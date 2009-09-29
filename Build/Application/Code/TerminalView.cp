@@ -292,7 +292,6 @@ struct TerminalView
 		Boolean						focusRingEnabled;		// is the matte and content area focus ring displayed?
 		Boolean						isReverseVideo;			// are foreground and background colors temporarily swapped?
 		
-		PicHandle					backgroundPicture;		// custom terminal screen background (if any)
 	#if 0
 		ListenerModel_ListenerRef	backgroundDragHandler;	// listener for clicks in screens from inactive windows
 	#endif
@@ -3226,7 +3225,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.cache.maxViewHeightInPixels = 0; // set later...
 	this->screen.cache.maxWidthInPixels = 0; // set later...
 	this->screen.cache.maxHeightInPixels = 0; // set later...
-	this->screen.backgroundPicture = nullptr;
 	this->screen.focusRingEnabled = true;
 	this->screen.isReverseVideo = 0;
 	this->screen.cursor.currentState = kMyCursorStateVisible;
@@ -3290,14 +3288,24 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	// create HIViews
 	if (this->contentHIView != nullptr)
 	{
-		OSStatus	error = noErr;
+		Preferences_Result	preferencesResult = kPreferences_ResultOK;
+		CFStringRef			imageURLCFString = nullptr;
+		OSStatus			error = noErr;
 		
+		
+		// read optional image URL
+		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagTerminalImageNormalBackground,
+														sizeof(imageURLCFString), &imageURLCFString, true/* search defaults too */);
+		if (kPreferences_ResultOK != preferencesResult)
+		{
+			imageURLCFString = nullptr;
+		}
 		
 		// see the HIObject callbacks, this will already exist
 		error = HIViewSetVisible(this->contentHIView, true);
 		assert_noerr(error);
 		
-		assert_noerr(TerminalBackground_CreateHIView(this->paddingHIView));
+		assert_noerr(TerminalBackground_CreateHIView(this->paddingHIView, false/* is matte */, imageURLCFString));
 		error = HIViewSetVisible(this->paddingHIView, true);
 		assert_noerr(error);
 		// IMPORTANT: Set a property with the TerminalViewRef, so that
@@ -3308,7 +3316,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 									sizeof(this->selfRef), &this->selfRef);
 		assert_noerr(error);
 		
-		assert_noerr(TerminalBackground_CreateHIView(this->backgroundHIView));
+		assert_noerr(TerminalBackground_CreateHIView(this->backgroundHIView, true/* is matte */));
 		error = HIViewSetVisible(this->backgroundHIView, true);
 		assert_noerr(error);
 		

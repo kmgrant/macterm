@@ -284,6 +284,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20090929': [
         'Fixed a possible crash when closing the Custom Format sheet.',
+        'New low-level preference "terminal-image-normal-background-url" (string, in Formats), to give terminal views a background image.  This feature is experimental, there are minor display glitches when using it.',
     ],
     '20090928': [
         'Fixed some cases where the scrollback buffer could grow larger than its specified maximum number of lines.',

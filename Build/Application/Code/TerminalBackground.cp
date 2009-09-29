@@ -40,6 +40,7 @@
 // library includes
 #include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
+#include <CFUtilities.h>
 #include <ColorUtilities.h>
 #include <Console.h>
 #include <MemoryBlocks.h>
@@ -72,6 +73,15 @@ enum
 	kTerminalBackground_ContentPartText		= 1,				//!< draw a focus ring around entire view perimeter
 };
 
+/*!
+Custom Carbon Event parameters.
+*/
+enum
+{
+	kEventParamTerminalBackground_ImageURL	= 'TBIU',	//!< CFStringRef; optional, specifies URL of image file to use for background
+	kEventParamTerminalBackground_IsMatte	= 'TBMt',	//!< whether or not the view is opaque (data: typeBoolean)
+};
+
 } // anonymous namespace
 
 #pragma mark Types
@@ -81,6 +91,9 @@ struct My_TerminalBackground
 {
 	My_TerminalBackground	(HIViewRef	inSuperclassViewInstance);
 	~My_TerminalBackground	();
+	
+	void
+	setImageFromURLString	(CFStringRef);
 	
 	static pascal OSStatus
 	receiveViewBoundsChanged	(EventHandlerCallRef, EventRef, void*);
@@ -99,12 +112,15 @@ struct My_TerminalBackground
 	
 	HIViewRef					view;
 	HIViewPartCode				currentContentFocus;		//!< used in the content view focus handler to determine where (if anywhere) a ring goes
+	CFRetainRelease				imageObject;				//!< actually represents an auto-retained/released CGImageRef for the background image
+	CGImageRef					image;						//!< a convenient cast of the reference retained by "imageObject"; KEEP IN SYNC!
+	Boolean						isMatte;					//!< if true, the view is considered completely opaque
+	Boolean						dontDimBackgroundScreens;	//!< a cache of the preferences value, updated by the callback
 	CarbonEventHandlerWrap		boundsChangingHandler;		//!< detects changes to the view size, to update any associated focus overlay
 	CarbonEventHandlerWrap		windowChangedHandler;		//!< detects when the view has finally been embedded in a window
 	CarbonEventHandlerWrap		windowActivationHandler;	//!< detects when the window is activated or deactivated, to hide/show the overlay
 	CarbonEventHandlerWrap		windowMinimizationHandler;	//!< detects when the window is collapsed or expanded, to hide/show the overlay
 	CarbonEventHandlerWrap		windowMovementHandler;		//!< detects changes to the window position, and updates any associated focus overlay
-	Boolean						dontDimBackgroundScreens;	//!< a cache of the preferences value, updated by the callback
 	ListenerModel_ListenerRef	preferenceMonitor;			//!< detects changes to important preference settings
 };
 typedef My_TerminalBackground*			My_TerminalBackgroundPtr;
@@ -239,9 +255,17 @@ TerminalBackground_Done ()
 
 
 /*!
-Creates a new HIView, complete with all the callbacks
-and data necessary to drive a terminal background view
-based on it.
+Creates a new HIView, complete with all the callbacks and data
+necessary to drive a terminal background view based on it.
+
+If "inIsMatte" is true, the view is optimized for opaque
+rendering and is not expected to have anything behind it.
+Otherwise, it expects to be “in front” of something (perhaps
+another Terminal Background view in a different color that
+produces the matte effect).
+
+A background image can be provided as well.  Currently, this
+is experimental.
 
 If any problems occur, nullptr is returned; otherwise, a
 reference to the new view is returned.
@@ -255,7 +279,9 @@ IMPORTANT:	As with all APIs in this module, you must have
 (3.1)
 */
 OSStatus
-TerminalBackground_CreateHIView		(HIViewRef&		outHIViewRef)
+TerminalBackground_CreateHIView		(HIViewRef&		outHIViewRef,
+									 Boolean		inIsMatte,
+									 CFStringRef	inImageURLOrNull)
 {
 	EventRef	initializationEvent = nullptr;
 	OSStatus	result = noErr;
@@ -269,6 +295,17 @@ TerminalBackground_CreateHIView		(HIViewRef&		outHIViewRef)
 							GetCurrentEventTime(), kEventAttributeNone, &initializationEvent);
 	if (noErr == result)
 	{
+		// set the matte flag
+		(OSStatus)SetEventParameter(initializationEvent, kEventParamTerminalBackground_IsMatte,
+									typeBoolean, sizeof(inIsMatte), &inIsMatte);
+		
+		// set the image flag
+		if (nullptr != inImageURLOrNull)
+		{
+			(OSStatus)SetEventParameter(initializationEvent, kEventParamTerminalBackground_ImageURL,
+										typeCFStringRef, sizeof(inImageURLOrNull), &inImageURLOrNull);
+		}
+		
 		// set the parent window
 		//result = SetEventParameter(initializationEvent, kEventParamNetEvents_ParentWindow,
 		//							typeWindowRef, sizeof(inParentWindow), &inParentWindow);
@@ -282,14 +319,15 @@ TerminalBackground_CreateHIView		(HIViewRef&		outHIViewRef)
 									REINTERPRET_CAST(&outHIViewRef, HIObjectRef*));
 			if (noErr == result)
 			{
-				UInt32		actualSize = 0;
+				My_TerminalBackgroundPtr	ptr = nullptr;
+				UInt32						actualSize = 0;
 				
 				
 				// the event handlers for this class of HIObject will attach a custom
-				// control property to the new view, containing the TerminalViewRef
+				// control property to the new view, containing the internal structure
 				result = GetControlProperty(outHIViewRef, AppResources_ReturnCreatorCode(),
 											kConstantsRegistry_ControlPropertyTypeTerminalBackgroundData,
-											sizeof(result), &actualSize, &result);
+											sizeof(ptr), &actualSize, &ptr);
 				if (noErr == result)
 				{
 					// success!
@@ -324,6 +362,10 @@ My_TerminalBackground	(HIViewRef		inSuperclassViewInstance)
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 view						(inSuperclassViewInstance),
 currentContentFocus			(kControlNoPart),
+imageObject					(),
+image						(nullptr),
+isMatte						(true),
+dontDimBackgroundScreens	(false), // reset by callback
 boundsChangingHandler		(GetControlEventTarget(inSuperclassViewInstance),
 								receiveViewBoundsChanged,
 								CarbonEventSetInClass
@@ -337,7 +379,6 @@ windowChangedHandler		(GetControlEventTarget(inSuperclassViewInstance),
 windowActivationHandler		(), // set up later, in the window-changed handler
 windowMinimizationHandler	(), // set up later, in the window-changed handler
 windowMovementHandler		(), // set up later, in the window-changed handler
-dontDimBackgroundScreens	(false), // reset by callback
 preferenceMonitor			(ListenerModel_NewStandardListener(preferenceChangedForBackground, this/* context */))
 {
 	OSStatus	error = noErr;
@@ -378,6 +419,43 @@ My_TerminalBackground::
 	Preferences_StopMonitoring(this->preferenceMonitor, kPreferences_TagDontDimBackgroundScreens);
 	ListenerModel_ReleaseListener(&this->preferenceMonitor);
 }// My_TerminalBackground destructor
+
+
+/*!
+Reads the specified image file, and stores its image data in
+memory.  The image is then rendered later by the view.
+
+(4.0)
+*/
+void
+My_TerminalBackground::
+setImageFromURLString	(CFStringRef	inURLCFString)
+{
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+	CFRetainRelease		imageURLObject(CFURLCreateWithString
+										(kCFAllocatorDefault, inURLCFString, nullptr/* base URL */), true/* is retained */);
+	CFURLRef			imageURL = CFUtilities_URLCast(imageURLObject.returnCFTypeRef());
+	CFRetainRelease		imageDataObject(CGImageSourceCreateWithURL(imageURL, nullptr/* options */), true/* is retained */);
+	CGImageSourceRef	imageData = (CGImageSourceRef)imageDataObject.returnCFTypeRef();
+	
+	
+	this->imageObject = CGImageSourceCreateImageAtIndex(imageData, 0/* index */, nullptr/* options */);
+#else
+	CFRetainRelease		imageURLObject(CFURLCreateWithString
+										(kCFAllocatorDefault, inURLCFString, nullptr/* base URL */), true/* is retained */);
+	CFURLRef			imageURL = CFUtilities_URLCast(imageURLObject.returnCFTypeRef());
+	CFRetainRelease		imageDataObject(CGDataProviderCreateWithURL(imageURL), true/* is retained */);
+	CGDataProviderRef	imageData = (CGDataProviderRef)imageDataObject.returnCFTypeRef();
+	
+	
+	this->imageObject = CGImageCreateWithJPEGDataProvider(imageData, nullptr/* decode array */,
+															false/* interpolate */,
+															kCGRenderingIntentDefault);
+#endif
+	
+	// for convenience, pre-cast the retained reference and store it
+	this->image = (CGImageRef)this->imageObject.returnCFTypeRef();
+}// My_TerminalBackground::setImageFromURLString
 
 
 /*!
@@ -1017,6 +1095,11 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 					UseInactiveColors();
 				}
 				EraseRect(&bounds);
+				
+				if (nullptr != dataPtr->image)
+				{
+					(OSStatus)HIViewDrawCGImage(drawingContext, &floatBounds, dataPtr->image);
+				}
 			}
 			
 			// restore port
@@ -1322,7 +1405,23 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 			result = CallNextEventHandler(inHandlerCallRef, inEvent);
 			if ((noErr == result) || (eventNotHandledErr == result))
 			{
-				// no initialization needed
+				OSStatus		error = noErr;
+				CFStringRef		urlCFString = nullptr;
+				Boolean			flag = false;
+				
+				
+				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamTerminalBackground_IsMatte, typeBoolean, flag);
+				if (noErr == result)
+				{
+					dataPtr->isMatte = flag;
+				}
+				
+				error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamTerminalBackground_ImageURL, typeCFStringRef, urlCFString);
+				if (noErr == error)
+				{
+					dataPtr->setImageFromURLString(urlCFString);
+				}
+				
 				result = noErr;
 			}
 			break;
