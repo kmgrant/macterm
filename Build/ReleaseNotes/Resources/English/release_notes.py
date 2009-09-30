@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090930',
     '20090929',
     '20090928',
     '20090926',
@@ -282,6 +283,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090930': [
+        'Fixed terminal view cursor to be twice the size when placed on double-height lines.',
+    ],
     '20090929': [
         'Fixed a possible crash when closing the Custom Format sheet.',
         'New low-level preference "terminal-image-normal-background-url" (string, in Formats), to give terminal views a background image.  This feature is experimental, there are minor display glitches when using it.',

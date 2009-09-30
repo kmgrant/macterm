@@ -10280,6 +10280,7 @@ setUpCursorBounds	(TerminalViewPtr			inTerminalViewPtr,
 	
 	
 	Point						characterSizeInPixels; // based on font metrics
+	Rect						rowBounds;
 	UInt16						thickness = 0; // used for non-block-shaped cursors
 	TerminalView_CursorType		terminalCursorType = inTerminalCursorType;
 	
@@ -10291,10 +10292,12 @@ setUpCursorBounds	(TerminalViewPtr			inTerminalViewPtr,
 		terminalCursorType = cursorType(inTerminalViewPtr);
 	}
 	
-	SetPt(&characterSizeInPixels, getRowCharacterWidth(inTerminalViewPtr, inY), inTerminalViewPtr->text.font.heightPerCharacter);
+	getRowBounds(inTerminalViewPtr, inY, &rowBounds);
+	
+	SetPt(&characterSizeInPixels, getRowCharacterWidth(inTerminalViewPtr, inY), rowBounds.bottom - rowBounds.top);
 	
 	outBoundsPtr->left = inX * characterSizeInPixels.h;
-	outBoundsPtr->top = inY * characterSizeInPixels.v;
+	outBoundsPtr->top = rowBounds.top;
 	
 	switch (terminalCursorType)
 	{
