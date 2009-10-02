@@ -7150,8 +7150,8 @@ mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		gApplicationIsSuspended = FlagManager_Test(kFlagSuspended);
 		{
 			// redraw every screen that has a text selection, because these can look different in the background
-			SessionFactory_ForEveryTerminalWindowDo(redrawScreensTerminalWindowOp, nullptr/* data 1 - unused */,
-													0L/* data 2 - unused */, nullptr/* result - unused */);
+			//SessionFactory_ForEveryTerminalWindowDo(redrawScreensTerminalWindowOp, nullptr/* data 1 - unused */,
+			//										0L/* data 2 - unused */, nullptr/* result - unused */);
 		}
 		break;
 	
@@ -8251,10 +8251,9 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// draw text
 				if (nullptr != viewPtr)
 				{
-					RgnHandle	optionalTargetRegion = nullptr;
-					HIRect		floatBounds;
-					HIRect		floatClipBounds;
 					Rect		clipBounds;
+					HIRect		floatBounds;
+					RgnHandle	optionalTargetRegion = nullptr;
 					
 					
 					SetPort(drawingPort);
@@ -8267,20 +8266,14 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamRgnHandle, typeQDRgnHandle,
 																		optionalTargetRegion))
 					{
-						SetClip(optionalTargetRegion);
 						GetRegionBounds(optionalTargetRegion, &clipBounds);
-						floatClipBounds = CGRectMake(clipBounds.left, clipBounds.top, clipBounds.right - clipBounds.left,
-														clipBounds.bottom - clipBounds.top);
 					}
 					else
 					{
 						SetRectRgn(gInvalidationScratchRegion(), 0, 0, STATIC_CAST(floatBounds.size.width, SInt16),
 									STATIC_CAST(floatBounds.size.height, SInt16));
-						SetClip(gInvalidationScratchRegion());
 						GetRegionBounds(gInvalidationScratchRegion(), &clipBounds);
-						floatClipBounds = floatBounds;
 					}
-					CGContextClipToRect(drawingContext, floatClipBounds);
 					
 					if ((partCode == kTerminalView_ContentPartText) ||
 						(partCode == kControlEntireControl) ||
@@ -8292,12 +8285,6 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						// determine if a focus ring is required
 						isFocused = HIViewSubtreeContainsFocus(viewPtr->contentHIView);
-						
-						// draw or erase focus ring
-						if (viewPtr->screen.focusRingEnabled)
-						{
-							//TMP//(OSStatus)HIThemeDrawFocusRect(&floatBounds, isFocused, drawingContext, kHIThemeOrientationNormal);
-						}
 						
 						// perform any necessary rendering for drags
 						{

@@ -1048,8 +1048,8 @@ receiveCanvasDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			// if all information can be found, proceed with drawing
 			if (noErr == result)
 			{
-				Rect		bounds;
 				HIRect		floatBounds;
+				HIRect		floatClipBounds;
 				RgnHandle	optionalTargetRegion = nullptr;
 				
 				
@@ -1057,37 +1057,34 @@ receiveCanvasDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				// determine boundaries of the content view being drawn
 				HIViewGetBounds(view, &floatBounds);
-				GetControlBounds(view, &bounds);
-				OffsetRect(&bounds, -bounds.left, -bounds.top);
 				
 				// update internal dimensions to match current view size
 				// (NOTE: could be done in a bounds-changed handler)
-				dataPtr->width = bounds.right - bounds.left;
-				dataPtr->height = bounds.bottom - bounds.top;
+				{
+					Rect	bounds;
+					
+					
+					GetControlBounds(view, &bounds);
+					OffsetRect(&bounds, -bounds.left, -bounds.top);
+					
+					dataPtr->width = bounds.right - bounds.left;
+					dataPtr->height = bounds.bottom - bounds.top;
+				}
 				
 				// maybe a focus region has been provided
 				if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamRgnHandle, typeQDRgnHandle,
 																	optionalTargetRegion))
 				{
 					Rect	clipBounds;
-					HIRect	floatClipBounds;
 					
 					
-					SetClip(optionalTargetRegion);
 					GetRegionBounds(optionalTargetRegion, &clipBounds);
 					floatClipBounds = CGRectMake(clipBounds.left, clipBounds.top, clipBounds.right - clipBounds.left,
 													clipBounds.bottom - clipBounds.top);
-					CGContextClipToRect(drawingContext, floatClipBounds);
 				}
 				else
 				{
-					static RgnHandle	clipRegion = Memory_NewRegion();
-					
-					
-					SetRectRgn(clipRegion, 0, 0, STATIC_CAST(floatBounds.size.width, SInt16),
-								STATIC_CAST(floatBounds.size.height, SInt16));
-					SetClip(clipRegion);
-					CGContextClipToRect(drawingContext, floatBounds);
+					floatClipBounds = floatBounds;
 				}
 				
 				// finally, draw the graphic!
@@ -1101,7 +1098,7 @@ receiveCanvasDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					getPaletteColor(dataPtr, backgroundColorIndex, backgroundColor);
 					CGContextSetRGBFillColor(drawingContext, backgroundColor.red, backgroundColor.green,
 												backgroundColor.blue, 1.0/* alpha */);
-					CGContextFillRect(drawingContext, floatBounds);
+					CGContextFillRect(drawingContext, floatClipBounds);
 				}
 				VectorInterpreter_Redraw(dataPtr->interpreter, dataPtr->interpreter);
 				

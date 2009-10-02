@@ -1051,7 +1051,9 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 			{
 				// paint background color and draw background picture, if any
 				Rect		bounds;
+				Rect		clipBounds;
 				HIRect		floatBounds;
+				HIRect		floatClipBounds;
 				RgnHandle	optionalTargetRegion = nullptr;
 				
 				
@@ -1060,41 +1062,29 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				// determine boundaries of the content view being drawn;
 				// ensure view-local coordinates
 				HIViewGetBounds(view, &floatBounds);
+				GetControlBounds(view, &bounds);
+				OffsetRect(&bounds, -bounds.left, -bounds.top);
 				
 				// maybe a focus region has been provided
 				if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamRgnHandle, typeQDRgnHandle,
 																	optionalTargetRegion))
 				{
-					Rect	clipBounds;
-					HIRect	floatClipBounds;
-					
-					
-					SetClip(optionalTargetRegion);
 					GetRegionBounds(optionalTargetRegion, &clipBounds);
 					floatClipBounds = CGRectMake(clipBounds.left, clipBounds.top, clipBounds.right - clipBounds.left,
 													clipBounds.bottom - clipBounds.top);
-					CGContextClipToRect(drawingContext, floatClipBounds);
 				}
 				else
 				{
-					static RgnHandle	clipRegion = Memory_NewRegion();
-					
-					
-					SetRectRgn(clipRegion, 0, 0, STATIC_CAST(floatBounds.size.width, SInt16),
-								STATIC_CAST(floatBounds.size.height, SInt16));
-					SetClip(clipRegion);
-					CGContextClipToRect(drawingContext, floatBounds);
+					clipBounds = bounds;
+					floatClipBounds = floatBounds;
 				}
-				
-				GetControlBounds(view, &bounds);
-				OffsetRect(&bounds, -bounds.left, -bounds.top);
 				
 				RGBBackColor(&backgroundColor);
 				if ((false == IsControlActive(view)) && (false == dataPtr->dontDimBackgroundScreens))
 				{
 					UseInactiveColors();
 				}
-				EraseRect(&bounds);
+				EraseRect(&clipBounds);
 				
 				if (nullptr != dataPtr->image)
 				{
