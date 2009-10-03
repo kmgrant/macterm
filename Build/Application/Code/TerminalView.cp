@@ -412,7 +412,7 @@ void				drawTerminalScreenRunOp				(TerminalScreenRef, UniChar const*, UInt16, T
 														 UInt16, TerminalTextAttributes, void*);
 void				drawTerminalText					(TerminalViewPtr, CGContextRef, CGRect const&, Rect const&, UniChar const*,
 														 CFIndex, TerminalTextAttributes);
-void				drawVTGraphicsGlyph					(TerminalViewPtr, CGContextRef, Rect const*, UniChar, char, Boolean);
+void				drawVTGraphicsGlyph					(TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char, Boolean);
 void				eraseSection						(TerminalViewPtr, CGContextRef, SInt16, SInt16, CGRect&);
 void				eventNotifyForView					(TerminalViewConstPtr, TerminalView_Event, void*);
 Terminal_LineRef	findRowIterator						(TerminalViewPtr, UInt16);
@@ -4544,7 +4544,7 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 				if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 				{
 					// draw a graphics character
-					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, &inOldQuickDrawBoundaries, inTextBufferPtr[i],
+					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i],
 										oldMacRomanBufferForQuickDraw[i], true/* is double width */);
 				}
 				else
@@ -4572,7 +4572,7 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 				if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 				{
 					// draw a graphics character
-					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, &inOldQuickDrawBoundaries, inTextBufferPtr[i],
+					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i],
 										oldMacRomanBufferForQuickDraw[i], false/* is double width */);
 				}
 				else
@@ -4638,7 +4638,7 @@ based ones prescribed by the standard VT font.
 void
 drawVTGraphicsGlyph		(TerminalViewPtr	inTerminalViewPtr,
 						 CGContextRef		inDrawingContext,
-						 Rect const*		inBoundaries,
+						 CGRect const&		inBoundaries,
 						 UniChar			inUnicode,
 						 char				inMacRomanForQuickDraw, // DEPRECATED
 						 Boolean			inIsDoubleWidth)
@@ -4687,11 +4687,11 @@ drawVTGraphicsGlyph		(TerminalViewPtr	inTerminalViewPtr,
 		
 		
 		GetPen(&penLocation);
-		cellTop = inBoundaries->top;
+		cellTop = inBoundaries.origin.y;
 		cellLeft = penLocation.h;
 		cellRight = cellLeft + inTerminalViewPtr->text.font.widthPerCharacter;
 		if (inIsDoubleWidth) cellRight += inTerminalViewPtr->text.font.widthPerCharacter;
-		cellBottom = inBoundaries->bottom;
+		cellBottom = inBoundaries.origin.y + inBoundaries.size.height;
 		SetRect(&cellRect, cellLeft, cellTop, cellRight, cellBottom);
 	}
 	SetPt(&cellCenter, cellLeft + INTEGER_HALVED(cellRight - cellLeft),
