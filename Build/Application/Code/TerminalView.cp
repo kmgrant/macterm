@@ -457,7 +457,6 @@ pascal OSStatus		receiveTerminalHIObjectEvents		(EventHandlerCallRef, EventRef, 
 OSStatus			receiveTerminalViewActiveStateChange(EventHandlerCallRef, EventRef, TerminalViewRef);
 pascal OSStatus		receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef, EventRef, void*);
 OSStatus			receiveTerminalViewDraw				(EventHandlerCallRef, EventRef, TerminalViewRef);
-OSStatus			receiveTerminalViewFocus			(EventHandlerCallRef, EventRef, TerminalViewRef);
 OSStatus			receiveTerminalViewGetData			(EventHandlerCallRef, EventRef, TerminalViewRef);
 OSStatus			receiveTerminalViewHitTest			(EventHandlerCallRef, EventRef, TerminalViewRef);
 pascal OSStatus		receiveTerminalViewRawKeyDown		(EventHandlerCallRef, EventRef, void*);
@@ -537,7 +536,6 @@ TerminalView_Init ()
 									{ kEventClassControl, kEventControlGetPartRegion },
 									{ kEventClassControl, kEventControlHitTest },
 									{ kEventClassControl, kEventControlSetCursor },
-									{ kEventClassControl, kEventControlSetFocusPart },
 									{ kEventClassControl, kEventControlTrack },
 									{ kEventClassAccessibility, kEventAccessibleGetAllAttributeNames },
 									{ kEventClassAccessibility, kEventAccessibleGetNamedAttribute },
@@ -8053,11 +8051,6 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 			}
 			break;
 		
-		case kEventControlSetFocusPart:
-			//Console_WriteLine("HI OBJECT control set focus part for terminal view");
-			//TMP//result = receiveTerminalViewFocus(inHandlerCallRef, inEvent, view);
-			break;
-		
 		case kEventControlTrack:
 			//Console_WriteLine("HI OBJECT control track for terminal view");
 			result = receiveTerminalViewTrack(inHandlerCallRef, inEvent, view);
@@ -8512,117 +8505,6 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	return result;
 }// receiveTerminalViewDraw
-
-
-/*!
-Handles "kEventControlSetFocusPart" of "kEventClassControl".
-
-Invoked by Mac OS X whenever the currently-focused part of
-a terminal view should be changed.
-
-(3.0)
-*/
-OSStatus
-receiveTerminalViewFocus	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef				inEvent,
-							 TerminalViewRef		inTerminalViewRef)
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlSetFocusPart);
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// get the target view
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		
-		// if the view was found, continue
-		if (result == noErr)
-		{
-			HIViewPartCode		focusPart = kControlNoPart;
-			
-			
-			// determine the focus part
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, focusPart);
-			if (result == noErr)
-			{
-				TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inTerminalViewRef);
-				
-				
-				if (viewPtr != nullptr)
-				{
-					HIViewPartCode		newFocusPart = kTerminalView_ContentPartVoid;
-					
-					
-					switch (focusPart)
-					{
-					case kControlFocusNextPart:
-						// advance focus
-						switch (viewPtr->currentContentFocus)
-						{
-						case kTerminalView_ContentPartVoid:
-							// when the previous view is highlighted and focus advances, the
-							// entire terminal view content area should be the next focus target
-							newFocusPart = kTerminalView_ContentPartText;
-							break;
-						
-						case kTerminalView_ContentPartText:
-						default:
-							// when the entire terminal view is highlighted and focus advances,
-							// the next view should be the next focus target
-							newFocusPart = kTerminalView_ContentPartVoid;
-							break;
-						}
-						break;
-					
-					case kControlFocusPrevPart:
-						// reverse focus
-						switch (viewPtr->currentContentFocus)
-						{
-						case kTerminalView_ContentPartVoid:
-							// when the next view is highlighted and focus backs up, the
-							// entire terminal view content area should be the next focus target
-							newFocusPart = kTerminalView_ContentPartText;
-							break;
-						
-						case kTerminalView_ContentPartText:
-						default:
-							// when the entire terminal view is highlighted and focus backs up,
-							// the previous view should be the next focus target
-							newFocusPart = kTerminalView_ContentPartVoid;
-							break;
-						}
-						break;
-					
-					default:
-						// set focus to given part
-						newFocusPart = focusPart;
-						break;
-					}
-					
-					if (viewPtr->currentContentFocus != newFocusPart)
-					{
-						// update focus flag
-						viewPtr->currentContentFocus = newFocusPart;
-						
-						// notify the system that the structure region has changed
-						(OSStatus)HIViewReshapeStructure(viewPtr->contentHIView);
-					}
-					
-					// update the part code parameter with the new focus part
-					result = SetEventParameter(inEvent, kEventParamControlPart,
-												typeControlPartCode, sizeof(newFocusPart), &newFocusPart);
-				}
-			}
-		}
-	}
-	return result;
-}// receiveTerminalViewFocus
 
 
 /*!
