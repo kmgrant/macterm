@@ -251,8 +251,6 @@ struct TerminalView
 	HIViewRef			paddingHIView;			// view that is outset by the padding amount from the content view
 	HIViewRef			contentHIView;			// view that renders the text of the terminal screen
 	
-	HIViewPartCode		currentContentFocus;	// used in the content view focus handler to determine where (if anywhere) a ring goes
-	
 	CommonEventHandlers_HIViewResizer	containerResizeHandler;		// responds to changes in the terminal view container boundaries
 	CarbonEventHandlerWrap		contextualMenuHandler;		// responds to right-clicks
 	CarbonEventHandlerWrap		rawKeyDownHandler;			// responds to keystrokes that change the text selection
@@ -3137,7 +3135,6 @@ backgroundHIView(nullptr), // set later
 focusHIView(nullptr), // set later
 paddingHIView(nullptr), // set later
 contentHIView(inSuperclassViewInstance),
-currentContentFocus(kControlEntireControl), // set later
 containerResizeHandler(), // set later
 contextualMenuHandler(),
 rawKeyDownHandler(),
@@ -3279,9 +3276,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		
 		assert(preferenceCount > 0);
 	}
-	
-	// initialize focus area
-	this->currentContentFocus = kTerminalView_ContentPartVoid;
 	
 	// create HIViews
 	if (this->contentHIView != nullptr)
@@ -8273,12 +8267,6 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						((partCode >= kTerminalView_ContentPartFirstLine) &&
 							(partCode <= kTerminalView_ContentPartLastLine)))
 					{
-						Boolean		isFocused = false;
-						
-						
-						// determine if a focus ring is required
-						isFocused = HIViewSubtreeContainsFocus(viewPtr->contentHIView);
-						
 						// perform any necessary rendering for drags
 						{
 							Boolean		dragHighlight = false;
@@ -8458,8 +8446,10 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					}
 					
 					// kTerminalView_ContentPartCursor
+					if (kMyCursorStateVisible == viewPtr->screen.cursor.currentState)
 					{
 						CGContextSaveRestore	_(drawingContext);
+						TerminalTextAttributes	cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
 						CGRect					cursorFloatBounds = CGRectMake(viewPtr->screen.cursor.bounds.left,
 																				viewPtr->screen.cursor.bounds.top,
 																				viewPtr->screen.cursor.bounds.right -
@@ -8470,21 +8460,14 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																					- 2/* TEMPORARY Quartz/QD conversion */);
 						
 						
-						if (kMyCursorStateVisible == viewPtr->screen.cursor.currentState)
-						{
-							TerminalTextAttributes		cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
-							
-							
-							if (cursorAttributes & kTerminalTextAttributeInverseVideo) cursorAttributes &= ~kTerminalTextAttributeInverseVideo;
-							else cursorAttributes |= kTerminalTextAttributeInverseVideo;
-							
-							// flip colors and paint at the current blink alpha value
-							useTerminalTextColors(viewPtr, drawingContext, cursorAttributes,
-													cursorBlinks(viewPtr)
-													? viewPtr->animation.cursor.blinkAlpha
-													: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
-							CGContextFillRect(drawingContext, cursorFloatBounds);
-						}
+						// flip colors and paint at the current blink alpha value
+						if (cursorAttributes & kTerminalTextAttributeInverseVideo) cursorAttributes &= ~kTerminalTextAttributeInverseVideo;
+						else cursorAttributes |= kTerminalTextAttributeInverseVideo;
+						useTerminalTextColors(viewPtr, drawingContext, cursorAttributes,
+												cursorBlinks(viewPtr)
+												? viewPtr->animation.cursor.blinkAlpha
+												: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
+						CGContextFillRect(drawingContext, cursorFloatBounds);
 					}
 					
 					// kTerminalView_ContentPartCursorGhost
@@ -9039,13 +9022,6 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 				default:
 					SetRect(&partBounds, 0, 0, 0, 0);
 					break;
-				}
-				
-				// outset the structure rectangle when focused
-				if ((kControlNoPart != viewPtr->currentContentFocus) &&
-					(kControlStructureMetaPart == partNeedingRegion))
-				{
-					InsetRect(&partBounds, -3, -3);
 				}
 				
 				// the line-specific regions are special part codes not
