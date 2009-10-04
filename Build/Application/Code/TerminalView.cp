@@ -204,6 +204,23 @@ typedef std::vector< CGDeviceColor >			My_CGColorList;
 typedef std::map< UInt16, CGDeviceColor >		My_CGColorByIndex; // a map is necessary because "vector" cannot handle 256 sequential color structures
 typedef std::vector< EventTime >				My_TimeIntervalList;
 
+/*!
+A wrapper that calls HIViewConvertRegion() at construction
+time, and optionally at destruction time to undo the effects
+of its conversion.
+*/
+struct My_RegionConverter
+{
+	My_RegionConverter	(RgnHandle, HIViewRef, HIViewRef, Boolean = false);
+	~My_RegionConverter	();
+	
+	RgnHandle	region;			//!< the region, retained only by reference, that is converted
+	HIViewRef	source;			//!< source view for HIViewConvertRegion()
+	HIViewRef	destination;	//!< source view for HIViewConvertRegion()
+	Boolean		convertBack;	//!< if true, at destruction time HIViewConvertRegion() is called with inverted arguments;
+								//!  otherwise, it is not called at all, and the region is considered permanently changed
+};
+
 // TEMPORARY: This structure is transitioning to C++, and so initialization
 // and maintenance of it is downright ugly for the time being.  It *will*
 // be simplified and become more object-oriented in the future.
@@ -483,6 +500,8 @@ void				setUpCursorGhost					(My_TerminalViewPtr, Point);
 void				setUpScreenFontMetrics				(My_TerminalViewPtr);
 void				sortAnchors							(TerminalView_Cell&, TerminalView_Cell&, Boolean);
 void				trackTextSelection					(My_TerminalViewPtr, Point, EventModifiers, Point*, UInt32*);
+void				updateDisplay						(My_TerminalViewPtr);
+void				updateDisplayInRegion				(My_TerminalViewPtr, RgnHandle, Boolean = false);
 void				useTerminalTextAttributes			(My_TerminalViewPtr, CGContextRef, TerminalTextAttributes);
 void				useTerminalTextColors				(My_TerminalViewPtr, CGContextRef, TerminalTextAttributes, Float32 = 1.0);
 void				visualBell							(TerminalViewRef);
@@ -901,13 +920,13 @@ TerminalView_FlashSelection		(TerminalViewRef	inView)
 			highlightCurrentSelection(viewPtr, false/* is highlighted */, true/* redraw */);
 			
 			// hand-hold Mac OS X to get the damned changes to show up!
-			(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
+			updateDisplay(viewPtr);
 			
 			Delay(5, &finalTick);
 			highlightCurrentSelection(viewPtr, true/* is highlighted */, true/* redraw */);
 			
 			// hand-hold Mac OS X to get the damned changes to show up!
-			(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
+			updateDisplay(viewPtr);
 		}
 		
 		// undo the lock done earlier in this block
@@ -1907,8 +1926,7 @@ TerminalView_ReverseVideo	(TerminalViewRef	inView,
 		setScreenCustomColor(viewPtr, kTerminalView_ColorIndexNormalText, &oldBackgroundColor);
 		setScreenCustomColor(viewPtr, kTerminalView_ColorIndexNormalBackground, &oldTextColor);
 		
-		// update the screen
-		(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
+		updateDisplay(viewPtr);
 	}
 }// ReverseVideo
 
@@ -2009,7 +2027,7 @@ TerminalView_ScrollColumnsTowardLeftEdge	(TerminalViewRef	inView,
 	if ((viewPtr != nullptr) && (inNumberOfColumnsToScroll != 0))
 	{
 		// just redraw everything
-		(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
+		updateDisplay(viewPtr);
 		
 		// update anchor
 		offsetLeftVisibleEdge(viewPtr, +(inNumberOfColumnsToScroll * viewPtr->text.font.widthPerCharacter));
@@ -2038,7 +2056,7 @@ TerminalView_ScrollColumnsTowardRightEdge	(TerminalViewRef	inView,
 	if (viewPtr != nullptr)
 	{
 		// just redraw everything
-		(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
+		updateDisplay(viewPtr);
 		
 		// update anchor
 		offsetLeftVisibleEdge(viewPtr, -(inNumberOfColumnsToScroll * viewPtr->text.font.widthPerCharacter));
@@ -2087,7 +2105,7 @@ TerminalView_ScrollPixelsTo		(TerminalViewRef	inView,
 		
 		
 		// just redraw everything
-		(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
+		updateDisplay(viewPtr);
 		
 		// update anchor
 		offsetTopVisibleEdge(viewPtr, kNewValue - viewPtr->screen.topVisibleEdgeInPixels);
@@ -2124,7 +2142,7 @@ TerminalView_ScrollRowsTowardBottomEdge		(TerminalViewRef	inView,
 	else
 	{
 		// just redraw everything
-		(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
+		updateDisplay(viewPtr);
 		
 		// update anchor
 		// TEMPORARY: really, something should traverse the row attributes between
@@ -2163,7 +2181,7 @@ TerminalView_ScrollRowsTowardTopEdge	(TerminalViewRef	inView,
 	else
 	{
 		// just redraw everything
-		(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
+		updateDisplay(viewPtr);
 		
 		// update anchor
 		// TEMPORARY: really, something should traverse the row attributes between
@@ -3023,6 +3041,51 @@ TerminalView_ZoomToSelection	(TerminalViewRef	inView)
 namespace {
 
 /*!
+Calls HIViewConvertRegion() to convert the specified region
+into a new coordinate system.
+
+(4.0)
+*/
+My_RegionConverter::
+My_RegionConverter	(RgnHandle		inoutRegion,
+					 HIViewRef		inSource,
+					 HIViewRef		inDestination,
+					 Boolean		inConvertBack)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+region			(inoutRegion),
+source			(inSource),
+destination		(inDestination),
+convertBack		(inConvertBack)
+{
+	OSStatus	error = HIViewConvertRegion(region, source, destination);
+	
+	
+	assert_noerr(error);
+}// My_RegionConverter constructor
+
+
+/*!
+For instances configured to convert back, once again calls
+HIViewConvertRegion() to restore the region to its previous
+coordinate system.
+
+(4.0)
+*/
+My_RegionConverter::
+~My_RegionConverter ()
+{
+	if (convertBack)
+	{
+		OSStatus	error = HIViewConvertRegion(region, destination, source);
+		
+		
+		assert_noerr(error);
+	}
+}// My_RegionConverter destructor
+
+
+/*!
 Initializes all tables, after which they can be used to
 conveniently translate received parameter values in XTerm
 256-color syntax, into RGB or gray values.
@@ -3525,7 +3588,7 @@ animateBlinkingItems	(EventLoopTimerRef		inTimer,
 		}
 		
 		// invalidate only the appropriate (blinking) parts of the screen
-		(OSStatus)HIViewSetNeedsDisplayInRegion(ptr->contentHIView, ptr->animation.rendering.region, true);
+		updateDisplayInRegion(ptr, ptr->animation.rendering.region, true/* translate back */);
 		
 		//
 		// cursor
@@ -3546,7 +3609,7 @@ animateBlinkingItems	(EventLoopTimerRef		inTimer,
 		
 		// invalidate the cursor
 		RectRgn(gInvalidationScratchRegion(), &ptr->screen.cursor.bounds);
-		(OSStatus)HIViewSetNeedsDisplayInRegion(ptr->contentHIView, gInvalidationScratchRegion(), true);
+		updateDisplayInRegion(ptr, gInvalidationScratchRegion());
 	}
 }// animateBlinkingItems
 
@@ -4594,7 +4657,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 				(kMyCursorStateVisible == inTerminalViewPtr->screen.cursor.currentState))
 			{
 				RectRgn(gInvalidationScratchRegion(), &inTerminalViewPtr->screen.cursor.bounds);
-				(OSStatus)HIViewSetNeedsDisplayInRegion(inTerminalViewPtr->contentHIView, gInvalidationScratchRegion(), true);
+				updateDisplayInRegion(inTerminalViewPtr, gInvalidationScratchRegion());
 			}
 		}
 	}
@@ -7008,10 +7071,10 @@ invalidateRowSection	(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	
 	// mark the specified area; it is already in “screen coordinates”,
-	// which match the view coordinates used by HIViewSetNeedsDisplayInRegion()
+	// which match the view coordinates used by updateDisplayInRegion()
 	getRowSectionBounds(inTerminalViewPtr, inLineNumber, inStartingColumnNumber, inCharacterCount, &textBounds);
 	RectRgn(gInvalidationScratchRegion(), &textBounds);
-	(OSStatus)HIViewSetNeedsDisplayInRegion(inTerminalViewPtr->contentHIView, gInvalidationScratchRegion(), true);
+	updateDisplayInRegion(inTerminalViewPtr, gInvalidationScratchRegion());
 }// invalidateRowSection
 
 
@@ -7454,8 +7517,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					gPreferenceProxies.dontDimTerminals = false; // assume a value, if preference can’t be found
 				}
 				
-				// redraw the screen
-				(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
+				updateDisplay(viewPtr);
 			}
 			break;
 		
@@ -7471,7 +7533,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				RectRgn(gInvalidationScratchRegion(), &viewPtr->screen.cursor.bounds);
 				if (IsValidControlHandle(viewPtr->contentHIView))
 				{
-					(OSStatus)HIViewSetNeedsDisplayInRegion(viewPtr->contentHIView, gInvalidationScratchRegion(), true);
+					updateDisplayInRegion(viewPtr, gInvalidationScratchRegion());
 				}
 				
 				// find the new cursor region
@@ -7482,7 +7544,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				RectRgn(gInvalidationScratchRegion(), &viewPtr->screen.cursor.bounds);
 				if (IsValidControlHandle(viewPtr->contentHIView))
 				{
-					(OSStatus)HIViewSetNeedsDisplayInRegion(viewPtr->contentHIView, gInvalidationScratchRegion(), true);
+					updateDisplayInRegion(viewPtr, gInvalidationScratchRegion());
 				}
 			}
 			break;
@@ -7520,9 +7582,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					(UInt16)copyColorPreferences(viewPtr, prefsContext, false/* search for defaults */);
 					(UInt16)copyFontPreferences(viewPtr, prefsContext, false/* search for defaults */);
 				}
-				(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
-				(OSStatus)HIViewSetNeedsDisplay(viewPtr->paddingHIView, true);
-				(OSStatus)HIViewSetNeedsDisplay(viewPtr->backgroundHIView, true);
+				updateDisplay(viewPtr);
 			}
 			else
 			{
@@ -9604,7 +9664,7 @@ screenCursorChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	{
 		// when moving or hiding/showing the cursor, invalidate its original rectangle
 		RectRgn(gInvalidationScratchRegion(), &viewPtr->screen.cursor.bounds);
-		(OSStatus)HIViewSetNeedsDisplayInRegion(viewPtr->contentHIView, gInvalidationScratchRegion(), true);
+		updateDisplayInRegion(viewPtr, gInvalidationScratchRegion());
 		if (inTerminalChange == kTerminal_ChangeCursorLocation)
 		{
 			// in addition, when moving, recalculate the new bounds and invalidate again
@@ -9617,7 +9677,7 @@ screenCursorChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			//Console_WriteValuePair("notification passed new location", cursorX, cursorY);
 			setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds);
 			RectRgn(gInvalidationScratchRegion(), &viewPtr->screen.cursor.bounds);
-			(OSStatus)HIViewSetNeedsDisplayInRegion(viewPtr->contentHIView, gInvalidationScratchRegion(), true);
+			updateDisplayInRegion(viewPtr, gInvalidationScratchRegion());
 		}
 	}
 }// screenCursorChanged
@@ -9766,7 +9826,7 @@ setCursorGhostVisibility	(My_TerminalViewPtr		inTerminalViewPtr,
 	{
 		// TEMPORARY: highlighting one part does not seem to work right now, so
 		// invalidate the WHOLE view (expensive?) to ensure the cursor redraws
-		(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->contentHIView, true);
+		updateDisplay(inTerminalViewPtr);
 		//HiliteControl(inTerminalViewPtr->contentHIView, kTerminalView_ContentPartCursorGhost);
 	}
 }// setCursorGhostVisibility
@@ -9801,7 +9861,7 @@ setCursorVisibility		(My_TerminalViewPtr		inTerminalViewPtr,
 	if (renderCursor)
 	{
 		RectRgn(gInvalidationScratchRegion(), &inTerminalViewPtr->screen.cursor.bounds);
-		(OSStatus)HIViewSetNeedsDisplayInRegion(inTerminalViewPtr->contentHIView, gInvalidationScratchRegion(), true);
+		updateDisplayInRegion(inTerminalViewPtr, gInvalidationScratchRegion());
 	}
 }// setCursorVisibility
 
@@ -10545,6 +10605,64 @@ trackTextSelection	(My_TerminalViewPtr		inTerminalViewPtr,
 	}
 	copySelectedTextIfUserPreference(inTerminalViewPtr);
 }// trackTextSelection
+
+
+/*!
+Arranges for the entire terminal screen to be redrawn at the
+next opportunity.
+
+Use of this utility routine is recommended because there are
+nested views that combine to produce a terminal display, and
+they must often be updated as set.
+
+(4.0)
+*/
+void
+updateDisplay	(My_TerminalViewPtr		inTerminalViewPtr)
+{
+	(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->backgroundHIView, true);
+	(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->paddingHIView, true);
+	(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->contentHIView, true);
+}// updateDisplay
+
+
+/*!
+Arranges for the specified portion of the terminal screen to be
+redrawn at the next opportunity.  The region should be relative
+to the main content view.
+
+IMPORTANT:	The region may be translated into other coordinate
+systems, and could be modified by this routine call.  However,
+if "inTranslateBack" is set to true, extra compute time is
+spent to restore the region to its previous coordinates.
+
+(4.0)
+*/
+void
+updateDisplayInRegion	(My_TerminalViewPtr		inTerminalViewPtr,
+						 RgnHandle				inoutRegion,
+						 Boolean				inTranslateBack)
+{
+	HIViewRef	currentView = inTerminalViewPtr->contentHIView;
+	
+	
+	// no need to convert for first view, input region is assumed
+	// to already be in its coordinate system
+	(OSStatus)HIViewSetNeedsDisplayInRegion(currentView, inoutRegion, true);
+	{
+		My_RegionConverter	contentToPadding(inoutRegion, currentView, HIViewGetSuperview(currentView), inTranslateBack);
+		
+		
+		(OSStatus)HIViewSetNeedsDisplayInRegion(contentToPadding.destination, inoutRegion, true);
+		currentView = HIViewGetSuperview(currentView);
+		{
+			My_RegionConverter	paddingToBackground(inoutRegion, currentView, HIViewGetSuperview(currentView), inTranslateBack);
+			
+			
+			(OSStatus)HIViewSetNeedsDisplayInRegion(paddingToBackground.destination, inoutRegion, true);
+		}
+	}
+}// updateDisplayInRegion
 
 
 /*!
