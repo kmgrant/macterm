@@ -461,7 +461,6 @@ pascal OSStatus		receiveTerminalViewRawKeyDown		(EventHandlerCallRef, EventRef, 
 OSStatus			receiveTerminalViewRegionRequest	(EventHandlerCallRef, EventRef, TerminalViewRef);
 OSStatus			receiveTerminalViewTrack			(EventHandlerCallRef, EventRef, TerminalViewRef);
 void				receiveVideoModeChange				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-void				redrawScreensTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
 void				releaseRowIterator					(TerminalViewPtr, Terminal_LineRef*);
 SInt32				returnNumberOfCharacters			(TerminalViewPtr);
 CFStringRef			returnSelectedTextAsNewUnicode		(TerminalViewPtr, UInt16, TerminalView_TextFlags);
@@ -7140,11 +7139,6 @@ mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kEventLoop_GlobalEventSuspendResume:
 		// update the internal variable to reflect the current suspended state of the application
 		gApplicationIsSuspended = FlagManager_Test(kFlagSuspended);
-		{
-			// redraw every screen that has a text selection, because these can look different in the background
-			//SessionFactory_ForEveryTerminalWindowDo(redrawScreensTerminalWindowOp, nullptr/* data 1 - unused */,
-			//										0L/* data 2 - unused */, nullptr/* result - unused */);
-		}
 		break;
 	
 	default:
@@ -9361,26 +9355,6 @@ receiveVideoModeChange	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	assert(inTerminalChange == kTerminal_ChangeVideoMode);
 	TerminalView_ReverseVideo(view, Terminal_ReverseVideoIsEnabled(screen));
 }// receiveVideoModeChange
-
-
-/*!
-Marks the specified terminal window’s contents as
-“dirty” so that they are redrawn the next time an
-update event is handled.
-
-(3.0)
-*/
-void
-redrawScreensTerminalWindowOp	(TerminalWindowRef		inTerminalWindow,
-								 void*					UNUSED_ARGUMENT(inData1),
-								 SInt32					UNUSED_ARGUMENT(inData2),
-								 void*					UNUSED_ARGUMENT(inoutResultPtr))
-{
-	HIViewRef		root = HIViewGetRoot(TerminalWindow_ReturnWindow(inTerminalWindow));
-	
-	
-	(OSStatus)HIViewSetNeedsDisplay(root, true);
-}// redrawScreensTerminalWindowOp
 
 
 /*!
