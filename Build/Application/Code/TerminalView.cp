@@ -295,9 +295,13 @@ struct My_TerminalView
 		ListenerModel_ListenerRef	preferenceMonitor;		// listener for changes to preferences that affect a particular view
 		ListenerModel_ListenerRef	bellHandler;			// listener for bell signals from the terminal screen
 		ListenerModel_ListenerRef	videoModeMonitor;		// listener for changes to the reverse-video setting
+		RgnHandle					refreshRegion;			// used to optimize redraws
+		EventLoopTimerUPP			refreshTimerUPP;		// UPP for the equivalent timer ref
+		EventLoopTimerRef			refreshTimerRef;		// timer to invoke HIViewSetNeedsDisplayInRegion() at controlled intervals
 		
 		struct
 		{
+			RgnHandle			boundsAsRegion;	// redundant precalculation of "bounds" as a region, for rendering
 			Rect				bounds;			// the rectangle of the cursor’s visible region, relative to the content pane!!!
 			Rect				ghostBounds;	// the exact view-relative rectangle of a dragged cursor’s outline region
 			MyCursorState		currentState;	// whether the cursor is visible
@@ -494,14 +498,15 @@ SInt16				setPortScreenPort					(My_TerminalViewPtr);
 void				setScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
 void				setScreenCoreColor					(My_TerminalViewPtr, UInt16, RGBColor const*);
 void				setScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
-void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, Rect*,
+void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, Rect*, RgnHandle,
 														 TerminalView_CursorType = kTerminalView_CursorTypeCurrentPreferenceValue);
 void				setUpCursorGhost					(My_TerminalViewPtr, Point);
 void				setUpScreenFontMetrics				(My_TerminalViewPtr);
 void				sortAnchors							(TerminalView_Cell&, TerminalView_Cell&, Boolean);
 void				trackTextSelection					(My_TerminalViewPtr, Point, EventModifiers, Point*, UInt32*);
 void				updateDisplay						(My_TerminalViewPtr);
-void				updateDisplayInRegion				(My_TerminalViewPtr, RgnHandle, Boolean = false);
+void				updateDisplayInRegion				(My_TerminalViewPtr, RgnHandle);
+pascal void			updateDisplayTimer					(EventLoopTimerRef, void*);
 void				useTerminalTextAttributes			(My_TerminalViewPtr, CGContextRef, TerminalTextAttributes);
 void				useTerminalTextColors				(My_TerminalViewPtr, CGContextRef, TerminalTextAttributes, Float32 = 1.0);
 void				visualBell							(TerminalViewRef);
@@ -3227,6 +3232,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 				 Preferences_ContextRef		inFormat)
 {
 	this->selfRef = REINTERPRET_CAST(this, TerminalViewRef);
+	this->screen.refreshRegion = Memory_NewRegion();
 	
 	this->encodingConfig = Preferences_NewContext(Quills::Prefs::TRANSLATION);
 	assert(nullptr != this->encodingConfig);
@@ -3286,6 +3292,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.isReverseVideo = 0;
 	this->screen.cursor.currentState = kMyCursorStateVisible;
 	this->screen.cursor.ghostState = kMyCursorStateInvisible;
+	this->screen.cursor.boundsAsRegion = Memory_NewRegion();
 	this->screen.currentRenderContext = nullptr;
 	this->text.toCurrentSearchResult = this->text.searchResults.end();
 	
@@ -3480,6 +3487,22 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		prefsResult = Preferences_ContextStartMonitoring(this->formatConfig, this->screen.preferenceMonitor,
 															kPreferences_ChangeContextBatchMode);
 	}
+	
+	// refreshes are requested on a fixed schedule because the API call
+	// may be expensive, and the system coalesces updates to within
+	// 60 frames (once per tick) anyway
+	{
+		OSStatus	error = noErr;
+		
+		
+		this->screen.refreshTimerUPP = NewEventLoopTimerUPP(updateDisplayTimer);
+		error = InstallEventLoopTimer(GetCurrentEventLoop(), kEventDurationNoWait/* time before first fire */,
+										TicksToEventTime(1)/* time between fires */,
+										this->screen.refreshTimerUPP,
+										this->selfRef/* user data */,
+										&this->screen.refreshTimerRef);
+		assert_noerr(error);
+	}
 }// My_TerminalView::initialize
 
 
@@ -3520,16 +3543,15 @@ My_TerminalView::
 															kPreferences_ChangeContextBatchMode);
 	ListenerModel_ReleaseListener(&this->screen.preferenceMonitor);
 	
-	// remove timer
+	// remove timers
 	RemoveEventLoopTimer(this->animation.timer.ref), this->animation.timer.ref = nullptr;
 	DisposeEventLoopTimerUPP(this->animation.timer.upp), this->animation.timer.upp = nullptr;
-	
-	// 3.0 - destroy any picture
-	//if (nullptr != this->backgroundHIView)
-	//{
-	//}
+	RemoveEventLoopTimer(this->screen.refreshTimerRef), this->screen.refreshTimerRef = nullptr;
+	DisposeEventLoopTimerUPP(this->screen.refreshTimerUPP), this->screen.refreshTimerUPP = nullptr;
 	
 	Memory_DisposeRegion(&this->animation.rendering.region);
+	Memory_DisposeRegion(&this->screen.cursor.boundsAsRegion);
+	Memory_DisposeRegion(&this->screen.refreshRegion);
 	ListenerModel_Dispose(&this->changeListenerModel);
 	Preferences_ReleaseContext(&this->encodingConfig);
 	Preferences_ReleaseContext(&this->formatConfig);
@@ -3588,7 +3610,7 @@ animateBlinkingItems	(EventLoopTimerRef		inTimer,
 		}
 		
 		// invalidate only the appropriate (blinking) parts of the screen
-		updateDisplayInRegion(ptr, ptr->animation.rendering.region, true/* translate back */);
+		updateDisplayInRegion(ptr, ptr->animation.rendering.region);
 		
 		//
 		// cursor
@@ -3608,8 +3630,7 @@ animateBlinkingItems	(EventLoopTimerRef		inTimer,
 		}
 		
 		// invalidate the cursor
-		RectRgn(gInvalidationScratchRegion(), &ptr->screen.cursor.bounds);
-		updateDisplayInRegion(ptr, gInvalidationScratchRegion());
+		updateDisplayInRegion(ptr, ptr->screen.cursor.boundsAsRegion);
 	}
 }// animateBlinkingItems
 
@@ -4656,8 +4677,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			if (SectRect(&inOldQuickDrawBoundaries, &inTerminalViewPtr->screen.cursor.bounds, &intersection) &&
 				(kMyCursorStateVisible == inTerminalViewPtr->screen.cursor.currentState))
 			{
-				RectRgn(gInvalidationScratchRegion(), &inTerminalViewPtr->screen.cursor.bounds);
-				updateDisplayInRegion(inTerminalViewPtr, gInvalidationScratchRegion());
+				updateDisplayInRegion(inTerminalViewPtr, inTerminalViewPtr->screen.cursor.boundsAsRegion);
 			}
 		}
 	}
@@ -6902,7 +6922,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 		
 		
 		getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
-		setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds);
+		setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
 	}
 }// handleNewViewContainerBounds
 
@@ -7530,21 +7550,19 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				
 				// invalidate the entire old cursor region (in case it is bigger than the new one)
-				RectRgn(gInvalidationScratchRegion(), &viewPtr->screen.cursor.bounds);
 				if (IsValidControlHandle(viewPtr->contentHIView))
 				{
-					updateDisplayInRegion(viewPtr, gInvalidationScratchRegion());
+					updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
 				}
 				
 				// find the new cursor region
 				getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
-				setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds);
+				setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
 				
 				// invalidate the new cursor region (in case it is bigger than the old one)
-				RectRgn(gInvalidationScratchRegion(), &viewPtr->screen.cursor.bounds);
 				if (IsValidControlHandle(viewPtr->contentHIView))
 				{
-					updateDisplayInRegion(viewPtr, gInvalidationScratchRegion());
+					updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
 				}
 			}
 			break;
@@ -9065,7 +9083,6 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 				
 				case kTerminalView_ContentPartCursor:
 					partBounds = viewPtr->screen.cursor.bounds;
-				Console_WriteValueFloat4("returning cursor bounds on demand", partBounds.left, partBounds.top, partBounds.right, partBounds.bottom);
 					break;
 				
 				case kTerminalView_ContentPartCursorGhost:
@@ -9663,8 +9680,7 @@ screenCursorChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	if (viewPtr->screen.cursor.currentState != kMyCursorStateInvisible)
 	{
 		// when moving or hiding/showing the cursor, invalidate its original rectangle
-		RectRgn(gInvalidationScratchRegion(), &viewPtr->screen.cursor.bounds);
-		updateDisplayInRegion(viewPtr, gInvalidationScratchRegion());
+		updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
 		if (inTerminalChange == kTerminal_ChangeCursorLocation)
 		{
 			// in addition, when moving, recalculate the new bounds and invalidate again
@@ -9675,9 +9691,8 @@ screenCursorChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			getCursorLocationError = Terminal_CursorGetLocation(screen, &cursorX, &cursorY);
 			//Console_WriteValuePair("notification passed new location", cursorX, cursorY);
-			setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds);
-			RectRgn(gInvalidationScratchRegion(), &viewPtr->screen.cursor.bounds);
-			updateDisplayInRegion(viewPtr, gInvalidationScratchRegion());
+			setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
+			updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
 		}
 	}
 }// screenCursorChanged
@@ -9860,8 +9875,7 @@ setCursorVisibility		(My_TerminalViewPtr		inTerminalViewPtr,
 	// redraw the cursor if necessary
 	if (renderCursor)
 	{
-		RectRgn(gInvalidationScratchRegion(), &inTerminalViewPtr->screen.cursor.bounds);
-		updateDisplayInRegion(inTerminalViewPtr, gInvalidationScratchRegion());
+		updateDisplayInRegion(inTerminalViewPtr, inTerminalViewPtr->screen.cursor.boundsAsRegion);
 	}
 }// setCursorVisibility
 
@@ -9936,7 +9950,7 @@ setFontAndSize		(My_TerminalViewPtr		inViewPtr,
 		
 		
 		getCursorLocationError = Terminal_CursorGetLocation(inViewPtr->screen.ref, &cursorX, &cursorY);
-		setUpCursorBounds(inViewPtr, cursorX, cursorY, &inViewPtr->screen.cursor.bounds);
+		setUpCursorBounds(inViewPtr, cursorX, cursorY, &inViewPtr->screen.cursor.bounds, inViewPtr->screen.cursor.boundsAsRegion);
 	}
 	
 	// resize window to preserve its dimensions in character cell units
@@ -10137,6 +10151,10 @@ of the given screen to determine the view-relative boundaries
 of the terminal cursor if it were located at the specified
 row and column in the terminal screen.
 
+It is usually a good idea to also precalculate an equivalent
+region for the rectangle; if so, pass a valid region for
+"inoutBoundsRegionOrNull".		
+
 (3.0)
 */
 void
@@ -10144,6 +10162,7 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 					 SInt16						inX,
 					 SInt16						inY,
 					 Rect*						outBoundsPtr,
+					 RgnHandle					inoutBoundsRegionOrNull,
 					 TerminalView_CursorType	inTerminalCursorType)
 {
 	enum
@@ -10205,6 +10224,11 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 		outBoundsPtr->bottom = outBoundsPtr->top + characterSizeInPixels.v;
 		break;
 	}
+	
+	if (nullptr != inoutBoundsRegionOrNull)
+	{
+		RectRgn(inoutBoundsRegionOrNull, outBoundsPtr);
+	}
 }// setUpCursorBounds
 
 
@@ -10244,12 +10268,14 @@ setUpCursorGhost	(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, inLocalMouse, newColumnRow, deltaColumn, deltaRow);
 		// cursor is visible - put it where it’s supposed to be
-		setUpCursorBounds(inTerminalViewPtr, newColumnRow.first, newColumnRow.second, &inTerminalViewPtr->screen.cursor.ghostBounds);
+		setUpCursorBounds(inTerminalViewPtr, newColumnRow.first, newColumnRow.second, &inTerminalViewPtr->screen.cursor.ghostBounds,
+							nullptr/* region */);
 	}
 	else
 	{
 		// cursor is outside the screen - do not show any cursor in the visible screen area
-		setUpCursorBounds(inTerminalViewPtr, -100/* arbitrary */, -100/* arbitrary */, &inTerminalViewPtr->screen.cursor.ghostBounds);
+		setUpCursorBounds(inTerminalViewPtr, -100/* arbitrary */, -100/* arbitrary */, &inTerminalViewPtr->screen.cursor.ghostBounds,
+							nullptr/* region */);
 	}
 }// setUpCursorGhost
 
@@ -10631,38 +10657,58 @@ Arranges for the specified portion of the terminal screen to be
 redrawn at the next opportunity.  The region should be relative
 to the main content view.
 
-IMPORTANT:	The region may be translated into other coordinate
-systems, and could be modified by this routine call.  However,
-if "inTranslateBack" is set to true, extra compute time is
-spent to restore the region to its previous coordinates.
-
 (4.0)
 */
 void
 updateDisplayInRegion	(My_TerminalViewPtr		inTerminalViewPtr,
-						 RgnHandle				inoutRegion,
-						 Boolean				inTranslateBack)
+						 RgnHandle				inoutRegion)
 {
-	HIViewRef	currentView = inTerminalViewPtr->contentHIView;
+	// it is potentially slow to call HIViewSetNeedsDisplay() here, so instead
+	// an internal region is maintained and refreshed regularly via a timer
+	UnionRgn(inTerminalViewPtr->screen.refreshRegion, inoutRegion, inTerminalViewPtr->screen.refreshRegion);
+}// updateDisplayInRegion
+
+
+/*!
+A timer that is functionally equivalent to updateDisplay() and
+similar routines, except that it passes the internal region to
+the system (whereas, all other similar methods merely add to
+the region).  The region is then cleared.
+
+This is implemented as a timer because it keeps the potentially
+expensive and useless invalidation calls from occurring more
+frequently than the system will handle them (which is, at a
+refresh rate of once per tick).
+
+(4.0)
+*/
+pascal void
+updateDisplayTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
+					 void*					inTerminalViewRef)
+{
+	TerminalViewRef				ref = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
+	My_TerminalViewAutoLocker	ptr(gTerminalViewPtrLocks(), ref);
+	HIViewRef					currentView = ptr->contentHIView;
 	
 	
 	// no need to convert for first view, input region is assumed
 	// to already be in its coordinate system
-	(OSStatus)HIViewSetNeedsDisplayInRegion(currentView, inoutRegion, true);
+	(OSStatus)HIViewSetNeedsDisplayInRegion(currentView, ptr->screen.refreshRegion, true);
 	{
-		My_RegionConverter	contentToPadding(inoutRegion, currentView, HIViewGetSuperview(currentView), inTranslateBack);
+		My_RegionConverter	contentToPadding(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
 		
 		
-		(OSStatus)HIViewSetNeedsDisplayInRegion(contentToPadding.destination, inoutRegion, true);
+		(OSStatus)HIViewSetNeedsDisplayInRegion(contentToPadding.destination, ptr->screen.refreshRegion, true);
 		currentView = HIViewGetSuperview(currentView);
 		{
-			My_RegionConverter	paddingToBackground(inoutRegion, currentView, HIViewGetSuperview(currentView), inTranslateBack);
+			My_RegionConverter	paddingToBackground(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
 			
 			
-			(OSStatus)HIViewSetNeedsDisplayInRegion(paddingToBackground.destination, inoutRegion, true);
+			(OSStatus)HIViewSetNeedsDisplayInRegion(paddingToBackground.destination, ptr->screen.refreshRegion, true);
 		}
 	}
-}// updateDisplayInRegion
+	SetEmptyRgn(ptr->screen.refreshRegion);
+}// updateDisplayTimer
 
 
 /*!

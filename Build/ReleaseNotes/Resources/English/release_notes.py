@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20091005',
     '20090930',
     '20090929',
     '20090928',
@@ -283,6 +284,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20091005': [
+        'Terminal view drawing performance has been significantly improved.',
+    ],
     '20090930': [
         'Fixed terminal view cursor to be twice the size when placed on double-height lines.',
     ],
