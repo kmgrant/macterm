@@ -42,6 +42,7 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
+#include <QuickTime/QuickTime.h>
 
 // library includes
 #include <CarbonEventHandlerWrap.template.h>
