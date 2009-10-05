@@ -10688,26 +10688,31 @@ updateDisplayTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 {
 	TerminalViewRef				ref = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
 	My_TerminalViewAutoLocker	ptr(gTerminalViewPtrLocks(), ref);
-	HIViewRef					currentView = ptr->contentHIView;
 	
 	
-	// no need to convert for first view, input region is assumed
-	// to already be in its coordinate system
-	(OSStatus)HIViewSetNeedsDisplayInRegion(currentView, ptr->screen.refreshRegion, true);
+	if (false == EmptyRgn(ptr->screen.refreshRegion))
 	{
-		My_RegionConverter	contentToPadding(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
+		HIViewRef	currentView = ptr->contentHIView;
 		
 		
-		(OSStatus)HIViewSetNeedsDisplayInRegion(contentToPadding.destination, ptr->screen.refreshRegion, true);
-		currentView = HIViewGetSuperview(currentView);
+		// no need to convert for first view, input region is assumed
+		// to already be in its coordinate system
+		(OSStatus)HIViewSetNeedsDisplayInRegion(currentView, ptr->screen.refreshRegion, true);
 		{
-			My_RegionConverter	paddingToBackground(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
+			My_RegionConverter	contentToPadding(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
 			
 			
-			(OSStatus)HIViewSetNeedsDisplayInRegion(paddingToBackground.destination, ptr->screen.refreshRegion, true);
+			(OSStatus)HIViewSetNeedsDisplayInRegion(contentToPadding.destination, ptr->screen.refreshRegion, true);
+			currentView = HIViewGetSuperview(currentView);
+			{
+				My_RegionConverter	paddingToBackground(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
+				
+				
+				(OSStatus)HIViewSetNeedsDisplayInRegion(paddingToBackground.destination, ptr->screen.refreshRegion, true);
+			}
 		}
+		SetEmptyRgn(ptr->screen.refreshRegion);
 	}
-	SetEmptyRgn(ptr->screen.refreshRegion);
 }// updateDisplayTimer
 
 
