@@ -285,6 +285,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20091005': [
+        'Fix that should prevent startup failures with Leopard on certain Macs.',
         'Terminal view drawing performance has been significantly improved.',
     ],
     '20090930': [

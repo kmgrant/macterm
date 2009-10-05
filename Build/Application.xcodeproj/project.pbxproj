@@ -17,6 +17,7 @@
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
 		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.cp */; };
+		0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A70B8AC1079C33B0013E76F /* PythonMain.cp */; };
 		0A766E0B0FB54D8E00259E56 /* kvp.py in pymactelnet-file */ = {isa = PBXBuildFile; fileRef = 0A766E0A0FB54D8E00259E56 /* kvp.py */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
 		0AB3B2670F0C1B92000559AB /* __init__.py in pymactelnet */ = {isa = PBXBuildFile; fileRef = 0AB3B2640F0C1B69000559AB /* __init__.py */; };
@@ -433,6 +434,8 @@
 		0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacHelpUtilities.h; path = Shared/Code/MacHelpUtilities.h; sourceTree = "<group>"; };
 		0A6E225906CF42F0004AC0A4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KioskPasswordDialog.nib; sourceTree = "<group>"; };
 		0A6F285B0FB3E45B00B30E69 /* PreferencesContextRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PreferencesContextRef.typedef.h; path = Application/Code/PreferencesContextRef.typedef.h; sourceTree = "<group>"; };
+		0A70B8A31079C1EB0013E76F /* PythonInvoker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = PythonInvoker; sourceTree = BUILT_PRODUCTS_DIR; };
+		0A70B8AC1079C33B0013E76F /* PythonMain.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PythonMain.cp; path = Shared/Code/PythonMain.cp; sourceTree = "<group>"; };
 		0A719D33055D95EE009B0A88 /* SpacingConstants.r */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.rez; name = SpacingConstants.r; path = Application/Resources/SpacingConstants.r; sourceTree = "<group>"; };
 		0A719D51055D963A009B0A88 /* GeneralResources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GeneralResources.h; path = Application/Resources/GeneralResources.h; sourceTree = "<group>"; };
 		0A719D53055D963A009B0A88 /* MenuResources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MenuResources.h; path = Application/Resources/MenuResources.h; sourceTree = "<group>"; };
@@ -566,6 +569,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0A70B8A11079C1EB0013E76F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0A983A9A0D11087A0054B4D2 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -861,6 +871,7 @@
 				0AC6BAD20A8C0A8B00AFF37A /* Quills.framework */,
 				0A9AF64E0AF5A50500E7DF18 /* PyMacTelnet.framework */,
 				0AC1FAF30D1992D600ED3102 /* _Quills.so */,
+				0A70B8A31079C1EB0013E76F /* PythonInvoker */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -868,6 +879,7 @@
 		0AC6BDB90A8C130400AFF37A /* Python */ = {
 			isa = PBXGroup;
 			children = (
+				0A70B8AC1079C33B0013E76F /* PythonMain.cp */,
 				0AE1F38D0AF41DA200D2DC13 /* MacTelnet */,
 				0AFF11220AF41FEE006CCA34 /* RunMacTelnet.py */,
 				0AE960170F0C13D900E75E26 /* pymactelnet */,
@@ -1112,6 +1124,22 @@
 /* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
+		0A70B8A21079C1EB0013E76F /* PythonInvoker */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0A70B8A81079C20D0013E76F /* Build configuration list for PBXNativeTarget "PythonInvoker" */;
+			buildPhases = (
+				0A70B8A01079C1EB0013E76F /* Sources */,
+				0A70B8A11079C1EB0013E76F /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PythonInvoker;
+			productName = PythonInvoker;
+			productReference = 0A70B8A31079C1EB0013E76F /* PythonInvoker */;
+			productType = "com.apple.product-type.tool";
+		};
 		0A983A9B0D11087A0054B4D2 /* PythonWrapper */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0A983AA20D1108A20054B4D2 /* Build configuration list for PBXNativeTarget "PythonWrapper" */;
@@ -1184,6 +1212,7 @@
 			targets = (
 				0AFB6A1E0E86FD26005C5A07 /* Everything */,
 				0AC6BAD10A8C0A8B00AFF37A /* Quills.framework */,
+				0A70B8A21079C1EB0013E76F /* PythonInvoker */,
 				0A983A9B0D11087A0054B4D2 /* PythonWrapper */,
 				0A9AF64D0AF5A50500E7DF18 /* PyMacTelnet.framework */,
 			);
@@ -1271,6 +1300,14 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0A70B8A01079C1EB0013E76F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0A983A990D11087A0054B4D2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1679,6 +1716,96 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		0A70B8A51079C1EB0013E76F /* ForTigerDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "";
+				INSTALL_PATH = /usr/local/bin;
+				OTHER_CFLAGS = (
+					"-g",
+					"-fpascal-strings",
+					"-v",
+					"$(SWIG_PYTHON_INCLUDE)",
+					"-IApplication/Code",
+					"-IShared/Code",
+					"-IApplication/Resources",
+					"-IApplication/Resources/English.lproj",
+					"-I$(GROWL_SDK_ROOT)/Frameworks/Growl.framework/Headers",
+					"$(SDK_PATCH_INCLUDES)",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					Python,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = PythonInvoker;
+			};
+			name = ForTigerDebug;
+		};
+		0A70B8A61079C1EB0013E76F /* ForLeopardDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "";
+				INSTALL_PATH = /usr/local/bin;
+				OTHER_CFLAGS = (
+					"-g",
+					"-fpascal-strings",
+					"-v",
+					"$(SWIG_PYTHON_INCLUDE)",
+					"-IApplication/Code",
+					"-IShared/Code",
+					"-IApplication/Resources",
+					"-IApplication/Resources/English.lproj",
+					"-I$(GROWL_SDK_ROOT)/Frameworks/Growl.framework/Headers",
+					"$(SDK_PATCH_INCLUDES)",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					Python,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = PythonInvoker;
+			};
+			name = ForLeopardDebug;
+		};
+		0A70B8A71079C1EB0013E76F /* ForPantherDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "";
+				INSTALL_PATH = /usr/local/bin;
+				OTHER_CFLAGS = (
+					"-g",
+					"-fpascal-strings",
+					"-v",
+					"$(SWIG_PYTHON_INCLUDE)",
+					"-IApplication/Code",
+					"-IShared/Code",
+					"-IApplication/Resources",
+					"-IApplication/Resources/English.lproj",
+					"-I$(GROWL_SDK_ROOT)/Frameworks/Growl.framework/Headers",
+					"$(SDK_PATCH_INCLUDES)",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					Python,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = PythonInvoker;
+			};
+			name = ForPantherDebug;
+		};
 		0A8110880D0A62BF00D5CDE2 /* ForPantherDebug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A69E5200DDBAC4100DA7874 /* Panther.xcconfig */;
@@ -2048,6 +2175,16 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0A70B8A81079C20D0013E76F /* Build configuration list for PBXNativeTarget "PythonInvoker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A70B8A51079C1EB0013E76F /* ForTigerDebug */,
+				0A70B8A61079C1EB0013E76F /* ForLeopardDebug */,
+				0A70B8A71079C1EB0013E76F /* ForPantherDebug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ForTigerDebug;
+		};
 		0A983AA20D1108A20054B4D2 /* Build configuration list for PBXNativeTarget "PythonWrapper" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
