@@ -57,6 +57,8 @@ XCODE_ENV := \
 
 # tools
 COPY=/bin/cp
+IBTOOL=/usr/bin/ibtool
+IBTOOL_COMPILE_XIB_OPTIONS=--errors --warnings --notices --output-format human-readable-text --flatten NO
 MKDIR_P=/usr/bin/install -d
 MOVE=/bin/mv
 RMDIR=/bin/rmdir
@@ -226,7 +228,13 @@ English.lproj/ServerBrowserCocoa.nib \
 English.lproj/TEKWindow.nib \
 English.lproj/TerminalWindow.nib \
 English.lproj/WindowTitleDialog.nib
-APP_RESOURCES := \
+# set to a list of "English.lproj/<xyz>" paths, where there
+# should be an <xyz>.xib source and implied <xyz>.nib output
+XIB_PREFIXES :=
+
+APP_RESOURCES_BUNDLES_GENERATED := \
+$(foreach PREFIX,$(XIB_PREFIXES),$(PREFIX).nib)
+APP_RESOURCES_COPIED := \
 $(APP_RESOURCES_FILES) \
 $(APP_RESOURCES_BUNDLES) \
 
@@ -530,8 +538,10 @@ clean-prefs-converter:
 
 .PHONY: install-resources
 install-resources: \
-$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES))
+$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_COPIED))
 	$(call banner,$@)
+	@# build any NIBs that are based on XIBs
+	$(foreach PREFIX,$(XIB_PREFIXES),$(call compile_xib_named,$(PREFIX),$(SRC_APP_RESOURCES_TOP),$(DEST_APP_RESOURCES_TOP)))
 	@# keep in sync with the matching clean rule
 	$(MKDIR_P) $(DEST_APP_RESOURCES_TOP)/English.lproj
 	$(MAKE) install-app-dot-strings
@@ -550,6 +560,7 @@ clean-resources:
 	fi
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_FILES))' | $(XARGS) $(RM)
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_BUNDLES))' | $(XARGS) $(RM) -R
+	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_BUNDLES_GENERATED))' | $(XARGS) $(RM) -R
 	$(MAKE) clean-prefs-converter
 	$(MAKE) clean-bug-reporter
 	$(MAKE) clean-app-dot-strings
@@ -579,10 +590,29 @@ $(DEST_APP_TOP)/PkgInfo: FORCE
 # Utilities
 #
 
+# compile a XIB to a NIB without using Xcode;
+# $(1) is the path to the .xib file that will be the source
+# $(2) is the path to the .nib bundle that will be created or overwritten
+define compile_xib
+	$(IBTOOL) $(IBTOOL_COMPILE_XIB_OPTIONS) '$(1)' --compile '$(2)'
+
+endef
+
+# helper for compiling based on prefix from a source directory and
+# dumping results to a destination directory
+# $(1) is the prefix (e.g. "abc" implies "abc.xib" source and "abc.nib" output)
+# $(2) is the source directory
+# $(3) is the output directory
+define compile_xib_named
+	$(call compile_xib,$(addprefix $(2)/,$(1).xib),$(addprefix $(3)/,$(1).nib))
+
+endef
+
 # print a line in huge text (on VT100 terminals)
 define banner
 	@printf "\033#3$(1)\n"
 	@printf "\033#4$(1)\n"
+	@printf "\033#5"
 
 endef
 
