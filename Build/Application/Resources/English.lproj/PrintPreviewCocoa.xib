@@ -88,7 +88,7 @@
 												<int key="NSTCFlags">1</int>
 											</object>
 											<object class="NSTextViewSharedData" key="NSSharedData">
-												<int key="NSFlags">2372</int>
+												<int key="NSFlags">2308</int>
 												<int key="NSTextCheckingTypes">0</int>
 												<nil key="NSMarkedAttributes"/>
 												<object class="NSColor" key="NSBackgroundColor" id="715107684">
@@ -148,7 +148,7 @@
 												</object>
 												<nil key="NSDefaultParagraphStyle"/>
 											</object>
-											<int key="NSTVFlags">6</int>
+											<int key="NSTVFlags">7</int>
 											<string key="NSMaxSize">{1315, 1e+07}</string>
 											<string key="NSMinize">{223, 0}</string>
 											<nil key="NSDelegate"/>

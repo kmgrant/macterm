@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20091015',
     '20091014',
     '20091005',
     '20090930',
@@ -285,6 +286,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20091015': [
+        'Fixed a problem that could cause the print preview to be erased.',
+    ],
     '20091014': [
         'Fixed certain printing features to render more than one line to the printer!',
         'Printing is now preceded by a special dialog for influencing text layout.',
