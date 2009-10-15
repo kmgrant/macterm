@@ -30,6 +30,8 @@ __version__ = '4.0.0'
 from pymactelnet.utilities import \
     slash_free_path as _slash_free_path, \
     sort_dict as _sort_dict
+import urlparse
+#import urllib.parse as urlparse # for Python 3.0
 
 def _host_port(netloc):
     """_host_port(netloc) -> (host, port)
@@ -135,7 +137,6 @@ def file(url):
     
     """
     result = dict()
-    import urlparse
     allow_pound_notation = False
     (scheme, netloc, path, params, query, fragment) = \
         urlparse.urlparse(url, 'ftp', allow_pound_notation)
@@ -166,7 +167,6 @@ def ftp(url):
     
     """
     result = dict()
-    import urlparse
     allow_pound_notation = False
     (scheme, netloc, path, params, query, fragment) = \
         urlparse.urlparse(url, 'ftp', allow_pound_notation)
@@ -206,7 +206,7 @@ def sftp(url):
     
     """
     result = dict()
-    # the Python urlparse module does not support sftp:// because it
+    # the Python parsing module does not support sftp:// because it
     # is not fully specified; so, parse manually
     if not url.startswith('sftp://'): raise ValueError("not an sftp URL")
     netloc = _slash_free_path(url.replace('sftp:', '', 1))
@@ -245,7 +245,7 @@ def ssh(url):
     
     """
     result = dict()
-    # the Python urlparse module does not support ssh:// because it
+    # the Python parsing module does not support ssh:// because it
     # is not fully specified; so, parse manually
     if not url.startswith('ssh://'): raise ValueError("not an ssh URL")
     netloc = _slash_free_path(url.replace('ssh:', '', 1))
@@ -277,7 +277,6 @@ def telnet(url):
     
     """
     result = dict()
-    import urlparse
     allow_pound_notation = False
     (scheme, netloc, path, params, query, fragment) = \
         urlparse.urlparse(url, 'telnet', allow_pound_notation)
@@ -310,7 +309,6 @@ def x_man_page(url):
     
     """
     result = dict()
-    import urlparse
     allow_pound_notation = False
     (scheme, netloc, path, params, query, fragment) = \
         urlparse.urlparse(url, 'x-man-page', allow_pound_notation)
