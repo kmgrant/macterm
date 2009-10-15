@@ -83,6 +83,7 @@ extern "C"
 #include "MenuBar.h"
 #include "Network.h"
 #include "PrefsWindow.h"
+#include "PrintTerminal.h"
 #include "RasterGraphicsScreen.h"
 #include "RecordAE.h"
 #include "Session.h"
@@ -422,55 +423,51 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandPrint:
 			// print the selection using the print dialog
-			UniversalPrint_SetMode(kUniversalPrint_ModeNormal);
-			TelnetPrinting_PrintSelection();
-			break;
-		
-		case kCommandPrintOne:
-			// print the selection immediately, assuming
-			// only one copy is desired and the previous
-			// print parameters will be used
-			UniversalPrint_SetMode(kUniversalPrint_ModeOneCopy);
-			TelnetPrinting_PrintSelection();
+			{
+				CFStringRef			jobTitle = nullptr;
+				UIStrings_Result	stringResult = UIStrings_Copy(kUIStrings_TerminalPrintSelectionJobTitle,
+																	jobTitle);
+				
+				
+				if (nullptr != jobTitle)
+				{
+					PrintTerminal_JobRef	printJob = PrintTerminal_NewJobFromSelectedText
+														(activeView, jobTitle);
+					
+					
+					if (nullptr != printJob)
+					{
+						(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
+												(printJob, TerminalWindow_ReturnWindow(frontTerminalWindow));
+						PrintTerminal_ReleaseJob(&printJob);
+					}
+					CFRelease(jobTitle), jobTitle = nullptr;
+				}
+			}
 			break;
 		
 		case kCommandPrintScreen:
 			{
-				TerminalView_CellRange	startEnd;
-				TerminalView_CellRange	oldStartEnd;
-				Boolean					isRectangular = false;
-				Boolean					isSelection = TerminalView_TextSelectionExists(activeView);
+				CFStringRef			jobTitle = nullptr;
+				UIStrings_Result	stringResult = UIStrings_Copy(kUIStrings_TerminalPrintScreenJobTitle,
+																	jobTitle);
 				
 				
-				// preserve any existing selection
-				if (isSelection)
+				if (nullptr != jobTitle)
 				{
-					TerminalView_GetSelectedTextAsVirtualRange(activeView, oldStartEnd);
-					isRectangular = TerminalView_TextSelectionIsRectangular(activeView);
+					PrintTerminal_JobRef	printJob = PrintTerminal_NewJobFromVisibleScreen
+														(activeView, activeScreen, jobTitle);
+					
+					
+					if (nullptr != printJob)
+					{
+						(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
+												(printJob, TerminalWindow_ReturnWindow(frontTerminalWindow));
+						PrintTerminal_ReleaseJob(&printJob);
+					}
+					CFRelease(jobTitle), jobTitle = nullptr;
 				}
-				else
-				{
-					oldStartEnd = std::make_pair(std::make_pair(0, 0), std::make_pair(0, 0));
-				}
-				
-				// select the entire visible screen and print it
-				startEnd.first = std::make_pair(0, 0);
-				startEnd.second = std::make_pair(Terminal_ReturnColumnCount(activeScreen),
-													Terminal_ReturnRowCount(activeScreen));
-				TerminalView_SelectVirtualRange(activeView, startEnd);
-				UniversalPrint_SetMode(kUniversalPrint_ModeNormal);
-				TelnetPrinting_PrintSelection();
-				
-				// clear the full screen selection, restoring any previous selection
-				TerminalView_MakeSelectionsRectangular(activeView, isRectangular);
-				TerminalView_SelectVirtualRange(activeView, oldStartEnd);
 			}
-			break;
-		
-		case kCommandPageSetup:
-			// work with a saved reference to a printing record in the preferences file
-			//TelnetPrinting_PageSetup(AppResources_ReturnResFile(kAppResources_FileIDPreferences));
-			if (isSession) Session_DisplayPrintPageSetupDialog(frontSession);
 			break;
 		
 		case kHICommandQuit:

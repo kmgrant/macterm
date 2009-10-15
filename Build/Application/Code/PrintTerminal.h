@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -40,6 +40,7 @@
 #include <CoreServices/CoreServices.h>
 
 // MacTelnet includes
+#include "TerminalScreenRef.typedef.h"
 #include "TerminalViewRef.typedef.h"
 
 
@@ -47,25 +48,51 @@
 #pragma mark Constants
 
 /*!
-Meta-characters allow special information to be encoded
-into an otherwise-plain-text stream of data.  Spooling
-a meta-character is equivalent to adding an instruction
-for rendering whatever follows.
-
-(3.1)
+Possible return values from certain APIs in this module.
 */
-typedef UInt8 PrintTerminal_MetaChar;
-enum
+enum PrintTerminal_Result
 {
-	kPrintTerminal_MetaCharBeginBold		= 0x01,		//!< Make font weight bold from now on.
-	kPrintTerminal_MetaCharEndFormat		= 0x02		//!< Make font style plain from now on.
+	kPrintTerminal_ResultOK = 0,				//!< no error
+	kPrintTerminal_ResultInvalidID = -1,		//!< a given "PrintTerminal_JobRef" does not correspond to any known object
+	kPrintTerminal_ResultParameterError = -2,	//!< invalid input (e.g. a null pointer)
 };
 
 #pragma mark Types
 
-typedef struct PrintTerminal_OpaqueJob*		PrintTerminal_CaptureRef;
-
 typedef struct PrintTerminal_OpaqueJob*		PrintTerminal_JobRef;
+
+#ifdef __OBJC__
+
+/*!
+Implements the Print Preview dialog.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrintTerminal_PreviewPanelController : NSWindowController
+{
+@private
+	IBOutlet NSTextView*	previewPane;
+	NSString*				previewTitle;
+	NSString*				previewText;
+	NSFont*					previewFont;
+	NSPrintInfo*			pageSetup;
+	NSString*				paperInfo;
+}
+// the following MUST match what is in "PrintPreviewCocoa.xib"
+- (IBAction)	cancel:(id)sender;
+- (IBAction)	help:(id)sender;
+- (IBAction)	pageSetup:(id)sender;
+- (IBAction)	print:(id)sender;
+// accessors
+- (NSString*)	paperInfo;
+- (void)		setPaperInfo:(NSString*)aString; // binding
+// new methods
+- (void)		beginPreviewSheetModalForWindow:(NSWindow*)aWindow;
+@end
+
+#endif // __OBJC__
 
 
 
@@ -74,54 +101,27 @@ typedef struct PrintTerminal_OpaqueJob*		PrintTerminal_JobRef;
 //!\name Creating and Destroying Objects
 //@{
 
-PrintTerminal_CaptureRef
-	PrintTerminal_NewCapture				();
+PrintTerminal_JobRef
+	PrintTerminal_NewJobFromSelectedText	(TerminalViewRef			inView,
+											 CFStringRef				inJobName,
+											 Boolean					inDefaultToLandscape = false);
 
 PrintTerminal_JobRef
-	PrintTerminal_NewJobFromCapture			(PrintTerminal_CaptureRef	inCapture);
-
-PrintTerminal_JobRef
-	PrintTerminal_NewJobFromSelectedText	(TerminalViewRef			inView);
-
-PrintTerminal_JobRef
-	PrintTerminal_NewJobFromVisibleScreen	(TerminalViewRef			inView);
+	PrintTerminal_NewJobFromVisibleScreen	(TerminalViewRef			inView,
+											 TerminalScreenRef			inViewBuffer,
+											 CFStringRef				inJobName);
 
 void
-	PrintTerminal_DisposeCapture			(PrintTerminal_CaptureRef*	inoutCapturePtr);
-
-void
-	PrintTerminal_DisposeJob				(PrintTerminal_JobRef*		inoutJobPtr);
-
-//@}
-
-//!\name Streaming Data
-//@{
-
-void
-	PrintTerminal_CaptureData				(PrintTerminal_CaptureRef	inCapture,
-											 UInt8 const*				inBuffer,
-											 SInt32*					inoutCounterPtr);
-
-void
-	PrintTerminal_CaptureMetaCharacter		(PrintTerminal_CaptureRef	inCapture,
-											 PrintTerminal_MetaChar		inSpecialInstruction);
+	PrintTerminal_ReleaseJob				(PrintTerminal_JobRef*		inoutJobPtr);
 
 //@}
 
 //!\name Printing
 //@{
 
-void
+PrintTerminal_Result
 	PrintTerminal_JobSendToPrinter			(PrintTerminal_JobRef		inJob,
-											 Boolean					inWithUserInterface);
-
-void
-	PrintTerminal_JobSetNumberOfColumns		(PrintTerminal_JobRef		inJob,
-											 UInt16						inNumberOfColumns);
-
-void
-	PrintTerminal_JobSetTitle				(PrintTerminal_JobRef		inJob,
-											 CFStringRef				inTitle);
+											 HIWindowRef				inParentWindowOrNull);
 
 //@}
 

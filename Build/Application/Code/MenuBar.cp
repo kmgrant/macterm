@@ -1356,9 +1356,7 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandCaptureToFile, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandEndCaptureToFile, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPrint, stateTrackerPrintingItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPrintOne, stateTrackerPrintingItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPrintScreen, stateTrackerPrintingItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPageSetup, stateTrackerPrintingItems);
 	
 	// Edit
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandUndo, stateTrackerStandardEditItems);
@@ -3187,9 +3185,7 @@ stateTrackerPrintingItems	(UInt32				inCommandID,
 	switch (inCommandID)
 	{
 	case kCommandPrint:
-	case kCommandPrintOne:
 	case kCommandPrintScreen:
-	case kCommandPageSetup:
 		{
 			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());
 			
@@ -3198,8 +3194,7 @@ stateTrackerPrintingItems	(UInt32				inCommandID,
 			if (result)
 			{
 				// for selection-dependent Print items, make sure text is selected
-				if ((kCommandPrint == inCommandID) ||
-					(kCommandPrintOne == inCommandID))
+				if (kCommandPrint == inCommandID)
 				{
 					TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
 					

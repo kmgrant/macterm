@@ -39,6 +39,9 @@
 #ifndef __STREAMCAPTURE__
 #define __STREAMCAPTURE__
 
+// MacTelnet includes
+#include "Session.h"
+
 
 
 #pragma mark Constants

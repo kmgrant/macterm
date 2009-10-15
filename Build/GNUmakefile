@@ -230,8 +230,8 @@ English.lproj/TerminalWindow.nib \
 English.lproj/WindowTitleDialog.nib
 # set to a list of "English.lproj/<xyz>" paths, where there
 # should be an <xyz>.xib source and implied <xyz>.nib output
-XIB_PREFIXES :=
-
+XIB_PREFIXES := \
+English.lproj/PrintPreviewCocoa
 APP_RESOURCES_BUNDLES_GENERATED := \
 $(foreach PREFIX,$(XIB_PREFIXES),$(PREFIX).nib)
 APP_RESOURCES_COPIED := \

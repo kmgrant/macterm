@@ -671,9 +671,9 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 													CFSTR("kUIStrings_ContextualMenuPasteText"));
 		break;
 	
-	case kUIStrings_ContextualMenuPrintSelectionNow:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Print Selection Now"), CFSTR("ContextualMenus"),
-													CFSTR("kUIStrings_ContextualMenuPrintSelectionNow"));
+	case kUIStrings_ContextualMenuPrintSelectedText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Print Selected Text..."), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuPrintSelectedText"));
 		break;
 	
 	case kUIStrings_ContextualMenuRenameThisWindow:
@@ -1523,6 +1523,16 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 	case kUIStrings_TerminalNewCommandsKeyCharacter:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("N"), CFSTR("Terminal"),
 													CFSTR("kUIStrings_TerminalNewCommandsKeyCharacter; used for some menu command keys, this should be only one Unicode character"));
+		break;
+	
+	case kUIStrings_TerminalPrintScreenJobTitle:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Print Screen: MacTelnet"), CFSTR("Terminal"),
+													CFSTR("kUIStrings_TerminalPrintScreenJobTitle"));
+		break;
+	
+	case kUIStrings_TerminalPrintSelectionJobTitle:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Print Selection: MacTelnet"), CFSTR("Terminal"),
+													CFSTR("kUIStrings_TerminalPrintSelectionJobTitle"));
 		break;
 	
 	case kUIStrings_TerminalResumeOutput:

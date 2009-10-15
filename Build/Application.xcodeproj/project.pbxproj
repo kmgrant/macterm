@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		0A06274B0FB3AF3C00EBC8BB /* __init__.py in pymactelnet-file */ = {isa = PBXBuildFile; fileRef = 0A06274A0FB3AF3C00EBC8BB /* __init__.py */; };
 		0A0627500FB3AF4900EBC8BB /* __init__.py in pymactelnet-url */ = {isa = PBXBuildFile; fileRef = 0A06274F0FB3AF4900EBC8BB /* __init__.py */; };
-		0A1A068A0ABA6241002C95D7 /* PrintTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.cp */; };
+		0A1A068A0ABA6241002C95D7 /* PrintTerminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */; };
 		0A2890DD0D68017D0017D99E /* GenericPanelTabs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */; };
 		0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A35F5130DEDD9E300F16B03 /* CommandLine.mm */; };
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
@@ -209,7 +209,7 @@
 		0A11F54D059FE55D00A565C3 /* IconForPrefPanelMacros.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelMacros.icns; path = Application/Resources/IconForPrefPanelMacros.icns; sourceTree = "<group>"; };
 		0A1427340DA5D4270028510F /* VectorInterpreterID.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreterID.typedef.h; path = Application/Code/VectorInterpreterID.typedef.h; sourceTree = "<group>"; };
 		0A1A06860ABA6236002C95D7 /* PrintTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrintTerminal.h; path = Application/Code/PrintTerminal.h; sourceTree = "<group>"; };
-		0A1A06890ABA6241002C95D7 /* PrintTerminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrintTerminal.cp; path = Application/Code/PrintTerminal.cp; sourceTree = "<group>"; };
+		0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrintTerminal.mm; path = Application/Code/PrintTerminal.mm; sourceTree = "<group>"; };
 		0A1BCD8905CA2B21005CF1E5 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/TerminalWindow.nib; sourceTree = "<group>"; };
 		0A1BCD9D05CA34FF005CF1E5 /* IconForSessionStatusActive.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSessionStatusActive.icns; path = Application/Resources/IconForSessionStatusActive.icns; sourceTree = "<group>"; };
 		0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSessionStatusDead.icns; path = Application/Resources/IconForSessionStatusDead.icns; sourceTree = "<group>"; };
@@ -439,6 +439,7 @@
 		0A719D33055D95EE009B0A88 /* SpacingConstants.r */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.rez; name = SpacingConstants.r; path = Application/Resources/SpacingConstants.r; sourceTree = "<group>"; };
 		0A719D51055D963A009B0A88 /* GeneralResources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GeneralResources.h; path = Application/Resources/GeneralResources.h; sourceTree = "<group>"; };
 		0A719D53055D963A009B0A88 /* MenuResources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MenuResources.h; path = Application/Resources/MenuResources.h; sourceTree = "<group>"; };
+		0A7236F510841FAB00BB36C2 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrintPreviewCocoa.xib; sourceTree = "<group>"; };
 		0A7530D20580470F00BCC5E4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/MenuForDockIcon.nib; sourceTree = "<group>"; };
 		0A766E0A0FB54D8E00259E56 /* kvp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = kvp.py; path = Application/PythonCode/pymactelnet/file/kvp.py; sourceTree = "<group>"; };
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
@@ -744,7 +745,7 @@
 				0A46FE00055432A400ACDF3A /* NewSessionDialog.cp */,
 				0A46FE01055432A400ACDF3A /* Panel.cp */,
 				0AFF137E0AF421AD006CCA34 /* Preferences */,
-				0A1A06890ABA6241002C95D7 /* PrintTerminal.cp */,
+				0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */,
 				0A46FE0A055432A400ACDF3A /* ProgressDialog.cp */,
 				0A46FE0D055432A400ACDF3A /* RasterGraphicsKernel.cp */,
 				0A46FE0E055432A400ACDF3A /* RasterGraphicsScreen.cp */,
@@ -940,6 +941,7 @@
 		0AFF112F0AF4202B006CCA34 /* NIBs */ = {
 			isa = PBXGroup;
 			children = (
+				0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */,
 				0ABD01D6106800F700BBB87A /* DebugInterfaceCocoa.nib */,
 				0A7530D10580470F00BCC5E4 /* MenuForDockIcon.nib */,
 				0AC57BC40B1AE73B000F0250 /* MainMenus.nib */,
@@ -1417,7 +1419,7 @@
 				0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */,
 				0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */,
 				0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */,
-				0A1A068A0ABA6241002C95D7 /* PrintTerminal.cp in Sources */,
+				0A1A068A0ABA6241002C95D7 /* PrintTerminal.mm in Sources */,
 				0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */,
 				0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */,
 				0ACA57D30AEADDE800B5F482 /* GenericDialog.cp in Sources */,
@@ -1551,6 +1553,14 @@
 				0A6E225906CF42F0004AC0A4 /* English */,
 			);
 			name = KioskPasswordDialog.nib;
+			sourceTree = "<group>";
+		};
+		0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A7236F510841FAB00BB36C2 /* English */,
+			);
+			name = PrintPreviewCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A7530D10580470F00BCC5E4 /* MenuForDockIcon.nib */ = {

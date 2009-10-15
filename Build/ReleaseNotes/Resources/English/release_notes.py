@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20091014',
     '20091005',
     '20090930',
     '20090929',
@@ -284,6 +285,14 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20091014': [
+        'Fixed certain printing features to render more than one line to the printer!',
+        'Printing is now preceded by a special dialog for influencing text layout.',
+        'Printing now has intelligent defaults for portrait/landscape, text scaling, and font, based on the source terminal.',
+        'The "Page Setup..." menu command has been removed, as it is consolidated into the new layout dialog.',
+        'The "Print One Copy" menu command has been removed.',
+        'Terminal view contextual menus have new printing commands.',
+    ],
     '20091005': [
         'Fix that should prevent startup failures with Leopard on certain Macs.',
         'Terminal view drawing performance has been significantly improved.',

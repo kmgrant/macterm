@@ -881,7 +881,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		MenuBar_SetUpMenuItemState(kCommandCopy);
 		MenuBar_SetUpMenuItemState(kCommandCopyTable);
 		MenuBar_SetUpMenuItemState(kCommandSaveText);
-		MenuBar_SetUpMenuItemState(kCommandPrintOne);
+		MenuBar_SetUpMenuItemState(kCommandPrint);
 		MenuBar_SetUpMenuItemState(kCommandSpeakSelectedText);
 		
 		// URL commands
@@ -942,10 +942,10 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 			ContextSensitiveMenu_NewItemGroup(inMenu);
 			
 			ContextSensitiveMenu_InitItem(&itemInfo);
-			itemInfo.commandID = kCommandPrintOne;
-			if (UIStrings_Copy(kUIStrings_ContextualMenuPrintSelectionNow, itemInfo.commandText).ok())
+			itemInfo.commandID = kCommandPrint;
+			if (UIStrings_Copy(kUIStrings_ContextualMenuPrintSelectedText, itemInfo.commandText).ok())
 			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Print Selection Now”
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Print Selected Text…”
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 			
@@ -971,6 +971,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		MenuBar_SetUpMenuItemState(kCommandSetScreenSize);
 		MenuBar_SetUpMenuItemState(kCommandFormat);
 		MenuBar_SetUpMenuItemState(kCommandSetKeys);
+		MenuBar_SetUpMenuItemState(kCommandPrintScreen);
 		MenuBar_SetUpMenuItemState(kCommandChangeWindowTitle);
 		
 		// text-editing-related menu items
@@ -1055,6 +1056,17 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 			if (UIStrings_Copy(kUIStrings_ContextualMenuSpecialKeySequences, itemInfo.commandText).ok())
 			{
 				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Special Key Sequences…”
+				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
+			}
+		}
+		
+		ContextSensitiveMenu_InitItem(&itemInfo);
+		itemInfo.commandID = kCommandPrintScreen;
+		if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+		{
+			if (Commands_CopyCommandName(itemInfo.commandID, kCommands_NameTypeDefault, itemInfo.commandText))
+			{
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Print Screen…”
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 		}

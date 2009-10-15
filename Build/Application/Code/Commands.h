@@ -135,9 +135,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSaveText						'SvTx'
 #define kCommandCaptureToFile					'Capt'
 #define kCommandEndCaptureToFile				'CapE'
-#define kCommandPageSetup						kHICommandPageSetup
 #define kCommandPrint							kHICommandPrint
-#define kCommandPrintOne						'Pr1C'
 #define kCommandPrintScreen						'PrSc'
 
 // Edit menu
