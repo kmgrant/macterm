@@ -1332,13 +1332,13 @@ This is a visual adornment only; you typically use this when
 windows are grouped and you want all tabs to be visible at
 the same time.
 
-WARNING:	The Mac OS X window manager will not allow a
-			drawer to be cut off, and it solves this problem
-			by resizing the *parent* (terminal) window to
-			make room for the tab.  If you do not want this
-			behavior, you need to check in advance how large
-			the window is, and what a reasonable tab placement
-			would be.
+WARNING:	Prior to Snow Leopard, the Mac OS X window manager
+			will not allow a drawer to be cut off, and it solves
+			this problem by resizing the *parent* (terminal)
+			window to make room for the tab.  If you do not want
+			this behavior, you need to check in advance how
+			large the window is, and what a reasonable tab
+			placement would be.
 
 Note that since this affects only a single window, this is
 not the proper API for general tab manipulation; it is a
@@ -1372,40 +1372,9 @@ TerminalWindow_SetTabPosition	(TerminalWindowRef	inRef,
 	else
 	{
 		ptr->tabOffsetInPixels = inOffsetFromStartingPointInPixels;
-		if (false == ptr->tab.exists())
-		{
-			result = kTerminalWindow_ResultGenericFailure;
-		}
-		else
-		{
-			// drawers are managed in terms of start and end offsets as opposed to
-			// a “width”, so some roundabout calculations are done to find offsets
-			HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
-			HIWindowRef		parentWindow = ptr->window;
-			Rect			currentTabBounds;
-			Rect			currentParentBounds;
-			OSStatus		error = noErr;
-			float			leadingOffset = kWindowOffsetUnchanged;
-			float			trailingOffset = kWindowOffsetUnchanged;
-			
-			
-			error = GetWindowBounds(tabWindow, kWindowStructureRgn, &currentTabBounds);
-			assert_noerr(error);
-			error = GetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
-			assert_noerr(error);
-			leadingOffset = (float)ptr->tabOffsetInPixels;
-			// it does not appear necessary to set the trailing offset...
-			//trailingOffset = (float)(currentParentBounds.right - currentParentBounds.left -
-			//							(currentTabBounds.right - currentTabBounds.left) - leadingOffset);
-			
-			// force a “resize” to cause the tab position to update immediately
-			// (TEMPORARY: is there a better way to do this?)
-			++currentParentBounds.right;
-			SetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
-			error = SetDrawerOffsets(tabWindow, leadingOffset, trailingOffset);
-			--currentParentBounds.right;
-			SetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
-		}
+		
+		// “setting the width” has the side effect of putting the tab in the right place
+		result = TerminalWindow_SetTabWidth(inRef, ptr->tabWidthInPixels);
 	}
 	
 	return result;
@@ -1493,9 +1462,9 @@ TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
 			
 			// force a “resize” to cause the tab position to update immediately
 			// (TEMPORARY: is there a better way to do this?)
+			error = SetDrawerOffsets(tabWindow, leadingOffset, trailingOffset);
 			++currentParentBounds.right;
 			SetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
-			error = SetDrawerOffsets(tabWindow, leadingOffset, trailingOffset);
 			--currentParentBounds.right;
 			SetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
 		}

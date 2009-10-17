@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20091016',
     '20091015',
     '20091014',
     '20091005',
@@ -286,6 +287,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20091016': [
+        'Fixed an overlapping-tab problem that could occur on Snow Leopard.',
+    ],
     '20091015': [
         'Fixed a problem that could cause the print preview to be erased.',
     ],
