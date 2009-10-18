@@ -77,7 +77,6 @@
 #include "GenericThreads.h"
 #include "NetEvents.h"
 #include "Preferences.h"
-#include "SessionFactory.h"
 #include "Terminal.h"
 #include "TerminalBackground.h"
 #include "TerminalView.h"

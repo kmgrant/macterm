@@ -43,7 +43,6 @@
 #include <MemoryBlocks.h>
 
 // MacTelnet includes
-#include "AppleEventUtilities.h"
 #include "ConstantsRegistry.h"
 #include "InstallAE.h"
 #include "RequiredAE.h"

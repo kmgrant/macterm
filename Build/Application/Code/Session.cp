@@ -74,7 +74,6 @@
 
 // MacTelnet includes
 #include "AppResources.h"
-#include "BasicTypesAE.h"
 #include "Clipboard.h"
 #include "Commands.h"
 #include "DialogUtilities.h"
@@ -86,7 +85,6 @@
 #include "QuillsSession.h"
 #include "RasterGraphicsKernel.h"
 #include "RasterGraphicsScreen.h"
-#include "RecordAE.h"
 #include "Session.h"
 #include "SessionDescription.h"
 #include "SessionFactory.h"

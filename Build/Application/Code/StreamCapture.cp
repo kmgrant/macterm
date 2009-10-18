@@ -44,7 +44,6 @@
 #include <SoundSystem.h>
 
 // MacTelnet includes
-#include "Folder.h"
 #include "Preferences.h"
 #include "Session.h"
 #include "StreamCapture.h"

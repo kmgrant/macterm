@@ -57,7 +57,6 @@
 #include "AppleEventUtilities.h"
 #include "AppResources.h"
 #include "BasicTypesAE.h"
-#include "Clipboard.h"
 #include "Commands.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
@@ -71,7 +70,6 @@
 #include "Session.h"
 #include "SessionDescription.h"
 #include "SessionFactory.h"
-#include "TerminalView.h"
 #include "Terminology.h"
 #include "UIStrings.h"
 

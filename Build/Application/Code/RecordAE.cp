@@ -41,7 +41,6 @@
 
 // MacTelnet includes
 #include "AppleEventUtilities.h"
-#include "BasicTypesAE.h"
 #include "ConstantsRegistry.h"
 #include "RecordAE.h"
 #include "Terminology.h"
