@@ -68,6 +68,7 @@
 #include "MacroManager.h"
 #include "MenuBar.h"
 #include "Preferences.h"
+#include "PrintTerminal.h"
 #include "ProgressDialog.h"
 #include "RasterGraphicsScreen.h"
 #include "Session.h"
@@ -3190,7 +3191,7 @@ stateTrackerPrintingItems	(UInt32				inCommandID,
 			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());
 			
 			
-			result = (nullptr != terminalWindow);
+			result = (PrintTerminal_IsPrintingSupported() && (nullptr != terminalWindow));
 			if (result)
 			{
 				// for selection-dependent Print items, make sure text is selected
@@ -3201,11 +3202,6 @@ stateTrackerPrintingItems	(UInt32				inCommandID,
 					
 					result = TerminalView_TextSelectionExists(view);
 				}
-			}
-			else if (kCommandPrint == inCommandID)
-			{
-				// TEK graphics can also be printed
-				result = (WIN_TEK == GetWindowKind(EventLoop_ReturnRealFrontWindow()));
 			}
 		}
 		break;

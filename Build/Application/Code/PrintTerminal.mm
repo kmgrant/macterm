@@ -45,8 +45,12 @@
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
+// library includes
+#include <FlagManager.h>
+
 // MacTelnet includes
 #include "Console.h"
+#include "ConstantsRegistry.h"
 #include "HelpSystem.h"
 #include "PrintTerminal.h"
 #include "Terminal.h"
@@ -198,6 +202,34 @@ PrintTerminal_ReleaseJob	(PrintTerminal_JobRef*		inoutRefPtr)
 	[ptr release];
 	*inoutRefPtr = nullptr;
 }// ReleaseJob
+
+
+/*!
+Returns true only if printing is supported.  This should be
+used to hide print-related commands in user interfaces, if
+printing is not possible.
+
+There is a known problem on Panther, where Cocoa view printing
+does not work in a Carbon/Cocoa hybrid; it “almost” works,
+but then becomes stuck at the progress bar (er, thanks Apple).
+So until the entire application transitions to pure Cocoa,
+this routine will return false on 10.3, and otherwise returns
+true.
+
+(4.0)
+*/
+Boolean
+PrintTerminal_IsPrintingSupported ()
+{
+	Boolean		result = false;
+	
+	
+	if (FlagManager_Test(kFlagOS10_4API))
+	{
+		result = true;
+	}
+	return result;
+}// IsPrintingSupported
 
 
 /*!

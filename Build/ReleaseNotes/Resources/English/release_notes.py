@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20091019',
     '20091016',
     '20091015',
     '20091014',
@@ -287,6 +288,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20091019': [
+        'Disabled all printing commands on Panther, because an unfortunate bug in that OS prevents Cocoa/Carbon hybrid applications from sending jobs to a printer without hanging.',
+    ],
     '20091016': [
         'Fixed an overlapping-tab problem that could occur on Snow Leopard.',
     ],
