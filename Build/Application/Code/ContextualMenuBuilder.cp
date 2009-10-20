@@ -943,10 +943,13 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 			
 			ContextSensitiveMenu_InitItem(&itemInfo);
 			itemInfo.commandID = kCommandPrint;
-			if (UIStrings_Copy(kUIStrings_ContextualMenuPrintSelectedText, itemInfo.commandText).ok())
+			if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
 			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Print Selected Text…”
-				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
+				if (UIStrings_Copy(kUIStrings_ContextualMenuPrintSelectedText, itemInfo.commandText).ok())
+				{
+					(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Print Selected Text…”
+					CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
+				}
 			}
 			
 			ContextSensitiveMenu_InitItem(&itemInfo);
