@@ -3,7 +3,7 @@
 	FileSelectionDialogs.cp
 	
 	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -32,7 +32,6 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
-#include <AppleEventUtilities.h>
 #include <Embedding.h>
 #include <FileSelectionDialogs.h>
 #include <Localization.h>
@@ -42,9 +41,11 @@
 
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static OSStatus		getAEDescData			(AEDesc const*, DescType*, void*, ByteCount, ByteCount*);
-static void			setUpWTitleProcessName	(NavDialogOptions*, ConstStringPtr);
+void		setUpWTitleProcessName	(NavDialogOptions*, ConstStringPtr);
+
+}// anonymous namespace
 
 
 
@@ -205,174 +206,6 @@ FileSelectionDialogs_CreateOrFindUserSaveFile	(NavReplyRecord const&	inReply,
 
 
 /*!
-This routine is useful when you need to ask the
-user to select a directory.
-
-(1.0)
-*/
-OSStatus
-FileSelectionDialogs_GetDirectory	(ConstStr255Param		inPromptMessage,
-									 ConstStr255Param		inDialogTitle,
-									 UInt32					inPrefKey,
-									 NavDialogOptionFlags	inFlags,
-									 NavEventProcPtr		inEventProc,
-									 FSSpec*				outFileSpecPtr)
-{	
-	NavReplyRecord		theReply;
-	NavDialogOptions	dialogOptions;
-	OSStatus			result = noErr;
-	NavEventUPP			eventUPP = NewNavEventUPP(inEventProc);
-	
-	
-	result = NavGetDefaultDialogOptions(&dialogOptions);
-	dialogOptions.dialogOptionFlags = 0;
-	dialogOptions.dialogOptionFlags |= inFlags;
-	
-	PLstrcpy(dialogOptions.message, inPromptMessage);
-	setUpWTitleProcessName(&dialogOptions, inDialogTitle);
-	dialogOptions.preferenceKey = inPrefKey;
-	
-	// display “choose directory” dialog
-	Embedding_DeactivateFrontmostWindow();
-	result = NavChooseFolder(nullptr, &theReply, &dialogOptions, eventUPP,
-								nullptr, (NavCallBackUserData)nullptr);
-	Embedding_RestoreFrontmostWindow();
-	DisposeNavEventUPP(eventUPP), eventUPP = nullptr;;
-	
-	// NOTE: for some reason, *aliases* to directories result in the PARENT folder...how is this happening?...
-	if ((theReply.validRecord) && (noErr == result))
-	{
-		// grab the target FSSpec from the AEDesc
-		AEDesc		resultDesc;
-		
-		
-		result = AECoerceDesc(&(theReply.selection), typeFSS, &resultDesc);
-		if (noErr == result)
-		{
-			result = getAEDescData(&resultDesc, nullptr/* result type */, outFileSpecPtr, sizeof(FSSpec),
-									nullptr/* actual size */);
-		}
-		AEDisposeDesc(&resultDesc);
-		
-		if (noErr == result) result = NavDisposeReply(&theReply);
-		else (OSStatus)NavDisposeReply(&theReply); // preserves previous error
-	}
-	return result;
-}// GetDirectory
-
-
-/*!
-Use this method to get access to zero or more
-file specification records that are embedded
-in an Apple Event description.
-
-(1.0)
-*/
-OSStatus
-FileSelectionDialogs_GetFSSpecArrayFromAEDesc	(AEDesc const*		inAEDescPtr,
-												 void*				outFSSpecArray,
-												 long*				inoutFSSpecArrayLengthPtr)
-{
-	FSSpecArrayPtr	fileArray = (FSSpecArrayPtr)outFSSpecArray;
-	OSStatus		result = noErr;
-	
-	
-	fileArray = (FSSpecArrayPtr)Memory_NewPtr(sizeof(FSSpec) * (*inoutFSSpecArrayLengthPtr));
-	if (noErr == MemError())
-	{
-		register SInt16		i = 0;
-		
-		
-		*(void**)outFSSpecArray = fileArray;
-		
-		for (i = 1; i <= (*inoutFSSpecArrayLengthPtr); i++)
-		{
-			AEDesc	desc;
-			FSSpec	spec;
-			
-			
-			result = AEGetNthDesc(inAEDescPtr, i, typeFSS, nullptr, &desc);
-			if (noErr == result)
-			{
-				result = FileSelectionDialogs_GetFSSpecFromAEDesc(&desc, &spec);
-				*fileArray++ = spec;
-			}
-			else
-			{
-				break;
-			}
-		}
-	}
-	return result;
-}// GetFSSpecArrayFromAEDesc
-
-
-/*!
-Use this method to get access to a file specification
-record that is embedded in an Apple Event description,
-in a Carbon-compliant manner.
-
-(1.0)
-*/
-OSStatus
-FileSelectionDialogs_GetFSSpecFromAEDesc	(AEDesc const*		inAEDescPtr,
-											 FSSpec*			outFSSpecPtr)
-{
-	AEDesc		tempDesc = { typeNull, nullptr };
-	OSStatus	result = noErr;
-	
-	
-	if (typeFSS == inAEDescPtr->descriptorType)
-	{
-		(OSStatus)AEGetDescData(inAEDescPtr, outFSSpecPtr, sizeof(FSSpec));
-	}
-	else
-	{
-		result = AECoerceDesc(inAEDescPtr, typeFSS, &tempDesc);
-		if (noErr == result)
-		{
-			(OSStatus)AEGetDescData(&tempDesc, outFSSpecPtr, sizeof(FSSpec));
-		}
-	}
-	
-	AEDisposeDesc(&tempDesc);
-	return result;
-}// GetFSSpecFromAEDesc
-
-
-/*!
-This method can be used as a file filter procedure for a
-Navigation Services dialog box when no special handling
-whatsoever is desired.  A return value of true means
-“display query item”; a value of false means that the
-item should not be displayed.
-
-(1.0)
-*/
-pascal Boolean
-FileSelectionDialogs_NothingFilterProc	(AEDesc*				UNUSED_ARGUMENT(inItem),
-										 void*					UNUSED_ARGUMENT(inNavFileOrFolderInfoPtr),
-										 NavCallBackUserData	UNUSED_ARGUMENT(inContext),
-										 NavFilterModes			UNUSED_ARGUMENT(inFilter))
-{
-	Boolean					result = pascal_true;
-	//NavFileOrFolderInfo*	infoPtr = REINTERPRET_CAST(inNavFileOrFolderInfoPtr, NavFileOrFolderInfo*);
-	
-	
-	//if (typeFSS == inItem->descriptorType)
-	//{
-	//	if (false == infoPtr->isFolder)
-	//	{
-			// Use:
-			// 'infoPtr->fileAndFolder.fileInfo.finderInfo.fdType'
-			// to check for the file type you want to filter.
-	//	}
-	//}
-	return result;
-}// NothingFilterProc
-
-
-/*!
 This routine is adequate for 99% of “save file” dialog
 needs on Mac OS 9.
 
@@ -445,39 +278,7 @@ FileSelectionDialogs_PutFile	(ConstStr255Param		inPromptMessage,
 
 
 #pragma mark Internal Methods
-
-/*!
-Copies the data from an Apple Event into an arbitrary
-handle.  If the specified buffer is too small, this
-routine will copy as much data as possible and return
-"memFullErr".
-
-(1.0)
-*/
-static OSStatus
-getAEDescData		(AEDesc const*		inDescPtr,
-					 DescType*			outTypeCodePtr,
-					 void*				outBufferPtr,
-					 ByteCount			inMaximumSize,
-					 ByteCount*			outActualSizePtr)
-{
-	ByteCount	dataSize = 0;
-	OSStatus	result = noErr;
-	
-	
-	if (nullptr != outTypeCodePtr) *outTypeCodePtr = inDescPtr->descriptorType;
-	dataSize = AEGetDescDataSize(inDescPtr);
-	if (dataSize > inMaximumSize)
-	{
-		dataSize = inMaximumSize;
-		result = memFullErr;
-	}
-	if (nullptr != outActualSizePtr) *outActualSizePtr = dataSize;
-	result = AEGetDescData(inDescPtr, outBufferPtr, dataSize);
-	
-	return result;
-}// getAEDescData
-
+namespace {
 
 /*!
 To automatically set up a Navigation Services
@@ -492,7 +293,7 @@ filled in.
 
 (1.0)
 */
-static void
+void
 setUpWTitleProcessName		(NavDialogOptions*		inoutDataPtr,
 							 ConstStringPtr			inTitle)
 {
@@ -516,5 +317,7 @@ setUpWTitleProcessName		(NavDialogOptions*		inoutDataPtr,
 								metaMappings);
 	}
 }// setUpWTitleProcessName
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -4,7 +4,7 @@
 /*###############################################################
 
 	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -48,15 +48,6 @@
 
 // PRESENTS AN APPLICATION-MODAL DIALOG
 OSStatus
-	FileSelectionDialogs_GetDirectory	(ConstStringPtr			inPromptMessage,
-										 ConstStringPtr			inDialogTitle,
-										 UInt32					inPrefKey,
-										 NavDialogOptionFlags	inFlags,
-										 NavEventProcPtr		inEventProc,
-										 FSSpec*				outFileSpecPtr);
-
-// PRESENTS AN APPLICATION-MODAL DIALOG
-OSStatus
 	FileSelectionDialogs_PutFile		(ConstStringPtr			inPromptMessage,
 										 ConstStringPtr			inDialogTitle,
 										 ConstStringPtr			inDefaultFileNameOrNull,
@@ -82,21 +73,6 @@ OSStatus
 													 OSType					inNewFileType,
 													 FSRef&					outUserSaveFile,
 													 FSRef&					outTemporaryFile);
-
-OSStatus
-	FileSelectionDialogs_GetFSSpecArrayFromAEDesc	(AEDesc const*			inAEDescPtr,
-													 void*					outFSSpecArray,
-													 long*					inoutFSSpecArrayLengthPtr);
-
-OSStatus
-	FileSelectionDialogs_GetFSSpecFromAEDesc		(AEDesc const*			inAEDescPtr,
-													 FSSpec*				outFSSpecPtr);
-
-pascal Boolean
-	FileSelectionDialogs_NothingFilterProc			(AEDesc*				inItem,
-													 void*					inNavFileOrFolderInfoPtr,
-													 NavCallBackUserData	inContext,
-													 NavFilterModes			inFilter);
 
 //@}
 
