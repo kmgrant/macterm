@@ -1717,9 +1717,9 @@ Session_LocalEchoIsHalfDuplex	(SessionRef		inRef)
 
 
 /*!
-Returns "true" only if the specified connection
-is disabled - that is, its network activity has
-not been suspended by a Scroll Lock.
+Returns "true" only if the specified connection is disabled;
+that is, its network activity has not been suspended by a
+Scroll Lock.
 
 (3.0)
 */
@@ -1727,7 +1727,8 @@ Boolean
 Session_NetworkIsSuspended		(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean					result = Local_ProcessIsStopped(ptr->mainProcess);
+	Boolean					result = (0 != (ptr->statusAttributes & kSession_StateAttributeSuspendNetwork)) ||
+										Local_ProcessIsStopped(ptr->mainProcess);
 	
 	
 	return result;

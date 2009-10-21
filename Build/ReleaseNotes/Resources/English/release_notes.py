@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20091020',
     '20091019',
     '20091016',
     '20091015',
@@ -288,6 +289,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20091020': [
+        'Fixed a problem that prevented the "Suspend (Scroll Lock)" toolbar item from resuming a suspended terminal.',
+    ],
     '20091019': [
         'Disabled all printing commands on Panther, because an unfortunate bug in that OS prevents Cocoa/Carbon hybrid applications from sending jobs to a printer without hanging.',
     ],
