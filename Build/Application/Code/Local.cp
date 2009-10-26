@@ -1246,7 +1246,10 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 			int const	kActualError = errno;
 			
 			
-			Console_Warning(Console_WriteValue, "fsync(stdout) failed, errno", kActualError);
+			if (ENOTSUP != kActualError)
+			{
+				Console_Warning(Console_WriteValue, "fsync(stdout) failed, errno", kActualError);
+			}
 		}
 		syncResult = fsync(STDERR_FILENO);
 		if (0 != syncResult)
@@ -1254,7 +1257,10 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 			int const	kActualError = errno;
 			
 			
-			Console_Warning(Console_WriteValue, "fsync(stderr) failed, errno", kActualError);
+			if (ENOTSUP != kActualError)
+			{
+				Console_Warning(Console_WriteValue, "fsync(stderr) failed, errno", kActualError);
+			}
 		}
 	}
 	
