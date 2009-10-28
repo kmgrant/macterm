@@ -3,7 +3,7 @@
 	FileUtilities.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -46,6 +46,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <CFRetainRelease.h>
 #include <Console.h>
 #include <MemoryBlocks.h>
 #include <StringUtilities.h>
@@ -55,6 +56,7 @@
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "FileUtilities.h"
+#include "Folder.h"
 #include "Preferences.h"
 #include "RecordAE.h"
 #include "Terminology.h"
@@ -66,20 +68,23 @@
 #define STRING_PATHNAME_DELIMITER "\p:"
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Boolean		gGetFilesInProgress = false;
-}
+Boolean		gGetFilesInProgress = false;
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static OSStatus		getFilesInDirectory				(FSSpec const*, Boolean, OSType, OSType, FSSpec*, UInt32*);
-static pascal void	ioCompletionGetFiles			(ParmBlkPtr);
-static OSStatus		threadedGetFilesInDirectory		(FSSpec const*, Boolean, OSType, OSType, FSSpec*, UInt32*,
-														UInt32);
-static OSStatus		threadedGetFilesInDirectory2	(FSSpec const*, Boolean, OSType, OSType, FSSpec*, UInt32*,
-														UInt32);
+OSStatus		getFilesInDirectory				(FSSpec const*, Boolean, OSType, OSType, FSSpec*, UInt32*);
+pascal void		ioCompletionGetFiles			(ParmBlkPtr);
+OSStatus		threadedGetFilesInDirectory		(FSSpec const*, Boolean, OSType, OSType, FSSpec*, UInt32*,
+												 UInt32);
+OSStatus		threadedGetFilesInDirectory2	(FSSpec const*, Boolean, OSType, OSType, FSSpec*, UInt32*,
+												 UInt32);
+
+} // anonymous namespace
 
 
 
@@ -716,6 +721,97 @@ FileUtilities_OpenDocuments		(AEDescList const&	inList)
 
 
 /*!
+Creates a unique new temporary file, and opens it for
+read and write, returning its reference number.  When
+you are finished, call FSClose() on the file.  Returns
+a positive number, and defines "outTemporaryFile", only
+if successful.
+
+It is your responsibility to subsequently delete the
+created temporary file.  (Worst case, the system does
+this on its own, or leaves the item in the Trash for
+recovery by the user on the next boot.)
+
+This function is not completely secure because a race
+condition exists between the time a file is opened,
+and the time its "outTemporaryFile" structure is
+subsequently used.  You are encouraged to write and
+read from the file while it is open, and to never
+use it again when it is closed.
+
+A better approach to creating temporary files is the
+mkstemp() system call, however this returns Unix file
+descriptors and cannot be used with the File Manager.
+
+(4.0)
+*/
+SInt16
+FileUtilities_OpenTemporaryFile		(FSRef&		outTemporaryFile)
+{
+	SInt16		result = 0;
+	FSRef		temporaryFilesFolder;
+	OSStatus	error = noErr;
+	
+	
+	error = Folder_GetFSRef(kFolder_RefMacTemporaryItems, temporaryFilesFolder);
+	if (noErr != error)
+	{
+		Console_Warning(Console_WriteValue, "failed to find folder for temporary files, error", error);
+	}
+	else
+	{
+		UniChar				fileName[32/* arbitrary! */];
+		CFRetainRelease		buffer(CFStringCreateMutableWithExternalCharactersNoCopy
+									(kCFAllocatorDefault, fileName, 0/* size */, sizeof(fileName) / sizeof(UniChar)/* capacity */,
+										kCFAllocatorNull/* deallocator */), true/* is retained */);
+		
+		
+		if (false == buffer.exists())
+		{
+			Console_Warning(Console_WriteLine, "failed to create temporary file, out of memory");
+		}
+		else
+		{
+			CFMutableStringRef const	kBufferAsCFString = buffer.returnCFMutableStringRef();
+			unsigned int				count = 0;
+			
+			
+			do
+			{
+				CFStringDelete(kBufferAsCFString, CFRangeMake(0, CFStringGetLength(kBufferAsCFString)));
+				CFStringAppendFormat(kBufferAsCFString, nullptr/* options */,
+										CFSTR("mactelnet%u.tmp")/* format */, count);
+				Console_WriteValueCFString("attempting to create temporary file with name", kBufferAsCFString); // debug
+				error = FSCreateFileUnicode(&temporaryFilesFolder, CFStringGetLength(kBufferAsCFString), fileName,
+											kFSCatInfoNone, nullptr/* catalog info */, &outTemporaryFile, nullptr/* FSSpec */);
+				++count;
+			} while (dupFNErr == error);
+			
+			if (noErr != error)
+			{
+				Console_Warning(Console_WriteValue, "failed to create temporary file, error", error);
+			}
+			else
+			{
+				//Console_WriteValueCFString("created temporary file with name", kBufferAsCFString); // debug
+				error = FSOpenFork(&outTemporaryFile, 0/* name length */, nullptr/* name */, fsWrPerm, &result);
+				if (noErr != error)
+				{
+					Console_Warning(Console_WriteValue, "failed to open temporary file, error", error);
+				}
+				else
+				{
+					// success!
+					SetEOF(result, (long)0);
+				}
+			}
+		}
+	}
+	return result;
+}// OpenTemporaryFile
+
+
+/*!
 To create a file in the specified location with the
 specified name, or to create a file with a similar
 name in the case of a duplicate, use this method.
@@ -904,6 +1000,7 @@ FileUtilities_VolHasDesktopDB	(short			inVRefNum,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 This convenient routine can be used to perform a
@@ -914,7 +1011,7 @@ directory.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 getFilesInDirectory		(FSSpec const*		inDirectorySpecPtr,
 						 Boolean			inRequireSignatures,
 						 OSType				inDesiredTypeSignature,
@@ -935,7 +1032,7 @@ the UPP properly and clears the in-progress flag.
 
 (3.0)
 */
-static pascal void
+pascal void
 ioCompletionGetFiles		(ParmBlkPtr		inParamBlockPtr)
 {
 	//Console_WriteValue("done, result", inParamBlockPtr->fileParam.ioResult);
@@ -961,7 +1058,7 @@ but many threads may be yielded to before then.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 threadedGetFilesInDirectory		(FSSpec const*		inDirectorySpecPtr,
 								 Boolean			inRequireSignatures,
 								 OSType				inDesiredTypeSignature,
@@ -1119,7 +1216,7 @@ but many threads may be yielded to before then.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 threadedGetFilesInDirectory2	(FSSpec const*	inDirectorySpecPtr,
 								 Boolean		inRequireSignatures,
 								 OSType			inDesiredTypeSignature,
@@ -1205,5 +1302,7 @@ threadedGetFilesInDirectory2	(FSSpec const*	inDirectorySpecPtr,
 	
 	return result;
 }// threadedGetFilesInDirectory2
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
