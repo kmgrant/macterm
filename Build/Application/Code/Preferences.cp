@@ -5130,7 +5130,10 @@ contextKeys(inContextPtr->returnKeyListCopy(), true/* is retained */)
 		CFArrayRef		sourceKeysCFArray = this->contextKeys.returnCFArrayRef();
 		
 		
-		if (nullptr == sourceKeysCFArray) Console_WriteLine("warning, null tags array!");
+		if (nullptr == sourceKeysCFArray)
+		{
+			Console_Warning(Console_WriteLine, "null tags array!");
+		}
 		else
 		{
 			CFIndex const	kNumberOfKeys = CFArrayGetCount(sourceKeysCFArray);

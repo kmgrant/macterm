@@ -2518,7 +2518,10 @@ setSampleArea	(Preferences_ContextRef		inSettingsToCopy,
 	if (false == tags.empty())
 	{
 		tagSet = Preferences_NewTagSet(tags);
-		if (nullptr == tagSet) Console_WriteLine("warning, unable to create tag set, cannot update sample area");
+		if (nullptr == tagSet)
+		{
+			Console_Warning(Console_WriteLine, "unable to create tag set, cannot update sample area");
+		}
 		else
 		{
 			Preferences_ContextCopy(inSettingsToCopy, TerminalView_ReturnFormatConfiguration(this->terminalView),
