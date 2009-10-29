@@ -59,9 +59,6 @@ public:
 	My_StreamCapture	(Session_LineEnding);
 	~My_StreamCapture ();
 	
-	Session_LineEnding
-	returnUserPreferredLineEndings ();
-	
 	Session_LineEnding		captureFileLineEndings;		//!< carriage return and/or line feed
 	SInt16					captureFileRefNum;			//!< file reference number of opened capture file
 	StreamCapture_Ref		selfRef;					//!< opaque reference that would resolve to a pointer to this structure
@@ -360,7 +357,7 @@ My_StreamCapture::
 My_StreamCapture	(Session_LineEnding		inLineEndings)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-captureFileLineEndings(returnUserPreferredLineEndings()),
+captureFileLineEndings(inLineEndings),
 captureFileRefNum(0),
 selfRef(REINTERPRET_CAST(this, StreamCapture_Ref))
 {
@@ -375,30 +372,7 @@ Destructor.  See StreamCapture_Release().
 My_StreamCapture::
 ~My_StreamCapture ()
 {
-	// INCOMPLETE
 }// My_StreamCapture destructor
-
-
-/*!
-Reads "kPreferences_TagCaptureFileLineEndings" from a Preferences
-context, and returns either that value or the default value if
-none was found.
-
-(4.0)
-*/
-Session_LineEnding
-My_StreamCapture::
-returnUserPreferredLineEndings ()
-{
-	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	Session_LineEnding		result = kSession_LineEndingLF; // arbitrary default
-	
-	
-	// TEMPORARY - perhaps this routine should take a specific preferences context
-	prefsResult = Preferences_GetData(kPreferences_TagCaptureFileLineEndings,
-										sizeof(result), &result);
-	return result;
-}// returnUserPreferredLineEndings
 
 } // anonymous namespace
 
