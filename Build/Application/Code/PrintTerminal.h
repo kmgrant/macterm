@@ -102,6 +102,12 @@ changes to an interface declared in a ".mm" file.
 //@{
 
 PrintTerminal_JobRef
+	PrintTerminal_NewJobFromFile			(CFURLRef					inFile,
+											 TerminalViewRef			inView,
+											 CFStringRef				inJobName,
+											 Boolean					inDefaultToLandscape = false);
+
+PrintTerminal_JobRef
 	PrintTerminal_NewJobFromSelectedText	(TerminalViewRef			inView,
 											 CFStringRef				inJobName,
 											 Boolean					inDefaultToLandscape = false);

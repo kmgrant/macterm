@@ -90,6 +90,34 @@ NSFont*		returnNSFontForTerminalView		(TerminalViewRef);
 #pragma mark Public Methods
 
 /*!
+Creates a new object to manage printing of the text in the
+given file, using the font and size of the given view.
+Returns "nullptr" if any problem occurs.
+
+(4.0)
+*/
+PrintTerminal_JobRef
+PrintTerminal_NewJobFromFile	(CFURLRef			inFile,
+								 TerminalViewRef	inView,
+								 CFStringRef		inJobName,
+								 Boolean			inDefaultToLandscape)
+{
+	AutoPool				_;
+	CFRetainRelease			selectedText(TerminalView_ReturnSelectedTextAsNewUnicode
+											(inView, 0/* space/tab conversion, or zero */, 0/* flags */),
+											true/* is retained */);
+	PrintTerminal_JobRef	result = nullptr;
+	
+	
+	result = REINTERPRET_CAST([[PrintTerminal_Job alloc] initWithString:[NSString stringWithContentsOfURL:(NSURL*)inFile]
+															andFont:returnNSFontForTerminalView(inView)
+															andTitle:(NSString*)inJobName
+															andLandscape:((inDefaultToLandscape) ? YES : NO)], PrintTerminal_JobRef);
+	return result;
+}// NewJobFromFile
+
+
+/*!
 Creates a new object to manage printing of the text currently
 on the main screen of a terminal view, using the font and size
 of that view.  Returns "nullptr" if any problem occurs.
