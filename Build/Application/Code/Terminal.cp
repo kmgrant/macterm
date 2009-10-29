@@ -60,6 +60,7 @@
 // library includes
 #include <AlertMessages.h>
 #include <CFRetainRelease.h>
+#include <CFUtilities.h>
 #include <Console.h>
 #include <Cursors.h>
 #include <FileSelectionDialogs.h>
@@ -75,15 +76,17 @@
 #include "DebugInterface.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
+#include "FileUtilities.h"
 #include "Folder.h"
 #include "Preferences.h"
+#include "PrintTerminal.h"
 #include "Session.h"
 #include "StreamCapture.h"
-#include "TelnetPrinting.h"
 #include "Terminal.h"
 #include "TerminalSpeaker.h"
 #include "TerminalView.h"
 #include "TextTranslation.h"
+#include "UIStrings.h"
 #include "VTKeys.h"
 
 
@@ -248,6 +251,20 @@ enum
 	kMy_LEDBitsLight3			= (1 << 2),		//!< set if LED 3 is on
 	kMy_LEDBitsLight4			= (1 << 3),		//!< set if LED 4 is on
 	kMy_LEDBitsAllOff			= 0L			//!< cleared if all LEDs are off
+};
+
+/*!
+In VT102 terminals and beyond, there are multiple
+printing modes that can be active.  In order to
+ensure that as few printing dialogs appear as
+possible, all possible modes must be off before
+printing will occur.
+*/
+typedef UInt8 My_PrintingMode;
+enum
+{
+	kMy_PrintingModeAutoPrint			= (1 << 0),		//!< MC private (VT102): true only if terminal-rendered lines are also sent to the printer
+	kMy_PrintingModePrintController		= (1 << 1),		//!< MC (VT102): true only if received data is being copied to the printer, verbatim
 };
 
 enum
@@ -655,6 +672,12 @@ public:
 	static void
 	preferenceChanged	(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 	
+	void
+	printingEnd		(Boolean = true);
+	
+	void
+	printingReset ();
+	
 	CFStringRef
 	returnAnswerBackMessage		(Preferences_ContextRef);
 	
@@ -718,7 +741,10 @@ public:
 	My_TabStopList						tabSettings;				//!< array of characters representing tab stops; values are either kMy_TabClear
 																	//!  (for most columns), or kMy_TabSet at tab columns
 	
-	StreamCapture_Ref					captureFile;				//!< used to manage streaming data to a file
+	StreamCapture_Ref					captureStream;				//!< used to stream data to a file chosen by the user
+	StreamCapture_Ref					printingStream;				//!< used to stream data to a temporary file for later printing
+	FSRef								printingFile;				//!< used to delete the temporary printing file when finished
+	UInt8								printingModes;				//!< MC private (VT102): true only if terminal-rendered lines are also sent to the printer
 	
 	Boolean								bellDisabled;				//!< if true, all bell signals are completely ignored (no audio or visual)
 	Boolean								cursorVisible;				//!< if true, cursor state is visible (as opposed to invisible)
@@ -784,9 +810,7 @@ public:
 																	//!  this should always be preferred when restricting the cursor, and as an offset
 																	//!  when returning column or row numbers
 	
-    TerminalPrintingInfo				printing;					//!< data used when spooling data to a printer (via temporary file)
-	
-	struct
+    struct
 	{
 		Terminal_SpeechMode		mode;			//!< restrictions on when the computer may speak
 		Str255					buffer;			//!< place to hold text that has not yet been spoken
@@ -2734,9 +2758,9 @@ Terminal_FileCaptureBegin	(TerminalScreenRef	inRef,
 	Boolean					result = false;
 	
 	
-	if (dataPtr != nullptr)
+	if (nullptr != dataPtr)
 	{
-		result = StreamCapture_Begin(dataPtr->captureFile, inOpenWritableFile);
+		result = StreamCapture_Begin(dataPtr->captureStream, inOpenWritableFile);
 		changeNotifyForTerminal(dataPtr, kTerminal_ChangeFileCaptureBegun, inRef);
 	}
 	return result;
@@ -2759,10 +2783,10 @@ Terminal_FileCaptureEnd		(TerminalScreenRef		inRef)
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr)
+	if (nullptr != dataPtr)
 	{
 		changeNotifyForTerminal(dataPtr, kTerminal_ChangeFileCaptureEnding, inRef);
-		StreamCapture_End(dataPtr->captureFile);
+		StreamCapture_End(dataPtr->captureStream);
 	}
 }// FileCaptureEnd
 
@@ -2780,9 +2804,9 @@ Terminal_FileCaptureInProgress	(TerminalScreenRef		inRef)
 	Boolean				result = false;
 	
 	
-	if (dataPtr != nullptr)
+	if (nullptr != dataPtr)
 	{
-		result = StreamCapture_InProgress(dataPtr->captureFile);
+		result = StreamCapture_InProgress(dataPtr->captureStream);
 	}
 	return result;
 }// FileCaptureInProgress
@@ -3266,63 +3290,6 @@ Terminal_LineWrapIsEnabled		(TerminalScreenRef	inRef)
 	}
 	return result;
 }// LineWrapIsEnabled
-
-
-/*!
-Terminates a printout for the specified terminal,
-closing the temporary file used for print data.
-
-(2.6)
-*/
-void
-Terminal_PrintingEnd	(TerminalScreenRef		inRef)
-{
-	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
-	
-	
-	if (dataPtr == nullptr) Sound_StandardAlert();
-	else
-	{
-		OSStatus	error = noErr;
-		FSSpec		temporaryFile;
-		
-		
-		// close the printing file...
-		error = FSClose(dataPtr->printing.temporaryFileRefNum), dataPtr->printing.temporaryFileRefNum = -1;
-		if (error != noErr) Sound_StandardAlert();
-		
-		// ...and then destroy it (uses modern File Manager in MacTelnet 3.0)
-		error = Folder_GetFSSpec(kFolder_RefMacTemporaryItems, &temporaryFile);
-		if (error == noErr)
-		{
-			error = FSMakeFSSpec(temporaryFile.vRefNum, temporaryFile.parID,
-									REINTERPRET_CAST(dataPtr->printing.temporaryFileName, StringPtr),
-									&temporaryFile);
-			if (error == noErr) error = FSpDelete(&temporaryFile);
-		}
-		if (error != noErr) Sound_StandardAlert();
-		
-		dataPtr->printing.enabled = false; // 3.0
-	}
-}// PrintingEnd
-
-
-/*!
-Returns "true" only if the specified screen’s
-text is currently being printed.
-
-(2.6)
-*/
-Boolean
-Terminal_PrintingInProgress		(TerminalScreenRef		inRef)
-{
-	Boolean				result = false;
-	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
-	
-	
-	if (dataPtr != nullptr) result = dataPtr->printing.enabled;
-	return result;
-}// PrintingInProgress
 
 
 /*!
@@ -4072,7 +4039,6 @@ Terminal_SetVisibleColumnCount	(TerminalScreenRef	inRef,
 			inNewNumberOfCharactersWide = kMy_NumberOfCharactersPerLineMaximum;
 		}
 		dataPtr->text.visibleScreen.numberOfColumnsPermitted = inNewNumberOfCharactersWide;
-		dataPtr->printing.wrapColumnCount = inNewNumberOfCharactersWide;
 		
 		changeNotifyForTerminal(dataPtr, kTerminal_ChangeScreenSize, dataPtr->selfRef/* context */);
 	}
@@ -4935,7 +4901,10 @@ scrollbackBuffer(),
 screenBuffer(),
 bytesToEcho(),
 tabSettings(),
-captureFile(StreamCapture_New(returnLineEndings())),
+captureStream(StreamCapture_New(returnLineEndings())),
+printingStream(nullptr),
+printingFile(),
+printingModes(0),
 bellDisabled(false),
 cursorVisible(true),
 reverseVideo(false),
@@ -4958,7 +4927,6 @@ modeInsertNotReplace(false),
 modeNewLineOption(false),
 modeOriginRedefined(false),
 originRegionPtr(&visibleBoundary.rows),
-printing(returnScreenColumns(inTerminalConfig)),
 // speech elements - not initialized
 current(*this),
 // previous elements - not initialized
@@ -5045,7 +5013,9 @@ Destructor.  See Terminal_DisposeScreen().
 My_ScreenBuffer::
 ~My_ScreenBuffer ()
 {
-	StreamCapture_Release(&this->captureFile);
+	this->printingModes = 0; // clear so that printingEnd() will clean up
+	printingEnd();
+	StreamCapture_Release(&this->captureStream);
 	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration, this->preferenceMonitor,
 															kPreferences_ChangeContextBatchMode);
 	ListenerModel_ReleaseListener(&this->preferenceMonitor);
@@ -5090,6 +5060,107 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// ???
 	}
 }// preferenceChanged
+
+
+/*!
+Conditionally terminates a printout for the specified terminal,
+closing the temporary file used for print data.  If requested,
+all the text cached since the last printingReset() is then sent
+to the printer (displaying a preview dialog first).  The cache
+file is deleted, so this is your only chance to print.
+
+This has no effect if ANY printing mode is still active.  The
+typical approach is to first disable the desired printing mode
+bit (in the "printingModes" member) when a mode ends, and to
+then call this routine.  If the disabled mode was the last
+active mode, then there will be no active mode, and printing
+will occur automatically.
+
+(4.0)
+*/
+void
+My_ScreenBuffer::
+printingEnd		(Boolean	inSendRemainderToPrinter)
+{
+	if ((nullptr != this->printingStream) && (0 == this->printingModes))
+	{
+		FSClose(StreamCapture_ReturnReferenceNumber(this->printingStream));
+		StreamCapture_End(this->printingStream);
+		StreamCapture_Release(&this->printingStream);
+		
+		// to print the outstanding text, determine the location of the temporary file
+		// and then print from that file
+		if (inSendRemainderToPrinter)
+		{
+			CFRetainRelease		fileURL(CFURLCreateFromFSRef(kCFAllocatorDefault, &this->printingFile),
+										true/* is retained */);
+			
+			
+			if (false == fileURL.exists())
+			{
+				Console_Warning(Console_WriteLine, "unable to find the URL of the temporary file that was used to print");
+			}
+			else
+			{
+				// print the captured text using the print dialog
+				CFStringRef			jobTitle = nullptr;
+				UIStrings_Result	stringResult = UIStrings_Copy(kUIStrings_TerminalPrintFromTerminalJobTitle,
+																	jobTitle);
+				
+				
+				if (nullptr != jobTitle)
+				{
+					TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(this->listeningSession);
+					PrintTerminal_JobRef	printJob = PrintTerminal_NewJobFromFile
+														(CFUtilities_URLCast(fileURL.returnCFTypeRef()),
+															TerminalWindow_ReturnViewWithFocus(terminalWindow),
+															jobTitle);
+					
+					
+					if (nullptr != printJob)
+					{
+						(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
+												(printJob, TerminalWindow_ReturnWindow(terminalWindow));
+						PrintTerminal_ReleaseJob(&printJob);
+					}
+					CFRelease(jobTitle), jobTitle = nullptr;
+				}
+			}
+		}
+		
+		(OSStatus)FSDeleteObject(&this->printingFile);
+	}
+}// printingEnd
+
+
+/*!
+Conditionally starts printing by opening a new temporary file
+for streaming.  If ANY printing mode is currently active (such
+as auto-print or print controller), this has no effect.
+
+Call this whenever you start a new printing mode.
+
+To terminate all active prints, use printingEnd() (also called
+automatically by the destructor of the class).
+
+(4.0)
+*/
+void
+My_ScreenBuffer::
+printingReset ()
+{
+	if (PrintTerminal_IsPrintingSupported() && (0 == this->printingModes))
+	{
+		SInt16		openedFile = 0;
+		
+		
+		// create a new, empty file that is open for write
+		openedFile = FileUtilities_OpenTemporaryFile(this->printingFile);
+		this->printingStream = StreamCapture_New(kSession_LineEndingLF);
+		(Boolean)StreamCapture_Begin(this->printingStream, openedFile);
+		// TEMPORARY - if this fails, need to report to the user somehow
+	}
+}// printingReset
 
 
 /*!
@@ -6504,7 +6575,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateControlHT:
 		// horizontal tab
 		moveCursorRightToNextTabStop(inDataPtr);
-		StreamCapture_WriteUTF8Data(inDataPtr->captureFile, inBuffer, 1);
+		StreamCapture_WriteUTF8Data(inDataPtr->captureStream, inBuffer, 1);
 		break;
 	
 	case kStateControlLFVTFF:
@@ -6530,7 +6601,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			moveCursorDownOrScroll(inDataPtr);
 		}
 	#endif
-		StreamCapture_WriteUTF8Data(inDataPtr->captureFile, inBuffer, 1);
+		StreamCapture_WriteUTF8Data(inDataPtr->captureStream, inBuffer, 1);
 		break;
 	
 	case kStateControlSO:
@@ -7565,6 +7636,24 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	// INCOMPLETE
 	switch (inOldNew.second)
 	{
+	case kStateControlLFVTFF:
+		// line feed
+		// all of these are interpreted the same for VT102;
+		// when printing, this also forces a line to print
+		// (for auto-print, but not printer controller mode)
+		moveCursorDownOrScroll(inDataPtr);
+		if (0 != inDataPtr->printingModes)
+		{
+			UInt8 const		kReturn = '\015';
+			
+			
+			// the implementation is such that sending any new-line-like character
+			// (return, whatever) will translate to the actual new-line sequence
+			// defined for the stream
+			StreamCapture_WriteUTF8Data(inDataPtr->printingStream, &kReturn, sizeof(kReturn));
+		}
+		break;
+	
 	case kStateDCH:
 		deleteCharacters(inDataPtr);
 		break;
@@ -7582,17 +7671,77 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateMC:
-		if (inDataPtr->emulator.parameterValues[inDataPtr->emulator.parameterEndIndex] == 5)
+		// media copy (automatic printing)
 		{
-			TelnetPrinting_Begin(&inDataPtr->printing);
-		}
-		else if (inDataPtr->emulator.parameterValues[inDataPtr->emulator.parameterEndIndex] == 4)
-		{
-			TelnetPrinting_End(&inDataPtr->printing);
-		}
-		else
-		{
-			Console_Warning(Console_WriteLine, "VT102 media copy did not recognize the given parameters");
+			Boolean		printScreen = false;
+			
+			
+			if (inDataPtr->emulator.parameterEndIndex >= 0)
+			{
+				switch (inDataPtr->emulator.parameterValues[inDataPtr->emulator.parameterEndIndex])
+				{
+				case 5:
+					// printer controller (print lines without necessarily displaying them);
+					// this can be enabled or disabled while auto-print remains in effect
+					inDataPtr->printingReset();
+					inDataPtr->printingModes |= kMy_PrintingModePrintController;
+					break;
+				
+				case 4:
+					// printer controller off
+					inDataPtr->printingModes &= ~kMy_PrintingModePrintController;
+					inDataPtr->printingEnd();
+					break;
+				
+				case 0:
+					printScreen = true;
+					break;
+				
+				case -2:
+					// private parameters (e.g. ESC [ ? 5 i)
+					switch (inDataPtr->emulator.parameterValues[0])
+					{
+					case 5:
+						// auto-print (print lines that are also displayed)
+						inDataPtr->printingReset();
+						inDataPtr->printingModes |= kMy_PrintingModeAutoPrint;
+						break;
+					
+					case 4:
+						// auto-print off
+						inDataPtr->printingModes &= ~kMy_PrintingModeAutoPrint;
+						inDataPtr->printingEnd();
+						break;
+					
+					case 1:
+						// print cursor line
+						// UNIMPLEMENTED
+						break;
+					
+					default:
+						// ???
+						Console_Warning(Console_WriteLine, "VT102 media copy did not recognize the given private parameters");
+						break;
+					}
+					break;
+				
+				default:
+					Console_Warning(Console_WriteLine, "VT102 media copy did not recognize the given parameters");
+					break;
+				}
+			}
+			else
+			{
+				// no parameters; defaults to “print screen”
+				printScreen = true;
+			}
+			
+			if (printScreen)
+			{
+				// print the screen or the scrolling region, based on
+				// the most recent use of the DECEXT sequence
+				// UNIMPLEMENTED
+			}
 		}
 		break;
 	
@@ -8795,18 +8944,13 @@ void
 echoCFString	(My_ScreenBufferPtr		inDataPtr,
 				 CFStringRef			inString)
 {
-	CFIndex const		kLength = CFStringGetLength(inString);
+	CFIndex const	kLength = CFStringGetLength(inString);
+	Boolean const	kPrinterOnly = (0 != (inDataPtr->printingModes & kMy_PrintingModePrintController));
 	
-	
-	// send to printer, if a job is in progress
-	if (inDataPtr->printing.enabled)
-	{
-		// spool string to printer temporary file
-		// UNIMPLEMENTED
-	}
 	
 	// append to capture file, if one is open; try to avoid conversion,
 	// but if necessary convert the bytes into a Unicode format
+	if ((nullptr != inDataPtr->captureStream) || (nullptr != inDataPtr->printingStream))
 	{
 		CFStringEncoding const		kDesiredEncoding = kCFStringEncodingUTF8;
 		CFIndex						bytesNeeded = 0;
@@ -8846,7 +8990,14 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 		
 		if (nullptr != bufferReadOnly)
 		{
-			StreamCapture_WriteUTF8Data(inDataPtr->captureFile, bufferReadOnly, bytesNeeded);
+			if ((false == kPrinterOnly) && (nullptr != inDataPtr->captureStream))
+			{
+				StreamCapture_WriteUTF8Data(inDataPtr->captureStream, bufferReadOnly, bytesNeeded);
+			}
+			if (nullptr != inDataPtr->printingStream)
+			{
+				StreamCapture_WriteUTF8Data(inDataPtr->printingStream, bufferReadOnly, bytesNeeded);
+			}
 		}
 		
 		if (freeBuffer)
@@ -8857,6 +9008,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 	
 	// add each character to the terminal at the current cursor position, advancing
 	// the cursor each time (and therefore being mindful of wrap settings, etc.)
+	if (false == kPrinterOnly)
 	{
 		My_ScreenBufferLineList::iterator	cursorLineIterator;
 		register SInt16						preWriteCursorX = inDataPtr->current.cursorX;
@@ -9023,10 +9175,10 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 	
 	while (ctr > 0)
 	{
-		if (inDataPtr->printing.enabled)
-		{
-			TelnetPrinting_Spool(&inDataPtr->printing, c, &ctr/* count can decrease, depending on what is printed */);
-		}
+		//if (inDataPtr->printing.enabled)
+		//{
+		//	TelnetPrinting_Spool(&inDataPtr->printing, c, &ctr/* count can decrease, depending on what is printed */);
+		//}
 		
 		while ((escflg == 0) && (ctr > 0) && (*c < 32))
 		{
@@ -9046,7 +9198,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			
 			case 0x09: // control-I; horizontal tab
 				moveCursorRightToNextTabStop(inDataPtr);
-				StreamCapture_WriteUTF8Data(inDataPtr->captureFile, c, 1);
+				StreamCapture_WriteUTF8Data(inDataPtr->captureStream, c, 1);
 				break;
 			
 			case 0x0A: // control-J; line feed
@@ -9061,7 +9213,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			
 			case 0x0D: // control-M; carriage return
 				moveCursorLeftToEdge(inDataPtr);
-				StreamCapture_WriteUTF8Data(inDataPtr->captureFile, c, 1);
+				StreamCapture_WriteUTF8Data(inDataPtr->captureStream, c, 1);
 				break;
 			
 			case 0x0E: // control-N; shift-out
@@ -9261,7 +9413,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
 				}
 				
-				StreamCapture_WriteUTF8Data(inDataPtr->captureFile, (UInt8*)startPtr/* data to write */, extra/* buffer length */);
+				StreamCapture_WriteUTF8Data(inDataPtr->captureStream, (UInt8*)startPtr/* data to write */, extra/* buffer length */);
 				
 			#if 0
 				// 3.0 - test speech (this implementation will be greatly enhanced in the near future
@@ -9635,10 +9787,10 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				goto ShortCut;				
 		   
 			case 'i': // media copy
-				if (inDataPtr->emulator.parameterValues[inDataPtr->emulator.parameterEndIndex] == 5)
-				{		
-					TelnetPrinting_Begin(&inDataPtr->printing);
-				}
+				//if (inDataPtr->emulator.parameterValues[inDataPtr->emulator.parameterEndIndex] == 5)
+				//{		
+				//	TelnetPrinting_Begin(&inDataPtr->printing);
+				//}
 				escflg = 0;
 				break;
 			
@@ -10786,6 +10938,9 @@ Changes the column of the cursor, within the boundaries of
 the screen.  All cursor-dependent data is automatically
 synchronized if necessary.
 
+This has no effect if print controller mode (VT102 or later)
+is active.
+
 IMPORTANT:	ALWAYS use moveCursor...() routines to set the
 			cursor value; otherwise, cursor-dependent stuff
 			could become out of sync.
@@ -10796,43 +10951,46 @@ inline void
 moveCursorX		(My_ScreenBufferPtr		inDataPtr,
 				 SInt16					inNewX)
 {
-	if ((inDataPtr->mayNeedToSaveToScrollback) && (inNewX != 0))
+	if (0 == (inDataPtr->printingModes & kMy_PrintingModePrintController))
 	{
-		// once the cursor leaves the home position, there is no
-		// chance of having to save the top line into scrollback
-		inDataPtr->mayNeedToSaveToScrollback = false;
-	}
-	inDataPtr->current.cursorX = inNewX;
-	if ((inDataPtr->current.cursorX == 0) && (inDataPtr->current.cursorY == 0))
-	{
-		// if the cursor moves into the home position, flag this
-		// and prepare to possibly save the line contents if any
-		// subsequent erase commands show up
-		inDataPtr->mayNeedToSaveToScrollback = true;
-	}
-	
-	// TEMPORARY - the inefficiency of this is ugly, but it
-	// is definitely known to work
-	{
-		My_ScreenBufferLineList::iterator	cursorLineIterator;
+		if ((inDataPtr->mayNeedToSaveToScrollback) && (inNewX != 0))
+		{
+			// once the cursor leaves the home position, there is no
+			// chance of having to save the top line into scrollback
+			inDataPtr->mayNeedToSaveToScrollback = false;
+		}
+		inDataPtr->current.cursorX = inNewX;
+		if ((inDataPtr->current.cursorX == 0) && (inDataPtr->current.cursorY == 0))
+		{
+			// if the cursor moves into the home position, flag this
+			// and prepare to possibly save the line contents if any
+			// subsequent erase commands show up
+			inDataPtr->mayNeedToSaveToScrollback = true;
+		}
 		
+		// TEMPORARY - the inefficiency of this is ugly, but it
+		// is definitely known to work
+		{
+			My_ScreenBufferLineList::iterator	cursorLineIterator;
+			
+			
+			locateCursorLine(inDataPtr, cursorLineIterator);
+			inDataPtr->current.cursorAttributes = cursorLineIterator->attributeVector[inDataPtr->current.cursorX];
+		}
 		
-		locateCursorLine(inDataPtr, cursorLineIterator);
-		inDataPtr->current.cursorAttributes = cursorLineIterator->attributeVector[inDataPtr->current.cursorX];
+		// reset wrap flag, now that the cursor is moving
+		inDataPtr->wrapPending = false;
+		
+		//if (inDataPtr->cursorVisible)
+		{
+			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeCursorLocation, inDataPtr->selfRef);
+		}
+		
+	#if 0
+		// DEBUG
+		Console_WriteValuePair("cursor trace (dx)", inDataPtr->current.cursorX, inDataPtr->current.cursorY);
+	#endif
 	}
-	
-	// reset wrap flag, now that the cursor is moving
-	inDataPtr->wrapPending = false;
-	
-	//if (inDataPtr->cursorVisible)
-	{
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeCursorLocation, inDataPtr->selfRef);
-	}
-	
-#if 0
-	// DEBUG
-	Console_WriteValuePair("cursor trace (dx)", inDataPtr->current.cursorX, inDataPtr->current.cursorY);
-#endif
 }// moveCursorX
 
 
@@ -10840,6 +10998,9 @@ moveCursorX		(My_ScreenBufferPtr		inDataPtr,
 Changes the row of the cursor, within the boundaries of the
 screen and any current margins.  All cursor-dependent data is
 automatically synchronized if necessary.
+
+This has no effect if print controller mode (VT102 or later)
+is active.
 
 IMPORTANT:	ALWAYS use moveCursor...() routines to set the
 			cursor value; otherwise, cursor-dependent stuff
@@ -10851,56 +11012,59 @@ inline void
 moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 				 My_ScreenRowIndex		inNewY)
 {
-	My_ScreenBufferLineList::iterator	cursorLineIterator;
-	
-	
-	locateCursorLine(inDataPtr, cursorLineIterator);
-	
-	if ((inDataPtr->mayNeedToSaveToScrollback) && (0 != inNewY))
+	if (0 == (inDataPtr->printingModes & kMy_PrintingModePrintController))
 	{
-		// once the cursor leaves the home position, there is no
-		// chance of having to save the top line into scrollback
-		inDataPtr->mayNeedToSaveToScrollback = false;
-	}
-	STYLE_REMOVE(inDataPtr->current.drawingAttributes, cursorLineIterator->globalAttributes);
-	
-	// don’t allow the cursor to fall off the screen (in origin
-	// mode, it cannot fall outside the scrolling region)
-	{
-		SInt16		newCursorY = inNewY;
+		My_ScreenBufferLineList::iterator	cursorLineIterator;
 		
 		
-		newCursorY = std::max< SInt16 >(newCursorY, inDataPtr->originRegionPtr->firstRow);
-		newCursorY = std::min< SInt16 >(newCursorY, inDataPtr->originRegionPtr->lastRow);
-		inDataPtr->current.cursorY = newCursorY;
+		locateCursorLine(inDataPtr, cursorLineIterator);
+		
+		if ((inDataPtr->mayNeedToSaveToScrollback) && (0 != inNewY))
+		{
+			// once the cursor leaves the home position, there is no
+			// chance of having to save the top line into scrollback
+			inDataPtr->mayNeedToSaveToScrollback = false;
+		}
+		STYLE_REMOVE(inDataPtr->current.drawingAttributes, cursorLineIterator->globalAttributes);
+		
+		// don’t allow the cursor to fall off the screen (in origin
+		// mode, it cannot fall outside the scrolling region)
+		{
+			SInt16		newCursorY = inNewY;
+			
+			
+			newCursorY = std::max< SInt16 >(newCursorY, inDataPtr->originRegionPtr->firstRow);
+			newCursorY = std::min< SInt16 >(newCursorY, inDataPtr->originRegionPtr->lastRow);
+			inDataPtr->current.cursorY = newCursorY;
+		}
+		
+		// cursor has moved, so find the data for its new row
+		locateCursorLine(inDataPtr, cursorLineIterator);
+		
+		STYLE_ADD(inDataPtr->current.drawingAttributes, cursorLineIterator->globalAttributes);
+		if ((0 == inDataPtr->current.cursorY) && (0 == inDataPtr->current.cursorX))
+		{
+			// if the cursor moves into the home position, flag this
+			// and prepare to possibly save the line contents if any
+			// subsequent erase commands show up
+			inDataPtr->mayNeedToSaveToScrollback = true;
+		}
+		
+		inDataPtr->current.cursorAttributes = cursorLineIterator->attributeVector[inDataPtr->current.cursorX];
+		
+		// reset wrap flag, now that the cursor is moving
+		inDataPtr->wrapPending = false;
+		
+		//if (inDataPtr->cursorVisible)
+		{
+			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeCursorLocation, inDataPtr->selfRef);
+		}
+		
+	#if 0
+		// DEBUG
+		Console_WriteValuePair("cursor trace (dy)", inDataPtr->current.cursorX, inDataPtr->current.cursorY);
+	#endif
 	}
-	
-	// cursor has moved, so find the data for its new row
-	locateCursorLine(inDataPtr, cursorLineIterator);
-	
-	STYLE_ADD(inDataPtr->current.drawingAttributes, cursorLineIterator->globalAttributes);
-	if ((0 == inDataPtr->current.cursorY) && (0 == inDataPtr->current.cursorX))
-	{
-		// if the cursor moves into the home position, flag this
-		// and prepare to possibly save the line contents if any
-		// subsequent erase commands show up
-		inDataPtr->mayNeedToSaveToScrollback = true;
-	}
-	
-	inDataPtr->current.cursorAttributes = cursorLineIterator->attributeVector[inDataPtr->current.cursorX];
-	
-	// reset wrap flag, now that the cursor is moving
-	inDataPtr->wrapPending = false;
-	
-	//if (inDataPtr->cursorVisible)
-	{
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeCursorLocation, inDataPtr->selfRef);
-	}
-	
-#if 0
-	// DEBUG
-	Console_WriteValuePair("cursor trace (dy)", inDataPtr->current.cursorX, inDataPtr->current.cursorY);
-#endif
 }// moveCursorY
 
 
@@ -10928,11 +11092,8 @@ resetTerminal   (My_ScreenBufferPtr  inDataPtr)
 	inDataPtr->modeNewLineOption = false;
 	moveCursor(inDataPtr, 0, 0);
 	inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG0;
-	inDataPtr->printing.bufferTail = 0x00000000;
-	if (Terminal_PrintingInProgress(inDataPtr->selfRef))
-	{
-		Terminal_PrintingEnd(inDataPtr->selfRef); // 3.0
-	}
+	inDataPtr->printingModes = 0;
+	inDataPtr->printingEnd();
 	bufferEraseVisibleScreenWithUpdate(inDataPtr);
 	tabStopInitialize(inDataPtr);
 	highlightLED(inDataPtr, 0/* zero means “turn off all LEDs” */);
@@ -12225,7 +12386,7 @@ vt100ModeSetReset	(My_ScreenBufferPtr		inDataPtr,
 			Boolean				emulateDECOMBug = false;
 			
 			
-			for (i = 0; i <= inDataPtr->emulator.parameterEndIndex; ++i)
+			for (i = 1/* skip the -2 parameter */; i <= inDataPtr->emulator.parameterEndIndex; ++i)
 			{
 				switch (inDataPtr->emulator.parameterValues[i])
 				{

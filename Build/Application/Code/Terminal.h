@@ -658,17 +658,6 @@ Boolean
 
 //@}
 
-//!\name Print Handling (Note: May Move)
-//@{
-
-void
-	Terminal_PrintingEnd					(TerminalScreenRef			inScreen);
-
-Boolean
-	Terminal_PrintingInProgress				(TerminalScreenRef			inScreen);
-
-//@}
-
 //!\name Sound and Speech (Note: May Move)
 //@{
 

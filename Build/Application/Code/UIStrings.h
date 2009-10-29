@@ -346,6 +346,7 @@ enum UIStrings_TerminalCFString
 	kUIStrings_TerminalBackgroundAccessibilityDescription	= 'ABDs',
 	kUIStrings_TerminalInterruptProcess						= 'Intr',
 	kUIStrings_TerminalNewCommandsKeyCharacter				= 'NewK',
+	kUIStrings_TerminalPrintFromTerminalJobTitle			= 'PTrm',
 	kUIStrings_TerminalPrintScreenJobTitle					= 'PScr',
 	kUIStrings_TerminalPrintSelectionJobTitle				= 'PSel',
 	kUIStrings_TerminalResumeOutput							= 'Resu',

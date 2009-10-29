@@ -87,7 +87,6 @@
 		0AC6BB2C0A8C0BA000AFF37A /* StatusIcon.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE1C055432A400ACDF3A /* StatusIcon.cp */; };
 		0AC6BB2D0A8C0BA000AFF37A /* TextTranslation.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE2D055432A400ACDF3A /* TextTranslation.cp */; };
 		0AC6BB2E0A8C0BA000AFF37A /* Embedding.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD3055432A400ACDF3A /* Embedding.cp */; };
-		0AC6BB300A8C0BA000AFF37A /* TelnetPrinting.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE23055432A400ACDF3A /* TelnetPrinting.cp */; };
 		0AC6BB310A8C0BA000AFF37A /* ProgressDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE0A055432A400ACDF3A /* ProgressDialog.cp */; };
 		0AC6BB320A8C0BA000AFF37A /* InfoWindow.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE7055432A400ACDF3A /* InfoWindow.cp */; };
 		0AC6BB330A8C0BA000AFF37A /* Releases.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0307FAC08800248DDF /* Releases.cp */; };
@@ -305,7 +304,6 @@
 		0A46042E0554376100ACDF3A /* StatusIcon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StatusIcon.h; path = Application/Code/StatusIcon.h; sourceTree = SOURCE_ROOT; };
 		0A4604360554376100ACDF3A /* VectorCanvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorCanvas.h; path = Application/Code/VectorCanvas.h; sourceTree = "<group>"; };
 		0A4604370554376100ACDF3A /* VectorInterpreter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreter.h; path = Application/Code/VectorInterpreter.h; sourceTree = "<group>"; };
-		0A4604390554376100ACDF3A /* TelnetPrinting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TelnetPrinting.h; path = Application/Code/TelnetPrinting.h; sourceTree = SOURCE_ROOT; };
 		0A46043B0554376100ACDF3A /* Terminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Terminal.h; path = Application/Code/Terminal.h; sourceTree = SOURCE_ROOT; };
 		0A46043C0554376100ACDF3A /* TerminalFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalFile.h; path = Application/Code/TerminalFile.h; sourceTree = SOURCE_ROOT; };
 		0A46043D0554376100ACDF3A /* TerminalScreenRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalScreenRef.typedef.h; path = Application/Code/TerminalScreenRef.typedef.h; sourceTree = SOURCE_ROOT; };
@@ -394,7 +392,6 @@
 		0A46FE1C055432A400ACDF3A /* StatusIcon.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StatusIcon.cp; path = Application/Code/StatusIcon.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE21055432A400ACDF3A /* VectorCanvas.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = VectorCanvas.cp; path = Application/Code/VectorCanvas.cp; sourceTree = "<group>"; };
 		0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = VectorInterpreter.cp; path = Application/Code/VectorInterpreter.cp; sourceTree = "<group>"; };
-		0A46FE23055432A400ACDF3A /* TelnetPrinting.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TelnetPrinting.cp; path = Application/Code/TelnetPrinting.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE25055432A400ACDF3A /* Terminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Terminal.cp; path = Application/Code/Terminal.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE26055432A400ACDF3A /* TerminalFile.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalFile.cp; path = Application/Code/TerminalFile.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE27055432A400ACDF3A /* TerminalSpeaker.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalSpeaker.cp; path = Application/Code/TerminalSpeaker.cp; sourceTree = SOURCE_ROOT; };
@@ -756,7 +753,6 @@
 				0A46FE17055432A400ACDF3A /* SessionFactory.cp */,
 				0A46FE1C055432A400ACDF3A /* StatusIcon.cp */,
 				0A64C5EA1059E423005B8A48 /* StreamCapture.cp */,
-				0A46FE23055432A400ACDF3A /* TelnetPrinting.cp */,
 				0A46FE25055432A400ACDF3A /* Terminal.cp */,
 				0A984182083452E6002E1BCE /* TerminalBackground.cp */,
 				0A46FE26055432A400ACDF3A /* TerminalFile.cp */,
@@ -826,7 +822,6 @@
 				0A4604290554376100ACDF3A /* SessionRef.typedef.h */,
 				0A46042E0554376100ACDF3A /* StatusIcon.h */,
 				0A64C5EC1059E432005B8A48 /* StreamCapture.h */,
-				0A4604390554376100ACDF3A /* TelnetPrinting.h */,
 				0A46043B0554376100ACDF3A /* Terminal.h */,
 				0A9841C7083457A4002E1BCE /* TerminalBackground.h */,
 				0A46043C0554376100ACDF3A /* TerminalFile.h */,
@@ -1385,7 +1380,6 @@
 				0AC6BB2C0A8C0BA000AFF37A /* StatusIcon.cp in Sources */,
 				0AC6BB2D0A8C0BA000AFF37A /* TextTranslation.cp in Sources */,
 				0AC6BB2E0A8C0BA000AFF37A /* Embedding.cp in Sources */,
-				0AC6BB300A8C0BA000AFF37A /* TelnetPrinting.cp in Sources */,
 				0AC6BB310A8C0BA000AFF37A /* ProgressDialog.cp in Sources */,
 				0AC6BB320A8C0BA000AFF37A /* InfoWindow.cp in Sources */,
 				0AC6BB330A8C0BA000AFF37A /* Releases.cp in Sources */,

@@ -885,7 +885,6 @@ Session_Disconnect		(SessionRef		inRef)
 		{
 			// active session; terminate associated tasks
 			if (Terminal_FileCaptureInProgress(*toScreen)) Terminal_FileCaptureEnd(*toScreen);
-			if (Terminal_PrintingInProgress(*toScreen)) Terminal_PrintingEnd(*toScreen);
 		}
 	}
 	

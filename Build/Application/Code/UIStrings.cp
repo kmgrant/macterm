@@ -1525,6 +1525,11 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 													CFSTR("kUIStrings_TerminalNewCommandsKeyCharacter; used for some menu command keys, this should be only one Unicode character"));
 		break;
 	
+	case kUIStrings_TerminalPrintFromTerminalJobTitle:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Print From Terminal: MacTelnet"), CFSTR("Terminal"),
+													CFSTR("kUIStrings_TerminalPrintFromTerminalJobTitle"));
+		break;
+	
 	case kUIStrings_TerminalPrintScreenJobTitle:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Print Screen: MacTelnet"), CFSTR("Terminal"),
 													CFSTR("kUIStrings_TerminalPrintScreenJobTitle"));
