@@ -781,7 +781,7 @@ FileUtilities_OpenTemporaryFile		(FSRef&		outTemporaryFile)
 				CFStringDelete(kBufferAsCFString, CFRangeMake(0, CFStringGetLength(kBufferAsCFString)));
 				CFStringAppendFormat(kBufferAsCFString, nullptr/* options */,
 										CFSTR("mactelnet%u.tmp")/* format */, count);
-				Console_WriteValueCFString("attempting to create temporary file with name", kBufferAsCFString); // debug
+				//Console_WriteValueCFString("attempting to create temporary file with name", kBufferAsCFString); // debug
 				error = FSCreateFileUnicode(&temporaryFilesFolder, CFStringGetLength(kBufferAsCFString), fileName,
 											kFSCatInfoNone, nullptr/* catalog info */, &outTemporaryFile, nullptr/* FSSpec */);
 				++count;
