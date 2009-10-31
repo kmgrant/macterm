@@ -262,6 +262,8 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSInitialToolTipDelay</key>
+	<integer>0</integer>
 	<key>SmartCrashReports_CompanyName</key>
 	<string>Kevin Grant</string>
 	<key>SmartCrashReports_EmailTicket</key>
