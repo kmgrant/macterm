@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20091102',
     '20091029',
     '20091020',
     '20091019',
@@ -290,6 +291,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20091102': [
+        'Disabled all printing commands on Leopard, Tiger and Panther, because a bug (fixed only in Snow Leopard) prevents Cocoa/Carbon hybrid applications from sending jobs to a printer without hanging.',
+    ],
     '20091029': [
         'Terminal views that use the VT102 base emulator will once again support some terminal-initiated printing sequences.  For instance, it is now possible to print from "pine".',
     ],

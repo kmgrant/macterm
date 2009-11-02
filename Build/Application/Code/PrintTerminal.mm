@@ -237,12 +237,12 @@ Returns true only if printing is supported.  This should be
 used to hide print-related commands in user interfaces, if
 printing is not possible.
 
-There is a known problem on Panther, where Cocoa view printing
-does not work in a Carbon/Cocoa hybrid; it “almost” works,
-but then becomes stuck at the progress bar (er, thanks Apple).
-So until the entire application transitions to pure Cocoa,
-this routine will return false on 10.3, and otherwise returns
-true.
+There is a known problem on Leopard and earlier, where Cocoa
+view printing does not work in a Carbon/Cocoa hybrid; it
+“almost” works, but then becomes stuck at the progress bar
+(er, thanks Apple).  So until the entire application
+transitions to pure Cocoa, this routine will return false on
+10.5 or earlier, and otherwise returns true.
 
 (4.0)
 */
@@ -252,7 +252,7 @@ PrintTerminal_IsPrintingSupported ()
 	Boolean		result = false;
 	
 	
-	if (FlagManager_Test(kFlagOS10_4API))
+	if (FlagManager_Test(kFlagOS10_6API))
 	{
 		result = true;
 	}
