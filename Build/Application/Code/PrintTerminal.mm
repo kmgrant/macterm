@@ -29,32 +29,32 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#import "UniversalDefines.h"
 
 // standard-C includes
-#include <cstdio>
-#include <cstring>
+#import <cstdio>
+#import <cstring>
 
 // library includes
-#include <AutoPool.objc++.h>
-#include <CFRetainRelease.h>
-#include <MemoryBlockPtrLocker.template.h>
+#import <AutoPool.objc++.h>
+#import <CFRetainRelease.h>
+#import <MemoryBlockPtrLocker.template.h>
 
 // Mac includes
-#include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <ApplicationServices/ApplicationServices.h>
+#import <Carbon/Carbon.h>
+#import <CoreServices/CoreServices.h>
 
 // library includes
-#include <FlagManager.h>
+#import <FlagManager.h>
 
 // MacTelnet includes
-#include "Console.h"
-#include "ConstantsRegistry.h"
-#include "HelpSystem.h"
-#include "PrintTerminal.h"
-#include "Terminal.h"
-#include "TerminalView.h"
+#import "Console.h"
+#import "ConstantsRegistry.h"
+#import "HelpSystem.h"
+#import "PrintTerminal.h"
+#import "Terminal.h"
+#import "TerminalView.h"
 
 
 
