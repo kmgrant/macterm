@@ -77,11 +77,11 @@ enum
 };
 
 
+
 #pragma mark Public Methods
 
-/*###############################################################
-	INITIALIZING AND FINISHING WITH EVENTS
-###############################################################*/
+//!\name Initialization
+//@{
 
 EventLoop_Result
 	EventLoop_Init								();
@@ -89,9 +89,10 @@ EventLoop_Result
 void
 	EventLoop_Done								();
 
-/*###############################################################
-	RUNNING THE EVENT LOOP
-###############################################################*/
+//@}
+
+//!\name Running the Event Loop
+//@{
 
 void
 	EventLoop_Run								();
@@ -99,9 +100,10 @@ void
 void
 	EventLoop_Terminate							();
 
-/*###############################################################
-	MANUAL HANDLING OF EVENTS
-###############################################################*/
+//@}
+
+//!\name Manual Handling of Events
+//@{
 
 // DEPRECATED
 EventLoop_Result
@@ -113,9 +115,10 @@ EventLoop_Result
 	EventLoop_StopMonitoring					(EventLoop_GlobalEvent				inForWhatEvent,
 												 ListenerModel_ListenerRef			inListener);
 
-/*###############################################################
-	RESPONDING TO EVENTS
-###############################################################*/
+//@}
+
+//!\name Responding to Events
+//@{
 
 // DEPRECATED
 pascal Boolean
@@ -127,9 +130,10 @@ pascal void
 												 NavCBRecPtr						inParameters,
 												 NavCallBackUserData				inUserData);
 
-/*###############################################################
-	ANNOUNCING EVENT OCCURRENCES FROM EXTERNAL SOURCES
-###############################################################*/
+//@}
+
+//!\name Announcing Event Occurrences from External Sources
+//@{
 
 // DEPRECATED
 void
@@ -143,17 +147,19 @@ void
 void
 	EventLoop_SelectOverRealFrontWindow			(WindowRef							inWindowToSelect);
 
-/*###############################################################
-	SCANNING THE QUEUE FOR STILL-UNHANDLED EVENTS
-###############################################################*/
+//@}
+
+//!\name Scanning the Queue for Still-Unhandled Events
+//@{
 
 // DEPRECATED
 Boolean
 	EventLoop_IsNextDoubleClick					(Point*								outGlobalMouseLocationPtr);
 
-/*###############################################################
-	KEYBOARD STATE INFORMATION
-###############################################################*/
+//@}
+
+//!\name Keyboard State Information
+//@{
 
 Boolean
 	EventLoop_IsCapsLockKeyDown					();
@@ -171,13 +177,16 @@ Boolean
 EventModifiers
 	EventLoop_ReturnCurrentModifiers			();
 
-/*###############################################################
-	MISCELLANEOUS
-###############################################################*/
+//@}
+
+//!\name Miscellaneous
+//@{
 
 // DEPRECATED
 WindowRef
 	EventLoop_ReturnRealFrontWindow				();
+
+//@}
 
 #endif
 
