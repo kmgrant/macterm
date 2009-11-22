@@ -1,7 +1,8 @@
+/*!	\file PrintTerminal.mm
+	\brief Handles printing, by using a preview panel.
+*/
 /*###############################################################
 
-	PrintTerminal.mm
-	
 	MacTelnet
 		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
