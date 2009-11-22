@@ -3,8 +3,8 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.0
-	© 2008 by Kevin Grant
+	Simple Cocoa Wrappers Library 1.1
+	© 2008-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -346,6 +346,55 @@ CocoaBasic_GrowlNotify	(CFStringRef	inNotificationName,
 	}
 #endif
 }// GrowlNotify
+
+
+/*!
+Forces the Cocoa runtime to consider the Carbon user focus
+window (as returned by GetUserFocusWindow()) to be the
+frontmost, key window.
+
+This can be important any time a window is selected using
+Carbon APIs instead of user input; the Cocoa runtime may
+correctly highlight the new window but not order it in
+front.  So call SelectWindow(), and then this routine.
+
+See also CocoaBasic_MakeKeyWindowCarbonUserFocusWindow().
+
+(1.1)
+*/
+void
+CocoaBasic_MakeFrontWindowCarbonUserFocusWindow ()
+{
+	AutoPool	_;
+	NSWindow*	window = [[NSWindow alloc] initWithWindowRef:GetUserFocusWindow()];
+	
+	
+	[window makeKeyAndOrderFront:nil];
+}// MakeFrontWindowCarbonUserFocusWindow
+
+
+/*!
+Forces the Cocoa runtime to consider the Carbon user focus
+window (as returned by GetUserFocusWindow()) to be key.
+
+This is mostly important for Carbon sheets that spawn from
+Carbon windows that are running in a Cocoa runtime; the
+sheets do not acquire focus automatically.  So call
+ShowSheetWindow(), and then this routine.
+
+See also CocoaBasic_MakeFrontWindowCarbonUserFocusWindow().
+
+(1.1)
+*/
+void
+CocoaBasic_MakeKeyWindowCarbonUserFocusWindow ()
+{
+	AutoPool	_;
+	NSWindow*	window = [[NSWindow alloc] initWithWindowRef:GetUserFocusWindow()];
+	
+	
+	[window makeKeyWindow];
+}// MakeKeyWindowCarbonUserFocusWindow
 
 
 /*!

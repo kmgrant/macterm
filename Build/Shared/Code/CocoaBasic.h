@@ -3,8 +3,8 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.0
-	© 2008 by Kevin Grant
+	Simple Cocoa Wrappers Library 1.1
+	© 2008-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -62,6 +62,12 @@ void
 	CocoaBasic_GrowlNotify							(CFStringRef,
 													 CFStringRef = nullptr,
 													 CFStringRef = nullptr);
+
+void
+	CocoaBasic_MakeFrontWindowCarbonUserFocusWindow	();
+
+void
+	CocoaBasic_MakeKeyWindowCarbonUserFocusWindow	();
 
 void
 	CocoaBasic_PlaySoundByName						(CFStringRef);
