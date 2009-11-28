@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20091128',
     '20091127',
     '20091102',
     '20091029',
@@ -292,6 +293,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20091128': [
+        'Printing commands are once again enabled on all Mac OS X versions, as the new Cocoa runtime solves the previous issues.',
+    ],
     '20091127': [
         'The application core and menus have been switched to Cocoa, though Carbon is still used for a number of windows.',
         'Menu section titles now use a smaller font.',
