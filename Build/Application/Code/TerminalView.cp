@@ -9203,8 +9203,6 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 					GetGWorld(&oldPort, &oldDevice);
 					SetPortWindowPort(GetControlOwner(view));
 					
-					// this assumes the mouse button is already down
-					assert(GetCurrentEventButtonState() != 0);
 					do
 					{
 						if ((currentModifiers & optionKey) && (currentModifiers & cmdKey))
