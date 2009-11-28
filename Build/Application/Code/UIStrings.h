@@ -325,10 +325,15 @@ Strings used in window toolbars, typically accompanied by icons.
 */
 enum UIStrings_ToolbarItemCFString
 {
+	kUIStrings_ToolbarItemArrangeAllInFront		= 'AAIF',
+	kUIStrings_ToolbarItemBell					= 'Bell',
+	kUIStrings_ToolbarItemFullScreen			= 'Full',
+	kUIStrings_ToolbarItemHideFrontWindow		= 'Hide',
 	kUIStrings_ToolbarItemNewSessionDefault		= 'NewD',
 	kUIStrings_ToolbarItemNewSessionLoginShell	= 'NewL',
 	kUIStrings_ToolbarItemNewSessionShell		= 'NewS',
 	kUIStrings_ToolbarItemSearch				= 'Find',
+	kUIStrings_ToolbarItemSuspendNetwork		= 'Susp',
 	kUIStrings_ToolbarItemTerminalLED1			= 'LED1',
 	kUIStrings_ToolbarItemTerminalLED2			= 'LED2',
 	kUIStrings_ToolbarItemTerminalLED3			= 'LED3',

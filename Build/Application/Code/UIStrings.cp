@@ -1521,8 +1521,8 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 		break;
 	
 	case kUIStrings_TerminalNewCommandsKeyCharacter:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("N"), CFSTR("Terminal"),
-													CFSTR("kUIStrings_TerminalNewCommandsKeyCharacter; used for some menu command keys, this should be only one Unicode character"));
+		outString = CFCopyLocalizedStringFromTable(CFSTR("n"), CFSTR("Terminal"),
+													CFSTR("kUIStrings_TerminalNewCommandsKeyCharacter; used for some menu command keys, this should be only one lowercase Unicode character"));
 		break;
 	
 	case kUIStrings_TerminalPrintFromTerminalJobTitle:
@@ -1605,6 +1605,26 @@ UIStrings_Copy	(UIStrings_ToolbarItemCFString	inWhichString,
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
+	case kUIStrings_ToolbarItemArrangeAllInFront:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Arrange All Windows in Front"), CFSTR("ToolbarItems"),
+													CFSTR("kUIStrings_ToolbarItemArrangeAllInFront"));
+		break;
+	
+	case kUIStrings_ToolbarItemBell:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Bell"), CFSTR("ToolbarItems"),
+													CFSTR("kUIStrings_ToolbarItemBell"));
+		break;
+	
+	case kUIStrings_ToolbarItemFullScreen:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Full Screen"), CFSTR("ToolbarItems"),
+													CFSTR("kUIStrings_ToolbarFullScreen"));
+		break;
+	
+	case kUIStrings_ToolbarItemHideFrontWindow:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Hide"), CFSTR("ToolbarItems"),
+													CFSTR("kUIStrings_ToolbarItemHideFrontWindow"));
+		break;
+	
 	case kUIStrings_ToolbarItemNewSessionDefault:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Default"), CFSTR("ToolbarItems"),
 													CFSTR("kUIStrings_ToolbarItemNewSessionDefault"));
@@ -1623,6 +1643,11 @@ UIStrings_Copy	(UIStrings_ToolbarItemCFString	inWhichString,
 	case kUIStrings_ToolbarItemSearch:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Search"), CFSTR("ToolbarItems"),
 													CFSTR("kUIStrings_ToolbarItemSearch"));
+		break;
+	
+	case kUIStrings_ToolbarItemSuspendNetwork:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Suspend (Scroll Lock)"), CFSTR("ToolbarItems"),
+													CFSTR("kUIStrings_ToolbarItemSuspendNetwork"));
 		break;
 	
 	case kUIStrings_ToolbarItemTerminalLED1:
