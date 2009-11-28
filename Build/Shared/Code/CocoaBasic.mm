@@ -365,9 +365,15 @@ See also CocoaBasic_MakeKeyWindowCarbonUserFocusWindow().
 void
 CocoaBasic_MakeFrontWindowCarbonUserFocusWindow ()
 {
-	AutoPool	_;
-	NSWindow*	window = [[NSWindow alloc] initWithWindowRef:GetUserFocusWindow()];
+	AutoPool		_;
+	HIWindowRef		carbonWindow = GetUserFocusWindow();
+	NSWindow*		window = [[NSWindow alloc] initWithWindowRef:carbonWindow];
 	
+	
+	// as recommended in the documentation, retain the given window
+	// manually, because initWithWindowRef: does not retain it (but
+	// does release it)
+	RetainWindow(carbonWindow);
 	
 	[window makeKeyAndOrderFront:nil];
 }// MakeFrontWindowCarbonUserFocusWindow
@@ -389,9 +395,15 @@ See also CocoaBasic_MakeFrontWindowCarbonUserFocusWindow().
 void
 CocoaBasic_MakeKeyWindowCarbonUserFocusWindow ()
 {
-	AutoPool	_;
-	NSWindow*	window = [[NSWindow alloc] initWithWindowRef:GetUserFocusWindow()];
+	AutoPool		_;
+	HIWindowRef		carbonWindow = GetUserFocusWindow();
+	NSWindow*		window = [[NSWindow alloc] initWithWindowRef:carbonWindow];
 	
+	
+	// as recommended in the documentation, retain the given window
+	// manually, because initWithWindowRef: does not retain it (but
+	// does release it)
+	RetainWindow(carbonWindow);
 	
 	[window makeKeyWindow];
 }// MakeKeyWindowCarbonUserFocusWindow
