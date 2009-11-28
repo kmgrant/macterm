@@ -3,6 +3,19 @@
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
   <array count="6" name="allObjects">
+    <object class="IBCarbonImageView" id="204">
+      <ostype name="controlSignature">Imag</ostype>
+      <object name="layoutInfo" class="IBCarbonHILayoutInfo">
+        <int name="bindingTopKind">1</int>
+        <int name="bindingLeftKind">1</int>
+        <int name="bindingBottomKind">2</int>
+        <int name="bindingRightKind">2</int>
+      </object>
+      <float name="alpha">0.000000</float>
+      <boolean name="scaleToFit">TRUE</boolean>
+      <string name="viewFrame">0 0 675 274 </string>
+      <string name="bounds">28 0 302 675 </string>
+    </object>
     <object class="IBCarbonRootControl" id="167">
       <string name="viewFrame">0 0 675 302 </string>
       <array count="2" name="subviews">
@@ -39,48 +52,36 @@
           <int name="featureBits">4098</int>
           <string name="viewFrame">0 28 675 274 </string>
           <array count="1" name="subviews">
-            <object class="IBCarbonImageView" id="204">
-              <ostype name="controlSignature">Imag</ostype>
-              <object name="layoutInfo" class="IBCarbonHILayoutInfo">
-                <int name="bindingTopKind">1</int>
-                <int name="bindingLeftKind">1</int>
-                <int name="bindingBottomKind">2</int>
-                <int name="bindingRightKind">2</int>
-              </object>
-              <float name="alpha">0.000000</float>
-              <boolean name="scaleToFit">TRUE</boolean>
-              <string name="viewFrame">0 0 675 274 </string>
-              <string name="bounds">28 0 302 675 </string>
-            </object>
+            <reference idRef="204"/>
           </array>
           <string name="bounds">28 0 302 675 </string>
         </object>
       </array>
       <string name="bounds">0 0 302 675 </string>
     </object>
-    <reference idRef="210"/>
-    <reference idRef="194"/>
     <reference idRef="195"/>
+    <reference idRef="194"/>
+    <reference idRef="210"/>
     <object class="IBCarbonWindow" id="166">
       <boolean name="liveResize">TRUE</boolean>
       <boolean name="compositing">TRUE</boolean>
       <boolean name="isConstrained">FALSE</boolean>
       <boolean name="hideOnSuspend">TRUE</boolean>
+      <boolean name="inWindowMenu">FALSE</boolean>
       <int name="scalingMode">1048576</int>
       <string name="title">Clipboard: MacTelnet</string>
       <reference name="rootControl" idRef="167"/>
       <string name="windowRect">212 206 514 881 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <reference idRef="204"/>
   </array>
   <array count="6" name="allParents">
-    <reference idRef="166"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="194"/>
-    <reference idRef="1"/>
     <reference idRef="210"/>
+    <reference idRef="166"/>
+    <reference idRef="194"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="1"/>
   </array>
   <dictionary count="2" name="nameTable">
     <string>File&apos;s Owner</string>

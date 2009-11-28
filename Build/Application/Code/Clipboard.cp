@@ -176,6 +176,15 @@ Clipboard_Init ()
 	
 	gClipboardWindow = clipboardWindow;
 	
+	// some attributes that are unset in the NIB are not recognized on 10.3
+	if (false == FlagManager_Test(kFlagOS10_4API))
+	{
+		(OSStatus)ChangeWindowAttributes
+					(clipboardWindow,
+						0/* attributes to set */,
+						kWindowInWindowMenuAttribute/* attributes to clear */);
+	}
+	
 	// install a callback that responds to drags (which copies dragged data to the clipboard)
 	{
 		HIViewWrap		frameView(idMyUserPaneDragParent, clipboardWindow);

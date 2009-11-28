@@ -8,6 +8,7 @@
       <boolean name="liveResize">TRUE</boolean>
       <boolean name="toolbarButton">TRUE</boolean>
       <boolean name="compositing">TRUE</boolean>
+      <boolean name="inWindowMenu">FALSE</boolean>
       <int name="scalingMode">1048576</int>
       <string name="title">Session Info: MacTelnet</string>
       <object name="rootControl" class="IBCarbonRootControl" id="167">

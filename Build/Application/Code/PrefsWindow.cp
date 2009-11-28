@@ -1058,6 +1058,15 @@ init ()
 		Rect		panelBounds;
 		
 		
+		// some attributes that are unset in the NIB are not recognized on 10.3
+		if (false == FlagManager_Test(kFlagOS10_4API))
+		{
+			(OSStatus)ChangeWindowAttributes
+						(gPreferencesWindow,
+							0/* attributes to set */,
+							kWindowInWindowMenuAttribute/* attributes to clear */);
+		}
+		
 	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 		if (FlagManager_Test(kFlagOS10_5API))
 		{

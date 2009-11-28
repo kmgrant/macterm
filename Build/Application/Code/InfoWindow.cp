@@ -169,6 +169,15 @@ InfoWindow_Init	()
 									CFSTR("InfoWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
 	gSessionStatusWindow = sessionStatusWindow;
 	
+	// set attributes from NIB that are not automatically read on 10.3
+	if (false == FlagManager_Test(kFlagOS10_4API))
+	{
+		(OSStatus)ChangeWindowAttributes
+					(sessionStatusWindow,
+						0/* attributes to set */,
+						kWindowInWindowMenuAttribute/* attributes to clear */);
+	}
+	
 	// on 10.4, use the special unified toolbar appearance
 	if (FlagManager_Test(kFlagOS10_4API))
 	{

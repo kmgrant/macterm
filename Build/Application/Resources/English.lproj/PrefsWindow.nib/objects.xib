@@ -3,41 +3,65 @@
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
   <array count="19" name="allObjects">
-    <object class="IBCarbonRoundButton" id="364">
-      <ostype name="controlSignature">Help</ostype>
-      <ostype name="command">?Ctx</ostype>
-      <string name="viewFrame">18 5 25 25 </string>
-      <string name="bounds">479 18 504 43 </string>
-      <int name="contentType">132</int>
-      <int name="iconCreator">1835098995</int>
-      <int name="iconType">1751477360</int>
+    <object class="IBCarbonBevelButton" id="382">
+      <ostype name="controlSignature">MvDC</ostype>
+      <ostype name="command">MvDC</ostype>
+      <string name="helpTagText">Move lower in the list.</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <int name="menuBehavior">8192</int>
+      <string name="title">▽</string>
+      <string name="viewFrame">132 277 32 24 </string>
+      <string name="bounds">277 132 301 164 </string>
     </object>
-    <object class="IBCarbonMenuItem" id="359">
-      <string name="title">Duplicate Collection</string>
-      <boolean name="updateSingleItem">TRUE</boolean>
-      <int name="keyEquivalentModifier">0</int>
-      <ostype name="command">DupC</ostype>
+    <object class="IBCarbonSeparator" id="368">
+      <ostype name="controlSignature">BSep</ostype>
+      <string name="viewFrame">0 -2 423 8 </string>
+      <string name="bounds">472 0 480 423 </string>
     </object>
-    <object class="IBCarbonStaticText" id="349">
-      <ostype name="controlSignature">Titl</ostype>
-      <int name="fontStyle">107</int>
-      <string name="title">&lt;set automatically&gt;</string>
-      <string name="viewFrame">11 4 233 16 </string>
-      <string name="bounds">4 11 20 244 </string>
+    <object class="IBCarbonBevelButton" id="357">
+      <ostype name="controlSignature">MnpC</ostype>
+      <string name="helpTagText">More commands applicable to Collections.</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <int name="menuBehavior">8192</int>
+      <int name="selectedItem">2</int>
+      <object name="menu" class="IBCarbonMenu" id="358">
+        <string name="title">BevelMenu</string>
+        <array count="2" name="items">
+          <object class="IBCarbonMenuItem" id="359">
+            <string name="title">Duplicate Collection</string>
+            <boolean name="updateSingleItem">TRUE</boolean>
+            <int name="keyEquivalentModifier">0</int>
+            <ostype name="command">DupC</ostype>
+          </object>
+          <object class="IBCarbonMenuItem" id="360">
+            <string name="title">Rename Collection</string>
+            <boolean name="checked">TRUE</boolean>
+            <boolean name="updateSingleItem">TRUE</boolean>
+            <int name="keyEquivalentModifier">0</int>
+            <ostype name="command">RnmC</ostype>
+          </object>
+        </array>
+      </object>
+      <string name="title">*</string>
+      <unsigned_int name="behavior">8192</unsigned_int>
+      <string name="viewFrame">174 277 32 24 </string>
+      <string name="bounds">277 174 301 206 </string>
     </object>
-    <object class="IBCarbonStaticText" id="352">
-      <int name="controlSize">1</int>
-      <string name="title">Focus with ⌥⌘`.</string>
-      <int name="justification">-1</int>
-      <string name="viewFrame">4 253 221 16 </string>
-      <string name="bounds">253 4 269 225 </string>
-    </object>
-    <object class="IBCarbonMenuItem" id="360">
-      <string name="title">Rename Collection</string>
-      <boolean name="checked">TRUE</boolean>
-      <boolean name="updateSingleItem">TRUE</boolean>
-      <int name="keyEquivalentModifier">0</int>
-      <ostype name="command">RnmC</ostype>
+    <object class="IBCarbonBevelButton" id="328">
+      <ostype name="controlSignature">NewC</ostype>
+      <ostype name="command">NewC</ostype>
+      <string name="helpTagText">Create a Collection of this type.</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <int name="menuBehavior">8192</int>
+      <string name="title">+</string>
+      <string name="viewFrame">4 277 32 24 </string>
+      <string name="bounds">277 4 301 36 </string>
     </object>
     <object class="IBCarbonRootControl" id="186">
       <string name="viewFrame">0 0 423 506 </string>
@@ -53,12 +77,16 @@
           <int name="featureBits">2</int>
           <string name="viewFrame">0 474 423 32 </string>
           <array count="2" name="subviews">
-            <object class="IBCarbonSeparator" id="368">
-              <ostype name="controlSignature">BSep</ostype>
-              <string name="viewFrame">0 -2 423 8 </string>
-              <string name="bounds">472 0 480 423 </string>
+            <reference idRef="368"/>
+            <object class="IBCarbonRoundButton" id="364">
+              <ostype name="controlSignature">Help</ostype>
+              <ostype name="command">?Ctx</ostype>
+              <string name="viewFrame">18 5 25 25 </string>
+              <string name="bounds">479 18 504 43 </string>
+              <int name="contentType">132</int>
+              <int name="iconCreator">1835098995</int>
+              <int name="iconType">1751477360</int>
             </object>
-            <reference idRef="364"/>
           </array>
           <string name="bounds">474 0 506 423 </string>
         </object>
@@ -77,7 +105,65 @@
       <string name="viewFrame">46 277 32 24 </string>
       <string name="bounds">277 46 301 78 </string>
     </object>
-    <reference idRef="372"/>
+    <reference idRef="358"/>
+    <object class="IBCarbonBevelButton" id="381">
+      <ostype name="controlSignature">MvUC</ostype>
+      <ostype name="command">MvUC</ostype>
+      <string name="helpTagText">Move higher in the list.</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <int name="menuBehavior">8192</int>
+      <string name="title">△</string>
+      <string name="viewFrame">90 277 32 24 </string>
+      <string name="bounds">277 90 301 122 </string>
+    </object>
+    <object class="IBCarbonRootControl" id="298">
+      <string name="viewFrame">0 0 245 304 </string>
+      <array count="8" name="subviews">
+        <object class="IBCarbonStaticText" id="349">
+          <ostype name="controlSignature">Titl</ostype>
+          <int name="fontStyle">107</int>
+          <string name="title">&lt;set automatically&gt;</string>
+          <string name="viewFrame">11 4 233 16 </string>
+          <string name="bounds">4 11 20 244 </string>
+        </object>
+        <object class="IBCarbonStaticText" id="352">
+          <int name="controlSize">1</int>
+          <string name="title">Focus with ⌥⌘`.</string>
+          <int name="justification">-1</int>
+          <string name="viewFrame">4 253 221 16 </string>
+          <string name="bounds">253 4 269 225 </string>
+        </object>
+        <object class="IBCarbonDBListView" id="326">
+          <ostype name="controlSignature">Favs</ostype>
+          <int name="columnWidth">220</int>
+          <array count="1" name="listViewColumns">
+            <object class="IBCarbonDBListViewColumn">
+              <ostype name="propertyID">Sets</ostype>
+              <int name="propertyFlags">524289</int>
+              <int name="sortOrder">1</int>
+              <int name="maxWidth">220</int>
+              <int name="minWidth">220</int>
+              <int name="textAlignment">0</int>
+            </object>
+          </array>
+          <int name="hiliteStyle">1</int>
+          <int name="selectionFlags">22</int>
+          <boolean name="horzScrollBar">FALSE</boolean>
+          <int name="listViewHeaderBtnHeight">0</int>
+          <string name="viewFrame">2 26 241 219 </string>
+          <string name="bounds">26 2 245 243 </string>
+        </object>
+        <reference idRef="328"/>
+        <reference idRef="350"/>
+        <reference idRef="381"/>
+        <reference idRef="382"/>
+        <reference idRef="357"/>
+      </array>
+      <string name="bounds">0 0 304 245 </string>
+    </object>
+    <reference idRef="352"/>
     <object class="IBCarbonWindow" id="297">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="isResizable">FALSE</boolean>
@@ -87,103 +173,24 @@
       <boolean name="inWindowMenu">FALSE</boolean>
       <int name="carbonWindowClass">20</int>
       <string name="title"></string>
-      <object name="rootControl" class="IBCarbonRootControl" id="298">
-        <string name="viewFrame">0 0 245 304 </string>
-        <array count="8" name="subviews">
-          <reference idRef="349"/>
-          <reference idRef="352"/>
-          <object class="IBCarbonDBListView" id="326">
-            <ostype name="controlSignature">Favs</ostype>
-            <int name="columnWidth">220</int>
-            <array count="1" name="listViewColumns">
-              <object class="IBCarbonDBListViewColumn">
-                <ostype name="propertyID">Sets</ostype>
-                <int name="propertyFlags">524289</int>
-                <int name="sortOrder">1</int>
-                <int name="maxWidth">220</int>
-                <int name="minWidth">220</int>
-                <int name="textAlignment">0</int>
-              </object>
-            </array>
-            <int name="hiliteStyle">1</int>
-            <int name="selectionFlags">22</int>
-            <boolean name="horzScrollBar">FALSE</boolean>
-            <int name="listViewHeaderBtnHeight">0</int>
-            <string name="viewFrame">2 26 241 219 </string>
-            <string name="bounds">26 2 245 243 </string>
-          </object>
-          <object class="IBCarbonBevelButton" id="328">
-            <ostype name="controlSignature">NewC</ostype>
-            <ostype name="command">NewC</ostype>
-            <string name="helpTagText">Create a Collection of this type.</string>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="textPlacement">3</int>
-            <int name="menuBehavior">8192</int>
-            <string name="title">+</string>
-            <string name="viewFrame">4 277 32 24 </string>
-            <string name="bounds">277 4 301 36 </string>
-          </object>
-          <reference idRef="350"/>
-          <object class="IBCarbonBevelButton" id="381">
-            <ostype name="controlSignature">MvUC</ostype>
-            <ostype name="command">MvUC</ostype>
-            <string name="helpTagText">Move higher in the list.</string>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="textPlacement">3</int>
-            <int name="menuBehavior">8192</int>
-            <string name="title">△</string>
-            <string name="viewFrame">90 277 32 24 </string>
-            <string name="bounds">277 90 301 122 </string>
-          </object>
-          <object class="IBCarbonBevelButton" id="382">
-            <ostype name="controlSignature">MvDC</ostype>
-            <ostype name="command">MvDC</ostype>
-            <string name="helpTagText">Move lower in the list.</string>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="textPlacement">3</int>
-            <int name="menuBehavior">8192</int>
-            <string name="title">▽</string>
-            <string name="viewFrame">132 277 32 24 </string>
-            <string name="bounds">277 132 301 164 </string>
-          </object>
-          <object class="IBCarbonBevelButton" id="357">
-            <ostype name="controlSignature">MnpC</ostype>
-            <string name="helpTagText">More commands applicable to Collections.</string>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="textPlacement">3</int>
-            <int name="menuBehavior">8192</int>
-            <int name="selectedItem">2</int>
-            <object name="menu" class="IBCarbonMenu" id="358">
-              <string name="title">BevelMenu</string>
-              <array count="2" name="items">
-                <reference idRef="359"/>
-                <reference idRef="360"/>
-              </array>
-            </object>
-            <string name="title">*</string>
-            <unsigned_int name="behavior">8192</unsigned_int>
-            <string name="viewFrame">174 277 32 24 </string>
-            <string name="bounds">277 174 301 206 </string>
-          </object>
-        </array>
-        <string name="bounds">0 0 304 245 </string>
-      </object>
+      <reference name="rootControl" idRef="298"/>
       <string name="windowRect">189 274 493 519 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
+    <reference idRef="364"/>
+    <reference idRef="359"/>
+    <reference idRef="360"/>
     <reference idRef="326"/>
-    <reference idRef="357"/>
-    <reference idRef="382"/>
+    <reference idRef="349"/>
+    <reference idRef="195"/>
+    <reference idRef="372"/>
     <object class="IBCarbonWindow" id="180">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="hasHorizontalZoom">FALSE</boolean>
       <boolean name="hasVerticalZoom">FALSE</boolean>
       <boolean name="liveResize">TRUE</boolean>
       <boolean name="compositing">TRUE</boolean>
+      <boolean name="inWindowMenu">FALSE</boolean>
       <int name="themeBrush">1</int>
       <int name="windowPosition">1</int>
       <string name="title">Preferences: MacTelnet</string>
@@ -191,33 +198,27 @@
       <string name="windowRect">189 590 695 1013 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <reference idRef="298"/>
-    <reference idRef="381"/>
-    <reference idRef="328"/>
-    <reference idRef="368"/>
-    <reference idRef="195"/>
-    <reference idRef="358"/>
   </array>
   <array count="19" name="allParents">
+    <reference idRef="298"/>
     <reference idRef="372"/>
-    <reference idRef="358"/>
     <reference idRef="298"/>
     <reference idRef="298"/>
-    <reference idRef="358"/>
     <reference idRef="180"/>
     <reference idRef="298"/>
-    <reference idRef="186"/>
-    <reference idRef="1"/>
+    <reference idRef="357"/>
     <reference idRef="298"/>
-    <reference idRef="298"/>
-    <reference idRef="298"/>
-    <reference idRef="1"/>
     <reference idRef="297"/>
     <reference idRef="298"/>
-    <reference idRef="298"/>
+    <reference idRef="1"/>
     <reference idRef="372"/>
+    <reference idRef="358"/>
+    <reference idRef="358"/>
+    <reference idRef="298"/>
+    <reference idRef="298"/>
     <reference idRef="186"/>
-    <reference idRef="357"/>
+    <reference idRef="186"/>
+    <reference idRef="1"/>
   </array>
   <dictionary count="3" name="nameTable">
     <string>Drawer</string>
