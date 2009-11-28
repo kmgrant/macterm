@@ -36,6 +36,7 @@
 #include <AlertMessages.h>
 #include <CarbonEventUtilities.template.h>
 #include <CFRetainRelease.h>
+#include <CocoaBasic.h>
 #include <Console.h>
 #include <Cursors.h>
 #include <Embedding.h>
@@ -1546,6 +1547,7 @@ setAlertVisibility	(My_AlertMessagePtr		inPtr,
 		if (inPtr->isSheet)
 		{
 			ShowSheetWindow(inPtr->dialogWindow, inPtr->parentWindow);
+			CocoaBasic_MakeKeyWindowCarbonUserFocusWindow();
 		}
 		else if (inPtr->isCompletelyModeless)
 		{

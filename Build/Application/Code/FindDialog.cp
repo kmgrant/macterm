@@ -45,6 +45,7 @@
 #include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
 #include <CFUtilities.h>
+#include <CocoaBasic.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
 #include <DialogAdjust.h>
@@ -401,6 +402,7 @@ FindDialog_Display		(FindDialog_Ref		inDialog)
 		
 		// display the dialog
 		ShowSheetWindow(ptr->dialogWindow, TerminalWindow_ReturnWindow(ptr->terminalWindow));
+		CocoaBasic_MakeKeyWindowCarbonUserFocusWindow();
 		
 		// set keyboard focus
 		error = DialogUtilities_SetKeyboardFocus(ptr->fieldKeywords);

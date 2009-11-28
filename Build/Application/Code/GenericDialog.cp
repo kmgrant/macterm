@@ -3,7 +3,7 @@
 	GenericDialog.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -50,6 +50,7 @@
 #include <CarbonEventUtilities.template.h>
 #include <CFRetainRelease.h>
 #include <CFUtilities.h>
+#include <CocoaBasic.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
 #include <Cursors.h>
@@ -323,6 +324,7 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog)
 			ShowSheetWindow(ptr->dialogWindow, ptr->parentWindow);
 			(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
 			Panel_SendMessageFocusFirst(ptr->hostedPanel);
+			CocoaBasic_MakeKeyWindowCarbonUserFocusWindow();
 			// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
 		}
 	}
