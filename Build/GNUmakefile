@@ -213,9 +213,6 @@ English.lproj/KeypadFullScreen.nib \
 English.lproj/KeypadFunctionKeys.nib \
 English.lproj/KeypadVT220Keys.nib \
 English.lproj/KioskPasswordDialog.nib \
-English.lproj/MainMenuHelp.nib \
-English.lproj/MainMenus.nib \
-English.lproj/MenuForDockIcon.nib \
 English.lproj/PrefPanelFormats.nib \
 English.lproj/PrefPanelMacros.nib \
 English.lproj/PrefPanels.nib \
@@ -231,6 +228,7 @@ English.lproj/WindowTitleDialog.nib
 # set to a list of "English.lproj/<xyz>" paths, where there
 # should be an <xyz>.xib source and implied <xyz>.nib output
 XIB_PREFIXES := \
+English.lproj/MainMenuCocoa \
 English.lproj/PrintPreviewCocoa
 APP_RESOURCES_BUNDLES_GENERATED := \
 $(foreach PREFIX,$(XIB_PREFIXES),$(PREFIX).nib)

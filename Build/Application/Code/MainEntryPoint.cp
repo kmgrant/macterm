@@ -132,23 +132,6 @@ MainEntryPoint_ImmediatelyQuit ()
 }// ImmediatelyQuit
 
 
-/*!
-Call this method when the program is about to quit,
-so things can be cleaned up.  This method sets the
-“done” flag, so the program will shut down virtually
-right after this method returns and the next event
-loop occurs.
-
-(3.0)
-*/
-void
-MainEntryPoint_SignalQuit ()
-{
-	// set the flag that will cause the next main loop to terminate the program
-	EventLoop_Terminate();
-}// SignalQuit
-
-
 #pragma mark Internal Methods
 
 /*!

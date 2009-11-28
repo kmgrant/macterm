@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20091127',
     '20091102',
     '20091029',
     '20091020',
@@ -291,6 +292,14 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20091127': [
+        'The application core and menus have been switched to Cocoa, though Carbon is still used for a number of windows.',
+        'Menu section titles now use a smaller font.',
+        'Dock menu has had minor tweaks.',
+        'Macros menu now displays help information while macros are disabled (by selecting None).',
+        'Macros menu now contains the macro-related commands that were previously in the Map menu.',
+        'Terminal view focus rings have been temporarily removed.',
+    ],
     '20091102': [
         'Disabled all printing commands on Leopard, Tiger and Panther, because a bug (fixed only in Snow Leopard) prevents Cocoa/Carbon hybrid applications from sending jobs to a printer without hanging.',
     ],

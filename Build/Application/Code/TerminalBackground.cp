@@ -1819,6 +1819,14 @@ Makes the focus ring overlay appear to be visible or invisible.
 void
 setFocusOverlayVisible	(Boolean	inVisible)
 {
+#if 1
+	// the overlay window effect seems to be particularly taxing in a Cocoa
+	// hybrid environment, where the window manager creates extra windows
+	// (and extra redrawing); this effect is being disabled for now, and
+	// may return once a full Cocoa transition is complete
+	// TEMPORARY
+	HideWindow(gTerminalViewFocusOverlayWindow());
+#else
 	HIWindowRef const	kOverlayWindow = gTerminalViewFocusOverlayWindow();
 	
 	
@@ -1831,6 +1839,7 @@ setFocusOverlayVisible	(Boolean	inVisible)
 		//HideWindow(kOverlayWindow); // if this is done, the window never reappears, for an unknown reason
 		MoveWindow(kOverlayWindow, -8000, -8000, false/* activate */); // arbitrary offsets
 	}
+#endif
 }// setFocusOverlayVisible
 
 } // anonymous namespace

@@ -45,7 +45,12 @@
 */
 
 // main menus
-// these MUST agree with the various "MainMenu*.nib" files!
+// These MUST agree with "MainMenuCocoa.xib".  In the Carbon days,
+// these were menu IDs.  But for Cocoa, they are the "tag" values
+// on each of the menus in the main menu.  So you could ask NSApp
+// for "mainMenu", and then use "itemWithTag" with an ID below to
+// find an NSMenuItem for the title, whose "submenu" is the NSMenu
+// containing all of the items.
 #define	kMenuIDApplication			512
 #define	kMenuIDFile					513
 #define	kMenuIDEdit					514
@@ -53,6 +58,7 @@
 #define	kMenuIDTerminal				516
 #define	kMenuIDKeys					517
 #define	kMenuIDWindow				518
+#define	kMenuItemIDPrecedingWindowList		123
 #define	kMenuIDDebug				519
 #define	kMenuIDScripts				520
 #define	kMenuIDContextual			521

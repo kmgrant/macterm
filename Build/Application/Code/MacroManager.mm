@@ -1,7 +1,8 @@
+/*!	\file MacroManager.mm
+	\brief An API for user-specified keyboard short-cuts.
+*/
 /*###############################################################
 
-	MacroManager.cp
-	
 	MacTelnet
 		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,46 +30,47 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#import "UniversalDefines.h"
 
 // standard-C includes
-#include <cctype>
-#include <cstdio>
-#include <cstring>
+#import <cctype>
+#import <cstdio>
+#import <cstring>
 
 // standard-C++ includes
-#include <sstream>
-#include <string>
+#import <sstream>
+#import <string>
 
 // Mac includes
-#include <Carbon/Carbon.h>
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
 
 // library includes
-#include <AlertMessages.h>
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <CocoaBasic.h>
-#include <Console.h>
-#include <FileSelectionDialogs.h>
-#include <MemoryBlocks.h>
-#include <SoundSystem.h>
-#include <StringUtilities.h>
+#import <AlertMessages.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CocoaBasic.h>
+#import <Console.h>
+#import <FileSelectionDialogs.h>
+#import <MemoryBlocks.h>
+#import <SoundSystem.h>
+#import <StringUtilities.h>
 
 // resource includes
-#include "ApplicationVersion.h"
-#include "GeneralResources.h"
+#import "ApplicationVersion.h"
+#import "GeneralResources.h"
+#import "MenuResources.h"
 
 // MacTelnet includes
-#include "ConstantsRegistry.h"
-#include "MacroManager.h"
-#include "MenuBar.h"
-#include "Network.h"
-#include "Preferences.h"
-#include "QuillsPrefs.h"
-#include "Session.h"
-#include "SessionFactory.h"
-#include "Terminal.h"
-#include "URL.h"
+#import "ConstantsRegistry.h"
+#import "MacroManager.h"
+#import "Network.h"
+#import "Preferences.h"
+#import "QuillsPrefs.h"
+#import "Session.h"
+#import "SessionFactory.h"
+#import "Terminal.h"
+#import "URL.h"
 
 
 
@@ -76,23 +78,17 @@
 namespace {
 
 void						macroSetChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-pascal OSStatus				receiveHICommand		(EventHandlerCallRef, EventRef, void*);
 Preferences_ContextRef		returnDefaultMacroSet	();
+NSMenu*						returnMacrosMenu		();
+unichar						virtualKeyToUnicode		(UInt16);
 
 } // anonymous namespace
 
 #pragma mark Variables
 namespace {
 
-Boolean						gShowMacrosMenu = false;
 ListenerModel_ListenerRef&	gMacroSetMonitor ()		{ static ListenerModel_ListenerRef x = ListenerModel_NewStandardListener(macroSetChanged); return x; }
-CarbonEventHandlerWrap&		gMacroCommandsHandler ()	{ static CarbonEventHandlerWrap	x(GetApplicationEventTarget(), receiveHICommand,
-																							CarbonEventSetInClass(CarbonEventClass
-																													(kEventClassCommand),
-																													kEventCommandProcess,
-																													kEventCommandUpdateStatus),
-																							nullptr/* user data */); return x; }
-Preferences_ContextRef&		gCurrentMacroSet ()			{ static Preferences_ContextRef x = returnDefaultMacroSet(); return x; }
+Preferences_ContextRef&		gCurrentMacroSet ()		{ static Preferences_ContextRef x = returnDefaultMacroSet(); return x; }
 
 } // anonymous namespace
 
@@ -158,27 +154,8 @@ MacroManager_SetCurrentMacros	(Preferences_ContextRef		inMacroSetOrNullForNone)
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	
 	
-	// install a command handler if none exists
-	gMacroCommandsHandler();
-	
 	// perform last action for previous context
-	if (nullptr == gCurrentMacroSet())
-	{
-		MenuRef		macrosMenu = MenuBar_ReturnMacrosMenu();
-		
-		
-		// e.g. previous set was None; now, show the Macros menu for the new set
-		if (gShowMacrosMenu)
-		{
-			(OSStatus)ChangeMenuAttributes(macrosMenu, 0/* attributes to set */, kMenuAttrHidden/* attributes to clear */);
-		}
-		else
-		{
-			// user preference is to always hide
-			(OSStatus)ChangeMenuAttributes(macrosMenu, kMenuAttrHidden/* attributes to set */, 0/* attributes to clear */);
-		}
-	}
-	else
+	if (nullptr != gCurrentMacroSet())
 	{
 		// remove monitors from the context that is about to be non-current
 		for (UInt16 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
@@ -200,24 +177,8 @@ MacroManager_SetCurrentMacros	(Preferences_ContextRef		inMacroSetOrNullForNone)
 	gCurrentMacroSet() = inMacroSetOrNullForNone;
 	
 	// monitor the new current context so that caches and menus can be updated, etc.
-	if (nullptr == gCurrentMacroSet())
+	if (nullptr != gCurrentMacroSet())
 	{
-		MenuRef		macrosMenu = MenuBar_ReturnMacrosMenu();
-		
-		
-		// e.g. the user selected the None macro set; hide the Macros menu entirely
-		(OSStatus)ChangeMenuAttributes(macrosMenu, kMenuAttrHidden/* attributes to set */, 0/* attributes to clear */);
-	}
-	else
-	{
-		// technically this only has to be installed once
-		static Boolean		gMacroMenuVisibleMonitorInstalled = false;
-		if (false == gMacroMenuVisibleMonitorInstalled)
-		{
-			prefsResult = Preferences_StartMonitoring(gMacroSetMonitor(), kPreferences_TagMacrosMenuVisible, true/* notify of initial value */);
-			gMacroMenuVisibleMonitorInstalled = true;
-		}
-		
 		// monitor Preferences for changes to macro settings that are important in the Macro Manager module
 		for (UInt16 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
 		{
@@ -247,6 +208,95 @@ MacroManager_SetCurrentMacros	(Preferences_ContextRef		inMacroSetOrNullForNone)
 	result = kMacroManager_ResultOK;
 	return result;
 }// SetCurrentMacros
+
+
+/*!
+Sets the title and key equivalent of the specified menu item
+based on the given macro in the set.
+
+(4.0)
+*/
+void
+MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
+								 UInt16						inOneBasedMacroIndex,
+								 Preferences_ContextRef		inMacroSetOrNullForActiveSet)
+{
+	Preferences_ContextRef	prefsContext = (nullptr == inMacroSetOrNullForActiveSet)
+											? gCurrentMacroSet()
+											: inMacroSetOrNullForActiveSet;
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	CFStringRef				nameCFString = nullptr;
+	MacroManager_KeyID		macroKeyID = 0;
+	UInt32					modifiers = 0;
+	size_t					actualSize = 0;
+	
+	
+	// retrieve name
+	prefsResult = Preferences_ContextGetData
+					(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, inOneBasedMacroIndex),
+						sizeof(nameCFString), &nameCFString, false/* search defaults too */, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		[inMenuItem setTitle:(NSString*)nameCFString];
+		CFRelease(nameCFString), nameCFString = nullptr;
+	}
+	else
+	{
+		// set a dummy value
+		[inMenuItem setTitle:@""];
+	}
+	
+	// reset menu item
+	[inMenuItem setKeyEquivalent:@""];
+	
+	// retrieve key code
+	prefsResult = Preferences_ContextGetData
+					(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, inOneBasedMacroIndex),
+						sizeof(macroKeyID), &macroKeyID, false/* search defaults too */, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		UInt16 const	kKeyCode = MacroManager_KeyIDKeyCode(macroKeyID);
+		Boolean const	kIsVirtualKey = MacroManager_KeyIDIsVirtualKey(macroKeyID);
+		unichar			keyEquivalentUnicode = '\0';
+		
+		
+		// apply new key equivalent
+		if (kIsVirtualKey)
+		{
+			keyEquivalentUnicode = virtualKeyToUnicode(kKeyCode);
+			[inMenuItem setKeyEquivalent:[NSString stringWithCharacters:&keyEquivalentUnicode length:1]];
+		}
+		else
+		{
+			keyEquivalentUnicode = kKeyCode;
+			[inMenuItem setKeyEquivalent:[NSString stringWithCharacters:&keyEquivalentUnicode length:1]];
+		}
+	}
+	
+	// retrieve key modifiers
+	prefsResult = Preferences_ContextGetData
+					(prefsContext,
+						Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, inOneBasedMacroIndex),
+						sizeof(modifiers), &modifiers, false/* search defaults too */, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		unsigned int	abbreviatedModifiers = 0;
+		
+		
+		// NOTE: if a command key has not been assigned to the item,
+		// setting its modifiers will have no visible effect
+		if (modifiers & cmdKey) abbreviatedModifiers |= NSCommandKeyMask;
+		if (modifiers & controlKey) abbreviatedModifiers |= NSControlKeyMask;
+		if (modifiers & optionKey) abbreviatedModifiers |= NSAlternateKeyMask;
+		if (modifiers & shiftKey) abbreviatedModifiers |= NSShiftKeyMask;
+		[inMenuItem setKeyEquivalentModifierMask:abbreviatedModifiers];
+	}
+	else
+	{
+		// set a dummy value
+		[inMenuItem setKeyEquivalentModifierMask:0];
+	}
+}// UpdateMenuItem
 
 
 /*!
@@ -634,42 +684,16 @@ macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 void*					UNUSED_ARGUMENT(inListenerContext))
 {
 	Preferences_ContextRef		prefsContext = REINTERPRET_CAST(inPreferencesContext, Preferences_ContextRef);
-	MenuRef						macrosMenu = MenuBar_ReturnMacrosMenu();
-	Preferences_Result			prefsResult = kPreferences_ResultOK;
-	size_t						actualSize = 0;
 	
 	
-	if (kPreferences_TagMacrosMenuVisible == inPreferenceTagThatChanged)
-	{
-		// global preference
-		Boolean		flag = false;
-		
-		
-		prefsResult = Preferences_GetData(inPreferenceTagThatChanged, sizeof(flag), &flag, &actualSize);
-		gShowMacrosMenu = flag;
-		if (gShowMacrosMenu)
-		{
-			// the menu should remain hidden if the current macro set is None
-			// (it will be shown again if the user switches the macro set)
-			if (nullptr != gCurrentMacroSet())
-			{
-				(OSStatus)ChangeMenuAttributes(macrosMenu, 0/* attributes to set */, kMenuAttrHidden/* attributes to clear */);
-			}
-		}
-		else
-		{
-			// hide menu immediately
-			(OSStatus)ChangeMenuAttributes(macrosMenu, kMenuAttrHidden/* attributes to set */, 0/* attributes to clear */);
-		}
-	}
-	else if (nullptr == prefsContext)
+	if (nullptr == prefsContext)
 	{
 		Console_Warning(Console_WriteLine, "callback was invoked for nonexistent macro set");
 	}
 	else
 	{
 		Preferences_Tag const		kTagWithoutIndex = Preferences_ReturnTagFromVariant(inPreferenceTagThatChanged);
-		Preferences_Index const		kIndexFromTag = Preferences_ReturnTagIndex(inPreferenceTagThatChanged);
+		//Preferences_Index const		kIndexFromTag = Preferences_ReturnTagIndex(inPreferenceTagThatChanged);
 		
 		
 		switch (kTagWithoutIndex)
@@ -688,82 +712,10 @@ macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			break;
 		
 		case kPreferences_TagIndexedMacroName:
-			// update the proper menu item to match the macro name of the set
-			{
-				CFStringRef		nameCFString = nullptr;
-				
-				
-				// retrieve name
-				prefsResult = Preferences_ContextGetData(prefsContext, inPreferenceTagThatChanged, sizeof(nameCFString),
-															&nameCFString, false/* search defaults too */, &actualSize);
-				if (kPreferences_ResultOK == prefsResult)
-				{
-					(OSStatus)SetMenuItemTextWithCFString(macrosMenu, kIndexFromTag, nameCFString);
-					CFRelease(nameCFString), nameCFString = nullptr;
-				}
-				else
-				{
-					// set a dummy value
-					(OSStatus)SetMenuItemTextWithCFString(macrosMenu, kIndexFromTag, CFSTR(""));
-				}
-			}
-			break;
-		
-		case kPreferences_TagIndexedMacroKey:
-			// update the proper menu item to match the macro key of the set
-			{
-				MacroManager_KeyID		macroKeyID = 0;
-				
-				
-				// reset menu item
-				(OSStatus)ChangeMenuItemAttributes(macrosMenu, kIndexFromTag, 0/* attributes to set */,
-													kMenuItemAttrUseVirtualKey/* attributes to clear */);
-				(OSStatus)SetMenuItemCommandKey(macrosMenu, kIndexFromTag, false/* virtual key */, '\0'/* character */);
-				(OSStatus)SetMenuItemKeyGlyph(macrosMenu, kIndexFromTag, kMenuNullGlyph);
-				
-				// retrieve key modifiers
-				prefsResult = Preferences_ContextGetData(prefsContext, inPreferenceTagThatChanged, sizeof(macroKeyID),
-															&macroKeyID, false/* search defaults too */, &actualSize);
-				if (kPreferences_ResultOK == prefsResult)
-				{
-					UInt16 const	kKeyCode = MacroManager_KeyIDKeyCode(macroKeyID);
-					Boolean const	kIsVirtualKey = MacroManager_KeyIDIsVirtualKey(macroKeyID);
-					
-					
-					// apply new key equivalent
-					(OSStatus)SetMenuItemCommandKey(macrosMenu, kIndexFromTag, kIsVirtualKey, kKeyCode);
-				}
-			}
-			break;
-		
+		case kPreferences_TagIndexedMacroKey:		
 		case kPreferences_TagIndexedMacroKeyModifiers:
-			// update the proper menu item to match the macro key modifiers of the set
-			{
-				UInt32		modifiers = 0;
-				
-				
-				// retrieve key modifiers
-				prefsResult = Preferences_ContextGetData(prefsContext, inPreferenceTagThatChanged, sizeof(modifiers),
-															&modifiers, false/* search defaults too */, &actualSize);
-				if (kPreferences_ResultOK == prefsResult)
-				{
-					UInt8		abbreviatedModifiers = kMenuNoCommandModifier;
-					
-					
-					// NOTE: if a command key has not been assigned to the item,
-					// setting its modifiers will have no visible effect
-					if (modifiers & cmdKey) abbreviatedModifiers &= ~kMenuNoCommandModifier;
-					if (modifiers & controlKey) abbreviatedModifiers |= kMenuControlModifier;
-					if (modifiers & optionKey) abbreviatedModifiers |= kMenuOptionModifier;
-					if (modifiers & shiftKey) abbreviatedModifiers |= kMenuShiftModifier;
-					(OSStatus)SetMenuItemModifiers(macrosMenu, kIndexFromTag, abbreviatedModifiers);
-				}
-				else
-				{
-					// set a dummy value
-					(OSStatus)SetMenuItemModifiers(macrosMenu, kIndexFromTag, kMenuNoCommandModifier);
-				}
-			}
+			// no action necessary, although this could perhaps do caching that
+			// would make MacroManager_UpdateMenuItem() more efficient
 			break;
 		
 		default:
@@ -772,203 +724,6 @@ macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		}
 	}
 }// macroSetChanged
-
-
-/*!
-Handles "kEventCommandProcess" of "kEventClassCommand" for
-macro set selection commands.
-
-(4.0)
-*/
-pascal OSStatus
-receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					UNUSED_ARGUMENT(inContextPtr))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassCommand);
-	{
-		HICommand	received;
-		
-		
-		// determine the command in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
-		
-		// if the command information was found, proceed
-		if (result == noErr)
-		{
-			// don’t claim to have handled any commands not shown below
-			result = eventNotHandledErr;
-			
-			switch (kEventKind)
-			{
-			case kEventCommandProcess:
-				// Determine if a menu command needs updating.
-				switch (received.commandID)
-				{
-				case kCommandMacroSetNone:
-					{
-						MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-						
-						
-						macrosResult = MacroManager_SetCurrentMacros(nullptr);
-						if (false == macrosResult.ok())
-						{
-							Sound_StandardAlert();
-						}
-						result = noErr;
-					}
-					break;
-				
-				case kCommandMacroSetDefault:
-					{
-						MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-						
-						
-						macrosResult = MacroManager_SetCurrentMacros(MacroManager_ReturnDefaultMacros());
-						if (false == macrosResult.ok())
-						{
-							Sound_StandardAlert();
-						}
-						result = noErr;
-					}
-					break;
-				
-				case kCommandMacroSetByFavoriteName:
-					{
-						// use the specified preferences
-						Boolean		isError = true;
-						
-						
-						if (received.attributes & kHICommandFromMenu)
-						{
-							CFStringRef		collectionName = nullptr;
-							
-							
-							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
-							{
-								Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-																			(Quills::Prefs::MACRO_SET, collectionName);
-								
-								
-								if (nullptr != namedSettings)
-								{
-									MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-									
-									
-									macrosResult = MacroManager_SetCurrentMacros(namedSettings);
-									isError = (false == macrosResult.ok());
-								}
-								CFRelease(collectionName), collectionName = nullptr;
-							}
-						}
-						
-						if (isError)
-						{
-							// failed...
-							Sound_StandardAlert();
-						}
-						
-						result = noErr;
-					}
-					break;
-				
-				default:
-					// ???
-					break;
-				}
-				break;
-			
-			case kEventCommandUpdateStatus:
-				// Execute a command selected from a menu (or sent from a control, etc.).
-				//
-				// IMPORTANT: This could imply ANY form of menu selection, whether from
-				//            the menu bar, from a contextual menu, or from a pop-up menu!
-				switch (received.commandID)
-				{
-				case kCommandMacroSetNone:
-					if (received.attributes & kHICommandFromMenu)
-					{
-						MenuRef			menu = received.menu.menuRef;
-						MenuItemIndex	itemIndex = received.menu.menuItemIndex;
-						
-						
-						CheckMenuItem(menu, itemIndex, (nullptr == gCurrentMacroSet()));
-						
-						// fall through to the other handler (MenuBar module), which
-						// will also fix the active state of this item
-						result = eventNotHandledErr;
-					}
-					break;
-				
-				case kCommandMacroSetDefault:
-					if (received.attributes & kHICommandFromMenu)
-					{
-						MenuRef			menu = received.menu.menuRef;
-						MenuItemIndex	itemIndex = received.menu.menuItemIndex;
-						
-						
-						CheckMenuItem(menu, itemIndex, (returnDefaultMacroSet() == gCurrentMacroSet()));
-						
-						// fall through to the other handler (MenuBar module), which
-						// will also fix the active state of this item
-						result = eventNotHandledErr;
-					}
-					break;
-				
-				case kCommandMacroSetByFavoriteName:
-					if (received.attributes & kHICommandFromMenu)
-					{
-						MenuRef			menu = received.menu.menuRef;
-						MenuItemIndex	itemIndex = received.menu.menuItemIndex;
-						Boolean			isChecked = false;
-						
-						
-						if (nullptr != gCurrentMacroSet())
-						{
-							CFStringRef		collectionName = nullptr;
-							CFStringRef		menuItemName = nullptr;
-							
-							
-							if (noErr == CopyMenuItemTextAsCFString(menu, itemIndex, &menuItemName))
-							{
-								// the context name should not be released
-								Preferences_Result		prefsResult = Preferences_ContextGetName(gCurrentMacroSet(), collectionName);
-								
-								
-								if (kPreferences_ResultOK == prefsResult)
-								{
-									isChecked = (kCFCompareEqualTo == CFStringCompare(collectionName, menuItemName, 0/* options */));
-								}
-								CFRelease(menuItemName), menuItemName = nullptr;
-							}
-						}
-						CheckMenuItem(menu, itemIndex, isChecked);
-						
-						// fall through to the other handler (MenuBar module), which
-						// will also fix the active state of this item
-						result = eventNotHandledErr;
-					}
-					break;
-				
-				default:
-					// ???
-					break;
-				}
-				break;
-			
-			default:
-				// ???
-				break;
-			}
-		}
-	}
-	return result;
-}// receiveHICommand
 
 
 /*!
@@ -991,6 +746,180 @@ returnDefaultMacroSet ()
 	return result;
 }// returnDefaultMacroSet
 
+
+/*!
+Returns the menu from the menu bar that contains macro
+commands.  There must be an item in this menu with a tag
+of "1", with subsequent macros having increasing numerical
+tags.
+
+(4.0)
+*/
+NSMenu*
+returnMacrosMenu ()
+{
+	assert(nil != NSApp);
+	NSMenu*			mainMenu = [NSApp mainMenu];
+	assert(nil != mainMenu);
+	NSMenuItem*		macrosMenuItem = [mainMenu itemWithTag:kMenuIDMacros];
+	assert(nil != macrosMenuItem);
+	NSMenu*			result = [macrosMenuItem submenu];
+	assert(nil != result);
+	
+	
+	return result;
+}// returnMacrosMenu
+
+
+/*!
+Returns a Unicode character that is a reasonable description
+of the specified virtual key code, as returned by the Carbon
+event manager.
+
+INCOMPLETE.
+
+Virtual key codes are poorly documented, but they are
+described in older Inside Macintosh books!
+
+(4.0)
+*/
+unichar
+virtualKeyToUnicode		(UInt16		inVirtualKeyCode)
+{
+	unichar		result = '\0';
+	
+	
+	// INCOMPLETE!!!
+	// (yes, these really are assigned as bizarrely as they seem...)
+	switch (inVirtualKeyCode)
+	{
+	case 0x24:
+		result = NSCarriageReturnCharacter;
+		break;
+	
+	case 0x33:
+		result = NSBackspaceCharacter;
+		break;
+	
+	case 0x35:
+		result = 0x001B; // the “escape” key
+		break;
+	
+	case 0x47:
+		result = 0x2327; // the “clear” key
+		break;
+	
+	case 0x4C:
+		result = NSEnterCharacter;
+		break;
+	
+	case 0x60:
+		result = NSF5FunctionKey;
+		break;
+	
+	case 0x61:
+		result = NSF6FunctionKey;
+		break;
+	
+	case 0x62:
+		result = NSF7FunctionKey;
+		break;
+	
+	case 0x63:
+		result = NSF3FunctionKey;
+		break;
+	
+	case 0x64:
+		result = NSF8FunctionKey;
+		break;
+	
+	case 0x65:
+		result = NSF9FunctionKey;
+		break;
+	
+	case 0x67:
+		result = NSF11FunctionKey;
+		break;
+	
+	case 0x69:
+		result = NSF13FunctionKey;
+		break;
+	
+	case 0x6A:
+		result = NSF16FunctionKey;
+		break;
+	
+	case 0x6B:
+		result = NSF14FunctionKey;
+		break;
+	
+	case 0x6D:
+		result = NSF10FunctionKey;
+		break;
+	
+	case 0x6F:
+		result = NSF12FunctionKey;
+		break;
+	
+	case 0x71:
+		result = NSF15FunctionKey;
+		break;
+	
+	case 0x73:
+		result = NSHomeFunctionKey;
+		break;
+	
+	case 0x74:
+		result = NSPageUpFunctionKey;
+		break;
+	
+	case 0x75:
+		result = NSDeleteCharacter;
+		break;
+	
+	case 0x76:
+		result = NSF4FunctionKey;
+		break;
+	
+	case 0x77:
+		result = NSEndFunctionKey;
+		break;
+	
+	case 0x78:
+		result = NSF2FunctionKey;
+		break;
+	
+	case 0x79:
+		result = NSPageDownFunctionKey;
+		break;
+	
+	case 0x7A:
+		result = NSF1FunctionKey;
+		break;
+	
+	case 0x7B:
+		result = NSLeftArrowFunctionKey;
+		break;
+	
+	case 0x7C:
+		result = NSRightArrowFunctionKey;
+		break;
+	
+	case 0x7D:
+		result = NSDownArrowFunctionKey;
+		break;
+	
+	case 0x7E:
+		result = NSUpArrowFunctionKey;
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+	
+	return result;
+}// virtualKeyToUnicode
 
 } // anonymous namespace
 

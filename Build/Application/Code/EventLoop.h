@@ -97,9 +97,6 @@ void
 void
 	EventLoop_Run								();
 
-void
-	EventLoop_Terminate							();
-
 //@}
 
 //!\name Manual Handling of Events

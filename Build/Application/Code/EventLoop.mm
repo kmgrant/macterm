@@ -1,7 +1,8 @@
+/*!	\file EventLoop.mm
+	\brief The main loop, and event-related utilities.
+*/
 /*###############################################################
 
-	EventLoop.cp
-	
 	MacTelnet
 		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,56 +30,59 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#import "UniversalDefines.h"
 
 // standard-C++ includes
-#include <algorithm>
-#include <map>
-#include <vector>
+#import <algorithm>
+#import <map>
+#import <vector>
 
 // Mac includes
-#include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
-#include <QuickTime/QuickTime.h>
+#import <ApplicationServices/ApplicationServices.h>
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
+#import <CoreServices/CoreServices.h>
+#import <QuickTime/QuickTime.h>
 
 // library includes
-#include <AlertMessages.h>
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <Console.h>
-#include <Cursors.h>
-#include <Embedding.h>
-#include <HIViewWrap.h>
-#include <ListenerModel.h>
-#include <Localization.h>
-#include <MemoryBlockHandleLocker.template.h>
-#include <MemoryBlockPtrLocker.template.h>
-#include <MemoryBlocks.h>
-#include <RegionUtilities.h>
-#include <StringUtilities.h>
-#include <WindowInfo.h>
+#import <AlertMessages.h>
+#import <AutoPool.objc++.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CocoaBasic.h>
+#import <Console.h>
+#import <Cursors.h>
+#import <Embedding.h>
+#import <HIViewWrap.h>
+#import <ListenerModel.h>
+#import <Localization.h>
+#import <MemoryBlockHandleLocker.template.h>
+#import <MemoryBlockPtrLocker.template.h>
+#import <MemoryBlocks.h>
+#import <RegionUtilities.h>
+#import <StringUtilities.h>
+#import <WindowInfo.h>
 
 // resource includes
-#include "GeneralResources.h"
-#include "MenuResources.h"
+#import "GeneralResources.h"
+#import "MenuResources.h"
 
 // MacTelnet includes
-#include "Clipboard.h"
-#include "Commands.h"
-#include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
-#include "EventLoop.h"
-#include "HelpSystem.h"
-#include "MenuBar.h"
-#include "Preferences.h"
-#include "QuillsSession.h"
-#include "RasterGraphicsScreen.h"
-#include "Session.h"
-#include "SessionFactory.h"
-#include "TerminalView.h"
-#include "TerminalWindow.h"
-#include "Terminology.h"
+#import "Clipboard.h"
+#import "Commands.h"
+#import "ConstantsRegistry.h"
+#import "DialogUtilities.h"
+#import "EventLoop.h"
+#import "HelpSystem.h"
+#import "MenuBar.h"
+#import "Preferences.h"
+#import "QuillsSession.h"
+#import "RasterGraphicsScreen.h"
+#import "Session.h"
+#import "SessionFactory.h"
+#import "TerminalView.h"
+#import "TerminalWindow.h"
+#import "Terminology.h"
 
 
 
@@ -170,6 +174,7 @@ pascal OSStatus			updateModifiers					(EventHandlerCallRef, EventRef, void*);
 #pragma mark Variables
 namespace {
 
+NSAutoreleasePool*					gGlobalPool = nil;
 My_GlobalEventTargetRef				gGlobalEventTarget = nullptr;
 SInt16								gHaveInstalledNotification = 0;
 UInt32								gTicksWaitNextEvent = 0L;
@@ -240,6 +245,31 @@ EventLoop_Init ()
 	EventLoop_Result	result = noErr;
 	
 	
+	// a pool must be constructed here, because NSApplicationMain()
+	// is never called
+	gGlobalPool = [[NSAutoreleasePool alloc] init];
+	
+	// ensure that Cocoa globals are defined (NSApp); this has to be
+	// done separately, and not with NSApplicationMain(), because
+	// some modules can only initialize after Cocoa is ready (and
+	// not all modules are using Cocoa, yet)
+	{
+		AutoPool	_;
+		NSBundle*	mainBundle = nil;
+		NSString*	mainFileName = nil;
+		BOOL		loadOK = NO;
+		
+		
+		[NSApplication sharedApplication];
+		assert(nil != NSApp);
+		mainBundle = [NSBundle mainBundle];
+		assert(nil != mainBundle);
+		mainFileName = (NSString*)[mainBundle objectForInfoDictionaryKey:@"NSMainNibFile"]; // e.g. "MainMenuCocoa"
+		assert(nil != mainFileName);
+		loadOK = [NSBundle loadNibNamed:mainFileName owner:NSApp];
+		assert(loadOK);
+	}
+	
 	// set the sleep time (3.0 - don’t use preferences value, it’s not user-specifiable anymore)
 	gTicksWaitNextEvent = 60; // make this larger to increase likelihood of high-frequency timers firing on time
 	
@@ -265,11 +295,6 @@ EventLoop_Init ()
 	// create listener models to handle event notifications
 	gGlobalEventTarget = newGlobalEventTarget();
 	
-	// the update-status handler for Preferences does not appear to be
-	// called soon enough to properly initialize its state, so it is
-	// explicitly enabled here
-	EnableMenuCommand(nullptr/* menu */, kHICommandPreferences);
-	
 	return result;
 }// Init
 
@@ -287,9 +312,10 @@ EventLoop_Done ()
 	RemoveEventHandler(gCarbonEventSheetOpeningHandler), gCarbonEventSheetOpeningHandler = nullptr;
 	DisposeEventHandlerUPP(gCarbonEventSheetOpeningUPP), gCarbonEventSheetOpeningUPP = nullptr;
 	
-	
 	// destroy global event target
 	disposeGlobalEventTarget(&gGlobalEventTarget);
+	
+	//[gGlobalPool release];
 }// Done
 
 
@@ -517,7 +543,10 @@ be invoked from the main application thread.
 void
 EventLoop_Run ()
 {
-	RunApplicationEventLoop();
+	AutoPool	_;
+	
+	
+	[NSApp run];
 }// Run
 
 
@@ -532,6 +561,7 @@ void
 EventLoop_SelectBehindDialogWindows		(HIWindowRef	inWindow)
 {
 	SelectWindow(inWindow);
+	CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
 }// SelectBehindDialogWindows
 
 
@@ -547,9 +577,8 @@ window.
 void
 EventLoop_SelectOverRealFrontWindow		(HIWindowRef	inWindow)
 {
-	// I give up, dammit; it’s too hard to prevent
-	// activate events from occurring on Mac OS 8/9.
 	SelectWindow(inWindow);
+	CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
 }// SelectOverRealFrontWindow
 
 
@@ -608,21 +637,6 @@ EventLoop_StopMonitoring	(EventLoop_GlobalEvent		inForWhatEvent,
 	
 	return result;
 }// StopMonitoring
-
-
-/*!
-Kills the main event loop, causing EventLoop_Run()
-to return.  This should be done from within the
-Quit Apple Event handler, and not usually any place
-else.
-
-(3.0)
-*/
-void
-EventLoop_Terminate ()
-{
-	QuitApplicationEventLoop();
-}// Terminate
 
 
 #pragma mark Internal Methods
@@ -764,8 +778,7 @@ receiveApplicationSwitch	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
-Handles "kEventCommandProcess" and "kEventCommandUpdateStatus"
-of "kEventClassCommand".
+Handles "kEventCommandProcess" of "kEventClassCommand".
 
 (3.0)
 */
@@ -792,229 +805,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		{
 			switch (kEventKind)
 			{
-			case kEventCommandUpdateStatus:
-				// Determine the proper state of the given command.
-				//
-				// WARNING:	Be VERY EFFICIENT in this code.  Since
-				//			menu commands are allowed to have single-
-				//			key equivalents, the Menu Manager will
-				//			invoke this EVERY TIME A KEY IS PRESSED,
-				//			not to mention many other times during
-				//			the main event loop.  Typing will be very
-				//			*slow* if this code is doing anything
-				//			complicated.
-				switch (received.commandID)
-				{
-				case kHICommandPreferences:
-					{
-						// set the item state for the “Preferences…” item
-						Boolean		enabled = false;
-						Boolean		menuKeyEquivalents = false;
-						size_t		actualSize = 0;
-						
-						
-						// this item is disabled if the Preferences window is in front
-						if (EventLoop_ReturnRealFrontWindow() == nullptr) enabled = true;
-						else
-						{
-							WindowInfo_Ref			windowInfoRef = nullptr;
-							WindowInfo_Descriptor	windowDescriptor = kWindowInfo_InvalidDescriptor;
-							
-							
-							windowInfoRef = WindowInfo_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());
-							if (windowInfoRef != nullptr)
-							{
-								windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowInfoRef);
-							}
-							enabled = (windowDescriptor != kConstantsRegistry_WindowDescriptorPreferences);
-						}
-						if (enabled) EnableMenuItem(received.menu.menuRef, received.menu.menuItemIndex);
-						else DisableMenuItem(received.menu.menuRef, received.menu.menuItemIndex);
-						
-						// set the menu key
-						unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(menuKeyEquivalents),
-													&menuKeyEquivalents, &actualSize) ==
-								kPreferences_ResultOK)
-						{
-							menuKeyEquivalents = true; // assume key equivalents, if preference can’t be found
-						}
-						(OSStatus)SetMenuItemCommandKey(received.menu.menuRef, received.menu.menuItemIndex,
-														false/* is virtual key code */, (menuKeyEquivalents) ? ',' : '\0');
-					}
-					break;
-				
-				case kCommandContextSensitiveHelp:
-					{
-						// set the item state for the context-sensitive help item
-						HelpSystem_Result	helpSystemResult = kHelpSystem_ResultOK;
-						Boolean				menuKeyEquivalents = false;
-						size_t				actualSize = 0;
-						CFStringRef			itemText = nullptr;
-						
-						
-						// set enabled state; inactive only if no particular help context is set
-						if (HelpSystem_ReturnCurrentContextKeyPhrase() == kHelpSystem_KeyPhraseDefault)
-						{
-							DisableMenuItem(received.menu.menuRef, received.menu.menuItemIndex);
-						}
-						else
-						{
-							EnableMenuItem(received.menu.menuRef, received.menu.menuItemIndex);
-						}
-						
-						// set the item text
-						helpSystemResult = HelpSystem_CopyKeyPhraseCFString
-											(HelpSystem_ReturnCurrentContextKeyPhrase(), itemText);
-						if (helpSystemResult == kHelpSystem_ResultOK)
-						{
-							SetMenuItemTextWithCFString(received.menu.menuRef, received.menu.menuItemIndex, itemText);
-							CFRelease(itemText);
-						}
-						
-						// set the menu key
-						unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(menuKeyEquivalents),
-													&menuKeyEquivalents, &actualSize) ==
-								kPreferences_ResultOK)
-						{
-							menuKeyEquivalents = true; // assume key equivalents, if preference can’t be found
-						}
-						(OSStatus)SetMenuItemCommandKey(received.menu.menuRef, received.menu.menuItemIndex,
-														false/* is virtual key code */, (menuKeyEquivalents) ? '?' : '\0');
-						SetMenuItemModifiers(received.menu.menuRef, received.menu.menuItemIndex,
-											(menuKeyEquivalents) ? kMenuControlModifier : kMenuNoModifiers);
-					}
-					break;
-				
-				case kCommandShowHelpTags:
-				case kCommandHideHelpTags:
-					{
-						// set the item state for the “Show Help Tags” item
-						Boolean		menuKeyEquivalents = false;
-						Boolean		hideCondition = false;
-						size_t		actualSize = 0;
-						
-						
-						// hide item if it is not applicable; otherwise show it
-						hideCondition = (received.commandID == kCommandShowHelpTags)
-											? HMAreHelpTagsDisplayed()
-											: (false == HMAreHelpTagsDisplayed());
-						if (hideCondition)
-						{
-							ChangeMenuItemAttributes(received.menu.menuRef, received.menu.menuItemIndex,
-														kMenuItemAttrHidden/* attributes to set */, 0L);
-						}
-						else
-						{
-							ChangeMenuItemAttributes(received.menu.menuRef, received.menu.menuItemIndex,
-														0L, kMenuItemAttrHidden/* attributes to clear */);
-						}
-						
-						// set the menu key
-						unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(menuKeyEquivalents),
-													&menuKeyEquivalents, &actualSize) ==
-								kPreferences_ResultOK)
-						{
-							menuKeyEquivalents = true; // assume key equivalents, if preference can’t be found
-						}
-						(OSStatus)SetMenuItemCommandKey(received.menu.menuRef, received.menu.menuItemIndex,
-														false/* is virtual key code */, (menuKeyEquivalents) ? '?' : '\0');
-						SetMenuItemModifiers(received.menu.menuRef, received.menu.menuItemIndex,
-											(menuKeyEquivalents) ? kMenuOptionModifier : kMenuNoModifiers);
-					}
-					break;
-				
-				case kHICommandCustomizeToolbar:
-					{
-						// set the item state for the “Show Toolbar” item
-						HIWindowRef		window = GetUserFocusWindow();
-						HIToolbarRef	targetToolbar = nullptr;
-						OptionBits		toolbarAttributes = 0;
-						OSStatus		error = (nullptr == window)
-													? STATIC_CAST(memPCErr, OSStatus)
-													: GetWindowToolbar(window, &targetToolbar);
-						
-						
-						if ((noErr == error) && (nullptr != targetToolbar))
-						{
-							error = HIToolbarGetAttributes(targetToolbar, &toolbarAttributes);
-						}
-						
-						if ((noErr != error) || (nullptr == targetToolbar) ||
-							(0 == (kHIToolbarIsConfigurable & toolbarAttributes)))
-						{
-							// the customize command does not apply if no window is open,
-							// if there is no toolbar, or if the toolbar is not configurable
-							DisableMenuItem(received.menu.menuRef, received.menu.menuItemIndex);
-						}
-						else
-						{
-							EnableMenuItem(received.menu.menuRef, received.menu.menuItemIndex);
-						}
-					}
-					break;
-				
-				case kHICommandShowToolbar:
-				case kHICommandHideToolbar:
-					{
-						// set the item state for the “Show Toolbar” and “Hide Toolbar” items
-						HIWindowRef			window = GetUserFocusWindow();
-						WindowAttributes	windowAttributes = 0;
-						OSStatus			error = (nullptr == window)
-														? STATIC_CAST(memPCErr, OSStatus)
-														: GetWindowAttributes(window, &windowAttributes);
-						Boolean				toolbarCanBeHidden = false;
-						
-						
-						if ((noErr == error) &&
-							(windowAttributes & kWindowToolbarButtonAttribute) &&
-							IsWindowToolbarVisible(window))
-						{
-							toolbarCanBeHidden = true;
-						}
-						
-						// hide item if it is not applicable; otherwise show it
-						{
-							// for windows without toolbars or windows where the toolbar
-							// state cannot be changed, hide the Hide Toolbar item
-							// and dim the Show Toolbar item; otherwise, show the one
-							// that is applicable for the current toolbar state
-							Boolean		hideCondition = (received.commandID == kHICommandShowToolbar)
-															? toolbarCanBeHidden
-															: (false == toolbarCanBeHidden);
-							
-							
-							if (hideCondition)
-							{
-								ChangeMenuItemAttributes(received.menu.menuRef, received.menu.menuItemIndex,
-															kMenuItemAttrHidden/* attributes to set */, 0L);
-							}
-							else
-							{
-								ChangeMenuItemAttributes(received.menu.menuRef, received.menu.menuItemIndex,
-															0L, kMenuItemAttrHidden/* attributes to clear */);
-							}
-						}
-						
-						// disable the Show Toolbar item if there is no window or no toolbar
-						// or a toolbar that cannot be explicitly hidden
-						if ((noErr != error) ||
-							(0 == (windowAttributes & kWindowToolbarButtonAttribute)))
-						{
-							DisableMenuItem(received.menu.menuRef, received.menu.menuItemIndex);
-						}
-						else
-						{
-							EnableMenuItem(received.menu.menuRef, received.menu.menuItemIndex);
-						}
-					}
-					break;
-				
-				default:
-					MenuBar_SetUpMenuItemState(received.commandID);
-					break;
-				}
-				break;
-			
 			case kEventCommandProcess:
 				// Execute a command selected from a menu.
 				//

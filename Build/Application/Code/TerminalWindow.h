@@ -46,6 +46,11 @@
 #define __TERMINALWINDOW__
 
 // Mac includes
+#ifdef __OBJC__
+@class NSWindow;
+#else
+class NSWindow;
+#endif
 #include <CoreServices/CoreServices.h>
 
 // library includes
@@ -132,6 +137,10 @@ Boolean
 	TerminalWindow_EventInside						(TerminalWindowRef			inRef,
 													 EventRef					inMouseEvent);
 
+// TEMPORARY, FOR COCOA TRANSITION
+void
+	TerminalWindow_Focus							(TerminalWindowRef			inRef);
+
 void
 	TerminalWindow_GetFontAndSize					(TerminalWindowRef			inRef,
 													 StringPtr					outFontFamilyNameOrNull,
@@ -162,6 +171,10 @@ TerminalWindow_Result
 													 TerminalViewRef*			outViewArray,
 													 UInt16*					outActualCountOrNull);
 
+// TEMPORARY, FOR COCOA TRANSITION
+Boolean
+	TerminalWindow_IsFocused						(TerminalWindowRef			inRef);
+
 Boolean
 	TerminalWindow_IsObscured						(TerminalWindowRef			inRef);
 
@@ -169,6 +182,9 @@ Boolean
 	TerminalWindow_ReconfigureViewsInGroup			(TerminalWindowRef			inRef,
 													 TerminalWindow_ViewGroup	inViewGroup,
 													 Preferences_ContextRef		inContext);
+
+NSWindow*
+	TerminalWindow_ReturnNSWindow					(TerminalWindowRef			inRef);
 
 UInt16
 	TerminalWindow_ReturnScreenCount				(TerminalWindowRef			inRef);
@@ -197,6 +213,11 @@ TerminalViewRef
 WindowRef
 	TerminalWindow_ReturnWindow						(TerminalWindowRef			inRef);
 
+// TEMPORARY, FOR COCOA TRANSITION
+void
+	TerminalWindow_Select							(TerminalWindowRef			inRef,
+													 Boolean					inFocus = true);
+
 void
 	TerminalWindow_SetFontAndSize					(TerminalWindowRef			inRef,
 													 ConstStringPtr				inFontFamilyNameOrNull,
@@ -219,6 +240,11 @@ void
 void
 	TerminalWindow_SetWindowTitle					(TerminalWindowRef			inRef,
 													 CFStringRef				inName);
+
+// TEMPORARY, FOR COCOA TRANSITION
+void
+	TerminalWindow_SetVisible						(TerminalWindowRef			inRef,
+													 Boolean					inIsVisible);
 
 //@}
 

@@ -271,7 +271,7 @@ struct My_Session
 	EventLoopTimerRef			longLifeTimer;				// 15-second timer
 	InterfaceLibAlertRef		currentTerminationAlert;	// retained while a sheet is still open so a 2nd sheet is not displayed
 	TerminalWindowRef			terminalWindow;				// terminal window housing this session
-	HIWindowRef					window;						// redundant copy of TerminalWindow_ReturnWindow(terminalWindow)
+	HIWindowRef					xwindow;						// redundant copy of TerminalWindow_ReturnWindow(terminalWindow)
 	Local_ProcessRef			mainProcess;				// the command whose output is directly attached to the terminal
 	Session_EventKeys			eventKeys;					// information on keyboard short-cuts for major events
 	My_TEKGraphicList			targetVectorGraphics;		// list of TEK graphics attached to this session
@@ -1251,8 +1251,8 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 		// return immediately without session termination (yet);
 		// ensure that the relevant window is visible and frontmost
 		// when the message appears
-		ShowWindow(returnActiveWindow(ptr));
-		EventLoop_SelectBehindDialogWindows(returnActiveWindow(ptr));
+		TerminalWindow_SetVisible(ptr->terminalWindow, true);
+		TerminalWindow_Select(ptr->terminalWindow);
 		if (isModal)
 		{
 			Alert_Display(ptr->currentTerminationAlert);
@@ -2894,7 +2894,6 @@ Session_SetTerminalWindow	(SessionRef			inRef,
 	
 	
 	ptr->terminalWindow = inTerminalWindow;
-	ptr->window = TerminalWindow_ReturnWindow(inTerminalWindow);
 	if (nullptr == inTerminalWindow)
 	{
 		changeNotifyForSession(ptr, kSession_ChangeWindowInvalid, inRef/* context */);
@@ -3319,7 +3318,7 @@ Session_TEKCreateTargetGraphic		(SessionRef		inRef)
 			}
 		}
 		Session_AddDataTarget(inRef, kSession_DataTargetTektronixGraphicsCanvas, &id);
-		SelectWindow(Session_ReturnActiveWindow(inRef));
+		TerminalWindow_Select(ptr->terminalWindow);
 		
 		// display a help tag over the cursor in an unobtrusive location
 		// that confirms for the user that a suspend has in fact occurred
@@ -4002,8 +4001,8 @@ Session_UserInputPaste	(SessionRef			inRef,
 				
 				// ensure that the relevant window is visible and frontmost
 				// when the message appears
-				ShowWindow(returnActiveWindow(ptr));
-				EventLoop_SelectBehindDialogWindows(returnActiveWindow(ptr));
+				TerminalWindow_SetVisible(ptr->terminalWindow, true);
+				TerminalWindow_Select(ptr->terminalWindow);
 				Alert_MakeWindowModal(box, returnActiveWindow(ptr)/* parent */, false/* is window close alert */,
 										pasteWarningCloseNotifyProc, pasteAlertInfoPtr/* user data */);
 				
@@ -4173,7 +4172,6 @@ longLifeTimerUPP(NewEventLoopTimerUPP(detectLongLife)),
 longLifeTimer(nullptr), // set later
 currentTerminationAlert(nullptr),
 terminalWindow(nullptr), // set at window validation time
-window(nullptr), // set at window validation time
 mainProcess(nullptr),
 // controlKey is initialized below
 targetVectorGraphics(),
@@ -4305,7 +4303,7 @@ autoActivateWindow	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
 	
 	
-	if (nullptr != ptr->terminalWindow) SelectWindow(TerminalWindow_ReturnWindow(ptr->terminalWindow));
+	if (nullptr != ptr->terminalWindow) TerminalWindow_Select(ptr->terminalWindow);
 }// autoActivateWindow
 
 
@@ -5761,7 +5759,7 @@ receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 						}
 						
 						// if the window is inactive, start a hover timer to auto-activate the window
-						if ((acceptDrag) && (false == IsWindowActive(TerminalWindow_ReturnWindow(ptr->terminalWindow))))
+						if ((acceptDrag) && (false == TerminalWindow_IsFocused(ptr->terminalWindow)))
 						{
 							(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
 															kEventDurationSecond/* arbitrary */,
@@ -6245,14 +6243,20 @@ receiveWindowFocusChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 /*!
 Returns the window most recently used by this session.
 
+DEPRECATED.  There needs to be a Cocoa equivalent for this.
+
 (4.0)
 */
 HIWindowRef
 returnActiveWindow	(My_SessionPtr		inPtr)
 {
-	HIWindowRef		result = inPtr->window;
+	HIWindowRef		result = nullptr;
 	
 	
+	if (nullptr != inPtr->terminalWindow)
+	{
+		result = TerminalWindow_ReturnWindow(inPtr->terminalWindow);
+	}
 	return result;
 }// returnActiveWindow
 

@@ -57,12 +57,17 @@
 #ifndef __MACROMANAGER__
 #define __MACROMANAGER__
 
+// Mac includes
+#include <CoreServices/CoreServices.h>
+#ifdef __OBJC__
+@class NSMenuItem;
+#else
+class NSMenuItem;
+#endif
+
 // library includes
 #include <ListenerModel.h>
 #include <ResultCode.template.h>
-
-// Mac includes
-#include <CoreServices/CoreServices.h>
 
 // MacTelnet includes
 #include "Preferences.h"
@@ -177,6 +182,11 @@ inline MacroManager_KeyID
 		result |= flagBit;
 		return result;
 	}
+
+void
+	MacroManager_UpdateMenuItem			(NSMenuItem*				inMenuItem,
+										 UInt16						inOneBasedMacroIndex,
+										 Preferences_ContextRef		inMacroSetOrNullForActiveSet = nullptr);
 
 //@}
 

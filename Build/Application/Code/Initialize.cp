@@ -1,7 +1,9 @@
+/*!	\file Initialize.cp
+	\brief Setup and teardown for all modules that
+	require it (and cannot do it just-in-time).
+*/
 /*###############################################################
 
-	Initialize.cp
-	
 	MacTelnet
 		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -73,10 +75,8 @@
 #include "Folder.h"
 #include "InfoWindow.h"
 #include "Initialize.h"
-#include "InstallAE.h"
 #include "InternetPrefs.h"
 #include "MainEntryPoint.h"
-#include "MenuBar.h"
 #include "Preferences.h"
 #include "PrefsWindow.h"
 #include "RasterGraphicsKernel.h"
@@ -125,11 +125,14 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	// set the application bundle so everything searches in the right place for resources
 	AppResources_Init(inApplicationBundle);
 	
+	// initialize Cocoa
+	EventLoop_Init();
+	
 	// initialize memory manager, start up toolbox managers, etc.
 	initMacOSToolbox();
 	
 	// on Mac OS X the following call also stops the bouncing of MacTelnet’s Dock icon
-	FlushEvents(everyEvent/* events to flush */, 0/* events to not flush */);
+	//FlushEvents(everyEvent/* events to flush */, 0/* events to not flush */);
 	
 	// QuickTime?
 	FlagManager_Set(kFlagQuickTime, true); // always available on Mac OS X
@@ -170,9 +173,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	ListenerModel_RunTests();
 #endif
 	
-	// display initialization progress
-	DrawMenuBar();
-	
 	// set wait cursor
 	Cursors_UseWatch();
 	
@@ -188,9 +188,9 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		//TextTranslation_RunTests();
 	#endif
 		
-		MenuBar_Init(); // will also build the Scripts menu and font-list (if deemed necessary)
+		Commands_Init();
 	#if RUN_MODULE_TESTS
-		//MenuBar_RunTests();
+		//Commands_RunTests();
 	#endif
 		
 		TerminalBackground_Init();
@@ -268,6 +268,7 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 			};
 			FSSpec		startupItemsFolder;
 			OSStatus	error = noErr;
+			UInt32		numberOfFilesOpened = 0;
 			
 			
 			if (Folder_GetFSSpec(kFolder_RefStartupItems, &startupItemsFolder) == noErr)
@@ -300,9 +301,52 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 							// skip invisible files
 							useFile = (!(info.finderFlags & kIsInvisible));
 						}
-						if (useFile) (OSStatus)FileUtilities_OpenDocument(&array[i]);
+						if (useFile)
+						{
+							(OSStatus)FileUtilities_OpenDocument(&array[i]);
+							++numberOfFilesOpened;
+						}
 					}
 					Memory_DisposePtr(REINTERPRET_CAST(&array, Ptr*));
+				}
+			}
+			
+			if (0 == numberOfFilesOpened)
+			{
+				// open a new, untitled document (this will eventually not be necessary; see
+				// the note in "applicationShouldOpenUntitledFile:" in the implementation
+				// for the application delegate, in "Commands.mm")
+				Boolean		quellAutoNew = false;
+				size_t		actualSize = 0L;
+				
+				
+				// get the user’s “don’t auto-new” application preference, if possible
+				if (kPreferences_ResultOK !=
+					Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(quellAutoNew),
+										&quellAutoNew, &actualSize))
+				{
+					// assume a value if it cannot be found
+					quellAutoNew = false;
+				}
+				
+				unless (quellAutoNew)
+				{
+					UInt32		newCommandID = kCommandNewSessionDefaultFavorite;
+					
+					
+					// assume that the user is mapping command-N to the same type of session
+					// that would be appropriate for opening by default on startup
+					unless (kPreferences_ResultOK ==
+							Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
+												sizeof(newCommandID), &newCommandID,
+												&actualSize))
+					{
+						// assume a value if it cannot be found
+						newCommandID = kCommandNewSessionDefaultFavorite;
+					}
+					
+					// no open windows - respond by spawning a new session
+					Commands_ExecuteByIDUsingEvent(newCommandID);
 				}
 			}
 		}
@@ -321,15 +365,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		{
 			(OSStatus)SetFrontProcess(&psn);
 		}
-	}
-	
-	// initialize Cocoa
-	{
-		Boolean		cocoaOK = false;
-		
-		
-		cocoaOK = CocoaBasic_ApplicationLoad();
-		assert(cocoaOK);
 	}
 	
 	// set default cursor
@@ -360,13 +395,12 @@ Initialize_ApplicationShutdown ()
 	
 	TerminalView_Done();
 	TerminalBackground_Done();
-	MenuBar_Done();
+	Commands_Done();
 	SessionFactory_Done();
 	TextTranslation_Done();
 	Alert_Done();
 	
 	Preferences_Done();
-	InstallAE_Done();
 	Cursors_Done();
 	Undoables_Done();
 	EventLoop_Done();
@@ -392,18 +426,6 @@ to the user.
 static void
 initApplicationCore ()
 {
-	// suck out events from the queue at startup time (if the user was
-	// clicking the mouse madly when the splash screen was up, MacTelnet
-	// can hardly do anything useful with those events)
-	EventLoop_Init();
-	{
-		EventRecord			discardedEvent;
-		register SInt16 	i = 0;
-		
-		
-		for (i = 1; i < 12/* arbitrary */; ++i) EventAvail(everyEvent, &discardedEvent);
-	}
-	
 	// set up the Localization module, and define where all user interface resources should come from
 	{
 		Localization_InitFlags		flags = 0L;
@@ -523,15 +545,6 @@ initMacOSToolbox ()
 		Undoables_Init(kUndoables_UndoHandlingMechanismMultiple, undoNameCFString, redoNameCFString);
 		if (nullptr != undoNameCFString) CFRelease(undoNameCFString), undoNameCFString = nullptr;
 		if (nullptr != redoNameCFString) CFRelease(redoNameCFString), redoNameCFString = nullptr;
-	}
-	
-	// install event handlers, allowing Quit to work and
-	// double-clicked documents to be opened, etc.
-	unless (InstallAE_Init())
-	{
-		Console_WriteLine("failed to install AppleEvent handlers!");
-		// this method does not return
-		MainEntryPoint_ImmediatelyQuit();
 	}
 	
 	// install recording handlers

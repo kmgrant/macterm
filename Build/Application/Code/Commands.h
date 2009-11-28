@@ -54,6 +54,12 @@
 #define __COMMANDS__
 
 // Mac includes
+#ifdef __OBJC__
+#	import <Cocoa/Cocoa.h>
+#else
+typedef void* SEL;
+class NSMenu;
+#endif
 #ifndef REZ
 #   include <CoreServices/CoreServices.h>
 #endif
@@ -63,6 +69,9 @@
 #	include <ListenerModel.h>
 #endif
 #include <ResultCode.template.h>
+
+// MacTelnet includes
+#include <QuillsPrefs.h>
 
 
 
@@ -122,8 +131,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandURLProjectStatus				'Proj'
 
 // File menu
-#define kCommandNewSessionDefaultFavorite		kHICommandNew
-#define kCommandNewSessionByFavoriteName		'NFav'
+#define kCommandNewSessionDefaultFavorite		'NSDF'
 #define kCommandNewSessionLoginShell			'NLgS'
 #define kCommandNewSessionShell					'NShS'
 #define kCommandNewSessionDialog				'NSDg'
@@ -203,9 +211,6 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandEmacsArrowMapping				'Emac'	// multiple interfaces
 #define kCommandLocalPageUpDown					'LcPg'
 #define kCommandSetKeys							'SetK'
-#define kCommandMacroSetNone					'XMcr'
-#define kCommandMacroSetDefault					'McrD'
-#define kCommandMacroSetByFavoriteName			'MFav'
 #define kCommandTranslationTableDefault			'XltD'
 #define kCommandTranslationTableByFavoriteName	'XFav'
 #define kCommandSetTranslationTable				'Xlat'
@@ -347,20 +352,6 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandKeypadComma						'KCom'
 #define kCommandKeypadDash						'KDsh'
 #define kCommandKeypadEnter						'KEnt'
-
-// macro invokers
-#define kCommandSendMacro1						'Mc01'
-#define kCommandSendMacro2						'Mc02'
-#define kCommandSendMacro3						'Mc03'
-#define kCommandSendMacro4						'Mc04'
-#define kCommandSendMacro5						'Mc05'
-#define kCommandSendMacro6						'Mc06'
-#define kCommandSendMacro7						'Mc07'
-#define kCommandSendMacro8						'Mc08'
-#define kCommandSendMacro9						'Mc09'
-#define kCommandSendMacro10						'Mc10'
-#define kCommandSendMacro11						'Mc11'
-#define kCommandSendMacro12						'Mc12'
 
 // terminal view page control
 #define kCommandTerminalViewPageUp				'TVPU'
@@ -520,6 +511,214 @@ struct Commands_ExecutionEventContext
 };
 typedef Commands_ExecutionEventContext*		Commands_ExecutionEventContextPtr;
 
+#ifdef __OBJC__
+
+/*!
+Implements an interface for menu commands to target.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface Commands_Executor : NSObject
+@end
+
+@interface Commands_Executor (Commands_ApplicationCoreEvents)
+// NSApplicationDelegate
+- (void)						application:(NSApplication*)sender
+									openFiles:(NSArray*)filenames;
+- (BOOL)						applicationShouldHandleReopen:(NSApplication*)sender
+									hasVisibleWindows:(BOOL)flag;
+- (BOOL)						applicationShouldOpenUntitledFile:(NSApplication*)sender;
+- (NSApplicationTerminateReply)	applicationShouldTerminate:(NSApplication*)sender;
+// NSApplicationNotifications
+- (void)						applicationWillFinishLaunching:(NSNotification*)aNotification;
+@end
+
+@interface Commands_Executor (Commands_Capturing)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performCaptureBegin:(id)sender;
+- (IBAction)	performCaptureEnd:(id)sender;
+- (IBAction)	performPrintScreen:(id)sender;
+- (IBAction)	performPrintSelection:(id)sender;
+- (IBAction)	performSaveSelection:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_Editing)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performUndo:(id)sender;
+- (IBAction)	performRedo:(id)sender;
+- (IBAction)	performCut:(id)sender;
+- (IBAction)	performCopy:(id)sender;
+- (IBAction)	performCopyWithTabSubstitution:(id)sender;
+- (IBAction)	performCopyAndPaste:(id)sender;
+- (IBAction)	performPaste:(id)sender;
+- (IBAction)	performDelete:(id)sender;
+- (IBAction)	performSelectAll:(id)sender;
+- (IBAction)	performSelectNothing:(id)sender;
+- (IBAction)	performSelectEntireScrollbackBuffer:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_OpeningSessions)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performNewDefault:(id)sender;
+- (void)		performNewByFavoriteName:(id)sender;
+- (IBAction)	performNewLogInShell:(id)sender;
+- (IBAction)	performNewShell:(id)sender;
+- (IBAction)	performNewCustom:(id)sender;
+- (IBAction)	performOpen:(id)sender;
+- (IBAction)	performDuplicate:(id)sender;
+- (IBAction)	performSaveAs:(id)sender;
+- (void)		receiveGetURLEvent:(NSAppleEventDescriptor*)receivedEvent
+					replyEvent:(NSAppleEventDescriptor*)replyEvent;
+@end
+
+@interface Commands_Executor (Commands_OpeningVectorGraphics)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performNewTEKPage:(id)sender;
+- (IBAction)	performPageClearToggle:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_OpeningWebPages)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performCheckForUpdates:(id)sender;
+- (IBAction)	performGoToMainWebSite:(id)sender;
+- (IBAction)	performOpenURL:(id)sender;
+- (IBAction)	performProvideFeedback:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_ManagingMacros)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performActionForMacro:(id)sender;
+- (IBAction)	performMacroSwitchNone:(id)sender;
+- (IBAction)	performMacroSwitchDefault:(id)sender;
+- (void)		performMacroSwitchByFavoriteName:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_ManagingTerminalEvents)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performBellToggle:(id)sender;
+- (IBAction)	performSetActivityHandlerNone:(id)sender;
+- (IBAction)	performSetActivityHandlerNotifyOnNext:(id)sender;
+- (IBAction)	performSetActivityHandlerNotifyOnIdle:(id)sender;
+- (IBAction)	performSetActivityHandlerSendKeepAliveOnIdle:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_ManagingTerminalKeyMappings)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performDeleteMapToBackspace:(id)sender;
+- (IBAction)	performDeleteMapToDelete:(id)sender;
+- (IBAction)	performEmacsCursorModeToggle:(id)sender;
+- (IBAction)	performLocalPageKeysToggle:(id)sender;
+- (IBAction)	performMappingCustom:(id)sender;
+- (IBAction)	performTranslationSwitchDefault:(id)sender;
+- (void)		performTranslationSwitchByFavoriteName:(id)sender;
+- (IBAction)	performTranslationSwitchCustom:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_ManagingTerminalSettings)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performInterruptProcess:(id)sender;
+- (IBAction)	performJumpScrolling:(id)sender;
+- (IBAction)	performLineWrapToggle:(id)sender;
+- (IBAction)	performLocalEchoToggle:(id)sender;
+- (IBAction)	performReset:(id)sender;
+- (IBAction)	performResetGraphicsCharactersOnly:(id)sender;
+- (IBAction)	performSaveOnClearToggle:(id)sender;
+- (IBAction)	performScrollbackClear:(id)sender;
+- (IBAction)	performSpeechToggle:(id)sender;
+- (IBAction)	performSuspendToggle:(id)sender;
+- (IBAction)	performTerminalCustomSetup:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_ModifyingTerminalDimensions)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performScreenResizeCustom:(id)sender;
+- (IBAction)	performScreenResizeNarrower:(id)sender;
+- (IBAction)	performScreenResizeShorter:(id)sender;
+- (IBAction)	performScreenResizeStandard:(id)sender;
+- (IBAction)	performScreenResizeTall:(id)sender;
+- (IBAction)	performScreenResizeTaller:(id)sender;
+- (IBAction)	performScreenResizeWide:(id)sender;
+- (IBAction)	performScreenResizeWider:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_ModifyingTerminalText)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performFormatDefault:(id)sender;
+- (void)		performFormatByFavoriteName:(id)sender;
+- (IBAction)	performFormatCustom:(id)sender;
+- (IBAction)	performFormatTextBigger:(id)sender;
+- (IBAction)	performFormatTextMaximum:(id)sender;
+- (IBAction)	performFormatTextSmaller:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_ModifyingWindows)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performArrangeInFront:(id)sender;
+- (IBAction)	performHideWindow:(id)sender;
+- (IBAction)	performHideOtherWindows:(id)sender;
+- (IBAction)	performMaximize:(id)sender;
+- (IBAction)	performMoveToNewWorkspace:(id)sender;
+- (IBAction)	performRename:(id)sender;
+- (IBAction)	performShowHiddenWindows:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_Searching)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performFind:(id)sender;
+- (IBAction)	performFindNext:(id)sender;
+- (IBAction)	performFindPrevious:(id)sender;
+- (IBAction)	performFindCursor:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_ShowingPanels)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	orderFrontAbout:(id)sender;
+- (IBAction)	orderFrontClipboard:(id)sender;
+- (IBAction)	orderFrontCommandLine:(id)sender;
+- (IBAction)	orderFrontContextualHelp:(id)sender;
+- (IBAction)	orderFrontControlKeys:(id)sender;
+- (IBAction)	orderFrontDebuggingOptions:(id)sender;
+- (IBAction)	orderFrontIPAddresses:(id)sender;
+- (IBAction)	orderFrontPreferences:(id)sender;
+- (IBAction)	orderFrontSessionInfo:(id)sender;
+- (IBAction)	orderFrontVT220FunctionKeys:(id)sender;
+- (IBAction)	orderFrontVT220Keypad:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_SwitchingModes)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performFullScreenOn:(id)sender;
+- (IBAction)	performFullScreenOff:(id)sender;
+@end
+
+@interface Commands_Executor (Commands_SwitchingWindows)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	orderFrontNextWindow:(id)sender;
+- (IBAction)	orderFrontNextWindowHidingPrevious:(id)sender;
+- (IBAction)	orderFrontPreviousWindow:(id)sender;
+- (void)		orderFrontSpecificWindow:(id)sender;
+@end
+
+// These methods exactly match those typically found on NSWindow
+// derivatives.  They exist here solely for the purpose of
+// transition away from Carbon; since the menu commands are
+// mapped to a (Cocoa) first responder, any Cocoa window (such
+// as a floating palette) will implicitly handle the commands
+// and never invoke these fallbacks.  These are only executed
+// for windows that have no such methods,
+@interface Commands_Executor (Commands_TransitionFromCarbon)
+// the following MUST match what is in "MainMenuCocoa.xib"
+- (IBAction)	performCloseSetup:(id)sender;
+- (IBAction)	performMinimizeSetup:(id)sender;
+- (IBAction)	performZoomSetup:(id)sender;
+- (IBAction)	runToolbarCustomizationPaletteSetup:(id)sender;
+- (IBAction)	toggleToolbarShownSetup:(id)sender;
+@end
+
+#endif
+
 #endif
 
 
@@ -527,6 +726,17 @@ typedef Commands_ExecutionEventContext*		Commands_ExecutionEventContextPtr;
 #ifndef REZ
 
 #pragma mark Public Methods
+
+//!\name Initialization
+//@{
+
+void
+	Commands_Init							();
+
+void
+	Commands_Done							();
+
+//@}
 
 //!\name Executing Commands
 //@{
@@ -558,6 +768,19 @@ pascal OSStatus
 	Commands_HandleCreateToolbarItem		(EventHandlerCallRef		inHandlerCallRef,
 											 EventRef					inEvent,
 											 void*						inNullContextPtr);
+
+//@}
+
+//!\name Cocoa Menu Utilities
+//@{
+
+Commands_Result
+	Commands_InsertPrefNamesIntoMenu		(Quills::Prefs::Class		inClass,
+											 NSMenu*					inoutMenu,
+											 int						inAtItemIndex,
+											 int						inInitialIndent,
+											 SEL						inAction,
+											 int&						outHowManyItemsAdded);
 
 //@}
 

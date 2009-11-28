@@ -1,7 +1,12 @@
+/*!	\file TerminalWindow.mm
+	\brief The most common type of window, used to hold
+	terminal views and scroll bars for a session.
+	
+	Note that this is in transition from Carbon to Cocoa,
+	and is not yet taking advantage of most of Cocoa.
+*/
 /*###############################################################
 
-	TerminalWindow.cp
-	
 	MacTelnet
 		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,18 +34,18 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#import "UniversalDefines.h"
 
 // standard-C includes
-#include <cstring>
+#import <cstring>
 
 // standard-C++ includes
-#include <algorithm>
-#include <map>
-#include <vector>
+#import <algorithm>
+#import <map>
+#import <vector>
 
 // GNU extension includes
-#include <ext/numeric>
+#import <ext/numeric>
 
 // UNIX includes
 extern "C"
@@ -50,54 +55,55 @@ extern "C"
 }
 
 // Mac includes
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <Carbon/Carbon.h>
+#import <CoreServices/CoreServices.h>
 
 // library includes
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <CFRetainRelease.h>
-#include <CGContextSaveRestore.h>
-#include <ColorUtilities.h>
-#include <CommonEventHandlers.h>
-#include <Console.h>
-#include <Cursors.h>
-#include <Embedding.h>
-#include <HIViewWrap.h>
-#include <Localization.h>
-#include <MemoryBlockPtrLocker.template.h>
-#include <MemoryBlockReferenceTracker.template.h>
-#include <MemoryBlocks.h>
-#include <NIBLoader.h>
-#include <RandomWrap.h>
-#include <RegionUtilities.h>
-#include <SoundSystem.h>
-#include <Undoables.h>
-#include <WindowInfo.h>
+#import <AutoPool.objc++.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CFRetainRelease.h>
+#import <CGContextSaveRestore.h>
+#import <ColorUtilities.h>
+#import <CommonEventHandlers.h>
+#import <Console.h>
+#import <Cursors.h>
+#import <Embedding.h>
+#import <HIViewWrap.h>
+#import <Localization.h>
+#import <MemoryBlockPtrLocker.template.h>
+#import <MemoryBlockReferenceTracker.template.h>
+#import <MemoryBlocks.h>
+#import <NIBLoader.h>
+#import <RandomWrap.h>
+#import <RegionUtilities.h>
+#import <SoundSystem.h>
+#import <Undoables.h>
+#import <WindowInfo.h>
 
 // resource includes
-#include "GeneralResources.h"
+#import "GeneralResources.h"
 
 // MacTelnet includes
-#include "AppResources.h"
-#include "Commands.h"
-#include "Console.h"
-#include "DialogUtilities.h"
-#include "EventLoop.h"
-#include "FindDialog.h"
-#include "GenericThreads.h"
-#include "HelpSystem.h"
-#include "Keypads.h"
-#include "Preferences.h"
-#include "PrefPanelFormats.h"
-#include "PrefPanelTerminals.h"
-#include "PrefPanelTranslations.h"
-#include "PrefsContextDialog.h"
-#include "SessionFactory.h"
-#include "Terminal.h"
-#include "TerminalWindow.h"
-#include "TerminalView.h"
-#include "UIStrings.h"
+#import "AppResources.h"
+#import "Commands.h"
+#import "Console.h"
+#import "DialogUtilities.h"
+#import "EventLoop.h"
+#import "FindDialog.h"
+#import "GenericThreads.h"
+#import "HelpSystem.h"
+#import "Keypads.h"
+#import "Preferences.h"
+#import "PrefPanelFormats.h"
+#import "PrefPanelTerminals.h"
+#import "PrefPanelTranslations.h"
+#import "PrefsContextDialog.h"
+#import "SessionFactory.h"
+#import "Terminal.h"
+#import "TerminalWindow.h"
+#import "TerminalView.h"
+#import "UIStrings.h"
 
 
 
@@ -164,7 +170,7 @@ struct TerminalWindow
 	
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this terminal data
 	
-	HIWindowRef					window;						// the Mac OS window reference for the terminal window
+	NSWindow*					window;						// the Cocoa window reference for the terminal window (wrapping Carbon)
 	CFRetainRelease				tab;						// the Mac OS window reference (if any) for the sister window acting as a tab
 	CarbonEventHandlerWrap*		tabDragHandlerPtr;			// used to track drags that enter tabs
 	WindowGroupRef				tabAndWindowGroup;			// WindowGroupRef; forces the window and its tab to move together
@@ -291,7 +297,7 @@ static IconRef				createLEDOffIcon				();
 static IconRef				createLEDOnIcon					();
 static void					createViews						(TerminalWindowPtr);
 static Boolean				createTabWindow					(TerminalWindowPtr);
-static HIWindowRef			createWindow					();
+static NSWindow*			createWindow					();
 static void					ensureTopLeftCornersExists		();
 static TerminalScreenRef	getActiveScreen					(TerminalWindowPtr);
 static TerminalViewRef		getActiveView					(TerminalWindowPtr);
@@ -321,6 +327,7 @@ static pascal OSStatus		receiveWindowCursorChange		(EventHandlerCallRef, EventRe
 static pascal OSStatus		receiveWindowDragCompleted		(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveWindowGetClickActivation	(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
+static HIWindowRef			returnCarbonWindow				(TerminalWindowPtr);
 static void					reverseFontChanges				(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 static void					reverseFullScreenChanges		(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 static void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_ActionRef, void*);
@@ -460,7 +467,7 @@ TerminalWindow_EventInside	(TerminalWindowRef	inRef,
 	Boolean						result = false;
 	
 	
-	error = HIViewGetViewForMouseEvent(HIViewGetRoot(ptr->window), inMouseEvent, &hitView);
+	error = HIViewGetViewForMouseEvent(HIViewGetRoot(returnCarbonWindow(ptr)), inMouseEvent, &hitView);
 	if (noErr == error)
 	{
 		result = true;
@@ -503,6 +510,32 @@ TerminalWindow_ExistsFor	(WindowRef	inWindow)
 	
 	return result;
 }// ExistsFor
+
+
+/*!
+Makes a terminal window the target of keyboard input, but does
+not force it to be in front.
+
+See also TerminalWindow_IsFocused().
+
+This is a TEMPORARY API that should be used in any code that
+cannot use TerminalWindow_ReturnNSWindow() to manipulate the
+Cocoa window directly.  All calls to the Carbon SelectWindow(),
+that had been using TerminalWindow_ReturnWindow(), should
+DEFINITELY change to call this routine, instead (which
+manipulates the Cocoa window internally).
+
+(4.0)
+*/
+void
+TerminalWindow_Focus	(TerminalWindowRef	inRef)
+{
+	AutoPool					_;
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	
+	
+	[ptr->window makeKeyWindow];
+}// Focus
 
 
 /*!
@@ -778,6 +811,34 @@ TerminalWindow_GetViewsInGroup	(TerminalWindowRef			inRef,
 
 
 /*!
+Returns "true" only if the specified window currently has the
+keyboard focus.
+
+See also TerminalWindow_Focus().
+
+This is a TEMPORARY API that should be used in any code that
+cannot use TerminalWindow_ReturnNSWindow() to manipulate the
+Cocoa window directly.  Calls to the Carbon IsWindowFocused(),
+that had been using TerminalWindow_ReturnWindow(), should
+DEFINITELY change to call this routine, instead (which
+manipulates the Cocoa window internally).
+
+(4.0)
+*/
+Boolean
+TerminalWindow_IsFocused	(TerminalWindowRef	inRef)
+{
+	AutoPool					_;
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	Boolean						result = false;
+	
+	
+	result = (YES == [ptr->window isKeyWindow]);
+	return result;
+}// IsFocused
+
+
+/*!
 Returns "true" only if the specified window is obscured,
 meaning it is invisible to the user but technically
 considered a visible window.  This is the state used by
@@ -854,6 +915,27 @@ TerminalWindow_ReturnFromWindow		(WindowRef	inWindow)
 	
 	return result;
 }// ReturnFromWindow
+
+
+/*!
+Returns the Cocoa window for the specified terminal window.
+
+IMPORTANT:	If an API exists to manipulate a terminal window,
+			use the Terminal Window API; only use the Cocoa
+			window when absolutely necessary.
+
+(4.0)
+*/
+NSWindow*
+TerminalWindow_ReturnNSWindow	(TerminalWindowRef	inRef)
+{
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	NSWindow*					result = nil;
+	
+	
+	result = ptr->window;
+	return result;
+}// ReturnNSWindow
 
 
 /*!
@@ -1059,6 +1141,10 @@ TerminalWindow_ReturnViewWithFocus		(TerminalWindowRef	inRef)
 Returns the Mac OS window reference for the specified
 terminal window.
 
+DEPRECATED.  You should generally manipulate the Cocoa window,
+if anything (which can also be used to find the Carbon window).
+See TerminalWindow_ReturnNSWindow().
+
 IMPORTANT:	If an API exists to manipulate a terminal
 			window, use the Terminal Window API; only
 			use the Mac OS window reference when
@@ -1073,9 +1159,41 @@ TerminalWindow_ReturnWindow		(TerminalWindowRef	inRef)
 	WindowRef					result = nullptr;
 	
 	
-	result = ptr->window;
+	result = returnCarbonWindow(ptr);
 	return result;
 }// ReturnWindow
+
+
+/*!
+Puts a terminal window in front of other windows.  For
+convenience, if "inFocus" is true, TerminalWindow_Focus() is
+also called (which is commonly required at the same time).
+
+See also TerminalWindow_Focus() and TerminalWindow_IsFocused().
+
+This is a TEMPORARY API that should be used in any code that
+cannot use TerminalWindow_ReturnNSWindow() to manipulate the
+Cocoa window directly.  All calls to the Carbon SelectWindow(),
+that had been using TerminalWindow_ReturnWindow(), should
+DEFINITELY change to call this routine, instead (which
+manipulates the Cocoa window internally).
+
+(4.0)
+*/
+void
+TerminalWindow_Select	(TerminalWindowRef	inRef,
+						 Boolean			inFocus)
+{
+	AutoPool					_;
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	
+	
+	[ptr->window orderFront:nil];
+	if (inFocus)
+	{
+		TerminalWindow_Focus(inRef);
+	}
+}// Select
 
 
 /*!
@@ -1158,6 +1276,7 @@ void
 TerminalWindow_SetObscured	(TerminalWindowRef	inRef,
 							 Boolean			inIsHidden)
 {
+	AutoPool					_;
 	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
@@ -1168,8 +1287,7 @@ TerminalWindow_SetObscured	(TerminalWindowRef	inRef,
 		{
 			// hide the window and notify listeners of the event (that ought to trigger
 			// actions such as a zoom rectangle effect, updating Window menu items, etc.)
-			HiliteWindow(ptr->window, false); // doing this might avoid a bug on re-display?
-			HideWindow(ptr->window);
+			[ptr->window orderOut:nil];
 			
 			// notify interested listeners about the change in state
 			changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeObscuredState, ptr->selfRef/* context */);
@@ -1178,10 +1296,10 @@ TerminalWindow_SetObscured	(TerminalWindowRef	inRef,
 		{
 			// show the window and notify listeners of the event (that ought to trigger
 			// actions such as updating Window menu items, etc.)
-			ShowWindow(ptr->window);
+			[ptr->window makeKeyAndOrderFront:nil];
 			
 			// also restore the window if it was collapsed/minimized
-			if (IsWindowCollapsed(ptr->window)) CollapseWindow(ptr->window, false);
+			if ([ptr->window isMiniaturized]) [ptr->window deminiaturize:nil];
 			
 			// notify interested listeners about the change in state
 			changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeObscuredState, ptr->selfRef/* context */);
@@ -1231,10 +1349,11 @@ void
 TerminalWindow_SetIconTitle		(TerminalWindowRef	inRef,
 								 CFStringRef		inName)
 {
+	AutoPool					_;
 	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
-	if (ptr->window != nullptr) SetWindowAlternateTitle(ptr->window, inName);
+	[ptr->window setMiniwindowTitle:(NSString*)inName];
 	changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeIconTitle, ptr->selfRef/* context */);
 }// SetIconTitle
 
@@ -1287,7 +1406,7 @@ TerminalWindow_SetTabAppearance		(TerminalWindowRef		inRef,
 			TerminalWindow_SetWindowTitle(inRef, ptr->baseTitleString.returnCFStringRef());
 			
 			// attach the tab to the top edge of the window
-			result = SetDrawerParent(tabWindow, ptr->window);
+			result = SetDrawerParent(tabWindow, TerminalWindow_ReturnWindow(inRef));
 			if (noErr == result)
 			{
 				OptionBits				preferredEdge = kWindowEdgeTop;
@@ -1496,7 +1615,7 @@ TerminalWindow_SetWindowTitle	(TerminalWindowRef	inRef,
 		ptr->baseTitleString.setCFTypeRef(inName);
 	}
 	
-	if (nullptr != ptr->window)
+	if (nil != ptr->window)
 	{
 		if (ptr->isDead)
 		{
@@ -1520,6 +1639,37 @@ TerminalWindow_SetWindowTitle	(TerminalWindowRef	inRef,
 	}
 	changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeWindowTitle, ptr->selfRef/* context */);
 }// SetWindowTitle
+
+
+/*!
+Set to "true" to show a terminal window, and "false" to hide it.
+
+This is a TEMPORARY API that should be used in any code that
+cannot use TerminalWindow_ReturnNSWindow() to manipulate the
+Cocoa window directly.  All calls to the Carbon ShowWindow() or
+HideWindow(), that had been using TerminalWindow_ReturnWindow(),
+should DEFINITELY change to call this routine, instead (which
+manipulates the Cocoa window internally).
+
+(4.0)
+*/
+void
+TerminalWindow_SetVisible	(TerminalWindowRef	inRef,
+							 Boolean			inIsVisible)
+{
+	AutoPool					_;
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	
+	
+	if (inIsVisible)
+	{
+		[ptr->window orderFront:nil];
+	}
+	else
+	{
+		[ptr->window orderOut:nil];
+	}
+}// SetVisible
 
 
 /*!
@@ -1663,6 +1813,7 @@ allScreens(),
 allViews(),
 installedActions()
 {
+	AutoPool				_;
 	TerminalScreenRef		newScreen = nullptr;
 	TerminalViewRef			newView = nullptr;
 	Preferences_Result		preferencesResult = kPreferences_ResultOK;
@@ -1723,10 +1874,10 @@ installedActions()
 	WindowInfo_SetWindowDescriptor(this->windowInfo, kConstantsRegistry_WindowDescriptorAnyTerminal);
 	WindowInfo_SetWindowPotentialDropTarget(this->windowInfo, true/* can receive data via drag-and-drop */);
 	WindowInfo_SetAuxiliaryDataPtr(this->windowInfo, REINTERPRET_CAST(this, TerminalWindowRef)); // the auxiliary data is the "TerminalWindowRef"
-	WindowInfo_SetForWindow(this->window, this->windowInfo);
+	WindowInfo_SetForWindow(returnCarbonWindow(this), this->windowInfo);
 	
 	// set up the Help System
-	HelpSystem_SetWindowKeyPhrase(this->window, kHelpSystem_KeyPhraseTerminals);
+	HelpSystem_SetWindowKeyPhrase(returnCarbonWindow(this), kHelpSystem_KeyPhraseTerminals);
 	
 #if 0
 	// on 10.4, use the special unified toolbar appearance
@@ -1740,7 +1891,7 @@ installedActions()
 #endif
 	
 	// install a callback that responds as a window is resized
-	this->windowResizeHandler.install(this->window, handleNewSize, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
+	this->windowResizeHandler.install(returnCarbonWindow(this), handleNewSize, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
 										250/* arbitrary minimum width */,
 										200/* arbitrary minimum height */,
 										SHRT_MAX/* maximum width */,
@@ -1758,7 +1909,7 @@ installedActions()
 			newView = TerminalView_NewHIViewBased(newScreen, inFontInfoOrNull);
 			if (newView != nullptr)
 			{
-				HIViewWrap		contentView(kHIViewWindowContentID, this->window);
+				HIViewWrap		contentView(kHIViewWindowContentID, returnCarbonWindow(this));
 				HIViewRef		terminalHIView = TerminalView_ReturnContainerHIView(newView);
 				OSStatus		error = noErr;
 				
@@ -1867,10 +2018,10 @@ installedActions()
 		OSStatus	error = noErr;
 		
 		
-		error = GetWindowBounds(this->window, kWindowContentRgn, &windowRect);
+		error = GetWindowBounds(returnCarbonWindow(this), kWindowContentRgn, &windowRect);
 		assert_noerr(error);
 		calculateWindowPosition(this, &windowRect);
-		error = SetWindowBounds(this->window, kWindowContentRgn, &windowRect);
+		error = SetWindowBounds(returnCarbonWindow(this), kWindowContentRgn, &windowRect);
 		assert_noerr(error);
 	}
 	
@@ -1902,13 +2053,16 @@ installedActions()
 		
 		
 		this->commandUPP = NewEventHandlerUPP(receiveHICommand);
-		error = InstallWindowEventHandler(this->window, this->commandUPP, GetEventTypeCount(whenCommandExecuted),
+		error = InstallWindowEventHandler(returnCarbonWindow(this), this->commandUPP, GetEventTypeCount(whenCommandExecuted),
 											whenCommandExecuted, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
 											&this->commandHandler/* event handler reference */);
 		assert_noerr(error);
 	}
 	
 	// install a callback that tells the Window Manager the proper behavior for clicks in background terminal windows
+#if 0
+	// this behavior is disabled temporarily under the hybrid environment with a Cocoa
+	// runtime; it will be restored when terminals become full-fledged Cocoa windows
 	{
 		EventTypeSpec const		whenWindowClickActivationRequired[] =
 								{
@@ -1918,11 +2072,12 @@ installedActions()
 		
 		
 		this->windowClickActivationUPP = NewEventHandlerUPP(receiveWindowGetClickActivation);
-		error = InstallWindowEventHandler(this->window, this->windowClickActivationUPP, GetEventTypeCount(whenWindowClickActivationRequired),
+		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowClickActivationUPP, GetEventTypeCount(whenWindowClickActivationRequired),
 											whenWindowClickActivationRequired, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
 											&this->windowClickActivationHandler/* event handler reference */);
 		assert_noerr(error);
 	}
+#endif
 	
 	// install a callback that attempts to fix tab locations after a window is moved far enough below the menu bar
 	{
@@ -1934,7 +2089,7 @@ installedActions()
 		
 		
 		this->windowDragCompletedUPP = NewEventHandlerUPP(receiveWindowDragCompleted);
-		error = InstallWindowEventHandler(this->window, this->windowDragCompletedUPP, GetEventTypeCount(whenWindowDragCompleted),
+		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowDragCompletedUPP, GetEventTypeCount(whenWindowDragCompleted),
 											whenWindowDragCompleted, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
 											&this->windowDragCompletedHandler/* event handler reference */);
 		assert_noerr(error);
@@ -1951,7 +2106,7 @@ installedActions()
 		
 		
 		this->windowCursorChangeUPP = NewEventHandlerUPP(receiveWindowCursorChange);
-		error = InstallWindowEventHandler(this->window, this->windowCursorChangeUPP, GetEventTypeCount(whenCursorChangeRequired),
+		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowCursorChangeUPP, GetEventTypeCount(whenCursorChangeRequired),
 											whenCursorChangeRequired, this->window/* user data */,
 											&this->windowCursorChangeHandler/* event handler reference */);
 		assert_noerr(error);
@@ -1969,7 +2124,7 @@ installedActions()
 		
 		
 		this->windowResizeEmbellishUPP = NewEventHandlerUPP(receiveWindowResize);
-		error = InstallWindowEventHandler(this->window, this->windowResizeEmbellishUPP, GetEventTypeCount(whenWindowResizeStartsContinuesOrStops),
+		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowResizeEmbellishUPP, GetEventTypeCount(whenWindowResizeStartsContinuesOrStops),
 											whenWindowResizeStartsContinuesOrStops, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
 											&this->windowResizeEmbellishHandler/* event handler reference */);
 		assert_noerr(error);
@@ -1986,7 +2141,7 @@ installedActions()
 		
 		
 		this->growBoxClickUPP = NewEventHandlerUPP(receiveGrowBoxClick);
-		error = HIViewFindByID(HIViewGetRoot(this->window), kHIViewWindowGrowBoxID, &growBoxView);
+		error = HIViewFindByID(HIViewGetRoot(returnCarbonWindow(this)), kHIViewWindowGrowBoxID, &growBoxView);
 		assert_noerr(error);
 		error = HIViewInstallEventHandler(growBoxView, this->growBoxClickUPP, GetEventTypeCount(whenGrowBoxClicked),
 											whenGrowBoxClicked, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
@@ -2001,7 +2156,7 @@ installedActions()
 		Boolean		headersCollapsed = false;
 		
 		
-		error = SetWindowToolbar(this->window, this->toolbar);
+		error = SetWindowToolbar(returnCarbonWindow(this), this->toolbar);
 		assert_noerr(error);
 		
 		// also show the toolbar, unless the user preference to collapse is set
@@ -2013,14 +2168,14 @@ installedActions()
 		}
 		unless (headersCollapsed)
 		{
-			error = ShowHideWindowToolbar(this->window, true/* show */, false/* animate */);
+			error = ShowHideWindowToolbar(returnCarbonWindow(this), true/* show */, false/* animate */);
 			assert_noerr(error);
 		}
 	}
 	CFRelease(this->toolbar); // once set in the window, the toolbar is retained, so release the creation lock
 	
 	// enable drag tracking so that certain default toolbar behaviors work
-	(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(this->window, true/* enabled */);
+	(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(returnCarbonWindow(this), true/* enabled */);
 	
 	// finish by applying any desired attributes to the screen
 	{
@@ -2046,6 +2201,9 @@ Destructor.  See TerminalWindow_Dispose().
 TerminalWindow::
 ~TerminalWindow ()
 {
+	AutoPool	_;
+	
+	
 	// now that the window is going away, destroy any Undo commands
 	// that could be applied to this window
 	{
@@ -2094,24 +2252,24 @@ TerminalWindow::
 	DisposeEventHandlerUPP(this->toolbarEventUPP), this->toolbarEventUPP = nullptr;
 	
 	// hide window and kill its controls to disable callbacks
-	if (nullptr != this->window)
+	if (nil != this->window)
 	{
-		if (IsWindowVisible(this->window))
+		if ([this->window isVisible])
 		{
 			// 3.0 - use a zoom effect to close windows
 			Rect	lowerRight;
 			Rect	screenRect;
 			
 			
-			RegionUtilities_GetWindowDeviceGrayRect(this->window, &screenRect);
+			RegionUtilities_GetWindowDeviceGrayRect(returnCarbonWindow(this), &screenRect);
 			SetRect(&lowerRight, screenRect.right, screenRect.bottom, screenRect.right, screenRect.bottom);
-			if (noErr != TransitionWindow(this->window, kWindowZoomTransitionEffect,
+			if (noErr != TransitionWindow(returnCarbonWindow(this), kWindowZoomTransitionEffect,
 											kWindowHideTransitionAction, &lowerRight))
 			{
-				HideWindow(this->window);
+				[this->window orderOut:nil];
 			}
 		}
-		KillControls(this->window);
+		KillControls(returnCarbonWindow(this));
 	}
 	
 	// perform other clean-up
@@ -2167,10 +2325,10 @@ TerminalWindow::
 	ListenerModel_Dispose(&this->changeListenerModel);
 	
 	// finally, dispose of the window
-	if (this->window != nullptr)
+	if (nil != this->window)
 	{
-		HelpSystem_SetWindowKeyPhrase(this->window, kHelpSystem_KeyPhraseDefault); // clean up
-		DisposeWindow(this->window), this->window = nullptr;
+		HelpSystem_SetWindowKeyPhrase(returnCarbonWindow(this), kHelpSystem_KeyPhraseDefault); // clean up
+		[this->window close], this->window = nil;
 	}
 	if (nullptr == this->tabAndWindowGroup)
 	{
@@ -2240,7 +2398,7 @@ calculateIndexedWindowPosition	(TerminalWindowPtr	inPtr,
 		// the stagger amount on Mac OS X is set by the Aqua Human Interface Guidelines
 		SetPt(&stagger, 20, 20);
 		
-		RegionUtilities_GetPositioningBounds(inPtr->window, &screenRect);
+		RegionUtilities_GetPositioningBounds(returnCarbonWindow(inPtr), &screenRect);
 		outPositionPtr->v = stackingOrigin.v + stagger.v * (1 + inStaggerIndex);
 		outPositionPtr->h = stackingOrigin.h + stagger.h * (1 + inStaggerIndex);
 	}
@@ -2272,7 +2430,7 @@ calculateWindowPosition		(TerminalWindowPtr	inPtr,
 	
 	ensureTopLeftCornersExists();
 	inPtr->staggerPositionIndex = 0;
-	error = GetWindowBounds(inPtr->window, kWindowContentRgn, &contentRegionBounds);
+	error = GetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &contentRegionBounds);
 	assert_noerr(error);
 	while ((!done) && (!tooBig))
 	{
@@ -2297,7 +2455,7 @@ calculateWindowPosition		(TerminalWindowPtr	inPtr,
 			Rect	screenRect;
 			
 			
-			RegionUtilities_GetPositioningBounds(inPtr->window, &screenRect);
+			RegionUtilities_GetPositioningBounds(returnCarbonWindow(inPtr), &screenRect);
 			tooFarRight = ((outArrangement->left + contentRegionBounds.right - contentRegionBounds.left) > screenRect.right);
 			tooFarDown = ((outArrangement->top + contentRegionBounds.bottom - contentRegionBounds.top) > screenRect.bottom);
 		}
@@ -2679,7 +2837,7 @@ the scroll bars and the toolbar.
 static void
 createViews		(TerminalWindowPtr	inPtr)
 {
-	HIViewWrap	contentView(kHIViewWindowContentID, inPtr->window);
+	HIViewWrap	contentView(kHIViewWindowContentID, returnCarbonWindow(inPtr));
 	Rect		rect;
 	OSStatus	error = noErr;
 	
@@ -2691,7 +2849,7 @@ createViews		(TerminalWindowPtr	inPtr)
 	
 	// create a vertical scroll bar; the resize event handler initializes its size correctly
 	SetRect(&rect, 0, 0, 0, 0);
-	error = CreateScrollBarControl(inPtr->window, &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
+	error = CreateScrollBarControl(returnCarbonWindow(inPtr), &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
 									true/* live tracking */, inPtr->scrollProcUPP, &inPtr->controls.scrollBarV);
 	assert_noerr(error);
 	error = SetControlProperty(inPtr->controls.scrollBarV, AppResources_ReturnCreatorCode(),
@@ -2707,7 +2865,7 @@ createViews		(TerminalWindowPtr	inPtr)
 	
 	// create a horizontal scroll bar; the resize event handler initializes its size correctly
 	SetRect(&rect, 0, 0, 0, 0);
-	error = CreateScrollBarControl(inPtr->window, &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
+	error = CreateScrollBarControl(returnCarbonWindow(inPtr), &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
 									true/* live tracking */, inPtr->scrollProcUPP, &inPtr->controls.scrollBarH);
 	assert_noerr(error);
 	error = SetControlProperty(inPtr->controls.scrollBarH, AppResources_ReturnCreatorCode(),
@@ -2722,30 +2880,38 @@ createViews		(TerminalWindowPtr	inPtr)
 
 
 /*!
-Creates a Mac OS window for the specified terminal window
-and constructs a root control for subsequent control
-embedding.
+Creates a Cocoa window for the specified terminal window,
+based on a Carbon window (for now), and constructs a root
+view for subsequent embedding.
 
 Returns nullptr if the window was not created successfully.
 
-(3.0)
+(4.0)
 */
-static HIWindowRef
+static NSWindow*
 createWindow ()
 {
-	HIWindowRef		result = nullptr;
+	AutoPool		_;
+	NSWindow*		result = nil;
+	HIWindowRef		window = nullptr;
 	
 	
 	// load the NIB containing this window (automatically finds the right localization)
-	result = NIBWindow(AppResources_ReturnBundleForNIBs(),
+	window = NIBWindow(AppResources_ReturnBundleForNIBs(),
 						CFSTR("TerminalWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
-	if (nullptr != result)
+	if (nullptr != window)
 	{
+		result = [[NSWindow alloc] initWithWindowRef:window];
+		
+		// as recommended in the documentation, retain the window
+		// manually, because initWithWindowRef: does not retain it
+		// (but does release it)
+		(OSStatus)RetainWindow(window);
+		
 		// override this default; technically terminal windows
 		// are immediately closeable for the first 15 seconds
-		SetWindowModified(result, false);
+		(OSStatus)SetWindowModified(window, false);
 	}
-	
 	return result;
 }// createWindow
 
@@ -3771,6 +3937,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					break;
 				
 				case kCommandFormatByFavoriteName:
+					// IMPORTANT: This implementation is for Carbon compatibility only, as the
+					// Session Preferences panel is still Carbon-based and has a menu that
+					// relies on this command handler.  The equivalent menu bar command does
+					// not use this, it has an associated Objective-C action method.
 					{
 						// reformat frontmost window using the specified preferences
 						Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration
@@ -3963,6 +4133,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					break;
 				
 				case kCommandTranslationTableByFavoriteName:
+					// IMPORTANT: This implementation is for Carbon compatibility only, as the
+					// Session Preferences panel is still Carbon-based and has a menu that
+					// relies on this command handler.  The equivalent menu bar command does
+					// not use this, it has an associated Objective-C action method.
 					{
 						// change character set of frontmost window according to the specified preferences
 						Preferences_ContextRef		currentSettings = TerminalView_ReturnTranslationConfiguration
@@ -4398,10 +4572,11 @@ receiveTabDragDrop	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inTerminalWindowRef)
 {
-	OSStatus			result = eventNotHandledErr;
+	AutoPool			_;
 	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
 	UInt32 const		kEventClass = GetEventClass(inEvent);
 	UInt32 const		kEventKind = GetEventKind(inEvent);
+	OSStatus			result = eventNotHandledErr;
 	
 	
 	assert(kEventClass == kEventClassControl);
@@ -4434,7 +4609,7 @@ receiveTabDragDrop	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						result = SetEventParameter(inEvent, kEventParamControlWouldAcceptDrop,
 													typeBoolean, sizeof(acceptDrag), &acceptDrag);
-						SelectWindow(ptr->window);
+						[ptr->window orderFront:nil];
 					}
 					break;
 				
@@ -5154,10 +5329,11 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					inTerminalWindowRef)
 {
-	OSStatus			result = eventNotHandledErr;
+	AutoPool			_;
 	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
 	UInt32 const		kEventClass = GetEventClass(inEvent);
 	UInt32 const		kEventKind = GetEventKind(inEvent);
+	OSStatus			result = eventNotHandledErr;
 	
 	
 	assert(kEventClass == kEventClassWindow);
@@ -5206,7 +5382,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					{
 						if (useSheet)
 						{
-							ShowSheetWindow(ptr->resizeFloater, ptr->window);
+							ShowSheetWindow(ptr->resizeFloater, returnCarbonWindow(ptr));
 						}
 						else
 						{
@@ -5217,14 +5393,10 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				// remember the old window title
 				{
-					CFStringRef		nameCFString = nullptr;
+					CFStringRef		nameCFString = (CFStringRef)[ptr->window title];
 					
 					
-					if (noErr == CopyWindowTitleAsCFString(ptr->window, &nameCFString))
-					{
-						ptr->preResizeTitleString.setCFTypeRef(nameCFString);
-						CFRelease(nameCFString), nameCFString = nullptr;
-					}
+					ptr->preResizeTitleString.setCFTypeRef(nameCFString);
 				}
 			}
 			else if ((kEventKind == kEventWindowBoundsChanging) && (ptr->preResizeTitleString.exists()))
@@ -5282,7 +5454,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							// TerminalWindow_SetWindowTitle() routine, because
 							// it is a “secret” and temporary change to the title
 							// that will be undone when resizing completes
-							SetWindowTitleWithCFString(ptr->window, newTitle);
+							[ptr->window setTitle:(NSString*)newTitle];
 						}
 						
 						// update the floater
@@ -5321,11 +5493,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// restore the window title
 				if (ptr->preResizeTitleString.exists())
 				{
-					OSStatus	error = noErr;
-					
-					
-					error = SetWindowTitleWithCFString(ptr->window, ptr->preResizeTitleString.returnCFStringRef());
-					assert_noerr(error);
+					[ptr->window setTitle:(NSString*)ptr->preResizeTitleString.returnCFStringRef()];
 					ptr->preResizeTitleString.clear();
 				}
 			}
@@ -5334,6 +5502,23 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	return result;
 }// receiveWindowResize
+
+
+/*!
+Implementation of TerminalWindow_ReturnWindow().
+
+(4.0)
+*/
+HIWindowRef
+returnCarbonWindow		(TerminalWindowPtr	inPtr)
+{
+	AutoPool		_;
+	HIWindowRef		result = nullptr;
+	
+	
+	result = (HIWindowRef)[inPtr->window windowRef];
+	return result;
+}// returnCarbonWindow
 
 
 /*!
@@ -5678,6 +5863,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 void*					inEventContextPtr,
 						 void*					inTerminalWindowRef)
 {
+	AutoPool			_;
 	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
 	
 	
@@ -5697,7 +5883,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				
 				TerminalWindow_SetObscured(terminalWindow, false);
-				EventLoop_SelectBehindDialogWindows(ptr->window);
+				[ptr->window orderFront:nil];
 			}
 		}
 		break;
@@ -5945,7 +6131,7 @@ setStandardState	(TerminalWindowPtr	inPtr,
 		OSStatus	error = noErr;
 		
 		
-		error = GetWindowBounds(inPtr->window, kWindowContentRgn, &bounds);
+		error = GetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &bounds);
 		assert_noerr(error);
 		// force the current size regardless (in reality, the event handlers
 		// will be consulted so that the window size is constrained); but
@@ -5955,7 +6141,7 @@ setStandardState	(TerminalWindowPtr	inPtr,
 			bounds.right = bounds.left + windowWidth;
 			bounds.bottom = bounds.top + windowHeight;
 		}
-		error = SetWindowBounds(inPtr->window, kWindowContentRgn, &bounds);
+		error = SetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &bounds);
 		assert_noerr(error);
 	}
 }// setStandardState
@@ -5979,16 +6165,12 @@ static void
 setWarningOnWindowClose		(TerminalWindowPtr	inPtr,
 							 Boolean			inCloseBoxHasDot)
 {
-	if (nullptr != inPtr->window)
+	if (nil != inPtr->window)
 	{
 		// attach or remove an adornment in the window that shows
 		// that attempting to close it will display a warning;
-		// on Mac OS 8.5 and beyond, this disables any proxy icon;
 		// on Mac OS X, a dot appears in the middle of the close box
-		if (API_AVAILABLE(SetWindowModified))
-		{
-			SetWindowModified(inPtr->window, inCloseBoxHasDot);
-		}
+		(OSStatus)SetWindowModified(returnCarbonWindow(inPtr), inCloseBoxHasDot);
 	}
 }// setWarningOnWindowClose
 
@@ -6005,7 +6187,10 @@ static void
 setWindowAndTabTitle	(TerminalWindowPtr	inPtr,
 						 CFStringRef		inNewTitle)
 {
-	SetWindowTitleWithCFString(inPtr->window, inNewTitle);
+	AutoPool	_;
+	
+	
+	[inPtr->window setTitle:(NSString*)inNewTitle];
 	if (inPtr->tab.exists())
 	{
 		HIViewWrap			titleWrap(idMyLabelTabTitle,
@@ -6046,6 +6231,7 @@ stackWindowTerminalWindowOp		(TerminalWindowRef	inTerminalWindow,
 								 SInt32				UNUSED_ARGUMENT(inData2),
 								 void*				UNUSED_ARGUMENT(inoutResultPtr))
 {
+	AutoPool					_;
 	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
 	
 	
@@ -6321,6 +6507,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kTerminal_ChangeWindowIconTitle:
 		// set window’s alternate (Dock icon) title to match
 		{
+			AutoPool			_;
 			TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
 			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
 			
@@ -6334,7 +6521,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				Terminal_CopyTitleForIcon(screen, titleCFString);
 				if (nullptr != titleCFString)
 				{
-					SetWindowAlternateTitle(ptr->window, titleCFString);
+					[ptr->window setMiniwindowTitle:(NSString*)titleCFString];
 					CFRelease(titleCFString), titleCFString = nullptr;
 				}
 			}
@@ -6344,6 +6531,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kTerminal_ChangeWindowMinimization:
 		// minimize or restore window based on requested minimization
 		{
+			AutoPool			_;
 			TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
 			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
 			
@@ -6353,7 +6541,14 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
 				
 				
-				CollapseWindow(ptr->window, Terminal_WindowIsToBeMinimized(screen));
+				if (Terminal_WindowIsToBeMinimized(screen))
+				{
+					[ptr->window miniaturize:nil];
+				}
+				else
+				{
+					[ptr->window deminiaturize:nil];
+				}
 			}
 		}
 		break;

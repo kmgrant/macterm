@@ -2112,7 +2112,7 @@ displayTerminalWindow	(TerminalWindowRef	inTerminalWindow)
 			// tabbed appearance.  This is due to the tab implementation being a
 			// drawer, which refuses to associate itself with an invisible window!
 			Workspace_AddWindow(targetWorkspace, window);
-			ShowWindow(window);
+			TerminalWindow_SetVisible(inTerminalWindow, true);
 			(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
 			if (gAutoRearrangeTabs)
 			{
@@ -2122,9 +2122,9 @@ displayTerminalWindow	(TerminalWindowRef	inTerminalWindow)
 		}
 		else
 		{
-			ShowWindow(window);
+			TerminalWindow_SetVisible(inTerminalWindow, true);
 		}
-		EventLoop_SelectBehindDialogWindows(window);
+		TerminalWindow_Select(inTerminalWindow);
 		
 		// focus the first view of the first tab
 		terminalWindowResult = TerminalWindow_GetViewsInGroup(inTerminalWindow, kTerminalWindow_ViewGroupEverything, 1/* array length */,
@@ -2241,39 +2241,15 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				switch (received.commandID)
 				{
 				case kCommandNewSessionDefaultFavorite:
-				case kCommandNewSessionByFavoriteName:
 					{
 						Preferences_ContextRef		sessionContext = nullptr;
-						Boolean						releaseContext = true;
-						
-						
-						if (kCommandNewSessionDefaultFavorite == received.commandID)
-						{
-							Preferences_Result		prefsResult = Preferences_GetDefaultContext
+						Preferences_Result			prefsResult = Preferences_GetDefaultContext
 																	(&sessionContext, Quills::Prefs::SESSION);
-							
-							
-							if (kPreferences_ResultOK != prefsResult) sessionContext = nullptr;
-							releaseContext = false;
-						}
-						else
+						
+						
+						if (kPreferences_ResultOK != prefsResult)
 						{
-							// this relies on the text of the menu command to use
-							// the right Favorite, so it won’t work without a menu
-							if (received.attributes & kHICommandFromMenu)
-							{
-								// extract the name of the Favorite from the menu text;
-								// this command cannot be used unless it comes from a menu
-								CFStringRef		itemTextCFString = nullptr;
-								
-								
-								if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef,
-																		received.menu.menuItemIndex, &itemTextCFString))
-								{
-									sessionContext = Preferences_NewContextFromFavorites(Quills::Prefs::SESSION, itemTextCFString);
-									CFRelease(itemTextCFString), itemTextCFString = nullptr;
-								}
-							}
+							sessionContext = nullptr;
 						}
 						
 						// finally, create the session from the specified context
@@ -2293,11 +2269,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						{
 							// UNIMPLEMENTED!!!
 							Sound_StandardAlert();
-						}
-						
-						if ((releaseContext) && (nullptr != sessionContext))
-						{
-							Preferences_ReleaseContext(&sessionContext);
 						}
 					}
 					break;
@@ -2335,38 +2306,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							// UNIMPLEMENTED!!!
 							result = eventNotHandledErr;
 						}
-					}
-					break;
-				
-				case kCommandSessionByWindowName:
-					// this relies on the property of the menu command to use
-					// the right Session, so it won’t work without a menu
-					if (received.attributes & kHICommandFromMenu)
-					{
-						SessionRef		session = nullptr;
-						UInt32			actualSize = 0;
-						OSStatus		error = noErr;
-						
-						
-						// find the window corresponding to the selected menu item
-						error = GetMenuItemProperty(received.menu.menuRef, received.menu.menuItemIndex,
-													AppResources_ReturnCreatorCode(), kConstantsRegistry_MenuItemPropertyTypeSessionRef,
-													sizeof(session), &actualSize, &session);
-						if (noErr == error)
-						{
-							TerminalWindowRef	terminalWindow = nullptr;
-							HIWindowRef			window = nullptr;
-							
-							
-							// first make the window visible if it was obscured
-							window = Session_ReturnActiveWindow(session);
-							terminalWindow = Session_ReturnActiveTerminalWindow(session);
-							if (nullptr != terminalWindow) TerminalWindow_SetObscured(terminalWindow, false);
-							
-							// now select the window
-							EventLoop_SelectBehindDialogWindows(window);
-						}
-						result = noErr;
 					}
 					break;
 				
