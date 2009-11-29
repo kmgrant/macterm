@@ -228,8 +228,6 @@
 	<string>f12</string>
 	<key>macro-12-modifiers</key>
 	<array/>
-	<key>menu-macros-visible</key>
-	<false/>
 	<key>macro-order</key>
 	<array>
 		<string>macro-01</string>
@@ -245,10 +243,6 @@
 		<string>macro-11</string>
 		<string>macro-12</string>
 	</array>
-	<key>menu-command-set-simplified</key>
-	<false/>
-	<key>menu-key-equivalents</key>
-	<true/>
 	<key>new-means</key>
 	<string>dialog</string>
 	<key>no-auto-close</key>
@@ -256,7 +250,7 @@
 	<key>no-auto-new</key>
 	<false/>
 	<key>prefs-version</key>
-	<integer>3</integer>
+	<integer>4</integer>
 	<key>server-host</key>
 	<string>nowhere.loopback.edu</string>
 	<key>server-port</key>

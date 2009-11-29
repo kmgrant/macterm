@@ -190,9 +190,7 @@ enum
 	kPreferences_TagKioskShowsScrollBar					= 'kscr',	//!< data: "Boolean"
 	kPreferences_TagKioskShowsWindowFrame				= 'kwnf',	//!< data: "Boolean"
 	kPreferences_TagKioskUsesSuperfluousEffects			= 'kewl',	//!< data: "Boolean"
-	kPreferences_TagMacrosMenuVisible					= 'mmnu',	//!< data: "Boolean"
 	kPreferences_TagMapBackquote						= 'map`',	//!< data: "Boolean"
-	kPreferences_TagMenuItemKeys						= 'mkey',	//!< data: "Boolean"
 	kPreferences_TagNewCommandShortcutEffect			= 'new?',	//!< data: "UInt32", a "kCommand..." constant
 	kPreferences_TagNotification						= 'noti',	//!< data: "SInt16", a "kAlert_Notify..." constant
 	kPreferences_TagNotifyOfBeeps						= 'bnot',	//!< data: "Boolean"

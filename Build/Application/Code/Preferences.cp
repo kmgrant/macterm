@@ -892,7 +892,7 @@ Preferences_Init ()
 	unless (gHaveRunConverter)
 	{
 		CFDictionaryRef		defaultPrefDictionary = createDefaultPrefDictionary();
-		SInt16				currentPrefsVersion = 2; // only a default...
+		SInt16				currentPrefsVersion = 4; // only a default...
 		
 		
 		// The "prefs-version" key in DefaultPreferences.plist defines the
@@ -1085,8 +1085,6 @@ Preferences_Init ()
 										CFSTR("data-send-local-echo-enabled"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagLocalEchoHalfDuplex,
 										CFSTR("data-send-local-echo-half-duplex"), Quills::Prefs::SESSION);
-	My_PreferenceDefinition::createFlag(kPreferences_TagMacrosMenuVisible,
-										CFSTR("menu-macros-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagMapArrowsForEmacs,
 									CFSTR("command-key-emacs-move-down"), typeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::TERMINAL);
@@ -1102,8 +1100,6 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagMapKeypadTopRowForVT220,
 									CFSTR("command-key-vt220-pf1")/* TEMPORARY - one of several key names used */, typeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::TERMINAL);
-	My_PreferenceDefinition::createFlag(kPreferences_TagMenuItemKeys,
-										CFSTR("menu-key-equivalents"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagNewCommandShortcutEffect,
 									CFSTR("new-means"), typeCFStringRef/* "shell", "dialog", "default" */,
 									sizeof(UInt32), Quills::Prefs::GENERAL);
@@ -3742,9 +3738,7 @@ Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagCursorBlinks:
 	case kPreferences_TagDontDimBackgroundScreens:
 	case kPreferences_TagFocusFollowsMouse:
-	case kPreferences_TagMacrosMenuVisible:
 	case kPreferences_TagMapBackquote:
-	case kPreferences_TagMenuItemKeys:
 	case kPreferences_TagNewCommandShortcutEffect:
 	case kPreferences_TagPureInverse:
 	case kPreferences_TagScrollDelay:
@@ -3816,9 +3810,7 @@ Preferences_StopMonitoring	(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagCursorBlinks:
 	case kPreferences_TagDontDimBackgroundScreens:
 	case kPreferences_TagFocusFollowsMouse:
-	case kPreferences_TagMacrosMenuVisible:
 	case kPreferences_TagMapBackquote:
-	case kPreferences_TagMenuItemKeys:
 	case kPreferences_TagNewCommandShortcutEffect:
 	case kPreferences_TagPureInverse:
 	case kPreferences_TagScrollDelay:
@@ -6376,8 +6368,6 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagDontDimBackgroundScreens:
 				case kPreferences_TagFocusFollowsMouse:
 				case kPreferences_TagHeadersCollapsed:
-				case kPreferences_TagMacrosMenuVisible:
-				case kPreferences_TagMenuItemKeys:
 				case kPreferences_TagPureInverse:
 				case kPreferences_TagRandomTerminalFormats:
 					{
@@ -8774,17 +8764,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
-			case kPreferences_TagMacrosMenuVisible:
-				{
-					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
-					
-					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
-				}
-				break;
-			
 			case kPreferences_TagMapBackquote:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
@@ -8792,17 +8771,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeCFStringRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? CFSTR("\\e") : CFSTR(""));
-					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
-				}
-				break;
-			
-			case kPreferences_TagMenuItemKeys:
-				{
-					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
-					
-					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;

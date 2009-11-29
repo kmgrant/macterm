@@ -235,10 +235,6 @@ Commands_Init ()
 		
 		
 		prefsResult = Preferences_StartMonitoring
-						(gPreferenceChangeEventListener, kPreferences_TagMenuItemKeys,
-							true/* notify of initial value */);
-		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_StartMonitoring
 						(gPreferenceChangeEventListener, kPreferences_TagNewCommandShortcutEffect,
 							true/* notify of initial value */);
 		assert(kPreferences_ResultOK == prefsResult);
@@ -279,8 +275,9 @@ void
 Commands_Done ()
 {
 	// disable preference change listener
-	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagMenuItemKeys);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagNewCommandShortcutEffect);
+	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_ChangeNumberOfContexts);
+	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_ChangeContextName);
 	ListenerModel_ReleaseListener(&gPreferenceChangeEventListener);
 	
 	// disable session state listeners
@@ -2342,20 +2339,6 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	
 	switch (inPreferenceTagThatChanged)
 	{
-	case kPreferences_TagMenuItemKeys:
-		{
-			Boolean		flag = false;
-			
-			
-			unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(flag), &flag, &actualSize) ==
-					kPreferences_ResultOK)
-			{
-				flag = true; // assume menu items have key equivalents, if preference can’t be found
-			}
-			// UNIMPLEMENTED
-		}
-		break;
-	
 	case kPreferences_TagNewCommandShortcutEffect:
 		// update internal variable that matches the value of the preference
 		// (easier than calling Preferences_GetData() every time!)
@@ -2823,195 +2806,181 @@ no menu command keys is set.
 void
 setNewCommand	(UInt32		inCommandNShortcutCommand)
 {
-	size_t		actualSize = 0;
-	Boolean		menuCommandKeys = false;
+	CFStringRef		charCFString = nullptr;
+	NSString*		charNSString = nil;
+	NSMenu*			targetMenu = returnMenu(kMenuIDFile);
+	NSArray*		items = [targetMenu itemArray];
+	NSMenuItem*		defaultItem = nil;
+	NSMenuItem*		logInShellItem = nil;
+	NSMenuItem*		shellItem = nil;
+	NSMenuItem*		dialogItem = nil;
 	
 	
-	// determine if menus are supposed to display key equivalents at all...
-	unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(menuCommandKeys), &menuCommandKeys,
-			&actualSize) == kPreferences_ResultOK)
+	// determine the character that should be used for all key equivalents
 	{
-		menuCommandKeys = true; // assume menu items have key equivalents, if preference can’t be found
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
+		
+		
+		stringResult = UIStrings_Copy(kUIStrings_TerminalNewCommandsKeyCharacter, charCFString);
+		if (false == stringResult.ok())
+		{
+			assert(false && "unable to find key equivalent for New commands");
+		}
+		else
+		{
+			// use the object for convenience
+			charNSString = (NSString*)charCFString;
+		}
 	}
 	
-	if (menuCommandKeys)
+	// find the commands in the menu that create sessions; these will
+	// have their key equivalents set according to user preferences
 	{
-		CFStringRef		charCFString = nullptr;
-		NSString*		charNSString = nil;
-		NSMenu*			targetMenu = returnMenu(kMenuIDFile);
-		NSArray*		items = [targetMenu itemArray];
-		NSMenuItem*		defaultItem = nil;
-		NSMenuItem*		logInShellItem = nil;
-		NSMenuItem*		shellItem = nil;
-		NSMenuItem*		dialogItem = nil;
+		NSEnumerator*	toMenuItem = [items objectEnumerator];
 		
 		
-		// determine the character that should be used for all key equivalents
+		while (NSMenuItem* item = [toMenuItem nextObject])
 		{
-			UIStrings_Result	stringResult = kUIStrings_ResultOK;
-			
-			
-			stringResult = UIStrings_Copy(kUIStrings_TerminalNewCommandsKeyCharacter, charCFString);
-			if (false == stringResult.ok())
+			if (@selector(performNewDefault:) == [item action])
 			{
-				assert(false && "unable to find key equivalent for New commands");
+				defaultItem = item;
 			}
-			else
+			else if (@selector(performNewLogInShell:) == [item action])
 			{
-				// use the object for convenience
-				charNSString = (NSString*)charCFString;
+				logInShellItem = item;
+			}
+			else if (@selector(performNewShell:) == [item action])
+			{
+				shellItem = item;
+			}
+			else if (@selector(performNewCustom:) == [item action])
+			{
+				dialogItem = item;
 			}
 		}
-		
-		// find the commands in the menu that create sessions; these will
-		// have their key equivalents set according to user preferences
+	}
+	
+	// first clear the non-command-key modifiers of certain “New” commands
+	[defaultItem setKeyEquivalent:@""];
+	[defaultItem setKeyEquivalentModifierMask:0];
+	[logInShellItem setKeyEquivalent:@""];
+	[logInShellItem setKeyEquivalentModifierMask:0];
+	[shellItem setKeyEquivalent:@""];
+	[shellItem setKeyEquivalentModifierMask:0];
+	[dialogItem setKeyEquivalent:@""];
+	[dialogItem setKeyEquivalentModifierMask:0];
+	
+	// Modifiers are assigned appropriately based on the given command.
+	// If a menu item is assigned to command-N, then Default is given
+	// whatever key equivalent the item would have otherwise had.  The
+	// NIB is always overridden, although the keys in the NIB act like
+	// comments for the key equivalents used in the code below.
+	switch (inCommandNShortcutCommand)
+	{
+	case kCommandNewSessionDefaultFavorite:
+		// default case: everything here should match NIB assignments
 		{
-			NSEnumerator*	toMenuItem = [items objectEnumerator];
+			NSMenuItem*		item = nil;
 			
 			
-			while (NSMenuItem* item = [toMenuItem nextObject])
-			{
-				if (@selector(performNewDefault:) == [item action])
-				{
-					defaultItem = item;
-				}
-				else if (@selector(performNewLogInShell:) == [item action])
-				{
-					logInShellItem = item;
-				}
-				else if (@selector(performNewShell:) == [item action])
-				{
-					shellItem = item;
-				}
-				else if (@selector(performNewCustom:) == [item action])
-				{
-					dialogItem = item;
-				}
-			}
+			item = defaultItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask];
+			
+			item = shellItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSControlKeyMask];
+			
+			item = logInShellItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSAlternateKeyMask];
+			
+			item = dialogItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
 		}
-		
-		// first clear the non-command-key modifiers of certain “New” commands
-		[defaultItem setKeyEquivalent:@""];
-		[defaultItem setKeyEquivalentModifierMask:0];
-		[logInShellItem setKeyEquivalent:@""];
-		[logInShellItem setKeyEquivalentModifierMask:0];
-		[shellItem setKeyEquivalent:@""];
-		[shellItem setKeyEquivalentModifierMask:0];
-		[dialogItem setKeyEquivalent:@""];
-		[dialogItem setKeyEquivalentModifierMask:0];
-		
-		// Modifiers are assigned appropriately based on the given command.
-		// If a menu item is assigned to command-N, then Default is given
-		// whatever key equivalent the item would have otherwise had.  The
-		// NIB is always overridden, although the keys in the NIB act like
-		// comments for the key equivalents used in the code below.
-		switch (inCommandNShortcutCommand)
+		break;
+	
+	case kCommandNewSessionShell:
+		// swap Default and Shell key equivalents
 		{
-		case kCommandNewSessionDefaultFavorite:
-			// default case: everything here should match NIB assignments
-			{
-				NSMenuItem*		item = nil;
-				
-				
-				item = defaultItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask];
-				
-				item = shellItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSControlKeyMask];
-				
-				item = logInShellItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSAlternateKeyMask];
-				
-				item = dialogItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
-			}
-			break;
-		
-		case kCommandNewSessionShell:
-			// swap Default and Shell key equivalents
-			{
-				NSMenuItem*		item = nil;
-				
-				
-				item = defaultItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSControlKeyMask];
-				
-				item = shellItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask];
-				
-				item = logInShellItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSAlternateKeyMask];
-				
-				item = dialogItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
-			}
-			break;
-		
-		case kCommandNewSessionLoginShell:
-			// swap Default and Log-In Shell key equivalents
-			{
-				NSMenuItem*		item = nil;
-				
-				
-				item = defaultItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSAlternateKeyMask];
-				
-				item = shellItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSControlKeyMask];
-				
-				item = logInShellItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask];
-				
-				item = dialogItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
-			}
-			break;
-		
-		case kCommandNewSessionDialog:
-			// swap Default and Custom New Session key equivalents
-			{
-				NSMenuItem*		item = nil;
-				
-				
-				item = defaultItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
-				
-				item = shellItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSControlKeyMask];
-				
-				item = logInShellItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSAlternateKeyMask];
-				
-				item = dialogItem;
-				[item setKeyEquivalent:charNSString];
-				[item setKeyEquivalentModifierMask:NSCommandKeyMask];
-			}
-			break;
-		
-		default:
-			// ???
-			break;
+			NSMenuItem*		item = nil;
+			
+			
+			item = defaultItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSControlKeyMask];
+			
+			item = shellItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask];
+			
+			item = logInShellItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSAlternateKeyMask];
+			
+			item = dialogItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
 		}
-		
-		if (nullptr != charCFString)
+		break;
+	
+	case kCommandNewSessionLoginShell:
+		// swap Default and Log-In Shell key equivalents
 		{
-			CFRelease(charCFString), charCFString = nullptr;
+			NSMenuItem*		item = nil;
+			
+			
+			item = defaultItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSAlternateKeyMask];
+			
+			item = shellItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSControlKeyMask];
+			
+			item = logInShellItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask];
+			
+			item = dialogItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
 		}
+		break;
+	
+	case kCommandNewSessionDialog:
+		// swap Default and Custom New Session key equivalents
+		{
+			NSMenuItem*		item = nil;
+			
+			
+			item = defaultItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
+			
+			item = shellItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSControlKeyMask];
+			
+			item = logInShellItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSAlternateKeyMask];
+			
+			item = dialogItem;
+			[item setKeyEquivalent:charNSString];
+			[item setKeyEquivalentModifierMask:NSCommandKeyMask];
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+	
+	if (nullptr != charCFString)
+	{
+		CFRelease(charCFString), charCFString = nullptr;
 	}
 }// setNewCommand
 
@@ -5323,10 +5292,8 @@ orderFrontPreferences:(id)	sender
 - (id)
 canOrderFrontPreferences:(id <NSValidatedUserInterfaceItem>)	anItem
 {
+#pragma unused(anItem)
 	BOOL					result = YES;
-	Boolean					menuKeyEquivalents = false;
-	size_t					actualSize = 0;
-	NSMenuItem*				asMenuItem = (NSMenuItem*)anItem;
 	WindowInfo_Ref			windowInfoRef = nullptr;
 	WindowInfo_Descriptor	windowDescriptor = kWindowInfo_InvalidDescriptor;
 	
@@ -5338,24 +5305,6 @@ canOrderFrontPreferences:(id <NSValidatedUserInterfaceItem>)	anItem
 		windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowInfoRef);
 	}
 	result = (windowDescriptor != kConstantsRegistry_WindowDescriptorPreferences);
-	
-	// set the menu item key equivalent
-	unless (kPreferences_ResultOK ==
-			Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(menuKeyEquivalents),
-								&menuKeyEquivalents, &actualSize))
-	{
-		menuKeyEquivalents = true; // assume key equivalents, if preference can’t be found
-	}
-	if (menuKeyEquivalents)
-	{
-		[asMenuItem setKeyEquivalent:@","];
-		[asMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
-	}
-	else
-	{
-		[asMenuItem setKeyEquivalent:@""];
-		[asMenuItem setKeyEquivalentModifierMask:0];
-	}
 	
 	return [NSNumber numberWithBool:result];
 }

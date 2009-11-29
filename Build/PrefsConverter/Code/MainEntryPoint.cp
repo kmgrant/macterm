@@ -137,6 +137,8 @@ Boolean				gFinished = false;			//!< used to control exit warnings to the user
 namespace {
 
 My_PrefsResult		actionLegacyUpdates			();
+My_PrefsResult		actionVersion3				();
+My_PrefsResult		actionVersion4				();
 OSStatus			addErrorToReply				(ConstStringPtr, OSStatus, AppleEventPtr);
 Boolean				convertRGBColorToCFArray	(RGBColor const*, CFArrayRef&);
 My_StringResult		copyFileOrFolderCFString	(My_FolderStringType, CFStringRef*);
@@ -424,7 +426,7 @@ actionLegacyUpdates ()
 				setMacTelnetPreference(prefsKey, (appPrefs.wasVT220KeypadShowing) ? kCFBooleanTrue : kCFBooleanFalse);
 				
 				prefsKey = CFSTR("menu-command-set-simplified");
-				setMacTelnetPreference(prefsKey, (appPrefs.simplifiedUserInterface) ? kCFBooleanTrue : kCFBooleanFalse);
+				setMacTelnetPreference(prefsKey, kCFBooleanFalse);
 				
 				prefsKey = CFSTR("when-alert-in-background");
 				switch (appPrefs.notificationPrefs)
@@ -1133,7 +1135,7 @@ actionLegacyUpdates ()
 
 
 /*!
-Upgrades from version 1 to version 2.  Some keys are
+Upgrades from version 2 to version 3.  Some keys are
 now obsolete that were never available to users, so
 they are deleted.
 
@@ -1150,8 +1152,42 @@ actionVersion3 ()
 	
 	// this is now "favorite-formats" and redefined as a simple array of domain names
 	CFPreferencesSetAppValue(CFSTR("favorite-styles"), nullptr/* delete value */, kMacTelnetApplicationID);
+	
 	return result;
 }// actionVersion3
+
+
+/*!
+Upgrades from version 3 to version 4.  Some keys are
+now obsolete, so they are deleted.
+
+(4.0)
+*/
+My_PrefsResult
+actionVersion4 ()
+{
+	My_PrefsResult		result = kMy_PrefsResultOK;
+	
+	
+	// this setting is no longer used
+	CFPreferencesSetAppValue(CFSTR("menu-command-set-simplified"), nullptr/* delete value */, kMacTelnetApplicationID);
+	
+	// this setting is no longer used
+	CFPreferencesSetAppValue(CFSTR("menu-key-equivalents"), nullptr/* delete value */, kMacTelnetApplicationID);
+	
+	// these settings are no longer used
+	CFPreferencesSetAppValue(CFSTR("macro-menu-name-string"), nullptr/* delete value */, kMacTelnetApplicationID);
+	CFPreferencesSetAppValue(CFSTR("macro-menu-visible"), nullptr/* delete value */, kMacTelnetApplicationID);
+	CFPreferencesSetAppValue(CFSTR("menu-macros-visible"), nullptr/* delete value */, kMacTelnetApplicationID);
+	CFPreferencesSetAppValue(CFSTR("menu-visible"), nullptr/* delete value */, kMacTelnetApplicationID);
+	
+	// these settings are no longer used
+	CFPreferencesSetAppValue(CFSTR("window-macroeditor-position-pixels"), nullptr/* delete value */, kMacTelnetApplicationID);
+	CFPreferencesSetAppValue(CFSTR("window-macroeditor-size-pixels"), nullptr/* delete value */, kMacTelnetApplicationID);
+	CFPreferencesSetAppValue(CFSTR("window-macroeditor-visible"), nullptr/* delete value */, kMacTelnetApplicationID);
+	
+	return result;
+}// actionVersion4
 
 
 /*!
@@ -1748,7 +1784,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 	// The preferences version MUST match what is used by the version of
 	// MacTelnet that ships with this preferences converter; it should
 	// be changed here if it is changed in MacTelnet.
-	SInt16 const	kCurrentPrefsVersion = 3;
+	SInt16 const	kCurrentPrefsVersion = 4;
 	CFIndex			diskVersion = 0;
 	Boolean			doConvert = false;
 	Boolean			conversionSuccessful = false;
@@ -1847,8 +1883,13 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		}
 		if (diskVersion < 3)
 		{
-			// Version 3 changed some key names; delete obsolete keys.
+			// Version 3 changed some key names and deleted obsolete keys.
 			actionResult = actionVersion3();
+		}
+		if (diskVersion < 4)
+		{
+			// Version 4 deleted some obsolete keys.
+			actionResult = actionVersion4();
 		}
 		//if (diskVersion < X)
 		//{

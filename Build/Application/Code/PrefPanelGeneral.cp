@@ -994,18 +994,6 @@ const
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
 	{
-		HIViewWrap		checkBox(idMyCheckBoxMenuKeyEquivalents, inOwningWindow);
-		
-		
-		assert(checkBox.exists());
-		unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultOK)
-		{
-			flag = true; // assume a value, if preference can’t be found
-		}
-		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
-	}
-	{
 		HIViewWrap		checkBox(idMyCheckBoxMapBackquoteToEscape, inOwningWindow);
 		
 		
@@ -1035,18 +1023,6 @@ const
 		
 		assert(checkBox.exists());
 		unless (Preferences_GetData(kPreferences_TagFocusFollowsMouse, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultOK)
-		{
-			flag = false; // assume a value, if preference can’t be found
-		}
-		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
-	}
-	{
-		HIViewWrap		checkBox(idMyCheckBoxMacrosMenuVisible, inOwningWindow);
-		
-		
-		assert(checkBox.exists());
-		unless (Preferences_GetData(kPreferences_TagMacrosMenuVisible, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
 			flag = false; // assume a value, if preference can’t be found
@@ -1962,12 +1938,6 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
 				result = true;
 			}
-			else if (HIViewIDWrap(idMyCheckBoxMenuKeyEquivalents) == viewID)
-			{
-				Preferences_SetData(kPreferences_TagMenuItemKeys,
-									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
-				result = true;
-			}
 			else if (HIViewIDWrap(idMyCheckBoxMapBackquoteToEscape) == viewID)
 			{
 				Preferences_SetData(kPreferences_TagMapBackquote,
@@ -1983,12 +1953,6 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 			else if (HIViewIDWrap(idMyCheckBoxFocusFollowsMouse) == viewID)
 			{
 				Preferences_SetData(kPreferences_TagFocusFollowsMouse,
-									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
-				result = true;
-			}
-			else if (HIViewIDWrap(idMyCheckBoxMacrosMenuVisible) == viewID)
-			{
-				Preferences_SetData(kPreferences_TagMacrosMenuVisible,
 									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
 				result = true;
 			}

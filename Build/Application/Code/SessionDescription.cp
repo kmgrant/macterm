@@ -1169,12 +1169,9 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 		
 		if (inoutDataPtr->windowName != nullptr)
 		{
-			Preferences_Result		prefResult = kPreferences_ResultOK;
-			size_t					actualSize = 0;
-			Boolean					flag = false;
+			Boolean		flag = true;
 			
 			
-			prefResult = Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(flag), &flag, &actualSize);
 			success = TextDataFile_AddNameValueFlag(writer, nullptr/* class */, "commandkeys", flag);
 	  	}
 		
