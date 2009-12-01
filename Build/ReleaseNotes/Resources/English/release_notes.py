@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20091130',
     '20091128',
     '20091127',
     '20091102',
@@ -293,6 +294,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20091130': [
+        'Fixed Window menu items to once again use italic text for hidden windows.',
+    ],
     '20091128': [
         'Printing commands are once again enabled on all Mac OS X versions, as the new Cocoa runtime solves the previous issues.',
         'Preferences window General pane Options tab "Menu key equivalents" checkbox has been removed.',

@@ -1988,6 +1988,18 @@ addWindowMenuItemForSession		(SessionRef							inSession,
 	
 	if (nil != newItem)
 	{
+		// define an attributed title so that it is possible to italicize the text for hidden windows
+		NSAttributedString*			immutableText = [[[NSAttributedString alloc] initWithString:[newItem title]]
+														autorelease];
+		NSMutableAttributedString*	mutableText = [[immutableText mutableCopyWithZone:NULL] autorelease];
+		
+		
+		// unfortunately, attributed strings have no properties whatsoever, so even normal text
+		// requires explicitly setting the proper system font for menu items!
+		[mutableText addAttribute:NSFontAttributeName value:[NSFont menuFontOfSize:[NSFont systemFontSize]]
+														range:NSMakeRange(0, [mutableText length])];
+		[newItem setAttributedTitle:mutableText];
+		
 		// set icon appropriately for the state
 		setWindowMenuItemMarkForSession(inSession, newItem);
 		
@@ -3297,7 +3309,7 @@ setWindowMenuItemMarkForSession		(SessionRef		inSession,
 		if (TerminalWindow_IsObscured(terminalWindow))
 		{
 			// set the style of the item to italic, which makes it more obvious that a window is hidden
-			[styledText addAttribute:NSObliquenessAttributeName value:[NSNumber numberWithFloat:0.5]
+			[styledText addAttribute:NSObliquenessAttributeName value:[NSNumber numberWithFloat:0.25]
 										range:NSMakeRange(0, [styledText length])];
 			if (nil != styledText)
 			{
