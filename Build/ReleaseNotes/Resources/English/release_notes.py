@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20091204',
     '20091130',
     '20091128',
     '20091127',
@@ -294,6 +295,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20091204': [
+        'Fixed MacTelnet Help to no longer mention certain preferences that were recently removed.',
+    ],
     '20091130': [
         'Fixed Window menu items to once again use italic text for hidden windows.',
     ],

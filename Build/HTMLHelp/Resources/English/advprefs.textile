@@ -67,10 +67,6 @@ table(deftable).
 (defbottom). |(desc)\2. The scroll bar (and therefore scrollback history) is available in Full Screen mode.|
 (deftop). |(key). @kiosk-window-frame-visible@|(types). _true or false_|
 (defbottom). |(desc)\2. The window title and toolbar are visible in Full Screen mode.|
-(deftop). |(key). @menu-key-equivalents@|(types). _true or false_|
-(defbottom). |(desc)\2. Menu items in the menu bar can display and respond to keyboard equivalents.|
-(deftop). |(key). @menu-macros-visible@|(types). _true or false_|
-(defbottom). |(desc)\2. Macros are available in the menu bar.|
 (deftop). |(key). @new-means@|(types). _string_: @default@, @dialog@, @log-in shell@ or @shell@| 
 (defbottom). |(desc)\2. The default command-N key equivalent creates this type of session.|
 (deftop). |(key). @no-auto-close@|(types). _true or false_|

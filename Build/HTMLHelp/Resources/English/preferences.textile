@@ -43,15 +43,6 @@ application is activated and no windows are open.
 Note that the type of session created will implicitly match the
 "Command-N Key Equivalent" preference.
 
-h5(#macrosmenu). Display a macros menu
-
-Show a Macros menu in the menu bar, providing direct access to
-the current macros (as selected from the Map menu and defined in
-the Preferences window).  Also useful for seeing at a glance the
-names and key equivalents of your current macros.  And, if you
-invoke keys that trigger macros, the Macros menu title will
-flash.
-
 h4. Text
 
 h5(#invert). Invert selected text
@@ -83,13 +74,6 @@ To help emphasize the active terminal, MacTelnet alters the color
 hues of background windows.  Use this option to quell recoloring.
 
 h4. Keyboard
-
-h5(#menukeys). Menu item key equivalents
-
-Disabling the key equivalents for all menu items is recommended
-when in kiosk (Full Screen) mode, or whenever it is necessary to
-use keys from menu commands as input to the application in the
-active terminal.
 
 h5(#mapbackquote). Treat backquote key like Escape
 
