@@ -53,6 +53,7 @@ enum
 	typeNetEvents_TerminalScreenRef		= 'TTSR',	//!< "TerminalScreenRef"
 	typeNetEvents_TerminalViewRef		= 'TTVR',	//!< "TerminalViewRef"
 	typeNetEvents_CFBooleanRef			= 'CFTF',	//!< "CFBooleanRef"; could use typeCFBooleanRef but that is not available in the Mac OS 10.1 SDK
+	typeNetEvents_CFDataRef				= 'CFDa',	//!< "CFDataRef"
 	typeNetEvents_CFNumberRef			= 'CFNm'	//!< "CFNumberRef"; could use typeCFNumberRef but that is not available in the Mac OS 10.1 SDK
 };
 

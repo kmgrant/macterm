@@ -171,27 +171,6 @@ private:
 namespace {
 
 /*!
-Information about a file on disk.  This is a typical
-way to store information about files within preferences,
-since files can still be found even if the user renames
-them or moves them, etc.
-*/
-struct My_AliasInfo
-{
-	AliasHandle				alias;
-	Preferences_AliasID		resourceID;
-	Boolean					wasChanged;
-	Boolean					isResource;
-};
-typedef My_AliasInfo const*		My_AliasInfoConstPtr;
-typedef My_AliasInfo*			My_AliasInfoPtr;
-
-/*!
-Keeps track of all aliases in memory.
-*/
-typedef std::vector< My_AliasInfoPtr >	My_AliasInfoList;
-
-/*!
 Provides uniform access to context information no
 matter how it is really stored.
 
@@ -688,10 +667,6 @@ Preferences_Result		copyClassDomainCFArray					(Quills::Prefs::Class, CFArrayRef
 Preferences_Result		createAllPreferencesContextsFromDisk	();
 CFDictionaryRef			createDefaultPrefDictionary				();
 CFStringRef				createKeyAtIndex						(CFStringRef, UInt32);
-void					deleteAliasData							(My_AliasInfoPtr*);
-void					deleteAllAliasNodes						();
-My_AliasInfoPtr			findAlias								(Preferences_AliasID);
-Boolean					findAliasOnDisk							(Preferences_AliasID, AliasHandle*);
 CFIndex					findDomainIndexInArray					(CFArrayRef, CFStringRef);
 CFStringRef				findDomainUserSpecifiedName				(CFStringRef);
 Boolean					getDefaultContext						(Quills::Prefs::Class, My_ContextInterfacePtr&);
@@ -721,7 +696,6 @@ void					readMacTelnetCoordPreference			(CFStringRef, SInt16&, SInt16&);
 void					readMacTelnetArrayPreference			(CFStringRef, CFArrayRef&);
 OSStatus				readPreferencesDictionary				(CFDictionaryRef, Boolean);
 OSStatus				readPreferencesDictionaryInContext		(My_ContextInterfacePtr, CFDictionaryRef, Boolean);
-OSStatus				setAliasChanged							(My_AliasInfoPtr);
 Preferences_Result		setFormatPreference						(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
 Preferences_Result		setGeneralPreference					(My_ContextInterfacePtr, Preferences_Tag,
@@ -753,7 +727,6 @@ namespace {
 ListenerModel_Ref			gPreferenceEventListenerModel = nullptr;
 Boolean						gHaveRunConverter = false;
 Boolean						gInitialized = false;
-My_AliasInfoList&			gAliasList ()	{ static My_AliasInfoList x; return x; }
 My_ContextPtrLocker&		gMyContextPtrLocks ()	{ static My_ContextPtrLocker x; return x; }
 My_ContextReferenceLocker&	gMyContextRefLocks ()	{ static My_ContextReferenceLocker x; return x; }
 My_ContextInterface&		gFactoryDefaultsContext ()	{ static My_ContextCFDictionary x(Quills::Prefs::_FACTORY_DEFAULTS, createDefaultPrefDictionary()); return x; }
@@ -776,33 +749,6 @@ My_TagSetPtrLocker&			gMyTagSetPtrLocks ()	{ static My_TagSetPtrLocker x; return
 
 #pragma mark Functors
 namespace {
-
-/*!
-Returns true only if the specified Alias Info record
-has a resource ID matching the given ID.
-
-Model of STL Predicate.
-
-(3.0)
-*/
-class aliasInfoResourceIDMatches:
-public std::unary_function< My_AliasInfoPtr/* argument */, bool/* return */ >
-{
-public:
-	aliasInfoResourceIDMatches	(SInt16	inResourceID)
-	: _matchID(inResourceID) {}
-	
-	bool
-	operator ()	(My_AliasInfoPtr	inAliasInfoPtr)
-	{
-		return (inAliasInfoPtr->resourceID == _matchID);
-	}
-
-protected:
-
-private:
-	SInt16		_matchID;
-};
 
 /*!
 Returns true only if the specified context has a name
@@ -987,8 +933,8 @@ Preferences_Init ()
 									CFSTR("terminal-when-bell-sound-basename"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagCaptureFileAlias,
-									CFSTR("terminal-capture-file-alias-id"), typeNetEvents_CFNumberRef,
-									sizeof(Preferences_AliasID), Quills::Prefs::SESSION);
+									CFSTR("terminal-capture-file-alias-id"), typeNetEvents_CFDataRef,
+									sizeof(FSRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagCaptureFileCreator,
 									CFSTR("terminal-capture-file-creator-code"), typeCFStringRef,
 									sizeof(OSType), Quills::Prefs::GENERAL);
@@ -1327,9 +1273,6 @@ Preferences_Done ()
 		// dispose of the listener model
 		ListenerModel_Dispose(&gPreferenceEventListenerModel);
 		
-		// clean up the list of alias references
-		deleteAllAliasNodes();
-		
 		gInitialized = false;
 	}
 }// Done
@@ -1362,47 +1305,83 @@ Preferences_RunTests ()
 
 
 /*!
-Creates a new alias in memory.  You can set up “pending
-alias preferences” this way, changing the alias as many
-times as you need to, but only writing it to the preferences
-file if necessary.  This prevents unused alias resources
-from appearing in the preferences file.
+Allocates a Core Foundation data object with the contents of an
+alias.  When finished with it, call CFRelease().
 
-NOTE:	Always call Preferences_AliasIsStored() before
-		creating a new alias.  If you want to update an
-		existing alias, you need to create it using
-		Preferences_NewSavedAlias().  Otherwise, if you
-		use Preferences_NewAlias(), and then save the
-		alias to disk, it will never replace any existing
-		alias.
+This is typically used when storing a file path preference to
+disk; and for that, you are more likely to use high-level APIs
+such as Preferences_ContextSetData().
 
-(3.0)
+(4.0)
 */
-Preferences_AliasID
-Preferences_NewAlias	(FSSpec const*		inFileSpecificationPtr)
+CFDataRef
+Preferences_NewAliasDataFromAlias		(AliasHandle	inAlias)
 {
-	Preferences_AliasID		result = kPreferences_InvalidAliasID;
-	My_AliasInfoPtr			dataPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(My_AliasInfo)), My_AliasInfoPtr);
+	CFDataRef	result = CFDataCreate(kCFAllocatorDefault,
+										REINTERPRET_CAST(*inAlias, UInt8*),
+										GetHandleSize(REINTERPRET_CAST(inAlias, Handle)));
 	
 	
-	if ((nullptr != dataPtr) && (nullptr != inFileSpecificationPtr))
+	return result;
+}// NewAliasDataFromAlias
+
+
+/*!
+A convenient short-cut for directly constructing alias data for
+an existing file or directory.  When finished with it, call
+CFRelease().
+
+Equivalent to calling FSNewAlias() on the given object, and then
+passing the alias to Preferences_NewAliasDataFromAlias().
+
+(4.0)
+*/
+CFDataRef
+Preferences_NewAliasDataFromObject		(FSRef const&	inObject)
+{
+	CFDataRef		result = nullptr;
+	AliasHandle		alias = nullptr;
+	OSStatus		error = FSNewAlias(nullptr/* from file */, &inObject, &alias);
+	
+	
+	if (noErr == error)
 	{
-		SInt16		oldResFile = CurResFile();
-		
-		
-		AppResources_UseResFile(kAppResources_FileIDPreferences);
-		gAliasList().push_back(dataPtr);
-		dataPtr->alias = nullptr;
-		if (NewAlias(nullptr/* base */, inFileSpecificationPtr, &dataPtr->alias) == noErr)
-		{
-			dataPtr->resourceID = result = Unique1ID(rAliasType);
-			dataPtr->wasChanged = false;
-			dataPtr->isResource = false;
-		}
-		UseResFile(oldResFile);
+		result = Preferences_NewAliasDataFromAlias(alias);
+		Memory_DisposeHandle(REINTERPRET_CAST(&alias, Handle*));
 	}
 	return result;
-}// NewAlias
+}// NewAliasDataFromObject
+
+
+/*!
+Allocates a new handle with the given alias data.  When finished,
+call Preferences_DisposeAlias().
+
+This is typically used when reading a file path preference from
+disk; and for that, you are more likely to use high-level APIs
+such as Preferences_ContextGetData().
+
+(4.0)
+*/
+AliasHandle
+Preferences_NewAliasFromData	(CFDataRef		inAliasHandleData)
+{
+	CFIndex const	kDataSize = CFDataGetLength(inAliasHandleData);
+	AliasHandle		result = nullptr;
+	
+	
+	if (kDataSize > 0)
+	{
+		result = REINTERPRET_CAST(Memory_NewHandle(kDataSize), AliasHandle);
+		if (nullptr != result)
+		{
+			CFDataGetBytes(inAliasHandleData, CFRangeMake(0, kDataSize),
+							REINTERPRET_CAST(*result, UInt8*));
+			
+		}
+	}
+	return result;
+}// NewAliasFromData
 
 
 /*!
@@ -1815,88 +1794,6 @@ Preferences_NewContextFromXMLFileURL	(Quills::Prefs::Class	inClass,
 
 
 /*!
-Creates a new alias in memory based on an alias already
-present in the preferences file.  You generally save an
-alias ID in a preferences structure in order to refer to
-a file, and then use that ID and this method to work with
-the alias in memory.  To make changes to an alias in the
-preferences file, you must first use this routine to read
-it into memory, and then use the Preferences_AliasChange()
-and Preferences_AliasSave() methods.
-
-NOTE:	Always call Preferences_AliasIsStored() before
-		creating a new alias with this routine.  If an
-		alias with the ID of "inAliasID" exists, it *will*
-		be overwritten if you subsequently call
-		Preferences_AliasSave() on your new alias.  If
-		you want a new alias that will not conflict with
-		saved aliases, use Preferences_NewAlias().
-
-WARNING:	Never call Preferences_NewSavedAlias() more
-			than once with the same alias ID, unless you
-			always call Preferences_AliasDispose() to
-			destroy prior instances with the same ID.  If
-			you create more than one alias with the same
-			ID, a memory leak will ensue and you will only
-			be able to access data for the first alias
-			with the repeated ID.
-
-(3.0)
-*/
-Preferences_AliasID
-Preferences_NewSavedAlias	(Preferences_AliasID	inAliasID)
-{
-	AliasHandle				alias = nullptr;
-	Preferences_AliasID		result = kPreferences_InvalidAliasID;
-	
-	
-	// look for an alias resource matching the given ID
-	if (findAliasOnDisk(inAliasID, &alias))
-	{
-		FSSpec		aliasFile;
-		Boolean		isError = false,
-					recordChanged = false;
-		
-		
-		if (ResolveAlias(nullptr/* base */, alias, &aliasFile, &recordChanged) != noErr)
-		{
-			// most likely, the alias stored on disk no longer points to a valid file
-			isError = true;
-		}
-		else
-		{
-			My_AliasInfoPtr		dataPtr = findAlias(Preferences_NewAlias(&aliasFile));
-			
-			
-			if (nullptr == dataPtr)
-			{
-				// somehow, the alias was found earlier but is not there anymore!
-				isError = true;
-			}
-			else
-			{
-				// set the alias ID to the specified ID, to make sure the stored alias
-				// is overwritten when the alias is saved
-				dataPtr->resourceID = result = inAliasID; // changing this field allows the alias to be stored under the given ID
-				dataPtr->alias = alias; // set the handle to be a resource handle (see Preferences_AliasSave())
-				dataPtr->isResource = true;
-				if (recordChanged) ChangedResource(REINTERPRET_CAST(alias, Handle));
-				Alert_ReportOSStatus(ResError());
-			}
-		}
-		
-		if (isError)
-		{
-			// bail; findAliasOnDisk() loads a resource into memory,
-			// so that resource must be released
-			ReleaseResource(REINTERPRET_CAST(alias, Handle)), alias = nullptr;
-		}
-	}
-	return result;
-}// NewSavedAlias
-
-
-/*!
 Creates an object representing the preferences tags that are
 currently defined in the specified context.
 
@@ -1955,35 +1852,6 @@ Preferences_NewTagSet	(std::vector< Preferences_Tag > const&		inTags)
 
 
 /*!
-Destroys the in-memory version of an alias, not affecting
-its on-disk version.  To write the contents of an alias in
-memory to the preferences file first, use
-Preferences_AliasSave(), and then call this method to dispose
-of the memory.  After calling this routine, the specified
-alias ID is invalid.
-
-(3.0)
-*/
-void
-Preferences_DisposeAlias	(Preferences_AliasID	inAliasID)
-{
-	My_AliasInfoList::iterator		aliasInfoIterator;
-	
-	
-	// look for the given alias in the linked list
-	aliasInfoIterator = find_if(gAliasList().begin(), gAliasList().end(), aliasInfoResourceIDMatches(inAliasID));
-	if (aliasInfoIterator != gAliasList().end())
-	{
-		My_AliasInfoPtr		dataPtr = *aliasInfoIterator;
-		
-		
-		deleteAliasData(&dataPtr);
-		gAliasList().erase(aliasInfoIterator);
-	}
-}// DisposeAlias
-
-
-/*!
 Adds an additional lock on the specified reference.
 This indicates that you are using the context for
 some reason, so attempts by anyone else to delete
@@ -1998,6 +1866,18 @@ Preferences_RetainContext	(Preferences_ContextRef		inRef)
 {
 	gMyContextRefLocks().acquireLock(inRef);
 }// RetainContext
+
+
+/*!
+Frees an alias created by Preferences_NewAliasFromData().
+
+(4.0)
+*/
+void
+Preferences_DisposeAlias	(AliasHandle*		inoutAliasPtr)
+{
+	Memory_DisposeHandle(REINTERPRET_CAST(inoutAliasPtr, Handle*));
+}// DisposeAlias
 
 
 /*!
@@ -2059,166 +1939,6 @@ Preferences_ReleaseTagSet	(Preferences_TagSetRef*		inoutRefPtr)
 		*inoutRefPtr = nullptr;
 	}
 }// ReleaseTagSet
-
-
-/*!
-Modifies an alias in memory.  Your changes are not
-saved to the preferences file unless you call
-Preferences_AliasSave().
-
-(3.0)
-*/
-void
-Preferences_AliasChange		(Preferences_AliasID	inAliasID,
-							 FSSpec const*			inNewAliasFileSpecificationPtr)
-{
-	My_AliasInfoPtr		dataPtr = findAlias(inAliasID);
-	
-	
-	if (nullptr != dataPtr)
-	{
-		Boolean		wasChanged = false;
-		
-		
-		if (UpdateAlias(nullptr/* base */, inNewAliasFileSpecificationPtr, dataPtr->alias, &wasChanged) == noErr)
-		{
-			(OSStatus)setAliasChanged(dataPtr);
-		}
-	}
-}// AliasChange
-
-
-/*!
-Removes an alias from the preferences file.  This
-does not affect the version in memory (the alias
-remains valid) - to destroy the memory alias, use
-the method Preferences_AliasDispose().
-
-(3.0)
-*/
-void
-Preferences_AliasDeleteSaved	(Preferences_AliasID	inAliasID)
-{
-	My_AliasInfoPtr		dataPtr = findAlias(inAliasID);
-	
-	
-	if (nullptr != dataPtr)
-	{
-		Handle		aliasAsHandle = REINTERPRET_CAST(dataPtr->alias, Handle);
-		Handle		temporaryHandle = Memory_NewHandle(GetHandleSize(aliasAsHandle));
-		
-		
-		if (nullptr != temporaryHandle)
-		{
-			// copy the alias data, because RemoveResource() creates an unreliable handle
-			BlockMoveData(*aliasAsHandle, *temporaryHandle, GetHandleSize(temporaryHandle));
-			
-			// remove the alias resource, and replace the internal handle with a valid one (the copy)
-			RemoveResource(aliasAsHandle);
-			AppResources_UpdateResFile(kAppResources_FileIDPreferences);
-			dataPtr->alias = REINTERPRET_CAST(temporaryHandle, AliasHandle);
-		}
-		dataPtr->isResource = false; // signifies that the data in memory no longer represents a resource
-		
-		Alert_ReportOSStatus(ResError());
-	}
-}// AliasDeleteSaved
-
-
-/*!
-Determines if an alias with the specified ID is in the
-preferences file.
-
-(3.0)
-*/
-Boolean
-Preferences_AliasIsStored	(Preferences_AliasID	inAliasID)
-{
-	Boolean			result = false;
-	AliasHandle		unused = nullptr;
-	
-	
-	result = findAliasOnDisk(inAliasID, &unused);
-	ReleaseResource(REINTERPRET_CAST(unused, Handle)), unused = nullptr;
-	return result;
-}// AliasIsStored
-
-
-/*!
-Finds the file for an alias.  If the file does not exist,
-the result is "false"; otherwise, the result is "true".
-
-(3.0)
-*/
-Boolean
-Preferences_AliasParse	(Preferences_AliasID	inAliasID,
-						 FSSpec*				outAliasFileSpecificationPtr)
-{
-	Boolean		result = false;
-	
-	
-	if (nullptr != outAliasFileSpecificationPtr)
-	{
-		My_AliasInfoPtr		dataPtr = findAlias(inAliasID);
-		
-		
-		if (nullptr != dataPtr)
-		{
-			Boolean		wasChanged = false;
-			
-			
-			if (ResolveAlias(nullptr/* base */, dataPtr->alias, outAliasFileSpecificationPtr, &wasChanged) == noErr)
-			{
-				// then the file was found
-				result = true;
-				if (wasChanged) (OSStatus)setAliasChanged(dataPtr);
-			}
-		}
-	}
-	return result;
-}// AliasParse
-
-
-/*!
-Saves an alias to disk, but only if it has been modified.
-This is the only way to physically write an alias record
-to the preferences file.
-
-The new alias resource will be given the specified name.
-If you do not want to use a name, pass an empty string.
-
-(3.0)
-*/
-void
-Preferences_AliasSave	(Preferences_AliasID	inAliasID,
-						 ConstStringPtr			inName)
-{
-	My_AliasInfoPtr		dataPtr = findAlias(inAliasID);
-	
-	
-	if (nullptr != dataPtr)
-	{
-		// only write to disk if the data in memory actually changed at some point
-		if (dataPtr->wasChanged)
-		{
-			SInt16		oldResFile = CurResFile();
-			OSStatus	error = noErr;
-			
-			
-			AppResources_UseResFile(kAppResources_FileIDPreferences);
-			unless (Preferences_AliasIsStored(inAliasID))
-			{
-				// write a new alias record to the preferences file, using the unique resource ID number
-				// NOTE: hmmm, AddResource() would convert the AliasHandle to a resource handle here, is that a good idea?
-				AddResource(REINTERPRET_CAST(dataPtr->alias, Handle), rAliasType, dataPtr->resourceID, inName);
-				error = ResError();
-			}
-			if (error == noErr) AppResources_UpdateResFile(kAppResources_FileIDPreferences);
-			Alert_ReportOSStatus(error);
-			UseResFile(oldResFile);
-		}
-	}
-}// AliasSave
 
 
 /*!
@@ -5701,122 +5421,6 @@ createKeyAtIndex	(CFStringRef	inTemplate,
 
 
 /*!
-Disposes of memory used for the given alias structure.
-
-(3.0)
-*/
-void
-deleteAliasData		(My_AliasInfoPtr*	inoutAliasDataPtr)
-{
-	if ((nullptr != inoutAliasDataPtr) && (nullptr != *inoutAliasDataPtr))
-	{
-		if (nullptr != (*inoutAliasDataPtr)->alias)
-		{
-			if ((*inoutAliasDataPtr)->isResource)
-			{
-				ReleaseResource(REINTERPRET_CAST((*inoutAliasDataPtr)->alias, Handle)),
-					(*inoutAliasDataPtr)->alias = nullptr;
-			}
-			else
-			{
-				Memory_DisposeHandle(REINTERPRET_CAST(&((*inoutAliasDataPtr)->alias), Handle*));
-			}
-		}
-		Memory_DisposePtr(REINTERPRET_CAST(inoutAliasDataPtr, Ptr*));
-	}
-}// deleteAliasData
-
-
-/*!
-Locates all undeleted alias references and cleans
-up the memory used by them.
-
-(3.0)
-*/
-void
-deleteAllAliasNodes ()
-{
-	My_AliasInfoPtr				dataPtr = nullptr;
-	My_AliasInfoList::iterator	aliasInfoIterator;
-	
-	
-	// look for the given alias in the linked list
-	for (aliasInfoIterator = gAliasList().begin(); aliasInfoIterator != gAliasList().end(); ++aliasInfoIterator)
-	{
-		dataPtr = *aliasInfoIterator;
-		deleteAliasData(&dataPtr); // dispose of the Preferences module internal data structure associated with the node
-		gAliasList().erase(aliasInfoIterator);
-	}
-}// deleteAllAliasNodes
-
-
-/*!
-Locates the alias structure with the specified
-ID in the list in memory, or returns nullptr if
-there is no match.
-
-(3.0)
-*/
-My_AliasInfoPtr
-findAlias		(Preferences_AliasID	inAliasID)
-{
-	My_AliasInfoPtr				result = nullptr;
-	My_AliasInfoList::iterator	aliasInfoIterator;
-	
-	
-	// look for the given alias in the linked list
-	aliasInfoIterator = find_if(gAliasList().begin(), gAliasList().end(), aliasInfoResourceIDMatches(inAliasID));
-	if (aliasInfoIterator != gAliasList().end())
-	{
-		result = *aliasInfoIterator;
-	}
-	
-	return result;
-}// findAlias
-
-
-/*!
-Reads an alias resource corresponding to a given
-MacTelnet alias ID.
-
-If successfully created, you may assume that the
-"AliasHandle" you provide will become a resource
-handle.  As such, you must eventually free its
-memory using ReleaseResource().
-
-\retval true
-if successful; the alias in "outAliasPtr" will be
-valid
-
-\retval false
-if the resource cannot be read for any reason; the
-output alias handle should then be considered invalid
-
-(3.0)
-*/
-Boolean
-findAliasOnDisk		(Preferences_AliasID	inAliasID,
-					 AliasHandle*			outAliasPtr)
-{
-	Boolean		result = false;
-	
-	
-	if (nullptr != outAliasPtr)
-	{
-		SInt16		oldResFile = CurResFile();
-		
-		
-		// the MacTelnet alias ID is defined as the resource ID of the alias resource
-		AppResources_UseResFile(kAppResources_FileIDPreferences);
-		*outAliasPtr = REINTERPRET_CAST(Get1Resource(rAliasType, inAliasID), AliasHandle);
-		if ((ResError() == noErr) && (nullptr != *outAliasPtr)) result = true;
-		UseResFile(oldResFile);
-	}
-	return result;
-}// findAliasOnDisk
-
-
-/*!
 Given an arrays of strings with preferences domains, tries to
 find the specified domain.
 
@@ -7137,19 +6741,38 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagCaptureFileAlias:
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
-						SInt16						valueInteger = inContextPtr->returnInteger(keyName);
-						Preferences_AliasID* const	data = REINTERPRET_CAST(outDataPtr, Preferences_AliasID*);
+						CFRetainRelease		dataObject(inContextPtr->returnValueCopy(keyName));
+						FSRef* const		data = REINTERPRET_CAST(outDataPtr, FSRef*);
 						
 						
-						if (0 == valueInteger)
+						if (false == dataObject.exists())
 						{
-							// failed; make default
-							*data = kPreferences_InvalidAliasID;
+							// failed
 							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
-							*data = valueInteger;
+							CFDataRef		objectAsData = CFUtilities_DataCast(dataObject.returnCFTypeRef());
+							AliasHandle		alias = Preferences_NewAliasFromData(objectAsData);
+							
+							
+							if (nullptr == alias)
+							{
+								result = kPreferences_ResultBadVersionDataNotAvailable;
+							}
+							else
+							{
+								Boolean		wasChanged = false;
+								OSStatus	error = FSResolveAlias(nullptr/* from file */, alias,
+																	data, &wasChanged);
+								
+								
+								if (noErr != error)
+								{
+									result = kPreferences_ResultBadVersionDataNotAvailable;
+								}
+								Preferences_DisposeAlias(&alias);
+							}
 						}
 					}
 					break;
@@ -8324,35 +7947,6 @@ readPreferencesDictionaryInContext		(My_ContextInterfacePtr		inContextPtr,
 
 
 /*!
-Marks an alias as having changed.  This also marks the
-alias resource by calling ChangedResource(), if the alias
-is based on a resource.  Any Resource Manager error may
-be returned.
-
-(3.0)
-*/
-OSStatus
-setAliasChanged		(My_AliasInfoPtr	inoutAliasDataPtr)
-{
-	OSStatus		result = noErr;
-	
-	
-	if (nullptr != inoutAliasDataPtr)
-	{
-		inoutAliasDataPtr->wasChanged = true;
-		if (inoutAliasDataPtr->isResource)
-		{
-			ChangedResource(REINTERPRET_CAST(inoutAliasDataPtr->alias, Handle));
-			result = ResError();
-		}
-	}
-	else result = memPCErr;
-	
-	return result;
-}// setAliasChanged
-
-
-/*!
 Modifies the indicated font or color preference using
 the given data (see Preferences.h and the definition of
 each tag for comments on what data format is expected
@@ -9337,11 +8931,16 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagCaptureFileAlias:
 				{
-					Preferences_AliasID const* const	data = REINTERPRET_CAST(inDataPtr, Preferences_AliasID const*);
+					FSRef const* const	data = REINTERPRET_CAST(inDataPtr, FSRef const*);
+					CFRetainRelease		object(Preferences_NewAliasDataFromObject(*data));
 					
 					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
-					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
+					if (object.exists())
+					{
+						assert(typeNetEvents_CFDataRef == keyValueType);
+						inContextPtr->addData(inDataPreferenceTag, keyName,
+												CFUtilities_DataCast(object.returnCFTypeRef()));
+					}
 				}
 				break;
 			

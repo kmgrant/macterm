@@ -94,19 +94,6 @@ enum
 };
 
 /*!
-Generic ID number for an alias stored as preferences
-on disk.  Using a simple ID you can create, save and
-retrieve alias records easily.  This is the ONLY way
-you should ever save file preferences to disk - they
-are more flexible than regular pathnames.
-*/
-typedef SInt16 Preferences_AliasID;
-enum
-{
-	kPreferences_InvalidAliasID = 0
-};
-
-/*!
 All tags from the same preference class must have
 unique values.  The tags are grouped by class.
 When you call Preferences_GetData...() methods,
@@ -237,7 +224,7 @@ enum
 	kPreferences_TagAssociatedTerminalFavorite			= 'term',	//!< data: "CFStringRef" (a Quills::Prefs::TERMINAL context name)
 	kPreferences_TagAssociatedTranslationFavorite		= 'xlat',	//!< data: "CFStringRef" (a Quills::Prefs::TRANSLATION context name)
 	kPreferences_TagAutoCaptureToFile					= 'capt',	//!< data: "Boolean"
-	kPreferences_TagCaptureFileAlias					= 'cfil',	//!< data: "Preferences_AliasID"
+	kPreferences_TagCaptureFileAlias					= 'cfil',	//!< data: "FSRef"
 	kPreferences_TagCommandLine							= 'cmdl',	//!< data: "CFArrayRef" (of CFStrings)
 	kPreferences_TagDataReadBufferSize					= 'rdbf',	//!< data: "SInt16"
 	kPreferences_TagIdleAfterInactivityInSeconds		= 'idle',	//!< data: "UInt16"
@@ -664,32 +651,17 @@ Preferences_Result
 //!\name Alias Management
 //@{
 
-Preferences_AliasID
-	Preferences_NewAlias					(FSSpec const*						inFileSpecificationPtr);
+CFDataRef
+	Preferences_NewAliasDataFromAlias		(AliasHandle						inAlias);
 
-Preferences_AliasID
-	Preferences_NewSavedAlias				(Preferences_AliasID				inAliasID);
+CFDataRef
+	Preferences_NewAliasDataFromObject		(FSRef const&						inObject);
 
-void
-	Preferences_DisposeAlias				(Preferences_AliasID				inAliasID);
-
-void
-	Preferences_AliasChange					(Preferences_AliasID				inAliasID,
-											 FSSpec const*						inNewAliasFileSpecificationPtr);
+AliasHandle
+	Preferences_NewAliasFromData			(CFDataRef							inAliasHandleData);
 
 void
-	Preferences_AliasDeleteSaved			(Preferences_AliasID				inAliasID);
-
-Boolean
-	Preferences_AliasIsStored				(Preferences_AliasID				inAliasID);
-
-Boolean
-	Preferences_AliasParse					(Preferences_AliasID				inAliasID,
-											 FSSpec*							outAliasFileSpecificationPtr);
-
-void
-	Preferences_AliasSave					(Preferences_AliasID				inAliasID,
-											 ConstStringPtr						inName);
+	Preferences_DisposeAlias				(AliasHandle*						inoutAliasPtr);
 
 //@}
 
