@@ -240,15 +240,9 @@ enum UIStrings_FileOrFolderCFString
 	kUIStrings_FileNameToolbarPoofFrame4Mask			= 'Pf4M',
 	kUIStrings_FileNameToolbarPoofFrame5Picture			= 'Pf5P',
 	kUIStrings_FileNameToolbarPoofFrame5Mask			= 'Pf5M',
-	kUIStrings_FolderNameApplicationFavorites			= 'AFav',
-	kUIStrings_FolderNameApplicationFavoritesMacros		= 'AFFM',
-	kUIStrings_FolderNameApplicationFavoritesProxies	= 'AFPx',
-	kUIStrings_FolderNameApplicationFavoritesSessions	= 'AFSn',
-	kUIStrings_FolderNameApplicationFavoritesTerminals	= 'AFTm',
 	kUIStrings_FolderNameApplicationPreferences			= 'APrf',
 	kUIStrings_FolderNameApplicationRecentSessions		= 'ARcS',
 	kUIStrings_FolderNameApplicationScriptsMenuItems	= 'AScM',
-	kUIStrings_FolderNameApplicationStartupItems		= 'AStI',
 	kUIStrings_FolderNameHomeLibraryLogs				= 'Logs'
 };
 

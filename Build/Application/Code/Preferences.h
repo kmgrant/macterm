@@ -432,9 +432,6 @@ Preferences_Result
 void
 	Preferences_Done						();
 
-Preferences_Result
-	Preferences_CreateOrFindFiles			();
-
 //@}
 
 //!\name Module Tests

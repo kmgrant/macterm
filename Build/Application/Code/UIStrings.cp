@@ -835,31 +835,6 @@ UIStrings_Copy	(UIStrings_FileOrFolderCFString		inWhichString,
 		CFRetain(outString);
 		break;
 	
-	case kUIStrings_FolderNameApplicationFavorites:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Favorites"), CFSTR("FileOrFolderNames"),
-													CFSTR("kUIStrings_FolderNameApplicationFavorites; warning, this should be consistent with previous strings of this type because it is used to find existing preferences"));
-		break;
-	
-	case kUIStrings_FolderNameApplicationFavoritesMacros:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Macro Sets"), CFSTR("FileOrFolderNames"),
-													CFSTR("kUIStrings_FolderNameApplicationFavoritesMacros; warning, this should be consistent with previous strings of this type because it is used to find existing preferences"));
-		break;
-	
-	case kUIStrings_FolderNameApplicationFavoritesProxies:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Proxies"), CFSTR("FileOrFolderNames"),
-													CFSTR("kUIStrings_FolderNameApplicationFavoritesProxies; warning, this should be consistent with previous strings of this type because it is used to find existing preferences"));
-		break;
-	
-	case kUIStrings_FolderNameApplicationFavoritesSessions:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Sessions"), CFSTR("FileOrFolderNames"),
-													CFSTR("kUIStrings_FolderNameApplicationFavoritesSessions; warning, this should be consistent with previous strings of this type because it is used to find existing preferences"));
-		break;
-	
-	case kUIStrings_FolderNameApplicationFavoritesTerminals:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Terminals"), CFSTR("FileOrFolderNames"),
-													CFSTR("kUIStrings_FolderNameApplicationFavoritesTerminals; warning, this should be consistent with previous strings of this type because it is used to find existing preferences"));
-		break;
-	
 	case kUIStrings_FolderNameApplicationPreferences:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("MacTelnet Preferences"), CFSTR("FileOrFolderNames"),
 													CFSTR("kUIStrings_FolderNameApplicationPreferences; warning, this should be consistent with previous strings of this type because it is used to find existing preferences"));
@@ -873,11 +848,6 @@ UIStrings_Copy	(UIStrings_FileOrFolderCFString		inWhichString,
 	case kUIStrings_FolderNameApplicationScriptsMenuItems:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Scripts Menu Items"), CFSTR("FileOrFolderNames"),
 													CFSTR("kUIStrings_FolderNameApplicationScriptsMenuItems; warning, this should be consistent with previous strings of this type because it is used to find existing scripts"));
-		break;
-	
-	case kUIStrings_FolderNameApplicationStartupItems:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Startup Items"), CFSTR("FileOrFolderNames"),
-													CFSTR("kUIStrings_FolderNameApplicationStartupItems; warning, this should be consistent with previous strings of this type because it is used to find existing startup items"));
 		break;
 	
 	case kUIStrings_FolderNameHomeLibraryLogs:

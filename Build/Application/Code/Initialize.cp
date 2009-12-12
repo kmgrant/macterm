@@ -259,95 +259,41 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		}
 	#endif
 		
-		// Open every file in the “Startup Items” folder, by sending Apple Events back
-		// to MacTelnet for each one.
+		// open a new, untitled document (this will eventually not be necessary; see
+		// the note in "applicationShouldOpenUntitledFile:" in the implementation
+		// for the application delegate, in "Commands.mm")
 		{
-			enum
-			{
-				kMaximumStartupItems = 10		// no more than this many startup files will be openable
-			};
-			FSSpec		startupItemsFolder;
-			OSStatus	error = noErr;
-			UInt32		numberOfFilesOpened = 0;
+			Boolean		quellAutoNew = false;
+			size_t		actualSize = 0L;
 			
 			
-			if (Folder_GetFSSpec(kFolder_RefStartupItems, &startupItemsFolder) == noErr)
+			// get the user’s “don’t auto-new” application preference, if possible
+			if (kPreferences_ResultOK !=
+				Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(quellAutoNew),
+									&quellAutoNew, &actualSize))
 			{
-				FSSpec*		array = REINTERPRET_CAST(Memory_NewPtr(kMaximumStartupItems * sizeof(FSSpec)), FSSpec*);
-				
-				
-				if (array == nullptr)
-				{
-					// warn user - unimplemented
-					Console_Warning(Console_WriteLine, "unable to allocate file spec. array for startup items");
-				}
-				else
-				{
-					UInt32				arrayLength = kMaximumStartupItems;
-					register UInt32		i = 0L;
-					FileInfo			info;
-					Boolean				useFile = true;
-					
-					
-					error = FileUtilities_GetAllFilesInDirectory(&startupItemsFolder, array, &arrayLength);
-					//if (error != eofErr) Alert_ReportOSStatus(error); // debugging
-					
-					// Iterate through all found files, opening each via Apple Events.
-					if (error == noErr) for (i = 0; i < arrayLength; ++i)
-					{
-						useFile = true;
-						if (FSpGetFInfo(&array[i], (FInfo*)&info) == noErr)
-						{
-							// skip invisible files
-							useFile = (!(info.finderFlags & kIsInvisible));
-						}
-						if (useFile)
-						{
-							(OSStatus)FileUtilities_OpenDocument(&array[i]);
-							++numberOfFilesOpened;
-						}
-					}
-					Memory_DisposePtr(REINTERPRET_CAST(&array, Ptr*));
-				}
+				// assume a value if it cannot be found
+				quellAutoNew = false;
 			}
 			
-			if (0 == numberOfFilesOpened)
+			unless (quellAutoNew)
 			{
-				// open a new, untitled document (this will eventually not be necessary; see
-				// the note in "applicationShouldOpenUntitledFile:" in the implementation
-				// for the application delegate, in "Commands.mm")
-				Boolean		quellAutoNew = false;
-				size_t		actualSize = 0L;
+				UInt32		newCommandID = kCommandNewSessionDefaultFavorite;
 				
 				
-				// get the user’s “don’t auto-new” application preference, if possible
-				if (kPreferences_ResultOK !=
-					Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(quellAutoNew),
-										&quellAutoNew, &actualSize))
+				// assume that the user is mapping command-N to the same type of session
+				// that would be appropriate for opening by default on startup
+				unless (kPreferences_ResultOK ==
+						Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
+											sizeof(newCommandID), &newCommandID,
+											&actualSize))
 				{
 					// assume a value if it cannot be found
-					quellAutoNew = false;
+					newCommandID = kCommandNewSessionDefaultFavorite;
 				}
 				
-				unless (quellAutoNew)
-				{
-					UInt32		newCommandID = kCommandNewSessionDefaultFavorite;
-					
-					
-					// assume that the user is mapping command-N to the same type of session
-					// that would be appropriate for opening by default on startup
-					unless (kPreferences_ResultOK ==
-							Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
-												sizeof(newCommandID), &newCommandID,
-												&actualSize))
-					{
-						// assume a value if it cannot be found
-						newCommandID = kCommandNewSessionDefaultFavorite;
-					}
-					
-					// no open windows - respond by spawning a new session
-					Commands_ExecuteByIDUsingEvent(newCommandID);
-				}
+				// no open windows - respond by spawning a new session
+				Commands_ExecuteByIDUsingEvent(newCommandID);
 			}
 		}
 	}
@@ -465,8 +411,27 @@ initApplicationCore ()
 	// initialize cursors
 	Cursors_Init();
 	
-	// ensure preferences folders exist, then set up macro preferences
-	(Preferences_Result)Preferences_CreateOrFindFiles();
+	// set up notification info
+	{
+		Str255		notificationMessage;
+		UInt16		notificationPreferences = kAlert_NotifyDisplayDiamondMark;
+		size_t		actualSize = 0L;
+		
+		
+		unless (Preferences_GetData(kPreferences_TagNotification, sizeof(notificationPreferences),
+									&notificationPreferences, &actualSize) ==
+				kPreferences_ResultOK)
+		{
+			notificationPreferences = kAlert_NotifyDisplayDiamondMark; // assume default, if preference can’t be found
+		}
+		
+		// the Interface Library Alert module is responsible for handling Notification Manager stuff...
+		Alert_SetNotificationPreferences(notificationPreferences);
+		// TEMPORARY: This needs a new localized string.  LOCALIZE THIS.
+		//GetIndString(notificationMessage, rStringsNoteAlerts, siNotificationAlert);
+		//Alert_SetNotificationMessage(notificationMessage);
+	}
+	
 #if RUN_MODULE_TESTS
 	Preferences_RunTests();
 #endif

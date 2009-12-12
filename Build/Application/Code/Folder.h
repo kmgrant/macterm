@@ -14,7 +14,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -58,38 +58,21 @@ enum
 	// folders defined by MacTelnet
 	kFolder_RefApplicationSupport = 1,			// MacTelnet’s folder in the Application Support folder.
 	
-	kFolder_RefFavorites = 2,					// MacTelnet’s “Favorites” folder, in the preferences folder.
-	
 	kFolder_RefPreferences = 3,					// The folder “MacTelnet Preferences”, in the preferences
 												//   folder of the user currently logged in.
 	
 	kFolder_RefScriptsMenuItems = 4,			// MacTelnet’s “Scripts Menu Items” folder.
 	
-	kFolder_RefStartupItems = 5,				// MacTelnet’s “Startup Items” folder, in MacTelnet’s
-												//   preferences folder.
-	
 	kFolder_RefUserLogs = 6,					// where the MacTelnet Debugging Log goes, or any other log
-	
-	kFolder_RefUserMacroFavorites = 7,			// “Macro Sets” folder, in the Favorites folder.
-	
-	kFolder_RefRecentSessions = 8,				// “Recent Sessions” folder, in MacTelnet’s preferences folder.
 	
 	// folders defined by Mac OS X
 	kFolder_RefMacApplicationSupport = 9,		// the Application Support folder
-	
-	kFolder_RefMacDesktop = 10,					// the Desktop for the user currently logged in
-	
-	kFolder_RefMacFavorites = 11,				// the Favorites folder for the user currently logged in
-	
-	kFolder_RefMacHelp = 12,					// the system-wide Help folder
 	
 	kFolder_RefMacLibrary = 13,					// the Library folder for the user currently logged in
 	
 	kFolder_RefMacPreferences = 14,				// the Preferences folder for the user currently logged in
 	
 	kFolder_RefMacTemporaryItems = 15,			// the (invisible) Temporary Items folder
-	
-	kFolder_RefMacTrash = 16					// the Trash
 };
 
 
@@ -100,11 +83,6 @@ enum
 OSStatus
 	Folder_GetFSRef			(Folder_Ref		inFolderType,
 							 FSRef&			outFolderFSRef);
-
-// DEPRECATED
-OSStatus
-	Folder_GetFSSpec		(Folder_Ref		inFolderType,
-							 FSSpec*		outFolderFSSpecPtr);
 
 #endif
 

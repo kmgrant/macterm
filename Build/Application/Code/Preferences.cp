@@ -3314,68 +3314,6 @@ Preferences_CreateUniqueContextName		(Quills::Prefs::Class	inClass,
 
 
 /*!
-Ensures that all necessary preferences folders exist,
-and reads some global default preferences.
-
-\retval kPreferences_ResultOK
-if no error occurred (currently the only possible return code)
-
-(3.0)
-*/
-Preferences_Result
-Preferences_CreateOrFindFiles ()
-{
-	Preferences_Result		result = kPreferences_ResultOK;
-	
-	
-	result = assertInitialized();
-	if (result == kPreferences_ResultOK)
-	{
-		// create the MacTelnet Preferences folder and important sub-folders
-		FSRef		unusedFolderRef;
-		
-		
-		// create the MacTelnet Application Support folder (no effect if it already exists); the resultant FSSpec is ignored
-		Folder_GetFSRef(kFolder_RefApplicationSupport, unusedFolderRef);
-		
-		// create the MacTelnet Preferences folder (no effect if it already exists); the resultant FSSpec is ignored
-		Folder_GetFSRef(kFolder_RefPreferences, unusedFolderRef);
-		
-		// create the Recent Sessions folder (no effect if it already exists); the resultant FSSpec is ignored
-		Folder_GetFSRef(kFolder_RefRecentSessions, unusedFolderRef);
-		
-		// create the Favorites folder (no effect if it already exists); the resultant FSSpec is ignored
-		Folder_GetFSRef(kFolder_RefFavorites, unusedFolderRef);
-		
-		// create the Macro Sets Favorites folder (no effect if it already exists); the resultant FSSpec is ignored
-		Folder_GetFSRef(kFolder_RefUserMacroFavorites, unusedFolderRef);
-		
-		// other setup
-		{
-			Str255		notificationMessage;
-			UInt16		notificationPreferences = kAlert_NotifyDisplayDiamondMark;
-			size_t		actualSize = 0L;
-			
-			
-			unless (Preferences_GetData(kPreferences_TagNotification, sizeof(notificationPreferences),
-										&notificationPreferences, &actualSize) ==
-					kPreferences_ResultOK)
-			{
-				notificationPreferences = kAlert_NotifyDisplayDiamondMark; // assume default, if preference can’t be found
-			}
-			
-			// the Interface Library Alert module is responsible for handling Notification Manager stuff...
-			Alert_SetNotificationPreferences(notificationPreferences);
-			// TEMPORARY: This needs a new localized string.  LOCALIZE THIS.
-			//GetIndString(notificationMessage, rStringsNoteAlerts, siNotificationAlert);
-			//Alert_SetNotificationMessage(notificationMessage);
-		}
-	}
-	return result;
-}// CreateOrFindFiles
-
-
-/*!
 Provides a list of all created contexts in the specified
 preferences class.  The first context in the list is the
 default context (see also Preferences_GetDefaultContext()),

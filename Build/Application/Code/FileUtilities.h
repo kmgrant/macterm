@@ -40,108 +40,22 @@
 
 
 
-#pragma mark Constants
-
-typedef SInt16 FileUtilitiesDate;
-enum
-{
-	kFileUtilitiesDateOfModification = 0,
-	kFileUtilitiesDateOfCreation = 1,
-	kFileUtilitiesDateOfBackup = 2
-};
-
-
-
 #pragma mark Public Methods
 
 //!\name File, Directory and Volume Routines
 //@{
 
 OSStatus
-	FileUtilities_ConvertFSRefToFSSpec				(FSRef const&		inFSRef,
-													 FSSpec&			outFSSpec);
+	FileUtilities_EnsureOriginalFile		(FSSpec*				inoutFSSpecPtr);
 
 OSStatus
-	FileUtilities_EnsureOriginalFile				(FSSpec*			inoutFSSpecPtr);
+	FileUtilities_OpenDocument				(FSRef const&			inFSRef);
 
 OSStatus
-	FileUtilities_GetAllFilesInDirectory			(FSSpec const*		inDirectorySpecPtr,
-													 FSSpec*			inFileArrayStoragePtr,
-													 UInt32*			inoutFileMaxCountFileActualCountPtr);
-
-OSStatus
-	FileUtilities_GetTypedFilesInDirectory			(FSSpec const*		inDirectorySpecPtr,
-													 OSType				inDesiredTypeSignature,
-													 OSType				inDesiredCreatorSignature,
-													 FSSpec*			inFileArrayStoragePtr,
-													 UInt32*			inoutFileMaxCountFileActualCountPtr);
-
-void
-	FileUtilities_GetDirectoryName					(short				inVRefNum,
-													 long				inDirID,
-													 Str32				outName);
-
-OSStatus
-	FileUtilities_GetIndVolume						(short				inIndex,
-													 short*				outVRefNum);
-
-OSStatus
-	FileUtilities_GetLastModDateTime				(FSSpec*			inFSSpecPtr,
-													 unsigned long*		outLastModDateTime);
-
-OSStatus
-	FileUtilities_GetPathnameFromDirectoryID		(long				inDirectoryID,
-													 short				inVolumeReferenceNumber,
-													 StringPtr			outFullPathNameString);
-
-OSStatus
-	FileUtilities_GetPathnameFromFSSpec				(FSSpec const*		inDirectorySpecPtr,
-													 StringPtr			outFullPathNameString,
-													 Boolean			inIsDirectory);
-
-OSStatus
-	FileUtilities_GetPOSIXPathnameFromFSSpec		(FSSpec const*		inDirectorySpecPtr,
-													 StringPtr			outFullPathNameString,
-													 Boolean			inIsDirectory);
-
-OSStatus
-	FileUtilities_LaunchApplicationFromFSSpec		(FSSpec*			inFSSpecPtr);
-
-OSStatus
-	FileUtilities_OpenDocument						(FSRef const&		inFSRef);
-
-OSStatus
-	FileUtilities_OpenDocument						(FSSpec const*		inFSSpecPtr);
-
-OSStatus
-	FileUtilities_OpenDocuments						(AEDescList const&	inList);
+	FileUtilities_OpenDocuments				(AEDescList const&		inList);
 
 SInt16
-	FileUtilities_OpenTemporaryFile					(FSRef&				outTemporaryFile);
-
-OSStatus
-	FileUtilities_PersistentCreate					(FSSpec*			inoutFSSpecPtr,
-													 OSType				inCreator,
-													 OSType				inType,
-													 ScriptCode			inScriptTag);
-
-unsigned long
-	FileUtilities_ReturnDirectoryDateFromFSSpec		(FSSpec const*		inFSSpecPtr,
-													 FileUtilitiesDate	inWhichDate);
-
-long
-	FileUtilities_ReturnDirectoryIDFromFSSpec		(FSSpec const*		inFSSpecPtr);
-
-short
-	FileUtilities_ReturnVolumeRefNumberForName		(Str32				inVolumeName);
-
-SInt32
-	FileUtilities_TextToHandle						(SInt16				inFileRefNum,
-													 Handle				inoutTextHandle);
-
-OSStatus
-	FileUtilities_VolHasDesktopDB					(short				inVRefNum,
-													 Boolean*			outHasDesktop);
+	FileUtilities_OpenTemporaryFile			(FSRef&					outTemporaryFile);
 
 //@}
 
