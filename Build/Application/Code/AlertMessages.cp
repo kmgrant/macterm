@@ -1998,6 +1998,11 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 			assert_noerr(error);
 		}
 		
+		// absorb keyboard events to avoid accidental button activations,
+		// e.g. if user presses Return just as a message appears, this
+		// should not kill the message
+		FlushEvents(keyDown, 0/* stop mask */);
+		
 		// get the rectangle where the alert box is supposed to be, and animate it into position (with Mac OS 8.5 and beyond)
 		setAlertVisibility(ptr, true/* visible */, true/* animate */);
 		
