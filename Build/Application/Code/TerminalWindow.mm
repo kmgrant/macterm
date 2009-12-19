@@ -59,6 +59,7 @@ extern "C"
 #import <CoreServices/CoreServices.h>
 
 // library includes
+#import <AlertMessages.h>
 #import <AutoPool.objc++.h>
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
@@ -2033,6 +2034,7 @@ installedActions()
 	SessionFactory_StartMonitoringSessions(kSession_ChangeWindowTitle, this->sessionStateChangeEventListener);
 	this->terminalStateChangeEventListener = ListenerModel_NewStandardListener(terminalStateChanged, REINTERPRET_CAST(this, TerminalWindowRef)/* context */);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener);
+	Terminal_StartMonitoring(newScreen, kTerminal_ChangeExcessiveErrors, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeScreenSize, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener);
@@ -2296,6 +2298,7 @@ TerminalWindow::
 		for (screenIterator = this->allScreens.begin(); screenIterator != this->allScreens.end(); ++screenIterator)
 		{
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener);
+			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeExcessiveErrors, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeScreenSize, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener);
@@ -6365,6 +6368,49 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				{
 					error = HIToolbarItemSetIconRef(bellItem, (Terminal_BellIsEnabled(screen)) ? gBellOffIcon() : gBellOnIcon());
 					assert_noerr(error);
+				}
+			}
+		}
+		break;
+	
+	case kTerminal_ChangeExcessiveErrors:
+		// the terminal has finally had enough, having seen a ridiculous
+		// number of data errors; report this to the user
+		{
+			//TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
+			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
+			
+			
+			if (nullptr != terminalWindow)
+			{
+				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+				AlertMessages_BoxRef		warningBox = Alert_New();
+				UIStrings_Result			stringResult = kUIStrings_ResultOK;
+				CFStringRef					dialogTextCFString = nullptr;
+				CFStringRef					helpTextCFString = nullptr;
+				
+				
+				Alert_SetParamsFor(warningBox, kAlert_StyleOK);
+				Alert_SetType(warningBox, kAlertNoteAlert);
+				
+				stringResult = UIStrings_Copy(kUIStrings_AlertWindowExcessiveErrorsPrimaryText, dialogTextCFString);
+				assert(stringResult.ok());
+				stringResult = UIStrings_Copy(kUIStrings_AlertWindowExcessiveErrorsHelpText, helpTextCFString);
+				assert(stringResult.ok());
+				Alert_SetTextCFStrings(warningBox, dialogTextCFString, helpTextCFString);
+				
+				// show the message; it is disposed asynchronously
+				Alert_MakeWindowModal(warningBox, TerminalWindow_ReturnWindow(terminalWindow), false/* is close warning */,
+										Alert_StandardCloseNotifyProc, nullptr/* context */);
+				Alert_Display(warningBox);
+				
+				if (nullptr != dialogTextCFString)
+				{
+					CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
+				}
+				if (nullptr != helpTextCFString)
+				{
+					CFRelease(helpTextCFString), helpTextCFString = nullptr;
 				}
 			}
 		}

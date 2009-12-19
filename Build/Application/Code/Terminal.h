@@ -102,6 +102,10 @@ enum
 	kTerminal_ChangeCursorState			= 'CurV',	//!< cursor has been shown or hidden; new state can be
 													//!  found with Terminal_CursorIsVisible() (context:
 													//!  TerminalScreenRef)
+	kTerminal_ChangeExcessiveErrors		= 'Errr',	//!< a very exceptional number of data errors have now occurred;
+													//!  this message is sent just once, if ever, at an arbitrary time,
+													//!  and is intended to allow a user warning (context:
+													//!  TerminalScreenRef)
 	kTerminal_ChangeFileCaptureBegun	= 'CapB',	//!< file capture started (context: TerminalScreenRef)
 	kTerminal_ChangeFileCaptureEnding	= 'CapE',	//!< capture about to stop (context: TerminalScreenRef)
 	kTerminal_ChangeLineFeedNewLineMode	= 'LFNL',	//!< terminal has changed the expected behavior of the

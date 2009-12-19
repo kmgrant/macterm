@@ -746,13 +746,16 @@ public:
 	//
 	// To avoid the spam and resulting slowdown of logging these
 	// cases, error counts are used: incremented as errors occur,
-	// and decremented when a periodic handler discovers new errors.
+	// and decremented when a periodic handler discovers new errors
+	// (except for the total, which is never reset).
 	UInt32								echoErrorCount;				//!< echo errors occur when a stream of exceptionally bad data arrives (e.g.
 																	//!  someone dumps binary data)
 	UInt32								translationErrorCount;		//!< translation errors typically occur when the text encoding assumed either
 																	//!  by the user or the running process is not actually used by some data; if
 																	//!  enough of these are accumulated, the user could actually be prompted to
 																	//!  reconsider the chosen translation table for the session
+	UInt32								errorCountTotal;			//!< used to eventually fire "kTerminal_ChangeExcessiveErrors", if things have
+																	//!  become just ridiculous
 	
 	My_TabStopList						tabSettings;				//!< array of characters representing tab stops; values are either kMy_TabClear
 																	//!  (for most columns), or kMy_TabSet at tab columns
@@ -2551,6 +2554,12 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 		if ((dataPtr->echoErrorCount != 0) ||
 			(dataPtr->translationErrorCount != 0))
 		{
+			++(dataPtr->errorCountTotal);
+			if (dataPtr->errorCountTotal == 20/* arbitrary; equality is used to ensure that this event can only fire once */)
+			{
+				changeNotifyForTerminal(dataPtr, kTerminal_ChangeExcessiveErrors, inRef);
+			}
+			
 			Console_Warning(Console_WriteValue, "at least some characters were SKIPPED due to the following errors; original buffer length", inLength);
 			if (dataPtr->echoErrorCount != 0)
 			{
@@ -4941,6 +4950,7 @@ screenBuffer(),
 bytesToEcho(),
 echoErrorCount(0),
 translationErrorCount(0),
+errorCountTotal(0),
 tabSettings(),
 captureStream(StreamCapture_New(returnLineEndings())),
 printingStream(nullptr),

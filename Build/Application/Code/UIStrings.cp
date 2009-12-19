@@ -126,6 +126,16 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 													CFSTR("kUIStrings_AlertWindowCommandFailedPrimaryText; %1$d will be an error code"));
 		break;
 	
+	case kUIStrings_AlertWindowExcessiveErrorsPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("A significant number of data errors are occurring.  For stability reasons, MacTelnet has avoided trying to render some of the text."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowExcessiveErrorsPrimaryText"));
+		break;
+	
+	case kUIStrings_AlertWindowExcessiveErrorsHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("It is possible that the current Text Translation (set in the Map menu) is inaccurate."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowExcessiveErrorsHelpText"));
+		break;
+	
 	case kUIStrings_AlertWindowGenericCannotUndoHelpText:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("This cannot be undone."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowGenericCannotUndoHelpText"));

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20091219',
     '20091204',
     '20091130',
     '20091128',
@@ -295,6 +296,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20091219': [
+        'Terminal windows will now warn the user (at most once) when an exceptional number of data errors have occurred.',
+    ],
     '20091204': [
         'Fixed MacTelnet Help to no longer mention certain preferences that were recently removed.',
     ],

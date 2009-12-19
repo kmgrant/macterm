@@ -93,6 +93,8 @@ enum UIStrings_AlertWindowCFString
 	kUIStrings_AlertWindowClosePrimaryText				= 'PCls',
 	kUIStrings_AlertWindowCommandFailedHelpText			= 'HCmd',
 	kUIStrings_AlertWindowCommandFailedPrimaryText		= 'PCmd',
+	kUIStrings_AlertWindowExcessiveErrorsPrimaryText	= 'PMnE',
+	kUIStrings_AlertWindowExcessiveErrorsHelpText		= 'HMnE',
 	kUIStrings_AlertWindowGenericCannotUndoHelpText		= 'HNUn',
 	kUIStrings_AlertWindowMacroExportNothingPrimaryText	= 'MENW',
 	kUIStrings_AlertWindowMacroExportNothingHelpText	= 'MENH',
