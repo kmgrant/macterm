@@ -738,6 +738,22 @@ public:
 																	//!  NOTE you should ONLY modify this using screen...() routines!
 	std::string							bytesToEcho;				//!< captures contiguous blocks of text to be translated and echoed
 	
+	// Error Counts
+	//
+	// Certain classes of error are exceptional, but when they occur
+	// they may occur very often (e.g. extremely bad input data that
+	// continues to cause errors until it is cleared out).
+	//
+	// To avoid the spam and resulting slowdown of logging these
+	// cases, error counts are used: incremented as errors occur,
+	// and decremented when a periodic handler discovers new errors.
+	UInt32								echoErrorCount;				//!< echo errors occur when a stream of exceptionally bad data arrives (e.g.
+																	//!  someone dumps binary data)
+	UInt32								translationErrorCount;		//!< translation errors typically occur when the text encoding assumed either
+																	//!  by the user or the running process is not actually used by some data; if
+																	//!  enough of these are accumulated, the user could actually be prompted to
+																	//!  reconsider the chosen translation table for the session
+	
 	My_TabStopList						tabSettings;				//!< array of characters representing tab stops; values are either kMy_TabClear
 																	//!  (for most columns), or kMy_TabSet at tab columns
 	
@@ -2490,7 +2506,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 						{
 							// special case...some kind of error, no bytes were translated;
 							// dump the buffer, which LOSES DATA, but this is a spin control
-							Console_WriteLine("echoing unexpectedly failed, SKIPPING entire cache of bytes as a precaution");
+							++(dataPtr->echoErrorCount);
 							dataPtr->bytesToEcho.clear();
 						}
 						else
@@ -2529,7 +2545,27 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 			// restore cursor
 			setCursorVisible(dataPtr, true);
 		}
+		
+		// to minimize spam, count certain classes of data error in
+		// the loop above, and only report them at the end
+		if ((dataPtr->echoErrorCount != 0) ||
+			(dataPtr->translationErrorCount != 0))
+		{
+			Console_Warning(Console_WriteValue, "at least some characters were SKIPPED due to the following errors; original buffer length", inLength);
+			if (dataPtr->echoErrorCount != 0)
+			{
+				Console_Warning(Console_WriteValue, "number of times that echoing unexpectedly failed", dataPtr->echoErrorCount);
+				dataPtr->echoErrorCount = 0;
+			}
+			if (dataPtr->translationErrorCount != 0)
+			{
+				//Console_WriteValueCharacter("current terminal text encoding", dataPtr->emulator.inputTextEncoding);
+				Console_Warning(Console_WriteValue, "number of times that translation unexpectedly failed", dataPtr->translationErrorCount);
+				dataPtr->translationErrorCount = 0;
+			}
+		}
 	}
+	
 	return result;
 }// EmulatorProcessData
 
@@ -4903,6 +4939,8 @@ preferenceMonitor(ListenerModel_NewStandardListener(preferenceChanged, this/* co
 scrollbackBuffer(),
 screenBuffer(),
 bytesToEcho(),
+echoErrorCount(0),
+translationErrorCount(0),
 tabSettings(),
 captureStream(StreamCapture_New(returnLineEndings())),
 printingStream(nullptr),
@@ -5553,8 +5591,7 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 		if (false == bufferAsCFString.exists())
 		{
 			// TEMPORARY: this should probably be handled better
-			Console_WriteValueCharacter("current terminal text encoding", inDataPtr->emulator.inputTextEncoding);
-			Console_Warning(Console_WriteLine, "unexpected error interpreting terminal data, SKIPPING the bad data segment!");
+			++(inDataPtr->translationErrorCount);
 			result = 0;
 		}
 		else
@@ -6130,8 +6167,7 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 		if (false == bufferAsCFString.exists())
 		{
 			// TEMPORARY: this should probably be handled better
-			Console_WriteValueCharacter("current terminal text encoding", inDataPtr->emulator.inputTextEncoding);
-			Console_Warning(Console_WriteLine, "unexpected error interpreting dumb terminal data, SKIPPING the bad data segment!");
+			++(inDataPtr->translationErrorCount);
 			
 			// echo a single byte so that it will be skipped next time
 			CFStringAppendFormat(humanReadableCFString.returnCFMutableStringRef(), nullptr/* format options */,
@@ -7313,7 +7349,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateControlENQ:
 		// send answer-back message
 		// UNIMPLEMENTED
-		Console_WriteLine("request to send answer-back message; unimplemented");
+		//Console_WriteLine("request to send answer-back message; unimplemented");
 		break;
 	
 	case kStateControlBEL:
@@ -7395,13 +7431,13 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateControlXON:
 		// resume transmission
 		// UNIMPLEMENTED
-		Console_WriteLine("request to resume transmission; unimplemented");
+		//Console_WriteLine("request to resume transmission; unimplemented");
 		break;
 	
 	case kStateControlXOFF:
 		// suspend transmission
 		// UNIMPLEMENTED
-		Console_WriteLine("request to suspend transmission (except for XON/XOFF); unimplemented");
+		//Console_WriteLine("request to suspend transmission (except for XON/XOFF); unimplemented");
 		break;
 	
 	case kStateControlCANSUB:
