@@ -902,6 +902,23 @@ public:
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
+	static void		alignmentDisplay			(My_ScreenBufferPtr);
+	static void		ansiMode					(My_ScreenBufferPtr);
+	static void		cursorBackward				(My_ScreenBufferPtr);
+	static void		cursorDown					(My_ScreenBufferPtr);
+	static void		cursorForward				(My_ScreenBufferPtr);
+	static void		cursorUp					(My_ScreenBufferPtr);
+	static void		deviceAttributes			(My_ScreenBufferPtr);
+	static void		deviceStatusReport			(My_ScreenBufferPtr);
+	static void		eraseInDisplay				(My_ScreenBufferPtr);
+	static void		eraseInLine					(My_ScreenBufferPtr);
+	static void		loadLEDs					(My_ScreenBufferPtr);
+	static void		modeSetReset				(My_ScreenBufferPtr, Boolean);
+	static UInt32	readCSIParameters			(My_ScreenBufferPtr, UInt8 const*, UInt32);
+	static void		reportTerminalParameters	(My_ScreenBufferPtr);
+	static void		setTopAndBottomMargins		(My_ScreenBufferPtr);
+	static void		vt52Mode					(My_ScreenBufferPtr);
+	
 	class VT52
 	{
 		friend class My_VT100;
@@ -909,6 +926,12 @@ public:
 	public:
 		static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
 		static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+		
+		static void		cursorBackward		(My_ScreenBufferPtr);
+		static void		cursorDown			(My_ScreenBufferPtr);
+		static void		cursorForward		(My_ScreenBufferPtr);
+		static void		cursorUp			(My_ScreenBufferPtr);
+		static void		identify			(My_ScreenBufferPtr);
 	
 	protected:
 		// The names of these constants use the same mnemonics from
@@ -1050,6 +1073,8 @@ class My_VT220
 public:
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	
+	static void		deviceAttributes	(My_ScreenBufferPtr);
 };
 
 /*!
@@ -1163,28 +1188,6 @@ UInt16						tabStopGetDistanceFromCursor			(My_ScreenBufferConstPtr);
 void						tabStopInitialize						(My_ScreenBufferPtr);
 UniChar						translateCharacter						(My_ScreenBufferPtr, UniChar, TerminalTextAttributes,
 																	 TerminalTextAttributes&);
-void						vt100AlignmentDisplay					(My_ScreenBufferPtr);
-void						vt100ANSIMode							(My_ScreenBufferPtr);
-void						vt100CursorBackward						(My_ScreenBufferPtr);
-void						vt100CursorBackward_vt52				(My_ScreenBufferPtr);
-void						vt100CursorDown							(My_ScreenBufferPtr);
-void						vt100CursorDown_vt52					(My_ScreenBufferPtr);
-void						vt100CursorForward						(My_ScreenBufferPtr);
-void						vt100CursorForward_vt52					(My_ScreenBufferPtr);
-void						vt100CursorUp							(My_ScreenBufferPtr);
-void						vt100CursorUp_vt52						(My_ScreenBufferPtr);
-void						vt100DeviceAttributes					(My_ScreenBufferPtr);
-void						vt100DeviceStatusReport					(My_ScreenBufferPtr);
-void						vt100EraseInDisplay						(My_ScreenBufferPtr);
-void						vt100EraseInLine						(My_ScreenBufferPtr);
-void						vt100Identify_vt52						(My_ScreenBufferPtr);
-void						vt100LoadLEDs							(My_ScreenBufferPtr);
-void						vt100ModeSetReset						(My_ScreenBufferPtr, Boolean);
-UInt32						vt100ReadCSIParameters					(My_ScreenBufferPtr, UInt8 const*, UInt32);
-void						vt100ReportTerminalParameters			(My_ScreenBufferPtr);
-void						vt100SetTopAndBottomMargins				(My_ScreenBufferPtr);
-void						vt100VT52Mode							(My_ScreenBufferPtr);
-void						vt220DeviceAttributes					(My_ScreenBufferPtr);
 template < typename src_char_seq_const_iter, typename src_char_seq_size_t,
 			typename dest_char_seq_iter, typename dest_char_seq_size_t >
 dest_char_seq_iter			whitespaceSensitiveCopy					(src_char_seq_const_iter, src_char_seq_size_t,
@@ -6252,6 +6255,761 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 
 
 /*!
+Handles the VT100 'DECALN' sequence.  See the VT100
+manual for complete details.
+
+(3.0)
+*/
+void
+My_VT100::
+alignmentDisplay	(My_ScreenBufferPtr		inDataPtr)
+{
+	// first clear the buffer, saving it to scrollback if appropriate
+	bufferEraseVisibleScreenWithUpdate(inDataPtr);
+	
+	// now fill the lines with letter-E characters; technically this
+	// also will reset all attributes and this may not be part of the
+	// VT100 specification (but it seems reasonable to get rid of any
+	// special colors or oversized text when doing screen alignment)
+	{
+		My_ScreenBufferLineList::iterator	lineIterator;
+		
+		
+		for (lineIterator = inDataPtr->screenBuffer.begin(); lineIterator != inDataPtr->screenBuffer.end(); ++lineIterator)
+		{
+			bufferLineFill(inDataPtr, *lineIterator, 'E', kTerminalTextAttributesAllOff, true/* change line global attributes to match */);
+		}
+	}
+	
+	// update the display - UNIMPLEMENTED
+}// My_VT100::alignmentDisplay
+
+
+/*!
+Switches a VT100-compatible terminal to ANSI mode, which means
+it no longer accepts VT52 sequences.
+
+(3.1)
+*/
+void
+My_VT100::
+ansiMode	(My_ScreenBufferPtr		inDataPtr)
+{
+	inDataPtr->modeANSIEnabled = true;
+	if (inDataPtr->emulator.pushedCallbacks.exist())
+	{
+		inDataPtr->emulator.currentCallbacks = inDataPtr->emulator.pushedCallbacks;
+		inDataPtr->emulator.pushedCallbacks = My_Emulator::Callbacks();
+	}
+	initializeParserStateStack(&inDataPtr->emulator);
+}// My_VT100::ansiMode
+
+
+/*!
+Handles the VT100 'CUB' sequence.  See the VT100
+manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::
+cursorBackward	(My_ScreenBufferPtr		inDataPtr)
+{
+	// the default value is 1 if there are no parameters
+	if (inDataPtr->emulator.parameterValues[0] < 1)
+	{
+		if (inDataPtr->current.cursorX > 0) moveCursorLeft(inDataPtr);
+		else moveCursorLeftToEdge(inDataPtr);
+	}
+	else
+	{
+		SInt16		newValue = inDataPtr->current.cursorX - inDataPtr->emulator.parameterValues[0];
+		
+		
+		if (newValue < 0) newValue = 0;
+		moveCursorX(inDataPtr, newValue);
+	}
+}// My_VT100::cursorBackward
+
+
+/*!
+Handles the VT100 'CUD' sequence.  See the VT100
+manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::
+cursorDown	(My_ScreenBufferPtr		inDataPtr)
+{
+	// the default value is 1 if there are no parameters
+	if (inDataPtr->emulator.parameterValues[0] < 1)
+	{
+		if (inDataPtr->current.cursorY < inDataPtr->originRegionPtr->lastRow) moveCursorDown(inDataPtr);
+		else moveCursorDownToEdge(inDataPtr);
+	}
+	else
+	{
+		My_ScreenRowIndex	newValue = inDataPtr->current.cursorY +
+										inDataPtr->emulator.parameterValues[0];
+		
+		
+		if (newValue > inDataPtr->originRegionPtr->lastRow)
+		{
+			newValue = inDataPtr->originRegionPtr->lastRow;
+		}
+		// NOTE: the check below may not be necessary
+		if (newValue >= inDataPtr->screenBuffer.size())
+		{
+			newValue = inDataPtr->screenBuffer.size() - 1;
+		}
+		moveCursorY(inDataPtr, newValue);
+	}
+}// My_VT100::cursorDown
+
+
+/*!
+Handles the VT100 'CUF' sequence.  See the VT100
+manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::
+cursorForward	(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16		rightLimit = inDataPtr->current.returnNumberOfColumnsPermitted() - ((inDataPtr->modeAutoWrap) ? 0 : 1);
+	
+	
+	// the default value is 1 if there are no parameters
+	if (inDataPtr->emulator.parameterValues[0] < 1)
+	{
+		if (inDataPtr->current.cursorX < rightLimit) moveCursorRight(inDataPtr);
+		else moveCursorRightToEdge(inDataPtr);
+	}
+	else
+	{
+		SInt16		newValue = inDataPtr->current.cursorX + inDataPtr->emulator.parameterValues[0];
+		
+		
+		if (newValue > rightLimit) newValue = rightLimit;
+		moveCursorX(inDataPtr, newValue);
+	}
+}// My_VT100::cursorForward
+
+
+/*!
+Handles the VT100 'CUU' sequence.  See the VT100
+manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::
+cursorUp	(My_ScreenBufferPtr		inDataPtr)
+{
+	// the default value is 1 if there are no parameters
+	if (inDataPtr->emulator.parameterValues[0] < 1)
+	{
+		if (inDataPtr->current.cursorY > inDataPtr->originRegionPtr->firstRow)
+		{
+			moveCursorUp(inDataPtr);
+		}
+		else
+		{
+			moveCursorUpToEdge(inDataPtr);
+		}
+	}
+	else
+	{
+		SInt16				newValue = inDataPtr->current.cursorY - inDataPtr->emulator.parameterValues[0];
+		My_ScreenRowIndex	rowIndex = 0;
+		
+		
+		if (newValue < 0)
+		{
+			newValue = 0;
+		}
+		
+		rowIndex = STATIC_CAST(newValue, My_ScreenRowIndex);
+		if (rowIndex < inDataPtr->originRegionPtr->firstRow)
+		{
+			rowIndex = inDataPtr->originRegionPtr->firstRow;
+		}
+		moveCursorY(inDataPtr, rowIndex);
+	}
+}// My_VT100::cursorUp
+
+
+/*!
+Handles the VT100 'DA' sequence.  See the VT100
+manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::
+deviceAttributes	(My_ScreenBufferPtr		inDataPtr)
+{
+	SessionRef		session = returnListeningSession(inDataPtr);
+	
+	
+	if (nullptr != session)
+	{
+		// support GPO (graphics processor option) and AVO (advanced video option)
+		Session_SendData(session, "\033[?1;6c", 7);
+	}
+}// My_VT100::deviceAttributes
+
+
+/*!
+Handles the VT100 'DSR' sequence.  See the VT100
+manual for complete details.
+
+(3.0)
+*/
+void
+My_VT100::
+deviceStatusReport		(My_ScreenBufferPtr		inDataPtr)
+{
+	switch (inDataPtr->emulator.parameterValues[0])
+	{
+	case 5:
+		// report status using a DSR control sequence
+		{
+			SessionRef	session = returnListeningSession(inDataPtr);
+			
+			
+			if (nullptr != session)
+			{
+				Session_SendData(session, "\033[0n"/* 0 means “ready, no malfunctions detected”; see VT100 manual on DSR for details */,
+									4/* length of the string */);
+			}
+		}
+		break;
+	
+	case 6:
+		// report active (cursor) position using a CPR control sequence
+		{
+			SInt16				reportedCursorX = inDataPtr->current.cursorX;
+			My_ScreenRowIndex	reportedCursorY = inDataPtr->current.cursorY;
+			
+			
+			// determine imminent cursor position
+			if (reportedCursorX >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
+			{
+				// auto-wrap pending
+				reportedCursorX = 0;
+				++reportedCursorY;
+			}
+			if (reportedCursorY >= inDataPtr->screenBuffer.size())
+			{
+				// scroll pending (because of auto-wrap)
+				reportedCursorY = inDataPtr->screenBuffer.size() - 1;
+			}
+			
+			// report relative to the scroll region if in origin mode
+			reportedCursorY -= inDataPtr->originRegionPtr->firstRow;
+			
+			// the reported numbers are one-based, not zero-based
+			++reportedCursorX;
+			++reportedCursorY;
+			
+			// send response
+			{
+				SessionRef	session = returnListeningSession(inDataPtr);
+				
+				
+				if (nullptr != session)
+				{
+					std::ostringstream		reportBuffer;
+					
+					
+					reportBuffer
+					<< "\033["
+					<< reportedCursorY
+					<< ";"
+					<< reportedCursorX
+					<< "R"
+					;
+					std::string		reportBufferString = reportBuffer.str();
+					Session_SendData(session, reportBufferString.c_str(), reportBufferString.size());
+				}
+			}
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// My_VT100::deviceStatusReport
+
+
+/*!
+Handles the VT100 'ED' sequence.  See the VT100
+manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::
+eraseInDisplay		(My_ScreenBufferPtr		inDataPtr)
+{
+	switch (inDataPtr->emulator.parameterValues[0])
+	{
+	case -1: // -1 means no parameter was given; the default value is 0
+	case 0:
+		bufferEraseFromCursorToEnd(inDataPtr);
+		break;
+	
+	case 1:
+		bufferEraseFromHomeToCursor(inDataPtr);
+		break;
+	
+	case 2:
+		bufferEraseVisibleScreenWithUpdate(inDataPtr);
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// My_VT100::eraseInDisplay
+
+
+/*!
+Handles the VT100 'EL' sequence.  See the VT100
+manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::
+eraseInLine		(My_ScreenBufferPtr		inDataPtr)
+{
+	switch (inDataPtr->emulator.parameterValues[0])
+	{
+	case -1: // -1 means no parameter was given; the default value is 0
+	case 0:
+		bufferEraseFromCursorColumnToLineEnd(inDataPtr);
+		break;
+	
+	case 1:
+		bufferEraseFromLineBeginToCursorColumn(inDataPtr);
+		break;
+	
+	case 2:
+		bufferEraseLineWithUpdate(inDataPtr, -1/* line number, or negative for cursor line */);
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// My_VT100::eraseInLine
+
+
+/*!
+Handles the VT100 'DECLL' sequence.  See the VT100
+manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::
+loadLEDs	(My_ScreenBufferPtr		inDataPtr)
+{
+	register SInt16		i = 0;
+	
+	
+	for (i = 0; i <= inDataPtr->emulator.parameterEndIndex; ++i)
+	{
+		if (inDataPtr->emulator.parameterValues[i] == -1)
+		{
+			// no value; default is “all off”
+			highlightLED(inDataPtr, 0);
+		}
+		else if (inDataPtr->emulator.parameterValues[i] == 137)
+		{
+			// could decide to emulate the “ludicrous repeat rate” bug
+			// of the VT100, here; in combination with key click, this
+			// should basically make each key press play a musical note :)
+		}
+		else
+		{
+			// a parameter of 1 means “LED 1 on”, 2 means “LED 2 on”,
+			// 3 means “LED 3 on”, 4 means “LED 4 on”; 0 means “all off”
+			highlightLED(inDataPtr, inDataPtr->emulator.parameterValues[i]/* LED # */);
+		}
+	}
+}// My_VT100::loadLEDs
+
+
+/*!
+Handles the VT100 'SM' sequence (if "inIsModeEnabled" is true)
+or the VT100 'RM' sequence (if "inIsModeEnabled" is false).
+See the VT100 manual for complete details.
+
+(2.6)
+*/
+void
+My_VT100::
+modeSetReset	(My_ScreenBufferPtr		inDataPtr,
+				 Boolean				inIsModeEnabled)
+{
+	switch (inDataPtr->emulator.parameterValues[0])
+	{
+	case -2: // DEC-private control sequence
+		{
+			register SInt16		i = 0;
+			Boolean				emulateDECOMBug = false;
+			
+			
+			for (i = 1/* skip the -2 parameter */; i <= inDataPtr->emulator.parameterEndIndex; ++i)
+			{
+				switch (inDataPtr->emulator.parameterValues[i])
+				{
+				case 1:
+					// DECCKM (cursor-key mode)
+					inDataPtr->modeCursorKeysForApp = inIsModeEnabled;
+					break;
+				
+				case 2:
+					// DECANM (ANSI/VT52 mode); this is only possible to reset, not set
+					// (the set is accomplished in a different way)
+					if (false == inIsModeEnabled)
+					{
+						My_VT100::vt52Mode(inDataPtr);
+					}
+					break;
+				
+				case 3:
+					// DECCOLM (80/132 column switch)
+					{
+						(Boolean)Commands_ExecuteByIDUsingEvent((inIsModeEnabled)
+																? kCommandLargeScreen
+																: kCommandSmallScreen);
+					}
+					break;
+				
+				case 5:
+					// DECSCNM (screen mode)
+					inDataPtr->reverseVideo = inIsModeEnabled;
+					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeVideoMode, inDataPtr->selfRef);
+					break;
+				
+				case 6: // DECOM (origin mode)
+					{
+					#if 0
+						// the original VT100 has a bug where as soon as DECOM is set or cleared,
+						// ALL subsequent mode changes are ignored; since technically MacTelnet
+						// is emulating a *real* VT100 and not the ideal manual, you could enable
+						// this flag to replicate VT100 behavior instead of what the manual says
+						emulateDECOMBug = true;
+					#endif
+						
+						inDataPtr->modeOriginRedefined = inIsModeEnabled;
+						if (inIsModeEnabled)
+						{
+							// restrict cursor movements to the defined margins, and
+							// ensure that reported cursor row/column use these offsets
+							inDataPtr->originRegionPtr = &inDataPtr->customScrollingRegion;
+						}
+						else
+						{
+							// no restrictions
+							inDataPtr->originRegionPtr = &inDataPtr->visibleBoundary.rows;
+						}
+						
+						// home the cursor, but relative to the new top margin
+						// (automatically restricted by cursor movement routines)
+						moveCursor(inDataPtr, 0, 0);
+					}
+					break;
+				
+				case 7: // DECAWM (auto-wrap mode)
+					inDataPtr->modeAutoWrap = inIsModeEnabled;
+					if (false == inIsModeEnabled) inDataPtr->wrapPending = false;
+					break;
+				
+				case 4: // DECSCLM (if enabled, scrolling is smooth at 6 lines per second; otherwise, instantaneous)
+				case 8: // DECARM (auto-repeating)
+				case 9: // DECINLM (interlace)
+				case 0: // error, ignored
+				case -1: // no value given (set and reset do not have default values)
+				default:
+					// ???
+					break;
+				}
+				
+				// see above, where this is defined, for more information on this break
+				if (emulateDECOMBug)
+				{
+					break;
+				}
+			}
+		}
+		break;
+	
+	case 4: // insert/replace character writing mode
+		inDataPtr->modeInsertNotReplace = inIsModeEnabled;
+		break;
+	
+	case 20: // LNM (line feed / newline mode)
+		inDataPtr->modeNewLineOption = inIsModeEnabled;
+		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeLineFeedNewLineMode, inDataPtr->selfRef);
+		break;
+	
+	default:
+		break;
+	}
+}// My_VT100::modeSetReset
+
+
+/*!
+Scans the specified buffer for parameter-like data
+(e.g. ;0;05;21;2) and saves all the parameters it
+finds.  The number of characters “used” is returned
+(you can use this to offset your original buffer
+pointer appropriately).
+
+Typically this is done immediately after a VT100
+control sequence inducer (CSI, a.k.a. ESC-[) is
+received.  That way, any terminal sequence which
+has a CSI in it (i.e. anything that needs parameters)
+will have all defined parameters available to it.
+
+(3.1)
+*/
+UInt32
+My_VT100::
+readCSIParameters	(My_ScreenBufferPtr		inDataPtr,
+					 UInt8 const*			inBuffer,
+					 UInt32					inLength)
+{
+	UInt32			result = 0;
+	UInt8 const*	bufferIterator = inBuffer;
+	Boolean			done = false;
+	SInt16&			terminalEndIndexRef = inDataPtr->emulator.parameterEndIndex;
+	
+	
+	for (; (false == done) && (bufferIterator != (inBuffer + inLength)); ++bufferIterator, ++result)
+	{
+		//Console_WriteValueCharacter("scan", *bufferIterator);
+		switch (*bufferIterator)
+		{
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			// parse numeric parameter
+			{
+				// rename this incredibly long expression, since it’s needed a lot here!
+				SInt16&		valueRef = inDataPtr->emulator.parameterValues[terminalEndIndexRef];
+				
+				
+				if (valueRef < 0) valueRef = 0;
+				valueRef *= 10;
+				valueRef += *bufferIterator - '0';
+			}
+			break;
+		
+		case ';':
+			// parameter separator
+			if (terminalEndIndexRef < kMy_MaximumANSIParameters) ++terminalEndIndexRef;
+			break;
+		
+		case '?':
+			// manual says the FIRST character must be this to enter
+			// DEC-private parameter mode; otherwise, ignore (stop here)
+			if (0 == result)
+			{
+				// DEC-private parameters
+				inDataPtr->emulator.parameterValues[terminalEndIndexRef++] = -2;
+			}
+			else
+			{
+				done = true;
+			}
+			break;
+		
+		default:
+			// not part of a parameter sequence
+			done = true;
+			break;
+		}
+	}
+	
+	// ignore final character if the loop was broken prematurely
+	if (done) --result;
+	
+	// debug - write results to console
+	//Console_WriteValue("parameters found", terminalEndIndexRef + 1);
+	//for (register SInt16 i = 0; i <= terminalEndIndexRef; ++i)
+	//{
+	//	Console_WriteValue("found post-CSI parameter", inDataPtr->emulator.parameterValues[i]);
+	//}
+	
+	return result;
+}// My_VT100::readCSIParameters
+
+
+/*!
+Handles the VT100 'DECREQT' sequence.  See the VT100
+manual for complete details.
+
+(3.1)
+*/
+void
+My_VT100::
+reportTerminalParameters	(My_ScreenBufferPtr		inDataPtr)
+{
+	UInt16 const	kRequestType = (inDataPtr->emulator.parameterValues[0] != -1)
+									? inDataPtr->emulator.parameterValues[0]
+									: 0/* default is a request, unsolicited reports mode */;
+	// these variable names are copied directly from the VT100 manual
+	// in the DECREQT section, to make it crystal clear what each one is;
+	// see the VT100 manual for full descriptions of their values
+	UInt16			sol = 0;		// solicitation; what to do
+	UInt16			par = 0;		// parity
+	UInt16			nbits = 0;		// bits per character
+	UInt16			xspeed = 0;		// transmission speed
+	UInt16			rspeed = 0;		// reception speed
+	UInt16			clkmul = 0;		// clock multiplier
+	UInt16			flags = 0;		// four switch values from SETUP-B
+	
+	
+	// determine the type of response based on the request;
+	// also remember this mode for future reports
+	if (kRequestType == 1)
+	{
+		inDataPtr->reportOnlyOnRequest = true;
+	}
+	else
+	{
+		inDataPtr->reportOnlyOnRequest = false;
+	}
+	
+	// set the report parameters appropriately
+	sol = (inDataPtr->reportOnlyOnRequest) ? 3 : 2;
+	par = 1; // 1 = no parity is set
+	// TEMPORARY: bits setting is fixed, should be fluid
+	nbits = 1; // 1 = 8 bits per character, 2 = 7 bits
+	// NOTE: These speeds are a hack...technically, this is set in
+	// the terminal control code in "Local.cp", but even that is a hack!
+	xspeed = 112; // 112 = 9600 baud
+	rspeed = 112; // 112 = 9600 baud
+	clkmul = 1; // set to 1 if the bit rate multiplier is 16
+	flags = 0; // TEMPORARY: these switches are not stored anywhere
+	
+	// send response
+	{
+		SessionRef	session = returnListeningSession(inDataPtr);
+		
+		
+		if (nullptr != session)
+		{
+			std::ostringstream	reportBuffer;
+			
+			
+			reportBuffer
+			<< "\033["
+			<< sol << ";"
+			<< par << ";"
+			<< nbits << ";"
+			<< xspeed << ";"
+			<< rspeed << ";"
+			<< clkmul << ";"
+			<< flags
+			<< "x"
+			;
+			std::string		reportBufferString = reportBuffer.str();
+			Session_SendData(session, reportBufferString.c_str(), reportBufferString.size());
+		}
+	}
+}// My_VT100::reportTerminalParameters
+
+
+/*!
+Handles the VT100 'DECSTBM' sequence.  See the VT100
+manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::
+setTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
+{
+	if (inDataPtr->emulator.parameterValues[0] < 0)
+	{
+		// no top parameter given; default is top of screen
+		inDataPtr->customScrollingRegion.firstRow = inDataPtr->visibleBoundary.rows.firstRow;
+	}
+	else
+	{
+		// parameter is the line number of the new first line of the scrolling region; the
+		// input is 1-based but internally it is a zero-based array index, so subtract one
+		if (0 == inDataPtr->emulator.parameterValues[0]) inDataPtr->emulator.parameterValues[0] = 1;
+		inDataPtr->customScrollingRegion.firstRow = inDataPtr->emulator.parameterValues[0] - 1;
+	}
+	
+	if (inDataPtr->emulator.parameterValues[1] < 0)
+	{
+		// no bottom parameter given; default is bottom of screen
+		inDataPtr->customScrollingRegion.lastRow = inDataPtr->visibleBoundary.rows.lastRow;
+	}
+	else
+	{
+		// parameter is the line number of the new last line of the scrolling region; the
+		// input is 1-based but internally it is a zero-based array index, so subtract one
+		UInt16		newValue = 0;
+		
+		
+		if (0 == inDataPtr->emulator.parameterValues[1]) inDataPtr->emulator.parameterValues[1] = 1;
+		
+		newValue = inDataPtr->emulator.parameterValues[1] - 1;
+		if (newValue > inDataPtr->visibleBoundary.rows.lastRow)
+		{
+			Console_Warning(Console_WriteLine, "emulator was given a scrolling region bottom row that is too large; truncating");
+			newValue = inDataPtr->visibleBoundary.rows.lastRow;
+		}
+		inDataPtr->customScrollingRegion.lastRow = newValue;
+	}
+	
+	// VT100 requires that the range be 2 lines minimum
+	if (inDataPtr->customScrollingRegion.firstRow >= inDataPtr->customScrollingRegion.lastRow)
+	{
+		Console_Warning(Console_WriteLine, "emulator was given a scrolling region bottom row that is less than the top; resetting");
+		inDataPtr->customScrollingRegion.lastRow = inDataPtr->customScrollingRegion.firstRow + 1;
+		if (inDataPtr->customScrollingRegion.lastRow > inDataPtr->visibleBoundary.rows.lastRow)
+		{
+			inDataPtr->customScrollingRegion.lastRow = inDataPtr->visibleBoundary.rows.lastRow;
+		}
+		if (inDataPtr->customScrollingRegion.firstRow >= inDataPtr->customScrollingRegion.lastRow)
+		{
+			inDataPtr->customScrollingRegion.firstRow = inDataPtr->customScrollingRegion.lastRow - 1;
+		}
+		assertScrollingRegion(inDataPtr);
+	}
+	
+	// home the cursor, but relative to any current top margin
+	// (this limit is enforced by moveCursorY())
+	moveCursor(inDataPtr, 0, 0);
+	
+	//Console_WriteValuePair("scrolling region rows are now", inDataPtr->inDataPtr->customScrollingRegion.firstRow,
+	//							inDataPtr->customScrollingRegion.lastRow); // debug
+	//Console_WriteValuePair("origin mode enable flag and cursor row", inDataPtr->modeOriginRedefined, inDataPtr->current.cursorY); // debug
+}// My_VT100::setTopAndBottomMargins
+
+
+/*!
 A standard "My_EmulatorStateDeterminantProcPtr" that sets
 VT100-specific states based on the characters of the given
 buffer.
@@ -6454,7 +7212,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 				break;
 			
 			// continue scanning as long as characters are LEGAL in a parameter sequence
-			// (the set below should be consistent with vt100ReadCSIParameters())
+			// (the set below should be consistent with My_VT100::readCSIParameters())
 			case '0':
 			case '1':
 			case '2':
@@ -6658,23 +7416,23 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateCSIParamScan:
 		// continue to accumulate parameters (this could require multiple passes)
-		result += vt100ReadCSIParameters(inDataPtr, inBuffer, inLength);
+		result += My_VT100::readCSIParameters(inDataPtr, inBuffer, inLength);
 		break;
 	
 	case kStateCUB:
-		vt100CursorBackward(inDataPtr);
+		My_VT100::cursorBackward(inDataPtr);
 		break;
 	
 	case kStateCUD:
-		vt100CursorDown(inDataPtr);
+		My_VT100::cursorDown(inDataPtr);
 		break;
 	
 	case kStateCUF:
-		vt100CursorForward(inDataPtr);
+		My_VT100::cursorForward(inDataPtr);
 		break;
 	
 	case kStateCUU:
-		vt100CursorUp(inDataPtr);
+		My_VT100::cursorUp(inDataPtr);
 		break;
 	
 	case kStateCUP:
@@ -6705,11 +7463,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateDA:
-		vt100DeviceAttributes(inDataPtr);
+		My_VT100::deviceAttributes(inDataPtr);
 		break;
 	
 	case kStateDECALN:
-		vt100AlignmentDisplay(inDataPtr);
+		My_VT100::alignmentDisplay(inDataPtr);
 		break;
 	
 	case kStateDECANM:
@@ -6794,7 +7552,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateDECID:
-		vt100DeviceAttributes(inDataPtr);
+		My_VT100::deviceAttributes(inDataPtr);
 		break;
 	
 	case kStateDECKPAM:
@@ -6806,7 +7564,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateDECLL:
-		vt100LoadLEDs(inDataPtr);
+		My_VT100::loadLEDs(inDataPtr);
 		break;
 	
 	case kStateDECOM:
@@ -6824,7 +7582,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateDECREQTPARM:
 		// a request for parameters has been made; send a response
-		vt100ReportTerminalParameters(inDataPtr);
+		My_VT100::reportTerminalParameters(inDataPtr);
 		break;
 	
 	case kStateANSISC:
@@ -6833,7 +7591,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateDECSTBM:
-		vt100SetTopAndBottomMargins(inDataPtr);
+		My_VT100::setTopAndBottomMargins(inDataPtr);
 		break;
 	
 	case kStateDECSWL:
@@ -6854,15 +7612,15 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateDSR:
-		vt100DeviceStatusReport(inDataPtr);
+		My_VT100::deviceStatusReport(inDataPtr);
 		break;
 	
 	case kStateED:
-		vt100EraseInDisplay(inDataPtr);
+		My_VT100::eraseInDisplay(inDataPtr);
 		break;
 	
 	case kStateEL:
-		vt100EraseInLine(inDataPtr);
+		My_VT100::eraseInLine(inDataPtr);
 		break;
 	
 	case kStateHTS:
@@ -6891,7 +7649,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateRM:
-		vt100ModeSetReset(inDataPtr, false/* set */);
+		My_VT100::modeSetReset(inDataPtr, false/* set */);
 		break;
 	
 	case kStateSCSG0UK:
@@ -7064,7 +7822,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateSM:
-		vt100ModeSetReset(inDataPtr, true/* set */);
+		My_VT100::modeSetReset(inDataPtr, true/* set */);
 		break;
 	
 	case kStateTBC:
@@ -7116,6 +7874,116 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	return result;
 }// My_VT100::stateTransition
+
+
+/*!
+Switches a VT100 terminal to VT52 mode, which means it
+starts to accept VT52 sequences.
+
+(3.1)
+*/
+void
+My_VT100::
+vt52Mode	(My_ScreenBufferPtr		inDataPtr)
+{
+	inDataPtr->modeANSIEnabled = false;
+	inDataPtr->emulator.pushedCallbacks = inDataPtr->emulator.currentCallbacks;
+	inDataPtr->emulator.currentCallbacks = My_Emulator::Callbacks
+											(My_DefaultEmulator::echoData,
+												My_VT100::VT52::stateDeterminant,
+												My_VT100::VT52::stateTransition);
+	initializeParserStateStack(&inDataPtr->emulator);
+}// My_VT100::vt52Mode
+
+
+/*!
+Handles the VT100 VT52-compatibility sequence 'ESC D'.
+See the VT100 manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::VT52::
+cursorBackward	(My_ScreenBufferPtr		inDataPtr)
+{
+	if (inDataPtr->current.cursorX > 0) moveCursorLeft(inDataPtr);
+	else moveCursorLeftToEdge(inDataPtr);
+}// My_VT100::VT52::cursorBackward
+
+
+/*!
+Handles the VT100 VT52-compatibility sequence 'ESC B'.
+See the VT100 manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::VT52::
+cursorDown	(My_ScreenBufferPtr		inDataPtr)
+{
+	if (inDataPtr->current.cursorY < inDataPtr->originRegionPtr->lastRow) moveCursorDown(inDataPtr);
+	else moveCursorDownToEdge(inDataPtr);
+}// My_VT100::VT52:cursorDown
+
+
+/*!
+Handles the VT100 VT52-compatibility sequence 'ESC C'.
+See the VT100 manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::VT52::
+cursorForward	(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16		rightLimit = inDataPtr->current.returnNumberOfColumnsPermitted() - ((inDataPtr->modeAutoWrap) ? 0 : 1);
+	
+	
+	if (inDataPtr->current.cursorX < rightLimit) moveCursorRight(inDataPtr);
+	else moveCursorRightToEdge(inDataPtr);
+}// My_VT100::VT52:cursorForward
+
+
+/*!
+Handles the VT100 VT52-compatibility sequence 'ESC A'.
+See the VT100 manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::VT52::
+cursorUp	(My_ScreenBufferPtr		inDataPtr)
+{
+	if (inDataPtr->current.cursorY > inDataPtr->originRegionPtr->firstRow)
+	{
+		moveCursorUp(inDataPtr);
+	}
+	else
+	{
+		moveCursorUpToEdge(inDataPtr);
+	}
+}// My_VT100::VT52:cursorUp
+
+
+/*!
+Handles the VT100 'ESC Z' sequence, which should only
+be recognized in VT52 compatibility mode.  See the
+VT100 manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT100::VT52::
+identify	(My_ScreenBufferPtr		inDataPtr)
+{
+	SessionRef		session = returnListeningSession(inDataPtr);
+	
+	
+	if (nullptr != session)
+	{
+		Session_SendData(session, "\033/Z", 3);
+	}
+}// My_VT100::VT52:identify
 
 
 /*!
@@ -7273,19 +8141,19 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	switch (inOldNew.second)
 	{
 	case kStateCU:
-		vt100CursorUp_vt52(inDataPtr);
+		My_VT100::VT52::cursorUp(inDataPtr);
 		break;
 	
 	case kStateCD:
-		vt100CursorDown_vt52(inDataPtr);
+		My_VT100::VT52::cursorDown(inDataPtr);
 		break;
 	
 	case kStateCR:
-		vt100CursorForward_vt52(inDataPtr);
+		My_VT100::VT52::cursorForward(inDataPtr);
 		break;
 	
 	case kStateCL:
-		vt100CursorBackward_vt52(inDataPtr);
+		My_VT100::VT52::cursorBackward(inDataPtr);
 		break;
 	
 	case kStateNGM:
@@ -7359,7 +8227,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateID:
-		vt100Identify_vt52(inDataPtr);
+		My_VT100::VT52::identify(inDataPtr);
 		break;
 	
 	case kStateNAKM:
@@ -7371,7 +8239,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateANSI:
-		vt100ANSIMode(inDataPtr);
+		My_VT100::ansiMode(inDataPtr);
 		break;
 	
 	// ignore all VT100 sequences that are invalid in VT52 mode
@@ -7760,6 +8628,27 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	return result;
 }// My_VT102::stateTransition
+
+
+/*!
+Handles the VT220 'DA' sequence.  See the VT220
+manual for complete details.
+
+(3.0)
+*/
+inline void
+My_VT220::
+deviceAttributes	(My_ScreenBufferPtr		inDataPtr)
+{
+	SessionRef		session = returnListeningSession(inDataPtr);
+	
+	
+	if (nullptr != session)
+	{
+		// support GPO (graphics processor option) and AVO (advanced video option)
+		Session_SendData(session, "\033[?62;1;6c", 10);
+	}
+}// My_VT220::deviceAttributes
 
 
 /*!
@@ -9536,20 +10425,20 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				break;
 			
 			case 'A':
-				unless (inDataPtr->modeANSIEnabled) vt100CursorUp_vt52(inDataPtr);
+				unless (inDataPtr->modeANSIEnabled) My_VT100::VT52::cursorUp(inDataPtr);
 				goto ShortCut;
 			
 			case 'B':
-				unless (inDataPtr->modeANSIEnabled) vt100CursorDown_vt52(inDataPtr);
+				unless (inDataPtr->modeANSIEnabled) My_VT100::VT52::cursorDown(inDataPtr);
 				goto ShortCut;
 			
 			case 'C':
-				unless (inDataPtr->modeANSIEnabled) vt100CursorForward_vt52(inDataPtr);
+				unless (inDataPtr->modeANSIEnabled) My_VT100::VT52::cursorForward(inDataPtr);
 				goto ShortCut;
 			
 			case 'D':
 				if (inDataPtr->modeANSIEnabled) moveCursorDownOrScroll(inDataPtr);
-				else vt100CursorBackward_vt52(inDataPtr);
+				else My_VT100::VT52::cursorBackward(inDataPtr);
 				goto ShortCut;				
 			
 			case 'E':
@@ -9638,8 +10527,8 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				goto ShortCut;
 			
 			case 'Z':
-				if (inDataPtr->modeANSIEnabled) vt100DeviceAttributes(inDataPtr);
-				else vt100Identify_vt52(inDataPtr);
+				if (inDataPtr->modeANSIEnabled) My_VT100::deviceAttributes(inDataPtr);
+				else My_VT100::VT52::identify(inDataPtr);
 				goto ShortCut;
 			
 			case '=':
@@ -9745,19 +10634,19 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				break;
 			
 			case 'A':
-				vt100CursorUp(inDataPtr);
+				My_VT100::cursorUp(inDataPtr);
 				goto ShortCut;				
 			
 			case 'B':
-				vt100CursorDown(inDataPtr);
+				My_VT100::cursorDown(inDataPtr);
 				goto ShortCut;				
 			
 			case 'C':
-				vt100CursorForward(inDataPtr);
+				My_VT100::cursorForward(inDataPtr);
 				goto ShortCut;
 			
 			case 'D':
-				vt100CursorBackward(inDataPtr);
+				My_VT100::cursorBackward(inDataPtr);
 				goto ShortCut;
 			
 			case 'f':
@@ -9795,11 +10684,11 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				break;
 			
 			case 'J':
-				vt100EraseInDisplay(inDataPtr);
+				My_VT100::eraseInDisplay(inDataPtr);
 				goto ShortCut;
 			
 			case 'K':
-				vt100EraseInLine(inDataPtr);
+				My_VT100::eraseInLine(inDataPtr);
 				goto ShortCut;
 			
 			case 'm':
@@ -10051,16 +10940,16 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				goto ShortCut;
 			
 			case 'q':
-				vt100LoadLEDs(inDataPtr);
+				My_VT100::loadLEDs(inDataPtr);
 				goto ShortCut;
 			
 			case 'c':
-				if (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT220) vt220DeviceAttributes(inDataPtr);
-				else if (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT100) vt100DeviceAttributes(inDataPtr);
+				if (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT220) My_VT220::deviceAttributes(inDataPtr);
+				else if (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT100) My_VT100::deviceAttributes(inDataPtr);
 				goto ShortCut;
 			
 			case 'n':
-				vt100DeviceStatusReport(inDataPtr);
+				My_VT100::deviceStatusReport(inDataPtr);
 				goto ShortCut;
 			
 			case 'L':
@@ -10104,17 +10993,17 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				goto ShortCut;				
 			
 			case 'r':
-				vt100SetTopAndBottomMargins(inDataPtr);
+				My_VT100::setTopAndBottomMargins(inDataPtr);
 				goto ShortCut;
 			
 			case 'h':
 			  	// set mode
-				vt100ModeSetReset(inDataPtr, true/* set */);
+				My_VT100::modeSetReset(inDataPtr, true/* set */);
 				goto ShortCut;				
 			
 			case 'l':
 				// reset mode
-				vt100ModeSetReset(inDataPtr, false/* set */);
+				My_VT100::modeSetReset(inDataPtr, false/* set */);
 				goto ShortCut;				
 			
 			case 'g':
@@ -11080,7 +11969,7 @@ resetTerminal   (My_ScreenBufferPtr  inDataPtr)
 	inDataPtr->customScrollingRegion = inDataPtr->visibleBoundary.rows;
 	assertScrollingRegion(inDataPtr);
 	inDataPtr->emulator.parameterEndIndex = 0;
-	vt100ANSIMode(inDataPtr);
+	My_VT100::ansiMode(inDataPtr);
 	//inDataPtr->modeAutoWrap = false; // 3.0 - do not touch the auto-wrap setting
 	inDataPtr->modeCursorKeysForApp = false;
 	inDataPtr->modeApplicationKeys = false;
@@ -11899,870 +12788,6 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 	
 	return result;
 }// translateCharacter
-
-
-/*!
-Handles the VT100 'DECALN' sequence.  See the VT100
-manual for complete details.
-
-(3.0)
-*/
-void
-vt100AlignmentDisplay	(My_ScreenBufferPtr		inDataPtr)
-{
-	// first clear the buffer, saving it to scrollback if appropriate
-	bufferEraseVisibleScreenWithUpdate(inDataPtr);
-	
-	// now fill the lines with letter-E characters; technically this
-	// also will reset all attributes and this may not be part of the
-	// VT100 specification (but it seems reasonable to get rid of any
-	// special colors or oversized text when doing screen alignment)
-	{
-		My_ScreenBufferLineList::iterator	lineIterator;
-		
-		
-		for (lineIterator = inDataPtr->screenBuffer.begin(); lineIterator != inDataPtr->screenBuffer.end(); ++lineIterator)
-		{
-			bufferLineFill(inDataPtr, *lineIterator, 'E', kTerminalTextAttributesAllOff, true/* change line global attributes to match */);
-		}
-	}
-	
-	// update the display - UNIMPLEMENTED
-}// vt100AlignmentDisplay
-
-
-/*!
-Switches a VT100-compatible terminal to ANSI mode, which means
-it no longer accepts VT52 sequences.
-
-(3.1)
-*/
-void
-vt100ANSIMode	(My_ScreenBufferPtr		inDataPtr)
-{
-	inDataPtr->modeANSIEnabled = true;
-	if (inDataPtr->emulator.pushedCallbacks.exist())
-	{
-		inDataPtr->emulator.currentCallbacks = inDataPtr->emulator.pushedCallbacks;
-		inDataPtr->emulator.pushedCallbacks = My_Emulator::Callbacks();
-	}
-	initializeParserStateStack(&inDataPtr->emulator);
-}// vt100ANSIMode
-
-
-/*!
-Handles the VT100 'CUB' sequence.  See the VT100
-manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100CursorBackward		(My_ScreenBufferPtr		inDataPtr)
-{
-	// the default value is 1 if there are no parameters
-	if (inDataPtr->emulator.parameterValues[0] < 1)
-	{
-		if (inDataPtr->current.cursorX > 0) moveCursorLeft(inDataPtr);
-		else moveCursorLeftToEdge(inDataPtr);
-	}
-	else
-	{
-		SInt16		newValue = inDataPtr->current.cursorX - inDataPtr->emulator.parameterValues[0];
-		
-		
-		if (newValue < 0) newValue = 0;
-		moveCursorX(inDataPtr, newValue);
-	}
-}// vt100CursorBackward
-
-
-/*!
-Handles the VT100 VT52-compatibility sequence 'ESC D'.
-See the VT100 manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100CursorBackward_vt52	(My_ScreenBufferPtr		inDataPtr)
-{
-	if (inDataPtr->current.cursorX > 0) moveCursorLeft(inDataPtr);
-	else moveCursorLeftToEdge(inDataPtr);
-}// vt100CursorBackward_vt52
-
-
-/*!
-Handles the VT100 'CUD' sequence.  See the VT100
-manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100CursorDown		(My_ScreenBufferPtr		inDataPtr)
-{
-	// the default value is 1 if there are no parameters
-	if (inDataPtr->emulator.parameterValues[0] < 1)
-	{
-		if (inDataPtr->current.cursorY < inDataPtr->originRegionPtr->lastRow) moveCursorDown(inDataPtr);
-		else moveCursorDownToEdge(inDataPtr);
-	}
-	else
-	{
-		My_ScreenRowIndex	newValue = inDataPtr->current.cursorY +
-										inDataPtr->emulator.parameterValues[0];
-		
-		
-		if (newValue > inDataPtr->originRegionPtr->lastRow)
-		{
-			newValue = inDataPtr->originRegionPtr->lastRow;
-		}
-		// NOTE: the check below may not be necessary
-		if (newValue >= inDataPtr->screenBuffer.size())
-		{
-			newValue = inDataPtr->screenBuffer.size() - 1;
-		}
-		moveCursorY(inDataPtr, newValue);
-	}
-}// vt100CursorDown
-
-
-/*!
-Handles the VT100 VT52-compatibility sequence 'ESC B'.
-See the VT100 manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100CursorDown_vt52	(My_ScreenBufferPtr		inDataPtr)
-{
-	if (inDataPtr->current.cursorY < inDataPtr->originRegionPtr->lastRow) moveCursorDown(inDataPtr);
-	else moveCursorDownToEdge(inDataPtr);
-}// vt100CursorDown_vt52
-
-
-/*!
-Handles the VT100 'CUF' sequence.  See the VT100
-manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100CursorForward		(My_ScreenBufferPtr		inDataPtr)
-{
-	SInt16		rightLimit = inDataPtr->current.returnNumberOfColumnsPermitted() - ((inDataPtr->modeAutoWrap) ? 0 : 1);
-	
-	
-	// the default value is 1 if there are no parameters
-	if (inDataPtr->emulator.parameterValues[0] < 1)
-	{
-		if (inDataPtr->current.cursorX < rightLimit) moveCursorRight(inDataPtr);
-		else moveCursorRightToEdge(inDataPtr);
-	}
-	else
-	{
-		SInt16		newValue = inDataPtr->current.cursorX + inDataPtr->emulator.parameterValues[0];
-		
-		
-		if (newValue > rightLimit) newValue = rightLimit;
-		moveCursorX(inDataPtr, newValue);
-	}
-}// vt100CursorForward
-
-
-/*!
-Handles the VT100 VT52-compatibility sequence 'ESC C'.
-See the VT100 manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100CursorForward_vt52	(My_ScreenBufferPtr		inDataPtr)
-{
-	SInt16		rightLimit = inDataPtr->current.returnNumberOfColumnsPermitted() - ((inDataPtr->modeAutoWrap) ? 0 : 1);
-	
-	
-	if (inDataPtr->current.cursorX < rightLimit) moveCursorRight(inDataPtr);
-	else moveCursorRightToEdge(inDataPtr);
-}// vt100CursorForward_vt52
-
-
-/*!
-Handles the VT100 'CUU' sequence.  See the VT100
-manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100CursorUp	(My_ScreenBufferPtr		inDataPtr)
-{
-	// the default value is 1 if there are no parameters
-	if (inDataPtr->emulator.parameterValues[0] < 1)
-	{
-		if (inDataPtr->current.cursorY > inDataPtr->originRegionPtr->firstRow)
-		{
-			moveCursorUp(inDataPtr);
-		}
-		else
-		{
-			moveCursorUpToEdge(inDataPtr);
-		}
-	}
-	else
-	{
-		SInt16				newValue = inDataPtr->current.cursorY - inDataPtr->emulator.parameterValues[0];
-		My_ScreenRowIndex	rowIndex = 0;
-		
-		
-		if (newValue < 0)
-		{
-			newValue = 0;
-		}
-		
-		rowIndex = STATIC_CAST(newValue, My_ScreenRowIndex);
-		if (rowIndex < inDataPtr->originRegionPtr->firstRow)
-		{
-			rowIndex = inDataPtr->originRegionPtr->firstRow;
-		}
-		moveCursorY(inDataPtr, rowIndex);
-	}
-}// vt100CursorUp
-
-
-/*!
-Handles the VT100 VT52-compatibility sequence 'ESC A'.
-See the VT100 manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100CursorUp_vt52		(My_ScreenBufferPtr		inDataPtr)
-{
-	if (inDataPtr->current.cursorY > inDataPtr->originRegionPtr->firstRow)
-	{
-		moveCursorUp(inDataPtr);
-	}
-	else
-	{
-		moveCursorUpToEdge(inDataPtr);
-	}
-}// vt100CursorUp_vt52
-
-
-/*!
-Handles the VT100 'DA' sequence.  See the VT100
-manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100DeviceAttributes	(My_ScreenBufferPtr		inDataPtr)
-{
-	SessionRef		session = returnListeningSession(inDataPtr);
-	
-	
-	if (nullptr != session)
-	{
-		// support GPO (graphics processor option) and AVO (advanced video option)
-		Session_SendData(session, "\033[?1;6c", 7);
-	}
-}// vt100DeviceAttributes
-
-
-/*!
-Handles the VT100 'DSR' sequence.  See the VT100
-manual for complete details.
-
-(3.0)
-*/
-void
-vt100DeviceStatusReport		(My_ScreenBufferPtr		inDataPtr)
-{
-	switch (inDataPtr->emulator.parameterValues[0])
-	{
-	case 5:
-		// report status using a DSR control sequence
-		{
-			SessionRef	session = returnListeningSession(inDataPtr);
-			
-			
-			if (nullptr != session)
-			{
-				Session_SendData(session, "\033[0n"/* 0 means “ready, no malfunctions detected”; see VT100 manual on DSR for details */,
-									4/* length of the string */);
-			}
-		}
-		break;
-	
-	case 6:
-		// report active (cursor) position using a CPR control sequence
-		{
-			SInt16				reportedCursorX = inDataPtr->current.cursorX;
-			My_ScreenRowIndex	reportedCursorY = inDataPtr->current.cursorY;
-			
-			
-			// determine imminent cursor position
-			if (reportedCursorX >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
-			{
-				// auto-wrap pending
-				reportedCursorX = 0;
-				++reportedCursorY;
-			}
-			if (reportedCursorY >= inDataPtr->screenBuffer.size())
-			{
-				// scroll pending (because of auto-wrap)
-				reportedCursorY = inDataPtr->screenBuffer.size() - 1;
-			}
-			
-			// report relative to the scroll region if in origin mode
-			reportedCursorY -= inDataPtr->originRegionPtr->firstRow;
-			
-			// the reported numbers are one-based, not zero-based
-			++reportedCursorX;
-			++reportedCursorY;
-			
-			// send response
-			{
-				SessionRef	session = returnListeningSession(inDataPtr);
-				
-				
-				if (nullptr != session)
-				{
-					std::ostringstream		reportBuffer;
-					
-					
-					reportBuffer
-					<< "\033["
-					<< reportedCursorY
-					<< ";"
-					<< reportedCursorX
-					<< "R"
-					;
-					std::string		reportBufferString = reportBuffer.str();
-					Session_SendData(session, reportBufferString.c_str(), reportBufferString.size());
-				}
-			}
-		}
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-}// vt100DeviceStatusReport
-
-
-/*!
-Handles the VT100 'ED' sequence.  See the VT100
-manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100EraseInDisplay		(My_ScreenBufferPtr		inDataPtr)
-{
-	switch (inDataPtr->emulator.parameterValues[0])
-	{
-	case -1: // -1 means no parameter was given; the default value is 0
-	case 0:
-		bufferEraseFromCursorToEnd(inDataPtr);
-		break;
-	
-	case 1:
-		bufferEraseFromHomeToCursor(inDataPtr);
-		break;
-	
-	case 2:
-		bufferEraseVisibleScreenWithUpdate(inDataPtr);
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-}// vt100EraseInDisplay
-
-
-/*!
-Handles the VT100 'EL' sequence.  See the VT100
-manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100EraseInLine	(My_ScreenBufferPtr		inDataPtr)
-{
-	switch (inDataPtr->emulator.parameterValues[0])
-	{
-	case -1: // -1 means no parameter was given; the default value is 0
-	case 0:
-		bufferEraseFromCursorColumnToLineEnd(inDataPtr);
-		break;
-	
-	case 1:
-		bufferEraseFromLineBeginToCursorColumn(inDataPtr);
-		break;
-	
-	case 2:
-		bufferEraseLineWithUpdate(inDataPtr, -1/* line number, or negative for cursor line */);
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-}// vt100EraseInLine
-
-
-/*!
-Handles the VT100 'ESC Z' sequence, which should only
-be recognized in VT52 compatibility mode.  See the
-VT100 manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100Identify_vt52	(My_ScreenBufferPtr		inDataPtr)
-{
-	SessionRef		session = returnListeningSession(inDataPtr);
-	
-	
-	if (nullptr != session)
-	{
-		Session_SendData(session, "\033/Z", 3);
-	}
-}// vt100Identify_vt52
-
-
-/*!
-Handles the VT100 'DECLL' sequence.  See the VT100
-manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100LoadLEDs	(My_ScreenBufferPtr		inDataPtr)
-{
-	register SInt16		i = 0;
-	
-	
-	for (i = 0; i <= inDataPtr->emulator.parameterEndIndex; ++i)
-	{
-		if (inDataPtr->emulator.parameterValues[i] == -1)
-		{
-			// no value; default is “all off”
-			highlightLED(inDataPtr, 0);
-		}
-		else if (inDataPtr->emulator.parameterValues[i] == 137)
-		{
-			// could decide to emulate the “ludicrous repeat rate” bug
-			// of the VT100, here; in combination with key click, this
-			// should basically make each key press play a musical note :)
-		}
-		else
-		{
-			// a parameter of 1 means “LED 1 on”, 2 means “LED 2 on”,
-			// 3 means “LED 3 on”, 4 means “LED 4 on”; 0 means “all off”
-			highlightLED(inDataPtr, inDataPtr->emulator.parameterValues[i]/* LED # */);
-		}
-	}
-}// vt100LoadLEDs
-
-
-/*!
-Handles the VT100 'SM' sequence (if "inIsModeEnabled" is true)
-or the VT100 'RM' sequence (if "inIsModeEnabled" is false).
-See the VT100 manual for complete details.
-
-(2.6)
-*/
-void
-vt100ModeSetReset	(My_ScreenBufferPtr		inDataPtr,
-					 Boolean				inIsModeEnabled)
-{
-	switch (inDataPtr->emulator.parameterValues[0])
-	{
-	case -2: // DEC-private control sequence
-		{
-			register SInt16		i = 0;
-			Boolean				emulateDECOMBug = false;
-			
-			
-			for (i = 1/* skip the -2 parameter */; i <= inDataPtr->emulator.parameterEndIndex; ++i)
-			{
-				switch (inDataPtr->emulator.parameterValues[i])
-				{
-				case 1:
-					// DECCKM (cursor-key mode)
-					inDataPtr->modeCursorKeysForApp = inIsModeEnabled;
-					break;
-				
-				case 2:
-					// DECANM (ANSI/VT52 mode); this is only possible to reset, not set
-					// (the set is accomplished in a different way)
-					if (false == inIsModeEnabled)
-					{
-						vt100VT52Mode(inDataPtr);
-					}
-					break;
-				
-				case 3:
-					// DECCOLM (80/132 column switch)
-					{
-						(Boolean)Commands_ExecuteByIDUsingEvent((inIsModeEnabled)
-																? kCommandLargeScreen
-																: kCommandSmallScreen);
-					}
-					break;
-				
-				case 5:
-					// DECSCNM (screen mode)
-					inDataPtr->reverseVideo = inIsModeEnabled;
-					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeVideoMode, inDataPtr->selfRef);
-					break;
-				
-				case 6: // DECOM (origin mode)
-					{
-					#if 0
-						// the original VT100 has a bug where as soon as DECOM is set or cleared,
-						// ALL subsequent mode changes are ignored; since technically MacTelnet
-						// is emulating a *real* VT100 and not the ideal manual, you could enable
-						// this flag to replicate VT100 behavior instead of what the manual says
-						emulateDECOMBug = true;
-					#endif
-						
-						inDataPtr->modeOriginRedefined = inIsModeEnabled;
-						if (inIsModeEnabled)
-						{
-							// restrict cursor movements to the defined margins, and
-							// ensure that reported cursor row/column use these offsets
-							inDataPtr->originRegionPtr = &inDataPtr->customScrollingRegion;
-						}
-						else
-						{
-							// no restrictions
-							inDataPtr->originRegionPtr = &inDataPtr->visibleBoundary.rows;
-						}
-						
-						// home the cursor, but relative to the new top margin
-						// (automatically restricted by cursor movement routines)
-						moveCursor(inDataPtr, 0, 0);
-					}
-					break;
-				
-				case 7: // DECAWM (auto-wrap mode)
-					inDataPtr->modeAutoWrap = inIsModeEnabled;
-					if (false == inIsModeEnabled) inDataPtr->wrapPending = false;
-					break;
-				
-				case 4: // DECSCLM (if enabled, scrolling is smooth at 6 lines per second; otherwise, instantaneous)
-				case 8: // DECARM (auto-repeating)
-				case 9: // DECINLM (interlace)
-				case 0: // error, ignored
-				case -1: // no value given (set and reset do not have default values)
-				default:
-					// ???
-					break;
-				}
-				
-				// see above, where this is defined, for more information on this break
-				if (emulateDECOMBug)
-				{
-					break;
-				}
-			}
-		}
-		break;
-	
-	case 4: // insert/replace character writing mode
-		inDataPtr->modeInsertNotReplace = inIsModeEnabled;
-		break;
-	
-	case 20: // LNM (line feed / newline mode)
-		inDataPtr->modeNewLineOption = inIsModeEnabled;
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeLineFeedNewLineMode, inDataPtr->selfRef);
-		break;
-	
-	default:
-		break;
-	}
-}// vt100ModeSetReset
-
-
-/*!
-Scans the specified buffer for parameter-like data
-(e.g. ;0;05;21;2) and saves all the parameters it
-finds.  The number of characters “used” is returned
-(you can use this to offset your original buffer
-pointer appropriately).
-
-Typically this is done immediately after a VT100
-control sequence inducer (CSI, a.k.a. ESC-[) is
-received.  That way, any terminal sequence which
-has a CSI in it (i.e. anything that needs parameters)
-will have all defined parameters available to it.
-
-(3.1)
-*/
-UInt32
-vt100ReadCSIParameters	(My_ScreenBufferPtr		inDataPtr,
-						 UInt8 const*			inBuffer,
-						 UInt32					inLength)
-{
-	UInt32			result = 0;
-	UInt8 const*	bufferIterator = inBuffer;
-	Boolean			done = false;
-	SInt16&			terminalEndIndexRef = inDataPtr->emulator.parameterEndIndex;
-	
-	
-	for (; (false == done) && (bufferIterator != (inBuffer + inLength)); ++bufferIterator, ++result)
-	{
-		//Console_WriteValueCharacter("scan", *bufferIterator);
-		switch (*bufferIterator)
-		{
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-			// parse numeric parameter
-			{
-				// rename this incredibly long expression, since it’s needed a lot here!
-				SInt16&		valueRef = inDataPtr->emulator.parameterValues[terminalEndIndexRef];
-				
-				
-				if (valueRef < 0) valueRef = 0;
-				valueRef *= 10;
-				valueRef += *bufferIterator - '0';
-			}
-			break;
-		
-		case ';':
-			// parameter separator
-			if (terminalEndIndexRef < kMy_MaximumANSIParameters) ++terminalEndIndexRef;
-			break;
-		
-		case '?':
-			// manual says the FIRST character must be this to enter
-			// DEC-private parameter mode; otherwise, ignore (stop here)
-			if (0 == result)
-			{
-				// DEC-private parameters
-				inDataPtr->emulator.parameterValues[terminalEndIndexRef++] = -2;
-			}
-			else
-			{
-				done = true;
-			}
-			break;
-		
-		default:
-			// not part of a parameter sequence
-			done = true;
-			break;
-		}
-	}
-	
-	// ignore final character if the loop was broken prematurely
-	if (done) --result;
-	
-	// debug - write results to console
-	//Console_WriteValue("parameters found", terminalEndIndexRef + 1);
-	//for (register SInt16 i = 0; i <= terminalEndIndexRef; ++i)
-	//{
-	//	Console_WriteValue("found post-CSI parameter", inDataPtr->emulator.parameterValues[i]);
-	//}
-	
-	return result;
-}// vt100ReadCSIParameters
-
-
-/*!
-Handles the VT100 'DECREQT' sequence.  See the VT100
-manual for complete details.
-
-(3.1)
-*/
-void
-vt100ReportTerminalParameters	(My_ScreenBufferPtr		inDataPtr)
-{
-	UInt16 const	kRequestType = (inDataPtr->emulator.parameterValues[0] != -1)
-									? inDataPtr->emulator.parameterValues[0]
-									: 0/* default is a request, unsolicited reports mode */;
-	// these variable names are copied directly from the VT100 manual
-	// in the DECREQT section, to make it crystal clear what each one is;
-	// see the VT100 manual for full descriptions of their values
-	UInt16			sol = 0;		// solicitation; what to do
-	UInt16			par = 0;		// parity
-	UInt16			nbits = 0;		// bits per character
-	UInt16			xspeed = 0;		// transmission speed
-	UInt16			rspeed = 0;		// reception speed
-	UInt16			clkmul = 0;		// clock multiplier
-	UInt16			flags = 0;		// four switch values from SETUP-B
-	
-	
-	// determine the type of response based on the request;
-	// also remember this mode for future reports
-	if (kRequestType == 1)
-	{
-		inDataPtr->reportOnlyOnRequest = true;
-	}
-	else
-	{
-		inDataPtr->reportOnlyOnRequest = false;
-	}
-	
-	// set the report parameters appropriately
-	sol = (inDataPtr->reportOnlyOnRequest) ? 3 : 2;
-	par = 1; // 1 = no parity is set
-	// TEMPORARY: bits setting is fixed, should be fluid
-	nbits = 1; // 1 = 8 bits per character, 2 = 7 bits
-	// NOTE: These speeds are a hack...technically, this is set in
-	// the terminal control code in "Local.cp", but even that is a hack!
-	xspeed = 112; // 112 = 9600 baud
-	rspeed = 112; // 112 = 9600 baud
-	clkmul = 1; // set to 1 if the bit rate multiplier is 16
-	flags = 0; // TEMPORARY: these switches are not stored anywhere
-	
-	// send response
-	{
-		SessionRef	session = returnListeningSession(inDataPtr);
-		
-		
-		if (nullptr != session)
-		{
-			std::ostringstream	reportBuffer;
-			
-			
-			reportBuffer
-			<< "\033["
-			<< sol << ";"
-			<< par << ";"
-			<< nbits << ";"
-			<< xspeed << ";"
-			<< rspeed << ";"
-			<< clkmul << ";"
-			<< flags
-			<< "x"
-			;
-			std::string		reportBufferString = reportBuffer.str();
-			Session_SendData(session, reportBufferString.c_str(), reportBufferString.size());
-		}
-	}
-}// vt100ReportTerminalParameters
-
-
-/*!
-Handles the VT100 'DECSTBM' sequence.  See the VT100
-manual for complete details.
-
-(3.0)
-*/
-inline void
-vt100SetTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
-{
-	if (inDataPtr->emulator.parameterValues[0] < 0)
-	{
-		// no top parameter given; default is top of screen
-		inDataPtr->customScrollingRegion.firstRow = inDataPtr->visibleBoundary.rows.firstRow;
-	}
-	else
-	{
-		// parameter is the line number of the new first line of the scrolling region; the
-		// input is 1-based but internally it is a zero-based array index, so subtract one
-		if (0 == inDataPtr->emulator.parameterValues[0]) inDataPtr->emulator.parameterValues[0] = 1;
-		inDataPtr->customScrollingRegion.firstRow = inDataPtr->emulator.parameterValues[0] - 1;
-	}
-	
-	if (inDataPtr->emulator.parameterValues[1] < 0)
-	{
-		// no bottom parameter given; default is bottom of screen
-		inDataPtr->customScrollingRegion.lastRow = inDataPtr->visibleBoundary.rows.lastRow;
-	}
-	else
-	{
-		// parameter is the line number of the new last line of the scrolling region; the
-		// input is 1-based but internally it is a zero-based array index, so subtract one
-		UInt16		newValue = 0;
-		
-		
-		if (0 == inDataPtr->emulator.parameterValues[1]) inDataPtr->emulator.parameterValues[1] = 1;
-		
-		newValue = inDataPtr->emulator.parameterValues[1] - 1;
-		if (newValue > inDataPtr->visibleBoundary.rows.lastRow)
-		{
-			Console_Warning(Console_WriteLine, "emulator was given a scrolling region bottom row that is too large; truncating");
-			newValue = inDataPtr->visibleBoundary.rows.lastRow;
-		}
-		inDataPtr->customScrollingRegion.lastRow = newValue;
-	}
-	
-	// VT100 requires that the range be 2 lines minimum
-	if (inDataPtr->customScrollingRegion.firstRow >= inDataPtr->customScrollingRegion.lastRow)
-	{
-		Console_Warning(Console_WriteLine, "emulator was given a scrolling region bottom row that is less than the top; resetting");
-		inDataPtr->customScrollingRegion.lastRow = inDataPtr->customScrollingRegion.firstRow + 1;
-		if (inDataPtr->customScrollingRegion.lastRow > inDataPtr->visibleBoundary.rows.lastRow)
-		{
-			inDataPtr->customScrollingRegion.lastRow = inDataPtr->visibleBoundary.rows.lastRow;
-		}
-		if (inDataPtr->customScrollingRegion.firstRow >= inDataPtr->customScrollingRegion.lastRow)
-		{
-			inDataPtr->customScrollingRegion.firstRow = inDataPtr->customScrollingRegion.lastRow - 1;
-		}
-		assertScrollingRegion(inDataPtr);
-	}
-	
-	// home the cursor, but relative to any current top margin
-	// (this limit is enforced by moveCursorY())
-	moveCursor(inDataPtr, 0, 0);
-	
-	//Console_WriteValuePair("scrolling region rows are now", inDataPtr->inDataPtr->customScrollingRegion.firstRow,
-	//							inDataPtr->customScrollingRegion.lastRow); // debug
-	//Console_WriteValuePair("origin mode enable flag and cursor row", inDataPtr->modeOriginRedefined, inDataPtr->current.cursorY); // debug
-}// vt100SetTopAndBottomMargins
-
-
-/*!
-Switches a VT100 terminal to VT52 mode, which means it
-starts to accept VT52 sequences.
-
-(3.1)
-*/
-void
-vt100VT52Mode	(My_ScreenBufferPtr		inDataPtr)
-{
-	inDataPtr->modeANSIEnabled = false;
-	inDataPtr->emulator.pushedCallbacks = inDataPtr->emulator.currentCallbacks;
-	inDataPtr->emulator.currentCallbacks = My_Emulator::Callbacks
-											(My_DefaultEmulator::echoData,
-												My_VT100::VT52::stateDeterminant,
-												My_VT100::VT52::stateTransition);
-	initializeParserStateStack(&inDataPtr->emulator);
-}// vt100VT52Mode
-
-
-/*!
-Handles the VT220 'DA' sequence.  See the VT220
-manual for complete details.
-
-(3.0)
-*/
-inline void
-vt220DeviceAttributes	(My_ScreenBufferPtr		inDataPtr)
-{
-	SessionRef		session = returnListeningSession(inDataPtr);
-	
-	
-	if (nullptr != session)
-	{
-		// support GPO (graphics processor option) and AVO (advanced video option)
-		Session_SendData(session, "\033[?62;1;6c", 10);
-	}
-}// vt220DeviceAttributes
 
 
 /*!
