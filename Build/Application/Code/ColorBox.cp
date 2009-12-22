@@ -42,6 +42,7 @@
 #include <CocoaBasic.h>
 #include <ColorUtilities.h>
 #include <Console.h>
+#include <Embedding.h>
 #include <FlagManager.h>
 #include <RegionUtilities.h>
 
@@ -374,7 +375,7 @@ ColorBox_UserSetColor	(HIViewRef		inView)
 		
 		bzero(&editMenuInfo, sizeof(editMenuInfo));
 		
-		DeactivateFrontmostWindow();
+		Embedding_DeactivateFrontmostWindow();
 		if (ColorUtilities_ColorChooserDialogDisplay
 			(askColorCFString, &dataPtr->displayedColor/* input */, &dataPtr->displayedColor/* output */,
 				true/* is modal */, NewUserEventUPP(EventLoop_HandleColorPickerUpdate),
@@ -382,7 +383,7 @@ ColorBox_UserSetColor	(HIViewRef		inView)
 		{
 			(OSStatus)HIViewSetNeedsDisplay(inView, true);
 		}
-		RestoreFrontmostWindow();
+		Embedding_RestoreFrontmostWindow();
 		
 		if (releaseAskColorCFString)
 		{

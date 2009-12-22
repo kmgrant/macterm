@@ -15,7 +15,7 @@ __author__ = 'Kevin Grant <kevin@ieee.org>'
 __date__ = '24 August 2006'
 __version__ = '4.0.0'
 
-import os, string
+import os, string, datetime
 
 import pymactelnet.file.open
 import pymactelnet.url.open
@@ -54,6 +54,10 @@ except ImportError, err:
 #os.system("pydoc quills.Terminal")
 
 
+
+# preamble
+now = datetime.datetime.now()
+print "MacTelnet: %s" % now.strftime("%A, %B %d, %Y, %I:%M %p")
 
 # load all required MacTelnet modules
 Base.all_init()

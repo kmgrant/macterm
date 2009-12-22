@@ -111,9 +111,6 @@ void
 	DialogUtilities_DisposeControlsBasedOnWindowNIB		(std::vector< ControlRef > const&	inControlArray);
 
 void
-	DeactivateFrontmostWindow				();
-
-void
 	DebugSelectControlHierarchyDumpFile		(WindowRef				inForWindow);
 
 void
@@ -137,11 +134,6 @@ OSStatus
 											 WindowRef				inDestinationWindow,
 											 ControlRef&			outNewControl);
 
-Boolean
-	FlashButtonControl						(ControlRef				inControl,
-											 Boolean				inIsDefaultButton,
-											 Boolean				inIsCancelButton);
-
 void
 	GetControlNumericalText					(ControlRef				inControl,
 											 SInt32*				outNumberPtr);
@@ -158,33 +150,10 @@ void
 	GetControlTextAsCFString				(ControlRef				inControl,
 											 CFStringRef&			outCFString);
 
-void
-	GetNewDialogWithWindowInfo				(SInt16					inDialogResourceID,
-											 DialogRef*				outDialog,
-											 WindowInfo_Ref*		outWindowInfoRefPtr);
-
 class DialogUtilities_HIViewIDEqualTo; // STL Unary Function - returns: bool, argument: HIViewRef
-
-pascal ControlKeyFilterResult
-	HostNameLimiter							(ControlRef				inControl,
-											 SInt16*				inKeyCode,
-											 SInt16*				inCharCode,
-											 EventModifiers*		inModifiers);
-
-ControlKeyFilterUPP
-	HostNameLimiterKeyFilterUPP				();
 
 //! since the Carbon implementation of IsControlHilited() isn’t smart enough to consider the inactive case, this API exists...
 #define IsControlActiveAndHilited(inControlHandle)			((GetControlHilite(inControlHandle) > 0) && (GetControlHilite(inControlHandle) < 255))
-
-pascal ControlKeyFilterResult
-	NoSpaceLimiter							(ControlRef				inControl,
-											 SInt16*				inKeyCode,
-											 SInt16*				inCharCode,
-											 EventModifiers*		inModifiers);
-
-ControlKeyFilterUPP
-	NoSpaceLimiterKeyFilterUPP				();
 
 pascal ControlKeyFilterResult
 	NumericalLimiter						(ControlRef				inControl,
@@ -195,20 +164,8 @@ pascal ControlKeyFilterResult
 ControlKeyFilterUPP
 	NumericalLimiterKeyFilterUPP			();
 
-pascal ControlKeyFilterResult
-	OSTypeLengthLimiter						(ControlRef				inControl,
-											 SInt16*				inKeyCode,
-											 SInt16*				inCharCode,
-											 EventModifiers*		inModifiers);
-
-ControlKeyFilterUPP
-	OSTypeLengthLimiterKeyFilterUPP			();
-
 void
 	OutlineRegion							(RgnHandle				inoutRegion);
-
-void
-	RestoreFrontmostWindow					();
 
 void
 	SetControlNumericalText					(ControlRef				inControl,
@@ -244,10 +201,6 @@ OSStatus
 
 HIViewWrap&
 	DialogUtilities_SetUpHelpButton			(HIViewWrap&			inoutView);
-
-OSStatus
-	SetWindowAlternateTitleWithPString		(WindowRef				inWindow,
-											 ConstStringPtr			inText);
 
 void
 	TextFontByName							(ConstStringPtr			inFontName);

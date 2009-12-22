@@ -8,7 +8,7 @@
 	to gauge memory requirements, and increased stability.
 	
 	Data Access Library 1.3
-	© 1998-2005 by Kevin Grant
+	© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -41,35 +41,7 @@
 
 
 
-#pragma mark Variables
-
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Boolean		gInited = false;		// has this module been initialized
-}
-
-#pragma mark Internal Method Prototypes
-
-static Boolean		memoryAvailable		(Size);
-
-
-
 #pragma mark Public Methods
-
-/*!
-Initializes the memory management variables used by
-the routines in this file, and allocates reserve
-memory space.
-
-(1.0)
-*/
-void
-Memory_Init ()
-{
-	MoreMasterPointers(32);
-	gInited = true;
-}// Init
-
 
 /*!
 Destroys the memory allocated by a Mac OS Memory Manager
@@ -175,16 +147,11 @@ IMPORTANT:	You should not normally use Memory_NewHandle();
 */
 Handle
 Memory_NewHandle	(Size		inDesiredNumberOfBytes,
-					 Boolean	inIsCritical)
+					 Boolean	UNUSED_ARGUMENT(inIsCritical))
 {
-	Handle		result = nullptr;
-	Boolean		doAllocate = (inIsCritical ? true : memoryAvailable(inDesiredNumberOfBytes));
+	Handle		result = NewHandleClear(inDesiredNumberOfBytes);
 	
 	
-	if (doAllocate)
-	{
-		result = NewHandleClear(inDesiredNumberOfBytes);
-	}
 	return result;
 }// NewHandle
 
@@ -249,12 +216,10 @@ Memory_NewPtr	(Size	inDesiredNumberOfBytes)
 	Ptr		result = nullptr;
 	
 	
-	if (memoryAvailable(inDesiredNumberOfBytes))
-	{
-		// NOTE: For performance, on Mac OS X calloc() should really be used instead.
-		//       When linking against Mach-O, this code should be changed.
-		result = NewPtrClear(inDesiredNumberOfBytes);
-	}
+	// NOTE: For performance, on Mac OS X calloc() should really be used instead.
+	//       When linking against Mach-O, this code should be changed.
+	result = NewPtrClear(inDesiredNumberOfBytes);
+	
 	return result;
 }// NewPtr
 
@@ -334,50 +299,25 @@ Memory_SetHandleSize	(Handle		inoutHandle,
 	OSStatus	result = noErr;
 	
 	
-	if (originalSizeInBytes < inNewHandleSizeInBytes)
+	// first attempt; set the handle size, which may take some time depending
+	// on how much memory needs to be moved to make the resize possible; this
+	// may fail for a variety of reasons
+	SetHandleSize(inoutHandle, inNewHandleSizeInBytes);
+	result = MemError();
+	
+	// now check for failures; some can perhaps be eliminated with extra effort
+	// and a 2nd attempt to set the handle size
+	if (memFullErr == result)
 	{
-		// if a Handle is going to grow, there must be enough physical memory;
-		// do a simple check up front to avoid a lot of unnecessary shuffling
-		unless (memoryAvailable(inNewHandleSizeInBytes - originalSizeInBytes)) result = memFullErr;
-	}
-	if (noErr == result)
-	{
-		// first attempt; set the handle size, which may take some time depending
-		// on how much memory needs to be moved to make the resize possible; this
-		// may fail for a variety of reasons
+		// move the Handle high in the heap, eliminate bubbles (compact memory)
+		// and try again; the Mac OS Memory Manager doesn’t do this itself for
+		// some reason
+		MoveHHi(inoutHandle);
+		CompactMem(maxSize);
 		SetHandleSize(inoutHandle, inNewHandleSizeInBytes);
 		result = MemError();
-		
-		// now check for failures; some can perhaps be eliminated with extra effort
-		// and a 2nd attempt to set the handle size
-		if (memFullErr == result)
-		{
-			// move the Handle high in the heap, eliminate bubbles (compact memory)
-			// and try again; the Mac OS Memory Manager doesn’t do this itself for
-			// some reason
-			MoveHHi(inoutHandle);
-			CompactMem(maxSize);
-			SetHandleSize(inoutHandle, inNewHandleSizeInBytes);
-			result = MemError();
-		}
 	}
 	return result;
 }// SetHandleSize
-
-
-#pragma mark Internal Methods
-
-/*!
-Determines if there is enough contiguous free space in
-the heap zone to accommodate a memory allocation of
-the specified number of bytes.
-
-(1.0)
-*/
-static Boolean
-memoryAvailable		(Size	UNUSED_ARGUMENT(inNumberOfBytesNeeded))
-{
-	return true; // currently, this is how this is handled on Mac OS X
-}// memoryAvailable
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

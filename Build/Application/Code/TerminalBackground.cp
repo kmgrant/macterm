@@ -43,6 +43,7 @@
 #include <CFUtilities.h>
 #include <ColorUtilities.h>
 #include <Console.h>
+#include <Embedding.h>
 #include <MemoryBlocks.h>
 #include <NIBLoader.h>
 
@@ -1276,12 +1277,12 @@ receiveBackgroundHICommand	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRe
 													sizeof(backgroundColor), nullptr/* actual size */, &backgroundColor);
 						assert_noerr(error);
 						
-						DeactivateFrontmostWindow();
+						Embedding_DeactivateFrontmostWindow();
 						result = ColorUtilities_ColorChooserDialogDisplay
 									(askColorCFString, &backgroundColor/* input */, &backgroundColor/* output */,
 										true/* is modal */, NewUserEventUPP(EventLoop_HandleColorPickerUpdate),
 										&editMenuInfo);
-						RestoreFrontmostWindow();
+						Embedding_RestoreFrontmostWindow();
 						
 						if (result)
 						{

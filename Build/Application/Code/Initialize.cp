@@ -134,32 +134,12 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	// on Mac OS X the following call also stops the bouncing of MacTelnet’s Dock icon
 	//FlushEvents(everyEvent/* events to flush */, 0/* events to not flush */);
 	
-	// QuickTime?
-	FlagManager_Set(kFlagQuickTime, true); // always available on Mac OS X
-	
 	initApplicationCore();
 	
 #ifndef NDEBUG
 	// the Console must be among the first things initialized if
 	// it is to be used for debugging of these early modules
-	{
-		char		dateString[40];
-		char		timeString[40];
-		UInt32		date = 0L;
-		
-		
-		// initialize the console and write initial information (the
-		// date and time, the console name, the web site URL, etc.)
-		Console_WriteLine("Starting up.");
-		GetDateTime(&date);
-		DateString(STATIC_CAST(date, SInt32), longDate, REINTERPRET_CAST(dateString, StringPtr), nullptr/* intlHandle */);
-		StringUtilities_PToCInPlace(REINTERPRET_CAST(dateString, StringPtr));
-		TimeString(STATIC_CAST(date, SInt32), true/* want seconds */, REINTERPRET_CAST(timeString, StringPtr), nullptr/* intlHandle */);
-		StringUtilities_PToCInPlace(REINTERPRET_CAST(timeString, StringPtr));
-		CPP_STD::strcat(dateString, " ");
-		CPP_STD::strcat(dateString, timeString);
-		Console_WriteLine(dateString);
-	}
+	Console_WriteLine("Starting up.");
 #endif
 	
 #if RUN_MODULE_TESTS
@@ -457,15 +437,7 @@ tests are done in initApplicationCore()...
 static void
 initMacOSToolbox ()
 {
-	// initialize MacTelnet’s memory module, providing a grow zone for emergency situations;
-	// NOTE: this will probably already have been called indirectly at static initialization
-	// time (for operator new[], etc.) so the following call may have no effect
-	Memory_Init();
-	
 	FlagManager_Init();
-	
-	// register as an Appearance client
-	RegisterAppearanceClient();
 	
 	// Launch Services seems to recommend this, so do it
 	LSInit(kLSInitializeDefaults);

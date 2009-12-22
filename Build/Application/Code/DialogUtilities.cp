@@ -68,7 +68,6 @@
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
-#include "GenericThreads.h"
 #include "MenuBar.h"
 #include "Preferences.h"
 #include "UIStrings.h"
@@ -243,26 +242,6 @@ DialogUtilities_DisposeControlsBasedOnWindowNIB		(std::vector< ControlRef > cons
 		DialogUtilities_DisposeDuplicateControl(*controlIter);
 	}
 }// DisposeControlsBasedOnWindowNIB
-
-
-/*!
-To deactivate the root control of the frontmost
-window and to change the cursor to the standard
-watch, call this method.  Usually, you do this
-immediately prior to displaying a dialog box on
-the screen.
-
-This routine automatically finds the “real”
-front window, deactivating all floating windows
-as well.
-
-(3.0)
-*/
-void
-DeactivateFrontmostWindow ()
-{
-	Embedding_DeactivateFrontmostWindow();
-}// DeactivateFrontmostWindow
 
 
 /*!
@@ -1106,45 +1085,6 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 
 
 /*!
-DEPRECATED.  Do not use.  All current invocations
-are in old-style dialogs that are being rewritten
-anyway.
-*/
-Boolean
-FlashButtonControl	(ControlRef		inControl,
-					 Boolean		inIsDefaultButton,
-					 Boolean		inIsCancelButton)
-{
-	Boolean			result = false;
-	
-	
-	if (IsControlActive(inControl))
-	{
-		// play sound when highlighting button
-		if (inIsDefaultButton) PlayThemeSound(kThemeSoundDefaultButtonPress);
-		else if (inIsCancelButton) PlayThemeSound(kThemeSoundCancelButtonPress);
-		else PlayThemeSound(kThemeSoundButtonPress);
-		
-		// under Carbon, it is necessary to hand-hold QuickDraw to get
-		// the damned highlighting to actually show up immediately
-		HiliteControl(inControl, kControlButtonPart);
-		//EventLoop_HandlePendingUpdates();
-		GenericThreads_DelayMinimumTicks(8);
-		HiliteControl(inControl, kControlNoPart);
-		//EventLoop_HandlePendingUpdates();
-		
-		// play sound when unhighlighting button
-		if (inIsDefaultButton) PlayThemeSound(kThemeSoundDefaultButtonRelease);
-		else if (inIsCancelButton) PlayThemeSound(kThemeSoundCancelButtonRelease);
-		else PlayThemeSound(kThemeSoundButtonRelease);
-		
-		result = true;
-	}
-	return result;
-}// FlashButtonControl
-
-
-/*!
 To convert the text in a text field or static
 text control into a number, use this convenient
 method.
@@ -1232,167 +1172,6 @@ GetControlTextAsCFString	(ControlRef		inControl,
 
 
 /*!
-To create a new dialog from a 'DLOG', 'DITL'
-and 'dlgx' resource having the specified ID,
-use this method.  The dialog is returned, and
-if a non-nullptr reference to a Window Info
-object is provided, a new Window Info object
-is automatically created.  Dispose of the
-Window Info object when you are finished
-with the dialog by invoking the method
-WindowInfo_Dispose().
-
-(3.0)
-*/
-void
-GetNewDialogWithWindowInfo		(SInt16				inDialogResourceID,
-								 DialogRef*			outDialog,
-								 WindowInfo_Ref*	outWindowInfoRefPtr)
-{
-	if (outDialog != nullptr)
-	{
-		Cursors_DeferredUseWatch(30); // if it takes more than half a second to initialize, show the watch cursor
-		
-		*outDialog = GetNewDialog(inDialogResourceID, nullptr, (WindowRef)-1);
-		if (outWindowInfoRefPtr != nullptr) *outWindowInfoRefPtr = WindowInfo_New();
-		if (*outDialog != nullptr)
-		{
-			// MacTelnet has a thread that takes care of this, so don’t let the Dialog Manager do it
-			SetDialogTracksCursor(*outDialog, false);
-		}
-	}
-}// GetNewDialogWithWindowInfo
-
-
-/*!
-This is a standard ControlKeyFilterUPP that will
-prevent any characters invalid in an Internet host name
-from being typed into a text field.
-
-(3.1)
-*/
-pascal ControlKeyFilterResult
-HostNameLimiter		(ControlRef			inControl,
-					 SInt16*			inKeyCode,
-					 SInt16*			inCharCode,
-					 EventModifiers*	UNUSED_ARGUMENT(inModifiers))
-{
-	ControlKeyFilterResult  result = kControlKeyFilterPassKey;
-	
-	
-	// make sure that any arrow or delete key press is allowed
-	if ((*inKeyCode != 0x3B/* left arrow */) &&
-		(*inKeyCode != 0x7B/* left arrow */) &&
-		(*inKeyCode != 0x3E/* up arrow */) &&
-		(*inKeyCode != 0x7E/* up arrow */) &&
-		(*inKeyCode != 0x3C/* right arrow */) &&
-		(*inKeyCode != 0x7C/* right arrow */) &&
-		(*inKeyCode != 0x3D/* down arrow */) &&
-		(*inKeyCode != 0x7D/* down arrow */) &&
-		(*inKeyCode != 0x33/* delete */) &&
-		(*inKeyCode != 0x75/* del */))
-	{
-		// the rules of RFC-952 are followed here, as well as the
-		// extra provision in RFC-1123 that the first character
-		// may be a letter or a number, and the addition of IPv6
-		// where a colon may be the delimiter of an IP address
-		CFStringRef		textCFString = nullptr;
-		
-		
-		GetControlTextAsCFString(inControl, textCFString);
-		if (0 == CFStringGetLength(textCFString))
-		{
-			// first character; MUST be a letter or number
-			unless (std::isdigit(*inCharCode) || std::isalpha(*inCharCode))
-			{
-				result = kControlKeyFilterBlockKey;
-			}
-		}
-		else
-		{
-			// all other characters have more leniency
-			unless (std::isdigit(*inCharCode) || std::isalpha(*inCharCode) || ('.' == *inCharCode) ||
-					('-' == *inCharCode) || (':' == *inCharCode)/* IPv6 */)
-			{
-				result = kControlKeyFilterBlockKey;
-			}
-		}
-	}
-	
-	return result;
-}// HostNameLimiter
-
-
-/*!
-Returns a key filter UPP for HostNameLimiter().
-
-(3.1)
-*/
-ControlKeyFilterUPP
-HostNameLimiterKeyFilterUPP ()
-{
-	static ControlKeyFilterUPP		result = NewControlKeyFilterUPP(HostNameLimiter);
-	
-	
-	return result;
-}// HostNameLimiterKeyFilterUPP
-
-
-/*!
-This is a standard ControlKeyFilterUPP that will
-prevent any characters invalid in an Internet host name
-from being typed into a text field.
-
-(3.1)
-*/
-pascal ControlKeyFilterResult
-NoSpaceLimiter		(ControlRef			UNUSED_ARGUMENT(inControl),
-					 SInt16*			inKeyCode,
-					 SInt16*			inCharCode,
-					 EventModifiers*	UNUSED_ARGUMENT(inModifiers))
-{
-	ControlKeyFilterResult  result = kControlKeyFilterPassKey;
-	
-	
-	// make sure that any arrow or delete key press is allowed
-	if ((*inKeyCode != 0x3B/* left arrow */) &&
-		(*inKeyCode != 0x7B/* left arrow */) &&
-		(*inKeyCode != 0x3E/* up arrow */) &&
-		(*inKeyCode != 0x7E/* up arrow */) &&
-		(*inKeyCode != 0x3C/* right arrow */) &&
-		(*inKeyCode != 0x7C/* right arrow */) &&
-		(*inKeyCode != 0x3D/* down arrow */) &&
-		(*inKeyCode != 0x7D/* down arrow */) &&
-		(*inKeyCode != 0x33/* delete */) &&
-		(*inKeyCode != 0x75/* del */))
-	{
-		// whitespace prohibited, everything else is okay
-		if (std::isspace(*inCharCode))
-		{
-			result = kControlKeyFilterBlockKey;
-		}
-	}
-	
-	return result;
-}// NoSpaceLimiter
-
-
-/*!
-Returns a key filter UPP for NoSpaceLimiter().
-
-(3.1)
-*/
-ControlKeyFilterUPP
-NoSpaceLimiterKeyFilterUPP ()
-{
-	static ControlKeyFilterUPP		result = NewControlKeyFilterUPP(NoSpaceLimiter);
-	
-	
-	return result;
-}// NoSpaceLimiterKeyFilterUPP
-
-
-/*!
 This is a standard ControlKeyFilterUPP that will
 prevent any non-digit characters from being typed
 into a text field.
@@ -1460,92 +1239,6 @@ NumericalLimiterKeyFilterUPP ()
 
 
 /*!
-This is a standard ControlKeyFilterUPP that will
-prevent more than 4 characters from being typed
-into an OSType text field.
-
-If there is a text selection in the specified
-field, or if a special key (such as an arrow key
-or the delete key) is pressed, this method will
-not block it.
-
-(3.0)
-*/
-pascal ControlKeyFilterResult
-OSTypeLengthLimiter		(ControlRef			inControl,
-						 SInt16*			inKeyCode,
-						 SInt16*			inCharCode,
-						 EventModifiers*	inModifiers)
-{
-	Size							actualSize = 0L;
-	ControlKeyFilterResult			result = kControlKeyFilterPassKey;
-	ControlEditTextSelectionRec		selectionRangeInfo;
-	
-	
-	// determine if text is selected - if so, don’t block any keys
-	selectionRangeInfo.selStart = selectionRangeInfo.selEnd = 0;
-	(OSStatus)GetControlData(inControl, kControlEditTextPart, kControlEditTextSelectionTag,
-								sizeof(selectionRangeInfo), &selectionRangeInfo, &actualSize);
-	if (selectionRangeInfo.selStart == selectionRangeInfo.selEnd)
-	{
-		Str255		text;
-		
-		
-		// determine the text currently in the control - if it is 4 characters long, block the key
-		GetControlText(inControl, text);
-		
-		if (!(*inModifiers & cmdKey))
-		{
-			// make sure that any arrow or delete key press is allowed
-			if ((*inKeyCode != 0x3B/* left arrow */) &&
-				(*inKeyCode != 0x7B/* left arrow */) &&
-				(*inKeyCode != 0x3E/* up arrow */) &&
-				(*inKeyCode != 0x7E/* up arrow */) &&
-				(*inKeyCode != 0x3C/* right arrow */) &&
-				(*inKeyCode != 0x7C/* right arrow */) &&
-				(*inKeyCode != 0x3D/* down arrow */) &&
-				(*inKeyCode != 0x7D/* down arrow */) &&
-				(*inKeyCode != 0x33/* delete */) &&
-				(*inKeyCode != 0x75/* del */))
-			{
-				// if a character key was pressed, block it when there are four or more characters in the field already
-				if (PLstrlen(text) >= 4) result = kControlKeyFilterBlockKey;
-			}
-		}
-		else
-		{
-			// command key is down - scan for a Paste operation
-			if ((*inCharCode == 'V') || (*inCharCode == 'v'))
-			{
-				// check the size of the TextEdit scrap
-				if ((TEGetScrapLength() + PLstrlen(text) * sizeof(UInt8)) > (4 * sizeof(UInt8)))
-				{
-					// pasting isn’t allowed because adding the scrap would make the field too big
-					result = kControlKeyFilterBlockKey;
-				}
-			}
-		}
-	}
-	return result;
-}// OSTypeLengthLimiter
-
-
-/*!
-Returns a key filter UPP for OSTypeLengthLimiter().
-
-(3.1)
-*/
-ControlKeyFilterUPP
-OSTypeLengthLimiterKeyFilterUPP ()
-{
-	static ControlKeyFilterUPP		result = NewControlKeyFilterUPP(OSTypeLengthLimiter);
-	
-	
-	return result;
-}// OSTypeLengthLimiterKeyFilterUPP
-
-
-/*!
 Removes the interior of a region so that
 it ends up describing only its outline.
 
@@ -1565,23 +1258,6 @@ OutlineRegion	(RgnHandle		inoutRegion)
 		Memory_DisposeRegion(&tempRgn);
 	}
 }// OutlineRegion
-
-
-/*!
-To activate the root control of the frontmost
-window and to change the cursor to the standard
-arrow, call this method.  Usually, you do this
-immediately after removing a dialog box from the
-screen, especially if you previously used the
-DeactivateFrontmostWindow() method.
-
-(3.0)
-*/
-void
-RestoreFrontmostWindow ()
-{
-	Embedding_RestoreFrontmostWindow();
-}// RestoreFrontmostWindow
 
 
 /*!
@@ -1874,39 +1550,6 @@ DialogUtilities_SetUpHelpButton		(HIViewWrap&	inoutView)
 #endif
 	return inoutView;
 }// SetUpHelpButton
-
-
-/*!
-Specifies the Window menu (and Dock menu) text
-for a window to be something other than its
-title.  Use this for windows that have no title,
-or windows whose titles are inappropriate when
-listed in a menu.
-
-This method saves you from having to construct
-a CFString manually when interfacing with the
-Mac OS.  Carbon only.
-
-(3.0)
-*/
-OSStatus
-SetWindowAlternateTitleWithPString	(WindowRef			inWindow,
-									 ConstStringPtr		inText)
-{
-	OSStatus		result = noErr;
-	CFStringRef		alternateWindowTitle = nullptr;
-	
-	
-	alternateWindowTitle = CFStringCreateWithPascalString(kCFAllocatorDefault, inText,
-															CFStringGetSystemEncoding());
-	if (alternateWindowTitle == nullptr) result = memFullErr;
-	else
-	{
-		result = SetWindowAlternateTitle(inWindow, alternateWindowTitle);
-		CFRelease(alternateWindowTitle);
-	}
-	return result;
-}// SetWindowAlternateTitleWithPString
 
 
 /*!

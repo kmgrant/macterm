@@ -74,7 +74,6 @@
 #include "DialogUtilities.h"
 #include "DragAndDrop.h"
 #include "EventLoop.h"
-#include "GenericThreads.h"
 #include "NetEvents.h"
 #include "Preferences.h"
 #include "Terminal.h"
@@ -11062,7 +11061,12 @@ visualBell	(TerminalViewRef	inView)
 	// Mac OS 8 asynchronous sounds mean that a sound generates
 	// very little delay, therefore a standard visual delay of 8
 	// ticks should be enforced even if a beep was emitted.
-	GenericThreads_DelayMinimumTicks(8);
+	{
+		UInt32		dummy = 0L;
+		
+		
+		Delay(8/* ticks */, &dummy);
+	}
 	
 	// if previously inverted, invert again to restore to normal
 	if (visual)

@@ -92,7 +92,6 @@ extern "C"
 #import "DialogUtilities.h"
 #import "EventLoop.h"
 #import "FindDialog.h"
-#import "GenericThreads.h"
 #import "HelpSystem.h"
 #import "Keypads.h"
 #import "Preferences.h"
@@ -299,6 +298,7 @@ static IconRef				createLEDOnIcon					();
 static void					createViews						(TerminalWindowPtr);
 static Boolean				createTabWindow					(TerminalWindowPtr);
 static NSWindow*			createWindow					();
+static void					delayMinimumTicks				(UInt16 = 8);
 static void					ensureTopLeftCornersExists		();
 static TerminalScreenRef	getActiveScreen					(TerminalWindowPtr);
 static TerminalViewRef		getActiveView					(TerminalWindowPtr);
@@ -2917,6 +2917,22 @@ createWindow ()
 	}
 	return result;
 }// createWindow
+
+
+/*!
+Delays the active thread by the specified amount
+(in 60ths of a second).
+
+(4.0)
+*/
+static void
+delayMinimumTicks	(UInt16		inTickCount)
+{
+	UInt32		dummy = 0L;
+	
+	
+	Delay(inTickCount, &dummy);
+}// delayMinimumTicks
 
 
 /*!
@@ -5762,13 +5778,13 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 				// 3.0 - animate page scrolling a bit (users can more easily see what is happening)
 				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
-				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
+				delayMinimumTicks(kPageScrollDelayTicks);
 				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
-				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
+				delayMinimumTicks(kPageScrollDelayTicks);
 				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
-				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
+				delayMinimumTicks(kPageScrollDelayTicks);
 				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, visibleColumnCount - 3 * INTEGER_QUARTERED(visibleColumnCount));
 				break;
 			
@@ -5776,13 +5792,13 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 				// 3.0 - animate page scrolling a bit (users can more easily see what is happening)
 				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
-				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
+				delayMinimumTicks(kPageScrollDelayTicks);
 				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
-				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
+				delayMinimumTicks(kPageScrollDelayTicks);
 				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
-				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
+				delayMinimumTicks(kPageScrollDelayTicks);
 				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, visibleColumnCount - 3 * INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
 				break;
@@ -5814,13 +5830,13 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 				// 3.0 - animate page scrolling a bit (users can more easily see what is happening)
 				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, INTEGER_QUARTERED(visibleRowCount));
 				handlePendingUpdates();
-				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
+				delayMinimumTicks(kPageScrollDelayTicks);
 				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, INTEGER_QUARTERED(visibleRowCount));
 				handlePendingUpdates();
-				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
+				delayMinimumTicks(kPageScrollDelayTicks);
 				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, INTEGER_QUARTERED(visibleRowCount));
 				handlePendingUpdates();
-				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
+				delayMinimumTicks(kPageScrollDelayTicks);
 				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, visibleRowCount - 3 * INTEGER_QUARTERED(visibleRowCount));
 				break;
 			
@@ -5828,13 +5844,13 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 				// 3.0 - animate page scrolling a bit (users can more easily see what is happening)
 				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, INTEGER_QUARTERED(visibleRowCount));
 				handlePendingUpdates();
-				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
+				delayMinimumTicks(kPageScrollDelayTicks);
 				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, INTEGER_QUARTERED(visibleRowCount));
 				handlePendingUpdates();
-				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
+				delayMinimumTicks(kPageScrollDelayTicks);
 				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, INTEGER_QUARTERED(visibleRowCount));
 				handlePendingUpdates();
-				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
+				delayMinimumTicks(kPageScrollDelayTicks);
 				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, visibleRowCount - 3 * INTEGER_QUARTERED(visibleRowCount));
 				break;
 			
