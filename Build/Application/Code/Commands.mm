@@ -4115,25 +4115,24 @@ canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
 	{
 		TerminalWindowRef			terminalWindow = returnActiveTerminalWindow();
 		TerminalViewRef				view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-		Handle						selectedText = TerminalView_ReturnSelectedTextAsNewHandle
+		CFRetainRelease				selectedText(TerminalView_ReturnSelectedTextAsNewUnicode
 													(view, 0/* Copy with Tab Substitution info */,
-														kTerminalView_TextFlagInline);
+														kTerminalView_TextFlagInline));
 		
 		
-		if (nullptr == selectedText)
+		if (false == selectedText.exists())
 		{
 			result = NO;
 		}
 		else
 		{
-			UniformResourceLocatorType	urlKind = URL_ReturnTypeFromDataHandle(selectedText);
+			UniformResourceLocatorType	urlKind = URL_ReturnTypeFromCFString(selectedText.returnCFStringRef());
 			
 			
 			if (kNotURL == urlKind)
 			{
 				result = NO; // disable command for non-URL text selections
 			}
-			Memory_DisposeHandle(&selectedText);
 		}
 	}
 	
