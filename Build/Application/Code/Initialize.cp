@@ -309,23 +309,16 @@ Initialize_ApplicationShutdown ()
 {
 	// saving user preferences is a top priority, since other quitting procedures could cause a crash
 	PrefsWindow_Done();
-	
 	Clipboard_Done();
 	InfoWindow_Done();
-	
 	InternetPrefs_Done();
-	
-#ifndef NDEBUG
 	Console_Done();
-#endif
-	
 	TerminalView_Done();
 	TerminalBackground_Done();
 	Commands_Done();
 	SessionFactory_Done();
 	TextTranslation_Done();
 	Alert_Done();
-	
 	Preferences_Done();
 	Cursors_Done();
 	Undoables_Done();
