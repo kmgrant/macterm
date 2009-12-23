@@ -123,9 +123,13 @@
 			<key>CFBundleTypeName</key>
 			<string>script</string>
 			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
+			<string>Shell</string>
 			<key>LSTypeIsPackage</key>
 			<false/>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.unix-executable</string>
+			</array>
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
