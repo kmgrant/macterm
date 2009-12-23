@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20091222',
     '20091219',
     '20091204',
     '20091130',
@@ -296,6 +297,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20091222': [
+        'Terminal bells are now automatically ignored if they occur many times within a few seconds.',
+        'Some additional console output has been suppressed by default, unless enabled by the debugging interface.',
+    ],
     '20091219': [
         'Terminal windows will now warn the user (at most once) when an exceptional number of data errors have occurred.',
     ],

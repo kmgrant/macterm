@@ -2445,23 +2445,41 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 						++dataPtr->emulator.stateRepetitions;
 						if (dataPtr->emulator.stateRepetitions > 100/* arbitrary */)
 						{
-							Console_WriteHorizontalRule();
-							Console_WriteValueFourChars("SERIOUS PARSER ERROR: appears to be stuck, state", states.first);
+							Boolean const	kLogThis = DebugInterface_LogsTerminalState();
+							
+							
+							if (kLogThis)
+							{
+								Console_WriteHorizontalRule();
+								Console_WriteValueFourChars("SERIOUS PARSER ERROR: appears to be stuck, state", states.first);
+							}
+							
 							if (kMy_ParserStateInitial == states.first)
 							{
 								// if somehow stuck oddly in the initial state, assume
 								// the trigger character is responsible and simply
 								// ignore the troublesome sequence of characters
-								Console_WriteValueCharacter("FORCING step-over of trigger character", *ptr);
+								if (kLogThis)
+								{
+									Console_WriteValueCharacter("FORCING step-over of trigger character", *ptr);
+								}
 								--i;
 								++ptr;
 							}
 							else
 							{
-								Console_WriteLine("FORCING a return to the initial state");
+								if (kLogThis)
+								{
+									Console_WriteLine("FORCING a return to the initial state");
+								}
 								states.second = kMy_ParserStateInitial;
 							}
-							Console_WriteHorizontalRule();
+							
+							if (kLogThis)
+							{
+								Console_WriteHorizontalRule();
+							}
+							
 							dataPtr->emulator.stateRepetitions = 0;
 						}
 					}
@@ -2512,9 +2530,9 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 							++(dataPtr->echoErrorCount);
 							dataPtr->bytesToEcho.clear();
 						}
-						else
+						else if (bytesUsed > 0)
 						{
-							dataPtr->bytesToEcho = dataPtr->bytesToEcho.substr(bytesUsed/* offset */, kOldSize - bytesUsed/* length */);
+							dataPtr->bytesToEcho = dataPtr->bytesToEcho.substr(bytesUsed/* offset */);
 						}
 					}
 				}
@@ -2554,22 +2572,34 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 		if ((dataPtr->echoErrorCount != 0) ||
 			(dataPtr->translationErrorCount != 0))
 		{
+			Boolean const	kDebugExcessiveErrors = false;
+			
+			
 			++(dataPtr->errorCountTotal);
-			if (dataPtr->errorCountTotal == 20/* arbitrary; equality is used to ensure that this event can only fire once */)
+			if (dataPtr->errorCountTotal == 10/* arbitrary; equality is used to ensure that this event can only fire once */)
 			{
 				changeNotifyForTerminal(dataPtr, kTerminal_ChangeExcessiveErrors, inRef);
 			}
 			
-			Console_Warning(Console_WriteValue, "at least some characters were SKIPPED due to the following errors; original buffer length", inLength);
+			if (kDebugExcessiveErrors)
+			{
+				Console_Warning(Console_WriteValue, "at least some characters were SKIPPED due to the following errors; original buffer length", inLength);
+			}
 			if (dataPtr->echoErrorCount != 0)
 			{
-				Console_Warning(Console_WriteValue, "number of times that echoing unexpectedly failed", dataPtr->echoErrorCount);
+				if (kDebugExcessiveErrors)
+				{
+					Console_Warning(Console_WriteValue, "number of times that echoing unexpectedly failed", dataPtr->echoErrorCount);
+				}
 				dataPtr->echoErrorCount = 0;
 			}
 			if (dataPtr->translationErrorCount != 0)
 			{
-				//Console_WriteValueCharacter("current terminal text encoding", dataPtr->emulator.inputTextEncoding);
-				Console_Warning(Console_WriteValue, "number of times that translation unexpectedly failed", dataPtr->translationErrorCount);
+				if (kDebugExcessiveErrors)
+				{
+					Console_WriteValueCharacter("current terminal text encoding", dataPtr->emulator.inputTextEncoding);
+					Console_Warning(Console_WriteValue, "number of times that translation unexpectedly failed", dataPtr->translationErrorCount);
+				}
 				dataPtr->translationErrorCount = 0;
 			}
 		}
@@ -7281,7 +7311,10 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			
 			default:
 				// this is unexpected data; choose a new state
-				Console_Warning(Console_WriteValueCharacter, "VT100 in CSI parameter mode did not expect character", *inBuffer);
+				if (DebugInterface_LogsTerminalInputChar())
+				{
+					Console_Warning(Console_WriteValueCharacter, "VT100 in CSI parameter mode did not expect character", *inBuffer);
+				}
 				outHandled = false;
 				break;
 			}
@@ -7366,7 +7399,18 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		// audio event
 		unless (inDataPtr->bellDisabled)
 		{
-			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeAudioEvent, inDataPtr->selfRef/* context */);
+			static CFAbsoluteTime	gLastBeep = 0;
+			CFAbsoluteTime			now = CFAbsoluteTimeGetCurrent();
+			
+			
+			// do not allow repeating beeps in a short period of time to
+			// take over the terminal; automatically ignore events that
+			// occur at an arbitrarily high frequency
+			if ((now - gLastBeep) > 2/* arbitrary; in seconds */)
+			{
+				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeAudioEvent, inDataPtr->selfRef/* context */);
+			}
+			gLastBeep = now;
 		}
 		break;
 	
@@ -7816,7 +7860,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							//Console_WriteLine("request to set one of 256 background or foreground colors");
 							if (2 != (inDataPtr->emulator.parameterEndIndex - i))
 							{
-								Console_Warning(Console_WriteLine, "expected exactly 3 parameters for 256-color-mode request");
+								if (DebugInterface_LogsTerminalInputChar())
+								{
+									Console_Warning(Console_WriteLine, "expected exactly 3 parameters for 256-color-mode request");
+								}
 							}
 							else
 							{
@@ -7828,8 +7875,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 								
 								if (5 != kParam2)
 								{
-									Console_Warning(Console_WriteValue, "unrecognized parameter for type of color (expected 5)",
-													kParam2);
+									if (DebugInterface_LogsTerminalInputChar())
+									{
+										Console_Warning(Console_WriteValue, "unrecognized parameter for type of color (expected 5)",
+														kParam2);
+									}
 								}
 								else
 								{
@@ -8119,7 +8169,10 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		
 		default:
 			// this is unexpected data; choose a new state
-			Console_Warning(Console_WriteValueCharacter, "VT52 did not expect an ESC to be followed by character", *inBuffer);
+			if (DebugInterface_LogsTerminalInputChar())
+			{
+				Console_Warning(Console_WriteValueCharacter, "VT52 did not expect an ESC to be followed by character", *inBuffer);
+			}
 			outHandled = false;
 			break;
 		}
@@ -8634,13 +8687,19 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					
 					default:
 						// ???
-						Console_Warning(Console_WriteLine, "VT102 media copy did not recognize the given private parameters");
+						if (DebugInterface_LogsTerminalInputChar())
+						{
+							Console_Warning(Console_WriteLine, "VT102 media copy did not recognize the given private parameters");
+						}
 						break;
 					}
 					break;
 				
 				default:
-					Console_Warning(Console_WriteLine, "VT102 media copy did not recognize the given parameters");
+					if (DebugInterface_LogsTerminalInputChar())
+					{
+						Console_Warning(Console_WriteLine, "VT102 media copy did not recognize the given parameters");
+					}
 					break;
 				}
 			}

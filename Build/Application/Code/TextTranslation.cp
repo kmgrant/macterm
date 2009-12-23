@@ -348,11 +348,14 @@ TextTranslation_ConvertBufferToNewHandle	(UInt8*			inText,
 /*!
 This is like CFStringCreateWithBytes(), except on failure it
 will loop up to "inByteMaxBacktrack" times; each time the tail
-of the buffer is reduced by one byte, in an attempt to find a
-proper translation.  (Setting the backtrack to 0 is equivalent
-to calling CFStringCreateWithBytes() directly.)  The number of
-bytes successfully used is returned in "outBytesUsed", though
-this only has meaning if the string result is defined.
+of the buffer is reduced by half (at least one byte), in an
+attempt to find a proper translation.  (Setting the backtrack
+to 0 is equivalent to calling CFStringCreateWithBytes()
+directly.)
+
+The number of bytes successfully used is returned in
+"outBytesUsed", though this only has meaning if the string
+result is defined.
 
 This is very useful when a byte stream is a “slice” of a larger
 or infinite stream, since a slice could end with only part of
@@ -373,7 +376,7 @@ TextTranslation_PersistentCFStringCreate	(CFAllocatorRef			inAllocator,
 											 CFStringEncoding		inEncoding,
 											 Boolean				inIsExternalRepresentation,
 											 CFIndex&				outBytesUsed,
-											 CFIndex				inByteMaxBacktrack)
+											 CFIndex				inMaxBacktrack)
 {
 	Boolean const	kDebug = false;
 	CFStringRef		result = nullptr;
@@ -386,7 +389,7 @@ TextTranslation_PersistentCFStringCreate	(CFAllocatorRef			inAllocator,
 	{
 		Console_WriteValue("attempt to translate persistently to encoding", inEncoding);
 	}
-	for (CFIndex i = 0; ((nullptr == result) && (outBytesUsed > 0) && (i < (1 + inByteMaxBacktrack))); ++i)
+	for (CFIndex i = 0; ((nullptr == result) && (outBytesUsed > 0) && (i < (1 + inMaxBacktrack))); ++i)
 	{
 		result = CFStringCreateWithBytes(inAllocator, inBytes, outBytesUsed, inEncoding, inIsExternalRepresentation);
 		if (kDebug)
@@ -401,8 +404,25 @@ TextTranslation_PersistentCFStringCreate	(CFAllocatorRef			inAllocator,
 			CFRelease(result), result = nullptr;
 		}
 		
-		// if translation fails, start over with one less byte
-		if (nullptr == result) --outBytesUsed;
+		// if translation fails, start over with fewer bytes; to have
+		// reasonable runtime with huge buffers, reduce by an amount
+		// proportionate to the original size, but at least one byte
+		if ((nullptr == result) && (outBytesUsed > 0))
+		{
+			CFIndex		reductionAmount = STATIC_CAST(STATIC_CAST(inByteCount, Float32) / 2.0f, CFIndex);
+			
+			
+			if (reductionAmount < 1)
+			{
+				reductionAmount = 1;
+			}
+			outBytesUsed -= reductionAmount;
+			
+			if (kDebug)
+			{
+				Console_WriteValue("translation failed; count of bytes to be ignored next time", reductionAmount);
+			}
+		}
 	}
 	
 	return result;
