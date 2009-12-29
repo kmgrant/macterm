@@ -9911,7 +9911,7 @@ namespace {
 Tests the CFDictionary context interface.
 
 Returns "true" if ALL assertions pass; "false" is
-returned if any fail, however messagess should be
+returned if any fail, however messages should be
 printed for ALL assertion failures regardless.
 
 (3.1)
@@ -9931,7 +9931,7 @@ unitTest000_Begin ()
 Tests the CFPreferences (defaults) context interface.
 
 Returns "true" if ALL assertions pass; "false" is
-returned if any fail, however messagess should be
+returned if any fail, however messages should be
 printed for ALL assertion failures regardless.
 
 (3.1)
