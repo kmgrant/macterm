@@ -295,7 +295,6 @@ OSStatus
 Memory_SetHandleSize	(Handle		inoutHandle,
 						 Size		inNewHandleSizeInBytes)
 {
-	Size		originalSizeInBytes = GetHandleSize(inoutHandle);
 	OSStatus	result = noErr;
 	
 	
