@@ -36,6 +36,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <Console.h>
 #include <MemoryBlockLocker.template.h>
 
 
@@ -68,6 +69,10 @@ public:
 	void
 	releaseLock	(structure_reference_type	inReference,
 				 structure_type**			inoutPtrPtr);
+	
+	//! test routine
+	static Boolean
+	unitTest ();
 
 protected:
 
@@ -79,9 +84,42 @@ private:
 										//!  locked (and is in the process of being destroyed)
 };
 
+struct MemoryBlockPtrLocker_TestClass
+{
+	int		x;
+};
+typedef struct MemoryBlockPtrLocker_TestClass*		MemoryBlockPtrLocker_TestClassRef;
+
 
 
 #pragma mark Public Methods
+
+/*!
+A unit test for this module.  This should always
+be run before a release, after any substantial
+changes are made, or if you suspect bugs!  It
+should also be EXPANDED as new functionality is
+proposed (ideally, a test is written before the
+functionality is added).
+
+(4.0)
+*/
+inline void
+MemoryBlockPtrLocker_RunTests ()
+{
+	UInt16		totalTests = 0;
+	UInt16		failedTests = 0;
+	
+	
+	++totalTests;
+	if (false == MemoryBlockPtrLocker<MemoryBlockPtrLocker_TestClassRef, MemoryBlockPtrLocker_TestClass>::unitTest())
+	{
+		++failedTests;
+	}
+	
+	Console_WriteUnitTestReport("Memory Block Ptr Locker", failedTests, totalTests);
+}// RunTests
+
 
 template < typename structure_reference_type, typename structure_type >
 MemoryBlockPtrLocker< structure_reference_type, structure_type >::
@@ -142,6 +180,92 @@ releaseLock	(structure_reference_type	inReference,
 		if (inoutPtrPtr != nullptr) *inoutPtrPtr = nullptr;
 	}
 }// releaseLock
+
+
+/*!
+Tests an instance of this template class.  Returns true only
+if successful.  Information on failures is printed to the
+console.
+
+(4.0)
+*/
+template < typename structure_reference_type, typename structure_type >
+Boolean
+MemoryBlockPtrLocker< structure_reference_type, structure_type >::
+unitTest ()
+{
+	typedef LockAcquireRelease< structure_reference_type, structure_type >		TestAutoLockerClass;
+	typedef MemoryBlockPtrLocker< structure_reference_type, structure_type >	TestLockerClass;
+	Boolean		result = true;
+	
+	
+	// basic locking
+	{
+		TestLockerClass				locker;
+		structure_reference_type	ref1 = REINTERPRET_CAST(0x1234DEAD, structure_reference_type);
+		structure_reference_type	ref2 = REINTERPRET_CAST(0x5678BEEF, structure_reference_type);
+		structure_type*				ptr1 = nullptr;
+		structure_type*				ptr2 = nullptr;
+		
+		
+		result &= Console_Assert("initial lock count of zero for ref1", !locker.isLocked(ref1));
+		result &= Console_Assert("initial lock count of zero for ref2", !locker.isLocked(ref2));
+		ptr1 = locker.acquireLock(ref1);
+		result &= Console_Assert("lock count increases for ref1", locker.isLocked(ref1));
+		result &= Console_Assert("lock count is up to one for ref1", 1 == locker.returnLockCount(ref1));
+		ptr2 = locker.acquireLock(ref2);
+		locker.releaseLock(ref1, &ptr1);
+		result &= Console_Assert("ptr1 is nullified", nullptr == ptr1);
+		result &= Console_Assert("ptr2 is not nullified", nullptr != ptr2);
+		result &= Console_Assert("lock count decreases for ref1", false == locker.isLocked(ref1));
+		result &= Console_Assert("lock count is down to zero for ref1", 0 == locker.returnLockCount(ref1));
+		result &= Console_Assert("lock count is up to one for ref2", 1 == locker.returnLockCount(ref2));
+		ptr1 = locker.acquireLock(ref2);
+		result &= Console_Assert("lock count is up to two for ref2", 2 == locker.returnLockCount(ref2));
+		locker.releaseLock(ref2, &ptr2);
+		result &= Console_Assert("ptr2 is nullified", nullptr == ptr2);
+		result &= Console_Assert("lock count is down to one for ref2", 1 == locker.returnLockCount(ref2));
+		locker.releaseLock(ref2, &ptr2);
+		result &= Console_Assert("lock count is down to zero for ref2", 0 == locker.returnLockCount(ref2));
+	}
+	
+	// automatic locking
+	{
+		TestLockerClass				locker;
+		structure_reference_type	ref1 = REINTERPRET_CAST(0x1234DEAD, structure_reference_type);
+		structure_reference_type	ref2 = REINTERPRET_CAST(0x5678BEEF, structure_reference_type);
+		
+		
+		result &= Console_Assert("initial lock count of zero for ref1", !locker.isLocked(ref1));
+		result &= Console_Assert("initial lock count of zero for ref2", !locker.isLocked(ref2));
+		{
+			TestAutoLockerClass		ptr1(locker, ref1);
+			
+			
+			result &= Console_Assert("lock count increases for ref1", locker.isLocked(ref1));
+			result &= Console_Assert("lock count is up to one for ref1", 1 == locker.returnLockCount(ref1));
+		}
+		{
+			TestAutoLockerClass		ptr2(locker, ref2);
+			
+			
+			result &= Console_Assert("ptr2 is not nullified", nullptr != &*ptr2);
+			result &= Console_Assert("lock count decreases for ref1", false == locker.isLocked(ref1));
+			result &= Console_Assert("lock count is down to zero for ref1", 0 == locker.returnLockCount(ref1));
+			result &= Console_Assert("lock count is up to one for ref2", 1 == locker.returnLockCount(ref2));
+			{
+				TestAutoLockerClass		alsoPtr2(locker, ref2);
+				
+				
+				result &= Console_Assert("lock count is up to two for ref2", 2 == locker.returnLockCount(ref2));
+			}
+			result &= Console_Assert("lock count is down to one for ref2", 1 == locker.returnLockCount(ref2));
+		}
+		result &= Console_Assert("lock count is down to zero for ref2", 0 == locker.returnLockCount(ref2));
+	}
+	
+	return result;
+}// unitTest
 
 #endif
 

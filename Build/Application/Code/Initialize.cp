@@ -57,6 +57,7 @@
 #include <Cursors.h>
 #include <Localization.h>
 #include <MacHelpUtilities.h>
+#include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlocks.h>
 #include <Releases.h>
 #include <Undoables.h>
@@ -120,6 +121,10 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	Console_Init();
 #if RUN_MODULE_TESTS
 	//Console_RunTests();
+#endif
+	
+#if RUN_MODULE_TESTS
+	MemoryBlockPtrLocker_RunTests();
 #endif
 	
 	// set the application bundle so everything searches in the right place for resources
