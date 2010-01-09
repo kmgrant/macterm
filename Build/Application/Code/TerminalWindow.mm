@@ -2349,7 +2349,7 @@ TerminalWindow::
 		
 		for (screenIterator = this->allScreens.begin(); screenIterator != this->allScreens.end(); ++screenIterator)
 		{
-			if (visitedScreens.end() != visitedScreens.find(*screenIterator))
+			if (visitedScreens.end() == visitedScreens.find(*screenIterator))
 			{
 				Terminal_DisposeScreen(*screenIterator);
 				visitedScreens.insert(*screenIterator);
