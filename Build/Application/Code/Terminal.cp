@@ -736,7 +736,7 @@ public:
 	My_ScreenBufferLineList				screenBuffer;				//!< a double-ended queue containing all the visible text for the terminal;
 																	//!  insertion or deletion from either end is fast, other operations are slow;
 																	//!  NOTE you should ONLY modify this using screen...() routines!
-	std::string							bytesToEcho;				//!< captures contiguous blocks of text to be translated and echoed
+	std::basic_string<UInt8>			bytesToEcho;				//!< captures contiguous blocks of text to be translated and echoed
 	
 	// Error Counts
 	//
@@ -2515,8 +2515,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 						std::string::size_type const	kOldSize = dataPtr->bytesToEcho.size();
 						UInt32							bytesUsed = invokeEmulatorEchoDataProc
 																	(dataPtr->emulator.currentCallbacks.dataWriter, dataPtr,
-																		REINTERPRET_CAST(dataPtr->bytesToEcho.c_str(), UInt8 const*),
-																		kOldSize);
+																		dataPtr->bytesToEcho.data(), kOldSize);
 						
 						
 						// it is possible for this chunk of the stream to terminate with
@@ -2532,7 +2531,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 						}
 						else if (bytesUsed > 0)
 						{
-							dataPtr->bytesToEcho = dataPtr->bytesToEcho.substr(bytesUsed/* offset */);
+							dataPtr->bytesToEcho.erase(0/* starting position */, bytesUsed/* count */);
 						}
 					}
 				}
@@ -5027,6 +5026,11 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	}
 	assert(!this->screenBuffer.empty());
 	
+	// arbitrary pre-allocation to avoid dynamic allocation;
+	// the destructor can log the actual size in debug mode,
+	// which will help to tune this for optimal performance
+	this->bytesToEcho.reserve(256);
+	
 	try
 	{
 		// it is important to make the list a multiple of the tab stop distance;
@@ -5094,6 +5098,16 @@ Destructor.  See Terminal_DisposeScreen().
 My_ScreenBuffer::
 ~My_ScreenBuffer ()
 {
+	if (DebugInterface_LogsTerminalState())
+	{
+		// write some statistics on the terminal when it is finished,
+		// for things like memory profiling; by knowing how large
+		// dynamic structures typically grow, the pre-allocation
+		// arbitrations can be more appropriate
+		Console_WriteLine("statistics for disposed screen buffer object:");
+		Console_WriteValue("final echo buffer size", this->bytesToEcho.capacity());
+	}
+	
 	this->printingModes = 0; // clear so that printingEnd() will clean up
 	printingEnd();
 	StreamCapture_Release(&this->captureStream);
