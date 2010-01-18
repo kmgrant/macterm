@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100117',
     '20091222',
     '20091219',
     '20091204',
@@ -297,6 +298,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100117': [
+        'Fixed significant memory management problems; terminal windows no longer use memory after they are killed.',
+        'Terminal windows, when the "no window close on process exit" preference is set, now only stay open if the process exits by itself; a 2nd close will no longer be required when the user tries to close the window.',
+    ],
     '20091222': [
         'Terminal bells are now automatically ignored if they occur many times within a few seconds.',
         'Some additional console output has been suppressed by default, unless enabled by the debugging interface.',

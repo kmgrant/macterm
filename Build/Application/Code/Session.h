@@ -256,7 +256,7 @@ enum Session_State
 										//!  "kSession_StateActiveStable"
 	kSession_StateActiveStable = 3,		//!< equivalent to active, but "kSession_LifetimeMinimumForNoWarningClose"
 										//!  duration has now elapsed, indicating a stable connection or process
-	kSession_StateDead = 4,				//!< session terminated; however, the terminal window may still be open
+	kSession_StateDead = 4,				//!< session terminated (however, the terminal window may still be open)
 	kSession_StateImminentDisposal = -1	//!< should ALWAYS be the last state a session is in
 };
 
@@ -372,6 +372,9 @@ SessionRef
 
 void
 	Session_Dispose							(SessionRef*						inoutRefPtr);
+
+Boolean
+	Session_IsValid							(SessionRef							inRef);
 
 //@}
 
@@ -525,9 +528,6 @@ size_t
 											 size_t								inSize);
 
 void
-	Session_Disconnect						(SessionRef							inRef);
-
-void
 	Session_FlushNetwork					(SessionRef							inRef);
 
 Session_Result
@@ -577,11 +577,6 @@ void
 void
 	Session_SetSpeechEnabled				(SessionRef							inRef,
 											 Boolean							inIsEnabled);
-
-// AFFECTS RETURN VALUES OF THE Session_StateIs...() METHODS
-void
-	Session_SetState						(SessionRef							inRef,
-											 Session_State						inNewState);
 
 // AFFECTS RETURN VALUES OF THE Session_WatchIs...() METHODS
 void
@@ -662,6 +657,11 @@ void
 void
 	Session_SetProcess						(SessionRef							inRef,
 											 Local_ProcessRef					inRunningProcess);
+
+// AFFECTS RETURN VALUES OF THE Session_StateIs...() METHODS
+void
+	Session_SetState						(SessionRef							inRef,
+											 Session_State						inNewState);
 
 Boolean
 	Session_SpeechIsEnabled					(SessionRef							inRef);

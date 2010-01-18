@@ -1909,7 +1909,7 @@ appendDataForProcessing		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					// retrieve the session for which data has arrived for processing
 					result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_DirectSession,
 																	typeNetEvents_SessionRef, session);
-					if (noErr == result)
+					if ((noErr == result) && Session_IsValid(session))
 					{
 						// success!
 						UInt32	unprocessedDataSize = Session_AppendDataForProcessing
@@ -2473,10 +2473,13 @@ setSessionState		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		SessionRef		session = nullptr;
 		
 		
-		// retrieve the session whose state should change
+		// retrieve the session whose state should change; since this
+		// is captured asynchronously, it is possible that the session
+		// has become invalid since the time the event was first fired,
+		// so ensure the session is still in use
 		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_DirectSession,
 														typeNetEvents_SessionRef, session);
-		if (noErr == result)
+		if ((noErr == result) && Session_IsValid(session))
 		{
 			Session_State		newState = kSession_StateBrandNew;
 			
@@ -2488,6 +2491,26 @@ setSessionState		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			{
 				// success!
 				Session_SetState(session, newState);
+				if (newState == kSession_StateDead)
+				{
+					Boolean		keepWindowOpen = false;
+					size_t		actualSize = 0L;
+					
+					
+					// get the user’s process service preference, if possible
+					if (kPreferences_ResultOK != Preferences_GetData(kPreferences_TagDontAutoClose,
+																		sizeof(keepWindowOpen), &keepWindowOpen,
+																		&actualSize))
+					{
+						keepWindowOpen = false; // assume window should be closed, if preference can’t be found
+					}
+					
+					// kill the session if appropriate
+					unless (keepWindowOpen)
+					{
+						Session_Dispose(&session);
+					}
+				}
 			}
 		}
 	}
