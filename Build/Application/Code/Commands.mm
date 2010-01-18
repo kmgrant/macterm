@@ -2324,6 +2324,10 @@ moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef		inSession,
 			
 			Session_StartMonitoring(inSession, kSession_ChangeCloseWarningAnswered, gCurrentQuitWarningAnswerListener);
 			Session_DisplayTerminationWarning(inSession, true/* force modal window */);
+			// there is a chance that displaying the alert will destroy
+			// the session, in which case the stop-monitoring call is
+			// invalid (but only in that case); TEMPORARY, not sure how
+			// to fix this, yet
 			Session_StopMonitoring(inSession, kSession_ChangeCloseWarningAnswered, gCurrentQuitWarningAnswerListener);
 			*outFlagPtr = gCurrentQuitCancelled;
 		}
@@ -3306,7 +3310,7 @@ setWindowMenuItemMarkForSession		(SessionRef		inSession,
 		NSMutableAttributedString*	styledText = [[[item attributedTitle] mutableCopyWithZone:NULL] autorelease];
 		
 		
-		if (TerminalWindow_IsObscured(terminalWindow))
+		if ((nullptr != terminalWindow) && TerminalWindow_IsObscured(terminalWindow))
 		{
 			// set the style of the item to italic, which makes it more obvious that a window is hidden
 			[styledText addAttribute:NSObliquenessAttributeName value:[NSNumber numberWithFloat:0.25]
