@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100120',
     '20100117',
     '20091222',
     '20091219',
@@ -298,6 +299,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100120': [
+        'Preferences window Formats pane Character Width setting may now be adjusted from 70% to 130%.',
+    ],
     '20100117': [
         'Fixed significant memory management problems; terminal windows no longer use memory after they are killed.',
         'Terminal windows, when the "no window close on process exit" preference is set, now only stay open if the process exits by itself; a 2nd close will no longer be required when the user tries to close the window.',
