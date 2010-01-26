@@ -466,6 +466,7 @@
 		0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOff.icns; path = Application/Resources/IconForLEDOff.icns; sourceTree = "<group>"; };
 		0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOn.icns; path = Application/Resources/IconForLEDOn.icns; sourceTree = "<group>"; };
 		0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalRangeDescription.typedef.h; path = Application/Code/TerminalRangeDescription.typedef.h; sourceTree = "<group>"; };
+		0AB0EF76110E99570099E055 /* Registrar.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Registrar.template.h; path = Shared/Code/Registrar.template.h; sourceTree = "<group>"; };
 		0AB3B2640F0C1B69000559AB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymactelnet/__init__.py; sourceTree = "<group>"; };
 		0AB64A94057819E5005702BA /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/InfoWindow.nib; sourceTree = "<group>"; };
 		0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelSessions.icns; path = Application/Resources/IconForPrefPanelSessions.icns; sourceTree = "<group>"; };
@@ -664,6 +665,7 @@
 				0A9B31920D538EE400C1616D /* MemoryBlocks.h */,
 				0AFD12B7087A148B00439BEA /* NIBLoader.h */,
 				0A90CD8C0DAD28F300B6E89E /* RandomWrap.h */,
+				0AB0EF76110E99570099E055 /* Registrar.template.h */,
 				0A9B319E0D538EFA00C1616D /* Releases.h */,
 				0AF5023B0F872DF80068CB19 /* ResultCode.template.h */,
 				0A9B31820D538E4400C1616D /* SoundSystem.h */,

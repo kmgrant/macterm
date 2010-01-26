@@ -8,7 +8,7 @@
 /*###############################################################
 
 	Data Access Library 1.3
-	© 1998-2007 by Kevin Grant
+	© 1998-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -79,69 +79,6 @@ public hash_set_namespace::hash_set< structure_reference_type,
 										_AddrToLongHasher< structure_reference_type > >
 {
 };
-
-/*!
-Automatically adds the specified reference to a set when
-constructed, and removes it when destructed.
-
-Typically, you make one of these the first data member of
-an internal class whose pointer is tracked by an opaque
-reference type.  This way, when the class is constructed
-its reference is added to the list and when it is destroyed
-it is removed.
-
-Another application is to declare one of these within the
-code of a constructor or destructor, attached to a different
-list of references that track “unstable” pointers.  This is
-useful for debugging if code is called using a pointer to a
-data structure that is technically partially defined due to
-construction or destruction.
-
-NOTE:	This class is actually quite general and should
-		probably be moved elsewhere.
-*/
-template < typename address_type, typename set_type >
-class Registrar
-{
-public:
-	Registrar	(address_type, set_type&);
-	~Registrar	();
-
-private:
-	// copying is not allowed
-	Registrar	(Registrar< address_type, set_type > const&);
-	
-	// reassignment is not allowed
-	Registrar< address_type, set_type >&
-	operator =	(Registrar< address_type, set_type > const&);
-	
-	address_type	_ref;
-	set_type&		_registry;
-};
-
-
-
-#pragma mark Public Methods
-
-template < typename address_type, typename set_type >
-Registrar< address_type, set_type >::
-Registrar	(address_type	inRef,
-			 set_type&		inoutRegistry)
-:
-_ref(inRef),
-_registry(inoutRegistry)
-{
-	_registry.insert(_ref);
-}// Registrar default constructor
-
-
-template < typename address_type, typename set_type >
-Registrar< address_type, set_type >::
-~Registrar ()
-{
-	_registry.erase(_ref);
-}// Registrar destructor
-
 
 
 #pragma mark Internal Methods

@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -78,6 +78,7 @@ extern "C"
 #import <NIBLoader.h>
 #import <RandomWrap.h>
 #import <RegionUtilities.h>
+#import <Registrar.template.h>
 #import <SoundSystem.h>
 #import <Undoables.h>
 #import <WindowInfo.h>
