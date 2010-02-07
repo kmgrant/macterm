@@ -60,7 +60,8 @@ struct Panel
 	{
 		void*					auxiliaryDataPtr;	// arbitrary data
 		Panel_ChangeProcPtr		changedProc;		// called when anything changes in the panel
-		HIViewRef				container;			// the super-control of every panel control
+		HIViewRef				container;			// the super-view of every panel view, if Carbon
+		NSView*					containerNSView;	// the super-view of every panel view, if Cocoa
 		CFRetainRelease			descriptor;			// an identifier that helps distinguish panels
 		
 		IconManagerIconRef		icon;
@@ -71,7 +72,8 @@ struct Panel
 	
 	struct
 	{
-		HIWindowRef				owningWindow;		// the window associated with panel controls
+		HIWindowRef				owningWindow;		// the window associated with panel controls, if Carbon
+		NSWindow*				owningNSWindow;		// the window associated with panel controls, if Cocoa
 		HISize					preferredSize;		// user-specified dimensions of the panel
 	} utilizerWritable;
 	
@@ -102,9 +104,9 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 Creates a new Panel.  If any problems occur,
 nullptr is returned.
 
-Your dialog panel cannot function without a
+Your window panel cannot function without a
 change notification procedure.  This routine
-is the entry point that dialog boxes use
+is the entry point that owning windows use
 (indirectly, by invoking one or more methods
 from the Panel module) to communicate with
 panels in an abstract way.
@@ -126,9 +128,11 @@ Panel_New	(Panel_ChangeProcPtr	inProc)
 		ptr->customizerWritable.auxiliaryDataPtr = nullptr;
 		ptr->customizerWritable.changedProc = inProc;
 		ptr->customizerWritable.container = nullptr;
+		ptr->customizerWritable.containerNSView = nullptr;
 		ptr->customizerWritable.descriptor.setCFTypeRef(kPanel_InvalidKind);
 		ptr->customizerWritable.icon = IconManager_NewIcon();
 		ptr->utilizerWritable.owningWindow = nullptr;
+		ptr->utilizerWritable.owningNSWindow = nullptr;
 		ptr->utilizerWritable.preferredSize = CGSizeMake(0, 0);
 		ptr->selfRef = result;
 	}
@@ -212,7 +216,41 @@ Panel_CalculateTabFrame		(Float32	inPanelContainerWidth,
 
 
 /*!
-When a dialog box needs to manipulate a panel,
+When an owning window needs to manipulate a panel,
+its code should invoke this routine.  The code
+responsible for customizing the specified panel
+should have already used the method
+Panel_SetContainerNSView() to set the super-view
+that embeds every other view in the panel.
+
+The owning window can then move the view provided
+by this routine, instantly relocating every view
+in the panel, or perform other operations, such
+as changing the visibility or active state of an
+entire panel.
+
+IMPORTANT:	If the panel is currently being used
+			in a Carbon window, the returned view
+			will be nullptr.
+
+(4.0)
+*/
+void
+Panel_GetContainerNSView	(Panel_Ref		inRef,
+							 NSView*&		outView)
+{
+	if (nullptr != inRef)
+	{
+		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
+		
+		
+		outView = ptr->customizerWritable.containerNSView;
+	}
+}// GetContainerNSView
+
+
+/*!
+When an owning window needs to manipulate a panel,
 its code should invoke this routine.  The code
 responsible for customizing the specified panel
 should have already used the method
@@ -220,11 +258,15 @@ Panel_SetContainerView() to set the super-view
 (which is most likely a user pane) that embeds
 every other view in the panel.
 
-The dialog box can then move the view provided
+The owning window can then move the view provided
 by this routine, instantly relocating every view
 in the panel, or perform other operations, such
 as changing the visibility or active state of an
 entire panel.
+
+IMPORTANT:	If the panel is currently being used
+			in a Cocoa window, the returned view
+			will be nullptr.
 
 (3.0)
 */
@@ -272,7 +314,7 @@ Panel_GetDescription	(Panel_Ref		inRef,
 /*!
 Returns a very short label string that can be used to
 describe a panel.  Panels should always specify this
-label so that dialogs can use it to represent a set of
+label so that windows can use it to represent a set of
 panels.  For example, labels may be used for text in
 buttons, menus, lists or tabs that select amongst all
 active panels.  Do not assume how your panel’s label
@@ -417,8 +459,42 @@ Panel_ReturnKind	(Panel_Ref	inRef)
 /*!
 Returns the window that a panel is in.  This
 property is set once, automatically, when a
-dialog box fires the "kPanel_MessageCreateViews"
+window fires the "kPanel_MessageCreateNSViews"
 message.
+
+IMPORTANT:	If the panel is currently being used
+			in a Carbon window, the returned
+			window will be nullptr.
+
+(4.0)
+*/
+NSWindow*
+Panel_ReturnOwningNSWindow	(Panel_Ref	inRef)
+{
+	NSWindow*	result = nullptr;
+	
+	
+	if (nullptr != inRef)
+	{
+		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
+		
+		
+		result = ptr->utilizerWritable.owningNSWindow;
+	}
+	
+	return result;
+}// ReturnOwningNSWindow
+
+
+/*!
+Returns the window that a panel is in.  This
+property is set once, automatically, when a
+window fires the "kPanel_MessageCreateViews"
+message.
+
+IMPORTANT:	If the panel is currently being used
+			in a Cocoa window, the returned
+			window will be nullptr.
 
 (3.0)
 */
@@ -771,17 +847,51 @@ Panel_SetButtonIcon		(HIViewRef		inView,
 
 
 /*!
-Sets the super-view (usually a user pane) that
-directly or indirectly embeds every view in
-the specified panel.
+Sets the Cocoa super-view that directly or indirectly
+embeds every view in the specified panel.
 
-Dialog boxes that use Panel objects generally
-require custom panels to have a container view!
-Without one, it is not possible for a dialog to
-include the views of a panel, much less
-manipulate them.  A dialog uses the method
-Panel_GetContainerView() to acquire the view
-that is specified here.
+A window that is Carbon-based should not call this;
+use Panel_SetContainerView() instead.
+
+A window that uses a Panel object generally requires
+custom panels to have a container view!  Without one,
+it is not possible for a window to include the views
+of a panel, much less manipulate them.  A window uses
+the method Panel_GetContainerNSView() to acquire the
+view that is specified here.
+
+(4.0)
+*/
+void
+Panel_SetContainerNSView	(Panel_Ref		inRef,
+							 NSView*		inView)
+{
+	if (nullptr != inRef)
+	{
+		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
+		
+		
+		ptr->customizerWritable.containerNSView = inView;
+	}
+}// SetContainerNSView
+
+
+/*!
+Sets the super-view (usually a user pane) that
+directly or indirectly embeds every view in the
+specified panel.
+
+A window that is Cocoa-based should not call this;
+use Panel_SetContainerNSView() instead.
+
+A window that uses a Panel object generally requires
+custom panels to have a container view!  Without one,
+it is not possible for a window to include the views
+of a panel, much less manipulate them.  A window uses
+the method Panel_GetContainerView() to acquire the
+view that is specified here.
+
+See also Panel_SetContainerNSView().
 
 (3.0)
 */
@@ -913,7 +1023,7 @@ Associates arbitrary data with a panel.  You
 generally also call Panel_SetKind(), to help
 you identify what this auxiliary data is.
 This access is only allowed by panel customizing
-code, not dialogs.
+code, not windows.
 
 To acquire this data later, use this method
 Panel_ReturnImplementation().
@@ -935,7 +1045,7 @@ Panel_SetImplementation		(Panel_Ref	inRef,
 
 
 /*!
-Changes the descriptor of a dialog panel, which in
+Changes the descriptor of a window panel, which in
 effect identifies this panel’s type.  Your descriptor
 should not be "kPanel_InvalidKind".
 
@@ -962,7 +1072,7 @@ Panel_SetKind	(Panel_Ref		inRef,
 Specifies a label string that can be used to describe
 a panel.  Generally, even if panel implementations do
 not use labels themselves, they should specify a label
-that dialogs can use as desired to represent a set of
+that windows can use as desired to represent a set of
 panels.  For example, labels may be used for text in
 buttons, menus, lists or tabs that select amongst
 active panels.  Since you should not assume how your
@@ -971,7 +1081,7 @@ label whether you need it or not.
 
 See also Panel_SetIconSuite(), which lets you specify
 a set of icons for your panel that is often paired
-with a label in dialog boxes.
+with a label in windows.
 
 The Core Foundation string is retained.
 
@@ -994,7 +1104,7 @@ Panel_SetName	(Panel_Ref		inRef,
 /*!
 Sets the dimensions for the panel that the user wants.
 
-Dialogs should update this whenever a user event
+A window should update this whenever a user event
 changes the panel size (however, you should constrain
 this according to the ideal or minimum size).  You
 might also update this size as part of initialization,
@@ -1080,8 +1190,8 @@ Panel_SetToolbarItemIconAndLabel	(HIToolbarItemRef	inItem,
 #pragma mark Internal Methods
 
 /*!
-When a dialog box performs some kind of operation on a
-panel, such as changing its size or visible state, this
+When an owning window performs some kind of operation on
+a panel, such as changing its size or visible state, this
 routine should always be invoked to notify the panel that
 a change has occurred.  Some messages generate defined
 result codes, and others do not.  See "Panel.h" to see
@@ -1102,6 +1212,12 @@ panelChanged	(PanelPtr		inPtr,
 	
 	if (nullptr != inPtr)
 	{
+		// automatically save this property, for convenience
+		if (inMessage == kPanel_MessageCreateNSViews)
+		{
+			inPtr->utilizerWritable.owningNSWindow = REINTERPRET_CAST(inDataPtr, NSWindow*);
+		}
+		
 		// automatically save this property, for convenience
 		if (inMessage == kPanel_MessageCreateViews)
 		{
