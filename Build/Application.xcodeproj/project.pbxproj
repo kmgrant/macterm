@@ -466,6 +466,7 @@
 		0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOff.icns; path = Application/Resources/IconForLEDOff.icns; sourceTree = "<group>"; };
 		0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOn.icns; path = Application/Resources/IconForLEDOn.icns; sourceTree = "<group>"; };
 		0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalRangeDescription.typedef.h; path = Application/Code/TerminalRangeDescription.typedef.h; sourceTree = "<group>"; };
+		0AAEFFC0111E77F100526983 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ServerBrowserCocoa.xib; sourceTree = "<group>"; };
 		0AB0EF76110E99570099E055 /* Registrar.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Registrar.template.h; path = Shared/Code/Registrar.template.h; sourceTree = "<group>"; };
 		0AB3B2640F0C1B69000559AB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymactelnet/__init__.py; sourceTree = "<group>"; };
 		0AB64A94057819E5005702BA /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/InfoWindow.nib; sourceTree = "<group>"; };
@@ -479,7 +480,6 @@
 		0ABD01CF1068000A00BBB87A /* DebugInterface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DebugInterface.mm; path = Application/Code/DebugInterface.mm; sourceTree = "<group>"; };
 		0ABD01D11068002C00BBB87A /* DebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebugInterface.h; path = Application/Code/DebugInterface.h; sourceTree = "<group>"; };
 		0ABD01D7106800F700BBB87A /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/DebugInterfaceCocoa.nib; sourceTree = "<group>"; };
-		0AC0D8B00F7408AD004F9709 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/ServerBrowserCocoa.nib; sourceTree = "<group>"; };
 		0AC1FAF30D1992D600ED3102 /* _Quills.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = _Quills.so; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsTerminal.cp; path = Application/Code/QuillsTerminal.cp; sourceTree = "<group>"; };
 		0AC6A4E40AC4D24400FF6FC6 /* QuillsTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsTerminal.h; path = Application/Code/QuillsTerminal.h; sourceTree = "<group>"; };
@@ -918,6 +918,7 @@
 			children = (
 				0A317CAC10A0C775002EDEFB /* MainMenuCocoa.xib */,
 				0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */,
+				0AAEFFBF111E77F100526983 /* ServerBrowserCocoa.xib */,
 				0ABD01D6106800F700BBB87A /* DebugInterfaceCocoa.nib */,
 				0ACDD9240ABD16C200040553 /* AlertMessages.nib */,
 				0ADEFCCC06C34E1B00814772 /* Clipboard.nib */,
@@ -944,7 +945,6 @@
 				0A1BCD8805CA2B21005CF1E5 /* TerminalWindow.nib */,
 				0A8450AF0554CB8E00CFF440 /* WindowTitleDialog.nib */,
 				0ACDC7900DDA5688000AE3CD /* AddressDialogCocoa.nib */,
-				0AC0D8AF0F7408AD004F9709 /* ServerBrowserCocoa.nib */,
 			);
 			name = NIBs;
 			sourceTree = "<group>";
@@ -1587,6 +1587,14 @@
 			name = PrefPanels.nib;
 			sourceTree = "<group>";
 		};
+		0AAEFFBF111E77F100526983 /* ServerBrowserCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AAEFFC0111E77F100526983 /* English */,
+			);
+			name = ServerBrowserCocoa.xib;
+			sourceTree = "<group>";
+		};
 		0AAF265C05CE49110058BC0D /* LocalizedApplicationVersion.h */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1609,14 +1617,6 @@
 				0ABD01D7106800F700BBB87A /* English */,
 			);
 			name = DebugInterfaceCocoa.nib;
-			sourceTree = "<group>";
-		};
-		0AC0D8AF0F7408AD004F9709 /* ServerBrowserCocoa.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AC0D8B00F7408AD004F9709 /* English */,
-			);
-			name = ServerBrowserCocoa.nib;
 			sourceTree = "<group>";
 		};
 		0ACA57C40AEADC5C00B5F482 /* GenericDialog.nib */ = {

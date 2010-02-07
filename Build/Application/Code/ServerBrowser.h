@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -51,6 +51,12 @@
 /*!
 Implements the server browser panel.
 
+This class is KVO-compliant for the following keys:
+	hostName
+	portNumber
+	protocolIndexes
+	userID
+
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
@@ -72,6 +78,7 @@ changes to an interface declared in a ".mm" file.
 	NSIndexSet*				protocolIndexes;
 	NSString*				hostName;
 	NSString*				portNumber;
+	id						target;
 	NSString*				userID;
 	NSString*				errorMessage;
 }
@@ -82,6 +89,7 @@ changes to an interface declared in a ".mm" file.
 - (IBAction)		lookUpHostName:(id)sender;
 - (void)			rediscoverServices;
 // accessors
+- (Session_Protocol)currentProtocolID;
 - (NSIndexSet*)		discoveredHostIndexes;
 - (NSString*)		errorMessage;
 - (BOOL)			hidesDiscoveredHosts;
@@ -93,8 +101,9 @@ changes to an interface declared in a ".mm" file.
 - (NSString*)		portNumber;
 - (NSArray*)		protocolDefinitions;
 - (NSIndexSet*)		protocolIndexes;
+- (id)				target;
 - (NSString*)		userID;
-- (void)			insertObject:(NSString*)name
+- (void)			insertObject:(ServerBrowser_NetService*)name
 						inDiscoveredHostsAtIndex:(unsigned long)index;
 - (void)			removeObjectFromDiscoveredHostsAtIndex:(unsigned long)index;
 - (void)			insertObject:(NSString*)name
@@ -111,12 +120,19 @@ changes to an interface declared in a ".mm" file.
 - (void)			setPortNumber:(NSString*)aString; // binding
 - (void)			setProtocolIndexByProtocol:(Session_Protocol)aProtocol;
 - (void)			setProtocolIndexes:(NSIndexSet*)indexes; // binding
+- (void)			setTarget:(id)anObject
+						protocol:(Session_Protocol)aProtocol
+						hostName:(NSString*)aString
+						portNumber:(unsigned int)aNumber
+						userID:(NSString*)anID;
 - (void)			setUserID:(NSString*)aString; // binding
 // validators
 - (BOOL)			validatePortNumber:(id*)ioValue
 						error:(NSError**)outError;
 - (BOOL)			validateUserID:(id*)ioValue
 						error:(NSError**)outError;
+// NSKeyValueObservingCustomization
++ (BOOL)			automaticallyNotifiesObserversForKey:(NSString*)theKey;
 // NSNetServiceBrowserDelegateMethods
 - (void)			netServiceBrowser:(NSNetServiceBrowser*)aNetServiceBrowser
 						didFindService:(NSNetService*)aNetService
@@ -127,6 +143,8 @@ changes to an interface declared in a ".mm" file.
 - (void)			netServiceBrowserWillSearch:(NSNetServiceBrowser*)aNetServiceBrowser;
 // NSWindowController
 - (void)			windowDidLoad;
+- (void)			windowWillLoad;
+- (NSString*)		windowFrameAutosaveName;
 // NSWindowNotifications
 - (void)			windowWillClose:(NSNotification*)notification;
 // internal methods

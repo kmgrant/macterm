@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -77,7 +77,7 @@ about each service.
 }
 - (id)					initWithNetService:(NSNetService*)aNetService
 							addressFamily:(unsigned char)aSocketAddrFamily;
-// accessors
+// accessors; see "Discovered Hosts" array controller in the NIB, for key names
 - (NSString*)			bestResolvedAddress;
 - (unsigned short)		bestResolvedPort;
 - (NSString*)			description;
@@ -104,7 +104,7 @@ protocol.
 	NSString*			serviceType; // RFC 2782 / Bonjour, e.g. "_xyz._tcp."
 	unsigned short		defaultPort;
 }
-// accessors
+// accessors; see "Protocol Definitions" array controller in the NIB, for key names
 - (unsigned short)		defaultPort;
 - (NSString*)			description;
 - (Session_Protocol)	protocolID;
@@ -123,6 +123,10 @@ protocol.
 #pragma mark Internal Method Prototypes
 namespace {
 
+id					flagNo						();
+void				initializePanel				(ServerBrowser_PanelController*, Session_Protocol, CFStringRef, UInt16,
+												 CFStringRef);
+void				notifyOldEventTarget		(EventTargetRef);
 pascal OSStatus		receiveLookupComplete		(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
@@ -184,7 +188,10 @@ ServerBrowser_RemoveEventTarget ()
 
 
 /*!
-Sets the current event target.
+Sets the current event target.  This is for Carbon interfaces,
+and is deprecated; Cocoa interfaces are better off using the
+"setTarget:protocol:hostName:portNumber:userID:" method of
+ServerBrowser_PanelController.
 
 The target is sent an event whenever anything in the panel is
 changed by the user, which includes the given initial values.
@@ -199,7 +206,9 @@ Before the window is shown, a valid target should be set;
 otherwise, the user could change something that goes unnoticed.
 
 IMPORTANT:	This is for Carbon compatibility and is not a
-			long-term solution.
+			long-term solution.  In Cocoa, notifications are
+			sent along the responder chain, using the methods
+			declared in "ServerBrowser_PanelChanges".
 
 (4.0)
 */
@@ -210,54 +219,22 @@ ServerBrowser_SetEventTarget	(EventTargetRef		inTargetOrNull,
 								 UInt16				inPortNumber,
 								 CFStringRef		inUserID)
 {
-	AutoPool	_;
+	AutoPool						_;
+	ServerBrowser_PanelController*	panelController = [ServerBrowser_PanelController sharedServerBrowserPanelController];
 	
 	
 	// if a target already exists, send it one final event to tell it
 	// that a new target will be chosen
+	[panelController setTarget:nil protocol:kSession_ProtocolSSH1 hostName:@"" portNumber:22 userID:@""];
 	if ((nullptr != gPanelEventTarget) && (inTargetOrNull != gPanelEventTarget))
 	{
-		EventRef	panelHasNewTargetEvent = nullptr;
-		OSStatus	error = noErr;
-		
-		
-		// create a Carbon Event
-		error = CreateEvent(nullptr/* allocator */, kEventClassNetEvents_ServerBrowser,
-							kEventNetEvents_ServerBrowserNewEventTarget, GetCurrentEventTime(),
-							kEventAttributeNone, &panelHasNewTargetEvent);
-		
-		// attach required parameters to event, then dispatch it
-		if (noErr != error) panelHasNewTargetEvent = nullptr;
-		else
-		{
-			Boolean		doPost = true;
-			
-			
-			if (doPost)
-			{
-				// finally, send the message to the target
-				error = SendEventToEventTargetWithOptions(panelHasNewTargetEvent, gPanelEventTarget,
-															kEventTargetDontPropagate);
-			}
-		}
-		
-		// dispose of event
-		if (nullptr != panelHasNewTargetEvent) ReleaseEvent(panelHasNewTargetEvent), panelHasNewTargetEvent = nullptr;
+		notifyOldEventTarget(gPanelEventTarget);
 	}
 	
 	gPanelEventTarget = inTargetOrNull;
 	
 	// now update the panel
-	if (nil != gServerBrowser_PanelController)
-	{
-		ServerBrowser_PanelController*		panelController = [ServerBrowser_PanelController sharedServerBrowserPanelController];
-		
-		
-		[panelController setProtocolIndexByProtocol:inProtocol];
-		[panelController setHostName:(NSString*)inHostName];
-		[panelController setPortNumber:[[NSNumber numberWithUnsignedShort:inPortNumber] stringValue]];
-		[panelController setUserID:(NSString*)inUserID];
-	}
+	initializePanel(panelController, inProtocol, inHostName, inPortNumber, inUserID);
 }// SetEventTarget
 
 
@@ -285,6 +262,84 @@ ServerBrowser_SetVisible	(Boolean	inIsVisible)
 
 #pragma mark Internal Methods
 namespace {
+
+/*!
+Returns an object representing a false value, useful in many
+simple flag methods.  The given item is not used.
+
+(4.0)
+*/
+id
+flagNo ()
+{
+	BOOL	result = NO;
+	
+	
+	return [NSNumber numberWithBool:result];
+}// flagNo
+
+
+/*!
+Fills in all of the main views of the Servers panel
+with the given default values.
+
+(4.0)
+*/
+void
+initializePanel		(ServerBrowser_PanelController*		inController,
+					 Session_Protocol					inProtocol,
+					 CFStringRef						inHostName,
+					 UInt16								inPortNumber,
+					 CFStringRef						inUserID)
+{
+	if (nil != inController)
+	{
+		[inController setProtocolIndexByProtocol:inProtocol];
+		[inController setHostName:(NSString*)inHostName];
+		[inController setPortNumber:[[NSNumber numberWithUnsignedShort:inPortNumber] stringValue]];
+		[inController setUserID:(NSString*)inUserID];
+	}
+}// initializePanel
+
+
+/*!
+For Carbon compatibility, sends an event to the previous
+Carbon event target of the panel, notifying it that a
+new target is taking over.
+
+(4.0)
+*/
+void
+notifyOldEventTarget	(EventTargetRef		inOldTarget)
+{
+	EventRef	panelHasNewTargetEvent = nullptr;
+	OSStatus	error = noErr;
+	
+	
+	// create a Carbon Event
+	error = CreateEvent(nullptr/* allocator */, kEventClassNetEvents_ServerBrowser,
+						kEventNetEvents_ServerBrowserNewEventTarget, GetCurrentEventTime(),
+						kEventAttributeNone, &panelHasNewTargetEvent);
+	
+	// attach required parameters to event, then dispatch it
+	if (noErr != error) panelHasNewTargetEvent = nullptr;
+	else
+	{
+		Boolean		doPost = true;
+		
+		
+		if (doPost)
+		{
+			// finally, send the message to the target
+			error = SendEventToEventTargetWithOptions(panelHasNewTargetEvent, inOldTarget,
+														kEventTargetDontPropagate);
+		}
+	}
+	
+	// dispose of event
+	if (nullptr != panelHasNewTargetEvent) ReleaseEvent(panelHasNewTargetEvent), panelHasNewTargetEvent = nullptr;
+}// notifyOldEventTarget
+
 
 /*!
 Handles "kEventNetEvents_HostLookupComplete" of
@@ -658,53 +713,15 @@ Constructor.
 - (id)
 init
 {
+	// The correct place for pre-NIB initialization is "windowWillLoad".
+	// The correct place for post-NIB initialization is "windowDidLoad".
 	self = [super initWithWindowNibName:@"ServerBrowserCocoa"];
-	if (nil != self)
-	{
-		discoveredHosts = [[NSMutableArray alloc] init];
-		recentHosts = [[NSMutableArray alloc] init];
-		// TEMPORARY - it should be possible to externally define these (probably via Python)
-		protocolDefinitions = [[[NSArray alloc] initWithObjects:
-								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSSH1
-									description:NSLocalizedStringFromTable(@"SSH Version 1", @"ServerBrowser"/* table */, @"ssh-1")
-									serviceType:@"_ssh._tcp."
-									defaultPort:22] autorelease],
-								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSSH2
-									description:NSLocalizedStringFromTable(@"SSH Version 2", @"ServerBrowser"/* table */, @"ssh-2")
-									serviceType:@"_ssh._tcp."
-									defaultPort:22] autorelease],
-								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolTelnet
-									description:NSLocalizedStringFromTable(@"TELNET", @"ServerBrowser"/* table */, @"telnet")
-									serviceType:@"_telnet._tcp."
-									defaultPort:23] autorelease],
-								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolFTP
-									description:NSLocalizedStringFromTable(@"FTP", @"ServerBrowser"/* table */, @"ftp")
-									serviceType:@"_ftp._tcp."
-									defaultPort:21] autorelease],
-								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSFTP
-									description:NSLocalizedStringFromTable(@"SFTP", @"ServerBrowser"/* table */, @"sftp")
-									serviceType:@"_ssh._tcp."
-									defaultPort:22] autorelease],
-								nil] autorelease];
-		browser = [[NSNetServiceBrowser alloc] init];
-		[browser setDelegate:self];
-		discoveredHostIndexes = [[NSIndexSet alloc] init];
-		hidesDiscoveredHosts = YES;
-		hidesErrorMessage = YES;
-		hidesPortNumberError = YES;
-		hidesProgress = YES;
-		hidesUserIDError = YES;
-		protocolIndexes = [[NSIndexSet alloc] init];
-		hostName = [[[NSString alloc] initWithString:@""] autorelease];
-		portNumber = [[[NSString alloc] initWithString:@""] autorelease];
-		userID = [[[NSString alloc] initWithString:@""] autorelease];
-		errorMessage = [[NSString string] retain];
-	}
 	return self;
 }
 - (void)
 dealloc
 {
+	// See "init", "windowWillLoad", and "windowDidLoad" for initializations to clean up here.
 	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
 	[discoveredHosts release];
 	[recentHosts release];
@@ -825,7 +842,86 @@ rediscoverServices
 }// rediscoverServices
 
 
+/*!
+Given a property method name, such as fooBar, returns the
+conventional name for a selector to indicate whether or not
+changes to that key will automatically notify observers; in
+this case, autoNotifyOnChangeToFooBar.
+
+The idea is to keep property information close to the
+accessors for those properties, instead of making the
+"automaticallyNotifiesObserversForKey:" method big and ugly.
+
+IMPORTANT:	This method is completely generic and is only
+			here temporarily.  It should move elsewhere.
+
+(4.0)
+*/
++ (NSString*)
+selectorNameForKeyChangeAutoNotifyFlag:(NSString*)	aPropertySelectorName
+{
+	NSString*			result = nil;
+	NSMutableString*	nameOfAccessor = [[[NSMutableString alloc] initWithString:aPropertySelectorName]
+											autorelease];
+	NSString*			accessorFirstChar = [nameOfAccessor substringToIndex:1];
+	
+	
+	[nameOfAccessor replaceCharactersInRange:NSMakeRange(0, 1/* length */)
+												withString:[accessorFirstChar uppercaseString]];
+	result = [@"autoNotifyOnChangeTo" stringByAppendingString:nameOfAccessor];
+	return result;
+}
+
+
+/*!
+Given a selector, such as @selector(fooBar), returns the
+conventional selector for a method that would determine whether
+or not property changes will automatically notify any observers;
+in this case, @selector(autoNotifyOnChangeToFooBar).
+
+The signature of the validator is expected to be:
+- (id) autoNotifyOnChangeToFooBar;
+Due to limitations in performSelector:, the result is not a
+BOOL, but rather an object of type NSNumber, whose "boolValue"
+method is called.  Validators are encouraged to use the method
+[NSNumber numberWithBool:] when returning their results.
+
+See selectorNameForKeyChangeAutoNotifyFlag: and
+automaticallyNotifiesObserversForKey:.
+
+IMPORTANT:	This method is completely generic and is only
+			here temporarily.  It should move elsewhere.
+
+(4.0)
+*/
++ (SEL)
+selectorToReturnKeyChangeAutoNotifyFlag:(SEL)	anAccessor
+{
+	SEL		result = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:NSStringFromSelector(anAccessor)]);
+	
+	
+	return result;
+}
+
+
 #pragma mark Accessors
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (Session_Protocol)
+currentProtocolID
+{
+	ServerBrowser_Protocol*		protocolObject = [self protocol];
+	assert(nil != protocolObject);
+	Session_Protocol			result = [protocolObject protocolID];
+	
+	
+	return result;
+}// currentProtocolID
+
 
 /*!
 Accessor.
@@ -984,19 +1080,32 @@ hostName
 {
 	return [[hostName copy] autorelease];
 }
+- (id)
+autoNotifyOnChangeToHostName
+{
+	return flagNo();
+}
 - (void)
 setHostName:(NSString*)		aString
 {
-	if (nil == aString)
+	if (aString != hostName)
 	{
-		hostName = [@"" retain];
+		[self willChangeValueForKey:@"hostName"];
+		
+		if (nil == aString)
+		{
+			hostName = [@"" retain];
+		}
+		else
+		{
+			[hostName autorelease];
+			hostName = [aString copy];
+		}
+		
+		[self didChangeValueForKey:@"hostName"];
+		// TEMPORARY; while Carbon is supported, send a Carbon event as well
+		[self notifyOfChangeInValueReturnedBy:@selector(hostName)];
 	}
-	else
-	{
-		[hostName autorelease];
-		hostName = [aString copy];
-	}
-	[self notifyOfChangeInValueReturnedBy:@selector(hostName)];
 }// setHostName:
 
 
@@ -1006,10 +1115,10 @@ Accessor.
 (4.0)
 */
 - (void)
-insertObject:(NSString*)					name
+insertObject:(ServerBrowser_NetService*)	service
 inDiscoveredHostsAtIndex:(unsigned long)	index
 {
-	[discoveredHosts insertObject:name atIndex:index];
+	[discoveredHosts insertObject:service atIndex:index];
 }
 - (void)
 removeObjectFromDiscoveredHostsAtIndex:(unsigned long)		index
@@ -1046,20 +1155,33 @@ portNumber
 {
 	return [[portNumber copy] autorelease];
 }
+- (id)
+autoNotifyOnChangeToPortNumber
+{
+	return flagNo();
+}
 - (void)
 setPortNumber:(NSString*)	aString
 {
-	if (nil == aString)
+	if (aString != portNumber)
 	{
-		portNumber = [@"" retain];
+		[self willChangeValueForKey:@"portNumber"];
+		
+		if (nil == aString)
+		{
+			portNumber = [@"" retain];
+		}
+		else
+		{
+			[portNumber autorelease];
+			portNumber = [aString copy];
+		}
+		[self setHidesPortNumberError:YES];
+		
+		[self didChangeValueForKey:@"portNumber"];
+		// TEMPORARY; while Carbon is supported, send a Carbon event as well
+		[self notifyOfChangeInValueReturnedBy:@selector(portNumber)];
 	}
-	else
-	{
-		[portNumber autorelease];
-		portNumber = [aString copy];
-	}
-	[self setHidesPortNumberError:YES];
-	[self notifyOfChangeInValueReturnedBy:@selector(portNumber)];
 }// setPortNumber:
 
 
@@ -1102,25 +1224,71 @@ setProtocolIndexByProtocol:(Session_Protocol)	aProtocol
 		++i;
 	}
 }
+- (id)
+autoNotifyOnChangeToProtocolIndexes
+{
+	return flagNo();
+}
 - (void)
 setProtocolIndexes:(NSIndexSet*)	indexes
 {
-	ServerBrowser_Protocol*		theProtocol = nil;
-	
-	
-	[protocolIndexes release];
-	protocolIndexes = [indexes retain];
-	
-	theProtocol = [self protocol];
-	if (nil != theProtocol)
+	if (indexes != protocolIndexes)
 	{
-		// auto-set the port number to match the default for this protocol
-		[self setPortNumber:[[NSNumber numberWithUnsignedShort:[theProtocol defaultPort]] stringValue]];
-		// rediscover services appropriate for this selection
-		[self rediscoverServices];
+		[self willChangeValueForKey:@"protocolIndexes"];
+		
+		[protocolIndexes release];
+		protocolIndexes = [indexes retain];
+		
+		[self didChangeValueForKey:@"protocolIndexes"];
+		// TEMPORARY; while Carbon is supported, send a Carbon event as well
 		[self notifyOfChangeInValueReturnedBy:@selector(protocolIndexes)];
+		
+		ServerBrowser_Protocol*		theProtocol = [self protocol];
+		if (nil != theProtocol)
+		{
+			// auto-set the port number to match the default for this protocol
+			[self setPortNumber:[[NSNumber numberWithUnsignedShort:[theProtocol defaultPort]] stringValue]];
+			// rediscover services appropriate for this selection
+			[self rediscoverServices];
+		}
 	}
 }// setProtocolIndexes:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (id)
+target
+{
+	return target;
+}
+- (id)
+autoNotifyOnChangeToTarget
+{
+	return flagNo();
+}
+- (void)
+setTarget:(id)				anObject
+protocol:(Session_Protocol)	aProtocol
+hostName:(NSString*)		aString
+portNumber:(unsigned int)	aNumber
+userID:(NSString*)			anID
+{
+	if (anObject != target)
+	{
+		[self willChangeValueForKey:@"target"];
+		
+		[target release];
+		target = [anObject retain];
+		
+		[self didChangeValueForKey:@"target"];
+		
+		initializePanel(self, aProtocol, (CFStringRef)aString, aNumber, (CFStringRef)anID);
+	}
+}// setTarget:protocol:hostName:portNumber:userID:
 
 
 /*!
@@ -1133,20 +1301,33 @@ userID
 {
 	return [[userID copy] autorelease];
 }
+- (id)
+autoNotifyOnChangeToUserID
+{
+	return flagNo();
+}
 - (void)
 setUserID:(NSString*)	aString
 {
-	if (nil == aString)
+	if (aString != userID)
 	{
-		userID = [@"" retain];
+		[self willChangeValueForKey:@"userID"];
+		
+		if (nil == aString)
+		{
+			userID = [@"" retain];
+		}
+		else
+		{
+			[userID autorelease];
+			userID = [aString copy];
+		}
+		[self setHidesUserIDError:YES];
+		
+		[self didChangeValueForKey:@"userID"];
+		// TEMPORARY; while Carbon is supported, send a Carbon event as well
+		[self notifyOfChangeInValueReturnedBy:@selector(userID)];
 	}
-	else
-	{
-		[userID autorelease];
-		userID = [aString copy];
-	}
-	[self setHidesUserIDError:YES];
-	[self notifyOfChangeInValueReturnedBy:@selector(userID)];
 }// setUserID:
 
 
@@ -1260,6 +1441,34 @@ error:(NSError**)					outError
 }// validateUserID:error:
 
 
+#pragma mark NSKeyValueObservingCustomization
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.0)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if ([self respondsToSelector:flagSource])
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
 #pragma mark NSNetServiceBrowserDelegateMethods
 
 /*!
@@ -1342,6 +1551,75 @@ windowDidLoad
 	// since double-click bindings require 10.4 or later, do this manually now
 	[discoveredHostsTableView setDoubleAction:@selector(didDoubleClickDiscoveredHostWithSelection:)];
 }// windowDidLoad
+
+
+/*!
+Handles initialization that should definitely occur before
+the window NIB is loaded.  (Everything else is just done in
+"init".)
+
+(4.0)
+*/
+- (void)
+windowWillLoad
+{
+	[super windowWillLoad];
+	
+	discoveredHosts = [[NSMutableArray alloc] init];
+	recentHosts = [[NSMutableArray alloc] init];
+	// TEMPORARY - it should be possible to externally define these (probably via Python)
+	protocolDefinitions = [[[NSArray alloc] initWithObjects:
+							[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSSH1
+								description:NSLocalizedStringFromTable(@"SSH Version 1", @"ServerBrowser"/* table */, @"ssh-1")
+								serviceType:@"_ssh._tcp."
+								defaultPort:22] autorelease],
+							[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSSH2
+								description:NSLocalizedStringFromTable(@"SSH Version 2", @"ServerBrowser"/* table */, @"ssh-2")
+								serviceType:@"_ssh._tcp."
+								defaultPort:22] autorelease],
+							[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolTelnet
+								description:NSLocalizedStringFromTable(@"TELNET", @"ServerBrowser"/* table */, @"telnet")
+								serviceType:@"_telnet._tcp."
+								defaultPort:23] autorelease],
+							[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolFTP
+								description:NSLocalizedStringFromTable(@"FTP", @"ServerBrowser"/* table */, @"ftp")
+								serviceType:@"_ftp._tcp."
+								defaultPort:21] autorelease],
+							[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSFTP
+								description:NSLocalizedStringFromTable(@"SFTP", @"ServerBrowser"/* table */, @"sftp")
+								serviceType:@"_ssh._tcp."
+								defaultPort:22] autorelease],
+							nil] autorelease];
+	browser = [[NSNetServiceBrowser alloc] init];
+	[browser setDelegate:self];
+	discoveredHostIndexes = [[NSIndexSet alloc] init];
+	hidesDiscoveredHosts = YES;
+	hidesErrorMessage = YES;
+	hidesPortNumberError = YES;
+	hidesProgress = YES;
+	hidesUserIDError = YES;
+	protocolIndexes = [[NSIndexSet alloc] init];
+	hostName = [[[NSString alloc] initWithString:@""] autorelease];
+	portNumber = [[[NSString alloc] initWithString:@""] autorelease];
+	userID = [[[NSString alloc] initWithString:@""] autorelease];
+	errorMessage = [[NSString string] retain];
+}// windowWillLoad
+
+
+/*!
+Affects the preferences key under which window position
+and size information are automatically saved and
+restored.
+
+(4.0)
+*/
+- (NSString*)
+windowFrameAutosaveName
+{
+	// NOTE: do not ever change this, it would only cause existing
+	// user settings to be forgotten
+	return @"ServerBrowser";
+}// windowFrameAutosaveName
 
 
 #pragma mark NSWindowNotifications
@@ -1442,9 +1720,7 @@ notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 			
 			if (valueGetter == @selector(protocolIndexes))
 			{
-				ServerBrowser_Protocol*		protocolObject = [self protocol];
-				assert(nil != protocolObject);
-				Session_Protocol			protocolForEvent = [protocolObject protocolID];
+				Session_Protocol	protocolForEvent = [self currentProtocolID];
 				
 				
 				error = SetEventParameter(panelChangedEvent, kEventParamNetEvents_Protocol,

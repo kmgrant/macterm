@@ -221,7 +221,6 @@ English.lproj/PrefPanelTerminals.nib \
 English.lproj/PrefPanelWorkspaces.nib \
 English.lproj/PrefsWindow.nib \
 English.lproj/ProgressDialog.nib \
-English.lproj/ServerBrowserCocoa.nib \
 English.lproj/TEKWindow.nib \
 English.lproj/TerminalWindow.nib \
 English.lproj/WindowTitleDialog.nib
@@ -229,7 +228,8 @@ English.lproj/WindowTitleDialog.nib
 # should be an <xyz>.xib source and implied <xyz>.nib output
 XIB_PREFIXES := \
 English.lproj/MainMenuCocoa \
-English.lproj/PrintPreviewCocoa
+English.lproj/PrintPreviewCocoa \
+English.lproj/ServerBrowserCocoa
 APP_RESOURCES_BUNDLES_GENERATED := \
 $(foreach PREFIX,$(XIB_PREFIXES),$(PREFIX).nib)
 APP_RESOURCES_COPIED := \
