@@ -61,7 +61,7 @@ IBTOOL=/usr/bin/ibtool
 IBTOOL_COMPILE_XIB_OPTIONS=--errors --warnings --notices --output-format human-readable-text --flatten NO
 MKDIR_P=/usr/bin/install -d
 MOVE=/bin/mv
-RMDIR=/bin/rmdir
+RMDIR=/bin/rmdir -f
 RSYNC=/usr/bin/rsync
 SYMLINK_REPLACE=/bin/ln -snf
 XARGS=/usr/bin/xargs
@@ -466,6 +466,7 @@ clean-executables:
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.3
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.5_wrap
 	-$(RMDIR) $(DEST_APP_MACOS_TOP)
+	$(XCB) clean -project Application.xcodeproj -target PythonInvoker -configuration ForLeopardDebug
 
 #
 # Resources subdirectory
