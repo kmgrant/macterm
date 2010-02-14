@@ -270,7 +270,7 @@ sharedArrangeWindowPanelController
 {
 	if (nil == gKeypads_ArrangeWindowPanelController)
 	{
-		gKeypads_ArrangeWindowPanelController = [[Keypads_ArrangeWindowPanelController allocWithZone:NULL] init];
+		gKeypads_ArrangeWindowPanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gKeypads_ArrangeWindowPanelController;
 }
@@ -359,7 +359,7 @@ sharedControlKeysPanelController
 {
 	if (nil == gKeypads_ControlKeysPanelController)
 	{
-		gKeypads_ControlKeysPanelController = [[Keypads_ControlKeysPanelController allocWithZone:NULL] init];
+		gKeypads_ControlKeysPanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gKeypads_ControlKeysPanelController;
 }
@@ -638,7 +638,7 @@ sharedFullScreenPanelController
 {
 	if (nil == gKeypads_FullScreenPanelController)
 	{
-		gKeypads_FullScreenPanelController = [[Keypads_FullScreenPanelController allocWithZone:NULL] init];
+		gKeypads_FullScreenPanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gKeypads_FullScreenPanelController;
 }
@@ -674,7 +674,7 @@ sharedFunctionKeysPanelController
 {
 	if (nil == gKeypads_FunctionKeysPanelController)
 	{
-		gKeypads_FunctionKeysPanelController = [[Keypads_FunctionKeysPanelController allocWithZone:NULL] init];
+		gKeypads_FunctionKeysPanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gKeypads_FunctionKeysPanelController;
 }
@@ -802,7 +802,7 @@ sharedVT220KeysPanelController
 {
 	if (nil == gKeypads_VT220KeysPanelController)
 	{
-		gKeypads_VT220KeysPanelController = [[Keypads_VT220KeysPanelController allocWithZone:NULL] init];
+		gKeypads_VT220KeysPanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gKeypads_VT220KeysPanelController;
 }

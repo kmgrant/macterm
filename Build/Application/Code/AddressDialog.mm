@@ -112,7 +112,7 @@ sharedAddressPanelController
 {
 	if (nil == gAddressDialog_PanelController)
 	{
-		gAddressDialog_PanelController = [[AddressDialog_PanelController allocWithZone:NULL] init];
+		gAddressDialog_PanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gAddressDialog_PanelController;
 }

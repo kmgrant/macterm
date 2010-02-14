@@ -582,7 +582,7 @@ sharedGrowlDelegate
 {
 	if (nil == gCocoaBasic_GrowlDelegate)
 	{
-		gCocoaBasic_GrowlDelegate = [[CocoaBasic_GrowlDelegate allocWithZone:NULL] init];
+		gCocoaBasic_GrowlDelegate = [[[self class] allocWithZone:NULL] init];
 	}
 	return gCocoaBasic_GrowlDelegate;
 }

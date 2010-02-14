@@ -77,7 +77,7 @@ sharedDebugInterfacePanelController
 {
 	if (nil == gDebugInterface_PanelController)
 	{
-		gDebugInterface_PanelController = [[DebugInterface_PanelController allocWithZone:NULL] init];
+		gDebugInterface_PanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gDebugInterface_PanelController;
 }

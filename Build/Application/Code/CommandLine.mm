@@ -154,7 +154,7 @@ sharedCommandLinePanelController
 {
 	if (nil == gCommandLine_PanelController)
 	{
-		gCommandLine_PanelController = [[CommandLine_PanelController allocWithZone:NULL] init];
+		gCommandLine_PanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gCommandLine_PanelController;
 }

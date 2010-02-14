@@ -699,7 +699,7 @@ sharedServerBrowserPanelController
 {
 	if (nil == gServerBrowser_PanelController)
 	{
-		gServerBrowser_PanelController = [[ServerBrowser_PanelController allocWithZone:NULL] init];
+		gServerBrowser_PanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gServerBrowser_PanelController;
 }// sharedServerBrowserPanelController
