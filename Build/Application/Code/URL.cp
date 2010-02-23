@@ -1,9 +1,11 @@
+/*!	\file URL.cp
+	\brief Helpers for working with uniform resource
+	locators (Internet addresses).
+*/
 /*###############################################################
 
-	URL.cp
-	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -78,27 +80,28 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 {
 	char*	gURLSchemeNames[] =
 	{
-		// WARNING:	This MUST match the order of the types
-		//			in "InternetPrefs.h", this is assumed
+		// WARNING:	This MUST match the order of the list
+		//			URL_Type in "URL.h"; this is assumed
 		//			within code in this file.
 		":",
+		"file:",
+		"finger:",
+		"ftp:",
+		"gopher:",
+		"http:",
+		"https:",
 		"mailto:",	
 		"news:",
 		"nntp:",
-		"ftp:",
-		"http:",
-		"gopher:",
-		"wais:",
-		"telnet:",
 		"rlogin:",
+		"telnet:",
 		"tn3270:",
-		"finger:",
-		"whois:",
-		"rtsp:",
-		"ssh:",
+		"rtsp:", // QuickTime
 		"sftp:",
+		"ssh:",
+		"wais:",
+		"whois:",
 		"x-man-page:",
-		"file:",
 		nullptr // this list must end with a nullptr
 	};
 }
@@ -125,11 +128,11 @@ URL_HandleForScreenView		(TerminalScreenRef	UNUSED_ARGUMENT(inScreen),
 	
 	if (urlObject.exists())
 	{
-		CFStringRef					urlAsCFString = urlObject.returnCFStringRef();
-		UniformResourceLocatorType	urlKind = URL_ReturnTypeFromCFString(urlAsCFString);
+		CFStringRef		urlAsCFString = urlObject.returnCFStringRef();
+		URL_Type		urlKind = URL_ReturnTypeFromCFString(urlAsCFString);
 		
 		
-		if (kNotURL != urlKind)
+		if (kURL_TypeInvalid != urlKind)
 		{
 			std::string		urlUTF8;
 			
@@ -298,11 +301,11 @@ URL_ParseCFString	(CFStringRef	inURLString)
 	if (nullptr == inURLString) result = memPCErr;
 	else
 	{
-		UniformResourceLocatorType	urlKind = kNotURL;
+		URL_Type	urlKind = kURL_TypeInvalid;
 		
 		
 		urlKind = URL_ReturnTypeFromCFString(inURLString);
-		if (kNotURL != urlKind)
+		if (kURL_TypeInvalid != urlKind)
 		{
 			CFURLRef	theCFURL = CFURLCreateWithString(kCFAllocatorDefault, inURLString, nullptr/* base URL */);
 			
@@ -334,13 +337,13 @@ more types of URLs.
 
 (3.1)
 */
-UniformResourceLocatorType
+URL_Type
 URL_ReturnTypeFromCFString		(CFStringRef	inURLCFString)
 {
-	UniformResourceLocatorType	result = kNotURL;
-	CFMutableStringRef			urlCopyCFString = CFStringCreateMutableCopy
-													(kCFAllocatorDefault, 0/* length or 0 for unlimited */,
-														inURLCFString);
+	URL_Type			result = kURL_TypeInvalid;
+	CFMutableStringRef	urlCopyCFString = CFStringCreateMutableCopy
+											(kCFAllocatorDefault, 0/* length or 0 for unlimited */,
+												inURLCFString);
 	
 	
 	if (nullptr != urlCopyCFString)
@@ -378,12 +381,12 @@ the routine.
 
 (3.1)
 */
-UniformResourceLocatorType
+URL_Type
 URL_ReturnTypeFromCharacterRange	(char const*	inBegin,
 									 char const*	inPastEnd)
 {
-	UniformResourceLocatorType	result = kNotURL;
-	register SInt16				i = 0;
+	URL_Type			result = kURL_TypeInvalid;
+	register SInt16		i = 0;
 	
 	
 	// look for a match on the prefix (e.g. "http:")
@@ -397,7 +400,7 @@ URL_ReturnTypeFromCharacterRange	(char const*	inBegin,
 		{
 			if (std::equal(kCStringPtr, kCStringPtr + std::strlen(kCStringPtr), inBegin))
 			{
-				result = STATIC_CAST(i, UniformResourceLocatorType);
+				result = STATIC_CAST(i, URL_Type);
 				break;
 			}
 		}

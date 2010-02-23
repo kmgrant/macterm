@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100223',
     '20100120',
     '20100117',
     '20091222',
@@ -299,6 +300,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100223': [
+        'Fixed the URL opener to support the "https://" URL type.',
+    ],
     '20100120': [
         'Preferences window Formats pane Character Width setting may now be adjusted from 70% to 130%.',
     ],

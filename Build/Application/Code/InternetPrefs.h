@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -39,38 +39,6 @@
 
 
 
-#pragma mark Constants
-
-enum UniformResourceLocatorType
-{
-	// must be consecutive and zero-based
-	kNotURL = 0,
-	kMailtoURL = 1,
-	kNewsURL = 2,
-	kNntpURL = 3,
-	kFtpURL = 4,
-	kHttpURL = 5,
-	kGopherURL = 6,
-	kWaisURL = 7,
-	kTelnetURL = 8,
-	kRloginURL = 9,
-	kTn3270URL = 10,
-	kFingerURL = 11,
-	kWhoisURL = 12,
-	kQuickTimeURL = 13,
-	kSshURL = 14,
-	kSftpURL = 15,
-	kXmanpageURL = 16,
-	kFileURL = 17
-};
-
-enum
-{
-	kInternetConfigUnknownHelper = '----'
-};
-
-
-
 #pragma mark Public Methods
 
 void
@@ -78,9 +46,6 @@ void
 
 void
 	InternetPrefs_Done							();
-
-OSType
-	InternetPrefs_HelperApplicationForURLType	(UniformResourceLocatorType		urlKind);
 
 #endif
 

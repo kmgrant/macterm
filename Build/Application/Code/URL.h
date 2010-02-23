@@ -53,7 +53,6 @@
 
 /*!
 Internet locations that are special to MacTelnet.
-
 */
 enum URL_InternetLocation
 {
@@ -62,6 +61,31 @@ enum URL_InternetLocation
 	kURL_InternetLocationApplicationUpdatesPage		= 'Updt',	//!< information on updates for this version
 	kURL_InternetLocationSourceCodeLicense			= 'CGPL',	//!< GNU General Public License
 	kURL_InternetLocationSourceForgeProject			= 'Proj'	//!< SourceForge project page
+};
+
+enum URL_Type
+{
+	// must be consecutive and zero-based; do not change this without
+	// looking at the order of internal variables in "URL.cp"
+	kURL_TypeInvalid,
+	kURL_TypeFile,
+	kURL_TypeFinger,
+	kURL_TypeFTP,
+	kURL_TypeGopher,
+	kURL_TypeHTTP,
+	kURL_TypeHTTPS,
+	kURL_TypeMailTo,
+	kURL_TypeNews,
+	kURL_TypeNNTP,
+	kURL_TypeRLogIn,
+	kURL_TypeTelnet,
+	kURL_TypeTN3270,
+	kURL_TypeQuickTime,
+	kURL_TypeSFTP,
+	kURL_TypeSSH,
+	kURL_TypeWAIS,
+	kURL_TypeWhoIs,
+	kURL_TypeXManPage
 };
 
 
@@ -78,10 +102,10 @@ Boolean
 OSStatus
 	URL_ParseCFString					(CFStringRef					inURLCFString);
 
-UniformResourceLocatorType
+URL_Type
 	URL_ReturnTypeFromCFString			(CFStringRef					inURLCFString);
 
-UniformResourceLocatorType
+URL_Type
 	URL_ReturnTypeFromCharacterRange	(char const*					inBegin,
 										 char const*					inPastEnd);
 

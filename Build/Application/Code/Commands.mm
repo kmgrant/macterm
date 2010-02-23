@@ -4130,10 +4130,10 @@ canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
 		}
 		else
 		{
-			UniformResourceLocatorType	urlKind = URL_ReturnTypeFromCFString(selectedText.returnCFStringRef());
+			URL_Type	urlKind = URL_ReturnTypeFromCFString(selectedText.returnCFStringRef());
 			
 			
-			if (kNotURL == urlKind)
+			if (kURL_TypeInvalid == urlKind)
 			{
 				result = NO; // disable command for non-URL text selections
 			}
