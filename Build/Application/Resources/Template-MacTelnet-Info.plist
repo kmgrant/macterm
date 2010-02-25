@@ -246,7 +246,7 @@
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>©1998-2009 by Kevin M. Grant
+	<string>©1998-2010 by Kevin M. Grant
 ©1986-1994 U. of Illinois Board of Trustees</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenuCocoa</string>
