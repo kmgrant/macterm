@@ -388,7 +388,7 @@ UInt16
 UInt16
 	Terminal_ReturnColumnCount				(TerminalScreenRef			inScreen);
 
-UInt16
+UInt32
 	Terminal_ReturnInvisibleRowCount		(TerminalScreenRef			inScreen);
 
 UInt16

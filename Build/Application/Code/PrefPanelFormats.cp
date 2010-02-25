@@ -1632,7 +1632,7 @@ const
 		// set up the terminal
 		Terminal_Emulator const		kTerminalType = kTerminal_EmulatorVT100;
 		UInt16 const				kRowCount = 3;
-		UInt16 const				kScrollbackSize = 0;
+		UInt32 const				kScrollbackSize = 0;
 		Boolean const				kForceSave = false;
 		Preferences_Result			prefsResult = kPreferences_ResultOK;
 		

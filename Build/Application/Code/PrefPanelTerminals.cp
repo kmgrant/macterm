@@ -239,7 +239,7 @@ struct My_TerminalsPanelScreenUI
 	setScrollbackCustomizationEnabled	(Boolean);
 	
 	void
-	setScrollbackRows	(UInt16);
+	setScrollbackRows	(UInt32);
 	
 	void
 	setScrollbackType	(Terminal_ScrollbackType);
@@ -1751,7 +1751,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		
 		// set scrollback rows
 		{
-			UInt16		dimension = 0;
+			UInt32		dimension = 0;
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalScreenScrollbackRows, sizeof(dimension),
@@ -1879,12 +1879,12 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 		
 		// set scrollback rows
 		{
-			UInt16		dimension = 0;
+			UInt32		dimension = 0;
 			
 			
 			// INCOMPLETE - take the current units into account!!!
 			GetControlNumericalText(HIViewWrap(idMyFieldScrollback, kOwningWindow), &dummyInteger);
-			dimension = STATIC_CAST(dummyInteger, UInt16);
+			dimension = STATIC_CAST(dummyInteger, UInt32);
 			
 			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagTerminalScreenScrollbackRows,
 														sizeof(dimension), &dimension);
@@ -1959,7 +1959,7 @@ in units of rows.
 */
 void
 My_TerminalsPanelScreenUI::
-setScrollbackRows	(UInt16		inDimension)
+setScrollbackRows	(UInt32		inDimension)
 {
 	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
 	

@@ -1460,7 +1460,7 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 					TerminalScreenRef	screen = ptr->targetTerminals.front();
 					UInt16				columns = Terminal_ReturnColumnCount(screen);
 					UInt16				rows = Terminal_ReturnRowCount(screen);
-					UInt16				scrollback = Terminal_ReturnInvisibleRowCount(screen);
+					UInt32				scrollback = Terminal_ReturnInvisibleRowCount(screen);
 					
 					
 					saveError = SessionDescription_SetIntegerData

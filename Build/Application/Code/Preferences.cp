@@ -1186,7 +1186,7 @@ Preferences_Init ()
 									sizeof(UInt16), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenScrollbackRows,
 									CFSTR("terminal-scrollback-size-lines"), typeNetEvents_CFNumberRef,
-									sizeof(UInt16), Quills::Prefs::TERMINAL);
+									sizeof(UInt32), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenScrollbackType,
 									CFSTR("terminal-scrollback-type"), typeCFStringRef,
 									sizeof(Terminal_ScrollbackType), Quills::Prefs::TERMINAL);
@@ -7300,11 +7300,11 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagTerminalScreenScrollbackRows:
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
-						SInt16			valueInteger = inContextPtr->returnInteger(keyName);
-						UInt16* const	data = REINTERPRET_CAST(outDataPtr, UInt16*);
+						SInt32			valueInteger = inContextPtr->returnLong(keyName);
+						UInt32* const	data = REINTERPRET_CAST(outDataPtr, UInt32*);
 						
 						
-						*data = STATIC_CAST(valueInteger, UInt16);
+						*data = STATIC_CAST(valueInteger, UInt32);
 						if (0 == *data)
 						{
 							// failed; make default
@@ -9292,13 +9292,22 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagTerminalScreenColumns:
 			case kPreferences_TagTerminalScreenRows:
-			case kPreferences_TagTerminalScreenScrollbackRows:
 				{
 					UInt16 const* const		data = REINTERPRET_CAST(inDataPtr, UInt16 const*);
 					
 					
 					assert(typeNetEvents_CFNumberRef == keyValueType);
 					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
+				}
+				break;
+			
+			case kPreferences_TagTerminalScreenScrollbackRows:
+				{
+					UInt32 const* const		data = REINTERPRET_CAST(inDataPtr, UInt32 const*);
+					
+					
+					assert(typeNetEvents_CFNumberRef == keyValueType);
+					inContextPtr->addLong(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			

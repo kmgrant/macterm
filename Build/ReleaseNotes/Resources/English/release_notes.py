@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100224',
     '20100223',
     '20100120',
     '20100117',
@@ -300,6 +301,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100224': [
+        'Fixed scrollback size preference to no longer wrap values that were larger than about 65000.',
+    ],
     '20100223': [
         'Fixed the URL opener to support the "https://" URL type.',
     ],

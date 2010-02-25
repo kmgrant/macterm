@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -43,11 +43,11 @@
 struct Terminal_RangeDescription
 {
 	TerminalScreenRef	screen;				//!< the screen for which this text range applies
-	SInt16				firstRow;			//!< zero-based row number where range occurs; 0 is topmost main screen line,
+	SInt32				firstRow;			//!< zero-based row number where range occurs; 0 is topmost main screen line,
 											//!  a negative line number is in the scrollback buffer
 	UInt16				firstColumn;		//!< zero-based column number where range begins
 	UInt16				columnCount;		//!< number of columns wide the range is; if 0, the range is empty
-	UInt16				rowCount;			//!< number of rows the range covers (it is rectangular, not flush to the edges)
+	UInt32				rowCount;			//!< number of rows the range covers (it is rectangular, not flush to the edges)
 };
 typedef Terminal_RangeDescription const*	Terminal_RangeDescriptionConstPtr;
 

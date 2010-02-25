@@ -481,7 +481,7 @@ OSStatus			receiveTerminalViewRegionRequest	(EventHandlerCallRef, EventRef, Term
 OSStatus			receiveTerminalViewTrack			(EventHandlerCallRef, EventRef, TerminalViewRef);
 void				receiveVideoModeChange				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				releaseRowIterator					(My_TerminalViewPtr, Terminal_LineRef*);
-SInt32				returnNumberOfCharacters			(My_TerminalViewPtr);
+SInt64				returnNumberOfCharacters			(My_TerminalViewPtr);
 CFStringRef			returnSelectedTextAsNewUnicode		(My_TerminalViewPtr, UInt16, TerminalView_TextFlags);
 void				screenBufferChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				screenCursorChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -2091,8 +2091,8 @@ if the range code is not valid
 */
 TerminalView_Result
 TerminalView_ScrollPixelsTo		(TerminalViewRef	inView,
-								 UInt32				inStartOfRangeV,
-								 UInt32				UNUSED_ARGUMENT(inStartOfRangeH))
+								 UInt64				inStartOfRangeV,
+								 UInt64				UNUSED_ARGUMENT(inStartOfRangeH))
 {
 	TerminalView_Result			result = kTerminalView_ResultOK;
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
@@ -2135,7 +2135,7 @@ if the screen reference is unrecognized
 */
 TerminalView_Result
 TerminalView_ScrollRowsTowardBottomEdge		(TerminalViewRef	inView,
-											 UInt16 			inNumberOfRowsToScroll)
+											 UInt32 			inNumberOfRowsToScroll)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	TerminalView_Result			result = kTerminalView_ResultOK;
@@ -2174,7 +2174,7 @@ if the screen reference is unrecognized
 */
 TerminalView_Result
 TerminalView_ScrollRowsTowardTopEdge	(TerminalViewRef	inView,
-										 UInt16				inNumberOfRowsToScroll)
+										 UInt32				inNumberOfRowsToScroll)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	TerminalView_Result			result = kTerminalView_ResultOK;
@@ -7393,10 +7393,10 @@ void
 offsetTopVisibleEdge	(My_TerminalViewPtr		inTerminalViewPtr,
 						 SInt16					inDeltaInPixels)
 {
-	SInt16 const	kMinimum = -Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
-	SInt16 const	kMaximum = 0/*Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref) - 1*/;
+	SInt64 const	kMinimum = -Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
+	SInt64 const	kMaximum = 0/*Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref) - 1*/;
 	SInt16 const	kOldDiscreteValue = inTerminalViewPtr->screen.topVisibleEdgeInRows;
-	SInt32			pixelValue = inTerminalViewPtr->screen.topVisibleEdgeInPixels;
+	SInt64			pixelValue = inTerminalViewPtr->screen.topVisibleEdgeInPixels;
 	SInt16			discreteValue = kOldDiscreteValue;
 	
 	
@@ -7630,11 +7630,11 @@ void
 recalculateCachedDimensions		(My_TerminalViewPtr		inTerminalViewPtr)
 {
 	SInt16 const	kWidth = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
-	SInt16 const	kScrollbackLines = Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
+	SInt32 const	kScrollbackLines = Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
 	SInt16 const	kVisibleWidth = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
 	SInt16 const	kVisibleLines = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
 	SInt16 const	kLines = kScrollbackLines + kVisibleLines;
-	SInt32 const	kPossibleNewMaxViewHeight = STATIC_CAST(kLines, SInt32) *
+	SInt64 const	kPossibleNewMaxViewHeight = STATIC_CAST(kLines, SInt32) *
 												STATIC_CAST(inTerminalViewPtr->text.font.heightPerCharacter, SInt32);
 	
 	
@@ -7913,9 +7913,9 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 						if (kEventAccessibleGetNamedAttribute == kEventKind)
 						{
 							My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
-							SInt32						numChars = returnNumberOfCharacters(viewPtr);
+							SInt64						numChars = returnNumberOfCharacters(viewPtr);
 							CFNumberRef					numCharsCFNumber = CFNumberCreate(kCFAllocatorDefault,
-																							kCFNumberSInt32Type, &numChars);
+																							kCFNumberSInt64Type, &numChars);
 							
 							
 							if (nullptr != numCharsCFNumber)
@@ -9454,13 +9454,13 @@ represented by this terminal view’s text area.
 
 (3.1)
 */
-SInt32
+SInt64
 returnNumberOfCharacters	(My_TerminalViewPtr		inTerminalViewPtr)
 {
 	UInt16 const	kNumVisibleRows = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
-	UInt16 const	kNumScrollbackRows = Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
+	UInt32 const	kNumScrollbackRows = Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
 	UInt16 const	kNumColumns = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
-	SInt32			result = (kNumVisibleRows + kNumScrollbackRows) * kNumColumns;
+	SInt64			result = (kNumVisibleRows + kNumScrollbackRows) * kNumColumns;
 	
 	
 	return result;

@@ -3,7 +3,7 @@
 	Terminal.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -696,7 +696,7 @@ public:
 	UInt16
 	returnScreenRows		(Preferences_ContextRef);
 	
-	UInt16
+	UInt32
 	returnScrollbackRows	(Preferences_ContextRef);
 	
 	CFStringEncoding
@@ -1160,7 +1160,7 @@ void						cursorWrapIfNecessaryGetLocation		(My_ScreenBufferPtr, SInt16*, My_Scr
 void						echoCFString							(My_ScreenBufferPtr, CFStringRef);
 void						emulatorFrontEndOld						(My_ScreenBufferPtr, UInt8 const*, SInt32);
 void						eraseRightHalfOfLine					(My_ScreenBufferPtr, My_ScreenBufferLine&);
-Terminal_Result				forEachLineDo							(TerminalScreenRef, Terminal_LineRef, UInt16,
+Terminal_Result				forEachLineDo							(TerminalScreenRef, Terminal_LineRef, UInt32,
 																	 My_ScreenLineOperationProcPtr, void*);
 void						getBufferOffsetCell						(My_ScreenBufferPtr, size_t, UInt16, UInt16&, SInt32&);
 inline My_LineIteratorPtr	getLineIterator							(Terminal_LineRef);
@@ -1195,7 +1195,7 @@ Boolean						screenInsertNewLines					(My_ScreenBufferPtr, My_ScreenBufferLineLi
 Boolean						screenMoveLinesToScrollback				(My_ScreenBufferPtr, My_ScreenBufferLineList::size_type);
 void						screenScroll							(My_ScreenBufferPtr);
 void						setCursorVisible						(My_ScreenBufferPtr, Boolean);
-void						setScrollbackSize						(My_ScreenBufferPtr, UInt16);
+void						setScrollbackSize						(My_ScreenBufferPtr, UInt32);
 // IMPORTANT: Attribute bit manipulation is fully described in "TerminalTextAttributes.typedef.h".
 //            Changes must be kept consistent everywhere.  See below, for usage.
 inline TerminalTextAttributes	styleOfVTParameter					(UInt8	inPs)
@@ -3522,7 +3522,7 @@ Terminal_ReturnConfiguration	(TerminalScreenRef		inRef)
 	}
 	
 	{
-		UInt16		dimension = dataPtr->text.scrollback.numberOfRowsPermitted;
+		UInt32		dimension = dataPtr->text.scrollback.numberOfRowsPermitted;
 		
 		
 		prefsResult = Preferences_ContextSetData(result, kPreferences_TagTerminalScreenScrollbackRows,
@@ -3540,7 +3540,7 @@ off the top of the screen.
 
 (3.0)
 */
-UInt16
+UInt32
 Terminal_ReturnInvisibleRowCount	(TerminalScreenRef		inRef)
 {
 	UInt16						result = 0;
@@ -3719,7 +3719,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 	else
 	{
 		typedef std::vector< CFStringRef >	BufferList;
-		UInt16 const		kNumberOfScrollbackRows = Terminal_ReturnInvisibleRowCount(inRef);
+		UInt32 const		kNumberOfScrollbackRows = Terminal_ReturnInvisibleRowCount(inRef);
 		UInt16 const		kNumberOfVisibleRows = Terminal_ReturnRowCount(inRef);
 		Terminal_Result		iterationResult = kTerminal_ResultOK;
 		BufferList			buffersToSearch;
@@ -3741,7 +3741,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 		// index and not require the creation of a mega-buffer.
 		{
 			CFRetainRelease*		retainerPtr = nullptr;
-			UInt16					numberOfRows = 0;
+			UInt32					numberOfRows = 0;
 			CFIndex					stringLength = 0;
 			CFMutableStringRef		mutableCFString = nullptr;
 			Terminal_LineRef		lineIterator = nullptr;
@@ -5397,13 +5397,13 @@ and returns an appropriate value for scrollback size.
 
 (3.1)
 */
-UInt16
+UInt32
 My_ScreenBuffer::
 returnScrollbackRows	(Preferences_ContextRef		inTerminalConfig)
 {
 	Preferences_Result			prefsResult = kPreferences_ResultOK;
 	Terminal_ScrollbackType		scrollbackType = kTerminal_ScrollbackTypeFixed;
-	UInt16						result = 200; // arbitrary default
+	UInt32						result = 200; // arbitrary default
 	
 	
 	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenScrollbackType,
@@ -5411,7 +5411,7 @@ returnScrollbackRows	(Preferences_ContextRef		inTerminalConfig)
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		if (kTerminal_ScrollbackTypeDisabled == scrollbackType) result = 0;
-		else if (kTerminal_ScrollbackTypeUnlimited == scrollbackType) result = 1024; // TEMPORARY
+		else if (kTerminal_ScrollbackTypeUnlimited == scrollbackType) result = USHRT_MAX; // TEMPORARY
 		else if (kTerminal_ScrollbackTypeDistributed == scrollbackType) ; // UNIMPLEMENTED
 	}
 	
@@ -11403,7 +11403,7 @@ if any line buffers are unexpectedly empty
 Terminal_Result
 forEachLineDo	(TerminalScreenRef				inRef,
 				 Terminal_LineRef				inStartRow,
-				 UInt16							inNumberOfRowsToConsider,
+				 UInt32							inNumberOfRowsToConsider,
 				 My_ScreenLineOperationProcPtr	inDoWhat,
 				 void*							inContextPtr)
 {
@@ -12474,13 +12474,13 @@ previous scrollback lines).
 */
 void
 setScrollbackSize	(My_ScreenBufferPtr		inDataPtr,
-					 UInt16					inLineCount)
+					 UInt32					inLineCount)
 {
-	SInt16 const	kPreviousScrollbackCount = inDataPtr->scrollbackBuffer.size();
+	My_ScreenBufferLineList::size_type const	kPreviousScrollbackCount = inDataPtr->scrollbackBuffer.size();
 	
 	
 	inDataPtr->text.scrollback.numberOfRowsPermitted = inLineCount;
-	inDataPtr->text.scrollback.enabled = (inDataPtr->text.scrollback.numberOfRowsPermitted > 0);
+	inDataPtr->text.scrollback.enabled = (inDataPtr->text.scrollback.numberOfRowsPermitted > 0L);
 	
 	if (inDataPtr->scrollbackBuffer.size() > inLineCount)
 	{

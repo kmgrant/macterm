@@ -355,16 +355,16 @@ TerminalView_Result
 
 TerminalView_Result
 	TerminalView_ScrollPixelsTo					(TerminalViewRef			inView,
-												 UInt32						inStartOfVerticalRange,
-												 UInt32						inStartOfHorizontalRange = 0);
+												 UInt64						inStartOfVerticalRange,
+												 UInt64						inStartOfHorizontalRange = 0);
 
 TerminalView_Result
 	TerminalView_ScrollRowsTowardBottomEdge		(TerminalViewRef			inView,
-												 UInt16						inNumberOfRowsToScroll);
+												 UInt32						inNumberOfRowsToScroll);
 
 TerminalView_Result
 	TerminalView_ScrollRowsTowardTopEdge		(TerminalViewRef			inView,
-												 UInt16						inNumberOfRowsToScroll);
+												 UInt32						inNumberOfRowsToScroll);
 
 TerminalView_Result
 	TerminalView_ScrollToBeginning				(TerminalViewRef			inView);

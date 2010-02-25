@@ -269,7 +269,7 @@ enum
 	kPreferences_TagTerminalLineWrap					= 'wrap',	//!< data: "Boolean"
 	kPreferences_TagTerminalScreenColumns				= 'scol',	//!< data: "UInt16"
 	kPreferences_TagTerminalScreenRows					= 'srow',	//!< data: "UInt16"
-	kPreferences_TagTerminalScreenScrollbackRows		= 'scrb',	//!< data: "UInt16"
+	kPreferences_TagTerminalScreenScrollbackRows		= 'scrb',	//!< data: "UInt32"
 	kPreferences_TagTerminalScreenScrollbackType		= 'scrt',	//!< data: "Terminal_ScrollbackType"
 	kPreferences_TagVT100FixLineWrappingBug				= 'vlwr',	//!< data: "Boolean"
 	kPreferences_TagXTermColorEnabled					= 'xtcl',	//!< data: "Boolean"
