@@ -1085,23 +1085,31 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 
 
 /*!
-To convert the text in a text field or static
-text control into a number, use this convenient
-method.
+Converts the text in a text field or static text view
+into a number.
+
+The optional length argument is useful to distinguish
+a true zero value from a 0 that occurred for other
+reasons (mainly, from a blank text field).
 
 (3.0)
 */
 void
 GetControlNumericalText		(ControlRef		inControl,
-							 SInt32*		outNumberPtr)
+							 SInt32*		outNumberPtr,
+							 size_t*		outStringLengthPtrOrNull)
 {
 	if (outNumberPtr != nullptr)
 	{
-		Str255		string;
+		Str255		pString;
 		
 		
-		GetControlText(inControl, string);
-		StringToNum(string, outNumberPtr);
+		GetControlText(inControl, pString);
+		StringToNum(pString, outNumberPtr);
+		if (nullptr != outStringLengthPtrOrNull)
+		{
+			*outStringLengthPtrOrNull = PLstrlen(pString);
+		}
 	}
 }// GetControlNumericalText
 

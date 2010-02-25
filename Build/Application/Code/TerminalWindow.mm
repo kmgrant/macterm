@@ -5806,7 +5806,7 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 			
 			case kControlIndicatorPart:
 				// 3.0 - live scrolling
-				TerminalView_ScrollPixelsTo(view, GetControl32BitValue(ptr->controls.scrollBarV),
+				TerminalView_ScrollTo(view, GetControl32BitValue(ptr->controls.scrollBarV),
 											GetControl32BitValue(ptr->controls.scrollBarH));
 				break;
 			
@@ -5857,7 +5857,7 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 			
 			case kControlIndicatorPart:
 				// 3.0 - live scrolling
-				TerminalView_ScrollPixelsTo(view, GetControl32BitValue(ptr->controls.scrollBarV));
+				TerminalView_ScrollTo(view, GetControl32BitValue(ptr->controls.scrollBarV));
 				break;
 			
 			default:
@@ -6696,19 +6696,16 @@ updateScrollBars	(TerminalWindowPtr		inPtr)
 	{
 		// update the scroll bars to reflect the contents of the selected view
 		HIViewRef				scrollBarView = nullptr;
-		UInt32					scrollVStartView = 0;
-		UInt32					scrollVPastEndView = 0;
-		UInt32					scrollVRangeMinimum = 0;
-		UInt32					scrollVRangePastMaximum = 0;
+		SInt32					scrollVStartView = 0;
+		SInt32					scrollVPastEndView = 0;
+		SInt32					scrollVRangeMinimum = 0;
+		SInt32					scrollVRangePastMaximum = 0;
 		TerminalView_Result		rangeResult = kTerminalView_ResultOK;
 		
 		
 		// use the maximum possible screen size for the maximum resize limits
-		rangeResult = TerminalView_GetRange(view, kTerminalView_RangeCodeScrollRegionV,
-											scrollVStartView, scrollVPastEndView);
-		assert(kTerminalView_ResultOK == rangeResult);
-		rangeResult = TerminalView_GetRange(view, kTerminalView_RangeCodeScrollRegionVMaximum,
-											scrollVRangeMinimum, scrollVRangePastMaximum);
+		rangeResult = TerminalView_GetScrollVerticalInfo(view, scrollVStartView, scrollVPastEndView,
+															scrollVRangeMinimum, scrollVRangePastMaximum);
 		assert(kTerminalView_ResultOK == rangeResult);
 		
 		// update controls’ maximum and minimum values; the vertical scroll bar

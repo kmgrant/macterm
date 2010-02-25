@@ -307,12 +307,8 @@ struct My_TerminalView
 			Boolean				idleFlash;		// is timer currently animating anything?
 		} cursor;
 		
-		SInt32			topVisibleEdgeInPixels;		// 0 if scrolled to the main screen, negative if scrollback; do not change this
+		SInt32			topVisibleEdgeInRows;		// 0 if scrolled to the main screen, negative if scrollback; do not change this
 													//   value directly, use offsetTopVisibleEdge()
-		SInt16			topVisibleEdgeInRows;		// 0 if scrolled to the main screen, negative if scrollback; do not change this
-													//   value directly, use offsetTopVisibleEdge()
-		UInt16			leftVisibleEdgeInPixels;	// 0 if leftmost column is visible, positive if content is scrolled to the left;
-													//   do not change this value directly, use offsetLeftVisibleEdge()
 		UInt16			leftVisibleEdgeInColumns;	// 0 if leftmost column is visible, positive if content is scrolled to the left;
 													//   do not change this value directly, use offsetLeftVisibleEdge()
 		SInt16			currentRenderedLine;		// only defined while drawing; the row that is currently being drawn
@@ -334,13 +330,8 @@ struct My_TerminalView
 			// these settings should only ever be modified by recalculateCachedDimensions(),
 			// and that routine should be called when any dependent factor, such as font,
 			// is changed; see that routine’s documentation for more information
-			SInt16			topEdgeInPixels;		// the most negative possible value for the top visible edge in pixels
-			SInt16			viewWidthInPixels;		// size of window view (window could be smaller than the screen size);
-			SInt32			viewHeightInPixels;		//   always identical to the current dimensions of the content view
-			SInt16			maxViewWidthInPixels;	// size of bottommost screenful (regardless of window size);
-			SInt32			maxViewHeightInPixels;	//   always identical to the maximum dimensions of the content view
-			SInt16			maxWidthInPixels;		// the largest size the terminal view content area can possibly have, which
-			SInt32			maxHeightInPixels;		//   would display every last line of the visible screen *and* scrollback!
+			SInt16		viewWidthInPixels;		// size of window view (window could be smaller than the screen size);
+			SInt32		viewHeightInPixels;		//   always identical to the current dimensions of the content view
 		} cache;
 	} screen;
 	
@@ -466,7 +457,7 @@ void				localToScreen						(My_TerminalViewPtr, SInt16*, SInt16*);
 Boolean				mainEventLoopEvent					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 pascal void			navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
 void				offsetLeftVisibleEdge				(My_TerminalViewPtr, SInt16);
-void				offsetTopVisibleEdge				(My_TerminalViewPtr, SInt16);
+void				offsetTopVisibleEdge				(My_TerminalViewPtr, SInt32);
 void				preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				preferenceChangedForView			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				recalculateCachedDimensions			(My_TerminalViewPtr);
@@ -1101,11 +1092,17 @@ TerminalView_GetIdealSize	(TerminalViewRef	inView,
 
 
 /*!
-Returns values for the specified range along one axis.
-See the documentation on "TerminalView_RangeCode" for
-more information.
+Returns information on the currently visible rows and the
+maximum theoretical row view size, scaled to the limits of
+a 32-bit integer (for use in user interface elements).
 
-See also TerminalView_ScrollPixelsTo().
+The maximum range is not necessarily appropriate as the
+maximum value of a control; in particular, you would want
+to subtract one page (the view range size) to reflect the
+fact that the current value is always the top of the range.
+
+See also TerminalView_ScrollTo(), which is useful for
+handling live tracking of user interface elements.
 
 \retval kTerminalView_ResultOK
 if no error occurred
@@ -1113,16 +1110,14 @@ if no error occurred
 \retval kTerminalView_ResultInvalidID
 if the view reference is unrecognized
 
-\retval kTerminalView_ResultParameterError
-if the range code is not valid
-
-(3.1)
+(4.0)
 */
 TerminalView_Result
-TerminalView_GetRange	(TerminalViewRef			inView,
-						 TerminalView_RangeCode		inRangeCode,
-						 UInt32&					outStartOfRange,
-						 UInt32&					outPastEndOfRange)
+TerminalView_GetScrollVerticalInfo	(TerminalViewRef	inView,
+									 SInt32&			outStartOfView,
+									 SInt32&			outPastEndOfView,
+									 SInt32&			outStartOfMaximumRange,
+									 SInt32&			outPastEndOfMaximumRange)
 {
 	TerminalView_Result			result = kTerminalView_ResultOK;
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
@@ -1131,45 +1126,18 @@ TerminalView_GetRange	(TerminalViewRef			inView,
 	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
 	else
 	{
-		switch (inRangeCode)
-		{
-		case kTerminalView_RangeCodeScrollRegionV:
-			// IMPORTANT: This routine should derive range values in the same way as
-			// TerminalView_ScrollPixelsTo().
-			//
-			// Although the top visible edge is stored internally as a negative value
-			// (where zero means the main screen is fully visible and anything less
-			// indicates scrollback), the returned range is defined with positive
-			// integers.  In the returned range, the smallest possible value is zero
-			// and the largest value depends on how many lines are in the scrollback
-			// and main screen, the size (double or not) of those lines, and the font.
-			//
-			// Since the maximum height includes the bottommost screenful, the height
-			// (in pixels) of the screen is subtracted from that height to find the
-			// scrollback height.  The scrollback is then simply added to the internal
-			// negative offset to find the overall pixel position relative to the
-			// oldest row.
-			//
-			// This range definition is chosen to be convenient for scrollbars.
-			outStartOfRange = viewPtr->screen.topVisibleEdgeInPixels/* negative for scrollback */ +
-								viewPtr->screen.cache.maxHeightInPixels - viewPtr->screen.cache.viewHeightInPixels;
-			outPastEndOfRange = outStartOfRange + viewPtr->screen.cache.viewHeightInPixels;
-			break;
+		SInt32 const	kScrollbackRows = Terminal_ReturnInvisibleRowCount(viewPtr->screen.ref);
+		SInt16 const	kRows = Terminal_ReturnRowCount(viewPtr->screen.ref);
 		
-		case kTerminalView_RangeCodeScrollRegionVMaximum:
-			outStartOfRange = 0;
-			outPastEndOfRange = viewPtr->screen.cache.maxHeightInPixels;
-			break;
 		
-		default:
-			// ???
-			result = kTerminalView_ResultParameterError;
-			break;
-		}
+		// WARNING: this must use the same logic as TerminalView_ScrollTo()
+		outStartOfMaximumRange = 0;
+		outPastEndOfMaximumRange = outStartOfMaximumRange + kScrollbackRows + kRows;
+		outStartOfView = outPastEndOfMaximumRange - kRows + viewPtr->screen.topVisibleEdgeInRows;
+		outPastEndOfView = outStartOfView + (viewPtr->screen.cache.viewHeightInPixels / viewPtr->text.font.heightPerCharacter);
 	}
-	
 	return result;
-}// GetRange
+}// GetScrollVerticalInfo
 
 
 /*!
@@ -2033,7 +2001,7 @@ TerminalView_ScrollColumnsTowardLeftEdge	(TerminalViewRef	inView,
 		updateDisplay(viewPtr);
 		
 		// update anchor
-		offsetLeftVisibleEdge(viewPtr, +(inNumberOfColumnsToScroll * viewPtr->text.font.widthPerCharacter));
+		offsetLeftVisibleEdge(viewPtr, +inNumberOfColumnsToScroll);
 		
 		eventNotifyForView(viewPtr, kTerminalView_EventScrolling, inView/* context */);
 	}
@@ -2062,62 +2030,12 @@ TerminalView_ScrollColumnsTowardRightEdge	(TerminalViewRef	inView,
 		updateDisplay(viewPtr);
 		
 		// update anchor
-		offsetLeftVisibleEdge(viewPtr, -(inNumberOfColumnsToScroll * viewPtr->text.font.widthPerCharacter));
+		offsetLeftVisibleEdge(viewPtr, -inNumberOfColumnsToScroll);
 		
 		eventNotifyForView(viewPtr, kTerminalView_EventScrolling, inView/* context */);
 	}
 	return result;
 }// ScrollColumnsTowardRightEdge
-
-
-/*!
-Scrolls the contents of the terminal screen by a specific
-number of pixels, as if the user dragged a scroll bar
-indicator.  This routine reserves the right to snap the
-amount to some less precise value.
-
-Currently, the horizontal value is ignored.
-
-\retval kTerminalView_ResultOK
-if no error occurred
-
-\retval kTerminalView_ResultInvalidID
-if the view reference is unrecognized
-
-\retval kTerminalView_ResultParameterError
-if the range code is not valid
-
-(3.1)
-*/
-TerminalView_Result
-TerminalView_ScrollPixelsTo		(TerminalViewRef	inView,
-								 UInt64				inStartOfRangeV,
-								 UInt64				UNUSED_ARGUMENT(inStartOfRangeH))
-{
-	TerminalView_Result			result = kTerminalView_ResultOK;
-	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	
-	
-	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
-	else
-	{
-		// IMPORTANT: This routine should derive range values in the same way
-		// as TerminalView_GetRange().
-		SInt32 const	kNewValue = inStartOfRangeV - viewPtr->screen.cache.maxHeightInPixels +
-									viewPtr->screen.cache.viewHeightInPixels;
-		
-		
-		// just redraw everything
-		updateDisplay(viewPtr);
-		
-		// update anchor
-		offsetTopVisibleEdge(viewPtr, kNewValue - viewPtr->screen.topVisibleEdgeInPixels);
-		
-		eventNotifyForView(viewPtr, kTerminalView_EventScrolling, inView/* context */);
-	}
-	
-	return result;
-}// ScrollPixelsTo
 
 
 /*!
@@ -2148,10 +2066,7 @@ TerminalView_ScrollRowsTowardBottomEdge		(TerminalViewRef	inView,
 		updateDisplay(viewPtr);
 		
 		// update anchor
-		// TEMPORARY: really, something should traverse the row attributes between
-		// the current location and the final location, figure out how many of them
-		// use double-sized text and double the height of each appropriate row
-		offsetTopVisibleEdge(viewPtr, -(inNumberOfRowsToScroll * viewPtr->text.font.heightPerCharacter));
+		offsetTopVisibleEdge(viewPtr, -inNumberOfRowsToScroll);
 		
 		eventNotifyForView(viewPtr, kTerminalView_EventScrolling, inView/* context */);
 	}
@@ -2187,15 +2102,64 @@ TerminalView_ScrollRowsTowardTopEdge	(TerminalViewRef	inView,
 		updateDisplay(viewPtr);
 		
 		// update anchor
-		// TEMPORARY: really, something should traverse the row attributes between
-		// the current location and the final location, figure out how many of them
-		// use double-sized text and double the height of each appropriate row
-		offsetTopVisibleEdge(viewPtr, +(inNumberOfRowsToScroll * viewPtr->text.font.heightPerCharacter));
+		offsetTopVisibleEdge(viewPtr, +inNumberOfRowsToScroll);
 		
 		eventNotifyForView(viewPtr, kTerminalView_EventScrolling, inView/* context */);
 	}
 	return result;
 }// ScrollRowsTowardTopEdge
+
+
+/*!
+Scrolls the contents of the terminal screen to a particular
+location, as if the user dragged a scroll bar indicator.
+
+The given integer ranges do not necessarily correspond to any
+real value (such as row counts, or pixels); they could be
+scaled.  Always use TerminalView_GetScrollVerticalInfo() to
+set up the maximum range and value of a user interface element,
+at which point it is safe to pass the current value of that
+element to this routine.
+
+Currently, the horizontal value is ignored.
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+\retval kTerminalView_ResultParameterError
+if a range is invalid
+
+(4.0)
+*/
+TerminalView_Result
+TerminalView_ScrollTo	(TerminalViewRef	inView,
+						 SInt32				inStartOfRangeV,
+						 SInt32				UNUSED_ARGUMENT(inStartOfRangeH))
+{
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		SInt32 const	kScrollbackRows = Terminal_ReturnInvisibleRowCount(viewPtr->screen.ref);
+		
+		
+		// update anchor
+		// WARNING: this must use the same logic as TerminalView_GetScrollVerticalInfo()
+		offsetTopVisibleEdge(viewPtr, (inStartOfRangeV - kScrollbackRows) - viewPtr->screen.topVisibleEdgeInRows);
+		
+		// just redraw everything
+		updateDisplay(viewPtr);
+		
+		eventNotifyForView(viewPtr, kTerminalView_EventScrolling, inView/* context */);
+	}
+	return result;
+}// ScrollTo
 
 
 /*!
@@ -3275,17 +3239,10 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->text.selection.keyboardMode = kMy_SelectionModeUnset;
 	this->text.selection.exists = false;
 	this->text.selection.isRectangular = false;
-	this->screen.leftVisibleEdgeInPixels = 0;
 	this->screen.leftVisibleEdgeInColumns = 0;
-	this->screen.topVisibleEdgeInPixels = 0;
 	this->screen.topVisibleEdgeInRows = 0;
-	this->screen.cache.topEdgeInPixels = 0; // set later...
 	this->screen.cache.viewWidthInPixels = 0; // set later...
 	this->screen.cache.viewHeightInPixels = 0; // set later...
-	this->screen.cache.maxViewWidthInPixels = 0; // set later...
-	this->screen.cache.maxViewHeightInPixels = 0; // set later...
-	this->screen.cache.maxWidthInPixels = 0; // set later...
-	this->screen.cache.maxHeightInPixels = 0; // set later...
 	this->screen.focusRingEnabled = true;
 	this->screen.isReverseVideo = 0;
 	this->screen.cursor.currentState = kMyCursorStateVisible;
@@ -3460,7 +3417,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	
 	// ask to be notified of screen buffer content changes
 	this->screen.contentMonitor = ListenerModel_NewStandardListener(screenBufferChanged, this->selfRef/* context */);
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeText, this->screen.contentMonitor);
+	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeTextEdited, this->screen.contentMonitor);
 	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeScrollActivity, this->screen.contentMonitor);
 	
 	// ask to be notified of cursor changes
@@ -3522,7 +3479,7 @@ My_TerminalView::
 	ListenerModel_ReleaseListener(&this->screen.videoModeMonitor);
 	
 	// stop listening for screen buffer content changes
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeText, this->screen.contentMonitor);
+	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeTextEdited, this->screen.contentMonitor);
 	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeScrollActivity, this->screen.contentMonitor);
 	ListenerModel_ReleaseListener(&this->screen.contentMonitor);
 	
@@ -7346,43 +7303,38 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 
 /*!
 Changes the left visible edge of the terminal view by the
-specified number of pixels; if positive, the display would
+specified number of columns; if positive, the display would
 move left, otherwise it would move right.  No redrawing is
 done, however; the change will take effect the next time
 the screen is redrawn.
+
+Currently, this routine has no real effect, because there
+is no horizontal scrolling implemented.
 
 (3.0)
 */
 void
 offsetLeftVisibleEdge	(My_TerminalViewPtr		inTerminalViewPtr,
-						 SInt16					inDeltaInPixels)
+						 SInt16					inDeltaInColumns)
 {
-	SInt16 const	kMinimum = 0;
-	SInt16 const	kMaximum = 0/*Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref) - 1*/;
+	SInt16 const	kMinimum = 0; // TEMPORARY - some day, horizontal scrolling may be supported
+	SInt16 const	kMaximum = 0;
 	SInt16 const	kOldDiscreteValue = inTerminalViewPtr->screen.leftVisibleEdgeInColumns;
-	SInt16			pixelValue = inTerminalViewPtr->screen.leftVisibleEdgeInPixels;
-	SInt16			discreteValue = kOldDiscreteValue;
+	SInt16			newDiscreteValue = kOldDiscreteValue + inDeltaInColumns;
 	
 	
-	// TEMPORARY; theoretically these could take into account which rows have double-sized text
+	newDiscreteValue = INTEGER_MAXIMUM(kMinimum, newDiscreteValue);
+	newDiscreteValue = INTEGER_MINIMUM(kMaximum, newDiscreteValue);
+	inTerminalViewPtr->screen.leftVisibleEdgeInColumns = newDiscreteValue;
 	
-	pixelValue += inDeltaInPixels;
-	pixelValue = INTEGER_MAXIMUM(kMinimum * inTerminalViewPtr->text.font.widthPerCharacter, pixelValue);
-	pixelValue = INTEGER_MINIMUM(kMaximum * inTerminalViewPtr->text.font.widthPerCharacter, pixelValue);
-	
-	discreteValue = pixelValue / inTerminalViewPtr->text.font.widthPerCharacter;
-	
-	inTerminalViewPtr->screen.leftVisibleEdgeInPixels = pixelValue;
-	inTerminalViewPtr->screen.leftVisibleEdgeInColumns = discreteValue;
-	
-	inTerminalViewPtr->text.selection.range.first.first += (discreteValue - kOldDiscreteValue);
-	inTerminalViewPtr->text.selection.range.second.first += (discreteValue - kOldDiscreteValue);
+	inTerminalViewPtr->text.selection.range.first.first += (newDiscreteValue - kOldDiscreteValue);
+	inTerminalViewPtr->text.selection.range.second.first += (newDiscreteValue - kOldDiscreteValue);
 }// offsetLeftVisibleEdge
 
 
 /*!
 Changes the top visible edge of the terminal view by the
-specified number of pixels; if positive, the display would
+specified number of rows; if positive, the display would
 move up, otherwise it would move down.  No redrawing is
 done, however; the change will take effect the next time
 the screen is redrawn.
@@ -7391,28 +7343,20 @@ the screen is redrawn.
 */
 void
 offsetTopVisibleEdge	(My_TerminalViewPtr		inTerminalViewPtr,
-						 SInt16					inDeltaInPixels)
+						 SInt32					inDeltaInRows)
 {
-	SInt64 const	kMinimum = -Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
-	SInt64 const	kMaximum = 0/*Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref) - 1*/;
-	SInt16 const	kOldDiscreteValue = inTerminalViewPtr->screen.topVisibleEdgeInRows;
-	SInt64			pixelValue = inTerminalViewPtr->screen.topVisibleEdgeInPixels;
-	SInt16			discreteValue = kOldDiscreteValue;
+	SInt32 const	kMinimum = -Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
+	SInt32 const	kMaximum = 0;
+	SInt32 const	kOldDiscreteValue = inTerminalViewPtr->screen.topVisibleEdgeInRows;
+	SInt32			newDiscreteValue = kOldDiscreteValue + inDeltaInRows;
 	
 	
-	// TEMPORARY; theoretically these could take into account which rows have double-sized text
+	newDiscreteValue = INTEGER_MAXIMUM(kMinimum, newDiscreteValue);
+	newDiscreteValue = INTEGER_MINIMUM(kMaximum, newDiscreteValue);
+	inTerminalViewPtr->screen.topVisibleEdgeInRows = newDiscreteValue;
 	
-	pixelValue += inDeltaInPixels;
-	pixelValue = INTEGER_MAXIMUM(kMinimum * inTerminalViewPtr->text.font.heightPerCharacter, pixelValue);
-	pixelValue = INTEGER_MINIMUM(kMaximum * inTerminalViewPtr->text.font.heightPerCharacter, pixelValue);
-	
-	discreteValue = pixelValue / inTerminalViewPtr->text.font.heightPerCharacter;
-	
-	inTerminalViewPtr->screen.topVisibleEdgeInPixels = pixelValue;
-	inTerminalViewPtr->screen.topVisibleEdgeInRows = discreteValue;
-	
-	inTerminalViewPtr->text.selection.range.first.second += (discreteValue - kOldDiscreteValue);
-	inTerminalViewPtr->text.selection.range.second.second += (discreteValue - kOldDiscreteValue);
+	inTerminalViewPtr->text.selection.range.first.second += (newDiscreteValue - kOldDiscreteValue);
+	inTerminalViewPtr->text.selection.range.second.second += (newDiscreteValue - kOldDiscreteValue);
 	
 	// hide the cursor while the main screen is not showing
 	setCursorVisibility(inTerminalViewPtr, (inTerminalViewPtr->screen.topVisibleEdgeInRows >= 0));
@@ -7611,8 +7555,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 
 
 /*!
-Determines the current and maximum view width and height, and
-maximum possible width and height in pixels, based on the current
+Caches various measurements in pixels, based on the current
 font dimensions and the current number of columns, rows and
 scrollback buffer lines.
 
@@ -7629,35 +7572,14 @@ cached settings ever be changed.
 void
 recalculateCachedDimensions		(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	SInt16 const	kWidth = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
-	SInt32 const	kScrollbackLines = Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
+	//SInt32 const	kScrollbackLines = Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
 	SInt16 const	kVisibleWidth = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
 	SInt16 const	kVisibleLines = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
-	SInt16 const	kLines = kScrollbackLines + kVisibleLines;
-	SInt64 const	kPossibleNewMaxViewHeight = STATIC_CAST(kLines, SInt32) *
-												STATIC_CAST(inTerminalViewPtr->text.font.heightPerCharacter, SInt32);
 	
 	
-	inTerminalViewPtr->screen.cache.topEdgeInPixels = -(STATIC_CAST(kScrollbackLines, SInt32) *
-														STATIC_CAST(inTerminalViewPtr->text.font.heightPerCharacter, SInt32));
-	inTerminalViewPtr->screen.cache.maxViewWidthInPixels = kVisibleWidth * inTerminalViewPtr->text.font.widthPerCharacter;
-	inTerminalViewPtr->screen.cache.viewWidthInPixels    = kVisibleWidth * inTerminalViewPtr->text.font.widthPerCharacter;
-	// TEMPORARY: since some visible lines may be in double-height mode, that should be taken into account here
-	inTerminalViewPtr->screen.cache.maxViewHeightInPixels = STATIC_CAST(kVisibleLines, SInt32) *
-															STATIC_CAST(inTerminalViewPtr->text.font.heightPerCharacter, SInt32);
+	inTerminalViewPtr->screen.cache.viewWidthInPixels = kVisibleWidth * inTerminalViewPtr->text.font.widthPerCharacter;
 	inTerminalViewPtr->screen.cache.viewHeightInPixels = STATIC_CAST(kVisibleLines, SInt32) *
 															STATIC_CAST(inTerminalViewPtr->text.font.heightPerCharacter, SInt32);
-	if (inTerminalViewPtr->screen.cache.maxViewWidthInPixels > (kWidth * inTerminalViewPtr->text.font.widthPerCharacter))
-	{
-		inTerminalViewPtr->screen.cache.maxViewWidthInPixels = (kWidth * inTerminalViewPtr->text.font.widthPerCharacter);
-	}
-	if (inTerminalViewPtr->screen.cache.maxViewHeightInPixels > kPossibleNewMaxViewHeight)
-	{
-		inTerminalViewPtr->screen.cache.maxViewHeightInPixels = kPossibleNewMaxViewHeight;
-	}
-	inTerminalViewPtr->screen.cache.maxWidthInPixels = kWidth * inTerminalViewPtr->text.font.widthPerCharacter;
-	inTerminalViewPtr->screen.cache.maxHeightInPixels = STATIC_CAST(kLines, SInt32) *
-														STATIC_CAST(inTerminalViewPtr->text.font.heightPerCharacter, SInt32);
 }// recalculateCachedDimensions
 
 
@@ -9604,19 +9526,19 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	
 	switch (inTerminalChange)
 	{
-	case kTerminal_ChangeText:
+	case kTerminal_ChangeTextEdited:
 		if (IsValidWindowRef(HIViewGetWindow(viewPtr->contentHIView)))
 		{
 			Terminal_RangeDescriptionConstPtr	rangeInfoPtr = REINTERPRET_CAST(inEventContextPtr,
 																				Terminal_RangeDescriptionConstPtr);
-			register SInt16						i = 0;
+			register SInt32						i = 0;
 			
 			
 			// debug
 			//Console_WriteValuePair("first changed row, number of changed rows",
 			//						rangeInfoPtr->firstRow, rangeInfoPtr->rowCount);
 			for (i = rangeInfoPtr->firstRow - viewPtr->screen.topVisibleEdgeInRows;
-					i < (rangeInfoPtr->firstRow - viewPtr->screen.topVisibleEdgeInRows + rangeInfoPtr->rowCount); ++i)
+					i < (rangeInfoPtr->firstRow - viewPtr->screen.topVisibleEdgeInRows + STATIC_CAST(rangeInfoPtr->rowCount, SInt32)); ++i)
 			{
 				invalidateRowSection(viewPtr, i, rangeInfoPtr->firstColumn, rangeInfoPtr->columnCount);
 			}

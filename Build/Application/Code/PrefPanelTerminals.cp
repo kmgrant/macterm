@@ -1880,10 +1880,15 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 		// set scrollback rows
 		{
 			UInt32		dimension = 0;
+			size_t		stringLength = 0;
 			
 			
 			// INCOMPLETE - take the current units into account!!!
-			GetControlNumericalText(HIViewWrap(idMyFieldScrollback, kOwningWindow), &dummyInteger);
+			GetControlNumericalText(HIViewWrap(idMyFieldScrollback, kOwningWindow), &dummyInteger, &stringLength);
+			if (dummyInteger < 0)
+			{
+				dummyInteger = 0; // arbitrary
+			}
 			dimension = STATIC_CAST(dummyInteger, UInt32);
 			
 			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagTerminalScreenScrollbackRows,
@@ -1891,6 +1896,14 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 			if (kPreferences_ResultOK != prefsResult)
 			{
 				Console_Warning(Console_WriteLine, "failed to set screen scrollback");
+			}
+			
+			// the Preferences module will special-case the value 0 and
+			// choose the Default value, instead; short-cut that here,
+			// and implicitly switch to Off mode
+			if ((0 == dimension) && (0 != stringLength))
+			{
+				Commands_ExecuteByIDUsingEvent(kCommandSetScrollbackTypeDisabled);
 			}
 		}
 	}

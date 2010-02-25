@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100225',
     '20100224',
     '20100223',
     '20100120',
@@ -301,6 +302,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100225': [
+        'Fixed terminal window scroll bars, to work with any scrollback buffer size (Trac #36).',
+    ],
     '20100224': [
         'Fixed scrollback size preference to no longer wrap values that were larger than about 65000.',
     ],

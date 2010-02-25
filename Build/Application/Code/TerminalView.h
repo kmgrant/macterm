@@ -144,26 +144,6 @@ enum TerminalView_Event
 													//!  (context: TerminalViewRef)
 };
 
-/*!
-Special ranges of a terminal view.  Ranges always start at
-0 (the “oldest” pixel, for the vertical axis), and end at
-one past the actual value (useful algorithmically).  So for
-instance, the first 10 pixels of the view would be represented
-as the range (0, 10), where 10 is one past the end (it
-follows that the pixel count in the range is the difference
-between the start and end points).
-*/
-enum TerminalView_RangeCode
-{
-	kTerminalView_RangeCodeScrollRegionV			= 0,	//!< the *scroll* region of the screen background, in pixels;
-															//!  this can be compared with the maximum scroll region to see
-															//!  both where in the maximum space the screen is scrolled, and
-															//!  how much of the maximum screen is showing
-	kTerminalView_RangeCodeScrollRegionVMaximum		= 1		//!< the maximum *virtual* region of the screen background, in
-															//!  pixels; useful for comparisons against the range returned
-															//!  for "kTerminalView_RangeCodeScrollRegionV"
-};
-
 #include "TerminalTextAttributes.typedef.h"
 
 typedef UInt16 TerminalView_TextFlags;
@@ -337,6 +317,13 @@ HIWindowRef
 //!\name Visible Area
 //@{
 
+TerminalView_Result
+	TerminalView_GetScrollVerticalInfo			(TerminalViewRef			inView,
+												 SInt32&					outStartOfRange,
+												 SInt32&					outPastEndOfRange,
+												 SInt32&					outStartOfMaximum,
+												 SInt32&					outPastEndOfMaximum);
+
 TerminalView_DisplayMode
 	TerminalView_ReturnDisplayMode				(TerminalViewRef			inView);
 
@@ -354,17 +341,18 @@ TerminalView_Result
 												 UInt16						inNumberOfColumnsToScroll);
 
 TerminalView_Result
-	TerminalView_ScrollPixelsTo					(TerminalViewRef			inView,
-												 UInt64						inStartOfVerticalRange,
-												 UInt64						inStartOfHorizontalRange = 0);
-
-TerminalView_Result
 	TerminalView_ScrollRowsTowardBottomEdge		(TerminalViewRef			inView,
 												 UInt32						inNumberOfRowsToScroll);
 
 TerminalView_Result
 	TerminalView_ScrollRowsTowardTopEdge		(TerminalViewRef			inView,
 												 UInt32						inNumberOfRowsToScroll);
+
+// USE TerminalView_GetScrollVerticalInfo() TO DETERMINE APPROPRIATE VALUES FOR THESE INTEGER RANGES
+TerminalView_Result
+	TerminalView_ScrollTo						(TerminalViewRef			inView,
+												 SInt32						inStartOfVerticalRange,
+												 SInt32						inStartOfHorizontalRange = 0);
 
 TerminalView_Result
 	TerminalView_ScrollToBeginning				(TerminalViewRef			inView);
@@ -402,12 +390,6 @@ Boolean
 	TerminalView_GetIdealSize					(TerminalViewRef			inView,
 												 SInt16&					outWidthInPixels,
 												 SInt16&					outHeightInPixels);
-
-TerminalView_Result
-	TerminalView_GetRange						(TerminalViewRef			inView,
-												 TerminalView_RangeCode		inRangeCode,
-												 UInt32&					outStartOfRange,
-												 UInt32&					outPastEndOfRange);
 
 void
 	TerminalView_GetTheoreticalScreenDimensions	(TerminalViewRef			inView,

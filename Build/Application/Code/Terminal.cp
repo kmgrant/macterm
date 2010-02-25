@@ -2175,7 +2175,7 @@ value of Terminal_ReturnInvisibleRowCount() should be zero.
 
 This triggers two events: "kTerminal_ChangeScrollActivity"
 to indicate that data has been removed, and also
-"kTerminal_ChangeText" (given a range consisting of
+"kkTerminal_ChangeTextRemoved" (given a range consisting of
 all previous scrollback lines).
 
 (3.1)
@@ -2204,7 +2204,7 @@ Terminal_DeleteAllSavedLines	(TerminalScreenRef		inRef)
 			range.columnCount = dataPtr->text.visibleScreen.numberOfColumnsPermitted;
 			range.rowCount = kPreviousScrollbackCount;
 			
-			changeNotifyForTerminal(dataPtr, kTerminal_ChangeText, &range/* context */);
+			changeNotifyForTerminal(dataPtr, kTerminal_ChangeTextRemoved, &range/* context */);
 		}
 		
 		// notify listeners that scroll activity has taken place,
@@ -3416,7 +3416,7 @@ Terminal_Reset		(TerminalScreenRef		inRef,
 					// add the entire visible buffer to the text-change region;
 					// this should trigger things like Terminal View updates
 					//Console_WriteLine("text changed event: reset terminal");
-					changeNotifyForTerminal(dataPtr, kTerminal_ChangeText, &range);
+					changeNotifyForTerminal(dataPtr, kTerminal_ChangeTextEdited, &range);
 					
 					// destroy the iterator
 					Terminal_DisposeLineIterator(&lineIterator);
@@ -4232,7 +4232,7 @@ Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
 			range.firstColumn = 0;
 			range.columnCount = dataPtr->text.visibleScreen.numberOfColumnsPermitted;
 			range.rowCount = kLineDelta;
-			changeNotifyForTerminal(dataPtr, kTerminal_ChangeText, &range);
+			changeNotifyForTerminal(dataPtr, kTerminal_ChangeTextEdited, &range);
 		}
 		
 		changeNotifyForTerminal(dataPtr, kTerminal_ChangeScreenSize, dataPtr->selfRef/* context */);
@@ -9161,7 +9161,7 @@ bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr)
 		range.firstColumn = postWrapCursorX;
 		range.columnCount = inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX;
 		range.rowCount = 1;
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 	}
 }// bufferEraseFromCursorColumnToLineEnd
 
@@ -9226,7 +9226,7 @@ bufferEraseFromCursorToEnd  (My_ScreenBufferPtr  inDataPtr)
 		range.firstColumn = 0;
 		range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
 		range.rowCount = inDataPtr->screenBuffer.size() - postWrapCursorY + 1;
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 	}
 }// bufferEraseFromCursorToEnd
 
@@ -9283,7 +9283,7 @@ bufferEraseFromHomeToCursor		(My_ScreenBufferPtr  inDataPtr)
 		range.firstColumn = 0;
 		range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
 		range.rowCount = postWrapCursorY - 1;
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 	}
 }// bufferEraseFromHomeToCursor
 
@@ -9326,7 +9326,7 @@ bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr  inDataPtr)
 		range.firstColumn = 0;
 		range.columnCount = fillLength;
 		range.rowCount = 1;
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 	}
 }// bufferEraseFromLineBeginToCursorColumn
 
@@ -9382,7 +9382,7 @@ bufferEraseLineWithUpdate		(My_ScreenBufferPtr		inDataPtr,
 		range.firstColumn = 0;
 		range.columnCount = inDataPtr->current.returnNumberOfColumnsPermitted();
 		range.rowCount = 1;
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 	}
 }// bufferEraseLineWithUpdate
 
@@ -9445,7 +9445,7 @@ bufferEraseVisibleScreenWithUpdate		(My_ScreenBufferPtr		inDataPtr)
 		range.firstColumn = 0;
 		range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
 		range.rowCount = inDataPtr->screenBuffer.size();
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 	}
 }// bufferEraseVisibleScreenWithUpdate
 
@@ -9577,7 +9577,7 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 			range.firstColumn = 0;
 			range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
 			range.rowCount = inDataPtr->customScrollingRegion.lastRow - range.firstRow + 1;
-			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 		}
 	}
 }// bufferInsertBlankLines
@@ -9683,7 +9683,7 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 		range.firstColumn = postWrapCursorX;
 		range.columnCount = inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX;
 		range.rowCount = 1;
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 	}
 }// bufferRemoveCharactersAtCursorColumn
 
@@ -9745,7 +9745,7 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 			range.firstColumn = 0;
 			range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
 			range.rowCount = inDataPtr->customScrollingRegion.lastRow - range.firstRow + 1;
-			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 		}
 	}
 }// bufferRemoveLines
@@ -10151,7 +10151,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			}
 			//Console_WriteValuePair("text changed event: add data starting at row, column", range.firstRow, range.firstColumn);
 			//Console_WriteValuePair("text changed event: add data for #rows, #columns", range.rowCount, range.columnCount);
-			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 		}
 	}
 }// echoCFString
@@ -10418,7 +10418,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					range.firstColumn = preWriteCursorX;
 					range.columnCount = extra;
 					range.rowCount = 1;
-					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 				}
 				
 				StreamCapture_WriteUTF8Data(inDataPtr->captureStream, (UInt8*)startPtr/* data to write */, extra/* buffer length */);
@@ -12417,7 +12417,7 @@ screenScroll	(My_ScreenBufferPtr		inDataPtr)
 				range.firstColumn = 0;
 				range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
 				range.rowCount = inDataPtr->visibleBoundary.rows.lastRow - inDataPtr->visibleBoundary.rows.firstRow + 1;
-				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 			}
 			
 			// notify about the scrolling amount
@@ -12467,8 +12467,8 @@ current content is larger, its memory is truncated.
 
 This triggers two events: "kTerminal_ChangeScrollActivity"
 to indicate that data has been removed, and also
-"kTerminal_ChangeText" (given a range consisting of all
-previous scrollback lines).
+"kTerminal_ChangeTextRemoved" (given a range consisting of
+all previous scrollback lines).
 
 (4.0)
 */
@@ -12495,7 +12495,7 @@ setScrollbackSize	(My_ScreenBufferPtr		inDataPtr,
 			range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
 			range.rowCount = kPreviousScrollbackCount - inLineCount;
 			
-			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range/* context */);
+			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextRemoved, &range/* context */);
 		}
 	}
 	

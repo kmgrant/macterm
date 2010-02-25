@@ -119,7 +119,9 @@ enum
 													//!  (context: TerminalScreenRef)
 	kTerminal_ChangeScrollActivity		= '^v<>',	//!< screen or scrollback changes that would affect a scroll bar
 													//!  have occurred (context: Terminal_ScrollDescriptionConstPtr)
-	kTerminal_ChangeText				= 'UpdT',	//!< text has changed, requiring an update (context:
+	kTerminal_ChangeTextEdited			= 'UpdT',	//!< text has changed, requiring an update (context:
+													//!  Terminal_RangeDescriptionConstPtr)
+	kTerminal_ChangeTextRemoved			= 'DelT',	//!< scrollback text is about to be completely destroyed (context:
 													//!  Terminal_RangeDescriptionConstPtr)
 	kTerminal_ChangeVideoMode			= 'RevV',	//!< terminal has toggled between normal and reverse
 													//!  video modes; use Terminal_ReverseVideoIsEnabled()

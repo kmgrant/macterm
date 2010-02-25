@@ -136,7 +136,8 @@ OSStatus
 
 void
 	GetControlNumericalText					(ControlRef				inControl,
-											 SInt32*				outNumberPtr);
+											 SInt32*				outNumberPtr,
+											 size_t*				outStringLengthPtrOrNull = nullptr);
 
 void
 	GetControlOSTypeText					(ControlRef				inControl,
