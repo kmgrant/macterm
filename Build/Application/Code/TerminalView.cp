@@ -9441,12 +9441,22 @@ returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
 				else
 				{
 					// for standard selections, the first and last lines are different
+					// TEMPORARY: whitespace exclusion flags are mostly a hack to work
+					// around the fact that terminals do not currently know where a
+					// line actually ends; they store whitespace for the full width,
+					// and it is undesirable to pad copied lines with meaningless spaces;
+					// heuristics are employed to arbitrarily strip this end space most
+					// of the time, making an exception for short (~2 line) wraps that
+					// are most likely part of the same, continuing line anyway
 					if (i == kSelectionStart.second)
 					{
 						// first line is anchored at the end (LOCALIZE THIS)
 						textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
 																kSelectionStart.first, -1/* end column */,
-																textBegin, textPastEnd, kTerminal_TextFilterFlagsNoEndWhitespace);
+																textBegin, textPastEnd,
+																(2/* arbitrary */ == (kSelectionPastEnd.second - kSelectionStart.second))
+																	? 0/* flags */
+																	: kTerminal_TextFilterFlagsNoEndWhitespace);
 						assert(kTerminal_ResultOK == textGrabResult);
 					}
 					else if (i == (kSelectionPastEnd.second - 1))

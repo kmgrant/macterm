@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100321',
     '20100225',
     '20100224',
     '20100223',
@@ -302,6 +303,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100321': [
+        'Fixed terminal text copying (and dragging) so that short wrapping lines do not strip the whitespace that joins the lines.',
+    ],
     '20100225': [
         'Fixed terminal window scroll bars, to work with any scrollback buffer size (Trac #36).',
     ],
