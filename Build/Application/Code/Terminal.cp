@@ -8991,21 +8991,8 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateSWITAcquireStr:
 	case kStateSITAcquireStr:
 	case kStateSWTAcquireStr:
-		{
-			UInt8 const* const	kEnd = inBuffer + inLength;
-			UInt8 const*		toChar = inBuffer;
-			
-			
-			while (kEnd != toChar)
-			{
-				if (*toChar != '\007')
-				{
-					inDataPtr->emulator.stringAccumulator += *toChar;
-					++result;
-				}
-				++toChar;
-			}
-		}
+		inDataPtr->emulator.stringAccumulator += *inBuffer;
+		result = 1;
 		break;
 	
 	case kStateSWIT:
@@ -9017,16 +9004,20 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 																	inDataPtr->emulator.inputTextEncoding);
 			
 			
-			if ((kStateSWIT == inOldNew.second) || (kStateSWT == inOldNew.second))
+			if (nullptr != titleString)
 			{
-				inDataPtr->windowTitleCFString.setCFTypeRef(titleString);
-				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowFrameTitle, inDataPtr->selfRef/* context */);
+				if ((kStateSWIT == inOldNew.second) || (kStateSWT == inOldNew.second))
+				{
+					inDataPtr->windowTitleCFString.setCFTypeRef(titleString);
+					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowFrameTitle, inDataPtr->selfRef/* context */);
+				}
+				if ((kStateSWIT == inOldNew.second) || (kStateSIT == inOldNew.second))
+				{
+					inDataPtr->iconTitleCFString.setCFTypeRef(titleString);
+					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowIconTitle, inDataPtr->selfRef/* context */);
+				}
 			}
-			if ((kStateSWIT == inOldNew.second) || (kStateSIT == inOldNew.second))
-			{
-				inDataPtr->iconTitleCFString.setCFTypeRef(titleString);
-				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowIconTitle, inDataPtr->selfRef/* context */);
-			}
+			CFRelease(titleString), titleString = nullptr;
 		}
 		break;
 	
@@ -11419,7 +11410,7 @@ forEachLineDo	(TerminalScreenRef				inRef,
 	else
 	{
 		My_ScreenBufferLineList::iterator	lineIterator;
-		SInt16								lineNumber = 0;
+		UInt16								lineNumber = 0;
 		
 		
 		// iterate over all lines in the range

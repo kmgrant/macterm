@@ -6584,7 +6584,12 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				Terminal_CopyTitleForIcon(screen, titleCFString);
 				if (nullptr != titleCFString)
 				{
+					// TEMPORARY - Cocoa wrapper window does not seem to recognize setMiniwindowTitle:,
+					// so the Carbon call is also used in the meantime
+					(OSStatus)SetWindowAlternateTitle(returnCarbonWindow(ptr), titleCFString);
+					
 					[ptr->window setMiniwindowTitle:(NSString*)titleCFString];
+					
 					CFRelease(titleCFString), titleCFString = nullptr;
 				}
 			}
