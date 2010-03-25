@@ -3,8 +3,8 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.1
-	© 2008-2009 by Kevin Grant
+	Simple Cocoa Wrappers Library 1.2
+	© 2008-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -262,6 +262,64 @@ CocoaBasic_FileOpenPanelDisplay		(CFStringRef	inMessage,
 	
 	return result;
 }// FileOpenPanelDisplay
+
+
+/*!
+This one-color variation uses white as one of the colors.
+
+See also the two-color version.
+
+(1.2)
+*/
+CGDeviceColor
+CocoaBasic_GetGray	(CGDeviceColor const&	inColor,
+					 Float32				inFraction)
+{
+	AutoPool		_;
+	CGDeviceColor	result = inColor;
+	NSColor*		c1 = [NSColor colorWithDeviceRed:inColor.red green:inColor.green blue:inColor.blue alpha:1.0];
+	NSColor*		c2 = [NSColor whiteColor];
+	NSColor*		blended = [c1 blendedColorWithFraction:inFraction ofColor:c2];
+	
+	
+	if (blended)
+	{
+		result.red = [blended redComponent];
+		result.green = [blended greenComponent];
+		result.blue = [blended blueComponent];
+	}
+	return result;
+}// GetGray
+
+
+/*!
+Emulates QuickDraw’s GetGray() by using the NSColor method
+"blendedColorWithFraction:ofColor:".
+
+See also the one-color version, which implicitly uses white.
+
+(1.2)
+*/
+CGDeviceColor
+CocoaBasic_GetGray	(CGDeviceColor const&	inColor1,
+					 CGDeviceColor const&	inColor2,
+					 Float32				inFraction)
+{
+	AutoPool		_;
+	CGDeviceColor	result = inColor1;
+	NSColor*		c1 = [NSColor colorWithDeviceRed:inColor1.red green:inColor1.green blue:inColor1.blue alpha:1.0];
+	NSColor*		c2 = [NSColor colorWithDeviceRed:inColor2.red green:inColor2.green blue:inColor2.blue alpha:1.0];
+	NSColor*		blended = [c1 blendedColorWithFraction:inFraction ofColor:c2];
+	
+	
+	if (blended)
+	{
+		result.red = [blended redComponent];
+		result.green = [blended greenComponent];
+		result.blue = [blended blueComponent];
+	}
+	return result;
+}// GetGray
 
 
 /*!

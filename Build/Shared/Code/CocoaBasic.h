@@ -3,8 +3,8 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.1
-	© 2008-2009 by Kevin Grant
+	Simple Cocoa Wrappers Library 1.2
+	© 2008-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -54,6 +54,15 @@ Boolean
 	CocoaBasic_FileOpenPanelDisplay					(CFStringRef = nullptr,
 													 CFStringRef = nullptr,
 													 CFArrayRef = nullptr);
+
+CGDeviceColor
+	CocoaBasic_GetGray								(CGDeviceColor const&,
+													 Float32 = 0.5);
+
+CGDeviceColor
+	CocoaBasic_GetGray								(CGDeviceColor const&,
+													 CGDeviceColor const&,
+													 Float32 = 0.5);
 
 Boolean
 	CocoaBasic_GrowlIsAvailable						();
