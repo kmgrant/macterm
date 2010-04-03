@@ -1107,9 +1107,9 @@ class My_XTermWindowAlteration
 public:
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
-protected:
 	enum State
 	{
+		// Ideally these are "protected", but loop evasion code requires them.
 		kStateSWITAcquireStr	= 'Es]0',	//!< seen ESC]0, gathering characters of string
 		kStateSWIT				= 'E]0S',	//!< set window title and icon title
 		kStateSITAcquireStr		= 'Es]1',	//!< seen ESC]1, gathering characters of string
@@ -2437,13 +2437,32 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 				// that this does not hang the application in an infinite loop
 				if (states.first == states.second)
 				{
-					// exclude the echo data, because this is the one state
-					// that can be expected to remain for a long period of
-					// time (e.g. long strings of printable text)
+					// exclude the echo data, because this is the most likely state
+					// to last awhile (e.g. long strings of printable text)
 					if (states.second != kMy_ParserStateAccumulateForEcho)
 					{
+						Boolean		interrupt = (dataPtr->emulator.stateRepetitions > 100/* arbitrary */);
+						
+						
 						++dataPtr->emulator.stateRepetitions;
-						if (dataPtr->emulator.stateRepetitions > 100/* arbitrary */)
+						
+						if (interrupt)
+						{
+							// some states allow a bit more leeway before panicking,
+							// because there could be good reasons for long data streams
+							// TEMPORARY; it may make the most sense to also defer loop
+							// evasion to an emulator method, so that each emulator type
+							// can handle its own custom states (and only when that
+							// emulator is actually in use!)
+							if ((states.second == My_XTermWindowAlteration::kStateSITAcquireStr) ||
+								(states.second == My_XTermWindowAlteration::kStateSWTAcquireStr) ||
+								(states.second == My_XTermWindowAlteration::kStateSWITAcquireStr))
+							{
+								interrupt = (dataPtr->emulator.stateRepetitions > 255/* arbitrary */);
+							}
+						}
+						
+						if (interrupt)
 						{
 							Boolean const	kLogThis = DebugInterface_LogsTerminalState();
 							

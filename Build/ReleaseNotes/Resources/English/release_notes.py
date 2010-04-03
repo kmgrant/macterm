@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100403',
     '20100322',
     '20100321',
     '20100225',
@@ -304,6 +305,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100403': [
+        'XTerm window and icon title sequences now accept longer strings.',
+    ],
     '20100322': [
         'Fixed handling of XTerm window and icon title sequences.',
     ],
