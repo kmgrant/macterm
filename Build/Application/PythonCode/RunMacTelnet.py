@@ -79,22 +79,11 @@ for removed_var in (
 # banner
 print "MacTelnet: Base initialization complete.  This is MacTelnet version %s." % Base.version()
 
-# If necessary, invoke testcases (each has its own block so that subsets
-# can be run more easily).  A _test() call will generate output only for
-# problems; therefore, this runner prints its own banner for success.
-do_testing = False
-def run_module_tests( mod ):
-    (failures, test_count) = mod._test()
-    if not failures: print "MacTelnet: %s module: SUCCESSFUL unit test (total tests: %d)" % (mod.__name__, test_count)
+# optionally invoke some unit tests
+do_testing = ("MACTELNET_RUN_TESTS" in os.environ)
 if do_testing:
-    import pymactelnet.utilities
-    run_module_tests(pymactelnet.utilities)
-if do_testing:
-    import pymactelnet.url.open
-    run_module_tests(pymactelnet.url.open)
-if do_testing:
-    import pymactelnet.url.parse
-    run_module_tests(pymactelnet.url.parse)
+    import pymactelnet
+    pymactelnet.run_all_tests()
 
 # register MacTelnet features that are actually implemented in Python!
 Session.on_urlopen_call(pymactelnet.url.open.file, 'file')
