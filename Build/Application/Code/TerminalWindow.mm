@@ -202,6 +202,7 @@ struct TerminalWindow
 	Boolean						isObscured;				// is the window hidden, via a command in the Window menu?
 	Boolean						isDead;					// is the window title flagged to indicate a disconnected session?
 	Boolean						isLEDOn[4];				// true only if this terminal light is lit
+	Boolean						viewSizeIndependent;	// true only temporarily, to handle transitional cases such as full-screen mode
 	FindDialog_Options			recentSearchOptions;	// the options used during the last search in the dialog
 	CFRetainRelease				recentSearchStrings;	// CFMutableArrayRef; the CFStrings used in searches since this window was opened
 	CFRetainRelease				baseTitleString;		// user-provided title string; may be adorned prior to becoming the window title
@@ -337,6 +338,7 @@ static pascal void			scrollProc						(HIViewRef, HIViewPartCode);
 static void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static OSStatus				setCursorInWindow				(WindowRef, Point, UInt32);
 static void					setStandardState				(TerminalWindowPtr, UInt16, UInt16, Boolean);
+static void					setViewSizeIndependentFromWindow(TerminalWindowPtr, Boolean);
 static void					setWarningOnWindowClose			(TerminalWindowPtr, Boolean);
 static void					setWindowAndTabTitle			(TerminalWindowPtr, CFStringRef);
 static void					stackWindowTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
@@ -1230,8 +1232,6 @@ TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 	TerminalViewRef				activeView = getActiveView(ptr);
 	TerminalView_DisplayMode	oldMode = kTerminalView_DisplayModeNormal;
 	TerminalView_Result			viewResult = kTerminalView_ResultOK;
-	SInt16						screenWidth = 0;
-	SInt16						screenHeight = 0;
 	
 	
 	// update terminal screen font attributes; temporarily change the
@@ -1245,11 +1245,19 @@ TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 	viewResult = TerminalView_SetDisplayMode(activeView, oldMode);
 	assert(kTerminalView_ResultOK == viewResult);
 	
-	// set the standard state to be large enough for the current font and size;
-	// and, set window dimensions to this new standard size
-	TerminalView_GetIdealSize(activeView/* TEMPORARY - must consider a list of views */,
-								screenWidth, screenHeight);
-	setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
+	unless (ptr->viewSizeIndependent)
+	{
+		SInt16		screenWidth = 0;
+		SInt16		screenHeight = 0;
+		
+		
+		// set the standard state to be large enough for the current font and size;
+		// and, set window dimensions to this new standard size
+		TerminalView_GetIdealSize(activeView/* TEMPORARY - must consider a list of views */,
+									screenWidth, screenHeight);
+		
+		setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
+	}
 }// SetFontAndSize
 
 
@@ -1782,6 +1790,7 @@ windowInfo(WindowInfo_New()),
 staggerPositionIndex(0),
 isObscured(false),
 isDead(false),
+viewSizeIndependent(false),
 recentSearchOptions(kFindDialog_OptionsDefault),
 recentSearchStrings(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no size limit */, &kCFTypeArrayCallBacks),
 					true/* is retained */),
@@ -3909,7 +3918,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										RegionUtilities_GetPositioningBounds(targetWindow, &maxBounds);
 									}
 								}
+								
+								setViewSizeIndependentFromWindow(ptr, true);
 								(OSStatus)SetWindowBounds(targetWindow, kWindowContentRgn, &maxBounds);
+								setViewSizeIndependentFromWindow(ptr, false);
 								
 								TerminalView_SetDisplayMode(ptr->allViews.front(), kOldMode);
 								
@@ -5650,7 +5662,9 @@ reverseFullScreenChanges	(Undoables_ActionInstruction	inDoWhat,
 				{
 					TerminalView_SetDisplayMode(ptr->allViews.front(), dataPtr->oldMode);
 				}
+				setViewSizeIndependentFromWindow(ptr, true);
 				SetWindowBounds(TerminalWindow_ReturnWindow(dataPtr->terminalWindow), kWindowContentRgn, &dataPtr->oldContentBounds);
+				setViewSizeIndependentFromWindow(ptr, false);
 				if ((dataPtr->oldMode != dataPtr->newMode) && (kTerminalView_DisplayModeNormal == dataPtr->newMode))
 				{
 					TerminalView_SetDisplayMode(ptr->allViews.front(), dataPtr->oldMode);
@@ -6168,6 +6182,28 @@ setStandardState	(TerminalWindowPtr	inPtr,
 
 
 /*!
+This internal state changes in certain special situations
+(such as during the transition to full-screen mode) to
+temporarily prevent view dimension or font size changes
+from triggering “ideal” window resizes to match those
+changes.  Normally, the flag should be true.
+
+This is useful for full-screen mode because the window
+should be flush to an exact size (that of the display),
+whereas in most cases it is better to make the window no
+bigger than it needs to be.
+
+(4.0)
+*/
+static void
+setViewSizeIndependentFromWindow	(TerminalWindowPtr	inPtr,
+									 Boolean			inWindowResizesWhenViewSizeChanges)
+{
+	inPtr->viewSizeIndependent = inWindowResizesWhenViewSizeChanges;
+}// setViewSizeIndependentFromWindow
+
+
+/*!
 Adorns or strips a window frame indicator showing
 that a warning message will appear if the user
 tries to close the window.  On Mac OS 8/9, this
@@ -6502,8 +6538,6 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				TerminalViewRef				activeView = getActiveView(ptr);
 				TerminalView_DisplayMode	oldMode = kTerminalView_DisplayModeNormal;
 				TerminalView_Result			viewResult = kTerminalView_ResultOK;
-				SInt16						screenWidth = 0;
-				SInt16						screenHeight = 0;
 				
 				
 				// changing the window size will force the view to match;
@@ -6512,11 +6546,18 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				oldMode = TerminalView_ReturnDisplayMode(activeView);
 				viewResult = TerminalView_SetDisplayMode(activeView, kTerminalView_DisplayModeNormal);
 				assert(kTerminalView_ResultOK == viewResult);
-				TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
-													Terminal_ReturnColumnCount(screen),
-													Terminal_ReturnRowCount(screen),
-													&screenWidth, &screenHeight);
-				setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
+				unless (ptr->viewSizeIndependent)
+				{
+					SInt16		screenWidth = 0;
+					SInt16		screenHeight = 0;
+					
+					
+					TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
+														Terminal_ReturnColumnCount(screen),
+														Terminal_ReturnRowCount(screen),
+														&screenWidth, &screenHeight);
+					setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
+				}
 				viewResult = TerminalView_SetDisplayMode(activeView, oldMode);
 				assert(kTerminalView_ResultOK == viewResult);
 				
@@ -6664,6 +6705,7 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case kTerminalView_EventFontSizeChanged:
+		unless (ptr->viewSizeIndependent)
 		{
 			TerminalViewRef		view = REINTERPRET_CAST(inEventContextPtr, TerminalViewRef);
 			SInt16				screenWidth = 0;

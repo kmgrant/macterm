@@ -306,6 +306,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20100403': [
+        'Fixed Full Screen mode to properly fill the display, instead of being limited to the ideal window size.',
         'XTerm window and icon title sequences now accept longer strings.',
     ],
     '20100322': [
