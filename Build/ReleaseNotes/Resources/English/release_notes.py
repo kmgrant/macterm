@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100406',
     '20100403',
     '20100322',
     '20100321',
@@ -305,6 +306,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100406': [
+        'Fixed Growl notifications, which were accidentally disabled several builds ago.',
+    ],
     '20100403': [
         'Fixed Full Screen mode to properly fill the display, instead of being limited to the ideal window size.',
         'XTerm window and icon title sequences now accept longer strings.',

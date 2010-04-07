@@ -100,26 +100,6 @@ CocoaBasic_AboutPanelDisplay ()
 
 
 /*!
-Initializes a Cocoa application by calling
-NSApplicationLoad().
-
-(1.0)
-*/
-Boolean
-CocoaBasic_ApplicationLoad ()
-{
-	AutoPool	_;
-	BOOL		loadOK = NSApplicationLoad();
-	
-	
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-	[GrowlApplicationBridge setGrowlDelegate:[CocoaBasic_GrowlDelegate sharedGrowlDelegate]];
-#endif
-	return loadOK;
-}// ApplicationLoad
-
-
-/*!
 Shows the global color panel floating window, if it is
 not already visible.
 
@@ -320,6 +300,23 @@ CocoaBasic_GetGray	(CGDeviceColor const&	inColor1,
 	}
 	return result;
 }// GetGray
+
+
+/*!
+Initializes the Growl delegate.
+
+(1.2)
+*/
+void
+CocoaBasic_GrowlInit ()
+{
+	AutoPool	_;
+	
+	
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+	[GrowlApplicationBridge setGrowlDelegate:[CocoaBasic_GrowlDelegate sharedGrowlDelegate]];
+#endif
+}// GrowlInit
 
 
 /*!

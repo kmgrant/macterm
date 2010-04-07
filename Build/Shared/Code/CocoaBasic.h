@@ -41,9 +41,6 @@
 void
 	CocoaBasic_AboutPanelDisplay					();
 
-Boolean
-	CocoaBasic_ApplicationLoad						();
-
 void
 	CocoaBasic_ColorPanelDisplay					();
 
@@ -63,6 +60,9 @@ CGDeviceColor
 	CocoaBasic_GetGray								(CGDeviceColor const&,
 													 CGDeviceColor const&,
 													 Float32 = 0.5);
+
+void
+	CocoaBasic_GrowlInit							();
 
 Boolean
 	CocoaBasic_GrowlIsAvailable						();
