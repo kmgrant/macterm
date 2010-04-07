@@ -307,6 +307,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20100406': [
+        'Fixed a possible crash when opening certain menus while a terminated-but-still-open terminal window was frontmost.',
         'Fixed Growl notifications, which were accidentally disabled several builds ago.',
     ],
     '20100403': [

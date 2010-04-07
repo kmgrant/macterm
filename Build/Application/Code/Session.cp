@@ -1723,10 +1723,13 @@ Boolean
 Session_NetworkIsSuspended		(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean					result = (0 != (ptr->statusAttributes & kSession_StateAttributeSuspendNetwork)) ||
-										Local_ProcessIsStopped(ptr->mainProcess);
+	Boolean					result = (0 != (ptr->statusAttributes & kSession_StateAttributeSuspendNetwork));
 	
 	
+	if ((false == result) && (nullptr != ptr->mainProcess))
+	{
+		result = Local_ProcessIsStopped(ptr->mainProcess);
+	}
 	return result;
 }// NetworkIsSuspended
 
@@ -2871,9 +2874,12 @@ Session_SetState	(SessionRef		inRef,
 	// update status text to reflect new state
 	ptr->status = inNewState;
 	
-	if ((kSession_StateDead == ptr->status) || (kSession_StateImminentDisposal == ptr->status))
+	if (nullptr != ptr->mainProcess)
 	{
-		Local_KillProcess(&ptr->mainProcess);
+		if ((kSession_StateDead == ptr->status) || (kSession_StateImminentDisposal == ptr->status))
+		{
+			Local_KillProcess(&ptr->mainProcess);
+		}
 	}
 	
 	// once connected, set the connection time
