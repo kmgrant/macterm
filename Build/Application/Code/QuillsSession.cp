@@ -41,6 +41,7 @@
 #include <vector>
 
 // library includes
+#include <CFRetainRelease.h>
 #include <Console.h>
 #include <SoundSystem.h>
 #include <StringUtilities.h>
@@ -60,13 +61,13 @@
 #pragma mark Types
 namespace {
 
-struct find_cstr:
-public std::unary_function< std::string, char const* >
+struct create_cfstr:
+public std::unary_function< std::string, CFStringRef >
 {
-	char const*
+	CFStringRef
 	operator ()	(std::string const&		inString)
 	{
-		return inString.c_str();
+		return CFStringCreateWithCString(kCFAllocatorDefault, inString.c_str(), kCFStringEncodingUTF8);
 	}
 };
 
@@ -116,18 +117,23 @@ _session(nullptr)
 {
 	try
 	{
-		// create a nullptr-terminated array of C strings
+		// create a nullptr-terminated array of strings
 		std::vector< std::string >::size_type const		argc = inArgV.size();
-		char const**									args = new char const* [1 + argc];
+		void const**									args = new void const* [argc];
+		CFRetainRelease									argsObject;
+		CFRetainRelease									dirObject(CFStringCreateWithCString(kCFAllocatorDefault,
+																							inWorkingDirectory.c_str(),
+																							kCFStringEncodingUTF8),
+																	true/* is retained */);
 		
 		
-		std::transform(inArgV.begin(), inArgV.end(), args, find_cstr());
-		args[argc] = nullptr;
-		_session = SessionFactory_NewSessionArbitraryCommand(nullptr/* terminal window */, args/* command */,
+		std::transform(inArgV.begin(), inArgV.end(), args, create_cfstr());
+		argsObject.setCFTypeRef(CFArrayCreate(kCFAllocatorDefault, args, argc, &kCFTypeArrayCallBacks), true/* is retained */);
+		_session = SessionFactory_NewSessionArbitraryCommand(nullptr/* terminal window */, argsObject.returnCFArrayRef()/* command */,
 																nullptr/* preferences context */,
-																inWorkingDirectory.empty()
-																	? nullptr
-																	: inWorkingDirectory.c_str());
+																dirObject.returnCFStringRef());
+		
+		// WARNING: this cleanup is not exception-safe and should be fixed
 		delete [] args;
 		
 		if (nullptr != gSessionOpenedCallbackInvoker) (*gSessionOpenedCallbackInvoker)(gSessionOpenedPythonCallback);

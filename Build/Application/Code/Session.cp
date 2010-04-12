@@ -1,9 +1,13 @@
+/*!	\file Session.cp
+	\brief The front end to a particular running command
+	or server connection.  This remains valid as long as
+	the session is defined, even if the command has
+	terminated or all its windows are temporarily hidden.
+*/
 /*###############################################################
 
-	Session.cp
-	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -247,6 +251,8 @@ struct My_Session
 	CFRetainRelease				statusString;				// one word (usually) describing the state succinctly
 	CFRetainRelease				alternateTitle;				// user-defined window title
 	CFRetainRelease				resourceLocationString;		// one-liner for remote URL or local Unix command line
+	CFRetainRelease				commandLineArguments;		// CFArrayRef of CFStringRef; typically agrees with "resourceLocationString"
+	CFRetainRelease				originalDirectoryString;	// pathname of the directory that was current when the session was executed
 	CFRetainRelease				deviceNameString;			// pathname of slave pseudo-terminal device attached to the session
 	UInt32						connectionDateTime;			// result of GetDateTime() call at connection time
 	CFAbsoluteTime				terminationAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call at disconnection time
@@ -1402,9 +1408,14 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 				}
 				
 				// command info
-				saveError = SessionDescription_SetStringData
-								(saveFileMemoryModel, kSessionDescription_StringTypeCommandLine,
-									ptr->resourceLocationString.returnCFStringRef());
+				stringValue = CFStringCreateByCombiningStrings(kCFAllocatorDefault,
+																ptr->commandLineArguments.returnCFArrayRef(), CFSTR(" "));
+				if (nullptr != stringValue)
+				{
+					saveError = SessionDescription_SetStringData
+									(saveFileMemoryModel, kSessionDescription_StringTypeCommandLine, stringValue);
+					CFRelease(stringValue), stringValue = nullptr;
+				}
 				
 				// font info
 				{
@@ -2097,6 +2108,25 @@ Session_ReturnActiveWindow	(SessionRef		inRef)
 
 
 /*!
+Returns the program name and command line arguments used
+to start the session originally.  Each array element is
+a CFStringRef, but it can be converted back into a C string
+using CFString APIs.
+
+(4.0)
+*/
+CFArrayRef
+Session_ReturnCommandLine	(SessionRef		inRef)
+{
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	CFArrayRef				result = ptr->commandLineArguments.returnCFArrayRef();
+	
+	
+	return result;
+}// ReturnCommandLine
+
+
+/*!
 Returns a variety of preferences unique to this session.
 
 You can make changes to this context ONLY if you do it in “batch
@@ -2215,6 +2245,26 @@ Session_ReturnEventKeys		(SessionRef		inRef)
 	
 	return result;
 }// ReturnEventKeys
+
+
+/*!
+Returns the POSIX path of the directory that was current
+when the session was started.  If this is empty, it means
+that no particular directory was chosen (so it will be
+the current directory from its spawning shell, typically
+the Finder).
+
+(4.0)
+*/
+CFStringRef
+Session_ReturnOriginalWorkingDirectory		(SessionRef		inRef)
+{
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	CFStringRef				result = ptr->originalDirectoryString.returnCFStringRef();
+	
+	
+	return result;
+}// ReturnOriginalWorkingDirectory
 
 
 /*!
@@ -2740,9 +2790,9 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 Specifies the process that this session is running.  This
 automatically sets the device name, window title, and resource
 location (Session_ReturnPseudoTerminalDeviceNameCFString(),
-Session_GetWindowUserDefinedTitle(), and
-Session_ReturnResourceLocationCFString() can be used to return
-these values later).
+Session_GetWindowUserDefinedTitle(), Session_ReturnCommandLine()
+and Session_ReturnResourceLocationCFString() can be used to
+return these values later).
 
 (3.1)
 */
@@ -2766,11 +2816,10 @@ Session_SetProcess	(SessionRef			inRef,
 	}
 	{
 		// set resource location string (and initial window title to match)
-		char const* const	kCommandLine = Local_ProcessReturnCommandLineString(ptr->mainProcess);
-		
-		
-		ptr->resourceLocationString.setCFTypeRef(CFStringCreateWithCString
-													(kCFAllocatorDefault, kCommandLine, kCFStringEncodingASCII),
+		ptr->commandLineArguments = Local_ProcessReturnCommandLine(ptr->mainProcess);
+		ptr->originalDirectoryString = Local_ProcessReturnOriginalDirectory(ptr->mainProcess);
+		ptr->resourceLocationString.setCFTypeRef(CFStringCreateByCombiningStrings
+													(kCFAllocatorDefault, ptr->commandLineArguments.returnCFArrayRef(), CFSTR(" ")),
 													true/* is retained */);
 		Session_SetWindowUserDefinedTitle(inRef, ptr->resourceLocationString.returnCFStringRef());
 		changeNotifyForSession(ptr, kSession_ChangeResourceLocation, inRef/* context */);
@@ -4280,6 +4329,8 @@ statusAttributes(0),
 statusString(),
 alternateTitle(),
 resourceLocationString(),
+commandLineArguments(),
+originalDirectoryString(),
 deviceNameString(),
 connectionDateTime(0), // set below
 terminationAbsoluteTime(0),

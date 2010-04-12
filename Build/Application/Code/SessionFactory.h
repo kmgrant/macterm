@@ -192,14 +192,9 @@ SessionRef
 
 SessionRef
 	SessionFactory_NewSessionArbitraryCommand		(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow,
-													 char const* const				argv[],
+													 CFArrayRef						inArgumentArray,
 													 Preferences_ContextRef			inContextOrNull = nullptr,
-													 char const*					inWorkingDirectoryOrNull = nullptr);
-
-SessionRef
-	SessionFactory_NewSessionArbitraryCommand		(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow,
-													 CFArrayRef						inArray,
-													 Preferences_ContextRef			inContextOrNull = nullptr);
+													 CFStringRef					inWorkingDirectoryOrNull = nullptr);
 
 SessionRef
 	SessionFactory_NewSessionDefaultShell			(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow = nullptr,
@@ -231,6 +226,9 @@ TerminalWindowRef
 	SessionFactory_NewTerminalWindowUserFavorite	(Preferences_ContextRef			inTerminalInfoOrNull = nullptr,
 													 Preferences_ContextRef			inFontInfoOrNull = nullptr,
 													 Preferences_ContextRef			inTranslationInfoOrNull = nullptr);
+
+Boolean
+	SessionFactory_RespawnSession					(SessionRef						inSession);
 
 //@}
 

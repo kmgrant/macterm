@@ -632,11 +632,17 @@ TerminalWindowRef
 HIWindowRef
 	Session_ReturnActiveWindow				(SessionRef							inRef);
 
+CFArrayRef
+	Session_ReturnCommandLine				(SessionRef							inRef);
+
 Preferences_ContextRef
 	Session_ReturnConfiguration				(SessionRef							inRef);
 
 Session_EventKeys
 	Session_ReturnEventKeys					(SessionRef							inRef);
+
+CFStringRef
+	Session_ReturnOriginalWorkingDirectory	(SessionRef							inRef);
 
 CFStringRef
 	Session_ReturnPseudoTerminalDeviceNameCFString	(SessionRef					inRef);

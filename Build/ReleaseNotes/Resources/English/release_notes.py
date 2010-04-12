@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100411',
     '20100406',
     '20100403',
     '20100322',
@@ -306,6 +307,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100411': [
+        'A dead session can now be restarted if its window is still open, using the new "Restart Session" menu item (Trac #12).  This obviously cannot preserve the state of the previously terminated process, but the scrollback is intact, and the command line is exactly the same.',
+        'Various internal improvements for the handling of command line parameters and session state.',
+    ],
     '20100406': [
         'Fixed a possible crash when opening certain menus while a terminated-but-still-open terminal window was frontmost.',
         'Fixed Growl notifications, which were accidentally disabled several builds ago.',

@@ -3,7 +3,7 @@
 	Local.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -66,6 +66,7 @@ extern "C"
 // library includes
 #include <AlertMessages.h>
 #include <CarbonEventUtilities.template.h>
+#include <CFRetainRelease.h>
 #include <CFUtilities.h>
 #include <Console.h>
 #include <MemoryBlockPtrLocker.template.h>
@@ -121,17 +122,15 @@ as a Local_ProcessRef.
 */
 struct My_Process
 {
-	My_Process	(int, char const* const[], Local_TerminalID, char const*, pid_t);
+	My_Process	(CFArrayRef, CFStringRef, Local_TerminalID, char const*, pid_t);
 	~My_Process	();
-	
-	char const*
-	createCommandLine	(int, char const* const[]);
 	
 	pid_t				_processID;			// the process directly spawned by this session
 	Boolean				_stopped;			// true only if XOFF/suspend has occurred with no XON/resume yet
 	Local_TerminalID	_pseudoTerminal;	// file descriptor of pseudo-terminal master
 	char const*			_slaveDeviceName;	// e.g. "/dev/ttyp0", data sent here goes to the terminal emulator (not the process)
-	char const*			_commandLine;		// buffer for parent process’ command line
+	CFRetainRelease		_commandLine;		// array of strings for parent process’ command line arguments (first is program name)
+	CFRetainRelease		_originalDirectory;	// empty if no chdir() was used, otherwise the chdir() value at spawn time
 };
 typedef My_Process*			My_ProcessPtr;
 typedef My_Process const*	My_ProcessConstPtr;
@@ -341,22 +340,24 @@ Local_ProcessIsStopped	(Local_ProcessRef	inProcess)
 
 
 /*!
-Returns the program and its given arguments as a string,
-suitable for display but not advisable for execution (e.g.
-whitespace in original arguments may no longer be obvious).
+Returns the program and its given arguments as an array of
+CFStringRefs, suitable for display.  The strings can be decoded
+into C strings for use in low-level system calls.
 
-(3.1)
+Do not release the reference that is returned.
+
+(4.0)
 */
-char const*
-Local_ProcessReturnCommandLineString	(Local_ProcessRef	inProcess)
+CFArrayRef
+Local_ProcessReturnCommandLine	(Local_ProcessRef	inProcess)
 {
 	My_ProcessAutoLocker	ptr(gProcessPtrLocks(), inProcess);
-	char const*				result = nullptr;
+	CFArrayRef				result = nullptr;
 	
 	
-	result = ptr->_commandLine;
+	result = ptr->_commandLine.returnCFArrayRef();
 	return result;
-}// ProcessReturnCommandLineString
+}// ProcessReturnCommandLine
 
 
 /*!
@@ -377,6 +378,32 @@ Local_ProcessReturnMasterTerminal	(Local_ProcessRef	inProcess)
 	result = ptr->_pseudoTerminal;
 	return result;
 }// ProcessReturnMasterTerminal
+
+
+/*!
+Returns the POSIX path of the directory that was current at
+the time the process was spawned.  The string can be decoded
+into a C string for use in low-level system calls.
+
+If the string is empty, it means that no chdir() was done to
+set a directory, so the working directory was implicitly that
+of the shell that launched MacTelnet itself (typically, the
+Finder).
+
+Do not release the reference that is returned.
+
+(4.0)
+*/
+CFStringRef
+Local_ProcessReturnOriginalDirectory	(Local_ProcessRef	inProcess)
+{
+	My_ProcessAutoLocker	ptr(gProcessPtrLocks(), inProcess);
+	CFStringRef				result = nullptr;
+	
+	
+	result = ptr->_originalDirectory.returnCFStringRef();
+	return result;
+}// ProcessReturnOriginalDirectory
 
 
 /*!
@@ -432,24 +459,23 @@ more on how the working directory is handled.
 Local_Result
 Local_SpawnDefaultShell	(SessionRef			inUninitializedSession,
 						 TerminalScreenRef	inContainer,
-						 char const*		inWorkingDirectoryOrNull)
+						 CFStringRef		inWorkingDirectoryOrNull)
 {
-	struct passwd*	userInfoPtr = getpwuid(getuid());
-	char const*		args[] = { nullptr, nullptr/* terminator */ };
+	struct passwd*		userInfoPtr = getpwuid(getuid());
+	CFRetainRelease		userShell(CFStringCreateWithCString
+									(kCFAllocatorDefault,
+										(nullptr != userInfoPtr) ? userInfoPtr->pw_shell : getenv("SHELL"),
+										kCFStringEncodingASCII),
+									true/* is retained */);
+	void const*			args[] = { userShell.returnCFStringRef() };
+	CFRetainRelease		argsObject(CFArrayCreate
+									(kCFAllocatorDefault, args, sizeof(args) / sizeof(void const*),
+										&kCFTypeArrayCallBacks),
+									true/* is retained */);
 	
 	
-	if (nullptr != userInfoPtr)
-	{
-		// grab the user’s preferred shell from the password file
-		args[0] = userInfoPtr->pw_shell;
-	}
-	else
-	{
-		// revert to the $SHELL method, which usually works but is less reliable...
-		args[0] = getenv("SHELL");
-	}
-	
-	return Local_SpawnProcess(inUninitializedSession, inContainer, args, inWorkingDirectoryOrNull);
+	return Local_SpawnProcess(inUninitializedSession, inContainer, argsObject.returnCFArrayRef(),
+								inWorkingDirectoryOrNull);
 }// SpawnDefaultShell
 
 
@@ -468,37 +494,42 @@ how the working directory is handled.
 Local_Result
 Local_SpawnLoginShell	(SessionRef			inUninitializedSession,
 						 TerminalScreenRef	inContainer,
-						 char const*		inWorkingDirectoryOrNull)
+						 CFStringRef		inWorkingDirectoryOrNull)
 {
-	char const*		args[] = { "/usr/bin/login", "-p", "-f", getenv("USER"), nullptr/* terminator */ };
+	CFRetainRelease		userName(CFStringCreateWithCString(kCFAllocatorDefault, getenv("USER"), kCFStringEncodingASCII),
+									true/* is retained */);
+	void const*			args[] = { CFSTR("/usr/bin/login"), CFSTR("-p"), CFSTR("-f"), userName.returnCFStringRef() };
+	CFRetainRelease		argsObject(CFArrayCreate
+									(kCFAllocatorDefault, args, sizeof(args) / sizeof(void const*),
+										&kCFTypeArrayCallBacks),
+									true/* is retained */);
 	
 	
-	return Local_SpawnProcess(inUninitializedSession, inContainer, args, inWorkingDirectoryOrNull);
+	return Local_SpawnProcess(inUninitializedSession, inContainer, argsObject.returnCFArrayRef(),
+								inWorkingDirectoryOrNull);
 }// SpawnLoginShell
 
 
 /*!
-Forks a new process and arranges for its output and
-input to be channeled through the specified screen.
-The Unix command line is defined using the given
-argument vector, which must be terminated by a
-nullptr entry in the array.
+Forks a new process and arranges for its output and input to be
+channeled through the specified screen.  The Unix command line is
+defined using the given argument array, the first element of
+which must either be a program name (resolved by the PATH) or
+a POSIX pathname to the location of the program to run.
 
-The specified session’s data will be updated with
-whatever information is available for the created
-process.
+The specified session’s data will be updated with whatever
+information is available for the created process.
 
-The specified working directory is targeted only in
-the child process, meaning the caller’s working
-directory is unchanged.  If it is not possible to
-change to that directory, the child process is
-aborted.
+The specified working directory is targeted only in the child
+process, meaning the caller’s working directory is unchanged.
+If it is not possible to change to that directory, the child
+process is aborted.
 
 \retval kLocal_ResultOK
 if the process was created successfully
 
 \retval kLocal_ResultParameterError
-if a storage variable is nullptr or argv is not terminated
+if a storage variable is nullptr, or the argument array is empty
 
 \retval kLocal_ResultForkError
 if the process cannot be spawned
@@ -511,253 +542,293 @@ if a thread cannot be created to read data
 Local_Result
 Local_SpawnProcess	(SessionRef			inUninitializedSession,
 					 TerminalScreenRef	inContainer,
-					 char const* const	argv[],
-					 char const*		inWorkingDirectoryOrNull)
+					 CFArrayRef			inArgumentArray,
+					 CFStringRef		inWorkingDirectoryOrNull)
 {
-	Local_Result		result = kLocal_ResultOK;
-	My_TTYMasterID		masterTTY = 0;
-	char				slaveDeviceName[20/* arbitrary */];
-	pid_t				processID = -1;
-	size_t				argc = 0;
-	struct termios		terminalControl;
+	CFIndex const	kArgumentCount = CFArrayGetCount(inArgumentArray);
+	Local_Result	result = kLocal_ResultOK;
 	
 	
-	// figure out the size of the argument list
+	if ((nullptr == inArgumentArray) || (kArgumentCount < 1))
 	{
-		char const* const*		argPtr = argv;
-		
-		
-		while (nullptr != *argPtr)
-		{
-			++argc;
-			++argPtr;
-		}
+		result = kLocal_ResultParameterError;
 	}
-	
-	// set the answer-back message
-	{
-		CFStringRef		answerBackCFString = Terminal_EmulatorReturnName(inContainer);
-		
-		
-		if (nullptr != answerBackCFString)
-		{
-			size_t const	kAnswerBackSize = CFStringGetLength(answerBackCFString) + 1/* terminator */;
-			char*			answerBackCString = new char[kAnswerBackSize];
-			
-			
-			if (CFStringGetCString(answerBackCFString, answerBackCString, kAnswerBackSize, kCFStringEncodingASCII))
-			{
-				(int)setenv("TERM", answerBackCString, true/* overwrite */);
-			}
-			delete [] answerBackCString;
-		}
-	}
-	
-	// Apple’s Terminal sets the variables TERM_PROGRAM and
-	// TERM_PROGRAM_VERSION for some reason; it is possible
-	// that scripts could start to rely on these, so it seems
-	// harmless enough to set them correctly for MacTelnet
-	{
-		CFBundleRef		mainBundle = AppResources_ReturnBundleForInfo();
-		CFStringRef		valueCFString = nullptr;
-		
-		
-		valueCFString = CFUtilities_StringCast
-						(CFBundleGetValueForInfoDictionaryKey(mainBundle, kCFBundleNameKey));
-		if (nullptr != valueCFString)
-		{
-			size_t const	kStringSize = CFStringGetLength(valueCFString) + 1/* terminator */;
-			char*			valueCString = new char[kStringSize];
-			
-			
-			if (CFStringGetCString(valueCFString, valueCString, kStringSize, kCFStringEncodingASCII))
-			{
-				(int)setenv("TERM_PROGRAM", valueCString, true/* overwrite */);
-			}
-			delete [] valueCString;
-		}
-		valueCFString = CFUtilities_StringCast
-						(CFBundleGetValueForInfoDictionaryKey(mainBundle, kCFBundleVersionKey));
-		if (nullptr != valueCFString)
-		{
-			size_t const	kStringSize = CFStringGetLength(valueCFString) + 1/* terminator */;
-			char*			valueCString = new char[kStringSize];
-			
-			
-			if (CFStringGetCString(valueCFString, valueCString, kStringSize, kCFStringEncodingASCII))
-			{
-				(int)setenv("TERM_PROGRAM_VERSION", valueCString, true/* overwrite */);
-			}
-			delete [] valueCString;
-		}
-	}
-	
-	// TEMPORARY - the UNIX structures are filled in with defaults that work,
-	//             but eventually MacTelnet has to map user preferences, etc.
-	//             to these so that they affect “local” terminals in the same
-	//             way as they affect remote ones
-	std::memset(&terminalControl, 0, sizeof(terminalControl));
-	fillInTerminalControlStructure(&terminalControl); // TEMP
-	
-	// spawn a child process attached to a pseudo-terminal device; the child
-	// will be used to run the shell, and the shell’s I/O will be handled in
-	// a separate preemptive thread by MacTelnet’s awesome terminal emulator
-	// and main event loop
-	{
-		struct winsize		terminalSize; // defined in "/usr/include/sys/ttycom.h"
-		
-		
-		terminalSize.ws_col = Terminal_ReturnColumnCount(inContainer);
-		terminalSize.ws_row = Terminal_ReturnRowCount(inContainer);
-		
-		// TEMPORARY; the TerminalView_GetTheoreticalScreenDimensions() API would be useful for this
-		terminalSize.ws_xpixel = 0;	// terminal width, in pixels; UNKNOWN
-		terminalSize.ws_ypixel = 0;	// terminal height, in pixels; UNKNOWN
-		
-		processID = forkToNewTTY(&masterTTY, slaveDeviceName, sizeof(slaveDeviceName),
-									&terminalControl, &terminalSize);
-	}
-	
-	if (-1 == processID) result = kLocal_ResultForkError;
 	else
 	{
-		if (0 == processID)
+		CFStringEncoding const	kPathEncoding = kCFStringEncodingUTF8;
+		My_TTYMasterID			masterTTY = 0;
+		char					slaveDeviceName[20/* arbitrary */];
+		pid_t					processID = -1;
+		char const*				targetDir = nullptr;
+		CFRetainRelease			targetDirCFString = inWorkingDirectoryOrNull;
+		Boolean					deleteTargetDir = false;
+		struct termios			terminalControl;
+		
+		
+		// determine the directory to be in when the command is run
+		if ((false == targetDirCFString.exists()) || (0 == CFStringGetLength(targetDirCFString.returnCFStringRef())))
 		{
-			//
-			// this is executed inside the child process
-			//
-			
-			// IMPORTANT: There are limitations on what a child process can do.
-			// For example, global data and framework calls are generally unsafe.
-			// See the "fork" man page for more information.
-			
-			char const*		targetDir = inWorkingDirectoryOrNull;
+			struct passwd*	userInfoPtr = getpwuid(getuid());
 			
 			
-			// determine the directory to be in when the command is run
-			if (nullptr == targetDir)
+			if (nullptr != userInfoPtr)
 			{
-				struct passwd*	userInfoPtr = getpwuid(getuid());
-				
-				
-				if (nullptr != userInfoPtr)
-				{
-					targetDir = userInfoPtr->pw_dir;
-				}
-				else
-				{
-					// revert to the $HOME method, which usually works but is less reliable...
-					targetDir = getenv("HOME");
-				}
+				targetDir = userInfoPtr->pw_dir;
 			}
-			
-			// set the current working directory...abort if this fails
-			// because presumably it is important that a command not
-			// start in the wrong directory
-			if (0 != chdir(targetDir))
-			{
-				Console_WriteValueCString("aborting, failed to chdir() to ", targetDir);
-				abort();
-			}
-			
-			// run a Unix terminal-based application program; this is accomplished
-			// using an execvp() call, which DOES NOT RETURN UNLESS there is an
-			// error; technically the return value is -1 on error, but really it’s
-			// a problem if any return value is received, so an abort() is done no
-			// matter what (the abort() kills this child process, but not MacTelnet)
-			{					
-				// An execvp() accepts mutable arguments and the input is constant.
-				// But the child process has a copy of the original data and the
-				// data goes away after the execvp(), so a const_cast should be okay.
-				char**		argvCopy = CONST_CAST(argv, char**);
-				
-				
-				(int)execvp(argvCopy[0], argvCopy); // should not return
-			}
-			
-			abort(); // almost no chance this line will be run, but if it does, just kill the child process
-		}
-		
-		//
-		// this is executed inside the parent process
-		//
-		
-		Console_WriteValue("spawned process ID", processID);
-		
-		// prevent threads from being the receivers of signals
-		gSignalsBlockedInThreads();
-		
-		// try to detect an immediately-failed process
-		gExitWatchTimer();
-		
-		// avoid special processing of data, allow the terminal to see it all (raw mode)
-		{
-			// arrange for user’s TTY to be fixed at exit time
-			gTerminalToRestore = STDIN_FILENO;
-			if (-1 == atexit(putTTYInOriginalModeAtExit))
-			{
-				int const		kActualError = errno;
-				
-				
-				Console_Warning(Console_WriteValue, "unable to register atexit() routine for TTY mode", kActualError);
-			}
-			
-			// set user’s TTY to raw mode
-			{
-				Local_Result	rawSwitchResult = putTTYInRawMode(gTerminalToRestore);
-				
-				
-				if (kLocal_ResultOK != rawSwitchResult)
-				{
-					Console_Warning(Console_WriteValue, "error entering TTY raw-mode", rawSwitchResult);
-				}
-			}
-		}
-		
-		// start a thread for data processing so that MacTelnet’s main event loop can still run
-		{
-			pthread_attr_t	attr;
-			int				error = 0;
-			
-			
-			error = pthread_attr_init(&attr);
-			if (0 != error) result = kLocal_ResultThreadError;
 			else
 			{
-				My_DataLoopThreadContextPtr		threadContextPtr = nullptr;
-				pthread_t						thread;
+				// revert to the $HOME method, which usually works but is less reliable...
+				targetDir = getenv("HOME");
+			}
+			
+			targetDirCFString.setCFTypeRef(CFStringCreateWithCString(kCFAllocatorDefault, targetDir, kPathEncoding),
+											true/* is retained */);
+		}
+		else
+		{
+			// convert path to a form that is accepted by chdir()
+			targetDir = CFStringGetCStringPtr(targetDirCFString.returnCFStringRef(), kPathEncoding);
+			if (nullptr == targetDir)
+			{
+				size_t const	kBufferSize = 1 + CFStringGetMaximumSizeForEncoding
+													(CFStringGetLength(targetDirCFString.returnCFStringRef()),
+														kPathEncoding);
+				char*			valueString = new char[kBufferSize];
 				
 				
-				// store process information for session
-				{
-					Local_ProcessRef	newProcess = nullptr;
-					
-					
-					newProcess = REINTERPRET_CAST(new My_Process(argc, argv, masterTTY, slaveDeviceName, processID),
-													Local_ProcessRef);
-					Session_SetProcess(inUninitializedSession, newProcess);
-				}
-				threadContextPtr = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(sizeof(My_DataLoopThreadContext)),
-													My_DataLoopThreadContextPtr);
-				if (nullptr == threadContextPtr) result = kLocal_ResultThreadError;
-				else
-				{
-					// set up context
-					threadContextPtr->eventQueue = nullptr; // set inside the handler
-					threadContextPtr->session = inUninitializedSession;
-					threadContextPtr->masterTTY = masterTTY;
-					
-					// create thread
-					error = pthread_create(&thread, &attr, threadForLocalProcessDataLoop, threadContextPtr);
-					if (0 != error) result = kLocal_ResultThreadError;
-				}
-				
-				// put the session in the initialized state, to indicate it is complete
-				Session_SetState(inUninitializedSession, kSession_StateInitialized);
+				CFStringGetCString(targetDirCFString.returnCFStringRef(), valueString, kBufferSize, kPathEncoding);
+				targetDir = valueString;
+				deleteTargetDir = true;
 			}
 		}
+		
+		// set the answer-back message
+		{
+			CFStringRef		answerBackCFString = Terminal_EmulatorReturnName(inContainer);
+			
+			
+			if (nullptr != answerBackCFString)
+			{
+				size_t const	kAnswerBackSize = CFStringGetLength(answerBackCFString) + 1/* terminator */;
+				char*			answerBackCString = new char[kAnswerBackSize];
+				
+				
+				if (CFStringGetCString(answerBackCFString, answerBackCString, kAnswerBackSize, kCFStringEncodingASCII))
+				{
+					(int)setenv("TERM", answerBackCString, true/* overwrite */);
+				}
+				delete [] answerBackCString;
+			}
+		}
+		
+		// Apple’s Terminal sets the variables TERM_PROGRAM and
+		// TERM_PROGRAM_VERSION for some reason; it is possible
+		// that scripts could start to rely on these, so it seems
+		// harmless enough to set them correctly for MacTelnet
+		{
+			CFBundleRef		mainBundle = AppResources_ReturnBundleForInfo();
+			CFStringRef		valueCFString = nullptr;
+			
+			
+			valueCFString = CFUtilities_StringCast
+							(CFBundleGetValueForInfoDictionaryKey(mainBundle, kCFBundleNameKey));
+			if (nullptr != valueCFString)
+			{
+				size_t const	kStringSize = CFStringGetLength(valueCFString) + 1/* terminator */;
+				char*			valueCString = new char[kStringSize];
+				
+				
+				if (CFStringGetCString(valueCFString, valueCString, kStringSize, kCFStringEncodingASCII))
+				{
+					(int)setenv("TERM_PROGRAM", valueCString, true/* overwrite */);
+				}
+				delete [] valueCString;
+			}
+			valueCFString = CFUtilities_StringCast
+							(CFBundleGetValueForInfoDictionaryKey(mainBundle, kCFBundleVersionKey));
+			if (nullptr != valueCFString)
+			{
+				size_t const	kStringSize = CFStringGetLength(valueCFString) + 1/* terminator */;
+				char*			valueCString = new char[kStringSize];
+				
+				
+				if (CFStringGetCString(valueCFString, valueCString, kStringSize, kCFStringEncodingASCII))
+				{
+					(int)setenv("TERM_PROGRAM_VERSION", valueCString, true/* overwrite */);
+				}
+				delete [] valueCString;
+			}
+		}
+		
+		// TEMPORARY - the UNIX structures are filled in with defaults that work,
+		//             but eventually MacTelnet has to map user preferences, etc.
+		//             to these so that they affect “local” terminals in the same
+		//             way as they affect remote ones
+		std::memset(&terminalControl, 0, sizeof(terminalControl));
+		fillInTerminalControlStructure(&terminalControl); // TEMP
+		
+		// spawn a child process attached to a pseudo-terminal device; the child
+		// will be used to run the shell, and the shell’s I/O will be handled in
+		// a separate preemptive thread by MacTelnet’s awesome terminal emulator
+		// and main event loop
+		{
+			struct winsize		terminalSize; // defined in "/usr/include/sys/ttycom.h"
+			
+			
+			terminalSize.ws_col = Terminal_ReturnColumnCount(inContainer);
+			terminalSize.ws_row = Terminal_ReturnRowCount(inContainer);
+			
+			// TEMPORARY; the TerminalView_GetTheoreticalScreenDimensions() API would be useful for this
+			terminalSize.ws_xpixel = 0;	// terminal width, in pixels; UNKNOWN
+			terminalSize.ws_ypixel = 0;	// terminal height, in pixels; UNKNOWN
+			
+			processID = forkToNewTTY(&masterTTY, slaveDeviceName, sizeof(slaveDeviceName),
+										&terminalControl, &terminalSize);
+		}
+		
+		if (-1 == processID) result = kLocal_ResultForkError;
+		else
+		{
+			if (0 == processID)
+			{
+				//
+				// this is executed inside the child process; note that any
+				// console print-outs at this point will actually go to the
+				// child terminal (rendered by a MacTelnet window!)
+				//
+				
+				// IMPORTANT: There are limitations on what a child process can do.
+				// For example, global data and framework calls are generally unsafe.
+				// See the "fork" man page for more information.
+				
+				// set the current working directory...abort if this fails
+				// because presumably it is important that a command not
+				// start in the wrong directory
+				if (0 != chdir(targetDir))
+				{
+					Console_WriteValueCString("aborting, failed to chdir(), target directory", targetDir);
+					abort();
+				}
+				
+				// run a Unix terminal-based application program; this is accomplished
+				// using an execvp() call, which DOES NOT RETURN UNLESS there is an
+				// error; technically the return value is -1 on error, but really it’s
+				// a problem if any return value is received, so an abort() is done no
+				// matter what (the abort() kills this child process, but not MacTelnet)
+				{					
+					// construct an argument array of the form expected by the system call
+					CFStringEncoding const	kArgumentEncoding = kCFStringEncodingUTF8;
+					char**					argvCopy = new char*[1 + kArgumentCount];
+					
+					
+					for (UInt16 i = 0; i < kArgumentCount; ++i)
+					{
+						CFStringRef		argumentCFString = CFUtilities_StringCast
+															(CFArrayGetValueAtIndex(inArgumentArray, i));
+						size_t const	kBufferSize = 1 + CFStringGetMaximumSizeForEncoding
+																(CFStringGetLength(argumentCFString), kArgumentEncoding);
+						
+						
+						// this memory is not leaked because exec() is about to occur
+						argvCopy[i] = new char[kBufferSize];
+						CFStringGetCString(argumentCFString, argvCopy[i], kBufferSize, kArgumentEncoding);
+					}
+					argvCopy[kArgumentCount] = nullptr;
+					assert(nullptr != argvCopy[0]);
+					(int)execvp(argvCopy[0], argvCopy); // should not return
+				}
+				
+				Console_WriteLine("aborting, failed to exec()");
+				abort(); // almost no chance this line will be run, but if it does, just kill the child process
+			}
+			
+			//
+			// this is executed inside the parent process
+			//
+			
+			Console_WriteValue("spawned process ID", processID);
+			
+			// prevent threads from being the receivers of signals
+			gSignalsBlockedInThreads();
+			
+			// try to detect an immediately-failed process
+			gExitWatchTimer();
+			
+			// avoid special processing of data, allow the terminal to see it all (raw mode)
+			{
+				// arrange for user’s TTY to be fixed at exit time
+				gTerminalToRestore = STDIN_FILENO;
+				if (-1 == atexit(putTTYInOriginalModeAtExit))
+				{
+					int const		kActualError = errno;
+					
+					
+					Console_Warning(Console_WriteValue, "unable to register atexit() routine for TTY mode", kActualError);
+				}
+				
+				// set user’s TTY to raw mode
+				{
+					Local_Result	rawSwitchResult = putTTYInRawMode(gTerminalToRestore);
+					
+					
+					if (kLocal_ResultOK != rawSwitchResult)
+					{
+						Console_Warning(Console_WriteValue, "error entering TTY raw-mode", rawSwitchResult);
+					}
+				}
+			}
+			
+			// start a thread for data processing so that MacTelnet’s main event loop can still run
+			{
+				pthread_attr_t	attr;
+				int				error = 0;
+				
+				
+				error = pthread_attr_init(&attr);
+				if (0 != error) result = kLocal_ResultThreadError;
+				else
+				{
+					My_DataLoopThreadContextPtr		threadContextPtr = nullptr;
+					pthread_t						thread;
+					
+					
+					// store process information for session
+					{
+						My_Process*			newProcessPtr = new My_Process(inArgumentArray,
+																			targetDirCFString.returnCFStringRef(),
+																			masterTTY, slaveDeviceName, processID);
+						Local_ProcessRef	newProcess = REINTERPRET_CAST(newProcessPtr, Local_ProcessRef);
+						
+						
+						Session_SetProcess(inUninitializedSession, newProcess);
+					}
+					threadContextPtr = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(sizeof(My_DataLoopThreadContext)),
+														My_DataLoopThreadContextPtr);
+					if (nullptr == threadContextPtr) result = kLocal_ResultThreadError;
+					else
+					{
+						// set up context
+						threadContextPtr->eventQueue = nullptr; // set inside the handler
+						threadContextPtr->session = inUninitializedSession;
+						threadContextPtr->masterTTY = masterTTY;
+						
+						// create thread
+						error = pthread_create(&thread, &attr, threadForLocalProcessDataLoop, threadContextPtr);
+						if (0 != error) result = kLocal_ResultThreadError;
+					}
+					
+					// put the session in the initialized state, to indicate it is complete
+					Session_SetState(inUninitializedSession, kSession_StateInitialized);
+				}
+			}
+		}
+		
+		if (deleteTargetDir)
+		{
+			// WARNING: this cleanup is not exception-safe, and should change
+			delete [] targetDir, targetDir = nullptr;
+		}
 	}
-	
 	// with the preemptive thread handling data transfer
 	// to and from the process, return immediately
 	return result;
@@ -1028,8 +1099,8 @@ Local_TerminalWriteBytes	(int			inFileDescriptor,
 namespace {
 
 My_Process::
-My_Process	(int				argc,
-			 char const* const	argv[],
+My_Process	(CFArrayRef			inArgumentArray,
+			 CFStringRef		inWorkingDirectory,
 			 Local_TerminalID	inMasterTerminal,
 			 char const*		inSlaveDeviceName,
 			 pid_t				inProcessID)
@@ -1039,8 +1110,15 @@ _processID(inProcessID),
 _stopped(false),
 _pseudoTerminal(inMasterTerminal),
 _slaveDeviceName(inSlaveDeviceName),
-_commandLine(createCommandLine(argc, argv))
+_commandLine(inArgumentArray),
+_originalDirectory(inWorkingDirectory)
 {
+#if 0
+	Console_WriteLine("process created with argument array:");
+	CFShow(inArgumentArray);
+	Console_WriteLine("and working directory:");
+	CFShow(inWorkingDirectory);
+#endif
 	gChildProcessIDs().insert(_processID);
 	gProcessesByID()[_processID] = REINTERPRET_CAST(this, Local_ProcessRef);
 }// My_Process constructor
@@ -1051,50 +1129,7 @@ My_Process::
 {
 	gChildProcessIDs().erase(_processID);
 	gProcessesByID().erase(_processID);
-	if (nullptr != _commandLine) delete [] _commandLine, _commandLine = nullptr;
 }// My_Process destructor
-
-
-char const*
-My_Process::
-createCommandLine	(int				argc,
-					 char const* const	argv[])
-{
-	char const* const	kDelimiter = " ";
-	size_t const		kDelimiterSize = CPP_STD::strlen(kDelimiter);
-	char const* const*	argumentPtr = argv;
-	size_t				requiredSize = 0;
-	char*				result = nullptr;
-	
-	
-	// figure out how long the string needs to be, taking into account delimiting spaces
-	for (int i = 0; i < argc; ++i)
-	{
-		requiredSize += (CPP_STD::strlen(*argumentPtr) + kDelimiterSize);
-		++argumentPtr;
-	}
-	++requiredSize; // space for terminator
-	
-	// allocate space
-	result = new char[requiredSize];
-	if (nullptr != result)
-	{
-		char*	endPtr = result;
-		
-		
-		// copy in all the arguments, each delimited by a space
-		argumentPtr = argv;
-		*endPtr = '\0';
-		for (int i = 0; i < argc; ++i, ++endPtr, ++argumentPtr)
-		{
-			CPP_STD::strcat(endPtr, *argumentPtr);
-			endPtr += CPP_STD::strlen(*argumentPtr);
-			if (i != (argc - 1)) CPP_STD::strcat(endPtr, kDelimiter);
-		}
-	}
-	
-	return result;
-}// createCommandLine
 
 
 /*!

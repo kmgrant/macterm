@@ -412,24 +412,14 @@ SessionRef
 SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindowOrNullToMakeNewWindow,
 								 SessionRef				inBaseSession)
 {
-	SessionRef			result = nullptr;
-	CFRetainRelease		sessionResourceString = Session_ReturnResourceLocationCFString(inBaseSession);
+	SessionRef		result = nullptr;
+	CFArrayRef		argsArray = Session_ReturnCommandLine(inBaseSession);
 	
 	
-	if (sessionResourceString.exists())
+	if (nullptr != argsArray)
 	{
-		// NOTE: this might be reimplemented to use URLs in the future
-		CFArrayRef		argsArray = CFStringCreateArrayBySeparatingStrings
-									(kCFAllocatorDefault, sessionResourceString.returnCFStringRef(),
-										CFSTR(" ")/* LOCALIZE THIS? */);
-		
-		
-		if (nullptr != argsArray)
-		{
-			result = SessionFactory_NewSessionArbitraryCommand
-						(inTerminalWindowOrNullToMakeNewWindow, argsArray);
-			CFRelease(argsArray), argsArray = nullptr;
-		}
+		result = SessionFactory_NewSessionArbitraryCommand
+					(inTerminalWindowOrNullToMakeNewWindow, argsArray);
 	}
 	return result;
 }// NewCloneSession
@@ -450,9 +440,9 @@ is returned.
 */
 SessionRef
 SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowOrNullToMakeNewWindow,
-											 char const* const			argv[],
+											 CFArrayRef					inArgumentArray,
 											 Preferences_ContextRef		inContext,
-											 char const*				inWorkingDirectoryOrNull)
+											 CFStringRef				inWorkingDirectoryOrNull)
 {
 	SessionRef			result = nullptr;
 	TerminalWindowRef	terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
@@ -486,8 +476,10 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowO
 			
 			
 			SetWindowKind(window, WIN_SHELL);
+			
+			// see also SessionFactory_RespawnSession(), which must do something similar
 			localResult = Local_SpawnProcess(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
-												argv, inWorkingDirectoryOrNull);
+												inArgumentArray, inWorkingDirectoryOrNull);
 			if (kLocal_ResultOK == localResult)
 			{
 				// success!
@@ -506,93 +498,7 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowO
 	}
 	
 	return result;
-}// NewSessionArbitraryCommand (char const* const)
-
-
-/*!
-Like the C-style version, except it conveniently splits
-a CFArrayRef containing CFStringRef types.
-
-(3.0)
-*/
-SessionRef
-SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowOrNullToMakeNewWindow,
-											 CFArrayRef					inArgumentArray,
-											 Preferences_ContextRef		inContext)
-{
-	SessionRef		result = nullptr;
-	CFIndex			argc = CFArrayGetCount(inArgumentArray);
-	CFIndex const   kArgumentArraySize = (argc + 1/* space for nullptr terminator */) * sizeof(char*);
-	char**			args = nullptr;
-	
-	
-	// construct a C-style array out of the CFArrayRef
-	args = REINTERPRET_CAST(CFAllocatorAllocate(kCFAllocatorDefault, kArgumentArraySize, 0L/* hints */), char**);
-	if (nullptr == args)
-	{
-		// not enough memory...
-	}
-	else
-	{
-		CFStringEncoding const	kEncoding = kCFStringEncodingASCII;
-		CFStringRef				argumentCFString = nullptr;
-		CFIndex					i = 0;
-		CFIndex					j = 0;
-		Boolean					allocationOK = true;
-		
-		
-		// initialize the array to nullptrs, so that it is possible to
-		// determine what should be freed later (this is mostly a
-		// guard to ensure partial allocations are still freed)
-		CPP_STD::memset(args, 0, kArgumentArraySize);
-		
-		// copy each argument into the C-style array; note that since the C-style
-		// array requires 8-bit characters, sizeof(char) is used even though
-		// technically CFStringGetLength() counts 16-bit characters
-		for (i = 0, j = 0; ((i < argc) && (allocationOK)); ++i)
-		{
-			argumentCFString = CFUtilities_StringCast(CFArrayGetValueAtIndex(inArgumentArray, i));
-			
-			// skip empty strings (sometimes artifacts of splitting on whitespace)
-			if (CFStringGetLength(argumentCFString) > 0)
-			{
-				CFIndex const	kBufferSize = 1/* space for terminator */ +
-												CFStringGetMaximumSizeForEncoding
-												(CFStringGetLength(argumentCFString), kEncoding);
-				
-				
-				args[j] = REINTERPRET_CAST(CFAllocatorAllocate(kCFAllocatorDefault, kBufferSize, 0L/* hints */), char*);
-				if (nullptr == args[j]) allocationOK = false;
-				else
-				{
-					allocationOK = CFStringGetCString(argumentCFString, args[j], kBufferSize, kEncoding);
-					++j;
-				}
-			}
-		}
-		args[argc] = nullptr; // nullptr-terminate, which is required by execvp()
-		
-		if (allocationOK)
-		{
-			char* const*	arg1Ptr = args;
-			
-			
-			// spawn normally
-			result = SessionFactory_NewSessionArbitraryCommand(inTerminalWindowOrNullToMakeNewWindow, arg1Ptr, inContext);
-		}
-		
-		// free all allocated strings
-		for (i = 0; i < argc; ++i)
-		{
-			if (nullptr != args[i])
-			{
-				CFAllocatorDeallocate(kCFAllocatorDefault, args[i]);
-			}
-		}
-	}
-	
-	return result;
-}// NewSessionArbitraryCommand (CFArrayRef)
+}// NewSessionArbitraryCommand
 
 
 /*!
@@ -1214,6 +1120,45 @@ SessionFactory_NewTerminalWindowUserFavorite	(Preferences_ContextRef		inTerminal
 {
 	return createTerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationInfoOrNull);
 }// NewTerminalWindowUserFavorite
+
+
+/*!
+Reruns the same command line that was used to start the
+specified session, using the same terminal window.  The
+given session MUST be in the “dead” state (with its window
+still open).  Returns true only if successful.
+
+This function should have a similar implementation to that
+of SessionFactory_NewSessionArbitraryCommand(), except
+that no new session object or window are created.
+
+(4.0)
+*/
+Boolean
+SessionFactory_RespawnSession	(SessionRef		inSession)
+{
+	Boolean		result = false;
+	
+	
+	if (Session_StateIsDead(inSession))
+	{
+		Local_Result			localResult = kLocal_ResultOK;
+		TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(inSession);
+		TerminalScreenRef		screenBuffer = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+		CFStringRef				workingDirectory = Session_ReturnOriginalWorkingDirectory(inSession);
+		
+		
+		localResult = Local_SpawnProcess(inSession, screenBuffer, Session_ReturnCommandLine(inSession),
+											workingDirectory);
+		result = (kLocal_ResultOK == localResult);
+		
+		// NOTE: the session is still being tracked from when it was first created,
+		// so there is no need to start tracking it after a respawn; however, it is
+		// still important to activate the session (which also notifies listeners)
+		Session_SetState(inSession, kSession_StateActiveUnstable);
+	}
+	return result;
+}// RespawnSession
 
 
 /*!

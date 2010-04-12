@@ -5954,6 +5954,10 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					TerminalWindow_SetWindowTitle(terminalWindow, nullptr/* keep title, evaluate state again */);
 					setWarningOnWindowClose(ptr, false);
 				}
+				else
+				{
+					ptr->isDead = false;
+				}
 			}
 		}
 		break;

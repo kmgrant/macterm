@@ -3987,6 +3987,36 @@ canPerformNewShell:(id <NSValidatedUserInterfaceItem>)		anItem
 
 
 - (IBAction)
+performRestart:(id)		sender
+{
+#pragma unused(sender)
+	SessionRef	currentSession = SessionFactory_ReturnUserFocusSession();
+	Boolean		success = SessionFactory_RespawnSession(currentSession);
+	
+	
+	unless (success)
+	{
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteLine, "failed to restart session");
+	}
+}
+- (id)
+canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	SessionRef		currentSession = SessionFactory_ReturnUserFocusSession();
+	BOOL			result = NO;
+	
+	
+	if ((nullptr != currentSession) && Session_StateIsDead(currentSession))
+	{
+		result = YES;
+	}
+	return [NSNumber numberWithBool:result];
+}
+
+
+- (IBAction)
 performOpen:(id)	sender
 {
 #pragma unused(sender)
@@ -4117,11 +4147,11 @@ canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
 	
 	if (result)
 	{
-		TerminalWindowRef			terminalWindow = returnActiveTerminalWindow();
-		TerminalViewRef				view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-		CFRetainRelease				selectedText(TerminalView_ReturnSelectedTextAsNewUnicode
-													(view, 0/* Copy with Tab Substitution info */,
-														kTerminalView_TextFlagInline));
+		TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+		CFRetainRelease		selectedText(TerminalView_ReturnSelectedTextAsNewUnicode
+											(view, 0/* Copy with Tab Substitution info */,
+												kTerminalView_TextFlagInline));
 		
 		
 		if (false == selectedText.exists())

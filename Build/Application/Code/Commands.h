@@ -566,6 +566,7 @@ changes to an interface declared in a ".mm" file.
 - (IBAction)	performNewLogInShell:(id)sender;
 - (IBAction)	performNewShell:(id)sender;
 - (IBAction)	performNewCustom:(id)sender;
+- (IBAction)	performRestart:(id)sender;
 - (IBAction)	performOpen:(id)sender;
 - (IBAction)	performDuplicate:(id)sender;
 - (IBAction)	performSaveAs:(id)sender;

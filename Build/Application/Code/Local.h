@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -91,18 +91,18 @@ typedef struct Local_OpaqueProcess*		Local_ProcessRef;
 Local_Result
 	Local_SpawnDefaultShell					(SessionRef					inUninitializedSession,
 											 TerminalScreenRef			inContainer,
-											 char const*				inWorkingDirectoryOrNull = nullptr);
+											 CFStringRef				inWorkingDirectoryOrNull = nullptr);
 
 Local_Result
 	Local_SpawnLoginShell					(SessionRef					inUninitializedSession,
 											 TerminalScreenRef			inContainer,
-											 char const*				inWorkingDirectoryOrNull = nullptr);
+											 CFStringRef				inWorkingDirectoryOrNull = nullptr);
 
 Local_Result
 	Local_SpawnProcess						(SessionRef					inUninitializedSession,
 											 TerminalScreenRef			inContainer,
-											 char const* const			argv[],
-											 char const*				inWorkingDirectoryOrNull = nullptr);
+											 CFArrayRef					inArgumentArray,
+											 CFStringRef				inWorkingDirectoryOrNull = nullptr);
 
 Local_Result
 	Local_SpawnProcessAndWaitForTermination	(char const*				inCommand);
@@ -118,11 +118,14 @@ void
 Boolean
 	Local_ProcessIsStopped					(Local_ProcessRef			inProcess);
 
-char const*
-	Local_ProcessReturnCommandLineString	(Local_ProcessRef			inProcess);
+CFArrayRef
+	Local_ProcessReturnCommandLine			(Local_ProcessRef			inProcess);
 
 Local_TerminalID
 	Local_ProcessReturnMasterTerminal		(Local_ProcessRef			inProcess);
+
+CFStringRef
+	Local_ProcessReturnOriginalDirectory	(Local_ProcessRef			inProcess);
 
 char const*
 	Local_ProcessReturnSlaveDeviceName		(Local_ProcessRef			inProcess);
