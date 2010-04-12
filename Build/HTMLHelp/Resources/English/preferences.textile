@@ -36,6 +36,9 @@ Prevents a window from closing when the process running inside it
 has quit.  This only applies to processes that quit on their own;
 if you choose to close a window yourself, it will not stay open.
 
+When a window has terminated and remains open, the special menu
+command File >> Restart Session becomes available.
+
 h5(#noautonew). No automatic new windows
 
 Prevents a new session from being created at startup, or when the

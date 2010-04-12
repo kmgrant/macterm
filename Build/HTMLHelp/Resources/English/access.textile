@@ -52,6 +52,30 @@ not inherit any environment variable settings from MacTelnet.
 bq. Most session creation commands are also available
 from the MacTelnet icon's Dock menu.
 
+h2(#restart). Replicating Windows
+
+You can use File >> Duplicate Session to spawn a new window that
+is running the same command as the previous window.
+
+Currently, only the command is duplicated; other window settings
+may come from your defaults.  Once a window is duplicated, any
+updates to the window will not affect its duplicate.
+
+h2(#restart). Restarting Commands
+
+If the "No window close on process exit" preference is set, a
+session window will remain open when it quits by itself (that is,
+if it was not explicitly terminated using File >> Close or your
+mouse).  When the window is in this dead state, the special
+File >> Restart Session command becomes available.
+
+When you restart a session, the original local or remote command
+line is run again in the same window, preserving your entire
+scrollback buffer and other window settings.  Most programs do
+not aggressively save their state, so a restart is unlikely to
+let you simply resume where the program left off when it last
+exited.
+
 </div>
 
 <!-- ----|--------------------------------------------|----|- -->
