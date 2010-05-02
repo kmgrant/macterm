@@ -115,7 +115,7 @@ a few standard sizes, or have issues at certain (typically large)
 sizes; for instance, text editors may run out of memory with wide
 terminals.  While MacTelnet does not restrict your window size,
 it does provide a few short-cut commands to let you immediately
-change to common sizes (80x24, 80x48, 132x24).
+change to common sizes (80x24, 80x40, 132x24).
 
 You may also open a dialog to choose a specific number of rows
 and columns.  Note that Edit >> Undo can be used to cancel
