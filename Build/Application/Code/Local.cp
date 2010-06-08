@@ -719,21 +719,30 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 					// construct an argument array of the form expected by the system call
 					CFStringEncoding const	kArgumentEncoding = kCFStringEncodingUTF8;
 					char**					argvCopy = new char*[1 + kArgumentCount];
+					UInt16					j = 0;
 					
 					
 					for (UInt16 i = 0; i < kArgumentCount; ++i)
 					{
 						CFStringRef		argumentCFString = CFUtilities_StringCast
 															(CFArrayGetValueAtIndex(inArgumentArray, i));
-						size_t const	kBufferSize = 1 + CFStringGetMaximumSizeForEncoding
+						
+						
+						// ignore completely empty strings (generally caused by
+						// a bad split on multiple whitespace characters)
+						if (CFStringGetLength(argumentCFString) > 0)
+						{
+							size_t const	kBufferSize = 1 + CFStringGetMaximumSizeForEncoding
 																(CFStringGetLength(argumentCFString), kArgumentEncoding);
-						
-						
-						// this memory is not leaked because exec() is about to occur
-						argvCopy[i] = new char[kBufferSize];
-						CFStringGetCString(argumentCFString, argvCopy[i], kBufferSize, kArgumentEncoding);
+							
+							
+							// this memory is not leaked because execvp() is about to occur
+							argvCopy[j] = new char[kBufferSize];
+							CFStringGetCString(argumentCFString, argvCopy[j], kBufferSize, kArgumentEncoding);
+							++j;
+						}
 					}
-					argvCopy[kArgumentCount] = nullptr;
+					argvCopy[j] = nullptr;
 					assert(nullptr != argvCopy[0]);
 					(int)execvp(argvCopy[0], argvCopy); // should not return
 				}

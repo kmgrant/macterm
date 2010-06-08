@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100607',
     '20100411',
     '20100406',
     '20100403',
@@ -307,6 +308,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100607': [
+        'Fixed command line parser to compress whitespace, since commands like "telnet" will fail when given blank arguments.',
+    ],
     '20100411': [
         'A dead session can now be restarted if its window is still open, using the new "Restart Session" menu item (Trac #12).  This obviously cannot preserve the state of the previously terminated process, but the scrollback is intact, and the command line is exactly the same.',
         'Various internal improvements for the handling of command line parameters and session state.',
