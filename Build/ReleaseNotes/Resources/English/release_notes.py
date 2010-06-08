@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100608',
     '20100607',
     '20100411',
     '20100406',
@@ -308,6 +309,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100608': [
+        'Fixed a possible crash when changing preferences (among other things), due to improper cleanup in closed terminals.',
+    ],
     '20100607': [
         'Fixed command line parser to compress whitespace, since commands like "telnet" will fail when given blank arguments.',
     ],

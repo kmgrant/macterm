@@ -2341,6 +2341,7 @@ TerminalWindow::
 	if (nil != this->window)
 	{
 		HelpSystem_SetWindowKeyPhrase(returnCarbonWindow(this), kHelpSystem_KeyPhraseDefault); // clean up
+		DisposeWindow(returnCarbonWindow(this));
 		[this->window close], this->window = nil;
 	}
 	if (nullptr == this->tabAndWindowGroup)

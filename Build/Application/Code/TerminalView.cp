@@ -7485,6 +7485,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		
 		case kPreferences_TagTerminalCursorType:
 			// recalculate cursor boundaries for the specified view
+			if (IsValidControlHandle(viewPtr->contentHIView))
 			{
 				Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
 				UInt16				cursorX = 0;
@@ -7492,20 +7493,14 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				
 				// invalidate the entire old cursor region (in case it is bigger than the new one)
-				if (IsValidControlHandle(viewPtr->contentHIView))
-				{
-					updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
-				}
+				updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
 				
 				// find the new cursor region
 				getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
 				setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
 				
 				// invalidate the new cursor region (in case it is bigger than the old one)
-				if (IsValidControlHandle(viewPtr->contentHIView))
-				{
-					updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
-				}
+				updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
 			}
 			break;
 		
