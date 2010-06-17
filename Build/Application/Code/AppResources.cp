@@ -606,7 +606,21 @@ launchResourceApplication	(CFStringRef	inName)
 														unixPath, sizeof(unixPath)))
 				{
 					Local_Result	spawnError = kLocal_ResultOK;
+					UInt8			escapedPath[PATH_MAX];
 					
+					
+					// IMPORTANT: The (eventual) system() call will run a SHELL, so
+					// the path must be escaped accordingly.  This is NOT perfect
+					// escaping, and should really IMPROVE, but single-quoting is
+					// certainly good enough to cover a very common case (spaces).
+					// A better solution is to individually recognize and escape,
+					// using a backslash (\), every character that the shell thinks
+					// is significant.  TEMPORARY.
+					escapedPath[0] = '\'';
+					escapedPath[1] = '\0';
+					std::strncpy(REINTERPRET_CAST(escapedPath, char*) + 1, REINTERPRET_CAST(unixPath, char const*),
+									sizeof(escapedPath) - 3/* quotes + terminator */);
+					std::strncat(REINTERPRET_CAST(escapedPath, char*), "\'", 1);
 					
 					spawnError = Local_SpawnProcessAndWaitForTermination(REINTERPRET_CAST(unixPath, char const*));
 					if (spawnError != kLocal_ResultOK)

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100617',
     '20100608',
     '20100607',
     '20100411',
@@ -309,6 +310,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100617': [
+        "Fixed an initialization problem when MacTelnet was run from certain paths (like its disk image).",
+    ],
     '20100608': [
         'Fixed a possible crash when changing preferences (among other things), due to improper cleanup in closed terminals.',
     ],
