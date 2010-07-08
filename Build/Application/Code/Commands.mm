@@ -1842,27 +1842,25 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 		if (nullptr == frontSession)
 		{
 			// not a session window; so, select the first or last session window
-			SessionRef				nextSession = nullptr;
-			SessionFactory_Result	factoryError = SessionFactory_GetSessionWithZeroBasedIndex
+			SessionFactory_Result	factoryError = SessionFactory_GetWindowWithZeroBasedIndex
 													((inPreviousInsteadOfNext) ? SessionFactory_ReturnCount() - 1 : 0,
-														kSessionFactory_ListInCreationOrder, &nextSession);
+														kSessionFactory_ListInCreationOrder, &nextWindow);
 			
 			
 			if (kSessionFactory_ResultOK == factoryError)
 			{
-				nextWindow = Session_ReturnActiveWindow(nextSession);
+				Console_Warning(Console_WriteLine, "failed to find window with given index");
 			}
 		}
 		else
 		{
 			// is a session window; so, select the next or previous session window
-			SessionRef				nextSession = nullptr;
 			UInt16					frontSessionIndex = 0;
 			SessionFactory_Result	factoryError = kSessionFactory_ResultOK;
 			
 			
 			factoryError = SessionFactory_GetZeroBasedIndexOfSession
-							(frontSession, kSessionFactory_ListInCreationOrder, &frontSessionIndex);
+							(frontSession, kSessionFactory_ListInTabStackOrder, &frontSessionIndex);
 			if (kSessionFactory_ResultOK == factoryError)
 			{
 				// adjust the session index to determine the new session;
@@ -1877,11 +1875,11 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 					if (++frontSessionIndex >= SessionFactory_ReturnCount()) frontSessionIndex = 0;
 				}
 				
-				factoryError = SessionFactory_GetSessionWithZeroBasedIndex
-								(frontSessionIndex, kSessionFactory_ListInCreationOrder, &nextSession);
+				factoryError = SessionFactory_GetWindowWithZeroBasedIndex
+								(frontSessionIndex, kSessionFactory_ListInTabStackOrder, &nextWindow);
 				if (kSessionFactory_ResultOK == factoryError)
 				{
-					nextWindow = Session_ReturnActiveWindow(nextSession);
+					Console_Warning(Console_WriteLine, "failed to find window with given index");
 				}
 			}
 		}

@@ -1375,7 +1375,7 @@ SessionFactory_ForEveryTerminalWindowDo		(SessionFactory_TerminalWindowOpProcPtr
 
 
 /*!
-Returns the session whose order in the specified list
+Returns the window whose order in the specified list
 (each list is sorted by a different criteria) is the
 index given.
 
@@ -1383,20 +1383,20 @@ index given.
 if there are no errors
 
 \retval kSessionFactory_ResultParameterError
-if the specified index, list type or session pointer
+if the specified index, list type or window pointer
 is invalid
 
 (3.0)
 */
 SessionFactory_Result
-SessionFactory_GetSessionWithZeroBasedIndex		(UInt16					inZeroBasedSessionIndex,
+SessionFactory_GetWindowWithZeroBasedIndex		(UInt16					inZeroBasedSessionIndex,
 												 SessionFactory_List	inFromWhichList,
-												 SessionRef*			outSessionPtr)
+												 HIWindowRef*			outWindowPtr)
 {
 	SessionFactory_Result	result = kSessionFactory_ResultOK;
 	
 	
-	if (nullptr == outSessionPtr) result = kSessionFactory_ResultParameterError;
+	if (nullptr == outWindowPtr) result = kSessionFactory_ResultParameterError;
 	else
 	{
 		switch (inFromWhichList)
@@ -1414,7 +1414,57 @@ SessionFactory_GetSessionWithZeroBasedIndex		(UInt16					inZeroBasedSessionIndex
 				else
 				{
 					// index is valid; return the appropriate session reference
-					*outSessionPtr = gSessionListSortedByCreationTime()[inZeroBasedSessionIndex];
+					SessionRef		session = gSessionListSortedByCreationTime()[inZeroBasedSessionIndex];
+					
+					
+					*outWindowPtr = Session_ReturnActiveWindow(session);
+				}
+			}
+			break;
+		
+		case kSessionFactory_ListInTabStackOrder:
+			{
+				MyWorkspaceList&					workspaceList = gWorkspaceListSortedByCreationTime();
+				MyWorkspaceList::const_iterator		toWorkspace;
+				UInt16								currentIndex = inZeroBasedSessionIndex;
+				
+				
+				// the index basically acts as if all workspaces were laid
+				// end-to-end, and the indices in each workspace were renumbered
+				// according to their placement in that super-list; if there is
+				// no match among tabbed windows, there could still be windows
+				// that are not tabbed that match
+				*outWindowPtr = nullptr;
+				for (toWorkspace = workspaceList.begin();
+						toWorkspace != workspaceList.end(); ++toWorkspace)
+				{
+					UInt16 const	kWindowCount = Workspace_ReturnWindowCount(*toWorkspace);
+					
+					
+					if (currentIndex >= kWindowCount)
+					{
+						currentIndex -= kWindowCount;
+					}
+					else
+					{
+						*outWindowPtr = Workspace_ReturnWindowWithZeroBasedIndex(*toWorkspace, currentIndex);
+						break;
+					}
+				}
+				if (nullptr == *outWindowPtr)
+				{
+					if (currentIndex < gSessionListSortedByCreationTime().size())
+					{
+						SessionRef		session = gSessionListSortedByCreationTime()[currentIndex];
+						
+						
+						*outWindowPtr = Session_ReturnActiveWindow(session);
+					}
+				}
+				
+				if (nullptr == *outWindowPtr)
+				{
+					result = kSessionFactory_ResultParameterError;
 				}
 			}
 			break;
@@ -1478,6 +1528,63 @@ SessionFactory_GetZeroBasedIndexOfSession	(SessionRef				inOfWhichSession,
 				if (*outIndexPtr >= gSessionListSortedByCreationTime().size())
 				{
 					// session was not in the list; return an error
+					result = kSessionFactory_ResultParameterError;
+				}
+			}
+			break;
+		
+		case kSessionFactory_ListInTabStackOrder:
+			{
+				TerminalWindowRef					terminalWindow = Session_ReturnActiveTerminalWindow
+																		(inOfWhichSession);
+				HIWindowRef							window = TerminalWindow_ReturnWindow(terminalWindow);
+				MyWorkspaceList&					workspaceList = gWorkspaceListSortedByCreationTime();
+				MyWorkspaceList::const_iterator		toWorkspace;
+				Boolean								foundWindow = false;
+				
+				
+				// look for the given session in available workspaces;
+				// it is also possible that the window will not be tabbed
+				*outIndexPtr = 0;
+				for (toWorkspace = workspaceList.begin();
+						toWorkspace != workspaceList.end(); ++toWorkspace)
+				{
+					UInt16		windowIndex = Workspace_ReturnZeroBasedIndexOfWindow(*toWorkspace, window);
+					
+					
+					if (kWorkspace_WindowIndexInfinity != windowIndex)
+					{
+						foundWindow = true;
+						(*outIndexPtr) += windowIndex;
+						break;
+					}
+					else
+					{
+						(*outIndexPtr) += Workspace_ReturnWindowCount(*toWorkspace);
+					}
+				}
+				if (false == foundWindow)
+				{
+					SessionList::const_iterator		sessionIterator;
+					SessionRef						session = nullptr;
+					
+					
+					// look for the given session in the list
+					for (sessionIterator = gSessionListSortedByCreationTime().begin();
+							sessionIterator != gSessionListSortedByCreationTime().end(); ++sessionIterator)
+					{
+						session = *sessionIterator;
+						if (session == inOfWhichSession)
+						{
+							foundWindow = true;
+							break;
+						}
+						++(*outIndexPtr);
+					}
+				}
+				
+				if (false == foundWindow)
+				{
 					result = kSessionFactory_ResultParameterError;
 				}
 			}

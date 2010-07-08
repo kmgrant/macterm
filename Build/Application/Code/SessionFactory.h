@@ -88,7 +88,9 @@ using indexing (such as, “the first session whose...”).
 typedef FourCharCode SessionFactory_List;
 enum
 {
-	kSessionFactory_ListInCreationOrder		= 'cron'	//!< in order of creation time, session 0 is earliest
+	kSessionFactory_ListInCreationOrder		= 'cron',	//!< in order of creation time, session 0 is earliest
+	kSessionFactory_ListInTabStackOrder		= 'tabs'	//!< if tabs are in use, iterates over workspaces in turn, from first tab to last;
+														//!  otherwise, works like "kSessionFactory_ListInCreationOrder"
 };
 
 /*!
@@ -270,9 +272,9 @@ void
 //@{
 
 SessionFactory_Result
-	SessionFactory_GetSessionWithZeroBasedIndex		(UInt16							inZeroBasedSessionIndex,
+	SessionFactory_GetWindowWithZeroBasedIndex		(UInt16							inZeroBasedSessionIndex,
 													 SessionFactory_List			inFromWhichList,
-													 SessionRef*					outSessionPtr);
+													 HIWindowRef*					outWindowPtr);
 
 SessionFactory_Result
 	SessionFactory_GetZeroBasedIndexOfSession		(SessionRef						inOfWhichSession,

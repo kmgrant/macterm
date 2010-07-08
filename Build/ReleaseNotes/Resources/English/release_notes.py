@@ -312,6 +312,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20100707': [
+        'Fixed Terminal window tabs so that keyboard rotation selects windows in tab order instead of chronological order.',
         'Fixed Terminal window tabs to start in the correct orientation, by using a new default Window Stacking Origin.',
         'Fixed Terminal window tabs to pop out at the correct location, instead of moving after becoming visible.',
         'Fixed Terminal window tabs so that the terminal window size can be reduced (as regular windows always allowed).',
