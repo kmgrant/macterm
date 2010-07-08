@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100707',
     '20100617',
     '20100608',
     '20100607',
@@ -310,6 +311,13 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100707': [
+        'Fixed Terminal window tabs to start in the correct orientation, by using a new default Window Stacking Origin.',
+        'Fixed Terminal window tabs to pop out at the correct location, instead of moving after becoming visible.',
+        'Fixed Terminal window tabs so that the terminal window size can be reduced (as regular windows always allowed).',
+        'Terminal window tabs are now automatically resized if they do not all fit along the edge of the window.',
+        'Terminal window tabs will now reposition automatically when "Move to New Workspace" leaves a gap between tabs.',
+    ],
     '20100617': [
         "Fixed an initialization problem when MacTelnet was run from certain paths (like its disk image).",
     ],

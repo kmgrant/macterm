@@ -167,14 +167,20 @@ public:
 	void
 	operator()	(Workspace_Ref	inWorkspace)
 	{
-		UInt16 const	kMaxWindows = Workspace_ReturnWindowCount(inWorkspace);
+		UInt16 const			kMaxWindows = Workspace_ReturnWindowCount(inWorkspace);
+		TerminalWindow_Result	terminalResult = kTerminalWindow_ResultOK;
 		
 		
-		if (kWorkspace_WindowIndexInfinity != kMaxWindows)
+		if ((kWorkspace_WindowIndexInfinity != kMaxWindows) && (kMaxWindows > 0))
 		{
-			Float32		currentOffset = 0.0; // as each window is processed, its tab size is added here to define the next offset
+			Float32 const	kAverageTabWidth = 320.0; // arbitrary!
+			Float32			currentOffset = 0.0; // while processing, each tab size is added here to define the next offset
+			Float32			smallestMaxWidth = FLT_MAX;
+			Float32			idealTabWidth = kAverageTabWidth;
 			
 			
+			// determine how wide each tab should be; use the smallest window
+			// for this, since Mac OS X will otherwise force a window resize
 			for (UInt16 i = 0; i < kMaxWindows; ++i)
 			{
 				HIWindowRef			window = Workspace_ReturnWindowWithZeroBasedIndex(inWorkspace, i);
@@ -183,18 +189,50 @@ public:
 				
 				if (nullptr != terminalWindow)
 				{
-					TerminalWindow_Result	terminalResult = kTerminalWindow_ResultOK;
-					Float32					tabWidth = 0.0;
+					Float32		availableSpace = FLT_MAX;
 					
 					
-					terminalResult = TerminalWindow_SetTabPosition(terminalWindow, currentOffset);
+					terminalResult = TerminalWindow_GetTabWidthAvailable(terminalWindow, availableSpace);
 					if (kTerminalWindow_ResultOK == terminalResult)
 					{
+						if (availableSpace < smallestMaxWidth)
+						{
+							smallestMaxWidth = availableSpace;
+						}
+					}
+				}
+			}
+			idealTabWidth = smallestMaxWidth / kMaxWindows;
+			if (idealTabWidth > kAverageTabWidth)
+			{
+				idealTabWidth = kAverageTabWidth;
+			}
+			
+			// reposition and resize each window’s tab appropriately
+			for (UInt16 i = 0; i < kMaxWindows; ++i)
+			{
+				HIWindowRef			window = Workspace_ReturnWindowWithZeroBasedIndex(inWorkspace, i);
+				TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(window);
+				
+				
+				if (nullptr != terminalWindow)
+				{
+					terminalResult = TerminalWindow_SetTabPosition(terminalWindow, currentOffset, idealTabWidth);
+					if (kTerminalWindow_ResultOK == terminalResult)
+					{
+						Float32		tabWidth = 0.0;
+						
+						
 						terminalResult = TerminalWindow_GetTabWidth(terminalWindow, tabWidth);
 						//assert(kTerminalWindow_ResultOK == terminalResult);
 						if (kTerminalWindow_ResultOK == terminalResult)
 						{
 							currentOffset += tabWidth;
+							
+							// reset the tab flag; this has the effect of opening the drawer
+							// if it is not already open (TEMPORARY - should this be done in
+							// a more direct way?)
+							(OSStatus)TerminalWindow_SetTabAppearance(terminalWindow, true);
 						}
 					}
 				}
@@ -1484,11 +1522,15 @@ SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalW
 	// ensure the window is not a member of any other workspace
 	(removeTerminalWindowFromWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
 														removeTerminalWindowFromWorkspace(inTerminalWindow));
-	
-	// TEMPORARY, INCOMPLETE - figure out what workspace the window used to be in,
-	// and call "fixTerminalWindowTabPositionsInWorkspace()(oldWorkspace)"
-	// (should this kind of thing be handled automatically through callbacks, when
-	// windows are removed from a workspace for any reason?)
+	if (gAutoRearrangeTabs)
+	{
+		// TEMPORARY, INCOMPLETE - figure out what workspace the window used to be in,
+		// and call "fixTerminalWindowTabPositionsInWorkspace()(oldWorkspace)"
+		// (should this kind of thing be handled automatically through callbacks, when
+		// windows are removed from a workspace for any reason?)
+		(fixTerminalWindowTabPositionsInWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
+																fixTerminalWindowTabPositionsInWorkspace());
+	}
 	
 	// offset the window slightly to emphasize its detachment
 	{
@@ -1499,7 +1541,7 @@ SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalW
 		error = GetWindowBounds(window, kWindowStructureRgn, &structureBounds);
 		if (noErr == error)
 		{
-			OffsetRect(&structureBounds, 20/* arbitrary */, 20/* arbitrary */);
+			OffsetRect(&structureBounds, 32/* arbitrary */, 32/* arbitrary */);
 			SetWindowBounds(window, kWindowStructureRgn, &structureBounds);
 		}
 	}

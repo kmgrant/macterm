@@ -256,7 +256,11 @@ void
 
 TerminalWindow_Result
 	TerminalWindow_GetTabWidth						(TerminalWindowRef			inRef,
-													 Float32&					inWidthInPixels);
+													 Float32&					outWidthHeightInPixels);
+
+TerminalWindow_Result
+	TerminalWindow_GetTabWidthAvailable				(TerminalWindowRef			inRef,
+													 Float32&					outMaxWidthHeightInPixels);
 
 OSStatus
 	TerminalWindow_SetTabAppearance					(TerminalWindowRef			inRef,
@@ -264,7 +268,8 @@ OSStatus
 
 TerminalWindow_Result
 	TerminalWindow_SetTabPosition					(TerminalWindowRef			inRef,
-													 Float32					inOffsetFromStartingPointInPixels);
+													 Float32					inOffsetFromStartingPointInPixels,
+													 Float32					inWidthInPixelsOrFltMax = FLT_MAX);
 
 TerminalWindow_Result
 	TerminalWindow_SetTabWidth						(TerminalWindowRef			inRef,
