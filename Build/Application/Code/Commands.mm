@@ -1847,7 +1847,7 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 														kSessionFactory_ListInCreationOrder, &nextWindow);
 			
 			
-			if (kSessionFactory_ResultOK == factoryError)
+			if (kSessionFactory_ResultOK != factoryError)
 			{
 				Console_Warning(Console_WriteLine, "failed to find window with given index");
 			}
@@ -1877,7 +1877,7 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 				
 				factoryError = SessionFactory_GetWindowWithZeroBasedIndex
 								(frontSessionIndex, kSessionFactory_ListInTabStackOrder, &nextWindow);
-				if (kSessionFactory_ResultOK == factoryError)
+				if (kSessionFactory_ResultOK != factoryError)
 				{
 					Console_Warning(Console_WriteLine, "failed to find window with given index");
 				}
@@ -2617,12 +2617,13 @@ NSMenuItem*
 returnWindowMenuItemForSession		(SessionRef		inSession)
 {
 	NSMenu*			windowMenu = returnMenu(kMenuIDWindow);
+	int const		kItemCount = ([windowMenu numberOfItems] - 1);
 	int const		kStartItem = returnFirstWindowItemAnchor(windowMenu);
 	int const		kPastEndItem = kStartItem + SessionFactory_ReturnCount();
 	NSMenuItem*		result = nil;
 	
 	
-	for (int i = kStartItem; i != kPastEndItem; ++i)
+	for (int i = kStartItem; ((i != kPastEndItem) && (i < kItemCount)); ++i)
 	{
 		NSMenuItem*		item = [windowMenu itemAtIndex:i];
 		SessionRef		itemSession = returnMenuItemSession(item);

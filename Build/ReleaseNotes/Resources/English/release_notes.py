@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100708',
     '20100707',
     '20100617',
     '20100608',
@@ -311,6 +312,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100708': [
+        'Fixed a few minor problems that were causing console messages.',
+    ],
     '20100707': [
         'Fixed Terminal window tabs so that keyboard rotation selects windows in tab order instead of chronological order.',
         'Fixed Terminal window tabs to start in the correct orientation, by using a new default Window Stacking Origin.',
