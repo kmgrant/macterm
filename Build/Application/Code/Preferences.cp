@@ -2208,7 +2208,10 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 		{
 			result = contextGetData(ptr, dataClass, inDataPreferenceTag, inDataStorageSize,
 									outDataStorage, outActualSizePtrOrNull);
-			searchDefaults = (kPreferences_ResultOK != result);
+			if ((searchDefaults) && (kPreferences_ResultOK == result))
+			{
+				searchDefaults = false;
+			}
 		}
 		else if (false == searchDefaults)
 		{
