@@ -487,7 +487,7 @@ createContainerView		(Panel_Ref		inPanel,
 		columnInfo.propertyDesc.propertyID = '----';
 		columnInfo.propertyDesc.propertyType = kDataBrowserTextType;
 		columnInfo.propertyDesc.propertyFlags = kDataBrowserDefaultPropertyFlags | kDataBrowserListViewSortableColumn |
-												kDataBrowserListViewMovableColumn | kDataBrowserListViewTypeSelectColumn;
+												kDataBrowserListViewMovableColumn;
 		columnInfo.headerBtnDesc.version = kDataBrowserListViewLatestHeaderDesc;
 		columnInfo.headerBtnDesc.minimumWidth = 100; // arbitrary
 		columnInfo.headerBtnDesc.maximumWidth = 400; // arbitrary
@@ -515,6 +515,7 @@ createContainerView		(Panel_Ref		inPanel,
 		if (stringResult.ok())
 		{
 			columnInfo.propertyDesc.propertyID = kMyDataBrowserPropertyIDMacroName;
+			columnInfo.propertyDesc.propertyFlags |= kDataBrowserListViewTypeSelectColumn;
 			error = AddDataBrowserListViewColumn(macrosList, &columnInfo, columnNumber++);
 			assert_noerr(error);
 			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
