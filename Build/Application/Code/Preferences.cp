@@ -5542,6 +5542,18 @@ getDefaultContext	(Quills::Prefs::Class		inClass,
 		break;
 	}
 	
+	// default contexts must be retained when they are first
+	// constructed, so that another retain/release will not
+	// destroy them
+	if (nullptr != outContextPtr)
+	{
+		if (false == gMyContextRefLocks().isLocked(outContextPtr->selfRef))
+		{
+			Preferences_RetainContext(outContextPtr->selfRef);
+			assert(gMyContextRefLocks().isLocked(outContextPtr->selfRef));
+		}
+	}
+	
 	return result;
 }// getDefaultContext
 
