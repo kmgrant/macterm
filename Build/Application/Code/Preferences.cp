@@ -4971,7 +4971,7 @@ convertCFArrayToHIRect	(CFArrayRef		inArray,
 		CFNumberRef		yValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 1));
 		CFNumberRef		widthValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 2));
 		CFNumberRef		heightValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 3));
-		Float64			floatValue = 0L;
+		Float32			floatValue = 0L;
 		
 		
 		if (CFNumberGetValue(xValue, kCFNumberFloat32Type, &floatValue))
