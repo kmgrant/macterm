@@ -2608,7 +2608,7 @@ NSMenuItem*
 returnWindowMenuItemForSession		(SessionRef		inSession)
 {
 	NSMenu*			windowMenu = returnMenu(kMenuIDWindow);
-	int const		kItemCount = ([windowMenu numberOfItems] - 1);
+	int const		kItemCount = [windowMenu numberOfItems];
 	int const		kStartItem = returnFirstWindowItemAnchor(windowMenu);
 	int const		kPastEndItem = kStartItem + SessionFactory_ReturnCount();
 	NSMenuItem*		result = nil;
