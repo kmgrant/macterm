@@ -644,10 +644,11 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 						
 						if (nullptr != argsCFArray)
 						{
-							SessionRef		newSession = nullptr;
+							TerminalWindowRef	terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
+							SessionRef			newSession = nullptr;
 							
 							
-							newSession = SessionFactory_NewSessionArbitraryCommand(nullptr/* terminal window */, argsCFArray);
+							newSession = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argsCFArray);
 							if (nullptr != newSession) result = kMacroManager_ResultOK;
 							
 							CFRelease(argsCFArray), argsCFArray = nullptr;

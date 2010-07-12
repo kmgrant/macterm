@@ -3,7 +3,7 @@
 	SessionFactory.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -447,7 +447,7 @@ NOTE:	A future version of this routine might add a parameter
 (3.1)
 */
 SessionRef
-SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindowOrNullToMakeNewWindow,
+SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindow,
 								 SessionRef				inBaseSession)
 {
 	SessionRef		result = nullptr;
@@ -456,8 +456,8 @@ SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindowOrNullToMakeN
 	
 	if (nullptr != argsArray)
 	{
-		result = SessionFactory_NewSessionArbitraryCommand
-					(inTerminalWindowOrNullToMakeNewWindow, argsArray);
+		assert(nullptr != inTerminalWindow);
+		result = SessionFactory_NewSessionArbitraryCommand(inTerminalWindow, argsArray);
 	}
 	return result;
 }// NewCloneSession
@@ -477,22 +477,17 @@ is returned.
 (3.0)
 */
 SessionRef
-SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowOrNullToMakeNewWindow,
+SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 											 CFArrayRef					inArgumentArray,
 											 Preferences_ContextRef		inContext,
 											 CFStringRef				inWorkingDirectoryOrNull)
 {
 	SessionRef			result = nullptr;
-	TerminalWindowRef	terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-											? createTerminalWindow(inContext, inContext, inContext)
-											: inTerminalWindowOrNullToMakeNewWindow;
+	TerminalWindowRef	terminalWindow = inTerminalWindow;
 	
 	
-	if (nullptr == terminalWindow)
-	{
-		Console_WriteLine("unexpected problem creating terminal window!!!");
-	}
-	else if (false == displayTerminalWindow(terminalWindow))
+	assert(nullptr != terminalWindow);
+	if (false == displayTerminalWindow(terminalWindow))
 	{
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
 	}
@@ -552,21 +547,15 @@ is returned.
 (3.0)
 */
 SessionRef
-SessionFactory_NewSessionDefaultShell	(TerminalWindowRef			inTerminalWindowOrNullToMakeNewWindow,
-										 Preferences_ContextRef		inContext)
+SessionFactory_NewSessionDefaultShell	(TerminalWindowRef		inTerminalWindow)
 {
 	SessionRef			result = nullptr;
-	TerminalWindowRef	terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-											? createTerminalWindow(inContext, inContext, inContext)
-											: inTerminalWindowOrNullToMakeNewWindow;
+	TerminalWindowRef	terminalWindow = inTerminalWindow;
 	Boolean				displayOK = false;
 	
 	
-	if (nullptr == terminalWindow)
-	{
-		Console_WriteLine("unexpected problem creating terminal window!!!");
-	}
-	else if (false == displayTerminalWindow(terminalWindow))
+	assert(nullptr != terminalWindow);
+	if (false == displayTerminalWindow(terminalWindow))
 	{
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
 	}
@@ -614,21 +603,15 @@ returned.
 (3.0)
 */
 SessionRef
-SessionFactory_NewSessionFromCommandFile	(TerminalWindowRef			inTerminalWindowOrNullToMakeNewWindow,
-											 char const*				inCommandFilePath,
-											 Preferences_ContextRef		inContext)
+SessionFactory_NewSessionFromCommandFile	(TerminalWindowRef		inTerminalWindow,
+											 char const*			inCommandFilePath)
 {
 	SessionRef			result = nullptr;
-	TerminalWindowRef	terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-											? createTerminalWindow(inContext, inContext, inContext)
-											: inTerminalWindowOrNullToMakeNewWindow;
+	TerminalWindowRef	terminalWindow = inTerminalWindow;
 	
 	
-	if (nullptr == terminalWindow)
-	{
-		Console_WriteLine("unexpected problem creating terminal window!!!");
-	}
-	else if (false == displayTerminalWindow(terminalWindow))
+	assert(nullptr != terminalWindow);
+	if (false == displayTerminalWindow(terminalWindow))
 	{
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
 	}
@@ -694,13 +677,11 @@ Returns the new session, or nullptr if errors occur.
 (3.1)
 */
 SessionRef
-SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOrNullToMakeNewWindow,
+SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
 											 SessionDescription_Ref		inSessionDescription)
 {
 	SessionRef					result = nullptr;
-	TerminalWindowRef			terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-													? createTerminalWindow()
-													: inTerminalWindowOrNullToMakeNewWindow;
+	TerminalWindowRef			terminalWindow = inTerminalWindow;
 	SessionDescription_Result   dataAccessError = kSessionDescription_ResultOK;
 	
 	
@@ -853,6 +834,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 			
 			if (nullptr != argv)
 			{
+				assert(nullptr != terminalWindow);
 				result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argv);
 				CFRelease(argv), argv = nullptr;
 			}
@@ -896,21 +878,15 @@ returned.
 (3.1)
 */
 SessionRef
-SessionFactory_NewSessionFromTerminalFile	(TerminalWindowRef			inTerminalWindowOrNullToMakeNewWindow,
-											 char const*				inAppleDotTermFilePath,
-											 Preferences_ContextRef		inContext)
+SessionFactory_NewSessionFromTerminalFile	(TerminalWindowRef		inTerminalWindow,
+											 char const*			inAppleDotTermFilePath)
 {
 	SessionRef			result = nullptr;
-	TerminalWindowRef	terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-											? createTerminalWindow(inContext, inContext, inContext)
-											: inTerminalWindowOrNullToMakeNewWindow;
+	TerminalWindowRef	terminalWindow = inTerminalWindow;
 	
 	
-	if (nullptr == terminalWindow)
-	{
-		Console_WriteLine("unexpected problem creating terminal window!!!");
-	}
-	else if (false == displayTerminalWindow(terminalWindow))
+	assert(nullptr != terminalWindow);
+	if (false == displayTerminalWindow(terminalWindow))
 	{
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
 	}
@@ -985,20 +961,14 @@ is returned.
 (3.0)
 */
 SessionRef
-SessionFactory_NewSessionLoginShell		(TerminalWindowRef			inTerminalWindowOrNullToMakeNewWindow,
-										 Preferences_ContextRef		inContext)
+SessionFactory_NewSessionLoginShell		(TerminalWindowRef		inTerminalWindow)
 {
 	SessionRef			result = nullptr;
-	TerminalWindowRef	terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-											? createTerminalWindow(inContext, inContext, inContext)
-											: inTerminalWindowOrNullToMakeNewWindow;
+	TerminalWindowRef	terminalWindow = inTerminalWindow;
 	
 	
-	if (nullptr == terminalWindow)
-	{
-		Console_WriteLine("unexpected problem creating terminal window!!!");
-	}
-	else if (false == displayTerminalWindow(terminalWindow))
+	assert(nullptr != terminalWindow);
+	if (false == displayTerminalWindow(terminalWindow))
 	{
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
 	}
@@ -1055,11 +1025,11 @@ to the listener by examining the session list.
 (3.1)
 */
 SessionRef
-SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNullToMakeNewWindow,
+SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindow,
 										 Preferences_ContextRef		inSessionContext)
 {
 	SessionRef				result = nullptr;
-	TerminalWindowRef		terminalWindow = inTerminalWindowOrNullToMakeNewWindow;
+	TerminalWindowRef		terminalWindow = inTerminalWindow;
 	Preferences_ContextRef	associatedFormatContext = nullptr;
 	Preferences_ContextRef	associatedTerminalContext = nullptr;
 	Preferences_ContextRef	associatedTranslationContext = nullptr;
@@ -1111,15 +1081,11 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 		}
 	}
 	
-	if (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-	{
-		terminalWindow = createTerminalWindow(associatedTerminalContext, associatedFormatContext, associatedTranslationContext);
-	}
-	else
-	{
-		// reconfigure given window; UNIMPLEMENTED
-	}
+	assert(nullptr != terminalWindow);
 	
+	// reconfigure given window; UNIMPLEMENTED
+	
+	// display the window
 	if (false == displayTerminalWindow(terminalWindow))
 	{
 		// some kind of problem?!?
@@ -1239,12 +1205,9 @@ to the listener by examining the session list.
 (3.0)
 */
 Boolean
-SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindowOrNullToMakeNewWindow,
-											 Preferences_ContextRef		inContext)
+SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef		inTerminalWindow)
 {
-	TerminalWindowRef		terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-												? createTerminalWindow(inContext, inContext, inContext)
-												: inTerminalWindowOrNullToMakeNewWindow;
+	TerminalWindowRef		terminalWindow = inTerminalWindow;
 	Preferences_ContextRef	sessionContext = nullptr;
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	Boolean					result = true;
@@ -1257,14 +1220,7 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindowO
 		Console_Warning(Console_WriteLine, "unable to initialize dialog with Session Default preferences!");
 	}
 	
-	if (nullptr == terminalWindow)
-	{
-		// TEMPORARY - NEED to display some kind of user alert here
-		Sound_StandardAlert();
-		Console_WriteLine("unexpected problem creating terminal window!!!");
-		result = false;
-	}
-	else
+	assert(nullptr != terminalWindow);
 	{
 		// display a terminal window and then immediately display
 		// a sheet asking the user what to do with the new window
@@ -2350,8 +2306,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (nullptr == sessionContext) result = eventNotHandledErr;
 						else
 						{
-							SessionRef		newSession = SessionFactory_NewSessionUserFavorite(nullptr/* terminal window */,
-																								sessionContext);
+							TerminalWindowRef	terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
+							SessionRef			newSession = SessionFactory_NewSessionUserFavorite(terminalWindow, sessionContext);
 							
 							
 							if (nullptr != newSession) result = noErr;
@@ -2369,7 +2325,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				case kCommandNewSessionDialog:
 					{
-						Boolean		displayOK = SessionFactory_DisplayUserCustomizationUI();
+						TerminalWindowRef	terminalWindow = createTerminalWindow();
+						Boolean				displayOK = SessionFactory_DisplayUserCustomizationUI(terminalWindow);
 						
 						
 						// report any errors to the user
@@ -2386,12 +2343,13 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandNewSessionLoginShell:
 				case kCommandNewSessionShell:
 					{
-						SessionRef		newSession = nullptr;
+						TerminalWindowRef	terminalWindow = createTerminalWindow();
+						SessionRef			newSession = nullptr;
 						
 						
 						// create a shell
-						if (received.commandID == kCommandNewSessionLoginShell) newSession = SessionFactory_NewSessionLoginShell();
-						else newSession = SessionFactory_NewSessionDefaultShell();
+						if (received.commandID == kCommandNewSessionLoginShell) newSession = SessionFactory_NewSessionLoginShell(terminalWindow);
+						else newSession = SessionFactory_NewSessionDefaultShell(terminalWindow);
 						
 						// report any errors to the user
 						if (nullptr != newSession) result = noErr;

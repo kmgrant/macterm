@@ -3,7 +3,7 @@
 	QuillsSession.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -125,11 +125,12 @@ _session(nullptr)
 																							inWorkingDirectory.c_str(),
 																							kCFStringEncodingUTF8),
 																	true/* is retained */);
+		TerminalWindowRef								terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
 		
 		
 		std::transform(inArgV.begin(), inArgV.end(), args, create_cfstr());
 		argsObject.setCFTypeRef(CFArrayCreate(kCFAllocatorDefault, args, argc, &kCFTypeArrayCallBacks), true/* is retained */);
-		_session = SessionFactory_NewSessionArbitraryCommand(nullptr/* terminal window */, argsObject.returnCFArrayRef()/* command */,
+		_session = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argsObject.returnCFArrayRef()/* command */,
 																nullptr/* preferences context */,
 																dirObject.returnCFStringRef());
 		
@@ -313,8 +314,10 @@ Session::handle_file	(std::string	inPathname)
 			else if (extensionName == "term")
 			{
 				// it appears to be a Terminal XML property list file; parse it
-				SessionFactory_NewSessionFromTerminalFile(nullptr/* existing terminal window to use */,
-															inPathname.c_str());
+				TerminalWindowRef	terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
+				
+				
+				SessionFactory_NewSessionFromTerminalFile(terminalWindow, inPathname.c_str());
 			}
 			else
 			{

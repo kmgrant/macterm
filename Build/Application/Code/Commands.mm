@@ -3894,8 +3894,8 @@ performNewByFavoriteName:(id)	sender
 			
 			if (nullptr != namedSettings)
 			{
-				SessionRef		newSession = SessionFactory_NewSessionUserFavorite
-												(nullptr/* terminal window */, namedSettings);
+				TerminalWindowRef	terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
+				SessionRef			newSession = SessionFactory_NewSessionUserFavorite(terminalWindow, namedSettings);
 				
 				
 				isError = (nullptr == newSession);

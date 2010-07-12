@@ -761,7 +761,10 @@ SessionDescription_ReadFromFile		(FSSpec const*		inFilePtr)
 			else
 			{
 				// create a session using the file data; the following call is asynchronous
-				(SessionRef)SessionFactory_NewSessionFromDescription(nullptr/* terminal window */, sessionFile);
+				TerminalWindowRef	terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
+				
+				
+				(SessionRef)SessionFactory_NewSessionFromDescription(terminalWindow, sessionFile);
 			}
 			SessionDescription_Release(&sessionFile);
 		}

@@ -20,7 +20,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -189,39 +189,35 @@ void
 //@{
 
 SessionRef
-	SessionFactory_NewCloneSession					(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow,
+	SessionFactory_NewCloneSession					(TerminalWindowRef				inTerminalWindow,
 													 SessionRef						inBaseSession);
 
 SessionRef
-	SessionFactory_NewSessionArbitraryCommand		(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow,
+	SessionFactory_NewSessionArbitraryCommand		(TerminalWindowRef				inTerminalWindow,
 													 CFArrayRef						inArgumentArray,
 													 Preferences_ContextRef			inContextOrNull = nullptr,
 													 CFStringRef					inWorkingDirectoryOrNull = nullptr);
 
 SessionRef
-	SessionFactory_NewSessionDefaultShell			(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow = nullptr,
-													 Preferences_ContextRef			inContextOrNull = nullptr);
+	SessionFactory_NewSessionDefaultShell			(TerminalWindowRef				inTerminalWindow);
 
 SessionRef
-	SessionFactory_NewSessionFromCommandFile		(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow,
-													 char const*					inCommandFilePath,
-													 Preferences_ContextRef			inContextOrNull = nullptr);
+	SessionFactory_NewSessionFromCommandFile		(TerminalWindowRef				inTerminalWindow,
+													 char const*					inCommandFilePath);
 
 SessionRef
-	SessionFactory_NewSessionFromDescription		(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow,
+	SessionFactory_NewSessionFromDescription		(TerminalWindowRef				inTerminalWindow,
 													 SessionDescription_Ref			inSessionDescription);
 
 SessionRef
-	SessionFactory_NewSessionFromTerminalFile		(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow,
-													 char const*					inAppleDotTermFilePath,
-													 Preferences_ContextRef			inContextOrNull = nullptr);
+	SessionFactory_NewSessionFromTerminalFile		(TerminalWindowRef				inTerminalWindow,
+													 char const*					inAppleDotTermFilePath);
 
 SessionRef
-	SessionFactory_NewSessionLoginShell				(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow = nullptr,
-													 Preferences_ContextRef			inContextOrNull = nullptr);
+	SessionFactory_NewSessionLoginShell				(TerminalWindowRef				inTerminalWindow);
 
 SessionRef
-	SessionFactory_NewSessionUserFavorite			(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow,
+	SessionFactory_NewSessionUserFavorite			(TerminalWindowRef				inTerminalWindow,
 													 Preferences_ContextRef			inSessionContext);
 
 TerminalWindowRef
@@ -238,8 +234,7 @@ Boolean
 //@{
 
 Boolean
-	SessionFactory_DisplayUserCustomizationUI		(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow = nullptr,
-													 Preferences_ContextRef			inContextOrNull = nullptr);
+	SessionFactory_DisplayUserCustomizationUI		(TerminalWindowRef				inTerminalWindow);
 
 void
 	SessionFactory_MoveTerminalWindowToNewWorkspace	(TerminalWindowRef				inTerminalWindow);
