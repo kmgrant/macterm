@@ -3,7 +3,7 @@
 	UIStrings.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -247,7 +247,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowQuitPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Review long-running sessions?"), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Review running sessions?"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowQuitPrimaryText"));
 		break;
 	
