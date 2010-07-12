@@ -780,8 +780,7 @@ Commands_Result
 											 NSMenu*					inoutMenu,
 											 int						inAtItemIndex,
 											 int						inInitialIndent,
-											 SEL						inAction,
-											 int&						outHowManyItemsAdded);
+											 SEL						inAction);
 
 //@}
 

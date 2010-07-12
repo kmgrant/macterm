@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -190,12 +190,6 @@ namespace {
 ListenerModel_ListenerRef	gPreferenceChangeEventListener = nullptr;
 ListenerModel_ListenerRef	gSessionStateChangeEventListener = nullptr;
 ListenerModel_ListenerRef	gSessionWindowStateChangeEventListener = nullptr;
-int							gNumberOfSessionMenuItemsAdded = 0;
-int							gNumberOfFormatMenuItemsAdded = 0;
-int							gNumberOfMacroSetMenuItemsAdded = 0;
-int							gNumberOfSpecialWindowMenuItemsAdded = 0;
-int							gNumberOfTranslationTableMenuItemsAdded = 0;
-int							gNumberOfWindowMenuItemsAdded = 0;
 UInt32						gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite;
 Boolean						gCurrentQuitCancelled = false;
 ListenerModel_ListenerRef	gCurrentQuitWarningAnswerListener = nullptr;
@@ -1677,9 +1671,7 @@ contexts in the specified preferences class.
 
 If there is a problem adding anything to the menu, a
 non-success code may be returned, although the menu may
-still be partially changed.  The "outHowManyItemsAdded"
-value is always valid and indicates how many items were
-added regardless of errors.
+still be partially changed.
 
 NOTE:	This is like Preferences_InsertContextNamesInMenu(),
 		but is Cocoa-specific.  It is only here, for now,
@@ -1699,8 +1691,7 @@ Commands_InsertPrefNamesIntoMenu	(Quills::Prefs::Class	inClass,
 									 NSMenu*				inoutMenu,
 									 int					inAtItemIndex,
 									 int					inInitialIndent,
-									 SEL					inAction,
-									 int&					outHowManyItemsAdded)
+									 SEL					inAction)
 {
 	Commands_Result		result = kCommands_ResultOK;
 	Preferences_Result	prefsResult = kPreferences_ResultOK;
@@ -1717,10 +1708,10 @@ Commands_InsertPrefNamesIntoMenu	(Quills::Prefs::Class	inClass,
 		// now re-populate the menu using resource information
 		int const		kMenuItemCount = CFArrayGetCount(nameCFStringCFArray);
 		int				i = 0;
+		int				totalItems = 0;
 		CFStringRef		nameCFString = nullptr;
 		
 		
-		outHowManyItemsAdded = 0; // initially...
 		for (i = 0; i < kMenuItemCount; ++i)
 		{
 			nameCFString = CFUtilities_StringCast(CFArrayGetValueAtIndex(nameCFStringCFArray, i));
@@ -1731,10 +1722,10 @@ Commands_InsertPrefNamesIntoMenu	(Quills::Prefs::Class	inClass,
 				
 				newItem = [inoutMenu insertItemWithTitle:(NSString*)nameCFString
 															action:inAction keyEquivalent:@""
-															atIndex:(inAtItemIndex + outHowManyItemsAdded)];
+															atIndex:(inAtItemIndex + totalItems)];
 				if (nil != newItem)
 				{
-					++outHowManyItemsAdded;
+					++totalItems;
 					[newItem setIndentationLevel:inInitialIndent];
 				}
 			}
@@ -3062,23 +3053,23 @@ setUpFormatFavoritesMenu	(NSMenu*	inMenu)
 	{
 		Quills::Prefs::Class	prefsClass = Quills::Prefs::FORMAT;
 		SEL						byNameAction = @selector(performFormatByFavoriteName:);
-		int&					counter = gNumberOfFormatMenuItemsAdded;
+		int						deletedItemIndex = -1;
+		Commands_Result			insertResult = kCommands_ResultOK;
 		
 		
 		// erase previous items
-		if (0 != counter)
+		while (-1 != (deletedItemIndex = indexOfItemWithAction(inMenu, byNameAction)))
 		{
-			for (int i = 0; i < counter; ++i)
-			{
-				[inMenu removeItemAtIndex:pastAnchorIndex];
-			}
+			[inMenu removeItemAtIndex:deletedItemIndex];
 		}
 		
-		// add the names of all configurations to the menu;
-		// update global count of items added at that location
-		counter = 0;
-		(Commands_Result)Commands_InsertPrefNamesIntoMenu(prefsClass, inMenu, pastAnchorIndex,
-															1/* indentation level */, byNameAction, counter);
+		// add the names of all configurations to the menu
+		insertResult = Commands_InsertPrefNamesIntoMenu(prefsClass, inMenu, pastAnchorIndex,
+														1/* indentation level */, byNameAction);
+		if (false == insertResult.ok())
+		{
+			Console_Warning(Console_WriteLine, "unexpected error inserting favorites into menu");
+		}
 	}
 }// setUpFormatFavoritesMenu
 
@@ -3102,23 +3093,23 @@ setUpMacroSetsMenu	(NSMenu*	inMenu)
 	{
 		Quills::Prefs::Class	prefsClass = Quills::Prefs::MACRO_SET;
 		SEL						byNameAction = @selector(performMacroSwitchByFavoriteName:);
-		int&					counter = gNumberOfMacroSetMenuItemsAdded;
+		int						deletedItemIndex = -1;
+		Commands_Result			insertResult = kCommands_ResultOK;
 		
 		
 		// erase previous items
-		if (0 != counter)
+		while (-1 != (deletedItemIndex = indexOfItemWithAction(inMenu, byNameAction)))
 		{
-			for (int i = 0; i < counter; ++i)
-			{
-				[inMenu removeItemAtIndex:pastAnchorIndex];
-			}
+			[inMenu removeItemAtIndex:deletedItemIndex];
 		}
 		
-		// add the names of all configurations to the menu;
-		// update global count of items added at that location
-		counter = 0;
-		(Commands_Result)Commands_InsertPrefNamesIntoMenu(prefsClass, inMenu, pastAnchorIndex,
-															1/* indentation level */, byNameAction, counter);
+		// add the names of all configurations to the menu
+		insertResult = Commands_InsertPrefNamesIntoMenu(prefsClass, inMenu, pastAnchorIndex,
+														1/* indentation level */, byNameAction);
+		if (false == insertResult.ok())
+		{
+			Console_Warning(Console_WriteLine, "unexpected error inserting favorites into menu");
+		}
 	}
 }// setUpMacroSetsMenu
 
@@ -3142,28 +3133,28 @@ setUpSessionFavoritesMenu	(NSMenu*	inMenu)
 	{
 		Quills::Prefs::Class	prefsClass = Quills::Prefs::SESSION;
 		SEL						byNameAction = @selector(performNewByFavoriteName:);
-		int&					counter = gNumberOfSessionMenuItemsAdded;
+		int						deletedItemIndex = -1;
+		Commands_Result			insertResult = kCommands_ResultOK;
 		
 		
 		// erase previous items
-		if (0 != counter)
+		while (-1 != (deletedItemIndex = indexOfItemWithAction(inMenu, byNameAction)))
 		{
-			for (int i = 0; i < counter; ++i)
-			{
-				[inMenu removeItemAtIndex:pastAnchorIndex];
-			}
+			[inMenu removeItemAtIndex:deletedItemIndex];
 		}
 		
-		// add the names of all configurations to the menu;
-		// update global count of items added at that location
-		counter = 0;
-		(Commands_Result)Commands_InsertPrefNamesIntoMenu(prefsClass, inMenu, pastAnchorIndex,
-															1/* indentation level */, byNameAction, counter);
+		// add the names of all configurations to the menu
+		insertResult = Commands_InsertPrefNamesIntoMenu(prefsClass, inMenu, pastAnchorIndex,
+														1/* indentation level */, byNameAction);
+		if (false == insertResult.ok())
+		{
+			Console_Warning(Console_WriteLine, "unexpected error inserting favorites into menu");
+		}
 	}
 	
 	// check to see if a key equivalent should be applied
 	setNewCommand(gNewCommandShortcutEffect);
-}// setUpSessionFavoritesSubmenu
+}// setUpSessionFavoritesMenu
 
 
 /*!
@@ -3185,23 +3176,23 @@ setUpTranslationTablesMenu	(NSMenu*	inMenu)
 	{
 		Quills::Prefs::Class	prefsClass = Quills::Prefs::TRANSLATION;
 		SEL						byNameAction = @selector(performTranslationSwitchByFavoriteName:);
-		int&					counter = gNumberOfTranslationTableMenuItemsAdded;
+		int						deletedItemIndex = -1;
+		Commands_Result			insertResult = kCommands_ResultOK;
 		
 		
 		// erase previous items
-		if (0 != counter)
+		while (-1 != (deletedItemIndex = indexOfItemWithAction(inMenu, byNameAction)))
 		{
-			for (int i = 0; i < counter; ++i)
-			{
-				[inMenu removeItemAtIndex:pastAnchorIndex];
-			}
+			[inMenu removeItemAtIndex:deletedItemIndex];
 		}
 		
-		// add the names of all configurations to the menu;
-		// update global count of items added at that location
-		counter = 0;
-		(Commands_Result)Commands_InsertPrefNamesIntoMenu(prefsClass, inMenu, pastAnchorIndex,
-															1/* indentation level */, byNameAction, counter);
+		// add the names of all configurations to the menu
+		insertResult = Commands_InsertPrefNamesIntoMenu(prefsClass, inMenu, pastAnchorIndex,
+														1/* indentation level */, byNameAction);
+		if (false == insertResult.ok())
+		{
+			Console_Warning(Console_WriteLine, "unexpected error inserting favorites into menu");
+		}
 	}
 }// setUpTranslationTablesMenu
 
@@ -3217,6 +3208,8 @@ setUpWindowMenu		(NSMenu*	inMenu)
 {
 	int const					kFirstWindowItemIndex = returnFirstWindowItemAnchor(inMenu);
 	int const					kDividerIndex = kFirstWindowItemIndex - 1;
+	int							deletedItemIndex = -1;
+	int							numberOfWindowMenuItemsAdded = 0;
 	My_MenuItemInsertionInfo	insertWhere;
 	
 	
@@ -3226,40 +3219,30 @@ setUpWindowMenu		(NSMenu*	inMenu)
 	insertWhere.atItemIndex = kDividerIndex; // because, the divider is not present at insertion time
 	
 	// erase previous items
-	if (0 != gNumberOfWindowMenuItemsAdded)
+	while (-1 != (deletedItemIndex = indexOfItemWithAction(inMenu, @selector(orderFrontSpecificWindow:))))
 	{
-		for (int i = 0; i < gNumberOfSpecialWindowMenuItemsAdded; ++i)
-		{
-			[inMenu removeItemAtIndex:kDividerIndex];
-		}
-		for (int i = 0; i < gNumberOfWindowMenuItemsAdded; ++i)
+		[inMenu removeItemAtIndex:deletedItemIndex];
+	}
+	if (kDividerIndex < [inMenu numberOfItems])
+	{
+		if ([[inMenu itemAtIndex:kDividerIndex] isSeparatorItem])
 		{
 			[inMenu removeItemAtIndex:kDividerIndex];
 		}
 	}
 	
-	// add the names of all open session windows to the menu;
-	// update global count of items added at that location
-	gNumberOfWindowMenuItemsAdded = 0;
+	// add the names of all open session windows to the menu
 	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions &
 										~kSessionFactory_SessionFilterFlagConsoleSessions,
 									addWindowMenuItemSessionOp,
 									&insertWhere/* data 1: menu info */, 0L/* data 2: undefined */,
-									&gNumberOfWindowMenuItemsAdded/* result: MenuItemIndex*, number of items added */);
+									&numberOfWindowMenuItemsAdded/* result: int*, number of items added */);
 	
 	// if any were added, include a dividing line (note also that this
-	// item must be counted above in the code to erase the old items)
-	gNumberOfSpecialWindowMenuItemsAdded = 0;
-	if (gNumberOfWindowMenuItemsAdded > 0)
+	// item must be erased above)
+	if (numberOfWindowMenuItemsAdded > 0)
 	{
-		int const	kOldCount = [inMenu numberOfItems];
-		
-		
 		[inMenu insertItem:[NSMenuItem separatorItem] atIndex:kDividerIndex];
-		if (kOldCount != [inMenu numberOfItems])
-		{
-			++gNumberOfSpecialWindowMenuItemsAdded;
-		}
 	}
 }// setUpWindowMenu
 
@@ -3916,6 +3899,7 @@ performNewByFavoriteName:(id)	sender
 				
 				
 				isError = (nullptr == newSession);
+				Preferences_ReleaseContext(&namedSettings);
 			}
 		}
 	}
@@ -4271,6 +4255,7 @@ performMacroSwitchByFavoriteName:(id)	sender
 				
 				macrosResult = MacroManager_SetCurrentMacros(namedSettings);
 				isError = (false == macrosResult.ok());
+				Preferences_ReleaseContext(&namedSettings);
 			}
 		}
 	}
@@ -4648,6 +4633,7 @@ performTranslationSwitchByFavoriteName:(id)		sender
 				
 				prefsResult = Preferences_ContextCopy(namedSettings, currentSettings);
 				isError = (kPreferences_ResultOK != prefsResult);
+				Preferences_ReleaseContext(&namedSettings);
 			}
 		}
 	}
@@ -4955,6 +4941,7 @@ performFormatByFavoriteName:(id)	sender
 				
 				prefsResult = Preferences_ContextCopy(namedSettings, currentSettings);
 				isError = (kPreferences_ResultOK != prefsResult);
+				Preferences_ReleaseContext(&namedSettings);
 			}
 		}
 	}
