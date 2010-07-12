@@ -12,7 +12,7 @@
 /*###############################################################
 
 	Data Access Library 1.4
-	© 1998-2005 by Kevin Grant
+	© 1998-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -50,6 +50,7 @@ public:
 	inline explicit ResultCode			(c_type const&);
 	inline virtual ~ResultCode			();
 	inline virtual bool operator ==		(ResultCode const&) const;
+	inline virtual bool operator !=		(ResultCode const&) const;
 	inline virtual bool ok				() const;
 protected:
 private:
@@ -84,6 +85,16 @@ const
 {
 	return (inComparison.this_resultCode == this_resultCode);
 }// operator ==
+
+
+template < typename c_type >
+bool
+ResultCode< c_type >::
+operator !=		(ResultCode const&		inComparison)
+const
+{
+	return !(this->operator ==(inComparison));
+}// operator !=
 
 
 /*!
