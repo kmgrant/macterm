@@ -3,7 +3,7 @@
 	PrefPanelMacros.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -1546,12 +1546,17 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 				
 				
 				prefsResult = Preferences_ContextGetData
-								(panelDataPtr->dataModel, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex),
+								(panelDataPtr->dataModel,
+									Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex),
 									sizeof(nameCFString), &nameCFString, false/* search defaults too */, &actualSize);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					result = SetDataBrowserItemDataText(inItemData, nameCFString);
 					CFRelease(nameCFString), nameCFString = nullptr;
+				}
+				else
+				{
+					result = SetDataBrowserItemDataText(inItemData, CFSTR(""));
 				}
 			}
 			break;
@@ -1577,7 +1582,7 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		
 		default:
 			// ???
-			result = paramErr;
+			result = errDataBrowserPropertyNotSupported;
 			break;
 		}
 	}
@@ -1600,7 +1605,8 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 					
 					
 					prefsResult = Preferences_ContextSetData
-									(panelDataPtr->dataModel, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex),
+									(panelDataPtr->dataModel,
+										Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex),
 										sizeof(newName), &newName);
 					if (kPreferences_ResultOK == prefsResult)
 					{
@@ -1621,6 +1627,7 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		
 		default:
 			// ???
+			result = errDataBrowserPropertyNotSupported;
 			break;
 		}
 	}
@@ -1680,10 +1687,12 @@ compareDataBrowserItems		(HIViewRef					inDataBrowser,
 				
 				// ignore results, the strings are checked below
 				prefsResult = Preferences_ContextGetData
-								(panelDataPtr->dataModel, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex1),
+								(panelDataPtr->dataModel,
+									Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex1),
 									sizeof(string1), &string1, false/* search defaults too */, &actualSize);
 				prefsResult = Preferences_ContextGetData
-								(panelDataPtr->dataModel, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex2),
+								(panelDataPtr->dataModel,
+									Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex2),
 									sizeof(string2), &string2, false/* search defaults too */, &actualSize);
 			}
 			
