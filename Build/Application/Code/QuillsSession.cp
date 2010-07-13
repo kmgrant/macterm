@@ -126,12 +126,13 @@ _session(nullptr)
 																							kCFStringEncodingUTF8),
 																	true/* is retained */);
 		TerminalWindowRef								terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
+		Preferences_ContextRef							workspaceContext = nullptr;
 		
 		
 		std::transform(inArgV.begin(), inArgV.end(), args, create_cfstr());
 		argsObject.setCFTypeRef(CFArrayCreate(kCFAllocatorDefault, args, argc, &kCFTypeArrayCallBacks), true/* is retained */);
 		_session = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argsObject.returnCFArrayRef()/* command */,
-																nullptr/* preferences context */,
+																nullptr/* preferences context */, workspaceContext, 0/* window index */,
 																dirObject.returnCFStringRef());
 		
 		// WARNING: this cleanup is not exception-safe and should be fixed
@@ -314,10 +315,12 @@ Session::handle_file	(std::string	inPathname)
 			else if (extensionName == "term")
 			{
 				// it appears to be a Terminal XML property list file; parse it
-				TerminalWindowRef	terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
+				TerminalWindowRef		terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
+				Preferences_ContextRef	workspaceContext = nullptr;
 				
 				
-				SessionFactory_NewSessionFromTerminalFile(terminalWindow, inPathname.c_str());
+				SessionFactory_NewSessionFromTerminalFile(terminalWindow, inPathname.c_str(), workspaceContext,
+															0/* window index */);
 			}
 			else
 			{

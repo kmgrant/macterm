@@ -196,29 +196,46 @@ SessionRef
 	SessionFactory_NewSessionArbitraryCommand		(TerminalWindowRef				inTerminalWindow,
 													 CFArrayRef						inArgumentArray,
 													 Preferences_ContextRef			inContextOrNull = nullptr,
+													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
+													 UInt16							inWindowIndexInWorkspaceOrZero = 0,
 													 CFStringRef					inWorkingDirectoryOrNull = nullptr);
 
 SessionRef
-	SessionFactory_NewSessionDefaultShell			(TerminalWindowRef				inTerminalWindow);
+	SessionFactory_NewSessionDefaultShell			(TerminalWindowRef				inTerminalWindow,
+													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
+													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
 
 SessionRef
 	SessionFactory_NewSessionFromCommandFile		(TerminalWindowRef				inTerminalWindow,
-													 char const*					inCommandFilePath);
+													 char const*					inCommandFilePath,
+													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
+													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
 
 SessionRef
 	SessionFactory_NewSessionFromDescription		(TerminalWindowRef				inTerminalWindow,
-													 SessionDescription_Ref			inSessionDescription);
+													 SessionDescription_Ref			inSessionDescription,
+													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
+													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
 
 SessionRef
 	SessionFactory_NewSessionFromTerminalFile		(TerminalWindowRef				inTerminalWindow,
-													 char const*					inAppleDotTermFilePath);
+													 char const*					inAppleDotTermFilePath,
+													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
+													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
 
 SessionRef
-	SessionFactory_NewSessionLoginShell				(TerminalWindowRef				inTerminalWindow);
+	SessionFactory_NewSessionLoginShell				(TerminalWindowRef				inTerminalWindow,
+													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
+													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
 
 SessionRef
 	SessionFactory_NewSessionUserFavorite			(TerminalWindowRef				inTerminalWindow,
-													 Preferences_ContextRef			inSessionContext);
+													 Preferences_ContextRef			inSessionContext,
+													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
+													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
+
+Boolean
+	SessionFactory_NewSessionsUserFavoriteWorkspace	(Preferences_ContextRef			inWorkspaceContext);
 
 TerminalWindowRef
 	SessionFactory_NewTerminalWindowUserFavorite	(Preferences_ContextRef			inTerminalInfoOrNull = nullptr,
@@ -234,7 +251,9 @@ Boolean
 //@{
 
 Boolean
-	SessionFactory_DisplayUserCustomizationUI		(TerminalWindowRef				inTerminalWindow);
+	SessionFactory_DisplayUserCustomizationUI		(TerminalWindowRef				inTerminalWindow,
+													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
+													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
 
 void
 	SessionFactory_MoveTerminalWindowToNewWorkspace	(TerminalWindowRef				inTerminalWindow);

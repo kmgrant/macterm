@@ -1663,7 +1663,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				break;
 			
 			case kCommandPrefSetWindowLocation:
-				Keypads_SetArrangeWindowPanelBinding(kPreferences_TagWindowStackingOrigin);
+				Keypads_SetArrangeWindowPanelBinding(kPreferences_TagWindowStackingOrigin, typeQDPoint);
 				Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, true);
 				result = noErr;
 				break;

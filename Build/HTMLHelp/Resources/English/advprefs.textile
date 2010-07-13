@@ -119,7 +119,7 @@ table(deftable).
 (defbottom). |(desc)\2. When a window first opens, its toolbar buttons are hidden.|
 (deftop). |(key). @window-vt220-visible@|(types). _true or false_|
 (defbottom). |(desc)\2. This window should be displayed when the application launches.|
-(deftop). |(key). @window-terminal-position-pixels@|(types). _array of integer_: two values, horizontal and vertical pixel offsets from main display top-left|
+(deftop). |(key). @window-terminal-position-pixels@|(types). _array of integer_: two values; horizontal and vertical pixel offsets from main display top-left|
 (defbottom). |(desc)\2. Where to place the first terminal window, and where to start for "Arrange All in Front".|
 (deftop). |(key). @window-terminal-tab-edge@|(types). _string_: @top@, @bottom@, @left@ or @right@| 
 (defbottom). |(desc)\2. When tabs are enabled, this side of the window should be used.|
@@ -145,6 +145,16 @@ h3(#workspaces). Workspace Collections
 table(deftable).
 (deftop). |(key). @terminal-use-tabs@|(types). _true or false_|
 (defbottom). |(desc)\2. Windows stick together and have tabs.|
+(deftop). |(key). @window-NN-frame-bounds-pixels@, where NN is 01 to 10|(types). _array of integer_: 4 values; horizontal and vertical pixel offsets from main display top-left, and width and height|
+(defbottom). |(desc)\2. The top-left corner of the window on its display, and the frame size.|
+(deftop). |(key). @window-NN-screen-bounds-pixels@, where NN is 01 to 10|(types). _array of integer_: 4 values; horizontal and vertical pixel offsets from main display top-left, and width and height|
+(defbottom). |(desc)\2. The boundaries of the display the window was on when the frame was saved.|
+(deftop). |(key). @window-NN-name-string@, where NN is 01 to 10|(types). _string_|
+(defbottom). |(desc)\2. Name to use in the window title bar and other interface elements, when representing this window.|
+(deftop). |(key). @window-NN-session-built-in@, where NN is 01 to 10|(types). _string_: @default@, @dialog@, @log-in shell@ or @shell@|
+(defbottom). |(desc)\2. This type of session is started when the window opens.  Ignored if there is a @window-NN-session-favorite@.|
+(deftop). |(key). @window-NN-session-favorite@, where NN is 01 to 10|(types). _string_|
+(defbottom). |(desc)\2. The command in this Session collection is run when the window opens.  Overrides @window-NN-session-built-in@.|
 
 h3(#sessions). Session Collections
 

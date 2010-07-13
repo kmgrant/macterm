@@ -256,8 +256,12 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 			SessionRef		session = nullptr;
 			
 			
+			// since the terminal window is already displayed when the UI is presented,
+			// its workspace-window-specific settings have already been applied;
+			// therefore, no specific workspace or window index should ever be given here
 			session = SessionFactory_NewSessionArbitraryCommand
-						(dataPtr->terminalWindow, argumentListCFArray, dataPtr->temporaryDataModel);
+						(dataPtr->terminalWindow, argumentListCFArray, dataPtr->temporaryDataModel,
+							nullptr/* workspace context */, 0/* window index */);
 			CFRelease(argumentListCFArray), argumentListCFArray = nullptr;
 		}
 	}

@@ -116,10 +116,12 @@ command in the Edit menu, which locates the cursor on demand.
 
 h4(#stackorigin). Window Stacking Origin
 
-You can specify the location on the screen where the first
-MacTelnet window is placed.  Subsequent windows automatically
-stack diagonally.  Note that if you save a session or an entire
-workspace, window locations are preserved and ignore this origin.
+You can specify the location (on any display) where a new window
+is placed.  Subsequent windows automatically stack diagonally.
+
+Note that windows restored as part of a Workspace (File menu)
+will give precedence to any boundaries that might be saved with
+the Workspace.
 
 h4(#spacesfortab). Window Resize Effect
 
@@ -150,9 +152,11 @@ h4(#commandN). Command-N Key Equivalent
 
 MacTelnet has several ways to create sessions, and you may wish
 to use one of them more than others.  You can map command-N as a
-short-cut to whichever one you use most.  This also implicitly
-determines the behavior of any automatically-opened windows (such
-as, at startup time).
+short-cut to whichever one you use most.
+
+Note that this previously would also determine the window that
+opens automatically at startup.  But, the startup window(s) now
+come from the Default Workspace collection.
 
 h3(#generalnotification). Notification
 
@@ -212,20 +216,16 @@ You can also edit the names of the numbered items, as
 you would for any item in the Finder.
 
 Macro sets are completely arbitrary actions that you can bind
-to almost any key combinations you wish!  In addition, you can
-choose to display them in a menu (see General preferences).
+to almost any key combinations you wish!
 
-Only macros from the active set, if any, are enabled.  The
-active set is selected with the Map menu.  If the "None"
-set is chosen, macros are disabled and the Macros menu is
-temporarily hidden.
+Only macros from the active set, if any, are enabled, and these
+are shown in the Macros menu along with their key equivalents.
+The active set can also be changed using the Macros menu.
 
-If a macro set is active, any of its macros can be used by
-typing a key equivalent (the macro's main key, plus some
-optional combination of modifiers).  In addition, if the
-preference is set to display a Macros menu, all of the
-current macros' names are shown in the menu along with their
-key equivalents.
+If the "None" set is chosen, all macros are disabled.  Otherwise,
+the macros in the active set can be used by typing a key
+equivalent (the macro's main key, plus some optional combination
+of modifiers) or by selecting its name from the Macros menu.
 
 h3. Macro List
 
@@ -262,10 +262,10 @@ defaults, or the application you're going to run in the
 terminal.  In general, it's not a good idea to choose very
 simple key combinations.
 
-**Important:** Whether or not you intend to use the Macros
-menu, displaying it initially is recommended so that you can
-see how your key equivalent will be interpreted.  Certain
-combinations are "special" and will not be available to you.
+**Important:** If you use the Macros menu to select the set you
+are editing, it is easy to see how your key equivalent will be
+interpreted by Mac OS X.  Certain combinations are "special"
+and will not be available to you.
 
 h4. Modifiers
 
@@ -351,11 +351,45 @@ edit that collection's settings in the main Preferences
 window.
 
 Workspaces manage multiple terminal windows on one or more
-displays.
+displays.  In addition, the Default is used at startup time to
+automatically spawn zero or more windows for you.
 
-So far in MacTelnet 4.0 beta, these preferences are not fully
-functional, but the intent is to offer very flexible window
-management.
+h3. Window List
+
+This displays the number of windows that can be in the workspace
+(currently fixed at 10), and their names.
+
+The names can be edited by clicking and hovering on them, or
+selecting an item and pressing Return.  Names are used to title
+the new windows that are created; leave them empty to have a
+name chosen automatically.
+
+h3. Selected Window
+
+To edit a window, select it from the list and then modify its
+fields in this section.  Changes take effect immediately (so,
+you could use the File menu to spawn your modified workspace).
+
+h4. Session
+
+The session that is started in this window.
+
+If "None (No Window)" is selected, no window is opened at all,
+and other window-specific settings are ignored.
+
+h4. Boundaries
+
+This specifies where the window appears.  It can be on any
+display.
+
+If "Use tabs to arrange windows" is set for the Workspace, then
+all of the windows in the Workspace are initially glued
+together, and the only boundaries that matter are those of the
+first window in the Workspace.  (Windows are created in the
+order they are listed in the Workspace.)
+
+See also the "Window Stacking Origin", which applies to any new
+window that is not created as part of a Workspace.
 
 h3. Settings
 

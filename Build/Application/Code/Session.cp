@@ -2788,11 +2788,11 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 
 /*!
 Specifies the process that this session is running.  This
-automatically sets the device name, window title, and resource
-location (Session_ReturnPseudoTerminalDeviceNameCFString(),
-Session_GetWindowUserDefinedTitle(), Session_ReturnCommandLine()
-and Session_ReturnResourceLocationCFString() can be used to
-return these values later).
+automatically sets the device name and resource location
+(Session_ReturnPseudoTerminalDeviceNameCFString(),
+Session_ReturnResourceLocationCFString() and
+Session_ReturnCommandLine() and can be used to return these
+values later).
 
 (3.1)
 */
@@ -2805,6 +2805,8 @@ Session_SetProcess	(SessionRef			inRef,
 	
 	assert(nullptr != inRunningProcess);
 	ptr->mainProcess = inRunningProcess;
+	
+	// store important information about the process that spawned
 	{
 		// set device name string
 		char const* const	kDeviceName = Local_ProcessReturnSlaveDeviceName(ptr->mainProcess);
@@ -2814,16 +2816,13 @@ Session_SetProcess	(SessionRef			inRef,
 											(kCFAllocatorDefault, kDeviceName, kCFStringEncodingASCII),
 											true/* is retained */);
 	}
-	{
-		// set resource location string (and initial window title to match)
-		ptr->commandLineArguments = Local_ProcessReturnCommandLine(ptr->mainProcess);
-		ptr->originalDirectoryString = Local_ProcessReturnOriginalDirectory(ptr->mainProcess);
-		ptr->resourceLocationString.setCFTypeRef(CFStringCreateByCombiningStrings
-													(kCFAllocatorDefault, ptr->commandLineArguments.returnCFArrayRef(), CFSTR(" ")),
-													true/* is retained */);
-		Session_SetWindowUserDefinedTitle(inRef, ptr->resourceLocationString.returnCFStringRef());
-		changeNotifyForSession(ptr, kSession_ChangeResourceLocation, inRef/* context */);
-	}
+	ptr->commandLineArguments = Local_ProcessReturnCommandLine(ptr->mainProcess);
+	ptr->originalDirectoryString = Local_ProcessReturnOriginalDirectory(ptr->mainProcess);
+	ptr->resourceLocationString.setCFTypeRef(CFStringCreateByCombiningStrings
+												(kCFAllocatorDefault, ptr->commandLineArguments.returnCFArrayRef(), CFSTR(" ")),
+												true/* is retained */);
+	
+	changeNotifyForSession(ptr, kSession_ChangeResourceLocation, inRef/* context */);
 }// SetProcess
 
 

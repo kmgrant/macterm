@@ -491,6 +491,8 @@
 	<string>ignore</string>
 	<key>when-alert-in-background</key>
 	<string>ignore</string>
+	<key>window-01-session-built-in</key>
+	<string>dialog</string>
 	<key>window-clipboard-visible</key>
 	<false/>
 	<key>window-commandline-visible</key>

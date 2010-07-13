@@ -3,7 +3,7 @@
 	PrefPanelWorkspaces.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -71,6 +71,7 @@
 #include "Commands.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
+#include "Keypads.h"
 #include "Panel.h"
 #include "Preferences.h"
 #include "PrefPanelWorkspaces.h"
@@ -99,9 +100,9 @@ In addition, they MUST be unique across all panels.
 */
 HIViewID const	idMyUserPaneWindowList					= { 'WLst', 0/* ID */ };
 HIViewID const	idMyDataBrowserWindowList				= { 'WnDB', 0/* ID */ };
-HIViewID const	idMyButtonAddWindow						= { 'NewW', 0/* ID */ };
-HIViewID const	idMyButtonRemoveWindow					= { 'DelW', 0/* ID */ };
 HIViewID const	idMySeparatorSelectedWindow				= { 'SSWn', 0/* ID */ };
+HIViewID const	idMyPopUpMenuSession					= { 'WSss', 0/* ID */ };
+HIViewID const	idMyButtonSetWindowBoundaries			= { 'WSBn', 0/* ID */ };
 HIViewID const	idMySeparatorGlobalSettings				= { 'SSWG', 0/* ID */ };
 HIViewID const	idMyLabelOptions						= { 'LWSO', 0/* ID */ };
 HIViewID const	idMyCheckBoxUseTabsToArrangeWindows		= { 'UTAW', 0/* ID */ };
@@ -139,11 +140,30 @@ public:
 	static SInt32
 	panelChanged	(Panel_Ref, Panel_Message, void*);
 	
+	static void
+	preferenceChanged	(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+	
 	void
 	readPreferences		(Preferences_ContextRef, Preferences_Index);
 	
 	void
+	rebuildFavoritesMenu	(HIViewID const&, UInt32, Quills::Prefs::Class,
+							 UInt32, MenuItemIndex&);
+	
+	void
+	rebuildSessionMenu ();
+	
+	static OSStatus
+	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
+	
+	void
 	refreshDisplay ();
+	
+	void
+	setAssociatedSession	(CFStringRef);
+	
+	void
+	setAssociatedSessionByType	(UInt32);
 	
 	void
 	setDataBrowserColumnWidths ();
@@ -159,8 +179,10 @@ protected:
 	createContainerView		(Panel_Ref, HIWindowRef);
 
 private:
+	MenuItemIndex						_numberOfSessionItemsAdded;	//!< used to manage Session pop-up menu
 	CarbonEventHandlerWrap				_menuCommandsHandler;		//!< responds to menu selections
 	CommonEventHandlers_HIViewResizer	_containerResizer;			//!< invoked when the panel is resized
+	ListenerModel_ListenerRef			_whenFavoritesChangedHandler;	//!< used to manage Session pop-up menu
 };
 typedef My_WorkspacesPanelUI*		My_WorkspacesPanelUIPtr;
 
@@ -171,6 +193,8 @@ Contains the panel reference and its user interface
 struct My_WorkspacesPanelData
 {
 	My_WorkspacesPanelData ();
+	
+	~My_WorkspacesPanelData ();
 	
 	void
 	switchDataModel		(Preferences_ContextRef, Preferences_Index);
@@ -187,14 +211,12 @@ typedef My_WorkspacesPanelData*		My_WorkspacesPanelDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal OSStatus		accessDataBrowserItemData			(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
+OSStatus			accessDataBrowserItemData			(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
 														 DataBrowserItemDataRef, Boolean);
-pascal Boolean		compareDataBrowserItems				(HIViewRef, DataBrowserItemID, DataBrowserItemID,
+Boolean				compareDataBrowserItems				(HIViewRef, DataBrowserItemID, DataBrowserItemID,
 														 DataBrowserPropertyID);
 void				deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
-void				disposePanel						(Panel_Ref, void*);
-pascal void			monitorDataBrowserItems				(HIViewRef, DataBrowserItemID, DataBrowserItemNotification);
-pascal OSStatus		receiveHICommand					(EventHandlerCallRef, EventRef, void*);
+void				monitorDataBrowserItems				(HIViewRef, DataBrowserItemID, DataBrowserItemNotification);
 
 } // anonymous namespace
 
@@ -313,6 +335,18 @@ currentIndex(1)
 
 
 /*!
+Tears down a My_WorkspacesPanelData structure.
+
+(4.0)
+*/
+My_WorkspacesPanelData::
+~My_WorkspacesPanelData ()
+{
+	if (nullptr != this->interfacePtr) delete this->interfacePtr;
+}// My_WorkspacesPanelData destructor
+
+
+/*!
 Updates the current data model and/or window index to
 the specified values.  Pass nullptr to leave the context
 unchanged, and 0 to leave the index unchanged.
@@ -353,17 +387,31 @@ idealHeight					(0.0),
 listCallbacks				(),
 mainView					(createContainerView(inPanel, inOwningWindow)
 								<< HIViewWrap_AssertExists),
+_numberOfSessionItemsAdded	(0),
 _menuCommandsHandler		(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 								this/* user data */),
 _containerResizer			(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
 										kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
-								deltaSizePanelContainerHIView, this/* context */)
+								deltaSizePanelContainerHIView, this/* context */),
+_whenFavoritesChangedHandler(ListenerModel_NewStandardListener(preferenceChanged, this/* context */))
 {
 	assert(_menuCommandsHandler.isInstalled());
 	assert(_containerResizer.isInstalled());
 	
 	this->setDataBrowserColumnWidths();
+	
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	
+	prefsResult = Preferences_StartMonitoring
+					(this->_whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts,
+						true/* notify of initial value */);
+	assert(kPreferences_ResultOK == prefsResult);
+	prefsResult = Preferences_StartMonitoring
+					(this->_whenFavoritesChangedHandler, kPreferences_ChangeContextName,
+						true/* notify of initial value */);
+	assert(kPreferences_ResultOK == prefsResult);
 }// My_WorkspacesPanelUI 2-argument constructor
 
 
@@ -375,6 +423,9 @@ Tears down a My_WorkspacesPanelUI structure.
 My_WorkspacesPanelUI::
 ~My_WorkspacesPanelUI ()
 {
+	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts);
+	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler, kPreferences_ChangeContextName);
+	ListenerModel_ReleaseListener(&_whenFavoritesChangedHandler);
 }// My_WorkspacesPanelUI destructor
 
 
@@ -439,7 +490,7 @@ createContainerView		(Panel_Ref		inPanel,
 		columnInfo.propertyDesc.propertyID = '----';
 		columnInfo.propertyDesc.propertyType = kDataBrowserTextType;
 		columnInfo.propertyDesc.propertyFlags = kDataBrowserDefaultPropertyFlags | kDataBrowserListViewSortableColumn |
-												kDataBrowserListViewMovableColumn | kDataBrowserListViewTypeSelectColumn;
+												kDataBrowserListViewMovableColumn;
 		columnInfo.headerBtnDesc.version = kDataBrowserListViewLatestHeaderDesc;
 		columnInfo.headerBtnDesc.minimumWidth = 100; // arbitrary
 		columnInfo.headerBtnDesc.maximumWidth = 400; // arbitrary
@@ -467,10 +518,16 @@ createContainerView		(Panel_Ref		inPanel,
 		if (stringResult.ok())
 		{
 			columnInfo.propertyDesc.propertyID = kMyDataBrowserPropertyIDWindowName;
+			columnInfo.propertyDesc.propertyFlags |= kDataBrowserListViewTypeSelectColumn;
 			error = AddDataBrowserListViewColumn(windowsList, &columnInfo, columnNumber++);
 			assert_noerr(error);
 			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
 		}
+		
+		// insert as many rows as there can be windows in a workspace
+		error = AddDataBrowserItems(windowsList, kDataBrowserNoItem/* parent item */, kPreferences_MaximumWorkspaceSize,
+									nullptr/* IDs */, kDataBrowserItemNoProperty/* pre-sort property */);
+		assert_noerr(error);
 		
 		// attach data that would not be specifiable in a NIB
 		error = SetDataBrowserCallbacks(windowsList, &this->listCallbacks.listCallbacks);
@@ -514,52 +571,6 @@ createContainerView		(Panel_Ref		inPanel,
 		
 		error = HIViewAddSubview(result, windowsList);
 		assert_noerr(error);
-	}
-	
-	// add "+" and "-" icons to the add and remove buttons
-	{
-		IconManagerIconRef		buttonIcon = nullptr;
-		
-		
-		buttonIcon = IconManager_NewIcon();
-		if (nullptr != buttonIcon)
-		{
-			if (noErr == IconManager_MakeIconRefFromBundleFile
-							(buttonIcon, AppResources_ReturnItemAddIconFilenameNoExtension(),
-								AppResources_ReturnCreatorCode(),
-								kConstantsRegistry_IconServicesIconItemAdd))
-			{
-				HIViewWrap		button(idMyButtonAddWindow, inOwningWindow);
-				
-				
-				if (noErr == IconManager_SetButtonIcon(button, buttonIcon))
-				{
-					// once the icon is set successfully, the equivalent text title can be removed
-					(OSStatus)SetControlTitleWithCFString(button, CFSTR(""));
-				}
-			}
-			IconManager_DisposeIcon(&buttonIcon);
-		}
-		
-		buttonIcon = IconManager_NewIcon();
-		if (nullptr != buttonIcon)
-		{
-			if (noErr == IconManager_MakeIconRefFromBundleFile
-							(buttonIcon, AppResources_ReturnItemRemoveIconFilenameNoExtension(),
-								AppResources_ReturnCreatorCode(),
-								kConstantsRegistry_IconServicesIconItemRemove))
-			{
-				HIViewWrap		button(idMyButtonRemoveWindow, inOwningWindow);
-				
-				
-				if (noErr == IconManager_SetButtonIcon(button, buttonIcon))
-				{
-					// once the icon is set successfully, the equivalent text title can be removed
-					(OSStatus)SetControlTitleWithCFString(button, CFSTR(""));
-				}
-			}
-			IconManager_DisposeIcon(&buttonIcon);
-		}
 	}
 	
 	// calculate the ideal size
@@ -618,10 +629,7 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageDestroyed: // request to dispose of private data structures
 		{
-			My_WorkspacesPanelDataPtr	panelDataPtr = REINTERPRET_CAST(inDataPtr, My_WorkspacesPanelDataPtr);
-			
-			
-			disposePanel(inPanel, panelDataPtr);
+			delete (REINTERPRET_CAST(inDataPtr, My_WorkspacesPanelDataPtr));
 		}
 		break;
 	
@@ -700,12 +708,10 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
 		{
-			//My_WorkspacesPanelDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnAuxiliaryDataPtr(inPanel), My_WorkspacesPanelDataPtr);
-			//Boolean						isNowVisible = *((Boolean*)inDataPtr);
+			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
 			
 			
-			// hack - on pre-Mac OS 9 systems, the pesky “Edit...” buttons sticks around for some reason; explicitly show/hide it
-			//SetControlVisibility(panelDataPtr->controls.editButton, isNowVisible/* visibility */, isNowVisible/* draw */);
+			// do nothing
 		}
 		break;
 	
@@ -715,6 +721,37 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	return result;
 }// My_WorkspacesPanelUI::panelChanged
+
+
+/*!
+Invoked whenever a monitored preference value is changed.
+Responds by updating the user interface.
+
+(3.1)
+*/
+void
+My_WorkspacesPanelUI::
+preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
+					 ListenerModel_Event	inPreferenceTagThatChanged,
+					 void*					UNUSED_ARGUMENT(inEventContextPtr),
+					 void*					inMyWorkspacesPanelUIPtr)
+{
+	//Preferences_ChangeContext*	contextPtr = REINTERPRET_CAST(inEventContextPtr, Preferences_ChangeContext*);
+	My_WorkspacesPanelUI*		ptr = REINTERPRET_CAST(inMyWorkspacesPanelUIPtr, My_WorkspacesPanelUI*);
+	
+	
+	switch (inPreferenceTagThatChanged)
+	{
+	case kPreferences_ChangeNumberOfContexts:
+	case kPreferences_ChangeContextName:
+		ptr->rebuildSessionMenu();
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// preferenceChanged
 
 
 /*!
@@ -737,6 +774,45 @@ readPreferences		(Preferences_ContextRef		inSettings,
 		
 		
 		// INCOMPLETE
+		
+		// set associated Session settings; if this is None, then the entire
+		// window entry is effectively disabled and no other window-specific
+		// preferences will matter
+		{
+			CFStringRef		associatedSessionName = nullptr;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, Preferences_ReturnTagVariantForIndex
+																	(kPreferences_TagIndexedWindowSessionFavorite,
+																		inOneBasedIndex),
+														sizeof(associatedSessionName), &associatedSessionName,
+														false/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setAssociatedSession(associatedSessionName);
+				CFRelease(associatedSessionName), associatedSessionName = nullptr;
+			}
+			else
+			{
+				UInt32		associatedSessionType = 0;
+				
+				
+				prefsResult = Preferences_ContextGetData(inSettings, Preferences_ReturnTagVariantForIndex
+																		(kPreferences_TagIndexedWindowCommandType,
+																			inOneBasedIndex),
+															sizeof(associatedSessionType), &associatedSessionType,
+															false/* search defaults too */, &actualSize);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					this->setAssociatedSessionByType(associatedSessionType);
+				}
+				else
+				{
+					this->setAssociatedSessionByType(0);
+				}
+			}
+		}
+		
 		{
 			HIViewWrap		checkBox(idMyCheckBoxUseTabsToArrangeWindows, kOwningWindow);
 			Boolean			flag = false;
@@ -753,6 +829,289 @@ readPreferences		(Preferences_ContextRef		inSettings,
 		}
 	}
 }// My_WorkspacesPanelUI::readPreferences
+
+
+/*!
+Deletes "inoutItemCountTracker" items below the anchor item for
+the specified pop-up menu, and rebuilds the menu based on current
+preferences of the given type.  Also tracks the number of items
+added so that they can be removed later.
+
+(4.0)
+*/
+void
+My_WorkspacesPanelUI::
+rebuildFavoritesMenu	(HIViewID const&		inMenuButtonID,
+						 UInt32					inAnchorCommandID,
+						 Quills::Prefs::Class	inCollectionsToUse,
+						 UInt32					inEachNewItemCommandID,
+						 MenuItemIndex&			inoutItemCountTracker)
+{
+	// it is possible for an event to arrive while the UI is not defined
+	if (IsValidWindowRef(HIViewGetWindow(this->mainView)))
+	{
+		HIViewWrap		popUpMenuView(inMenuButtonID, HIViewGetWindow(this->mainView));
+		OSStatus		error = noErr;
+		MenuRef			favoritesMenu = nullptr;
+		MenuItemIndex	defaultIndex = 0;
+		MenuItemIndex	otherItemCount = 0;
+		Size			actualSize = 0;
+		
+		
+		error = GetControlData(popUpMenuView, kControlMenuPart, kControlPopupButtonMenuRefTag,
+								sizeof(favoritesMenu), &favoritesMenu, &actualSize);
+		assert_noerr(error);
+		
+		// find the key item to use as an anchor point
+		error = GetIndMenuItemWithCommandID(favoritesMenu, inAnchorCommandID, 1/* which match to return */,
+											&favoritesMenu, &defaultIndex);
+		assert_noerr(error);
+		
+		// erase previous items
+		if (0 != inoutItemCountTracker)
+		{
+			(OSStatus)DeleteMenuItems(favoritesMenu, defaultIndex + 1/* first item */, inoutItemCountTracker);
+		}
+		otherItemCount = CountMenuItems(favoritesMenu);
+		
+		// add the names of all terminal configurations to the menu;
+		// update global count of items added at that location
+		inoutItemCountTracker = 0;
+		(Preferences_Result)Preferences_InsertContextNamesInMenu(inCollectionsToUse, favoritesMenu,
+																	defaultIndex, 0/* indentation level */,
+																	inEachNewItemCommandID, inoutItemCountTracker);
+		SetControl32BitMaximum(popUpMenuView, otherItemCount + inoutItemCountTracker);
+		
+		// TEMPORARY: verify that this final step is necessary...
+		error = SetControlData(popUpMenuView, kControlMenuPart, kControlPopupButtonMenuRefTag,
+								sizeof(favoritesMenu), &favoritesMenu);
+		assert_noerr(error);
+	}
+}// My_WorkspacesPanelUI::rebuildFavoritesMenu
+
+
+/*!
+Deletes all the items in the Format pop-up menu and
+rebuilds the menu based on current preferences.
+
+(4.0)
+*/
+void
+My_WorkspacesPanelUI::
+rebuildSessionMenu ()
+{
+	rebuildFavoritesMenu(idMyPopUpMenuSession, kCommandSetWorkspaceSessionDefault/* anchor */, Quills::Prefs::SESSION,
+							kCommandSetWorkspaceSessionByFavoriteName/* command ID of new items */, this->_numberOfSessionItemsAdded);
+}// My_WorkspacesPanelUI::rebuildSessionMenu
+
+
+/*!
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for the buttons and menus in this panel.
+
+(4.0)
+*/
+OSStatus
+My_WorkspacesPanelUI::
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inMyWorkspacesPanelUIPtr)
+{
+	OSStatus				result = eventNotHandledErr;
+	My_WorkspacesPanelUI*	interfacePtr = REINTERPRET_CAST(inMyWorkspacesPanelUIPtr, My_WorkspacesPanelUI*);
+	UInt32 const			kEventClass = GetEventClass(inEvent);
+	UInt32 const			kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
+	{
+		HICommandExtended	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if (noErr == result)
+		{
+			My_WorkspacesPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																	My_WorkspacesPanelDataPtr);
+			Preferences_Result			prefsResult = kPreferences_ResultOK;
+			
+			
+			result = eventNotHandledErr; // initially...
+			
+			switch (received.commandID)
+			{
+			case kCommandSetWorkspaceSessionNone:
+			case kCommandSetWorkspaceSessionDefault:
+			case kCommandSetWorkspaceSessionShell:
+			case kCommandSetWorkspaceSessionLogInShell:
+			case kCommandSetWorkspaceSessionCustom:
+				// for all of these cases, start by deleting any specific Session association,
+				// then put a difference preference in its place (if appropriate)
+				{
+					Boolean		isError = true;
+					
+					
+					// delete the “associated Session” preference first, because
+					// it will take precedence when it is present
+					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel,
+																Preferences_ReturnTagVariantForIndex
+																(kPreferences_TagIndexedWindowSessionFavorite,
+																	dataPtr->currentIndex));
+					if (kPreferences_ResultOK == prefsResult)
+					{
+						// add a new preference for the built-in, if applicable
+						// IMPORTANT: this setting CANNOT be deleted to represent “none”,
+						// because the factory default preference would then be copied
+						// in its place at startup time
+						UInt32		savedType = kCommandSetWorkspaceSessionNone;
+						
+						
+						switch (received.commandID)
+						{
+						case kCommandSetWorkspaceSessionNone:
+							savedType = 0;
+							break;
+						
+						case kCommandSetWorkspaceSessionDefault:
+							savedType = kCommandNewSessionDefaultFavorite;
+							break;
+						
+						case kCommandSetWorkspaceSessionShell:
+							savedType = kCommandNewSessionShell;
+							break;
+						
+						case kCommandSetWorkspaceSessionLogInShell:
+							savedType = kCommandNewSessionLoginShell;
+							break;
+						
+						case kCommandSetWorkspaceSessionCustom:
+							savedType = kCommandNewSessionDialog;
+							break;
+						
+						default:
+							// ???
+							break;
+						}
+						
+						prefsResult = Preferences_ContextSetData(dataPtr->dataModel,
+																	Preferences_ReturnTagVariantForIndex
+																	(kPreferences_TagIndexedWindowCommandType,
+																		dataPtr->currentIndex),
+																	sizeof(savedType), &savedType);
+						if (kPreferences_ResultOK == prefsResult)
+						{
+							isError = false;
+							interfacePtr->setAssociatedSessionByType(savedType);
+						}
+					}
+					
+					if (isError)
+					{
+						// failed...
+						Sound_StandardAlert();
+					}
+					
+					// pass this handler through to the window
+					result = eventNotHandledErr;
+				}
+				break;
+			
+			case kCommandSetWorkspaceSessionByFavoriteName:
+				{
+					Boolean		isError = true;
+					
+					
+					// determine the name of the selected item
+					if (received.attributes & kHICommandFromMenu)
+					{
+						CFStringRef		collectionName = nullptr;
+						
+						
+						if (noErr == CopyMenuItemTextAsCFString(received.source.menu.menuRef,
+																received.source.menu.menuItemIndex, &collectionName))
+						{
+							// set this name as the new preference value
+							prefsResult = Preferences_ContextSetData(dataPtr->dataModel,
+																		Preferences_ReturnTagVariantForIndex
+																		(kPreferences_TagIndexedWindowSessionFavorite,
+																			dataPtr->currentIndex),
+																		sizeof(collectionName), &collectionName);
+							if (kPreferences_ResultOK == prefsResult)
+							{
+								isError = false;
+								interfacePtr->setAssociatedSession(collectionName);
+							}
+							CFRelease(collectionName), collectionName = nullptr;
+						}
+					}
+					
+					if (isError)
+					{
+						// failed...
+						Sound_StandardAlert();
+					}
+					
+					// pass this handler through to the window
+					result = eventNotHandledErr;
+				}
+				break;
+			
+			case kCommandSetWorkspaceWindowPosition:
+				Keypads_SetArrangeWindowPanelBinding(Preferences_ReturnTagVariantForIndex
+														(kPreferences_TagIndexedWindowFrameBounds, dataPtr->currentIndex),
+														typeHIRect,
+														Preferences_ReturnTagVariantForIndex
+														(kPreferences_TagIndexedWindowScreenBounds, dataPtr->currentIndex),
+														typeHIRect,
+														dataPtr->dataModel);
+				Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, true);
+				result = noErr;
+				break;
+			
+			case kCommandSetWorkspaceDisplayRegions1x1:
+				// UNIMPLEMENTED
+				break;
+			
+			case kCommandSetWorkspaceDisplayRegions2x2:
+				// UNIMPLEMENTED
+				break;
+			
+			case kCommandSetWorkspaceDisplayRegions3x3:
+				// UNIMPLEMENTED
+				break;
+			
+			default:
+				if (received.attributes & kHICommandFromControl)
+				{
+					HIViewWrap		commandingView(received.source.control);
+					Boolean const	kCheckBoxFlagValue = (kControlCheckBoxCheckedValue == GetControl32BitValue(commandingView));
+					
+					
+					if (HIViewIDWrap(idMyCheckBoxUseTabsToArrangeWindows) == commandingView.identifier())
+					{
+						prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagArrangeWindowsUsingTabs,
+																	sizeof(kCheckBoxFlagValue), &kCheckBoxFlagValue);
+						if (kPreferences_ResultOK != prefsResult)
+						{
+							Console_Warning(Console_WriteLine, "unable to save window tabs setting");
+						}
+						result = noErr;
+					}
+				}
+				break;
+			}
+		}
+		else
+		{
+			result = eventNotHandledErr;
+		}
+	}
+	return result;
+}// receiveHICommand
 
 
 /*!
@@ -775,6 +1134,124 @@ refreshDisplay ()
 										kDataBrowserItemNoProperty/* pre-sort property */,
 										kMyDataBrowserPropertyIDWindowName);
 }// My_WorkspacesPanelUI::refreshDisplay
+
+
+/*!
+Changes the Session menu selection to the specified match,
+or chooses the Default if none is found or the name is not
+defined.
+
+Note that this only applies to associations with user
+favorites.  It is also possible to select from built-in
+session types; see setAssociatedSessionByType().
+
+(4.0)
+*/
+void
+My_WorkspacesPanelUI::
+setAssociatedSession	(CFStringRef	inContextNameOrNull)
+{
+	SInt32 const	kFallbackValue = 3; // index of Default item
+	HIViewWrap		popUpMenuButton(idMyPopUpMenuSession, HIViewGetWindow(this->mainView));
+	
+	
+	if (nullptr == inContextNameOrNull)
+	{
+		SetControl32BitValue(popUpMenuButton, kFallbackValue);
+	}
+	else
+	{
+		OSStatus	error = noErr;
+		
+		
+		error = DialogUtilities_SetPopUpItemByText(popUpMenuButton, inContextNameOrNull, kFallbackValue);
+		if (controlPropertyNotFoundErr == error)
+		{
+			Console_Warning(Console_WriteValueCFString, "unable to find menu item for requested Session context",
+							inContextNameOrNull);
+		}
+		else
+		{
+			assert_noerr(error);
+		}
+	}
+	
+	// window-specific views might have been disabled by a None selection
+	{
+		Boolean const	kActivated = true;
+		HIViewWrap		viewWrap;
+		
+		
+		viewWrap = HIViewWrap(idMyButtonSetWindowBoundaries, HIViewGetWindow(this->mainView));
+		viewWrap << HIViewWrap_SetActiveState(kActivated);
+	}
+}// My_WorkspacesPanelUI::setAssociatedSession
+
+
+/*!
+Changes the Session menu selection to the specified match
+among built-in types (such as Log-In Shell).  You may also
+pass 0 to remove the association, setting it to None in the
+menu.
+
+Note that it is also possible to select from user favorites;
+see setAssociatedSession().
+
+(4.0)
+*/
+void
+My_WorkspacesPanelUI::
+setAssociatedSessionByType	(UInt32		inNewSessionCommandIDOrZero)
+{
+	HIViewWrap		popUpMenuButton(idMyPopUpMenuSession, HIViewGetWindow(this->mainView));
+	UInt32			menuCommandID = kCommandSetWorkspaceSessionNone;
+	OSStatus		error = noErr;
+	
+	
+	switch (inNewSessionCommandIDOrZero)
+	{
+	case kCommandNewSessionDefaultFavorite:
+		menuCommandID = kCommandSetWorkspaceSessionDefault;
+		break;
+	
+	case kCommandNewSessionShell:
+		menuCommandID = kCommandSetWorkspaceSessionShell;
+		break;
+	
+	case kCommandNewSessionLoginShell:
+		menuCommandID = kCommandSetWorkspaceSessionLogInShell;
+		break;
+	
+	case kCommandNewSessionDialog:
+		menuCommandID = kCommandSetWorkspaceSessionCustom;
+		break;
+	
+	case 0:
+	default:
+		menuCommandID = kCommandSetWorkspaceSessionNone;
+		break;
+	}
+	
+	error = DialogUtilities_SetPopUpItemByCommand(popUpMenuButton, menuCommandID);
+	if (noErr != error)
+	{
+		Console_Warning(Console_WriteLine, "specified built-in session type not found in menu; reverting to None");
+		menuCommandID = kCommandSetWorkspaceSessionNone;
+		(OSStatus)DialogUtilities_SetPopUpItemByCommand(popUpMenuButton, menuCommandID);
+	}
+	
+	// the None case effectively disables all other window-specific
+	// views, because the window is not in use
+	{
+		// enable or disable window-specific views
+		Boolean const	kActivated = (kCommandSetWorkspaceSessionNone != menuCommandID);
+		HIViewWrap		viewWrap;
+		
+		
+		viewWrap = HIViewWrap(idMyButtonSetWindowBoundaries, HIViewGetWindow(this->mainView));
+		viewWrap << HIViewWrap_SetActiveState(kActivated);
+	}
+}// My_WorkspacesPanelUI::setAssociatedSessionByType
 
 
 /*!
@@ -822,7 +1299,7 @@ belongs in the specified list.
 
 (4.0)
 */
-pascal OSStatus
+OSStatus
 accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 							 DataBrowserItemID			inItemID,
 							 DataBrowserPropertyID		inPropertyID,
@@ -860,8 +1337,27 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		
 		case kMyDataBrowserPropertyIDWindowName:
 			// return the text string for the window name
-			// UNIMPLEMENTED
-			result = eventNotHandledErr;
+			{
+				Preferences_Index	windowIndex = STATIC_CAST(inItemID, Preferences_Index);
+				CFStringRef			nameCFString = nullptr;
+				Preferences_Result	prefsResult = kPreferences_ResultOK;
+				size_t				actualSize = 0;
+				
+				
+				prefsResult = Preferences_ContextGetData
+								(panelDataPtr->dataModel,
+									Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex),
+									sizeof(nameCFString), &nameCFString, false/* search defaults too */, &actualSize);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					result = SetDataBrowserItemDataText(inItemData, nameCFString);
+					CFRelease(nameCFString), nameCFString = nullptr;
+				}
+				else
+				{
+					result = SetDataBrowserItemDataText(inItemData, CFSTR(""));
+				}
+			}
 			break;
 		
 		case kMyDataBrowserPropertyIDWindowNumber:
@@ -885,7 +1381,7 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		
 		default:
 			// ???
-			result = paramErr;
+			result = errDataBrowserPropertyNotSupported;
 			break;
 		}
 	}
@@ -894,9 +1390,33 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		switch (inPropertyID)
 		{
 		case kMyDataBrowserPropertyIDWindowName:
-			// user has changed the window name
-			// UNIMPLEMENTED
-			result = eventNotHandledErr;
+			// user has changed the window name; update the window in memory
+			{
+				CFStringRef		newName = nullptr;
+				
+				
+				result = GetDataBrowserItemDataText(inItemData, &newName);
+				if (noErr == result)
+				{
+					// fix window name
+					Preferences_Index	windowIndex = STATIC_CAST(inItemID, Preferences_Index);
+					Preferences_Result	prefsResult = kPreferences_ResultOK;
+					
+					
+					prefsResult = Preferences_ContextSetData
+									(panelDataPtr->dataModel,
+										Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex),
+										sizeof(newName), &newName);
+					if (kPreferences_ResultOK == prefsResult)
+					{
+						result = noErr;
+					}
+					else
+					{
+						result = errDataBrowserItemNotFound;
+					}
+				}
+			}
 			break;
 		
 		case kMyDataBrowserPropertyIDWindowNumber:
@@ -906,6 +1426,7 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		
 		default:
 			// ???
+			result = errDataBrowserPropertyNotSupported;
 			break;
 		}
 	}
@@ -920,7 +1441,7 @@ method compares items in the list.
 
 (4.0)
 */
-pascal Boolean
+Boolean
 compareDataBrowserItems		(HIViewRef					inDataBrowser,
 							 DataBrowserItemID			inItemOne,
 							 DataBrowserItemID			inItemTwo,
@@ -950,8 +1471,48 @@ compareDataBrowserItems		(HIViewRef					inDataBrowser,
 	switch (inSortProperty)
 	{
 	case kMyDataBrowserPropertyIDWindowName:
-		// UNIMPLEMENTED
-		result = eventNotHandledErr;
+		{
+			CFStringRef		string1 = nullptr;
+			CFStringRef		string2 = nullptr;
+			
+			
+			if (nullptr != panelDataPtr)
+			{
+				SInt32				windowIndex1 = STATIC_CAST(inItemOne, SInt32);
+				SInt32				windowIndex2 = STATIC_CAST(inItemTwo, SInt32);
+				Preferences_Result	prefsResult = kPreferences_ResultOK;
+				size_t				actualSize = 0;
+				
+				
+				// ignore results, the strings are checked below
+				prefsResult = Preferences_ContextGetData
+								(panelDataPtr->dataModel,
+									Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex1),
+									sizeof(string1), &string1, false/* search defaults too */, &actualSize);
+				prefsResult = Preferences_ContextGetData
+								(panelDataPtr->dataModel,
+									Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex2),
+									sizeof(string2), &string2, false/* search defaults too */, &actualSize);
+			}
+			
+			// check for nullptr, because CFStringCompare() will not deal with it
+			if ((nullptr == string1) && (nullptr != string2)) result = true;
+			else if ((nullptr == string1) || (nullptr == string2)) result = false;
+			else
+			{
+				result = (kCFCompareLessThan == CFStringCompare(string1, string2,
+																kCFCompareCaseInsensitive | kCFCompareLocalized/* options */));
+			}
+			
+			if (nullptr != string1)
+			{
+				CFRelease(string1), string1 = nullptr;
+			}
+			if (nullptr != string2)
+			{
+				CFRelease(string2), string2 = nullptr;
+			}
+		}
 		break;
 	
 	case kMyDataBrowserPropertyIDWindowNumber:
@@ -988,14 +1549,9 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 		
 		viewWrap = HIViewWrap(idMyDataBrowserWindowList, kPanelWindow);
 		viewWrap << HIViewWrap_DeltaSize(0/* delta X */, inDeltaY);
-		viewWrap = HIViewWrap(idMyButtonAddWindow, kPanelWindow);
-		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY/* delta Y */);
-		viewWrap = HIViewWrap(idMyButtonRemoveWindow, kPanelWindow);
-		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY/* delta Y */);
 		
 		interfacePtr->setDataBrowserColumnWidths();
 		
-		// INCOMPLETE
 		viewWrap = HIViewWrap(idMySeparatorSelectedWindow, kPanelWindow);
 		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 		
@@ -1011,33 +1567,11 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 
 
 /*!
-This routine responds to a change in the existence
-of a panel.  The panel is about to be destroyed, so
-this routine disposes of private data structures
-associated with the specified panel.
-
-(4.0)
-*/
-void
-disposePanel	(Panel_Ref		UNUSED_ARGUMENT(inPanel),
-				 void*			inDataPtr)
-{
-	My_WorkspacesPanelDataPtr	dataPtr = REINTERPRET_CAST(inDataPtr, My_WorkspacesPanelDataPtr);
-	
-	
-	// destroy UI, if present
-	if (nullptr != dataPtr->interfacePtr) delete dataPtr->interfacePtr;
-	
-	delete dataPtr, dataPtr = nullptr;
-}// disposePanel
-
-
-/*!
 Responds to changes in the data browser.
 
 (4.0)
 */
-pascal void
+void
 monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 							 DataBrowserItemID				inItemID,
 							 DataBrowserItemNotification	inMessage)
@@ -1096,94 +1630,6 @@ monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 		break;
 	}
 }// monitorDataBrowserItems
-
-
-/*!
-Handles "kEventCommandProcess" of "kEventClassCommand"
-for the buttons and menus in this panel.
-
-(4.0)
-*/
-pascal OSStatus
-receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					inMyWorkspacesPanelUIPtr)
-{
-	OSStatus				result = eventNotHandledErr;
-	My_WorkspacesPanelUI*	interfacePtr = REINTERPRET_CAST(inMyWorkspacesPanelUIPtr, My_WorkspacesPanelUI*);
-	UInt32 const			kEventClass = GetEventClass(inEvent);
-	UInt32 const			kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassCommand);
-	assert(kEventKind == kEventCommandProcess);
-	{
-		HICommandExtended	received;
-		
-		
-		// determine the command in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
-		
-		// if the command information was found, proceed
-		if (noErr == result)
-		{
-			My_WorkspacesPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
-																	My_WorkspacesPanelDataPtr);
-			Preferences_Result			prefsResult = kPreferences_ResultOK;
-			
-			
-			result = eventNotHandledErr; // initially...
-			
-			if (received.attributes & kHICommandFromControl)
-			{
-				HIViewWrap		commandingView(received.source.control);
-				Boolean const	kCheckBoxFlagValue = (kControlCheckBoxCheckedValue == GetControl32BitValue(commandingView));
-				
-				
-				if (HIViewIDWrap(idMyCheckBoxUseTabsToArrangeWindows) == commandingView.identifier())
-				{
-					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagArrangeWindowsUsingTabs,
-																sizeof(kCheckBoxFlagValue), &kCheckBoxFlagValue);
-					if (kPreferences_ResultOK != prefsResult)
-					{
-						Console_Warning(Console_WriteLine, "unable to save window tabs setting");
-					}
-					result = noErr;
-				}
-			}
-			else
-			{
-				switch (received.commandID)
-				{
-				// INCOMPLETE
-				case kCommandSetWorkspaceWindowPosition:
-					// UNIMPLEMENTED
-					break;
-				
-				case kCommandSetWorkspaceDisplayRegions1x1:
-					// UNIMPLEMENTED
-					break;
-				
-				case kCommandSetWorkspaceDisplayRegions2x2:
-					// UNIMPLEMENTED
-					break;
-				
-				case kCommandSetWorkspaceDisplayRegions3x3:
-					// UNIMPLEMENTED
-					break;
-				
-				default:
-					break;
-				}
-			}
-		}
-		else
-		{
-			result = eventNotHandledErr;
-		}
-	}
-	return result;
-}// receiveHICommand
 
 } // anonymous namespace
 

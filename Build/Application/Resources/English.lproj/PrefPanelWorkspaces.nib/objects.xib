@@ -2,68 +2,47 @@
 <object class="NSIBObjectData">
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
-  <array count="18" name="allObjects">
+  <array count="19" name="allObjects">
     <object class="IBCarbonUserPane" id="1987">
       <ostype name="controlSignature">WLst</ostype>
       <int name="featureBits">2</int>
       <string name="viewFrame">20 20 200 235 </string>
       <string name="bounds">20 20 255 220 </string>
     </object>
-    <object class="IBCarbonStaticText" id="2093">
-      <int name="fontStyle">107</int>
-      <string name="title">Session:</string>
-      <int name="justification">-1</int>
-      <string name="viewFrame">240 50 140 16 </string>
-      <string name="bounds">50 240 66 380 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="2101">
-      <string name="title">Selected Window</string>
-      <int name="justification">-1</int>
-      <string name="viewFrame">240 20 125 16 </string>
-      <string name="bounds">20 240 36 365 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="2210">
-      <ostype name="controlSignature">LWSO</ostype>
-      <int name="fontStyle">107</int>
-      <string name="title">Options:</string>
-      <int name="justification">-1</int>
-      <string name="viewFrame">20 299 200 16 </string>
-      <string name="bounds">299 20 315 220 </string>
-    </object>
-    <object class="IBCarbonSeparator" id="2100">
-      <ostype name="controlSignature">SSWn</ostype>
-      <string name="viewFrame">373 28 317 8 </string>
-      <string name="bounds">28 373 36 690 </string>
-    </object>
-    <object class="IBCarbonMenuItem" id="2192">
-      <string name="title">Shell</string>
-      <boolean name="disabled">TRUE</boolean>
+    <object class="IBCarbonMenuItem" id="2191">
+      <string name="title">Log-In Shell</string>
       <boolean name="notPreviousAlternate">TRUE</boolean>
-    </object>
-    <object class="IBCarbonMenuItem" id="2194">
-      <boolean name="separator">TRUE</boolean>
-      <boolean name="disabled">TRUE</boolean>
-      <boolean name="notPreviousAlternate">TRUE</boolean>
-    </object>
-    <object class="IBCarbonBevelButton" id="2254">
-      <ostype name="controlSignature">NewW</ostype>
-      <ostype name="command">NewW</ostype>
-      <string name="helpTagText">Create a Collection of this type.</string>
-      <int name="bevelThickness">1</int>
-      <int name="contentType">0</int>
-      <int name="textPlacement">3</int>
-      <int name="menuBehavior">8192</int>
-      <string name="title">+</string>
-      <string name="viewFrame">240 229 32 24 </string>
-      <string name="bounds">229 240 253 272 </string>
+      <ostype name="command">WSLI</ostype>
     </object>
     <object class="IBCarbonRootControl" id="1927">
       <string name="viewFrame">0 0 710 335 </string>
-      <array count="12" name="subviews">
-        <reference idRef="2093"/>
-        <reference idRef="2210"/>
-        <reference idRef="2100"/>
-        <reference idRef="2101"/>
+      <array count="10" name="subviews">
+        <object class="IBCarbonStaticText" id="2093">
+          <int name="fontStyle">107</int>
+          <string name="title">Session:</string>
+          <int name="justification">-1</int>
+          <string name="viewFrame">240 50 140 16 </string>
+          <string name="bounds">50 240 66 380 </string>
+        </object>
+        <object class="IBCarbonStaticText" id="2210">
+          <ostype name="controlSignature">LWSO</ostype>
+          <int name="fontStyle">107</int>
+          <string name="title">Options:</string>
+          <int name="justification">-1</int>
+          <string name="viewFrame">20 299 200 16 </string>
+          <string name="bounds">299 20 315 220 </string>
+        </object>
+        <object class="IBCarbonSeparator" id="2100">
+          <ostype name="controlSignature">SSWn</ostype>
+          <string name="viewFrame">373 28 317 8 </string>
+          <string name="bounds">28 373 36 690 </string>
+        </object>
+        <object class="IBCarbonStaticText" id="2101">
+          <string name="title">Selected Window</string>
+          <int name="justification">-1</int>
+          <string name="viewFrame">240 20 125 16 </string>
+          <string name="bounds">20 240 36 365 </string>
+        </object>
         <object class="IBCarbonStaticText" id="2112">
           <int name="fontStyle">107</int>
           <string name="title">Boundaries:</string>
@@ -85,15 +64,35 @@
           <string name="bounds">298 226 316 480 </string>
         </object>
         <object class="IBCarbonPopupButton" id="2169">
+          <ostype name="controlSignature">WSss</ostype>
           <object name="menu" class="IBCarbonMenu" id="2170">
-            <array count="3" name="items">
-              <object class="IBCarbonMenuItem" id="2191">
-                <string name="title">Log-In Shell</string>
+            <array count="6" name="items">
+              <object class="IBCarbonMenuItem" id="2260">
+                <string name="title">None (No Window)</string>
+                <boolean name="notPreviousAlternate">TRUE</boolean>
+                <ostype name="command">WSNo</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="2261">
+                <boolean name="separator">TRUE</boolean>
                 <boolean name="disabled">TRUE</boolean>
                 <boolean name="notPreviousAlternate">TRUE</boolean>
               </object>
-              <reference idRef="2192"/>
-              <reference idRef="2194"/>
+              <object class="IBCarbonMenuItem" id="2257">
+                <string name="title">Default</string>
+                <boolean name="notPreviousAlternate">TRUE</boolean>
+                <ostype name="command">WSDf</ostype>
+              </object>
+              <reference idRef="2191"/>
+              <object class="IBCarbonMenuItem" id="2192">
+                <string name="title">Shell</string>
+                <boolean name="notPreviousAlternate">TRUE</boolean>
+                <ostype name="command">WSSh</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="2258">
+                <string name="title">Custom New Session</string>
+                <boolean name="notPreviousAlternate">TRUE</boolean>
+                <ostype name="command">WSDg</ostype>
+              </object>
             </array>
           </object>
           <int name="titleJustification">0</int>
@@ -101,28 +100,31 @@
           <string name="bounds">48 387 68 690 </string>
         </object>
         <object class="IBCarbonButton" id="2249">
+          <ostype name="controlSignature">WSBn</ostype>
           <ostype name="command">SPos</ostype>
           <int name="iconPosition">0</int>
           <string name="title">Set…</string>
           <string name="viewFrame">388 76 70 20 </string>
           <string name="bounds">76 388 96 458 </string>
         </object>
-        <reference idRef="2254"/>
-        <object class="IBCarbonBevelButton" id="2255">
-          <ostype name="controlSignature">DelW</ostype>
-          <ostype name="command">DelW</ostype>
-          <string name="helpTagText">Delete a Collection.</string>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <int name="menuBehavior">8192</int>
-          <string name="title">-</string>
-          <string name="viewFrame">240 195 32 24 </string>
-          <string name="bounds">195 240 219 272 </string>
-        </object>
       </array>
       <string name="bounds">0 0 335 710 </string>
     </object>
+    <reference idRef="2192"/>
+    <reference idRef="2249"/>
+    <reference idRef="2210"/>
+    <reference idRef="2101"/>
+    <reference idRef="2258"/>
+    <reference idRef="2257"/>
+    <reference idRef="2190"/>
+    <reference idRef="2169"/>
+    <reference idRef="2093"/>
+    <reference idRef="2100"/>
+    <reference idRef="2260"/>
+    <reference idRef="2112"/>
+    <reference idRef="2261"/>
+    <reference idRef="2170"/>
+    <reference idRef="2211"/>
     <object class="IBCarbonWindow" id="1926">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="liveResize">TRUE</boolean>
@@ -134,34 +136,27 @@
       <string name="windowRect">425 182 760 892 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <reference idRef="2249"/>
-    <reference idRef="2255"/>
-    <reference idRef="2170"/>
-    <reference idRef="2191"/>
-    <reference idRef="2211"/>
-    <reference idRef="2169"/>
-    <reference idRef="2190"/>
-    <reference idRef="2112"/>
   </array>
-  <array count="18" name="allParents">
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
+  <array count="19" name="allParents">
     <reference idRef="1927"/>
     <reference idRef="2170"/>
-    <reference idRef="2170"/>
-    <reference idRef="1927"/>
     <reference idRef="1926"/>
-    <reference idRef="1"/>
+    <reference idRef="2170"/>
     <reference idRef="1927"/>
     <reference idRef="1927"/>
-    <reference idRef="2169"/>
+    <reference idRef="1927"/>
+    <reference idRef="2170"/>
     <reference idRef="2170"/>
     <reference idRef="1927"/>
     <reference idRef="1927"/>
     <reference idRef="1927"/>
     <reference idRef="1927"/>
+    <reference idRef="2170"/>
+    <reference idRef="1927"/>
+    <reference idRef="2170"/>
+    <reference idRef="2169"/>
+    <reference idRef="1927"/>
+    <reference idRef="1"/>
   </array>
   <dictionary count="2" name="nameTable">
     <string>File&apos;s Owner</string>
@@ -170,5 +165,5 @@
     <reference idRef="1926"/>
   </dictionary>
   <string name="targetFramework">IBCarbonFramework</string>
-  <unsigned_int name="nextObjectID">2256</unsigned_int>
+  <unsigned_int name="nextObjectID">2262</unsigned_int>
 </object>

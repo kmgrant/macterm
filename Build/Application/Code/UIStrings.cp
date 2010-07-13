@@ -1233,7 +1233,7 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_PreferencesWindowWindowsListHeaderName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Window"), CFSTR("PreferencesWindow"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Window Name"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowWindowsListHeaderName"));
 		break;
 	

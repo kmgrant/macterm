@@ -22,7 +22,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -96,11 +96,11 @@ enum
 /*!
 All tags from the same preference class must have
 unique values.  The tags are grouped by class.
-When you call Preferences_GetData...() methods,
+When you call Preferences_GetData…() methods,
 make sure the storage space you provide is large
 enough to hold the data type indicated below for
 the tag you specify.  Similarly, with the
-Preferences_SetData...() methods, the data pointer
+Preferences_SetData…() methods, the data pointer
 you provide should refer to data of the type that
 the tag “expects”.  In each case, the data *points*
 to storage of the type indicated.
@@ -178,8 +178,8 @@ enum
 	kPreferences_TagKioskShowsWindowFrame				= 'kwnf',	//!< data: "Boolean"
 	kPreferences_TagKioskUsesSuperfluousEffects			= 'kewl',	//!< data: "Boolean"
 	kPreferences_TagMapBackquote						= 'map`',	//!< data: "Boolean"
-	kPreferences_TagNewCommandShortcutEffect			= 'new?',	//!< data: "UInt32", a "kCommand..." constant
-	kPreferences_TagNotification						= 'noti',	//!< data: "SInt16", a "kAlert_Notify..." constant
+	kPreferences_TagNewCommandShortcutEffect			= 'new?',	//!< data: "UInt32", a "kCommandNewSession…" constant
+	kPreferences_TagNotification						= 'noti',	//!< data: "SInt16", a "kAlert_Notify…" constant
 	kPreferences_TagNotifyOfBeeps						= 'bnot',	//!< data: "Boolean"
 	kPreferences_TagPureInverse							= 'pinv',	//!< data: "Boolean"
 	kPreferences_TagRandomTerminalFormats				= 'rfmt',	//!< data: "Boolean"
@@ -194,7 +194,7 @@ enum
 	kPreferences_TagWasSessionInfoShowing				= 'wvsi',	//!< data: "Boolean"
 	kPreferences_TagWasVT220KeypadShowing				= 'wvvk',	//!< data: "Boolean"
 	kPreferences_TagWindowStackingOrigin				= 'wino',	//!< data: "Point"
-	kPreferences_TagWindowTabPreferredEdge				= 'tedg'	//!< data: "OptionBits", a "kWindowEdge..." constant
+	kPreferences_TagWindowTabPreferredEdge				= 'tedg'	//!< data: "OptionBits", a "kWindowEdge…" constant
 };
 
 /*!
@@ -252,7 +252,7 @@ enum
 Tags for use with Quills::Prefs::TERMINAL.
 
 Some are terminal-specific tweaks; anything starting with
-"kPreferences_TagVT..." or "kPreferences_TagXTerm...".
+"kPreferences_TagVT…" or "kPreferences_TagXTerm…".
 These should also have localized names in
 "UIStrings_PrefsWindow.h".
 */
@@ -265,7 +265,7 @@ enum
 	kPreferences_TagPageKeysControlLocalTerminal		= 'pgtm',	//!< data: "Boolean"
 	kPreferences_TagTerminalAnswerBackMessage			= 'ansb',	//!< data: "CFStringRef"
 	kPreferences_TagTerminalClearSavesLines				= 'clsv',	//!< data: "Boolean"
-	kPreferences_TagTerminalEmulatorType				= 'emul',	//!< data: "Terminal_Emulator", a "kTerminal_Emulator..." constant
+	kPreferences_TagTerminalEmulatorType				= 'emul',	//!< data: "Terminal_Emulator", a "kTerminal_Emulator…" constant
 	kPreferences_TagTerminalLineWrap					= 'wrap',	//!< data: "Boolean"
 	kPreferences_TagTerminalScreenColumns				= 'scol',	//!< data: "UInt16"
 	kPreferences_TagTerminalScreenRows					= 'srow',	//!< data: "UInt16"
@@ -300,9 +300,14 @@ enum
 	kPreferences_TagArrangeWindowsUsingTabs				= 'tabs',	//!< data: "Boolean"
 	// indexed tags must have a zero byte to have space for tag variants;
 	// see also Preferences_ReturnTagVariantForIndex()
+	kPreferences_TagIndexedWindowCommandType			= 'sst\0',	//!< data: "UInt32", a "kCommandNewSession…" constant
 	kPreferences_TagIndexedWindowFrameBounds			= 'wfb\0',	//!< data: "HIRect"
-	kPreferences_TagIndexedWindowScreenBounds			= 'wsb\0'	//!< data: "HIRect"
+	kPreferences_TagIndexedWindowScreenBounds			= 'wsb\0',	//!< data: "HIRect" (display boundaries when window saved)
+	kPreferences_TagIndexedWindowSessionFavorite		= 'ssf\0',	//!< data: "CFStringRef" (a Quills::Prefs::SESSION context name)
+	kPreferences_TagIndexedWindowTitle					= 'wnt\0'	//!< data: "CFStringRef"
 };
+
+UInt16 const kPreferences_MaximumWorkspaceSize = 10;	//!< TEMPORARY: arbitrary upper limit on windows in workspaces, for simplicity in other code
 
 /*!
 Navigation Services preference keys.  The idea here is to

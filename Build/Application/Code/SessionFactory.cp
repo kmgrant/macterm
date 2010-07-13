@@ -95,11 +95,12 @@ Boolean					configureSessionTerminalWindow	(TerminalWindowRef, Preferences_Conte
 TerminalWindowRef		createTerminalWindow			(Preferences_ContextRef = nullptr,
 														 Preferences_ContextRef = nullptr,
 														 Preferences_ContextRef = nullptr);
-Boolean					displayTerminalWindow			(TerminalWindowRef);
+Boolean					displayTerminalWindow			(TerminalWindowRef, Preferences_ContextRef = nullptr, UInt16 = 0);
 void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionFilterFlags,
 														 SessionFactory_SessionOpProcPtr, void*, SInt32, void*);
 void					forEveryTerminalWindowInListDo	(TerminalWindowList const&,
 														 SessionFactory_TerminalWindowOpProcPtr, void*, SInt32, void*);
+Boolean					newSessionFromCommand			(TerminalWindowRef, UInt32, Preferences_ContextRef, UInt16);
 pascal OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 Workspace_Ref			returnActiveWorkspace			();
 void					sessionChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -466,8 +467,7 @@ SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindow,
 /*!
 Creates a terminal window (or uses the specified
 window, if non-nullptr) and attempts to run the
-specified process inside it.  The given argument
-list must be terminated with a nullptr entry.
+specified process inside it.
 
 If unsuccessful, nullptr is returned and an alert
 message may be displayed to the user; otherwise,
@@ -479,7 +479,9 @@ is returned.
 SessionRef
 SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 											 CFArrayRef					inArgumentArray,
-											 Preferences_ContextRef		inContext,
+											 Preferences_ContextRef		inContextOrNull,
+											 Preferences_ContextRef		inWorkspaceOrNull,
+											 UInt16						inWindowIndexInWorkspaceOrZero,
 											 CFStringRef				inWorkingDirectoryOrNull)
 {
 	SessionRef			result = nullptr;
@@ -487,7 +489,7 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 	
 	
 	assert(nullptr != terminalWindow);
-	if (false == displayTerminalWindow(terminalWindow))
+	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 	{
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
 	}
@@ -496,12 +498,12 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 		Boolean		displayOK = false;
 		
 		
-		if (false == configureSessionTerminalWindow(terminalWindow, inContext))
+		if (false == configureSessionTerminalWindow(terminalWindow, inContextOrNull))
 		{
 			Console_Warning(Console_WriteLine, "unable to reconfigure terminal window");
 		}
 		
-		result = Session_New(inContext);
+		result = Session_New(inContextOrNull);
 		if (nullptr != result)
 		{
 			Local_Result	localResult = kLocal_ResultOK;
@@ -547,7 +549,9 @@ is returned.
 (3.0)
 */
 SessionRef
-SessionFactory_NewSessionDefaultShell	(TerminalWindowRef		inTerminalWindow)
+SessionFactory_NewSessionDefaultShell	(TerminalWindowRef			inTerminalWindow,
+										 Preferences_ContextRef		inWorkspaceOrNull,
+										 UInt16						inWindowIndexInWorkspaceOrZero)
 {
 	SessionRef			result = nullptr;
 	TerminalWindowRef	terminalWindow = inTerminalWindow;
@@ -555,7 +559,7 @@ SessionFactory_NewSessionDefaultShell	(TerminalWindowRef		inTerminalWindow)
 	
 	
 	assert(nullptr != terminalWindow);
-	if (false == displayTerminalWindow(terminalWindow))
+	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 	{
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
 	}
@@ -603,15 +607,17 @@ returned.
 (3.0)
 */
 SessionRef
-SessionFactory_NewSessionFromCommandFile	(TerminalWindowRef		inTerminalWindow,
-											 char const*			inCommandFilePath)
+SessionFactory_NewSessionFromCommandFile	(TerminalWindowRef			inTerminalWindow,
+											 char const*				inCommandFilePath,
+											 Preferences_ContextRef		inWorkspaceOrNull,
+											 UInt16						inWindowIndexInWorkspaceOrZero)
 {
 	SessionRef			result = nullptr;
 	TerminalWindowRef	terminalWindow = inTerminalWindow;
 	
 	
 	assert(nullptr != terminalWindow);
-	if (false == displayTerminalWindow(terminalWindow))
+	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 	{
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
 	}
@@ -678,7 +684,9 @@ Returns the new session, or nullptr if errors occur.
 */
 SessionRef
 SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
-											 SessionDescription_Ref		inSessionDescription)
+											 SessionDescription_Ref		inSessionDescription,
+											 Preferences_ContextRef		inWorkspaceOrNull,
+											 UInt16						inWindowIndexInWorkspaceOrZero)
 {
 	SessionRef					result = nullptr;
 	TerminalWindowRef			terminalWindow = inTerminalWindow;
@@ -835,14 +843,15 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
 			if (nullptr != argv)
 			{
 				assert(nullptr != terminalWindow);
-				result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argv);
+				result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argv, nullptr/* session context */,
+																	inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero);
 				CFRelease(argv), argv = nullptr;
 			}
 		}
 		else
 		{
 			// see if this is a remote host session...
-			CFStringRef		hostName = nullptr;
+			//CFStringRef		hostName = nullptr;
 			
 			
 			//dataAccessError = SessionDescription_GetStringData(inSessionDescription, kSessionDescription_StringTypeHostName,
@@ -878,15 +887,17 @@ returned.
 (3.1)
 */
 SessionRef
-SessionFactory_NewSessionFromTerminalFile	(TerminalWindowRef		inTerminalWindow,
-											 char const*			inAppleDotTermFilePath)
+SessionFactory_NewSessionFromTerminalFile	(TerminalWindowRef			inTerminalWindow,
+											 char const*				inAppleDotTermFilePath,
+											 Preferences_ContextRef		inWorkspaceOrNull,
+											 UInt16						inWindowIndexInWorkspaceOrZero)
 {
 	SessionRef			result = nullptr;
 	TerminalWindowRef	terminalWindow = inTerminalWindow;
 	
 	
 	assert(nullptr != terminalWindow);
-	if (false == displayTerminalWindow(terminalWindow))
+	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 	{
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
 	}
@@ -961,14 +972,16 @@ is returned.
 (3.0)
 */
 SessionRef
-SessionFactory_NewSessionLoginShell		(TerminalWindowRef		inTerminalWindow)
+SessionFactory_NewSessionLoginShell		(TerminalWindowRef			inTerminalWindow,
+										 Preferences_ContextRef		inWorkspaceOrNull,
+										 UInt16						inWindowIndexInWorkspaceOrZero)
 {
 	SessionRef			result = nullptr;
 	TerminalWindowRef	terminalWindow = inTerminalWindow;
 	
 	
 	assert(nullptr != terminalWindow);
-	if (false == displayTerminalWindow(terminalWindow))
+	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 	{
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
 	}
@@ -1026,7 +1039,9 @@ to the listener by examining the session list.
 */
 SessionRef
 SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindow,
-										 Preferences_ContextRef		inSessionContext)
+										 Preferences_ContextRef		inSessionContext,
+										 Preferences_ContextRef		inWorkspaceOrNull,
+										 UInt16						inWindowIndexInWorkspaceOrZero)
 {
 	SessionRef				result = nullptr;
 	TerminalWindowRef		terminalWindow = inTerminalWindow;
@@ -1086,7 +1101,7 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindow,
 	// reconfigure given window; UNIMPLEMENTED
 	
 	// display the window
-	if (false == displayTerminalWindow(terminalWindow))
+	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 	{
 		// some kind of problem?!?
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
@@ -1101,13 +1116,99 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindow,
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argumentCFArray,
-																inSessionContext);
+																inSessionContext, inWorkspaceOrNull,
+																inWindowIndexInWorkspaceOrZero);
 			CFRelease(argumentCFArray), argumentCFArray = nullptr;
 		}
 		// INCOMPLETE!!!
 	}
 	return result;
 }// NewSessionUserFavorite
+
+
+/*!
+Creates new sessions for each listed in the given workspace,
+in the order they are stored.  Any other constraints (such as
+confining them to a tab stack) are automatically respected.
+
+(4.0)
+*/
+Boolean
+SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWorkspaceContext)
+{
+	Boolean					result = true;
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	size_t					actualSize = 0;
+	
+	
+	// not every window in the workspace may be defined; launch
+	// every session that is found
+	for (UInt16 i = 1; i <= kPreferences_MaximumWorkspaceSize; ++i)
+	{
+		CFStringRef		associatedSessionName = nullptr;
+		
+		
+		prefsResult = Preferences_ContextGetData(inWorkspaceContext,
+													Preferences_ReturnTagVariantForIndex
+													(kPreferences_TagIndexedWindowSessionFavorite, i),
+													sizeof(associatedSessionName), &associatedSessionName,
+													false/* search defaults too */, &actualSize);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
+														(Quills::Prefs::SESSION, associatedSessionName);
+			
+			
+			if (nullptr == namedSettings)
+			{
+				result = false;
+			}
+			else
+			{
+				TerminalWindowRef	terminalWindow = createTerminalWindow();
+				SessionRef			session = SessionFactory_NewSessionUserFavorite(terminalWindow, namedSettings,
+																					inWorkspaceContext, i);
+				
+				
+				if (nullptr == session)
+				{
+					result = false;
+				}
+				Preferences_ReleaseContext(&namedSettings);
+			}
+			CFRelease(associatedSessionName), associatedSessionName = nullptr;
+		}
+		else
+		{
+			UInt32		associatedSessionType = 0;
+			
+			
+			prefsResult = Preferences_ContextGetData(inWorkspaceContext,
+														Preferences_ReturnTagVariantForIndex
+														(kPreferences_TagIndexedWindowCommandType, i),
+														sizeof(associatedSessionType), &associatedSessionType,
+														false/* search defaults too */, &actualSize);
+			if ((kPreferences_ResultOK == prefsResult) && (0 != associatedSessionType))
+			{
+				TerminalWindowRef	terminalWindow = createTerminalWindow();
+				Boolean				launchOK = newSessionFromCommand
+												(terminalWindow, associatedSessionType, inWorkspaceContext, i);
+				
+				
+				if (false == launchOK)
+				{
+					result = false;
+				}
+			}
+			else
+			{
+				// this window is disabled; ignore
+			}
+		}
+	}
+	
+	return result;
+}// NewSessionsUserFavoriteWorkspace
 
 
 /*!
@@ -1205,7 +1306,9 @@ to the listener by examining the session list.
 (3.0)
 */
 Boolean
-SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef		inTerminalWindow)
+SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
+											 Preferences_ContextRef		inWorkspaceOrNull,
+											 UInt16						inWindowIndexInWorkspaceOrZero)
 {
 	TerminalWindowRef		terminalWindow = inTerminalWindow;
 	Preferences_ContextRef	sessionContext = nullptr;
@@ -1227,7 +1330,7 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef		inTerminalWindow)
 		NewSessionDialog_Ref	dialog = NewSessionDialog_New(terminalWindow, sessionContext);
 		
 		
-		if (displayTerminalWindow(terminalWindow))
+		if (displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 		{
 			NewSessionDialog_Display(dialog); // automatically disposed when the user clicks a button
 		}
@@ -2118,17 +2221,24 @@ createTerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 
 
 /*!
-Shows a terminal window, putting it in front of all
-other terminal windows and forcing its contents to
-be rendered.
+Shows a terminal window, putting it in front of all other
+terminal windows and forcing its contents to be rendered.
 
-Returns "true" unless the window was not able to
-display for some reason.
+If a workspace context is given, then any workspace settings
+(such as the presence of tabs) are read from this; otherwise,
+user defaults are used.  In addition, if a specific window
+index is given, window-specific workspace settings (such as
+the window location on screen) will also be used.
 
-(3.0)
+Returns "true" unless the window was not able to display for
+some reason.
+
+(4.0)
 */
 Boolean
-displayTerminalWindow	(TerminalWindowRef	inTerminalWindow)
+displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
+						 Preferences_ContextRef		inWorkspaceOrNull,
+						 UInt16						inWindowIndexInWorkspaceOrZero)
 {
 	WindowRef	window = TerminalWindow_ReturnWindow(inTerminalWindow);
 	Boolean		result = true;
@@ -2137,17 +2247,58 @@ displayTerminalWindow	(TerminalWindowRef	inTerminalWindow)
 	if (nullptr == window) result = false;
 	else
 	{
-		TerminalWindow_Result		terminalWindowResult = kTerminalWindow_ResultOK;
-		TerminalViewRef				view = nullptr;
-		Preferences_ContextRef		defaultContext = nullptr;
-		Preferences_Result			prefsResult = kPreferences_ResultOK;
-		Boolean						useTabs = false;
+		TerminalWindow_Result	terminalWindowResult = kTerminalWindow_ResultOK;
+		TerminalViewRef			view = nullptr;
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		Boolean					useTabs = false;
 		
+		
+		// set the window location and size appropriately
+		if ((0 != inWindowIndexInWorkspaceOrZero) && (nullptr != inWorkspaceOrNull))
+		{
+			HIRect		frameBounds;
+			size_t		actualSize = 0;
+			
+			
+			prefsResult = Preferences_ContextGetData(inWorkspaceOrNull, Preferences_ReturnTagVariantForIndex
+																		(kPreferences_TagIndexedWindowFrameBounds,
+																			inWindowIndexInWorkspaceOrZero),
+														sizeof(frameBounds), &frameBounds, false/* search defaults */,
+														&actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				// UNIMPLEMENTED - check kPreferences_TagIndexedWindowScreenBounds too, and
+				// if the current display size disagrees, adjust the window location somehow
+				
+				// IMPORTANT: the boundaries are not guaranteed to specify the width or height
+				MoveWindowStructure(window, frameBounds.origin.x, frameBounds.origin.y);
+			}
+		}
+		
+		// set the window title, if one is defined
+		if ((0 != inWindowIndexInWorkspaceOrZero) && (nullptr != inWorkspaceOrNull))
+		{
+			CFStringRef		titleCFString = nullptr;
+			size_t			actualSize = 0;
+			
+			
+			prefsResult = Preferences_ContextGetData(inWorkspaceOrNull, Preferences_ReturnTagVariantForIndex
+																		(kPreferences_TagIndexedWindowTitle,
+																			inWindowIndexInWorkspaceOrZero),
+														sizeof(titleCFString), &titleCFString, false/* search defaults */,
+														&actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				if (CFStringGetLength(titleCFString) > 0)
+				{
+					TerminalWindow_SetWindowTitle(inTerminalWindow, titleCFString);
+				}
+				CFRelease(titleCFString), titleCFString = nullptr;
+			}
+		}
 		
 		// figure out if this window should have a tab and be arranged
-		prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::WORKSPACE);
-		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_ContextGetData(defaultContext, kPreferences_TagArrangeWindowsUsingTabs,
+		prefsResult = Preferences_ContextGetData(inWorkspaceOrNull, kPreferences_TagArrangeWindowsUsingTabs,
 													sizeof(useTabs), &useTabs,
 													true/* search defaults */, nullptr/* actual size */);
 		if (prefsResult != kPreferences_ResultOK) useTabs = false;
@@ -2254,6 +2405,99 @@ forEveryTerminalWindowInListDo	(TerminalWindowList const&					inList,
 
 
 /*!
+Creates a new session based on a command ID (such as from a
+menu); or, arranges for the appropriate user interface to
+appear, in the case of a custom new session.  Returns true only
+if successful.
+
+If the workspace is defined, then workspace-wide settings such
+as the use of tabs can be applied to the specified terminal
+window.  In addition, if the window index is nonzero, any
+window-specific settings (such as location on screen) can also
+be applied.
+
+(4.0)
+*/
+Boolean
+newSessionFromCommand	(TerminalWindowRef			inTerminalWindow,
+						 UInt32						inCommandID,
+						 Preferences_ContextRef		inWorkspaceOrNull,
+						 UInt16						inWindowIndexInWorkspaceOrZero)
+{
+	Boolean		result = false;
+	
+	
+	switch (inCommandID)
+	{
+	case kCommandNewSessionDefaultFavorite:
+		{
+			Preferences_ContextRef		sessionContext = nullptr;
+			Preferences_Result			prefsResult = Preferences_GetDefaultContext
+														(&sessionContext, Quills::Prefs::SESSION);
+			
+			
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				sessionContext = nullptr;
+			}
+			
+			// finally, create the session from the specified context
+			if (nullptr != sessionContext)
+			{
+				SessionRef		newSession = SessionFactory_NewSessionUserFavorite
+												(inTerminalWindow, sessionContext, inWorkspaceOrNull,
+													inWindowIndexInWorkspaceOrZero);
+				
+				
+				if (nullptr != newSession)
+				{
+					// success!
+					result = true;
+				}
+			}
+		}
+		break;
+	
+	case kCommandNewSessionDialog:
+		result = SessionFactory_DisplayUserCustomizationUI(inTerminalWindow, inWorkspaceOrNull,
+															inWindowIndexInWorkspaceOrZero);
+		break;
+	
+	case kCommandNewSessionLoginShell:
+	case kCommandNewSessionShell:
+		{
+			SessionRef		newSession = nullptr;
+			
+			
+			// create a shell
+			if (kCommandNewSessionLoginShell == inCommandID)
+			{
+				newSession = SessionFactory_NewSessionLoginShell(inTerminalWindow, inWorkspaceOrNull,
+																	inWindowIndexInWorkspaceOrZero);
+			}
+			else
+			{
+				newSession = SessionFactory_NewSessionDefaultShell(inTerminalWindow, inWorkspaceOrNull,
+																	inWindowIndexInWorkspaceOrZero);
+			}
+			
+			if (nullptr != newSession)
+			{
+				// success!
+				result = true;
+			}
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// newSessionFromCommand
+
+
+/*!
 Handles "kEventCommandProcess" of "kEventClassCommand"
 for commands that create new sessions.
 
@@ -2291,26 +2535,49 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				switch (received.commandID)
 				{
 				case kCommandNewSessionDefaultFavorite:
+				case kCommandNewSessionDialog:
+				case kCommandNewSessionLoginShell:
+				case kCommandNewSessionShell:
 					{
-						Preferences_ContextRef		sessionContext = nullptr;
+						TerminalWindowRef			terminalWindow = createTerminalWindow();
+						Preferences_ContextRef		workspaceContext = nullptr;
+						Boolean						launchOK = newSessionFromCommand
+																(terminalWindow, received.commandID, workspaceContext,
+																	0/* window index */);
+						
+						
+						if (launchOK)
+						{
+							result = noErr;
+						}
+						else
+						{
+							// UNIMPLEMENTED - report any problems to the user!!!
+							result = eventNotHandledErr;
+						}
+					}
+					break;
+				
+				case kCommandRestoreWorkspaceDefaultFavorite:
+					{
+						Preferences_ContextRef		workspaceContext = nullptr;
 						Preferences_Result			prefsResult = Preferences_GetDefaultContext
-																	(&sessionContext, Quills::Prefs::SESSION);
+																	(&workspaceContext, Quills::Prefs::WORKSPACE);
 						
 						
 						if (kPreferences_ResultOK != prefsResult)
 						{
-							sessionContext = nullptr;
+							workspaceContext = nullptr;
 						}
 						
 						// finally, create the session from the specified context
-						if (nullptr == sessionContext) result = eventNotHandledErr;
+						if (nullptr == workspaceContext) result = eventNotHandledErr;
 						else
 						{
-							TerminalWindowRef	terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
-							SessionRef			newSession = SessionFactory_NewSessionUserFavorite(terminalWindow, sessionContext);
+							Boolean		launchedOK = SessionFactory_NewSessionsUserFavoriteWorkspace(workspaceContext);
 							
 							
-							if (nullptr != newSession) result = noErr;
+							if (launchedOK) result = noErr;
 							else result = eventNotHandledErr;
 						}
 						
@@ -2319,44 +2586,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						{
 							// UNIMPLEMENTED!!!
 							Sound_StandardAlert();
-						}
-					}
-					break;
-				
-				case kCommandNewSessionDialog:
-					{
-						TerminalWindowRef	terminalWindow = createTerminalWindow();
-						Boolean				displayOK = SessionFactory_DisplayUserCustomizationUI(terminalWindow);
-						
-						
-						// report any errors to the user
-						if (displayOK) result = noErr;
-						else
-						{
-							// UNIMPLEMENTED!!!
-							Sound_StandardAlert();
-							result = eventNotHandledErr;
-						}
-					}
-					break;
-				
-				case kCommandNewSessionLoginShell:
-				case kCommandNewSessionShell:
-					{
-						TerminalWindowRef	terminalWindow = createTerminalWindow();
-						SessionRef			newSession = nullptr;
-						
-						
-						// create a shell
-						if (received.commandID == kCommandNewSessionLoginShell) newSession = SessionFactory_NewSessionLoginShell(terminalWindow);
-						else newSession = SessionFactory_NewSessionDefaultShell(terminalWindow);
-						
-						// report any errors to the user
-						if (nullptr != newSession) result = noErr;
-						else
-						{
-							// UNIMPLEMENTED!!!
-							result = eventNotHandledErr;
 						}
 					}
 					break;
@@ -2478,7 +2707,49 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			case kSession_StateBrandNew:
 			case kSession_StateInitialized:
+				// ignore
+				break;
+			
 			case kSession_StateActiveUnstable:
+				// initialize the session user-defined title to match whatever
+				// title the window is given when it opens
+				{
+					TerminalWindowRef	terminalWindow = Session_ReturnActiveTerminalWindow(session);
+					Boolean				foundTitle = false;
+					
+					
+					if (nullptr != terminalWindow)
+					{
+						HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
+						
+						
+						if (nullptr != window)
+						{
+							CFStringRef		existingTitleCFString = nullptr;
+							OSStatus		error = noErr;
+							
+							
+							error = CopyWindowTitleAsCFString(window, &existingTitleCFString);
+							if (noErr == error)
+							{
+								if (CFStringGetLength(existingTitleCFString) > 0)
+								{
+									Session_SetWindowUserDefinedTitle(session, existingTitleCFString);
+									foundTitle = true;
+								}
+								CFRelease(existingTitleCFString), existingTitleCFString = nullptr;
+							}
+						}
+					}
+					
+					if (false == foundTitle)
+					{
+						// by default, use the resource location string
+						Session_SetWindowUserDefinedTitle(session, Session_ReturnResourceLocationCFString(session));
+					}
+				}
+				break;
+			
 			case kSession_StateActiveStable:
 			case kSession_StateDead:
 			default:

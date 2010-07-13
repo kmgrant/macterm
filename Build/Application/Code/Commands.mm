@@ -176,6 +176,7 @@ void				setUpMacroSetsMenu								(NSMenu*);
 void				setUpSessionFavoritesMenu						(NSMenu*);
 void				setUpTranslationTablesMenu						(NSMenu*);
 void				setUpWindowMenu									(NSMenu*);
+void				setUpWorkspaceFavoritesMenu						(NSMenu*);
 void				setWindowMenuItemMarkForSession					(SessionRef, NSMenuItem* = nil);
 void				showWindowTerminalWindowOp						(TerminalWindowRef, void*, SInt32, void*);
 Boolean				stateTrackerWindowMenuWindowItems				(UInt32, MenuRef, MenuItemIndex);
@@ -3027,6 +3028,7 @@ void
 setUpDynamicMenus ()
 {
 	setUpSessionFavoritesMenu(returnMenu(kMenuIDFile));
+	setUpWorkspaceFavoritesMenu(returnMenu(kMenuIDFile));
 	setUpFormatFavoritesMenu(returnMenu(kMenuIDView));
 	//setUpMacroSetsMenu(returnMenu(kMenuIDMacros)); // not necessary; see "canPerformActionForMacro:"
 	setUpTranslationTablesMenu(returnMenu(kMenuIDKeys));
@@ -3245,6 +3247,46 @@ setUpWindowMenu		(NSMenu*	inMenu)
 		[inMenu insertItem:[NSMenuItem separatorItem] atIndex:kDividerIndex];
 	}
 }// setUpWindowMenu
+
+
+/*!
+Destroys and rebuilds the menu items that automatically open
+sessions with particular Workspace Favorite names.
+
+(4.0)
+*/
+void
+setUpWorkspaceFavoritesMenu		(NSMenu*	inMenu)
+{
+	int		pastAnchorIndex = 0;
+	
+	
+	// find the key item to use as an anchor point
+	pastAnchorIndex = 1 + indexOfItemWithAction(inMenu, @selector(performRestoreWorkspaceDefault:));
+	
+	if (pastAnchorIndex > 0)
+	{
+		Quills::Prefs::Class	prefsClass = Quills::Prefs::WORKSPACE;
+		SEL						byNameAction = @selector(performRestoreWorkspaceByFavoriteName:);
+		int						deletedItemIndex = -1;
+		Commands_Result			insertResult = kCommands_ResultOK;
+		
+		
+		// erase previous items
+		while (-1 != (deletedItemIndex = indexOfItemWithAction(inMenu, byNameAction)))
+		{
+			[inMenu removeItemAtIndex:deletedItemIndex];
+		}
+		
+		// add the names of all configurations to the menu
+		insertResult = Commands_InsertPrefNamesIntoMenu(prefsClass, inMenu, pastAnchorIndex,
+														1/* indentation level */, byNameAction);
+		if (false == insertResult.ok())
+		{
+			Console_Warning(Console_WriteLine, "unexpected error inserting favorites into menu");
+		}
+	}
+}// setUpWorkspaceFavoritesSubmenu
 
 
 /*!
@@ -3894,8 +3936,11 @@ performNewByFavoriteName:(id)	sender
 			
 			if (nullptr != namedSettings)
 			{
-				TerminalWindowRef	terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
-				SessionRef			newSession = SessionFactory_NewSessionUserFavorite(terminalWindow, namedSettings);
+				TerminalWindowRef		terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
+				Preferences_ContextRef	workspaceContext = nullptr;
+				SessionRef				newSession = SessionFactory_NewSessionUserFavorite
+														(terminalWindow, namedSettings, workspaceContext,
+															0/* window index */);
 				
 				
 				isError = (nullptr == newSession);
@@ -3996,6 +4041,62 @@ canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
 		result = YES;
 	}
 	return [NSNumber numberWithBool:result];
+}
+
+
+- (IBAction)
+performRestoreWorkspaceDefault:(id)		sender
+{
+#pragma unused(sender)
+	Commands_ExecuteByIDUsingEvent(kCommandRestoreWorkspaceDefaultFavorite, nullptr/* target */);
+}
+- (id)
+canPerformRestoreWorkspaceDefault:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+	return validatorYes(anItem);
+}
+
+
+- (IBAction)
+performRestoreWorkspaceByFavoriteName:(id)	sender
+{
+	BOOL	isError = YES;
+	
+	
+	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+	{
+		// use the specified preferences
+		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
+		
+		
+		if (nil != collectionName)
+		{
+			Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
+														(Quills::Prefs::WORKSPACE, collectionName);
+			
+			
+			if (nullptr != namedSettings)
+			{
+				Boolean		launchedOK = SessionFactory_NewSessionsUserFavoriteWorkspace(namedSettings);
+				
+				
+				if (launchedOK) isError = NO;
+				Preferences_ReleaseContext(&namedSettings);
+			}
+		}
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Sound_StandardAlert();
+	}
+}
+- (id)
+canPerformRestoreWorkspaceByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+	return validatorYes(anItem);
 }
 
 

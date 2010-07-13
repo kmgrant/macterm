@@ -3,7 +3,7 @@
 	Preferences.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2004 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -996,6 +996,21 @@ Preferences_Init ()
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroName, kMacroManager_MaximumMacroSetSize,
 											CFSTR("macro-%02u-name-string"), typeCFStringRef,
 											sizeof(CFStringRef), Quills::Prefs::MACRO_SET);
+	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedWindowCommandType, kPreferences_MaximumWorkspaceSize,
+											CFSTR("window-%02u-session-built-in"), typeCFStringRef/* "shell", "dialog", "default" */,
+											sizeof(UInt32), Quills::Prefs::WORKSPACE);
+	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedWindowFrameBounds, kPreferences_MaximumWorkspaceSize,
+											CFSTR("window-%02u-frame-bounds-pixels"), typeCFArrayRef,
+											sizeof(HIRect), Quills::Prefs::WORKSPACE);
+	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedWindowScreenBounds, kPreferences_MaximumWorkspaceSize,
+											CFSTR("window-%02u-screen-bounds-pixels"), typeCFArrayRef,
+											sizeof(HIRect), Quills::Prefs::WORKSPACE);
+	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedWindowSessionFavorite, kPreferences_MaximumWorkspaceSize,
+											CFSTR("window-%02u-session-favorite"), typeCFStringRef,
+											sizeof(CFStringRef), Quills::Prefs::WORKSPACE);
+	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedWindowTitle, kPreferences_MaximumWorkspaceSize,
+											CFSTR("window-%02u-name-string"), typeCFStringRef,
+											sizeof(CFStringRef), Quills::Prefs::WORKSPACE);
 	My_PreferenceDefinition::create(kPreferences_TagKeepAlivePeriodInMinutes,
 									CFSTR("data-send-keepalive-period-minutes"), typeNetEvents_CFNumberRef,
 									sizeof(UInt16), Quills::Prefs::SESSION);
@@ -4954,7 +4969,8 @@ Reads an array of 4 CFNumber elements and puts their
 values into an HIRect structure in the order origin.x,
 origin.y, size.width, size.height.
 
-Returns "true" only if successful.
+Returns "true" only if successful.  Note, however, that
+a rectangle containing all zeroes may also be a problem.
 
 (4.0)
 */
@@ -7558,6 +7574,50 @@ getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						switch (kTagWithoutIndex)
 						{
+						case kPreferences_TagIndexedWindowCommandType:
+							assert(typeCFStringRef == keyValueType);
+							{
+								CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+								
+								
+								if (nullptr == valueCFString)
+								{
+									result = kPreferences_ResultBadVersionDataNotAvailable;
+								}
+								else
+								{
+									UInt32*		storedValuePtr = REINTERPRET_CAST(outDataPtr, UInt32*);
+									
+									
+									if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("shell"), kCFCompareCaseInsensitive))
+									{
+										*storedValuePtr = kCommandNewSessionShell;
+									}
+									else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("log-in shell"), kCFCompareCaseInsensitive))
+									{
+										*storedValuePtr = kCommandNewSessionLoginShell;
+									}
+									else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("dialog"), kCFCompareCaseInsensitive))
+									{
+										*storedValuePtr = kCommandNewSessionDialog;
+									}
+									else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("default"), kCFCompareCaseInsensitive))
+									{
+										*storedValuePtr = kCommandNewSessionDefaultFavorite;
+									}
+									else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("none"), kCFCompareCaseInsensitive))
+									{
+										*storedValuePtr = 0;
+									}
+									else
+									{
+										result = kPreferences_ResultBadVersionDataNotAvailable;
+									}
+									CFRelease(valueCFString), valueCFString = nullptr;
+								}
+							}
+							break;
+						
 						case kPreferences_TagIndexedWindowFrameBounds:
 						case kPreferences_TagIndexedWindowScreenBounds:
 							{
@@ -7581,7 +7641,35 @@ getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
 										data->size.width = data->size.height = 0;
 										result = kPreferences_ResultBadVersionDataNotAvailable;
 									}
+									if ((0 == data->origin.x) && (0 == data->origin.y) && (0 == data->size.width) && (0 == data->size.height))
+									{
+										// this is also indicative of a problem
+										result = kPreferences_ResultBadVersionDataNotAvailable;
+									}
 									CFRelease(valueCFArray), valueCFArray = nullptr;
+								}
+							}
+							break;
+						
+						case kPreferences_TagIndexedWindowSessionFavorite:
+						case kPreferences_TagIndexedWindowTitle:
+							// all of these keys have Core Foundation string values
+							{
+								assert(typeCFStringRef == keyValueType);
+								CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+								
+								
+								if (nullptr == valueCFString)
+								{
+									result = kPreferences_ResultBadVersionDataNotAvailable;
+								}
+								else
+								{
+									CFStringRef* const	data = REINTERPRET_CAST(outDataPtr, CFStringRef*);
+									
+									
+									*data = valueCFString;
+									// do not release because the string is returned
 								}
 							}
 							break;
@@ -8338,13 +8426,13 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 						setMacTelnetPreference(keyName, CFSTR("default"));
 						break;
 					
-					case kCommandNewSessionLoginShell:
-						setMacTelnetPreference(keyName, CFSTR("log-in shell"));
+					case kCommandNewSessionShell:
+						setMacTelnetPreference(keyName, CFSTR("shell"));
 						break;
 					
-					case kCommandNewSessionShell:
+					case kCommandNewSessionLoginShell:
 					default:
-						setMacTelnetPreference(keyName, CFSTR("shell"));
+						setMacTelnetPreference(keyName, CFSTR("log-in shell"));
 						break;
 					}
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
@@ -9509,6 +9597,37 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					switch (kTagWithoutIndex)
 					{
+					case kPreferences_TagIndexedWindowCommandType:
+						{
+							UInt32 const	data = *(REINTERPRET_CAST(inDataPtr, UInt32 const*));
+							
+							
+							assert(typeCFStringRef == keyValueType);
+							switch (data)
+							{
+							case kCommandNewSessionDialog:
+								inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("dialog"));
+								break;
+							
+							case kCommandNewSessionDefaultFavorite:
+								inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("default"));
+								break;
+							
+							case kCommandNewSessionShell:
+								inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("shell"));
+								break;
+							
+							case kCommandNewSessionLoginShell:
+								inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("log-in shell"));
+								break;
+							
+							default:
+								inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("none"));
+								break;
+							}
+						}
+						break;
+					
 					case kPreferences_TagIndexedWindowFrameBounds:
 					case kPreferences_TagIndexedWindowScreenBounds:
 						{
@@ -9523,6 +9642,18 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 								CFRelease(boundsCFArray), boundsCFArray = nullptr;
 							}
 							else result = kPreferences_ResultGenericFailure;
+						}
+						break;
+					
+					case kPreferences_TagIndexedWindowSessionFavorite:
+					case kPreferences_TagIndexedWindowTitle:
+						// all of these keys have Core Foundation string values
+						{
+							CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
+							
+							
+							assert(typeCFStringRef == keyValueType);
+							inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 						}
 						break;
 					

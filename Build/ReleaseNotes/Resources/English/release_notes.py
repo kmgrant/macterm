@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100712',
     '20100708',
     '20100707',
     '20100617',
@@ -312,6 +313,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100712': [
+        'Preferences window Workspaces pane now allows you to specify that multiple sessions should start at the same time.',
+        'The File menu now contains a section for opening multiple sessions, from any Workspace saved in Preferences.',
+        'The Default Workspace is now spawned at startup, instead of the session type from the command-N mapping.  This means you can now spawn multiple windows automatically, or disable new windows entirely, using the Preferences window, Workspaces pane.',
+        '"Use tabs to arrange windows" can now be applied to specific Workspaces (in addition to Default).',
+    ],
     '20100708': [
         'Fixed a few minor problems that were causing console messages.',
     ],

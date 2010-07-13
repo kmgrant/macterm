@@ -263,22 +263,7 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 			
 			unless (quellAutoNew)
 			{
-				UInt32		newCommandID = kCommandNewSessionDefaultFavorite;
-				
-				
-				// assume that the user is mapping command-N to the same type of session
-				// that would be appropriate for opening by default on startup
-				unless (kPreferences_ResultOK ==
-						Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
-											sizeof(newCommandID), &newCommandID,
-											&actualSize))
-				{
-					// assume a value if it cannot be found
-					newCommandID = kCommandNewSessionDefaultFavorite;
-				}
-				
-				// no open windows - respond by spawning a new session
-				Commands_ExecuteByIDUsingEvent(newCommandID);
+				Commands_ExecuteByIDUsingEvent(kCommandRestoreWorkspaceDefaultFavorite);
 			}
 		}
 	}

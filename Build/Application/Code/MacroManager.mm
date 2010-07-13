@@ -644,11 +644,13 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 						
 						if (nullptr != argsCFArray)
 						{
-							TerminalWindowRef	terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
-							SessionRef			newSession = nullptr;
+							TerminalWindowRef		terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
+							Preferences_ContextRef	workspaceContext = nullptr;
+							SessionRef				newSession = nullptr;
 							
 							
-							newSession = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argsCFArray);
+							newSession = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argsCFArray, workspaceContext,
+																					0/* window index */);
 							if (nullptr != newSession) result = kMacroManager_ResultOK;
 							
 							CFRelease(argsCFArray), argsCFArray = nullptr;

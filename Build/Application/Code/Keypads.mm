@@ -49,9 +49,13 @@
 #pragma mark Variables
 namespace {
 
-Preferences_Tag		gArrangeWindowBinding = 0;
-Point				gArrangeWindowStackingOrigin = { 0, 0 };
-EventTargetRef		gControlKeysEventTarget = nullptr;	//!< temporary, for Carbon interaction
+Preferences_ContextRef	gArrangeWindowBindingContext = nullptr;
+Preferences_Tag			gArrangeWindowBinding = 0;
+Preferences_Tag			gArrangeWindowScreenBinding = 0;
+FourCharCode			gArrangeWindowDataTypeForWindowBinding = typeQDPoint;
+FourCharCode			gArrangeWindowDataTypeForScreenBinding = typeHIRect;
+Point					gArrangeWindowStackingOrigin = { 0, 0 };
+EventTargetRef			gControlKeysEventTarget = nullptr;	//!< temporary, for Carbon interaction
 
 }// anonymous namespace
 
@@ -60,26 +64,99 @@ EventTargetRef		gControlKeysEventTarget = nullptr;	//!< temporary, for Carbon in
 #pragma mark Public Methods
 
 /*!
-Binds the “Arrange Window” panel to a preferences tag,
-which determines both its new window position and the
-preference that is auto-updated as the window is moved.
+Binds the “Arrange Window” panel to a preferences tag, which
+determines both the source of its initial window position and
+the destination that is auto-updated as the window is moved.
 
-Set to 0 to have no binding effect.
+Set the screen binding information to nonzero values to also
+keep track of the boundaries of the display that contains most
+of the window.  This is usually important to save somewhere as
+well, because it allows you to intelligently restore the window
+if the user has resized the screen after the window was saved.
+
+The window frame binding data type is currently allowed to be
+one of the following: "typeQDPoint" (Point), "typeHIRect"
+(HIRect).  The "inWindowBindingOrZero" tag must be documented as
+expecting the corresponding type!  If a type is rectangular, the
+width and height are set to 0, but the origin is still set
+according to the window position.
+
+The screen binding must currently always be "typeHIRect", and
+the origin and size are both defined.
+
+Set "inBinding" to 0 to have no binding effect.
 
 (4.0)
 */
 void
-Keypads_SetArrangeWindowPanelBinding	(Preferences_Tag	inBinding)
+Keypads_SetArrangeWindowPanelBinding	(Preferences_Tag			inWindowBindingOrZero,
+										 FourCharCode				inDataTypeForWindowBinding,
+										 Preferences_Tag			inScreenBindingOrZero,
+										 FourCharCode				inDataTypeForScreenBinding,
+										 Preferences_ContextRef		inContextOrNull)
 {
-	size_t		actualSize = 0;
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	Preferences_ContextRef	newContext = inContextOrNull;
+	size_t					actualSize = 0;
+	UInt16 const			kDefaultX = 128; // arbitrary
+	UInt16 const			kDefaultY = 128; // arbitrary
 	
 	
-	unless (Preferences_GetData(inBinding, sizeof(gArrangeWindowStackingOrigin), &gArrangeWindowStackingOrigin, &actualSize) ==
-			kPreferences_ResultOK)
+	assert((typeQDPoint == inDataTypeForWindowBinding) || (typeHIRect == inDataTypeForWindowBinding));
+	assert((0 == inDataTypeForScreenBinding) || (typeHIRect == inDataTypeForScreenBinding));
+	
+	if (nullptr == newContext)
 	{
-		SetPt(&gArrangeWindowStackingOrigin, 40, 40); // assume a default, if preference can’t be found
+		prefsResult = Preferences_GetDefaultContext(&newContext);
+		assert(kPreferences_ResultOK == prefsResult);
 	}
-	gArrangeWindowBinding = inBinding;
+	
+	assert(nullptr != newContext);
+	if (newContext != gArrangeWindowBindingContext)
+	{
+		Preferences_RetainContext(newContext);
+		if (nullptr != gArrangeWindowBindingContext)
+		{
+			Preferences_ReleaseContext(&gArrangeWindowBindingContext);
+		}
+		gArrangeWindowBindingContext = newContext;
+	}
+	
+	gArrangeWindowBinding = inWindowBindingOrZero;
+	gArrangeWindowDataTypeForWindowBinding = inDataTypeForWindowBinding;
+	gArrangeWindowScreenBinding = inScreenBindingOrZero;
+	gArrangeWindowDataTypeForScreenBinding = inDataTypeForScreenBinding;
+	
+	if (0 != gArrangeWindowBinding)
+	{
+		if (typeQDPoint == gArrangeWindowDataTypeForWindowBinding)
+		{
+			prefsResult = Preferences_ContextGetData(gArrangeWindowBindingContext, gArrangeWindowBinding,
+														sizeof(gArrangeWindowStackingOrigin), &gArrangeWindowStackingOrigin,
+														false/* search defaults */, &actualSize);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				SetPt(&gArrangeWindowStackingOrigin, kDefaultX, kDefaultY); // assume a default, if preference can’t be found
+			}
+		}
+		else if (typeHIRect == gArrangeWindowDataTypeForWindowBinding)
+		{
+			HIRect		prefValue;
+			
+			
+			prefsResult = Preferences_ContextGetData(gArrangeWindowBindingContext, gArrangeWindowBinding,
+														sizeof(prefValue), &prefValue, false/* search defaults */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				gArrangeWindowStackingOrigin.h = prefValue.origin.x;
+				gArrangeWindowStackingOrigin.v = prefValue.origin.y;
+			}
+			else
+			{
+				SetPt(&gArrangeWindowStackingOrigin, kDefaultX, kDefaultY); // assume a default, if preference can’t be found
+			}
+		}
+	}
 }// SetArrangeWindowPanelBinding
 
 
@@ -181,9 +258,9 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 	case kKeypads_WindowTypeArrangeWindow:
 		if (inIsVisible)
 		{
-			[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] showWindow:NSApp];
 			[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] setOriginToX:gArrangeWindowStackingOrigin.h
 																						andY:gArrangeWindowStackingOrigin.v];
+			[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] showWindow:NSApp];
 		}
 		else
 		{
@@ -294,20 +371,66 @@ doneArranging:(id)	sender
 		NSRect				screenFrame = [screen frame];
 		SInt16				x = STATIC_CAST(windowFrame.origin.x, SInt32);
 		SInt16				y = STATIC_CAST(screenFrame.size.height - windowFrame.size.height - windowFrame.origin.y, SInt32);
-		Point				prefValue;
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
 		
 		
-		SetPt(&prefValue, x, y);
-		prefsResult = Preferences_SetData(kPreferences_TagWindowStackingOrigin, sizeof(prefValue), &prefValue);
+		if (typeQDPoint == gArrangeWindowDataTypeForWindowBinding)
+		{
+			Point		prefValue;
+			
+			
+			SetPt(&prefValue, x, y);
+			prefsResult = Preferences_ContextSetData(gArrangeWindowBindingContext, gArrangeWindowBinding, sizeof(prefValue), &prefValue);
+		}
+		else if (typeHIRect == gArrangeWindowDataTypeForWindowBinding)
+		{
+			HIRect		prefValue;
+			
+			
+			prefValue.origin.x = x;
+			prefValue.origin.y = y;
+			prefValue.size.width = 0;
+			prefValue.size.height = 0;
+			prefsResult = Preferences_ContextSetData(gArrangeWindowBindingContext, gArrangeWindowBinding, sizeof(prefValue), &prefValue);
+		}
+		else
+		{
+			assert(false && "incorrect window location binding type");
+		}
+		
 		if (kPreferences_ResultOK != prefsResult)
 		{
-			Console_Warning(Console_WriteLine, "failed to set terminal window origin");
+			Console_Warning(Console_WriteLine, "failed to set window origin preference");
 		}
-		TerminalWindow_StackWindows(); // re-stack windows so the user can see the effect of the change
+		
+		if (0 != gArrangeWindowScreenBinding)
+		{
+			if (typeHIRect == gArrangeWindowDataTypeForScreenBinding)
+			{
+				HIRect		prefValue;
+				
+				
+				// TEMPORARY: the coordinate system should probably be flipped here
+				prefValue.origin.x = screenFrame.origin.x;
+				prefValue.origin.y = screenFrame.origin.y;
+				prefValue.size.width = screenFrame.size.width;
+				prefValue.size.height = screenFrame.size.height;
+				prefsResult = Preferences_ContextSetData(gArrangeWindowBindingContext, gArrangeWindowScreenBinding,
+															sizeof(prefValue), &prefValue);
+			}
+			else
+			{
+				assert(false && "incorrect screen rectangle binding type");
+			}
+		}
 	}
 	Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, false);
-	// INCOMPLETE
+	
+	// release the binding
+	if (nullptr != gArrangeWindowBindingContext)
+	{
+		Preferences_ReleaseContext(&gArrangeWindowBindingContext);
+	}
 }
 
 - (void)

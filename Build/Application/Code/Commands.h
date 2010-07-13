@@ -135,6 +135,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandNewSessionLoginShell			'NLgS'
 #define kCommandNewSessionShell					'NShS'
 #define kCommandNewSessionDialog				'NSDg'
+#define kCommandRestoreWorkspaceDefaultFavorite	'RWDF'
 #define kCommandOpenSession						kHICommandOpen
 #define kCommandCloseConnection					kHICommandClose
 #define kCommandSaveSession						kHICommandSaveAs
@@ -459,6 +460,12 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSetTEKModeTEK4014				'4014'		// “Preferences” window
 #define kCommandSetTEKModeTEK4105				'4105'		// “Preferences” window
 #define kCommandSetTEKPageClearsScreen			'XPCS'		// “Preferences” window
+#define kCommandSetWorkspaceSessionNone			'WSNo'		// “Preferences” window
+#define kCommandSetWorkspaceSessionDefault		'WSDf'		// “Preferences” window
+#define kCommandSetWorkspaceSessionByFavoriteName	'WSFv'	// “Preferences” window
+#define kCommandSetWorkspaceSessionShell		'WSSh'		// “Preferences” window
+#define kCommandSetWorkspaceSessionLogInShell	'WSLI'		// “Preferences” window
+#define kCommandSetWorkspaceSessionCustom		'WSDg'		// “Preferences” window
 #define kCommandSetWorkspaceDisplayRegions1x1	'R1x1'		// multiple interfaces
 #define kCommandSetWorkspaceDisplayRegions2x2	'R2x2'		// multiple interfaces
 #define kCommandSetWorkspaceDisplayRegions3x3	'R3x3'		// multiple interfaces
@@ -566,6 +573,8 @@ changes to an interface declared in a ".mm" file.
 - (IBAction)	performNewLogInShell:(id)sender;
 - (IBAction)	performNewShell:(id)sender;
 - (IBAction)	performNewCustom:(id)sender;
+- (IBAction)	performRestoreWorkspaceDefault:(id)sender;
+- (void)		performRestoreWorkspaceByFavoriteName:(id)sender;
 - (IBAction)	performRestart:(id)sender;
 - (IBAction)	performOpen:(id)sender;
 - (IBAction)	performDuplicate:(id)sender;

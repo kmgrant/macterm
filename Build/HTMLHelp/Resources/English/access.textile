@@ -40,7 +40,8 @@ You have a few options for new commands:
 commands interactively.
 
 * File >> Default (or the name of any other Favorite from your
-Session Preferences), will open that session.
+Session Preferences) in the "New Session:" section of the File
+menu, will open that session.
 
 * File >> Custom New Session... can also be used; simply ignore
 the "Connect to Server..." button, and enter command line text.
@@ -51,6 +52,17 @@ not inherit any environment variable settings from MacTelnet.
 
 bq. Most session creation commands are also available
 from the MacTelnet icon's Dock menu.
+
+h2(#workspaces). Workspaces: Starting Several Sessions
+
+Using Preferences, you can define Workspaces, which specify a set
+of sessions that should all start at the same time, in a certain
+window arrangement.
+
+Once a workspace is defined, go to the "New From Workspace:"
+section of the File menu, and use File >> Default (or the name of
+any other Favorite from your Workspace Preferences), to create
+the sessions of a workspace.
 
 h2(#restart). Replicating Windows
 

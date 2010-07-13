@@ -214,18 +214,22 @@ changes to an interface declared in a ".mm" file.
 #pragma mark Public Methods
 
 void
-	Keypads_SetArrangeWindowPanelBinding		(Preferences_Tag		inBinding);
+	Keypads_SetArrangeWindowPanelBinding		(Preferences_Tag			inWindowBindingOrZero,
+												 FourCharCode				inDataTypeForWindowBinding,
+												 Preferences_Tag			inScreenBindingOrZero = 0,
+												 FourCharCode				inDataTypeForScreenBinding = 0,
+												 Preferences_ContextRef		inContextOrNull = nullptr);
 
 Boolean
-	Keypads_IsVisible							(Keypads_WindowType		inKeypad);
+	Keypads_IsVisible							(Keypads_WindowType			inKeypad);
 
 void
-	Keypads_SetEventTarget						(Keypads_WindowType		inKeypad,
-												 EventTargetRef			inTarget);
+	Keypads_SetEventTarget						(Keypads_WindowType			inKeypad,
+												 EventTargetRef				inTarget);
 
 void
-	Keypads_SetVisible							(Keypads_WindowType		inKeypad,
-												 Boolean				inIsVisible);
+	Keypads_SetVisible							(Keypads_WindowType			inKeypad,
+												 Boolean					inIsVisible);
 
 #endif
 
