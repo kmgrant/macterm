@@ -2030,10 +2030,10 @@ addWindowMenuItemSessionOp	(SessionRef		inSession,
 		// no window yet; find a descriptive string for this session
 		// (resource location will be a remote URL or local Unix command)
 		nameCFString = Session_ReturnResourceLocationCFString(inSession);
-		if (nullptr == nameCFString)
-		{
-			nameCFString = CFSTR("<no name or URL found>"); // LOCALIZE THIS?
-		}
+	}
+	if (nullptr == nameCFString)
+	{
+		nameCFString = CFSTR("<no name or URL found>"); // LOCALIZE THIS?
 	}
 	
 	if (addWindowMenuItemForSession(inSession, menuInfoPtr, nameCFString))
