@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100713',
     '20100712',
     '20100708',
     '20100707',
@@ -313,6 +314,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100713': [
+        'Fixed Preferences window to no longer even allow name editing for Default items (since renaming will not work).',
+    ],
     '20100712': [
         'Preferences window Workspaces pane now allows you to specify that multiple sessions should start at the same time.',
         'The File menu now contains a section for opening multiple sessions, from any Workspace saved in Preferences.',

@@ -473,8 +473,23 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		switch (inPropertyID)
 		{
 		case kDataBrowserItemIsEditableProperty:
-			// TEMPORARY - the Default context should not be editable, all others are
-			result = SetDataBrowserItemDataBooleanValue(inItemData, true/* is editable */);
+			{
+				DataBrowserTableViewRowIndex	rowIndex = 0;
+				OSStatus						error = noErr;
+				
+				
+				result = SetDataBrowserItemDataBooleanValue(inItemData, true/* is editable */);
+				
+				// the Default item is in the first row and cannot be renamed
+				error = GetDataBrowserTableViewItemRow(inDataBrowser, inItemID, &rowIndex);
+				if (noErr == error)
+				{
+					if (0 == rowIndex)
+					{
+						result = SetDataBrowserItemDataBooleanValue(inItemData, false/* is editable */);
+					}
+				}
+			}
 			break;
 		
 		case kMyDataBrowserPropertyIDSets:
