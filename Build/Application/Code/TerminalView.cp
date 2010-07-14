@@ -9472,7 +9472,28 @@ returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
 				}
 				
 				// add the characters for the line...
-				CFStringAppendCharacters(resultMutable, textBegin, textPastEnd - textBegin/* number of characters */);
+				{
+					ptrdiff_t	copyLength = (textPastEnd - textBegin);
+					
+					
+					if (copyLength < 0)
+					{
+						Console_Warning(Console_WriteValue, "internal error, copy range ended up negative; proposed size", copyLength);
+						copyLength = 0;
+					}
+					else if (copyLength > 0)
+					{
+						ptrdiff_t const		kSanityCheckCopyLimit = 256; // arbitrary, but matches maximum line buffer size
+						
+						
+						if (copyLength > kSanityCheckCopyLimit)
+						{
+							Console_Warning(Console_WriteValue, "internal error, unexpectedly large line copy (truncating); proposed size", copyLength);
+							copyLength = kSanityCheckCopyLimit;
+						}
+						CFStringAppendCharacters(resultMutable, textBegin, copyLength/* number of characters */);
+					}
+				}
 				
 				// if requested, add a new-line
 				if (0 == (inFlags & kTerminalView_TextFlagInline))
