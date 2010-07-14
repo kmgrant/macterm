@@ -373,17 +373,87 @@ Clipboard_AddCFStringToPasteboard	(CFStringRef		inStringToCopy,
 	result = PasteboardClear(target);
 	if (noErr == result)
 	{
-		CFDataRef	externalRepresentation = CFStringCreateExternalRepresentation
-												(kCFAllocatorDefault, inStringToCopy, kCFStringEncodingUnicode,
-													'?'/* loss byte */);
-		
-		
-		if (nullptr == externalRepresentation) result = unicodePartConvertErr;
-		else
+		// primary Unicode storage; this should be lossless, and should
+		// succeed in order for the Copy to be considered successful
 		{
-			result = PasteboardPutItemFlavor(target, (PasteboardItemID)inStringToCopy,
-												FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"), kUTTypeUTF16ExternalPlainText),
-												externalRepresentation, kPasteboardFlavorNoFlags);
+			CFDataRef	externalRepresentation = CFStringCreateExternalRepresentation
+													(kCFAllocatorDefault, inStringToCopy, kCFStringEncodingUnicode,
+														'?'/* loss byte */);
+			
+			
+			if (nullptr == externalRepresentation)
+			{
+				result = unicodePartConvertErr;
+			}
+			else
+			{
+				result = PasteboardPutItemFlavor(target, (PasteboardItemID)inStringToCopy,
+													FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"),
+																	kUTTypeUTF16ExternalPlainText),
+													externalRepresentation, kPasteboardFlavorNoFlags);
+				CFRelease(externalRepresentation), externalRepresentation = nullptr;
+			}
+		}
+		
+		// if the copy is reasonably small, add extra versions of it, using
+		// other text formats; this helps older applications to properly
+		// Paste the selection; any errors here are not critical, and the
+		// conversions may be lossy, so "result" is not updated from now on
+		if (CFStringGetLength(inStringToCopy) < 16384/* completely arbitrary; avoid replicating “very large” selections */)
+		{
+			// UTF-8
+			{
+				CFDataRef	externalRepresentation = CFStringCreateExternalRepresentation
+														(kCFAllocatorDefault, inStringToCopy, kCFStringEncodingUTF8,
+														'?'/* loss byte */);
+				
+				
+				if (nullptr == externalRepresentation)
+				{
+					//Console_Warning(Console_WriteLine, "unable to create UTF-8 for copied text; some apps may not be able to Paste");
+				}
+				else
+				{
+					OSStatus	error = PasteboardPutItemFlavor(target, (PasteboardItemID)inStringToCopy,
+																FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"),
+																				kUTTypeUTF8PlainText),
+																externalRepresentation, kPasteboardFlavorNoFlags);
+					
+					
+					if (noErr != error)
+					{
+						//Console_Warning(Console_WriteValue, "unable to copy UTF-8 text flavor, error", error);
+					}
+					CFRelease(externalRepresentation), externalRepresentation = nullptr;
+				}
+			}
+			
+			// Mac Roman
+			{
+				CFDataRef	externalRepresentation = CFStringCreateExternalRepresentation
+														(kCFAllocatorDefault, inStringToCopy, kCFStringEncodingMacRoman,
+														'?'/* loss byte */);
+				
+				
+				if (nullptr == externalRepresentation)
+				{
+					//Console_Warning(Console_WriteLine, "unable to create Mac Roman for copied text; some apps may not be able to Paste");
+				}
+				else
+				{
+					OSStatus	error = PasteboardPutItemFlavor(target, (PasteboardItemID)inStringToCopy,
+																FUTURE_SYMBOL(CFSTR("public.plain-text"),
+																				kUTTypePlainText),
+																externalRepresentation, kPasteboardFlavorNoFlags);
+					
+					
+					if (noErr != error)
+					{
+						//Console_Warning(Console_WriteValue, "unable to copy Mac Roman text flavor, error", error);
+					}
+					CFRelease(externalRepresentation), externalRepresentation = nullptr;
+				}
+			}
 		}
 	}
 	return result;
