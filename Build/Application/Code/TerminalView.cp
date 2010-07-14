@@ -10618,20 +10618,23 @@ updateDisplayTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 		HIViewRef	currentView = ptr->contentHIView;
 		
 		
-		// no need to convert for first view, input region is assumed
-		// to already be in its coordinate system
-		(OSStatus)HIViewSetNeedsDisplayInRegion(currentView, ptr->screen.refreshRegion, true);
+		if (IsValidControlHandle(currentView))
 		{
-			My_RegionConverter	contentToPadding(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
-			
-			
-			(OSStatus)HIViewSetNeedsDisplayInRegion(contentToPadding.destination, ptr->screen.refreshRegion, true);
-			currentView = HIViewGetSuperview(currentView);
+			// no need to convert for first view, input region is assumed
+			// to already be in its coordinate system
+			(OSStatus)HIViewSetNeedsDisplayInRegion(currentView, ptr->screen.refreshRegion, true);
 			{
-				My_RegionConverter	paddingToBackground(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
+				My_RegionConverter	contentToPadding(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
 				
 				
-				(OSStatus)HIViewSetNeedsDisplayInRegion(paddingToBackground.destination, ptr->screen.refreshRegion, true);
+				(OSStatus)HIViewSetNeedsDisplayInRegion(contentToPadding.destination, ptr->screen.refreshRegion, true);
+				currentView = HIViewGetSuperview(currentView);
+				{
+					My_RegionConverter	paddingToBackground(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
+					
+					
+					(OSStatus)HIViewSetNeedsDisplayInRegion(paddingToBackground.destination, ptr->screen.refreshRegion, true);
+				}
 			}
 		}
 		SetEmptyRgn(ptr->screen.refreshRegion);

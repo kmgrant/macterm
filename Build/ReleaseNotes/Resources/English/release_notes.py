@@ -315,6 +315,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20100713': [
+        'Fixed a rare crash that could occur when terminal windows are closed.',
         'Fixed Preferences window to no longer even allow name editing for Default items (since renaming will not work).',
         'The Copy command now stores small text selections in multiple formats, to help with application interoperability.',
     ],
