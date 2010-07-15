@@ -68,6 +68,7 @@ extern "C"
 #import <ColorUtilities.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
+#import <ContextSensitiveMenu.h>
 #import <Cursors.h>
 #import <Embedding.h>
 #import <HIViewWrap.h>
@@ -91,6 +92,7 @@ extern "C"
 #import "AppResources.h"
 #import "Commands.h"
 #import "Console.h"
+#import "ContextualMenuBuilder.h"
 #import "DialogUtilities.h"
 #import "EventLoop.h"
 #import "FindDialog.h"
@@ -149,7 +151,6 @@ The following values MUST agree with the control IDs in the
 "Tab" NIB from the package "TerminalWindow.nib".
 */
 static HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
-static HIViewID const	idMyButtonNewWorkspace		= { 'TTab', 0/* ID */ };
 
 #pragma mark Types
 
@@ -174,6 +175,7 @@ struct TerminalWindow
 	
 	NSWindow*					window;						// the Cocoa window reference for the terminal window (wrapping Carbon)
 	CFRetainRelease				tab;						// the Mac OS window reference (if any) for the sister window acting as a tab
+	CarbonEventHandlerWrap*		tabContextualMenuHandlerPtr;// used to track contextual menu clicks in tabs
 	CarbonEventHandlerWrap*		tabDragHandlerPtr;			// used to track drags that enter tabs
 	WindowGroupRef				tabAndWindowGroup;			// WindowGroupRef; forces the window and its tab to move together
 	Float32						tabOffsetInPixels;			// used to position the tab drawer, if any
@@ -286,6 +288,7 @@ typedef LockAcquireRelease< TerminalWindowRef, TerminalWindow >		TerminalWindowA
 
 #pragma mark Internal Method Prototypes
 
+static void					addContextualMenuItemsForTab	(MenuRef, HIObjectRef, AEDesc&);
 static void					calculateWindowPosition			(TerminalWindowPtr, Rect*);
 static void					calculateIndexedWindowPosition	(TerminalWindowPtr, SInt16, Point*);
 static void					changeNotifyForTerminalWindow	(TerminalWindowPtr, TerminalWindow_Change, void*);
@@ -320,21 +323,22 @@ static void					handlePendingUpdates			();
 static void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
 static void					installUndoFullScreenChanges	(TerminalWindowRef, TerminalView_DisplayMode, TerminalView_DisplayMode);
 static void					installUndoScreenDimensionChanges	(TerminalWindowRef);
-static pascal OSStatus		receiveGrowBoxClick				(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveScrollBarDraw			(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveTabDragDrop				(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveToolbarEvent				(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveWindowDragCompleted		(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveWindowGetClickActivation	(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
+static OSStatus				receiveGrowBoxClick				(EventHandlerCallRef, EventRef, void*);
+static OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+static OSStatus				receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
+static OSStatus				receiveScrollBarDraw			(EventHandlerCallRef, EventRef, void*);
+static OSStatus				receiveTabContextualMenuClick	(EventHandlerCallRef, EventRef, void*);
+static OSStatus				receiveTabDragDrop				(EventHandlerCallRef, EventRef, void*);
+static OSStatus				receiveToolbarEvent				(EventHandlerCallRef, EventRef, void*);
+static OSStatus				receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
+static OSStatus				receiveWindowDragCompleted		(EventHandlerCallRef, EventRef, void*);
+static OSStatus				receiveWindowGetClickActivation	(EventHandlerCallRef, EventRef, void*);
+static OSStatus				receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
 static HIWindowRef			returnCarbonWindow				(TerminalWindowPtr);
 static void					reverseFontChanges				(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 static void					reverseFullScreenChanges		(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 static void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_ActionRef, void*);
-static pascal void			scrollProc						(HIViewRef, HIViewPartCode);
+static void					scrollProc						(HIViewRef, HIViewPartCode);
 static void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static OSStatus				setCursorInWindow				(WindowRef, Point, UInt32);
 static void					setStandardState				(TerminalWindowPtr, UInt16, UInt16, Boolean);
@@ -1893,6 +1897,7 @@ changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorTerminalWindowChanges)),
 window(createWindow()),
 tab(),
+tabContextualMenuHandlerPtr(nullptr),
 tabDragHandlerPtr(nullptr),
 tabAndWindowGroup(nullptr),
 tabOffsetInPixels(0.0),
@@ -2354,6 +2359,9 @@ TerminalWindow::
 	// show a hidden window just before it is destroyed (most importantly, notifying callbacks)
 	TerminalWindow_SetObscured(REINTERPRET_CAST(this, TerminalWindowRef), false);
 	
+	// remove any tab contextual menu handler
+	if (nullptr != tabContextualMenuHandlerPtr) delete tabContextualMenuHandlerPtr, tabContextualMenuHandlerPtr = nullptr;
+	
 	// remove any tab drag handler
 	if (nullptr != tabDragHandlerPtr) delete tabDragHandlerPtr, tabDragHandlerPtr = nullptr;
 	
@@ -2490,6 +2498,41 @@ TerminalWindow::
 		}
 	}
 }// TerminalWindow destructor
+
+
+/*!
+Adds items to the specified menu that are appropriate
+for the given terminal window tab’s main view, and
+fills in the given description of the content (for use
+by system contextual items).
+
+(4.0)
+*/
+static void
+addContextualMenuItemsForTab	(MenuRef		inMenu,
+								 HIObjectRef	UNUSED_ARGUMENT(inView),
+								 AEDesc&		UNUSED_ARGUMENT(inoutContentsDesc))
+{
+	ContextSensitiveMenu_Item	itemInfo;
+	
+	
+	// set up states for all items used below
+	// UNIMPLEMENTED
+	
+	// window-related menu items
+	ContextSensitiveMenu_NewItemGroup(inMenu);
+	
+	ContextSensitiveMenu_InitItem(&itemInfo);
+	itemInfo.commandID = kCommandTerminalNewWorkspace;
+	//if (is enabled)
+	{
+		if (UIStrings_Copy(kUIStrings_ContextualMenuMoveToNewWorkspace, itemInfo.commandText).ok())
+		{
+			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Move to New Workspace”
+			CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
+		}
+	}
+}// addContextualMenuItemsForTab
 
 
 /*!
@@ -2969,6 +3012,24 @@ createTabWindow		(TerminalWindowPtr		inPtr)
 			error = SetControlDragTrackingEnabled(contentPane, true/* is drag enabled */);
 			assert_noerr(error);
 		}
+		
+		// install a contextual menu handler
+		{
+			HIViewRef	contentPane = nullptr;
+			
+			
+			error = HIViewFindByID(HIViewGetRoot(tabWindow), kHIViewWindowContentID, &contentPane);
+			assert_noerr(error);
+			inPtr->tabContextualMenuHandlerPtr = new CarbonEventHandlerWrap(CarbonEventUtilities_ReturnViewTarget(contentPane),
+																			receiveTabContextualMenuClick,
+																			CarbonEventSetInClass
+																			(CarbonEventClass(kEventClassControl),
+																				kEventControlContextualMenuClick),
+																			inPtr->selfRef/* handler data */);
+			assert(nullptr != inPtr->tabContextualMenuHandlerPtr);
+			assert(inPtr->tabContextualMenuHandlerPtr->isInstalled());
+			assert_noerr(error);
+		}
 	}
 	
 	inPtr->tab = tabWindow;
@@ -3386,13 +3447,10 @@ handleNewDrawerWindowSize	(WindowRef		inWindowRef,
 	{
 		viewWrap = HIViewWrap(idMyLabelTabTitle, inWindowRef);
 		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0);
-		viewWrap = HIViewWrap(idMyButtonNewWorkspace, inWindowRef);
-		viewWrap << HIViewWrap_MoveBy(inDeltaX, 0);
 	}
 	else
 	{
 		viewWrap = HIViewWrap(idMyLabelTabTitle, inWindowRef);
-		viewWrap << HIViewWrap_MoveBy(inDeltaX, 0);
 		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0);
 	}
 }// handleNewDrawerWindowSize
@@ -3713,7 +3771,7 @@ for a terminal window’s grow box.
 
 (3.1)
 */
-static pascal OSStatus
+static OSStatus
 receiveGrowBoxClick		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					inTerminalWindowRef)
@@ -3785,7 +3843,7 @@ terminal window commands.
 
 (3.0)
 */
-static pascal OSStatus
+static OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inTerminalWindowRef)
@@ -4482,7 +4540,7 @@ function is used on the frontmost window.
 
 (3.1)
 */
-static pascal OSStatus
+static OSStatus
 receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inUserData))
@@ -4606,7 +4664,7 @@ then adds “on top” tick marks for any active searches.
 
 (4.0)
 */
-static pascal OSStatus
+static OSStatus
 receiveScrollBarDraw	(EventHandlerCallRef	inHandlerCallRef,
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inContext))
@@ -4748,6 +4806,52 @@ receiveScrollBarDraw	(EventHandlerCallRef	inHandlerCallRef,
 
 
 /*!
+Handles "kEventControlContextualMenuClick" for a terminal
+window tab.
+
+Invoked by Mac OS X whenever the tab is right-clicked.
+
+(4.0)
+*/
+static OSStatus
+receiveTabContextualMenuClick	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+								 EventRef				inEvent,
+								 void*					inTerminalWindowRef)
+{
+	AutoPool			_;
+	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
+	OSStatus			result = eventNotHandledErr;
+	
+	
+	assert(kEventClass == kEventClassControl);
+	assert(kEventKind == kEventControlContextualMenuClick);
+	{
+		HIViewRef	view = nullptr;
+		
+		
+		// determine the view in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
+		if (noErr == result)
+		{
+			TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+			
+			
+			// make this the current focus, so that menu commands are sent to it!
+			SetUserFocusWindow(HIViewGetWindow(view));
+			(OSStatus)DialogUtilities_SetKeyboardFocus(view);
+			
+			// display a contextual menu
+			(OSStatus)ContextualMenuBuilder_DisplayMenuForView(view, inEvent, addContextualMenuItemsForTab);
+			result = noErr; // event is completely handled
+		}
+	}
+	return result;
+}// receiveTabContextualMenuClick
+
+
+/*!
 Handles "kEventControlDragEnter" for a terminal window tab.
 
 Invoked by Mac OS X whenever the tab is involved in a
@@ -4755,7 +4859,7 @@ drag-and-drop operation.
 
 (3.1)
 */
-static pascal OSStatus
+static OSStatus
 receiveTabDragDrop	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inTerminalWindowRef)
@@ -4821,7 +4925,7 @@ updating the given lists of identifiers.
 
 (3.1)
 */
-static pascal OSStatus
+static OSStatus
 receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					inTerminalWindowRef)
@@ -5290,7 +5394,7 @@ IMPORTANT:	This is completely generic.  It should move
 
 (3.1)
 */
-static pascal OSStatus
+static OSStatus
 receiveWindowCursorChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					inWindowRef)
@@ -5365,7 +5469,7 @@ for a terminal window.
 
 (3.1)
 */
-static pascal OSStatus
+static OSStatus
 receiveWindowDragCompleted	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					inTerminalWindowRef)
@@ -5424,7 +5528,7 @@ for a terminal window.
 
 (3.1)
 */
-static pascal OSStatus
+static OSStatus
 receiveWindowGetClickActivation		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									 EventRef				inEvent,
 									 void*					inTerminalWindowRef)
@@ -5512,7 +5616,7 @@ terminal window.
 
 (3.0)
 */
-static pascal OSStatus
+static OSStatus
 receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					inTerminalWindowRef)
@@ -5896,7 +6000,7 @@ window.
 
 (2.6)
 */
-static pascal void
+static void
 scrollProc	(HIViewRef			inScrollBarClicked,
 			 HIViewPartCode		inPartCode)
 {

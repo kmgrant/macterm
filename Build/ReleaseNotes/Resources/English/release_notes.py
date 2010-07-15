@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100714',
     '20100713',
     '20100712',
     '20100708',
@@ -314,6 +315,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100714': [
+        'Terminal window tabs no longer have the up-arrow button to pop them out; instead, a contextual menu is provided.',
+    ],
     '20100713': [
         'Fixed a rare crash that could occur when terminal windows are closed.',
         'Fixed Preferences window to no longer even allow name editing for Default items (since renaming will not work).',

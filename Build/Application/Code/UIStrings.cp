@@ -671,6 +671,11 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 													CFSTR("kUIStrings_ContextualMenuHideThisWindow"));
 		break;
 	
+	case kUIStrings_ContextualMenuMoveToNewWorkspace:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Move to New Workspace"), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuMoveToNewWorkspace"));
+		break;
+	
 	case kUIStrings_ContextualMenuOpenThisResource:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Open URL"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuOpenThisResource"));

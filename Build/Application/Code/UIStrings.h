@@ -210,6 +210,7 @@ enum UIStrings_ContextualMenuCFString
 	kUIStrings_ContextualMenuFindInThisWindow			= 'Find',
 	kUIStrings_ContextualMenuFixCharacterTranslation	= 'FixT',
 	kUIStrings_ContextualMenuHideThisWindow				= 'Hide',
+	kUIStrings_ContextualMenuMoveToNewWorkspace			= 'MTab',
 	kUIStrings_ContextualMenuOpenThisResource			= 'OURL',
 	kUIStrings_ContextualMenuPrintSelectedText			= 'PrSl',
 	kUIStrings_ContextualMenuPasteText					= 'Pste',
