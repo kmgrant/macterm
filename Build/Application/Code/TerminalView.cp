@@ -6960,8 +6960,12 @@ highlightVirtualRange	(My_TerminalViewPtr				inTerminalViewPtr,
 								(inTerminalViewPtr->screen.ref, lineIterator, kNumberOfRows,
 									orderedRange.first.first, orderedRange.second.first,
 									inTerminalViewPtr->text.selection.isRectangular,
-									(inIsHighlighted) ? inHighlightingStyle : kNoTerminalTextAttributes/* attributes to set */,
-									(inIsHighlighted) ? kNoTerminalTextAttributes : inHighlightingStyle/* attributes to clear */);
+									(inIsHighlighted)
+										? inHighlightingStyle
+										: STATIC_CAST(kNoTerminalTextAttributes, TerminalTextAttributes)/* attributes to set */,
+									(inIsHighlighted)
+										? STATIC_CAST(kNoTerminalTextAttributes, TerminalTextAttributes)
+										: inHighlightingStyle/* attributes to clear */);
 			releaseRowIterator(inTerminalViewPtr, &lineIterator);
 		}
 	}

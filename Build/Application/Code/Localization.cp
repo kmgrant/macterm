@@ -1372,7 +1372,7 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 	error = noErr;
 	if (haveAppearance1_1)
 	{
-		error = GetThemeFont((inThemeFontToUse != USHRT_MAX) ? inThemeFontToUse : kThemeSystemFont,
+		error = GetThemeFont((inThemeFontToUse != USHRT_MAX) ? inThemeFontToUse : STATIC_CAST(kThemeSystemFont, ThemeFontID),
 								GetScriptManagerVariable(smSysScript)/* script code */,
 								outFontName, outFontSizePtr, outFontStylePtr);
 	}
