@@ -179,8 +179,10 @@ table(deftable).
 (defbottom). |(desc)\2. The running process is instructed not to echo data coming from text input.|
 (deftop). |(key). @data-send-paste-block-size-bytes@|(types). _integer_|
 (defbottom). |(desc)\2. "Large" pastes in throttled mode are split into chunks no larger than this number of bytes.|
-(deftop). |(key). @data-send-paste-method@|(types). _string_: @normal@ or @throttled@| 
+(deftop). |(key). @data-send-paste-method@|(types). _string_: @normal@ or @throttled@|
 (defbottom). |(desc)\2. Pastes are sent to the session all at once or split into chunks.|
+(deftop). |(key). @data-send-paste-no-warning@|(types). _true or false_|
+(defbottom). |(desc)\2. Prevents the multi-line Paste warning from appearing, and does not join pasted lines together.|
 (deftop). |(key). @format-favorite@|(types). _string_|
 (defbottom). |(desc)\2. This Format collection is used by default when the session starts.|
 (deftop). |(key). @key-map-delete@|(types). _string_: @backspace@ or @delete@| 

@@ -77,6 +77,19 @@ h5(#nodim). Don't dim background terminal text
 To help emphasize the active terminal, MacTelnet alters the color
 hues of background windows.  Use this option to quell recoloring.
 
+h5(#nodim). Don't warn about multi-line Paste
+
+Immediately dumps text into a terminal on Paste, instead of
+displaying a "Join" option when the text spans multiple lines.
+
+Note that even if the warning appears, a "Paste Normally" option
+is always provided.
+
+A number of programs, like Unix shells, will perform actions when
+they see new-line characters.  If you use these kinds of programs
+frequently in a session, then disabling the Paste warning is not
+recommended.
+
 h4. Keyboard
 
 h5(#mapbackquote). Treat backquote key like Escape

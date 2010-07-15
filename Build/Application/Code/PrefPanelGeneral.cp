@@ -100,14 +100,13 @@ the NIBs from the package "PrefPanels.nib".
 In addition, they MUST be unique across all panels.
 */
 static HIViewID const	idMyCheckBoxDoNotAutoClose					= { 'DACW', 0/* ID */ };
-static HIViewID const	idMyCheckBoxDoNotDimInactive				= { 'DDBW', 0/* ID */ };
-static HIViewID const	idMyCheckBoxMacrosMenuVisible				= { 'McMn', 0/* ID */ };
+static HIViewID const	idMyCheckBoxDoNotAutoCreateWindows			= { 'DCNW', 0/* ID */ };
 static HIViewID const	idMyCheckBoxInvertSelectedText				= { 'ISel', 0/* ID */ };
 static HIViewID const	idMyCheckBoxAutoCopySelectedText			= { 'ACST', 0/* ID */ };
 static HIViewID const	idMyCheckBoxMoveCursorToDropArea			= { 'MCTD', 0/* ID */ };
-static HIViewID const	idMyCheckBoxMenuKeyEquivalents				= { 'MIKE', 0/* ID */ };
+static HIViewID const	idMyCheckBoxDoNotDimInactive				= { 'DDBW', 0/* ID */ };
+static HIViewID const	idMyCheckBoxDoNotWarnOnPaste				= { 'NPWR', 0/* ID */ };
 static HIViewID const	idMyCheckBoxMapBackquoteToEscape			= { 'MBQE', 0/* ID */ };
-static HIViewID const	idMyCheckBoxDoNotAutoCreateWindows			= { 'DCNW', 0/* ID */ };
 static HIViewID const	idMyCheckBoxFocusFollowsMouse				= { 'FcFM', 0/* ID */ };
 static HIViewID const	idMyLabelTerminalCursor						= { 'LCrs', 0/* ID */ };
 static HIViewID const	idMyCheckBoxCursorFlashing					= { 'CurF', 0/* ID */ };
@@ -987,6 +986,18 @@ const
 		
 		assert(checkBox.exists());
 		unless (Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops, sizeof(flag), &flag,
+									&actualSize) == kPreferences_ResultOK)
+		{
+			flag = false; // assume a value, if preference can’t be found
+		}
+		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
+	}
+	{
+		HIViewWrap		checkBox(idMyCheckBoxDoNotWarnOnPaste, inOwningWindow);
+		
+		
+		assert(checkBox.exists());
+		unless (Preferences_GetData(kPreferences_TagNoPasteWarning, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
 			flag = false; // assume a value, if preference can’t be found
@@ -1935,6 +1946,12 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 			else if (HIViewIDWrap(idMyCheckBoxMoveCursorToDropArea) == viewID)
 			{
 				Preferences_SetData(kPreferences_TagCursorMovesPriorToDrops,
+									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
+				result = true;
+			}
+			else if (HIViewIDWrap(idMyCheckBoxDoNotWarnOnPaste) == viewID)
+			{
+				Preferences_SetData(kPreferences_TagNoPasteWarning,
 									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
 				result = true;
 			}

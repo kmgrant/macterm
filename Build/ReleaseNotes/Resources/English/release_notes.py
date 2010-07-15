@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100715',
     '20100714',
     '20100713',
     '20100712',
@@ -315,6 +316,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100715': [
+        'Preferences window General pane Options tab has a new setting to disable the multi-line Paste warning (Trac #38).',
+    ],
     '20100714': [
         'Fixed some of the contextual menu items displayed in terminal windows.',
         'Terminal window tabs no longer have the up-arrow button to pop them out; instead, a contextual menu is provided (Trac #37).',

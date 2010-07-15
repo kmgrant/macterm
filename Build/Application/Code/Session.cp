@@ -4084,10 +4084,20 @@ Session_UserInputPaste	(SessionRef			inRef,
 	if (Clipboard_CreateCFStringFromPasteboard(pastedCFString, pastedDataUTI, kPasteboard))
 	{
 		// examine the Clipboard; if the data contains new-lines, warn the user
-		Boolean		displayWarning = false;
+		Boolean		isOneLine = false;
+		Boolean		noWarning = false;
+		size_t		actualSize = 0;
 		
 		
 		pasteAlertInfoPtr->sourcePasteboard = kPasteboard;
+		
+		// determine if the user should be warned
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNoPasteWarning,
+									sizeof(noWarning), &noWarning, &actualSize))
+		{
+			noWarning = false; // assume a value, if preference can’t be found
+		}
 		
 		// determine if this is a multi-line paste
 		{
@@ -4102,7 +4112,7 @@ Session_UserInputPaste	(SessionRef			inRef,
 				bufferPtr = allocatedBuffer;
 				CFStringGetCharacters(pastedCFString, CFRangeMake(0, kBufferLength), allocatedBuffer);
 			}
-			displayWarning = (false == Clipboard_IsOneLineInBuffer(bufferPtr, kBufferLength));
+			isOneLine = Clipboard_IsOneLineInBuffer(bufferPtr, kBufferLength);
 			if (nullptr != allocatedBuffer) delete [] allocatedBuffer, allocatedBuffer = nullptr;
 		}
 		
@@ -4111,10 +4121,16 @@ Session_UserInputPaste	(SessionRef			inRef,
 			AlertMessages_BoxRef	box = Alert_New();
 			
 			
-			if (false == displayWarning)
+			if (isOneLine)
 			{
-				// the Clipboard contains only one line of text, so do not warn first
+				// the Clipboard contains only one line of text; Paste immediately without warning
 				pasteWarningCloseNotifyProc(box, kAlertStdAlertOKButton, pasteAlertInfoPtr/* user data */);
+			}
+			else if (noWarning)
+			{
+				// the Clipboard contains more than one line, and the user does not want to be warned;
+				// proceed with the Paste, but do it without joining (“other button” option)
+				pasteWarningCloseNotifyProc(box, kAlertStdAlertOtherButton, pasteAlertInfoPtr/* user data */);
 			}
 			else
 			{

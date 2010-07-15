@@ -1064,6 +1064,8 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagNewCommandShortcutEffect,
 									CFSTR("new-means"), typeCFStringRef/* "shell", "dialog", "default" */,
 									sizeof(UInt32), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::createFlag(kPreferences_TagNoPasteWarning,
+										CFSTR("data-send-paste-no-warning"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagNotification,
 									CFSTR("when-alert-in-background"), typeCFStringRef/* "alert", "animate", "badge", "ignore" */,
 									sizeof(SInt16), Quills::Prefs::GENERAL);
@@ -6761,6 +6763,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagLineModeEnabled:
 				case kPreferences_TagLocalEchoEnabled:
 				case kPreferences_TagLocalEchoHalfDuplex:
+				case kPreferences_TagNoPasteWarning:
 				case kPreferences_TagTektronixPAGEClearsScreen:
 					// all of these keys have Core Foundation Boolean values
 					{
@@ -9022,6 +9025,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagLineModeEnabled:
 			case kPreferences_TagLocalEchoEnabled:
 			case kPreferences_TagLocalEchoHalfDuplex:
+			case kPreferences_TagNoPasteWarning:
 			case kPreferences_TagTektronixPAGEClearsScreen:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));

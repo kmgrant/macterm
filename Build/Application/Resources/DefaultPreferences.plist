@@ -74,6 +74,8 @@
 	<integer>128</integer>
 	<key>data-send-paste-method</key>
 	<string>throttled</string>
+	<key>data-send-paste-no-warning</key>
+	<false/>
 	<key>favorite-formats</key>
 	<array/>
 	<key>favorite-macro-sets</key>
