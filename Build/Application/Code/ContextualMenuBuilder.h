@@ -1,17 +1,11 @@
 /*!	\file ContextualMenuBuilder.h
 	\brief Configuration and display of context-sensitive
 	pop-up menus.
-	
-	Currently, this module handles all contextual menus,
-	but ideally some of this behavior would eventually be
-	handled within more appropriate modules (the Terminal
-	Window module might handle terminal window menus, for
-	example).
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -48,29 +42,38 @@
 
 
 
+#pragma mark Callbacks
+
+/*!
+Contextual Menu Add-Items Methods
+
+Most of the mundane details of constructing and displaying
+a contextual menu can be handled by one of the routines
+below, such as ContextualMenuBuilder_DisplayMenuForView().
+However, this callback allows you to delegate responsibility
+for determining which items belong in the menu.  The callback
+should use helpers like ContextSensitiveMenu_NewItemGroup()
+and ContextSensitiveMenu_AddItem() as needed to make this an
+easy task.
+*/
+typedef void (*ContextualMenuBuilder_AddItemsProcPtr)	(MenuRef		inoutMenu,
+														 HIObjectRef	inTargetViewOrWindow,
+														 AEDesc&		inoutContentsDesc);
+
+
+
 #pragma mark Public Methods
 
 OSStatus
 	ContextualMenuBuilder_DisplayMenuForView	(HIViewRef			inWhichView,
-												 EventRef			inContextualMenuClickEvent);
+												 EventRef			inContextualMenuClickEvent,
+												 ContextualMenuBuilder_AddItemsProcPtr	inItemAdderOrNull = nullptr);
 
 OSStatus
 	ContextualMenuBuilder_DisplayMenuForWindow	(HIWindowRef		inWhichWindow,
 												 EventRecord*		inoutEventPtr,
-												 WindowPartCode		inWindowPart);
-
-OSStatus
-	ContextualMenuBuilder_PopulateMenuForView	(HIViewRef			inWhichView,
-												 EventRef			inContextualMenuClickEvent,
-												 MenuRef			inoutMenu,
-												 AEDesc&			inoutViewContentsDesc);
-
-OSStatus
-	ContextualMenuBuilder_PopulateMenuForWindow	(HIWindowRef		inWhichWindow,
-												 EventRecord*		inoutEventPtrOrNull,
 												 WindowPartCode		inWindowPart,
-												 MenuRef			inoutMenu,
-												 AEDesc&			inoutWindowContentsDesc);
+												 ContextualMenuBuilder_AddItemsProcPtr	inItemAdderOrNull = nullptr);
 
 UInt32
 	ContextualMenuBuilder_ReturnMenuHelpType	();

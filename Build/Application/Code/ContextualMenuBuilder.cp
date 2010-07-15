@@ -35,7 +35,7 @@
 	  menu to the user!
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -93,20 +93,26 @@
 
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	UInt32	gHelpType = kCMHelpItemNoHelp;	//!< this could change depending on available system libraries at runtime
-}
+UInt32	gHelpType = kCMHelpItemNoHelp;	//!< this could change depending on available system libraries at runtime
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static void buildAboutBoxContextualMenu				(MenuRef, HIWindowRef);
-static void buildClipboardWindowContextualMenu		(MenuRef, HIWindowRef);
-static void buildEmptyContextualMenu				(MenuRef, HIWindowRef);
-static void buildSessionStatusWindowContextualMenu	(MenuRef, HIWindowRef);
-static void buildTerminalBackgroundContextualMenu	(MenuRef, HIViewRef);
-static void buildTerminalWindowContextualMenu		(MenuRef, HIWindowRef);
+void		buildAboutBoxContextualMenu				(MenuRef, HIWindowRef);
+void		buildClipboardWindowContextualMenu		(MenuRef, HIWindowRef);
+void		buildEmptyContextualMenu				(MenuRef, HIWindowRef);
+void		buildSessionStatusWindowContextualMenu	(MenuRef, HIWindowRef);
+void		buildTerminalBackgroundContextualMenu	(MenuRef, HIViewRef);
+void		buildTerminalWindowContextualMenu		(MenuRef, HIWindowRef);
+OSStatus	populateMenuForView						(HIViewRef, MenuRef, ContextualMenuBuilder_AddItemsProcPtr, AEDesc&);
+OSStatus	populateMenuForWindow					(HIWindowRef, WindowPartCode, MenuRef,
+													 ContextualMenuBuilder_AddItemsProcPtr, AEDesc&);
+
+} // anonymous namespace
 
 
 
@@ -124,8 +130,9 @@ ContextualMenuBuilder_DisplayMenuForWindow().
 (3.1)
 */
 OSStatus
-ContextualMenuBuilder_DisplayMenuForView	(HIViewRef		inWhichView,
-											 EventRef		inContextualMenuClickEvent)
+ContextualMenuBuilder_DisplayMenuForView	(HIViewRef								inWhichView,
+											 EventRef								inContextualMenuClickEvent,
+											 ContextualMenuBuilder_AddItemsProcPtr	inItemAdderOrNull)
 {
 	MenuRef					menu = nullptr;
 	HelpSystem_KeyPhrase	keyPhrase = kHelpSystem_KeyPhraseDefault; // determines the Help menu item text and the search string
@@ -157,8 +164,7 @@ ContextualMenuBuilder_DisplayMenuForView	(HIViewRef		inWhichView,
 		
 		
 		// add appropriate items
-		error = ContextualMenuBuilder_PopulateMenuForView(inWhichView, inContextualMenuClickEvent,
-															menu, contentsDesc);
+		error = populateMenuForView(inWhichView, menu, inItemAdderOrNull, contentsDesc);
 		
 		// now that all items have been added, notify the Contextual Menu modules to clean up
 		ContextSensitiveMenu_DoneAddingItems(menu);
@@ -278,9 +284,10 @@ know what part of the window was hit.
 (3.1)
 */
 OSStatus
-ContextualMenuBuilder_DisplayMenuForWindow	(HIWindowRef		inWhichWindow,
-											 EventRecord*		inoutEventPtr,
-											 WindowPartCode		inWindowPart)
+ContextualMenuBuilder_DisplayMenuForWindow	(HIWindowRef							inWhichWindow,
+											 EventRecord*							inoutEventPtr,
+											 WindowPartCode							inWindowPart,
+											 ContextualMenuBuilder_AddItemsProcPtr	inItemAdderOrNull)
 {
 	MenuRef					menu = nullptr;
 	HelpSystem_KeyPhrase	keyPhrase = kHelpSystem_KeyPhraseDefault; // determines the Help menu item text and the search string
@@ -329,8 +336,7 @@ ContextualMenuBuilder_DisplayMenuForWindow	(HIWindowRef		inWhichWindow,
 		}
 		
 		// add appropriate items
-		error = ContextualMenuBuilder_PopulateMenuForWindow(inWhichWindow, inoutEventPtr,
-															inWindowPart, menu, contentsDesc);
+		error = populateMenuForWindow(inWhichWindow, inWindowPart, menu, inItemAdderOrNull, contentsDesc);
 		
 		// now that all items have been added, notify the Contextual Menu modules to clean up
 		ContextSensitiveMenu_DoneAddingItems(menu);
@@ -411,239 +417,6 @@ ContextualMenuBuilder_DisplayMenuForWindow	(HIWindowRef		inWhichWindow,
 
 
 /*!
-Appends contextual items to a menu that are appropriate
-for the specified view and event (mouse location, modifier
-keys, etc.).
-
-A descriptor for the contents of the specified view may
-also be constructed; you can use this (for instance) to
-tell the Contextual Menu Manager what is in the view so
-that appropriate plug-ins can add their own items.  You
-must call AEDisposeDesc() on this result.
-
-Most views do not allow contextual menus, and what you
-really need is a menu for the entire window; see
-ContextualMenuBuilder_PopulateMenuForWindow().
-
-(3.1)
-*/
-OSStatus
-ContextualMenuBuilder_PopulateMenuForView	(HIViewRef		inWhichView,
-											 EventRef		inContextualMenuClickEvent,
-											 MenuRef		inoutMenu,
-											 AEDesc&		inoutViewContentsDesc)
-{
-	Boolean		failed = false;
-	OSStatus	result = noErr;
-	
-	
-	result = AppleEventUtilities_InitAEDesc(&inoutViewContentsDesc);
-	assert_noerr(result);
-	
-	if (nullptr != inoutMenu)
-	{
-		// determine what should go in the menu
-		if (HIObjectIsOfClass(REINTERPRET_CAST(inWhichView, HIObjectRef),
-								kConstantsRegistry_HIObjectClassIDTerminalBackgroundView))
-		{
-			// create an AEDesc describing the color
-			// UNIMPLEMENTED
-			//(OSStatus)BasicTypesAE_CreateRGBColorDesc(color, &inoutViewContentsDesc);
-			
-			// click in the background of a terminal view
-			buildTerminalBackgroundContextualMenu(inoutMenu, inWhichView);
-		}
-		else
-		{
-			failed = true;
-		}
-		
-		unless (failed)
-		{
-			// Depending upon the view type, there may be data that can be used by contextual
-			// menu plug-ins.  The method of getting that data also depends on the view type.
-			// See what kind of view the contextual-menu-display event was for, and send that
-			// view’s data (usually the current selection) to the plug-ins via a new Apple
-			// Event descriptor.
-			// UNIMPLEMENTED
-			
-			// now that all items have been added, notify the Contextual Menu modules to clean up
-			ContextSensitiveMenu_DoneAddingItems(inoutMenu);
-		}
-	}
-	
-	return result;
-}// PopulateMenuForView
-
-
-/*!
-Appends contextual items to a menu that are appropriate
-for the specified window.  If you want the menu to also
-be appropriate for a specific event (mouse location,
-modifier keys, window part), provide those parameters.
-
-A descriptor for the contents of the specified window
-may also be constructed; you can use this (for instance)
-to tell the Contextual Menu Manager what is in the window
-so that appropriate plug-ins can add their own items.
-You must call AEDisposeDesc() on this result.
-
-Sometimes, a contextual menu is constructed that will
-not pop up at the user focus.  For this case, you can
-pass nullptr for the event record and "inNoWindow" for
-the window part; the contents of the menu will be found
-based solely on the active window and any selection in
-that window; the mouse location and state of modifier
-keys will be ignored.
-
-(3.0)
-*/
-OSStatus
-ContextualMenuBuilder_PopulateMenuForWindow		(HIWindowRef		inWhichWindow,
-												 EventRecord*		inoutEventPtrOrNull,
-												 WindowPartCode		inWindowPart,
-												 MenuRef			inoutMenu,
-												 AEDesc&			inoutWindowContentsDesc)
-{
-	WindowInfo_Ref			windowFeaturesRef = nullptr;
-	WindowInfo_Descriptor	windowDescriptor = kWindowInfo_InvalidDescriptor;
-	HelpSystem_KeyPhrase	keyPhrase = kHelpSystem_KeyPhraseDefault; // determines the Help menu item text and the search string
-	Boolean					failed = false;
-	Boolean					isConnectionWindow = false;
-	OSStatus				result = noErr;
-	
-	
-	result = AppleEventUtilities_InitAEDesc(&inoutWindowContentsDesc);
-	assert_noerr(result);
-	
-	windowFeaturesRef = WindowInfo_ReturnFromWindow(inWhichWindow);
-	if (nullptr != windowFeaturesRef) windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowFeaturesRef);
-	isConnectionWindow = TerminalWindow_ExistsFor(inWhichWindow);
-	
-	if (nullptr != inoutMenu)
-	{
-		// determine what should go in the menu
-		switch (inWindowPart)
-		{
-		//case inSysWindow:
-		case inStructure:
-		case inContent:
-		case inDrag:
-		case inGrow:
-		case inGoAway:
-		case inZoomIn:
-		case inZoomOut:
-		case inCollapseBox:
-		case inProxyIcon:
-		case inToolbarButton:
-		case inNoWindow:
-			switch (windowDescriptor)
-			{
-			case kConstantsRegistry_WindowDescriptorClipboard:
-				buildClipboardWindowContextualMenu(inoutMenu, inWhichWindow);
-				keyPhrase = kHelpSystem_KeyPhraseDefault;
-				break;
-			
-			case kConstantsRegistry_WindowDescriptorCommandLine:
-				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
-				keyPhrase = kHelpSystem_KeyPhraseCommandLine;
-				break;
-			
-			case kConstantsRegistry_WindowDescriptorConnectionStatus:
-				buildSessionStatusWindowContextualMenu(inoutMenu, inWhichWindow);
-				keyPhrase = kHelpSystem_KeyPhraseDefault;
-				break;
-			
-			case kConstantsRegistry_WindowDescriptorFind:
-				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
-				keyPhrase = kHelpSystem_KeyPhraseFind;
-				break;
-			
-			case kConstantsRegistry_WindowDescriptorFormat:
-				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
-				keyPhrase = kHelpSystem_KeyPhraseFormatting;
-				break;
-			
-			case kConstantsRegistry_WindowDescriptorPreferences:
-				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
-				keyPhrase = kHelpSystem_KeyPhrasePreferences;
-				break;
-			
-			case kConstantsRegistry_WindowDescriptorScreenSize:
-				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
-				keyPhrase = kHelpSystem_KeyPhraseScreenSize;
-				break;
-			
-			case kConstantsRegistry_WindowDescriptorStandardAboutBox:
-				buildAboutBoxContextualMenu(inoutMenu, inWhichWindow);
-				keyPhrase = kHelpSystem_KeyPhraseDefault;
-				break;
-			
-			default:
-				if (isConnectionWindow)
-				{
-					buildTerminalWindowContextualMenu(inoutMenu, inWhichWindow);
-					keyPhrase = kHelpSystem_KeyPhraseTerminals;
-				}
-				else
-				{
-					buildEmptyContextualMenu(inoutMenu, inWhichWindow);
-					keyPhrase = kHelpSystem_KeyPhraseDefault;
-				}
-				break;
-			}
-			break;
-		
-		default:
-			failed = true;
-			break;
-		}
-		
-		unless (failed)
-		{
-			// Depending upon the window type, there may be data that can be used by contextual
-			// menu plug-ins.  The method of getting that data also depends on the window type.
-			// See what kind of window the contextual-menu-display event was for, and send that
-			// window’s data (usually the current selection) to the plug-ins via a new Apple
-			// Event descriptor.
-			if (isConnectionWindow)
-			{
-				// Let the Contextual Menu Manager know what data is selected in the
-				// frontmost window, so that Contextual Menu Plug-Ins can parse it.
-				TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(inWhichWindow);
-				TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-				
-				
-				if (TerminalView_TextSelectionExists(view))
-				{
-					Handle		handle = nullptr;
-					
-					
-					handle = TerminalView_ReturnSelectedTextAsNewHandle(view, 0/* tab info */, 0/* flags */);
-					if (nullptr != handle)
-					{
-						(OSStatus)AECreateDesc(typeChar, *handle, GetHandleSize(handle), &inoutWindowContentsDesc);
-						Memory_DisposeHandle(&handle);
-					}
-				}
-			}
-			else if (kConstantsRegistry_WindowDescriptorClipboard == windowDescriptor)
-			{
-				// Let the Contextual Menu Manager know what data is on the clipboard,
-				// so that any installed Contextual Menu Plug-Ins can parse it.
-				(OSStatus)Clipboard_CreateContentsAEDesc(&inoutWindowContentsDesc);
-			}
-			
-			// now that all items have been added, notify the Contextual Menu modules to clean up
-			ContextSensitiveMenu_DoneAddingItems(inoutMenu);
-		}
-	}
-	
-	return result;
-}// PopulateMenuForWindow
-
-
-/*!
 Determines the kind of help item that will be
 available in displayed contextual menus.  You
 can specify this information using
@@ -674,6 +447,7 @@ ContextualMenuBuilder_SetMenuHelpType	(UInt32		inNewHelpType)
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 This routine will look at the frontmost window as being
@@ -683,7 +457,7 @@ Window Info associated with it (see "WindowInfo.cp").
 
 (3.0)
 */
-static void
+void
 buildAboutBoxContextualMenu		(MenuRef		inMenu,
 								 WindowRef		UNUSED_ARGUMENT(inWhichWindow))
 {
@@ -717,7 +491,7 @@ Window Info associated with it (see "WindowInfo.cp").
 
 (3.0)
 */
-static void
+void
 buildClipboardWindowContextualMenu	(MenuRef		inMenu,
 									 WindowRef		UNUSED_ARGUMENT(inWhichWindow))
 {
@@ -766,7 +540,7 @@ Window Info associated with it (see "WindowInfo.cp").
 
 (3.0)
 */
-static void
+void
 buildEmptyContextualMenu	(MenuRef		UNUSED_ARGUMENT(inMenu),
 							 WindowRef		UNUSED_ARGUMENT(inWhichWindow))
 {
@@ -786,7 +560,7 @@ Window Info associated with it (see "WindowInfo.cp").
 
 (3.0)
 */
-static void
+void
 buildSessionStatusWindowContextualMenu	(MenuRef		inMenu,
 										 WindowRef		UNUSED_ARGUMENT(inWhichWindow))
 {
@@ -819,7 +593,7 @@ menu appropriate for it.
 
 (3.1)
 */
-static void
+void
 buildTerminalBackgroundContextualMenu	(MenuRef		inMenu,
 										 HIViewRef		UNUSED_ARGUMENT(inWhichView))
 {
@@ -859,7 +633,7 @@ are available if applicable.
 
 (3.0)
 */
-static void
+void
 buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 									 WindowRef		inWhichWindow)
 {
@@ -1086,5 +860,252 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		}
 	}
 }// buildTerminalWindowContextualMenu
+
+
+/*!
+Appends contextual items to a menu that are appropriate
+for the specified view and event (mouse location, modifier
+keys, etc.).
+
+A descriptor for the contents of the specified view may
+also be constructed; you can use this (for instance) to
+tell the Contextual Menu Manager what is in the view so
+that appropriate plug-ins can add their own items.  You
+must call AEDisposeDesc() on this result.
+
+Most views do not allow contextual menus, and what you
+really need is a menu for the entire window; see
+populateMenuForWindow().
+
+(3.1)
+*/
+OSStatus
+populateMenuForView		(HIViewRef								inWhichView,
+						 MenuRef								inoutMenu,
+						 ContextualMenuBuilder_AddItemsProcPtr	inItemAdderOrNull,
+						 AEDesc&								inoutViewContentsDesc)
+{
+	Boolean		failed = false;
+	OSStatus	result = noErr;
+	
+	
+	result = AppleEventUtilities_InitAEDesc(&inoutViewContentsDesc);
+	assert_noerr(result);
+	
+	if (nullptr != inoutMenu)
+	{
+		// if there is a callback, invoke it
+		if (nullptr != inItemAdderOrNull)
+		{
+			(*inItemAdderOrNull)(inoutMenu, REINTERPRET_CAST(inWhichView, HIObjectRef), inoutViewContentsDesc);
+		}
+		
+		// determine what else should go in the menu
+		if (HIObjectIsOfClass(REINTERPRET_CAST(inWhichView, HIObjectRef),
+								kConstantsRegistry_HIObjectClassIDTerminalBackgroundView))
+		{
+			// create an AEDesc describing the color
+			// UNIMPLEMENTED
+			//(OSStatus)BasicTypesAE_CreateRGBColorDesc(color, &inoutViewContentsDesc);
+			
+			// click in the background of a terminal view
+			buildTerminalBackgroundContextualMenu(inoutMenu, inWhichView);
+		}
+		else
+		{
+			failed = true;
+		}
+		
+		unless (failed)
+		{
+			// Depending upon the view type, there may be data that can be used by contextual
+			// menu plug-ins.  The method of getting that data also depends on the view type.
+			// See what kind of view the contextual-menu-display event was for, and send that
+			// view’s data (usually the current selection) to the plug-ins via a new Apple
+			// Event descriptor.
+			// UNIMPLEMENTED
+			
+			// now that all items have been added, notify the Contextual Menu modules to clean up
+			ContextSensitiveMenu_DoneAddingItems(inoutMenu);
+		}
+	}
+	
+	return result;
+}// populateMenuForView
+
+
+/*!
+Appends contextual items to a menu that are appropriate
+for the specified window.  If you want the menu to also
+be appropriate for a specific event (mouse location,
+modifier keys, window part), provide those parameters.
+
+A descriptor for the contents of the specified window
+may also be constructed; you can use this (for instance)
+to tell the Contextual Menu Manager what is in the window
+so that appropriate plug-ins can add their own items.
+You must call AEDisposeDesc() on this result.
+
+Sometimes, a contextual menu is constructed that will
+not pop up at the user focus.  For this case, you can
+pass nullptr for the event record and "inNoWindow" for
+the window part; the contents of the menu will be found
+based solely on the active window and any selection in
+that window; the mouse location and state of modifier
+keys will be ignored.
+
+(3.0)
+*/
+OSStatus
+populateMenuForWindow	(HIWindowRef							inWhichWindow,
+						 WindowPartCode							inWindowPart,
+						 MenuRef								inoutMenu,
+						 ContextualMenuBuilder_AddItemsProcPtr	inItemAdderOrNull,
+						 AEDesc&								inoutWindowContentsDesc)
+{
+	WindowInfo_Ref			windowFeaturesRef = nullptr;
+	WindowInfo_Descriptor	windowDescriptor = kWindowInfo_InvalidDescriptor;
+	HelpSystem_KeyPhrase	keyPhrase = kHelpSystem_KeyPhraseDefault; // determines the Help menu item text and the search string
+	Boolean					failed = false;
+	Boolean					isConnectionWindow = false;
+	OSStatus				result = noErr;
+	
+	
+	result = AppleEventUtilities_InitAEDesc(&inoutWindowContentsDesc);
+	assert_noerr(result);
+	
+	windowFeaturesRef = WindowInfo_ReturnFromWindow(inWhichWindow);
+	if (nullptr != windowFeaturesRef) windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowFeaturesRef);
+	isConnectionWindow = TerminalWindow_ExistsFor(inWhichWindow);
+	
+	if (nullptr != inoutMenu)
+	{
+		// if there is a callback, invoke it
+		if (nullptr != inItemAdderOrNull)
+		{
+			(*inItemAdderOrNull)(inoutMenu, REINTERPRET_CAST(inWhichWindow, HIObjectRef), inoutWindowContentsDesc);
+		}
+		
+		// determine what else should go in the menu
+		switch (inWindowPart)
+		{
+		//case inSysWindow:
+		case inStructure:
+		case inContent:
+		case inDrag:
+		case inGrow:
+		case inGoAway:
+		case inZoomIn:
+		case inZoomOut:
+		case inCollapseBox:
+		case inProxyIcon:
+		case inToolbarButton:
+		case inNoWindow:
+			switch (windowDescriptor)
+			{
+			case kConstantsRegistry_WindowDescriptorClipboard:
+				buildClipboardWindowContextualMenu(inoutMenu, inWhichWindow);
+				keyPhrase = kHelpSystem_KeyPhraseDefault;
+				break;
+			
+			case kConstantsRegistry_WindowDescriptorCommandLine:
+				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
+				keyPhrase = kHelpSystem_KeyPhraseCommandLine;
+				break;
+			
+			case kConstantsRegistry_WindowDescriptorConnectionStatus:
+				buildSessionStatusWindowContextualMenu(inoutMenu, inWhichWindow);
+				keyPhrase = kHelpSystem_KeyPhraseDefault;
+				break;
+			
+			case kConstantsRegistry_WindowDescriptorFind:
+				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
+				keyPhrase = kHelpSystem_KeyPhraseFind;
+				break;
+			
+			case kConstantsRegistry_WindowDescriptorFormat:
+				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
+				keyPhrase = kHelpSystem_KeyPhraseFormatting;
+				break;
+			
+			case kConstantsRegistry_WindowDescriptorPreferences:
+				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
+				keyPhrase = kHelpSystem_KeyPhrasePreferences;
+				break;
+			
+			case kConstantsRegistry_WindowDescriptorScreenSize:
+				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
+				keyPhrase = kHelpSystem_KeyPhraseScreenSize;
+				break;
+			
+			case kConstantsRegistry_WindowDescriptorStandardAboutBox:
+				buildAboutBoxContextualMenu(inoutMenu, inWhichWindow);
+				keyPhrase = kHelpSystem_KeyPhraseDefault;
+				break;
+			
+			default:
+				if (isConnectionWindow)
+				{
+					buildTerminalWindowContextualMenu(inoutMenu, inWhichWindow);
+					keyPhrase = kHelpSystem_KeyPhraseTerminals;
+				}
+				else
+				{
+					buildEmptyContextualMenu(inoutMenu, inWhichWindow);
+					keyPhrase = kHelpSystem_KeyPhraseDefault;
+				}
+				break;
+			}
+			break;
+		
+		default:
+			failed = true;
+			break;
+		}
+		
+		unless (failed)
+		{
+			// Depending upon the window type, there may be data that can be used by contextual
+			// menu plug-ins.  The method of getting that data also depends on the window type.
+			// See what kind of window the contextual-menu-display event was for, and send that
+			// window’s data (usually the current selection) to the plug-ins via a new Apple
+			// Event descriptor.
+			if (isConnectionWindow)
+			{
+				// Let the Contextual Menu Manager know what data is selected in the
+				// frontmost window, so that Contextual Menu Plug-Ins can parse it.
+				TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(inWhichWindow);
+				TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+				
+				
+				if (TerminalView_TextSelectionExists(view))
+				{
+					Handle		handle = nullptr;
+					
+					
+					handle = TerminalView_ReturnSelectedTextAsNewHandle(view, 0/* tab info */, 0/* flags */);
+					if (nullptr != handle)
+					{
+						(OSStatus)AECreateDesc(typeChar, *handle, GetHandleSize(handle), &inoutWindowContentsDesc);
+						Memory_DisposeHandle(&handle);
+					}
+				}
+			}
+			else if (kConstantsRegistry_WindowDescriptorClipboard == windowDescriptor)
+			{
+				// Let the Contextual Menu Manager know what data is on the clipboard,
+				// so that any installed Contextual Menu Plug-Ins can parse it.
+				(OSStatus)Clipboard_CreateContentsAEDesc(&inoutWindowContentsDesc);
+			}
+			
+			// now that all items have been added, notify the Contextual Menu modules to clean up
+			ContextSensitiveMenu_DoneAddingItems(inoutMenu);
+		}
+	}
+	
+	return result;
+}// populateMenuForWindow
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
