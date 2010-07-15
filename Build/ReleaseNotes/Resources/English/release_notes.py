@@ -317,7 +317,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20100714': [
         'Fixed some of the contextual menu items displayed in terminal windows.',
-        'Terminal window tabs no longer have the up-arrow button to pop them out; instead, a contextual menu is provided.',
+        'Terminal window tabs no longer have the up-arrow button to pop them out; instead, a contextual menu is provided (Trac #37).',
     ],
     '20100713': [
         'Fixed a rare crash that could occur when terminal windows are closed.',
