@@ -322,7 +322,7 @@ notes_by_version = {
     '20100713': [
         'Fixed a rare crash that could occur when terminal windows are closed.',
         'Fixed Preferences window to no longer even allow name editing for Default items (since renaming will not work).',
-        'The Copy command now stores small text selections in multiple formats, to help with application interoperability.',
+        'The Copy command now stores small text selections in multiple formats, to help with application interoperability (Trac #40).',
     ],
     '20100712': [
         'Preferences window Workspaces pane now allows you to specify that multiple sessions should start at the same time.',
