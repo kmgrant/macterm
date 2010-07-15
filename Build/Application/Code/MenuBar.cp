@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -62,53 +62,13 @@
 #pragma mark Internal Method Prototypes
 namespace {
 
-void			adjustMenuItem							(MenuRef, MenuItemIndex, UInt32);
-void			adjustMenuItemByCommandID				(UInt32);
 MenuItemIndex	getMenuAndMenuItemIndexByCommandID		(UInt32, MenuRef*);
-void			getMenuItemAdjustmentProc				(MenuRef, MenuItemIndex, MenuCommandStateTrackerProcPtr*);
-void			setMenuItemEnabled						(MenuRef, UInt16, Boolean);
 
 } // anonymous namespace
 
 
 
 #pragma mark Public Methods
-
-/*!
-Determines the name of a menu item in a menu bar menu
-knowing only its command ID.  If the command specified
-cannot be found in any menu, "menuItemNotFoundErr" is
-returned, this method does nothing and the returned text
-is invalid.
-
-IMPORTANT:  This is a low-level API.  Use of higher-level
-			APIs such as Commands_CopyCommandName() is
-			probably sufficient for your needs.
-
-(3.1)
-*/
-OSStatus
-MenuBar_CopyMenuItemTextByCommandID	(UInt32			inCommandID,
-									 CFStringRef&	outText)
-{
-	MenuRef			menuHandle = nullptr;
-	MenuItemIndex	itemIndex = getMenuAndMenuItemIndexByCommandID(inCommandID, &menuHandle);
-	OSStatus		result = noErr;
-	
-	
-	outText = nullptr;
-	if ((nullptr != menuHandle) && (itemIndex > 0))
-	{
-		result = CopyMenuItemTextAsCFString(menuHandle, itemIndex, &outText);
-	}
-	else
-	{
-		result = menuItemNotFoundErr;
-	}
-	
-	return result;
-}// CopyMenuItemTextByCommandID
-
 
 /*!
 Returns the global rectangle approximating the
@@ -335,46 +295,6 @@ MenuBar_HandleMenuCommandByID	(UInt32		inCommandID)
 
 
 /*!
-Determines the enabled or disabled (dimmed) state of a
-menu item in a menu bar menu knowing only its command ID.
-If the command specified cannot be found in any menu,
-this method does nothing and returns "false".
-
-IMPORTANT:	All commands must be associated with a
-			MenuCommandStateTrackerProcPtr callback, or
-			this routine will return "false" for any
-			item that does not have one.  MacTelnet always
-			determines item states dynamically, not
-			statically, so this routine will not read
-			the current enabled state of the item.
-			Rather, it invokes the command’s callback to
-			determine what the item state *should* be,
-			which ultimately is what you’re interested
-			in, right???
-
-(3.0)
-*/
-Boolean
-MenuBar_IsMenuCommandEnabled	(UInt32		inCommandID)
-{
-	MenuRef							menu = nullptr;
-	MenuItemIndex					itemIndex = 0;
-	MenuCommandStateTrackerProcPtr	proc = nullptr;
-	Boolean							result = false;
-	
-	
-	itemIndex = getMenuAndMenuItemIndexByCommandID(inCommandID, &menu);
-	if ((nullptr != menu) && (itemIndex > 0)) // only look at the primary menu (both should be the same anyway)
-	{
-		getMenuItemAdjustmentProc(menu, itemIndex, &proc);
-		if (nullptr != proc) result = MenuBar_InvokeCommandStateTracker(proc, inCommandID, menu, itemIndex);
-	}
-	
-	return result;
-}// IsMenuCommandEnabled
-
-
-/*!
 To determine if a menu contains no item with
 text identical to the specified item text,
 use this method.
@@ -530,174 +450,8 @@ MenuBar_ReturnUniqueMenuID ()
 }// ReturnUniqueMenuID
 
 
-/*!
-Associates a menu item with a function that reports the proper
-state of the item at any given time.  A menu item property is
-used to store the information.
-
-See also MenuBar_SetMenuItemStateTrackerProcByCommandID().
-
-(3.0)
-*/
-void
-MenuBar_SetMenuItemStateTrackerProc		(MenuRef							inMenu,
-										 MenuItemIndex						inItemIndex,
-										 MenuCommandStateTrackerProcPtr		inProc)
-{
-	if ((nullptr != inMenu) && (inItemIndex > 0))
-	{
-		OSStatus	error = noErr;
-		
-		
-		error = SetMenuItemProperty(inMenu, inItemIndex, AppResources_ReturnCreatorCode(),
-									kConstantsRegistry_MenuPropertyTypeStateTrackerProcPtr,
-									sizeof(inProc), &inProc);
-		assert_noerr(error);
-	}
-}// SetMenuItemStateTrackerProc
-
-
-/*!
-Associates a menu item with a function that reports the proper
-state of the item at any given time.  A menu item property is
-used to store the information.
-
-See also MenuBar_SetMenuItemStateTrackerProc().
-
-(3.0)
-*/
-void
-MenuBar_SetMenuItemStateTrackerProcByCommandID	(UInt32								inCommandID,
-												 MenuCommandStateTrackerProcPtr		inProc)
-{
-	MenuRef			menu = nullptr;
-	MenuItemIndex	itemIndex = 0;
-	
-	
-	itemIndex = getMenuAndMenuItemIndexByCommandID(inCommandID, &menu);
-	if ((nullptr != menu) && (0 != itemIndex))
-	{
-		MenuBar_SetMenuItemStateTrackerProc(menu, itemIndex, inProc);
-	}
-}// SetMenuItemStateTrackerProcByCommandID
-
-
-/*!
-This method ensures that everything about the specified
-menu command (such as item text, enabled state, checked
-states and menu enabled state) is correct for the context
-of the program at the time this method is invoked.
-
-(3.1)
-*/
-void
-MenuBar_SetUpMenuItemState	(UInt32		inCommandID)
-{
-	adjustMenuItemByCommandID(inCommandID);
-}// SetUpMenuItemState
-
-
 #pragma mark Internal Methods
 namespace {
-
-/*!
-Automatically sets the enabled state and, as appropriate,
-the mark, item text, modifiers, etc. for a specific item.
-
-You have the option of specifying the command ID that should
-be used for adjustment context; you might do this if it is
-not obvious from the menu and menu item number alone (for
-example, a menu item that toggles between multiple commands
-based on the state of modifier keys).  If you pass 0 as the
-command ID, an attempt to extract the command ID from the
-menu item is made.
-
-For this method to work, you must have previously associated
-a state tracking procedure with the item using
-MenuBar_SetMenuItemStateTrackerProcByCommandID().
-
-This is called by MenuBar_SetUpMenuItemState(), and is probably
-not needed any place else.
-
-(3.0)
-*/
-void
-adjustMenuItem	(MenuRef		inMenu,
-				 MenuItemIndex	inItemNumber,
-				 UInt32			inOverridingCommandIDOrZero)
-{
-	MenuCommand						commandID = inOverridingCommandIDOrZero;
-	OSStatus						error = noErr;
-	MenuCommandStateTrackerProcPtr	proc = nullptr;
-	
-	
-	if (commandID == 0) error = GetMenuItemCommandID(inMenu, inItemNumber, &commandID);
-	if (error != noErr) commandID = 0;
-	
-	// invoke the state tracker, if it exists
-	getMenuItemAdjustmentProc(inMenu, inItemNumber, &proc);
-	if (nullptr == proc)
-	{
-		// error!
-	}
-	else
-	{
-		// invoking the state tracker will trigger all item state changes
-		// except the enabled state, which is returned; so, that state is
-		// explicitly set following the call
-		Boolean		isEnabled = MenuBar_InvokeCommandStateTracker(proc, commandID, inMenu, inItemNumber);
-		
-		
-		setMenuItemEnabled(inMenu, inItemNumber, isEnabled);
-	}
-}// adjustMenuItem
-
-
-/*!
-Automatically sets the enabled state and, as appropriate, the
-mark, item text, etc. for a menu item using only its command ID.
-
-For this method to work, you must have previously associated a
-state tracking procedure with the item using
-MenuBar_SetMenuItemStateTrackerProcByCommandID().
-
-This is called by MenuBar_SetUpMenuItemState(), and is probably
-not needed any place else.
-
-(3.0)
-*/
-void
-adjustMenuItemByCommandID	(UInt32		inCommandID)
-{
-	MenuRef			menu = nullptr;
-	MenuItemIndex	itemIndex = 0;
-	
-	
-	itemIndex = getMenuAndMenuItemIndexByCommandID(inCommandID, &menu);
-	if (nullptr != menu)
-	{
-		MenuRef			foundMenu = nullptr;
-		MenuItemIndex	foundIndex = 0;
-		OSStatus		error = noErr;
-		
-		
-		adjustMenuItem(menu, itemIndex, inCommandID);
-		
-		// some commands are repeated several times (e.g. for Favorites lists),
-		// requiring iteration to find all of the items that have this command ID
-		for (MenuItemIndex i = 2; ((noErr == error) && (i < 50/* arbitrary */)); ++i)
-		{
-			error = GetIndMenuItemWithCommandID(menu/* starting point */, inCommandID,
-												i/* which matching item to return */,
-												&foundMenu, &foundIndex);
-			if (noErr == error)
-			{
-				adjustMenuItem(foundMenu, foundIndex, inCommandID);
-			}
-		}
-	}
-}// adjustMenuItemByCommandID
-
 
 /*!
 Returns the main menu and item index for an item based only on
@@ -738,49 +492,6 @@ getMenuAndMenuItemIndexByCommandID	(UInt32		inCommandID,
 	}
 	return result;
 }// getMenuAndMenuItemIndexByCommandID
-
-
-/*!
-Retrieves the command state tracking routine stored in a
-property of the specified menu item, or nullptr if there is
-none.
-
-(3.0)
-*/
-void
-getMenuItemAdjustmentProc	(MenuRef							inMenu,
-							 MenuItemIndex						inItemIndex,
-							 MenuCommandStateTrackerProcPtr*	outProcPtrPtr)
-{
-	OSStatus	error = noErr;
-	UInt32		actualSize = 0;
-	
-	
-	error = GetMenuItemProperty(inMenu, inItemIndex, AppResources_ReturnCreatorCode(),
-								kConstantsRegistry_MenuPropertyTypeStateTrackerProcPtr,
-								sizeof(*outProcPtrPtr), &actualSize, outProcPtrPtr);
-	if (noErr != error) *outProcPtrPtr = nullptr;
-}// getMenuItemAdjustmentProc
-
-
-/*!
-To set the enabled state of a menu item or an
-entire menu, use this method.  This routine
-automatically uses the most advanced routine
-possible (namely the EnableMenuItem() or
-DisableMenuItem() commands under OS 8.5 and
-beyond, if available).
-
-(3.0)
-*/
-inline void
-setMenuItemEnabled		(MenuRef		inMenu,
-						 UInt16			inItemNumberOrZero,
-						 Boolean		inEnabled)
-{
-	if (inEnabled) EnableMenuItem(inMenu, inItemNumberOrZero);
-	else DisableMenuItem(inMenu, inItemNumberOrZero);
-}// setMenuItemEnabled
 
 } // anonymous namespace
 

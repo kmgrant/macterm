@@ -2524,7 +2524,7 @@ addContextualMenuItemsForTab	(MenuRef		inMenu,
 	
 	ContextSensitiveMenu_InitItem(&itemInfo);
 	itemInfo.commandID = kCommandTerminalNewWorkspace;
-	//if (is enabled)
+	if (Commands_IsCommandEnabled(itemInfo.commandID))
 	{
 		if (UIStrings_Copy(kUIStrings_ContextualMenuMoveToNewWorkspace, itemInfo.commandText).ok())
 		{

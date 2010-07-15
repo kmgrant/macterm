@@ -316,6 +316,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20100714': [
+        'Fixed some of the contextual menu items displayed in terminal windows.',
         'Terminal window tabs no longer have the up-arrow button to pop them out; instead, a contextual menu is provided.',
     ],
     '20100713': [

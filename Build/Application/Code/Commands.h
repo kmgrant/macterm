@@ -759,6 +759,10 @@ Boolean
 	Commands_ExecuteByIDUsingEvent			(UInt32						inCommandID,
 											 EventTargetRef				inTarget = nullptr);
 
+// WARNING: CURRENTLY ONLY IMPLEMENTED FOR CONTEXTUAL MENU COMMAND IDS
+Boolean
+	Commands_IsCommandEnabled				(UInt32						inCommandID);
+
 //@}
 
 //!\name Retrieving Command Information

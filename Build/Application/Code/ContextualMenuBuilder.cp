@@ -464,15 +464,12 @@ buildAboutBoxContextualMenu		(MenuRef		inMenu,
 	ContextSensitiveMenu_Item	itemInfo;
 	
 	
-	// set up states for all items used below
-	MenuBar_SetUpMenuItemState(kCommandCloseConnection);
-	
 	// window-related menu items
 	ContextSensitiveMenu_NewItemGroup(inMenu);
 	
 	ContextSensitiveMenu_InitItem(&itemInfo);
 	itemInfo.commandID = kCommandCloseConnection;
-	if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+	if (Commands_IsCommandEnabled(itemInfo.commandID))
 	{
 		if (UIStrings_Copy(kUIStrings_ContextualMenuCloseThisWindow, itemInfo.commandText).ok())
 		{
@@ -498,16 +495,12 @@ buildClipboardWindowContextualMenu	(MenuRef		inMenu,
 	ContextSensitiveMenu_Item	itemInfo;
 	
 	
-	// set up states for all items used below
-	MenuBar_SetUpMenuItemState(kCommandHandleURL);
-	MenuBar_SetUpMenuItemState(kCommandCloseConnection);
-	
 	// text-editing-related menu items
 	ContextSensitiveMenu_NewItemGroup(inMenu);
 	
 	ContextSensitiveMenu_InitItem(&itemInfo);
 	itemInfo.commandID = kCommandHandleURL;
-	if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+	if (Commands_IsCommandEnabled(itemInfo.commandID))
 	{
 		if (UIStrings_Copy(kUIStrings_ContextualMenuOpenThisResource, itemInfo.commandText).ok())
 		{
@@ -521,7 +514,7 @@ buildClipboardWindowContextualMenu	(MenuRef		inMenu,
 	
 	ContextSensitiveMenu_InitItem(&itemInfo);
 	itemInfo.commandID = kCommandCloseConnection;
-	if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+	if (Commands_IsCommandEnabled(itemInfo.commandID))
 	{
 		if (UIStrings_Copy(kUIStrings_ContextualMenuCloseThisWindow, itemInfo.commandText).ok())
 		{
@@ -548,7 +541,7 @@ buildEmptyContextualMenu	(MenuRef		UNUSED_ARGUMENT(inMenu),
 	//MenuRef					menuBarMenu = nullptr;
 	
 	
-	//MenuBar_SetUpMenuItemState(...);
+	
 }// buildEmptyContextualMenu
 
 
@@ -567,15 +560,12 @@ buildSessionStatusWindowContextualMenu	(MenuRef		inMenu,
 	ContextSensitiveMenu_Item	itemInfo;
 	
 	
-	// set up states for all items used below
-	MenuBar_SetUpMenuItemState(kCommandCloseConnection);
-	
 	// window-related menu items
 	ContextSensitiveMenu_NewItemGroup(inMenu);
 	
 	ContextSensitiveMenu_InitItem(&itemInfo);
 	itemInfo.commandID = kCommandCloseConnection;
-	if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+	if (Commands_IsCommandEnabled(itemInfo.commandID))
 	{
 		if (UIStrings_Copy(kUIStrings_ContextualMenuCloseThisWindow, itemInfo.commandText).ok())
 		{
@@ -600,15 +590,12 @@ buildTerminalBackgroundContextualMenu	(MenuRef		inMenu,
 	ContextSensitiveMenu_Item	itemInfo;
 	
 	
-	// set up states for all items used below
-	MenuBar_SetUpMenuItemState(kCommandSetBackground);
-	
 	// window-related menu items
 	ContextSensitiveMenu_NewItemGroup(inMenu);
 	
 	ContextSensitiveMenu_InitItem(&itemInfo);
 	itemInfo.commandID = kCommandSetBackground;
-	if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+	if (Commands_IsCommandEnabled(itemInfo.commandID))
 	{
 		if (UIStrings_Copy(kUIStrings_ContextualMenuChangeBackground, itemInfo.commandText).ok())
 		{
@@ -647,23 +634,15 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 	
 	if (isTextSelected) // no need to keep checking for context, since the same context applies to all items!
 	{
-		Boolean		selectionIsURL = IsMenuCommandEnabled(nullptr/* menu */, kCommandHandleURL);
+		Boolean		selectionIsURL = Commands_IsCommandEnabled(kCommandHandleURL);
 		
-		
-		// set up states for all items used below
-		MenuBar_SetUpMenuItemState(kCommandHandleURL);
-		MenuBar_SetUpMenuItemState(kCommandCopy);
-		MenuBar_SetUpMenuItemState(kCommandCopyTable);
-		MenuBar_SetUpMenuItemState(kCommandSaveText);
-		MenuBar_SetUpMenuItemState(kCommandPrint);
-		MenuBar_SetUpMenuItemState(kCommandSpeakSelectedText);
 		
 		// URL commands
 		ContextSensitiveMenu_NewItemGroup(inMenu);
 		
 		ContextSensitiveMenu_InitItem(&itemInfo);
 		itemInfo.commandID = kCommandHandleURL;
-		if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuOpenThisResource, itemInfo.commandText).ok())
 			{
@@ -677,7 +656,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		
 		ContextSensitiveMenu_InitItem(&itemInfo);
 		itemInfo.commandID = kCommandCopy;
-		if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuCopyToClipboard, itemInfo.commandText).ok())
 			{
@@ -692,7 +671,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		{
 			ContextSensitiveMenu_InitItem(&itemInfo);
 			itemInfo.commandID = kCommandCopyTable;
-			if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+			if (Commands_IsCommandEnabled(itemInfo.commandID))
 			{
 				if (UIStrings_Copy(kUIStrings_ContextualMenuCopyUsingTabsForSpaces, itemInfo.commandText).ok())
 				{
@@ -703,7 +682,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 			
 			ContextSensitiveMenu_InitItem(&itemInfo);
 			itemInfo.commandID = kCommandSaveText;
-			if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+			if (Commands_IsCommandEnabled(itemInfo.commandID))
 			{
 				if (UIStrings_Copy(kUIStrings_ContextualMenuSaveSelectedText, itemInfo.commandText).ok())
 				{
@@ -717,7 +696,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 			
 			ContextSensitiveMenu_InitItem(&itemInfo);
 			itemInfo.commandID = kCommandPrint;
-			if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+			if (Commands_IsCommandEnabled(itemInfo.commandID))
 			{
 				if (UIStrings_Copy(kUIStrings_ContextualMenuPrintSelectedText, itemInfo.commandText).ok())
 				{
@@ -728,7 +707,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 			
 			ContextSensitiveMenu_InitItem(&itemInfo);
 			itemInfo.commandID = kCommandSpeakSelectedText;
-			if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+			if (Commands_IsCommandEnabled(itemInfo.commandID))
 			{
 				if (UIStrings_Copy(kUIStrings_ContextualMenuSpeakSelectedText, itemInfo.commandText).ok())
 				{
@@ -740,23 +719,12 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 	}
 	else
 	{
-		// set up states for all items used below
-		MenuBar_SetUpMenuItemState(kCommandPaste);
-		MenuBar_SetUpMenuItemState(kCommandFind);
-		MenuBar_SetUpMenuItemState(kCommandHideFrontWindow);
-		MenuBar_SetUpMenuItemState(kCommandStackWindows);
-		MenuBar_SetUpMenuItemState(kCommandSetScreenSize);
-		MenuBar_SetUpMenuItemState(kCommandFormat);
-		MenuBar_SetUpMenuItemState(kCommandSetKeys);
-		MenuBar_SetUpMenuItemState(kCommandPrintScreen);
-		MenuBar_SetUpMenuItemState(kCommandChangeWindowTitle);
-		
 		// text-editing-related menu items
 		ContextSensitiveMenu_NewItemGroup(inMenu);
 		
 		ContextSensitiveMenu_InitItem(&itemInfo);
 		itemInfo.commandID = kCommandPaste;
-		if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuPasteText, itemInfo.commandText).ok())
 			{
@@ -767,7 +735,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		
 		ContextSensitiveMenu_InitItem(&itemInfo);
 		itemInfo.commandID = kCommandFind;
-		if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuFindInThisWindow, itemInfo.commandText).ok())
 			{
@@ -781,7 +749,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		
 		ContextSensitiveMenu_InitItem(&itemInfo);
 		itemInfo.commandID = kCommandHideFrontWindow;
-		if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuHideThisWindow, itemInfo.commandText).ok())
 			{
@@ -792,7 +760,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		
 		ContextSensitiveMenu_InitItem(&itemInfo);
 		itemInfo.commandID = kCommandStackWindows;
-		if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuArrangeAllInFront, itemInfo.commandText).ok())
 			{
@@ -806,7 +774,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		
 		ContextSensitiveMenu_InitItem(&itemInfo);
 		itemInfo.commandID = kCommandSetScreenSize;
-		if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuCustomScreenDimensions, itemInfo.commandText).ok())
 			{
@@ -817,7 +785,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		
 		ContextSensitiveMenu_InitItem(&itemInfo);
 		itemInfo.commandID = kCommandFormat;
-		if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuCustomFormat, itemInfo.commandText).ok())
 			{
@@ -828,7 +796,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		
 		ContextSensitiveMenu_InitItem(&itemInfo);
 		itemInfo.commandID = kCommandSetKeys;
-		if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuSpecialKeySequences, itemInfo.commandText).ok())
 			{
@@ -839,7 +807,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		
 		ContextSensitiveMenu_InitItem(&itemInfo);
 		itemInfo.commandID = kCommandPrintScreen;
-		if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
 		{
 			if (Commands_CopyCommandName(itemInfo.commandID, kCommands_NameTypeDefault, itemInfo.commandText))
 			{
@@ -850,7 +818,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		
 		ContextSensitiveMenu_InitItem(&itemInfo);
 		itemInfo.commandID = kCommandChangeWindowTitle;
-		if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuRenameThisWindow, itemInfo.commandText).ok())
 			{

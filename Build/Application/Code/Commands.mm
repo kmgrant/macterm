@@ -1740,6 +1740,83 @@ Commands_InsertPrefNamesIntoMenu	(Quills::Prefs::Class	inClass,
 
 
 /*!
+Returns true only if the specified command ID is currently
+available to the user, taking into account the active window
+and any other relevant context.
+
+WARNING:	This currently only works for command IDs that
+			are used for contextual menu items.
+
+DEPRECATED.  This is here for transitional purposes, as it
+is useful in some cases (particularly contextual menus) to
+refer to items by ID.  However, menu items from now on will
+be primarily checked using Objective-C and Cocoa
+selectors.
+
+(4.0)
+*/
+Boolean
+Commands_IsCommandEnabled	(UInt32		inCommandID)
+{
+	Boolean		result = false;
+	
+	
+	switch (inCommandID)
+	{
+	case kCommandChangeWindowTitle:
+		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
+		result = true;
+		break;
+	
+	case kCommandCloseConnection:
+		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
+		result = true;
+		break;
+	
+	case kCommandFormat:
+		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
+		result = true;
+		break;
+	
+	case kCommandHideFrontWindow:
+		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
+		result = true;
+		break;
+	
+	case kCommandPrintScreen:
+		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
+		result = true;
+		break;
+	
+	case kCommandSetKeys:
+		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
+		result = true;
+		break;
+	
+	case kCommandSetScreenSize:
+		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
+		result = true;
+		break;
+	
+	case kCommandStackWindows:
+		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
+		result = true;
+		break;
+	
+	case kCommandTerminalNewWorkspace:
+		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
+		result = true;
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// IsCommandEnabled
+
+
+/*!
 Arranges for a callback to be invoked in order to
 execute the given command.
 
