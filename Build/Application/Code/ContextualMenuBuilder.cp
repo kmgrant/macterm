@@ -268,6 +268,18 @@ ContextualMenuBuilder_DisplayMenuForView	(HIViewRef								inWhichView,
 			}
 		}
 		ContextSensitiveMenu_Dispose(&menu);
+		
+		// do not allow focus to remain on drawers; set user focus
+		// to the parent window, if appropriate
+		{
+			HIWindowRef		parentWindow = GetDrawerParent(GetUserFocusWindow());
+			
+			
+			if (nullptr != parentWindow)
+			{
+				SetUserFocusWindow(parentWindow);
+			}
+		}
 	}
 	
 	return result;
