@@ -528,6 +528,7 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface Commands_Executor : NSObject
++ (id)		sharedExecutor;
 @end
 
 @interface Commands_Executor (Commands_ApplicationCoreEvents)
@@ -725,6 +726,7 @@ changes to an interface declared in a ".mm" file.
 - (IBAction)	performZoomSetup:(id)sender;
 - (IBAction)	runToolbarCustomizationPaletteSetup:(id)sender;
 - (IBAction)	toggleToolbarShownSetup:(id)sender;
+- (BOOL)		isCommandEnabled:(UInt32)aCommandID;
 @end
 
 #endif

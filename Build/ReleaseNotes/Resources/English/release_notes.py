@@ -317,6 +317,9 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20100715': [
+        'Fixed remaining contextual menu items displayed in terminal windows.',
+        'Fixed the enabled state of the "Move to New Workspace" menu item.',
+        'Removed the "Contextual Help" item from contextual menus, which did not work properly anyway.',
         'Preferences window General pane Options tab has a new setting to disable the multi-line Paste warning (Trac #38).',
     ],
     '20100714': [

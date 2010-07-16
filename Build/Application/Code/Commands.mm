@@ -58,6 +58,7 @@ extern "C"
 
 // library includes
 #import <AlertMessages.h>
+#import <AutoPool.objc++.h>
 #import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
@@ -1758,59 +1759,14 @@ selectors.
 Boolean
 Commands_IsCommandEnabled	(UInt32		inCommandID)
 {
-	Boolean		result = false;
+	AutoPool				_;
+	Commands_Executor*		commandExecutor = (Commands_Executor*)[Commands_Executor sharedExecutor];
+	Boolean					result = false;
 	
 	
-	switch (inCommandID)
-	{
-	case kCommandChangeWindowTitle:
-		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
-		result = true;
-		break;
+	assert(nil != commandExecutor);
 	
-	case kCommandCloseConnection:
-		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
-		result = true;
-		break;
-	
-	case kCommandFormat:
-		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
-		result = true;
-		break;
-	
-	case kCommandHideFrontWindow:
-		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
-		result = true;
-		break;
-	
-	case kCommandPrintScreen:
-		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
-		result = true;
-		break;
-	
-	case kCommandSetKeys:
-		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
-		result = true;
-		break;
-	
-	case kCommandSetScreenSize:
-		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
-		result = true;
-		break;
-	
-	case kCommandStackWindows:
-		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
-		result = true;
-		break;
-	
-	case kCommandTerminalNewWorkspace:
-		// TEMPORARY; always available if requested for a contextual menu, but not always available normally
-		result = true;
-		break;
-	
-	default:
-		break;
-	}
+	result = ([commandExecutor isCommandEnabled:inCommandID]) ? true : false;
 	
 	return result;
 }// IsCommandEnabled
@@ -3506,6 +3462,35 @@ validatorYes	(id <NSValidatedUserInterfaceItem>		UNUSED_ARGUMENT(inItem))
 
 @implementation Commands_Executor
 
+Commands_Executor*		gCommands_Executor = nil;
++ (id)
+sharedExecutor
+{
+	if (nil == gCommands_Executor)
+	{
+		[[[self class] allocWithZone:NULL] init];
+		assert(nil != gCommands_Executor);
+	}
+	return gCommands_Executor;
+}
+
+
+- (id)
+init
+{
+	self = [super init];
+	
+	// this approach allows the singleton to be constructed from
+	// anywhere, even an object in a NIB
+	if (nil == gCommands_Executor)
+	{
+		gCommands_Executor = self;
+	}
+	
+	return self;
+}
+
+
 // IMPORTANT: These methods are initially trivial, calling into the
 // established Carbon command responder chain.  This is TEMPORARY.
 // It will eventually make more sense for these methods to directly
@@ -3514,6 +3499,7 @@ validatorYes	(id <NSValidatedUserInterfaceItem>		UNUSED_ARGUMENT(inItem))
 // specific places (for example, NSWindowController subclasses).
 // This initial design is an attempt to change as little as possible
 // while performing a transition from Carbon to Cocoa.
+
 
 @end // Commands_Executor
 
@@ -5264,23 +5250,14 @@ performMoveToNewWorkspace:(id)	sender
 canPerformMoveToNewWorkspace:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL					result = NO;
-	Boolean					flag = false;
-	size_t					actualSize = 0;
-	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	Preferences_ContextRef	defaultContext = nullptr;
+	BOOL				result = NO;
+	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
 	
 	
-	prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::WORKSPACE);
-	assert(kPreferences_ResultOK == prefsResult);
-	prefsResult = Preferences_ContextGetData(defaultContext, kPreferences_TagArrangeWindowsUsingTabs,
-												sizeof(flag), &flag,
-												true/* search defaults */, &actualSize);
-	unless (kPreferences_ResultOK == prefsResult)
+	if (nullptr != terminalWindow)
 	{
-		flag = false; // assume tabs are not being used, if preference can’t be found
+		result = TerminalWindow_IsTab(terminalWindow) ? YES : NO;
 	}
-	result = (flag) ? YES : NO;
 	
 	return [NSNumber numberWithBool:result];
 }
@@ -5427,7 +5404,6 @@ orderFrontContextualHelp:(id)	sender
 - (id)
 canOrderFrontContextualHelp:(id <NSValidatedUserInterfaceItem>)		anItem
 {
-#pragma unused(anItem)
 	CFStringRef				keyPhraseCFString = nullptr;
 	HelpSystem_KeyPhrase	keyPhrase = HelpSystem_ReturnCurrentContextKeyPhrase();
 	HelpSystem_Result		helpResult = kHelpSystem_ResultOK;
@@ -5941,10 +5917,109 @@ canToggleToolbarShownSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 	return [NSNumber numberWithBool:result];
 }
 
+
+/*!
+Internal version of Commands_IsCommandEnabled().
+
+(4.0)
+*/
+- (BOOL)
+isCommandEnabled:(UInt32)	aCommandID
+{
+	NSMenuItem*		targetItem = nil; // currently, never defined for these checks
+	NSNumber*		numericalBool = nil;
+	BOOL			result = false;
+	
+	
+	switch (aCommandID)
+	{
+	case kCommandChangeWindowTitle:
+		numericalBool = [self canPerformRename:targetItem];
+		result = [numericalBool boolValue];
+		break;
+	
+	case kCommandCloseConnection:
+		numericalBool = [self canPerformCloseSetup:targetItem];
+		result = [numericalBool boolValue];
+		break;
+	
+	case kCommandCopy:
+		numericalBool = [self canPerformCopy:targetItem];
+		result = [numericalBool boolValue];
+		break;
+	
+	case kCommandCopyTable:
+		numericalBool = [self canPerformCopyWithTabSubstitution:targetItem];
+		result = [numericalBool boolValue];
+		break;
+	
+	case kCommandFind:
+		result = YES; // TEMPORARY
+		break;
+	
+	case kCommandFormat:
+		result = YES;
+		break;
+	
+	case kCommandHandleURL:
+		numericalBool = [self canPerformOpenURL:targetItem];
+		result = [numericalBool boolValue];
+		break;
+	
+	case kCommandHideFrontWindow:
+		result = YES;
+		break;
+	
+	case kCommandPaste:
+		numericalBool = [self canPerformPaste:targetItem];
+		result = [numericalBool boolValue];
+		break;
+	
+	case kCommandPrintScreen:
+		numericalBool = [self canPerformPrintScreen:targetItem];
+		result = [numericalBool boolValue];
+		break;
+	
+	case kCommandSaveText:
+		numericalBool = [self canPerformSaveSelection:targetItem];
+		result = [numericalBool boolValue];
+		break;
+	
+	case kCommandSetKeys:
+		result = YES;
+		break;
+	
+	case kCommandSetScreenSize:
+		result = YES;
+		break;
+	
+	case kCommandSpeakSelectedText:
+		// for now, reuse the handler for saving selections; they should be equivalent
+		numericalBool = [self canPerformSaveSelection:targetItem];
+		result = [numericalBool boolValue];
+		break;
+	
+	case kCommandStackWindows:
+		result = YES;
+		break;
+	
+	case kCommandTerminalNewWorkspace:
+		numericalBool = [self canPerformMoveToNewWorkspace:targetItem];
+		result = [numericalBool boolValue];
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}
+
 @end // Commands_Executor (Commands_TransitionFromCarbon)
 
 
 @implementation Commands_Executor (Commands_Validation)
+
 
 /*!
 Given a selector name, such as performFooBar:, returns the

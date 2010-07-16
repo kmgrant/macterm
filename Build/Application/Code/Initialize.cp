@@ -369,7 +369,7 @@ initApplicationCore ()
 		}
 	}
 	
-	ContextualMenuBuilder_SetMenuHelpType(kCMHelpItemOtherHelp);
+	ContextualMenuBuilder_SetMenuHelpType(kCMHelpItemRemoveHelp);
 	
 	// initialize cursors
 	Cursors_Init();
