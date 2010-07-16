@@ -262,6 +262,9 @@ TerminalWindow_Result
 	TerminalWindow_GetTabWidthAvailable				(TerminalWindowRef			inRef,
 													 Float32&					outMaxWidthHeightInPixels);
 
+Boolean
+	TerminalWindow_IsTab							(TerminalWindowRef			inRef);
+
 OSStatus
 	TerminalWindow_SetTabAppearance					(TerminalWindowRef			inRef,
 													 Boolean					inIsTab);

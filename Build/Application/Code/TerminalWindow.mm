@@ -930,6 +930,24 @@ TerminalWindow_IsObscured	(TerminalWindowRef	inRef)
 
 
 /*!
+Returns "true" only if the specified window has a tab
+appearance, as set with TerminalWindow_SetTabAppearance().
+
+(4.0)
+*/
+Boolean
+TerminalWindow_IsTab	(TerminalWindowRef	inRef)
+{
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	Boolean						result = false;
+	
+	
+	result = ptr->tab.exists();
+	return result;
+}// IsTab
+
+
+/*!
 Changes the settings of every view in the specified group,
 to include the recognized settings of given context.  You might
 use this, for example, to do a batch-mode change of all the
