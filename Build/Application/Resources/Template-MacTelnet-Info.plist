@@ -267,7 +267,14 @@
 			<key>NSSendTypes</key>
 			<array>
 				<string>NSStringPboardType</string>
+				<string>public.utf16-external-plain-text</string>
+				<string>public.utf8-plain-text</string>
+				<string>public.plain-text</string>
 			</array>
+			<key>NSTextContent</key>
+			<string>URL</string>
+			<key>NSWordLimit</key>
+			<integer>1</integer>
 		</dict>
 	</array>
 	<key>NSInitialToolTipDelay</key>
