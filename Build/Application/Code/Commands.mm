@@ -878,11 +878,8 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandCaptureToFile:
 			if (isSession)
 			{
+				Terminal_FileCaptureEnd(activeScreen);
 				Session_DisplayFileCaptureSaveDialog(frontSession);
-				//if (Terminal_FileCaptureBegin(activeScreen, nullptr/* let user choose a file */))
-				//{
-				//	// then capturing is on
-				//}
 			}
 			break;
 		

@@ -261,7 +261,7 @@ FileUtilities_OpenTemporaryFile		(FSRef&		outTemporaryFile)
 				error = FSCreateFileUnicode(&temporaryFilesFolder, CFStringGetLength(kBufferAsCFString), fileName,
 											kFSCatInfoNone, nullptr/* catalog info */, &outTemporaryFile, nullptr/* FSSpec */);
 				++count;
-			} while (dupFNErr == error);
+			} while ((errFSForkExists == error) || (dupFNErr == error));
 			
 			if (noErr != error)
 			{

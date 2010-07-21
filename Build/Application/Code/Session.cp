@@ -346,7 +346,7 @@ typedef My_WatchAlertInfo*		My_WatchAlertInfoPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal void					autoActivateWindow					(EventLoopTimerRef, void*);
+void						autoActivateWindow					(EventLoopTimerRef, void*);
 void						changeNotifyForSession				(My_SessionPtr, Session_Change, void*);
 void						changeStateAttributes				(My_SessionPtr, Session_StateAttributes,
 																 Session_StateAttributes);
@@ -360,24 +360,24 @@ My_HMHelpContentRecWrap&	createHelpTagForVectorGraphics		();
 PMPageFormat				createSessionPageFormat				();
 IconRef						createSessionStateActiveIcon		();
 IconRef						createSessionStateDeadIcon			();
-pascal void					detectLongLife						(EventLoopTimerRef, void*);
+void						detectLongLife						(EventLoopTimerRef, void*);
 Boolean						handleSessionKeyDown				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 Boolean						isReadOnly							(My_SessionPtr);
-pascal void					navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
-pascal void					navigationSaveDialogEvent			(NavEventCallbackMessage, NavCBRecPtr, void*);
-pascal void					pageSetupCloseNotifyProc			(PMPrintSession, WindowRef, Boolean);
+void						navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
+void						navigationSaveDialogEvent			(NavEventCallbackMessage, NavCBRecPtr, void*);
+void						pageSetupCloseNotifyProc			(PMPrintSession, WindowRef, Boolean);
 void						pasteWarningCloseNotifyProc			(InterfaceLibAlertRef, SInt16, void*);
 void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 size_t						processMoreData						(My_SessionPtr);
-pascal OSStatus				receiveTerminalViewDragDrop			(EventHandlerCallRef, EventRef, void*);
+OSStatus					receiveTerminalViewDragDrop			(EventHandlerCallRef, EventRef, void*);
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-pascal OSStatus				receiveTerminalViewEntered			(EventHandlerCallRef, EventRef, void*);
+OSStatus					receiveTerminalViewEntered			(EventHandlerCallRef, EventRef, void*);
 #endif
-pascal OSStatus				receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus				receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus				receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
+OSStatus					receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef, void*);
+OSStatus					receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
+OSStatus					receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
 HIWindowRef					returnActiveWindow					(My_SessionPtr);
 OSStatus					sessionDragDrop						(EventHandlerCallRef, EventRef, SessionRef,
 																 HIViewRef, DragRef);
@@ -387,7 +387,7 @@ void						terminationWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*
 void						watchClearForSession				(My_SessionPtr);
 void						watchCloseNotifyProc				(AlertMessages_BoxRef, SInt16, void*);
 void						watchNotifyForSession				(My_SessionPtr, Session_Watch);
-pascal void					watchNotifyFromTimer				(EventLoopTimerRef, void*);
+void						watchNotifyFromTimer				(EventLoopTimerRef, void*);
 void						watchTimerResetForSession			(My_SessionPtr, Session_Watch);
 void						windowValidationStateChanged		(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
@@ -879,7 +879,7 @@ Session_DisplayFileCaptureSaveDialog	(SessionRef		inRef)
 	
 	
 	error = NavGetDefaultDialogCreationOptions(&dialogOptions);
-	if (error == noErr)
+	if (noErr == error)
 	{
 		// this call sets most of the options up front (parent window, etc.)
 		configureSaveDialog(inRef, dialogOptions);
@@ -892,10 +892,12 @@ Session_DisplayFileCaptureSaveDialog	(SessionRef		inRef)
 	error = NavCreatePutFileDialog(&dialogOptions, 'TEXT'/* type */, 'ttxt'/* creator (TextEdit) */,
 									NewNavEventUPP(navigationFileCaptureDialogEvent), inRef/* client data */,
 									&navigationServicesDialog);
-	
-	// display the dialog; it is a sheet, so this will return immediately
-	// and the dialog will close whenever the user is actually done with it
-	error = NavDialogRun(navigationServicesDialog);
+	if (noErr == error)
+	{
+		// display the dialog; it is a sheet, so this will return immediately
+		// and the dialog will close whenever the user is actually done with it
+		error = NavDialogRun(navigationServicesDialog);
+	}
 }// DisplayFileCaptureSaveDialog
 
 
@@ -4518,7 +4520,7 @@ Timers that draw must save and restore the current graphics port.
 
 (3.1)
 */
-pascal void
+void
 autoActivateWindow	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 					 void*					inSessionRef)
 {
@@ -4956,7 +4958,7 @@ Mac OS X only.
 
 (3.0)
 */
-pascal void
+void
 detectLongLife	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 				 void*					inSessionRef)
 {
@@ -5317,7 +5319,7 @@ attached to a session window.
 
 (3.0)
 */
-pascal void
+void
 navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 								 	 NavCBRecPtr				inParameters,
 								 	 void*						inSessionRef)
@@ -5328,7 +5330,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 	switch (inMessage)
 	{
 	case kNavCBUserAction:
-		if (inParameters->userAction == kNavUserActionSaveAs)
+		if (kNavUserActionSaveAs == inParameters->userAction)
 		{
 			NavReplyRecord		reply;
 			OSStatus			error = noErr;
@@ -5336,7 +5338,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 			
 			// save file
 			error = NavDialogGetReply(inParameters->context/* dialog */, &reply);
-			if ((error == noErr) && (reply.validRecord))
+			if ((noErr == error) && (reply.validRecord))
 			{
 				FSRef	saveFile;
 				FSRef	temporaryFile;
@@ -5345,16 +5347,16 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 				
 				
 				// get the user’s Capture File Creator preference, if possible
-				unless (Preferences_GetData(kPreferences_TagCaptureFileCreator,
-											sizeof(captureFileCreator), &captureFileCreator, &actualSize) ==
-						kPreferences_ResultOK)
+				unless (kPreferences_ResultOK ==
+						Preferences_GetData(kPreferences_TagCaptureFileCreator,
+											sizeof(captureFileCreator), &captureFileCreator, &actualSize))
 				{
 					captureFileCreator = 'ttxt'; // default to SimpleText if a preference can’t be found
 				}
 				
 				error = FileSelectionDialogs_CreateOrFindUserSaveFile
 						(reply, captureFileCreator, 'TEXT', saveFile, temporaryFile);
-				if (error == noErr)
+				if (noErr == error)
 				{
 					My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
 					
@@ -5365,11 +5367,11 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 					
 					// now write to the file
 					error = FSCreateFork(&saveFile, 0/* name length */, nullptr/* name */);
-					if (error == dupFNErr)
+					if ((errFSForkExists == error) || (dupFNErr == error))
 					{
 						// if a capture file already exists, try to delete it; if the delete fails,
 						// try creating files with alternate, similar names until successful
-						if (FSDeleteFork(&saveFile, 0/* name length */, nullptr/* name */) == noErr)
+						if (noErr == FSDeleteFork(&saveFile, 0/* name length */, nullptr/* name */))
 						{
 							error = FSCreateFork(&saveFile, 0/* name length */, nullptr/* name */);
 						}
@@ -5377,17 +5379,18 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 						{
 							// TEMPORARY
 							// persistent create - UNIMPLEMENTED
+							error = noErr;
 						}
 					}
 					
-					if (error != noErr) Alert_ReportOSStatus(error);
+					if (noErr != error) Alert_ReportOSStatus(error);
 					else
 					{
 						SInt16		fileRefNum = 0;
 						
 						
 						error = FSOpenFork(&saveFile, 0/* name length */, nullptr/* name */, fsWrPerm, &fileRefNum);
-						if (error != noErr) Alert_ReportOSStatus(error);
+						if (noErr != error) Alert_ReportOSStatus(error);
 						else
 						{
 							// The capture file is opened for writing at this point - however,
@@ -5407,7 +5410,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 								
 								
 								// I can’t remember if it’s a memory leak to forget about an alias or not...warning...
-								if (NewAliasMinimal(&captureFile, &alias) == noErr)
+								if (noErr == NewAliasMinimal(&captureFile, &alias))
 								{
 									// TEMPORARY - one day it might be nice if MacTelnet could display the same screen
 									//             in more than one window; in such case, the following would have to
@@ -5416,7 +5419,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 									WindowRef		window = TerminalView_ReturnWindow(dataPtr->view);
 									
 									
-									if (window != nullptr)
+									if (nullptr != window)
 									{
 										(OSStatus)SetWindowProxyAlias(window, alias);
 										if (API_AVAILABLE(SetWindowProxyCreatorAndType))
@@ -5432,6 +5435,10 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 						}
 					}
 				}
+			}
+			else
+			{
+Console_WriteLine("invalid record");
 			}
 			Alert_ReportOSStatus(error);
 			error = FileSelectionDialogs_CompleteSave(&reply);
@@ -5457,7 +5464,7 @@ to a session window.
 
 (3.0)
 */
-pascal void
+void
 navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 						 	 NavCBRecPtr				inParameters,
 						 	 void*						inSessionRef)
@@ -5570,7 +5577,7 @@ or not the settings were kept).
 
 (3.1)
 */
-pascal void
+void
 pageSetupCloseNotifyProc	(PMPrintSession		inPrintSession,
 							 WindowRef			inWindow,
 							 Boolean			inWasAccepted)
@@ -5884,7 +5891,7 @@ for a terminal view.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveTerminalViewEntered		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					UNUSED_ARGUMENT(inSessionRef))
@@ -6002,7 +6009,7 @@ Handles "kEventTextInputUnicodeForKeyEvent" of
 
 (3.0)
 */
-pascal OSStatus
+OSStatus
 receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					inSessionRef)
@@ -6207,7 +6214,7 @@ for a session’s terminal window.
 
 (3.0)
 */
-pascal OSStatus
+OSStatus
 receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					inSessionRef)
@@ -6261,7 +6268,7 @@ set on the session.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveWindowFocusChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					inSessionRef)
@@ -6775,7 +6782,7 @@ Timers that draw must save and restore the current graphics port.
 
 (3.1)
 */
-pascal void
+void
 watchNotifyFromTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 						 void*					inSessionRef)
 {
