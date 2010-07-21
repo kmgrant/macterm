@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -78,7 +78,8 @@ void
 
 Boolean
 	StreamCapture_Begin					(StreamCapture_Ref			inRef,
-										 SInt16						inOpenWritableFile);
+										 SInt16						inOpenWritableFile,
+										 Boolean					inAutoClose = false);
 
 void
 	StreamCapture_End					(StreamCapture_Ref			inRef);

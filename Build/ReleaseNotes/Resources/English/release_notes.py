@@ -320,6 +320,7 @@ notes_by_version = {
     '20100720': [
         'Fixed a major bug with text highlighting in scrollback lines (Trac #39).',
         'Fixed cases where text selections may not be drawn, such as when using "Select Entire Scrollback Buffer".',
+        'Fixed a case where a 2nd file capture may fail when the same file name is chosen.',
         'Terminal search is now faster in certain situations.',
     ],
     '20100715': [

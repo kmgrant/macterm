@@ -654,7 +654,8 @@ Terminal_Result
 
 Boolean
 	Terminal_FileCaptureBegin				(TerminalScreenRef			inScreen,
-											 SInt16						inOpenWritableFile);
+											 SInt16						inOpenWritableFile,
+											 Boolean					inAutoClose);
 
 void
 	Terminal_FileCaptureEnd					(TerminalScreenRef			inScreen);

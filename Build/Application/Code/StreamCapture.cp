@@ -3,7 +3,7 @@
 	StreamCapture.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -59,9 +59,21 @@ public:
 	My_StreamCapture	(Session_LineEnding);
 	~My_StreamCapture ();
 	
+	void
+	endCapture ()
+	{
+		if ((this->autoClose) && (0 != this->captureFileRefNum))
+		{
+			(OSErr)FSClose(this->captureFileRefNum);
+		}
+		this->captureFileRefNum = 0;
+	}
+	
 	Session_LineEnding		captureFileLineEndings;		//!< carriage return and/or line feed
 	SInt16					captureFileRefNum;			//!< file reference number of opened capture file
+	Boolean					autoClose;					//!< if true, the capture claims ownership of the open file
 	StreamCapture_Ref		selfRef;					//!< opaque reference that would resolve to a pointer to this structure
+
 };
 typedef My_StreamCapture*			My_StreamCapturePtr;
 typedef My_StreamCapture const*		My_StreamCaptureConstPtr;
@@ -141,18 +153,31 @@ StreamCapture_Release	(StreamCapture_Ref*		inoutRefPtr)
 
 /*!
 Initiates a capture to a file, returning "true" only if
-successful.
+successful.  Any capture in progress is automatically
+ended.
+
+If "inAutoClose" is set to true, then you NO LONGER OWN
+the given File Manager file, and you should not close it
+yourself; it will be closed for you, whenever the capture
+ends (through StreamCapture_End(), or the destruction of
+this capture object).  Otherwise, YOU must close the file,
+after you have finished with the stream object that is
+writing to it.
 
 (4.0)
 */
 Boolean
 StreamCapture_Begin		(StreamCapture_Ref		inRef,
-						 SInt16					inOpenWritableFile)
+						 SInt16					inOpenWritableFile,
+						 Boolean				inAutoClose)
 {
 	My_StreamCaptureAutoLocker	ptr(gStreamCapturePtrLocks(), inRef);
 	Boolean						result = false;
 	
 	
+	ptr->endCapture();
+	
+	ptr->autoClose = inAutoClose;
 	ptr->captureFileRefNum = inOpenWritableFile;
 	result = true;
 	
@@ -177,6 +202,12 @@ with the specified object.
 Since the Stream Capture module does not open the capture
 file, you must subsequently close it using FSClose().
 
+Since the Stream Capture module does not open the capture
+file, you must normally close it yourself using FSClose()
+after this routine returns.  HOWEVER, if you set the
+auto-close flag in StreamCapture_Begin(), then FSClose()
+WILL be called for you, and you lose ownership of the file.
+
 (4.0)
 */
 void
@@ -185,7 +216,7 @@ StreamCapture_End	(StreamCapture_Ref		inRef)
 	My_StreamCaptureAutoLocker	ptr(gStreamCapturePtrLocks(), inRef);
 	
 	
-	ptr->captureFileRefNum = 0;
+	ptr->endCapture();
 }// End
 
 
@@ -212,6 +243,12 @@ Returns the file reference number of any open capture
 file associated with the specified object.  If no
 capture is open, returns an invalid number (you can
 also use StreamCapture_InProgress() to ascertain this).
+
+IMPORTANT:	If you have transferred ownership of the
+			open file by setting the auto-close flag in
+			StreamCapture_Begin(), you should not be
+			using this routine to obtain the reference
+			number in order to close the file.
 
 (4.0)
 */
@@ -359,6 +396,7 @@ My_StreamCapture	(Session_LineEnding		inLineEndings)
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 captureFileLineEndings(inLineEndings),
 captureFileRefNum(0),
+autoClose(false),
 selfRef(REINTERPRET_CAST(this, StreamCapture_Ref))
 {
 }// My_StreamCapture 1-argument constructor
@@ -372,6 +410,7 @@ Destructor.  See StreamCapture_Release().
 My_StreamCapture::
 ~My_StreamCapture ()
 {
+	endCapture();
 }// My_StreamCapture destructor
 
 } // anonymous namespace

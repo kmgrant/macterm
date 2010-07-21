@@ -5393,15 +5393,12 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 						if (noErr != error) Alert_ReportOSStatus(error);
 						else
 						{
-							// The capture file is opened for writing at this point - however,
-							// the file must be closed later whenever the capture ends.  The
-							// Terminal_FileCaptureEnd() routine will notify listeners of the
-							// "kTerminal_ChangeFileCaptureEnding" event - this module should
-							// listen for that event so that FSClose() can be called.
+							// The capture file is opened for writing at this point, but it is not necessary to
+							// close the file in the Session module because of the argument, below, that
+							// transfers responsibility for closing the file to the Terminal module.
 							SetEOF(fileRefNum, (long)0);
-							// TEMPORARY - this should be able to use "ptr->targetFiles" and "ptr->targetPrintJobs"
 							// TEMPORARY - this command is not capable of handling multiple screens per window
-							Terminal_FileCaptureBegin(ptr->targetTerminals.front(), fileRefNum);
+							Terminal_FileCaptureBegin(ptr->targetTerminals.front(), fileRefNum, true/* auto-close */);
 							
 						#if 0
 							// set the window proxy icon appropriately for the file capture

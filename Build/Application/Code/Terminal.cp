@@ -2966,6 +2966,16 @@ notifying listeners of "kTerminal_ChangeFileCaptureBegun"
 events if successful.  The callbacks are invoked after
 internal file capture state has been set up.
 
+If "inAutoClose" is set to true, then you NO LONGER OWN
+the given File Manager file, and you should not close it
+yourself; it will be closed for you, whenever the capture
+ends (through Terminal_FileCaptureEnd(), or the destruction
+of this terminal screen).  Otherwise, YOU must close the
+file, after you have finished with the terminal that is
+writing to it.  See the "kTerminal_ChangeFileCaptureEnding"
+event, which will tell you exactly when the capture is
+finished.
+
 If the capture begins successfully, "true" is returned;
 otherwise, "false" is returned.
 
@@ -2973,7 +2983,8 @@ otherwise, "false" is returned.
 */
 Boolean
 Terminal_FileCaptureBegin	(TerminalScreenRef	inRef,
-							 SInt16				inOpenWritableFile)
+							 SInt16				inOpenWritableFile,
+							 Boolean			inAutoClose)
 {
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	Boolean					result = false;
@@ -2981,7 +2992,7 @@ Terminal_FileCaptureBegin	(TerminalScreenRef	inRef,
 	
 	if (nullptr != dataPtr)
 	{
-		result = StreamCapture_Begin(dataPtr->captureStream, inOpenWritableFile);
+		result = StreamCapture_Begin(dataPtr->captureStream, inOpenWritableFile, inAutoClose);
 		changeNotifyForTerminal(dataPtr, kTerminal_ChangeFileCaptureBegun, inRef);
 	}
 	return result;
@@ -2994,7 +3005,10 @@ notifying listeners of "kTerminal_ChangeFileCaptureEnding"
 events just prior to clearing internal file capture state.
 
 Since the Terminal module does not open the capture file,
-you must subsequently close it using FSClose().
+you must normally close it yourself using FSClose() after
+this routine returns.  HOWEVER, if you set the auto-close
+flag in Terminal_FileCaptureBegin(), then FSClose() WILL
+be called for you, and you lose ownership of the file.
 
 (3.0)
 */
