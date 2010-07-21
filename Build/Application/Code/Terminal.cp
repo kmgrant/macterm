@@ -587,19 +587,143 @@ public:
 /*!
 Represents a line of the terminal buffer, either in the
 scrollback or one of the main screen (“visible”) lines.
+
+A line iterator can traverse from the oldest scrollback
+line (the beginning) all the way to the bottommost main
+screen line (the end), as if all terminal lines were
+stored sequentially in memory.
 */
 struct My_LineIterator
 {
-	My_ScreenBufferLineList&				sourceList;				//!< the list that this iterator is pointing into
-	My_ScreenBufferLineList::iterator		rowIterator;			//!< points into one of the buffer queues
-	
-	My_LineIterator		(My_ScreenBufferLineList&				inSourceList,
-						 My_ScreenBufferLineList::iterator		inRowIterator)
+public:
+	My_LineIterator		(My_ScreenBufferLineList&			inScreenBuffer,
+						 My_ScreenBufferLineList&			inScrollbackBuffer,
+						 My_ScreenBufferLineList&			inInitialIteratorTarget,
+						 My_ScreenBufferLineList::iterator	inRowIterator)
 	:
-	sourceList(inSourceList),
+	screenBuffer(inScreenBuffer),
+	scrollbackBuffer(inScrollbackBuffer),
+	currentListPtr(&inInitialIteratorTarget),
 	rowIterator(inRowIterator)
 	{
+		assert((inInitialIteratorTarget == inScreenBuffer) || (inInitialIteratorTarget == inScrollbackBuffer));
 	}
+	
+	My_ScreenBufferLineList&
+	currentBuffer ()
+	{
+		return *currentListPtr;
+	}
+	
+	My_ScreenBufferLine&
+	currentLine ()
+	{
+		return *rowIterator; // crashes if isEnd(), which is expected (STL-like) behavior
+	}
+	
+	//! Returns either the oldest scrollback line, or the topmost
+	//! main screen line when the scrollback is empty.
+	My_ScreenBufferLine&
+	firstLine ()
+	{
+		// the back of the scrollback is used because its first line is the one
+		// that is closest to the main screen, and the front (from the caller’s
+		// perspective) must be the oldest scrollback line
+		return (scrollbackBuffer.empty() || (currentBuffer() == screenBuffer)) ? screenBuffer.front() : scrollbackBuffer.back();
+	}
+	
+	//! Increments the internal line pointer so that currentLine() now
+	//! refers to the next line in the scrollback or screen buffer, as
+	//! appropriate.  Returns a reference to the new currentLine().
+	//! If the returned line is the last valid line, "isEnd" is set to
+	//! true; otherwise, it is set to false.  The initial value of
+	//! "isEnd" is ignored.
+	My_ScreenBufferLine&
+	goToNextLine	(Boolean&	isEnd)
+	{
+		// IMPORTANT:	The scrollback buffer is stored in the opposite
+		//			sense that it is returned by this iterator: the
+		//			beginning of the scrollback is the line nearest
+		//			the main screen.  So, the scrollback buffer is
+		//			traversed backward to reach “next lines”.
+		isEnd = false;
+		if ((currentBuffer() == scrollbackBuffer) &&
+			(currentBuffer().empty() || (&currentBuffer().front() == &currentLine())))
+		{
+			// change the iterator to look at the screen buffer instead
+			currentListPtr = &screenBuffer;
+			rowIterator = currentListPtr->begin();
+		}
+		else
+		{
+			if ((currentBuffer() == scrollbackBuffer) && (scrollbackBuffer.begin() != rowIterator))
+			{
+				--rowIterator; // scrollback is inverted
+			}
+			else if ((currentBuffer() == screenBuffer) && (&lastLine() != &*rowIterator))
+			{
+				++rowIterator;
+			}
+			else
+			{
+				isEnd = true;
+			}
+		}
+		return currentLine();
+	}
+	
+	//! Decrements the internal line pointer so that currentLine() now
+	//! refers to the previous line in the scrollback or screen buffer,
+	//! as appropriate.  Returns a reference to the new currentLine().
+	//! If the returned line is the first valid line, "isEnd" is set to
+	//! true; otherwise, it is set to false.  The initial value of
+	//! "isEnd" is ignored.
+	My_ScreenBufferLine&
+	goToPreviousLine	(Boolean&	isEnd)
+	{
+		// IMPORTANT:	The scrollback buffer is stored in the opposite
+		//			sense that it is returned by this iterator: the
+		//			beginning of the scrollback is the line nearest
+		//			the main screen.  So, the scrollback buffer is
+		//			traversed forward to reach “previous lines”.
+		isEnd = false;
+		if ((currentBuffer() == screenBuffer) &&
+			(&currentBuffer().front() == &currentLine()))
+		{
+			// change the iterator to look at the scrollback buffer instead
+			currentListPtr = &scrollbackBuffer;
+			rowIterator = currentListPtr->begin();
+		}
+		else
+		{
+			if ((currentBuffer() == screenBuffer) && (screenBuffer.begin() != rowIterator))
+			{
+				--rowIterator;
+			}
+			else if ((currentBuffer() == scrollbackBuffer) && (&firstLine() != &*rowIterator))
+			{
+				++rowIterator; // scrollback is inverted
+			}
+			else
+			{
+				isEnd = true;
+			}
+		}
+		return currentLine();
+	}
+	
+	//! Returns the bottommost main screen line.
+	My_ScreenBufferLine&
+	lastLine ()
+	{
+		return screenBuffer.back();
+	}
+
+private:
+	My_ScreenBufferLineList&			screenBuffer;			//!< the other possible target for "currentListPtr"
+	My_ScreenBufferLineList&			scrollbackBuffer;		//!< one possible target for "currentListPtr"
+	My_ScreenBufferLineList*			currentListPtr;			//!< the list that this iterator is pointing into
+	My_ScreenBufferLineList::iterator	rowIterator;			//!< points into one of the buffer queues
 };
 typedef My_LineIterator*	My_LineIteratorPtr;
 
@@ -1125,6 +1249,7 @@ public:
 namespace {
 
 void						addScreenLineLength						(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
+void						appendScreenLinePtrToList				(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
 void						appendScreenLineRawToCFString			(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
 void						assertScrollingRegion					(My_ScreenBufferPtr);
 void						bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr);
@@ -1310,18 +1435,19 @@ Terminal_DisposeScreen	(TerminalScreenRef		inRef)
 /*!
 Creates a special reference to the given line of the given
 terminal screen’s VISIBLE SCREEN buffer, or returns nullptr
-if the line is out of range or the iterator cannot be
-created for some other reason.
+if the line is out of range or the iterator cannot be created
+for some other reason.
 
-Pass 0 to indicate you want the very topmost line (that
-is, the one that would be added to the scrollback buffer
-first if the screen scrolls), or larger values to ask for
-lines below it.  Currently, this routine takes linearly
-more time to figure out where the bottommost lines are.
+Pass 0 to indicate you want the very topmost line (that is,
+the one that would be added to the scrollback buffer first if
+the screen scrolls), or larger values to ask for lines below
+it.  Currently, this routine takes linearly more time to
+figure out where the bottommost lines are.
 
-A main line iterator cannot point to a scrollback screen
-line; use Terminal_NewScrollbackLineIterator() to locate
-scrollback lines.
+A main line iterator can be advanced using negative numbers
+to go backwards, and if this is done often enough, it will
+automatically enter the scrollback buffer (as if the iterator
+were constructed with Terminal_NewScrollbackLineIterator()).
 
 IMPORTANT:	An iterator is completely invalid once the
 			screen it was created for has been destroyed.
@@ -1336,7 +1462,7 @@ Terminal_NewMainScreenLineIterator	(TerminalScreenRef		inRef,
 	My_ScreenBufferPtr		ptr = getVirtualScreenData(inRef);
 	
 	
-	if (ptr != nullptr)
+	if (nullptr != ptr)
 	{
 		// ensure the specified row is in range
 		if (inLineNumberZeroForTop < ptr->screenBuffer.size())
@@ -1348,8 +1474,9 @@ Terminal_NewMainScreenLineIterator	(TerminalScreenRef		inRef,
 				
 				
 				std::advance(startIterator, STATIC_CAST(inLineNumberZeroForTop, My_ScreenBufferLineList::difference_type));
-				iteratorPtr = new My_LineIterator(ptr->screenBuffer, startIterator);
-				if (iteratorPtr != nullptr)
+				iteratorPtr = new My_LineIterator(ptr->screenBuffer, ptr->scrollbackBuffer,
+													ptr->screenBuffer/* iterator target */, startIterator);
+				if (nullptr != iteratorPtr)
 				{
 					result = REINTERPRET_CAST(iteratorPtr, Terminal_LineRef);
 				}
@@ -1365,25 +1492,25 @@ Terminal_NewMainScreenLineIterator	(TerminalScreenRef		inRef,
 
 
 /*!
-Creates a special reference to the given line of the
-given terminal screen’s SCROLLBACK buffer, or returns
-nullptr if the line is out of range or the iterator
-cannot be created for some other reason.
+Creates a special reference to the given line of the given
+terminal screen’s SCROLLBACK buffer, or returns nullptr if
+the line is out of range or the iterator cannot be created
+for some other reason.
 
-Pass 0 to indicate you want the very newest line (that
-is, the one that most recently scrolled off the top of
-the main screen), or larger values to ask for older
-lines.  Currently, this routine takes linearly more time
-to figure out where old scrollback lines are.
+Pass 0 to indicate you want the very newest line (that is,
+the one that most recently scrolled off the top of the main
+screen), or larger values to ask for older lines.  Currently,
+this routine takes linearly more time to figure out where
+old scrollback lines are.
 
-A scrollback iterator cannot point to a main screen
-line; use Terminal_NewMainLineIterator() to locate main
-screen lines.
+A scrollback line iterator can be advanced often enough to
+automatically enter the main screen buffer (as if the iterator
+were constructed with NewMainScreenLineIterator()).
 
-IMPORTANT:	An iterator is completely invalid once the
-			screen it was created for has been destroyed.
-			It can also be invalidated in other ways,
-			e.g. a call to Terminal_DeleteAllSavedLines().
+IMPORTANT:	An iterator is completely invalid once the screen
+			it was created for has been destroyed.  It can
+			also be invalidated in other ways, e.g. a call to
+			Terminal_DeleteAllSavedLines().
 
 (3.0)
 */
@@ -1395,7 +1522,7 @@ Terminal_NewScrollbackLineIterator	(TerminalScreenRef	inRef,
 	My_ScreenBufferPtr		ptr = getVirtualScreenData(inRef);
 	
 	
-	if (ptr != nullptr)
+	if (nullptr != ptr)
 	{
 		// ensure the specified row is in range
 		if (inLineNumberZeroForNewest < ptr->scrollbackBuffer.size())
@@ -1407,8 +1534,9 @@ Terminal_NewScrollbackLineIterator	(TerminalScreenRef	inRef,
 				
 				
 				std::advance(startIterator, STATIC_CAST(inLineNumberZeroForNewest, My_ScreenBufferLineList::difference_type));
-				iteratorPtr = new My_LineIterator(ptr->scrollbackBuffer, startIterator);
-				if (iteratorPtr != nullptr)
+				iteratorPtr = new My_LineIterator(ptr->screenBuffer, ptr->scrollbackBuffer,
+													ptr->scrollbackBuffer/* iterator target */, startIterator);
+				if (nullptr != iteratorPtr)
 				{
 					result = REINTERPRET_CAST(iteratorPtr, Terminal_LineRef);
 				}
@@ -1432,12 +1560,12 @@ and sets your copy of the reference to nullptr.
 void
 Terminal_DisposeLineIterator	(Terminal_LineRef*		inoutRefPtr)
 {
-	if (inoutRefPtr != nullptr)
+	if (nullptr != inoutRefPtr)
 	{
 		My_LineIteratorPtr		ptr = getLineIterator(*inoutRefPtr);
 		
 		
-		if (ptr != nullptr)
+		if (nullptr != ptr)
 		{
 			delete ptr;
 			*inoutRefPtr = nullptr;
@@ -1514,7 +1642,7 @@ Terminal_ChangeLineAttributes	(TerminalScreenRef			inRef,
 	else if (iteratorPtr == nullptr) result = kTerminal_ResultInvalidIterator;
 	else
 	{
-		changeLineAttributes(dataPtr, *(iteratorPtr->rowIterator), inSetTheseAttributes, inClearTheseAttributes);
+		changeLineAttributes(dataPtr, iteratorPtr->currentLine(), inSetTheseAttributes, inClearTheseAttributes);
 	}
 	
 	return result;
@@ -1565,7 +1693,7 @@ Terminal_ChangeLineRangeAttributes	(TerminalScreenRef			inRef,
 	else if (iteratorPtr == nullptr) result = kTerminal_ResultInvalidIterator;
 	else
 	{
-		changeLineRangeAttributes(dataPtr, *(iteratorPtr->rowIterator), inZeroBasedStartColumn,
+		changeLineRangeAttributes(dataPtr, iteratorPtr->currentLine(), inZeroBasedStartColumn,
 									inZeroBasedPastTheEndColumnOrNegativeForLastColumn,
 									inSetTheseAttributes, inClearTheseAttributes);
 	}
@@ -1645,15 +1773,14 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 		else if (nullptr == iteratorPtr) result = kTerminal_ResultInvalidIterator;
 		else
 		{
-			Boolean const						kSingleLineRange = (1 == inNumberOfRowsToConsider);
-			My_ScreenBufferLineList::iterator	currentLine = iteratorPtr->rowIterator;
+			Boolean const		kSingleLineRange = (1 == inNumberOfRowsToConsider);
 			
 			
 			// figure out how to treat the first line
 			if (kSingleLineRange)
 			{
 				// same line - iterate only over certain columns
-				changeLineRangeAttributes(dataPtr, *currentLine, inZeroBasedStartColumn, inZeroBasedPastTheEndColumn,
+				changeLineRangeAttributes(dataPtr, iteratorPtr->currentLine(), inZeroBasedStartColumn, inZeroBasedPastTheEndColumn,
 											inSetTheseAttributes, inClearTheseAttributes);
 			}
 			else
@@ -1666,14 +1793,15 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 				SInt16		linePastTheEndColumn = (inConstrainToRectangle)
 													? inZeroBasedPastTheEndColumn
 													: dataPtr->text.visibleScreen.numberOfColumnsPermitted;
+				Boolean		isEnd = false;
 				
 				
 				// fill in first line
-				changeLineRangeAttributes(dataPtr, *currentLine, inZeroBasedStartColumn, linePastTheEndColumn,
+				changeLineRangeAttributes(dataPtr, iteratorPtr->currentLine(), inZeroBasedStartColumn, linePastTheEndColumn,
 											inSetTheseAttributes, inClearTheseAttributes);
-				++currentLine;
+				iteratorPtr->goToNextLine(isEnd);
 				
-				if (iteratorPtr->sourceList.end() != currentLine)
+				if (false == isEnd)
 				{
 					// fill in remaining lines; the last line is special
 					// because it will end “early” at the end anchor
@@ -1682,9 +1810,9 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 						SInt16 const		kLineEnd = (inNumberOfRowsToConsider - 1);
 						
 						
-						for (i = 0; i < kLineEnd; ++i, ++currentLine)
+						for (i = 0; i < kLineEnd; ++i, iteratorPtr->goToNextLine(isEnd))
 						{
-							if (currentLine == iteratorPtr->sourceList.end())
+							if (isEnd)
 							{
 								Console_Warning(Console_WriteLine, "exceeded row boundaries when changing attributes of a range");
 								break;
@@ -1695,13 +1823,13 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 							if (i < (kLineEnd - 1))
 							{
 								// fill in intermediate line
-								changeLineRangeAttributes(dataPtr, *currentLine, lineStartColumn, linePastTheEndColumn,
+								changeLineRangeAttributes(dataPtr, iteratorPtr->currentLine(), lineStartColumn, linePastTheEndColumn,
 															inSetTheseAttributes, inClearTheseAttributes);
 							}
 							else
 							{
 								// fill in last line
-								changeLineRangeAttributes(dataPtr, *currentLine, lineStartColumn, inZeroBasedPastTheEndColumn,
+								changeLineRangeAttributes(dataPtr, iteratorPtr->currentLine(), lineStartColumn, inZeroBasedPastTheEndColumn,
 															inSetTheseAttributes, inClearTheseAttributes);
 							}
 						}
@@ -1759,7 +1887,7 @@ Terminal_CopyLineRange	(TerminalScreenRef		inScreen,
 	else if (iteratorPtr == nullptr) result = kTerminal_ResultInvalidIterator;
 	else
 	{
-		CFIndex const	kTextVectorSize = CFStringGetLength(iteratorPtr->rowIterator->textCFString.returnCFMutableStringRef());
+		CFIndex const	kTextVectorSize = CFStringGetLength(iteratorPtr->currentLine().textCFString.returnCFMutableStringRef());
 		UInt16			endColumn = (inZeroBasedEndColumnOrNegativeForLastColumn < 0)
 										? kTextVectorSize - 1
 										: inZeroBasedEndColumnOrNegativeForLastColumn;
@@ -1775,7 +1903,7 @@ Terminal_CopyLineRange	(TerminalScreenRef		inScreen,
 			SInt32				copyLength = INTEGER_MINIMUM(inBufferLength, endColumn - inZeroBasedStartColumn + 1);
 			
 			
-			textStartIter = iteratorPtr->rowIterator->textVectorBegin;
+			textStartIter = iteratorPtr->currentLine().textVectorBegin;
 			std::advance(textStartIter, inZeroBasedStartColumn);
 			(char*)whitespaceSensitiveCopy(textStartIter, copyLength, outBuffer, copyLength,
 											&copyLength/* returned actual length */,
@@ -1872,16 +2000,15 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 		else
 		{
 			// there are multiple lines of text
-			UInt16 const						kEOLLength = CPP_STD::strlen(inEndOfLineSequence);
-			My_ScreenBufferLineList&			lineList = iteratorPtr->sourceList;
-			My_ScreenBufferLineList::iterator	currentLine = iteratorPtr->rowIterator;
-			UInt16								lineCount = 0;
-			SInt16								currentX = 0;
-			SInt16								actualLineLength = 0L;
-			char*								destPtr = outBuffer;
+			UInt16 const	kEOLLength = CPP_STD::strlen(inEndOfLineSequence);
+			Boolean			isEnd = false;
+			UInt16			lineCount = 0;
+			SInt16			currentX = 0;
+			SInt16			actualLineLength = 0L;
+			char*			destPtr = outBuffer;
 			
 			
-			for (; ((lineCount < inNumberOfRowsToConsider) && (currentLine != lineList.end())); ++currentLine, ++lineCount)
+			for (; ((lineCount < inNumberOfRowsToConsider) && (false == isEnd)); iteratorPtr->goToNextLine(isEnd), ++lineCount)
 			{
 				char const* const	kDestLineStartPtr = destPtr; // pointer into destination buffer for start of current line
 				char const*			destLinePastTheEndPtr = nullptr;
@@ -1893,14 +2020,13 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 				{
 					// non-rectangular mode; the first and last lines are irregularly-shaped, but
 					// the remainder is rectangular, flushed to the left and right screen edges
-					assert(!lineList.empty());
 					if (0 == lineCount)
 					{
 						// first row in range
 						currentX = inZeroBasedStartColumnOnFirstRow;
 						lineLength = dataPtr->text.visibleScreen.numberOfColumnsPermitted - inZeroBasedStartColumnOnFirstRow;
 					}
-					else if ((lineCount == (inNumberOfRowsToConsider - 1)) || (*currentLine == lineList.back()))
+					else if ((lineCount == (inNumberOfRowsToConsider - 1)) || (&(iteratorPtr->currentLine()) == &(iteratorPtr->lastLine())))
 					{
 						// last row in range
 						currentX = 0;
@@ -1935,7 +2061,7 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 					My_TextIterator		textStartIter = nullptr;
 					
 					
-					textStartIter = currentLine->textVectorBegin;
+					textStartIter = iteratorPtr->currentLine().textVectorBegin;
 					std::advance(textStartIter, currentX);
 					destPtr = whitespaceSensitiveCopy(textStartIter, lineLength/* source length */,
 														destPtr/* destination start */,
@@ -1949,8 +2075,7 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 				// skip it for any line where the copy range includes the right margin and the right
 				// margin character is non-whitespace (this is an XTerm-style way of allowing long
 				// pathnames to join when they are broken at the right margin)
-				assert(!lineList.empty());
-				if ((kEOLLength) && (&*currentLine != &lineList.back()))
+				if ((kEOLLength) && (&(iteratorPtr->currentLine()) != &(iteratorPtr->lastLine())))
 				{
 					if ((inFlags & kTerminal_TextCopyFlagsAlwaysNewLineAtRightMargin)/* force new-line? */ ||
 						(inFlags & kTerminal_TextCopyFlagsRectangular)/* rectangular selections always have new-lines */ ||
@@ -2944,9 +3069,9 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 	else
 	{
 		// need to search line for style chunks
-		My_ScreenBufferLineList::iterator		lineIterator = iteratorPtr->rowIterator;
+		My_ScreenBufferLine&					currentLine = iteratorPtr->currentLine();
 		My_TextIterator							textIterator = nullptr;
-		My_TextAttributesList::const_iterator	attrIterator = lineIterator->attributeVector.begin();
+		My_TextAttributesList::const_iterator	attrIterator = currentLine.attributeVector.begin();
 		TerminalTextAttributes					previousAttributes = 0;
 		TerminalTextAttributes					currentAttributes = 0;
 		SInt16									runStartCharacterIndex = 0;
@@ -2957,26 +3082,26 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 	#if 0
 		// DEBUGGING ONLY: if you suspect a bug in the incremental loop below,
 		// try asking the entire line to be drawn without formatting, first
-		InvokeScreenRunOperationProc(inDoWhat, inRef, lineIterator->textVectorBegin/* starting point */,
-										lineIterator->textVectorSize/* length */,
+		InvokeScreenRunOperationProc(inDoWhat, inRef, currentLine.textVectorBegin/* starting point */,
+										currentLine.textVectorSize/* length */,
 										inStartRow, 0/* zero-based start column */,
-										lineIterator->globalAttributes, inContextPtr);
+										currentLine.globalAttributes, inContextPtr);
 	#endif
 		
 		// TEMPORARY - HIGHLY inefficient to search here, need to change this into a cache
 		//             (in fact, attribute bit arrays can probably be completely replaced by
 		//             style runs at some point in the future)
-		assert(nullptr != lineIterator->textVectorBegin);
-		for (textIterator = lineIterator->textVectorBegin,
-					attrIterator = lineIterator->attributeVector.begin();
-				(textIterator != lineIterator->textVectorEnd) &&
-					(attrIterator != lineIterator->attributeVector.end());
+		assert(nullptr != currentLine.textVectorBegin);
+		for (textIterator = currentLine.textVectorBegin,
+					attrIterator = currentLine.attributeVector.begin();
+				(textIterator != currentLine.textVectorEnd) &&
+					(attrIterator != currentLine.attributeVector.end());
 				++textIterator, ++attrIterator, ++characterIndex)
 		{
 			currentAttributes = *attrIterator;
 			if ((currentAttributes != previousAttributes) ||
-				(characterIndex == STATIC_CAST(lineIterator->textVectorSize - 1, SInt16)) ||
-				(characterIndex == STATIC_CAST(lineIterator->attributeVector.size() - 1, SInt16)))
+				(characterIndex == STATIC_CAST(currentLine.textVectorSize - 1, SInt16)) ||
+				(characterIndex == STATIC_CAST(currentLine.attributeVector.size() - 1, SInt16)))
 			{
 				styleRunLength = characterIndex - runStartCharacterIndex;
 				
@@ -2986,8 +3111,8 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 					TerminalTextAttributes		rangeAttributes = previousAttributes;
 					
 					
-					STYLE_ADD(rangeAttributes, lineIterator->globalAttributes);
-					Terminal_InvokeScreenRunProc(inDoWhat, inRef, lineIterator->textVectorBegin + runStartCharacterIndex/* starting point */,
+					STYLE_ADD(rangeAttributes, currentLine.globalAttributes);
+					Terminal_InvokeScreenRunProc(inDoWhat, inRef, currentLine.textVectorBegin + runStartCharacterIndex/* starting point */,
 													styleRunLength/* length */, inStartRow,
 													runStartCharacterIndex/* zero-based start column */,
 													rangeAttributes, inContextPtr);
@@ -3000,14 +3125,14 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 		}
 		
 		// ask that the remainder of the line be handled as if it were blank
-		if (textIterator != lineIterator->textVectorEnd)
+		if (textIterator != currentLine.textVectorEnd)
 		{
-			styleRunLength = std::distance(textIterator, lineIterator->textVectorEnd);
+			styleRunLength = std::distance(textIterator, currentLine.textVectorEnd);
 			
 			// found new style run; so handle the previous run
 			if (styleRunLength > 0)
 			{
-				TerminalTextAttributes		attributesForRemainder = lineIterator->globalAttributes;
+				TerminalTextAttributes		attributesForRemainder = currentLine.globalAttributes;
 				
 				
 				// the “selected” attribute is special; it persists regardless
@@ -3050,7 +3175,7 @@ Terminal_GetLineGlobalAttributes	(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 	if ((iteratorPtr == nullptr) || (outAttributesPtr == nullptr)) result = kTerminal_ResultParameterError;
 	else
 	{
-		*outAttributesPtr = iteratorPtr->rowIterator->globalAttributes;
+		*outAttributesPtr = iteratorPtr->currentLine().globalAttributes;
 	}
 	
 	return result;
@@ -3146,14 +3271,14 @@ Terminal_GetLineRange	(TerminalScreenRef			inScreen,
 											: inZeroBasedPastEndColumnOrNegativeForLastColumn;
 		
 		
-		if (kPastEndColumn > iteratorPtr->rowIterator->textVectorSize)
+		if (kPastEndColumn > iteratorPtr->currentLine().textVectorSize)
 		{
 			result = kTerminal_ResultParameterError;
 		}
 		else
 		{
-			outReferenceStart = iteratorPtr->rowIterator->textVectorBegin + inZeroBasedStartColumn;
-			outReferencePastEnd = iteratorPtr->rowIterator->textVectorBegin + kPastEndColumn;
+			outReferenceStart = iteratorPtr->currentLine().textVectorBegin + inZeroBasedStartColumn;
+			outReferencePastEnd = iteratorPtr->currentLine().textVectorBegin + kPastEndColumn;
 			if (inFlags & kTerminal_TextFilterFlagsNoEndWhitespace)
 			{
 				UniChar const*		lastCharPtr = outReferencePastEnd - 1;
@@ -3293,9 +3418,9 @@ if the iterator is advanced or backed-up successfully
 if the iterator is completely invalid
 
 \retval kTerminal_ResultIteratorCannotAdvance
-if the iterator cannot move in the requested direction; try
-creating a new iterator over the other buffer (scrollback or
-main screen)
+if the iterator cannot move in the requested direction (already
+at oldest scrollback or screen line, or already at bottommost
+screen line)
 
 (3.0)
 */
@@ -3312,28 +3437,38 @@ Terminal_LineIteratorAdvance	(TerminalScreenRef		inRef,
 	if (iteratorPtr == nullptr) result = kTerminal_ResultParameterError;
 	else
 	{
-		My_ScreenBufferLineList::iterator			proposedNewIterator = iteratorPtr->rowIterator;
-		My_ScreenBufferLineList::difference_type	moveDistance = STATIC_CAST(inHowManyRowsForwardOrNegativeForBackward,
-																				My_ScreenBufferLineList::difference_type);
+		Boolean		isEnd = false;
 		
 		
-		// IMPLEMENTATION DETAIL: the scrollback is maintained in reverse, so
-		// a normal advance would technically move backward instead of forward;
-		// for consistency, this routine always advances in a downward direction
-		// (from a rendering point of view)
-		if (&iteratorPtr->sourceList == &dataPtr->scrollbackBuffer) moveDistance = -moveDistance;
-		
-		std::advance(proposedNewIterator, moveDistance);
-		
-		if (((inHowManyRowsForwardOrNegativeForBackward > 0) && (proposedNewIterator == iteratorPtr->sourceList.end())) ||
-				((inHowManyRowsForwardOrNegativeForBackward < 0) && (iteratorPtr->rowIterator == iteratorPtr->sourceList.begin())))
+		if (inHowManyRowsForwardOrNegativeForBackward > 0)
 		{
-			// unable to advance!
-			result = kTerminal_ResultIteratorCannotAdvance;
+			SInt16		i = 0;
+			
+			
+			for (i = 0; i < inHowManyRowsForwardOrNegativeForBackward; ++i)
+			{
+				iteratorPtr->goToNextLine(isEnd);
+				if (isEnd) break;
+			}
+			if (inHowManyRowsForwardOrNegativeForBackward != i)
+			{
+				result = kTerminal_ResultIteratorCannotAdvance;
+			}
 		}
 		else
 		{
-			iteratorPtr->rowIterator = proposedNewIterator;
+			SInt16		i = 0;
+			
+			
+			for (i = inHowManyRowsForwardOrNegativeForBackward; i < 0; ++i)
+			{
+				iteratorPtr->goToPreviousLine(isEnd);
+				if (isEnd) break;
+			}
+			if (0 != i)
+			{
+				result = kTerminal_ResultIteratorCannotAdvance;
+			}
 		}
 	}
 	return result;
@@ -3737,175 +3872,87 @@ Terminal_Search		(TerminalScreenRef							inRef,
 	else if (nullptr == inQuery) result = kTerminal_ResultParameterError;
 	else
 	{
-		typedef std::vector< CFStringRef >	BufferList;
-		UInt32 const		kNumberOfScrollbackRows = Terminal_ReturnInvisibleRowCount(inRef);
-		UInt16 const		kNumberOfVisibleRows = Terminal_ReturnRowCount(inRef);
-		Terminal_Result		iterationResult = kTerminal_ResultOK;
-		BufferList			buffersToSearch;
-		CFRetainRelease		searchedScrollbackBuffer;
-		CFRetainRelease		searchedScreenBuffer;
-		CFOptionFlags		searchFlags = 0;
-		UInt16				bufferIndex = 0; // 0 for screen, 1 for scrollback
+		typedef std::vector< My_ScreenBufferLineList* >		BufferList;
+		UInt32 const	kNumberOfScrollbackRows = Terminal_ReturnInvisibleRowCount(inRef);
+		BufferList		buffersToSearch;
+		CFOptionFlags	searchFlags = 0;
+		UInt16			bufferIndex = 0;
 		
 		
 		// translate given flags to Core Foundation String search flags
 		if (0 == (inFlags & kTerminal_SearchFlagsCaseSensitive)) searchFlags |= kCFCompareCaseInsensitive;
 		if (inFlags & kTerminal_SearchFlagsSearchBackwards) searchFlags |= kCFCompareBackwards;
 		
-		// TEMPORARY; since the search algorithm currently traverses a
-		// contiguous buffer, one is created; however, it’s hard to imagine
-		// anything less efficient than this!  A future implementation will
-		// probably create index entries for each terminal line, so that the
-		// search algorithm can be rewritten to use the existing buffer and
-		// index and not require the creation of a mega-buffer.
-		{
-			CFRetainRelease*		retainerPtr = nullptr;
-			UInt32					numberOfRows = 0;
-			CFIndex					stringLength = 0;
-			CFMutableStringRef		mutableCFString = nullptr;
-			Terminal_LineRef		lineIterator = nullptr;
-			
-			
-			//
-			// main screen
-			//
-			
-			// configure; also find the appropriate buffer size and starting iterator
-			retainerPtr = &searchedScreenBuffer;
-			numberOfRows = kNumberOfVisibleRows;
-			stringLength = 0;
-			lineIterator = Terminal_NewMainScreenLineIterator(inRef, 0);
-			
-			// note: this block is generic and the same for scrollback and screen
-			// code here, thanks to the “configuration” section above
-			if (nullptr != lineIterator)
-			{
-				// note that the iterator is not invalidated by this loop
-				iterationResult = forEachLineDo(inRef, lineIterator, numberOfRows, addScreenLineLength, &stringLength);
-				assert(kTerminal_ResultParameterError != iterationResult);
-			}
-			if (0 != stringLength)
-			{
-				mutableCFString = CFStringCreateMutable(kCFAllocatorDefault, stringLength);
-				retainerPtr->setCFMutableStringRef(mutableCFString, true/* is retained */);
-				if (false == retainerPtr->exists())
-				{
-					result = kTerminal_ResultNotEnoughMemory;
-				}
-				else
-				{
-					iterationResult = forEachLineDo(inRef, lineIterator, numberOfRows, appendScreenLineRawToCFString,
-													mutableCFString);
-					assert(kTerminal_ResultParameterError != iterationResult);
-					if (kTerminal_ResultOK != iterationResult) result = kTerminal_ResultNotEnoughMemory;
-					else
-					{
-						buffersToSearch.push_back(mutableCFString);
-					}
-				}
-			}
-			Terminal_DisposeLineIterator(&lineIterator);
-			
-			//
-			// scrollback
-			//
-			
-			// configure; also find the appropriate buffer size and starting iterator
-			retainerPtr = &searchedScrollbackBuffer;
-			numberOfRows = kNumberOfScrollbackRows;
-			stringLength = 0;
-			lineIterator = Terminal_NewScrollbackLineIterator(inRef, 0);
-			
-			// note: this block is generic and the same for scrollback and screen
-			// code here, thanks to the “configuration” section above
-			if (nullptr != lineIterator)
-			{
-				// note that the iterator is not invalidated by this loop
-				iterationResult = forEachLineDo(inRef, lineIterator, numberOfRows, addScreenLineLength, &stringLength);
-				assert(kTerminal_ResultParameterError != iterationResult);
-			}
-			if (0 != stringLength)
-			{
-				mutableCFString = CFStringCreateMutable(kCFAllocatorDefault, stringLength);
-				retainerPtr->setCFMutableStringRef(mutableCFString, true/* is retained */);
-				if (false == retainerPtr->exists())
-				{
-					result = kTerminal_ResultNotEnoughMemory;
-				}
-				else
-				{
-					iterationResult = forEachLineDo(inRef, lineIterator, numberOfRows, appendScreenLineRawToCFString,
-													mutableCFString);
-					assert(kTerminal_ResultParameterError != iterationResult);
-					if (kTerminal_ResultOK != iterationResult) result = kTerminal_ResultNotEnoughMemory;
-					else
-					{
-						buffersToSearch.push_back(mutableCFString);
-					}
-				}
-			}
-			Terminal_DisposeLineIterator(&lineIterator);
-		}
-		
 		// search the screen first, then the scrollback (backwards) if it exists
-		bufferIndex = 0;
+		buffersToSearch.push_back(&dataPtr->screenBuffer);
+		buffersToSearch.push_back(&dataPtr->scrollbackBuffer);
 		for (BufferList::const_iterator toBuffer = buffersToSearch.begin();
 				toBuffer != buffersToSearch.end(); ++toBuffer, ++bufferIndex)
 		{
-			// find ALL matches
-			CFStringRef const	kBufferToSearch = *toBuffer;
-			Boolean const		kIsScreen = (0 == bufferIndex); // else scrollback
-			CFRetainRelease		resultsArray(CFStringCreateArrayWithFindResults
-												(kCFAllocatorDefault, kBufferToSearch, inQuery,
-													CFRangeMake(0, CFStringGetLength(kBufferToSearch)),
-													searchFlags),
-												true/* already retained */);
+			Boolean const				kIsScreen = (0 == bufferIndex); // else scrollback
+			My_ScreenBufferLineList&	kBuffer = *(*toBuffer);
+			SInt32						rowIndex = 0; // reset per buffer
 			
 			
-			if (resultsArray.exists())
+			for (My_ScreenBufferLineList::const_iterator toLine = kBuffer.begin();
+					toLine != kBuffer.end(); ++toLine, ++rowIndex)
 			{
-				CFArrayRef const	kResultsArrayRef = resultsArray.returnCFArrayRef();
-				CFIndex const		kNumberOfMatches = CFArrayGetCount(kResultsArrayRef);
+				// find ALL matches; NOTE that this technically will not find words
+				// that begin at the end of one line and continue at the start of
+				// the next, but that is a known limitation right now (TEMPORARY)
+				My_ScreenBufferLine const&	kLine = *toLine;
+				CFStringRef const			kCFStringToSearch = kLine.textCFString.returnCFStringRef();
+				CFRetainRelease				resultsArray(CFStringCreateArrayWithFindResults
+															(kCFAllocatorDefault, kCFStringToSearch, inQuery,
+																CFRangeMake(0, CFStringGetLength(kCFStringToSearch)),
+																searchFlags),
+															true/* already retained */);
 				
 				
-				// return the range of text that was found
-				outMatches.reserve(outMatches.size() + kNumberOfMatches);
-				for (CFIndex i = 0; i < kNumberOfMatches; ++i)
+				if (resultsArray.exists())
 				{
-					UInt16 const				kEndOfLinePad = 0; // lines are joined without any characters in between (e.g. no new-lines)
-					CFRange const*				toRange = REINTERPRET_CAST(CFArrayGetValueAtIndex(kResultsArrayRef, i),
-																			CFRange const*);
-					UInt16						firstColumn = 0;
-					SInt32						firstRow = 0;
-					UInt16						secondColumn = 0; // in case selection spans rows
-					SInt32						secondRow = 0; // in case selection spans rows
-					Terminal_RangeDescription	textRegion;
+					CFArrayRef const	kResultsArrayRef = resultsArray.returnCFArrayRef();
+					CFIndex const		kNumberOfMatches = CFArrayGetCount(kResultsArrayRef);
 					
 					
-					// translate all results ranges into external form; the
-					// caller understands rows and columns, etc. not offsets
-					// into a giant buffer
-					getBufferOffsetCell(dataPtr, toRange->location, kEndOfLinePad, firstColumn, firstRow);
-					getBufferOffsetCell(dataPtr, toRange->location + toRange->length, kEndOfLinePad, secondColumn, secondRow);
-					if (false == kIsScreen)
+					// return the range of text that was found
+					outMatches.reserve(outMatches.size() + kNumberOfMatches);
+					for (CFIndex i = 0; i < kNumberOfMatches; ++i)
 					{
-						// translate scrollback into negative coordinates (zero-based)
-						firstRow = -firstRow - 1;
-						secondRow = -secondRow - 1;
+						CFRange const*				toRange = REINTERPRET_CAST(CFArrayGetValueAtIndex(kResultsArrayRef, i),
+																				CFRange const*);
+						SInt32						firstRow = rowIndex;
+						UInt16						firstColumn = 0;
+						UInt16						secondColumn = 0;
+						Terminal_RangeDescription	textRegion;
+						
+						
+						// translate all results ranges into external form; the
+						// caller understands rows and columns, etc. not offsets
+						// into a giant buffer
+						//getBufferOffsetCell(dataPtr, toRange->location, kEndOfLinePad, firstColumn, firstRow);
+						//getBufferOffsetCell(dataPtr, toRange->location + toRange->length, kEndOfLinePad, secondColumn, firstRow);
+						firstColumn = toRange->location;
+						secondColumn = toRange->location + toRange->length;
+						if (false == kIsScreen)
+						{
+							// translate scrollback into negative coordinates (zero-based)
+							firstRow = -firstRow - 1;
+						}
+						bzero(&textRegion, sizeof(textRegion));
+						textRegion.screen = inRef;
+						textRegion.firstRow = firstRow;
+						textRegion.firstColumn = firstColumn;
+						textRegion.columnCount = toRange->length;
+						textRegion.rowCount = 1;
+						outMatches.push_back(textRegion);
 					}
-					bzero(&textRegion, sizeof(textRegion));
-					textRegion.screen = inRef;
-					textRegion.firstRow = firstRow;
-					textRegion.firstColumn = firstColumn;
-					textRegion.columnCount = toRange->length;
-					textRegion.rowCount = secondRow - firstRow + 1;
-					outMatches.push_back(textRegion);
 				}
-			}
-			else
-			{
-				// text was not found
-				//Console_WriteLine("string not found");
+				else
+				{
+					// text was not found
+					//Console_WriteLine("string not found");
+				}
 			}
 		}
 	}
@@ -11380,14 +11427,6 @@ eraseRightHalfOfLine	(My_ScreenBufferPtr		inDataPtr,
 Iterates over the given range of lines on the specified
 terminal screen, executing a function on each of them.
 
-Since iterators can only be created exclusively for the
-main screen or exclusively for the scrollback, it follows
-that the iteration will only cover one of those buffers.
-To iterate over a region that spans both the screen and
-the scrollback, you will need to invoke this routine twice
-with two different kinds of iterators and the appropriate
-row counts for each.
-
 The ranges are zero-based, but can be negative; 0 is the
 first line of the main screen area, and -1 is the first
 scrollback line.  The oldest scrollback row is a larger
@@ -11428,16 +11467,15 @@ forEachLineDo	(TerminalScreenRef				inRef,
 	}
 	else
 	{
-		My_ScreenBufferLineList::iterator	lineIterator;
-		UInt16								lineNumber = 0;
+		UInt16		lineNumber = 0;
+		Boolean		isEnd = false;
 		
 		
 		// iterate over all lines in the range
-		for (lineIterator = iteratorPtr->rowIterator;
-				((lineNumber < inNumberOfRowsToConsider) && (iteratorPtr->rowIterator != iteratorPtr->sourceList.end()));
-				++lineIterator, ++lineNumber)
+		for (; ((lineNumber < inNumberOfRowsToConsider) && (false == isEnd));
+				iteratorPtr->goToNextLine(isEnd), ++lineNumber)
 		{
-			invokeScreenLineOperationProc(inDoWhat, screenPtr, lineIterator->textCFString.returnCFMutableStringRef(),
+			invokeScreenLineOperationProc(inDoWhat, screenPtr, iteratorPtr->currentLine().textCFString.returnCFMutableStringRef(),
 											lineNumber, inContextPtr);
 		}
 	}

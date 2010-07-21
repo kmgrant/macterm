@@ -7000,6 +7000,12 @@ highlightVirtualRange	(My_TerminalViewPtr				inTerminalViewPtr,
 		// necessary to redraw the actual range, but for normal selections
 		// (which primarily consist of full-width highlighting), the entire
 		// width in the given row range is redrawn
+		if (orderedRange.second.second - orderedRange.first.second > 20/* arbitrary; some large number of rows */)
+		{
+			// just redraw everything
+			updateDisplay(inTerminalViewPtr);
+		}
+		else
 		{
 			UInt16 const	kFirstChar = (inTerminalViewPtr->text.selection.isRectangular)
 											? orderedRange.first.first
@@ -7359,8 +7365,10 @@ offsetTopVisibleEdge	(My_TerminalViewPtr		inTerminalViewPtr,
 	newDiscreteValue = INTEGER_MINIMUM(kMaximum, newDiscreteValue);
 	inTerminalViewPtr->screen.topVisibleEdgeInRows = newDiscreteValue;
 	
+#if 0
 	inTerminalViewPtr->text.selection.range.first.second += (newDiscreteValue - kOldDiscreteValue);
 	inTerminalViewPtr->text.selection.range.second.second += (newDiscreteValue - kOldDiscreteValue);
+#endif
 	
 	// hide the cursor while the main screen is not showing
 	setCursorVisibility(inTerminalViewPtr, (inTerminalViewPtr->screen.topVisibleEdgeInRows >= 0));

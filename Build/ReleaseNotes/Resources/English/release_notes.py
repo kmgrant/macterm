@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100720',
     '20100715',
     '20100714',
     '20100713',
@@ -316,6 +317,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100720': [
+        'Fixed a major bug with text highlighting in scrollback lines (Trac #39).',
+        'Fixed cases where text selections may not be drawn, such as when using "Select Entire Scrollback Buffer".',
+        'Terminal search is now faster in certain situations.',
+    ],
     '20100715': [
         'Fixed remaining contextual menu items displayed in terminal windows.',
         'Fixed the enabled state of the "Move to New Workspace" menu item.',
