@@ -3,7 +3,7 @@
 	VectorInterpreter.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -183,13 +183,15 @@ commands and ultimately render a picture.
 */
 struct My_VectorInterpreter
 {
+	My_VectorInterpreter	(VectorInterpreter_ID, VectorInterpreter_Target, VectorInterpreter_Mode);
+	
 	inline void
 	shrinkVectorDB	(My_VectorDB::size_type);
 	
 	VectorInterpreter_ID	selfRef;			// the ID given to this structure at construction time
 	VectorInterpreter_Mode	commandSet;			// how data is interpreted
 	Boolean					pageClears;			// true if PAGE clears the screen, false if it opens a new window
-	VectorCanvas_Ref		canvas;				// contains commands to create a picture or paint to a window
+	VectorCanvas_Ref		canvas;				// contains commands to create a picture or paint to a window; must be initialized last
 	char	mode,modesave;					/* current output mode */
 	char	loy,hiy,lox,hix,ex,ey;			/* current graphics coordinates */
 	char	nloy,nhiy,nlox,nhix,nex,ney;	/* new coordinates */
@@ -530,29 +532,12 @@ VectorInterpreter_New	(VectorInterpreter_Target	inTarget,
 	
 	try
 	{
-		My_VectorInterpreterPtr		ptr = new My_VectorInterpreter;
+		My_VectorInterpreterPtr		ptr = new My_VectorInterpreter(result, inTarget, inCommandSet);
 		
 		
-		VGwin[result] = ptr;
-		ptr->canvas = nullptr; // initially...
-		ptr->selfRef = result;
-		ptr->toCurrentCommand = ptr->commandList.begin();
-		ptr->commandSet = inCommandSet;
-		ptr->pageClears = false;
-		
-		ptr->mode = ALPHA;
-		ptr->TEKPanel = nullptr;
-		ptr->state = DONE;
-		ptr->textcol = 0;
 		fontnum(ptr, 0);
 		storexy(ptr, 0, 3071);
 		
-		// do this last, because it will trigger rendering that
-		// depends on all the initializations above
-		ptr->canvas = VectorCanvas_New(result,
-										(kVectorInterpreter_TargetQuickDrawPicture == inTarget)
-										? kVectorCanvas_TargetQuickDrawPicture
-										: kVectorCanvas_TargetScreenPixels);
 		VectorCanvas_SetPenColor(ptr->canvas, 1);
 	#if 1
 		VectorInterpreter_Zoom(result, 0, 0, 4095, 3119); // important!
@@ -836,6 +821,81 @@ VectorInterpreter_Zoom	(VectorInterpreter_ID	inGraphicID,
 
 #pragma mark Internal Methods
 namespace {
+
+/*!
+Constructor.
+
+TEMPORARY:	This is horrible as a class, but it is leftover from
+			the ancient TEK implementation.  For now, this just
+			initializes all the old fields.  Eventually, all of
+			this will be redesigned.
+
+(4.0)
+*/
+My_VectorInterpreter::
+My_VectorInterpreter	(VectorInterpreter_ID		inID,
+						 VectorInterpreter_Target	inTarget,
+						 VectorInterpreter_Mode		inCommandSet)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+selfRef(inID),
+commandSet(inCommandSet),
+pageClears(false),
+canvas(nullptr),
+mode(ALPHA),
+modesave(0),
+loy(0),
+hiy(0),
+lox(0),
+hix(0),
+ex(0),
+ey(0),
+nloy(0),
+nhiy(0),
+nlox(0),
+nhix(0),
+nex(0),
+ney(0),
+curx(0),
+cury(0),
+savx(0),
+savy(0),
+winbot(0),
+wintop(0),
+winleft(0),
+winright(0),
+wintall(0),
+winwide(0),
+textcol(0),
+intin(0),
+pencolor(0),
+fontnum(0),
+charx(0),
+chary(0),
+count(0),
+TEKMarker(0),
+TEKOutline(0),
+TEKPath(0),
+TEKPattern(0),
+TEKIndex(0),
+TEKRot(0),
+TEKSize(0),
+TEKBackground(0),
+TEKPanel(nullptr),
+current(nullptr),
+state(DONE),
+savstate(0),
+commandList(),
+toCurrentCommand(commandList.begin())
+{
+	VGwin[inID] = this;
+	// the canvas should be initialized last, because it will trigger
+	// rendering that depends on all the initializations above
+	this->canvas = VectorCanvas_New(inID, (kVectorInterpreter_TargetQuickDrawPicture == inTarget)
+											? kVectorCanvas_TargetQuickDrawPicture
+											: kVectorCanvas_TargetScreenPixels);
+}// My_VectorInterpreter default constructor
+
 
 /*!
 This is the recommended way to shrink the command vector,

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100801',
     '20100720',
     '20100715',
     '20100714',
@@ -317,6 +318,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100801': [
+        'Fixed TEK graphics to actually respect preferences that set the mode: 4105 (color), 4014, or disabled.',
+    ],
     '20100720': [
         'Fixed a major bug with text highlighting in scrollback lines (Trac #39).',
         'Fixed cases where text selections may not be drawn, such as when using "Select Entire Scrollback Buffer".',

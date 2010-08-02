@@ -353,6 +353,7 @@ void						changeStateAttributes				(My_SessionPtr, Session_StateAttributes,
 void						closeTerminalWindow					(My_SessionPtr);
 void						configureSaveDialog					(SessionRef, NavDialogCreationOptions&);
 UInt16						copyEventKeyPreferences				(My_SessionPtr, Preferences_ContextRef, Boolean);
+UInt16						copyVectorGraphicsPreferences		(My_SessionPtr, Preferences_ContextRef, Boolean);
 My_HMHelpContentRecWrap&	createHelpTagForInterrupt			();
 My_HMHelpContentRecWrap&	createHelpTagForResume				();
 My_HMHelpContentRecWrap&	createHelpTagForSuspend				();
@@ -4409,6 +4410,12 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 		
 		assert(preferenceCount > 0);
 	}
+	{
+		UInt16		preferenceCount = copyVectorGraphicsPreferences(this, inConfigurationOrNull, true/* search defaults too */);
+		
+		
+		assert(preferenceCount > 0);
+	}
 	
 	Session_StartMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener);
 	Session_StartMonitoring(this->selfRef, kSession_ChangeWindowInvalid, this->windowValidationListener);
@@ -4714,6 +4721,46 @@ copyEventKeyPreferences		(My_SessionPtr				inPtr,
 	
 	return result;
 }// copyEventKeyPreferences
+
+
+/*!
+Attempts to read all supported vector graphics tags from the
+given preference context, and any settings that exist will be
+used to update the specified session.
+
+Returns the number of settings that were changed.
+
+(4.0)
+*/
+UInt16
+copyVectorGraphicsPreferences	(My_SessionPtr				inPtr,
+								 Preferences_ContextRef		inSource,
+								 Boolean					inSearchDefaults)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	VectorInterpreter_Mode	commandSet = kVectorInterpreter_ModeDisabled;
+	Boolean					flag = false;
+	UInt16					result = 0;
+	
+	
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagTektronixMode,
+												sizeof(commandSet), &commandSet, inSearchDefaults);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		inPtr->vectorGraphicsCommandSet = commandSet;
+		++result;
+	}
+	
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagTektronixPAGEClearsScreen,
+												sizeof(flag), &flag, inSearchDefaults);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		inPtr->vectorGraphicsPageOpensNewWindow = !flag;
+		++result;
+	}
+	
+	return result;
+}// copyVectorGraphicsPreferences
 
 
 /*!
@@ -5683,6 +5730,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			// batch mode; multiple things have changed, so check for the new values
 			// of everything that is understood by a terminal view
 			(UInt16)copyEventKeyPreferences(ptr, prefsContext, false/* search for defaults */);
+			(UInt16)copyVectorGraphicsPreferences(ptr, prefsContext, false/* search for defaults */);
 		}
 		else
 		{
