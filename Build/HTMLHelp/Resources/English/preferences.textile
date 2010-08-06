@@ -458,7 +458,7 @@ field.  For local Unix commands, just type in whatever you want
 to run.
 
 For remote sessions, you can either enter a command yourself, or
-use the "Connect to Server..." button to help you.  This button
+use the "Server Settings..." button to help you.  This button
 opens the Servers panel.  Note that edits in the Servers panel
 overwrite the command line field!  To learn more about the
 Servers panel, review "its documentation":windows.html#serverbrowser.

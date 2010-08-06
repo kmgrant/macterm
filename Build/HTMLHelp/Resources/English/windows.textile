@@ -38,7 +38,7 @@ What you can do with a graphics window:
 
 h2(#serverbrowser). Server Browser
 
-The Servers panel appears when the "Connect to Server..." button
+The Servers panel appears when the "Server Settings..." button
 is clicked (either in the File >> Custom New Session... sheet, or
 when editing the equivalent panel in the Preferences window).
 Changes to the panel will automatically write an appropriate

@@ -46,6 +46,7 @@
 #include "Preferences.h"
 #include "SessionFactory.h"
 #include "SessionRef.typedef.h"
+#include "UIStrings.h"
 
 
 
@@ -195,8 +196,16 @@ genericDialog		(GenericDialog_New(TerminalWindow_ReturnWindow(inParentWindowOrNu
 										PrefPanelSessions_NewResourcePane(), temporaryDataModel,
 										handleDialogClose, kHelpSystem_KeyPhraseConnections))
 {
+	CFStringRef		buttonTitleCFString = nullptr;
+	
+	
 	// configure the dialog
 	GenericDialog_SetCommandDialogEffect(this->genericDialog, kHICommandCancel, kGenericDialog_DialogEffectCloseImmediately);
+	if (kUIStrings_ResultOK == UIStrings_Copy(kUIStrings_ButtonStartSession, buttonTitleCFString))
+	{
+		GenericDialog_SetCommandButtonTitle(this->genericDialog, kHICommandOK, buttonTitleCFString);
+		CFRelease(buttonTitleCFString), buttonTitleCFString = nullptr;
+	}
 	
 	// note that the cloned context is implicitly retained
 	Preferences_RetainContext(this->originalDataModel);

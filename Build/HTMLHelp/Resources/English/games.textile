@@ -100,7 +100,7 @@ configuration information in the "Custom New Session" sheet.
 When the Sessions pane (or sheet) is visible, you will see a
 "Command:" field.  Either directly type in the telnet command or
 other command needed to reach the game, or use the button
-"Connect to Server..." to help you compose a command.
+"Server Settings..." to help you compose a command.
 
 The pane also has pop-up menus that will let you choose the
 Terminal, Format and Translation that you created above.  This

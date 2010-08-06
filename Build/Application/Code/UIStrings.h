@@ -31,7 +31,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -145,15 +145,13 @@ enum UIStrings_ButtonCFString
 	kUIStrings_ButtonMoveUpAccessibilityDesc			= 'MUAA',
 	kUIStrings_ButtonNo									= ' No ',
 	kUIStrings_ButtonOK									= ' OK ',
-	kUIStrings_ButtonOpenMacroEditor					= 'OMcE',
 	kUIStrings_ButtonPasteNormally						= 'Pste',
 	kUIStrings_ButtonPopUpMenuArrowsAccessibilityDesc	= 'MnAA',
 	kUIStrings_ButtonRemoveAccessibilityDesc			= 'RmAA',
 	kUIStrings_ButtonQuit								= 'Quit',
 	kUIStrings_ButtonReviewWithEllipsis					= 'Revu',
 	kUIStrings_ButtonSave								= 'Save',
-	kUIStrings_ButtonStop								= 'Stop',
-	kUIStrings_ButtonVisitMainWebSite					= 'VWeb',
+	kUIStrings_ButtonStartSession						= 'SSss',
 	kUIStrings_ButtonYes								= 'Yes '
 };
 

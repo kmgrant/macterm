@@ -44,7 +44,7 @@ Session Preferences) in the "New Session:" section of the File
 menu, will open that session.
 
 * File >> Custom New Session... can also be used; simply ignore
-the "Connect to Server..." button, and enter command line text.
+the "Server Settings..." button, and enter command line text.
 
 * Hold down Option to see File >> Log-In Shell.  This invokes a
 shell in log-in mode (with shell-dependent settings) that will

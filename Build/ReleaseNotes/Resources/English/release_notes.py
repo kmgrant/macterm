@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100806',
     '20100801',
     '20100720',
     '20100715',
@@ -318,6 +319,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100806': [
+        'Preferences window Sessions pane Resource tab (and Custom New Session sheet) have slightly changed, to make remote connection setup clearer.',
+    ],
     '20100801': [
         'Fixed TEK graphics to actually respect preferences that set the mode: 4105 (color), 4014, or disabled.',
     ],

@@ -306,6 +306,11 @@ UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 													CFSTR("kUIStrings_ButtonSave"));
 		break;
 	
+	case kUIStrings_ButtonStartSession:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Start Session"), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonStartSession"));
+		break;
+	
 	case kUIStrings_ButtonDontSave:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Don't Save"), CFSTR("Buttons"),
 													CFSTR("kUIStrings_ButtonDontSave"));
@@ -344,16 +349,6 @@ UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 	case kUIStrings_ButtonDiscardAll:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Discard All"), CFSTR("Buttons"),
 													CFSTR("kUIStrings_ButtonDiscardAll"));
-		break;
-	
-	case kUIStrings_ButtonVisitMainWebSite:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("MacTelnet.com"), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonVisitMainWebSite"));
-		break;
-	
-	case kUIStrings_ButtonOpenMacroEditor:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Show Macro Editor"), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonOpenMacroEditor"));
 		break;
 	
 	case kUIStrings_ButtonPasteNormally:
