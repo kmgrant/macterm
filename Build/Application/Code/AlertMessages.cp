@@ -1943,12 +1943,12 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 				
 				
 				// use this “sneaky” approach to correctly set up the vertical component of the third button
-				(UInt16)Localization_ArrangeButtonArray(buttonControls, 1);
+				Localization_ArrangeButtonArray(buttonControls, 1);
 				
 				// auto-arrange the buttons in the OK and Cancel positions
 				buttonControls[0] = ptr->buttonDefault;
 				buttonControls[1] = ptr->buttonCancel;
-				(UInt16)Localization_ArrangeButtonArray(buttonControls, 2);
+				Localization_ArrangeButtonArray(buttonControls, 2);
 				
 				if (isButton3)
 				{

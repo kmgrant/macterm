@@ -3,7 +3,7 @@
 	GenericDialog.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -110,6 +110,9 @@ struct My_GenericDialog
 						 HelpSystem_KeyPhrase);
 	
 	~My_GenericDialog	();
+	
+	void
+	autoArrangeButtons ();
 	
 	// IMPORTANT: DATA MEMBER ORDER HAS A CRITICAL EFFECT ON CONSTRUCTOR CODE EXECUTION ORDER.  DO NOT CHANGE!!!
 	GenericDialog_Ref						selfRef;						//!< identical to address of structure, but typed as ref
@@ -240,12 +243,6 @@ GenericDialog_AddButton		(GenericDialog_Ref		inDialog,
 							 UInt32					inButtonCommandID)
 {
 	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
-	HIViewRef					referenceButtonView = nullptr;
-	HIRect						buttonFrame;
-	UInt16						buttonWidth = 0;
-	Float32						x = 0;
-	Float32						y = 0;
-	Boolean						isButton2 = true; // always true, for now...
 	OSStatus					error = noErr;
 	
 	
@@ -254,21 +251,12 @@ GenericDialog_AddButton		(GenericDialog_Ref		inDialog,
 	assert_noerr(error);
 	error = SetControlCommandID(ptr->buttonOther, inButtonCommandID);
 	assert_noerr(error);
-	buttonWidth = Localization_AutoSizeButtonControl(ptr->buttonOther, 0/* minimum width */);
+	(UInt16)Localization_AutoSizeButtonControl(ptr->buttonOther, 0/* minimum width */);
 	error = HIViewSetVisible(ptr->buttonOther, true);
 	assert_noerr(error);
 	
 	// now determine where the left edge of the button should be (locale-sensitive)
-	referenceButtonView = (isButton2) ? ptr->buttonCancel : ptr->buttonOK;
-	error = HIViewGetFrame(referenceButtonView, &buttonFrame);
-	assert_noerr(error);
-	if (Localization_IsLeftToRight()) x = STATIC_CAST(buttonFrame.origin.x - HSP_BUTTONS - buttonWidth, SInt16);
-	else x = STATIC_CAST(buttonFrame.origin.x + buttonFrame.size.width + HSP_BUTTONS, SInt16);
-	y = buttonFrame.origin.y;
-	
-	// finally, move the button appropriately
-	error = HIViewPlaceInSuperviewAt(ptr->buttonOther, x, y);
-	assert_noerr(error);
+	ptr->autoArrangeButtons();
 }// AddButton
 
 
@@ -386,6 +374,36 @@ GenericDialog_ReturnParentWindow	(GenericDialog_Ref	inDialog)
 	
 	return result;
 }// ReturnParentWindow
+
+
+/*!
+Specifies a new name for the button corresponding to the
+given command.  The specified button is automatically
+resized to fit the title, and other action buttons are
+moved (and possibly resized) to make room.
+
+Use kHICommandOK to refer to the default button.  No other
+command IDs are currently supported!
+
+IMPORTANT:	This API currently only works for the
+			standard buttons, not custom command IDs.
+
+(4.0)
+*/
+void
+GenericDialog_SetCommandButtonTitle		(GenericDialog_Ref		inDialog,
+										 UInt32					inCommandID,
+										 CFStringRef			inButtonTitle)
+{
+	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+	
+	
+	if (kHICommandOK == inCommandID)
+	{
+		(OSStatus)SetControlTitleWithCFString(ptr->buttonOK, inButtonTitle);
+	}
+	ptr->autoArrangeButtons();
+}// SetCommandButtonTitle
 
 
 /*!
@@ -580,6 +598,9 @@ userDataPtr						(nullptr)
 	SizeWindow(this->dialogWindow, STATIC_CAST(windowInitialSize.width, SInt16),
 				STATIC_CAST(windowInitialSize.height, SInt16), true/* update */);
 	
+	// auto-size and auto-arrange the initial buttons
+	this->autoArrangeButtons();
+	
 	// positioning is not done in the NIB because an arbitrarily-sized panel is
 	// added programmatically, and affects the size (and centering) of the window
 	if (this->isModal)
@@ -618,6 +639,24 @@ My_GenericDialog::
 {
 	DisposeWindow(this->dialogWindow.operator WindowRef());
 }// My_GenericDialog destructor
+
+
+/*!
+Resizes and repositions all of the command buttons in
+the dialog, so that they fit their current titles and
+are evenly spaced along the bottom of the window.
+
+(4.0)
+*/
+void
+My_GenericDialog::
+autoArrangeButtons ()
+{
+	HIViewRef	buttonArray[] = { this->buttonOK, this->buttonCancel, this->buttonOther };
+	
+	
+	Localization_ArrangeButtonArray(buttonArray, sizeof(buttonArray) / sizeof(HIViewRef));
+}// autoArrangeButtons
 
 
 /*!

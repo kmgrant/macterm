@@ -321,12 +321,6 @@ indices is expected to be the default button (if
 any), and buttons are positioned in the order
 they appear in the array.
 
-For convenience, the "common size" chosen for
-the buttons is returned, as a number in units of
-horizontal pixels.  The buttons will not acquire
-a width smaller than the standard minimum button
-width (as specified in "SpacingConstants.r").
-
 Invoking this method can make buttons move and
 resize, causing onscreen flickering.  You should
 invoke this method while drawing to an offscreen
@@ -335,47 +329,55 @@ invisible.
 
 (1.1)
 */
-UInt16
+void
 Localization_ArrangeButtonArray		(ControlRef const*	inButtons,
 									 UInt16				inButtonCount)
 {
-	UInt16				result = BUTTON_WD_MINIMUM;
 	register SInt16		i = 0;
-	SInt16				positionH = 0,
-						positionV = 0;
+	UInt16				firstButtonWidth = 0;
+	SInt16				positionH = 0;
+	SInt16				positionV = 0;
 	Rect				windowRect;
 	
 	
 	GetPortBounds(GetWindowPort(GetControlOwner(inButtons[0])), &windowRect);
 	
-	// determine the width of the widest button
+	// resize every button
 	for (i = 0; i < inButtonCount; ++i)
 	{
-		result = Localization_AutoSizeButtonControl(inButtons[i], result);
-	}
-	
-	// resize all of the buttons to that width
-	for (i = 0; i < inButtonCount; ++i)
-	{
-		(UInt16)Localization_AutoSizeButtonControl(inButtons[i], result);
+		UInt16		buttonWidth = Localization_AutoSizeButtonControl(inButtons[i]);
+		
+		
+		if (0 == i)
+		{
+			firstButtonWidth = buttonWidth;
+		}
 	}
 	
 	// now move the buttons
+	if (inButtonCount > 0)
 	{
-		SInt16		deltaPositionH = ((Localization_IsLeftToRight()) ? -1 : 1) * (HSP_BUTTONS + result);
+		SInt16		deltaPositionH = 0;
 		
 		
 		positionV = windowRect.bottom - VSP_BUTTON_AND_DIALOG - BUTTON_HT;
 		positionH = (Localization_IsLeftToRight())
-						? (windowRect.right - HSP_BUTTON_AND_DIALOG - result)
+						? (windowRect.right - HSP_BUTTON_AND_DIALOG - firstButtonWidth)
 						: (HSP_BUTTON_AND_DIALOG);
-		for (i = 0; i < inButtonCount; ++i, positionH += deltaPositionH)
+		for (i = 0; i < inButtonCount; positionH += deltaPositionH)
 		{
+			Rect	buttonBounds;
+			
+			
 			MoveControl(inButtons[i], positionH, positionV);
+			++i;
+			if (i < inButtonCount)
+			{
+				GetControlBounds(inButtons[i], &buttonBounds);
+				deltaPositionH = ((Localization_IsLeftToRight()) ? -1 : 1) * (HSP_BUTTONS + (buttonBounds.right - buttonBounds.left));
+			}
 		}
 	}
-	
-	return result;
 }// ArrangeButtonArray
 
 

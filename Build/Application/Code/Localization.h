@@ -194,7 +194,7 @@ void
 	Localization_AdjustHelpButtonItem			(DialogRef					inDialog,
 												 DialogItemIndex			inHelpButtonIndex);
 
-UInt16
+void
 	Localization_ArrangeButtonArray				(ControlRef const*			inButtons,
 												 UInt16						inButtonCount);
 
@@ -208,12 +208,12 @@ Boolean
 
 UInt16
 	Localization_AutoSizeButtonControl			(ControlRef					inControl,
-												 UInt16						inMinimumWidth = 58);
+												 UInt16						inMinimumWidth = 86);
 
 UInt16
 	Localization_AutoSizeButtonItem				(DialogRef					inDialog,
 												 DialogItemIndex			inItemIndex,
-												 UInt16						inMinimumWidth = 58);
+												 UInt16						inMinimumWidth = 86);
 
 void
 	Localization_HorizontallyCenterControlWithinContainer	(ControlRef		inControlToCenterHorizontally,
