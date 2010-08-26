@@ -141,6 +141,13 @@ inline CFStringRef
 }
 
 inline CFStringRef
+	AppResources_ReturnCautionIconFilenameNoExtension					()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.png"
+	return CFSTR("IconForCaution");
+}
+
+inline CFStringRef
 	AppResources_ReturnContextMenuFilenameNoExtension					()
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
@@ -267,10 +274,24 @@ inline CFStringRef
 }
 
 inline CFStringRef
-	AppResources_ReturnPreferenceCollectionsIconFilenameNoExtension		()
+	AppResources_ReturnNewSessionDefaultIconFilenameNoExtension			()
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
-	return CFSTR("IconForPreferenceCollections");
+	return CFSTR("IconForNewSessionDefault");
+}
+
+inline CFStringRef
+	AppResources_ReturnNewSessionLogInShellIconFilenameNoExtension		()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForNewSessionLogInShell");
+}
+
+inline CFStringRef
+	AppResources_ReturnNewSessionShellIconFilenameNoExtension			()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForNewSessionShell");
 }
 
 inline CFStringRef

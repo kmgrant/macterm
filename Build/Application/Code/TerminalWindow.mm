@@ -6195,7 +6195,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				
 				TerminalWindow_SetObscured(terminalWindow, false);
-				[ptr->window orderFront:nil];
+				[ptr->window makeKeyAndOrderFront:nil];
 			}
 		}
 		break;

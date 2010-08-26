@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100826',
     '20100806',
     '20100801',
     '20100720',
@@ -319,6 +320,13 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100826': [
+        'Fixed Session Info window double-clicks, so that selected terminal windows are also brought to the front.',
+        'Session Info window has been reimplemented using Cocoa, improving the table view and avoiding window bugs.',
+        'Session Info window Status column has been reduced to icon-only, with a help tag for textual status.',
+        'Session Info window toolbar icons have slightly changed.',
+        'Session Info window size and position are once again saved and restored automatically.',
+    ],
     '20100806': [
         'Preferences window Sessions pane Resource tab (and Custom New Session sheet) have slightly changed, to make remote connection setup clearer.',
     ],

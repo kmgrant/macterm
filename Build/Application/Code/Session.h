@@ -607,6 +607,10 @@ Session_Result
 											 SessionDescription_Ref*			outNewSaveFileMemoryModelPtr);
 
 Session_Result
+	Session_GetStateIconName				(SessionRef							inRef,
+											 CFStringRef&						outUncopiedString);
+
+Session_Result
 	Session_GetStateString					(SessionRef							inRef,
 											 CFStringRef&						outUncopiedString);
 
@@ -703,7 +707,7 @@ void
 											 Session_Change						inForWhatChange,
 											 ListenerModel_ListenerRef			inListener);
 
-UInt32
+CFAbsoluteTime
 	Session_TimeOfActivation				(SessionRef							inRef);
 
 CFAbsoluteTime

@@ -248,14 +248,15 @@ struct My_Session
 	Session_Type				kind;						// type of session; affects use of the union below
 	Session_State				status;						// indicates whether session is initialized, etc.
 	Session_StateAttributes		statusAttributes;			// “tags” for the status, above
+	CFRetainRelease				statusIconName;				// basename of image file for icon that describes the state and/or attributes
 	CFRetainRelease				statusString;				// one word (usually) describing the state succinctly
 	CFRetainRelease				alternateTitle;				// user-defined window title
 	CFRetainRelease				resourceLocationString;		// one-liner for remote URL or local Unix command line
 	CFRetainRelease				commandLineArguments;		// CFArrayRef of CFStringRef; typically agrees with "resourceLocationString"
 	CFRetainRelease				originalDirectoryString;	// pathname of the directory that was current when the session was executed
 	CFRetainRelease				deviceNameString;			// pathname of slave pseudo-terminal device attached to the session
-	UInt32						connectionDateTime;			// result of GetDateTime() call at connection time
-	CFAbsoluteTime				terminationAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call at disconnection time
+	CFAbsoluteTime				activationAbsoluteTime;		// result of CFAbsoluteTimeGetCurrent() call when the command starts or restarts
+	CFAbsoluteTime				terminationAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call when the command ends
 	EventHandlerUPP				windowClosingUPP;			// wrapper for window closing callback
 	EventHandlerRef				windowClosingHandler;		// invoked whenever a session terminal window should close
 	EventHandlerUPP				windowFocusChangeUPP;		// wrapper for window focus-change callback
@@ -382,6 +383,7 @@ OSStatus					receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
 HIWindowRef					returnActiveWindow					(My_SessionPtr);
 OSStatus					sessionDragDrop						(EventHandlerCallRef, EventRef, SessionRef,
 																 HIViewRef, DragRef);
+void						setIconFromState					(My_SessionPtr);
 void						terminalWindowChanged				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 void						terminationWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
@@ -793,6 +795,8 @@ finished with it.
 Any applied attributes (see Session_StateAttribute) *may*
 influence the icon that is returned.  For example, a
 badge may be added.
+
+DEPRECATED.  Use Session_GetStateIconName(), instead.
 
 (3.1)
 */
@@ -1561,6 +1565,33 @@ Session_FlushNetwork	(SessionRef		inRef)
 
 
 /*!
+Returns the name of an image file in the bundle (suitable
+for use with APIs such as NSImage’s "iconNamed:"), to
+represent the current state of the session.  Useful for
+user interface elements.
+
+(4.0)
+*/
+Session_Result
+Session_GetStateIconName	(SessionRef		inRef,
+							 CFStringRef&	outUncopiedString)
+{
+	Session_Result		result = kSession_ResultOK;
+	
+	
+	if (nullptr == inRef) result = kSession_ResultInvalidReference;
+	else
+	{
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		
+		
+		outUncopiedString = ptr->statusIconName.returnCFStringRef();
+	}
+	return result;
+}// GetStateString
+
+
+/*!
 Returns a succinct string representation of the
 specified session’s state.  This is localized so
 it can be displayed in user interface elements.
@@ -1574,7 +1605,7 @@ Session_GetStateString		(SessionRef		inRef,
 	Session_Result		result = kSession_ResultOK;
 	
 	
-	if (inRef == nullptr) result = kSession_ResultInvalidReference;
+	if (nullptr == inRef) result = kSession_ResultInvalidReference;
 	else
 	{
 		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
@@ -1582,7 +1613,6 @@ Session_GetStateString		(SessionRef		inRef,
 		
 		outUncopiedString = ptr->statusString.returnCFStringRef();
 	}
-	
 	return result;
 }// GetStateString
 
@@ -2936,7 +2966,7 @@ Session_SetState	(SessionRef		inRef,
 	// once connected, set the connection time
 	if (kSession_StateActiveUnstable == ptr->status)
 	{
-		GetDateTime(&ptr->connectionDateTime); // in seconds
+		ptr->activationAbsoluteTime = CFAbsoluteTimeGetCurrent();
 	}
 	
 	// now update the session status string
@@ -3037,6 +3067,8 @@ Session_SetState	(SessionRef		inRef,
 			keepWindowOpen = false; // assume window should be closed, if preference can’t be found
 		}
 	}
+	
+	setIconFromState(ptr);
 	
 	// now that the state of the Session object is appropriate
 	// for the state, notify any other listeners of the change
@@ -3723,32 +3755,35 @@ Session_TerminalWriteCString	(SessionRef		inRef,
 
 
 /*!
-Returns the clock time (in seconds) for the computer
-back when the specified session’s command was run.
-You can use TimeString() or DateString() on the
-result to get a text representation.
+Returns the time when the specified session’s command was
+run or restarted.
 
-(3.0)
+Use CFDateFormatterCreateStringWithAbsoluteTime() or a
+similar function to show this value in a user interface
+element.
+
+(4.0)
 */
-UInt32
+CFAbsoluteTime
 Session_TimeOfActivation	(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	UInt32					result = 0L;
+	CFAbsoluteTime			result = 0L;
 	
 	
-	result = ptr->connectionDateTime;
+	result = ptr->activationAbsoluteTime;
 	return result;
 }// TimeOfActivation
 
 
 /*!
-Returns the clock time (in seconds) for the computer
-back when the specified session’s command exited.
-You can use TimeString() or DateString() on the
-result to get a text representation.
+Returns the time when the specified session’s command exited.
 
-(3.1)
+Use CFDateFormatterCreateStringWithAbsoluteTime() or a
+similar function to show this value in a user interface
+element.
+
+(4.0)
 */
 CFAbsoluteTime
 Session_TimeOfTermination	(SessionRef		inRef)
@@ -4344,13 +4379,14 @@ readOnly(inIsReadOnly),
 kind(kSession_TypeLocalNonLoginShell),
 status(kSession_StateBrandNew),
 statusAttributes(0),
+statusIconName(),
 statusString(),
 alternateTitle(),
 resourceLocationString(),
 commandLineArguments(),
 originalDirectoryString(),
 deviceNameString(),
-connectionDateTime(0), // set below
+activationAbsoluteTime(CFAbsoluteTimeGetCurrent()),
 terminationAbsoluteTime(0),
 windowClosingUPP(nullptr), // set at window validation time
 windowClosingHandler(nullptr), // set at window validation time
@@ -4397,9 +4433,6 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 {
 	bzero(&this->echo, sizeof(this->echo));
 	bzero(&this->preferencesCache, sizeof(this->preferencesCache));
-	
-	// 3.0 - record the time when the connection began
-	GetDateTime(&this->connectionDateTime);
 	
 	assert(nullptr != this->readBufferPtr);
 	
@@ -4577,6 +4610,7 @@ changeStateAttributes	(My_SessionPtr				inPtr,
 {
 	inPtr->statusAttributes |= inAttributesToSet;
 	inPtr->statusAttributes &= ~inAttributesToClear;
+	setIconFromState(inPtr);
 	changeNotifyForSession(inPtr, kSession_ChangeStateAttributes, inPtr->selfRef/* context */);
 }// changeStateAttributes
 
@@ -6453,6 +6487,40 @@ sessionDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	return result;
 }// sessionDragDrop
+
+
+/*!
+Updates the name of the icon file that is stored in
+the session to represent its current state.
+
+If no attributes have been applied to the state, the
+icon will represent absolute state (such as whether
+or not it is running).  However, certain attributes
+can override the icon.
+
+This function should be called when the state or
+state attributes are changed.
+
+(4.0)
+*/
+void
+setIconFromState	(My_SessionPtr	inPtr)
+{
+	
+	if ((inPtr->statusAttributes & kSession_StateAttributeNotification) ||
+		(inPtr->statusAttributes & kSession_StateAttributeOpenDialog))
+	{
+		inPtr->statusIconName.setCFTypeRef(AppResources_ReturnCautionIconFilenameNoExtension());
+	}
+	else if (kSession_StateDead == inPtr->status)
+	{
+		inPtr->statusIconName.setCFTypeRef(AppResources_ReturnSessionStatusDeadIconFilenameNoExtension());
+	}
+	else
+	{
+		inPtr->statusIconName.setCFTypeRef(AppResources_ReturnSessionStatusActiveIconFilenameNoExtension());
+	}
+}// setIconFromState
 
 
 /*!

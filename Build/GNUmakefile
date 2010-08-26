@@ -156,6 +156,7 @@ GrowlRegistrationTicket.growlRegDict \
 IconForBellOff.icns \
 IconForBellOn.icns \
 IconForBundle.icns \
+IconForCaution.png \
 IconForCommand.icns \
 IconForContextMenu.icns \
 IconForHide.icns \
@@ -175,6 +176,9 @@ IconForKeypadSelect.icns \
 IconForLEDOff.icns \
 IconForLEDOn.icns \
 IconForMacroSet.icns \
+IconForNewSessionDefault.icns \
+IconForNewSessionLogInShell.icns \
+IconForNewSessionShell.icns \
 IconForPrefPanelFormats.icns \
 IconForPrefPanelGeneral.icns \
 IconForPrefPanelKiosk.icns \
@@ -184,7 +188,6 @@ IconForPrefPanelSessions.icns \
 IconForPrefPanelTerminals.icns \
 IconForPrefPanelTranslations.icns \
 IconForPrefPanelWorkspaces.icns \
-IconForPreferenceCollections.icns \
 IconForScriptsMenu.icns \
 IconForScrollLockOff.icns \
 IconForScrollLockOn.icns \
@@ -206,7 +209,6 @@ English.lproj/CommandLineCocoa.nib \
 English.lproj/DebugInterfaceCocoa.nib \
 English.lproj/FindDialog.nib \
 English.lproj/GenericDialog.nib \
-English.lproj/InfoWindow.nib \
 English.lproj/KeypadArrangeWindow.nib \
 English.lproj/KeypadControlKeys.nib \
 English.lproj/KeypadFullScreen.nib \
@@ -227,6 +229,7 @@ English.lproj/WindowTitleDialog.nib
 # set to a list of "English.lproj/<xyz>" paths, where there
 # should be an <xyz>.xib source and implied <xyz>.nib output
 XIB_PREFIXES := \
+English.lproj/InfoWindowCocoa \
 English.lproj/MainMenuCocoa \
 English.lproj/PrintPreviewCocoa \
 English.lproj/ServerBrowserCocoa

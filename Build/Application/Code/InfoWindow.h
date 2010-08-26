@@ -1,13 +1,15 @@
 /*!	\file InfoWindow.h
 	\brief A window showing status for all sessions.
 	
-	Information such as window name and connection information
-	(like "Disconnected", etc.) is listed.
+	The window is currently just a table, containing a
+	number of columns.  It is slightly interactive; the
+	window name can be edited, and double-clicking a row
+	will activate that terminal window.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -44,6 +46,42 @@
 
 // MacTelnet includes
 #include "SessionRef.typedef.h"
+
+
+
+#pragma mark Types
+
+#ifdef __OBJC__
+
+@class InfoWindow_SessionRow;
+
+/*!
+Implements the Session Info window.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface InfoWindow_Controller : NSWindowController
+{
+@public
+	IBOutlet NSTableView*	infoTable;
+	NSMutableArray*			dataArray;
+}
++ (id)sharedInfoWindowController;
+// the following MUST match what is in "InfoWindowCocoa.xib"
+
+- (InfoWindow_SessionRow*)
+infoForRow:(int)	row;
+
+- (InfoWindow_SessionRow*)
+infoForSession:(SessionRef)		aSession;
+
+- (void)
+removeSession:(SessionRef)		aSession;
+@end
+
+#endif // __OBJC__
 
 
 
