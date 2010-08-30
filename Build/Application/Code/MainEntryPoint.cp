@@ -3,7 +3,7 @@
 	MainEntryPoint.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -59,65 +59,6 @@ static void		exitCleanly		();
 
 
 #pragma mark Public Methods
-
-/*!
-This is technically the main entry point, but it is only
-available if the target is a real application.  Usually
-MacTelnet is built as a shared library that can be loaded
-into a running Python interpreter.  For more information
-on the Python interface, see the "PythonCode" folder and
-the various Quill API headers like "QuillBase.h".
-
-This is the main entry point, what runs when the user
-launches the application.  Aside from C++ static
-initialization (constructors, etc.) which are called
-first, this is essentially where the program begins; and
-ideally, the program should end only when this function
-returns.
-
-This application uses a callback-driven event framework.
-Consequently, you cannot easily determine how the
-program works by starting in main()!  Instead, you must
-assume that the user drives the vast majority of
-operations: this means either AppleScript will generate
-primitive instructions, or user commands will trigger a
-series of primitive instructions to accomplish a task
-(for example, as a result of selecting a menu item).
-You should look in the AppleScript source files (which
-have "...AE.cp" names) as well as in central places like
-Commands.cp, for clues as to how the various components
-really work.
-
-(3.1)
-*/
-#define MACTELNET_LIB_NO_MAIN 1
-#if !MACTELNET_LIB_NO_MAIN
-int
-main ()
-{
-//#define CATCH_WILD_EXCEPTIONS (defined DEBUG)
-#define CATCH_WILD_EXCEPTIONS 1
-#if CATCH_WILD_EXCEPTIONS
-	try
-#endif
-	{
-		Initialize_ApplicationStartup(CFBundleGetMainBundle());
-		EventLoop_Run(); // returns only when the user asks to quit
-		Initialize_ApplicationShutdown();
-		MainEntryPoint_ImmediatelyQuit();
-		assert(0); // THE PROGRAM SHOULD NEVER GET HERE
-	}
-#if CATCH_WILD_EXCEPTIONS
-	catch (std::exception const&	e)
-	{
-		Console_WriteLine("uncaught exception");
-		Console_WriteLine(e.what());
-	}
-#endif
-	return 1;
-}// main
-#endif
-
 
 /*!
 Call this method to force the program to clean up (if
