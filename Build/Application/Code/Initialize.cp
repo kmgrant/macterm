@@ -289,18 +289,42 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 
 
 /*!
-Undoes the main things that Initialize_ApplicationStartup()
-does, in reverse order.
+Shuts down components that seem “safe” to tear down, because
+they are isolated and nothing else should depend on the things
+that they created.
 
-(3.0)
+See also Initialize_ApplicationShutDownRemainingComponents().
+
+(4.0)
 */
 void
-Initialize_ApplicationShutdown ()
+Initialize_ApplicationShutDownIsolatedComponents ()
 {
 	// saving user preferences is a top priority, since other quitting procedures could cause a crash
 	PrefsWindow_Done();
 	Clipboard_Done();
 	InfoWindow_Done();
+	Preferences_Done();
+	EventLoop_Done();
+	FlagManager_Done();
+}// ApplicationShutDownIsolatedComponents
+
+
+/*!
+Undoes the things that Initialize_ApplicationStartup()
+does, in reverse order, that were not undone by an initial
+call to ApplicationShutDownIsolatedComponents().
+
+See the note in QuillsBase.cp, "Base::all_done()", for the
+problems caused by performing the teardowns below, in the
+current design.  Hopefully those issues will be addressed
+by moving to Cocoa.
+
+(4.0)
+*/
+void
+Initialize_ApplicationShutDownRemainingComponents ()
+{
 	InternetPrefs_Done();
 	Console_Done();
 	TerminalView_Done();
@@ -309,12 +333,9 @@ Initialize_ApplicationShutdown ()
 	SessionFactory_Done();
 	TextTranslation_Done();
 	Alert_Done();
-	Preferences_Done();
 	Cursors_Done();
 	Undoables_Done();
-	EventLoop_Done();
-	FlagManager_Done();
-}// ApplicationShutdown
+}// ApplicationShutDownRemainingComponents
 
 
 #pragma mark Internal Methods

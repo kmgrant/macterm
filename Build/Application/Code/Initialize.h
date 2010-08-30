@@ -45,10 +45,13 @@
 ###############################################################*/
 
 void
-	Initialize_ApplicationStartup		(CFBundleRef	inApplicationBundle);
+	Initialize_ApplicationStartup							(CFBundleRef	inApplicationBundle);
 
 void
-	Initialize_ApplicationShutdown		();
+	Initialize_ApplicationShutDownIsolatedComponents		();
+
+void
+	Initialize_ApplicationShutDownRemainingComponents		();
 
 #endif // __INITIALIZE__
 
