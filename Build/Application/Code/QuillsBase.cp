@@ -114,6 +114,7 @@ See header or "pydoc" for Python docstrings.
 void
 Base::all_done ()
 {
+	Initialize_ApplicationShutDownIsolatedComponents();
 #if 0
 	// Argh...well, this is a problem!  The final ExitToShell() *might* trigger
 	// final releases of things like HIViews for TerminalViews, which in turn
@@ -124,7 +125,7 @@ Base::all_done ()
 	// pleases, especially as part of THE EXIT SYSTEM CALL, it will be very
 	// difficult indeed to tear down modules in a safe order.  So the extremely
 	// ugly work-around for now is to simply not tear anything down at all...
-	Initialize_ApplicationShutdown();
+	Initialize_ApplicationShutDownRemainingComponents();
 #endif
 	MainEntryPoint_ImmediatelyQuit();
 }// all_done

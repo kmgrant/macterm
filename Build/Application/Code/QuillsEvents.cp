@@ -3,7 +3,7 @@
 	QuillsEvents.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -37,8 +37,19 @@
 
 
 
+#pragma mark Variables
+namespace {
+
+Quills::FunctionReturnVoidArg1VoidPtr	gEventsEndLoopCallbackInvoker = nullptr;
+void*									gEventsEndLoopPythonCallback = nullptr;
+
+} // anonymous namespace
+
+
+
 #pragma mark Public Methods
 namespace Quills {
+
 
 /*!
 See header or "pydoc" for Python docstrings.
@@ -50,6 +61,32 @@ Events::run_loop ()
 {
 	EventLoop_Run(); // returns only when the user asks to quit
 }// run_loop
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(4.0)
+*/
+void
+Events::_handle_endloop ()
+{
+	if (nullptr != gEventsEndLoopCallbackInvoker) (*gEventsEndLoopCallbackInvoker)(gEventsEndLoopPythonCallback);
+}// _handle_endloop
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(4.0)
+*/
+void
+Events::_on_endloop_call_py		(FunctionReturnVoidArg1VoidPtr	inRoutine,
+								 void*							inPythonFunctionObject)
+{
+	gEventsEndLoopCallbackInvoker = inRoutine;
+	gEventsEndLoopPythonCallback = inPythonFunctionObject;
+}// _on_endloop_call_py
 
 
 } // namespace Quills

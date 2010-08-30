@@ -156,9 +156,12 @@ print "MacTelnet: Full initialization complete."
 #my_set.define_macro(3, name="my third macro!", contents="this is different")
 #Prefs.set_current_macros(my_set)
 
-# start user interaction (WARNING: will not return until quitting time!)
+def terminate():
+    # unload all required MacTelnet modules, performing necessary cleanup
+    Base.all_done()
+
+Events.on_endloop_call(terminate)
+
+# start user interaction (WARNING: will not return, but calls the endloop callback when finished)
 Events.run_loop()
-
-# unload all required MacTelnet modules, performing necessary cleanup
-Base.all_done()
-
+# IMPORTANT: anything beyond this point will NEVER RUN; use callbacks instead

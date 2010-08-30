@@ -10,7 +10,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -41,6 +41,9 @@
 #ifndef __QUILLSEVENTS__
 #define __QUILLSEVENTS__
 
+// MacTelnet includes
+#include <QuillsCallbacks.typedef.h>
+
 
 
 #pragma mark Public Methods
@@ -59,10 +62,50 @@ IMPORTANT: This call blocks until the user asks to quit.\n\
 ") run_loop;
 #endif
 	static void run_loop ();
+	
+#if SWIG
+// do not lose exceptions that may be raised by callbacks
+%exception handle_url
+{
+	try
+	{
+		$action
+	}
+    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	SWIG_CATCH_UNKNOWN
+}
+#endif
+	// only intended for direct use by MacTelnet’s application delegate in Cocoa
+	static void _handle_endloop ();
+	
+	// only intended for direct use by the SWIG wrapper
+	static void _on_endloop_call_py (Quills::FunctionReturnVoidArg1VoidPtr, void*);
 
 private:
 	Events (); // class is not instantiated
 };
+
+// callback support
+#if SWIG
+%extend Events {
+%feature("docstring",
+"Register a Python function to be called (with no arguments)\n\
+immediately after the main event loop terminates.\n\
+\n\
+This is the only way for Python code to continue running after\n\
+you call Events.run_loop().  At some point in this callback,\n\
+you MUST call Base.all_done() to clean up MacTelnet modules.\n\
+") on_new_call;
+	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
+	// "CallPythonVoidReturnVoid" is defined in Quills.i
+	static void
+	on_endloop_call	(PyObject*	inPythonFunction)
+	{
+		Quills::Events::_on_endloop_call_py(CallPythonVoidReturnVoid, reinterpret_cast< void* >(inPythonFunction));
+		Py_INCREF(inPythonFunction);
+	}
+}
+#endif
 
 } // namespace Quills
 

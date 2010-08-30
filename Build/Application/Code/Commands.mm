@@ -93,6 +93,7 @@ extern "C"
 #import "PrefsWindow.h"
 #import "PrintTerminal.h"
 #import "ProgressDialog.h"
+#import "QuillsEvents.h"
 #import "QuillsSession.h"
 #import "RasterGraphicsScreen.h"
 #import "RecordAE.h"
@@ -3662,6 +3663,18 @@ applicationWillFinishLaunching:(NSNotification*)	aNotification
 	[events setEventHandler:[application delegate] andSelector:@selector(receiveGetURLEvent:replyEvent:)
 													forEventClass:kInternetEventClass
 													andEventID:kAEGetURL];
+}
+
+
+/*!
+Notifies any Quills callback that the application has terminated.
+
+(4.0)
+*/
+- (void)
+applicationWillTerminate:(NSNotification*)		aNotification
+{
+	Quills::Events::_handle_endloop();
 }
 
 @end // Commands_Executor (Commands_ApplicationCoreEvents)

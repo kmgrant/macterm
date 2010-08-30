@@ -541,6 +541,7 @@ changes to an interface declared in a ".mm" file.
 - (NSApplicationTerminateReply)	applicationShouldTerminate:(NSApplication*)sender;
 // NSApplicationNotifications
 - (void)						applicationWillFinishLaunching:(NSNotification*)aNotification;
+- (void)						applicationWillTerminate:(NSNotification*)aNotification;
 @end
 
 @interface Commands_Executor (Commands_Capturing)

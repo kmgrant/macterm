@@ -537,9 +537,11 @@ EventLoop_ReturnRealFrontWindow ()
 
 
 /*!
-Runs the main event loop, NOT RETURNING until a
-quit operation is invoked.  This routine can ONLY
-be invoked from the main application thread.
+Runs the main event loop, AND DOES NOT RETURN.  This routine
+can ONLY be invoked from the main application thread.
+
+To effectively run code “after” this point, modify the
+application delegate’s "terminate:" method.
 
 (3.0)
 */

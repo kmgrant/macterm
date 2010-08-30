@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100829',
     '20100826',
     '20100806',
     '20100801',
@@ -320,6 +321,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100829': [
+        'Added Events.on_endloop_call(func) to Quills, allowing Python code to continue after the event loop terminates.',
+    ],
     '20100826': [
         'Fixed Session Info window double-clicks, so that selected terminal windows are also brought to the front.',
         'Session Info window has been reimplemented using Cocoa, improving the table view and avoiding window bugs.',
