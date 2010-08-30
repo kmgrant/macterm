@@ -300,10 +300,9 @@ See also Initialize_ApplicationShutDownRemainingComponents().
 void
 Initialize_ApplicationShutDownIsolatedComponents ()
 {
-	// saving user preferences is a top priority, since other quitting procedures could cause a crash
-	PrefsWindow_Done();
 	Clipboard_Done();
 	InfoWindow_Done();
+	PrefsWindow_Done(); // also saves other preferences
 	Preferences_Done();
 	EventLoop_Done();
 	FlagManager_Done();
