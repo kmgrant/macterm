@@ -322,6 +322,8 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20100829': [
+        'Fixed Session Info window to appear at startup only if it was visible the last time MacTelnet quit.',
+        'Fixed Clipboard window to appear at startup only if it was visible the last time MacTelnet quit.',
         'Added Events.on_endloop_call(func) to Quills, allowing Python code to continue after the event loop terminates.',
     ],
     '20100826': [

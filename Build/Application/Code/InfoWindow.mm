@@ -150,7 +150,6 @@ Toolbar item “Arrange All Windows in Front”.
 #pragma mark Variables
 namespace {
 
-Boolean						gIsShowing = false;
 ListenerModel_ListenerRef	gSessionAttributeChangeEventListener = nullptr;
 ListenerModel_ListenerRef	gSessionStateChangeEventListener = nullptr;
 ListenerModel_ListenerRef	gInfoWindowDisplayEventListener = nullptr;
@@ -200,7 +199,8 @@ InfoWindow_Init	()
 	Commands_StartHandlingExecution(kCommandShowConnectionStatus, gInfoWindowDisplayEventListener);
 	Commands_StartHandlingExecution(kCommandHideConnectionStatus, gInfoWindowDisplayEventListener);
 	
-	// restore the visible state implicitly saved at last Quit
+	// if the window was open at last Quit, construct it right away;
+	// otherwise, wait until it is requested by the user
 	{
 		Boolean		windowIsVisible = false;
 		size_t		actualSize = 0L;
@@ -213,7 +213,11 @@ InfoWindow_Init	()
 		{
 			windowIsVisible = false; // assume invisible if the preference can’t be found
 		}
-		InfoWindow_SetVisible(windowIsVisible);
+		
+		if (windowIsVisible)
+		{
+			InfoWindow_SetVisible(true);
+		}
 	}
 }// Init
 
@@ -260,7 +264,7 @@ set to be visible.
 Boolean
 InfoWindow_IsVisible ()
 {
-	return gIsShowing;
+	return ([[[InfoWindow_Controller sharedInfoWindowController] window] isVisible]) ? true : false;
 }// IsVisible
 
 
@@ -300,7 +304,6 @@ Shows or hides the session status window.
 void
 InfoWindow_SetVisible	(Boolean	inIsVisible)
 {
-	gIsShowing = inIsVisible;
 	if (inIsVisible)
 	{
 		[[InfoWindow_Controller sharedInfoWindowController] showWindow:NSApp];
