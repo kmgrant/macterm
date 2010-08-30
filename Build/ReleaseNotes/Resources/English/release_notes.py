@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100830',
     '20100829',
     '20100826',
     '20100806',
@@ -321,6 +322,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100830': [
+        'Fixed session activity notifications to not open multiple alerts (or post multiple Growl notifications).',
+    ],
     '20100829': [
         'Fixed Session Info window to appear at startup only if it was visible the last time MacTelnet quit.',
         'Fixed Clipboard window to appear at startup only if it was visible the last time MacTelnet quit.',

@@ -257,6 +257,7 @@ struct My_Session
 	CFRetainRelease				deviceNameString;			// pathname of slave pseudo-terminal device attached to the session
 	CFAbsoluteTime				activationAbsoluteTime;		// result of CFAbsoluteTimeGetCurrent() call when the command starts or restarts
 	CFAbsoluteTime				terminationAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call when the command ends
+	CFAbsoluteTime				watchTriggerAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call when the last watch of any kind went off
 	EventHandlerUPP				windowClosingUPP;			// wrapper for window closing callback
 	EventHandlerRef				windowClosingHandler;		// invoked whenever a session terminal window should close
 	EventHandlerUPP				windowFocusChangeUPP;		// wrapper for window focus-change callback
@@ -4388,6 +4389,7 @@ originalDirectoryString(),
 deviceNameString(),
 activationAbsoluteTime(CFAbsoluteTimeGetCurrent()),
 terminationAbsoluteTime(0),
+watchTriggerAbsoluteTime(CFAbsoluteTimeGetCurrent()),
 windowClosingUPP(nullptr), // set at window validation time
 windowClosingHandler(nullptr), // set at window validation time
 windowFocusChangeUPP(nullptr), // set at window validation time
@@ -6774,14 +6776,23 @@ void
 watchNotifyForSession	(My_SessionPtr	inPtr,
 						 Session_Watch	inWhatTriggered)
 {
-	Boolean		canTrigger = (kSession_WatchForKeepAlive == inWhatTriggered)
-								? true
-								: ((SessionFactory_ReturnUserFocusSession() != inPtr->selfRef) ||
-									FlagManager_Test(kFlagSuspended));
+	CFAbsoluteTime const	kNow = CFAbsoluteTimeGetCurrent();
+	Boolean					canTrigger = (kSession_WatchForKeepAlive == inWhatTriggered)
+											? true
+											: ((SessionFactory_ReturnUserFocusSession() != inPtr->selfRef) ||
+												FlagManager_Test(kFlagSuspended));
 	
+	
+	// automatically ignore triggers that occur too close together
+	if ((kNow - inPtr->watchTriggerAbsoluteTime) < 5.0/* arbitrary; in seconds */)
+	{
+		canTrigger = false;
+	}
 	
 	if (canTrigger)
 	{
+		inPtr->watchTriggerAbsoluteTime = kNow;
+		
 		// note the change (e.g. can cause icon displays to be updated)
 		changeStateAttributes(inPtr, kSession_StateAttributeNotification/* attributes to set */,
 								0/* attributes to clear */);
@@ -6792,12 +6803,12 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 		case kSession_WatchForPassiveData:
 		case kSession_WatchForInactivity:
 			{
-				CFStringRef				growlNotificationName = nullptr;
-				CFStringRef				growlNotificationTitle = nullptr;
-				CFStringRef				dialogTextCFString = nullptr;
-				UIStrings_Result		stringResult = kUIStrings_ResultOK;
-				Boolean					displayGrowl = CocoaBasic_GrowlIsAvailable();
-				Boolean					displayNormal = (false == displayGrowl);
+				CFStringRef			growlNotificationName = nullptr;
+				CFStringRef			growlNotificationTitle = nullptr;
+				CFStringRef			dialogTextCFString = nullptr;
+				UIStrings_Result	stringResult = kUIStrings_ResultOK;
+				Boolean				displayGrowl = CocoaBasic_GrowlIsAvailable();
+				Boolean				displayNormal = (false == displayGrowl);
 				
 				
 				// set message based on watch type
@@ -6833,19 +6844,19 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 					watchClearForSession(inPtr);
 				}
 				
-				if (displayNormal)
+				// TEMPORARY; not really set up to handle more than one alert at a time
+				// per session, so prevent multiple alerts for the same session
+				if ((displayNormal) && (nullptr == inPtr->watchBox))
 				{
 					My_WatchAlertInfoPtr	watchAlertInfoPtr = new My_WatchAlertInfo;
 					
 					
 					// basic setup
 					watchAlertInfoPtr->sessionBeingWatched = inPtr->selfRef;
-					if (nullptr == inPtr->watchBox)
-					{
-						inPtr->watchBox = Alert_New();
-						Alert_SetParamsFor(inPtr->watchBox, kAlert_StyleOK);
-						Alert_SetType(inPtr->watchBox, kAlertNoteAlert);
-					}
+					assert(nullptr == inPtr->watchBox);
+					inPtr->watchBox = Alert_New();
+					Alert_SetParamsFor(inPtr->watchBox, kAlert_StyleOK);
+					Alert_SetType(inPtr->watchBox, kAlertNoteAlert);
 					
 					if (stringResult.ok())
 					{
