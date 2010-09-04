@@ -75,12 +75,12 @@ method is designed to provide you with all of
 the information that DeviceLoop() would normally
 provide.
 */
-typedef pascal Boolean (*Embedding_OffscreenOpProcPtr)	(ControlRef			inSpecificControlOrRoot,
-														 SInt16				inColorDepth,
-														 SInt16				inDeviceFlags,
-														 GDHandle			inTargetDevice,
-														 SInt32				inData1,
-														 SInt32				inData2);
+typedef Boolean (*Embedding_OffscreenOpProcPtr)	(ControlRef			inSpecificControlOrRoot,
+												 SInt16				inColorDepth,
+												 SInt16				inDeviceFlags,
+												 GDHandle			inTargetDevice,
+												 SInt32				inData1,
+												 SInt32				inData2);
 inline Boolean
 Embedding_InvokeOffscreenOpProc	(Embedding_OffscreenOpProcPtr	inUserRoutine,
 								 ControlRef						inControl,

@@ -121,11 +121,11 @@ typedef MyKioskPanelData*		MyKioskPanelDataPtr;
 
 #pragma mark Internal Method Prototypes
 
-static void				deltaSizePanelContainerHIView	(HIViewRef, Float32, Float32, void*);
-static void				disposePanel					(Panel_Ref, void*);
-static SInt32			panelChanged					(Panel_Ref, Panel_Message, void*);
-static pascal OSStatus	receiveViewHit					(EventHandlerCallRef, EventRef, void*);
-static Boolean			updateCheckBoxPreference		(MyKioskPanelUIPtr, HIViewRef);
+static void			deltaSizePanelContainerHIView	(HIViewRef, Float32, Float32, void*);
+static void			disposePanel					(Panel_Ref, void*);
+static SInt32		panelChanged					(Panel_Ref, Panel_Message, void*);
+static OSStatus		receiveViewHit					(EventHandlerCallRef, EventRef, void*);
+static Boolean		updateCheckBoxPreference		(MyKioskPanelUIPtr, HIViewRef);
 
 #pragma mark Variables
 
@@ -501,7 +501,7 @@ preferences bound to checkboxes.
 
 (3.1)
 */
-static pascal OSStatus
+static OSStatus
 receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				 EventRef				inEvent,
 				 void*					inMyKioskPanelUIPtr)

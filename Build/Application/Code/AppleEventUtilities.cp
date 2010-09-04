@@ -582,7 +582,7 @@ use this method.
 
 (3.0)
 */
-pascal OSErr
+OSErr
 AppleEventUtilities_ObjectExists	(AppleEvent const*	inAppleEventPtr,
 									 AppleEvent*		outReplyAppleEventPtr, 
 									 SInt32				UNUSED_ARGUMENT(inData))

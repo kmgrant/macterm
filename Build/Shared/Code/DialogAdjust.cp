@@ -98,8 +98,8 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 
 #pragma mark Internal Method Prototypes
 
-static pascal Boolean	adjustControlsOperation		(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
-static void				beginAdjustment				(WindowRef, Boolean);
+static Boolean		adjustControlsOperation		(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
+static void			beginAdjustment				(WindowRef, Boolean);
 
 
 
@@ -357,7 +357,7 @@ returned; otherwise, "true" is returned.
 
 (1.0)
 */
-static pascal Boolean
+static Boolean
 adjustControlsOperation		(ControlRef		inSpecificControlOrRoot,
 							 SInt16			UNUSED_ARGUMENT(inColorDepth),
 							 SInt16			UNUSED_ARGUMENT(inDeviceFlags),
@@ -368,7 +368,7 @@ adjustControlsOperation		(ControlRef		inSpecificControlOrRoot,
 	OSStatus			error = noErr;
 	AdjustmentDeltaPtr	deltaPtr = REINTERPRET_CAST(inData1, AdjustmentDeltaPtr);
 	Boolean				adjustingDialogItems = gPendingAdjustmentListContainsDialogItems; // as opposed to regular controls
-	Boolean				result = pascal_true;
+	Boolean				result = true;
 	
 	
 	if (inSpecificControlOrRoot == nullptr) error = memPCErr;
@@ -532,7 +532,7 @@ adjustControlsOperation		(ControlRef		inSpecificControlOrRoot,
 		
 		Cursors_UseArrow();
 	}
-	else result = pascal_false;
+	else result = false;
 	
 	return result;
 }// adjustControlsOperation

@@ -157,7 +157,7 @@ Local_Result	putTTYInRawMode						(Local_TerminalID);
 void			receiveSignal						(int);
 Local_Result	sendTerminalResizeMessage			(Local_TerminalID, struct winsize const*);
 void*			threadForLocalProcessDataLoop		(void*);
-pascal void		watchForExitsTimer					(EventLoopTimerRef, void*);
+void			watchForExitsTimer					(EventLoopTimerRef, void*);
 
 } // anonymous namespace
 
@@ -1978,7 +1978,7 @@ Timers that draw must save and restore the current graphics port.
 
 (4.0)
 */
-pascal void
+void
 watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 					 void*					UNUSED_ARGUMENT(inContext))
 {

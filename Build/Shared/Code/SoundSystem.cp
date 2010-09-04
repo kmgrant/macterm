@@ -78,7 +78,7 @@ static void				disposeSoundInfoRef		(SoundInfoRef*);
 static SoundInfoRef		newSoundInfoRef			();
 static SoundInfoPtr		refAcquireLock			(SoundInfoRef);
 static void				refReleaseLock			(SoundInfoRef, SoundInfoPtr*);
-static pascal void		soundCallBack			(SndChannelPtr, SndCommand*);
+static void				soundCallBack			(SndChannelPtr, SndCommand*);
 
 
 
@@ -369,7 +369,7 @@ channel and any resource data).
 
 (1.0)
 */
-pascal void
+void
 soundCallBack	(SndChannelPtr	inChannelPtr,
 				 SndCommand*	inCmdPtr)
 {

@@ -92,7 +92,7 @@ static OSStatus						flattenAndCopy		(PMPrintSettings, PMPageFormat, Handle, Han
 #endif
 
 #if TARGET_API_MAC_CARBON
-static pascal void					sheetDone			(PMPrintSession, WindowRef, Boolean);
+static void							sheetDone			(PMPrintSession, WindowRef, Boolean);
 #endif
 
 
@@ -1332,7 +1332,7 @@ user (either saving settings or throwing them away).
 
 (1.0)
 */
-static pascal void
+static void
 sheetDone	(PMPrintSession		inPrintSession,
 			 WindowRef			inParentWindow,
 			 Boolean			inDialogAccepted)

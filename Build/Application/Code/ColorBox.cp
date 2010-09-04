@@ -84,7 +84,7 @@ typedef MyColorBoxData*		MyColorBoxDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal OSStatus		receiveColorBoxDraw		(EventHandlerCallRef, EventRef, void*);
+OSStatus	receiveColorBoxDraw		(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -408,7 +408,7 @@ color region on top of that.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveColorBoxDraw	(EventHandlerCallRef	inHandlerCallRef,
 					 EventRef				inEvent,
 					 void*					inColorBoxDataPtr)

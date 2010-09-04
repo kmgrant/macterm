@@ -152,9 +152,9 @@ My_GenericDialogPtrLocker&		gGenericDialogPtrLocks ()		{ static My_GenericDialog
 #pragma mark Internal Method Prototypes
 namespace {
 
-Boolean				handleItemHit		(My_GenericDialogPtr, HIViewID const&);
-void				handleNewSize		(HIWindowRef, Float32, Float32, void*);
-pascal OSStatus		receiveHICommand	(EventHandlerCallRef, EventRef, void*);
+Boolean		handleItemHit		(My_GenericDialogPtr, HIViewID const&);
+void		handleNewSize		(HIWindowRef, Float32, Float32, void*);
+OSStatus	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -791,7 +791,7 @@ for the buttons in the new session dialog.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inGenericDialogRef)

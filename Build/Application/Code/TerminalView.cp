@@ -403,7 +403,7 @@ public:
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal void			animateBlinkingItems				(EventLoopTimerRef, void*);
+void				animateBlinkingItems				(EventLoopTimerRef, void*);
 void				audioEvent							(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 EventTime			calculateAnimationStageDelay		(My_TerminalViewPtr, My_TimeIntervalList::size_type);
 void				calculateDoubleSize					(My_TerminalViewPtr, SInt16&, SInt16&);
@@ -455,19 +455,19 @@ void				invalidateRowSection				(My_TerminalViewPtr, UInt16, UInt16, UInt16);
 Boolean				isMonospacedFont					(FMFontFamily);
 void				localToScreen						(My_TerminalViewPtr, SInt16*, SInt16*);
 Boolean				mainEventLoopEvent					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-pascal void			navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
+void				navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
 void				offsetLeftVisibleEdge				(My_TerminalViewPtr, SInt16);
 void				offsetTopVisibleEdge				(My_TerminalViewPtr, SInt32);
 void				preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				preferenceChangedForView			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				recalculateCachedDimensions			(My_TerminalViewPtr);
-pascal OSStatus		receiveTerminalHIObjectEvents		(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveTerminalHIObjectEvents		(EventHandlerCallRef, EventRef, void*);
 OSStatus			receiveTerminalViewActiveStateChange(EventHandlerCallRef, EventRef, TerminalViewRef);
-pascal OSStatus		receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef, EventRef, void*);
 OSStatus			receiveTerminalViewDraw				(EventHandlerCallRef, EventRef, TerminalViewRef);
 OSStatus			receiveTerminalViewGetData			(EventHandlerCallRef, EventRef, TerminalViewRef);
 OSStatus			receiveTerminalViewHitTest			(EventHandlerCallRef, EventRef, TerminalViewRef);
-pascal OSStatus		receiveTerminalViewRawKeyDown		(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveTerminalViewRawKeyDown		(EventHandlerCallRef, EventRef, void*);
 OSStatus			receiveTerminalViewRegionRequest	(EventHandlerCallRef, EventRef, TerminalViewRef);
 OSStatus			receiveTerminalViewTrack			(EventHandlerCallRef, EventRef, TerminalViewRef);
 void				receiveVideoModeChange				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -495,7 +495,7 @@ void				sortAnchors							(TerminalView_Cell&, TerminalView_Cell&, Boolean);
 void				trackTextSelection					(My_TerminalViewPtr, Point, EventModifiers, Point*, UInt32*);
 void				updateDisplay						(My_TerminalViewPtr);
 void				updateDisplayInRegion				(My_TerminalViewPtr, RgnHandle);
-pascal void			updateDisplayTimer					(EventLoopTimerRef, void*);
+void				updateDisplayTimer					(EventLoopTimerRef, void*);
 void				useTerminalTextAttributes			(My_TerminalViewPtr, CGContextRef, TerminalTextAttributes);
 void				useTerminalTextColors				(My_TerminalViewPtr, CGContextRef, TerminalTextAttributes, Float32 = 1.0);
 void				visualBell							(TerminalViewRef);
@@ -3526,7 +3526,7 @@ graphics port.
 
 (3.0)
 */
-pascal void
+void
 animateBlinkingItems	(EventLoopTimerRef		inTimer,
 						 void*					inTerminalViewRef)
 {
@@ -7204,7 +7204,7 @@ a terminal view’s window.
 
 (3.1)
 */
-pascal void
+void
 navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 								 	 NavCBRecPtr				inParameters,
 								 	 void*						inTerminalViewRef)
@@ -7602,7 +7602,7 @@ Invoked by Mac OS X.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 								 EventRef				inEvent,
 								 void*					inTerminalViewRef)
@@ -8114,7 +8114,7 @@ for terminal views.
 
 (3.0)
 */
-pascal OSStatus
+OSStatus
 receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										 EventRef				inEvent,
 										 void*					inTerminalViewRef)
@@ -8648,7 +8648,7 @@ Invoked by Mac OS X whenever the user hits a key.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					inTerminalViewRef)
@@ -10638,7 +10638,7 @@ refresh rate of once per tick).
 
 (4.0)
 */
-pascal void
+void
 updateDisplayTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 					 void*					inTerminalViewRef)
 {

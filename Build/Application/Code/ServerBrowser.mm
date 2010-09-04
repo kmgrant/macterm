@@ -123,11 +123,11 @@ protocol.
 #pragma mark Internal Method Prototypes
 namespace {
 
-id					flagNo						();
-void				initializePanel				(ServerBrowser_PanelController*, Session_Protocol, CFStringRef, UInt16,
-												 CFStringRef);
-void				notifyOldEventTarget		(EventTargetRef);
-pascal OSStatus		receiveLookupComplete		(EventHandlerCallRef, EventRef, void*);
+id			flagNo						();
+void		initializePanel				(ServerBrowser_PanelController*, Session_Protocol, CFStringRef, UInt16,
+										 CFStringRef);
+void		notifyOldEventTarget		(EventTargetRef);
+OSStatus	receiveLookupComplete		(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -348,7 +348,7 @@ field containing the remote host name.
 
 (4.0)
 */
-pascal OSStatus
+OSStatus
 receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inContext))

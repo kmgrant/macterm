@@ -93,8 +93,8 @@ typedef struct My_DeviceLoopControlInfo const*		My_DeviceLoopControlInfoConstPtr
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal void		clipAndDrawControlDeviceLoop	(short, short, GDHandle, long);
-void			useBestHelpButtonIcon			(ControlRef);
+void	clipAndDrawControlDeviceLoop	(short, short, GDHandle, long);
+void	useBestHelpButtonIcon			(ControlRef);
 
 } // anonymous namespace
 
@@ -1191,7 +1191,7 @@ not block it.
 
 (3.0)
 */
-pascal ControlKeyFilterResult
+ControlKeyFilterResult
 NumericalLimiter		(ControlRef			UNUSED_ARGUMENT(inControl),
 						 SInt16*			inKeyCode,
 						 SInt16*			inCharCode,
@@ -1592,7 +1592,7 @@ from being typed into a text field.
 
 (3.1)
 */
-pascal ControlKeyFilterResult
+ControlKeyFilterResult
 UnixCommandLineLimiter	(ControlRef			UNUSED_ARGUMENT(inControl),
 						 SInt16*			inKeyCode,
 						 SInt16*			UNUSED_ARGUMENT(inCharCode),
@@ -1647,7 +1647,7 @@ does not have to worry about type-casting errors.
 
 (3.0)
 */
-pascal void
+void
 clipAndDrawControlDeviceLoop	(short		inColorDepth,
 								 short		inDeviceFlags,
 								 GDHandle	inTargetDevice,

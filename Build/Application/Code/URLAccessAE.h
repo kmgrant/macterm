@@ -44,7 +44,7 @@
 
 #pragma mark Public Methods
 
-pascal OSErr
+OSErr
 	URLAccessAE_HandleUniformResourceLocator		(AppleEvent const*		inAppleEventPtr,
 													 AppleEvent*			outReplyAppleEventPtr,
 													 SInt32					inData);

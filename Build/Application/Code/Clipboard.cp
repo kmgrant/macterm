@@ -114,19 +114,19 @@ typedef std::map< PasteboardRef, My_Type >		My_TypeByPasteboard;
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal void			clipboardUpdatesTimer					(EventLoopTimerRef, void*);
-OSStatus			createCGImageFromComponentConnection	(GraphicsImportComponent, CGImageRef&);
-OSStatus			createCGImageFromData					(CFDataRef, CGImageRef&);
-void				disposeImporterImageBuffer				(void*, void const*, size_t);
-void				handleNewSize							(HIWindowRef, Float32, Float32, void*);
-void				pictureToScrap							(Handle);
-pascal OSStatus		receiveClipboardContentDraw				(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveClipboardContentDragDrop			(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveWindowClosing					(EventHandlerCallRef, EventRef, void*);
-void				setDataTypeInformation					(CFStringRef, size_t);
-void				setScalingInformation					(size_t, size_t);
-void				textToScrap								(Handle);
-void				updateClipboard							(PasteboardRef);
+void		clipboardUpdatesTimer					(EventLoopTimerRef, void*);
+OSStatus	createCGImageFromComponentConnection	(GraphicsImportComponent, CGImageRef&);
+OSStatus	createCGImageFromData					(CFDataRef, CGImageRef&);
+void		disposeImporterImageBuffer				(void*, void const*, size_t);
+void		handleNewSize							(HIWindowRef, Float32, Float32, void*);
+void		pictureToScrap							(Handle);
+OSStatus	receiveClipboardContentDraw				(EventHandlerCallRef, EventRef, void*);
+OSStatus	receiveClipboardContentDragDrop			(EventHandlerCallRef, EventRef, void*);
+OSStatus	receiveWindowClosing					(EventHandlerCallRef, EventRef, void*);
+void		setDataTypeInformation					(CFStringRef, size_t);
+void		setScalingInformation					(size_t, size_t);
+void		textToScrap								(Handle);
+void		updateClipboard							(PasteboardRef);
 
 } // anonymous namespace
 
@@ -1447,7 +1447,7 @@ does change, the clipboard window is updated.
 
 (3.1)
 */
-pascal void
+void
 clipboardUpdatesTimer	(EventLoopTimerRef	UNUSED_ARGUMENT(inTimer),
 						 void*				UNUSED_ARGUMENT(inUnusedData))
 {
@@ -1658,7 +1658,7 @@ should be redrawn.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					UNUSED_ARGUMENT(inContextPtr))
@@ -1764,7 +1764,7 @@ drag-and-drop operation.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveClipboardContentDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									 EventRef				inEvent,
 									 void*					UNUSED_ARGUMENT(inContextPtr))
@@ -1893,7 +1893,7 @@ shown (as it always remains in memory).
 
 (3.0)
 */
-pascal OSStatus
+OSStatus
 receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inContext))

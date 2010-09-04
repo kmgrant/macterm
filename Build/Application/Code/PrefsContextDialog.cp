@@ -84,8 +84,8 @@ My_PrefsContextDialogPtrLocker&		gPrefsContextDialogPtrLocks()  { static My_Pref
 #pragma mark Internal Method Prototypes
 namespace {
 
-void				handleDialogClose	(GenericDialog_Ref, Boolean);
-pascal OSStatus		receiveHICommand	(EventHandlerCallRef, EventRef, void*);
+void		handleDialogClose	(GenericDialog_Ref, Boolean);
+OSStatus	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -336,7 +336,7 @@ for this sheet.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inContextPtr)

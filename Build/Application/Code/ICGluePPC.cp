@@ -38,8 +38,8 @@ enum
 // internal methods
 //
 
-static pascal OSStatus	callComponentUPP	(ICInstance				inComponentInstance,
-											 ComponentParameters*	inParamsPtr);
+static OSStatus	callComponentUPP	(ICInstance				inComponentInstance,
+									 ComponentParameters*	inParamsPtr);
 
 
 
@@ -49,7 +49,7 @@ static pascal OSStatus	callComponentUPP	(ICInstance				inComponentInstance,
 
 #if TARGET_API_MAC_OS8
 
-pascal OSStatus ICStart(ICInstance *inst, OSType creator)
+OSStatus ICStart(ICInstance *inst, OSType creator)
 {
   OSStatus junk;
   OSStatus err;
@@ -83,12 +83,12 @@ pascal OSStatus ICStart(ICInstance *inst, OSType creator)
   return(err);
 }
 
-pascal OSStatus ICCStart(ComponentInstance *inst, OSType creator)
+OSStatus ICCStart(ComponentInstance *inst, OSType creator)
 {
 	return (ICStart((ICInstance*)inst, creator));
 }
 
-pascal OSStatus ICStop(ICInstance inst)
+OSStatus ICStop(ICInstance inst)
 {
   OSStatus err;
   OSStatus err2;
@@ -111,20 +111,20 @@ pascal OSStatus ICStop(ICInstance inst)
   return(err);
 }
 
-pascal OSStatus ICCStop(ComponentInstance inst)
+OSStatus ICCStop(ComponentInstance inst)
 {
 	return (ICStop((ICInstance)inst));
 }
 
 // MacTelnet 3.0 - changed Ptr to ComponentInstance
-pascal OSStatus ICGetComponentInstance(ICInstance inst, ComponentInstance *component_inst)
+OSStatus ICGetComponentInstance(ICInstance inst, ComponentInstance *component_inst)
 {
 	*component_inst = (ComponentInstance)inst;
 	return (noErr);
 }
 
 // MacTelnet 3.0 - changed Ptr to ComponentInstance
-pascal OSStatus ICCGetComponentInstance(ComponentInstance inst, ComponentInstance *component_inst)
+OSStatus ICCGetComponentInstance(ComponentInstance inst, ComponentInstance *component_inst)
 {
 	return (ICGetComponentInstance((ICInstance)inst, component_inst));
 }
@@ -137,7 +137,7 @@ pascal OSStatus ICCGetComponentInstance(ComponentInstance inst, ComponentInstanc
 
 /* ***** Specifying a Configuration ***** */
 
-pascal OSStatus ICFindConfigFile(ICInstance inst, short count, ICDirSpecArrayPtr folders)
+OSStatus ICFindConfigFile(ICInstance inst, short count, ICDirSpecArrayPtr folders)
 {
   struct {
     UInt8 param_flags;
@@ -162,12 +162,12 @@ pascal OSStatus ICFindConfigFile(ICInstance inst, short count, ICDirSpecArrayPtr
 
 #if TARGET_API_MAC_OS8
 
-pascal OSStatus ICCFindConfigFile(ComponentInstance inst, short count, ICDirSpecArrayPtr folders)
+OSStatus ICCFindConfigFile(ComponentInstance inst, short count, ICDirSpecArrayPtr folders)
 {
   return(ICFindConfigFile((ICInstance)inst, count, folders));
 } /* ICCFindConfigFile */
 
-pascal OSStatus ICFindUserConfigFile(ICInstance inst, ICDirSpec *where)
+OSStatus ICFindUserConfigFile(ICInstance inst, ICDirSpec *where)
 {
   struct {
     UInt8 param_flags;
@@ -188,12 +188,12 @@ pascal OSStatus ICFindUserConfigFile(ICInstance inst, ICDirSpec *where)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICFindUserConfigFile */
 
-pascal OSStatus ICCFindUserConfigFile(ComponentInstance inst, ICDirSpec *where)
+OSStatus ICCFindUserConfigFile(ComponentInstance inst, ICDirSpec *where)
 {
   return(ICFindUserConfigFile((ICInstance)inst, where));
 } /* ICCFindUserConfigFile */
 
-pascal OSStatus ICGeneralFindConfigFile(ICInstance inst, Boolean search_prefs, Boolean can_create, short count, ICDirSpecArrayPtr folders)
+OSStatus ICGeneralFindConfigFile(ICInstance inst, Boolean search_prefs, Boolean can_create, short count, ICDirSpecArrayPtr folders)
 {
   struct {
     UInt8 param_flags;
@@ -222,12 +222,12 @@ pascal OSStatus ICGeneralFindConfigFile(ICInstance inst, Boolean search_prefs, B
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICGeneralFindConfigFile */
 
-pascal OSStatus ICCGeneralFindConfigFile(ComponentInstance inst, Boolean search_prefs, Boolean can_create, short count, ICDirSpecArrayPtr folders)
+OSStatus ICCGeneralFindConfigFile(ComponentInstance inst, Boolean search_prefs, Boolean can_create, short count, ICDirSpecArrayPtr folders)
 {
   return(ICGeneralFindConfigFile((ICInstance)inst, search_prefs, can_create, count, folders));
 } /* ICCGeneralFindConfigFile */
 
-pascal OSStatus ICChooseConfig(ICInstance inst)
+OSStatus ICChooseConfig(ICInstance inst)
 {
   struct {
     UInt8 param_flags;
@@ -248,12 +248,12 @@ pascal OSStatus ICChooseConfig(ICInstance inst)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICChooseConfig */
 
-pascal OSStatus ICCChooseConfig(ComponentInstance inst)
+OSStatus ICCChooseConfig(ComponentInstance inst)
 {
   return(ICChooseConfig((ICInstance)inst));
 } /* ICCChooseConfig */
 
-pascal OSStatus ICChooseNewConfig(ICInstance inst)
+OSStatus ICChooseNewConfig(ICInstance inst)
 {
   struct {
     UInt8 param_flags;
@@ -274,12 +274,12 @@ pascal OSStatus ICChooseNewConfig(ICInstance inst)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICChooseNewConfig */
 
-pascal OSStatus ICCChooseNewConfig(ComponentInstance inst)
+OSStatus ICCChooseNewConfig(ComponentInstance inst)
 {
   return(ICChooseNewConfig((ICInstance)inst));
 } /* ICCChooseNewConfig */
 
-pascal OSStatus ICGetConfigName(ICInstance inst, Boolean longname, Str255 name)
+OSStatus ICGetConfigName(ICInstance inst, Boolean longname, Str255 name)
 {
   struct {
     UInt8 param_flags;
@@ -303,12 +303,12 @@ pascal OSStatus ICGetConfigName(ICInstance inst, Boolean longname, Str255 name)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICGetConfigName */
 
-pascal OSStatus ICCGetConfigName(ComponentInstance inst, Boolean longname, Str255 name)
+OSStatus ICCGetConfigName(ComponentInstance inst, Boolean longname, Str255 name)
 {
   return(ICGetConfigName((ICInstance)inst, longname, name));
 } /* ICCGetConfigName */
 
-pascal OSStatus ICGetConfigReference(ICInstance inst, ICConfigRefHandle ref)
+OSStatus ICGetConfigReference(ICInstance inst, ICConfigRefHandle ref)
 {
   struct {
     UInt8 param_flags;
@@ -329,12 +329,12 @@ pascal OSStatus ICGetConfigReference(ICInstance inst, ICConfigRefHandle ref)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICGetConfigReference */
 
-pascal OSStatus ICCGetConfigReference(ComponentInstance inst, ICConfigRefHandle ref)
+OSStatus ICCGetConfigReference(ComponentInstance inst, ICConfigRefHandle ref)
 {
   return(ICGetConfigReference((ICInstance)inst, ref));
 } /* ICCGetConfigReference */
 
-pascal OSStatus ICSetConfigReference(ICInstance inst, ICConfigRefHandle ref, long flags)
+OSStatus ICSetConfigReference(ICInstance inst, ICConfigRefHandle ref, long flags)
 {
   struct {
     UInt8 param_flags;
@@ -357,12 +357,12 @@ pascal OSStatus ICSetConfigReference(ICInstance inst, ICConfigRefHandle ref, lon
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICSetConfigReference */
 
-pascal OSStatus ICCSetConfigReference(ComponentInstance inst, ICConfigRefHandle ref, long flags)
+OSStatus ICCSetConfigReference(ComponentInstance inst, ICConfigRefHandle ref, long flags)
 {
   return(ICSetConfigReference((ICInstance)inst, ref, flags));
 } /* ICCSetConfigReference */
 
-pascal OSStatus ICSpecifyConfigFile(ICInstance inst, FSSpec *config)
+OSStatus ICSpecifyConfigFile(ICInstance inst, FSSpec *config)
 {
   struct {
     UInt8 param_flags;
@@ -383,14 +383,14 @@ pascal OSStatus ICSpecifyConfigFile(ICInstance inst, FSSpec *config)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICSpecifyConfigFile */
 
-pascal OSStatus ICCSpecifyConfigFile(ComponentInstance inst, FSSpec *config)
+OSStatus ICCSpecifyConfigFile(ComponentInstance inst, FSSpec *config)
 {
   return(ICSpecifyConfigFile((ICInstance)inst, config));
 } /* ICCSpecifyConfigFile */
 
 /* ***** Getting Information ***** */
 
-pascal OSStatus ICGetSeed(ICInstance inst, long *seed)
+OSStatus ICGetSeed(ICInstance inst, long *seed)
 {
   struct {
     char param_flags;
@@ -411,12 +411,12 @@ pascal OSStatus ICGetSeed(ICInstance inst, long *seed)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICGetSeed */
 
-pascal OSStatus ICCGetSeed(ComponentInstance inst, long *seed)
+OSStatus ICCGetSeed(ComponentInstance inst, long *seed)
 {
   return(ICGetSeed((ICInstance)inst, seed));
 } /* ICCGetSeed */
 
-pascal OSStatus ICGetPerm(ICInstance inst, ICPerm *perm)
+OSStatus ICGetPerm(ICInstance inst, ICPerm *perm)
 {
   struct {
     char param_flags;
@@ -437,12 +437,12 @@ pascal OSStatus ICGetPerm(ICInstance inst, ICPerm *perm)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICGetPerm */
 
-pascal OSStatus ICCGetPerm(ComponentInstance inst, ICPerm *perm)
+OSStatus ICCGetPerm(ComponentInstance inst, ICPerm *perm)
 {
   return(ICGetPerm((ICInstance)inst, perm));
 } /* ICCGetPerm */
 
-pascal OSStatus ICDefaultFileName(ICInstance inst, Str63 name)
+OSStatus ICDefaultFileName(ICInstance inst, Str63 name)
 {
   struct {
     char param_flags;
@@ -463,14 +463,14 @@ pascal OSStatus ICDefaultFileName(ICInstance inst, Str63 name)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICDefaultFileName */
 
-pascal OSStatus ICCDefaultFileName(ComponentInstance inst, Str63 name)
+OSStatus ICCDefaultFileName(ComponentInstance inst, Str63 name)
 {
   return(ICDefaultFileName((ICInstance)inst, name));
 } /* ICCDefaultFileName */
 
 /* ***** Reading and Writing Preferences ***** */
 
-pascal OSStatus ICBegin(ICInstance inst, ICPerm perm)
+OSStatus ICBegin(ICInstance inst, ICPerm perm)
 {
   struct {
     char param_flags;
@@ -491,12 +491,12 @@ pascal OSStatus ICBegin(ICInstance inst, ICPerm perm)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICBegin */
 
-pascal OSStatus ICCBegin(ComponentInstance inst, ICPerm perm)
+OSStatus ICCBegin(ComponentInstance inst, ICPerm perm)
 {
   return(ICBegin((ICInstance)inst, perm));
 } /* ICCBegin */
 
-pascal OSStatus ICGetPref(ICInstance inst, ConstStr255Param key, ICAttr *attr, void* buf, long *size)
+OSStatus ICGetPref(ICInstance inst, ConstStr255Param key, ICAttr *attr, void* buf, long *size)
 {
   struct {
     char param_flags;
@@ -523,12 +523,12 @@ pascal OSStatus ICGetPref(ICInstance inst, ConstStr255Param key, ICAttr *attr, v
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICGetPref */
 
-pascal OSStatus ICCGetPref(ComponentInstance inst, ConstStr255Param key, ICAttr *attr, Ptr buf, long *size)
+OSStatus ICCGetPref(ComponentInstance inst, ConstStr255Param key, ICAttr *attr, Ptr buf, long *size)
 {
   return(ICGetPref((ICInstance)inst, key, attr, buf, size));
 } /* ICCGetPref */
 
-pascal OSStatus ICSetPref(ICInstance inst, ConstStr255Param key, ICAttr attr, void const* buf, long size)
+OSStatus ICSetPref(ICInstance inst, ConstStr255Param key, ICAttr attr, void const* buf, long size)
 {
   struct {
     char param_flags;
@@ -555,12 +555,12 @@ pascal OSStatus ICSetPref(ICInstance inst, ConstStr255Param key, ICAttr attr, vo
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICSetPref */
 
-pascal OSStatus ICCSetPref(ComponentInstance inst, ConstStr255Param key, ICAttr attr, Ptr buf, long size)
+OSStatus ICCSetPref(ComponentInstance inst, ConstStr255Param key, ICAttr attr, Ptr buf, long size)
 {
   return(ICSetPref((ICInstance)inst, key, attr, buf, size));
 } /* ICCSetPref */
 
-pascal OSStatus ICFindPrefHandle(ICInstance inst, ConstStr255Param key, ICAttr *attr, Handle prefh)
+OSStatus ICFindPrefHandle(ICInstance inst, ConstStr255Param key, ICAttr *attr, Handle prefh)
 {
   struct {
     char param_flags;
@@ -585,12 +585,12 @@ pascal OSStatus ICFindPrefHandle(ICInstance inst, ConstStr255Param key, ICAttr *
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICFindPrefHandle */
 
-pascal OSStatus ICCFindPrefHandle(ComponentInstance inst, ConstStr255Param key, ICAttr *attr, Handle prefh)
+OSStatus ICCFindPrefHandle(ComponentInstance inst, ConstStr255Param key, ICAttr *attr, Handle prefh)
 {
   return(ICFindPrefHandle((ICInstance)inst, key, attr, prefh));
 } /* ICCFindPrefHandle */
 
-pascal OSStatus ICGetPrefHandle(ICInstance inst, ConstStr255Param key, ICAttr *attr, Handle *prefh)
+OSStatus ICGetPrefHandle(ICInstance inst, ConstStr255Param key, ICAttr *attr, Handle *prefh)
 {
   struct {
     char param_flags;
@@ -615,12 +615,12 @@ pascal OSStatus ICGetPrefHandle(ICInstance inst, ConstStr255Param key, ICAttr *a
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICGetPrefHandle */
 
-pascal OSStatus ICCGetPrefHandle(ComponentInstance inst, ConstStr255Param key, ICAttr *attr, Handle *prefh)
+OSStatus ICCGetPrefHandle(ComponentInstance inst, ConstStr255Param key, ICAttr *attr, Handle *prefh)
 {
   return(ICGetPrefHandle((ICInstance)inst, key, attr, prefh));
 } /* ICCGetPrefHandle */
 
-pascal OSStatus ICSetPrefHandle(ICInstance inst, ConstStr255Param key, ICAttr attr, Handle prefh)
+OSStatus ICSetPrefHandle(ICInstance inst, ConstStr255Param key, ICAttr attr, Handle prefh)
 {
   struct {
     char param_flags;
@@ -645,12 +645,12 @@ pascal OSStatus ICSetPrefHandle(ICInstance inst, ConstStr255Param key, ICAttr at
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICSetPrefHandle */
 
-pascal OSStatus ICCSetPrefHandle(ComponentInstance inst, ConstStr255Param key, ICAttr attr, Handle prefh)
+OSStatus ICCSetPrefHandle(ComponentInstance inst, ConstStr255Param key, ICAttr attr, Handle prefh)
 {
   return(ICSetPrefHandle((ICInstance)inst, key, attr, prefh));
 } /* ICCSetPrefHandle */
 
-pascal OSStatus ICCountPref(ICInstance inst, long *count)
+OSStatus ICCountPref(ICInstance inst, long *count)
 {
   struct {
     char param_flags;
@@ -671,12 +671,12 @@ pascal OSStatus ICCountPref(ICInstance inst, long *count)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICCountPref */
 
-pascal OSStatus ICCCountPref(ComponentInstance inst, long *count)
+OSStatus ICCCountPref(ComponentInstance inst, long *count)
 {
   return(ICCountPref((ICInstance)inst, count));
 } /* ICCCountPref */
 
-pascal OSStatus ICGetIndPref(ICInstance inst, long n, Str255 key)
+OSStatus ICGetIndPref(ICInstance inst, long n, Str255 key)
 {
   struct {
     char param_flags;
@@ -699,12 +699,12 @@ pascal OSStatus ICGetIndPref(ICInstance inst, long n, Str255 key)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICGetIndPref */
 
-pascal OSStatus ICCGetIndPref(ComponentInstance inst, long n, Str255 key)
+OSStatus ICCGetIndPref(ComponentInstance inst, long n, Str255 key)
 {
   return(ICGetIndPref((ICInstance)inst, n, key));
 } /* ICCGetIndPref */
 
-pascal OSStatus ICDeletePref(ICInstance inst, ConstStr255Param key)
+OSStatus ICDeletePref(ICInstance inst, ConstStr255Param key)
 {
   struct {
     char param_flags;
@@ -725,12 +725,12 @@ pascal OSStatus ICDeletePref(ICInstance inst, ConstStr255Param key)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICDeletePref */
 
-pascal OSStatus ICCDeletePref(ComponentInstance inst, ConstStr255Param key)
+OSStatus ICCDeletePref(ComponentInstance inst, ConstStr255Param key)
 {
   return(ICDeletePref((ICInstance)inst, key));
 } /* ICCDeletePref */
 
-pascal OSStatus ICEnd(ICInstance inst)
+OSStatus ICEnd(ICInstance inst)
 {
   struct {
     char param_flags;
@@ -751,14 +751,14 @@ pascal OSStatus ICEnd(ICInstance inst)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICEnd */
 
-pascal OSStatus ICCEnd(ComponentInstance inst)
+OSStatus ICCEnd(ComponentInstance inst)
 {
   return(ICEnd((ICInstance)inst));
 } /* ICCEnd */
 
 /* ***** User Interface Stuff ***** */
 
-pascal OSStatus ICEditPreferences(ICInstance inst, ConstStr255Param key)
+OSStatus ICEditPreferences(ICInstance inst, ConstStr255Param key)
 {
   struct {
     char param_flags;
@@ -779,14 +779,14 @@ pascal OSStatus ICEditPreferences(ICInstance inst, ConstStr255Param key)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICEditPreferences */
 
-pascal OSStatus ICCEditPreferences(ComponentInstance inst, ConstStr255Param key)
+OSStatus ICCEditPreferences(ComponentInstance inst, ConstStr255Param key)
 {
   return(ICEditPreferences((ICInstance)inst, key));
 } /* ICCEditPreferences */
 
 /* ***** URL Handling ***** */
 
-pascal OSStatus ICParseURL(ICInstance inst, ConstStr255Param hint, void const* data, long len, long *selStart, long *selEnd, Handle url)
+OSStatus ICParseURL(ICInstance inst, ConstStr255Param hint, void const* data, long len, long *selStart, long *selEnd, Handle url)
 {
   struct {
     char param_flags;
@@ -817,12 +817,12 @@ pascal OSStatus ICParseURL(ICInstance inst, ConstStr255Param hint, void const* d
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICParseURL */
 
-pascal OSStatus ICCParseURL(ComponentInstance inst, ConstStr255Param hint, Ptr data, long len, long *selStart, long *selEnd, Handle url)
+OSStatus ICCParseURL(ComponentInstance inst, ConstStr255Param hint, Ptr data, long len, long *selStart, long *selEnd, Handle url)
 {
   return(ICParseURL((ICInstance)inst, hint, data, len, selStart, selEnd, url));
 } /* ICCParseURL */
 
-pascal OSStatus ICLaunchURL(ICInstance inst, ConstStr255Param hint, void const* data, long len, long *selStart, long *selEnd)
+OSStatus ICLaunchURL(ICInstance inst, ConstStr255Param hint, void const* data, long len, long *selStart, long *selEnd)
 {
   struct {
     char param_flags;
@@ -851,7 +851,7 @@ pascal OSStatus ICLaunchURL(ICInstance inst, ConstStr255Param hint, void const* 
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICLaunchURL */
 
-pascal OSStatus ICCLaunchURL(ComponentInstance inst, ConstStr255Param hint, Ptr data, long len, long *selStart, long *selEnd)
+OSStatus ICCLaunchURL(ComponentInstance inst, ConstStr255Param hint, Ptr data, long len, long *selStart, long *selEnd)
 {
   return(ICLaunchURL((ICInstance)inst, hint, data, len, selStart, selEnd));
 } /* ICCLaunchURL */
@@ -863,7 +863,7 @@ pascal OSStatus ICCLaunchURL(ComponentInstance inst, ConstStr255Param hint, Ptr 
  * ----- High Level Routines -----
  */
 
-pascal OSStatus ICMapFilename(ICInstance inst, ConstStr255Param filename, ICMapEntry *entry)
+OSStatus ICMapFilename(ICInstance inst, ConstStr255Param filename, ICMapEntry *entry)
 {
   struct {
     char param_flags;
@@ -886,12 +886,12 @@ pascal OSStatus ICMapFilename(ICInstance inst, ConstStr255Param filename, ICMapE
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICMapFilename */
 
-pascal OSStatus ICCMapFilename(ComponentInstance inst, ConstStr255Param filename, ICMapEntry *entry)
+OSStatus ICCMapFilename(ComponentInstance inst, ConstStr255Param filename, ICMapEntry *entry)
 {
   return(ICMapFilename((ICInstance)inst, filename, entry));
 } /* ICCMapFilename */
 
-pascal OSStatus ICMapTypeCreator(ICInstance inst, OSType fType, OSType fCreator, ConstStr255Param filename, ICMapEntry *entry)
+OSStatus ICMapTypeCreator(ICInstance inst, OSType fType, OSType fCreator, ConstStr255Param filename, ICMapEntry *entry)
 {
   struct {
     char param_flags;
@@ -918,14 +918,14 @@ pascal OSStatus ICMapTypeCreator(ICInstance inst, OSType fType, OSType fCreator,
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICMapTypeCreator */
 
-pascal OSStatus ICCMapTypeCreator(ComponentInstance inst, OSType fType, OSType fCreator, ConstStr255Param filename, ICMapEntry *entry)
+OSStatus ICCMapTypeCreator(ComponentInstance inst, OSType fType, OSType fCreator, ConstStr255Param filename, ICMapEntry *entry)
 {
   return(ICMapTypeCreator((ICInstance)inst, fType, fCreator, filename, entry));
 } /* ICCMapTypeCreator */
 
 /* ----- Mid Level Routines ----- */
 
-pascal OSStatus ICMapEntriesFilename(ICInstance inst, Handle entries, ConstStr255Param filename, ICMapEntry *entry)
+OSStatus ICMapEntriesFilename(ICInstance inst, Handle entries, ConstStr255Param filename, ICMapEntry *entry)
 {
   struct {
     char param_flags;
@@ -950,12 +950,12 @@ pascal OSStatus ICMapEntriesFilename(ICInstance inst, Handle entries, ConstStr25
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICMapEntriesFilename */
 
-pascal OSStatus ICCMapEntriesFilename(ComponentInstance inst, Handle entries, ConstStr255Param filename, ICMapEntry *entry)
+OSStatus ICCMapEntriesFilename(ComponentInstance inst, Handle entries, ConstStr255Param filename, ICMapEntry *entry)
 {
   return(ICMapEntriesFilename((ICInstance)inst, entries, filename, entry));
 } /* ICCMapEntriesFilename */
 
-pascal OSStatus ICMapEntriesTypeCreator(ICInstance inst, Handle entries, OSType fType, OSType fCreator, ConstStr255Param filename, ICMapEntry *entry)
+OSStatus ICMapEntriesTypeCreator(ICInstance inst, Handle entries, OSType fType, OSType fCreator, ConstStr255Param filename, ICMapEntry *entry)
 {
   struct {
     char param_flags;
@@ -984,14 +984,14 @@ pascal OSStatus ICMapEntriesTypeCreator(ICInstance inst, Handle entries, OSType 
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICMapEntriesTypeCreator */
 
-pascal OSStatus ICCMapEntriesTypeCreator(ComponentInstance inst, Handle entries, OSType fType, OSType fCreator, ConstStr255Param filename, ICMapEntry *entry)
+OSStatus ICCMapEntriesTypeCreator(ComponentInstance inst, Handle entries, OSType fType, OSType fCreator, ConstStr255Param filename, ICMapEntry *entry)
 {
   return(ICMapEntriesTypeCreator((ICInstance)inst, entries, fType, fCreator, filename, entry));
 } /* ICCMapEntriesTypeCreator */
 
 /* ----- Low Level Routines ----- */
 
-pascal OSStatus ICCountMapEntries(ICInstance inst, Handle entries, long *count)
+OSStatus ICCountMapEntries(ICInstance inst, Handle entries, long *count)
 {
   struct {
     char param_flags;
@@ -1014,12 +1014,12 @@ pascal OSStatus ICCountMapEntries(ICInstance inst, Handle entries, long *count)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICCountMapEntries */
 
-pascal OSStatus ICCCountMapEntries(ComponentInstance inst, Handle entries, long *count)
+OSStatus ICCCountMapEntries(ComponentInstance inst, Handle entries, long *count)
 {
   return(ICCountMapEntries((ICInstance)inst, entries, count));
 } /* ICCCountMapEntries */
 
-pascal OSStatus ICGetIndMapEntry(ICInstance inst, Handle entries, long ndx, long *pos, ICMapEntry *entry)
+OSStatus ICGetIndMapEntry(ICInstance inst, Handle entries, long ndx, long *pos, ICMapEntry *entry)
 {
   struct {
     char param_flags;
@@ -1046,12 +1046,12 @@ pascal OSStatus ICGetIndMapEntry(ICInstance inst, Handle entries, long ndx, long
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICGetIndMapEntry */
 
-pascal OSStatus ICCGetIndMapEntry(ComponentInstance inst, Handle entries, long ndx, long *pos, ICMapEntry *entry)
+OSStatus ICCGetIndMapEntry(ComponentInstance inst, Handle entries, long ndx, long *pos, ICMapEntry *entry)
 {
   return(ICGetIndMapEntry((ICInstance)inst, entries, ndx, pos, entry));
 } /* ICCGetIndMapEntry */
 
-pascal OSStatus ICGetMapEntry(ICInstance inst, Handle entries, long pos, ICMapEntry *entry)
+OSStatus ICGetMapEntry(ICInstance inst, Handle entries, long pos, ICMapEntry *entry)
 {
   struct {
     char param_flags;
@@ -1076,12 +1076,12 @@ pascal OSStatus ICGetMapEntry(ICInstance inst, Handle entries, long pos, ICMapEn
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICGetMapEntry */
 
-pascal OSStatus ICCGetMapEntry(ComponentInstance inst, Handle entries, long pos, ICMapEntry *entry)
+OSStatus ICCGetMapEntry(ComponentInstance inst, Handle entries, long pos, ICMapEntry *entry)
 {
   return(ICGetMapEntry((ICInstance)inst, entries, pos, entry));
 } /* ICCGetMapEntry */
 
-pascal OSStatus ICSetMapEntry(ICInstance inst, Handle entries, long pos, ICMapEntry const *entry)
+OSStatus ICSetMapEntry(ICInstance inst, Handle entries, long pos, ICMapEntry const *entry)
 {
   struct {
     char param_flags;
@@ -1106,12 +1106,12 @@ pascal OSStatus ICSetMapEntry(ICInstance inst, Handle entries, long pos, ICMapEn
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICSetMapEntry */
 
-pascal OSStatus ICCSetMapEntry(ComponentInstance inst, Handle entries, long pos, ICMapEntry *entry)
+OSStatus ICCSetMapEntry(ComponentInstance inst, Handle entries, long pos, ICMapEntry *entry)
 {
   return(ICSetMapEntry((ICInstance)inst, entries, pos, entry));
 } /* ICCSetMapEntry */
 
-pascal OSStatus ICDeleteMapEntry(ICInstance inst, Handle entries, long pos)
+OSStatus ICDeleteMapEntry(ICInstance inst, Handle entries, long pos)
 {
   struct {
     char param_flags;
@@ -1134,12 +1134,12 @@ pascal OSStatus ICDeleteMapEntry(ICInstance inst, Handle entries, long pos)
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICDeleteMapEntry */
 
-pascal OSStatus ICCDeleteMapEntry(ComponentInstance inst, Handle entries, long pos)
+OSStatus ICCDeleteMapEntry(ComponentInstance inst, Handle entries, long pos)
 {
   return(ICDeleteMapEntry((ICInstance)inst, entries, pos));
 } /* ICCDeleteMapEntry */
 
-pascal OSStatus ICAddMapEntry(ICInstance inst, Handle entries, ICMapEntry const *entry)
+OSStatus ICAddMapEntry(ICInstance inst, Handle entries, ICMapEntry const *entry)
 {
   struct {
     char param_flags;
@@ -1162,7 +1162,7 @@ pascal OSStatus ICAddMapEntry(ICInstance inst, Handle entries, ICMapEntry const 
   return callComponentUPP(params.inst, (ComponentParameters*)&params);
 } /* ICAddMapEntry */
 
-pascal OSStatus ICCAddMapEntry(ComponentInstance inst, Handle entries, ICMapEntry *entry)
+OSStatus ICCAddMapEntry(ComponentInstance inst, Handle entries, ICMapEntry *entry)
 {
   return(ICAddMapEntry((ICInstance)inst, entries, entry));
 } /* ICCAddMapEntry */
@@ -1182,7 +1182,7 @@ component parameters structure, use this method.
 
 (3.0)
 */
-static pascal OSStatus
+static OSStatus
 callComponentUPP	(ICInstance				UNUSED_ARGUMENT(inComponentInstance),
 					 ComponentParameters*	inParamsPtr)
 {

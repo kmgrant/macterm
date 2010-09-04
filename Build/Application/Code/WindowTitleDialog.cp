@@ -120,9 +120,9 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 
 #pragma mark Internal Method Prototypes
 
-static void				handleItemHit					(My_WindowTitleDialogPtr, HIViewID const&);
-static void				handleNewSize					(HIWindowRef, Float32, Float32, void*);
-static pascal OSStatus	receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+static void			handleItemHit		(My_WindowTitleDialogPtr, HIViewID const&);
+static void			handleNewSize		(HIWindowRef, Float32, Float32, void*);
+static OSStatus		receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 
 
 
@@ -525,7 +525,7 @@ for the buttons in window title dialogs.
 
 (3.0)
 */
-static pascal OSStatus
+static OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inWindowTitleDialogRef)

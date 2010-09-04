@@ -188,7 +188,7 @@ struct My_FormatsPanelANSIColorsUI
 	void
 	readPreferencesForWhite		(Preferences_ContextRef);
 	
-	static pascal OSStatus
+	static OSStatus
 	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 
 protected:
@@ -256,7 +256,7 @@ struct My_FormatsPanelNormalUI
 	void
 	readPreferencesForNormalColors	(Preferences_ContextRef, Boolean = true);
 	
-	static pascal OSStatus
+	static OSStatus
 	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 	
 	void
@@ -341,8 +341,8 @@ namespace {
 Preferences_Result	copyColor						(Preferences_Tag, Preferences_ContextRef, Preferences_ContextRef,
 													 Boolean = false, Boolean* = nullptr);
 Boolean				isMonospacedFont				(Str255);
-pascal OSStatus		receiveFontChange				(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveWindowFocusChange		(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveFontChange				(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveWindowFocusChange		(EventHandlerCallRef, EventRef, void*);
 void				resetANSIWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
 void				setColorBox						(Preferences_ContextRef, Preferences_Tag, HIViewRef, Boolean&);
 void				setInheritanceCheckBox			(HIViewWrap, SInt32, Boolean);
@@ -1107,7 +1107,7 @@ for the buttons in this panel.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 My_FormatsPanelANSIColorsUI::
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
@@ -2115,7 +2115,7 @@ for the buttons in this panel.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 My_FormatsPanelNormalUI::
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
@@ -2724,7 +2724,7 @@ Handles "kEventFontPanelClosed" and "kEventFontSelection" of
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inMyFormatsPanelUIPtr)
@@ -2819,7 +2819,7 @@ for font buttons in this panel.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveWindowFocusChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					inMyFormatsPanelUIPtr)

@@ -103,10 +103,10 @@ appropriate for this notifier to highlight the most specific
 item in the window that the contextual menu will apply to,
 prior to returning the menu that should be displayed.
 */
-typedef pascal void (*WindowInfo_ContextualMenuProcPtr)	(HIWindowRef		inWindow,
-														 Point				inGlobalMouse,
-														 MenuRef			inoutMenu,
-														 WindowInfo_Message	inCallbackMessage);
+typedef void (*WindowInfo_ContextualMenuProcPtr)	(HIWindowRef		inWindow,
+													 Point				inGlobalMouse,
+													 MenuRef			inoutMenu,
+													 WindowInfo_Message	inCallbackMessage);
 inline void
 WindowInfo_InvokeContextualMenuProc		(WindowInfo_ContextualMenuProcPtr	inUserRoutine,
 										 HIWindowRef						inWindow,
@@ -126,10 +126,10 @@ general Window Info reference for that window.  The function is
 notified of the change in size of the window, and should respond
 accordingly (usually by moving and/or resizing controls).
 */
-typedef pascal void (*WindowInfo_ResizeResponderProcPtr)	(HIWindowRef	inWindow,
-															 SInt32			inDeltaSizeX,
-															 SInt32			inDeltaSizeY,
-															 SInt32			inData);
+typedef void (*WindowInfo_ResizeResponderProcPtr)	(HIWindowRef	inWindow,
+													 SInt32			inDeltaSizeX,
+													 SInt32			inDeltaSizeY,
+													 SInt32			inData);
 inline void
 WindowInfo_InvokeResizeResponderProc	(WindowInfo_ResizeResponderProcPtr	inUserRoutine,
 										 HIWindowRef						inWindow,

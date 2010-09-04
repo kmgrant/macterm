@@ -156,7 +156,7 @@ class DialogUtilities_HIViewIDEqualTo; // STL Unary Function - returns: bool, ar
 //! since the Carbon implementation of IsControlHilited() isn’t smart enough to consider the inactive case, this API exists...
 #define IsControlActiveAndHilited(inControlHandle)			((GetControlHilite(inControlHandle) > 0) && (GetControlHilite(inControlHandle) < 255))
 
-pascal ControlKeyFilterResult
+ControlKeyFilterResult
 	NumericalLimiter						(ControlRef				inControl,
 											 SInt16*				inKeyCode,
 											 SInt16*				inCharCode,
@@ -206,7 +206,7 @@ HIViewWrap&
 void
 	TextFontByName							(ConstStringPtr			inFontName);
 
-pascal ControlKeyFilterResult
+ControlKeyFilterResult
 	UnixCommandLineLimiter					(ControlRef				inControl,
 											 SInt16*				inKeyCode,
 											 SInt16*				inCharCode,

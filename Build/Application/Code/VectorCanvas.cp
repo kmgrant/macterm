@@ -146,15 +146,15 @@ typedef LockAcquireRelease< VectorCanvas_Ref, My_VectorCanvas >		My_VectorCanvas
 #pragma mark Internal Method Prototypes
 namespace {
 
-UInt16				copyColorPreferences		(My_VectorCanvasPtr, Preferences_ContextRef, Boolean = true);
-void				getPaletteColor				(My_VectorCanvasPtr, SInt16, CGDeviceColor&);
-void				getPaletteColor				(My_VectorCanvasPtr, SInt16, RGBColor&);
-void				handleMouseDown				(My_VectorCanvasPtr, Point);
-Boolean				inSplash					(Point, Point);
-pascal OSStatus		receiveCanvasDraw			(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveWindowClosing		(EventHandlerCallRef, EventRef, void*);
-void				setPaletteColor				(My_VectorCanvasPtr, SInt16, RGBColor const&);
-SInt16				setPortCanvasPort			(My_VectorCanvasPtr);
+UInt16		copyColorPreferences	(My_VectorCanvasPtr, Preferences_ContextRef, Boolean = true);
+void		getPaletteColor			(My_VectorCanvasPtr, SInt16, CGDeviceColor&);
+void		getPaletteColor			(My_VectorCanvasPtr, SInt16, RGBColor&);
+void		handleMouseDown			(My_VectorCanvasPtr, Point);
+Boolean		inSplash				(Point, Point);
+OSStatus	receiveCanvasDraw		(EventHandlerCallRef, EventRef, void*);
+OSStatus	receiveWindowClosing	(EventHandlerCallRef, EventRef, void*);
+void		setPaletteColor			(My_VectorCanvasPtr, SInt16, RGBColor const&);
+SInt16		setPortCanvasPort		(My_VectorCanvasPtr);
 
 } // anonymous namespace
 
@@ -993,7 +993,7 @@ redrawn.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveCanvasDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inVectorCanvasPtr)
@@ -1121,7 +1121,7 @@ ensure the terminal is re-attached to the data stream!
 
 (3.0)
 */
-pascal OSStatus
+OSStatus
 receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					inContext)

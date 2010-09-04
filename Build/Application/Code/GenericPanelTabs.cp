@@ -129,10 +129,10 @@ typedef My_GenericPanelTabsData*	My_GenericPanelTabsDataPtr;
 
 #pragma mark Internal Method Prototypes
 
-static void				deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
-static SInt32			panelChanged						(Panel_Ref, Panel_Message, void*);
-static pascal OSStatus	receiveViewHit						(EventHandlerCallRef, EventRef, void*);
-static void				showTabPane							(My_GenericPanelTabsUIPtr, UInt16);
+static void			deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
+static SInt32		panelChanged						(Panel_Ref, Panel_Message, void*);
+static OSStatus		receiveViewHit						(EventHandlerCallRef, EventRef, void*);
+static void			showTabPane							(My_GenericPanelTabsUIPtr, UInt16);
 
 
 
@@ -714,7 +714,7 @@ selected tab.
 
 (3.1)
 */
-static pascal OSStatus
+static OSStatus
 receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				 EventRef				inEvent,
 				 void*					inMyGenericTabsPanelUIPtr)

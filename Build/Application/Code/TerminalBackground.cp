@@ -96,19 +96,19 @@ struct My_TerminalBackground
 	void
 	setImageFromURLString	(CFStringRef);
 	
-	static pascal OSStatus
+	static OSStatus
 	receiveViewBoundsChanged	(EventHandlerCallRef, EventRef, void*);
 	
-	static pascal OSStatus
+	static OSStatus
 	receiveViewWindowChanged	(EventHandlerCallRef, EventRef, void*);
 	
-	static pascal OSStatus
+	static OSStatus
 	receiveWindowActivationChanged	(EventHandlerCallRef, EventRef, void*);
 	
-	static pascal OSStatus
+	static OSStatus
 	receiveWindowBoundsChanged	(EventHandlerCallRef, EventRef, void*);
 	
-	static pascal OSStatus
+	static OSStatus
 	receiveWindowMinimizationChanged	(EventHandlerCallRef, EventRef, void*);
 	
 	HIViewRef					view;
@@ -147,10 +147,10 @@ OSStatus			receiveBackgroundFocus					(EventHandlerCallRef, EventRef,
 															 My_TerminalBackgroundPtr);
 OSStatus			receiveBackgroundHICommand				(EventHandlerCallRef, EventRef,
 															 My_TerminalBackgroundPtr);
-pascal OSStatus		receiveBackgroundHIObjectEvents			(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveBackgroundHIObjectEvents			(EventHandlerCallRef, EventRef, void*);
 OSStatus			receiveBackgroundRegionRequest			(EventHandlerCallRef, EventRef,
 															 My_TerminalBackgroundPtr);
-pascal OSStatus		receiveFocusOverlayContentDraw			(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveFocusOverlayContentDraw			(EventHandlerCallRef, EventRef, void*);
 void				setFocusOverlayVisible					(Boolean);
 
 } // anonymous namespace
@@ -468,7 +468,7 @@ focus overlay.
 
 (4.0)
 */
-pascal OSStatus
+OSStatus
 My_TerminalBackground::
 receiveViewBoundsChanged	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
@@ -514,7 +514,7 @@ is changed.  Responds by setting up a window event handler.
 
 (4.0)
 */
-pascal OSStatus
+OSStatus
 My_TerminalBackground::
 receiveViewWindowChanged	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
@@ -588,7 +588,7 @@ overlay.
 
 (4.0)
 */
-pascal OSStatus
+OSStatus
 My_TerminalBackground::
 receiveWindowActivationChanged	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
@@ -637,7 +637,7 @@ synchronizing any focus overlay.
 
 (4.0)
 */
-pascal OSStatus
+OSStatus
 My_TerminalBackground::
 receiveWindowBoundsChanged	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
@@ -699,7 +699,7 @@ overlay.
 
 (4.0)
 */
-pascal OSStatus
+OSStatus
 My_TerminalBackground::
 receiveWindowMinimizationChanged	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									 EventRef				inEvent,
@@ -1326,7 +1326,7 @@ Invoked by Mac OS X.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 									 EventRef				inEvent,
 									 void*					inMyTerminalBackgroundPtr)
@@ -1756,7 +1756,7 @@ needs to be rendered.
 
 (4.0)
 */
-pascal OSStatus
+OSStatus
 receiveFocusOverlayContentDraw	(EventHandlerCallRef	inHandlerCallRef,
 								 EventRef				inEvent,
 								 void*					UNUSED_ARGUMENT(inContext))

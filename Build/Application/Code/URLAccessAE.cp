@@ -64,7 +64,7 @@ kStandardURLSuite
 
 (3.0)
 */
-pascal OSErr
+OSErr
 URLAccessAE_HandleUniformResourceLocator		(AppleEvent const*	inAppleEventPtr,
 												 AppleEvent*		outReplyAppleEventPtr,
 												 SInt32				UNUSED_ARGUMENT(inData))

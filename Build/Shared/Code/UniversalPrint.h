@@ -111,7 +111,7 @@ Printing Idle Method
 This routine should, at a minimum, check for -.
 keypresses and cancel printing.
 */
-typedef pascal void (*UniversalPrint_IdleProcPtr)();
+typedef void (*UniversalPrint_IdleProcPtr)();
 inline void
 UniversalPrint_InvokeIdleProc	(UniversalPrint_IdleProcPtr		inUserRoutine)
 {
@@ -130,9 +130,9 @@ accessor routines in this module to read the
 information you need from the given print
 record reference.
 */
-typedef pascal void (*UniversalPrint_SheetDoneProcPtr)	(UniversalPrint_ContextRef	inRef,
-														 WindowRef					inParentWindow,
-														 Boolean					inDialogAccepted);
+typedef void (*UniversalPrint_SheetDoneProcPtr)	(UniversalPrint_ContextRef	inRef,
+												 WindowRef					inParentWindow,
+												 Boolean					inDialogAccepted);
 inline void
 UniversalPrint_InvokeSheetDoneProc	(UniversalPrint_SheetDoneProcPtr	inUserRoutine,
 									 UniversalPrint_ContextRef			inRef,

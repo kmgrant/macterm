@@ -118,11 +118,11 @@ EventLoop_Result
 //@{
 
 // DEPRECATED
-pascal Boolean
+Boolean
 	EventLoop_HandleColorPickerUpdate			(EventRecord*						inoutEventPtr);
 
 // DEPRECATED
-pascal void
+void
 	EventLoop_HandleNavigationUpdate			(NavEventCallbackMessage			inMessage,
 												 NavCBRecPtr						inParameters,
 												 NavCallBackUserData				inUserData);

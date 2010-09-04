@@ -141,10 +141,10 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 
 #pragma mark Internal Method Prototypes
 
-static pascal OSStatus	receiveArrowHitForNumericalField			(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus	receiveArrowHitForPopUpMenu					(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus	receiveHIViewResizeOrSizeQuery				(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus	receiveWindowResizeOrSizeQuery				(EventHandlerCallRef, EventRef, void*);
+static OSStatus		receiveArrowHitForNumericalField	(EventHandlerCallRef, EventRef, void*);
+static OSStatus		receiveArrowHitForPopUpMenu			(EventHandlerCallRef, EventRef, void*);
+static OSStatus		receiveHIViewResizeOrSizeQuery		(EventHandlerCallRef, EventRef, void*);
+static OSStatus		receiveWindowResizeOrSizeQuery		(EventHandlerCallRef, EventRef, void*);
 
 
 
@@ -739,7 +739,7 @@ current selection in the menu button.
 
 (3.1)
 */
-static pascal OSStatus
+static OSStatus
 receiveArrowHitForNumericalField	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									 EventRef				inEvent,
 									 void*					inNumericalFieldArrowsHandlerRef)
@@ -816,7 +816,7 @@ current selection in the menu button.
 
 (3.1)
 */
-static pascal OSStatus
+static OSStatus
 receiveArrowHitForPopUpMenu		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					inPopUpMenuArrowsHandlerRef)
@@ -886,7 +886,7 @@ Invokes the control resize callback provided at install time.
 
 (3.0)
 */
-static pascal OSStatus
+static OSStatus
 receiveHIViewResizeOrSizeQuery	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					inResizeHandlerRef)
@@ -992,7 +992,7 @@ window, or returns the requested dimensions.
 
 (3.0)
 */
-static pascal OSStatus
+static OSStatus
 receiveWindowResizeOrSizeQuery	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					inResizeHandlerRef)

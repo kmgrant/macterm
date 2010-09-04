@@ -174,7 +174,7 @@ struct My_SessionsPanelGraphicsUI
 	void
 	readPreferences		(Preferences_ContextRef);
 	
-	static pascal OSStatus
+	static OSStatus
 	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 	
 	void
@@ -213,7 +213,7 @@ struct My_SessionsPanelKeyboardUI
 	void
 	readPreferences		(Preferences_ContextRef);
 	
-	static pascal OSStatus
+	static OSStatus
 	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 	
 	OSStatus
@@ -267,7 +267,7 @@ struct My_SessionsPanelResourceUI
 	void
 	rebuildTranslationMenu ();
 	
-	static pascal OSStatus
+	static OSStatus
 	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 	
 	void
@@ -377,10 +377,10 @@ typedef My_SessionsPanelResourceData*		My_SessionsPanelResourceDataPtr;
 namespace {
 
 My_CharacterToCFStringMap&	initCharacterToCFStringMap		();
-void				makeAllBevelButtonsUseTheSystemFont		(HIWindowRef);
-void				preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-pascal OSStatus		receiveFieldChangedInCommandLine		(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveServerBrowserEvent				(EventHandlerCallRef, EventRef, void*);
+void						makeAllBevelButtonsUseTheSystemFont		(HIWindowRef);
+void						preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+OSStatus					receiveFieldChangedInCommandLine		(EventHandlerCallRef, EventRef, void*);
+OSStatus					receiveServerBrowserEvent				(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -1165,7 +1165,7 @@ for the radio buttons in the Graphics tab.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 My_SessionsPanelGraphicsUI::
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
@@ -1715,7 +1715,7 @@ for the buttons in the Keyboard tab.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 My_SessionsPanelKeyboardUI::
 receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					 EventRef				inEvent,
@@ -2701,7 +2701,7 @@ for the buttons in the Resource tab.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 My_SessionsPanelResourceUI::
 receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					 EventRef				inEvent,
@@ -3581,7 +3581,7 @@ for text field data.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveFieldChangedInCommandLine	(EventHandlerCallRef	inHandlerCallRef,
 									 EventRef				inEvent,
 									 void*					inMySessionsTabResourcePtr)
@@ -3626,7 +3626,7 @@ from the button that originally spawned the server browser panel.
 
 (4.0)
 */
-pascal OSStatus
+OSStatus
 receiveServerBrowserEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					inMySessionsPanelResourceUIPtr)

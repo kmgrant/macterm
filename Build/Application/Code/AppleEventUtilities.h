@@ -92,7 +92,7 @@ OSStatus
 Boolean
 	AppleEventUtilities_IsValidReply				(AppleEventPtr			inAppleEventPtr);
 
-pascal OSErr
+OSErr
 	AppleEventUtilities_ObjectExists				(AppleEvent const*		inAppleEventPtr,
 													 AppleEvent*			outReplyAppleEventPtr, 
 													 SInt32					inData);

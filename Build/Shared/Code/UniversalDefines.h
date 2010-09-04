@@ -76,13 +76,6 @@ typedef char const*		ConstCStringPtr;
 //! à la Perl, this is my preferred if-not term
 #define unless(x)		if (!(x))
 
-//! these return values should be used for "pascal Boolean" functions
-enum
-{
-	pascal_true = 0xff, // enough bits for sizeof(unsigned char)
-	pascal_false = 0
-};
-
 //! when a method is declared private but is not implemented
 //! (e.g. a constructor for a class not meant to be instantiated),
 //! use this macro to clarify intent:

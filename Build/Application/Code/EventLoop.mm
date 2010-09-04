@@ -157,17 +157,17 @@ typedef LockAcquireRelease< My_WindowEventTargetRef, My_WindowEventTarget >		My_
 #pragma mark Internal Method Prototypes
 namespace {
 
-void						disposeGlobalEventTarget		(My_GlobalEventTargetRef*);
-void						eventNotifyGlobal				(EventLoop_GlobalEvent, void*);
+void					disposeGlobalEventTarget		(My_GlobalEventTargetRef*);
+void					eventNotifyGlobal				(EventLoop_GlobalEvent, void*);
 My_GlobalEventTargetRef	newGlobalEventTarget			();
-pascal OSStatus			receiveApplicationSwitch		(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus			receiveServicesEvent			(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveApplicationSwitch		(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveServicesEvent			(EventHandlerCallRef, EventRef, void*);
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-pascal OSStatus			receiveSheetOpening				(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveSheetOpening				(EventHandlerCallRef, EventRef, void*);
 #endif
-pascal OSStatus			receiveWindowActivated			(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus			updateModifiers					(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveWindowActivated			(EventHandlerCallRef, EventRef, void*);
+OSStatus				updateModifiers					(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -330,10 +330,10 @@ given to other running threads.
 
 (3.0)
 */
-pascal Boolean
+Boolean
 EventLoop_HandleColorPickerUpdate	(EventRecord*		UNUSED_ARGUMENT(inoutEventPtr))
 {
-	Boolean		result = pascal_false; // event handled?
+	Boolean		result = false; // event handled?
 	
 	
 	// no longer important with Carbon Events
@@ -349,7 +349,7 @@ given to other running threads.
 
 (3.0)
 */
-pascal void
+void
 EventLoop_HandleNavigationUpdate	(NavEventCallbackMessage	UNUSED_ARGUMENT(inMessage), 
 									 NavCBRecPtr				UNUSED_ARGUMENT(inParameters), 
 									 NavCallBackUserData		UNUSED_ARGUMENT(inUserData))
@@ -734,7 +734,7 @@ frontmost (suspended/deactivated).
 
 (3.0)
 */
-pascal OSStatus
+OSStatus
 receiveApplicationSwitch	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					UNUSED_ARGUMENT(inUserData))
@@ -787,7 +787,7 @@ Handles "kEventCommandProcess" of "kEventClassCommand".
 
 (3.0)
 */
-pascal OSStatus
+OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					UNUSED_ARGUMENT(inUserData))
@@ -875,7 +875,7 @@ invoked for a piece of data.
 
 (3.0)
 */
-pascal OSStatus
+OSStatus
 receiveServicesEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inUserData))
@@ -1026,7 +1026,7 @@ This handler could prevent the opening by returning
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveSheetOpening		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inUserData))
@@ -1152,7 +1152,7 @@ by resetting the mouse cursor.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveWindowActivated	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inUserData))
@@ -1183,7 +1183,7 @@ variable that is used by other functions
 
 (3.0)
 */
-pascal OSStatus
+OSStatus
 updateModifiers		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					UNUSED_ARGUMENT(inUserData))

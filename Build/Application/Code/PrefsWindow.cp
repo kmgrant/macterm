@@ -140,7 +140,7 @@ typedef std::map< UInt32, SInt16 >			IndexByCommandID;
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal OSStatus			accessDataBrowserItemData		(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
+OSStatus				accessDataBrowserItemData		(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
 														 DataBrowserItemDataRef, Boolean);
 void					chooseContext					(Preferences_ContextRef);
 void					choosePanel						(UInt16);
@@ -153,14 +153,14 @@ void					handleNewFooterSize				(HIViewRef, Float32, Float32, void*);
 void					handleNewMainWindowSize			(WindowRef, Float32, Float32, void*);
 void					init							();
 void					installPanel					(Panel_Ref);
-pascal void				monitorDataBrowserItems			(ControlRef, DataBrowserItemID, DataBrowserItemNotification);
+void					monitorDataBrowserItems			(ControlRef, DataBrowserItemID, DataBrowserItemNotification);
 void					newPanelSelector				(Panel_Ref);
 void					preferenceChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					rebuildList						();
-pascal OSStatus			receiveFooterActiveStateChange	(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus			receiveFooterDraw				(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus			receiveWindowClosing			(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveFooterActiveStateChange	(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveFooterDraw				(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveWindowClosing			(EventHandlerCallRef, EventRef, void*);
 void					refreshDisplay					();
 void					removeCollectionRenameUI		();
 Quills::Prefs::Class	returnCurrentPreferencesClass	();
@@ -168,9 +168,6 @@ DataBrowserItemID		returnCurrentSelection			();
 OSStatus				selectCollection				(DataBrowserItemID = 0);
 void					showWindow						();
 void					sizePanels						(HISize const&);
-
-// declare the LDEF entry point (it’s only referred to here, and is implemented in IconListDef.c)
-pascal void IconListDef(SInt16, Boolean, Rect*, Cell, SInt16, SInt16, ListHandle);
 
 } // anonymous namespace
 
@@ -456,7 +453,7 @@ belongs in the specified list.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 							 DataBrowserItemID			inItemID,
 							 DataBrowserPropertyID		inPropertyID,
@@ -1514,7 +1511,7 @@ is used to determine when to update the panel views.
 
 (3.1)
 */
-pascal void
+void
 monitorDataBrowserItems		(ControlRef						inDataBrowser,
 							 DataBrowserItemID				inItemID,
 							 DataBrowserItemNotification	inMessage)
@@ -1747,7 +1744,7 @@ Invoked by Mac OS X whenever the footer is activated or dimmed.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveFooterActiveStateChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					UNUSED_ARGUMENT(inContext))
@@ -1784,7 +1781,7 @@ Paints the background of the footer.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveFooterDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef					inEvent,
 					 void*						UNUSED_ARGUMENT(inContext))
@@ -1857,7 +1854,7 @@ the currently-displayed panel.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					UNUSED_ARGUMENT(inContextPtr))
@@ -2087,7 +2084,7 @@ for the preferences window.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inContext))

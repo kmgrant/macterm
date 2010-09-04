@@ -89,7 +89,7 @@ typedef std::vector< Workspace_Ref >					MyWorkspaceList;
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal OSStatus			appendDataForProcessing			(EventHandlerCallRef, EventRef, void*);
+OSStatus				appendDataForProcessing			(EventHandlerCallRef, EventRef, void*);
 void					changeNotifyGlobal				(SessionFactory_Change, void*);
 Boolean					configureSessionTerminalWindow	(TerminalWindowRef, Preferences_ContextRef);
 TerminalWindowRef		createTerminalWindow			(Preferences_ContextRef = nullptr,
@@ -101,11 +101,11 @@ void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionFil
 void					forEveryTerminalWindowInListDo	(TerminalWindowList const&,
 														 SessionFactory_TerminalWindowOpProcPtr, void*, SInt32, void*);
 Boolean					newSessionFromCommand			(TerminalWindowRef, UInt32, Preferences_ContextRef, UInt16);
-pascal OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 Workspace_Ref			returnActiveWorkspace			();
 void					sessionChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-pascal OSStatus			setSessionState					(EventHandlerCallRef, EventRef, void*);
+OSStatus				setSessionState					(EventHandlerCallRef, EventRef, void*);
 void					startTrackingSession			(SessionRef, TerminalWindowRef);
 void					startTrackingTerminalWindow		(TerminalWindowRef);
 void					stopTrackingSession				(SessionRef);
@@ -2019,7 +2019,7 @@ by retrieving arguments from a Carbon Event.
 
 (3.0)
 */
-pascal OSStatus
+OSStatus
 appendDataForProcessing		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					UNUSED_ARGUMENT(inUserData))
@@ -2503,7 +2503,7 @@ for commands that create new sessions.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					UNUSED_ARGUMENT(inContextPtr))
@@ -2780,7 +2780,7 @@ retrieving arguments from a Carbon Event.
 
 (3.0)
 */
-pascal OSStatus
+OSStatus
 setSessionState		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					UNUSED_ARGUMENT(inUserData))

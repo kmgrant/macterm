@@ -140,14 +140,14 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 
 #pragma mark Internal Method Prototypes
 
-static OSStatus				backgroundNotification			();
-static OSStatus				badgeApplicationDockTile		();
-static CGImageRef			createCGImageForCautionIcon		();
-static void					handleItemHit					(My_AlertMessagePtr, DialogItemIndex);
-static void					newButtonString					(CFStringRef&, UIStrings_ButtonCFString);
-static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-static void					setAlertVisibility				(My_AlertMessagePtr, Boolean, Boolean);
-static OSStatus				standardAlert					(My_AlertMessagePtr, AlertType, CFStringRef, CFStringRef);
+static OSStatus			backgroundNotification			();
+static OSStatus			badgeApplicationDockTile		();
+static CGImageRef		createCGImageForCautionIcon		();
+static void				handleItemHit					(My_AlertMessagePtr, DialogItemIndex);
+static void				newButtonString					(CFStringRef&, UIStrings_ButtonCFString);
+static OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+static void				setAlertVisibility				(My_AlertMessagePtr, Boolean, Boolean);
+static OSStatus			standardAlert					(My_AlertMessagePtr, AlertType, CFStringRef, CFStringRef);
 
 
 
@@ -1473,7 +1473,7 @@ for the buttons in the special key sequences dialog.
 
 (3.0)
 */
-static pascal OSStatus
+static OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inMy_AlertMessagePtr)

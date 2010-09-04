@@ -67,10 +67,10 @@ SInt32					gRecordingCount = 0L;				//!< number of recordings taking place
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal OSErr	handleRecordingBegunEvent			(AppleEvent const*, AppleEvent*, SInt32);
-pascal OSErr	handleRecordingTerminatedEvent		(AppleEvent const*, AppleEvent*, SInt32);
-OSStatus		startRecording						();
-OSStatus		stopRecording						();
+OSErr		handleRecordingBegunEvent			(AppleEvent const*, AppleEvent*, SInt32);
+OSErr		handleRecordingTerminatedEvent		(AppleEvent const*, AppleEvent*, SInt32);
+OSStatus	startRecording						();
+OSStatus	stopRecording						();
 
 } // anonymous namespace
 
@@ -214,7 +214,7 @@ Handles event "kAENotifyStartRecording" of "kCoreEventClass".
 
 (3.0)
 */
-pascal OSErr
+OSErr
 handleRecordingBegunEvent	(AppleEvent const*	inAppleEventPtr,
 							 AppleEvent*		UNUSED_ARGUMENT(outReplyAppleEventPtr),
 							 SInt32				UNUSED_ARGUMENT(inData))
@@ -243,7 +243,7 @@ Handles event "kAENotifyStopRecording" of "kCoreEventClass".
 
 (3.0)
 */
-pascal OSErr
+OSErr
 handleRecordingTerminatedEvent	(AppleEvent const*	inAppleEventPtr,
 								 AppleEvent*		UNUSED_ARGUMENT(outReplyAppleEventPtr),
 								 SInt32				UNUSED_ARGUMENT(inData))

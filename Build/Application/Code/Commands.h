@@ -781,7 +781,7 @@ Boolean
 //!\name Standard Carbon Event Handlers
 //@{
 
-pascal OSStatus
+OSStatus
 	Commands_HandleCreateToolbarItem		(EventHandlerCallRef		inHandlerCallRef,
 											 EventRef					inEvent,
 											 void*						inNullContextPtr);

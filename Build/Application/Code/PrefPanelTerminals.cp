@@ -143,7 +143,7 @@ struct My_TerminalsPanelEmulationUI
 	void
 	readPreferences		(Preferences_ContextRef);
 	
-	static pascal OSStatus
+	static OSStatus
 	receiveFieldChanged		(EventHandlerCallRef, EventRef, void*);
 	
 	void
@@ -223,7 +223,7 @@ struct My_TerminalsPanelScreenUI
 	void
 	readPreferences		(Preferences_ContextRef);
 	
-	static pascal OSStatus
+	static OSStatus
 	receiveFieldChanged		(EventHandlerCallRef, EventRef, void*);
 	
 	void
@@ -310,10 +310,10 @@ typedef My_TerminalsPanelScreenData*		My_TerminalsPanelScreenDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal OSStatus		accessDataBrowserItemData	(ControlRef, DataBrowserItemID, DataBrowserPropertyID,
-													DataBrowserItemDataRef, Boolean);
-pascal Boolean		compareDataBrowserItems		(ControlRef, DataBrowserItemID, DataBrowserItemID, DataBrowserPropertyID);
-pascal OSStatus		receiveHICommand			(EventHandlerCallRef, EventRef, void*);
+OSStatus	accessDataBrowserItemData	(ControlRef, DataBrowserItemID, DataBrowserPropertyID,
+										 DataBrowserItemDataRef, Boolean);
+Boolean		compareDataBrowserItems		(ControlRef, DataBrowserItemID, DataBrowserItemID, DataBrowserPropertyID);
+OSStatus	receiveHICommand			(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -975,7 +975,7 @@ their preferences when new text arrives.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 My_TerminalsPanelEmulationUI::
 receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
 						 EventRef				inEvent,
@@ -1793,7 +1793,7 @@ their preferences when new text arrives.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 My_TerminalsPanelScreenUI::
 receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
 						 EventRef				inEvent,
@@ -2034,7 +2034,7 @@ modify data for the specified list.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 							 DataBrowserItemID			inItemID,
 							 DataBrowserPropertyID		inPropertyID,
@@ -2166,7 +2166,7 @@ method compares items in the list.
 
 (3.1)
 */
-pascal Boolean
+Boolean
 compareDataBrowserItems		(HIViewRef					UNUSED_ARGUMENT(inDataBrowser),
 							 DataBrowserItemID			inItemOne,
 							 DataBrowserItemID			inItemTwo,
@@ -2200,7 +2200,7 @@ for the buttons and menus in this panel.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inMyTerminalsPanelUIPtr)

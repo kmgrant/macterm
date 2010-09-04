@@ -175,16 +175,16 @@ typedef My_TranslationsPanelData*	My_TranslationsPanelDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal OSStatus		accessDataBrowserItemData		(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
+OSStatus			accessDataBrowserItemData		(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
 													 DataBrowserItemDataRef, Boolean);
-pascal Boolean		compareDataBrowserItems			(HIViewRef, DataBrowserItemID, DataBrowserItemID, DataBrowserPropertyID);
+Boolean				compareDataBrowserItems			(HIViewRef, DataBrowserItemID, DataBrowserItemID, DataBrowserPropertyID);
 void				deltaSizePanelContainerHIView	(HIViewRef, Float32, Float32, void*);
 void				disposePanel					(Panel_Ref, void*);
-pascal void			monitorDataBrowserItems			(HIViewRef, DataBrowserItemID, DataBrowserItemNotification);
+void				monitorDataBrowserItems			(HIViewRef, DataBrowserItemID, DataBrowserItemNotification);
 SInt32				panelChanged					(Panel_Ref, Panel_Message, void*);
-pascal OSStatus		receiveFontChange				(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveViewHit					(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveFontChange				(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveViewHit					(EventHandlerCallRef, EventRef, void*);
 void				setDataBrowserColumnWidths		(My_TranslationsPanelUIPtr);
 
 } // anonymous namespace
@@ -686,7 +686,7 @@ belongs in the specified list.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 accessDataBrowserItemData	(HIViewRef					UNUSED_ARGUMENT(inDataBrowser),
 							 DataBrowserItemID			inItemID,
 							 DataBrowserPropertyID		inPropertyID,
@@ -755,7 +755,7 @@ method compares items in the list.
 
 (3.1)
 */
-pascal Boolean
+Boolean
 compareDataBrowserItems		(HIViewRef					UNUSED_ARGUMENT(inDataBrowser),
 							 DataBrowserItemID			inItemOne,
 							 DataBrowserItemID			inItemTwo,
@@ -844,7 +844,7 @@ is used to determine when to update the panel views.
 
 (3.1)
 */
-pascal void
+void
 monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 							 DataBrowserItemID				inItemID,
 							 DataBrowserItemNotification	inMessage)
@@ -1041,7 +1041,7 @@ Handles "kEventFontPanelClosed" and "kEventFontSelection" of
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inMyTranslationsPanelUIPtr)
@@ -1115,7 +1115,7 @@ for the buttons in this panel.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inMyTranslationsPanelUIPtr)
@@ -1238,7 +1238,7 @@ for this preferences panel.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				 EventRef				inEvent,
 				 void*					inMyTranslationsPanelUIPtr)

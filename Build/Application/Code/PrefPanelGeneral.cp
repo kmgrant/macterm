@@ -268,9 +268,9 @@ typedef My_GeneralPanelData*	My_GeneralPanelDataPtr;
 static void				changePreferenceUpdateScreenTerminalWindowOp	(TerminalWindowRef, void*, SInt32, void*);
 static void				deltaSizePanelContainerHIView					(HIViewRef, Float32, Float32, void*);
 static SInt32			panelChanged									(Panel_Ref, Panel_Message, void*);
-static pascal OSStatus	receiveHICommand								(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus	receiveFieldChanged								(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus	receiveViewHit									(EventHandlerCallRef, EventRef, void*);
+static OSStatus			receiveHICommand								(EventHandlerCallRef, EventRef, void*);
+static OSStatus			receiveFieldChanged								(EventHandlerCallRef, EventRef, void*);
+static OSStatus			receiveViewHit									(EventHandlerCallRef, EventRef, void*);
 static void				saveFieldPreferences							(My_GeneralPanelUIPtr);
 static void				showTabPane										(My_GeneralPanelUIPtr, UInt16);
 static Boolean			updateCheckBoxPreference						(My_GeneralPanelUIPtr, HIViewRef);
@@ -1572,7 +1572,7 @@ their preferences when new text arrives.
 
 (4.0)
 */
-static pascal OSStatus
+static OSStatus
 receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
 						 EventRef				inEvent,
 						 void*					inMyGeneralPanelUIPtr)
@@ -1603,7 +1603,7 @@ for the buttons in this panel.
 
 (3.1)
 */
-static pascal OSStatus
+static OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					UNUSED_ARGUMENT(inContext))
@@ -1748,7 +1748,7 @@ will be installed instead.
 
 (3.1)
 */
-static pascal OSStatus
+static OSStatus
 receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				 EventRef				inEvent,
 				 void*					inMyGeneralPanelUIPtr)

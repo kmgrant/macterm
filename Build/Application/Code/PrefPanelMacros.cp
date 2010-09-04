@@ -155,7 +155,7 @@ public:
 	void
 	readPreferences		(Preferences_ContextRef, Preferences_Index);
 	
-	static pascal OSStatus
+	static OSStatus
 	receiveFieldChanged		(EventHandlerCallRef, EventRef, void*);
 	
 	void
@@ -227,14 +227,14 @@ typedef My_MacrosPanelData*		My_MacrosPanelDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal OSStatus		accessDataBrowserItemData			(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
-														 DataBrowserItemDataRef, Boolean);
-pascal Boolean		compareDataBrowserItems				(HIViewRef, DataBrowserItemID, DataBrowserItemID,
-														 DataBrowserPropertyID);
-void				deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
-void				disposePanel						(Panel_Ref, void*);
-pascal void			monitorDataBrowserItems				(HIViewRef, DataBrowserItemID, DataBrowserItemNotification);
-pascal OSStatus		receiveHICommand					(EventHandlerCallRef, EventRef, void*);
+OSStatus	accessDataBrowserItemData			(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
+												 DataBrowserItemDataRef, Boolean);
+Boolean		compareDataBrowserItems				(HIViewRef, DataBrowserItemID, DataBrowserItemID,
+												 DataBrowserPropertyID);
+void		deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
+void		disposePanel						(Panel_Ref, void*);
+void		monitorDataBrowserItems				(HIViewRef, DataBrowserItemID, DataBrowserItemNotification);
+OSStatus	receiveHICommand					(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -1162,7 +1162,7 @@ their preferences when new text arrives.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 My_MacrosPanelUI::
 receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
 						 EventRef				inEvent,
@@ -1500,7 +1500,7 @@ belongs in the specified list.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 							 DataBrowserItemID			inItemID,
 							 DataBrowserPropertyID		inPropertyID,
@@ -1642,7 +1642,7 @@ method compares items in the list.
 
 (3.1)
 */
-pascal Boolean
+Boolean
 compareDataBrowserItems		(HIViewRef					inDataBrowser,
 							 DataBrowserItemID			inItemOne,
 							 DataBrowserItemID			inItemTwo,
@@ -1790,7 +1790,7 @@ Responds to changes in the data browser.
 
 (3.1)
 */
-pascal void
+void
 monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 							 DataBrowserItemID				inItemID,
 							 DataBrowserItemNotification	inMessage)
@@ -1857,7 +1857,7 @@ for the buttons and menus in this panel.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inMyMacrosPanelUIPtr)

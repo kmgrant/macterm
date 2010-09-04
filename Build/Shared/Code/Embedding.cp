@@ -59,9 +59,9 @@ typedef My_OffscreenDeviceLoopParams*			My_OffscreenDeviceLoopParamsPtr;
 
 #pragma mark Internal Method Prototypes
 
-static pascal void		offscreenDumpDeviceLoop			(short, short, GDHandle, long);
-static pascal Boolean	setControlActiveOperation		(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
-static pascal Boolean	swapControlsOperation			(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
+static void		offscreenDumpDeviceLoop			(short, short, GDHandle, long);
+static Boolean	setControlActiveOperation		(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
+static Boolean	swapControlsOperation			(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
 
 
 
@@ -525,7 +525,7 @@ the device characteristics are.
 
 (1.0)
 */
-static pascal void
+static void
 offscreenDumpDeviceLoop		(short		inColorDepth,
 							 short		inDeviceFlags,
 							 GDHandle	inTargetDevice,
@@ -692,7 +692,7 @@ returned; otherwise, true is returned.
 
 (1.0)
 */
-static pascal Boolean
+static Boolean
 setControlActiveOperation	(ControlRef		inSpecificControlOrRoot,
 							 SInt16			UNUSED_ARGUMENT(inColorDepth),
 							 SInt16			UNUSED_ARGUMENT(inDeviceFlags),
@@ -700,7 +700,7 @@ setControlActiveOperation	(ControlRef		inSpecificControlOrRoot,
 							 SInt32			inIsEnabled,
 							 SInt32			UNUSED_ARGUMENT(inData2))
 {
-	Boolean		result = pascal_true;
+	Boolean		result = true;
 	
 	
 	if (inSpecificControlOrRoot != nullptr)
@@ -713,7 +713,7 @@ setControlActiveOperation	(ControlRef		inSpecificControlOrRoot,
 	}
 	else
 	{
-		result = pascal_false;
+		result = false;
 	}
 	
 	return result;
@@ -731,7 +731,7 @@ returned; otherwise, true is returned.
 
 (1.0)
 */
-static pascal Boolean
+static Boolean
 swapControlsOperation	(ControlRef		inControlToDisplay,
 						 SInt16			UNUSED_ARGUMENT(inColorDepth),
 						 SInt16			UNUSED_ARGUMENT(inDeviceFlags),
@@ -741,15 +741,15 @@ swapControlsOperation	(ControlRef		inControlToDisplay,
 {
 	OSStatus		error = noErr;
 	ControlRef		controlToHide = REINTERPRET_CAST(inControlToHide, ControlRef);
-	Boolean			result = pascal_true;
+	Boolean			result = true;
 	
 	
 	if (controlToHide != nullptr)
 	{
 		error = SetControlVisibility(controlToHide, false/* visibility */, false/* draw */);
-		if (error != noErr) result = pascal_false;
+		if (error != noErr) result = false;
 		error = SetControlVisibility(inControlToDisplay, true/* visibility */, true/* draw */);
-		if (error != noErr) result = pascal_false;
+		if (error != noErr) result = false;
 	}
 	
 	return result;

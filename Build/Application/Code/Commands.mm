@@ -1418,7 +1418,7 @@ Currently, the context is unused and should be nullptr.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 Commands_HandleCreateToolbarItem	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									 EventRef				inEvent,
 									 void*					UNUSED_ARGUMENT(inContextPtr))
