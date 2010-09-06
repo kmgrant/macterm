@@ -42,6 +42,9 @@
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
+#ifdef __OBJC__
+#	import <Cocoa/Cocoa.h>
+#endif
 #include <CoreServices/CoreServices.h>
 
 // MacTelnet includes

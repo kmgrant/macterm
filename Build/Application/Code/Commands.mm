@@ -3674,6 +3674,7 @@ Notifies any Quills callback that the application has terminated.
 - (void)
 applicationWillTerminate:(NSNotification*)		aNotification
 {
+#pragma unused(aNotification)
 	Quills::Events::_handle_endloop();
 }
 

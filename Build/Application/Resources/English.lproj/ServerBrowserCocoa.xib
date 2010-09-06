@@ -504,7 +504,6 @@ ARcABAAAAAEAAAACARwAAwAAAAEAAQAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
 				<string key="NSMinSize">{670, 227}</string>
 				<string key="NSMaxSize">{1500, 227}</string>
-				<string key="NSFrameAutosaveName"/>
 			</object>
 			<object class="NSArrayController" id="661666040">
 				<object class="NSMutableArray" key="NSDeclaredKeys">

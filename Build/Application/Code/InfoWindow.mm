@@ -950,6 +950,7 @@ sharedInfoWindowController
 	return gInfoWindow_Controller;
 }// sharedInfoWindowController
 
+
 /*!
 Constructor.
 
