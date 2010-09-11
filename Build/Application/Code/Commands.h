@@ -672,6 +672,10 @@ changes to an interface declared in a ".mm" file.
 - (IBAction)	performHideOtherWindows:(id)sender;
 - (IBAction)	performMaximize:(id)sender;
 - (IBAction)	performMoveToNewWorkspace:(id)sender;
+- (IBAction)	performMoveWindowRight:(id)sender;
+- (IBAction)	performMoveWindowLeft:(id)sender;
+- (IBAction)	performMoveWindowDown:(id)sender;
+- (IBAction)	performMoveWindowUp:(id)sender;
 - (IBAction)	performRename:(id)sender;
 - (IBAction)	performShowHiddenWindows:(id)sender;
 @end

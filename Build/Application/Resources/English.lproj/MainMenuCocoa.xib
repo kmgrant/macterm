@@ -3,16 +3,16 @@
 	<data>
 		<int key="IBDocument.SystemTarget">1030</int>
 		<string key="IBDocument.SystemVersion">10F569</string>
-		<string key="IBDocument.InterfaceBuilderVersion">762</string>
+		<string key="IBDocument.InterfaceBuilderVersion">788</string>
 		<string key="IBDocument.AppKitVersion">1038.29</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">762</string>
+			<string key="NS.object.0">788</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="29"/>
+			<integer value="24"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -1511,6 +1511,42 @@
 									<reference key="NSOnImage" ref="229763992"/>
 									<reference key="NSMixedImage" ref="909111550"/>
 								</object>
+								<object class="NSMenuItem" id="1018275014">
+									<reference key="NSMenu" ref="835318025"/>
+									<string key="NSTitle">Nudge Window to the Right</string>
+									<string key="NSKeyEquiv"></string>
+									<int key="NSKeyEquivModMask">786432</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="229763992"/>
+									<reference key="NSMixedImage" ref="909111550"/>
+								</object>
+								<object class="NSMenuItem" id="922793877">
+									<reference key="NSMenu" ref="835318025"/>
+									<string key="NSTitle">Nudge Window to the Left</string>
+									<string key="NSKeyEquiv"></string>
+									<int key="NSKeyEquivModMask">786432</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="229763992"/>
+									<reference key="NSMixedImage" ref="909111550"/>
+								</object>
+								<object class="NSMenuItem" id="128193721">
+									<reference key="NSMenu" ref="835318025"/>
+									<string key="NSTitle">Nudge Window Downward</string>
+									<string key="NSKeyEquiv"></string>
+									<int key="NSKeyEquivModMask">786432</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="229763992"/>
+									<reference key="NSMixedImage" ref="909111550"/>
+								</object>
+								<object class="NSMenuItem" id="1019795736">
+									<reference key="NSMenu" ref="835318025"/>
+									<string key="NSTitle">Nudge Window Upward</string>
+									<string key="NSKeyEquiv"></string>
+									<int key="NSKeyEquivModMask">786432</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="229763992"/>
+									<reference key="NSMixedImage" ref="909111550"/>
+								</object>
 								<object class="NSMenuItem" id="772876404">
 									<reference key="NSMenu" ref="835318025"/>
 									<bool key="NSIsDisabled">YES</bool>
@@ -2770,6 +2806,38 @@
 					</object>
 					<int key="connectionID">1158</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">performMoveWindowRight:</string>
+						<reference key="source" ref="412825009"/>
+						<reference key="destination" ref="1018275014"/>
+					</object>
+					<int key="connectionID">1162</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">performMoveWindowLeft:</string>
+						<reference key="source" ref="412825009"/>
+						<reference key="destination" ref="922793877"/>
+					</object>
+					<int key="connectionID">1169</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">performMoveWindowDown:</string>
+						<reference key="source" ref="412825009"/>
+						<reference key="destination" ref="128193721"/>
+					</object>
+					<int key="connectionID">1170</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">performMoveWindowUp:</string>
+						<reference key="source" ref="412825009"/>
+						<reference key="destination" ref="1019795736"/>
+					</object>
+					<int key="connectionID">1171</int>
+				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<object class="NSArray" key="orderedObjects">
@@ -2966,6 +3034,10 @@
 							<reference ref="407187037"/>
 							<reference ref="1061026545"/>
 							<reference ref="651693707"/>
+							<reference ref="1018275014"/>
+							<reference ref="922793877"/>
+							<reference ref="128193721"/>
+							<reference ref="1019795736"/>
 						</object>
 						<reference key="parent" ref="713487014"/>
 					</object>
@@ -3982,6 +4054,26 @@
 						<reference key="object" ref="696693714"/>
 						<reference key="parent" ref="589872605"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1161</int>
+						<reference key="object" ref="1018275014"/>
+						<reference key="parent" ref="835318025"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1163</int>
+						<reference key="object" ref="922793877"/>
+						<reference key="parent" ref="835318025"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1165</int>
+						<reference key="object" ref="128193721"/>
+						<reference key="parent" ref="835318025"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1167</int>
+						<reference key="object" ref="1019795736"/>
+						<reference key="parent" ref="835318025"/>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -4032,6 +4124,10 @@
 					<string>1153.ImportedFromIB2</string>
 					<string>1155.IBPluginDependency</string>
 					<string>1155.ImportedFromIB2</string>
+					<string>1161.IBPluginDependency</string>
+					<string>1163.IBPluginDependency</string>
+					<string>1165.IBPluginDependency</string>
+					<string>1167.IBPluginDependency</string>
 					<string>19.IBPluginDependency</string>
 					<string>19.ImportedFromIB2</string>
 					<string>23.IBPluginDependency</string>
@@ -4325,12 +4421,16 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<integer value="1"/>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
-					<string>{{681, 516}, {324, 403}}</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<integer value="1"/>
+					<string>{{681, 436}, {326, 483}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{525, 802}, {197, 73}}</string>
@@ -4605,7 +4705,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">1160</int>
+			<int key="maxID">1171</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -4675,6 +4775,10 @@
 							<string>performMaximize:</string>
 							<string>performMinimizeSetup:</string>
 							<string>performMoveToNewWorkspace:</string>
+							<string>performMoveWindowDown:</string>
+							<string>performMoveWindowLeft:</string>
+							<string>performMoveWindowRight:</string>
+							<string>performMoveWindowUp:</string>
 							<string>performNewByFavoriteName:</string>
 							<string>performNewCustom:</string>
 							<string>performNewDefault:</string>
@@ -4836,6 +4940,579 @@
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+						</object>
+					</object>
+					<object class="NSMutableDictionary" key="actionInfosByName">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSArray" key="dict.sortedKeys">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>orderFrontAbout:</string>
+							<string>orderFrontClipboard:</string>
+							<string>orderFrontCommandLine:</string>
+							<string>orderFrontContextualHelp:</string>
+							<string>orderFrontControlKeys:</string>
+							<string>orderFrontDebuggingOptions:</string>
+							<string>orderFrontIPAddresses:</string>
+							<string>orderFrontNextWindow:</string>
+							<string>orderFrontNextWindowHidingPrevious:</string>
+							<string>orderFrontPreferences:</string>
+							<string>orderFrontPreviousWindow:</string>
+							<string>orderFrontSessionInfo:</string>
+							<string>orderFrontSpecificWindow:</string>
+							<string>orderFrontVT220FunctionKeys:</string>
+							<string>orderFrontVT220Keypad:</string>
+							<string>performActionForMacro:</string>
+							<string>performArrangeInFront:</string>
+							<string>performBellToggle:</string>
+							<string>performCaptureBegin:</string>
+							<string>performCaptureEnd:</string>
+							<string>performCheckForUpdates:</string>
+							<string>performCloseSetup:</string>
+							<string>performCopy:</string>
+							<string>performCopyAndPaste:</string>
+							<string>performCopyWithTabSubstitution:</string>
+							<string>performCut:</string>
+							<string>performDelete:</string>
+							<string>performDeleteMapToBackspace:</string>
+							<string>performDeleteMapToDelete:</string>
+							<string>performDuplicate:</string>
+							<string>performEmacsCursorModeToggle:</string>
+							<string>performFind:</string>
+							<string>performFindCursor:</string>
+							<string>performFindNext:</string>
+							<string>performFindPrevious:</string>
+							<string>performFormatByFavoriteName:</string>
+							<string>performFormatCustom:</string>
+							<string>performFormatDefault:</string>
+							<string>performFormatTextBigger:</string>
+							<string>performFormatTextMaximum:</string>
+							<string>performFormatTextSmaller:</string>
+							<string>performFullScreenOff:</string>
+							<string>performFullScreenOn:</string>
+							<string>performGoToMainWebSite:</string>
+							<string>performHideOtherWindows:</string>
+							<string>performHideWindow:</string>
+							<string>performInterruptProcess:</string>
+							<string>performJumpScrolling:</string>
+							<string>performLineWrapToggle:</string>
+							<string>performLocalEchoToggle:</string>
+							<string>performLocalPageKeysToggle:</string>
+							<string>performMacroSwitchByFavoriteName:</string>
+							<string>performMacroSwitchDefault:</string>
+							<string>performMacroSwitchNone:</string>
+							<string>performMappingCustom:</string>
+							<string>performMaximize:</string>
+							<string>performMinimizeSetup:</string>
+							<string>performMoveToNewWorkspace:</string>
+							<string>performMoveWindowDown:</string>
+							<string>performMoveWindowLeft:</string>
+							<string>performMoveWindowRight:</string>
+							<string>performMoveWindowUp:</string>
+							<string>performNewByFavoriteName:</string>
+							<string>performNewCustom:</string>
+							<string>performNewDefault:</string>
+							<string>performNewLogInShell:</string>
+							<string>performNewShell:</string>
+							<string>performNewTEKPage:</string>
+							<string>performOpen:</string>
+							<string>performOpenURL:</string>
+							<string>performPageClearToggle:</string>
+							<string>performPaste:</string>
+							<string>performPrintScreen:</string>
+							<string>performPrintSelection:</string>
+							<string>performProvideFeedback:</string>
+							<string>performRedo:</string>
+							<string>performRename:</string>
+							<string>performReset:</string>
+							<string>performResetGraphicsCharactersOnly:</string>
+							<string>performRestart:</string>
+							<string>performRestoreWorkspaceByFavoriteName:</string>
+							<string>performRestoreWorkspaceDefault:</string>
+							<string>performSaveAs:</string>
+							<string>performSaveOnClearToggle:</string>
+							<string>performSaveSelection:</string>
+							<string>performScreenResizeCustom:</string>
+							<string>performScreenResizeNarrower:</string>
+							<string>performScreenResizeShorter:</string>
+							<string>performScreenResizeStandard:</string>
+							<string>performScreenResizeTall:</string>
+							<string>performScreenResizeTaller:</string>
+							<string>performScreenResizeWide:</string>
+							<string>performScreenResizeWider:</string>
+							<string>performScrollbackClear:</string>
+							<string>performSelectAll:</string>
+							<string>performSelectEntireScrollbackBuffer:</string>
+							<string>performSelectNothing:</string>
+							<string>performSetActivityHandlerNone:</string>
+							<string>performSetActivityHandlerNotifyOnIdle:</string>
+							<string>performSetActivityHandlerNotifyOnNext:</string>
+							<string>performSetActivityHandlerSendKeepAliveOnIdle:</string>
+							<string>performShowHiddenWindows:</string>
+							<string>performSpeechToggle:</string>
+							<string>performSuspendToggle:</string>
+							<string>performTerminalCustomSetup:</string>
+							<string>performTranslationSwitchByFavoriteName:</string>
+							<string>performTranslationSwitchCustom:</string>
+							<string>performTranslationSwitchDefault:</string>
+							<string>performUndo:</string>
+							<string>performZoomSetup:</string>
+							<string>runToolbarCustomizationPaletteSetup:</string>
+							<string>toggleToolbarShownSetup:</string>
+						</object>
+						<object class="NSMutableArray" key="dict.values">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontAbout:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontClipboard:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontCommandLine:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontContextualHelp:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontControlKeys:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontDebuggingOptions:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontIPAddresses:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontNextWindow:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontNextWindowHidingPrevious:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontPreferences:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontPreviousWindow:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontSessionInfo:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontSpecificWindow:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontVT220FunctionKeys:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontVT220Keypad:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performActionForMacro:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performArrangeInFront:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performBellToggle:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performCaptureBegin:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performCaptureEnd:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performCheckForUpdates:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performCloseSetup:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performCopy:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performCopyAndPaste:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performCopyWithTabSubstitution:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performCut:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performDelete:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performDeleteMapToBackspace:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performDeleteMapToDelete:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performDuplicate:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performEmacsCursorModeToggle:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performFind:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performFindCursor:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performFindNext:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performFindPrevious:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performFormatByFavoriteName:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performFormatCustom:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performFormatDefault:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performFormatTextBigger:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performFormatTextMaximum:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performFormatTextSmaller:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performFullScreenOff:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performFullScreenOn:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performGoToMainWebSite:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performHideOtherWindows:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performHideWindow:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performInterruptProcess:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performJumpScrolling:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performLineWrapToggle:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performLocalEchoToggle:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performLocalPageKeysToggle:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performMacroSwitchByFavoriteName:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performMacroSwitchDefault:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performMacroSwitchNone:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performMappingCustom:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performMaximize:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performMinimizeSetup:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performMoveToNewWorkspace:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performMoveWindowDown:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performMoveWindowLeft:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performMoveWindowRight:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performMoveWindowUp:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performNewByFavoriteName:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performNewCustom:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performNewDefault:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performNewLogInShell:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performNewShell:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performNewTEKPage:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performOpen:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performOpenURL:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performPageClearToggle:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performPaste:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performPrintScreen:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performPrintSelection:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performProvideFeedback:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performRedo:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performRename:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performReset:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performResetGraphicsCharactersOnly:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performRestart:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performRestoreWorkspaceByFavoriteName:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performRestoreWorkspaceDefault:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performSaveAs:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performSaveOnClearToggle:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performSaveSelection:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performScreenResizeCustom:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performScreenResizeNarrower:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performScreenResizeShorter:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performScreenResizeStandard:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performScreenResizeTall:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performScreenResizeTaller:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performScreenResizeWide:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performScreenResizeWider:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performScrollbackClear:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performSelectAll:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performSelectEntireScrollbackBuffer:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performSelectNothing:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performSetActivityHandlerNone:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performSetActivityHandlerNotifyOnIdle:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performSetActivityHandlerNotifyOnNext:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performSetActivityHandlerSendKeepAliveOnIdle:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performShowHiddenWindows:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performSpeechToggle:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performSuspendToggle:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performTerminalCustomSetup:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performTranslationSwitchByFavoriteName:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performTranslationSwitchCustom:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performTranslationSwitchDefault:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performUndo:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performZoomSetup:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">runToolbarCustomizationPaletteSetup:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">toggleToolbarShownSetup:</string>
+								<string key="candidateClassName">id</string>
+							</object>
 						</object>
 					</object>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">

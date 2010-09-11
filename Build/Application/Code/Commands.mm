@@ -5269,6 +5269,140 @@ canPerformMoveToNewWorkspace:(id <NSValidatedUserInterfaceItem>)	anItem
 
 
 - (IBAction)
+performMoveWindowRight:(id)		sender
+{
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	
+	
+	if (nullptr != terminalWindow)
+	{
+		NSWindow*	window = TerminalWindow_ReturnNSWindow(terminalWindow);
+		NSPoint		location = [window frame].origin;
+		
+		
+		location.x += 10; // arbitrary, but should match "performMoveWindowLeft:" (TEMPORARY; make this a preference?)
+		[window setFrameOrigin:location];
+	}
+}
+- (id)
+canPerformMoveWindowRight:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL				result = NO;
+	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	
+	
+	if (nullptr != terminalWindow)
+	{
+		result = YES;
+	}
+	return [NSNumber numberWithBool:result];
+}
+
+
+- (IBAction)
+performMoveWindowLeft:(id)		sender
+{
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	
+	
+	if (nullptr != terminalWindow)
+	{
+		NSWindow*	window = TerminalWindow_ReturnNSWindow(terminalWindow);
+		NSPoint		location = [window frame].origin;
+		
+		
+		location.x -= 10; // arbitrary, but should match "performMoveWindowRight:" (TEMPORARY; make this a preference?)
+		[window setFrameOrigin:location];
+	}
+}
+- (id)
+canPerformMoveWindowLeft:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL				result = NO;
+	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	
+	
+	if (nullptr != terminalWindow)
+	{
+		result = YES;
+	}
+	return [NSNumber numberWithBool:result];
+}
+
+
+- (IBAction)
+performMoveWindowDown:(id)		sender
+{
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	
+	
+	if (nullptr != terminalWindow)
+	{
+		NSWindow*	window = TerminalWindow_ReturnNSWindow(terminalWindow);
+		NSPoint		location = [window frame].origin;
+		
+		
+		// remember, Cocoa windows have origins in the bottom-left corner
+		location.y -= 10; // arbitrary, but should match "performMoveWindowUp:" (TEMPORARY; make this a preference?)
+		[window setFrameOrigin:location];
+	}
+}
+- (id)
+canPerformMoveWindowDown:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL				result = NO;
+	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	
+	
+	if (nullptr != terminalWindow)
+	{
+		result = YES;
+	}
+	return [NSNumber numberWithBool:result];
+}
+
+
+- (IBAction)
+performMoveWindowUp:(id)		sender
+{
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	
+	
+	if (nullptr != terminalWindow)
+	{
+		NSWindow*	window = TerminalWindow_ReturnNSWindow(terminalWindow);
+		NSPoint		location = [window frame].origin;
+		
+		
+		// remember, Cocoa windows have origins in the bottom-left corner
+		location.y += 10; // arbitrary, but should match "performMoveWindowDown:" (TEMPORARY; make this a preference?)
+		[window setFrameOrigin:location];
+	}
+}
+- (id)
+canPerformMoveWindowUp:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL				result = NO;
+	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	
+	
+	if (nullptr != terminalWindow)
+	{
+		result = YES;
+	}
+	return [NSNumber numberWithBool:result];
+}
+
+
+- (IBAction)
 performRename:(id)	sender
 {
 #pragma unused(sender)

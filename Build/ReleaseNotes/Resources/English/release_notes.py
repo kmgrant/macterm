@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100911',
     '20100910',
     '20100830',
     '20100829',
@@ -323,6 +324,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100911': [
+        'Window menu items have been added for nudging the frontmost terminal window in any direction.  Combined with the existing commands in the View menu for changing size, it is now possible to do terminal window layout entirely from the keyboard.',
+    ],
     '20100910': [
         'Clipboard window has been reimplemented using Cocoa, improving text/image views and avoiding window bugs.',
         'Clipboard window now has a Finder-style information pane, showing what is known about the data that can be pasted.',
