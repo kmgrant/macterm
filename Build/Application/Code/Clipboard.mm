@@ -104,13 +104,16 @@ typedef std::map< PasteboardRef, My_Type >		My_TypeByPasteboard;
 #pragma mark Internal Method Prototypes
 namespace {
 
-void		clipboardUpdatesTimer					(EventLoopTimerRef, void*);
-OSStatus	createCGImageFromComponentConnection	(GraphicsImportComponent, CGImageRef&);
-OSStatus	createCGImageFromData					(CFDataRef, CGImageRef&);
-void		disposeImporterImageBuffer				(void*, void const*, size_t);
-void		pictureToScrap							(Handle);
-void		textToScrap								(Handle);
-void		updateClipboard							(PasteboardRef);
+void			clipboardUpdatesTimer					(EventLoopTimerRef, void*);
+CFStringRef		copyTypeDescription						(CFStringRef);
+OSStatus		createCGImageFromComponentConnection	(GraphicsImportComponent, CGImageRef&);
+OSStatus		createCGImageFromData					(CFDataRef, CGImageRef&);
+void			disposeImporterImageBuffer				(void*, void const*, size_t);
+Boolean			isImageType								(CFStringRef);
+Boolean			isTextType								(CFStringRef);
+void			pictureToScrap							(Handle);
+void			textToScrap								(Handle);
+void			updateClipboard							(PasteboardRef);
 
 } // anonymous namespace
 
@@ -630,6 +633,14 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 						translationOK = (nullptr != thisCFString);
 					}
 					if ((false == translationOK) && UTTypeConformsTo(outUTI, CFSTR("com.apple.traditional-mac-plain-text")))
+					{
+						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
+																CFDataGetLength(textData), kCFStringEncodingUTF8,
+																false/* is external */);
+						translationOK = (nullptr != thisCFString);
+					}
+					if ((false == translationOK) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.plain-text"),
+																							kUTTypePlainText)))
 					{
 						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
 																CFDataGetLength(textData), kCFStringEncodingUTF8,
@@ -1307,6 +1318,48 @@ clipboardUpdatesTimer	(EventLoopTimerRef	UNUSED_ARGUMENT(inTimer),
 
 
 /*!
+Returns a human-readable description of the specified data type.
+If not nullptr, call CFRelease() on the result when finished.
+
+(4.0)
+*/
+CFStringRef
+copyTypeDescription		(CFStringRef	inUTI)
+{
+	CFStringRef		result = nullptr;
+	
+	
+	// for reasons which aren’t yet understood, it is very easy for
+	// Panther to hang at some point after UTTypeCopyDescription()
+	// is called (but before returning to application code); for
+	// now, this is avoided by simply do nothing at all on 10.3.x
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+	result = UTTypeCopyDescription(inUTI);
+#endif
+	if (nullptr == result)
+	{
+		if (nullptr != inUTI)
+		{
+			if (isTextType(inUTI))
+			{
+				(UIStrings_Result)UIStrings_Copy(kUIStrings_ClipboardWindowGenericKindText, result);
+			}
+			else if (isImageType(inUTI))
+			{
+				(UIStrings_Result)UIStrings_Copy(kUIStrings_ClipboardWindowGenericKindImage, result);
+			}
+		}
+		if (nullptr == result)
+		{
+			result = CFSTR("-");
+			CFRetain(result);
+		}
+	}
+	return result;
+}// copyTypeDescription
+
+
+/*!
 For an open connection to a graphics importer, creates
 a CGImage out of the data.
 
@@ -1441,6 +1494,56 @@ disposeImporterImageBuffer	(void*			UNUSED_ARGUMENT(inInfo),
 
 
 /*!
+Returns true only if the specified UTI appears to be
+referring to some kind of image.
+
+This uses a heuristic, and is meant for efficiency; a
+slower and more accurate method may be to construct an
+image, using Clipboard_CreateCGImageFromPasteboard().
+
+(4.0)
+*/
+Boolean
+isImageType		(CFStringRef	inUTI)
+{
+	Boolean		result = false;
+	
+	
+	if (nullptr != inUTI)
+	{
+		result = ((CFStringFind(inUTI, CFSTR("image"), kCFCompareBackwards).length > 0) ||
+					(CFStringFind(inUTI, CFSTR("picture"), kCFCompareBackwards).length > 0) ||
+					(CFStringFind(inUTI, CFSTR("graphics"), kCFCompareBackwards).length > 0));
+	}
+	return result;
+}// isImageType
+
+
+/*!
+Returns true only if the specified UTI appears to be
+referring to some kind of text.
+
+This uses a heuristic, and is meant for efficiency; a
+slower and more accurate method may be to construct a
+string, using Clipboard_CreateCFStringFromPasteboard().
+
+(4.0)
+*/
+Boolean
+isTextType	(CFStringRef	inUTI)
+{
+	Boolean		result = false;
+	
+	
+	if (nullptr != inUTI)
+	{
+		result = (CFStringFind(inUTI, CFSTR("text"), kCFCompareBackwards).length > 0);
+	}
+	return result;
+}// isTextType
+
+
+/*!
 Copies the specified PICT (QuickDraw picture) data
 to the clipboard.
 
@@ -1523,7 +1626,7 @@ updateClipboard		(PasteboardRef		inPasteboard)
 	if (Clipboard_CreateCFStringFromPasteboard(textToRender, typeIdentifier, inPasteboard))
 	{
 		// text
-		typeCFString = UTTypeCopyDescription(typeIdentifier);
+		typeCFString = copyTypeDescription(typeIdentifier);
 		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeText;
 		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
 		{
@@ -1531,7 +1634,13 @@ updateClipboard		(PasteboardRef		inPasteboard)
 			
 			[controller->clipboardTextContent setEditable:YES];
 			[controller->clipboardTextContent setString:@""];
+		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			[controller->clipboardTextContent paste:NSApp];
+		#else
+			// on Panther, pasting does not seem to work; so, just do a
+			// raw text dump (not as pretty, but better than nothing)
+			[controller->clipboardTextContent setString:(NSString*)textToRender];
+		#endif
 			[controller->clipboardTextContent setEditable:NO];
 			[controller setShowImage:NO];
 			[controller setShowText:YES];
@@ -1547,7 +1656,7 @@ updateClipboard		(PasteboardRef		inPasteboard)
 	else if (Clipboard_CreateCGImageFromPasteboard(imageToRender, typeIdentifier, inPasteboard))
 	{
 		// image
-		typeCFString = UTTypeCopyDescription(typeIdentifier);
+		typeCFString = copyTypeDescription(typeIdentifier);
 		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeGraphics;
 		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
 		{
@@ -1570,7 +1679,7 @@ updateClipboard		(PasteboardRef		inPasteboard)
 	else
 	{
 		// unknown, or empty
-		typeCFString = UTTypeCopyDescription(typeIdentifier);
+		typeCFString = copyTypeDescription(typeIdentifier);
 		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeUnknown;
 		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
 		{
@@ -1636,6 +1745,8 @@ initWithFrame:(NSRect)		aFrame
 																				kUTTypeUTF16PlainText),
 													(NSString*)FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"),
 																				kUTTypeUTF8PlainText),
+													(NSString*)FUTURE_SYMBOL(CFSTR("public.plain-text"),
+																				kUTTypePlainText),
 													(NSString*)CFSTR("com.apple.traditional-mac-plain-text"),
 													nil]];
 	}

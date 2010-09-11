@@ -471,6 +471,16 @@ UIStrings_Copy	(UIStrings_ClipboardWindowCFString	inWhichString,
 													CFSTR("kUIStrings_ClipboardWindowOnePixel; used to represent a size of exactly one pixel"));
 		break;
 	
+	case kUIStrings_ClipboardWindowGenericKindText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("text"), CFSTR("ClipboardWindow"),
+													CFSTR("kUIStrings_ClipboardWindowGenericKindText"));
+		break;
+	
+	case kUIStrings_ClipboardWindowGenericKindImage:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("image"), CFSTR("ClipboardWindow"),
+													CFSTR("kUIStrings_ClipboardWindowGenericKindImage"));
+		break;
+	
 	case kUIStrings_ClipboardWindowDataSizeTemplate:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("%1$@%2$d %3$@"), CFSTR("ClipboardWindow"),
 													CFSTR("kUIStrings_ClipboardWindowDataSizeTemplate; %1$@ is used if the value is approximate, and should have trailing whitespace; %2$d is a numeric size value; %3$@ is a units string, like MB"));

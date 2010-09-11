@@ -167,6 +167,8 @@ enum UIStrings_ClipboardWindowCFString
 	kUIStrings_ClipboardWindowLabelHeight				= 'LHgt',
 	kUIStrings_ClipboardWindowPixelDimensionTemplate	= 'DPix',
 	kUIStrings_ClipboardWindowOnePixel					= '1Pix',
+	kUIStrings_ClipboardWindowGenericKindText			= 'Text',
+	kUIStrings_ClipboardWindowGenericKindImage			= 'Imag',
 	kUIStrings_ClipboardWindowDataSizeTemplate			= 'DSiz',
 	kUIStrings_ClipboardWindowDataSizeApproximately		= 'Aprx',
 	kUIStrings_ClipboardWindowUnitsByte					= 'SzB1',
