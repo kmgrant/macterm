@@ -1277,6 +1277,8 @@ windowDidLoad
 	[super windowDidLoad];
 	assert(nil != infoTable);
 	
+	[[self window] setExcludedFromWindowsMenu:YES];
+	
 	// make this window appear on all Spaces by default; note that this only
 	// works on later versions of Mac OS X; scan for "NSWindowExtensionsFromLeopard"
 	if ([[self window] respondsToSelector:@selector(setCollectionBehavior:)])

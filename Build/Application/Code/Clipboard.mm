@@ -2299,6 +2299,8 @@ windowDidLoad
 	assert(nil != label2);
 	assert(nil != value2);
 	
+	[[self window] setExcludedFromWindowsMenu:YES];
+	
 	// the horizontal scroller is enabled in the NIB, but that has no effect
 	// unless the text itself is set up to never wrap...
 	//[[clipboardTextContent textContainer] setWidthTracksTextView:NO];
