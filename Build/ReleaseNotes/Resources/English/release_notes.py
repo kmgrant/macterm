@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100910',
     '20100830',
     '20100829',
     '20100826',
@@ -322,6 +323,13 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100910': [
+        'Clipboard window has been reimplemented using Cocoa, improving text/image views and avoiding window bugs.',
+        'Clipboard window now has a Finder-style information pane, showing what is known about the data that can be pasted.',
+        'Clipboard window now renders text much more accurately than before, and allows partial selections and dragging.',
+        'Clipboard window now allows the image and text displays to scroll.',
+        'Clipboard window size and position are once again saved and restored automatically.',
+    ],
     '20100830': [
         'Fixed session activity notifications to not open multiple alerts (or post multiple Growl notifications).',
     ],

@@ -163,18 +163,17 @@ Strings appearing in the window used by Show Clipboard.
 enum UIStrings_ClipboardWindowCFString
 {
 	kUIStrings_ClipboardWindowIconName					= 'Icon',
-	kUIStrings_ClipboardWindowDisplaySizePercentage		= 'Pcnt',
-	kUIStrings_ClipboardWindowDescriptionEmpty			= 'Empt',
-	kUIStrings_ClipboardWindowDescriptionTemplate		= 'Desc',
-	kUIStrings_ClipboardWindowContentTypeText			= 'Text',
-	kUIStrings_ClipboardWindowContentTypeUnicodeText	= 'Unic',
-	kUIStrings_ClipboardWindowContentTypePicture		= 'Pict',
-	kUIStrings_ClipboardWindowContentTypeUnknown		= 'Unkn',
-	kUIStrings_ClipboardWindowDescriptionApproximately	= 'Aprx',
+	kUIStrings_ClipboardWindowLabelWidth				= 'LWid',
+	kUIStrings_ClipboardWindowLabelHeight				= 'LHgt',
+	kUIStrings_ClipboardWindowPixelDimensionTemplate	= 'DPix',
+	kUIStrings_ClipboardWindowOnePixel					= '1Pix',
+	kUIStrings_ClipboardWindowDataSizeTemplate			= 'DSiz',
+	kUIStrings_ClipboardWindowDataSizeApproximately		= 'Aprx',
 	kUIStrings_ClipboardWindowUnitsByte					= 'SzB1',
 	kUIStrings_ClipboardWindowUnitsBytes				= 'SzBt',
 	kUIStrings_ClipboardWindowUnitsK					= 'SzKB',
-	kUIStrings_ClipboardWindowUnitsMB					= 'SzMB'
+	kUIStrings_ClipboardWindowUnitsMB					= 'SzMB',
+	kUIStrings_ClipboardWindowValueUnknown				= 'Unkn'
 };
 
 /*!

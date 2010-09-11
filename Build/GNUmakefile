@@ -203,7 +203,6 @@ APP_RESOURCES_BUNDLES := \
 English.lproj/Help \
 English.lproj/AddressDialogCocoa.nib \
 English.lproj/AlertMessages.nib \
-English.lproj/Clipboard.nib \
 English.lproj/ColorBox.nib \
 English.lproj/CommandLineCocoa.nib \
 English.lproj/DebugInterfaceCocoa.nib \
@@ -229,6 +228,7 @@ English.lproj/WindowTitleDialog.nib
 # set to a list of "English.lproj/<xyz>" paths, where there
 # should be an <xyz>.xib source and implied <xyz>.nib output
 XIB_PREFIXES := \
+English.lproj/ClipboardCocoa \
 English.lproj/InfoWindowCocoa \
 English.lproj/MainMenuCocoa \
 English.lproj/PrintPreviewCocoa \

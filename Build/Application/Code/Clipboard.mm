@@ -1,9 +1,9 @@
 /*###############################################################
 
-	Clipboard.cp
+	Clipboard.mm
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -29,70 +29,60 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#import "UniversalDefines.h"
 
 // standard-C includes
-#include <climits>
-#include <map>
+#import <climits>
+#import <map>
 
 // Unix includes
-#include <sys/param.h>
+#import <sys/param.h>
 
 // Mac includes
-#include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
-#include <QuickTime/QuickTime.h>
+#import <ApplicationServices/ApplicationServices.h>
+#import <Carbon/Carbon.h>
+#import <CoreServices/CoreServices.h>
+#import <QuickTime/QuickTime.h>
 
 // library includes
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <CFUtilities.h>
-#include <ColorUtilities.h>
-#include <Console.h>
-#include <Cursors.h>
-#include <DialogAdjust.h>
-#include <FlagManager.h>
-#include <HIViewWrap.h>
-#include <ListenerModel.h>
-#include <Localization.h>
-#include <MemoryBlocks.h>
-#include <NIBLoader.h>
-#include <RegionUtilities.h>
-#include <SoundSystem.h>
-#include <WindowInfo.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CFUtilities.h>
+#import <ColorUtilities.h>
+#import <Console.h>
+#import <Cursors.h>
+#import <FlagManager.h>
+#import <ListenerModel.h>
+#import <Localization.h>
+#import <MemoryBlocks.h>
+#import <NIBLoader.h>
+#import <RegionUtilities.h>
+#import <SoundSystem.h>
 
 // MacTelnet includes
-#include "AppleEventUtilities.h"
-#include "AppResources.h"
-#include "Clipboard.h"
-#include "Commands.h"
-#include "CommonEventHandlers.h"
-#include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
-#include "DragAndDrop.h"
-#include "EventLoop.h"
-#include "Preferences.h"
-#include "Session.h"
-#include "TerminalView.h"
-#include "UIStrings.h"
-#include "VectorCanvas.h"
-#include "VectorInterpreter.h"
+#import "AppleEventUtilities.h"
+#import "AppResources.h"
+#import "Clipboard.h"
+#import "Commands.h"
+#import "CommonEventHandlers.h"
+#import "ConstantsRegistry.h"
+#import "DialogUtilities.h"
+#import "DragAndDrop.h"
+#import "EventLoop.h"
+#import "Preferences.h"
+#import "Session.h"
+#import "TerminalView.h"
+#import "UIStrings.h"
+#import "VectorCanvas.h"
+#import "VectorInterpreter.h"
 
 
 
 #pragma mark Constants
 namespace {
 
-/*!
-IMPORTANT
-
-The following values MUST agree with the view IDs in
-the “Window” NIB from the package "Clipboard.nib".
-*/
-HIViewID const	idMyLabelDataDescription	= { 'Info', 0/* ID */ };
-HIViewID const	idMyUserPaneDragParent		= { 'Frme', 0/* ID */ };
-HIViewID const	idMyImageData				= { 'Imag', 0/* ID */ };
+Float32 const	kSeparatorWidth = 1.0; // vertical line rendered at edge of Clipboard window content
+Float32 const	kSeparatorPerceivedWidth = 2.0;
 
 enum My_Type
 {
@@ -118,13 +108,7 @@ void		clipboardUpdatesTimer					(EventLoopTimerRef, void*);
 OSStatus	createCGImageFromComponentConnection	(GraphicsImportComponent, CGImageRef&);
 OSStatus	createCGImageFromData					(CFDataRef, CGImageRef&);
 void		disposeImporterImageBuffer				(void*, void const*, size_t);
-void		handleNewSize							(HIWindowRef, Float32, Float32, void*);
 void		pictureToScrap							(Handle);
-OSStatus	receiveClipboardContentDraw				(EventHandlerCallRef, EventRef, void*);
-OSStatus	receiveClipboardContentDragDrop			(EventHandlerCallRef, EventRef, void*);
-OSStatus	receiveWindowClosing					(EventHandlerCallRef, EventRef, void*);
-void		setDataTypeInformation					(CFStringRef, size_t);
-void		setScalingInformation					(size_t, size_t);
 void		textToScrap								(Handle);
 void		updateClipboard							(PasteboardRef);
 
@@ -133,18 +117,11 @@ void		updateClipboard							(PasteboardRef);
 #pragma mark Variables
 namespace {
 
-My_TypeByPasteboard&					gClipboardDataGeneralTypes ()	{ static My_TypeByPasteboard x; return x; }
-HIWindowRef								gClipboardWindow = nullptr;
-WindowInfo_Ref							gClipboardWindowInfo = nullptr;
-Boolean									gIsShowing = false;
-My_FlagByPasteboard&					gClipboardLocalChanges ()	{ static My_FlagByPasteboard x; return x; }
-CFRetainRelease							gCurrentRenderData;
-CommonEventHandlers_WindowResizer		gClipboardResizeHandler;
-CarbonEventHandlerWrap					gClipboardWindowClosingHandler;
-CarbonEventHandlerWrap					gClipboardDrawHandler;
-CarbonEventHandlerWrap					gClipboardDragDropHandler;
-EventLoopTimerUPP						gClipboardUpdatesTimerUPP = nullptr;
-EventLoopTimerRef						gClipboardUpdatesTimer = nullptr;
+My_TypeByPasteboard&		gClipboardDataGeneralTypes ()	{ static My_TypeByPasteboard x; return x; }
+My_FlagByPasteboard&		gClipboardLocalChanges ()	{ static My_FlagByPasteboard x; return x; }
+CFRetainRelease				gCurrentRenderData;
+EventLoopTimerUPP			gClipboardUpdatesTimerUPP = nullptr;
+EventLoopTimerRef			gClipboardUpdatesTimer = nullptr;
 
 } // anonymous namespace
 
@@ -157,132 +134,16 @@ This method sets up the initial configurations for
 the clipboard window.  Call this method before
 calling any other clipboard methods from this file.
 
-Support for scroll bars has not been implemented
-yet.  Nonetheless, the commented-out code for adding
-the controls is here.
-
 (3.0)
 */
 void
 Clipboard_Init ()
 {
-	HIWindowRef		clipboardWindow = nullptr;
-	OSStatus		error = noErr;
-	
-	
-	// create the clipboard window
-	clipboardWindow = NIBWindow(AppResources_ReturnBundleForNIBs(),
-								CFSTR("Clipboard"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
-	
-	gClipboardWindow = clipboardWindow;
-	
-	// some attributes that are unset in the NIB are not recognized on 10.3
-	if (false == FlagManager_Test(kFlagOS10_4API))
-	{
-		(OSStatus)ChangeWindowAttributes
-					(clipboardWindow,
-						0/* attributes to set */,
-						kWindowInWindowMenuAttribute/* attributes to clear */);
-	}
-	
-	// install a callback that responds to drags (which copies dragged data to the clipboard)
-	{
-		HIViewWrap		frameView(idMyUserPaneDragParent, clipboardWindow);
-		
-		
-		gClipboardDragDropHandler.install(HIObjectGetEventTarget(frameView.returnHIObjectRef()), receiveClipboardContentDragDrop,
-											CarbonEventSetInClass(CarbonEventClass(kEventClassControl),
-																	kEventControlDragEnter, kEventControlDragWithin,
-																	kEventControlDragLeave, kEventControlDragReceive),
-											nullptr/* user data */);
-		assert(gClipboardDragDropHandler.isInstalled());
-		error = SetControlDragTrackingEnabled(frameView, true/* is drag enabled */);
-		assert_noerr(error);
-	}
-	
-	// install a callback that renders a drag highlight
-	{
-		HIViewWrap		frameView(idMyUserPaneDragParent, clipboardWindow);
-		
-		
-		gClipboardDrawHandler.install(HIObjectGetEventTarget(frameView.returnHIObjectRef()), receiveClipboardContentDraw,
-										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
-										nullptr/* user data */);
-		assert(gClipboardDrawHandler.isInstalled());
-	}
-	
-	// set up image view
-	{
-		HIViewWrap		imageView(idMyImageData, clipboardWindow);
-		
-		
-		HIViewSetVisible(imageView, false); // initially...
-	}
-	
-	// set up the Window Info information
-	gClipboardWindowInfo = WindowInfo_New();
-	WindowInfo_SetWindowDescriptor(gClipboardWindowInfo, kConstantsRegistry_WindowDescriptorClipboard);
-	WindowInfo_SetWindowPotentialDropTarget(gClipboardWindowInfo, true/* can receive data via drag-and-drop */);
-	WindowInfo_SetForWindow(clipboardWindow, gClipboardWindowInfo);
-	
-	// specify a different title for the Dock’s menu, one which doesn’t include the application name
-	{
-		CFStringRef			titleCFString = nullptr;
-		UIStrings_Result	stringResult = kUIStrings_ResultOK;
-		
-		
-		stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowIconName, titleCFString);
-		SetWindowAlternateTitle(clipboardWindow, titleCFString);
-		CFRelease(titleCFString);
-	}
-	
-	// Place the clipboard in the standard position indicated in the Human Interface Guidelines.
-	// With themes, the window frame size cannot be guessed reliably.  Therefore, first, take
-	// the difference between the left edges of the window content and structure region boxes
-	// and make that the left edge of the window.
-	{
-		Rect		screenRect;
-		Rect		structureRect;
-		Rect		contentRect;
-		Rect		initialBounds;
-		Float32		fh = 0.0;
-		Float32		fw = 0.0;
-		
-		
-		RegionUtilities_GetPositioningBounds(clipboardWindow, &screenRect);
-		(OSStatus)GetWindowBounds(clipboardWindow, kWindowContentRgn, &contentRect);
-		(OSStatus)GetWindowBounds(clipboardWindow, kWindowStructureRgn, &structureRect);
-		
-		// use main screen size to calculate the initial clipboard size
-		fh = 0.35 * (screenRect.bottom - screenRect.top);
-		fw = 0.80 * (screenRect.right - screenRect.left);
-		
-		// define the default window size, and make the window that size initially
-		SetRect(&initialBounds, screenRect.left + (contentRect.left - structureRect.left) + 4/* arbitrary */,
-								screenRect.bottom - ((short)fh) - 4/* arbitrary */, 0, 0);
-		SetRect(&initialBounds, initialBounds.left, initialBounds.top,
-								initialBounds.left + (short)fw,
-								initialBounds.top + (short)fh);
-		SetWindowStandardState(clipboardWindow, &initialBounds);
-		(OSStatus)SetWindowBounds(clipboardWindow, kWindowContentRgn, &initialBounds);
-		
-		// install a callback that responds as a window is resized
-		gClipboardResizeHandler.install(clipboardWindow, handleNewSize, nullptr/* user data */,
-										fw / 2/* arbitrary minimum width */,
-										fh / 2/* arbitrary minimum height */,
-										fw + 200/* arbitrary maximum width */,
-										fh + 100/* arbitrary maximum height */);
-		assert(gClipboardResizeHandler.isInstalled());
-	}
-	
-	// install a callback that hides the clipboard instead of destroying it, when it should be closed
-	gClipboardWindowClosingHandler.install(GetWindowEventTarget(clipboardWindow), receiveWindowClosing,
-											CarbonEventSetInClass(CarbonEventClass(kEventClassWindow), kEventWindowClose),
-											nullptr/* user data */);
-	assert(gClipboardWindowClosingHandler.isInstalled());
-	
 	// install a timer that detects changes to the clipboard
 	{
+		OSStatus	error = noErr;
+		
+		
 		gClipboardUpdatesTimerUPP = NewEventLoopTimerUPP(clipboardUpdatesTimer);
 		assert(nullptr != gClipboardUpdatesTimerUPP);
 		error = InstallEventLoopTimer(GetCurrentEventLoop(),
@@ -292,7 +153,8 @@ Clipboard_Init ()
 										&gClipboardUpdatesTimer);
 	}
 	
-	// restore the visible state implicitly saved at last Quit
+	// if the window was open at last Quit, construct it right away;
+	// otherwise, wait until it is requested by the user
 	{
 		Boolean		windowIsVisible = false;
 		size_t		actualSize = 0L;
@@ -305,11 +167,12 @@ Clipboard_Init ()
 		{
 			windowIsVisible = false; // assume invisible if the preference can’t be found
 		}
-		Clipboard_SetWindowVisible(windowIsVisible);
+		
+		if (windowIsVisible)
+		{
+			Clipboard_SetWindowVisible(true);
+		}
 	}
-	
-	// enable drag-and-drop on the window!
-	(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(gClipboardWindow, true);
 	
 	// trigger an initial rendering of whatever was on the clipboard at application launch
 	gClipboardLocalChanges()[Clipboard_ReturnPrimaryPasteboard()] = true;
@@ -337,8 +200,6 @@ Clipboard_Done ()
 	
 	RemoveEventLoopTimer(gClipboardUpdatesTimer), gClipboardUpdatesTimer = nullptr;
 	DisposeEventLoopTimerUPP(gClipboardUpdatesTimerUPP), gClipboardUpdatesTimerUPP = nullptr;
-	DisposeWindow(gClipboardWindow), gClipboardWindow = nullptr;
-	WindowInfo_Dispose(gClipboardWindowInfo);
 }// Done
 
 
@@ -1193,18 +1054,6 @@ Clipboard_ReturnPrimaryPasteboard ()
 
 
 /*!
-Returns the Mac OS window pointer for the clipboard window.
-
-(3.0)
-*/
-HIWindowRef
-Clipboard_ReturnWindow ()
-{
-	return gClipboardWindow;
-}// ReturnWindow
-
-
-/*!
 Reads and caches information about the specified pasteboard,
 and if the pasteboard is actually the Clipboard, triggers an
 update of the Clipboard window.
@@ -1242,18 +1091,13 @@ Shows or hides the clipboard.
 void
 Clipboard_SetWindowVisible	(Boolean	inIsVisible)
 {
-	HIWindowRef		clipboard = Clipboard_ReturnWindow();
-	
-	
-	gIsShowing = inIsVisible;
 	if (inIsVisible)
 	{
-		ShowWindow(clipboard);
-		EventLoop_SelectBehindDialogWindows(clipboard);
+		[[Clipboard_WindowController sharedClipboardWindowController] showWindow:NSApp];
 	}
 	else
 	{
-		HideWindow(clipboard);
+		[[Clipboard_WindowController sharedClipboardWindowController] close];
 	}
 }// SetWindowVisible
 
@@ -1422,17 +1266,12 @@ if the clipboard is suspended but set to visible,
 the window will be invisible (because the application
 is suspended) and yet this method will return "true".
 
-If you need to find the definite visible state of the
-clipboard window, use Clipboard_ReturnWindow() to
-obtain the Mac OS window pointer and then use the
-IsWindowVisible() system call.
-
 (3.0)
 */
 Boolean
 Clipboard_WindowIsVisible ()
 {
-	return gIsShowing;
+	return ([[[Clipboard_WindowController sharedClipboardWindowController] window] isVisible]) ? true : false;
 }// WindowIsVisible
 
 
@@ -1552,7 +1391,7 @@ createCGImageFromComponentConnection	(GraphicsImportComponent	inImporter,
 
 /*!
 Uses QuickTime to import image data that was presumably
-suppled by a pasteboard.
+supplied by a pasteboard.
 
 (3.1)
 */
@@ -1602,23 +1441,6 @@ disposeImporterImageBuffer	(void*			UNUSED_ARGUMENT(inInfo),
 
 
 /*!
-This does not actually do anything, but the mechanism for
-installing the handler allows maximum size to be easily
-enforced.  Resize is automatic through the standard handler
-and settings from the NIB.
-
-(3.0)
-*/
-void
-handleNewSize	(WindowRef		UNUSED_ARGUMENT(inWindow),
-				 Float32		UNUSED_ARGUMENT(inDeltaSizeX),
-				 Float32		UNUSED_ARGUMENT(inDeltaSizeY),
-				 void*			UNUSED_ARGUMENT(inData))
-{
-}// handleNewSize
-
-
-/*!
 Copies the specified PICT (QuickDraw picture) data
 to the clipboard.
 
@@ -1641,489 +1463,10 @@ pictureToScrap	(Handle		inPictureData)
 			(OSStatus)PutScrapFlavor(currentScrap, kScrapFlavorTypePicture,
 										kScrapFlavorMaskNone, GetHandleSize(inPictureData),
 										*inPictureData);
-			RegionUtilities_RedrawWindowOnNextUpdate(gClipboardWindow);
 		}
 	}
 	HSetState(inPictureData, hState);
 }// pictureToScrap
-
-
-/*!
-Embellishes "kEventControlDraw" of "kEventClassControl" by
-rendering clipboard text content, and a drag highlight where
-appropriate.
-
-Invoked by Mac OS X whenever the parent user pane contents
-should be redrawn.
-
-(3.1)
-*/
-OSStatus
-receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef				inEvent,
-							 void*					UNUSED_ARGUMENT(inContextPtr))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlDraw);
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// get the target view
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		
-		// if the view was found, continue
-		if (noErr == result)
-		{
-			CGContextRef	drawingContext = nullptr;
-			
-			
-			
-			// determine the context to draw in with Core Graphics
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamCGContextRef, typeCGContextRef,
-															drawingContext);
-			assert_noerr(result);
-			
-			// if all information can be found, proceed with drawing
-			if (noErr == result)
-			{
-				OSStatus	error = noErr;
-				HIRect		contentBounds;
-				Boolean		dragHighlight = false;
-				UInt32		actualSize = 0;
-				
-				
-				error = HIViewGetBounds(view, &contentBounds);
-				assert_noerr(error);
-				
-				// perform any necessary rendering for drags
-				if (noErr != GetControlProperty
-								(view, AppResources_ReturnCreatorCode(),
-									kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
-									sizeof(dragHighlight), &actualSize,
-									&dragHighlight))
-				{
-					dragHighlight = false;
-				}
-				
-				if (dragHighlight)
-				{
-					DragAndDrop_ShowHighlightBackground(drawingContext, contentBounds);
-					DragAndDrop_ShowHighlightFrame(drawingContext, contentBounds);
-				}
-				else
-				{
-					DragAndDrop_HideHighlightBackground(drawingContext, contentBounds);
-					DragAndDrop_HideHighlightFrame(drawingContext, contentBounds);
-				}
-				
-				// render text, if that is what is on the clipboard
-				if (gCurrentRenderData.exists() && (CFStringGetTypeID() == CFGetTypeID(gCurrentRenderData.returnCFTypeRef())))
-				{
-					HIThemeTextInfo		textInfo;
-					
-					
-					bzero(&textInfo, sizeof(textInfo));
-					textInfo.version = 0;
-					textInfo.state = IsControlActive(view) ? kThemeStateActive : kThemeStateInactive;
-					textInfo.fontID = kThemeSystemFont;
-					textInfo.horizontalFlushness = kHIThemeTextHorizontalFlushLeft;
-					textInfo.verticalFlushness = kHIThemeTextVerticalFlushTop;
-					textInfo.options = 0;
-					textInfo.truncationPosition = kHIThemeTextTruncationNone;
-					textInfo.truncationMaxLines = 0;
-					
-					error = HIThemeDrawTextBox(gCurrentRenderData.returnCFStringRef(), &contentBounds, &textInfo,
-												drawingContext, kHIThemeOrientationNormal);
-					assert_noerr(error);
-				}
-				else
-				{
-					CGContextSetRGBFillColor(drawingContext, 1.0, 1.0, 1.0, 1.0/* alpha */);
-					CGContextFillRect(drawingContext, contentBounds);
-				}
-			}
-		}
-	}
-	return result;
-}// receiveClipboardContentDraw
-
-
-/*!
-Handles "kEventControlDragEnter", "kEventControlDragWithin",
-"kEventControlDragLeave" and "kEventControlDragReceive" of
-"kEventClassControl".
-
-Invoked by Mac OS X whenever the clipboard is involved in a
-drag-and-drop operation.
-
-(3.1)
-*/
-OSStatus
-receiveClipboardContentDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-									 EventRef				inEvent,
-									 void*					UNUSED_ARGUMENT(inContextPtr))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert((kEventKind == kEventControlDragEnter) ||
-			(kEventKind == kEventControlDragWithin) ||
-			(kEventKind == kEventControlDragLeave) ||
-			(kEventKind == kEventControlDragReceive));
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// get the target control
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		
-		// if the control was found, continue
-		if (noErr == result)
-		{
-			DragRef		dragRef = nullptr;
-			
-			
-			// determine the drag taking place
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDragRef, typeDragRef, dragRef);
-			if (noErr == result)
-			{
-				PasteboardRef		dragPasteboard = nullptr;
-				
-				
-				result = GetDragPasteboard(dragRef, &dragPasteboard);
-				assert_noerr(result);
-				
-				// read and cache information about this pasteboard
-				Clipboard_SetPasteboardModified(dragPasteboard);
-				
-				switch (kEventKind)
-				{
-				case kEventControlDragEnter:
-					// indicate whether or not this drag is interesting
-					{
-						Boolean		acceptDrag = Clipboard_ContainsText(dragPasteboard);
-						
-						
-						result = SetEventParameter(inEvent, kEventParamControlWouldAcceptDrop,
-													typeBoolean, sizeof(acceptDrag), &acceptDrag);
-					}
-					break;
-				
-				case kEventControlDragWithin:
-				case kEventControlDragLeave:
-					// show or hide a highlight area; this is a control property so that all the
-					// highlight rendering can simply be done by the drawing routine
-					{
-						Boolean		showHighlight = (kEventControlDragWithin == kEventKind);
-						
-						
-						result = SetControlProperty(view, AppResources_ReturnCreatorCode(),
-													kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
-													sizeof(showHighlight), &showHighlight);
-						// change the cursor, for additional visual feedback
-						if (showHighlight)
-						{
-							Cursors_UseArrowCopy();
-						}
-						else
-						{
-							Cursors_UseArrow();
-						}
-						(OSStatus)HIViewSetNeedsDisplay(view, true);
-					}
-					break;
-				
-				case kEventControlDragReceive:
-					// handle the drop (by copying the data to the clipboard)
-					{
-						CFStringRef		copiedTextCFString;
-						CFStringRef		copiedTextUTI;
-						Boolean			copyOK = Clipboard_CreateCFStringFromPasteboard
-													(copiedTextCFString, copiedTextUTI, dragPasteboard);
-						
-						
-						if (false == copyOK)
-						{
-							Console_Warning(Console_WriteLine, "failed to copy the dragged text!");
-							result = resNotFound;
-						}
-						else
-						{
-							// put the text on the clipboard
-							result = Clipboard_AddCFStringToPasteboard(copiedTextCFString, Clipboard_ReturnPrimaryPasteboard());
-							if (noErr == result)
-							{
-								// force a view update, as obviously it is now out of date
-								updateClipboard(Clipboard_ReturnPrimaryPasteboard());
-								
-								// success!
-								result = noErr;
-							}
-							CFRelease(copiedTextCFString), copiedTextCFString = nullptr;
-							CFRelease(copiedTextUTI), copiedTextUTI = nullptr;
-						}
-					}
-					break;
-				
-				default:
-					// ???
-					break;
-				}
-			}
-		}
-	}
-	return result;
-}// receiveClipboardContentDragDrop
-
-
-/*!
-Handles "kEventWindowClose" of "kEventClassWindow"
-for the clipboard window.  The default handler destroys
-windows, but the clipboard should only be hidden or
-shown (as it always remains in memory).
-
-(3.0)
-*/
-OSStatus
-receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					UNUSED_ARGUMENT(inContext))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClassWindow == kEventClass);
-	assert(kEventWindowClose == kEventKind);
-	{
-		WindowRef	window = nullptr;
-		
-		
-		// determine the window in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-		
-		// if the window was found, proceed
-		if (result == noErr)
-		{
-			if (window == gClipboardWindow)
-			{
-				// toggle window display
-				Commands_ExecuteByID(kCommandHideClipboard);
-				result = noErr; // event is completely handled
-			}
-			else
-			{
-				// ???
-				result = eventNotHandledErr;
-			}
-		}
-	}
-	
-	return result;
-}// receiveWindowClosing
-
-
-/*!
-Updates a description area in the Clipboard window to
-describe the specified text.
-
-The size is given in bytes, but is represented in a more
-human-readable form, e.g. "352 K" or "1.2 MB".
-
-(3.1)
-*/
-void
-setDataTypeInformation	(CFStringRef	inUTI,
-						 size_t			inDataSize)
-{
-	UIStrings_Result	stringResult = kUIStrings_ResultOK;
-	CFStringRef			finalCFString = CFSTR("");
-	Boolean				releaseFinalCFString = false;
-	
-	
-	// the contents of the description depend on whether or not
-	// the clipboard has any data, and if so, the type and size
-	// of that data
-	if (0 == inDataSize)
-	{
-		// clipboard is empty; display a simple description
-		stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDescriptionEmpty, finalCFString);
-		if (stringResult.ok())
-		{
-			releaseFinalCFString = true;
-		}
-	}
-	else
-	{
-		// create a string describing the contents, by first making
-		// the substrings that will be used to form that description
-		CFStringRef		descriptionTemplateCFString = CFSTR("");
-		
-		
-		// get a template for a description string
-		stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDescriptionTemplate, descriptionTemplateCFString);
-		if (stringResult.ok())
-		{
-			CFStringRef		contentTypeCFString = UTTypeCopyDescription(inUTI);
-			
-			
-			if (nullptr == contentTypeCFString)
-			{
-				stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowContentTypeUnknown, contentTypeCFString);
-				if (false == stringResult.ok())
-				{
-					contentTypeCFString = CFSTR("?");
-					CFRetain(contentTypeCFString);
-				}
-			}
-			assert(nullptr != contentTypeCFString);
-			
-			// now create the description string
-			{
-				// adjust the size value so the number displayed to the user is not too big and ugly;
-				// construct a size string, with appropriate units and the word “about”, if necessary
-				CFStringRef							aboutCFString = CFSTR("");
-				CFStringRef							unitsCFString = CFSTR("");
-				UIStrings_ClipboardWindowCFString	unitsStringCode = kUIStrings_ClipboardWindowUnitsBytes;
-				Boolean								releaseAboutCFString = false;
-				Boolean								releaseUnitsCFString = false;
-				Boolean								approximation = false;
-				size_t								contentSize = inDataSize;
-				
-				
-				if (STATIC_CAST(contentSize, size_t) > INTEGER_MEGABYTES(1))
-				{
-					approximation = true;
-					contentSize /= INTEGER_MEGABYTES(1);
-					unitsStringCode = kUIStrings_ClipboardWindowUnitsMB;
-				}
-				else if (STATIC_CAST(contentSize, size_t) > INTEGER_KILOBYTES(1))
-				{
-					approximation = true;
-					contentSize /= INTEGER_KILOBYTES(1);
-					unitsStringCode = kUIStrings_ClipboardWindowUnitsK;
-				}
-				else if (contentSize == 1)
-				{
-					unitsStringCode = kUIStrings_ClipboardWindowUnitsByte;
-				}
-				
-				// if the size value is not exact, insert a word into the
-				// string; e.g. “about 3 MB”
-				if (approximation)
-				{
-					stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDescriptionApproximately,
-													aboutCFString);
-					if (stringResult.ok())
-					{
-						// a new string was created, so it must be released later
-						releaseAboutCFString = true;
-					}
-				}
-				
-				// based on the determined units, find the proper unit string
-				stringResult = UIStrings_Copy(unitsStringCode, unitsCFString);
-				if (stringResult.ok())
-				{
-					// a new string was created, so it must be released later
-					releaseUnitsCFString = true;
-				}
-				
-			#if 0
-				// debug
-				Console_WriteValueCFString("description template is", descriptionTemplateCFString);
-				Console_WriteValueCFString("determined content type to be", contentTypeCFString);
-				Console_WriteValueCFString("determined approximation to be", aboutCFString);
-				Console_WriteValue("determined size number to be", contentSize);
-				Console_WriteValueCFString("determined size units to be", unitsCFString);
-			#endif
-				
-				// construct a string that contains all the proper substitutions
-				// (see the UIStrings code to ensure the substitution order is right!!!)
-				finalCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
-															descriptionTemplateCFString,
-															contentTypeCFString, aboutCFString,
-															contentSize, unitsCFString);
-				if (nullptr == finalCFString)
-				{
-					Console_WriteLine("unable to create clipboard description string from format");
-					finalCFString = CFSTR("");
-				}
-				
-				if (releaseAboutCFString)
-				{
-					CFRelease(aboutCFString), aboutCFString = nullptr;
-				}
-				if (releaseUnitsCFString)
-				{
-					CFRelease(unitsCFString), unitsCFString = nullptr;
-				}
-			}
-			
-			CFRelease(contentTypeCFString), contentTypeCFString = nullptr;
-			CFRelease(descriptionTemplateCFString), descriptionTemplateCFString = nullptr;
-		}
-	}
-	
-	// update the window header text
-	{
-		HIViewWrap		descriptionLabel(idMyLabelDataDescription, gClipboardWindow);
-		
-		
-	#if 0
-		(UInt16)Localization_SetUpSingleLineTextControl(descriptionLabel, finalCFString,
-														false/* is a checkbox or radio button */);
-	#else
-		SetControlTextWithCFString(descriptionLabel, finalCFString);
-	#endif
-	}
-	
-	if (releaseFinalCFString)
-	{
-		CFRelease(finalCFString), finalCFString = nullptr;
-	}
-}// setDataTypeInformation
-
-
-/*!
-Allows the image view to intelligently choose whether or
-not to scale its content.  Pass zeroes if no image is being
-rendered.
-
-(3.1)
-*/
-void
-setScalingInformation	(size_t		inImageWidth,
-						 size_t		inImageHeight)
-{
-	HIViewWrap		imageView(idMyImageData, gClipboardWindow);
-	Boolean			doScale = false;
-	
-	
-	if ((0 != inImageWidth) && (0 != inImageHeight))
-	{
-		// scale only if the image is bigger than its view
-		HIRect		imageBounds;
-		
-		
-		if (noErr == HIViewGetBounds(imageView, &imageBounds))
-		{
-			doScale = ((inImageWidth > imageBounds.size.width) ||
-						(inImageHeight > imageBounds.size.height));
-		}
-	}
-	(OSStatus)HIImageViewSetScaleToFit(imageView, doScale);
-}// setScalingInformation
 
 
 /*!
@@ -2146,7 +1489,6 @@ textToScrap		(Handle		inTextHandle)
 			(OSStatus)PutScrapFlavor(currentScrap, kScrapFlavorTypeText,
 										kScrapFlavorMaskNone, GetHandleSize(inTextHandle),
 										*inTextHandle);
-			RegionUtilities_RedrawWindowOnNextUpdate(gClipboardWindow);
 		}
 	}
 }// textToScrap
@@ -2170,25 +1512,34 @@ IMPORTANT:	This API should be called whenever the
 void
 updateClipboard		(PasteboardRef		inPasteboard)
 {
-	HIViewWrap		imageView(idMyImageData, gClipboardWindow);
-	HIViewWrap		textView(idMyUserPaneDragParent, gClipboardWindow);
-	CGImageRef		imageToRender = nullptr;
-	CFStringRef		textToRender = nullptr;
-	CFStringRef		typeIdentifier = nullptr;
+	Clipboard_WindowController*		controller = (Clipboard_WindowController*)
+													[Clipboard_WindowController sharedClipboardWindowController];
+	CGImageRef						imageToRender = nullptr;
+	CFStringRef						textToRender = nullptr;
+	CFStringRef						typeIdentifier = nullptr;
+	CFStringRef						typeCFString = nullptr;
 	
 	
 	if (Clipboard_CreateCFStringFromPasteboard(textToRender, typeIdentifier, inPasteboard))
 	{
 		// text
+		typeCFString = UTTypeCopyDescription(typeIdentifier);
 		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeText;
 		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
 		{
 			gCurrentRenderData = textToRender;
-			(OSStatus)HIViewSetVisible(imageView, false);
-			(OSStatus)HIViewSetNeedsDisplay(textView, true);
 			
-			setDataTypeInformation(typeIdentifier, CFStringGetLength(textToRender) * sizeof(UniChar));
-			setScalingInformation(0, 0);
+			[controller->clipboardTextContent setEditable:YES];
+			[controller->clipboardTextContent setString:@""];
+			[controller->clipboardTextContent paste:NSApp];
+			[controller->clipboardTextContent setEditable:NO];
+			[controller setShowImage:NO];
+			[controller setShowText:YES];
+			[controller setKindField:(NSString*)typeCFString];
+			[controller setDataSize:(CFStringGetLength(textToRender) * sizeof(UniChar))]; // TEMPORARY; this is probably not always right
+			[controller setLabel1:nil andValue:nil];
+			[controller setLabel2:nil andValue:nil];
+			[controller setNeedsDisplay];
 		}
 		CFRelease(textToRender), textToRender = nullptr;
 		CFRelease(typeIdentifier), typeIdentifier = nullptr;
@@ -2196,17 +1547,22 @@ updateClipboard		(PasteboardRef		inPasteboard)
 	else if (Clipboard_CreateCGImageFromPasteboard(imageToRender, typeIdentifier, inPasteboard))
 	{
 		// image
+		typeCFString = UTTypeCopyDescription(typeIdentifier);
 		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeGraphics;
 		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
 		{
-			gCurrentRenderData.clear();
-			(OSStatus)HIImageViewSetImage(imageView, imageToRender);
-			(OSStatus)HIViewSetVisible(imageView, true);
-			(OSStatus)HIViewSetNeedsDisplay(imageView, true);
+			NSPasteboard*	generalPasteboard = [NSPasteboard generalPasteboard];
 			
-			setDataTypeInformation(typeIdentifier,
-									CGImageGetHeight(imageToRender) * CGImageGetBytesPerRow(imageToRender));
-			setScalingInformation(CGImageGetWidth(imageToRender), CGImageGetHeight(imageToRender));
+			
+			gCurrentRenderData.clear();
+			
+			[controller->clipboardImageContent setImage:[[[NSImage alloc] initWithPasteboard:generalPasteboard] autorelease]];
+			[controller setShowImage:YES];
+			[controller setShowText:NO];
+			[controller setKindField:(NSString*)typeCFString];
+			[controller setDataSize:(CGImageGetHeight(imageToRender) * CGImageGetBytesPerRow(imageToRender))];
+			[controller setDataWidth:CGImageGetWidth(imageToRender) andHeight:CGImageGetHeight(imageToRender)];
+			[controller setNeedsDisplay];
 		}
 		CFRelease(imageToRender), imageToRender = nullptr;
 		CFRelease(typeIdentifier), typeIdentifier = nullptr;
@@ -2214,20 +1570,655 @@ updateClipboard		(PasteboardRef		inPasteboard)
 	else
 	{
 		// unknown, or empty
+		typeCFString = UTTypeCopyDescription(typeIdentifier);
 		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeUnknown;
 		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
 		{
-			gCurrentRenderData.clear();
-			(OSStatus)HIViewSetVisible(imageView, false);
-			(OSStatus)HIViewSetNeedsDisplay(textView, true);
+			CFStringRef		unknownCFString = nullptr;
 			
-			// TEMPORARY: could determine actual UTI here
-			setDataTypeInformation(nullptr, 0);
-			setScalingInformation(0, 0);
+			
+			gCurrentRenderData.clear();
+			
+			[controller setShowImage:NO];
+			[controller setShowText:NO];
+			[controller setKindField:(NSString*)typeCFString];
+			if (UIStrings_Copy(kUIStrings_ClipboardWindowValueUnknown, unknownCFString).ok())
+			{
+				[controller setSizeField:(NSString*)unknownCFString];
+				
+				if ((nullptr == typeCFString) || (0 == CFStringGetLength(typeCFString)))
+				{
+					[controller setKindField:(NSString*)unknownCFString];
+				}
+				
+				CFRelease(unknownCFString), unknownCFString = nullptr;
+			}
+			else
+			{
+				[controller setDataSize:0];
+			}
+			[controller setLabel1:nil andValue:nil];
+			[controller setLabel2:nil andValue:nil];
+			[controller setNeedsDisplay];
 		}
+	}
+	if (nullptr != typeCFString)
+	{
+		CFRelease(typeCFString), typeCFString = nullptr;
 	}
 }// updateClipboard
 
 } // anonymous namespace
+
+
+@implementation Clipboard_ContentView
+
+
+/*!
+Constructor.
+
+(4.0)
+*/
+- (id)
+initWithFrame:(NSRect)		aFrame
+{
+	self = [super initWithFrame:aFrame];
+	if (nil != self)
+	{
+		self->showDragHighlight = NO;
+		
+		// the list of accepted drag text types should correspond with what
+		// Clipboard_CreateCFStringFromPasteboard() will actually support
+		[self registerForDraggedTypes:[NSArray arrayWithObjects:
+													(NSString*)FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"),
+																				kUTTypeUTF16ExternalPlainText),
+													(NSString*)FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"),
+																				kUTTypeUTF16PlainText),
+													(NSString*)FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"),
+																				kUTTypeUTF8PlainText),
+													(NSString*)CFSTR("com.apple.traditional-mac-plain-text"),
+													nil]];
+	}
+	return self;
+}
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (BOOL)
+showDragHighlight
+{
+	return showDragHighlight;
+}
+- (void)
+setShowDragHighlight:(BOOL)		flag
+{
+	showDragHighlight = flag;
+}// setShowDragHighlight:
+
+
+#pragma mark NSControl
+
+
+/*!
+Draws the separator on the edge of clipboard content,
+as well as any applicable drag highlights.
+
+(4.0)
+*/
+- (void)
+drawRect:(NSRect)	rect
+{
+	Float32 const		kHorizontalScrollBarWidth = 15.0; // arbitrary; TEMPORARY, should retrieve dynamically from somewhere
+	Float32 const		kVerticalScrollBarWidth = 15.0; // arbitrary; TEMPORARY, should retrieve dynamically from somewhere
+	NSGraphicsContext*	contextMgr = [NSGraphicsContext currentContext];
+	CGContextRef		drawingContext = (CGContextRef)[contextMgr graphicsPort];
+	NSRect				entireRect = [self bounds];
+	CGRect				contentBounds;
+	
+	
+	[super drawRect:rect];
+	
+	// paint entire background first
+	contentBounds = CGRectMake(entireRect.origin.x, entireRect.origin.y, entireRect.size.width, entireRect.size.height);
+	CGContextSetRGBFillColor(drawingContext, 1.0, 1.0, 1.0, 1.0/* alpha */);
+	CGContextFillRect(drawingContext, contentBounds);
+	
+	// now define the region that excludes the vertical separator and scroll bar
+	// (so that an appropriate drag highlight appears around the logical border)
+	contentBounds.origin.x += kSeparatorWidth;
+	contentBounds.origin.y += kHorizontalScrollBarWidth;
+	contentBounds.size.width -= (kSeparatorWidth + kVerticalScrollBarWidth);
+	contentBounds.size.height -= kHorizontalScrollBarWidth;
+	
+	// perform any necessary rendering for drags
+	if ([self showDragHighlight])
+	{
+		DragAndDrop_ShowHighlightBackground(drawingContext, contentBounds);
+		DragAndDrop_ShowHighlightFrame(drawingContext, contentBounds);
+	}
+	else
+	{
+		DragAndDrop_HideHighlightBackground(drawingContext, contentBounds);
+		DragAndDrop_HideHighlightFrame(drawingContext, contentBounds);
+	}
+	
+	// draw a separator on the edge, which will be next to the splitter;
+	// the scroll view should be offset slightly in the NIB, so that
+	// this separator is visible while the scroll view is visible
+	contentBounds = CGRectMake(entireRect.origin.x, entireRect.origin.y, entireRect.size.width, entireRect.size.height);
+	contentBounds.size.width = kSeparatorWidth;
+	CGContextSetRGBStrokeColor(drawingContext, 0, 0, 0, 1.0/* alpha */);
+	CGContextStrokeRect(drawingContext, contentBounds);
+}// drawRect
+
+
+#pragma mark NSDraggingDestination
+
+
+- (NSDragOperation)
+draggingEntered:(id <NSDraggingInfo>)	sender
+{
+	NSDragOperation		result = NSDragOperationNone;
+	
+	
+	if ([sender draggingSourceOperationMask] & NSDragOperationCopy)
+	{
+		result = NSDragOperationCopy;
+		
+		// show a highlight area by setting the appropriate view property
+		// and requesting a redraw
+		[self setShowDragHighlight:YES];
+		[self setNeedsDisplay];
+	}
+	return result;
+}// draggingEntered:
+
+
+- (void)
+draggingExited:(id <NSDraggingInfo>)	sender
+{
+#pragma unused(sender)
+	// show a highlight area by setting the appropriate view property
+	// and requesting a redraw
+	[self setShowDragHighlight:NO];
+	[self setNeedsDisplay];
+}// draggingExited:
+
+
+- (BOOL)
+performDragOperation:(id <NSDraggingInfo>)		sender
+{
+	NSPasteboard*	dragPasteboard = [sender draggingPasteboard];
+	PasteboardRef	asPasteboardRef = nullptr;
+	OSStatus		error = PasteboardCreate((CFStringRef)[dragPasteboard name], &asPasteboardRef);
+	BOOL			result = NO;
+	
+	
+	// handle the drop (by copying the data to the clipboard)
+	if (noErr == error)
+	{
+		CFStringRef		copiedTextCFString;
+		CFStringRef		copiedTextUTI;
+		Boolean			copyOK = Clipboard_CreateCFStringFromPasteboard
+									(copiedTextCFString, copiedTextUTI, asPasteboardRef);
+		
+		
+		if (false == copyOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to copy the dragged text!");
+			result = resNotFound;
+		}
+		else
+		{
+			// put the text on the clipboard
+			result = Clipboard_AddCFStringToPasteboard(copiedTextCFString, Clipboard_ReturnPrimaryPasteboard());
+			if (noErr == result)
+			{
+				// force a view update, as obviously it is now out of date
+				updateClipboard(Clipboard_ReturnPrimaryPasteboard());
+				
+				// success!
+				result = noErr;
+			}
+			CFRelease(copiedTextCFString), copiedTextCFString = nullptr;
+			CFRelease(copiedTextUTI), copiedTextUTI = nullptr;
+		}
+		CFRelease(asPasteboardRef), asPasteboardRef = nullptr;
+	}
+	
+	result = YES;
+	return result;
+}// performDragOperation:
+
+
+- (BOOL)
+prepareForDragOperation:(id <NSDraggingInfo>)	sender
+{
+#pragma unused(sender)
+	BOOL	result = NO;
+	
+	
+	[self setShowDragHighlight:NO];
+	[self setNeedsDisplay];
+	
+	// always accept the drag
+	result = YES;
+	
+	return result;
+}// prepareForDragOperation:
+
+
+#pragma mark NSView
+
+
+- (BOOL)
+isOpaque
+{
+	return YES;
+}// isOpaque
+
+
+@end // Clipboard_ContentView
+
+
+@implementation Clipboard_WindowController
+
+static Clipboard_WindowController*	gClipboard_WindowController = nil;
++ (id)
+sharedClipboardWindowController
+{
+	if (nil == gClipboard_WindowController)
+	{
+		gClipboard_WindowController = [[[self class] allocWithZone:NULL] init];
+	}
+	return gClipboard_WindowController;
+}// sharedClipboardWindowController
+
+
+/*!
+Constructor.
+
+(4.0)
+*/
+- (id)
+init
+{
+	self = [super initWithWindowNibName:@"ClipboardCocoa"];
+	if (nil != self)
+	{
+	}
+	return self;
+}
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+/*!
+Updates the Size field in the Clipboard window to show the
+specified pasteboard data size.
+
+The size is given in bytes, but is represented in a more
+human-readable form, e.g. "352 K" or "1.2 MB".
+
+(4.0)
+*/
+- (void)
+setDataSize:(size_t)	dataSize
+{
+	UIStrings_Result	stringResult = kUIStrings_ResultOK;
+	CFStringRef			templateCFString = CFSTR("");
+	CFStringRef			finalCFString = CFSTR("");
+	Boolean				releaseFinalCFString = false;
+	
+	
+	// create a string describing the approximate size, by first making
+	// the substrings that will be used to form that description
+	stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDataSizeTemplate, templateCFString);
+	if (stringResult.ok())
+	{
+		// adjust the size value so the number displayed to the user is not too big and ugly;
+		// construct a size string, with appropriate units and the word “about”, if necessary
+		CFStringRef							aboutCFString = CFSTR("");
+		CFStringRef							unitsCFString = CFSTR("");
+		UIStrings_ClipboardWindowCFString	unitsStringCode = kUIStrings_ClipboardWindowUnitsBytes;
+		Boolean								releaseAboutCFString = false;
+		Boolean								releaseUnitsCFString = false;
+		Boolean								approximation = false;
+		size_t								contentSize = dataSize;
+		
+		
+		if (STATIC_CAST(contentSize, size_t) > INTEGER_MEGABYTES(1))
+		{
+			approximation = true;
+			contentSize /= INTEGER_MEGABYTES(1);
+			unitsStringCode = kUIStrings_ClipboardWindowUnitsMB;
+		}
+		else if (STATIC_CAST(contentSize, size_t) > INTEGER_KILOBYTES(1))
+		{
+			approximation = true;
+			contentSize /= INTEGER_KILOBYTES(1);
+			unitsStringCode = kUIStrings_ClipboardWindowUnitsK;
+		}
+		else if (contentSize == 1)
+		{
+			unitsStringCode = kUIStrings_ClipboardWindowUnitsByte;
+		}
+		
+		// if the size value is not exact, insert a word into the
+		// string; e.g. “about 3 MB”
+		if (approximation)
+		{
+			stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDataSizeApproximately,
+											aboutCFString);
+			if (stringResult.ok())
+			{
+				// a new string was created, so it must be released later
+				releaseAboutCFString = true;
+			}
+		}
+		
+		// based on the determined units, find the proper unit string
+		stringResult = UIStrings_Copy(unitsStringCode, unitsCFString);
+		if (stringResult.ok())
+		{
+			// a new string was created, so it must be released later
+			releaseUnitsCFString = true;
+		}
+		
+		// construct a string that contains all the proper substitutions
+		// (see the UIStrings code to ensure the substitution order is right!!!)
+		finalCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
+													templateCFString,
+													aboutCFString, contentSize, unitsCFString);
+		if (nullptr == finalCFString)
+		{
+			Console_WriteLine("unable to create clipboard data size string from format");
+			finalCFString = CFSTR("");
+		}
+		
+		if (releaseAboutCFString)
+		{
+			CFRelease(aboutCFString), aboutCFString = nullptr;
+		}
+		if (releaseUnitsCFString)
+		{
+			CFRelease(unitsCFString), unitsCFString = nullptr;
+		}
+		CFRelease(templateCFString), templateCFString = nullptr;
+	}
+	
+	// update the window header text
+	[self setSizeField:(NSString*)finalCFString];
+	
+	if (releaseFinalCFString)
+	{
+		CFRelease(finalCFString), finalCFString = nullptr;
+	}
+}// setDataSize:
+
+
+/*!
+Updates the Width and Height fields in the Clipboard window to
+show the specified pasteboard image dimensions, which are
+currently assumed to be only in pixels.
+
+(4.0)
+*/
+- (void)
+setDataWidth:(size_t)	widthInPixels
+andHeight:(size_t)		heightInPixels
+{
+	UIStrings_Result	stringResult = kUIStrings_ResultOK;
+	CFStringRef			templateCFString = nullptr;
+	
+	
+	// create a string describing the approximate size, by first making
+	// the substrings that will be used to form that description
+	stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowPixelDimensionTemplate, templateCFString);
+	if (stringResult.ok())
+	{
+		CFStringRef		widthCFString = nullptr;
+		
+		
+		stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowLabelWidth, widthCFString);
+		if (stringResult.ok())
+		{
+			CFStringRef		heightCFString = nullptr;
+			
+			
+			stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowLabelHeight, heightCFString);
+			if (stringResult.ok())
+			{
+				// set the width and height strings, using the same string template
+				// (see the UIStrings code to ensure the substitution order is right!!!)
+				CFStringRef		finalCFString = nullptr;
+				
+				
+				if (1 == widthInPixels)
+				{
+					stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowOnePixel, finalCFString);
+				}
+				else
+				{
+					finalCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
+																templateCFString, widthInPixels);
+				}
+				if (nullptr == finalCFString)
+				{
+					Console_WriteLine("unable to create clipboard image dimension string from format");
+					finalCFString = CFSTR("");
+					CFRetain(finalCFString);
+				}
+				[self setLabel1:(NSString*)widthCFString andValue:(NSString*)finalCFString];
+				CFRelease(finalCFString), finalCFString = nullptr;
+				
+				if (1 == heightInPixels)
+				{
+					stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowOnePixel, finalCFString);
+				}
+				else
+				{
+					finalCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
+																templateCFString, heightInPixels);
+				}
+				if (nullptr == finalCFString)
+				{
+					Console_WriteLine("unable to create clipboard image dimension string from format");
+					finalCFString = CFSTR("");
+					CFRetain(finalCFString);
+				}
+				[self setLabel2:(NSString*)heightCFString andValue:(NSString*)finalCFString];
+				CFRelease(finalCFString), finalCFString = nullptr;
+				
+				CFRelease(heightCFString), heightCFString = nullptr;
+			}
+			CFRelease(widthCFString), widthCFString = nullptr;
+		}
+		CFRelease(templateCFString), templateCFString = nullptr;
+	}
+}// setDataWidth:andHeight:
+
+
+- (void)
+setKindField:(NSString*)	aString
+{
+	[valueKind setStringValue:aString];
+}// setKindField:
+
+
+- (void)
+setLabel1:(NSString*)	labelString
+andValue:(NSString*)	valueString
+{
+	if (nil != labelString)
+	{
+		[label1 setStringValue:labelString];
+		[value1 setStringValue:valueString];
+		[label1 setHidden:NO];
+		[value1 setHidden:NO];
+	}
+	else
+	{
+		[label1 setStringValue:@""];
+		[value1 setStringValue:@""];
+		[label1 setHidden:YES];
+		[value1 setHidden:YES];
+	}
+}// setLabel1:andValue:
+
+
+- (void)
+setLabel2:(NSString*)	labelString
+andValue:(NSString*)	valueString
+{
+	if (nil != labelString)
+	{
+		[label2 setStringValue:labelString];
+		[value2 setStringValue:valueString];
+		[label2 setHidden:NO];
+		[value2 setHidden:NO];
+	}
+	else
+	{
+		[label2 setStringValue:@""];
+		[value2 setStringValue:@""];
+		[label2 setHidden:YES];
+		[value2 setHidden:YES];
+	}
+}// setLabel2:andValue:
+
+
+- (void)
+setNeedsDisplay
+{
+	[clipboardContent setNeedsDisplay];
+}// setNeedsDisplay
+
+
+- (void)
+setShowImage:(BOOL)		flag
+{
+	if (flag)
+	{
+		NSSize	imageSize = [[clipboardImageContent image] size];
+		NSRect	newFrame = [clipboardContent bounds];
+		
+		
+		newFrame.origin.x += kSeparatorPerceivedWidth;
+		newFrame.size.width -= kSeparatorPerceivedWidth;
+		if (NO == [clipboardImageContainer isDescendantOf:clipboardContent])
+		{
+			[clipboardContent addSubview:clipboardImageContainer];
+		}
+		[clipboardImageContainer setFrame:newFrame];
+		[clipboardImageContent setFrameSize:imageSize];
+		[clipboardImageContainer setHidden:NO];
+	}
+	else
+	{
+		[clipboardImageContainer removeFromSuperview];
+		[clipboardImageContainer setHidden:YES];
+	}
+}// setShowImage:
+
+
+- (void)
+setShowText:(BOOL)		flag
+{
+	if (flag)
+	{
+		NSRect	newFrame = [clipboardContent bounds];
+		
+		
+		newFrame.origin.x += kSeparatorPerceivedWidth;
+		newFrame.size.width -= kSeparatorPerceivedWidth;
+		if (NO == [clipboardTextContainer isDescendantOf:clipboardContent])
+		{
+			[clipboardContent addSubview:clipboardTextContainer];
+		}
+		[clipboardTextContainer setFrame:newFrame];
+		[clipboardTextContainer setHidden:NO];
+	}
+	else
+	{
+		[clipboardTextContainer removeFromSuperview];
+		[clipboardTextContainer setHidden:YES];
+	}
+}// setShowText:
+
+
+- (void)
+setSizeField:(NSString*)	aString
+{
+	[valueSize setStringValue:aString];
+}// setSizeField:
+
+
+#pragma mark NSWindowController
+
+/*!
+Handles initialization that depends on user interface
+elements being properly set up.  (Everything else is just
+done in "init...".)
+
+(4.0)
+*/
+- (void)
+windowDidLoad
+{
+	[super windowDidLoad];
+	assert(nil != clipboardContent);
+	assert(nil != clipboardImageContainer);
+	assert(nil != clipboardImageContent);
+	assert(nil != clipboardTextContainer);
+	assert(nil != clipboardTextContent);
+	assert(nil != valueKind);
+	assert(nil != valueSize);
+	assert(nil != label1);
+	assert(nil != value1);
+	assert(nil != label2);
+	assert(nil != value2);
+	
+	// the horizontal scroller is enabled in the NIB, but that has no effect
+	// unless the text itself is set up to never wrap...
+	//[[clipboardTextContent textContainer] setWidthTracksTextView:NO];
+	
+	[self setShowImage:NO];
+	[self setShowText:NO];
+	[self setLabel1:nil andValue:nil];
+	[self setLabel2:nil andValue:nil];
+}// windowDidLoad
+
+
+/*!
+Affects the preferences key under which window position
+and size information are automatically saved and
+restored.
+
+(4.0)
+*/
+- (NSString*)
+windowFrameAutosaveName
+{
+	// NOTE: do not ever change this, it would only cause existing
+	// user settings to be forgotten
+	return @"Clipboard";
+}// windowFrameAutosaveName
+
+@end // Clipboard_WindowController
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

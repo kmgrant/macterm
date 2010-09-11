@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -38,10 +38,11 @@
 #define __CLIPBOARD__
 
 // Mac includes
-#if !REZ
-#   include <Carbon/Carbon.h>
-#   include <CoreServices/CoreServices.h>
+#include <Carbon/Carbon.h>
+#ifdef __OBJC__
+#	import <Cocoa/Cocoa.h>
 #endif
+#include <CoreServices/CoreServices.h>
 
 // MacTelnet includes
 #include "SessionRef.typedef.h"
@@ -52,9 +53,7 @@
 
 #pragma mark Constants
 
-#if !REZ
 typedef UInt16 Clipboard_CopyMethod; // do not redefine
-#endif
 enum
 {
 	kClipboard_CopyMethodStandard		= 0,		// use this value, or...
@@ -78,9 +77,7 @@ enum Clipboard_DataConstraint
 	kClipboard_DataConstraintText16BitNative	= 1 << 1	//!< only Unicode text with native byte-ordering
 };
 
-#if !REZ
 typedef UInt16 Clipboard_PasteMethod; // do not redefine
-#endif
 enum
 {
 	kClipboard_PasteMethodStandard		= 0,
@@ -97,9 +94,81 @@ enum Clipboard_Modifier
 	kClipboard_ModifierOneLine					= 1			//!< strip all '\r' and '\n' characters first
 };
 
+#pragma mark Types
 
+#ifdef __OBJC__
 
-#if !REZ
+/*!
+Implements the data-rendering part of the Clipboard.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface Clipboard_ContentView : NSControl
+{
+@private
+	BOOL	showDragHighlight;
+}
+
+- (void)drawRect:(NSRect)	rect;
+
+- (void)setShowDragHighlight:(BOOL)		flag;
+
+- (BOOL)showDragHighlight;
+
+@end
+
+/*!
+Implements the Clipboard window.  See "ClipboardCocoa.xib".
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface Clipboard_WindowController : NSWindowController
+{
+@public
+	IBOutlet Clipboard_ContentView*		clipboardContent;
+	IBOutlet NSView*					clipboardImageContainer;
+	IBOutlet NSImageView*				clipboardImageContent;
+	IBOutlet NSView*					clipboardTextContainer;
+	IBOutlet NSTextView*				clipboardTextContent;
+	IBOutlet NSTextField*				valueKind;
+	IBOutlet NSTextField*				valueSize;
+	IBOutlet NSTextField*				label1;
+	IBOutlet NSTextField*				value1;
+	IBOutlet NSTextField*				label2;
+	IBOutlet NSTextField*				value2;
+}
+
++ (id)sharedClipboardWindowController;
+
+- (void)setDataSize:(size_t)	dataSize;
+
+- (void)setDataWidth:(size_t)	widthInPixels
+		andHeight:(size_t)		heightInPixels;
+
+- (void)setNeedsDisplay;
+
+- (void)setKindField:(NSString*)	aString;
+
+- (void)setLabel1:(NSString*)	labelString
+		andValue:(NSString*)	valueString;
+
+- (void)setLabel2:(NSString*)	labelString
+		andValue:(NSString*)	valueString;
+
+- (void)setShowImage:(BOOL)		flag;
+
+- (void)setShowText:(BOOL)		flag;
+
+- (void)setSizeField:(NSString*)	aString;
+
+@end
+
+#endif // __OBJC__
+
 
 #pragma mark Public Methods
 
@@ -208,8 +277,6 @@ Boolean
 										 CFIndex			inLength);
 
 //@}
-
-#endif /* REZ */
 
 #endif
 

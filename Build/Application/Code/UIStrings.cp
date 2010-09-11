@@ -451,44 +451,34 @@ UIStrings_Copy	(UIStrings_ClipboardWindowCFString	inWhichString,
 													CFSTR("kUIStrings_ClipboardWindowIconName"));
 		break;
 	
-	case kUIStrings_ClipboardWindowDisplaySizePercentage:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Display is %1$hi%% of the actual size."), CFSTR("ClipboardWindow"),
-													CFSTR("kUIStrings_ClipboardWindowDisplaySizePercentage; %1$hi will be a number between 0 and 100"));
+	case kUIStrings_ClipboardWindowLabelWidth:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Width:"), CFSTR("ClipboardWindow"),
+													CFSTR("kUIStrings_ClipboardWindowLabelWidth; used to label the width property of a copied image"));
 		break;
 	
-	case kUIStrings_ClipboardWindowDescriptionEmpty:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("The clipboard is empty."), CFSTR("ClipboardWindow"),
-													CFSTR("kUIStrings_ClipboardWindowDescriptionEmpty"));
+	case kUIStrings_ClipboardWindowLabelHeight:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Height:"), CFSTR("ClipboardWindow"),
+													CFSTR("kUIStrings_ClipboardWindowLabelHeight; used to label the height property of a copied image"));
 		break;
 	
-	case kUIStrings_ClipboardWindowDescriptionTemplate:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Clipboard contents: %1$@ (%2$@%3$d %4$@)"), CFSTR("ClipboardWindow"),
-													CFSTR("kUIStrings_ClipboardWindowDescriptionTemplate; %1$@ is a description, like text or graphics; %2$@ is used if the value is approximate, and should have trailing whitespace; %3$d is a numeric size value; %4$@ is a units string, like MB"));
+	case kUIStrings_ClipboardWindowPixelDimensionTemplate:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("%1$d pixels"), CFSTR("ClipboardWindow"),
+													CFSTR("kUIStrings_ClipboardWindowPixelDimensionTemplate; %1$d is a numeric pixel value"));
 		break;
 	
-	case kUIStrings_ClipboardWindowContentTypeText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("text"), CFSTR("ClipboardWindow"),
-													CFSTR("kUIStrings_ClipboardWindowContentTypeText"));
+	case kUIStrings_ClipboardWindowOnePixel:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("one pixel"), CFSTR("ClipboardWindow"),
+													CFSTR("kUIStrings_ClipboardWindowOnePixel; used to represent a size of exactly one pixel"));
 		break;
 	
-	case kUIStrings_ClipboardWindowContentTypeUnicodeText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Unicode text"), CFSTR("ClipboardWindow"),
-													CFSTR("kUIStrings_ClipboardWindowContentTypeUnicodeText"));
+	case kUIStrings_ClipboardWindowDataSizeTemplate:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("%1$@%2$d %3$@"), CFSTR("ClipboardWindow"),
+													CFSTR("kUIStrings_ClipboardWindowDataSizeTemplate; %1$@ is used if the value is approximate, and should have trailing whitespace; %2$d is a numeric size value; %3$@ is a units string, like MB"));
 		break;
 	
-	case kUIStrings_ClipboardWindowContentTypePicture:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("picture"), CFSTR("ClipboardWindow"),
-													CFSTR("kUIStrings_ClipboardWindowContentTypePicture"));
-		break;
-	
-	case kUIStrings_ClipboardWindowContentTypeUnknown:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("unknown"), CFSTR("ClipboardWindow"),
-													CFSTR("kUIStrings_ClipboardWindowContentTypeUnknown"));
-		break;
-	
-	case kUIStrings_ClipboardWindowDescriptionApproximately:
+	case kUIStrings_ClipboardWindowDataSizeApproximately:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("about "), CFSTR("ClipboardWindow"),
-													CFSTR("kUIStrings_ClipboardWindowDescriptionApproximately; substituted into the description string whenever the size value is not exact, e.g. about 3 MB; must have a trailing space!!!"));
+													CFSTR("kUIStrings_ClipboardWindowDataSizeApproximately; substituted into the data size string whenever the size value is not exact, e.g. about 3 MB; must have a trailing space!!!"));
 		break;
 	
 	case kUIStrings_ClipboardWindowUnitsByte:
@@ -509,6 +499,11 @@ UIStrings_Copy	(UIStrings_ClipboardWindowCFString	inWhichString,
 	case kUIStrings_ClipboardWindowUnitsMB:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("MB"), CFSTR("ClipboardWindow"),
 													CFSTR("kUIStrings_ClipboardWindowUnitsMB; units of megabytes"));
+		break;
+	
+	case kUIStrings_ClipboardWindowValueUnknown:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("unknown"), CFSTR("ClipboardWindow"),
+													CFSTR("kUIStrings_ClipboardWindowValueUnknown; used to represent any unknown property"));
 		break;
 	
 	default:
