@@ -3,15 +3,15 @@
 # WarnAboutHeaders.pl
 #
 # Scans the specified MacTelnet source files and
-# looks for #include statements that may not be
-# necessary.  Warnings are printed to standard
-# output, one per line, for each case.
+# looks for #include or #import statements that
+# may not be necessary.  Warnings are printed to
+# standard output, one per line, for each case.
 #
 # The algorithm is quite simple; since MacTelnet
 # follows the naming standard of prefixing symbol
 # names with "<filename>_", this script just looks
 # for at least one reference to "foo_" when it
-# encounters an #include "foo.h".
+# encounters an #include/#import "foo.h".
 #
 # Kevin Grant (kevin@ieee.org)
 # December 29, 2002
@@ -67,10 +67,10 @@ foreach my $file (@files)
 	#
 	while (defined($_ = <$fh>))
 	{
-		if (/^#\s*include\s+\"([^\.]+)\.h\"/)
+		if (/^#\s*(include|import)\s+\"([^\.]+)\.h\"/)
 		{
 			#print "$file: found module $1\n";
-			$module_info{$1} = 1;
+			$module_info{$2} = 1;
 		}
 		
 		# do not read more of the file than necessary

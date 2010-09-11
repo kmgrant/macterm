@@ -81,7 +81,6 @@
 #include "Clipboard.h"
 #include "Commands.h"
 #include "DialogUtilities.h"
-#include "EventLoop.h"
 #include "NetEvents.h"
 #include "Preferences.h"
 #include "PrefPanelSessions.h"

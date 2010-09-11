@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -72,12 +72,9 @@
 #include "ContextualMenuBuilder.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
-#include "FileUtilities.h"
-#include "Folder.h"
 #include "InfoWindow.h"
 #include "Initialize.h"
 #include "InternetPrefs.h"
-#include "MainEntryPoint.h"
 #include "Preferences.h"
 #include "PrefsWindow.h"
 #include "RasterGraphicsKernel.h"

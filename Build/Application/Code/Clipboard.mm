@@ -45,8 +45,6 @@
 #import <QuickTime/QuickTime.h>
 
 // library includes
-#import <CarbonEventHandlerWrap.template.h>
-#import <CarbonEventUtilities.template.h>
 #import <CFUtilities.h>
 #import <ColorUtilities.h>
 #import <Console.h>
@@ -61,14 +59,11 @@
 
 // MacTelnet includes
 #import "AppleEventUtilities.h"
-#import "AppResources.h"
 #import "Clipboard.h"
 #import "Commands.h"
-#import "CommonEventHandlers.h"
 #import "ConstantsRegistry.h"
 #import "DialogUtilities.h"
 #import "DragAndDrop.h"
-#import "EventLoop.h"
 #import "Preferences.h"
 #import "Session.h"
 #import "TerminalView.h"

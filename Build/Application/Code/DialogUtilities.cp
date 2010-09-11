@@ -762,8 +762,6 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 									{
 										UInt32				segmentCount = CountMenuItems(originalMenu);
 										HISegmentBehavior	segmentBehavior = kHISegmentBehaviorRadio;
-										OptionBits			segmentAttributes = 0L;
-										SInt32				segmentValue = 0;
 										UInt32				segmentCommand = 0;
 										CFStringRef			segmentLabelCFString = nullptr;
 										// The content width per segment appears to exclude the padding in the

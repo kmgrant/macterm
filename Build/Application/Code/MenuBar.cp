@@ -53,7 +53,6 @@
 #include "MenuResources.h"
 
 // MacTelnet includes
-#include "AppResources.h"
 #include "Commands.h"
 #include "MenuBar.h"
 

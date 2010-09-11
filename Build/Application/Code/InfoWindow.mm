@@ -64,7 +64,6 @@
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "DialogUtilities.h"
-#import "EventLoop.h"
 #import "InfoWindow.h"
 #import "Session.h"
 #import "SessionFactory.h"

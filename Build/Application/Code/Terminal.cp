@@ -77,7 +77,6 @@
 #include "DialogUtilities.h"
 #include "EventLoop.h"
 #include "FileUtilities.h"
-#include "Folder.h"
 #include "Preferences.h"
 #include "PrintTerminal.h"
 #include "Session.h"
@@ -3439,11 +3438,10 @@ screen line)
 (3.0)
 */
 Terminal_Result
-Terminal_LineIteratorAdvance	(TerminalScreenRef		inRef,
+Terminal_LineIteratorAdvance	(TerminalScreenRef		UNUSED_ARGUMENT(inRef),
 								 Terminal_LineRef		inRow,
 								 SInt16					inHowManyRowsForwardOrNegativeForBackward)
 {
-	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	My_LineIteratorPtr		iteratorPtr = getLineIterator(inRow);
 	Terminal_Result			result = kTerminal_ResultOK;
 	
@@ -3887,7 +3885,6 @@ Terminal_Search		(TerminalScreenRef							inRef,
 	else
 	{
 		typedef std::vector< My_ScreenBufferLineList* >		BufferList;
-		UInt32 const	kNumberOfScrollbackRows = Terminal_ReturnInvisibleRowCount(inRef);
 		BufferList		buffersToSearch;
 		CFOptionFlags	searchFlags = 0;
 		UInt16			bufferIndex = 0;
@@ -5812,12 +5809,12 @@ IMPORTANT:	Even if this routine can handle a sequence
 */
 UInt32
 My_DefaultEmulator::
-stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
+stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 					 UInt8 const*			inBuffer,
 					 UInt32					inLength,
 					 My_ParserStatePair&	inNowOutNext,
-					 Boolean&				outInterrupt,
-					 Boolean&				outHandled)
+					 Boolean&				UNUSED_ARGUMENT(outInterrupt),
+					 Boolean&				UNUSED_ARGUMENT(outHandled))
 {
 	assert(inLength > 0);
 	UInt8 const				kTriggerChar = *inBuffer; // for convenience; usually only first character matters
@@ -6241,11 +6238,11 @@ arguments.
 */
 UInt32
 My_DefaultEmulator::
-stateTransition		(My_ScreenBufferPtr			inDataPtr,
-					 UInt8 const*				inBuffer,
-					 UInt32						inLength,
+stateTransition		(My_ScreenBufferPtr			UNUSED_ARGUMENT(inDataPtr),
+					 UInt8 const*				UNUSED_ARGUMENT(inBuffer),
+					 UInt32						UNUSED_ARGUMENT(inLength),
 					 My_ParserStatePair const&	inOldNew,
-					 Boolean&					outHandled)
+					 Boolean&					UNUSED_ARGUMENT(outHandled))
 {
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
 	
@@ -9044,7 +9041,7 @@ UInt32
 My_XTermWindowAlteration::
 stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					 UInt8 const*				inBuffer,
-					 UInt32						inLength,
+					 UInt32						UNUSED_ARGUMENT(inLength),
 					 My_ParserStatePair const&	inOldNew,
 					 Boolean&					outHandled)
 {

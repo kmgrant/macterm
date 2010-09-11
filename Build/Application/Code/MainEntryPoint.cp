@@ -42,8 +42,6 @@
 
 // MacTelnet includes
 #include "AppResources.h"
-#include "EventLoop.h"
-#include "Initialize.h"
 #include "MainEntryPoint.h"
 
 

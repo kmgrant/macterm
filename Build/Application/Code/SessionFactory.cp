@@ -57,9 +57,7 @@
 #include <StringUtilities.h>
 
 // MacTelnet includes
-#include "AppResources.h"
 #include "DialogUtilities.h"
-#include "EventLoop.h"
 #include "InfoWindow.h"
 #include "Local.h"
 #include "NetEvents.h"

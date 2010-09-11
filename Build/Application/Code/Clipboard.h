@@ -254,9 +254,6 @@ void
 //!\name Clipboard User Interface
 //@{
 
-HIWindowRef
-	Clipboard_ReturnWindow				();
-
 void
 	Clipboard_SetWindowVisible			(Boolean			inIsVisible);
 

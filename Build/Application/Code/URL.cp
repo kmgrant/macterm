@@ -54,12 +54,9 @@
 #include <SoundSystem.h>
 
 // MacTelnet includes
-#include "AppleEventUtilities.h"
 #include "AppResources.h"
-#include "BasicTypesAE.h"
 #include "DialogUtilities.h"
 #include "QuillsSession.h"
-#include "RecordAE.h"
 #include "TerminalScreenRef.typedef.h"
 #include "TerminalView.h"
 #include "Terminology.h"

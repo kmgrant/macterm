@@ -86,7 +86,6 @@
 #include "AppResources.h"
 #include "Clipboard.h"
 #include "Commands.h"
-#include "Folder.h"
 #include "MacroManager.h"
 #include "NetEvents.h"
 #include "Preferences.h"
