@@ -1629,6 +1629,12 @@ updateClipboard		(PasteboardRef		inPasteboard)
 			
 			[controller->clipboardTextContent setEditable:YES];
 			[controller->clipboardTextContent setString:@""];
+			{
+				// since the previous content may have been styled text, try
+				// to reset as much as possible (font, color, etc.)
+				[controller->clipboardTextContent setFont:[controller returnNSFontForMonospacedTextOfSize:14/* arbitrary */]];
+				[controller->clipboardTextContent setTextColor:[NSColor textColor]];
+			}
 		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			[controller->clipboardTextContent paste:NSApp];
 		#else
@@ -1971,6 +1977,36 @@ dealloc
 {
 	[super dealloc];
 }// dealloc
+
+
+/*!
+Returns a system-managed NSFont object that represents
+the user’s default terminal font at the specified size.
+This should be reasonable for displaying plain text in
+the Clipboard window.
+
+(4.0)
+*/
+- (NSFont*)
+returnNSFontForMonospacedTextOfSize:(unsigned int)	fontSize
+{
+	NSFont*				result = nil;
+	Str255				fontName;
+	Preferences_Result	prefsResult = kPreferences_ResultOK;
+	
+	
+	prefsResult = Preferences_GetData(kPreferences_TagFontName, sizeof(fontName), fontName);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		CFRetainRelease		fontNameCFString(CFStringCreateWithPascalString(kCFAllocatorDefault,
+																			fontName, kCFStringEncodingMacRoman),
+												true/* is retained */);
+		
+		
+		result = [NSFont fontWithName:(NSString*)fontNameCFString.returnCFStringRef() size:fontSize];
+	}
+	return result;
+}// returnNSFontForMonospacedTextOfSize:
 
 
 /*!

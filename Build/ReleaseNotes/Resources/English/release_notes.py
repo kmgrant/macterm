@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100919',
     '20100911',
     '20100910',
     '20100830',
@@ -324,6 +325,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100919': [
+        'Fixed Clipboard window to reset the color, font and size when a selection of styled text is replaced by plain text.',
+        "Clipboard window now automatically chooses the Default Format's font to display selections of plain (unstyled) text.",
+    ],
     '20100911': [
         'Window menu items have been added for nudging the frontmost terminal window in any direction.  Combined with the existing commands in the View menu for changing size, it is now possible to do terminal window layout entirely from the keyboard.',
     ],

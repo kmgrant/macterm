@@ -144,6 +144,8 @@ changes to an interface declared in a ".mm" file.
 
 + (id)sharedClipboardWindowController;
 
+- (NSFont*)returnNSFontForMonospacedTextOfSize:(unsigned int)	fontSize;
+
 - (void)setDataSize:(size_t)	dataSize;
 
 - (void)setDataWidth:(size_t)	widthInPixels
