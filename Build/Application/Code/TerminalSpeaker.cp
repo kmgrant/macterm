@@ -3,7 +3,7 @@
 	TerminalSpeaker.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -353,6 +353,46 @@ TerminalSpeaker_SynthesizeSpeechFromBuffer	(TerminalSpeaker_Ref	inSpeaker,
 	}
 	return result;
 }// SynthesizeSpeechFromBuffer
+
+
+/*!
+Speaks the specified string using the same speech
+channel as the specified speaker, interrupting any
+current speech on that channel.  You might use this to
+speak terminal-specific things, such as the current
+selection of text.
+
+TEMPORARY: This uses the default system voice and
+global channel, instead of allocating its own.
+
+\retval kTerminalSpeaker_ResultOK
+if the speech was generated and played successfully
+
+\retval kTerminalSpeaker_ResultSpeechSynthesisFailed
+if any problems occurred
+
+(4.0)
+*/
+TerminalSpeaker_Result
+TerminalSpeaker_SynthesizeSpeechFromCFString	(TerminalSpeaker_Ref	inSpeaker,
+												 CFStringRef			inCFString)
+{
+	My_TerminalSpeakerAutoLocker	ptr(gTerminalSpeakerPtrLocks(), inSpeaker);
+	TerminalSpeaker_Result			result = kTerminalSpeaker_ResultOK;
+	
+	
+	if (ptr != nullptr)
+	{
+		Boolean		speakOK = CocoaBasic_StartSpeakingString(inCFString);
+		
+		
+		if (false == speakOK)
+		{
+			result = kTerminalSpeaker_ResultSpeechSynthesisFailed;
+		}
+	}
+	return result;
+}// SynthesizeSpeechFromCFString
 
 
 #pragma mark Internal Methods

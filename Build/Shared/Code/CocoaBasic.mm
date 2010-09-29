@@ -3,7 +3,7 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.2
+	Simple Cocoa Wrappers Library 1.3
 	© 2008-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -73,6 +73,7 @@ namespace {
 
 HIViewWrap						gCurrentColorPanelFocus;	//!< see ColorBox.h; a view with a color box that uses the current color
 My_NoticeColorPanelChange*		gColorWatcher = nil;		//!< sees color changes
+NSSpeechSynthesizer*			gDefaultSynth = nil;
 
 } // anonymous namespace
 
@@ -567,6 +568,49 @@ CocoaBasic_ReturnUserSoundNames ()
 	[result retain];
 	return REINTERPRET_CAST(result, CFArrayRef);
 }// ReturnUserSoundNames
+
+
+/*!
+Since Cocoa has a routine for finding the *localized* name of a
+string encoding, it is exposed as a general API here.
+
+The returned string is not retained, so do not release it.
+
+(1.3)
+*/
+Boolean
+CocoaBasic_StartSpeakingString	(CFStringRef	inCFString)
+{
+	AutoPool	_;
+	BOOL		speakOK;
+	
+	
+	if (nil == gDefaultSynth)
+	{
+		gDefaultSynth = [[NSSpeechSynthesizer alloc] initWithVoice:nil];
+	}
+	speakOK = ([gDefaultSynth startSpeakingString:(NSString*)inCFString]) ? true : false;
+	
+	return (speakOK) ? true : false;
+}// StartSpeakingString
+
+
+/*!
+Since Cocoa has a routine for finding the *localized* name of a
+string encoding, it is exposed as a general API here.
+
+The returned string is not retained, so do not release it.
+
+(1.3)
+*/
+void
+CocoaBasic_StopSpeaking ()
+{
+	AutoPool	_;
+	
+	
+	[gDefaultSynth stopSpeaking];
+}// StopSpeaking
 
 
 #pragma mark Internal Methods

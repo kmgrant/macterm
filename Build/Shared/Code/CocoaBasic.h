@@ -90,6 +90,12 @@ CFStringRef
 CFArrayRef
 	CocoaBasic_ReturnUserSoundNames					();
 
+Boolean
+	CocoaBasic_StartSpeakingString					(CFStringRef);
+
+void
+	CocoaBasic_StopSpeaking							();
+
 #endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

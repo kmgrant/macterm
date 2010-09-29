@@ -1191,10 +1191,11 @@ TerminalView_GetSelectedTextAsAudio		(TerminalViewRef	inView)
 	
 	if (viewPtr != nullptr)
 	{
-		Handle		textHandle = getSelectedTextAsNewHandle(viewPtr, 0/* space info */, kTerminalView_TextFlagInline);
+		CFRetainRelease		spokenText(returnSelectedTextAsNewUnicode(viewPtr, 0/* space info */, kTerminalView_TextFlagInline),
+										true/* is retained */);
 		
 		
-		if (textHandle != nullptr)
+		if (spokenText.exists())
 		{
 			TerminalSpeaker_Ref		speaker = Terminal_ReturnSpeaker(viewPtr->screen.ref);
 			
@@ -1204,9 +1205,8 @@ TerminalView_GetSelectedTextAsAudio		(TerminalViewRef	inView)
 				TerminalSpeaker_Result		speakerResult = kTerminalSpeaker_ResultOK;
 				
 				
-				speakerResult = TerminalSpeaker_SynthesizeSpeechFromBuffer(speaker, *textHandle, GetHandleSize(textHandle));
+				speakerResult = TerminalSpeaker_SynthesizeSpeechFromCFString(speaker, spokenText.returnCFStringRef());
 			}
-			Memory_DisposeHandle(&textHandle);
 		}
 	}
 }// GetSelectedTextAsAudio

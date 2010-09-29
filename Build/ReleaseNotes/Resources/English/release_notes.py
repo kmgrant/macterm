@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20100928',
     '20100919',
     '20100911',
     '20100910',
@@ -325,6 +326,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20100928': [
+        'Fixed the "Start Speaking Text" contextual menu item to once again synthesize speech in the default system voice.',
+    ],
     '20100919': [
         'Fixed Clipboard window to reset the color, font and size when a selection of styled text is replaced by plain text.',
         "Clipboard window now automatically chooses the Default Format's font to display selections of plain (unstyled) text.",
