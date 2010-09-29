@@ -91,6 +91,9 @@ CFArrayRef
 	CocoaBasic_ReturnUserSoundNames					();
 
 Boolean
+	CocoaBasic_SpeakingInProgress					();
+
+Boolean
 	CocoaBasic_StartSpeakingString					(CFStringRef);
 
 void

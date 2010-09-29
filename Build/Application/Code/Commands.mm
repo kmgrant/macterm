@@ -961,6 +961,10 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
+		case kCommandStopSpeaking:
+			CocoaBasic_StopSpeaking();
+			break;
+		
 		case kCommandClearEntireScrollback:
 			if (isTerminal)
 			{
@@ -6136,6 +6140,10 @@ isCommandEnabled:(UInt32)	aCommandID
 		// for now, reuse the handler for saving selections; they should be equivalent
 		numericalBool = [self canPerformSaveSelection:targetItem];
 		result = [numericalBool boolValue];
+		break;
+	
+	case kCommandStopSpeaking:
+		result = CocoaBasic_SpeakingInProgress() ? YES : NO;
 		break;
 	
 	case kCommandStackWindows:

@@ -706,6 +706,11 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 													CFSTR("kUIStrings_ContextualMenuSpeakSelectedText"));
 		break;
 	
+	case kUIStrings_ContextualMenuStopSpeaking:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Stop Speaking"), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuStopSpeaking"));
+		break;
+	
 	case kUIStrings_ContextualMenuSpecialKeySequences:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Custom Key Sequences..."), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuSpecialKeySequences"));

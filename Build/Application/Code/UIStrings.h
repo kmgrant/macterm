@@ -216,6 +216,7 @@ enum UIStrings_ContextualMenuCFString
 	kUIStrings_ContextualMenuRenameThisWindow			= 'Renm',
 	kUIStrings_ContextualMenuSaveSelectedText			= 'Save',
 	kUIStrings_ContextualMenuSpeakSelectedText			= 'SpkS',
+	kUIStrings_ContextualMenuStopSpeaking				= 'SpkE',
 	kUIStrings_ContextualMenuSpecialKeySequences		= 'Keys'
 };
 

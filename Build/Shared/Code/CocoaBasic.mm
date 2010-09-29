@@ -571,10 +571,22 @@ CocoaBasic_ReturnUserSoundNames ()
 
 
 /*!
-Since Cocoa has a routine for finding the *localized* name of a
-string encoding, it is exposed as a general API here.
+Returns true if a computer voice is currently speaking.
 
-The returned string is not retained, so do not release it.
+(1.3)
+*/
+Boolean
+CocoaBasic_SpeakingInProgress ()
+{
+	AutoPool	_;
+	
+	
+	return ([gDefaultSynth isSpeaking]) ? true : false;
+}// SpeakingInProgress
+
+
+/*!
+Passes the given string to the default speech synthesizer.
 
 (1.3)
 */
@@ -596,10 +608,8 @@ CocoaBasic_StartSpeakingString	(CFStringRef	inCFString)
 
 
 /*!
-Since Cocoa has a routine for finding the *localized* name of a
-string encoding, it is exposed as a general API here.
-
-The returned string is not retained, so do not release it.
+Interrupts any current speech synthesis, and not
+necessarily gracefully.
 
 (1.3)
 */

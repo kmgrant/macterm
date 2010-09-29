@@ -727,6 +727,17 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 					CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 				}
 			}
+			
+			ContextSensitiveMenu_InitItem(&itemInfo);
+			itemInfo.commandID = kCommandStopSpeaking;
+			if (Commands_IsCommandEnabled(itemInfo.commandID))
+			{
+				if (UIStrings_Copy(kUIStrings_ContextualMenuStopSpeaking, itemInfo.commandText).ok())
+				{
+					(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Stop Speaking”
+					CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
+				}
+			}
 		}
 	}
 	else

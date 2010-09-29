@@ -507,6 +507,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandCloseWorkspace					'ClsA'
 #define kCommandKillProcessesKeepWindow			'Kill'
 #define kCommandSpeakSelectedText				'SpkS'
+#define kCommandStopSpeaking					'SpkE'
 
 #pragma mark Types
 
