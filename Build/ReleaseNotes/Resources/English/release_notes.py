@@ -5,7 +5,7 @@
 Import this module to access its variables, or run it as a script to see the
 sorted, formatted release notes as text (see to_rst()).
 """
-__author__ = "Kevin Grant <kevin@ieee.org>"
+__author__ = "Kevin Grant <kmg@mac.com>"
 __date__ = "28 September 2006"
 
 # IMPORTANT: Released versions of MacTelnet will always point to
@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20101011',
     '20100928',
     '20100919',
     '20100911',
@@ -326,6 +327,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20101011': [
+        'Clipboard window information pane has been adjusted slightly, to take up less space.',
+        'Clipboard window information pane now does a better job of handling truncated text.',
+        'Clipboard window minimum size has been reduced, so that the window can take up less space.',
+    ],
     '20100928': [
         'Fixed the "Start Speaking Text" contextual menu item to once again synthesize speech in the default system voice.',
     ],
