@@ -2,7 +2,7 @@
 # vim: set fileencoding=UTF-8 :
 """Converts any given Textile input file into HTML.
 """
-__author__ = 'Kevin Grant <kevin@ieee.org>'
+__author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '5 March 2005'
 __version__ = '1.0'
 

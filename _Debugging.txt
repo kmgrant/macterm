@@ -64,5 +64,5 @@ THE CALL STACK
   #20 0x98b14a00 in Py_Main ()
   #21 0x00002574 in start ()
 
-                                     Kevin Grant (kevin@ieee.org)
+                                        Kevin Grant (kmg@mac.com)
                                         Lead Developer, MacTelnet

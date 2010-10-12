@@ -13,7 +13,7 @@
 # for at least one reference to "foo_" when it
 # encounters an #include/#import "foo.h".
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # December 29, 2002
 
 use strict;

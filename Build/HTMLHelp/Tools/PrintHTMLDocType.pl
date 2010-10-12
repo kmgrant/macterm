@@ -8,7 +8,7 @@
 # Valid keys are (add more as needed):
 # HTML3.2 HTML4.01 XHTML1.0-UTF-8
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # March 7, 2005
 
 (scalar @ARGV) or die "$0: requires argument\n";

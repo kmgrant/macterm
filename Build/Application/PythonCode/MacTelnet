@@ -22,7 +22,7 @@ that would also require the user to run an installer or otherwise
 use elevated permissions, which is inappropriate for this simple
 task.
 """
-__author__ = "Kevin Grant <kevin@ieee.org>"
+__author__ = "Kevin Grant <kmg@mac.com>"
 __date__ = "2 September 2006"
 
 import sys, os

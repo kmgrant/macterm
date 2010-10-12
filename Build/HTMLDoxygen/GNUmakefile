@@ -1,6 +1,6 @@
 # GNU makefile for building code documentation.
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # March 26, 2005
 
 PATH := /opt/doxygen/bin:/Applications/Doxygen.app/Contents/Resources:/Applications/GraphViz.app/Contents/MacOS:$(PATH)

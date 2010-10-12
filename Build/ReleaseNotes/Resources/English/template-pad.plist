@@ -7,7 +7,7 @@ This file is automatically updated by the build GNUmakefile in
 the Build/HTMLReleaseNotes module.  Values in ALL_CAPS will be
 substituted with runtime values.
 
-Kevin Grant (kevin@ieee.org)
+Kevin Grant (kmg@mac.com)
 October 13, 2006
 -->
 <plist version="1.0">
@@ -17,7 +17,7 @@ October 13, 2006
 	<key>companyCountry</key>
 	<string></string>
 	<key>companyEmail</key>
-	<string>kevin@ieee.org</string>
+	<string>kmg@mac.com</string>
 	<key>companyFax</key>
 	<string></string>
 	<key>companyName</key>

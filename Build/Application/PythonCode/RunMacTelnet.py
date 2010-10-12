@@ -11,7 +11,7 @@ for extensibility and configuration that most applications lack!
 This file shows just a few examples of what you can do...look for
 more information at MacTelnet.com.
 """
-__author__ = 'Kevin Grant <kevin@ieee.org>'
+__author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '24 August 2006'
 __version__ = '4.0.0'
 

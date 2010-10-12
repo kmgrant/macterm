@@ -20,7 +20,7 @@
 #	<other>		becomes a meta tag of that name
 #			with content="value"
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # March 7, 2005
 
 my $xml = 0;

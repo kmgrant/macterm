@@ -23,7 +23,7 @@
 #     MY_ALPHA_BETA
 #     MY_BUILD_NUMBER
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # June 17, 2004
 
 MY_MAJOR_NUMBER=4

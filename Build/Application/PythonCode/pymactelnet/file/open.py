@@ -2,7 +2,7 @@
 # vim: set fileencoding=UTF-8 :
 """Routines to open various types of files.
 """
-__author__ = 'Kevin Grant <kevin@ieee.org>'
+__author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '1 January 2008'
 __version__ = '4.0.0'
 

@@ -48,5 +48,5 @@ GRAPHICAL USER INTERFACE TESTS
   there is no automatic GUI testing, so I just click on things
   myself until I cause a crash. :)
 
-                                     Kevin Grant (kevin@ieee.org)
+                                        Kevin Grant (kmg@mac.com)
                                         Lead Developer, MacTelnet

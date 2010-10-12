@@ -7,7 +7,7 @@
 # calls, and writes output to the proper location
 # (application bundle).
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # March 24, 2003
 
 date "+Started generating strings at %T."

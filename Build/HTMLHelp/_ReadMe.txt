@@ -13,5 +13,5 @@ idea is for the source to be as simple as possible
 textile is available if you run "pydoc textile"
 from Tools/textile-2.0.10.
 
-Kevin Grant (kevin@ieee.org)
+Kevin Grant (kmg@mac.com)
 March 7, 2005

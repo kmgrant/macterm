@@ -7,7 +7,7 @@
 # ensuring that specific terms can find specific
 # help pages.
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # November 5, 2008
 
 print <<'ENDHEADER';

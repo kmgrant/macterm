@@ -8,7 +8,7 @@
 # The Application Xcode project uses this to set up all
 # property lists prior to including them in bundles.
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # August 29, 2006
 
 # most variables depended upon below should be set by Xcode

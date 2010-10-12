@@ -8,7 +8,7 @@
 # soon).  Warnings are printed to standard output,
 # one per line, for each case.
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # January 5, 2005
 
 use strict;

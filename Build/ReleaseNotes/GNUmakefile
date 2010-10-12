@@ -4,7 +4,7 @@
 # The release notes are published online and referred to by the
 # MacTelnet Check for Updates command.
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # October 12, 2006
 
 # determine MacTelnet version

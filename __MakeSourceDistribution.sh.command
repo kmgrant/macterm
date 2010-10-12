@@ -7,7 +7,7 @@
 # You may need to set your PATH appropriately to find the
 # Subversion (svn) program.
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # June 17, 2004
 
 die () {

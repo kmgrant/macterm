@@ -14,7 +14,7 @@ a very specific order.  This parser does not care what the keys
 are, or what order they are in.
 
 """
-__author__ = 'Kevin Grant <kevin@ieee.org>'
+__author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '13 April 2009'
 __version__ = '4.0.0'
 

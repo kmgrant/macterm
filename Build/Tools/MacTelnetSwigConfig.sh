@@ -8,7 +8,7 @@
 # Run this instead of "./configure" from your untarred
 # "swig-<x.x>" build directory.
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # July 29, 2006
 
 # IMPORTANT: MacTelnet's build system assumes /opt/swig

@@ -21,7 +21,7 @@
 # default is "Application" and "MacTelnet" (i.e.
 # MacTelnet.app).
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # August 29, 2006
 
 if [ "x${top_dir}" = "x" ] ; then

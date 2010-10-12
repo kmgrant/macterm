@@ -2,14 +2,14 @@
                    Reporting Bugs in MacTelnet         2005-04-08
 
 REPORTING BUGS
-  You are welcome to submit via E-mail to "kevin@ieee.org".
-  But bugs are now maintained on SourceForge, where you may
-  also submit directly:
+  You are welcome to submit via E-mail to "kmg@mac.com".  But
+  bugs are now maintained on SourceForge, where you may also
+  submit directly:
     http://sourceforge.net/projects/mactelnet/
   
   Please see http://homepage.mac.com/kmg/mactelnet/bug-reporter/
   for a variety of advice on submitting useful bug reports.
 
-                                     Kevin Grant (kevin@ieee.org)
+                                        Kevin Grant (kmg@mac.com)
                                         Lead Developer, MacTelnet
 

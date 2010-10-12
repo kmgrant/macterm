@@ -9,7 +9,7 @@
 #   every step that is done is explicitly undone (the results are
 #   both safer and more robust, if painful to set up properly)
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # March 26, 2005
 
 DEST = $(CURDIR)/_Generated

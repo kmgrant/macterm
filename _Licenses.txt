@@ -17,6 +17,6 @@ GENERIC CODE LICENSE
   
   A copy of the LPL license is in Licenses/.
 
-                                     Kevin Grant (kevin@ieee.org)
+                                        Kevin Grant (kmg@mac.com)
                                         Lead Developer, MacTelnet
 

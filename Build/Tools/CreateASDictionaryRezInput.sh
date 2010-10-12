@@ -11,7 +11,7 @@
 # and ../Build/Resources/English.lproj/\
 # AutomaticallyGeneratedDictionary.r.
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # March 26, 2004
 
 inpf=$1

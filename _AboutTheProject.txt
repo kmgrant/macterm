@@ -27,10 +27,10 @@ WHAT FILES ARE WHERE, HOW TO BUILD, ETC.
   Please see the file "_Building.txt" for more.
 
 CONTACT
-  As always, ask me (kevin@ieee.org) if you have questions or
-  would like to contribute.
+  As always, ask me (kmg@mac.com) if you have questions or would
+  like to contribute.
 
 Thank you for your interest!
-                                     Kevin Grant (kevin@ieee.org)
+                                        Kevin Grant (kmg@mac.com)
                                         Lead Developer, MacTelnet
 

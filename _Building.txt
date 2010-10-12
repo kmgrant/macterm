@@ -94,5 +94,5 @@ HOW TO CUSTOMIZE THE BUILD
   can be tweaked through the command line.  Other settings may
   require GNUmakefile edits or changes to the .xcconfig files.
 
-                                     Kevin Grant (kevin@ieee.org)
+                                        Kevin Grant (kmg@mac.com)
                                         Lead Developer, MacTelnet

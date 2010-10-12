@@ -8,7 +8,7 @@ on the first version in the list.
 A version web page contains release notes for all intermediate versions, so that
 a user can easily see *everything* that's changed since.
 """
-__author__ = "Kevin Grant <kevin@ieee.org>"
+__author__ = "Kevin Grant <kmg@mac.com>"
 __date__ = "28 September 2006"
 
 import sys, os

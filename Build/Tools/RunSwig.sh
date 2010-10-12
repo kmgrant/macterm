@@ -13,7 +13,7 @@
 # This script exists to act as an interface to Xcode build rules,
 # and to correct some stupid things that SWIG does.
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # December 13, 2007
 
 cat=/bin/cat

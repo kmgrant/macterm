@@ -8,7 +8,7 @@
 # architectures/versions of Quills.framework, and installation
 # of secondary executables such as the bug reporter.
 #
-# Kevin Grant (kevin@ieee.org)
+# Kevin Grant (kmg@mac.com)
 # December 14, 2007
 
 # IMPORTANT: The first rule in the file is chosen when "make" is
