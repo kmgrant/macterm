@@ -65,6 +65,7 @@ extern "C"
 #import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CGContextSaveRestore.h>
+#import <CocoaBasic.h>
 #import <ColorUtilities.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
@@ -4084,6 +4085,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								{
 									Keypads_SetVisible(kKeypads_WindowTypeFullScreen, true);
 									SelectWindow(activeWindow); // return focus to the terminal window
+									CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
 								}
 								
 								// finally, set a global flag indicating the mode is in effect

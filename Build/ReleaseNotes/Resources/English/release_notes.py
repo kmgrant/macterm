@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20101022',
     '20101011',
     '20100928',
     '20100919',
@@ -327,6 +328,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20101022': [
+        'Fixed Full Screen mode so that the "Disable Full Screen" floating window will not steal keyboard focus.',
+    ],
     '20101011': [
         'Clipboard window information pane has been adjusted slightly, to take up less space.',
         'Clipboard window information pane now does a better job of handling truncated text.',
