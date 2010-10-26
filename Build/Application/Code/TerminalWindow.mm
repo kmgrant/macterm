@@ -1430,8 +1430,7 @@ TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 	
 	// there are monitors installed to detect size changes in the screen
 	// (to make the window adjust accordingly), so just alter the screen
-	Terminal_SetVisibleColumnCount(activeScreen, inNewColumnCount);
-	Terminal_SetVisibleRowCount(activeScreen, inNewRowCount);
+	Terminal_SetVisibleScreenDimensions(activeScreen, inNewColumnCount, inNewRowCount);
 }// SetScreenDimensions
 
 

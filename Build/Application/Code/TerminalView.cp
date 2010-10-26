@@ -6837,8 +6837,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 			TerminalView_GetTheoreticalScreenDimensions(view, STATIC_CAST(kMaximumViewWidth, UInt16),
 														STATIC_CAST(kMaximumViewHeight, UInt16),
 														&columns, &rows);
-			Terminal_SetVisibleColumnCount(viewPtr->screen.ref, columns);
-			Terminal_SetVisibleRowCount(viewPtr->screen.ref, rows);
+			Terminal_SetVisibleScreenDimensions(viewPtr->screen.ref, columns, rows);
 			recalculateCachedDimensions(viewPtr);
 		}
 	}

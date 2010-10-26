@@ -1320,6 +1320,8 @@ Boolean						screenMoveLinesToScrollback				(My_ScreenBufferPtr, My_ScreenBuffer
 void						screenScroll							(My_ScreenBufferPtr);
 void						setCursorVisible						(My_ScreenBufferPtr, Boolean);
 void						setScrollbackSize						(My_ScreenBufferPtr, UInt32);
+Terminal_Result				setVisibleColumnCount					(My_ScreenBufferPtr, UInt16);
+Terminal_Result				setVisibleRowCount						(My_ScreenBufferPtr, UInt16);
 // IMPORTANT: Attribute bit manipulation is fully described in "TerminalTextAttributes.typedef.h".
 //            Changes must be kept consistent everywhere.  See below, for usage.
 inline TerminalTextAttributes	styleOfVTParameter					(UInt8	inPs)
@@ -4144,13 +4146,9 @@ Terminal_SetTextEncoding	(TerminalScreenRef		inRef,
 
 
 /*!
-Changes the number of characters of text per line for a
-screen buffer.  This operation is currently trivial
-because all line arrays are allocated to maximum size
-when a buffer is created, and this simply adjusts the
-percentage of the total that should be usable.  Although,
-this also forces the cursor into the new region, if
-necessary.
+Calls both of the internal setVisibleColumnCount() and
+setVisibleRowCount() routines, but generates only a single
+notification to observers of screen size changes.
 
 \retval kTerminal_ResultOK
 if the terminal is resized without errors
@@ -4159,164 +4157,35 @@ if the terminal is resized without errors
 if the given terminal screen reference is invalid
 
 \retval kTerminal_ResultParameterError
-if the given number of columns is too small or too large
+if the given number of columns or rows is too small or too large
 
 \retval kTerminal_ResultNotEnoughMemory
 not currently returned because this routine does no memory
-reallocation; however a future implementation might decide
-to reallocate, and if such reallocation fails, this error
-should be returned
+reallocation; however a future implementation might decide to
+reallocate, and if such reallocation fails, this error should be
+returned
 
-(2.6)
+(4.0)
 */
 Terminal_Result
-Terminal_SetVisibleColumnCount	(TerminalScreenRef	inRef,
-								 UInt16				inNewNumberOfCharactersWide)
+Terminal_SetVisibleScreenDimensions		(TerminalScreenRef	inRef,
+										 UInt16				inNewNumberOfCharactersWide,
+										 UInt16				inNewNumberOfLinesHigh)
 {
 	Terminal_Result			result = kTerminal_ResultOK;
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr == nullptr) result = kTerminal_ResultInvalidID;
+	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
 	else
 	{
-		// move cursor, if necessary
-		if (inNewNumberOfCharactersWide <= dataPtr->current.cursorX)
-		{
-			moveCursorX(dataPtr, inNewNumberOfCharactersWide - 1);
-		}
-		
-		if (inNewNumberOfCharactersWide > kMy_NumberOfCharactersPerLineMaximum)
-		{
-			// flag an error, but set a reasonable value anyway
-			result = kTerminal_ResultParameterError;
-			inNewNumberOfCharactersWide = kMy_NumberOfCharactersPerLineMaximum;
-		}
-		dataPtr->text.visibleScreen.numberOfColumnsPermitted = inNewNumberOfCharactersWide;
+		(Terminal_Result)setVisibleColumnCount(dataPtr, inNewNumberOfCharactersWide);
+		result = setVisibleRowCount(dataPtr, inNewNumberOfLinesHigh);
 		
 		changeNotifyForTerminal(dataPtr, kTerminal_ChangeScreenSize, dataPtr->selfRef/* context */);
 	}
 	return result;
-}// SetVisibleColumnCount
-
-
-/*!
-Changes the number of lines of text, not including the
-scrollback buffer, for a screen buffer.  This non-trivial
-operation requires reallocating a series of arrays.
-
-\retval kTerminal_ResultOK
-if the terminal is resized without errors
-
-\retval kTerminal_ResultInvalidID
-if the given terminal screen reference is invalid
-
-\retval kTerminal_ResultParameterError
-if the given number of rows is too small or too large
-
-\retval kTerminal_ResultNotEnoughMemory
-if it is not possible to allocate the requested number of rows
-
-(2.6)
-*/
-Terminal_Result
-Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
-								 UInt16				inNewNumberOfLinesHigh)
-{
-	Terminal_Result			result = kTerminal_ResultOK;
-	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
-	
-	
-	//Console_WriteValue("requested new number of lines", inNewNumberOfLinesHigh);
-	if (inNewNumberOfLinesHigh > 200)
-	{
-		Console_WriteLine("refusing to resize on account of ridiculous line size");
-		result = kTerminal_ResultParameterError;
-	}
-	else if (dataPtr == nullptr) result = kTerminal_ResultInvalidID;
-	else if (dataPtr->screenBuffer.size() != inNewNumberOfLinesHigh)
-	{
-		// then the requested number of lines is different than the current number; resize!
-		SInt16 const	kOriginalNumberOfLines = dataPtr->screenBuffer.size();
-		SInt16 const	kLineDelta = (inNewNumberOfLinesHigh - kOriginalNumberOfLines);
-		
-		
-		//Console_WriteValue("window line size", kOriginalNumberOfLines);
-		//Console_WriteValue("window size change", kLineDelta);
-		
-		// force view to the top of the bottommost screenful
-		// UNIMPLEMENTED
-		
-		if (kLineDelta > 0)
-		{
-			// if more lines are in the screen buffer than before,
-			// allocate space for them (but don’t scroll them off!)
-			Boolean		insertOK = screenInsertNewLines(dataPtr, kLineDelta);
-			
-			
-			unless (insertOK) result = kTerminal_ResultNotEnoughMemory;
-		}
-		else
-		{
-		#if 0
-			// this will move the entire screen buffer into the scrollback
-			// beforehand, if desired (having the effect of CLEARING the
-			// main screen, which is basically undesirable most of the time)
-			if (dataPtr->text.scrollback.enabled)
-			{
-				(Boolean)screenCopyLinesToScrollback(dataPtr);
-			}
-		#endif
-			
-			// now make sure the cursor line doesn’t fall off the end
-			if (dataPtr->current.cursorY >= (dataPtr->screenBuffer.size() + kLineDelta))
-			{
-				moveCursorY(dataPtr, dataPtr->screenBuffer.size() + kLineDelta - 1);
-			}
-			
-			// finally, shrink the buffer
-			dataPtr->screenBuffer.resize(dataPtr->screenBuffer.size() + kLineDelta);
-		}
-		
-		// reset visible region; if the custom margin is also at the bottom,
-		// keep it at the new bottom (otherwise, assume there was a good
-		// reason that it was not using all the lines, and leave it alone!)
-		if (dataPtr->customScrollingRegion.lastRow >= dataPtr->visibleBoundary.rows.lastRow)
-		{
-			dataPtr->customScrollingRegion.lastRow = inNewNumberOfLinesHigh - 1;
-			if (dataPtr->customScrollingRegion.firstRow > dataPtr->customScrollingRegion.lastRow)
-			{
-				dataPtr->customScrollingRegion.firstRow = dataPtr->customScrollingRegion.lastRow - 1;
-				assertScrollingRegion(dataPtr);
-			}
-		}
-		dataPtr->visibleBoundary.rows.firstRow = 0;
-		dataPtr->visibleBoundary.rows.lastRow = inNewNumberOfLinesHigh - 1;
-		
-		// add new screen rows to the text-change region; this should trigger
-		// things like Terminal View updates
-		if (kLineDelta > 0)
-		{
-			// when the screen is becoming bigger, it is only necessary to
-			// refresh the new region; when the screen is becoming smaller,
-			// no refresh is necessary at all!
-			Terminal_RangeDescription	range;
-			
-			
-			//Console_WriteLine("text changed event: set visible row count");
-			range.screen = dataPtr->selfRef;
-			range.firstRow = kOriginalNumberOfLines;
-			range.firstColumn = 0;
-			range.columnCount = dataPtr->text.visibleScreen.numberOfColumnsPermitted;
-			range.rowCount = kLineDelta;
-			changeNotifyForTerminal(dataPtr, kTerminal_ChangeTextEdited, &range);
-		}
-		
-		changeNotifyForTerminal(dataPtr, kTerminal_ChangeScreenSize, dataPtr->selfRef/* context */);
-	}
-	
-	return result;
-}// SetVisibleRowCount
+}// SetVisibleScreenDimensions
 
 
 /*!
@@ -5223,8 +5092,8 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	{
 		// batch mode; multiple things have changed; this should basically mirror
 		// what is copied by Terminal_ReturnConfiguration()
-		Terminal_SetVisibleColumnCount(ptr->selfRef, ptr->returnScreenColumns(prefsContext));
-		Terminal_SetVisibleRowCount(ptr->selfRef, ptr->returnScreenRows(prefsContext));
+		Terminal_SetVisibleScreenDimensions(ptr->selfRef, ptr->returnScreenColumns(prefsContext),
+											ptr->returnScreenRows(prefsContext));
 		setScrollbackSize(ptr, ptr->returnScrollbackRows(prefsContext));
 	}
 	else
@@ -11024,8 +10893,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 							// determine the closest terminal size to the requested pixel width and height
 							TerminalView_GetTheoreticalScreenDimensions(inDataPtr->view, pixelWidth, pixelHeight,
 																		false/* include insets */, &columns, &rows);
-							Terminal_SetVisibleColumnCount(inDataPtr->selfRef, columns);
-							Terminal_SetVisibleRowCount(inDataPtr->selfRef, rows);
+							Terminal_SetVisibleScreenDimensions(inDataPtr->selfRef, columns, rows);
 						}
 					#endif
 						break;
@@ -11066,8 +10934,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 							if (rows > 64/* arbitrary */) rows = 64;
 							
 							// now resize the screen
-							Terminal_SetVisibleColumnCount(inDataPtr->selfRef, columns);
-							Terminal_SetVisibleRowCount(inDataPtr->selfRef, rows);
+							Terminal_SetVisibleScreenDimensions(inDataPtr->selfRef, columns, rows);
 						}
 						break;
 					
@@ -11119,7 +10986,8 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					default:
 						// any number greater than or equal to 24 is a request to
 						// change the number of terminal lines to that amount
-						Terminal_SetVisibleRowCount(inDataPtr->selfRef, inDataPtr->emulator.parameterValues[0]);
+						(Terminal_Result)setVisibleRowCount(inDataPtr, inDataPtr->emulator.parameterValues[0]);
+						changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScreenSize, inDataPtr->selfRef/* context */);
 						break;
 					}
 				}
@@ -12572,6 +12440,188 @@ setScrollbackSize	(My_ScreenBufferPtr		inDataPtr,
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScrollActivity, &scrollInfo/* context */);
 	}
 }// setScrollbackSize
+
+
+/*!
+Changes the number of characters of text per line for a
+screen buffer.  This operation is currently trivial
+because all line arrays are allocated to maximum size
+when a buffer is created, and this simply adjusts the
+percentage of the total that should be usable.  Although,
+this also forces the cursor into the new region, if
+necessary.
+
+IMPORTANT:	This is a low-level routine for internal use;
+			send a "kTerminal_ChangeScreenSize" notification
+			after all size changes are complete.  Note that
+			Terminal_SetVisibleScreenDimensions() will set
+			dimensions and automatically notify listeners.
+
+\retval kTerminal_ResultOK
+if the terminal is resized without errors
+
+\retval kTerminal_ResultInvalidID
+if the given terminal screen reference is invalid
+
+\retval kTerminal_ResultParameterError
+if the given number of columns is too small or too large
+
+\retval kTerminal_ResultNotEnoughMemory
+not currently returned because this routine does no memory
+reallocation; however a future implementation might decide
+to reallocate, and if such reallocation fails, this error
+should be returned
+
+(2.6)
+*/
+Terminal_Result
+setVisibleColumnCount	(My_ScreenBufferPtr		inPtr,
+						 UInt16					inNewNumberOfCharactersWide)
+{
+	Terminal_Result		result = kTerminal_ResultOK;
+	
+	
+	if (nullptr == inPtr) result = kTerminal_ResultInvalidID;
+	else
+	{
+		// move cursor, if necessary
+		if (inNewNumberOfCharactersWide <= inPtr->current.cursorX)
+		{
+			moveCursorX(inPtr, inNewNumberOfCharactersWide - 1);
+		}
+		
+		if (inNewNumberOfCharactersWide > kMy_NumberOfCharactersPerLineMaximum)
+		{
+			// flag an error, but set a reasonable value anyway
+			result = kTerminal_ResultParameterError;
+			inNewNumberOfCharactersWide = kMy_NumberOfCharactersPerLineMaximum;
+		}
+		inPtr->text.visibleScreen.numberOfColumnsPermitted = inNewNumberOfCharactersWide;
+	}
+	return result;
+}// setVisibleColumnCount
+
+
+/*!
+Changes the number of lines of text, not including the
+scrollback buffer, for a screen buffer.  This non-trivial
+operation requires reallocating a series of arrays.
+
+IMPORTANT:	This is a low-level routine for internal use;
+			send a "kTerminal_ChangeScreenSize" notification
+			after all size changes are complete.  Note that
+			Terminal_SetVisibleScreenDimensions() will set
+			dimensions and automatically notify listeners.
+
+\retval kTerminal_ResultOK
+if the terminal is resized without errors
+
+\retval kTerminal_ResultInvalidID
+if the given terminal screen reference is invalid
+
+\retval kTerminal_ResultParameterError
+if the given number of rows is too small or too large
+
+\retval kTerminal_ResultNotEnoughMemory
+if it is not possible to allocate the requested number of rows
+
+(2.6)
+*/
+Terminal_Result
+setVisibleRowCount	(My_ScreenBufferPtr		inPtr,
+					 UInt16					inNewNumberOfLinesHigh)
+{
+	Terminal_Result		result = kTerminal_ResultOK;
+	
+	
+	//Console_WriteValue("requested new number of lines", inNewNumberOfLinesHigh);
+	if (inNewNumberOfLinesHigh > 200)
+	{
+		Console_WriteLine("refusing to resize on account of ridiculous line size");
+		result = kTerminal_ResultParameterError;
+	}
+	else if (nullptr == inPtr) result = kTerminal_ResultInvalidID;
+	else if (inPtr->screenBuffer.size() != inNewNumberOfLinesHigh)
+	{
+		// then the requested number of lines is different than the current number; resize!
+		SInt16 const	kOriginalNumberOfLines = inPtr->screenBuffer.size();
+		SInt16 const	kLineDelta = (inNewNumberOfLinesHigh - kOriginalNumberOfLines);
+		
+		
+		//Console_WriteValue("window line size", kOriginalNumberOfLines);
+		//Console_WriteValue("window size change", kLineDelta);
+		
+		// force view to the top of the bottommost screenful
+		// UNIMPLEMENTED
+		
+		if (kLineDelta > 0)
+		{
+			// if more lines are in the screen buffer than before,
+			// allocate space for them (but don’t scroll them off!)
+			Boolean		insertOK = screenInsertNewLines(inPtr, kLineDelta);
+			
+			
+			unless (insertOK) result = kTerminal_ResultNotEnoughMemory;
+		}
+		else
+		{
+		#if 0
+			// this will move the entire screen buffer into the scrollback
+			// beforehand, if desired (having the effect of CLEARING the
+			// main screen, which is basically undesirable most of the time)
+			if (inPtr->text.scrollback.enabled)
+			{
+				(Boolean)screenCopyLinesToScrollback(inPtr);
+			}
+		#endif
+			
+			// now make sure the cursor line doesn’t fall off the end
+			if (inPtr->current.cursorY >= (inPtr->screenBuffer.size() + kLineDelta))
+			{
+				moveCursorY(inPtr, inPtr->screenBuffer.size() + kLineDelta - 1);
+			}
+			
+			// finally, shrink the buffer
+			inPtr->screenBuffer.resize(inPtr->screenBuffer.size() + kLineDelta);
+		}
+		
+		// reset visible region; if the custom margin is also at the bottom,
+		// keep it at the new bottom (otherwise, assume there was a good
+		// reason that it was not using all the lines, and leave it alone!)
+		if (inPtr->customScrollingRegion.lastRow >= inPtr->visibleBoundary.rows.lastRow)
+		{
+			inPtr->customScrollingRegion.lastRow = inNewNumberOfLinesHigh - 1;
+			if (inPtr->customScrollingRegion.firstRow > inPtr->customScrollingRegion.lastRow)
+			{
+				inPtr->customScrollingRegion.firstRow = inPtr->customScrollingRegion.lastRow - 1;
+				assertScrollingRegion(inPtr);
+			}
+		}
+		inPtr->visibleBoundary.rows.firstRow = 0;
+		inPtr->visibleBoundary.rows.lastRow = inNewNumberOfLinesHigh - 1;
+		
+		// add new screen rows to the text-change region; this should trigger
+		// things like Terminal View updates
+		if (kLineDelta > 0)
+		{
+			// when the screen is becoming bigger, it is only necessary to
+			// refresh the new region; when the screen is becoming smaller,
+			// no refresh is necessary at all!
+			Terminal_RangeDescription	range;
+			
+			
+			//Console_WriteLine("text changed event: set visible row count");
+			range.screen = inPtr->selfRef;
+			range.firstRow = kOriginalNumberOfLines;
+			range.firstColumn = 0;
+			range.columnCount = inPtr->text.visibleScreen.numberOfColumnsPermitted;
+			range.rowCount = kLineDelta;
+			changeNotifyForTerminal(inPtr, kTerminal_ChangeTextEdited, &range);
+		}
+	}
+	
+	return result;
+}// setVisibleRowCount
 
 
 /*!

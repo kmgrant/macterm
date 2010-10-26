@@ -397,11 +397,8 @@ UInt16
 	Terminal_ReturnRowCount					(TerminalScreenRef			inScreen);
 
 Terminal_Result
-	Terminal_SetVisibleColumnCount			(TerminalScreenRef			inScreen,
-											 UInt16						inNewNumberOfCharactersWide);
-
-Terminal_Result
-	Terminal_SetVisibleRowCount				(TerminalScreenRef			inScreen,
+	Terminal_SetVisibleScreenDimensions		(TerminalScreenRef			inScreen,
+											 UInt16						inNewNumberOfCharactersWide,
 											 UInt16						inNewNumberOfLinesHigh);
 
 //@}
