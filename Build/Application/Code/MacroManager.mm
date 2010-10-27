@@ -649,8 +649,9 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 							SessionRef				newSession = nullptr;
 							
 							
-							newSession = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argsCFArray, workspaceContext,
-																					0/* window index */);
+							newSession = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argsCFArray, nullptr/* session */,
+																					false/* reconfigure window from session */,
+																					workspaceContext, 0/* window index */);
 							if (nullptr != newSession) result = kMacroManager_ResultOK;
 							
 							CFRelease(argsCFArray), argsCFArray = nullptr;

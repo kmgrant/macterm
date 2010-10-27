@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20101026',
     '20101022',
     '20101011',
     '20100928',
@@ -328,6 +329,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20101026': [
+        'Fixed sessions spawned from Favorites, so settings such as screen size are copied from any associated Terminal.',
+        'Fixed sessions spawned from Favorites, so settings such as character set are copied from any associated Translation.',
+        'Fixed sessions spawned from macros, to use the correct workspace preferences.',
+    ],
     '20101022': [
         'Fixed Full Screen mode so that the "Disable Full Screen" floating window will not steal keyboard focus.',
     ],

@@ -196,6 +196,7 @@ SessionRef
 	SessionFactory_NewSessionArbitraryCommand		(TerminalWindowRef				inTerminalWindow,
 													 CFArrayRef						inArgumentArray,
 													 Preferences_ContextRef			inContextOrNull = nullptr,
+													 Boolean						inReconfigureTerminalFromAssociatedContexts = true,
 													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
 													 UInt16							inWindowIndexInWorkspaceOrZero = 0,
 													 CFStringRef					inWorkingDirectoryOrNull = nullptr);

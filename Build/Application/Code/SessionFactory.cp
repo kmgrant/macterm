@@ -463,14 +463,29 @@ SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindow,
 
 
 /*!
-Creates a terminal window (or uses the specified
-window, if non-nullptr) and attempts to run the
-specified process inside it.
+Creates a terminal window (or uses the specified window, if not
+nullptr), and attempts to run the specified process inside it.
 
-If unsuccessful, nullptr is returned and an alert
-message may be displayed to the user; otherwise,
-the session reference for the new local process
-is returned.
+If a main context is supplied, it is assumed to primarily
+contain Session-class settings, which will be used to change
+the initial settings; otherwise, global defaults will be chosen
+implicitly.  Note that a Session contains a command line, which
+will always be ignored in favor of "inArgumentArray".
+
+A Session can also contain associations with other kinds of
+preferences (like a Format to set fonts and colors, a Terminal
+to set the screen size, etc., and a Translation to set the
+character set).  Since you may already have applied these with
+configureSessionTerminalWindow(), you may choose to skip them
+now, if "inReconfigureTerminalFromAssociatedContexts" is false.
+This is recommended when you are calling this from another
+factory routine that has already displayed the terminal window,
+because it should have called configureSessionTerminalWindow()
+before displaying that window.
+
+If unsuccessful, nullptr is returned, and an alert message may
+be displayed to the user; otherwise, the session reference for
+the new local process is returned.
 
 (3.0)
 */
@@ -478,6 +493,7 @@ SessionRef
 SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 											 CFArrayRef					inArgumentArray,
 											 Preferences_ContextRef		inContextOrNull,
+											 Boolean					inReconfigureTerminalFromAssociatedContexts,
 											 Preferences_ContextRef		inWorkspaceOrNull,
 											 UInt16						inWindowIndexInWorkspaceOrZero,
 											 CFStringRef				inWorkingDirectoryOrNull)
@@ -487,6 +503,21 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 	
 	
 	assert(nullptr != terminalWindow);
+	
+	// since this is the lowest-level routine, it is used by some
+	// other session-creation routines, and those routines may have
+	// already reconfigured the terminal (as it is typically done
+	// before the terminal window is displayed); therefore, the
+	// terminal is not automatically reconfigured here, it is only
+	// done on request
+	if ((inReconfigureTerminalFromAssociatedContexts) && (nullptr != inContextOrNull))
+	{
+		if (false == configureSessionTerminalWindow(terminalWindow, inContextOrNull))
+		{
+			Console_Warning(Console_WriteLine, "unable to reconfigure terminal window");
+		}
+	}
+	
 	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 	{
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
@@ -495,11 +526,6 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 	{
 		Boolean		displayOK = false;
 		
-		
-		if (false == configureSessionTerminalWindow(terminalWindow, inContextOrNull))
-		{
-			Console_Warning(Console_WriteLine, "unable to reconfigure terminal window");
-		}
 		
 		result = Session_New(inContextOrNull);
 		if (nullptr != result)
@@ -842,6 +868,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
 			{
 				assert(nullptr != terminalWindow);
 				result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argv, nullptr/* session context */,
+																	false/* reconfigure terminal window */,
 																	inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero);
 				CFRelease(argv), argv = nullptr;
 			}
@@ -1043,60 +1070,19 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindow,
 {
 	SessionRef				result = nullptr;
 	TerminalWindowRef		terminalWindow = inTerminalWindow;
-	Preferences_ContextRef	associatedFormatContext = nullptr;
-	Preferences_ContextRef	associatedTerminalContext = nullptr;
-	Preferences_ContextRef	associatedTranslationContext = nullptr;
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	
 	
-	// read the format associated with the session, and use it
-	// to configure either the specified terminal window or the
-	// newly-created window, accordingly
-	{
-		CFStringRef		associatedFormatName = nullptr;
-		
-		
-		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedFormatFavorite,
-													sizeof(associatedFormatName), &associatedFormatName);
-		if (kPreferences_ResultOK == prefsResult)
-		{
-			associatedFormatContext = Preferences_NewContextFromFavorites(Quills::Prefs::FORMAT, associatedFormatName);
-		}
-	}
-	
-	// read the terminal associated with the session, and use it
-	// to configure either the specified terminal window or the
-	// newly-created window, accordingly
-	{
-		CFStringRef		associatedTerminalName = nullptr;
-		
-		
-		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTerminalFavorite,
-													sizeof(associatedTerminalName), &associatedTerminalName);
-		if (kPreferences_ResultOK == prefsResult)
-		{
-			associatedTerminalContext = Preferences_NewContextFromFavorites(Quills::Prefs::TERMINAL, associatedTerminalName);
-		}
-	}
-	
-	// read the translation associated with the session, and use it
-	// to configure either the specified terminal window or the
-	// newly-created window, accordingly
-	{
-		CFStringRef		associatedTranslationName = nullptr;
-		
-		
-		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTranslationFavorite,
-													sizeof(associatedTranslationName), &associatedTranslationName);
-		if (kPreferences_ResultOK == prefsResult)
-		{
-			associatedTranslationContext = Preferences_NewContextFromFavorites(Quills::Prefs::TRANSLATION, associatedTranslationName);
-		}
-	}
-	
 	assert(nullptr != terminalWindow);
 	
-	// reconfigure given window; UNIMPLEMENTED
+	// it is best to apply settings before displaying the terminal, since
+	// they can have side effects (e.g. resizing); therefore, "false"
+	// should be passed to SessionFactory_NewSessionArbitraryCommand(),
+	// below, to make sure it does not repeat this reconfiguration
+	if (false == configureSessionTerminalWindow(terminalWindow, inSessionContext))
+	{
+		Console_Warning(Console_WriteLine, "unable to reconfigure terminal window");
+	}
 	
 	// display the window
 	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
@@ -1114,8 +1100,8 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindow,
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argumentCFArray,
-																inSessionContext, inWorkspaceOrNull,
-																inWindowIndexInWorkspaceOrZero);
+																inSessionContext, false/* reconfigure terminal */,
+																inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero);
 			CFRelease(argumentCFArray), argumentCFArray = nullptr;
 		}
 		// INCOMPLETE!!!
@@ -2158,8 +2144,6 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 								 Preferences_ContextRef		inSessionContext)
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	
-	CFStringRef				associatedFormatName = nullptr;
 	size_t					actualSize = 0;
 	Boolean					result = false;
 	
@@ -2167,27 +2151,83 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 	// copy settings to the terminal window; note that a session context
 	// will not directly contain view settings such as fonts and colors,
 	// but it may contain the name of a context to use for this
-	prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedFormatFavorite,
-												sizeof(associatedFormatName), &associatedFormatName,
-												false/* search defaults too */, &actualSize);
-	if (kPreferences_ResultOK == prefsResult)
 	{
-		Preferences_ContextRef		associatedFormat = Preferences_NewContextFromFavorites
-														(Quills::Prefs::FORMAT, associatedFormatName);
+		CFStringRef		contextName = nullptr;
 		
 		
-		if (nullptr == associatedFormat)
+		// font and color settings
+		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedFormatFavorite,
+													sizeof(contextName), &contextName,
+													false/* search defaults too */, &actualSize);
+		if (kPreferences_ResultOK == prefsResult)
 		{
-			Console_Warning(Console_WriteValueCFString, "associated Format not found", associatedFormatName);
+			Preferences_ContextRef		associatedContext = Preferences_NewContextFromFavorites
+															(Quills::Prefs::FORMAT, contextName);
+			
+			
+			if (nullptr == associatedContext)
+			{
+				Console_Warning(Console_WriteValueCFString, "associated Format not found", contextName);
+			}
+			else
+			{
+				result = TerminalWindow_ReconfigureViewsInGroup
+							(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext,
+								Quills::Prefs::FORMAT);
+				Preferences_ReleaseContext(&associatedContext);
+			}
+			CFRelease(contextName), contextName = nullptr;
 		}
-		else
+		
+		// terminal emulator settings
+		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTerminalFavorite,
+													sizeof(contextName), &contextName,
+													false/* search defaults too */, &actualSize);
+		if (kPreferences_ResultOK == prefsResult)
 		{
-			result = TerminalWindow_ReconfigureViewsInGroup
-						(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedFormat);
-			Preferences_ReleaseContext(&associatedFormat);
+			Preferences_ContextRef		associatedContext = Preferences_NewContextFromFavorites
+															(Quills::Prefs::TERMINAL, contextName);
+			
+			
+			if (nullptr == associatedContext)
+			{
+				Console_Warning(Console_WriteValueCFString, "associated Terminal not found", contextName);
+			}
+			else
+			{
+				result = TerminalWindow_ReconfigureViewsInGroup
+							(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext,
+								Quills::Prefs::TERMINAL);
+				Preferences_ReleaseContext(&associatedContext);
+			}
+			CFRelease(contextName), contextName = nullptr;
 		}
-		CFRelease(associatedFormatName), associatedFormatName = nullptr;
+		
+		// translation settings
+		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTranslationFavorite,
+													sizeof(contextName), &contextName,
+													false/* search defaults too */, &actualSize);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			Preferences_ContextRef		associatedContext = Preferences_NewContextFromFavorites
+															(Quills::Prefs::TRANSLATION, contextName);
+			
+			
+			if (nullptr == associatedContext)
+			{
+				Console_Warning(Console_WriteValueCFString, "associated Translation not found", contextName);
+			}
+			else
+			{
+				result = TerminalWindow_ReconfigureViewsInGroup
+							(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext,
+								Quills::Prefs::TRANSLATION);
+				Preferences_ReleaseContext(&associatedContext);
+			}
+			CFRelease(contextName), contextName = nullptr;
+		}
 	}
+	
 	return result;
 }// configureSessionTerminalWindow
 

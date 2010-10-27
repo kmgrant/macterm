@@ -181,7 +181,8 @@ Boolean
 Boolean
 	TerminalWindow_ReconfigureViewsInGroup			(TerminalWindowRef			inRef,
 													 TerminalWindow_ViewGroup	inViewGroup,
-													 Preferences_ContextRef		inContext);
+													 Preferences_ContextRef		inContext,
+													 Quills::Prefs::Class		inPrefsClass);
 
 NSWindow*
 	TerminalWindow_ReturnNSWindow					(TerminalWindowRef			inRef);

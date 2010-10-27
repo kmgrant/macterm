@@ -268,9 +268,15 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 			// since the terminal window is already displayed when the UI is presented,
 			// its workspace-window-specific settings have already been applied;
 			// therefore, no specific workspace or window index should ever be given here
+			// TEMPORARY: the reconfigure-terminal argument is "true" for now, because
+			// update-on-menu-selection is not implemented for all pop-up menus of
+			// associated favorites (it only works for Formats; to work for others, new
+			// command IDs must be implemented in TerminalWindow.mm or Commands.mm);
+			// the goal is to eventually auto-update windows as soon as items are chosen
+			// from menus, so that no reconfiguration is necessary when the session spawns
 			session = SessionFactory_NewSessionArbitraryCommand
 						(dataPtr->terminalWindow, argumentListCFArray, dataPtr->temporaryDataModel,
-							nullptr/* workspace context */, 0/* window index */);
+							true/* reconfigure terminal */, nullptr/* workspace context */, 0/* window index */);
 			CFRelease(argumentListCFArray), argumentListCFArray = nullptr;
 		}
 	}

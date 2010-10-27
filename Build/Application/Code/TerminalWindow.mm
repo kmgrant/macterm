@@ -950,9 +950,14 @@ TerminalWindow_IsTab	(TerminalWindowRef	inRef)
 
 /*!
 Changes the settings of every view in the specified group,
-to include the recognized settings of given context.  You might
-use this, for example, to do a batch-mode change of all the
-fonts and colors of a terminal window’s views.
+to include the recognized settings of the given context.  You
+might use this, for example, to do a batch-mode change of all
+the fonts and colors of a terminal window’s views.
+
+A preferences class can be provided as a hint to indicate what
+should be changed.  For example, Quills::Prefs::FORMAT will set
+fonts and colors on views, but Quills::Prefs::TERMINAL will set
+internal screen buffer preferences.
 
 Currently, the only supported group is the active view,
 "kTerminalWindow_ViewGroupActive".
@@ -964,20 +969,39 @@ Returns true only if successful.
 Boolean
 TerminalWindow_ReconfigureViewsInGroup	(TerminalWindowRef			inRef,
 										 TerminalWindow_ViewGroup	inViewGroup,
-										 Preferences_ContextRef		inContext)
+										 Preferences_ContextRef		inContext,
+										 Quills::Prefs::Class		inPrefsClass)
 {
 	Boolean		result = false;
 	
 	
 	if (kTerminalWindow_ViewGroupActive == inViewGroup)
 	{
-		Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration
-														(TerminalWindow_ReturnViewWithFocus(inRef));
+		Preferences_ContextRef		currentSettings = nullptr;
 		Preferences_Result			copyResult = kPreferences_ResultOK;
 		
 		
-		copyResult = Preferences_ContextCopy(inContext, currentSettings);
-		result = (kPreferences_ResultOK == copyResult);
+		switch (inPrefsClass)
+		{
+		case Quills::Prefs::FORMAT:
+			currentSettings = TerminalView_ReturnFormatConfiguration(TerminalWindow_ReturnViewWithFocus(inRef));
+			break;
+		case Quills::Prefs::TERMINAL:
+			currentSettings = Terminal_ReturnConfiguration(TerminalWindow_ReturnScreenWithFocus(inRef));
+			break;
+		case Quills::Prefs::TRANSLATION:
+			currentSettings = TerminalView_ReturnTranslationConfiguration(TerminalWindow_ReturnViewWithFocus(inRef));
+			break;
+		default:
+			// ???
+			break;
+		}
+		
+		if (nullptr != currentSettings)
+		{
+			copyResult = Preferences_ContextCopy(inContext, currentSettings);
+			result = (kPreferences_ResultOK == copyResult);
+		}
 	}
 	return result;
 }// ReconfigureViewsInGroup
@@ -3510,7 +3534,6 @@ handleNewSize	(WindowRef	inWindow,
 		controlBounds.bottom = contentBounds.bottom - getGrowBoxHeight();
 		floatBounds = CGRectMake(controlBounds.left, controlBounds.top, controlBounds.right - controlBounds.left,
 									controlBounds.bottom - controlBounds.top);
-		//SetControlBounds(ptr->controls.scrollBarV, &controlBounds);
 		HIViewSetFrame(ptr->controls.scrollBarV, &floatBounds);
 		
 		// glue the horizontal scroll bar to the new bottom edge of the window; it must
@@ -3522,7 +3545,6 @@ handleNewSize	(WindowRef	inWindow,
 		controlBounds.right = contentBounds.right - getGrowBoxWidth();
 		floatBounds = CGRectMake(controlBounds.left, controlBounds.top, controlBounds.right - controlBounds.left,
 									controlBounds.bottom - controlBounds.top);
-		//SetControlBounds(ptr->controls.scrollBarH, &controlBounds);
 		HIViewSetFrame(ptr->controls.scrollBarH, &floatBounds);
 		
 		// change the screen sizes to match the user’s window size as well as possible,
@@ -3581,7 +3603,6 @@ handleNewSize	(WindowRef	inWindow,
 							assert_noerr(error);
 							terminalScreenBounds.size.height = scrollBarBounds.origin.y - terminalScreenBounds.origin.y;
 						}
-						//SetControlBounds(TerminalView_ReturnContainerHIView(viewArray[i]), &terminalScreenBounds);
 						error = HIViewSetFrame(TerminalView_ReturnContainerHIView(viewArray[i]), &terminalScreenBounds);
 						assert_noerr(error);
 					}
@@ -3596,9 +3617,6 @@ handleNewSize	(WindowRef	inWindow,
 		
 		// update the scroll bars’ values to reflect the new screen size
 		updateScrollBars(ptr);
-		
-		// redraw controls
-		DrawControls(TerminalWindow_ReturnWindow(terminalWindow));
 	}
 }// handleNewSize
 

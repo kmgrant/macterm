@@ -132,7 +132,8 @@ _session(nullptr)
 		std::transform(inArgV.begin(), inArgV.end(), args, create_cfstr());
 		argsObject.setCFTypeRef(CFArrayCreate(kCFAllocatorDefault, args, argc, &kCFTypeArrayCallBacks), true/* is retained */);
 		_session = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argsObject.returnCFArrayRef()/* command */,
-																nullptr/* preferences context */, workspaceContext, 0/* window index */,
+																nullptr/* preferences context */, false/* reconfigure terminal */,
+																workspaceContext, 0/* window index */,
 																dirObject.returnCFStringRef());
 		
 		// WARNING: this cleanup is not exception-safe and should be fixed
