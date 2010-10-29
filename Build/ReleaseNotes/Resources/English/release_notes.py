@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20101028',
     '20101026',
     '20101022',
     '20101011',
@@ -329,6 +330,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20101028': [
+        'Fixed crash that was occurring recently when trying to use "Duplicate Session".',
+    ],
     '20101026': [
         'Fixed sessions spawned from Favorites, so settings such as screen size are copied from any associated Terminal.',
         'Fixed sessions spawned from Favorites, so settings such as character set are copied from any associated Translation.',

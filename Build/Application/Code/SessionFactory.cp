@@ -453,9 +453,17 @@ SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindow,
 	CFArrayRef		argsArray = Session_ReturnCommandLine(inBaseSession);
 	
 	
-	if (nullptr != argsArray)
+	if (nullptr == inTerminalWindow)
 	{
-		assert(nullptr != inTerminalWindow);
+		// TEMPORARY; createTerminalWindow() accepts up to 3 context arguments,
+		// which should be extracted or derived from the original session somehow
+		// (to completely duplicate things like window size, fonts and colors);
+		// for now, a window style based on the default is chosen
+		inTerminalWindow = createTerminalWindow();
+	}
+	
+	if ((nullptr != argsArray) && (nullptr != inTerminalWindow))
+	{
 		result = SessionFactory_NewSessionArbitraryCommand(inTerminalWindow, argsArray);
 	}
 	return result;

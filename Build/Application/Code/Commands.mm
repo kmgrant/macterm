@@ -614,6 +614,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				if (nullptr == newSession)
 				{
 					// UNIMPLEMENTED!!!
+					Sound_StandardAlert();
 				}
 			}
 			break;
