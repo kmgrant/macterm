@@ -224,6 +224,12 @@ enum
 	kMy_NumberOfCharactersPerLineMaximum = 256	//!< maximum number of columns allowed; must be a multiple of "kMy_TabStop"
 };
 
+enum My_AttributeRule
+{
+	kMy_AttributeRuleInitialize		= 0,	//!< newly-created lines have cleared attributes
+	kMy_AttributeRuleCopyLastLine	= 1		//!< newly-created lines copy all of the attributes of the line that used to be at the end
+};
+
 enum My_CharacterSet
 {
 	kMy_CharacterSetVT100UnitedKingdom		= 0,	//!< ASCII character set except '#' is '£' (British pounds currency symbol)
@@ -1268,7 +1274,8 @@ void						bufferLineFill							(My_ScreenBufferPtr, My_ScreenBufferLine&, UInt8,
 																	 Boolean = true);
 void						bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr, SInt16);
 void						bufferRemoveLines						(My_ScreenBufferPtr, UInt16,
-																	 My_ScreenBufferLineList::iterator&);
+																	 My_ScreenBufferLineList::iterator&,
+																	 My_AttributeRule = kMy_AttributeRuleInitialize);
 void						changeLineAttributes					(My_ScreenBufferPtr, My_ScreenBufferLine&,
 																	 TerminalTextAttributes, TerminalTextAttributes);
 void						changeLineGlobalAttributes				(My_ScreenBufferPtr, My_ScreenBufferLine&,
@@ -8389,7 +8396,7 @@ deleteLines		(My_ScreenBufferPtr		inDataPtr)
 				++totalLines;
 			}
 		}
-		bufferRemoveLines(inDataPtr, totalLines, lineIterator);
+		bufferRemoveLines(inDataPtr, totalLines, lineIterator, kMy_AttributeRuleCopyLastLine);
 	}
 }// deleteLines
 
@@ -9627,8 +9634,13 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 
 /*!
 Deletes lines from the screen buffer, scrolling up the
-remainder and inserting new blank lines at the bottom of
-the scrolling region.  The display is updated.
+remainder and inserting new blank lines at the bottom of the
+scrolling region.  The display is updated.
+
+New blank lines normally have cleared attributes.  However, if
+"inAttributeRule" is set to "kMy_AttributeRuleCopyLastLine",
+they will instead copy the attributes of the line that was at
+the end prior to new lines being inserted.
 
 See also bufferInsertBlankLines().
 
@@ -9642,7 +9654,8 @@ WARNING:	The specified line MUST be part of the terminal
 void
 bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 					 UInt16									inNumberOfLines,
-					 My_ScreenBufferLineList::iterator&		inFirstDeletionLine)
+					 My_ScreenBufferLineList::iterator&		inFirstDeletionLine,
+					 My_AttributeRule						inAttributeRule)
 {
 	My_ScreenBufferLineList::iterator	scrollingRegionBegin;
 	My_ScreenBufferLineList::iterator	scrollingRegionEnd;
@@ -9662,8 +9675,21 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 		
 		
 		// insert blank lines
-		// INCOMPLETE - copy attributes of last line for new lines
-		inDataPtr->screenBuffer.insert(scrollingRegionEnd, kMostLines, gEmptyScreenBufferLine());
+		if ((kMy_AttributeRuleCopyLastLine == inAttributeRule) && (scrollingRegionEnd != scrollingRegionBegin))
+		{
+			My_ScreenBufferLine					lineTemplate = gEmptyScreenBufferLine();
+			My_ScreenBufferLineList::iterator	toCopiedLine = scrollingRegionEnd;
+			
+			
+			std::advance(toCopiedLine, -1);
+			lineTemplate.attributeVector = (*toCopiedLine).attributeVector;
+			lineTemplate.globalAttributes = (*toCopiedLine).globalAttributes;
+			inDataPtr->screenBuffer.insert(scrollingRegionEnd, kMostLines, lineTemplate);
+		}
+		else
+		{
+			inDataPtr->screenBuffer.insert(scrollingRegionEnd, kMostLines, gEmptyScreenBufferLine());
+		}
 		
 		// delete first lines
 		pastLastDeletionLine = inFirstDeletionLine;
@@ -11031,7 +11057,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					{
 						inDataPtr->emulator.parameterValues[0] = 1;
 					}
-					bufferRemoveLines(inDataPtr, inDataPtr->emulator.parameterValues[0], cursorLineIterator);
+					bufferRemoveLines(inDataPtr, inDataPtr->emulator.parameterValues[0], cursorLineIterator, kMy_AttributeRuleCopyLastLine);
 				}
 				goto ShortCut;
 			
