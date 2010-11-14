@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -36,9 +36,14 @@
 // library includes
 #import <AutoPool.objc++.h>
 #import <Console.h>
+#import <SoundSystem.h>
 
 // MacTelnet includes
 #import "DebugInterface.h"
+#import "Session.h"
+#import "SessionFactory.h"
+#import "Terminal.h"
+#import "TerminalWindow.h"
 
 
 
@@ -88,6 +93,93 @@ init
 	self = [super initWithWindowNibName:@"DebugInterfaceCocoa"];
 	return self;
 }
+
+
+/*!
+Prints information to the console on the current state of
+the active terminal; for example, whether it is in insert
+or replace mode.
+
+(4.0)
+*/
+- (IBAction)
+dumpStateOfActiveTerminal:(id)	sender
+{
+#pragma unused(sender)
+	SessionRef			activeSession = nullptr;
+	TerminalWindowRef	activeTerminalWindow = nullptr;
+	TerminalScreenRef	activeScreen = nullptr;
+	
+	
+	Console_WriteLine("");
+	Console_WriteHorizontalRule();
+	Console_WriteLine("Report on active window:");
+	{
+		Console_BlockIndent		_;
+		
+		
+		Console_WriteLine("Session");
+		{
+			Console_BlockIndent		_2;
+			
+			
+			activeSession = SessionFactory_ReturnUserFocusSession();
+			
+			if (nullptr == activeSession)
+			{
+				Sound_StandardAlert();
+				Console_WriteLine("There is no active session.");
+			}
+			else
+			{
+				Console_WriteLine("No debugging information has been defined.");
+			}
+		}
+		Console_WriteLine("Terminal Window");
+		{
+			Console_BlockIndent		_2;
+			
+			
+			if (nullptr != activeSession)
+			{
+				activeTerminalWindow = Session_ReturnActiveTerminalWindow(activeSession);
+			}
+			
+			if (nullptr == activeTerminalWindow)
+			{
+				Sound_StandardAlert();
+				Console_WriteLine("The active session has no terminal window.");
+			}
+			else
+			{
+				Console_WriteValue("Is hidden (obscured)", TerminalWindow_IsObscured(activeTerminalWindow));
+				Console_WriteValue("Is tabbed", TerminalWindow_IsTab(activeTerminalWindow));
+			}
+		}
+		Console_WriteLine("Terminal Screen Buffer");
+		{
+			Console_BlockIndent		_2;
+			
+			
+			if (nullptr != activeTerminalWindow)
+			{
+				activeScreen = TerminalWindow_ReturnScreenWithFocus(activeTerminalWindow);
+			}
+			
+			if (nullptr == activeScreen)
+			{
+				Sound_StandardAlert();
+				Console_WriteLine("The active session has no focused terminal screen.");
+			}
+			else
+			{
+				Terminal_DebugDumpDetailedSnapshot(activeScreen);
+			}
+		}
+	}
+	Console_WriteLine("End of active terminal report.");
+	Console_WriteHorizontalRule();
+}// dumpStateOfActiveTerminal:
 
 
 /*!

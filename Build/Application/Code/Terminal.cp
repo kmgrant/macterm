@@ -2299,6 +2299,36 @@ Terminal_CursorReturnAttributes		(TerminalScreenRef		inRef)
 
 
 /*!
+Writes arbitrary debugging information to the console for the
+specified terminal screen.
+
+(4.0)
+*/
+void
+Terminal_DebugDumpDetailedSnapshot		(TerminalScreenRef		inRef)
+{
+	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
+	
+	
+	Console_WriteValuePair("Visible boundary first and last columns", dataPtr->visibleBoundary.firstColumn,
+																		dataPtr->visibleBoundary.lastColumn);
+	Console_WriteValuePair("Visible boundary first and last rows", dataPtr->visibleBoundary.rows.firstRow,
+																	dataPtr->visibleBoundary.rows.lastRow);
+	Console_WriteValuePair("Defined scrolling region first and last rows", dataPtr->customScrollingRegion.firstRow,
+																			dataPtr->customScrollingRegion.lastRow);
+	Console_WriteValuePair("Current scrolling region first and last rows", dataPtr->originRegionPtr->firstRow,
+																			dataPtr->originRegionPtr->lastRow);
+	Console_WriteValue("Mode: auto-wrap", dataPtr->modeAutoWrap);
+	Console_WriteValue("Mode: cursor keys for application", dataPtr->modeCursorKeysForApp);
+	Console_WriteValue("Mode: application keys", dataPtr->modeApplicationKeys);
+	Console_WriteValue("Mode: origin redefined", dataPtr->modeOriginRedefined);
+	Console_WriteValue("Mode: insert, not replace", dataPtr->modeInsertNotReplace);
+	Console_WriteValue("Mode: new-line option", dataPtr->modeNewLineOption);
+	// INCOMPLETE - could put just about anything here, whatever is interesting to know
+}// DebugDumpDetailedSnapshot
+
+
+/*!
 Destroys all scrollback buffer lines.  The “visible”
 lines are not affected.  This obviously invalidates any
 iterators pointing to scrollback lines.
