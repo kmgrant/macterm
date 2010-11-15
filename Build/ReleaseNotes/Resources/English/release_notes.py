@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20101115',
     '20101028',
     '20101026',
     '20101022',
@@ -330,6 +331,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20101115': [
+        'Fixed the insert-character and delete-character sequences of the VT102 emulator.',
+    ],
     '20101028': [
         'Fixed crash that was occurring recently when trying to use "Duplicate Session".',
     ],

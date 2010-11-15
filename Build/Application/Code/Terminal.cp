@@ -1265,7 +1265,7 @@ void						bufferEraseLineWithoutUpdate			(My_ScreenBufferPtr, My_ScreenBufferLin
 void						bufferEraseLineWithUpdate				(My_ScreenBufferPtr, SInt16);
 void						bufferEraseVisibleScreenWithUpdate		(My_ScreenBufferPtr);
 void						bufferEraseWithoutUpdate				(My_ScreenBufferPtr);
-void						bufferInsertBlanksAtCursorColumn		(My_ScreenBufferPtr, SInt16);
+void						bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr, SInt16);
 void						bufferInsertBlankLines					(My_ScreenBufferPtr, UInt16,
 																	 My_ScreenBufferLineList::iterator&);
 void						bufferLineFill							(My_ScreenBufferPtr, My_ScreenBufferLine&, UInt8,
@@ -9456,42 +9456,68 @@ display is NOT updated.
 (2.6)
 */
 void
-bufferInsertBlanksAtCursorColumn	(My_ScreenBufferPtr	inDataPtr,
-									 SInt16				inNumberOfBlankCharactersToInsert)
+bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
+												 SInt16					inNumberOfBlankCharactersToInsert)
 {
+	UInt16								numBlanksToAdd = inNumberOfBlankCharactersToInsert;
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
-	My_TextIterator						textIterator = nullptr;
-	My_TextIterator						firstCharPastInsertedRangeIterator = nullptr;
-	My_TextAttributesList::iterator		attrIterator;
-	My_TextAttributesList::iterator		firstAttrPastInsertedRangeIterator;
-	My_ScreenBufferLineList::iterator	cursorLineIterator;
+	My_ScreenBufferLineList::iterator	toCursorLine;
 	
 	
 	// wrap cursor
 	cursorWrapIfNecessaryGetLocation(inDataPtr, &postWrapCursorX, &postWrapCursorY);
-	locateCursorLine(inDataPtr, cursorLineIterator);
+	locateCursorLine(inDataPtr, toCursorLine);
 	
-	// find cursor position
-	attrIterator = cursorLineIterator->attributeVector.begin();
-	std::advance(attrIterator, 1 + postWrapCursorX);
-	firstAttrPastInsertedRangeIterator = attrIterator;
-	std::advance(firstAttrPastInsertedRangeIterator, inNumberOfBlankCharactersToInsert);
-	textIterator = cursorLineIterator->textVectorBegin;
-	std::advance(textIterator, 1 + postWrapCursorX);
-	firstCharPastInsertedRangeIterator = textIterator;
-	std::advance(firstCharPastInsertedRangeIterator, inNumberOfBlankCharactersToInsert);
+	// since the caller cannot know for sure if the cursor wrapped,
+	// do bounds-checking between the screen edge and new location
+	if ((postWrapCursorX + numBlanksToAdd) >= inDataPtr->current.returnNumberOfColumnsPermitted())
+	{
+		numBlanksToAdd = inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX;
+	}
 	
-	// copy text backwards from the to-be-overwritten range to the end; note
-	// that this is safe only because the destination range begins later than
-	// the source
-	std::copy_backward(attrIterator, firstAttrPastInsertedRangeIterator, cursorLineIterator->attributeVector.end());
-	std::copy_backward(textIterator, firstCharPastInsertedRangeIterator, cursorLineIterator->textVectorEnd);
+	// update attributes
+	{
+		My_TextAttributesList::iterator		pastVisibleEnd = toCursorLine->attributeVector.begin();
+		My_TextAttributesList::iterator		toCursorAttr = toCursorLine->attributeVector.begin();
+		My_TextAttributesList::iterator		toFirstRelocatedAttr;
+		My_TextAttributesList::iterator		pastLastPreservedAttr;
+		
+		
+		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
+		
+		pastLastPreservedAttr = pastVisibleEnd;
+		
+		std::advance(toCursorAttr, postWrapCursorX);
+		toFirstRelocatedAttr = toCursorAttr;
+		std::advance(toFirstRelocatedAttr, numBlanksToAdd);
+		std::advance(pastLastPreservedAttr, -numBlanksToAdd);
+		
+		std::copy_backward(toCursorAttr, pastLastPreservedAttr, pastVisibleEnd);
+		std::fill(toCursorAttr, toFirstRelocatedAttr, toCursorLine->globalAttributes);
+	}
 	
-	// put blanks in the inserted space somewhere in the middle
-	std::fill(attrIterator, firstAttrPastInsertedRangeIterator, cursorLineIterator->globalAttributes);
-	std::fill(textIterator, firstCharPastInsertedRangeIterator, ' ');
-}// bufferInsertBlanksAtCursorColumn
+	// update text
+	{
+		My_TextIterator		pastVisibleEnd = toCursorLine->textVectorBegin;
+		My_TextIterator		toCursorChar = toCursorLine->textVectorBegin;
+		My_TextIterator		toFirstRelocatedChar;
+		My_TextIterator		pastLastPreservedChar;
+		
+		
+		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
+		
+		pastLastPreservedChar = pastVisibleEnd;
+		
+		std::advance(toCursorChar, postWrapCursorX);
+		toFirstRelocatedChar = toCursorChar;
+		std::advance(toFirstRelocatedChar, numBlanksToAdd);
+		std::advance(pastLastPreservedChar, -numBlanksToAdd);
+		
+		std::copy_backward(toCursorChar, pastLastPreservedChar, pastVisibleEnd);
+		std::fill(toCursorChar, toFirstRelocatedChar, ' ');
+	}
+}// bufferInsertBlanksAtCursorColumnWithoutUpdate
 
 
 /*!
@@ -9598,17 +9624,13 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	UInt16								numCharsToRemove = inNumberOfCharactersToDelete;
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
-	My_TextIterator						firstCharDeletedIterator = nullptr;
-	My_TextIterator						firstCharPreservedIterator = nullptr;
-	My_TextAttributesList::iterator		firstAttrDeletedIterator;
-	My_TextAttributesList::iterator		firstAttrPreservedIterator;
-	My_TextAttributesList::iterator		firstAttrPastDeletedRangeIterator;
-	My_ScreenBufferLineList::iterator	cursorLineIterator;
+	My_ScreenBufferLineList::iterator	toCursorLine;
+	TerminalTextAttributes				copiedAttributes = kNoTerminalTextAttributes;
 	
 	
 	// wrap cursor
 	cursorWrapIfNecessaryGetLocation(inDataPtr, &postWrapCursorX, &postWrapCursorY);
-	locateCursorLine(inDataPtr, cursorLineIterator);
+	locateCursorLine(inDataPtr, toCursorLine);
 	
 	// since the caller cannot know for sure if the cursor wrapped,
 	// do bounds-checking between the screen edge and new location
@@ -9617,32 +9639,50 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 		numCharsToRemove = inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX;
 	}
 	
-	// find cursor position
-	firstAttrDeletedIterator = cursorLineIterator->attributeVector.begin();
-	std::advance(firstAttrDeletedIterator, postWrapCursorX);
-	firstAttrPreservedIterator = firstAttrDeletedIterator;
-	std::advance(firstAttrPreservedIterator, numCharsToRemove);
-	firstCharDeletedIterator = cursorLineIterator->textVectorBegin;
-	std::advance(firstCharDeletedIterator, postWrapCursorX);
-	firstCharPreservedIterator = firstCharDeletedIterator;
-	std::advance(firstCharPreservedIterator, numCharsToRemove);
+	// the VT102 specification says that the blank attributes are copied from the last character
+	copiedAttributes = toCursorLine->attributeVector[inDataPtr->current.returnNumberOfColumnsPermitted() - 1];
 	
-	// copy text from end range to the earlier range; note that this is safe
-	// only because the destination range begins earlier than the source
-	std::copy(firstAttrPreservedIterator, cursorLineIterator->attributeVector.end(), firstAttrDeletedIterator);
-	std::copy(firstCharPreservedIterator, cursorLineIterator->textVectorEnd, firstCharDeletedIterator);
+	// update attributes
+	{
+		My_TextAttributesList::iterator		pastVisibleEnd = toCursorLine->attributeVector.begin();
+		My_TextAttributesList::iterator		toCursorAttr = toCursorLine->attributeVector.begin();
+		My_TextAttributesList::iterator		toFirstPreservedAttr;
+		My_TextAttributesList::iterator		pastLastRelocatedAttr;
+		
+		
+		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
+		
+		pastLastRelocatedAttr = pastVisibleEnd;
+		
+		std::advance(toCursorAttr, postWrapCursorX);
+		toFirstPreservedAttr = toCursorAttr;
+		std::advance(toFirstPreservedAttr, numCharsToRemove);
+		std::advance(pastLastRelocatedAttr, -numCharsToRemove);
+		
+		std::copy(toFirstPreservedAttr, pastVisibleEnd, toCursorAttr);
+		std::fill(pastLastRelocatedAttr, pastVisibleEnd, copiedAttributes);
+	}
 	
-	// put blanks in the revealed space at the end; the VT102 specification
-	// says that the blank attributes are copied from the last character
-	// (TEMPORARY - may eventually need a function parameter to decide how
-	// this is done, but currently-supported terminals are fine with it)
-	firstAttrDeletedIterator = cursorLineIterator->attributeVector.end();
-	std::advance(firstAttrDeletedIterator, -STATIC_CAST(numCharsToRemove, SInt16));
-	std::fill(firstAttrDeletedIterator, cursorLineIterator->attributeVector.end(),
-				cursorLineIterator->attributeVector[inDataPtr->current.returnNumberOfColumnsPermitted() - 1]);
-	firstCharDeletedIterator = cursorLineIterator->textVectorEnd;
-	std::advance(firstCharDeletedIterator, -STATIC_CAST(numCharsToRemove, SInt16));
-	std::fill(firstCharDeletedIterator, cursorLineIterator->textVectorEnd, ' ');
+	// update text
+	{
+		My_TextIterator		pastVisibleEnd = toCursorLine->textVectorBegin;
+		My_TextIterator		toCursorChar = toCursorLine->textVectorBegin;
+		My_TextIterator		toFirstPreservedChar;
+		My_TextIterator		pastLastRelocatedChar;
+		
+		
+		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
+		
+		pastLastRelocatedChar = pastVisibleEnd;
+		
+		std::advance(toCursorChar, postWrapCursorX);
+		toFirstPreservedChar = toCursorChar;
+		std::advance(toFirstPreservedChar, numCharsToRemove);
+		std::advance(pastLastRelocatedChar, -numCharsToRemove);
+		
+		std::copy(toFirstPreservedChar, pastVisibleEnd, toCursorChar);
+		std::fill(pastLastRelocatedChar, pastVisibleEnd, ' ');
+	}
 	
 	// add the entire line from the cursor to the end
 	// to the text-change region; this would trigger
@@ -10081,7 +10121,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			// write characters on a single line
 			if (inDataPtr->modeInsertNotReplace)
 			{
-				bufferInsertBlanksAtCursorColumn(inDataPtr, 1/* number of blank characters */);
+				bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, 1/* number of blank characters */);
 			}
 			cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, thisCharacter,
 																									inDataPtr->current.drawingAttributes,
@@ -10365,7 +10405,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					// write characters on a single line
 					if (inDataPtr->modeInsertNotReplace)
 					{
-						bufferInsertBlanksAtCursorColumn(inDataPtr, 1/* number of blank characters */);
+						bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, 1/* number of blank characters */);
 					}
 					cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *c, attrib,
 																											temporaryAttributes);
@@ -11094,7 +11134,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			case '@':
 				if (inDataPtr->emulator.parameterValues[0] < 1)
 					inDataPtr->emulator.parameterValues[0] = 1;
-				bufferInsertBlanksAtCursorColumn(inDataPtr, inDataPtr->emulator.parameterValues[0]/* number of blank characters */);
+				bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, inDataPtr->emulator.parameterValues[0]/* number of blank characters */);
 				goto ShortCut;
 			
 			case 'P':
