@@ -468,8 +468,7 @@ initMacOSToolbox ()
 	InitCursor();
 	
 	// initialization of the Alert module must be done here, otherwise startup error alerts can’t be displayed
-	AppResources_SetResFile(kAppResources_FileIDPreferences, -1);
-	Alert_Init(CurResFile());
+	Alert_Init();
 	
 	// initialize the Undoables module
 	{

@@ -3,7 +3,7 @@
 	AppResources.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -58,9 +58,9 @@ SInt16				gResourceFilePreferences = -1;
 namespace {
 
 OSStatus	createImageFromBundleFile	(CFStringRef, CGImageRef&);
-OSStatus		createPictureFromFile		(SInt16, PicHandle&);
-OSStatus		launchResourceApplication	(CFStringRef);
-OSStatus		openPictureWithName			(UIStrings_FileOrFolderCFString, SInt16*);
+OSStatus	createPictureFromFile		(SInt16, PicHandle&);
+OSStatus	launchResourceApplication	(CFStringRef);
+OSStatus	openPictureWithName			(UIStrings_FileOrFolderCFString, SInt16*);
 
 } // anonymous namespace
 
@@ -393,101 +393,6 @@ AppResources_ReturnCreatorCode ()
 	}
 	return gCreatorCode;
 }// ReturnCreatorCode
-
-
-/*!
-To determine a resource file’s reference number
-given its resource file descriptor, use this
-method.
-
-See also AppResources_UseResFile(), a convenient
-routine for changing the current resource file.
-
-(3.0)
-*/
-SInt16
-AppResources_ReturnResFile		(AppResources_FileID	inResourceFileType)
-{
-	SInt16		result = -1; // IMPORTANT - initialize to an INVALID file descriptor
-	
-	
-	switch (inResourceFileType)
-	{
-	case kAppResources_FileIDPreferences:
-		result = gResourceFilePreferences;
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-	return result;
-}// ReturnResFile
-
-
-/*!
-To assign a resource file reference number to a
-particular resource file descriptor, use this
-method.
-
-WARNING:	This is only done once for each type
-			of resource file, at the start of
-			your program when you’ve determined
-			the descriptors of important open
-			resource files.  Unless you use one
-			or more Resource Manager routines to
-			explicitly close and re-open your
-			resource files, do not call this
-			routine again for the same resource
-			file type.
-
-(3.0)
-*/
-void
-AppResources_SetResFile		(AppResources_FileID	inResourceFileType,
-							 SInt16					inResourceFileRefNum)
-{
-	switch (inResourceFileType)
-	{
-	case kAppResources_FileIDPreferences:
-		gResourceFilePreferences = inResourceFileRefNum;
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-}// SetResFile
-
-
-/*!
-Use this convenient method to update the
-specified resource file (equivalent to calling
-the Resource Manager function UpdateResFile()
-on the appropriate file reference number).
-
-(3.0)
-*/
-void
-AppResources_UpdateResFile	(AppResources_FileID	inResourceFileType)
-{
-	UpdateResFile(AppResources_ReturnResFile(inResourceFileType));
-}// UpdateResFile
-
-
-/*!
-Use this convenient method to change the
-current resource file (equivalent to calling
-the Resource Manager function UseResFile()
-on the appropriate file reference number).
-
-(3.0)
-*/
-void
-AppResources_UseResFile		(AppResources_FileID	inResourceFileType)
-{
-	UseResFile(AppResources_ReturnResFile(inResourceFileType));
-}// UseResFile
 
 
 #pragma mark Internal Methods

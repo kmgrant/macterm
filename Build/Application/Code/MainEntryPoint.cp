@@ -82,14 +82,6 @@ resources (this function does not return).
 static void
 exitCleanly ()
 {
-	// close any resource files that the application would have opened
-	{
-		SInt16		resFile = 0;
-		
-		
-		resFile = AppResources_ReturnResFile(kAppResources_FileIDPreferences);
-		if (resFile >= 0) CloseResFile(resFile);
-	}
 	RestoreApplicationDockTileImage();
 	ExitToShell();
 }// exitCleanly

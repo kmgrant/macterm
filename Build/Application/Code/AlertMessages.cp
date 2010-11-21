@@ -3,7 +3,7 @@
 	AlertMessages.cp
 	
 	Interface Library 1.2
-	© 1998-2009 by Kevin Grant
+	© 1998-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -62,6 +62,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 /*!
 IMPORTANT
@@ -69,19 +70,22 @@ IMPORTANT
 The following values MUST agree with the control IDs in the
 "Dialog" and "Sheet" NIBs from the package "AlertMessages.nib".
 */
-static HIViewID const	idMyButtonDefault		= { 'Dflt', 0/* ID */ };
-static HIViewID const	idMyButtonCancel		= { 'Canc', 0/* ID */ };
-static HIViewID const	idMyButtonOther			= { 'Othr', 0/* ID */ };
-static HIViewID const	idMyButtonHelp			= { 'Help', 0/* ID */ };
-static HIViewID const	idMyTextTitle			= { 'Titl', 0/* ID */ };
-static HIViewID const	idMyTextMain			= { 'Main', 0/* ID */ };
-static HIViewID const	idMyTextHelp			= { 'Smal', 0/* ID */ };
-static HIViewID const	idMyStopIcon			= { 'Stop', 0/* ID */ };
-static HIViewID const	idMyNoteIcon			= { 'Note', 0/* ID */ };
-static HIViewID const	idMyCautionIcon			= { 'Caut', 0/* ID */ };
-static HIViewID const	idMyApplicationIcon		= { 'AppI', 0/* ID */ };
+HIViewID const	idMyButtonDefault		= { 'Dflt', 0/* ID */ };
+HIViewID const	idMyButtonCancel		= { 'Canc', 0/* ID */ };
+HIViewID const	idMyButtonOther			= { 'Othr', 0/* ID */ };
+HIViewID const	idMyButtonHelp			= { 'Help', 0/* ID */ };
+HIViewID const	idMyTextTitle			= { 'Titl', 0/* ID */ };
+HIViewID const	idMyTextMain			= { 'Main', 0/* ID */ };
+HIViewID const	idMyTextHelp			= { 'Smal', 0/* ID */ };
+HIViewID const	idMyStopIcon			= { 'Stop', 0/* ID */ };
+HIViewID const	idMyNoteIcon			= { 'Note', 0/* ID */ };
+HIViewID const	idMyCautionIcon			= { 'Caut', 0/* ID */ };
+HIViewID const	idMyApplicationIcon		= { 'AppI', 0/* ID */ };
+
+} // anonymous namespace
 
 #pragma mark Types
+namespace {
 
 struct My_AlertMessage
 {
@@ -122,32 +126,36 @@ typedef My_AlertMessage*	My_AlertMessagePtr;
 typedef MemoryBlockPtrLocker< InterfaceLibAlertRef, My_AlertMessage >	My_AlertPtrLocker;
 typedef LockAcquireRelease< InterfaceLibAlertRef, My_AlertMessage >		My_AlertAutoLocker;
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Boolean				gNotificationIsBackgrounded = false;
-	Boolean				gUseSpeech = false;
-	Boolean				gIsInited = false;
-	Boolean				gDebuggingEnabled = true;
-	UInt16				gNotificationPreferences = kAlert_NotifyDisplayDiamondMark;
-	short				gApplicationResourceFile = 0;
-	Str255				gNotificationMessage;
-	NMRecPtr			gNotificationPtr = nullptr;
-	EventHandlerUPP		gAlertButtonHICommandUPP = nullptr;
-	My_AlertPtrLocker&	gAlertPtrLocks ()	{ static My_AlertPtrLocker x; return x; }
-}
+#pragma mark Variables
+namespace {
+
+Boolean				gNotificationIsBackgrounded = false;
+Boolean				gUseSpeech = false;
+Boolean				gIsInited = false;
+Boolean				gDebuggingEnabled = true;
+UInt16				gNotificationPreferences = kAlert_NotifyDisplayDiamondMark;
+Str255				gNotificationMessage;
+NMRecPtr			gNotificationPtr = nullptr;
+EventHandlerUPP		gAlertButtonHICommandUPP = nullptr;
+My_AlertPtrLocker&	gAlertPtrLocks ()	{ static My_AlertPtrLocker x; return x; }
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static OSStatus			backgroundNotification			();
-static OSStatus			badgeApplicationDockTile		();
-static CGImageRef		createCGImageForCautionIcon		();
-static void				handleItemHit					(My_AlertMessagePtr, DialogItemIndex);
-static void				newButtonString					(CFStringRef&, UIStrings_ButtonCFString);
-static OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-static void				setAlertVisibility				(My_AlertMessagePtr, Boolean, Boolean);
-static OSStatus			standardAlert					(My_AlertMessagePtr, AlertType, CFStringRef, CFStringRef);
+OSStatus		backgroundNotification			();
+OSStatus		badgeApplicationDockTile		();
+CGImageRef		createCGImageForCautionIcon		();
+void			handleItemHit					(My_AlertMessagePtr, DialogItemIndex);
+void			newButtonString					(CFStringRef&, UIStrings_ButtonCFString);
+OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+void			setAlertVisibility				(My_AlertMessagePtr, Boolean, Boolean);
+OSStatus		standardAlert					(My_AlertMessagePtr, AlertType, CFStringRef, CFStringRef);
+
+} // anonymous namespace
 
 
 
@@ -167,9 +175,8 @@ call Alert_Init() at startup time.
 (1.0)
 */
 void
-Alert_Init	(short		inApplicationResourceFile)
+Alert_Init ()
 {
-	gApplicationResourceFile = inApplicationResourceFile;
 	gAlertButtonHICommandUPP = NewEventHandlerUPP(receiveHICommand);
 	
 	// register application icon, because the "AlertMessages.nib" file
@@ -1232,6 +1239,7 @@ Alert_StandardCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Constructor.  See Alert_New().
@@ -1302,7 +1310,7 @@ Alert_SetNotificationPreferences().
 
 (1.1)
 */
-static OSStatus
+OSStatus
 backgroundNotification ()
 {
 	OSStatus	result = noErr;
@@ -1314,13 +1322,9 @@ backgroundNotification ()
 		if (nullptr == gNotificationPtr) result = memFullErr;
 		else
 		{
-			short		oldResourceFile = CurResFile();
-			
-			
 			gNotificationPtr->qLink = nullptr;
 			gNotificationPtr->qType = nmType;
 			gNotificationPtr->nmMark = 0; // index of menu item to mark
-			UseResFile(gApplicationResourceFile);
 			gNotificationPtr->nmIcon = nullptr;
 			gNotificationPtr->nmSound = nullptr;
 			if (gNotificationPreferences < kAlert_NotifyAlsoDisplayAlert)
@@ -1338,7 +1342,6 @@ backgroundNotification ()
 			if (gNotificationPreferences >= kAlert_NotifyDisplayDiamondMark) badgeApplicationDockTile();
 			
 			result = NMInstall(gNotificationPtr); // TEMP - should use AEInteractWithUser here, instead...
-			UseResFile(oldResourceFile);
 		}
 	}
 	return result;
@@ -1354,7 +1357,7 @@ appeared.
 
 (1.0)
 */
-static OSStatus
+OSStatus
 badgeApplicationDockTile ()
 {
 	OSStatus	result = noErr;
@@ -1382,7 +1385,7 @@ standard Caution icon, 64x64 pixels in size.
 
 (3.1)
 */
-static CGImageRef
+CGImageRef
 createCGImageForCautionIcon ()
 {
 	PicHandle	cautionIconBadgePicture = nullptr;
@@ -1409,7 +1412,7 @@ Responds to clicks in alert boxes.
 
 (1.0)
 */
-static void
+void
 handleItemHit	(My_AlertMessagePtr		inPtr,
 				 DialogItemIndex		inItemIndex)
 {
@@ -1456,7 +1459,7 @@ finished using it.
 
 (1.0)
 */
-static void
+void
 newButtonString		(CFStringRef&				outStringStorage,
 					 UIStrings_ButtonCFString	inButtonStringType)
 {
@@ -1473,7 +1476,7 @@ for the buttons in the special key sequences dialog.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inMy_AlertMessagePtr)
@@ -1537,7 +1540,7 @@ appropriate to the type of alert.
 
 (1.0)
 */
-static void
+void
 setAlertVisibility	(My_AlertMessagePtr		inPtr,
 					 Boolean				inIsVisible,
 					 Boolean				inAnimate)
@@ -1609,7 +1612,7 @@ This method is invoked by Alert_Display().
 
 (1.0)
 */
-static OSStatus
+OSStatus
 standardAlert	(My_AlertMessagePtr		inAlert,
 				 AlertType				inAlertType,
 				 CFStringRef			inDialogText,
@@ -2029,5 +2032,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 	
 	return result;
 }// standardAlert
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -10,7 +10,7 @@
 /*###############################################################
 
 	Interface Library 2.0
-	© 1998-2007 by Kevin Grant
+	© 1998-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -116,7 +116,7 @@ AlertMessages_InvokeCloseNotifyProc		(AlertMessages_CloseNotifyProcPtr	inUserRou
 
 // CALL THIS ROUTINE ONCE, BEFORE ANY OTHER ALERT ROUTINE
 void
-	Alert_Init							(SInt16						inApplicationResourceFile);
+	Alert_Init							();
 
 // CALL THIS ROUTINE AFTER YOU ARE PERMANENTLY DONE WITH ALERTS
 void

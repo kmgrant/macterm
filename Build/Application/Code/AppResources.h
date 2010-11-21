@@ -2,32 +2,15 @@
 	\brief Easy access to resources located in application
 	resource files.
 	
-	To reduce the number of global variables in this program,
-	and to more intelligently manage multiple open resource
-	files, the Resource File Manager module has been created
-	in MacTelnet 3.0.  It contains initialization routines for
-	setting resource file reference numbers, which are then
-	stored internally in this module.  You subsequently access
-	these reference numbers using MacTelnet’s own descriptors,
-	which utilize more abstract concepts like “the preferences
-	resource file” or “the application resource file”.
-	
-	On Mac OS X this can also be used for managing files that
-	are probably located in the application bundle somewhere.
-	This prevents other code modules from having to know the
+	This can be used for managing files that are probably
+	located in the application bundle somewhere.  This
+	prevents other code modules from having to know the
 	names or locations of files, etc.
-	
-	For convenience, there are special routines for setting
-	the current resource file and updating a resource file,
-	the two most common Resource Manager operations.  To use
-	other Resource Manager routines, you use the method
-	AppResources_ReturnResFile(), which gives you the file
-	reference number of the specified open resource file.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -76,9 +59,8 @@ enum
 
 #pragma mark Public Methods
 
-/*###############################################################
-	RETRIEVING MACTELNET RESOURCES
-###############################################################*/
+//!\name Retrieving MacTelnet Resources
+//@{
 
 void
 	AppResources_Init													(CFBundleRef					inApplicationBundle);
@@ -115,9 +97,10 @@ AppResources_Result
 AppResources_Result
 	AppResources_LaunchPreferencesConverter								();
 
-/*###############################################################
-	ICON NAMES (FOR ICON SERVICES)
-###############################################################*/
+//@}
+
+//!\name Icon Names (For Icon Services, Cocoa APIs or NIBs)
+//@{
 
 inline CFStringRef
 	AppResources_ReturnBellOffIconFilenameNoExtension					()
@@ -392,22 +375,7 @@ inline CFStringRef
 	return CFSTR("IconForStackWindows");
 }
 
-/*###############################################################
-	HELPERS FOR USE WITH THE TRADITIONAL RESOURCE MANAGER
-###############################################################*/
-
-SInt16
-	AppResources_ReturnResFile											(AppResources_FileID		inResourceFileType);
-
-void
-	AppResources_SetResFile												(AppResources_FileID		inResourceFileType,
-																		 SInt16						inResourceFileRefNum);
-
-void
-	AppResources_UpdateResFile											(AppResources_FileID		inResourceFileType);
-
-void
-	AppResources_UseResFile												(AppResources_FileID		inResourceFileType);
+//@}
 
 #endif
 
