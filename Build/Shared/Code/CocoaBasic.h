@@ -3,7 +3,7 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.2
+	Simple Cocoa Wrappers Library 1.4
 	© 2008-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -89,6 +89,12 @@ CFStringRef
 
 CFArrayRef
 	CocoaBasic_ReturnUserSoundNames					();
+
+void
+	CocoaBasic_SetDockTileToCautionOverlay			();
+
+void
+	CocoaBasic_SetDockTileToDefaultAppIcon			();
 
 Boolean
 	CocoaBasic_SpeakingInProgress					();

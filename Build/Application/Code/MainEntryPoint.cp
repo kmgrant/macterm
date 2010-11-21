@@ -31,28 +31,11 @@
 
 #include "UniversalDefines.h"
 
-// standard-C includes
-#include <climits>
-#include <stdexcept>
-
 // library includes
 #include <Console.h>
-#include <FlagManager.h>
-#include <StringUtilities.h>
 
 // MacTelnet includes
-#include "AppResources.h"
 #include "MainEntryPoint.h"
-
-
-
-// symbols required to link on 10.1
-//long __isinfd(double d) { return (d == __inf()); }
-//float __nan() { return INT_MIN; }
-
-#pragma mark Internal Method Prototypes
-
-static void		exitCleanly		();
 
 
 
@@ -67,23 +50,7 @@ possible) and to then *definitely* shut down.
 void
 MainEntryPoint_ImmediatelyQuit ()
 {
-	exitCleanly();
-}// ImmediatelyQuit
-
-
-#pragma mark Internal Methods
-
-/*!
-Quits this application, freeing any locked-up
-resources (this function does not return).
-
-(3.0)
-*/
-static void
-exitCleanly ()
-{
-	RestoreApplicationDockTileImage();
 	ExitToShell();
-}// exitCleanly
+}// ImmediatelyQuit
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

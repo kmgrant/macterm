@@ -391,8 +391,6 @@
 		0A46FE3B055432A400ACDF3A /* WindowInfo.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WindowInfo.cp; path = Application/Code/WindowInfo.cp; sourceTree = "<group>"; };
 		0A46FE3C055432A400ACDF3A /* WindowTitleDialog.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WindowTitleDialog.cp; path = Application/Code/WindowTitleDialog.cp; sourceTree = "<group>"; };
 		0A46FE3D055432A400ACDF3A /* Workspace.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Workspace.cp; path = Application/Code/Workspace.cp; sourceTree = "<group>"; };
-		0A4A7839055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/DockTileAttentionMask.pict; sourceTree = "<group>"; };
-		0A4A783B055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/DockTileAttention.pict; sourceTree = "<group>"; };
 		0A4A86AC055B3DDF0011CC82 /* ApplicationVersion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ApplicationVersion.h; path = Application/Resources/ApplicationVersion.h; sourceTree = "<group>"; };
 		0A4A86B9055B3DDF0011CC82 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = English; path = Application/Resources/English.lproj/LocalizedApplicationVersion.h; sourceTree = "<group>"; };
 		0A4C9D210FE9B1A0005EAE9D /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelWorkspaces.nib; sourceTree = "<group>"; };
@@ -831,8 +829,6 @@
 				0AFF137C0AF4210D006CCA34 /* Resource Headers */,
 				0AFF137B0AF42077006CCA34 /* Rez Input */,
 				0AFF137A0AF42067006CCA34 /* Icons */,
-				0A4A7838055B3D1D0011CC82 /* DockTileAttentionMask.pict */,
-				0A4A783A055B3D1D0011CC82 /* DockTileAttention.pict */,
 				0AFF112F0AF4202B006CCA34 /* NIBs */,
 				0AFF136B0AF42045006CCA34 /* Required Frameworks */,
 				0A46FE73055433CA00ACDF3A /* Products */,
@@ -1505,22 +1501,6 @@
 			);
 			name = PrefPanelTerminals.nib;
 			sourceTree = "<group>";
-		};
-		0A4A7838055B3D1D0011CC82 /* DockTileAttentionMask.pict */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A4A7839055B3D1D0011CC82 /* English */,
-			);
-			name = DockTileAttentionMask.pict;
-			sourceTree = SOURCE_ROOT;
-		};
-		0A4A783A055B3D1D0011CC82 /* DockTileAttention.pict */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A4A783B055B3D1D0011CC82 /* English */,
-			);
-			name = DockTileAttention.pict;
-			sourceTree = SOURCE_ROOT;
 		};
 		0A4C9D200FE9B1A0005EAE9D /* PrefPanelWorkspaces.nib */ = {
 			isa = PBXVariantGroup;

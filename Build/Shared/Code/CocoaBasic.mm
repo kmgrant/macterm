@@ -3,7 +3,7 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.3
+	Simple Cocoa Wrappers Library 1.4
 	© 2008-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -39,6 +39,7 @@
 #import <SoundSystem.h>
 
 // MacTelnet includes
+#import "AppResources.h"
 #import "ColorBox.h"
 #import "FileUtilities.h"
 
@@ -568,6 +569,46 @@ CocoaBasic_ReturnUserSoundNames ()
 	[result retain];
 	return REINTERPRET_CAST(result, CFArrayRef);
 }// ReturnUserSoundNames
+
+
+/*!
+Adds a caution icon overlay to the main application icon
+in the Dock.
+
+See also CocoaBasic_SetDockTileToDefaultAppIcon().
+
+(1.4)
+*/
+void
+CocoaBasic_SetDockTileToCautionOverlay ()
+{
+	AutoPool	_;
+	NSImage*	appIconImage = [[NSImage imageNamed:(NSString*)AppResources_ReturnBundleIconFilenameNoExtension()] copy];
+	NSImage*	overlayImage = [NSImage imageNamed:(NSString*)AppResources_ReturnCautionIconFilenameNoExtension()];
+	
+	
+	// the image location is somewhat arbitrary, and should probably be made configurable; TEMPORARY
+	[appIconImage lockFocus];
+	[overlayImage drawAtPoint:NSMakePoint(56, 16) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+	[appIconImage unlockFocus];
+	[NSApp setApplicationIconImage:appIconImage];
+	[appIconImage release];
+}// SetDockTileToCautionOverlay
+
+
+/*!
+Returns the Dock icon back to a plain application icon.
+
+(1.4)
+*/
+void
+CocoaBasic_SetDockTileToDefaultAppIcon ()
+{
+	AutoPool	_;
+	
+	
+	[NSApp setApplicationIconImage:nil];
+}// SetDockTileToDefaultAppIcon
 
 
 /*!

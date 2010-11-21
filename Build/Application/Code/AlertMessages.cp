@@ -147,7 +147,7 @@ My_AlertPtrLocker&	gAlertPtrLocks ()	{ static My_AlertPtrLocker x; return x; }
 namespace {
 
 OSStatus		backgroundNotification			();
-OSStatus		badgeApplicationDockTile		();
+void			badgeApplicationDockTile		();
 CGImageRef		createCGImageForCautionIcon		();
 void			handleItemHit					(My_AlertMessagePtr, DialogItemIndex);
 void			newButtonString					(CFStringRef&, UIStrings_ButtonCFString);
@@ -1339,7 +1339,10 @@ backgroundNotification ()
 			gNotificationPtr->nmRefCon = 0L;
 			
 			// badge MacTelnet’s Dock tile with a caution icon, if that preference is set
-			if (gNotificationPreferences >= kAlert_NotifyDisplayDiamondMark) badgeApplicationDockTile();
+			if (gNotificationPreferences >= kAlert_NotifyDisplayDiamondMark)
+			{
+				badgeApplicationDockTile();
+			}
 			
 			result = NMInstall(gNotificationPtr); // TEMP - should use AEInteractWithUser here, instead...
 		}
@@ -1357,25 +1360,10 @@ appeared.
 
 (1.0)
 */
-OSStatus
+void
 badgeApplicationDockTile ()
 {
-	OSStatus	result = noErr;
-	CGImageRef	cautionIconCGImage = createCGImageForCautionIcon();
-	
-	
-	// Core Graphics mixes pixels together, so clear out anything
-	// that might have been there before to avoid weird results
-	RestoreApplicationDockTileImage();
-	
-	// badge the application Dock tile
-	if (nullptr != cautionIconCGImage)
-	{
-		result = OverlayApplicationDockTileImage(cautionIconCGImage);
-		CGImageRelease(cautionIconCGImage), cautionIconCGImage = nullptr;
-	}
-	
-	return result;
+	CocoaBasic_SetDockTileToCautionOverlay();
 }// badgeApplicationDockTile
 
 

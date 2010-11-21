@@ -196,9 +196,7 @@ IconForSessionStatusActive.icns \
 IconForSessionStatusDead.icns \
 IconForStackWindows.icns \
 IconForTerminal.icns \
-English.lproj/Credits.html \
-English.lproj/DockTileAttention.pict \
-English.lproj/DockTileAttentionMask.pict
+English.lproj/Credits.html
 APP_RESOURCES_BUNDLES := \
 English.lproj/Help \
 English.lproj/AddressDialogCocoa.nib \

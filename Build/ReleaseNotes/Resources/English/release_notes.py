@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20101120',
     '20101115',
     '20101028',
     '20101026',
@@ -331,6 +332,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20101120': [
+        'Fixed the appearance of the attention indicator that can appear on the application dock tile.',
+    ],
     '20101115': [
         'Fixed the insert-character and delete-character sequences of the VT102 emulator.',
     ],
