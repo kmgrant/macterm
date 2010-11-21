@@ -113,6 +113,7 @@ extern "C"
 
 
 #pragma mark Constants
+namespace {
 
 SInt16 const		kMaximumNumberOfArrangedWindows = 20; // TEMPORARY RESTRICTION
 
@@ -143,7 +144,7 @@ The following values MUST agree with the control IDs in the
 "DimensionsFloater" and "DimensionsSheet" NIB from the
 package "TerminalWindow.nib".
 */
-static HIViewID const	idMyTextScreenDimensions	= { 'Dims', 0/* ID */ };
+HIViewID const	idMyTextScreenDimensions	= { 'Dims', 0/* ID */ };
 
 /*!
 IMPORTANT
@@ -151,9 +152,12 @@ IMPORTANT
 The following values MUST agree with the control IDs in the
 "Tab" NIB from the package "TerminalWindow.nib".
 */
-static HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
+HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
+
+} // anonymous namespace
 
 #pragma mark Types
+namespace {
 
 typedef std::vector< TerminalScreenRef >						TerminalScreenList;
 typedef std::multimap< TerminalScreenRef, TerminalViewRef >		TerminalScreenToViewMultiMap;
@@ -287,89 +291,94 @@ typedef UndoDataScreenDimensionChanges*		UndoDataScreenDimensionChangesPtr;
 typedef MemoryBlockPtrLocker< TerminalWindowRef, TerminalWindow >	TerminalWindowPtrLocker;
 typedef LockAcquireRelease< TerminalWindowRef, TerminalWindow >		TerminalWindowAutoLocker;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static void					addContextualMenuItemsForTab	(MenuRef, HIObjectRef, AEDesc&);
-static void					calculateWindowPosition			(TerminalWindowPtr, Rect*);
-static void					calculateIndexedWindowPosition	(TerminalWindowPtr, SInt16, Point*);
-static void					changeNotifyForTerminalWindow	(TerminalWindowPtr, TerminalWindow_Change, void*);
-static IconRef				createBellOffIcon				();
-static IconRef				createBellOnIcon				();
-static IconRef				createFullScreenIcon			();
-static IconRef				createHideWindowIcon			();
-static IconRef				createScrollLockOffIcon			();
-static IconRef				createScrollLockOnIcon			();
-static IconRef				createLEDOffIcon				();
-static IconRef				createLEDOnIcon					();
-static void					createViews						(TerminalWindowPtr);
-static Boolean				createTabWindow					(TerminalWindowPtr);
-static NSWindow*			createWindow					();
-static void					delayMinimumTicks				(UInt16 = 8);
-static void					ensureTopLeftCornersExists		();
-static TerminalScreenRef	getActiveScreen					(TerminalWindowPtr);
-static TerminalViewRef		getActiveView					(TerminalWindowPtr);
-static UInt16				getGrowBoxHeight				();
-static UInt16				getGrowBoxWidth					();
-static TerminalWindowScrollBarKind	getScrollBarKind		(TerminalWindowPtr, HIViewRef);
-static TerminalScreenRef	getScrollBarScreen				(TerminalWindowPtr, HIViewRef);
-static TerminalViewRef		getScrollBarView				(TerminalWindowPtr, HIViewRef);
-static UInt16				getStatusBarHeight				(TerminalWindowPtr);
-static UInt16				getToolbarHeight				(TerminalWindowPtr);
-static void					getViewSizeFromWindowSize		(TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
-static void					getWindowSizeFromViewSize		(TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
-static void					handleFindDialogClose			(FindDialog_Ref);
-static void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
-static void					handleNewSize					(WindowRef, Float32, Float32, void*);
-static void					handlePendingUpdates			();
-static void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
-static void					installUndoFullScreenChanges	(TerminalWindowRef, TerminalView_DisplayMode, TerminalView_DisplayMode);
-static void					installUndoScreenDimensionChanges	(TerminalWindowRef);
-static OSStatus				receiveGrowBoxClick				(EventHandlerCallRef, EventRef, void*);
-static OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-static OSStatus				receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
-static OSStatus				receiveScrollBarDraw			(EventHandlerCallRef, EventRef, void*);
-static OSStatus				receiveTabContextualMenuClick	(EventHandlerCallRef, EventRef, void*);
-static OSStatus				receiveTabDragDrop				(EventHandlerCallRef, EventRef, void*);
-static OSStatus				receiveToolbarEvent				(EventHandlerCallRef, EventRef, void*);
-static OSStatus				receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
-static OSStatus				receiveWindowDragCompleted		(EventHandlerCallRef, EventRef, void*);
-static OSStatus				receiveWindowGetClickActivation	(EventHandlerCallRef, EventRef, void*);
-static OSStatus				receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
-static HIWindowRef			returnCarbonWindow				(TerminalWindowPtr);
-static void					reverseFontChanges				(Undoables_ActionInstruction, Undoables_ActionRef, void*);
-static void					reverseFullScreenChanges		(Undoables_ActionInstruction, Undoables_ActionRef, void*);
-static void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_ActionRef, void*);
-static void					scrollProc						(HIViewRef, HIViewPartCode);
-static void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static OSStatus				setCursorInWindow				(WindowRef, Point, UInt32);
-static void					setStandardState				(TerminalWindowPtr, UInt16, UInt16, Boolean);
-static void					setViewSizeIndependentFromWindow(TerminalWindowPtr, Boolean);
-static void					setWarningOnWindowClose			(TerminalWindowPtr, Boolean);
-static void					setWindowAndTabTitle			(TerminalWindowPtr, CFStringRef);
-static void					stackWindowTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
-static void					terminalStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void					terminalViewStateChanged		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void					updateScrollBars				(TerminalWindowPtr);
+#pragma mark Internal Method Prototypes
+namespace {
+
+void					addContextualMenuItemsForTab	(MenuRef, HIObjectRef, AEDesc&);
+void					calculateWindowPosition			(TerminalWindowPtr, Rect*);
+void					calculateIndexedWindowPosition	(TerminalWindowPtr, SInt16, Point*);
+void					changeNotifyForTerminalWindow	(TerminalWindowPtr, TerminalWindow_Change, void*);
+IconRef					createBellOffIcon				();
+IconRef					createBellOnIcon				();
+IconRef					createFullScreenIcon			();
+IconRef					createHideWindowIcon			();
+IconRef					createScrollLockOffIcon			();
+IconRef					createScrollLockOnIcon			();
+IconRef					createLEDOffIcon				();
+IconRef					createLEDOnIcon					();
+void					createViews						(TerminalWindowPtr);
+Boolean					createTabWindow					(TerminalWindowPtr);
+NSWindow*				createWindow					();
+void					delayMinimumTicks				(UInt16 = 8);
+void					ensureTopLeftCornersExists		();
+TerminalScreenRef		getActiveScreen					(TerminalWindowPtr);
+TerminalViewRef			getActiveView					(TerminalWindowPtr);
+UInt16					getGrowBoxHeight				();
+UInt16					getGrowBoxWidth					();
+TerminalWindowScrollBarKind	getScrollBarKind			(TerminalWindowPtr, HIViewRef);
+TerminalScreenRef		getScrollBarScreen				(TerminalWindowPtr, HIViewRef);
+TerminalViewRef			getScrollBarView				(TerminalWindowPtr, HIViewRef);
+UInt16					getStatusBarHeight				(TerminalWindowPtr);
+UInt16					getToolbarHeight				(TerminalWindowPtr);
+void					getViewSizeFromWindowSize		(TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
+void					getWindowSizeFromViewSize		(TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
+void					handleFindDialogClose			(FindDialog_Ref);
+void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
+void					handleNewSize					(WindowRef, Float32, Float32, void*);
+void					handlePendingUpdates			();
+void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
+void					installUndoFullScreenChanges	(TerminalWindowRef, TerminalView_DisplayMode, TerminalView_DisplayMode);
+void					installUndoScreenDimensionChanges	(TerminalWindowRef);
+OSStatus				receiveGrowBoxClick				(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveScrollBarDraw			(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveTabContextualMenuClick	(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveTabDragDrop				(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveToolbarEvent				(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveWindowDragCompleted		(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveWindowGetClickActivation	(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
+HIWindowRef				returnCarbonWindow				(TerminalWindowPtr);
+void					reverseFontChanges				(Undoables_ActionInstruction, Undoables_ActionRef, void*);
+void					reverseFullScreenChanges		(Undoables_ActionInstruction, Undoables_ActionRef, void*);
+void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_ActionRef, void*);
+void					scrollProc						(HIViewRef, HIViewPartCode);
+void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+OSStatus				setCursorInWindow				(WindowRef, Point, UInt32);
+void					setStandardState				(TerminalWindowPtr, UInt16, UInt16, Boolean);
+void					setViewSizeIndependentFromWindow(TerminalWindowPtr, Boolean);
+void					setWarningOnWindowClose			(TerminalWindowPtr, Boolean);
+void					setWindowAndTabTitle			(TerminalWindowPtr, CFStringRef);
+void					stackWindowTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
+void					terminalStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void					terminalViewStateChanged		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void					updateScrollBars				(TerminalWindowPtr);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	TerminalWindowRefTracker&	gTerminalWindowValidRefs ()		{ static TerminalWindowRefTracker x; return x; }
-	TerminalWindowPtrLocker&	gTerminalWindowPtrLocks ()		{ static TerminalWindowPtrLocker x; return x; }
-	SInt16**					gTopLeftCorners = nullptr;
-	SInt16						gNumberOfTransitioningWindows = 0;	// used only by TerminalWindow_StackWindows()
-	IconRef&					gBellOffIcon ()					{ static IconRef x = createBellOffIcon(); return x; }
-	IconRef&					gBellOnIcon ()					{ static IconRef x = createBellOnIcon(); return x; }
-	IconRef&					gFullScreenIcon ()				{ static IconRef x = createFullScreenIcon(); return x; }
-	IconRef&					gHideWindowIcon ()				{ static IconRef x = createHideWindowIcon(); return x; }
-	IconRef&					gLEDOffIcon ()					{ static IconRef x = createLEDOffIcon(); return x; }
-	IconRef&					gLEDOnIcon ()					{ static IconRef x = createLEDOnIcon(); return x; }
-	IconRef&					gScrollLockOffIcon ()			{ static IconRef x = createScrollLockOffIcon(); return x; }
-	IconRef&					gScrollLockOnIcon ()			{ static IconRef x = createScrollLockOnIcon(); return x; }
-	Float32						gDefaultTabWidth = 0.0;		// set later
-	Float32						gDefaultTabHeight = 0.0;	// set later
-}
+TerminalWindowRefTracker&	gTerminalWindowValidRefs ()		{ static TerminalWindowRefTracker x; return x; }
+TerminalWindowPtrLocker&	gTerminalWindowPtrLocks ()		{ static TerminalWindowPtrLocker x; return x; }
+SInt16**					gTopLeftCorners = nullptr;
+SInt16						gNumberOfTransitioningWindows = 0;	// used only by TerminalWindow_StackWindows()
+IconRef&					gBellOffIcon ()					{ static IconRef x = createBellOffIcon(); return x; }
+IconRef&					gBellOnIcon ()					{ static IconRef x = createBellOnIcon(); return x; }
+IconRef&					gFullScreenIcon ()				{ static IconRef x = createFullScreenIcon(); return x; }
+IconRef&					gHideWindowIcon ()				{ static IconRef x = createHideWindowIcon(); return x; }
+IconRef&					gLEDOffIcon ()					{ static IconRef x = createLEDOffIcon(); return x; }
+IconRef&					gLEDOnIcon ()					{ static IconRef x = createLEDOnIcon(); return x; }
+IconRef&					gScrollLockOffIcon ()			{ static IconRef x = createScrollLockOffIcon(); return x; }
+IconRef&					gScrollLockOnIcon ()			{ static IconRef x = createScrollLockOnIcon(); return x; }
+Float32						gDefaultTabWidth = 0.0;		// set later
+Float32						gDefaultTabHeight = 0.0;	// set later
+
+} // anonymous namespace
 
 
 #pragma mark Public Methods
@@ -1921,6 +1930,7 @@ TerminalWindow_StopMonitoring	(TerminalWindowRef			inRef,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Constructor.  See TerminalWindow_New().
@@ -2550,7 +2560,7 @@ by system contextual items).
 
 (4.0)
 */
-static void
+void
 addContextualMenuItemsForTab	(MenuRef		inMenu,
 								 HIObjectRef	UNUSED_ARGUMENT(inView),
 								 AEDesc&		UNUSED_ARGUMENT(inoutContentsDesc))
@@ -2595,7 +2605,7 @@ different devices.
 
 (3.0)
 */
-static void
+void
 calculateIndexedWindowPosition	(TerminalWindowPtr	inPtr,
 								 SInt16				inStaggerIndex,
 								 Point*				outPositionPtr)
@@ -2635,7 +2645,7 @@ Appearance theme.
 
 (2.6)
 */
-static void
+void
 calculateWindowPosition		(TerminalWindowPtr	inPtr,
 							 Rect*				outArrangement)
 {
@@ -2714,7 +2724,7 @@ IMPORTANT:	The context must make sense for the
 
 (3.0)
 */
-static void
+void
 changeNotifyForTerminalWindow	(TerminalWindowPtr		inPtr,
 								 TerminalWindow_Change	inWhatChanged,
 								 void*					inContextPtr)
@@ -2730,7 +2740,7 @@ and returns a reference to the new icon.
 
 (3.1)
 */
-static IconRef
+IconRef
 createBellOffIcon ()
 {
 	IconRef		result = nullptr;
@@ -2760,7 +2770,7 @@ and returns a reference to the new icon.
 
 (3.1)
 */
-static IconRef
+IconRef
 createBellOnIcon ()
 {
 	IconRef		result = nullptr;
@@ -2790,7 +2800,7 @@ and returns a reference to the new icon.
 
 (3.1)
 */
-static IconRef
+IconRef
 createFullScreenIcon ()
 {
 	IconRef		result = nullptr;
@@ -2820,7 +2830,7 @@ and returns a reference to the new icon.
 
 (3.1)
 */
-static IconRef
+IconRef
 createHideWindowIcon ()
 {
 	IconRef		result = nullptr;
@@ -2850,7 +2860,7 @@ and returns a reference to the new icon.
 
 (3.1)
 */
-static IconRef
+IconRef
 createLEDOffIcon ()
 {
 	IconRef		result = nullptr;
@@ -2880,7 +2890,7 @@ and returns a reference to the new icon.
 
 (3.1)
 */
-static IconRef
+IconRef
 createLEDOnIcon ()
 {
 	IconRef		result = nullptr;
@@ -2910,7 +2920,7 @@ system, and returns a reference to the new icon.
 
 (3.1)
 */
-static IconRef
+IconRef
 createScrollLockOffIcon ()
 {
 	IconRef		result = nullptr;
@@ -2940,7 +2950,7 @@ system, and returns a reference to the new icon.
 
 (3.1)
 */
-static IconRef
+IconRef
 createScrollLockOnIcon ()
 {
 	IconRef		result = nullptr;
@@ -2974,7 +2984,7 @@ will make it as wide as the window).
 
 (3.1)
 */
-static Boolean
+Boolean
 createTabWindow		(TerminalWindowPtr		inPtr)
 {
 	HIWindowRef		tabWindow = nullptr;
@@ -3089,7 +3099,7 @@ the scroll bars and the toolbar.
 
 (3.0)
 */
-static void
+void
 createViews		(TerminalWindowPtr	inPtr)
 {
 	HIViewWrap	contentView(kHIViewWindowContentID, returnCarbonWindow(inPtr));
@@ -3143,7 +3153,7 @@ Returns nullptr if the window was not created successfully.
 
 (4.0)
 */
-static NSWindow*
+NSWindow*
 createWindow ()
 {
 	AutoPool		_;
@@ -3177,7 +3187,7 @@ Delays the active thread by the specified amount
 
 (4.0)
 */
-static void
+void
 delayMinimumTicks	(UInt16		inTickCount)
 {
 	UInt32		dummy = 0L;
@@ -3193,7 +3203,7 @@ not already exist.
 
 (3.0)
 */
-static void
+void
 ensureTopLeftCornersExists ()
 {
 	if (gTopLeftCorners == nullptr)
@@ -3218,7 +3228,7 @@ IMPORTANT:	This API is under evaluation.  Perhaps there
 
 (3.0)
 */
-static TerminalScreenRef
+TerminalScreenRef
 getActiveScreen		(TerminalWindowPtr	inPtr)
 {
 	assert(!inPtr->allScreens.empty());
@@ -3234,7 +3244,7 @@ in the window (which should always be true!).
 
 (3.0)
 */
-static TerminalViewRef
+TerminalViewRef
 getActiveView	(TerminalWindowPtr	inPtr)
 {
 	assert(!inPtr->allViews.empty());
@@ -3251,7 +3261,7 @@ scroll bar may be present.
 
 (3.0)
 */
-static UInt16
+UInt16
 getGrowBoxHeight ()
 {
 	UInt16		result = 0;
@@ -3275,7 +3285,7 @@ bar may be present.
 
 (3.0)
 */
-static UInt16
+UInt16
 getGrowBoxWidth ()
 {
 	return TerminalWindow_ReturnScrollBarWidth();
@@ -3291,7 +3301,7 @@ whether the control is horizontal or vertical.
 
 (3.0)
 */
-static TerminalWindowScrollBarKind
+TerminalWindowScrollBarKind
 getScrollBarKind	(TerminalWindowPtr	inPtr,
 					 HIViewRef			inScrollBarControl)
 {
@@ -3310,7 +3320,7 @@ controls, or nullptr if none.
 
 (3.0)
 */
-static TerminalScreenRef
+TerminalScreenRef
 getScrollBarScreen	(TerminalWindowPtr	inPtr,
 					 HIViewRef			UNUSED_ARGUMENT(inScrollBarControl))
 {
@@ -3325,7 +3335,7 @@ or nullptr if none.
 
 (3.0)
 */
-static TerminalViewRef
+TerminalViewRef
 getScrollBarView	(TerminalWindowPtr	inPtr,
 					 HIViewRef			UNUSED_ARGUMENT(inScrollBarControl))
 {
@@ -3342,7 +3352,7 @@ status bar has zero height.
 
 (3.0)
 */
-static UInt16
+UInt16
 getStatusBarHeight	(TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
 {
 	return 0;
@@ -3357,7 +3367,7 @@ an invisible toolbar has zero height.
 
 (3.0)
 */
-static UInt16
+UInt16
 getToolbarHeight	(TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
 {
 	return 0;
@@ -3381,7 +3391,7 @@ IMPORTANT:	Any changes to this routine should be
 
 (3.0)
 */
-static void
+void
 getViewSizeFromWindowSize	(TerminalWindowPtr	inPtr,
 							 SInt16				inWindowContentWidthInPixels,
 							 SInt16				inWindowContentHeightInPixels,
@@ -3415,7 +3425,7 @@ IMPORTANT:	Any changes to this routine should be
 
 (3.0)
 */
-static void
+void
 getWindowSizeFromViewSize	(TerminalWindowPtr	inPtr,
 							 SInt16				inScreenInteriorWidthInPixels,
 							 SInt16				inScreenInteriorHeightInPixels,
@@ -3444,7 +3454,7 @@ most recent checkbox settings.
 
 (3.0)
 */
-static void
+void
 handleFindDialogClose	(FindDialog_Ref		inDialogThatClosed)
 {
 	TerminalWindowRef		terminalWindow = FindDialog_ReturnTerminalWindow(inDialogThatClosed);
@@ -3475,7 +3485,7 @@ drawer height (or width, for vertical tabs) is constrained.
 
 (3.1)
 */
-static void
+void
 handleNewDrawerWindowSize	(WindowRef		inWindowRef,
 							 Float32		inDeltaX,
 							 Float32		UNUSED_ARGUMENT(inDeltaY),
@@ -3504,7 +3514,7 @@ window in response to a resize.
 
 (3.0)
 */
-static void
+void
 handleNewSize	(WindowRef	inWindow,
 				 Float32	UNUSED_ARGUMENT(inDeltaX),
 				 Float32	UNUSED_ARGUMENT(inDeltaY),
@@ -3634,7 +3644,7 @@ available for Classic builds.
 
 (3.1)
 */
-static void
+void
 handlePendingUpdates ()
 {
 	EventRecord		updateEvent;
@@ -3658,7 +3668,7 @@ when the user chooses Undo.
 
 (3.0)
 */
-static void
+void
 installUndoFontSizeChanges	(TerminalWindowRef	inTerminalWindow,
 							 Boolean			inUndoFont,
 							 Boolean			inUndoFontSize)
@@ -3709,7 +3719,7 @@ and window location when the user chooses Undo.
 
 (3.1)
 */
-static void
+void
 installUndoFullScreenChanges	(TerminalWindowRef			inTerminalWindow,
 								 TerminalView_DisplayMode	inPreFullScreenMode,
 								 TerminalView_DisplayMode	inFullScreenMode)
@@ -3762,7 +3772,7 @@ current dimensions when the user chooses Undo.
 
 (3.1)
 */
-static void
+void
 installUndoScreenDimensionChanges	(TerminalWindowRef		inTerminalWindow)
 {
 	OSStatus							error = noErr;
@@ -3807,7 +3817,7 @@ for a terminal window’s grow box.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveGrowBoxClick		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					inTerminalWindowRef)
@@ -3879,7 +3889,7 @@ terminal window commands.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inTerminalWindowRef)
@@ -4577,7 +4587,7 @@ function is used on the frontmost window.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inUserData))
@@ -4701,7 +4711,7 @@ then adds “on top” tick marks for any active searches.
 
 (4.0)
 */
-static OSStatus
+OSStatus
 receiveScrollBarDraw	(EventHandlerCallRef	inHandlerCallRef,
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inContext))
@@ -4850,7 +4860,7 @@ Invoked by Mac OS X whenever the tab is right-clicked.
 
 (4.0)
 */
-static OSStatus
+OSStatus
 receiveTabContextualMenuClick	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					inTerminalWindowRef)
@@ -4896,7 +4906,7 @@ drag-and-drop operation.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveTabDragDrop	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inTerminalWindowRef)
@@ -4962,7 +4972,7 @@ updating the given lists of identifiers.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					inTerminalWindowRef)
@@ -5431,7 +5441,7 @@ IMPORTANT:	This is completely generic.  It should move
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveWindowCursorChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					inWindowRef)
@@ -5506,7 +5516,7 @@ for a terminal window.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveWindowDragCompleted	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					inTerminalWindowRef)
@@ -5565,7 +5575,7 @@ for a terminal window.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveWindowGetClickActivation		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									 EventRef				inEvent,
 									 void*					inTerminalWindowRef)
@@ -5653,7 +5663,7 @@ terminal window.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					inTerminalWindowRef)
@@ -5862,7 +5872,7 @@ coding™, and can be made into a recordable event.
 
 (3.0)
 */
-static void
+void
 reverseFontChanges	(Undoables_ActionInstruction	inDoWhat,
 					 Undoables_ActionRef			inApplicableAction,
 					 void*							inContextPtr)
@@ -5916,7 +5926,7 @@ Full Screen mode).
 
 (3.0)
 */
-static void
+void
 reverseFullScreenChanges	(Undoables_ActionInstruction	inDoWhat,
 							 Undoables_ActionRef			inApplicableAction,
 							 void*							inContextPtr)
@@ -5985,7 +5995,7 @@ terminal screen.
 
 (3.1)
 */
-static void
+void
 reverseScreenDimensionChanges	(Undoables_ActionInstruction	inDoWhat,
 								 Undoables_ActionRef			inApplicableAction,
 								 void*							inContextPtr)
@@ -6037,7 +6047,7 @@ window.
 
 (2.6)
 */
-static void
+void
 scrollProc	(HIViewRef			inScrollBarClicked,
 			 HIViewPartCode		inPartCode)
 {
@@ -6188,7 +6198,7 @@ windows appropriately.
 
 (3.0)
 */
-static void
+void
 sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 ListenerModel_Event	inSessionSettingThatChanged,
 						 void*					inEventContextPtr,
@@ -6324,7 +6334,7 @@ for the given window.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 setCursorInWindow	(WindowRef		inWindow,
 					 Point			inGlobalMouse,
 					 UInt32			inModifiers)
@@ -6449,7 +6459,7 @@ size by zooming “out”, or by passing "true" for
 
 (3.0)
 */
-static void
+void
 setStandardState	(TerminalWindowPtr	inPtr,
 					 UInt16				inScreenWidthInPixels,
 					 UInt16				inScreenHeightInPixels,
@@ -6496,7 +6506,7 @@ bigger than it needs to be.
 
 (4.0)
 */
-static void
+void
 setViewSizeIndependentFromWindow	(TerminalWindowPtr	inPtr,
 									 Boolean			inWindowResizesWhenViewSizeChanges)
 {
@@ -6518,7 +6528,7 @@ NOTE:	This does NOT force a warning message to
 
 (3.0)
 */
-static void
+void
 setWarningOnWindowClose		(TerminalWindowPtr	inPtr,
 							 Boolean			inCloseBoxHasDot)
 {
@@ -6540,7 +6550,7 @@ See also TerminalWindow_SetWindowTitle().
 
 (4.0)
 */
-static void
+void
 setWindowAndTabTitle	(TerminalWindowPtr	inPtr,
 						 CFStringRef		inNewTitle)
 {
@@ -6582,7 +6592,7 @@ slots” for staggered terminal windows.
 
 (3.0)
 */
-static void
+void
 stackWindowTerminalWindowOp		(TerminalWindowRef	inTerminalWindow,
 								 void*				UNUSED_ARGUMENT(inData1),
 								 SInt32				UNUSED_ARGUMENT(inData2),
@@ -6695,7 +6705,7 @@ appropriately.
 
 (3.0)
 */
-static void
+void
 terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 ListenerModel_Event	inTerminalSettingThatChanged,
 						 void*					inEventContextPtr,
@@ -6977,7 +6987,7 @@ This routine responds by updating terminal windows appropriately.
 
 (3.1)
 */
-static void
+void
 terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							 ListenerModel_Event	inTerminalViewEvent,
 							 void*					inEventContextPtr,
@@ -7034,7 +7044,7 @@ screen area that is currently visible in the window.
 
 (3.0)
 */
-static void
+void
 updateScrollBars	(TerminalWindowPtr		inPtr)
 {
 	TerminalViewRef		view = getActiveView(inPtr);
@@ -7118,5 +7128,7 @@ updateScrollBars	(TerminalWindowPtr		inPtr)
 	#endif
 	}
 }// updateScrollBars
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
