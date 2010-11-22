@@ -76,14 +76,6 @@ OSStatus
 	AppleEventUtilities_DuplicateOrResolveObject	(AEDesc const*			inDescriptor,
 													 AEDesc*				outDuplicate);
 
-OSStatus
-	AppleEventUtilities_ExecuteScript				(Handle					inScriptData,
-													 Boolean				inNotifyUser);
-
-OSStatus
-	AppleEventUtilities_ExecuteScriptFile			(FSSpec const*			inFile,
-													 Boolean				inNotifyUser);
-
 // USE THIS INSTEAD OF OTHER METHODS FOR INITIALIZING AEDesc STRUCTURES TO typeNull WITH nullptr DATA
 OSStatus
 	AppleEventUtilities_InitAEDesc					(AEDesc*				inoutDescriptorPtr);

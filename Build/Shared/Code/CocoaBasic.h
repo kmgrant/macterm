@@ -97,6 +97,11 @@ void
 	CocoaBasic_SetDockTileToDefaultAppIcon			();
 
 Boolean
+	CocoaBasic_SetFileTypeCreator					(CFStringRef		inPath,
+													 OSType				inNewType,
+													 OSType				inNewCreator);
+
+Boolean
 	CocoaBasic_SpeakingInProgress					();
 
 Boolean

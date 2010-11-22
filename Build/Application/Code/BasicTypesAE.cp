@@ -120,24 +120,6 @@ BasicTypesAE_CreateEnumerationDesc	(FourCharCode	inEnumeration,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
-for a file system specification record.
-
-(3.0)
-*/
-OSStatus
-BasicTypesAE_CreateFileOrFolderDesc		(FSSpec const*	inFSSpecPtr,
-										 AEDesc*		outDescPtr)
-{
-	OSStatus	result = noErr;
-	
-	
-	result = AECreateDesc(typeFSS, inFSSpecPtr, sizeof(FSSpec), outDescPtr);
-	return result;
-}// CreateFileOrFolderDesc
-
-
-/*!
 Creates an Apple Event descriptor “wrapper” for a
 new-style file system specification record.
 

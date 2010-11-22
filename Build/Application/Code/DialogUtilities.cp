@@ -3,7 +3,7 @@
 	DialogUtilities.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -71,32 +71,6 @@
 #include "MenuBar.h"
 #include "Preferences.h"
 #include "UIStrings.h"
-
-
-
-#pragma mark Types
-namespace {
-
-/*!
-This structure is used for DeviceLoopClipAndDrawControl().
-*/
-struct My_DeviceLoopControlInfo
-{
-	DialogUtilities_DrawViewProcPtr		proc;
-	ControlRef							control;
-	SInt16								controlPartCode;
-};
-typedef struct My_DeviceLoopControlInfo const*		My_DeviceLoopControlInfoConstPtr;
-
-} // anonymous namespace
-
-#pragma mark Internal Method Prototypes
-namespace {
-
-void	clipAndDrawControlDeviceLoop	(short, short, GDHandle, long);
-void	useBestHelpButtonIcon			(ControlRef);
-
-} // anonymous namespace
 
 
 
@@ -242,196 +216,6 @@ DialogUtilities_DisposeControlsBasedOnWindowNIB		(std::vector< ControlRef > cons
 		DialogUtilities_DisposeDuplicateControl(*controlIter);
 	}
 }// DisposeControlsBasedOnWindowNIB
-
-
-/*!
-To display a standard Save File dialog box and
-create a file containing a dump of the control
-embedding hierarchy for the specified window,
-use this method.
-
-(3.0)
-*/
-void
-DebugSelectControlHierarchyDumpFile		(WindowRef		inForWindow)
-{
-	FSSpec		file;
-	OSStatus	error = noErr;
-	Str255		prompt,
-				title,
-				fileDefaultName;
-	Boolean		good = false;
-	
-	
-	PLstrcpy(prompt, "\pCreate a file to show the window’s control hierarchy.");
-	PLstrcpy(title, "\pCreate Control Hierarchy Dump File");
-	PLstrcpy(fileDefaultName, "\phierarchy-dump.txt");
-	
-	{
-		NavReplyRecord	reply;
-		
-		
-		Alert_ReportOSStatus(error = FileSelectionDialogs_PutFile
-										(prompt, title, fileDefaultName,
-											AppResources_ReturnCreatorCode(), 'TEXT',
-											kPreferences_NavPrefKeyGenericSaveFile,
-											kNavDefaultNavDlogOptions | kNavDontAddTranslateItems,
-											EventLoop_HandleNavigationUpdate, &reply, &file));
-		good = ((error == noErr) && (reply.validRecord));
-	}
-	
-	if (good) error = DumpControlHierarchy(inForWindow, &file);
-	else error = userCanceledErr;
-	
-	if (error != noErr) Sound_StandardAlert();
-}// DebugSelectControlHierarchyDumpFile
-
-
-/*!
-If you want to draw something using a DeviceLoop()
-drawing procedure, use this method.  The graphics
-port is automatically clipped to the specified
-region, preserving and restoring any previous
-clipping regions.  DeviceLoop() is called using
-the given drawing procedure, “user data”, and flags.
-
-IMPORTANT:	On output, the specified clip region
-			will be changed to the intersection of
-			the region on input with the visible
-			region of the current port.
-
-(3.0)
-*/
-void
-DeviceLoopClipAndDraw	(RgnHandle				inoutNewClipRegion,
-						 DeviceLoopDrawingUPP	inProc,
-						 long					inDeviceLoopUserData,
-						 DeviceLoopFlags		inDeviceLoopFlags)
-{
-	RgnHandle		oldClipRgn = Memory_NewRegion();
-	
-	
-	// get the arrangement of this control
-	if ((oldClipRgn != nullptr) && (inoutNewClipRegion != nullptr))
-	{
-		CGrafPtr	currentPort = nullptr;
-		GDHandle	currentDevice = nullptr;
-		Boolean		useDeviceLoop = true;
-		
-		
-		// get a reference to the current graphics port
-		GetGWorld(&currentPort, &currentDevice);
-		
-		// for better performance on Mac OS X, lock the bits of a port
-		// before performing a series of QuickDraw operations in it,
-		// and make the intended drawing area part of the dirty region
-		(OSStatus)LockPortBits(currentPort);
-		(OSStatus)QDAddRegionToDirtyRegion(currentPort, inoutNewClipRegion);
-		
-		// on Mac OS X, DeviceLoop() is unnecessary for buffered ports
-		useDeviceLoop = !QDIsPortBuffered(currentPort);
-		
-		// first determine the exact area in which to draw (the intersection
-		// of the control region and the graphics port’s visible region)
-		GetClip(oldClipRgn);
-		
-		// now clip drawing in the port to the exact area where drawing should occur
-		SetClip(inoutNewClipRegion);
-		
-		if (useDeviceLoop)
-		{
-			// call DeviceLoop() to make sure the window looks right no matter how many monitors it may cross
-			DeviceLoop(inoutNewClipRegion, inProc, inDeviceLoopUserData, inDeviceLoopFlags);
-		}
-		else
-		{
-			// instead of using DeviceLoop(), invoke the drawing procedure using the port pixel map values
-			SInt16			colorDepth = 0;
-			PixMapHandle	portPixelMap = GetPortPixMap(currentPort);
-			GDHandle		device = GetGDevice();
-			
-			
-			colorDepth = (**portPixelMap).pixelSize;
-			InvokeDeviceLoopDrawingUPP(colorDepth, TestDeviceAttribute(device, gdDevType),
-										device, inDeviceLoopUserData, inProc);
-		}
-		
-		// undo the lock done earlier in this block
-		(OSStatus)UnlockPortBits(currentPort);
-		
-		SetClip(oldClipRgn);
-	}
-	if (oldClipRgn != nullptr) Memory_DisposeRegion(&oldClipRgn);
-}// DeviceLoopClipAndDraw
-
-
-/*!
-If you want to draw a user pane control using a
-DeviceLoop() drawing procedure, use this method.
-
-The graphics port is automatically clipped to
-the control’s rectangle (or its even more specific
-structure region, if an appropriate API from the
-Carbon Control Manager is available).  If you are
-drawing a control that is capable of acquiring
-user focus, you should pass "true" for the
-"inExtendClipBoundaryForFocusRing" flag, so that
-the clipping area is extended slightly outside
-the control boundaries to allow for a focus ring.
-
-The DeviceLoop() routine is called using the given
-drawing procedure, passing a “user data” of type
-"ControlInfoConstPtr", and flags set to zero.  In
-other words, by using this routine you gain the
-ability to automatically set up the clipping
-properly, but you have no control over the
-DeviceLoop() flags and your drawing procedure
-*must* interpret its user data as being of type
-"ControlInfoConstPtr".
-
-(3.0)
-*/
-void
-DeviceLoopClipAndDrawControl	(ControlRef							inControl,
-								 SInt16								inControlPartCode,
-								 DialogUtilities_DrawViewProcPtr	inProc,
-								 Boolean							inExtendClipBoundaryForFocusRing)
-{
-	RgnHandle	newClipRgn = Memory_NewRegion();
-	
-	
-	if (newClipRgn != nullptr)
-	{
-		DeviceLoopDrawingUPP		upp = nullptr;
-		My_DeviceLoopControlInfo	controlInfo;
-		OSStatus					error = noErr;
-		
-		
-		// first determine the exact area in which to draw (the intersection
-		// of the control region and the graphics port’s visible region)
-		error = GetControlRegion(inControl, kControlStructureMetaPart, newClipRgn);
-		if (error != noErr)
-		{
-			Rect		controlBounds;
-			
-			
-			error = noErr;
-			GetControlBounds(inControl, &controlBounds);
-			SetRectRgn(newClipRgn, controlBounds.left, controlBounds.top,
-						controlBounds.right, controlBounds.bottom);
-		}
-		
-		InsetRgn(newClipRgn, (inExtendClipBoundaryForFocusRing) ? -4 : -1,
-					(inExtendClipBoundaryForFocusRing) ? -4 : -1);
-		controlInfo.proc = inProc;
-		controlInfo.control = inControl;
-		controlInfo.controlPartCode = inControlPartCode;
-		upp = NewDeviceLoopDrawingUPP(clipAndDrawControlDeviceLoop);
-		DeviceLoopClipAndDraw(newClipRgn, upp, REINTERPRET_CAST(&controlInfo, long), 0L/* flags */);
-		DisposeDeviceLoopDrawingUPP(upp), upp = nullptr;
-		Memory_DisposeRegion(&newClipRgn);
-	}
-}// DeviceLoopClipAndDrawControl
 
 
 /*!
@@ -1523,7 +1307,6 @@ appropriate accessibility description is given to the button.
 HIViewWrap&
 DialogUtilities_SetUpHelpButton		(HIViewWrap&	inoutView)
 {
-	useBestHelpButtonIcon(inoutView);
 	unless (FlagManager_Test(kFlagOS10_3API))
 	{
 		// on Panther, Interface Builder will create a nice
@@ -1631,54 +1414,5 @@ UnixCommandLineLimiterKeyFilterUPP ()
 	
 	return result;
 }// UnixCommandLineLimiterKeyFilterUPP
-
-
-#pragma mark Internal Methods
-namespace {
-
-/*!
-The “real” DeviceLoopDrawingUPP that is called by
-the OS from DeviceLoopClipAndDrawControl().  This
-stand-in routine performs type-casting correctly
-and re-invokes a user-defined C function that then
-does not have to worry about type-casting errors.
-
-(3.0)
-*/
-void
-clipAndDrawControlDeviceLoop	(short		inColorDepth,
-								 short		inDeviceFlags,
-								 GDHandle	inTargetDevice,
-								 long		inControlInfoConstPtr)
-{
-	My_DeviceLoopControlInfoConstPtr	controlInfoPtr = REINTERPRET_CAST(inControlInfoConstPtr,
-																			My_DeviceLoopControlInfoConstPtr);
-	
-	
-	DialogUtilities_InvokeDrawViewProc(controlInfoPtr->proc, inColorDepth, inDeviceFlags, inTargetDevice,
-										controlInfoPtr->control, controlInfoPtr->controlPartCode);
-}// clipAndDrawControlDeviceLoop
-
-
-/*!
-To automatically use the best (32-bit) Help button icon
-available for the specified Help bevel button control,
-use this method.  If Icon Services is not available, a
-system icon resource is automatically used.
-
-(3.0)
-*/
-void
-useBestHelpButtonIcon	(ControlRef		inControl)
-{
-	IconManagerIconRef		icon = IconManager_NewIcon();
-	
-	
-	IconManager_MakeIconSuite(icon, kHelpIconResource, kSelectorAllSmallData);
-	(OSStatus)IconManager_SetButtonIcon(inControl, icon);
-	IconManager_DisposeIcon(&icon);
-}// useBestHelpButtonIcon
-
-} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

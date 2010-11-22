@@ -2,8 +2,8 @@
 
 	IconManager.cp
 	
-	Interface Library 2.0
-	© 1998-2009 by Kevin Grant
+	Interface Library 2.1
+	© 1998-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -47,6 +47,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 typedef SInt16		IconManagerIconType;
 enum
@@ -56,7 +57,10 @@ enum
 	kIconManagerIconTypeOSX = 1
 };
 
+} // anonymous namespace
+
 #pragma mark Types
+namespace {
 
 struct IconManagerIcon
 {
@@ -71,19 +75,23 @@ struct IconManagerIcon
 typedef struct IconManagerIcon		IconManagerIcon;
 typedef IconManagerIcon*			IconManagerIconPtr;
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Boolean		gHaveIconServices = false;
-}
+#pragma mark Variables
+namespace {
+
+Boolean		gHaveIconServices = false;
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static Boolean				getMainResourceFileFSSpec		(FSSpec*);
-static IconManagerIconPtr	refAcquireLock					(IconManagerIconRef);
-static void					refReleaseLock					(IconManagerIconRef, IconManagerIconPtr*);
-static void					releaseIcons					(IconManagerIconPtr);
+IconManagerIconPtr	refAcquireLock		(IconManagerIconRef);
+void				refReleaseLock		(IconManagerIconRef, IconManagerIconPtr*);
+void				releaseIcons		(IconManagerIconPtr);
+
+} // anonymous namespace
 
 
 
@@ -274,9 +282,6 @@ IconManager_MakeIconRef		(IconManagerIconRef		inRef,
 				//			made more complete as necessary, to include mappings for
 				//			other icon suites.  Heck, the implementation should
 				//			probably be different, but I don’t have time for that!
-				//
-				// If you add to this switch, also modify the inverse switch in the
-				// IconManager_MakeIconSuite() routine.
 				switch (inIconServicesDescription)
 				{
 				case kAlertStopIcon:
@@ -397,249 +402,6 @@ IconManager_MakeIconRefFromBundleFile	(IconManagerIconRef		inRef,
 	
 	return result;
 }// MakeIconRefFromBundleFile
-
-
-/*!
-To force an abstract icon to render itself based on data
-in an icon suite, use this method.  The specified icon
-reference must already exist.
-
-Since Icon Services data is more desirable, this routine
-will automatically create an Icon Services icon if the
-specified icon suite resource ID corresponds to an icon
-that has an Icon Services equivalent, and Mac OS 8.5 or
-later is in use.
-
-(1.0)
-*/
-OSStatus
-IconManager_MakeIconSuite	(IconManagerIconRef		inRef,
-							 SInt16					inSuiteResourceID,
-							 IconSelectorValue		inWhichIcons)
-{
-	IconManagerIconPtr		ptr = refAcquireLock(inRef);
-	OSStatus				result = noErr;
-	
-	
-	if (ptr == nullptr) result = memPCErr;
-	else
-	{
-		Boolean		canGetRef = false;
-		
-		
-		// get rid of any previous icon data
-		releaseIcons(ptr);
-		
-		// check for an Icon Services equivalent
-		if (gHaveIconServices)
-		{
-			// first look for a system icon
-			{
-				SInt16		volume = kOnSystemDisk;				// most icons use this
-				OSType		iconCreator = kSystemIconsCreator;	// most icons use this
-				OSType		iconType = '----';
-				
-				
-				// NOTE:	This switch statement is infinitely expandable; I’ve only
-				//			included generic icons that I need.  The list should be
-				//			made more complete as necessary, to include mappings for
-				//			other Icon Services icons.  Heck, the implementation should
-				//			probably be different, but I don’t have time for that!
-				//
-				// If you add to this switch, also modify the inverse switch in the
-				// IconManager_MakeIconRef() routine.
-				switch (inSuiteResourceID) // look for a system icon, then
-				{
-				case 0:
-					iconType = kAlertStopIcon;
-					break;
-				
-				case 1:
-					iconType = kAlertNoteIcon;
-					break;
-				
-				case 2:
-					iconType = kAlertCautionIcon;
-					break;
-				
-				case kGenericDocumentIconResource:
-					iconType = kGenericDocumentIcon;
-					break;
-				
-				case kGenericFolderIconResource:
-					iconType = kGenericFolderIcon;
-					break;
-				
-				case kHelpIconResource:
-					iconType = kHelpIcon;
-					break;
-				
-				default:
-					break;
-				}
-				
-				if (iconType == '----') canGetRef = false;
-				else
-				{
-					ptr->type = kIconManagerIconTypeOSX;
-					canGetRef = (GetIconRef(volume, iconCreator, iconType, &ptr->data.OSX) == noErr);
-				}
-			}
-			
-			// if that fails, look for an application icon
-			unless (canGetRef)
-			{
-				FSSpec		mainApplicationResourceFile;
-				
-				
-				if (getMainResourceFileFSSpec(&mainApplicationResourceFile))
-				{
-					// Use the process FSSpec of the application to get at its resource
-					// file.  Since every Icon Manager icon is unique, the easiest way
-					// to ensure that separate references are created is to coerce the
-					// resource ID into an icon type four-character code.  If a
-					// static value were chosen, then all icons would be the same!!!
-					if (RegisterIconRefFromResource(AppResources_ReturnCreatorCode(),
-													(OSType)inSuiteResourceID,
-													&mainApplicationResourceFile, inSuiteResourceID,
-													&ptr->data.OSX) == noErr)
-					{
-						ptr->type = kIconManagerIconTypeOSX;
-						canGetRef = (ptr->data.OSX != nullptr);
-					}
-				}
-			}
-		}
-		
-		// if no Icon Services icon can be found, use the specified icon suite resource
-		unless (canGetRef)
-		{
-			ptr->type = kIconManagerIconTypeOS8;
-			result = GetIconSuite(&ptr->data.OS8, inSuiteResourceID, inWhichIcons);
-		}
-		
-		refReleaseLock(inRef, &ptr);
-	}
-	
-	return result;
-}// MakeIconSuite
-
-
-/*!
-To force an abstract icon to render itself based on data
-in a 'cicn' resource, use this method.  The specified icon
-reference must already exist.
-
-Since Icon Services data is more desirable, this routine
-will automatically create an Icon Services icon if the
-specified color icon resource ID corresponds to an icon
-that has an Icon Services equivalent, and Mac OS 8.5 or
-later is in use.  This is very convenient for specifying
-alert icons.
-
-(1.0)
-*/
-OSStatus
-IconManager_MakeOldColorIcon	(IconManagerIconRef		inRef,
-								 SInt16					inIconResourceID_cicn)
-{
-	IconManagerIconPtr		ptr = refAcquireLock(inRef);
-	OSStatus				result = noErr;
-	
-	
-	if (ptr == nullptr) result = memPCErr;
-	else
-	{
-		Boolean		canGetRef = false;
-		
-		
-		// get rid of any previous icon data
-		releaseIcons(ptr);
-		
-		// check for an Icon Services equivalent
-		if (gHaveIconServices)
-		{
-			// first look for a system icon
-			{
-				SInt16		volume = kOnSystemDisk;				// most icons use this
-				OSType		iconCreator = kSystemIconsCreator;	// most icons use this
-				OSType		iconType = '----';
-				
-				
-				// NOTE:	This switch statement is infinitely expandable; I’ve only
-				//			included generic icons that I need.  The list should be
-				//			made more complete as necessary, to include mappings for
-				//			other Icon Services icons.  Heck, the implementation should
-				//			probably be different, but I don’t have time for that!
-				//
-				// If you add to this switch, also modify the inverse switch in the
-				// IconManager_MakeIconRef() routine.
-				switch (inIconResourceID_cicn) // look for a system icon, then
-				{
-				case 0:
-					iconType = kAlertStopIcon;
-					break;
-				
-				case 1:
-					iconType = kAlertNoteIcon;
-					break;
-				
-				case 2:
-					iconType = kAlertCautionIcon;
-					break;
-				
-				default:
-					break;
-				}
-				
-				if (iconType == '----') canGetRef = false;
-				else
-				{
-					ptr->type = kIconManagerIconTypeOSX;
-					canGetRef = (GetIconRef(volume, iconCreator, iconType, &ptr->data.OSX) == noErr);
-				}
-			}
-			
-			// if that fails, look for an application icon
-			unless (canGetRef)
-			{
-				FSSpec		mainApplicationResourceFile;
-				
-				
-				if (getMainResourceFileFSSpec(&mainApplicationResourceFile))
-				{
-					// Use the process FSSpec of the application to get at its resource
-					// file.  Since every Icon Manager icon is unique, the easiest way
-					// to ensure that separate references are created is to coerce the
-					// resource ID into an icon type four-character code.  If a
-					// static value were chosen, then all icons would be the same!!!
-					if (RegisterIconRefFromResource(AppResources_ReturnCreatorCode(),
-													(OSType)inIconResourceID_cicn,
-													&mainApplicationResourceFile, inIconResourceID_cicn,
-													&ptr->data.OSX) == noErr)
-					{
-						ptr->type = kIconManagerIconTypeOSX;
-						canGetRef = (ptr->data.OSX != nullptr);
-					}
-				}
-			}
-		}
-		
-		// if no Icon Services icon can be found, use the specified color icon resource
-		unless (canGetRef)
-		{
-			ptr->type = kIconManagerIconTypeOS7;
-			ptr->data.OS7 = GetCIcon(inIconResourceID_cicn);
-			result = (ptr->data.OS7 == nullptr)
-						? STATIC_CAST(resNotFound, OSStatus)
-						: STATIC_CAST(noErr, OSStatus); // correct?
-		}
-		
-		refReleaseLock(inRef, &ptr);
-	}
-	
-	return result;
-}// MakeOldColorIcon
 
 
 /*!
@@ -900,57 +662,7 @@ IconManager_SetToolbarItemIcon	(HIToolbarItemRef		inItem,
 
 
 #pragma mark Internal Methods
-
-/*!
-Fills in a file system specification record
-with information about the main resource
-file for the running application.  On Mac OS 8,
-this is that of the application itself; but
-on Mac OS X, it is the specification of the
-appropriate Localized.rsrc file in the main
-bundle.
-
-Returns "true" only if the file can be found.
-
-(1.0)
-*/
-static Boolean
-getMainResourceFileFSSpec	(FSSpec*	outFSSpecPtr)
-{
-	Boolean			result = false;
-	CFStringRef		mainResourceFileName = CFStringCreateWithPascalString
-											(kCFAllocatorDefault, "\pLocalized.rsrc",
-											CFStringGetSystemEncoding());
-	
-	
-	if (mainResourceFileName != nullptr)
-	{
-		CFURLRef		resourceFileURL = nullptr;
-		FSRef			resourceFileRef;
-		
-		
-		resourceFileURL = CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(),
-													mainResourceFileName, nullptr/* type */,
-													nullptr/* no particular subdirectory */);
-		if (resourceFileURL != nullptr)
-		{
-			if (CFURLGetFSRef(resourceFileURL, &resourceFileRef))
-			{
-				OSStatus	error = noErr;
-				
-				
-				error = FSGetCatalogInfo(&resourceFileRef, kFSCatInfoNone, nullptr/* catalog info */,
-											nullptr/* file name */, outFSSpecPtr, nullptr/* parent */);
-				if (error == noErr) result = true;
-			}
-			CFRelease(resourceFileURL);
-		}
-		CFRelease(mainResourceFileName);
-	}
-	
-	return result;
-}// getMainResourceFileFSSpec
-
+namespace {
 
 /*!
 To acquire a pointer to the internal structure,
@@ -958,7 +670,7 @@ given a reference to it, use this method.
 
 (1.0)
 */
-static IconManagerIconPtr
+IconManagerIconPtr
 refAcquireLock	(IconManagerIconRef		inRef)
 {
 	return ((IconManagerIconPtr)inRef);
@@ -973,7 +685,7 @@ nullptr.
 
 (1.0)
 */
-static void
+void
 refReleaseLock	(IconManagerIconRef		UNUSED_ARGUMENT(inRef),
 				 IconManagerIconPtr*	inoutPtr)
 {
@@ -990,7 +702,7 @@ else.
 
 (1.0)
 */
-static void
+void
 releaseIcons	(IconManagerIconPtr		inPtr)
 {
 	if (inPtr != nullptr)
@@ -1020,5 +732,7 @@ releaseIcons	(IconManagerIconPtr		inPtr)
 		}
 	}
 }// releaseIcons
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

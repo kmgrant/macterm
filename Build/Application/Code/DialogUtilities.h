@@ -12,7 +12,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -56,37 +56,6 @@
 
 
 
-#pragma mark Callbacks
-
-/*!
-Device Loop Draw-Control Routine
-
-Used to enforce type safety when using the
-DeviceLoopClipAndDrawControl() routine.
-Specifically, instead of having a normal
-DeviceLoopDrawingUPP, an internal interface
-to DeviceLoop() is used that casts the user
-data to an appropriate type and then invokes
-this strongly-typed callback.
-*/
-typedef void (*DialogUtilities_DrawViewProcPtr)	(short				inColorDepth,
-												 short				inDeviceFlags,
-												 GDHandle			inTargetDevice,
-												 ControlRef			inControl,
-												 ControlPartCode	inControlPartCode);
-inline void
-DialogUtilities_InvokeDrawViewProc	(DialogUtilities_DrawViewProcPtr	inProc,
-									 short								inColorDepth,
-									 short								inDeviceFlags,
-									 GDHandle							inTargetDevice,
-									 ControlRef							inControl,
-									 ControlPartCode					inControlPartCode)
-{
-	(*inProc)(inColorDepth, inDeviceFlags, inTargetDevice, inControl, inControlPartCode);
-}
-
-
-
 #pragma mark Public Methods
 
 #define	BooleanToCheckBoxValue(a)			((a) ? (kControlCheckBoxCheckedValue) : (kControlCheckBoxUncheckedValue))
@@ -109,21 +78,6 @@ OSStatus
 
 void
 	DialogUtilities_DisposeControlsBasedOnWindowNIB		(std::vector< ControlRef > const&	inControlArray);
-
-void
-	DebugSelectControlHierarchyDumpFile		(WindowRef				inForWindow);
-
-void
-	DeviceLoopClipAndDraw					(RgnHandle				inNewClipRegion,
-											 DeviceLoopDrawingUPP	inProc,
-											 long					inDeviceLoopUserData,
-											 DeviceLoopFlags		inDeviceLoopFlags);
-
-void
-	DeviceLoopClipAndDrawControl			(ControlRef						inControl,
-											 SInt16							inControlPartCode,
-											 DialogUtilities_DrawViewProcPtr inProc,
-											 Boolean						inExtendClipBoundaryForFocusRing = false);
 
 void
 	DialogUtilities_DisposeDuplicateControl	(ControlRef				inDuplicatedControl);

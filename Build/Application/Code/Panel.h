@@ -425,11 +425,6 @@ void
 										 void*						inAuxiliaryDataPtr);
 
 void
-	Panel_SetIconSuite					(Panel_Ref					inRef,
-										 SInt16						inSuiteResourceID,
-										 IconSelectorValue			inWhichIcons);
-
-void
 	Panel_SetKind						(Panel_Ref					inRef,
 										 Panel_Kind					inDescriptor);
 

@@ -63,10 +63,6 @@ OSStatus
 											 AEDesc*			outDescPtr);
 
 OSStatus
-	BasicTypesAE_CreateFileOrFolderDesc		(FSSpec const*		inFSSpecPtr,
-											 AEDesc*			outDescPtr);
-
-OSStatus
 	BasicTypesAE_CreateFileOrFolderDesc		(FSRef const&		inFSRef,
 											 AEDesc*			outDescPtr);
 

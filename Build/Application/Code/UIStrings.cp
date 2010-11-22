@@ -1808,11 +1808,8 @@ Locates the specified file or folder name and calls
 FSMakeFSRefUnicode() with the given parent directory.  The
 result is an FSRef with a copy of the given file name string.
 
-Note that unlike UIStrings_MakeFSSpec(), this routine cannot be
-used to refer to nonexistent files and folders.
-
 \retval noErr
-if the FSSpec is created successfully
+if the FSRef is created successfully
 
 \retval paramErr
 if no file name with the given ID exists
@@ -1838,7 +1835,7 @@ UIStrings_CreateFileOrDirectory		(FSRef const&						inParentRef,
 	
 	stringResult = UIStrings_Copy(inWhichString, nameCFString);
 	
-	// if the string was obtained, call FSMakeFSSpec
+	// if the string was obtained, find the file
 	if (stringResult.ok())
 	{
 		UniCharCount const	kBufferSize = CFStringGetLength(nameCFString);
@@ -1884,13 +1881,11 @@ Locates the specified file or folder name and calls
 FSMakeFSRefUnicode() with the given parent directory.  The result
 is an FSRef with a copy of the given file name string.
 
-Note that unlike UIStrings_MakeFSSpec(), this routine cannot be
-used to refer to nonexistent files and folders.  If your initial
-filename is nonexistent, UIStrings_CreateFileOrDirectory() can be
-used to create the object and return a valid record.
+If the file does not exist, UIStrings_CreateFileOrDirectory() can
+be used to create the object and return a valid record.
 
 \retval noErr
-if the FSSpec is created successfully
+if the FSRef is created successfully
 
 \retval paramErr
 if no file name with the given ID exists
@@ -1913,7 +1908,7 @@ UIStrings_MakeFSRef		(FSRef const&						inParentRef,
 	
 	stringResult = UIStrings_Copy(inWhichString, nameCFString);
 	
-	// if the string was obtained, call FSMakeFSSpec
+	// if the string was obtained, find the file
 	if (stringResult.ok())
 	{
 		UniCharCount const	kBufferSize = CFStringGetLength(nameCFString);
@@ -1934,73 +1929,5 @@ UIStrings_MakeFSRef		(FSRef const&						inParentRef,
 	
 	return result;
 }// MakeFSRef
-
-
-/*!
-Locates the specified file or folder name and calls
-FSMakeFSSpec() with the given volume and directory
-ID information.  The result is an FSSpec with a
-Pascal string copy of the given file name string
-(unless FSMakeFSSpec() does any further munging).
-
-IMPORTANT: This routine is essentially unfriendly to
-           localization.  UIStrings_MakeFSRef() is
-		   preferred.
-
-\retval noErr
-if the FSSpec is created successfully
-
-\retval paramErr
-if no file name with the given ID exists
-
-\retval kTECNoConversionPathErr
-if conversion is not possible (arbitrary return value,
-used even without Text Encoding Converter)
-
-\retval (other)
-if an OS error occurred (note that "fnfErr" is
-common and simply means that you are trying to
-create a specification for a nonexistent file; that
-may be what you are intending to do)
-
-(3.0)
-*/
-OSStatus
-UIStrings_MakeFSSpec	(SInt16							inVRefNum,
-						 SInt32							inDirID,
-						 UIStrings_FileOrFolderCFString	inWhichString,
-						 FSSpec*						outFSSpecPtr)
-{
-	CFStringRef			nameCFString = nullptr;
-	UIStrings_Result	stringResult = kUIStrings_ResultOK;
-	OSStatus			result = noErr;
-	
-	
-	stringResult = UIStrings_Copy(inWhichString, nameCFString);
-	
-	// if the string was obtained, call FSMakeFSSpec
-	if (stringResult == kUIStrings_ResultOK)
-	{
-		Str255		name;
-		
-		
-		if (CFStringGetPascalString(nameCFString, name, sizeof(name), kCFStringEncodingMacRoman/* presumed; but this always has been */))
-		{
-			// got Pascal string representation OK; so, attempt to create FSSpec!
-			result = FSMakeFSSpec(inVRefNum, inDirID, name, outFSSpecPtr);
-		}
-		else
-		{
-			// some kind of conversion error...
-			result = kTECNoConversionPathErr;
-		}
-	}
-	else
-	{
-		result = paramErr;
-	}
-	
-	return result;
-}// MakeFSSpec
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -939,8 +939,7 @@ unless the user has at least OS 8.5.  If OS 8.5 or
 later is not in use, an attempt is made to find an
 equivalent icon suite, which may fail.
 
-See also Panel_SetIconRefFromBundleFile() and
-Panel_SetIconSuite().
+See also Panel_SetIconRefFromBundleFile().
 
 (3.0)
 */
@@ -967,7 +966,7 @@ Panel_SetIconRef	(Panel_Ref	inRef,
 Uses an Icon Services icon set to describe a panel,
 but based on a flat file in the Mac OS X bundle.
 
-See also Panel_SetIconRef() and Panel_SetIconSuite().
+See also Panel_SetIconRef().
 
 (3.0)
 */
@@ -988,34 +987,6 @@ Panel_SetIconRefFromBundleFile	(Panel_Ref		inRef,
 														inIconServicesDescription);
 	}
 }// SetIconRefFromBundleFile
-
-
-/*!
-Uses a traditional icon suite to describe a panel.
-An Icon Services reference will automatically take
-effect if OS 8.5 or later is in use and an equivalent
-icon can be found.  If no equivalent can be found,
-the icon suite resource is used.
-
-See also Panel_SetIconRefFromBundleFile() and
-Panel_SetIconRef().
-
-(3.0)
-*/
-void
-Panel_SetIconSuite	(Panel_Ref			inRef,
-					 SInt16				inSuiteResourceID,
-					 IconSelectorValue	inWhichIcons)
-{
-	if (nullptr != inRef)
-	{
-		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
-		
-		
-		(OSStatus)IconManager_MakeIconSuite(ptr->customizerWritable.icon,
-											inSuiteResourceID, inWhichIcons);
-	}
-}// SetIconSuite
 
 
 /*!
@@ -1078,10 +1049,6 @@ buttons, menus, lists or tabs that select amongst
 active panels.  Since you should not assume how your
 panel will be displayed in a user interface, provide a
 label whether you need it or not.
-
-See also Panel_SetIconSuite(), which lets you specify
-a set of icons for your panel that is often paired
-with a label in windows.
 
 The Core Foundation string is retained.
 

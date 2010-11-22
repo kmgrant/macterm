@@ -612,6 +612,37 @@ CocoaBasic_SetDockTileToDefaultAppIcon ()
 
 
 /*!
+Uses Cocoa NSFileManager APIs to set the HFS file type and
+creator codes for the file at the given path.  Returns true
+if both were set successfully.
+
+(1.4)
+*/
+Boolean
+CocoaBasic_SetFileTypeCreator	(CFStringRef	inPath,
+								 OSType			inNewType,
+								 OSType			inNewCreator)
+{
+	AutoPool		_;
+	Boolean			result = false;
+	NSDictionary*	attributeDict = [NSDictionary dictionaryWithObjectsAndKeys:
+																				[NSNumber numberWithUnsignedLong:inNewType],
+																				NSFileHFSTypeCode,
+																				[NSNumber numberWithUnsignedLong:inNewCreator],
+																				NSFileHFSCreatorCode,
+																				nil];
+	
+	
+	if ([[NSFileManager defaultManager] changeFileAttributes:attributeDict atPath:(NSString*)inPath])
+	{
+		result = true;
+	}
+	
+	return result;
+}// SetFileTypeCreator
+
+
+/*!
 Returns true if a computer voice is currently speaking.
 
 (1.3)

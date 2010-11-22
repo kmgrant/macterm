@@ -3,7 +3,7 @@
 	FileSelectionDialogs.cp
 	
 	Interface Library 1.3
-	© 1998-2009 by Kevin Grant
+	© 1998-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -32,20 +32,13 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <CFRetainRelease.h>
+#include <CocoaBasic.h>
 #include <Embedding.h>
 #include <FileSelectionDialogs.h>
 #include <Localization.h>
 #include <MemoryBlocks.h>
 #include <SoundSystem.h>
-
-
-
-#pragma mark Internal Method Prototypes
-namespace {
-
-void		setUpWTitleProcessName	(NavDialogOptions*, ConstStringPtr);
-
-}// anonymous namespace
 
 
 
@@ -175,25 +168,24 @@ FileSelectionDialogs_CreateOrFindUserSaveFile	(NavReplyRecord const&	inReply,
 			else
 			{
 				// file did not previously exist; create it
-				FSSpec	fileSpec;
-				
-				
 				result = FSCreateFileUnicode(&saveDirectory, fileNameLength, buffer, 0/* catalog info bits */,
-												nullptr/* catalog info */, &outUserSaveFile, &fileSpec);
+												nullptr/* catalog info */, &outUserSaveFile, nullptr/* spec record */);
 				
 				// now set the old creator and type info; if this fails it
 				// probably just means the file system is not HFS-based
 				if (noErr == result)
 				{
-					FileInfo	fileInfo;
+					CFURLRef	absolutePathURL = CFURLCreateFromFSRef(kCFAllocatorDefault, &outUserSaveFile);
 					
 					
-					// retrieve current settings so only some things change
-					if (noErr == FSpGetFInfo(&fileSpec, REINTERPRET_CAST(&fileInfo, FInfo*)))
+					if (nullptr != absolutePathURL)
 					{
-						fileInfo.fileType = inNewFileType;
-						fileInfo.fileCreator = inNewFileCreator;
-						(OSStatus)FSpSetFInfo(&fileSpec, REINTERPRET_CAST(&fileInfo, FInfo const*));
+						CFRetainRelease		absolutePathCFString(CFURLCopyFileSystemPath(absolutePathURL, kCFURLPOSIXPathStyle),
+																	true/* is retained */);
+						
+						
+						(Boolean)CocoaBasic_SetFileTypeCreator(absolutePathCFString.returnCFStringRef(), inNewFileType, inNewFileCreator);
+						CFRelease(absolutePathURL), absolutePathURL = nullptr;
 					}
 				}
 			}
@@ -203,121 +195,5 @@ FileSelectionDialogs_CreateOrFindUserSaveFile	(NavReplyRecord const&	inReply,
 	}
 	return result;
 }// CreateOrFindUserSaveFile
-
-
-/*!
-This routine is adequate for 99% of “save file” dialog
-needs on Mac OS 9.
-
-(1.0)
-*/
-OSStatus
-FileSelectionDialogs_PutFile	(ConstStr255Param		inPromptMessage,
-								 ConstStr255Param		inDialogTitle,
-								 ConstStr255Param		inDefaultFileNameOrNull,
-								 OSType					inApplicationSignature,
-								 OSType					inFileSignature,
-								 UInt32					inPrefKey,
-								 NavDialogOptionFlags	inFlags,
-								 NavEventProcPtr		inEventProc,
-								 NavReplyRecord*		outReplyPtr,
-								 FSSpec*				outFileSpecPtr)
-{
-	NavDialogOptions	dialogOptions;
-	NavEventUPP			eventUPP = NewNavEventUPP(inEventProc);
-	OSStatus			result = noErr;
-	
-	
-	result = NavGetDefaultDialogOptions(&dialogOptions);
-	dialogOptions.dialogOptionFlags = 0;
-	dialogOptions.dialogOptionFlags |= inFlags;
-	
-	// add customized settings
-	PLstrcpy(dialogOptions.message, inPromptMessage);
-	setUpWTitleProcessName(&dialogOptions, inDialogTitle);
-	if (nullptr == inDefaultFileNameOrNull) PLstrcpy(dialogOptions.savedFileName, EMPTY_PSTRING);
-	else PLstrcpy(dialogOptions.savedFileName, inDefaultFileNameOrNull);
-	dialogOptions.preferenceKey = inPrefKey;
-	
-	Embedding_DeactivateFrontmostWindow();
-	result = NavPutFile(nullptr, outReplyPtr, &dialogOptions, eventUPP,
-						inFileSignature, inApplicationSignature, nullptr);
-	Embedding_RestoreFrontmostWindow();
-	DisposeNavEventUPP(eventUPP), eventUPP = nullptr;
-	
-	if (memFullErr == result) result = userCanceledErr;
-	
-	if ((noErr == result) && (outReplyPtr->validRecord))
-	{
-		// grab the target FSSpec from the AEDesc for saving:	
-		AEDesc 		resultDesc;
-		AEKeyword	keyword;
-		Boolean		failed = false;
-		
-		
-		result = AEGetNthDesc(&(outReplyPtr->selection), 1, typeFSS, &keyword, &resultDesc);
-		if (noErr == result)
-		{
-			(OSStatus)AEGetDescData(&resultDesc, outFileSpecPtr, sizeof(FSSpec));
-		}
-		
-		if (!outReplyPtr->replacing)
-		{
-			if (FSpCreate(outFileSpecPtr, inApplicationSignature,
-								inFileSignature, outReplyPtr->keyScript))
-			{
-				Sound_StandardAlert();
-				failed = true;
-			}
-		}
-		
-		if (!failed) AEDisposeDesc(&resultDesc);
-	}
-	return result;
-}// PutFile
-
-
-#pragma mark Internal Methods
-namespace {
-
-/*!
-To automatically set up a Navigation Services
-dialog options structure to contain a window
-title consisting of the specified title, a
-colon, and the name of the current process as
-a “client name”, use this method.
-
-On output, the "windowTitle" and "clientName"
-fields of the NavDialogOptions structure are
-filled in.
-
-(1.0)
-*/
-void
-setUpWTitleProcessName		(NavDialogOptions*		inoutDataPtr,
-							 ConstStringPtr			inTitle)
-{
-	if ((nullptr != inoutDataPtr) && (nullptr != inTitle))
-	{
-		Str255							titleCopy;
-		StringSubstitutionSpec const	metaMappings[] =
-										{
-											{ kStringSubstitutionDefaultTag1, titleCopy },
-											{ kStringSubstitutionDefaultTag2, inoutDataPtr->clientName }
-										};
-		
-		
-		PLstrcpy(titleCopy, inTitle);
-		
-		// %a = (given title), %b = (process name)
-		PLstrcpy(inoutDataPtr->windowTitle, "\p%a: %b"); // LOCALIZE THIS
-		Localization_GetCurrentApplicationName(inoutDataPtr->clientName);
-		StringUtilities_PBuild(inoutDataPtr->windowTitle,
-								sizeof(metaMappings) / sizeof(StringSubstitutionSpec),
-								metaMappings);
-	}
-}// setUpWTitleProcessName
-
-} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

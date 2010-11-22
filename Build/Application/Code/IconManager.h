@@ -19,8 +19,8 @@
 */
 /*###############################################################
 
-	Interface Library 2.0
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.1
+	© 1998-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -81,15 +81,6 @@ OSStatus
 											 CFStringRef				inFileNameWithoutExtension,
 											 OSType						inIconServicesCreator,
 											 OSType						inIconServicesDescription);
-
-OSStatus
-	IconManager_MakeIconSuite				(IconManagerIconRef			inRef,
-											 SInt16						inSuiteResourceID,
-											 IconSelectorValue			inWhichIcons);
-
-OSStatus
-	IconManager_MakeOldColorIcon			(IconManagerIconRef			inRef,
-											 SInt16						inIconResourceID_cicn);
 
 //@}
 

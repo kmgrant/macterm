@@ -276,7 +276,6 @@ Session::handle_file	(std::string	inPathname)
 		{
 			LSItemInfoRecord	fileInfo;
 			FSRef				fileRef;
-			FSSpec				fileSpec;
 			OSStatus			error = noErr;
 			
 			
@@ -290,19 +289,13 @@ Session::handle_file	(std::string	inPathname)
 					
 					
 					error = FSGetCatalogInfo(&fileRef, kFSCatInfoNone, nullptr/* catalog info */,
-												&nameBuffer, &fileSpec, nullptr/* parent directory */);
+												&nameBuffer, nullptr/* spec record */, nullptr/* parent directory */);
 				}
 			}
 			
-			if ((fileInfo.creator == 'ToyS' || fileInfo.filetype == 'osas') ||
-				(extensionName == "scpt"))
-			{
-				// it appears to be a script; run it
-				AppleEventUtilities_ExecuteScriptFile(&fileSpec, true/* notify user of errors */);
-			}
-			else if ((fileInfo.creator == AppResources_ReturnCreatorCode() &&
-						fileInfo.filetype == kApplicationFileTypeSessionDescription) ||
-						(extensionName == "session"))
+			if ((fileInfo.creator == AppResources_ReturnCreatorCode() &&
+					fileInfo.filetype == kApplicationFileTypeSessionDescription) ||
+					(extensionName == "session"))
 			{
 				// read a configuration set
 				SessionDescription_ReadFromFile(fileRef);

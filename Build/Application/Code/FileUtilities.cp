@@ -3,7 +3,7 @@
 	FileUtilities.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -50,60 +50,6 @@
 
 
 #pragma mark Public Methods
-
-/*!
-Determines if the specified file is an alias, and if
-so, modifies the file specification to point to the
-original file (if possible).  It does this by checking
-for the “is alias” Finder Info bit, and if set, by
-reading the first alias resource in the file, and if
-successful, by resolving the alias record in that
-resource.  In other words, it resolves the damned
-alias without any pretty stuff.  For some reason, no
-Alias Manager API is quite this simple (sigh).
-
-(3.0)
-*/
-OSStatus
-FileUtilities_EnsureOriginalFile	(FSSpec*		inoutFSSpecPtr)
-{
-	FileInfo		fileInfo;
-	OSStatus		result = noErr;
-	
-	
-	// if the file is an alias, resolve it first
-	result = FSpGetFInfo(inoutFSSpecPtr, (FInfo*)&fileInfo);
-	if ((result == noErr) && (fileInfo.finderFlags & kIsAlias))
-	{
-		AliasHandle		fileAlias = nullptr;
-		SInt16			aliasResourceFile = -1;
-		
-		
-		aliasResourceFile = FSpOpenResFile(inoutFSSpecPtr, fsRdPerm);
-		result = ResError();
-		if (result == noErr)
-		{
-			UseResFile(aliasResourceFile);
-			if (Count1Resources(rAliasType) <= 0) result = resNotFound;
-			else
-			{
-				// get the alias record and resolve it
-				fileAlias = (AliasHandle)Get1IndResource(rAliasType, 1);
-				result = ResError();
-				
-				if (result == noErr)
-				{
-					Boolean		aliasChanged = false;
-					
-					
-					result = ResolveAlias(nullptr/* base */, fileAlias, inoutFSSpecPtr, &aliasChanged);
-				}
-			}
-		}
-	}
-	return result;
-}// EnsureOriginalFile
-
 
 /*!
 Use this convenient routine to fire an Apple Event
@@ -153,8 +99,7 @@ which will cause the files to be opened (as well
 as having the action recorded into scripts, if
 recording is in progress).
 
-Currently, the list must contain FSSpec or FSRef
-entries.
+Currently, the list must contain FSRef entries.
 
 (3.1)
 */
@@ -259,7 +204,7 @@ FileUtilities_OpenTemporaryFile		(FSRef&		outTemporaryFile)
 										CFSTR("mactelnet%u.tmp")/* format */, count);
 				//Console_WriteValueCFString("attempting to create temporary file with name", kBufferAsCFString); // debug
 				error = FSCreateFileUnicode(&temporaryFilesFolder, CFStringGetLength(kBufferAsCFString), fileName,
-											kFSCatInfoNone, nullptr/* catalog info */, &outTemporaryFile, nullptr/* FSSpec */);
+											kFSCatInfoNone, nullptr/* catalog info */, &outTemporaryFile, nullptr/* spec record */);
 				++count;
 			} while ((errFSForkExists == error) || (dupFNErr == error));
 			

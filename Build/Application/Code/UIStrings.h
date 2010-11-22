@@ -465,13 +465,6 @@ OSStatus
 										 UIStrings_FileOrFolderCFString					inWhichString,
 										 FSRef&											outFSRef);
 
-// CALLS FSMakeFSSpec()
-OSStatus
-	UIStrings_MakeFSSpec				(SInt16											inVRefNum,
-										 SInt32											inDirID,
-										 UIStrings_FileOrFolderCFString					inWhichString,
-										 FSSpec*										outFSSpecPtr);
-
 //@}
 
 #endif

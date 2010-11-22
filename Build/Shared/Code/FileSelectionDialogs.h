@@ -4,7 +4,7 @@
 /*###############################################################
 
 	Interface Library 1.3
-	© 1998-2009 by Kevin Grant
+	© 1998-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -42,24 +42,6 @@
 
 
 #pragma mark Public Methods
-
-//!\name Displaying Navigation Services Dialog Boxes
-//@{
-
-// PRESENTS AN APPLICATION-MODAL DIALOG
-OSStatus
-	FileSelectionDialogs_PutFile		(ConstStringPtr			inPromptMessage,
-										 ConstStringPtr			inDialogTitle,
-										 ConstStringPtr			inDefaultFileNameOrNull,
-										 OSType					inApplicationSignature,
-										 OSType					inFileSignature,
-										 UInt32					inPrefKey,
-										 NavDialogOptionFlags	inFlags,
-										 NavEventProcPtr		inEventProc,
-										 NavReplyRecord*		outReplyPtr,
-										 FSSpec*				outFileSpecPtr);
-
-//@}
 
 //!\name Utility Routines For Use With Navigation Services
 //@{

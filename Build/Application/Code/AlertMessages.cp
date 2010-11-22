@@ -1685,16 +1685,6 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 			SetControlTextWithCFString(ptr->textTitle, ptr->titleCFString.returnCFStringRef());
 		}
 		
-		// use a 32-bit icon for the help button, if possible
-		{
-			IconManagerIconRef		icon = IconManager_NewIcon();
-			
-			
-			IconManager_MakeIconSuite(icon, kHelpIconResource, kSelectorAllSmallData);
-			(OSStatus)IconManager_SetButtonIcon(ptr->buttonHelp, icon);
-			IconManager_DisposeIcon(&icon);
-		}
-		
 		//
 		// set up dialog items to reflect alert parameters
 		//
