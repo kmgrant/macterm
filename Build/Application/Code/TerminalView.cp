@@ -416,6 +416,7 @@ Boolean				cursorBlinks						(My_TerminalViewPtr);
 TerminalView_CursorType	cursorType						(My_TerminalViewPtr);
 OSStatus			dragTextSelection					(My_TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
 Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, UInt16, UInt16, UInt16);
+void				drawSymbolFontLetter				(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char, Boolean);
 void				drawTerminalScreenRunOp				(TerminalScreenRef, UniChar const*, UInt16, Terminal_LineRef,
 														 UInt16, TerminalTextAttributes, void*);
 void				drawTerminalText					(My_TerminalViewPtr, CGContextRef, CGRect const&, Rect const&, UniChar const*,
@@ -4348,6 +4349,63 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 
 
 /*!
+This is only intended to be used by drawVTGraphicsGlyph(),
+to handle glyphs that happen to be Greek letters or other
+Mac Roman characters that the Symbol font can render.
+
+It is a TEMPORARY solution for the fact that the terminal
+renderer cannot handle complete Unicode, because of
+QuickDraw legacy.
+
+(4.0)
+*/
+void
+drawSymbolFontLetter	(My_TerminalViewPtr		UNUSED_ARGUMENT(inTerminalViewPtr),
+						 CGContextRef			UNUSED_ARGUMENT(inDrawingContext),
+						 CGRect const&			UNUSED_ARGUMENT(inBoundaries),
+						 UniChar				UNUSED_ARGUMENT(inUnicode),
+						 char					inMacRomanForQuickDraw, // DEPRECATED
+						 Boolean				UNUSED_ARGUMENT(inIsDoubleWidth))
+{
+	// Greek character; “cheat” and try to use the Symbol font for this
+	// (changing the font on the fly is probably insanely inefficient,
+	// but this is all a temporary hack anyway to make up for the lack
+	// of full Unicode rendering support, thanks to QuickDraw legacy)
+	if (FMGetFontFamilyFromName("\pSymbol") != kInvalidFontFamily)
+	{
+		// this is in Mac Roman encoding
+		UInt8	text[] = { inMacRomanForQuickDraw };
+		SInt16	oldFontID = 0;
+		SInt16	oldFontSize = 0;
+		
+		
+		{
+			CGrafPtr	currentPort = nullptr;
+			GDHandle	currentDevice = nullptr;
+			
+			
+			GetGWorld(&currentPort, &currentDevice);
+			oldFontID = GetPortTextFont(currentPort);
+			oldFontSize = GetPortTextSize(currentPort);
+		}
+		TextFontByName("\pSymbol");
+		TextSize(oldFontSize - oldFontSize / 6); // arbitrary heuristic; assume Symbol might be too big, shrink it proportionately
+		DrawText(text, 0/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
+		TextFont(oldFontID);
+		TextSize(oldFontSize);
+	}
+	else
+	{
+		// this is in Mac Roman encoding
+		UInt8	text[] = { '?' };
+		
+		
+		DrawText(text, 0/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
+	}
+}// drawSymbolFontLetter
+
+
+/*!
 Draws the specified chunk of text in the given view
 (line number 1 is the oldest line in the scrollback).
 
@@ -5292,6 +5350,97 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
 		LineTo(cellCenter.h, cellBottom - lineHeight);
 		LineTo(cellCenter.h - lineWidth - lineWidth, cellBottom - lineHeight);
 		LineTo(cellCenter.h - lineWidth - lineWidth, cellBottom - lineHeight - lineHeight - lineHeight);
+		break;
+	
+	case 0x0192: // small 'f' with hook
+	#if 0
+		MoveTo(cellCenter.h - lineWidth * 3/* arbitrary */, cellBottom - lineHeight);
+		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
+		LineTo(cellCenter.h - lineWidth, cellTop + lineHeight);
+		LineTo(cellCenter.h + lineWidth * 3/* arbitrary */, cellTop + lineHeight);
+		MoveTo(cellLeft + lineWidth, cellCenter.v - lineHeight);
+		LineTo(cellCenter.h + lineWidth * 2/* arbitrary */, cellCenter.v - lineHeight);
+	#else
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0xA6, inIsDoubleWidth);
+	#endif
+		break;
+	
+	case 0x221A: // square root left edge
+		MoveTo(cellLeft + lineWidth, cellCenter.v - lineHeight);
+		LineTo(cellLeft + lineWidth * 2/* arbitrary */, cellCenter.v - lineHeight);
+		LineTo(cellRight - lineWidth, cellBottom - lineHeight);
+		LineTo(cellRight - lineWidth, cellTop + lineHeight);
+		break;
+	
+	case 0x03B1: // alpha
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 'a', inIsDoubleWidth);
+		break;
+	
+	case 0x00DF: // beta
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	'b', inIsDoubleWidth);
+		break;
+	
+	case 0x0393: // capital gamma
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 'G', inIsDoubleWidth);
+		break;
+	
+	case 0x03C0: // pi
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 		'p', inIsDoubleWidth);
+		break;
+	
+	case 0x03A3: // capital sigma
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 		'S', inIsDoubleWidth);
+		break;
+	
+	case 0x03C3: // sigma
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 		's', inIsDoubleWidth);
+		break;
+	
+	case 0x00B5: // mu
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+								'm', inIsDoubleWidth);
+		break;
+	
+	case 0x03C4: // tau
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 't', inIsDoubleWidth);
+		break;
+	
+	case 0x03A6: // capital phi
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 'F', inIsDoubleWidth);
+		break;
+	
+	case 0x0398: // capital theta
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 'Q', inIsDoubleWidth);
+		break;
+	
+	case 0x03A9: // capital omega
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 'W', inIsDoubleWidth);
+		break;
+	
+	case 0x03B4: // delta
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 'd', inIsDoubleWidth);
+		break;
+	
+	case 0x03C6: // phi
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 'f', inIsDoubleWidth);
+		break;
+	
+	case 0x03B5: // epsilon
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 'e', inIsDoubleWidth);
 		break;
 	
 	default:

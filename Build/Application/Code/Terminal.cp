@@ -13010,6 +13010,70 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 			}
 			break;
 		
+		case 159:
+			result = 0x0192; // small 'f' with hook
+			break;
+		
+		case 224:
+			result = 0x03B1; // alpha
+			break;
+		
+		case 225:
+			result = 0x00DF; // beta
+			break;
+		
+		case 226:
+			result = 0x0393; // capital gamma
+			break;
+		
+		case 227:
+			result = 0x03C0; // pi
+			break;
+		
+		case 228:
+			result = 0x03A3; // capital sigma
+			break;
+		
+		case 229:
+			result = 0x03C3; // sigma
+			break;
+		
+		case 230:
+			result = 0x00B5; // mu
+			break;
+		
+		case 231:
+			result = 0x03C4; // tau
+			break;
+		
+		case 232:
+			result = 0x03A6; // capital phi
+			break;
+		
+		case 233:
+			result = 0x0398; // capital theta
+			break;
+		
+		case 234:
+			result = 0x03A9; // capital omega
+			break;
+		
+		case 235:
+			result = 0x03B4; // delta
+			break;
+		
+		case 237:
+			result = 0x03C6; // phi
+			break;
+		
+		case 238:
+			result = 0x03B5; // epsilon
+			break;
+		
+		case 251:
+			result = 0x221A; // square root left edge
+			break;
+		
 		default:
 			break;
 		}
@@ -13102,6 +13166,22 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		case 0x25A0: // black square
 		case 0x2320: // integral sign (elongated S), top
 		case 0x2321: // integral sign (elongated S), bottom
+		case 0x0192: // small 'f' with hook
+		case 0x03B1: // alpha
+		case 0x00DF: // beta
+		case 0x0393: // capital gamma
+		case 0x03C0: // pi
+		case 0x03A3: // capital sigma
+		case 0x03C3: // sigma
+		case 0x00B5: // mu
+		case 0x03C4: // tau
+		case 0x03A6: // capital phi
+		case 0x0398: // capital theta
+		case 0x03A9: // capital omega
+		case 0x03B4: // delta
+		case 0x03C6: // phi
+		case 0x03B5: // epsilon
+		case 0x221A: // square root left edge
 			STYLE_ADD(outNewAttributes, kTerminalTextAttributeVTGraphics);
 			break;
 		
