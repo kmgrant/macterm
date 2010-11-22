@@ -331,9 +331,8 @@ SessionDescription_Result
 void
 	SessionDescription_Load						();
 
-// DEPRECATED
 Boolean
-	SessionDescription_ReadFromFile				(FSSpec const*						inFilePtr);
+	SessionDescription_ReadFromFile				(FSRef const&						inFile);
 
 //@}
 

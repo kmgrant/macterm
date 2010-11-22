@@ -715,61 +715,49 @@ SessionDescription_Load ()
 
 
 /*!
-Reads the specified session description file into
-memory and then creates a session based on it.
+Reads the specified session description file into memory and
+then creates a session based on it.
 
-Returns "true" only if the FILE is opened
-successfully.  Note that since sessions are
-created asynchronously, you must use other means
-to determine if a new session has been created
-successfully (for example, register to receive
-notification from the Session Factory module).
+Returns "true" only if the FILE is opened successfully.  Note
+that since sessions are created asynchronously, you must use
+other means to determine if a new session has been created
+successfully (for example, register to receive notification
+from the Session Factory module).
 
-(3.0)
+(4.0)
 */
 Boolean
-SessionDescription_ReadFromFile		(FSSpec const*		inFilePtr)
+SessionDescription_ReadFromFile		(FSRef const&	inFile)
 {
 	OSStatus	error = noErr;
-	FSSpec		fileSpec;
+	SInt16		fileRefNum = -1;
 	Boolean		result = false;
 	
 	
-	error = FSMakeFSSpec(inFilePtr->vRefNum, inFilePtr->parID, inFilePtr->name, &fileSpec);
-	if (error == fnfErr)
+	error = FSOpenFork(&inFile, 0/* name length */, nullptr/* name */, fsRdPerm, &fileRefNum);
+	if (noErr == error)
 	{
-		error = FSpCreate(&fileSpec, AppResources_ReturnCreatorCode(),
-							kApplicationFileTypeSessionDescription, APPLICATION_SCRIPTMANAGER_REGIONCODE);
-	}
-	if (error == noErr)
-	{
-		SInt16		fileRefNum = -1;
+		SessionDescription_Ref			sessionFile = nullptr;
+		SessionDescription_ContentType	sessionFileType = kSessionDescription_ContentTypeUnknown;
 		
 		
-		error = FSpOpenDF(&fileSpec, fsRdPerm, &fileRefNum);
-		if (error == noErr)
+		sessionFile = SessionDescription_NewFromFile(fileRefNum, &sessionFileType);
+		if (sessionFileType == kSessionDescription_ContentTypeUnknown)
 		{
-			SessionDescription_Ref			sessionFile = nullptr;
-			SessionDescription_ContentType	sessionFileType = kSessionDescription_ContentTypeUnknown;
-			
-			
-			sessionFile = SessionDescription_NewFromFile(fileRefNum, &sessionFileType);
-			if (sessionFileType == kSessionDescription_ContentTypeUnknown)
-			{
-				// error
-			}
-			else
-			{
-				// create a session using the file data; the following call is asynchronous
-				TerminalWindowRef		terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
-				Preferences_ContextRef	workspaceContext = nullptr;
-				
-				
-				(SessionRef)SessionFactory_NewSessionFromDescription(terminalWindow, sessionFile, workspaceContext,
-																		0/* window index */);
-			}
-			SessionDescription_Release(&sessionFile);
+			// error
 		}
+		else
+		{
+			// create a session using the file data; the following call is asynchronous
+			TerminalWindowRef		terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
+			Preferences_ContextRef	workspaceContext = nullptr;
+			
+			
+			(SessionRef)SessionFactory_NewSessionFromDescription(terminalWindow, sessionFile, workspaceContext,
+																	0/* window index */);
+		}
+		SessionDescription_Release(&sessionFile);
+		FSCloseFork(fileRefNum), fileRefNum = -1;
 	}
 	
 	return result;

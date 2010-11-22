@@ -305,7 +305,7 @@ Session::handle_file	(std::string	inPathname)
 						(extensionName == "session"))
 			{
 				// read a configuration set
-				SessionDescription_ReadFromFile(&fileSpec);
+				SessionDescription_ReadFromFile(fileRef);
 			}
 			else if ((//fileInfo.creator == AppResources_ReturnCreatorCode() &&
 							fileInfo.filetype == kApplicationFileTypeMacroSet) ||
