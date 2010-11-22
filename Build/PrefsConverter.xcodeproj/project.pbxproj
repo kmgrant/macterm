@@ -151,7 +151,14 @@
 			isa = PBXProject;
 			buildConfigurationList = 0A578F0A09D88AAC007D1289 /* Build configuration list for PBXProject "PrefsConverter" */;
 			compatibilityVersion = "Xcode 2.4";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
 			mainGroup = 20286C29FDCF999611CA2CEA /* MacTelnetPrefsConverter */;
 			projectDirPath = "";
 			projectRoot = "";
