@@ -335,6 +335,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20101122': [
         'Rendering of CP-437 (DOS character set) has been improved by adding Greek letters and other symbols.',
+        'Printing now automatically applies to the whole screen if no text is selected (though "Print Screen" is still available).',
     ],
     '20101120': [
         'Fixed the appearance of the attention indicator on the application dock tile.',

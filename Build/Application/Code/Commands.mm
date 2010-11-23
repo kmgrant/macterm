@@ -627,41 +627,26 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandPrint:
-			// print the selection using the print dialog
-			{
-				CFStringRef			jobTitle = nullptr;
-				UIStrings_Result	stringResult = UIStrings_Copy(kUIStrings_TerminalPrintSelectionJobTitle,
-																	jobTitle);
-				
-				
-				if (nullptr != jobTitle)
-				{
-					PrintTerminal_JobRef	printJob = PrintTerminal_NewJobFromSelectedText
-														(activeView, jobTitle);
-					
-					
-					if (nullptr != printJob)
-					{
-						(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
-												(printJob, TerminalWindow_ReturnWindow(frontTerminalWindow));
-						PrintTerminal_ReleaseJob(&printJob);
-					}
-					CFRelease(jobTitle), jobTitle = nullptr;
-				}
-			}
-			break;
-		
 		case kCommandPrintScreen:
+			// print the selection or the screen using the print dialog
 			{
+				Boolean				printScreen = ((kCommandPrintScreen == inCommandID) ||
+													(false == TerminalView_TextSelectionExists(activeView)));
 				CFStringRef			jobTitle = nullptr;
-				UIStrings_Result	stringResult = UIStrings_Copy(kUIStrings_TerminalPrintScreenJobTitle,
-																	jobTitle);
+				UIStrings_Result	stringResult = (printScreen)
+													? UIStrings_Copy(kUIStrings_TerminalPrintScreenJobTitle,
+																		jobTitle)
+													: UIStrings_Copy(kUIStrings_TerminalPrintSelectionJobTitle,
+																		jobTitle);
 				
 				
 				if (nullptr != jobTitle)
 				{
-					PrintTerminal_JobRef	printJob = PrintTerminal_NewJobFromVisibleScreen
-														(activeView, activeScreen, jobTitle);
+					PrintTerminal_JobRef	printJob = (printScreen)
+														? PrintTerminal_NewJobFromVisibleScreen
+															(activeView, activeScreen, jobTitle)
+														: PrintTerminal_NewJobFromSelectedText
+															(activeView, jobTitle);
 					
 					
 					if (nullptr != printJob)
