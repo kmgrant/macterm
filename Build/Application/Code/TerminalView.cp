@@ -76,6 +76,7 @@
 #include "EventLoop.h"
 #include "NetEvents.h"
 #include "Preferences.h"
+#include "QuillsTerminal.h"
 #include "Terminal.h"
 #include "TerminalBackground.h"
 #include "TerminalView.h"
@@ -6721,7 +6722,7 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 	TerminalView_Cell	selectionStart;
 	TerminalView_Cell	selectionPastEnd;
 	SInt16 const		kColumnCount = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
-	SInt16 const		kRowCount = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
+	//SInt16 const		kRowCount = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
 	
 	
 	selectionStart = inTerminalViewPtr->text.selection.range.first;
@@ -6733,139 +6734,44 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	if (inClickCount == 2)
 	{
-		SInt16 const				kNumberOfSpacesPerTab = 0; // zero means “do not substitute tabs”
+		// double-click; invoke the registered Python word-finding callback
+		// to determine which text should be selected
 		Terminal_LineRef			lineIterator = findRowIterator(inTerminalViewPtr, selectionStart.second);
+		UniChar const*				textStart = nullptr;
+		UniChar const*				textPastEnd = nullptr;
 		Terminal_TextCopyFlags		flags = 0L;
-		char						theChar[5];
 		
 		
-		// configure range copying routine
+		// configure terminal routine
 		if (inTerminalViewPtr->text.selection.isRectangular) flags |= kTerminal_TextCopyFlagsRectangular;
 		
 		// double-click - select a word; or, do intelligent double-click
 		// based on the character underneath the cursor
+		// TEMPORARY; only one line is examined, but this is probably
+		// more useful if it joins at least the preceding line, and
+		// possible the following line as well
 		if (kTerminal_ResultOK ==
-			Terminal_CopyLineRange(inTerminalViewPtr->screen.ref, lineIterator,
-									inTerminalViewPtr->text.selection.range.first.first,
-									inTerminalViewPtr->text.selection.range.first.first,
-									theChar, 1L/* maximum characters to return */, nullptr/* actual length */,
-									kNumberOfSpacesPerTab))
+			Terminal_GetLine(inTerminalViewPtr->screen.ref, lineIterator, textStart, textPastEnd, flags))
 		{
-			SInt32		actualLength = 0L;
-			Boolean		foundEnd = false;
+			// NOTE: while currently a short-cut is taken to avoid copying the string,
+			// this may have to become a true copy if this is expanded to look at text
+			// across more than one line
+			CFRetainRelease			asCFString(CFStringCreateWithCharactersNoCopy
+												(kCFAllocatorDefault, textStart, textPastEnd - textStart, kCFAllocatorNull/* deallocator */),
+												true/* is retained */);
+			std::string				asUTF8;
+			std::pair<long, long>	wordInfo; // offset (zero-based), and count
 			
 			
-			//
-			// IMPORTANT: The current line iterator is cached in the "lineIterator"
-			// variable, and should be reset if the selection line ever changes below.
-			//
-			
-			// normal word selection mode; scan to the right and left
-			// of the click location, constrained to a single line
-			for (foundEnd = false; !foundEnd; )
+			StringUtilities_CFToUTF8(asCFString.returnCFStringRef(), asUTF8);
+			wordInfo = Quills::Terminal::word_of_char_in_string(asUTF8, selectionStart.first);
+			if ((wordInfo.first >= 0) && (wordInfo.first < kColumnCount) &&
+				(wordInfo.second >= 0) && ((wordInfo.first + wordInfo.second) < kColumnCount))
 			{
-				if (selectionPastEnd.first >= kColumnCount)
-				{
-					// wrap to next line
-					releaseRowIterator(inTerminalViewPtr, &lineIterator);
-					++selectionPastEnd.second;
-					foundEnd = (selectionPastEnd.second >= kRowCount);
-					if (foundEnd)
-					{
-						selectionPastEnd.second = kRowCount;
-					}
-					else
-					{
-						selectionPastEnd.first = 0;
-					}
-					lineIterator = findRowIterator(inTerminalViewPtr, selectionPastEnd.second);
-				}
-				unless (foundEnd)
-				{
-					actualLength = 0L;
-					
-					// copy a single character and examine it
-					if (kTerminal_ResultOK ==
-						Terminal_CopyLineRange(inTerminalViewPtr->screen.ref, lineIterator,
-												selectionPastEnd.first, selectionPastEnd.first,
-												theChar, 1L/* maximum characters to return */, &actualLength,
-												kNumberOfSpacesPerTab))
-					{
-						foundEnd = ((actualLength == 0) || CPP_STD::isspace(*theChar));
-						unless (foundEnd)
-						{
-							++selectionPastEnd.first;
-						}
-					}
-					else
-					{
-						// read error...break now
-						foundEnd = true;
-					}
-				}
-			}
-			// note that because the start of the range is inclusive
-			// and the end is exclusive, the left-scan loop below is
-			// not quite similar to the right-scan loop above
-			for (foundEnd = false; !foundEnd; )
-			{
-				actualLength = 0L;
-				
-				// copy a single character and examine it
-				if (kTerminal_ResultOK ==
-					Terminal_CopyLineRange(inTerminalViewPtr->screen.ref, lineIterator,
-											selectionStart.first, selectionStart.first,
-											theChar, 1L/* maximum characters to return */, &actualLength,
-											kNumberOfSpacesPerTab))
-				{
-					foundEnd = ((actualLength == 0) || CPP_STD::isspace(*theChar));
-				}
-				else
-				{
-					// read error...break now
-					foundEnd = true;
-				}
-				
-				if (foundEnd)
-				{
-					// with an inclusive range, the discovered space should be ignored
-					++selectionStart.first;
-					if (selectionStart.first >= kColumnCount)
-					{
-						// also ignore the shift to the previous line, if it ended with a space
-						releaseRowIterator(inTerminalViewPtr, &lineIterator);
-						selectionStart.first = 0;
-						++selectionStart.second;
-						lineIterator = findRowIterator(inTerminalViewPtr, selectionStart.second);
-					}
-				}
-				else
-				{
-					if (selectionStart.first == 0)
-					{
-						// wrap to previous line
-						releaseRowIterator(inTerminalViewPtr, &lineIterator);
-						--selectionStart.second;
-						foundEnd = (selectionStart.second <= 0);
-						if (foundEnd)
-						{
-							selectionStart.second = 0;
-						}
-						else
-						{
-							selectionStart.first = kColumnCount - 1;
-						}
-						lineIterator = findRowIterator(inTerminalViewPtr, selectionStart.second);
-					}
-					else
-					{
-						// move to previous character on same line
-						--selectionStart.first;
-					}
-				}
+				selectionStart.first = wordInfo.first;
+				selectionPastEnd.first = wordInfo.first + wordInfo.second;
 			}
 		}
-		
 		releaseRowIterator(inTerminalViewPtr, &lineIterator);
 	}
 	else

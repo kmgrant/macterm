@@ -27,6 +27,7 @@ allowing you to directly access core functionality from scripts!"
 
 // instantiate template types relied upon by Quills
 %template(_float_list) std::vector< double >;
+%template(_long_pair) std::pair< long, long >;
 %template(_string_list) std::vector< std::string >;
 
 // enable callbacks to be written in Python
@@ -233,11 +234,69 @@ CallPythonStringReturnString	(void*	inPythonFunctionObject,
 		if (false == PyString_CheckExact(pythonResult))
 		{
 			PyErr_SetString(PyExc_TypeError, "Callback did not return a string");
-			return NULL;
+			return result;
 		}
 		
 		stringPtr = PyString_AsString(pythonResult);
 		result = stringPtr;
+	}
+	Py_XDECREF(pythonResult), pythonResult = NULL;
+	
+	return result;
+}
+%}
+#endif
+
+// enable callbacks that take a string argument and a long-integer argument and return a long-integer pair
+#ifdef SWIGPYTHON
+%{
+static std::pair<long, long>
+CallPythonStringLongReturnLongPair	(void*	inPythonFunctionObject,
+									 char*	inoutString,
+									 long	inLong)
+{
+	PyObject*				pythonDef = NULL;
+	PyObject*				arguments = NULL;	
+	PyObject*				pythonResult = NULL;
+	std::pair<long, long>	result;
+	
+	
+	result.first = inLong;
+	result.second = inLong;
+	
+	pythonDef = reinterpret_cast< PyObject* >(inPythonFunctionObject);
+	arguments = Py_BuildValue("(s,l)", inoutString, inLong);
+	assert(NULL != arguments);
+	pythonResult = PyEval_CallObject(pythonDef, arguments); // call Python
+	Py_DECREF(arguments), arguments = NULL;
+	_Quills_PropagateExceptions(pythonResult, "while C++ called a Python single-string-argument function that returns an integer pair");
+	if (NULL != pythonResult)
+	{
+		PyObject*	item0 = nullptr;
+		PyObject*	item1 = nullptr;
+		
+		
+		if (false == PyTuple_CheckExact(pythonResult))
+		{
+			PyErr_SetString(PyExc_TypeError, "Callback did not return a tuple");
+			return result;
+		}
+		
+		item0 = PyTuple_GetItem(pythonResult, 0);
+		if ((nullptr == item0) || (false == PyInt_CheckExact(item0)))
+		{
+			PyErr_SetString(PyExc_TypeError, "Callback did not return a tuple with an integer as a first item");
+			return result;
+		}
+		result.first = PyInt_AsLong(item0);
+		
+		item1 = PyTuple_GetItem(pythonResult, 1);
+		if ((nullptr == item1) || (false == PyInt_CheckExact(item1)))
+		{
+			PyErr_SetString(PyExc_TypeError, "Callback did not return a tuple with an integer as a second item");
+			return result;
+		}
+		result.second = PyInt_AsLong(item1);
 	}
 	Py_XDECREF(pythonResult), pythonResult = NULL;
 	

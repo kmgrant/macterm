@@ -336,6 +336,9 @@ notes_by_version = {
     '20101122': [
         'Rendering of CP-437 (DOS character set) has been improved by adding Greek letters and other symbols.',
         'Printing now automatically applies to the whole screen if no text is selected (though "Print Screen" is still available).',
+        'Terminal view text can now be double-clicked consistently to highlight entire words.',
+        'Terminal view whitespace can now be double-clicked to highlight all surrounding whitespace.',
+        'Added Terminal.on_seekword_call(func) to Quills, allowing Python code to define exactly what a double-click word is!',
     ],
     '20101120': [
         'Fixed the appearance of the attention indicator on the application dock tile.',

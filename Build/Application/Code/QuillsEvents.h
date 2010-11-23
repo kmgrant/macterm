@@ -42,7 +42,7 @@
 #define __QUILLSEVENTS__
 
 // MacTelnet includes
-#include <QuillsCallbacks.typedef.h>
+#include "QuillsCallbacks.typedef.h"
 
 
 

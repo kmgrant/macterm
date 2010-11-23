@@ -3,7 +3,7 @@
 	QuillsTerminal.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -34,6 +34,7 @@
 // standard-C++ includes
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 // library includes
@@ -41,6 +42,16 @@
 
 // MacTelnet includes
 #include "QuillsTerminal.h"
+
+
+
+#pragma mark variables
+namespace {
+
+Quills::FunctionReturnLongPairArg1VoidPtrArg2CharPtrArg3Long	gTerminalSeekWordCallbackInvoker = nullptr;
+void*															gTerminalSeekWordPythonCallback = nullptr;
+
+} // anonymous namespace
 
 
 
@@ -58,6 +69,50 @@ Terminal::set_dumb_string_for_char	(unsigned short		unicode,
 {
 	Terminal_SetDumbTerminalRendering(unicode, rendering_utf8.c_str());
 }
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(4.0)
+*/
+std::pair<long, long>
+Terminal::word_of_char_in_string	(std::string	text_utf8,
+									 long			offset)
+{
+	std::pair<long, long>	result = std::make_pair(offset, 1);
+	
+	
+	if (nullptr != gTerminalSeekWordCallbackInvoker)
+	{
+		char*	mutableTextCopy = new char[1 + text_utf8.size()];
+		
+		
+		// make a copy of the argument, since scripting languages
+		// do not distinguish mutable and immutable strings
+		mutableTextCopy[text_utf8.size()] = '\0';
+		std::copy(text_utf8.begin(), text_utf8.end(), mutableTextCopy);
+		
+		result = (*gTerminalSeekWordCallbackInvoker)(gTerminalSeekWordPythonCallback, mutableTextCopy, offset);
+		
+		delete [] mutableTextCopy;
+	}
+	return result;
+}// word_of_char_in_string
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(4.0)
+*/
+void
+Terminal::_on_seekword_call_py	(FunctionReturnLongPairArg1VoidPtrArg2CharPtrArg3Long	inRoutine,
+								 void*													inPythonFunctionObject)
+{
+	gTerminalSeekWordCallbackInvoker = inRoutine;
+	gTerminalSeekWordPythonCallback = inPythonFunctionObject;
+}// _on_seekword_call_py
 
 
 } // namespace Quills
