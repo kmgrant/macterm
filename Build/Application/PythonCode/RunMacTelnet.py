@@ -123,23 +123,28 @@ def get_word_of_char_in_string( text_utf8, pos ):
         ustr = unicode(text_utf8, "utf-8", "ignore")
         if pos >= len(ustr):
             raise ValueError("word-seeking callback expected offset to fall within range of characters")
+        nonword_chars = str(string.whitespace)
+        # an easy way to customize this is to add characters to
+        # the string variable "nonword_chars", e.g. the following
+        # would consider dots (.) to be word-breaking characters:
+        #     nonword_chars = nonword_chars + '.'
         invert = False
-        if ustr[pos] in string.whitespace:
-            # special case; when starting on whitespace, look for all whitespace
+        if ustr[pos] in nonword_chars:
+            # special case; when starting on non-word characters, look for all non-word characters
             invert = True
         i = pos
         j = pos
         while i >= 0:
-            if (invert and ustr[i] not in string.whitespace) or \
-               (not invert and ustr[i] in string.whitespace):
+            if (invert and ustr[i] not in nonword_chars) or \
+               (not invert and ustr[i] in nonword_chars):
                 i = i + 1
                 break
             i = i - 1
         if i < 0:
             i = 0
         while j < len(ustr):
-            if (invert and ustr[j] not in string.whitespace) or \
-               (not invert and ustr[j] in string.whitespace):
+            if (invert and ustr[j] not in nonword_chars) or \
+               (not invert and ustr[j] in nonword_chars):
                 j = j - 1
                 break
             j = j + 1
@@ -148,7 +153,7 @@ def get_word_of_char_in_string( text_utf8, pos ):
         result[0] = i
         result[1] = j - i + 1
     except Exception, e:
-        print "warning, exception while trying to convert string to UTF-8 to find words:", e
+        print "warning, exception while trying to find words:", e
     return (result[0], result[1])
 
 try:
