@@ -49,6 +49,11 @@
 #pragma mark Public Methods
 namespace Quills {
 
+#if SWIG
+%feature("docstring",
+"Manage setup and teardown of the main application event loop.\n\
+") Events;
+#endif
 class Events
 {
 public:
@@ -95,7 +100,7 @@ immediately after the main event loop terminates.\n\
 This is the only way for Python code to continue running after\n\
 you call Events.run_loop().  At some point in this callback,\n\
 you MUST call Base.all_done() to clean up MacTelnet modules.\n\
-") on_new_call;
+") on_endloop_call;
 	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
 	// "CallPythonVoidReturnVoid" is defined in Quills.i
 	static void

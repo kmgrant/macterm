@@ -50,6 +50,11 @@
 #pragma mark Public Methods
 namespace Quills {
 
+#if SWIG
+%feature("docstring",
+"Run commands in terminal windows, and other Session-related actions.\n\
+") Session;
+#endif
 class Session
 {
 public:
@@ -222,7 +227,7 @@ argument, every time an open is requested for a file with the\n\
 given attribute.\n\
 \n\
 Specify only one attribute (keyword parameter) at a time.  You\n\
-can use the same callback function, just register it more than\n\
+can reuse the same callback function, just register it more than\n\
 once and provide a different attribute for each call.\n\
 \n\
 Currently, the only supported attribute is 'extension', which\n\
@@ -230,7 +235,10 @@ refers to the end of the filename without a dot (.).  Examples\n\
 include 'txt' for text, and 'sh' for Bourne shell.  Note that the\n\
 Finder obeys extension mappings in the 'Info.plist' file of the\n\
 application bundle, so you may wish to update that file when\n\
-adding new handlers.\n\
+adding new handlers.  If the 'Info.plist' does not include the\n\
+extension you choose, your handler will only be used for files\n\
+that are forced to open with MacTelnet (say, when they are\n\
+dragged onto the Dock icon).\n\
 \n\
 You cannot register more than one Python function for the same\n\
 attribute.  Registering a Python function for an attribute that\n\
@@ -239,7 +247,7 @@ implementation.\n\
 \n\
 Your handler is given a single argument, the pathname string,\n\
 which you must decompose yourself (but note that Python has\n\
-built-in libraries such as the 'os.path' module, to help parse).\n\
+built-in libraries such as the 'os.path' module to help parse).\n\
 Generally your handler constructs a Session object with a command\n\
 that is appropriate for the file, although you could do something\n\
 else.\n\
@@ -282,7 +290,7 @@ override the default MacTelnet implementation.\n\
 \n\
 Your handler is given a single argument, the URL string, which\n\
 you must decompose yourself (but note that Python has built-in\n\
-libraries such as the 'urlparse' module, to help, and the default\n\
+libraries such as the 'urlparse' module to help, and the default\n\
 MacTelnet parsers are also available in a Python module).\n\
 Generally your handler constructs a Session object with a command\n\
 that is appropriate for the URL, although you could do something\n\

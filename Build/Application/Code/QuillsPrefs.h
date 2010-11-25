@@ -54,15 +54,18 @@ namespace Quills {
 
 #if SWIG
 %feature("docstring",
-"GENERAL -- Preferences not typically found in collections.\n\
-FORMAT -- Font and color settings.\n\
-MACRO_SET -- Actions mapped to keyboard short-cuts.\n\
-SESSION -- How to reach, and interact with, a resource.\n\
-TERMINAL -- Characteristics of the emulator and its data storage.\n\
-TRANSLATION -- Text encoding.\n\
-WORKSPACE -- Windows that are spawned at the same time.\n\
-_FACTORY_DEFAULTS -- Represents the DefaultPreferences.plist,\n\
-for internal use only.\n\
+"Access and modify user preferences.\n\
+\n\
+Preferences are grouped in the following classes:\n\
+- GENERAL -- Preferences not typically found in collections.\n\
+- FORMAT -- Font and color settings.\n\
+- MACRO_SET -- Actions mapped to keyboard short-cuts.\n\
+- SESSION -- How to reach, and interact with, a resource.\n\
+- TERMINAL -- Characteristics of the emulator and its data storage.\n\
+- TRANSLATION -- Text encoding.\n\
+- WORKSPACE -- Windows that are spawned at the same time.\n\
+- _FACTORY_DEFAULTS -- Represents the DefaultPreferences.plist,\n\
+  for internal use only.\n\
 ") Prefs;
 #endif
 class Prefs
@@ -120,17 +123,6 @@ Each string is in UTF-8 encoding.\n\
 #endif
 	static std::vector< std::string > list_collections (Class	of_class);
 	
-#if SWIG
-%feature("docstring",
-"Change the active macro set to the specified collection,\n\
-which should be a Prefs instance of type MACRO_SET.\n\
-\n\
-Since changes to collections are detected, you may continue to\n\
-modify the specified macros, and anything that depends on them\n\
-(such as a Macros menu) will update automatically.\n\
-") set_current_macros;
-#endif
-	
 	// only intended for direct use by the SWIG wrapper
 	static void _set_current_macros	(Prefs&);
 
@@ -140,12 +132,14 @@ private:
 
 #if SWIG
 %extend Prefs {
-	// Any routines that accept a Python-generated object
-	// for unspecified future use must be able to retain
-	// that reference.  These method wrappers help to keep
-	// the Python stuff contained here, relying on internal
-	// methods for most of the implementation.
-	
+%feature("docstring",
+"Change the active macro set to the specified collection,\n\
+which should be a Prefs instance of type MACRO_SET.\n\
+\n\
+Since changes to collections are detected, you may continue to\n\
+modify the specified macros, and anything that depends on them\n\
+(such as a Macros menu) will update automatically.\n\
+") set_current_macros;
 	static void set_current_macros	(PyObject*		new_set)
 	{
 		void*				objectPtr = nullptr;

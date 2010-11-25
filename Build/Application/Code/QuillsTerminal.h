@@ -51,6 +51,11 @@
 #pragma mark Public Methods
 namespace Quills {
 
+#if SWIG
+%feature("docstring",
+"Customization of terminal views.\n\
+") Terminal;
+#endif
 class Terminal
 {
 public:	
@@ -78,13 +83,13 @@ the given string is an encoded sequence of bytes, it may well\n\
 contain fewer characters than bytes, and offsets refer only to\n\
 the positions of characters!  Do not use byte offsets.\n\
 \n\
-The starting character will be in the middle of any word, so\n\
-scan both forwards and backwards from that point.\n\
+If there is no word, the pair holds the original offset in the\n\
+first element, and the second element is 1.\n\
 \n\
-If there is no word, the pair should hold the original offset in\n\
-the first element, and the second element should be 1.\n\
+The character encoding of the given string must be UTF-8.\n\
 \n\
-The character encoding of the given string is UTF-8.\n\
+Note that this calls what was registered with on_seekword_call(),\n\
+and MacTelnet installs its own routine by default.\n\
 ") word_of_char_in_string;
 
 // raise Python exception if C++ throws anything
@@ -112,11 +117,19 @@ The character encoding of the given string is UTF-8.\n\
 offset arguments) every time a word must be found in a string of\n\
 text.  The string uses UTF-8 encoding, and may include new-lines.\n\
 \n\
-Typically, this is used in response to double-clicks.  The value\n\
-returned should be a tuple of two integers: the first, an offset\n\
-(zero-based) into the original string that identifies the start\n\
-of the word to use; the second, the COUNT of characters to read.\n\
-The returned range should surround the original offset location.\n\
+Return a pair of integers as a tuple, where the first is a\n\
+zero-based CHARACTER offset into the given string, and the second\n\
+is a CHARACTER count from that offset.  This range identifies a\n\
+word that is found by scanning forwards and backwards from the\n\
+given starting CHARACTER in the given string of BYTES.  Don't use\n\
+byte offsets!  In particular, UTF-8 supports single characters\n\
+that are described by multiple bytes, and you should be skipping\n\
+all of the bytes to reach the next character in the string.  (It\n\
+can be quite helpful to use the Python 'unicode' built-in object\n\
+for this; see the default, registered in 'RunMacTelnet.py'.)\n\
+\n\
+Typically, this is used in response to double-clicks, so the\n\
+returned range should surround the original offset location.\n\
 ") on_seekword_call;
 	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
 	// "CallPythonStringLongReturnLongPair" is defined in Quills.i

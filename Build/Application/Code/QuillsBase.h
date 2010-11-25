@@ -49,6 +49,11 @@
 #pragma mark Public Methods
 namespace Quills {
 
+#if SWIG
+%feature("docstring",
+"Core APIs for setup and teardown of Quills, and a version API.\n\
+") Base;
+#endif
 class Base
 {
 public:
