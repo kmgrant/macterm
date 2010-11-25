@@ -19,7 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
-    '20101123',
+    '20101124',
     '20101122',
     '20101120',
     '20101115',
@@ -334,7 +334,7 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
-    '20101123': [
+    '20101124': [
         'Fixed terminal view double-clicks in scrollback rows.',
     ],
     '20101122': [
