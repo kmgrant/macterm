@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20101123',
     '20101122',
     '20101120',
     '20101115',
@@ -333,6 +334,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20101123': [
+        'Fixed terminal view double-clicks in scrollback rows.',
+    ],
     '20101122': [
         'Rendering of CP-437 (DOS character set) has been improved by adding Greek letters and other symbols.',
         'Printing now automatically applies to the whole screen if no text is selected (though "Print Screen" is still available).',
@@ -431,10 +435,10 @@ notes_by_version = {
         'Fixed a few minor problems that were causing console messages.',
     ],
     '20100707': [
-        'Fixed Terminal window tabs so that keyboard rotation selects windows in tab order instead of chronological order.',
-        'Fixed Terminal window tabs to start in the correct orientation, by using a new default Window Stacking Origin.',
-        'Fixed Terminal window tabs to pop out at the correct location, instead of moving after becoming visible.',
-        'Fixed Terminal window tabs so that the terminal window size can be reduced (as regular windows always allowed).',
+        'Fixed terminal window tabs so that keyboard rotation selects windows in tab order instead of chronological order.',
+        'Fixed terminal window tabs to start in the correct orientation, by using a new default Window Stacking Origin.',
+        'Fixed terminal window tabs to pop out at the correct location, instead of moving after becoming visible.',
+        'Fixed terminal window tabs so that the terminal window size can be reduced (as regular windows always allowed).',
         'Terminal window tabs are now automatically resized if they do not all fit along the edge of the window.',
         'Terminal window tabs will now reposition automatically when "Move to New Workspace" leaves a gap between tabs.',
     ],

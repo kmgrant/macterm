@@ -6736,7 +6736,7 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 	{
 		// double-click; invoke the registered Python word-finding callback
 		// to determine which text should be selected
-		Terminal_LineRef			lineIterator = findRowIterator(inTerminalViewPtr, selectionStart.second);
+		Terminal_LineRef			lineIterator = findRowIteratorRelativeTo(inTerminalViewPtr, selectionStart.second, 0/* origin row */);
 		UniChar const*				textStart = nullptr;
 		UniChar const*				textPastEnd = nullptr;
 		Terminal_TextCopyFlags		flags = 0L;
