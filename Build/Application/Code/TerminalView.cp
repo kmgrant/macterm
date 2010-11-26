@@ -6766,7 +6766,7 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 			StringUtilities_CFToUTF8(asCFString.returnCFStringRef(), asUTF8);
 			wordInfo = Quills::Terminal::word_of_char_in_string(asUTF8, selectionStart.first);
 			if ((wordInfo.first >= 0) && (wordInfo.first < kColumnCount) &&
-				(wordInfo.second >= 0) && ((wordInfo.first + wordInfo.second) < kColumnCount))
+				(wordInfo.second >= 0) && ((wordInfo.first + wordInfo.second) <= kColumnCount))
 			{
 				selectionStart.first = wordInfo.first;
 				selectionPastEnd.first = wordInfo.first + wordInfo.second;
