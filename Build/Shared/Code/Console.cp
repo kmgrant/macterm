@@ -2,8 +2,8 @@
 
 	Console.cp
 	
-	Data Access Library 1.4
-	© 1998-2009 by Kevin Grant
+	Data Access Library 2.2
+	© 1998-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -40,6 +40,7 @@
 
 // library includes
 #include <CFRetainRelease.h>
+#include <CocoaBasic.h>
 #include <Console.h>
 #include <ListenerModel.h>
 #include <MemoryBlocks.h>
@@ -79,7 +80,7 @@ IMPORTANT:	To turn off debugging completely (and
 			calls ineffective), simply avoid calling
 			Console_Init().
 
-(3.0)
+(1.0)
 */
 void
 Console_Init ()
@@ -97,7 +98,7 @@ Console_Init().  It also resets the screen
 ID to an invalid integer so that future calls
 to write to the console have no effect.
 
-(3.0)
+(1.0)
 */
 void
 Console_Done ()
@@ -117,7 +118,7 @@ name ONLY if the condition evaluates to "false".
 Returns "false" only if the assertion fails (that
 is, "true" is good!).
 
-(3.0)
+(1.0)
 */
 Boolean
 Console_Assert	(char const*	inAssertionName,
@@ -149,7 +150,7 @@ You cannot call this routine too often - if you call
 it more than a few hundred times, it will silently
 have no effect.
 
-(3.0)
+(1.0)
 */
 void
 Console_BeginFunction ()
@@ -172,7 +173,7 @@ You cannot call this routine too often - if you
 call it more than a few hundred times, it will
 silently have no effect.
 
-(3.0)
+(1.0)
 */
 void
 Console_EndFunction ()
@@ -193,7 +194,7 @@ line feed.  Use this routine for drawing lines in
 case one day the console is not implemented in the
 way it currently is.
 
-(3.0)
+(1.0)
 */
 void
 Console_WriteHorizontalRule	()
@@ -213,7 +214,7 @@ appropriate amount, depending on how many times
 Console_BeginFunction() has been called without a
 balancing Console_EndFunction() call.
 
-(3.0)
+(1.0)
 */
 void
 Console_WriteLine	(char const*	inString)
@@ -227,10 +228,46 @@ Console_WriteLine	(char const*	inString)
 
 
 /*!
+Uses Growl to notify the user about errors in script code.  If
+Growl is not installed, attempts to send the same information
+to the console log.
+
+Since these messages are more likely to be presented directly
+to the user, they should be localized, and are therefore given
+as CFStrings.
+
+(2.2)
+*/
+void
+Console_WriteScriptError	(CFStringRef		inTitle,
+							 CFStringRef		inDescription)
+{
+	if (CocoaBasic_GrowlIsAvailable())
+	{
+		CFStringRef		growlNotificationName = CFSTR("Script error"); // MUST match "Growl Registration Ticket.growlRegDict"
+		
+		
+		CocoaBasic_GrowlNotify(growlNotificationName, inTitle, inDescription);
+	}
+	else
+	{
+		char const*		cStringTitle = CFStringGetCStringPtr(inTitle, kCFStringEncodingUTF8);
+		
+		
+		if (nullptr == cStringTitle)
+		{
+			cStringTitle = "Script error";
+		}
+		Console_WriteValueCFString(cStringTitle, inDescription);
+	}
+}// WriteScriptError
+
+
+/*!
 Writes a line to the console that includes the time
 and date.
 
-(3.0)
+(1.0)
 */
 void
 Console_WriteTimeStamp	(char const*	inLabel)
@@ -259,7 +296,7 @@ with the given information included.  If the failure
 count is zero, the output format may be completely
 different.
 
-(3.1)
+(1.1)
 */
 void
 Console_WriteUnitTestReport		(char const*	inModuleName,
@@ -289,7 +326,7 @@ Writes the value of a numeric variable, preceded
 by its name.  A string of the form "label = value"
 is written to the console (with a new-line).
 
-(3.0)
+(1.0)
 */
 void
 Console_WriteValue		(char const*	inLabel,
@@ -307,7 +344,7 @@ Writes a pointer value.  A string of the form
 "label = value" is written to the console (with a
 new-line).
 
-(3.0)
+(1.0)
 */
 void
 Console_WriteValueAddress	(char const*	inLabel,
@@ -325,7 +362,7 @@ Writes a string of 32 1 and 0 digits for the bits
 in a flag value.  A string of the form "label = value"
 is written to the console (with a new-line).
 
-(3.0)
+(1.0)
 */
 void
 Console_WriteValueBitFlags		(char const*	inLabel,
@@ -354,7 +391,7 @@ Writes the value of a Core Foundation string.  A
 string of the form "label = “value”" is written
 to the console (with a new-line).
 
-(3.0)
+(1.0)
 */
 void
 Console_WriteValueCFString	(char const*	inLabel,
@@ -389,7 +426,7 @@ Writes the type of a Core Foundation object.  A
 string of the form "label = “type”" is written
 to the console (with a new-line).
 
-(3.1)
+(1.1)
 */
 void
 Console_WriteValueCFTypeOf	(char const*	inLabel,
@@ -419,7 +456,7 @@ characters visible (e.g. "^A").  A string of the form
 "label = value" is written to the console (with a
 new-line).
 
-(3.0)
+(1.0)
 */
 void
 Console_WriteValueCharacter		(char const*	inLabel,
@@ -460,7 +497,7 @@ Writes the value of a null-terminated string variable.
 A string of the form "label = “value”" is written to
 the console (with a new-line).
 
-(3.0)
+(1.0)
 */
 void
 Console_WriteValueCString	(char const*	inLabel,
@@ -479,7 +516,7 @@ by a label.  A string of the form
 "label = value1, value2, value3, value4" is written to
 the console (with a new-line).
 
-(3.1)
+(1.1)
 */
 void
 Console_WriteValueFloat4	(char const*	inLabel,
@@ -503,7 +540,7 @@ Writes the value of an "OSType" variable.  A
 string of the form "label = value" is written
 to the console (with a new-line).
 
-(3.0)
+(1.0)
 */
 void
 Console_WriteValueFourChars		(char const*	inLabel,
@@ -521,7 +558,7 @@ Writes the values of 2 numeric variables, preceded
 by a label.  A string of the form "label = value1, value2"
 is written to the console (with a new-line).
 
-(3.0)
+(1.0)
 */
 void
 Console_WriteValuePair	(char const*	inLabel,
@@ -540,7 +577,7 @@ Writes the value of a Pascal string variable.  A
 string of the form "label = “value”" is written
 to the console (with a new-line).
 
-(3.0)
+(1.0)
 */
 void
 Console_WriteValuePString	(char const*		inLabel,
@@ -571,7 +608,7 @@ Writes the value of a std::string variable.  A string
 of the form "label = “value”" is written to the console
 (with a new-line).
 
-(3.1)
+(1.1)
 */
 void
 Console_WriteValueStdString	(char const*			inLabel,
@@ -595,7 +632,7 @@ may be tweaked frequently and the header is used A LOT.  This
 simple flag change should not cause the entire project to be
 recompiled.
 
-(4.0)
+(2.0)
 */
 Boolean
 __Console_WarningsTriggerCrashTraces ()

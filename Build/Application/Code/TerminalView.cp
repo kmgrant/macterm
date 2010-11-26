@@ -6776,8 +6776,13 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 			}
 			catch (std::exception const& e)
 			{
-				Console_Warning(Console_WriteValueCString, "caught exception while trying to find double-clicked word",
-								e.what());
+				CFStringRef			titleCFString = CFSTR("Exception while trying to find double-clicked word"); // LOCALIZE THIS
+				CFRetainRelease		messageCFString(CFStringCreateWithCString
+													(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
+													true/* is retained */); // LOCALIZE THIS?
+				
+				
+				Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());
 			}
 		}
 		releaseRowIterator(inTerminalViewPtr, &lineIterator);

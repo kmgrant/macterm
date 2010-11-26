@@ -14,8 +14,8 @@
 */
 /*###############################################################
 
-	Data Access Library 1.4
-	© 1998-2009 by Kevin Grant
+	Data Access Library 2.2
+	© 1998-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -194,6 +194,10 @@ void
 
 void
 	Console_WriteLine				(char const*		inString);
+
+void
+	Console_WriteScriptError		(CFStringRef		inTitle,
+									 CFStringRef		inDescription);
 
 void
 	Console_WriteTimeStamp			(char const*		inLabel);

@@ -995,8 +995,13 @@ receiveServicesEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					}
 					catch (std::exception const&	e)
 					{
-						Console_Warning(Console_WriteValueCString, "caught exception while trying to handle URL for Service",
-										e.what());
+						CFStringRef			titleCFString = CFSTR("Exception while trying to handle URL for Service"); // LOCALIZE THIS
+						CFRetainRelease		messageCFString(CFStringCreateWithCString
+															(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
+															true/* is retained */); // LOCALIZE THIS?
+						
+						
+						Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());
 						result = eventNotHandledErr;
 					}
 					if (nullptr != urlCFString) CFRelease(urlCFString), urlCFString = nullptr;

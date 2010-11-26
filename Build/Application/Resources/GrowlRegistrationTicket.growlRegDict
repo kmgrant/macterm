@@ -5,7 +5,7 @@
 	Growl Registration Ticket.growlRegDict
 	
 	MacTelnet 4.0
-	© 1998-2009 by Kevin Grant
+	© 1998-2010 by Kevin Grant
 	
 	This file is used to configure Growl.  See "http://www.growl.info/".
 	(All possible key values are described in "GrowlDefines.h".)
@@ -23,6 +23,7 @@
 	<string>MacTelnet</string>
 	<key>AllNotifications</key>
 	<array>
+		<string>Script error</string>
 		<string>Session active</string>
 		<string>Session ended</string>
 		<string>Session failed</string>
@@ -30,6 +31,8 @@
 	</array>
 	<key>NotificationDescriptions</key>
 	<dict>
+		<key>Script error</key>
+		<string>When an exception is caught from user Python code (callbacks)</string>
 		<key>Session active</key>
 		<string>When data arrives, in windows requesting "Notify on Next Activity"</string>
 		<key>Session ended</key>

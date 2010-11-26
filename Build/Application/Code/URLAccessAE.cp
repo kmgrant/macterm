@@ -3,7 +3,7 @@
 	URLAccessAE.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2002 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -36,6 +36,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <CFRetainRelease.h>
 #include <Console.h>
 #include <MemoryBlocks.h>
 
@@ -185,8 +186,13 @@ handleURL	(AEDesc const*		inFromWhichObject,
 							}
 							catch (std::exception const&	e)
 							{
-								Console_Warning(Console_WriteValueCString, "caught exception while trying to handle URL from Apple Event",
-												e.what());
+								CFStringRef			titleCFString = CFSTR("Exception while trying to handle URL from Apple Event"); // LOCALIZE THIS
+								CFRetainRelease		messageCFString(CFStringCreateWithCString
+																	(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
+																	true/* is retained */); // LOCALIZE THIS?
+								
+								
+								Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());
 								resultCode = 1; // failure
 								errorCausingNonzeroResult = eventNotHandledErr;
 							}

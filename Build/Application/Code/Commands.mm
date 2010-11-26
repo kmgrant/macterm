@@ -3523,8 +3523,13 @@ openFiles:(NSArray*)			filenames
 		}
 		catch (std::exception const&	e)
 		{
-			Console_Warning(Console_WriteValueCFString, "exception during file open, given path", (CFStringRef)path);
-			Console_WriteLine(e.what());
+			CFStringRef			titleCFString = CFSTR("Exception during file open"); // LOCALIZE THIS
+			CFRetainRelease		messageCFString(CFStringCreateWithCString
+												(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
+												true/* is retained */); // LOCALIZE THIS?
+			
+			
+			Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());
 			success = NO;
 		}
 	}

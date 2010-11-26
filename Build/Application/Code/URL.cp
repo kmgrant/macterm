@@ -172,8 +172,13 @@ URL_HandleForScreenView		(TerminalScreenRef	UNUSED_ARGUMENT(inScreen),
 				}
 				catch (std::exception const&	e)
 				{
-					Console_Warning(Console_WriteValueCString, "caught exception while trying to handle URL",
-									e.what());
+					CFStringRef			titleCFString = CFSTR("Exception while trying to handle URL"); // LOCALIZE THIS
+					CFRetainRelease		messageCFString(CFStringCreateWithCString
+														(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
+														true/* is retained */); // LOCALIZE THIS?
+					
+					
+					Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());
 					// in the event of an error, show “dying zoom rectangles”
 					SetRect(&selectionRect, 0, 0, 0, 0);
 					(OSStatus)ZoomRects(&screenRect, &selectionRect, 20/* steps, arbitrary */, kZoomDecelerate);

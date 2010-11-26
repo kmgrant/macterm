@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20101126',
     '20101125',
     '20101124',
     '20101122',
@@ -335,6 +336,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20101126': [
+        'Added a new type of Growl notification for script errors, to make exceptions in user Python code more prominent.',
+    ],
     '20101125': [
         'Fixed terminal view double-clicks that would have no effect if the selection crossed the far right column.',
     ],
