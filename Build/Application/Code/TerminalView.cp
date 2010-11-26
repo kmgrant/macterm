@@ -6764,12 +6764,20 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 			
 			
 			StringUtilities_CFToUTF8(asCFString.returnCFStringRef(), asUTF8);
-			wordInfo = Quills::Terminal::word_of_char_in_string(asUTF8, selectionStart.first);
-			if ((wordInfo.first >= 0) && (wordInfo.first < kColumnCount) &&
-				(wordInfo.second >= 0) && ((wordInfo.first + wordInfo.second) <= kColumnCount))
+			try
 			{
-				selectionStart.first = wordInfo.first;
-				selectionPastEnd.first = wordInfo.first + wordInfo.second;
+				wordInfo = Quills::Terminal::word_of_char_in_string(asUTF8, selectionStart.first);
+				if ((wordInfo.first >= 0) && (wordInfo.first < kColumnCount) &&
+					(wordInfo.second >= 0) && ((wordInfo.first + wordInfo.second) <= kColumnCount))
+				{
+					selectionStart.first = wordInfo.first;
+					selectionPastEnd.first = wordInfo.first + wordInfo.second;
+				}
+			}
+			catch (std::exception const& e)
+			{
+				Console_Warning(Console_WriteValueCString, "caught exception while trying to find double-clicked word",
+								e.what());
 			}
 		}
 		releaseRowIterator(inTerminalViewPtr, &lineIterator);

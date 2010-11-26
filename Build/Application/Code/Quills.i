@@ -47,6 +47,48 @@ allowing you to directly access core functionality from scripts!"
 #ifdef SWIGPYTHON
 %{
 /*!
+This class helps to make exception messages a bit more descriptive
+when the cause of the error is something in a Python callback.
+
+(4.0)
+*/
+class _Quills_CallbackError: public std::runtime_error
+{
+public:
+	_Quills_CallbackError	(char const*	inMessage,
+							 PyObject*		inFunction)
+	:
+	std::runtime_error(getMessage(inMessage, inFunction))
+	{
+	}
+	
+	~_Quills_CallbackError () throw ()
+	{
+	}
+
+protected:
+	std::string
+	getMessage	(char const*	inMessage,
+				 PyObject*		inFunction)
+	const
+	{
+		std::string		result(inMessage);
+		
+		
+		if ((nullptr != inFunction) && (nullptr != PyEval_GetFuncName(inFunction)))
+		{
+			result += "; while calling ";
+			result += PyEval_GetFuncName(inFunction);
+			result += "()";
+		}
+		return result;
+	}
+
+private:
+};
+
+
+/*!
 Utility routine.  Given a Python string object, returns its
 value or (if not defined) an appropriate description.
 
@@ -225,7 +267,7 @@ CallPythonStringReturnString	(void*	inPythonFunctionObject,
 	assert(NULL != arguments);
 	pythonResult = PyEval_CallObject(pythonDef, arguments); // call Python
 	Py_DECREF(arguments), arguments = NULL;
-	_Quills_PropagateExceptions(pythonResult, "while C++ called a Python single-string-argument function that returns a string");
+	_Quills_PropagateExceptions(pythonResult, PyEval_GetFuncDesc(pythonDef));
 	if (NULL != pythonResult)
 	{
 		char const*		stringPtr = NULL;
@@ -233,8 +275,7 @@ CallPythonStringReturnString	(void*	inPythonFunctionObject,
 		
 		if (false == PyString_CheckExact(pythonResult))
 		{
-			PyErr_SetString(PyExc_TypeError, "Callback did not return a string");
-			return result;
+			throw _Quills_CallbackError("String must be returned", pythonDef);
 		}
 		
 		stringPtr = PyString_AsString(pythonResult);
@@ -278,23 +319,20 @@ CallPythonStringLongReturnLongPair	(void*	inPythonFunctionObject,
 		
 		if (false == PyTuple_CheckExact(pythonResult))
 		{
-			PyErr_SetString(PyExc_TypeError, "Callback did not return a tuple");
-			return result;
+			throw _Quills_CallbackError("Tuple must be returned", pythonDef);
 		}
 		
 		item0 = PyTuple_GetItem(pythonResult, 0);
 		if ((nullptr == item0) || (false == PyInt_CheckExact(item0)))
 		{
-			PyErr_SetString(PyExc_TypeError, "Callback did not return a tuple with an integer as a first item");
-			return result;
+			throw _Quills_CallbackError("First item of returned tuple must be an integer", pythonDef);
 		}
 		result.first = PyInt_AsLong(item0);
 		
 		item1 = PyTuple_GetItem(pythonResult, 1);
 		if ((nullptr == item1) || (false == PyInt_CheckExact(item1)))
 		{
-			PyErr_SetString(PyExc_TypeError, "Callback did not return a tuple with an integer as a second item");
-			return result;
+			throw _Quills_CallbackError("Second item of returned tuple must be an integer", pythonDef);
 		}
 		result.second = PyInt_AsLong(item1);
 	}
