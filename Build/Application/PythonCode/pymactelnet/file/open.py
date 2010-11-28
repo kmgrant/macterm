@@ -1,12 +1,18 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
 """Routines to open various types of files.
+
+macros -- set current macro set according to a ".macros" key-value-pair file
+script -- run any executable file as a Session
+session -- start a Session according to a ".session" key-value-pair file
+
 """
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '1 January 2008'
 __version__ = '4.0.0'
 
 import sys
+
 import pymactelnet.file.kvp
 # note: Quills is a compiled module, library path must be set properly
 import quills
@@ -35,9 +41,9 @@ def macros(pathname):
     is doing both.
     
     """
-    sfile = open(pathname, 'rU')
+    mfile = open(pathname, 'rU')
     try:
-        parser = pymactelnet.file.kvp.Parser(file_object=sfile)
+        parser = pymactelnet.file.kvp.Parser(file_object=mfile)
         defs = parser.results()
         macro_set = quills.Prefs(quills.Prefs.MACRO_SET)
         for key in defs:
@@ -50,7 +56,7 @@ def macros(pathname):
             macro_set.define_macro(number, name="Macro %i" % number, contents=data)
         quills.Prefs.set_current_macros(macro_set)
     finally:
-        sfile.close()
+        mfile.close()
 
 def script(pathname):
     """script(pathname) -> None
@@ -91,5 +97,6 @@ def session(pathname):
         sfile.close()
 
 def _test():
-    import doctest, pymactelnet.file.open
+    import doctest
+    import pymactelnet.file.open
     return doctest.testmod(pymactelnet.file.open)

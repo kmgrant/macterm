@@ -2,16 +2,16 @@
 # vim: set fileencoding=UTF-8 :
 """Parse key-value-pair file formats such as ".session".
 
-A key-value-pair file uses a single, all-lowercase, alphanumeric
-key name on each line, followed by an "=" sign, and the value.
-The value may be in optional quotation marks.  If it is within
-braces {}, it is considered a list, and list items are each
-followed by a comma ",".
+A key-value-pair file uses a single, all-lowercase, alphanumeric key name on
+each line, followed by an "=" sign, and the value.  The value may be in optional
+quotation marks.  If it is within braces {}, it is considered a list, and list
+items are each followed by a comma ",".
 
-Extremely old incarnations of this file format, specifically the
-saved files of NCSA Telnet 2.6, required an exact set of keys in
-a very specific order.  This parser does not care what the keys
-are, or what order they are in.
+Extremely old incarnations of this file format, specifically the saved files of
+NCSA Telnet 2.6, required an exact set of keys in a very specific order.  This
+parser does not care what the keys are, or what order they are in.
+
+Parser -- class to translate key-value-pair syntax into Python data
 
 """
 __author__ = 'Kevin Grant <kmg@mac.com>'
@@ -19,7 +19,13 @@ __date__ = '13 April 2009'
 __version__ = '4.0.0'
 
 class Parser (file):
-    def _parse_any_value (value):
+    """Read key-value-pair syntax and translate it into Python data.
+    
+    results -- retrieve key-value pairs as a dictionary
+    
+    """
+    
+    def _parse_any_value(value):
         """_parse_any_value(string) -> string
         
         Strip end whitespace and quotes from a string, returning
@@ -44,7 +50,8 @@ class Parser (file):
             pass
         return result
     _parse_any_value = staticmethod(_parse_any_value)
-    def _parse_list_value (value):
+
+    def _parse_list_value(value):
         """_parse_list_value(string) -> tuple
         
         Return a tuple with the actual values (strings or
@@ -70,7 +77,8 @@ class Parser (file):
         result = tuple([Parser._parse_any_value(x) for x in value.split(",")])
         return result
     _parse_list_value = staticmethod(_parse_list_value)
-    def __init__ (self, lines=None, file_object=None):
+
+    def __init__(self, lines=None, file_object=None):
         """Parser(lines) -> Parser
         Parser(file_object) -> Parser
         
@@ -138,7 +146,8 @@ class Parser (file):
                 raise SyntaxError("session file line %d: %s" % (i, str(e)))
             self._definitions[key] = value
             i = i + 1
-    def results (self):
+
+    def results(self):
         """results() -> dict
         
         Return the settings parsed from the file as key-value
@@ -157,7 +166,8 @@ class Parser (file):
         return self._definitions
 
 def _test():
-    import doctest, pymactelnet.file.kvp
+    import doctest
+    import pymactelnet.file.kvp
     return doctest.testmod(pymactelnet.file.kvp)
 
 if __name__ == '__main__':

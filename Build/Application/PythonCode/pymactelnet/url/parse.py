@@ -22,6 +22,7 @@ sftp -- handle URLs of the form "sftp://user@host:port"
 ssh -- handle URLs of the form "ssh://user@host:port"
 telnet -- handle URLs of the form "telnet://user@host:port"
 x_man_page -- handle URLs of the form "x-man-page://section/cmd"
+
 """
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '24 August 2006'
@@ -331,7 +332,8 @@ def x_man_page(url):
     return result
 
 def _test():
-    import doctest, pymactelnet.url.parse
+    import doctest
+    import pymactelnet.url.parse
     return doctest.testmod(pymactelnet.url.parse)
 
 if __name__ == '__main__':

@@ -1,151 +1,145 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
-"""The main entry point to MacTelnet.  Yes, a Python interpreter!
+"""The main entry point to MacTelnet.
 
-This Python script has the same name as the base executable so
-that it is recognized as the main entry point of the bundle.
-(See the bundle Info.plist for this reference.)
+This file's name must match the value of CFBundleExecutableName in "Info.plist".
 
-You will notice that this script actually turns around and
-invokes a *second* Python interpreter and script.  This is
-because the "real" entry point depends on compiled code, and the
-loader has to find the appropriate libraries.  The first script
-sets up loader environment variables to this end, and then runs a
-2nd interpreter and script to actually use the compiled modules.
-(Consequently, this first script could be written in any language
-but is in Python for consistency.)
+The loader is set up in this file, so that a 2nd script (executed at the end) is
+able to import compiled code.  Note that an alternative would have been to
+install the necessary frameworks in a location that the loader already searches,
+such as /Library/Frameworks; but it's nice to have all the files together, and
+definitely nice when users don't need an installer or administrator privileges.
 
-NOTE: It would be possible to avoid this script if all necessary
-MacTelnet libraries were installed in locations that the loader
-checks by default (/Library/Frameworks, for example).  However,
-that would also require the user to run an installer or otherwise
-use elevated permissions, which is inappropriate for this simple
-task.
 """
 __author__ = "Kevin Grant <kmg@mac.com>"
 __date__ = "2 September 2006"
 
-import sys, os
+import sys
+import os
 
-# find the "MacOS" folder
-macos_dir = os.path.dirname(os.path.normpath(sys.argv[0]))
-contents_dir = os.path.join(macos_dir, "..")
-bundle_dir = os.path.join(contents_dir, "..")
-frameworks_dir = os.path.join(contents_dir, "Frameworks")
-resources_dir = os.path.join(contents_dir, "Resources")
-
-# the PyMacTelnet.framework code is not compiled, so its version
-# will depend only on whatever the current implementation is
-pymactelnet_pylib_ver = "2.3"
-pymactelnet_dir = os.path.join(frameworks_dir, "PyMacTelnet.framework")
-pymactelnet_versions_dir = os.path.join(pymactelnet_dir, "Versions")
-pymactelnet_current_version_dir = os.path.join(pymactelnet_versions_dir, "Current")
-pymactelnet_pylib_dir = os.path.join(pymactelnet_current_version_dir, "lib", "python" + pymactelnet_pylib_ver)
-
-# now import utility modules
-sys.path.insert(0, pymactelnet_pylib_dir)
-import pymactelnet.utilities
-mac_os_name = pymactelnet.utilities.mac_os_name()
-
-# notes on the platform-dependent setup below...
-#
-# the interpreter MUST be invoked from a location physically inside the
-# bundle in order for the system to assign the correct bundle for such
-# things as the application menu and preferences; prior to Leopard, a
-# symlink is sufficient, but on Leopard the "python2.5" mini-executable
-# from "Build Applet" is required (renamed "MacTelnet_python2.5_wrap")
-#
-# the Quills.framework code is compiled, so it is architecture-dependent;
-# the SWIG wrappers must be built for every possible Python version that
-# is incompatible, namely the Python 2.3 PowerPC of Panther, the Python
-# 2.3.5 universal of Tiger, and the Python 2.5 universal of Leopard; the
-# core Quills library (the biggest chunk of code) is not dependent on the
-# Python version but still requires a PowerPC version for 10.3 since only
-# 10.4+ supports universal binaries...so with all these combinations a
-# bit of magic is used here to figure out just which one to load:
-# - Panther is PowerPC only and requires the Python 2.3 SWIG wrapper
-# - Tiger is universal and requires the Python 2.3.5 SWIG wrapper
-# - Leopard is universal and requires the Python 2.5 SWIG wrapper
-# - version "A" of the framework supports PowerPC only (and Python 2.3)
-# - version "B" of the framework is universal (for Python 2.3.5 or 2.5)
-if mac_os_name == "Snow Leopard":
-    py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.5_wrap")
-    quills_fw_ver = "B"
-    quills_pylib_ver = "2.5"
-elif mac_os_name == "Leopard":
-    py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.5_wrap")
-    quills_fw_ver = "B"
-    quills_pylib_ver = "2.5"
-elif mac_os_name == "Tiger":
-    py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.3.5")
-    quills_fw_ver = "B" # Tiger and Leopard use the same framework
-    quills_pylib_ver = "2.3.5"
-elif mac_os_name == "Panther":
-    py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.3")
-    quills_fw_ver = "A"
-    quills_pylib_ver = "2.3"
-else:
-    print >>sys.stderr, "WARNING: MacTelnet may not work on your system, the Python interpreter is unrecognized."
-    py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.x")
-    quills_fw_ver = "A"
-    quills_pylib_ver = "2.3"
-os.environ["PYTHONEXECUTABLE"] = py_interpreter
-quills_dir = os.path.join(frameworks_dir, "Quills.framework")
-quills_versions_dir = os.path.join(quills_dir, "Versions")
-quills_proper_version_dir = os.path.join(quills_versions_dir, quills_fw_ver)
-quills_pylib_dir = os.path.join(quills_proper_version_dir, "lib", "python" + quills_pylib_ver)
-
-# put the initial bundle location in the environment, for convenience
-# when initializing other components
-os.environ["INITIAL_APP_BUNDLE_DIR"] = bundle_dir
-
-# specify where dependent Python and C++ libraries will reside
-pypath_append = ""
-if "PYTHONPATH" in os.environ:
-    pypath_append = ":" + os.environ["PYTHONPATH"]
-os.environ["PYTHONPATH"] = quills_pylib_dir + ":" + pymactelnet_pylib_dir + pypath_append
-os.environ["DYLD_LIBRARY_PATH"] = quills_proper_version_dir
-
-# the following is NOT required for MacTelnet to run, however it is
-# useful for such things as conveniently running "pydoc" on Quills;
-# attempts to load Quills will call dependent frameworks (currently,
-# Growl.framework), and without a path these loads would fail
-os.environ["DYLD_FRAMEWORK_PATH"] = frameworks_dir
-
-# DEBUGGING ONLY: if you want to do memory debugging, you can substitute
-# the allocator library as follows (do NOT do this on a whim, guard
-# allocation makes the program MUCH, MUCH slower!)
-#os.environ["DYLD_INSERT_LIBRARIES"] = "/usr/lib/libgmalloc.dylib"
-
-# DEBUGGING ONLY: here is an easy way to enable the debugging versions of
-# all loaded frameworks (including system libraries), but DO NOTE this
-# is only likely to work in a boxed OS version (e.g. definitely works in
-# 10.4.0, may break in 10.4.1 as Apple does not update debug libraries)
-#os.environ["DYLD_IMAGE_SUFFIX"] = "_debug"
-
-# the value of sys.argv[0] is replaced before passing arguments on,
-# because it originally referred to this script
-sys.argv[0] = py_interpreter
-
-# locate the "real" main entry point script, the one depending on C++
-# libraries (hence the environment setup above); ensure it is passed as
-# the main argument to the interpreter
-main_script = os.path.join(macos_dir, "RunMacTelnet.py")
-sys.argv.insert(1, main_script)
-
-# WARNING: the Finder will include arguments (e.g. -psn_0_10223617) that
-# will not be present in a normal shell run; ensure these arguments are
-# preserved so that runs from the Finder are successful
-
-# if it is ever necessary to pass arguments to the 2nd Python script,
-# you could do so here
-#sys.argv.append('--whatever-option')
-
-# Since the main loop loads compiled Python modules, the environment of
-# the interpreter itself must know where those C++ libraries are.  It is
-# therefore necessary to re-exec an interpreter (with the environment
-# defined above) as opposed to simply running the 2nd Python file with
-# execfile(), say.  
-os.execve(sys.argv[0], sys.argv, os.environ)
-sys.exit(1)
-
+if __name__ == "__main__":
+    # find the "MacOS" folder
+    macos_dir = os.path.dirname(os.path.normpath(sys.argv[0]))
+    contents_dir = os.path.join(macos_dir, "..")
+    bundle_dir = os.path.join(contents_dir, "..")
+    frameworks_dir = os.path.join(contents_dir, "Frameworks")
+    resources_dir = os.path.join(contents_dir, "Resources")
+    
+    # the PyMacTelnet.framework code is not compiled, so its version
+    # will depend only on whatever the current implementation is
+    pymactelnet_pylib_ver = "2.3"
+    pymactelnet_dir = os.path.join(frameworks_dir, "PyMacTelnet.framework")
+    pymactelnet_versions_dir = os.path.join(pymactelnet_dir, "Versions")
+    pymactelnet_current_version_dir = os.path.join(pymactelnet_versions_dir, "Current")
+    pymactelnet_pylib_dir = os.path.join(pymactelnet_current_version_dir, "lib", "python" + pymactelnet_pylib_ver)
+    
+    # now import utility modules
+    sys.path.insert(0, pymactelnet_pylib_dir)
+    import pymactelnet.utilities
+    mac_os_name = pymactelnet.utilities.mac_os_name()
+    
+    # notes on the platform-dependent setup below...
+    #
+    # the interpreter MUST be invoked from a location physically inside the
+    # bundle in order for the system to assign the correct bundle for such
+    # things as the application menu and preferences; prior to Leopard, a
+    # symlink is sufficient, but as of Leopard, a tiny executable is built to
+    # run the Python interpreter from C++ ("MacTelnet_python2.5_wrap")
+    #
+    # the Quills.framework code is compiled, so it is architecture-dependent;
+    # the SWIG wrappers must be built for every possible Python version that
+    # is incompatible, namely the Python 2.3 PowerPC of Panther, the Python
+    # 2.3.5 universal of Tiger, and the Python 2.5 universal of Leopard; the
+    # core Quills library (the biggest chunk of code) is not dependent on the
+    # Python version but still requires a PowerPC version for 10.3 since only
+    # 10.4+ supports universal binaries...so with all these combinations a
+    # bit of magic is used here to figure out just which one to load:
+    # - Panther is PowerPC only and requires the Python 2.3 SWIG wrapper
+    # - Tiger is universal and requires the Python 2.3.5 SWIG wrapper
+    # - Leopard is universal and requires the Python 2.5 SWIG wrapper
+    # - version "A" of the framework supports PowerPC only (and Python 2.3)
+    # - version "B" of the framework is universal (for Python 2.3.5 or 2.5)
+    if mac_os_name == "Lion":
+        py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.5_wrap")
+        quills_fw_ver = "B"
+        quills_pylib_ver = "2.5"
+    elif mac_os_name == "Snow Leopard":
+        py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.5_wrap")
+        quills_fw_ver = "B"
+        quills_pylib_ver = "2.5"
+    elif mac_os_name == "Leopard":
+        py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.5_wrap")
+        quills_fw_ver = "B"
+        quills_pylib_ver = "2.5"
+    elif mac_os_name == "Tiger":
+        py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.3.5")
+        quills_fw_ver = "B" # Tiger and Leopard use the same framework
+        quills_pylib_ver = "2.3.5"
+    elif mac_os_name == "Panther":
+        py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.3")
+        quills_fw_ver = "A"
+        quills_pylib_ver = "2.3"
+    else:
+        print >>sys.stderr, "WARNING: MacTelnet may not work on your system, the Python interpreter is unrecognized."
+        py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.x")
+        quills_fw_ver = "A"
+        quills_pylib_ver = "2.3"
+    os.environ["PYTHONEXECUTABLE"] = py_interpreter
+    quills_dir = os.path.join(frameworks_dir, "Quills.framework")
+    quills_versions_dir = os.path.join(quills_dir, "Versions")
+    quills_proper_version_dir = os.path.join(quills_versions_dir, quills_fw_ver)
+    quills_pylib_dir = os.path.join(quills_proper_version_dir, "lib", "python" + quills_pylib_ver)
+    
+    # put the initial bundle location in the environment, for convenience
+    # when initializing other components
+    os.environ["INITIAL_APP_BUNDLE_DIR"] = bundle_dir
+    
+    # specify where dependent Python and C++ libraries will reside
+    pypath_append = ""
+    if "PYTHONPATH" in os.environ:
+        pypath_append = ":" + os.environ["PYTHONPATH"]
+    os.environ["PYTHONPATH"] = quills_pylib_dir + ":" + pymactelnet_pylib_dir + pypath_append
+    os.environ["DYLD_LIBRARY_PATH"] = quills_proper_version_dir
+    
+    # the following is NOT required for MacTelnet to run, however it is
+    # useful for such things as conveniently running "pydoc" on Quills;
+    # attempts to load Quills will call dependent frameworks (currently,
+    # Growl.framework), and without a path these loads would fail
+    os.environ["DYLD_FRAMEWORK_PATH"] = frameworks_dir
+    
+    # DEBUGGING ONLY: if you want to do memory debugging, you can substitute
+    # the allocator library as follows (do NOT do this on a whim, guard
+    # allocation makes the program MUCH, MUCH slower!)
+    #os.environ["DYLD_INSERT_LIBRARIES"] = "/usr/lib/libgmalloc.dylib"
+    
+    # DEBUGGING ONLY: here is an easy way to enable the debugging versions of
+    # all loaded frameworks (including system libraries), but DO NOTE this
+    # is only likely to work in a boxed OS version (e.g. definitely works in
+    # 10.4.0, may break in 10.4.1 as Apple does not update debug libraries)
+    #os.environ["DYLD_IMAGE_SUFFIX"] = "_debug"
+    
+    # the value of sys.argv[0] is replaced before passing arguments on,
+    # because it originally referred to this script
+    sys.argv[0] = py_interpreter
+    
+    # locate the "real" main entry point script, the one depending on C++
+    # libraries (hence the environment setup above); ensure it is passed as
+    # the main argument to the interpreter
+    main_script = os.path.join(macos_dir, "RunMacTelnet.py")
+    sys.argv.insert(1, main_script)
+    
+    # WARNING: the Finder will include arguments (e.g. -psn_0_10223617) that
+    # will not be present in a normal shell run; ensure these arguments are
+    # preserved so that runs from the Finder are successful
+    
+    # if it is ever necessary to pass arguments to the 2nd Python script,
+    # you could do so here
+    #sys.argv.append('--whatever-option')
+    
+    # Since the main loop loads compiled Python modules, the environment of
+    # the interpreter itself must know where those C++ libraries are.  It is
+    # therefore necessary to re-exec an interpreter (with the environment
+    # defined above) as opposed to simply running the 2nd Python file with
+    # execfile(), say.
+    os.execve(sys.argv[0], sys.argv, os.environ)
+    sys.exit(1)

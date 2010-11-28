@@ -13,6 +13,7 @@ sftp -- handle URLs of the form "sftp://user@host:port"
 ssh -- handle URLs of the form "ssh://user@host:port"
 telnet -- handle URLs of the form "telnet://user@host:port"
 x_man_page -- handle URLs of the form "x-man-page://section/cmd"
+
 """
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '24 August 2006'
@@ -287,7 +288,8 @@ def x_man_page(url):
         raise ValueError("unsupported form of x-man-page URL")
 
 def _test():
-    import doctest, pymactelnet.url.open
+    import doctest
+    import pymactelnet.url.open
     result = None
     try:
         result = doctest.testmod(pymactelnet.url.open)

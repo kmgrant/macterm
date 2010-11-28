@@ -5,6 +5,7 @@
 mac_os_name -- return a name like Panther, Tiger, Leopard, etc.
 slash_free_path -- remove all leading and trailing slashes
 sort_dict -- for testing, return deterministic "dict" description
+
 """
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '30 December 2006'
@@ -21,7 +22,7 @@ def mac_os_name():
     standard way, because (for instance) platform.mac_version()
     fails with the Panther version of Python.
     
-    >>> mac_os_name() in ['Snow Leopard', 'Leopard', 'Tiger', 'Panther']
+    >>> mac_os_name() in ['Lion', 'Snow Leopard', 'Leopard', 'Tiger', 'Panther']
     True
     
     """
@@ -33,6 +34,7 @@ def mac_os_name():
     if darwin_version.startswith('8.'): result = "Tiger"
     if darwin_version.startswith('9.'): result = "Leopard"
     if darwin_version.startswith('10.'): result = "Snow Leopard"
+    if darwin_version.startswith('11.'): result = "Lion"
     return result
 
 def slash_free_path(path):

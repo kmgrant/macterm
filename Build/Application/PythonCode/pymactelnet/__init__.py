@@ -1,4 +1,4 @@
-def run_module_tests( mod ):
+def run_module_tests(mod):
     """Every module must have a _test() function, which
     uses "doctest"; this function invokes that for the
     given module.

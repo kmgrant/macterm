@@ -1,6 +1,10 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
 """Routines to handle text in terminal screen buffers.
+
+find_word -- scan around a starting point to find the range of the word
+get_dumb_rendering -- string to describe a Unicode character in a dumb terminal
+
 """
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '28 November 2010'
@@ -8,6 +12,7 @@ __version__ = '4.0.0'
 
 import sys
 import string
+
 # note: Quills is a compiled module, library path must be set properly
 import quills
 
@@ -127,5 +132,6 @@ def get_dumb_rendering(ord_unicode_16):
     return result
 
 def _test():
-    import doctest, pymactelnet.term.text
+    import doctest
+    import pymactelnet.term.text
     return doctest.testmod(pymactelnet.term.text)
