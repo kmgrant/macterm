@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20101127',
     '20101126',
     '20101125',
     '20101124',
@@ -336,6 +337,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20101127': [
+        'Terminal search now accepts an empty query, which closes the search window and removes all search highlighting.',
+    ],
     '20101126': [
         'Added a new type of Growl notification for script errors, to make exceptions in user Python code more prominent.',
     ],

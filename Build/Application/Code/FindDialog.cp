@@ -684,7 +684,16 @@ initiateSearch	(My_FindDialogPtr	inPtr,
 	
 	GetControlTextAsCFString(inPtr->fieldKeywords, searchQueryCFString);
 	searchQueryLength = CFStringGetLength(searchQueryCFString);
-	if (STATIC_CAST(searchQueryLength, UInt32) >= inMinimumLength)
+	if (0 == searchQueryLength)
+	{
+		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow);
+		
+		
+		// special case; empty queries always “succeed”, but deselect everything
+		TerminalView_FindNothing(view);
+		result = true;
+	}
+	else if (STATIC_CAST(searchQueryLength, UInt32) >= inMinimumLength)
 	{
 		TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow);
 		TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(inPtr->terminalWindow);
