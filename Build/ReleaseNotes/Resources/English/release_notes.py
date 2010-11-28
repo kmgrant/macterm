@@ -338,6 +338,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20101127': [
+        'Terminal search is no longer dynamic while certain patterns are being typed, such as leading whitespace.',
         'Terminal search now accepts an empty query, which closes the search window and removes all search highlighting.',
     ],
     '20101126': [
