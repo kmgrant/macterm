@@ -16,11 +16,13 @@ def run_all_tests():
     """
     import pymactelnet.file.kvp
     import pymactelnet.file.open
+    import pymactelnet.term.text
     import pymactelnet.url.open
     import pymactelnet.url.parse
     import pymactelnet.utilities
     run_module_tests(pymactelnet.file.kvp)
     run_module_tests(pymactelnet.file.open)
+    run_module_tests(pymactelnet.term.text)
     run_module_tests(pymactelnet.url.open)
     run_module_tests(pymactelnet.url.parse)
     run_module_tests(pymactelnet.utilities)
