@@ -1530,18 +1530,30 @@ Terminal_NewScrollbackLineIterator	(TerminalScreenRef	inRef,
 	My_ScreenBufferPtr		ptr = getVirtualScreenData(inRef);
 	
 	
-	if (nullptr != ptr)
+	if ((nullptr != ptr) && (ptr->scrollbackBuffer.begin() != ptr->scrollbackBuffer.end()))
 	{
-		// ensure the specified row is in range
-		if (inLineNumberZeroForNewest < ptr->scrollbackBuffer.size())
+		try
 		{
-			try
+			My_ScreenBufferLineList::iterator	startIterator = ptr->scrollbackBuffer.begin();
+			My_LineIteratorPtr					iteratorPtr = nullptr;
+			Boolean								validIterator = true;
+			
+			
+			// ensure the specified row is in range; since the scrollback buffer is
+			// a linked list, it would be prohibitively expensive to ask for its size,
+			// so instead the iterator is incremented while watching for the end
+			for (My_ScreenBufferLineList::difference_type i = 0; i < inLineNumberZeroForNewest; ++i)
 			{
-				My_ScreenBufferLineList::iterator	startIterator = ptr->scrollbackBuffer.begin();
-				My_LineIteratorPtr					iteratorPtr = nullptr;
-				
-				
-				std::advance(startIterator, STATIC_CAST(inLineNumberZeroForNewest, My_ScreenBufferLineList::difference_type));
+				++startIterator;
+				if (startIterator == ptr->scrollbackBuffer.end())
+				{
+					validIterator = false;
+					break;
+				}
+			}
+			
+			if (validIterator)
+			{
 				iteratorPtr = new My_LineIterator(ptr->screenBuffer, ptr->scrollbackBuffer,
 													ptr->scrollbackBuffer/* iterator target */, startIterator);
 				if (nullptr != iteratorPtr)
@@ -1549,10 +1561,10 @@ Terminal_NewScrollbackLineIterator	(TerminalScreenRef	inRef,
 					result = REINTERPRET_CAST(iteratorPtr, Terminal_LineRef);
 				}
 			}
-			catch (std::bad_alloc)
-			{
-				result = nullptr;
-			}
+		}
+		catch (std::bad_alloc)
+		{
+			result = nullptr;
 		}
 	}
 	return result;
