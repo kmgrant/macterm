@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20101129',
     '20101128',
     '20101127',
     '20101126',
@@ -338,6 +339,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20101129': [
+        'Fixed terminal views in various ways to slightly improve performance.',
+    ],
     '20101128': [
         'Fixed renderer to avoid unnecessary cursor refreshes, which was consuming CPU time.',
     ],
