@@ -6957,7 +6957,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 /*!
 Like highlightVirtualRange(), but automatically uses
 the current text selection anchors for the specified
-terminal view.
+terminal view.  Has no effect if there is no selection.
 
 (3.0)
 */
@@ -6966,15 +6966,18 @@ highlightCurrentSelection	(My_TerminalViewPtr		inTerminalViewPtr,
 							 Boolean				inIsHighlighted,
 							 Boolean				inRedraw)
 {
-#if 0
-	Console_WriteValueFloat4("Selection range",
-								inTerminalViewPtr->text.selection.range.first.first,
-								inTerminalViewPtr->text.selection.range.first.second,
-								inTerminalViewPtr->text.selection.range.second.first,
-								inTerminalViewPtr->text.selection.range.second.second);
-#endif
-	highlightVirtualRange(inTerminalViewPtr, inTerminalViewPtr->text.selection.range,
-							kTerminalTextAttributeSelected, inIsHighlighted, inRedraw);
+	if (inTerminalViewPtr->text.selection.exists)
+	{
+	#if 0
+		Console_WriteValueFloat4("Selection range",
+									inTerminalViewPtr->text.selection.range.first.first,
+									inTerminalViewPtr->text.selection.range.first.second,
+									inTerminalViewPtr->text.selection.range.second.first,
+									inTerminalViewPtr->text.selection.range.second.second);
+	#endif
+		highlightVirtualRange(inTerminalViewPtr, inTerminalViewPtr->text.selection.range,
+								kTerminalTextAttributeSelected, inIsHighlighted, inRedraw);
+	}
 }// highlightCurrentSelection
 
 
