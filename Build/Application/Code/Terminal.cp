@@ -597,6 +597,13 @@ A line iterator can traverse from the oldest scrollback
 line (the beginning) all the way to the bottommost main
 screen line (the end), as if all terminal lines were
 stored sequentially in memory.
+
+IMPORTANT:	Since the scrollback size is cached, it is
+			important that the scrollback buffer NOT be
+			changed without updating the cache.  The
+			iterator holds a non-constant reference to
+			the buffer, but should have no legitimate
+			reason to resize the buffer.
 */
 struct My_LineIterator
 {
@@ -614,7 +621,7 @@ public:
 		assert((inInitialIteratorTarget == inScreenBuffer) || (inInitialIteratorTarget == inScrollbackBuffer));
 	}
 	
-	My_ScreenBufferLineList&
+	My_ScreenBufferLineList const&
 	currentBuffer ()
 	{
 		return *currentListPtr;
@@ -849,15 +856,9 @@ public:
 	ListenerModel_Ref					changeListenerModel;		//!< registry of listeners for various terminal events
 	ListenerModel_ListenerRef			preferenceMonitor;			//!< listener for changes to preferences that affect a particular screen
 	
-	/*!
-	IMPORTANT:  It may be useful (and implemented so as) to retain iterators.
-				However, lines can move between the two buffers, which screws
-				up the iterators, as they assume screen lines; and lines can
-				be deleted.  The screen...() routines are the ONLY places
-				these manipulations are ever performed, so that it is easy to
-				check and resynchronize retained iterators at the same time.
-				TO MAKE LIFE EASY, DON’T MESS WITH THE BUFFER LISTS ELSEWHERE.
-	*/
+	My_ScreenBufferLineList::size_type	scrollbackBufferCachedSize;	//!< linked list size is sometimes needed, but is VERY expensive to calculate;
+																	//!  therefore, it is cached, and ALL code that changes "scrollbackBuffer" must
+																	//!  be aware of this cached size and update it accordingly!
 	My_ScreenBufferLineList				scrollbackBuffer;			//!< a double-ended queue containing all the scrollback text for the terminal;
 																	//!  IMPORTANT: the FRONT of this queue is the scrollback line CLOSEST to the
 																	//!  top (FRONT) of the screen buffer line queue; imagine both queues starting
@@ -2282,7 +2283,10 @@ Terminal_CursorIsVisible	(TerminalScreenRef		inRef)
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr) result = dataPtr->cursorVisible;
+	if (nullptr != dataPtr)
+	{
+		result = dataPtr->cursorVisible;
+	}
 	return result;
 }// CursorIsVisible
 
@@ -2363,10 +2367,11 @@ Terminal_DeleteAllSavedLines	(TerminalScreenRef		inRef)
 	
 	if (dataPtr != nullptr)
 	{
-		SInt16 const	kPreviousScrollbackCount = dataPtr->scrollbackBuffer.size();
+		SInt16 const	kPreviousScrollbackCount = dataPtr->scrollbackBufferCachedSize;
 		
 		
 		dataPtr->scrollbackBuffer.clear();
+		dataPtr->scrollbackBufferCachedSize = 0;
 		
 		// notify listeners of the range of text that has gone away
 		{
@@ -2455,7 +2460,10 @@ Terminal_EmulatorIsVT100	(TerminalScreenRef		inRef)
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr) result = (dataPtr->emulator.primaryType == kTerminal_EmulatorVT100);
+	if (nullptr != dataPtr)
+	{
+		result = (dataPtr->emulator.primaryType == kTerminal_EmulatorVT100);
+	}
 	return result;
 }// EmulatorIsVT100
 
@@ -2480,7 +2488,10 @@ Terminal_EmulatorIsVT220	(TerminalScreenRef		inRef)
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr) result = (dataPtr->emulator.primaryType == kTerminal_EmulatorVT220);
+	if (nullptr != dataPtr)
+	{
+		result = (dataPtr->emulator.primaryType == kTerminal_EmulatorVT220);
+	}
 	return result;
 }// EmulatorIsVT220
 
@@ -3684,7 +3695,10 @@ Terminal_ReturnColumnCount		(TerminalScreenRef		inRef)
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr) result = dataPtr->text.visibleScreen.numberOfColumnsPermitted;
+	if (nullptr != dataPtr)
+	{
+		result = dataPtr->text.visibleScreen.numberOfColumnsPermitted;
+	}
 	return result;
 }// ReturnColumnCount
 
@@ -3764,7 +3778,10 @@ Terminal_ReturnInvisibleRowCount	(TerminalScreenRef		inRef)
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr) result = dataPtr->scrollbackBuffer.size();
+	if (nullptr != dataPtr)
+	{
+		result = dataPtr->scrollbackBufferCachedSize;
+	}
 	return result;
 }// ReturnInvisibleRowCount
 
@@ -3783,7 +3800,10 @@ Terminal_ReturnNextTabDistance		(TerminalScreenRef		inRef)
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr) result = tabStopGetDistanceFromCursor(dataPtr);
+	if (nullptr != dataPtr)
+	{
+		result = tabStopGetDistanceFromCursor(dataPtr);
+	}
 	return result;
 }// ReturnNextTabDistance
 
@@ -3802,7 +3822,10 @@ Terminal_ReturnRowCount		(TerminalScreenRef		inRef)
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr) result = dataPtr->screenBuffer.size();
+	if (nullptr != dataPtr)
+	{
+		result = dataPtr->screenBuffer.size();
+	}
 	return result;
 }// ReturnRowCount
 
@@ -3827,7 +3850,10 @@ Terminal_ReturnSpeaker		(TerminalScreenRef	inRef)
 	TerminalSpeaker_Ref			result = nullptr;
 	
 	
-	if (dataPtr != nullptr) result = dataPtr->speaker;
+	if (nullptr != dataPtr)
+	{
+		result = dataPtr->speaker;
+	}
 	return result;
 }// ReturnSpeaker
 
@@ -3872,7 +3898,10 @@ Terminal_ReverseVideoIsEnabled	(TerminalScreenRef		inRef)
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr) result = dataPtr->reverseVideo;
+	if (nullptr != dataPtr)
+	{
+		result = dataPtr->reverseVideo;
+	}
 	return result;
 }// ReverseVideoIsEnabled
 
@@ -3891,7 +3920,10 @@ Terminal_SaveLinesOnClearIsEnabled		(TerminalScreenRef		inRef)
 	Boolean				result = false;
 	
 	
-	if (dataPtr != nullptr) result = dataPtr->saveToScrollbackOnClear;
+	if (nullptr != dataPtr)
+	{
+		result = dataPtr->saveToScrollbackOnClear;
+	}
 	return result;
 }// SaveLinesOnClearIsEnabled
 
@@ -4969,6 +5001,7 @@ windowTitleCFString(),
 iconTitleCFString(),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard, kConstantsRegistry_ListenerModelDescriptorTerminalChanges)),
 preferenceMonitor(ListenerModel_NewStandardListener(preferenceChanged, this/* context */)),
+scrollbackBufferCachedSize(0),
 scrollbackBuffer(),
 screenBuffer(),
 bytesToEcho(),
@@ -12217,11 +12250,13 @@ screenCopyLinesToScrollback		(My_ScreenBufferPtr		inDataPtr)
 		
 		
 		inDataPtr->scrollbackBuffer.insert(inDataPtr->scrollbackBuffer.begin(), kLineCount/* number of lines */, templateLine);
+		inDataPtr->scrollbackBufferCachedSize += kLineCount;
 		std::copy(inDataPtr->screenBuffer.rbegin(), inDataPtr->screenBuffer.rend(), inDataPtr->scrollbackBuffer.begin());
 		
-		if (inDataPtr->scrollbackBuffer.size() > inDataPtr->text.scrollback.numberOfRowsPermitted)
+		if (inDataPtr->scrollbackBufferCachedSize > inDataPtr->text.scrollback.numberOfRowsPermitted)
 		{
 			inDataPtr->scrollbackBuffer.resize(inDataPtr->text.scrollback.numberOfRowsPermitted);
+			inDataPtr->scrollbackBufferCachedSize = inDataPtr->text.scrollback.numberOfRowsPermitted;
 		}
 		
 		if (result)
@@ -12328,7 +12363,7 @@ screenMoveLinesToScrollback		(My_ScreenBufferPtr						inDataPtr,
 		// scrolling will be done; figure out whether or not to recycle old lines
 		recycleLines = (!(inDataPtr->text.scrollback.enabled)) ||
 						(!(inDataPtr->scrollbackBuffer.empty()) &&
-							(inDataPtr->scrollbackBuffer.size() >= inDataPtr->text.scrollback.numberOfRowsPermitted));
+							(inDataPtr->scrollbackBufferCachedSize >= inDataPtr->text.scrollback.numberOfRowsPermitted));
 		
 		// adjust screen and scrollback buffers appropriately; new lines
 		// will either be rotated in from the oldest scrollback, or
@@ -12359,6 +12394,7 @@ screenMoveLinesToScrollback		(My_ScreenBufferPtr						inDataPtr,
 					inDataPtr->scrollbackBuffer.splice(inDataPtr->scrollbackBuffer.begin()/* the next oldest scrollback line */,
 														inDataPtr->screenBuffer/* the list to move from */,
 														inDataPtr->screenBuffer.begin()/* the line to move */);
+					++(inDataPtr->scrollbackBufferCachedSize);
 					
 					// end() points one past the end, so nudge it back
 					oldestScrollbackLine = inDataPtr->scrollbackBuffer.end();
@@ -12368,13 +12404,15 @@ screenMoveLinesToScrollback		(My_ScreenBufferPtr						inDataPtr,
 					inDataPtr->screenBuffer.splice(inDataPtr->screenBuffer.end()/* the next newest screen line */,
 													inDataPtr->scrollbackBuffer/* the list to move from */,
 													oldestScrollbackLine/* the line to move */);
+					--(inDataPtr->scrollbackBufferCachedSize);
 				}
 				
 				// the recycled line may have data in it, so clear it out
 				inDataPtr->screenBuffer.back().structureInitialize();
 			}
 			
-			//Console_WriteValue("post-recycle scrollback size", inDataPtr->scrollbackBuffer.size());
+			//Console_WriteValue("post-recycle scrollback size (actual)", inDataPtr->scrollbackBuffer.size());
+			//Console_WriteValue("post-recycle scrollback size (cached)", inDataPtr->scrollbackBufferCachedSize);
 		}
 		else
 		{
@@ -12398,13 +12436,16 @@ screenMoveLinesToScrollback		(My_ScreenBufferPtr						inDataPtr,
 			inDataPtr->scrollbackBuffer.splice(inDataPtr->scrollbackBuffer.begin()/* the next oldest scrollback line */,
 												movedLines/* the list to move from */,
 												movedLines.begin(), movedLines.end());
+			inDataPtr->scrollbackBufferCachedSize += movedLines.size();
 			
-			if (inDataPtr->scrollbackBuffer.size() > inDataPtr->text.scrollback.numberOfRowsPermitted)
+			if (inDataPtr->scrollbackBufferCachedSize > inDataPtr->text.scrollback.numberOfRowsPermitted)
 			{
 				inDataPtr->scrollbackBuffer.resize(inDataPtr->text.scrollback.numberOfRowsPermitted);
+				inDataPtr->scrollbackBufferCachedSize = inDataPtr->text.scrollback.numberOfRowsPermitted;
 			}
 			
-			//Console_WriteValue("post-move scrollback size", inDataPtr->scrollbackBuffer.size());
+			//Console_WriteValue("post-move scrollback size (actual)", inDataPtr->scrollbackBuffer.size());
+			//Console_WriteValue("post-move scrollback size (cached)", inDataPtr->scrollbackBufferCachedSize);
 			
 			// allocate new lines
 			try
@@ -12511,13 +12552,13 @@ void
 setScrollbackSize	(My_ScreenBufferPtr		inDataPtr,
 					 UInt32					inLineCount)
 {
-	My_ScreenBufferLineList::size_type const	kPreviousScrollbackCount = inDataPtr->scrollbackBuffer.size();
+	My_ScreenBufferLineList::size_type const	kPreviousScrollbackCount = inDataPtr->scrollbackBufferCachedSize;
 	
 	
 	inDataPtr->text.scrollback.numberOfRowsPermitted = inLineCount;
 	inDataPtr->text.scrollback.enabled = (inDataPtr->text.scrollback.numberOfRowsPermitted > 0L);
 	
-	if (inDataPtr->scrollbackBuffer.size() > inLineCount)
+	if (kPreviousScrollbackCount > inLineCount)
 	{
 		// notify listeners of the range of text that has gone away
 		{
@@ -12535,6 +12576,7 @@ setScrollbackSize	(My_ScreenBufferPtr		inDataPtr,
 	}
 	
 	inDataPtr->scrollbackBuffer.resize(inLineCount);
+	inDataPtr->scrollbackBufferCachedSize = inLineCount;
 	
 	// notify listeners that scroll activity has taken place,
 	// though technically no remaining lines have been affected
