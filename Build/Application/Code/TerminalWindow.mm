@@ -328,6 +328,7 @@ void					handleFindDialogClose			(FindDialog_Ref);
 void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
 void					handleNewSize					(WindowRef, Float32, Float32, void*);
 void					handlePendingUpdates			();
+void					installTickHandler				(TerminalWindowPtr);
 void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
 void					installUndoFullScreenChanges	(TerminalWindowRef, TerminalView_DisplayMode, TerminalView_DisplayMode);
 void					installUndoScreenDimensionChanges	(TerminalWindowRef);
@@ -2233,6 +2234,7 @@ installedActions()
 	this->terminalViewEventListener = ListenerModel_NewStandardListener(terminalViewStateChanged, REINTERPRET_CAST(this, TerminalWindowRef)/* context */);
 	TerminalView_StartMonitoring(newView, kTerminalView_EventFontSizeChanged, this->terminalViewEventListener);
 	TerminalView_StartMonitoring(newView, kTerminalView_EventScrolling, this->terminalViewEventListener);
+	TerminalView_StartMonitoring(newView, kTerminalView_EventSearchResultsExistence, this->terminalViewEventListener);
 	
 	// install a callback that handles commands relevant to terminal windows
 	{
@@ -2512,6 +2514,7 @@ TerminalWindow::
 			view = *viewIterator;
 			TerminalView_StopMonitoring(view, kTerminalView_EventFontSizeChanged, this->terminalViewEventListener);
 			TerminalView_StopMonitoring(view, kTerminalView_EventScrolling, this->terminalViewEventListener);
+			TerminalView_StopMonitoring(view, kTerminalView_EventSearchResultsExistence, this->terminalViewEventListener);
 		}
 	}
 	ListenerModel_ReleaseListener(&this->terminalViewEventListener);
@@ -3123,10 +3126,6 @@ createViews		(TerminalWindowPtr	inPtr)
 	assert_noerr(error);
 	error = HIViewAddSubview(contentView, inPtr->controls.scrollBarV);
 	assert_noerr(error);
-	inPtr->scrollTickHandler.install(GetControlEventTarget(inPtr->controls.scrollBarV), receiveScrollBarDraw,
-										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
-										inPtr->selfRef/* user data */);
-	assert(inPtr->scrollTickHandler.isInstalled());
 	
 	// create a horizontal scroll bar; the resize event handler initializes its size correctly
 	SetRect(&rect, 0, 0, 0, 0);
@@ -3658,6 +3657,32 @@ handlePendingUpdates ()
 	// couldn’t handle the events if they were pulled)
 	isEvent = EventAvail(updateMask, &updateEvent);
 }// handlePendingUpdates
+
+
+/*!
+Installs a handler to draw tick marks on top of the
+standard scroll bar (for showing the location of search
+results).
+
+This handler is not always installed because it is only
+needed while there are search results defined, and there
+is a cost to allowing scroll bar draws to enter the
+application’s memory space.
+
+To remove, call inPtr->scrollTickHandler.remove().
+
+(4.0)
+*/
+void
+installTickHandler	(TerminalWindowPtr		inPtr)
+{
+	inPtr->scrollTickHandler.remove();
+	assert(false == inPtr->scrollTickHandler.isInstalled());
+	inPtr->scrollTickHandler.install(GetControlEventTarget(inPtr->controls.scrollBarV), receiveScrollBarDraw,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
+										inPtr->selfRef/* user data */);
+	assert(inPtr->scrollTickHandler.isInstalled());
+}// installTickHandler
 
 
 /*!
@@ -6999,7 +7024,8 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	
 	// currently, only one type of event is expected
 	assert((inTerminalViewEvent == kTerminalView_EventScrolling) ||
-			(inTerminalViewEvent == kTerminalView_EventFontSizeChanged));
+			(inTerminalViewEvent == kTerminalView_EventFontSizeChanged) ||
+			(inTerminalViewEvent == kTerminalView_EventSearchResultsExistence));
 	
 	switch (inTerminalViewEvent)
 	{
@@ -7027,6 +7053,27 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			// and, set window dimensions to this new standard size
 			TerminalView_GetIdealSize(view, screenWidth, screenHeight);
 			setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
+		}
+		break;
+	
+	case kTerminalView_EventSearchResultsExistence:
+		// search results either appeared or disappeared; ensure the scroll bar
+		// rendering is only installed when it is needed
+		{
+			TerminalViewRef		view = REINTERPRET_CAST(inEventContextPtr, TerminalViewRef);
+			
+			
+			if (TerminalView_SearchResultsExist(view))
+			{
+				installTickHandler(ptr);
+			}
+			else
+			{
+				ptr->scrollTickHandler.remove();
+				assert(false == ptr->scrollTickHandler.isInstalled());
+			}
+			(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarH, true);
+			(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarV, true);
 		}
 		break;
 	

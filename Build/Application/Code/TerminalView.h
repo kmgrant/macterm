@@ -138,10 +138,13 @@ receive notification of.
 */
 enum TerminalView_Event
 {
-	kTerminalView_EventFontSizeChanged	= 'FSiz',	//!< the font size used for drawing text has been altered
-													//!  (context: TerminalViewRef)
-	kTerminalView_EventScrolling		= 'Scrl'	//!< the visible part of the terminal view has changed
-													//!  (context: TerminalViewRef)
+	kTerminalView_EventFontSizeChanged			= 'FSiz',	//!< the font size used for drawing text has been altered
+															//!  (context: TerminalViewRef)
+	kTerminalView_EventScrolling				= 'Scrl',	//!< the visible part of the terminal view has changed
+															//!  (context: TerminalViewRef)
+	kTerminalView_EventSearchResultsExistence	= 'Srch'	//!< the result of TerminalView_SearchResultsExist() is now
+															//!  different; this is NOT called if the number of search
+															//!  results simply changes (context: TerminalViewRef)
 };
 
 #include "TerminalTextAttributes.typedef.h"

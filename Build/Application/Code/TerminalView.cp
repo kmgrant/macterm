@@ -796,9 +796,9 @@ TerminalView_DisplaySaveSelectedTextUI	(TerminalViewRef	inView)
 Removes all highlighted search results ranges, and clears the
 current search result focus.
 
-This triggers a "kTerminalView_EventScrolling" event so that
-listeners can respond (for instance, to clear a scroll bar that
-is showing the positions of the search results).
+A "kTerminalView_EventSearchResultsExistence" event is sent if
+the previous search results were not already cleared; this
+allows a view to stop customizing its scroll bar display.
 
 \retval kTerminalView_ResultOK
 if no error occurred
@@ -818,6 +818,9 @@ TerminalView_FindNothing	(TerminalViewRef	inView)
 	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
 	else
 	{
+		Boolean const	kWasCleared = viewPtr->text.searchResults.empty();
+		
+		
 		for (TerminalView_CellRangeList::const_iterator toRange = viewPtr->text.searchResults.begin();
 				toRange != viewPtr->text.searchResults.end(); ++toRange)
 		{
@@ -827,8 +830,10 @@ TerminalView_FindNothing	(TerminalViewRef	inView)
 		viewPtr->text.searchResults.clear();
 		viewPtr->text.toCurrentSearchResult = viewPtr->text.searchResults.end();
 		
-		// TEMPORARY - efficiency may demand a unique type of event for this
-		eventNotifyForView(viewPtr, kTerminalView_EventScrolling, inView/* context */);
+		if (false == kWasCleared)
+		{
+			eventNotifyForView(viewPtr, kTerminalView_EventSearchResultsExistence, inView/* context */);
+		}
 	}
 	return result;
 }// FindNothing
@@ -849,6 +854,10 @@ This triggers a "kTerminalView_EventScrolling" event so that
 listeners can respond (for instance, to update a scroll bar that
 is showing the positions of the search results).
 
+A "kTerminalView_EventSearchResultsExistence" event is also sent,
+if the previous search results were empty; this allows a view to
+start customizing its scroll bar display.
+
 \retval kTerminalView_ResultOK
 if no error occurred
 
@@ -868,6 +877,9 @@ TerminalView_FindVirtualRange	(TerminalViewRef				inView,
 	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
 	else
 	{
+		Boolean const	kWasCleared = viewPtr->text.searchResults.empty();
+		
+		
 		viewPtr->text.searchResults.push_back(inSelection);
 		assert(false == viewPtr->text.searchResults.empty());
 		if (viewPtr->text.searchResults.end() == viewPtr->text.toCurrentSearchResult)
@@ -880,6 +892,11 @@ TerminalView_FindVirtualRange	(TerminalViewRef				inView,
 		
 		// TEMPORARY - efficiency may demand a unique type of event for this
 		eventNotifyForView(viewPtr, kTerminalView_EventScrolling, inView/* context */);
+		
+		if (kWasCleared != viewPtr->text.searchResults.empty())
+		{
+			eventNotifyForView(viewPtr, kTerminalView_EventSearchResultsExistence, inView/* context */);
+		}
 	}
 	return result;
 }// FindVirtualRange
