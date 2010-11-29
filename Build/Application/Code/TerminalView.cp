@@ -6966,7 +6966,7 @@ highlightCurrentSelection	(My_TerminalViewPtr		inTerminalViewPtr,
 							 Boolean				inIsHighlighted,
 							 Boolean				inRedraw)
 {
-	if (inTerminalViewPtr->text.selection.exists)
+	if (inTerminalViewPtr->text.selection.range.first != inTerminalViewPtr->text.selection.range.second)
 	{
 	#if 0
 		Console_WriteValueFloat4("Selection range",
