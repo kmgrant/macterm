@@ -9595,10 +9595,9 @@ returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
 				iteratorAdvanceResult = Terminal_LineIteratorAdvance(inTerminalViewPtr->screen.ref, lineIterator, +1);
 				if (kTerminal_ResultIteratorCannotAdvance == iteratorAdvanceResult)
 				{
-					// iterator has reached end of buffer; most likely means that the selection
-					// crosses from the scrollback to the main screen, so reset to the main screen
-					releaseRowIterator(inTerminalViewPtr, &lineIterator);
-					lineIterator = findRowIteratorRelativeTo(inTerminalViewPtr, 0/* requested row */, 0/* origin row */);
+					// it is not clear how the iterator could fail to advance...just abort
+					Console_Warning(Console_WriteLine, "row iterator unexpectedly failed to advance while trying to gather text");
+					break;
 				}
 			}
 			releaseRowIterator(inTerminalViewPtr, &lineIterator);
