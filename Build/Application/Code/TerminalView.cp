@@ -4682,18 +4682,6 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			// certainly the common case, so it’s good if this is as efficient as possible)
 			DrawText(oldMacRomanBufferForQuickDraw, 0/* offset */, inCharacterCount); // draw text using current font, size, color, etc.
 		}
-		
-		// draw the cursor if it is in the requested region
-		{
-			Rect	intersection;
-			
-			
-			if (SectRect(&inOldQuickDrawBoundaries, &inTerminalViewPtr->screen.cursor.bounds, &intersection) &&
-				(kMyCursorStateVisible == inTerminalViewPtr->screen.cursor.currentState))
-			{
-				updateDisplayInRegion(inTerminalViewPtr, inTerminalViewPtr->screen.cursor.boundsAsRegion);
-			}
-		}
 	}
 	
 	if (nullptr != deletedBufferPtr)
