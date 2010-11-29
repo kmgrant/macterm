@@ -180,6 +180,10 @@ public:
 	//! returns true only if the event handler was allocated and installed successfully
 	inline bool
 	isInstalled () const;
+	
+	//! removes the handler; subsequent calls to isInstalled() will return false, but install() can be called again
+	inline void
+	remove ();
 
 protected:
 	static inline void
@@ -367,7 +371,7 @@ template < typename event_type_container >
 CarbonEventHandlerWrapGeneric< event_type_container >::
 ~CarbonEventHandlerWrapGeneric ()
 {
-	remove(_procUPP, _handler);
+	remove();
 }// CarbonEventHandlerWrapGeneric destructor
 
 
@@ -379,8 +383,7 @@ install		(EventTargetRef					inTarget,
 			 event_type_container const&	inEvents,
 			 void*							inDataToPassToHandler)
 {
-	if (nullptr != _handler) remove(_procUPP, _handler);
-	_installed = false;
+	remove();
 	_procUPP = NewEventHandlerUPP(inProcPtr);
 	if (nullptr != _procUPP)
 	{
@@ -439,12 +442,25 @@ const
 template < typename event_type_container >
 void
 CarbonEventHandlerWrapGeneric< event_type_container >::
+remove ()
+{
+	if (nullptr != _handler)
+	{
+		remove(_procUPP, _handler);
+	}
+	_installed = false;
+}// remove (no arguments)
+
+
+template < typename event_type_container >
+void
+CarbonEventHandlerWrapGeneric< event_type_container >::
 remove	(EventHandlerUPP&	inoutUPP,
 		 EventHandlerRef&	inoutHandler)
 {
 	if (nullptr != inoutHandler) RemoveEventHandler(inoutHandler), inoutHandler = nullptr;
 	if (nullptr != inoutUPP) DisposeEventHandlerUPP(inoutUPP), inoutUPP = nullptr;
-}// remove
+}// remove (2 arguments)
 
 
 CarbonEventHandlerWrap::
