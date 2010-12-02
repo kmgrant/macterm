@@ -231,7 +231,7 @@ struct My_RegionConverter
 struct My_TerminalView
 {
 	My_TerminalView		(HIViewRef);
-	My_TerminalView		(TerminalView_ContentView*);
+	My_TerminalView		(TerminalView_ContentView*, TerminalView_BackgroundView*, TerminalView_BackgroundView*);
 	~My_TerminalView	();
 	
 	void
@@ -250,11 +250,11 @@ struct My_TerminalView
 	CFRetainRelease		accessibilityObject;	// AXUIElementRef; makes terminal views compatible with accessibility technologies
 	NSView*				encompassingNSView;		// contains all other HIViews but is otherwise invisible
 	HIViewRef			encompassingHIView;		// Carbon version; will go away when Cocoa transition is complete
-	NSView*				backgroundNSView;		// view that renders the background of the terminal screen (border included)
+	TerminalView_BackgroundView*	backgroundNSView;	// view that renders the background of the terminal screen (border included)
 	HIViewRef			backgroundHIView;		// Carbon version; will go away when Cocoa transition is complete
 	NSView*				focusNSView;			// view whose current focus part determines the visibility and boundaries of the focus ring
 	HIViewRef			focusHIView;			// Carbon version; will go away when Cocoa transition is complete
-	NSView*				paddingNSView;			// view that is outset by the padding amount from the content view, if constructed as a Cocoa view
+	TerminalView_BackgroundView*	paddingNSView;	// view that is outset by the padding amount from the content view, if constructed as a Cocoa view
 	HIViewRef			paddingHIView;			// Carbon version; will go away when Cocoa transition is complete
 	TerminalView_ContentView*	contentNSView;	// view that renders the text of the terminal screen, if constructed as a Cocoa view
 	HIViewRef			contentHIView;			// Carbon version; will go away when Cocoa transition is complete
@@ -516,6 +516,23 @@ void				visualBell							(TerminalViewRef);
 
 } // anonymous namespace
 
+@interface TerminalView_BackgroundView (TerminalView_BackgroundViewPrivate)
+
+- (void)
+drawRect:(NSRect)	rect;
+
+- (size_t)
+colorIndex; // a "kTerminalView_ColorIndex..." constant
+- (void)
+setColorIndex:(size_t)	aColorIndex;
+
+- (My_TerminalViewPtr)
+internalViewPtr;
+- (void)
+setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr;
+
+@end
+
 @interface TerminalView_ContentView (TerminalView_ContentViewPrivate)
 
 - (void)
@@ -768,9 +785,11 @@ actual NSView* hierarchy.)
 (4.0)
 */
 TerminalViewRef
-TerminalView_NewNSViewBased		(TerminalView_ContentView*	inBaseView,
-								 TerminalScreenRef			inScreenDataSource,
-								 Preferences_ContextRef		inFormatOrNull)
+TerminalView_NewNSViewBased		(TerminalView_ContentView*		inBaseView,
+								 TerminalView_BackgroundView*	inPaddingView,
+								 TerminalView_BackgroundView*	inBackgroundView,
+								 TerminalScreenRef				inScreenDataSource,
+								 Preferences_ContextRef			inFormatOrNull)
 {
 	TerminalViewRef		result = nullptr;
 	
@@ -780,11 +799,10 @@ TerminalView_NewNSViewBased		(TerminalView_ContentView*	inBaseView,
 	
 	try
 	{
-		My_TerminalViewPtr	viewPtr = new My_TerminalView(inBaseView);
+		My_TerminalViewPtr	viewPtr = new My_TerminalView(inBaseView, inPaddingView, inBackgroundView);
 		
 		
 		assert(nullptr != viewPtr);
-		[inBaseView setInternalViewPtr:viewPtr];
 		result = REINTERPRET_CAST(viewPtr, TerminalViewRef);
 	}
 	catch (std::exception const& e)
@@ -3432,7 +3450,9 @@ allow some other changes.
 (4.0)
 */
 My_TerminalView::
-My_TerminalView		(TerminalView_ContentView*		inSuperclassViewInstance)
+My_TerminalView		(TerminalView_ContentView*		inSuperclassViewInstance,
+					 TerminalView_BackgroundView*	inPaddingView,
+					 TerminalView_BackgroundView*	inBackgroundView)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 encodingConfig(nullptr), // set later
@@ -3445,13 +3465,13 @@ isCocoa(true),
 accessibilityObject(), // obsolete
 encompassingNSView(nil), // set later
 encompassingHIView(nullptr),
-backgroundNSView(nil), // set later
+backgroundNSView([inBackgroundView retain]),
 backgroundHIView(nullptr),
 focusNSView(nil), // set later
 focusHIView(nullptr),
-paddingNSView(nil), // set later
+paddingNSView([inPaddingView retain]),
 paddingHIView(nullptr),
-contentNSView(inSuperclassViewInstance),
+contentNSView([inSuperclassViewInstance retain]),
 contentHIView(nullptr),
 containerResizeHandler(), // set later
 contextualMenuHandler(),
@@ -3590,8 +3610,36 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		assert(preferenceCount > 0);
 	}
 	
-	// create HIViews
-	if ((false == this->isCocoa) && (nullptr != this->contentHIView))
+	// create views
+	if (this->isCocoa)
+	{
+		// read optional image URL
+		// UNIMPLEMENTED
+		
+		// NOTE: in the Cocoa implementation, all views are passed in to the routine that
+		// constructs the Terminal View, so views do not need to be created here; but,
+		// it is necessary to associate the Terminal View object with them
+		[this->contentNSView setInternalViewPtr:this];
+		[this->paddingNSView setInternalViewPtr:this];
+		[this->backgroundNSView setInternalViewPtr:this];
+		
+		// NOTE: initializing the padding and background view colors is not really necessary
+		// (by the time the views are displayed, they will have been updated in the same way
+		// that they are whenever the user changes preferences later); however, it is
+		// important to tell the views which color index to use
+		[this->paddingNSView setColorIndex:kMyBasicColorIndexNormalBackground];
+		[this->backgroundNSView setColorIndex:kMyBasicColorIndexMatteBackground];
+		
+		// specify the view to use for focus and basic input
+		this->focusNSView = this->backgroundNSView;
+		
+		// since no extra rendering, etc. is required, make this a mere ALIAS
+		// for the background view; this is so that code intending to operate
+		// on the “entire” view can clearly indicate this by referring to the
+		// encompassing pane instead of some specific pane that might change
+		this->encompassingNSView = this->backgroundNSView;
+	}
+	else if (nullptr != this->contentHIView)
 	{
 		Preferences_Result	preferencesResult = kPreferences_ResultOK;
 		CFStringRef			imageURLCFString = nullptr;
@@ -3766,6 +3814,11 @@ that deals with setup and teardown.
 My_TerminalView::
 ~My_TerminalView ()
 {
+	// NOTE: encompassingNSView and focusNSView are aliases only, and are never retained
+	[this->contentNSView release];
+	[this->paddingNSView release];
+	[this->backgroundNSView release];
+	
 	// stop listening for terminal bells
 	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeAudioEvent, this->screen.bellHandler);
 	ListenerModel_ReleaseListener(&this->screen.bellHandler);
@@ -10342,16 +10395,23 @@ setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 	switch (inColorEntryNumber)
 	{
 	case kTerminalView_ColorIndexNormalBackground:
-		inTerminalViewPtr->text.colors[kMyBasicColorIndexNormalBackground] = *inColorPtr;
-		if (nullptr != inTerminalViewPtr->paddingHIView)
 		{
-			OSStatus	error = noErr;
-			
-			
-			error = SetControlProperty(inTerminalViewPtr->paddingHIView, AppResources_ReturnCreatorCode(),
-										kConstantsRegistry_ControlPropertyTypeBackgroundColor,
-										sizeof(*inColorPtr), inColorPtr);
-			assert_noerr(error);
+			inTerminalViewPtr->text.colors[kMyBasicColorIndexNormalBackground] = *inColorPtr;
+			if (inTerminalViewPtr->isCocoa)
+			{
+				// the view reads its color from the associated data structure automatically, so just redraw
+				[inTerminalViewPtr->paddingNSView setNeedsDisplay:YES];
+			}
+			else if (nullptr != inTerminalViewPtr->paddingHIView)
+			{
+				OSStatus	error = noErr;
+				
+				
+				error = SetControlProperty(inTerminalViewPtr->paddingHIView, AppResources_ReturnCreatorCode(),
+											kConstantsRegistry_ControlPropertyTypeBackgroundColor,
+											sizeof(*inColorPtr), inColorPtr);
+				assert_noerr(error);
+			}
 		}
 		break;
 	
@@ -10374,7 +10434,16 @@ setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 	case kTerminalView_ColorIndexMatteBackground:
 		{
 			inTerminalViewPtr->text.colors[kMyBasicColorIndexMatteBackground] = *inColorPtr;
-			if (nullptr != inTerminalViewPtr->backgroundHIView)
+			if (inTerminalViewPtr->isCocoa)
+			{
+				CGDeviceColor	asFloats = ColorUtilities_CGDeviceColorMake(*inColorPtr);
+				
+				
+				[inTerminalViewPtr->backgroundNSView setBackgroundColor:[NSColor colorWithCalibratedRed:asFloats.red green:asFloats.green
+																										blue:asFloats.blue alpha:1.0]];
+				[inTerminalViewPtr->backgroundNSView setNeedsDisplay:YES];
+			}
+			else if (nullptr != inTerminalViewPtr->backgroundHIView)
 			{
 				OSStatus	error = noErr;
 				
@@ -11441,6 +11510,116 @@ visualBell	(TerminalViewRef	inView)
 } // anonymous namespace
 
 
+@implementation TerminalView_BackgroundView
+
+
+/*!
+Constructor.
+
+(4.0)
+*/
+- (id)
+initWithFrame:(NSRect)		aFrame
+{
+	self = [super initWithFrame:aFrame];
+	if (nil != self)
+	{
+		self->colorIndex = kMyBasicColorIndexNormalBackground;
+		self->internalViewPtr = nullptr;
+	}
+	return self;
+}
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (size_t)
+colorIndex
+{
+	return colorIndex;
+}
+- (void)
+setColorIndex:(size_t)		aColorIndex
+{
+	colorIndex = aColorIndex;
+}// setColorIndex:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (My_TerminalViewPtr)
+internalViewPtr
+{
+	return REINTERPRET_CAST(internalViewPtr, My_TerminalViewPtr);
+}
+- (void)
+setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
+{
+	internalViewPtr = aViewPtr;
+}// setInternalViewPtr:
+
+
+#pragma mark NSView
+
+
+/*!
+Render the specified part of the terminal background.
+
+(4.0)
+*/
+- (void)
+drawRect:(NSRect)	rect
+{
+	My_TerminalViewPtr		viewPtr = [self internalViewPtr];
+	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
+	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	CGRect					clipBounds = CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+	
+	
+	[super drawRect:rect];
+	
+	if (nullptr != viewPtr)
+	{
+		CGDeviceColor	asFloats = ColorUtilities_CGDeviceColorMake(viewPtr->text.colors[[self colorIndex]]);
+		
+		
+		// draw background
+		CGContextSetRGBFillColor(drawingContext, asFloats.red, asFloats.green, asFloats.blue, 1.0/* alpha */);
+		CGContextFillRect(drawingContext, clipBounds);
+	}
+	else
+	{
+		// no associated view yet; draw a dummy background
+		CGContextSetRGBFillColor(drawingContext, 1.0/* red */, 1.0/* green */, 1.0/* blue */, 1.0/* alpha */);
+		CGContextFillRect(drawingContext, clipBounds);
+	}
+}// drawRect
+
+
+- (BOOL)
+isOpaque
+{
+	return YES;
+}// isOpaque
+
+
+@end // TerminalView_BackgroundView
+
+
 @implementation TerminalView_ContentView
 
 
@@ -11456,6 +11635,7 @@ initWithFrame:(NSRect)		aFrame
 	if (nil != self)
 	{
 		self->showDragHighlight = NO;
+		self->internalViewPtr = nullptr;
 	}
 	return self;
 }
@@ -11503,7 +11683,7 @@ setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
 }// setInternalViewPtr:
 
 
-#pragma mark NSControl
+#pragma mark NSView
 
 
 /*!
@@ -11520,35 +11700,31 @@ something like a formatting sheet’s preview pane.)
 - (void)
 drawRect:(NSRect)	rect
 {
-	My_TerminalViewPtr	viewPtr = [self internalViewPtr];
-	NSGraphicsContext*	contextMgr = [NSGraphicsContext currentContext];
-	CGContextRef		drawingContext = (CGContextRef)[contextMgr graphicsPort];
-	NSRect				entireRect = [self bounds];
-	CGRect				clipBounds = CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
-	CGRect				contentBounds = CGRectMake(entireRect.origin.x, entireRect.origin.y, entireRect.size.width, entireRect.size.height);
+	My_TerminalViewPtr		viewPtr = [self internalViewPtr];
+	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
+	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	NSRect					entireRect = [self bounds];
+	CGRect					clipBounds = CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+	CGRect					contentBounds = CGRectMake(entireRect.origin.x, entireRect.origin.y, entireRect.size.width, entireRect.size.height);
 	
 	
 	[super drawRect:rect];
-	
-	// draw background
-	useTerminalTextColors(viewPtr, drawingContext, kNoTerminalTextAttributes, 1.0/* alpha */);
-	CGContextFillRect(drawingContext, clipBounds);
 	
 	// INCOMPLETE!
 	
 	// draw cursor
 	if (kMyCursorStateVisible == viewPtr->screen.cursor.currentState)
 	{
-		CGContextSaveRestore	_(drawingContext);
-		TerminalTextAttributes	cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
-		CGRect					cursorFloatBounds = CGRectMake(viewPtr->screen.cursor.bounds.left,
-																viewPtr->screen.cursor.bounds.top,
-																viewPtr->screen.cursor.bounds.right -
-																	viewPtr->screen.cursor.bounds.left
-																	- 2/* TEMPORARY Quartz/QD conversion */,
-																viewPtr->screen.cursor.bounds.bottom -
-																	viewPtr->screen.cursor.bounds.top
-																	- 2/* TEMPORARY Quartz/QD conversion */);
+		CGContextSaveRestore		_(drawingContext);
+		TerminalTextAttributes		cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
+		CGRect						cursorFloatBounds = CGRectMake(viewPtr->screen.cursor.bounds.left,
+																	viewPtr->screen.cursor.bounds.top,
+																	viewPtr->screen.cursor.bounds.right -
+																		viewPtr->screen.cursor.bounds.left
+																		- 2/* TEMPORARY Quartz/QD conversion */,
+																	viewPtr->screen.cursor.bounds.bottom -
+																		viewPtr->screen.cursor.bounds.top
+																		- 2/* TEMPORARY Quartz/QD conversion */);
 		
 		
 		// flip colors and paint at the current blink alpha value
@@ -11573,9 +11749,6 @@ drawRect:(NSRect)	rect
 		DragAndDrop_HideHighlightFrame(drawingContext, contentBounds);
 	}
 }// drawRect
-
-
-#pragma mark NSView
 
 
 - (BOOL)

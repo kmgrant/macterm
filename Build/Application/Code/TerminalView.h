@@ -175,6 +175,22 @@ typedef std::vector< TerminalView_CellRange >				TerminalView_CellRangeList;
 #ifdef __OBJC__
 
 /*!
+Implements the background rendering part of the
+Terminal View.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface TerminalView_BackgroundView : NSView
+{
+@private
+	size_t	colorIndex;
+	void*	internalViewPtr;
+}
+@end
+
+/*!
 Implements the main rendering part of the Terminal View.
 
 Note that this is only in the header for the sake of
@@ -191,6 +207,7 @@ changes to an interface declared in a ".mm" file.
 
 #else
 
+class TerminalView_BackgroundView;
 class TerminalView_ContentView;
 
 #endif // __OBJC__
@@ -214,14 +231,16 @@ void
 //@{
 
 TerminalViewRef
-	TerminalView_NewNSViewBased		(TerminalView_ContentView*	inBaseView,
-									 TerminalScreenRef			inScreenDataSource,
-									 Preferences_ContextRef		inFormatOrNull = nullptr);
+	TerminalView_NewNSViewBased		(TerminalView_ContentView*		inBaseView,
+									 TerminalView_BackgroundView*	inPaddingView,
+									 TerminalView_BackgroundView*	inBackgroundView,
+									 TerminalScreenRef				inScreenDataSource,
+									 Preferences_ContextRef			inFormatOrNull = nullptr);
 
 // AUTOMATICALLY DESTROYED WHEN THE VIEW FROM TerminalView_ReturnContainerHIView() GOES AWAY
 TerminalViewRef
-	TerminalView_NewHIViewBased		(TerminalScreenRef			inScreenDataSource,
-									 Preferences_ContextRef		inFormatOrNull = nullptr);
+	TerminalView_NewHIViewBased		(TerminalScreenRef				inScreenDataSource,
+									 Preferences_ContextRef			inFormatOrNull = nullptr);
 
 //@}
 

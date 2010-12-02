@@ -250,7 +250,9 @@ showTestTerminalWindow:(id)		sender
 - (void)
 windowDidLoad
 {
-	assert(nil != testTerminalView);
+	assert(nil != testTerminalContentView);
+	assert(nil != testTerminalPaddingView);
+	assert(nil != testTerminalBackgroundView);
 	assert(nil != testTerminalWindow);
 	
 	Preferences_ContextRef	terminalConfig = Preferences_NewContext(Quills::Prefs::TERMINAL);
@@ -270,7 +272,8 @@ windowDidLoad
 		}
 		else
 		{
-			TerminalViewRef		view = TerminalView_NewNSViewBased(testTerminalView, buffer, nullptr/* format */);
+			TerminalViewRef		view = TerminalView_NewNSViewBased(testTerminalContentView, testTerminalPaddingView,
+																	testTerminalBackgroundView, buffer, nullptr/* format */);
 			
 			
 			if (nullptr == view)

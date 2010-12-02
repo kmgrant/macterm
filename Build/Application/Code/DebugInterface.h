@@ -43,6 +43,7 @@
 #ifdef __OBJC__
 
 @class NSWindow;
+@class TerminalView_BackgroundView;
 @class TerminalView_ContentView;
 
 /*!
@@ -54,8 +55,10 @@ changes to an interface declared in a ".mm" file.
 */
 @interface DebugInterface_PanelController : NSWindowController
 {
-	IBOutlet TerminalView_ContentView*	testTerminalView;
-	IBOutlet NSWindow*					testTerminalWindow;
+	IBOutlet TerminalView_ContentView*		testTerminalContentView;
+	IBOutlet TerminalView_BackgroundView*	testTerminalPaddingView; // should embed the content view
+	IBOutlet TerminalView_BackgroundView*	testTerminalBackgroundView; // should embed the padding view
+	IBOutlet NSWindow*						testTerminalWindow;
 }
 
 // the following MUST match what is in "DebugInterfaceCocoa.nib"
@@ -82,6 +85,7 @@ setLogsTerminalInputChar:(BOOL)flag; // binding
 
 - (void)
 setLogsTerminalState:(BOOL)flag; // binding
+
 @end
 
 #endif // __OBJC__
