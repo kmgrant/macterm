@@ -21,7 +21,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2010 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -58,6 +58,13 @@
 
 // Mac includes
 #include <Carbon/Carbon.h>
+#ifdef __OBJC__
+@class NSView;
+@class NSWindow;
+#else
+class NSView;
+class NSWindow;
+#endif
 
 // library includes
 #include "ListenerModel.h"
@@ -165,6 +172,29 @@ typedef std::pair< TerminalView_Cell, TerminalView_Cell >	TerminalView_CellRange
 
 typedef std::vector< TerminalView_CellRange >				TerminalView_CellRangeList;
 
+#ifdef __OBJC__
+
+/*!
+Implements the main rendering part of the Terminal View.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface TerminalView_ContentView : NSControl
+{
+@private
+	BOOL	showDragHighlight;
+	void*	internalViewPtr;
+}
+@end
+
+#else
+
+class TerminalView_ContentView;
+
+#endif // __OBJC__
+
 
 
 #pragma mark Public Methods
@@ -182,6 +212,11 @@ void
 
 //!\name Creating and Destroying Terminal Views
 //@{
+
+TerminalViewRef
+	TerminalView_NewNSViewBased		(TerminalView_ContentView*	inBaseView,
+									 TerminalScreenRef			inScreenDataSource,
+									 Preferences_ContextRef		inFormatOrNull = nullptr);
 
 // AUTOMATICALLY DESTROYED WHEN THE VIEW FROM TerminalView_ReturnContainerHIView() GOES AWAY
 TerminalViewRef
@@ -312,6 +347,9 @@ Boolean
 //!\name Window Management
 //@{
 
+NSWindow*
+	TerminalView_ReturnNSWindow					(TerminalViewRef			inView);
+
 HIWindowRef
 	TerminalView_ReturnWindow					(TerminalViewRef			inView);
 
@@ -410,7 +448,7 @@ void
 
  //@}
 
-//!\name Mac OS HIView Management
+//!\name Cocoa NSView and Mac OS HIView Management
 //@{
 
 void
@@ -419,11 +457,20 @@ void
 HIViewRef
 	TerminalView_ReturnContainerHIView			(TerminalViewRef			inView);
 
+NSView*
+	TerminalView_ReturnContainerNSView			(TerminalViewRef			inView);
+
 HIViewRef
 	TerminalView_ReturnDragFocusHIView			(TerminalViewRef			inView);
 
+NSView*
+	TerminalView_ReturnDragFocusNSView			(TerminalViewRef			inView);
+
 HIViewRef
 	TerminalView_ReturnUserFocusHIView			(TerminalViewRef			inView);
+
+NSView*
+	TerminalView_ReturnUserFocusNSView			(TerminalViewRef			inView);
 
 TerminalViewRef
 	TerminalView_ReturnUserFocusTerminalView	();

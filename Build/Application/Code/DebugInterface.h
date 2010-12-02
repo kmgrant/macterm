@@ -42,6 +42,9 @@
 
 #ifdef __OBJC__
 
+@class NSWindow;
+@class TerminalView_ContentView;
+
 /*!
 Implements the Debugging panel.
 
@@ -51,15 +54,34 @@ changes to an interface declared in a ".mm" file.
 */
 @interface DebugInterface_PanelController : NSWindowController
 {
+	IBOutlet TerminalView_ContentView*	testTerminalView;
+	IBOutlet NSWindow*					testTerminalWindow;
 }
+
 // the following MUST match what is in "DebugInterfaceCocoa.nib"
-+ (id)		sharedDebugInterfacePanelController;
-- (IBAction)	dumpStateOfActiveTerminal:(id)sender;
+
++ (id)
+sharedDebugInterfacePanelController;
+
+- (IBAction)
+dumpStateOfActiveTerminal:(id)		sender;
+
+- (IBAction)
+showTestTerminalWindow:(id)		sender;
+
 // accessors
-- (BOOL)	logsTerminalInputChar;
-- (BOOL)	logsTerminalState;
-- (void)	setLogsTerminalInputChar:(BOOL)flag; // binding
-- (void)	setLogsTerminalState:(BOOL)flag; // binding
+
+- (BOOL)
+logsTerminalInputChar;
+
+- (BOOL)
+logsTerminalState;
+
+- (void)
+setLogsTerminalInputChar:(BOOL)flag; // binding
+
+- (void)
+setLogsTerminalState:(BOOL)flag; // binding
 @end
 
 #endif // __OBJC__

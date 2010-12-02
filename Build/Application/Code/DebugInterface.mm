@@ -43,6 +43,7 @@
 #import "Session.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
+#import "TerminalView.h"
 #import "TerminalWindow.h"
 
 
@@ -226,6 +227,74 @@ setLogsTerminalState:(BOOL)		flag
 		gDebugInterface_LogsTerminalState = flag;
 	}
 }// setLogsTerminalState:
+
+
+/*!
+Displays the Cocoa-based terminal window that is constructed
+secretly at startup time.  It is incomplete, so it is only
+used for testing incremental additions to the Cocoa-based
+terminal view.
+
+(4.0)
+*/
+- (IBAction)
+showTestTerminalWindow:(id)		sender
+{
+	[self->testTerminalWindow makeKeyAndOrderFront:sender];
+}// showTestTerminalWindow:
+
+
+#pragma mark NSWindowController
+
+
+- (void)
+windowDidLoad
+{
+	assert(nil != testTerminalView);
+	assert(nil != testTerminalWindow);
+	
+	Preferences_ContextRef	terminalConfig = Preferences_NewContext(Quills::Prefs::TERMINAL);
+	Preferences_ContextRef	translationConfig = Preferences_NewContext(Quills::Prefs::TRANSLATION);
+	
+	
+	// could customize the new contexts above to initialize settings;
+	// currently, this is not done
+	{
+		TerminalScreenRef		buffer = nullptr;
+		Terminal_Result			bufferResult = Terminal_NewScreen(terminalConfig, translationConfig, &buffer);
+		
+		
+		if (kTerminal_ResultOK != bufferResult)
+		{
+			Console_WriteValue("error creating test terminal screen buffer", bufferResult);
+		}
+		else
+		{
+			TerminalViewRef		view = TerminalView_NewNSViewBased(testTerminalView, buffer, nullptr/* format */);
+			
+			
+			if (nullptr == view)
+			{
+				Console_WriteLine("error creating test terminal view!");
+			}
+			else
+			{
+				// write some text in various styles to the screen (happens to be a
+				// copy of what the sample view does); this will help with testing
+				// the new Cocoa-based renderer as it is implemented
+				Terminal_EmulatorProcessCString(buffer,
+												"\033[2J\033[H"); // clear screen, home cursor (assumes VT100)
+				Terminal_EmulatorProcessCString(buffer,
+												"sel norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m");
+				// the range selected here should be as long as the length of the word “sel” above
+				TerminalView_SelectVirtualRange(view, std::make_pair(std::make_pair(0, 0), std::make_pair(3, 1)/* exclusive end */));
+			}
+		}
+	}
+	
+	Preferences_ReleaseContext(&terminalConfig);
+	Preferences_ReleaseContext(&translationConfig);
+}// windowDidLoad
 
 @end // DebugInterface_PanelController
 
