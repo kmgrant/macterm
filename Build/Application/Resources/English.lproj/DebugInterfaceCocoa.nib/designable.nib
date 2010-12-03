@@ -658,6 +658,7 @@
 				<string key="1.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1.IBWindowTemplateEditedContentRect">{{711, 781}, {466, 171}}</string>
 				<boolean value="YES" key="1.ImportedFromIB2"/>
+				<boolean value="YES" key="1.NSWindowTemplate.visibleAtLaunch"/>
 				<boolean value="YES" key="1.windowTemplate.hasMaxSize"/>
 				<boolean value="YES" key="1.windowTemplate.hasMinSize"/>
 				<string key="1.windowTemplate.maxSize">{466, 171}</string>
