@@ -440,6 +440,7 @@ void				eventNotifyForView					(My_TerminalViewConstPtr, TerminalView_Event, voi
 Terminal_LineRef	findRowIterator						(My_TerminalViewPtr, UInt16);
 Terminal_LineRef	findRowIteratorRelativeTo			(My_TerminalViewPtr, UInt16, SInt16);
 Boolean				findVirtualCellFromLocalPoint		(My_TerminalViewPtr, Point, TerminalView_Cell&, SInt16&, SInt16&);
+Boolean				findVirtualCellFromScreenPoint		(My_TerminalViewPtr, HIPoint, TerminalView_Cell&, Float32&, Float32&);
 void				getBlinkAnimationColor				(My_TerminalViewPtr, UInt16, RGBColor*);
 void				getRowBounds						(My_TerminalViewPtr, UInt16, Rect*);
 SInt16				getRowCharacterWidth				(My_TerminalViewPtr, UInt16);
@@ -4576,11 +4577,14 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 		GDHandle			currentDevice = nullptr;
 		
 		
-		// for better performance on Mac OS X, lock the bits of a port
-		// before performing a series of QuickDraw operations in it,
-		// and make the intended drawing area part of the dirty region
-		GetGWorld(&currentPort, &currentDevice);
-		(OSStatus)LockPortBits(currentPort);
+		if (false == inTerminalViewPtr->isCocoa)
+		{
+			// for better performance on Mac OS X, lock the bits of a port
+			// before performing a series of QuickDraw operations in it,
+			// and make the intended drawing area part of the dirty region
+			GetGWorld(&currentPort, &currentDevice);
+			(OSStatus)LockPortBits(currentPort);
+		}
 		
 		// find contiguous blocks of text on each line in the given
 		// range that have the same attributes, and draw those blocks
@@ -4692,8 +4696,11 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 		inTerminalViewPtr->screen.currentRenderedLine = -1;
 		inTerminalViewPtr->screen.currentRenderContext = nullptr;
 		
-		// undo the lock done earlier in this block
-		(OSStatus)UnlockPortBits(currentPort);
+		if (false == inTerminalViewPtr->isCocoa)
+		{
+			// undo the lock done earlier in this block
+			(OSStatus)UnlockPortBits(currentPort);
+		}
 	}
 	return result;
 }// drawSection
@@ -5840,7 +5847,14 @@ eraseSection	(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	if (false == inTerminalViewPtr->screen.currentRenderNoBackground)
 	{
-		EraseRect(&intBounds);
+		if (inTerminalViewPtr->isCocoa)
+		{
+			CGContextFillRect(inDrawingContext, outRowSectionBounds);
+		}
+		else
+		{
+			EraseRect(&intBounds);
+		}
 	}
 }// eraseSection
 
@@ -5972,20 +5986,83 @@ findVirtualCellFromLocalPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 								 SInt16&				outDeltaRow)
 {
 	Boolean		result = true;
+	SInt16		offsetH = inLocalPixelPosition.h;
+	SInt16		offsetV = inLocalPixelPosition.v;
+	
+	
+	// adjust point to fit in local screen area
+	localToScreen(inTerminalViewPtr, &offsetH, &offsetV);
+	{
+		HIPoint		screenPixelPosition = CGPointMake(offsetH, offsetV);
+		Float32		deltaColumn = 0.0;
+		Float32		deltaRow = 0.0;
+		
+		
+		result = findVirtualCellFromScreenPoint(inTerminalViewPtr, screenPixelPosition, outCell,
+												deltaColumn, deltaRow);
+		outDeltaColumn = STATIC_CAST(deltaColumn, SInt16); // TEMPORARY; lost precision here
+		outDeltaRow = STATIC_CAST(deltaRow, SInt16);
+	}
+	
+#if 0
+	// TEMPORARY - for debugging purposes, could display the coordinates
+	{
+	Str31 x, y;
+	MoveTo(inLocalPixelPosition.h, inLocalPixelPosition.v);
+	NumToString(outCell.first, x);
+	NumToString(outCell.second, y);
+	DrawString(x);
+	DrawString("\p,");
+	DrawString(y);
+	}
+#endif
+	
+	return result;
+}// findVirtualCellFromLocalPoint
+
+
+/*!
+Finds the cell position in the visible screen area that is
+closest to the given screen-relative pixel position (in the
+coordinate system of cells).
+
+If the point is inside the visible area, "true" is
+returned, the provided row and column will be the point
+directly under the specified pixel position, and the
+deltas will be set to zero.
+
+If the point is outside the visible area, "false" is
+returned, the provided row and column will be the nearest
+visible point, and "outDeltaColumn" and "outDeltaRow"
+will be nonzero.  A negative delta means that the virtual
+cell is above or to the left of the nearest visible point;
+a positive delta means the cell is below or to the right
+(you could use this information to scroll the proper
+distance to display the point, for instance).
+
+(4.0)
+*/
+Boolean
+findVirtualCellFromScreenPoint	(My_TerminalViewPtr		inTerminalViewPtr,
+								 HIPoint				inScreenLocalPixelPosition,
+								 TerminalView_Cell&		outCell,
+								 Float32&				outDeltaColumn,
+								 Float32&				outDeltaRow)
+{
+	Boolean		result = true;
 	
 	
 	// NOTE: This code starts in units of pixels for convenience,
 	// but must convert to units of columns and rows upon return.
-	outCell.first = inLocalPixelPosition.h;
-	outCell.second = inLocalPixelPosition.v;
+	outCell.first = inScreenLocalPixelPosition.x;
+	outCell.second = inScreenLocalPixelPosition.y;
 	
 	// adjust point to fit in local screen area
 	{
-		SInt16		offsetH = inLocalPixelPosition.h;
-		SInt16		offsetV = inLocalPixelPosition.v;
+		Float32		offsetH = inScreenLocalPixelPosition.x;
+		Float32		offsetV = inScreenLocalPixelPosition.y;
 		
 		
-		localToScreen(inTerminalViewPtr, &offsetH, &offsetV);
 		if (offsetH < 0)
 		{
 			result = false;
@@ -6038,21 +6115,8 @@ findVirtualCellFromLocalPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 	outCell.first += inTerminalViewPtr->screen.leftVisibleEdgeInColumns;
 	outCell.second += inTerminalViewPtr->screen.topVisibleEdgeInRows;
 	
-#if 0
-	// TEMPORARY - for debugging purposes, could display the coordinates
-	{
-	Str31 x, y;
-	MoveTo(inLocalPixelPosition.h, inLocalPixelPosition.v);
-	NumToString(outCell.first, x);
-	NumToString(outCell.second, y);
-	DrawString(x);
-	DrawString("\p,");
-	DrawString(y);
-	}
-#endif
-	
 	return result;
-}// findVirtualCellFromLocalPoint
+}// findVirtualCellFromScreenPoint
 
 
 /*!
@@ -6542,17 +6606,24 @@ getScreenOriginFloat	(My_TerminalViewPtr		inTerminalViewPtr,
 						 Float32&				outScreenPositionX,
 						 Float32&				outScreenPositionY)
 {
-	HIViewWrap	windowContentView(kHIViewWindowContentID, HIViewGetWindow(inTerminalViewPtr->contentHIView));
-	HIRect		contentFrame;
-	OSStatus	error = noErr;
-	
-	
-	assert(windowContentView.exists());
-	error = HIViewGetFrame(inTerminalViewPtr->contentHIView, &contentFrame);
-	assert_noerr(error);
-	error = HIViewConvertRect(&contentFrame, HIViewGetSuperview(inTerminalViewPtr->contentHIView), windowContentView);
-	outScreenPositionX = contentFrame.origin.x;
-	outScreenPositionY = contentFrame.origin.y;
+	if (inTerminalViewPtr->isCocoa)
+	{
+		
+	}
+	else
+	{
+		HIViewWrap	windowContentView(kHIViewWindowContentID, HIViewGetWindow(inTerminalViewPtr->contentHIView));
+		HIRect		contentFrame;
+		OSStatus	error = noErr;
+		
+		
+		assert(windowContentView.exists());
+		error = HIViewGetFrame(inTerminalViewPtr->contentHIView, &contentFrame);
+		assert_noerr(error);
+		error = HIViewConvertRect(&contentFrame, HIViewGetSuperview(inTerminalViewPtr->contentHIView), windowContentView);
+		outScreenPositionX = contentFrame.origin.x;
+		outScreenPositionY = contentFrame.origin.y;
+	}
 }// getScreenOriginFloat
 
 
@@ -10436,11 +10507,7 @@ setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 			inTerminalViewPtr->text.colors[kMyBasicColorIndexMatteBackground] = *inColorPtr;
 			if (inTerminalViewPtr->isCocoa)
 			{
-				CGDeviceColor	asFloats = ColorUtilities_CGDeviceColorMake(*inColorPtr);
-				
-				
-				[inTerminalViewPtr->backgroundNSView setBackgroundColor:[NSColor colorWithCalibratedRed:asFloats.red green:asFloats.green
-																										blue:asFloats.blue alpha:1.0]];
+				// the view reads its color from the associated data structure automatically, so just redraw
 				[inTerminalViewPtr->backgroundNSView setNeedsDisplay:YES];
 			}
 			else if (nullptr != inTerminalViewPtr->backgroundHIView)
@@ -11712,6 +11779,127 @@ drawRect:(NSRect)	rect
 	
 	// INCOMPLETE!
 	
+	// perform any necessary rendering for drags
+	{
+		if ([self showDragHighlight])
+		{
+			DragAndDrop_ShowHighlightBackground(drawingContext, contentBounds);
+			// frame is drawn at the end, after any content
+		}
+		else
+		{
+			// hide is not necessary because the NSView model ensures the
+			// backdrop behind this view is painted as needed
+		}
+		
+		// tell text routines to draw in black if there is a drag highlight
+		viewPtr->screen.currentRenderDragColors = ([self showDragHighlight]) ? true : false;
+	}
+	
+	// draw text and graphics
+	{
+		// draw only the requested area; convert from pixels to screen cells
+		HIPoint const&		kTopLeftAnchor = clipBounds.origin;
+		HIPoint const		kBottomRightAnchor = CGPointMake(clipBounds.origin.y + clipBounds.size.height,
+																clipBounds.origin.x + clipBounds.size.width);
+		TerminalView_Cell	leftTopCell;
+		TerminalView_Cell	rightBottomCell;
+		Float32				deltaColumn = 0.0;
+		Float32				deltaRow = 0.0;
+		
+		
+		// figure out what cells to draw
+		(Boolean)findVirtualCellFromScreenPoint(viewPtr, kTopLeftAnchor, leftTopCell, deltaColumn, deltaRow);
+		(Boolean)findVirtualCellFromScreenPoint(viewPtr, kBottomRightAnchor, rightBottomCell, deltaColumn, deltaRow);
+		
+		// draw the text in the clipped area
+		(Boolean)drawSection(viewPtr, drawingContext, leftTopCell.first - viewPtr->screen.leftVisibleEdgeInColumns,
+								leftTopCell.second - viewPtr->screen.topVisibleEdgeInRows,
+								rightBottomCell.first + 1/* past-the-end */ - viewPtr->screen.leftVisibleEdgeInColumns,
+								rightBottomCell.second + 1/* past-the-end */ - viewPtr->screen.topVisibleEdgeInRows);
+	}
+	viewPtr->text.attributes = kInvalidTerminalTextAttributes; // forces attributes to reset themselves properly
+	
+	// if, after drawing all text, no text is actually blinking,
+	// then disable the animation timer (so unnecessary refreshes
+	// are not done); otherwise, install it
+	setBlinkingTimerActive(viewPtr, (viewPtr->isActive) && (cursorBlinks(viewPtr) ||
+															(viewPtr->screen.currentRenderBlinking)));
+	
+	// if inactive, render the text selection as an outline
+	// (if active, the call above to draw the text will also
+	// have drawn the active selection)
+	if ((false == viewPtr->isActive) && viewPtr->text.selection.exists)
+	{
+		HIShapeRef		selectionShape = getSelectedTextAsNewHIShape(viewPtr, 1.0/* inset */);
+		
+		
+		if (nullptr != selectionShape)
+		{
+			RGBColor		highlightColorRGB;
+			CGDeviceColor	highlightColorDevice;
+			OSStatus		error = noErr;
+			
+			
+			// TEMPORARY - account for QuickDraw/Quartz differences until conversion is complete
+			{
+				HIMutableShapeRef		offsetCopy = HIShapeCreateMutableCopy(selectionShape);
+				
+				
+				if (nullptr != offsetCopy)
+				{
+					HIShapeOffset(offsetCopy, -1.0, -1.0);
+					
+					CFRelease(selectionShape), selectionShape = nullptr;
+					selectionShape = offsetCopy;
+				}
+			}
+			
+			// draw outline
+			CGContextSetLineWidth(drawingContext, 2.0); // make thick outline frame on Mac OS X
+			CGContextSetLineCap(drawingContext, kCGLineCapRound);
+			LMGetHiliteRGB(&highlightColorRGB);
+			highlightColorDevice = ColorUtilities_CGDeviceColorMake(highlightColorRGB);
+			CGContextSetRGBStrokeColor(drawingContext, highlightColorDevice.red, highlightColorDevice.green,
+										highlightColorDevice.blue, 1.0/* alpha */);
+			error = HIShapeReplacePathInCGContext(selectionShape, drawingContext);
+			assert_noerr(error);
+			CGContextStrokePath(drawingContext);
+			
+			// free allocated memory
+			CFRelease(selectionShape), selectionShape = nullptr;
+		}
+	}
+	
+	// perform any necessary rendering for drags
+	if ([self showDragHighlight])
+	{
+		DragAndDrop_ShowHighlightFrame(drawingContext, contentBounds);
+	}
+	
+	// render margin line, if requested
+	if (gPreferenceProxies.renderMarginAtColumn > 0)
+	{
+		Rect			dummyBounds;
+		RGBColor		highlightColorRGB;
+		CGDeviceColor	highlightColorDevice;
+		
+		
+		getRowSectionBounds(viewPtr, 0/* row; does not matter which */,
+							gPreferenceProxies.renderMarginAtColumn/* zero-based column number, but following column is desired */,
+							1/* character count - not important */, &dummyBounds);
+		CGContextSetLineWidth(drawingContext, 2.0);
+		CGContextSetLineCap(drawingContext, kCGLineCapButt);
+		LMGetHiliteRGB(&highlightColorRGB);
+		highlightColorDevice = ColorUtilities_CGDeviceColorMake(highlightColorRGB);
+		CGContextSetRGBStrokeColor(drawingContext, highlightColorDevice.red, highlightColorDevice.green,
+									highlightColorDevice.blue, 1.0/* alpha */);
+		CGContextBeginPath(drawingContext);
+		CGContextMoveToPoint(drawingContext, dummyBounds.left, contentBounds.origin.y);
+		CGContextAddLineToPoint(drawingContext, dummyBounds.left, contentBounds.origin.y + contentBounds.size.height);
+		CGContextStrokePath(drawingContext);
+	}
+	
 	// draw cursor
 	if (kMyCursorStateVisible == viewPtr->screen.cursor.currentState)
 	{
@@ -11737,16 +11925,10 @@ drawRect:(NSRect)	rect
 		CGContextFillRect(drawingContext, cursorFloatBounds);
 	}
 	
-	// perform any necessary rendering for drags
-	if ([self showDragHighlight])
+	if (kMyCursorStateVisible == viewPtr->screen.cursor.ghostState)
 	{
-		DragAndDrop_ShowHighlightBackground(drawingContext, contentBounds);
-		DragAndDrop_ShowHighlightFrame(drawingContext, contentBounds);
-	}
-	else
-	{
-		DragAndDrop_HideHighlightBackground(drawingContext, contentBounds);
-		DragAndDrop_HideHighlightFrame(drawingContext, contentBounds);
+		// render cursor ghost
+		// UNIMPLEMENTED
 	}
 }// drawRect
 
