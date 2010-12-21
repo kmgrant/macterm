@@ -13,7 +13,7 @@ SDKROOT = $(DEVELOPER_SDK_DIR)/MacOSX10.4u.sdk
 SDK_PATCH_INCLUDES = -I$(SDKROOT)/usr/include/c++/4.0.0/powerpc-apple-darwin10 -I$(SDKROOT)/usr/lib/gcc/powerpc-apple-darwin10/4.0.1/include -I$(SDKROOT)/usr/lib/gcc/powerpc-apple-darwin10/4.0.1/../../../../powerpc-apple-darwin10/include -I$(SDKROOT)/usr/include
 
 // Growl is not available for Panther
-LDFLAGS_EXTRA_FRAMEWORKS = -framework Growl
+LDFLAGS_EXTRA_FRAMEWORKS = -weak_framework Growl
 
 // the version of SWIG required to work with the system Python
 // (see also SWIG_PREFIX)

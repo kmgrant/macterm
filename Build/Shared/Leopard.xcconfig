@@ -7,7 +7,7 @@ FRAMEWORK_SEARCH_PATHS = "$(SDKROOT)/System/Library/Frameworks"
 SDKROOT = $(DEVELOPER_SDK_DIR)/MacOSX10.5.sdk
 
 // Growl is not available for Panther
-LDFLAGS_EXTRA_FRAMEWORKS = -framework Growl
+LDFLAGS_EXTRA_FRAMEWORKS = -weak_framework Growl
 
 // the version of SWIG required to work with the system Python
 // (see also SWIG_PREFIX)

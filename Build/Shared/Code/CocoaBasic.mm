@@ -29,6 +29,7 @@
 // Mac includes
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
+#import <objc/objc-runtime.h>
 
 // library includes
 #import <AutoPool.objc++.h>
@@ -75,6 +76,7 @@ namespace {
 HIViewWrap						gCurrentColorPanelFocus;	//!< see ColorBox.h; a view with a color box that uses the current color
 My_NoticeColorPanelChange*		gColorWatcher = nil;		//!< sees color changes
 NSSpeechSynthesizer*			gDefaultSynth = nil;
+BOOL							gGrowlFrameworkIsLinked = NO;
 
 } // anonymous namespace
 
@@ -316,7 +318,24 @@ CocoaBasic_GrowlInit ()
 	
 	
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-	[GrowlApplicationBridge setGrowlDelegate:[CocoaBasic_GrowlDelegate sharedGrowlDelegate]];
+	// IMPORTANT: The framework is weak-linked so that the application will
+	// always launch on older Mac OS X versions; check for a defined symbol
+	// before attempting to call ANYTHING in Growl.  Other code in this file
+	// should check that "gGrowlFrameworkIsLinked" is YES before using Growl.
+	// And ideally, NO OTHER SOURCE FILE should directly depend on Growl!
+	if (NULL != objc_getClass("GrowlApplicationBridge"))
+	{
+		gGrowlFrameworkIsLinked = YES;
+	}
+	else
+	{
+		gGrowlFrameworkIsLinked = NO;
+	}
+	
+	if (gGrowlFrameworkIsLinked)
+	{
+		[GrowlApplicationBridge setGrowlDelegate:[CocoaBasic_GrowlDelegate sharedGrowlDelegate]];
+	}
 #endif
 }// GrowlInit
 
@@ -335,7 +354,7 @@ CocoaBasic_GrowlIsAvailable ()
 	Boolean		result = false;
 	
 	
-	result = (YES == [[CocoaBasic_GrowlDelegate sharedGrowlDelegate] isReady]);
+	result = ((YES == gGrowlFrameworkIsLinked) && (YES == [[CocoaBasic_GrowlDelegate sharedGrowlDelegate] isReady]));
 	return result;
 }// GrowlIsAvailable
 
