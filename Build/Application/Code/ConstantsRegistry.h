@@ -68,7 +68,7 @@ enum
 {
 	// use AppResources_ReturnCreatorCode() to set the creator code of these properties
 	kConstantsRegistry_ControlPropertyTypeAddressDialog				= 'ADlg',	//!< data: AddressDialog_Ref
-	kConstantsRegistry_ControlPropertyTypeBackgroundColor			= 'BkCl',	//!< data: RGBColor
+	kConstantsRegistry_ControlPropertyTypeBackgroundColor			= 'BkCl',	//!< data: CGDeviceColor
 	kConstantsRegistry_ControlPropertyTypeColorBoxData				= 'ClBx',	//!< data: MyColorBoxDataPtr (internal to ColorBox.cp)
 	kConstantsRegistry_ControlPropertyTypeDefaultPreferenceTag		= 'DPrf',	//!< data: Preferences_Tag
 	kConstantsRegistry_ControlPropertyTypeOwningPanel				= 'Panl',	//!< data: Panel_Ref

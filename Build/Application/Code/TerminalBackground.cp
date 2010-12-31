@@ -145,8 +145,6 @@ OSStatus			receiveBackgroundDraw					(EventHandlerCallRef, EventRef,
 															 My_TerminalBackgroundPtr);
 OSStatus			receiveBackgroundFocus					(EventHandlerCallRef, EventRef,
 															 My_TerminalBackgroundPtr);
-OSStatus			receiveBackgroundHICommand				(EventHandlerCallRef, EventRef,
-															 My_TerminalBackgroundPtr);
 OSStatus			receiveBackgroundHIObjectEvents			(EventHandlerCallRef, EventRef, void*);
 OSStatus			receiveBackgroundRegionRequest			(EventHandlerCallRef, EventRef,
 															 My_TerminalBackgroundPtr);
@@ -195,7 +193,6 @@ TerminalBackground_Init ()
 									{ kEventClassControl, kEventControlGetPartRegion },
 									{ kEventClassControl, kEventControlGetFocusPart },
 									{ kEventClassControl, kEventControlSetFocusPart },
-									{ kEventClassCommand, kEventCommandProcess },
 									{ kEventClassAccessibility, kEventAccessibleGetAllAttributeNames },
 									{ kEventClassAccessibility, kEventAccessibleGetNamedAttribute },
 									{ kEventClassAccessibility, kEventAccessibleIsNamedAttributeSettable }
@@ -382,13 +379,13 @@ windowMinimizationHandler	(), // set up later, in the window-changed handler
 windowMovementHandler		(), // set up later, in the window-changed handler
 preferenceMonitor			(ListenerModel_NewStandardListener(preferenceChangedForBackground, this/* context */))
 {
-	OSStatus	error = noErr;
-	RGBColor	initialColor;
+	OSStatus		error = noErr;
+	CGDeviceColor	initialColor;
 	
 	
-	initialColor.red = RGBCOLOR_INTENSITY_MAX;
-	initialColor.green = RGBCOLOR_INTENSITY_MAX;
-	initialColor.blue = RGBCOLOR_INTENSITY_MAX;
+	initialColor.red = 1.0;
+	initialColor.green = 1.0;
+	initialColor.blue = 1.0;
 	error = SetControlProperty(view, AppResources_ReturnCreatorCode(),
 								kConstantsRegistry_ControlPropertyTypeBackgroundColor,
 								sizeof(initialColor), &initialColor);
@@ -1016,7 +1013,7 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 			CGContextRef		drawingContext = nullptr;
 			CGrafPtr			oldPort = nullptr;
 			GDHandle			oldDevice = nullptr;
-			RGBColor			backgroundColor;
+			CGDeviceColor		backgroundColor;
 			
 			
 			// determine background color
@@ -1080,7 +1077,15 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 					floatClipBounds = floatBounds;
 				}
 				
-				RGBBackColor(&backgroundColor);
+				{
+					RGBColor	tmpColor;
+					
+					
+					tmpColor.red = STATIC_CAST(STATIC_CAST(RGBCOLOR_INTENSITY_MAX, Float32) * backgroundColor.red, unsigned short);
+					tmpColor.green = STATIC_CAST(STATIC_CAST(RGBCOLOR_INTENSITY_MAX, Float32) * backgroundColor.green, unsigned short);
+					tmpColor.blue = STATIC_CAST(STATIC_CAST(RGBCOLOR_INTENSITY_MAX, Float32) * backgroundColor.blue, unsigned short);
+					RGBBackColor(&tmpColor);
+				}
 				if ((false == IsControlActive(view)) && (false == dataPtr->dontDimBackgroundScreens))
 				{
 					UseInactiveColors();
@@ -1214,108 +1219,6 @@ receiveBackgroundFocus	(EventHandlerCallRef		inHandlerCallRef,
 	}
 	return result;
 }// receiveBackgroundFocus
-
-
-/*!
-Handles "kEventCommandProcess" of "kEventClassCommand"
-for the terminal background.  Responds by displaying a
-color chooser and changing the background color if the
-user accepts.
-
-(3.1)
-*/
-OSStatus
-receiveBackgroundHICommand	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef					inEvent,
-							 My_TerminalBackgroundPtr	inMyTerminalBackgroundPtr)
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassCommand);
-	{
-		HICommand	received;
-		
-		
-		// determine the command in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
-		if (noErr == result)
-		{
-			// don’t claim to have handled any commands not shown below
-			result = eventNotHandledErr;
-			
-			switch (kEventKind)
-			{
-			case kEventCommandProcess:
-				// execute a command
-				switch (received.commandID)
-				{
-				case kCommandSetBackground:
-					{
-						UIStrings_Result		stringResult = kUIStrings_ResultOK;
-						CFStringRef				askColorCFString = nullptr;
-						PickerMenuItemInfo		editMenuInfo;
-						RGBColor				backgroundColor;
-						OSStatus				error = noErr;
-						Boolean					releaseAskColorCFString = true;
-						
-						
-						stringResult = UIStrings_Copy(kUIStrings_SystemDialogPromptPickColor, askColorCFString);
-						unless (stringResult.ok())
-						{
-							// cannot find prompt, but this is not a serious problem
-							askColorCFString = CFSTR("");
-							releaseAskColorCFString = false;
-						}
-						
-						bzero(&editMenuInfo, sizeof(editMenuInfo));
-						
-						error = GetControlProperty(inMyTerminalBackgroundPtr->view, AppResources_ReturnCreatorCode(),
-													kConstantsRegistry_ControlPropertyTypeBackgroundColor,
-													sizeof(backgroundColor), nullptr/* actual size */, &backgroundColor);
-						assert_noerr(error);
-						
-						Embedding_DeactivateFrontmostWindow();
-						result = ColorUtilities_ColorChooserDialogDisplay
-									(askColorCFString, &backgroundColor/* input */, &backgroundColor/* output */,
-										true/* is modal */, NewUserEventUPP(EventLoop_HandleColorPickerUpdate),
-										&editMenuInfo);
-						Embedding_RestoreFrontmostWindow();
-						
-						if (result)
-						{
-							error = SetControlProperty(inMyTerminalBackgroundPtr->view, AppResources_ReturnCreatorCode(),
-														kConstantsRegistry_ControlPropertyTypeBackgroundColor,
-														sizeof(backgroundColor), &backgroundColor);
-							assert_noerr(error);
-							(OSStatus)HIViewSetNeedsDisplay(inMyTerminalBackgroundPtr->view, true);
-						}
-						
-						if (releaseAskColorCFString)
-						{
-							CFRelease(askColorCFString), askColorCFString = nullptr;
-						}
-					}
-					result = noErr;
-					break;
-				
-				default:
-					// ???
-					break;
-				}
-				break;
-			
-			default:
-				// ???
-				break;
-			}
-		}
-	}
-	
-	return result;
-}// receiveBackgroundHICommand
 
 
 /*!
@@ -1567,19 +1470,6 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 					}
 				}
 			}
-			break;
-		
-		default:
-			// ???
-			break;
-		}
-	}
-	else if (kEventClass == kEventClassCommand)
-	{
-		switch (kEventKind)
-		{
-		case kEventCommandProcess:
-			result = receiveBackgroundHICommand(inHandlerCallRef, inEvent, dataPtr);
 			break;
 		
 		default:

@@ -500,7 +500,6 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandToggleTerminalLED3				'LED3'		// terminal window toolbars
 #define kCommandToggleTerminalLED4				'LED4'		// terminal window toolbars
 #define kCommandTerminalNewWorkspace			'MTab'		// terminal window tab drawers
-#define kCommandSetBackground					'SBkg'		// generic request to open a UI to change a background
 
 // commands no longer used, may be deleted
 #define kCommandDisplayWindowContextualMenu		'CMnu'

@@ -502,7 +502,7 @@ TerminalViewRef
 Boolean
 	TerminalView_GetColor						(TerminalViewRef			inView,
 												 TerminalView_ColorIndex	inColorEntryNumber,
-												 RGBColor*					outColorPtr);
+												 CGDeviceColor*				outColorPtr);
 
 void
 	TerminalView_GetFontAndSize					(TerminalViewRef			inView,
@@ -522,7 +522,7 @@ void
 Boolean
 	TerminalView_SetColor						(TerminalViewRef			inView,
 												 TerminalView_ColorIndex	inColorEntryNumber,
-												 RGBColor const*			inColorPtr);
+												 CGDeviceColor const*		inColorPtr);
 
 TerminalView_Result
 	TerminalView_SetFontAndSize					(TerminalViewRef			inView,

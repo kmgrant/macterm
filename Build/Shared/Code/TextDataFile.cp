@@ -2,8 +2,8 @@
 
 	TextDataFile.cp
 	
-	Data Access Library 1.3
-	© 1998-2008 by Kevin Grant
+	Data Access Library 2.3
+	© 1998-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -36,6 +36,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <ColorUtilities.h>
 #include <MemoryBlockHandleLocker.template.h>
 #include <MemoryBlocks.h>
 #include <StringUtilities.h>
@@ -496,13 +497,15 @@ Boolean
 TextDataFile_AddNameValueRGBColor	(TextDataFile_Ref				inRef,
 									 char const*					inClassNameOrNull,
 									 char const*					inPropertyName,
-									 RGBColor const*				inValuePtr,
+									 CGDeviceColor const*			inValuePtr,
 									 TextDataFile_ValueBrackets		inBrackets)
 {
-	char	buffer[100];
+	// for historical reasons, this is in terms of integers and not fractions
+	RGBColor	asRGBColor = ColorUtilities_QuickDrawColorMake(*inValuePtr);
+	char		buffer[100];
 	
 	
-	CPP_STD::sprintf(buffer, "%d,%d,%d", inValuePtr->red, inValuePtr->green, inValuePtr->blue);
+	CPP_STD::sprintf(buffer, "%d,%d,%d", asRGBColor.red, asRGBColor.green, asRGBColor.blue);
 	return TextDataFile_AddNameValue(inRef, inClassNameOrNull, inPropertyName, buffer, inBrackets);
 }// AddNameValueRGBColor
 
@@ -810,8 +813,8 @@ IMPORTANT:  Always strip brackets.  The input string will
 (1.0)
 */
 Boolean
-TextDataFile_StringToRGBColor	(char const*	inStringPtr,
-								 RGBColor*		outValuePtr)
+TextDataFile_StringToRGBColor	(char const*		inStringPtr,
+								 CGDeviceColor*		outValuePtr)
 {
 	Boolean		result = false;
 	
@@ -823,12 +826,18 @@ TextDataFile_StringToRGBColor	(char const*	inStringPtr,
 		unsigned int	b = 0;
 		
 		
+		// for historical reasons, these are expected to be integers in the
+		// range used by a QuickDraw RGBColor structure (and not fractions)
 		if (3 == CPP_STD::sscanf(inStringPtr, "%u,%u,%u", &r, &g, &b))
 		{
 			// three numbers successfully read
-			outValuePtr->red = r;
-			outValuePtr->green = g;
-			outValuePtr->blue = b;
+			RGBColor	asRGBColor;
+			
+			
+			asRGBColor.red = r;
+			asRGBColor.green = g;
+			asRGBColor.blue = b;
+			*outValuePtr = ColorUtilities_CGDeviceColorMake(asRGBColor);
 			result = true;
 		}
 	}

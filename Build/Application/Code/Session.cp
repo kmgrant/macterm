@@ -1401,7 +1401,7 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 			// write all information into memory
 			{
 				CFStringRef		stringValue = nullptr;
-				RGBColor		colorValue;
+				CGDeviceColor	colorValue;
 				OSStatus		error = noErr;
 				
 				

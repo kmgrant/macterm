@@ -787,22 +787,10 @@ getPaletteColor	(My_VectorCanvasPtr		inPtr,
 				 RGBColor&				outColor)
 {
 	CGDeviceColor	deviceColor;
-	Float32			fullIntensityFraction = 0.0;
 	
 	
 	getPaletteColor(inPtr, inZeroBasedIndex, deviceColor);
-	
-	fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
-	fullIntensityFraction *= deviceColor.red;
-	outColor.red = STATIC_CAST(fullIntensityFraction, unsigned short);
-	
-	fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
-	fullIntensityFraction *= deviceColor.green;
-	outColor.green = STATIC_CAST(fullIntensityFraction, unsigned short);
-	
-	fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
-	fullIntensityFraction *= deviceColor.blue;
-	outColor.blue = STATIC_CAST(fullIntensityFraction, unsigned short);
+	outColor = ColorUtilities_QuickDrawColorMake(deviceColor);
 }// getPaletteColor
 
 

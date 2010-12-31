@@ -144,7 +144,7 @@ Boolean
 
 Boolean
 	TextDataFile_StringToRGBColor			(char const*					inStringPtr,
-											 RGBColor*						outValuePtr);
+											 CGDeviceColor*					outValuePtr);
 
 /*###############################################################
 	SAVING TO A TEXT DATA FILE
@@ -210,7 +210,7 @@ Boolean
 	TextDataFile_AddNameValueRGBColor		(TextDataFile_Ref				inRef,
 											 char const*					inClassNameOrNull,
 											 char const*					inPropertyName,
-											 RGBColor const*				inValuePtr,
+											 CGDeviceColor const*			inValuePtr,
 											 TextDataFile_ValueBrackets		inBrackets = kTextDataFile_ValueBracketsCurlyBraces);
 
 #endif

@@ -279,7 +279,7 @@ SessionDescription_Result
 SessionDescription_Result
 	SessionDescription_GetRGBColorData			(SessionDescription_Ref				inRef,
 												 SessionDescription_RGBColorType	inType,
-												 RGBColor&							outColor);
+												 CGDeviceColor&						outColor);
 
 SessionDescription_Result
 	SessionDescription_GetStringData			(SessionDescription_Ref				inRef,
@@ -305,7 +305,7 @@ SessionDescription_Result
 SessionDescription_Result
 	SessionDescription_SetRGBColorData			(SessionDescription_Ref				inRef,
 												 SessionDescription_RGBColorType	inType,
-												 RGBColor const&					inColor);
+												 CGDeviceColor const&				inColor);
 
 SessionDescription_Result
 	SessionDescription_SetStringData			(SessionDescription_Ref				inRef,

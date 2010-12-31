@@ -799,8 +799,8 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
 																	viewCount, viewArray, nullptr/* actual size */);
 			if (kTerminalWindow_ResultOK != terminalWindowResult)
 			{
-				RGBColor	colorValue;
-				UInt16		i = 0;
+				CGDeviceColor	colorValue;
+				UInt16			i = 0;
 				
 				
 				for (i = 0; i < viewCount; ++i)

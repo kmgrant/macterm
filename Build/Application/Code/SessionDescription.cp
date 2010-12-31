@@ -103,12 +103,12 @@ struct My_SessionFile
 	CFStringRef					answerBack;			//!< string identifying terminal emulation type
 	CFStringRef					toolbarInfo;		//!< string describing toolbar state
 	
-	RGBColor*					colorTextNormalPtr;
-	RGBColor*					colorBackgroundNormalPtr;
-	RGBColor*					colorTextBoldPtr;
-	RGBColor*					colorBackgroundBoldPtr;
-	RGBColor*					colorTextBlinkingPtr;
-	RGBColor*					colorBackgroundBlinkingPtr;
+	CGDeviceColor*				colorTextNormalPtr;
+	CGDeviceColor*				colorBackgroundNormalPtr;
+	CGDeviceColor*				colorTextBoldPtr;
+	CGDeviceColor*				colorBackgroundBoldPtr;
+	CGDeviceColor*				colorTextBlinkingPtr;
+	CGDeviceColor*				colorBackgroundBlinkingPtr;
 	
 	SInt32*						invisibleLineCountPtr;
 	SInt32*						visibleColumnCountPtr;
@@ -551,7 +551,7 @@ SessionDescription_GetIntegerData	(SessionDescription_Ref				inRef,
 
 /*!
 Retrieves the specified information from the in-memory
-model and fills in an RGBColor structure using it.
+model and fills in a CGDeviceColor structure using it.
 
 \retval kSessionDescription_ResultOK
 if the color is retrieved successfully
@@ -569,7 +569,7 @@ if the data you asked for could not be delivered
 SessionDescription_Result
 SessionDescription_GetRGBColorData	(SessionDescription_Ref				inRef,
 									 SessionDescription_RGBColorType	inType,
-									 RGBColor&							outColor)
+									 CGDeviceColor&						outColor)
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
 	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
@@ -966,11 +966,11 @@ if the specified data type is unknown
 SessionDescription_Result
 SessionDescription_SetRGBColorData	(SessionDescription_Ref				inRef,
 									 SessionDescription_RGBColorType	inType,
-									 RGBColor const&					inColor)
+									 CGDeviceColor const&				inColor)
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
 	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
-	RGBColor**					colorPtrPtr = nullptr;
+	CGDeviceColor**				colorPtrPtr = nullptr;
 	
 	
 	switch (inType)
@@ -1011,7 +1011,7 @@ SessionDescription_SetRGBColorData	(SessionDescription_Ref				inRef,
 	{
 		if (*colorPtrPtr == nullptr)
 		{
-			*colorPtrPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(RGBColor)), RGBColor*);
+			*colorPtrPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(CGDeviceColor)), CGDeviceColor*);
 		}
 		if (*colorPtrPtr == nullptr) result = kSessionDescription_ResultInsufficientBufferSpace;
 		else **colorPtrPtr = inColor;
@@ -1664,7 +1664,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("rgb0");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					RGBColor	normalTextColor;
+					CGDeviceColor	normalTextColor;
 					
 					
 					if (TextDataFile_StringToRGBColor(valueList.at(keyNameToKeyValueArrayIndexIterator->second),
@@ -1681,7 +1681,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("rgb1");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					RGBColor	normalBackgroundColor;
+					CGDeviceColor	normalBackgroundColor;
 					
 					
 					if (TextDataFile_StringToRGBColor(valueList.at(keyNameToKeyValueArrayIndexIterator->second),
@@ -1698,7 +1698,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("rgb2");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					RGBColor	blinkingTextColor;
+					CGDeviceColor	blinkingTextColor;
 					
 					
 					if (TextDataFile_StringToRGBColor(valueList.at(keyNameToKeyValueArrayIndexIterator->second),
@@ -1715,7 +1715,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("rgb3");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					RGBColor	blinkingBackgroundColor;
+					CGDeviceColor	blinkingBackgroundColor;
 					
 					
 					if (TextDataFile_StringToRGBColor(valueList.at(keyNameToKeyValueArrayIndexIterator->second),
@@ -1732,7 +1732,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("rgb4");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					RGBColor	boldTextColor;
+					CGDeviceColor	boldTextColor;
 					
 					
 					if (TextDataFile_StringToRGBColor(valueList.at(keyNameToKeyValueArrayIndexIterator->second),
@@ -1749,7 +1749,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("rgb5");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					RGBColor	boldBackgroundColor;
+					CGDeviceColor	boldBackgroundColor;
 					
 					
 					if (TextDataFile_StringToRGBColor(valueList.at(keyNameToKeyValueArrayIndexIterator->second),

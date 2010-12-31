@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20101231',
     '20101221',
     '20101129',
     '20101128',
@@ -340,6 +341,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20101231': [
+        'Changed color storage for terminal views, which makes blinking text animate more smoothly (among other things).',
+    ],
     '20101221': [
         'Fixed a launch failure on older Mac OS X versions; now more resilient if the built-in Growl.framework is unusable.',
     ],
