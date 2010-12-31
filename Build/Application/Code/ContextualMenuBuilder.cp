@@ -106,7 +106,6 @@ void		buildAboutBoxContextualMenu				(MenuRef, HIWindowRef);
 void		buildClipboardWindowContextualMenu		(MenuRef, HIWindowRef);
 void		buildEmptyContextualMenu				(MenuRef, HIWindowRef);
 void		buildSessionStatusWindowContextualMenu	(MenuRef, HIWindowRef);
-void		buildTerminalBackgroundContextualMenu	(MenuRef, HIViewRef);
 void		buildTerminalWindowContextualMenu		(MenuRef, HIWindowRef);
 OSStatus	populateMenuForView						(HIViewRef, MenuRef, ContextualMenuBuilder_AddItemsProcPtr, AEDesc&);
 OSStatus	populateMenuForWindow					(HIWindowRef, WindowPartCode, MenuRef,
@@ -589,36 +588,6 @@ buildSessionStatusWindowContextualMenu	(MenuRef		inMenu,
 
 
 /*!
-This routine will look at the specified view as being a
-terminal view background, and will construct a contextual
-menu appropriate for it.
-
-(3.1)
-*/
-void
-buildTerminalBackgroundContextualMenu	(MenuRef		inMenu,
-										 HIViewRef		UNUSED_ARGUMENT(inWhichView))
-{
-	ContextSensitiveMenu_Item	itemInfo;
-	
-	
-	// window-related menu items
-	ContextSensitiveMenu_NewItemGroup(inMenu);
-	
-	ContextSensitiveMenu_InitItem(&itemInfo);
-	itemInfo.commandID = kCommandSetBackground;
-	if (Commands_IsCommandEnabled(itemInfo.commandID))
-	{
-		if (UIStrings_Copy(kUIStrings_ContextualMenuChangeBackground, itemInfo.commandText).ok())
-		{
-			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Close This Window”
-			CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
-		}
-	}
-}// buildTerminalBackgroundContextualMenu
-
-
-/*!
 This routine will look at the frontmost window as a
 terminal window, determine its characteristics and
 construct a contextual menu appropriate for its
@@ -892,20 +861,8 @@ populateMenuForView		(HIViewRef								inWhichView,
 		}
 		
 		// determine what else should go in the menu
-		if (HIObjectIsOfClass(REINTERPRET_CAST(inWhichView, HIObjectRef),
-								kConstantsRegistry_HIObjectClassIDTerminalBackgroundView))
-		{
-			// create an AEDesc describing the color
-			// UNIMPLEMENTED
-			//(OSStatus)BasicTypesAE_CreateRGBColorDesc(color, &inoutViewContentsDesc);
-			
-			// click in the background of a terminal view
-			buildTerminalBackgroundContextualMenu(inoutMenu, inWhichView);
-		}
-		else
-		{
-			failed = true;
-		}
+		// UNIMPLEMENTED
+		failed = true;
 		
 		unless (failed)
 		{
