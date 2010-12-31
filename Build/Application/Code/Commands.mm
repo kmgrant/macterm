@@ -5078,42 +5078,76 @@ performScreenResizeWider:(id)	sender
 - (IBAction)
 performFormatByFavoriteName:(id)	sender
 {
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
-	BOOL				isError = YES;
+	// IMPORTANT:	TRANSITIONAL METHOD
+	//			NOW ALSO IN: TerminalView_ContentView
+	//
+	//			(What follows is boilerplate for all such methods.)
+	//
+	//			This is a transitional method.  Until the full Cocoa runtime can be
+	//			adopted, Commands_Executor is king of the responder chain and is the
+	//			ONLY thing that receives messages from user interfaces, such as menu
+	//			commands.  This means that even if a new-style Cocoa window and view
+	//			hierarchy exist, and they implement a method with the same selector
+	//			that is associated with a menu item, Cocoa will not know about it;
+	//			Commands_Executor must explicitly allow that action to fall through.
+	//
+	//			In “transitional methods” only, it does exactly that: it checks for a
+	//			target, and if it finds one, it manually invokes this same selector
+	//			on that target INSTEAD of using THIS implementation.  Otherwise, it
+	//			uses this version (e.g. presumably to deal with an old Carbon window).
+	//
+	//			Initially, transitional methods are largely COPIES of their alternate
+	//			implementations (see “NOW ALSO IN”, above).  But over time, the code
+	//			below may become simpler, until of course Commands_Executor is
+	//			removed completely and the Cocoa runtime and responder chain finally
+	//			are used the way they are traditionally used.
+	SEL		thisSelector = @selector(performFormatDefault:);
+	id		target = [NSApp targetForAction:thisSelector to:nil from:sender];
 	
 	
-	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+	if (self != target)
 	{
-		// use the specified preferences
-		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
+		[NSApp sendAction:thisSelector to:target from:sender];
+	}
+	else
+	{
+		TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+		BOOL				isError = YES;
 		
 		
-		if (nil != collectionName)
+		if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
 		{
-			Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-														(Quills::Prefs::FORMAT, collectionName);
+			// use the specified preferences
+			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+			CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
 			
 			
-			if (nullptr != namedSettings)
+			if (nil != collectionName)
 			{
-				// change font and/or colors of frontmost window according to the specified preferences
-				Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration
-																(TerminalWindow_ReturnViewWithFocus(terminalWindow));
-				Preferences_Result			prefsResult = kPreferences_ResultOK;
+				Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
+															(Quills::Prefs::FORMAT, collectionName);
 				
 				
-				prefsResult = Preferences_ContextCopy(namedSettings, currentSettings);
-				isError = (kPreferences_ResultOK != prefsResult);
-				Preferences_ReleaseContext(&namedSettings);
+				if (nullptr != namedSettings)
+				{
+					// change font and/or colors of frontmost window according to the specified preferences
+					Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration
+																	(TerminalWindow_ReturnViewWithFocus(terminalWindow));
+					Preferences_Result			prefsResult = kPreferences_ResultOK;
+					
+					
+					prefsResult = Preferences_ContextCopy(namedSettings, currentSettings);
+					isError = (kPreferences_ResultOK != prefsResult);
+					Preferences_ReleaseContext(&namedSettings);
+				}
 			}
 		}
-	}
-	
-	if (isError)
-	{
-		// failed...
-		Sound_StandardAlert();
+		
+		if (isError)
+		{
+			// failed...
+			Sound_StandardAlert();
+		}
 	}
 }
 
@@ -5130,7 +5164,41 @@ performFormatCustom:(id)	sender
 performFormatDefault:(id)	sender
 {
 #pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandFormatDefault, nullptr/* target */);
+	// IMPORTANT:	TRANSITIONAL METHOD
+	//			NOW ALSO IN: TerminalView_ContentView
+	//
+	//			(What follows is boilerplate for all such methods.)
+	//
+	//			This is a transitional method.  Until the full Cocoa runtime can be
+	//			adopted, Commands_Executor is king of the responder chain and is the
+	//			ONLY thing that receives messages from user interfaces, such as menu
+	//			commands.  This means that even if a new-style Cocoa window and view
+	//			hierarchy exist, and they implement a method with the same selector
+	//			that is associated with a menu item, Cocoa will not know about it;
+	//			Commands_Executor must explicitly allow that action to fall through.
+	//
+	//			In “transitional methods” only, it does exactly that: it checks for a
+	//			target, and if it finds one, it manually invokes this same selector
+	//			on that target INSTEAD of using THIS implementation.  Otherwise, it
+	//			uses this version (e.g. presumably to deal with an old Carbon window).
+	//
+	//			Initially, transitional methods are largely COPIES of their alternate
+	//			implementations (see “NOW ALSO IN”, above).  But over time, the code
+	//			below may become simpler, until of course Commands_Executor is
+	//			removed completely and the Cocoa runtime and responder chain finally
+	//			are used the way they are traditionally used.
+	SEL		thisSelector = @selector(performFormatDefault:);
+	id		target = [NSApp targetForAction:thisSelector to:nil from:sender];
+	
+	
+	if (self != target)
+	{
+		[NSApp sendAction:thisSelector to:target from:sender];
+	}
+	else
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandFormatDefault, nullptr/* target */);
+	}
 }
 
 
@@ -6235,7 +6303,15 @@ validateUserInterfaceItem:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 	
 	if (nil != validator)
 	{
-		if ([self respondsToSelector:validator])
+		id		target = [NSApp targetForAction:validator to:nil from:anItem];
+		
+		
+		if (nil != target)
+		{
+			// See selectorToValidateAction: for more information on the form of the selector.
+			result = [[target performSelector:validator withObject:anItem] boolValue];
+		}
+		else if ([self respondsToSelector:validator])
 		{
 			// See selectorToValidateAction: for more information on the form of the selector.
 			result = [[self performSelector:validator withObject:anItem] boolValue];

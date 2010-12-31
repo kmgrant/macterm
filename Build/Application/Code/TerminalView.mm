@@ -11750,7 +11750,122 @@ setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
 }// setInternalViewPtr:
 
 
+/*!
+Uses the name of the given sender (expected to be a menu item) to
+find a Format set of Preferences from which to copy new font and
+color information.
+
+WARNING:	For the transition period, this can only be called
+			by Commands_Executor, and not by the responder chain.
+
+(4.0)
+*/
+- (IBAction)
+performFormatByFavoriteName:(id)	sender
+{
+	TerminalViewRef		currentView = [self internalViewPtr]->selfRef;
+	BOOL				isError = YES;
+	
+	
+	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+	{
+		// use the specified preferences
+		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
+		
+		
+		if (nil != collectionName)
+		{
+			Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
+														(Quills::Prefs::FORMAT, collectionName);
+			
+			
+			if (nullptr != namedSettings)
+			{
+				// change font and/or colors of frontmost window according to the specified preferences
+				Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration(currentView);
+				Preferences_Result			prefsResult = kPreferences_ResultOK;
+				
+				
+				prefsResult = Preferences_ContextCopy(namedSettings, currentSettings);
+				isError = (kPreferences_ResultOK != prefsResult);
+				Preferences_ReleaseContext(&namedSettings);
+			}
+		}
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Sound_StandardAlert();
+	}
+}
+- (id)
+canPerformFormatByFavoriteName:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = YES;
+	
+	
+	return [NSNumber numberWithBool:result];
+}
+
+
+/*!
+Copies new font and color information from the Default set.
+
+WARNING:	For the transition period, this can only be called
+			by Commands_Executor, and not by the responder chain.
+
+(4.0)
+*/
+- (IBAction)
+performFormatDefault:(id)	sender
+{
+#pragma unused(sender)
+	TerminalViewRef			currentView = [self internalViewPtr]->selfRef;
+	Preferences_ContextRef	currentSettings = TerminalView_ReturnFormatConfiguration(currentView);
+	Preferences_ContextRef	defaultSettings = nullptr;
+	BOOL					isError = YES;
+	
+	
+	// reformat frontmost window using the Default preferences
+	if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::FORMAT))
+	{
+		isError = (kPreferences_ResultOK != Preferences_ContextCopy(defaultSettings, currentSettings));
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Sound_StandardAlert();
+	}
+}
+- (id)
+canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = YES;
+	
+	
+	return [NSNumber numberWithBool:result];
+}
+
+
 #pragma mark NSView
+
+
+/*!
+It is necessary for terminal views to accept “first responder”
+in order to ever receive actions such as menu commands!
+
+(4.0)
+*/
+- (BOOL)
+acceptsFirstResponder
+{
+	return YES;
+}
 
 
 /*!
