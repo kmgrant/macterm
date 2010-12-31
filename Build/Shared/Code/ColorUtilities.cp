@@ -273,6 +273,41 @@ GetDarkerColors		(RGBColor*		outDarkerForegroundColorOrNull,
 
 
 /*!
+Does the equivalent of the old QuickDraw GetGray() routine, but
+for Core Graphics device colors.  Returns true only if the
+conversion is successful.
+
+NOTE:	The device parameter is currently ignored, and the main
+		display is used for calculations.
+
+WARNING:	The initial implementation is for porting only, and
+			will be less efficient because it converts data
+			structures heavily.
+
+(4.0)
+*/
+Boolean
+ColorUtilities_CGDeviceGetGray	(CGDirectDisplayID		UNUSED_ARGUMENT(inDevice),
+								 CGDeviceColor const*	inBackgroundPtr,
+								 CGDeviceColor*			inoutForegroundNewColorPtr)
+{
+	// TEMPORARY: although GetGray() works nicely, it is probably deprecated along with
+	// the rest of QuickDraw (and converting into RGBColor is a pain)...figure out what
+	// else can be done here to get good results
+	RGBColor	backgroundColor = ColorUtilities_QuickDrawColorMake(*inBackgroundPtr);
+	RGBColor	foregroundColor = ColorUtilities_QuickDrawColorMake(*inoutForegroundNewColorPtr);
+	Boolean		result = false;
+	
+	
+	result = GetGray(GetMainDevice()/* TEMPORARY; use inDevice parameter someday */,
+						&backgroundColor, &foregroundColor/* both input and output */);
+	*inoutForegroundNewColorPtr = ColorUtilities_CGDeviceColorMake(foregroundColor);
+	
+	return result;
+}// GetGray
+
+
+/*!
 Returns “lighter” versions of the current foreground
 and background colors of the current graphics port.
 You can pass nullptr in place of either parameter if
@@ -505,6 +540,39 @@ ColorUtilities_PreserveColorAndPenState		(ColorPenState*		outStatePtr)
 	outStatePtr->textMode = GetPortTextMode(currentPort);
 #endif
 }// PreserveColorAndPenState
+
+
+/*!
+Creates a QuickDraw color by converting the red, green and blue
+intensity values from the given device color.  The resulting
+color will obviously be limited by the number of color values
+supported by the RGBColor structure.
+
+IMPORTANT:	For help with porting only!!!
+
+(4.0)
+*/
+RGBColor
+ColorUtilities_QuickDrawColorMake	(CGDeviceColor const&	inDeviceColor)
+{
+	Float32		fullIntensityFraction = 0.0;
+	RGBColor	result;
+	
+	
+	fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
+	fullIntensityFraction *= inDeviceColor.red;
+	result.red = STATIC_CAST(fullIntensityFraction, unsigned short);
+	
+	fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
+	fullIntensityFraction *= inDeviceColor.green;
+	result.green = STATIC_CAST(fullIntensityFraction, unsigned short);
+	
+	fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
+	fullIntensityFraction *= inDeviceColor.blue;
+	result.blue = STATIC_CAST(fullIntensityFraction, unsigned short);
+	
+	return result;
+}// QuickDrawColorMake
 
 
 /*!

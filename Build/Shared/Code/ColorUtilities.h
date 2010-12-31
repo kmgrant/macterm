@@ -22,8 +22,8 @@
 */
 /*###############################################################
 
-	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.2
+	© 1998-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -88,6 +88,14 @@ struct ColorPenState
 
 CGDeviceColor
 	ColorUtilities_CGDeviceColorMake			(RGBColor const&		inColor);
+
+Boolean
+	ColorUtilities_CGDeviceGetGray				(CGDirectDisplayID		inDevice,
+												 CGDeviceColor const*	inBackgroundPtr,
+												 CGDeviceColor*			inoutForegroundNewColorPtr);
+
+RGBColor
+	ColorUtilities_QuickDrawColorMake			(CGDeviceColor const&	inColor);
 
 //@}
 
