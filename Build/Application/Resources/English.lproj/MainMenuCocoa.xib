@@ -2,30 +2,25 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.10">
 	<data>
 		<int key="IBDocument.SystemTarget">1030</int>
-		<string key="IBDocument.SystemVersion">10F569</string>
-		<string key="IBDocument.InterfaceBuilderVersion">788</string>
-		<string key="IBDocument.AppKitVersion">1038.29</string>
+		<string key="IBDocument.SystemVersion">10H574</string>
+		<string key="IBDocument.InterfaceBuilderVersion">823</string>
+		<string key="IBDocument.AppKitVersion">1038.35</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">788</string>
+			<string key="NS.object.0">823</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="24"/>
+			<integer value="29"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
 			<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 		</object>
 		<object class="NSMutableDictionary" key="IBDocument.Metadata">
-			<bool key="EncodedWithXMLCoder">YES</bool>
-			<object class="NSArray" key="dict.sortedKeys" id="0">
-				<bool key="EncodedWithXMLCoder">YES</bool>
-			</object>
-			<object class="NSMutableArray" key="dict.values">
-				<bool key="EncodedWithXMLCoder">YES</bool>
-			</object>
+			<string key="NS.key.0">PluginDependencyRecalculationVersion</string>
+			<integer value="1" key="NS.object.0"/>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.RootObjects" id="1048">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -1217,7 +1212,7 @@
 						<reference key="NSOnImage" ref="229763992"/>
 						<reference key="NSMixedImage" ref="909111550"/>
 						<string key="NSAction">submenuAction:</string>
-						<int key="NSTag">522</int>
+						<int key="NSTag">518</int>
 						<object class="NSMenu" key="NSSubmenu" id="163204536">
 							<string key="NSTitle">Macros</string>
 							<object class="NSMutableArray" key="NSMenuItems">
@@ -1382,7 +1377,7 @@
 						<reference key="NSOnImage" ref="229763992"/>
 						<reference key="NSMixedImage" ref="909111550"/>
 						<string key="NSAction">submenuAction:</string>
-						<int key="NSTag">518</int>
+						<int key="NSTag">519</int>
 						<object class="NSMenu" key="NSSubmenu" id="835318025">
 							<string key="NSTitle">Window</string>
 							<object class="NSMutableArray" key="NSMenuItems">
@@ -1635,7 +1630,7 @@
 						<reference key="NSOnImage" ref="229763992"/>
 						<reference key="NSMixedImage" ref="909111550"/>
 						<string key="NSAction">submenuAction:</string>
-						<int key="NSTag">525</int>
+						<int key="NSTag">520</int>
 						<object class="NSMenu" key="NSSubmenu" id="227753972">
 							<object class="NSMutableString" key="NSTitle">
 								<characters key="NS.bytes">Help</characters>
@@ -1671,7 +1666,7 @@
 						<reference key="NSOnImage" ref="229763992"/>
 						<reference key="NSMixedImage" ref="909111550"/>
 						<string key="NSAction">submenuAction:</string>
-						<int key="NSTag">519</int>
+						<int key="NSTag">521</int>
 						<object class="NSMenu" key="NSSubmenu" id="627344098">
 							<string key="NSTitle"/>
 							<object class="NSMutableArray" key="NSMenuItems">
@@ -2844,7 +2839,9 @@
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<object class="IBObjectRecord">
 						<int key="objectID">0</int>
-						<reference key="object" ref="0"/>
+						<object class="NSArray" key="object" id="0">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+						</object>
 						<reference key="children" ref="1048"/>
 						<nil key="parent"/>
 					</object>

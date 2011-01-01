@@ -3,7 +3,7 @@
 	TextTranslation.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -46,10 +46,6 @@
 #include <Console.h>
 #include <MemoryBlocks.h>
 #include <StringUtilities.h>
-
-// resource includes
-#include "GeneralResources.h"
-#include "MenuResources.h"
 
 // MacTelnet includes
 #include "TextTranslation.h"

@@ -65,18 +65,6 @@ enum
 void
 	AppResources_Init													(CFBundleRef					inApplicationBundle);
 
-CFBundleRef
-	AppResources_ReturnApplicationBundle								();
-
-CFBundleRef
-	AppResources_ReturnBundleForInfo									();
-
-CFBundleRef
-	AppResources_ReturnBundleForNIBs									();
-
-UInt32
-	AppResources_ReturnCreatorCode										();
-
 Boolean
 	AppResources_GetArbitraryResourceFileFSRef							(CFStringRef					inName,
 																		 CFStringRef					inTypeOrNull,
@@ -96,6 +84,35 @@ AppResources_Result
 
 AppResources_Result
 	AppResources_LaunchPreferencesConverter								();
+
+CFBundleRef
+	AppResources_ReturnApplicationBundle								();
+
+CFBundleRef
+	AppResources_ReturnBundleForInfo									();
+
+CFBundleRef
+	AppResources_ReturnBundleForNIBs									();
+
+//@}
+
+//!\name Old-Style File Types and Creator Codes
+//@{
+
+UInt32
+	AppResources_ReturnCreatorCode										();
+
+inline UInt32
+	AppResources_ReturnFileTypeForMacroSets								()
+{
+	return 'TEXT';
+}
+
+inline UInt32
+	AppResources_ReturnFileTypeForSessionDescriptions					()
+{
+	return 'CONF';
+}
 
 //@}
 

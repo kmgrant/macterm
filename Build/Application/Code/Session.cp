@@ -7,7 +7,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -73,7 +73,6 @@
 #include <StringUtilities.h>
 
 // resource includes
-#include "GeneralResources.h"
 #include "SpacingConstants.r"
 
 // MacTelnet includes
@@ -1009,7 +1008,7 @@ Session_DisplaySaveDialog	(SessionRef		inRef)
 		(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptSaveSession, dialogOptions.message);
 		dialogOptions.modality = kWindowModalityWindowModal;
 	}
-	error = NavCreatePutFileDialog(&dialogOptions, kApplicationFileTypeSessionDescription,
+	error = NavCreatePutFileDialog(&dialogOptions, AppResources_ReturnFileTypeForSessionDescriptions(),
 									AppResources_ReturnCreatorCode(),
 									NewNavEventUPP(navigationSaveDialogEvent),
 									inRef/* client data */, &navigationServicesDialog);
@@ -5570,7 +5569,7 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 				
 				error = FileSelectionDialogs_CreateOrFindUserSaveFile
 						(reply, AppResources_ReturnCreatorCode(),
-							kApplicationFileTypeSessionDescription,
+							AppResources_ReturnFileTypeForSessionDescriptions(),
 							saveFile, temporaryFile);
 				if (error == noErr)
 				{

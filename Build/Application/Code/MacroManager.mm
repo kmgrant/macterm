@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -56,14 +56,10 @@
 #import <SoundSystem.h>
 #import <StringUtilities.h>
 
-// resource includes
-#import "ApplicationVersion.h"
-#import "GeneralResources.h"
-#import "MenuResources.h"
-
 // MacTelnet includes
 #import "ConstantsRegistry.h"
 #import "MacroManager.h"
+#import "MenuBar.h"
 #import "Network.h"
 #import "Preferences.h"
 #import "QuillsPrefs.h"

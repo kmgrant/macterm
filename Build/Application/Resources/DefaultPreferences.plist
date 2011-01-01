@@ -5,7 +5,7 @@
 	DefaultPreferences.plist
 	
 	MacTelnet 4.0
-	© 1998-2009 by Kevin Grant
+	© 1998-2011 by Kevin Grant
 	
 	This file defines MacTelnet's default preferences.  It has EXACTLY
 	the same format as the main Core Foundation Preferences file (i.e.

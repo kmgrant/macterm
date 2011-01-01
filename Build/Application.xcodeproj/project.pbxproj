@@ -405,8 +405,6 @@
 		0A46FE3B055432A400ACDF3A /* WindowInfo.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WindowInfo.cp; path = Application/Code/WindowInfo.cp; sourceTree = "<group>"; };
 		0A46FE3C055432A400ACDF3A /* WindowTitleDialog.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WindowTitleDialog.cp; path = Application/Code/WindowTitleDialog.cp; sourceTree = "<group>"; };
 		0A46FE3D055432A400ACDF3A /* Workspace.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Workspace.cp; path = Application/Code/Workspace.cp; sourceTree = "<group>"; };
-		0A4A86AC055B3DDF0011CC82 /* ApplicationVersion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ApplicationVersion.h; path = Application/Resources/ApplicationVersion.h; sourceTree = "<group>"; };
-		0A4A86B9055B3DDF0011CC82 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = English; path = Application/Resources/English.lproj/LocalizedApplicationVersion.h; sourceTree = "<group>"; };
 		0A4C9D210FE9B1A0005EAE9D /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelWorkspaces.nib; sourceTree = "<group>"; };
 		0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelWorkspaces.cp; path = Application/Code/PrefPanelWorkspaces.cp; sourceTree = "<group>"; };
 		0A4C9D260FE9B986005EAE9D /* PrefPanelWorkspaces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelWorkspaces.h; path = Application/Code/PrefPanelWorkspaces.h; sourceTree = "<group>"; };
@@ -430,8 +428,6 @@
 		0A70B8A31079C1EB0013E76F /* PythonInvoker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = PythonInvoker; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A70B8AC1079C33B0013E76F /* PythonMain.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PythonMain.cp; path = Shared/Code/PythonMain.cp; sourceTree = "<group>"; };
 		0A719D33055D95EE009B0A88 /* SpacingConstants.r */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.rez; name = SpacingConstants.r; path = Application/Resources/SpacingConstants.r; sourceTree = "<group>"; };
-		0A719D51055D963A009B0A88 /* GeneralResources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GeneralResources.h; path = Application/Resources/GeneralResources.h; sourceTree = "<group>"; };
-		0A719D53055D963A009B0A88 /* MenuResources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MenuResources.h; path = Application/Resources/MenuResources.h; sourceTree = "<group>"; };
 		0A7236F510841FAB00BB36C2 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrintPreviewCocoa.xib; sourceTree = "<group>"; };
 		0A766E0A0FB54D8E00259E56 /* kvp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = kvp.py; path = Application/PythonCode/pymactelnet/file/kvp.py; sourceTree = "<group>"; };
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
@@ -490,6 +486,7 @@
 		0ABD01D11068002C00BBB87A /* DebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebugInterface.h; path = Application/Code/DebugInterface.h; sourceTree = "<group>"; };
 		0ABD01D7106800F700BBB87A /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/DebugInterfaceCocoa.nib; sourceTree = "<group>"; };
 		0AC1FAF30D1992D600ED3102 /* _Quills.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = _Quills.so; sourceTree = BUILT_PRODUCTS_DIR; };
+		0AC5687512CFC73800BAA7F0 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = English; path = Application/Resources/English.lproj/Credits.html; sourceTree = "<group>"; };
 		0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsTerminal.cp; path = Application/Code/QuillsTerminal.cp; sourceTree = "<group>"; };
 		0AC6A4E40AC4D24400FF6FC6 /* QuillsTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsTerminal.h; path = Application/Code/QuillsTerminal.h; sourceTree = "<group>"; };
 		0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsSession.cp; path = Application/Code/QuillsSession.cp; sourceTree = "<group>"; };
@@ -698,6 +695,7 @@
 				0A33CCEF07FABFBF00248DDF /* Shared */,
 				0AD0B0A60A9EABDF002064BA /* AppleScript */,
 				0AC6BDB90A8C130400AFF37A /* Python */,
+				0AC5687412CFC73800BAA7F0 /* Credits.html */,
 				0ADB0D3305A7FBD90054A4E9 /* DefaultPreferences.plist */,
 				0AA42A290F0C95B80057B393 /* Template-MacTelnet-Info.plist */,
 				0AA42A2A0F0C95BD0057B393 /* Template-PyMacTelnet.framework-Info.plist */,
@@ -842,7 +840,6 @@
 				0A4604580554376100ACDF3A /* WindowInfo.h */,
 				0A4604590554376100ACDF3A /* WindowTitleDialog.h */,
 				0A46045A0554376100ACDF3A /* Workspace.h */,
-				0AFF137C0AF4210D006CCA34 /* Resource Headers */,
 				0AFF137B0AF42077006CCA34 /* Rez Input */,
 				0AFF137A0AF42067006CCA34 /* Icons */,
 				0AFF112F0AF4202B006CCA34 /* NIBs */,
@@ -1040,17 +1037,6 @@
 				0A719D33055D95EE009B0A88 /* SpacingConstants.r */,
 			);
 			name = "Rez Input";
-			sourceTree = "<group>";
-		};
-		0AFF137C0AF4210D006CCA34 /* Resource Headers */ = {
-			isa = PBXGroup;
-			children = (
-				0A4A86AC055B3DDF0011CC82 /* ApplicationVersion.h */,
-				0AAF265C05CE49110058BC0D /* LocalizedApplicationVersion.h */,
-				0A719D51055D963A009B0A88 /* GeneralResources.h */,
-				0A719D53055D963A009B0A88 /* MenuResources.h */,
-			);
-			name = "Resource Headers";
 			sourceTree = "<group>";
 		};
 		0AFF137E0AF421AD006CCA34 /* Preferences */ = {
@@ -1617,20 +1603,20 @@
 			name = ServerBrowserCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0AAF265C05CE49110058BC0D /* LocalizedApplicationVersion.h */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A4A86B9055B3DDF0011CC82 /* English */,
-			);
-			name = LocalizedApplicationVersion.h;
-			sourceTree = "<group>";
-		};
 		0ABD01D6106800F700BBB87A /* DebugInterfaceCocoa.nib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				0ABD01D7106800F700BBB87A /* English */,
 			);
 			name = DebugInterfaceCocoa.nib;
+			sourceTree = "<group>";
+		};
+		0AC5687412CFC73800BAA7F0 /* Credits.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AC5687512CFC73800BAA7F0 /* English */,
+			);
+			name = Credits.html;
 			sourceTree = "<group>";
 		};
 		0AC8100B1221C89000687DB2 /* InfoWindowCocoa.xib */ = {

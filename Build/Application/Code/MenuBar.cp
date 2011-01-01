@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -46,11 +46,6 @@
 // Mac includes
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
-
-// resource includes
-#include "ApplicationVersion.h"
-#include "GeneralResources.h"
-#include "MenuResources.h"
 
 // MacTelnet includes
 #include "Commands.h"
@@ -277,7 +272,7 @@ MenuBar_HandleMenuCommand	(MenuRef			inMenu,
 This method handles menu commands using the new
 command IDs assigned in MacTelnet 3.0 for OS 8.
 The command ID to use can be found in the file
-"MenuResources.h", and the modifiers come from a
+"Commands.h", and the modifiers come from a
 standard event record.
 
 (3.0)

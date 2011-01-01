@@ -3,7 +3,7 @@
 	QuillsSession.cp
 	
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -45,9 +45,6 @@
 #include <Console.h>
 #include <SoundSystem.h>
 #include <StringUtilities.h>
-
-// resource includes
-#include "GeneralResources.h"
 
 // MacTelnet includes
 #include "AppleEventUtilities.h"
@@ -294,14 +291,14 @@ Session::handle_file	(std::string	inPathname)
 			}
 			
 			if ((fileInfo.creator == AppResources_ReturnCreatorCode() &&
-					fileInfo.filetype == kApplicationFileTypeSessionDescription) ||
+					fileInfo.filetype == AppResources_ReturnFileTypeForSessionDescriptions()) ||
 					(extensionName == "session"))
 			{
 				// read a configuration set
 				SessionDescription_ReadFromFile(fileRef);
 			}
 			else if ((//fileInfo.creator == AppResources_ReturnCreatorCode() &&
-							fileInfo.filetype == kApplicationFileTypeMacroSet) ||
+							fileInfo.filetype == AppResources_ReturnFileTypeForMacroSets()) ||
 						(extensionName == "macros"))
 			{
 				// UNIMPLEMENTED - import macros from text
