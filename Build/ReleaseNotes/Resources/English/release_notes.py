@@ -342,6 +342,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20101231': [
+        'In XTerm 256-color mode, MacTelnet now responds to the XTerm sequences that customize colors.',
         'Changed color storage for terminal views, which makes blinking text animate more smoothly (among other things).',
     ],
     '20101221': [

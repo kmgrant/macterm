@@ -132,9 +132,11 @@ enum
 	kTerminal_ChangeWindowIconTitle		= 'IcnT',	//!< terminal received a new title meant for its icon;
 													//!  use Terminal_CopyTitleForIcon() to determine title
 													//!  (context: TerminalScreenRef)
-	kTerminal_ChangeWindowMinimization	= 'MnmR'	//!< terminal received a request to minimize or restore;
+	kTerminal_ChangeWindowMinimization	= 'MnmR',	//!< terminal received a request to minimize or restore;
 													//!  use Terminal_WindowIsToBeMinimized() for more info
 													//!  (context: TerminalScreenRef)
+	kTerminal_ChangeXTermColor			= 'XTCl'	//!< a new value has been set for some color in the table of 256
+													//!  XTerm colors (context: Terminal_XTermColorDescriptionConstPtr)
 };
 
 #ifndef REZ
@@ -291,6 +293,16 @@ struct Terminal_ScrollDescription
 											//!  was modified in some unspecified way (e.g. being cleared)
 };
 typedef Terminal_ScrollDescription const*	Terminal_ScrollDescriptionConstPtr;
+
+struct Terminal_XTermColorDescription
+{
+	TerminalScreenRef	screen;				//!< the screen for which the color applies
+	UInt16				index;				//!< a number between 16 and 255 that indicates what changed
+	UInt16				redComponent;		//!< part of the color value
+	UInt16				greenComponent;		//!< part of the color value
+	UInt16				blueComponent;		//!< part of the color value
+};
+typedef Terminal_XTermColorDescription const*	Terminal_XTermColorDescriptionConstPtr;
 
 #pragma mark Callbacks
 

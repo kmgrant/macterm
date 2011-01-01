@@ -225,6 +225,8 @@ struct My_RegionConverter
 								//!  otherwise, it is not called at all, and the region is considered permanently changed
 };
 
+class My_XTerm256Table;
+
 // TEMPORARY: This structure is transitioning to C++, and so initialization
 // and maintenance of it is downright ugly for the time being.  It *will*
 // be simplified and become more object-oriented in the future.
@@ -287,9 +289,10 @@ struct My_TerminalView
 		} cursor;
 	} animation;
 	
-	My_CGColorByIndex	coreColors;		// the (up to) 256 standard colors used, e.g. in color XTerms; base 16 are ANSI colors
-	My_CGColorList		customColors;	// the colors currently used to render based on purpose, e.g. normal, bold, blinking, matte
-	My_CGColorList		blinkColors;	// an automatically generated set of intermediate colors for blink animation
+	My_CGColorByIndex	coreColors;			// the (up to) 256 standard colors used, e.g. in color XTerms; base 16 are ANSI colors
+	My_CGColorList		customColors;		// the colors currently used to render based on purpose, e.g. normal, bold, blinking, matte
+	My_CGColorList		blinkColors;		// an automatically generated set of intermediate colors for blink animation
+	My_XTerm256Table*	extendedColorsPtr;	// for storing 256 XTerm colors; globally shared unless a customization command is received
 	
 	struct
 	{
@@ -404,8 +407,11 @@ public:
 	
 	My_XTerm256Table ();
 	
-	void
+	static void
 	makeCGDeviceColor	(UInt8, UInt8, UInt8, CGDeviceColor&);
+	
+	void
+	setColor	(UInt8, UInt8, UInt8, UInt8);
 	
 	GrayLevelByIndex	grayLevels;
 	RGBLevelsByIndex	colorLevels;
@@ -3323,7 +3329,10 @@ My_XTerm256Table ()
 grayLevels(),
 colorLevels()
 {
-	// most colors are defined as a 6x6x6 cube
+	// most colors are defined as a 6x6x6 cube; note that the
+	// following is completely arbitrary, and terminal sequences
+	// (eventually) may trigger setColor() to change any of these
+	// at the request of a program running in the terminal
 	SInt16 const	kCubeBase = 16; // first index
 	for (SInt16 red = 0; red < 6; ++red)
 	{
@@ -3389,6 +3398,27 @@ makeCGDeviceColor	(UInt8				inRed,
 	fullIntensityFraction /= 255;
 	outColor.blue = fullIntensityFraction;
 }// My_XTerm256Table::makeCGDeviceColor
+
+
+/*!
+Sets a color in the table to a new value.  Only the normal
+color range can be customized; the base 16 colors and the
+grayscale range will always come from a different source
+(even if they are set here).
+
+(4.0)
+*/
+void
+My_XTerm256Table::
+setColor	(UInt8		inIndex,
+			 UInt8		inRed,
+			 UInt8		inGreen,
+			 UInt8		inBlue)
+{
+	colorLevels[inIndex][0] = inRed;
+	colorLevels[inIndex][1] = inGreen;
+	colorLevels[inIndex][2] = inBlue;
+}// My_XTerm256Table::setColor
 
 
 /*!
@@ -3760,6 +3790,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.contentMonitor = ListenerModel_NewStandardListener(screenBufferChanged, this->selfRef/* context */);
 	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeTextEdited, this->screen.contentMonitor);
 	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeScrollActivity, this->screen.contentMonitor);
+	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeXTermColor, this->screen.contentMonitor);
 	
 	// ask to be notified of cursor changes
 	this->screen.cursorMonitor = ListenerModel_NewStandardListener(screenCursorChanged, this->selfRef/* context */);
@@ -3817,6 +3848,12 @@ My_TerminalView::
 	[this->paddingNSView release];
 	[this->backgroundNSView release];
 	
+	// if the table is not the global one, a copy was allocated
+	if (&gColorGrid() != this->extendedColorsPtr)
+	{
+		delete this->extendedColorsPtr;
+	}
+	
 	// stop listening for terminal bells
 	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeAudioEvent, this->screen.bellHandler);
 	ListenerModel_ReleaseListener(&this->screen.bellHandler);
@@ -3828,6 +3865,7 @@ My_TerminalView::
 	// stop listening for screen buffer content changes
 	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeTextEdited, this->screen.contentMonitor);
 	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeScrollActivity, this->screen.contentMonitor);
+	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeXTermColor, this->screen.contentMonitor);
 	ListenerModel_ReleaseListener(&this->screen.contentMonitor);
 	
 	// stop listening for cursor changes
@@ -4508,6 +4546,7 @@ createWindowColorPalette	(My_TerminalViewPtr			inTerminalViewPtr,
 	// create palettes for future use
 	inTerminalViewPtr->customColors.resize(kTerminalView_ColorIndexLastValid - kTerminalView_ColorIndexFirstValid + 1);
 	inTerminalViewPtr->blinkColors.resize(kMy_BlinkingColorCount);
+	inTerminalViewPtr->extendedColorsPtr = &gColorGrid(); // globally shared unless customized
 	
 	// set up window’s colors; note that this will set the non-ANSI colors,
 	// the blinking colors, and the ANSI colors
@@ -6529,9 +6568,9 @@ getScreenCoreColor	(My_TerminalViewPtr		inTerminalViewPtr,
 					 UInt16					inColorEntryNumber,
 					 CGDeviceColor*			outColorPtr)
 {
-	My_CGColorByIndex&	colors = inTerminalViewPtr->coreColors;
-	My_XTerm256Table&	sourceGrid = gColorGrid();
-	Boolean				result = false;
+	My_CGColorByIndex&		colors = inTerminalViewPtr->coreColors; // only non-const for convenience of "[]"
+	My_XTerm256Table&		sourceGrid = *(inTerminalViewPtr->extendedColorsPtr); // only non-const for convenience of "[]"
+	Boolean					result = false;
 	
 	
 	if (colors.end() != colors.find(inColorEntryNumber))
@@ -6548,9 +6587,9 @@ getScreenCoreColor	(My_TerminalViewPtr		inTerminalViewPtr,
 		//							sourceGrid.colorLevels[inColorEntryNumber][1],
 		//							sourceGrid.colorLevels[inColorEntryNumber][2],
 		//							0);
-		sourceGrid.makeCGDeviceColor(sourceGrid.colorLevels[inColorEntryNumber][0],
-										sourceGrid.colorLevels[inColorEntryNumber][1],
-										sourceGrid.colorLevels[inColorEntryNumber][2], *outColorPtr);
+		My_XTerm256Table::makeCGDeviceColor(sourceGrid.colorLevels[inColorEntryNumber][0],
+											sourceGrid.colorLevels[inColorEntryNumber][1],
+											sourceGrid.colorLevels[inColorEntryNumber][2], *outColorPtr);
 		result = true;
 	}
 	else if (sourceGrid.grayLevels.end() !=
@@ -6558,9 +6597,9 @@ getScreenCoreColor	(My_TerminalViewPtr		inTerminalViewPtr,
 	{
 		// one of the standard grays
 		//Console_WriteValue("gray", sourceGrid.grayLevels[inColorEntryNumber]);
-		sourceGrid.makeCGDeviceColor(sourceGrid.grayLevels[inColorEntryNumber],
-										sourceGrid.grayLevels[inColorEntryNumber],
-										sourceGrid.grayLevels[inColorEntryNumber], *outColorPtr);
+		My_XTerm256Table::makeCGDeviceColor(sourceGrid.grayLevels[inColorEntryNumber],
+											sourceGrid.grayLevels[inColorEntryNumber],
+											sourceGrid.grayLevels[inColorEntryNumber], *outColorPtr);
 		result = true;
 	}
 	return result;
@@ -10112,6 +10151,24 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			viewPtr->text.selection.range.first.second += rangeInfoPtr->rowDelta;
 			viewPtr->text.selection.range.second.second += rangeInfoPtr->rowDelta;
 			highlightCurrentSelection(viewPtr, true/* highlight */, true/* draw */);
+		}
+		break;
+	
+	case kTerminal_ChangeXTermColor:
+		{
+			Terminal_XTermColorDescriptionConstPtr	colorInfoPtr = REINTERPRET_CAST(inEventContextPtr,
+																					Terminal_XTermColorDescriptionConstPtr);
+			
+			
+			if (&gColorGrid() == viewPtr->extendedColorsPtr)
+			{
+				// if the global table is in use, a copy must be made before any
+				// customizations can occur
+				viewPtr->extendedColorsPtr = new My_XTerm256Table;
+			}
+			viewPtr->extendedColorsPtr->setColor(colorInfoPtr->index, colorInfoPtr->redComponent, colorInfoPtr->greenComponent,
+													colorInfoPtr->blueComponent);
+			updateDisplay(viewPtr);
 		}
 		break;
 	

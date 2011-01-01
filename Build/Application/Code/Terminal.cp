@@ -181,9 +181,13 @@ enum
 	kMy_ParserStateSeenESCRightSqBracket0		= 'ES]0',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightSqBracket1		= 'ES]1',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightSqBracket2		= 'ES]2',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightSqBracket3		= 'ES]3',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightSqBracket4		= 'ES]4',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightSqBracket0Semi	= 'E]0;',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightSqBracket1Semi	= 'E]1;',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightSqBracket2Semi	= 'E]2;',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightSqBracket3Semi	= 'E]3;',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightSqBracket4Semi	= 'E]4;',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCA						= 'ESCA',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCB						= 'ESCB',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCC						= 'ESCC',	//!< generic state used to define emulator-specific states, below
@@ -210,6 +214,10 @@ enum
 	kMy_ParserStateSeenESCEquals				= 'ESC=',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLessThan				= 'ESC<',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCGreaterThan			= 'ESC>',	//!< generic state used to define emulator-specific states, below
+	// note that a real backslash is a very common escape character, and
+	// since state codes tend to be printed, it would screw up the output;
+	// so the convention is broken in this case, and "B/" is used instead
+	kMy_ParserStateSeenESCBackslash				= 'ESB/',	//!< generic state used to define emulator-specific states, below
 };
 
 UInt16 const					kNumberOfScrollbackRowsToAllocateAtOnce = 100;
@@ -786,6 +794,7 @@ public:
 	Callbacks							currentCallbacks;		//!< emulator-type-specific handlers to drive the state machine
 	Callbacks							pushedCallbacks;		//!< for emulators that can switch modes, the previous set of callbacks
 	TagSet								supportedVariants;		//!< tags identifying minor features, e.g. "kPreferences_TagXTerm256ColorsEnabled"
+	Boolean								addedXTerm;				//!< since multiple variants reuse these callbacks, only insert them once
 
 protected:
 	My_EmulatorEchoDataProcPtr
@@ -1227,12 +1236,10 @@ public:
 };
 
 /*!
-Manages state determination and transition for just the
-window alteration parts of XTerm.  This allows the user
-to choose which XTerm features should be supported by
-other emulators that are mostly compatible with XTerm.
+Manages state determination and transition for the XTerm
+terminal emulator.
 */
-class My_XTermWindowAlteration
+class My_XTerm
 {
 public:
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
@@ -1240,12 +1247,14 @@ public:
 	enum State
 	{
 		// Ideally these are "protected", but loop evasion code requires them.
-		kStateSWITAcquireStr	= 'Es]0',	//!< seen ESC]0, gathering characters of string
-		kStateSWIT				= 'E]0S',	//!< set window title and icon title
-		kStateSITAcquireStr		= 'Es]1',	//!< seen ESC]1, gathering characters of string
-		kStateSIT				= 'E]1S',	//!< set icon title only
-		kStateSWTAcquireStr		= 'Es]2',	//!< seen ESC]2, gathering characters of string
-		kStateSWT				= 'E]2S',	//!< set window title only
+		kStateSWITAcquireStr	= kMy_ParserStateSeenESCRightSqBracket0Semi,	//!< seen ESC]0, gathering characters of string
+		kStateSWIT				= 'E]0S',										//!< set window title and icon title
+		kStateSITAcquireStr		= kMy_ParserStateSeenESCRightSqBracket1Semi,	//!< seen ESC]1, gathering characters of string
+		kStateSIT				= 'E]1S',										//!< set icon title only
+		kStateSWTAcquireStr		= kMy_ParserStateSeenESCRightSqBracket2Semi,	//!< seen ESC]2, gathering characters of string
+		kStateSWT				= 'E]2S',										//!< set window title only
+		kStateColorAcquireStr	= kMy_ParserStateSeenESCRightSqBracket4Semi,	//!< seen ESC]4, gathering characters of string
+		kStateSetColorComplete	= kMy_ParserStateSeenESCBackslash,				//!< set color based on preceding parameters
 	};
 };
 
@@ -2640,9 +2649,9 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 							// evasion to an emulator method, so that each emulator type
 							// can handle its own custom states (and only when that
 							// emulator is actually in use!)
-							if ((states.second == My_XTermWindowAlteration::kStateSITAcquireStr) ||
-								(states.second == My_XTermWindowAlteration::kStateSWTAcquireStr) ||
-								(states.second == My_XTermWindowAlteration::kStateSWITAcquireStr))
+							if ((states.second == My_XTerm::kStateSITAcquireStr) ||
+								(states.second == My_XTerm::kStateSWTAcquireStr) ||
+								(states.second == My_XTerm::kStateSWITAcquireStr))
 							{
 								interrupt = (dataPtr->emulator.stateRepetitions > 255/* arbitrary */);
 							}
@@ -4743,7 +4752,8 @@ currentCallbacks(returnDataWriter(inPrimaryEmulation),
 					returnStateDeterminant(inPrimaryEmulation),
 					returnStateTransitionHandler(inPrimaryEmulation)),
 pushedCallbacks(),
-supportedVariants()
+supportedVariants(),
+addedXTerm(false)
 {
 	initializeParserStateStack(this);
 }// My_Emulator default constructor
@@ -5087,14 +5097,26 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	if (returnXTerm256(inTerminalConfig))
 	{
 		this->emulator.supportedVariants.insert(kPreferences_TagXTerm256ColorsEnabled);
+		if (false == this->emulator.addedXTerm)
+		{
+			this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
+													My_Emulator::Callbacks(My_DefaultEmulator::echoData,
+																			My_XTerm::stateDeterminant,
+																			My_XTerm::stateTransition));
+			this->emulator.addedXTerm = true;
+		}
 	}
 	if (returnXTermWindowAlteration(inTerminalConfig))
 	{
 		this->emulator.supportedVariants.insert(kPreferences_TagXTermWindowAlterationEnabled);
-		this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
-												My_Emulator::Callbacks(My_DefaultEmulator::echoData,
-																		My_XTermWindowAlteration::stateDeterminant,
-																		My_XTermWindowAlteration::stateTransition));
+		if (false == this->emulator.addedXTerm)
+		{
+			this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
+													My_Emulator::Callbacks(My_DefaultEmulator::echoData,
+																			My_XTerm::stateDeterminant,
+																			My_XTerm::stateTransition));
+			this->emulator.addedXTerm = true;
+		}
 	}
 	
 	// IMPORTANT: Within constructors, calls to routines expecting a *self reference* should be
@@ -5889,6 +5911,10 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			inNowOutNext.second = kMy_ParserStateSeenESCGreaterThan;
 			break;
 		
+		case '\\':
+			inNowOutNext.second = kMy_ParserStateSeenESCBackslash;
+			break;
+		
 		default:
 			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape", kTriggerChar);
 			inNowOutNext.second = kDefaultNextState;
@@ -6083,6 +6109,14 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket2;
 			break;
 		
+		case '3':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket3;
+			break;
+		
+		case '4':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket4;
+			break;
+		
 		default:
 			inNowOutNext.second = kDefaultNextState;
 			result = 0; // do not absorb the unknown
@@ -6123,6 +6157,34 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 		{
 		case ';':
 			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket2Semi;
+			break;
+		
+		default:
+			inNowOutNext.second = kDefaultNextState;
+			result = 0; // do not absorb the unknown
+			break;
+		}
+		break;
+	
+	case kMy_ParserStateSeenESCRightSqBracket3:
+		switch (kTriggerChar)
+		{
+		case ';':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket3Semi;
+			break;
+		
+		default:
+			inNowOutNext.second = kDefaultNextState;
+			result = 0; // do not absorb the unknown
+			break;
+		}
+		break;
+	
+	case kMy_ParserStateSeenESCRightSqBracket4:
+		switch (kTriggerChar)
+		{
+		case ';':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket4Semi;
 			break;
 		
 		default:
@@ -8883,7 +8945,7 @@ given buffer.
 (4.0)
 */
 UInt32
-My_XTermWindowAlteration::
+My_XTerm::
 stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 					 UInt8 const*			inBuffer,
 					 UInt32					inLength,
@@ -8904,66 +8966,95 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 																	inNowOutNext, outInterrupt, outHandled);
 		break;
 	
-	case kMy_ParserStateSeenESCRightSqBracket0Semi:
-		// immediately begin reading the string, but do not absorb these characters
-		inNowOutNext.second = kStateSWITAcquireStr;
-		result = 0; // do not absorb the unknown
-		break;
-	
 	case kStateSWITAcquireStr:
-		switch (kTriggerChar)
+		if (inEmulatorPtr->supportsVariant(kPreferences_TagXTermWindowAlterationEnabled))
 		{
-		case '\007':
-			inNowOutNext.second = kStateSWIT;
-			break;
-		
-		default:
-			// continue extending the string until a known terminator is found
-			inNowOutNext.second = kStateSWITAcquireStr;
-			result = 0; // do not absorb the unknown
-			break;
+			switch (kTriggerChar)
+			{
+			case '\007':
+				inNowOutNext.second = kStateSWIT;
+				break;
+			
+			default:
+				// continue extending the string until a known terminator is found
+				inNowOutNext.second = kStateSWITAcquireStr;
+				result = 0; // do not absorb the unknown
+				break;
+			}
 		}
-		break;
-	
-	case kMy_ParserStateSeenESCRightSqBracket1Semi:
-		// immediately begin reading the string, but do not absorb these characters
-		inNowOutNext.second = kStateSITAcquireStr;
-		result = 0; // do not absorb the unknown
+		else
+		{
+			// ignore
+			outHandled = false;
+		}
 		break;
 	
 	case kStateSITAcquireStr:
-		switch (kTriggerChar)
+		if (inEmulatorPtr->supportsVariant(kPreferences_TagXTermWindowAlterationEnabled))
 		{
-		case '\007':
-			inNowOutNext.second = kStateSIT;
-			break;
-		
-		default:
-			// continue extending the string until a known terminator is found
-			inNowOutNext.second = kStateSITAcquireStr;
-			result = 0; // do not absorb the unknown
-			break;
+			switch (kTriggerChar)
+			{
+			case '\007':
+				inNowOutNext.second = kStateSIT;
+				break;
+			
+			default:
+				// continue extending the string until a known terminator is found
+				inNowOutNext.second = kStateSITAcquireStr;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+		}
+		else
+		{
+			// ignore
+			outHandled = false;
 		}
 		break;
 	
-	case kMy_ParserStateSeenESCRightSqBracket2Semi:
-		// immediately begin reading the string, but do not absorb these characters
-		inNowOutNext.second = kStateSWTAcquireStr;
-		result = 0; // do not absorb the unknown
+	case kStateSWTAcquireStr:
+		if (inEmulatorPtr->supportsVariant(kPreferences_TagXTermWindowAlterationEnabled))
+		{
+			switch (kTriggerChar)
+			{
+			case '\007':
+				inNowOutNext.second = kStateSWT;
+				break;
+			
+			default:
+				// continue extending the string until a known terminator is found
+				inNowOutNext.second = kStateSWTAcquireStr;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+		}
+		else
+		{
+			// ignore
+			outHandled = false;
+		}
 		break;
 	
-	case kStateSWTAcquireStr:
-		switch (kTriggerChar)
+	case kStateColorAcquireStr:
+		if (inEmulatorPtr->supportsVariant(kPreferences_TagXTerm256ColorsEnabled))
 		{
-		case '\007':
-			inNowOutNext.second = kStateSWT;
-			break;
-		
-		default:
-			// continue extending the string until a known terminator is found
-			inNowOutNext.second = kStateSWTAcquireStr;
-			result = 0; // do not absorb the unknown
-			break;
+			switch (kTriggerChar)
+			{
+			case '\033':
+				inNowOutNext.second = kMy_ParserStateSeenESC;
+				break;
+			
+			default:
+				// continue extending the string; termination is an escape sequence (a different state)
+				inNowOutNext.second = kStateColorAcquireStr;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+		}
+		else
+		{
+			// ignore
+			outHandled = false;
 		}
 		break;
 	
@@ -8974,12 +9065,12 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	}
 	
 	// debug
-	//Console_WriteValueFourChars("    <<< XTerm Window Alteration in state", inNowOutNext.first);
-	//Console_WriteValueFourChars(">>>     XTerm Window Alteration proposes state", inNowOutNext.second);
-	//Console_WriteValueCharacter("        XTerm Window Alteration bases this at least on character", *inBuffer);
+	//Console_WriteValueFourChars("    <<< XTerm in state", inNowOutNext.first);
+	//Console_WriteValueFourChars(">>>     XTerm proposes state", inNowOutNext.second);
+	//Console_WriteValueCharacter("        XTerm bases this at least on character", *inBuffer);
 	
 	return result;
-}// My_XTermWindowAlteration::stateDeterminant
+}// My_XTerm::stateDeterminant
 
 
 /*!
@@ -8989,7 +9080,7 @@ XTerm-specific window state changes.
 (4.0)
 */
 UInt32
-My_XTermWindowAlteration::
+My_XTerm::
 stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					 UInt8 const*				inBuffer,
 					 UInt32						UNUSED_ARGUMENT(inLength),
@@ -9000,10 +9091,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	
 	// debug
-	//Console_WriteValueFourChars("    <<< XTerm Window Alteration transition from state", inOldNew.first);
+	//Console_WriteValueFourChars("    <<< XTerm transition from state", inOldNew.first);
 	if (DebugInterface_LogsTerminalState())
 	{
-		Console_WriteValueFourChars(">>>     XTerm Window Alteration transition to state  ", inOldNew.second);
+		Console_WriteValueFourChars(">>>     XTerm transition to state  ", inOldNew.second);
 	}
 	
 	// decide what to do based on the proposed transition
@@ -9013,12 +9104,14 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kMy_ParserStateSeenESCRightSqBracket0:
 	case kMy_ParserStateSeenESCRightSqBracket1:
 	case kMy_ParserStateSeenESCRightSqBracket2:
+	case kMy_ParserStateSeenESCRightSqBracket4:
 		inDataPtr->emulator.stringAccumulator.clear();
 		break;
 	
 	case kStateSWITAcquireStr:
 	case kStateSITAcquireStr:
 	case kStateSWTAcquireStr:
+	case kStateColorAcquireStr:
 		inDataPtr->emulator.stringAccumulator += *inBuffer;
 		result = 1;
 		break;
@@ -9049,6 +9142,50 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		}
 		break;
 	
+	case kStateSetColorComplete:
+		{
+			// the accumulated string up to this point actually needs to be parsed; currently,
+			// only strings of this form are allowed:
+			//		%d;rgb:%x/%x/%x - set color at index, to red, green, blue components in hex
+			char const*		stringPtr = inDataPtr->emulator.stringAccumulator.c_str();
+			int				i = 0;
+			int				r = 0;
+			int				g = 0;
+			int				b = 0;
+			
+			
+			if (4 == CPP_STD::sscanf(stringPtr, "%d;rgb:%x/%x/%x", &i, &r, &g, &b))
+			{
+				if ((i > 255) || (r > 255) || (g > 255) || (b > 255) ||
+					(i < 16/* cannot overwrite base ANSI colors */) || (r < 0) || (g < 0) || (b < 0))
+				{
+					Console_Warning(Console_WriteValueFloat4, "one or more illegal indices found in request to set XTerm color: index, red, green, blue", i, r, g, b);
+				}
+				else
+				{
+					// success!
+					Terminal_XTermColorDescription		colorInfo;
+					
+					
+					bzero(&colorInfo, sizeof(colorInfo));
+					colorInfo.screen = inDataPtr->selfRef;
+					colorInfo.index = i;
+					colorInfo.redComponent = r;
+					colorInfo.greenComponent = g;
+					colorInfo.blueComponent = b;
+					
+					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeXTermColor, &colorInfo/* context */);
+					
+					//Console_WriteValueFloat4("set color at index to red, green, blue", i, r, g, b);
+				}
+			}
+			else
+			{
+				Console_Warning(Console_WriteValueCString, "discarding unrecognized syntax for XTerm color string", stringPtr);
+			}
+		}
+		break;
+	
 	default:
 		// other state transitions are not handled at all
 		outHandled = false;
@@ -9056,7 +9193,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	}
 	
 	return result;
-}// My_XTermWindowAlteration::stateTransition
+}// My_XTerm::stateTransition
 
 
 /*!
