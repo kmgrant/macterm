@@ -1755,66 +1755,80 @@ SessionFactory_ReturnStateCount		(Session_State		inStateToCheckFor)
 
 
 /*!
-Returns the session the user is currently interacting with.
-This is the appropriate target to assume when processing
-keyboard input or commands, etc.
+Returns the session of the specified terminal window.
 
-If there is no open session, or under some bizarre
-circumstance no open session is focused, the result will be
-nullptr.
+(4.0)
+*/
+SessionRef
+SessionFactory_ReturnTerminalWindowSession		(TerminalWindowRef		inTerminalWindow)
+{
+	SessionRef		result = nullptr;
+	
+	
+	if (nullptr != inTerminalWindow)
+	{
+		TerminalWindowToSessionsMap::const_iterator		terminalWindowToSessionIterator =
+															gTerminalWindowToSessions().find(inTerminalWindow);
+		
+		
+		if (gTerminalWindowToSessions().end() != terminalWindowToSessionIterator)
+		{
+			result = terminalWindowToSessionIterator->second;
+		}
+	}
+	
+	return result;
+}// ReturnTerminalWindowSession
+
+
+/*!
+Returns the session the user is currently interacting with, or
+nullptr if none is found.  This is the appropriate target to
+assume when processing keyboard input or commands, etc. and
+must always be a valid, focused window if it is defined (since
+commands may end up displaying sheets, etc. and need a target).
+
+See also InfoWindow_ReturnSelectedSession(), which is useful in
+certain contexts where you want to allow commands to apply to a
+selected window even if no terminal window is frontmost.
+
+And see also SessionFactory_ReturnUserRecentSession().
 
 (3.1)
 */
 SessionRef
 SessionFactory_ReturnUserFocusSession ()
 {
-	HIWindowRef		userFocusWindow = GetUserFocusWindow();
-	SessionRef		result = nullptr;
+	SessionRef		result = SessionFactory_ReturnTerminalWindowSession
+								(TerminalWindow_ReturnFromKeyWindow());
 	
-	
-	if (nullptr != userFocusWindow)
-	{
-		WindowClass		focusWindowClass = kSimpleWindowClass;
-		
-		
-		// if the user focus window is not a document window, it
-		// cannot be a terminal window (e.g. it might be the floating
-		// command line); try to find an appropriate terminal window
-		if ((noErr == GetWindowClass(userFocusWindow, &focusWindowClass)) &&
-			(kDocumentWindowClass != focusWindowClass))
-		{
-			userFocusWindow = ActiveNonFloatingWindow();
-		}
-		
-		if (nullptr != userFocusWindow)
-		{
-			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(userFocusWindow);
-			
-			
-			if (nullptr != terminalWindow)
-			{
-				TerminalWindowToSessionsMap::const_iterator		terminalWindowToSessionIterator =
-																	gTerminalWindowToSessions().find(terminalWindow);
-				
-				
-				if (gTerminalWindowToSessions().end() != terminalWindowToSessionIterator)
-				{
-					result = terminalWindowToSessionIterator->second;
-				}
-			}
-		}
-		
-		// if all other attempts to find a focused window fail,
-		// look for the session selected in the Session Info list
-		// (if any)
-		if (nullptr == result)
-		{
-			result = InfoWindow_ReturnSelectedSession(); // could still be nullptr...
-		}
-	}
 	
 	return result;
 }// ReturnUserFocusSession
+
+
+/*!
+Returns the session of the main window, or nullptr if none is
+found.  The only difference between this and the user focus (see
+SessionFactory_ReturnUserFocusSession()) is that this will return
+the main window session even if the focus is, say, in a floating
+window such as a keypad or command line.  It will never return a
+session whose window is not open.
+
+See also InfoWindow_ReturnSelectedSession() and
+SessionFactory_ReturnUserFocusSession().
+
+(4.0)
+*/
+SessionRef
+SessionFactory_ReturnUserRecentSession ()
+{
+	SessionRef		result = SessionFactory_ReturnTerminalWindowSession
+								(TerminalWindow_ReturnFromMainWindow());
+	
+	
+	return result;
+}// ReturnUserRecentSession
 
 
 /*!
@@ -2673,12 +2687,17 @@ returnActiveWorkspace ()
 	}
 	else
 	{
-		SessionRef const	kActiveSession = SessionFactory_ReturnUserFocusSession();
+		SessionRef		activeSession = SessionFactory_ReturnUserRecentSession();
 		
 		
-		if (nullptr != kActiveSession)
+		if (nullptr == activeSession)
 		{
-			HIWindowRef const					kActiveWindow = Session_ReturnActiveWindow(kActiveSession);
+			activeSession = InfoWindow_ReturnSelectedSession();
+		}
+		
+		if (nullptr != activeSession)
+		{
+			HIWindowRef const					kActiveWindow = Session_ReturnActiveWindow(activeSession);
 			MyWorkspaceList&					targetList = gWorkspaceListSortedByCreationTime();
 			MyWorkspaceList::const_iterator		toWorkspace = std::find_if(targetList.begin(), targetList.end(),
 																			workspaceContainsWindow(kActiveWindow));

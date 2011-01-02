@@ -260,7 +260,13 @@ void
 	SessionFactory_MoveTerminalWindowToNewWorkspace	(TerminalWindowRef				inTerminalWindow);
 
 SessionRef
+	SessionFactory_ReturnTerminalWindowSession		(TerminalWindowRef				inTerminalWindow);
+
+SessionRef
 	SessionFactory_ReturnUserFocusSession			();
+
+SessionRef
+	SessionFactory_ReturnUserRecentSession			();
 
 //@}
 

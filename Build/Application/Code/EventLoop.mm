@@ -889,7 +889,7 @@ receiveServicesEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// return data or type information for the current selection;
 		// currently, only terminal window text is supported
 		{
-			SessionRef		activeSession = SessionFactory_ReturnUserFocusSession();
+			SessionRef		activeSession = SessionFactory_ReturnUserRecentSession();
 			
 			
 			if (nullptr != activeSession)

@@ -132,7 +132,6 @@ namespace {
 
 void				activateAnotherWindow							(Boolean, Boolean);
 BOOL				activeCarbonWindowHasSelectedText				();
-BOOL				activeWindowIsTerminalWindow					();
 BOOL				addWindowMenuItemForSession						(SessionRef, My_MenuItemInsertionInfoConstPtr,
 																	 CFStringRef);
 void				addWindowMenuItemSessionOp						(SessionRef, void*, SInt32, void*);
@@ -148,8 +147,6 @@ BOOL				quellAutoNew									();
 void				receiveTerminationWarningAnswer					(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
 HIViewRef			returnActiveCarbonWindowFocusedField			();
-TerminalScreenRef	returnActiveTerminalScreen						();
-TerminalWindowRef	returnActiveTerminalWindow						();
 int					returnFirstWindowItemAnchor						(NSMenu*);
 NSMenu*				returnMenu										(UInt32);
 SessionRef			returnMenuItemSession							(NSMenuItem*);
@@ -512,7 +509,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		// to do it per-command, it should probably be put into a more
 		// global context that is automatically updated whenever the user
 		// focus session is changed (and only then).
-		frontSession = SessionFactory_ReturnUserFocusSession();
+		frontSession = SessionFactory_ReturnUserRecentSession();
 		frontTerminalWindow = (nullptr == frontSession) ? nullptr : Session_ReturnActiveTerminalWindow(frontSession);
 		activeScreen = (nullptr == frontTerminalWindow) ? nullptr : TerminalWindow_ReturnScreenWithFocus(frontTerminalWindow);
 		activeView = (nullptr == frontTerminalWindow) ? nullptr : TerminalWindow_ReturnViewWithFocus(frontTerminalWindow);
@@ -1949,25 +1946,6 @@ activeCarbonWindowHasSelectedText ()
 
 
 /*!
-Returns true only if the active window (if any) has a terminal.
-
-This is a helper for validators that commonly rely on this
-state.
-
-(4.0)
-*/
-BOOL
-activeWindowIsTerminalWindow ()
-{
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	return result;
-}// activeWindowIsTerminalWindow
-
-
-/*!
 Adds a session’s name to the Window menu, arranging so
 that future selections of the new menu item will cause
 the window to be selected, and so that the item’s state
@@ -2276,6 +2254,11 @@ existence of the undocumented internal NSCarbonWindow
 class, which just so happens to be used consistently on
 all versions of Mac OS X so far.
 
+This also calls CocoaBasic_RegisterCocoaCarbonWindow() so
+that the window is automatically made known to the registry;
+that way, any future attempts to “allocate” a Cocoa window
+for that Carbon window, will instead return the known window.
+
 (4.0)
 */
 BOOL
@@ -2284,6 +2267,10 @@ isCarbonWindow	(id		inObject)
 	BOOL	result = [[inObject class] isSubclassOfClass:[NSCarbonWindow class]];
 	
 	
+	if (result)
+	{
+		CocoaBasic_RegisterCocoaCarbonWindow((NSWindow*)inObject);
+	}
 	return result;
 }// isCarbonWindow
 
@@ -2479,41 +2466,6 @@ returnActiveCarbonWindowFocusedField ()
 
 
 /*!
-Returns the terminal screen that was most recently used,
-or nullptr if there is no such screen.
-
-(4.0)
-*/
-TerminalScreenRef
-returnActiveTerminalScreen ()
-{
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
-	TerminalScreenRef	result = (nullptr == terminalWindow)
-									? nullptr
-									: TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-	
-	
-	return result;
-}// returnActiveTerminalScreen
-
-
-/*!
-Returns the terminal window that is the target of commands,
-or nullptr if there is no such window.
-
-(4.0)
-*/
-TerminalWindowRef
-returnActiveTerminalWindow ()
-{
-	TerminalWindowRef	result = TerminalWindow_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());
-	
-	
-	return result;
-}// returnActiveTerminalWindow
-
-
-/*!
 Returns the item number that the first window-specific
 item in the Window menu WOULD have.  This assumes there
 is a dividing line between the last known command in the
@@ -2581,8 +2533,8 @@ returnMenuItemSession	(NSMenuItem*	inItem)
 
 /*!
 Returns the session currently applicable to TEK commands;
-defined if the focus window is either a session terminal,
-or a vector graphic that came from a session.
+defined if the active non-floating window is either a session
+terminal, or a vector graphic that came from a session.
 
 (4.0)
 */
@@ -2655,7 +2607,7 @@ BOOL
 searchResultsExist ()
 {
 	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	
 	
 	result = (nullptr != terminalWindow);
@@ -3406,7 +3358,7 @@ BOOL
 textSelectionExists ()
 {
 	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
 	
 	
 	result = (nullptr != terminalWindow);
@@ -3687,7 +3639,10 @@ performCaptureEnd:(id)	sender
 canPerformCaptureEnd:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	TerminalScreenRef	currentScreen = returnActiveTerminalScreen();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	TerminalScreenRef	currentScreen = (nullptr == terminalWindow)
+										? nullptr
+										: TerminalWindow_ReturnScreenWithFocus(terminalWindow);
 	BOOL				result = NO;
 	
 	
@@ -3710,7 +3665,7 @@ performPrintScreen:(id)		sender
 canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (PrintTerminal_IsPrintingSupported() && activeWindowIsTerminalWindow());
+	BOOL	result = (PrintTerminal_IsPrintingSupported() && (nullptr != TerminalWindow_ReturnFromMainWindow()));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -3765,7 +3720,7 @@ performCopy:(id)	sender
 canPerformCopy:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
 	BOOL				result = NO;
 	
 	
@@ -3876,7 +3831,7 @@ canPerformPaste:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
 	BOOL	result = (Clipboard_ContainsText() &&
-						(activeWindowIsTerminalWindow() ||
+						((nullptr != TerminalWindow_ReturnFromKeyWindow()) ||
 							(nullptr != returnActiveCarbonWindowFocusedField())));
 	
 	
@@ -4078,7 +4033,7 @@ canPerformNewShell:(id <NSValidatedUserInterfaceItem>)		anItem
 performRestart:(id)		sender
 {
 #pragma unused(sender)
-	SessionRef	currentSession = SessionFactory_ReturnUserFocusSession();
+	SessionRef	currentSession = SessionFactory_ReturnUserRecentSession();
 	Boolean		success = SessionFactory_RespawnSession(currentSession);
 	
 	
@@ -4092,7 +4047,7 @@ performRestart:(id)		sender
 canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	SessionRef		currentSession = SessionFactory_ReturnUserFocusSession();
+	SessionRef		currentSession = SessionFactory_ReturnUserRecentSession();
 	BOOL			result = NO;
 	
 	
@@ -4291,7 +4246,7 @@ canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
 	
 	if (result)
 	{
-		TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
 		CFRetainRelease		selectedText(TerminalView_ReturnSelectedTextAsNewUnicode
 											(view, 0/* Copy with Tab Substitution info */,
@@ -4350,7 +4305,8 @@ canPerformActionForMacro:(id <NSValidatedUserInterfaceItem>)	anItem
 	Preferences_ContextRef	currentMacros = MacroManager_ReturnCurrentMacros();
 	NSMenuItem*				asMenuItem = (NSMenuItem*)anItem;
 	int						macroIndex = [asMenuItem tag];
-	BOOL					result = (activeWindowIsTerminalWindow() && (nullptr != currentMacros));
+	BOOL					result = ((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+										(nullptr != currentMacros));
 	
 	
 	if (nullptr == currentMacros)
@@ -4430,7 +4386,7 @@ performMacroSwitchByFavoriteName:(id)	sender
 - (id)
 canPerformMacroSwitchByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 {
-	BOOL			result = activeWindowIsTerminalWindow();
+	BOOL			result = (nullptr != TerminalWindow_ReturnFromMainWindow());
 	BOOL			isChecked = NO;
 	NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
 	
@@ -4475,7 +4431,7 @@ performMacroSwitchDefault:(id)	sender
 - (id)
 canPerformMacroSwitchDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	BOOL	result = activeWindowIsTerminalWindow();
+	BOOL	result = (nullptr != TerminalWindow_ReturnFromMainWindow());
 	BOOL	isChecked = (MacroManager_ReturnDefaultMacros() == MacroManager_ReturnCurrentMacros());
 	
 	
@@ -4501,7 +4457,7 @@ performMacroSwitchNone:(id)		sender
 - (id)
 canPerformMacroSwitchNone:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	BOOL	result = activeWindowIsTerminalWindow();
+	BOOL	result = (nullptr != TerminalWindow_ReturnFromMainWindow());
 	BOOL	isChecked = (nullptr == MacroManager_ReturnCurrentMacros());
 	
 	
@@ -4525,9 +4481,12 @@ performBellToggle:(id)	sender
 canPerformBellToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL				result = activeWindowIsTerminalWindow();
 	BOOL				isChecked = NO;
-	TerminalScreenRef	currentScreen = returnActiveTerminalScreen();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	TerminalScreenRef	currentScreen = (nullptr == terminalWindow)
+										? nullptr
+										: TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentScreen)
@@ -4550,9 +4509,10 @@ performSetActivityHandlerNone:(id)	sender
 canPerformSetActivityHandlerNone:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL			result = activeWindowIsTerminalWindow();
-	BOOL			isChecked = NO;
-	SessionRef		currentSession = SessionFactory_ReturnUserFocusSession();
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentSession)
@@ -4575,9 +4535,10 @@ performSetActivityHandlerNotifyOnIdle:(id)	sender
 canPerformSetActivityHandlerNotifyOnIdle:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL			result = activeWindowIsTerminalWindow();
-	BOOL			isChecked = NO;
-	SessionRef		currentSession = SessionFactory_ReturnUserFocusSession();
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentSession)
@@ -4600,9 +4561,10 @@ performSetActivityHandlerNotifyOnNext:(id)	sender
 canPerformSetActivityHandlerNotifyOnNext:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL			result = activeWindowIsTerminalWindow();
-	BOOL			isChecked = NO;
-	SessionRef		currentSession = SessionFactory_ReturnUserFocusSession();
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentSession)
@@ -4625,9 +4587,10 @@ performSetActivityHandlerSendKeepAliveOnIdle:(id)	sender
 canPerformSetActivityHandlerSendKeepAliveOnIdle:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL			result = activeWindowIsTerminalWindow();
-	BOOL			isChecked = NO;
-	SessionRef		currentSession = SessionFactory_ReturnUserFocusSession();
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentSession)
@@ -4654,9 +4617,10 @@ performDeleteMapToBackspace:(id)	sender
 canPerformDeleteMapToBackspace:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL			result = activeWindowIsTerminalWindow();
-	BOOL			isChecked = NO;
-	SessionRef		currentSession = SessionFactory_ReturnUserFocusSession();
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentSession)
@@ -4682,9 +4646,10 @@ performDeleteMapToDelete:(id)	sender
 canPerformDeleteMapToDelete:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL			result = activeWindowIsTerminalWindow();
-	BOOL			isChecked = NO;
-	SessionRef		currentSession = SessionFactory_ReturnUserFocusSession();
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentSession)
@@ -4710,9 +4675,10 @@ performEmacsCursorModeToggle:(id)	sender
 canPerformEmacsCursorModeToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL			result = activeWindowIsTerminalWindow();
-	BOOL			isChecked = NO;
-	SessionRef		currentSession = SessionFactory_ReturnUserFocusSession();
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentSession)
@@ -4738,9 +4704,10 @@ performLocalPageKeysToggle:(id)	sender
 canPerformLocalPageKeysToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL			result = activeWindowIsTerminalWindow();
-	BOOL			isChecked = NO;
-	SessionRef		currentSession = SessionFactory_ReturnUserFocusSession();
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentSession)
@@ -4767,7 +4734,7 @@ performMappingCustom:(id)	sender
 - (IBAction)
 performTranslationSwitchByFavoriteName:(id)		sender
 {
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	BOOL				isError = YES;
 	
 	
@@ -4853,9 +4820,12 @@ performLineWrapToggle:(id)		sender
 canPerformLineWrapToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL				result = activeWindowIsTerminalWindow();
 	BOOL				isChecked = NO;
-	TerminalScreenRef	currentScreen = returnActiveTerminalScreen();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
+	TerminalScreenRef	currentScreen = (nullptr == terminalWindow)
+										? nullptr
+										: TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentScreen)
@@ -4878,9 +4848,10 @@ performLocalEchoToggle:(id)		sender
 canPerformLocalEchoToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL			result = activeWindowIsTerminalWindow();
-	BOOL			isChecked = NO;
-	SessionRef		currentSession = SessionFactory_ReturnUserFocusSession();
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentSession)
@@ -4919,9 +4890,12 @@ performSaveOnClearToggle:(id)	sender
 canPerformSaveOnClearToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL				result = activeWindowIsTerminalWindow();
 	BOOL				isChecked = NO;
-	TerminalScreenRef	currentScreen = returnActiveTerminalScreen();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
+	TerminalScreenRef	currentScreen = (nullptr == terminalWindow)
+										? nullptr
+										: TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentScreen)
@@ -4952,9 +4926,10 @@ performSpeechToggle:(id)	sender
 canPerformSpeechToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL			result = activeWindowIsTerminalWindow();
-	BOOL			isChecked = NO;
-	SessionRef		currentSession = SessionFactory_ReturnUserFocusSession();
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentSession)
@@ -4977,9 +4952,10 @@ performSuspendToggle:(id)	sender
 canPerformSuspendToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL			result = activeWindowIsTerminalWindow();
-	BOOL			isChecked = NO;
-	SessionRef		currentSession = SessionFactory_ReturnUserFocusSession();
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
 	
 	
 	if (nullptr != currentSession)
@@ -5108,7 +5084,7 @@ performFormatByFavoriteName:(id)	sender
 	}
 	else
 	{
-		TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 		BOOL				isError = YES;
 		
 		
@@ -5246,7 +5222,8 @@ canPerformHideOtherWindows:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
 	// INCOMPLETE, should really be disabled if all other terminal windows are hidden
-	BOOL	result = (activeWindowIsTerminalWindow() && (SessionFactory_ReturnCount() > 1));
+	BOOL	result = ((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+						(SessionFactory_ReturnCount() > 1));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5316,7 +5293,7 @@ canPerformMoveToNewWorkspace:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
 	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	
 	
 	if (nullptr != terminalWindow)
@@ -5332,7 +5309,7 @@ canPerformMoveToNewWorkspace:(id <NSValidatedUserInterfaceItem>)	anItem
 performMoveWindowRight:(id)		sender
 {
 #pragma unused(sender)
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	
 	
 	if (nullptr != terminalWindow)
@@ -5350,7 +5327,7 @@ canPerformMoveWindowRight:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
 	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	
 	
 	if (nullptr != terminalWindow)
@@ -5365,7 +5342,7 @@ canPerformMoveWindowRight:(id <NSValidatedUserInterfaceItem>)	anItem
 performMoveWindowLeft:(id)		sender
 {
 #pragma unused(sender)
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	
 	
 	if (nullptr != terminalWindow)
@@ -5383,7 +5360,7 @@ canPerformMoveWindowLeft:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
 	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	
 	
 	if (nullptr != terminalWindow)
@@ -5398,7 +5375,7 @@ canPerformMoveWindowLeft:(id <NSValidatedUserInterfaceItem>)	anItem
 performMoveWindowDown:(id)		sender
 {
 #pragma unused(sender)
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	
 	
 	if (nullptr != terminalWindow)
@@ -5417,7 +5394,7 @@ canPerformMoveWindowDown:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
 	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	
 	
 	if (nullptr != terminalWindow)
@@ -5432,7 +5409,7 @@ canPerformMoveWindowDown:(id <NSValidatedUserInterfaceItem>)	anItem
 performMoveWindowUp:(id)		sender
 {
 #pragma unused(sender)
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	
 	
 	if (nullptr != terminalWindow)
@@ -5451,7 +5428,7 @@ canPerformMoveWindowUp:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
 	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = returnActiveTerminalWindow();
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	
 	
 	if (nullptr != terminalWindow)
@@ -5472,7 +5449,8 @@ performRename:(id)	sender
 canPerformRename:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (activeWindowIsTerminalWindow() || (nullptr != returnTEKSession()));
+	BOOL	result = ((nullptr != TerminalWindow_ReturnFromKeyWindow()) ||
+						(nullptr != returnTEKSession()));
 	
 	
 	return [NSNumber numberWithBool:result];

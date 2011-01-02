@@ -344,6 +344,8 @@ daily_build_lineage = [
 notes_by_version = {
     '20110101': [
         'Fixed a problem where floating windows could not transfer keyboard focus back to terminal windows that were clicked.',
+        'Fixed various cases of menu commands being enabled when they were not meant to be.',
+        'Certain terminal window commands, such as macros, nudging, printing, notification and suspend, are now available even while a sheet is open in the foreground.',
     ],
     '20101231': [
         'In XTerm 256-color mode, MacTelnet now responds to the XTerm sequences that customize colors.',

@@ -38,6 +38,7 @@
 
 // library includes
 #import <AutoPool.objc++.h>
+#import <CocoaBasic.h>
 #import <CFRetainRelease.h>
 #import <MemoryBlockPtrLocker.template.h>
 
@@ -281,13 +282,8 @@ PrintTerminal_JobSendToPrinter	(PrintTerminal_JobRef	inRef,
 	if (nullptr == ptr) result = kPrintTerminal_ResultInvalidID;
 	else
 	{
-		NSWindow*	window = [[[NSWindow alloc] initWithWindowRef:inParentWindowOrNull] autorelease];
+		NSWindow*	window = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNull);
 		
-		
-		// as recommended in the documentation, retain the given window
-		// manually, because initWithWindowRef: does not retain it (but
-		// does release it)
-		RetainWindow(inParentWindowOrNull);
 		
 		// run the sheet, which will also retain the job object
 		[ptr beginPreviewSheetModalForWindow:window];

@@ -319,7 +319,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 {
 	MacroManager_Result		result = kMacroManager_ResultGenericFailure;
 	SessionRef				session = (nullptr == inTargetSessionOrNullForActiveSession)
-										? SessionFactory_ReturnUserFocusSession()
+										? SessionFactory_ReturnUserRecentSession()
 										: inTargetSessionOrNullForActiveSession;
 	Preferences_ContextRef	context = (nullptr == inMacroSetOrNullForActiveSet)
 										? gCurrentMacroSet()

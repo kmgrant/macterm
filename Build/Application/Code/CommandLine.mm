@@ -178,7 +178,7 @@ displayHelp:(id)	sender
 sendText:(id)	sender
 {
 #pragma unused(sender)
-	SessionRef		session = SessionFactory_ReturnUserFocusSession();
+	SessionRef		session = SessionFactory_ReturnUserRecentSession();
 	
 	
 	if ((nullptr == session) || (nil == commandLineText))

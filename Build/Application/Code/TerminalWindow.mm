@@ -156,6 +156,7 @@ HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
 #pragma mark Types
 namespace {
 
+typedef std::map< NSWindow*, TerminalWindowRef >				NSWindowToTerminalWindowMap;
 typedef std::vector< TerminalScreenRef >						TerminalScreenList;
 typedef std::multimap< TerminalScreenRef, TerminalViewRef >		TerminalScreenToViewMultiMap;
 typedef std::vector< TerminalViewRef >							TerminalViewList;
@@ -361,6 +362,7 @@ void					updateScrollBars				(TerminalWindowPtr);
 #pragma mark Variables
 namespace {
 
+NSWindowToTerminalWindowMap&	gTerminalNSWindows ()		{ static NSWindowToTerminalWindowMap x; return x; }
 TerminalWindowRefTracker&	gTerminalWindowValidRefs ()		{ static TerminalWindowRefTracker x; return x; }
 TerminalWindowPtrLocker&	gTerminalWindowPtrLocks ()		{ static TerminalWindowPtrLocker x; return x; }
 SInt16**					gTopLeftCorners = nullptr;
@@ -1015,9 +1017,65 @@ TerminalWindow_ReconfigureViewsInGroup	(TerminalWindowRef			inRef,
 
 
 /*!
+Returns the Terminal Window associated with the most recently
+active non-floating Cocoa or Carbon window, or nullptr if there
+is none.
+
+Use this in cases where you want to interact with the terminal
+window even if something else is focused, e.g. if a floating
+window is currently the target of keyboard input.
+
+(4.0)
+*/
+TerminalWindowRef
+TerminalWindow_ReturnFromMainWindow ()
+{
+	NSWindow*			activeWindow = [NSApp mainWindow];
+	TerminalWindowRef	result = [activeWindow terminalWindowRef];
+	
+	
+	if (nullptr == result)
+	{
+		// old method; temporary, for Carbon
+		result = TerminalWindow_ReturnFromWindow(ActiveNonFloatingWindow());
+	}
+	return result;
+}// ReturnFromMainWindow
+
+
+/*!
+Returns the Terminal Window associated with the Cocoa or Carbon
+window that has keyboard focus, or nullptr if there is none.  In
+particular, if a floating window is focused, this will always
+return nullptr.
+
+Use this in cases where the target of keyboard input absolutely
+must be a terminal, and cannot be a floating non-terminal window.
+
+(4.0)
+*/
+TerminalWindowRef
+TerminalWindow_ReturnFromKeyWindow ()
+{
+	NSWindow*			activeWindow = [NSApp keyWindow];
+	TerminalWindowRef	result = [activeWindow terminalWindowRef];
+	
+	
+	if (nullptr == result)
+	{
+		// old method; temporary, for Carbon
+		result = TerminalWindow_ReturnFromWindow(GetUserFocusWindow());
+	}
+	return result;
+}// ReturnFromKeyWindow
+
+
+/*!
 Returns the Terminal Window associated with the specified
 window, if any.  A window that is not a terminal window
 will cause a nullptr return value.
+
+See also TerminalWindow_ReturnFromActiveWindow().
 
 (3.0)
 */
@@ -2058,7 +2116,8 @@ installedActions()
 	// set up Window Info; it is important to do this right away
 	// because this is relied upon by other code to find the
 	// terminal window data attached to the Mac OS window
-	assert(this->window != nullptr);
+	assert(this->window != nil);
+	gTerminalNSWindows()[this->window] = this->selfRef;
 	WindowInfo_SetWindowDescriptor(this->windowInfo, kConstantsRegistry_WindowDescriptorAnyTerminal);
 	WindowInfo_SetWindowPotentialDropTarget(this->windowInfo, true/* can receive data via drag-and-drop */);
 	WindowInfo_SetAuxiliaryDataPtr(this->windowInfo, REINTERPRET_CAST(this, TerminalWindowRef)); // the auxiliary data is the "TerminalWindowRef"
@@ -2447,6 +2506,8 @@ TerminalWindow::
 	// hide window and kill its controls to disable callbacks
 	if (nil != this->window)
 	{
+		gTerminalNSWindows().erase(this->window);
+		
 		if ([this->window isVisible])
 		{
 			// 3.0 - use a zoom effect to close windows
@@ -3162,12 +3223,7 @@ createWindow ()
 						CFSTR("TerminalWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
 	if (nullptr != window)
 	{
-		result = [[NSWindow alloc] initWithWindowRef:window];
-		
-		// as recommended in the documentation, retain the window
-		// manually, because initWithWindowRef: does not retain it
-		// (but does release it)
-		(OSStatus)RetainWindow(window);
+		result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(window);
 		
 		// override this default; technically terminal windows
 		// are immediately closeable for the first 15 seconds
@@ -7174,5 +7230,27 @@ updateScrollBars	(TerminalWindowPtr		inPtr)
 }// updateScrollBars
 
 } // anonymous namespace
+
+
+
+@implementation NSWindow (TerminalWindow_NSWindowExtensions)
+
+
+- (TerminalWindowRef)
+terminalWindowRef
+{
+	NSWindowToTerminalWindowMap::const_iterator		toPair = gTerminalNSWindows().find(self);
+	TerminalWindowRef								result = nullptr;
+	
+	
+	if (gTerminalNSWindows().end() != toPair)
+	{
+		result = toPair->second;
+	}
+	return result;
+}// terminalWindowRef
+
+
+@end // NSWindow (TerminalWindow_NSWindowExtensions)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

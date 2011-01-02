@@ -325,15 +325,17 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 namespace {
 
 /*!
-This routine consistently determines the current
-keyboard focus session for all keypad menus.
+This routine consistently determines the session where all
+keypad commands will go.  Note that since Cocoa floating windows
+can have the user focus, the appropriate terminal window MAY NOT
+always be the user focus window!
 
 (3.0)
 */
 SessionRef
 getCurrentSession ()
 {
-	return SessionFactory_ReturnUserFocusSession();
+	return SessionFactory_ReturnUserRecentSession();
 }// getCurrentSession
 
 }// anonymous namespace

@@ -14,7 +14,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -111,6 +111,17 @@ Float32 const	kTerminalWindow_DefaultMetaTabWidth = 0.0;	//!< tells TerminalWind
 #pragma mark Types
 
 typedef struct OpaqueTerminalWindow*	TerminalWindowRef;
+
+#ifdef __OBJC__
+
+@interface NSWindow (TerminalWindow_NSWindowExtensions)
+
+- (TerminalWindowRef)
+terminalWindowRef;
+
+@end
+
+#endif // __OBJC__
 
 
 
@@ -301,6 +312,12 @@ void
 // IMPORTANT - USE THIS FUNCTION TO GUARANTEE A WINDOW IS A TERMINAL, BEFORE MUCKING WITH IT
 Boolean
 	TerminalWindow_ExistsFor						(WindowRef					inWindow);
+
+TerminalWindowRef
+	TerminalWindow_ReturnFromMainWindow				();
+
+TerminalWindowRef
+	TerminalWindow_ReturnFromKeyWindow				();
 
 TerminalWindowRef
 	TerminalWindow_ReturnFromWindow					(WindowRef					inWindow);

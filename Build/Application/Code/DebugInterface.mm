@@ -124,7 +124,7 @@ dumpStateOfActiveTerminal:(id)	sender
 			Console_BlockIndent		_2;
 			
 			
-			activeSession = SessionFactory_ReturnUserFocusSession();
+			activeSession = SessionFactory_ReturnUserRecentSession();
 			
 			if (nullptr == activeSession)
 			{

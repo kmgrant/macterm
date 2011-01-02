@@ -6777,7 +6777,7 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 	CFAbsoluteTime const	kNow = CFAbsoluteTimeGetCurrent();
 	Boolean					canTrigger = (kSession_WatchForKeepAlive == inWhatTriggered)
 											? true
-											: ((SessionFactory_ReturnUserFocusSession() != inPtr->selfRef) ||
+											: ((SessionFactory_ReturnUserRecentSession() != inPtr->selfRef) ||
 												FlagManager_Test(kFlagSuspended));
 	
 	
