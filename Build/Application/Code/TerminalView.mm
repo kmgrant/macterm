@@ -5115,11 +5115,90 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			// to draw one character at a time so that the character offset can be corrected
 			register SInt16		i = 0;
 			Point				oldPen;
+			char				previousChar = '\0'; // aids heuristic algorithm; certain letter combinations may demand different offsets
 			
 			
 			for (i = 0; i < inCharacterCount; ++i)
 			{
+				char const	thisChar = *(oldMacRomanBufferForQuickDraw + i);
+				SInt16		offset = 0;
+				
+				
+				if (false == inTerminalViewPtr->text.font.isMonospaced)
+				{
+					// the following is completely arbitrary, a heuristic; in an attempt to make
+					// font display nicer when proportional fonts are shoehorned into monospace
+					// layout, ASSUME that certain characters will TEND to be an unusual size,
+					// and nudge them a bit to center them in the fixed-size cell that they use
+					// (note: these are pixel-based instead of being proportional to the width,
+					// so at small or very large font sizes they won’t really work as intended)
+					switch (thisChar)
+					{
+					case ':':
+					case ';':
+					case '.':
+					case ',':
+					case '-':
+					case '"':
+					case '\'':
+					case '/':
+					case '\\':
+						++offset;
+						break;
+					case 'c':
+					case 'e':
+					case 'r':
+					case 's':
+					case 't':
+						++offset;
+						if (std::isupper(previousChar))
+						{
+							++offset;
+						}
+						break;
+					case 'i':
+					case 'l':
+					case '[':
+					case '{':
+					case '(':
+						offset += 2;
+						break;
+					case 'I':
+						offset += 3;
+						break;
+					case 'C':
+					case 'O':
+					case 'T':
+						if (false == std::isupper(previousChar))
+						{
+							--offset;
+						}
+						break;
+					case 'Q':
+					case 'U':
+						if (false == std::isupper(previousChar))
+						{
+							offset -= 2;
+						}
+						break;
+					case 'w':
+						offset -= 2;
+						break;
+					case 'm':
+					case 'M':
+					case 'W':
+						offset -= 3;
+						break;
+					default:
+						break;
+					}
+				}
+				
 				GetPen(&oldPen);
+				if (offset != 0)
+				{
+					MoveTo(oldPen.h + offset, oldPen.v);
+				}
 				if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 				{
 					// draw a graphics character
@@ -5132,6 +5211,8 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 					DrawText(oldMacRomanBufferForQuickDraw, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
 				}
 				MoveTo(oldPen.h + inTerminalViewPtr->text.font.widthPerCharacter, oldPen.v);
+				
+				previousChar = thisChar;
 			}
 		}
 		else

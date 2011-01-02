@@ -346,6 +346,7 @@ notes_by_version = {
         'Fixed a problem where floating windows could not transfer keyboard focus back to terminal windows that were clicked.',
         'Fixed various cases of menu commands being enabled when they were not meant to be.',
         'Certain terminal window commands, such as macros, nudging, printing, notification and suspend, are now available even while a sheet is open in the foreground.',
+        'Terminal views that use proportional fonts now look better, thanks to a letter-sensitive heuristic for manual alignment.',
     ],
     '20101231': [
         'In XTerm 256-color mode, MacTelnet now responds to the XTerm sequences that customize colors.',
