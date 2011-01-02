@@ -9149,9 +9149,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			int				r = 0;
 			int				g = 0;
 			int				b = 0;
+			int				scanResult = sscanf(stringPtr, "%d;rgb:%x/%x/%x", &i, &r, &g, &b);
 			
 			
-			if (4 == CPP_STD::sscanf(stringPtr, "%d;rgb:%x/%x/%x", &i, &r, &g, &b))
+			if (4 == scanResult)
 			{
 				if ((i > 255) || (r > 255) || (g > 255) || (b > 255) ||
 					(i < 16/* cannot overwrite base ANSI colors */) || (r < 0) || (g < 0) || (b < 0))
@@ -9178,6 +9179,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			}
 			else
 			{
+				Console_Warning(Console_WriteValue, "failed to parse XTerm color string; sscanf() result", scanResult);
 				Console_Warning(Console_WriteValueCString, "discarding unrecognized syntax for XTerm color string", stringPtr);
 			}
 		}

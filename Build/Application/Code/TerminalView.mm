@@ -4936,7 +4936,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 	{
 		char x[255];
 		Str255 pstr;
-		std::snprintf(x, sizeof(x), "%d", inZeroBasedStartColumnNumber);
+		(int)std::snprintf(x, sizeof(x), "%d", inZeroBasedStartColumnNumber);
 		StringUtilities_CToP(x, pstr);
 		DrawString(pstr);
 	}
@@ -4946,7 +4946,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 	{
 		char x[255];
 		Str255 pstr;
-		std::snprintf(x, sizeof(x), "%d", viewPtr->screen.currentRenderedLine);
+		(int)std::snprintf(x, sizeof(x), "%d", viewPtr->screen.currentRenderedLine);
 		StringUtilities_CToP(x, pstr);
 		DrawString(pstr);
 	}

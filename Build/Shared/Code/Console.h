@@ -160,7 +160,7 @@ inline bool __Console_CrashTraceably ()
 }
 inline bool __Console_AssertHelper (char const* t, char const* file, unsigned long line)
 {
-	printf("MacTelnet: ASSERTION FAILURE: %s [%s:%lu]\n", t, file, line);
+	(int)printf("MacTelnet: ASSERTION FAILURE: %s [%s:%lu]\n", t, file, line);
 	__Console_CrashTraceably();
 	return false;
 }
@@ -168,9 +168,9 @@ inline bool __Console_AssertNoErrHelper (OSStatus e, char const* t, char const* 
 {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	char const*		desc = GetMacOSStatusCommentString(e);
-	printf("MacTelnet: ASSERTION FAILURE: OSStatus value was %ld (%s) for \"%s\" [%s:%lu]\n", e, desc, t, file, line);
+	(int)printf("MacTelnet: ASSERTION FAILURE: OSStatus value was %ld (%s) for \"%s\" [%s:%lu]\n", e, desc, t, file, line);
 #else
-	printf("MacTelnet: ASSERTION FAILURE: OSStatus value was %ld for \"%s\" [%s:%lu]\n", e, t, file, line);
+	(int)printf("MacTelnet: ASSERTION FAILURE: OSStatus value was %ld for \"%s\" [%s:%lu]\n", e, t, file, line);
 #endif
 	__Console_CrashTraceably();
 	return false;
@@ -186,7 +186,7 @@ inline bool __Console_AssertNoErrHelper (OSStatus e, char const* t, char const* 
 // the first argument is a function, and all remaining arguments are the function parameters
 // IMPORTANT: the "args..." and " , ##" syntax only work in GNU compilers
 #define Console_Warning(f, t, args...)  \
-	do { char s[256]; snprintf(s, sizeof(s), "warning, %s", t); f(s    , ## args); \
+	do { char s[256]; (int)snprintf(s, sizeof(s), "warning, %s", t); f(s    , ## args); \
 	     if (__Console_WarningsTriggerCrashTraces()) __Console_CrashTraceably(); } while (0)
 
 void

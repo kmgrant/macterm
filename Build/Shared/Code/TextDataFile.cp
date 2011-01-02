@@ -3,7 +3,7 @@
 	TextDataFile.cp
 	
 	Data Access Library 2.3
-	© 1998-2010 by Kevin Grant
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -37,6 +37,7 @@
 
 // library includes
 #include <ColorUtilities.h>
+#include <Console.h>
 #include <MemoryBlockHandleLocker.template.h>
 #include <MemoryBlocks.h>
 #include <StringUtilities.h>
@@ -423,9 +424,17 @@ TextDataFile_AddNameValueNumber		(TextDataFile_Ref				inRef,
 									 TextDataFile_ValueBrackets		inBrackets)
 {
 	char	buffer[10];
+	int		requiredSize = snprintf(buffer, sizeof(buffer), "%ld", inValue);
 	
 	
-	CPP_STD::sprintf(buffer, "%ld", inValue);
+	if (STATIC_CAST(requiredSize, size_t) >= sizeof(buffer))
+	{
+		Console_Warning(Console_WriteValueCString, "not enough space to add numerical value, property", inPropertyName);
+	}
+	else if (requiredSize < 0)
+	{
+		Console_Warning(Console_WriteValue, "snprintf() failed when adding numerical value, errno", errno);
+	}
 	return TextDataFile_AddNameValue(inRef, inClassNameOrNull, inPropertyName, buffer, inBrackets);
 }// AddNameValueNumber
 
@@ -475,9 +484,18 @@ TextDataFile_AddNameValueRectangle	(TextDataFile_Ref				inRef,
 									 TextDataFile_ValueBrackets		inBrackets)
 {
 	char	buffer[100];
+	int		requiredSize = snprintf(buffer, sizeof(buffer), "%d,%d,%d,%d", inValuePtr->left, inValuePtr->top,
+									inValuePtr->right, inValuePtr->bottom);
 	
 	
-	CPP_STD::sprintf(buffer, "%d,%d,%d,%d", inValuePtr->left, inValuePtr->top, inValuePtr->right, inValuePtr->bottom);
+	if (STATIC_CAST(requiredSize, size_t) >= sizeof(buffer))
+	{
+		Console_Warning(Console_WriteValueCString, "not enough space to add rectangular value, property", inPropertyName);
+	}
+	else if (requiredSize < 0)
+	{
+		Console_Warning(Console_WriteValue, "snprintf() failed when adding rectangular value, errno", errno);
+	}
 	return TextDataFile_AddNameValue(inRef, inClassNameOrNull, inPropertyName, buffer, inBrackets);
 }// AddNameValueRectangle
 
@@ -503,9 +521,17 @@ TextDataFile_AddNameValueRGBColor	(TextDataFile_Ref				inRef,
 	// for historical reasons, this is in terms of integers and not fractions
 	RGBColor	asRGBColor = ColorUtilities_QuickDrawColorMake(*inValuePtr);
 	char		buffer[100];
+	int			requiredSize = snprintf(buffer, sizeof(buffer), "%d,%d,%d", asRGBColor.red, asRGBColor.green, asRGBColor.blue);
 	
 	
-	CPP_STD::sprintf(buffer, "%d,%d,%d", asRGBColor.red, asRGBColor.green, asRGBColor.blue);
+	if (STATIC_CAST(requiredSize, size_t) >= sizeof(buffer))
+	{
+		Console_Warning(Console_WriteValueCString, "not enough space to add color value, property", inPropertyName);
+	}
+	else if (requiredSize < 0)
+	{
+		Console_Warning(Console_WriteValue, "snprintf() failed when adding color value, errno", errno);
+	}
 	return TextDataFile_AddNameValue(inRef, inClassNameOrNull, inPropertyName, buffer, inBrackets);
 }// AddNameValueRGBColor
 
@@ -785,9 +811,10 @@ TextDataFile_StringToRectangle	(char const*	inStringPtr,
 		int		t = 0;
 		int		r = 0;
 		int		b = 0;
+		int		scanResult = sscanf(inStringPtr, "%d,%d,%d,%d", &l, &t, &r, &b);
 		
 		
-		if (4 == CPP_STD::sscanf(inStringPtr, "%d,%d,%d,%d", &l, &t, &r, &b))
+		if (4 == scanResult)
 		{
 			// four numbers successfully read
 			outValuePtr->left = l;
@@ -795,6 +822,10 @@ TextDataFile_StringToRectangle	(char const*	inStringPtr,
 			outValuePtr->right = r;
 			outValuePtr->bottom = b;
 			result = true;
+		}
+		else
+		{
+			Console_Warning(Console_WriteValue, "failed to convert string to rectangle; sscanf() result", scanResult);
 		}
 	}
 	return result;
@@ -824,11 +855,12 @@ TextDataFile_StringToRGBColor	(char const*		inStringPtr,
 		unsigned int	r = 0;
 		unsigned int	g = 0;
 		unsigned int	b = 0;
+		int				scanResult = sscanf(inStringPtr, "%u,%u,%u", &r, &g, &b);
 		
 		
 		// for historical reasons, these are expected to be integers in the
 		// range used by a QuickDraw RGBColor structure (and not fractions)
-		if (3 == CPP_STD::sscanf(inStringPtr, "%u,%u,%u", &r, &g, &b))
+		if (3 == scanResult)
 		{
 			// three numbers successfully read
 			RGBColor	asRGBColor;
@@ -839,6 +871,10 @@ TextDataFile_StringToRGBColor	(char const*		inStringPtr,
 			asRGBColor.blue = b;
 			*outValuePtr = ColorUtilities_CGDeviceColorMake(asRGBColor);
 			result = true;
+		}
+		else
+		{
+			Console_Warning(Console_WriteValue, "failed to convert string to color; sscanf() result", scanResult);
 		}
 	}
 	return result;

@@ -3,7 +3,7 @@
 	RasterGraphicsKernel.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -37,6 +37,7 @@
 #include <cstring>
 
 // library includes
+#include <Console.h>
 #include <MemoryBlocks.h>
 
 // MacTelnet includes
@@ -142,7 +143,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	struct VRwin	VRhead;				// linked list head
 	short			VRcmdnum = -1;		// current command
 	short			VRargcount = 0;		// number of args for command
-	int				VRdatalen = 0;		// length of expected data
+	int				VRdatalen = 0;		// length of expected data; WARNING, must be exactly "int" due to scanf() usage in this file
 	short			VRbufpos = 0;		// current pointer in tempdata
 	union arg		VRargs[MAXARGS];	// argument vector
 	char			VRtempdata[256];	// temporary storage while parsing
@@ -287,7 +288,15 @@ VRwrite		(char*		b,
 				VRtempdata[VRbufpos] = '\0';
 
 				/*	copy into argument union */
-				(int)CPP_STD::sscanf(VRtempdata,"%d",&VRargs[VRargcount].a_num);
+				{
+					int		scanResult = sscanf(VRtempdata,"%d",&VRargs[VRargcount].a_num);
+					
+					
+					if (scanResult <= 0)
+					{
+						Console_Warning(Console_WriteValue, "failed to read raster graphics integer argument; sscanf() result", scanResult);
+					}
+				}
 				VRbufpos = 0;
 
 				VRargcount++;
@@ -376,8 +385,24 @@ VRwrite		(char*		b,
 				VRtempdata[VRbufpos] = '\0';
 
 				/*	copy into argument union */
-				(int)CPP_STD::sscanf(VRtempdata,"%d",&VRdatalen);
-				(int)CPP_STD::sscanf(VRtempdata,"%d",&VRargs[VRargcount].a_num);
+				{
+					int		scanResult = sscanf(VRtempdata,"%d",&VRdatalen);
+					
+					
+					if (scanResult <= 0)
+					{
+						Console_Warning(Console_WriteValue, "failed to read raster graphics count argument; sscanf() result", scanResult);
+					}
+				}
+				{
+					int		scanResult = sscanf(VRtempdata,"%d",&VRargs[VRargcount].a_num);
+					
+					
+					if (scanResult <= 0)
+					{
+						Console_Warning(Console_WriteValue, "failed to read raster graphics count argument; sscanf() result", scanResult);
+					}
+				}
 
 				if (VRdatalen > LINEMAX)
 					VRdatalen = LINEMAX;

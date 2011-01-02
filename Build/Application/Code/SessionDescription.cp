@@ -1125,6 +1125,7 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 	{
 		Boolean		makeCompatibleWithNCSATelnet = false; // whether to constrain to 23 specific keys
 		Boolean		success = false;
+		//int			requiredSize = 0;
 		
 		
 		// IMPORTANT:
@@ -1192,7 +1193,7 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 		//nameValuePairToFile("erase", (connectionDataPtr->bsdel) ? "delete" : "backspace", fn);
 		
 		//(OSStatus)GetWindowBounds(TerminalView_GetWindow(view), kWindowContentRgn, &rect);
-		//CPP_STD::snprintf(temp2, sizeof(temp2), "{%d,%d,%d,%d}", rect.top, rect.left, rect.bottom, rect.right);
+		//requiredSize = snprintf(temp2, sizeof(temp2), "{%d,%d,%d,%d}", rect.top, rect.left, rect.bottom, rect.right);
 		//nameValuePairToFile("size", temp2, fn);
 		
 		if ((inoutDataPtr->windowPositionHPtr != nullptr) && (inoutDataPtr->windowPositionVPtr != nullptr))
@@ -1264,11 +1265,11 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 														*(inoutDataPtr->visibleLineCountPtr));
 		}
 		
-		//CPP_STD::snprintf(temp2, sizeof(temp2), "%d", connectionDataPtr->controlKey.suspend);
+		//requiredSize = snprintf(temp2, sizeof(temp2), "%d", connectionDataPtr->controlKey.suspend);
 		//nameValuePairToFile("keystop", temp2, fn);
-		//CPP_STD::snprintf(temp2, sizeof(temp2), "%d", connectionDataPtr->controlKey.resume);
+		//requiredSize = snprintf(temp2, sizeof(temp2), "%d", connectionDataPtr->controlKey.resume);
 		//nameValuePairToFile("keygo", temp2, fn);
-		//CPP_STD::snprintf(temp2, sizeof(temp2), "%d", connectionDataPtr->controlKey.interrupt);
+		//requiredSize = snprintf(temp2, sizeof(temp2), "%d", connectionDataPtr->controlKey.interrupt);
 		//nameValuePairToFile("keyip", temp2, fn);
 		
 		if (inoutDataPtr->isBerkeleyCRPtr != nullptr)
@@ -1277,7 +1278,7 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 													*(inoutDataPtr->isBerkeleyCRPtr));
 		}
 		
-		//CPP_STD::snprintf(temp2, sizeof(temp2), "%d", connectionDataPtr->TEK.mode);
+		//requiredSize = snprintf(temp2, sizeof(temp2), "%d", connectionDataPtr->TEK.mode);
 		//nameValuePairToFile("tekem", temp2, fn);
 		
 		if (inoutDataPtr->answerBack != nullptr)
