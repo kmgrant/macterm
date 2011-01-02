@@ -54,6 +54,7 @@
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
 #import <CGContextSaveRestore.h>
+#import <CocoaBasic.h>
 #import <ColorUtilities.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
@@ -9644,6 +9645,19 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 		{
 			Point   originalLocalMouse;
 			
+			
+			// NOTE: the following is a TOTAL HACK to help Carbon and Cocoa play nicely together;
+			// in certain situations, if a Cocoa window had focus and the user clicks in the
+			// Carbon-based terminal window, the Cocoa window won’t lose focus (which is very
+			// unexpected behavior); this FORCES the window belonging to this view to become the
+			// focus from Cocoa’s point of view, so that it will behave better
+			{
+				HIWindowRef		viewWindow = HIViewGetWindow(view);
+				
+				
+				SetUserFocusWindow(viewWindow);
+				CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
+			}
 			
 			// determine where the mouse is (view-relative!)
 			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseLocation, typeQDPoint, originalLocalMouse);

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110101',
     '20101231',
     '20101221',
     '20101129',
@@ -341,6 +342,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110101': [
+        'Fixed a problem where floating windows could not transfer keyboard focus back to terminal windows that were clicked.',
+    ],
     '20101231': [
         'In XTerm 256-color mode, MacTelnet now responds to the XTerm sequences that customize colors.',
         'Changed color storage for terminal views, which makes blinking text animate more smoothly (among other things).',
