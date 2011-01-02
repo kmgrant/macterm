@@ -26,6 +26,9 @@
 
 ###############################################################*/
 
+// standard-C++ includes
+#import <map>
+
 // Mac includes
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
@@ -62,6 +65,8 @@
 - (void)changeColor: (id)sender;
 @end
 
+typedef std::map< HIWindowRef, NSWindow* >		HIWindowRefToNSWindowMap;
+
 #pragma mark Internal Method prototypes
 namespace {
 
@@ -73,6 +78,7 @@ NSString*	returnPathForFSRef	(FSRef const&);
 #pragma mark Variables
 namespace {
 
+HIWindowRefToNSWindowMap&		gCocoaCarbonWindows()	{ static HIWindowRefToNSWindowMap x; return x; }
 HIViewWrap						gCurrentColorPanelFocus;	//!< see ColorBox.h; a view with a color box that uses the current color
 My_NoticeColorPanelChange*		gColorWatcher = nil;		//!< sees color changes
 NSSpeechSynthesizer*			gDefaultSynth = nil;
@@ -473,7 +479,7 @@ CocoaBasic_MakeKeyWindowCarbonUserFocusWindow ()
 {
 	AutoPool		_;
 	HIWindowRef		carbonWindow = GetUserFocusWindow();
-	NSWindow*		window = [[NSWindow alloc] initWithWindowRef:carbonWindow];
+	NSWindow*		window = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(carbonWindow);
 	
 	
 	// as recommended in the documentation, retain the given window
@@ -518,6 +524,63 @@ CocoaBasic_PlaySoundFile	(CFURLRef	inFile)
 	
 	[[[[NSSound alloc] initWithContentsOfURL:REINTERPRET_CAST(inFile, NSURL const*) byReference:NO] autorelease] play];
 }// PlaySoundFile
+
+
+/*!
+For an existing window suspected to be a Carbon window (e.g. as
+obtained from [NSApp keyWindow]), registers its Carbon window
+reference for later use, so that another will not be allocated.
+
+(1.5)
+*/
+void
+CocoaBasic_RegisterCocoaCarbonWindow	(NSWindow*		inCocoaWindow)
+{
+	AutoPool	_;
+	
+	
+	assert(nullptr != [inCocoaWindow windowRef]);
+	gCocoaCarbonWindows().insert(std::make_pair(REINTERPRET_CAST([inCocoaWindow windowRef], HIWindowRef), inCocoaWindow));
+}// RegisterCocoaCarbonWindow
+
+
+/*!
+Using the registry maintained by this module, returns the only
+known NSWindow* for the given Carbon window reference.  If none
+existed, "initWithWindowRef:" is used to make one.  This should
+always be used instead of calling "initWithWindowRef:" yourself!
+
+This calls CocoaBasic_RegisterCocoaCarbonWindow() automatically
+when a new window is created.
+
+(1.5)
+*/
+NSWindow*
+CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow		(HIWindowRef	inCarbonWindow)
+{
+	AutoPool										_;
+	HIWindowRefToNSWindowMap::const_iterator		toPair = gCocoaCarbonWindows().find(inCarbonWindow);
+	NSWindow*										result = nil;
+	
+	
+	if (toPair != gCocoaCarbonWindows().end())
+	{
+		result = toPair->second;
+	}
+	
+	if (nil == result)
+	{
+		result = [[NSWindow alloc] initWithWindowRef:inCarbonWindow];
+		
+		// as recommended in the documentation, retain the given window
+		// manually, because initWithWindowRef: does not retain it (but
+		// does release it)
+		RetainWindow(inCarbonWindow);
+		
+		CocoaBasic_RegisterCocoaCarbonWindow(result);
+	}
+	return result;
+}// ReturnNewOrExistingCocoaCarbonWindow
 
 
 /*!

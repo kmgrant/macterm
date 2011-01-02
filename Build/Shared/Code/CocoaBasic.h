@@ -3,8 +3,8 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.4
-	© 2008-2010 by Kevin Grant
+	Simple Cocoa Wrappers Library 1.5
+	© 2008-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -33,24 +33,18 @@
 #include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
+#ifdef __OBJC__
+@class NSWindow;
+#else
+class NSWindow;
+#endif
 
 
 
 #pragma mark Public Methods
 
-void
-	CocoaBasic_AboutPanelDisplay					();
-
-void
-	CocoaBasic_ColorPanelDisplay					();
-
-void
-	CocoaBasic_ColorPanelSetTargetView				(HIViewRef);
-
-Boolean
-	CocoaBasic_FileOpenPanelDisplay					(CFStringRef = nullptr,
-													 CFStringRef = nullptr,
-													 CFArrayRef = nullptr);
+//!\name General
+//@{
 
 CGDeviceColor
 	CocoaBasic_GetGray								(CGDeviceColor const&,
@@ -73,12 +67,6 @@ void
 													 CFStringRef = nullptr);
 
 void
-	CocoaBasic_MakeFrontWindowCarbonUserFocusWindow	();
-
-void
-	CocoaBasic_MakeKeyWindowCarbonUserFocusWindow	();
-
-void
 	CocoaBasic_PlaySoundByName						(CFStringRef);
 
 void
@@ -97,9 +85,9 @@ void
 	CocoaBasic_SetDockTileToDefaultAppIcon			();
 
 Boolean
-	CocoaBasic_SetFileTypeCreator					(CFStringRef		inPath,
-													 OSType				inNewType,
-													 OSType				inNewCreator);
+	CocoaBasic_SetFileTypeCreator					(CFStringRef,
+													 OSType,
+													 OSType);
 
 Boolean
 	CocoaBasic_SpeakingInProgress					();
@@ -109,6 +97,44 @@ Boolean
 
 void
 	CocoaBasic_StopSpeaking							();
+
+//@}
+
+//!\name Panels
+//@{
+
+void
+	CocoaBasic_AboutPanelDisplay					();
+
+void
+	CocoaBasic_ColorPanelDisplay					();
+
+void
+	CocoaBasic_ColorPanelSetTargetView				(HIViewRef);
+
+Boolean
+	CocoaBasic_FileOpenPanelDisplay					(CFStringRef = nullptr,
+													 CFStringRef = nullptr,
+													 CFArrayRef = nullptr);
+
+//@}
+
+//!\name Window Management
+//@{
+
+void
+	CocoaBasic_MakeFrontWindowCarbonUserFocusWindow	();
+
+void
+	CocoaBasic_MakeKeyWindowCarbonUserFocusWindow	();
+
+void
+	CocoaBasic_RegisterCocoaCarbonWindow			(NSWindow*);
+
+NSWindow*
+	CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow	(HIWindowRef);
+
+//@}
 
 #endif
 
