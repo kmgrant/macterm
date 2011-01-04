@@ -57,6 +57,7 @@
 #include "NetEvents.h"
 #include "Preferences.h"
 #include "TerminalBackground.h"
+#include "TerminalView.h"
 #include "UIStrings.h"
 
 
@@ -146,7 +147,11 @@ OSStatus			receiveBackgroundDraw					(EventHandlerCallRef, EventRef,
 OSStatus			receiveBackgroundFocus					(EventHandlerCallRef, EventRef,
 															 My_TerminalBackgroundPtr);
 OSStatus			receiveBackgroundHIObjectEvents			(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveBackgroundHitTest				(EventHandlerCallRef, EventRef,
+															 My_TerminalBackgroundPtr);
 OSStatus			receiveBackgroundRegionRequest			(EventHandlerCallRef, EventRef,
+															 My_TerminalBackgroundPtr);
+OSStatus			receiveBackgroundTrack					(EventHandlerCallRef, EventRef,
 															 My_TerminalBackgroundPtr);
 OSStatus			receiveFocusOverlayContentDraw			(EventHandlerCallRef, EventRef, void*);
 void				setFocusOverlayVisible					(Boolean);
@@ -190,6 +195,8 @@ TerminalBackground_Init ()
 									{ kEventClassControl, kEventControlActivate },
 									{ kEventClassControl, kEventControlDeactivate },
 									{ kEventClassControl, kEventControlContextualMenuClick },
+									{ kEventClassControl, kEventControlHitTest },
+									{ kEventClassControl, kEventControlTrack },
 									{ kEventClassControl, kEventControlGetPartRegion },
 									{ kEventClassControl, kEventControlGetFocusPart },
 									{ kEventClassControl, kEventControlSetFocusPart },
@@ -1133,7 +1140,7 @@ receiveBackgroundFocus	(EventHandlerCallRef		inHandlerCallRef,
 		
 		// get the target view
 		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		if (result == noErr)
+		if (noErr == result)
 		{
 			// when setting the part, find directions in the part code parameter
 			if (kEventKind == kEventControlSetFocusPart)
@@ -1144,7 +1151,7 @@ receiveBackgroundFocus	(EventHandlerCallRef		inHandlerCallRef,
 				(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
 				
 				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, focusPart);
-				if (result == noErr)
+				if (noErr == result)
 				{
 					HIViewPartCode		newFocusPart = kTerminalBackground_ContentPartVoid;
 					
@@ -1513,6 +1520,16 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 			}
 			break;
 		
+		case kEventControlHitTest:
+			//Console_WriteLine("HI OBJECT hit test for terminal background");
+			result = receiveBackgroundHitTest(inHandlerCallRef, inEvent, dataPtr);
+			break;
+		
+		case kEventControlTrack:
+			//Console_WriteLine("HI OBJECT control track for terminal background");
+			result = receiveBackgroundTrack(inHandlerCallRef, inEvent, dataPtr);
+			break;
+		
 		case kEventControlDraw:
 			//Console_WriteLine("HI OBJECT control draw for terminal background");
 			result = CallNextEventHandler(inHandlerCallRef, inEvent);
@@ -1547,6 +1564,63 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 
 
 /*!
+Handles "kEventControlHitTest" of "kEventClassControl"
+for terminal backgrounds.
+
+(4.0)
+*/
+OSStatus
+receiveBackgroundHitTest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
+							 EventRef					inEvent,
+							 My_TerminalBackgroundPtr	UNUSED_ARGUMENT(inMyTerminalBackgroundPtr))
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassControl);
+	assert(kEventKind == kEventControlHitTest);
+	{
+		HIViewRef	view = nullptr;
+		
+		
+		// get the target view
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
+		
+		// if the view was found, continue
+		if (noErr == result)
+		{
+			HIPoint   localMouse;
+			
+			
+			// determine where the mouse is
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseLocation, typeHIPoint, localMouse);
+			if (noErr == result)
+			{
+				HIViewPartCode		hitPart = kControlNoPart;
+				HIRect				viewBounds;
+				
+				
+				// find the part the mouse is in
+				HIViewGetBounds(view, &viewBounds);
+				if (CGRectContainsPoint(viewBounds, localMouse))
+				{
+					hitPart = 1; // arbitrary; a hack, really...parts are never used otherwise, but has to be nonzero
+				}
+				
+				// update the part code parameter with the part under the mouse
+				result = SetEventParameter(inEvent, kEventParamControlPart,
+											typeControlPartCode, sizeof(hitPart), &hitPart);
+			}
+		}
+	}
+	
+	return result;
+}// receiveBackgroundHitTest
+
+
+/*!
 Handles "kEventControlGetPartRegion" of "kEventClassControl".
 
 Returns the boundaries of the requested view part.
@@ -1573,7 +1647,7 @@ receiveBackgroundRegionRequest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCa
 		
 		// get the target view
 		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		if (result == noErr)
+		if (noErr == result)
 		{
 			HIViewPartCode		partNeedingRegion = kControlNoPart;
 			
@@ -1581,7 +1655,7 @@ receiveBackgroundRegionRequest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCa
 			// determine the part whose region is needed
 			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode,
 															partNeedingRegion);
-			if (result == noErr)
+			if (noErr == result)
 			{
 				Rect	partBounds;
 				
@@ -1636,6 +1710,83 @@ receiveBackgroundRegionRequest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCa
 	}
 	return result;
 }// receiveBackgroundRegionRequest
+
+
+/*!
+Handles "kEventControlTrack" of "kEventClassControl"
+for terminal backgrounds.
+
+There is an optical illusion when a terminal background
+directly contains a terminal view, where the user might
+try to click on the view and really hit the background;
+this therefore intercepts clicks and forwards them to
+the view’s nearest point.
+
+(4.0)
+*/
+OSStatus
+receiveBackgroundTrack	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
+						 EventRef					inEvent,
+						 My_TerminalBackgroundPtr	UNUSED_ARGUMENT(inMyTerminalBackgroundPtr))
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassControl);
+	assert(kEventKind == kEventControlTrack);
+	{
+		HIViewRef	view = nullptr;
+		
+		
+		// determine the view in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
+		if (noErr == result)
+		{
+			Point		viewLocalMouse;
+			
+			
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseLocation, typeQDPoint, viewLocalMouse);
+			if (noErr == result)
+			{
+				HIViewRef	terminalContentView = nullptr;
+				
+				
+				result = HIViewFindByID(view, TerminalView_ReturnContainerHIViewID(), &terminalContentView);
+				if (noErr == result)
+				{
+					HIPoint		translatedPoint;
+					
+					
+					translatedPoint.x = viewLocalMouse.h;
+					translatedPoint.y = viewLocalMouse.v;
+					
+					// NOTE: This is basically a large hack, and it is temporary, until all of this
+					// moves to Cocoa anyway.  Basically, if the user clicks in a background view,
+					// the click should appear to be in the content view instead.
+					result = HIViewConvertPoint(&translatedPoint, view, terminalContentView);
+					if (noErr == result)
+					{
+						Point	truncatedPoint;
+						
+						
+						truncatedPoint.h = STATIC_CAST(translatedPoint.x, unsigned short);
+						truncatedPoint.v = STATIC_CAST(translatedPoint.y, unsigned short);
+						result = TrackControl(terminalContentView, truncatedPoint, nullptr/* action routine */);
+					}
+				}
+			}
+		}
+		
+		if (noErr != result)
+		{
+			result = eventNotHandledErr;
+		}
+	}
+	
+	return result;
+}// receiveBackgroundTrack
 
 
 /*!

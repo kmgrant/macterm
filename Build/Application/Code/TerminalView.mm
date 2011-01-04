@@ -746,6 +746,15 @@ TerminalView_NewHIViewBased		(TerminalScreenRef			inScreenDataSource,
 				UInt32		actualSize = 0;
 				
 				
+				// give the content view an ID, so that the background (parent) can find it when forwarding clicks
+				{
+					ControlID		newID = TerminalView_ReturnContainerHIViewID();
+					
+					
+					error = SetControlID(contentHIView, &newID);
+					assert_noerr(error);
+				}
+				
 				// the event handlers for this class of HIObject will attach a custom
 				// property to the new view, containing the TerminalViewRef
 				error = GetControlProperty(contentHIView, AppResources_ReturnCreatorCode(),
@@ -1706,6 +1715,23 @@ TerminalView_ReturnContainerHIView		(TerminalViewRef	inView)
 	result = viewPtr->encompassingHIView;
 	return result;
 }// ReturnContainerHIView
+
+
+/*!
+Returns the ID that can be used to find the terminal view’s
+content view in a view hierarchy.  This is currently required to
+allow click forwarding from the parent background view.
+
+(4.0)
+*/
+HIViewID
+TerminalView_ReturnContainerHIViewID ()
+{
+	HIViewID	result = { 'Cnvs', 0/* ID */ };
+	
+	
+	return result;
+}// ReturnContainerHIViewID
 
 
 /*!

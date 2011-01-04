@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110104',
     '20110101',
     '20101231',
     '20101221',
@@ -342,6 +343,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110104': [
+        'Fixed a problem where it was too hard to select text or otherwise use the mouse when close to the edge of a terminal.',
+    ],
     '20110101': [
         'Fixed a problem where floating windows could not transfer keyboard focus back to terminal windows that were clicked.',
         'Fixed various cases of menu commands being enabled when they were not meant to be.',

@@ -476,6 +476,9 @@ void
 HIViewRef
 	TerminalView_ReturnContainerHIView			(TerminalViewRef			inView);
 
+HIViewID
+	TerminalView_ReturnContainerHIViewID		();
+
 NSView*
 	TerminalView_ReturnContainerNSView			(TerminalViewRef			inView);
 
