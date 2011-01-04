@@ -199,18 +199,10 @@ IconForTerminal.icns \
 English.lproj/Credits.html
 APP_RESOURCES_BUNDLES := \
 English.lproj/Help \
-English.lproj/AddressDialogCocoa.nib \
 English.lproj/AlertMessages.nib \
 English.lproj/ColorBox.nib \
-English.lproj/CommandLineCocoa.nib \
-English.lproj/DebugInterfaceCocoa.nib \
 English.lproj/FindDialog.nib \
 English.lproj/GenericDialog.nib \
-English.lproj/KeypadArrangeWindow.nib \
-English.lproj/KeypadControlKeys.nib \
-English.lproj/KeypadFullScreen.nib \
-English.lproj/KeypadFunctionKeys.nib \
-English.lproj/KeypadVT220Keys.nib \
 English.lproj/KioskPasswordDialog.nib \
 English.lproj/PrefPanelFormats.nib \
 English.lproj/PrefPanelMacros.nib \
@@ -226,8 +218,16 @@ English.lproj/WindowTitleDialog.nib
 # set to a list of "English.lproj/<xyz>" paths, where there
 # should be an <xyz>.xib source and implied <xyz>.nib output
 XIB_PREFIXES := \
+English.lproj/AddressDialogCocoa \
 English.lproj/ClipboardCocoa \
+English.lproj/CommandLineCocoa \
+English.lproj/DebugInterfaceCocoa \
 English.lproj/InfoWindowCocoa \
+English.lproj/KeypadArrangeWindowCocoa \
+English.lproj/KeypadControlKeysCocoa \
+English.lproj/KeypadFullScreenCocoa \
+English.lproj/KeypadFunctionKeysCocoa \
+English.lproj/KeypadVT220KeysCocoa \
 English.lproj/MainMenuCocoa \
 English.lproj/PrintPreviewCocoa \
 English.lproj/ServerBrowserCocoa

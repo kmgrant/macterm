@@ -10,9 +10,7 @@
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
 			<string key="NS.object.0">823</string>
 		</object>
-		<array class="NSMutableArray" key="IBDocument.EditedObjectIDs">
-			<integer value="92"/>
-		</array>
+		<array class="NSMutableArray" key="IBDocument.EditedObjectIDs"/>
 		<array key="IBDocument.PluginDependencies">
 			<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 		</array>
@@ -274,7 +272,7 @@
 				<string key="NSWindowContentMaxSize">{3.40282e+38, 3.40282e+38}</string>
 				<string key="NSWindowContentMinSize">{150, 100}</string>
 				<object class="NSView" key="NSWindowView" id="920537610">
-					<reference key="NSNextResponder"/>
+					<nil key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<array class="NSMutableArray" key="NSSubviews">
 						<object class="NSScrollView" id="317856731">
@@ -313,7 +311,6 @@
 									</array>
 									<string key="NSFrame">{{1, 1}, {716, 496}}</string>
 									<reference key="NSSuperview" ref="317856731"/>
-									<reference key="NSNextKeyView" ref="694371765"/>
 									<reference key="NSDocView" ref="694371765"/>
 									<reference key="NSBGColor" ref="631987523"/>
 									<int key="NScvFlags">4</int>
@@ -341,7 +338,6 @@
 							</array>
 							<string key="NSFrame">{{-1, -2}, {733, 498}}</string>
 							<reference key="NSSuperview" ref="920537610"/>
-							<reference key="NSNextKeyView" ref="514231977"/>
 							<int key="NSsFlags">18</int>
 							<reference key="NSVScroller" ref="436085552"/>
 							<reference key="NSHScroller" ref="122325"/>
@@ -349,7 +345,6 @@
 						</object>
 					</array>
 					<string key="NSFrameSize">{731, 495}</string>
-					<reference key="NSSuperview"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
 				<string key="NSMinSize">{150, 122}</string>
@@ -782,6 +777,13 @@
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">Application/Code/DebugInterface.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">NSWindow</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">Application/Code/TerminalWindow.h</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">

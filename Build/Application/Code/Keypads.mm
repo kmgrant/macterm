@@ -357,7 +357,7 @@ sharedArrangeWindowPanelController
 - (id)
 init
 {
-	self = [super initWithWindowNibName:@"KeypadArrangeWindow"];
+	self = [super initWithWindowNibName:@"KeypadArrangeWindowCocoa"];
 	return self;
 }
 
@@ -492,7 +492,7 @@ sharedControlKeysPanelController
 - (id)
 init
 {
-	self = [super initWithWindowNibName:@"KeypadControlKeys"];
+	self = [super initWithWindowNibName:@"KeypadControlKeysCocoa"];
 	return self;
 }
 
@@ -771,7 +771,7 @@ sharedFullScreenPanelController
 - (id)
 init
 {
-	self = [super initWithWindowNibName:@"KeypadFullScreen"];
+	self = [super initWithWindowNibName:@"KeypadFullScreenCocoa"];
 	return self;
 }
 
@@ -807,7 +807,7 @@ sharedFunctionKeysPanelController
 - (id)
 init
 {
-	self = [super initWithWindowNibName:@"KeypadFunctionKeys"];
+	self = [super initWithWindowNibName:@"KeypadFunctionKeysCocoa"];
 	return self;
 }
 
@@ -935,7 +935,7 @@ sharedVT220KeysPanelController
 - (id)
 init
 {
-	self = [super initWithWindowNibName:@"KeypadVT220Keys"];
+	self = [super initWithWindowNibName:@"KeypadVT220KeysCocoa"];
 	return self;
 }
 
