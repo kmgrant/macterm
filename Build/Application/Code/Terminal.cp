@@ -10360,7 +10360,15 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			else
 			{
 				range.firstColumn = preWriteCursorX;
-				range.columnCount = inDataPtr->current.cursorX - preWriteCursorX + 1;
+				if (inDataPtr->modeInsertNotReplace)
+				{
+					// invalidate the rest of the line
+					range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - preWriteCursorX;
+				}
+				else
+				{
+					range.columnCount = inDataPtr->current.cursorX - preWriteCursorX + 1;
+				}
 				range.rowCount = 1;
 			}
 			//Console_WriteValuePair("text changed event: add data starting at row, column", range.firstRow, range.firstColumn);
