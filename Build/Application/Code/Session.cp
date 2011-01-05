@@ -5700,8 +5700,9 @@ pasteWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 		}
 		else if (inItemHit == kAlertStdAlertOtherButton)
 		{
-			// regular Paste, use verbatim what is on the Clipboard
-			Clipboard_TextFromScrap(sessionPtr->selfRef, kClipboard_ModifierNone,
+			// regular Paste, use verbatim what is on the Clipboard unless the
+			// session is in “translate newlines to carriage returns” mode
+			Clipboard_TextFromScrap(sessionPtr->selfRef, kClipboard_ModifierTranslateNewlineToCR,
 									dataPtr->sourcePasteboard.returnPasteboardRef());
 		}
 		

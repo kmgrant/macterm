@@ -1157,6 +1157,26 @@ Clipboard_TextFromScrap		(SessionRef				inSession,
 				CFRelease(mutableBuffer), mutableBuffer = nullptr;
 			}
 		}
+		else if (kClipboard_ModifierTranslateNewlineToCR == inModifier)
+		{
+			CFMutableStringRef		mutableBuffer = CFStringCreateMutableCopy
+													(kCFAllocatorDefault, 0/* capacity or 0 for no limit */, clipboardString);
+			
+			
+			if (nullptr == mutableBuffer)
+			{
+				// no memory?
+				Sound_StandardAlert();
+			}
+			else
+			{
+				// convert new-line characters into carriage-return characters
+				(CFIndex)CFStringFindAndReplace(mutableBuffer, CFSTR("\n"), CFSTR("\r"),
+												CFRangeMake(0, CFStringGetLength(mutableBuffer)), 0/* flags */);
+				Session_UserInputCFString(inSession, mutableBuffer, false/* send to scripts */);
+				CFRelease(mutableBuffer), mutableBuffer = nullptr;
+			}
+		}
 		else
 		{
 			// send the data unmodified to the session

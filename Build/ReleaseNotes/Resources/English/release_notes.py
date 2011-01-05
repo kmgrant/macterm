@@ -346,6 +346,7 @@ notes_by_version = {
     '20110104': [
         'Fixed a problem where it was too hard to select text or otherwise use the mouse when close to the edge of a terminal.',
         'Fixed text display when inserting in the middle of a line.',
+        'Fixed Paste to convert newline characters (^J) into carriage returns (^M), to avoid confusing some programs.',
     ],
     '20110101': [
         'Fixed a problem where floating windows could not transfer keyboard focus back to terminal windows that were clicked.',

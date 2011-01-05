@@ -90,8 +90,9 @@ of the data actually on the Clipboard, to suit the destination.
 */
 enum Clipboard_Modifier
 {
-	kClipboard_ModifierNone						= 0,		//!< leave data unchanged
-	kClipboard_ModifierOneLine					= 1			//!< strip all '\r' and '\n' characters first
+	kClipboard_ModifierNone						= 0,	//!< leave data unchanged
+	kClipboard_ModifierOneLine					= 1,	//!< strip all '\r' and '\n' characters first
+	kClipboard_ModifierTranslateNewlineToCR		= 2		//!< convert all '\n' characters into '\r' first
 };
 
 #pragma mark Types
