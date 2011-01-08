@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110108',
     '20110107',
     '20110104',
     '20110101',
@@ -344,6 +345,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110108': [
+        'Any "customize_mactelnet" Python module in the path is now imported implicitly; see "RunMacTelnet.py" for more.',
+    ],
     '20110107': [
         'Added keyword parameter for Base.all_init() to Quills, allowing Python code to customize the startup workspace.',
     ],

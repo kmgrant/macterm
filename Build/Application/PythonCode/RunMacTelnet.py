@@ -38,6 +38,110 @@ import pymactelnet.term.text
 import pymactelnet.url.open
 
 if __name__ == "__main__":
+    # Define default symbols for ALL possible user customizations.  This
+    # may also be a useful reference for customizers, because it shows a
+    # valid (if uninteresting) implementation of each function, including
+    # any parameters or return values.
+    def app_will_finish():
+        Base.all_done()
+    def initial_workspace():
+        return ""
+    # User-Defined Customizations Module "customize_mactelnet"
+    #
+    # If your default Python path includes this module name, then the module
+    # will be imported automatically!  And, any functions it defines that match
+    # a known protocol will be called.  This allows "cleaner" customization,
+    # because you can affect the behavior of this startup code without actually
+    # editing the file (MacTelnet upgrades will also be smoother).
+    #
+    # Although the path usually contains many directories, the following choices
+    # will probably work best:
+    #     Mac OS X 10.5.x and 10.6.x
+    #         /Library/Python/2.5/site-packages/customize_mactelnet.py
+    #     Mac OS X 10.3.9 and 10.4.x
+    #         /Library/Python/2.3/site-packages/customize_mactelnet.py
+    # NOTE: The path includes the interpreter version, which changes across OS
+    #       upgrades.  It is also possible that the new Python version won't
+    #       like your code.  Expect to relocate and possibly update your code
+    #       after each major OS upgrade.
+    #
+    # USER CUSTOMIZATIONS PROTOCOL REFERENCE
+    #
+    # Your customizations may assume that "quills" is properly imported.
+    #
+    # The following user customizations are defined.  If you do not want to use
+    # something, just leave it out; but what you do define must EXACTLY match
+    # what is expected in this file, or MacTelnet may have problems starting up!
+    # (If you see a failure, run the Console application to help debug.)
+    #
+    # --------------------------------------------------------------------------
+    # app_will_finish()
+    #
+    # Since running the main event loop prevents Python from ever returning to
+    # this script, anything that should happen "after" must be in a callback
+    # that is automatically executed.
+    #
+    # One way to think of it is as if the program has two "halves"; the first
+    # half is up to the end of the event loop; the second half is everything
+    # afterward, and the second half must be in this function.
+    #
+    # The Base.all_done() function is automatically called after your function
+    # returns.
+    #
+    # EXAMPLE
+    #     def app_will_finish():
+    #         print "this is the 2nd half of my script"
+    #
+    # --------------------------------------------------------------------------
+    # initial_workspace() -> string
+    #
+    # Return the UTF-8-encoded name to pass as the "initial_workspace" keyword
+    # parameter for Base.all_init().  Any Prefs.WORKSPACE collection name will
+    # override the Default and cause a different set of windows to be spawned.
+    # If not defined or not found, the Default is used anyway.
+    #
+    # If you just want to set this to a static value, you're advised to use the
+    # Preferences window, and just edit the Default to do what you want.  The
+    # only benefit to setting it here is when you want to do something dynamic;
+    # for instance, you could check to see if the computer's host name indicates
+    # a VPN connection, and spawn different startup sessions in that case.
+    #
+    # EXAMPLE
+    #     def initial_workspace():
+    #         ws = ""
+    #         from socket import gethostname
+    #         host = str(gethostname())
+    #         print "MacTelnet: Current machine hostname is '%s'." % host
+    #         if host.endswith("mycompany.com"):
+    #             ws = "Company Servers" # or whatever you used
+    #         return ws
+    #
+    # --------------------------------------------------------------------------
+    if "MACTELNET_SKIP_CUSTOM_LIBS" in os.environ:
+        print "MacTelnet: ignoring any 'customize_mactelnet' module (environment setting)"
+    else:
+        try:
+            import customize_mactelnet
+            user_syms = dir(customize_mactelnet)
+            if '__file__' in user_syms:
+                print "MacTelnet: imported 'customize_mactelnet' module from", customize_mactelnet.__file__ # could be a list
+            else:
+                print "MacTelnet: imported 'customize_mactelnet' module"
+            # look for valid user overrides (EVERYTHING used here should be
+            # documented above and initialized at the beginning)
+            print "MacTelnet: module contains:", user_syms
+            if 'app_will_finish' in user_syms:
+                print "MacTelnet: employing user customization 'app_will_finish'"
+                app_will_finish = customize_mactelnet.app_will_finish
+            if 'initial_workspace' in user_syms:
+                print "MacTelnet: employing user customization 'initial_workspace'"
+                initial_workspace = customize_mactelnet.initial_workspace
+        except ImportError, err:
+            # assume the module was never created, and ignore (nothing is
+            # printed as an error in this case because the overwhelming
+            # majority of users are not expected to ever create this module)
+            pass
+    
     # if you intend to use your own GUI elements with "wx", you need to
     # import and construct the application object at this point (that is,
     # before Quills is initialized); this allows your callbacks to pop up
@@ -58,28 +162,8 @@ if __name__ == "__main__":
     now = datetime.datetime.now()
     print "MacTelnet: %s" % now.strftime("%A, %B %d, %Y, %I:%M %p")
     
-    # Load all required MacTelnet modules.  If desired, set "initial_workspace"
-    # to the name of a Workspace preference collection that should be loaded
-    # instead of the Default, to spawn initial windows.  (If the specified
-    # collection is not found, the Default is chosen anyway.)
-    #
-    # IMPORTANT: If you just want to set this to a static value, you're advised
-    #            to use the Preferences window, and just edit the Default to do
-    #            what you want.  The only benefit to setting it here is when you
-    #            want to do something dynamic; for instance, you could check to
-    #            see if your computer's host name indicates a VPN connection,
-    #            and spawn different sessions by default in that case.
-    def get_ws():
-        ws = ""
-        # Put your logic here if you want; here is an example:
-        #
-        #from socket import gethostname
-        #host = str(gethostname())
-        #print "MacTelnet: Current machine hostname is '%s'." % host
-        #if host.endswith("mycompany.com"):
-        #    ws = "Company Servers" # or whatever your Workspace is called
-        return ws
-    Base.all_init(initial_workspace=get_ws())
+    # load all required MacTelnet modules
+    Base.all_init(initial_workspace=initial_workspace())
     
     # undo environment settings made by the "MacTelnet" script, so as not
     # to pollute the user environment too much
@@ -159,7 +243,7 @@ if __name__ == "__main__":
     #Prefs.set_current_macros(my_set)
     
     def terminate():
-        # unload all required MacTelnet modules, performing necessary cleanup
+        app_will_finish()
         Base.all_done()
     
     Events.on_endloop_call(terminate)
