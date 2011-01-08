@@ -58,9 +58,28 @@ if __name__ == "__main__":
     now = datetime.datetime.now()
     print "MacTelnet: %s" % now.strftime("%A, %B %d, %Y, %I:%M %p")
     
-    # load all required MacTelnet modules
-    Base.all_init()
-    #Base.all_init(os.environ['INITIAL_APP_BUNDLE_DIR']) # this variant is no longer needed
+    # Load all required MacTelnet modules.  If desired, set "initial_workspace"
+    # to the name of a Workspace preference collection that should be loaded
+    # instead of the Default, to spawn initial windows.  (If the specified
+    # collection is not found, the Default is chosen anyway.)
+    #
+    # IMPORTANT: If you just want to set this to a static value, you're advised
+    #            to use the Preferences window, and just edit the Default to do
+    #            what you want.  The only benefit to setting it here is when you
+    #            want to do something dynamic; for instance, you could check to
+    #            see if your computer's host name indicates a VPN connection,
+    #            and spawn different sessions by default in that case.
+    def get_ws():
+        ws = ""
+        # Put your logic here if you want; here is an example:
+        #
+        #from socket import gethostname
+        #host = str(gethostname())
+        #print "MacTelnet: Current machine hostname is '%s'." % host
+        #if host.endswith("mycompany.com"):
+        #    ws = "Company Servers" # or whatever your Workspace is called
+        return ws
+    Base.all_init(initial_workspace=get_ws())
     
     # undo environment settings made by the "MacTelnet" script, so as not
     # to pollute the user environment too much

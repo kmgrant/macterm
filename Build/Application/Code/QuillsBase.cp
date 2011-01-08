@@ -3,7 +3,7 @@
 	QuillsBase.cp
 	
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -48,6 +48,15 @@
 
 
 
+#pragma mark Variables
+namespace {
+
+std::string		gBaseInitialWorkspaceName;
+
+} // anonymous namespace
+
+
+
 #pragma mark Public Methods
 namespace Quills {
 
@@ -57,8 +66,10 @@ See header or "pydoc" for Python docstrings.
 (3.1)
 */
 void
-Base::all_init ()
+Base::all_init	(std::string	initial_workspace)
 {
+	gBaseInitialWorkspaceName = initial_workspace;
+	
 #if 1
 	// as long as CFBundle is not confused by which application is
 	// the current one, this call is sufficient; for now, the problem
@@ -154,6 +165,20 @@ Base::version ()
 	}
 	return result;
 }// version
+
+
+/*!
+Returns any workspace specified in Base::all_init().  It is up to
+the caller to verify that this will create a valid workspace, and
+to use the Default when necessary.
+
+(4.0)
+*/
+std::string
+Base::_initial_workspace_name ()
+{
+	return gBaseInitialWorkspaceName;
+}// _initial_workspace_name
 
 } // namespace Quills
 

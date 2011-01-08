@@ -3,7 +3,7 @@
 	SessionFactory.cp
 	
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -63,6 +63,7 @@
 #include "NetEvents.h"
 #include "NewSessionDialog.h"
 #include "Preferences.h"
+#include "QuillsBase.h"
 #include "SessionDescription.h"
 #include "SessionFactory.h"
 #include "Terminal.h"
@@ -2620,14 +2621,34 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				case kCommandRestoreWorkspaceDefaultFavorite:
 					{
-						Preferences_ContextRef		workspaceContext = nullptr;
-						Preferences_Result			prefsResult = Preferences_GetDefaultContext
-																	(&workspaceContext, Quills::Prefs::WORKSPACE);
+						std::string					preferredName = Quills::Base::_initial_workspace_name();
+						CFRetainRelease				asCFString(CFStringCreateWithCString(kCFAllocatorDefault,
+																							preferredName.c_str(),
+																							kCFStringEncodingUTF8),
+																true/* is retained */);
+						Preferences_ContextRef		workspaceContext = Preferences_NewContextFromFavorites
+																		(Quills::Prefs::WORKSPACE,
+																			asCFString.returnCFStringRef());
+						Boolean						releaseContext = (nullptr != workspaceContext);
 						
 						
-						if (kPreferences_ResultOK != prefsResult)
+						if (nullptr == workspaceContext)
 						{
-							workspaceContext = nullptr;
+							// preferred one does not exist; find the Default, instead
+							Preferences_Result		prefsResult = Preferences_GetDefaultContext
+																	(&workspaceContext, Quills::Prefs::WORKSPACE);
+							
+							
+							if (kPreferences_ResultOK == prefsResult)
+							{
+								// default contexts are borrowed, not allocated or retained
+								releaseContext = false;
+							}
+							else
+							{
+								// error
+								workspaceContext = nullptr;
+							}
 						}
 						
 						// finally, create the session from the specified context
@@ -2645,6 +2666,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (noErr != result)
 						{
 							// UNIMPLEMENTED!!!
+							Console_Warning(Console_WriteLine, "failed to launch startup workspace");
 							Sound_StandardAlert();
 						}
 					}

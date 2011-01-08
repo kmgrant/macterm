@@ -9,7 +9,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -60,10 +60,18 @@ public:
 #if SWIG
 %feature("docstring",
 "Initialize every module, in dependency order.  May also trigger\n\
-side effects such as displaying the splash screen.\n\
+side effects such as launching initial windows.\n\
+\n\
+The parameter is optional; if set, it should be the name of a\n\
+valid Prefs.WORKSPACE context to use as the source of windows\n\
+spawned at startup time.  The purpose of this is to allow some\n\
+intelligence in your environment; for instance, you might check if\n\
+your computer is connected to a VPN (based on its host name), and\n\
+choose different default windows based on the servers that are\n\
+currently visible to your computer.\n\
 ") all_init;
 #endif
-	static void all_init ();
+	static void all_init	(std::string	initial_workspace = "");
 	
 #if SWIG
 %feature("docstring",
@@ -84,6 +92,9 @@ The string encoding is UTF-8.\n\
 ") version;
 #endif
 	static std::string version ();
+	
+	// intended only for direct use by MacTelnet
+	static std::string _initial_workspace_name ();
 
 private:
 	Base (); // class is not instantiated

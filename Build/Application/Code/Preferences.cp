@@ -1593,63 +1593,68 @@ Preferences_NewContextFromFavorites		(Quills::Prefs::Class	inClass,
 										 CFStringRef			inDomainNameIfInitializingOrNull)
 {
 	Preferences_ContextRef		result = nullptr;
-	Boolean						releaseName = false;
 	
 	
-	// when nullptr is given, scan the list of all contexts for the
-	// given class and find a unique name
-	if (nullptr == inNameOrNullToAutoGenerateUniqueName)
+	// the name may be explicitly nullptr, but otherwise it must not be empty
+	if ((nullptr == inNameOrNullToAutoGenerateUniqueName) || (CFStringGetLength(inNameOrNullToAutoGenerateUniqueName) > 0))
 	{
-		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		Boolean		releaseName = false;
 		
 		
-		prefsResult = Preferences_CreateUniqueContextName
-						(inClass, inNameOrNullToAutoGenerateUniqueName/* new name */);
-		assert(kPreferences_ResultOK == prefsResult);
-		releaseName = true;
-	}
-	
-	try
-	{
-		My_ContextFavoritePtr	contextPtr = nullptr;
-		
-		
-		if (false == getNamedContext(inClass, inNameOrNullToAutoGenerateUniqueName, contextPtr))
+		// when nullptr is given, scan the list of all contexts for the
+		// given class and find a unique name
+		if (nullptr == inNameOrNullToAutoGenerateUniqueName)
 		{
-			My_FavoriteContextList*		listPtr = nullptr;
+			Preferences_Result		prefsResult = kPreferences_ResultOK;
 			
 			
-			if (getListOfContexts(inClass, listPtr))
+			prefsResult = Preferences_CreateUniqueContextName
+							(inClass, inNameOrNullToAutoGenerateUniqueName/* new name */);
+			assert(kPreferences_ResultOK == prefsResult);
+			releaseName = true;
+		}
+		
+		try
+		{
+			My_ContextFavoritePtr	contextPtr = nullptr;
+			
+			
+			if (false == getNamedContext(inClass, inNameOrNullToAutoGenerateUniqueName, contextPtr))
 			{
-				My_ContextFavoritePtr	newDictionary = new My_ContextFavorite
-															(inClass, inNameOrNullToAutoGenerateUniqueName,
-																inDomainNameIfInitializingOrNull);
+				My_FavoriteContextList*		listPtr = nullptr;
 				
 				
-				contextPtr = newDictionary;
-				listPtr->push_back(newDictionary);
-				assert(true == getNamedContext(inClass, inNameOrNullToAutoGenerateUniqueName, contextPtr));
-				changeNotify(kPreferences_ChangeNumberOfContexts);
+				if (getListOfContexts(inClass, listPtr))
+				{
+					My_ContextFavoritePtr	newDictionary = new My_ContextFavorite
+																(inClass, inNameOrNullToAutoGenerateUniqueName,
+																	inDomainNameIfInitializingOrNull);
+					
+					
+					contextPtr = newDictionary;
+					listPtr->push_back(newDictionary);
+					assert(true == getNamedContext(inClass, inNameOrNullToAutoGenerateUniqueName, contextPtr));
+					changeNotify(kPreferences_ChangeNumberOfContexts);
+				}
+			}
+			
+			if (nullptr != contextPtr)
+			{
+				result = REINTERPRET_CAST(contextPtr, Preferences_ContextRef);
+				Preferences_RetainContext(result);
 			}
 		}
-		
-		if (nullptr != contextPtr)
+		catch (std::exception const&	inException)
 		{
-			result = REINTERPRET_CAST(contextPtr, Preferences_ContextRef);
-			Preferences_RetainContext(result);
+			Console_WriteLine(inException.what());
+			result = nullptr;
+		}
+		
+		if (releaseName)
+		{
+			CFRelease(inNameOrNullToAutoGenerateUniqueName), inNameOrNullToAutoGenerateUniqueName = nullptr;
 		}
 	}
-	catch (std::exception const&	inException)
-	{
-		Console_WriteLine(inException.what());
-		result = nullptr;
-	}
-	
-	if (releaseName)
-	{
-		CFRelease(inNameOrNullToAutoGenerateUniqueName), inNameOrNullToAutoGenerateUniqueName = nullptr;
-	}
-	
 	return result;
 }// NewContextFromFavorites
 
@@ -6604,25 +6609,28 @@ getNamedContext		(Quills::Prefs::Class		inClass,
 					 CFStringRef				inName,
 					 My_ContextFavoritePtr&		outContextPtr)
 {
-	Boolean						result = false;
-	My_FavoriteContextList*		listPtr = nullptr;
+	Boolean		result = false;
 	
 	
 	outContextPtr = nullptr;
-	if (getListOfContexts(inClass, listPtr))
+	if ((nullptr != inName) && (CFStringGetLength(inName) > 0))
 	{
-		My_FavoriteContextList::const_iterator		toContextPtr = std::find_if
-																	(listPtr->begin(), listPtr->end(),
-																		contextNameEqualTo(inName));
+		My_FavoriteContextList*		listPtr = nullptr;
 		
 		
-		if (listPtr->end() != toContextPtr)
+		if (getListOfContexts(inClass, listPtr))
 		{
-			outContextPtr = *toContextPtr;
-			result = true;
+			My_FavoriteContextList::const_iterator		toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
+																					contextNameEqualTo(inName));
+			
+			
+			if (listPtr->end() != toContextPtr)
+			{
+				outContextPtr = *toContextPtr;
+				result = true;
+			}
 		}
 	}
-	
 	return result;
 }// getNamedContext
 

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110107',
     '20110104',
     '20110101',
     '20101231',
@@ -343,6 +344,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110107': [
+        'Added keyword parameter for Base.all_init() to Quills, allowing Python code to customize the startup workspace.',
+    ],
     '20110104': [
         'Fixed a problem where it was too hard to select text or otherwise use the mouse when close to the edge of a terminal.',
         'Fixed text display when inserting in the middle of a line.',
