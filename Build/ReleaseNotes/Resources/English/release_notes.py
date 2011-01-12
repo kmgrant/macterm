@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110111',
     '20110108',
     '20110107',
     '20110104',
@@ -345,6 +346,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110111': [
+        'Preferences window Formats pane Character Width setting may now be adjusted from 60% to 140%.',
+    ],
     '20110108': [
         'Any "customize_mactelnet" Python module in the path is now imported implicitly; see "RunMacTelnet.py" for more.',
     ],

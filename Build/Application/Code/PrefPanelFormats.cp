@@ -2360,12 +2360,14 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 			
 			
 			// warning, this MUST be consistent with the NIB and setFontWidthScaleFactor()
-			if (1 == scaleDiscreteValue) equivalentScale = 0.7;
-			else if (2 == scaleDiscreteValue) equivalentScale = 0.8;
-			else if (3 == scaleDiscreteValue) equivalentScale = 0.9;
-			else if (5 == scaleDiscreteValue) equivalentScale = 1.1;
-			else if (6 == scaleDiscreteValue) equivalentScale = 1.2;
-			else if (7 == scaleDiscreteValue) equivalentScale = 1.3;
+			if (1 == scaleDiscreteValue) equivalentScale = 0.6;
+			else if (2 == scaleDiscreteValue) equivalentScale = 0.7;
+			else if (3 == scaleDiscreteValue) equivalentScale = 0.8;
+			else if (4 == scaleDiscreteValue) equivalentScale = 0.9;
+			else if (6 == scaleDiscreteValue) equivalentScale = 1.1;
+			else if (7 == scaleDiscreteValue) equivalentScale = 1.2;
+			else if (8 == scaleDiscreteValue) equivalentScale = 1.3;
+			else if (9 == scaleDiscreteValue) equivalentScale = 1.4;
 			else equivalentScale = 1.0;
 			
 			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagFontCharacterWidthMultiplier,
@@ -2441,38 +2443,48 @@ setFontWidthScaleFactor		(Float32	inFontWidthScaleFactor,
 	// floating point numbers are not exact values, they technically are
 	// discrete at a very fine granularity; so do not use pure equality,
 	// use a range with a small tolerance to choose a matching number
-	if (inFontWidthScaleFactor < (0.7/* warning: must be consistent with NIB label and tick marks */ + kTolerance))
+	if (inFontWidthScaleFactor < (0.6/* warning: must be consistent with NIB label and tick marks */ + kTolerance))
 	{
-		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 1/* first slider value, 70% */);
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 1/* first slider value, 60% */);
+	}
+	else if ((inFontWidthScaleFactor >= (0.6/* warning: must be consistent with NIB label */ + kTolerance)) &&
+				(inFontWidthScaleFactor < (0.7/* warning: must be consistent with NIB label */ + kTolerance)))
+	{
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 2/* next slider value */);
 	}
 	else if ((inFontWidthScaleFactor >= (0.7/* warning: must be consistent with NIB label */ + kTolerance)) &&
 				(inFontWidthScaleFactor < (0.8/* warning: must be consistent with NIB label */ + kTolerance)))
 	{
-		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 2/* next slider value */);
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 3/* next slider value */);
 	}
 	else if ((inFontWidthScaleFactor >= (0.8/* warning: must be consistent with NIB label */ + kTolerance)) &&
 				(inFontWidthScaleFactor < (0.9/* warning: must be consistent with NIB label */ + kTolerance)))
 	{
-		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 3/* next slider value */);
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 4/* next slider value */);
 	}
 	else if ((inFontWidthScaleFactor >= (0.9/* warning: must be consistent with NIB label */ + kTolerance)) &&
 				(inFontWidthScaleFactor < (1.0/* warning: must be consistent with NIB label */ + kTolerance)))
 	{
-		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 4/* middle slider value */);
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 5/* middle slider value */);
 	}
 	else if ((inFontWidthScaleFactor >= (1.0/* warning: must be consistent with NIB label */ + kTolerance)) &&
 				(inFontWidthScaleFactor < (1.1/* warning: must be consistent with NIB label */ + kTolerance)))
 	{
-		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 5/* next slider value */);
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 6/* next slider value */);
 	}
 	else if ((inFontWidthScaleFactor >= (1.1/* warning: must be consistent with NIB label */ + kTolerance)) &&
 				(inFontWidthScaleFactor < (1.2/* warning: must be consistent with NIB label */ + kTolerance)))
 	{
-		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 6/* next slider value */);
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 7/* next slider value */);
 	}
-	else if (inFontWidthScaleFactor >= (1.2/* warning: must be consistent with NIB label */ + kTolerance))
+	else if ((inFontWidthScaleFactor >= (1.2/* warning: must be consistent with NIB label */ + kTolerance)) &&
+				(inFontWidthScaleFactor < (1.3/* warning: must be consistent with NIB label */ + kTolerance)))
 	{
-		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 7/* last slider value, 130% */);
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 8/* next slider value */);
+	}
+	else if (inFontWidthScaleFactor >= (1.3/* warning: must be consistent with NIB label */ + kTolerance))
+	{
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 9/* last slider value, 140% */);
 	}
 	else
 	{
