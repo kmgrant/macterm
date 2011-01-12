@@ -347,6 +347,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20110111': [
+        'Fixed Macros menu to display all macro sets from Preferences.',
         'Preferences window Formats pane Character Width setting may now be adjusted from 60% to 140%.',
     ],
     '20110108': [

@@ -72,8 +72,10 @@
 #include <CocoaUserDefaults.h>
 #include <Console.h>
 #include <ListenerModel.h>
+#include <Registrar.template.h>
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlockReferenceLocker.template.h>
+#include <MemoryBlockReferenceTracker.template.h>
 #include <MemoryBlocks.h>
 #include <RegionUtilities.h>
 #include <WindowInfo.h>
@@ -165,6 +167,9 @@ private:
 #pragma mark Types
 namespace {
 
+typedef MemoryBlockReferenceTracker< Preferences_ContextRef >				My_ContextReferenceTracker;
+typedef Registrar< Preferences_ContextRef, My_ContextReferenceTracker >		My_ContextReferenceRegistrar;
+
 /*!
 Provides uniform access to context information no
 matter how it is really stored.
@@ -179,7 +184,8 @@ public:
 	virtual
 	~My_ContextInterface ();
 	
-	Preferences_ContextRef		selfRef;	//!< convenient, redundant self-reference
+	My_ContextReferenceRegistrar	refValidator;	//! ensures this reference is recognized as a valid one
+	Preferences_ContextRef			selfRef;		//!< convenient, redundant self-reference
 	
 	//! inserts array value into dictionary
 	void
@@ -724,6 +730,7 @@ Boolean						gHaveRunConverter = false;
 Boolean						gInitialized = false;
 My_ContextPtrLocker&		gMyContextPtrLocks ()	{ static My_ContextPtrLocker x; return x; }
 My_ContextReferenceLocker&	gMyContextRefLocks ()	{ static My_ContextReferenceLocker x; return x; }
+My_ContextReferenceTracker&	gMyContextValidRefs ()	{ static My_ContextReferenceTracker x; return x; }
 My_ContextInterface&		gFactoryDefaultsContext ()	{ static My_ContextCFDictionary x(Quills::Prefs::_FACTORY_DEFAULTS, createDefaultPrefDictionary()); return x; }
 My_ContextInterface&		gGeneralDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::GENERAL); return x; }
 My_ContextInterface&		gFormatDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::FORMAT); return x; }
@@ -2318,6 +2325,27 @@ Preferences_ContextGetName	(Preferences_ContextRef		inContext,
 
 
 /*!
+Returns true only if the specified context is still valid.  An
+invalid context was either never valid, or invalidated by having
+lost all its retain counts (causing deallocation).
+
+(4.0)
+*/
+Boolean
+Preferences_ContextIsValid	(Preferences_ContextRef		inContext)
+{
+	Boolean		result = false;
+	
+	
+	if ((nullptr != inContext) && (gMyContextValidRefs().end() != gMyContextValidRefs().find(inContext)))
+	{
+		result = true;
+	}
+	return result;
+}// ContextIsValid
+
+
+/*!
 Changes the name of a context (which is typically displayed
 in user interface elements); this will become permanent the
 next time application preferences are synchronized.
@@ -3525,6 +3553,7 @@ Constructor.  Used only by subclasses.
 My_ContextInterface::
 My_ContextInterface		(Quills::Prefs::Class	inClass)
 :
+refValidator(REINTERPRET_CAST(this, Preferences_ContextRef), gMyContextValidRefs()),
 selfRef(REINTERPRET_CAST(this, Preferences_ContextRef)),
 _preferencesClass(inClass),
 _listenerModel(nullptr/* constructed as needed */),

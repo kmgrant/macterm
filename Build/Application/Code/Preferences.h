@@ -564,6 +564,9 @@ Preferences_Result
 											 size_t*							outActualSizePtrOrNull = nullptr,
 											 Boolean*							outIsDefaultOrNull = nullptr);
 
+Boolean
+	Preferences_ContextIsValid				(Preferences_ContextRef				inContext);
+
 Quills::Prefs::Class
 	Preferences_ContextReturnClass			(Preferences_ContextRef				inContext);
 

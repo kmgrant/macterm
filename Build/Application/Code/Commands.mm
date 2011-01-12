@@ -2994,7 +2994,7 @@ setUpDynamicMenus ()
 	setUpSessionFavoritesMenu(returnMenu(kMenuIDFile));
 	setUpWorkspaceFavoritesMenu(returnMenu(kMenuIDFile));
 	setUpFormatFavoritesMenu(returnMenu(kMenuIDView));
-	//setUpMacroSetsMenu(returnMenu(kMenuIDMacros)); // not necessary; see "canPerformActionForMacro:"
+	setUpMacroSetsMenu(returnMenu(kMenuIDMacros));
 	setUpTranslationTablesMenu(returnMenu(kMenuIDKeys));
 	setUpWindowMenu(returnMenu(kMenuIDWindow));
 }// setUpDynamicMenus

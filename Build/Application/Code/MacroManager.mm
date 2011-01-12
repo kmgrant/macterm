@@ -74,6 +74,7 @@
 namespace {
 
 void						macroSetChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void						preferenceChanged		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 Preferences_ContextRef		returnDefaultMacroSet	();
 NSMenu*						returnMacrosMenu		();
 unichar						virtualKeyToUnicode		(UInt16);
@@ -84,6 +85,7 @@ unichar						virtualKeyToUnicode		(UInt16);
 namespace {
 
 ListenerModel_ListenerRef&	gMacroSetMonitor ()		{ static ListenerModel_ListenerRef x = ListenerModel_NewStandardListener(macroSetChanged); return x; }
+ListenerModel_ListenerRef&	gPreferencesMonitor ()	{ static ListenerModel_ListenerRef x = ListenerModel_NewStandardListener(preferenceChanged); return x; }
 Preferences_ContextRef&		gCurrentMacroSet ()		{ static Preferences_ContextRef x = returnDefaultMacroSet(); return x; }
 
 } // anonymous namespace
@@ -119,6 +121,21 @@ is active when the user chooses to turn off macros.
 Preferences_ContextRef
 MacroManager_ReturnDefaultMacros ()
 {
+	// putting just-in-time monitoring here is a bit of a hack,
+	// but it saves the module from requiring an initializer
+	static Boolean		gDidInstallPrefsMonitor = false;
+	if (false == gDidInstallPrefsMonitor)
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_StartMonitoring
+						(gPreferencesMonitor(), kPreferences_ChangeNumberOfContexts,
+							false/* notify of initial value */);
+		assert(kPreferences_ResultOK == prefsResult);
+		gDidInstallPrefsMonitor = true;
+	}
+	
 	return returnDefaultMacroSet();
 }// ReturnDefaultMacros
 
@@ -724,6 +741,42 @@ macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		}
 	}
 }// macroSetChanged
+
+
+/*!
+Invoked whenever a monitored preference value is changed (see
+MacroManager_ReturnCurrentMacros() to see which preferences are
+monitored).  This routine responds by ensuring that the current
+macro set is still valid; if the macros were destroyed, the
+active set is changed to something else.
+
+(4.0)
+*/
+void
+preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
+					 ListenerModel_Event	inPreferenceTagThatChanged,
+					 void*					UNUSED_ARGUMENT(inEventContextPtr),
+					 void*					UNUSED_ARGUMENT(inListenerContextPtr))
+{
+	//Preferences_ChangeContext*	contextPtr = REINTERPRET_CAST(inEventContextPtr, Preferences_ChangeContext*);
+	size_t						actualSize = 0L;
+	
+	
+	switch (inPreferenceTagThatChanged)
+	{
+	case kPreferences_ChangeNumberOfContexts:
+		// if the current macro set has been destroyed, stop using it!
+		if (false == Preferences_ContextIsValid(MacroManager_ReturnCurrentMacros()))
+		{
+			MacroManager_SetCurrentMacros(nullptr);
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// preferenceChanged
 
 
 /*!
