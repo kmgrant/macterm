@@ -259,6 +259,8 @@
 	<integer>22</integer>
 	<key>server-protocol</key>
 	<string>ssh-1</string>
+	<key>server-user-id</key>
+	<string></string>
 	<key>spaces-per-tab</key>
 	<integer>4</integer>
 	<key>tek-mode</key>
@@ -479,6 +481,8 @@
 	<integer>1000</integer>
 	<key>terminal-scrollback-size-lines</key>
 	<integer>200</integer>
+	<key>terminal-scrollback-type</key>
+	<string>fixed</string>
 	<key>terminal-show-margin-at-column</key>
 	<integer>0</integer>
 	<key>terminal-text-encoding-name</key>

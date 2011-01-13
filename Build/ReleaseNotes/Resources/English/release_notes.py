@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110112',
     '20110111',
     '20110108',
     '20110107',
@@ -346,6 +347,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110112': [
+        'Fixed a problem that could spam warnings about missing preferences to the console.',
+    ],
     '20110111': [
         'Fixed Macros menu to display all macro sets from Preferences.',
         'Preferences window Formats pane Character Width setting may now be adjusted from 60% to 140%.',
