@@ -2267,7 +2267,7 @@ isCarbonWindow	(id		inObject)
 	BOOL	result = [[inObject class] isSubclassOfClass:[NSCarbonWindow class]];
 	
 	
-	if (result)
+	if (result && ([[inObject class] isSubclassOfClass:[NSWindow class]]))
 	{
 		CocoaBasic_RegisterCocoaCarbonWindow((NSWindow*)inObject);
 	}

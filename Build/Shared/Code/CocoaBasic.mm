@@ -449,15 +449,20 @@ CocoaBasic_MakeFrontWindowCarbonUserFocusWindow ()
 {
 	AutoPool		_;
 	HIWindowRef		carbonWindow = GetUserFocusWindow();
-	NSWindow*		window = [[NSWindow alloc] initWithWindowRef:carbonWindow];
 	
 	
-	// as recommended in the documentation, retain the given window
-	// manually, because initWithWindowRef: does not retain it (but
-	// does release it)
-	RetainWindow(carbonWindow);
-	
-	[window makeKeyAndOrderFront:nil];
+	if (nullptr != carbonWindow)
+	{
+		NSWindow*		window = [[NSWindow alloc] initWithWindowRef:carbonWindow];
+		
+		
+		// as recommended in the documentation, retain the given window
+		// manually, because initWithWindowRef: does not retain it (but
+		// does release it)
+		RetainWindow(carbonWindow);
+		
+		[window makeKeyAndOrderFront:nil];
+	}
 }// MakeFrontWindowCarbonUserFocusWindow
 
 
@@ -479,15 +484,20 @@ CocoaBasic_MakeKeyWindowCarbonUserFocusWindow ()
 {
 	AutoPool		_;
 	HIWindowRef		carbonWindow = GetUserFocusWindow();
-	NSWindow*		window = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(carbonWindow);
 	
 	
-	// as recommended in the documentation, retain the given window
-	// manually, because initWithWindowRef: does not retain it (but
-	// does release it)
-	RetainWindow(carbonWindow);
-	
-	[window makeKeyWindow];
+	if (nullptr != carbonWindow)
+	{
+		NSWindow*		window = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(carbonWindow);
+		
+		
+		// as recommended in the documentation, retain the given window
+		// manually, because initWithWindowRef: does not retain it (but
+		// does release it)
+		RetainWindow(carbonWindow);
+		
+		[window makeKeyWindow];
+	}
 }// MakeKeyWindowCarbonUserFocusWindow
 
 

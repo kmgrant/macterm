@@ -348,6 +348,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20110112': [
+        'Fixed a possible crash when certain windows were opened, especially at startup time.',
         'Fixed a problem that could spam warnings about missing preferences to the console.',
     ],
     '20110111': [
