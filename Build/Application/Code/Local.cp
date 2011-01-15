@@ -546,10 +546,41 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 					 CFStringRef		inWorkingDirectoryOrNull)
 {
 	CFIndex const	kArgumentCount = CFArrayGetCount(inArgumentArray);
+	char**			argvCopy = new char*[1 + kArgumentCount];
 	Local_Result	result = kLocal_ResultOK;
 	
 	
-	if ((nullptr == inArgumentArray) || (kArgumentCount < 1))
+	if (kArgumentCount > 0)
+	{					
+		// construct an argument array of the form expected by the system call
+		CFStringEncoding const	kArgumentEncoding = kCFStringEncodingUTF8;
+		UInt16					j = 0;
+		
+		
+		for (UInt16 i = 0; i < kArgumentCount; ++i)
+		{
+			CFStringRef		argumentCFString = CFUtilities_StringCast
+												(CFArrayGetValueAtIndex(inArgumentArray, i));
+			
+			
+			// ignore completely empty strings (generally caused by
+			// a bad split on multiple whitespace characters)
+			if (CFStringGetLength(argumentCFString) > 0)
+			{
+				size_t const	kBufferSize = 1 + CFStringGetMaximumSizeForEncoding
+													(CFStringGetLength(argumentCFString), kArgumentEncoding);
+				
+				
+				// this memory is not leaked because execvp() is about to occur
+				argvCopy[j] = new char[kBufferSize];
+				CFStringGetCString(argumentCFString, argvCopy[j], kBufferSize, kArgumentEncoding);
+				++j;
+			}
+		}
+		argvCopy[j] = nullptr;
+	}
+	
+	if ((nullptr == inArgumentArray) || (kArgumentCount < 1) || (nullptr == argvCopy[0]))
 	{
 		result = kLocal_ResultParameterError;
 	}
@@ -714,38 +745,9 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				// using an execvp() call, which DOES NOT RETURN UNLESS there is an
 				// error; technically the return value is -1 on error, but really it’s
 				// a problem if any return value is received, so an abort() is done no
-				// matter what (the abort() kills this child process, but not MacTelnet)
-				{					
-					// construct an argument array of the form expected by the system call
-					CFStringEncoding const	kArgumentEncoding = kCFStringEncodingUTF8;
-					char**					argvCopy = new char*[1 + kArgumentCount];
-					UInt16					j = 0;
-					
-					
-					for (UInt16 i = 0; i < kArgumentCount; ++i)
-					{
-						CFStringRef		argumentCFString = CFUtilities_StringCast
-															(CFArrayGetValueAtIndex(inArgumentArray, i));
-						
-						
-						// ignore completely empty strings (generally caused by
-						// a bad split on multiple whitespace characters)
-						if (CFStringGetLength(argumentCFString) > 0)
-						{
-							size_t const	kBufferSize = 1 + CFStringGetMaximumSizeForEncoding
-																(CFStringGetLength(argumentCFString), kArgumentEncoding);
-							
-							
-							// this memory is not leaked because execvp() is about to occur
-							argvCopy[j] = new char[kBufferSize];
-							CFStringGetCString(argumentCFString, argvCopy[j], kBufferSize, kArgumentEncoding);
-							++j;
-						}
-					}
-					argvCopy[j] = nullptr;
-					assert(nullptr != argvCopy[0]);
-					(int)execvp(argvCopy[0], argvCopy); // should not return
-				}
+				// matter what (the abort() kills this child process, but not MacTelnet;
+				// however, it may trigger a scary application-quit dialog from Mac OS X)
+				(int)execvp(argvCopy[0], argvCopy); // should not return
 				
 				Console_WriteLine("aborting, failed to exec()");
 				abort(); // almost no chance this line will be run, but if it does, just kill the child process
@@ -838,6 +840,10 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 			delete [] targetDir, targetDir = nullptr;
 		}
 	}
+	
+	// WARNING: this cleanup is not exception-safe, and should change
+	delete [] argvCopy, argvCopy = nullptr;
+	
 	// with the preemptive thread handling data transfer
 	// to and from the process, return immediately
 	return result;
