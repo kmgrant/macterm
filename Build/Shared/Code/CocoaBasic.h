@@ -134,7 +134,7 @@ void
 void
 	CocoaBasic_MakeKeyWindowCarbonUserFocusWindow	();
 
-void
+Boolean
 	CocoaBasic_RegisterCocoaCarbonWindow			(NSWindow*);
 
 NSWindow*

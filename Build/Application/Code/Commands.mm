@@ -2264,12 +2264,16 @@ for that Carbon window, will instead return the known window.
 BOOL
 isCarbonWindow	(id		inObject)
 {
-	BOOL	result = [[inObject class] isSubclassOfClass:[NSCarbonWindow class]];
+	BOOL	result = NO;
 	
 	
-	if (result && ([[inObject class] isSubclassOfClass:[NSWindow class]]))
+	if (nil != inObject)
 	{
-		CocoaBasic_RegisterCocoaCarbonWindow((NSWindow*)inObject);
+		result = [[inObject class] isSubclassOfClass:[NSCarbonWindow class]];
+		if (result && ([[inObject class] isSubclassOfClass:[NSWindow class]]))
+		{
+			(Boolean)CocoaBasic_RegisterCocoaCarbonWindow((NSWindow*)inObject);
+		}
 	}
 	return result;
 }// isCarbonWindow

@@ -349,6 +349,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20110114': [
+        'Fixed various problems that could occur when sessions fail (due to unreachable servers, etc.).',
         'Preferences window General pane Notification tab can now open the Growl preferences pane, if it is installed.',
     ],
     '20110112': [

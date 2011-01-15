@@ -577,17 +577,23 @@ CocoaBasic_PlaySoundFile	(CFURLRef	inFile)
 For an existing window suspected to be a Carbon window (e.g. as
 obtained from [NSApp keyWindow]), registers its Carbon window
 reference for later use, so that another will not be allocated.
+Returns true only if successfully registered.
 
 (1.5)
 */
-void
+Boolean
 CocoaBasic_RegisterCocoaCarbonWindow	(NSWindow*		inCocoaWindow)
 {
 	AutoPool	_;
+	Boolean		result = false;
 	
 	
-	assert(nullptr != [inCocoaWindow windowRef]);
-	gCocoaCarbonWindows().insert(std::make_pair(REINTERPRET_CAST([inCocoaWindow windowRef], HIWindowRef), inCocoaWindow));
+	if (nullptr != [inCocoaWindow windowRef])
+	{
+		gCocoaCarbonWindows().insert(std::make_pair(REINTERPRET_CAST([inCocoaWindow windowRef], HIWindowRef), inCocoaWindow));
+		result = true;
+	}
+	return result;
 }// RegisterCocoaCarbonWindow
 
 
@@ -605,26 +611,34 @@ when a new window is created.
 NSWindow*
 CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow		(HIWindowRef	inCarbonWindow)
 {
-	AutoPool										_;
-	HIWindowRefToNSWindowMap::const_iterator		toPair = gCocoaCarbonWindows().find(inCarbonWindow);
-	NSWindow*										result = nil;
+	AutoPool	_;
+	NSWindow*	result = nil;
 	
 	
-	if (toPair != gCocoaCarbonWindows().end())
+	if (nullptr != inCarbonWindow)
 	{
-		result = toPair->second;
-	}
-	
-	if (nil == result)
-	{
-		result = [[NSWindow alloc] initWithWindowRef:inCarbonWindow];
+		HIWindowRefToNSWindowMap::const_iterator	toPair = gCocoaCarbonWindows().find(inCarbonWindow);
 		
-		// as recommended in the documentation, retain the given window
-		// manually, because initWithWindowRef: does not retain it (but
-		// does release it)
-		RetainWindow(inCarbonWindow);
 		
-		CocoaBasic_RegisterCocoaCarbonWindow(result);
+		if (toPair != gCocoaCarbonWindows().end())
+		{
+			result = toPair->second;
+		}
+		
+		if (nil == result)
+		{
+			result = [[NSWindow alloc] initWithWindowRef:inCarbonWindow];
+			
+			// as recommended in the documentation, retain the given window
+			// manually, because initWithWindowRef: does not retain it (but
+			// does release it)
+			RetainWindow(inCarbonWindow);
+			
+			if (nil != [result windowRef])
+			{
+				(Boolean)CocoaBasic_RegisterCocoaCarbonWindow(result);
+			}
+		}
 	}
 	return result;
 }// ReturnNewOrExistingCocoaCarbonWindow
