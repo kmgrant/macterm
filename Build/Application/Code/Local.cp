@@ -3,7 +3,7 @@
 	Local.cp
 	
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -51,6 +51,7 @@ extern "C"
 #	include <pthread.h>
 #	include <pwd.h>
 #	include <signal.h>
+#	include <sysexits.h>
 #	include <termios.h>
 #	include <unistd.h>
 #	include <netinet/in.h>
@@ -523,7 +524,7 @@ information is available for the created process.
 The specified working directory is targeted only in the child
 process, meaning the caller’s working directory is unchanged.
 If it is not possible to change to that directory, the child
-process is aborted.
+process exits as a precaution.
 
 \retval kLocal_ResultOK
 if the process was created successfully
@@ -738,19 +739,19 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				if (0 != chdir(targetDir))
 				{
 					Console_WriteValueCString("aborting, failed to chdir(), target directory", targetDir);
-					abort();
+					exit(EX_NOINPUT); // could abort(), but an exit() is easier to report gracefully to the user
 				}
 				
 				// run a Unix terminal-based application program; this is accomplished
 				// using an execvp() call, which DOES NOT RETURN UNLESS there is an
 				// error; technically the return value is -1 on error, but really it’s
-				// a problem if any return value is received, so an abort() is done no
-				// matter what (the abort() kills this child process, but not MacTelnet;
-				// however, it may trigger a scary application-quit dialog from Mac OS X)
+				// a problem if any return value is received, so never exit with a 0
+				// in this situation!
 				(int)execvp(argvCopy[0], argvCopy); // should not return
 				
+				// almost no chance this line will be run, but if it does, just kill the child process
 				Console_WriteLine("aborting, failed to exec()");
-				abort(); // almost no chance this line will be run, but if it does, just kill the child process
+				exit(EX_UNAVAILABLE); // could abort(), but an exit() is easier to report gracefully to the user
 			}
 			
 			//
@@ -1265,11 +1266,15 @@ fillInTerminalControlStructure	(struct termios*	outTerminalControlPtr)
 
 
 /*!
-Forks a new process under UNIX, configuring the child
-to direct all its output to a new pseudo-terminal
-device.  If this succeeds, the process ID of the child
-is returned (or 0, within the child process); a negative
-value is returned on failure.
+Forks a new process under UNIX, configuring the child to direct
+all its output to a new pseudo-terminal device.  If this
+succeeds, the process ID of the child is returned (or 0, within
+the child process); a negative value is returned on failure.
+
+Note that if the fork succeeds, but the child process then has
+problems setting itself up, the child will exit with a nonzero
+status that can be detected only through a system call such as
+wait().
 
 (3.0)
 */
@@ -1335,25 +1340,34 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 			if (0 == result)
 			{
 				//
-				// this is executed inside the child process
+				// this is executed inside the child process; note that in the
+				// following, exit() calls only terminate the child (abort()
+				// could be used here, but an exit() is easier to report
+				// gracefully to the user)
 				//
 				
 				// create a session
-				if (-1 == setsid()) abort();
+				if (-1 == setsid())
+				{
+					exit(EX_NOPERM);
+				}
 				
 				// SVR4 acquires controlling terminal on open()
 				slaveTTY = openSlaveTeletypewriter(outSlaveTeletypewriterName);
 				if (slaveTTY >= 0) close(masterTTY); // child process no longer needs the master TTY
 				
 				// this is the BSD 4.4 way to acquire the controlling terminal
-				if (-1 == ioctl(slaveTTY, TIOCSCTTY/* command */, NULL/* data */)) abort();
+				if (-1 == ioctl(slaveTTY, TIOCSCTTY/* command */, NULL/* data */))
+				{
+					exit(EX_OSERR);
+				}
 				
 				// set slave’s terminal control information and terminal screen size
 				if (nullptr != inSlaveTerminalControlPtrOrNull)
 				{
 					if (-1 == tcsetattr(slaveTTY, TCSANOW/* when to apply changes */, inSlaveTerminalControlPtrOrNull))
 					{
-						abort();
+						exit(EX_OSERR);
 					}
 					if (gInDebuggingMode)
 					{
@@ -1367,14 +1381,14 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 					if (kLocal_ResultOK != sendTerminalResizeMessage
 											(slaveTTY, inSlaveTerminalSizePtrOrNull))
 					{
-						abort();
+						exit(EX_UNAVAILABLE);
 					}
 				}
 				
 				// make the slave terminal the standard input, output, and standard error of this process
-				if (STDIN_FILENO != dup2(slaveTTY, STDIN_FILENO)) abort();
-				if (STDOUT_FILENO != dup2(slaveTTY, STDOUT_FILENO)) abort();
-				if (STDERR_FILENO != dup2(slaveTTY, STDERR_FILENO)) abort();
+				if (STDIN_FILENO != dup2(slaveTTY, STDIN_FILENO)) exit(EX_UNAVAILABLE);
+				if (STDOUT_FILENO != dup2(slaveTTY, STDOUT_FILENO)) exit(EX_UNAVAILABLE);
+				if (STDERR_FILENO != dup2(slaveTTY, STDERR_FILENO)) exit(EX_UNAVAILABLE);
 				if (slaveTTY > STDERR_FILENO) close(slaveTTY);
 				result = 0; // return 0, this is what fork() normally does within its child
 			}
