@@ -66,6 +66,12 @@ void
 													 CFStringRef = nullptr,
 													 CFStringRef = nullptr);
 
+Boolean
+	CocoaBasic_GrowlPreferencesPaneCanDisplay		();
+
+void
+	CocoaBasic_GrowlPreferencesPaneDisplay			();
+
 void
 	CocoaBasic_PlaySoundByName						(CFStringRef);
 

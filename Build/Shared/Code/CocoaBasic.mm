@@ -3,7 +3,7 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.4
+	Simple Cocoa Wrappers Library 1.5
 	© 2008-2010 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -83,6 +83,7 @@ HIViewWrap						gCurrentColorPanelFocus;	//!< see ColorBox.h; a view with a colo
 My_NoticeColorPanelChange*		gColorWatcher = nil;		//!< sees color changes
 NSSpeechSynthesizer*			gDefaultSynth = nil;
 BOOL							gGrowlFrameworkIsLinked = NO;
+NSString*						gGrowlPrefsPaneGlobalPath = @"/Library/PreferencePanes/Growl.prefPane";
 
 } // anonymous namespace
 
@@ -428,6 +429,42 @@ CocoaBasic_GrowlNotify	(CFStringRef	inNotificationName,
 	}
 #endif
 }// GrowlNotify
+
+
+/*!
+Returns true only if the Growl preferences pane exists in
+its expected location.
+
+(1.5)
+*/
+Boolean
+CocoaBasic_GrowlPreferencesPaneCanDisplay ()
+{
+	AutoPool	_;
+	Boolean		result = ([[NSFileManager defaultManager] isReadableFileAtPath:gGrowlPrefsPaneGlobalPath]) ? true : false;
+	
+	
+	return result;
+}// GrowlPreferencesPaneCanDisplay
+
+
+/*!
+Launches “System Preferences” to open the Growl preferences
+pane, if it is available.
+
+(1.5)
+*/
+void
+CocoaBasic_GrowlPreferencesPaneDisplay ()
+{
+	AutoPool	_;
+	
+	
+	if (CocoaBasic_GrowlPreferencesPaneCanDisplay())
+	{
+		(BOOL)[[NSWorkspace sharedWorkspace] openFile:gGrowlPrefsPaneGlobalPath];
+	}
+}// GrowlPreferencesPaneDisplay
 
 
 /*!

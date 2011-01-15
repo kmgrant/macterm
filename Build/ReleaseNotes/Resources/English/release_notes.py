@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110114',
     '20110112',
     '20110111',
     '20110108',
@@ -347,6 +348,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110114': [
+        'Preferences window General pane Notification tab can now open the Growl preferences pane, if it is installed.',
+    ],
     '20110112': [
         'Fixed a possible crash when certain windows were opened, especially at startup time.',
         'Fixed a problem that could spam warnings about missing preferences to the console.',

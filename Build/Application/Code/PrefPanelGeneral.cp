@@ -128,6 +128,8 @@ static HIViewID const	idMyRadioButtonNotifyDoNothing				= { 'NotN', 0/* ID */ };
 static HIViewID const	idMyRadioButtonNotifyBadgeDockIcon			= { 'NotD', 0/* ID */ };
 static HIViewID const	idMyRadioButtonNotifyBounceDockIcon			= { 'NotB', 0/* ID */ };
 static HIViewID const	idMyRadioButtonNotifyDisplayMessage			= { 'NotM', 0/* ID */ };
+static HIViewID const	idMyLabelGrowlSettings						= { 'GLab', 0/* ID */ };
+static HIViewID const	idMyButtonOpenGrowlPreferencesPane			= { 'GBut', 0/* ID */ };
 
 #pragma mark Types
 
@@ -688,6 +690,17 @@ const
 		
 		error = HIViewSetFrame(result, &containerFrame);
 		assert_noerr(error);
+	}
+	
+	// hide settings that are not useful, based on what is available on the user’s computer
+	if (false == CocoaBasic_GrowlPreferencesPaneCanDisplay())
+	{
+		HIViewWrap	label(idMyLabelGrowlSettings, inOwningWindow);
+		HIViewWrap	button(idMyButtonOpenGrowlPreferencesPane, inOwningWindow);
+		
+		
+		label << HIViewWrap_SetVisibleState(false);
+		button << HIViewWrap_SetVisibleState(false);
 	}
 	
 	// initialize values
@@ -1720,6 +1733,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					}
 				}
 				result = eventNotHandledErr;
+				break;
+			
+			case kCommandPrefOpenGrowlPreferencesPane:
+				CocoaBasic_GrowlPreferencesPaneDisplay();
+				result = noErr;
 				break;
 			
 			default:
