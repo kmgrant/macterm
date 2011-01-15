@@ -2471,7 +2471,8 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagCommandLine,
 														sizeof(argumentListCFArray), &argumentListCFArray);
-			if (kPreferences_ResultOK == prefsResult)
+			if ((kPreferences_ResultOK == prefsResult) &&
+				(CFArrayGetCount(argumentListCFArray) > 0))
 			{
 				CFStringRef		concatenatedString = CFStringCreateByCombiningStrings
 														(kCFAllocatorDefault, argumentListCFArray,

@@ -58,6 +58,8 @@
 	<string>keypad-/</string>
 	<key>command-key-vt220-pf4</key>
 	<string>keypad-*</string>
+	<key>command-line-token-strings</key>
+	<array/>
 	<key>data-receive-buffer-size-bytes</key>
 	<integer>512</integer>
 	<key>data-receive-do-not-strip-high-bit</key>
