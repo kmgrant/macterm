@@ -3,7 +3,7 @@
 	MainEntryPoint.cp
 	
 	MacTelnet Preferences Converter
-		© 2004-2010 by Kevin Grant.
+		© 2004-2011 by Kevin Grant.
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -119,6 +119,7 @@ namespace {
 My_PrefsResult		actionLegacyUpdates			();
 My_PrefsResult		actionVersion3				();
 My_PrefsResult		actionVersion4				();
+My_PrefsResult		actionVersion5				();
 OSStatus			addErrorToReply				(ConstStringPtr, OSStatus, AppleEventPtr);
 Boolean				convertRGBColorToCFArray	(RGBColor const*, CFArrayRef&);
 My_StringResult		copyFileOrFolderCFString	(My_FolderStringType, CFStringRef*);
@@ -274,7 +275,6 @@ actionLegacyUpdates ()
 		if (0 != gOldPrefsFileRefNum)
 		{
 			ApplicationPrefs	appPrefs;
-			WindowPrefs			windowPrefs;
 			Handle				handle = nullptr;
 			SInt16				i = 0;
 			SInt16				collectionCount = 0;
@@ -442,52 +442,8 @@ actionLegacyUpdates ()
 				}
 			}
 			
-			// read window preferences resource (there should be only one of these);
-			// the resource types and IDs here must match what was used in the original file;
-			// so no fancy constants, etc. are used here, these values simply must not change
-			UseResFile(gOldPrefsFileRefNum);
-			error = loadPreferencesStructure(&windowPrefs, sizeof(windowPrefs), 'WPRF'/* type */, 128/* ID */);
-			if (noErr == error)
-			{
-				CFStringRef		prefsKey = nullptr;
-				
-				
-				//
-				// convert settings to their CFPreferences equivalents
-				//
-				
-				prefsKey = CFSTR("window-macroeditor-position-pixels");
-				(Boolean)setMacTelnetCoordPreference(prefsKey, windowPrefs.macroSetupDialog.location.x,
-														windowPrefs.macroSetupDialog.location.y);
-				
-				prefsKey = CFSTR("window-macroeditor-size-pixels");
-				(Boolean)setMacTelnetCoordPreference(prefsKey, windowPrefs.macroSetupDialog.size.width,
-														windowPrefs.macroSetupDialog.size.height);
-				
-				prefsKey = CFSTR("window-commandline-position-pixels");
-				(Boolean)setMacTelnetCoordPreference(prefsKey, windowPrefs.commandLineWindow.location.x,
-														windowPrefs.commandLineWindow.location.y);
-				
-				prefsKey = CFSTR("window-commandline-size-pixels");
-				(Boolean)setMacTelnetCoordPreference(prefsKey, windowPrefs.macroSetupDialog.size.width,
-														0/* height is not used */);
-				
-				prefsKey = CFSTR("window-vt220keys-position-pixels");
-				(Boolean)setMacTelnetCoordPreference(prefsKey, windowPrefs.keypadWindow.location.x,
-														windowPrefs.keypadWindow.location.y);
-				
-				prefsKey = CFSTR("window-functionkeys-position-pixels");
-				(Boolean)setMacTelnetCoordPreference(prefsKey, windowPrefs.functionWindow.location.x,
-														windowPrefs.functionWindow.location.y);
-				
-				prefsKey = CFSTR("window-controlkeys-position-pixels");
-				(Boolean)setMacTelnetCoordPreference(prefsKey, windowPrefs.controlKeysWindow.location.x,
-														windowPrefs.controlKeysWindow.location.y);
-				
-				prefsKey = CFSTR("window-preferences-position-pixels");
-				(Boolean)setMacTelnetCoordPreference(prefsKey, windowPrefs.preferencesWindow.location.x,
-														windowPrefs.preferencesWindow.location.y);
-			}
+			// old window preference resources are now ignored, because they are not
+			// going to be translated into the Cocoa window layout format anyway
 			
 			//
 			// Now iterate over collections (Terminal, Sessions) and
@@ -1171,6 +1127,31 @@ actionVersion4 ()
 
 
 /*!
+Upgrades from version 4 to version 5.  Some keys are
+now obsolete, so they are deleted.
+
+(4.0)
+*/
+My_PrefsResult
+actionVersion5 ()
+{
+	My_PrefsResult		result = kMy_PrefsResultOK;
+	
+	
+	// these settings are no longer used
+	CFPreferencesSetAppValue(CFSTR("window-commandline-position-pixels"), nullptr/* delete value */, kMacTelnetApplicationID);
+	CFPreferencesSetAppValue(CFSTR("window-commandline-size-pixels"), nullptr/* delete value */, kMacTelnetApplicationID);
+	CFPreferencesSetAppValue(CFSTR("window-controlkeys-position-pixels"), nullptr/* delete value */, kMacTelnetApplicationID);
+	CFPreferencesSetAppValue(CFSTR("window-functionkeys-position-pixels"), nullptr/* delete value */, kMacTelnetApplicationID);
+	CFPreferencesSetAppValue(CFSTR("window-preferences-position-pixels"), nullptr/* delete value */, kMacTelnetApplicationID);
+	CFPreferencesSetAppValue(CFSTR("window-sessioninfo-column-order"), nullptr/* delete value */, kMacTelnetApplicationID);
+	CFPreferencesSetAppValue(CFSTR("window-vt220keys-position-pixels"), nullptr/* delete value */, kMacTelnetApplicationID);
+	
+	return result;
+}// actionVersion5
+
+
+/*!
 Adds an error to the reply record; at least the
 error code is provided, and optionally you can
 accompany it with an equivalent message.
@@ -1625,7 +1606,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 	// The preferences version MUST match what is used by the version of
 	// MacTelnet that ships with this preferences converter; it should
 	// be changed here if it is changed in MacTelnet.
-	SInt16 const	kCurrentPrefsVersion = 4;
+	SInt16 const	kCurrentPrefsVersion = 5;
 	CFIndex			diskVersion = 0;
 	Boolean			doConvert = false;
 	Boolean			conversionSuccessful = false;
@@ -1731,6 +1712,11 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		{
 			// Version 4 deleted some obsolete keys.
 			actionResult = actionVersion4();
+		}
+		if (diskVersion < 5)
+		{
+			// Version 5 deleted some obsolete keys.
+			actionResult = actionVersion5();
 		}
 		//if (diskVersion < X)
 		//{

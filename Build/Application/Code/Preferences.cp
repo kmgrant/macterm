@@ -598,6 +598,12 @@ public:
 	static My_PreferenceDefinition*
 	findByTag	(Preferences_Tag);
 	
+	static Boolean
+	isValidKeyName	(CFStringRef);
+	
+	static void
+	registerIndirectKeyName		(CFStringRef);
+	
 	Preferences_Tag			tag;						//!< tag that describes this setting
 	CFRetainRelease			keyName;					//!< key used to store this in XML or CFPreferences
 	FourCharCode			keyValueType;				//!< property list type of key (e.g. typeCFArrayRef)
@@ -616,12 +622,20 @@ private:
 				returnCFStringHashCode,				// hash code generator
 				isCFStringPairEqual					// key comparator
 			>	DefinitionPtrByKeyName;
+	typedef hash_map_namespace::hash_set
+			<
+				CFStringRef,						// value type - name string
+				returnCFStringHashCode,				// hash code generator
+				isCFStringPairEqual					// value comparator
+			>	KeyNameSet;
 	
 	static DefinitionPtrByKeyName	_definitionsByKeyName;
 	static DefinitionPtrByTag		_definitionsByTag;
+	static KeyNameSet				_indirectKeyNames;
 };
 My_PreferenceDefinition::DefinitionPtrByKeyName		My_PreferenceDefinition::_definitionsByKeyName;
 My_PreferenceDefinition::DefinitionPtrByTag			My_PreferenceDefinition::_definitionsByTag;
+My_PreferenceDefinition::KeyNameSet					My_PreferenceDefinition::_indirectKeyNames;
 
 /*!
 A wrapper for a list of keys, that can be used externally to
@@ -693,7 +707,6 @@ Preferences_Result		getWorkspacePreference					(My_ContextInterfaceConstPtr, Pre
 																 size_t, void*, size_t*);
 OSStatus				mergeInDefaultPreferences				();
 Preferences_Result		overwriteClassDomainCFArray				(Quills::Prefs::Class, CFArrayRef);
-void					readMacTelnetCoordPreference			(CFStringRef, SInt16&, SInt16&);
 void					readMacTelnetArrayPreference			(CFStringRef, CFArrayRef&);
 OSStatus				readPreferencesDictionary				(CFDictionaryRef, Boolean);
 OSStatus				readPreferencesDictionaryInContext		(My_ContextInterfacePtr, CFDictionaryRef, Boolean);
@@ -915,6 +928,16 @@ Preferences_Init ()
 	// IMPORTANT: The data types used here are documented in Preferences.h,
 	//            and relied upon in other methods.  They are also used in
 	//            the PrefsConverter.  Check for consistency!
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("prefs-version"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("favorite-formats"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("favorite-macro-sets"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("favorite-sessions"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("favorite-terminals"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("favorite-translations"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("favorite-workspaces"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("macro-order")); // for future use
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("terminal-capture-folder")); // for future use
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("terminal-when-cursor-near-right-margin")); // for future use
 	My_PreferenceDefinition::createFlag(kPreferences_TagArrangeWindowsUsingTabs,
 										CFSTR("terminal-use-tabs"), Quills::Prefs::WORKSPACE);
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedFormatFavorite,
@@ -943,6 +966,7 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagCaptureFileLineEndings,
 									CFSTR("terminal-capture-file-line-endings"), typeCFStringRef,
 									sizeof(Session_LineEnding), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("terminal-capture-file-open-with-application"));
 	My_PreferenceDefinition::create(kPreferences_TagCommandLine,
 									CFSTR("command-line-token-strings"), typeCFArrayRef,
 									sizeof(CFArrayRef), Quills::Prefs::SESSION);
@@ -1039,9 +1063,6 @@ Preferences_Init ()
 										CFSTR("kiosk-effects-enabled"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagHeadersCollapsed,
 										CFSTR("window-terminal-toolbar-invisible"), Quills::Prefs::GENERAL);
-	My_PreferenceDefinition::create(kPreferences_TagInfoWindowColumnOrdering,
-									CFSTR("window-sessioninfo-column-order"), typeCFArrayRef,
-									sizeof(CFArrayRef), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagLineModeEnabled,
 										CFSTR("line-mode-enabled"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagLocalEchoEnabled,
@@ -1051,6 +1072,9 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagMapArrowsForEmacs,
 									CFSTR("command-key-emacs-move-down"), typeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::TERMINAL);
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-emacs-move-up"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-emacs-move-left"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-emacs-move-right"));
 	My_PreferenceDefinition::create(kPreferences_TagMapBackquote,
 									CFSTR("key-map-backquote"), typeCFStringRef/* keystroke string, e.g. blank "" or escape "\e" */,
 									sizeof(Boolean), Quills::Prefs::GENERAL);
@@ -1063,6 +1087,9 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagMapKeypadTopRowForVT220,
 									CFSTR("command-key-vt220-pf1")/* TEMPORARY - one of several key names used */, typeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::TERMINAL);
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-vt220-pf2"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-vt220-pf3"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-vt220-pf4"));
 	My_PreferenceDefinition::create(kPreferences_TagNewCommandShortcutEffect,
 									CFSTR("new-means"), typeCFStringRef/* "shell", "dialog", "default" */,
 									sizeof(UInt32), Quills::Prefs::GENERAL);
@@ -1077,6 +1104,9 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagPageKeysControlLocalTerminal,
 									CFSTR("command-key-terminal-end")/* TEMPORARY - one of several key names used */, typeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::TERMINAL);
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-terminal-home"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-terminal-page-up"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-terminal-page-down"));
 	My_PreferenceDefinition::create(kPreferences_TagPasteBlockSize,
 									CFSTR("data-send-paste-block-size-bytes"), typeNetEvents_CFNumberRef,
 									sizeof(SInt16), Quills::Prefs::SESSION);
@@ -4787,7 +4817,10 @@ findByKeyName	(CFStringRef	inKeyName)
 	
 	
 	//Console_WriteValueCFString("find preference by key name", inKeyName); // debug
-	if (toDefPtr != _definitionsByKeyName.end()) result = toDefPtr->second;
+	if (toDefPtr != _definitionsByKeyName.end())
+	{
+		result = toDefPtr->second;
+	}
 	return result;
 }// My_PreferenceDefinition::findByKeyName
 
@@ -4807,9 +4840,78 @@ findByTag	(Preferences_Tag	inTag)
 	DefinitionPtrByTag::const_iterator		toDefPtr = _definitionsByTag.find(inTag);
 	
 	
-	if (_definitionsByTag.end() != toDefPtr) result = toDefPtr->second;
+	if (toDefPtr != _definitionsByTag.end())
+	{
+		result = toDefPtr->second;
+	}
 	return result;
 }// My_PreferenceDefinition::findByTag
+
+
+/*!
+Returns true if the specified key had a definition created
+for it, or was registered as an indirect key.  In other words,
+any name that is “expected” in the application preferences
+should return true, and anything unknown will not.
+
+(4.0)
+*/
+Boolean
+My_PreferenceDefinition::
+isValidKeyName	(CFStringRef	inKeyName)
+{
+	DefinitionPtrByKeyName::const_iterator		toDefPtr = _definitionsByKeyName.find(inKeyName);
+	Boolean										result = false;
+	
+	
+	if (toDefPtr != _definitionsByKeyName.end())
+	{
+		result = true;
+	}
+	else
+	{
+		KeyNameSet::const_iterator		toKey = _indirectKeyNames.find(inKeyName);
+		
+		
+		if (toKey != _indirectKeyNames.end())
+		{
+			result = true;
+		}
+	}
+	return result;
+}// My_PreferenceDefinition::isValidKeyName
+
+
+/*!
+If a low-level key is considered valid when it appears in
+application preferences, but is not tied to a particular
+high-level tag or definition structure, register it with this
+method.  Then, isValidKeyName() will return true for this key
+along with any keys that have actual definitions.
+
+This is typically used for keys that are truly special (like
+"prefs-version"), and keys that have a single high-level tag
+but values that are spread across multiple low-level key names
+(such as some command key settings).
+
+Currently, this registry has little purpose other than to quell
+warnings for keys that are not used in the usual way, but still
+technically valid keys.
+
+(4.0)
+*/
+void
+My_PreferenceDefinition::
+registerIndirectKeyName		(CFStringRef	inKeyName)
+{
+	KeyNameSet::const_iterator		toKey = _indirectKeyNames.find(inKeyName);
+	
+	
+	if (toKey == _indirectKeyNames.end())
+	{
+		_indirectKeyNames.insert(inKeyName);
+	}
+}// My_PreferenceDefinition::registerIndirectKeyName
 
 
 /*!
@@ -5991,20 +6093,6 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						{
 							// failed; make default
 							*outUInt16Ptr = 8; // arbitrary
-							result = kPreferences_ResultBadVersionDataNotAvailable;
-						}
-					}
-					break;
-				
-				case kPreferences_TagInfoWindowColumnOrdering:
-					{
-						assert(typeCFArrayRef == keyValueType);
-						CFArrayRef* const	data = REINTERPRET_CAST(outDataPtr, CFArrayRef*);
-						
-						
-						*data = inContextPtr->returnArrayCopy(keyName);
-						if (nullptr == *data)
-						{
 							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
@@ -7920,60 +8008,6 @@ readMacTelnetArrayPreference	(CFStringRef	inKey,
 
 
 /*!
-Like readMacTelnetArrayPreference(), but is useful for
-reading coordinate values.  The work of reading a
-CFArrayRef containing two CFNumberRefs is done for you.
-
-Zeroes are returned for nonexistent values.
-
-(3.1)
-*/
-void
-readMacTelnetCoordPreference	(CFStringRef	inKey,
-								 SInt16&		outX,
-								 SInt16&		outY)
-{
-	CFArrayRef		coords = nullptr;
-	
-	
-	outX = 0;
-	outY = 0;
-	readMacTelnetArrayPreference(inKey, coords);
-	if (nullptr != coords)
-	{
-		// the array should be a list of two numbers, in the order (X, Y)
-		if (CFArrayGetCount(coords) > 0)
-		{
-			CFNumberRef		leftCoord = CFUtilities_NumberCast(CFArrayGetValueAtIndex(coords, 0));
-			
-			
-			if (nullptr != leftCoord)
-			{
-				if (true != CFNumberGetValue(leftCoord, kCFNumberSInt16Type, &outX))
-				{
-					// okay, some kind of error; but best conversion result will still be in "outX"
-				}
-			}
-		}
-		if (CFArrayGetCount(coords) > 1)
-		{
-			CFNumberRef		topCoord = CFUtilities_NumberCast(CFArrayGetValueAtIndex(coords, 1));
-			
-			
-			if (nullptr != topCoord)
-			{
-				if (true != CFNumberGetValue(topCoord, kCFNumberSInt16Type, &outY))
-				{
-					// okay, some kind of error; but best conversion result will still be in "outY"
-				}
-			}
-		}
-		CFRelease(coords), coords = nullptr;
-	}
-}// readMacTelnetCoordPreference
-
-
-/*!
 Updates stored preference values using master preferences from
 the given dictionary.  If merging, conflicting keys are
 skipped; otherwise, they are replaced with the new dictionary
@@ -8066,7 +8100,11 @@ readPreferencesDictionaryInContext		(My_ContextInterfacePtr		inContextPtr,
 					Preferences_Tag				dummyTag = Preferences_ReturnTagVariantForIndex('DUM\0', gDummyIndex++);
 					
 					
-					Console_Warning(Console_WriteValueCFString, "using anonymous tag for unknown preference dictionary key", kKey);
+					if (false == My_PreferenceDefinition::isValidKeyName(kKey))
+					{
+						// only emit a warning for key names that are completely unexpected; either way, register anonymously
+						Console_Warning(Console_WriteValueCFString, "using anonymous tag for unknown preference dictionary key", kKey);
+					}
 					inContextPtr->addValue(dummyTag, kKey, keyValue);
 				}
 				else
@@ -8406,16 +8444,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-				}
-				break;
-			
-			case kPreferences_TagInfoWindowColumnOrdering:
-				{
-					CFArrayRef const* const		data = REINTERPRET_CAST(inDataPtr, CFArrayRef const*);
-					
-					
-					assert(typeCFArrayRef == keyValueType);
-					inContextPtr->addArray(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			

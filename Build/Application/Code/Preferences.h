@@ -169,7 +169,6 @@ enum
 	kPreferences_TagDontAutoNewOnApplicationReopen		= 'nonu',	//!< data: "Boolean"
 	kPreferences_TagDontDimBackgroundScreens			= 'wddb',	//!< data: "Boolean"
 	kPreferences_TagFocusFollowsMouse					= 'fcfm',	//!< data: "Boolean"
-	kPreferences_TagInfoWindowColumnOrdering			= 'sico',	//!< data: "CFArrayRef" (of CFStrings)
 	kPreferences_TagHeadersCollapsed					= 'hdcl',	//!< data: "Boolean"
 	kPreferences_TagKioskAllowsForceQuit				= 'kafq',	//!< data: "Boolean"
 	kPreferences_TagKioskShowsMenuBar					= 'kmnb',	//!< data: "Boolean"

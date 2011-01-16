@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110115',
     '20110114',
     '20110112',
     '20110111',
@@ -348,6 +349,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110115': [
+        'Fixed console warnings about unrecognized preferences.',
+        'The internal preferences version has been changed to 5, and a few obsolete settings will be automatically deleted.',
+    ],
     '20110114': [
         'Fixed various problems that could occur when sessions fail (due to unreachable servers, etc.).',
         'Preferences window General pane Notification tab can now open the Growl preferences pane, if it is installed.',

@@ -11,7 +11,7 @@
 	Newer MacTelnet preferences are in XML format.
 	
 	MacTelnet Preferences Converter
-		© 2004 by Kevin Grant.
+		© 2004-2011 by Kevin Grant.
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -143,40 +143,6 @@ struct ApplicationPrefs
 };
 typedef ApplicationPrefs*		ApplicationPrefsPtr;
 typedef ApplicationPrefsPtr*	ApplicationPrefsHandle;
-
-struct WindowPrefsWindowData
-{
-	// generic structure defining the arrangement of a particular window
-	struct
-	{
-		SInt16		x,
-					y;
-	} location;
-	
-	struct
-	{
-		UInt16		width,
-					height;
-	} size;
-};
-typedef struct WindowPrefsWindowData WinPref;
-
-struct WindowPrefs
-{
-	UInt16			version;					// The version number of this resource.
-	Rect			screenBounds;				// (No longer used.) The screen boundaries when this resource was saved.
-	WinPref			macroSetupDialog;			// Layout preferences for the “Macro Setup” dialog box (now a modeless window).
-	WinPref			openConnectionsDialog;		// Layout preferences for the “New Sessions” dialog box (now a sheet).
-	WinPref			commandLineWindow;			// Layout preferences for the “Message Window” windoid.
-	WinPref			keypadWindow;				// Layout preferences for the “VT220 Keypad” windoid.
-	WinPref			functionWindow;				// Layout preferences for the “Function” windoid.
-	WinPref			macrosWindow;				// Unused layout preferences for the (now removed) “Macros” windoid.
-	WinPref			controlKeysWindow;			// Layout preferences for the “Control Keys” windoid.
-	WinPref			preferencesWindow;			// Layout preferences for the “Preferences” dialog window.
-	WinPref			unused[6];					// Space for future windows.
-};
-typedef WindowPrefs*		WindowPrefsPtr;
-typedef WindowPrefsPtr*		WindowPrefsHandle;
 
 struct TerminalPrefs
 {

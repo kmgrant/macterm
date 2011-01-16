@@ -254,7 +254,7 @@
 	<key>no-auto-new</key>
 	<false/>
 	<key>prefs-version</key>
-	<integer>4</integer>
+	<integer>5</integer>
 	<key>server-host</key>
 	<string>nowhere.loopback.edu</string>
 	<key>server-port</key>
@@ -509,18 +509,6 @@
 	<false/>
 	<key>window-functionkeys-visible</key>
 	<false/>
-	<key>window-preferences-position-pixels</key>
-	<array>
-		<integer>100</integer>
-		<integer>180</integer>
-	</array>
-	<key>window-sessioninfo-column-order</key>
-	<array>
-		<string>window</string>
-		<string>resource</string>
-		<string>status</string>
-		<string>open-time</string>
-	</array>
 	<key>window-sessioninfo-visible</key>
 	<false/>
 	<key>window-terminal-position-pixels</key>
