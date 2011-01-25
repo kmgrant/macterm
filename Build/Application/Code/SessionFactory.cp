@@ -58,6 +58,7 @@
 
 // MacTelnet includes
 #include "DialogUtilities.h"
+#include "EventLoop.h"
 #include "InfoWindow.h"
 #include "Local.h"
 #include "NetEvents.h"
@@ -94,6 +95,7 @@ Boolean					configureSessionTerminalWindow	(TerminalWindowRef, Preferences_Conte
 TerminalWindowRef		createTerminalWindow			(Preferences_ContextRef = nullptr,
 														 Preferences_ContextRef = nullptr,
 														 Preferences_ContextRef = nullptr);
+Workspace_Ref			createWorkspace					();
 Boolean					displayTerminalWindow			(TerminalWindowRef, Preferences_ContextRef = nullptr, UInt16 = 0);
 void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionFilterFlags,
 														 SessionFactory_SessionOpProcPtr, void*, SInt32, void*);
@@ -1664,7 +1666,7 @@ void
 SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalWindow)
 {
 	HIWindowRef			window = TerminalWindow_ReturnWindow(inTerminalWindow);
-	Workspace_Ref		newWorkspace = Workspace_New();
+	Workspace_Ref		newWorkspace = createWorkspace();
 	MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
 	
 	
@@ -1675,7 +1677,6 @@ SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalW
 	(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, false);
 	
 	assert(nullptr != newWorkspace);
-	workspaceList.push_back(newWorkspace);
 	assert(workspaceList.end() != std::find(workspaceList.begin(), workspaceList.end(), newWorkspace));
 	
 	// ensure the window is not a member of any other workspace
@@ -2282,6 +2283,24 @@ createTerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 
 
 /*!
+Use this instead of calling Workspace_New() directly, so that
+any new workspaces are properly tracked.
+
+(4.0)
+*/
+Workspace_Ref
+createWorkspace ()
+{
+	Workspace_Ref	result = Workspace_New();
+	
+	
+	gWorkspaceListSortedByCreationTime().push_back(result);
+	
+	return result;
+}// createWorkspace
+
+
+/*!
 Shows a terminal window, putting it in front of all other
 terminal windows and forcing its contents to be rendered.
 
@@ -2310,6 +2329,7 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 	{
 		TerminalWindow_Result	terminalWindowResult = kTerminalWindow_ResultOK;
 		TerminalViewRef			view = nullptr;
+		Workspace_Ref			targetWorkspace = nullptr;
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		Boolean					useTabs = false;
 		
@@ -2359,15 +2379,89 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 		}
 		
 		// figure out if this window should have a tab and be arranged
-		prefsResult = Preferences_ContextGetData(inWorkspaceOrNull, kPreferences_TagArrangeWindowsUsingTabs,
-													sizeof(useTabs), &useTabs,
-													true/* search defaults */, nullptr/* actual size */);
-		if (prefsResult != kPreferences_ResultOK) useTabs = false;
+		if (nullptr == inWorkspaceOrNull)
+		{
+			// no specific source for workspace preferences; therefore, the appearance
+			// and arrangement of the new window may depend on the frontmost window,
+			// or the user may have requested a new workspace
+			if (EventLoop_IsOptionKeyDown())
+			{
+				// if the user requests a new workspace, ignore any frontmost window
+				// or active workspace, and choose the tabbed appearance from the
+				// Default preferences; and, if that default is to use tabs, create
+				// a new workspace for tabs (otherwise, the tab would glue itself
+				// to the active workspace of tabs)
+				prefsResult = Preferences_ContextGetData(nullptr/* context */, kPreferences_TagArrangeWindowsUsingTabs,
+															sizeof(useTabs), &useTabs,
+															true/* search defaults */, nullptr/* actual size */);
+				if (prefsResult != kPreferences_ResultOK)
+				{
+					useTabs = false;
+				}
+				
+				if (useTabs)
+				{
+					// override the default behavior of using the active set of tabs
+					targetWorkspace = createWorkspace();
+				}
+			}
+			else
+			{
+				// no request for new workspace, so use the existing one; copy the
+				// style of the previously-frontmost terminal window, if any (no
+				// need to set a workspace in this case, since it will default to
+				// the active workspace, below)
+				TerminalWindowRef	previousTerminalWindow = TerminalWindow_ReturnFromMainWindow();
+				
+				
+				if (nullptr != previousTerminalWindow)
+				{
+					useTabs = TerminalWindow_IsTab(previousTerminalWindow);
+				}
+				else
+				{
+					prefsResult = Preferences_ContextGetData(nullptr/* context */, kPreferences_TagArrangeWindowsUsingTabs,
+																sizeof(useTabs), &useTabs,
+																true/* search defaults */, nullptr/* actual size */);
+					if (prefsResult != kPreferences_ResultOK)
+					{
+						useTabs = false;
+					}
+				}
+			}
+		}
+		else
+		{
+			// when given a target workspace, the choice of tabs or not comes from that
+			// specific collection, and not the default (unless the given workspace
+			// completely lacks the setting, of course)
+			prefsResult = Preferences_ContextGetData(inWorkspaceOrNull, kPreferences_TagArrangeWindowsUsingTabs,
+														sizeof(useTabs), &useTabs,
+														true/* search defaults */, nullptr/* actual size */);
+			if (prefsResult != kPreferences_ResultOK)
+			{
+				useTabs = false;
+			}
+			
+			// also, when given a target workspace, assume that tabs should appear on
+			// their own, even if they could otherwise fold into an existing stack
+			if ((useTabs) && (1 == inWindowIndexInWorkspaceOrZero))
+			{
+				// override the default behavior of using the active set of tabs
+				targetWorkspace = createWorkspace();
+			}
+		}
+		
+		// display the window, and give it the appropriate ordering (depends on tab setting)
 		if (useTabs)
 		{
 			MyWorkspaceList&	targetList = gWorkspaceListSortedByCreationTime();
-			Workspace_Ref		targetWorkspace = returnActiveWorkspace();
 			
+			
+			if (nullptr == targetWorkspace)
+			{
+				targetWorkspace = returnActiveWorkspace();
+			}
 			
 			// IMPORTANT: Although you should add a window to a workspace before
 			// it is visible, the window MUST be visible before you can give it a
@@ -2703,9 +2797,7 @@ returnActiveWorkspace ()
 	
 	if (gWorkspaceListSortedByCreationTime().empty())
 	{
-		result = Workspace_New();
-		gWorkspaceListSortedByCreationTime().push_back(result);
-		assert(false == gWorkspaceListSortedByCreationTime().empty());
+		result = createWorkspace();
 	}
 	else
 	{

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110125',
     '20110124',
     '20110116',
     '20110115',
@@ -351,6 +352,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110125': [
+        'The "Log-In Shell" command in the File menu is now visible by default; the Control key shows the Shell command.',
+        'Terminal windows now join the frontmost tab stack when they first appear, if the frontmost window has tabs.',
+        'Terminal windows spawned by a tabbed workspace now use a separate tab stack instead of joining the frontmost one.',
+        'Terminal windows now use new workspaces if the Option key is down when a session is chosen from the File menu.',
+    ],
     '20110124': [
         'Fixed Preferences window Macros pane to prevent new collections from copying part of the Default set.',
     ],
@@ -1308,7 +1315,7 @@ notes_by_version = {
         'Find dialog now allows blank queries, so it is possible to remove all previous search highlighting when the dialog is closed.',
     ],
     '20080305': [
-        'New Login Shell (hidden command requiring Option key in File menu) now runs "/usr/bin/login -p -f user" so there is no password prompt.',
+        'New Log-In Shell (hidden command requiring Option key in File menu) now runs "/usr/bin/login -p -f user" so there is no password prompt.',
     ],
     '20080303': [
         'Reverted the default emulator to VT100 (from VT102), pending some important accuracy fixes in VT102.',
