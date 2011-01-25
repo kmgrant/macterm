@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110116',
     '20110115',
     '20110114',
     '20110112',
@@ -349,6 +350,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110116': [
+        'Fixed redundant Window menu items on older versions of Mac OS X.',
+    ],
     '20110115': [
         'Fixed console warnings about unrecognized preferences.',
         'The internal preferences version has been changed to 5, and a few obsolete settings will be automatically deleted.',
