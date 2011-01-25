@@ -3467,7 +3467,7 @@ displayMode(kTerminalView_DisplayModeNormal), // set later
 isActive(true),
 isCocoa(false),
 accessibilityObject(AXUIElementCreateWithHIObjectAndIdentifier
-					(REINTERPRET_CAST(inSuperclassViewInstance, HIObjectRef), 0/* identifier */)),
+					(REINTERPRET_CAST(inSuperclassViewInstance, HIObjectRef), 0/* identifier */), true/* is retained */),
 encompassingNSView(nil),
 encompassingHIView(nullptr), // set later
 backgroundNSView(nil),
