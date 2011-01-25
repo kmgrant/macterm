@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110124',
     '20110116',
     '20110115',
     '20110114',
@@ -350,6 +351,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110124': [
+        'Fixed Preferences window Macros pane to prevent new collections from copying part of the Default set.',
+    ],
     '20110116': [
         'Fixed redundant Window menu items on older versions of Mac OS X.',
     ],

@@ -158,7 +158,7 @@ public:
 	receiveFieldChanged		(EventHandlerCallRef, EventRef, void*);
 	
 	void
-	refreshDisplay ();
+	resetDisplay ();
 	
 	void
 	saveFieldPreferences	(Preferences_ContextRef, UInt32);
@@ -370,7 +370,7 @@ switchDataModel		(Preferences_ContextRef		inNewContext,
 	if (0 != inNewIndex) this->currentIndex = inNewIndex;
 	if (nullptr != this->interfacePtr)
 	{
-		this->interfacePtr->refreshDisplay();
+		this->interfacePtr->resetDisplay();
 		this->interfacePtr->readPreferences(this->dataModel, this->currentIndex);
 	}
 }// My_MacrosPanelData::switchDataModel
@@ -1144,7 +1144,7 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			
 			prefsResult = Preferences_ContextGetData
 							(inSettings, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, inOneBasedIndex),
-								sizeof(actionCFString), &actionCFString, true/* search defaults too */, &actualSize);
+								sizeof(actionCFString), &actionCFString, false/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				SetControlTextWithCFString(HIViewWrap(idMyFieldMacroText, kOwningWindow), actionCFString);
@@ -1194,25 +1194,39 @@ receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
 
 
 /*!
-Redraws the macro display.  Use this when you have caused
-it to change in some way (by spawning an editor dialog box
-or by switching tabs, etc.).
+Clears or resets the user interface elements of the panel
+to reflect a lack of preferences.  This is useful just
+prior to loading in a specific set of preferences, and is
+important for predictable results.
 
-(3.0)
+(4.0)
 */
 void
 My_MacrosPanelUI::
-refreshDisplay ()
+resetDisplay ()
 {
 	HIViewWrap		macrosListContainer(idMyDataBrowserMacroSetList, HIViewGetWindow(this->mainView));
 	assert(macrosListContainer.exists());
 	
 	
+	// reset the list
 	(OSStatus)UpdateDataBrowserItems(macrosListContainer, kDataBrowserNoItem/* parent item */,
 										0/* number of IDs */, nullptr/* IDs */,
 										kDataBrowserItemNoProperty/* pre-sort property */,
 										kMyDataBrowserPropertyIDMacroName);
-}// My_MacrosPanelUI::refreshDisplay
+	
+	// reset the selected macro’s items
+	{
+		Preferences_ContextRef	factoryDefaults = nullptr;
+		Preferences_Result		prefsResult = Preferences_GetFactoryDefaultsContext(&factoryDefaults);
+		
+		
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			readPreferences(factoryDefaults, 1/* index */);
+		}
+	}
+}// My_MacrosPanelUI::resetDisplay
 
 
 /*!
