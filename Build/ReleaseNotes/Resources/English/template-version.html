@@ -4,10 +4,10 @@
 	<title>Updates (MacTelnet Home Page)</title>
 	<meta http-equiv="Content-type" content="text/html;charset=utf-8">
 	<meta name="keywords" content="support,updates,Mac,terminal,shell,Unix,MacTelnet,telnet,ssh,ftp,client,Macintosh,NCSA">
-	<meta name="description" content="Terminal emulator for Mac OS X, and remote shell for any Mac OS.">
+	<meta name="description" content="Update page for version %(version)s of MacTelnet.">
 	
 	<link rel="author" href="mailto:kmg%40mac%2Ecom">
-	<link rel="copyright" href="http://www.mactelnet.com/copyright.html">
+	<link rel="copyright" href="http://homepage.mac.com/kmg/mactelnet/copyright.html">
 	<link rel="home" href="http://www.mactelnet.com/">
 	<link rel="index" href="http://homepage.mac.com/kmg/mactelnet/index.html">
 	
@@ -26,30 +26,47 @@
 <h1>Updates</h1>
 </header>
 
-<section class="content">
-	<dl>
-	<dt>Your version:</dt>
-	<dd><b>%(version)s</b></dd>
-	</dl>
+<article class="content">
+	<header>
+		<dl>
+		<dt>Your version:</dt>
+		<dd><b>%(version)s</b></dd>
+		</dl>
+	</header>
 	
 <!-- BEGIN NEW UPDATE -->
-	<h2>A new version is available!</h2>
-	
-	<p>Please <a href="http://homepage.mac.com/kmg/mactelnet/download/">download the update now</a>.</p>
-	
-	<!-- BEGIN VERSION LOOP -->
-	<h3>New in %(version)s:</h3>
-	<ul class="release-notes">
-	<!-- BEGIN RELEASE NOTES LOOP -->
-	<li>%(release_note)s</li>
-	<!-- END RELEASE NOTES LOOP -->
-	</ul>
-	<!-- END VERSION LOOP -->
+	<section id="update">
+		<header>
+			<h2>A new version is available!</h2>
+			
+			<p>Please <a href="http://homepage.mac.com/kmg/mactelnet/download/"
+			>download the update now</a>.</p>
+		</header>
+		
+		<!-- BEGIN VERSION LOOP -->
+		<section>
+			<header>
+				<h3>New in %(version)s:</h3>
+			</header>
+			
+			<ul class="release-notes">
+			<!-- BEGIN RELEASE NOTES LOOP -->
+			<li>%(release_note)s</li>
+			<!-- END RELEASE NOTES LOOP -->
+			</ul>
+		</section>
+		<!-- END VERSION LOOP -->
+	</section>
 <!-- END NEW UPDATE -->
 <!-- BEGIN NO UPDATES -->
-	<p><b>Up-to-date.</b>&nbsp; No new releases are available.</p>
+	<section id="update">
+		<p><b>Up-to-date.</b>  You are using the latest stable release.  You may wish to
+		try one of the <a href=
+		"http://homepage.mac.com/kmg/mactelnet/updates/daily.html">daily builds</a> however,
+		which provide access to brand new features that are still under development.</p>
+	</section>
 <!-- END NO UPDATES -->
-</section>
+</article>
 
 </body>
 </html>

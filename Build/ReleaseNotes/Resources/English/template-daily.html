@@ -4,10 +4,10 @@
 	<title>Daily Test Build (MacTelnet Home Page)</title>
 	<meta http-equiv="Content-type" content="text/html;charset=utf-8">
 	<meta name="keywords" content="support,updates,Mac,terminal,shell,Unix,MacTelnet,telnet,ssh,ftp,client,Macintosh,NCSA">
-	<meta name="description" content="Terminal emulator for Mac OS X, and remote shell for any Mac OS.">
+	<meta name="description" content="Release notes and download page for a Mac OS X terminal emulator.">
 	
 	<link rel="author" href="mailto:kmg%40mac%2Ecom">
-	<link rel="copyright" href="http://www.mactelnet.com/copyright.html">
+	<link rel="copyright" href="http://homepage.mac.com/kmg/mactelnet/copyright.html">
 	<link rel="home" href="http://www.mactelnet.com/">
 	<link rel="index" href="http://homepage.mac.com/kmg/mactelnet/index.html">
 	
@@ -26,26 +26,37 @@
 <h1>Daily Test Build</h1>
 </header>
 
-<section class="content">
+<article class="content">
 <!-- BEGIN NEW UPDATE -->
-	<p><a class="download-button" href=
-	"http://homepage.mac.com/kmg/mactelnet/download/seed/mactelnet-4.0.0b-latest.dmg"
-	>Download Free Update (BETA)</a></p>
+	<header>
+		<p><a class="download-button" href=
+		"http://homepage.mac.com/kmg/mactelnet/download/seed/mactelnet-4.0.0b-latest.dmg"
+		>Download Free Update (BETA)</a></p>
+		
+		<p> </p>
+	</header>
 	
-	<p> </p>
-	
-	<h2>Change Log</h2>
-	
-	<!-- BEGIN VERSION LOOP -->
-	<h3>New in %(version)s:</h3>
-	<ul class="release-notes">
-	<!-- BEGIN RELEASE NOTES LOOP -->
-	<li>%(release_note)s</li>
-	<!-- END RELEASE NOTES LOOP -->
-	</ul>
-	<!-- END VERSION LOOP -->
+	<section id="change-log">
+		<header>
+			<h2>Change Log</h2>
+		</header>
+		
+		<!-- BEGIN VERSION LOOP -->
+		<section>
+			<header>
+				<h3>New in %(version)s:</h3>
+			</header>
+			
+			<ul class="release-notes">
+			<!-- BEGIN RELEASE NOTES LOOP -->
+			<li>%(release_note)s</li>
+			<!-- END RELEASE NOTES LOOP -->
+			</ul>
+		</section>
+		<!-- END VERSION LOOP -->
+	</section>
 <!-- END NEW UPDATE -->
-</section>
+</article>
 
 </body>
 </html>
