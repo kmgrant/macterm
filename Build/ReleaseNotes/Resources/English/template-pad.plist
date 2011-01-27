@@ -76,6 +76,7 @@ It natively runs Unix applications on Mac OS X, however it provides support for 
 		<string>10.3</string>
 		<string>10.4</string>
 		<string>10.5</string>
+		<string>10.6</string>
 	</array>
 	<key>productPageURL</key>
 	<string>http://www.mactelnet.com/</string>
