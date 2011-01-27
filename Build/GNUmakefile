@@ -230,7 +230,8 @@ English.lproj/KeypadFunctionKeysCocoa \
 English.lproj/KeypadVT220KeysCocoa \
 English.lproj/MainMenuCocoa \
 English.lproj/PrintPreviewCocoa \
-English.lproj/ServerBrowserCocoa
+English.lproj/ServerBrowserCocoa \
+English.lproj/TerminalWindowCocoa
 APP_RESOURCES_BUNDLES_GENERATED := \
 $(foreach PREFIX,$(XIB_PREFIXES),$(PREFIX).nib)
 APP_RESOURCES_COPIED := \

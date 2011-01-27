@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -39,11 +39,11 @@
 #import <SoundSystem.h>
 
 // MacTelnet includes
+#import "AppResources.h"
 #import "DebugInterface.h"
 #import "Session.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
-#import "TerminalView.h"
 #import "TerminalWindow.h"
 
 
@@ -87,6 +87,7 @@ sharedDebugInterfacePanelController
 	}
 	return gDebugInterface_PanelController;
 }
+
 
 - (id)
 init
@@ -240,64 +241,8 @@ terminal view.
 - (IBAction)
 showTestTerminalWindow:(id)		sender
 {
-	[self->testTerminalWindow makeKeyAndOrderFront:sender];
+	[[[TerminalWindow_Controller sharedTerminalWindowController] window] makeKeyAndOrderFront:sender];
 }// showTestTerminalWindow:
-
-
-#pragma mark NSWindowController
-
-
-- (void)
-windowDidLoad
-{
-	assert(nil != testTerminalContentView);
-	assert(nil != testTerminalPaddingView);
-	assert(nil != testTerminalBackgroundView);
-	assert(nil != testTerminalWindow);
-	
-	Preferences_ContextRef	terminalConfig = Preferences_NewContext(Quills::Prefs::TERMINAL);
-	Preferences_ContextRef	translationConfig = Preferences_NewContext(Quills::Prefs::TRANSLATION);
-	
-	
-	// could customize the new contexts above to initialize settings;
-	// currently, this is not done
-	{
-		TerminalScreenRef		buffer = nullptr;
-		Terminal_Result			bufferResult = Terminal_NewScreen(terminalConfig, translationConfig, &buffer);
-		
-		
-		if (kTerminal_ResultOK != bufferResult)
-		{
-			Console_WriteValue("error creating test terminal screen buffer", bufferResult);
-		}
-		else
-		{
-			TerminalViewRef		view = TerminalView_NewNSViewBased(testTerminalContentView, testTerminalPaddingView,
-																	testTerminalBackgroundView, buffer, nullptr/* format */);
-			
-			
-			if (nullptr == view)
-			{
-				Console_WriteLine("error creating test terminal view!");
-			}
-			else
-			{
-				// write some text in various styles to the screen (happens to be a
-				// copy of what the sample view does); this will help with testing
-				// the new Cocoa-based renderer as it is implemented
-				Terminal_EmulatorProcessCString(buffer,
-												"\033[2J\033[H"); // clear screen, home cursor (assumes VT100)
-				Terminal_EmulatorProcessCString(buffer,
-												"sel norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m");
-				// the range selected here should be as long as the length of the word “sel” above
-				TerminalView_SelectVirtualRange(view, std::make_pair(std::make_pair(0, 0), std::make_pair(3, 1)/* exclusive end */));
-			}
-		}
-	}
-	
-	Preferences_ReleaseContext(&terminalConfig);
-	Preferences_ReleaseContext(&translationConfig);
-}// windowDidLoad
 
 @end // DebugInterface_PanelController
 

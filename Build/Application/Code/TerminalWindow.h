@@ -114,6 +114,33 @@ typedef struct OpaqueTerminalWindow*	TerminalWindowRef;
 
 #ifdef __OBJC__
 
+@class TerminalView_BackgroundView;
+@class TerminalView_ContentView;
+
+/*!
+Implements the temporary Cocoa window that wraps the
+Cocoa version of the Terminal View that is under
+development.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface TerminalWindow_Controller : NSWindowController
+{
+	IBOutlet TerminalView_ContentView*		testTerminalContentView;
+	IBOutlet TerminalView_BackgroundView*	testTerminalPaddingView; // should embed the content view
+	IBOutlet TerminalView_BackgroundView*	testTerminalBackgroundView; // should embed the padding view
+}
+
+// the following MUST match what is in "TerminalWindowCocoa.xib"
+
++ (id)
+sharedTerminalWindowController; // TEMPORARY
+
+@end
+
+
 @interface NSWindow (TerminalWindow_NSWindowExtensions)
 
 - (TerminalWindowRef)

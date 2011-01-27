@@ -56,6 +56,7 @@ extern "C"
 
 // Mac includes
 #import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
 #import <CoreServices/CoreServices.h>
 
 // library includes
@@ -111,6 +112,12 @@ extern "C"
 
 #pragma mark Constants
 namespace {
+
+// NOTE: do not ever change these, that would only break user preferences
+NSString*	kMy_ToolbarItemIDLED1	= @"com.mactelnet.MacTelnet.toolbaritem.led1";
+NSString*	kMy_ToolbarItemIDLED2	= @"com.mactelnet.MacTelnet.toolbaritem.led2";
+NSString*	kMy_ToolbarItemIDLED3	= @"com.mactelnet.MacTelnet.toolbaritem.led3";
+NSString*	kMy_ToolbarItemIDLED4	= @"com.mactelnet.MacTelnet.toolbaritem.led4";
 
 SInt16 const		kMaximumNumberOfArrangedWindows = 20; // TEMPORARY RESTRICTION
 
@@ -290,6 +297,38 @@ typedef MemoryBlockPtrLocker< TerminalWindowRef, TerminalWindow >	TerminalWindow
 typedef LockAcquireRelease< TerminalWindowRef, TerminalWindow >		TerminalWindowAutoLocker;
 
 } // anonymous namespace
+
+/*!
+Toolbar item “L1”.
+*/
+@interface TerminalWindow_ToolbarItemLED1 : NSToolbarItem
+{
+}
+@end
+
+/*!
+Toolbar item “L2”.
+*/
+@interface TerminalWindow_ToolbarItemLED2 : NSToolbarItem
+{
+}
+@end
+
+/*!
+Toolbar item “L3”.
+*/
+@interface TerminalWindow_ToolbarItemLED3 : NSToolbarItem
+{
+}
+@end
+
+/*!
+Toolbar item “L4”.
+*/
+@interface TerminalWindow_ToolbarItemLED4 : NSToolbarItem
+{
+}
+@end
 
 #pragma mark Internal Method Prototypes
 namespace {
@@ -7231,6 +7270,306 @@ updateScrollBars	(TerminalWindowPtr		inPtr)
 
 } // anonymous namespace
 
+
+@implementation TerminalWindow_Controller
+
+static TerminalWindow_Controller*	gTerminalWindow_Controller = nil;
++ (id)
+sharedTerminalWindowController
+{
+	if (nil == gTerminalWindow_Controller)
+	{
+		gTerminalWindow_Controller = [[[self class] allocWithZone:NULL] init];
+	}
+	return gTerminalWindow_Controller;
+}
+
+
+- (id)
+init
+{
+	self = [super initWithWindowNibName:@"TerminalWindowCocoa"];
+	return self;
+}
+
+
+#pragma mark NSToolbarDelegate
+
+
+- (NSToolbarItem*)
+toolbar:(NSToolbar*)				toolbar
+itemForItemIdentifier:(NSString*)	itemIdentifier
+willBeInsertedIntoToolbar:(BOOL)	flag
+{
+#pragma unused(toolbar, flag)
+	NSToolbarItem*		result = nil;
+	
+	
+	// NOTE: no need to handle standard items here
+	// TEMPORARY - need to create all custom items
+	if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDLED1])
+	{
+		result = [[[TerminalWindow_ToolbarItemLED1 alloc] init] autorelease];
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDLED2])
+	{
+		result = [[[TerminalWindow_ToolbarItemLED2 alloc] init] autorelease];
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDLED3])
+	{
+		result = [[[TerminalWindow_ToolbarItemLED3 alloc] init] autorelease];
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDLED4])
+	{
+		result = [[[TerminalWindow_ToolbarItemLED4 alloc] init] autorelease];
+	}
+	return result;
+}// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
+
+
+- (NSArray*)
+toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
+{
+#pragma unused(toolbar)
+	return [NSArray arrayWithObjects:
+						kMy_ToolbarItemIDLED1,
+						kMy_ToolbarItemIDLED2,
+						kMy_ToolbarItemIDLED3,
+						kMy_ToolbarItemIDLED4,
+						NSToolbarSeparatorItemIdentifier,
+						NSToolbarSpaceItemIdentifier,
+						NSToolbarFlexibleSpaceItemIdentifier,
+						NSToolbarPrintItemIdentifier,
+						NSToolbarCustomizeToolbarItemIdentifier,
+						nil];
+}// toolbarAllowedItemIdentifiers
+
+
+- (NSArray*)
+toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
+{
+#pragma unused(toolbar)
+	return [NSArray arrayWithObjects:
+						NSToolbarSpaceItemIdentifier,
+						NSToolbarSpaceItemIdentifier,
+						kMy_ToolbarItemIDLED1,
+						kMy_ToolbarItemIDLED2,
+						kMy_ToolbarItemIDLED3,
+						kMy_ToolbarItemIDLED4,
+						NSToolbarFlexibleSpaceItemIdentifier,
+						NSToolbarPrintItemIdentifier,
+						NSToolbarSpaceItemIdentifier,
+						NSToolbarSpaceItemIdentifier,
+						nil];
+}// toolbarDefaultItemIdentifiers
+
+
+#pragma mark NSWindowController
+
+
+- (void)
+windowDidLoad
+{
+	assert(nil != testTerminalContentView);
+	assert(nil != testTerminalPaddingView);
+	assert(nil != testTerminalBackgroundView);
+	
+	Preferences_ContextRef	terminalConfig = Preferences_NewContext(Quills::Prefs::TERMINAL);
+	Preferences_ContextRef	translationConfig = Preferences_NewContext(Quills::Prefs::TRANSLATION);
+	
+	
+	// create toolbar; has to be done programmatically, because
+	// IB only supports them in 10.5; which makes sense, you know,
+	// since toolbars have only been in the OS since 10.0, and
+	// hardly any applications would have found THOSE useful...
+	{
+		NSString*		toolbarID = @"TerminalToolbar"; // do not ever change this; that would only break user preferences
+		NSToolbar*		windowToolbar = [[[NSToolbar alloc] initWithIdentifier:toolbarID] autorelease];
+		
+		
+		[windowToolbar setAllowsUserCustomization:YES];
+		[windowToolbar setAutosavesConfiguration:YES];
+		[windowToolbar setDelegate:self];
+		[[self window] setToolbar:windowToolbar];
+	}
+	
+	// could customize the new contexts above to initialize settings;
+	// currently, this is not done
+	{
+		TerminalScreenRef		buffer = nullptr;
+		Terminal_Result			bufferResult = Terminal_NewScreen(terminalConfig, translationConfig, &buffer);
+		
+		
+		if (kTerminal_ResultOK != bufferResult)
+		{
+			Console_WriteValue("error creating test terminal screen buffer", bufferResult);
+		}
+		else
+		{
+			TerminalViewRef		view = TerminalView_NewNSViewBased(testTerminalContentView, testTerminalPaddingView,
+																	testTerminalBackgroundView, buffer, nullptr/* format */);
+			
+			
+			if (nullptr == view)
+			{
+				Console_WriteLine("error creating test terminal view!");
+			}
+			else
+			{
+				// write some text in various styles to the screen (happens to be a
+				// copy of what the sample view does); this will help with testing
+				// the new Cocoa-based renderer as it is implemented
+				Terminal_EmulatorProcessCString(buffer,
+												"\033[2J\033[H"); // clear screen, home cursor (assumes VT100)
+				Terminal_EmulatorProcessCString(buffer,
+												"sel norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m");
+				// the range selected here should be as long as the length of the word “sel” above
+				TerminalView_SelectVirtualRange(view, std::make_pair(std::make_pair(0, 0), std::make_pair(3, 1)/* exclusive end */));
+			}
+		}
+	}
+	
+	Preferences_ReleaseContext(&terminalConfig);
+	Preferences_ReleaseContext(&translationConfig);
+}// windowDidLoad
+
+@end // TerminalWindow_Controller
+
+
+@implementation TerminalWindow_ToolbarItemLED1
+
+- (id)
+init
+{
+	self = [super initWithItemIdentifier:kMy_ToolbarItemIDLED1];
+	if (nil != self)
+	{
+		[self setAction:@selector(performToolbarItemAction:)];
+		[self setTarget:self];
+		[self setEnabled:YES];
+		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnLEDOffIconFilenameNoExtension()]];
+		[self setLabel:NSLocalizedString(@"L1", @"toolbar item name; for terminal LED #1")];
+		[self setPaletteLabel:[self label]];
+	}
+	return self;
+}
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+- (void)
+performToolbarItemAction:(id)	sender
+{
+#pragma unused(sender)
+	Commands_ExecuteByIDUsingEvent(kCommandToggleTerminalLED1);
+}// performToolbarItemAction:
+
+@end // TerminalWindow_ToolbarItemLED1
+
+
+@implementation TerminalWindow_ToolbarItemLED2
+
+- (id)
+init
+{
+	self = [super initWithItemIdentifier:kMy_ToolbarItemIDLED2];
+	if (nil != self)
+	{
+		[self setAction:@selector(performToolbarItemAction:)];
+		[self setTarget:self];
+		[self setEnabled:YES];
+		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnLEDOffIconFilenameNoExtension()]];
+		[self setLabel:NSLocalizedString(@"L2", @"toolbar item name; for terminal LED #1")];
+		[self setPaletteLabel:[self label]];
+	}
+	return self;
+}
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+- (void)
+performToolbarItemAction:(id)	sender
+{
+#pragma unused(sender)
+	Commands_ExecuteByIDUsingEvent(kCommandToggleTerminalLED2);
+}// performToolbarItemAction:
+
+@end // TerminalWindow_ToolbarItemLED2
+
+
+@implementation TerminalWindow_ToolbarItemLED3
+
+- (id)
+init
+{
+	self = [super initWithItemIdentifier:kMy_ToolbarItemIDLED3];
+	if (nil != self)
+	{
+		[self setAction:@selector(performToolbarItemAction:)];
+		[self setTarget:self];
+		[self setEnabled:YES];
+		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnLEDOffIconFilenameNoExtension()]];
+		[self setLabel:NSLocalizedString(@"L3", @"toolbar item name; for terminal LED #1")];
+		[self setPaletteLabel:[self label]];
+	}
+	return self;
+}
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+- (void)
+performToolbarItemAction:(id)	sender
+{
+#pragma unused(sender)
+	Commands_ExecuteByIDUsingEvent(kCommandToggleTerminalLED3);
+}// performToolbarItemAction:
+
+@end // TerminalWindow_ToolbarItemLED3
+
+
+@implementation TerminalWindow_ToolbarItemLED4
+
+- (id)
+init
+{
+	self = [super initWithItemIdentifier:kMy_ToolbarItemIDLED4];
+	if (nil != self)
+	{
+		[self setAction:@selector(performToolbarItemAction:)];
+		[self setTarget:self];
+		[self setEnabled:YES];
+		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnLEDOffIconFilenameNoExtension()]];
+		[self setLabel:NSLocalizedString(@"L4", @"toolbar item name; for terminal LED #1")];
+		[self setPaletteLabel:[self label]];
+	}
+	return self;
+}
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+- (void)
+performToolbarItemAction:(id)	sender
+{
+#pragma unused(sender)
+	Commands_ExecuteByIDUsingEvent(kCommandToggleTerminalLED4);
+}// performToolbarItemAction:
+
+@end // TerminalWindow_ToolbarItemLED4
 
 
 @implementation NSWindow (TerminalWindow_NSWindowExtensions)

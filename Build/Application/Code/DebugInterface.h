@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -42,10 +42,6 @@
 
 #ifdef __OBJC__
 
-@class NSWindow;
-@class TerminalView_BackgroundView;
-@class TerminalView_ContentView;
-
 /*!
 Implements the Debugging panel.
 
@@ -55,13 +51,9 @@ changes to an interface declared in a ".mm" file.
 */
 @interface DebugInterface_PanelController : NSWindowController
 {
-	IBOutlet TerminalView_ContentView*		testTerminalContentView;
-	IBOutlet TerminalView_BackgroundView*	testTerminalPaddingView; // should embed the content view
-	IBOutlet TerminalView_BackgroundView*	testTerminalBackgroundView; // should embed the padding view
-	IBOutlet NSWindow*						testTerminalWindow;
 }
 
-// the following MUST match what is in "DebugInterfaceCocoa.nib"
+// the following MUST match what is in "DebugInterfaceCocoa.xib"
 
 + (id)
 sharedDebugInterfacePanelController;

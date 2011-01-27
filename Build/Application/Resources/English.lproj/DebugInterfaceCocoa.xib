@@ -2,10 +2,10 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
 		<int key="IBDocument.SystemTarget">1030</int>
-		<string key="IBDocument.SystemVersion">10H574</string>
+		<string key="IBDocument.SystemVersion">10J567</string>
 		<string key="IBDocument.InterfaceBuilderVersion">823</string>
 		<string key="IBDocument.AppKitVersion">1038.35</string>
-		<string key="IBDocument.HIToolboxVersion">461.00</string>
+		<string key="IBDocument.HIToolboxVersion">462.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
 			<string key="NS.object.0">823</string>
@@ -261,95 +261,6 @@
 				<string key="NSMaxSize">{466, 190}</string>
 				<string key="NSFrameAutosaveName">Debugging</string>
 			</object>
-			<object class="NSWindowTemplate" id="299725393">
-				<int key="NSWindowStyleMask">15</int>
-				<int key="NSWindowBacking">2</int>
-				<string key="NSWindowRect">{{352, 529}, {731, 495}}</string>
-				<int key="NSWTFlags">611844096</int>
-				<string key="NSWindowTitle">Test of Cocoa Terminal Window</string>
-				<string key="NSWindowClass">NSWindow</string>
-				<nil key="NSViewClass"/>
-				<string key="NSWindowContentMaxSize">{3.40282e+38, 3.40282e+38}</string>
-				<string key="NSWindowContentMinSize">{150, 100}</string>
-				<object class="NSView" key="NSWindowView" id="920537610">
-					<nil key="NSNextResponder"/>
-					<int key="NSvFlags">256</int>
-					<array class="NSMutableArray" key="NSSubviews">
-						<object class="NSScrollView" id="317856731">
-							<reference key="NSNextResponder" ref="920537610"/>
-							<int key="NSvFlags">274</int>
-							<array class="NSMutableArray" key="NSSubviews">
-								<object class="NSClipView" id="514231977">
-									<reference key="NSNextResponder" ref="317856731"/>
-									<int key="NSvFlags">2304</int>
-									<array class="NSMutableArray" key="NSSubviews">
-										<object class="NSCustomView" id="694371765">
-											<reference key="NSNextResponder" ref="514231977"/>
-											<int key="NSvFlags">274</int>
-											<array class="NSMutableArray" key="NSSubviews">
-												<object class="NSCustomView" id="881789961">
-													<reference key="NSNextResponder" ref="694371765"/>
-													<int key="NSvFlags">274</int>
-													<array class="NSMutableArray" key="NSSubviews">
-														<object class="NSCustomView" id="565376434">
-															<reference key="NSNextResponder" ref="881789961"/>
-															<int key="NSvFlags">274</int>
-															<string key="NSFrame">{{7, 7}, {692, 472}}</string>
-															<reference key="NSSuperview" ref="881789961"/>
-															<string key="NSClassName">TerminalView_ContentView</string>
-														</object>
-													</array>
-													<string key="NSFrame">{{5, 5}, {706, 486}}</string>
-													<reference key="NSSuperview" ref="694371765"/>
-													<string key="NSClassName">TerminalView_BackgroundView</string>
-												</object>
-											</array>
-											<string key="NSFrameSize">{716, 496}</string>
-											<reference key="NSSuperview" ref="514231977"/>
-											<string key="NSClassName">TerminalView_BackgroundView</string>
-										</object>
-									</array>
-									<string key="NSFrame">{{1, 1}, {716, 496}}</string>
-									<reference key="NSSuperview" ref="317856731"/>
-									<reference key="NSDocView" ref="694371765"/>
-									<reference key="NSBGColor" ref="631987523"/>
-									<int key="NScvFlags">4</int>
-								</object>
-								<object class="NSScroller" id="436085552">
-									<reference key="NSNextResponder" ref="317856731"/>
-									<int key="NSvFlags">256</int>
-									<string key="NSFrame">{{717, 1}, {15, 480}}</string>
-									<reference key="NSSuperview" ref="317856731"/>
-									<reference key="NSTarget" ref="317856731"/>
-									<string key="NSAction">_doScroller:</string>
-									<double key="NSCurValue">0.99798387289047241</double>
-									<double key="NSPercent">0.9860835075378418</double>
-								</object>
-								<object class="NSScroller" id="122325">
-									<reference key="NSNextResponder" ref="317856731"/>
-									<int key="NSvFlags">-2147483392</int>
-									<string key="NSFrame">{{-100, -100}, {716, 15}}</string>
-									<reference key="NSSuperview" ref="317856731"/>
-									<int key="NSsFlags">1</int>
-									<reference key="NSTarget" ref="317856731"/>
-									<string key="NSAction">_doScroller:</string>
-									<double key="NSPercent">0.50602412223815918</double>
-								</object>
-							</array>
-							<string key="NSFrame">{{-1, -2}, {733, 498}}</string>
-							<reference key="NSSuperview" ref="920537610"/>
-							<int key="NSsFlags">18</int>
-							<reference key="NSVScroller" ref="436085552"/>
-							<reference key="NSHScroller" ref="122325"/>
-							<reference key="NSContentView" ref="514231977"/>
-						</object>
-					</array>
-					<string key="NSFrameSize">{731, 495}</string>
-				</object>
-				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
-				<string key="NSMinSize">{150, 122}</string>
-				<string key="NSMaxSize">{3.40282e+38, 3.40282e+38}</string>
-			</object>
 		</array>
 		<object class="IBObjectContainer" key="IBDocument.Objects">
 			<array class="NSMutableArray" key="connectionRecords">
@@ -402,44 +313,12 @@
 					<int key="connectionID">62</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">testTerminalWindow</string>
-						<reference key="source" ref="491703908"/>
-						<reference key="destination" ref="299725393"/>
-					</object>
-					<int key="connectionID">70</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
 						<string key="label">showTestTerminalWindow:</string>
 						<reference key="source" ref="491703908"/>
 						<reference key="destination" ref="575996668"/>
 					</object>
 					<int key="connectionID">77</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">testTerminalContentView</string>
-						<reference key="source" ref="491703908"/>
-						<reference key="destination" ref="565376434"/>
-					</object>
-					<int key="connectionID">99</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">testTerminalBackgroundView</string>
-						<reference key="source" ref="491703908"/>
-						<reference key="destination" ref="694371765"/>
-					</object>
-					<int key="connectionID">104</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">testTerminalPaddingView</string>
-						<reference key="source" ref="491703908"/>
-						<reference key="destination" ref="881789961"/>
-					</object>
-					<int key="connectionID">105</int>
 				</object>
 			</array>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -557,24 +436,6 @@
 						<reference key="parent" ref="964642497"/>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">63</int>
-						<reference key="object" ref="299725393"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="920537610"/>
-						</array>
-						<reference key="parent" ref="0"/>
-						<string key="objectName">Test Cocoa Terminal Window</string>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">64</int>
-						<reference key="object" ref="920537610"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="317856731"/>
-						</array>
-						<reference key="parent" ref="299725393"/>
-						<string key="objectName">Window Content View</string>
-					</object>
-					<object class="IBObjectRecord">
 						<int key="objectID">72</int>
 						<reference key="object" ref="260695050"/>
 						<array class="NSMutableArray" key="children">
@@ -600,50 +461,6 @@
 						<reference key="object" ref="398416969"/>
 						<reference key="parent" ref="260695050"/>
 					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">94</int>
-						<reference key="object" ref="317856731"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="436085552"/>
-							<reference ref="122325"/>
-							<reference ref="694371765"/>
-						</array>
-						<reference key="parent" ref="920537610"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">95</int>
-						<reference key="object" ref="436085552"/>
-						<reference key="parent" ref="317856731"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">96</int>
-						<reference key="object" ref="122325"/>
-						<reference key="parent" ref="317856731"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">92</int>
-						<reference key="object" ref="694371765"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="881789961"/>
-						</array>
-						<reference key="parent" ref="317856731"/>
-						<string key="objectName">Background View</string>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">103</int>
-						<reference key="object" ref="881789961"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="565376434"/>
-						</array>
-						<reference key="parent" ref="694371765"/>
-						<string key="objectName">Padding View</string>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">93</int>
-						<reference key="object" ref="565376434"/>
-						<reference key="parent" ref="881789961"/>
-						<string key="objectName">Content View</string>
-					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -658,9 +475,6 @@
 				<boolean value="YES" key="1.windowTemplate.hasMinSize"/>
 				<string key="1.windowTemplate.maxSize">{466, 171}</string>
 				<string key="1.windowTemplate.minSize">{300, 74}</string>
-				<object class="NSAffineTransform" key="103.IBViewBoundsToFrameTransform">
-					<bytes key="NSTransformStruct">AUCgAABCtAAAA</bytes>
-				</object>
 				<string key="2.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="YES" key="2.ImportedFromIB2"/>
 				<string key="47.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -696,13 +510,6 @@
 					<bytes key="NSTransformStruct">P4AAAL+AAABDNAAAwyIAAA</bytes>
 				</object>
 				<string key="61.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<string key="63.IBEditorWindowLastContentRect">{{352, 529}, {731, 495}}</string>
-				<string key="63.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<string key="63.IBWindowTemplateEditedContentRect">{{352, 529}, {731, 495}}</string>
-				<boolean value="NO" key="63.NSWindowTemplate.visibleAtLaunch"/>
-				<boolean value="YES" key="63.windowTemplate.hasMinSize"/>
-				<string key="63.windowTemplate.minSize">{150, 100}</string>
-				<string key="64.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="72.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<object class="NSAffineTransform" key="72.IBViewBoundsToFrameTransform">
 					<bytes key="NSTransformStruct">P4AAAL+AAABBiAAAwuAAAA</bytes>
@@ -713,23 +520,12 @@
 				</object>
 				<string key="74.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="75.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<string key="92.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<object class="NSAffineTransform" key="92.IBViewBoundsToFrameTransform">
-					<bytes key="NSTransformStruct">AULWAABCQAAAA</bytes>
-				</object>
-				<string key="93.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<object class="NSAffineTransform" key="93.IBViewBoundsToFrameTransform">
-					<bytes key="NSTransformStruct">AUIgAABC/AAAA</bytes>
-				</object>
-				<object class="NSAffineTransform" key="94.IBViewBoundsToFrameTransform">
-					<bytes key="NSTransformStruct">P4AAAL+AAABA4AAAw/oAAA</bytes>
-				</object>
 			</dictionary>
 			<dictionary class="NSMutableDictionary" key="unlocalizedProperties"/>
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">105</int>
+			<int key="maxID">111</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -750,30 +546,6 @@
 							<string key="candidateClassName">id</string>
 						</object>
 					</dictionary>
-					<dictionary class="NSMutableDictionary" key="outlets">
-						<string key="testTerminalBackgroundView">TerminalView_BackgroundView</string>
-						<string key="testTerminalContentView">TerminalView_ContentView</string>
-						<string key="testTerminalPaddingView">TerminalView_BackgroundView</string>
-						<string key="testTerminalWindow">NSWindow</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<object class="IBToOneOutletInfo" key="testTerminalBackgroundView">
-							<string key="name">testTerminalBackgroundView</string>
-							<string key="candidateClassName">TerminalView_BackgroundView</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="testTerminalContentView">
-							<string key="name">testTerminalContentView</string>
-							<string key="candidateClassName">TerminalView_ContentView</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="testTerminalPaddingView">
-							<string key="name">testTerminalPaddingView</string>
-							<string key="candidateClassName">TerminalView_BackgroundView</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="testTerminalWindow">
-							<string key="name">testTerminalWindow</string>
-							<string key="candidateClassName">NSWindow</string>
-						</object>
-					</dictionary>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">Application/Code/DebugInterface.h</string>
@@ -785,19 +557,6 @@
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">Application/Code/TerminalWindow.h</string>
 					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">TerminalView_BackgroundView</string>
-					<string key="superclassName">NSView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier" id="563214611">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">Application/Code/TerminalView.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">TerminalView_ContentView</string>
-					<string key="superclassName">NSControl</string>
-					<reference key="sourceIdentifier" ref="563214611"/>
 				</object>
 			</array>
 			<array class="NSMutableArray" key="referencedPartialClassDescriptionsV3.2+">

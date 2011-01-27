@@ -515,6 +515,7 @@
 		0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FileSelectionDialogs.h; path = Shared/Code/FileSelectionDialogs.h; sourceTree = "<group>"; };
 		0ACDD9250ABD16C200040553 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AlertMessages.nib; sourceTree = "<group>"; };
 		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c.preprocessed; name = Quills.i; path = Application/Code/Quills.i; sourceTree = "<group>"; };
+		0ACFBF4712F13506008E4203 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/TerminalWindowCocoa.xib; sourceTree = "<group>"; };
 		0AD0B09D0A9EAAA3002064BA /* QuillsBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsBase.h; path = Application/Code/QuillsBase.h; sourceTree = "<group>"; };
 		0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsBase.cp; path = Application/Code/QuillsBase.cp; sourceTree = "<group>"; };
 		0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsEvents.cp; path = Application/Code/QuillsEvents.cp; sourceTree = "<group>"; };
@@ -946,6 +947,7 @@
 				0A317CAC10A0C775002EDEFB /* MainMenuCocoa.xib */,
 				0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */,
 				0AAEFFBF111E77F100526983 /* ServerBrowserCocoa.xib */,
+				0ACFBF4612F13506008E4203 /* TerminalWindowCocoa.xib */,
 				0ACDD9240ABD16C200040553 /* AlertMessages.nib */,
 				0A060B29078BA0D500A8BB55 /* ColorBox.nib */,
 				0A84509D0554CB8E00CFF440 /* FindDialog.nib */,
@@ -1665,6 +1667,14 @@
 				0ACDD9250ABD16C200040553 /* English */,
 			);
 			name = AlertMessages.nib;
+			sourceTree = "<group>";
+		};
+		0ACFBF4612F13506008E4203 /* TerminalWindowCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0ACFBF4712F13506008E4203 /* English */,
+			);
+			name = TerminalWindowCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0AEA45D70642041B00E701DA /* Dictionary.sdef */ = {
