@@ -7,11 +7,13 @@ on the first version in the list.
 
 A version web page contains release notes for all intermediate versions, so that
 a user can easily see *everything* that's changed since.
+
 """
 __author__ = "Kevin Grant <kmg@mac.com>"
 __date__ = "28 September 2006"
 
-import sys, os
+import sys
+import os
 import os.path as path
 from Resources.English.release_notes import version_lineage, daily_build_lineage, notes_by_version
 
@@ -24,6 +26,7 @@ def subst_line(line, vars):
     substitutions are applied to it using the given variable map
     (e.g. %(foobar)s becomes whatever value 'foobar' has).  Passing
     the locals() map is recommended.
+    
     """
     # requiring parentheses helps avoid confusing Python
     # for lines that contain only percents (like URLs)
@@ -39,6 +42,7 @@ def write_subst(ofh, line, vars):
     Like subst_line(), but prints the substituted value to the
     specified output file handle "ofh".  No newline is added, it is
     assumed that the given line already has one.
+    
     """
     printed_line = subst_line(line, vars)
     print >>ofh, printed_line, # <- trailing ',' quells extra newline
@@ -46,6 +50,9 @@ def write_subst(ofh, line, vars):
 def generate_version_history_file(version, ofh, template_lines, recent_versions):
     """generate_version_history_file(version, ofh, template_lines, recent_versions)
     
+    Copies and adapts a template HTML file so that it contains the release notes
+    for the specified version.  The resulting file can cover one version, or
+    several (e.g. the daily builds page).
     
     """
     main_lines = []
@@ -90,6 +97,11 @@ def generate_version_history_file(version, ofh, template_lines, recent_versions)
             no_updates_loop_lines.append(line)
         else:
             main_lines.append(line)
+    # error checking
+    if no_updates_loop: raise RuntimeError("no-updates loop was not closed")
+    if release_notes_loop: raise RuntimeError("release-notes loop was not closed")
+    if version_loop: raise RuntimeError("version loop was not closed")
+    if update_loop: raise RuntimeError("new-update loop was not closed")
     # now use the fragments to generate a specific-version file
     for line in main_lines:
         if '<!-- BEGIN NEW UPDATE -->' in line and len(recent_versions) > 0:
@@ -139,11 +151,11 @@ if __name__ == '__main__':
     for line in index_lines:
         if '<!-- BEGIN VERSION LOOP -->' in line:
             version_loop = True
+        elif '<!-- END VERSION LOOP -->' in line:
+            version_loop = False
         elif version_loop:
             for version in lineage:
                 write_subst(index_out, line, locals())
-        elif '<!-- END VERSION LOOP -->' in line:
-            version_loop = False
         else:
             write_subst(index_out, line, locals())
     index_out.close()
