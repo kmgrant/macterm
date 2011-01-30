@@ -63,6 +63,7 @@
 #include <Console.h>
 #include <Cursors.h>
 #include <FileSelectionDialogs.h>
+#include <GrowlSupport.h>
 #include <ListenerModel.h>
 #include <Localization.h>
 #include <MemoryBlockPtrLocker.template.h>
@@ -6806,7 +6807,7 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 				CFStringRef			growlNotificationTitle = nullptr;
 				CFStringRef			dialogTextCFString = nullptr;
 				UIStrings_Result	stringResult = kUIStrings_ResultOK;
-				Boolean				displayGrowl = CocoaBasic_GrowlIsAvailable();
+				Boolean				displayGrowl = GrowlSupport_IsAvailable();
 				Boolean				displayNormal = (false == displayGrowl);
 				
 				
@@ -6838,8 +6839,8 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 				{
 					// page Growl and then clear immediately, instead of waiting
 					// for the user to respond
-					CocoaBasic_GrowlNotify(growlNotificationName, growlNotificationTitle,
-											dialogTextCFString/* description */);
+					GrowlSupport_Notify(growlNotificationName, growlNotificationTitle,
+										dialogTextCFString/* description */);
 					watchClearForSession(inPtr);
 				}
 				

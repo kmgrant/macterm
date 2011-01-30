@@ -53,6 +53,7 @@
 #import <Console.h>
 #import <Cursors.h>
 #import <Embedding.h>
+#import <GrowlSupport.h>
 #import <HIViewWrap.h>
 #import <ListenerModel.h>
 #import <Localization.h>
@@ -265,7 +266,7 @@ EventLoop_Init ()
 	}
 	
 	// support Growl notifications if possible
-	CocoaBasic_GrowlInit();
+	GrowlSupport_Init();
 	
 	// set the sleep time (3.0 - don’t use preferences value, it’s not user-specifiable anymore)
 	gTicksWaitNextEvent = 60; // make this larger to increase likelihood of high-frequency timers firing on time

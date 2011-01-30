@@ -17,6 +17,7 @@
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
 		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.cp */; };
+		0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A68811112F537A1005F418A /* GrowlSupport.mm */; };
 		0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A70B8AC1079C33B0013E76F /* PythonMain.cp */; };
 		0A766E0B0FB54D8E00259E56 /* kvp.py in pymactelnet-file */ = {isa = PBXBuildFile; fileRef = 0A766E0A0FB54D8E00259E56 /* kvp.py */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
@@ -413,6 +414,8 @@
 		0A66CA450887464200FD616C /* HIViewWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.h; path = Shared/Code/HIViewWrap.h; sourceTree = "<group>"; };
 		0A66CA4B0887467000FD616C /* HIViewWrap.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HIViewWrap.cp; path = Shared/Code/HIViewWrap.cp; sourceTree = "<group>"; };
 		0A66CA950887505200FD616C /* HIViewWrap.fwd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.fwd.h; path = Shared/Code/HIViewWrap.fwd.h; sourceTree = "<group>"; };
+		0A68811012F5378C005F418A /* GrowlSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrowlSupport.h; path = Shared/Code/GrowlSupport.h; sourceTree = "<group>"; };
+		0A68811112F537A1005F418A /* GrowlSupport.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GrowlSupport.mm; path = Shared/Code/GrowlSupport.mm; sourceTree = "<group>"; };
 		0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrapManip.h; path = Shared/Code/HIViewWrapManip.h; sourceTree = "<group>"; };
 		0A69E5200DDBAC4100DA7874 /* Panther.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Panther.xcconfig; path = Shared/Panther.xcconfig; sourceTree = "<group>"; };
 		0A69E5240DDBAC7E00DA7874 /* Tiger.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Tiger.xcconfig; path = Shared/Tiger.xcconfig; sourceTree = "<group>"; };
@@ -635,6 +638,7 @@
 				0A46FDD3055432A400ACDF3A /* Embedding.cp */,
 				0A46FDFD055432A400ACDF3A /* FileSelectionDialogs.cp */,
 				0A33CD0007FAC07A00248DDF /* FlagManager.cp */,
+				0A68811112F537A1005F418A /* GrowlSupport.mm */,
 				0A66CA4B0887467000FD616C /* HIViewWrap.cp */,
 				0A33CCF607FAC04200248DDF /* ListenerModel.cp */,
 				0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */,
@@ -664,6 +668,7 @@
 				0A4603DB0554376100ACDF3A /* Embedding.h */,
 				0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */,
 				0A9B318C0D538E8600C1616D /* FlagManager.h */,
+				0A68811012F5378C005F418A /* GrowlSupport.h */,
 				0A66CA450887464200FD616C /* HIViewWrap.h */,
 				0A66CA950887505200FD616C /* HIViewWrap.fwd.h */,
 				0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */,
@@ -1423,6 +1428,7 @@
 				0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */,
 				0A64C5EB1059E423005B8A48 /* StreamCapture.cp in Sources */,
 				0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */,
+				0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

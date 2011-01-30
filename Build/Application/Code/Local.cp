@@ -70,12 +70,12 @@ extern "C"
 #include <CFRetainRelease.h>
 #include <CFUtilities.h>
 #include <Console.h>
+#include <GrowlSupport.h>
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlocks.h>
 
 // MacTelnet includes
 #include "AppResources.h"
-#include "CocoaBasic.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "Local.h"
@@ -2160,14 +2160,14 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 			// excessive)
 			if ((canNotifyGrowl) || (canDisplayAlert))
 			{
-				Boolean const	kDisplayGrowl = CocoaBasic_GrowlIsAvailable();
+				Boolean const	kDisplayGrowl = GrowlSupport_IsAvailable();
 				Boolean const	kDisplayNormal = (false == kDisplayGrowl);
 				
 				
 				if ((kDisplayGrowl) && (canNotifyGrowl))
 				{
 					// page Growl
-					CocoaBasic_GrowlNotify(growlNotificationName, growlNotificationTitle, dialogTextCFString/* description */);
+					GrowlSupport_Notify(growlNotificationName, growlNotificationTitle, dialogTextCFString/* description */);
 				}
 				
 				if ((kDisplayNormal) && (canDisplayAlert))

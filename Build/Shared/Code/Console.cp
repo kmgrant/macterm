@@ -40,8 +40,8 @@
 
 // library includes
 #include <CFRetainRelease.h>
-#include <CocoaBasic.h>
 #include <Console.h>
+#include <GrowlSupport.h>
 #include <ListenerModel.h>
 #include <MemoryBlocks.h>
 #include <StringUtilities.h>
@@ -242,12 +242,12 @@ void
 Console_WriteScriptError	(CFStringRef		inTitle,
 							 CFStringRef		inDescription)
 {
-	if (CocoaBasic_GrowlIsAvailable())
+	if (GrowlSupport_IsAvailable())
 	{
 		CFStringRef		growlNotificationName = CFSTR("Script error"); // MUST match "Growl Registration Ticket.growlRegDict"
 		
 		
-		CocoaBasic_GrowlNotify(growlNotificationName, inTitle, inDescription);
+		GrowlSupport_Notify(growlNotificationName, inTitle, inDescription);
 	}
 	else
 	{

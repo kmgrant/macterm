@@ -4,7 +4,7 @@
 /*###############################################################
 
 	Simple Cocoa Wrappers Library 1.5
-	© 2008-2010 by Kevin Grant
+	© 2008-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -38,7 +38,6 @@
 #import <AutoPool.objc++.h>
 #import <CocoaBasic.h>
 #import <Console.h>
-#import <Growl/Growl.h>
 #import <HIViewWrap.h>
 #import <SoundSystem.h>
 
@@ -50,16 +49,6 @@
 
 
 #pragma mark Types
-
-@interface CocoaBasic_GrowlDelegate : NSObject<GrowlApplicationBridgeDelegate>
-{
-	BOOL	_isReady;
-}
-+ (id)sharedGrowlDelegate;
-- (BOOL)isReady;
-// GrowlApplicationBridgeDelegate
-- (void)growlIsReady;
-@end
 
 @interface My_NoticeColorPanelChange : NSResponder
 - (void)changeColor: (id)sender;
@@ -82,8 +71,6 @@ HIWindowRefToNSWindowMap&		gCocoaCarbonWindows()	{ static HIWindowRefToNSWindowM
 HIViewWrap						gCurrentColorPanelFocus;	//!< see ColorBox.h; a view with a color box that uses the current color
 My_NoticeColorPanelChange*		gColorWatcher = nil;		//!< sees color changes
 NSSpeechSynthesizer*			gDefaultSynth = nil;
-BOOL							gGrowlFrameworkIsLinked = NO;
-NSString*						gGrowlPrefsPaneGlobalPath = @"/Library/PreferencePanes/Growl.prefPane";
 
 } // anonymous namespace
 
@@ -311,160 +298,6 @@ CocoaBasic_GetGray	(CGDeviceColor const&	inColor1,
 	}
 	return result;
 }// GetGray
-
-
-/*!
-Initializes the Growl delegate.
-
-(1.2)
-*/
-void
-CocoaBasic_GrowlInit ()
-{
-	AutoPool	_;
-	
-	
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-	// IMPORTANT: The framework is weak-linked so that the application will
-	// always launch on older Mac OS X versions; check for a defined symbol
-	// before attempting to call ANYTHING in Growl.  Other code in this file
-	// should check that "gGrowlFrameworkIsLinked" is YES before using Growl.
-	// And ideally, NO OTHER SOURCE FILE should directly depend on Growl!
-	if (NULL != objc_getClass("GrowlApplicationBridge"))
-	{
-		gGrowlFrameworkIsLinked = YES;
-	}
-	else
-	{
-		gGrowlFrameworkIsLinked = NO;
-	}
-	
-	if (gGrowlFrameworkIsLinked)
-	{
-		[GrowlApplicationBridge setGrowlDelegate:[CocoaBasic_GrowlDelegate sharedGrowlDelegate]];
-	}
-#endif
-}// GrowlInit
-
-
-/*!
-Returns true only if the Growl daemon is installed and
-running, indicating that it is okay to send Growl
-notifications.
-
-(1.0)
-*/
-Boolean
-CocoaBasic_GrowlIsAvailable ()
-{
-	AutoPool	_;
-	Boolean		result = false;
-	
-	
-	result = ((YES == gGrowlFrameworkIsLinked) && (YES == [[CocoaBasic_GrowlDelegate sharedGrowlDelegate] isReady]));
-	return result;
-}// GrowlIsAvailable
-
-
-/*!
-Posts the specified notification to Growl.  The name should match
-one of the strings in "Growl Registration Ticket.growlRegDict".
-The title and description can be anything.  If the title is set
-to nullptr, it copies the notification name; if the description
-is set to nullptr, it is set to an empty string.
-
-Has no effect if Growl is not installed and available.
-
-(1.0)
-*/
-void
-CocoaBasic_GrowlNotify	(CFStringRef	inNotificationName,
-						 CFStringRef	inTitle,
-						 CFStringRef	inDescription)
-{
-	AutoPool	_;
-	
-	
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-	if (CocoaBasic_GrowlIsAvailable())
-	{
-		if (nullptr == inTitle) inTitle = inNotificationName;
-		if (nullptr == inDescription) inDescription = CFSTR("");
-	#if 1
-		// normally an Objective-C call is enough, but see below
-		[GrowlApplicationBridge
-			notifyWithTitle:(NSString*)inTitle
-			description:(NSString*)inDescription
-			notificationName:(NSString*)inNotificationName
-			iconData:nil
-			priority:0
-			isSticky:NO
-			clickContext:nil];
-	#else
-		// prior to Growl 1.1.3, AppleScript was the only way
-		// notifications would work on Leopard if certain 3rd-party
-		// software was installed; but this is probably slower so
-		// it is avoided unless there is a good reason to use it
-		NSDictionary*			errorDict = nil;
-		NSAppleEventDescriptor*	returnDescriptor = nil;
-		NSString*				scriptText = [[NSString alloc] initWithFormat:@"\
-			tell application \"GrowlHelperApp\"\n\
-				notify with name \"%@\" title \"%@\" description \"%@\" application name \"MacTelnet\"\n\
-			end tell",
-			(NSString*)inNotificationName,
-			(NSString*)inTitle,
-			(NSString*)inDescription
-		];
-		NSAppleScript*			scriptObject = [[NSAppleScript alloc] initWithSource:scriptText];
-		
-		
-		returnDescriptor = [scriptObject executeAndReturnError:&errorDict];
-		if (nullptr == returnDescriptor)
-		{
-			NSLog(@"%@", errorDict);
-			Console_Warning(Console_WriteLine, "unable to send notification via AppleScript, error:");
-		}
-		[scriptObject release];
-	#endif
-	}
-#endif
-}// GrowlNotify
-
-
-/*!
-Returns true only if the Growl preferences pane exists in
-its expected location.
-
-(1.5)
-*/
-Boolean
-CocoaBasic_GrowlPreferencesPaneCanDisplay ()
-{
-	AutoPool	_;
-	Boolean		result = ([[NSFileManager defaultManager] isReadableFileAtPath:gGrowlPrefsPaneGlobalPath]) ? true : false;
-	
-	
-	return result;
-}// GrowlPreferencesPaneCanDisplay
-
-
-/*!
-Launches “System Preferences” to open the Growl preferences
-pane, if it is available.
-
-(1.5)
-*/
-void
-CocoaBasic_GrowlPreferencesPaneDisplay ()
-{
-	AutoPool	_;
-	
-	
-	if (CocoaBasic_GrowlPreferencesPaneCanDisplay())
-	{
-		(BOOL)[[NSWorkspace sharedWorkspace] openFile:gGrowlPrefsPaneGlobalPath];
-	}
-}// GrowlPreferencesPaneDisplay
 
 
 /*!
@@ -896,48 +729,6 @@ returnPathForFSRef	(FSRef const&	inFileOrFolder)
 }// returnPathForFSRef
 
 } // anonymous namespace
-
-
-@implementation CocoaBasic_GrowlDelegate
-
-static CocoaBasic_GrowlDelegate*	gCocoaBasic_GrowlDelegate = nil;
-+ (id)
-sharedGrowlDelegate
-{
-	if (nil == gCocoaBasic_GrowlDelegate)
-	{
-		gCocoaBasic_GrowlDelegate = [[[self class] allocWithZone:NULL] init];
-	}
-	return gCocoaBasic_GrowlDelegate;
-}
-
-- (id)
-init
-{
-	self = [super init];
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-	_isReady = ([GrowlApplicationBridge isGrowlInstalled] && [GrowlApplicationBridge isGrowlRunning]);
-#else
-	_isReady = NO;
-#endif
-	return self;
-}
-
-- (void)
-growlIsReady
-{
-	// this might only be received upon restart of Growl, not at startup;
-	// but it is handled in case Growl is started after MacTelnet starts
-	_isReady = true;
-}// growlIsReady
-
-- (BOOL)
-isReady
-{
-	return _isReady;
-}// isReady
-
-@end
 
 
 @implementation My_NoticeColorPanelChange

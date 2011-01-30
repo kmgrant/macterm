@@ -56,23 +56,6 @@ CGDeviceColor
 													 Float32 = 0.5);
 
 void
-	CocoaBasic_GrowlInit							();
-
-Boolean
-	CocoaBasic_GrowlIsAvailable						();
-
-void
-	CocoaBasic_GrowlNotify							(CFStringRef,
-													 CFStringRef = nullptr,
-													 CFStringRef = nullptr);
-
-Boolean
-	CocoaBasic_GrowlPreferencesPaneCanDisplay		();
-
-void
-	CocoaBasic_GrowlPreferencesPaneDisplay			();
-
-void
 	CocoaBasic_PlaySoundByName						(CFStringRef);
 
 void

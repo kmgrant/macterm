@@ -51,6 +51,7 @@
 #include <CommonEventHandlers.h>
 #include <Console.h>
 #include <DialogAdjust.h>
+#include <GrowlSupport.h>
 #include <HIViewWrap.h>
 #include <HIViewWrapManip.h>
 #include <Localization.h>
@@ -693,7 +694,7 @@ const
 	}
 	
 	// hide settings that are not useful, based on what is available on the user’s computer
-	if (false == CocoaBasic_GrowlPreferencesPaneCanDisplay())
+	if (false == GrowlSupport_PreferencesPaneCanDisplay())
 	{
 		HIViewWrap	label(idMyLabelGrowlSettings, inOwningWindow);
 		HIViewWrap	button(idMyButtonOpenGrowlPreferencesPane, inOwningWindow);
@@ -1736,7 +1737,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				break;
 			
 			case kCommandPrefOpenGrowlPreferencesPane:
-				CocoaBasic_GrowlPreferencesPaneDisplay();
+				GrowlSupport_PreferencesPaneDisplay();
 				result = noErr;
 				break;
 			
