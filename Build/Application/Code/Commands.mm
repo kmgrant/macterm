@@ -3081,6 +3081,12 @@ setUpMacroSetsMenu	(NSMenu*	inMenu)
 			Console_Warning(Console_WriteLine, "unexpected error inserting favorites into menu");
 		}
 	}
+	
+	// unlike most collections in menus, macro sets can define their
+	// own key equivalents; it is important to update the menu right
+	// away, otherwise Cocoa will only do it the next time the user
+	// opens the menu with the mouse
+	[inMenu update];
 }// setUpMacroSetsMenu
 
 

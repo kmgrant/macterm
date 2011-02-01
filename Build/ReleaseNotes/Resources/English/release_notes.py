@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110131',
     '20110125',
     '20110124',
     '20110116',
@@ -352,6 +353,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110131': [
+        'Fixed Macros menu key equivalents to stay in sync with the active macro set even if the menu is never opened.',
+    ],
     '20110125': [
         'The "Log-In Shell" command in the File menu is now visible by default; the Control key shows the Shell command.',
         'Terminal windows now join the frontmost tab stack when they first appear, if the frontmost window has tabs.',

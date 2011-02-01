@@ -731,8 +731,11 @@ macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		case kPreferences_TagIndexedMacroName:
 		case kPreferences_TagIndexedMacroKey:		
 		case kPreferences_TagIndexedMacroKeyModifiers:
-			// no action necessary, although this could perhaps do caching that
-			// would make MacroManager_UpdateMenuItem() more efficient
+			// immediately update the entire menu, because key equivalents must
+			// always match correctly (even if the user does not open the menu)
+			[returnMacrosMenu() update];
+			// NOTE: this could perhaps do caching that would make it more
+			// efficient to call MacroManager_UpdateMenuItem() later
 			break;
 		
 		default:
