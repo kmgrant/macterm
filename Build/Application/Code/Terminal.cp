@@ -967,8 +967,7 @@ public:
 	
     struct
 	{
-		Terminal_SpeechMode		mode;			//!< restrictions on when the computer may speak
-		Str255					buffer;			//!< place to hold text that has not yet been spoken
+		Terminal_SpeechMode		mode;	//!< restrictions on when the computer may speak
 	} speech;
 	
 	struct CurrentLineCache
@@ -4195,9 +4194,10 @@ Terminal_SetSpeechEnabled	(TerminalScreenRef	inRef,
 	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr)
+	if (nullptr != dataPtr)
 	{
-		TerminalSpeaker_SetMuted(dataPtr->speaker, !inIsEnabled);
+		// TEMPORARY; other speech modes are not implemented yet
+		dataPtr->speech.mode = (inIsEnabled) ? kTerminal_SpeechModeSpeakAlways : kTerminal_SpeechModeSpeakNever;
 	}
 }// SetSpeechEnabled
 
@@ -4276,30 +4276,6 @@ Terminal_SetVisibleScreenDimensions		(TerminalScreenRef	inRef,
 
 
 /*!
-Speaks the specified text buffer using the same speech
-channel as the specified terminal, interrupting any
-current speech on that channel.  You might use this to
-speak terminal-specific things, such as the current
-selection of text.
-
-(3.0)
-*/
-void
-Terminal_SpeakBuffer	(TerminalScreenRef	inRef,
-						 void const*		inBuffer,
-						 Size				inBufferSize)
-{
-	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
-	
-	
-	if ((dataPtr != nullptr) && API_AVAILABLE(SpeakBuffer))
-	{
-		TerminalSpeaker_SynthesizeSpeechFromBuffer(dataPtr->speaker, inBuffer, inBufferSize);
-	}
-}// SpeakBuffer
-
-
-/*!
 Returns "true" only if speech is enabled for the specified
 session.  Use the SpeechBusy() system call to determine if
 the computer is actually speaking something at the moment.
@@ -4313,9 +4289,9 @@ Terminal_SpeechIsEnabled	(TerminalScreenRef		inRef)
 	Boolean				result = false;
 	
 	
-	if (dataPtr != nullptr)
+	if (nullptr != dataPtr)
 	{
-		result = !TerminalSpeaker_IsMuted(dataPtr->speaker);
+		result = (kTerminal_SpeechModeSpeakNever != dataPtr->speech.mode);
 	}
 	return result;
 }// SpeechIsEnabled
@@ -5088,8 +5064,7 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	this->previous.drawingAttributes = kInvalidTerminalTextAttributes; // initially no saved attribute
 	
 	// speech setup
-	this->speech.mode = kTerminal_SpeechModeSpeakAlways;
-	this->speech.buffer[0] = '\0'; // initially empty
+	this->speech.mode = kTerminal_SpeechModeSpeakNever;
 	
 	if (returnXTerm256(inTerminalConfig))
 	{
@@ -5700,7 +5675,12 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 			// send the data wherever it needs to go
 			echoCFString(inDataPtr, bufferAsCFString.returnCFStringRef());
 			
-			// 3.0 - test speech (this implementation will be greatly enhanced in the near future
+			// speech implementation; TEMPORARY: handled here because the spoken text must
+			// have access to a post-translation string, free of any meta-characters that
+			// might have been in the original text stream; but text typically arrives too
+			// irregularly and too quickly to allow a useful sentence to be spoken, so it
+			// may be necessary to capture lines and speak them via a timer in a more
+			// orderly fashion
 			unless (TerminalSpeaker_IsMuted(inDataPtr->speaker) || TerminalSpeaker_IsGloballyMuted())
 			{
 				Boolean		doSpeak = false;
@@ -5720,6 +5700,7 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 					//doSpeak = !IsWindowHilited(the screen window);
 					break;
 				
+				case kTerminal_SpeechModeSpeakNever:
 				default:
 					doSpeak = false;
 					break;
@@ -5730,15 +5711,13 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 					TerminalSpeaker_Result		speakerResult = kTerminalSpeaker_ResultOK;
 					
 					
-					// TEMPORARY - spin lock, to keep asynchronous speech from jumbling multi-line text;
-					//             this really should be changed to use speech callbacks instead
-					do
+					// TEMPORARY - queue this, to keep asynchronous speech from jumbling or interrupting multi-line text
+					// (and to improve performance as a result)
+					speakerResult = TerminalSpeaker_SynthesizeSpeechFromCFString(inDataPtr->speaker, bufferAsCFString.returnCFStringRef());
+					if (kTerminalSpeaker_ResultSpeechSynthesisTryAgain == speakerResult)
 					{
-						// stop and speak when a new line is found, or
-						// when there is just no more room for characters
-						// UNIMPLEMENTED - need to update for use with CFString (use Cocoa, probably)
-						//speakerResult = TerminalSpeaker_SynthesizeSpeechFromBuffer(inDataPtr->speaker, inBuffer, result);
-					} while (speakerResult == kTerminalSpeaker_ResultSpeechSynthesisTryAgain);
+						// error...
+					}
 				}
 			}
 		}
@@ -10644,67 +10623,6 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				}
 				
 				StreamCapture_WriteUTF8Data(inDataPtr->captureStream, (UInt8*)startPtr/* data to write */, extra/* buffer length */);
-				
-			#if 0
-				// 3.0 - test speech (this implementation will be greatly enhanced in the near future
-				unless (TerminalSpeaker_IsMuted(inDataPtr->speaker) || TerminalSpeaker_IsGloballyMuted())
-				{
-					Boolean		doSpeak = false;
-					
-					
-					switch (inDataPtr->speech.mode)
-					{
-					case kTerminal_SpeechModeSpeakAlways:
-						doSpeak = true;
-						break;
-					
-					case kTerminal_SpeechModeSpeakWhenActive:
-						//doSpeak = IsWindowHilited(the screen window);
-						break;
-					
-					case kTerminal_SpeechModeSpeakWhenInactive:
-						//doSpeak = !IsWindowHilited(the screen window);
-						break;
-					
-					default:
-						doSpeak = false;
-						break;
-					}
-					
-					if (doSpeak)
-					{
-						register SInt16		i = 0;
-						Str255&				buffer = inDataPtr->speech.buffer;
-						My_TextIterator		speechIterator = startIterator;
-						
-						
-						// accumulate characters in a buffer; the buffer keeps all
-						// unspoken text, and is cleared (and speech occurs) as
-						// soon as it is full, or when a new line is encountered
-						for (i = 0; i < extra; ++i, ++speechIterator)
-						{
-							*(buffer + buffer[0]) = *speechIterator; // append received character to spoken string
-							++buffer[0]; // fix string length
-							if ((buffer[0] == 255) || (*speechIterator == '\r'))
-							{
-								TerminalSpeaker_Result		speakerResult = kTerminalSpeaker_ResultOK;
-								
-								
-								// TEMPORARY - spin lock, to keep asynchronous speech from jumbling multi-line text;
-								//             this really should be changed to use speech callbacks instead
-								do
-								{
-									// stop and speak when a new line is found, or
-									// when there is just no more room for characters
-									speakerResult = TerminalSpeaker_SynthesizeSpeechFromBuffer(inDataPtr->speaker, 1 + buffer/* buffer */,
-																								buffer[0]/* buffer size */);
-								} while (speakerResult == kTerminalSpeaker_ResultSpeechSynthesisTryAgain);
-								buffer[0] = '\0'; // clear string
-							}
-						}
-					}
-				}
-			#endif
 			}/* while */
 		}
 		

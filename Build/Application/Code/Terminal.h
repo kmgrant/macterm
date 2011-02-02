@@ -246,9 +246,10 @@ Controls over the computer’s voice when it is speaking text.
 */
 enum Terminal_SpeechMode
 {
-	kTerminal_SpeechModeSpeakAlways = 0,		//!< no restrictions on speech
-	kTerminal_SpeechModeSpeakWhenActive = 1,	//!< mute speech if the terminal window is not frontmost
-	kTerminal_SpeechModeSpeakWhenInactive = 2	//!< mute speech if the terminal window is frontmost
+	kTerminal_SpeechModeSpeakNever = 0,			//!< speech is disabled
+	kTerminal_SpeechModeSpeakAlways = 1,		//!< no restrictions on speech
+	kTerminal_SpeechModeSpeakWhenActive = 2,	//!< mute speech if the terminal window is not frontmost
+	kTerminal_SpeechModeSpeakWhenInactive = 3	//!< mute speech if the terminal window is frontmost
 };
 
 /*!
@@ -683,11 +684,6 @@ TerminalSpeaker_Ref
 void
 	Terminal_SetSpeechEnabled				(TerminalScreenRef			inScreen,
 											 Boolean					inIsEnabled);
-
-void
-	Terminal_SpeakBuffer					(TerminalScreenRef			inScreen,
-											 void const*				inBuffer,
-											 Size						inBufferSize);
 
 Boolean
 	Terminal_SpeechIsEnabled				(TerminalScreenRef			inScreen);

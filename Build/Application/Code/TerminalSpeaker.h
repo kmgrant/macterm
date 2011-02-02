@@ -3,10 +3,10 @@
 	terminal screen buffer and user interaction visually, this
 	module handles communication through sound.
 	
-	This is the Terminal Sound module, which defines the audio
+	This is the Terminal Speaker module, which defines the audio
 	component of a terminal screen.
 	
-	Generally, you only use Terminal Sound APIs to manipulate
+	Generally, you only use Terminal Speaker APIs to manipulate
 	things that are unique to audio interaction with a terminal,
 	such as synthesizing voice or the terminal bell sound.
 	Anything that is data-centric should be manipulated from the
@@ -18,7 +18,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -113,11 +113,6 @@ void
 
 void
 	TerminalSpeaker_SoundBell					(TerminalSpeaker_Ref		inSpeaker);
-
-TerminalSpeaker_Result
-	TerminalSpeaker_SynthesizeSpeechFromBuffer	(TerminalSpeaker_Ref		inRef,
-												 void const*				inBuffer,
-												 Size						inBufferSize);
 
 TerminalSpeaker_Result
 	TerminalSpeaker_SynthesizeSpeechFromCFString(TerminalSpeaker_Ref		inRef,

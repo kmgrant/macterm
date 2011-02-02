@@ -57,17 +57,6 @@
 
 #pragma mark Types
 
-struct My_TerminalSpeakerSpeechHandler
-{
-	My_TerminalSpeakerSpeechHandler ();
-	
-	void	initializeBuffer	(Str255&);
-	
-	Boolean			enabled;	//!< will the computer speak incoming text from this terminal?
-	SpeechChannel	channel;	//!< where text is spoken
-	Str255			buffer;		//!< place to hold text that has not yet been spoken
-};
-
 struct My_TerminalSpeaker
 {
 	My_TerminalSpeaker	(TerminalScreenRef);
@@ -78,7 +67,6 @@ struct My_TerminalSpeaker
 	Boolean								isPaused;				//!< if true, sound playback is suspended partway through
 	ListenerModel_ListenerRef			bellHandler;			//!< invoked by a terminal screen buffer when it encounters a bell signal
 	ListenerModel_ListenerRef			preferencesHandler;		//!< invoked when an important user preference is changed
-	My_TerminalSpeakerSpeechHandler		speech;					//!< information on speech synthesis
 	TerminalSpeaker_Ref					selfRef;				//!< redundant opaque reference that would resolve to point to this structure
 };
 typedef My_TerminalSpeaker*			My_TerminalSpeakerPtr;
@@ -260,14 +248,9 @@ TerminalSpeaker_SetPaused	(TerminalSpeaker_Ref	inSpeaker,
 	
 	
 	ptr->isPaused = inInterruptSoundPlayback;
-	if (ptr->isPaused)
-	{
-		(OSStatus)PauseSpeechAt(ptr->speech.channel, kImmediate);
-	}
-	else
-	{
-		(OSStatus)ContinueSpeech(ptr->speech.channel);
-	}
+	// INCOMPLETE; should stop speaking in the current speech channel,
+	// but for now just do it globally (which is overkill)
+	CocoaBasic_StopSpeaking();
 }// SetPaused
 
 
@@ -299,57 +282,6 @@ TerminalSpeaker_SoundBell	(TerminalSpeaker_Ref	inSpeaker)
 		}
 	}
 }// SoundBell
-
-
-/*!
-Speaks the specified text buffer using the same speech
-channel as the specified speaker, interrupting any
-current speech on that channel.  You might use this to
-speak terminal-specific things, such as the current
-selection of text.
-
-\retval kTerminalSpeaker_ResultOK
-if the speech was generated and played successfully
-
-\retval kTerminalSpeaker_ResultSpeechSynthesisTryAgain
-if the buffer was not spoken because the synthesizer is
-busy (try again)
-
-\retval kTerminalSpeaker_ResultSpeechSynthesisFailed
-if any problems occurred
-
-(3.0)
-*/
-TerminalSpeaker_Result
-TerminalSpeaker_SynthesizeSpeechFromBuffer	(TerminalSpeaker_Ref	inSpeaker,
-											 void const*			inBuffer,
-											 Size					inBufferSize)
-{
-	My_TerminalSpeakerAutoLocker	ptr(gTerminalSpeakerPtrLocks(), inSpeaker);
-	TerminalSpeaker_Result			result = kTerminalSpeaker_ResultOK;
-	
-	
-	if (ptr != nullptr)
-	{
-		OSStatus	error = SpeakBuffer(ptr->speech.channel, inBuffer, inBufferSize, 0L/* flags */);
-		
-		
-		if (error != noErr)
-		{
-			switch (error)
-			{
-			case synthNotReady:
-				result = kTerminalSpeaker_ResultSpeechSynthesisTryAgain;
-				break;
-			
-			default:
-				result = kTerminalSpeaker_ResultSpeechSynthesisFailed;
-				break;
-			}
-		}
-	}
-	return result;
-}// SynthesizeSpeechFromBuffer
 
 
 /*!
@@ -395,39 +327,6 @@ TerminalSpeaker_SynthesizeSpeechFromCFString	(TerminalSpeaker_Ref	inSpeaker,
 #pragma mark Internal Methods
 
 /*!
-Creates and initializes a buffer for processing speech.
-
-(3.0)
-*/
-My_TerminalSpeakerSpeechHandler::
-My_TerminalSpeakerSpeechHandler ()
-:
-enabled(false),
-channel(nullptr),
-buffer()
-{
-	//OSStatus	error = NewSpeechChannel(nullptr/* voice */, &this->channel);
-	
-	
-	//if (noErr != error) throw std::runtime_error("cannot create speech channel");
-	initializeBuffer(this->buffer);
-}// My_TerminalSpeakerSpeechHandler default constructor
-
-
-/*!
-Initializes the specified buffer and returns it.
-
-(3.1)
-*/
-void
-My_TerminalSpeakerSpeechHandler::
-initializeBuffer	(Str255&	inoutBuffer)
-{
-	PLstrcpy(inoutBuffer, "\p");
-}// initializeBuffer
-
-
-/*!
 Creates a new real screen, complete with virtual
 screen storage.  The screen ID of the new screen is
 returned, or a negative value if any problems occur.
@@ -442,12 +341,10 @@ isEnabled(true),
 isPaused(false),
 bellHandler(ListenerModel_NewStandardListener(audioEvent, this/* context, as TerminalSpeaker_Ref */)),
 preferencesHandler(ListenerModel_NewStandardListener(preferenceChanged, this/* context, as TerminalSpeaker_Ref */)),
-speech(),
 selfRef(REINTERPRET_CAST(this, TerminalSpeaker_Ref))
 {
 	// ask to be notified of terminal bells
 	Terminal_StartMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler);
-	Terminal_StartMonitoring(this->screen, kTerminal_ChangeTextEdited, this->bellHandler);
 	(Preferences_Result)Preferences_StartMonitoring(this->preferencesHandler, kPreferences_TagBellSound, true/* notify of initial value */);
 }// My_TerminalSpeaker one-argument constructor
 
@@ -462,14 +359,9 @@ My_TerminalSpeaker::
 ~My_TerminalSpeaker ()
 {
 	Terminal_StopMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler);
-	Terminal_StopMonitoring(this->screen, kTerminal_ChangeTextEdited, this->bellHandler);
 	ListenerModel_ReleaseListener(&this->bellHandler);
 	(Preferences_Result)Preferences_StopMonitoring(this->preferencesHandler, kPreferences_TagBellSound);
 	ListenerModel_ReleaseListener(&this->preferencesHandler);
-	if (nullptr != this->speech.channel)
-	{
-		(OSStatus)DisposeSpeechChannel(this->speech.channel), this->speech.channel = nullptr;
-	}
 }// My_TerminalSpeaker destructor
 
 
@@ -496,75 +388,6 @@ audioEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			TerminalSpeaker_SoundBell(inSpeaker);
 		}
-		break;
-	
-	case kTerminal_ChangeTextEdited:
-	#if 0
-		{
-			Boolean		doSpeak = true;
-			
-			
-			// speak the contents of each line of text that changed
-			if (doSpeak)
-			{
-				Terminal_RangeDescriptionConstPtr	rangeInfoPtr = REINTERPRET_CAST(inEventContextPtr,
-																					Terminal_RangeDescriptionConstPtr);
-				register SInt16						i = 0;
-				
-				
-				for (i = rangeInfoPtr->firstRow; i < (rangeInfoPtr->firstRow + rangeInfoPtr->rowCount); ++i)
-				{
-					Terminal_LineRef	rowIterator = nullptr;
-					char				buffer[255/* arbitrary */];
-					
-					
-					// WARNING: This is very inefficient!  Finding iterators based on indices
-					//          is known to be slow, but at the moment this is the easiest
-					//          option.  This must improve for better performance.
-					if (rangeInfoPtr->firstRow >= 0)
-					{
-						// main screen lines are compatible with the signed system and
-						// remain unchanged when constructing iterators
-						rowIterator = Terminal_NewMainScreenLineIterator(rangeInfoPtr->screen, rangeInfoPtr->firstRow);
-					}
-					else
-					{
-						// -1 is ordinarily the 1st scrollback row in the signed system,
-						// but iterators are constructed with unsigned values where 0 is
-						// the newest row (so -1 must become 0, -2 must become 1, etc.)
-						rowIterator = Terminal_NewScrollbackLineIterator(rangeInfoPtr->screen, -(rangeInfoPtr->firstRow) - 1);
-					}
-					
-					if (nullptr != rowIterator)
-					{
-						Terminal_Result		getResult = kTerminal_ResultOK;
-						char const*			rangeStart = nullptr;
-						char const*			rangePastEnd = nullptr;
-						
-						
-						getResult = Terminal_GetLineRange(rangeInfoPtr->screen, rowIterator,
-															rangeInfoPtr->firstColumn,
-															rangeInfoPtr->firstColumn + rangeInfoPtr->columnCount,
-															rangeStart, rangePastEnd);
-						if (kTerminal_ResultOK == getResult)
-						{
-							TerminalSpeaker_Result		speechResult = kTerminalSpeaker_ResultOK;
-							
-							
-							// TEMPORARY - spin lock, to keep asynchronous speech from jumbling multi-line text;
-							//             this really should be changed to use speech callbacks instead
-							do
-							{
-								speechResult = TerminalSpeaker_SynthesizeSpeechFromBuffer
-												(inSpeaker, rangeStart, rangePastEnd - rangeStart);
-							} while (speechResult == kTerminalSpeaker_ResultSpeechSynthesisTryAgain);
-						}
-						Terminal_DisposeLineIterator(&rowIterator);
-					}
-				}
-			}
-		}
-	#endif
 		break;
 	
 	default:

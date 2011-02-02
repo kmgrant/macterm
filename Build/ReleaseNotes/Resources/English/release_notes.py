@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110201',
     '20110131',
     '20110125',
     '20110124',
@@ -353,6 +354,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110201': [
+        'Fixed "Speak Incoming Lines of Text" command, though speech behavior is simplistic and improvements are planned.',
+    ],
     '20110131': [
         'Fixed Macros menu key equivalents to stay in sync with the active macro set even if the menu is never opened.',
     ],
