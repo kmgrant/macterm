@@ -1605,25 +1605,6 @@ TerminalView_MoveCursorWithArrowKeys	(TerminalViewRef	inView,
 
 
 /*!
-Returns the Cocoa window reference for the given
-Terminal View.  This is currently only defined if
-the view was created as an NSView.
-
-(4.0)
-*/
-NSWindow*
-TerminalView_ReturnNSWindow		(TerminalViewRef	inView)
-{
-	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	NSWindow*					result = nil;
-	
-	
-	result = [viewPtr->contentNSView window];
-	return result;
-}// ReturnNSWindow
-
-
-/*!
 Determines whether a point in the coordinate
 system of a window’s graphics port is in the
 boundaries of the highlighted text in that
@@ -1881,6 +1862,25 @@ TerminalView_ReturnFormatConfiguration		(TerminalViewRef	inView)
 	
 	return result;
 }// ReturnFormatConfiguration
+
+
+/*!
+Returns the Cocoa window reference for the given
+Terminal View.  This is currently only defined if
+the view was created as an NSView.
+
+(4.0)
+*/
+NSWindow*
+TerminalView_ReturnNSWindow		(TerminalViewRef	inView)
+{
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	NSWindow*					result = nil;
+	
+	
+	result = [viewPtr->contentNSView window];
+	return result;
+}// ReturnNSWindow
 
 
 /*!
@@ -6262,6 +6262,9 @@ findVirtualCellFromScreenPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 	Boolean		result = true;
 	
 	
+	outDeltaColumn = 0;
+	outDeltaRow = 0;
+	
 	// NOTE: This code starts in units of pixels for convenience,
 	// but must convert to units of columns and rows upon return.
 	outCell.first = inScreenLocalPixelPosition.x;
@@ -8986,17 +8989,17 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					#else
 						{
 							// draw only the requested area; convert from pixels to screen cells
-							Point const			kTopLeftAnchor = { clipBounds.top, clipBounds.left };
-							Point const			kBottomRightAnchor = { clipBounds.bottom, clipBounds.right };
+							HIPoint const		kTopLeftAnchor = CGPointMake(clipBounds.left, clipBounds.top);
+							HIPoint const		kBottomRightAnchor = CGPointMake(clipBounds.right, clipBounds.bottom);
 							TerminalView_Cell	leftTopCell;
 							TerminalView_Cell	rightBottomCell;
-							SInt16				deltaColumn = 0;
-							SInt16				deltaRow = 0;
+							Float32				deltaColumn = 0;
+							Float32				deltaRow = 0;
 							
 							
 							// figure out what cells to draw
-							(Boolean)findVirtualCellFromLocalPoint(viewPtr, kTopLeftAnchor, leftTopCell, deltaColumn, deltaRow);
-							(Boolean)findVirtualCellFromLocalPoint(viewPtr, kBottomRightAnchor, rightBottomCell, deltaColumn, deltaRow);
+							(Boolean)findVirtualCellFromScreenPoint(viewPtr, kTopLeftAnchor, leftTopCell, deltaColumn, deltaRow);
+							(Boolean)findVirtualCellFromScreenPoint(viewPtr, kBottomRightAnchor, rightBottomCell, deltaColumn, deltaRow);
 							
 							// draw the text in the clipped area
 							(Boolean)drawSection(viewPtr, drawingContext, leftTopCell.first - viewPtr->screen.leftVisibleEdgeInColumns,

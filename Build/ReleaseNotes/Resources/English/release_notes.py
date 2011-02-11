@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110210',
     '20110201',
     '20110131',
     '20110125',
@@ -354,6 +355,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110210': [
+        'Fixed a display problem that could cut off lines at the bottom when text was zoomed (such as in Full Screen).',
+    ],
     '20110201': [
         'Fixed "Speak Incoming Lines of Text" command, though speech behavior is simplistic and improvements are planned.',
     ],
