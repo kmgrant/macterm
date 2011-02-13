@@ -3,7 +3,7 @@
 	InfoWindow.mm
 	
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -79,6 +79,8 @@ NSString*	kMyToolbarItemIDNewSessionDefaultFavorite	= @"com.mactelnet.MacTelnet.
 NSString*	kMyToolbarItemIDNewSessionLogInShell		= @"com.mactelnet.MacTelnet.toolbaritem.newsessionloginshell";
 NSString*	kMyToolbarItemIDNewSessionShell				= @"com.mactelnet.MacTelnet.toolbaritem.newsessionshell";
 NSString*	kMyToolbarItemIDStackWindows				= @"com.mactelnet.MacTelnet.toolbaritem.stackwindows";
+// WARNING: The Customize item ID is currently redundantly specified in the Terminal Window module; this is TEMPORARY, but both should agree.
+NSString*	kMyToolbarItemIDCustomize					= @"com.mactelnet.MacTelnet.toolbaritem.customize";
 
 // the following are also used in "InfoWindowCocoa.xib"
 NSString*	kMyInfoColumnCommand		= @"Command";
@@ -112,6 +114,14 @@ objectForKey:(NSString*)	aKey;
 - (void)
 setObject:(id)		anObject
 forKey:(NSString*)	aKey;
+@end
+
+/*!
+Toolbar item “Customize”.
+*/
+@interface InfoWindow_ToolbarItemCustomize : NSToolbarItem
+{
+}
 @end
 
 /*!
@@ -800,6 +810,43 @@ forKey:(NSString*)	aKey
 @end // InfoWindow_SessionRow
 
 
+@implementation InfoWindow_ToolbarItemCustomize
+
+- (id)
+init
+{
+	// WARNING: The Customize item is currently redundantly implemented in the Info Window module;
+	// this is TEMPORARY, but both implementations should agree.
+	self = [super initWithItemIdentifier:kMyToolbarItemIDCustomize];
+	if (nil != self)
+	{
+		[self setAction:@selector(performToolbarItemAction:)];
+		[self setTarget:self];
+		[self setEnabled:YES];
+		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnCustomizeToolbarIconFilenameNoExtension()]];
+		[self setLabel:NSLocalizedString(@"Customize", @"toolbar item name; for customizing the toolbar")];
+		[self setPaletteLabel:[self label]];
+	}
+	return self;
+}
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+- (void)
+performToolbarItemAction:(id)	sender
+{
+#pragma unused(sender)
+	// TEMPORARY; only doing it this way during Carbon/Cocoa transition
+	[[Commands_Executor sharedExecutor] runToolbarCustomizationPaletteSetup:NSApp];
+}// performToolbarItemAction:
+
+@end // InfoWindow_ToolbarItemCustomize
+
+
 @implementation InfoWindow_ToolbarItemNewSessionDefaultFavorite
 
 - (id)
@@ -1216,6 +1263,10 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	{
 		result = [[[InfoWindow_ToolbarItemStackWindows alloc] init] autorelease];
 	}
+	else if ([itemIdentifier isEqualToString:kMyToolbarItemIDCustomize])
+	{
+		result = [[[InfoWindow_ToolbarItemCustomize alloc] init] autorelease];
+	}
 	return result;
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
 
@@ -1228,7 +1279,7 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 						kMyToolbarItemIDNewSessionDefaultFavorite,
 						kMyToolbarItemIDNewSessionShell,
 						kMyToolbarItemIDNewSessionLogInShell,
-						NSToolbarCustomizeToolbarItemIdentifier,
+						kMyToolbarItemIDCustomize,
 						kMyToolbarItemIDStackWindows,
 						NSToolbarSeparatorItemIdentifier,
 						NSToolbarSpaceItemIdentifier,
@@ -1254,7 +1305,7 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 						NSToolbarSeparatorItemIdentifier,
 						kMyToolbarItemIDNewSessionLogInShell,
 						NSToolbarSeparatorItemIdentifier,
-						NSToolbarCustomizeToolbarItemIdentifier,
+						kMyToolbarItemIDCustomize,
 						NSToolbarFlexibleSpaceItemIdentifier,
 						kMyToolbarItemIDStackWindows,
 						NSToolbarSpaceItemIdentifier,

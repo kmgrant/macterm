@@ -155,6 +155,20 @@ inline CFStringRef
 }
 
 inline CFStringRef
+	AppResources_ReturnCustomizeToolbarIconFilenameNoExtension			()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForCustomize");
+}
+
+inline CFStringRef
+	AppResources_ReturnFullScreenIconFilenameNoExtension				()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForFullScreen");
+}
+
+inline CFStringRef
 	AppResources_ReturnHideWindowIconFilenameNoExtension				()
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
@@ -355,6 +369,13 @@ inline CFStringRef
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
 	return CFSTR("IconForPrefPanelWorkspaces");
+}
+
+inline CFStringRef
+	AppResources_ReturnPrintIconFilenameNoExtension						()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForPrint");
 }
 
 inline CFStringRef

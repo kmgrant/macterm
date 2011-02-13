@@ -366,6 +366,36 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		}
 		break;
 	
+	case kCommandPrint:
+		switch (inNameType)
+		{
+		case kCommands_NameTypeShort:
+			if (UIStrings_Copy(kUIStrings_ToolbarItemPrint, outName).ok()) result = true;
+			else useMenuCommandName = true;
+			break;
+		
+		case kCommands_NameTypeDefault:
+		default:
+			useMenuCommandName = true;
+			break;
+		}
+		break;
+	
+	case kHICommandCustomizeToolbar:
+		switch (inNameType)
+		{
+		case kCommands_NameTypeShort:
+			if (UIStrings_Copy(kUIStrings_ToolbarItemCustomizeToolbar, outName).ok()) result = true;
+			else useMenuCommandName = true;
+			break;
+		
+		case kCommands_NameTypeDefault:
+		default:
+			useMenuCommandName = true;
+			break;
+		}
+		break;
+	
 	case kCommandSuspendNetwork:
 		switch (inNameType)
 		{
@@ -6035,31 +6065,71 @@ canPerformZoomSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 runToolbarCustomizationPaletteSetup:(id)	sender
 {
 #pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kHICommandCustomizeToolbar, nullptr/* target */);
+	if (isCarbonWindow([NSApp mainWindow]))
+	{
+		HIWindowRef		userFocusWindow = GetUserFocusWindow();
+		
+		
+		if (nullptr != userFocusWindow)
+		{
+			Commands_ExecuteByIDUsingEvent(kHICommandCustomizeToolbar, nullptr/* target */);
+		}
+	}
+	else
+	{
+		id		target = [NSApp targetForAction:@selector(runToolbarCustomizationPalette:)];
+		
+		
+		if ((target) && ([[target class] isSubclassOfClass:[NSWindow class]]))
+		{
+			NSWindow*	window = (NSWindow*)target;
+			
+			
+			[window runToolbarCustomizationPalette:sender];
+		}
+	}
 }
 - (id)
 canRunToolbarCustomizationPaletteSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL			result = NO;
-	HIWindowRef		userFocusWindow = GetUserFocusWindow();
+	BOOL	result = NO;
 	
 	
-	if (nullptr != userFocusWindow)
+	if (isCarbonWindow([NSApp mainWindow]))
 	{
-		HIToolbarRef	toolbar = nullptr;
+		HIWindowRef		userFocusWindow = GetUserFocusWindow();
 		
 		
-		if ((noErr == GetWindowToolbar(userFocusWindow, &toolbar)) && (nullptr != toolbar))
+		if (nullptr != userFocusWindow)
 		{
-			OptionBits		optionBits = 0;
+			HIToolbarRef	toolbar = nullptr;
 			
 			
-			result = YES;
-			if (noErr == HIToolbarGetAttributes(toolbar, &optionBits))
+			if ((noErr == GetWindowToolbar(userFocusWindow, &toolbar)) && (nullptr != toolbar))
 			{
-				result = (0 != (optionBits & kHIToolbarIsConfigurable));
+				OptionBits		optionBits = 0;
+				
+				
+				result = YES;
+				if (noErr == HIToolbarGetAttributes(toolbar, &optionBits))
+				{
+					result = (0 != (optionBits & kHIToolbarIsConfigurable));
+				}
 			}
+		}
+	}
+	else
+	{
+		id		target = [NSApp targetForAction:@selector(runToolbarCustomizationPalette:)];
+		
+		
+		if ((target) && ([[target class] isSubclassOfClass:[NSWindow class]]))
+		{
+			NSWindow*	window = (NSWindow*)target;
+			
+			
+			result = [[window toolbar] allowsUserCustomization];
 		}
 	}
 	return [NSNumber numberWithBool:result];

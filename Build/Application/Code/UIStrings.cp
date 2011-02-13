@@ -1605,6 +1605,11 @@ UIStrings_Copy	(UIStrings_ToolbarItemCFString	inWhichString,
 													CFSTR("kUIStrings_ToolbarItemBell"));
 		break;
 	
+	case kUIStrings_ToolbarItemCustomizeToolbar:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Customize"), CFSTR("ToolbarItems"),
+													CFSTR("kUIStrings_ToolbarItemCustomizeToolbar"));
+		break;
+	
 	case kUIStrings_ToolbarItemFullScreen:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Full Screen"), CFSTR("ToolbarItems"),
 													CFSTR("kUIStrings_ToolbarFullScreen"));
@@ -1628,6 +1633,11 @@ UIStrings_Copy	(UIStrings_ToolbarItemCFString	inWhichString,
 	case kUIStrings_ToolbarItemNewSessionShell:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Shell"), CFSTR("ToolbarItems"),
 													CFSTR("kUIStrings_ToolbarItemNewSessionShell"));
+		break;
+	
+	case kUIStrings_ToolbarItemPrint:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Print"), CFSTR("ToolbarItems"),
+													CFSTR("kUIStrings_ToolbarItemPrint"));
 		break;
 	
 	case kUIStrings_ToolbarItemSearch:

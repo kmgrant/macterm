@@ -159,6 +159,8 @@ IconForBundle.icns \
 IconForCaution.png \
 IconForCommand.icns \
 IconForContextMenu.icns \
+IconForCustomize.icns \
+IconForFullScreen.icns \
 IconForHide.icns \
 IconForItemAdd.icns \
 IconForItemRemove.icns \
@@ -183,12 +185,11 @@ IconForPrefPanelFormats.icns \
 IconForPrefPanelGeneral.icns \
 IconForPrefPanelKiosk.icns \
 IconForPrefPanelMacros.icns \
-IconForPrefPanelScripts.icns \
 IconForPrefPanelSessions.icns \
 IconForPrefPanelTerminals.icns \
 IconForPrefPanelTranslations.icns \
 IconForPrefPanelWorkspaces.icns \
-IconForScriptsMenu.icns \
+IconForPrint.icns \
 IconForScrollLockOff.icns \
 IconForScrollLockOn.icns \
 IconForSession.icns \

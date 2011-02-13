@@ -114,10 +114,13 @@ extern "C"
 namespace {
 
 // NOTE: do not ever change these, that would only break user preferences
-NSString*	kMy_ToolbarItemIDLED1	= @"com.mactelnet.MacTelnet.toolbaritem.led1";
-NSString*	kMy_ToolbarItemIDLED2	= @"com.mactelnet.MacTelnet.toolbaritem.led2";
-NSString*	kMy_ToolbarItemIDLED3	= @"com.mactelnet.MacTelnet.toolbaritem.led3";
-NSString*	kMy_ToolbarItemIDLED4	= @"com.mactelnet.MacTelnet.toolbaritem.led4";
+NSString*	kMy_ToolbarItemIDLED1		= @"com.mactelnet.MacTelnet.toolbaritem.led1";
+NSString*	kMy_ToolbarItemIDLED2		= @"com.mactelnet.MacTelnet.toolbaritem.led2";
+NSString*	kMy_ToolbarItemIDLED3		= @"com.mactelnet.MacTelnet.toolbaritem.led3";
+NSString*	kMy_ToolbarItemIDLED4		= @"com.mactelnet.MacTelnet.toolbaritem.led4";
+NSString*	kMy_ToolbarItemIDPrint		= @"com.mactelnet.MacTelnet.toolbaritem.print";
+// WARNING: The Customize item ID is currently redundantly specified in the Info Window module; this is TEMPORARY, but both should agree.
+NSString*	kMy_ToolbarItemIDCustomize	= @"com.mactelnet.MacTelnet.toolbaritem.customize";
 
 SInt16 const		kMaximumNumberOfArrangedWindows = 20; // TEMPORARY RESTRICTION
 
@@ -299,6 +302,14 @@ typedef LockAcquireRelease< TerminalWindowRef, TerminalWindow >		TerminalWindowA
 } // anonymous namespace
 
 /*!
+Toolbar item “Customize”.
+*/
+@interface TerminalWindow_ToolbarItemCustomize : NSToolbarItem
+{
+}
+@end
+
+/*!
 Toolbar item “L1”.
 */
 @interface TerminalWindow_ToolbarItemLED1 : NSToolbarItem
@@ -330,6 +341,14 @@ Toolbar item “L4”.
 }
 @end
 
+/*!
+Toolbar item “Print”.
+*/
+@interface TerminalWindow_ToolbarItemPrint : NSToolbarItem
+{
+}
+@end
+
 #pragma mark Internal Method Prototypes
 namespace {
 
@@ -339,12 +358,14 @@ void					calculateIndexedWindowPosition	(TerminalWindowPtr, SInt16, Point*);
 void					changeNotifyForTerminalWindow	(TerminalWindowPtr, TerminalWindow_Change, void*);
 IconRef					createBellOffIcon				();
 IconRef					createBellOnIcon				();
+IconRef					createCustomizeToolbarIcon		();
 IconRef					createFullScreenIcon			();
 IconRef					createHideWindowIcon			();
 IconRef					createScrollLockOffIcon			();
 IconRef					createScrollLockOnIcon			();
 IconRef					createLEDOffIcon				();
 IconRef					createLEDOnIcon					();
+IconRef					createPrintIcon					();
 void					createViews						(TerminalWindowPtr);
 Boolean					createTabWindow					(TerminalWindowPtr);
 NSWindow*				createWindow					();
@@ -408,10 +429,12 @@ SInt16**					gTopLeftCorners = nullptr;
 SInt16						gNumberOfTransitioningWindows = 0;	// used only by TerminalWindow_StackWindows()
 IconRef&					gBellOffIcon ()					{ static IconRef x = createBellOffIcon(); return x; }
 IconRef&					gBellOnIcon ()					{ static IconRef x = createBellOnIcon(); return x; }
+IconRef&					gCustomizeToolbarIcon ()		{ static IconRef x = createCustomizeToolbarIcon(); return x; }
 IconRef&					gFullScreenIcon ()				{ static IconRef x = createFullScreenIcon(); return x; }
 IconRef&					gHideWindowIcon ()				{ static IconRef x = createHideWindowIcon(); return x; }
 IconRef&					gLEDOffIcon ()					{ static IconRef x = createLEDOffIcon(); return x; }
 IconRef&					gLEDOnIcon ()					{ static IconRef x = createLEDOnIcon(); return x; }
+IconRef&					gPrintIcon ()					{ static IconRef x = createPrintIcon(); return x; }
 IconRef&					gScrollLockOffIcon ()			{ static IconRef x = createScrollLockOffIcon(); return x; }
 IconRef&					gScrollLockOnIcon ()			{ static IconRef x = createScrollLockOnIcon(); return x; }
 Float32						gDefaultTabWidth = 0.0;		// set later
@@ -2895,6 +2918,40 @@ createBellOnIcon ()
 
 
 /*!
+Registers the “customize toolbar” icon reference with the system,
+and returns a reference to the new icon.
+
+NOTE:	This is only being created for short-term Carbon use; it
+		will not be necessary to allocate icons at all in Cocoa
+		windows.
+
+(4.0)
+*/
+IconRef
+createCustomizeToolbarIcon ()
+{
+	IconRef		result = nullptr;
+	FSRef		iconFile;
+	
+	
+	if (AppResources_GetArbitraryResourceFileFSRef
+		(AppResources_ReturnCustomizeToolbarIconFilenameNoExtension(),
+			CFSTR("icns")/* type */, iconFile))
+	{
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
+												kConstantsRegistry_IconServicesIconToolbarItemCustomize,
+												&iconFile, &result))
+		{
+			// failed!
+			result = nullptr;
+		}
+	}
+	
+	return result;
+}// createCustomizeToolbarIcon
+
+
+/*!
 Registers the “full screen” icon reference with the system,
 and returns a reference to the new icon.
 
@@ -2908,7 +2965,7 @@ createFullScreenIcon ()
 	
 	
 	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnPrefPanelKioskIconFilenameNoExtension(),
+		(AppResources_ReturnFullScreenIconFilenameNoExtension(),
 			CFSTR("icns")/* type */, iconFile))
 	{
 		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
@@ -3012,6 +3069,40 @@ createLEDOnIcon ()
 	
 	return result;
 }// createLEDOnIcon
+
+
+/*!
+Registers the “print” icon reference with the system, and returns
+a reference to the new icon.
+
+NOTE:	This is only being created for short-term Carbon use; it
+		will not be necessary to allocate icons at all in Cocoa
+		windows.
+
+(4.0)
+*/
+IconRef
+createPrintIcon ()
+{
+	IconRef		result = nullptr;
+	FSRef		iconFile;
+	
+	
+	if (AppResources_GetArbitraryResourceFileFSRef
+		(AppResources_ReturnPrintIconFilenameNoExtension(),
+			CFSTR("icns")/* type */, iconFile))
+	{
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
+												kConstantsRegistry_IconServicesIconToolbarItemPrint,
+												&iconFile, &result))
+		{
+			// failed!
+			result = nullptr;
+		}
+	}
+	
+	return result;
+}// createPrintIcon
 
 
 /*!
@@ -5136,8 +5227,8 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						CFArrayAppendValue(allowedIdentifiers, kHIToolbarSeparatorIdentifier);
 						CFArrayAppendValue(allowedIdentifiers, kHIToolbarSpaceIdentifier);
 						CFArrayAppendValue(allowedIdentifiers, kHIToolbarFlexibleSpaceIdentifier);
-						CFArrayAppendValue(allowedIdentifiers, kHIToolbarPrintItemIdentifier);
-						CFArrayAppendValue(allowedIdentifiers, kHIToolbarCustomizeIdentifier);
+						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDPrint);
+						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDCustomize);
 					}
 				}
 				break;
@@ -5160,7 +5251,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED4);
 						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSeparatorIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDFullScreen);
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarCustomizeIdentifier);
+						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDCustomize);
 					}
 				}
 				break;
@@ -5424,6 +5515,64 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										CFRelease(nameCFString), nameCFString = nullptr;
 									}
 									result = HIToolbarItemSetIconRef(itemRef, gFullScreenIcon());
+									assert_noerr(result);
+									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
+									assert_noerr(result);
+								}
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDCustomize,
+																			identifierCFString, kCFCompareBackwards))
+							{
+								TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+								
+								
+								result = HIToolbarItemCreate(identifierCFString,
+																kHIToolbarItemNoAttributes, &itemRef);
+								if (noErr == result)
+								{
+									UInt32 const	kMyCommandID = kHICommandCustomizeToolbar;
+									CFStringRef		nameCFString = nullptr;
+									
+									
+									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
+									{
+										result = HIToolbarItemSetLabel(itemRef, nameCFString);
+										assert_noerr(result);
+										result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
+																			nullptr/* long text */);
+										assert_noerr(result);
+										CFRelease(nameCFString), nameCFString = nullptr;
+									}
+									result = HIToolbarItemSetIconRef(itemRef, gCustomizeToolbarIcon());
+									assert_noerr(result);
+									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
+									assert_noerr(result);
+								}
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDPrint,
+																			identifierCFString, kCFCompareBackwards))
+							{
+								TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+								
+								
+								result = HIToolbarItemCreate(identifierCFString,
+																kHIToolbarItemNoAttributes, &itemRef);
+								if (noErr == result)
+								{
+									UInt32 const	kMyCommandID = kCommandPrint;
+									CFStringRef		nameCFString = nullptr;
+									
+									
+									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
+									{
+										result = HIToolbarItemSetLabel(itemRef, nameCFString);
+										assert_noerr(result);
+										result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
+																			nullptr/* long text */);
+										assert_noerr(result);
+										CFRelease(nameCFString), nameCFString = nullptr;
+									}
+									result = HIToolbarItemSetIconRef(itemRef, gPrintIcon());
 									assert_noerr(result);
 									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
 									assert_noerr(result);
@@ -7307,7 +7456,11 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	
 	// NOTE: no need to handle standard items here
 	// TEMPORARY - need to create all custom items
-	if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDLED1])
+	if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDCustomize])
+	{
+		result = [[[TerminalWindow_ToolbarItemCustomize alloc] init] autorelease];
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDLED1])
 	{
 		result = [[[TerminalWindow_ToolbarItemLED1 alloc] init] autorelease];
 	}
@@ -7322,6 +7475,10 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDLED4])
 	{
 		result = [[[TerminalWindow_ToolbarItemLED4 alloc] init] autorelease];
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDPrint])
+	{
+		result = [[[TerminalWindow_ToolbarItemPrint alloc] init] autorelease];
 	}
 	return result;
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
@@ -7340,7 +7497,7 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 						NSToolbarSpaceItemIdentifier,
 						NSToolbarFlexibleSpaceItemIdentifier,
 						NSToolbarPrintItemIdentifier,
-						NSToolbarCustomizeToolbarItemIdentifier,
+						kMy_ToolbarItemIDCustomize,
 						nil];
 }// toolbarAllowedItemIdentifiers
 
@@ -7434,6 +7591,43 @@ windowDidLoad
 }// windowDidLoad
 
 @end // TerminalWindow_Controller
+
+
+@implementation TerminalWindow_ToolbarItemCustomize
+
+- (id)
+init
+{
+	// WARNING: The Customize item is currently redundantly implemented in the Terminal Window module;
+	// this is TEMPORARY, but both implementations should agree.
+	self = [super initWithItemIdentifier:kMy_ToolbarItemIDCustomize];
+	if (nil != self)
+	{
+		[self setAction:@selector(performToolbarItemAction:)];
+		[self setTarget:self];
+		[self setEnabled:YES];
+		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnCustomizeToolbarIconFilenameNoExtension()]];
+		[self setLabel:NSLocalizedString(@"Customize", @"toolbar item name; for customizing the toolbar")];
+		[self setPaletteLabel:[self label]];
+	}
+	return self;
+}
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+- (void)
+performToolbarItemAction:(id)	sender
+{
+#pragma unused(sender)
+	// TEMPORARY; only doing it this way during Carbon/Cocoa transition
+	[[Commands_Executor sharedExecutor] runToolbarCustomizationPaletteSetup:NSApp];
+}// performToolbarItemAction:
+
+@end // TerminalWindow_ToolbarItemCustomize
 
 
 @implementation TerminalWindow_ToolbarItemLED1
@@ -7570,6 +7764,40 @@ performToolbarItemAction:(id)	sender
 }// performToolbarItemAction:
 
 @end // TerminalWindow_ToolbarItemLED4
+
+
+@implementation TerminalWindow_ToolbarItemPrint
+
+- (id)
+init
+{
+	self = [super initWithItemIdentifier:kMy_ToolbarItemIDPrint];
+	if (nil != self)
+	{
+		[self setAction:@selector(performToolbarItemAction:)];
+		[self setTarget:self];
+		[self setEnabled:YES];
+		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnPrintIconFilenameNoExtension()]];
+		[self setLabel:NSLocalizedString(@"Print", @"toolbar item name; for printing")];
+		[self setPaletteLabel:[self label]];
+	}
+	return self;
+}
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+- (void)
+performToolbarItemAction:(id)	sender
+{
+#pragma unused(sender)
+	Commands_ExecuteByIDUsingEvent(kCommandPrint);
+}// performToolbarItemAction:
+
+@end // TerminalWindow_ToolbarItemPrint
 
 
 @implementation NSWindow (TerminalWindow_NSWindowExtensions)

@@ -324,11 +324,13 @@ enum UIStrings_ToolbarItemCFString
 {
 	kUIStrings_ToolbarItemArrangeAllInFront		= 'AAIF',
 	kUIStrings_ToolbarItemBell					= 'Bell',
+	kUIStrings_ToolbarItemCustomizeToolbar		= 'CTlb',
 	kUIStrings_ToolbarItemFullScreen			= 'Full',
 	kUIStrings_ToolbarItemHideFrontWindow		= 'Hide',
 	kUIStrings_ToolbarItemNewSessionDefault		= 'NewD',
 	kUIStrings_ToolbarItemNewSessionLoginShell	= 'NewL',
 	kUIStrings_ToolbarItemNewSessionShell		= 'NewS',
+	kUIStrings_ToolbarItemPrint					= 'Prnt',
 	kUIStrings_ToolbarItemSearch				= 'Find',
 	kUIStrings_ToolbarItemSuspendNetwork		= 'Susp',
 	kUIStrings_ToolbarItemTerminalLED1			= 'LED1',

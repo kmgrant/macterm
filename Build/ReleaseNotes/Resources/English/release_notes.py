@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110212',
     '20110210',
     '20110201',
     '20110131',
@@ -355,6 +356,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110212': [
+        'Toolbar icon artwork has been completely redone; colors have been removed, and icons are crisper and flatter.',
+    ],
     '20110210': [
         'Fixed a display problem that could cut off lines at the bottom when text was zoomed (such as in Full Screen).',
     ],
