@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -70,6 +70,12 @@ CommandLine_Display ()
 
 @implementation CommandLine_HistoryDataSource
 
+
+/*!
+Designated initializer.
+
+(3.1)
+*/
 - (id)
 init
 {
@@ -77,8 +83,29 @@ init
 	// arrays grow automatically, this is just an initial size
 	_commandHistoryArray = [[NSMutableArray alloc] initWithCapacity:15/* initial capacity; arbitrary */];
 	return self;
-}
+}// init
 
+
+/*!
+Returns the array of strings for recent command lines.
+
+(3.1)
+*/
+- (NSMutableArray*)
+historyArray
+{
+	return _commandHistoryArray;
+}// historyArray
+
+
+#pragma mark NSComboBoxDataSource
+
+
+/*!
+For auto-completion support; has no effect.
+
+(3.1)
+*/
 - (NSString*)
 comboBox:(NSComboBox*)			aComboBox
 completedString:(NSString*)		string
@@ -86,42 +113,64 @@ completedString:(NSString*)		string
 #pragma unused(aComboBox, string)
 	// this combo box does not support completion
 	return nil;
-}
+}// comboBox:completedString:
 
+
+/*!
+Returns the index into the underlying array for the first
+item that matches the given string value.
+
+(3.1)
+*/
 - (unsigned int)
 comboBox:(NSComboBox*)					aComboBox
 indexOfItemWithStringValue:(NSString*)	string
 {
 #pragma unused(aComboBox)
 	return [_commandHistoryArray indexOfObject:string];
-}
+}// comboBox:indexOfItemWithStringValue:
 
+
+/*!
+Returns the exact object (string) in the underlying array
+at the given index.
+
+(3.1)
+*/
 - (id)
 comboBox:(NSComboBox*)				aComboBox
 objectValueForItemAtIndex:(int)		index
 {
 #pragma unused(aComboBox)
 	return [_commandHistoryArray objectAtIndex:index];
-}
+}// comboBox:objectValueForItemAtIndex:
 
-- (NSMutableArray*)
-historyArray
-{
-	return _commandHistoryArray;
-}
 
+/*!
+Returns the size of the underlying array.
+
+(3.1)
+*/
 - (int)
 numberOfItemsInComboBox:(NSComboBox*)	aComboBox
 {
 #pragma unused(aComboBox)
 	return [_commandHistoryArray count];
-}
+}// numberOfItemsInComboBox:
+
 
 @end // CommandLine_HistoryDataSource
 
 
 @implementation CommandLine_TerminalLikeComboBox
 
+
+/*!
+Sets the color of the cursor to match the text, which is useful
+when the user’s default terminal background is dark.
+
+(3.1)
+*/
 - (void)
 textDidBeginEditing:(NSNotification*)	notification
 {
@@ -143,12 +192,21 @@ textDidBeginEditing:(NSNotification*)	notification
 	}
 }
 
+
 @end // CommandLine_TerminalLikeComboBox
 
 
 @implementation CommandLine_PanelController
 
+
 static CommandLine_PanelController*		gCommandLine_PanelController = nil;
+
+
+/*!
+Returns the singleton.
+
+(3.1)
+*/
 + (id)
 sharedCommandLinePanelController
 {
@@ -157,23 +215,59 @@ sharedCommandLinePanelController
 		gCommandLine_PanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gCommandLine_PanelController;
-}
+}// sharedCommandLinePanelController
 
+
+/*!
+Designated initializer.
+
+(3.1)
+*/
 - (id)
 init
 {
 	self = [super initWithWindowNibName:@"CommandLineCocoa"];
-	commandLineText = [[NSString alloc] init];
+	if (nil != self)
+	{
+		commandLineText = [[NSMutableString alloc] init];
+	}
 	return self;
-}
+}// init
 
+
+/*!
+Destructor.
+
+(3.1)
+*/
+- (void)
+dealloc
+{
+	[commandLineText release];
+	[super dealloc];
+}// dealloc
+
+
+/*!
+Responds to a click in the help button.
+
+(3.1)
+*/
 - (IBAction)
 displayHelp:(id)	sender
 {
 #pragma unused(sender)
 	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhraseCommandLine);
-}
+}// displayHelp:
 
+
+/*!
+“Types” the command line from this window into the active
+session’s terminal window, followed by an appropriate new-line
+sequence.
+
+(3.1)
+*/
 - (IBAction)
 sendText:(id)	sender
 {
@@ -192,14 +286,31 @@ sendText:(id)	sender
 		Session_SendNewline(session, kSession_EchoCurrentSessionValue);
 		[[[commandLineField dataSource] historyArray] insertObject:[[NSString alloc] initWithString:commandLineText] atIndex:0];
 	}
-}
+}// sendText:
 
+
+/*!
+Returns the user’s default terminal text color.
+
+(3.1)
+*/
 - (NSColor*)
 textColor
 {
 	return [commandLineField textColor];
-}
+}// textColor
 
+
+#pragma mark NSWindowController
+
+
+/*!
+Handles initialization that depends on user interface
+elements being properly set up.  (Everything else is just
+done in "init".)
+
+(3.1)
+*/
 - (void)
 windowDidLoad
 {
@@ -254,7 +365,8 @@ windowDidLoad
 			}
 		}
 	}
-}
+}// windowDidLoad
+
 
 @end // CommandLine_PanelController
 

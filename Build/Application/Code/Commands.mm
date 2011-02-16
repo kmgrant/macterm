@@ -113,7 +113,10 @@ with an NSMenuItem, via setRepresentedObject:.
 @public
 	SessionRef		session;
 }
-- (id)		initWithSession:(SessionRef)aSession;
+
+- (id)
+initWithSession:(SessionRef)_;
+
 @end
 
 namespace {
@@ -3439,7 +3442,15 @@ validatorYes	(id <NSValidatedUserInterfaceItem>		UNUSED_ARGUMENT(inItem))
 
 @implementation Commands_Executor
 
+
 Commands_Executor*		gCommands_Executor = nil;
+
+
+/*!
+Returns the singleton.
+
+(4.0)
+*/
 + (id)
 sharedExecutor
 {
@@ -3452,6 +3463,11 @@ sharedExecutor
 }
 
 
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
@@ -3465,7 +3481,7 @@ init
 	}
 	
 	return self;
-}
+}// init
 
 
 // IMPORTANT: These methods are initially trivial, calling into the
@@ -3482,6 +3498,10 @@ init
 
 
 @implementation Commands_Executor (Commands_ApplicationCoreEvents)
+
+
+#pragma mark NSApplicationDelegate
+
 
 /*!
 The standard method used by the default AppKit implementation
@@ -3537,7 +3557,7 @@ openFiles:(NSArray*)			filenames
 	{
 		[sender replyToOpenOrPrint:NSApplicationDelegateReplyFailure];
 	}
-}
+}// application:openFiles:
 
 
 /*!
@@ -3582,9 +3602,14 @@ hasVisibleWindows:(BOOL)						flag
 	}
 	
 	return result;
-}
+}// applicationShouldHandleReopen:hasVisibleWindows:
 
 
+/*!
+Part of the application delegate interface.
+
+(4.0)
+*/
 - (BOOL)
 applicationShouldOpenUntitledFile:(NSApplication*)		sender
 {
@@ -3597,7 +3622,7 @@ applicationShouldOpenUntitledFile:(NSApplication*)		sender
 	// for now, startup actions are simply handled in the
 	// Initialize module
 	return result;
-}
+}// applicationShouldOpenUntitledFile:
 
 
 /*!
@@ -3628,7 +3653,10 @@ applicationShouldTerminate:(NSApplication*)		sender
 	ListenerModel_ReleaseListener(&gCurrentQuitWarningAnswerListener);
 	
 	return result;
-}
+}// applicationShouldTerminate:
+
+
+#pragma mark NSApplicationNotifications
 
 
 /*!
@@ -3647,7 +3675,7 @@ applicationWillFinishLaunching:(NSNotification*)	aNotification
 	[events setEventHandler:[application delegate] andSelector:@selector(receiveGetURLEvent:replyEvent:)
 													forEventClass:kInternetEventClass
 													andEventID:kAEGetURL];
-}
+}// applicationWillFinishLaunching:
 
 
 /*!
@@ -3660,12 +3688,14 @@ applicationWillTerminate:(NSNotification*)		aNotification
 {
 #pragma unused(aNotification)
 	Quills::Events::_handle_endloop();
-}
+}// applicationWillTerminate:
+
 
 @end // Commands_Executor (Commands_ApplicationCoreEvents)
 
 
 @implementation Commands_Executor (Commands_Capturing)
+
 
 - (IBAction)
 performCaptureBegin:(id)	sender
@@ -3751,10 +3781,12 @@ canPerformSaveSelection:(id <NSValidatedUserInterfaceItem>)		anItem
 	return [NSNumber numberWithBool:result];
 }
 
+
 @end // Commands_Executor (Commands_Capturing)
 
 
 @implementation Commands_Executor (Commands_Editing)
+
 
 - (IBAction)
 performCopy:(id)	sender
@@ -3920,6 +3952,7 @@ performSelectAll:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandSelectAll, nullptr/* target */);
 }
 
+
 - (IBAction)
 performSelectEntireScrollbackBuffer:(id)	sender
 {
@@ -3963,10 +3996,12 @@ canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
 	return [NSNumber numberWithBool:result];
 }
 
+
 @end // Commands_Executor (Commands_Editing)
 
 
 @implementation Commands_Executor (Commands_OpeningSessions)
+
 
 - (IBAction)
 performDuplicate:(id)		sender
@@ -4182,6 +4217,12 @@ performSaveAs:(id)		sender
 }
 
 
+/*!
+Invoked when a URL is opened by the user, possibly from some
+other application.
+
+(4.0)
+*/
 - (void)
 receiveGetURLEvent:(NSAppleEventDescriptor*)	receivedEvent
 replyEvent:(NSAppleEventDescriptor*)			replyEvent
@@ -4199,10 +4240,12 @@ replyEvent:(NSAppleEventDescriptor*)			replyEvent
 	// reply is currently ignored - TEMPORARY
 }
 
+
 @end // Commands_Executor (Commands_OpeningSessions)
 
 
 @implementation Commands_Executor (Commands_OpeningVectorGraphics)
+
 
 - (IBAction)
 performNewTEKPage:(id)		sender
@@ -4246,10 +4289,12 @@ canPerformPageClearToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 	return [NSNumber numberWithBool:result];
 }
 
+
 @end // Commands_Executor (Commands_OpeningVectorGraphics)
 
 
 @implementation Commands_Executor (Commands_OpeningWebPages)
+
 
 - (IBAction)
 performCheckForUpdates:(id)		sender
@@ -4331,10 +4376,12 @@ canPerformProvideFeedback:(id <NSValidatedUserInterfaceItem>)	anItem
 	return validatorYes(anItem);
 }
 
+
 @end // Commands_Executor (Commands_OpeningWebPages)
 
 
 @implementation Commands_Executor (Commands_ManagingMacros)
+
 
 - (IBAction)
 performActionForMacro:(id)		sender
@@ -4512,10 +4559,12 @@ canPerformMacroSwitchNone:(id <NSValidatedUserInterfaceItem>)	anItem
 	return [NSNumber numberWithBool:result];
 }
 
+
 @end // Commands_Executor (Commands_ManagingMacros)
 
 
 @implementation Commands_Executor (Commands_ManagingTerminalEvents)
+
 
 - (IBAction)
 performBellToggle:(id)	sender
@@ -4648,10 +4697,12 @@ canPerformSetActivityHandlerSendKeepAliveOnIdle:(id <NSValidatedUserInterfaceIte
 	return [NSNumber numberWithBool:result];
 }
 
+
 @end // Commands_Executor (Commands_ManagingTerminalEvents)
 
 
 @implementation Commands_Executor (Commands_ManagingTerminalKeyMappings)
+
 
 - (IBAction)
 performDeleteMapToBackspace:(id)	sender
@@ -4835,10 +4886,12 @@ performTranslationSwitchDefault:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandTranslationTableDefault, nullptr/* target */);
 }
 
+
 @end // Commands_Executor (Commands_ManagingTerminalKeyMappings)
 
 
 @implementation Commands_Executor (Commands_ManagingTerminalSettings)
+
 
 - (IBAction)
 performInterruptProcess:(id)	sender
@@ -5021,10 +5074,12 @@ performTerminalCustomSetup:(id)		sender
 	Commands_ExecuteByIDUsingEvent(kCommandTerminalEmulatorSetup, nullptr/* target */);
 }
 
+
 @end // Commands_Executor (Commands_ManagingTerminalSettings)
 
 
 @implementation Commands_Executor (Commands_ModifyingTerminalDimensions)
+
 
 - (IBAction)
 performScreenResizeCustom:(id)	sender
@@ -5089,10 +5144,12 @@ performScreenResizeWider:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandWiderScreen, nullptr/* target */);
 }
 
+
 @end // Commands_Executor (Commands_ModifyingTerminalDimensions)
 
 
 @implementation Commands_Executor (Commands_ModifyingTerminalText)
+
 
 - (IBAction)
 performFormatByFavoriteName:(id)	sender
@@ -5244,10 +5301,12 @@ performFormatTextSmaller:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandSmallerText, nullptr/* target */);
 }
 
+
 @end // Commands_Executor (Commands_ModifyingTerminalText)
 
 
 @implementation Commands_Executor (Commands_ModifyingWindows)
+
 
 - (IBAction)
 performArrangeInFront:(id)	sender
@@ -5520,10 +5579,12 @@ canPerformShowHiddenWindows:(id <NSValidatedUserInterfaceItem>)		anItem
 	return [NSNumber numberWithBool:result];
 }
 
+
 @end // Commands_Executor (Commands_ModifyingWindows)
 
 
 @implementation Commands_Executor (Commands_Searching)
+
 
 - (IBAction)
 performFind:(id)	sender
@@ -5574,10 +5635,12 @@ canPerformFindPrevious:(id <NSValidatedUserInterfaceItem>)		anItem
 	return [NSNumber numberWithBool:result];
 }
 
+
 @end // Commands_Executor (Commands_Searching)
 
 
 @implementation Commands_Executor (Commands_ShowingPanels)
+
 
 - (IBAction)
 orderFrontAbout:(id)	sender
@@ -5756,10 +5819,12 @@ canOrderFrontVT220Keypad:(id <NSValidatedUserInterfaceItem>)	anItem
 	return validatorYes(anItem);
 }
 
+
 @end // Commands_ExecutionDelegate (Commands_ShowingPanels)
 
 
 @implementation Commands_Executor (Commands_SwitchingModes)
+
 
 - (IBAction)
 performFullScreenOff:(id)	sender
@@ -5785,10 +5850,12 @@ performFullScreenOn:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandFullScreenModal, nullptr/* target */);
 }
 
+
 @end // Commands_Executor (Commands_SwitchingModes)
 
 
 @implementation Commands_Executor (Commands_SwitchingWindows)
+
 
 - (IBAction)
 orderFrontNextWindow:(id)		sender
@@ -5883,10 +5950,12 @@ canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 	return [NSNumber numberWithBool:result];
 }
 
+
 @end // Commands_Executor (Commands_SwitchingWindows)
 
 
 @implementation Commands_Executor (Commands_TransitionFromCarbon)
+
 
 // These are obviously Carbon-specific, and will disappear
 // once target windows are based exclusively on NSWindow.
@@ -6280,7 +6349,8 @@ isCommandEnabled:(UInt32)	aCommandID
 	}
 	
 	return result;
-}
+}// isCommandEnabled:
+
 
 @end // Commands_Executor (Commands_TransitionFromCarbon)
 
@@ -6313,7 +6383,7 @@ selectorNameForValidateActionName:(NSString*)	anActionSelectorName
 											withString:[actionFirstChar uppercaseString]];
 	result = [@"can" stringByAppendingString:nameOfAction];
 	return result;
-}
+}// selectorNameForValidateActionName:
 
 
 /*!
@@ -6340,7 +6410,7 @@ selectorToValidateAction:(SEL)	anAction
 	
 	
 	return result;
-}
+}// selectorToValidateAction:
 
 
 /*!
@@ -6390,15 +6460,17 @@ validateUserInterfaceItem:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 		}
 	}
 	return result;
-}
+}// validateUserInterfaceItem:
+
 
 @end // Commands_Executor (Commands_Validation)
 
 
 @implementation Commands_SessionWrap
 
+
 /*!
-Constructor.
+Designated initializer.
 
 (4.0)
 */
@@ -6413,12 +6485,20 @@ initWithSession:(SessionRef)	aSession
 		session = aSession;
 	}
 	return self;
-}
+}// initWithSession:
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
 	[super dealloc];
 }// dealloc
+
 
 @end // Commands_SessionWrap
 

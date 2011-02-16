@@ -1,13 +1,12 @@
 /*!	\file CommandLine.h
-	\brief The floating one-line input window in MacTelnet 3.0.
+	\brief The floating one-line input window.
 	
-	Input is sent to the frontmost terminal window when entered
-	or tabbed by the user.
+	Input is sent to the frontmost terminal window.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -56,28 +55,32 @@ to use bindings and controllers for this purpose failed...
 {
 	NSMutableArray*		_commandHistoryArray;
 }
-- (NSMutableArray*)historyArray;
-// NSComboBoxDataSource
-- (int)numberOfItemsInComboBox:(NSComboBox*)aComboBox;
-- (id)comboBox:(NSComboBox*)aComboBox objectValueForItemAtIndex:(int)index;
-- (unsigned int)comboBox:(NSComboBox*)aComboBox indexOfItemWithStringValue:(NSString*)string;
-- (NSString*)comboBox:(NSComboBox*)aComboBox completedString:(NSString*)string;
+
+- (NSMutableArray*)
+historyArray;
+
 @end
 
+
 /*!
-Implements the floating command line window.
+A special customization of a combo box that makes it look more
+like a terminal window.  See "CommandLineCocoa.xib".
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface CommandLine_TerminalLikeComboBox : NSComboBox
-// the following MUST match what is in "CommandLineCocoa.nib"
-- (void)textDidBeginEditing:(NSNotification*)notification;
+
+- (void)
+textDidBeginEditing:(NSNotification*)_;
+
 @end
 
+
 /*!
-Implements the floating command line window.
+Implements the floating command line window.  See
+"CommandLineCocoa.xib".
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
@@ -86,15 +89,21 @@ changes to an interface declared in a ".mm" file.
 @interface CommandLine_PanelController : NSWindowController
 {
 	NSMutableString*							commandLineText; // binding
-	
 	IBOutlet CommandLine_TerminalLikeComboBox*	commandLineField;
 }
-+ (id)sharedCommandLinePanelController;
-// the following MUST match what is in "CommandLineCocoa.nib"
-- (IBAction)displayHelp:(id)sender;
-- (IBAction)sendText:(id)sender;
-- (NSColor*)textColor;
-- (void)windowDidLoad;
+
++ (id)
+sharedCommandLinePanelController;
+
+- (IBAction)
+displayHelp:(id)_;
+
+- (IBAction)
+sendText:(id)_;
+
+- (NSColor*)
+textColor;
+
 @end
 
 #endif // __OBJC__

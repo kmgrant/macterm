@@ -222,7 +222,15 @@ GrowlSupport_PreferencesPaneDisplay ()
 
 @implementation GrowlSupport_Delegate
 
+
 static GrowlSupport_Delegate*	gGrowlSupport_Delegate = nil;
+
+
+/*!
+Returns the singleton.
+
+(4.0)
+*/
 + (id)
 sharedGrowlDelegate
 {
@@ -231,9 +239,14 @@ sharedGrowlDelegate
 		gGrowlSupport_Delegate = [[[self class] allocWithZone:NULL] init];
 	}
 	return gGrowlSupport_Delegate;
-}
+}// sharedGrowlDelegate
 
 
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
@@ -244,13 +257,26 @@ init
 	self->isReady = NO;
 #endif
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
+	[super dealloc];
 }// dealloc
 
 
+/*!
+Returns true only if the delegate can handle notifications.
+
+(4.0)
+*/
 - (BOOL)
 isReady
 {
@@ -260,6 +286,13 @@ isReady
 
 #pragma mark GrowlApplicationBridgeDelegate
 
+
+/*!
+Invoked by Growl when it is ready to interact with this
+application.
+
+(4.0)
+*/
 - (void)
 growlIsReady
 {
@@ -267,6 +300,7 @@ growlIsReady
 	// but it is handled in case Growl is started after MacTelnet starts
 	self->isReady = true;
 }// growlIsReady
+
 
 @end
 

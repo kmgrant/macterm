@@ -77,7 +77,15 @@ DebugInterface_Display ()
 
 @implementation DebugInterface_PanelController
 
+
 static DebugInterface_PanelController*	gDebugInterface_PanelController = nil;
+
+
+/*!
+Returns the singleton.
+
+(4.0)
+*/
 + (id)
 sharedDebugInterfacePanelController
 {
@@ -86,15 +94,20 @@ sharedDebugInterfacePanelController
 		gDebugInterface_PanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gDebugInterface_PanelController;
-}
+}// sharedDebugInterfacePanelController
 
 
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
 	self = [super initWithWindowNibName:@"DebugInterfaceCocoa"];
 	return self;
-}
+}// init
 
 
 /*!
@@ -185,6 +198,24 @@ dumpStateOfActiveTerminal:(id)	sender
 
 
 /*!
+Displays the Cocoa-based terminal window that is constructed
+secretly at startup time.  It is incomplete, so it is only
+used for testing incremental additions to the Cocoa-based
+terminal view.
+
+(4.0)
+*/
+- (IBAction)
+showTestTerminalWindow:(id)		sender
+{
+	[[[TerminalWindow_Controller sharedTerminalWindowController] window] makeKeyAndOrderFront:sender];
+}// showTestTerminalWindow:
+
+
+#pragma mark Accessors
+
+
+/*!
 Accessor.
 
 (4.0)
@@ -229,20 +260,6 @@ setLogsTerminalState:(BOOL)		flag
 	}
 }// setLogsTerminalState:
 
-
-/*!
-Displays the Cocoa-based terminal window that is constructed
-secretly at startup time.  It is incomplete, so it is only
-used for testing incremental additions to the Cocoa-based
-terminal view.
-
-(4.0)
-*/
-- (IBAction)
-showTestTerminalWindow:(id)		sender
-{
-	[[[TerminalWindow_Controller sharedTerminalWindowController] window] makeKeyAndOrderFront:sender];
-}// showTestTerminalWindow:
 
 @end // DebugInterface_PanelController
 

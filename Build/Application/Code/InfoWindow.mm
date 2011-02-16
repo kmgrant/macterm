@@ -105,15 +105,16 @@ This class holds information displayed in a row of the table.
 }
 
 - (id)
-initWithSession:(SessionRef)		aSession
-andActivationTime:(CFAbsoluteTime)	aTimeInterval;
+initWithSession:(SessionRef)_
+andActivationTime:(CFAbsoluteTime)_;
 
 - (id)
-objectForKey:(NSString*)	aKey;
+objectForKey:(NSString*)_;
 
 - (void)
-setObject:(id)		anObject
-forKey:(NSString*)	aKey;
+setObject:(id)_
+forKey:(NSString*)_;
+
 @end
 
 /*!
@@ -671,13 +672,21 @@ run on them.  It occasionally uses "respondsToSelector:" to
 invoke APIs that older headers have not defined.)
 */
 @interface NSWindow (NSWindowExtensionsFromLeopard)
+
 - (void)
-setCollectionBehavior:(unsigned int)	aBehavior;
+setCollectionBehavior:(unsigned int)_;
+
 @end
 
 
 @implementation InfoWindow_SessionRow
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 initWithSession:(SessionRef)		aSession
 andActivationTime:(CFAbsoluteTime)	aTimeInterval
@@ -691,7 +700,14 @@ andActivationTime:(CFAbsoluteTime)	aTimeInterval
 		self->dataByKey = [[NSMutableDictionary alloc] init];
 	}
 	return self;
-}
+}// initWithSession:andActivationTime:
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -807,11 +823,18 @@ forKey:(NSString*)	aKey
 	[dataByKey setObject:anObject forKey:aKey];
 }// setObject:forKey:
 
+
 @end // InfoWindow_SessionRow
 
 
 @implementation InfoWindow_ToolbarItemCustomize
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
@@ -828,7 +851,14 @@ init
 		[self setPaletteLabel:[self label]];
 	}
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -836,6 +866,11 @@ dealloc
 }// dealloc
 
 
+/*!
+Responds when the toolbar item is used.
+
+(4.0)
+*/
 - (void)
 performToolbarItemAction:(id)	sender
 {
@@ -844,11 +879,18 @@ performToolbarItemAction:(id)	sender
 	[[Commands_Executor sharedExecutor] runToolbarCustomizationPaletteSetup:NSApp];
 }// performToolbarItemAction:
 
+
 @end // InfoWindow_ToolbarItemCustomize
 
 
 @implementation InfoWindow_ToolbarItemNewSessionDefaultFavorite
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
@@ -863,7 +905,14 @@ init
 		[self setPaletteLabel:[self label]];
 	}
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -871,6 +920,11 @@ dealloc
 }// dealloc
 
 
+/*!
+Responds when the toolbar item is used.
+
+(4.0)
+*/
 - (void)
 performToolbarItemAction:(id)	sender
 {
@@ -878,11 +932,18 @@ performToolbarItemAction:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandNewSessionDefaultFavorite);
 }// performToolbarItemAction:
 
+
 @end // InfoWindow_ToolbarItemNewSessionDefaultFavorite
 
 
 @implementation InfoWindow_ToolbarItemNewSessionLogInShell
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
@@ -897,7 +958,14 @@ init
 		[self setPaletteLabel:[self label]];
 	}
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -905,6 +973,11 @@ dealloc
 }// dealloc
 
 
+/*!
+Responds when the toolbar item is used.
+
+(4.0)
+*/
 - (void)
 performToolbarItemAction:(id)	sender
 {
@@ -912,11 +985,18 @@ performToolbarItemAction:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandNewSessionLoginShell);
 }// performToolbarItemAction:
 
+
 @end // InfoWindow_ToolbarItemNewSessionLogInShell
 
 
 @implementation InfoWindow_ToolbarItemNewSessionShell
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
@@ -931,7 +1011,14 @@ init
 		[self setPaletteLabel:[self label]];
 	}
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -939,6 +1026,11 @@ dealloc
 }// dealloc
 
 
+/*!
+Responds when the toolbar item is used.
+
+(4.0)
+*/
 - (void)
 performToolbarItemAction:(id)	sender
 {
@@ -946,11 +1038,18 @@ performToolbarItemAction:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandNewSessionShell);
 }// performToolbarItemAction:
 
+
 @end // InfoWindow_ToolbarItemNewSessionShell
 
 
 @implementation InfoWindow_ToolbarItemStackWindows
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
@@ -965,7 +1064,14 @@ init
 		[self setPaletteLabel:[self label]];
 	}
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -973,6 +1079,11 @@ dealloc
 }// dealloc
 
 
+/*!
+Responds when the toolbar item is used.
+
+(4.0)
+*/
 - (void)
 performToolbarItemAction:(id)	sender
 {
@@ -980,12 +1091,21 @@ performToolbarItemAction:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandStackWindows);
 }// performToolbarItemAction:
 
+
 @end // InfoWindow_ToolbarItemStackWindows
 
 
 @implementation InfoWindow_Controller
 
+
 static InfoWindow_Controller*	gInfoWindow_Controller = nil;
+
+
+/*!
+Returns the singleton.
+
+(4.0)
+*/
 + (id)
 sharedInfoWindowController
 {
@@ -998,7 +1118,7 @@ sharedInfoWindowController
 
 
 /*!
-Constructor.
+Designated initializer.
 
 (4.0)
 */
@@ -1011,7 +1131,14 @@ init
 		self->dataArray = [[NSMutableArray alloc] init]; // elements are of type InfoWindow_SessionRow*
 	}
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -1020,6 +1147,11 @@ dealloc
 }// dealloc
 
 
+/*!
+Returns an object representing the specified row in the table.
+
+(4.0)
+*/
 - (InfoWindow_SessionRow*)
 infoForRow:(int)	row
 {
@@ -1038,6 +1170,12 @@ infoForRow:(int)	row
 }// infoForRow:
 
 
+/*!
+Returns an object representing the specified session in the
+table.
+
+(4.0)
+*/
 - (InfoWindow_SessionRow*)
 infoForSession:(SessionRef)		aSession
 {
@@ -1062,6 +1200,12 @@ infoForSession:(SessionRef)		aSession
 }// infoForSession:
 
 
+/*!
+Responds when the user double-clicks the specified row in the
+table.
+
+(4.0)
+*/
 - (void)
 didDoubleClickInView:(id)	sender
 {
@@ -1086,6 +1230,12 @@ didDoubleClickInView:(id)	sender
 }// didDoubleClickInView:
 
 
+/*!
+Locates any object representing the specified session in the
+table, and removes it.
+
+(4.0)
+*/
 - (void)
 removeSession:(SessionRef)		aSession
 {
@@ -1116,6 +1266,12 @@ removeSession:(SessionRef)		aSession
 
 #pragma mark NSTableDataSource
 
+
+/*!
+Returns the size of the internal array.
+
+(4.0)
+*/
 - (int)
 numberOfRowsInTableView:(NSTableView*)	tableView
 {
@@ -1124,6 +1280,12 @@ numberOfRowsInTableView:(NSTableView*)	tableView
 }// numberOfRowsInTableView:
 
 
+/*!
+Returns the object that represents the specified row in the
+table.
+
+(4.0)
+*/
 - (id)
 tableView:(NSTableView*)					tableView
 objectValueForTableColumn:(NSTableColumn*)	tableColumn
@@ -1134,6 +1296,12 @@ row:(int)									row
 }// tableView:objectValueForTableColumn:row:
 
 
+/*!
+Changes the object that defines the data for the specified
+column of the given row in the table.
+
+(4.0)
+*/
 - (void)
 tableView:(NSTableView*)			tableView
 setObjectValue:(id)					object
@@ -1160,6 +1328,11 @@ row:(int)							row
 }// tableView:setObjectValue:forTableColumn:row:
 
 
+/*!
+Responds when the sorting criteria change for the table.
+
+(4.0)
+*/
 - (void)tableView:(NSTableView*)		tableView
 sortDescriptorsDidChange:(NSArray*)		oldDescriptors
 {
@@ -1185,6 +1358,12 @@ sortDescriptorsDidChange:(NSArray*)		oldDescriptors
 #pragma mark NSTableViewDelegate
 
 
+/*!
+Returns true only if the specified column can be selected
+all at once.
+
+(4.0)
+*/
 - (BOOL)
 tableView:(NSTableView*)					tableView
 shouldSelectTableColumn:(NSTableColumn*)	tableColumn
@@ -1236,6 +1415,12 @@ mouseLocation:(NSPoint)			mouseLocation
 #pragma mark NSToolbarDelegate
 
 
+/*!
+Responds when the specified kind of toolbar item should be
+constructed for the given toolbar.
+
+(4.0)
+*/
 - (NSToolbarItem*)
 toolbar:(NSToolbar*)				toolbar
 itemForItemIdentifier:(NSString*)	itemIdentifier
@@ -1271,6 +1456,12 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
 
 
+/*!
+Returns the identifiers for the kinds of items that can appear
+in the given toolbar.
+
+(4.0)
+*/
 - (NSArray*)
 toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 {
@@ -1288,6 +1479,12 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 }// toolbarAllowedItemIdentifiers
 
 
+/*!
+Returns the identifiers for the items that will appear in the
+given toolbar whenever the user has not customized it.
+
+(4.0)
+*/
 - (NSArray*)
 toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 {
@@ -1314,6 +1511,7 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 
 
 #pragma mark NSWindowController
+
 
 /*!
 Handles initialization that depends on user interface
@@ -1395,6 +1593,7 @@ windowFrameAutosaveName
 	// user settings to be forgotten
 	return @"SessionInfo";
 }// windowFrameAutosaveName
+
 
 @end // InfoWindow_Controller
 

@@ -59,7 +59,7 @@
 @class InfoWindow_SessionRow;
 
 /*!
-Implements the Session Info window.
+Implements the Session Info window.  See "InfoWindowCocoa.xib".
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
@@ -71,17 +71,19 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSTableView*	infoTable;
 	NSMutableArray*			dataArray;
 }
-+ (id)sharedInfoWindowController;
-// the following MUST match what is in "InfoWindowCocoa.xib"
+
++ (id)
+sharedInfoWindowController;
 
 - (InfoWindow_SessionRow*)
-infoForRow:(int)	row;
+infoForRow:(int)_;
 
 - (InfoWindow_SessionRow*)
-infoForSession:(SessionRef)		aSession;
+infoForSession:(SessionRef)_;
 
 - (void)
-removeSession:(SessionRef)		aSession;
+removeSession:(SessionRef)_;
+
 @end
 
 #endif // __OBJC__

@@ -43,7 +43,8 @@
 #ifdef __OBJC__
 
 /*!
-Implements the Debugging panel.
+Implements the Debugging panel.  This class must be in sync with
+references in "DebugInterfaceCocoa.xib".
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
@@ -53,30 +54,26 @@ changes to an interface declared in a ".mm" file.
 {
 }
 
-// the following MUST match what is in "DebugInterfaceCocoa.xib"
-
 + (id)
 sharedDebugInterfacePanelController;
 
 - (IBAction)
-dumpStateOfActiveTerminal:(id)		sender;
+dumpStateOfActiveTerminal:(id)_;
 
 - (IBAction)
-showTestTerminalWindow:(id)		sender;
+showTestTerminalWindow:(id)_;
 
 // accessors
 
 - (BOOL)
 logsTerminalInputChar;
+- (void)
+setLogsTerminalInputChar:(BOOL)_; // binding
 
 - (BOOL)
 logsTerminalState;
-
 - (void)
-setLogsTerminalInputChar:(BOOL)flag; // binding
-
-- (void)
-setLogsTerminalState:(BOOL)flag; // binding
+setLogsTerminalState:(BOOL)_; // binding
 
 @end
 

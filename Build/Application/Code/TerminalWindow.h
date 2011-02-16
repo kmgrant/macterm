@@ -120,7 +120,7 @@ typedef struct OpaqueTerminalWindow*	TerminalWindowRef;
 /*!
 Implements the temporary Cocoa window that wraps the
 Cocoa version of the Terminal View that is under
-development.
+development.  See "TerminalWindowCocoa.xib".
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
@@ -132,8 +132,6 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet TerminalView_BackgroundView*	testTerminalPaddingView; // should embed the content view
 	IBOutlet TerminalView_BackgroundView*	testTerminalBackgroundView; // should embed the padding view
 }
-
-// the following MUST match what is in "TerminalWindowCocoa.xib"
 
 + (id)
 sharedTerminalWindowController; // TEMPORARY

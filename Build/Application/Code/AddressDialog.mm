@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -66,6 +66,12 @@ AddressDialog_Display ()
 
 @implementation AddressDialog_AddressArrayController
 
+
+/*!
+Designated initializer.
+
+(3.1)
+*/
 - (id)
 init
 {
@@ -76,7 +82,8 @@ init
 	[addressTableView setDraggingSourceOperationMask:NSDragOperationCopy forLocal:NO];
 #endif
 	return self;
-}
+}// init
+
 
 /*!
 Adds the selected table strings to the specified drag.
@@ -99,14 +106,23 @@ toPasteboard:(NSPasteboard*)		inoutPasteboard
 	[inoutPasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:self];
 	[inoutPasteboard setString:dragData forType:NSStringPboardType];
 	return result;
-}
+}// tableView:writeRowsWithIndexes:toPasteboard:
+
 
 @end // AddressDialog_AddressArrayController
 
 
 @implementation AddressDialog_PanelController
 
+
 static AddressDialog_PanelController*	gAddressDialog_PanelController = nil;
+
+
+/*!
+Returns the singleton.
+
+(3.1)
+*/
 + (id)
 sharedAddressPanelController
 {
@@ -117,14 +133,42 @@ sharedAddressPanelController
 	return gAddressDialog_PanelController;
 }
 
+
+/*!
+Designated initializer.
+
+(3.1)
+*/
 - (id)
 init
 {
 	self = [super initWithWindowNibName:@"AddressDialogCocoa"];
-	[self rebuildAddressList:NSApp];
+	if (nil != self)
+	{
+		[self rebuildAddressList:NSApp];
+	}
 	return self;
-}
+}// init
 
+
+/*!
+Destructor.
+
+(4.0)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+/*!
+Rebuilds the list of IP addresses based on the current
+address assignments for the network cards in the computer.
+
+(4.0)
+*/
 - (IBAction)
 rebuildAddressList:(id)		sender
 {
@@ -146,7 +190,8 @@ rebuildAddressList:(id)		sender
 			[addressArray addObject:addressString];
 		}
 	}
-}
+}// rebuildAddressList:
+
 
 @end // AddressDialog_PanelController
 

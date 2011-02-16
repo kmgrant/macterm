@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -63,148 +63,335 @@ enum
 
 #ifdef __OBJC__
 
+/*!
+Base class for palettes that interact with sessions.
+This is useful to encapsulate the complexity of
+locating a target session.
+*/
 @interface Keypads_PanelController : NSWindowController
-- (void)sendCharacter:(UInt8)inCharacter;
-- (void)sendKey:(UInt8)inKey;
+
+- (void)
+sendCharacter:(UInt8)_;
+
+- (void)
+sendKey:(UInt8)_;
+
 @end
 
+
 /*!
-Implements the Control Keys palette.
+Implements the Control Keys palette.  See
+"KeypadControlKeysCocoa.xib".
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface Keypads_ControlKeysPanelController : Keypads_PanelController
-+ (id)sharedControlKeysPanelController;
-// the following MUST match what is in "KeypadControlKeys.nib"
-- (IBAction)typeNull:(id)sender;
-- (IBAction)typeControlA:(id)sender;
-- (IBAction)typeControlB:(id)sender;
-- (IBAction)typeControlC:(id)sender;
-- (IBAction)typeControlD:(id)sender;
-- (IBAction)typeControlE:(id)sender;
-- (IBAction)typeControlF:(id)sender;
-- (IBAction)typeControlG:(id)sender;
-- (IBAction)typeControlH:(id)sender;
-- (IBAction)typeControlI:(id)sender;
-- (IBAction)typeControlJ:(id)sender;
-- (IBAction)typeControlK:(id)sender;
-- (IBAction)typeControlL:(id)sender;
-- (IBAction)typeControlM:(id)sender;
-- (IBAction)typeControlN:(id)sender;
-- (IBAction)typeControlO:(id)sender;
-- (IBAction)typeControlP:(id)sender;
-- (IBAction)typeControlQ:(id)sender;
-- (IBAction)typeControlR:(id)sender;
-- (IBAction)typeControlS:(id)sender;
-- (IBAction)typeControlT:(id)sender;
-- (IBAction)typeControlU:(id)sender;
-- (IBAction)typeControlV:(id)sender;
-- (IBAction)typeControlW:(id)sender;
-- (IBAction)typeControlX:(id)sender;
-- (IBAction)typeControlY:(id)sender;
-- (IBAction)typeControlZ:(id)sender;
-- (IBAction)typeControlLeftSquareBracket:(id)sender;
-- (IBAction)typeControlBackslash:(id)sender;
-- (IBAction)typeControlRightSquareBracket:(id)sender;
-- (IBAction)typeControlTilde:(id)sender;
-- (IBAction)typeControlQuestionMark:(id)sender;
+
++ (id)
+sharedControlKeysPanelController;
+
+- (IBAction)
+typeNull:(id)_;
+
+- (IBAction)
+typeControlA:(id)_;
+
+- (IBAction)
+typeControlB:(id)_;
+
+- (IBAction)
+typeControlC:(id)_;
+
+- (IBAction)
+typeControlD:(id)_;
+
+- (IBAction)
+typeControlE:(id)_;
+
+- (IBAction)
+typeControlF:(id)_;
+
+- (IBAction)
+typeControlG:(id)_;
+
+- (IBAction)
+typeControlH:(id)_;
+
+- (IBAction)
+typeControlI:(id)_;
+
+- (IBAction)
+typeControlJ:(id)_;
+
+- (IBAction)
+typeControlK:(id)_;
+
+- (IBAction)
+typeControlL:(id)_;
+
+- (IBAction)
+typeControlM:(id)_;
+
+- (IBAction)
+typeControlN:(id)_;
+
+- (IBAction)
+typeControlO:(id)_;
+
+- (IBAction)
+typeControlP:(id)_;
+
+- (IBAction)
+typeControlQ:(id)_;
+
+- (IBAction)
+typeControlR:(id)_;
+
+- (IBAction)
+typeControlS:(id)_;
+
+- (IBAction)
+typeControlT:(id)_;
+
+- (IBAction)
+typeControlU:(id)_;
+
+- (IBAction)
+typeControlV:(id)_;
+
+- (IBAction)
+typeControlW:(id)_;
+
+- (IBAction)
+typeControlX:(id)_;
+
+- (IBAction)
+typeControlY:(id)_;
+
+- (IBAction)
+typeControlZ:(id)_;
+
+- (IBAction)
+typeControlLeftSquareBracket:(id)_;
+
+- (IBAction)
+typeControlBackslash:(id)_;
+
+- (IBAction)
+typeControlRightSquareBracket:(id)_;
+
+- (IBAction)
+typeControlTilde:(id)_;
+
+- (IBAction)
+typeControlQuestionMark:(id)_;
+
 @end
 
+
 /*!
-Implements the VT220 Function Keys palette.
+Implements the VT220 Function Keys palette.  See
+"KeypadFunctionKeysCocoa.xib".
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface Keypads_FunctionKeysPanelController : Keypads_PanelController
-+ (id)sharedFunctionKeysPanelController;
-// the following MUST match what is in "KeypadFunctionKeys.nib"
-- (IBAction)typeF6:(id)sender;
-- (IBAction)typeF7:(id)sender;
-- (IBAction)typeF8:(id)sender;
-- (IBAction)typeF9:(id)sender;
-- (IBAction)typeF10:(id)sender;
-- (IBAction)typeF11:(id)sender;
-- (IBAction)typeF12:(id)sender;
-- (IBAction)typeF13:(id)sender;
-- (IBAction)typeF14:(id)sender;
-- (IBAction)typeF15:(id)sender;
-- (IBAction)typeF16:(id)sender;
-- (IBAction)typeF17:(id)sender;
-- (IBAction)typeF18:(id)sender;
-- (IBAction)typeF19:(id)sender;
-- (IBAction)typeF20:(id)sender;
+
++ (id)
+sharedFunctionKeysPanelController;
+
+- (IBAction)
+typeF6:(id)_;
+
+- (IBAction)
+typeF7:(id)_;
+
+- (IBAction)
+typeF8:(id)_;
+
+- (IBAction)
+typeF9:(id)_;
+
+- (IBAction)
+typeF10:(id)_;
+
+- (IBAction)
+typeF11:(id)_;
+
+- (IBAction)
+typeF12:(id)_;
+
+- (IBAction)
+typeF13:(id)_;
+
+- (IBAction)
+typeF14:(id)_;
+
+- (IBAction)
+typeF15:(id)_;
+
+- (IBAction)
+typeF16:(id)_;
+
+- (IBAction)
+typeF17:(id)_;
+
+- (IBAction)
+typeF18:(id)_;
+
+- (IBAction)
+typeF19:(id)_;
+
+- (IBAction)
+typeF20:(id)_;
+
 @end
 
+
 /*!
-Implements the VT220 Keypad palette.
+Implements the VT220 Keypad palette.  See
+"KeypadVT220KeysCocoa.xib".
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface Keypads_VT220KeysPanelController : Keypads_PanelController
-+ (id)sharedVT220KeysPanelController;
-// the following MUST match what is in "KeypadVT220Keys.nib"
-- (IBAction)type0:(id)sender;
-- (IBAction)type1:(id)sender;
-- (IBAction)type2:(id)sender;
-- (IBAction)type3:(id)sender;
-- (IBAction)type4:(id)sender;
-- (IBAction)type5:(id)sender;
-- (IBAction)type6:(id)sender;
-- (IBAction)type7:(id)sender;
-- (IBAction)type8:(id)sender;
-- (IBAction)type9:(id)sender;
-- (IBAction)typeArrowDown:(id)sender;
-- (IBAction)typeArrowLeft:(id)sender;
-- (IBAction)typeArrowRight:(id)sender;
-- (IBAction)typeArrowUp:(id)sender;
-- (IBAction)typeComma:(id)sender;
-- (IBAction)typeDecimalPoint:(id)sender;
-- (IBAction)typeDelete:(id)sender;
-- (IBAction)typeEnter:(id)sender;
-- (IBAction)typeFind:(id)sender;
-- (IBAction)typeHyphen:(id)sender;
-- (IBAction)typeInsert:(id)sender;
-- (IBAction)typePageDown:(id)sender;
-- (IBAction)typePageUp:(id)sender;
-- (IBAction)typePF1:(id)sender;
-- (IBAction)typePF2:(id)sender;
-- (IBAction)typePF3:(id)sender;
-- (IBAction)typePF4:(id)sender;
-- (IBAction)typeSelect:(id)sender;
+
++ (id)
+sharedVT220KeysPanelController;
+
+- (IBAction)
+type0:(id)_;
+
+- (IBAction)
+type1:(id)_;
+
+- (IBAction)
+type2:(id)_;
+
+- (IBAction)
+type3:(id)_;
+
+- (IBAction)
+type4:(id)_;
+
+- (IBAction)
+type5:(id)_;
+
+- (IBAction)
+type6:(id)_;
+
+- (IBAction)
+type7:(id)_;
+
+- (IBAction)
+type8:(id)_;
+
+- (IBAction)
+type9:(id)_;
+
+- (IBAction)
+typeArrowDown:(id)_;
+
+- (IBAction)
+typeArrowLeft:(id)_;
+
+- (IBAction)
+typeArrowRight:(id)_;
+
+- (IBAction)
+typeArrowUp:(id)_;
+
+- (IBAction)
+typeComma:(id)_;
+
+- (IBAction)
+typeDecimalPoint:(id)_;
+
+- (IBAction)
+typeDelete:(id)_;
+
+- (IBAction)
+typeEnter:(id)_;
+
+- (IBAction)
+typeFind:(id)_;
+
+- (IBAction)
+typeHyphen:(id)_;
+
+- (IBAction)
+typeInsert:(id)_;
+
+- (IBAction)
+typePageDown:(id)_;
+
+- (IBAction)
+typePageUp:(id)_;
+
+- (IBAction)
+typePF1:(id)_;
+
+- (IBAction)
+typePF2:(id)_;
+
+- (IBAction)
+typePF3:(id)_;
+
+- (IBAction)
+typePF4:(id)_;
+
+- (IBAction)
+typeSelect:(id)_;
+
 @end
+
 
 /*!
 Implements the Full Screen control window, which is
-currently only used to disable Full Screen mode.
+currently only used to disable Full Screen mode.  See
+"KeypadFullScreenCocoa.xib".
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface Keypads_FullScreenPanelController : NSWindowController
-+ (id)sharedFullScreenPanelController;
-// the following MUST match what is in "KeypadFullScreen.nib"
-- (IBAction)disableFullScreen:(id)sender;
+
++ (id)
+sharedFullScreenPanelController;
+
+- (IBAction)
+disableFullScreen:(id)_;
+
 @end
 
+
 /*!
-Implements the Arrange Window panel.
+Implements the Arrange Window panel.  See
+"KeypadArrangeWindowCocoa.xib".
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface Keypads_ArrangeWindowPanelController : NSWindowController
-+ (id)sharedArrangeWindowPanelController;
-// the following MUST match what is in "KeypadArrangeWindow.nib"
-- (IBAction)doneArranging:(id)sender;
-- (void)setOriginToX:(int)x andY:(int)y;
+
++ (id)
+sharedArrangeWindowPanelController;
+
+- (IBAction)
+doneArranging:(id)_;
+
+- (void)
+setOriginToX:(int)_
+andY:(int)_;
+
 @end
 
 #endif

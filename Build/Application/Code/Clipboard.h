@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -112,13 +112,18 @@ changes to an interface declared in a ".mm" file.
 	BOOL	showDragHighlight;
 }
 
-- (void)drawRect:(NSRect)	rect;
+- (void)
+drawRect:(NSRect)_;
 
-- (void)setShowDragHighlight:(BOOL)		flag;
+// accessors
 
-- (BOOL)showDragHighlight;
+- (BOOL)
+showDragHighlight;
+- (void)
+setShowDragHighlight:(BOOL)_;
 
 @end
+
 
 /*!
 Implements the Clipboard window.  See "ClipboardCocoa.xib".
@@ -143,30 +148,41 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSTextField*				value2;
 }
 
-+ (id)sharedClipboardWindowController;
++ (id)
+sharedClipboardWindowController;
 
-- (NSFont*)returnNSFontForMonospacedTextOfSize:(unsigned int)	fontSize;
+- (NSFont*)
+returnNSFontForMonospacedTextOfSize:(unsigned int)_;
 
-- (void)setDataSize:(size_t)	dataSize;
+- (void)
+setDataSize:(size_t)_;
 
-- (void)setDataWidth:(size_t)	widthInPixels
-		andHeight:(size_t)		heightInPixels;
+- (void)
+setDataWidth:(size_t)_
+andHeight:(size_t)_;
 
-- (void)setNeedsDisplay;
+- (void)
+setNeedsDisplay;
 
-- (void)setKindField:(NSString*)	aString;
+- (void)
+setKindField:(NSString*)_;
 
-- (void)setLabel1:(NSString*)	labelString
-		andValue:(NSString*)	valueString;
+- (void)
+setLabel1:(NSString*)_
+andValue:(NSString*)_;
 
-- (void)setLabel2:(NSString*)	labelString
-		andValue:(NSString*)	valueString;
+- (void)
+setLabel2:(NSString*)_
+andValue:(NSString*)_;
 
-- (void)setShowImage:(BOOL)		flag;
+- (void)
+setShowImage:(BOOL)_;
 
-- (void)setShowText:(BOOL)		flag;
+- (void)
+setShowText:(BOOL)_;
 
-- (void)setSizeField:(NSString*)	aString;
+- (void)
+setSizeField:(NSString*)_;
 
 @end
 

@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -343,7 +343,15 @@ getCurrentSession ()
 
 @implementation Keypads_ArrangeWindowPanelController
 
+
 static Keypads_ArrangeWindowPanelController*	gKeypads_ArrangeWindowPanelController = nil;
+
+
+/*!
+Returns the singleton.
+
+(4.0)
+*/
 + (id)
 sharedArrangeWindowPanelController
 {
@@ -352,15 +360,29 @@ sharedArrangeWindowPanelController
 		gKeypads_ArrangeWindowPanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gKeypads_ArrangeWindowPanelController;
-}
+}// sharedArrangeWindowPanelController
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
 	self = [super initWithWindowNibName:@"KeypadArrangeWindowCocoa"];
 	return self;
-}
+}// init
 
+
+
+/*!
+Invoked when the user has dismissed the window that represents
+a window location preference.
+
+(4.0)
+*/
 - (IBAction)
 doneArranging:(id)	sender
 {
@@ -433,8 +455,15 @@ doneArranging:(id)	sender
 	{
 		Preferences_ReleaseContext(&gArrangeWindowBindingContext);
 	}
-}
+}// doneArranging
 
+
+/*!
+Moves the window to the specified position (which is actually
+expressed relative to the top-left corner).
+
+(4.0)
+*/
 - (void)
 setOriginToX:(int)	x
 andY:(int)			y // this is flipped to be measured from the top
@@ -447,13 +476,21 @@ andY:(int)			y // this is flipped to be measured from the top
 	origin.x = x;
 	origin.y = [screen frame].size.height - [window frame].size.height - y;
 	[[self window] setFrameOrigin:origin];
-}
+}// setOriginToX:andY:
+
 
 @end // Keypads_ArrangeWindowPanelController
 
 
 @implementation Keypads_PanelController
 
+
+/*!
+Finds the appropriate target session and sends the specified
+character, as if the user had typed that character.
+
+(3.1)
+*/
 - (void)
 sendCharacter:(UInt8)	inCharacter
 {
@@ -462,8 +499,17 @@ sendCharacter:(UInt8)	inCharacter
 	
 	
 	if (nullptr != currentSession) Session_UserInputString(currentSession, ck, sizeof(ck), false/* record */);
-}
+}// sendCharacter:
 
+
+/*!
+Finds the appropriate target session and sends the character
+represented by the specified virtual key, as if the user had
+typed that key.  The key code should match those that are
+valid for Session_UserInputKey().
+
+(3.1)
+*/
 - (void)
 sendKey:(UInt8)		inKey
 {
@@ -471,14 +517,23 @@ sendKey:(UInt8)		inKey
 	
 	
 	if (nullptr != currentSession) Session_UserInputKey(currentSession, inKey);
-}
+}// sendKey:
+
 
 @end // Keypads_PanelController
 
 
 @implementation Keypads_ControlKeysPanelController
 
+
 static Keypads_ControlKeysPanelController*		gKeypads_ControlKeysPanelController = nil;
+
+
+/*!
+Returns the singleton.
+
+(3.1)
+*/
 + (id)
 sharedControlKeysPanelController
 {
@@ -487,277 +542,484 @@ sharedControlKeysPanelController
 		gKeypads_ControlKeysPanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gKeypads_ControlKeysPanelController;
-}
+}// sharedControlKeysPanelController
 
+
+/*!
+Designated initializer.
+
+(3.1)
+*/
 - (id)
 init
 {
 	self = [super initWithWindowNibName:@"KeypadControlKeysCocoa"];
 	return self;
-}
+}// init
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeNull:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x00];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlAtSign, gControlKeysEventTarget);
-}
+}// typeNull:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlA:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x01];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlA, gControlKeysEventTarget);
-}
+}// typeControlA:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlB:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x02];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlB, gControlKeysEventTarget);
-}
+}// typeControlB:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlC:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x03];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlC, gControlKeysEventTarget);
-}
+}// typeControlC:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlD:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x04];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlD, gControlKeysEventTarget);
-}
+}// typeControlD:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlE:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x05];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlE, gControlKeysEventTarget);
-}
+}// typeControlE:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlF:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x06];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlF, gControlKeysEventTarget);
-}
+}// typeControlF:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlG:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x07];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlG, gControlKeysEventTarget);
-}
+}// typeControlG:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlH:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x08];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlH, gControlKeysEventTarget);
-}
+}// typeControlH:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlI:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x09];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlI, gControlKeysEventTarget);
-}
+}// typeControlI:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlJ:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0A];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlJ, gControlKeysEventTarget);
-}
+}// typeControlJ:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlK:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0B];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlK, gControlKeysEventTarget);
-}
+}// typeControlK:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlL:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0C];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlL, gControlKeysEventTarget);
-}
+}// typeControlL:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlM:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0D];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlM, gControlKeysEventTarget);
-}
+}// typeControlM:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlN:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0E];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlN, gControlKeysEventTarget);
-}
+}// typeControlN:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlO:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0F];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlO, gControlKeysEventTarget);
-}
+}// typeControlO:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlP:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x10];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlP, gControlKeysEventTarget);
-}
+}// typeControlP:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlQ:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x11];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlQ, gControlKeysEventTarget);
-}
+}// typeControlQ:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlR:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x12];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlR, gControlKeysEventTarget);
-}
+}// typeControlR:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlS:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x13];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlS, gControlKeysEventTarget);
-}
+}// typeControlS:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlT:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x14];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlT, gControlKeysEventTarget);
-}
+}// typeControlT:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlU:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x15];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlU, gControlKeysEventTarget);
-}
+}// typeControlU:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlV:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x16];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlV, gControlKeysEventTarget);
-}
+}// typeControlV:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlW:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x17];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlW, gControlKeysEventTarget);
-}
+}// typeControlW:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlX:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x18];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlX, gControlKeysEventTarget);
-}
+}// typeControlX:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlY:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x19];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlY, gControlKeysEventTarget);
-}
+}// typeControlY:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlZ:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1A];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlZ, gControlKeysEventTarget);
-}
+}// typeControlZ:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlLeftSquareBracket:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1B];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlLeftSquareBracket, gControlKeysEventTarget);
-}
+}// typeControlLeftSquareBracket:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlBackslash:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1C];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlBackslash, gControlKeysEventTarget);
-}
+}// typeControlBackslash:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlRightSquareBracket:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1D];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlRightSquareBracket, gControlKeysEventTarget);
-}
+}// typeControlRightSquareBracket:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlTilde:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1E];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlTilde, gControlKeysEventTarget);
-}
+}// typeControlTilde:
 
+
+/*!
+Sends the specified control character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeControlQuestionMark:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1F];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlQuestionMark, gControlKeysEventTarget);
-}
+}// typeControlQuestionMark:
+
 
 @end // Keypads_ControlKeysPanelController
 
 
 @implementation Keypads_FullScreenPanelController
 
+
 static Keypads_FullScreenPanelController*		gKeypads_FullScreenPanelController = nil;
+
+
+/*!
+Returns the singleton.
+
+(3.1)
+*/
 + (id)
 sharedFullScreenPanelController
 {
@@ -766,15 +1028,27 @@ sharedFullScreenPanelController
 		gKeypads_FullScreenPanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gKeypads_FullScreenPanelController;
-}
+}// sharedFullScreenPanelController
 
+
+/*!
+Designated initializer.
+
+(3.1)
+*/
 - (id)
 init
 {
 	self = [super initWithWindowNibName:@"KeypadFullScreenCocoa"];
 	return self;
-}
+}// init
 
+
+/*!
+Turns off Full Screen mode.
+
+(3.1)
+*/
 - (IBAction)
 disableFullScreen:(id)	sender
 {
@@ -786,14 +1060,23 @@ disableFullScreen:(id)	sender
 	(OSStatus)SetUserFocusWindow(GetFrontWindowOfClass(kDocumentWindowClass, true/* must be visible */));
 	
 	Commands_ExecuteByIDUsingEvent(kCommandKioskModeDisable, gControlKeysEventTarget);
-}
+}// disableFullScreen:
+
 
 @end // Keypads_FullScreenPanelController
 
 
 @implementation Keypads_FunctionKeysPanelController
 
+
 static Keypads_FunctionKeysPanelController*		gKeypads_FunctionKeysPanelController = nil;
+
+
+/*!
+Returns the singleton.
+
+(3.1)
+*/
 + (id)
 sharedFunctionKeysPanelController
 {
@@ -802,126 +1085,231 @@ sharedFunctionKeysPanelController
 		gKeypads_FunctionKeysPanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gKeypads_FunctionKeysPanelController;
-}
+}// sharedFunctionKeysPanelController
 
+
+/*!
+Designated initializer.
+
+(3.1)
+*/
 - (id)
 init
 {
 	self = [super initWithWindowNibName:@"KeypadFunctionKeysCocoa"];
 	return self;
-}
+}// init
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF6:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF6];
-}
+}// typeF6:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF7:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF7];
-}
+}// typeF7:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF8:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF8];
-}
+}// typeF8:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF9:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF9];
-}
+}// typeF9:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF10:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF10];
-}
+}// typeF10:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF11:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF11];
-}
+}// typeF11:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF12:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF12];
-}
+}// typeF12:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF13:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF13];
-}
+}// typeF13:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF14:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF14];
-}
+}// typeF14:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF15:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF15];
-}
+}// typeF15:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF16:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF16];
-}
+}// typeF16:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF17:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF17];
-}
+}// typeF17:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF18:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF18];
-}
+}// typeF18:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF19:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF19];
-}
+}// typeF19:
 
+
+/*!
+Sends the specified VT function key to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeF20:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF20];
-}
+}// typeF20:
+
 
 @end // Keypads_FunctionKeysPanelController
 
 
 @implementation Keypads_VT220KeysPanelController
 
+
 static Keypads_VT220KeysPanelController*	gKeypads_VT220KeysPanelController = nil;
+
+
+/*!
+Returns the singleton.
+
+(3.1)
+*/
 + (id)
 sharedVT220KeysPanelController
 {
@@ -930,210 +1318,385 @@ sharedVT220KeysPanelController
 		gKeypads_VT220KeysPanelController = [[[self class] allocWithZone:NULL] init];
 	}
 	return gKeypads_VT220KeysPanelController;
-}
+}// sharedVT220KeysPanelController
 
+
+/*!
+Designated initializer.
+
+(3.1)
+*/
 - (id)
 init
 {
 	self = [super initWithWindowNibName:@"KeypadVT220KeysCocoa"];
 	return self;
-}
+}// init
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 type0:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK0];
-}
+}// type0:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 type1:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK1];
-}
+}// type1:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 type2:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK2];
-}
+}// type2:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 type3:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK3];
-}
+}// type3:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 type4:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK4];
-}
+}// type4:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 type5:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK5];
-}
+}// type5:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 type6:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK6];
-}
+}// type6:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 type7:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK7];
-}
+}// type7:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 type8:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK8];
-}
+}// type8:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 type9:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK9];
-}
+}// type9:
 
+
+/*!
+Sends the specified arrow key sequence to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeArrowDown:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSDN];
-}
+}// typeArrowDown:
 
+
+/*!
+Sends the specified arrow key sequence to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeArrowLeft:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSLT];
-}
+}// typeArrowLeft:
 
+
+/*!
+Sends the specified arrow key sequence to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeArrowRight:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSRT];
-}
+}// typeArrowRight:
 
+
+/*!
+Sends the specified arrow key sequence to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeArrowUp:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSUP];
-}
+}// typeArrowUp:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeComma:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSKC];
-}
+}// typeComma:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeDecimalPoint:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSKP];
-}
+}// typeDecimalPoint:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeDelete:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSPGUP/* yes this is correct, based on key position */];
-}
+}// typeDelete:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeEnter:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSKE];
-}
+}// typeEnter:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeFind:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSHELP/* yes this is correct, based on key position */];
-}
+}// typeFind:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeHyphen:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSKM];
-}
+}// typeHyphen:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeInsert:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSHOME/* yes this is correct, based on key position */];
-}
+}// typeInsert:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typePageDown:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSPGDN];
-}
+}// typePageDown:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typePageUp:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSEND/* yes this is correct, based on key position */];
-}
+}// typePageUp:
 
+
+/*!
+Sends the specified function key sequence to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typePF1:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF1];
-}
+}// typeF1:
 
+
+/*!
+Sends the specified function key sequence to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typePF2:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF2];
-}
+}// typePF2:
 
+
+/*!
+Sends the specified function key sequence to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typePF3:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF3];
-}
+}// typePF3:
 
+
+/*!
+Sends the specified function key sequence to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typePF4:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF4];
-}
+}// typePF4:
 
+
+/*!
+Sends the specified key’s character to the active session.
+
+(3.1)
+*/
 - (IBAction)
 typeSelect:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSDEL/* yes this is correct, based on key position */];
-}
+}// typeSelect:
+
 
 @end // Keypads_VT220KeysPanelController
 

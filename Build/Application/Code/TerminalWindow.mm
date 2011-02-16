@@ -7422,7 +7422,15 @@ updateScrollBars	(TerminalWindowPtr		inPtr)
 
 @implementation TerminalWindow_Controller
 
+
 static TerminalWindow_Controller*	gTerminalWindow_Controller = nil;
+
+
+/*!
+Returns the singleton.
+
+(4.0)
+*/
 + (id)
 sharedTerminalWindowController
 {
@@ -7431,20 +7439,31 @@ sharedTerminalWindowController
 		gTerminalWindow_Controller = [[[self class] allocWithZone:NULL] init];
 	}
 	return gTerminalWindow_Controller;
-}
+}// sharedTerminalWindowController
 
 
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
 	self = [super initWithWindowNibName:@"TerminalWindowCocoa"];
 	return self;
-}
+}// init
 
 
 #pragma mark NSToolbarDelegate
 
 
+/*!
+Responds when the specified kind of toolbar item should be
+constructed for the given toolbar.
+
+(4.0)
+*/
 - (NSToolbarItem*)
 toolbar:(NSToolbar*)				toolbar
 itemForItemIdentifier:(NSString*)	itemIdentifier
@@ -7484,6 +7503,12 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
 
 
+/*!
+Returns the identifiers for the kinds of items that can appear
+in the given toolbar.
+
+(4.0)
+*/
 - (NSArray*)
 toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 {
@@ -7502,6 +7527,12 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 }// toolbarAllowedItemIdentifiers
 
 
+/*!
+Returns the identifiers for the items that will appear in the
+given toolbar whenever the user has not customized it.
+
+(4.0)
+*/
 - (NSArray*)
 toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 {
@@ -7524,6 +7555,13 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 #pragma mark NSWindowController
 
 
+/*!
+Handles initialization that depends on user interface
+elements being properly set up.  (Everything else is just
+done in "init".)
+
+(4.0)
+*/
 - (void)
 windowDidLoad
 {
@@ -7590,11 +7628,18 @@ windowDidLoad
 	Preferences_ReleaseContext(&translationConfig);
 }// windowDidLoad
 
+
 @end // TerminalWindow_Controller
 
 
 @implementation TerminalWindow_ToolbarItemCustomize
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
@@ -7611,7 +7656,14 @@ init
 		[self setPaletteLabel:[self label]];
 	}
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -7619,6 +7671,11 @@ dealloc
 }// dealloc
 
 
+/*!
+Responds when the toolbar item is used.
+
+(4.0)
+*/
 - (void)
 performToolbarItemAction:(id)	sender
 {
@@ -7627,11 +7684,18 @@ performToolbarItemAction:(id)	sender
 	[[Commands_Executor sharedExecutor] runToolbarCustomizationPaletteSetup:NSApp];
 }// performToolbarItemAction:
 
+
 @end // TerminalWindow_ToolbarItemCustomize
 
 
 @implementation TerminalWindow_ToolbarItemLED1
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
@@ -7646,7 +7710,14 @@ init
 		[self setPaletteLabel:[self label]];
 	}
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -7654,6 +7725,11 @@ dealloc
 }// dealloc
 
 
+/*!
+Responds when the toolbar item is used.
+
+(4.0)
+*/
 - (void)
 performToolbarItemAction:(id)	sender
 {
@@ -7661,11 +7737,18 @@ performToolbarItemAction:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandToggleTerminalLED1);
 }// performToolbarItemAction:
 
+
 @end // TerminalWindow_ToolbarItemLED1
 
 
 @implementation TerminalWindow_ToolbarItemLED2
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
@@ -7680,7 +7763,14 @@ init
 		[self setPaletteLabel:[self label]];
 	}
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -7688,6 +7778,11 @@ dealloc
 }// dealloc
 
 
+/*!
+Responds when the toolbar item is used.
+
+(4.0)
+*/
 - (void)
 performToolbarItemAction:(id)	sender
 {
@@ -7695,11 +7790,18 @@ performToolbarItemAction:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandToggleTerminalLED2);
 }// performToolbarItemAction:
 
+
 @end // TerminalWindow_ToolbarItemLED2
 
 
 @implementation TerminalWindow_ToolbarItemLED3
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
@@ -7714,7 +7816,14 @@ init
 		[self setPaletteLabel:[self label]];
 	}
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -7722,6 +7831,11 @@ dealloc
 }// dealloc
 
 
+/*!
+Responds when the toolbar item is used.
+
+(4.0)
+*/
 - (void)
 performToolbarItemAction:(id)	sender
 {
@@ -7729,11 +7843,18 @@ performToolbarItemAction:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandToggleTerminalLED3);
 }// performToolbarItemAction:
 
+
 @end // TerminalWindow_ToolbarItemLED3
 
 
 @implementation TerminalWindow_ToolbarItemLED4
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
@@ -7748,7 +7869,14 @@ init
 		[self setPaletteLabel:[self label]];
 	}
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -7756,6 +7884,11 @@ dealloc
 }// dealloc
 
 
+/*!
+Responds when the toolbar item is used.
+
+(4.0)
+*/
 - (void)
 performToolbarItemAction:(id)	sender
 {
@@ -7763,11 +7896,18 @@ performToolbarItemAction:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandToggleTerminalLED4);
 }// performToolbarItemAction:
 
+
 @end // TerminalWindow_ToolbarItemLED4
 
 
 @implementation TerminalWindow_ToolbarItemPrint
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 init
 {
@@ -7782,7 +7922,14 @@ init
 		[self setPaletteLabel:[self label]];
 	}
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -7790,6 +7937,11 @@ dealloc
 }// dealloc
 
 
+/*!
+Responds when the toolbar item is used.
+
+(4.0)
+*/
 - (void)
 performToolbarItemAction:(id)	sender
 {
@@ -7797,12 +7949,19 @@ performToolbarItemAction:(id)	sender
 	Commands_ExecuteByIDUsingEvent(kCommandPrint);
 }// performToolbarItemAction:
 
+
 @end // TerminalWindow_ToolbarItemPrint
 
 
 @implementation NSWindow (TerminalWindow_NSWindowExtensions)
 
 
+/*!
+Returns any Terminal Window that is associated with an NSWindow,
+or nullptr if there is none.
+
+(4.0)
+*/
 - (TerminalWindowRef)
 terminalWindowRef
 {

@@ -11786,7 +11786,7 @@ visualBell	(TerminalViewRef	inView)
 
 
 /*!
-Constructor.
+Designated initializer.
 
 (4.0)
 */
@@ -11800,7 +11800,14 @@ initWithFrame:(NSRect)		aFrame
 		self->internalViewPtr = nullptr;
 	}
 	return self;
-}
+}// initWithFrame:
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -11879,7 +11886,7 @@ drawRect:(NSRect)	rect
 		CGContextSetRGBFillColor(drawingContext, 1.0/* red */, 1.0/* green */, 1.0/* blue */, 1.0/* alpha */);
 		CGContextFillRect(drawingContext, clipBounds);
 	}
-}// drawRect
+}// drawRect:
 
 
 - (BOOL)
@@ -11896,7 +11903,7 @@ isOpaque
 
 
 /*!
-Constructor.
+Designated initializer.
 
 (4.0)
 */
@@ -11910,7 +11917,14 @@ initWithFrame:(NSRect)		aFrame
 		self->internalViewPtr = nullptr;
 	}
 	return self;
-}
+}// initWithFrame:
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -11953,6 +11967,9 @@ setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
 {
 	internalViewPtr = aViewPtr;
 }// setInternalViewPtr:
+
+
+#pragma mark Commands
 
 
 /*!
@@ -12070,7 +12087,7 @@ in order to ever receive actions such as menu commands!
 acceptsFirstResponder
 {
 	return YES;
-}
+}// acceptsFirstResponder
 
 
 /*!
@@ -12250,9 +12267,14 @@ drawRect:(NSRect)	rect
 		// render cursor ghost
 		// UNIMPLEMENTED
 	}
-}// drawRect
+}// drawRect:
 
 
+/*!
+Returns YES only if the view has no transparent parts.
+
+(4.0)
+*/
 - (BOOL)
 isOpaque
 {

@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -54,10 +54,14 @@ changes to an interface declared in a ".mm" file.
 {
 	IBOutlet NSTableView*	addressTableView;
 }
-- (BOOL)tableView:(NSTableView*)			inTable
-		writeRowsWithIndexes:(NSIndexSet*)	inRowIndices
-		toPasteboard:(NSPasteboard*)		inoutPasteboard;
+
+- (BOOL)
+tableView:(NSTableView*)_
+writeRowsWithIndexes:(NSIndexSet*)_
+toPasteboard:(NSPasteboard*)_;
+
 @end
+
 
 /*!
 Implements the IP Addresses panel.
@@ -70,8 +74,13 @@ changes to an interface declared in a ".mm" file.
 {
 	NSMutableArray*		addressArray; // binding
 }
-+ (id)sharedAddressPanelController;
-- (IBAction)rebuildAddressList:(id)sender;
+
++ (id)
+sharedAddressPanelController;
+
+- (IBAction)
+rebuildAddressList:(id)_;
+
 @end
 
 #endif // __OBJC__

@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -64,7 +64,7 @@ typedef struct PrintTerminal_OpaqueJob*		PrintTerminal_JobRef;
 #ifdef __OBJC__
 
 /*!
-Implements the Print Preview dialog.
+Implements the Print Preview dialog.  See "PrintPreviewCocoa.xib".
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
@@ -80,16 +80,29 @@ changes to an interface declared in a ".mm" file.
 	NSPrintInfo*			pageSetup;
 	NSString*				paperInfo;
 }
-// the following MUST match what is in "PrintPreviewCocoa.xib"
-- (IBAction)	cancel:(id)sender;
-- (IBAction)	help:(id)sender;
-- (IBAction)	pageSetup:(id)sender;
-- (IBAction)	print:(id)sender;
+
+- (void)
+beginPreviewSheetModalForWindow:(NSWindow*)_;
+
+- (IBAction)
+cancel:(id)_;
+
+- (IBAction)
+help:(id)_;
+
+- (IBAction)
+pageSetup:(id)_;
+
+- (IBAction)
+print:(id)_;
+
 // accessors
-- (NSString*)	paperInfo;
-- (void)		setPaperInfo:(NSString*)aString; // binding
-// new methods
-- (void)		beginPreviewSheetModalForWindow:(NSWindow*)aWindow;
+
+- (NSString*)
+paperInfo;
+- (void)
+setPaperInfo:(NSString*)_; // binding
+
 @end
 
 #endif // __OBJC__

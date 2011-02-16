@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -49,7 +49,7 @@
 @class ServerBrowser_Protocol;
 
 /*!
-Implements the server browser panel.
+Implements the server browser panel.  See "ServerBrowserCocoa.xib".
 
 This class is KVO-compliant for the following keys:
 	hostName
@@ -61,7 +61,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface ServerBrowser_PanelController : NSWindowController
+@interface ServerBrowser_PanelController : NSWindowController // NSKeyValueObservingCustomization, NSNetServiceBrowserDelegateMethods, NSWindowNotifications
 {
 	NSMutableArray*			discoveredHosts; // binding
 	NSMutableArray*			recentHosts; // binding
@@ -82,75 +82,128 @@ changes to an interface declared in a ".mm" file.
 	NSString*				userID;
 	NSString*				errorMessage;
 }
-// the following MUST match what is in "ServerBrowserCocoa.nib"
-+ (id)				sharedServerBrowserPanelController;
+
++ (id)
+sharedServerBrowserPanelController;
+
 // new methods
-- (void)			didDoubleClickDiscoveredHostWithSelection:(NSArray*)objects;
-- (IBAction)		lookUpHostName:(id)sender;
-- (void)			rediscoverServices;
+
+- (void)
+didDoubleClickDiscoveredHostWithSelection:(NSArray*)_;
+
+- (IBAction)
+lookUpHostName:(id)_;
+
+- (void)
+rediscoverServices;
+
 // accessors
-- (Session_Protocol)currentProtocolID;
-- (NSIndexSet*)		discoveredHostIndexes;
-- (NSString*)		errorMessage;
-- (BOOL)			hidesDiscoveredHosts;
-- (BOOL)			hidesErrorMessage;
-- (BOOL)			hidesPortNumberError;
-- (BOOL)			hidesProgress;
-- (BOOL)			hidesUserIDError;
-- (NSString*)		hostName;
-- (NSString*)		portNumber;
-- (NSArray*)		protocolDefinitions;
-- (NSIndexSet*)		protocolIndexes;
-- (id)				target;
-- (NSString*)		userID;
-- (void)			insertObject:(ServerBrowser_NetService*)name
-						inDiscoveredHostsAtIndex:(unsigned long)index;
-- (void)			removeObjectFromDiscoveredHostsAtIndex:(unsigned long)index;
-- (void)			insertObject:(NSString*)name
-						inRecentHostsAtIndex:(unsigned long)index;
-- (void)			removeObjectFromRecentHostsAtIndex:(unsigned long)index;
-- (void)			setDiscoveredHostIndexes:(NSIndexSet*)indexes; // binding
-- (void)			setErrorMessage:(NSString*)aString;
-- (void)			setHidesDiscoveredHosts:(BOOL)flag;
-- (void)			setHidesErrorMessage:(BOOL)flag;
-- (void)			setHidesPortNumberError:(BOOL)flag; // binding
-- (void)			setHidesProgress:(BOOL)flag; // binding
-- (void)			setHidesUserIDError:(BOOL)flag; // binding
-- (void)			setHostName:(NSString*)aString; // binding
-- (void)			setPortNumber:(NSString*)aString; // binding
-- (void)			setProtocolIndexByProtocol:(Session_Protocol)aProtocol;
-- (void)			setProtocolIndexes:(NSIndexSet*)indexes; // binding
-- (void)			setTarget:(id)anObject
-						protocol:(Session_Protocol)aProtocol
-						hostName:(NSString*)aString
-						portNumber:(unsigned int)aNumber
-						userID:(NSString*)anID;
-- (void)			setUserID:(NSString*)aString; // binding
+
+- (Session_Protocol)
+currentProtocolID;
+
+- (void)
+insertObject:(ServerBrowser_NetService*)_
+inDiscoveredHostsAtIndex:(unsigned long)_;
+- (void)
+removeObjectFromDiscoveredHostsAtIndex:(unsigned long)_;
+
+- (NSIndexSet*)
+discoveredHostIndexes;
+- (void)
+setDiscoveredHostIndexes:(NSIndexSet*)_; // binding
+
+- (NSString*)
+errorMessage;
+- (void)
+setErrorMessage:(NSString*)_;
+
+- (BOOL)
+hidesDiscoveredHosts;
+- (void)
+setHidesDiscoveredHosts:(BOOL)_;
+
+- (BOOL)
+hidesErrorMessage;
+- (void)
+setHidesErrorMessage:(BOOL)_;
+
+- (BOOL)
+hidesPortNumberError;
+- (void)
+setHidesPortNumberError:(BOOL)_; // binding
+
+- (BOOL)
+hidesProgress;
+- (void)
+setHidesProgress:(BOOL)_; // binding
+
+- (BOOL)
+hidesUserIDError;
+- (void)
+setHidesUserIDError:(BOOL)_; // binding
+
+- (NSString*)
+hostName;
+- (void)
+setHostName:(NSString*)_; // binding
+
+- (NSString*)
+portNumber;
+- (void)
+setPortNumber:(NSString*)_; // binding
+
+- (NSArray*)
+protocolDefinitions;
+
+- (NSIndexSet*)
+protocolIndexes;
+- (void)
+setProtocolIndexByProtocol:(Session_Protocol)_;
+- (void)
+setProtocolIndexes:(NSIndexSet*)_; // binding
+
+- (void)
+insertObject:(NSString*)_
+inRecentHostsAtIndex:(unsigned long)_;
+- (void)
+removeObjectFromRecentHostsAtIndex:(unsigned long)_;
+
+- (id)
+target;
+- (void)
+setTarget:(id)_
+protocol:(Session_Protocol)_
+hostName:(NSString*)_
+portNumber:(unsigned int)_
+userID:(NSString*)_;
+
+- (NSString*)
+userID;
+- (void)
+setUserID:(NSString*)_; // binding
+
 // validators
-- (BOOL)			validatePortNumber:(id*)ioValue
-						error:(NSError**)outError;
-- (BOOL)			validateUserID:(id*)ioValue
-						error:(NSError**)outError;
-// NSKeyValueObservingCustomization
-+ (BOOL)			automaticallyNotifiesObserversForKey:(NSString*)theKey;
-// NSNetServiceBrowserDelegateMethods
-- (void)			netServiceBrowser:(NSNetServiceBrowser*)aNetServiceBrowser
-						didFindService:(NSNetService*)aNetService
-						moreComing:(BOOL)moreComing;
-- (void)			netServiceBrowser:(NSNetServiceBrowser*)aNetServiceBrowser
-						didNotSearch:(NSDictionary*)errorInfo;
-- (void)			netServiceBrowserDidStopSearch:(NSNetServiceBrowser*)aNetServiceBrowser;
-- (void)			netServiceBrowserWillSearch:(NSNetServiceBrowser*)aNetServiceBrowser;
-// NSWindowController
-- (void)			windowDidLoad;
-- (void)			windowWillLoad;
-- (NSString*)		windowFrameAutosaveName;
-// NSWindowNotifications
-- (void)			windowWillClose:(NSNotification*)notification;
+
+- (BOOL)
+validatePortNumber:(id*)_
+error:(NSError**)_;
+
+- (BOOL)
+validateUserID:(id*)_
+error:(NSError**)_;
+
 // internal methods
-- (void)			notifyOfChangeInValueReturnedBy:(SEL)valueGetter;
-- (ServerBrowser_NetService*)	discoveredHost;
-- (ServerBrowser_Protocol*)		protocol;
+
+- (ServerBrowser_NetService*)
+discoveredHost;
+
+- (void)
+notifyOfChangeInValueReturnedBy:(SEL)_;
+
+- (ServerBrowser_Protocol*)
+protocol;
+
 @end
 
 #endif

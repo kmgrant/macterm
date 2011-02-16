@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -67,7 +67,7 @@ by Bonjour, that allows them to be easily inserted into user
 interface elements without losing less user-friendly information
 about each service.
 */
-@interface ServerBrowser_NetService : NSObject
+@interface ServerBrowser_NetService : NSObject // implements NSNetServiceDelegateMethods
 {
 @private
 	NSNetService*		netService;
@@ -75,20 +75,33 @@ about each service.
 	NSString*			bestResolvedAddress;
 	unsigned short		bestResolvedPort;
 }
-- (id)					initWithNetService:(NSNetService*)aNetService
-							addressFamily:(unsigned char)aSocketAddrFamily;
+
+- (id)
+initWithNetService:(NSNetService*)_
+addressFamily:(unsigned char)_;
+
 // accessors; see "Discovered Hosts" array controller in the NIB, for key names
-- (NSString*)			bestResolvedAddress;
-- (unsigned short)		bestResolvedPort;
-- (NSString*)			description;
-- (NSNetService*)		netService;
-- (void)				setBestResolvedAddress:(NSString*)aString;
-- (void)				setBestResolvedPort:(unsigned short)aNumber;
-// NSNetServiceDelegateMethods
-- (void)				netServiceDidResolveAddress:(NSNetService*)netService;
-- (void)				netService:(NSNetService*)netService
-							didNotResolve:(NSDictionary*)errorDict;
+
+- (NSString*)
+bestResolvedAddress;
+
+- (unsigned short)
+bestResolvedPort;
+
+- (NSString*)
+description;
+
+- (NSNetService*)
+netService;
+
+- (void)
+setBestResolvedAddress:(NSString*)_;
+
+- (void)
+setBestResolvedPort:(unsigned short)_;
+
 @end
+
 
 /*!
 Implements an object wrapper for protocol definitions, that
@@ -104,20 +117,37 @@ protocol.
 	NSString*			serviceType; // RFC 2782 / Bonjour, e.g. "_xyz._tcp."
 	unsigned short		defaultPort;
 }
+
 // accessors; see "Protocol Definitions" array controller in the NIB, for key names
-- (unsigned short)		defaultPort;
-- (NSString*)			description;
-- (Session_Protocol)	protocolID;
-- (NSString*)			serviceType;
-- (void)				setDefaultPort:(unsigned short)aNumber;
-- (void)				setDescription:(NSString*)aString;
-- (void)				setProtocolID:(Session_Protocol)anID;
-- (void)				setServiceType:(NSString*)aString;
+
+- (unsigned short)
+defaultPort;
+- (void)
+setDefaultPort:(unsigned short)_;
+
+- (NSString*)
+description;
+- (void)
+setDescription:(NSString*)_;
+
+- (Session_Protocol)
+protocolID;
+- (void)
+setProtocolID:(Session_Protocol)_;
+
+- (NSString*)
+serviceType;
+- (void)
+setServiceType:(NSString*)_;
+
 // initializers
-- (id)					initWithID:(Session_Protocol)anID
-							description:(NSString*)aString
-							serviceType:(NSString*)anRFC2782Name
-							defaultPort:(unsigned short)aNumber;
+
+- (id)
+initWithID:(Session_Protocol)_
+description:(NSString*)_
+serviceType:(NSString*)_
+defaultPort:(unsigned short)_;
+
 @end
 
 #pragma mark Internal Method Prototypes
@@ -134,19 +164,18 @@ OSStatus	receiveLookupComplete		(EventHandlerCallRef, EventRef, void*);
 #pragma mark Variables
 namespace {
 
-CarbonEventHandlerWrap&		gBrowserLookupResponder ()
-							{
-								static CarbonEventHandlerWrap		x(GetApplicationEventTarget(), receiveLookupComplete,
-																		CarbonEventSetInClass(CarbonEventClass(kEventClassNetEvents_DNS),
-																								kEventNetEvents_HostLookupComplete),
-																		nullptr/* user data */);
-								return x;
-							}
-EventTargetRef				gPanelEventTarget = nullptr;	//!< temporary, for Carbon interaction
+CarbonEventHandlerWrap&			gBrowserLookupResponder ()
+								{
+									static CarbonEventHandlerWrap		x(GetApplicationEventTarget(), receiveLookupComplete,
+																			CarbonEventSetInClass(CarbonEventClass(kEventClassNetEvents_DNS),
+																									kEventNetEvents_HostLookupComplete),
+																			nullptr/* user data */);
+									return x;
+								}
+EventTargetRef					gPanelEventTarget = nullptr;	//!< temporary, for Carbon interaction
+ServerBrowser_PanelController*	gServerBrowser_PanelController = nil;
 
 }// anonymous namespace
-
-static ServerBrowser_PanelController*		gServerBrowser_PanelController = nil;
 
 
 
@@ -400,8 +429,9 @@ receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 @implementation ServerBrowser_NetService
 
+
 /*!
-Constructor.
+Designated initializer.
 
 (4.0)
 */
@@ -424,7 +454,14 @@ addressFamily:(unsigned char)		aSocketAddrFamily
 	#endif
 	}
 	return self;
-}
+}// initWithNetService:addressFamily:
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -435,6 +472,7 @@ dealloc
 
 
 #pragma mark Accessors
+
 
 /*!
 Accessor.
@@ -499,6 +537,7 @@ netService
 
 
 #pragma mark NSNetServiceDelegateMethods
+
 
 /*!
 Called when a discovered host name could not be mapped to
@@ -579,13 +618,15 @@ netServiceDidResolveAddress:(NSNetService*)		resolvingService
 	if (0 != resolvedPort) [self setBestResolvedPort:resolvedPort];
 }// netServiceDidResolveAddress:
 
+
 @end
 
 
 @implementation ServerBrowser_Protocol
 
+
 /*!
-Constructor.
+Designated initializer.
 
 (4.0)
 */
@@ -608,6 +649,7 @@ defaultPort:(unsigned short)	aNumber
 
 
 #pragma mark Accessors
+
 
 /*!
 Accessor.
@@ -684,13 +726,15 @@ setServiceType:(NSString*)		aString
 	}
 }// setServiceType:
 
+
 @end
 
 
 @implementation ServerBrowser_PanelController
 
+
 /*!
-Returns the global instance of the panel.
+Returns the singleton.
 
 (4.0)
 */
@@ -706,7 +750,7 @@ sharedServerBrowserPanelController
 
 
 /*!
-Constructor.
+Designated initializer.
 
 (4.0)
 */
@@ -717,7 +761,14 @@ init
 	// The correct place for post-NIB initialization is "windowDidLoad".
 	self = [super initWithWindowNibName:@"ServerBrowserCocoa"];
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -735,6 +786,7 @@ dealloc
 
 
 #pragma mark New Methods
+
 
 /*!
 Responds to a double-click of a discovered host by
@@ -928,6 +980,24 @@ Accessor.
 
 (4.0)
 */
+- (void)
+insertObject:(ServerBrowser_NetService*)	service
+inDiscoveredHostsAtIndex:(unsigned long)	index
+{
+	[discoveredHosts insertObject:service atIndex:index];
+}
+- (void)
+removeObjectFromDiscoveredHostsAtIndex:(unsigned long)		index
+{
+	[discoveredHosts removeObjectAtIndex:index];
+}// removeObjectFromDiscoveredHostsAtIndex:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
 - (NSIndexSet*)
 discoveredHostIndexes
 {
@@ -1107,24 +1177,6 @@ setHostName:(NSString*)		aString
 		[self notifyOfChangeInValueReturnedBy:@selector(hostName)];
 	}
 }// setHostName:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (void)
-insertObject:(ServerBrowser_NetService*)	service
-inDiscoveredHostsAtIndex:(unsigned long)	index
-{
-	[discoveredHosts insertObject:service atIndex:index];
-}
-- (void)
-removeObjectFromDiscoveredHostsAtIndex:(unsigned long)		index
-{
-	[discoveredHosts removeObjectAtIndex:index];
-}// removeObjectFromDiscoveredHostsAtIndex:
 
 
 /*!
@@ -1333,6 +1385,7 @@ setUserID:(NSString*)	aString
 
 #pragma mark Validators
 
+
 /*!
 Validates a port number entered by the user, returning an
 appropriate error (and a NO result) if the number is incorrect.
@@ -1443,6 +1496,7 @@ error:(NSError**)					outError
 
 #pragma mark NSKeyValueObservingCustomization
 
+
 /*!
 Returns true for keys that manually notify observers
 (through "willChangeValueForKey:", etc.).
@@ -1470,6 +1524,7 @@ automaticallyNotifiesObserversForKey:(NSString*)	theKey
 
 
 #pragma mark NSNetServiceBrowserDelegateMethods
+
 
 /*!
 Called as new services are discovered.
@@ -1531,6 +1586,7 @@ netServiceBrowserWillSearch:(NSNetServiceBrowser*)	aNetServiceBrowser
 
 
 #pragma mark NSWindowController
+
 
 /*!
 Handles initialization that depends on user interface
@@ -1624,6 +1680,7 @@ windowFrameAutosaveName
 
 #pragma mark NSWindowNotifications
 
+
 /*!
 Responds to the panel closing by removing any ties to an
 event target, but notifying that target first.  This would
@@ -1655,6 +1712,7 @@ windowWillClose:(NSNotification*)	notification
 
 
 #pragma mark Internal Methods
+
 
 /*!
 Accessor.
@@ -1793,6 +1851,7 @@ protocol
 	}
 	return result;
 }// protocol
+
 
 @end
 

@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -70,14 +70,19 @@
 	NSFont*		textFont;			//!< the font and size to use
 	BOOL		isLandscapeMode;	//!< if YES, page setup defaults to landscape mode
 }
-+ (PrintTerminal_Job*)	jobFromRef:(PrintTerminal_JobRef)ref;
-// public methods
-- (void)				beginPreviewSheetModalForWindow:(NSWindow*)aWindow;
-// initializers
-- (id)					initWithString:(NSString*)aString
-							andFont:(NSFont*)aFont
-							andTitle:(NSString*)aTitle
-							andLandscape:(BOOL)landscapeMode;
+
++ (PrintTerminal_Job*)
+jobFromRef:(PrintTerminal_JobRef)_;
+
+- (void)
+beginPreviewSheetModalForWindow:(NSWindow*)_;
+
+- (id)
+initWithString:(NSString*)_
+andFont:(NSFont*)_
+andTitle:(NSString*)_
+andLandscape:(BOOL)_;
+
 @end
 
 #pragma mark Internal Methods
@@ -329,22 +334,12 @@ returnNSFontForTerminalView		(TerminalViewRef	inView)
 
 @implementation PrintTerminal_Job
 
-/*!
-Returns the internal object that is equivalent to the
-given external reference.
-
-(4.0)
-*/
-+ (PrintTerminal_Job*)
-jobFromRef:(PrintTerminal_JobRef)	ref
-{
-	return (PrintTerminal_Job*)ref;
-}// jobFromRef:
-
 
 /*!
 Initialize with the (perhaps multi-line) string of text that
 is to be printed.
+
+Designated initializer.
 
 (4.0)
 */
@@ -363,14 +358,21 @@ andLandscape:(BOOL)				landscapeMode
 		isLandscapeMode = landscapeMode;
 	}
 	return self;
-}
+}// initWithString:andFont:andTitle:andLandscape:
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
-	[super dealloc];
 	[jobTitle release];
 	[printedText release];
 	[textFont release];
+	[super dealloc];
 }// dealloc
 
 
@@ -392,14 +394,33 @@ beginPreviewSheetModalForWindow:(NSWindow*)		aWindow
 	
 	// run the sheet
 	[preview beginPreviewSheetModalForWindow:aWindow];
-}
+}// beginPreviewSheetModalForWindow:
+
+
+/*!
+Returns the internal object that is equivalent to the
+given external reference.
+
+(4.0)
+*/
++ (PrintTerminal_Job*)
+jobFromRef:(PrintTerminal_JobRef)	ref
+{
+	return (PrintTerminal_Job*)ref;
+}// jobFromRef:
+
 
 @end // PrintTerminal_Job
 
 
-
 @implementation PrintTerminal_PreviewPanelController
 
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
 - (id)
 initWithString:(NSString*)		aString
 andFont:(NSFont*)				aFont
@@ -431,7 +452,14 @@ andLandscape:(BOOL)				landscapeMode
 	}
 	[self setShouldCascadeWindows:NO];
 	return self;
-}
+}// initWithString:andFont:andTitle:andLandscape:
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -442,8 +470,6 @@ dealloc
 	[super dealloc];
 } // dealloc
 
-
-#pragma mark New Methods
 
 /*!
 Creates (if necessary) and displays the print preview sheet.
@@ -545,6 +571,7 @@ print:(id)	sender
 
 #pragma mark Accessors
 
+
 /*!
 Accessor.
 
@@ -567,6 +594,7 @@ setPaperInfo:(NSString*)	aString
 
 
 #pragma mark NSWindowController
+
 
 /*!
 Handles initialization that depends on user interface
@@ -608,6 +636,7 @@ windowFrameAutosaveName
 
 #pragma mark Internal Methods
 
+
 /*!
 Responds to the closing of a page layout configuration sheet.
 
@@ -641,6 +670,7 @@ contextInfo:(void*)							contextInfo
 		[NSApp stopModal];
 	}
 }// printOperationDidRun:success:contextInfo:
+
 
 @end // PrintTerminal_PreviewPanelController
 

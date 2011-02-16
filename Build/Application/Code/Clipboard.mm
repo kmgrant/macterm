@@ -3,7 +3,7 @@
 	Clipboard.mm
 	
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -1772,7 +1772,9 @@ initWithFrame:(NSRect)		aFrame
 													nil]];
 	}
 	return self;
-}
+}// initWithFrame:
+
+
 - (void)
 dealloc
 {
@@ -1781,6 +1783,7 @@ dealloc
 
 
 #pragma mark Accessors
+
 
 /*!
 Accessor.
@@ -1858,6 +1861,12 @@ drawRect:(NSRect)	rect
 #pragma mark NSDraggingDestination
 
 
+/*!
+Invoked when the user has dragged data into the main content
+area of the Clipboard window.
+
+(4.0)
+*/
 - (NSDragOperation)
 draggingEntered:(id <NSDraggingInfo>)	sender
 {
@@ -1877,6 +1886,12 @@ draggingEntered:(id <NSDraggingInfo>)	sender
 }// draggingEntered:
 
 
+/*!
+Invoked when the user has dragged data out of the main content
+area of the Clipboard window.
+
+(4.0)
+*/
 - (void)
 draggingExited:(id <NSDraggingInfo>)	sender
 {
@@ -1888,6 +1903,12 @@ draggingExited:(id <NSDraggingInfo>)	sender
 }// draggingExited:
 
 
+/*!
+Invoked when the user has dropped data into the main content
+area of the Clipboard window.
+
+(4.0)
+*/
 - (BOOL)
 performDragOperation:(id <NSDraggingInfo>)		sender
 {
@@ -1934,6 +1955,13 @@ performDragOperation:(id <NSDraggingInfo>)		sender
 }// performDragOperation:
 
 
+/*!
+Invoked when the user is about to drop data into the content
+area of the Clipboard window; returns YES only if the data is
+acceptable.
+
+(4.0)
+*/
 - (BOOL)
 prepareForDragOperation:(id <NSDraggingInfo>)	sender
 {
@@ -1954,6 +1982,11 @@ prepareForDragOperation:(id <NSDraggingInfo>)	sender
 #pragma mark NSView
 
 
+/*!
+Returns YES only if the view has no transparency at all.
+
+(4.0)
+*/
 - (BOOL)
 isOpaque
 {
@@ -1966,7 +1999,15 @@ isOpaque
 
 @implementation Clipboard_WindowController
 
+
 static Clipboard_WindowController*	gClipboard_WindowController = nil;
+
+
+/*!
+Returns the singleton.
+
+(4.0)
+*/
 + (id)
 sharedClipboardWindowController
 {
@@ -1979,7 +2020,7 @@ sharedClipboardWindowController
 
 
 /*!
-Constructor.
+Designated initializer.
 
 (4.0)
 */
@@ -1991,7 +2032,14 @@ init
 	{
 	}
 	return self;
-}
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
@@ -2215,6 +2263,12 @@ andHeight:(size_t)		heightInPixels
 }// setDataWidth:andHeight:
 
 
+/*!
+Updates the user interface element that shows the Kind of the
+data on the Clipboard.
+
+(4.0)
+*/
 - (void)
 setKindField:(NSString*)	aString
 {
@@ -2222,6 +2276,12 @@ setKindField:(NSString*)	aString
 }// setKindField:
 
 
+/*!
+Updates the first generic key-value pair in the user interface
+that shows information about the data on the Clipboard.
+
+(4.0)
+*/
 - (void)
 setLabel1:(NSString*)	labelString
 andValue:(NSString*)	valueString
@@ -2243,6 +2303,12 @@ andValue:(NSString*)	valueString
 }// setLabel1:andValue:
 
 
+/*!
+Updates the second generic key-value pair in the user interface
+that shows information about the data on the Clipboard.
+
+(4.0)
+*/
 - (void)
 setLabel2:(NSString*)	labelString
 andValue:(NSString*)	valueString
@@ -2264,6 +2330,13 @@ andValue:(NSString*)	valueString
 }// setLabel2:andValue:
 
 
+/*!
+Marks the main content area as dirty, so that it will be
+redrawn soon.  This is appropriate after the Clipboard’s data
+has been changed.
+
+(4.0)
+*/
 - (void)
 setNeedsDisplay
 {
@@ -2271,6 +2344,12 @@ setNeedsDisplay
 }// setNeedsDisplay
 
 
+/*!
+Specifies that the current Clipboard data is graphical, and
+causes a more appropriate user interface to be displayed.
+
+(4.0)
+*/
 - (void)
 setShowImage:(BOOL)		flag
 {
@@ -2298,6 +2377,12 @@ setShowImage:(BOOL)		flag
 }// setShowImage:
 
 
+/*!
+Specifies that the current Clipboard data is textual, and
+causes a more appropriate user interface to be displayed.
+
+(4.0)
+*/
 - (void)
 setShowText:(BOOL)		flag
 {
@@ -2323,6 +2408,12 @@ setShowText:(BOOL)		flag
 }// setShowText:
 
 
+/*!
+Updates the user interface element that shows the Size of the
+data on the Clipboard.
+
+(4.0)
+*/
 - (void)
 setSizeField:(NSString*)	aString
 {
@@ -2331,6 +2422,7 @@ setSizeField:(NSString*)	aString
 
 
 #pragma mark NSWindowController
+
 
 /*!
 Handles initialization that depends on user interface
@@ -2382,6 +2474,7 @@ windowFrameAutosaveName
 	// user settings to be forgotten
 	return @"Clipboard";
 }// windowFrameAutosaveName
+
 
 @end // Clipboard_WindowController
 

@@ -50,8 +50,11 @@
 
 #pragma mark Types
 
-@interface My_NoticeColorPanelChange : NSResponder
-- (void)changeColor: (id)sender;
+@interface CocoaBasic_NoticeColorPanelChange : NSResponder
+
+- (void)
+changeColor:(id)_;
+
 @end
 
 typedef std::map< HIWindowRef, NSWindow* >		HIWindowRefToNSWindowMap;
@@ -67,10 +70,10 @@ NSString*	returnPathForFSRef	(FSRef const&);
 #pragma mark Variables
 namespace {
 
-HIWindowRefToNSWindowMap&		gCocoaCarbonWindows()	{ static HIWindowRefToNSWindowMap x; return x; }
-HIViewWrap						gCurrentColorPanelFocus;	//!< see ColorBox.h; a view with a color box that uses the current color
-My_NoticeColorPanelChange*		gColorWatcher = nil;		//!< sees color changes
-NSSpeechSynthesizer*			gDefaultSynth = nil;
+HIWindowRefToNSWindowMap&			gCocoaCarbonWindows()	{ static HIWindowRefToNSWindowMap x; return x; }
+HIViewWrap							gCurrentColorPanelFocus;	//!< see ColorBox.h; a view with a color box that uses the current color
+CocoaBasic_NoticeColorPanelChange*	gColorWatcher = nil;		//!< sees color changes
+NSSpeechSynthesizer*				gDefaultSynth = nil;
 
 } // anonymous namespace
 
@@ -134,7 +137,7 @@ CocoaBasic_ColorPanelSetTargetView	(HIViewRef	inColorBoxView)
 	// create a responder if none exists, to watch for color changes
 	if (nil == gColorWatcher)
 	{
-		gColorWatcher = [[My_NoticeColorPanelChange alloc] init];
+		gColorWatcher = [[CocoaBasic_NoticeColorPanelChange alloc] init];
 		[gColorWatcher setNextResponder:[NSApp nextResponder]];
 		[NSApp setNextResponder:gColorWatcher];
 	}
@@ -731,8 +734,15 @@ returnPathForFSRef	(FSRef const&	inFileOrFolder)
 } // anonymous namespace
 
 
-@implementation My_NoticeColorPanelChange
+@implementation CocoaBasic_NoticeColorPanelChange
 
+
+/*!
+Notified when the user selects a new color in the system-wide
+Colors panel.
+
+(4.0)
+*/
 - (void)
 changeColor:(id)	sender
 {
@@ -743,8 +753,7 @@ changeColor:(id)	sender
 	RGBColor		newColorRGB;
 	
 	
-	[newColor getRed:&newColorFloat.red green:&newColorFloat.green blue:&newColorFloat.blue
-		alpha:&ignoredAlpha];
+	[newColor getRed:&newColorFloat.red green:&newColorFloat.green blue:&newColorFloat.blue alpha:&ignoredAlpha];
 	newColorFloat.red *= RGBCOLOR_INTENSITY_MAX;
 	newColorFloat.green *= RGBCOLOR_INTENSITY_MAX;
 	newColorFloat.blue *= RGBCOLOR_INTENSITY_MAX;
@@ -753,8 +762,9 @@ changeColor:(id)	sender
 	newColorRGB.blue = STATIC_CAST(newColorFloat.blue, unsigned short);
 	
 	ColorBox_SetColor(gCurrentColorPanelFocus, &newColorRGB, true/* is user action */);
-}
+}/// changeColor:
 
-@end // My_NoticeColorPanelChange
+
+@end // CocoaBasic_NoticeColorPanelChange
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
