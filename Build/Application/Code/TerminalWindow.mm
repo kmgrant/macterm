@@ -7496,7 +7496,7 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 						NSToolbarSeparatorItemIdentifier,
 						NSToolbarSpaceItemIdentifier,
 						NSToolbarFlexibleSpaceItemIdentifier,
-						NSToolbarPrintItemIdentifier,
+						kMy_ToolbarItemIDPrint,
 						kMy_ToolbarItemIDCustomize,
 						nil];
 }// toolbarAllowedItemIdentifiers
@@ -7514,7 +7514,7 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 						kMy_ToolbarItemIDLED3,
 						kMy_ToolbarItemIDLED4,
 						NSToolbarFlexibleSpaceItemIdentifier,
-						NSToolbarPrintItemIdentifier,
+						kMy_ToolbarItemIDPrint,
 						NSToolbarSpaceItemIdentifier,
 						NSToolbarSpaceItemIdentifier,
 						nil];
