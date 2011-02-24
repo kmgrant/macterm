@@ -233,6 +233,12 @@
 	<string>10.3.9</string>
 	<key>LSRequiresCarbon</key>
 	<true/>
+	<key>MyDefaultFormatPropertyLists</key>
+	<array>
+		<string>DefaultFormat1</string>
+		<string>DefaultFormat2</string>
+		<string>DefaultFormat3</string>
+	</array>
 	<key>MyHomePageURL</key>
 	<string>http://www.mactelnet.com/</string>
 	<key>MySourceCodeLicenseURL</key>

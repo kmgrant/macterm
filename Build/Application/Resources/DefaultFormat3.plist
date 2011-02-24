@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name-string</key>
+	<string>Sand</string>
+	<key>terminal-color-blinking-background-rgb</key>
+	<array>
+		<real>1</real>
+		<real>0.8</real>
+		<real>0.4</real>
+	</array>
+	<key>terminal-color-blinking-foreground-rgb</key>
+	<array>
+		<real>0.5019608</real>
+		<real>0.2509804</real>
+		<real>0</real>
+	</array>
+	<key>terminal-color-bold-background-rgb</key>
+	<array>
+		<real>1</real>
+		<real>0.8</real>
+		<real>0.4</real>
+	</array>
+	<key>terminal-color-bold-foreground-rgb</key>
+	<array>
+		<real>0.5701228</real>
+		<real>0.1357137</real>
+		<real>0.1295186</real>
+	</array>
+	<key>terminal-color-matte-background-rgb</key>
+	<array>
+		<real>0.6334783</real>
+		<real>0.4920424</real>
+		<real>0.1844968</real>
+	</array>
+	<key>terminal-color-normal-background-rgb</key>
+	<array>
+		<real>1</real>
+		<real>0.8</real>
+		<real>0.4</real>
+	</array>
+	<key>terminal-color-normal-foreground-rgb</key>
+	<array>
+		<real>0.5019608</real>
+		<real>0</real>
+		<real>0</real>
+	</array>
+</dict>
+</plist>

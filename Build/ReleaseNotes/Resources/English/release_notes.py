@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110223',
     '20110212',
     '20110210',
     '20110201',
@@ -356,6 +357,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110223': [
+        'Preferences window Formats pane now creates default color schemes if NO other custom Formats are in the list.',
+    ],
     '20110212': [
         'Toolbar icon artwork has been completely redone; colors have been removed, and icons are crisper and flatter.',
     ],

@@ -938,6 +938,8 @@ Preferences_Init ()
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("macro-order")); // for future use
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("terminal-capture-folder")); // for future use
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("terminal-when-cursor-near-right-margin")); // for future use
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("name")); // for creating default collections
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("name-string")); // for creating default collections
 	My_PreferenceDefinition::createFlag(kPreferences_TagArrangeWindowsUsingTabs,
 										CFSTR("terminal-use-tabs"), Quills::Prefs::WORKSPACE);
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedFormatFavorite,
@@ -5463,7 +5465,82 @@ createAllPreferencesContextsFromDisk ()
 		
 		
 		prefsResult = copyClassDomainCFArray(*toClass, namesInClass);
-		if (kPreferences_ResultOK == prefsResult);
+		if ((nullptr != namesInClass) && (0 == CFArrayGetCount(namesInClass)) &&
+			(Quills::Prefs::FORMAT == *toClass))
+		{
+			// the Format type is a special case; if there are no user-custom
+			// collections yet, then copy in all the default color schemes
+			// (this gives the user a list of Formats by default)
+			CFArrayRef		fileNameArray = CFUtilities_ArrayCast(CFBundleGetValueForInfoDictionaryKey(AppResources_ReturnBundleForInfo(),
+																										CFSTR("MyDefaultFormatPropertyLists")));
+			CFIndex			fileNameCount = (fileNameArray) ? CFArrayGetCount(fileNameArray) : 0;
+			
+			
+			for (CFIndex i = 0; i < fileNameCount; ++i)
+			{
+				// read a default format into a context, then create a target
+				// context that will save it in the Format collections list
+				// using the same name as that of the source context
+				CFStringRef		fileNameNoExtension = CFUtilities_StringCast(CFArrayGetValueAtIndex(fileNameArray, i));
+				CFURLRef		fileURL = CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), fileNameNoExtension,
+																	CFSTR("plist")/* type string */, nullptr/* subdirectory path */);
+				
+				
+				if (nullptr != fileURL)
+				{
+					// create a class-specific context so that it will automatically
+					// be stored in the appropriate preferences domain on disk (the
+					// name is implicitly changed by copying in the source context)
+					Preferences_ContextRef		savedFormat = Preferences_NewContextFromFavorites
+																(Quills::Prefs::FORMAT, nullptr/* generate name */);
+					
+					
+					if (nullptr != savedFormat)
+					{
+						Preferences_ContextRef		sourceFormat = Preferences_NewContextFromXMLFileURL(Quills::Prefs::FORMAT, fileURL);
+						
+						
+						if (nullptr != sourceFormat)
+						{
+							prefsResult = Preferences_ContextCopy(sourceFormat, savedFormat);
+							if (kPreferences_ResultOK == prefsResult)
+							{
+								// since the name key of a Favorites context is normally set automatically
+								// when saved, any dictionary value (technically added by the copy above)
+								// will be ignored; so, it is necessary to explicitly set the desired name
+								// with an API call
+								{
+									My_ContextAutoLocker	savedFormatPtr(gMyContextPtrLocks(), savedFormat);
+									My_ContextAutoLocker	sourceFormatPtr(gMyContextPtrLocks(), sourceFormat);
+									CFRetainRelease			desiredName(sourceFormatPtr->returnStringCopy(CFSTR("name-string")), true/* is retained */);
+									
+									
+									if (desiredName.exists())
+									{
+										savedFormatPtr->rename(desiredName.returnCFStringRef());
+									}
+								}
+								
+								prefsResult = Preferences_ContextSave(savedFormat);
+								if (kPreferences_ResultOK == prefsResult)
+								{
+									// success!
+								}
+							}
+							Preferences_ReleaseContext(&sourceFormat);
+						}
+						Preferences_ReleaseContext(&savedFormat);
+					}
+					CFRelease(fileURL), fileURL = nullptr;
+				}
+			}
+			
+			// now that the set of Formats has been changed, reinitialize the array
+			prefsResult = copyClassDomainCFArray(*toClass, namesInClass);
+		}
+		
+		// create contexts for every domain that was found for this class
+		if (kPreferences_ResultOK == prefsResult)
 		{
 			CFIndex const	kNumberOfFavorites = CFArrayGetCount(namesInClass);
 			

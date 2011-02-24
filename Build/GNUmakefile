@@ -152,6 +152,9 @@ $(wildcard $(SRC_APP_CODE_TOP)/Quills*)
 # need different commands for recursive trees
 APP_RESOURCES_FILES := \
 DefaultPreferences.plist \
+DefaultFormat1.plist \
+DefaultFormat2.plist \
+DefaultFormat3.plist \
 GrowlRegistrationTicket.growlRegDict \
 IconForBellOff.icns \
 IconForBellOn.icns \
