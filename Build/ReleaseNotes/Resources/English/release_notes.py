@@ -359,6 +359,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20110224': [
+        'Fixed menus so that command keys for disabled items are no longer typed into the active terminal window.',
         'Fixed "Make Text as Big as Possible" command so that the window frame stays on the screen.',
     ],
     '20110223': [

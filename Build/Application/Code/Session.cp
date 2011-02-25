@@ -6280,9 +6280,16 @@ receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 		// hide the cursor until the mouse moves
 		ObscureCursor();
 		
-		// now invoke old callback
-		handleSessionKeyDown(nullptr/* unused listener model */, 0/* unused event code */,
-								&controlKeyPressInfo/* event context */, session/* listener context */);
+		// note that a key equivalent for a menu item might be invoked
+		// when the corresponding item is disabled; Cocoa seems to forward
+		// such events to the next window instead of absorbing them, and
+		// this should not cause a command key letter to be typed into a
+		// terminal; an explicit command key check avoids the problem
+		if (false == controlKeyPressInfo.commandDown)
+		{
+			handleSessionKeyDown(nullptr/* unused listener model */, 0/* unused event code */,
+									&controlKeyPressInfo/* event context */, session/* listener context */);
+		}
 	}
 	
 	return result;
