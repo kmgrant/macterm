@@ -238,6 +238,7 @@
 		<string>DefaultFormat1</string>
 		<string>DefaultFormat2</string>
 		<string>DefaultFormat3</string>
+		<string>DefaultFormat4</string>
 	</array>
 	<key>MyHomePageURL</key>
 	<string>http://www.mactelnet.com/</string>

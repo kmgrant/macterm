@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name-string</key>
+	<string>Dark Blue and Purple</string>
+	<key>terminal-color-blinking-background-rgb</key>
+	<array>
+		<real>0.0443122</real>
+		<real>0.2451057</real>
+		<real>0.419913</real>
+	</array>
+	<key>terminal-color-blinking-foreground-rgb</key>
+	<array>
+		<real>1</real>
+		<real>1</real>
+		<real>1</real>
+	</array>
+	<key>terminal-color-bold-background-rgb</key>
+	<array>
+		<real>0.0443122</real>
+		<real>0.2451057</real>
+		<real>0.419913</real>
+	</array>
+	<key>terminal-color-bold-foreground-rgb</key>
+	<array>
+		<real>0.8554665</real>
+		<real>0.6400702</real>
+		<real>1</real>
+	</array>
+	<key>terminal-color-matte-background-rgb</key>
+	<array>
+		<real>0.3601282</real>
+		<real>0.2680857</real>
+		<real>0.3619898</real>
+	</array>
+	<key>terminal-color-normal-background-rgb</key>
+	<array>
+		<real>0.0443122</real>
+		<real>0.2451057</real>
+		<real>0.419913</real>
+	</array>
+	<key>terminal-color-normal-foreground-rgb</key>
+	<array>
+		<real>0.695964</real>
+		<real>0.7373007</real>
+		<real>0.9817197</real>
+	</array>
+</dict>
+</plist>

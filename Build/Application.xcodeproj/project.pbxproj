@@ -220,6 +220,7 @@
 		0A1BCD8905CA2B21005CF1E5 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/TerminalWindow.nib; sourceTree = "<group>"; };
 		0A1BCD9D05CA34FF005CF1E5 /* IconForSessionStatusActive.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSessionStatusActive.icns; path = Application/Resources/IconForSessionStatusActive.icns; sourceTree = "<group>"; };
 		0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSessionStatusDead.icns; path = Application/Resources/IconForSessionStatusDead.icns; sourceTree = "<group>"; };
+		0A21A1CD131766EA0012240D /* DefaultFormat4.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = DefaultFormat4.plist; path = Application/Resources/DefaultFormat4.plist; sourceTree = "<group>"; };
 		0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AddressDialog.h; path = Application/Code/AddressDialog.h; sourceTree = "<group>"; };
 		0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GenericPanelTabs.cp; path = Application/Code/GenericPanelTabs.cp; sourceTree = "<group>"; };
 		0A2890DE0D68019E0017D99E /* GenericPanelTabs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericPanelTabs.h; path = Application/Code/GenericPanelTabs.h; sourceTree = "<group>"; };
@@ -710,6 +711,7 @@
 				0AA66DFB1315F15C00B234C4 /* DefaultFormat1.plist */,
 				0AA66E3713160F0700B234C4 /* DefaultFormat2.plist */,
 				0AA66E3E131611EF00B234C4 /* DefaultFormat3.plist */,
+				0A21A1CD131766EA0012240D /* DefaultFormat4.plist */,
 				0AA42A290F0C95B80057B393 /* Template-MacTelnet-Info.plist */,
 				0AA42A2A0F0C95BD0057B393 /* Template-PyMacTelnet.framework-Info.plist */,
 				0AA42A2B0F0C95C20057B393 /* Template-Quills.framework-Info.plist */,

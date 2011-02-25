@@ -155,6 +155,7 @@ DefaultPreferences.plist \
 DefaultFormat1.plist \
 DefaultFormat2.plist \
 DefaultFormat3.plist \
+DefaultFormat4.plist \
 GrowlRegistrationTicket.growlRegDict \
 IconForBellOff.icns \
 IconForBellOn.icns \
