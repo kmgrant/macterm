@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110224',
     '20110223',
     '20110212',
     '20110210',
@@ -357,6 +358,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110224': [
+        'Fixed "Make Text as Big as Possible" command so that the window frame stays on the screen.',
+    ],
     '20110223': [
         'Preferences window Formats pane now creates default color schemes if NO other custom Formats are in the list.',
     ],

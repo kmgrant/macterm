@@ -4369,23 +4369,15 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									TerminalView_SetDisplayMode(ptr->allViews.front(), kTerminalView_DisplayModeZoom);
 								}
 								
-								if (showWindowFrame)
+								if ((showWindowFrame) || (kCommandFullScreen == received.commandID))
 								{
 									RegionUtilities_GetWindowMaximumBounds(targetWindow, &maxBounds,
 																			nullptr/* previous bounds */, true/* no insets */);
 								}
 								else
 								{
-									if (modalFullScreen)
-									{
-										// entire screen is available, so use it
-										RegionUtilities_GetWindowDeviceGrayRect(targetWindow, &maxBounds);
-									}
-									else
-									{
-										// menu bar and Dock will remain visible, so maximize within that region
-										RegionUtilities_GetPositioningBounds(targetWindow, &maxBounds);
-									}
+									// entire screen is available, so use it
+									RegionUtilities_GetWindowDeviceGrayRect(targetWindow, &maxBounds);
 								}
 								
 								setViewSizeIndependentFromWindow(ptr, true);
