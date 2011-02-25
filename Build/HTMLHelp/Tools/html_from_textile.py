@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=UTF-8 :
 """Converts any given Textile input file into HTML.
+
 """
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '5 March 2005'
@@ -16,7 +17,7 @@ except:
     prog = x.tb_frame.f_code.co_filename
     dir = os.path.dirname(prog)
 
-sys.path.append(os.path.join(dir, 'textile-2.0.11'))
+sys.path.append(os.path.join(dir, 'textile-2.1.4'))
 import textile
 
 if len(sys.argv) < 2: raise KeyError('not enough arguments')
