@@ -598,9 +598,6 @@ void
 Preferences_ContextRef
 	Terminal_ReturnConfiguration			(TerminalScreenRef			inScreen);
 
-UInt16
-	Terminal_ReturnNextTabDistance			(TerminalScreenRef			inScreen);
-
 CFStringEncoding
 	Terminal_ReturnTextEncoding				(TerminalScreenRef			inScreen);
 

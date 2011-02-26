@@ -165,6 +165,7 @@ enum
 	kMy_ParserStateSeenESCLeftSqBracketParamsT	= 'E[;T',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsu	= 'E[;u',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsx	= 'E[;x',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsZ	= 'E[;Z',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsBackquote	= 'E[;`',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParen				= 'ESC(',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParenA			= 'ES(A',	//!< generic state used to define emulator-specific states, below
@@ -1245,6 +1246,7 @@ public:
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
+	static void		cursorBackwardTabulation		(My_ScreenBufferPtr);
 	static void		horizontalPositionAbsolute		(My_ScreenBufferPtr);
 	static void		scrollDown						(My_ScreenBufferPtr);
 	static void		scrollUp						(My_ScreenBufferPtr);
@@ -1253,6 +1255,7 @@ public:
 	enum State
 	{
 		// Ideally these are "protected", but loop evasion code requires them.
+		kStateCBT				= kMy_ParserStateSeenESCLeftSqBracketParamsZ,			//!< cursor backward tabulation
 		kStateHPA				= kMy_ParserStateSeenESCLeftSqBracketParamsBackquote,	//!< horizontal (character) position absolute
 		kStateSD				= kMy_ParserStateSeenESCLeftSqBracketParamsT,			//!< scroll down
 		kStateSU				= kMy_ParserStateSeenESCLeftSqBracketParamsS,			//!< scroll up
@@ -1331,6 +1334,7 @@ void						moveCursorDownToEdge					(My_ScreenBufferPtr);
 void						moveCursorLeft							(My_ScreenBufferPtr);
 void						moveCursorLeftToEdge					(My_ScreenBufferPtr);
 void						moveCursorLeftToHalf					(My_ScreenBufferPtr);
+void						moveCursorLeftToNextTabStop				(My_ScreenBufferPtr);
 void						moveCursorRight							(My_ScreenBufferPtr);
 void						moveCursorRightToEdge					(My_ScreenBufferPtr);
 void						moveCursorRightToNextTabStop			(My_ScreenBufferPtr);
@@ -1358,7 +1362,7 @@ inline TerminalTextAttributes	styleOfVTParameter					(UInt8	inPs)
 	return (1 << (inPs - 1));
 }
 void						tabStopClearAll							(My_ScreenBufferPtr);
-UInt16						tabStopGetDistanceFromCursor			(My_ScreenBufferConstPtr);
+UInt16						tabStopGetDistanceFromCursor			(My_ScreenBufferConstPtr, Boolean);
 void						tabStopInitialize						(My_ScreenBufferPtr);
 UniChar						translateCharacter						(My_ScreenBufferPtr, UniChar, TerminalTextAttributes,
 																	 TerminalTextAttributes&);
@@ -3808,28 +3812,6 @@ Terminal_ReturnInvisibleRowCount	(TerminalScreenRef		inRef)
 
 
 /*!
-Returns the number of spaces until the next tab stop,
-based on the current cursor position in the specified
-terminal.
-
-(3.0)
-*/
-UInt16
-Terminal_ReturnNextTabDistance		(TerminalScreenRef		inRef)
-{
-	UInt16						result = 0;
-	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
-	
-	
-	if (nullptr != dataPtr)
-	{
-		result = tabStopGetDistanceFromCursor(dataPtr);
-	}
-	return result;
-}// ReturnNextTabDistance
-
-
-/*!
 Returns the number of lines long the specified
 terminal screen’s main screen area is (minus any
 scrollback lines).
@@ -6020,6 +6002,10 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 		
 		case 'x':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsx;
+			break;
+		
+		case 'Z':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsZ;
 			break;
 		
 		case '`':
@@ -8940,6 +8926,38 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 
 
 /*!
+Handles the XTerm 'CBT' sequence.
+
+This should accept zero or one parameters.  With no parameters,
+the cursor is moved backwards to the first tab stop current line.
+Otherwise, the parameter refers to the number of tab stops to
+move.
+
+See also the handling of the tab character in the VT terminal,
+which tabs in the opposite direction.
+
+(4.0)
+*/
+void
+My_XTerm::
+cursorBackwardTabulation	(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16		tabCount = 1;
+	
+	
+	if (-1 != inDataPtr->emulator.parameterValues[0])
+	{
+		tabCount = inDataPtr->emulator.parameterValues[0];
+	}
+	
+	for (SInt16 i = 0; i < tabCount; ++i)
+	{
+		moveCursorLeftToNextTabStop(inDataPtr);
+	}
+}// My_XTerm::cursorBackwardTabulation
+
+
+/*!
 Handles the XTerm 'HPA' sequence.
 
 This should accept up to 2 parameters.  With no parameters, the
@@ -9092,6 +9110,10 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		
 		case 'T':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsT;
+			break;
+		
+		case 'Z':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsZ;
 			break;
 		
 		case '`':
@@ -9262,6 +9284,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	// INCOMPLETE
 	switch (inOldNew.second)
 	{
+	case kStateCBT:
+		cursorBackwardTabulation(inDataPtr);
+		break;
+	
 	case kStateHPA:
 		horizontalPositionAbsolute(inDataPtr);
 		break;
@@ -12256,6 +12282,24 @@ moveCursorLeftToHalf	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+Moves the cursor in the opposite direction of a
+normal tab, to find the stop that is behind it.
+
+IMPORTANT:	ALWAYS use moveCursor...() routines
+			to set the cursor value; otherwise,
+			cursor-dependent stuff could become
+			out of sync.
+
+(3.0)
+*/
+inline void
+moveCursorLeftToNextTabStop	(My_ScreenBufferPtr		inDataPtr)
+{
+	moveCursorX(inDataPtr, inDataPtr->current.cursorX - tabStopGetDistanceFromCursor(inDataPtr, false/* forward */));
+}// moveCursorLeftToNextTabStop
+
+
+/*!
 Moves the cursor to the column immediately following
 its current column.
 
@@ -12304,7 +12348,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 inline void
 moveCursorRightToNextTabStop	(My_ScreenBufferPtr		inDataPtr)
 {
-	moveCursorX(inDataPtr, inDataPtr->current.cursorX + tabStopGetDistanceFromCursor(inDataPtr));
+	moveCursorX(inDataPtr, inDataPtr->current.cursorX + tabStopGetDistanceFromCursor(inDataPtr, true/* forward */));
 }// moveCursorRightToNextTabStop
 
 
@@ -13182,27 +13226,47 @@ tabStopClearAll		(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
-Returns the number of spaces until the next tab
-stop, based on the current cursor position of
-the specified screen.
+Returns the number of spaces until the next tab stop, based on
+the current cursor position of the specified screen.
+
+If "inForwardDirection" is true, the distance is returned
+relative to the next stop to the right of the cursor location;
+otherwise, the distance refers to the next stop to the left
+(that is, a backwards tab).
 
 (2.6)
 */
 UInt16
-tabStopGetDistanceFromCursor	(My_ScreenBufferConstPtr	inDataPtr)
+tabStopGetDistanceFromCursor	(My_ScreenBufferConstPtr	inDataPtr,
+								 Boolean					inForwardDirection)
 {
 	UInt16		result = 0;
 	
 	
-	if (inDataPtr->current.cursorX < (inDataPtr->current.returnNumberOfColumnsPermitted() - 1))
+	if (inForwardDirection)
 	{
-		result = inDataPtr->current.cursorX + 1;
-		while ((inDataPtr->tabSettings[result] != kMy_TabSet) &&
-				(result < (inDataPtr->current.returnNumberOfColumnsPermitted() - 1)))
+		if (inDataPtr->current.cursorX < (inDataPtr->current.returnNumberOfColumnsPermitted() - 1))
 		{
-			++result;
+			result = inDataPtr->current.cursorX + 1;
+			while ((inDataPtr->tabSettings[result] != kMy_TabSet) &&
+					(result < (inDataPtr->current.returnNumberOfColumnsPermitted() - 1)))
+			{
+				++result;
+			}
+			result = (result - inDataPtr->current.cursorX);
 		}
-		result = (result - inDataPtr->current.cursorX);
+	}
+	else
+	{
+		if (inDataPtr->current.cursorX > 0)
+		{
+			result = inDataPtr->current.cursorX - 1;
+			while ((inDataPtr->tabSettings[result] != kMy_TabSet) && (result > 0))
+			{
+				--result;
+			}
+			result = (inDataPtr->current.cursorX - result);
+		}
 	}
 	return result;
 }// tabStopGetDistanceFromCursor
