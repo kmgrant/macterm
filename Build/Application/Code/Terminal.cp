@@ -1288,7 +1288,8 @@ void						bufferEraseVisibleScreenWithUpdate		(My_ScreenBufferPtr);
 void						bufferEraseWithoutUpdate				(My_ScreenBufferPtr);
 void						bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr, SInt16);
 void						bufferInsertBlankLines					(My_ScreenBufferPtr, UInt16,
-																	 My_ScreenBufferLineList::iterator&);
+																	 My_ScreenBufferLineList::iterator&,
+																	 My_AttributeRule = kMy_AttributeRuleInitialize);
 void						bufferLineFill							(My_ScreenBufferPtr, My_ScreenBufferLine&, UInt8,
 																	 TerminalTextAttributes =
 																		kTerminalTextAttributesAllOff,
@@ -8572,7 +8573,7 @@ insertLines		(My_ScreenBufferPtr		inDataPtr)
 				++totalLines;
 			}
 		}
-		bufferInsertBlankLines(inDataPtr, totalLines, lineIterator);
+		bufferInsertBlankLines(inDataPtr, totalLines, lineIterator, kMy_AttributeRuleCopyLastLine);
 	}
 }// insertLines
 
@@ -9985,7 +9986,8 @@ WARNING:	The specified line MUST be part of the terminal
 void
 bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 						 UInt16									inNumberOfLines,
-						 My_ScreenBufferLineList::iterator&		inInsertionLine)
+						 My_ScreenBufferLineList::iterator&		inInsertionLine,
+						 My_AttributeRule						inAttributeRule)
 {
 	My_ScreenBufferLineList::iterator	scrollingRegionBegin;
 	My_ScreenBufferLineList::iterator	scrollingRegionEnd;
@@ -10005,8 +10007,19 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 		
 		
 		// insert blank lines
-		// INCOMPLETE - copy attributes of insertion line for new lines
-		inDataPtr->screenBuffer.insert(inInsertionLine, kMostLines, gEmptyScreenBufferLine());
+		if ((kMy_AttributeRuleCopyLastLine == inAttributeRule) && (scrollingRegionEnd != scrollingRegionBegin))
+		{
+			My_ScreenBufferLine		lineTemplate = gEmptyScreenBufferLine();
+			
+			
+			lineTemplate.attributeVector = (*inInsertionLine).attributeVector;
+			lineTemplate.globalAttributes = (*inInsertionLine).globalAttributes;
+			inDataPtr->screenBuffer.insert(inInsertionLine, kMostLines, lineTemplate);
+		}
+		else
+		{
+			inDataPtr->screenBuffer.insert(inInsertionLine, kMostLines, gEmptyScreenBufferLine());
+		}
 		
 		// delete last lines
 		pastLastKeptLine = scrollingRegionEnd;
@@ -11508,7 +11521,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					{
 						inDataPtr->emulator.parameterValues[0] = 1;
 					}
-					bufferInsertBlankLines(inDataPtr, inDataPtr->emulator.parameterValues[0], cursorLineIterator);
+					bufferInsertBlankLines(inDataPtr, inDataPtr->emulator.parameterValues[0], cursorLineIterator, kMy_AttributeRuleCopyLastLine);
 				}
 				goto ShortCut;				
 			
