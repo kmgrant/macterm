@@ -9185,45 +9185,46 @@ void
 My_XTerm::
 insertBlankCharacters	(My_ScreenBufferPtr		inDataPtr)
 {
-	SInt16				preWriteCursorX = inDataPtr->current.cursorX;
-	My_ScreenRowIndex	preWriteCursorY = inDataPtr->current.cursorY;
-	SInt16				characterCount = inDataPtr->emulator.parameterValues[0];
+	SInt16		characterCount = inDataPtr->emulator.parameterValues[0];
 	
 	
-	if (-1 == characterCount)
+	if (0 != characterCount)
 	{
-		characterCount = 1;
-	}
-	else if (0 == characterCount)
-	{
-		characterCount = 1;
-	}
-	
-	bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, characterCount);
-	
-	// add the effects of the insert to the text-change region;
-	// this should trigger things like Terminal View updates
-	{
-		Terminal_RangeDescription	range;
+		SInt16				preWriteCursorX = inDataPtr->current.cursorX;
+		My_ScreenRowIndex	preWriteCursorY = inDataPtr->current.cursorY;
 		
 		
-		range.screen = inDataPtr->selfRef;
-		range.firstRow = preWriteCursorY;
-		if (preWriteCursorY != inDataPtr->current.cursorY)
+		if (-1 == characterCount)
 		{
-			// more than one line; just draw all lines completely
-			range.firstColumn = 0;
-			range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
-			range.rowCount = inDataPtr->current.cursorY - preWriteCursorY + 1;
+			characterCount = 1;
 		}
-		else
+		
+		bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, characterCount);
+		
+		// add the effects of the insert to the text-change region;
+		// this should trigger things like Terminal View updates
 		{
-			// invalidate the entire line starting from the original cursor column
-			range.firstColumn = preWriteCursorX;
-			range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - preWriteCursorX;
-			range.rowCount = 1;
+			Terminal_RangeDescription	range;
+			
+			
+			range.screen = inDataPtr->selfRef;
+			range.firstRow = preWriteCursorY;
+			if (preWriteCursorY != inDataPtr->current.cursorY)
+			{
+				// more than one line; just draw all lines completely
+				range.firstColumn = 0;
+				range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
+				range.rowCount = inDataPtr->current.cursorY - preWriteCursorY + 1;
+			}
+			else
+			{
+				// invalidate the entire line starting from the original cursor column
+				range.firstColumn = preWriteCursorX;
+				range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - preWriteCursorX;
+				range.rowCount = 1;
+			}
+			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 		}
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 	}
 }// My_XTerm::insertBlankCharacters
 
