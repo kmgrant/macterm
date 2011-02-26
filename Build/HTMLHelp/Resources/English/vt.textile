@@ -43,7 +43,7 @@ You can set "TERM" to any value that is understood by the
 applications you run in a terminal.  Usually, this matches an
 actual terminal name; common values are:
 
-pre. vt100 vt102 vt220 xterm xterm-color linux
+pre. vt100 vt102 vt220 xterm xterm-256color linux
 
 But, it can also be set to other names that are considered
 compatible (more or less) with one of MacTelnet's own emulators.
@@ -58,8 +58,10 @@ h2(#vt102). VT102
 
 The VT102 is almost entirely the same as the VT100, but with
 enhanced editing and printing features.  MacTelnet handles the
-additional editing features, and has an implementation of the
-printing features that is currently unreliable and is under test.
+additional editing features, and implements some printing
+features (for instance, print-from-terminal will automatically
+generate a MacTelnet print preview).  You cannot use line-by-line
+printing yet.
 
 h2(#vt220). VT220
 
@@ -84,17 +86,21 @@ h2(#xterm). XTerm
 
 The XTerm is a superset of the VT100 series that is notable for
 window management features like minimization, size, and title, as
-well as mouse support.  MacTelnet has an implementation of some
-XTerm features, but in development versions they are largely
-disabled for testing.
+well as mouse support.  MacTelnet implements a number of useful
+XTerm features, *in addition to those already in the VT102*:
 
-These days, the more common variant is the color XTerm.  16 basic
-colors are supported by all MacTelnet terminals.
+* 256 colors (set "xterm-256color" TERM for apps to use it)
+* dynamic updates to colors
+* window and/or minimized-icon titles
+* cursor sequences ("CHA", "HPA", "VPA", "CNL", "CPL")
+* tab stop sequences ("CHT", "CBT")
+* line scrolling ("SU", "SD")
+* insert and erase ("ICH", "ECH")
 
 h2(#linux). Linux
 
 The Linux terminal is a superset of the color XTerm.  MacTelnet
-does not support this terminal type (yet).
+does not support the extensions from this terminal type (yet).
 
 h2(#ansibbs). ANSI-BBS
 
@@ -103,9 +109,9 @@ described as the MS-DOS terminal.  The feature set is not
 entirely standardized, but it is known for using Code Page 437
 extended ASCII as its character set.  PC console applications
 commonly rely on this to do relatively sophisticated graphics
-rendering.  MacTelnet has a preliminary implementation of this
-emulator, but in development versions it is largely disabled for
-testing.
+rendering.  MacTelnet has a very good rendering of CP437, but
+to enable it you must set up a Translation preference that
+chooses "Latin-US (DOS)" as its character set.
 
 </div>
 

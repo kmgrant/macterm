@@ -360,6 +360,11 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20110226': [
+        'XTerm compatibility has significantly improved with this build, as detailed in the following notes.',
+        'XTerm sequences for character insert and erase ("ICH" and "ECH") are now implemented.',
+        'XTerm sequences for cursor positioning ("CHA", "HPA", "VPA", "CNL" and "CPL") are now implemented.',
+        'XTerm sequences for jumping by tab stop ("CHT" and "CBT") are now implemented.',
+        'XTerm sequences for arbitrary scrolling of lines ("SU" and "SD") are now implemented.',
         'XTerm window and icon title sequences now allow new-style string terminators in addition to old-style bell terminators.',
     ],
     '20110224': [
