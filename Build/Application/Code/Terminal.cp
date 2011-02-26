@@ -783,8 +783,9 @@ public:
 	CFStringEncoding					inputTextEncoding;		//!< specifies the encoding used by the input data stream
 	CFRetainRelease						answerBackCFString;		//!< similar to "primaryType", but can be an arbitrary string
 	My_ParserState						currentState;			//!< state the terminal input parser is in now
-	UInt16								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
+	My_ParserState						stringAccumulatorState;	//!< state that was in effect when the "stringAccumulator" was recently cleared
 	std::string							stringAccumulator;		//!< used to gather characters for such things as XTerm window changes
+	UInt16								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
 	SInt16								parameterEndIndex;		//!< zero-based last parameter position in the "values" array
 	ParameterList						parameterValues;		//!< all values provided for the current escape sequence
 	VariantChain						preCallbackSet;			//!< callbacks invoked prior to ordinary callbacks, to allow tweaks (e.g. XTerm)
@@ -1240,17 +1241,19 @@ class My_XTerm
 public:
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	
 	enum State
 	{
 		// Ideally these are "protected", but loop evasion code requires them.
+		kStateSWIT				= kMy_ParserStateSeenESCRightSqBracket0,		//!< subsequent string is for window title and icon title
 		kStateSWITAcquireStr	= kMy_ParserStateSeenESCRightSqBracket0Semi,	//!< seen ESC]0, gathering characters of string
-		kStateSWIT				= 'E]0S',										//!< set window title and icon title
+		kStateSIT				= kMy_ParserStateSeenESCRightSqBracket1,		//!< subsequent string is for icon title only
 		kStateSITAcquireStr		= kMy_ParserStateSeenESCRightSqBracket1Semi,	//!< seen ESC]1, gathering characters of string
-		kStateSIT				= 'E]1S',										//!< set icon title only
+		kStateSWT				= kMy_ParserStateSeenESCRightSqBracket2,		//!< subsequent string is for window title only
 		kStateSWTAcquireStr		= kMy_ParserStateSeenESCRightSqBracket2Semi,	//!< seen ESC]2, gathering characters of string
-		kStateSWT				= 'E]2S',										//!< set window title only
+		kStateSetColor			= kMy_ParserStateSeenESCRightSqBracket4,		//!< subsequent string is a color specification
 		kStateColorAcquireStr	= kMy_ParserStateSeenESCRightSqBracket4Semi,	//!< seen ESC]4, gathering characters of string
-		kStateSetColorComplete	= kMy_ParserStateSeenESCBackslash,				//!< set color based on preceding parameters
+		kStateStringTerminator	= kMy_ParserStateSeenESCBackslash,				//!< perform action according to accumulated string
 	};
 };
 
@@ -4717,6 +4720,8 @@ primaryType(inPrimaryEmulation),
 inputTextEncoding(inInputTextEncoding),
 answerBackCFString(inAnswerBack),
 currentState(kMy_ParserStateInitial),
+stringAccumulatorState(kMy_ParserStateInitial),
+stringAccumulator(),
 stateRepetitions(0),
 parameterEndIndex(0),
 parameterValues(kMy_MaximumANSIParameters),
@@ -8948,7 +8953,11 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			switch (kTriggerChar)
 			{
 			case '\007':
-				inNowOutNext.second = kStateSWIT;
+				inNowOutNext.second = kStateStringTerminator;
+				break;
+			
+			case '\033':
+				inNowOutNext.second = kMy_ParserStateSeenESC;
 				break;
 			
 			default:
@@ -8971,7 +8980,11 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			switch (kTriggerChar)
 			{
 			case '\007':
-				inNowOutNext.second = kStateSIT;
+				inNowOutNext.second = kStateStringTerminator;
+				break;
+			
+			case '\033':
+				inNowOutNext.second = kMy_ParserStateSeenESC;
 				break;
 			
 			default:
@@ -8994,7 +9007,11 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			switch (kTriggerChar)
 			{
 			case '\007':
-				inNowOutNext.second = kStateSWT;
+				inNowOutNext.second = kStateStringTerminator;
+				break;
+			
+			case '\033':
+				inNowOutNext.second = kMy_ParserStateSeenESC;
 				break;
 			
 			default:
@@ -9032,6 +9049,11 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			// ignore
 			outHandled = false;
 		}
+		break;
+	
+	case kStateStringTerminator:
+		// ignore
+		outHandled = false;
 		break;
 	
 	default:
@@ -9077,11 +9099,12 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	// INCOMPLETE
 	switch (inOldNew.second)
 	{
-	case kMy_ParserStateSeenESCRightSqBracket0:
-	case kMy_ParserStateSeenESCRightSqBracket1:
-	case kMy_ParserStateSeenESCRightSqBracket2:
-	case kMy_ParserStateSeenESCRightSqBracket4:
+	case kStateSWIT:
+	case kStateSIT:
+	case kStateSWT:
+	case kStateSetColor:
 		inDataPtr->emulator.stringAccumulator.clear();
+		inDataPtr->emulator.stringAccumulatorState = inOldNew.second;
 		break;
 	
 	case kStateSWITAcquireStr:
@@ -9092,75 +9115,103 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		result = 1;
 		break;
 	
-	case kStateSWIT:
-	case kStateSIT:
-	case kStateSWT:
+	case kStateStringTerminator:
+		// a window and/or icon title can actually be terminated in multiple
+		// ways; if a new-style XTerm string terminator is seen, then the
+		// action must be chosen based on the state that most recently used
+		// the string buffer
+		switch (inDataPtr->emulator.stringAccumulatorState)
 		{
-			CFStringRef		titleString = CFStringCreateWithCString(kCFAllocatorDefault,
-																	inDataPtr->emulator.stringAccumulator.c_str(),
-																	inDataPtr->emulator.inputTextEncoding);
-			
-			
-			if (nullptr != titleString)
+		case kStateSWIT:
+		case kStateSIT:
+		case kStateSWT:
+			if (inDataPtr->emulator.supportsVariant(kPreferences_TagXTermWindowAlterationEnabled))
 			{
-				if ((kStateSWIT == inOldNew.second) || (kStateSWT == inOldNew.second))
+				CFStringRef		titleString = CFStringCreateWithCString(kCFAllocatorDefault,
+																		inDataPtr->emulator.stringAccumulator.c_str(),
+																		inDataPtr->emulator.inputTextEncoding);
+				
+				
+				if (nullptr != titleString)
 				{
-					inDataPtr->windowTitleCFString.setCFTypeRef(titleString);
-					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowFrameTitle, inDataPtr->selfRef/* context */);
+					if ((kStateSWIT == inDataPtr->emulator.stringAccumulatorState) ||
+						(kStateSWT == inDataPtr->emulator.stringAccumulatorState))
+					{
+						inDataPtr->windowTitleCFString.setCFTypeRef(titleString);
+						changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowFrameTitle, inDataPtr->selfRef/* context */);
+					}
+					if ((kStateSWIT == inDataPtr->emulator.stringAccumulatorState) ||
+						(kStateSIT == inDataPtr->emulator.stringAccumulatorState))
+					{
+						inDataPtr->iconTitleCFString.setCFTypeRef(titleString);
+						changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowIconTitle, inDataPtr->selfRef/* context */);
+					}
 				}
-				if ((kStateSWIT == inOldNew.second) || (kStateSIT == inOldNew.second))
-				{
-					inDataPtr->iconTitleCFString.setCFTypeRef(titleString);
-					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowIconTitle, inDataPtr->selfRef/* context */);
-				}
+				CFRelease(titleString), titleString = nullptr;
 			}
-			CFRelease(titleString), titleString = nullptr;
-		}
-		break;
-	
-	case kStateSetColorComplete:
-		{
-			// the accumulated string up to this point actually needs to be parsed; currently,
-			// only strings of this form are allowed:
-			//		%d;rgb:%x/%x/%x - set color at index, to red, green, blue components in hex
-			char const*		stringPtr = inDataPtr->emulator.stringAccumulator.c_str();
-			int				i = 0;
-			int				r = 0;
-			int				g = 0;
-			int				b = 0;
-			int				scanResult = sscanf(stringPtr, "%d;rgb:%x/%x/%x", &i, &r, &g, &b);
-			
-			
-			if (4 == scanResult)
+			else
 			{
-				if ((i > 255) || (r > 255) || (g > 255) || (b > 255) ||
-					(i < 16/* cannot overwrite base ANSI colors */) || (r < 0) || (g < 0) || (b < 0))
+				// ignore
+				outHandled = false;
+			}
+			break;
+		
+		case kStateSetColor:
+			if (inDataPtr->emulator.supportsVariant(kPreferences_TagXTerm256ColorsEnabled))
+			{
+				// the accumulated string up to this point actually needs to be parsed; currently,
+				// only strings of this form are allowed:
+				//		%d;rgb:%x/%x/%x - set color at index, to red, green, blue components in hex
+				char const*		stringPtr = inDataPtr->emulator.stringAccumulator.c_str();
+				int				i = 0;
+				int				r = 0;
+				int				g = 0;
+				int				b = 0;
+				int				scanResult = sscanf(stringPtr, "%d;rgb:%x/%x/%x", &i, &r, &g, &b);
+				
+				
+				if (4 == scanResult)
 				{
-					Console_Warning(Console_WriteValueFloat4, "one or more illegal indices found in request to set XTerm color: index, red, green, blue", i, r, g, b);
+					if ((i > 255) || (r > 255) || (g > 255) || (b > 255) ||
+						(i < 16/* cannot overwrite base ANSI colors */) || (r < 0) || (g < 0) || (b < 0))
+					{
+						Console_Warning(Console_WriteValueFloat4, "one or more illegal indices found in request to set XTerm color: index, red, green, blue", i, r, g, b);
+					}
+					else
+					{
+						// success!
+						Terminal_XTermColorDescription		colorInfo;
+						
+						
+						bzero(&colorInfo, sizeof(colorInfo));
+						colorInfo.screen = inDataPtr->selfRef;
+						colorInfo.index = i;
+						colorInfo.redComponent = r;
+						colorInfo.greenComponent = g;
+						colorInfo.blueComponent = b;
+						
+						changeNotifyForTerminal(inDataPtr, kTerminal_ChangeXTermColor, &colorInfo/* context */);
+						
+						//Console_WriteValueFloat4("set color at index to red, green, blue", i, r, g, b);
+					}
 				}
 				else
 				{
-					// success!
-					Terminal_XTermColorDescription		colorInfo;
-					
-					
-					bzero(&colorInfo, sizeof(colorInfo));
-					colorInfo.screen = inDataPtr->selfRef;
-					colorInfo.index = i;
-					colorInfo.redComponent = r;
-					colorInfo.greenComponent = g;
-					colorInfo.blueComponent = b;
-					
-					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeXTermColor, &colorInfo/* context */);
-					
-					//Console_WriteValueFloat4("set color at index to red, green, blue", i, r, g, b);
+					Console_Warning(Console_WriteValue, "failed to parse XTerm color string; sscanf() result", scanResult);
+					Console_Warning(Console_WriteValueCString, "discarding unrecognized syntax for XTerm color string", stringPtr);
 				}
 			}
 			else
 			{
-				Console_Warning(Console_WriteValue, "failed to parse XTerm color string; sscanf() result", scanResult);
-				Console_Warning(Console_WriteValueCString, "discarding unrecognized syntax for XTerm color string", stringPtr);
+				// ignore
+				outHandled = false;
 			}
+			break;
+		
+		default:
+			// ignore
+			outHandled = false;
+			break;
 		}
 		break;
 	
@@ -11687,6 +11738,7 @@ void
 initializeParserStateStack	(My_EmulatorPtr		inDataPtr)
 {
 	inDataPtr->currentState = kMy_ParserStateInitial;
+	inDataPtr->stringAccumulatorState = kMy_ParserStateInitial;
 }// initializeParserStateStack
 
 
