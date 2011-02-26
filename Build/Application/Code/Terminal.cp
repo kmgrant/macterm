@@ -143,6 +143,7 @@ enum
 	kMy_ParserStateSeenESCLeftSqBracketParamsB	= 'E[;B',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsc	= 'E[;c',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsC	= 'E[;C',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsd	= 'E[;d',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsD	= 'E[;D',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsf	= 'E[;f',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsg	= 'E[;g',	//!< generic state used to define emulator-specific states, below
@@ -162,6 +163,7 @@ enum
 	kMy_ParserStateSeenESCLeftSqBracketParamss	= 'E[;s',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsu	= 'E[;u',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsx	= 'E[;x',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsBackquote	= 'E[;`',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParen				= 'ESC(',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParenA			= 'ES(A',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParenB			= 'ES(B',	//!< generic state used to define emulator-specific states, below
@@ -1113,8 +1115,7 @@ public:
 			kStateANSI		= kMy_ParserStateSeenESCLessThan,		//!< enter ANSI mode
 		};
 	};
-
-protected:
+	
 	// The names of these constants use the same mnemonics from
 	// the programming manual of the original terminal.
 	enum State
@@ -1242,18 +1243,23 @@ public:
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
+	static void		horizontalPositionAbsolute		(My_ScreenBufferPtr);
+	static void		verticalPositionAbsolute		(My_ScreenBufferPtr);
+	
 	enum State
 	{
 		// Ideally these are "protected", but loop evasion code requires them.
-		kStateSWIT				= kMy_ParserStateSeenESCRightSqBracket0,		//!< subsequent string is for window title and icon title
-		kStateSWITAcquireStr	= kMy_ParserStateSeenESCRightSqBracket0Semi,	//!< seen ESC]0, gathering characters of string
-		kStateSIT				= kMy_ParserStateSeenESCRightSqBracket1,		//!< subsequent string is for icon title only
-		kStateSITAcquireStr		= kMy_ParserStateSeenESCRightSqBracket1Semi,	//!< seen ESC]1, gathering characters of string
-		kStateSWT				= kMy_ParserStateSeenESCRightSqBracket2,		//!< subsequent string is for window title only
-		kStateSWTAcquireStr		= kMy_ParserStateSeenESCRightSqBracket2Semi,	//!< seen ESC]2, gathering characters of string
-		kStateSetColor			= kMy_ParserStateSeenESCRightSqBracket4,		//!< subsequent string is a color specification
-		kStateColorAcquireStr	= kMy_ParserStateSeenESCRightSqBracket4Semi,	//!< seen ESC]4, gathering characters of string
-		kStateStringTerminator	= kMy_ParserStateSeenESCBackslash,				//!< perform action according to accumulated string
+		kStateHPA				= kMy_ParserStateSeenESCLeftSqBracketParamsBackquote,	//!< horizontal (character) position absolute
+		kStateVPA				= kMy_ParserStateSeenESCLeftSqBracketParamsd,			//!< vertical position absolute
+		kStateSWIT				= kMy_ParserStateSeenESCRightSqBracket0,				//!< subsequent string is for window title and icon title
+		kStateSWITAcquireStr	= kMy_ParserStateSeenESCRightSqBracket0Semi,			//!< seen ESC]0, gathering characters of string
+		kStateSIT				= kMy_ParserStateSeenESCRightSqBracket1,				//!< subsequent string is for icon title only
+		kStateSITAcquireStr		= kMy_ParserStateSeenESCRightSqBracket1Semi,			//!< seen ESC]1, gathering characters of string
+		kStateSWT				= kMy_ParserStateSeenESCRightSqBracket2,				//!< subsequent string is for window title only
+		kStateSWTAcquireStr		= kMy_ParserStateSeenESCRightSqBracket2Semi,			//!< seen ESC]2, gathering characters of string
+		kStateSetColor			= kMy_ParserStateSeenESCRightSqBracket4,				//!< subsequent string is a color specification
+		kStateColorAcquireStr	= kMy_ParserStateSeenESCRightSqBracket4Semi,			//!< seen ESC]4, gathering characters of string
+		kStateStringTerminator	= kMy_ParserStateSeenESCBackslash,						//!< perform action according to accumulated string
 	};
 };
 
@@ -5929,6 +5935,10 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsC;
 			break;
 		
+		case 'd':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsd;
+			break;
+		
 		case 'D':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsD;
 			break;
@@ -6003,6 +6013,10 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 		
 		case 'x':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsx;
+			break;
+		
+		case '`':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsBackquote;
 			break;
 		
 		default:
@@ -8919,6 +8933,64 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 
 
 /*!
+Handles the XTerm 'HPA' sequence.
+
+This should accept up to 2 parameters.  With no parameters, the
+cursor is moved to the first position on the current line.  If
+there is just one parameter, it is a one-based index for the new
+cursor column on the current line.  And with two parameters, the
+order changes and the parameters are the one-based indices of the
+new cursor row and column, in that order.
+
+See also the 'CUP' sequence in the VT terminal.
+
+(4.0)
+*/
+void
+My_XTerm::
+horizontalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16 const		kParam0 = inDataPtr->emulator.parameterValues[0];
+	SInt16 const		kParam1 = inDataPtr->emulator.parameterValues[1];
+	SInt16				newX = 0;
+	My_ScreenRowIndex	newY = inDataPtr->current.cursorY;
+	
+	
+	// in the following definitions, 0 and 1 are considered the same number
+	if (-1 == kParam1)
+	{
+		// only one parameter was given, so it is the column and
+		// the cursor row does not change
+		newX = (0 == kParam0)
+				? 0
+				: (-1 != kParam0)
+					? kParam0 - 1
+					: 0/* default is column 1 in current row */;
+	}
+	else
+	{
+		// two parameters, so the order changes to (row, column)
+		newY = (0 == kParam0)
+				? 0
+				: (-1 != kParam0)
+					? kParam0 - 1
+					: inDataPtr->current.cursorY/* default is current cursor row */;
+		newX = (0 == kParam1)
+				? 0
+				: kParam1 - 1;
+	}
+	
+	// offset according to the origin mode
+	newY += inDataPtr->originRegionPtr->firstRow;
+	
+	// the new values are not checked for violation of constraints
+	// because constraints (including current origin mode) are
+	// automatically enforced by moveCursor...() routines
+	moveCursor(inDataPtr, newX, newY);
+}// My_XTerm::horizontalPositionAbsolute
+
+
+/*!
 A standard "My_EmulatorStateDeterminantProcPtr" that sets
 XTerm-specific window states based on the characters of the
 given buffer.
@@ -8941,6 +9013,24 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	
 	switch (inNowOutNext.first)
 	{
+	case My_VT100::kStateCSIParamScan:
+		// look for a terminating character (anything not legal in a parameter)
+		switch (*inBuffer)
+		{
+		case 'd':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsd;
+			break;
+		
+		case '`':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsBackquote;
+			break;
+		
+		default:
+			outHandled = false;
+			break;
+		}
+		break;
+	
 	case kMy_ParserStateSeenESC:
 	case kMy_ParserStateSeenESCRightSqBracket:
 		result = inEmulatorPtr->currentCallbacks.stateDeterminant(inEmulatorPtr, inBuffer, inLength,
@@ -9099,6 +9189,14 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	// INCOMPLETE
 	switch (inOldNew.second)
 	{
+	case kStateHPA:
+		horizontalPositionAbsolute(inDataPtr);
+		break;
+	
+	case kStateVPA:
+		verticalPositionAbsolute(inDataPtr);
+		break;
+	
 	case kStateSWIT:
 	case kStateSIT:
 	case kStateSWT:
@@ -9223,6 +9321,65 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	return result;
 }// My_XTerm::stateTransition
+
+
+/*!
+Handles the XTerm 'VPA' sequence.
+
+This should accept up to 2 parameters.  With no parameters, the
+cursor is moved to the first row, but the same cursor column.  If
+there is just one parameter, it is a one-based index for the new
+cursor row, using the same column.  And with two parameters, the
+parameters are the one-based indices of the new cursor row and
+column, in that order.
+
+See also the 'CUP' sequence in the VT terminal.
+
+(4.0)
+*/
+void
+My_XTerm::
+verticalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16 const		kParam0 = inDataPtr->emulator.parameterValues[0];
+	SInt16 const		kParam1 = inDataPtr->emulator.parameterValues[1];
+	SInt16				newX = inDataPtr->current.cursorX;
+	My_ScreenRowIndex	newY = 0;
+	
+	
+	// in the following definitions, 0 and 1 are considered the same number
+	if (-1 == kParam1)
+	{
+		// only one parameter was given, so it is the row and
+		// the cursor column does not change
+		newY = (0 == kParam0)
+				? 0
+				: (-1 != kParam0)
+					? kParam0 - 1
+					: 0/* default is row 1 in current column */;
+	}
+	else
+	{
+		// two parameters, giving (row, column)
+		newY = (0 == kParam0)
+				? 0
+				: (-1 != kParam0)
+					? kParam0 - 1
+					: 0/* default is the home cursor row */;
+		newX = (0 == kParam1)
+				? 0
+				: kParam1 - 1;
+	}
+	
+	// offset according to the origin mode
+	newY += inDataPtr->originRegionPtr->firstRow;
+	
+	// the new values are not checked for violation of constraints
+	// because constraints (including current origin mode) are
+	// automatically enforced by moveCursor...() routines
+	moveCursor(inDataPtr, newX, newY);
+}// My_XTerm::verticalPositionAbsolute
+
 
 
 /*!
