@@ -161,6 +161,8 @@ enum
 	kMy_ParserStateSeenESCLeftSqBracketParamsq	= 'E[;q',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsr	= 'E[;r',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamss	= 'E[;s',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsS	= 'E[;S',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsT	= 'E[;T',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsu	= 'E[;u',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsx	= 'E[;x',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsBackquote	= 'E[;`',	//!< generic state used to define emulator-specific states, below
@@ -1244,12 +1246,16 @@ public:
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
 	static void		horizontalPositionAbsolute		(My_ScreenBufferPtr);
+	static void		scrollDown						(My_ScreenBufferPtr);
+	static void		scrollUp						(My_ScreenBufferPtr);
 	static void		verticalPositionAbsolute		(My_ScreenBufferPtr);
 	
 	enum State
 	{
 		// Ideally these are "protected", but loop evasion code requires them.
 		kStateHPA				= kMy_ParserStateSeenESCLeftSqBracketParamsBackquote,	//!< horizontal (character) position absolute
+		kStateSD				= kMy_ParserStateSeenESCLeftSqBracketParamsT,			//!< scroll down
+		kStateSU				= kMy_ParserStateSeenESCLeftSqBracketParamsS,			//!< scroll up
 		kStateVPA				= kMy_ParserStateSeenESCLeftSqBracketParamsd,			//!< vertical position absolute
 		kStateSWIT				= kMy_ParserStateSeenESCRightSqBracket0,				//!< subsequent string is for window title and icon title
 		kStateSWITAcquireStr	= kMy_ParserStateSeenESCRightSqBracket0Semi,			//!< seen ESC]0, gathering characters of string
@@ -1339,7 +1345,7 @@ Terminal_EmulatorVariant	returnTerminalVariant					(Terminal_Emulator);
 Boolean						screenCopyLinesToScrollback				(My_ScreenBufferPtr);
 Boolean						screenInsertNewLines					(My_ScreenBufferPtr, My_ScreenBufferLineList::size_type);
 Boolean						screenMoveLinesToScrollback				(My_ScreenBufferPtr, My_ScreenBufferLineList::size_type);
-void						screenScroll							(My_ScreenBufferPtr);
+void						screenScroll							(My_ScreenBufferPtr, SInt16 = 1);
 void						setCursorVisible						(My_ScreenBufferPtr, Boolean);
 void						setScrollbackSize						(My_ScreenBufferPtr, UInt32);
 Terminal_Result				setVisibleColumnCount					(My_ScreenBufferPtr, UInt16);
@@ -8991,6 +8997,64 @@ horizontalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+Handles the XTerm 'SD' sequence.
+
+This should accept zero or one parameters.  With no parameters,
+the screen content moves down by one line (which from a user’s
+point of view is like clicking an up-arrow in a scroll bar).
+If a parameter is given, it is the number of rows to scroll by.
+
+See also the 'IND' sequence in the VT terminal.
+
+(4.0)
+*/
+void
+My_XTerm::
+scrollDown	(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16		lineCount = inDataPtr->emulator.parameterValues[0];
+	
+	
+	if (-1 == lineCount)
+	{
+		lineCount = 1;
+	}
+	
+	// the following function handles the scrolling region boundaries automatically
+	screenScroll(inDataPtr, -lineCount);
+}// My_XTerm::scrollDown
+
+
+/*!
+Handles the XTerm 'SU' sequence.
+
+This should accept zero or one parameters.  With no parameters,
+the screen content moves up by one line (which from a user’s
+point of view is like clicking a down-arrow in a scroll bar).
+If a parameter is given, it is the number of rows to scroll by.
+
+See also the 'RI' sequence in the VT terminal.
+
+(4.0)
+*/
+void
+My_XTerm::
+scrollUp	(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16		lineCount = inDataPtr->emulator.parameterValues[0];
+	
+	
+	if (-1 == lineCount)
+	{
+		lineCount = 1;
+	}
+	
+	// the following function handles the scrolling region boundaries automatically
+	screenScroll(inDataPtr, lineCount);
+}// My_XTerm::scrollUp
+
+
+/*!
 A standard "My_EmulatorStateDeterminantProcPtr" that sets
 XTerm-specific window states based on the characters of the
 given buffer.
@@ -9019,6 +9083,14 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		{
 		case 'd':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsd;
+			break;
+		
+		case 'S':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsS;
+			break;
+		
+		case 'T':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsT;
 			break;
 		
 		case '`':
@@ -9191,6 +9263,14 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	{
 	case kStateHPA:
 		horizontalPositionAbsolute(inDataPtr);
+		break;
+	
+	case kStateSD:
+		scrollDown(inDataPtr);
+		break;
+	
+	case kStateSU:
+		scrollUp(inDataPtr);
 		break;
 	
 	case kStateVPA:
@@ -12073,7 +12153,7 @@ moveCursorDownOrScroll	(My_ScreenBufferPtr		inDataPtr)
 {
 	if (inDataPtr->current.cursorY == inDataPtr->customScrollingRegion.lastRow)
 	{
-		screenScroll(inDataPtr);
+		screenScroll(inDataPtr, +1);
 	}
 	else if (inDataPtr->current.cursorY < (inDataPtr->screenBuffer.size() - 1))
 	{
@@ -12249,11 +12329,7 @@ moveCursorUpOrScroll	(My_ScreenBufferPtr		inDataPtr)
 {
 	if (inDataPtr->current.cursorY == inDataPtr->customScrollingRegion.firstRow)
 	{
-		My_ScreenBufferLineList::iterator	scrollingRegionBegin;
-		
-		
-		locateScrollingRegionTop(inDataPtr, scrollingRegionBegin);
-		bufferInsertBlankLines(inDataPtr, 1/* number of blank lines */, scrollingRegionBegin/* insertion row */);
+		screenScroll(inDataPtr, -1);
 	}
 	else
 	{
@@ -12737,56 +12813,84 @@ screenMoveLinesToScrollback		(My_ScreenBufferPtr						inDataPtr,
 
 
 /*!
-Moves the scrolling region up one line.
+Removes the specified positive number of rows from the top of the
+scrolling region, or the specified magnitude of rows from the
+bottom when the value is negative.
+
+When rows disappear from the top, blank lines appear at the
+bottom.  Lines scrolled off the top are lost unless the terminal
+is set to save them, in which case the lines are inserted into
+the scrollback buffer.
+
+When rows disappear from the bottom, blank lines appear at the
+top.  Lines scrolled off the bottom are lost.
+
+The display is updated.
 
 (3.0)
 */
 void
-screenScroll	(My_ScreenBufferPtr		inDataPtr)
+screenScroll	(My_ScreenBufferPtr		inDataPtr,
+				 SInt16					inLineCount)
 {
-	if (inDataPtr->current.cursorY < inDataPtr->screenBuffer.size())
+	if (inLineCount > 0)
 	{
-		if ((inDataPtr->text.scrollback.enabled) &&
-			(inDataPtr->customScrollingRegion == inDataPtr->visibleBoundary.rows))
+		// remove lines from the top of the scrolling region,
+		// and possibly save them
+		if (inDataPtr->current.cursorY < inDataPtr->screenBuffer.size())
 		{
-			// scrolling region is entire screen, and lines are being saved off the top
-			(Boolean)screenMoveLinesToScrollback(inDataPtr, 1/* number of lines */);
-			
-			// displaying right from top of scrollback buffer; topmost line being shown
-			// has in fact vanished; update the display to show this
-			//Console_WriteLine("text changed event: scroll terminal buffer");
+			if ((inDataPtr->text.scrollback.enabled) &&
+				(inDataPtr->customScrollingRegion == inDataPtr->visibleBoundary.rows))
 			{
-				Terminal_RangeDescription	range;
+				// scrolling region is entire screen, and lines are being saved off the top
+				(Boolean)screenMoveLinesToScrollback(inDataPtr, inLineCount);
 				
+				// displaying right from top of scrollback buffer; topmost line being shown
+				// has in fact vanished; update the display to show this
+				//Console_WriteLine("text changed event: scroll terminal buffer");
+				{
+					Terminal_RangeDescription	range;
+					
+					
+					range.screen = inDataPtr->selfRef;
+					range.firstRow = 0;
+					range.firstColumn = 0;
+					range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
+					range.rowCount = inDataPtr->visibleBoundary.rows.lastRow - inDataPtr->visibleBoundary.rows.firstRow + 1;
+					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
+				}
 				
-				range.screen = inDataPtr->selfRef;
-				range.firstRow = 0;
-				range.firstColumn = 0;
-				range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
-				range.rowCount = inDataPtr->visibleBoundary.rows.lastRow - inDataPtr->visibleBoundary.rows.firstRow + 1;
-				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
+				// notify about the scrolling amount
+				{
+					Terminal_ScrollDescription	scrollInfo;
+					
+					
+					bzero(&scrollInfo, sizeof(scrollInfo));
+					scrollInfo.screen = inDataPtr->selfRef;
+					scrollInfo.rowDelta = -STATIC_CAST(inLineCount, SInt32);
+					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScrollActivity, &scrollInfo/* context */);
+				}
 			}
-			
-			// notify about the scrolling amount
+			else
 			{
-				Terminal_ScrollDescription	scrollInfo;
+				My_ScreenBufferLineList::iterator	scrollingRegionBegin;
 				
 				
-				bzero(&scrollInfo, sizeof(scrollInfo));
-				scrollInfo.screen = inDataPtr->selfRef;
-				scrollInfo.rowDelta = -1;
-				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScrollActivity, &scrollInfo/* context */);
+				// region being scrolled is not entire screen; no saving of lines
+				locateScrollingRegionTop(inDataPtr, scrollingRegionBegin);
+				bufferRemoveLines(inDataPtr, inLineCount, scrollingRegionBegin);
 			}
 		}
-		else
-		{
-			My_ScreenBufferLineList::iterator	scrollingRegionBegin;
-			
-			
-			// region being scrolled is not entire screen; no saving of lines
-			locateScrollingRegionTop(inDataPtr, scrollingRegionBegin);
-			bufferRemoveLines(inDataPtr, 1/* number of lines */, scrollingRegionBegin);
-		}
+	}
+	else if (inLineCount < 0)
+	{
+		// remove lines from the bottom of the scrolling region (they are lost)
+		// and add blank lines at the top
+		My_ScreenBufferLineList::iterator	scrollingRegionBegin;
+		
+		
+		locateScrollingRegionTop(inDataPtr, scrollingRegionBegin);
+		bufferInsertBlankLines(inDataPtr, -inLineCount, scrollingRegionBegin/* insertion row */);
 	}
 }// screenScroll
 
