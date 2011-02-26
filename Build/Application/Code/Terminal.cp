@@ -170,6 +170,7 @@ enum
 	kMy_ParserStateSeenESCLeftSqBracketParamsu	= 'E[;u',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsx	= 'E[;x',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsZ	= 'E[;Z',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsAt	= 'E[;@',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsBackquote	= 'E[;`',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParen				= 'ESC(',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParenA			= 'ES(A',	//!< generic state used to define emulator-specific states, below
@@ -1256,6 +1257,7 @@ public:
 	static void		cursorNextLine					(My_ScreenBufferPtr);
 	static void		cursorPreviousLine				(My_ScreenBufferPtr);
 	static void		horizontalPositionAbsolute		(My_ScreenBufferPtr);
+	static void		insertBlankCharacters			(My_ScreenBufferPtr);
 	static void		scrollDown						(My_ScreenBufferPtr);
 	static void		scrollUp						(My_ScreenBufferPtr);
 	static void		verticalPositionAbsolute		(My_ScreenBufferPtr);
@@ -1269,6 +1271,7 @@ public:
 		kStateCNL				= kMy_ParserStateSeenESCLeftSqBracketParamsE,			//!< cursor next line
 		kStateCPL				= kMy_ParserStateSeenESCLeftSqBracketParamsF,			//!< cursor previous line
 		kStateHPA				= kMy_ParserStateSeenESCLeftSqBracketParamsBackquote,	//!< horizontal (character) position absolute
+		kStateICH				= kMy_ParserStateSeenESCLeftSqBracketParamsAt,			//!< insert blank characters
 		kStateSD				= kMy_ParserStateSeenESCLeftSqBracketParamsT,			//!< scroll down
 		kStateSU				= kMy_ParserStateSeenESCLeftSqBracketParamsS,			//!< scroll up
 		kStateVPA				= kMy_ParserStateSeenESCLeftSqBracketParamsd,			//!< vertical position absolute
@@ -6036,6 +6039,10 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsZ;
 			break;
 		
+		case '@':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsAt;
+			break;
+		
 		case '`':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsBackquote;
 			break;
@@ -9164,6 +9171,64 @@ horizontalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+Handles the XTerm 'ICH' sequence.
+
+This should accept zero or one parameters.  With no parameters,
+a single blank character is inserted at the character position,
+moving the rest of the line over by one column.  Otherwise, the
+parameter refers to the number of blank characters to insert
+(shifting the line by that amount).
+
+(4.0)
+*/
+void
+My_XTerm::
+insertBlankCharacters	(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16				preWriteCursorX = inDataPtr->current.cursorX;
+	My_ScreenRowIndex	preWriteCursorY = inDataPtr->current.cursorY;
+	SInt16				characterCount = inDataPtr->emulator.parameterValues[0];
+	
+	
+	if (-1 == characterCount)
+	{
+		characterCount = 1;
+	}
+	else if (0 == characterCount)
+	{
+		characterCount = 1;
+	}
+	
+	bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, characterCount);
+	
+	// add the effects of the insert to the text-change region;
+	// this should trigger things like Terminal View updates
+	{
+		Terminal_RangeDescription	range;
+		
+		
+		range.screen = inDataPtr->selfRef;
+		range.firstRow = preWriteCursorY;
+		if (preWriteCursorY != inDataPtr->current.cursorY)
+		{
+			// more than one line; just draw all lines completely
+			range.firstColumn = 0;
+			range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
+			range.rowCount = inDataPtr->current.cursorY - preWriteCursorY + 1;
+		}
+		else
+		{
+			// invalidate the entire line starting from the original cursor column
+			range.firstColumn = preWriteCursorX;
+			range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - preWriteCursorX;
+			range.rowCount = 1;
+		}
+		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
+	}
+}// My_XTerm::insertBlankCharacters
+
+
+/*!
 Handles the XTerm 'SD' sequence.
 
 This should accept zero or one parameters.  With no parameters,
@@ -9278,6 +9343,10 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		
 		case 'Z':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsZ;
+			break;
+		
+		case '@':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsAt;
 			break;
 		
 		case '`':
@@ -9470,6 +9539,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateHPA:
 		horizontalPositionAbsolute(inDataPtr);
+		break;
+	
+	case kStateICH:
+		insertBlankCharacters(inDataPtr);
 		break;
 	
 	case kStateSD:
