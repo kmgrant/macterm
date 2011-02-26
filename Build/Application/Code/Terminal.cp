@@ -145,8 +145,11 @@ enum
 	kMy_ParserStateSeenESCLeftSqBracketParamsC	= 'E[;C',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsd	= 'E[;d',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsD	= 'E[;D',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsE	= 'E[;E',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsf	= 'E[;f',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsF	= 'E[;F',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsg	= 'E[;g',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsG	= 'E[;G',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsh	= 'E[;h',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsH	= 'E[;H',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsJ	= 'E[;J',	//!< generic state used to define emulator-specific states, below
@@ -1247,6 +1250,9 @@ public:
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
 	static void		cursorBackwardTabulation		(My_ScreenBufferPtr);
+	static void		cursorCharacterAbsolute			(My_ScreenBufferPtr);
+	static void		cursorNextLine					(My_ScreenBufferPtr);
+	static void		cursorPreviousLine				(My_ScreenBufferPtr);
 	static void		horizontalPositionAbsolute		(My_ScreenBufferPtr);
 	static void		scrollDown						(My_ScreenBufferPtr);
 	static void		scrollUp						(My_ScreenBufferPtr);
@@ -1256,6 +1262,9 @@ public:
 	{
 		// Ideally these are "protected", but loop evasion code requires them.
 		kStateCBT				= kMy_ParserStateSeenESCLeftSqBracketParamsZ,			//!< cursor backward tabulation
+		kStateCHA				= kMy_ParserStateSeenESCLeftSqBracketParamsG,			//!< cursor character absolute
+		kStateCNL				= kMy_ParserStateSeenESCLeftSqBracketParamsE,			//!< cursor next line
+		kStateCPL				= kMy_ParserStateSeenESCLeftSqBracketParamsF,			//!< cursor previous line
 		kStateHPA				= kMy_ParserStateSeenESCLeftSqBracketParamsBackquote,	//!< horizontal (character) position absolute
 		kStateSD				= kMy_ParserStateSeenESCLeftSqBracketParamsT,			//!< scroll down
 		kStateSU				= kMy_ParserStateSeenESCLeftSqBracketParamsS,			//!< scroll up
@@ -5932,12 +5941,24 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsD;
 			break;
 		
+		case 'E':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsE;
+			break;
+		
 		case 'f':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsf;
 			break;
 		
+		case 'F':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsF;
+			break;
+		
 		case 'g':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsg;
+			break;
+		
+		case 'G':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsG;
 			break;
 		
 		case 'h':
@@ -8958,6 +8979,98 @@ cursorBackwardTabulation	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+Handles the XTerm 'CHA' sequence.
+
+This should accept up to 2 parameters.  With no parameters, the
+cursor is moved to the first position on the current line.  If
+there is just one parameter, it is a one-based index for the new
+cursor column on the current line.  And with two parameters, the
+order changes and the parameters are the one-based indices of the
+new cursor row and column, in that order.
+
+NOTE:	It is not clear yet if this should be any different from
+		the implementation of horizontalPositionAbsolute().
+		Currently they are the same.
+
+(4.0)
+*/
+void
+My_XTerm::
+cursorCharacterAbsolute		(My_ScreenBufferPtr		inDataPtr)
+{
+	horizontalPositionAbsolute(inDataPtr);
+}// My_XTerm::cursorCharacterAbsolute
+
+
+/*!
+Handles the XTerm 'CNL' sequence.
+
+This should accept zero or one parameters.  With no parameters,
+the cursor is moved to the next line.  Otherwise, it is moved
+the specified number of lines downward, limited by the visible
+screen area.  In any case, the cursor is also reset to the
+first column of the display.
+
+(4.0)
+*/
+void
+My_XTerm::
+cursorNextLine		(My_ScreenBufferPtr		inDataPtr)
+{
+	My_ScreenRowIndex	newY = inDataPtr->current.cursorY;
+	
+	
+	if (-1 == inDataPtr->emulator.parameterValues[0])
+	{
+		++newY;
+	}
+	else
+	{
+		newY += inDataPtr->emulator.parameterValues[0];
+	}
+	
+	// the new values are not checked for violation of constraints
+	// because constraints (including current origin mode) are
+	// automatically enforced by moveCursor...() routines
+	moveCursor(inDataPtr, 0, newY);
+}// My_XTerm::cursorNextLine
+
+
+/*!
+Handles the XTerm 'CPL' sequence.
+
+This should accept zero or one parameters.  With no parameters,
+the cursor is moved to the previous line.  Otherwise, it is
+moved the specified number of lines upward, limited by the
+visible screen area.  In any case, the cursor is also reset to
+the first column of the display.
+
+(4.0)
+*/
+void
+My_XTerm::
+cursorPreviousLine		(My_ScreenBufferPtr		inDataPtr)
+{
+	My_ScreenRowIndex	newY = inDataPtr->current.cursorY;
+	
+	
+	if (-1 == inDataPtr->emulator.parameterValues[0])
+	{
+		--newY;
+	}
+	else
+	{
+		newY -= inDataPtr->emulator.parameterValues[0];
+	}
+	
+	// the new values are not checked for violation of constraints
+	// because constraints (including current origin mode) are
+	// automatically enforced by moveCursor...() routines
+	moveCursor(inDataPtr, 0, newY);
+}// My_XTerm::cursorPreviousLine
+
+
+/*!
 Handles the XTerm 'HPA' sequence.
 
 This should accept up to 2 parameters.  With no parameters, the
@@ -9004,9 +9117,6 @@ horizontalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
 				? 0
 				: kParam1 - 1;
 	}
-	
-	// offset according to the origin mode
-	newY += inDataPtr->originRegionPtr->firstRow;
 	
 	// the new values are not checked for violation of constraints
 	// because constraints (including current origin mode) are
@@ -9102,6 +9212,18 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		{
 		case 'd':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsd;
+			break;
+		
+		case 'E':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsE;
+			break;
+		
+		case 'F':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsF;
+			break;
+		
+		case 'G':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsG;
 			break;
 		
 		case 'S':
@@ -9286,6 +9408,18 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	{
 	case kStateCBT:
 		cursorBackwardTabulation(inDataPtr);
+		break;
+	
+	case kStateCHA:
+		cursorCharacterAbsolute(inDataPtr);
+		break;
+	
+	case kStateCNL:
+		cursorNextLine(inDataPtr);
+		break;
+	
+	case kStateCPL:
+		cursorPreviousLine(inDataPtr);
 		break;
 	
 	case kStateHPA:
@@ -9477,9 +9611,6 @@ verticalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
 				? 0
 				: kParam1 - 1;
 	}
-	
-	// offset according to the origin mode
-	newY += inDataPtr->originRegionPtr->firstRow;
 	
 	// the new values are not checked for violation of constraints
 	// because constraints (including current origin mode) are
