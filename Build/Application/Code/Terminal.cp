@@ -152,9 +152,10 @@ enum
 	kMy_ParserStateSeenESCLeftSqBracketParamsG	= 'E[;G',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsh	= 'E[;h',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsH	= 'E[;H',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsi	= 'E[;i',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsI	= 'E[;I',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsJ	= 'E[;J',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsK	= 'E[;K',	//!< generic state used to define emulator-specific states, below
-	kMy_ParserStateSeenESCLeftSqBracketParamsi	= 'E[;i',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsl	= 'E[;l',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsL	= 'E[;L',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsm	= 'E[;m',	//!< generic state used to define emulator-specific states, below
@@ -1251,6 +1252,7 @@ public:
 	
 	static void		cursorBackwardTabulation		(My_ScreenBufferPtr);
 	static void		cursorCharacterAbsolute			(My_ScreenBufferPtr);
+	static void		cursorForwardTabulation			(My_ScreenBufferPtr);
 	static void		cursorNextLine					(My_ScreenBufferPtr);
 	static void		cursorPreviousLine				(My_ScreenBufferPtr);
 	static void		horizontalPositionAbsolute		(My_ScreenBufferPtr);
@@ -1263,6 +1265,7 @@ public:
 		// Ideally these are "protected", but loop evasion code requires them.
 		kStateCBT				= kMy_ParserStateSeenESCLeftSqBracketParamsZ,			//!< cursor backward tabulation
 		kStateCHA				= kMy_ParserStateSeenESCLeftSqBracketParamsG,			//!< cursor character absolute
+		kStateCHT				= kMy_ParserStateSeenESCLeftSqBracketParamsI,			//!< cursor forward tabulation
 		kStateCNL				= kMy_ParserStateSeenESCLeftSqBracketParamsE,			//!< cursor next line
 		kStateCPL				= kMy_ParserStateSeenESCLeftSqBracketParamsF,			//!< cursor previous line
 		kStateHPA				= kMy_ParserStateSeenESCLeftSqBracketParamsBackquote,	//!< horizontal (character) position absolute
@@ -5973,6 +5976,10 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsi;
 			break;
 		
+		case 'I':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsI;
+			break;
+		
 		case 'J':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsJ;
 			break;
@@ -8950,9 +8957,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 Handles the XTerm 'CBT' sequence.
 
 This should accept zero or one parameters.  With no parameters,
-the cursor is moved backwards to the first tab stop current line.
-Otherwise, the parameter refers to the number of tab stops to
-move.
+the cursor is moved backwards to the first tab stop on the
+current line.  Otherwise, the parameter refers to the number of
+tab stops to move.
 
 See also the handling of the tab character in the VT terminal,
 which tabs in the opposite direction.
@@ -9000,6 +9007,37 @@ cursorCharacterAbsolute		(My_ScreenBufferPtr		inDataPtr)
 {
 	horizontalPositionAbsolute(inDataPtr);
 }// My_XTerm::cursorCharacterAbsolute
+
+
+/*!
+Handles the XTerm 'CHT' sequence.
+
+This should accept zero or one parameters.  With no parameters,
+the cursor is moved forwards to the first tab stop on the
+current line.  Otherwise, the parameter refers to the number of
+tab stops to move.
+
+See also the handling of the tab character in the VT terminal.
+
+(4.0)
+*/
+void
+My_XTerm::
+cursorForwardTabulation		(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16		tabCount = 1;
+	
+	
+	if (-1 != inDataPtr->emulator.parameterValues[0])
+	{
+		tabCount = inDataPtr->emulator.parameterValues[0];
+	}
+	
+	for (SInt16 i = 0; i < tabCount; ++i)
+	{
+		moveCursorRightToNextTabStop(inDataPtr);
+	}
+}// My_XTerm::cursorForwardTabulation
 
 
 /*!
@@ -9226,6 +9264,10 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsG;
 			break;
 		
+		case 'I':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsI;
+			break;
+		
 		case 'S':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsS;
 			break;
@@ -9412,6 +9454,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateCHA:
 		cursorCharacterAbsolute(inDataPtr);
+		break;
+	
+	case kStateCHT:
+		cursorForwardTabulation(inDataPtr);
 		break;
 	
 	case kStateCNL:
