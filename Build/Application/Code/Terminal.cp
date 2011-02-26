@@ -169,6 +169,7 @@ enum
 	kMy_ParserStateSeenESCLeftSqBracketParamsT	= 'E[;T',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsu	= 'E[;u',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsx	= 'E[;x',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsX	= 'E[;X',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsZ	= 'E[;Z',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsAt	= 'E[;@',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsBackquote	= 'E[;`',	//!< generic state used to define emulator-specific states, below
@@ -1256,6 +1257,7 @@ public:
 	static void		cursorForwardTabulation			(My_ScreenBufferPtr);
 	static void		cursorNextLine					(My_ScreenBufferPtr);
 	static void		cursorPreviousLine				(My_ScreenBufferPtr);
+	static void		deleteCharacters				(My_ScreenBufferPtr);
 	static void		horizontalPositionAbsolute		(My_ScreenBufferPtr);
 	static void		insertBlankCharacters			(My_ScreenBufferPtr);
 	static void		scrollDown						(My_ScreenBufferPtr);
@@ -1270,6 +1272,7 @@ public:
 		kStateCHT				= kMy_ParserStateSeenESCLeftSqBracketParamsI,			//!< cursor forward tabulation
 		kStateCNL				= kMy_ParserStateSeenESCLeftSqBracketParamsE,			//!< cursor next line
 		kStateCPL				= kMy_ParserStateSeenESCLeftSqBracketParamsF,			//!< cursor previous line
+		kStateECH				= kMy_ParserStateSeenESCLeftSqBracketParamsX,			//!< erase characters without insertion
 		kStateHPA				= kMy_ParserStateSeenESCLeftSqBracketParamsBackquote,	//!< horizontal (character) position absolute
 		kStateICH				= kMy_ParserStateSeenESCLeftSqBracketParamsAt,			//!< insert blank characters
 		kStateSD				= kMy_ParserStateSeenESCLeftSqBracketParamsT,			//!< scroll down
@@ -1296,6 +1299,7 @@ void						addScreenLineLength						(My_ScreenBufferPtr, CFMutableStringRef, UInt
 void						appendScreenLinePtrToList				(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
 void						appendScreenLineRawToCFString			(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
 void						assertScrollingRegion					(My_ScreenBufferPtr);
+void						bufferEraseFromCursorColumn				(My_ScreenBufferPtr, UInt16 = 1);
 void						bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr);
 void						bufferEraseFromCursorToEnd				(My_ScreenBufferPtr);
 void						bufferEraseFromHomeToCursor				(My_ScreenBufferPtr);
@@ -6035,6 +6039,10 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsx;
 			break;
 		
+		case 'X':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsX;
+			break;
+		
 		case 'Z':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsZ;
 			break;
@@ -9116,6 +9124,36 @@ cursorPreviousLine		(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+Handles the XTerm 'ECH' sequence.
+
+This should accept zero or one parameters.  With no parameters,
+a single character is erased at the character position, without
+offsetting anything after that point.  Otherwise, the parameter
+refers to the number of characters to erase (and again, without
+affecting anything outside that range on the line).
+
+(4.0)
+*/
+void
+My_XTerm::
+deleteCharacters	(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16		characterCount = inDataPtr->emulator.parameterValues[0];
+	
+	
+	if (0 != characterCount)
+	{
+		if (-1 == characterCount)
+		{
+			characterCount = 1;
+		}
+		
+		bufferEraseFromCursorColumn(inDataPtr, characterCount);
+	}
+}// My_XTerm::deleteCharacters
+
+
+/*!
 Handles the XTerm 'HPA' sequence.
 
 This should accept up to 2 parameters.  With no parameters, the
@@ -9342,6 +9380,10 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsT;
 			break;
 		
+		case 'X':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsX;
+			break;
+		
 		case 'Z':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsZ;
 			break;
@@ -9536,6 +9578,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateCPL:
 		cursorPreviousLine(inDataPtr);
+		break;
+	
+	case kStateECH:
+		deleteCharacters(inDataPtr);
 		break;
 	
 	case kStateHPA:
@@ -9807,6 +9853,57 @@ assertScrollingRegion	(My_ScreenBufferPtr		inDataPtr)
 	assert(inDataPtr->customScrollingRegion.lastRow < inDataPtr->screenBuffer.size());
 	assert(inDataPtr->screenBuffer.size() >= (inDataPtr->customScrollingRegion.lastRow - inDataPtr->customScrollingRegion.firstRow));
 }// assertScrollingRegion
+
+
+/*!
+Erases the specified number of characters on the cursor row,
+starting from the cursor position.
+
+(4.0)
+*/
+void
+bufferEraseFromCursorColumn		(My_ScreenBufferPtr		inDataPtr,
+								 UInt16					inCharacterCount)
+{
+	My_TextIterator						textIterator = nullptr;
+	My_TextAttributesList::iterator		attrIterator;
+	My_ScreenBufferLineList::iterator	cursorLineIterator;
+	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
+	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
+	UInt16								fillDistance = inCharacterCount;
+	
+	
+	// figure out where the cursor is, but first force it to
+	// wrap to the next line if a wrap is pending
+	cursorWrapIfNecessaryGetLocation(inDataPtr, &postWrapCursorX, &postWrapCursorY);
+	locateCursorLine(inDataPtr, cursorLineIterator);
+	
+	// do not overflow the line buffer
+	fillDistance = std::min(fillDistance, STATIC_CAST(inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX, UInt16));
+	
+	// clear out the specified part of the screen line
+	attrIterator = cursorLineIterator->attributeVector.begin();
+	std::advance(attrIterator, postWrapCursorX);
+	textIterator = cursorLineIterator->textVectorBegin;
+	std::advance(textIterator, postWrapCursorX);
+	std::fill_n(attrIterator, fillDistance, cursorLineIterator->globalAttributes);
+	std::fill_n(textIterator, fillDistance, ' ');
+	
+	// add the remainder of the row to the text-change region;
+	// this should trigger things like Terminal View updates
+	//Console_WriteLine("text changed event: erase from cursor column to line end");
+	{
+		Terminal_RangeDescription	range;
+		
+		
+		range.screen = inDataPtr->selfRef;
+		range.firstRow = postWrapCursorY;
+		range.firstColumn = postWrapCursorX;
+		range.columnCount = fillDistance;
+		range.rowCount = 1;
+		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
+	}
+}// bufferEraseFromCursorColumn
 
 
 /*!
