@@ -1,25 +1,27 @@
-<div class="navigation">
+notextile. <div class="navigation">
 
 * MacTELNET Help
 
-</div>
+notextile. </div>
 
 p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
 
-<table id="mainnavigation">
-<tr>
-<td valign="top">
+notextile. <table id="mainnavigation">
 
-<dl>
+notextile. <tr>
 
-<dt>Running Applications</dt><dd>
+notextile. <td valign="top">
+
+notextile. <dl>
+
+notextile. <dt>Running Applications</dt><dd>
 
 * "local sessions":content/access.html#unix
 * "remote sessions":content/access.html#servers
 
-</dd>
+notextile. </dd>
 
-<dt>Reference</dt><dd>
+notextile. <dt>Reference</dt><dd>
 
 * "preferences":content/preferences.html
 * "low-level settings":content/advprefs.html
@@ -27,16 +29,17 @@ p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
 * "terminal interaction":content/terminals.html
 * "emulator specifics":content/vt.html
 
-</dd>
+notextile. </dd>
 
-</dl>
+notextile. </dl>
 
-</td>
-<td valign="top">
+notextile. </td>
 
-<dl>
+notextile. <td valign="top">
 
-<dt>Interesting Features</dt><dd>
+notextile. <dl>
+
+notextile. <dt>Interesting Features</dt><dd>
 
 * "tabbed terminal windows":content/preferences.html#workspaces
 * "floating command line":content/terminals.html#commandline
@@ -46,36 +49,36 @@ p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
 * "hidden windows":content/terminals.html#hide
 * "floating keypads":content/windows.html#keypads
 
-</dd>
+notextile. </dd>
 
-</dl>
+notextile. </dl>
 
-</td>
-<td valign="top">
+notextile. </td>
 
-<dl>
+notextile. <td valign="top">
 
-<dt>Other Applications</dt><dd>
+notextile. <dl>
+
+notextile. <dt>Other Applications</dt><dd>
 
 * "using Automator":content/automator.html
 * "using Growl":content/growl.html
 
-</dd>
+notextile. </dd>
 
-<dt>Tutorials</dt><dd>
+notextile. <dt>Tutorials</dt><dd>
 
 * "playing BBS games":content/games.html
 * "using serial ports":content/serial.html
 
-</dd>
+notextile. </dd>
 
-</dl>
+notextile. </dl>
 
-</td>
-</tr>
-</table>
+notextile. </td>
+
+notextile. </tr>
+
+notextile. </table>
 
 p(#lastupdated). Last updated LAST_UPDATED.
-
-<!-- ====|============================================|====|= -->
-

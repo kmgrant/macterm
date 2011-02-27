@@ -1,13 +1,13 @@
-<div class="navigation">
+notextile. <div class="navigation">
 
 * MacTELNET Help
 * "Home":../index.html
 
-</div>
+notextile. </div>
 
 h1(pagetitle). Using Automator with MacTelnet
 
-<div class="content">
+notextile. <div class="content">
 
 p(#abstract). MacTelnet support for Automator is currently limited, however
 there are ways to use existing actions that you may not have
@@ -41,7 +41,4 @@ It is also possible to add or change URL handlers, through the
 lower-level Python API in MacTelnet.  For instance, you could add
 a handler that runs a terminal-based browser for "http" URLs.
 
-</div>
-
-<!-- ----|--------------------------------------------|----|- -->
-
+notextile. </div>

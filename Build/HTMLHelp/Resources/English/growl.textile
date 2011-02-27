@@ -1,13 +1,13 @@
-<div class="navigation">
+notextile. <div class="navigation">
 
 * MacTELNET Help
 * "Home":../index.html
 
-</div>
+notextile. </div>
 
 h1(pagetitle). Using Growl Notifications with MacTelnet
 
-<div class="content">
+notextile. <div class="content">
 
 p(#abstract). MacTelnet provides several different types of notifications that
 you can fully customize with the "Growl":http://www.growl.info/ infrastructure.
@@ -80,7 +80,4 @@ h2. Notification Clicks
 Currently, MacTelnet does not care if you click a notification,
 they are just for your information.
 
-</div>
-
-<!-- ----|--------------------------------------------|----|- -->
-
+notextile. </div>

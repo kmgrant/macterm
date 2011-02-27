@@ -1,14 +1,15 @@
-<div class="navigation">
+notextile. <div class="navigation">
 
 * MacTELNET Help
 * "Home":../index.html
 
-</div>
+notextile. </div>
 
 h1(pagetitle). Terminal Emulator Specifics
 
-<div class="content">
-<a name="helpwithterminalsettings"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <div class="content">
+
+notextile. <a name="helpwithterminalsettings"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 h2(#vt100). General
 
@@ -23,10 +24,8 @@ the emulator selected for that window.
 However, there are cases where you may have to set this yourself:
 
 * if you ask MacTelnet to change the emulator of a window
-* if you connect to a remote server that has its own method for
-  setting the terminal type (e.g. different operating system)
-* if there are defects in the active emulator and you want to try
-  a different one (e.g. downgrading from "vt102" to "vt100")
+* if you connect to a remote server that has its own method for setting the terminal type (e.g. different operating system)
+* if there are defects in the active emulator and you want to try a different one (e.g. downgrading from "vt102" to "vt100")
 
 In Mac OS X and other Unix-like operating systems, you typically
 are running a shell where the "TERM" variable can be changed.
@@ -113,7 +112,4 @@ rendering.  MacTelnet has a very good rendering of CP437, but
 to enable it you must set up a Translation preference that
 chooses "Latin-US (DOS)" as its character set.
 
-</div>
-
-<!-- ----|--------------------------------------------|----|- -->
-
+notextile. </div>

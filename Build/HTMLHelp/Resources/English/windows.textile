@@ -1,13 +1,13 @@
-<div class="navigation">
+notextile. <div class="navigation">
 
 * MacTELNET Help
 * "Home":../index.html
 
-</div>
+notextile. </div>
 
 h1(pagetitle). Types of Windows
 
-<div class="content">
+notextile. <div class="content">
 
 h2(#terminal). Terminal
 
@@ -33,8 +33,7 @@ What you can do with a graphics window:
 
 * Edit >> Copy to copy a bitmap of the graphic to the clipboard.
 * Magnify or shrink the image by resizing the window.
-* Focus on one part by dragging a rectangle with the mouse.  You
-  can undo this focus by double-clicking the image.
+* Focus on one part by dragging a rectangle with the mouse.  You can undo this focus by double-clicking the image.
 
 h2(#serverbrowser). Server Browser
 
@@ -103,25 +102,18 @@ To rename a window, select the appropriate item in the list and
 press Return to display an edit box (as you would in the Finder).
 This is equivalent to using the Window >> Rename command.
 
-The Status column can show a few different text descriptions:
+Hovering the mouse over the Status column can show a few
+different text descriptions:
 
-* ***Running (just opened):** It has only been a few seconds
-  since the window opened, so you can close it without warning.
-* **Running:** The session has been open for awhile; MacTelnet
-  will confirm when you try to close it.
-* **Not Running:** The application running in the window has
-  quit, but the window is still open; only possible when you have
-  set the "Don't automatically close windows" preference.
+* **Running (just opened):** It has only been a few seconds since the window opened, so you can close it without warning.
+* **Running:** The session has been open for awhile; MacTelnet will confirm when you try to close it.
+* **Not Running:** The application running in the window has quit, but the window is still open; only possible when you have set the "Don't automatically close windows" preference.
 
 An icon is also displayed, and normally matches the text above;
 but, it can sometimes change to show a transient state:
 
-* A yellow caution icon indicates an open alert message, or that
-  a notification is up (for example, a watch for activity in a
-  window).
-* A "dimmed" icon indicates the window was hidden from view with
-  the Hide command.  (Hidden windows can be redisplayed in many
-  ways, including double-clicking Session Info list items.)
+* A yellow caution icon indicates an open alert message, or that a notification is up (for example, a watch for activity in a window).
+* A "dimmed" icon indicates the window was hidden from view with the Hide command.  (Hidden windows can be redisplayed in many ways, including double-clicking Session Info list items.)
 
 You can rearrange the columns in this window and your preferred
 order will be saved automatically.
@@ -185,7 +177,4 @@ MacTelnet to enable contextual descriptions of the buttons; then
 point your mouse at one of the VT220 Keypad icons to see what it
 means.
 
-</div>
-
-<!-- ----|--------------------------------------------|----|- -->
-
+notextile. </div>

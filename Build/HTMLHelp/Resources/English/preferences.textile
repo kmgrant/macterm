@@ -1,14 +1,15 @@
-<div class="navigation">
+notextile. <div class="navigation">
 
 * MacTELNET Help
 * "Home":../index.html
 
-</div>
+notextile. </div>
 
 h1(pagetitle). Preferences
 
-<div class="content">
-<a name="helpwithpreferences"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <div class="content">
+
+notextile. <a name="helpwithpreferences"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 p(#abstract). This page is arranged in the same categories as those in the
 MacTelnet Preferences window.  To access any of the settings
@@ -748,13 +749,9 @@ h4. Emulation Tweaks
 MacTelnet allows you to customize some of the features of its
 emulators.  There are a couple of main reasons for this:
 
-* Some applications rely on bugs in common emulators or
-  the original devices, and won't work unless MacTelnet
-  is also buggy.
+* Some applications rely on bugs in common emulators or the original devices, and won't work unless MacTelnet is also buggy.
 
-* Certain newer terminals are supersets of older types
-  (for instance, XTerm is a VT100), and can work
-  "reasonably well" if popular features are supported.
+* Certain newer terminals are supersets of older types (for instance, XTerm is a VT100), and can work "reasonably well" if popular features are supported.
 
 Applications may ignore tweaks unless you also set the Identity
 to tell them that the feature is supported.  Each tweak below
@@ -953,7 +950,7 @@ collection with inherited settings will only overwrite
 the settings that are not inherited.  In new windows,
 inherited settings will match Default settings.
 
-<a name="helpwithscreenformatting"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <a name="helpwithscreenformatting"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 Formats are collections of fonts, font sizes, colors, and more,
 that decide how your terminal windows look.  You can use the View
@@ -1098,7 +1095,4 @@ the floating button that appears by default.  (Full Screen can
 always be disabled, but without this button it is less likely
 that visitors will determine how.)
 
-</div>
-
-<!-- ----|--------------------------------------------|----|- -->
-
+notextile. </div>

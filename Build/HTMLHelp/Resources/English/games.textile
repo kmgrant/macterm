@@ -1,13 +1,13 @@
-<div class="navigation">
+notextile. <div class="navigation">
 
 * MacTELNET Help
 * "Home":../index.html
 
-</div>
+notextile. </div>
 
 h1(pagetitle). Playing BBS Games
 
-<div class="content">
+notextile. <div class="content">
 
 p(#abstract). While it is possible to configure MacTelnet to work well with
 typical games, the defaults will not work well at all!  This
@@ -35,8 +35,7 @@ that uses the same characters as DOS typically does, such as
 special graphics.
 
 * Open the Preferences window, and go to the Translations pane.
-* Either edit the default, or (recommended) use the "+" button in
-  the drawer to create a new collection.
+* Either edit the default, or (recommended) use the "+" button in the drawer to create a new collection.
 * Select "Latin-US (DOS)" from the "Characters:" list.
 
 The list is based on what translation units are installed on your
@@ -136,7 +135,4 @@ The Macros pane in the Preferences window can be used to create
 sets of predefined actions mapped to keys (that can then be
 enabled using the Map menu).
 
-</div>
-
-<!-- ----|--------------------------------------------|----|- -->
-
+notextile. </div>

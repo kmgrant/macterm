@@ -1,14 +1,15 @@
-<div class="navigation">
+notextile. <div class="navigation">
 
 * MacTELNET Help
 * "Home":../index.html
 
-</div>
+notextile. </div>
 
 h1(pagetitle). Terminals
 
-<div class="content">
-<a name="helpwithterminalsettings"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <div class="content">
+
+notextile. <a name="helpwithterminalsettings"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 h2(#select). Text Selections
 
@@ -35,7 +36,7 @@ can choose to have them automatically copied to the clipboard.
 
 h3(#arrange). Terminal Search
 
-<a name="helpsearchingfortext"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <a name="helpsearchingfortext"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 The Edit >> Find... command allows *dynamic* search of the entire
 contents of a terminal (main screen and scrollback).  The dialog
@@ -84,7 +85,7 @@ choose its shape and whether or not it is flashing on and off.
 
 h2(#commandline). Floating Command Line
 
-<a name="helpusingthefloatingcommandline"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <a name="helpusingthefloatingcommandline"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 Use Window >> Command Line to display a floating window for
 entering text locally.  Unlike typing directly into a terminal,
@@ -108,7 +109,7 @@ MacTelnet provides many sophisticated ways to manage windows.
 
 h3(#dimensions). Screen Sizes
 
-<a name="helpsettingthescreensize"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <a name="helpsettingthescreensize"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 Some applications that run in terminals will either assume one of
 a few standard sizes, or have issues at certain (typically large)
@@ -168,7 +169,4 @@ MacTelnet respects some of XTerm's window sequences, so a
 terminal application may also affect a window.  Typically an
 application will rename the window or minimize it into the Dock.
 
-</div>
-
-<!-- ----|--------------------------------------------|----|- -->
-
+notextile. </div>

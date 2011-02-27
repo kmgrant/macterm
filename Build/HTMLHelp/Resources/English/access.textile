@@ -1,14 +1,15 @@
-<div class="navigation">
+notextile. <div class="navigation">
 
 * MacTELNET Help
 * "Home":../index.html
 
-</div>
+notextile. </div>
 
 h1(pagetitle). Running Applications
 
-<div class="content">
-<a name="helpcreatingsessions"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <div class="content">
+
+notextile. <a name="helpcreatingsessions"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 h2(#servers). Remote Sessions: Connecting to Servers
 
@@ -36,19 +37,13 @@ command that you previously saved.
 
 You have a few options for new commands:
 
-* File >> Shell opens your default Unix shell, where you can type
-commands interactively.
+* File >> Shell opens your default Unix shell, where you can type commands interactively.
 
-* File >> Default (or the name of any other Favorite from your
-Session Preferences) in the "New Session:" section of the File
-menu, will open that session.
+* File >> Default (or the name of any other Favorite from your Session Preferences) in the "New Session:" section of the File menu, will open that session.
 
-* File >> Custom New Session... can also be used; simply ignore
-the "Server Settings..." button, and enter command line text.
+* File >> Custom New Session... can also be used; simply ignore the "Server Settings..." button, and enter command line text.
 
-* Hold down Option to see File >> Log-In Shell.  This invokes a
-shell in log-in mode (with shell-dependent settings) that will
-not inherit any environment variable settings from MacTelnet.
+* Hold down Option to see File >> Log-In Shell.  This invokes a shell in log-in mode (with shell-dependent settings) that will not inherit any environment variable settings from MacTelnet.
 
 bq. Most session creation commands are also available
 from the MacTelnet icon's Dock menu.
@@ -88,7 +83,4 @@ not aggressively save their state, so a restart is unlikely to
 let you simply resume where the program left off when it last
 exited.
 
-</div>
-
-<!-- ----|--------------------------------------------|----|- -->
-
+notextile. </div>
