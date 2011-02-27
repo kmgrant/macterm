@@ -8602,7 +8602,7 @@ insertLines		(My_ScreenBufferPtr		inDataPtr)
 				++totalLines;
 			}
 		}
-		bufferInsertBlankLines(inDataPtr, totalLines, lineIterator, kMy_AttributeRuleCopyLastLine);
+		bufferInsertBlankLines(inDataPtr, totalLines, lineIterator, kMy_AttributeRuleInitialize);
 	}
 }// insertLines
 
@@ -10348,6 +10348,11 @@ Inserts the specified number of blank lines, scrolling the
 remaining ones down and dropping any that fall off the end
 of the scrolling region.  The display is updated.
 
+New blank lines normally have cleared attributes.  However, if
+"inAttributeRule" is set to "kMy_AttributeRuleCopyLastLine",
+they will instead copy the attributes of the given insertion
+line.
+
 See also bufferRemoveLines().
 
 NOTE:   You cannot use this to alter the scrollback.
@@ -11895,7 +11900,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					{
 						inDataPtr->emulator.parameterValues[0] = 1;
 					}
-					bufferInsertBlankLines(inDataPtr, inDataPtr->emulator.parameterValues[0], cursorLineIterator, kMy_AttributeRuleCopyLastLine);
+					bufferInsertBlankLines(inDataPtr, inDataPtr->emulator.parameterValues[0], cursorLineIterator, kMy_AttributeRuleInitialize);
 				}
 				goto ShortCut;				
 			

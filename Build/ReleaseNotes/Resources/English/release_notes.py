@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110227',
     '20110226',
     '20110224',
     '20110223',
@@ -359,6 +360,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110227': [
+        'Fixed a problem with colors and formatting not being cleared in certain programs when lines were scrolled.',
+    ],
     '20110226': [
         'XTerm compatibility has significantly improved with this build, as detailed in the following notes.',
         'XTerm sequences for character insert and erase ("ICH" and "ECH") are now implemented.',
