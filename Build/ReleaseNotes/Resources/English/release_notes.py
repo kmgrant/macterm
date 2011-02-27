@@ -366,6 +366,7 @@ notes_by_version = {
         'XTerm sequences for jumping by tab stop ("CHT" and "CBT") are now implemented.',
         'XTerm sequences for arbitrary scrolling of lines ("SU" and "SD") are now implemented.',
         'XTerm window and icon title sequences now allow new-style string terminators in addition to old-style bell terminators.',
+        'MacTelnet Help style and layout have improved, including changes to the font, text wrapping and headings.',
     ],
     '20110224': [
         'Fixed menus so that command keys for disabled items are no longer typed into the active terminal window.',

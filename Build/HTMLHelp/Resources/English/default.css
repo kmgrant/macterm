@@ -4,7 +4,7 @@ body
 {
 	background:			white;
 	color:				black;
-	font-family:		"Inconsolata", "Courier New", "Courier", "Monaco", monospace;
+	font-family:		"Optima", sans-serif;
 	line-height:		210%;
 	
 	margin-top:			0;
@@ -133,7 +133,7 @@ a:active
 
 .navigation a
 {
-	text-shadow:		#222 0.075em 0.1em 0.5em;
+	text-shadow:		#222 0.045em 0.1em 0.4em;
 	
 	margin-top:			0;
 	border-top:			solid transparent 0.1em;
@@ -161,7 +161,7 @@ a:active
 .navigation a:visited
 {
 	background:			transparent; /* okay because the body image color is known */
-	color:				#333;
+	color:				#444;
 	
 	border-left-color:	#333;
 }
@@ -187,7 +187,7 @@ a:active
 	height:				auto;
 	padding-bottom:		0;
 	border-bottom:		0;
-	margin-bottom:		0;
+	margin-bottom:		0.5em;
 	
 	margin-left:		0;
 	border-left:		0;
@@ -200,18 +200,18 @@ a:active
 
 h2
 {
-	background:			#ccc;
+	background:			#dedede -webkit-gradient(linear, left bottom, right top, from(#dedede), to(#fff), color-stop(0.4, #ccc));
 	color:				black;
 	font-family:		Optima, sans-serif;
 	line-height:		130%;
 	
-	margin-top:			0.25em;
-	border-top:			solid #aaa 0.075em;
+	margin-top:			0.85em;
+	border-top:			0;
 	padding-top:		0.05em;
 	height:				auto;
 	padding-bottom:		0;
 	border-bottom:		solid #aaa 0.075em;
-	margin-bottom:		0.2em;
+	margin-bottom:		0.85em;
 	
 	margin-left:		-1.2em;
 	border-left:		solid #666 0.35em;
@@ -235,7 +235,7 @@ h3
 	height:				auto;
 	padding-bottom:		0.3em;
 	border-bottom:		solid #888 0.1em;
-	margin-bottom:		0.2em;
+	margin-bottom:		0.45em;
 	
 	margin-left:		0;
 	border-left:		0;
@@ -248,18 +248,18 @@ h3
 
 h4
 {
-	background:			white;
+	background:			white -webkit-gradient(linear, left bottom, right top, from(#fff), to(#fff), color-stop(0.1, #efefef));
 	color:				black;
 	font-family:		Optima, sans-serif;
 	line-height:		130%;
 	
-	margin-top:			0.25em;
+	margin-top:			0.35em;
 	border-top:			solid white 0;
 	padding-top:		0.35em;
 	height:				auto;
 	padding-bottom:		0.35em;
 	border-bottom:		solid white 0;
-	margin-bottom:		0.1em;
+	margin-bottom:		0.35em;
 	
 	margin-left:		-0.8em;
 	border-left:		0;
@@ -364,25 +364,25 @@ h6
 
 blockquote
 {
-	background:			white;
+	background:			white -webkit-gradient(linear, right bottom, left top, from(#ccc), to(#fff), color-stop(0.3, #efefef));
 	color:				#556;
 	font-style:			italic;
 	
-	margin-top:			0;
-	border-top:			0;
+	margin-top:			0.5em;
+	border-top:			solid #efefef 0.1em;
 	padding-top:		0;
 	height:				auto;
 	padding-bottom:		0;
-	border-bottom:		0;
+	border-bottom:		solid #efefef 0.1em;
 	margin-bottom:		0;
 	
 	margin-left:		2em;
 	border-left:		dashed #aae 0.1em;
 	padding-left:		1.5em;
 	width:				auto;
-	padding-right:		1.5em;
+	padding-right:		1em;
 	border-right:		0;
-	margin-right:		0;
+	margin-right:		1em;
 }
 
 .deftable
