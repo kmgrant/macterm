@@ -16,24 +16,24 @@ h2(#servers). Remote Sessions: Connecting to Servers
 Select File >> Custom New Session... to begin.
 
 bq. Only your first sessions should require this
-customization step.  In the future, it will be faster
-to rely on a Favorite or a saved session file to hold
-your preferences.  A Favorite can be opened directly
-from the File menu; for others, use File >> Open.
+ customization step.  In the future, it will be faster
+ to rely on a Favorite or a saved session file to hold
+ your preferences.  A Favorite can be opened directly
+ from the File menu; for others, use File >> Open.
 
 A Custom New Session opens a terminal window and a sheet to allow
-configuration.
+ configuration.
 
 This sheet is identical to the equivalent panel of the Preferences
-window, so just review the "preferences documentation":preferences.html#sessionresource for more.
+ window, so just review the "preferences documentation":preferences.html#sessionresource for more.
 
 Unlike Preferences, changes to the sheet are temporary and can
-be either discarded or committed using the sheet's buttons.
+ be either discarded or committed using the sheet's buttons.
 
 h2(#unix). Local Sessions: Running Unix Commands
 
 As with remote applications, File >> Open... can be used to run a
-command that you previously saved.
+ command that you previously saved.
 
 You have a few options for new commands:
 
@@ -46,41 +46,41 @@ You have a few options for new commands:
 * Hold down Option to see File >> Log-In Shell.  This invokes a shell in log-in mode (with shell-dependent settings) that will not inherit any environment variable settings from MacTelnet.
 
 bq. Most session creation commands are also available
-from the MacTelnet icon's Dock menu.
+ from the MacTelnet icon's Dock menu.
 
 h2(#workspaces). Workspaces: Starting Several Sessions
 
 Using Preferences, you can define Workspaces, which specify a set
-of sessions that should all start at the same time, in a certain
-window arrangement.
+ of sessions that should all start at the same time, in a certain
+ window arrangement.
 
 Once a workspace is defined, go to the "New From Workspace:"
-section of the File menu, and use File >> Default (or the name of
-any other Favorite from your Workspace Preferences), to create
-the sessions of a workspace.
+ section of the File menu, and use File >> Default (or the name of
+ any other Favorite from your Workspace Preferences), to create
+ the sessions of a workspace.
 
 h2(#restart). Replicating Windows
 
 You can use File >> Duplicate Session to spawn a new window that
-is running the same command as the previous window.
+ is running the same command as the previous window.
 
 Currently, only the command is duplicated; other window settings
-may come from your defaults.  Once a window is duplicated, any
-updates to the window will not affect its duplicate.
+ may come from your defaults.  Once a window is duplicated, any
+ updates to the window will not affect its duplicate.
 
 h2(#restart). Restarting Commands
 
 If the "No window close on process exit" preference is set, a
-session window will remain open when it quits by itself (that is,
-if it was not explicitly terminated using File >> Close or your
-mouse).  When the window is in this dead state, the special
-File >> Restart Session command becomes available.
+ session window will remain open when it quits by itself (that is,
+ if it was not explicitly terminated using File >> Close or your
+ mouse).  When the window is in this dead state, the special
+ File >> Restart Session command becomes available.
 
 When you restart a session, the original local or remote command
-line is run again in the same window, preserving your entire
-scrollback buffer and other window settings.  Most programs do
-not aggressively save their state, so a restart is unlikely to
-let you simply resume where the program left off when it last
-exited.
+ line is run again in the same window, preserving your entire
+ scrollback buffer and other window settings.  Most programs do
+ not aggressively save their state, so a restart is unlikely to
+ let you simply resume where the program left off when it last
+ exited.
 
 notextile. </div>

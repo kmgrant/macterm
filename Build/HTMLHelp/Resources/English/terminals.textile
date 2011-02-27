@@ -14,94 +14,94 @@ notextile. <a name="helpwithterminalsettings"></a><!-- must use this exact tag; 
 h2(#select). Text Selections
 
 Highlight terminal text by dragging over it with the mouse.  Keep
-it *rectangular* by holding down the Option key.
+ it *rectangular* by holding down the Option key.
 
 h3(#selectdrag). Drag and Drop
 
 Text can be copied by using the mouse to move a selection to
-another location - for instance, the Desktop (to make a text
-clipping).
+ another location - for instance, the Desktop (to make a text
+ clipping).
 
 Text can be imported in the same way - any text dropped into a
-terminal is effectively typed into the terminal.
+ terminal is effectively typed into the terminal.
 
 The Unix pathname of a file or folder can be typed by dropping
-the icon (from the Finder, say) into a terminal.
+ the icon (from the Finder, say) into a terminal.
 
 h3(#selectappearance). Text Selection Preferences
 
 See "the Preferences page":preferences.html for some options related to the
-appearance and behavior of text selections.  For instance, you
-can choose to have them automatically copied to the clipboard.
+ appearance and behavior of text selections.  For instance, you
+ can choose to have them automatically copied to the clipboard.
 
 h3(#arrange). Terminal Search
 
 notextile. <a name="helpsearchingfortext"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 The Edit >> Find... command allows *dynamic* search of the entire
-contents of a terminal (main screen and scrollback).  The dialog
-has a special minimalist design so that it won't cover any search
-results.
+ contents of a terminal (main screen and scrollback).  The dialog
+ has a special minimalist design so that it won't cover any search
+ results.
 
 As you type, every match for the forming pattern is immediately
-found and highlighted, in a special way that does not cancel any
-other text selection in the window.  In addition, red tick marks
-appear on the scroll bar, showing you where you can find even
-more matches in the scrollback buffer.
+ found and highlighted, in a special way that does not cancel any
+ other text selection in the window.  In addition, red tick marks
+ appear on the scroll bar, showing you where you can find even
+ more matches in the scrollback buffer.
 
 For performance reasons, single-character searches are not
-dynamic, although you can still close the dialog to initiate a
-one-character search.
+ dynamic, although you can still close the dialog to initiate a
+ one-character search.
 
 The "A=a" checkbox, again an abbreviated interface, simply makes
-the search case-insensitive.
+ the search case-insensitive.
 
 The history menu allows you to access any previously accepted
-queries for the current terminal window.  If you do not use the
-default button when closing a search, your query is discarded and
-any previous search's highlighting is restored.
+ queries for the current terminal window.  If you do not use the
+ default button when closing a search, your query is discarded and
+ any previous search's highlighting is restored.
 
 You can draw attention to individual results in turn by using the
-Edit >> Find Next command (and via modifier key, Find Previous).
+ Edit >> Find Next command (and via modifier key, Find Previous).
 
 h2. Cursor
 
 The cursor is a special position in the bottommost screenful of a
-terminal, representing (usually) where text will appear when you
-type.
+ terminal, representing (usually) where text will appear when you
+ type.
 
 h3(#findcursor). Finding the Cursor
 
 Use Edit >> Find Cursor to create a homing animation that tells
-you where the terminal cursor is in the active window.  This can
-be useful at times when the cursor is hard to see amongst several
-lines of text.
+ you where the terminal cursor is in the active window.  This can
+ be useful at times when the cursor is hard to see amongst several
+ lines of text.
 
 h3(#cursorappearance). Cursor Preferences
 
 See "the Preferences page":preferences.html for some options related to the
-appearance and behavior of the cursor.  For instance, you can
-choose its shape and whether or not it is flashing on and off.
+ appearance and behavior of the cursor.  For instance, you can
+ choose its shape and whether or not it is flashing on and off.
 
 h2(#commandline). Floating Command Line
 
 notextile. <a name="helpusingthefloatingcommandline"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 Use Window >> Command Line to display a floating window for
-entering text locally.  Unlike typing directly into a terminal,
-nothing you type in the floating window is seen until you press
-the *Return* key (which also sends a new-line sequence to the
-terminal).
+ entering text locally.  Unlike typing directly into a terminal,
+ nothing you type in the floating window is seen until you press
+ the *Return* key (which also sends a new-line sequence to the
+ terminal).
 
 You can use the down-arrow key or the mouse to access a list of
-previously-entered command lines.  The field supports the usual
-Mac editing short-cuts, such as option-left-arrow to skip to the
-previous word.  It also supports some shell-like short-cuts, such
-as control-A and control-E to jump to the beginning and end,
-respectively.
+ previously-entered command lines.  The field supports the usual
+ Mac editing short-cuts, such as option-left-arrow to skip to the
+ previous word.  It also supports some shell-like short-cuts, such
+ as control-A and control-E to jump to the beginning and end,
+ respectively.
 
 The colors of the command line are read from your Default Format
-preferences when the window is first displayed.
+ preferences when the window is first displayed.
 
 h2. Window Operations
 
@@ -112,61 +112,61 @@ h3(#dimensions). Screen Sizes
 notextile. <a name="helpsettingthescreensize"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 Some applications that run in terminals will either assume one of
-a few standard sizes, or have issues at certain (typically large)
-sizes; for instance, text editors may run out of memory with wide
-terminals.  While MacTelnet does not restrict your window size,
-it does provide a few short-cut commands to let you immediately
-change to common sizes (80x24, 80x40, 132x24).
+ a few standard sizes, or have issues at certain (typically large)
+ sizes; for instance, text editors may run out of memory with wide
+ terminals.  While MacTelnet does not restrict your window size,
+ it does provide a few short-cut commands to let you immediately
+ change to common sizes (80x24, 80x40, 132x24).
 
 You may also open a dialog to choose a specific number of rows
-and columns.  Note that Edit >> Undo can be used to cancel
-dimension changes made with these commands.
+ and columns.  Note that Edit >> Undo can be used to cancel
+ dimension changes made with these commands.
 
 If your mouse has a scroll wheel, you can hold down the Option
-key and use the wheel to increase or decrease the terminal rows
-(or terminal columns, if your wheel can be moved horizontally).
-You can also adjust terminal columns by holding down both the
-Option and Command keys when using the vertical scroll wheel.
+ key and use the wheel to increase or decrease the terminal rows
+ (or terminal columns, if your wheel can be moved horizontally).
+ You can also adjust terminal columns by holding down both the
+ Option and Command keys when using the vertical scroll wheel.
 
 Depending on your "Window Resize Effect" preferences, dragging
-the size box with or without the Option key will also change the
-terminal screen dimensions.
+ the size box with or without the Option key will also change the
+ terminal screen dimensions.
 
 h3(#magnify). Magnification
 
 Use View >> Make Text as Big as Possible to alter a terminal's
-text size based on the display that contains the largest part of
-its window!
+ text size based on the display that contains the largest part of
+ its window!
 
 If your mouse has a scroll wheel, you can hold down the Control
-key and use the wheel to increase or decrease the text size.
+ key and use the wheel to increase or decrease the text size.
 
 It is also possible to magnify text as you resize a window or
-as you enter Full Screen mode.  The result depends on your
-"Window Resize Effect" preference setting, and whether or not you
-have held down the Option key to temporarily change it.
+ as you enter Full Screen mode.  The result depends on your
+ "Window Resize Effect" preference setting, and whether or not you
+ have held down the Option key to temporarily change it.
 
 Note that Edit >> Undo can be used to cancel dimension changes
-made with the "Make Text..." commands.
+ made with the "Make Text..." commands.
 
 h3(#hide). Hiding Windows
 
 A window can be hidden from view while it is still open, allowing
-you to reduce clutter without disturbing active commands or
-remote connections.  Note that if you Option-click another window
-the active terminal will automatically hide before activating the
-new window.
+ you to reduce clutter without disturbing active commands or
+ remote connections.  Note that if you Option-click another window
+ the active terminal will automatically hide before activating the
+ new window.
 
 h3(#arrange). Arranging Windows
 
 When arranged, _all_ terminal windows return to a diagonal
-stagger pattern that matches their original opening positions.
-NOTE that this cannot be undone.
+ stagger pattern that matches their original opening positions.
+ NOTE that this cannot be undone.
 
 h3(#arrange). Session-Induced Window Changes
 
 MacTelnet respects some of XTerm's window sequences, so a
-terminal application may also affect a window.  Typically an
-application will rename the window or minimize it into the Dock.
+ terminal application may also affect a window.  Typically an
+ application will rename the window or minimize it into the Dock.
 
 notextile. </div>

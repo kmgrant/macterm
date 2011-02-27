@@ -10,64 +10,64 @@ h1(pagetitle). Using Serial Ports
 notextile. <div class="content">
 
 p(#abstract). MacTelnet does *not* yet support serial ports directly, but you
-can easily use GNU "screen" to do it.  This tutorial will help
-you make settings appropriate for a basic device connection.
+ can easily use GNU "screen" to do it.  This tutorial will help
+ you make settings appropriate for a basic device connection.
 
 h2. Overview
 
 GNU "screen" is a program that, among other things, is its own
-terminal emulator.  It has many powerful features (for instance,
-it lets you open multiple terminals in one window, as an
-alternative to MacTelnet's tabs).
+ terminal emulator.  It has many powerful features (for instance,
+ it lets you open multiple terminals in one window, as an
+ alternative to MacTelnet's tabs).
 
 In the case of this tutorial, "screen" is used because its
-terminals have the ability to directly communicate with devices
-such as serial ports.
+ terminals have the ability to directly communicate with devices
+ such as serial ports.
 
 h2. Configuration
 
 h3. Session
 
 When the Sessions pane (or sheet) is visible, you will see a
-"Command:" field.  In it, enter a command similar to the
-following:
+ "Command:" field.  In it, enter a command similar to the
+ following:
 
     /usr/bin/screen  /dev/tty...  9600
 
 You should *substitute* the values above as appropriate for your
-connection.
+ connection.
 
 The path indicates the device to use.  For instance, you might
-say "/dev/tty.Bluetooth-Modem" to connect to your modem.  You can
-run "ls /dev/tty*" in a shell to see other options, or follow the
-guidance of the device manufacturer.
+ say "/dev/tty.Bluetooth-Modem" to connect to your modem.  You can
+ run "ls /dev/tty*" in a shell to see other options, or follow the
+ guidance of the device manufacturer.
 
 It is also possible to use "call Unix" versions of some devices,
-typically under paths like /dev/cu*.  Which you need depends on
-what you are doing: /dev/tty* is typical, for dial-in behavior,
-and /dev/cu* is for dial-out behavior.  Note that once you start
-using a dial-in (/dev/tty) device, that path is not available
-for any other use until you are finished, whereas /dev/cu*
-equivalents can continue to be used while the /dev/tty* version
-is open.
+ typically under paths like /dev/cu*.  Which you need depends on
+ what you are doing: /dev/tty* is typical, for dial-in behavior,
+ and /dev/cu* is for dial-out behavior.  Note that once you start
+ using a dial-in (/dev/tty) device, that path is not available
+ for any other use until you are finished, whereas /dev/cu*
+ equivalents can continue to be used while the /dev/tty* version
+ is open.
 
 The number is _optional_, and refers to the baud rate (bits per
-second) of both send and receive.  If you don't know what this
-should be for the device, try omitting it entirely; or, use one
-of the more common values such as 9600, 19200, 1200 or 300.
+ second) of both send and receive.  If you don't know what this
+ should be for the device, try omitting it entirely; or, use one
+ of the more common values such as 9600, 19200, 1200 or 300.
 
 h2. Interaction
 
 Once the session starts, you are actually running inside a
-"screen" session, so all of its commands are available.  It can
-be helpful to use MacTelnet's macros feature to create short-cuts
-for some of the "screen" features that you use more frequently.
+ "screen" session, so all of its commands are available.  It can
+ be helpful to use MacTelnet's macros feature to create short-cuts
+ for some of the "screen" features that you use more frequently.
 
 Since you are directly connected to a device, anything you enter
-must follow the device's protocol, or properly interact with
-whatever driver software is running.
+ must follow the device's protocol, or properly interact with
+ whatever driver software is running.
 
 See "the screen man page":x-man-page://screen for more details on how to drive a
-"screen" session.
+ "screen" session.
 
 notextile. </div>

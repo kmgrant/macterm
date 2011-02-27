@@ -10,9 +10,9 @@ h1(pagetitle). Low-Level Settings
 notextile. <div class="content">
 
 p(#abstract). This page describes preferences that generally require special
-edits to make.  For example, you may need to use the command-line
-"defaults" program, or edit XML directly, instead of interacting
-with a window in MacTelnet.
+ edits to make.  For example, you may need to use the command-line
+ "defaults" program, or edit XML directly, instead of interacting
+ with a window in MacTelnet.
 
 * "Overview":#overview
 * "Preference Keys":#keys
@@ -27,26 +27,26 @@ with a window in MacTelnet.
 h2(#overview). Overview
 
 MacTelnet preferences are hierarchical.  Every default value is
-in "com.mactelnet.MacTelnet.plist" (in the Preferences folder of
-the user Library folder), even if it appears to be a Default
-collection in the user interface.
+ in "com.mactelnet.MacTelnet.plist" (in the Preferences folder of
+ the user Library folder), even if it appears to be a Default
+ collection in the user interface.
 
 Collections themselves are separate property list files, of the
-form "com.mactelnet.MacTelnet.[type].[number].plist".  The names
-of these domains are recorded in the primary defaults file.
+ form "com.mactelnet.MacTelnet.[type].[number].plist".  The names
+ of these domains are recorded in the primary defaults file.
 
 Each collection file contains either a "name" key of type Data,
-or a "name-string" key of type String, or both.  The String
-version is less precise, but is useful for easy viewing and
-debugging of names.  The Data version is preferred and is an
-external representation of Unicode.  These names determine how
-MacTelnet displays the collection in any user interface, such as
-a menu or a list in the Preferences window.
+ or a "name-string" key of type String, or both.  The String
+ version is less precise, but is useful for easy viewing and
+ debugging of names.  The Data version is preferred and is an
+ external representation of Unicode.  These names determine how
+ MacTelnet displays the collection in any user interface, such as
+ a menu or a list in the Preferences window.
 
 MacTelnet settings are designed so that *any* preferences key
-might one day fit into any collection.  However, currently, only
-related settings are actually expected; for instance, nothing
-will check for colors in a Session collection.
+ might one day fit into any collection.  However, currently, only
+ related settings are actually expected; for instance, nothing
+ will check for colors in a Session collection.
 
 h2(#keys). Preference Keys
 
@@ -355,16 +355,16 @@ table(deftable).
 h2(#specialvalues). Special Values
 
 Sometimes, several preference keys accept similar values, that
-can have a wide range of valid tokens.
+ can have a wide range of valid tokens.
 
 A *key name* can describe many keys on the keyboard.  Characters
-that can unambiguously describe a key (such as capital letters)
-are all valid.  In addition, the string value could be @return@,
-@enter@, @escape@, @clear@, @forward-delete@, @backward-delete@,
-@home@, @end@, @page-up@, @page-down@, @left-arrow@,
-@right-arrow@, @up-arrow@, @down-arrow@, or @f1@ through @f16@.
+ that can unambiguously describe a key (such as capital letters)
+ are all valid.  In addition, the string value could be @return@,
+ @enter@, @escape@, @clear@, @forward-delete@, @backward-delete@,
+ @home@, @end@, @page-up@, @page-down@, @left-arrow@,
+ @right-arrow@, @up-arrow@, @down-arrow@, or @f1@ through @f16@.
 
 A *modifier key* is described by a string value equal to @shift@,
-@command@, @control@, or @option@.
+ @command@, @control@, or @option@.
 
 notextile. </div>

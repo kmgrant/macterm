@@ -12,22 +12,22 @@ notextile. <div class="content">
 h2(#terminal). Terminal
 
 A terminal window is what you will use most in MacTelnet.  It
-displays a primarily-text interface to other applications.
+ displays a primarily-text interface to other applications.
 
 There are so many things you can do with terminal windows that
-there is a "dedicated page":terminals.html discussing them all!
+ there is a "dedicated page":terminals.html discussing them all!
 
 h2(#tek). Tektronix Vector Graphics
 
 If a session has a TEK graphics command set enabled, it will
-automatically spawn Tektronix vector graphics drawings whenever
-properly-formatted data is received from the session.  You may
-also create pages using View >> New TEK Page.
+ automatically spawn Tektronix vector graphics drawings whenever
+ properly-formatted data is received from the session.  You may
+ also create pages using View >> New TEK Page.
 
 **Note:** Once a graphics window is opened, its terminal is tied
-to the canvas and any typing in the terminal will be rendered in
-the graphics window only.  To restore normal terminal behavior,
-close the graphics window.
+ to the canvas and any typing in the terminal will be rendered in
+ the graphics window only.  To restore normal terminal behavior,
+ close the graphics window.
 
 What you can do with a graphics window:
 
@@ -38,11 +38,11 @@ What you can do with a graphics window:
 h2(#serverbrowser). Server Browser
 
 The Servers panel appears when the "Server Settings..." button
-is clicked (either in the File >> Custom New Session... sheet, or
-when editing the equivalent panel in the Preferences window).
-Changes to the panel will automatically write an appropriate
-command line, in the window whose button was most recently used
-to activate the panel.
+ is clicked (either in the File >> Custom New Session... sheet, or
+ when editing the equivalent panel in the Preferences window).
+ Changes to the panel will automatically write an appropriate
+ command line, in the window whose button was most recently used
+ to activate the panel.
 
 What you can do with the Servers panel:
 
@@ -50,131 +50,131 @@ What you can do with the Servers panel:
 * Enter connection details manually.
 
 A remote application is accessed over a *connection* (which uses
-a particular "protocol") to an exact *port* (number) on a *host*
-(computer).  You can also identify yourself with a *user ID*, if
-the server requires one.
+ a particular "protocol") to an exact *port* (number) on a *host*
+ (computer).  You can also identify yourself with a *user ID*, if
+ the server requires one.
 
 To start, make a selection from the "Connection:" menu.  This
-will automatically assign a default port number.  (You may need
-to ask an administrator which choice is appropriate.)
+ will automatically assign a default port number.  (You may need
+ to ask an administrator which choice is appropriate.)
 
 It may be possible to simply browse for a service instead of
-entering connection details manually.  To try this, click the
-"Find a Server..." button, which will display a drawer that
-begins to list anything that was found by your computer for the
-type of Connection you selected in the menu.  Click any item in
-the list to copy its Host and Port information.  Double-click
-to automatically close the drawer in the process.
+ entering connection details manually.  To try this, click the
+ "Find a Server..." button, which will display a drawer that
+ begins to list anything that was found by your computer for the
+ type of Connection you selected in the menu.  Click any item in
+ the list to copy its Host and Port information.  Double-click
+ to automatically close the drawer in the process.
 
 If the service you want is not listed, you need to fill in the
-panel manually.  (You may want to ask an administrator for help.)
+ panel manually.  (You may want to ask an administrator for help.)
 
 In the Host field, you can enter a name like "apple.com" if one
-is applicable; if you have only an address, like "123.45.67.123",
-enter that instead.  The Look Up button can be used to check if a
-server name is valid (if so, it is transformed into a numeric
-address; otherwise, it is unchanged).
+ is applicable; if you have only an address, like "123.45.67.123",
+ enter that instead.  The Look Up button can be used to check if a
+ server name is valid (if so, it is transformed into a numeric
+ address; otherwise, it is unchanged).
 
 bq. MacTelnet supports IP version 6 addresses too, so
-you could also enter something like
-"0000:0000:0000:0000:0000:ffff:9d16:0164".
+ you could also enter something like
+ "0000:0000:0000:0000:0000:ffff:9d16:0164".
 
 The Port field may not require changing...it is set automatically
-when you choose a Connection type.  But some servers use a custom
-port number, so adjust the value if necessary.
+ when you choose a Connection type.  But some servers use a custom
+ port number, so adjust the value if necessary.
 
 The User ID is how the server identifies you.  If not provided,
-the name of your local Home folder is used (one-word,
-all-lowercase).  Note that if a password is also required to
-access the server, you will be prompted for that at connection
-time; you cannot enter it initially in the configuration sheet.
+ the name of your local Home folder is used (one-word,
+ all-lowercase).  Note that if a password is also required to
+ access the server, you will be prompted for that at connection
+ time; you cannot enter it initially in the configuration sheet.
 
 h2(#sessioninfo). Session Info
 
 Displays the status of all windows at once, including whether or
-not processes are running.  There are icons in the Window menu
-that show similar information.
+ not processes are running.  There are icons in the Window menu
+ that show similar information.
 
 To bring a window to the front, you can double-click its entry in
-the Session Info list.
+ the Session Info list.
 
 To rename a window, select the appropriate item in the list and
-press Return to display an edit box (as you would in the Finder).
-This is equivalent to using the Window >> Rename command.
+ press Return to display an edit box (as you would in the Finder).
+ This is equivalent to using the Window >> Rename command.
 
 Hovering the mouse over the Status column can show a few
-different text descriptions:
+ different text descriptions:
 
 * **Running (just opened):** It has only been a few seconds since the window opened, so you can close it without warning.
 * **Running:** The session has been open for awhile; MacTelnet will confirm when you try to close it.
 * **Not Running:** The application running in the window has quit, but the window is still open; only possible when you have set the "Don't automatically close windows" preference.
 
 An icon is also displayed, and normally matches the text above;
-but, it can sometimes change to show a transient state:
+ but, it can sometimes change to show a transient state:
 
 * A yellow caution icon indicates an open alert message, or that a notification is up (for example, a watch for activity in a window).
 * A "dimmed" icon indicates the window was hidden from view with the Hide command.  (Hidden windows can be redisplayed in many ways, including double-clicking Session Info list items.)
 
 You can rearrange the columns in this window and your preferred
-order will be saved automatically.
+ order will be saved automatically.
 
 Note that View >> Hide Toolbar and View >> Customize Toolbar also
-work for the Session Info window, and can be used to change your
-display preferences for the top of that window.
+ work for the Session Info window, and can be used to change your
+ display preferences for the top of that window.
 
 h2(#commandline). Command Line
 
 The command line is a special interface to the active terminal
-window.  See "the terminals page":terminals.html#commandline for more information.
+ window.  See "the terminals page":terminals.html#commandline for more information.
 
 h2(#keypads). Keypads
 
 MacTelnet provides a number of powerful keypad windows.  Clicking
-a keypad button is equivalent to typing the key or key sequence
-it represents.  However, keypad buttons __always__ send the right
-character code or character sequence, even in cases where the
-keyboard might not work (because of a terminal mode or a
-conflicting Mac OS X keyboard mapping, etc.).
+ a keypad button is equivalent to typing the key or key sequence
+ it represents.  However, keypad buttons __always__ send the right
+ character code or character sequence, even in cases where the
+ keyboard might not work (because of a terminal mode or a
+ conflicting Mac OS X keyboard mapping, etc.).
 
 **Tip:** On later versions of Mac OS X, MacTelnet will allow you
-to navigate keypad keys using the keyboard.  By default, you use
-Control-F1 to turn on Full Keyboard Access and Control-F6 to give
-keyboard focus to one of the floating keypad windows.
+ to navigate keypad keys using the keyboard.  By default, you use
+ Control-F1 to turn on Full Keyboard Access and Control-F6 to give
+ keyboard focus to one of the floating keypad windows.
 
 h3(#controlkeys). Control Keys
 
 This is a floating window providing access to 32 control key
-combinations, "invisible" characters of the ASCII character set.
-These keys are frequently useful in terminals and therefore are
-likely to trigger special responses when used.
+ combinations, "invisible" characters of the ASCII character set.
+ These keys are frequently useful in terminals and therefore are
+ likely to trigger special responses when used.
 
 h3(#functionkeys). VT220 Function Keys
 
 This is a floating window providing access to the function keys
-of a VT220 terminal.  MacTelnet will not prevent their use when
-you have selected a terminal emulator other than VT220, however
-your session may respond oddly to the input.
+ of a VT220 terminal.  MacTelnet will not prevent their use when
+ you have selected a terminal emulator other than VT220, however
+ your session may respond oddly to the input.
 
 For completeness the keypad shows F1-F5, however these are not
-available (they have meaning to a real VT220 terminal, but not an
-emulated terminal).
+ available (they have meaning to a real VT220 terminal, but not an
+ emulated terminal).
 
 Unless you have used the macro editor to map your keyboard's
-function keys to macros, they will map to VT220 function keys by
-default.  Each key is __offset by 5__, so your keyboard F1 maps
-to the VT220 F6, and your keyboard F15 maps to the VT220 F20.
+ function keys to macros, they will map to VT220 function keys by
+ default.  Each key is __offset by 5__, so your keyboard F1 maps
+ to the VT220 F6, and your keyboard F15 maps to the VT220 F20.
 
 h3(#vt220keypad). VT220 Keypad
 
 This is a floating window providing access to the special keypad
-functions of a real VT220 terminal.  MacTelnet will not prevent
-their use when you have selected a terminal emulator other than
-VT220, however your session may respond oddly to some of the
-keys.
+ functions of a real VT220 terminal.  MacTelnet will not prevent
+ their use when you have selected a terminal emulator other than
+ VT220, however your session may respond oddly to some of the
+ keys.
 
 You can use the "Show Help Tags" command of the Help menu in
-MacTelnet to enable contextual descriptions of the buttons; then
-point your mouse at one of the VT220 Keypad icons to see what it
-means.
+ MacTelnet to enable contextual descriptions of the buttons; then
+ point your mouse at one of the VT220 Keypad icons to see what it
+ means.
 
 notextile. </div>
