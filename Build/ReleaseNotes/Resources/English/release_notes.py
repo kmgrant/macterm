@@ -362,6 +362,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20110227': [
         'Fixed a problem with colors and formatting not being cleared in certain programs when lines were scrolled.',
+        'XTerm sequences that request bright colors will now work even if the corresponding text is not boldface.',
     ],
     '20110226': [
         'XTerm compatibility has significantly improved with this build, as detailed in the following notes.',

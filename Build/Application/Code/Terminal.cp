@@ -8042,6 +8042,14 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						// generally means “reset background”
 						STYLE_CLEAR_BACKGROUND_INDEX(inDataPtr->current.drawingAttributes);
 					}
+					else if ((p >= 90) && (p < 98))
+					{
+						STYLE_SET_FOREGROUND_INDEX(inDataPtr->current.drawingAttributes, 8 + (p - 90));
+					}
+					else if ((p >= 100) && (p < 108))
+					{
+						STYLE_SET_BACKGROUND_INDEX(inDataPtr->current.drawingAttributes, 8 + (p - 100));
+					}
 					else
 					{
 						Console_WriteValue("current terminal in SGR mode does not support parameter", p);
