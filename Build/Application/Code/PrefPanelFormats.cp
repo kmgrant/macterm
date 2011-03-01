@@ -2586,6 +2586,10 @@ setUpSampleTerminalHIView	(TerminalViewRef	inTerminalView,
 	// it is not meant to be an ordinary terminal view
 	(TerminalView_Result)TerminalView_IgnoreChangesToPreference(inTerminalView, kPreferences_TagTerminalResizeAffectsFontSize);
 	
+	// ignore user interaction, because text selections are not meant
+	// to change
+	(TerminalView_Result)TerminalView_SetUserInteractionEnabled(inTerminalView, false);
+	
 	// write some sample text to the view; NOTE that because of initial
 	// size constraints, there may not be enough room to write more than
 	// one line (if you need more than one line, defer to a later point)

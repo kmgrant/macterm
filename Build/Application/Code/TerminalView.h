@@ -355,6 +355,10 @@ void
 	TerminalView_SelectVirtualRange				(TerminalViewRef				inView,
 												 TerminalView_CellRange const&	inSelection);
 
+TerminalView_Result
+	TerminalView_SetTextSelectionRenderingEnabled	(TerminalViewRef			inView,
+												 Boolean						inIsSelectionEnabled);
+
 Boolean
 	TerminalView_TextSelectionExists			(TerminalViewRef				inView);
 
@@ -545,6 +549,10 @@ void
 void
 	TerminalView_SetDrawingEnabled				(TerminalViewRef			inView,
 												 Boolean					inIsDrawingEnabled);
+
+TerminalView_Result
+	TerminalView_SetUserInteractionEnabled		(TerminalViewRef			inView,
+												 Boolean					inIsInteractionEnabled);
 
 //@}
 

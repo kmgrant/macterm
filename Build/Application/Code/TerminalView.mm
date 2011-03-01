@@ -378,6 +378,8 @@ struct My_TerminalView
 			My_SelectionMode			keyboardMode;	// used for keyboard navigation; determines what is changed by keyboard-select actions
 			Boolean						exists;			// is any text highlighted anywhere in the window?
 			Boolean						isRectangular;	// is the text selection unattached from the left and right screen edges?
+			Boolean						readOnly;		// does the view respond to clicks and keystrokes that affect text selections?
+			Boolean						inhibited;		// does the view refuse to highlight or manage selections even when API calls are made?
 		} selection;
 		
 		TerminalView_CellRangeList				searchResults;			// regions matching the most recent Find results
@@ -2546,7 +2548,7 @@ TerminalView_SelectBeforeCursorCharacter	(TerminalViewRef	inView)
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	if (viewPtr != nullptr)
+	if ((nullptr != viewPtr) && (false == viewPtr->text.selection.inhibited))
 	{
 		Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
 		UInt16				cursorX = 0;
@@ -2589,7 +2591,7 @@ TerminalView_SelectCursorCharacter		(TerminalViewRef	inView)
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	if (viewPtr != nullptr)
+	if ((nullptr != viewPtr) && (false == viewPtr->text.selection.inhibited))
 	{
 		Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
 		UInt16				cursorX = 0;
@@ -2626,7 +2628,7 @@ TerminalView_SelectCursorLine	(TerminalViewRef	inView)
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	if (viewPtr != nullptr)
+	if ((nullptr != viewPtr) && (false == viewPtr->text.selection.inhibited))
 	{
 		Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
 		UInt16				cursorX = 0;
@@ -2662,7 +2664,7 @@ TerminalView_SelectEntireBuffer		(TerminalViewRef	inView)
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	if (viewPtr != nullptr)
+	if ((nullptr != viewPtr) && (false == viewPtr->text.selection.inhibited))
 	{
 		TerminalView_SelectNothing(inView);
 		
@@ -2691,7 +2693,7 @@ TerminalView_SelectMainScreen	(TerminalViewRef	inView)
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	if (viewPtr != nullptr)
+	if ((nullptr != viewPtr) && (false == viewPtr->text.selection.inhibited))
 	{
 		TerminalView_SelectNothing(inView);
 		
@@ -2751,7 +2753,7 @@ TerminalView_SelectVirtualRange		(TerminalViewRef				inView,
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	if (viewPtr != nullptr)
+	if ((nullptr != viewPtr) && (false == viewPtr->text.selection.inhibited))
 	{
 		TerminalView_SelectNothing(inView);
 		
@@ -2990,6 +2992,90 @@ TerminalView_SetFontAndSize		(TerminalViewRef	inView,
 	
 	return result;
 }// SetFontAndSize
+
+
+/*!
+Specifies whether or not the given view is capable of displaying
+text selections at all!  Clearing this flag will automatically
+remove any highlighting currently shown in the view.
+
+If you disable rendering, you should generally also disable user
+interaction with TerminalView_SetUserInteractionEnabled().
+
+IMPORTANT:	Since the highlighted state of text is tied to its
+			underlying attributes, it is crucial to use this API
+			when multiple views share the same storage (such as
+			in a split view).  At most one of the views sharing
+			the same buffer should allow selections at any time.
+			You may however provide some mechanism for switching
+			which view currently displays the selection.
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the specified view reference is not valid
+
+(4.0)
+*/
+TerminalView_Result
+TerminalView_SetTextSelectionRenderingEnabled	(TerminalViewRef	inView,
+												 Boolean			inIsEnabled)
+{
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		if (false == inIsEnabled)
+		{
+			TerminalView_SelectNothing(inView);
+		}
+		
+		viewPtr->text.selection.inhibited = (false == inIsEnabled);
+	}
+	
+	return result;
+}// SetTextSelectionRenderingEnabled
+
+
+/*!
+Specifies whether or not the given view responds to mouse clicks
+or keystrokes, or any other user actions that can affect the
+view.  This does not prevent API calls from making changes, and
+it does NOT prevent other monitors from accepting user input
+(such as an attached Session, that typically routes keystrokes
+to a program and ends up causing text to appear in the view).
+
+You typically use this to “disable” a view that isn’t meant to
+be interacted with, such as a sample display.
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the specified view reference is not valid
+
+(4.0)
+*/
+TerminalView_Result
+TerminalView_SetUserInteractionEnabled	(TerminalViewRef	inView,
+										 Boolean			inIsEnabled)
+{
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		viewPtr->text.selection.readOnly = (false == inIsEnabled);
+	}
+	
+	return result;
+}// SetUserInteractionEnabled
 
 
 /*!
@@ -3600,6 +3686,8 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->text.selection.keyboardMode = kMy_SelectionModeUnset;
 	this->text.selection.exists = false;
 	this->text.selection.isRectangular = false;
+	this->text.selection.readOnly = false;
+	this->text.selection.inhibited = false;
 	this->screen.leftVisibleEdgeInColumns = 0;
 	this->screen.topVisibleEdgeInRows = 0;
 	this->screen.cache.viewWidthInPixels = 0; // set later...
@@ -7310,87 +7398,90 @@ void
 handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 					 UInt16					inClickCount)													
 {
-	TerminalView_Cell	selectionStart;
-	TerminalView_Cell	selectionPastEnd;
-	SInt16 const		kColumnCount = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
-	//SInt16 const		kRowCount = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
-	
-	
-	selectionStart = inTerminalViewPtr->text.selection.range.first;
-	selectionPastEnd = inTerminalViewPtr->text.selection.range.second;
-	
-	// all multi-clicks result in a selection that is one line high,
-	// and the range is exclusive so the row difference must be 1
-	selectionPastEnd.second = selectionStart.second + 1;
-	
-	if (inClickCount == 2)
+	if (false == inTerminalViewPtr->text.selection.inhibited)
 	{
-		// double-click; invoke the registered Python word-finding callback
-		// to determine which text should be selected
-		Terminal_LineRef			lineIterator = findRowIteratorRelativeTo(inTerminalViewPtr, selectionStart.second, 0/* origin row */);
-		UniChar const*				textStart = nullptr;
-		UniChar const*				textPastEnd = nullptr;
-		Terminal_TextCopyFlags		flags = 0L;
+		TerminalView_Cell	selectionStart;
+		TerminalView_Cell	selectionPastEnd;
+		SInt16 const		kColumnCount = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
+		//SInt16 const		kRowCount = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
 		
 		
-		// configure terminal routine
-		if (inTerminalViewPtr->text.selection.isRectangular) flags |= kTerminal_TextCopyFlagsRectangular;
+		selectionStart = inTerminalViewPtr->text.selection.range.first;
+		selectionPastEnd = inTerminalViewPtr->text.selection.range.second;
 		
-		// double-click - select a word; or, do intelligent double-click
-		// based on the character underneath the cursor
-		// TEMPORARY; only one line is examined, but this is probably
-		// more useful if it joins at least the preceding line, and
-		// possible the following line as well
-		if (kTerminal_ResultOK ==
-			Terminal_GetLine(inTerminalViewPtr->screen.ref, lineIterator, textStart, textPastEnd, flags))
+		// all multi-clicks result in a selection that is one line high,
+		// and the range is exclusive so the row difference must be 1
+		selectionPastEnd.second = selectionStart.second + 1;
+		
+		if (inClickCount == 2)
 		{
-			// NOTE: while currently a short-cut is taken to avoid copying the string,
-			// this may have to become a true copy if this is expanded to look at text
-			// across more than one line
-			CFRetainRelease			asCFString(CFStringCreateWithCharactersNoCopy
-												(kCFAllocatorDefault, textStart, textPastEnd - textStart, kCFAllocatorNull/* deallocator */),
-												true/* is retained */);
-			std::string				asUTF8;
-			std::pair<long, long>	wordInfo; // offset (zero-based), and count
+			// double-click; invoke the registered Python word-finding callback
+			// to determine which text should be selected
+			Terminal_LineRef			lineIterator = findRowIteratorRelativeTo(inTerminalViewPtr, selectionStart.second, 0/* origin row */);
+			UniChar const*				textStart = nullptr;
+			UniChar const*				textPastEnd = nullptr;
+			Terminal_TextCopyFlags		flags = 0L;
 			
 			
-			StringUtilities_CFToUTF8(asCFString.returnCFStringRef(), asUTF8);
-			try
+			// configure terminal routine
+			if (inTerminalViewPtr->text.selection.isRectangular) flags |= kTerminal_TextCopyFlagsRectangular;
+			
+			// double-click - select a word; or, do intelligent double-click
+			// based on the character underneath the cursor
+			// TEMPORARY; only one line is examined, but this is probably
+			// more useful if it joins at least the preceding line, and
+			// possible the following line as well
+			if (kTerminal_ResultOK ==
+				Terminal_GetLine(inTerminalViewPtr->screen.ref, lineIterator, textStart, textPastEnd, flags))
 			{
-				wordInfo = Quills::Terminal::word_of_char_in_string(asUTF8, selectionStart.first);
-				if ((wordInfo.first >= 0) && (wordInfo.first < kColumnCount) &&
-					(wordInfo.second >= 0) && ((wordInfo.first + wordInfo.second) <= kColumnCount))
+				// NOTE: while currently a short-cut is taken to avoid copying the string,
+				// this may have to become a true copy if this is expanded to look at text
+				// across more than one line
+				CFRetainRelease			asCFString(CFStringCreateWithCharactersNoCopy
+													(kCFAllocatorDefault, textStart, textPastEnd - textStart, kCFAllocatorNull/* deallocator */),
+													true/* is retained */);
+				std::string				asUTF8;
+				std::pair<long, long>	wordInfo; // offset (zero-based), and count
+				
+				
+				StringUtilities_CFToUTF8(asCFString.returnCFStringRef(), asUTF8);
+				try
 				{
-					selectionStart.first = wordInfo.first;
-					selectionPastEnd.first = wordInfo.first + wordInfo.second;
+					wordInfo = Quills::Terminal::word_of_char_in_string(asUTF8, selectionStart.first);
+					if ((wordInfo.first >= 0) && (wordInfo.first < kColumnCount) &&
+						(wordInfo.second >= 0) && ((wordInfo.first + wordInfo.second) <= kColumnCount))
+					{
+						selectionStart.first = wordInfo.first;
+						selectionPastEnd.first = wordInfo.first + wordInfo.second;
+					}
+				}
+				catch (std::exception const& e)
+				{
+					CFStringRef			titleCFString = CFSTR("Exception while trying to find double-clicked word"); // LOCALIZE THIS
+					CFRetainRelease		messageCFString(CFStringCreateWithCString
+														(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
+														true/* is retained */); // LOCALIZE THIS?
+					
+					
+					Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());
 				}
 			}
-			catch (std::exception const& e)
-			{
-				CFStringRef			titleCFString = CFSTR("Exception while trying to find double-clicked word"); // LOCALIZE THIS
-				CFRetainRelease		messageCFString(CFStringCreateWithCString
-													(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
-													true/* is retained */); // LOCALIZE THIS?
-				
-				
-				Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());
-			}
+			releaseRowIterator(inTerminalViewPtr, &lineIterator);
 		}
-		releaseRowIterator(inTerminalViewPtr, &lineIterator);
+		else
+		{
+			// triple-click - select the whole line
+			selectionStart.first = 0;
+			selectionPastEnd.first = kColumnCount;
+		}
+		
+		inTerminalViewPtr->text.selection.range.first = selectionStart;
+		inTerminalViewPtr->text.selection.range.second = selectionPastEnd;
+		highlightCurrentSelection(inTerminalViewPtr, true/* is highlighted */, true/* redraw */);
+		inTerminalViewPtr->text.selection.exists = (inTerminalViewPtr->text.selection.range.first !=
+													inTerminalViewPtr->text.selection.range.second);
+		copySelectedTextIfUserPreference(inTerminalViewPtr);
 	}
-	else
-	{
-		// triple-click - select the whole line
-		selectionStart.first = 0;
-		selectionPastEnd.first = kColumnCount;
-	}
-	
-	inTerminalViewPtr->text.selection.range.first = selectionStart;
-	inTerminalViewPtr->text.selection.range.second = selectionPastEnd;
-	highlightCurrentSelection(inTerminalViewPtr, true/* is highlighted */, true/* redraw */);
-	inTerminalViewPtr->text.selection.exists = (inTerminalViewPtr->text.selection.range.first !=
-												inTerminalViewPtr->text.selection.range.second);
-	copySelectedTextIfUserPreference(inTerminalViewPtr);
 }// handleMultiClick
 
 
@@ -9359,224 +9450,236 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 				case 0x3B:
 				case 0x7B:
 					// left arrow
-					if (modifiers == shiftKey)
+					if (false == viewPtr->text.selection.readOnly)
 					{
-						if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
-							(false == viewPtr->text.selection.exists))
+						if (modifiers == shiftKey)
 						{
-							viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
-						}
-						
-						if (false == viewPtr->text.selection.exists)
-						{
-							TerminalView_SelectBeforeCursorCharacter(view);
-						}
-						else
-						{
-							// shift-left-arrow
-							TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
-																		// deselect the character to the right of the bottom selection anchor
-																		? viewPtr->text.selection.range.second
-																		// extend top selection anchor one character backward
-																		: viewPtr->text.selection.range.first;
-							
-							
-							// this wraps to the next line, but the wrap column depends on
-							// the style (rectangular or not)
-							if (anchorToChange.first > 0)
+							if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
+								(false == viewPtr->text.selection.exists))
 							{
-								// back up one character, same line
-								--anchorToChange.first;
+								viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
+							}
+							
+							if (false == viewPtr->text.selection.exists)
+							{
+								TerminalView_SelectBeforeCursorCharacter(view);
 							}
 							else
 							{
-								// move to previous line, end
-								if (false == viewPtr->text.selection.isRectangular)
+								// shift-left-arrow
+								TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
+																			// deselect the character to the right of the bottom selection anchor
+																			? viewPtr->text.selection.range.second
+																			// extend top selection anchor one character backward
+																			: viewPtr->text.selection.range.first;
+								
+								
+								// this wraps to the next line, but the wrap column depends on
+								// the style (rectangular or not)
+								if (anchorToChange.first > 0)
 								{
-									anchorToChange.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
+									// back up one character, same line
+									--anchorToChange.first;
 								}
-								--anchorToChange.second;
+								else
+								{
+									// move to previous line, end
+									if (false == viewPtr->text.selection.isRectangular)
+									{
+										anchorToChange.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
+									}
+									--anchorToChange.second;
+								}
+								selectionChanged = true;
+							}
+							
+							// event is handled
+							result = noErr;
+						}
+						else if (modifiers == (shiftKey | cmdKey))
+						{
+							if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
+								(false == viewPtr->text.selection.exists))
+							{
+								viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
+							}
+							
+							if (false == viewPtr->text.selection.exists)
+							{
+								TerminalView_SelectBeforeCursorCharacter(view);
+							}
+							
+							// shift-command-left-arrow
+							if (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
+							{
+								// deselect all characters on this line
+								viewPtr->text.selection.range.second.first = 0;
+							}
+							else
+							{
+								// extend selection to beginning of line
+								viewPtr->text.selection.range.first.first = 0;
 							}
 							selectionChanged = true;
+							
+							// event is handled
+							result = noErr;
 						}
-						
-						// event is handled
-						result = noErr;
-					}
-					else if (modifiers == (shiftKey | cmdKey))
-					{
-						if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
-							(false == viewPtr->text.selection.exists))
-						{
-							viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
-						}
-						
-						if (false == viewPtr->text.selection.exists)
-						{
-							TerminalView_SelectBeforeCursorCharacter(view);
-						}
-						
-						// shift-command-left-arrow
-						if (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
-						{
-							// deselect all characters on this line
-							viewPtr->text.selection.range.second.first = 0;
-						}
-						else
-						{
-							// extend selection to beginning of line
-							viewPtr->text.selection.range.first.first = 0;
-						}
-						selectionChanged = true;
-						
-						// event is handled
-						result = noErr;
 					}
 					break;
 				
 				case 0x3C:
 				case 0x7C:
 					// right arrow
-					if (modifiers == shiftKey)
+					if (false == viewPtr->text.selection.readOnly)
 					{
-						if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
-							(false == viewPtr->text.selection.exists))
+						if (modifiers == shiftKey)
 						{
-							viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
-						}
-						
-						if (false == viewPtr->text.selection.exists)
-						{
-							TerminalView_SelectCursorCharacter(view);
-						}
-						else
-						{
-							// shift-right-arrow
-							TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
-																		// extend bottom selection anchor one character forward
-																		? viewPtr->text.selection.range.second
-																		// deselect the character to the left of the top selection anchor
-																		: viewPtr->text.selection.range.first;
-							
-							
-							// this wraps to the next line, but the wrap column depends on
-							// the style (rectangular or not)
-							if (anchorToChange.first < Terminal_ReturnColumnCount(viewPtr->screen.ref))
+							if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
+								(false == viewPtr->text.selection.exists))
 							{
-								// go forward one character, same line
-								++anchorToChange.first;
+								viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
+							}
+							
+							if (false == viewPtr->text.selection.exists)
+							{
+								TerminalView_SelectCursorCharacter(view);
 							}
 							else
 							{
-								// move to next line, beginning
-								if (false == viewPtr->text.selection.isRectangular)
+								// shift-right-arrow
+								TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
+																			// extend bottom selection anchor one character forward
+																			? viewPtr->text.selection.range.second
+																			// deselect the character to the left of the top selection anchor
+																			: viewPtr->text.selection.range.first;
+								
+								
+								// this wraps to the next line, but the wrap column depends on
+								// the style (rectangular or not)
+								if (anchorToChange.first < Terminal_ReturnColumnCount(viewPtr->screen.ref))
 								{
-									anchorToChange.first = 0;
+									// go forward one character, same line
+									++anchorToChange.first;
 								}
-								++anchorToChange.second;
+								else
+								{
+									// move to next line, beginning
+									if (false == viewPtr->text.selection.isRectangular)
+									{
+										anchorToChange.first = 0;
+									}
+									++anchorToChange.second;
+								}
+								selectionChanged = true;
+							}
+							
+							// event is handled
+							result = noErr;
+						}
+						else if (modifiers == (shiftKey | cmdKey))
+						{
+							if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
+								(false == viewPtr->text.selection.exists))
+							{
+								viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
+							}
+							
+							if (false == viewPtr->text.selection.exists)
+							{
+								TerminalView_SelectCursorCharacter(view);
+							}
+							
+							// shift-command-right-arrow
+							if (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
+							{
+								// extend selection to end of line
+								viewPtr->text.selection.range.second.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
+							}
+							else
+							{
+								// deselect all characters on this line
+								viewPtr->text.selection.range.first.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
 							}
 							selectionChanged = true;
+							
+							// event is handled
+							result = noErr;
 						}
-						
-						// event is handled
-						result = noErr;
-					}
-					else if (modifiers == (shiftKey | cmdKey))
-					{
-						if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
-							(false == viewPtr->text.selection.exists))
-						{
-							viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
-						}
-						
-						if (false == viewPtr->text.selection.exists)
-						{
-							TerminalView_SelectCursorCharacter(view);
-						}
-						
-						// shift-command-right-arrow
-						if (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
-						{
-							// extend selection to end of line
-							viewPtr->text.selection.range.second.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
-						}
-						else
-						{
-							// deselect all characters on this line
-							viewPtr->text.selection.range.first.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
-						}
-						selectionChanged = true;
-						
-						// event is handled
-						result = noErr;
 					}
 					break;
 				
 				case 0x3E:
 				case 0x7E:
 					// up arrow
-					if (modifiers == shiftKey)
+					if (false == viewPtr->text.selection.readOnly)
 					{
-						if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
-							(false == viewPtr->text.selection.exists))
+						if (modifiers == shiftKey)
 						{
-							viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
-						}
-						
-						if (false == viewPtr->text.selection.exists)
-						{
-							TerminalView_SelectCursorLine(view);
-						}
-						else
-						{
-							// shift-up-arrow
-							TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
-																		// reduce selection by one line off the bottom
-																		? viewPtr->text.selection.range.second
-																		// extend selection one line backward, same column
-																		: viewPtr->text.selection.range.first;
+							if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
+								(false == viewPtr->text.selection.exists))
+							{
+								viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
+							}
 							
+							if (false == viewPtr->text.selection.exists)
+							{
+								TerminalView_SelectCursorLine(view);
+							}
+							else
+							{
+								// shift-up-arrow
+								TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
+																			// reduce selection by one line off the bottom
+																			? viewPtr->text.selection.range.second
+																			// extend selection one line backward, same column
+																			: viewPtr->text.selection.range.first;
+								
+								
+								--anchorToChange.second;
+								selectionChanged = true;
+							}
 							
-							--anchorToChange.second;
-							selectionChanged = true;
+							// event is handled
+							result = noErr;
 						}
-						
-						// event is handled
-						result = noErr;
 					}
 					break;
 				
 				case 0x3D:
 				case 0x7D:
 					// down arrow
-					if (modifiers == shiftKey)
+					if (false == viewPtr->text.selection.readOnly)
 					{
-						if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
-							(false == viewPtr->text.selection.exists))
+						if (modifiers == shiftKey)
 						{
-							viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
-						}
-						
-						if (false == viewPtr->text.selection.exists)
-						{
-							TerminalView_SelectCursorLine(view);
-						}
-						else
-						{
-							// shift-down-arrow
-							TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
-																		// extend selection one line forward, same column
-																		? viewPtr->text.selection.range.second
-																		// reduce selection by one line off the top
-																		: viewPtr->text.selection.range.first;
+							if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
+								(false == viewPtr->text.selection.exists))
+							{
+								viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
+							}
 							
+							if (false == viewPtr->text.selection.exists)
+							{
+								TerminalView_SelectCursorLine(view);
+							}
+							else
+							{
+								// shift-down-arrow
+								TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
+																			// extend selection one line forward, same column
+																			? viewPtr->text.selection.range.second
+																			// reduce selection by one line off the top
+																			: viewPtr->text.selection.range.first;
+								
+								
+								++anchorToChange.second;
+								selectionChanged = true;
+							}
 							
-							++anchorToChange.second;
-							selectionChanged = true;
+							// event is handled
+							result = noErr;
 						}
-						
-						// event is handled
-						result = noErr;
 					}
 					break;
 				
@@ -9736,13 +9839,15 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 							 EventRef				inEvent,
 							 TerminalViewRef		inTerminalViewRef)
 {
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inTerminalViewRef);
+	OSStatus					result = eventNotHandledErr;
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassControl);
 	assert(kEventKind == kEventControlTrack);
+	if (false == viewPtr->text.selection.readOnly)
 	{
 		HIViewRef	view = nullptr;
 		
@@ -9773,8 +9878,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseLocation, typeQDPoint, originalLocalMouse);
 			if (result == noErr)
 			{
-				My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inTerminalViewRef);
-				UInt32						currentModifiers = 0;
+				UInt32		currentModifiers = 0;
 				
 				
 				// translate the mouse coordinates to QuickDraw (content-relative)
@@ -11097,197 +11201,201 @@ trackTextSelection	(My_TerminalViewPtr		inTerminalViewPtr,
 					 Point*					outNewLocalMousePtr,
 					 UInt32*				outNewModifiersPtr)
 {
-	TerminalView_Cell		originalCellUnderMouse;
-	TerminalView_Cell		cellUnderMouse;
-	Point					previousLocalMouse;
-	SInt16					deltaColumn = 0;
-	SInt16					deltaRow = 0;
-	CGrafPtr				oldPort = nullptr;
-	GDHandle				oldDevice = nullptr;
-	MouseTrackingResult		trackingResult = kMouseTrackingMouseDown;
-	Boolean					extendSelection = false;
-	
-	
-	GetGWorld(&oldPort, &oldDevice);
-	
-	// determine if the old selection should go away first
-	extendSelection = (0 != (inModifiers & shiftKey));
-	if (extendSelection)
+	if ((false == inTerminalViewPtr->text.selection.inhibited) &&
+		(false == inTerminalViewPtr->text.selection.readOnly))
 	{
-		originalCellUnderMouse = inTerminalViewPtr->text.selection.range.first;
-	}
-	else
-	{
-		inTerminalViewPtr->text.selection.exists = false;
-		highlightCurrentSelection(inTerminalViewPtr, false/* is highlighted */, true/* redraw */);
-	}
-	
-	// this must be set after unhighlighting (above), since for example
-	// the user might have had a regular selection that is being replaced
-	// by a rectangular one, and the right type of region should be erased
-	inTerminalViewPtr->text.selection.isRectangular = (0 != (inModifiers & optionKey));
-	
-	if (inTerminalViewPtr->text.selection.isRectangular)
-	{
-		Cursors_UseCrosshairs();
-	}
-	else
-	{
-		Cursors_UseIBeam();
-	}
-	
-	SetPortWindowPort(HIViewGetWindow(inTerminalViewPtr->contentHIView));
-	
-	// continue tracking until the mouse is released
-	*outNewLocalMousePtr = inLocalMouse;
-	*outNewModifiersPtr = inModifiers;
-	previousLocalMouse = inLocalMouse;
-	do
-	{
-		// find new mouse location, scroll if necessary
-		(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, *outNewLocalMousePtr, cellUnderMouse, deltaColumn, deltaRow);
-		(TerminalView_Result)TerminalView_ScrollAround(inTerminalViewPtr->selfRef, deltaColumn, deltaRow);
+		TerminalView_Cell		originalCellUnderMouse;
+		TerminalView_Cell		cellUnderMouse;
+		Point					previousLocalMouse;
+		SInt16					deltaColumn = 0;
+		SInt16					deltaRow = 0;
+		CGrafPtr				oldPort = nullptr;
+		GDHandle				oldDevice = nullptr;
+		MouseTrackingResult		trackingResult = kMouseTrackingMouseDown;
+		Boolean					extendSelection = false;
 		
-		// if the mouse moves (or the shift key is down), update the selection
-		unless (RegionUtilities_NearPoints(*outNewLocalMousePtr, previousLocalMouse) && (false == extendSelection))
+		
+		GetGWorld(&oldPort, &oldDevice);
+		
+		// determine if the old selection should go away first
+		extendSelection = (0 != (inModifiers & shiftKey));
+		if (extendSelection)
 		{
-			// toggle the highlight state of text between the current and last mouse positions
+			originalCellUnderMouse = inTerminalViewPtr->text.selection.range.first;
+		}
+		else
+		{
+			inTerminalViewPtr->text.selection.exists = false;
 			highlightCurrentSelection(inTerminalViewPtr, false/* is highlighted */, true/* redraw */);
+		}
+		
+		// this must be set after unhighlighting (above), since for example
+		// the user might have had a regular selection that is being replaced
+		// by a rectangular one, and the right type of region should be erased
+		inTerminalViewPtr->text.selection.isRectangular = (0 != (inModifiers & optionKey));
+		
+		if (inTerminalViewPtr->text.selection.isRectangular)
+		{
+			Cursors_UseCrosshairs();
+		}
+		else
+		{
+			Cursors_UseIBeam();
+		}
+		
+		SetPortWindowPort(HIViewGetWindow(inTerminalViewPtr->contentHIView));
+		
+		// continue tracking until the mouse is released
+		*outNewLocalMousePtr = inLocalMouse;
+		*outNewModifiersPtr = inModifiers;
+		previousLocalMouse = inLocalMouse;
+		do
+		{
+			// find new mouse location, scroll if necessary
+			(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, *outNewLocalMousePtr, cellUnderMouse, deltaColumn, deltaRow);
+			(TerminalView_Result)TerminalView_ScrollAround(inTerminalViewPtr->selfRef, deltaColumn, deltaRow);
 			
-			// if this is the first move (that is, the mouse was not simply clicked to delete
-			// the previous selection), start a new selection range consisting of the cell
-			// underneath the mouse
-			if (false == inTerminalViewPtr->text.selection.exists)
+			// if the mouse moves (or the shift key is down), update the selection
+			unless (RegionUtilities_NearPoints(*outNewLocalMousePtr, previousLocalMouse) && (false == extendSelection))
 			{
-				inTerminalViewPtr->text.selection.exists = true;
-				originalCellUnderMouse = cellUnderMouse;
-				inTerminalViewPtr->text.selection.range.first = cellUnderMouse;
-				inTerminalViewPtr->text.selection.range.second = cellUnderMouse;
-			}
-			else
-			{
-				// LOCALIZE THIS; implies left-to-right locale
-				if (inTerminalViewPtr->text.selection.isRectangular)
+				// toggle the highlight state of text between the current and last mouse positions
+				highlightCurrentSelection(inTerminalViewPtr, false/* is highlighted */, true/* redraw */);
+				
+				// if this is the first move (that is, the mouse was not simply clicked to delete
+				// the previous selection), start a new selection range consisting of the cell
+				// underneath the mouse
+				if (false == inTerminalViewPtr->text.selection.exists)
 				{
-					// rectangular selection
-					TerminalView_Cell		originalSecond = inTerminalViewPtr->text.selection.range.second;
-					CGRect					r1;
-					
-					
-					if (extendSelection)
-					{
-						// when extending, remember the section previously highlighted...
-						r1 = CGRectMake(inTerminalViewPtr->text.selection.range.first.first,
-										inTerminalViewPtr->text.selection.range.first.second,
-										inTerminalViewPtr->text.selection.range.second.first -
-											inTerminalViewPtr->text.selection.range.first.first,
-										inTerminalViewPtr->text.selection.range.second.second -
-											inTerminalViewPtr->text.selection.range.first.second);
-					}
-					inTerminalViewPtr->text.selection.range.first = originalCellUnderMouse;
+					inTerminalViewPtr->text.selection.exists = true;
+					originalCellUnderMouse = cellUnderMouse;
+					inTerminalViewPtr->text.selection.range.first = cellUnderMouse;
 					inTerminalViewPtr->text.selection.range.second = cellUnderMouse;
-					// in rectangular mode, the anchor points might not exactly match
-					// one of the mouse anchors (they could be the other two corners),
-					// so a rectangular-sort is necessary before adjustments are made
-					sortAnchors(inTerminalViewPtr->text.selection.range.first,
-								inTerminalViewPtr->text.selection.range.second,
-								true/* is rectangular */);
-					// end point’s top-left would be past-the-end for the character
-					// above and to the left, so offset in both directions to
-					// encompass the character underneath the mouse
-					++(inTerminalViewPtr->text.selection.range.second.first);
-					++(inTerminalViewPtr->text.selection.range.second.second);
-					if (extendSelection)
-					{
-						// the largest encompassing rectangle must be used when extending;
-						// this composes both the original selection and the new range,
-						// and ensures the overall rectangle is completely highlighted
-						CGRect		r2 = CGRectMake(inTerminalViewPtr->text.selection.range.first.first,
-													inTerminalViewPtr->text.selection.range.first.second,
-													inTerminalViewPtr->text.selection.range.second.first -
-														inTerminalViewPtr->text.selection.range.first.first,
-													inTerminalViewPtr->text.selection.range.second.second -
-														inTerminalViewPtr->text.selection.range.first.second);
-						CGRect		r3 = CGRectUnion(r1, r2);
-						
-						
-						inTerminalViewPtr->text.selection.range.first = std::make_pair(r3.origin.x, r3.origin.y);
-						inTerminalViewPtr->text.selection.range.second = std::make_pair(r3.origin.x + r3.size.width,
-																						r3.origin.y + r3.size.height);
-						sortAnchors(inTerminalViewPtr->text.selection.range.first,
-									inTerminalViewPtr->text.selection.range.second,
-									true/* is rectangular */);
-					}
-					else
-					{
-						if (inTerminalViewPtr->text.selection.range.first.first < originalCellUnderMouse.first)
-						{
-							// selection is moving before the initial anchor point (exclusive)...
-							--(inTerminalViewPtr->text.selection.range.second.first);
-						}
-					}
 				}
 				else
 				{
-					// Mac-like continuous selection anchors
-					if ((cellUnderMouse.second < originalCellUnderMouse.second) ||
-						((cellUnderMouse.second == originalCellUnderMouse.second) &&
-							(cellUnderMouse.first < originalCellUnderMouse.first)))
+					// LOCALIZE THIS; implies left-to-right locale
+					if (inTerminalViewPtr->text.selection.isRectangular)
 					{
-						// selection is moving before the initial anchor point (exclusive)...
-						inTerminalViewPtr->text.selection.range.first = cellUnderMouse;
-						if (false == extendSelection)
+						// rectangular selection
+						TerminalView_Cell		originalSecond = inTerminalViewPtr->text.selection.range.second;
+						CGRect					r1;
+						
+						
+						if (extendSelection)
 						{
-							inTerminalViewPtr->text.selection.range.second = originalCellUnderMouse;
-							// ...start point’s top-left would be past-the-end for the line above,
-							// so descend by one
-							++(inTerminalViewPtr->text.selection.range.second.second);
+							// when extending, remember the section previously highlighted...
+							r1 = CGRectMake(inTerminalViewPtr->text.selection.range.first.first,
+											inTerminalViewPtr->text.selection.range.first.second,
+											inTerminalViewPtr->text.selection.range.second.first -
+												inTerminalViewPtr->text.selection.range.first.first,
+											inTerminalViewPtr->text.selection.range.second.second -
+												inTerminalViewPtr->text.selection.range.first.second);
+						}
+						inTerminalViewPtr->text.selection.range.first = originalCellUnderMouse;
+						inTerminalViewPtr->text.selection.range.second = cellUnderMouse;
+						// in rectangular mode, the anchor points might not exactly match
+						// one of the mouse anchors (they could be the other two corners),
+						// so a rectangular-sort is necessary before adjustments are made
+						sortAnchors(inTerminalViewPtr->text.selection.range.first,
+									inTerminalViewPtr->text.selection.range.second,
+									true/* is rectangular */);
+						// end point’s top-left would be past-the-end for the character
+						// above and to the left, so offset in both directions to
+						// encompass the character underneath the mouse
+						++(inTerminalViewPtr->text.selection.range.second.first);
+						++(inTerminalViewPtr->text.selection.range.second.second);
+						if (extendSelection)
+						{
+							// the largest encompassing rectangle must be used when extending;
+							// this composes both the original selection and the new range,
+							// and ensures the overall rectangle is completely highlighted
+							CGRect		r2 = CGRectMake(inTerminalViewPtr->text.selection.range.first.first,
+														inTerminalViewPtr->text.selection.range.first.second,
+														inTerminalViewPtr->text.selection.range.second.first -
+															inTerminalViewPtr->text.selection.range.first.first,
+														inTerminalViewPtr->text.selection.range.second.second -
+															inTerminalViewPtr->text.selection.range.first.second);
+							CGRect		r3 = CGRectUnion(r1, r2);
+							
+							
+							inTerminalViewPtr->text.selection.range.first = std::make_pair(r3.origin.x, r3.origin.y);
+							inTerminalViewPtr->text.selection.range.second = std::make_pair(r3.origin.x + r3.size.width,
+																							r3.origin.y + r3.size.height);
+							sortAnchors(inTerminalViewPtr->text.selection.range.first,
+										inTerminalViewPtr->text.selection.range.second,
+										true/* is rectangular */);
+						}
+						else
+						{
+							if (inTerminalViewPtr->text.selection.range.first.first < originalCellUnderMouse.first)
+							{
+								// selection is moving before the initial anchor point (exclusive)...
+								--(inTerminalViewPtr->text.selection.range.second.first);
+							}
 						}
 					}
 					else
 					{
-						// selection is moving after the initial anchor point (inclusive)...
-						if (false == extendSelection)
+						// Mac-like continuous selection anchors
+						if ((cellUnderMouse.second < originalCellUnderMouse.second) ||
+							((cellUnderMouse.second == originalCellUnderMouse.second) &&
+								(cellUnderMouse.first < originalCellUnderMouse.first)))
 						{
-							inTerminalViewPtr->text.selection.range.first = originalCellUnderMouse;
-							++(inTerminalViewPtr->text.selection.range.second.first);
+							// selection is moving before the initial anchor point (exclusive)...
+							inTerminalViewPtr->text.selection.range.first = cellUnderMouse;
+							if (false == extendSelection)
+							{
+								inTerminalViewPtr->text.selection.range.second = originalCellUnderMouse;
+								// ...start point’s top-left would be past-the-end for the line above,
+								// so descend by one
+								++(inTerminalViewPtr->text.selection.range.second.second);
+							}
 						}
-						inTerminalViewPtr->text.selection.range.second = cellUnderMouse;
-						// end point’s top-left would be past-the-end for the character
-						// above and to the left, so offset in both directions to
-						// encompass the character underneath the mouse
-						++(inTerminalViewPtr->text.selection.range.second.second);
+						else
+						{
+							// selection is moving after the initial anchor point (inclusive)...
+							if (false == extendSelection)
+							{
+								inTerminalViewPtr->text.selection.range.first = originalCellUnderMouse;
+								++(inTerminalViewPtr->text.selection.range.second.first);
+							}
+							inTerminalViewPtr->text.selection.range.second = cellUnderMouse;
+							// end point’s top-left would be past-the-end for the character
+							// above and to the left, so offset in both directions to
+							// encompass the character underneath the mouse
+							++(inTerminalViewPtr->text.selection.range.second.second);
+						}
 					}
 				}
+				
+				highlightCurrentSelection(inTerminalViewPtr, true/* is highlighted */, true/* redraw */);
+				previousLocalMouse = *outNewLocalMousePtr;
 			}
 			
-			highlightCurrentSelection(inTerminalViewPtr, true/* is highlighted */, true/* redraw */);
-			previousLocalMouse = *outNewLocalMousePtr;
+			// find next mouse location
+			{
+				OSStatus	error = noErr;
+				
+				
+				error = TrackMouseLocationWithOptions(nullptr/* port, or nullptr for current port */, 0/* options */,
+														kEventDurationForever/* timeout */, outNewLocalMousePtr, outNewModifiersPtr,
+														&trackingResult);
+				if (noErr != error) break;
+			}
 		}
+		while (kMouseTrackingMouseUp != trackingResult);
 		
-		// find next mouse location
+		SetGWorld(oldPort, oldDevice);
+		
+		inTerminalViewPtr->text.selection.exists = (inTerminalViewPtr->text.selection.range.first !=
+													inTerminalViewPtr->text.selection.range.second);
+		if (inTerminalViewPtr->text.selection.exists)
 		{
-			OSStatus	error = noErr;
-			
-			
-			error = TrackMouseLocationWithOptions(nullptr/* port, or nullptr for current port */, 0/* options */,
-													kEventDurationForever/* timeout */, outNewLocalMousePtr, outNewModifiersPtr,
-													&trackingResult);
-			if (noErr != error) break;
+			sortAnchors(inTerminalViewPtr->text.selection.range.first, inTerminalViewPtr->text.selection.range.second,
+						inTerminalViewPtr->text.selection.isRectangular);
 		}
+		copySelectedTextIfUserPreference(inTerminalViewPtr);
 	}
-	while (kMouseTrackingMouseUp != trackingResult);
-	
-	SetGWorld(oldPort, oldDevice);
-	
-	inTerminalViewPtr->text.selection.exists = (inTerminalViewPtr->text.selection.range.first !=
-												inTerminalViewPtr->text.selection.range.second);
-	if (inTerminalViewPtr->text.selection.exists)
-	{
-		sortAnchors(inTerminalViewPtr->text.selection.range.first, inTerminalViewPtr->text.selection.range.second,
-					inTerminalViewPtr->text.selection.isRectangular);
-	}
-	copySelectedTextIfUserPreference(inTerminalViewPtr);
 }// trackTextSelection
 
 
@@ -11452,22 +11560,25 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			
 			RGBBackColor(&backgroundRGB);
 			
-			// “darken” the colors if text is selected, but only in the foreground;
-			// in the background, the view renders an outline of the selection, so
-			// selected text should NOT have any special appearance in that case
-			if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
+			if (false == inTerminalViewPtr->text.selection.inhibited)
 			{
-				inTerminalViewPtr->screen.currentRenderNoBackground = false;
-				
-				if (gPreferenceProxies.invertSelections) UseInvertedColors();
-				else UseSelectionColors();
+				// “darken” the colors if text is selected, but only in the foreground;
+				// in the background, the view renders an outline of the selection, so
+				// selected text should NOT have any special appearance in that case
+				if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
+				{
+					inTerminalViewPtr->screen.currentRenderNoBackground = false;
+					
+					if (gPreferenceProxies.invertSelections) UseInvertedColors();
+					else UseSelectionColors();
+				}
 			}
 			
 			// when the screen is inactive, it is dimmed; in addition, any text that is
 			// not selected is FURTHER dimmed so as to emphasize the selection and show
 			// that the selection is in fact a click-through region
 			unless ((inTerminalViewPtr->isActive) || (gPreferenceProxies.dontDimTerminals) ||
-					(STYLE_SELECTED(inAttributes) && !gApplicationIsSuspended))
+					((false == inTerminalViewPtr->text.selection.inhibited) && STYLE_SELECTED(inAttributes) && !gApplicationIsSuspended))
 			{
 				inTerminalViewPtr->screen.currentRenderNoBackground = false;
 				
