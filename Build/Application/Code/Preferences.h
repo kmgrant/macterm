@@ -698,6 +698,14 @@ Preferences_Result
 
 //@}
 
+//!\name Debugging
+//@{
+
+void
+	Preferences_DebugDumpContext			(Preferences_ContextRef				inContext);
+
+//@}
+
 #endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -3114,6 +3114,44 @@ Preferences_CreateUniqueContextName		(Quills::Prefs::Class	inClass,
 
 
 /*!
+Dumps a text representation of the specified context’s settings
+to the console.  Currently, XML format is used.
+
+(4.0)
+*/
+void
+Preferences_DebugDumpContext	(Preferences_ContextRef		inContext)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	CFDataRef				dataRef = nullptr;
+	Boolean					dumpOK = false;
+	
+	
+	prefsResult = Preferences_ContextSaveAsXMLData(inContext, dataRef);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		CFStringRef		asString = CFStringCreateFromExternalRepresentation
+									(kCFAllocatorDefault, dataRef, kCFStringEncodingUTF8);
+		
+		
+		if (nullptr != asString)
+		{
+			Console_WriteValueAddress("dumping debug version of context", inContext);
+			Console_WriteValueCFString("context dump", asString);
+			dumpOK = true;
+			CFRelease(asString), asString = nullptr;
+		}
+		CFRelease(dataRef), dataRef = nullptr;
+	}
+	
+	if (false == dumpOK)
+	{
+		Console_Warning(Console_WriteValueAddress, "failed to dump debug version of context", inContext);
+	}
+}// DebugDumpContext
+
+
+/*!
 Provides a list of all created contexts in the specified
 preferences class.  The first context in the list is the
 default context (see also Preferences_GetDefaultContext()),
