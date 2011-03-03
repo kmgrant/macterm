@@ -546,6 +546,10 @@ void
 	TerminalView_SetANSIColorsEnabled			(TerminalViewRef			inView,
 												 Boolean					inUseANSIColorSequences);
 
+TerminalView_Result
+	TerminalView_SetCursorRenderingEnabled		(TerminalViewRef			inView,
+												 Boolean					inIsCursorVisible);
+
 void
 	TerminalView_SetDrawingEnabled				(TerminalViewRef			inView,
 												 Boolean					inIsDrawingEnabled);

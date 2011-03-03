@@ -318,7 +318,7 @@ struct My_TerminalView
 			Rect				ghostBounds;	// the exact view-relative rectangle of a dragged cursor’s outline region
 			MyCursorState		currentState;	// whether the cursor is visible
 			MyCursorState		ghostState;		// whether the cursor ghost is visible
-			Boolean				idleFlash;		// is timer currently animating anything?
+			Boolean				inhibited;		// if true, the cursor can never be displayed regardless of its state
 		} cursor;
 		
 		SInt32			topVisibleEdgeInRows;		// 0 if scrolled to the main screen, negative if scrollback; do not change this
@@ -2816,6 +2816,45 @@ TerminalView_SetColor	(TerminalViewRef			inView,
 
 
 /*!
+Specifies whether or not the given view is capable of displaying
+the cursor at all!  Changing this flag will automatically update
+the cursor to reflect the new permanent state.
+
+It is typical to hide the cursor of a view in a split-view
+situation, where only one view is expected to be the target at
+any one time.  Displaying multiple flashing cursors to the user
+for the same terminal buffer can be confusing.
+
+See also TerminalView_SetUserInteractionEnabled().
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the specified view reference is not valid
+
+(4.0)
+*/
+TerminalView_Result
+TerminalView_SetCursorRenderingEnabled	(TerminalViewRef	inView,
+										 Boolean			inIsEnabled)
+{
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		setCursorVisibility(viewPtr, inIsEnabled);
+		viewPtr->screen.cursor.inhibited = (false == inIsEnabled);
+	}
+	
+	return result;
+}// SetCursorRenderingEnabled
+
+
+/*!
 Changes the current display mode, which is normal by default.
 Query it later with TerminalView_ReturnDisplayMode().
 
@@ -3697,6 +3736,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.cursor.currentState = kMyCursorStateVisible;
 	this->screen.cursor.ghostState = kMyCursorStateInvisible;
 	this->screen.cursor.boundsAsRegion = Memory_NewRegion();
+	this->screen.cursor.inhibited = false;
 	this->screen.currentRenderContext = nullptr;
 	this->text.toCurrentSearchResult = this->text.searchResults.end();
 	
@@ -10599,8 +10639,10 @@ setCursorGhostVisibility	(My_TerminalViewPtr		inTerminalViewPtr,
 
 
 /*!
-Hides or shows the cursor in the specified screen.
-It may be invoked repeatedly.
+Hides or shows the cursor of the specified screen.
+
+This has no effect if TerminalView_SetCursorRenderingEnabled()
+has turned off cursor rendering.
 
 (3.0)
 */
@@ -10608,25 +10650,28 @@ void
 setCursorVisibility		(My_TerminalViewPtr		inTerminalViewPtr,
 						 Boolean				inIsVisible)
 {
-	MyCursorState	newCursorState = (inIsVisible) ? kMyCursorStateVisible : kMyCursorStateInvisible;
-	Boolean			renderCursor = (inTerminalViewPtr->screen.cursor.currentState != newCursorState);
-	
-	
-	if (API_AVAILABLE(IsValidWindowRef))
+	if (false == inTerminalViewPtr->screen.cursor.inhibited)
 	{
-		// cursor flashing is done within a thread; after a window closes,
-		// the flashing ought to stop, but to make sure of that the window
-		// must be valid (otherwise drawing occurs in the desktop!)
-		renderCursor = (renderCursor && IsValidWindowRef(HIViewGetWindow(inTerminalViewPtr->contentHIView)));
-	}
-	
-	// change state
-	inTerminalViewPtr->screen.cursor.currentState = newCursorState;
-	
-	// redraw the cursor if necessary
-	if (renderCursor)
-	{
-		updateDisplayInRegion(inTerminalViewPtr, inTerminalViewPtr->screen.cursor.boundsAsRegion);
+		MyCursorState	newCursorState = (inIsVisible) ? kMyCursorStateVisible : kMyCursorStateInvisible;
+		Boolean			renderCursor = (inTerminalViewPtr->screen.cursor.currentState != newCursorState);
+		
+		
+		if (API_AVAILABLE(IsValidWindowRef))
+		{
+			// cursor flashing is done within a thread; after a window closes,
+			// the flashing ought to stop, but to make sure of that the window
+			// must be valid (otherwise drawing occurs in the desktop!)
+			renderCursor = (renderCursor && IsValidWindowRef(HIViewGetWindow(inTerminalViewPtr->contentHIView)));
+		}
+		
+		// change state
+		inTerminalViewPtr->screen.cursor.currentState = newCursorState;
+		
+		// redraw the cursor if necessary
+		if (renderCursor)
+		{
+			updateDisplayInRegion(inTerminalViewPtr, inTerminalViewPtr->screen.cursor.boundsAsRegion);
+		}
 	}
 }// setCursorVisibility
 
