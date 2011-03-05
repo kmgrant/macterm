@@ -295,6 +295,7 @@ struct My_TerminalView
 	struct
 	{
 		TerminalScreenRef			ref;					// where the data for this terminal view comes from
+		Boolean						sizeNotMatchedWithView;	// if true, screen dimensions of screen buffer do not change when the view is resized
 		Boolean						areANSIColorsEnabled;	// are ANSI-colored text and graphics allowed in this window?
 		Boolean						focusRingEnabled;		// is the matte and content area focus ring displayed?
 		Boolean						isReverseVideo;			// are foreground and background colors temporarily swapped?
@@ -3034,6 +3035,39 @@ TerminalView_SetFontAndSize		(TerminalViewRef	inView,
 
 
 /*!
+Specifies whether or not a resize of the view will cause the
+underlying terminal buffer’s screen dimensions to change (to
+the size that best fills the space).  This should usually be
+enabled, but for split-panes it can make sense to view only a
+portion of the screen area.
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the specified view reference is not valid
+
+(4.0)
+*/
+TerminalView_Result
+TerminalView_SetResizeScreenBufferWithView		(TerminalViewRef	inView,
+												 Boolean			inScreenDimensionsAutoSync)
+{
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		viewPtr->screen.sizeNotMatchedWithView = (false == inScreenDimensionsAutoSync);
+	}
+	
+	return result;
+}// SetResizeScreenBufferWithView
+
+
+/*!
 Specifies whether or not the given view is capable of displaying
 text selections at all!  Clearing this flag will automatically
 remove any highlighting currently shown in the view.
@@ -3731,6 +3765,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.topVisibleEdgeInRows = 0;
 	this->screen.cache.viewWidthInPixels = 0; // set later...
 	this->screen.cache.viewHeightInPixels = 0; // set later...
+	this->screen.sizeNotMatchedWithView = false;
 	this->screen.focusRingEnabled = true;
 	this->screen.isReverseVideo = 0;
 	this->screen.cursor.currentState = kMyCursorStateVisible;
@@ -7617,7 +7652,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 			Localization_RestorePortFontState(&fontState);
 			SetGWorld(oldPort, oldDevice);
 		}
-		else
+		else if (false == viewPtr->screen.sizeNotMatchedWithView)
 		{
 			UInt16		columns = 0;
 			UInt16		rows = 0;
