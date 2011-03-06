@@ -782,11 +782,18 @@ acquireFocusOverlay		(HIViewRef		inView,
 		(Rect*)QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(inView)), &contentBounds);
 		
 		error = SetWindowBounds(kOverlayWindow, kWindowContentRgn, &contentBounds);
-		assert_noerr(error);
-		error = HIViewSetNeedsDisplay(HIViewWrap(kHIViewWindowContentID, kOverlayWindow), true);
-		assert_noerr(error);
-		
-		setFocusOverlayVisible(true);
+		if (noErr == error)
+		{
+			error = HIViewSetNeedsDisplay(HIViewWrap(kHIViewWindowContentID, kOverlayWindow), true);
+			assert_noerr(error);
+			setFocusOverlayVisible(true);
+		}
+		else
+		{
+			// boundaries might be illegal (e.g. excessive-shrunk view),
+			// so just bail and hide focus completely
+			setFocusOverlayVisible(false);
+		}
 	}
 }// acquireFocusOverlay
 
@@ -1844,8 +1851,7 @@ receiveFocusOverlayContentDraw	(EventHandlerCallRef	inHandlerCallRef,
 				// the theme focus rectangle is drawn outside the boundaries,
 				// so inset from the view edge to make sure it is visible
 				floatBounds = CGRectInset(floatBounds, 4, 4);
-				error = HIThemeDrawFocusRect(&floatBounds, true/* is focused */, drawingContext, kHIThemeOrientationNormal);
-				assert_noerr(error);
+				(OSStatus)HIThemeDrawFocusRect(&floatBounds, true/* is focused */, drawingContext, kHIThemeOrientationNormal);
 			}
 		}
 	}
