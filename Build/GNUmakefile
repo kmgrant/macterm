@@ -4,6 +4,12 @@
 # (in all required configurations) and copying the resulting
 # components into place.
 #
+# If you want to use an Xcode from a custom location, you can
+# either open the project file from that Xcode, or set the path
+# on the command line ("make DEVELOPER_DIR=...").  When run from
+# Xcode the DEVELOPER_DIR is set automatically; by default on
+# the command line, a DEVELOPER_DIR of /Developer is used.
+#
 # This is necessary to manage such things as merging multiple
 # architectures/versions of Quills.framework, and installation
 # of secondary executables such as the bug reporter.
@@ -55,6 +61,12 @@ XCODE_ENV := \
 	SYMROOT=$(SYMROOT) \
 	OBJROOT=$(OBJROOT)
 
+# DEVELOPER_DIR should be set by Xcode's build environment;
+# if not, or the directory does not exist, use /Developer
+ifeq ($(strip $(shell /bin/test -d $(DEVELOPER_DIR) || echo "no")),no)
+DEVELOPER_DIR := /Developer
+endif
+
 # tools
 COPY=/bin/cp
 IBTOOL=/usr/bin/ibtool
@@ -65,7 +77,7 @@ RMDIR=/bin/rmdir
 RSYNC=/usr/bin/rsync
 SYMLINK_REPLACE=/bin/ln -snf
 XARGS=/usr/bin/xargs
-XCB=/Developer/usr/bin/xcodebuild $(XCODE_ENV)
+XCB=$(DEVELOPER_DIR)/usr/bin/xcodebuild $(XCODE_ENV)
 
 # set this to "no" if you want to disable Panther support (may
 # make MacTelnet easier to build if you don't care about 10.3);
