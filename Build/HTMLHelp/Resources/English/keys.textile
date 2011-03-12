@@ -1,0 +1,74 @@
+notextile. <div class="navigation">
+
+* MacTELNET Help
+* "Home":../index.html
+
+notextile. </div>
+
+h1(pagetitle). Emulating Keys From Other Keyboards
+
+notextile. <div class="content">
+
+p(#abstract). Although you can use "palettes":windows.html#keypads
+ to help interact with certain programs in a terminal, you may need
+ keys that aren't in any palette.  Fortunately, MacTelnet's
+ "Macro preferences":preferences.html#macros allow you to map anything
+ you want to your Mac's keyboard, including key sequences that just
+ "do the right thing" on another computer.
+
+h2. X11 Keyboard Reference
+
+Below are example macros that emulate function keys on Unix-like
+ operating systems.
+
+Before using any of the following in a macro, be sure that the macro
+ is set to "Enter Text with Substitutions".
+
+Each sequence should be entered exactly into a macro, without any
+ spaces or other characters.
+
+table(deftable).
+(def). |_<(key). Key|_<(desc). No Modifier|_<(desc). Shift|_<(desc). Control|_<(desc). Shift and Control|
+(def). |<(key). @F1@|<(desc). @\e[11~@|<(desc). @\e[23~@|<(desc). @\e[11^@|<(desc). @\e[23^@|
+(def). |<(key). @F2@|<(desc). @\e[12~@|<(desc). @\e[24~@|<(desc). @\e[12^@|<(desc). @\e[24^@|
+(def). |<(key). @F3@|<(desc). @\e[13~@|<(desc). @\e[25~@|<(desc). @\e[13^@|<(desc). @\e[25^@|
+(def). |<(key). @F4@|<(desc). @\e[14~@|<(desc). @\e[26~@|<(desc). @\e[14^@|<(desc). @\e[26^@|
+(def). |<(key). @F5@|<(desc). @\e[15~@|<(desc). @\e[28~@|<(desc). @\e[15^@|<(desc). @\e[28^@|
+(def). |<(key). @F6@|<(desc). @\e[17~@|<(desc). @\e[29~@|<(desc). @\e[17^@|<(desc). @\e[29^@|
+(def). |<(key). @F7@|<(desc). @\e[18~@|<(desc). @\e[31~@|<(desc). @\e[18^@|<(desc). @\e[31^@|
+(def). |<(key). @F8@|<(desc). @\e[19~@|<(desc). @\e[32~@|<(desc). @\e[19^@|<(desc). @\e[32^@|
+(def). |<(key). @F9@|<(desc). @\e[20~@|<(desc). @\e[33~@|<(desc). @\e[20^@|<(desc). @\e[33^@|
+(def). |<(key). @F10@|<(desc). @\e[21~@|<(desc). @\e[34~@|<(desc). @\e[21^@|<(desc). @\e[34^@|
+(def). |<(key). @F11@|<(desc). @\e[23~@|<(desc). @\e[23$@|<(desc). @\e[23^@|<(desc). @\e[23@@|
+(def). |<(key). @F12@|<(desc). @\e[24~@|<(desc). @\e[24$@|<(desc). @\e[24^@|<(desc). @\e[24@@|
+(def). |<(key). @F13@|<(desc). @\e[25~@|<(desc). @\e[25$@|<(desc). @\e[25^@|<(desc). @\e[25@@|
+(def). |<(key). @F14@|<(desc). @\e[26~@|<(desc). @\e[26$@|<(desc). @\e[26^@|<(desc). @\e[26@@|
+(def). |<(key). @F15@|<(desc). @\e[28~@|<(desc). @\e[28$@|<(desc). @\e[28^@|<(desc). @\e[28@@|
+(def). |<(key). @F16@|<(desc). @\e[29~@|<(desc). @\e[29$@|<(desc). @\e[29^@|<(desc). @\e[29@@|
+(def). |<(key). @F17@|<(desc). @\e[31~@|<(desc). @\e[31$@|<(desc). @\e[31^@|<(desc). @\e[31@@|
+(def). |<(key). @F18@|<(desc). @\e[32~@|<(desc). @\e[32$@|<(desc). @\e[32^@|<(desc). @\e[32@@|
+(def). |<(key). @F19@|<(desc). @\e[33~@|<(desc). @\e[33$@|<(desc). @\e[33^@|<(desc). @\e[33@@|
+(def). |<(key). @F20@|<(desc). @\e[34~@|<(desc). @\e[34$@|<(desc). @\e[34^@|<(desc). @\e[34@@|
+
+h2. VT220 Keyboard Reference
+
+The "palette of VT220 keys":windows.html#keypads can be used to send
+ VT220 keys, but you may also want to use them in macros.
+
+VT220 function keys match the table above, with the exceptions of
+ PF1-PF4, which are defined as follows:
+
+table(deftable).
+(def). |_<(key). Key|_<(desc). Sequence|
+(def). |<(key). @PF1@|<(desc). @\eOP@|
+(def). |<(key). @PF2@|<(desc). @\eOQ@|
+(def). |<(key). @PF3@|<(desc). @\eOR@|
+(def). |<(key). @PF4@|<(desc). @\eOS@|
+(def). |<(key). Find|<(desc). @\e[1~@|
+(def). |<(key). Insert|<(desc). @\e[2~@|
+(def). |<(key). Delete|<(desc). @\e[3~@|
+(def). |<(key). Select|<(desc). @\e[4~@|
+(def). |<(key). Page Up|<(desc). @\e[5~@|
+(def). |<(key). Page Down|<(desc). @\e[6~@|
+
+notextile. </div>

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110311',
     '20110227',
     '20110226',
     '20110224',
@@ -360,6 +361,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110311': [
+        'MacTelnet Help has been updated to include examples of mapping various function keys to macros.',
+    ],
     '20110227': [
         'Fixed a problem with colors and formatting not being cleared in certain programs when lines were scrolled.',
         'XTerm sequences that request bright colors will now work even if the corresponding text is not boldface.',

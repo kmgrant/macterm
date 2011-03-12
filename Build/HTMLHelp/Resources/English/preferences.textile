@@ -308,17 +308,33 @@ The Contents are interpreted as a command line, split into
  words (on whitespace) and run in a new terminal window.
  When the command finishes, the terminal window is closed.
 
-h5. Enter Text
+Note that you can overcome limitations of this command line
+ by running your command in a shell, or providing the path to
+ a script (written in any language) that does more elaborate
+ things.
+
+h5. Enter Text Verbatim
 
 The Contents will be typed into the active terminal view as if
- the keyboard were used; however, any special sequences will
+ the keyboard was used, and *no* special sequences will be
+ substituted.
+
+h5. Enter Text with Substitutions
+
+The Contents will be typed into the active terminal view as if
+ the keyboard was used; however, any special sequences will
  first be substituted with their current values.
 
-If your macro fails to send any text, there may be errors in its
- special sequences.  You can use the Console application to see
- any errors that MacTelnet may have printed regarding your macro.
+This mode is very useful if your macro contains things like
+ escape sequences or other "invisible" characters (which is
+ common when "emulating key codes":keys.html from other
+ operating systems, for example).
 
-The possible special sequences are:
+But note that macros with substitutions can fail if your macro
+ has errors.  You can use the Console application to see errors
+ that MacTelnet generated for your macro.
+
+The possible substitutions are:
 
 table(deftable).
 (def). |_<(key). Code|_<(desc). Meaning|
@@ -327,33 +343,20 @@ table(deftable).
 (def). |<(key). @\r@|(desc)<. carriage return|
 (def). |<(key). @\n@|(desc)<. line feed|
 (def). |<(key). @\e@|(desc)<. escape (@^[@)|
-(def). |<(key). @\0nn@|(desc)<. arbitrary ASCII in octal; e.g. "@\004@" is @^D@|
-(def). |<(key). @\1nn@|(desc)<. arbitrary ASCII in octal; e.g. "@\177@" is delete|
+(def). |<(key). @\0nn@|(desc)<. arbitrary ASCII in octal[1]; e.g. @\004@ is @^D@|
+(def). |<(key). @\1nn@|(desc)<. arbitrary ASCII in octal[1]; e.g. @\177@ is delete|
+(def). |<(key). @\i@|(desc)<. dynamically substitute an IP address[2] of the computer|
+(def). |<(key). @\#@|(desc)<. dynamically substitute the number of terminal lines|
+(def). |<(key). @\"@|(desc)<. quote; allowed for legacy reasons, but no longer needs escaping|
 
-bq. To see the octal versions of all ASCII characters,
+fn1. To see the octal versions of all ASCII characters,
  look at <a href="x-man-page://ascii">x-man-page://ascii</a> (opens a
  MacTelnet window and runs "man ascii").
 
-For legacy reasons, you can also escape a double-quote (\"), but
- this is no longer necessary.
-
-MacTelnet also recognizes codes that represent information
- to be inserted at the time a macro is actually used:
-
-table(deftable).
-(def). |<(key). @\i@|(desc)<. dynamically substitute an IP address of the computer|
-(def). |<(key). @\#@|(desc)<. dynamically substitute the number of terminal lines|
-
-Currently, there is no way to choose which IP address is actually
+fn2. Currently, there is no way to choose which IP address is actually
  sent with "\i".  But you can use Window >> Show IP Addresses to
  see all the IP addresses that your computer has, and drag the
  desired one into a terminal window.
-
-h5. Enter Text Verbatim
-
-The Contents will be typed into the active terminal view as if
- the keyboard were used, and *no* special sequences will be
- substituted.
 
 h2(#workspaces). Workspaces
 
