@@ -10296,7 +10296,11 @@ returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
 					textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
 															kSelectionStart.first, kSelectionPastEnd.first,
 															textBegin, textPastEnd);
-					assert(kTerminal_ResultOK == textGrabResult);
+					if (kTerminal_ResultOK != textGrabResult)
+					{
+						Console_Warning(Console_WriteValue, "one-line text copy failed, terminal error", textGrabResult);
+						break;
+					}
 				}
 				else
 				{
@@ -10373,8 +10377,7 @@ returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
 				iteratorAdvanceResult = Terminal_LineIteratorAdvance(inTerminalViewPtr->screen.ref, lineIterator, +1);
 				if (kTerminal_ResultIteratorCannotAdvance == iteratorAdvanceResult)
 				{
-					// it is not clear how the iterator could fail to advance...just abort
-					Console_Warning(Console_WriteLine, "row iterator unexpectedly failed to advance while trying to gather text");
+					// last line of the buffer has been reached
 					break;
 				}
 			}

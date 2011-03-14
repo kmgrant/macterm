@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110313',
     '20110311',
     '20110227',
     '20110226',
@@ -361,6 +362,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110313': [
+        "Fixed a possible crash after clicking in the terminal window margin near the window's size box.",
+    ],
     '20110311': [
         'MacTelnet Help has been updated to include examples of mapping various function keys to macros.',
     ],
