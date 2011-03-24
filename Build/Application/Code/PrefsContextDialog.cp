@@ -3,7 +3,7 @@
 	PrefsContextDialog.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -55,17 +55,19 @@ namespace {
 
 struct My_PrefsContextDialog
 {
-	My_PrefsContextDialog	(HIWindowRef, Panel_Ref, Preferences_ContextRef, PrefsContextDialog_DisplayOptions);
+	My_PrefsContextDialog	(HIWindowRef, Panel_Ref, Preferences_ContextRef, PrefsContextDialog_DisplayOptions,
+							 GenericDialog_CloseNotifyProcPtr);
 	
 	~My_PrefsContextDialog	();
 	
-	PrefsContextDialog_Ref		selfRef;			// identical to address of structure, but typed as ref
-	Boolean						wasDisplayed;		// controls whose responsibility it is to destroy the Generic Dialog
-	Preferences_ContextRef		originalDataModel;	// data used to initialize the dialog; updated when the dialog is accepted
-	Preferences_TagSetRef		originalKeys;		// the set of keys that were defined in the original data model, before user changes
-	Preferences_ContextRef		temporaryDataModel;	// data used to initialize the dialog, and store any changes made
-	GenericDialog_Ref			genericDialog;		// handles most of the work
-	CarbonEventHandlerWrap		commandHandler;		// responds to certain command events in the panel’s window
+	PrefsContextDialog_Ref				selfRef;			// identical to address of structure, but typed as ref
+	Boolean								wasDisplayed;		// controls whose responsibility it is to destroy the Generic Dialog
+	Preferences_ContextRef				originalDataModel;	// data used to initialize the dialog; updated when the dialog is accepted
+	Preferences_TagSetRef				originalKeys;		// the set of keys that were defined in the original data model, before user changes
+	Preferences_ContextRef				temporaryDataModel;	// data used to initialize the dialog, and store any changes made
+	GenericDialog_Ref					genericDialog;		// handles most of the work
+	GenericDialog_CloseNotifyProcPtr	closeNotifyProc;	// routine to call when the dialog is dismissed
+	CarbonEventHandlerWrap				commandHandler;		// responds to certain command events in the panel’s window
 };
 typedef My_PrefsContextDialog*		My_PrefsContextDialogPtr;
 
@@ -115,7 +117,8 @@ PrefsContextDialog_Ref
 PrefsContextDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
 						 Panel_Ref							inHostedPanel,
 						 Preferences_ContextRef				inoutData,
-						 PrefsContextDialog_DisplayOptions	inOptions)
+						 PrefsContextDialog_DisplayOptions	inOptions,
+						 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
 {
 	PrefsContextDialog_Ref	result = nullptr;
 	
@@ -123,7 +126,7 @@ PrefsContextDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
 	try
 	{
 		result = REINTERPRET_CAST(new My_PrefsContextDialog(inParentWindowOrNullForModalDialog, inHostedPanel,
-															inoutData, inOptions), PrefsContextDialog_Ref);
+															inoutData, inOptions, inCloseNotifyProcPtr), PrefsContextDialog_Ref);
 	}
 	catch (std::bad_alloc)
 	{
@@ -212,7 +215,8 @@ My_PrefsContextDialog::
 My_PrefsContextDialog	(HIWindowRef						inParentWindowOrNullForModalDialog,
 						 Panel_Ref							inHostedPanel,
 						 Preferences_ContextRef				inoutData,
-						 PrefsContextDialog_DisplayOptions	inOptions)
+						 PrefsContextDialog_DisplayOptions	inOptions,
+						 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 selfRef				(REINTERPRET_CAST(this, PrefsContextDialog_Ref)),
@@ -223,6 +227,7 @@ temporaryDataModel	(Preferences_NewCloneContext(inoutData, true/* must detach */
 genericDialog		(GenericDialog_New(inParentWindowOrNullForModalDialog, inHostedPanel,
 										temporaryDataModel, handleDialogClose,
 										Panel_SendMessageGetHelpKeyPhrase(inHostedPanel))),
+closeNotifyProc		(inCloseNotifyProcPtr),
 commandHandler		(GetWindowEventTarget(Panel_ReturnOwningWindow(GenericDialog_ReturnHostedPanel(genericDialog))),
 						receiveHICommand,
 						CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
@@ -280,7 +285,8 @@ void
 handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 					 Boolean				inOKButtonPressed)
 {
-	My_PrefsContextDialogPtr	dataPtr = REINTERPRET_CAST(GenericDialog_ReturnImplementation(inDialogThatClosed), My_PrefsContextDialogPtr);
+	My_PrefsContextDialogPtr	dataPtr = REINTERPRET_CAST(GenericDialog_ReturnImplementation(inDialogThatClosed),
+															My_PrefsContextDialogPtr);
 	
 	
 	if (inOKButtonPressed)
@@ -326,6 +332,12 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 				Preferences_ReleaseTagSet(&currentKeys);
 			}
 		}
+	}
+	
+	// now call any user-provided routine
+	if (nullptr != dataPtr->closeNotifyProc)
+	{
+		GenericDialog_InvokeCloseNotifyProc(dataPtr->closeNotifyProc, inDialogThatClosed, inOKButtonPressed);
 	}
 }// handleDialogClose
 

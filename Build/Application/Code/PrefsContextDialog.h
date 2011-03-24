@@ -75,7 +75,8 @@ PrefsContextDialog_Ref
 	PrefsContextDialog_New					(HIWindowRef						inParentWindowOrNullForModalDialog,
 											 Panel_Ref							inHostedPanel,
 											 Preferences_ContextRef				inoutData,
-											 PrefsContextDialog_DisplayOptions	inOptions = kPrefsContextDialog_DisplayOptionsDefault);
+											 PrefsContextDialog_DisplayOptions	inOptions = kPrefsContextDialog_DisplayOptionsDefault,
+											 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr = nullptr);
 
 void
 	PrefsContextDialog_Dispose				(PrefsContextDialog_Ref*			inoutDialogPtr);
