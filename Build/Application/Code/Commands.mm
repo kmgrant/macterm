@@ -4851,13 +4851,12 @@ performTranslationSwitchByFavoriteName:(id)		sender
 			if (nullptr != namedSettings)
 			{
 				// change character set of frontmost window according to the specified preferences
-				Preferences_ContextRef		currentSettings = TerminalView_ReturnTranslationConfiguration
-																(TerminalWindow_ReturnViewWithFocus(terminalWindow));
-				Preferences_Result			prefsResult = kPreferences_ResultOK;
+				Boolean		changeOK = TerminalWindow_ReconfigureViewsInGroup
+										(terminalWindow, kTerminalWindow_ViewGroupActive,
+											namedSettings, Quills::Prefs::TRANSLATION);
 				
 				
-				prefsResult = Preferences_ContextCopy(namedSettings, currentSettings);
-				isError = (kPreferences_ResultOK != prefsResult);
+				isError = (false == changeOK);
 				Preferences_ReleaseContext(&namedSettings);
 			}
 		}
@@ -5207,13 +5206,12 @@ performFormatByFavoriteName:(id)	sender
 				if (nullptr != namedSettings)
 				{
 					// change font and/or colors of frontmost window according to the specified preferences
-					Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration
-																	(TerminalWindow_ReturnViewWithFocus(terminalWindow));
-					Preferences_Result			prefsResult = kPreferences_ResultOK;
+					Boolean		changeOK = TerminalWindow_ReconfigureViewsInGroup
+											(terminalWindow, kTerminalWindow_ViewGroupActive,
+												namedSettings, Quills::Prefs::FORMAT);
 					
 					
-					prefsResult = Preferences_ContextCopy(namedSettings, currentSettings);
-					isError = (kPreferences_ResultOK != prefsResult);
+					isError = (false == changeOK);
 					Preferences_ReleaseContext(&namedSettings);
 				}
 			}

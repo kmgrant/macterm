@@ -4269,7 +4269,8 @@ calculateDoubleSize		(My_TerminalViewPtr		inTerminalViewPtr,
 	// the bottom of the area
 	TextFontByName(inTerminalViewPtr->text.font.familyName);
 	TextSize(outPointSize);
-	while (STATIC_CAST(CharWidth('A'), unsigned int) < INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter))
+	while ((STATIC_CAST(CharWidth('A'), Float32) * inTerminalViewPtr->text.font.scaleWidthPerCharacter) <
+			INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter))
 	{
 		TextSize(++outPointSize);
 	}
@@ -7615,7 +7616,8 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 				UInt16		loopGuard = 0;
 				
 				
-				while ((CharWidth('A') * visibleColumns) < kMaximumViewWidth)
+				while ((STATIC_CAST(CharWidth('A'), Float32) * viewPtr->text.font.scaleWidthPerCharacter *
+						STATIC_CAST(visibleColumns, Float32)) < kMaximumViewWidth)
 				{
 					TextSize(++fontSize);
 					if (++loopGuard > 100/* arbitrary */) break;
@@ -8373,8 +8375,8 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				}
 				else
 				{
-					(UInt16)copyColorPreferences(viewPtr, prefsContext, false/* search for defaults */);
-					(UInt16)copyFontPreferences(viewPtr, prefsContext, false/* search for defaults */);
+					(UInt16)copyColorPreferences(viewPtr, prefsContext, true/* search for defaults */);
+					(UInt16)copyFontPreferences(viewPtr, prefsContext, true/* search for defaults */);
 				}
 				updateDisplay(viewPtr);
 			}
@@ -10735,10 +10737,6 @@ setFontAndSize		(My_TerminalViewPtr		inViewPtr,
 					 Float32				inCharacterWidthScalingOrZero,
 					 Boolean				inNotifyListeners)
 {
-	CGrafPtr	oldPort = nullptr;
-	GDHandle	oldDevice = nullptr;
-	
-	
 	if (inFontFamilyNameOrNull != nullptr)
 	{
 		// remember font selection
@@ -10770,11 +10768,23 @@ setFontAndSize		(My_TerminalViewPtr		inViewPtr,
 	}
 	
 	// set the font metrics (including double size)
-	GetGWorld(&oldPort, &oldDevice);
-	setPortScreenPort(inViewPtr);
-	TextFontByName(inViewPtr->text.font.familyName);
-	TextSize(inViewPtr->text.font.normalMetrics.size);
-	setUpScreenFontMetrics(inViewPtr);
+	{
+		CGrafPtr			oldPort = nullptr;
+		GDHandle			oldDevice = nullptr;
+		GrafPortFontState	fontState;
+		
+		
+		GetGWorld(&oldPort, &oldDevice);
+		setPortScreenPort(inViewPtr);
+		Localization_PreservePortFontState(&fontState);
+		TextFontByName(inViewPtr->text.font.familyName);
+		TextSize(inViewPtr->text.font.normalMetrics.size);
+		
+		setUpScreenFontMetrics(inViewPtr);
+		
+		Localization_RestorePortFontState(&fontState);
+		SetGWorld(oldPort, oldDevice);
+	}
 	
 	// recalculate cursor boundaries for the specified view
 	{
@@ -10789,8 +10799,6 @@ setFontAndSize		(My_TerminalViewPtr		inViewPtr,
 	
 	// resize window to preserve its dimensions in character cell units
 	recalculateCachedDimensions(inViewPtr);
-	
-	SetGWorld(oldPort, oldDevice);
 	
 	if (inNotifyListeners)
 	{

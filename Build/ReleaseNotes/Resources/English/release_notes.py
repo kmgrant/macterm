@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110323',
     '20110313',
     '20110311',
     '20110227',
@@ -362,6 +363,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110323': [
+        'Fixed some minor consistency issues with margins in terminal windows.',
+        'Fixed text zooming (such as in Full Screen) to properly take character width scaling into account.',
+        'Fixed a possible performance problem when resizing windows.',
+        'Selecting the name of a Format from the View menu now uses Default values for inherited settings.',
+    ],
     '20110313': [
         "Fixed a possible crash after clicking in the terminal window margin near the window's size box.",
     ],

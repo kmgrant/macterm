@@ -145,6 +145,19 @@ enum TerminalWindowScrollBarKind
 };
 
 /*!
+Specifies the type of sheet (if any) that is currently
+displayed.  This is used by the preferences context
+monitor, so that it knows what settings were changed.
+*/
+enum My_TerminalWindowSheetType
+{
+	kMy_TerminalWindowSheetTypeNone			= 0,
+	kMy_TerminalWindowSheetTypeFormat		= 1,
+	kMy_TerminalWindowSheetTypeScreenSize	= 2,
+	kMy_TerminalWindowSheetTypeTranslation	= 3
+};
+
+/*!
 IMPORTANT
 
 The following values MUST agree with the control IDs in the
@@ -218,6 +231,8 @@ struct TerminalWindow
 	Boolean						isDead;					// is the window title flagged to indicate a disconnected session?
 	Boolean						isLEDOn[4];				// true only if this terminal light is lit
 	Boolean						viewSizeIndependent;	// true only temporarily, to handle transitional cases such as full-screen mode
+	Preferences_ContextRef		recentSheetContext;		// defined temporarily while a Preferences-dependent sheet (such as screen size) is up
+	My_TerminalWindowSheetType	sheetType;				// if a sheet is active, this is a hint as to what settings can be put in the context
 	FindDialog_Options			recentSearchOptions;	// the options used during the last search in the dialog
 	CFRetainRelease				recentSearchStrings;	// CFMutableArrayRef; the CFStrings used in searches since this window was opened
 	CFRetainRelease				baseTitleString;		// user-provided title string; may be adorned prior to becoming the window title
@@ -408,10 +423,18 @@ void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_A
 void					scrollProc						(HIViewRef, HIViewPartCode);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 OSStatus				setCursorInWindow				(WindowRef, Point, UInt32);
+void					setScreenPreferences			(TerminalWindowPtr, Preferences_ContextRef);
 void					setStandardState				(TerminalWindowPtr, UInt16, UInt16, Boolean);
+void					setViewFormatPreferences		(TerminalWindowPtr, Preferences_ContextRef);
 void					setViewSizeIndependentFromWindow(TerminalWindowPtr, Boolean);
+void					setViewTranslationPreferences	(TerminalWindowPtr, Preferences_ContextRef);
 void					setWarningOnWindowClose			(TerminalWindowPtr, Boolean);
 void					setWindowAndTabTitle			(TerminalWindowPtr, CFStringRef);
+void					setWindowToIdealSizeForDimensions	(TerminalWindowPtr, UInt16, UInt16);
+void					setWindowToIdealSizeForFont		(TerminalWindowPtr);
+void					sheetClosed						(GenericDialog_Ref, Boolean);
+Preferences_ContextRef	sheetContextBegin				(TerminalWindowPtr, Quills::Prefs::Class, My_TerminalWindowSheetType);
+void					sheetContextEnd					(TerminalWindowPtr);
 void					stackWindowTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
 void					terminalStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					terminalViewStateChanged		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -1043,35 +1066,32 @@ TerminalWindow_ReconfigureViewsInGroup	(TerminalWindowRef			inRef,
 										 Preferences_ContextRef		inContext,
 										 Quills::Prefs::Class		inPrefsClass)
 {
-	Boolean		result = false;
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	Boolean						result = false;
 	
 	
 	if (kTerminalWindow_ViewGroupActive == inViewGroup)
 	{
-		Preferences_ContextRef		currentSettings = nullptr;
-		Preferences_Result			copyResult = kPreferences_ResultOK;
-		
-		
 		switch (inPrefsClass)
 		{
 		case Quills::Prefs::FORMAT:
-			currentSettings = TerminalView_ReturnFormatConfiguration(TerminalWindow_ReturnViewWithFocus(inRef));
+			setViewFormatPreferences(ptr, inContext);
+			result = true;
 			break;
+		
 		case Quills::Prefs::TERMINAL:
-			currentSettings = Terminal_ReturnConfiguration(TerminalWindow_ReturnScreenWithFocus(inRef));
+			setScreenPreferences(ptr, inContext);
+			result = true;
 			break;
+		
 		case Quills::Prefs::TRANSLATION:
-			currentSettings = TerminalView_ReturnTranslationConfiguration(TerminalWindow_ReturnViewWithFocus(inRef));
+			setViewTranslationPreferences(ptr, inContext);
+			result = true;
 			break;
+		
 		default:
 			// ???
 			break;
-		}
-		
-		if (nullptr != currentSettings)
-		{
-			copyResult = Preferences_ContextCopy(inContext, currentSettings);
-			result = (kPreferences_ResultOK == copyResult);
 		}
 	}
 	return result;
@@ -1439,11 +1459,9 @@ TerminalWindow_Select	(TerminalWindowRef	inRef,
 
 /*!
 Changes the font and/or size used by all screens in
-the specified terminal window.  The font size also
-affects any other text elements (such as the status
-text in the toolbar).  If the font name is nullptr,
-the font is not changed.  If the size is 0, the
-size is not changed.
+the specified terminal window.  If the font name is
+nullptr, the font is not changed.  If the size is 0,
+the size is not changed.
 
 The font and size are currently tied to the window
 dimensions, so adjusting these parameters will force
@@ -1457,6 +1475,8 @@ IMPORTANT:	This API is under evaluation.  It does
 			than one terminal view per window, in
 			the sense that each view theoretically
 			can have its own font and size.
+
+See also setViewFormatPreferences().
 
 (3.0)
 */
@@ -1482,18 +1502,10 @@ TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 	viewResult = TerminalView_SetDisplayMode(activeView, oldMode);
 	assert(kTerminalView_ResultOK == viewResult);
 	
+	// IMPORTANT: this window adjustment should match setViewFormatPreferences()
 	unless (ptr->viewSizeIndependent)
 	{
-		SInt16		screenWidth = 0;
-		SInt16		screenHeight = 0;
-		
-		
-		// set the standard state to be large enough for the current font and size;
-		// and, set window dimensions to this new standard size
-		TerminalView_GetIdealSize(activeView/* TEMPORARY - must consider a list of views */,
-									screenWidth, screenHeight);
-		
-		setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
+		setWindowToIdealSizeForFont(ptr);
 	}
 }// SetFontAndSize
 
@@ -1557,15 +1569,9 @@ TerminalWindow_SetObscured	(TerminalWindowRef	inRef,
 
 /*!
 Changes the dimensions of the visible screen area in the
-given terminal window.  If split-panes are active, the
-total view size is shared among the panes, proportional to
-their current sizes.
+given terminal window.  The window is resized accordingly.
 
-The screen size is currently tied to the window dimensions,
-so adjusting these parameters will force the window to
-resize to use the new space.  In the future, it may make
-more sense to leave the user’s chosen size intact (at least,
-when the new view size will fit within the current window).
+See also setScreenPreferences().
 
 (3.0)
 */
@@ -1579,9 +1585,13 @@ TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 	TerminalScreenRef			activeScreen = getActiveScreen(ptr);
 	
 	
-	// there are monitors installed to detect size changes in the screen
-	// (to make the window adjust accordingly), so just alter the screen
 	Terminal_SetVisibleScreenDimensions(activeScreen, inNewColumnCount, inNewRowCount);
+	
+	// IMPORTANT: this window adjustment should match setScreenPreferences()
+	unless (ptr->viewSizeIndependent)
+	{
+		setWindowToIdealSizeForDimensions(ptr, inNewColumnCount, inNewRowCount);
+	}
 }// SetScreenDimensions
 
 
@@ -2088,6 +2098,8 @@ staggerPositionIndex(0),
 isObscured(false),
 isDead(false),
 viewSizeIndependent(false),
+recentSheetContext(nullptr),
+sheetType(kMy_TerminalWindowSheetTypeNone),
 recentSearchOptions(kFindDialog_OptionsDefault),
 recentSearchStrings(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no size limit */, &kCFTypeArrayCallBacks),
 					true/* is retained */),
@@ -2344,13 +2356,11 @@ installedActions()
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeExcessiveErrors, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener);
-	Terminal_StartMonitoring(newScreen, kTerminal_ChangeScreenSize, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowMinimization, this->terminalStateChangeEventListener);
 	this->terminalViewEventListener = ListenerModel_NewStandardListener(terminalViewStateChanged, REINTERPRET_CAST(this, TerminalWindowRef)/* context */);
-	TerminalView_StartMonitoring(newView, kTerminalView_EventFontSizeChanged, this->terminalViewEventListener);
 	TerminalView_StartMonitoring(newView, kTerminalView_EventScrolling, this->terminalViewEventListener);
 	TerminalView_StartMonitoring(newView, kTerminalView_EventSearchResultsExistence, this->terminalViewEventListener);
 	
@@ -2515,6 +2525,8 @@ TerminalWindow::
 	AutoPool	_;
 	
 	
+	sheetContextEnd(this);
+	
 	// now that the window is going away, destroy any Undo commands
 	// that could be applied to this window
 	{
@@ -2614,7 +2626,6 @@ TerminalWindow::
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeExcessiveErrors, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener);
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeScreenSize, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener);
@@ -2632,7 +2643,6 @@ TerminalWindow::
 		for (viewIterator = this->allViews.begin(); viewIterator != this->allViews.end(); ++viewIterator)
 		{
 			view = *viewIterator;
-			TerminalView_StopMonitoring(view, kTerminalView_EventFontSizeChanged, this->terminalViewEventListener);
 			TerminalView_StopMonitoring(view, kTerminalView_EventScrolling, this->terminalViewEventListener);
 			TerminalView_StopMonitoring(view, kTerminalView_EventSearchResultsExistence, this->terminalViewEventListener);
 		}
@@ -4408,21 +4418,13 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandFormatDefault:
 					{
 						// reformat frontmost window using the Default preferences
-						Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration
-																		(TerminalWindow_ReturnViewWithFocus(terminalWindow));
+						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
 						Preferences_ContextRef		defaultSettings = nullptr;
-						Boolean						isError = true;
 						
 						
 						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::FORMAT))
 						{
-							isError = (kPreferences_ResultOK != Preferences_ContextCopy(defaultSettings, currentSettings));
-						}
-						
-						if (isError)
-						{
-							// failed...
-							Sound_StandardAlert();
+							setViewFormatPreferences(ptr, defaultSettings);
 						}
 						
 						result = noErr;
@@ -4436,14 +4438,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					// not use this, it has an associated Objective-C action method.
 					{
 						// reformat frontmost window using the specified preferences
-						Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration
-																		(TerminalWindow_ReturnViewWithFocus(terminalWindow));
-						Boolean						isError = true;
-						
-						
 						if (received.attributes & kHICommandFromMenu)
 						{
-							CFStringRef		collectionName = nullptr;
+							TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+							CFStringRef					collectionName = nullptr;
 							
 							
 							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
@@ -4454,16 +4452,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								
 								if (nullptr != namedSettings)
 								{
-									isError = (kPreferences_ResultOK != Preferences_ContextCopy(namedSettings, currentSettings));
+									setViewFormatPreferences(ptr, namedSettings);
+									Preferences_ReleaseContext(&namedSettings);
 								}
 								CFRelease(collectionName), collectionName = nullptr;
 							}
-						}
-						
-						if (isError)
-						{
-							// failed...
-							Sound_StandardAlert();
 						}
 						
 						result = noErr;
@@ -4473,15 +4466,27 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandFormat:
 					{
 						// display a format customization dialog
-						PrefsContextDialog_Ref		dialog = nullptr;
-						Panel_Ref					prefsPanel = PrefPanelFormats_New();
+						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						Preferences_ContextRef		temporaryContext = sheetContextBegin(ptr, Quills::Prefs::FORMAT,
+																							kMy_TerminalWindowSheetTypeFormat);
 						
 						
-						// display the sheet
-						dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel,
-														TerminalView_ReturnFormatConfiguration
-														(TerminalWindow_ReturnViewWithFocus(terminalWindow)));
-						PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
+						if (nullptr == temporaryContext)
+						{
+							Sound_StandardAlert();
+							Console_Warning(Console_WriteLine, "failed to construct temporary sheet context");
+						}
+						else
+						{
+							PrefsContextDialog_Ref		dialog = nullptr;
+							Panel_Ref					prefsPanel = PrefPanelFormats_New();
+							
+							
+							// display the sheet
+							dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel, temporaryContext,
+															kPrefsContextDialog_DisplayOptionsDefault, sheetClosed);
+							PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
+						}
 						
 						result = noErr;
 					}
@@ -4585,17 +4590,28 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				case kCommandSetScreenSize:
 					{
-						// display a format customization dialog
-						PrefsContextDialog_Ref		dialog = nullptr;
-						Panel_Ref					prefsPanel = PrefPanelTerminals_NewScreenPane();
+						// display a screen size customization dialog
+						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						Preferences_ContextRef		temporaryContext = sheetContextBegin(ptr, Quills::Prefs::TERMINAL,
+																							kMy_TerminalWindowSheetTypeScreenSize);
 						
 						
-						// display the sheet
-						dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel,
-														Terminal_ReturnConfiguration
-														(TerminalWindow_ReturnScreenWithFocus(terminalWindow)),
-														kPrefsContextDialog_DisplayOptionNoAddToPrefsButton);
-						PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
+						if (nullptr == temporaryContext)
+						{
+							Sound_StandardAlert();
+							Console_Warning(Console_WriteLine, "failed to construct temporary sheet context");
+						}
+						else
+						{
+							PrefsContextDialog_Ref		dialog = nullptr;
+							Panel_Ref					prefsPanel = PrefPanelTerminals_NewScreenPane();
+							
+							
+							// display the sheet
+							dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel, temporaryContext,
+															kPrefsContextDialog_DisplayOptionNoAddToPrefsButton, sheetClosed);
+							PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
+						}
 						
 						result = noErr;
 					}
@@ -4604,21 +4620,13 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandTranslationTableDefault:
 					{
 						// change character set of frontmost window according to Default preferences
-						Preferences_ContextRef		currentSettings = TerminalView_ReturnTranslationConfiguration
-																		(TerminalWindow_ReturnViewWithFocus(terminalWindow));
+						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
 						Preferences_ContextRef		defaultSettings = nullptr;
-						Boolean						isError = true;
 						
 						
 						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::TRANSLATION))
 						{
-							isError = (kPreferences_ResultOK != Preferences_ContextCopy(defaultSettings, currentSettings));
-						}
-						
-						if (isError)
-						{
-							// failed...
-							Sound_StandardAlert();
+							setViewTranslationPreferences(ptr, defaultSettings);
 						}
 						
 						result = noErr;
@@ -4632,14 +4640,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					// not use this, it has an associated Objective-C action method.
 					{
 						// change character set of frontmost window according to the specified preferences
-						Preferences_ContextRef		currentSettings = TerminalView_ReturnTranslationConfiguration
-																		(TerminalWindow_ReturnViewWithFocus(terminalWindow));
-						Boolean						isError = true;
-						
-						
 						if (received.attributes & kHICommandFromMenu)
 						{
-							CFStringRef		collectionName = nullptr;
+							TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+							CFStringRef					collectionName = nullptr;
 							
 							
 							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
@@ -4650,16 +4654,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								
 								if (nullptr != namedSettings)
 								{
-									isError = (kPreferences_ResultOK != Preferences_ContextCopy(namedSettings, currentSettings));
+									setViewTranslationPreferences(ptr, namedSettings);
+									Preferences_ReleaseContext(&namedSettings);
 								}
 								CFRelease(collectionName), collectionName = nullptr;
 							}
-						}
-						
-						if (isError)
-						{
-							// failed...
-							Sound_StandardAlert();
 						}
 						
 						result = noErr;
@@ -4669,15 +4668,27 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandSetTranslationTable:
 					{
 						// display a translation customization dialog
-						PrefsContextDialog_Ref		dialog = nullptr;
-						Panel_Ref					prefsPanel = PrefPanelTranslations_New();
+						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						Preferences_ContextRef		temporaryContext = sheetContextBegin(ptr, Quills::Prefs::TRANSLATION,
+																							kMy_TerminalWindowSheetTypeTranslation);
 						
 						
-						// display the sheet
-						dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel,
-														TerminalView_ReturnTranslationConfiguration
-														(TerminalWindow_ReturnViewWithFocus(terminalWindow)));
-						PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
+						if (nullptr == temporaryContext)
+						{
+							Sound_StandardAlert();
+							Console_Warning(Console_WriteLine, "failed to construct temporary sheet context");
+						}
+						else
+						{
+							PrefsContextDialog_Ref		dialog = nullptr;
+							Panel_Ref					prefsPanel = PrefPanelTranslations_New();
+							
+							
+							// display the sheet
+							dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel, temporaryContext,
+															kPrefsContextDialog_DisplayOptionsDefault, sheetClosed);
+							PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
+						}
 						
 						result = noErr;
 					}
@@ -6166,7 +6177,7 @@ reverseFontChanges	(Undoables_ActionInstruction	inDoWhat,
 												(dataPtr->undoFont) ? dataPtr->fontName : nullptr,
 												(dataPtr->undoFontSize) ? dataPtr->fontSize : 0);
 				
-				// save the preserved dimensions
+				// save the font and size
 				dataPtr->fontSize = oldFontSize;
 				PLstrcpy(dataPtr->fontName, oldFontName);
 			}
@@ -6288,7 +6299,7 @@ reverseScreenDimensionChanges	(Undoables_ActionInstruction	inDoWhat,
 				TerminalWindow_SetScreenDimensions(dataPtr->terminalWindow, dataPtr->columns, dataPtr->rows,
 													true/* recordable */);
 				
-				// save the preserved dimensions
+				// save the dimensions
 				dataPtr->columns = oldColumns;
 				dataPtr->rows = oldRows;
 			}
@@ -6707,6 +6718,57 @@ setCursorInWindow	(WindowRef		inWindow,
 
 
 /*!
+Copies the screen size and scrollback settings from the given
+context to the underlying terminal buffer.  The main view is
+updated to the size that will show the new dimensions entirely
+at the current font size.  The window size changes to fit the
+new screen.
+
+See also TerminalWindow_SetScreenDimensions().
+
+(4.0)
+*/
+void
+setScreenPreferences	(TerminalWindowPtr			inPtr,
+						 Preferences_ContextRef		inContext)
+{
+	TerminalScreenRef		activeScreen = getActiveScreen(inPtr);
+	
+	
+	if (nullptr != activeScreen)
+	{
+		Preferences_TagSetRef	tagSet = PrefPanelTerminals_NewScreenPaneTagSet();
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_ContextCopy(inContext, Terminal_ReturnConfiguration(activeScreen), tagSet);
+		Preferences_ReleaseTagSet(&tagSet);
+		
+		// IMPORTANT: this window adjustment should match TerminalWindow_SetScreenDimensions()
+		unless (inPtr->viewSizeIndependent)
+		{
+			UInt16		columns = 0;
+			UInt16		rows = 0;
+			
+			
+			prefsResult = Preferences_ContextGetData(inContext, kPreferences_TagTerminalScreenColumns,
+														sizeof(columns), &columns);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				prefsResult = Preferences_ContextGetData(inContext, kPreferences_TagTerminalScreenRows,
+															sizeof(rows), &rows);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					Terminal_SetVisibleScreenDimensions(activeScreen, columns, rows);
+					setWindowToIdealSizeForDimensions(inPtr, columns, rows);
+				}
+			}
+		}
+	}
+}// setScreenPreferences
+
+
+/*!
 Sets the standard state (for zooming) of the given
 terminal window to match the size required to fit
 the specified width and height in pixels.
@@ -6751,6 +6813,49 @@ setStandardState	(TerminalWindowPtr	inPtr,
 
 
 /*!
+Copies the format settings (like font and colors) from the given
+context to every view in the window.  The window size changes to
+fit any new font.
+
+See also TerminalWindow_SetFontAndSize().
+
+(4.0)
+*/
+void
+setViewFormatPreferences	(TerminalWindowPtr			inPtr,
+							 Preferences_ContextRef		inContext)
+{
+	TerminalViewRef		activeView = getActiveView(inPtr);
+	
+	
+	if (nullptr != activeView)
+	{
+		TerminalView_DisplayMode	oldMode = kTerminalView_DisplayModeNormal;
+		TerminalView_Result			viewResult = kTerminalView_ResultOK;
+		Preferences_TagSetRef		tagSet = PrefPanelFormats_NewTagSet();
+		Preferences_Result			prefsResult = kPreferences_ResultOK;
+		
+		
+		// TEMPORARY; should iterate over other views if there is ever more than one
+		oldMode = TerminalView_ReturnDisplayMode(activeView);
+		viewResult = TerminalView_SetDisplayMode(activeView, kTerminalView_DisplayModeNormal);
+		assert(kTerminalView_ResultOK == viewResult);
+		prefsResult = Preferences_ContextCopy(inContext, TerminalView_ReturnFormatConfiguration(activeView), tagSet);
+		viewResult = TerminalView_SetDisplayMode(activeView, oldMode);
+		assert(kTerminalView_ResultOK == viewResult);
+		
+		Preferences_ReleaseTagSet(&tagSet);
+		
+		// IMPORTANT: this window adjustment should match TerminalWindow_SetFontAndSize()
+		unless (inPtr->viewSizeIndependent)
+		{
+			setWindowToIdealSizeForFont(inPtr);
+		}
+	}
+}// setViewFormatPreferences
+
+
+/*!
 This internal state changes in certain special situations
 (such as during the transition to full-screen mode) to
 temporarily prevent view dimension or font size changes
@@ -6770,6 +6875,33 @@ setViewSizeIndependentFromWindow	(TerminalWindowPtr	inPtr,
 {
 	inPtr->viewSizeIndependent = inWindowResizesWhenViewSizeChanges;
 }// setViewSizeIndependentFromWindow
+
+
+/*!
+Copies the translation settings (like the character set) from
+the given context to every view in the window.
+
+(4.0)
+*/
+void
+setViewTranslationPreferences	(TerminalWindowPtr			inPtr,
+								 Preferences_ContextRef		inContext)
+{
+	TerminalViewRef		activeView = getActiveView(inPtr);
+	
+	
+	if (nullptr != activeView)
+	{
+		Preferences_TagSetRef		tagSet = PrefPanelTranslations_NewTagSet();
+		Preferences_Result			prefsResult = kPreferences_ResultOK;
+		
+		
+		// TEMPORARY; should iterate over other views if there is ever more than one
+		prefsResult = Preferences_ContextCopy(inContext, TerminalView_ReturnTranslationConfiguration(activeView), tagSet);
+		
+		Preferences_ReleaseTagSet(&tagSet);
+	}
+}// setViewTranslationPreferences
 
 
 /*!
@@ -6841,6 +6973,229 @@ setWindowAndTabTitle	(TerminalWindowPtr	inPtr,
 		assert_noerr(error);
 	}
 }// setWindowAndTabTitle
+
+
+/*!
+Resizes the window so that its main view is large enough for
+the specified number of columns and rows at the current font
+size.  Split-pane views are removed.
+
+(4.0)
+*/
+void
+setWindowToIdealSizeForDimensions	(TerminalWindowPtr		inPtr,
+									 UInt16					inColumns,
+									 UInt16					inRows)
+{
+	TerminalViewRef		activeView = getActiveView(inPtr);
+	
+	
+	if (nullptr != activeView)
+	{
+		SInt16		screenWidth = 0;
+		SInt16		screenHeight = 0;
+		
+		
+		TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
+											inColumns, inRows, &screenWidth, &screenHeight);
+		setStandardState(inPtr, screenWidth, screenHeight, true/* resize window */);
+	}
+}// setWindowToIdealSizeForDimensions
+
+
+/*!
+Resizes the window so that its main view is large enough to
+render the current number of columns and rows using the font
+and font size of the view.
+
+(4.0)
+*/
+void
+setWindowToIdealSizeForFont		(TerminalWindowPtr		inPtr)
+{
+	TerminalViewRef		activeView = getActiveView(inPtr);
+	
+	
+	if (nullptr != activeView)
+	{
+		SInt16		screenWidth = 0;
+		SInt16		screenHeight = 0;
+		
+		
+		TerminalView_GetIdealSize(activeView/* TEMPORARY - must consider a list of views */,
+									screenWidth, screenHeight);
+		setStandardState(inPtr, screenWidth, screenHeight, true/* resize window */);
+	}
+}// setWindowToIdealSizeForFont
+
+
+/*!
+Responds to a close of any sheet on a Terminal Window that
+is updating a context constructed by sheetContextBegin().
+
+This calls sheetContextEnd() to ensure that the context is
+cleaned up.
+
+(4.0)
+*/
+void
+sheetClosed		(GenericDialog_Ref		inDialogThatClosed,
+				 Boolean				inOKButtonPressed)
+{
+	TerminalWindowRef			ref = TerminalWindow_ReturnFromWindow
+										(GenericDialog_ReturnParentWindow(inDialogThatClosed));
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), ref);
+	
+	
+	if (nullptr == ptr)
+	{
+		Console_Warning(Console_WriteLine, "unexpected problem finding Terminal Window that corresponds to a closed sheet");
+	}
+	else
+	{
+		if (inOKButtonPressed)
+		{
+			switch (ptr->sheetType)
+			{
+			case kMy_TerminalWindowSheetTypeFormat:
+				setViewFormatPreferences(ptr, ptr->recentSheetContext);
+				break;
+			
+			case kMy_TerminalWindowSheetTypeScreenSize:
+				setScreenPreferences(ptr, ptr->recentSheetContext);
+				break;
+			
+			case kMy_TerminalWindowSheetTypeTranslation:
+				setViewTranslationPreferences(ptr, ptr->recentSheetContext);
+				break;
+			
+			default:
+				Console_Warning(Console_WriteLine, "no active sheet but sheet context still exists and was changed");
+				break;
+			}
+		}
+		sheetContextEnd(ptr);
+	}
+}// sheetClosed
+
+
+/*!
+Constructs a new sheet context and starts monitoring it for
+changes.  The given sheet type determines what the response
+will be when settings are dumped into the target context.
+
+The returned context is stored as "recentSheetContext" in the
+specified window structure, and is nullptr if there was any
+error.
+
+(4.0)
+*/
+Preferences_ContextRef
+sheetContextBegin	(TerminalWindowPtr				inPtr,
+					 Quills::Prefs::Class			inClass,
+					 My_TerminalWindowSheetType		inSheetType)
+{
+	Preferences_ContextRef		result = nullptr;
+	
+	
+	if (kMy_TerminalWindowSheetTypeNone == inPtr->sheetType)
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		Boolean					copyOK = false;
+		
+		
+		result = Preferences_NewContext(inClass);
+		
+		// initialize settings so that the sheet has the right data
+		// IMPORTANT: the contexts and tag sets chosen here should match those
+		// used elsewhere in this file to update preferences later (that is,
+		// in setScreenPreferences(), setViewFormatPreferences() and
+		// setViewTranslationPreferences())
+		switch (inSheetType)
+		{
+		case kMy_TerminalWindowSheetTypeFormat:
+			{
+				Preferences_TagSetRef	tagSet = PrefPanelFormats_NewTagSet();
+				
+				
+				prefsResult = Preferences_ContextCopy(TerminalView_ReturnFormatConfiguration(getActiveView(inPtr)), result, tagSet);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					copyOK = true;
+				}
+				Preferences_ReleaseTagSet(&tagSet);
+			}
+			break;
+		
+		case kMy_TerminalWindowSheetTypeScreenSize:
+			{
+				Preferences_TagSetRef	tagSet = PrefPanelTerminals_NewScreenPaneTagSet();
+				
+				
+				prefsResult = Preferences_ContextCopy(Terminal_ReturnConfiguration(getActiveScreen(inPtr)), result, tagSet);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					copyOK = true;
+				}
+				Preferences_ReleaseTagSet(&tagSet);
+			}
+			break;
+		
+		case kMy_TerminalWindowSheetTypeTranslation:
+			{
+				Preferences_TagSetRef	tagSet = PrefPanelTranslations_NewTagSet();
+				
+				
+				prefsResult = Preferences_ContextCopy(TerminalView_ReturnTranslationConfiguration(getActiveView(inPtr)), result, tagSet);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					copyOK = true;
+				}
+				Preferences_ReleaseTagSet(&tagSet);
+			}
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+		
+		if (copyOK)
+		{
+			inPtr->sheetType = inSheetType;
+			inPtr->recentSheetContext = result;
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "failed to copy initial preferences into sheet context");
+		}
+		
+		if (kMy_TerminalWindowSheetTypeNone == inPtr->sheetType)
+		{
+			// something above has failed; give up
+			Preferences_ReleaseContext(&result);
+		}
+	}
+	return result;
+}// sheetContextBegin
+
+
+/*!
+Destroys the temporary sheet preferences context, removing
+the monitor on it, and clearing any flags that keep track of
+active sheets.
+
+(4.0)
+*/
+void
+sheetContextEnd		(TerminalWindowPtr		inPtr)
+{
+	if (Preferences_ContextIsValid(inPtr->recentSheetContext))
+	{
+		Preferences_ReleaseContext(&inPtr->recentSheetContext);
+	}
+	inPtr->sheetType = kMy_TerminalWindowSheetTypeNone;
+}// sheetContextEnd
 
 
 /*!
@@ -7093,48 +7448,6 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		}
 		break;
 	
-	case kTerminal_ChangeScreenSize:
-		// set the standard state to be large enough for the specified number of columns and rows;
-		// and, set window dimensions to this new standard size
-		{
-			TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
-			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
-			
-			
-			if (nullptr != terminalWindow)
-			{
-				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-				TerminalViewRef				activeView = getActiveView(ptr);
-				TerminalView_DisplayMode	oldMode = kTerminalView_DisplayModeNormal;
-				TerminalView_Result			viewResult = kTerminalView_ResultOK;
-				
-				
-				// changing the window size will force the view to match;
-				// temporarily change the view mode to allow this, since
-				// the view might automatically be controlling its font size
-				oldMode = TerminalView_ReturnDisplayMode(activeView);
-				viewResult = TerminalView_SetDisplayMode(activeView, kTerminalView_DisplayModeNormal);
-				assert(kTerminalView_ResultOK == viewResult);
-				unless (ptr->viewSizeIndependent)
-				{
-					SInt16		screenWidth = 0;
-					SInt16		screenHeight = 0;
-					
-					
-					TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
-														Terminal_ReturnColumnCount(screen),
-														Terminal_ReturnRowCount(screen),
-														&screenWidth, &screenHeight);
-					setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
-				}
-				viewResult = TerminalView_SetDisplayMode(activeView, oldMode);
-				assert(kTerminalView_ResultOK == viewResult);
-				
-				changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeScreenDimensions, ptr->selfRef/* context */);
-			}
-		}
-		break;
-	
 	case kTerminal_ChangeScrollActivity:
 		// recalculate appearance of the scroll bars to match current screen attributes, and redraw them
 		{
@@ -7148,8 +7461,6 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				
 				updateScrollBars(ptr);
-				(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarH, true);
-				(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarV, true);
 			}
 		}
 		break;
@@ -7257,7 +7568,6 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	
 	// currently, only one type of event is expected
 	assert((inTerminalViewEvent == kTerminalView_EventScrolling) ||
-			(inTerminalViewEvent == kTerminalView_EventFontSizeChanged) ||
 			(inTerminalViewEvent == kTerminalView_EventSearchResultsExistence));
 	
 	switch (inTerminalViewEvent)
@@ -7271,21 +7581,6 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			updateScrollBars(ptr);
 			(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarH, true);
 			(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarV, true);
-		}
-		break;
-	
-	case kTerminalView_EventFontSizeChanged:
-		unless (ptr->viewSizeIndependent)
-		{
-			TerminalViewRef		view = REINTERPRET_CAST(inEventContextPtr, TerminalViewRef);
-			SInt16				screenWidth = 0;
-			SInt16				screenHeight = 0;
-			
-			
-			// set the standard state to be large enough for the current font and size;
-			// and, set window dimensions to this new standard size
-			TerminalView_GetIdealSize(view, screenWidth, screenHeight);
-			setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
 		}
 		break;
 	
@@ -7382,30 +7677,8 @@ updateScrollBars	(TerminalWindowPtr		inPtr)
 			SetControlViewSize(scrollBarView, proposedViewSize);
 		}
 		
-		// set the scroll bar view size to be the ratio
-	#if 0
-		{
-			Fixed		fixedValueRange;
-			Fixed		fixedVisibleToMaxRatio;
-			SInt32		maximumValue = 0;
-			SInt32		minimumValue = 0;
-			
-			
-			scrollBarView = inPtr->controls.scrollBarH;
-			maximumValue = GetControl32BitMaximum(scrollBarView);
-			minimumValue = GetControl32BitMinimum(scrollBarView);
-			fixedValueRange = Long2Fix(maximumValue - minimumValue);
-			fixedVisibleToMaxRatio = FixRatio(visibleBounds.bottom - visibleBounds.top, maximumValue - minimumValue);
-			SetControlViewSize(scrollBarView, STATIC_CAST(FixRound(FixMul(fixedValueRange, fixedVisibleToMaxRatio)), SInt32));
-			
-			scrollBarView = inPtr->controls.scrollBarV;
-			maximumValue = GetControl32BitMaximum(scrollBarView);
-			minimumValue = GetControl32BitMinimum(scrollBarView);
-			fixedValueRange = Long2Fix(maximumValue - minimumValue);
-			fixedVisibleToMaxRatio = FixRatio(scrollVRangePastMaximum - scrollVRangeMinimum, maximumValue - minimumValue);
-			SetControlViewSize(scrollBarView, STATIC_CAST(FixRound(FixMul(fixedValueRange, fixedVisibleToMaxRatio)), SInt32));
-		}
-	#endif
+		(OSStatus)HIViewSetNeedsDisplay(inPtr->controls.scrollBarV, true);
+		(OSStatus)HIViewSetNeedsDisplay(inPtr->controls.scrollBarH, true);
 	}
 }// updateScrollBars
 
