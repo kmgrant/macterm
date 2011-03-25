@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110324',
     '20110323',
     '20110313',
     '20110311',
@@ -363,6 +364,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110324': [
+        'Fixed Full Screen mode so that a variety of menu commands are disabled (as they mess with the full screen view).',
+    ],
     '20110323': [
         'Fixed some minor consistency issues with margins in terminal windows.',
         'Fixed text zooming (such as in Full Screen) to properly take character width scaling into account.',

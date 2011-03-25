@@ -3933,6 +3933,7 @@ canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
 	
 	
 	Undoables_GetRedoCommandInfo(redoCommandName, &isEnabled);
+	if (false == FlagManager_Test(kFlagKioskMode))
 	{
 		NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
 		
@@ -3985,6 +3986,7 @@ canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
 	
 	
 	Undoables_GetUndoCommandInfo(undoCommandName, &isEnabled);
+	if (false == FlagManager_Test(kFlagKioskMode))
 	{
 		NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
 		
@@ -4008,6 +4010,15 @@ performDuplicate:(id)		sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandNewDuplicateSession, nullptr/* target */);
+}
+- (id)
+canPerformDuplicate:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
 }
 
 
@@ -4054,6 +4065,10 @@ performNewByFavoriteName:(id)	sender
 - (id)
 canPerformNewByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 {
+	if (FlagManager_Test(kFlagKioskMode))
+	{
+		return [NSNumber numberWithBool:NO];
+	}
 	return validatorYes(anItem);
 }
 
@@ -4067,6 +4082,10 @@ performNewCustom:(id)		sender
 - (id)
 canPerformNewCustom:(id <NSValidatedUserInterfaceItem>)		anItem
 {
+	if (FlagManager_Test(kFlagKioskMode))
+	{
+		return [NSNumber numberWithBool:NO];
+	}
 	return validatorYes(anItem);
 }
 
@@ -4080,6 +4099,10 @@ performNewDefault:(id)		sender
 - (id)
 canPerformNewDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 {
+	if (FlagManager_Test(kFlagKioskMode))
+	{
+		return [NSNumber numberWithBool:NO];
+	}
 	return validatorYes(anItem);
 }
 
@@ -4093,6 +4116,10 @@ performNewLogInShell:(id)	sender
 - (id)
 canPerformNewLogInShell:(id <NSValidatedUserInterfaceItem>)		anItem
 {
+	if (FlagManager_Test(kFlagKioskMode))
+	{
+		return [NSNumber numberWithBool:NO];
+	}
 	return validatorYes(anItem);
 }
 
@@ -4106,6 +4133,10 @@ performNewShell:(id)	sender
 - (id)
 canPerformNewShell:(id <NSValidatedUserInterfaceItem>)		anItem
 {
+	if (FlagManager_Test(kFlagKioskMode))
+	{
+		return [NSNumber numberWithBool:NO];
+	}
 	return validatorYes(anItem);
 }
 
@@ -4149,6 +4180,10 @@ performRestoreWorkspaceDefault:(id)		sender
 - (id)
 canPerformRestoreWorkspaceDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 {
+	if (FlagManager_Test(kFlagKioskMode))
+	{
+		return [NSNumber numberWithBool:NO];
+	}
 	return validatorYes(anItem);
 }
 
@@ -4192,6 +4227,10 @@ performRestoreWorkspaceByFavoriteName:(id)	sender
 - (id)
 canPerformRestoreWorkspaceByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 {
+	if (FlagManager_Test(kFlagKioskMode))
+	{
+		return [NSNumber numberWithBool:NO];
+	}
 	return validatorYes(anItem);
 }
 
@@ -4205,6 +4244,10 @@ performOpen:(id)	sender
 - (id)
 canPerformOpen:(id <NSValidatedUserInterfaceItem>)		anItem
 {
+	if (FlagManager_Test(kFlagKioskMode))
+	{
+		return [NSNumber numberWithBool:NO];
+	}
 	return validatorYes(anItem);
 }
 
@@ -4261,6 +4304,10 @@ canPerformNewTEKPage:(id <NSValidatedUserInterfaceItem>)	anItem
 	BOOL			result = (nullptr != currentSession);
 	
 	
+	if (FlagManager_Test(kFlagKioskMode))
+	{
+		return [NSNumber numberWithBool:NO];
+	}
 	return [NSNumber numberWithBool:result];
 }
 
@@ -4332,7 +4379,7 @@ performOpenURL:(id)		sender
 canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = textSelectionExists();
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) && textSelectionExists());
 	
 	
 	if (result)
@@ -5086,6 +5133,15 @@ performScreenResizeCustom:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandSetScreenSize, nullptr/* target */);
 }
+- (id)
+canPerformScreenResizeCustom:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
+}
 
 
 - (IBAction)
@@ -5093,6 +5149,15 @@ performScreenResizeNarrower:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandNarrowerScreen, nullptr/* target */);
+}
+- (id)
+canPerformScreenResizeNarrower:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5102,6 +5167,15 @@ performScreenResizeShorter:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandShorterScreen, nullptr/* target */);
 }
+- (id)
+canPerformScreenResizeShorter:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
+}
 
 
 - (IBAction)
@@ -5109,6 +5183,15 @@ performScreenResizeStandard:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandSmallScreen, nullptr/* target */);
+}
+- (id)
+canPerformScreenResizeStandard:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5118,6 +5201,15 @@ performScreenResizeTall:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandTallScreen, nullptr/* target */);
 }
+- (id)
+canPerformScreenResizeTall:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
+}
 
 
 - (IBAction)
@@ -5125,6 +5217,15 @@ performScreenResizeTaller:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandTallerScreen, nullptr/* target */);
+}
+- (id)
+canPerformScreenResizeTaller:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5134,6 +5235,15 @@ performScreenResizeWide:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandLargeScreen, nullptr/* target */);
 }
+- (id)
+canPerformScreenResizeWide:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
+}
 
 
 - (IBAction)
@@ -5141,6 +5251,15 @@ performScreenResizeWider:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandWiderScreen, nullptr/* target */);
+}
+- (id)
+canPerformScreenResizeWider:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5224,6 +5343,15 @@ performFormatByFavoriteName:(id)	sender
 		}
 	}
 }
+- (id)
+canPerformFormatByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
+}
 
 
 - (IBAction)
@@ -5231,6 +5359,15 @@ performFormatCustom:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandFormat, nullptr/* target */);
+}
+- (id)
+canPerformFormatCustom:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5274,6 +5411,15 @@ performFormatDefault:(id)	sender
 		Commands_ExecuteByIDUsingEvent(kCommandFormatDefault, nullptr/* target */);
 	}
 }
+- (id)
+canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
+}
 
 
 - (IBAction)
@@ -5281,6 +5427,15 @@ performFormatTextBigger:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandBiggerText, nullptr/* target */);
+}
+- (id)
+canPerformFormatTextBigger:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5290,6 +5445,15 @@ performFormatTextMaximum:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandFullScreen, nullptr/* target */);
 }
+- (id)
+canPerformFormatTextMaximum:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
+}
 
 
 - (IBAction)
@@ -5297,6 +5461,15 @@ performFormatTextSmaller:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandSmallerText, nullptr/* target */);
+}
+- (id)
+canPerformFormatTextSmaller:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5312,6 +5485,15 @@ performArrangeInFront:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandStackWindows, nullptr/* target */);
 }
+- (id)
+canPerformArrangeInFront:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
+}
 
 
 - (IBAction)
@@ -5325,8 +5507,9 @@ canPerformHideOtherWindows:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
 	// INCOMPLETE, should really be disabled if all other terminal windows are hidden
-	BOOL	result = ((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-						(SessionFactory_ReturnCount() > 1));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 1)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5338,6 +5521,15 @@ performHideWindow:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandHideFrontWindow, nullptr/* target */);
+}
+- (id)
+canPerformHideWindow:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5357,29 +5549,32 @@ canPerformMaximize:(id <NSValidatedUserInterfaceItem>)		anItem
 	id		target = [NSApp targetForAction:@selector(performMaximize:)];
 	
 	
-	if (isCarbonWindow(target))
+	if (false == FlagManager_Test(kFlagKioskMode))
 	{
-		HIWindowRef		userFocusWindow = GetUserFocusWindow();
-		
-		
-		if (nullptr != userFocusWindow)
+		if (isCarbonWindow(target))
 		{
-			WindowAttributes	attributes = kWindowNoAttributes;
+			HIWindowRef		userFocusWindow = GetUserFocusWindow();
 			
 			
-			result = YES;
-			if (noErr == GetWindowAttributes(userFocusWindow, &attributes))
+			if (nullptr != userFocusWindow)
 			{
-				result = (0 != (attributes & kWindowFullZoomAttribute));
+				WindowAttributes	attributes = kWindowNoAttributes;
+				
+				
+				result = YES;
+				if (noErr == GetWindowAttributes(userFocusWindow, &attributes))
+				{
+					result = (0 != (attributes & kWindowFullZoomAttribute));
+				}
 			}
 		}
-	}
-	else if ([[target class] isSubclassOfClass:[NSWindow class]])
-	{
-		NSWindow*	window = (NSWindow*)target;
-		
-		
-		result = (0 != ([window styleMask] & NSResizableWindowMask));
+		else if ([[target class] isSubclassOfClass:[NSWindow class]])
+		{
+			NSWindow*	window = (NSWindow*)target;
+			
+			
+			result = (0 != ([window styleMask] & NSResizableWindowMask));
+		}
 	}
 	return [NSNumber numberWithBool:result];
 }
@@ -5395,15 +5590,19 @@ performMoveToNewWorkspace:(id)	sender
 canPerformMoveToNewWorkspace:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	BOOL	result = NO;
 	
 	
-	if (nullptr != terminalWindow)
+	if (false == FlagManager_Test(kFlagKioskMode))
 	{
-		result = TerminalWindow_IsTab(terminalWindow) ? YES : NO;
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		
+		
+		if (nullptr != terminalWindow)
+		{
+			result = TerminalWindow_IsTab(terminalWindow) ? YES : NO;
+		}
 	}
-	
 	return [NSNumber numberWithBool:result];
 }
 
@@ -5429,13 +5628,18 @@ performMoveWindowRight:(id)		sender
 canPerformMoveWindowRight:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	BOOL	result = NO;
 	
 	
-	if (nullptr != terminalWindow)
+	if (false == FlagManager_Test(kFlagKioskMode))
 	{
-		result = YES;
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		
+		
+		if (nullptr != terminalWindow)
+		{
+			result = YES;
+		}
 	}
 	return [NSNumber numberWithBool:result];
 }
@@ -5462,13 +5666,18 @@ performMoveWindowLeft:(id)		sender
 canPerformMoveWindowLeft:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	BOOL	result = NO;
 	
 	
-	if (nullptr != terminalWindow)
+	if (false == FlagManager_Test(kFlagKioskMode))
 	{
-		result = YES;
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		
+		
+		if (nullptr != terminalWindow)
+		{
+			result = YES;
+		}
 	}
 	return [NSNumber numberWithBool:result];
 }
@@ -5496,13 +5705,18 @@ performMoveWindowDown:(id)		sender
 canPerformMoveWindowDown:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	BOOL	result = NO;
 	
 	
-	if (nullptr != terminalWindow)
+	if (false == FlagManager_Test(kFlagKioskMode))
 	{
-		result = YES;
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		
+		
+		if (nullptr != terminalWindow)
+		{
+			result = YES;
+		}
 	}
 	return [NSNumber numberWithBool:result];
 }
@@ -5530,13 +5744,18 @@ performMoveWindowUp:(id)		sender
 canPerformMoveWindowUp:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	BOOL	result = NO;
 	
 	
-	if (nullptr != terminalWindow)
+	if (false == FlagManager_Test(kFlagKioskMode))
 	{
-		result = YES;
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		
+		
+		if (nullptr != terminalWindow)
+		{
+			result = YES;
+		}
 	}
 	return [NSNumber numberWithBool:result];
 }
@@ -5571,7 +5790,7 @@ canPerformShowHiddenWindows:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
 	// INCOMPLETE, should really be disabled if no windows are actually hidden
-	BOOL	result = YES;
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5658,11 +5877,6 @@ orderFrontClipboard:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandShowClipboard, nullptr/* target */);
-}
-- (id)
-canOrderFrontClipboard:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-	return validatorYes(anItem);
 }
 
 
@@ -5788,7 +6002,11 @@ orderFrontSessionInfo:(id)	sender
 - (id)
 canOrderFrontSessionInfo:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	return validatorYes(anItem);
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5861,6 +6079,15 @@ orderFrontNextWindow:(id)		sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandNextWindow, nullptr/* target */);
 }
+- (id)
+canOrderFrontNextWindow:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
+}
 
 
 - (IBAction)
@@ -5869,6 +6096,15 @@ orderFrontNextWindowHidingPrevious:(id)		sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandNextWindowHideCurrent, nullptr/* target */);
 }
+- (id)
+canOrderFrontNextWindowHidingPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
+}
 
 
 - (IBAction)
@@ -5876,6 +6112,15 @@ orderFrontPreviousWindow:(id)		sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandPreviousWindow, nullptr/* target */);
+}
+- (id)
+canOrderFrontPreviousWindow:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	
+	
+	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5918,31 +6163,36 @@ orderFrontSpecificWindow:(id)		sender
 - (id)
 canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 {
-	NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
-	SessionRef		itemSession = returnMenuItemSession(asMenuItem);
-	BOOL			result = YES;
+	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
 	
 	
-	if (nullptr != itemSession)
+	if (result)
 	{
-		HIWindowRef const	kSessionActiveWindow = Session_ReturnActiveWindow(itemSession);
+		NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
+		SessionRef		itemSession = returnMenuItemSession(asMenuItem);
 		
 		
-		if (IsWindowHilited(kSessionActiveWindow))
+		if (nullptr != itemSession)
 		{
-			// check the active window in the menu
-			setItemCheckMark(asMenuItem, YES);
-		}
-		else
-		{
-			// remove any mark, initially
-			setItemCheckMark(asMenuItem, NO);
+			HIWindowRef const	kSessionActiveWindow = Session_ReturnActiveWindow(itemSession);
 			
-			// use the Mac OS X convention of bullet-marking windows with unsaved changes
-			// UNIMPLEMENTED
 			
-			// use the Mac OS X convention of diamond-marking minimized windows
-			// UNIMPLEMENTED
+			if (IsWindowHilited(kSessionActiveWindow))
+			{
+				// check the active window in the menu
+				setItemCheckMark(asMenuItem, YES);
+			}
+			else
+			{
+				// remove any mark, initially
+				setItemCheckMark(asMenuItem, NO);
+				
+				// use the Mac OS X convention of bullet-marking windows with unsaved changes
+				// UNIMPLEMENTED
+				
+				// use the Mac OS X convention of diamond-marking minimized windows
+				// UNIMPLEMENTED
+			}
 		}
 	}
 	return [NSNumber numberWithBool:result];
@@ -6039,32 +6289,37 @@ canPerformMinimizeSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
 	BOOL	result = NO;
-	id		target = [NSApp targetForAction:@selector(performMiniaturize:)];
 	
 	
-	if (isCarbonWindow(target))
+	if (false == FlagManager_Test(kFlagKioskMode))
 	{
-		HIWindowRef		userFocusWindow = GetUserFocusWindow();
+		id		target = [NSApp targetForAction:@selector(performMiniaturize:)];
 		
 		
-		if (nullptr != userFocusWindow)
+		if (isCarbonWindow(target))
 		{
-			WindowAttributes	attributes = kWindowNoAttributes;
+			HIWindowRef		userFocusWindow = GetUserFocusWindow();
 			
 			
-			result = YES;
-			if (noErr == GetWindowAttributes(userFocusWindow, &attributes))
+			if (nullptr != userFocusWindow)
 			{
-				result = (0 != (attributes & kWindowCollapseBoxAttribute));
+				WindowAttributes	attributes = kWindowNoAttributes;
+				
+				
+				result = YES;
+				if (noErr == GetWindowAttributes(userFocusWindow, &attributes))
+				{
+					result = (0 != (attributes & kWindowCollapseBoxAttribute));
+				}
 			}
 		}
-	}
-	else if ([[target class] isSubclassOfClass:[NSWindow class]])
-	{
-		NSWindow*	window = (NSWindow*)target;
-		
-		
-		result = (0 != ([window styleMask] & NSMiniaturizableWindowMask));
+		else if ([[target class] isSubclassOfClass:[NSWindow class]])
+		{
+			NSWindow*	window = (NSWindow*)target;
+			
+			
+			result = (0 != ([window styleMask] & NSMiniaturizableWindowMask));
+		}
 	}
 	return [NSNumber numberWithBool:result];
 }
@@ -6095,32 +6350,37 @@ canPerformZoomSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
 	BOOL	result = NO;
-	id		target = [NSApp targetForAction:@selector(performZoom:)];
 	
 	
-	if (isCarbonWindow(target))
+	if (false == FlagManager_Test(kFlagKioskMode))
 	{
-		HIWindowRef		userFocusWindow = GetUserFocusWindow();
+		id		target = [NSApp targetForAction:@selector(performZoom:)];
 		
 		
-		if (nullptr != userFocusWindow)
+		if (isCarbonWindow(target))
 		{
-			WindowAttributes	attributes = kWindowNoAttributes;
+			HIWindowRef		userFocusWindow = GetUserFocusWindow();
 			
 			
-			result = YES;
-			if (noErr == GetWindowAttributes(userFocusWindow, &attributes))
+			if (nullptr != userFocusWindow)
 			{
-				result = (0 != (attributes & kWindowFullZoomAttribute));
+				WindowAttributes	attributes = kWindowNoAttributes;
+				
+				
+				result = YES;
+				if (noErr == GetWindowAttributes(userFocusWindow, &attributes))
+				{
+					result = (0 != (attributes & kWindowFullZoomAttribute));
+				}
 			}
 		}
-	}
-	else if ([[target class] isSubclassOfClass:[NSWindow class]])
-	{
-		NSWindow*	window = (NSWindow*)target;
-		
-		
-		result = (0 != ([window styleMask] & NSResizableWindowMask));
+		else if ([[target class] isSubclassOfClass:[NSWindow class]])
+		{
+			NSWindow*	window = (NSWindow*)target;
+			
+			
+			result = (0 != ([window styleMask] & NSResizableWindowMask));
+		}
 	}
 	return [NSNumber numberWithBool:result];
 }
@@ -6163,40 +6423,43 @@ canRunToolbarCustomizationPaletteSetup:(id <NSValidatedUserInterfaceItem>)		anIt
 	BOOL	result = NO;
 	
 	
-	if (isCarbonWindow([NSApp mainWindow]))
+	if (false == FlagManager_Test(kFlagKioskMode))
 	{
-		HIWindowRef		userFocusWindow = GetUserFocusWindow();
-		
-		
-		if (nullptr != userFocusWindow)
+		if (isCarbonWindow([NSApp mainWindow]))
 		{
-			HIToolbarRef	toolbar = nullptr;
+			HIWindowRef		userFocusWindow = GetUserFocusWindow();
 			
 			
-			if ((noErr == GetWindowToolbar(userFocusWindow, &toolbar)) && (nullptr != toolbar))
+			if (nullptr != userFocusWindow)
 			{
-				OptionBits		optionBits = 0;
+				HIToolbarRef	toolbar = nullptr;
 				
 				
-				result = YES;
-				if (noErr == HIToolbarGetAttributes(toolbar, &optionBits))
+				if ((noErr == GetWindowToolbar(userFocusWindow, &toolbar)) && (nullptr != toolbar))
 				{
-					result = (0 != (optionBits & kHIToolbarIsConfigurable));
+					OptionBits		optionBits = 0;
+					
+					
+					result = YES;
+					if (noErr == HIToolbarGetAttributes(toolbar, &optionBits))
+					{
+						result = (0 != (optionBits & kHIToolbarIsConfigurable));
+					}
 				}
 			}
 		}
-	}
-	else
-	{
-		id		target = [NSApp targetForAction:@selector(runToolbarCustomizationPalette:)];
-		
-		
-		if ((target) && ([[target class] isSubclassOfClass:[NSWindow class]]))
+		else
 		{
-			NSWindow*	window = (NSWindow*)target;
+			id		target = [NSApp targetForAction:@selector(runToolbarCustomizationPalette:)];
 			
 			
-			result = [[window toolbar] allowsUserCustomization];
+			if ((target) && ([[target class] isSubclassOfClass:[NSWindow class]]))
+			{
+				NSWindow*	window = (NSWindow*)target;
+				
+				
+				result = [[window toolbar] allowsUserCustomization];
+			}
 		}
 	}
 	return [NSNumber numberWithBool:result];
@@ -6222,27 +6485,32 @@ toggleToolbarShownSetup:(id)	sender
 canToggleToolbarShownSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL			result = NO;
-	HIWindowRef		userFocusWindow = GetUserFocusWindow();
+	BOOL	result = NO;
 	
 	
-	if (nullptr != userFocusWindow)
+	if (false == FlagManager_Test(kFlagKioskMode))
 	{
-		HIToolbarRef	toolbar = nullptr;
-		BOOL			useShowText = YES;
+		HIWindowRef		userFocusWindow = GetUserFocusWindow();
 		
 		
-		if ((noErr == GetWindowToolbar(userFocusWindow, &toolbar)) && (nullptr != toolbar))
+		if (nullptr != userFocusWindow)
 		{
-			result = YES;
-			if (IsWindowToolbarVisible(userFocusWindow))
+			HIToolbarRef	toolbar = nullptr;
+			BOOL			useShowText = YES;
+			
+			
+			if ((noErr == GetWindowToolbar(userFocusWindow, &toolbar)) && (nullptr != toolbar))
 			{
-				useShowText = NO;
+				result = YES;
+				if (IsWindowToolbarVisible(userFocusWindow))
+				{
+					useShowText = NO;
+				}
 			}
+			
+			// update item to use the appropriate show/hide command text
+			// UNIMPLEMENTED
 		}
-		
-		// update item to use the appropriate show/hide command text
-		// UNIMPLEMENTED
 	}
 	return [NSNumber numberWithBool:result];
 }
