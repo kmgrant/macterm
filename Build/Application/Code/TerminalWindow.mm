@@ -388,7 +388,7 @@ void					delayMinimumTicks				(UInt16 = 8);
 void					ensureTopLeftCornersExists		();
 TerminalScreenRef		getActiveScreen					(TerminalWindowPtr);
 TerminalViewRef			getActiveView					(TerminalWindowPtr);
-UInt16					getGrowBoxHeight				();
+UInt16					getGrowBoxHeight				(TerminalWindowPtr);
 UInt16					getGrowBoxWidth					();
 TerminalWindowScrollBarKind	getScrollBarKind			(TerminalWindowPtr, HIViewRef);
 TerminalScreenRef		getScrollBarScreen				(TerminalWindowPtr, HIViewRef);
@@ -3449,21 +3449,50 @@ Returns the height in pixels of the grow box in a terminal
 window.  Currently this is identical to the height of a
 horizontal scroll bar, but this function exists so that
 code can explicitly identify this metric when no horizontal
-scroll bar may be present.
+scroll bar may be present or when the size box is missing
+(Full Screen mode).
 
 (3.0)
 */
 UInt16
-getGrowBoxHeight ()
+getGrowBoxHeight	(TerminalWindowPtr		inPtr)
 {
-	UInt16		result = 0;
-	SInt32		data = 0L;
-	OSStatus	error = noErr;
+	UInt16				result = 0;
+	Boolean				hasSizeBox = false;
+	WindowAttributes	attributes = kWindowNoAttributes;
+	OSStatus			error = noErr;
 	
 	
-	error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
-	if (error != noErr) Console_WriteValue("unexpected error using GetThemeMetric()", error);
-	result = data;
+	error = GetWindowAttributes(returnCarbonWindow(inPtr), &attributes);
+	if (noErr != error)
+	{
+		// not sure if the window has a size box; assume it does
+		hasSizeBox = true;
+	}
+	else
+	{
+		if (attributes & kWindowResizableAttribute)
+		{
+			hasSizeBox = true;
+		}
+	}
+	
+	if (hasSizeBox)
+	{
+		SInt32		data = 0;
+		
+		
+		error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
+		if (noErr != error)
+		{
+			Console_WriteValue("unexpected error using GetThemeMetric()", error);
+			result = 16; // arbitrary
+		}
+		else
+		{
+			result = data;
+		}
+	}
 	return result;
 }// getGrowBoxHeight
 
@@ -3733,7 +3762,7 @@ handleNewSize	(WindowRef	inWindow,
 		controlBounds.left = contentBounds.right - TerminalWindow_ReturnScrollBarWidth();
 		controlBounds.top = -1; // frame thickness
 		controlBounds.right = contentBounds.right;
-		controlBounds.bottom = contentBounds.bottom - getGrowBoxHeight();
+		controlBounds.bottom = contentBounds.bottom - getGrowBoxHeight(ptr);
 		floatBounds = CGRectMake(controlBounds.left, controlBounds.top, controlBounds.right - controlBounds.left,
 									controlBounds.bottom - controlBounds.top);
 		HIViewSetFrame(ptr->controls.scrollBarV, &floatBounds);
@@ -4372,6 +4401,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									{
 										(OSStatus)HIViewSetVisible(ptr->controls.scrollBarV, false);
 									}
+									
+									// always hide the size box
+									(OSStatus)ChangeWindowAttributes(returnCarbonWindow(ptr), 0/* attributes to set */,
+																		kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
+																			kWindowResizableAttribute/* attributes to clear */);
 								}
 								else
 								{
@@ -6220,6 +6254,12 @@ reverseFullScreenChanges	(Undoables_ActionInstruction	inDoWhat,
 			{
 				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), dataPtr->terminalWindow);
 				
+				
+				// restore the size box
+				(OSStatus)ChangeWindowAttributes(returnCarbonWindow(ptr),
+													kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
+														kWindowResizableAttribute/* attributes to set */,
+													0/* attributes to clear */);
 				
 				FlagManager_Set(kFlagKioskMode, false);
 				Keypads_SetVisible(kKeypads_WindowTypeFullScreen, false);
