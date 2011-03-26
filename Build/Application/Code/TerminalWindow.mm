@@ -4888,7 +4888,10 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					else if (modifiers & controlKey)
 					{
 						// like Firefox, use control-scroll-wheel to affect font size
-						Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandBiggerText : kCommandSmallerText);
+						if (false == FlagManager_Test(kFlagKioskMode))
+						{
+							Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandBiggerText : kCommandSmallerText);
+						}
 						result = noErr;
 					}
 					else if (modifiers & optionKey)
@@ -4897,7 +4900,10 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (kEventMouseWheelAxisX == axis)
 						{
 							// adjust screen width
-							Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandNarrowerScreen : kCommandWiderScreen);
+							if (false == FlagManager_Test(kFlagKioskMode))
+							{
+								Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandNarrowerScreen : kCommandWiderScreen);
+							}
 							result = noErr;
 						}
 						else
@@ -4905,33 +4911,59 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							if (modifiers & cmdKey)
 							{
 								// adjust screen width
-								Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandWiderScreen : kCommandNarrowerScreen);
+								if (false == FlagManager_Test(kFlagKioskMode))
+								{
+									Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandWiderScreen : kCommandNarrowerScreen);
+								}
 								result = noErr;
 							}
 							else
 							{
-								Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandTallerScreen : kCommandShorterScreen);
+								if (false == FlagManager_Test(kFlagKioskMode))
+								{
+									Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandTallerScreen : kCommandShorterScreen);
+								}
 								result = noErr;
 							}
 						}
 					}
 					else
 					{
-						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						HIViewRef					scrollBar = ptr->controls.scrollBarV;
-						HIViewPartCode				hitPart = (delta > 0)
-															? (modifiers & optionKey)
-																? kControlPageUpPart
-																: kControlUpButtonPart
-															: (modifiers & optionKey)
-																? kControlPageDownPart
-																: kControlDownButtonPart;
+						// ordinary scrolling; when in Full Screen mode, scrolling is allowed
+						// as long as the user preference to show a scroll bar is set;
+						// otherwise, any form of scrolling (via mouse or not) is disabled
+						Boolean		allowScrolling = true;
+						size_t		actualSize = 0;
 						
 						
-						// vertically scroll the terminal, but 3 lines at a time (scroll wheel)
-						InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
-						InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
-						InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
+						if (FlagManager_Test(kFlagKioskMode))
+						{
+							if (kPreferences_ResultOK !=
+								Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(allowScrolling),
+													&allowScrolling, &actualSize))
+							{
+								allowScrolling = true; // assume a value if the preference cannot be found
+							}
+						}
+						
+						if (allowScrolling)
+						{
+							TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+							HIViewRef					scrollBar = ptr->controls.scrollBarV;
+							HIViewPartCode				hitPart = (delta > 0)
+																? (modifiers & optionKey)
+																	? kControlPageUpPart
+																	: kControlUpButtonPart
+																: (modifiers & optionKey)
+																	? kControlPageDownPart
+																	: kControlDownButtonPart;
+							
+							
+							// vertically scroll the terminal, but 3 lines at a time (scroll wheel)
+							InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
+							InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
+							InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
+						}
 						result = noErr;
 					}
 				}

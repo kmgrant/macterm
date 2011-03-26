@@ -367,6 +367,8 @@ daily_build_lineage = [
 notes_by_version = {
     '20110326': [
         'Fixed Full Screen mode to remove the resize control from the lower-right corner of the window.',
+        'Fixed Full Screen mode to disable scroll wheel actions that adjust the window size.',
+        'Fixed Full Screen mode to disable scroll wheel scrolling if the preference to hide the scroll bar is set.',
     ],
     '20110324': [
         'Fixed Full Screen mode so that a variety of menu commands are disabled (as they mess with the full screen view).',
