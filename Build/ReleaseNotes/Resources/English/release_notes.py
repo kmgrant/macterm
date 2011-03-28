@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110328',
     '20110326',
     '20110324',
     '20110323',
@@ -365,6 +366,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110328': [
+        'Fixed terminal emulators to not try to render skipped characters, such as the VT100 null (0) and delete (127).',
+        'Fixed VT220 (and above) emulators to recognize various sequences for switching character sets.',
+    ],
     '20110326': [
         'Fixed Full Screen mode to remove the resize control from the lower-right corner of the window.',
         'Fixed Full Screen mode to disable scroll wheel actions that adjust the window size.',

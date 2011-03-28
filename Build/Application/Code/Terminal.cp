@@ -137,6 +137,46 @@ enum
 	kMy_ParserStateSeenControlY					= 'CtlY',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenControlZ					= 'CtlZ',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESC						= 'cESC',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsterisk				= 'ESC*',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsteriskA				= 'ES*A',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsteriskB				= 'ES*B',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsteriskC				= 'ES*C',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsteriskE				= 'ES*E',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsteriskH				= 'ES*H',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsteriskK				= 'ES*K',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsteriskQ				= 'ES*Q',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsteriskR				= 'ES*R',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsteriskY				= 'ES*Y',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsteriskZ				= 'ES*Z',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsterisk0				= 'ES*0',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsterisk1				= 'ES*1',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsterisk2				= 'ES*2',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsterisk4				= 'ES*4',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsterisk5				= 'ES*5',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsterisk6				= 'ES*6',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsterisk7				= 'ES*7',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsteriskLessThan		= 'ES*<',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCAsteriskEquals		= 'ES*=',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlus					= 'ESC+',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlusA					= 'ES+A',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlusB					= 'ES+B',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlusC					= 'ES+C',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlusE					= 'ES+E',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlusH					= 'ES+H',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlusK					= 'ES+K',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlusQ					= 'ES+Q',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlusR					= 'ES+R',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlusY					= 'ES+Y',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlusZ					= 'ES+Z',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlus0					= 'ES+0',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlus1					= 'ES+1',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlus2					= 'ES+2',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlus4					= 'ES+4',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlus5					= 'ES+5',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlus6					= 'ES+6',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlus7					= 'ES+7',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlusLessThan			= 'ES+<',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPlusEquals			= 'ES+=',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracket			= 'ESC[',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParams	= 'E[;;',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsA	= 'E[;A',	//!< generic state used to define emulator-specific states, below
@@ -176,15 +216,43 @@ enum
 	kMy_ParserStateSeenESCLeftParen				= 'ESC(',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParenA			= 'ES(A',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParenB			= 'ES(B',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParenC			= 'ES(C',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParenE			= 'ES(E',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParenH			= 'ES(H',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParenK			= 'ES(K',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParenQ			= 'ES(Q',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParenR			= 'ES(R',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParenY			= 'ES(Y',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParenZ			= 'ES(Z',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParen0			= 'ES(0',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParen1			= 'ES(1',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParen2			= 'ES(2',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParen4			= 'ES(4',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParen5			= 'ES(5',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParen6			= 'ES(6',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParen7			= 'ES(7',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParenLessThan		= 'ES(<',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParenEquals		= 'ES(=',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightParen			= 'ESC)',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightParenA			= 'ES)A',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightParenB			= 'ES)B',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParenC			= 'ES)C',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParenE			= 'ES)E',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParenH			= 'ES)H',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParenK			= 'ES)K',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParenQ			= 'ES)Q',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParenR			= 'ES)R',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParenY			= 'ES)Y',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParenZ			= 'ES)Z',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightParen0			= 'ES)0',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightParen1			= 'ES)1',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightParen2			= 'ES)2',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParen4			= 'ES)4',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParen5			= 'ES)5',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParen6			= 'ES)6',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParen7			= 'ES)7',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParenLessThan	= 'ES)<',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParenEquals		= 'ES)=',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightSqBracket		= 'ESC]',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightSqBracket0		= 'ES]0',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightSqBracket1		= 'ES]1',	//!< generic state used to define emulator-specific states, below
@@ -209,6 +277,8 @@ enum
 	kMy_ParserStateSeenESCJ						= 'ESCJ',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCK						= 'ESCK',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCM						= 'ESCM',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCn						= 'ESCn',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCo						= 'ESCo',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCY						= 'ESCY',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCZ						= 'ESCZ',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESC7						= 'ESC7',	//!< generic state used to define emulator-specific states, below
@@ -220,8 +290,11 @@ enum
 	kMy_ParserStateSeenESCPound6				= 'ES#6',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCPound8				= 'ES#8',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCEquals				= 'ESC=',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCTilde					= 'ESC~',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLessThan				= 'ESC<',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCGreaterThan			= 'ESC>',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightBrace			= 'ESC}',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCVerticalBar			= 'ESC|',	//!< generic state used to define emulator-specific states, below
 	// note that a real backslash is a very common escape character, and
 	// since state codes tend to be printed, it would screw up the output;
 	// so the convention is broken in this case, and "B/" is used instead
@@ -923,6 +996,8 @@ public:
 	
 	My_CharacterSetInfo					vtG0;						//!< the G0 character set
 	My_CharacterSetInfo					vtG1;						//!< the G1 character set
+	My_CharacterSetInfo					vtG2;						//!< the G2 character set
+	My_CharacterSetInfo					vtG3;						//!< the G3 character set
 	
 	My_RowColumnBoundary				visibleBoundary;			//!< rows and columns forming the perimeter of the buffer’s “visible” region
 	My_RowBoundary						customScrollingRegion;		//!< region that is in effect when margin set sequence is received; updated only
@@ -1240,6 +1315,80 @@ public:
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
 	static void		deviceAttributes	(My_ScreenBufferPtr);
+
+protected:
+	// The names of these constants use the same mnemonics from
+	// the programming manual of the original terminal.
+	enum State
+	{
+		kStateLS1R				= kMy_ParserStateSeenESCTilde,			//!< lock shift G1, right side
+		kStateLS2				= kMy_ParserStateSeenESCn,				//!< lock shift G2, left side
+		kStateLS2R				= kMy_ParserStateSeenESCRightBrace,		//!< lock shift G2, right side
+		kStateLS3				= kMy_ParserStateSeenESCo,				//!< lock shift G3, left side
+		kStateLS3R				= kMy_ParserStateSeenESCVerticalBar,	//!< lock shift G3, right side
+		kStateSCSG0DECSupplemental	= kMy_ParserStateSeenESCLeftParenLessThan,	//!< select character set for G0, DEC supplemental
+		kStateSCSG0Dutch		= kMy_ParserStateSeenESCLeftParen4,		//!< select character set for G0, Dutch
+		kStateSCSG0Finnish1		= kMy_ParserStateSeenESCLeftParenC,		//!< select character set for G0, Finnish
+		kStateSCSG0Finnish2		= kMy_ParserStateSeenESCLeftParen5,		//!< select character set for G0, Finnish (alternate)
+		kStateSCSG0French		= kMy_ParserStateSeenESCLeftParenR,		//!< select character set for G0, French
+		kStateSCSG0FrenchCdn	= kMy_ParserStateSeenESCLeftParenQ,		//!< select character set for G0, French Canadian
+		kStateSCSG0German		= kMy_ParserStateSeenESCLeftParenK,		//!< select character set for G0, German
+		kStateSCSG0Italian		= kMy_ParserStateSeenESCLeftParenY,		//!< select character set for G0, Italian
+		kStateSCSG0Norwegian1	= kMy_ParserStateSeenESCLeftParenE,		//!< select character set for G0, Norwegian and Danish
+		kStateSCSG0Norwegian2	= kMy_ParserStateSeenESCLeftParen6,		//!< select character set for G0, Norwegian and Danish (alternate)
+		kStateSCSG0Spanish		= kMy_ParserStateSeenESCLeftParenZ,		//!< select character set for G0, Spanish
+		kStateSCSG0Swedish1		= kMy_ParserStateSeenESCLeftParenH,		//!< select character set for G0, Swedish
+		kStateSCSG0Swedish2		= kMy_ParserStateSeenESCLeftParen7,		//!< select character set for G0, Swedish (alternate)
+		kStateSCSG0Swiss		= kMy_ParserStateSeenESCLeftParenEquals,	//!< select character set for G0, Swiss
+		kStateSCSG1DECSupplemental	= kMy_ParserStateSeenESCRightParenLessThan,	//!< select character set for G1, DEC supplemental
+		kStateSCSG1Dutch		= kMy_ParserStateSeenESCRightParen4,	//!< select character set for G1, Dutch
+		kStateSCSG1Finnish1		= kMy_ParserStateSeenESCRightParenC,	//!< select character set for G1, Finnish
+		kStateSCSG1Finnish2		= kMy_ParserStateSeenESCRightParen5,	//!< select character set for G1, Finnish (alternate)
+		kStateSCSG1French		= kMy_ParserStateSeenESCRightParenR,	//!< select character set for G1, French
+		kStateSCSG1FrenchCdn	= kMy_ParserStateSeenESCRightParenQ,	//!< select character set for G1, French Canadian
+		kStateSCSG1German		= kMy_ParserStateSeenESCRightParenK,	//!< select character set for G1, German
+		kStateSCSG1Italian		= kMy_ParserStateSeenESCRightParenY,	//!< select character set for G1, Italian
+		kStateSCSG1Norwegian1	= kMy_ParserStateSeenESCRightParenE,	//!< select character set for G1, Norwegian and Danish
+		kStateSCSG1Norwegian2	= kMy_ParserStateSeenESCRightParen6,	//!< select character set for G1, Norwegian and Danish (alternate)
+		kStateSCSG1Spanish		= kMy_ParserStateSeenESCRightParenZ,	//!< select character set for G1, Spanish
+		kStateSCSG1Swedish1		= kMy_ParserStateSeenESCRightParenH,	//!< select character set for G1, Swedish
+		kStateSCSG1Swedish2		= kMy_ParserStateSeenESCRightParen7,	//!< select character set for G1, Swedish (alternate)
+		kStateSCSG1Swiss		= kMy_ParserStateSeenESCRightParenEquals,	//!< select character set for G1, Swiss
+		kStateSCSG2UK			= kMy_ParserStateSeenESCAsteriskA,		//!< select character set for G2, U.K.
+		kStateSCSG2ASCII		= kMy_ParserStateSeenESCAsteriskB,		//!< select character set for G2, ASCII
+		kStateSCSG2SG			= kMy_ParserStateSeenESCAsterisk0,		//!< select character set for G2, special graphics
+		kStateSCSG2DECSupplemental	= kMy_ParserStateSeenESCAsteriskLessThan,	//!< select character set for G2, DEC supplemental
+		kStateSCSG2Dutch		= kMy_ParserStateSeenESCAsterisk4,		//!< select character set for G2, Dutch
+		kStateSCSG2Finnish1		= kMy_ParserStateSeenESCAsteriskC,		//!< select character set for G2, Finnish
+		kStateSCSG2Finnish2		= kMy_ParserStateSeenESCAsterisk5,		//!< select character set for G2, Finnish (alternate)
+		kStateSCSG2French		= kMy_ParserStateSeenESCAsteriskR,		//!< select character set for G2, French
+		kStateSCSG2FrenchCdn	= kMy_ParserStateSeenESCAsteriskQ,		//!< select character set for G2, French Canadian
+		kStateSCSG2German		= kMy_ParserStateSeenESCAsteriskK,		//!< select character set for G2, German
+		kStateSCSG2Italian		= kMy_ParserStateSeenESCAsteriskY,		//!< select character set for G2, Italian
+		kStateSCSG2Norwegian1	= kMy_ParserStateSeenESCAsteriskE,		//!< select character set for G2, Norwegian and Danish
+		kStateSCSG2Norwegian2	= kMy_ParserStateSeenESCAsterisk6,		//!< select character set for G2, Norwegian and Danish (alternate)
+		kStateSCSG2Spanish		= kMy_ParserStateSeenESCAsteriskZ,		//!< select character set for G2, Spanish
+		kStateSCSG2Swedish1		= kMy_ParserStateSeenESCAsteriskH,		//!< select character set for G2, Swedish
+		kStateSCSG2Swedish2		= kMy_ParserStateSeenESCAsterisk7,		//!< select character set for G2, Swedish (alternate)
+		kStateSCSG2Swiss		= kMy_ParserStateSeenESCAsteriskEquals,	//!< select character set for G2, Swiss
+		kStateSCSG3UK			= kMy_ParserStateSeenESCPlusA,			//!< select character set for G3, U.K.
+		kStateSCSG3ASCII		= kMy_ParserStateSeenESCPlusB,			//!< select character set for G3, ASCII
+		kStateSCSG3SG			= kMy_ParserStateSeenESCPlus0,			//!< select character set for G3, special graphics
+		kStateSCSG3DECSupplemental	= kMy_ParserStateSeenESCPlusLessThan,	//!< select character set for G3, DEC supplemental
+		kStateSCSG3Dutch		= kMy_ParserStateSeenESCPlus4,			//!< select character set for G3, Dutch
+		kStateSCSG3Finnish1		= kMy_ParserStateSeenESCPlusC,			//!< select character set for G3, Finnish
+		kStateSCSG3Finnish2		= kMy_ParserStateSeenESCPlus5,			//!< select character set for G3, Finnish (alternate)
+		kStateSCSG3French		= kMy_ParserStateSeenESCPlusR,			//!< select character set for G3, French
+		kStateSCSG3FrenchCdn	= kMy_ParserStateSeenESCPlusQ,			//!< select character set for G3, French Canadian
+		kStateSCSG3German		= kMy_ParserStateSeenESCPlusK,			//!< select character set for G3, German
+		kStateSCSG3Italian		= kMy_ParserStateSeenESCPlusY,			//!< select character set for G3, Italian
+		kStateSCSG3Norwegian1	= kMy_ParserStateSeenESCPlusE,			//!< select character set for G3, Norwegian and Danish
+		kStateSCSG3Norwegian2	= kMy_ParserStateSeenESCPlus6,			//!< select character set for G3, Norwegian and Danish (alternate)
+		kStateSCSG3Spanish		= kMy_ParserStateSeenESCPlusZ,			//!< select character set for G3, Spanish
+		kStateSCSG3Swedish1		= kMy_ParserStateSeenESCPlusH,			//!< select character set for G3, Swedish
+		kStateSCSG3Swedish2		= kMy_ParserStateSeenESCPlus7,			//!< select character set for G3, Swedish (alternate)
+		kStateSCSG3Swiss		= kMy_ParserStateSeenESCPlusEquals,		//!< select character set for G3, Swiss
+	};
 };
 
 /*!
@@ -2657,102 +2806,106 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 				i -= countRead; // could be zero (no-op)
 				ptr += countRead; // could be zero (no-op)
 				
-				// DEBUG:
-				//Console_WriteValueFourChars("transition to state", states.second);
-				
-				// LOOPING GUARD: whenever the proposed next state matches the
-				// current state, a counter is incremented; if this count
-				// exceeds an arbitrary value, the next state is FORCED to
-				// return to the initial state (flagging a console error) so
-				// that this does not hang the application in an infinite loop
-				if (states.first == states.second)
+				// interrupts are never captured for echo
+				if (false == isInterrupt)
 				{
-					// exclude the echo data, because this is the most likely state
-					// to last awhile (e.g. long strings of printable text)
-					if (states.second != kMy_ParserStateAccumulateForEcho)
+					// DEBUG:
+					//Console_WriteValueFourChars("transition to state", states.second);
+					
+					// LOOPING GUARD: whenever the proposed next state matches the
+					// current state, a counter is incremented; if this count
+					// exceeds an arbitrary value, the next state is FORCED to
+					// return to the initial state (flagging a console error) so
+					// that this does not hang the application in an infinite loop
+					if (states.first == states.second)
 					{
-						Boolean		interrupt = (dataPtr->emulator.stateRepetitions > 100/* arbitrary */);
-						
-						
-						++dataPtr->emulator.stateRepetitions;
-						
-						if (interrupt)
+						// exclude the echo data, because this is the most likely state
+						// to last awhile (e.g. long strings of printable text)
+						if (states.second != kMy_ParserStateAccumulateForEcho)
 						{
-							// some states allow a bit more leeway before panicking,
-							// because there could be good reasons for long data streams
-							// TEMPORARY; it may make the most sense to also defer loop
-							// evasion to an emulator method, so that each emulator type
-							// can handle its own custom states (and only when that
-							// emulator is actually in use!)
-							if ((states.second == My_XTerm::kStateSITAcquireStr) ||
-								(states.second == My_XTerm::kStateSWTAcquireStr) ||
-								(states.second == My_XTerm::kStateSWITAcquireStr))
-							{
-								interrupt = (dataPtr->emulator.stateRepetitions > 255/* arbitrary */);
-							}
-						}
-						
-						if (interrupt)
-						{
-							Boolean const	kLogThis = DebugInterface_LogsTerminalState();
+							Boolean		interrupt = (dataPtr->emulator.stateRepetitions > 100/* arbitrary */);
 							
 							
-							if (kLogThis)
+							++dataPtr->emulator.stateRepetitions;
+							
+							if (interrupt)
 							{
-								Console_WriteHorizontalRule();
-								Console_WriteValueFourChars("SERIOUS PARSER ERROR: appears to be stuck, state", states.first);
+								// some states allow a bit more leeway before panicking,
+								// because there could be good reasons for long data streams
+								// TEMPORARY; it may make the most sense to also defer loop
+								// evasion to an emulator method, so that each emulator type
+								// can handle its own custom states (and only when that
+								// emulator is actually in use!)
+								if ((states.second == My_XTerm::kStateSITAcquireStr) ||
+									(states.second == My_XTerm::kStateSWTAcquireStr) ||
+									(states.second == My_XTerm::kStateSWITAcquireStr))
+								{
+									interrupt = (dataPtr->emulator.stateRepetitions > 255/* arbitrary */);
+								}
 							}
 							
-							if (kMy_ParserStateInitial == states.first)
+							if (interrupt)
 							{
-								// if somehow stuck oddly in the initial state, assume
-								// the trigger character is responsible and simply
-								// ignore the troublesome sequence of characters
+								Boolean const	kLogThis = DebugInterface_LogsTerminalState();
+								
+								
 								if (kLogThis)
 								{
-									Console_WriteValueCharacter("FORCING step-over of trigger character", *ptr);
+									Console_WriteHorizontalRule();
+									Console_WriteValueFourChars("SERIOUS PARSER ERROR: appears to be stuck, state", states.first);
 								}
-								--i;
-								++ptr;
-							}
-							else
-							{
+								
+								if (kMy_ParserStateInitial == states.first)
+								{
+									// if somehow stuck oddly in the initial state, assume
+									// the trigger character is responsible and simply
+									// ignore the troublesome sequence of characters
+									if (kLogThis)
+									{
+										Console_WriteValueCharacter("FORCING step-over of trigger character", *ptr);
+									}
+									--i;
+									++ptr;
+								}
+								else
+								{
+									if (kLogThis)
+									{
+										Console_WriteLine("FORCING a return to the initial state");
+									}
+									states.second = kMy_ParserStateInitial;
+								}
+								
 								if (kLogThis)
 								{
-									Console_WriteLine("FORCING a return to the initial state");
+									Console_WriteHorizontalRule();
 								}
-								states.second = kMy_ParserStateInitial;
+								
+								dataPtr->emulator.stateRepetitions = 0;
 							}
-							
-							if (kLogThis)
-							{
-								Console_WriteHorizontalRule();
-							}
-							
-							dataPtr->emulator.stateRepetitions = 0;
 						}
 					}
-				}
-				else
-				{
-					dataPtr->emulator.stateRepetitions = 0;
-				}
-				
-				if (kMy_ParserStateAccumulateForEcho == states.second)
-				{
-					// gather a byte for later use in display, but do not display yet;
-					// while it would be nice to feed the raw data stream into the
-					// translation APIs, translators might not stop when they see
-					// special characters such as control characters; so, the terminal
-					// emulator (above) has the first crack at the byte to see if there
-					// is any special meaning, and the byte is cached only if the
-					// terminal allows the byte to be echoed; the echo does not actually
-					// occur until a future byte triggers a non-echo state; at that
-					// time, the cached array of bytes is sent to the translator and
-					// converted into human-readable text
-					dataPtr->bytesToEcho.push_back(*ptr);
-					--i;
-					++ptr;
+					else
+					{
+						dataPtr->emulator.stateRepetitions = 0;
+					}
+					
+					if (kMy_ParserStateAccumulateForEcho == states.second)
+					{
+						// gather a byte for later use in display, but do not display yet;
+						// while it would be nice to feed the raw data stream into the
+						// translation APIs, translators might not stop when they see
+						// special characters such as control characters; so, the terminal
+						// emulator (above) has the first crack at the byte to see if there
+						// is any special meaning, and the byte is cached only if the
+						// terminal allows the byte to be echoed; the echo does not actually
+						// occur until a future byte triggers a non-echo state; at that
+						// time, the cached array of bytes is sent to the translator and
+						// converted into human-readable text
+						dataPtr->bytesToEcho.push_back(*ptr);
+						--i;
+						++ptr;
+					}
 				}
 				
 				// if the new state is no longer echo accumulation, or this chunk of the
@@ -5021,6 +5174,8 @@ reverseVideo(false),
 windowMinimized(false),
 vtG0(kMy_CharacterSetVT100UnitedStates, kMy_CharacterROMNormal, kMy_GraphicsModeOff),
 vtG1(kMy_CharacterSetVT100UnitedStates, kMy_CharacterROMNormal, kMy_GraphicsModeOn),
+vtG2(kMy_CharacterSetVT100UnitedStates, kMy_CharacterROMNormal, kMy_GraphicsModeOff),
+vtG3(kMy_CharacterSetVT100UnitedStates, kMy_CharacterROMNormal, kMy_GraphicsModeOff),
 visibleBoundary(0, 0, returnScreenColumns(inTerminalConfig) - 1, returnScreenRows(inTerminalConfig) - 1),
 customScrollingRegion(0, 0), // reset below...
 // text elements - not initialized
@@ -5822,6 +5977,10 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			inNowOutNext.second = kMy_ParserStateSeenESCRightParen;
 			break;
 		
+		case '}':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightBrace;
+			break;
+		
 		case 'A':
 			inNowOutNext.second = kMy_ParserStateSeenESCA;
 			break;
@@ -5874,6 +6033,14 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			inNowOutNext.second = kMy_ParserStateSeenESCM;
 			break;
 		
+		case 'n':
+			inNowOutNext.second = kMy_ParserStateSeenESCn;
+			break;
+		
+		case 'o':
+			inNowOutNext.second = kMy_ParserStateSeenESCo;
+			break;
+		
 		case 'Y':
 			inNowOutNext.second = kMy_ParserStateSeenESCY;
 			break;
@@ -5890,8 +6057,20 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			inNowOutNext.second = kMy_ParserStateSeenESC8;
 			break;
 		
+		case '*':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk;
+			break;
+		
+		case '+':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlus;
+			break;
+		
 		case '#':
 			inNowOutNext.second = kMy_ParserStateSeenESCPound;
+			break;
+		
+		case '~':
+			inNowOutNext.second = kMy_ParserStateSeenESCTilde;
 			break;
 		
 		case '=':
@@ -5908,6 +6087,10 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 		
 		case '\\':
 			inNowOutNext.second = kMy_ParserStateSeenESCBackslash;
+			break;
+		
+		case '|':
+			inNowOutNext.second = kMy_ParserStateSeenESCVerticalBar;
 			break;
 		
 		default:
@@ -6063,6 +6246,180 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 		}
 		break;
 	
+	case kMy_ParserStateSeenESCAsterisk:
+		switch (kTriggerChar)
+		{
+		case 'A':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskA;
+			break;
+		
+		case 'B':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskB;
+			break;
+		
+		case 'C':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskC;
+			break;
+		
+		case 'E':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskE;
+			break;
+		
+		case 'H':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskH;
+			break;
+		
+		case 'K':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskK;
+			break;
+		
+		case 'Q':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskQ;
+			break;
+		
+		case 'R':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskR;
+			break;
+		
+		case 'Y':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskY;
+			break;
+		
+		case 'Z':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskZ;
+			break;
+		
+		case '0':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk0;
+			break;
+		
+		case '1':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk1;
+			break;
+		
+		case '2':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk2;
+			break;
+		
+		case '4':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk4;
+			break;
+		
+		case '5':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk5;
+			break;
+		
+		case '6':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk6;
+			break;
+		
+		case '7':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk7;
+			break;
+		
+		case '<':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskLessThan;
+			break;
+		
+		case '=':
+			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskEquals;
+			break;
+		
+		default:
+			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-*", kTriggerChar);
+			inNowOutNext.second = kDefaultNextState;
+			result = 0; // do not absorb the unknown
+			break;
+		}
+		break;
+	
+	case kMy_ParserStateSeenESCPlus:
+		switch (kTriggerChar)
+		{
+		case 'A':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlusA;
+			break;
+		
+		case 'B':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlusB;
+			break;
+		
+		case 'C':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlusC;
+			break;
+		
+		case 'E':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlusE;
+			break;
+		
+		case 'H':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlusH;
+			break;
+		
+		case 'K':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlusK;
+			break;
+		
+		case 'Q':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlusQ;
+			break;
+		
+		case 'R':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlusR;
+			break;
+		
+		case 'Y':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlusY;
+			break;
+		
+		case 'Z':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlusZ;
+			break;
+		
+		case '0':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlus0;
+			break;
+		
+		case '1':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlus1;
+			break;
+		
+		case '2':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlus2;
+			break;
+		
+		case '4':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlus4;
+			break;
+		
+		case '5':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlus5;
+			break;
+		
+		case '6':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlus6;
+			break;
+		
+		case '7':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlus7;
+			break;
+		
+		case '<':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlusLessThan;
+			break;
+		
+		case '=':
+			inNowOutNext.second = kMy_ParserStateSeenESCPlusEquals;
+			break;
+		
+		default:
+			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-+", kTriggerChar);
+			inNowOutNext.second = kDefaultNextState;
+			result = 0; // do not absorb the unknown
+			break;
+		}
+		break;
+	
 	case kMy_ParserStateSeenESCLeftParen:
 		switch (kTriggerChar)
 		{
@@ -6072,6 +6429,38 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 		
 		case 'B':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenB;
+			break;
+		
+		case 'C':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenC;
+			break;
+		
+		case 'E':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenE;
+			break;
+		
+		case 'H':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenH;
+			break;
+		
+		case 'K':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenK;
+			break;
+		
+		case 'Q':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenQ;
+			break;
+		
+		case 'R':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenR;
+			break;
+		
+		case 'Y':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenY;
+			break;
+		
+		case 'Z':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenZ;
 			break;
 		
 		case '0':
@@ -6084,6 +6473,30 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 		
 		case '2':
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftParen2;
+			break;
+		
+		case '4':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParen4;
+			break;
+		
+		case '5':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParen5;
+			break;
+		
+		case '6':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParen6;
+			break;
+		
+		case '7':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParen7;
+			break;
+		
+		case '<':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenLessThan;
+			break;
+		
+		case '=':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenEquals;
 			break;
 		
 		default:
@@ -6105,6 +6518,38 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			inNowOutNext.second = kMy_ParserStateSeenESCRightParenB;
 			break;
 		
+		case 'C':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParenC;
+			break;
+		
+		case 'E':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParenE;
+			break;
+		
+		case 'H':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParenH;
+			break;
+		
+		case 'K':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParenK;
+			break;
+		
+		case 'Q':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParenQ;
+			break;
+		
+		case 'R':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParenR;
+			break;
+		
+		case 'Y':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParenY;
+			break;
+		
+		case 'Z':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParenZ;
+			break;
+		
 		case '0':
 			inNowOutNext.second = kMy_ParserStateSeenESCRightParen0;
 			break;
@@ -6115,6 +6560,30 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 		
 		case '2':
 			inNowOutNext.second = kMy_ParserStateSeenESCRightParen2;
+			break;
+		
+		case '4':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParen4;
+			break;
+		
+		case '5':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParen5;
+			break;
+		
+		case '6':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParen6;
+			break;
+		
+		case '7':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParen7;
+			break;
+		
+		case '<':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParenLessThan;
+			break;
+		
+		case '=':
+			inNowOutNext.second = kMy_ParserStateSeenESCRightParenEquals;
 			break;
 		
 		default:
@@ -7248,7 +7717,6 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	{
 	case '\000':
 		// ignore this character for the purposes of sequencing
-		inNowOutNext.second = inNowOutNext.first;
 		break;
 	
 	case '\005':
@@ -7312,7 +7780,6 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	
 	case '\177': // DEL
 		// ignore this character for the purposes of sequencing
-		inNowOutNext.second = inNowOutNext.first;
 		break;
 	
 	default:
@@ -7331,7 +7798,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	
 	// if no interrupt has occurred, use the current state and
 	// the available data to determine the next logical state
-	if (false == isControlCharacter)
+	if (false == outInterrupt)
 	{
 		switch (inNowOutNext.first)
 		{
@@ -8962,8 +9429,167 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	}
 	
 	// decide what to do based on the proposed transition
-	// INCOMPLETE
-	outHandled = false;
+	switch (inOldNew.first)
+	{
+	case kStateLS1R:
+		Console_Warning(Console_WriteLine, "request for VT220 to lock shift G1 right side, which is unsupported");
+		break;
+	
+	case kStateLS2:
+		// lock shift (left) the G2 setting
+		inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG2;
+		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
+		{
+			// set attribute
+			STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+		}
+		else
+		{
+			// clear attribute
+			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+		}
+		break;
+	
+	case kStateLS2R:
+		Console_Warning(Console_WriteLine, "request for VT220 to lock shift G2 right side, which is unsupported");
+		break;
+	
+	case kStateLS3:
+		// lock shift (left) the G3 setting
+		inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG3;
+		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
+		{
+			// set attribute
+			STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+		}
+		else
+		{
+			// clear attribute
+			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+		}
+		break;
+	
+	case kStateLS3R:
+		Console_Warning(Console_WriteLine, "request for VT220 to lock shift G3 right side, which is unsupported");
+		break;
+	
+	case kStateSCSG0DECSupplemental:
+	case kStateSCSG0Dutch:
+	case kStateSCSG0Finnish1:
+	case kStateSCSG0Finnish2:
+	case kStateSCSG0French:
+	case kStateSCSG0FrenchCdn:
+	case kStateSCSG0German:
+	case kStateSCSG0Italian:
+	case kStateSCSG0Norwegian1:
+	case kStateSCSG0Norwegian2:
+	case kStateSCSG0Spanish:
+	case kStateSCSG0Swedish1:
+	case kStateSCSG0Swedish2:
+	case kStateSCSG0Swiss:
+		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G0 character set", inOldNew.first);
+		break;
+	
+	case kStateSCSG1DECSupplemental:
+	case kStateSCSG1Dutch:
+	case kStateSCSG1Finnish1:
+	case kStateSCSG1Finnish2:
+	case kStateSCSG1French:
+	case kStateSCSG1FrenchCdn:
+	case kStateSCSG1German:
+	case kStateSCSG1Italian:
+	case kStateSCSG1Norwegian1:
+	case kStateSCSG1Norwegian2:
+	case kStateSCSG1Spanish:
+	case kStateSCSG1Swedish1:
+	case kStateSCSG1Swedish2:
+	case kStateSCSG1Swiss:
+		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G1 character set", inOldNew.first);
+		break;
+	
+	case kStateSCSG2UK:
+	case kStateSCSG3UK:
+		{
+			// U.K. character set, normal ROM, no graphics
+			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG2;
+			
+			
+			if (kStateSCSG3UK == inOldNew.second) targetCharacterSetPtr = &inDataPtr->vtG3;
+			targetCharacterSetPtr->translationTable = kMy_CharacterSetVT100UnitedKingdom;
+			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
+			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
+			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics); // clear graphics attribute
+		}
+		break;
+	
+	case kStateSCSG2ASCII:
+	case kStateSCSG3ASCII:
+		{
+			// U.S. character set, normal ROM, no graphics
+			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG2;
+			
+			
+			if (kStateSCSG3ASCII == inOldNew.second) targetCharacterSetPtr = &inDataPtr->vtG3;
+			targetCharacterSetPtr->translationTable = kMy_CharacterSetVT100UnitedStates;
+			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
+			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
+			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics); // clear graphics attribute
+		}
+		break;
+	
+	case kStateSCSG2SG:
+	case kStateSCSG3SG:
+		{
+			// normal ROM, graphics mode
+			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG2;
+			
+			
+			if (kStateSCSG3SG == inOldNew.second) targetCharacterSetPtr = &inDataPtr->vtG3;
+			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
+			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOn;
+			STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics); // set graphics attribute
+		}
+		break;
+	
+	case kStateSCSG2DECSupplemental:
+	case kStateSCSG2Dutch:
+	case kStateSCSG2Finnish1:
+	case kStateSCSG2Finnish2:
+	case kStateSCSG2French:
+	case kStateSCSG2FrenchCdn:
+	case kStateSCSG2German:
+	case kStateSCSG2Italian:
+	case kStateSCSG2Norwegian1:
+	case kStateSCSG2Norwegian2:
+	case kStateSCSG2Spanish:
+	case kStateSCSG2Swedish1:
+	case kStateSCSG2Swedish2:
+	case kStateSCSG2Swiss:
+		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G2 character set", inOldNew.first);
+		break;
+	
+	case kStateSCSG3DECSupplemental:
+	case kStateSCSG3Dutch:
+	case kStateSCSG3Finnish1:
+	case kStateSCSG3Finnish2:
+	case kStateSCSG3French:
+	case kStateSCSG3FrenchCdn:
+	case kStateSCSG3German:
+	case kStateSCSG3Italian:
+	case kStateSCSG3Norwegian1:
+	case kStateSCSG3Norwegian2:
+	case kStateSCSG3Spanish:
+	case kStateSCSG3Swedish1:
+	case kStateSCSG3Swedish2:
+	case kStateSCSG3Swiss:
+		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G3 character set", inOldNew.first);
+		break;
+	
+	default:
+		outHandled = false;
+		break;
+	}
+	
 	if (false == outHandled)
 	{
 		// other state transitions should still basically be handled as if in VT100
