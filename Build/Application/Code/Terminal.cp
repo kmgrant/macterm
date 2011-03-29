@@ -1287,6 +1287,7 @@ public My_VT100
 public:
 	static void		deleteCharacters	(My_ScreenBufferPtr);
 	static void		deleteLines			(My_ScreenBufferPtr);
+	static void		deviceAttributes	(My_ScreenBufferPtr);
 	static void		insertLines			(My_ScreenBufferPtr);
 	static void		loadLEDs			(My_ScreenBufferPtr);
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
@@ -1314,7 +1315,8 @@ public:
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
-	static void		deviceAttributes	(My_ScreenBufferPtr);
+	static void		primaryDeviceAttributes		(My_ScreenBufferPtr);
+	static void		secondaryDeviceAttributes	(My_ScreenBufferPtr);
 
 protected:
 	// The names of these constants use the same mnemonics from
@@ -7520,6 +7522,34 @@ readCSIParameters	(My_ScreenBufferPtr		inDataPtr,
 			}
 			break;
 		
+		case '>':
+			// the FIRST character must be this in order to recognize that
+			// this is a special type of sequence; otherwise, ignore (stop here)
+			if (0 == result)
+			{
+				// secondary device attributes (technically VT220)
+				inDataPtr->emulator.parameterValues[terminalEndIndexRef++] = -3;
+			}
+			else
+			{
+				done = true;
+			}
+			break;
+		
+		case '=':
+			// the FIRST character must be this in order to recognize that
+			// this is a special type of sequence; otherwise, ignore (stop here)
+			if (0 == result)
+			{
+				// tertiary device attributes (technically VT420)
+				inDataPtr->emulator.parameterValues[terminalEndIndexRef++] = -4;
+			}
+			else
+			{
+				done = true;
+			}
+			break;
+		
 		default:
 			// not part of a parameter sequence
 			done = true;
@@ -7903,6 +7933,8 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			case '9':
 			case ';':
 			case '?':
+			case '>': // VT220-specific
+			case '=': // VT420-specific
 				inNowOutNext.second = kStateCSIParamScan;
 				result = 0; // do not absorb this character
 				break;
@@ -9003,7 +9035,27 @@ deleteCharacters	(My_ScreenBufferPtr		inDataPtr)
 		}
 	}
 	bufferRemoveCharactersAtCursorColumn(inDataPtr, totalChars);
-}// deleteCharacters
+}// My_VT102::deleteCharacters
+
+
+/*!
+Handles the VT102 'DA' sequence.  See the VT102
+manual for complete details.
+
+(4.0)
+*/
+inline void
+My_VT102::
+deviceAttributes	(My_ScreenBufferPtr		inDataPtr)
+{
+	SessionRef		session = returnListeningSession(inDataPtr);
+	
+	
+	if (nullptr != session)
+	{
+		Session_SendData(session, "\033[?6c", 5);
+	}
+}// My_VT102::deviceAttributes
 
 
 /*!
@@ -9041,7 +9093,7 @@ deleteLines		(My_ScreenBufferPtr		inDataPtr)
 		}
 		bufferRemoveLines(inDataPtr, totalLines, lineIterator, kMy_AttributeRuleCopyLastLine);
 	}
-}// deleteLines
+}// My_VT102::deleteLines
 
 
 /*!
@@ -9079,7 +9131,7 @@ insertLines		(My_ScreenBufferPtr		inDataPtr)
 		}
 		bufferInsertBlankLines(inDataPtr, totalLines, lineIterator, kMy_AttributeRuleInitialize);
 	}
-}// insertLines
+}// My_VT102::insertLines
 
 
 /*!
@@ -9108,7 +9160,7 @@ loadLEDs	(My_ScreenBufferPtr		inDataPtr)
 			highlightLED(inDataPtr, 1/* LED # */);
 		}
 	}
-}// loadLEDs
+}// My_VT102::loadLEDs
 
 
 /*!
@@ -9213,6 +9265,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	// INCOMPLETE
 	switch (inOldNew.second)
 	{
+	case My_VT100::kStateDA:
+		My_VT102::deviceAttributes(inDataPtr);
+		break;
+	
 	case kStateControlLFVTFF:
 		// line feed
 		// all of these are interpreted the same for VT102;
@@ -9346,24 +9402,61 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 
 
 /*!
-Handles the VT220 'DA' sequence.  See the VT220
-manual for complete details.
+Handles the VT220 'DA' sequence for primary device attributes.
+See the VT220 manual for complete details.
 
 (3.0)
 */
 inline void
 My_VT220::
-deviceAttributes	(My_ScreenBufferPtr		inDataPtr)
+primaryDeviceAttributes		(My_ScreenBufferPtr		inDataPtr)
 {
 	SessionRef		session = returnListeningSession(inDataPtr);
 	
 	
 	if (nullptr != session)
 	{
-		// support GPO (graphics processor option) and AVO (advanced video option)
-		Session_SendData(session, "\033[?62;1;6c", 10);
+		// possible parameters to return are:
+		// (62) service class 2 terminal
+		// (1) if 132 columns
+		// (2) if printer port
+		// (6) if selective erase
+		// (7) if DRCS
+		// (8) if UDK
+		// (9) if 7-bit national replacement character sets supported
+		// INCOMPLETE
+		Session_SendData(session, "\033[?62", 5);
+		if (Terminal_ReturnColumnCount(inDataPtr->selfRef) >= 132)
+		{
+			Session_SendData(session, ";1", 2);
+		}
+		Session_SendData(session, ";6", 2);
+		// insert any other parameters here, with semicolons
+		Session_SendData(session, "c", 1);
 	}
-}// My_VT220::deviceAttributes
+}// My_VT220::primaryDeviceAttributes
+
+
+/*!
+Handles the VT220 'DA' sequence for secondary device attributes.
+See the VT220 manual for complete details.
+
+(4.0)
+*/
+inline void
+My_VT220::
+secondaryDeviceAttributes	(My_ScreenBufferPtr		inDataPtr)
+{
+	SessionRef		session = returnListeningSession(inDataPtr);
+	
+	
+	if (nullptr != session)
+	{
+		// an emulated terminal has no firmware, so this is a bit made-up;
+		// it means VT220 version 1.0, no options
+		Session_SendData(session, "\033[>1;10;0c", 10);
+	}
+}// My_VT220::secondaryDeviceAttributes
 
 
 /*!
@@ -9429,8 +9522,54 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	}
 	
 	// decide what to do based on the proposed transition
-	switch (inOldNew.first)
+	// INCOMPLETE
+	switch (inOldNew.second)
 	{
+	case My_VT100::kStateDA:
+		// device attributes (primary or secondary)
+		{
+			Boolean		isPrimary = false;
+			Boolean		isSecondary = false;
+			
+			
+			if (inDataPtr->emulator.parameterEndIndex >= 0)
+			{
+				switch (inDataPtr->emulator.parameterValues[0])
+				{
+				case -3:
+					isSecondary = true;
+					break;
+				
+				case 0:
+					isPrimary = true;
+					break;
+				
+				default:
+					// ???
+					break;
+				}
+			}
+			else
+			{
+				// no parameters; defaults to “primary”
+				isPrimary = true;
+			}
+			
+			if (isSecondary)
+			{
+				My_VT220::secondaryDeviceAttributes(inDataPtr);
+			}
+			else if (isPrimary)
+			{
+				My_VT220::primaryDeviceAttributes(inDataPtr);
+			}
+			else
+			{
+				// ??? - do nothing
+			}
+		}
+		break;
+	
 	case kStateLS1R:
 		Console_Warning(Console_WriteLine, "request for VT220 to lock shift G1 right side, which is unsupported");
 		break;
@@ -9487,7 +9626,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateSCSG0Swedish1:
 	case kStateSCSG0Swedish2:
 	case kStateSCSG0Swiss:
-		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G0 character set", inOldNew.first);
+		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G0 character set", inOldNew.second);
 		break;
 	
 	case kStateSCSG1DECSupplemental:
@@ -9504,7 +9643,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateSCSG1Swedish1:
 	case kStateSCSG1Swedish2:
 	case kStateSCSG1Swiss:
-		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G1 character set", inOldNew.first);
+		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G1 character set", inOldNew.second);
 		break;
 	
 	case kStateSCSG2UK:
@@ -9565,7 +9704,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateSCSG2Swedish1:
 	case kStateSCSG2Swedish2:
 	case kStateSCSG2Swiss:
-		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G2 character set", inOldNew.first);
+		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G2 character set", inOldNew.second);
 		break;
 	
 	case kStateSCSG3DECSupplemental:
@@ -9582,7 +9721,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateSCSG3Swedish1:
 	case kStateSCSG3Swedish2:
 	case kStateSCSG3Swiss:
-		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G3 character set", inOldNew.first);
+		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G3 character set", inOldNew.second);
 		break;
 	
 	default:
@@ -12516,7 +12655,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				goto ShortCut;
 			
 			case 'c':
-				if (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT220) My_VT220::deviceAttributes(inDataPtr);
+				if (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT220) My_VT220::primaryDeviceAttributes(inDataPtr);
 				else if (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT100) My_VT100::deviceAttributes(inDataPtr);
 				goto ShortCut;
 			
