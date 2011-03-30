@@ -3858,17 +3858,21 @@ Session_UserInputCFString	(SessionRef		inRef,
 	
 	if (Session_LocalEchoIsEnabled(inRef))
 	{
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		
+		
 		try
 		{
-			My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-			char*					stringBuffer = new char
-													[1 + CFStringGetMaximumSizeForEncoding
-															(CFStringGetLength(inStringBuffer), ptr->writeEncoding)];
+			size_t const	kBufferSize = (1 + CFStringGetMaximumSizeForEncoding
+											(CFStringGetLength(inStringBuffer), ptr->writeEncoding));
+			char*			stringBuffer = new char[kBufferSize];
 			
 			
-			if (false == CFStringGetCString(inStringBuffer, stringBuffer, sizeof(stringBuffer), ptr->writeEncoding))
+			stringBuffer[kBufferSize - 1] = '\0';
+			if (false == CFStringGetCString(inStringBuffer, stringBuffer, kBufferSize, ptr->writeEncoding))
 			{
-				Console_Warning(Console_WriteLine, "text cannot be converted into the encoding used by this terminal");
+				Console_Warning(Console_WriteValue, "input text does not match terminal with text encoding", ptr->writeEncoding);
+				Console_Warning(Console_WriteValueCFString, "cannot convert into the encoding used by this terminal, text", inStringBuffer);
 			}
 			else
 			{

@@ -371,6 +371,7 @@ notes_by_version = {
         'Fixed VT220 device status reports.',
         'Fixed VT220 "identify" sequence.',
         'Fixed VT220 device attribute reports to include printer port information.',
+        'Fixed Local Echo for text sent by Paste, the floating command line and macros.',
     ],
     '20110328': [
         'Fixed terminal emulators to not try to render skipped characters, such as the VT100 null (0) and delete (127).',
