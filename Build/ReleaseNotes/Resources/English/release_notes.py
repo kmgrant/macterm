@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110329',
     '20110328',
     '20110326',
     '20110324',
@@ -366,10 +367,15 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110329': [
+        'Fixed VT220 device status reports.',
+        'Fixed VT220 "identify" sequence.',
+        'Fixed VT220 device attribute reports to include printer port information.',
+    ],
     '20110328': [
         'Fixed terminal emulators to not try to render skipped characters, such as the VT100 null (0) and delete (127).',
         'Fixed VT220 (and above) emulators to recognize various sequences for switching character sets.',
-        'Fixed VT220 device status reports.',
+        'Fixed VT220 device attribute reports.',
     ],
     '20110326': [
         'Fixed Full Screen mode to remove the resize control from the lower-right corner of the window.',

@@ -1315,8 +1315,11 @@ public:
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
-	static void		primaryDeviceAttributes		(My_ScreenBufferPtr);
-	static void		secondaryDeviceAttributes	(My_ScreenBufferPtr);
+	static void		deviceStatusReportKeyboardLanguage	(My_ScreenBufferPtr);
+	static void		deviceStatusReportPrinterPort		(My_ScreenBufferPtr);
+	static void		deviceStatusReportUserDefinedKeys	(My_ScreenBufferPtr);
+	static void		primaryDeviceAttributes				(My_ScreenBufferPtr);
+	static void		secondaryDeviceAttributes			(My_ScreenBufferPtr);
 
 protected:
 	// The names of these constants use the same mnemonics from
@@ -9311,7 +9314,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			
 			if (inDataPtr->emulator.parameterEndIndex >= 0)
 			{
-				switch (inDataPtr->emulator.parameterValues[inDataPtr->emulator.parameterEndIndex])
+				switch (inDataPtr->emulator.parameterValues[0])
 				{
 				case 5:
 					// printer controller (print lines without necessarily displaying them);
@@ -9332,32 +9335,36 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				
 				case -2:
 					// private parameters (e.g. ESC [ ? 5 i)
-					switch (inDataPtr->emulator.parameterValues[0])
+					if (inDataPtr->emulator.parameterEndIndex >= 1)
 					{
-					case 5:
-						// auto-print (print lines that are also displayed)
-						inDataPtr->printingReset();
-						inDataPtr->printingModes |= kMy_PrintingModeAutoPrint;
-						break;
-					
-					case 4:
-						// auto-print off
-						inDataPtr->printingModes &= ~kMy_PrintingModeAutoPrint;
-						inDataPtr->printingEnd();
-						break;
-					
-					case 1:
-						// print cursor line
-						// UNIMPLEMENTED
-						break;
-					
-					default:
-						// ???
-						if (DebugInterface_LogsTerminalInputChar())
+						switch (inDataPtr->emulator.parameterValues[1])
 						{
-							Console_Warning(Console_WriteLine, "VT102 media copy did not recognize the given private parameters");
+						case 5:
+							// auto-print (print lines that are also displayed)
+							inDataPtr->printingReset();
+							inDataPtr->printingModes |= kMy_PrintingModeAutoPrint;
+							break;
+						
+						case 4:
+							// auto-print off
+							inDataPtr->printingModes &= ~kMy_PrintingModeAutoPrint;
+							inDataPtr->printingEnd();
+							break;
+						
+						case 1:
+							// print cursor line
+							// UNIMPLEMENTED
+							break;
+						
+						default:
+							// ???
+							if (DebugInterface_LogsTerminalInputChar())
+							{
+								Console_Warning(Console_WriteValue, "VT102 media copy did not recognize ?-parameter",
+												inDataPtr->emulator.parameterValues[1]);
+							}
+							break;
 						}
-						break;
 					}
 					break;
 				
@@ -9402,6 +9409,85 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 
 
 /*!
+Handles the VT220 'DSR' sequence for the keyboard language.
+See the VT220 manual for complete details.
+
+INCOMPLETE
+
+(4.0)
+*/
+inline void
+My_VT220::
+deviceStatusReportKeyboardLanguage		(My_ScreenBufferPtr		inDataPtr)
+{
+	SessionRef		session = returnListeningSession(inDataPtr);
+	
+	
+	if (nullptr != session)
+	{
+		Session_SendData(session, "\033[?27", 5);
+		// TEMPORARY; the keyboard cannot be changed this way right now,
+		// so the response is always “unknown” (0)
+		Session_SendData(session, ";0", 2);
+		// insert any other parameters here, with semicolons
+		Session_SendData(session, "n", 1);
+	}
+}// My_VT220::deviceStatusReportKeyboardLanguage
+
+
+/*!
+Handles the VT220 'DSR' sequence for the printer port.
+See the VT220 manual for complete details.
+
+(4.0)
+*/
+inline void
+My_VT220::
+deviceStatusReportPrinterPort	(My_ScreenBufferPtr		inDataPtr)
+{
+	SessionRef		session = returnListeningSession(inDataPtr);
+	
+	
+	if (nullptr != session)
+	{
+		// possible responses are "?13" (no printer), "?10" (ready), "?11" (not ready)
+		if (PrintTerminal_IsPrintingSupported())
+		{
+			Session_SendData(session, "\033[?10n", 6);
+		}
+		else
+		{
+			Session_SendData(session, "\033[?13n", 6);
+		}
+	}
+}// My_VT220::deviceStatusReportPrinterPort
+
+
+/*!
+Handles the VT220 'DSR' sequence for user-defined keys.
+See the VT220 manual for complete details.
+
+INCOMPLETE
+
+(4.0)
+*/
+inline void
+My_VT220::
+deviceStatusReportUserDefinedKeys	(My_ScreenBufferPtr		inDataPtr)
+{
+	SessionRef		session = returnListeningSession(inDataPtr);
+	
+	
+	if (nullptr != session)
+	{
+		// possible responses are "?20" (unlocked), "?21" (locked)
+		// UNIMPLEMENTED
+		Session_SendData(session, "\033[?20n", 6);
+	}
+}// My_VT220::deviceStatusReportUserDefinedKeys
+
+
+/*!
 Handles the VT220 'DA' sequence for primary device attributes.
 See the VT220 manual for complete details.
 
@@ -9430,6 +9516,7 @@ primaryDeviceAttributes		(My_ScreenBufferPtr		inDataPtr)
 		{
 			Session_SendData(session, ";1", 2);
 		}
+		Session_SendData(session, ";2", 2);
 		Session_SendData(session, ";6", 2);
 		// insert any other parameters here, with semicolons
 		Session_SendData(session, "c", 1);
@@ -9566,6 +9653,68 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			else
 			{
 				// ??? - do nothing
+			}
+		}
+		break;
+	
+	case My_VT100::kStateDECID:
+		My_VT220::primaryDeviceAttributes(inDataPtr);
+		break;
+	
+	case My_VT100::kStateDSR:
+		if (inDataPtr->printingModes & kMy_PrintingModePrintController)
+		{
+			// print controller mode; request is received but not answered
+		}
+		else
+		{
+			if (inDataPtr->emulator.parameterEndIndex >= 0)
+			{
+				switch (inDataPtr->emulator.parameterValues[0])
+				{
+				case -2:
+					// specific report parameters (e.g. ESC [ ? 1 5 n)
+					if (inDataPtr->emulator.parameterEndIndex >= 1)
+					{
+						switch (inDataPtr->emulator.parameterValues[1])
+						{
+						case 15:
+							// printer status request
+							My_VT220::deviceStatusReportPrinterPort(inDataPtr);
+							break;
+						
+						case 25:
+							// user-defined keys request for lock state
+							My_VT220::deviceStatusReportUserDefinedKeys(inDataPtr);
+							break;
+						
+						case 26:
+							// keyboard language request
+							My_VT220::deviceStatusReportKeyboardLanguage(inDataPtr);
+							break;
+						
+						default:
+							// ???
+							if (DebugInterface_LogsTerminalInputChar())
+							{
+								Console_Warning(Console_WriteValue, "VT220 device status report did not recognize ?-parameter",
+												inDataPtr->emulator.parameterValues[1]);
+							}
+							break;
+						}
+					}
+					break;
+				
+				default:
+					// earlier models of VT terminal already support the other
+					// kinds of device status report; pass to another handler
+					outHandled = false;
+					break;
+				}
+			}
+			else
+			{
+				outHandled = false;
 			}
 		}
 		break;
