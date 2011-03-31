@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -58,25 +58,25 @@ enum
 	VSF13			= 100, //!< function key 13; F8  on Mac keyboard
 	VSF14			= 101, //!< function key 14; F9  on Mac keyboard
 	//				// 102 is unused
-	VSF16			= 103, //!< function key 16; F11 on Mac keyboardz
+	VSF16_220DO		= 103, //!< function key 16; F11 on Mac keyboard (“do” key on VT220)
 	//				// 104 is unused
 	VSF18			= 105, //!< function key 18; F13 on Mac keyboard
 	//				// 106 is unused
 	VSF19			= 107, //!< function key 19; F14 on Mac keyboard
 	//				// 108 is unused
-	VSF15			= 109, //!< function key 15; F10 on Mac keyboard
+	VSF15_220HELP	= 109, //!< function key 15; F10 on Mac keyboard (“help” key on VT220)
 	//				// 110 is unused
 	VSF17			= 111, //!< function key 17; F12 on Mac keyboard
 	//				// 112 is unused
 	VSF20			= 113, //!< function key 20; F15 on Mac keyboard
-	VSHELP			= 114, //!< help key
-	VSHOME			= 115, //!< home key
-	VSPGUP			= 116, //!< page up key
-	VSDEL			= 117, //!< forward delete key
+	VSHELP_220FIND	= 114, //!< help key (“find” key on VT220)
+	VSHOME_220INS	= 115, //!< home key (“insert” key on VT220)
+	VSPGUP_220DEL	= 116, //!< page up key (“delete” key on VT220)
+	VSDEL_220SEL	= 117, //!< forward delete key (“select” key on VT220)
 	VSF9			= 118, //!< function key  9; F4  on Mac keyboard
-	VSEND			= 119, //!< end key
+	VSEND_220PGUP	= 119, //!< end key (“page up” key on VT220)
 	VSF7			= 120, //!< function key  7; F2  on Mac keyboard
-	VSPGDN			= 121, //!< page down key
+	VSPGDN_220PGDN	= 121, //!< page down key (even on VT220)
 	VSF6			= 122  //!< function key  6; F1  on Mac keyboard
 };
 

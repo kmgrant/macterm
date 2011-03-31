@@ -634,8 +634,7 @@ Terminal_Result
 
 Terminal_Result
 	Terminal_UserInputVTKey					(TerminalScreenRef			inScreen,
-											 UInt8						inVTKey,
-											 Boolean					inLocalEcho);
+											 UInt8						inVTKey);
 
 Boolean
 	Terminal_WindowIsToBeMinimized			(TerminalScreenRef			inScreen);

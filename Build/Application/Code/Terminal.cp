@@ -4658,17 +4658,15 @@ Terminal_UserInputOffsetCursor	(TerminalScreenRef		inRef,
 
 
 /*!
-Attempts to reposition the cursor by sending enough arrow key
-sequences in the specified directions.  (A delta of zero in
-either direction means the cursor does not move on that axis.)
+Sends a special key sequence, such as a VT220 function key or a
+page-down command.  All possible key codes are defined in the
+"VTKeys.h" header.
+
+User input of any kind should take local echoing behavior into
+account, but note that this routine does not do echoing.
 
 This could fail, if for instance there is no session listening
 to input for this terminal.
-
-IMPORTANT:	This could fail in ways that cannot be detected by
-			this function; for instance, if the user is currently
-			running a process that does not interpret arrow keys
-			properly.
 
 IMPORTANT:	User input routines at the terminal level are rare,
 			and generally only used to handle sequences that
@@ -4688,8 +4686,7 @@ if keys cannot be sent because no session is listening
 */
 Terminal_Result
 Terminal_UserInputVTKey		(TerminalScreenRef		inRef,
-							 UInt8					inVTKey,
-							 Boolean				inLocalEcho)
+							 UInt8					inVTKey)
 {
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	Terminal_Result			result = kTerminal_ResultOK;
@@ -4711,10 +4708,6 @@ Terminal_UserInputVTKey		(TerminalScreenRef		inRef,
 			
 			
 			Session_SendData(dataPtr->listeningSession, &kVTNumericModeTranslation[inVTKey - VSK0], 1);
-			if (inLocalEcho)
-			{
-				Terminal_EmulatorProcessData(dataPtr->selfRef, &kVTNumericModeTranslation[inVTKey - VSUP], 1);
-			}
 		}
 		else
 		{
@@ -4837,12 +4830,8 @@ Terminal_UserInputVTKey		(TerminalScreenRef		inRef,
 				}
 			}
 			
-			// finally, send the key sequence, optionally handling it immediately in the terminal
+			// finally, send the key sequence
 			Session_SendData(dataPtr->listeningSession, seqPtr, seqLength);
-			if (inLocalEcho)
-			{
-				Terminal_EmulatorProcessData(dataPtr->selfRef, REINTERPRET_CAST(seqPtr, UInt8*), seqLength);
-			}
 		}
 	}
 	return result;

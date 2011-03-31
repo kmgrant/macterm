@@ -1227,7 +1227,7 @@ Sends the specified VT function key to the active session.
 typeF15:(id)	sender
 {
 #pragma unused(sender)
-	[self sendKey:VSF15];
+	[self sendKey:VSF15_220HELP];
 }// typeF15:
 
 
@@ -1240,7 +1240,7 @@ Sends the specified VT function key to the active session.
 typeF16:(id)	sender
 {
 #pragma unused(sender)
-	[self sendKey:VSF16];
+	[self sendKey:VSF16_220DO];
 }// typeF16:
 
 
@@ -1551,7 +1551,7 @@ Sends the specified key’s character to the active session.
 typeDelete:(id)		sender
 {
 #pragma unused(sender)
-	[self sendKey:VSPGUP/* yes this is correct, based on key position */];
+	[self sendKey:VSPGUP_220DEL/* yes this is correct, based on key position */];
 }// typeDelete:
 
 
@@ -1577,7 +1577,7 @@ Sends the specified key’s character to the active session.
 typeFind:(id)	sender
 {
 #pragma unused(sender)
-	[self sendKey:VSHELP/* yes this is correct, based on key position */];
+	[self sendKey:VSHELP_220FIND/* yes this is correct, based on key position */];
 }// typeFind:
 
 
@@ -1603,7 +1603,7 @@ Sends the specified key’s character to the active session.
 typeInsert:(id)		sender
 {
 #pragma unused(sender)
-	[self sendKey:VSHOME/* yes this is correct, based on key position */];
+	[self sendKey:VSHOME_220INS/* yes this is correct, based on key position */];
 }// typeInsert:
 
 
@@ -1616,7 +1616,7 @@ Sends the specified key’s character to the active session.
 typePageDown:(id)	sender
 {
 #pragma unused(sender)
-	[self sendKey:VSPGDN];
+	[self sendKey:VSPGDN_220PGDN];
 }// typePageDown:
 
 
@@ -1629,7 +1629,7 @@ Sends the specified key’s character to the active session.
 typePageUp:(id)		sender
 {
 #pragma unused(sender)
-	[self sendKey:VSEND/* yes this is correct, based on key position */];
+	[self sendKey:VSEND_220PGUP/* yes this is correct, based on key position */];
 }// typePageUp:
 
 
@@ -1694,7 +1694,7 @@ Sends the specified key’s character to the active session.
 typeSelect:(id)		sender
 {
 #pragma unused(sender)
-	[self sendKey:VSDEL/* yes this is correct, based on key position */];
+	[self sendKey:VSDEL_220SEL/* yes this is correct, based on key position */];
 }// typeSelect:
 
 

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110330',
     '20110329',
     '20110328',
     '20110326',
@@ -367,6 +368,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110330': [
+        'Fixed Local Echo to generate text in a few cases where echoes were previously suppressed.',
+        'Terminal text that is written by Local Echo now floats above the cursor instead of occupying the space of normal text.',
+        'Terminal text that is written by Local Echo is now converted into special symbols or key descriptions when appropriate.',
+        'Terminal text that is written by Local Echo now appears before equivalent text is sent to the session.',
+    ],
     '20110329': [
         'Fixed VT220 device status reports.',
         'Fixed VT220 "identify" sequence.',
