@@ -71,6 +71,11 @@ logsTerminalInputChar;
 setLogsTerminalInputChar:(BOOL)_; // binding
 
 - (BOOL)
+logsTeletypewriterState;
+- (void)
+setLogsTeletypewriterState:(BOOL)_; // binding
+
+- (BOOL)
 logsTerminalState;
 - (void)
 setLogsTerminalState:(BOOL)_; // binding
@@ -82,6 +87,7 @@ setLogsTerminalState:(BOOL)_; // binding
 #pragma mark Variables
 
 // These are exposed for maximum efficiency.
+extern Boolean		gDebugInterface_LogsDeviceState;
 extern Boolean		gDebugInterface_LogsTerminalInputChar;
 extern Boolean		gDebugInterface_LogsTerminalState;
 
@@ -97,6 +103,16 @@ inline Boolean
 	{
 	#ifndef NDEBUG
 		return gDebugInterface_LogsTerminalInputChar;
+	#else
+		return false;
+	#endif
+	}
+
+inline Boolean
+	DebugInterface_LogsTeletypewriterState	()
+	{
+	#ifndef NDEBUG
+		return gDebugInterface_LogsDeviceState;
 	#else
 		return false;
 	#endif

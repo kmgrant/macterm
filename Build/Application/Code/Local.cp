@@ -77,6 +77,7 @@ extern "C"
 // MacTelnet includes
 #include "AppResources.h"
 #include "ConstantsRegistry.h"
+#include "DebugInterface.h"
 #include "DialogUtilities.h"
 #include "Local.h"
 #include "NetEvents.h"
@@ -169,6 +170,7 @@ My_ProcessPtrLocker&		gProcessPtrLocks ()		{ static My_ProcessPtrLocker x; retur
 struct termios				gCachedTerminalAttributes;
 MyTTYState					gTTYState = kMyTTYStateReset;
 Boolean						gInDebuggingMode = Local_StandardInputIsATerminal(); //!< true if terminal I/O is possible for debugging
+Boolean						gPrintedRawMode = false; //!< true after the first console dump of the raw-mode terminal configuration
 
 //! used to help atexit() handlers know which terminal to touch
 Local_TerminalID			gTerminalToRestore = 0;
@@ -1369,7 +1371,7 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 					{
 						exit(EX_OSERR);
 					}
-					if (gInDebuggingMode)
+					if (gInDebuggingMode && DebugInterface_LogsTeletypewriterState())
 					{
 						// in debugging mode, show the terminal configuration
 						Console_WriteLine("printing initial terminal configuration for process");
@@ -1739,11 +1741,12 @@ putTTYInRawMode		(Local_TerminalID		inTTY)
 		{
 			// success!
 			gTTYState = kMyTTYStateRaw;
-			if (gInDebuggingMode)
+			if ((gInDebuggingMode) && (false == gPrintedRawMode) && DebugInterface_LogsTeletypewriterState())
 			{
-				// in debugging mode, show the terminal configuration
+				// in debugging mode, show the terminal configuration, but just the first time it is used
 				Console_WriteLine("printing raw-mode terminal configuration");
 				printTerminalControlStructure(&terminalControl);
+				gPrintedRawMode = true;
 			}
 		}
 	}

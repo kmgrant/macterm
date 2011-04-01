@@ -49,6 +49,7 @@
 
 
 #pragma mark Variables
+Boolean		gDebugInterface_LogsDeviceState = false;
 Boolean		gDebugInterface_LogsTerminalInputChar = false;
 Boolean		gDebugInterface_LogsTerminalState = false;
 
@@ -236,6 +237,29 @@ setLogsTerminalInputChar:(BOOL)		flag
 		gDebugInterface_LogsTerminalInputChar = flag;
 	}
 }// setLogsTerminalInputChar:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (BOOL)
+logsTeletypewriterState
+{
+	return gDebugInterface_LogsDeviceState;
+}
+- (void)
+setLogsTeletypewriterState:(BOOL)		flag
+{
+	if (flag != gDebugInterface_LogsDeviceState)
+	{
+		if (flag) Console_WriteLine("started logging of pseudo-terminal device configurations");
+		else Console_WriteLine("stopped logging of pseudo-terminal device configurations");
+		
+		gDebugInterface_LogsDeviceState = flag;
+	}
+}// setLogsTeletypewriterState:
 
 
 /*!
