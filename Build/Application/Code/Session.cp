@@ -6944,16 +6944,37 @@ terminalWriteLocalEchoString	(My_SessionPtr		inPtr,
 	// special case; control characters that are sent as strings
 	// of a single byte are converted into visible sequences
 	// because they will not otherwise be visible
-	if ((1 == inCount) && (inBytes[0] <= 0x1F))
+	if (1 == inCount)
 	{
-		// control character; convert to a caret sequence (but with the Unicode control symbol)
-		char const*		controlSymbols = "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]~?"; // must contain exactly 32 symbols
-		
-		
-		assert(32 == CPP_STD::strlen(controlSymbols));
-		controlCharBuffer[3] = controlSymbols[inBytes[0]];
-		inBytes = controlCharBuffer;
-		inCount = sizeof(controlCharBuffer);
+		if (inBytes[0] <= 0x1F)
+		{
+			// control character; convert to a caret sequence (but with the Unicode control symbol)
+			char const*		controlSymbols = "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]~?"; // must contain exactly 32 symbols
+			
+			
+			assert(32 == CPP_STD::strlen(controlSymbols));
+			controlCharBuffer[3] = controlSymbols[inBytes[0]];
+			inBytes = controlCharBuffer;
+			inCount = sizeof(controlCharBuffer);
+		}
+		else if (32 == inBytes[0])
+		{
+			// space; make the Unicode (UTF-8) bottom-bracket symbol
+			controlCharBuffer[0] = 0xE2;
+			controlCharBuffer[1] = 0x8E;
+			controlCharBuffer[2] = 0xB5;
+			inBytes = controlCharBuffer;
+			inCount = 3;
+		}
+		else if (127 == inBytes[0])
+		{
+			// delete; make the Unicode (UTF-8) backward-delete symbol
+			controlCharBuffer[0] = 0xE2;
+			controlCharBuffer[1] = 0x8C;
+			controlCharBuffer[2] = 0xAB;
+			inBytes = controlCharBuffer;
+			inCount = 3;
+		}
 	}
 	
 	// now, update the help tag and display it
