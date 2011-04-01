@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110331',
     '20110330',
     '20110329',
     '20110328',
@@ -368,6 +369,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110331': [
+        'Fixed Preferences window Sessions pane Data Flow tab to save and restore the Paste Buffering setting correctly.',
+    ],
     '20110330': [
         'Fixed Local Echo to generate text in a few cases where echoes were previously suppressed.',
         'Terminal text that is written by Local Echo now floats above the cursor instead of occupying the space of normal text.',
