@@ -60,6 +60,7 @@ extern "C"
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
 #import <CocoaBasic.h>
+#import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <Localization.h>
 #import <MemoryBlocks.h>
@@ -1897,23 +1898,49 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 							(frontSession, kSessionFactory_ListInTabStackOrder, &frontSessionIndex);
 			if (kSessionFactory_ResultOK == factoryError)
 			{
-				// adjust the session index to determine the new session;
-				// if modified past the bounds, wrap around
-				if (inPreviousInsteadOfNext)
-				{
-					if (frontSessionIndex == 0) frontSessionIndex = SessionFactory_ReturnCount() - 1;
-					else --frontSessionIndex;
-				}
-				else
-				{
-					if (++frontSessionIndex >= SessionFactory_ReturnCount()) frontSessionIndex = 0;
-				}
+				UInt16		loopGuard = 0;
 				
-				factoryError = SessionFactory_GetWindowWithZeroBasedIndex
-								(frontSessionIndex, kSessionFactory_ListInTabStackOrder, &nextWindow);
-				if (kSessionFactory_ResultOK != factoryError)
+				
+				// skip certain windows in the rotation (see below)
+				while ((nullptr == nextWindow) && (loopGuard < 50/* arbitrary */))
 				{
-					Console_Warning(Console_WriteLine, "failed to find window with given index");
+					// adjust the session index to determine the new session;
+					// if modified past the bounds, wrap around
+					if (inPreviousInsteadOfNext)
+					{
+						if (frontSessionIndex == 0) frontSessionIndex = SessionFactory_ReturnCount() - 1;
+						else --frontSessionIndex;
+					}
+					else
+					{
+						if (++frontSessionIndex >= SessionFactory_ReturnCount()) frontSessionIndex = 0;
+					}
+					
+					factoryError = SessionFactory_GetWindowWithZeroBasedIndex
+									(frontSessionIndex, kSessionFactory_ListInTabStackOrder, &nextWindow);
+					if (kSessionFactory_ResultOK != factoryError)
+					{
+						Console_Warning(Console_WriteLine, "failed to find window with given index");
+					}
+					
+					// if possible, detect and avoid windows that are on different Spaces
+					if (nullptr != nextWindow)
+					{
+						NSWindow*	cocoaWindow = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(nextWindow);
+						
+						
+						// note: "(BOOL)isOnActiveSpace" is only available in Mac OS X 10.6
+						if ((nil != cocoaWindow) && ([cocoaWindow respondsToSelector:@selector(isOnActiveSpace)]))
+						{
+							if (NO == [cocoaWindow isOnActiveSpace])
+							{
+								// skip this window
+								nextWindow = nullptr;
+							}
+						}
+					}
+					
+					++loopGuard;
 				}
 			}
 		}

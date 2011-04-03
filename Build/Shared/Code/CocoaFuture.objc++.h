@@ -58,4 +58,29 @@ setCollectionBehavior:(unsigned int)_;
 
 #endif // MAC_OS_X_VERSION_10_5
 
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060 /* MAC_OS_X_VERSION_10_6 */
+
+/*!
+Methods that are implemented ONLY on Mac OS X 10.6 and beyond.
+These declarations should match the latest SDK.
+
+WARNING:	You MUST use "respondsToSelector:" or an equivalent
+			mechanism to guard against use of these methods on
+			older OSes.  The advantage of importing this method
+			is that you can directly invoke the target method
+			(in an if-statement, say) without seeing compiler
+			warnings.  Note that "performSelector:" is also an
+			option, but that is much more cumbersome for APIs
+			that take or return non-objects.
+*/
+@interface NSWindow (NSWindowExtensionsFromSnowLeopard)
+
+- (BOOL)
+isOnActiveSpace;
+
+@end
+
+#endif // MAC_OS_X_VERSION_10_6
+
 // BELOW IS REQUIRED NEWLINE TO END FILE
