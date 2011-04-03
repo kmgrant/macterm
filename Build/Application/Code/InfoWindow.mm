@@ -48,6 +48,7 @@
 #import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
+#import <CocoaFuture.objc++.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
 #import <Cursors.h>
@@ -662,21 +663,6 @@ showHideInfoWindow	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 }// showHideInfoWindow
 
 } // anonymous namespace
-
-
-/*!
-To avoid compiler warnings, and inform the compiler about
-unknown methods, this class is declared.  (MacTelnet does not
-yet compile specifically for newer OSes, even though it can
-run on them.  It occasionally uses "respondsToSelector:" to
-invoke APIs that older headers have not defined.)
-*/
-@interface NSWindow (NSWindowExtensionsFromLeopard)
-
-- (void)
-setCollectionBehavior:(unsigned int)_;
-
-@end
 
 
 @implementation InfoWindow_SessionRow

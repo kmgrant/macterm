@@ -24,6 +24,7 @@
 		0A9D796F12A234650006CECA /* __init__.py in pymactelnet-term */ = {isa = PBXBuildFile; fileRef = 0A9D796B12A2342B0006CECA /* __init__.py */; };
 		0A9D797012A234650006CECA /* text.py in pymactelnet-term */ = {isa = PBXBuildFile; fileRef = 0A9D796C12A2342B0006CECA /* text.py */; };
 		0AB3B2670F0C1B92000559AB /* __init__.py in pymactelnet */ = {isa = PBXBuildFile; fileRef = 0AB3B2640F0C1B69000559AB /* __init__.py */; };
+		0ABAA71B13491D06006B1EF6 /* CocoaFuture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */; };
 		0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABD01CF1068000A00BBB87A /* DebugInterface.mm */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
@@ -484,6 +485,8 @@
 		0AB2273D12D2D3BB00D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/KeypadFunctionKeysCocoa.xib; sourceTree = "<group>"; };
 		0AB2273F12D2D41300D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/KeypadVT220KeysCocoa.xib; sourceTree = "<group>"; };
 		0AB3B2640F0C1B69000559AB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymactelnet/__init__.py; sourceTree = "<group>"; };
+		0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaFuture.mm; path = Shared/Code/CocoaFuture.mm; sourceTree = "<group>"; };
+		0ABAA71A13491CFB006B1EF6 /* CocoaFuture.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "CocoaFuture.objc++.h"; path = "Shared/Code/CocoaFuture.objc++.h"; sourceTree = "<group>"; };
 		0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelSessions.icns; path = Application/Resources/IconForPrefPanelSessions.icns; sourceTree = "<group>"; };
 		0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelTerminals.icns; path = Application/Resources/IconForPrefPanelTerminals.icns; sourceTree = "<group>"; };
 		0ABC0CF80A44FFBD009D07FC /* IconForPrefPanelFormats.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelFormats.icns; path = Application/Resources/IconForPrefPanelFormats.icns; sourceTree = "<group>"; };
@@ -633,6 +636,7 @@
 				0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */,
 				0AF502330F872D420068CB19 /* CFUtilities.cp */,
 				0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */,
+				0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */,
 				0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */,
 				0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */,
 				0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */,
@@ -663,6 +667,7 @@
 				0AF5022E0F872CAF0068CB19 /* CFRetainRelease.h */,
 				0AF5022F0F872CC30068CB19 /* CFUtilities.h */,
 				0AF502300F872D150068CB19 /* CGContextSaveRestore.h */,
+				0ABAA71A13491CFB006B1EF6 /* CocoaFuture.objc++.h */,
 				0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */,
 				0AE852740D9463B900B6834B /* CocoaUserDefaults.h */,
 				0A4603C50554376100ACDF3A /* ColorUtilities.h */,
@@ -1439,6 +1444,7 @@
 				0A64C5EB1059E423005B8A48 /* StreamCapture.cp in Sources */,
 				0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */,
 				0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */,
+				0ABAA71B13491D06006B1EF6 /* CocoaFuture.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
