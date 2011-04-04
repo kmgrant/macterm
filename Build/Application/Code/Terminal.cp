@@ -91,6 +91,40 @@
 namespace {
 
 /*!
+Valid terminal emulator parameter values (as stored by the class
+My_Emulator) can be any integer starting from 0.  Any negative
+value is invalid, but these are overloaded to represent special
+states.
+
+A parameter list does not necessarily contain a contiguous range
+of undefined values.  For instance, "ESC[;1m" is an undefined
+first parameter, but a second parameter that is equal to 1.  For
+this reason, ALWAYS check the MAXIMUM number of parameters your
+sequence can accept, to see if ANY of them is defined.
+
+The very first (index 0) parameter is a sentinel; if it is set
+to kMy_ParamUndefined, the entire parameter list is invalid.  If
+it is set to any other sentinel value, then the first (index 0)
+parameter is invalid because it is the sentinel, but it changes
+the meaning of the parameters that follow, and also shifts them
+by one (so index 1 is now the first parameter, not index 0).
+
+IMPORTANT:	This code GUARANTEES that it is safe to rely on
+			relational operators such as "< 0" to scan quickly
+			for any sentinel value.  You do not have to build
+			complex switch-statements to test for all possible
+			values.
+*/
+enum
+{
+	// all of these must be negative numbers
+	kMy_ParamUndefined		= -1,	//!< meta-value; means that the parameter does not actually exist (undefined at index 0 implies empty list)
+	kMy_ParamPrivate		= -2,	//!< meta-value; means that the parameters came from an ESC[?... sequence
+	kMy_ParamSecondaryDA	= -3,	//!< meta-value; means that the parameters came from an ESC[>... sequence
+	kMy_ParamTertiaryDA		= -4,	//!< meta-value; means that the parameters came from an ESC[=... sequence
+};
+
+/*!
 A parser state represents a recent history of input that limits
 what can happen next (based on future input).
 
@@ -99,6 +133,18 @@ are often used to define aliases in specific terminal classes
 (like My_VT100).  This ties a terminal-specific state to a
 generic one, allowing the default parser to do most of the state
 determination/transition work on behalf of all terminals!
+
+Note that most complex sequences are defined by a final state
+that is reached implicitly be transitioning through trivial
+intermediate states (corresponding to characters that are read
+while the sequence is incomplete).  This is largely a “correct
+by construction” approach.  There are exceptions however, such
+as the CSI parameter parser ("ESC[...;...;...X" for some byte X
+that is the terminator) which absorbs characters without having
+a lot of intermediate states; it follows that certain sequences
+such as "ESC[?" do not have states, and cannot, because the data
+they require will be absorbed by a parser from a simpler state
+(in this case, the "ESC[" state).
 */
 typedef UInt32 My_ParserState;
 typedef std::pair< My_ParserState, My_ParserState >		My_ParserStatePair;
@@ -861,6 +907,9 @@ public:
 	Boolean
 	changeTo	(Terminal_Emulator);
 	
+	void
+	clearEscapeSequenceParameters ();
+	
 	Boolean
 	supportsVariant		(Preferences_Tag);
 	
@@ -871,8 +920,8 @@ public:
 	My_ParserState						stringAccumulatorState;	//!< state that was in effect when the "stringAccumulator" was recently cleared
 	std::string							stringAccumulator;		//!< used to gather characters for such things as XTerm window changes
 	UInt16								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
-	SInt16								parameterEndIndex;		//!< zero-based last parameter position in the "values" array
-	ParameterList						parameterValues;		//!< all values provided for the current escape sequence
+	SInt16								argLastIndex;			//!< zero-based last parameter position in the "values" array
+	ParameterList						argList;				//!< all values provided for the current escape sequence
 	VariantChain						preCallbackSet;			//!< callbacks invoked prior to ordinary callbacks, to allow tweaks (e.g. XTerm)
 	Callbacks							currentCallbacks;		//!< emulator-type-specific handlers to drive the state machine
 	Callbacks							pushedCallbacks;		//!< for emulators that can switch modes, the previous set of callbacks
@@ -1486,7 +1535,6 @@ void						changeLineRangeAttributes				(My_ScreenBufferPtr, My_ScreenBufferLine&
 																	 SInt16, TerminalTextAttributes,
 																	 TerminalTextAttributes);
 void						changeNotifyForTerminal					(My_ScreenBufferConstPtr, Terminal_Change, void*);
-void						clearEscapeSequenceParameters			(My_ScreenBufferPtr);
 void						cursorRestore							(My_ScreenBufferPtr);
 void						cursorSave								(My_ScreenBufferPtr);
 void						cursorWrapIfNecessaryGetLocation		(My_ScreenBufferPtr, SInt16*, My_ScreenRowIndex*);
@@ -4888,8 +4936,8 @@ currentState(kMy_ParserStateInitial),
 stringAccumulatorState(kMy_ParserStateInitial),
 stringAccumulator(),
 stateRepetitions(0),
-parameterEndIndex(0),
-parameterValues(kMy_MaximumANSIParameters),
+argLastIndex(0),
+argList(kMy_MaximumANSIParameters),
 preCallbackSet(),
 currentCallbacks(returnDataWriter(inPrimaryEmulation),
 					returnStateDeterminant(inPrimaryEmulation),
@@ -4928,6 +4976,28 @@ changeTo	(Terminal_Emulator		inPrimaryEmulation)
 	}
 	return result;
 }// changeTo
+
+
+/*!
+Responds to a CSI (control sequence inducer) by reinitializing
+all parameter values and resetting the current parameter index
+to 0.
+
+(3.0)
+*/
+void
+My_Emulator::
+clearEscapeSequenceParameters ()
+{
+	SInt16		parameterIndex = this->argList.size();
+	
+	
+	while (--parameterIndex >= 0)
+	{
+		this->argList[parameterIndex] = kMy_ParamUndefined;
+	}
+	this->argLastIndex = 0;
+}// clearEscapeSequenceParameters
 
 
 /*!
@@ -6998,14 +7068,14 @@ My_VT100::
 cursorBackward	(My_ScreenBufferPtr		inDataPtr)
 {
 	// the default value is 1 if there are no parameters
-	if (inDataPtr->emulator.parameterValues[0] < 1)
+	if (inDataPtr->emulator.argList[0] < 1)
 	{
 		if (inDataPtr->current.cursorX > 0) moveCursorLeft(inDataPtr);
 		else moveCursorLeftToEdge(inDataPtr);
 	}
 	else
 	{
-		SInt16		newValue = inDataPtr->current.cursorX - inDataPtr->emulator.parameterValues[0];
+		SInt16		newValue = inDataPtr->current.cursorX - inDataPtr->emulator.argList[0];
 		
 		
 		if (newValue < 0) newValue = 0;
@@ -7025,7 +7095,7 @@ My_VT100::
 cursorDown	(My_ScreenBufferPtr		inDataPtr)
 {
 	// the default value is 1 if there are no parameters
-	if (inDataPtr->emulator.parameterValues[0] < 1)
+	if (inDataPtr->emulator.argList[0] < 1)
 	{
 		if (inDataPtr->current.cursorY < inDataPtr->originRegionPtr->lastRow) moveCursorDown(inDataPtr);
 		else moveCursorDownToEdge(inDataPtr);
@@ -7033,7 +7103,7 @@ cursorDown	(My_ScreenBufferPtr		inDataPtr)
 	else
 	{
 		My_ScreenRowIndex	newValue = inDataPtr->current.cursorY +
-										inDataPtr->emulator.parameterValues[0];
+										inDataPtr->emulator.argList[0];
 		
 		
 		if (newValue > inDataPtr->originRegionPtr->lastRow)
@@ -7064,14 +7134,14 @@ cursorForward	(My_ScreenBufferPtr		inDataPtr)
 	
 	
 	// the default value is 1 if there are no parameters
-	if (inDataPtr->emulator.parameterValues[0] < 1)
+	if (inDataPtr->emulator.argList[0] < 1)
 	{
 		if (inDataPtr->current.cursorX < rightLimit) moveCursorRight(inDataPtr);
 		else moveCursorRightToEdge(inDataPtr);
 	}
 	else
 	{
-		SInt16		newValue = inDataPtr->current.cursorX + inDataPtr->emulator.parameterValues[0];
+		SInt16		newValue = inDataPtr->current.cursorX + inDataPtr->emulator.argList[0];
 		
 		
 		if (newValue > rightLimit) newValue = rightLimit;
@@ -7091,7 +7161,7 @@ My_VT100::
 cursorUp	(My_ScreenBufferPtr		inDataPtr)
 {
 	// the default value is 1 if there are no parameters
-	if (inDataPtr->emulator.parameterValues[0] < 1)
+	if (inDataPtr->emulator.argList[0] < 1)
 	{
 		if (inDataPtr->current.cursorY > inDataPtr->originRegionPtr->firstRow)
 		{
@@ -7104,7 +7174,7 @@ cursorUp	(My_ScreenBufferPtr		inDataPtr)
 	}
 	else
 	{
-		SInt16				newValue = inDataPtr->current.cursorY - inDataPtr->emulator.parameterValues[0];
+		SInt16				newValue = inDataPtr->current.cursorY - inDataPtr->emulator.argList[0];
 		My_ScreenRowIndex	rowIndex = 0;
 		
 		
@@ -7154,7 +7224,7 @@ void
 My_VT100::
 deviceStatusReport		(My_ScreenBufferPtr		inDataPtr)
 {
-	switch (inDataPtr->emulator.parameterValues[0])
+	switch (inDataPtr->emulator.argList[0])
 	{
 	case 5:
 		// report status using a DSR control sequence
@@ -7238,9 +7308,9 @@ inline void
 My_VT100::
 eraseInDisplay		(My_ScreenBufferPtr		inDataPtr)
 {
-	switch (inDataPtr->emulator.parameterValues[0])
+	switch (inDataPtr->emulator.argList[0])
 	{
-	case -1: // -1 means no parameter was given; the default value is 0
+	case kMy_ParamUndefined: // when nothing is given, the default value is 0
 	case 0:
 		bufferEraseFromCursorToEnd(inDataPtr);
 		break;
@@ -7270,9 +7340,9 @@ inline void
 My_VT100::
 eraseInLine		(My_ScreenBufferPtr		inDataPtr)
 {
-	switch (inDataPtr->emulator.parameterValues[0])
+	switch (inDataPtr->emulator.argList[0])
 	{
-	case -1: // -1 means no parameter was given; the default value is 0
+	case kMy_ParamUndefined: // when nothing is given, the default value is 0
 	case 0:
 		bufferEraseFromCursorColumnToLineEnd(inDataPtr);
 		break;
@@ -7305,14 +7375,14 @@ loadLEDs	(My_ScreenBufferPtr		inDataPtr)
 	register SInt16		i = 0;
 	
 	
-	for (i = 0; i <= inDataPtr->emulator.parameterEndIndex; ++i)
+	for (i = 0; i <= inDataPtr->emulator.argLastIndex; ++i)
 	{
-		if (inDataPtr->emulator.parameterValues[i] == -1)
+		if (kMy_ParamUndefined == inDataPtr->emulator.argList[i])
 		{
 			// no value; default is “all off”
 			highlightLED(inDataPtr, 0);
 		}
-		else if (inDataPtr->emulator.parameterValues[i] == 137)
+		else if (inDataPtr->emulator.argList[i] == 137)
 		{
 			// could decide to emulate the “ludicrous repeat rate” bug
 			// of the VT100, here; in combination with key click, this
@@ -7322,7 +7392,7 @@ loadLEDs	(My_ScreenBufferPtr		inDataPtr)
 		{
 			// a parameter of 1 means “LED 1 on”, 2 means “LED 2 on”,
 			// 3 means “LED 3 on”, 4 means “LED 4 on”; 0 means “all off”
-			highlightLED(inDataPtr, inDataPtr->emulator.parameterValues[i]/* LED # */);
+			highlightLED(inDataPtr, inDataPtr->emulator.argList[i]/* LED # */);
 		}
 	}
 }// My_VT100::loadLEDs
@@ -7340,17 +7410,17 @@ My_VT100::
 modeSetReset	(My_ScreenBufferPtr		inDataPtr,
 				 Boolean				inIsModeEnabled)
 {
-	switch (inDataPtr->emulator.parameterValues[0])
+	switch (inDataPtr->emulator.argList[0])
 	{
-	case -2: // DEC-private control sequence
+	case kMy_ParamPrivate: // DEC-private control sequence
 		{
 			register SInt16		i = 0;
 			Boolean				emulateDECOMBug = false;
 			
 			
-			for (i = 1/* skip the -2 parameter */; i <= inDataPtr->emulator.parameterEndIndex; ++i)
+			for (i = 1/* skip the meta-parameter */; i <= inDataPtr->emulator.argLastIndex; ++i)
 			{
-				switch (inDataPtr->emulator.parameterValues[i])
+				switch (inDataPtr->emulator.argList[i])
 				{
 				case 1:
 					// DECCKM (cursor-key mode)
@@ -7419,7 +7489,7 @@ modeSetReset	(My_ScreenBufferPtr		inDataPtr,
 				case 8: // DECARM (auto-repeating)
 				case 9: // DECINLM (interlace)
 				case 0: // error, ignored
-				case -1: // no value given (set and reset do not have default values)
+				case kMy_ParamUndefined: // no value given (set and reset do not have default values)
 				default:
 					// ???
 					break;
@@ -7473,7 +7543,7 @@ readCSIParameters	(My_ScreenBufferPtr		inDataPtr,
 	UInt32			result = 0;
 	UInt8 const*	bufferIterator = inBuffer;
 	Boolean			done = false;
-	SInt16&			terminalEndIndexRef = inDataPtr->emulator.parameterEndIndex;
+	SInt16&			terminalEndIndexRef = inDataPtr->emulator.argLastIndex;
 	
 	
 	for (; (false == done) && (bufferIterator != (inBuffer + inLength)); ++bufferIterator, ++result)
@@ -7494,7 +7564,7 @@ readCSIParameters	(My_ScreenBufferPtr		inDataPtr,
 			// parse numeric parameter
 			{
 				// rename this incredibly long expression, since it’s needed a lot here!
-				SInt16&		valueRef = inDataPtr->emulator.parameterValues[terminalEndIndexRef];
+				SInt16&		valueRef = inDataPtr->emulator.argList[terminalEndIndexRef];
 				
 				
 				if (valueRef < 0) valueRef = 0;
@@ -7514,7 +7584,7 @@ readCSIParameters	(My_ScreenBufferPtr		inDataPtr,
 			if (0 == result)
 			{
 				// DEC-private parameters
-				inDataPtr->emulator.parameterValues[terminalEndIndexRef++] = -2;
+				inDataPtr->emulator.argList[terminalEndIndexRef++] = kMy_ParamPrivate;
 			}
 			else
 			{
@@ -7528,7 +7598,7 @@ readCSIParameters	(My_ScreenBufferPtr		inDataPtr,
 			if (0 == result)
 			{
 				// secondary device attributes (technically VT220)
-				inDataPtr->emulator.parameterValues[terminalEndIndexRef++] = -3;
+				inDataPtr->emulator.argList[terminalEndIndexRef++] = kMy_ParamSecondaryDA;
 			}
 			else
 			{
@@ -7542,7 +7612,7 @@ readCSIParameters	(My_ScreenBufferPtr		inDataPtr,
 			if (0 == result)
 			{
 				// tertiary device attributes (technically VT420)
-				inDataPtr->emulator.parameterValues[terminalEndIndexRef++] = -4;
+				inDataPtr->emulator.argList[terminalEndIndexRef++] = kMy_ParamTertiaryDA;
 			}
 			else
 			{
@@ -7564,7 +7634,7 @@ readCSIParameters	(My_ScreenBufferPtr		inDataPtr,
 	//Console_WriteValue("parameters found", terminalEndIndexRef + 1);
 	//for (register SInt16 i = 0; i <= terminalEndIndexRef; ++i)
 	//{
-	//	Console_WriteValue("found post-CSI parameter", inDataPtr->emulator.parameterValues[i]);
+	//	Console_WriteValue("found post-CSI parameter", inDataPtr->emulator.argList[i]);
 	//}
 	
 	return result;
@@ -7581,8 +7651,8 @@ void
 My_VT100::
 reportTerminalParameters	(My_ScreenBufferPtr		inDataPtr)
 {
-	UInt16 const	kRequestType = (inDataPtr->emulator.parameterValues[0] != -1)
-									? inDataPtr->emulator.parameterValues[0]
+	UInt16 const	kRequestType = (kMy_ParamUndefined != inDataPtr->emulator.argList[0])
+									? inDataPtr->emulator.argList[0]
 									: 0/* default is a request, unsolicited reports mode */;
 	// these variable names are copied directly from the VT100 manual
 	// in the DECREQT section, to make it crystal clear what each one is;
@@ -7657,7 +7727,7 @@ inline void
 My_VT100::
 setTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 {
-	if (inDataPtr->emulator.parameterValues[0] < 0)
+	if (inDataPtr->emulator.argList[0] < 0)
 	{
 		// no top parameter given; default is top of screen
 		inDataPtr->customScrollingRegion.firstRow = inDataPtr->visibleBoundary.rows.firstRow;
@@ -7666,11 +7736,11 @@ setTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 	{
 		// parameter is the line number of the new first line of the scrolling region; the
 		// input is 1-based but internally it is a zero-based array index, so subtract one
-		if (0 == inDataPtr->emulator.parameterValues[0]) inDataPtr->emulator.parameterValues[0] = 1;
-		inDataPtr->customScrollingRegion.firstRow = inDataPtr->emulator.parameterValues[0] - 1;
+		if (0 == inDataPtr->emulator.argList[0]) inDataPtr->emulator.argList[0] = 1;
+		inDataPtr->customScrollingRegion.firstRow = inDataPtr->emulator.argList[0] - 1;
 	}
 	
-	if (inDataPtr->emulator.parameterValues[1] < 0)
+	if (inDataPtr->emulator.argList[1] < 0)
 	{
 		// no bottom parameter given; default is bottom of screen
 		inDataPtr->customScrollingRegion.lastRow = inDataPtr->visibleBoundary.rows.lastRow;
@@ -7682,9 +7752,9 @@ setTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 		UInt16		newValue = 0;
 		
 		
-		if (0 == inDataPtr->emulator.parameterValues[1]) inDataPtr->emulator.parameterValues[1] = 1;
+		if (0 == inDataPtr->emulator.argList[1]) inDataPtr->emulator.argList[1] = 1;
 		
-		newValue = inDataPtr->emulator.parameterValues[1] - 1;
+		newValue = inDataPtr->emulator.argList[1] - 1;
 		if (newValue > inDataPtr->visibleBoundary.rows.lastRow)
 		{
 			Console_Warning(Console_WriteLine, "emulator was given a scrolling region bottom row that is too large; truncating");
@@ -8135,7 +8205,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateCSI:
 		// each new CSI means a blank slate for parameters
-		clearEscapeSequenceParameters(inDataPtr);
+		inDataPtr->emulator.clearEscapeSequenceParameters();
 		break;
 	
 	case kStateCSIParamScan:
@@ -8164,15 +8234,15 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		// absolute cursor positioning
 		{
 			// both 0 and 1 are considered first row/column
-			SInt16				newX = (0 == inDataPtr->emulator.parameterValues[1])
+			SInt16				newX = (0 == inDataPtr->emulator.argList[1])
 										? 0
-										: (inDataPtr->emulator.parameterValues[1] != -1)
-											? inDataPtr->emulator.parameterValues[1] - 1
+										: (kMy_ParamUndefined != inDataPtr->emulator.argList[1])
+											? inDataPtr->emulator.argList[1] - 1
 											: 0/* default is home */;
-			My_ScreenRowIndex	newY = (0 == inDataPtr->emulator.parameterValues[0])
+			My_ScreenRowIndex	newY = (0 == inDataPtr->emulator.argList[0])
 										? 0
-										: (inDataPtr->emulator.parameterValues[0] != -1)
-											? inDataPtr->emulator.parameterValues[0] - 1
+										: (kMy_ParamUndefined != inDataPtr->emulator.argList[0])
+											? inDataPtr->emulator.argList[0] - 1
 											: 0/* default is home */;
 			
 			
@@ -8454,17 +8524,17 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			SInt16		i = 0;
 			
 			
-			while (i <= inDataPtr->emulator.parameterEndIndex)
+			while (i <= inDataPtr->emulator.argLastIndex)
 			{
 				SInt16		p = 0;
 				
 				
-				if (inDataPtr->emulator.parameterValues[inDataPtr->emulator.parameterEndIndex] < 0)
+				if (inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] < 0)
 				{
-					inDataPtr->emulator.parameterValues[inDataPtr->emulator.parameterEndIndex] = 0;
+					inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] = 0;
 				}
 				
-				p = inDataPtr->emulator.parameterValues[i];
+				p = inDataPtr->emulator.argList[i];
 				
 				// Note that a real VT100 will only understand 0-7 here.
 				// Other values are basically recognized because they are
@@ -8492,7 +8562,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						if (inDataPtr->emulator.supportsVariant(kPreferences_TagXTerm256ColorsEnabled))
 						{
 							//Console_WriteLine("request to set one of 256 background or foreground colors");
-							if (2 != (inDataPtr->emulator.parameterEndIndex - i))
+							if (2 != (inDataPtr->emulator.argLastIndex - i))
 							{
 								if (DebugInterface_LogsTerminalInputChar())
 								{
@@ -8502,8 +8572,8 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							else
 							{
 								Boolean const	kSetForeground = (38 == p);
-								SInt16 const	kParam2 = inDataPtr->emulator.parameterValues[i + 1];
-								SInt16 const	kParam3 = inDataPtr->emulator.parameterValues[i + 2];
+								SInt16 const	kParam2 = inDataPtr->emulator.argList[i + 1];
+								SInt16 const	kParam3 = inDataPtr->emulator.argList[i + 2];
 								SInt16 const	kColorParam = kParam3;
 								
 								
@@ -8564,12 +8634,12 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateTBC:
-		if (3 == inDataPtr->emulator.parameterValues[0])
+		if (3 == inDataPtr->emulator.argList[0])
 		{
 			// clear all tabs
 			tabStopClearAll(inDataPtr);
 		}
-		else if (0 >= inDataPtr->emulator.parameterValues[0])
+		else if (0 >= inDataPtr->emulator.argList[0])
 		{
 			// clear tab at current position
 			inDataPtr->tabSettings[inDataPtr->current.cursorX] = kMy_TabClear;
@@ -9020,14 +9090,14 @@ deleteCharacters	(My_ScreenBufferPtr		inDataPtr)
 	// “one character” is assumed if a parameter is zero, or there are no parameters,
 	// even though this is not explicitly stated in VT102 documentation
 	SInt16		i = 0;
-	UInt16		totalChars = (inDataPtr->emulator.parameterEndIndex < 0) ? 1 : 0;
+	UInt16		totalChars = (inDataPtr->emulator.argLastIndex < 0) ? 1 : 0;
 	
 	
-	for (i = 0; i <= inDataPtr->emulator.parameterEndIndex; ++i)
+	for (i = 0; i <= inDataPtr->emulator.argLastIndex; ++i)
 	{
-		if (inDataPtr->emulator.parameterValues[i] > 0)
+		if (inDataPtr->emulator.argList[i] > 0)
 		{
-			totalChars += inDataPtr->emulator.parameterValues[i];
+			totalChars += inDataPtr->emulator.argList[i];
 		}
 		else
 		{
@@ -9076,15 +9146,15 @@ deleteLines		(My_ScreenBufferPtr		inDataPtr)
 		// even though this is not explicitly stated in VT102 documentation
 		My_ScreenBufferLineList::iterator	lineIterator;
 		SInt16								i = 0;
-		UInt16								totalLines = (inDataPtr->emulator.parameterEndIndex < 0) ? 1 : 0;
+		UInt16								totalLines = (inDataPtr->emulator.argLastIndex < 0) ? 1 : 0;
 		
 		
 		locateCursorLine(inDataPtr, lineIterator);
-		for (i = 0; i <= inDataPtr->emulator.parameterEndIndex; ++i)
+		for (i = 0; i <= inDataPtr->emulator.argLastIndex; ++i)
 		{
-			if (inDataPtr->emulator.parameterValues[i] > 0)
+			if (inDataPtr->emulator.argList[i] > 0)
 			{
-				totalLines += inDataPtr->emulator.parameterValues[i];
+				totalLines += inDataPtr->emulator.argList[i];
 			}
 			else
 			{
@@ -9114,15 +9184,15 @@ insertLines		(My_ScreenBufferPtr		inDataPtr)
 		// even though this is not explicitly stated in VT102 documentation
 		My_ScreenBufferLineList::iterator	lineIterator;
 		SInt16								i = 0;
-		UInt16								totalLines = (inDataPtr->emulator.parameterEndIndex < 0) ? 1 : 0;
+		UInt16								totalLines = (inDataPtr->emulator.argLastIndex < 0) ? 1 : 0;
 		
 		
 		locateCursorLine(inDataPtr, lineIterator);
-		for (i = 0; i <= inDataPtr->emulator.parameterEndIndex; ++i)
+		for (i = 0; i <= inDataPtr->emulator.argLastIndex; ++i)
 		{
-			if (inDataPtr->emulator.parameterValues[i] > 0)
+			if (inDataPtr->emulator.argList[i] > 0)
 			{
-				totalLines += inDataPtr->emulator.parameterValues[i];
+				totalLines += inDataPtr->emulator.argList[i];
 			}
 			else
 			{
@@ -9148,14 +9218,14 @@ loadLEDs	(My_ScreenBufferPtr		inDataPtr)
 	SInt16		i = 0;
 	
 	
-	for (i = 0; i <= inDataPtr->emulator.parameterEndIndex; ++i)
+	for (i = 0; i <= inDataPtr->emulator.argLastIndex; ++i)
 	{
 		// a parameter of 1 means “LED 1 on”, 0 means “LED 1 off”
-		if (0 == inDataPtr->emulator.parameterValues[i])
+		if (0 == inDataPtr->emulator.argList[i])
 		{
 			highlightLED(inDataPtr, 0/* 0 means “all off” */);
 		}
-		else if (1 == inDataPtr->emulator.parameterValues[i])
+		else if (1 == inDataPtr->emulator.argList[i])
 		{
 			highlightLED(inDataPtr, 1/* LED # */);
 		}
@@ -9309,9 +9379,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			Boolean		printScreen = false;
 			
 			
-			if (inDataPtr->emulator.parameterEndIndex >= 0)
+			if (inDataPtr->emulator.argLastIndex >= 0)
 			{
-				switch (inDataPtr->emulator.parameterValues[0])
+				switch (inDataPtr->emulator.argList[0])
 				{
 				case 5:
 					// printer controller (print lines without necessarily displaying them);
@@ -9330,11 +9400,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					printScreen = true;
 					break;
 				
-				case -2:
+				case kMy_ParamPrivate:
 					// private parameters (e.g. ESC [ ? 5 i)
-					if (inDataPtr->emulator.parameterEndIndex >= 1)
+					if (inDataPtr->emulator.argLastIndex >= 1)
 					{
-						switch (inDataPtr->emulator.parameterValues[1])
+						switch (inDataPtr->emulator.argList[1])
 						{
 						case 5:
 							// auto-print (print lines that are also displayed)
@@ -9358,7 +9428,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							if (DebugInterface_LogsTerminalInputChar())
 							{
 								Console_Warning(Console_WriteValue, "VT102 media copy did not recognize ?-parameter",
-												inDataPtr->emulator.parameterValues[1]);
+												inDataPtr->emulator.argList[1]);
 							}
 							break;
 						}
@@ -9415,9 +9485,9 @@ inline void
 My_VT220::
 compatibilityLevel		(My_ScreenBufferPtr		inDataPtr)
 {
-	if (inDataPtr->emulator.parameterEndIndex >= 0)
+	if (inDataPtr->emulator.argLastIndex >= 0)
 	{
-		switch (inDataPtr->emulator.parameterValues[0])
+		switch (inDataPtr->emulator.argList[0])
 		{
 		case 61:
 			// VT100 mode
@@ -9426,12 +9496,12 @@ compatibilityLevel		(My_ScreenBufferPtr		inDataPtr)
 		
 		case 62:
 			// VT200 mode
-			if (inDataPtr->emulator.parameterEndIndex >= 1)
+			if (inDataPtr->emulator.argLastIndex >= 1)
 			{
 				Boolean		isEightBit = true;
 				
 				
-				switch (inDataPtr->emulator.parameterValues[1])
+				switch (inDataPtr->emulator.argList[1])
 				{
 				case 0:
 				case 2:
@@ -9445,7 +9515,7 @@ compatibilityLevel		(My_ScreenBufferPtr		inDataPtr)
 				
 				default:
 					// ???
-					Console_Warning(Console_WriteValue, "VT220 in DECSCL/VT200 mode did not expect parameter", inDataPtr->emulator.parameterValues[1]);
+					Console_Warning(Console_WriteValue, "VT220 in DECSCL/VT200 mode did not expect parameter", inDataPtr->emulator.argList[1]);
 					break;
 				}
 				// UNIMPLEMENTED
@@ -9454,7 +9524,7 @@ compatibilityLevel		(My_ScreenBufferPtr		inDataPtr)
 		
 		default:
 			// ???
-			Console_Warning(Console_WriteValue, "VT220 in DECSCL mode did not expect parameter", inDataPtr->emulator.parameterValues[0]);
+			Console_Warning(Console_WriteValue, "VT220 in DECSCL mode did not expect parameter", inDataPtr->emulator.argList[0]);
 			break;
 		}
 	}
@@ -9707,11 +9777,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			Boolean		isSecondary = false;
 			
 			
-			if (inDataPtr->emulator.parameterEndIndex >= 0)
+			if (inDataPtr->emulator.argLastIndex >= 0)
 			{
-				switch (inDataPtr->emulator.parameterValues[0])
+				switch (inDataPtr->emulator.argList[0])
 				{
-				case -3:
+				case kMy_ParamSecondaryDA:
 					isSecondary = true;
 					break;
 				
@@ -9756,15 +9826,15 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		}
 		else
 		{
-			if (inDataPtr->emulator.parameterEndIndex >= 0)
+			if (inDataPtr->emulator.argLastIndex >= 0)
 			{
-				switch (inDataPtr->emulator.parameterValues[0])
+				switch (inDataPtr->emulator.argList[0])
 				{
-				case -2:
+				case kMy_ParamPrivate:
 					// specific report parameters (e.g. ESC [ ? 1 5 n)
-					if (inDataPtr->emulator.parameterEndIndex >= 1)
+					if (inDataPtr->emulator.argLastIndex >= 1)
 					{
-						switch (inDataPtr->emulator.parameterValues[1])
+						switch (inDataPtr->emulator.argList[1])
 						{
 						case 15:
 							// printer status request
@@ -9786,7 +9856,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							if (DebugInterface_LogsTerminalInputChar())
 							{
 								Console_Warning(Console_WriteValue, "VT220 device status report did not recognize ?-parameter",
-												inDataPtr->emulator.parameterValues[1]);
+												inDataPtr->emulator.argList[1]);
 							}
 							break;
 						}
@@ -10003,9 +10073,9 @@ cursorBackwardTabulation	(My_ScreenBufferPtr		inDataPtr)
 	SInt16		tabCount = 1;
 	
 	
-	if (-1 != inDataPtr->emulator.parameterValues[0])
+	if (kMy_ParamUndefined != inDataPtr->emulator.argList[0])
 	{
-		tabCount = inDataPtr->emulator.parameterValues[0];
+		tabCount = inDataPtr->emulator.argList[0];
 	}
 	
 	for (SInt16 i = 0; i < tabCount; ++i)
@@ -10058,9 +10128,9 @@ cursorForwardTabulation		(My_ScreenBufferPtr		inDataPtr)
 	SInt16		tabCount = 1;
 	
 	
-	if (-1 != inDataPtr->emulator.parameterValues[0])
+	if (kMy_ParamUndefined != inDataPtr->emulator.argList[0])
 	{
-		tabCount = inDataPtr->emulator.parameterValues[0];
+		tabCount = inDataPtr->emulator.argList[0];
 	}
 	
 	for (SInt16 i = 0; i < tabCount; ++i)
@@ -10088,13 +10158,13 @@ cursorNextLine		(My_ScreenBufferPtr		inDataPtr)
 	My_ScreenRowIndex	newY = inDataPtr->current.cursorY;
 	
 	
-	if (-1 == inDataPtr->emulator.parameterValues[0])
+	if (kMy_ParamUndefined == inDataPtr->emulator.argList[0])
 	{
 		++newY;
 	}
 	else
 	{
-		newY += inDataPtr->emulator.parameterValues[0];
+		newY += inDataPtr->emulator.argList[0];
 	}
 	
 	// the new values are not checked for violation of constraints
@@ -10122,13 +10192,13 @@ cursorPreviousLine		(My_ScreenBufferPtr		inDataPtr)
 	My_ScreenRowIndex	newY = inDataPtr->current.cursorY;
 	
 	
-	if (-1 == inDataPtr->emulator.parameterValues[0])
+	if (kMy_ParamUndefined == inDataPtr->emulator.argList[0])
 	{
 		--newY;
 	}
 	else
 	{
-		newY -= inDataPtr->emulator.parameterValues[0];
+		newY -= inDataPtr->emulator.argList[0];
 	}
 	
 	// the new values are not checked for violation of constraints
@@ -10153,12 +10223,12 @@ void
 My_XTerm::
 deleteCharacters	(My_ScreenBufferPtr		inDataPtr)
 {
-	SInt16		characterCount = inDataPtr->emulator.parameterValues[0];
+	SInt16		characterCount = inDataPtr->emulator.argList[0];
 	
 	
 	if (0 != characterCount)
 	{
-		if (-1 == characterCount)
+		if (kMy_ParamUndefined == characterCount)
 		{
 			characterCount = 1;
 		}
@@ -10186,20 +10256,20 @@ void
 My_XTerm::
 horizontalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
 {
-	SInt16 const		kParam0 = inDataPtr->emulator.parameterValues[0];
-	SInt16 const		kParam1 = inDataPtr->emulator.parameterValues[1];
+	SInt16 const		kParam0 = inDataPtr->emulator.argList[0];
+	SInt16 const		kParam1 = inDataPtr->emulator.argList[1];
 	SInt16				newX = 0;
 	My_ScreenRowIndex	newY = inDataPtr->current.cursorY;
 	
 	
 	// in the following definitions, 0 and 1 are considered the same number
-	if (-1 == kParam1)
+	if (kMy_ParamUndefined == kParam1)
 	{
 		// only one parameter was given, so it is the column and
 		// the cursor row does not change
 		newX = (0 == kParam0)
 				? 0
-				: (-1 != kParam0)
+				: (kMy_ParamUndefined != kParam0)
 					? kParam0 - 1
 					: 0/* default is column 1 in current row */;
 	}
@@ -10208,7 +10278,7 @@ horizontalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
 		// two parameters, so the order changes to (row, column)
 		newY = (0 == kParam0)
 				? 0
-				: (-1 != kParam0)
+				: (kMy_ParamUndefined != kParam0)
 					? kParam0 - 1
 					: inDataPtr->current.cursorY/* default is current cursor row */;
 		newX = (0 == kParam1)
@@ -10238,7 +10308,7 @@ void
 My_XTerm::
 insertBlankCharacters	(My_ScreenBufferPtr		inDataPtr)
 {
-	SInt16		characterCount = inDataPtr->emulator.parameterValues[0];
+	SInt16		characterCount = inDataPtr->emulator.argList[0];
 	
 	
 	if (0 != characterCount)
@@ -10247,7 +10317,7 @@ insertBlankCharacters	(My_ScreenBufferPtr		inDataPtr)
 		My_ScreenRowIndex	preWriteCursorY = inDataPtr->current.cursorY;
 		
 		
-		if (-1 == characterCount)
+		if (kMy_ParamUndefined == characterCount)
 		{
 			characterCount = 1;
 		}
@@ -10298,10 +10368,10 @@ void
 My_XTerm::
 scrollDown	(My_ScreenBufferPtr		inDataPtr)
 {
-	SInt16		lineCount = inDataPtr->emulator.parameterValues[0];
+	SInt16		lineCount = inDataPtr->emulator.argList[0];
 	
 	
-	if (-1 == lineCount)
+	if (kMy_ParamUndefined == lineCount)
 	{
 		lineCount = 1;
 	}
@@ -10327,10 +10397,10 @@ void
 My_XTerm::
 scrollUp	(My_ScreenBufferPtr		inDataPtr)
 {
-	SInt16		lineCount = inDataPtr->emulator.parameterValues[0];
+	SInt16		lineCount = inDataPtr->emulator.argList[0];
 	
 	
-	if (-1 == lineCount)
+	if (kMy_ParamUndefined == lineCount)
 	{
 		lineCount = 1;
 	}
@@ -10763,20 +10833,20 @@ void
 My_XTerm::
 verticalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
 {
-	SInt16 const		kParam0 = inDataPtr->emulator.parameterValues[0];
-	SInt16 const		kParam1 = inDataPtr->emulator.parameterValues[1];
+	SInt16 const		kParam0 = inDataPtr->emulator.argList[0];
+	SInt16 const		kParam1 = inDataPtr->emulator.argList[1];
 	SInt16				newX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex	newY = 0;
 	
 	
 	// in the following definitions, 0 and 1 are considered the same number
-	if (-1 == kParam1)
+	if (kMy_ParamUndefined == kParam1)
 	{
 		// only one parameter was given, so it is the row and
 		// the cursor column does not change
 		newY = (0 == kParam0)
 				? 0
-				: (-1 != kParam0)
+				: (kMy_ParamUndefined != kParam0)
 					? kParam0 - 1
 					: 0/* default is row 1 in current column */;
 	}
@@ -10785,7 +10855,7 @@ verticalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
 		// two parameters, giving (row, column)
 		newY = (0 == kParam0)
 				? 0
-				: (-1 != kParam0)
+				: (kMy_ParamUndefined != kParam0)
 					? kParam0 - 1
 					: 0/* default is the home cursor row */;
 		newX = (0 == kParam1)
@@ -11754,27 +11824,6 @@ changeNotifyForTerminal		(My_ScreenBufferConstPtr	inPtr,
 
 
 /*!
-Responds to a CSI (control sequence inducer) by reinitializing
-all parameter values and resetting the current parameter index
-to 0.
-
-(3.0)
-*/
-void
-clearEscapeSequenceParameters	(My_ScreenBufferPtr		inDataPtr)
-{
-	SInt16		parameterIndex = kMy_MaximumANSIParameters;
-	
-	
-	while (--parameterIndex >= 0)
-	{
-		inDataPtr->emulator.parameterValues[parameterIndex] = -1;
-	}
-	inDataPtr->emulator.parameterEndIndex = 0;
-}// clearEscapeSequenceParameters
-
-
-/*!
 Restores the last saved cursor position and
 attribute settings.  See cursorSave() to ensure
 this function does the opposite.
@@ -12191,7 +12240,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				goto ShortCut;
 			
 			case 0x9B: /* csi */		//same as ESC [ 
-				clearEscapeSequenceParameters(inDataPtr);			
+				inDataPtr->emulator.clearEscapeSequenceParameters();
 				escflg = 2;			
 				++c;			//CCP			
 				--ctr;					
@@ -12348,7 +12397,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				if (inDataPtr->modeANSIEnabled)
 				{
 					// CSI (control sequence inducer)
-					clearEscapeSequenceParameters(inDataPtr);
+					inDataPtr->emulator.clearEscapeSequenceParameters();
 					++escflg;
 				}
 				break;
@@ -12560,8 +12609,8 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				// parse numeric parameter
 				{
 					// rename this incredibly long expression, since it’s needed a lot here!
-					SInt16&		valueRef = inDataPtr->emulator.parameterValues
-											[inDataPtr->emulator.parameterEndIndex];
+					SInt16&		valueRef = inDataPtr->emulator.argList
+											[inDataPtr->emulator.argLastIndex];
 					
 					
 					if (valueRef < 0) valueRef = 0;
@@ -12579,12 +12628,12 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			
 			case '?':
 				// DEC-private control sequence (see 'h' and 'l', that respectively do mode set/reset)
-				inDataPtr->emulator.parameterValues[(inDataPtr->emulator.parameterEndIndex)++] = -2;
+				inDataPtr->emulator.argList[(inDataPtr->emulator.argLastIndex)++] = kMy_ParamPrivate;
 				break;
 			
 			case ';':
 				// parameter separator
-				++(inDataPtr->emulator.parameterEndIndex);
+				++(inDataPtr->emulator.argLastIndex);
 				break;
 			
 			case 'A':
@@ -12607,15 +12656,15 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			case 'H':
 				// absolute cursor positioning
 				{
-					SInt16				newX = (0 == inDataPtr->emulator.parameterValues[1])
+					SInt16				newX = (0 == inDataPtr->emulator.argList[1])
 												? 0
-												: (inDataPtr->emulator.parameterValues[1] != -1)
-													? inDataPtr->emulator.parameterValues[1] - 1
+												: (inDataPtr->emulator.argList[1] != kMy_ParamUndefined)
+													? inDataPtr->emulator.argList[1] - 1
 													: 0/* default is home */;
-					My_ScreenRowIndex	newY = (0 == inDataPtr->emulator.parameterValues[0])
+					My_ScreenRowIndex	newY = (0 == inDataPtr->emulator.argList[0])
 												? 0
-												: (inDataPtr->emulator.parameterValues[0] != -1)
-													? inDataPtr->emulator.parameterValues[0] - 1
+												: (inDataPtr->emulator.argList[0] != kMy_ParamUndefined)
+													? inDataPtr->emulator.argList[0] - 1
 													: 0/* default is home */;
 					
 					
@@ -12630,7 +12679,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				goto ShortCut;				
 		   
 			case 'i': // media copy
-				//if (inDataPtr->emulator.parameterValues[inDataPtr->emulator.parameterEndIndex] == 5)
+				//if (inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] == 5)
 				//{		
 				//	TelnetPrinting_Begin(&inDataPtr->printing);
 				//}
@@ -12651,17 +12700,17 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					SInt16		i = 0;
 					
 					
-					while (i <= inDataPtr->emulator.parameterEndIndex)
+					while (i <= inDataPtr->emulator.argLastIndex)
 					{
 						SInt16		p = 0;
 						
 						
-						if (inDataPtr->emulator.parameterValues[inDataPtr->emulator.parameterEndIndex] < 0)
+						if (inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] < 0)
 						{
-							inDataPtr->emulator.parameterValues[inDataPtr->emulator.parameterEndIndex] = 0;
+							inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] = 0;
 						}
 						
-						p = inDataPtr->emulator.parameterValues[i];
+						p = inDataPtr->emulator.argList[i];
 						
 						// Note that a real VT100 will only understand 0-7 here.
 						// Other values are basically recognized because they are
@@ -12693,7 +12742,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			case 't':
 				// XTerm window modification and state reporting
 				{
-					SInt16 const&	instruction = inDataPtr->emulator.parameterValues[0];
+					SInt16 const&	instruction = inDataPtr->emulator.argList[0];
 					
 					
 					switch (instruction)
@@ -12718,7 +12767,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			#if 0 // TEMP
 				{
 					WindowRef		window = TerminalView_GetWindow(inDataPtr->view);
-					SInt16 const&	instruction = inDataPtr->emulator.parameterValues[0];
+					SInt16 const&	instruction = inDataPtr->emulator.argList[0];
 					
 					
 					// determine which modifier was received
@@ -12731,10 +12780,10 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 						// move window (X, Y coordinates are 2nd and 3rd parameters, respectively);
 						// since parameters are expected, first assert that exactly the right number
 						// of values was given (otherwise, the input data may be bogus)
-						if (inDataPtr->emulator.parameterEndIndex == 2)
+						if (inDataPtr->emulator.argLastIndex == 2)
 						{
-							SInt16		pixelLeft = inDataPtr->emulator.parameterValues[1];
-							SInt16		pixelTop = inDataPtr->emulator.parameterValues[2];
+							SInt16		pixelLeft = inDataPtr->emulator.argList[1];
+							SInt16		pixelTop = inDataPtr->emulator.argList[2];
 							Rect		screenBounds;
 							
 							
@@ -12759,10 +12808,10 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 						// resize terminal area (width and height in *pixels* are 2nd and 3rd parameters, respectively);
 						// since parameters are expected, first assert that exactly the right number
 						// of values was given (otherwise, the input data may be bogus)
-						if (inDataPtr->emulator.parameterEndIndex == 2)
+						if (inDataPtr->emulator.argLastIndex == 2)
 						{
-							SInt16		pixelWidth = inDataPtr->emulator.parameterValues[1];
-							SInt16		pixelHeight = inDataPtr->emulator.parameterValues[2];
+							SInt16		pixelWidth = inDataPtr->emulator.argList[1];
+							SInt16		pixelHeight = inDataPtr->emulator.argList[2];
 							UInt16		columns = 0;
 							UInt16		rows = 0;
 							
@@ -12815,10 +12864,10 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 						// resize terminal area (width and height in *characters* are 2nd and 3rd parameters, respectively);
 						// since parameters are expected, first assert that exactly the right number
 						// of values was given (otherwise, the input data may be bogus)
-						if (inDataPtr->emulator.parameterEndIndex == 2)
+						if (inDataPtr->emulator.argLastIndex == 2)
 						{
-							SInt16	columns = inDataPtr->emulator.parameterValues[1];
-							SInt16  rows = inDataPtr->emulator.parameterValues[2];
+							SInt16	columns = inDataPtr->emulator.argList[1];
+							SInt16  rows = inDataPtr->emulator.argList[2];
 							
 							
 							// first, constrain the values to something reasonable;
@@ -12840,10 +12889,10 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 						// zoom window (2nd parameter of 0 means return from maximized state, parameter of 1 means Maximize);
 						// since parameters are expected, first assert that exactly the right number
 						// of values was given (otherwise, the input data may be bogus)
-						if (inDataPtr->emulator.parameterEndIndex == 1)
+						if (inDataPtr->emulator.argLastIndex == 1)
 						{
-							//Boolean		maximize = (inDataPtr->emulator.parameterValues[1] == 1);
-							//WindowPartCode	inOrOut = (inDataPtr->emulator.parameterValues[1] == 0)
+							//Boolean		maximize = (inDataPtr->emulator.argList[1] == 1);
+							//WindowPartCode	inOrOut = (inDataPtr->emulator.argList[1] == 0)
 							//								? inZoomOut : inZoomIn;
 							
 							
@@ -12884,7 +12933,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					default:
 						// any number greater than or equal to 24 is a request to
 						// change the number of terminal lines to that amount
-						(Terminal_Result)setVisibleRowCount(inDataPtr, inDataPtr->emulator.parameterValues[0]);
+						(Terminal_Result)setVisibleRowCount(inDataPtr, inDataPtr->emulator.argList[0]);
 						changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScreenSize, inDataPtr->selfRef/* context */);
 						break;
 					}
@@ -12911,11 +12960,11 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					
 					
 					locateCursorLine(inDataPtr, cursorLineIterator);
-					if (inDataPtr->emulator.parameterValues[0] < 1)
+					if (inDataPtr->emulator.argList[0] < 1)
 					{
-						inDataPtr->emulator.parameterValues[0] = 1;
+						inDataPtr->emulator.argList[0] = 1;
 					}
-					bufferInsertBlankLines(inDataPtr, inDataPtr->emulator.parameterValues[0], cursorLineIterator, kMy_AttributeRuleInitialize);
+					bufferInsertBlankLines(inDataPtr, inDataPtr->emulator.argList[0], cursorLineIterator, kMy_AttributeRuleInitialize);
 				}
 				goto ShortCut;				
 			
@@ -12925,24 +12974,24 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					
 					
 					locateCursorLine(inDataPtr, cursorLineIterator);
-					if (inDataPtr->emulator.parameterValues[0] < 1)
+					if (inDataPtr->emulator.argList[0] < 1)
 					{
-						inDataPtr->emulator.parameterValues[0] = 1;
+						inDataPtr->emulator.argList[0] = 1;
 					}
-					bufferRemoveLines(inDataPtr, inDataPtr->emulator.parameterValues[0], cursorLineIterator, kMy_AttributeRuleCopyLastLine);
+					bufferRemoveLines(inDataPtr, inDataPtr->emulator.argList[0], cursorLineIterator, kMy_AttributeRuleCopyLastLine);
 				}
 				goto ShortCut;
 			
 			case '@':
-				if (inDataPtr->emulator.parameterValues[0] < 1)
-					inDataPtr->emulator.parameterValues[0] = 1;
-				bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, inDataPtr->emulator.parameterValues[0]/* number of blank characters */);
+				if (inDataPtr->emulator.argList[0] < 1)
+					inDataPtr->emulator.argList[0] = 1;
+				bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, inDataPtr->emulator.argList[0]/* number of blank characters */);
 				goto ShortCut;
 			
 			case 'P':
-				if (inDataPtr->emulator.parameterValues[0] < 1)
-					inDataPtr->emulator.parameterValues[0] = 1;
-				bufferRemoveCharactersAtCursorColumn(inDataPtr, inDataPtr->emulator.parameterValues[0]);
+				if (inDataPtr->emulator.argList[0] < 1)
+					inDataPtr->emulator.argList[0] = 1;
+				bufferRemoveCharactersAtCursorColumn(inDataPtr, inDataPtr->emulator.argList[0]);
 				goto ShortCut;				
 			
 			case 'r':
@@ -12960,10 +13009,10 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				goto ShortCut;				
 			
 			case 'g':
-				if (inDataPtr->emulator.parameterValues[0] == 3)
+				if (inDataPtr->emulator.argList[0] == 3)
 				  /* clear all tabs */
 					tabStopClearAll(inDataPtr);
-				else if (inDataPtr->emulator.parameterValues[0] <= 0)
+				else if (inDataPtr->emulator.argList[0] <= 0)
 				  /* clear tab at current position */
 					inDataPtr->tabSettings[inDataPtr->current.cursorX] = kMy_TabClear;
 				goto ShortCut;				
@@ -13927,7 +13976,7 @@ resetTerminal   (My_ScreenBufferPtr  inDataPtr)
 {
 	inDataPtr->customScrollingRegion = inDataPtr->visibleBoundary.rows;
 	assertScrollingRegion(inDataPtr);
-	inDataPtr->emulator.parameterEndIndex = 0;
+	inDataPtr->emulator.argLastIndex = 0;
 	My_VT100::ansiMode(inDataPtr);
 	//inDataPtr->modeAutoWrap = false; // 3.0 - do not touch the auto-wrap setting
 	inDataPtr->modeCursorKeysForApp = false;
