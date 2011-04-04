@@ -372,6 +372,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20110403': [
         'Fixed terminal window keyboard rotation on Mac OS X 10.6 so that only windows in the active Space can be chosen.',
+        'Fixed VT220 to correctly parse the software compatibility level sequence.',
     ],
     '20110331': [
         'Fixed Preferences window Sessions pane Data Flow tab to save and restore the Paste Buffering setting correctly.',

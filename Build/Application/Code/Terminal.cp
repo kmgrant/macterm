@@ -213,6 +213,7 @@ enum
 	kMy_ParserStateSeenESCLeftSqBracketParamsZ	= 'E[;Z',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsAt	= 'E[;@',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsBackquote	= 'E[;`',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsQuotes		= 'E[;\"',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParen				= 'ESC(',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParenA			= 'ES(A',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParenB			= 'ES(B',	//!< generic state used to define emulator-specific states, below
@@ -1315,6 +1316,7 @@ public:
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
+	static void		compatibilityLevel					(My_ScreenBufferPtr);
 	static void		deviceStatusReportKeyboardLanguage	(My_ScreenBufferPtr);
 	static void		deviceStatusReportPrinterPort		(My_ScreenBufferPtr);
 	static void		deviceStatusReportUserDefinedKeys	(My_ScreenBufferPtr);
@@ -1326,6 +1328,8 @@ protected:
 	// the programming manual of the original terminal.
 	enum State
 	{
+		kStateDECSCLHeader		= kMy_ParserStateSeenESCLeftSqBracketParamsQuotes,	//!< compatibility level, header (need 'p' to finish)
+		kStateDECSCL			= 'VSCL',								//!< compatibility level
 		kStateLS1R				= kMy_ParserStateSeenESCTilde,			//!< lock shift G1, right side
 		kStateLS2				= kMy_ParserStateSeenESCn,				//!< lock shift G2, left side
 		kStateLS2R				= kMy_ParserStateSeenESCRightBrace,		//!< lock shift G2, right side
@@ -6232,6 +6236,10 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsBackquote;
 			break;
 		
+		case '\"':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsQuotes;
+			break;
+		
 		default:
 			// continue looking for parameters until a known terminator is found
 			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParams;
@@ -9398,6 +9406,62 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 
 
 /*!
+Handles the VT220 'DECSCL' sequence.  See the VT220 manual for
+complete details.
+
+(4.0)
+*/
+inline void
+My_VT220::
+compatibilityLevel		(My_ScreenBufferPtr		inDataPtr)
+{
+	if (inDataPtr->emulator.parameterEndIndex >= 0)
+	{
+		switch (inDataPtr->emulator.parameterValues[0])
+		{
+		case 61:
+			// VT100 mode
+			// UNIMPLEMENTED
+			break;
+		
+		case 62:
+			// VT200 mode
+			if (inDataPtr->emulator.parameterEndIndex >= 1)
+			{
+				Boolean		isEightBit = true;
+				
+				
+				switch (inDataPtr->emulator.parameterValues[1])
+				{
+				case 0:
+				case 2:
+					// 8-bit (also the same as having no 2nd parameter)
+					break;
+				
+				case 1:
+					// 7-bit
+					isEightBit = false;
+					break;
+				
+				default:
+					// ???
+					Console_Warning(Console_WriteValue, "VT220 in DECSCL/VT200 mode did not expect parameter", inDataPtr->emulator.parameterValues[1]);
+					break;
+				}
+				// UNIMPLEMENTED
+			}
+			break;
+		
+		default:
+			// ???
+			Console_Warning(Console_WriteValue, "VT220 in DECSCL mode did not expect parameter", inDataPtr->emulator.parameterValues[0]);
+			break;
+		}
+	}
+}// My_VT220::compatibilityLevel
+
+
+/*!
 Handles the VT220 'DSR' sequence for the keyboard language.
 See the VT220 manual for complete details.
 
@@ -9555,8 +9619,43 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
 	
 	
-	// INCOMPLETE
-	outHandled = false;
+	// if no interrupt has occurred, use the current state and
+	// the available data to determine the next logical state
+	switch (inNowOutNext.first)
+	{
+	case My_VT100::kStateCSIParamScan:
+		// look for a terminating character (anything not legal in a parameter)
+		switch (*inBuffer)
+		{
+		case '\"':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsQuotes;
+			break;
+		
+		default:
+			outHandled = false;
+			break;
+		}
+		break;
+	
+	case kMy_ParserStateSeenESCLeftSqBracketParamsQuotes:
+		// the weird double-terminator case ("p) is handled by using two states
+		switch (*inBuffer)
+		{
+		case 'p':
+			inNowOutNext.second = kStateDECSCL;
+			break;
+		
+		default:
+			outHandled = false;
+			break;
+		}
+		break;
+	
+	default:
+		outHandled = false;
+		break;
+	}
+	
 	if (false == outHandled)
 	{
 		result = invokeEmulatorStateDeterminantProc
@@ -9706,6 +9805,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				outHandled = false;
 			}
 		}
+		break;
+	
+	case kStateDECSCL:
+		// set terminal compatibility level
+		My_VT220::compatibilityLevel(inDataPtr);
 		break;
 	
 	case kStateLS1R:
