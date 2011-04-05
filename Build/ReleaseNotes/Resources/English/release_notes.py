@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110404',
     '20110403',
     '20110331',
     '20110330',
@@ -370,6 +371,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110404': [
+        'VT220 sequences for selecting 7-bit or 8-bit responses ("DECSCL", "S7C1T", "S8C1T") are now implemented.',
+    ],
     '20110403': [
         'Fixed terminal window keyboard rotation on Mac OS X 10.6 so that only windows in the active Space can be chosen.',
         'Fixed VT220 to correctly parse the software compatibility level sequence.',

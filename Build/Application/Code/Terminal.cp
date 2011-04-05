@@ -342,6 +342,9 @@ enum
 	kMy_ParserStateSeenESCGreaterThan			= 'ESC>',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightBrace			= 'ESC}',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCVerticalBar			= 'ESC|',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCSpace					= 'ESC ',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCSpaceF				= 'ES F',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCSpaceG				= 'ES G',	//!< generic state used to define emulator-specific states, below
 	// note that a real backslash is a very common escape character, and
 	// since state codes tend to be printed, it would screw up the output;
 	// so the convention is broken in this case, and "B/" is used instead
@@ -910,6 +913,21 @@ public:
 	void
 	clearEscapeSequenceParameters ();
 	
+	void
+	initializeParserStateStack ();
+	
+	void
+	reset ();
+	
+	void
+	sendEscape	(SessionRef, void const*, size_t);
+	
+	void
+	set8Bit		(Boolean);
+	
+	void
+	set8BitNever	();
+	
 	Boolean
 	supportsVariant		(Preferences_Tag);
 	
@@ -937,6 +955,10 @@ protected:
 	
 	My_EmulatorStateTransitionProcPtr
 	returnStateTransitionHandler	(Terminal_Emulator);
+
+private:
+	Boolean								eightBitTransmission;	//!< if true, any sequences returned to the listening session should use 8-bit codes only
+	Boolean								sevenBitsLocked;		//!< if true, the emulator can never be set to 8-bit; useful in weird emulation corner cases
 };
 typedef My_Emulator*	My_EmulatorPtr;
 
@@ -1384,6 +1406,8 @@ protected:
 		kStateLS2R				= kMy_ParserStateSeenESCRightBrace,		//!< lock shift G2, right side
 		kStateLS3				= kMy_ParserStateSeenESCo,				//!< lock shift G3, left side
 		kStateLS3R				= kMy_ParserStateSeenESCVerticalBar,	//!< lock shift G3, right side
+		kStateS7C1T				= kMy_ParserStateSeenESCSpaceF,			//!< direct terminal to emit 7-bit sequences only (CSI = "ESC[")
+		kStateS8C1T				= kMy_ParserStateSeenESCSpaceG,			//!< direct terminal to emit 8-bit sequences only (CSI = the CSI C1 code)
 		kStateSCSG0DECSupplemental	= kMy_ParserStateSeenESCLeftParenLessThan,	//!< select character set for G0, DEC supplemental
 		kStateSCSG0Dutch		= kMy_ParserStateSeenESCLeftParen4,		//!< select character set for G0, Dutch
 		kStateSCSG0Finnish1		= kMy_ParserStateSeenESCLeftParenC,		//!< select character set for G0, Finnish
@@ -1547,7 +1571,6 @@ void						getBufferOffsetCell						(My_ScreenBufferPtr, size_t, UInt16, UInt16&,
 inline My_LineIteratorPtr	getLineIterator							(Terminal_LineRef);
 My_ScreenBufferPtr			getVirtualScreenData					(TerminalScreenRef);
 void						highlightLED							(My_ScreenBufferPtr, SInt16);
-void						initializeParserStateStack				(My_EmulatorPtr);
 void						locateCursorLine						(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&);
 void						locateScrollingRegion					(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&,
 																	 My_ScreenBufferLineList::iterator&);
@@ -4759,7 +4782,7 @@ Terminal_UserInputVTKey		(TerminalScreenRef		inRef,
 			};
 			
 			
-			Session_SendData(dataPtr->listeningSession, &kVTNumericModeTranslation[inVTKey - VSK0], 1);
+			dataPtr->emulator.sendEscape(dataPtr->listeningSession, &kVTNumericModeTranslation[inVTKey - VSK0], 1);
 		}
 		else
 		{
@@ -4883,7 +4906,7 @@ Terminal_UserInputVTKey		(TerminalScreenRef		inRef,
 			}
 			
 			// finally, send the key sequence
-			Session_SendData(dataPtr->listeningSession, seqPtr, seqLength);
+			dataPtr->emulator.sendEscape(dataPtr->listeningSession, seqPtr, seqLength);
 		}
 	}
 	return result;
@@ -4919,7 +4942,7 @@ Terminal_WindowIsToBeMinimized	(TerminalScreenRef	inRef)
 namespace {
 
 /*!
-Initializes a My_Emulator class instance.
+Initializes a My_Emulator class instance.  See also reset().
 
 (3.1)
 */
@@ -4944,9 +4967,11 @@ currentCallbacks(returnDataWriter(inPrimaryEmulation),
 					returnStateTransitionHandler(inPrimaryEmulation)),
 pushedCallbacks(),
 supportedVariants(),
-addedXTerm(false)
+addedXTerm(false),
+eightBitTransmission(false),
+sevenBitsLocked(false)
 {
-	initializeParserStateStack(this);
+	initializeParserStateStack();
 }// My_Emulator default constructor
 
 
@@ -4998,6 +5023,44 @@ clearEscapeSequenceParameters ()
 	}
 	this->argLastIndex = 0;
 }// clearEscapeSequenceParameters
+
+
+/*!
+Responds to a terminal reset by returning certain emulator
+settings to defaults.  This does NOT reinitialize settings in
+the instance that are not directly attributed to terminal state.
+
+(4.0)
+*/
+void
+My_Emulator::
+reset ()
+{
+	clearEscapeSequenceParameters();
+	initializeParserStateStack();
+	this->eightBitTransmission = false;
+	this->sevenBitsLocked = false;
+}// reset
+
+
+/*!
+Discards all state history in the screen’s parser and creates
+a single, initial state.
+
+This is obviously done when a screen is first created, but
+should also be done whenever the state determinant and state
+transition routines are changed (e.g. to change the emulation
+type).
+
+(3.1)
+*/
+void
+My_Emulator::
+initializeParserStateStack ()
+{
+	this->currentState = kMy_ParserStateInitial;
+	this->stringAccumulatorState = kMy_ParserStateInitial;
+}// initializeParserStateStack
 
 
 /*!
@@ -5132,6 +5195,95 @@ returnStateTransitionHandler	(Terminal_Emulator		inPrimaryEmulation)
 	}
 	return result;
 }// returnStateTransitionHandler
+
+
+/*!
+Transmits a string that starts with an escape sequence to the
+given session.  If the emulator is in "eightBitTransmission"
+mode, the sequence is automatically converted into a single
+byte (e.g. "\033[" becomes CSI) before transmitting the rest
+of the string.
+
+This allows you to express all responses as if they must be
+7-bit sequences, and have 8-bit versions used automatically
+when appropriate.
+
+IMPORTANT:	When a terminal has to respond to its listening
+			session, it is probably a good idea to always use
+			this method instead of calling Session_SendData()
+			directly.  That way, if any escape sequence is
+			needed now or in the future, your response will
+			handle 8-bit mode properly.
+
+(4.0)
+*/
+void
+My_Emulator::
+sendEscape	(SessionRef		inSession,
+			 void const*	in7BitSequence,
+			 size_t			inSequenceLength)
+{
+	if (inSequenceLength > 0)
+	{
+		UInt8 const*	asCharPtr = REINTERPRET_CAST(in7BitSequence, UInt8 const*);
+		
+		
+		if ((false == this->eightBitTransmission) || ('\033' != asCharPtr[0]) || (1 == inSequenceLength) ||
+			(asCharPtr[1] < 0x40/* @ */) || (asCharPtr[1] > 0x5F/* _ */))
+		{
+			// only an ESC, not an ESC sequence, or not possible to translate
+			// into an 8-bit sequence; emit normally
+			Session_SendData(inSession, asCharPtr, inSequenceLength);
+		}
+		else
+		{
+			UInt8	eightBit[] = { asCharPtr[1] + 0x40 }; // translate 7-bit to 8-bit, ignore the ESC
+			
+			
+			Session_SendData(inSession, eightBit, 1/* count */);
+			if (inSequenceLength > 2)
+			{
+				size_t const	kESCSeqLength = 2;
+				
+				
+				Session_SendData(inSession, asCharPtr + kESCSeqLength, inSequenceLength - kESCSeqLength);
+			}
+		}
+	}
+}// sendEscape
+
+
+/*!
+Specifies whether or not transmissions from the terminal to the
+listening session use a single byte to represent certain escape
+sequences.  Has no effect if set8BitNever() has been used.
+
+(4.0)
+*/
+void
+My_Emulator::
+set8Bit		(Boolean	inIs8Bit)
+{
+	if (false == this->sevenBitsLocked)
+	{
+		this->eightBitTransmission = inIs8Bit;
+	}
+}// set8Bit
+
+
+/*!
+Fuses the emulator into 7-bit mode.  This is only useful in odd
+corner cases with strict emulation of hardware, where it may be
+expected that the terminal stop respecting 8-bit mode requests.
+
+(4.0)
+*/
+void
+My_Emulator::
+set8BitNever ()
+{
+	this->sevenBitsLocked = true;
+}// set8BitNever
 
 
 /*!
@@ -6161,6 +6313,10 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			inNowOutNext.second = kMy_ParserStateSeenESCVerticalBar;
 			break;
 		
+		case ' ':
+			inNowOutNext.second = kMy_ParserStateSeenESCSpace;
+			break;
+		
 		default:
 			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape", kTriggerChar);
 			inNowOutNext.second = kDefaultNextState;
@@ -6797,6 +6953,25 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 		}
 		break;
 	
+	case kMy_ParserStateSeenESCSpace:
+		switch (kTriggerChar)
+		{
+		case 'F':
+			inNowOutNext.second = kMy_ParserStateSeenESCSpaceF;
+			break;
+		
+		case 'G':
+			inNowOutNext.second = kMy_ParserStateSeenESCSpaceG;
+			break;
+		
+		default:
+			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-space", kTriggerChar);
+			inNowOutNext.second = kDefaultNextState;
+			result = 0; // do not absorb the unknown
+			break;
+		}
+		break;
+	
 	default:
 		// unknown state!
 		//Console_WriteValueCharacter("WARNING, terminal entered unknown state; choosing a valid state based on character", kTriggerChar);
@@ -7053,7 +7228,13 @@ ansiMode	(My_ScreenBufferPtr		inDataPtr)
 		inDataPtr->emulator.currentCallbacks = inDataPtr->emulator.pushedCallbacks;
 		inDataPtr->emulator.pushedCallbacks = My_Emulator::Callbacks();
 	}
-	initializeParserStateStack(&inDataPtr->emulator);
+	inDataPtr->emulator.initializeParserStateStack();
+	
+	// a peculiarity about a real VT200 terminal is that returning to
+	// ANSI mode from VT52 mode will cause 8-bit mode to be unselectable
+	// (TEMPORARY; may want an option to not be so sticky about the
+	// accuracy of the emulation in this case)
+	inDataPtr->emulator.set8BitNever();
 }// My_VT100::ansiMode
 
 
@@ -7209,7 +7390,7 @@ deviceAttributes	(My_ScreenBufferPtr		inDataPtr)
 	if (nullptr != session)
 	{
 		// support GPO (graphics processor option) and AVO (advanced video option)
-		Session_SendData(session, "\033[?1;6c", 7);
+		inDataPtr->emulator.sendEscape(session, "\033[?1;6c", 7);
 	}
 }// My_VT100::deviceAttributes
 
@@ -7234,8 +7415,8 @@ deviceStatusReport		(My_ScreenBufferPtr		inDataPtr)
 			
 			if (nullptr != session)
 			{
-				Session_SendData(session, "\033[0n"/* 0 means “ready, no malfunctions detected”; see VT100 manual on DSR for details */,
-									4/* length of the string */);
+				inDataPtr->emulator.sendEscape(session, "\033[0n"/* 0 means “ready, no malfunctions detected”; see VT100 manual on DSR for details */,
+												4/* length of the string */);
 			}
 		}
 		break;
@@ -7285,7 +7466,7 @@ deviceStatusReport		(My_ScreenBufferPtr		inDataPtr)
 					<< "R"
 					;
 					std::string		reportBufferString = reportBuffer.str();
-					Session_SendData(session, reportBufferString.c_str(), reportBufferString.size());
+					inDataPtr->emulator.sendEscape(session, reportBufferString.c_str(), reportBufferString.size());
 				}
 			}
 		}
@@ -7711,7 +7892,7 @@ reportTerminalParameters	(My_ScreenBufferPtr		inDataPtr)
 			<< "x"
 			;
 			std::string		reportBufferString = reportBuffer.str();
-			Session_SendData(session, reportBufferString.c_str(), reportBufferString.size());
+			inDataPtr->emulator.sendEscape(session, reportBufferString.c_str(), reportBufferString.size());
 		}
 	}
 }// My_VT100::reportTerminalParameters
@@ -8700,7 +8881,7 @@ vt52Mode	(My_ScreenBufferPtr		inDataPtr)
 											(My_DefaultEmulator::echoData,
 												My_VT100::VT52::stateDeterminant,
 												My_VT100::VT52::stateTransition);
-	initializeParserStateStack(&inDataPtr->emulator);
+	inDataPtr->emulator.initializeParserStateStack();
 }// My_VT100::vt52Mode
 
 
@@ -8789,7 +8970,7 @@ identify	(My_ScreenBufferPtr		inDataPtr)
 	
 	if (nullptr != session)
 	{
-		Session_SendData(session, "\033/Z", 3);
+		inDataPtr->emulator.sendEscape(session, "\033/Z", 3);
 	}
 }// My_VT100::VT52:identify
 
@@ -9123,7 +9304,7 @@ deviceAttributes	(My_ScreenBufferPtr		inDataPtr)
 	
 	if (nullptr != session)
 	{
-		Session_SendData(session, "\033[?6c", 5);
+		inDataPtr->emulator.sendEscape(session, "\033[?6c", 5);
 	}
 }// My_VT102::deviceAttributes
 
@@ -9491,7 +9672,8 @@ compatibilityLevel		(My_ScreenBufferPtr		inDataPtr)
 		{
 		case 61:
 			// VT100 mode
-			// UNIMPLEMENTED
+			inDataPtr->emulator.set8Bit(false);
+			// INCOMPLETE
 			break;
 		
 		case 62:
@@ -9518,7 +9700,8 @@ compatibilityLevel		(My_ScreenBufferPtr		inDataPtr)
 					Console_Warning(Console_WriteValue, "VT220 in DECSCL/VT200 mode did not expect parameter", inDataPtr->emulator.argList[1]);
 					break;
 				}
-				// UNIMPLEMENTED
+				inDataPtr->emulator.set8Bit(isEightBit);
+				// INCOMPLETE
 			}
 			break;
 		
@@ -9548,12 +9731,12 @@ deviceStatusReportKeyboardLanguage		(My_ScreenBufferPtr		inDataPtr)
 	
 	if (nullptr != session)
 	{
-		Session_SendData(session, "\033[?27", 5);
+		inDataPtr->emulator.sendEscape(session, "\033[?27", 5);
 		// TEMPORARY; the keyboard cannot be changed this way right now,
 		// so the response is always “unknown” (0)
-		Session_SendData(session, ";0", 2);
+		inDataPtr->emulator.sendEscape(session, ";0", 2);
 		// insert any other parameters here, with semicolons
-		Session_SendData(session, "n", 1);
+		inDataPtr->emulator.sendEscape(session, "n", 1);
 	}
 }// My_VT220::deviceStatusReportKeyboardLanguage
 
@@ -9576,11 +9759,11 @@ deviceStatusReportPrinterPort	(My_ScreenBufferPtr		inDataPtr)
 		// possible responses are "?13" (no printer), "?10" (ready), "?11" (not ready)
 		if (PrintTerminal_IsPrintingSupported())
 		{
-			Session_SendData(session, "\033[?10n", 6);
+			inDataPtr->emulator.sendEscape(session, "\033[?10n", 6);
 		}
 		else
 		{
-			Session_SendData(session, "\033[?13n", 6);
+			inDataPtr->emulator.sendEscape(session, "\033[?13n", 6);
 		}
 	}
 }// My_VT220::deviceStatusReportPrinterPort
@@ -9605,7 +9788,7 @@ deviceStatusReportUserDefinedKeys	(My_ScreenBufferPtr		inDataPtr)
 	{
 		// possible responses are "?20" (unlocked), "?21" (locked)
 		// UNIMPLEMENTED
-		Session_SendData(session, "\033[?20n", 6);
+		inDataPtr->emulator.sendEscape(session, "\033[?20n", 6);
 	}
 }// My_VT220::deviceStatusReportUserDefinedKeys
 
@@ -9634,15 +9817,15 @@ primaryDeviceAttributes		(My_ScreenBufferPtr		inDataPtr)
 		// (8) if UDK
 		// (9) if 7-bit national replacement character sets supported
 		// INCOMPLETE
-		Session_SendData(session, "\033[?62", 5);
+		inDataPtr->emulator.sendEscape(session, "\033[?62", 5);
 		if (Terminal_ReturnColumnCount(inDataPtr->selfRef) >= 132)
 		{
-			Session_SendData(session, ";1", 2);
+			inDataPtr->emulator.sendEscape(session, ";1", 2);
 		}
-		Session_SendData(session, ";2", 2);
-		Session_SendData(session, ";6", 2);
+		inDataPtr->emulator.sendEscape(session, ";2", 2);
+		inDataPtr->emulator.sendEscape(session, ";6", 2);
 		// insert any other parameters here, with semicolons
-		Session_SendData(session, "c", 1);
+		inDataPtr->emulator.sendEscape(session, "c", 1);
 	}
 }// My_VT220::primaryDeviceAttributes
 
@@ -9664,7 +9847,7 @@ secondaryDeviceAttributes	(My_ScreenBufferPtr		inDataPtr)
 	{
 		// an emulated terminal has no firmware, so this is a bit made-up;
 		// it means VT220 version 1.0, no options
-		Session_SendData(session, "\033[>1;10;0c", 10);
+		inDataPtr->emulator.sendEscape(session, "\033[>1;10;0c", 10);
 	}
 }// My_VT220::secondaryDeviceAttributes
 
@@ -9922,6 +10105,14 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateLS3R:
 		Console_Warning(Console_WriteLine, "request for VT220 to lock shift G3 right side, which is unsupported");
+		break;
+	
+	case kStateS7C1T:
+		inDataPtr->emulator.set8Bit(false);
+		break;
+	
+	case kStateS8C1T:
+		inDataPtr->emulator.set8Bit(true);
 		break;
 	
 	case kStateSCSG0DECSupplemental:
@@ -12908,8 +13099,8 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 							
 							if (nullptr != session)
 							{
-								if (IsWindowCollapsed(window)) Session_SendData(session, "\033[2t", 4);
-								else Session_SendData(session, "\033[1t", 4);
+								if (IsWindowCollapsed(window)) inDataPtr->emulator.sendEscape(session, "\033[2t", 4);
+								else inDataPtr->emulator.sendEscape(session, "\033[1t", 4);
 							}
 						}
 						break;
@@ -13414,25 +13605,6 @@ highlightLED	(My_ScreenBufferPtr		inDataPtr,
 	
 	changeNotifyForTerminal(inDataPtr, kTerminal_ChangeNewLEDState, inDataPtr->selfRef/* context */);
 }// highlightLED
-
-
-/*!
-Discards all state history in the screen’s parser and creates
-a single, initial state.
-
-This is obviously done when a screen is first created, but
-should also be done whenever the state determinant and state
-transition routines are changed (e.g. to change the emulation
-type).
-
-(3.1)
-*/
-void
-initializeParserStateStack	(My_EmulatorPtr		inDataPtr)
-{
-	inDataPtr->currentState = kMy_ParserStateInitial;
-	inDataPtr->stringAccumulatorState = kMy_ParserStateInitial;
-}// initializeParserStateStack
 
 
 /*!
@@ -13976,8 +14148,8 @@ resetTerminal   (My_ScreenBufferPtr  inDataPtr)
 {
 	inDataPtr->customScrollingRegion = inDataPtr->visibleBoundary.rows;
 	assertScrollingRegion(inDataPtr);
-	inDataPtr->emulator.argLastIndex = 0;
 	My_VT100::ansiMode(inDataPtr);
+	inDataPtr->emulator.reset();
 	//inDataPtr->modeAutoWrap = false; // 3.0 - do not touch the auto-wrap setting
 	inDataPtr->modeCursorKeysForApp = false;
 	inDataPtr->modeApplicationKeys = false;
