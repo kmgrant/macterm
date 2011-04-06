@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110405',
     '20110404',
     '20110403',
     '20110331',
@@ -371,6 +372,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110405': [
+        'VT220 soft-reset sequence is now recognized.',
+    ],
     '20110404': [
         'VT220 sequences for selecting 7-bit or 8-bit responses ("DECSCL", "S7C1T", "S8C1T") are now implemented.',
     ],

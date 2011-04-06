@@ -224,6 +224,8 @@ enum
 	kMy_ParserStateSeenESCPlusLessThan			= 'ES+<',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCPlusEquals			= 'ES+=',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracket			= 'ESC[',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketExPoint	= 'ES[!',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketExPointp	= 'E[!p',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParams	= 'E[;;',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsA	= 'E[;A',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsB	= 'E[;B',	//!< generic state used to define emulator-specific states, below
@@ -455,6 +457,28 @@ invokeEmulatorEchoDataProc	(My_EmulatorEchoDataProcPtr		inProc,
 							 UInt32							inLength)
 {
 	return (*inProc)(inDataPtr, inBuffer, inLength);
+}
+
+/*!
+Emulator Reset Routine
+
+Performs whatever emulator-specific actions are appropriate
+for a hard reset or (if the given parameter is true) a soft
+reset.  Note that if a terminal does not distinguish between
+soft and hard resets it should ignore this parameter.
+
+IMPORTANT:	The terminal screen buffer handles a number of
+			reset actions by itself.  An emulator reset does
+			not generally require a lot of code.
+*/
+typedef void (*My_EmulatorResetProcPtr)		(My_Emulator*	inDataPtr,
+											 Boolean		inIsSoftReset);
+inline void
+invokeEmulatorResetProc		(My_EmulatorResetProcPtr	inProc,
+							 My_Emulator*				inDataPtr,
+							 Boolean					inIsSoftReset)
+{
+	(*inProc)(inDataPtr, inIsSoftReset);
 }
 
 /*!
@@ -891,12 +915,14 @@ public:
 		Callbacks	();
 		Callbacks	(My_EmulatorEchoDataProcPtr,
 					 My_EmulatorStateDeterminantProcPtr,
-					 My_EmulatorStateTransitionProcPtr);
+					 My_EmulatorStateTransitionProcPtr,
+					 My_EmulatorResetProcPtr);
 		
 		Boolean
 		exist () const;
 		
 		My_EmulatorEchoDataProcPtr			dataWriter;				//!< translates data and dumps it to the screen
+		My_EmulatorResetProcPtr				resetHandler;			//!< handles a soft or hard reset; varies based on the emulator
 		My_EmulatorStateDeterminantProcPtr	stateDeterminant;		//!< figures out what the next state should be
 		My_EmulatorStateTransitionProcPtr	transitionHandler;		//!< handles new parser states, driving the terminal; varies based on the emulator
 	};
@@ -917,7 +943,7 @@ public:
 	initializeParserStateStack ();
 	
 	void
-	reset ();
+	reset	(Boolean);
 	
 	void
 	sendEscape	(SessionRef, void const*, size_t);
@@ -949,6 +975,9 @@ public:
 protected:
 	My_EmulatorEchoDataProcPtr
 	returnDataWriter	(Terminal_Emulator);
+	
+	My_EmulatorResetProcPtr
+	returnResetHandler		(Terminal_Emulator);
 	
 	My_EmulatorStateDeterminantProcPtr
 	returnStateDeterminant		(Terminal_Emulator);
@@ -1187,6 +1216,7 @@ class My_DefaultEmulator
 {
 public:
 	static UInt32	echoData			(My_ScreenBufferPtr, UInt8 const*, UInt32);
+	static void		hardSoftReset		(My_EmulatorPtr, Boolean);
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 };
@@ -1212,6 +1242,7 @@ handles sequences specific to VT52 mode.
 class My_VT100
 {
 public:
+	static void		hardSoftReset		(My_EmulatorPtr, Boolean);
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
@@ -1384,6 +1415,7 @@ terminal emulator.
 class My_VT220
 {
 public:
+	static void		hardSoftReset		(My_EmulatorPtr, Boolean);
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
@@ -1401,6 +1433,7 @@ protected:
 	{
 		kStateDECSCLHeader		= kMy_ParserStateSeenESCLeftSqBracketParamsQuotes,	//!< compatibility level, header (need 'p' to finish)
 		kStateDECSCL			= 'VSCL',								//!< compatibility level
+		kStateDECSTR			= kMy_ParserStateSeenESCLeftSqBracketExPointp,	//!< soft terminal reset
 		kStateLS1R				= kMy_ParserStateSeenESCTilde,			//!< lock shift G1, right side
 		kStateLS2				= kMy_ParserStateSeenESCn,				//!< lock shift G2, left side
 		kStateLS2R				= kMy_ParserStateSeenESCRightBrace,		//!< lock shift G2, right side
@@ -1591,7 +1624,7 @@ void						moveCursorUp							(My_ScreenBufferPtr);
 void						moveCursorUpOrScroll					(My_ScreenBufferPtr);
 void						moveCursorX								(My_ScreenBufferPtr, SInt16);
 void						moveCursorY								(My_ScreenBufferPtr, My_ScreenRowIndex);
-void						resetTerminal							(My_ScreenBufferPtr);
+void						resetTerminal							(My_ScreenBufferPtr, Boolean = false);
 SessionRef					returnListeningSession					(My_ScreenBufferPtr);
 Terminal_EmulatorType		returnTerminalType						(Terminal_Emulator);
 Terminal_EmulatorVariant	returnTerminalVariant					(Terminal_Emulator);
@@ -4964,7 +4997,8 @@ argList(kMy_MaximumANSIParameters),
 preCallbackSet(),
 currentCallbacks(returnDataWriter(inPrimaryEmulation),
 					returnStateDeterminant(inPrimaryEmulation),
-					returnStateTransitionHandler(inPrimaryEmulation)),
+					returnStateTransitionHandler(inPrimaryEmulation),
+					returnResetHandler(inPrimaryEmulation)),
 pushedCallbacks(),
 supportedVariants(),
 addedXTerm(false),
@@ -4990,14 +5024,16 @@ changeTo	(Terminal_Emulator		inPrimaryEmulation)
 	My_EmulatorEchoDataProcPtr const			kNewDataWriter = returnDataWriter(inPrimaryEmulation);
 	My_EmulatorStateDeterminantProcPtr const	kNewDeterminant = returnStateDeterminant(inPrimaryEmulation);
 	My_EmulatorStateTransitionProcPtr const		kNewTransitionHandler = returnStateTransitionHandler(inPrimaryEmulation);
+	My_EmulatorResetProcPtr const				kNewResetHandler = returnResetHandler(inPrimaryEmulation);
 	Boolean										result = ((nullptr != kNewDataWriter) &&
 															(nullptr != kNewDeterminant) &&
-															(nullptr != kNewTransitionHandler));
+															(nullptr != kNewTransitionHandler) &&
+															(nullptr != kNewResetHandler));
 	
 	
 	if (result)
 	{
-		this->currentCallbacks = My_Emulator::Callbacks(kNewDataWriter, kNewDeterminant, kNewTransitionHandler);
+		this->currentCallbacks = My_Emulator::Callbacks(kNewDataWriter, kNewDeterminant, kNewTransitionHandler, kNewResetHandler);
 	}
 	return result;
 }// changeTo
@@ -5030,11 +5066,15 @@ Responds to a terminal reset by returning certain emulator
 settings to defaults.  This does NOT reinitialize settings in
 the instance that are not directly attributed to terminal state.
 
+If "inIsSoftReset" is true, then only parameters that should be
+affected by a soft reset are changed (for example, there are
+differences in a VT220).
+
 (4.0)
 */
 void
 My_Emulator::
-reset ()
+reset	(Boolean	UNUSED_ARGUMENT(inIsSoftReset))
 {
 	clearEscapeSequenceParameters();
 	initializeParserStateStack();
@@ -5101,6 +5141,47 @@ returnDataWriter	(Terminal_Emulator		inPrimaryEmulation)
 	}
 	return result;
 }// returnDataWriter
+
+
+/*!
+Returns the entry point for resetting the emulator, for the
+specified terminal type.
+
+(4.0)
+*/
+My_EmulatorResetProcPtr
+My_Emulator::
+returnResetHandler		(Terminal_Emulator		inPrimaryEmulation)
+{
+	My_EmulatorResetProcPtr		result = nullptr;
+	
+	
+	switch (inPrimaryEmulation)
+	{
+	case kTerminal_EmulatorVT100:
+	case kTerminal_EmulatorVT102:
+	case kTerminal_EmulatorXTermOriginal: // TEMPORARY
+	case kTerminal_EmulatorXTermColor: // TEMPORARY
+	case kTerminal_EmulatorXTerm256Color: // TEMPORARY
+	case kTerminal_EmulatorANSIBBS: // TEMPORARY
+	case kTerminal_EmulatorANSISCO: // TEMPORARY
+		result = My_VT100::hardSoftReset;
+		break;
+	
+	case kTerminal_EmulatorVT220:
+	case kTerminal_EmulatorVT320: // TEMPORARY
+	case kTerminal_EmulatorVT420: // TEMPORARY
+		result = My_VT220::hardSoftReset;
+		break;
+	
+	case kTerminal_EmulatorDumb:
+	default:
+		// ???
+		result = My_DefaultEmulator::hardSoftReset;
+		break;
+	}
+	return result;
+}// returnResetHandler
 
 
 /*!
@@ -5318,6 +5399,7 @@ Callbacks ()
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 dataWriter(nullptr),
+resetHandler(nullptr),
 stateDeterminant(nullptr),
 transitionHandler(nullptr)
 {
@@ -5332,10 +5414,12 @@ Initializes a My_Emulator::Callbacks class instance.
 My_Emulator::Callbacks::
 Callbacks	(My_EmulatorEchoDataProcPtr				inDataWriter,
 			 My_EmulatorStateDeterminantProcPtr		inStateDeterminant,
-			 My_EmulatorStateTransitionProcPtr		inTransitionHandler)
+			 My_EmulatorStateTransitionProcPtr		inTransitionHandler,
+			 My_EmulatorResetProcPtr				inResetHandler)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 dataWriter(inDataWriter),
+resetHandler(inResetHandler),
 stateDeterminant(inStateDeterminant),
 transitionHandler(inTransitionHandler)
 {
@@ -5468,7 +5552,8 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 			this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
 													My_Emulator::Callbacks(My_DefaultEmulator::echoData,
 																			My_XTerm::stateDeterminant,
-																			My_XTerm::stateTransition));
+																			My_XTerm::stateTransition,
+																			My_DefaultEmulator::hardSoftReset));
 			this->emulator.addedXTerm = true;
 		}
 	}
@@ -5480,7 +5565,8 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 			this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
 													My_Emulator::Callbacks(My_DefaultEmulator::echoData,
 																			My_XTerm::stateDeterminant,
-																			My_XTerm::stateTransition));
+																			My_XTerm::stateTransition,
+																			My_DefaultEmulator::hardSoftReset));
 			this->emulator.addedXTerm = true;
 		}
 	}
@@ -6121,6 +6207,23 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 
 
 /*!
+A standard "My_EmulatorResetProcPtr" to reset shared settings.
+Should generally be invoked by the reset routines of all other
+terminals.
+
+(4.0)
+*/
+void
+My_DefaultEmulator::
+hardSoftReset	(My_EmulatorPtr		UNUSED_ARGUMENT(inEmulatorPtr),
+				 Boolean			inIsSoftReset)
+{
+	// debug
+	//Console_WriteValue("    <<< default emulator has reset, soft", inIsSoftReset);
+}// hardSoftReset
+
+
+/*!
 A standard "My_EmulatorStateDeterminantProcPtr" that sets
 default states based on the characters of the given buffer.
 
@@ -6326,9 +6429,33 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 		break;
 	
 	case kMy_ParserStateSeenESCLeftSqBracket:
-		// immediately begin parsing parameters, but do not absorb these characters
-		inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParams;
-		result = 0; // do not absorb the unknown
+		switch (kTriggerChar)
+		{
+		case '!':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketExPoint;
+			break;
+		
+		default:
+			// immediately begin parsing parameters, but do not absorb these characters
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParams;
+			result = 0; // do not absorb the unknown
+			break;
+		}
+		break;
+	
+	case kMy_ParserStateSeenESCLeftSqBracketExPoint:
+		switch (kTriggerChar)
+		{
+		case 'p':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketExPointp;
+			break;
+		
+		default:
+			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-!", kTriggerChar);
+			inNowOutNext.second = kDefaultNextState;
+			result = 0; // do not absorb the unknown
+			break;
+		}
 		break;
 	
 	case kMy_ParserStateSeenESCLeftSqBracketParams:
@@ -7541,6 +7668,24 @@ eraseInLine		(My_ScreenBufferPtr		inDataPtr)
 		break;
 	}
 }// My_VT100::eraseInLine
+
+
+/*!
+A standard "My_EmulatorResetProcPtr" to reset VT100-specific
+settings.
+
+(4.0)
+*/
+void
+My_VT100::
+hardSoftReset	(My_EmulatorPtr		inEmulatorPtr,
+				 Boolean			inIsSoftReset)
+{
+	My_DefaultEmulator::hardSoftReset(inEmulatorPtr, inIsSoftReset);
+	
+	// debug
+	//Console_WriteValue("    <<< VT100 has reset, soft", inIsSoftReset);
+}// hardSoftReset
 
 
 /*!
@@ -8880,7 +9025,8 @@ vt52Mode	(My_ScreenBufferPtr		inDataPtr)
 	inDataPtr->emulator.currentCallbacks = My_Emulator::Callbacks
 											(My_DefaultEmulator::echoData,
 												My_VT100::VT52::stateDeterminant,
-												My_VT100::VT52::stateTransition);
+												My_VT100::VT52::stateTransition,
+												My_VT100::hardSoftReset);
 	inDataPtr->emulator.initializeParserStateStack();
 }// My_VT100::vt52Mode
 
@@ -9794,6 +9940,36 @@ deviceStatusReportUserDefinedKeys	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+A standard "My_EmulatorResetProcPtr" to reset VT220-specific
+settings.
+
+A soft reset should return settings to the defaults specified
+in the VT220 manual (Table 4-10).
+
+A VT220 hard reset is additionally responsible for:
+- Clearing UDKs.  (UNIMPLEMENTED)
+- Clearing down-line-loaded character sets.  (UNIMPLEMENTED)
+- Clearing the screen.  (Handled by buffer reset.)
+- Homing the cursor.  (Handled by buffer reset.)
+- Setting SGR (text style) to normal.  (Handled by buffer reset.)
+- Setting selective erase to do-not-erase.  (UNIMPLEMENTED)
+- Setting character sets to the defaults.  (Handled by buffer reset.)
+
+(4.0)
+*/
+void
+My_VT220::
+hardSoftReset	(My_EmulatorPtr		inEmulatorPtr,
+				 Boolean			inIsSoftReset)
+{
+	My_VT100::hardSoftReset(inEmulatorPtr, inIsSoftReset);
+	
+	// debug
+	//Console_WriteValue("    <<< VT220 has reset, soft", inIsSoftReset);
+}// hardSoftReset
+
+
+/*!
 Handles the VT220 'DA' sequence for primary device attributes.
 See the VT220 manual for complete details.
 
@@ -9876,6 +10052,20 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	// the available data to determine the next logical state
 	switch (inNowOutNext.first)
 	{
+	case My_VT100::kStateCSI:
+		switch (*inBuffer)
+		{
+		case '!':
+			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketExPoint;
+			break;
+		
+		default:
+			inNowOutNext.second = My_VT100::kStateCSIParamScan;
+			result = 0; // absorb nothing
+			break;
+		}
+		break;
+	
 	case My_VT100::kStateCSIParamScan:
 		// look for a terminating character (anything not legal in a parameter)
 		switch (*inBuffer)
@@ -10063,6 +10253,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateDECSCL:
 		// set terminal compatibility level
 		My_VT220::compatibilityLevel(inDataPtr);
+		break;
+	
+	case kStateDECSTR:
+		// soft terminal reset; note that hard reset is handled by My_VT100::kStateRIS
+		resetTerminal(inDataPtr, true/* is soft reset */);
 		break;
 	
 	case kStateLS1R:
@@ -14138,18 +14333,21 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 
 
 /*!
-Resets terminal modes to defaults, clears the screen
-and notifies any listeners of reset events.
+Resets terminal modes to defaults, and (for hard resets) clears
+the screen and returns all settings to factory defaults.
+Also notifies any listeners of reset events.
+
+The effect of a soft and hard reset can vary by terminal type.
 
 (2.6)
 */
 void
-resetTerminal   (My_ScreenBufferPtr  inDataPtr)
+resetTerminal   (My_ScreenBufferPtr		inDataPtr,
+				 Boolean				inSoftReset)
 {
 	inDataPtr->customScrollingRegion = inDataPtr->visibleBoundary.rows;
 	assertScrollingRegion(inDataPtr);
 	My_VT100::ansiMode(inDataPtr);
-	inDataPtr->emulator.reset();
 	//inDataPtr->modeAutoWrap = false; // 3.0 - do not touch the auto-wrap setting
 	inDataPtr->modeCursorKeysForApp = false;
 	inDataPtr->modeApplicationKeys = false;
@@ -14159,13 +14357,22 @@ resetTerminal   (My_ScreenBufferPtr  inDataPtr)
 	inDataPtr->current.drawingAttributes = kNoTerminalTextAttributes;
 	inDataPtr->modeInsertNotReplace = false;
 	inDataPtr->modeNewLineOption = false;
-	moveCursor(inDataPtr, 0, 0);
 	inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG0;
 	inDataPtr->printingModes = 0;
 	inDataPtr->printingEnd();
-	bufferEraseVisibleScreenWithUpdate(inDataPtr);
+	
+	// reset the base emulator, and then (rare) perform any emulator-specific actions
+	inDataPtr->emulator.reset(inSoftReset);
+	invokeEmulatorResetProc(inDataPtr->emulator.currentCallbacks.resetHandler, &inDataPtr->emulator, inSoftReset);
+	
+	unless (inSoftReset)
+	{
+		moveCursor(inDataPtr, 0, 0);
+		bufferEraseVisibleScreenWithUpdate(inDataPtr);
+	}
 	tabStopInitialize(inDataPtr);
 	highlightLED(inDataPtr, 0/* zero means “turn off all LEDs” */);
+	
 	changeNotifyForTerminal(inDataPtr, kTerminal_ChangeReset, inDataPtr->selfRef/* context */);
 }// resetTerminal
 
