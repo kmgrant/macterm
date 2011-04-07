@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110406',
     '20110405',
     '20110404',
     '20110403',
@@ -372,6 +373,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110406': [
+        'Fixed Local Echo to only float special key names, and insert all other text into the terminal.',
+    ],
     '20110405': [
         'VT220 soft-reset sequence is now recognized.',
     ],

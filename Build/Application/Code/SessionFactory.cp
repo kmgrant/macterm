@@ -672,20 +672,30 @@ SessionFactory_NewSessionFromCommandFile	(TerminalWindowRef			inTerminalWindow,
 			localResult = Local_SpawnDefaultShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow));
 			if (kLocal_ResultOK == localResult)
 			{
-				// construct a command that runs the shell script and then exits
-				Str255			buffer;
-				char const*		bufferCString = nullptr;
+				std::string		buffer(inCommandFilePath);
 				
 				
-				StringUtilities_CToP(inCommandFilePath, buffer);
-				StringUtilities_PInsert(buffer, "\p\'"); // escape path from the shell using apostrophes
-				PLstrcat(buffer, "\p\' ; exit\n");
-				bufferCString = StringUtilities_PToCInPlace(buffer);
-				Session_UserInputString(result, bufferCString, CPP_STD::strlen(bufferCString), false/* record in scripts */);
+				// construct a command that runs the shell script and then exits;
+				// escape the path from the shell by using apostrophes
+				buffer = std::string("\'") + buffer;
+				buffer += "\' ; exit\n";
 				
-				// success!
-				displayOK = true;
-				startTrackingSession(result, terminalWindow);
+				// pass the command line to the running shell
+				{
+					CFRetainRelease		asObject(CFStringCreateWithCString(kCFAllocatorDefault, buffer.c_str(),
+																			kCFStringEncodingUTF8),
+													true/* is retained */);
+					
+					
+					if (asObject.exists())
+					{
+						Session_UserInputCFString(result, asObject.returnCFStringRef());
+						
+						// success!
+						displayOK = true;
+						startTrackingSession(result, terminalWindow);
+					}
+				}
 			}
 			
 			unless (displayOK)

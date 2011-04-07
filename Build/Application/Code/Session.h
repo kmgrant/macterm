@@ -419,12 +419,10 @@ Session_Result
 
 void
 	Session_UserInputCFString				(SessionRef							inRef,
-											 CFStringRef						inStringBuffer,
-											 Boolean							inSendToRecordingScripts = true);
+											 CFStringRef						inStringBuffer);
 
 void
-	Session_UserInputInterruptProcess		(SessionRef							inRef,
-											 Boolean							inSendToRecordingScripts = true);
+	Session_UserInputInterruptProcess		(SessionRef							inRef);
 
 Session_Result
 	Session_UserInputKey					(SessionRef							inRef,
@@ -434,12 +432,6 @@ Session_Result
 Session_Result
 	Session_UserInputPaste					(SessionRef							inRef,
 											 PasteboardRef						inSourceOrNull = nullptr);
-
-void
-	Session_UserInputString					(SessionRef							inRef,
-											 char const*						inStringBuffer,
-											 size_t								inStringBufferSize,
-											 Boolean							inSendToRecordingScripts = true);
 
 //@}
 

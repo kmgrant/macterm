@@ -495,10 +495,12 @@ character, as if the user had typed that character.
 sendCharacter:(UInt8)	inCharacter
 {
 	SessionRef		currentSession = getCurrentSession();
-	char			ck[1] = { inCharacter };
 	
 	
-	if (nullptr != currentSession) Session_UserInputString(currentSession, ck, sizeof(ck), false/* record */);
+	if (nullptr != currentSession)
+	{
+		Session_UserInputKey(currentSession, inCharacter);
+	}
 }// sendCharacter:
 
 
@@ -516,7 +518,10 @@ sendKey:(UInt8)		inKey
 	SessionRef		currentSession = getCurrentSession();
 	
 	
-	if (nullptr != currentSession) Session_UserInputKey(currentSession, inKey);
+	if (nullptr != currentSession)
+	{
+		Session_UserInputKey(currentSession, inKey);
+	}
 }// sendKey:
 
 

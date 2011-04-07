@@ -282,7 +282,7 @@ sendText:(id)	sender
 	}
 	else
 	{
-		Session_UserInputCFString(session, (CFStringRef)commandLineText, true/* record */);
+		Session_UserInputCFString(session, (CFStringRef)commandLineText);
 		Session_SendNewline(session, kSession_EchoCurrentSessionValue);
 		[[[commandLineField dataSource] historyArray] insertObject:[[NSString alloc] initWithString:commandLineText] atIndex:0];
 	}

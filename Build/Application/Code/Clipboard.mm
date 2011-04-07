@@ -1153,7 +1153,7 @@ Clipboard_TextFromScrap		(SessionRef				inSession,
 												CFRangeMake(0, CFStringGetLength(mutableBuffer)), 0/* flags */);
 				(CFIndex)CFStringFindAndReplace(mutableBuffer, CFSTR("\n"), CFSTR(""),
 												CFRangeMake(0, CFStringGetLength(mutableBuffer)), 0/* flags */);
-				Session_UserInputCFString(inSession, mutableBuffer, false/* send to scripts */);
+				Session_UserInputCFString(inSession, mutableBuffer);
 				CFRelease(mutableBuffer), mutableBuffer = nullptr;
 			}
 		}
@@ -1173,14 +1173,14 @@ Clipboard_TextFromScrap		(SessionRef				inSession,
 				// convert new-line characters into carriage-return characters
 				(CFIndex)CFStringFindAndReplace(mutableBuffer, CFSTR("\n"), CFSTR("\r"),
 												CFRangeMake(0, CFStringGetLength(mutableBuffer)), 0/* flags */);
-				Session_UserInputCFString(inSession, mutableBuffer, false/* send to scripts */);
+				Session_UserInputCFString(inSession, mutableBuffer);
 				CFRelease(mutableBuffer), mutableBuffer = nullptr;
 			}
 		}
 		else
 		{
 			// send the data unmodified to the session
-			Session_UserInputCFString(inSession, clipboardString, false/* send to scripts */);
+			Session_UserInputCFString(inSession, clipboardString);
 		}
 		CFRelease(clipboardString), clipboardString = nullptr;
 		CFRelease(actualTypeName), actualTypeName = nullptr;

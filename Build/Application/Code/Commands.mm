@@ -1073,7 +1073,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 
 		case kCommandSendInterruptProcess:
-			Session_UserInputInterruptProcess(frontSession, false/* record to scripts */);
+			Session_UserInputInterruptProcess(frontSession);
 			break;
 		
 		case kCommandWatchNothing:

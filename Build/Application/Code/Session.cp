@@ -367,6 +367,8 @@ void						detectLongLife						(EventLoopTimerRef, void*);
 Boolean						handleSessionKeyDown				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 Boolean						isReadOnly							(My_SessionPtr);
+void						localEchoKey						(My_SessionPtr, UInt8);
+void						localEchoString						(My_SessionPtr, CFStringRef);
 void						navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
 void						navigationSaveDialogEvent			(NavEventCallbackMessage, NavCBRecPtr, void*);
 void						pageSetupCloseNotifyProc			(PMPrintSession, WindowRef, Boolean);
@@ -385,9 +387,10 @@ HIWindowRef					returnActiveWindow					(My_SessionPtr);
 OSStatus					sessionDragDrop						(EventHandlerCallRef, EventRef, SessionRef,
 																 HIViewRef, DragRef);
 void						setIconFromState					(My_SessionPtr);
+void						terminalHoverLocalEchoString		(My_SessionPtr, UInt8 const*, size_t);
+void						terminalInsertLocalEchoString		(My_SessionPtr, UInt8 const*, size_t);
 void						terminalWindowChanged				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
-void						terminalWriteLocalEchoString		(My_SessionPtr, UInt8 const*, size_t);
 void						terminationWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
 void						watchClearForSession				(My_SessionPtr);
 void						watchCloseNotifyProc				(AlertMessages_BoxRef, SInt16, void*);
@@ -2592,11 +2595,7 @@ Session_SendNewline		(SessionRef		inRef,
 	}
 	if (echo)
 	{
-		//UInt8	seqUTF8[] = {0xE2, 0x8F, 0x8E}; // return symbol
-		UInt8	seqUTF8[] = {0xE2, 0x86, 0xB5}; // down-left-hook symbol
-		
-		
-		terminalWriteLocalEchoString(ptr, seqUTF8, sizeof(seqUTF8));
+		localEchoKey(ptr, 0x0D/* carriage return character */);
 	}
 	
 	// now send the new-line sequence to the session
@@ -3861,37 +3860,14 @@ it is sent to the remote process.
 */
 void
 Session_UserInputCFString	(SessionRef		inRef,
-							 CFStringRef	inStringBuffer,
-							 Boolean		inSendToRecordingScripts)
+							 CFStringRef	inStringBuffer)
 {
 	if (Session_LocalEchoIsEnabled(inRef))
 	{
 		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
-		try
-		{
-			size_t const	kBufferSize = (1 + CFStringGetMaximumSizeForEncoding
-											(CFStringGetLength(inStringBuffer), ptr->writeEncoding));
-			char*			stringBuffer = new char[kBufferSize];
-			
-			
-			stringBuffer[kBufferSize - 1] = '\0';
-			if (false == CFStringGetCString(inStringBuffer, stringBuffer, kBufferSize, ptr->writeEncoding))
-			{
-				Console_Warning(Console_WriteValue, "input text does not match terminal with text encoding", ptr->writeEncoding);
-				Console_Warning(Console_WriteValueCFString, "cannot convert into the encoding used by this terminal, text", inStringBuffer);
-			}
-			else
-			{
-				terminalWriteLocalEchoString(ptr, REINTERPRET_CAST(stringBuffer, UInt8 const*), CPP_STD::strlen(stringBuffer));
-			}
-			delete [] stringBuffer;
-		}
-		catch (std::bad_alloc)
-		{
-			Console_WriteLine("user input failed, out of memory!");
-		}
+		localEchoString(ptr, inStringBuffer);
 	}
 	
 	Session_SendFlush(inRef);
@@ -3909,8 +3885,7 @@ telnet "IP" sequence.
 (3.1)
 */
 void
-Session_UserInputInterruptProcess	(SessionRef		inRef,
-									 Boolean		inSendToRecordingScripts)
+Session_UserInputInterruptProcess	(SessionRef		inRef)
 {
 	// clear the Suspend state from MacTelnet’s point of view,
 	// since the process already considers the pipe reopened
@@ -3987,6 +3962,10 @@ Session_UserInputKey	(SessionRef		inRef,
 		if (inKeyOrASCII < VSF10)
 		{
 			// 7-bit ASCII; send as-is
+			if (ptr->echo.enabled)
+			{
+				localEchoKey(ptr, inKeyOrASCII);
+			}
 			Session_SendData(ptr->selfRef, &inKeyOrASCII, 1);
 		}
 		else if (ptr->eventKeys.arrowsRemappedForEmacs && (inKeyOrASCII <= VSLT) && (inKeyOrASCII >= VSUP))
@@ -4021,10 +4000,7 @@ Session_UserInputKey	(SessionRef		inRef,
 					
 					if (ptr->echo.enabled)
 					{
-						UInt8	seqUTF8[] = {0xE2, 0x87, 0xA0}; // keyboard left arrow
-						
-						
-						terminalWriteLocalEchoString(ptr, seqUTF8, sizeof(seqUTF8));
+						localEchoKey(ptr, inKeyOrASCII);
 					}
 				}
 				break;
@@ -4051,10 +4027,7 @@ Session_UserInputKey	(SessionRef		inRef,
 					
 					if (ptr->echo.enabled)
 					{
-						UInt8	seqUTF8[] = {0xE2, 0x87, 0xA2}; // keyboard right arrow
-						
-						
-						terminalWriteLocalEchoString(ptr, seqUTF8, sizeof(seqUTF8));
+						localEchoKey(ptr, inKeyOrASCII);
 					}
 				}
 				break;
@@ -4081,10 +4054,7 @@ Session_UserInputKey	(SessionRef		inRef,
 					
 					if (ptr->echo.enabled)
 					{
-						UInt8	seqUTF8[] = {0xE2, 0x87, 0xA1}; // keyboard up arrow
-						
-						
-						terminalWriteLocalEchoString(ptr, seqUTF8, sizeof(seqUTF8));
+						localEchoKey(ptr, inKeyOrASCII);
 					}
 				}
 				break;
@@ -4111,10 +4081,7 @@ Session_UserInputKey	(SessionRef		inRef,
 					
 					if (ptr->echo.enabled)
 					{
-						UInt8	seqUTF8[] = {0xE2, 0x87, 0xA3}; // keyboard down arrow
-						
-						
-						terminalWriteLocalEchoString(ptr, seqUTF8, sizeof(seqUTF8));
+						localEchoKey(ptr, inKeyOrASCII);
 					}
 				}
 				break;
@@ -4128,220 +4095,85 @@ Session_UserInputKey	(SessionRef		inRef,
 		{
 			if (false == ptr->targetTerminals.empty())
 			{
+				// if enabled, write a local representation of the keystroke
+				if (ptr->echo.enabled)
+				{
+					// when echoing a key, send only a description (not the actual key sequence)
+					// TEMPORARY; this is handled here because it is currently the only place
+					// that requires descriptions of keys; it might be useful to put this in an
+					// API that is more generally available
+					switch (inKeyOrASCII)
+					{
+					case VSK0:
+					case VSK1:
+					case VSK2:
+					case VSK3:
+					case VSK4:
+					case VSK5:
+					case VSK6:
+					case VSK7:
+					case VSK8:
+					case VSK9:
+					case VSKC:
+					case VSKM:
+					case VSKP:
+						{
+							// IMPORTANT: this should match the numeric order of the key codes
+							char const*		numberStr = "0123456789,-.";
+							
+							
+							localEchoKey(ptr, numberStr[inKeyOrASCII - VSK0]);
+						}
+						break;
+					
+					case VSLT:
+					case VSRT:
+					case VSUP:
+					case VSDN:
+						localEchoKey(ptr, inKeyOrASCII);
+						break;
+					
+					case VSKE:
+					case VSF1:
+					case VSF2:
+					case VSF3:
+					case VSF4:
+					case VSF6:
+					case VSF7:
+					case VSF8:
+					case VSF9:
+					case VSF10:
+					case VSF11:
+					case VSF12:
+					case VSF13:
+					case VSF14:
+					case VSF15_220HELP:
+					case VSF16_220DO:
+					case VSF17:
+					case VSF18:
+					case VSF19:
+					case VSF20:
+					case VSHELP_220FIND:
+					case VSHOME_220INS:
+					case VSPGUP_220DEL:
+					case VSDEL_220SEL:
+					case VSEND_220PGUP:
+					case VSPGDN_220PGDN:
+						localEchoKey(ptr, inKeyOrASCII);
+						break;
+					
+					default:
+						// ???
+						break;
+					}
+				}
+				
 				// allow the terminal to perform the appropriate action for the key,
 				// given its current mode (for instance, a VT100 might be in VT52
 				// mode, which would send different data than ANSI mode)
 				for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
 						toScreen != ptr->targetTerminals.end(); ++toScreen)
 				{
-					// if enabled, write a local representation of the keystroke
-					if (ptr->echo.enabled)
-					{
-						// when echoing a key, send only a description (not the actual key sequence)
-						// TEMPORARY; this is handled here because it is currently the only place
-						// that requires descriptions of keys; it might be useful to put this in an
-						// API that is more generally available
-						switch (inKeyOrASCII)
-						{
-						case VSLT:
-							{
-								UInt8	seqUTF8[] = {0xE2, 0x87, 0xA0}; // keyboard left arrow
-								
-								
-								terminalWriteLocalEchoString(ptr, seqUTF8, sizeof(seqUTF8));
-							}
-							break;
-						
-						case VSRT:
-							{
-								UInt8	seqUTF8[] = {0xE2, 0x87, 0xA2}; // keyboard right arrow
-								
-								
-								terminalWriteLocalEchoString(ptr, seqUTF8, sizeof(seqUTF8));
-							}
-							break;
-						
-						case VSUP:
-							{
-								UInt8	seqUTF8[] = {0xE2, 0x87, 0xA1}; // keyboard up arrow
-								
-								
-								terminalWriteLocalEchoString(ptr, seqUTF8, sizeof(seqUTF8));
-							}
-							break;
-						
-						case VSDN:
-							{
-								UInt8	seqUTF8[] = {0xE2, 0x87, 0xA3}; // keyboard down arrow
-								
-								
-								terminalWriteLocalEchoString(ptr, seqUTF8, sizeof(seqUTF8));
-							}
-							break;
-						
-						case VSK0:
-						case VSK1:
-						case VSK2:
-						case VSK3:
-						case VSK4:
-						case VSK5:
-						case VSK6:
-						case VSK7:
-						case VSK8:
-						case VSK9:
-						case VSKC:
-						case VSKM:
-						case VSKP:
-							{
-								// IMPORTANT: this should match the numeric order of the key codes
-								char const*		numberStr = "0123456789,-.";
-								UInt8			seqUTF8[] = {numberStr[inKeyOrASCII - VSK0]}; // keyboard left arrow
-								
-								
-								terminalWriteLocalEchoString(ptr, seqUTF8, sizeof(seqUTF8));
-							}
-							break;
-						
-						case VSKE:
-							{
-								UInt8	seqUTF8[] = {0xE2, 0x8C, 0xA4}; // enter symbol (arrow head between two bars)
-								
-								
-								terminalWriteLocalEchoString(ptr, seqUTF8, sizeof(seqUTF8));
-							}
-							break;
-						
-						case VSF1:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("PF1", UInt8 const*), 3);
-							break;
-						
-						case VSF2:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("PF2", UInt8 const*), 3);
-							break;
-						
-						case VSF3:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("PF3", UInt8 const*), 3);
-							break;
-						
-						case VSF4:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("PF4", UInt8 const*), 3);
-							break;
-						
-						case VSF6:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("F6", UInt8 const*), 2);
-							break;
-						
-						case VSF7:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("F7", UInt8 const*), 2);
-							break;
-						
-						case VSF8:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("F8", UInt8 const*), 2);
-							break;
-						
-						case VSF9:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("F9", UInt8 const*), 2);
-							break;
-						
-						case VSF10:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("F10", UInt8 const*), 3);
-							break;
-						
-						case VSF11:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("F11", UInt8 const*), 3);
-							break;
-						
-						case VSF12:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("F12", UInt8 const*), 3);
-							break;
-						
-						case VSF13:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("F13", UInt8 const*), 3);
-							break;
-						
-						case VSF14:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("F14", UInt8 const*), 3);
-							break;
-						
-						case VSF15_220HELP:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("help", UInt8 const*), 4);
-							break;
-						
-						case VSF16_220DO:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("do", UInt8 const*), 2);
-							break;
-						
-						case VSF17:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("F17", UInt8 const*), 3);
-							break;
-						
-						case VSF18:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("F18", UInt8 const*), 3);
-							break;
-						
-						case VSF19:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("F19", UInt8 const*), 3);
-							break;
-						
-						case VSF20:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("F20", UInt8 const*), 3);
-							break;
-						
-						case VSHELP_220FIND:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("find", UInt8 const*), 4); // LOCALIZE THIS
-							break;
-						
-						case VSHOME_220INS:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("insert", UInt8 const*), 6); // LOCALIZE THIS
-							break;
-						
-						case VSPGUP_220DEL:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("delete", UInt8 const*), 6); // LOCALIZE THIS
-							break;
-						
-						case VSDEL_220SEL:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("select", UInt8 const*), 6); // LOCALIZE THIS
-							break;
-						
-						case VSEND_220PGUP:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("page up", UInt8 const*), 7); // LOCALIZE THIS
-							break;
-						
-						case VSPGDN_220PGDN:
-							// TEMPORARY: only makes sense for VT220 terminals
-							terminalWriteLocalEchoString(ptr, REINTERPRET_CAST("page down", UInt8 const*), 9); // LOCALIZE THIS
-							break;
-						
-						default:
-							// ???
-							break;
-						}
-					}
-					
 					// write the appropriate sequence to the terminal’s listening session
 					// (which will be this session)
 					(Terminal_Result)Terminal_UserInputVTKey(*toScreen, inKeyOrASCII);
@@ -4517,34 +4349,6 @@ Session_UserInputPaste	(SessionRef			inRef,
 	
 	return result;
 }// UserInputPaste
-
-
-/*!
-Send a string to a session as if it were typed into
-the specified session’s window.  If local echoing is
-enabled for the session, the string will be written
-to the local data target (usually a terminal) after
-it is sent to the remote process.
-
-(3.0)
-*/
-void
-Session_UserInputString		(SessionRef		inRef,
-							 char const*	inStringBuffer,
-							 size_t			inStringBufferSize,
-							 Boolean		inSendToRecordingScripts)
-{
-	if (Session_LocalEchoIsEnabled(inRef))
-	{
-		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-		
-		
-		terminalWriteLocalEchoString(ptr, REINTERPRET_CAST(inStringBuffer, UInt8 const*), inStringBufferSize);
-	}
-	
-	Session_SendFlush(inRef);
-	Session_SendData(inRef, inStringBuffer, inStringBufferSize);
-}// UserInputString
 
 
 /*!
@@ -5582,19 +5386,33 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// if no key-based action occurred, look for character-based actions
 		if (0 == characterCode2)
 		{
+			Boolean		sentCommand = false;
+			
+			
 			if (characterCode == ptr->eventKeys.suspend)
 			{
 				Session_SetNetworkSuspended(session, true);
+				sentCommand = true;
 				result = true;
 			}
 			if (characterCode == ptr->eventKeys.resume) 
 			{
 				Session_SetNetworkSuspended(session, false);
+				sentCommand = true;
 				result = true;
 			}
 			if (characterCode == ptr->eventKeys.interrupt)  
 			{
 				Session_UserInputInterruptProcess(session);
+				sentCommand = true;
+				result = true;
+			}
+			
+			if ((characterCode <= 0x1F) && ('\015' != characterCode) && (false == sentCommand))
+			{
+				// control key (except carriage return, which is handled later,
+				// and any of the special control key sequences above)
+				Session_UserInputKey(session, characterCode);
 				result = true;
 			}
 		}
@@ -5619,10 +5437,13 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				// no key-based or character-based actions have occurred;
 				// fine, the key should be respected “verbatim” (send the
 				// one or two characters it represents to the session)
-				UInt8		charactersToSend[2];
+				UInt8		charactersToSend[3];
 				UInt8*		characterPtr = charactersToSend;
 				size_t		theSize = sizeof(charactersToSend);
 				
+				
+				// terminate
+				charactersToSend[2] = '\0';
 				
 				// perform one final substitution: the meta key in Emacs
 				if (metaDown)
@@ -5659,7 +5480,12 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				// show local echo of the keystroke, if appropriate
 				if (Session_LocalEchoIsEnabled(session))
 				{
-					terminalWriteLocalEchoString(ptr, characterPtr, theSize);
+					CFRetainRelease		asObject(CFStringCreateWithCString(kCFAllocatorDefault, REINTERPRET_CAST(characterPtr, char const*),
+																			kCFStringEncodingUTF8),
+													true/* is retained */);
+					
+					
+					localEchoString(ptr, asObject.returnCFStringRef());
 				}
 				
 				// finally, send the character sequence to the session
@@ -5685,6 +5511,438 @@ isReadOnly		(My_SessionPtr		inPtr)
 {
 	return inPtr->readOnly;
 }// isReadOnly
+
+
+/*!
+Handles local echoing of the specified key code.
+
+Any key that the local terminal does not understand will be
+displayed in a hovering window instead of being sent to the
+local terminal.
+
+If the echo is set to hover in a window, the window may display
+a glyph that represents the key instead of a raw interpretation
+of the byte.
+
+If the echo is set to enter text into the local terminal, the
+interpretation of the key won’t necessarily match the hover
+version, and there may even be no effect at all.  But typically
+any cursor-control keys will locally move the cursor, and any
+printable characters will just be displayed.
+
+(4.0)
+*/
+void
+localEchoKey	(My_SessionPtr	inPtr,
+				 UInt8			inKeyOrASCII)
+{
+	Boolean		writeVerbatim = true;
+	Boolean		hoverEcho = false;
+	
+	
+	// special case; control characters that are sent as strings
+	// of a single byte are converted into visible sequences
+	// because they will not otherwise be visible
+	if (inKeyOrASCII <= 0x1F)
+	{
+		if (0x0D == inKeyOrASCII)
+		{
+			// carriage return; special-case this and do not print control-M
+			//UInt8	seqUTF8[] = {0xE2, 0x8F, 0x8E}; // return symbol
+			UInt8	seqUTF8[] = {0xE2, 0x86, 0xB5}; // down-left-hook symbol
+			
+			
+			terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));
+			writeVerbatim = false;
+		}
+		else
+		{
+			// control character; convert to a caret sequence (but with the Unicode control symbol)
+			char const*		controlSymbols = "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]~?"; // must contain exactly 32 symbols
+			UInt8			controlCharBuffer[4] = {0xE2, 0x8C, 0x83, '\0'}; // UTF-8 control symbol followed by a letter/symbol
+			
+			
+			assert(32 == CPP_STD::strlen(controlSymbols));
+			controlCharBuffer[3] = controlSymbols[inKeyOrASCII];
+			terminalHoverLocalEchoString(inPtr, controlCharBuffer, sizeof(controlCharBuffer));
+			writeVerbatim = false;
+		}
+	}
+	else if (127 == inKeyOrASCII)
+	{
+		// delete; make the Unicode (UTF-8) backward-delete symbol
+		UInt8	seqUTF8[] = { 0xE2, 0x8C, 0xAB};
+		
+		
+		terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));
+		writeVerbatim = false;
+	}
+	else
+	{
+		switch (inKeyOrASCII)
+		{
+		case VSLT:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				UInt8	seqUTF8[] = {0xE2, 0x87, 0xA0}; // keyboard left arrow
+				
+				
+				terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSRT:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				UInt8	seqUTF8[] = {0xE2, 0x87, 0xA2}; // keyboard right arrow
+				
+				
+				terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSUP:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				UInt8	seqUTF8[] = {0xE2, 0x87, 0xA1}; // keyboard up arrow
+				
+				
+				terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSDN:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				UInt8	seqUTF8[] = {0xE2, 0x87, 0xA3}; // keyboard down arrow
+				
+				
+				terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSKE:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				UInt8	seqUTF8[] = {0xE2, 0x8C, 0xA4}; // enter symbol (arrow head between two bars)
+				
+				
+				terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF1:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("PF1", UInt8 const*), 3);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF2:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("PF2", UInt8 const*), 3);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF3:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("PF3", UInt8 const*), 3);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF4:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("PF4", UInt8 const*), 3);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF6:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("F6", UInt8 const*), 2);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF7:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("F7", UInt8 const*), 2);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF8:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("F8", UInt8 const*), 2);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF9:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("F9", UInt8 const*), 2);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF10:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("F10", UInt8 const*), 3);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF11:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("F11", UInt8 const*), 3);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF12:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("F12", UInt8 const*), 3);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF13:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("F13", UInt8 const*), 3);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF14:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("F14", UInt8 const*), 3);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF15_220HELP:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("help", UInt8 const*), 4);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF16_220DO:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("do", UInt8 const*), 2);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF17:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("F17", UInt8 const*), 3);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF18:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("F18", UInt8 const*), 3);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF19:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("F19", UInt8 const*), 3);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSF20:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("F20", UInt8 const*), 3);
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSHELP_220FIND:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("find", UInt8 const*), 4); // LOCALIZE THIS
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSHOME_220INS:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("insert", UInt8 const*), 6); // LOCALIZE THIS
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSPGUP_220DEL:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("delete", UInt8 const*), 6); // LOCALIZE THIS
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSDEL_220SEL:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("select", UInt8 const*), 6); // LOCALIZE THIS
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSEND_220PGUP:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("page up", UInt8 const*), 7); // LOCALIZE THIS
+				writeVerbatim = false;
+			}
+			break;
+		
+		case VSPGDN_220PGDN:
+			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
+			if (hoverEcho)
+			{
+				// TEMPORARY: only makes sense for VT220 terminals
+				terminalHoverLocalEchoString(inPtr, REINTERPRET_CAST("page down", UInt8 const*), 9); // LOCALIZE THIS
+				writeVerbatim = false;
+			}
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
+	
+	if (writeVerbatim)
+	{
+		terminalInsertLocalEchoString(inPtr, &inKeyOrASCII, 1/* byte count */);
+	}
+}// localEchoKey
+
+
+/*!
+Immediately sends the specified string to the local terminal,
+as bytes in its output text encoding (defined by a call to
+Session_SetSendDataEncoding()).
+
+(4.0)
+*/
+void
+localEchoString		(My_SessionPtr		inPtr,
+					 CFStringRef		inStringBuffer)
+{
+	if (nullptr != inStringBuffer)
+	{
+		// convert the stream from UTF-8 into the encoding of the session
+		try
+		{
+			size_t const	kBufferSize = (1 + CFStringGetMaximumSizeForEncoding
+											(CFStringGetLength(inStringBuffer), inPtr->writeEncoding));
+			char*			stringBuffer = new char[kBufferSize];
+			
+			
+			stringBuffer[kBufferSize - 1] = '\0';
+			if (false == CFStringGetCString(inStringBuffer, stringBuffer, kBufferSize, inPtr->writeEncoding))
+			{
+				Console_Warning(Console_WriteValue, "input text does not match terminal with text encoding", inPtr->writeEncoding);
+				Console_Warning(Console_WriteValueCFString, "cannot convert into the encoding used by this terminal, text", inStringBuffer);
+			}
+			else
+			{
+				terminalInsertLocalEchoString(inPtr, REINTERPRET_CAST(stringBuffer, UInt8 const*), CPP_STD::strlen(stringBuffer));
+			}
+			delete [] stringBuffer;
+		}
+		catch (std::bad_alloc)
+		{
+			Console_WriteLine("local echo of string failed, out of memory!");
+		}
+	}
+}// localEchoString
 
 
 /*!
@@ -6826,6 +7084,61 @@ setIconFromState	(My_SessionPtr	inPtr)
 
 
 /*!
+Displays the specified text temporarily in a floating window.
+(For now, it is just a help tag, which serves the purpose but
+is smaller and uglier than is desired...TEMPORARY.)
+
+The given byte sequence MUST use UTF-8 encoding.
+
+(4.0)
+*/
+void
+terminalHoverLocalEchoString	(My_SessionPtr		inPtr,
+								 UInt8 const*		inBytes,
+								 size_t				inCount)
+{
+	// update the help tag and display it
+	My_HMHelpContentRecWrap&	tagData = createHelpTagForLocalEcho();
+	HIRect						globalCursorBounds;
+	CFRetainRelease				stringObject(CFStringCreateWithBytes(kCFAllocatorDefault, inBytes, inCount,
+																		kCFStringEncodingUTF8, false/* is external */), true/* is retained */);
+	
+	
+	tagData.rename(stringObject.returnCFStringRef(), nullptr/* alternate text */);
+	TerminalView_GetCursorGlobalBounds(TerminalWindow_ReturnViewWithFocus
+										(Session_ReturnActiveTerminalWindow(inPtr->selfRef)),
+										globalCursorBounds);
+	tagData.setFrame(globalCursorBounds);
+	(OSStatus)HMDisplayTag(tagData.ptr());
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+	// this call does not immediately hide the tag, but rather after a short delay
+	if (FlagManager_Test(kFlagOS10_4API))
+	{
+		(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
+	}
+#endif
+}// terminalHoverLocalEchoString
+
+
+/*!
+Displays the specified text immediately in the local terminal
+of the session.
+
+The given byte sequence MUST use the write encoding of the
+session, as set by Session_SetSendDataEncoding().
+
+(4.0)
+*/
+void
+terminalInsertLocalEchoString	(My_SessionPtr		inPtr,
+								 UInt8 const*		inBytes,
+								 size_t				inCount)
+{
+	Session_TerminalWrite(inPtr->selfRef, inBytes, inCount);
+}// terminalInsertLocalEchoString
+
+
+/*!
 Invoked whenever a monitored terminal window state is
 changed (see where TerminalWindow_New() is called for
 a session, to see which states are subsequently
@@ -6919,87 +7232,6 @@ terminalWindowChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// terminalWindowChanged
-
-
-/*!
-Displays the specified text as a local echo.  Traditionally
-this means dumping it into the terminal without sending it
-to the running session, but MacTelnet handles this by
-displaying it only temporarily in a floating window.  (For
-now, it is just a help tag, which serves the purpose but is
-smaller and uglier than is desired...TEMPORARY.)
-
-The given byte sequence MUST use UTF-8 encoding.
-
-(4.0)
-*/
-void
-terminalWriteLocalEchoString	(My_SessionPtr		inPtr,
-								 UInt8 const*		inBytes,
-								 size_t				inCount)
-{
-	UInt8		controlCharBuffer[4] = {0xE2, 0x8C, 0x83, '\0'}; // UTF-8 control symbol followed by a letter/symbol
-	
-	
-	// special case; control characters that are sent as strings
-	// of a single byte are converted into visible sequences
-	// because they will not otherwise be visible
-	if (1 == inCount)
-	{
-		if (inBytes[0] <= 0x1F)
-		{
-			// control character; convert to a caret sequence (but with the Unicode control symbol)
-			char const*		controlSymbols = "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]~?"; // must contain exactly 32 symbols
-			
-			
-			assert(32 == CPP_STD::strlen(controlSymbols));
-			controlCharBuffer[3] = controlSymbols[inBytes[0]];
-			inBytes = controlCharBuffer;
-			inCount = sizeof(controlCharBuffer);
-		}
-		else if (32 == inBytes[0])
-		{
-			// space; make the Unicode (UTF-8) bottom-bracket symbol
-			controlCharBuffer[0] = 0xE2;
-			controlCharBuffer[1] = 0x8E;
-			controlCharBuffer[2] = 0xB5;
-			inBytes = controlCharBuffer;
-			inCount = 3;
-		}
-		else if (127 == inBytes[0])
-		{
-			// delete; make the Unicode (UTF-8) backward-delete symbol
-			controlCharBuffer[0] = 0xE2;
-			controlCharBuffer[1] = 0x8C;
-			controlCharBuffer[2] = 0xAB;
-			inBytes = controlCharBuffer;
-			inCount = 3;
-		}
-	}
-	
-	// now, update the help tag and display it
-	{
-		My_HMHelpContentRecWrap&	tagData = createHelpTagForLocalEcho();
-		HIRect						globalCursorBounds;
-		CFRetainRelease				stringObject(CFStringCreateWithBytes(kCFAllocatorDefault, inBytes, inCount,
-																			kCFStringEncodingUTF8, false/* is external */), true/* is retained */);
-		
-		
-		tagData.rename(stringObject.returnCFStringRef(), nullptr/* alternate text */);
-		TerminalView_GetCursorGlobalBounds(TerminalWindow_ReturnViewWithFocus
-											(Session_ReturnActiveTerminalWindow(inPtr->selfRef)),
-											globalCursorBounds);
-		tagData.setFrame(globalCursorBounds);
-		(OSStatus)HMDisplayTag(tagData.ptr());
-	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-		// this call does not immediately hide the tag, but rather after a short delay
-		if (FlagManager_Test(kFlagOS10_4API))
-		{
-			(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
-		}
-	#endif
-	}
-}// terminalWriteLocalEchoString
 
 
 /*!
@@ -7262,10 +7494,15 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 		
 		case kSession_WatchForKeepAlive:
 			{
-				std::string		transmission = Quills::Session::keep_alive_transmission();
+				std::string			transmission = Quills::Session::keep_alive_transmission();
+				CFRetainRelease		asObject(CFStringCreateWithCString(kCFAllocatorDefault, transmission.c_str(), kCFStringEncodingUTF8),
+												true/* is retained */);
 				
 				
-				Session_UserInputString(inPtr->selfRef, transmission.c_str(), transmission.size());
+				if (asObject.exists())
+				{
+					Session_UserInputCFString(inPtr->selfRef, asObject.returnCFStringRef());
+				}
 			}
 			break;
 		
