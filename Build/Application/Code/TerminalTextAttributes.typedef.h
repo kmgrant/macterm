@@ -112,7 +112,7 @@ custom colors.
  |  |  |  |   |  |  |  |   |  |  |  |   |  |  |  |     |  |
  |  |  |  |   |  |  |  |   |  |  |  |   |  |  |  |     |  +--------- 14: is selected by the user (for copy, print, etc.)?
  |  |  |  |   |  |  |  |   |  |  |  |   |  |  |  |     |
- |  |  |  |   |  |  |  |   |  |  |  |   |  |  |  |     +------------ 15: UNDEFINED - set to 0
+ |  |  |  |   |  |  |  |   |  |  |  |   |  |  |  |     +------------ 15: is prohibited from being erased by selective erases
  |  |  |  |   |  |  |  |   |  |  |  |   |  |  |  |
  |  |  |  |   |  |  |  |   |  |  |  |   |  |  |  |
  |  |  |  |   |  |  |  |   +--+--+--+---+--+--+--+--- 23-16: index selecting one of up to 256 foreground colors (sometimes fewer, e.g. 8, [1])
@@ -164,6 +164,7 @@ enum
 																	//!  terminal; for example, graphics are different for VT52 than VT100)
 	kTerminalTextAttributeSearchResult		= 0x00002000,			//!< is text highlighted as being part of a search result?
 	kTerminalTextAttributeSelected			= 0x00004000,			//!< is text highlighted as being part of the selection?
+	kTerminalTextAttributeCannotErase		= 0x00008000,			//!< is text marked as do-not-touch by selective erase sequences?
 };
 
 
@@ -220,6 +221,8 @@ static inline Boolean STYLE_USE_VT_GRAPHICS				(TerminalTextAttributes x) { retu
 static inline Boolean STYLE_SEARCH_RESULT				(TerminalTextAttributes x) { return ((x & kTerminalTextAttributeSearchResult) != 0); }
 
 static inline Boolean STYLE_SELECTED					(TerminalTextAttributes x) { return ((x & kTerminalTextAttributeSelected) != 0); }
+
+static inline Boolean STYLE_CANNOT_ERASE				(TerminalTextAttributes x) { return ((x & kTerminalTextAttributeCannotErase) != 0); }
 
 static inline TerminalTextAttributes& STYLE_ADD			(TerminalTextAttributes& x, TerminalTextAttributes y) { x |= y; return x; }
 static inline TerminalTextAttributes& STYLE_REMOVE		(TerminalTextAttributes& x, TerminalTextAttributes y) { x &= ~y; return x; }

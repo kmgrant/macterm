@@ -371,6 +371,19 @@ enum My_AttributeRule
 	kMy_AttributeRuleCopyLastLine	= 1		//!< newly-created lines copy all of the attributes of the line that used to be at the end
 };
 
+typedef UInt32 My_BufferChanges;
+enum
+{
+	kMy_BufferChangesEraseAllText				= (1 << 0),		//!< erase every character (otherwise, only erasable text from selective erase is removed)
+	kMy_BufferChangesResetCharacterAttributes	= (1 << 1),		//!< every character is set to normal (otherwise, SGR-defined attributes are untouched)
+	kMy_BufferChangesResetLineAttributes		= (1 << 1),		//!< any completely-erased line resets line attributes, such as double-sized text, to normal;
+																//!  if you use this option then you must also use kMy_BufferChangesResetCharacterAttributes
+	kMy_BufferChangesNormal = (kMy_BufferChangesEraseAllText |
+								kMy_BufferChangesResetCharacterAttributes |
+								kMy_BufferChangesResetLineAttributes),
+	kMy_BufferChangesSelective = 0
+};
+
 enum My_CharacterSet
 {
 	kMy_CharacterSetVT100UnitedKingdom		= 0,	//!< ASCII character set except '#' is '£' (British pounds currency symbol)
@@ -1423,17 +1436,24 @@ public:
 	static void		deviceStatusReportKeyboardLanguage	(My_ScreenBufferPtr);
 	static void		deviceStatusReportPrinterPort		(My_ScreenBufferPtr);
 	static void		deviceStatusReportUserDefinedKeys	(My_ScreenBufferPtr);
+	static void		eraseCharacters						(My_ScreenBufferPtr);
+	static void		insertBlankCharacters				(My_ScreenBufferPtr);
 	static void		primaryDeviceAttributes				(My_ScreenBufferPtr);
 	static void		secondaryDeviceAttributes			(My_ScreenBufferPtr);
+	static void		selectCharacterAttributes			(My_ScreenBufferPtr);
+	static void		selectiveEraseInDisplay				(My_ScreenBufferPtr);
+	static void		selectiveEraseInLine				(My_ScreenBufferPtr);
 
 protected:
 	// The names of these constants use the same mnemonics from
 	// the programming manual of the original terminal.
 	enum State
 	{
-		kStateDECSCLHeader		= kMy_ParserStateSeenESCLeftSqBracketParamsQuotes,	//!< compatibility level, header (need 'p' to finish)
+		kStateDECSCA			= 'VSCA',								//!< select character attributes
 		kStateDECSCL			= 'VSCL',								//!< compatibility level
 		kStateDECSTR			= kMy_ParserStateSeenESCLeftSqBracketExPointp,	//!< soft terminal reset
+		kStateECH				= kMy_ParserStateSeenESCLeftSqBracketParamsX,	//!< erase characters without insertion
+		kStateICH				= kMy_ParserStateSeenESCLeftSqBracketParamsAt,	//!< insert blank characters
 		kStateLS1R				= kMy_ParserStateSeenESCTilde,			//!< lock shift G1, right side
 		kStateLS2				= kMy_ParserStateSeenESCn,				//!< lock shift G2, left side
 		kStateLS2R				= kMy_ParserStateSeenESCRightBrace,		//!< lock shift G2, right side
@@ -1521,9 +1541,7 @@ public:
 	static void		cursorForwardTabulation			(My_ScreenBufferPtr);
 	static void		cursorNextLine					(My_ScreenBufferPtr);
 	static void		cursorPreviousLine				(My_ScreenBufferPtr);
-	static void		deleteCharacters				(My_ScreenBufferPtr);
 	static void		horizontalPositionAbsolute		(My_ScreenBufferPtr);
-	static void		insertBlankCharacters			(My_ScreenBufferPtr);
 	static void		scrollDown						(My_ScreenBufferPtr);
 	static void		scrollUp						(My_ScreenBufferPtr);
 	static void		verticalPositionAbsolute		(My_ScreenBufferPtr);
@@ -1536,9 +1554,7 @@ public:
 		kStateCHT				= kMy_ParserStateSeenESCLeftSqBracketParamsI,			//!< cursor forward tabulation
 		kStateCNL				= kMy_ParserStateSeenESCLeftSqBracketParamsE,			//!< cursor next line
 		kStateCPL				= kMy_ParserStateSeenESCLeftSqBracketParamsF,			//!< cursor previous line
-		kStateECH				= kMy_ParserStateSeenESCLeftSqBracketParamsX,			//!< erase characters without insertion
 		kStateHPA				= kMy_ParserStateSeenESCLeftSqBracketParamsBackquote,	//!< horizontal (character) position absolute
-		kStateICH				= kMy_ParserStateSeenESCLeftSqBracketParamsAt,			//!< insert blank characters
 		kStateSD				= kMy_ParserStateSeenESCLeftSqBracketParamsT,			//!< scroll down
 		kStateSU				= kMy_ParserStateSeenESCLeftSqBracketParamsS,			//!< scroll up
 		kStateVPA				= kMy_ParserStateSeenESCLeftSqBracketParamsd,			//!< vertical position absolute
@@ -1563,15 +1579,14 @@ void						addScreenLineLength						(My_ScreenBufferPtr, CFMutableStringRef, UInt
 void						appendScreenLinePtrToList				(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
 void						appendScreenLineRawToCFString			(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
 void						assertScrollingRegion					(My_ScreenBufferPtr);
-void						bufferEraseFromCursorColumn				(My_ScreenBufferPtr, UInt16 = 1);
-void						bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr);
-void						bufferEraseFromCursorToEnd				(My_ScreenBufferPtr);
-void						bufferEraseFromHomeToCursor				(My_ScreenBufferPtr);
-void						bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr);
-void						bufferEraseLineWithoutUpdate			(My_ScreenBufferPtr, My_ScreenBufferLine&);
-void						bufferEraseLineWithUpdate				(My_ScreenBufferPtr, SInt16);
-void						bufferEraseVisibleScreenWithUpdate		(My_ScreenBufferPtr);
-void						bufferEraseWithoutUpdate				(My_ScreenBufferPtr);
+void						bufferEraseCursorLine					(My_ScreenBufferPtr, My_BufferChanges);
+void						bufferEraseFromCursorColumn				(My_ScreenBufferPtr, My_BufferChanges, UInt16);
+void						bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr, My_BufferChanges);
+void						bufferEraseFromCursorToEnd				(My_ScreenBufferPtr, My_BufferChanges);
+void						bufferEraseFromHomeToCursor				(My_ScreenBufferPtr, My_BufferChanges);
+void						bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr, My_BufferChanges);
+void						bufferEraseLineWithoutUpdate			(My_ScreenBufferPtr, My_BufferChanges, My_ScreenBufferLine&);
+void						bufferEraseVisibleScreen				(My_ScreenBufferPtr, My_BufferChanges);
 void						bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr, SInt16);
 void						bufferInsertBlankLines					(My_ScreenBufferPtr, UInt16,
 																	 My_ScreenBufferLineList::iterator&,
@@ -6421,7 +6436,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			break;
 		
 		default:
-			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape", kTriggerChar);
+			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape", kTriggerChar);
 			inNowOutNext.second = kDefaultNextState;
 			result = 0; // do not absorb the unknown
 			break;
@@ -6451,7 +6466,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			break;
 		
 		default:
-			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-!", kTriggerChar);
+			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-!", kTriggerChar);
 			inNowOutNext.second = kDefaultNextState;
 			result = 0; // do not absorb the unknown
 			break;
@@ -6681,7 +6696,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			break;
 		
 		default:
-			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-*", kTriggerChar);
+			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-*", kTriggerChar);
 			inNowOutNext.second = kDefaultNextState;
 			result = 0; // do not absorb the unknown
 			break;
@@ -6768,7 +6783,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			break;
 		
 		default:
-			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-+", kTriggerChar);
+			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-+", kTriggerChar);
 			inNowOutNext.second = kDefaultNextState;
 			result = 0; // do not absorb the unknown
 			break;
@@ -6855,7 +6870,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			break;
 		
 		default:
-			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-(", kTriggerChar);
+			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-(", kTriggerChar);
 			inNowOutNext.second = kDefaultNextState;
 			result = 0; // do not absorb the unknown
 			break;
@@ -6942,7 +6957,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			break;
 		
 		default:
-			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-)", kTriggerChar);
+			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-)", kTriggerChar);
 			inNowOutNext.second = kDefaultNextState;
 			result = 0; // do not absorb the unknown
 			break;
@@ -7073,7 +7088,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			break;
 		
 		default:
-			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-#", kTriggerChar);
+			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-#", kTriggerChar);
 			inNowOutNext.second = kDefaultNextState;
 			result = 0; // do not absorb the unknown
 			break;
@@ -7092,7 +7107,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			break;
 		
 		default:
-			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-space", kTriggerChar);
+			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-space", kTriggerChar);
 			inNowOutNext.second = kDefaultNextState;
 			result = 0; // do not absorb the unknown
 			break;
@@ -7101,7 +7116,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 	
 	default:
 		// unknown state!
-		//Console_WriteValueCharacter("WARNING, terminal entered unknown state; choosing a valid state based on character", kTriggerChar);
+		//Console_Warning(Console_WriteValueCharacter, "terminal entered unknown state; choosing a valid state based on character", kTriggerChar);
 		inNowOutNext.second = kDefaultNextState;
 		result = 0; // do not absorb the unknown
 		break;
@@ -7142,7 +7157,7 @@ stateTransition		(My_ScreenBufferPtr			UNUSED_ARGUMENT(inDataPtr),
 	}
 	
 	// decide what to do based on the proposed transition
-	//Console_WriteValueFourChars("WARNING, no known actions associated with new terminal state", inOldNew.second);
+	//Console_Warning(Console_WriteValueFourChars, "no known actions associated with new terminal state", inOldNew.second);
 	// the trigger character would also be skipped in this case
 	
 	return result;
@@ -7319,7 +7334,7 @@ My_VT100::
 alignmentDisplay	(My_ScreenBufferPtr		inDataPtr)
 {
 	// first clear the buffer, saving it to scrollback if appropriate
-	bufferEraseVisibleScreenWithUpdate(inDataPtr);
+	bufferEraseVisibleScreen(inDataPtr, kMy_BufferChangesNormal);
 	
 	// now fill the lines with letter-E characters; technically this
 	// also will reset all attributes and this may not be part of the
@@ -7620,15 +7635,15 @@ eraseInDisplay		(My_ScreenBufferPtr		inDataPtr)
 	{
 	case kMy_ParamUndefined: // when nothing is given, the default value is 0
 	case 0:
-		bufferEraseFromCursorToEnd(inDataPtr);
+		bufferEraseFromCursorToEnd(inDataPtr, kMy_BufferChangesNormal);
 		break;
 	
 	case 1:
-		bufferEraseFromHomeToCursor(inDataPtr);
+		bufferEraseFromHomeToCursor(inDataPtr, kMy_BufferChangesNormal);
 		break;
 	
 	case 2:
-		bufferEraseVisibleScreenWithUpdate(inDataPtr);
+		bufferEraseVisibleScreen(inDataPtr, kMy_BufferChangesNormal);
 		break;
 	
 	default:
@@ -7652,15 +7667,15 @@ eraseInLine		(My_ScreenBufferPtr		inDataPtr)
 	{
 	case kMy_ParamUndefined: // when nothing is given, the default value is 0
 	case 0:
-		bufferEraseFromCursorColumnToLineEnd(inDataPtr);
+		bufferEraseFromCursorColumnToLineEnd(inDataPtr, kMy_BufferChangesNormal);
 		break;
 	
 	case 1:
-		bufferEraseFromLineBeginToCursorColumn(inDataPtr);
+		bufferEraseFromLineBeginToCursorColumn(inDataPtr, kMy_BufferChangesNormal);
 		break;
 	
 	case 2:
-		bufferEraseLineWithUpdate(inDataPtr, -1/* line number, or negative for cursor line */);
+		bufferEraseCursorLine(inDataPtr, kMy_BufferChangesNormal);
 		break;
 	
 	default:
@@ -9311,11 +9326,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateEES:
-		bufferEraseFromCursorToEnd(inDataPtr); // erase to end of screen, in VT52 compatibility mode of VT100
+		bufferEraseFromCursorToEnd(inDataPtr, kMy_BufferChangesNormal); // erase to end of screen, in VT52 compatibility mode of VT100
 		break;
 	
 	case kStateEEL:
-		bufferEraseFromCursorColumnToLineEnd(inDataPtr); // erase to end of line, in VT52 compatibility mode of VT100
+		bufferEraseFromCursorColumnToLineEnd(inDataPtr, kMy_BufferChangesNormal); // erase to end of line, in VT52 compatibility mode of VT100
 		break;
 	
 	case kStateDCA:
@@ -9843,7 +9858,10 @@ compatibilityLevel		(My_ScreenBufferPtr		inDataPtr)
 				
 				default:
 					// ???
-					Console_Warning(Console_WriteValue, "VT220 in DECSCL/VT200 mode did not expect parameter", inDataPtr->emulator.argList[1]);
+					if (DebugInterface_LogsTerminalInputChar())
+					{
+						Console_Warning(Console_WriteValue, "VT220 in DECSCL/VT200 mode did not expect parameter", inDataPtr->emulator.argList[1]);
+					}
 					break;
 				}
 				inDataPtr->emulator.set8Bit(isEightBit);
@@ -9853,7 +9871,10 @@ compatibilityLevel		(My_ScreenBufferPtr		inDataPtr)
 		
 		default:
 			// ???
-			Console_Warning(Console_WriteValue, "VT220 in DECSCL mode did not expect parameter", inDataPtr->emulator.argList[0]);
+			if (DebugInterface_LogsTerminalInputChar())
+			{
+				Console_Warning(Console_WriteValue, "VT220 in DECSCL mode did not expect parameter", inDataPtr->emulator.argList[0]);
+			}
 			break;
 		}
 	}
@@ -9940,6 +9961,36 @@ deviceStatusReportUserDefinedKeys	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+Handles the VT220 'ECH' sequence.
+
+This should accept zero or one parameters.  With no parameters,
+a single character is erased at the character position, without
+offsetting anything after that point.  Otherwise, the parameter
+refers to the number of characters to erase (and again, without
+affecting anything outside that range on the line).
+
+(4.0)
+*/
+void
+My_VT220::
+eraseCharacters		(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16		characterCount = inDataPtr->emulator.argList[0];
+	
+	
+	if (0 != characterCount)
+	{
+		if (kMy_ParamUndefined == characterCount)
+		{
+			characterCount = 1;
+		}
+		
+		bufferEraseFromCursorColumn(inDataPtr, kMy_BufferChangesNormal, characterCount);
+	}
+}// My_VT220::eraseCharacters
+
+
+/*!
 A standard "My_EmulatorResetProcPtr" to reset VT220-specific
 settings.
 
@@ -9967,6 +10018,65 @@ hardSoftReset	(My_EmulatorPtr		inEmulatorPtr,
 	// debug
 	//Console_WriteValue("    <<< VT220 has reset, soft", inIsSoftReset);
 }// hardSoftReset
+
+
+/*!
+Handles the VT220 'ICH' sequence.
+
+This should accept zero or one parameters.  With no parameters,
+a single blank character is inserted at the character position,
+moving the rest of the line over by one column.  Otherwise, the
+parameter refers to the number of blank characters to insert
+(shifting the line by that amount).
+
+(4.0)
+*/
+void
+My_VT220::
+insertBlankCharacters	(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16		characterCount = inDataPtr->emulator.argList[0];
+	
+	
+	if (0 != characterCount)
+	{
+		SInt16				preWriteCursorX = inDataPtr->current.cursorX;
+		My_ScreenRowIndex	preWriteCursorY = inDataPtr->current.cursorY;
+		
+		
+		if (kMy_ParamUndefined == characterCount)
+		{
+			characterCount = 1;
+		}
+		
+		bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, characterCount);
+		
+		// add the effects of the insert to the text-change region;
+		// this should trigger things like Terminal View updates
+		{
+			Terminal_RangeDescription	range;
+			
+			
+			range.screen = inDataPtr->selfRef;
+			range.firstRow = preWriteCursorY;
+			if (preWriteCursorY != inDataPtr->current.cursorY)
+			{
+				// more than one line; just draw all lines completely
+				range.firstColumn = 0;
+				range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
+				range.rowCount = inDataPtr->current.cursorY - preWriteCursorY + 1;
+			}
+			else
+			{
+				// invalidate the entire line starting from the original cursor column
+				range.firstColumn = preWriteCursorX;
+				range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - preWriteCursorX;
+				range.rowCount = 1;
+			}
+			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
+		}
+	}
+}// My_VT220::insertBlankCharacters
 
 
 /*!
@@ -10029,6 +10139,133 @@ secondaryDeviceAttributes	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+Handles the VT220 'DECSCA' sequence.  See the VT220 manual for
+complete details.
+
+(4.0)
+*/
+inline void
+My_VT220::
+selectCharacterAttributes	(My_ScreenBufferPtr		inDataPtr)
+{
+	if (inDataPtr->emulator.argLastIndex >= 0)
+	{
+		switch (inDataPtr->emulator.argList[0])
+		{
+		case 0:
+			// all non-SGR attributes off (currently equivalent to a "2")
+			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeCannotErase);
+			break;
+		
+		case 1:
+			// character set CANNOT be erased by DECSEL/DECSED sequences
+			STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeCannotErase);
+			break;
+		
+		case 2:
+			// character set CAN be erased by DECSEL/DECSED sequences
+			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeCannotErase);
+			break;
+		
+		default:
+			// ???
+			if (DebugInterface_LogsTerminalInputChar())
+			{
+				Console_Warning(Console_WriteValue, "VT220 in DECSCA mode did not expect parameter", inDataPtr->emulator.argList[0]);
+			}
+			break;
+		}
+	}
+}// My_VT220::selectCharacterAttributes
+
+
+/*!
+Handles the VT220 'DECSED' sequence.  See the VT220
+manual for complete details.
+
+(4.0)
+*/
+inline void
+My_VT220::
+selectiveEraseInDisplay		(My_ScreenBufferPtr		inDataPtr)
+{
+	assert(kMy_ParamPrivate == inDataPtr->emulator.argList[0]);
+	
+	if (inDataPtr->emulator.argLastIndex >= 1)
+	{
+		switch (inDataPtr->emulator.argList[1])
+		{
+		case kMy_ParamUndefined: // when nothing is given, the default value is 0
+		case 0:
+			bufferEraseFromCursorToEnd(inDataPtr, kMy_BufferChangesSelective);
+			break;
+		
+		case 1:
+			bufferEraseFromHomeToCursor(inDataPtr, kMy_BufferChangesSelective);
+			break;
+		
+		case 2:
+			bufferEraseVisibleScreen(inDataPtr, kMy_BufferChangesSelective);
+			break;
+		
+		default:
+			// ???
+			if (DebugInterface_LogsTerminalInputChar())
+			{
+				Console_Warning(Console_WriteValue, "VT220 selective-erase-in-display did not recognize ?-parameter",
+								inDataPtr->emulator.argList[1]);
+			}
+			break;
+		}
+	}
+}// My_VT220::selectiveEraseInDisplay
+
+
+/*!
+Handles the VT220 'DECSEL' sequence.  See the VT220
+manual for complete details.
+
+(4.0)
+*/
+inline void
+My_VT220::
+selectiveEraseInLine	(My_ScreenBufferPtr		inDataPtr)
+{
+	assert(kMy_ParamPrivate == inDataPtr->emulator.argList[0]);
+	
+	assert(kMy_ParamPrivate == inDataPtr->emulator.argList[0]);
+	
+	if (inDataPtr->emulator.argLastIndex >= 1)
+	{
+		switch (inDataPtr->emulator.argList[1])
+		{
+		case kMy_ParamUndefined: // when nothing is given, the default value is 0
+		case 0:
+			bufferEraseFromCursorColumnToLineEnd(inDataPtr, kMy_BufferChangesSelective);
+			break;
+		
+		case 1:
+			bufferEraseFromLineBeginToCursorColumn(inDataPtr, kMy_BufferChangesSelective);
+			break;
+		
+		case 2:
+			bufferEraseCursorLine(inDataPtr, kMy_BufferChangesSelective);
+			break;
+		
+		default:
+			// ???
+			if (DebugInterface_LogsTerminalInputChar())
+			{
+				Console_Warning(Console_WriteValue, "VT220 selective-erase-in-line did not recognize ?-parameter",
+								inDataPtr->emulator.argList[1]);
+			}
+			break;
+		}
+	}
+}// My_VT220::selectiveEraseInLine
+
+
+/*!
 A standard "My_EmulatorStateDeterminantProcPtr" that sets
 VT220-specific states based on the characters of the given
 buffer.
@@ -10086,6 +10323,10 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		{
 		case 'p':
 			inNowOutNext.second = kStateDECSCL;
+			break;
+		
+		case 'q':
+			inNowOutNext.second = kStateDECSCA;
 			break;
 		
 		default:
@@ -10248,6 +10489,45 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				outHandled = false;
 			}
 		}
+		break;
+	
+	case My_VT100::kStateED:
+		if ((inDataPtr->emulator.argLastIndex > 0) &&
+			(kMy_ParamPrivate == inDataPtr->emulator.argList[0]))
+		{
+			selectiveEraseInDisplay(inDataPtr);
+		}
+		else
+		{
+			// VT100 will handle this (probably a normal ED sequence)
+			outHandled = false;
+		}
+		break;
+	
+	case My_VT100::kStateEL:
+		if ((inDataPtr->emulator.argLastIndex > 0) &&
+			(kMy_ParamPrivate == inDataPtr->emulator.argList[0]))
+		{
+			selectiveEraseInLine(inDataPtr);
+		}
+		else
+		{
+			// VT100 will handle this (probably a normal EL sequence)
+			outHandled = false;
+		}
+		break;
+	
+	case kStateECH:
+		My_VT220::eraseCharacters(inDataPtr);
+		break;
+	
+	case kStateICH:
+		My_VT220::insertBlankCharacters(inDataPtr);
+		break;
+	
+	case kStateDECSCA:
+		// select character attributes (other than those set by SGR)
+		My_VT220::selectCharacterAttributes(inDataPtr);
 		break;
 	
 	case kStateDECSCL:
@@ -10595,36 +10875,6 @@ cursorPreviousLine		(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
-Handles the XTerm 'ECH' sequence.
-
-This should accept zero or one parameters.  With no parameters,
-a single character is erased at the character position, without
-offsetting anything after that point.  Otherwise, the parameter
-refers to the number of characters to erase (and again, without
-affecting anything outside that range on the line).
-
-(4.0)
-*/
-void
-My_XTerm::
-deleteCharacters	(My_ScreenBufferPtr		inDataPtr)
-{
-	SInt16		characterCount = inDataPtr->emulator.argList[0];
-	
-	
-	if (0 != characterCount)
-	{
-		if (kMy_ParamUndefined == characterCount)
-		{
-			characterCount = 1;
-		}
-		
-		bufferEraseFromCursorColumn(inDataPtr, characterCount);
-	}
-}// My_XTerm::deleteCharacters
-
-
-/*!
 Handles the XTerm 'HPA' sequence.
 
 This should accept up to 2 parameters.  With no parameters, the
@@ -10677,65 +10927,6 @@ horizontalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
 	// automatically enforced by moveCursor...() routines
 	moveCursor(inDataPtr, newX, newY);
 }// My_XTerm::horizontalPositionAbsolute
-
-
-/*!
-Handles the XTerm 'ICH' sequence.
-
-This should accept zero or one parameters.  With no parameters,
-a single blank character is inserted at the character position,
-moving the rest of the line over by one column.  Otherwise, the
-parameter refers to the number of blank characters to insert
-(shifting the line by that amount).
-
-(4.0)
-*/
-void
-My_XTerm::
-insertBlankCharacters	(My_ScreenBufferPtr		inDataPtr)
-{
-	SInt16		characterCount = inDataPtr->emulator.argList[0];
-	
-	
-	if (0 != characterCount)
-	{
-		SInt16				preWriteCursorX = inDataPtr->current.cursorX;
-		My_ScreenRowIndex	preWriteCursorY = inDataPtr->current.cursorY;
-		
-		
-		if (kMy_ParamUndefined == characterCount)
-		{
-			characterCount = 1;
-		}
-		
-		bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, characterCount);
-		
-		// add the effects of the insert to the text-change region;
-		// this should trigger things like Terminal View updates
-		{
-			Terminal_RangeDescription	range;
-			
-			
-			range.screen = inDataPtr->selfRef;
-			range.firstRow = preWriteCursorY;
-			if (preWriteCursorY != inDataPtr->current.cursorY)
-			{
-				// more than one line; just draw all lines completely
-				range.firstColumn = 0;
-				range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
-				range.rowCount = inDataPtr->current.cursorY - preWriteCursorY + 1;
-			}
-			else
-			{
-				// invalidate the entire line starting from the original cursor column
-				range.firstColumn = preWriteCursorX;
-				range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - preWriteCursorX;
-				range.rowCount = 1;
-			}
-			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
-		}
-	}
-}// My_XTerm::insertBlankCharacters
 
 
 /*!
@@ -11051,16 +11242,8 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		cursorPreviousLine(inDataPtr);
 		break;
 	
-	case kStateECH:
-		deleteCharacters(inDataPtr);
-		break;
-	
 	case kStateHPA:
 		horizontalPositionAbsolute(inDataPtr);
-		break;
-	
-	case kStateICH:
-		insertBlankCharacters(inDataPtr);
 		break;
 	
 	case kStateSD:
@@ -11327,6 +11510,45 @@ assertScrollingRegion	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+Erases the entire line containing the cursor.
+
+(2.6)
+*/
+void
+bufferEraseCursorLine	(My_ScreenBufferPtr		inDataPtr,
+						 My_BufferChanges		inChanges)
+{
+	My_ScreenBufferLineList::iterator	cursorLineIterator;
+	SInt16								postWrapCursorX = 0;
+	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
+	
+	
+	// figure out where the cursor is, but first force it to
+	// wrap to the next line if a wrap is pending
+	cursorWrapIfNecessaryGetLocation(inDataPtr, &postWrapCursorX, &postWrapCursorY);
+	locateCursorLine(inDataPtr, cursorLineIterator);
+	
+	// clear appropriate attributes and text
+	bufferEraseLineWithoutUpdate(inDataPtr, inChanges, *cursorLineIterator);
+	
+	// add the entire row contents to the text-change region;
+	// this should trigger things like Terminal View updates
+	//Console_WriteLine("text changed event: erase line");
+	{
+		Terminal_RangeDescription	range;
+		
+		
+		range.screen = inDataPtr->selfRef;
+		range.firstRow = postWrapCursorY;
+		range.firstColumn = 0;
+		range.columnCount = inDataPtr->current.returnNumberOfColumnsPermitted();
+		range.rowCount = 1;
+		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
+	}
+}// bufferEraseCursorLine
+
+
+/*!
 Erases the specified number of characters on the cursor row,
 starting from the cursor position.
 
@@ -11334,10 +11556,13 @@ starting from the cursor position.
 */
 void
 bufferEraseFromCursorColumn		(My_ScreenBufferPtr		inDataPtr,
+								 My_BufferChanges		inChanges,
 								 UInt16					inCharacterCount)
 {
 	My_TextIterator						textIterator = nullptr;
+	My_TextIterator						endText = nullptr;
 	My_TextAttributesList::iterator		attrIterator;
+	My_TextAttributesList::iterator		endAttrs;
 	My_ScreenBufferLineList::iterator	cursorLineIterator;
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
@@ -11352,13 +11577,39 @@ bufferEraseFromCursorColumn		(My_ScreenBufferPtr		inDataPtr,
 	// do not overflow the line buffer
 	fillDistance = std::min(fillDistance, STATIC_CAST(inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX, UInt16));
 	
-	// clear out the specified part of the screen line
+	// find the right line offset
 	attrIterator = cursorLineIterator->attributeVector.begin();
 	std::advance(attrIterator, postWrapCursorX);
+	endAttrs = attrIterator;
+	std::advance(endAttrs, fillDistance);
 	textIterator = cursorLineIterator->textVectorBegin;
 	std::advance(textIterator, postWrapCursorX);
-	std::fill_n(attrIterator, fillDistance, cursorLineIterator->globalAttributes);
-	std::fill_n(textIterator, fillDistance, ' ');
+	endText = textIterator;
+	std::advance(endText, fillDistance);
+	
+	// clear attributes if appropriate; note that since a partial line is
+	// being erased, "kMy_BufferChangesResetLineAttributes" does NOT apply
+	if (inChanges & kMy_BufferChangesResetCharacterAttributes)
+	{
+		std::fill(attrIterator, endAttrs, cursorLineIterator->globalAttributes);
+	}
+	
+	// clear out the specified part of the screen line
+	if (inChanges & kMy_BufferChangesEraseAllText)
+	{
+		std::fill(textIterator, endText, ' ');
+	}
+	else
+	{
+		// erase only erasable characters
+		for (; textIterator != endText; ++textIterator, ++attrIterator)
+		{
+			if ((endAttrs == attrIterator) || (false == STYLE_CANNOT_ERASE(*attrIterator)))
+			{
+				*textIterator = ' ';
+			}
+		}
+	}
 	
 	// add the remainder of the row to the text-change region;
 	// this should trigger things like Terminal View updates
@@ -11384,10 +11635,13 @@ position to the end of the line.
 (2.6)
 */
 void
-bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr)
+bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr,
+										 My_BufferChanges		inChanges)
 {
 	My_TextIterator						textIterator = nullptr;
+	My_TextIterator						endText = nullptr;
 	My_TextAttributesList::iterator		attrIterator;
+	My_TextAttributesList::iterator		endAttrs;
 	My_ScreenBufferLineList::iterator	cursorLineIterator;
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
@@ -11408,14 +11662,37 @@ bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr)
 	cursorWrapIfNecessaryGetLocation(inDataPtr, &postWrapCursorX, &postWrapCursorY);
 	locateCursorLine(inDataPtr, cursorLineIterator);
 	
-	// clear out screen line
+	// find the right line offset
 	attrIterator = cursorLineIterator->attributeVector.begin();
 	std::advance(attrIterator, postWrapCursorX);
+	endAttrs = cursorLineIterator->attributeVector.end();
 	textIterator = cursorLineIterator->textVectorBegin;
 	std::advance(textIterator, postWrapCursorX);
-	std::fill(attrIterator, cursorLineIterator->attributeVector.end(),
-				cursorLineIterator->globalAttributes);
-	std::fill(textIterator, cursorLineIterator->textVectorEnd, ' ');
+	endText = cursorLineIterator->textVectorEnd;
+	
+	// clear attributes if appropriate; note that since a partial line is
+	// being erased, "kMy_BufferChangesResetLineAttributes" does NOT apply
+	if (inChanges & kMy_BufferChangesResetCharacterAttributes)
+	{
+		std::fill(attrIterator, endAttrs, cursorLineIterator->globalAttributes);
+	}
+	
+	// clear out the specified screen line
+	if (inChanges & kMy_BufferChangesEraseAllText)
+	{
+		std::fill(textIterator, endText, ' ');
+	}
+	else
+	{
+		// erase only erasable characters
+		for (; textIterator != endText; ++textIterator, ++attrIterator)
+		{
+			if ((endAttrs == attrIterator) || (false == STYLE_CANNOT_ERASE(*attrIterator)))
+			{
+				*textIterator = ' ';
+			}
+		}
+	}
 	
 	// add the remainder of the row to the text-change region;
 	// this should trigger things like Terminal View updates
@@ -11441,7 +11718,8 @@ up to the end position (last line, last column).
 (2.6)
 */
 void
-bufferEraseFromCursorToEnd  (My_ScreenBufferPtr  inDataPtr)
+bufferEraseFromCursorToEnd  (My_ScreenBufferPtr		inDataPtr,
+							 My_BufferChanges		inChanges)
 {
 	My_ScreenRowIndex	postWrapCursorY = inDataPtr->current.cursorY + 1;
 	
@@ -11464,7 +11742,7 @@ bufferEraseFromCursorToEnd  (My_ScreenBufferPtr  inDataPtr)
 	}
 	
 	// blank out current line from cursor to end, and update
-	bufferEraseFromCursorColumnToLineEnd(inDataPtr);
+	bufferEraseFromCursorColumnToLineEnd(inDataPtr, inChanges);
 	
 	// blank out following rows
 	{
@@ -11478,7 +11756,7 @@ bufferEraseFromCursorToEnd  (My_ScreenBufferPtr  inDataPtr)
 		++lineIterator;
 		for (; lineIterator != inDataPtr->screenBuffer.end(); ++lineIterator)
 		{
-			bufferEraseLineWithoutUpdate(inDataPtr, *lineIterator);
+			bufferEraseLineWithoutUpdate(inDataPtr, inChanges, *lineIterator);
 		}
 	}
 	
@@ -11509,7 +11787,8 @@ columns of line 3.
 (2.6)
 */
 void
-bufferEraseFromHomeToCursor		(My_ScreenBufferPtr  inDataPtr)
+bufferEraseFromHomeToCursor		(My_ScreenBufferPtr		inDataPtr,
+								 My_BufferChanges		inChanges)
 {
 	My_ScreenRowIndex	postWrapCursorY = 0;
 	
@@ -11524,7 +11803,7 @@ bufferEraseFromHomeToCursor		(My_ScreenBufferPtr  inDataPtr)
 	}
 	
 	// blank out current line from beginning to cursor
-	bufferEraseFromLineBeginToCursorColumn(inDataPtr);
+	bufferEraseFromLineBeginToCursorColumn(inDataPtr, inChanges);
 	
 	// blank out previous rows
 	{
@@ -11535,7 +11814,7 @@ bufferEraseFromHomeToCursor		(My_ScreenBufferPtr  inDataPtr)
 		locateCursorLine(inDataPtr, cursorLineIterator);
 		for (; lineIterator != cursorLineIterator; ++lineIterator)
 		{
-			bufferEraseLineWithoutUpdate(inDataPtr, *lineIterator);
+			bufferEraseLineWithoutUpdate(inDataPtr, inChanges, *lineIterator);
 		}
 	}
 	
@@ -11563,24 +11842,56 @@ the line up to and including the cursor position.
 (2.6)
 */
 void
-bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr  inDataPtr)
+bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr		inDataPtr,
+										 My_BufferChanges		inChanges)
 {
-	SInt32								fillLength = 0;
+	My_TextIterator						textIterator = nullptr;
+	My_TextIterator						endText = nullptr;
+	My_TextAttributesList::iterator		attrIterator;
+	My_TextAttributesList::iterator		endAttrs;
+	My_ScreenBufferLineList::iterator	cursorLineIterator;
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
-	My_ScreenBufferLineList::iterator	cursorLineIterator;
+	UInt16								fillDistance = 0;
 	
 	
 	// figure out where the cursor is, but first force it to
 	// wrap to the next line if a wrap is pending
 	cursorWrapIfNecessaryGetLocation(inDataPtr, &postWrapCursorX, &postWrapCursorY);
-	fillLength = 1 + postWrapCursorX;
-	
-	// clear from beginning of line to cursor
 	locateCursorLine(inDataPtr, cursorLineIterator);
-	std::fill_n(cursorLineIterator->attributeVector.begin(), fillLength,
-				cursorLineIterator->globalAttributes);
-	std::fill_n(cursorLineIterator->textVectorBegin, fillLength, ' ');
+	fillDistance = 1 + postWrapCursorX;
+	
+	// find the right line offset
+	attrIterator = cursorLineIterator->attributeVector.begin();
+	endAttrs = attrIterator;
+	std::advance(endAttrs, fillDistance);
+	textIterator = cursorLineIterator->textVectorBegin;
+	endText = textIterator;
+	std::advance(endText, fillDistance);
+	
+	// clear attributes if appropriate; note that since a partial line is
+	// being erased, "kMy_BufferChangesResetLineAttributes" does NOT apply
+	if (inChanges & kMy_BufferChangesResetCharacterAttributes)
+	{
+		std::fill(attrIterator, endAttrs, cursorLineIterator->globalAttributes);
+	}
+	
+	// clear out the specified part of the screen line
+	if (inChanges & kMy_BufferChangesEraseAllText)
+	{
+		std::fill(textIterator, endText, ' ');
+	}
+	else
+	{
+		// erase only erasable characters
+		for (; textIterator != endText; ++textIterator, ++attrIterator)
+		{
+			if ((endAttrs == attrIterator) || (false == STYLE_CANNOT_ERASE(*attrIterator)))
+			{
+				*textIterator = ' ';
+			}
+		}
+	}
 	
 	// add the first part of the row to the text-change region;
 	// this should trigger things like Terminal View updates
@@ -11590,9 +11901,9 @@ bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr  inDataPtr)
 		
 		
 		range.screen = inDataPtr->selfRef;
-		range.firstRow = 0;
+		range.firstRow = postWrapCursorY;
 		range.firstColumn = 0;
-		range.columnCount = fillLength;
+		range.columnCount = fillDistance;
 		range.rowCount = 1;
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 	}
@@ -11600,76 +11911,60 @@ bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr  inDataPtr)
 
 
 /*!
-Erases an entire line in the screen buffer, triggering
-redraws.  See also bufferEraseLineWithoutUpdate(), which
-modifies the data buffer but does not notify about the
-change.
+Erases an entire line in the screen buffer without triggering
+a redraw.  See also bufferEraseCursorLine().
 
-Unlike bufferEraseLineWithoutUpdate(), this routine will
-respect pending cursor wraps when asked to erase the
-cursor line, and will leave line-global attributes
-untouched.  (Its only real purpose is to handle the
-VT100 "EL" sequence correctly.)
+This should generally only be used as a helper to implement
+more specific "bufferErase...()" routines.
 
 (2.6)
 */
 void
-bufferEraseLineWithUpdate		(My_ScreenBufferPtr		inDataPtr,
-								 SInt16					inLineToEraseOrNegativeForCursorLine)
-{
-	My_ScreenRowIndex					postWrapCursorY = inLineToEraseOrNegativeForCursorLine;
-	My_ScreenBufferLineList::iterator	cursorLineIterator;
-	
-	
-	if (inLineToEraseOrNegativeForCursorLine < 0)
-	{
-		SInt16		postWrapCursorX = 0;
-		
-		
-		cursorWrapIfNecessaryGetLocation(inDataPtr, &postWrapCursorX, &postWrapCursorY);
-	}
-	
-	// clear out line
-	// 3.0 - the VT100 spec does not say that EL should erase double-width,
-	//       so leave the line-global attributes unchanged in this routine
-	locateCursorLine(inDataPtr, cursorLineIterator);
-	std::fill(cursorLineIterator->attributeVector.begin(),
-				cursorLineIterator->attributeVector.end(),
-				cursorLineIterator->globalAttributes);
-	std::fill(cursorLineIterator->textVectorBegin, cursorLineIterator->textVectorEnd, ' ');
-	
-	// add the entire row contents to the text-change region;
-	// this should trigger things like Terminal View updates
-	//Console_WriteLine("text changed event: erase line");
-	{
-		Terminal_RangeDescription	range;
-		
-		
-		range.screen = inDataPtr->selfRef;
-		range.firstRow = postWrapCursorY;
-		range.firstColumn = 0;
-		range.columnCount = inDataPtr->current.returnNumberOfColumnsPermitted();
-		range.rowCount = 1;
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
-	}
-}// bufferEraseLineWithUpdate
-
-
-/*!
-Erases an entire line in the screen buffer without
-triggering a redraw.  See also bufferEraseLineWithUpdate().
-
-(2.6)
-*/
-void
-bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
+bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	UNUSED_ARGUMENT(inDataPtr),
+								 My_BufferChanges		inChanges,
 								 My_ScreenBufferLine&	inRow)
 {
+	My_TextIterator						textIterator = nullptr;
+	My_TextIterator						endText = nullptr;
+	My_TextAttributesList::iterator		attrIterator;
+	My_TextAttributesList::iterator		endAttrs;
+	
+	
+	// find the right line offset
+	attrIterator = inRow.attributeVector.begin();
+	endAttrs = inRow.attributeVector.end();
+	textIterator = inRow.textVectorBegin;
+	endText = inRow.textVectorEnd;
+	
 	// 3.0 - line-global attributes are cleared only if clearing an entire line
 	inRow.globalAttributes = kTerminalTextAttributesAllOff;
 	
-	// fill in line
-	bufferLineFill(inDataPtr, inRow, ' ', inRow.globalAttributes, false/* update global attributes */);
+	// clear attributes if appropriate
+	if (inChanges & kMy_BufferChangesResetLineAttributes)
+	{
+		inRow.globalAttributes = kTerminalTextAttributesAllOff;
+	}
+	if (inChanges & kMy_BufferChangesResetCharacterAttributes)
+	{
+		std::fill(attrIterator, endAttrs, inRow.globalAttributes);
+	}
+	
+	// clear out the screen line
+	if (inChanges & kMy_BufferChangesEraseAllText)
+	{
+		std::fill(textIterator, endText, ' ');
+	}
+	else
+	{
+		// erase only erasable characters
+		for (; textIterator != endText; ++textIterator, ++attrIterator)
+		{
+			if ((endAttrs == attrIterator) || (false == STYLE_CANNOT_ERASE(*attrIterator)))
+			{
+				*textIterator = ' ';
+			}
+		}
+	}
 }// bufferEraseLineWithoutUpdate
 
 
@@ -11680,9 +11975,10 @@ buffer if that flag is turned on.  A screen redraw is triggered.
 (2.6)
 */
 void
-bufferEraseVisibleScreenWithUpdate		(My_ScreenBufferPtr		inDataPtr)
+bufferEraseVisibleScreen	(My_ScreenBufferPtr		inDataPtr,
+							 My_BufferChanges		inChanges)
 {
-	//Console_WriteLine("bufferEraseVisibleScreenWithUpdate");
+	//Console_WriteLine("bufferEraseVisibleScreen");
 	
 	// save screen contents in scrollback buffer, if appropriate
 	if (inDataPtr->saveToScrollbackOnClear)
@@ -11697,7 +11993,7 @@ bufferEraseVisibleScreenWithUpdate		(My_ScreenBufferPtr		inDataPtr)
 		
 		for (lineIterator = inDataPtr->screenBuffer.begin(); lineIterator != inDataPtr->screenBuffer.end(); ++lineIterator)
 		{
-			bufferEraseLineWithoutUpdate(inDataPtr, *lineIterator);
+			bufferEraseLineWithoutUpdate(inDataPtr, inChanges, *lineIterator);
 		}
 	}
 	
@@ -11715,30 +12011,7 @@ bufferEraseVisibleScreenWithUpdate		(My_ScreenBufferPtr		inDataPtr)
 		range.rowCount = inDataPtr->screenBuffer.size();
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 	}
-}// bufferEraseVisibleScreenWithUpdate
-
-
-/*!
-Clears out the text area and attributes buffers for
-the specified screen.  All text characters are set to
-blanks, and all attribute bytes become 0.  The display
-is NOT updated.
-
-(2.6)
-*/
-void
-bufferEraseWithoutUpdate	(My_ScreenBufferPtr		inDataPtr)
-{
-	My_ScreenBufferLineList::iterator	lineIterator;
-	
-	
-	for (lineIterator = inDataPtr->screenBuffer.begin(); lineIterator != inDataPtr->screenBuffer.end(); ++lineIterator)
-	{
-		std::fill(lineIterator->attributeVector.begin(), lineIterator->attributeVector.end(),
-					kTerminalTextAttributesAllOff);
-		std::fill(lineIterator->textVectorBegin, lineIterator->textVectorEnd, ' ');
-	}
-}// bufferEraseWithoutUpdate
+}// bufferEraseVisibleScreen
 
 
 /*!
@@ -12856,11 +13129,11 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				goto ShortCut;
 			
 			case 'J':
-				unless (inDataPtr->modeANSIEnabled) bufferEraseFromCursorToEnd(inDataPtr); // erase to end of screen, in VT52 compatibility mode of VT100
+				unless (inDataPtr->modeANSIEnabled) bufferEraseFromCursorToEnd(inDataPtr, kMy_BufferChangesNormal); // erase to end of screen, in VT52 compatibility mode of VT100
 				goto ShortCut;
 			
 			case 'K':
-				unless (inDataPtr->modeANSIEnabled) bufferEraseFromCursorColumnToLineEnd(inDataPtr); // erase to end of line, in VT52 compatibility mode of VT100
+				unless (inDataPtr->modeANSIEnabled) bufferEraseFromCursorColumnToLineEnd(inDataPtr, kMy_BufferChangesNormal); // erase to end of line, in VT52 compatibility mode of VT100
 				goto ShortCut;
 			
 			case 'M':
@@ -14368,7 +14641,7 @@ resetTerminal   (My_ScreenBufferPtr		inDataPtr,
 	unless (inSoftReset)
 	{
 		moveCursor(inDataPtr, 0, 0);
-		bufferEraseVisibleScreenWithUpdate(inDataPtr);
+		bufferEraseVisibleScreen(inDataPtr, kMy_BufferChangesNormal);
 	}
 	tabStopInitialize(inDataPtr);
 	highlightLED(inDataPtr, 0/* zero means “turn off all LEDs” */);

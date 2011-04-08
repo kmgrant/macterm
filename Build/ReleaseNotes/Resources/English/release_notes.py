@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110408',
     '20110406',
     '20110405',
     '20110404',
@@ -373,6 +374,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110408': [
+        'Fixed a problem where erased parts of lines would not automatically refresh (was triggered in programs like "lynx").',
+        'Fixed VT220 to handle character insert and erase ("ICH" and "ECH") even if XTerm features are not enabled.',
+        'Fixed VT220 to support selective erase ("DECSCA", "DECSED", "DECSEL").',
+    ],
     '20110406': [
         'Fixed Local Echo to only float special key names, and insert all other text into the terminal.',
     ],
