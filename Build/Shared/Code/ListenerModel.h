@@ -15,8 +15,8 @@
 */
 /*###############################################################
 
-	Data Access Library 1.3
-	© 1998-2008 by Kevin Grant
+	Data Access Library 2.4
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -45,6 +45,10 @@
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
+
+// library includes
+#include <Console.h>
+#include <RetainRelease.template.h>
 
 
 
@@ -250,6 +254,39 @@ ListenerModel_Result
 											 ListenerModel_Descriptor*		outDescriptorPtr);
 
 //@}
+
+
+
+#pragma mark Types Dependent on Method Names
+
+// DO NOT USE DIRECTLY.
+struct _ListenerModel_ListenerRefMgr
+{
+	typedef ListenerModel_ListenerRef	reference_type;
+	
+	static void
+	retain	(reference_type		inRef)
+	{
+		ListenerModel_RetainListener(inRef);
+	}
+	
+	static void
+	release	(reference_type		inRef)
+	{
+		ListenerModel_ReleaseListener(&inRef);
+	}
+};
+
+/*!
+Allows RAII-based automatic retain and release of a listener, so
+you don’t have to call ListenerModel_RetainListener() or
+ListenerModel_ReleaseListener() yourself.  Simply declare a
+variable of this type (in a data structure, say), initialize it
+as appropriate, and your reference is safe.  Note that there is
+a constructor that allows you to store pre-retained (e.g. newly
+allocated) listeners too.
+*/
+typedef RetainRelease<_ListenerModel_ListenerRefMgr>	ListenerModel_ListenerWrap;
 
 #endif
 

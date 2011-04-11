@@ -3,7 +3,7 @@
 	NewSessionDialog.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -62,8 +62,8 @@ struct My_NewSessionDialog
 	NewSessionDialog_Ref		selfRef;			// identical to address of structure, but typed as ref
 	TerminalWindowRef			terminalWindow;		// the terminal in which to place new sessions, if any
 	Boolean						wasDisplayed;		// controls whose responsibility it is to destroy the Generic Dialog
-	Preferences_ContextRef		originalDataModel;	// data used to initialize the dialog, and store any changes made
-	Preferences_ContextRef		temporaryDataModel;	// data used to initialize the dialog, and store any changes made
+	Preferences_ContextWrap		originalDataModel;	// data used to initialize the dialog, and store any changes made
+	Preferences_ContextWrap		temporaryDataModel;	// data used to initialize the dialog, and store any changes made
 	GenericDialog_Ref			genericDialog;		// handles most of the work
 };
 typedef My_NewSessionDialog*	My_NewSessionDialogPtr;
@@ -191,9 +191,9 @@ selfRef				(REINTERPRET_CAST(this, NewSessionDialog_Ref)),
 terminalWindow		(inParentWindowOrNullForModalDialog),
 wasDisplayed		(false),
 originalDataModel	(inData),
-temporaryDataModel	(Preferences_NewCloneContext(originalDataModel, true/* must detach */)),
+temporaryDataModel	(Preferences_NewCloneContext(originalDataModel.returnRef(), true/* must detach */), true/* is retained */),
 genericDialog		(GenericDialog_New(TerminalWindow_ReturnWindow(inParentWindowOrNullForModalDialog),
-										PrefPanelSessions_NewResourcePane(), temporaryDataModel,
+										PrefPanelSessions_NewResourcePane(), temporaryDataModel.returnRef(),
 										handleDialogClose, kHelpSystem_KeyPhraseConnections))
 {
 	CFStringRef		buttonTitleCFString = nullptr;
@@ -206,9 +206,6 @@ genericDialog		(GenericDialog_New(TerminalWindow_ReturnWindow(inParentWindowOrNu
 		GenericDialog_SetCommandButtonTitle(this->genericDialog, kHICommandOK, buttonTitleCFString);
 		CFRelease(buttonTitleCFString), buttonTitleCFString = nullptr;
 	}
-	
-	// note that the cloned context is implicitly retained
-	Preferences_RetainContext(this->originalDataModel);
 	
 	// remember reference for use in the callback
 	GenericDialog_SetImplementation(genericDialog, this);
@@ -223,9 +220,6 @@ Destructor.  See NewSessionDialog_Dispose().
 My_NewSessionDialog::
 ~My_NewSessionDialog ()
 {
-	Preferences_ReleaseContext(&this->originalDataModel);
-	Preferences_ReleaseContext(&this->temporaryDataModel);
-	
 	// if the dialog is displayed, then Generic Dialog takes over responsibility to dispose of it
 	if (false == this->wasDisplayed) GenericDialog_Dispose(&this->genericDialog);
 }// MyNewSessionDialog destructor
@@ -252,7 +246,7 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 		
 		// create a session; this information is expected to be defined by
 		// the panel as the user makes edits in the user interface
-		prefsResult = Preferences_ContextGetData(dataPtr->temporaryDataModel, kPreferences_TagCommandLine,
+		prefsResult = Preferences_ContextGetData(dataPtr->temporaryDataModel.returnRef(), kPreferences_TagCommandLine,
 													sizeof(argumentListCFArray), &argumentListCFArray);
 		if (kPreferences_ResultOK != prefsResult)
 		{
@@ -275,7 +269,7 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 			// the goal is to eventually auto-update windows as soon as items are chosen
 			// from menus, so that no reconfiguration is necessary when the session spawns
 			session = SessionFactory_NewSessionArbitraryCommand
-						(dataPtr->terminalWindow, argumentListCFArray, dataPtr->temporaryDataModel,
+						(dataPtr->terminalWindow, argumentListCFArray, dataPtr->temporaryDataModel.returnRef(),
 							true/* reconfigure terminal */, nullptr/* workspace context */, 0/* window index */);
 			CFRelease(argumentListCFArray), argumentListCFArray = nullptr;
 		}

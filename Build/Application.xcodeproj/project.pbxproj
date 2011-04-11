@@ -531,6 +531,7 @@
 		0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsPrefs.cp; path = Application/Code/QuillsPrefs.cp; sourceTree = "<group>"; };
 		0AD0B3C20A9EBDFC002064BA /* QuillsPrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsPrefs.h; path = Application/Code/QuillsPrefs.h; sourceTree = "<group>"; };
 		0AD62711055DEB7000843EA9 /* MacTelnetPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacTelnetPrefix.pch; path = Application/Code/MacTelnetPrefix.pch; sourceTree = "<group>"; };
+		0AD638F91350172E00035D4E /* RetainRelease.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RetainRelease.template.h; path = Shared/Code/RetainRelease.template.h; sourceTree = "<group>"; };
 		0AD7481C13072342003E368B /* IconForFullScreen.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForFullScreen.icns; path = Application/Resources/IconForFullScreen.icns; sourceTree = "<group>"; };
 		0AD7483013073E56003E368B /* IconForCustomize.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForCustomize.icns; path = Application/Resources/IconForCustomize.icns; sourceTree = "<group>"; };
 		0AD7483813074260003E368B /* IconForPrint.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrint.icns; path = Application/Resources/IconForPrint.icns; sourceTree = "<group>"; };
@@ -695,6 +696,7 @@
 				0AB0EF76110E99570099E055 /* Registrar.template.h */,
 				0A9B319E0D538EFA00C1616D /* Releases.h */,
 				0AF5023B0F872DF80068CB19 /* ResultCode.template.h */,
+				0AD638F91350172E00035D4E /* RetainRelease.template.h */,
 				0A9B31820D538E4400C1616D /* SoundSystem.h */,
 				0A9B31800D538E3C00C1616D /* StringUtilities.h */,
 				0A9B317E0D538E2800C1616D /* TextDataFile.h */,

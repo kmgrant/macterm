@@ -123,7 +123,7 @@ struct My_TerminalBackground
 	CarbonEventHandlerWrap		windowActivationHandler;	//!< detects when the window is activated or deactivated, to hide/show the overlay
 	CarbonEventHandlerWrap		windowMinimizationHandler;	//!< detects when the window is collapsed or expanded, to hide/show the overlay
 	CarbonEventHandlerWrap		windowMovementHandler;		//!< detects changes to the window position, and updates any associated focus overlay
-	ListenerModel_ListenerRef	preferenceMonitor;			//!< detects changes to important preference settings
+	ListenerModel_ListenerWrap	preferenceMonitor;			//!< detects changes to important preference settings
 };
 typedef My_TerminalBackground*			My_TerminalBackgroundPtr;
 typedef My_TerminalBackground const*	My_TerminalBackgroundConstPtr;
@@ -384,7 +384,7 @@ windowChangedHandler		(GetControlEventTarget(inSuperclassViewInstance),
 windowActivationHandler		(), // set up later, in the window-changed handler
 windowMinimizationHandler	(), // set up later, in the window-changed handler
 windowMovementHandler		(), // set up later, in the window-changed handler
-preferenceMonitor			(ListenerModel_NewStandardListener(preferenceChangedForBackground, this/* context */))
+preferenceMonitor			(ListenerModel_NewStandardListener(preferenceChangedForBackground, this/* context */), true/* is retained */)
 {
 	OSStatus		error = noErr;
 	CGDeviceColor	initialColor;
@@ -406,7 +406,7 @@ preferenceMonitor			(ListenerModel_NewStandardListener(preferenceChangedForBackg
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
-		prefsResult = Preferences_StartMonitoring(this->preferenceMonitor, kPreferences_TagDontDimBackgroundScreens,
+		prefsResult = Preferences_StartMonitoring(this->preferenceMonitor.returnRef(), kPreferences_TagDontDimBackgroundScreens,
 													true/* call immediately to get initial value */);
 	}
 }// My_TerminalBackground 1-argument constructor
@@ -421,8 +421,7 @@ My_TerminalBackground::
 ~My_TerminalBackground ()
 {
 	// stop receiving preference change notifications
-	Preferences_StopMonitoring(this->preferenceMonitor, kPreferences_TagDontDimBackgroundScreens);
-	ListenerModel_ReleaseListener(&this->preferenceMonitor);
+	Preferences_StopMonitoring(this->preferenceMonitor.returnRef(), kPreferences_TagDontDimBackgroundScreens);
 }// My_TerminalBackground destructor
 
 

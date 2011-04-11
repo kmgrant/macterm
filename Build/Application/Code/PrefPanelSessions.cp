@@ -316,7 +316,7 @@ private:
 	CarbonEventHandlerWrap				_buttonCommandsHandler;			//!< invoked when a button is clicked
 	CarbonEventHandlerWrap				_whenCommandLineChangedHandler;	//!< invoked when the command line field changes
 	CarbonEventHandlerWrap				_whenServerPanelChangedHandler;	//!< invoked when the server browser panel changes
-	ListenerModel_ListenerRef			_whenFavoritesChangedHandler;	//!< used to manage Terminal and Format pop-up menus
+	ListenerModel_ListenerWrap			_whenFavoritesChangedHandler;	//!< used to manage Terminal and Format pop-up menus
 };
 
 /*!
@@ -2296,7 +2296,7 @@ _whenServerPanelChangedHandler	(GetWindowEventTarget(inOwningWindow), receiveSer
 									CarbonEventSetInClass(CarbonEventClass(kEventClassNetEvents_ServerBrowser),
 															kEventNetEvents_ServerBrowserNewData, kEventNetEvents_ServerBrowserNewEventTarget),
 									this/* user data */),
-_whenFavoritesChangedHandler	(ListenerModel_NewStandardListener(preferenceChanged, this/* context */))
+_whenFavoritesChangedHandler	(ListenerModel_NewStandardListener(preferenceChanged, this/* context */), true/* is retained */)
 {
 	assert(this->mainView.exists());
 	assert(_containerResizer.isInstalled());
@@ -2305,11 +2305,11 @@ _whenFavoritesChangedHandler	(ListenerModel_NewStandardListener(preferenceChange
 	
 	
 	prefsResult = Preferences_StartMonitoring
-					(this->_whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts,
+					(this->_whenFavoritesChangedHandler.returnRef(), kPreferences_ChangeNumberOfContexts,
 						true/* notify of initial value */);
 	assert(kPreferences_ResultOK == prefsResult);
 	prefsResult = Preferences_StartMonitoring
-					(this->_whenFavoritesChangedHandler, kPreferences_ChangeContextName,
+					(this->_whenFavoritesChangedHandler.returnRef(), kPreferences_ChangeContextName,
 						true/* notify of initial value */);
 	assert(kPreferences_ResultOK == prefsResult);
 }// My_SessionsPanelResourceUI 2-argument constructor
@@ -2323,9 +2323,8 @@ Tears down a My_SessionsPanelResourceUI structure.
 My_SessionsPanelResourceUI::
 My_SessionsPanelResourceUI ()
 {
-	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts);
-	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler, kPreferences_ChangeContextName);
-	ListenerModel_ReleaseListener(&_whenFavoritesChangedHandler);
+	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler.returnRef(), kPreferences_ChangeNumberOfContexts);
+	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler.returnRef(), kPreferences_ChangeContextName);
 }// My_SessionsPanelResourceUI destructor
 
 

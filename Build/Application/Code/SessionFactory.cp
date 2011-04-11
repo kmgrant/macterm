@@ -1160,18 +1160,20 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 													false/* search defaults too */, &actualSize);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-														(Quills::Prefs::SESSION, associatedSessionName);
+			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+														(Quills::Prefs::SESSION, associatedSessionName),
+														true/* is retained */);
 			
 			
-			if (nullptr == namedSettings)
+			if (false == namedSettings.exists())
 			{
 				result = false;
 			}
 			else
 			{
 				TerminalWindowRef	terminalWindow = createTerminalWindow();
-				SessionRef			session = SessionFactory_NewSessionUserFavorite(terminalWindow, namedSettings,
+				SessionRef			session = SessionFactory_NewSessionUserFavorite(terminalWindow,
+																					namedSettings.returnRef(),
 																					inWorkspaceContext, i);
 				
 				
@@ -1179,7 +1181,6 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 				{
 					result = false;
 				}
-				Preferences_ReleaseContext(&namedSettings);
 			}
 			CFRelease(associatedSessionName), associatedSessionName = nullptr;
 		}
@@ -2195,20 +2196,19 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 													false/* search defaults too */, &actualSize);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			Preferences_ContextRef		associatedContext = Preferences_NewContextFromFavorites
-															(Quills::Prefs::FORMAT, contextName);
+			Preferences_ContextWrap		associatedContext(Preferences_NewContextFromFavorites
+															(Quills::Prefs::FORMAT, contextName), true/* is retained */);
 			
 			
-			if (nullptr == associatedContext)
+			if (false == associatedContext.exists())
 			{
 				Console_Warning(Console_WriteValueCFString, "associated Format not found", contextName);
 			}
 			else
 			{
 				result = TerminalWindow_ReconfigureViewsInGroup
-							(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext,
+							(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext.returnRef(),
 								Quills::Prefs::FORMAT);
-				Preferences_ReleaseContext(&associatedContext);
 			}
 			CFRelease(contextName), contextName = nullptr;
 		}
@@ -2219,20 +2219,19 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 													false/* search defaults too */, &actualSize);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			Preferences_ContextRef		associatedContext = Preferences_NewContextFromFavorites
-															(Quills::Prefs::TERMINAL, contextName);
+			Preferences_ContextWrap		associatedContext(Preferences_NewContextFromFavorites
+															(Quills::Prefs::TERMINAL, contextName), true/* is retained */);
 			
 			
-			if (nullptr == associatedContext)
+			if (false == associatedContext.exists())
 			{
 				Console_Warning(Console_WriteValueCFString, "associated Terminal not found", contextName);
 			}
 			else
 			{
 				result = TerminalWindow_ReconfigureViewsInGroup
-							(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext,
+							(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext.returnRef(),
 								Quills::Prefs::TERMINAL);
-				Preferences_ReleaseContext(&associatedContext);
 			}
 			CFRelease(contextName), contextName = nullptr;
 		}
@@ -2243,20 +2242,19 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 													false/* search defaults too */, &actualSize);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			Preferences_ContextRef		associatedContext = Preferences_NewContextFromFavorites
-															(Quills::Prefs::TRANSLATION, contextName);
+			Preferences_ContextWrap		associatedContext(Preferences_NewContextFromFavorites
+															(Quills::Prefs::TRANSLATION, contextName), true/* is retained */);
 			
 			
-			if (nullptr == associatedContext)
+			if (false == associatedContext.exists())
 			{
 				Console_Warning(Console_WriteValueCFString, "associated Translation not found", contextName);
 			}
 			else
 			{
 				result = TerminalWindow_ReconfigureViewsInGroup
-							(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext,
+							(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext.returnRef(),
 								Quills::Prefs::TRANSLATION);
-				Preferences_ReleaseContext(&associatedContext);
 			}
 			CFRelease(contextName), contextName = nullptr;
 		}

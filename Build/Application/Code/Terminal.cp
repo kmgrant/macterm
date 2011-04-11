@@ -1049,7 +1049,7 @@ public:
 	Boolean
 	returnXTermWindowAlteration		(Preferences_ContextRef);
 	
-	Preferences_ContextRef				configuration;
+	Preferences_ContextWrap				configuration;
 	My_Emulator							emulator;					//!< handles all parsing of the data stream
 	SessionRef							listeningSession;			//!< may be nullptr; the currently attached session, where certain terminal reports are sent
 	
@@ -1059,7 +1059,7 @@ public:
 	CFRetainRelease						iconTitleCFString;			//!< stores the string that the terminal considers its icon title
 	
 	ListenerModel_Ref					changeListenerModel;		//!< registry of listeners for various terminal events
-	ListenerModel_ListenerRef			preferenceMonitor;			//!< listener for changes to preferences that affect a particular screen
+	ListenerModel_ListenerWrap			preferenceMonitor;			//!< listener for changes to preferences that affect a particular screen
 	
 	My_ScreenBufferLineList::size_type	scrollbackBufferCachedSize;	//!< linked list size is sometimes needed, but is VERY expensive to calculate;
 																	//!  therefore, it is cached, and ALL code that changes "scrollbackBuffer" must
@@ -4050,7 +4050,7 @@ Terminal_ReturnConfiguration	(TerminalScreenRef		inRef)
 {
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	Preferences_Result			prefsResult = kPreferences_ResultOK;
-	Preferences_ContextRef		result = dataPtr->configuration;
+	Preferences_ContextRef		result = dataPtr->configuration.returnRef();
 	
 	
 	// since many settings are represented internally, this context
@@ -5467,14 +5467,14 @@ My_ScreenBuffer	(Preferences_ContextRef		inTerminalConfig,
 				 Preferences_ContextRef		inTranslationConfig)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-configuration(Preferences_NewCloneContext(inTerminalConfig, true/* detach */)),
+configuration(Preferences_NewCloneContext(inTerminalConfig, true/* detach */), true/* is retained */),
 emulator(returnEmulator(inTerminalConfig), returnAnswerBackMessage(inTerminalConfig), returnTextEncoding(inTranslationConfig)),
 listeningSession(nullptr),
 speaker(nullptr),
 windowTitleCFString(),
 iconTitleCFString(),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard, kConstantsRegistry_ListenerModelDescriptorTerminalChanges)),
-preferenceMonitor(ListenerModel_NewStandardListener(preferenceChanged, this/* context */)),
+preferenceMonitor(ListenerModel_NewStandardListener(preferenceChanged, this/* context */), true/* is retained */),
 scrollbackBufferCachedSize(0),
 scrollbackBuffer(),
 screenBuffer(),
@@ -5601,7 +5601,7 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
-		prefsResult = Preferences_ContextStartMonitoring(this->configuration, this->preferenceMonitor,
+		prefsResult = Preferences_ContextStartMonitoring(this->configuration.returnRef(), this->preferenceMonitor.returnRef(),
 															kPreferences_ChangeContextBatchMode);
 	}
 }// My_ScreenBuffer 1-argument constructor
@@ -5628,10 +5628,8 @@ My_ScreenBuffer::
 	this->printingModes = 0; // clear so that printingEnd() will clean up
 	printingEnd();
 	StreamCapture_Release(&this->captureStream);
-	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration, this->preferenceMonitor,
+	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration.returnRef(), this->preferenceMonitor.returnRef(),
 															kPreferences_ChangeContextBatchMode);
-	ListenerModel_ReleaseListener(&this->preferenceMonitor);
-	Preferences_ReleaseContext(&this->configuration);
 	TerminalSpeaker_Dispose(&this->speaker);
 	ListenerModel_Dispose(&this->changeListenerModel);
 }// My_ScreenBuffer destructor

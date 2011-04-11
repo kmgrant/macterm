@@ -561,6 +561,10 @@ the model with ListenerModel_ReleaseListener() will
 fail until you release your lock (and everyone else
 releases locks they may have).
 
+Note that you may wish to use an instance of the
+ListenerModel_ListenerWrap class instead of calling
+this directly.
+
 (1.1)
 */
 void
@@ -583,6 +587,10 @@ Releases one lock on the specified listener created with a
 ListenerModel_NewXYZListener() routine, and deletes the
 listener *if* no other locks remain.  Your copy of the
 reference is set to nullptr.
+
+Note that you may wish to use an instance of the
+ListenerModel_ListenerWrap class instead of calling this
+directly.
 
 (1.0)
 */
@@ -1013,16 +1021,17 @@ static Boolean
 unitTest000_Begin ()
 {
 	Boolean						result = true;
-	ListenerModel_ListenerRef	callbackWrapper = nullptr;
+	ListenerModel_ListenerWrap	callbackWrapper = nullptr;
 	ListenerModel_Result		modelError = kListenerModel_ResultOK;
 	
 	
 	// create a listener, and arbitrarily pass in the address of this
 	// function as the event context (the listener code should assert
 	// that it received the right event context)
-	callbackWrapper = ListenerModel_NewStandardListener
-						(unitTest000_Callback1, REINTERPRET_CAST(unitTest000_Begin, void*)/* event context */);
-	result &= Console_Assert("wrapper constructed", nullptr != callbackWrapper);
+	callbackWrapper.setRef(ListenerModel_NewStandardListener
+							(unitTest000_Callback1, REINTERPRET_CAST(unitTest000_Begin, void*)/* event context */),
+							true/* is retained */);
+	result &= Console_Assert("wrapper constructed", nullptr != callbackWrapper.returnRef());
 	
 	// create a model, for controlling event notifications
 	gUnitTest000_Model = ListenerModel_New(kListenerModel_StyleStandard, 'u000');
@@ -1040,7 +1049,7 @@ unitTest000_Begin ()
 		OSStatus	installError = noErr;
 		
 		
-		installError = ListenerModel_AddListenerForEvent(gUnitTest000_Model, 'test', callbackWrapper);
+		installError = ListenerModel_AddListenerForEvent(gUnitTest000_Model, 'test', callbackWrapper.returnRef());
 		result &= Console_Assert("no errors installing handler", noErr == installError);
 	}
 	
@@ -1075,7 +1084,6 @@ unitTest000_Begin ()
 	result &= Console_Assert("proper number of callback invocations", 6 == gUnitTest000_CallCount);
 	
 	// callback and model are no longer needed
-	ListenerModel_ReleaseListener(&callbackWrapper);
 	ListenerModel_Dispose(&gUnitTest000_Model);
 	result &= Console_Assert("model nullified", nullptr == gUnitTest000_Model);
 	

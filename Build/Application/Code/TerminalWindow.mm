@@ -231,7 +231,7 @@ struct TerminalWindow
 	Boolean						isDead;					// is the window title flagged to indicate a disconnected session?
 	Boolean						isLEDOn[4];				// true only if this terminal light is lit
 	Boolean						viewSizeIndependent;	// true only temporarily, to handle transitional cases such as full-screen mode
-	Preferences_ContextRef		recentSheetContext;		// defined temporarily while a Preferences-dependent sheet (such as screen size) is up
+	Preferences_ContextWrap		recentSheetContext;		// defined temporarily while a Preferences-dependent sheet (such as screen size) is up
 	My_TerminalWindowSheetType	sheetType;				// if a sheet is active, this is a hint as to what settings can be put in the context
 	FindDialog_Options			recentSearchOptions;	// the options used during the last search in the dialog
 	CFRetainRelease				recentSearchStrings;	// CFMutableArrayRef; the CFStrings used in searches since this window was opened
@@ -256,10 +256,10 @@ struct TerminalWindow
 	EventHandlerRef				growBoxClickHandler;					// invoked whenever a terminal window’s grow box is clicked
 	EventHandlerUPP				toolbarEventUPP;						// wrapper for toolbar callback
 	EventHandlerRef				toolbarEventHandler;					// invoked whenever a toolbar needs an item created, etc.
-	ListenerModel_ListenerRef	sessionStateChangeEventListener;		// responds to changes in a session
-	ListenerModel_ListenerRef	terminalStateChangeEventListener;		// responds to changes in a terminal
-	ListenerModel_ListenerRef	terminalViewEventListener;				// responds to changes in a terminal view
-	ListenerModel_ListenerRef	toolbarStateChangeEventListener;		// responds to changes in a toolbar
+	ListenerModel_ListenerWrap	sessionStateChangeEventListener;		// responds to changes in a session
+	ListenerModel_ListenerWrap	terminalStateChangeEventListener;		// responds to changes in a terminal
+	ListenerModel_ListenerWrap	terminalViewEventListener;				// responds to changes in a terminal view
+	ListenerModel_ListenerWrap	toolbarStateChangeEventListener;		// responds to changes in a toolbar
 	
 	TerminalScreenToViewMultiMap	screensToViews;			// map of a screen buffer to one or more views
 	TerminalViewToScreenMap			viewsToScreens;			// map of views to screen buffers
@@ -2347,22 +2347,27 @@ installedActions()
 	}
 	
 	// set up callbacks to receive various state change notifications
-	this->sessionStateChangeEventListener = ListenerModel_NewStandardListener(sessionStateChanged, this->selfRef/* context */);
-	SessionFactory_StartMonitoringSessions(kSession_ChangeSelected, this->sessionStateChangeEventListener);
-	SessionFactory_StartMonitoringSessions(kSession_ChangeState, this->sessionStateChangeEventListener);
-	SessionFactory_StartMonitoringSessions(kSession_ChangeStateAttributes, this->sessionStateChangeEventListener);
-	SessionFactory_StartMonitoringSessions(kSession_ChangeWindowTitle, this->sessionStateChangeEventListener);
-	this->terminalStateChangeEventListener = ListenerModel_NewStandardListener(terminalStateChanged, REINTERPRET_CAST(this, TerminalWindowRef)/* context */);
-	Terminal_StartMonitoring(newScreen, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener);
-	Terminal_StartMonitoring(newScreen, kTerminal_ChangeExcessiveErrors, this->terminalStateChangeEventListener);
-	Terminal_StartMonitoring(newScreen, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener);
-	Terminal_StartMonitoring(newScreen, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener);
-	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener);
-	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener);
-	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowMinimization, this->terminalStateChangeEventListener);
-	this->terminalViewEventListener = ListenerModel_NewStandardListener(terminalViewStateChanged, REINTERPRET_CAST(this, TerminalWindowRef)/* context */);
-	TerminalView_StartMonitoring(newView, kTerminalView_EventScrolling, this->terminalViewEventListener);
-	TerminalView_StartMonitoring(newView, kTerminalView_EventSearchResultsExistence, this->terminalViewEventListener);
+	this->sessionStateChangeEventListener.setRef(ListenerModel_NewStandardListener(sessionStateChanged, this->selfRef/* context */),
+													true/* is retained */);
+	SessionFactory_StartMonitoringSessions(kSession_ChangeSelected, this->sessionStateChangeEventListener.returnRef());
+	SessionFactory_StartMonitoringSessions(kSession_ChangeState, this->sessionStateChangeEventListener.returnRef());
+	SessionFactory_StartMonitoringSessions(kSession_ChangeStateAttributes, this->sessionStateChangeEventListener.returnRef());
+	SessionFactory_StartMonitoringSessions(kSession_ChangeWindowTitle, this->sessionStateChangeEventListener.returnRef());
+	this->terminalStateChangeEventListener.setRef(ListenerModel_NewStandardListener
+													(terminalStateChanged, REINTERPRET_CAST(this, TerminalWindowRef)/* context */),
+													true/* is retained */);
+	Terminal_StartMonitoring(newScreen, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener.returnRef());
+	Terminal_StartMonitoring(newScreen, kTerminal_ChangeExcessiveErrors, this->terminalStateChangeEventListener.returnRef());
+	Terminal_StartMonitoring(newScreen, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener.returnRef());
+	Terminal_StartMonitoring(newScreen, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener.returnRef());
+	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener.returnRef());
+	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener.returnRef());
+	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowMinimization, this->terminalStateChangeEventListener.returnRef());
+	this->terminalViewEventListener.setRef(ListenerModel_NewStandardListener
+											(terminalViewStateChanged, REINTERPRET_CAST(this, TerminalWindowRef)/* context */),
+											true/* is retained */);
+	TerminalView_StartMonitoring(newView, kTerminalView_EventScrolling, this->terminalViewEventListener.returnRef());
+	TerminalView_StartMonitoring(newView, kTerminalView_EventSearchResultsExistence, this->terminalViewEventListener.returnRef());
 	
 	// install a callback that handles commands relevant to terminal windows
 	{
@@ -2606,11 +2611,10 @@ TerminalWindow::
 	DisposeControlActionUPP(this->scrollProcUPP), this->scrollProcUPP = nullptr;
 	
 	// unregister session callbacks
-	SessionFactory_StopMonitoringSessions(kSession_ChangeSelected, this->sessionStateChangeEventListener);
-	SessionFactory_StopMonitoringSessions(kSession_ChangeState, this->sessionStateChangeEventListener);
-	SessionFactory_StopMonitoringSessions(kSession_ChangeStateAttributes, this->sessionStateChangeEventListener);
-	SessionFactory_StopMonitoringSessions(kSession_ChangeWindowTitle, this->sessionStateChangeEventListener);
-	ListenerModel_ReleaseListener(&this->sessionStateChangeEventListener);
+	SessionFactory_StopMonitoringSessions(kSession_ChangeSelected, this->sessionStateChangeEventListener.returnRef());
+	SessionFactory_StopMonitoringSessions(kSession_ChangeState, this->sessionStateChangeEventListener.returnRef());
+	SessionFactory_StopMonitoringSessions(kSession_ChangeStateAttributes, this->sessionStateChangeEventListener.returnRef());
+	SessionFactory_StopMonitoringSessions(kSession_ChangeWindowTitle, this->sessionStateChangeEventListener.returnRef());
 	
 	// unregister screen buffer callbacks and destroy all buffers
 	// (NOTE: perhaps this should be revisited, as a future feature
@@ -2623,16 +2627,15 @@ TerminalWindow::
 		
 		for (screenIterator = this->allScreens.begin(); screenIterator != this->allScreens.end(); ++screenIterator)
 		{
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener);
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeExcessiveErrors, this->terminalStateChangeEventListener);
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener);
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener);
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener);
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener);
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowMinimization, this->terminalStateChangeEventListener);
+			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener.returnRef());
+			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeExcessiveErrors, this->terminalStateChangeEventListener.returnRef());
+			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener.returnRef());
+			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener.returnRef());
+			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener.returnRef());
+			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener.returnRef());
+			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowMinimization, this->terminalStateChangeEventListener.returnRef());
 		}
 	}
-	ListenerModel_ReleaseListener(&this->terminalStateChangeEventListener);
 	
 	// destroy all terminal views
 	{
@@ -2643,11 +2646,10 @@ TerminalWindow::
 		for (viewIterator = this->allViews.begin(); viewIterator != this->allViews.end(); ++viewIterator)
 		{
 			view = *viewIterator;
-			TerminalView_StopMonitoring(view, kTerminalView_EventScrolling, this->terminalViewEventListener);
-			TerminalView_StopMonitoring(view, kTerminalView_EventSearchResultsExistence, this->terminalViewEventListener);
+			TerminalView_StopMonitoring(view, kTerminalView_EventScrolling, this->terminalViewEventListener.returnRef());
+			TerminalView_StopMonitoring(view, kTerminalView_EventSearchResultsExistence, this->terminalViewEventListener.returnRef());
 		}
 	}
-	ListenerModel_ReleaseListener(&this->terminalViewEventListener);
 	
 	// throw away information about terminal window change listeners
 	ListenerModel_Dispose(&this->changeListenerModel);
@@ -4480,14 +4482,14 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
 							{
-								Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-																			(Quills::Prefs::FORMAT, collectionName);
+								Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+																			(Quills::Prefs::FORMAT, collectionName),
+																			true/* is retained */);
 								
 								
-								if (nullptr != namedSettings)
+								if (namedSettings.exists())
 								{
-									setViewFormatPreferences(ptr, namedSettings);
-									Preferences_ReleaseContext(&namedSettings);
+									setViewFormatPreferences(ptr, namedSettings.returnRef());
 								}
 								CFRelease(collectionName), collectionName = nullptr;
 							}
@@ -4682,14 +4684,14 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
 							{
-								Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-																			(Quills::Prefs::TRANSLATION, collectionName);
+								Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+																			(Quills::Prefs::TRANSLATION, collectionName),
+																			true/* is retained */);
 								
 								
-								if (nullptr != namedSettings)
+								if (namedSettings.exists())
 								{
-									setViewTranslationPreferences(ptr, namedSettings);
-									Preferences_ReleaseContext(&namedSettings);
+									setViewTranslationPreferences(ptr, namedSettings.returnRef());
 								}
 								CFRelease(collectionName), collectionName = nullptr;
 							}
@@ -7130,15 +7132,15 @@ sheetClosed		(GenericDialog_Ref		inDialogThatClosed,
 			switch (ptr->sheetType)
 			{
 			case kMy_TerminalWindowSheetTypeFormat:
-				setViewFormatPreferences(ptr, ptr->recentSheetContext);
+				setViewFormatPreferences(ptr, ptr->recentSheetContext.returnRef());
 				break;
 			
 			case kMy_TerminalWindowSheetTypeScreenSize:
-				setScreenPreferences(ptr, ptr->recentSheetContext);
+				setScreenPreferences(ptr, ptr->recentSheetContext.returnRef());
 				break;
 			
 			case kMy_TerminalWindowSheetTypeTranslation:
-				setViewTranslationPreferences(ptr, ptr->recentSheetContext);
+				setViewTranslationPreferences(ptr, ptr->recentSheetContext.returnRef());
 				break;
 			
 			default:
@@ -7167,6 +7169,7 @@ sheetContextBegin	(TerminalWindowPtr				inPtr,
 					 Quills::Prefs::Class			inClass,
 					 My_TerminalWindowSheetType		inSheetType)
 {
+	Preferences_ContextWrap		newContext(Preferences_NewContext(inClass), true/* is retained */);
 	Preferences_ContextRef		result = nullptr;
 	
 	
@@ -7175,8 +7178,6 @@ sheetContextBegin	(TerminalWindowPtr				inPtr,
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		Boolean					copyOK = false;
 		
-		
-		result = Preferences_NewContext(inClass);
 		
 		// initialize settings so that the sheet has the right data
 		// IMPORTANT: the contexts and tag sets chosen here should match those
@@ -7190,7 +7191,8 @@ sheetContextBegin	(TerminalWindowPtr				inPtr,
 				Preferences_TagSetRef	tagSet = PrefPanelFormats_NewTagSet();
 				
 				
-				prefsResult = Preferences_ContextCopy(TerminalView_ReturnFormatConfiguration(getActiveView(inPtr)), result, tagSet);
+				prefsResult = Preferences_ContextCopy(TerminalView_ReturnFormatConfiguration(getActiveView(inPtr)),
+														newContext.returnRef(), tagSet);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					copyOK = true;
@@ -7204,7 +7206,8 @@ sheetContextBegin	(TerminalWindowPtr				inPtr,
 				Preferences_TagSetRef	tagSet = PrefPanelTerminals_NewScreenPaneTagSet();
 				
 				
-				prefsResult = Preferences_ContextCopy(Terminal_ReturnConfiguration(getActiveScreen(inPtr)), result, tagSet);
+				prefsResult = Preferences_ContextCopy(Terminal_ReturnConfiguration(getActiveScreen(inPtr)),
+														newContext.returnRef(), tagSet);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					copyOK = true;
@@ -7218,7 +7221,8 @@ sheetContextBegin	(TerminalWindowPtr				inPtr,
 				Preferences_TagSetRef	tagSet = PrefPanelTranslations_NewTagSet();
 				
 				
-				prefsResult = Preferences_ContextCopy(TerminalView_ReturnTranslationConfiguration(getActiveView(inPtr)), result, tagSet);
+				prefsResult = Preferences_ContextCopy(TerminalView_ReturnTranslationConfiguration(getActiveView(inPtr)),
+														newContext.returnRef(), tagSet);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					copyOK = true;
@@ -7235,19 +7239,16 @@ sheetContextBegin	(TerminalWindowPtr				inPtr,
 		if (copyOK)
 		{
 			inPtr->sheetType = inSheetType;
-			inPtr->recentSheetContext = result;
+			inPtr->recentSheetContext.setRef(newContext.returnRef()); // this also retains the new context
 		}
 		else
 		{
 			Console_Warning(Console_WriteLine, "failed to copy initial preferences into sheet context");
 		}
-		
-		if (kMy_TerminalWindowSheetTypeNone == inPtr->sheetType)
-		{
-			// something above has failed; give up
-			Preferences_ReleaseContext(&result);
-		}
 	}
+	
+	result = inPtr->recentSheetContext.returnRef();
+	
 	return result;
 }// sheetContextBegin
 
@@ -7262,9 +7263,9 @@ active sheets.
 void
 sheetContextEnd		(TerminalWindowPtr		inPtr)
 {
-	if (Preferences_ContextIsValid(inPtr->recentSheetContext))
+	if (Preferences_ContextIsValid(inPtr->recentSheetContext.returnRef()))
 	{
-		Preferences_ReleaseContext(&inPtr->recentSheetContext);
+		inPtr->recentSheetContext.clear();
 	}
 	inPtr->sheetType = kMy_TerminalWindowSheetTypeNone;
 }// sheetContextEnd
@@ -7906,63 +7907,69 @@ windowDidLoad
 	assert(nil != testTerminalPaddingView);
 	assert(nil != testTerminalBackgroundView);
 	
-	Preferences_ContextRef	terminalConfig = Preferences_NewContext(Quills::Prefs::TERMINAL);
-	Preferences_ContextRef	translationConfig = Preferences_NewContext(Quills::Prefs::TRANSLATION);
+	Preferences_ContextWrap		terminalConfig(Preferences_NewContext(Quills::Prefs::TERMINAL), true/* is retained */);
+	Preferences_ContextWrap		translationConfig(Preferences_NewContext(Quills::Prefs::TRANSLATION), true/* is retained */);
 	
 	
-	// create toolbar; has to be done programmatically, because
-	// IB only supports them in 10.5; which makes sense, you know,
-	// since toolbars have only been in the OS since 10.0, and
-	// hardly any applications would have found THOSE useful...
+	@try
 	{
-		NSString*		toolbarID = @"TerminalToolbar"; // do not ever change this; that would only break user preferences
-		NSToolbar*		windowToolbar = [[[NSToolbar alloc] initWithIdentifier:toolbarID] autorelease];
-		
-		
-		[windowToolbar setAllowsUserCustomization:YES];
-		[windowToolbar setAutosavesConfiguration:YES];
-		[windowToolbar setDelegate:self];
-		[[self window] setToolbar:windowToolbar];
-	}
-	
-	// could customize the new contexts above to initialize settings;
-	// currently, this is not done
-	{
-		TerminalScreenRef		buffer = nullptr;
-		Terminal_Result			bufferResult = Terminal_NewScreen(terminalConfig, translationConfig, &buffer);
-		
-		
-		if (kTerminal_ResultOK != bufferResult)
+		// create toolbar; has to be done programmatically, because
+		// IB only supports them in 10.5; which makes sense, you know,
+		// since toolbars have only been in the OS since 10.0, and
+		// hardly any applications would have found THOSE useful...
 		{
-			Console_WriteValue("error creating test terminal screen buffer", bufferResult);
+			NSString*		toolbarID = @"TerminalToolbar"; // do not ever change this; that would only break user preferences
+			NSToolbar*		windowToolbar = [[[NSToolbar alloc] initWithIdentifier:toolbarID] autorelease];
+			
+			
+			[windowToolbar setAllowsUserCustomization:YES];
+			[windowToolbar setAutosavesConfiguration:YES];
+			[windowToolbar setDelegate:self];
+			[[self window] setToolbar:windowToolbar];
 		}
-		else
+		
+		// could customize the new contexts above to initialize settings;
+		// currently, this is not done
 		{
-			TerminalViewRef		view = TerminalView_NewNSViewBased(testTerminalContentView, testTerminalPaddingView,
-																	testTerminalBackgroundView, buffer, nullptr/* format */);
+			TerminalScreenRef		buffer = nullptr;
+			Terminal_Result			bufferResult = Terminal_NewScreen(terminalConfig.returnRef(),
+																		translationConfig.returnRef(), &buffer);
 			
 			
-			if (nullptr == view)
+			if (kTerminal_ResultOK != bufferResult)
 			{
-				Console_WriteLine("error creating test terminal view!");
+				Console_WriteValue("error creating test terminal screen buffer", bufferResult);
 			}
 			else
 			{
-				// write some text in various styles to the screen (happens to be a
-				// copy of what the sample view does); this will help with testing
-				// the new Cocoa-based renderer as it is implemented
-				Terminal_EmulatorProcessCString(buffer,
-												"\033[2J\033[H"); // clear screen, home cursor (assumes VT100)
-				Terminal_EmulatorProcessCString(buffer,
-												"sel norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m");
-				// the range selected here should be as long as the length of the word “sel” above
-				TerminalView_SelectVirtualRange(view, std::make_pair(std::make_pair(0, 0), std::make_pair(3, 1)/* exclusive end */));
+				TerminalViewRef		view = TerminalView_NewNSViewBased(testTerminalContentView, testTerminalPaddingView,
+																		testTerminalBackgroundView, buffer, nullptr/* format */);
+				
+				
+				if (nullptr == view)
+				{
+					Console_WriteLine("error creating test terminal view!");
+				}
+				else
+				{
+					// write some text in various styles to the screen (happens to be a
+					// copy of what the sample view does); this will help with testing
+					// the new Cocoa-based renderer as it is implemented
+					Terminal_EmulatorProcessCString(buffer,
+													"\033[2J\033[H"); // clear screen, home cursor (assumes VT100)
+					Terminal_EmulatorProcessCString(buffer,
+													"sel norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m");
+					// the range selected here should be as long as the length of the word “sel” above
+					TerminalView_SelectVirtualRange(view, std::make_pair(std::make_pair(0, 0), std::make_pair(3, 1)/* exclusive end */));
+				}
 			}
 		}
 	}
-	
-	Preferences_ReleaseContext(&terminalConfig);
-	Preferences_ReleaseContext(&translationConfig);
+	@finally
+	{
+		terminalConfig.clear();
+		translationConfig.clear();
+	}
 }// windowDidLoad
 
 

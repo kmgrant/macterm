@@ -4064,21 +4064,21 @@ performNewByFavoriteName:(id)	sender
 		
 		if (nil != collectionName)
 		{
-			Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-														(Quills::Prefs::SESSION, collectionName);
+			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+														(Quills::Prefs::SESSION, collectionName),
+														true/* is retained */);
 			
 			
-			if (nullptr != namedSettings)
+			if (namedSettings.exists())
 			{
 				TerminalWindowRef		terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
 				Preferences_ContextRef	workspaceContext = nullptr;
 				SessionRef				newSession = SessionFactory_NewSessionUserFavorite
-														(terminalWindow, namedSettings, workspaceContext,
+														(terminalWindow, namedSettings.returnRef(), workspaceContext,
 															0/* window index */);
 				
 				
 				isError = (nullptr == newSession);
-				Preferences_ReleaseContext(&namedSettings);
 			}
 		}
 	}
@@ -4230,17 +4230,17 @@ performRestoreWorkspaceByFavoriteName:(id)	sender
 		
 		if (nil != collectionName)
 		{
-			Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-														(Quills::Prefs::WORKSPACE, collectionName);
+			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+														(Quills::Prefs::WORKSPACE, collectionName),
+														true/* is retained */);
 			
 			
-			if (nullptr != namedSettings)
+			if (namedSettings.exists())
 			{
-				Boolean		launchedOK = SessionFactory_NewSessionsUserFavoriteWorkspace(namedSettings);
+				Boolean		launchedOK = SessionFactory_NewSessionsUserFavoriteWorkspace(namedSettings.returnRef());
 				
 				
 				if (launchedOK) isError = NO;
-				Preferences_ReleaseContext(&namedSettings);
 			}
 		}
 	}
@@ -4528,18 +4528,18 @@ performMacroSwitchByFavoriteName:(id)	sender
 		
 		if (nil != collectionName)
 		{
-			Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-														(Quills::Prefs::MACRO_SET, collectionName);
+			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+														(Quills::Prefs::MACRO_SET, collectionName),
+														true/* is retained */);
 			
 			
-			if (nullptr != namedSettings)
+			if (namedSettings.exists())
 			{
 				MacroManager_Result		macrosResult = kMacroManager_ResultOK;
 				
 				
-				macrosResult = MacroManager_SetCurrentMacros(namedSettings);
+				macrosResult = MacroManager_SetCurrentMacros(namedSettings.returnRef());
 				isError = (false == macrosResult.ok());
-				Preferences_ReleaseContext(&namedSettings);
 			}
 		}
 	}
@@ -4918,20 +4918,20 @@ performTranslationSwitchByFavoriteName:(id)		sender
 		
 		if (nil != collectionName)
 		{
-			Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-														(Quills::Prefs::TRANSLATION, collectionName);
+			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+														(Quills::Prefs::TRANSLATION, collectionName),
+														true/* is retained */);
 			
 			
-			if (nullptr != namedSettings)
+			if (namedSettings.exists())
 			{
 				// change character set of frontmost window according to the specified preferences
 				Boolean		changeOK = TerminalWindow_ReconfigureViewsInGroup
 										(terminalWindow, kTerminalWindow_ViewGroupActive,
-											namedSettings, Quills::Prefs::TRANSLATION);
+											namedSettings.returnRef(), Quills::Prefs::TRANSLATION);
 				
 				
 				isError = (false == changeOK);
-				Preferences_ReleaseContext(&namedSettings);
 			}
 		}
 	}
@@ -5345,20 +5345,20 @@ performFormatByFavoriteName:(id)	sender
 			
 			if (nil != collectionName)
 			{
-				Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-															(Quills::Prefs::FORMAT, collectionName);
+				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+															(Quills::Prefs::FORMAT, collectionName),
+															true/* is retained */);
 				
 				
-				if (nullptr != namedSettings)
+				if (namedSettings.exists())
 				{
 					// change font and/or colors of frontmost window according to the specified preferences
 					Boolean		changeOK = TerminalWindow_ReconfigureViewsInGroup
 											(terminalWindow, kTerminalWindow_ViewGroupActive,
-												namedSettings, Quills::Prefs::FORMAT);
+												namedSettings.returnRef(), Quills::Prefs::FORMAT);
 					
 					
 					isError = (false == changeOK);
-					Preferences_ReleaseContext(&namedSettings);
 				}
 			}
 		}

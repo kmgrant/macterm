@@ -56,18 +56,19 @@
 
 
 #pragma mark Types
+namespace {
 
 struct My_TerminalSpeaker
 {
 	My_TerminalSpeaker	(TerminalScreenRef);
 	~My_TerminalSpeaker ();
 	
-	TerminalScreenRef					screen;					//!< source of terminal screen data
-	Boolean								isEnabled;				//!< if true, this speaker can emit sound; otherwise, no sound generation APIs work
-	Boolean								isPaused;				//!< if true, sound playback is suspended partway through
-	ListenerModel_ListenerRef			bellHandler;			//!< invoked by a terminal screen buffer when it encounters a bell signal
-	ListenerModel_ListenerRef			preferencesHandler;		//!< invoked when an important user preference is changed
-	TerminalSpeaker_Ref					selfRef;				//!< redundant opaque reference that would resolve to point to this structure
+	TerminalScreenRef				screen;					//!< source of terminal screen data
+	Boolean							isEnabled;				//!< if true, this speaker can emit sound; otherwise, no sound generation APIs work
+	Boolean							isPaused;				//!< if true, sound playback is suspended partway through
+	ListenerModel_ListenerWrap		bellHandler;			//!< invoked by a terminal screen buffer when it encounters a bell signal
+	ListenerModel_ListenerWrap		preferencesHandler;		//!< invoked when an important user preference is changed
+	TerminalSpeaker_Ref				selfRef;				//!< redundant opaque reference that would resolve to point to this structure
 };
 typedef My_TerminalSpeaker*			My_TerminalSpeakerPtr;
 typedef My_TerminalSpeaker const*	My_TerminalSpeakerConstPtr;
@@ -75,21 +76,26 @@ typedef My_TerminalSpeaker const*	My_TerminalSpeakerConstPtr;
 typedef MemoryBlockPtrLocker< TerminalSpeaker_Ref, My_TerminalSpeaker >		My_TerminalSpeakerPtrLocker;
 typedef LockAcquireRelease< TerminalSpeaker_Ref, My_TerminalSpeaker >		My_TerminalSpeakerAutoLocker;
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	My_TerminalSpeakerPtrLocker&	gTerminalSpeakerPtrLocks ()	{ static My_TerminalSpeakerPtrLocker x; return x; }
-	Boolean							gTerminalSoundsOff = false;		//!< global flag that can nix all sound if set
-	Boolean							gTerminalBellOff = false;		//!< global flag that mutes bell sounds but not speech
-	Boolean							gTerminalSoundDefault = true;	//!< global flag that ignores any custom sound file and uses the system alert
-	CFRetainRelease					gCurrentBellSoundName;			//!< CFStringRef containing current sound file basename (or empty string)
-}
+#pragma mark Variables
+namespace {
+
+My_TerminalSpeakerPtrLocker&	gTerminalSpeakerPtrLocks ()	{ static My_TerminalSpeakerPtrLocker x; return x; }
+Boolean							gTerminalSoundsOff = false;		//!< global flag that can nix all sound if set
+Boolean							gTerminalBellOff = false;		//!< global flag that mutes bell sounds but not speech
+Boolean							gTerminalSoundDefault = true;	//!< global flag that ignores any custom sound file and uses the system alert
+CFRetainRelease					gCurrentBellSoundName;			//!< CFStringRef containing current sound file basename (or empty string)
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static void		audioEvent			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void		preferenceChanged	(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void	audioEvent			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void	preferenceChanged	(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+
+} // anonymous namespace
 
 
 
@@ -325,6 +331,7 @@ TerminalSpeaker_SynthesizeSpeechFromCFString	(TerminalSpeaker_Ref	inSpeaker,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Creates a new real screen, complete with virtual
@@ -339,13 +346,13 @@ My_TerminalSpeaker	(TerminalScreenRef		inScreenDataSource)
 screen(inScreenDataSource),
 isEnabled(true),
 isPaused(false),
-bellHandler(ListenerModel_NewStandardListener(audioEvent, this/* context, as TerminalSpeaker_Ref */)),
-preferencesHandler(ListenerModel_NewStandardListener(preferenceChanged, this/* context, as TerminalSpeaker_Ref */)),
+bellHandler(ListenerModel_NewStandardListener(audioEvent, this/* context, as TerminalSpeaker_Ref */), true/* is retained */),
+preferencesHandler(ListenerModel_NewStandardListener(preferenceChanged, this/* context, as TerminalSpeaker_Ref */), true/* is retained */),
 selfRef(REINTERPRET_CAST(this, TerminalSpeaker_Ref))
 {
 	// ask to be notified of terminal bells
-	Terminal_StartMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler);
-	(Preferences_Result)Preferences_StartMonitoring(this->preferencesHandler, kPreferences_TagBellSound, true/* notify of initial value */);
+	Terminal_StartMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler.returnRef());
+	(Preferences_Result)Preferences_StartMonitoring(this->preferencesHandler.returnRef(), kPreferences_TagBellSound, true/* notify of initial value */);
 }// My_TerminalSpeaker one-argument constructor
 
 
@@ -358,10 +365,8 @@ freeing all resources allocated by that routine.
 My_TerminalSpeaker::
 ~My_TerminalSpeaker ()
 {
-	Terminal_StopMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler);
-	ListenerModel_ReleaseListener(&this->bellHandler);
-	(Preferences_Result)Preferences_StopMonitoring(this->preferencesHandler, kPreferences_TagBellSound);
-	ListenerModel_ReleaseListener(&this->preferencesHandler);
+	Terminal_StopMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler.returnRef());
+	(Preferences_Result)Preferences_StopMonitoring(this->preferencesHandler.returnRef(), kPreferences_TagBellSound);
 }// My_TerminalSpeaker destructor
 
 
@@ -370,7 +375,7 @@ Responds to terminal bells audibly.
 
 (3.0)
 */
-static void
+void
 audioEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			 ListenerModel_Event	inEventThatOccurred,
 			 void*					UNUSED_ARGUMENT(inEventContextPtr),
@@ -405,7 +410,7 @@ variables are up to date for the changed preference.
 
 (3.1)
 */
-static void
+void
 preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 ListenerModel_Event	inPreferenceTagThatChanged,
 					 void*					UNUSED_ARGUMENT(inEventContextPtr),
@@ -456,5 +461,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// preferenceChanged
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -22,7 +22,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -62,6 +62,7 @@
 
 // library includes
 #include <ListenerModel.h>
+#include <RetainRelease.template.h>
 
 // MacTelnet includes
 #include "Commands.h"
@@ -705,6 +706,39 @@ void
 	Preferences_DebugDumpContext			(Preferences_ContextRef				inContext);
 
 //@}
+
+
+
+#pragma mark Types Dependent on Method Names
+
+// DO NOT USE DIRECTLY.
+struct _Preferences_ContextRefMgr
+{
+	typedef Preferences_ContextRef		reference_type;
+	
+	static void release (Preferences_ContextRef		inRef)
+	{
+		Preferences_ReleaseContext(&inRef);
+	}
+	
+	static void retain (Preferences_ContextRef		inRef)
+	{
+		Preferences_RetainContext(inRef);
+	}
+};
+
+/*!
+Allows RAII-based automatic retain and release of a context
+reference, so you don’t have to call Preferences_RetainContext()
+or Preferences_ReleaseContext() yourself.  Simply declare a
+variable of this type (in a data structure, say), initialize it
+as appropriate, and your reference is safe.  Note that there is
+a constructor that allows you to store pre-retained (e.g. newly
+allocated) contexts too.
+*/
+typedef RetainRelease<_Preferences_ContextRefMgr>	Preferences_ContextWrap;
+
+
 
 #endif
 

@@ -5529,18 +5529,19 @@ createAllPreferencesContextsFromDisk ()
 					// create a class-specific context so that it will automatically
 					// be stored in the appropriate preferences domain on disk (the
 					// name is implicitly changed by copying in the source context)
-					Preferences_ContextRef		savedFormat = Preferences_NewContextFromFavorites
-																(Quills::Prefs::FORMAT, nullptr/* generate name */);
+					Preferences_ContextWrap		savedFormat(Preferences_NewContextFromFavorites(Quills::Prefs::FORMAT, nullptr/* generate name */),
+															true/* is retained */);
 					
 					
-					if (nullptr != savedFormat)
+					if (savedFormat.exists())
 					{
-						Preferences_ContextRef		sourceFormat = Preferences_NewContextFromXMLFileURL(Quills::Prefs::FORMAT, fileURL);
+						Preferences_ContextWrap		sourceFormat(Preferences_NewContextFromXMLFileURL(Quills::Prefs::FORMAT, fileURL),
+																	true/* is retained */);
 						
 						
-						if (nullptr != sourceFormat)
+						if (sourceFormat.exists())
 						{
-							prefsResult = Preferences_ContextCopy(sourceFormat, savedFormat);
+							prefsResult = Preferences_ContextCopy(sourceFormat.returnRef(), savedFormat.returnRef());
 							if (kPreferences_ResultOK == prefsResult)
 							{
 								// since the name key of a Favorites context is normally set automatically
@@ -5548,8 +5549,8 @@ createAllPreferencesContextsFromDisk ()
 								// will be ignored; so, it is necessary to explicitly set the desired name
 								// with an API call
 								{
-									My_ContextAutoLocker	savedFormatPtr(gMyContextPtrLocks(), savedFormat);
-									My_ContextAutoLocker	sourceFormatPtr(gMyContextPtrLocks(), sourceFormat);
+									My_ContextAutoLocker	savedFormatPtr(gMyContextPtrLocks(), savedFormat.returnRef());
+									My_ContextAutoLocker	sourceFormatPtr(gMyContextPtrLocks(), sourceFormat.returnRef());
 									CFRetainRelease			desiredName(sourceFormatPtr->returnStringCopy(CFSTR("name-string")), true/* is retained */);
 									
 									
@@ -5559,15 +5560,13 @@ createAllPreferencesContextsFromDisk ()
 									}
 								}
 								
-								prefsResult = Preferences_ContextSave(savedFormat);
+								prefsResult = Preferences_ContextSave(savedFormat.returnRef());
 								if (kPreferences_ResultOK == prefsResult)
 								{
 									// success!
 								}
 							}
-							Preferences_ReleaseContext(&sourceFormat);
 						}
-						Preferences_ReleaseContext(&savedFormat);
 					}
 					CFRelease(fileURL), fileURL = nullptr;
 				}

@@ -181,7 +181,7 @@ private:
 	MenuItemIndex						_numberOfSessionItemsAdded;	//!< used to manage Session pop-up menu
 	CarbonEventHandlerWrap				_menuCommandsHandler;		//!< responds to menu selections
 	CommonEventHandlers_HIViewResizer	_containerResizer;			//!< invoked when the panel is resized
-	ListenerModel_ListenerRef			_whenFavoritesChangedHandler;	//!< used to manage Session pop-up menu
+	ListenerModel_ListenerWrap			_whenFavoritesChangedHandler;	//!< used to manage Session pop-up menu
 };
 typedef My_WorkspacesPanelUI*		My_WorkspacesPanelUIPtr;
 
@@ -393,7 +393,7 @@ _menuCommandsHandler		(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 _containerResizer			(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
 										kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
 								deltaSizePanelContainerHIView, this/* context */),
-_whenFavoritesChangedHandler(ListenerModel_NewStandardListener(preferenceChanged, this/* context */))
+_whenFavoritesChangedHandler(ListenerModel_NewStandardListener(preferenceChanged, this/* context */), true/* is retained */)
 {
 	assert(_menuCommandsHandler.isInstalled());
 	assert(_containerResizer.isInstalled());
@@ -404,11 +404,11 @@ _whenFavoritesChangedHandler(ListenerModel_NewStandardListener(preferenceChanged
 	
 	
 	prefsResult = Preferences_StartMonitoring
-					(this->_whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts,
+					(this->_whenFavoritesChangedHandler.returnRef(), kPreferences_ChangeNumberOfContexts,
 						true/* notify of initial value */);
 	assert(kPreferences_ResultOK == prefsResult);
 	prefsResult = Preferences_StartMonitoring
-					(this->_whenFavoritesChangedHandler, kPreferences_ChangeContextName,
+					(this->_whenFavoritesChangedHandler.returnRef(), kPreferences_ChangeContextName,
 						true/* notify of initial value */);
 	assert(kPreferences_ResultOK == prefsResult);
 }// My_WorkspacesPanelUI 2-argument constructor
@@ -422,9 +422,8 @@ Tears down a My_WorkspacesPanelUI structure.
 My_WorkspacesPanelUI::
 ~My_WorkspacesPanelUI ()
 {
-	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts);
-	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler, kPreferences_ChangeContextName);
-	ListenerModel_ReleaseListener(&_whenFavoritesChangedHandler);
+	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler.returnRef(), kPreferences_ChangeNumberOfContexts);
+	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler.returnRef(), kPreferences_ChangeContextName);
 }// My_WorkspacesPanelUI destructor
 
 

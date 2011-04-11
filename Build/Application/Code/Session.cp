@@ -242,7 +242,7 @@ struct My_Session
 	My_Session		(Preferences_ContextRef, Boolean);
 	~My_Session		();
 	
-	Preferences_ContextRef		configuration;				// not always in sync; see Session_ReturnConfiguration()
+	Preferences_ContextWrap		configuration;				// not always in sync; see Session_ReturnConfiguration()
 	Boolean						readOnly;					// whether or not user input is allowed
 	Session_Type				kind;						// type of session; affects use of the union below
 	Session_State				status;						// indicates whether session is initialized, etc.
@@ -268,9 +268,9 @@ struct My_Session
 	EventHandlerUPP				terminalViewTextInputUPP;   // wrapper for keystroke callback
 	My_TextInputHandlerByView	terminalViewTextInputHandlers;// invoked whenever a terminal view is focused during a key press
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this session data
-	ListenerModel_ListenerRef	windowValidationListener;	// responds after a window is created, and just before it dies
-	ListenerModel_ListenerRef	terminalWindowListener;		// responds when terminal window states change
-	ListenerModel_ListenerRef	preferencesListener;		// responds when certain preference values are initialized or changed
+	ListenerModel_ListenerWrap	windowValidationListener;	// responds after a window is created, and just before it dies
+	ListenerModel_ListenerWrap	terminalWindowListener;		// responds when terminal window states change
+	ListenerModel_ListenerWrap	preferencesListener;		// responds when certain preference values are initialized or changed
 	EventLoopTimerUPP			autoActivateDragTimerUPP;	// procedure that is called when a drag hovers over an inactive window
 	EventLoopTimerRef			autoActivateDragTimer;		// short timer
 	EventLoopTimerUPP			longLifeTimerUPP;			// procedure that is called when a session has been open 15 seconds
@@ -2186,7 +2186,7 @@ Session_ReturnConfiguration		(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	Preferences_ContextRef	result = ptr->configuration;
+	Preferences_ContextRef	result = ptr->configuration.returnRef();
 	
 	
 	// since many settings are represented internally, this context
@@ -4445,7 +4445,8 @@ My_Session	(Preferences_ContextRef		inConfigurationOrNull,
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 configuration((nullptr == inConfigurationOrNull)
 				? Preferences_NewContext(Quills::Prefs::SESSION)
-				: Preferences_NewCloneContext(inConfigurationOrNull, true/* detach */)),
+				: Preferences_NewCloneContext(inConfigurationOrNull, true/* detach */),
+				true/* is retained */),
 readOnly(inIsReadOnly),
 kind(kSession_TypeLocalNonLoginShell),
 status(kSession_StateBrandNew),
@@ -4472,9 +4473,9 @@ terminalViewTextInputUPP(nullptr), // set at window validation time
 terminalViewTextInputHandlers(), // set at window validation time
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorSessionChanges)),
-windowValidationListener(ListenerModel_NewStandardListener(windowValidationStateChanged)),
+windowValidationListener(ListenerModel_NewStandardListener(windowValidationStateChanged), true/* is retained */),
 terminalWindowListener(nullptr), // set at window validation time
-preferencesListener(ListenerModel_NewStandardListener(preferenceChanged, this/* context */)),
+preferencesListener(ListenerModel_NewStandardListener(preferenceChanged, this/* context */), true/* is retained */),
 autoActivateDragTimerUPP(NewEventLoopTimerUPP(autoActivateWindow)),
 autoActivateDragTimer(nullptr), // installed only as needed
 longLifeTimerUPP(NewEventLoopTimerUPP(detectLongLife)),
@@ -4522,8 +4523,8 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 		assert(preferenceCount > 0);
 	}
 	
-	Session_StartMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener);
-	Session_StartMonitoring(this->selfRef, kSession_ChangeWindowInvalid, this->windowValidationListener);
+	Session_StartMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener.returnRef());
+	Session_StartMonitoring(this->selfRef, kSession_ChangeWindowInvalid, this->windowValidationListener.returnRef());
 	
 	changeNotifyForSession(this, kSession_ChangeState, this->selfRef/* context */);
 	changeNotifyForSession(this, kSession_ChangeStateAttributes, this->selfRef/* context */);
@@ -4537,11 +4538,12 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 	
 	// create a callback for preferences, then listen for certain preferences
 	// (this will also initialize the preferences cache values)
-	Preferences_StartMonitoring(this->preferencesListener, kPreferences_TagCursorBlinks,
+	Preferences_StartMonitoring(this->preferencesListener.returnRef(), kPreferences_TagCursorBlinks,
 								true/* call immediately to initialize */);
-	Preferences_StartMonitoring(this->preferencesListener, kPreferences_TagMapBackquote,
+	Preferences_StartMonitoring(this->preferencesListener.returnRef(), kPreferences_TagMapBackquote,
 								true/* call immediately to initialize */);
-	Preferences_ContextStartMonitoring(this->configuration, this->preferencesListener, kPreferences_ChangeContextBatchMode);
+	Preferences_ContextStartMonitoring(this->configuration.returnRef(), this->preferencesListener.returnRef(),
+										kPreferences_ChangeContextBatchMode);
 }// My_Session default constructor
 
 
@@ -4585,15 +4587,13 @@ My_Session::
 	closeTerminalWindow(this);
 	
 	// clean up
-	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration, this->preferencesListener,
+	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration.returnRef(), this->preferencesListener.returnRef(),
 															kPreferences_ChangeContextBatchMode);
-	Preferences_StopMonitoring(this->preferencesListener, kPreferences_TagCursorBlinks);
-	Preferences_StopMonitoring(this->preferencesListener, kPreferences_TagMapBackquote);
-	ListenerModel_ReleaseListener(&this->preferencesListener);
-	Preferences_ReleaseContext(&this->configuration);
+	Preferences_StopMonitoring(this->preferencesListener.returnRef(), kPreferences_TagCursorBlinks);
+	Preferences_StopMonitoring(this->preferencesListener.returnRef(), kPreferences_TagMapBackquote);
 	
-	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener);
-	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowInvalid, this->windowValidationListener);
+	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener.returnRef());
+	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowInvalid, this->windowValidationListener.returnRef());
 	
 	if (nullptr != this->autoActivateDragTimer)
 	{
@@ -4617,7 +4617,6 @@ My_Session::
 	{
 		delete [] this->readBufferPtr, this->readBufferPtr = nullptr;
 	}
-	ListenerModel_ReleaseListener(&this->windowValidationListener);
 	ListenerModel_Dispose(&this->changeListenerModel);
 }// My_Session destructor
 
@@ -7669,11 +7668,11 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				assert(error == noErr);
 			}
 			
-			ptr->terminalWindowListener = ListenerModel_NewStandardListener(terminalWindowChanged, session/* context */);
+			ptr->terminalWindowListener.setRef(ListenerModel_NewStandardListener(terminalWindowChanged, session/* context */), true/* is retained */);
 			TerminalWindow_StartMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeScreenDimensions,
-											ptr->terminalWindowListener);
+											ptr->terminalWindowListener.returnRef());
 			TerminalWindow_StartMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeObscuredState,
-											ptr->terminalWindowListener);
+											ptr->terminalWindowListener.returnRef());
 			{
 				// install a listener for keystrokes on each view’s control;
 				// in the future, terminal windows may have multiple views,
@@ -7784,9 +7783,9 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			RemoveEventHandler(ptr->windowFocusChangeHandler), ptr->windowFocusChangeHandler = nullptr;
 			DisposeEventHandlerUPP(ptr->windowFocusChangeUPP), ptr->windowFocusChangeUPP = nullptr;
 			TerminalWindow_StopMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeScreenDimensions,
-											ptr->terminalWindowListener);
+											ptr->terminalWindowListener.returnRef());
 			TerminalWindow_StopMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeObscuredState,
-											ptr->terminalWindowListener);
+											ptr->terminalWindowListener.returnRef());
 			{
 				// remove listener from each view where one was installed
 				UInt16				viewCount = TerminalWindow_ReturnViewCount(ptr->terminalWindow);
@@ -7818,7 +7817,6 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					Memory_DisposePtr(REINTERPRET_CAST(&viewArray, Ptr*));
 				}
 			}
-			ListenerModel_ReleaseListener(&ptr->terminalWindowListener);
 		}
 		break;
 	

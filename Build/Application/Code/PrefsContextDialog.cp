@@ -62,9 +62,9 @@ struct My_PrefsContextDialog
 	
 	PrefsContextDialog_Ref				selfRef;			// identical to address of structure, but typed as ref
 	Boolean								wasDisplayed;		// controls whose responsibility it is to destroy the Generic Dialog
-	Preferences_ContextRef				originalDataModel;	// data used to initialize the dialog; updated when the dialog is accepted
+	Preferences_ContextWrap				originalDataModel;	// data used to initialize the dialog; updated when the dialog is accepted
 	Preferences_TagSetRef				originalKeys;		// the set of keys that were defined in the original data model, before user changes
-	Preferences_ContextRef				temporaryDataModel;	// data used to initialize the dialog, and store any changes made
+	Preferences_ContextWrap				temporaryDataModel;	// data used to initialize the dialog, and store any changes made
 	GenericDialog_Ref					genericDialog;		// handles most of the work
 	GenericDialog_CloseNotifyProcPtr	closeNotifyProc;	// routine to call when the dialog is dismissed
 	CarbonEventHandlerWrap				commandHandler;		// responds to certain command events in the panel’s window
@@ -223,9 +223,9 @@ selfRef				(REINTERPRET_CAST(this, PrefsContextDialog_Ref)),
 wasDisplayed		(false),
 originalDataModel	(inoutData),
 originalKeys		(Preferences_NewTagSet(inoutData)),
-temporaryDataModel	(Preferences_NewCloneContext(inoutData, true/* must detach */)),
+temporaryDataModel	(Preferences_NewCloneContext(inoutData, true/* must detach */), true/* is retained */),
 genericDialog		(GenericDialog_New(inParentWindowOrNullForModalDialog, inHostedPanel,
-										temporaryDataModel, handleDialogClose,
+										temporaryDataModel.returnRef(), handleDialogClose,
 										Panel_SendMessageGetHelpKeyPhrase(inHostedPanel))),
 closeNotifyProc		(inCloseNotifyProcPtr),
 commandHandler		(GetWindowEventTarget(Panel_ReturnOwningWindow(GenericDialog_ReturnHostedPanel(genericDialog))),
@@ -233,9 +233,6 @@ commandHandler		(GetWindowEventTarget(Panel_ReturnOwningWindow(GenericDialog_Ret
 						CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 						this/* user data */)
 {
-	// note that the cloned context is implicitly retained
-	Preferences_RetainContext(this->originalDataModel);
-	
 	if (0 == (inOptions & kPrefsContextDialog_DisplayOptionNoAddToPrefsButton))
 	{
 		// add a button for copying the context to user defaults
@@ -265,9 +262,7 @@ Destructor.  See PrefsContextDialog_Dispose().
 My_PrefsContextDialog::
 ~My_PrefsContextDialog ()
 {
-	Preferences_ReleaseContext(&this->originalDataModel);
 	Preferences_ReleaseTagSet(&this->originalKeys);
-	Preferences_ReleaseContext(&this->temporaryDataModel);
 	
 	// if the dialog is displayed, then Generic Dialog takes over responsibility to dispose of it
 	if (false == this->wasDisplayed) GenericDialog_Dispose(&this->genericDialog);
@@ -300,7 +295,8 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 		
 		
 		// start with the defaults
-		prefsResult = Preferences_GetDefaultContext(&defaultContext, Preferences_ContextReturnClass(dataPtr->originalDataModel));
+		prefsResult = Preferences_GetDefaultContext(&defaultContext, Preferences_ContextReturnClass
+																		(dataPtr->originalDataModel.returnRef()));
 		if (kPreferences_ResultOK != prefsResult)
 		{
 			Console_Warning(Console_WriteLine, "unable to find default context");
@@ -310,7 +306,8 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 			// TEMPORARY - technically, defaults only need to be copied for the
 			// keys that are actually different between the current set and
 			// the original set; but for now, just copy everything
-			prefsResult = Preferences_ContextCopy(defaultContext, dataPtr->originalDataModel, dataPtr->originalKeys);
+			prefsResult = Preferences_ContextCopy(defaultContext, dataPtr->originalDataModel.returnRef(),
+													dataPtr->originalKeys);
 			if (kPreferences_ResultOK != prefsResult)
 			{
 				Console_Warning(Console_WriteLine, "unable to save defaults to context");
@@ -319,7 +316,7 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 		
 		// copy the new settings on top
 		{
-			Preferences_TagSetRef	currentKeys = Preferences_NewTagSet(dataPtr->temporaryDataModel);
+			Preferences_TagSetRef	currentKeys = Preferences_NewTagSet(dataPtr->temporaryDataModel.returnRef());
 			
 			
 			if (nullptr == currentKeys)
@@ -328,7 +325,8 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 			}
 			else
 			{
-				prefsResult = Preferences_ContextCopy(dataPtr->temporaryDataModel, dataPtr->originalDataModel, currentKeys);
+				prefsResult = Preferences_ContextCopy(dataPtr->temporaryDataModel.returnRef(),
+														dataPtr->originalDataModel.returnRef(), currentKeys);
 				Preferences_ReleaseTagSet(&currentKeys);
 			}
 		}
@@ -383,13 +381,14 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				{
 					// create and immediately save a new named context, which
 					// triggers callbacks to update Favorites lists, etc.
-					Preferences_ContextRef const	kReferenceContext = dataPtr->temporaryDataModel;
-					Preferences_ContextRef			newContext = Preferences_NewContextFromFavorites
-																	(Preferences_ContextReturnClass(kReferenceContext),
-																		nullptr/* name, or nullptr to auto-generate */);
+					Preferences_ContextRef const	kReferenceContext = dataPtr->temporaryDataModel.returnRef();
+					Preferences_ContextWrap			newContext(Preferences_NewContextFromFavorites
+																(Preferences_ContextReturnClass(kReferenceContext),
+																	nullptr/* name, or nullptr to auto-generate */),
+																true/* is retained */);
 					
 					
-					if (nullptr == newContext)
+					if (false == newContext.exists())
 					{
 						Sound_StandardAlert();
 						Console_Warning(Console_WriteLine, "unable to create a new Favorite for copying local changes");
@@ -399,7 +398,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						Preferences_Result		prefsResult = kPreferences_ResultOK;
 						
 						
-						prefsResult = Preferences_ContextSave(newContext);
+						prefsResult = Preferences_ContextSave(newContext.returnRef());
 						if (kPreferences_ResultOK != prefsResult)
 						{
 							Sound_StandardAlert();
@@ -407,7 +406,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						}
 						else
 						{
-							prefsResult = Preferences_ContextCopy(kReferenceContext, newContext);
+							prefsResult = Preferences_ContextCopy(kReferenceContext, newContext.returnRef());
 							if (kPreferences_ResultOK != prefsResult)
 							{
 								Sound_StandardAlert();
@@ -422,7 +421,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								// success!
 							}
 						}
-						Preferences_ReleaseContext(&newContext);
 					}
 					result = noErr;
 				}

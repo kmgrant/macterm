@@ -237,8 +237,8 @@ struct My_TerminalView
 	void
 	initialize		(TerminalScreenRef, Preferences_ContextRef);
 	
-	Preferences_ContextRef	encodingConfig;		// various settings from an external source; not kept up to date, see TerminalView_ReturnTranslationConfiguration()
-	Preferences_ContextRef	formatConfig;		// various settings from an external source; not kept up to date, see TerminalView_ReturnFormatConfiguration()
+	Preferences_ContextWrap		encodingConfig;	// various settings from an external source; not kept up to date, see TerminalView_ReturnTranslationConfiguration()
+	Preferences_ContextWrap		formatConfig;	// various settings from an external source; not kept up to date, see TerminalView_ReturnFormatConfiguration()
 	std::set< Preferences_Tag >		configFilter;	// settings that this view ignores when they are changed globally by the user
 	ListenerModel_Ref	changeListenerModel;	// listeners for various types of changes to this data
 	TerminalView_DisplayMode	displayMode;	// how the content fills the display area
@@ -301,13 +301,13 @@ struct My_TerminalView
 		Boolean						isReverseVideo;			// are foreground and background colors temporarily swapped?
 		
 	#if 0
-		ListenerModel_ListenerRef	backgroundDragHandler;	// listener for clicks in screens from inactive windows
+		ListenerModel_ListenerWrap	backgroundDragHandler;	// listener for clicks in screens from inactive windows
 	#endif
-		ListenerModel_ListenerRef	contentMonitor;			// listener for changes to the contents of the screen buffer
-		ListenerModel_ListenerRef	cursorMonitor;			// listener for changes to the terminal cursor position or visible state
-		ListenerModel_ListenerRef	preferenceMonitor;		// listener for changes to preferences that affect a particular view
-		ListenerModel_ListenerRef	bellHandler;			// listener for bell signals from the terminal screen
-		ListenerModel_ListenerRef	videoModeMonitor;		// listener for changes to the reverse-video setting
+		ListenerModel_ListenerWrap	contentMonitor;			// listener for changes to the contents of the screen buffer
+		ListenerModel_ListenerWrap	cursorMonitor;			// listener for changes to the terminal cursor position or visible state
+		ListenerModel_ListenerWrap	preferenceMonitor;		// listener for changes to preferences that affect a particular view
+		ListenerModel_ListenerWrap	bellHandler;			// listener for bell signals from the terminal screen
+		ListenerModel_ListenerWrap	videoModeMonitor;		// listener for changes to the reverse-video setting
 		RgnHandle					refreshRegion;			// used to optimize redraws
 		EventLoopTimerUPP			refreshTimerUPP;		// UPP for the equivalent timer ref
 		EventLoopTimerRef			refreshTimerRef;		// timer to invoke HIViewSetNeedsDisplayInRegion() at controlled intervals
@@ -831,12 +831,11 @@ TerminalView_NewNSViewBased		(TerminalView_ContentView*		inBaseView,
 	if (nullptr != result)
 	{
 		My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), result);
-		Preferences_ContextRef		viewFormat = inFormatOrNull;
-		BOOL						releaseFormat = NO;
+		Preferences_ContextWrap		viewFormat = inFormatOrNull;
 		
 		
 		// get the terminal format; if not found, use the default
-		if (nullptr == viewFormat)
+		if (false == viewFormat.exists())
 		{
 			// set default
 			Preferences_Result		prefsResult = kPreferences_ResultOK;
@@ -850,18 +849,12 @@ TerminalView_NewNSViewBased		(TerminalView_ContentView*		inBaseView,
 			}
 			else
 			{
-				viewFormat = Preferences_NewCloneContext(defaultContext, true/* force detach */);
-				releaseFormat = YES;
+				viewFormat.setRef(Preferences_NewCloneContext(defaultContext, true/* force detach */), true/* is retained */);
 			}
 		}
 		
 		// finally, initialize the view properly
-		viewPtr->initialize(inScreenDataSource, viewFormat);
-		
-		if (releaseFormat)
-		{
-			Preferences_ReleaseContext(&viewFormat);
-		}
+		viewPtr->initialize(inScreenDataSource, viewFormat.returnRef());
 	}
 	
 	return result;
@@ -1836,7 +1829,7 @@ TerminalView_ReturnFormatConfiguration		(TerminalViewRef	inView)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	Preferences_Result			prefsResult = kPreferences_ResultOK;
-	Preferences_ContextRef		result = viewPtr->formatConfig;
+	Preferences_ContextRef		result = viewPtr->formatConfig.returnRef();
 	
 	
 	// since many settings are represented internally, this context
@@ -2037,7 +2030,7 @@ Preferences_ContextRef
 TerminalView_ReturnTranslationConfiguration		(TerminalViewRef	inView)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	Preferences_ContextRef		result = viewPtr->encodingConfig;
+	Preferences_ContextRef		result = viewPtr->encodingConfig.returnRef();
 	Boolean						setOK = false;
 	
 	
@@ -3716,17 +3709,17 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->selfRef = REINTERPRET_CAST(this, TerminalViewRef);
 	this->screen.refreshRegion = Memory_NewRegion();
 	
-	this->encodingConfig = Preferences_NewContext(Quills::Prefs::TRANSLATION);
-	assert(nullptr != this->encodingConfig);
+	this->encodingConfig.setRef(Preferences_NewContext(Quills::Prefs::TRANSLATION), true/* is retained */);
+	assert(this->encodingConfig.exists());
 	{
-		Boolean		setOK = TextTranslation_ContextSetEncoding(this->encodingConfig, kCFStringEncodingUTF8);
+		Boolean		setOK = TextTranslation_ContextSetEncoding(this->encodingConfig.returnRef(), kCFStringEncodingUTF8);
 		
 		
 		assert(setOK);
 	}
 	
-	this->formatConfig = Preferences_NewCloneContext(inFormat, true/* detach */);
-	assert(nullptr != this->formatConfig);
+	this->formatConfig.setRef(Preferences_NewCloneContext(inFormat, true/* detach */), true/* is retained */);
+	assert(this->formatConfig.exists());
 	
 	this->changeListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
 													kConstantsRegistry_ListenerModelDescriptorTerminalViewChanges);
@@ -3966,39 +3959,40 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	}
 	
 	// ask to be notified of terminal bells
-	this->screen.bellHandler = ListenerModel_NewStandardListener(audioEvent, this->selfRef/* context */);
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeAudioEvent, this->screen.bellHandler);
+	this->screen.bellHandler.setRef(ListenerModel_NewStandardListener(audioEvent, this->selfRef/* context */), true/* is retained */);
+	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeAudioEvent, this->screen.bellHandler.returnRef());
 	
 	// ask to be notified of video mode changes
-	this->screen.videoModeMonitor = ListenerModel_NewStandardListener(receiveVideoModeChange, this->selfRef/* context */);
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeVideoMode, this->screen.videoModeMonitor);
+	this->screen.videoModeMonitor.setRef(ListenerModel_NewStandardListener(receiveVideoModeChange, this->selfRef/* context */), true/* is retained */);
+	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeVideoMode, this->screen.videoModeMonitor.returnRef());
 	
 	// ask to be notified of screen buffer content changes
-	this->screen.contentMonitor = ListenerModel_NewStandardListener(screenBufferChanged, this->selfRef/* context */);
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeTextEdited, this->screen.contentMonitor);
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeScrollActivity, this->screen.contentMonitor);
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeXTermColor, this->screen.contentMonitor);
+	this->screen.contentMonitor.setRef(ListenerModel_NewStandardListener(screenBufferChanged, this->selfRef/* context */), true/* is retained */);
+	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeTextEdited, this->screen.contentMonitor.returnRef());
+	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeScrollActivity, this->screen.contentMonitor.returnRef());
+	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeXTermColor, this->screen.contentMonitor.returnRef());
 	
 	// ask to be notified of cursor changes
-	this->screen.cursorMonitor = ListenerModel_NewStandardListener(screenCursorChanged, this->selfRef/* context */);
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeCursorLocation, this->screen.cursorMonitor);
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeCursorState, this->screen.cursorMonitor);
+	this->screen.cursorMonitor.setRef(ListenerModel_NewStandardListener(screenCursorChanged, this->selfRef/* context */), true/* is retained */);
+	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeCursorLocation, this->screen.cursorMonitor.returnRef());
+	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeCursorState, this->screen.cursorMonitor.returnRef());
 	
 	// set up a callback to receive preference change notifications
-	this->screen.preferenceMonitor = ListenerModel_NewStandardListener(preferenceChangedForView, this->selfRef/* context */);
+	this->screen.preferenceMonitor.setRef(ListenerModel_NewStandardListener(preferenceChangedForView, this->selfRef/* context */),
+											true/* is retained */);
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
-		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagDontDimBackgroundScreens,
+		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor.returnRef(), kPreferences_TagDontDimBackgroundScreens,
 													true/* call immediately to get initial value */);
-		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType,
+		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor.returnRef(), kPreferences_TagTerminalCursorType,
 													false/* call immediately to get initial value */);
-		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize,
+		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor.returnRef(), kPreferences_TagTerminalResizeAffectsFontSize,
 													false/* call immediately to get initial value */);
-		prefsResult = Preferences_ContextStartMonitoring(this->encodingConfig, this->screen.preferenceMonitor,
+		prefsResult = Preferences_ContextStartMonitoring(this->encodingConfig.returnRef(), this->screen.preferenceMonitor.returnRef(),
 															kPreferences_ChangeContextBatchMode);
-		prefsResult = Preferences_ContextStartMonitoring(this->formatConfig, this->screen.preferenceMonitor,
+		prefsResult = Preferences_ContextStartMonitoring(this->formatConfig.returnRef(), this->screen.preferenceMonitor.returnRef(),
 															kPreferences_ChangeContextBatchMode);
 	}
 	
@@ -4042,33 +4036,28 @@ My_TerminalView::
 	}
 	
 	// stop listening for terminal bells
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeAudioEvent, this->screen.bellHandler);
-	ListenerModel_ReleaseListener(&this->screen.bellHandler);
+	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeAudioEvent, this->screen.bellHandler.returnRef());
 	
 	// stop listening for video mode changes
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeVideoMode, this->screen.videoModeMonitor);
-	ListenerModel_ReleaseListener(&this->screen.videoModeMonitor);
+	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeVideoMode, this->screen.videoModeMonitor.returnRef());
 	
 	// stop listening for screen buffer content changes
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeTextEdited, this->screen.contentMonitor);
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeScrollActivity, this->screen.contentMonitor);
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeXTermColor, this->screen.contentMonitor);
-	ListenerModel_ReleaseListener(&this->screen.contentMonitor);
+	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeTextEdited, this->screen.contentMonitor.returnRef());
+	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeScrollActivity, this->screen.contentMonitor.returnRef());
+	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeXTermColor, this->screen.contentMonitor.returnRef());
 	
 	// stop listening for cursor changes
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeCursorLocation, this->screen.cursorMonitor);
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeCursorState, this->screen.cursorMonitor);
-	ListenerModel_ReleaseListener(&this->screen.cursorMonitor);
+	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeCursorLocation, this->screen.cursorMonitor.returnRef());
+	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeCursorState, this->screen.cursorMonitor.returnRef());
 	
 	// stop receiving preference change notifications
-	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagDontDimBackgroundScreens);
-	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType);
-	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize);
-	(Preferences_Result)Preferences_ContextStopMonitoring(this->encodingConfig, this->screen.preferenceMonitor,
+	Preferences_StopMonitoring(this->screen.preferenceMonitor.returnRef(), kPreferences_TagDontDimBackgroundScreens);
+	Preferences_StopMonitoring(this->screen.preferenceMonitor.returnRef(), kPreferences_TagTerminalCursorType);
+	Preferences_StopMonitoring(this->screen.preferenceMonitor.returnRef(), kPreferences_TagTerminalResizeAffectsFontSize);
+	(Preferences_Result)Preferences_ContextStopMonitoring(this->encodingConfig.returnRef(), this->screen.preferenceMonitor.returnRef(),
 															kPreferences_ChangeContextBatchMode);
-	(Preferences_Result)Preferences_ContextStopMonitoring(this->formatConfig, this->screen.preferenceMonitor,
+	(Preferences_Result)Preferences_ContextStopMonitoring(this->formatConfig.returnRef(), this->screen.preferenceMonitor.returnRef(),
 															kPreferences_ChangeContextBatchMode);
-	ListenerModel_ReleaseListener(&this->screen.preferenceMonitor);
 	
 	// remove timers
 	RemoveEventLoopTimer(this->animation.timer.ref), this->animation.timer.ref = nullptr;
@@ -4083,8 +4072,6 @@ My_TerminalView::
 	Memory_DisposeRegion(&this->screen.cursor.boundsAsRegion);
 	Memory_DisposeRegion(&this->screen.refreshRegion);
 	ListenerModel_Dispose(&this->changeListenerModel);
-	Preferences_ReleaseContext(&this->encodingConfig);
-	Preferences_ReleaseContext(&this->formatConfig);
 }// My_TerminalView destructor
 
 
@@ -8519,7 +8506,7 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 					result = CarbonEventUtilities_GetEventParameter
 								(inEvent, kEventParamNetEvents_TerminalFormatPreferences,
 									typeNetEvents_PreferencesContextRef, viewFormat);
-					if (noErr != result)
+					if ((noErr != result) || (nullptr == viewFormat))
 					{
 						// set default
 						Preferences_Result		prefsResult = kPreferences_ResultOK;
@@ -12200,20 +12187,19 @@ performFormatByFavoriteName:(id)	sender
 		
 		if (nil != collectionName)
 		{
-			Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-														(Quills::Prefs::FORMAT, collectionName);
+			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+														(Quills::Prefs::FORMAT, collectionName), true/* is retained */);
 			
 			
-			if (nullptr != namedSettings)
+			if (namedSettings.exists())
 			{
 				// change font and/or colors of frontmost window according to the specified preferences
 				Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration(currentView);
 				Preferences_Result			prefsResult = kPreferences_ResultOK;
 				
 				
-				prefsResult = Preferences_ContextCopy(namedSettings, currentSettings);
+				prefsResult = Preferences_ContextCopy(namedSettings.returnRef(), currentSettings);
 				isError = (kPreferences_ResultOK != prefsResult);
-				Preferences_ReleaseContext(&namedSettings);
 			}
 		}
 	}

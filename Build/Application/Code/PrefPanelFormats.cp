@@ -1672,14 +1672,14 @@ My_FormatsPanelNormalUI::
 createSampleTerminalScreen ()
 const
 {
-	TerminalScreenRef		result = nullptr;
-	Preferences_ContextRef	terminalConfig = Preferences_NewContext(Quills::Prefs::TERMINAL);
-	Preferences_ContextRef	translationConfig = Preferences_NewContext(Quills::Prefs::TRANSLATION);
-	Terminal_Result			screenCreationError = kTerminal_ResultOK;
+	TerminalScreenRef			result = nullptr;
+	Preferences_ContextWrap		terminalConfig(Preferences_NewContext(Quills::Prefs::TERMINAL), true/* is retained */);
+	Preferences_ContextWrap		translationConfig(Preferences_NewContext(Quills::Prefs::TRANSLATION), true/* is retained */);
+	Terminal_Result				screenCreationError = kTerminal_ResultOK;
 	
 	
-	assert(nullptr != terminalConfig);
-	if (nullptr != terminalConfig)
+	assert(terminalConfig.exists());
+	if (terminalConfig.exists())
 	{
 		// set up the terminal
 		Terminal_Emulator const		kTerminalType = kTerminal_EmulatorVT100;
@@ -1689,29 +1689,25 @@ const
 		Preferences_Result			prefsResult = kPreferences_ResultOK;
 		
 		
-		prefsResult = Preferences_ContextSetData(terminalConfig, kPreferences_TagTerminalEmulatorType,
+		prefsResult = Preferences_ContextSetData(terminalConfig.returnRef(), kPreferences_TagTerminalEmulatorType,
 													sizeof(kTerminalType), &kTerminalType);
 		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_ContextSetData(terminalConfig, kPreferences_TagTerminalScreenRows,
+		prefsResult = Preferences_ContextSetData(terminalConfig.returnRef(), kPreferences_TagTerminalScreenRows,
 													sizeof(kRowCount), &kRowCount);
 		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_ContextSetData(terminalConfig, kPreferences_TagTerminalScreenScrollbackRows,
+		prefsResult = Preferences_ContextSetData(terminalConfig.returnRef(), kPreferences_TagTerminalScreenScrollbackRows,
 													sizeof(kScrollbackSize), &kScrollbackSize);
 		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_ContextSetData(terminalConfig, kPreferences_TagTerminalClearSavesLines,
+		prefsResult = Preferences_ContextSetData(terminalConfig.returnRef(), kPreferences_TagTerminalClearSavesLines,
 													sizeof(kForceSave), &kForceSave);
 		assert(kPreferences_ResultOK == prefsResult);
 	}
-	assert(nullptr != translationConfig); // just use defaults for this context
+	assert(translationConfig.exists()); // just use defaults for this context
 	
 	// create the screen
-	screenCreationError = Terminal_NewScreen(terminalConfig, translationConfig, &result);
+	screenCreationError = Terminal_NewScreen(terminalConfig.returnRef(), translationConfig.returnRef(), &result);
 	assert(kTerminal_ResultOK == screenCreationError);
 	assert(nullptr != result);
-	
-	// cleanup
-	Preferences_ReleaseContext(&terminalConfig);
-	Preferences_ReleaseContext(&translationConfig);
 	
 	return result;
 }// My_FormatsPanelNormalUI::createSampleTerminalScreen

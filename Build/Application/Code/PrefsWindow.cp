@@ -819,24 +819,23 @@ createCollection	(CFStringRef	inNameOrNull)
 	// creating and immediately saving a new named context
 	// (a preferences callback elsewhere in this file is
 	// then notified by the Preferences module of the change)
-	Preferences_ContextRef		newContext = Preferences_NewContextFromFavorites
-												(returnCurrentPreferencesClass(), inNameOrNull);
+	Preferences_ContextWrap		newContext(Preferences_NewContextFromFavorites
+											(returnCurrentPreferencesClass(), inNameOrNull), true/* is retained */);
 	Boolean						result = false;
 	
 	
-	if (nullptr != newContext)
+	if (newContext.exists())
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
-		prefsResult = Preferences_ContextSave(newContext);
+		prefsResult = Preferences_ContextSave(newContext.returnRef());
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			DataBrowserItemID const		kNewItemID = REINTERPRET_CAST(newContext, DataBrowserItemID);
+			DataBrowserItemID const		kNewItemID = REINTERPRET_CAST(newContext.returnRef(), DataBrowserItemID);
 			
 			
 			// success!
-			Preferences_ReleaseContext(&newContext);
 			result = true;
 			
 			// automatically switch to editing the new item; ignore
@@ -890,23 +889,23 @@ duplicateCollection		(Preferences_ContextRef		inReferenceContext)
 	// creating and immediately saving a new named context
 	// (a preferences callback elsewhere in this file is
 	// then notified by the Preferences module of the change)
-	Preferences_ContextRef		newContext = Preferences_NewCloneContext(inReferenceContext, false/* detach */);
+	Preferences_ContextWrap		newContext(Preferences_NewCloneContext(inReferenceContext, false/* detach */),
+											true/* is retained */);
 	Boolean						result = false;
 	
 	
-	if (nullptr != newContext)
+	if (newContext.exists())
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
-		prefsResult = Preferences_ContextSave(newContext);
+		prefsResult = Preferences_ContextSave(newContext.returnRef());
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			DataBrowserItemID const		kNewItemID = REINTERPRET_CAST(newContext, DataBrowserItemID);
+			DataBrowserItemID const		kNewItemID = REINTERPRET_CAST(newContext.returnRef(), DataBrowserItemID);
 			
 			
 			// success!
-			Preferences_ReleaseContext(&newContext);
 			result = true;
 			
 			// automatically switch to editing the new item; ignore
