@@ -145,6 +145,9 @@ struct My_TerminalsPanelEmulationUI
 	static OSStatus
 	receiveFieldChanged		(EventHandlerCallRef, EventRef, void*);
 	
+	static OSStatus
+	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
+	
 	void
 	saveFieldPreferences	(Preferences_ContextRef);
 	
@@ -224,6 +227,9 @@ struct My_TerminalsPanelScreenUI
 	
 	static OSStatus
 	receiveFieldChanged		(EventHandlerCallRef, EventRef, void*);
+	
+	static OSStatus
+	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 	
 	void
 	saveFieldPreferences	(Preferences_ContextRef);
@@ -312,7 +318,6 @@ namespace {
 OSStatus	accessDataBrowserItemData	(ControlRef, DataBrowserItemID, DataBrowserPropertyID,
 										 DataBrowserItemDataRef, Boolean);
 Boolean		compareDataBrowserItems		(ControlRef, DataBrowserItemID, DataBrowserItemID, DataBrowserPropertyID);
-OSStatus	receiveHICommand			(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -1038,6 +1043,133 @@ receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
 
 
 /*!
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for the buttons and menus in this panel.
+
+(3.1)
+*/
+OSStatus
+My_TerminalsPanelEmulationUI::
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inMyTerminalsPanelUIPtr)
+{
+	OSStatus						result = eventNotHandledErr;
+	My_TerminalsPanelEmulationUI*	emulationInterfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_TerminalsPanelEmulationUI*);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
+	{
+		HICommandExtended	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if (noErr == result)
+		{
+			result = eventNotHandledErr; // initially...
+			
+			switch (received.commandID)
+			{
+			case kCommandSetEmulatorNone:
+			case kCommandSetEmulatorVT100:
+			case kCommandSetEmulatorVT102:
+			case kCommandSetEmulatorVT220:
+			case kCommandSetEmulatorXTermOriginal:
+				{
+					Terminal_Emulator					newEmulator = kTerminal_EmulatorDumb;
+					My_TerminalsPanelEmulationDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(emulationInterfacePtr->panel),
+																					My_TerminalsPanelEmulationDataPtr);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					
+					
+					switch (received.commandID)
+					{
+					case kCommandSetEmulatorNone:
+						newEmulator = kTerminal_EmulatorDumb;
+						break;
+					
+					case kCommandSetEmulatorVT100:
+						newEmulator = kTerminal_EmulatorVT100;
+						break;
+					
+					case kCommandSetEmulatorVT102:
+						newEmulator = kTerminal_EmulatorVT102;
+						break;
+					
+					case kCommandSetEmulatorVT220:
+						newEmulator = kTerminal_EmulatorVT220;
+						break;
+					
+					case kCommandSetEmulatorXTermOriginal:
+						newEmulator = kTerminal_EmulatorXTerm256Color;
+						{
+							// assume that by default the user will want all XTerm-related tweaks
+							// enabled when using XTerm as the base type (they can still be disabled
+							// individually if the user so desires)
+							Boolean		flagValue = true;
+							
+							
+							(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTerm256ColorsEnabled,
+																			sizeof(flagValue), &flagValue);
+							(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermColorEnabled,
+																			sizeof(flagValue), &flagValue);
+							(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermGraphicsEnabled,
+																			sizeof(flagValue), &flagValue);
+							(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermWindowAlterationEnabled,
+																			sizeof(flagValue), &flagValue);
+							emulationInterfacePtr->readPreferences(dataPtr->dataModel);
+						}
+						break;
+					
+					default:
+						// ???
+						break;
+					}
+					emulationInterfacePtr->setEmulator(newEmulator);
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTerminalEmulatorType,
+																sizeof(newEmulator), &newEmulator);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_Warning(Console_WriteLine, "failed to set terminal emulator");
+					}
+					
+					// only when setting from the menu, resync the answerback message
+					{
+						CFStringRef const	kAnswerBackMessage = Terminal_EmulatorReturnDefaultName(newEmulator);
+						
+						
+						prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTerminalAnswerBackMessage,
+																	sizeof(kAnswerBackMessage), &kAnswerBackMessage);
+						if ((nullptr == kAnswerBackMessage) || (kPreferences_ResultOK != prefsResult))
+						{
+							Console_Warning(Console_WriteLine, "failed to set terminal answer-back message");
+						}
+					}
+					
+					result = noErr; // event is handled
+				}
+				break;
+			
+			default:
+				break;
+			}
+		}
+		else
+		{
+			result = eventNotHandledErr;
+		}
+	}
+	return result;
+}// My_TerminalsPanelEmulationUI::receiveHICommand
+
+
+/*!
 Saves every text field in the panel to the data model.
 It is necessary to treat fields specially because they
 do not have obvious state changes (as, say, buttons do);
@@ -1171,6 +1303,14 @@ setEmulator		(Terminal_Emulator		inEmulator,
 	case kTerminal_EmulatorVT220:
 		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
 														kCommandSetEmulatorVT220);
+		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
+		break;
+	
+	case kTerminal_EmulatorXTermOriginal:
+	case kTerminal_EmulatorXTermColor:
+	case kTerminal_EmulatorXTerm256Color:
+		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
+														kCommandSetEmulatorXTermOriginal);
 		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	
@@ -1858,6 +1998,117 @@ receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
 
 
 /*!
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for the buttons and menus in this panel.
+
+(3.1)
+*/
+OSStatus
+My_TerminalsPanelScreenUI::
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inMyTerminalsPanelUIPtr)
+{
+	OSStatus					result = eventNotHandledErr;
+	My_TerminalsPanelScreenUI*	screenInterfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_TerminalsPanelScreenUI*);
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
+	{
+		HICommandExtended	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if (noErr == result)
+		{
+			result = eventNotHandledErr; // initially...
+			
+			switch (received.commandID)
+			{
+			case kCommandSetScrollbackTypeDisabled:
+			case kCommandSetScrollbackTypeFixed:
+			case kCommandSetScrollbackTypeUnlimited:
+			case kCommandSetScrollbackTypeDistributed:
+				{
+					Terminal_ScrollbackType				newScrollbackType = kTerminal_ScrollbackTypeDisabled;
+					My_TerminalsPanelEmulationDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(screenInterfacePtr->panel),
+																					My_TerminalsPanelEmulationDataPtr);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					
+					
+					switch (received.commandID)
+					{
+					case kCommandSetScrollbackTypeDisabled:
+						newScrollbackType = kTerminal_ScrollbackTypeDisabled;
+						break;
+					
+					case kCommandSetScrollbackTypeFixed:
+						newScrollbackType = kTerminal_ScrollbackTypeFixed;
+						break;
+					
+					case kCommandSetScrollbackTypeUnlimited:
+						newScrollbackType = kTerminal_ScrollbackTypeUnlimited;
+						break;
+					
+					case kCommandSetScrollbackTypeDistributed:
+						newScrollbackType = kTerminal_ScrollbackTypeDistributed;
+						break;
+					
+					default:
+						// ???
+						break;
+					}
+					screenInterfacePtr->setScrollbackType(newScrollbackType);
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTerminalScreenScrollbackType,
+																sizeof(newScrollbackType), &newScrollbackType);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_Warning(Console_WriteLine, "failed to set screen scrollback type");
+					}
+					
+					result = noErr; // event is handled
+				}
+				break;
+			
+			case kCommandSetScrollbackUnitsRows:
+				// INCOMPLETE
+				(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackUnits,
+																			Panel_ReturnOwningWindow(screenInterfacePtr->panel)),
+																received.commandID);
+				result = noErr; // event is handled
+				break;
+			
+			case kCommandSetScrollbackUnitsKilobytes:
+				// UNIMPLEMENTED
+				Sound_StandardAlert();
+			#if 0
+				(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackUnits,
+																			Panel_ReturnOwningWindow(screenInterfacePtr->panel)),
+																received.commandID);
+			#endif
+				result = noErr; // event is handled
+				break;
+			
+			default:
+				break;
+			}
+		}
+		else
+		{
+			result = eventNotHandledErr;
+		}
+	}
+	return result;
+}// My_TerminalsPanelScreenUI::receiveHICommand
+
+
+/*!
 Saves every text field in the panel to the data model.
 It is necessary to treat fields specially because they
 do not have obvious state changes (as, say, buttons do);
@@ -2224,177 +2475,6 @@ compareDataBrowserItems		(HIViewRef					UNUSED_ARGUMENT(inDataBrowser),
 	
 	return result;
 }// compareDataBrowserItems
-
-
-/*!
-Handles "kEventCommandProcess" of "kEventClassCommand"
-for the buttons and menus in this panel.
-
-(3.1)
-*/
-OSStatus
-receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					inMyTerminalsPanelUIPtr)
-{
-	OSStatus						result = eventNotHandledErr;
-	// WARNING: More than one UI uses this handler.  The context will
-	// depend on the command ID.
-	My_TerminalsPanelEmulationUI*	emulationInterfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_TerminalsPanelEmulationUI*);
-	My_TerminalsPanelScreenUI*		screenInterfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_TerminalsPanelScreenUI*);
-	UInt32 const					kEventClass = GetEventClass(inEvent);
-	UInt32 const					kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassCommand);
-	assert(kEventKind == kEventCommandProcess);
-	{
-		HICommandExtended	received;
-		
-		
-		// determine the command in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
-		
-		// if the command information was found, proceed
-		if (noErr == result)
-		{
-			result = eventNotHandledErr; // initially...
-			
-			switch (received.commandID)
-			{
-			case kCommandSetEmulatorNone:
-			case kCommandSetEmulatorVT100:
-			case kCommandSetEmulatorVT102:
-			case kCommandSetEmulatorVT220:
-				{
-					Terminal_Emulator					newEmulator = kTerminal_EmulatorDumb;
-					My_TerminalsPanelEmulationDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(emulationInterfacePtr->panel),
-																					My_TerminalsPanelEmulationDataPtr);
-					Preferences_Result					prefsResult = kPreferences_ResultOK;
-					
-					
-					switch (received.commandID)
-					{
-					case kCommandSetEmulatorNone:
-						newEmulator = kTerminal_EmulatorDumb;
-						break;
-					
-					case kCommandSetEmulatorVT100:
-						newEmulator = kTerminal_EmulatorVT100;
-						break;
-					
-					case kCommandSetEmulatorVT102:
-						newEmulator = kTerminal_EmulatorVT102;
-						break;
-					
-					case kCommandSetEmulatorVT220:
-						newEmulator = kTerminal_EmulatorVT220;
-						break;
-					
-					default:
-						// ???
-						break;
-					}
-					emulationInterfacePtr->setEmulator(newEmulator);
-					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTerminalEmulatorType,
-																sizeof(newEmulator), &newEmulator);
-					if (kPreferences_ResultOK != prefsResult)
-					{
-						Console_Warning(Console_WriteLine, "failed to set terminal emulator");
-					}
-					
-					// only when setting from the menu, resync the answerback message
-					{
-						CFStringRef const	kAnswerBackMessage = Terminal_EmulatorReturnDefaultName(newEmulator);
-						
-						
-						prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTerminalAnswerBackMessage,
-																	sizeof(kAnswerBackMessage), &kAnswerBackMessage);
-						if ((nullptr == kAnswerBackMessage) || (kPreferences_ResultOK != prefsResult))
-						{
-							Console_Warning(Console_WriteLine, "failed to set terminal answer-back message");
-						}
-					}
-					
-					result = noErr; // event is handled
-				}
-				break;
-			
-			case kCommandSetScrollbackTypeDisabled:
-			case kCommandSetScrollbackTypeFixed:
-			case kCommandSetScrollbackTypeUnlimited:
-			case kCommandSetScrollbackTypeDistributed:
-				{
-					Terminal_ScrollbackType				newScrollbackType = kTerminal_ScrollbackTypeDisabled;
-					My_TerminalsPanelEmulationDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(screenInterfacePtr->panel),
-																					My_TerminalsPanelEmulationDataPtr);
-					Preferences_Result					prefsResult = kPreferences_ResultOK;
-					
-					
-					switch (received.commandID)
-					{
-					case kCommandSetScrollbackTypeDisabled:
-						newScrollbackType = kTerminal_ScrollbackTypeDisabled;
-						break;
-					
-					case kCommandSetScrollbackTypeFixed:
-						newScrollbackType = kTerminal_ScrollbackTypeFixed;
-						break;
-					
-					case kCommandSetScrollbackTypeUnlimited:
-						newScrollbackType = kTerminal_ScrollbackTypeUnlimited;
-						break;
-					
-					case kCommandSetScrollbackTypeDistributed:
-						newScrollbackType = kTerminal_ScrollbackTypeDistributed;
-						break;
-					
-					default:
-						// ???
-						break;
-					}
-					screenInterfacePtr->setScrollbackType(newScrollbackType);
-					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTerminalScreenScrollbackType,
-																sizeof(newScrollbackType), &newScrollbackType);
-					if (kPreferences_ResultOK != prefsResult)
-					{
-						Console_Warning(Console_WriteLine, "failed to set screen scrollback type");
-					}
-					
-					result = noErr; // event is handled
-				}
-				break;
-			
-			case kCommandSetScrollbackUnitsRows:
-				// INCOMPLETE
-				(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackUnits,
-																			Panel_ReturnOwningWindow(screenInterfacePtr->panel)),
-																received.commandID);
-				result = noErr; // event is handled
-				break;
-			
-			case kCommandSetScrollbackUnitsKilobytes:
-				// UNIMPLEMENTED
-				Sound_StandardAlert();
-			#if 0
-				(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackUnits,
-																			Panel_ReturnOwningWindow(screenInterfacePtr->panel)),
-																received.commandID);
-			#endif
-				result = noErr; // event is handled
-				break;
-			
-			default:
-				break;
-			}
-		}
-		else
-		{
-			result = eventNotHandledErr;
-		}
-	}
-	return result;
-}// receiveHICommand
 
 } // anonymous namespace
 

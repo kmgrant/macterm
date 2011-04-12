@@ -716,19 +716,42 @@ This is an accurate emulation of Digital Equipment Corporation's
 h5. VT102
 
 Largely compatible with any system that wants a VT100, this
- device has additional capabilities such as print streaming.
- Currently, MacTelnet's 4.0 daily builds do not completely
- implement this terminal, and it may be difficult to use with
- all applications that require VT102.  Using VT100 first is
- recommended.
+ device has additional capabilities like print streaming.
+ MacTelnet is a very good VT102 emulator.
 
 h5. VT220
 
-Also a superset of others in the VT series such as VT100, this
- device has additional capabilities like special keyboard keys.
- Currently, the best way to access these features is via the
- Window menu (floating key palettes), as the emulator itself is
- not completely tested.
+This device has additional capabilities like special keyboard
+ keys and 8-bit controls.  MacTelnet is a very good VT220
+ emulator, but it does not currently support all features, like
+ user-defined keys (UDKs) and certain character set registers.
+
+Note that in the Window menu there are commands to show VT220
+ floating key palettes.  You may also find it useful to set up
+ Macros via Preferences for key sequences of your own; more
+ guidance on this is available in the "Macros section":#macros.
+
+h5. XTerm
+
+Mostly a superset of VT emulators, the XTerm terminal type also
+ refers to the behavior of the @xterm@ Unix terminal program.
+ MacTelnet supports certain standard sequences such as cursor
+ movement, although mouse support is not yet implemented.  If
+ you are using a highly complex terminal program, you may want
+ to try both the VT220 and XTerm types to see which works best
+ for now.  MacTelnet's XTerm support has improved over time.
+
+It is important to note that several XTerm features have been
+ extracted into Emulation Tweaks (see below) so that they may be
+ enabled while *any* terminal is active, even a base VT100.  It
+ is therefore not enough to choose the XTerm base type, you must
+ also enable all XTerm-related tweaks to see the most accurate
+ possible results.
+
+In addition, note that TEK vector graphics is a feature of XTerm
+ that MacTelnet enables separately; see "Graphics (TEK)":#sessiontek.
+ You must enable TEK for a Session, it is not automatically
+ handled just because you chose the XTerm type.
 
 h4. Identity
 
@@ -741,11 +764,13 @@ Applications may rely on this to determine if they should even
  commands that only a VT102 supports.
 
 This name is suggested for you automatically when you choose
- a Base Emulator.  Note, however, that you may still need to
+ a Base Emulator.  Note however that you may still need to
  change it depending on any Emulation Tweaks (below).
 
 This should be reflected in the "TERM" environment variable
- on Unix-like systems, and MacTelnet tries to set this for you.
+ on Unix-like systems, and MacTelnet tries to set this for you
+ when you start a local command.  For remote commands, such as
+ a secure shell (SSH) session, you may have to fix this yourself!
 
 h4. Emulation Tweaks
 
@@ -754,7 +779,7 @@ MacTelnet allows you to customize some of the features of its
 
 * Some applications rely on bugs in common emulators or the original devices, and won't work unless MacTelnet is also buggy.
 
-* Certain newer terminals are supersets of older types (for instance, XTerm is a VT100), and can work "reasonably well" if popular features are supported.
+* Sometimes an environment assumes that popular features of advanced terminals are available (such as XTerm window titles) even though it is mostly dependent on a more basic terminal type like VT102.
 
 Applications may ignore tweaks unless you also set the Identity
  to tell them that the feature is supported.  Each tweak below
@@ -776,6 +801,11 @@ Some applications have come to rely on text wrapping occurring
 
 h5. XTerm
 
+Note that XTerm is also an emulator type of its own, that has
+ additional cursor movement capabilities among other features.
+ You may choose to enable or disable the following XTerm features
+ whether or not you have chosen an actual XTerm as Base Emulator.
+
 h6. 256 Colors
 
 Enables all 256 new XTerm colors, which includes the 16 basic
@@ -787,7 +817,8 @@ Enables all 256 new XTerm colors, which includes the 16 basic
 Note that this feature could significantly increase the memory
  requirements for a terminal.
 
-For this to work, your Identity may need to be "xterm-256color".
+For this to work, your Identity may need to be "xterm-256color"
+ or a 256-color variant such as "gnome-256color".
 
 h6. Color
 

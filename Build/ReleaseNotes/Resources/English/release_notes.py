@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110411',
     '20110408',
     '20110406',
     '20110405',
@@ -374,6 +375,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110411': [
+        'Preferences window Terminals pane Emulation tab now offers XTerm as a Base Emulator type (incomplete).',
+        'Note that XTerm tweaks may still be enabled for other terminal types (like VT220), and this is recommended.',
+    ],
     '20110408': [
         'Fixed a problem where erased parts of lines would not automatically refresh (was triggered in programs like "lynx").',
         'Fixed VT220 to handle character insert and erase ("ICH" and "ECH") even if XTerm features are not enabled.',

@@ -979,7 +979,10 @@ public:
 	UInt16								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
 	SInt16								argLastIndex;			//!< zero-based last parameter position in the "values" array
 	ParameterList						argList;				//!< all values provided for the current escape sequence
-	VariantChain						preCallbackSet;			//!< callbacks invoked prior to ordinary callbacks, to allow tweaks (e.g. XTerm)
+	VariantChain						preCallbackSet;			//!< state determinant/transition callbacks invoked ahead of normal callbacks, to allow tweaks;
+																//!  a pre-callback set’s echo and reset callbacks are never used and should be nullptr; in
+																//!  addition, “normal” emulator callbacks CANNOT be used as pre-callbacks because they will
+																//!  absorb too many actions, so every pre-callback must be ITS OWN CLASS and be lightweight
 	Callbacks							currentCallbacks;		//!< emulator-type-specific handlers to drive the state machine
 	Callbacks							pushedCallbacks;		//!< for emulators that can switch modes, the previous set of callbacks
 	TagSet								supportedVariants;		//!< tags identifying minor features, e.g. "kPreferences_TagXTerm256ColorsEnabled"
@@ -1528,7 +1531,9 @@ protected:
 
 /*!
 Manages state determination and transition for the XTerm
-terminal emulator.
+terminal emulator.  Automatically uses My_XTermCore for
+various basic features, but also implements the rest of
+the XTerm terminal type.
 */
 class My_XTerm
 {
@@ -1558,6 +1563,32 @@ public:
 		kStateSD				= kMy_ParserStateSeenESCLeftSqBracketParamsT,			//!< scroll down
 		kStateSU				= kMy_ParserStateSeenESCLeftSqBracketParamsS,			//!< scroll up
 		kStateVPA				= kMy_ParserStateSeenESCLeftSqBracketParamsd,			//!< vertical position absolute
+	};
+};
+
+/*!
+A lightweight terminal implementation, suitable ONLY as a
+pre-callback.  Implements certain basic features of XTerm,
+such as colors and window title changes, that can be safely
+superimposed onto other emulators like the VT100.  The state
+determinant and transition routines automatically use the
+My_Emulator class’ supportsVariant() method to determine if
+a particular XTerm sequence should be handled; otherwise,
+the sequences are ignored.  In addition, any more advanced
+sequences from XTerm are always ignored.
+
+NOTE:	Almost all of XTerm is ignored by this class.  See
+		the class "My_XTerm" for the full emulator.
+*/
+class My_XTermCore
+{
+public:
+	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	
+	enum State
+	{
+		// Ideally these are "protected", but loop evasion code requires them.
 		kStateSWIT				= kMy_ParserStateSeenESCRightSqBracket0,				//!< subsequent string is for window title and icon title
 		kStateSWITAcquireStr	= kMy_ParserStateSeenESCRightSqBracket0Semi,			//!< seen ESC]0, gathering characters of string
 		kStateSIT				= kMy_ParserStateSeenESCRightSqBracket1,				//!< subsequent string is for icon title only
@@ -2964,9 +2995,9 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 								// evasion to an emulator method, so that each emulator type
 								// can handle its own custom states (and only when that
 								// emulator is actually in use!)
-								if ((states.second == My_XTerm::kStateSITAcquireStr) ||
-									(states.second == My_XTerm::kStateSWTAcquireStr) ||
-									(states.second == My_XTerm::kStateSWITAcquireStr))
+								if ((states.second == My_XTermCore::kStateSITAcquireStr) ||
+									(states.second == My_XTermCore::kStateSWTAcquireStr) ||
+									(states.second == My_XTermCore::kStateSWITAcquireStr))
 								{
 									interrupt = (dataPtr->emulator.stateRepetitions > 255/* arbitrary */);
 								}
@@ -5175,9 +5206,6 @@ returnResetHandler		(Terminal_Emulator		inPrimaryEmulation)
 	{
 	case kTerminal_EmulatorVT100:
 	case kTerminal_EmulatorVT102:
-	case kTerminal_EmulatorXTermOriginal: // TEMPORARY
-	case kTerminal_EmulatorXTermColor: // TEMPORARY
-	case kTerminal_EmulatorXTerm256Color: // TEMPORARY
 	case kTerminal_EmulatorANSIBBS: // TEMPORARY
 	case kTerminal_EmulatorANSISCO: // TEMPORARY
 		result = My_VT100::hardSoftReset;
@@ -5186,6 +5214,13 @@ returnResetHandler		(Terminal_Emulator		inPrimaryEmulation)
 	case kTerminal_EmulatorVT220:
 	case kTerminal_EmulatorVT320: // TEMPORARY
 	case kTerminal_EmulatorVT420: // TEMPORARY
+		result = My_VT220::hardSoftReset;
+		break;
+	
+	case kTerminal_EmulatorXTermOriginal: // TEMPORARY
+	case kTerminal_EmulatorXTermColor: // TEMPORARY
+	case kTerminal_EmulatorXTerm256Color: // TEMPORARY
+		// no XTerm-specific reset yet
 		result = My_VT220::hardSoftReset;
 		break;
 	
@@ -5215,9 +5250,6 @@ returnStateDeterminant		(Terminal_Emulator		inPrimaryEmulation)
 	switch (inPrimaryEmulation)
 	{
 	case kTerminal_EmulatorVT100:
-	case kTerminal_EmulatorXTermOriginal: // TEMPORARY
-	case kTerminal_EmulatorXTermColor: // TEMPORARY
-	case kTerminal_EmulatorXTerm256Color: // TEMPORARY
 	case kTerminal_EmulatorANSIBBS: // TEMPORARY
 	case kTerminal_EmulatorANSISCO: // TEMPORARY
 		result = My_VT100::stateDeterminant;
@@ -5231,6 +5263,12 @@ returnStateDeterminant		(Terminal_Emulator		inPrimaryEmulation)
 	case kTerminal_EmulatorVT320: // TEMPORARY
 	case kTerminal_EmulatorVT420: // TEMPORARY
 		result = My_VT220::stateDeterminant;
+		break;
+	
+	case kTerminal_EmulatorXTermOriginal:
+	case kTerminal_EmulatorXTermColor:
+	case kTerminal_EmulatorXTerm256Color:
+		result = My_XTerm::stateDeterminant;
 		break;
 	
 	case kTerminal_EmulatorDumb:
@@ -5262,9 +5300,6 @@ returnStateTransitionHandler	(Terminal_Emulator		inPrimaryEmulation)
 	switch (inPrimaryEmulation)
 	{
 	case kTerminal_EmulatorVT100:
-	case kTerminal_EmulatorXTermOriginal: // TEMPORARY
-	case kTerminal_EmulatorXTermColor: // TEMPORARY
-	case kTerminal_EmulatorXTerm256Color: // TEMPORARY
 	case kTerminal_EmulatorANSIBBS: // TEMPORARY
 	case kTerminal_EmulatorANSISCO: // TEMPORARY
 		result = My_VT100::stateTransition;
@@ -5278,6 +5313,12 @@ returnStateTransitionHandler	(Terminal_Emulator		inPrimaryEmulation)
 	case kTerminal_EmulatorVT320: // TEMPORARY
 	case kTerminal_EmulatorVT420: // TEMPORARY
 		result = My_VT220::stateTransition;
+		break;
+	
+	case kTerminal_EmulatorXTermOriginal:
+	case kTerminal_EmulatorXTermColor:
+	case kTerminal_EmulatorXTerm256Color:
+		result = My_XTerm::stateTransition;
 		break;
 	
 	case kTerminal_EmulatorDumb:
@@ -5565,12 +5606,12 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 		if (false == this->emulator.addedXTerm)
 		{
 			this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
-													My_Emulator::Callbacks(My_DefaultEmulator::echoData,
-																			My_XTerm::stateDeterminant,
-																			My_XTerm::stateTransition,
-																			My_DefaultEmulator::hardSoftReset));
+													My_Emulator::Callbacks(nullptr/* echo - override is not allowed in a pre-callback */,
+																			My_XTermCore::stateDeterminant,
+																			My_XTermCore::stateTransition,
+																			nullptr/* reset - override is not allowed in a pre-callback */));
 			this->emulator.addedXTerm = true;
-		}
+		}	
 	}
 	if (returnXTermWindowAlteration(inTerminalConfig))
 	{
@@ -5578,10 +5619,10 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 		if (false == this->emulator.addedXTerm)
 		{
 			this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
-													My_Emulator::Callbacks(My_DefaultEmulator::echoData,
-																			My_XTerm::stateDeterminant,
-																			My_XTerm::stateTransition,
-																			My_DefaultEmulator::hardSoftReset));
+													My_Emulator::Callbacks(nullptr/* echo - override is not allowed in a pre-callback */,
+																			My_XTermCore::stateDeterminant,
+																			My_XTermCore::stateTransition,
+																			nullptr/* reset - override is not allowed in a pre-callback */));
 			this->emulator.addedXTerm = true;
 		}
 	}
@@ -11002,8 +11043,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 					 Boolean&				outHandled)
 {
 	assert(inLength > 0);
-	UInt8 const		kTriggerChar = *inBuffer; // for convenience; usually only first character matters
-	UInt32			result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
 	
 	
 	switch (inNowOutNext.first)
@@ -11062,11 +11102,203 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		}
 		break;
 	
+	default:
+		// call the XTerm “core” to handle the sequence and update "outHandled" appropriately;
+		// note that the core IS NOT a complete emulator, which is why this routine falls
+		// back to a proper VT220 at the end instead of falling back to the core exclusively
+		result = invokeEmulatorStateDeterminantProc
+					(My_XTermCore::stateDeterminant, inEmulatorPtr, inBuffer, inLength, inNowOutNext,
+						outInterrupt, outHandled);
+		break;
+	}
+	
+	if (false == outHandled)
+	{
+		result = invokeEmulatorStateDeterminantProc
+					(My_VT220::stateDeterminant, inEmulatorPtr, inBuffer, inLength, inNowOutNext,
+						outInterrupt, outHandled);
+	}
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< XTerm in state", inNowOutNext.first);
+	//Console_WriteValueFourChars(">>>     XTerm proposes state", inNowOutNext.second);
+	//Console_WriteValueCharacter("        XTerm bases this at least on character", *inBuffer);
+	
+	return result;
+}// My_XTerm::stateDeterminant
+
+
+/*!
+A standard "My_EmulatorStateTransitionProcPtr" that responds to
+XTerm-specific window state changes.
+
+(4.0)
+*/
+UInt32
+My_XTerm::
+stateTransition		(My_ScreenBufferPtr			inDataPtr,
+					 UInt8 const*				inBuffer,
+					 UInt32						inLength,
+					 My_ParserStatePair const&	inOldNew,
+					 Boolean&					outHandled)
+{
+	UInt32		result = 0; // usually, no characters are consumed at the transition stage
+	
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< XTerm transition from state", inOldNew.first);
+	if (DebugInterface_LogsTerminalState())
+	{
+		Console_WriteValueFourChars(">>>     XTerm transition to state  ", inOldNew.second);
+	}
+	
+	// decide what to do based on the proposed transition
+	// INCOMPLETE
+	switch (inOldNew.second)
+	{
+	case kStateCBT:
+		cursorBackwardTabulation(inDataPtr);
+		break;
+	
+	case kStateCHA:
+		cursorCharacterAbsolute(inDataPtr);
+		break;
+	
+	case kStateCHT:
+		cursorForwardTabulation(inDataPtr);
+		break;
+	
+	case kStateCNL:
+		cursorNextLine(inDataPtr);
+		break;
+	
+	case kStateCPL:
+		cursorPreviousLine(inDataPtr);
+		break;
+	
+	case kStateHPA:
+		horizontalPositionAbsolute(inDataPtr);
+		break;
+	
+	case kStateSD:
+		scrollDown(inDataPtr);
+		break;
+	
+	case kStateSU:
+		scrollUp(inDataPtr);
+		break;
+	
+	case kStateVPA:
+		verticalPositionAbsolute(inDataPtr);
+		break;
+	
+	default:
+		// call the XTerm “core” to handle the sequence and update "outHandled" appropriately;
+		// note that the core IS NOT a complete emulator, which is why this routine falls
+		// back to a proper VT220 at the end instead of falling back to the core exclusively
+		result = invokeEmulatorStateTransitionProc
+					(My_XTermCore::stateTransition, inDataPtr, inBuffer, inLength,
+						inOldNew, outHandled);
+		break;
+	}
+	
+	if (false == outHandled)
+	{
+		// other state transitions should still basically be handled as if in VT100
+		result = invokeEmulatorStateTransitionProc
+					(My_VT220::stateTransition, inDataPtr, inBuffer, inLength,
+						inOldNew, outHandled);
+	}
+	
+	return result;
+}// My_XTerm::stateTransition
+
+
+/*!
+Handles the XTerm 'VPA' sequence.
+
+This should accept up to 2 parameters.  With no parameters, the
+cursor is moved to the first row, but the same cursor column.  If
+there is just one parameter, it is a one-based index for the new
+cursor row, using the same column.  And with two parameters, the
+parameters are the one-based indices of the new cursor row and
+column, in that order.
+
+See also the 'CUP' sequence in the VT terminal.
+
+(4.0)
+*/
+void
+My_XTerm::
+verticalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16 const		kParam0 = inDataPtr->emulator.argList[0];
+	SInt16 const		kParam1 = inDataPtr->emulator.argList[1];
+	SInt16				newX = inDataPtr->current.cursorX;
+	My_ScreenRowIndex	newY = 0;
+	
+	
+	// in the following definitions, 0 and 1 are considered the same number
+	if (kMy_ParamUndefined == kParam1)
+	{
+		// only one parameter was given, so it is the row and
+		// the cursor column does not change
+		newY = (0 == kParam0)
+				? 0
+				: (kMy_ParamUndefined != kParam0)
+					? kParam0 - 1
+					: 0/* default is row 1 in current column */;
+	}
+	else
+	{
+		// two parameters, giving (row, column)
+		newY = (0 == kParam0)
+				? 0
+				: (kMy_ParamUndefined != kParam0)
+					? kParam0 - 1
+					: 0/* default is the home cursor row */;
+		newX = (0 == kParam1)
+				? 0
+				: kParam1 - 1;
+	}
+	
+	// the new values are not checked for violation of constraints
+	// because constraints (including current origin mode) are
+	// automatically enforced by moveCursor...() routines
+	moveCursor(inDataPtr, newX, newY);
+}// My_XTerm::verticalPositionAbsolute
+
+
+/*!
+A standard "My_EmulatorStateDeterminantProcPtr" that sets
+XTerm-specific window states based on the characters of the
+given buffer.
+
+(4.0)
+*/
+UInt32
+My_XTermCore::
+stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
+					 UInt8 const*			inBuffer,
+					 UInt32					inLength,
+					 My_ParserStatePair&	inNowOutNext,
+					 Boolean&				UNUSED_ARGUMENT(outInterrupt),
+					 Boolean&				outHandled)
+{
+	assert(inLength > 0);
+	UInt8 const		kTriggerChar = *inBuffer; // for convenience; usually only first character matters
+	UInt32			result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	
+	
+	switch (inNowOutNext.first)
+	{
+	#if 0
 	case kMy_ParserStateSeenESC:
 	case kMy_ParserStateSeenESCRightSqBracket:
 		result = inEmulatorPtr->currentCallbacks.stateDeterminant(inEmulatorPtr, inBuffer, inLength,
 																	inNowOutNext, outInterrupt, outHandled);
 		break;
+	#endif
 	
 	case kStateSWITAcquireStr:
 		if (inEmulatorPtr->supportsVariant(kPreferences_TagXTermWindowAlterationEnabled))
@@ -11183,13 +11415,17 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		break;
 	}
 	
+	// WARNING: Do not call any other full emulator here!  This is a
+	//          pre-callback ONLY, which is designed to fall through
+	//          to something else (such as a VT100).
+	
 	// debug
 	//Console_WriteValueFourChars("    <<< XTerm in state", inNowOutNext.first);
 	//Console_WriteValueFourChars(">>>     XTerm proposes state", inNowOutNext.second);
 	//Console_WriteValueCharacter("        XTerm bases this at least on character", *inBuffer);
 	
 	return result;
-}// My_XTerm::stateDeterminant
+}// My_XTermCore::stateDeterminant
 
 
 /*!
@@ -11199,7 +11435,7 @@ XTerm-specific window state changes.
 (4.0)
 */
 UInt32
-My_XTerm::
+My_XTermCore::
 stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					 UInt8 const*				inBuffer,
 					 UInt32						UNUSED_ARGUMENT(inLength),
@@ -11220,42 +11456,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	// INCOMPLETE
 	switch (inOldNew.second)
 	{
-	case kStateCBT:
-		cursorBackwardTabulation(inDataPtr);
-		break;
-	
-	case kStateCHA:
-		cursorCharacterAbsolute(inDataPtr);
-		break;
-	
-	case kStateCHT:
-		cursorForwardTabulation(inDataPtr);
-		break;
-	
-	case kStateCNL:
-		cursorNextLine(inDataPtr);
-		break;
-	
-	case kStateCPL:
-		cursorPreviousLine(inDataPtr);
-		break;
-	
-	case kStateHPA:
-		horizontalPositionAbsolute(inDataPtr);
-		break;
-	
-	case kStateSD:
-		scrollDown(inDataPtr);
-		break;
-	
-	case kStateSU:
-		scrollUp(inDataPtr);
-		break;
-	
-	case kStateVPA:
-		verticalPositionAbsolute(inDataPtr);
-		break;
-	
 	case kStateSWIT:
 	case kStateSIT:
 	case kStateSWT:
@@ -11378,63 +11578,12 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	}
 	
+	// WARNING: Do not call any other full emulator here!  This is a
+	//          pre-callback ONLY, which is designed to fall through
+	//          to something else (such as a VT100).
+	
 	return result;
-}// My_XTerm::stateTransition
-
-
-/*!
-Handles the XTerm 'VPA' sequence.
-
-This should accept up to 2 parameters.  With no parameters, the
-cursor is moved to the first row, but the same cursor column.  If
-there is just one parameter, it is a one-based index for the new
-cursor row, using the same column.  And with two parameters, the
-parameters are the one-based indices of the new cursor row and
-column, in that order.
-
-See also the 'CUP' sequence in the VT terminal.
-
-(4.0)
-*/
-void
-My_XTerm::
-verticalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
-{
-	SInt16 const		kParam0 = inDataPtr->emulator.argList[0];
-	SInt16 const		kParam1 = inDataPtr->emulator.argList[1];
-	SInt16				newX = inDataPtr->current.cursorX;
-	My_ScreenRowIndex	newY = 0;
-	
-	
-	// in the following definitions, 0 and 1 are considered the same number
-	if (kMy_ParamUndefined == kParam1)
-	{
-		// only one parameter was given, so it is the row and
-		// the cursor column does not change
-		newY = (0 == kParam0)
-				? 0
-				: (kMy_ParamUndefined != kParam0)
-					? kParam0 - 1
-					: 0/* default is row 1 in current column */;
-	}
-	else
-	{
-		// two parameters, giving (row, column)
-		newY = (0 == kParam0)
-				? 0
-				: (kMy_ParamUndefined != kParam0)
-					? kParam0 - 1
-					: 0/* default is the home cursor row */;
-		newX = (0 == kParam1)
-				? 0
-				: kParam1 - 1;
-	}
-	
-	// the new values are not checked for violation of constraints
-	// because constraints (including current origin mode) are
-	// automatically enforced by moveCursor...() routines
-	moveCursor(inDataPtr, newX, newY);
-}// My_XTerm::verticalPositionAbsolute
+}// My_XTermCore::stateTransition
 
 
 
