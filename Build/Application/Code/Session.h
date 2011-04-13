@@ -18,7 +18,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -69,14 +69,13 @@
 /*!
 Possible return values from Session module routines.
 */
-#ifndef REZ
 typedef ResultCode< UInt16 >	Session_Result;
 Session_Result const	kSession_ResultOK(0);						//!< no error
 Session_Result const	kSession_ResultInvalidReference(1);			//!< given SessionRef is not valid
 Session_Result const	kSession_ResultProtocolMismatch(2);			//!< attempt to, say, set an FTP option on a telnet session
 Session_Result const	kSession_ResultParameterError(3);			//!< invalid input (e.g. a null pointer)
 Session_Result const	kSession_ResultInsufficientBufferSpace(4);	//!< not enough memory space provided to copy data
-#endif
+Session_Result const	kSession_ResultNotReady(5);					//!< session is not in a state that can accept this action right now
 
 /*!
 Setting changes that MacTelnet allows other modules to “listen” for,

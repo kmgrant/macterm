@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110412',
     '20110411',
     '20110408',
     '20110406',
@@ -375,6 +376,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110412': [
+        'Fixed Custom Key Sequences sheet so that clicks in the Control Keys palette do not affect the terminal window.',
+    ],
     '20110411': [
         'Preferences window Terminals pane Emulation tab now offers XTerm as a Base Emulator type (incomplete).',
         'Note that XTerm tweaks may still be enabled for other terminal types (like VT220), and this is recommended.',

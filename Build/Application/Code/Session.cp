@@ -111,6 +111,17 @@ enum Session_Type
 	kSession_TypeLocalLoginShell		= 1		// local Unix process running /usr/bin/login
 };
 
+/*!
+Specifies the type of sheet (if any) that is currently
+displayed.  This is currently used to disable key recognition
+when the Special Key Sequences sheet is open.
+*/
+enum My_SessionSheetType
+{
+	kMy_SessionSheetTypeNone					= 0,
+	kMy_SessionSheetTypeSpecialKeySequences		= 1
+};
+
 } // anonymous namespace
 
 #pragma mark Types
@@ -277,7 +288,6 @@ struct My_Session
 	EventLoopTimerRef			longLifeTimer;				// 15-second timer
 	InterfaceLibAlertRef		currentTerminationAlert;	// retained while a sheet is still open so a 2nd sheet is not displayed
 	TerminalWindowRef			terminalWindow;				// terminal window housing this session
-	HIWindowRef					xwindow;						// redundant copy of TerminalWindow_ReturnWindow(terminalWindow)
 	Local_ProcessRef			mainProcess;				// the command whose output is directly attached to the terminal
 	Session_EventKeys			eventKeys;					// information on keyboard short-cuts for major events
 	My_TEKGraphicList			targetVectorGraphics;		// list of TEK graphics attached to this session
@@ -294,6 +304,7 @@ struct My_Session
 	Session_Watch				activeWatch;				// if any, what notification is currently set up for internal data events
 	EventLoopTimerUPP			inactivityWatchTimerUPP;	// procedure that is called if data has not arrived after awhile
 	EventLoopTimerRef			inactivityWatchTimer;		// short timer
+	My_SessionSheetType			currentSheet;				// if "kMy_SessionSheetTypeNone", no significant sheet is currently open
 	AlertMessages_BoxRef		watchBox;					// if defined, the global alert used to show notifications for this session
 	My_AuxiliaryDataByKey		auxiliaryDataMap;			// all tagged data associated with this session
 	SessionRef					selfRef;					// convenient reference to this structure
@@ -387,6 +398,7 @@ HIWindowRef					returnActiveWindow					(My_SessionPtr);
 OSStatus					sessionDragDrop						(EventHandlerCallRef, EventRef, SessionRef,
 																 HIViewRef, DragRef);
 void						setIconFromState					(My_SessionPtr);
+void						specialKeySequencesSheetClosed		(GenericDialog_Ref, Boolean);
 void						terminalHoverLocalEchoString		(My_SessionPtr, UInt8 const*, size_t);
 void						terminalInsertLocalEchoString		(My_SessionPtr, UInt8 const*, size_t);
 void						terminalWindowChanged				(ListenerModel_Ref, ListenerModel_Event,
@@ -1045,8 +1057,16 @@ Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 	// display the sheet
 	dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel,
 									Session_ReturnConfiguration(inRef),
-									kPrefsContextDialog_DisplayOptionNoAddToPrefsButton);
-	PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
+									kPrefsContextDialog_DisplayOptionNoAddToPrefsButton,
+									specialKeySequencesSheetClosed);
+	if (nullptr != dialog)
+	{
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		
+		
+		PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
+		ptr->currentSheet = kMy_SessionSheetTypeSpecialKeySequences;
+	}
 }// DisplaySpecialKeySequencesDialog
 
 
@@ -3945,6 +3965,9 @@ if the key was apparently input successfully
 \retval kSession_ResultInvalidReference
 if "inRef" is invalid
 
+\retval kSession_ResultNotReady
+if the key cannot be handled right now (e.g. sheet is open)
+
 (3.1)
 */
 Session_Result
@@ -3956,7 +3979,14 @@ Session_UserInputKey	(SessionRef		inRef,
 	Session_Result			result = kSession_ResultOK;
 	
 	
-	if (nullptr == ptr) result = kSession_ResultInvalidReference;
+	if (nullptr == ptr)
+	{
+		result = kSession_ResultInvalidReference;
+	}
+	else if (kMy_SessionSheetTypeSpecialKeySequences == ptr->currentSheet)
+	{
+		result = kSession_ResultNotReady;
+	}
 	else
 	{
 		if (inKeyOrASCII < VSF10)
@@ -4498,6 +4528,7 @@ writeEncoding(kCFStringEncodingUTF8), // initially...
 activeWatch(kSession_WatchNothing),
 inactivityWatchTimerUPP(nullptr),
 inactivityWatchTimer(nullptr),
+currentSheet(kMy_SessionSheetTypeNone),
 watchBox(nullptr),
 auxiliaryDataMap(),
 selfRef(REINTERPRET_CAST(this, SessionRef))
@@ -7080,6 +7111,36 @@ setIconFromState	(My_SessionPtr	inPtr)
 		inPtr->statusIconName.setCFTypeRef(AppResources_ReturnSessionStatusActiveIconFilenameNoExtension());
 	}
 }// setIconFromState
+
+
+/*!
+Responds to a close of the Special Key Sequences sheet by
+re-enabling key recognition.
+
+This hack is necessary to deal with the temporary problem of
+events from the Control Keys palette being automatically
+forwarded to the session even when the desired target is one
+of the buttons in the Special Key Sequences sheet.
+
+(4.0)
+*/
+void
+specialKeySequencesSheetClosed	(GenericDialog_Ref	inDialogThatClosed,
+								 Boolean			UNUSED_ARGUMENT(inOKButtonPressed))
+{
+	TerminalWindowRef		terminalWindow = TerminalWindow_ReturnFromWindow
+												(GenericDialog_ReturnParentWindow(inDialogThatClosed));
+	SessionRef				session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	
+	
+	if (nullptr != session)
+	{
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+		
+		
+		ptr->currentSheet = kMy_SessionSheetTypeNone;
+	}
+}// specialKeySequencesSheetClosed
 
 
 /*!
