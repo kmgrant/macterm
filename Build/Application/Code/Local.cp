@@ -1066,9 +1066,10 @@ Local_TerminalResize	(Local_TerminalID	inPseudoTerminalID,
 
 
 /*!
-Writes the specified data to the stream described by
-the file descriptor.  Returns the number of bytes
-actually written.
+Writes the specified data to the stream described by the file
+descriptor.  Returns the number of bytes actually written; if
+this number is less than "inByteCount", offset the buffer by
+the difference and try again to send the rest.
 
 (3.0)
 */
@@ -1091,7 +1092,7 @@ Local_TerminalWriteBytes	(int			inFileDescriptor,
 		if ((bytesWritten = write(inFileDescriptor, ptr, bytesLeft)) < 0)
 		{
 			// error
-			result = bytesWritten;
+			result = (inByteCount - bytesLeft);
 			// NOTE: could examine "errno" here (see "man 2 write")...
 			break;
 		}
