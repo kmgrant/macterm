@@ -155,6 +155,9 @@ enum
 	kMy_ParserStateAccumulateForEcho			= 'echo',	//!< no sense could be made of the input, so gather it for later translation and display
 	
 	// generic states - these are automatically handled by the default state determinant based on the data stream
+	// IMPORTANT: states that represent an ESC-<CODE> sequence are coded as 'ESC\0' + <CODE> in part to simplify
+	// the code that translates from 8-bit streams to 7-bit sequences and vice-versa; if ANY escape sequence
+	// cannot follow this convention, look at the state determinant in the VT100 emulator and fix its 8-bit handler!
 	kMy_ParserStateSeenNull						= 'Ctl@',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenControlA					= 'CtlA',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenControlB					= 'CtlB',	//!< generic state used to define emulator-specific states, below
@@ -962,10 +965,13 @@ public:
 	sendEscape	(SessionRef, void const*, size_t);
 	
 	void
-	set8Bit		(Boolean);
+	set8BitReceive		(Boolean);
 	
 	void
-	set8BitNever	();
+	set8BitTransmit		(Boolean);
+	
+	void
+	set8BitTransmitNever	();
 	
 	Boolean
 	supportsVariant		(Preferences_Tag);
@@ -1002,8 +1008,10 @@ protected:
 	returnStateTransitionHandler	(Terminal_Emulator);
 
 private:
-	Boolean								eightBitTransmission;	//!< if true, any sequences returned to the listening session should use 8-bit codes only
-	Boolean								sevenBitsLocked;		//!< if true, the emulator can never be set to 8-bit; useful in weird emulation corner cases
+	Boolean								eightBitReceiver;		//!< if true, equivalent 8-bit codes should be recognized by the emulator’s state determinant
+																//!  (for example, in a VT100, the 7-bit ESC-[ sequence is equivalent to the 8-bit code 155)
+	Boolean								eightBitTransmitter;	//!< if true, any sequences returned to the listening session should use 8-bit codes only
+	Boolean								sevenBitTransmitLocked;	//!< if true, the emulator can never be set to 8-bit; useful in weird emulation corner cases
 };
 typedef My_Emulator*	My_EmulatorPtr;
 
@@ -5048,8 +5056,9 @@ currentCallbacks(returnDataWriter(inPrimaryEmulation),
 pushedCallbacks(),
 supportedVariants(),
 addedXTerm(false),
-eightBitTransmission(false),
-sevenBitsLocked(false)
+eightBitReceiver(false),
+eightBitTransmitter(false),
+sevenBitTransmitLocked(false)
 {
 	initializeParserStateStack();
 }// My_Emulator default constructor
@@ -5108,28 +5117,6 @@ clearEscapeSequenceParameters ()
 
 
 /*!
-Responds to a terminal reset by returning certain emulator
-settings to defaults.  This does NOT reinitialize settings in
-the instance that are not directly attributed to terminal state.
-
-If "inIsSoftReset" is true, then only parameters that should be
-affected by a soft reset are changed (for example, there are
-differences in a VT220).
-
-(4.0)
-*/
-void
-My_Emulator::
-reset	(Boolean	UNUSED_ARGUMENT(inIsSoftReset))
-{
-	clearEscapeSequenceParameters();
-	initializeParserStateStack();
-	this->eightBitTransmission = false;
-	this->sevenBitsLocked = false;
-}// reset
-
-
-/*!
 Discards all state history in the screen’s parser and creates
 a single, initial state.
 
@@ -5147,6 +5134,29 @@ initializeParserStateStack ()
 	this->currentState = kMy_ParserStateInitial;
 	this->stringAccumulatorState = kMy_ParserStateInitial;
 }// initializeParserStateStack
+
+
+/*!
+Responds to a terminal reset by returning certain emulator
+settings to defaults.  This does NOT reinitialize settings in
+the instance that are not directly attributed to terminal state.
+
+If "inIsSoftReset" is true, then only parameters that should be
+affected by a soft reset are changed (for example, there are
+differences in a VT220).
+
+(4.0)
+*/
+void
+My_Emulator::
+reset	(Boolean	UNUSED_ARGUMENT(inIsSoftReset))
+{
+	clearEscapeSequenceParameters();
+	initializeParserStateStack();
+	this->eightBitReceiver = false;
+	this->eightBitTransmitter = false;
+	this->sevenBitTransmitLocked = false;
+}// reset
 
 
 /*!
@@ -5336,7 +5346,7 @@ returnStateTransitionHandler	(Terminal_Emulator		inPrimaryEmulation)
 
 /*!
 Transmits a string that starts with an escape sequence to the
-given session.  If the emulator is in "eightBitTransmission"
+given session.  If the emulator is in "eightBitTransmitter"
 mode, the sequence is automatically converted into a single
 byte (e.g. "\033[" becomes CSI) before transmitting the rest
 of the string.
@@ -5365,7 +5375,7 @@ sendEscape	(SessionRef		inSession,
 		UInt8 const*	asCharPtr = REINTERPRET_CAST(in7BitSequence, UInt8 const*);
 		
 		
-		if ((false == this->eightBitTransmission) || ('\033' != asCharPtr[0]) || (1 == inSequenceLength) ||
+		if ((false == this->eightBitTransmitter) || ('\033' != asCharPtr[0]) || (1 == inSequenceLength) ||
 			(asCharPtr[1] < 0x40/* @ */) || (asCharPtr[1] > 0x5F/* _ */))
 		{
 			// only an ESC, not an ESC sequence, or not possible to translate
@@ -5391,21 +5401,45 @@ sendEscape	(SessionRef		inSession,
 
 
 /*!
-Specifies whether or not transmissions from the terminal to the
-listening session use a single byte to represent certain escape
-sequences.  Has no effect if set8BitNever() has been used.
+Specifies whether or not the terminal will recognize 8-bit
+sequences as being equivalent to multi-byte 7-bit sequences,
+for the purposes of its state machine.  For example, in a
+VT100 this means that code 155 is equivalent to (but one fewer
+byte than) the sequence ESC-[.
 
 (4.0)
 */
 void
 My_Emulator::
-set8Bit		(Boolean	inIs8Bit)
+set8BitReceive		(Boolean	inIs8Bit)
 {
-	if (false == this->sevenBitsLocked)
+	this->eightBitReceiver = inIs8Bit;
+}// set8BitReceive
+
+
+/*!
+Specifies whether or not transmissions from the terminal to the
+listening session use a single byte to represent certain escape
+sequences.  Has no effect if set8BitTransmitNever() has been
+used.
+
+(4.0)
+*/
+void
+My_Emulator::
+set8BitTransmit		(Boolean	inIs8Bit)
+{
+	if (false == inIs8Bit)
 	{
-		this->eightBitTransmission = inIs8Bit;
+		// it can always be turned off...
+		this->eightBitTransmitter = inIs8Bit;
 	}
-}// set8Bit
+	else
+	{
+		// if locked in a 7-bit mode then refuse to return to 8-bit mode
+		this->eightBitTransmitter = (false == this->sevenBitTransmitLocked);
+	}
+}// set8BitTransmit
 
 
 /*!
@@ -5417,10 +5451,10 @@ expected that the terminal stop respecting 8-bit mode requests.
 */
 void
 My_Emulator::
-set8BitNever ()
+set8BitTransmitNever ()
 {
-	this->sevenBitsLocked = true;
-}// set8BitNever
+	this->sevenBitTransmitLocked = true;
+}// set8BitTransmitNever
 
 
 /*!
@@ -6270,7 +6304,7 @@ terminals.
 void
 My_DefaultEmulator::
 hardSoftReset	(My_EmulatorPtr		UNUSED_ARGUMENT(inEmulatorPtr),
-				 Boolean			inIsSoftReset)
+				 Boolean			UNUSED_ARGUMENT(inIsSoftReset))
 {
 	// debug
 	//Console_WriteValue("    <<< default emulator has reset, soft", inIsSoftReset);
@@ -7415,7 +7449,7 @@ ansiMode	(My_ScreenBufferPtr		inDataPtr)
 	// ANSI mode from VT52 mode will cause 8-bit mode to be unselectable
 	// (TEMPORARY; may want an option to not be so sticky about the
 	// accuracy of the emulation in this case)
-	inDataPtr->emulator.set8BitNever();
+	inDataPtr->emulator.set8BitTransmitNever();
 }// My_VT100::ansiMode
 
 
@@ -8187,8 +8221,14 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 {
 	assert(inLength > 0);
 	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
-	Boolean		isControlCharacter = true;
+	Boolean		isEightBitControl = false;
 	
+	
+	// all control characters are interrupt-class: they should
+	// cause actions, but not “corrupt” any partially completed
+	// sequence that may have come before them, i.e. the caller
+	// should revert to the state preceding the control character
+	outInterrupt = true; // initially...
 	
 	// see if the given character is a control character; if so,
 	// it will not contribute to the current sequence and may
@@ -8263,22 +8303,28 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		break;
 	
 	default:
-		isControlCharacter = false;
+		outInterrupt = false;
+		{
+			// in 8-bit receive mode, single bytes in a certain range are
+			// equivalent to an ESC followed by some 7-bit character
+			SInt16		secondSevenBitChar = (*inBuffer - 0x40);
+			
+			
+			if ((secondSevenBitChar >= 0x40/* @ */) && (secondSevenBitChar <= 0x5F/* _ */))
+			{
+				// WARNING: this takes advantage of how the state codes happen to be defined,
+				// and the way arithmetic works with a 4-character code; if any state is not
+				// accounted for here, a separate switch statement should be added to fix it!
+				inNowOutNext.second = 'ESC\0' + STATIC_CAST(secondSevenBitChar, UInt8);
+				isEightBitControl = true;
+			}
+		}
 		break;
-	}
-	
-	// all control characters are interrupt-class: they should
-	// cause actions, but not “corrupt” any partially completed
-	// sequence that may have come before them, i.e. the caller
-	// should revert to the state preceding the control character
-	if (isControlCharacter)
-	{
-		outInterrupt = true;
 	}
 	
 	// if no interrupt has occurred, use the current state and
 	// the available data to determine the next logical state
-	if (false == outInterrupt)
+	if ((false == outInterrupt) && (false == isEightBitControl))
 	{
 		switch (inNowOutNext.first)
 		{
@@ -8418,7 +8464,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		}
 	}
 	
-	if (false == outHandled)
+	if ((false == outHandled) && (false == isEightBitControl))
 	{
 		result = invokeEmulatorStateDeterminantProc
 					(My_DefaultEmulator::stateDeterminant, inEmulatorPtr, inBuffer, inLength,
@@ -9872,7 +9918,8 @@ compatibilityLevel		(My_ScreenBufferPtr		inDataPtr)
 		{
 		case 61:
 			// VT100 mode
-			inDataPtr->emulator.set8Bit(false);
+			inDataPtr->emulator.set8BitReceive(false);
+			inDataPtr->emulator.set8BitTransmit(false);
 			// INCOMPLETE
 			break;
 		
@@ -9903,7 +9950,8 @@ compatibilityLevel		(My_ScreenBufferPtr		inDataPtr)
 					}
 					break;
 				}
-				inDataPtr->emulator.set8Bit(isEightBit);
+				inDataPtr->emulator.set8BitReceive(isEightBit);
+				inDataPtr->emulator.set8BitTransmit(isEightBit);
 				// INCOMPLETE
 			}
 			break;
@@ -10622,11 +10670,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateS7C1T:
-		inDataPtr->emulator.set8Bit(false);
+		inDataPtr->emulator.set8BitTransmit(false);
 		break;
 	
 	case kStateS8C1T:
-		inDataPtr->emulator.set8Bit(true);
+		inDataPtr->emulator.set8BitTransmit(true);
 		break;
 	
 	case kStateSCSG0DECSupplemental:

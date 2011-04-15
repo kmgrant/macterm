@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110414',
     '20110412',
     '20110411',
     '20110408',
@@ -376,6 +377,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110414': [
+        'Fixed VT220 and higher emulators to interpret 8-bit (single byte) control sequences correctly.',
+    ],
     '20110412': [
         'Fixed Custom Key Sequences sheet so that clicks in the Control Keys palette do not affect the terminal window.',
     ],
