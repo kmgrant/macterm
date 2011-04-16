@@ -958,6 +958,9 @@ public:
 	void
 	initializeParserStateStack ();
 	
+	Boolean
+	is8BitReceiver ();
+	
 	void
 	reset	(Boolean);
 	
@@ -5137,6 +5140,21 @@ initializeParserStateStack ()
 
 
 /*!
+Returns true only if the emulator is in 8-bit receive mode,
+which permits characters like CSI to be considered equivalent
+to multi-byte 7-bit sequences (in the case of CSI, ESC-"[").
+
+(4.0)
+*/
+inline Boolean
+My_Emulator::
+is8BitReceiver ()
+{
+	return this->eightBitReceiver;
+}// is8BitReceiver
+
+
+/*!
 Responds to a terminal reset by returning certain emulator
 settings to defaults.  This does NOT reinitialize settings in
 the instance that are not directly attributed to terminal state.
@@ -8304,6 +8322,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	
 	default:
 		outInterrupt = false;
+		if (inEmulatorPtr->is8BitReceiver())
 		{
 			// in 8-bit receive mode, single bytes in a certain range are
 			// equivalent to an ESC followed by some 7-bit character
