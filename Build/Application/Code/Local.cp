@@ -196,15 +196,16 @@ EventLoopTimerRef&			gExitWatchTimer ()
 								}
 								return x;
 							}
-sigset_t&					gSignalsBlockedInThreads ()
+sigset_t&					gSignalsBlockedInThreads	(Boolean	inBlock = true)
 							{
 								// call this from the main thread, to prevent any other thread from being
-								// chosen as the handler of signals, by setting a mask up front; any threads
-								// spawned hereafter will inherit the same mask
+								// chosen as the handler of signals, by setting a mask up front (any threads
+								// spawned hereafter will inherit the same mask); or, call this from a
+								// child process after a fork with "inBlock = false" to undo the changes
 								static sigset_t		x = 0;
 								
 								
-								if (0 == x)
+								if ((0 == x) || (false == inBlock))
 								{
 									int		maskResult = 0;
 									
@@ -215,7 +216,7 @@ sigset_t&					gSignalsBlockedInThreads ()
 									sigaddset(&x, SIGABRT);
 									sigaddset(&x, SIGINT);
 									sigaddset(&x, SIGTERM);
-									maskResult = pthread_sigmask(SIG_BLOCK, &x, nullptr/* old set */);
+									maskResult = pthread_sigmask((inBlock) ? SIG_BLOCK : SIG_UNBLOCK, &x, nullptr/* old set */);
 									if (0 != maskResult)
 									{
 										int const	kActualError = errno;
@@ -734,6 +735,12 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				// IMPORTANT: There are limitations on what a child process can do.
 				// For example, global data and framework calls are generally unsafe.
 				// See the "fork" man page for more information.
+				
+				// undo the effects on signals, because the user might be running
+				// a program like "bash" that inherits signal behavior from the
+				// parent; if this step were not performed, then "bash" would do
+				// odd things like ignore all control-C (interrupt) sequences
+				gSignalsBlockedInThreads(false);
 				
 				// set the current working directory...abort if this fails
 				// because presumably it is important that a command not
