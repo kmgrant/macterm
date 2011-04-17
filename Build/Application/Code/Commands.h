@@ -116,8 +116,6 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandAboutThisApplication			kHICommandAbout
 #define kCommandFullScreenModal					'Kios'
 #define kCommandKioskModeDisable				'KskQ'		// also used in Kiosk Mode off-switch floater
-#define kCommandShowNetworkNumbers				'CIPn'
-#define kCommandSendInternetProtocolNumber		'SIPn'
 #define kCommandCheckForUpdates					'ChUp'
 #define kCommandURLHomePage						'.com'
 #define kCommandURLAuthorMail					'Mail'
@@ -227,6 +225,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandShowConnectionStatus			'ShCS'
 #define kCommandHideConnectionStatus			'HiCS'
 #define kCommandShowCommandLine					'ShCL'
+#define kCommandShowNetworkNumbers				'CIPn'
 #define kCommandShowControlKeys					'ShCK'
 #define kCommandShowFunction					'ShFn'
 #define kCommandShowKeypad						'ShKp'

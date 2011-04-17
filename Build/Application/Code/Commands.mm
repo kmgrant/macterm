@@ -1051,26 +1051,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			// in the Cocoa implementation this really means “show or activate”
 			AddressDialog_Display();
 			break;
-		
-		case kCommandSendInternetProtocolNumber:
-			if (isSession)
-			{
-				std::string		ipAddressString;
-				int				addressType = 0;
-				
-				
-				// now send the requested information
-				if (Network_CurrentIPAddressToString(ipAddressString, addressType)) // 3.0
-				{
-					Session_SendData(frontSession, ipAddressString.c_str(), ipAddressString.size());
-					if (Session_LocalEchoIsEnabled(frontSession))
-					{
-						Session_ReceiveData(frontSession, ipAddressString.c_str(), ipAddressString.size());
-					}
-				}
-				else Sound_StandardAlert(); // IP-to-string failed in this case
-			}
-			break;
 
 		case kCommandSendInterruptProcess:
 			Session_UserInputInterruptProcess(frontSession);
