@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -52,7 +52,7 @@ Boolean
 
 bool
 	Network_CurrentIPAddressToString	(std::string&						inoutString,
-										 int&								outAddressType);
+										 int&								inoutAddressType); // AF_INET or AF_INET6
 
 #endif
 

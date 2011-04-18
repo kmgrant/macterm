@@ -3,7 +3,7 @@
 	Network.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -84,7 +84,7 @@ extern "C"
 
 #pragma mark Internal Method Prototypes
 
-static bool			allCurrentIPAddressesAndAliases		(struct hostent*&);
+static bool			allCurrentIPAddressesAndAliases		(struct hostent*&, int);
 #if USE_SYSTEM_CONFIGURATION_FRAMEWORK
 static bool			copyIPAddressListSCF				(CFArrayRef&);
 static void			getIPAddressListFromValue			(void const*, void const*, void*);
@@ -96,14 +96,16 @@ static void			getIPAddressListFromValue			(void const*, void const*, void*);
 
 
 /*!
-Finds the IP address(es) of the computer running
-this program.  Returns true only if any are found.
+Finds the IP address(es) of the computer running this program.
+Returns true only if any are found.
 
-If there is a problem finding a particular address,
-an (empty) entry is still added to the list.  So
-the length of the resulting list should always be
-an accurate count of machine addresses, even if
-they are not all returned.
+The addresses can be a mixture of types; both IPv4 and IPv6
+addresses are sought.
+
+If there is a problem finding a particular address, an (empty)
+entry is still added to the list.  So the length of the
+resulting list should always be an accurate count of machine
+addresses, even if they are not all returned.
 
 (3.1)
 */
@@ -112,29 +114,32 @@ Network_CopyIPAddresses		(std::vector< CFRetainRelease >&	inoutAddresses)
 {
 	Boolean				result = false;
 	struct hostent*		currentHost = nullptr;
+	int					targetFamilies[] = { AF_INET, AF_INET6 };
 	
 	
-	result = allCurrentIPAddressesAndAliases(currentHost);
-	if (result)
+	for (size_t i = 0; i < sizeof(targetFamilies) / sizeof(int); ++i)
 	{
-		char**				hostList = currentHost->h_addr_list;
-		assert(nullptr != hostList);
-		register SInt16		hostIndex = 0;
-		CFStringRef			addressCFString = nullptr;
-		
-		
-		for (; nullptr != *hostList; ++hostList, ++hostIndex)
+		result = allCurrentIPAddressesAndAliases(currentHost, targetFamilies[i]);
+		if (result)
 		{
-			addressCFString = DNR_CopyResolvedHostAsCFString(currentHost, hostIndex/* index in array to use */);
-			inoutAddresses.push_back(addressCFString);
-			if (nullptr != addressCFString)
+			char**				hostList = currentHost->h_addr_list;
+			assert(nullptr != hostList);
+			register SInt16		hostIndex = 0;
+			CFStringRef			addressCFString = nullptr;
+			
+			
+			for (; nullptr != *hostList; ++hostList, ++hostIndex)
 			{
-				result = true;
-				CFRelease(addressCFString), addressCFString = nullptr;
+				addressCFString = DNR_CopyResolvedHostAsCFString(currentHost, hostIndex/* index in array to use */);
+				inoutAddresses.push_back(addressCFString);
+				if (nullptr != addressCFString)
+				{
+					result = true;
+					CFRelease(addressCFString), addressCFString = nullptr;
+				}
 			}
 		}
 	}
-	
 	return result;
 }// CopyIPAddresses
 
@@ -143,8 +148,11 @@ Network_CopyIPAddresses		(std::vector< CFRetainRelease >&	inoutAddresses)
 Obtains the first available IP address of the computer running
 this program, as a C++ std::string.
 
-The type of address is returned as well.  This will be either
-AF_INET or AF_INET6.
+On input, specify the type of address string desired.  On
+output, this will be set to the actual type found (usually it
+will match; but it may be the case that you want IPv6 and only
+IPv4 is available, for instance).  The value will be either
+AF_INET for IPv4, or AF_INET6 for IPv6.
 
 If the IP address converts successfully, "true" is returned;
 otherwise, "false" is returned.
@@ -153,16 +161,24 @@ otherwise, "false" is returned.
 */
 bool
 Network_CurrentIPAddressToString	(std::string&	outString,
-									 int&			outAddressType)
+									 int&			inoutAddressType)
 {
 	bool				result = false;
 	struct hostent*		currentHost;
 	
 	
-	result = allCurrentIPAddressesAndAliases(currentHost);
+	result = allCurrentIPAddressesAndAliases(currentHost, inoutAddressType);
+	if (false == result)
+	{
+		int		alternateType = (AF_INET == inoutAddressType) ? AF_INET6 : AF_INET;
+		
+		
+		result = allCurrentIPAddressesAndAliases(currentHost, alternateType);
+	}
+	
 	if (result)
 	{
-		outAddressType = currentHost->h_addrtype;
+		inoutAddressType = currentHost->h_addrtype;
 		
 	#if 0
 		// this works, but not (yet) for IPv6, and is kind of a hack anyway...
@@ -209,16 +225,18 @@ Network_CurrentIPAddressToString	(std::string&	outString,
 #pragma mark Internal Methods
 
 /*!
-Finds all available information about the current host -
-all of the IP addresses it has.  Returns "true" only if
-successful, and ONLY in this case will "outHost" be defined.
+Finds all available information about the current host - all of
+the IP addresses it has.  Returns "true" only if successful, and
+ONLY in this case will "outHost" be defined.
 
-If possible, IPv6 addresses are returned.
+The "inSocketAddressFamily" should be AF_INET for IPv4 addresses
+or AF_INET6 for IPv6 addresses.
 
 (3.1)
 */
 static bool
-allCurrentIPAddressesAndAliases		(struct hostent*&	outHost)
+allCurrentIPAddressesAndAliases		(struct hostent*&	outHost,
+									 int				inSocketAddressFamily)
 {
 	bool	result = false;
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
@@ -234,15 +252,7 @@ allCurrentIPAddressesAndAliases		(struct hostent*&	outHost)
 	
 	if (0 == getHostResult)
 	{
-		if (FlagManager_Test(kFlagOS10_3API))
-		{
-			outHost = gethostbyname2(hostName, AF_INET6);
-		}
-		else
-		{
-			outHost = gethostbyname(hostName);
-		}
-		
+		outHost = gethostbyname2(hostName, inSocketAddressFamily);
 		if (nullptr != outHost)
 		{
 			result = true;
