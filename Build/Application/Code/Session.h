@@ -531,17 +531,13 @@ SInt16
 											 void const*						inBufferPtr,
 											 size_t								inByteCount);
 
-SInt16
-	Session_SendData						(SessionRef							inRef,
-											 CFStringRef						inBuffer);
+CFIndex
+	Session_SendDataCFString				(SessionRef							inRef,
+											 CFStringRef						inBuffer,
+											 CFIndex							inFirstCharacter = 0);
 
 SInt16
 	Session_SendFlush						(SessionRef							inRef);
-
-SInt16
-	Session_SendFlushData					(SessionRef							inRef,
-											 void const*						inBufferPtr,
-											 SInt16								inByteCount);
 
 void
 	Session_SendNewline						(SessionRef							inRef,

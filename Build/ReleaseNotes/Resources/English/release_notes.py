@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110420',
     '20110417',
     '20110412',
     '20110411',
@@ -377,6 +378,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110420': [
+        'Significantly improved the performance of string transmissions, such as Paste, drag-and-drop and macros.',
+    ],
     '20110417': [
         'Fixed major bug affecting programs that inherit signal masks (like "bash"); they now handle control-C correctly.',
         'Since IPv4 addresses are still quite common, the "IP Addresses of This Mac" window now shows both IPv4 and IPv6.',

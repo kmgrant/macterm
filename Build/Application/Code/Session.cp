@@ -2432,78 +2432,22 @@ Session_Select	(SessionRef		inRef)
 
 
 /*!
-Adds the specified data to a buffer, which will be sent to
-the local or remote process for the given session when the
-receiver is ready.
-
-Since this version of the function has encoding information
-available (in the CFString), it converts the data into the
-target encoding and sends the new format as a raw stream of
-bytes.  The assumption is that the application running in
-the terminal will know how to decode the data in the format
-that the user has selected for the session.
+Adds the specified data to a buffer, which will be sent to the
+local or remote process for the given session when the receiver
+is ready.
 
 Returns the number of bytes actually written, or a negative
-number on error.  If conversion is required, conversion
-problems are represented as incomplete writes instead of
-errors; so you should check the returned count against the
-actual size of the string, to see if all data was sent.
+number on error.
 
-(3.0)
-*/
-SInt16
-Session_SendData	(SessionRef		inRef,
-					 CFStringRef	inString)
-{
-	// first determine how much space will be needed
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	CFIndex					numberOfBytesRequired = 0;
-	CFIndex					numberOfCharactersConverted = CFStringGetBytes
-															(inString,
-																CFRangeMake(0, CFStringGetLength(inString)),
-																ptr->writeEncoding,
-																0/* loss byte, or 0 for no lossy conversion */,
-																false/* is external representation */,
-																nullptr/* no buffer means “return size only” */,
-																0/* size - ignored for null buffer */,
-																&numberOfBytesRequired);
-	SInt16		result = -1;
-	
-	
-	if (numberOfBytesRequired > 0)
-	{
-		CFIndex const	kBufferSize = numberOfBytesRequired;
-		UInt8*			buffer = new UInt8[kBufferSize];
-		
-		
-		if (nullptr != buffer)
-		{
-			// now actually translate/copy the data
-			numberOfCharactersConverted = CFStringGetBytes(inString,
-															CFRangeMake(0, CFStringGetLength(inString)),
-															ptr->writeEncoding,
-															0/* loss byte, or 0 for no lossy conversion */,
-															false/* is external representation */,
-															buffer, kBufferSize, &numberOfBytesRequired);
-			
-			if ((numberOfBytesRequired > 0) && (numberOfBytesRequired <= kBufferSize))
-			{
-				result = Session_SendData(inRef, buffer, numberOfBytesRequired);
-			}
-			delete [] buffer;
-		}
-	}
-	return result;
-}// SendData
+See also Session_SendDataCFString().
 
-
-/*!
-Adds the specified data to a buffer, which will be
-sent to the local or remote process for the given
-session when the receiver is ready.
-
-Returns the number of bytes actually written, or a
-negative number on error.
+WARNING:	This is a “raw” write function that does not give
+			you a chance to specify the text encoding of your
+			source data stream.  If you cannot be sure that your
+			data is compatible with the encoding specified by
+			the last call to Session_SetSendDataEncoding(), then
+			you should probably use the CFString variant of this
+			routine.
 
 (3.0)
 */
@@ -2526,11 +2470,94 @@ Session_SendData	(SessionRef		inRef,
 
 
 /*!
-Sends any data waiting to be sent (i.e. in the
-buffer) to the local or remote process for the
-given session immediately, clearing out the
-buffer if possible.  Returns the number of bytes
-left in the buffer.
+Adds the specified data to a buffer, which will be sent to
+the local or remote process for the given session when the
+pseudo-terminal device connected to the underlying process
+is ready.
+
+Since this version of the function has encoding information
+available (in the CFString), it converts the data into the
+target encoding and sends the new format as a raw stream of
+bytes.  The assumption is that the application running in
+the terminal will know how to decode the data in the format
+that the user has selected for the session.  If the string
+appears to be in the target encoding already, this might be
+done efficiently; note however that radically different text
+encodings will incur significant translation costs.
+
+This function now guarantees that the transmitted bytes fall
+on character boundaries; so, although it may return before
+all characters have been transmitted, it will ensure that
+all of the bytes that comprise the last written character
+have been sent.
+
+Returns the number of CHARACTERS actually written, or a
+negative number on error.  If this result is any less than
+"CFStringGetLength(inString)", then the string was written
+incompletely and you should attempt to write the remaining
+characters in a new call.
+
+(4.0)
+*/
+CFIndex
+Session_SendDataCFString	(SessionRef		inRef,
+							 CFStringRef	inString,
+							 CFIndex		inFirstCharacter)
+{
+	CFIndex const			kLength = CFStringGetLength(inString);
+	CFIndex					result = 0;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	
+	
+	// convert characters one at a time, so that it is possible to
+	// ensure that all the bytes for a character have been sent
+	// (even if the whole string cannot be sent successfully)
+	for (CFIndex i = inFirstCharacter; i < kLength; ++i)
+	{
+		UInt8		byteArray[8/* arbitrary */];
+		CFIndex		numberOfBytesRequired = 0;
+		CFIndex		numberOfCharactersConverted = CFStringGetBytes(inString, CFRangeMake(i, 1/* count */), ptr->writeEncoding,
+																	0/* loss byte, or 0 for no lossy conversion */,
+																	false/* is external representation */,
+																	byteArray, sizeof(byteArray), &numberOfBytesRequired);
+		
+		
+		if (numberOfCharactersConverted < 1)
+		{
+			// translation error; abort at this character boundary
+			break;
+		}
+		else
+		{
+			assert(STATIC_CAST(numberOfBytesRequired, size_t) < sizeof(byteArray));
+			UInt8 const*	bufferPtr = byteArray;
+			ptrdiff_t		bytesLeft = numberOfBytesRequired;
+			ptrdiff_t		bytesWritten = 0;
+			
+			
+			// for a given character, block until all its bytes are written;
+			// the routine may give up before writing the whole string however
+			while (bytesLeft > 0)
+			{
+				bytesWritten = Session_SendData(inRef, bufferPtr, bytesLeft);
+				if (bytesWritten > 0)
+				{
+					bytesLeft -= bytesWritten;
+					bufferPtr += bytesWritten;
+				}
+			}
+			++result;
+		}
+	}
+	return result;
+}// SendDataCFString
+
+
+/*!
+Sends any data waiting to be sent (i.e. in the buffer) to the
+local or remote process for the given session immediately,
+clearing out the buffer if possible.  Returns the number of
+bytes left in the buffer.
 
 (3.0)
 */
@@ -2545,33 +2572,6 @@ Session_SendFlush	(SessionRef		inRef)
 	
 	return result;
 }// SendFlush
-
-
-/*!
-Sends the specified data to the local or remote
-process for the given session immediately (flushing
-the buffer), if possible.
-
-Returns the number of bytes actually written (not
-counting any previous cache that was flushed), or
-a negative number on error.
-
-(3.0)
-*/
-SInt16
-Session_SendFlushData	(SessionRef		inRef,
-						 void const*	inBufferPtr,
-						 SInt16			inByteCount)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	SInt16					result = 0;
-	
-	
-	(SInt16)Session_SendFlush(inRef);
-	if (result == 0) result = Session_SendData(inRef, inBufferPtr, inByteCount);
-	
-	return result;
-}// SendFlushData
 
 
 /*!
@@ -2626,11 +2626,13 @@ Session_SendNewline		(SessionRef		inRef,
 	
 	if (lineFeedToo)
 	{
-		Session_SendFlushData(inRef, "\015\012", 2);
+		(SInt16)Session_SendFlush(inRef);
+		Session_SendData(inRef, "\015\012", 2);
 	}
 	else
 	{
-		Session_SendFlushData(inRef, "\015", 1);
+		(SInt16)Session_SendFlush(inRef);
+		Session_SendData(inRef, "\015", 1);
 	}
 }// SendNewline
 
@@ -3870,11 +3872,15 @@ Session_TypeIsLocalNonLoginShell	(SessionRef		inRef)
 
 
 /*!
-Send a string to a session as if it were typed into
-the specified session’s window.  If local echoing is
-enabled for the session, the string will be written
-to the local data target (usually a terminal) after
-it is sent to the remote process.
+Send a string to a session as if it were typed into the given
+session’s window.  Any previous pending output is first flushed
+to the session.  If local echoing is enabled for the session,
+the string will be written to the local data target (usually a
+terminal) before it is sent to the underlying process.
+
+This function will block until every character in the string
+has been sent to the session.  To have more direct control over
+the data transmission rate, see Session_SendData().
 
 (3.0)
 */
@@ -3882,6 +3888,12 @@ void
 Session_UserInputCFString	(SessionRef		inRef,
 							 CFStringRef	inStringBuffer)
 {
+	CFIndex const	kLength = CFStringGetLength(inStringBuffer);
+	CFIndex			offset = 0;
+	SInt16			loopGuard = 0;
+	
+	
+	// dump to the local terminal first, if this mode is turned on
 	if (Session_LocalEchoIsEnabled(inRef))
 	{
 		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
@@ -3890,8 +3902,22 @@ Session_UserInputCFString	(SessionRef		inRef,
 		localEchoString(ptr, inStringBuffer);
 	}
 	
+	// first send any outstanding data in the buffer
 	Session_SendFlush(inRef);
-	Session_SendData(inRef, inStringBuffer);
+	
+	// block until every character in the string has been written
+	while (offset < kLength)
+	{
+		CFIndex		charactersSent = Session_SendDataCFString(inRef, inStringBuffer, offset);
+		
+		
+		offset += charactersSent;
+		if (++loopGuard > 100/* arbitrary */)
+		{
+			Console_Warning(Console_WriteValueCFString, "aborting transmission of string after too many failed attempts", inStringBuffer);
+			break;
+		}
+	}
 }// UserInputCFString
 
 
