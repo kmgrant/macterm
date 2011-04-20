@@ -6,8 +6,8 @@
 	of useful operations on dialog box controls, often a must
 	when doing localization work.
 	
-	Interface Library 1.2
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.2
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -54,6 +54,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 // some (bad) “magic” numbers that are really “pretty good” estimates
 enum
@@ -66,22 +67,26 @@ enum
 									// sufficient for any string you’ll ever use.
 };
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Str255				gApplicationName;
-	CFRetainRelease		gApplicationNameCFString;
-	Boolean				gLeftToRight = true;		// text reads left-to-right?
-	Boolean				gTopToBottom = true;		// text reads top-to-bottom?
-}
+#pragma mark Variables
+namespace {
+
+CFRetainRelease		gApplicationNameCFString;
+Boolean				gLeftToRight = true;		// text reads left-to-right?
+Boolean				gTopToBottom = true;		// text reads top-to-bottom?
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static OSStatus		getControlFontInfo	(ControlFontStyleRec const*, ConstStringPtr, Str255, SInt16*, Style*,
-											UInt16*, UInt16*);
-static OSStatus		getThemeFontInfo	(ThemeFontID, ConstStringPtr, Str255, SInt16*, Style*, UInt16*, UInt16*);
-static OSStatus		setControlFontInfo	(ControlRef, ConstStringPtr, SInt16, Style);
+OSStatus	getControlFontInfo	(ControlFontStyleRec const*, ConstStringPtr, Str255, SInt16*, Style*,
+								 UInt16*, UInt16*);
+OSStatus	getThemeFontInfo	(ThemeFontID, ConstStringPtr, Str255, SInt16*, Style*, UInt16*, UInt16*);
+OSStatus	setControlFontInfo	(ControlRef, ConstStringPtr, SInt16, Style);
+
+} // anonymous namespace
 
 
 
@@ -101,134 +106,11 @@ if you plan on using Localization_UseResourceFile().
 void
 Localization_Init	(UInt32		inFlags)
 {
-	Boolean		gotIt = false;
-	
-	
 	gApplicationNameCFString = CFBundleGetValueForInfoDictionaryKey
 								(AppResources_ReturnBundleForInfo(), CFSTR("CFBundleName"));
-	gotIt = gApplicationNameCFString.exists();
-	if (gotIt)
-	{
-		ByteCount	actualSize = 0;
-		
-		
-		gApplicationName[0] = 255;
-		if (GetTextAndEncodingFromCFString(gApplicationNameCFString.returnCFStringRef(),
-											gApplicationName + 1, gApplicationName[0], &actualSize,
-											nullptr/* text encoding */) == noErr)
-		{
-			gotIt = (actualSize <= sizeof(gApplicationName));
-		}
-	}
-	
-	// if process information fails, default to low-memory value
-	// (not ideal, as on Mac OS X this will not be the “display name”
-	// for the application, but that of its buried executable file)
-	unless (gotIt) PLstrcpy(gApplicationName, LMGetCurApName());
-	
 	gLeftToRight = !(inFlags & kLocalization_InitFlagReadTextRightToLeft);
 	gTopToBottom = !(inFlags & kLocalization_InitFlagReadTextBottomToTop);
 }// Init
-
-
-/*!
-Like Localization_ArrangeButtonArray(), only for
-dialog items.
-
-DEPRECATED, use Localization_ArrangeButtonArray()
-instead.
-
-(1.0)
-*/
-UInt16
-Localization_AdjustDialogButtonArray	(DialogRef					inDialog,
-										 DialogItemIndex const*		inDialogItemIndices,
-										 UInt16						inDialogItemCount)
-{
-	UInt16				result = BUTTON_WD_MINIMUM;
-	register SInt16		i = 0;
-	SInt16				positionH = 0,
-						positionV = 0;
-	Rect				windowRect;
-	
-	
-	GetPortBounds(GetWindowPort(GetDialogWindow(inDialog)), &windowRect);
-	
-	// determine the width of the widest button
-	for (i = 0; i < inDialogItemCount; i++)
-	{
-		result = Localization_AutoSizeButtonItem(inDialog, inDialogItemIndices[i], result);
-	}
-	
-	// resize all of the buttons to that width
-	for (i = 0; i < inDialogItemCount; i++)
-	{
-		(UInt16)Localization_AutoSizeButtonItem(inDialog, inDialogItemIndices[i], result);
-	}
-	
-	// now move the buttons
-	{
-		SInt16		deltaPositionH = ((Localization_IsLeftToRight()) ? -1 : 1) * (HSP_BUTTONS + result);
-		
-		
-		positionV = windowRect.bottom - VSP_BUTTON_AND_DIALOG - BUTTON_HT;
-		positionH = (Localization_IsLeftToRight())
-						? (windowRect.right - HSP_BUTTON_AND_DIALOG - result)
-						: (HSP_BUTTON_AND_DIALOG);
-		for (i = 0; i < inDialogItemCount; i++, positionH += deltaPositionH)
-		{
-			MoveDialogItem(inDialog, inDialogItemIndices[i], positionH, positionV);
-		}
-	}
-	
-	return result;
-}// AdjustDialogButtonArray
-
-
-/*!
-Automatically moves and resizes a dialog box’s
-default and/or cancel buttons so that they are
-the same size and just large enough to fit their
-button titles.  Dialog buttons are assumed to be
-positioned on the same line horizontally, and
-located at the bottom-right corner of a dialog
-box (or the bottom-left corner, if the localization
-is right-to-left).  Thus, buttons are moved away
-from their assumed corner, and spaced exactly 12
-pixels apart (as specified in "SpacingConstants.r").
-
-This routine operates on generic dialogs; alerts
-automatically invoke it.  For convenience, the
-"common size" chosen for both buttons is returned,
-as a number in units of horizontal pixels.  The
-buttons will not acquire a width smaller than the
-standard minimum button width.
-
-Invoking this method can cause buttons to move
-and resize, causing onscreen flickering.  You
-should invoke this method while drawing to an
-offscreen graphics world or while the specified
-dialog is invisible.
-
-(1.0)
-*/
-UInt16
-Localization_AdjustDialogButtons	(DialogRef		inDialog,
-									 Boolean		inAdjustDefaultButton,
-									 Boolean		inAdjustCancelButton)
-{
-	UInt16				result = 0;
-	SInt16				itemCount = 0;
-	DialogItemIndex		indices[2];
-	
-	
-	if (inAdjustDefaultButton) indices[itemCount++] = GetDialogDefaultItem(inDialog);
-	if (inAdjustCancelButton) indices[itemCount++] = GetDialogCancelItem(inDialog);
-	
-	result = Localization_AdjustDialogButtonArray(inDialog, indices, itemCount);
-	
-	return result;
-}// AdjustDialogButtons
 
 
 /*!
@@ -242,11 +124,12 @@ window.
 void
 Localization_AdjustHelpButtonControl	(ControlRef		inControl)
 {
-	Rect		windowRect,
-				controlRect;
+	Rect	windowRect;
+	Rect	controlRect;
 	
 	
-	GetPortBounds(GetWindowPort(GetControlOwner(inControl)), &windowRect);
+	SetRect(&windowRect, 0, 0, 0, 0);
+	(OSStatus)GetWindowBounds(GetControlOwner(inControl), kWindowContentRgn, &windowRect);
 	GetControlBounds(inControl, &controlRect);
 	
 	// now move the button
@@ -257,54 +140,13 @@ Localization_AdjustHelpButtonControl	(ControlRef		inControl)
 					buttonHeight = (controlRect.bottom - controlRect.top);
 		
 		
-		positionV = windowRect.bottom - VSP_BUTTON_AND_DIALOG - buttonHeight;
+		positionV = windowRect.bottom - windowRect.top - VSP_BUTTON_AND_DIALOG - buttonHeight;
 		positionH = (Localization_IsLeftToRight())
 						? (HSP_BUTTON_AND_DIALOG)
-						: (windowRect.right - HSP_BUTTON_AND_DIALOG - buttonWidth);
+						: (windowRect.right - windowRect.left - HSP_BUTTON_AND_DIALOG - buttonWidth);
 		MoveControl(inControl, positionH, positionV);
 	}
 }// AdjustHelpButtonControl
-
-
-/*!
-Auto-arranges a dialog box’s help button to occupy
-the lower-left (for left-to-right localization) or
-lower-right (for right-to-left localization) corner
-of a dialog.
-
-This routine operates on generic dialogs; alerts
-automatically invoke it.
-
-(1.0)
-*/
-void
-Localization_AdjustHelpButtonItem	(DialogRef			inDialog,
-									 DialogItemIndex	inHelpButtonIndex)
-{
-	ControlRef		control = nullptr;
-	Rect			windowRect;
-	Rect			controlRect;
-	
-	
-	(OSStatus)GetDialogItemAsControl(inDialog, inHelpButtonIndex, &control);
-	GetPortBounds(GetWindowPort(GetControlOwner(control)), &windowRect);
-	GetControlBounds(control, &controlRect);
-	
-	// now move the button
-	{
-		UInt16		positionH = 0,
-					positionV = 0,
-					buttonWidth = (controlRect.right - controlRect.left),
-					buttonHeight = (controlRect.bottom - controlRect.top);
-		
-		
-		positionV = windowRect.bottom - VSP_BUTTON_AND_DIALOG - buttonHeight;
-		positionH = (Localization_IsLeftToRight())
-						? (HSP_BUTTON_AND_DIALOG)
-						: (windowRect.right - HSP_BUTTON_AND_DIALOG - buttonWidth);
-		MoveDialogItem(inDialog, inHelpButtonIndex, positionH, positionV);
-	}
-}// AdjustHelpButtonItem
 
 
 /*!
@@ -340,7 +182,11 @@ Localization_ArrangeButtonArray		(ControlRef const*	inButtons,
 	Rect				windowRect;
 	
 	
-	GetPortBounds(GetWindowPort(GetControlOwner(inButtons[0])), &windowRect);
+	SetRect(&windowRect, 0, 0, 0, 0);
+	if (inButtonCount > 0)
+	{
+		(OSStatus)GetWindowBounds(GetControlOwner(inButtons[0]), kWindowContentRgn, &windowRect);
+	}
 	
 	// resize every button
 	for (i = 0; i < inButtonCount; ++i)
@@ -357,12 +203,27 @@ Localization_ArrangeButtonArray		(ControlRef const*	inButtons,
 	// now move the buttons
 	if (inButtonCount > 0)
 	{
+		Boolean		isSmall = false;
 		SInt16		deltaPositionH = 0;
 		
 		
-		positionV = windowRect.bottom - VSP_BUTTON_AND_DIALOG - BUTTON_HT;
+		// use existing button height as a clue
+		{
+			HIRect		floatBounds;
+			
+			
+			(OSStatus)HIViewGetBounds(inButtons[0], &floatBounds);
+			if (floatBounds.size.height < BUTTON_HT)
+			{
+				isSmall = true;
+			}
+		}
+		
+		positionV = windowRect.bottom - windowRect.top -
+					((isSmall) ? VSP_BUTTON_SMALL_AND_DIALOG : VSP_BUTTON_AND_DIALOG) -
+					((isSmall) ? BUTTON_HT_SMALL : BUTTON_HT);
 		positionH = (Localization_IsLeftToRight())
-						? (windowRect.right - HSP_BUTTON_AND_DIALOG - firstButtonWidth)
+						? (windowRect.right - windowRect.left - HSP_BUTTON_AND_DIALOG - firstButtonWidth)
 						: (HSP_BUTTON_AND_DIALOG);
 		for (i = 0; i < inButtonCount; positionH += deltaPositionH)
 		{
@@ -566,90 +427,6 @@ Localization_AutoSizeButtonControl	(ControlRef		inControl,
 
 
 /*!
-Automatically sets the width of a dialog
-box button control so it is wide enough to
-comfortably fit its current title, but not
-less wide than the specified minimum.  The
-chosen width for the button is returned.
-
-(1.0)
-*/
-UInt16
-Localization_AutoSizeButtonItem		(DialogRef			inDialog,
-									 DialogItemIndex	inItemIndex,
-									 UInt16				inMinimumWidth)
-{
-	ControlRef		control = nullptr;
-	UInt16			result = inMinimumWidth;
-	
-	
-	if (GetDialogItemAsControl(inDialog, inItemIndex, &control) == noErr)
-	{
-		result = Localization_AutoSizeButtonControl(control, inMinimumWidth);
-		SizeDialogItem(inDialog, inItemIndex, result, BUTTON_HT); // update Dialog Manager view of control
-	}
-	return result;
-}// AutoSizeButtonItem
-
-
-/*!
-Compares two character buffers to see whether
-the first buffer is “less than” the second.
-0 is returned only if the texts are considered
-equal.
-
-You can apply case-sensitive and diacritics-
-sensitive comparison, which will return -1 if
-the first string is “less than” the second,
-or 1 if the second string is “less than” the
-first.
-
-If you don’t apply case-sensitive sorting, the
-result is 1 if the strings are not equal.
-
-(3.0)
-*/
-SInt16
-Localization_CompareTextSystemScript	(Boolean		inCaseSensitive,
-										 void const*	inBuffer1,
-										 void const*	inBuffer2,
-										 Size			inBuffer1Size,
-										 Size			inBuffer2Size)
-{
-	Handle		itl2Table = nullptr;
-	long		offset = 0L;
-	long		length = 0L;
-	short		script = 0;
-	SInt16		result = 0;
-	
-	
-	script = FontToScript(GetSysFont());
-	GetIntlResourceTable(script, smWordSelectTable, &itl2Table, &offset, &length);
-	if (itl2Table != nullptr)
-	{
-		if (inCaseSensitive) result = CompareText(inBuffer1, inBuffer2, inBuffer1Size, inBuffer2Size, itl2Table);
-		else result = IdenticalText(inBuffer1, inBuffer2, inBuffer1Size, inBuffer2Size, itl2Table) ? 1 : 0;
-	}
-	return result;
-}// CompareTextSystemScript
-
-
-/*!
-Returns a copy of the name of this process.
-Unreliable unless Localization_Init() has
-been called.
-
-(3.0)
-*/
-void
-Localization_GetCurrentApplicationName		(Str255		outProcessDisplayName)
-{
-	PLstrcpy(outProcessDisplayName, gApplicationName);
-}// GetCurrentApplicationName
-
-
-#if TARGET_API_MAC_CARBON
-/*!
 Returns a copy of the name of this process.
 Unreliable unless Localization_Init() has
 been called.
@@ -661,7 +438,6 @@ Localization_GetCurrentApplicationNameAsCFString	(CFStringRef*		outProcessDispla
 {
 	*outProcessDisplayNamePtr = gApplicationNameCFString.returnCFStringRef();
 }// GetCurrentApplicationName
-#endif
 
 
 /*!
@@ -783,51 +559,6 @@ Localization_HorizontallyPlaceControls	(ControlRef		inControl1,
 		MoveControl(inControl2, combinedRect.left, controlRect.top);
 	}
 }// HorizontallyPlaceControls
-
-
-/*!
-Conditionally rearranges two dialog items horizontally
-so that the left and right edges of the smallest
-rectangle bounding both controls remains the same
-after they trade places.
-
-This method assumes that you have laid out controls in
-the left-to-right arrangement by default, so IF YOU
-ARE in left-to-right localization, calling this
-routine has no effect.
-
-(1.0)
-*/
-void
-Localization_HorizontallyPlaceItems		(DialogRef			inDialog,
-										 DialogItemIndex	inItemIndex1,
-										 DialogItemIndex	inItemIndex2)
-{
-	unless (Localization_IsLeftToRight())
-	{
-		ControlRef		control1 = nullptr;
-		ControlRef		control2 = nullptr;
-		Rect			controlRect;
-		Rect			combinedRect;
-		
-		
-		(OSStatus)GetDialogItemAsControl(inDialog, inItemIndex1, &control1);
-		(OSStatus)GetDialogItemAsControl(inDialog, inItemIndex2, &control2);
-		
-		// find a rectangle whose horizontal expanse is exactly large enough to touch the edges of both controls
-		GetControlBounds(control1, &combinedRect);
-		GetControlBounds(control2, &controlRect);
-		if (combinedRect.right < controlRect.right) combinedRect.right = controlRect.right;
-		if (combinedRect.left > controlRect.left) combinedRect.left = controlRect.left;
-		
-		// switch the controls inside the smallest space that they both occupy
-		GetControlBounds(control1, &controlRect);
-		MoveDialogItem(inDialog, inItemIndex1,
-						(combinedRect.right - (controlRect.right - controlRect.left)), controlRect.top);
-		GetControlBounds(control2, &controlRect);
-		MoveDialogItem(inDialog, inItemIndex2, combinedRect.left, controlRect.top);
-	}
-}// HorizontallyPlaceItems
 
 
 /*!
@@ -1395,10 +1126,10 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 	// without the appropriate Appearance Manager APIs, use the Script Manager
 	if ((!haveAppearance1_1) || (error != noErr))
 	{
-		SInt16	fontID = GetScriptVariable(GetScriptManagerVariable(smSysScript),
-											((inThemeFontToUse == kThemeSystemFont) || (inThemeFontToUse == USHRT_MAX))
-											? smScriptSysFond
-											: smScriptAppFond);
+		FMFontFamily	fontID = GetScriptVariable(GetScriptManagerVariable(smSysScript),
+													((inThemeFontToUse == kThemeSystemFont) || (inThemeFontToUse == USHRT_MAX))
+													? smScriptSysFond
+													: smScriptAppFond);
 		
 		
 		(OSStatus)FMGetFontFamilyName(fontID, outFontName);
@@ -1409,17 +1140,37 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 	// special case for Aqua-like dialogs with “huge” title text
 	if (inThemeFontToUse == USHRT_MAX)
 	{
-		*outFontSizePtr = 16;
-		*outFontStylePtr = bold;
+		Str255		specialFontName;
+		
+		
+		PLstrcpy(specialFontName, "\pHelvetica");
+		if (kInvalidFontFamily == FMGetFontFamilyFromName(specialFontName))
+		{
+			// the specified font does not exist; use the system font but make it bigger
+			error = GetThemeFont(kThemeSystemFont, GetScriptManagerVariable(smSysScript)/* script code */,
+									outFontName, outFontSizePtr, outFontStylePtr);
+			error = noErr;
+			*outFontSizePtr = 16;
+			*outFontStylePtr = bold;
+		}
+		else
+		{
+			PLstrcpy(outFontName, specialFontName);
+			*outFontSizePtr = 18;
+			*outFontStylePtr = bold;
+		}
 	}
 	
 	// change the font settings of the current graphics port to match the results
 	{
-		SInt16		fontID = 0;
+		FMFontFamily	fontID = 0;
 		
 		
 		fontID = FMGetFontFamilyFromName(outFontName);
-		TextFont(fontID);
+		if (kInvalidFontFamily != fontID)
+		{
+			TextFont(fontID);
+		}
 	}
 	TextSize(*outFontSizePtr);
 	TextFace(*outFontStylePtr);
@@ -1502,49 +1253,8 @@ Localization_VerticallyPlaceControls	(ControlRef		inControl1,
 }// VerticallyPlaceControls
 
 
-/*!
-Conditionally rearranges two dialog items vertically
-so that the top and bottom edges of the smallest
-rectangle bounding both controls remains the same
-after they trade places.
-
-This method assumes that you have laid out controls
-in the top-to-bottom arrangement by default, so IF
-YOU ARE in top-to-bottom localization, calling this
-routine has no effect.
-
-(1.0)
-*/
-void
-Localization_VerticallyPlaceItems	(DialogRef			inDialog,
-									 DialogItemIndex	inItemIndex1,
-									 DialogItemIndex	inItemIndex2)
-{
-	unless (Localization_IsTopToBottom())
-	{
-		ControlRef		control1 = nullptr;
-		ControlRef		control2 = nullptr;
-		Rect			controlRect;
-		Rect			combinedRect;
-		
-		
-		// find a rectangle whose vertical expanse is exactly large enough to touch the edges of both controls
-		GetControlBounds(control1, &combinedRect);
-		GetControlBounds(control2, &controlRect);
-		if (combinedRect.bottom < controlRect.bottom) combinedRect.bottom = controlRect.bottom;
-		if (combinedRect.top > controlRect.top) combinedRect.top = controlRect.top;
-		
-		// switch the controls inside the smallest space that they both occupy
-		GetControlBounds(control1, &controlRect);
-		MoveDialogItem(inDialog, inItemIndex1,
-						controlRect.left, (combinedRect.bottom - (controlRect.bottom - controlRect.top)));
-		GetControlBounds(control2, &controlRect);
-		MoveDialogItem(inDialog, inItemIndex2, controlRect.left, combinedRect.top);
-	}
-}// VerticallyPlaceItems
-
-
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Provides a wealth of information about the
@@ -1566,7 +1276,7 @@ results you desire.
 
 (1.0)
 */
-static OSStatus
+OSStatus
 getControlFontInfo	(ControlFontStyleRec const*	inFontStyleRecPtr,
 					 ConstStringPtr				inStringOrNull,
 					 Str255						outFontName,
@@ -1633,7 +1343,7 @@ parameter is also optional.
 
 (1.0)
 */
-static OSStatus
+OSStatus
 getThemeFontInfo	(ThemeFontID		inThemeFontToUse,
 					 ConstStringPtr		inStringOrNull,
 					 Str255				outFontName,
@@ -1679,28 +1389,34 @@ previously.
 
 (1.0)
 */
-static OSStatus
+OSStatus
 setControlFontInfo	(ControlRef			inControl,
 					 ConstStringPtr		inFontName,
 					 SInt16				inFontSize,
 					 Style				inFontStyle)
 {
 	ControlFontStyleRec		styleRecord;
-	SInt16					fontID = 0;
+	FMFontFamily			fontID = 0;
 	Size					actualSize = 0L;
 	OSStatus				result = noErr;
 	
 	
-	fontID = FMGetFontFamilyFromName(inFontName);
+	bzero(&styleRecord, sizeof(styleRecord));
 	styleRecord.flags = 0;
 	(OSStatus)GetControlData(inControl, kControlEditTextPart, kControlFontStyleTag,
 								sizeof(styleRecord), &styleRecord, &actualSize);
 	styleRecord.flags |= kControlUseFontMask | kControlUseFaceMask | kControlUseSizeMask;
-	styleRecord.font = fontID;
+	fontID = FMGetFontFamilyFromName(inFontName);
+	if (kInvalidFontFamily != fontID)
+	{
+		styleRecord.font = fontID;
+	}
 	styleRecord.size = inFontSize;
 	styleRecord.style = inFontStyle;
 	result = SetControlFontStyle(inControl, &styleRecord);
 	return result;
 }// setControlFontInfo
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -15,8 +15,8 @@
 */
 /*###############################################################
 
-	Interface Library 1.2
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.2
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -134,20 +134,8 @@ Boolean
 //!\name Miscellaneous
 //@{
 
-SInt16
-	Localization_CompareTextSystemScript		(Boolean					inCaseSensitive,
-												 void const*				inBuffer1,
-												 void const*				inBuffer2,
-												 Size						inBuffer1Size,
-												 Size						inBuffer2Size);
-
-void
-	Localization_GetCurrentApplicationName		(Str255						outProcessDisplayName);
-
-#if TARGET_API_MAC_CARBON
 void
 	Localization_GetCurrentApplicationNameAsCFString	(CFStringRef*		outProcessDisplayNamePtr);
-#endif
 
 OSStatus
 	Localization_GetFontTextEncoding			(ConstStringPtr				inFontName,
@@ -175,24 +163,8 @@ void
 //!\name Utilities for View Manipulation
 //@{
 
-// DEPRECATED - USE Localization_ArrangeButtonArray() INSTEAD
-UInt16
-	Localization_AdjustDialogButtonArray		(DialogRef					inDialog,
-												 DialogItemIndex const*		inDialogItemIndices,
-												 UInt16						inDialogItemCount);
-
-// DEPRECATED - USE Localization_ArrangeButtonArray() INSTEAD
-UInt16
-	Localization_AdjustDialogButtons			(DialogRef					inDialog,
-												 Boolean					inAdjustDefaultButton,
-												 Boolean					inAdjustCancelButton);
-
 void
 	Localization_AdjustHelpButtonControl		(ControlRef					inControl);
-
-void
-	Localization_AdjustHelpButtonItem			(DialogRef					inDialog,
-												 DialogItemIndex			inHelpButtonIndex);
 
 void
 	Localization_ArrangeButtonArray				(ControlRef const*			inButtons,
@@ -210,11 +182,6 @@ UInt16
 	Localization_AutoSizeButtonControl			(ControlRef					inControl,
 												 UInt16						inMinimumWidth = 86);
 
-UInt16
-	Localization_AutoSizeButtonItem				(DialogRef					inDialog,
-												 DialogItemIndex			inItemIndex,
-												 UInt16						inMinimumWidth = 86);
-
 void
 	Localization_HorizontallyCenterControlWithinContainer	(ControlRef		inControlToCenterHorizontally,
 												 ControlRef					inContainerOrNullToUseHierarchyParent = nullptr);
@@ -222,11 +189,6 @@ void
 void
 	Localization_HorizontallyPlaceControls		(ControlRef					inControl1,
 												 ControlRef					inControl2);
-
-void
-	Localization_HorizontallyPlaceItems			(DialogRef					inDialog,
-												 DialogItemIndex			inItemIndex1,
-												 DialogItemIndex			inItemIndex2);
 
 UInt16
 	Localization_ReturnSingleLineTextHeight		(ThemeFontID				inThemeFontToUse);
@@ -271,11 +233,6 @@ void
 void
 	Localization_VerticallyPlaceControls		(ControlRef					inControl1,
 												 ControlRef					inControl2);
-
-void
-	Localization_VerticallyPlaceItems			(DialogRef					inDialog,
-												 DialogItemIndex			inItemIndex1,
-												 DialogItemIndex			inItemIndex2);
 
 //@}
 

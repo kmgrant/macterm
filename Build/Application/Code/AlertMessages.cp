@@ -2,7 +2,7 @@
 
 	AlertMessages.cp
 	
-	Interface Library 1.2
+	Interface Library 2.2
 	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -1670,6 +1670,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 		Localization_SetControlThemeFontInfo(ptr->textHelp, kThemeSmallSystemFont);
 		
 		// set the window title to be the application name, on Mac OS X
+	#if 0
 		{
 			CFStringRef		string;
 			
@@ -1677,6 +1678,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 			Localization_GetCurrentApplicationNameAsCFString(&string);
 			SetWindowTitleWithCFString(ptr->dialogWindow, string);
 		}
+	#endif
 		
 		// if the alert should have a title, give it one
 		if (ptr->titleCFString.exists())
@@ -1811,15 +1813,17 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 		{
 			enum
 			{
-				kTopEdgeText = kTopEdgeIcon,		// system standard is to make the text the same vertical offset as the icon
 				kSpacingBetweenTextItems = 10		// width in pixels vertically separating dialog text and help text
 			};
 			SInt16		textExpanseV = 0;
 			SInt16		totalExpanseV = 0; // initialized to vertical position of top edge of dialog text item
+			HIRect		floatBounds;
 			Rect		controlRect;
 			
 			
-			totalExpanseV = kTopEdgeText;
+			// use the actual top edge as defined in the NIB
+			HIViewGetFrame(ptr->textTitle, &floatBounds);
+			totalExpanseV = STATIC_CAST(floatBounds.origin.y, SInt16);
 			
 			// size and arrange title text, if present
 			if (ptr->titleCFString.exists())
@@ -1827,7 +1831,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 				GetControlBounds(ptr->textTitle, &controlRect);
 				//(OSStatus)SetControlData(ptr->textTitle, kControlEntireControl, kControlStaticTextCFStringTag,
 				//							STATIC_CAST(PLstrlen(ptr->title) * sizeof(UInt8), Size), ptr->title + 1);
-				textExpanseV = 22; // should be fixed to properly calculate dimensions, but alas, I’ve been lazy
+				textExpanseV = 20; // should be fixed to properly calculate dimensions, but alas, I’ve been lazy
 				//SizeControl(ptr->textTitle, INTERFACELIB_ALERT_DIALOG_WD - HSP_BUTTON_AND_DIALOG - controlRect.left, textExpanseV);
 				
 				// the text width is automatically set in the NIB
@@ -1899,10 +1903,16 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 			
 			// for right-to-left localization only, the alert icon and text will switch places
 			{
+				Rect	mainIconRect;
 				Rect	dialogTextRect;
 				
 				
 				Localization_HorizontallyPlaceControls(ptr->mainIcon, ptr->textMain);
+				GetControlBounds(ptr->mainIcon, &mainIconRect);
+				GetControlBounds(ptr->applicationIcon, &controlRect);
+				controlRect.right = mainIconRect.left + (controlRect.right - controlRect.left);
+				controlRect.left = mainIconRect.left;
+				SetControlBounds(ptr->applicationIcon, &controlRect);
 				GetControlBounds(ptr->textMain, &dialogTextRect);
 				if (nullptr != inHelpText)
 				{

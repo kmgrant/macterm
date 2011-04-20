@@ -380,6 +380,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20110420': [
         'Significantly improved the performance of string transmissions, such as Paste, drag-and-drop and macros.',
+        'Alert messages now have a slightly different style.',
     ],
     '20110417': [
         'Fixed major bug affecting programs that inherit signal masks (like "bash"); they now handle control-C correctly.',

@@ -2,7 +2,7 @@
 **************************************************************************
 	SpacingConstants.r
 	
-	© 1998-2004 by Kevin Grant
+	© 1998-2011 by Kevin Grant
 	
 	This file contains constants for “standard” dimensions and spacings
 	for controls.  They are largely based on the Apple Human Interface
@@ -182,6 +182,7 @@ enum
 	// space between button’s edges and dialog box interior
 	HSP_BUTTON_AND_DIALOG				= 24,
 	VSP_BUTTON_AND_DIALOG				= 20,
+	VSP_BUTTON_SMALL_AND_DIALOG			= 14,
 	
 	// space between group box’s edge and dialog box interior
 	HSP_GROUPBOX_AND_DIALOG				= 20,
