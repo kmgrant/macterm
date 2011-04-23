@@ -77,13 +77,6 @@ enum Clipboard_DataConstraint
 	kClipboard_DataConstraintText16BitNative	= 1 << 1	//!< only Unicode text with native byte-ordering
 };
 
-typedef UInt16 Clipboard_PasteMethod; // do not redefine
-enum
-{
-	kClipboard_PasteMethodStandard		= 0,
-	kClipboard_PasteMethodBlock			= 1
-};
-
 /*!
 When pasting, you have the option of using a filtered version
 of the data actually on the Clipboard, to suit the destination.

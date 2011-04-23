@@ -481,9 +481,6 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandRetrySearch						'RFnd'		// “Find” dialog
 #define kCommandResetANSIColors					'ANSD'		// “Preferences” window
 #define kCommandOpenScriptMenuItemsFolder		'OSMI'		// “Preferences” window
-#define kCommandPasteBufferingNone				'PBf0'		// multiple interfaces
-#define kCommandPasteBuffering128Bytes			'PBf1'		// multiple interfaces
-#define kCommandPasteBuffering256Bytes			'PBf2'		// multiple interfaces
 #define kCommandEditInterruptKey				'SIKy'		// multiple interfaces
 #define kCommandEditResumeKey					'SRKy'		// multiple interfaces
 #define kCommandEditSuspendKey					'SSKy'		// multiple interfaces

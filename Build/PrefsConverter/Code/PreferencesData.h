@@ -208,8 +208,8 @@ struct SessionPrefs
 		
 	UInt16			port;					// port to connect to
 	SInt16			modeForTEK;				// a "kTektronixMode…" constant (see tekdefs.h)
-	SInt16			pasteMethod;			// a "kClipboard_PasteMethod..." constant
-	UInt16			pasteBlockSize;			// size of blocks to paste if using block mode
+	SInt16			pasteMethod;			// no longer supported
+	UInt16			pasteBlockSize;			// no longer supported
 	UInt16			pad1;
 	
 	UInt32			ipAddress;				// IP address of the host; unused

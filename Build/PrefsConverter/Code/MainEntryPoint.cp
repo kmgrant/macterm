@@ -945,21 +945,9 @@ actionLegacyUpdates ()
 										break;
 									}
 									
-									switch (dataPtr->pasteMethod)
-									{
-									// these numbers must match values actually saved
-									// by older versions of MacTelnet
-									case 1:
-										sessionKeyValueMgrPtr->addString(CFSTR("data-send-paste-method"), CFSTR("throttled"));
-										break;
+									// dataPtr->pasteMethod is no longer supported
+									// dataPtr->pasteBlockSize is no longer supported
 									
-									case 0:
-									default:
-										sessionKeyValueMgrPtr->addString(CFSTR("data-send-paste-method"), CFSTR("normal"));
-										break;
-									}
-									
-									sessionKeyValueMgrPtr->addInteger(CFSTR("data-send-paste-block-size-bytes"), dataPtr->pasteBlockSize);
 									sessionKeyValueMgrPtr->addString(CFSTR("key-map-new-line"),
 																		(0 != dataPtr->mapCR) ? CFSTR("\\015\\000") : CFSTR("\\015\\012"));
 									sessionKeyValueMgrPtr->addFlag(CFSTR("line-mode-enabled"), (0 != dataPtr->lineMode));

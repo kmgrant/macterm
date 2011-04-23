@@ -148,9 +148,6 @@ struct My_SessionsPanelDataFlowUI
 	
 	static OSStatus
 	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
-	
-	void
-	setPasteBlockSize	(SInt16);
 
 protected:
 	HIViewWrap
@@ -879,34 +876,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		size_t					actualSize = 0;
 		
 		
-		// set paste block size
-		{
-			Clipboard_PasteMethod	pasteMethod = kClipboard_PasteMethodStandard;
-			
-			
-			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagPasteMethod,
-														sizeof(pasteMethod), &pasteMethod,
-														true/* search defaults too */, &actualSize);
-			if ((kPreferences_ResultOK != prefsResult) || (kClipboard_PasteMethodStandard == pasteMethod))
-			{
-				setPasteBlockSize(0);
-			}
-			else
-			{
-				SInt16		blockSize = 0;
-				
-				
-				prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagPasteBlockSize,
-														sizeof(blockSize), &blockSize,
-														true/* search defaults too */, &actualSize);
-				if (kPreferences_ResultOK != prefsResult)
-				{
-					blockSize = 0;
-				}
-				setPasteBlockSize(blockSize);
-			}
-		}
-		
 		// INCOMPLETE
 	}
 }// My_SessionsPanelDataFlowUI::readPreferences
@@ -945,53 +914,6 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 		{
 			switch (received.commandID)
 			{
-			case kCommandPasteBufferingNone:
-			case kCommandPasteBuffering128Bytes:
-			case kCommandPasteBuffering256Bytes:
-				{
-					Boolean		isError = true;
-					
-					
-					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
-					
-					// update preferences
-					if (received.attributes & kHICommandFromMenu)
-					{
-						My_SessionsPanelDataFlowDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation
-																						(dataFlowInterfacePtr->panel),
-																						My_SessionsPanelDataFlowDataPtr);
-						Preferences_Result					prefsResult = kPreferences_ResultOK;
-						Clipboard_PasteMethod				pasteMethod = (kCommandPasteBufferingNone == received.commandID)
-																			? kClipboard_PasteMethodStandard
-																			: kClipboard_PasteMethodBlock;
-						SInt16								blockSize = (kCommandPasteBuffering256Bytes == received.commandID)
-																		? 256
-																		: ((kCommandPasteBuffering128Bytes == received.commandID)
-																			? 128
-																			: 0);
-						
-						
-						prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagPasteMethod,
-																	sizeof(pasteMethod), &pasteMethod);
-						if (kPreferences_ResultOK == prefsResult) isError = false;
-						
-						prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagPasteBlockSize,
-																	sizeof(blockSize), &blockSize);
-						if (kPreferences_ResultOK == prefsResult) isError = false;
-					}
-					
-					if (isError)
-					{
-						// failed...
-						Sound_StandardAlert();
-					}
-					
-					// pass this handler through to the window, which will update the terminal settings!
-					result = eventNotHandledErr;
-				}
-				break;
-			
 			default:
 				// must return "eventNotHandledErr" here, or (for example) the user
 				// wouldn’t be able to select menu commands while the window is open
@@ -1003,36 +925,6 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 	
 	return result;
 }// My_SessionsPanelDataFlowUI::receiveHICommand
-
-
-/*!
-Updates the Paste Buffering menu selection based on the
-given size in bytes.  Set the size to zero to select no
-buffering.
-
-(4.0)
-*/
-void
-My_SessionsPanelDataFlowUI::
-setPasteBlockSize	(SInt16		inPasteBlockSize)
-{
-	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
-	HIViewWrap			bufferingMenu(idMyPopUpMenuPasteBuffering, kOwningWindow);
-	
-	
-	if ((inPasteBlockSize > 0) && (inPasteBlockSize <= 128))
-	{
-		(OSStatus)DialogUtilities_SetPopUpItemByCommand(bufferingMenu, kCommandPasteBuffering128Bytes);
-	}
-	else if (inPasteBlockSize > 128)
-	{
-		(OSStatus)DialogUtilities_SetPopUpItemByCommand(bufferingMenu, kCommandPasteBuffering256Bytes);
-	}
-	else
-	{
-		(OSStatus)DialogUtilities_SetPopUpItemByCommand(bufferingMenu, kCommandPasteBufferingNone);
-	}
-}// My_SessionsPanelDataFlowUI::setPasteBlockSize
 
 
 /*!

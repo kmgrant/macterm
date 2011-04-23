@@ -238,8 +238,6 @@ enum
 	kPreferences_TagLocalEchoHalfDuplex					= 'lehd',	//!< data: "Boolean"
 	kPreferences_TagMapCarriageReturnToCRNull			= 'crnl',	//!< data: "Boolean"
 	kPreferences_TagMapDeleteToBackspace				= 'delb',	//!< data: "Boolean"
-	kPreferences_TagPasteBlockSize						= 'pblk',	//!< data: "SInt16"
-	kPreferences_TagPasteMethod							= 'pstm',	//!< data: a "kClipboard_PasteMethod…" constant
 	kPreferences_TagScrollDelay							= 'scrd',	//!< data: "EventTime" in MILLISECONDS
 	kPreferences_TagServerHost							= 'host',	//!< data: "CFStringRef" (domain name or IP address)
 	kPreferences_TagServerPort							= 'port',	//!< data: "SInt16"

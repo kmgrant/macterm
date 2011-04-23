@@ -381,6 +381,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20110423': [
         'Fixed a crash that occurred on some versions of Mac OS X when the Dock icon was updated from the background (Trac #41).',
+        'The "Paste Buffering" preference has been removed, and buffering is now managed automatically.',
     ],
     '20110420': [
         'Significantly improved the performance of string transmissions, such as Paste, drag-and-drop and macros.',

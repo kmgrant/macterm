@@ -1109,12 +1109,6 @@ Preferences_Init ()
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-terminal-home"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-terminal-page-up"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-terminal-page-down"));
-	My_PreferenceDefinition::create(kPreferences_TagPasteBlockSize,
-									CFSTR("data-send-paste-block-size-bytes"), typeNetEvents_CFNumberRef,
-									sizeof(SInt16), Quills::Prefs::SESSION);
-	My_PreferenceDefinition::create(kPreferences_TagPasteMethod,
-									CFSTR("data-send-paste-method"), typeCFStringRef,
-									sizeof(Clipboard_PasteMethod), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagPureInverse,
 										CFSTR("terminal-inverse-selections"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagRandomTerminalFormats,
@@ -7163,56 +7157,6 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
-				case kPreferences_TagPasteBlockSize:
-					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
-						SInt16* const	data = REINTERPRET_CAST(outDataPtr, SInt16*);
-						
-						
-						*data = inContextPtr->returnInteger(keyName);
-						if (0 == *data)
-						{
-							// failed; make default
-							*data = 128; // arbitrary
-							result = kPreferences_ResultBadVersionDataNotAvailable;
-						}
-					}
-					break;
-				
-				case kPreferences_TagPasteMethod:
-					{
-						assert(typeCFStringRef == keyValueType);
-						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
-						
-						
-						if (nullptr == valueCFString)
-						{
-							result = kPreferences_ResultBadVersionDataNotAvailable;
-						}
-						else
-						{
-							Clipboard_PasteMethod*	storedValuePtr = REINTERPRET_CAST(outDataPtr, Clipboard_PasteMethod*);
-							
-							
-							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("normal"), kCFCompareCaseInsensitive))
-							{
-								*storedValuePtr = kClipboard_PasteMethodStandard;
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("throttled"), kCFCompareCaseInsensitive))
-							{
-								*storedValuePtr = kClipboard_PasteMethodBlock;
-							}
-							else
-							{
-								// failed; make default
-								*storedValuePtr = kClipboard_PasteMethodStandard; // arbitrary
-								result = kPreferences_ResultBadVersionDataNotAvailable;
-							}
-							CFRelease(valueCFString), valueCFString = nullptr;
-						}
-					}
-					break;
-				
 				case kPreferences_TagScrollDelay:
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
@@ -9236,7 +9180,6 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 				break;
 			
 			case kPreferences_TagDataReadBufferSize:
-			case kPreferences_TagPasteBlockSize:
 			case kPreferences_TagServerPort:
 				{
 					SInt16 const* const		data = REINTERPRET_CAST(inDataPtr, SInt16 const*);
@@ -9296,30 +9239,6 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, (*data) ? CFSTR("backspace") : CFSTR("delete"));
-				}
-				break;
-			
-			case kPreferences_TagPasteMethod:
-				{
-					Clipboard_PasteMethod const* const	data = REINTERPRET_CAST(inDataPtr, Clipboard_PasteMethod const*);
-					
-					
-					assert(typeCFStringRef == keyValueType);
-					switch (*data)
-					{
-					case kClipboard_PasteMethodStandard:
-						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("normal"));
-						break;
-					
-					case kClipboard_PasteMethodBlock:
-						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("throttled"));
-						break;
-					
-					default:
-						// ???
-						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("normal"));
-						break;
-					}
 				}
 				break;
 			

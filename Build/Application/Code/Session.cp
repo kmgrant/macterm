@@ -2436,8 +2436,9 @@ Adds the specified data to a buffer, which will be sent to the
 local or remote process for the given session when the receiver
 is ready.
 
-Returns the number of bytes actually written, or a negative
-number on error.
+Returns the number of bytes actually written; if this number is
+less than "inByteCount", offset the buffer by the difference
+and try again to send the rest.
 
 See also Session_SendDataCFString().
 
@@ -2505,48 +2506,63 @@ Session_SendDataCFString	(SessionRef		inRef,
 							 CFIndex		inFirstCharacter)
 {
 	CFIndex const			kLength = CFStringGetLength(inString);
-	CFIndex					result = 0;
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	CFRange					targetRange = CFRangeMake(0, 1/* count */);
+	UInt8					byteArray[1024]; // arbitrary size
+	UInt8*					currentPtr = byteArray;
+	size_t					sizeRemaining = sizeof(byteArray);
+	CFIndex					result = 0;
 	
 	
-	// convert characters one at a time, so that it is possible to
-	// ensure that all the bytes for a character have been sent
-	// (even if the whole string cannot be sent successfully)
-	for (CFIndex i = inFirstCharacter; i < kLength; ++i)
+	// convert characters one at a time, so that it is possible to ensure
+	// that all the bytes for a character have been sent (even if the
+	// whole string cannot be sent successfully)
+	for (targetRange.location = inFirstCharacter; targetRange.location < kLength; )
 	{
-		UInt8		byteArray[8/* arbitrary */];
-		CFIndex		numberOfBytesRequired = 0;
-		CFIndex		numberOfCharactersConverted = CFStringGetBytes(inString, CFRangeMake(i, 1/* count */), ptr->writeEncoding,
-																	0/* loss byte, or 0 for no lossy conversion */,
-																	false/* is external representation */,
-																	byteArray, sizeof(byteArray), &numberOfBytesRequired);
+		CFIndex		bytesForChar = 0;
+		// IMPORTANT: Although CFStringGetBytes() ought to accept a zero-length buffer,
+		// it appears that actually giving that function a length of zero makes it
+		// return a nonzero number of “bytes used”.  Not only would that violate the
+		// assertion that follows, but it calls into question just what the heck might
+		// have happened to the buffer and its surrounding memory!  A preemptive check
+		// is done to avoid this problem.
+		CFIndex		numberOfCharactersConverted = (0 == sizeRemaining)
+													? 0
+													: CFStringGetBytes(inString, targetRange, ptr->writeEncoding,
+																		0/* loss byte, or 0 for no lossy conversion */,
+																		false/* is external representation */,
+																		currentPtr, sizeRemaining, &bytesForChar);
 		
 		
-		if (numberOfCharactersConverted < 1)
+		if (numberOfCharactersConverted > 0)
 		{
-			// translation error; abort at this character boundary
-			break;
+			assert(sizeRemaining >= STATIC_CAST(bytesForChar, size_t));
+			sizeRemaining -= bytesForChar;
+			currentPtr += bytesForChar;
+			++result;
+			++(targetRange.location);
 		}
-		else
+		
+		if ((sizeRemaining < 4/* arbitrary */) || (targetRange.location >= kLength))
 		{
-			assert(STATIC_CAST(numberOfBytesRequired, size_t) < sizeof(byteArray));
-			UInt8 const*	bufferPtr = byteArray;
-			ptrdiff_t		bytesLeft = numberOfBytesRequired;
-			ptrdiff_t		bytesWritten = 0;
+			// send what has been accumulated, and then reset the pointer
+			size_t		bytesLeft = sizeof(byteArray) - sizeRemaining;
+			size_t		bytesWritten = 0;
 			
 			
-			// for a given character, block until all its bytes are written;
-			// the routine may give up before writing the whole string however
+			currentPtr = byteArray;
 			while (bytesLeft > 0)
 			{
-				bytesWritten = Session_SendData(inRef, bufferPtr, bytesLeft);
+				bytesWritten = Session_SendData(inRef, currentPtr, bytesLeft);
 				if (bytesWritten > 0)
 				{
+					assert(bytesLeft >= bytesWritten);
 					bytesLeft -= bytesWritten;
-					bufferPtr += bytesWritten;
+					currentPtr += bytesWritten;
 				}
 			}
-			++result;
+			currentPtr = byteArray;
+			sizeRemaining = sizeof(byteArray);
 		}
 	}
 	return result;
@@ -2635,60 +2651,6 @@ Session_SendNewline		(SessionRef		inRef,
 		Session_SendData(inRef, "\015", 1);
 	}
 }// SendNewline
-
-
-/*!
-Specifies the maximum number of bytes that can be read with
-each call to processMoreData().  Depending on available memory,
-the actual buffer size may end up being less than the amount
-requested.
-
-Requests of less than 512 bytes are increased to be a minimum
-of 512 bytes.
-
-\retval kSession_ResultOK
-if there are no errors
-
-\retval kSession_ResultInvalidReference
-if the specified session is unrecognized
-
-\retval kSession_ResultInsufficientBufferSpace
-if there is not enough memory to meet the request
-
-(3.0)
-*/
-Session_Result
-Session_SetDataProcessingCapacity	(SessionRef		inRef,
-									 size_t			inBlockSizeInBytes)
-{
-	Session_Result		result = kSession_ResultOK;
-	
-	
-	if (inRef == nullptr) result = kSession_ResultInvalidReference;
-	else
-	{
-		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-		UInt8*					newBuffer = nullptr;
-		
-		
-		// set the size, and allocate a buffer if necessary
-		ptr->readBufferSizeMaximum = (inBlockSizeInBytes < 512) ? 512 : inBlockSizeInBytes;
-		try
-		{
-			// use the new buffer in place of the stored one, then free the stored buffer
-			// WARNING: this allocation/deallocation scheme should match the constructor/destructor
-			newBuffer = new UInt8[ptr->readBufferSizeMaximum];
-			std::swap(ptr->readBufferPtr, newBuffer);
-			delete [] newBuffer, newBuffer = nullptr;
-		}
-		catch (std::bad_alloc)
-		{
-			result = kSession_ResultInsufficientBufferSpace;
-		}
-	}
-	
-	return result;
-}// SetDataProcessingCapacity
 
 
 /*!
@@ -4547,9 +4509,9 @@ targetTerminals(),
 vectorGraphicsPageOpensNewWindow(true),
 vectorGraphicsCommandSet(kVectorInterpreter_ModeTEK4014), // arbitrary, reset later
 vectorGraphicsID(kVectorInterpreter_InvalidID),
-readBufferSizeMaximum(4096), // arbitrary, for initialization; see Session_SetDataProcessingCapacity()
+readBufferSizeMaximum(4096), // arbitrary, for initialization
 readBufferSizeInUse(0),
-readBufferPtr(new UInt8[this->readBufferSizeMaximum]), // Session_SetDataProcessingCapacity() also defines this buffer
+readBufferPtr(new UInt8[this->readBufferSizeMaximum]),
 writeEncoding(kCFStringEncodingUTF8), // initially...
 activeWatch(kSession_WatchNothing),
 inactivityWatchTimerUPP(nullptr),
@@ -4669,8 +4631,7 @@ My_Session::
 	}
 	
 	// dispose contents
-	// WARNING: Session_SetDataProcessingCapacity() also allocates/deallocates this buffer
-	if (this->readBufferPtr != nullptr)
+	if (nullptr != this->readBufferPtr)
 	{
 		delete [] this->readBufferPtr, this->readBufferPtr = nullptr;
 	}
@@ -6385,16 +6346,12 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 
 
 /*!
-Reads as much available data as possible (based on
-the size of the processing buffer) and processes it,
-which will result in either displaying it as text or
-interpreting it as one or more commands.  The number
-of bytes left to be processed is returned, so if
-the result is greater than zero you ought to call
-this routine again.
-
-You can change the buffer size using the method
-Session_SetDataProcessingCapacity().
+Reads as much available data as possible (based on the size of
+the processing buffer) and processes it, which will result in
+either displaying it as text or interpreting it as one or more
+commands.  The number of bytes left to be processed is returned,
+so if the result is greater than zero you ought to call this
+routine again.
 
 (3.0)
 */
@@ -6408,8 +6365,7 @@ processMoreData		(My_SessionPtr	inPtr)
 	// thread using the blocking read() system call, so in that
 	// case data is expected to have been placed in the read buffer
 	// already by that thread
-	Session_ReceiveData(inPtr->selfRef, inPtr->readBufferPtr, inPtr->readBufferSizeInUse);
-	//Session_TerminalWrite(inPtr->selfRef, inPtr->readBufferPtr, inPtr->readBufferSizeInUse);
+	(Session_Result)Session_ReceiveData(inPtr->selfRef, inPtr->readBufferPtr, inPtr->readBufferSizeInUse);
 	inPtr->readBufferSizeInUse = 0;
 	return result;
 }// processMoreData
