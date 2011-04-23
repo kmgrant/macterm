@@ -561,17 +561,28 @@ See also CocoaBasic_SetDockTileToDefaultAppIcon().
 void
 CocoaBasic_SetDockTileToCautionOverlay ()
 {
-	AutoPool	_;
-	NSImage*	appIconImage = [[NSImage imageNamed:(NSString*)AppResources_ReturnBundleIconFilenameNoExtension()] copy];
-	NSImage*	overlayImage = [NSImage imageNamed:(NSString*)AppResources_ReturnCautionIconFilenameNoExtension()];
+	static BOOL		gHaveDisplayed = NO;
 	
 	
-	// the image location is somewhat arbitrary, and should probably be made configurable; TEMPORARY
-	[appIconImage lockFocus];
-	[overlayImage drawAtPoint:NSMakePoint(56, 16) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
-	[appIconImage unlockFocus];
-	[NSApp setApplicationIconImage:appIconImage];
-	[appIconImage release];
+	// TEMPORARY; on certain versions of Mac OS X, it seems that this can
+	// crash in the middle of Cocoa the *second* time it is called; for
+	// now just avoid the problem, as this is low-priority code
+	if (NO == gHaveDisplayed)
+	{
+		AutoPool		_;
+		NSImage*		appIconImage = [[NSImage imageNamed:(NSString*)AppResources_ReturnBundleIconFilenameNoExtension()] copy];
+		NSImage*		overlayImage = [NSImage imageNamed:(NSString*)AppResources_ReturnCautionIconFilenameNoExtension()];
+		
+		
+		// the image location is somewhat arbitrary, and should probably be made configurable; TEMPORARY
+		[appIconImage lockFocus];
+		[overlayImage drawAtPoint:NSMakePoint(56, 16) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+		[appIconImage unlockFocus];
+		[NSApp setApplicationIconImage:appIconImage];
+		[appIconImage release];
+		
+		gHaveDisplayed = YES;
+	}
 }// SetDockTileToCautionOverlay
 
 

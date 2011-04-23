@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110423',
     '20110420',
     '20110417',
     '20110412',
@@ -378,6 +379,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110423': [
+        'Fixed a crash that occurred on some versions of Mac OS X when the Dock icon was updated from the background (Trac #41).',
+    ],
     '20110420': [
         'Significantly improved the performance of string transmissions, such as Paste, drag-and-drop and macros.',
         'Alert messages now have a slightly different style.',
