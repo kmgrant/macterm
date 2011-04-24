@@ -3744,41 +3744,39 @@ handleNewSize	(WindowRef	inWindow,
 				 void*		inTerminalWindowRef)
 {
 	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
-	Rect				contentBounds;
+	HIRect				contentBounds;
+	OSStatus			error = noErr;
 	
 	
 	// get window boundaries in local coordinates
-	GetPortBounds(GetWindowPort(inWindow), &contentBounds);
+	error = HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, inWindow), &contentBounds);
+	assert_noerr(error);
 	
 	if (terminalWindow != nullptr)
 	{
 		TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-		Rect						controlBounds;
-		HIRect						floatBounds;
+		HIRect						viewBounds;
 		
 		
 		// glue the vertical scroll bar to the new right side of the window and to the
 		// bottom edge of the status bar, and ensure it is glued to the size box in the
 		// corner (so vertically resize it)
-		GetControlBounds(ptr->controls.scrollBarV, &controlBounds);
-		controlBounds.left = contentBounds.right - TerminalWindow_ReturnScrollBarWidth();
-		controlBounds.top = -1; // frame thickness
-		controlBounds.right = contentBounds.right;
-		controlBounds.bottom = contentBounds.bottom - getGrowBoxHeight(ptr);
-		floatBounds = CGRectMake(controlBounds.left, controlBounds.top, controlBounds.right - controlBounds.left,
-									controlBounds.bottom - controlBounds.top);
-		HIViewSetFrame(ptr->controls.scrollBarV, &floatBounds);
+		viewBounds.origin.x = contentBounds.size.width - TerminalWindow_ReturnScrollBarWidth();
+		viewBounds.origin.y = -1; // frame thickness
+		viewBounds.size.width = TerminalWindow_ReturnScrollBarWidth();
+		viewBounds.size.height = contentBounds.size.height - getGrowBoxHeight(ptr);
+		error = HIViewSetFrame(ptr->controls.scrollBarV, &viewBounds);
+		assert_noerr(error);
 		
 		// glue the horizontal scroll bar to the new bottom edge of the window; it must
 		// also move because its left edge is glued to the window edge, and it must resize
 		// because its right edge is glued to the size box in the corner
-		GetControlBounds(ptr->controls.scrollBarH, &controlBounds);
-		controlBounds.left = -1; // frame thickness
-		controlBounds.top = contentBounds.bottom - TerminalWindow_ReturnScrollBarHeight();
-		controlBounds.right = contentBounds.right - getGrowBoxWidth();
-		floatBounds = CGRectMake(controlBounds.left, controlBounds.top, controlBounds.right - controlBounds.left,
-									controlBounds.bottom - controlBounds.top);
-		HIViewSetFrame(ptr->controls.scrollBarH, &floatBounds);
+		viewBounds.origin.x = -1; // frame thickness
+		viewBounds.origin.y = contentBounds.size.height - TerminalWindow_ReturnScrollBarHeight();
+		viewBounds.size.width = contentBounds.size.width - getGrowBoxWidth();
+		viewBounds.size.height = TerminalWindow_ReturnScrollBarHeight();
+		error = HIViewSetFrame(ptr->controls.scrollBarH, &viewBounds);
+		//assert_noerr(error); // ignore this error since the scroll bar is not used
 		
 		// change the screen sizes to match the user’s window size as well as possible,
 		// notifying listeners of the change (to trigger actions such as sending messages
@@ -3809,7 +3807,6 @@ handleNewSize	(WindowRef	inWindow,
 				if (actualNumberOfViews > 0)
 				{
 					HIRect		terminalScreenBounds;
-					OSStatus	error = noErr;
 					
 					
 					for (i = 0; i < actualNumberOfViews; ++i)
