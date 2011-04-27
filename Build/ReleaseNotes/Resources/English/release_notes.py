@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110427',
     '20110423',
     '20110420',
     '20110417',
@@ -379,6 +380,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110427': [
+        'The factory default for "Treat backquote key like Escape" has changed to be false (though existing user preferences will not change).',
+    ],
     '20110423': [
         'Fixed a crash that occurred on some versions of Mac OS X when the Dock icon was updated from the background (Trac #41).',
         'The "Paste Buffering" preference has been removed, and buffering is now managed automatically.',

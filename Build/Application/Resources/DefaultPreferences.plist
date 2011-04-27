@@ -87,7 +87,7 @@
 	<key>favorite-workspaces</key>
 	<array/>
 	<key>key-map-backquote</key>
-	<string>\e</string>
+	<string></string>
 	<key>key-map-delete</key>
 	<string>delete</string>
 	<key>key-map-emacs-meta</key>
