@@ -213,7 +213,7 @@ CarbonEventHandlerWrap				gCarbonEventWindowActivateHandler(GetApplicationEventT
 																			(CarbonEventClass(kEventClassWindow),
 																				kEventWindowActivated),
 																		nullptr/* user data */);
-Console_Assertion					_5(gCarbonEventSwitchHandler.isInstalled(), __FILE__, __LINE__);
+Console_Assertion					_5(gCarbonEventWindowActivateHandler.isInstalled(), __FILE__, __LINE__);
 EventHandlerUPP						gCarbonEventSheetOpeningUPP = nullptr;
 EventHandlerRef						gCarbonEventSheetOpeningHandler = nullptr;
 
