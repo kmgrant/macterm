@@ -143,8 +143,6 @@ struct My_KeyPress
 };
 typedef My_KeyPress*	My_KeyPressPtr;
 
-typedef std::map< Session_PropertyKey, void* >		My_AuxiliaryDataByKey;
-
 typedef std::vector< TerminalScreenRef >	My_CaptureFileList;
 
 typedef std::map< HIViewRef, EventHandlerRef >		My_DragDropHandlerByView;
@@ -306,7 +304,6 @@ struct My_Session
 	EventLoopTimerRef			inactivityWatchTimer;		// short timer
 	My_SessionSheetType			currentSheet;				// if "kMy_SessionSheetTypeNone", no significant sheet is currently open
 	AlertMessages_BoxRef		watchBox;					// if defined, the global alert used to show notifications for this session
-	My_AuxiliaryDataByKey		auxiliaryDataMap;			// all tagged data associated with this session
 	SessionRef					selfRef;					// convenient reference to this structure
 	
 	struct
@@ -371,7 +368,6 @@ My_HMHelpContentRecWrap&	createHelpTagForLocalEcho			();
 My_HMHelpContentRecWrap&	createHelpTagForResume				();
 My_HMHelpContentRecWrap&	createHelpTagForSuspend				();
 My_HMHelpContentRecWrap&	createHelpTagForVectorGraphics		();
-PMPageFormat				createSessionPageFormat				();
 IconRef						createSessionStateActiveIcon		();
 IconRef						createSessionStateDeadIcon			();
 void						detectLongLife						(EventLoopTimerRef, void*);
@@ -382,7 +378,6 @@ void						localEchoKey						(My_SessionPtr, UInt8);
 void						localEchoString						(My_SessionPtr, CFStringRef);
 void						navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
 void						navigationSaveDialogEvent			(NavEventCallbackMessage, NavCBRecPtr, void*);
-void						pageSetupCloseNotifyProc			(PMPrintSession, WindowRef, Boolean);
 void						pasteWarningCloseNotifyProc			(InterfaceLibAlertRef, SInt16, void*);
 void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
@@ -418,7 +413,6 @@ void						windowValidationStateChanged		(ListenerModel_Ref, ListenerModel_Event,
 namespace {
 
 My_SessionPtrLocker&	gSessionPtrLocks ()	{ static My_SessionPtrLocker x; return x; }
-PMPageFormat&			gSessionPageFormat () { static PMPageFormat x = createSessionPageFormat(); return x; }
 IconRef					gSessionActiveIcon () { static IconRef x = createSessionStateActiveIcon(); return x; }
 IconRef					gSessionDeadIcon () { static IconRef x = createSessionStateDeadIcon(); return x; }
 My_SessionRefTracker&	gInvalidSessions () { static My_SessionRefTracker x; return x; }
@@ -924,81 +918,6 @@ Session_DisplayFileCaptureSaveDialog	(SessionRef		inRef)
 
 
 /*!
-Displays a Print dialog for the given terminal window,
-handling the user’s response automatically.  The dialog
-could be a sheet, so this routine may return immediately
-without the user having confirmed the print.
-
-(3.1)
-*/
-void
-Session_DisplayPrintJobDialog	(SessionRef		inRef)
-{
-	// UNIMPLEMENTED
-	Console_Warning(Console_WriteLine, "unimplemented");
-}// DisplayPrintJobDialog
-
-
-/*!
-Displays a Print dialog for the given terminal window,
-handling the user’s response automatically.  The dialog
-could be a sheet, so this routine may return immediately
-without the user having confirmed the print.
-
-(3.1)
-*/
-void
-Session_DisplayPrintPageSetupDialog		(SessionRef		inRef)
-{
-	OSStatus				error = noErr;
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	PMPrintSession			printSession = nullptr;
-	
-	
-	error = PMCreateSession(&printSession);
-	if (noErr == error)
-	{
-		static PMSheetDoneUPP	gMyPageSetupDoneUPP = NewPMSheetDoneUPP(pageSetupCloseNotifyProc);
-		PMPageFormat			pageFormat = gSessionPageFormat();
-		
-		
-		assert(nullptr != gMyPageSetupDoneUPP);
-		error = PMSessionDefaultPageFormat(printSession, pageFormat);
-		if (noErr == error)
-		{
-			// ??? necessary to validate a defaulted format ???
-			error = PMSessionValidatePageFormat(printSession, pageFormat, kPMDontWantBoolean/* result */);
-			if (noErr == error)
-			{
-				HIWindowRef		window = Session_ReturnActiveWindow(inRef);
-				
-				
-				assert(nullptr != window);
-				error = PMSessionUseSheets(printSession, window, gMyPageSetupDoneUPP);
-				if (noErr == error)
-				{
-					Boolean		meaninglessAcceptedFlag = false;
-					
-					
-					// since sheets are used, this is not a modal dialog and
-					// the "meaninglessAcceptedFlag" is, well, meaningless!
-					error = PMSessionPageSetupDialog(printSession, pageFormat, &meaninglessAcceptedFlag);
-				}
-			}
-		}
-	}
-	
-	if (noErr != error)
-	{
-		// ONLY release for errors; otherwise, the sheet callback does this
-		PMRelease(printSession), printSession = nullptr;
-	}
-	
-	Alert_ReportOSStatus(error);	
-}// DisplayPrintPageSetupDialog
-
-
-/*!
 Displays the Save dialog for the given terminal window,
 handling the user’s response automatically.  The dialog
 could be a sheet, so this routine may return immediately
@@ -1312,74 +1231,6 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 		}
 	}
 }// DisplaySessionTerminationWarning
-
-
-/*!
-Determines the port number within a string
-that may contain a host name and optionally a
-port number afterwards (à la New Sessions
-dialog box).  The port number can be tagged
-on either with white space or a colon.
-
-If the parse succeeds (that is, if the output
-port number is valid), "true" is returned;
-otherwise, "false" is returned.  On output,
-the string given is modified to include only
-the host name (minus any port number).
-
-(2.6)
-*/
-Boolean
-Session_ExtractPortNumberFromHostString		(StringPtr		inoutString,
-											 SInt16*		outPortNumberPtr)
-{
-	Str255				string;
-	register SInt16		i = 0;
-	StringPtr			xxxxptr = nullptr;
-	StringPtr			yyyyptr = nullptr;
-	Boolean				result = false;
-	
-	
-	// copy the string
-	BlockMoveData(inoutString, string, 255 * sizeof(UInt8));
-	
-	// remove leading spaces
-	for (i = 1; ((i <= PLstrlen(string)) && (string[i] == ' ')); i++) {}
-	
-	if (i > PLstrlen(string))
-	{
-		inoutString[0] = 0;
-		result = false;
-	}
-	else
-	{
-		SInt32		portRequested = 0L;
-		
-		
-		xxxxptr = &string[i - 1];
-		
-		//	Now look for a port number...
-		while ((i <= PLstrlen(string)) && (string[i] != ' ') && (string[i] != ':')) i++;
-		
-		yyyyptr = &string[i];
-		
-		if (i < PLstrlen(string))
-		{
-			string[i] = PLstrlen(string) - i;
-			StringToNum(&string[i], &portRequested);
-			if ((portRequested > 0) && (portRequested < 65535))	result = true;
-		}
-		
-		xxxxptr[0] = yyyyptr - xxxxptr - 1;
-		
-		// copy parsed host name string back
-		BlockMoveData(xxxxptr, inoutString, (PLstrlen(xxxxptr) + 1) * sizeof(UInt8));
-		
-		*outPortNumberPtr = (SInt16)portRequested;
-	}
-	
-	return result;
-}// ExtractPortNumberFromHostString
 
 
 /*!
@@ -1745,25 +1596,6 @@ Session_LocalEchoIsEnabled		(SessionRef		inRef)
 
 
 /*!
-Returns "true" only if local echo is set to full-duplex
-mode for the given session.  Full duplex means that data
-is locally echoed but not sent to the server until a
-return key or control key is pressed.
-
-(3.0)
-*/
-Boolean
-Session_LocalEchoIsFullDuplex	(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean					result = (false == ptr->echo.halfDuplex);
-	
-	
-	return result;
-}// LocalEchoIsFullDuplex
-
-
-/*!
 Returns "true" only if local echo is set to half-duplex
 mode for the given session.  Half duplex means that data
 is locally echoed and immediately sent to the server.
@@ -1880,96 +1712,6 @@ Session_PostDataArrivedEventToMainQueue		(SessionRef		inRef,
 	}
 	return result;
 }// PostDataArrivedEventToQueue
-
-
-/*!
-Attaches the specified data to the given session, such
-that the given tag can be used to retrieve the data
-later.  If any data was previously attached to the
-given session using the same tag, that data will be
-OVERWRITTEN with the data you specify now; the caller
-is responsible for ensuring the uniqueness of the
-tags used.
-
-(3.0)
-*/
-void
-Session_PropertyAdd		(SessionRef				inRef,
-						 Session_PropertyKey	inAuxiliaryDataTag,
-						 void*					inAuxiliaryData)
-{
-	if (inRef != nullptr)
-	{
-		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-		
-		
-		ptr->auxiliaryDataMap[inAuxiliaryDataTag] = inAuxiliaryData;
-	}
-}// PropertyAdd
-
-
-/*!
-Returns the data associated with the specified
-session and tag.  The data will be nullptr if the
-tag is invalid.
-
-The type of the data, as well as the size of
-the buffer referenced by the returned pointer,
-is defined when Session_PropertyAdd() is
-invoked.
-
-(3.0)
-*/
-void
-Session_PropertyLookUp	(SessionRef				inRef,
-						 Session_PropertyKey	inAuxiliaryDataTag,
-						 void**					outAuxiliaryDataPtr)
-{
-	if (inRef != nullptr)
-	{
-		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-		
-		
-		if (ptr->auxiliaryDataMap.find(inAuxiliaryDataTag) != ptr->auxiliaryDataMap.end())
-		{
-			// tag was found - return the data
-			*outAuxiliaryDataPtr = ptr->auxiliaryDataMap[inAuxiliaryDataTag];
-		}
-	}
-}// PropertyLookUp
-
-
-/*!
-Detaches the specified data from the given session, such
-that the given tag can no longer be used to retrieve the
-data later.  Whatever data is associated with the given
-tag is returned; this will be 0 (nullptr) if the tag is
-invalid.
-
-(3.0)
-*/
-void*
-Session_PropertyRemove	(SessionRef				inRef,
-						 Session_PropertyKey	inAuxiliaryDataTag)
-{
-	void*	result = nullptr;
-	
-	
-	if (inRef != nullptr)
-	{
-		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-		
-		
-		// erase the specified data from the internal map, and return it;
-		// note that the [] operator of a standard map will actually create
-		// an item if it doesn’t exist; that’s okay, this just means the
-		// item will be deleted immediately and the return value will be 0
-		result = ptr->auxiliaryDataMap[inAuxiliaryDataTag];
-		ptr->auxiliaryDataMap.erase(ptr->auxiliaryDataMap.find(inAuxiliaryDataTag));
-	}
-	
-	return result;
-}// PropertyRemove
 
 
 /*!
@@ -4518,7 +4260,6 @@ inactivityWatchTimerUPP(nullptr),
 inactivityWatchTimer(nullptr),
 currentSheet(kMy_SessionSheetTypeNone),
 watchBox(nullptr),
-auxiliaryDataMap(),
 selfRef(REINTERPRET_CAST(this, SessionRef))
 // echo initialized below
 // preferencesCache initialized below
@@ -5052,27 +4793,6 @@ createHelpTagForVectorGraphics ()
 	
 	return gTag;
 }// createHelpTagForVectorGraphics
-
-
-/*!
-Creates a Page Format object that can be used for printing
-to any session.  Currently, all sessions use the same one.
-This affects things like paper size, etc.
-
-(3.1)
-*/
-PMPageFormat
-createSessionPageFormat ()
-{
-	PMPageFormat	result = nullptr;
-	OSStatus		error = noErr;
-	
-	
-	error = PMCreatePageFormat(&result);
-	assert_noerr(error);
-	
-	return result;
-}// createSessionPageFormat
 
 
 /*!
@@ -6216,23 +5936,6 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 		break;
 	}
 }// navigationSaveDialogEvent
-
-
-/*!
-Invoked when the user completes a Page Setup sheet (whether
-or not the settings were kept).
-
-(3.1)
-*/
-void
-pageSetupCloseNotifyProc	(PMPrintSession		inPrintSession,
-							 WindowRef			inWindow,
-							 Boolean			inWasAccepted)
-{
-	// INCOMPLETE
-	
-    (OSStatus)PMRelease(inPrintSession);
-}// pageSetupCloseNotifyProc
 
 
 /*!

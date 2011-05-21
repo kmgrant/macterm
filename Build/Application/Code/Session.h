@@ -221,11 +221,6 @@ enum Session_NewlineMode
 };
 
 /*!
-A tag used to store and look up arbitrary data attached to a Session.
-*/
-typedef FourCharCode Session_PropertyKey;
-
-/*!
 Protocols supported by a Session.
 */
 enum Session_Protocol
@@ -274,16 +269,6 @@ enum
 	kSession_StateAttributeNotification		= (1 << 0),	//!< a watch has triggered for the session that has not been cleared by user focus
 	kSession_StateAttributeOpenDialog		= (1 << 1),	//!< an alert element (typically a sheet) is currently applicable to the session
 	kSession_StateAttributeSuspendNetwork	= (1 << 2)	//!< a Scroll Lock (XOFF) was initiated, so data has stopped transmitting
-};
-
-/*!
-Data specific to a telnet option that is stored on a Session.
-Note that "Session_PropertyKey" is probably more appropriate.
-*/
-enum Session_TelnetOptionStateType
-{
-	kSession_TelnetOptionStateTypeFlowControl	= 'flow',	//!< data: struct FlowControlState*
-	kSession_TelnetOptionStateTypeLineMode		= 'linm'	//!< data: LineModeStatePtr
 };
 
 /*!
@@ -384,12 +369,6 @@ void
 	Session_DisplayFileCaptureSaveDialog	(SessionRef							inRef);
 
 void
-	Session_DisplayPrintJobDialog			(SessionRef							inRef);
-
-void
-	Session_DisplayPrintPageSetupDialog		(SessionRef							inRef);
-
-void
 	Session_DisplaySaveDialog				(SessionRef							inRef);
 
 void
@@ -446,25 +425,6 @@ Session_Result
 	Session_RemoveDataTarget				(SessionRef							inRef,
 											 Session_DataTarget					inTarget,
 											 void*								inTargetData);
-
-//@}
-
-//!\name Custom Data Tags on Sessions
-//@{
-
-void
-	Session_PropertyAdd						(SessionRef							inRef,
-											 Session_PropertyKey				inAuxiliaryDataTag,
-											 void*								inAuxiliaryData);
-
-void
-	Session_PropertyLookUp					(SessionRef							inRef,
-											 Session_PropertyKey				inAuxiliaryDataTag,
-											 void**								outAuxiliaryDataPtr);
-
-void*
-	Session_PropertyRemove					(SessionRef							inRef,
-											 Session_PropertyKey				inAuxiliaryDataTag);
 
 //@}
 
@@ -609,9 +569,6 @@ Boolean
 	Session_LocalEchoIsEnabled				(SessionRef							inRef);
 
 Boolean
-	Session_LocalEchoIsFullDuplex			(SessionRef							inRef);
-
-Boolean
 	Session_LocalEchoIsHalfDuplex			(SessionRef							inRef);
 
 Boolean
@@ -721,26 +678,11 @@ Boolean
 /*###############################################################
 	SESSION ACCESSORS
 	! ! ! TEMPORARY ! ! !
-	The Session_Property...() APIs will eventually be used to
-	associate more abstract data with sessions, to the point
-	of storing pointers to data structures defined entirely
-	within particular code modules.  The following APIs exist
-	only to aide the transition to the SessionRef-based APIs,
-	and WILL DEFINITELY DISAPPEAR IN THE FUTURE.
 ###############################################################*/
 
 void
 	Session_SetTerminalWindow				(SessionRef							inRef,
 											 TerminalWindowRef					inTerminalWindow);
-
-//@}
-
-//!\name Utilities
-//@{
-
-Boolean
-	Session_ExtractPortNumberFromHostString	(StringPtr							inoutString,
-											 SInt16*							outPortNumberPtr);
 
 //@}
 
