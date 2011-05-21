@@ -120,6 +120,11 @@ protocol.
 
 // accessors; see "Protocol Definitions" array controller in the NIB, for key names
 
+- (NSString*)
+boundName;
+- (void)
+setBoundName:(NSString*)_;
+
 - (unsigned short)
 defaultPort;
 - (void)
@@ -649,6 +654,34 @@ defaultPort:(unsigned short)	aNumber
 
 
 #pragma mark Accessors
+
+
+/*!
+Accessor.
+
+IMPORTANT:	The "boundName" key is ONLY required because older
+			versions of Mac OS X do not seem to work properly
+			when bound to the "description" accessor.  (Namely,
+			the OS seems to stubbornly use its own "description"
+			instead of invoking the right one.)  In the future
+			this might be removed and rebound to "description".
+
+(4.0)
+*/
+- (NSString*)
+boundName
+{
+	return [[description retain] autorelease];
+}
+- (void)
+setBoundName:(NSString*)	aString
+{
+	if (description != aString)
+	{
+		[description release];
+		description = [aString copy];
+	}
+}// setBoundName:
 
 
 /*!

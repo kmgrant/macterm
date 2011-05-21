@@ -43,6 +43,40 @@
 
 
 
+#pragma mark Types
+
+/*!
+Implements an object wrapper for IP addresses, that allows them
+to be easily inserted into user interface elements without
+losing less user-friendly information about each address.
+*/
+@interface AddressDialog_Address : NSObject
+{
+@private
+	NSString*		description;
+}
+
+// accessors; see "Protocol Definitions" array controller in the NIB, for key names
+
+- (NSString*)
+boundName;
+- (void)
+setBoundName:(NSString*)_;
+
+- (NSString*)
+description;
+- (void)
+setDescription:(NSString*)_;
+
+// initializers
+
+- (id)
+initWithDescription:(NSString*)_;
+
+@end
+
+
+
 #pragma mark Public Methods
 
 /*!
@@ -63,6 +97,82 @@ AddressDialog_Display ()
 
 
 #pragma mark Internal Methods
+
+
+@implementation AddressDialog_Address
+
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
+- (id)
+initWithDescription:(NSString*)		aString
+{
+	self = [super init];
+	if (nil != self)
+	{
+		[self setDescription:aString];
+	}
+	return self;
+}// initWithDescription:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+IMPORTANT:	The "boundName" key is ONLY required because older
+			versions of Mac OS X do not seem to work properly
+			when bound to the "description" accessor.  (Namely,
+			the OS seems to stubbornly use its own "description"
+			instead of invoking the right one.)  In the future
+			this might be removed and rebound to "description".
+
+(4.0)
+*/
+- (NSString*)
+boundName
+{
+	return [[description retain] autorelease];
+}
+- (void)
+setBoundName:(NSString*)	aString
+{
+	if (description != aString)
+	{
+		[description release];
+		description = [aString copy];
+	}
+}// setBoundName:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSString*)
+description
+{
+	return [[description retain] autorelease];
+}
+- (void)
+setDescription:(NSString*)		aString
+{
+	if (description != aString)
+	{
+		[description release];
+		description = [aString copy];
+	}
+}// setDescription:
+
+
+@end // AddressDialog_Address
+
 
 @implementation AddressDialog_AddressArrayController
 
@@ -98,7 +208,7 @@ writeRowsWithIndexes:(NSIndexSet*)	inRowIndices
 toPasteboard:(NSPasteboard*)		inoutPasteboard
 {
 #pragma unused(inTable)
-	NSString*	dragData = [[self arrangedObjects] objectAtIndex:[inRowIndices firstIndex]];
+	NSString*	dragData = [[[self arrangedObjects] objectAtIndex:[inRowIndices firstIndex]] boundName];
 	BOOL		result = YES;
 	
 	
@@ -187,7 +297,7 @@ rebuildAddressList:(id)		sender
 			NSString*	addressString = (NSString*)addressList[i].returnCFStringRef();
 			
 			
-			[addressArray addObject:addressString];
+			[addressArray addObject:[[[AddressDialog_Address alloc] initWithDescription:addressString] autorelease]];
 		}
 	}
 }// rebuildAddressList:
