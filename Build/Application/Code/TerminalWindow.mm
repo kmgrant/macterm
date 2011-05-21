@@ -122,7 +122,7 @@ NSString*	kMy_ToolbarItemIDPrint		= @"com.mactelnet.MacTelnet.toolbaritem.print"
 // WARNING: The Customize item ID is currently redundantly specified in the Info Window module; this is TEMPORARY, but both should agree.
 NSString*	kMy_ToolbarItemIDCustomize	= @"com.mactelnet.MacTelnet.toolbaritem.customize";
 
-SInt16 const		kMaximumNumberOfArrangedWindows = 20; // TEMPORARY RESTRICTION
+SInt16 const	kMy_MaximumNumberOfArrangedWindows = 20; // TEMPORARY RESTRICTION
 
 /*!
 These are hacks.  But they make up for the fact that theme
@@ -137,11 +137,11 @@ float const		kMy_ScrollBarArrowHeight = 16.0; // pixels
 /*!
 Use with getScrollBarKind() for an unknown scroll bar.
 */
-enum TerminalWindowScrollBarKind
+enum My_ScrollBarKind
 {
-	kInvalidTerminalWindowScrollBarKind = 0,
-	kTerminalWindowScrollBarKindVertical = 1,
-	kTerminalWindowScrollBarKindHorizontal = 2
+	kMy_InvalidScrollBarKind	= 0,
+	kMy_ScrollBarKindVertical	= 1,
+	kMy_ScrollBarKindHorizontal = 2
 };
 
 /*!
@@ -149,12 +149,12 @@ Specifies the type of sheet (if any) that is currently
 displayed.  This is used by the preferences context
 monitor, so that it knows what settings were changed.
 */
-enum My_TerminalWindowSheetType
+enum My_SheetType
 {
-	kMy_TerminalWindowSheetTypeNone			= 0,
-	kMy_TerminalWindowSheetTypeFormat		= 1,
-	kMy_TerminalWindowSheetTypeScreenSize	= 2,
-	kMy_TerminalWindowSheetTypeTranslation	= 3
+	kMy_SheetTypeNone			= 0,
+	kMy_SheetTypeFormat			= 1,
+	kMy_SheetTypeScreenSize		= 2,
+	kMy_SheetTypeTranslation	= 3
 };
 
 /*!
@@ -179,22 +179,22 @@ HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
 #pragma mark Types
 namespace {
 
-typedef std::map< NSWindow*, TerminalWindowRef >				NSWindowToTerminalWindowMap;
-typedef std::vector< TerminalScreenRef >						TerminalScreenList;
-typedef std::multimap< TerminalScreenRef, TerminalViewRef >		TerminalScreenToViewMultiMap;
-typedef std::vector< TerminalViewRef >							TerminalViewList;
-typedef std::map< TerminalViewRef, TerminalScreenRef >			TerminalViewToScreenMap;
-typedef std::vector< Undoables_ActionRef >						UndoableActionList;
+typedef std::map< TerminalViewRef, TerminalScreenRef >			My_ScreenByTerminalView;
+typedef std::map< NSWindow*, TerminalWindowRef >				My_TerminalWindowByNSWindow;
+typedef std::vector< TerminalScreenRef >						My_TerminalScreenList;
+typedef std::vector< TerminalViewRef >							My_TerminalViewList;
+typedef std::vector< Undoables_ActionRef >						My_UndoableActionList;
+typedef std::multimap< TerminalScreenRef, TerminalViewRef >		My_ViewsByScreen;
 
-typedef MemoryBlockReferenceTracker< TerminalWindowRef >			TerminalWindowRefTracker;
-typedef Registrar< TerminalWindowRef, TerminalWindowRefTracker >	TerminalWindowRefRegistrar;
+typedef MemoryBlockReferenceTracker< TerminalWindowRef >	My_RefTracker;
+typedef Registrar< TerminalWindowRef, My_RefTracker >		My_RefRegistrar;
 
-struct TerminalWindow
+struct My_TerminalWindow
 {
-	TerminalWindow  (Preferences_ContextRef, Preferences_ContextRef, Preferences_ContextRef);
-	~TerminalWindow ();
+	My_TerminalWindow  (Preferences_ContextRef, Preferences_ContextRef, Preferences_ContextRef);
+	~My_TerminalWindow ();
 	
-	TerminalWindowRefRegistrar	refValidator;				// ensures this reference is recognized as a valid one
+	My_RefRegistrar				refValidator;				// ensures this reference is recognized as a valid one
 	TerminalWindowRef			selfRef;					// redundant reference to self, for convenience
 	
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this terminal data
@@ -232,7 +232,7 @@ struct TerminalWindow
 	Boolean						isLEDOn[4];				// true only if this terminal light is lit
 	Boolean						viewSizeIndependent;	// true only temporarily, to handle transitional cases such as full-screen mode
 	Preferences_ContextWrap		recentSheetContext;		// defined temporarily while a Preferences-dependent sheet (such as screen size) is up
-	My_TerminalWindowSheetType	sheetType;				// if a sheet is active, this is a hint as to what settings can be put in the context
+	My_SheetType				sheetType;				// if a sheet is active, this is a hint as to what settings can be put in the context
 	FindDialog_Options			recentSearchOptions;	// the options used during the last search in the dialog
 	CFRetainRelease				recentSearchStrings;	// CFMutableArrayRef; the CFStrings used in searches since this window was opened
 	CFRetainRelease				baseTitleString;		// user-provided title string; may be adorned prior to becoming the window title
@@ -261,15 +261,15 @@ struct TerminalWindow
 	ListenerModel_ListenerWrap	terminalViewEventListener;				// responds to changes in a terminal view
 	ListenerModel_ListenerWrap	toolbarStateChangeEventListener;		// responds to changes in a toolbar
 	
-	TerminalScreenToViewMultiMap	screensToViews;			// map of a screen buffer to one or more views
-	TerminalViewToScreenMap			viewsToScreens;			// map of views to screen buffers
-	TerminalScreenList				allScreens;				// all screen buffers represented in the two maps above
-	TerminalViewList				allViews;				// all views represented in the two maps above
+	My_ViewsByScreen				screensToViews;			// map of a screen buffer to one or more views
+	My_ScreenByTerminalView			viewsToScreens;			// map of views to screen buffers
+	My_TerminalScreenList			allScreens;				// all screen buffers represented in the two maps above
+	My_TerminalViewList				allViews;				// all views represented in the two maps above
 	
-	UndoableActionList			installedActions;			// undoable things installed on behalf of this window
+	My_UndoableActionList			installedActions;		// undoable things installed on behalf of this window
 };
-typedef TerminalWindow*			TerminalWindowPtr;
-typedef TerminalWindow const*	TerminalWindowConstPtr;
+typedef My_TerminalWindow*			My_TerminalWindowPtr;
+typedef My_TerminalWindow const*	My_TerminalWindowConstPtr;
 
 /*!
 Context data for the context ID "kUndoableContextIdentifierTerminalFontSizeChanges".
@@ -311,8 +311,8 @@ struct UndoDataScreenDimensionChanges
 };
 typedef UndoDataScreenDimensionChanges*		UndoDataScreenDimensionChangesPtr;
 
-typedef MemoryBlockPtrLocker< TerminalWindowRef, TerminalWindow >	TerminalWindowPtrLocker;
-typedef LockAcquireRelease< TerminalWindowRef, TerminalWindow >		TerminalWindowAutoLocker;
+typedef MemoryBlockPtrLocker< TerminalWindowRef, My_TerminalWindow >	My_TerminalWindowPtrLocker;
+typedef LockAcquireRelease< TerminalWindowRef, My_TerminalWindow >		My_TerminalWindowAutoLocker;
 
 } // anonymous namespace
 
@@ -368,9 +368,9 @@ Toolbar item “Print”.
 namespace {
 
 void					addContextualMenuItemsForTab	(MenuRef, HIObjectRef, AEDesc&);
-void					calculateWindowPosition			(TerminalWindowPtr, Rect*);
-void					calculateIndexedWindowPosition	(TerminalWindowPtr, SInt16, Point*);
-void					changeNotifyForTerminalWindow	(TerminalWindowPtr, TerminalWindow_Change, void*);
+void					calculateWindowPosition			(My_TerminalWindowPtr, Rect*);
+void					calculateIndexedWindowPosition	(My_TerminalWindowPtr, SInt16, Point*);
+void					changeNotifyForTerminalWindow	(My_TerminalWindowPtr, TerminalWindow_Change, void*);
 IconRef					createBellOffIcon				();
 IconRef					createBellOnIcon				();
 IconRef					createCustomizeToolbarIcon		();
@@ -381,27 +381,27 @@ IconRef					createScrollLockOnIcon			();
 IconRef					createLEDOffIcon				();
 IconRef					createLEDOnIcon					();
 IconRef					createPrintIcon					();
-void					createViews						(TerminalWindowPtr);
-Boolean					createTabWindow					(TerminalWindowPtr);
+void					createViews						(My_TerminalWindowPtr);
+Boolean					createTabWindow					(My_TerminalWindowPtr);
 NSWindow*				createWindow					();
 void					delayMinimumTicks				(UInt16 = 8);
 void					ensureTopLeftCornersExists		();
-TerminalScreenRef		getActiveScreen					(TerminalWindowPtr);
-TerminalViewRef			getActiveView					(TerminalWindowPtr);
-UInt16					getGrowBoxHeight				(TerminalWindowPtr);
+TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
+TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
+UInt16					getGrowBoxHeight				(My_TerminalWindowPtr);
 UInt16					getGrowBoxWidth					();
-TerminalWindowScrollBarKind	getScrollBarKind			(TerminalWindowPtr, HIViewRef);
-TerminalScreenRef		getScrollBarScreen				(TerminalWindowPtr, HIViewRef);
-TerminalViewRef			getScrollBarView				(TerminalWindowPtr, HIViewRef);
-UInt16					getStatusBarHeight				(TerminalWindowPtr);
-UInt16					getToolbarHeight				(TerminalWindowPtr);
-void					getViewSizeFromWindowSize		(TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
-void					getWindowSizeFromViewSize		(TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
+My_ScrollBarKind		getScrollBarKind				(My_TerminalWindowPtr, HIViewRef);
+TerminalScreenRef		getScrollBarScreen				(My_TerminalWindowPtr, HIViewRef);
+TerminalViewRef			getScrollBarView				(My_TerminalWindowPtr, HIViewRef);
+UInt16					getStatusBarHeight				(My_TerminalWindowPtr);
+UInt16					getToolbarHeight				(My_TerminalWindowPtr);
+void					getViewSizeFromWindowSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
+void					getWindowSizeFromViewSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
 void					handleFindDialogClose			(FindDialog_Ref);
 void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
 void					handleNewSize					(WindowRef, Float32, Float32, void*);
 void					handlePendingUpdates			();
-void					installTickHandler				(TerminalWindowPtr);
+void					installTickHandler				(My_TerminalWindowPtr);
 void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
 void					installUndoFullScreenChanges	(TerminalWindowRef, TerminalView_DisplayMode, TerminalView_DisplayMode);
 void					installUndoScreenDimensionChanges	(TerminalWindowRef);
@@ -416,38 +416,38 @@ OSStatus				receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowDragCompleted		(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowGetClickActivation	(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
-HIWindowRef				returnCarbonWindow				(TerminalWindowPtr);
+HIWindowRef				returnCarbonWindow				(My_TerminalWindowPtr);
 void					reverseFontChanges				(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					reverseFullScreenChanges		(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					scrollProc						(HIViewRef, HIViewPartCode);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 OSStatus				setCursorInWindow				(WindowRef, Point, UInt32);
-void					setScreenPreferences			(TerminalWindowPtr, Preferences_ContextRef);
-void					setStandardState				(TerminalWindowPtr, UInt16, UInt16, Boolean);
-void					setViewFormatPreferences		(TerminalWindowPtr, Preferences_ContextRef);
-void					setViewSizeIndependentFromWindow(TerminalWindowPtr, Boolean);
-void					setViewTranslationPreferences	(TerminalWindowPtr, Preferences_ContextRef);
-void					setWarningOnWindowClose			(TerminalWindowPtr, Boolean);
-void					setWindowAndTabTitle			(TerminalWindowPtr, CFStringRef);
-void					setWindowToIdealSizeForDimensions	(TerminalWindowPtr, UInt16, UInt16);
-void					setWindowToIdealSizeForFont		(TerminalWindowPtr);
+void					setScreenPreferences			(My_TerminalWindowPtr, Preferences_ContextRef);
+void					setStandardState				(My_TerminalWindowPtr, UInt16, UInt16, Boolean);
+void					setViewFormatPreferences		(My_TerminalWindowPtr, Preferences_ContextRef);
+void					setViewSizeIndependentFromWindow(My_TerminalWindowPtr, Boolean);
+void					setViewTranslationPreferences	(My_TerminalWindowPtr, Preferences_ContextRef);
+void					setWarningOnWindowClose			(My_TerminalWindowPtr, Boolean);
+void					setWindowAndTabTitle			(My_TerminalWindowPtr, CFStringRef);
+void					setWindowToIdealSizeForDimensions	(My_TerminalWindowPtr, UInt16, UInt16);
+void					setWindowToIdealSizeForFont		(My_TerminalWindowPtr);
 void					sheetClosed						(GenericDialog_Ref, Boolean);
-Preferences_ContextRef	sheetContextBegin				(TerminalWindowPtr, Quills::Prefs::Class, My_TerminalWindowSheetType);
-void					sheetContextEnd					(TerminalWindowPtr);
+Preferences_ContextRef	sheetContextBegin				(My_TerminalWindowPtr, Quills::Prefs::Class, My_SheetType);
+void					sheetContextEnd					(My_TerminalWindowPtr);
 void					stackWindowTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
 void					terminalStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					terminalViewStateChanged		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-void					updateScrollBars				(TerminalWindowPtr);
+void					updateScrollBars				(My_TerminalWindowPtr);
 
 } // anonymous namespace
 
 #pragma mark Variables
 namespace {
 
-NSWindowToTerminalWindowMap&	gTerminalNSWindows ()		{ static NSWindowToTerminalWindowMap x; return x; }
-TerminalWindowRefTracker&	gTerminalWindowValidRefs ()		{ static TerminalWindowRefTracker x; return x; }
-TerminalWindowPtrLocker&	gTerminalWindowPtrLocks ()		{ static TerminalWindowPtrLocker x; return x; }
+My_TerminalWindowByNSWindow&	gTerminalNSWindows ()			{ static My_TerminalWindowByNSWindow x; return x; }
+My_RefTracker&					gTerminalWindowValidRefs ()		{ static My_RefTracker x; return x; }
+My_TerminalWindowPtrLocker&		gTerminalWindowPtrLocks ()		{ static My_TerminalWindowPtrLocker x; return x; }
 SInt16**					gTopLeftCorners = nullptr;
 SInt16						gNumberOfTransitioningWindows = 0;	// used only by TerminalWindow_StackWindows()
 IconRef&					gBellOffIcon ()					{ static IconRef x = createBellOffIcon(); return x; }
@@ -494,7 +494,7 @@ TerminalWindow_New  (Preferences_ContextRef		inTerminalInfoOrNull,
 	
 	try
 	{
-		result = REINTERPRET_CAST(new TerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull), TerminalWindowRef);
+		result = REINTERPRET_CAST(new My_TerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull), TerminalWindowRef);
 	}
 	catch (std::bad_alloc)
 	{
@@ -522,7 +522,7 @@ TerminalWindow_Dispose   (TerminalWindowRef*	inoutRefPtr)
 	{
 		// clean up
 		{
-			TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), *inoutRefPtr);
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), *inoutRefPtr);
 			
 			
 			delete ptr;
@@ -543,10 +543,10 @@ the user having finished searching.
 void
 TerminalWindow_DisplayTextSearchDialog	(TerminalWindowRef		inRef)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	FindDialog_Ref				findDialog = FindDialog_New(inRef, handleFindDialogClose,
-															ptr->recentSearchStrings.returnCFMutableArrayRef(),
-															ptr->recentSearchOptions);
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	FindDialog_Ref					findDialog = FindDialog_New(inRef, handleFindDialogClose,
+																ptr->recentSearchStrings.returnCFMutableArrayRef(),
+																ptr->recentSearchOptions);
 	
 	
 	// display a text search dialog (automatically disposed when the user clicks a button)
@@ -564,10 +564,10 @@ Boolean
 TerminalWindow_EventInside	(TerminalWindowRef	inRef,
 							 EventRef			inMouseEvent)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	HIViewRef					hitView = nullptr;
-	OSStatus					error = noErr;
-	Boolean						result = false;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	HIViewRef						hitView = nullptr;
+	OSStatus						error = noErr;
+	Boolean							result = false;
 	
 	
 	error = HIViewGetViewForMouseEvent(HIViewGetRoot(returnCarbonWindow(ptr)), inMouseEvent, &hitView);
@@ -633,8 +633,8 @@ manipulates the Cocoa window internally).
 void
 TerminalWindow_Focus	(TerminalWindowRef	inRef)
 {
-	AutoPool					_;
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	AutoPool						_;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
 	[ptr->window makeKeyWindow];
@@ -660,7 +660,7 @@ TerminalWindow_GetFontAndSize	(TerminalWindowRef	inRef,
 								 StringPtr			outFontFamilyNameOrNull,
 								 UInt16*			outFontSizeOrNull)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
 	TerminalView_GetFontAndSize(getActiveView(ptr)/* TEMPORARY */, outFontFamilyNameOrNull, outFontSizeOrNull);
@@ -696,9 +696,9 @@ TerminalWindow_GetScreens	(TerminalWindowRef		inRef,
 {
 	if (outScreenArray != nullptr)
 	{
-		TerminalWindowAutoLocker			ptr(gTerminalWindowPtrLocks(), inRef);
-		TerminalScreenList::const_iterator	screenIterator;
-		TerminalScreenList::const_iterator	maxIterator = ptr->allScreens.begin();
+		My_TerminalWindowAutoLocker				ptr(gTerminalWindowPtrLocks(), inRef);
+		My_TerminalScreenList::const_iterator	screenIterator;
+		My_TerminalScreenList::const_iterator	maxIterator = ptr->allScreens.begin();
 		
 		
 		// based on the available space given by the caller,
@@ -728,7 +728,7 @@ TerminalWindow_GetScreenDimensions	(TerminalWindowRef	inRef,
 									 UInt16*			outColumnCountPtrOrNull,
 									 UInt16*			outRowCountPtrOrNull)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
 	if (outColumnCountPtrOrNull != nullptr) *outColumnCountPtrOrNull = Terminal_ReturnColumnCount(getActiveScreen(ptr)/* TEMPORARY */);
@@ -760,8 +760,8 @@ TerminalWindow_Result
 TerminalWindow_GetTabWidth	(TerminalWindowRef	inRef,
 							 Float32&			outWidthHeightInPixels)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalWindow_Result		result = kTerminalWindow_ResultOK;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalWindow_Result			result = kTerminalWindow_ResultOK;
 	
 	
 	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
@@ -819,8 +819,8 @@ TerminalWindow_Result
 TerminalWindow_GetTabWidthAvailable		(TerminalWindowRef	inRef,
 										 Float32&			outMaxWidthHeightInPixels)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalWindow_Result		result = kTerminalWindow_ResultOK;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalWindow_Result			result = kTerminalWindow_ResultOK;
 	
 	
 	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
@@ -891,9 +891,9 @@ TerminalWindow_GetViews		(TerminalWindowRef	inRef,
 {
 	if (outViewArray != nullptr)
 	{
-		TerminalWindowAutoLocker			ptr(gTerminalWindowPtrLocks(), inRef);
-		TerminalViewList::const_iterator	viewIterator;
-		TerminalViewList::const_iterator	maxIterator = ptr->allViews.begin();
+		My_TerminalWindowAutoLocker				ptr(gTerminalWindowPtrLocks(), inRef);
+		My_TerminalViewList::const_iterator		viewIterator;
+		My_TerminalViewList::const_iterator		maxIterator = ptr->allViews.begin();
 		
 		
 		// based on the available space given by the caller,
@@ -949,9 +949,9 @@ TerminalWindow_GetViewsInGroup	(TerminalWindowRef			inRef,
 	case kTerminalWindow_ViewGroupActive:
 		if (outViewArray != nullptr)
 		{
-			TerminalWindowAutoLocker			ptr(gTerminalWindowPtrLocks(), inRef);
-			TerminalViewList::const_iterator	viewIterator;
-			TerminalViewList::const_iterator	maxIterator = ptr->allViews.begin();
+			My_TerminalWindowAutoLocker				ptr(gTerminalWindowPtrLocks(), inRef);
+			My_TerminalViewList::const_iterator		viewIterator;
+			My_TerminalViewList::const_iterator		maxIterator = ptr->allViews.begin();
 			
 			
 			// based on the available space given by the caller,
@@ -994,9 +994,9 @@ manipulates the Cocoa window internally).
 Boolean
 TerminalWindow_IsFocused	(TerminalWindowRef	inRef)
 {
-	AutoPool					_;
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	Boolean						result = false;
+	AutoPool						_;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	Boolean							result = false;
 	
 	
 	result = (YES == [ptr->window isKeyWindow]);
@@ -1015,8 +1015,8 @@ the “Hide Front Window” command.
 Boolean
 TerminalWindow_IsObscured	(TerminalWindowRef	inRef)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	Boolean						result = false;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	Boolean							result = false;
 	
 	
 	result = ptr->isObscured;
@@ -1033,8 +1033,8 @@ appearance, as set with TerminalWindow_SetTabAppearance().
 Boolean
 TerminalWindow_IsTab	(TerminalWindowRef	inRef)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	Boolean						result = false;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	Boolean							result = false;
 	
 	
 	result = ptr->tab.exists();
@@ -1066,8 +1066,8 @@ TerminalWindow_ReconfigureViewsInGroup	(TerminalWindowRef			inRef,
 										 Preferences_ContextRef		inContext,
 										 Quills::Prefs::Class		inPrefsClass)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	Boolean						result = false;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	Boolean							result = false;
 	
 	
 	if (kTerminalWindow_ViewGroupActive == inViewGroup)
@@ -1190,8 +1190,8 @@ IMPORTANT:	If an API exists to manipulate a terminal window,
 NSWindow*
 TerminalWindow_ReturnNSWindow	(TerminalWindowRef	inRef)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	NSWindow*					result = nil;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	NSWindow*						result = nil;
 	
 	
 	result = ptr->window;
@@ -1217,8 +1217,8 @@ ensure correct behavior in the future.
 UInt16
 TerminalWindow_ReturnScreenCount	(TerminalWindowRef		inRef)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	UInt16						result = 0;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	UInt16							result = 0;
 	
 	
 	result = ptr->allScreens.size();
@@ -1243,8 +1243,8 @@ WARNING:	MacTelnet could change in the future to
 TerminalScreenRef
 TerminalWindow_ReturnScreenWithFocus	(TerminalWindowRef	inRef)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalScreenRef			result = nullptr;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalScreenRef				result = nullptr;
 	
 	
 	result = getActiveScreen(ptr);
@@ -1326,8 +1326,8 @@ of "kTerminalWindow_ViewGroupEverything".
 UInt16
 TerminalWindow_ReturnViewCount		(TerminalWindowRef		inRef)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	UInt16						result = 0;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	UInt16							result = 0;
 	
 	
 	result = ptr->allViews.size();
@@ -1347,8 +1347,8 @@ UInt16
 TerminalWindow_ReturnViewCountInGroup	(TerminalWindowRef			inRef,
 										 TerminalWindow_ViewGroup	inGroup)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	UInt16						result = 0;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	UInt16							result = 0;
 	
 	
 	switch (inGroup)
@@ -1389,8 +1389,8 @@ WARNING:	MacTelnet could change in the future to
 TerminalViewRef
 TerminalWindow_ReturnViewWithFocus		(TerminalWindowRef	inRef)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalViewRef				result = nullptr;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalViewRef					result = nullptr;
 	
 	
 	result = getActiveView(ptr);
@@ -1416,8 +1416,8 @@ IMPORTANT:	If an API exists to manipulate a terminal
 WindowRef
 TerminalWindow_ReturnWindow		(TerminalWindowRef	inRef)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	WindowRef					result = nullptr;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	WindowRef						result = nullptr;
 	
 	
 	result = returnCarbonWindow(ptr);
@@ -1445,8 +1445,8 @@ void
 TerminalWindow_Select	(TerminalWindowRef	inRef,
 						 Boolean			inFocus)
 {
-	AutoPool					_;
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	AutoPool						_;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
 	[ptr->window orderFront:nil];
@@ -1485,10 +1485,10 @@ TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 								 ConstStringPtr			inFontFamilyNameOrNull,
 								 UInt16					inFontSizeOrZero)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalViewRef				activeView = getActiveView(ptr);
-	TerminalView_DisplayMode	oldMode = kTerminalView_DisplayModeNormal;
-	TerminalView_Result			viewResult = kTerminalView_ResultOK;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalViewRef					activeView = getActiveView(ptr);
+	TerminalView_DisplayMode		oldMode = kTerminalView_DisplayModeNormal;
+	TerminalView_Result				viewResult = kTerminalView_ResultOK;
 	
 	
 	// update terminal screen font attributes; temporarily change the
@@ -1535,8 +1535,8 @@ void
 TerminalWindow_SetObscured	(TerminalWindowRef	inRef,
 							 Boolean			inIsHidden)
 {
-	AutoPool					_;
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	AutoPool						_;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
 	if (ptr->isObscured != inIsHidden)
@@ -1581,8 +1581,8 @@ TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 									 UInt16				inNewRowCount,
 									 Boolean			UNUSED_ARGUMENT(inSendToRecordingScripts))
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalScreenRef			activeScreen = getActiveScreen(ptr);
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalScreenRef				activeScreen = getActiveScreen(ptr);
 	
 	
 	Terminal_SetVisibleScreenDimensions(activeScreen, inNewColumnCount, inNewRowCount);
@@ -1605,8 +1605,8 @@ void
 TerminalWindow_SetIconTitle		(TerminalWindowRef	inRef,
 								 CFStringRef		inName)
 {
-	AutoPool					_;
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	AutoPool						_;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
 	[ptr->window setMiniwindowTitle:(NSString*)inName];
@@ -1636,8 +1636,8 @@ OSStatus
 TerminalWindow_SetTabAppearance		(TerminalWindowRef		inRef,
 									 Boolean				inIsTab)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	OSStatus					result = noErr;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	OSStatus						result = noErr;
 	
 	
 	if (inIsTab)
@@ -1747,8 +1747,8 @@ TerminalWindow_SetTabPosition	(TerminalWindowRef	inRef,
 								 Float32			inOffsetFromStartingPointInPixels,
 								 Float32			inWidthInPixelsOrFltMax)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalWindow_Result		result = kTerminalWindow_ResultOK;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalWindow_Result			result = kTerminalWindow_ResultOK;
 	
 	
 	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
@@ -1803,8 +1803,8 @@ TerminalWindow_Result
 TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
 							 Float32			inWidthInPixels)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalWindow_Result		result = kTerminalWindow_ResultOK;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalWindow_Result			result = kTerminalWindow_ResultOK;
 	
 	
 	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
@@ -1923,7 +1923,7 @@ void
 TerminalWindow_SetWindowTitle	(TerminalWindowRef	inRef,
 								 CFStringRef		inName)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
 	if (nullptr != inName)
@@ -1973,8 +1973,8 @@ void
 TerminalWindow_SetVisible	(TerminalWindowRef	inRef,
 							 Boolean			inIsVisible)
 {
-	AutoPool					_;
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	AutoPool						_;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
 	if (inIsVisible)
@@ -2022,8 +2022,8 @@ TerminalWindow_StartMonitoring	(TerminalWindowRef			inRef,
 								 TerminalWindow_Change		inForWhatChange,
 								 ListenerModel_ListenerRef	inListener)
 {
-	OSStatus					error = noErr;
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	OSStatus						error = noErr;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
 	// add a listener to the specified target’s listener model for the given setting change
@@ -2049,7 +2049,7 @@ TerminalWindow_StopMonitoring	(TerminalWindowRef			inRef,
 								 TerminalWindow_Change		inForWhatChange,
 								 ListenerModel_ListenerRef	inListener)
 {
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
 	// add a listener to the specified target’s listener model for the given setting change
@@ -2065,10 +2065,10 @@ Constructor.  See TerminalWindow_New().
 
 (3.0)
 */
-TerminalWindow::
-TerminalWindow  (Preferences_ContextRef		inTerminalInfoOrNull,
-				 Preferences_ContextRef		inFontInfoOrNull,
-				 Preferences_ContextRef		inTranslationInfoOrNull)
+My_TerminalWindow::
+My_TerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
+					 Preferences_ContextRef		inFontInfoOrNull,
+					 Preferences_ContextRef		inTranslationInfoOrNull)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 refValidator(REINTERPRET_CAST(this, TerminalWindowRef), gTerminalWindowValidRefs()),
@@ -2099,7 +2099,7 @@ isObscured(false),
 isDead(false),
 viewSizeIndependent(false),
 recentSheetContext(nullptr),
-sheetType(kMy_TerminalWindowSheetTypeNone),
+sheetType(kMy_SheetTypeNone),
 recentSearchOptions(kFindDialog_OptionsDefault),
 recentSearchStrings(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no size limit */, &kCFTypeArrayCallBacks),
 					true/* is retained */),
@@ -2516,7 +2516,7 @@ installedActions()
 			Terminal_EmulatorProcessCString(newScreen, "\033[?7h"); // turn on autowrap
 		}
 	}
-}// TerminalWindow 2-argument constructor
+}// My_TerminalWindow 2-argument constructor
 
 
 /*!
@@ -2524,8 +2524,8 @@ Destructor.  See TerminalWindow_Dispose().
 
 (3.0)
 */
-TerminalWindow::
-~TerminalWindow ()
+My_TerminalWindow::
+~My_TerminalWindow ()
 {
 	AutoPool	_;
 	
@@ -2535,7 +2535,7 @@ TerminalWindow::
 	// now that the window is going away, destroy any Undo commands
 	// that could be applied to this window
 	{
-		UndoableActionList::const_iterator	actionIter;
+		My_UndoableActionList::const_iterator	actionIter;
 		
 		
 		for (actionIter = this->installedActions.begin();
@@ -2622,7 +2622,7 @@ TerminalWindow::
 	// that were the case, killing one window should not necessarily
 	// throw out its buffer)
 	{
-		TerminalScreenList::const_iterator	screenIterator;
+		My_TerminalScreenList::const_iterator	screenIterator;
 		
 		
 		for (screenIterator = this->allScreens.begin(); screenIterator != this->allScreens.end(); ++screenIterator)
@@ -2639,8 +2639,8 @@ TerminalWindow::
 	
 	// destroy all terminal views
 	{
-		TerminalViewList::const_iterator	viewIterator;
-		TerminalViewRef						view = nullptr;
+		My_TerminalViewList::const_iterator		viewIterator;
+		TerminalViewRef							view = nullptr;
 		
 		
 		for (viewIterator = this->allViews.begin(); viewIterator != this->allViews.end(); ++viewIterator)
@@ -2671,8 +2671,8 @@ TerminalWindow::
 	// buffer; if that were the case, killing one window should not
 	// necessarily throw out its buffer)
 	{
-		TerminalScreenList::const_iterator	screenIterator;
-		std::set< TerminalScreenRef >		visitedScreens; // NOTE: not needed if Terminal module adopts retain/release
+		My_TerminalScreenList::const_iterator	screenIterator;
+		std::set< TerminalScreenRef >			visitedScreens; // NOTE: not needed if Terminal module adopts retain/release
 		
 		
 		for (screenIterator = this->allScreens.begin(); screenIterator != this->allScreens.end(); ++screenIterator)
@@ -2684,7 +2684,7 @@ TerminalWindow::
 			}
 		}
 	}
-}// TerminalWindow destructor
+}// My_TerminalWindow destructor
 
 
 /*!
@@ -2741,9 +2741,9 @@ different devices.
 (3.0)
 */
 void
-calculateIndexedWindowPosition	(TerminalWindowPtr	inPtr,
-								 SInt16				inStaggerIndex,
-								 Point*				outPositionPtr)
+calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
+								 SInt16					inStaggerIndex,
+								 Point*					outPositionPtr)
 {
 	if ((inPtr != nullptr) && (outPositionPtr != nullptr))
 	{
@@ -2781,8 +2781,8 @@ Appearance theme.
 (2.6)
 */
 void
-calculateWindowPosition		(TerminalWindowPtr	inPtr,
-							 Rect*				outArrangement)
+calculateWindowPosition		(My_TerminalWindowPtr	inPtr,
+							 Rect*					outArrangement)
 {
 	Rect			contentRegionBounds;
 	SInt16			currentCount = 0;
@@ -2801,7 +2801,7 @@ calculateWindowPosition		(TerminalWindowPtr	inPtr,
 	while ((!done) && (!tooBig))
 	{
 		while (((*gTopLeftCorners)[inPtr->staggerPositionIndex] > currentCount) && // find an empty spot
-					(inPtr->staggerPositionIndex < kMaximumNumberOfArrangedWindows - 1))
+					(inPtr->staggerPositionIndex < kMy_MaximumNumberOfArrangedWindows - 1))
 		{
 			++inPtr->staggerPositionIndex;
 		}
@@ -2860,7 +2860,7 @@ IMPORTANT:	The context must make sense for the
 (3.0)
 */
 void
-changeNotifyForTerminalWindow	(TerminalWindowPtr		inPtr,
+changeNotifyForTerminalWindow	(My_TerminalWindowPtr	inPtr,
 								 TerminalWindow_Change	inWhatChanged,
 								 void*					inContextPtr)
 {
@@ -3188,7 +3188,7 @@ will make it as wide as the window).
 (3.1)
 */
 Boolean
-createTabWindow		(TerminalWindowPtr		inPtr)
+createTabWindow		(My_TerminalWindowPtr	inPtr)
 {
 	HIWindowRef		tabWindow = nullptr;
 	Boolean			result = false;
@@ -3303,7 +3303,7 @@ the scroll bars and the toolbar.
 (3.0)
 */
 void
-createViews		(TerminalWindowPtr	inPtr)
+createViews		(My_TerminalWindowPtr	inPtr)
 {
 	HIViewWrap	contentView(kHIViewWindowContentID, returnCarbonWindow(inPtr));
 	Rect		rect;
@@ -3402,7 +3402,7 @@ ensureTopLeftCornersExists ()
 {
 	if (gTopLeftCorners == nullptr)
 	{
-		gTopLeftCorners = REINTERPRET_CAST(Memory_NewHandleInProperZone(kMaximumNumberOfArrangedWindows * sizeof(SInt16),
+		gTopLeftCorners = REINTERPRET_CAST(Memory_NewHandleInProperZone(kMy_MaximumNumberOfArrangedWindows * sizeof(SInt16),
 																		kMemoryBlockLifetimeLong), SInt16**);
 	}
 }// ensureTopLeftCornersExists
@@ -3423,7 +3423,7 @@ IMPORTANT:	This API is under evaluation.  Perhaps there
 (3.0)
 */
 TerminalScreenRef
-getActiveScreen		(TerminalWindowPtr	inPtr)
+getActiveScreen		(My_TerminalWindowPtr	inPtr)
 {
 	assert(!inPtr->allScreens.empty());
 	return inPtr->allScreens.front(); // TEMPORARY; should instead use focus-change events from terminal views
@@ -3439,7 +3439,7 @@ in the window (which should always be true!).
 (3.0)
 */
 TerminalViewRef
-getActiveView	(TerminalWindowPtr	inPtr)
+getActiveView	(My_TerminalWindowPtr	inPtr)
 {
 	assert(!inPtr->allViews.empty());
 	return inPtr->allViews.front(); // TEMPORARY; should instead use focus-change events from terminal views
@@ -3457,7 +3457,7 @@ scroll bar may be present or when the size box is missing
 (3.0)
 */
 UInt16
-getGrowBoxHeight	(TerminalWindowPtr		inPtr)
+getGrowBoxHeight	(My_TerminalWindowPtr	inPtr)
 {
 	UInt16				result = 0;
 	Boolean				hasSizeBox = false;
@@ -3516,23 +3516,23 @@ getGrowBoxWidth ()
 
 
 /*!
-Returns a constant describing the type of scroll bar that
-is given.  If the specified control does not belong to the
-given terminal window, "kInvalidTerminalWindowScrollBarKind"
-is returned; otherwise, a constant is returned indicating
-whether the control is horizontal or vertical.
+Returns a constant describing the type of scroll bar that is
+given.  If the specified control does not belong to the given
+terminal window, "kMy_InvalidScrollBarKind" is returned;
+otherwise, a constant is returned indicating whether the
+control is horizontal or vertical.
 
 (3.0)
 */
-TerminalWindowScrollBarKind
-getScrollBarKind	(TerminalWindowPtr	inPtr,
-					 HIViewRef			inScrollBarControl)
+My_ScrollBarKind
+getScrollBarKind	(My_TerminalWindowPtr	inPtr,
+					 HIViewRef				inScrollBarControl)
 {
-	TerminalWindowScrollBarKind		result = kInvalidTerminalWindowScrollBarKind;
+	My_ScrollBarKind	result = kMy_InvalidScrollBarKind;
 	
 	
-	if (inScrollBarControl == inPtr->controls.scrollBarH) result = kTerminalWindowScrollBarKindHorizontal;
-	if (inScrollBarControl == inPtr->controls.scrollBarV) result = kTerminalWindowScrollBarKindVertical;
+	if (inScrollBarControl == inPtr->controls.scrollBarH) result = kMy_ScrollBarKindHorizontal;
+	if (inScrollBarControl == inPtr->controls.scrollBarV) result = kMy_ScrollBarKindVertical;
 	return result;
 }// getScrollBarKind
 
@@ -3544,8 +3544,8 @@ controls, or nullptr if none.
 (3.0)
 */
 TerminalScreenRef
-getScrollBarScreen	(TerminalWindowPtr	inPtr,
-					 HIViewRef			UNUSED_ARGUMENT(inScrollBarControl))
+getScrollBarScreen	(My_TerminalWindowPtr	inPtr,
+					 HIViewRef				UNUSED_ARGUMENT(inScrollBarControl))
 {
 	assert(!inPtr->allScreens.empty());
 	return inPtr->allScreens.front(); // one day, if more than one view per window exists, this logic will be more complex
@@ -3559,8 +3559,8 @@ or nullptr if none.
 (3.0)
 */
 TerminalViewRef
-getScrollBarView	(TerminalWindowPtr	inPtr,
-					 HIViewRef			UNUSED_ARGUMENT(inScrollBarControl))
+getScrollBarView	(My_TerminalWindowPtr	inPtr,
+					 HIViewRef				UNUSED_ARGUMENT(inScrollBarControl))
 {
 	assert(!inPtr->allViews.empty());
 	return inPtr->allViews.front(); // one day, if more than one view per window exists, this logic will be more complex
@@ -3576,7 +3576,7 @@ status bar has zero height.
 (3.0)
 */
 UInt16
-getStatusBarHeight	(TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
+getStatusBarHeight	(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
 {
 	return 0;
 }// getStatusBarHeight
@@ -3591,7 +3591,7 @@ an invisible toolbar has zero height.
 (3.0)
 */
 UInt16
-getToolbarHeight	(TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
+getToolbarHeight	(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
 {
 	return 0;
 }// getToolbarHeight
@@ -3615,11 +3615,11 @@ IMPORTANT:	Any changes to this routine should be
 (3.0)
 */
 void
-getViewSizeFromWindowSize	(TerminalWindowPtr	inPtr,
-							 SInt16				inWindowContentWidthInPixels,
-							 SInt16				inWindowContentHeightInPixels,
-							 SInt16*			outScreenInteriorWidthInPixels,
-							 SInt16*			outScreenInteriorHeightInPixels)
+getViewSizeFromWindowSize	(My_TerminalWindowPtr	inPtr,
+							 SInt16					inWindowContentWidthInPixels,
+							 SInt16					inWindowContentHeightInPixels,
+							 SInt16*				outScreenInteriorWidthInPixels,
+							 SInt16*				outScreenInteriorHeightInPixels)
 {
 	if (nullptr != outScreenInteriorWidthInPixels)
 	{
@@ -3649,11 +3649,11 @@ IMPORTANT:	Any changes to this routine should be
 (3.0)
 */
 void
-getWindowSizeFromViewSize	(TerminalWindowPtr	inPtr,
-							 SInt16				inScreenInteriorWidthInPixels,
-							 SInt16				inScreenInteriorHeightInPixels,
-							 SInt16*			outWindowContentWidthInPixels,
-							 SInt16*			outWindowContentHeightInPixels)
+getWindowSizeFromViewSize	(My_TerminalWindowPtr	inPtr,
+							 SInt16					inScreenInteriorWidthInPixels,
+							 SInt16					inScreenInteriorHeightInPixels,
+							 SInt16*				outWindowContentWidthInPixels,
+							 SInt16*				outWindowContentHeightInPixels)
 {
 	if (nullptr != outWindowContentWidthInPixels)
 	{
@@ -3685,7 +3685,7 @@ handleFindDialogClose	(FindDialog_Ref		inDialogThatClosed)
 	
 	if (terminalWindow != nullptr)
 	{
-		TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 		
 		
 		// save things the user entered in the dialog
@@ -3754,8 +3754,8 @@ handleNewSize	(WindowRef	inWindow,
 	
 	if (terminalWindow != nullptr)
 	{
-		TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-		HIRect						viewBounds;
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+		HIRect							viewBounds;
 		
 		
 		// glue the vertical scroll bar to the new right side of the window and to the
@@ -3895,7 +3895,7 @@ To remove, call inPtr->scrollTickHandler.remove().
 (4.0)
 */
 void
-installTickHandler	(TerminalWindowPtr		inPtr)
+installTickHandler	(My_TerminalWindowPtr	inPtr)
 {
 	inPtr->scrollTickHandler.remove();
 	assert(false == inPtr->scrollTickHandler.isInstalled());
@@ -3949,7 +3949,7 @@ installUndoFontSizeChanges	(TerminalWindowRef	inTerminalWindow,
 	if (error != noErr) Console_WriteValue("Warning: Could not make font and/or size change undoable, error", error);
 	else
 	{
-		TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
 		
 		
 		ptr->installedActions.push_back(dataPtr->action);
@@ -3998,7 +3998,7 @@ installUndoFullScreenChanges	(TerminalWindowRef			inTerminalWindow,
 	if (noErr != error) Console_Warning(Console_WriteValue, "could not make font size and/or location change undoable, error", error);
 	else
 	{
-		TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
 		
 		
 		ptr->installedActions.push_back(dataPtr->action);
@@ -4049,7 +4049,7 @@ installUndoScreenDimensionChanges	(TerminalWindowRef		inTerminalWindow)
 	if (error != noErr) Console_WriteValue("Warning: Could not make dimension change undoable, error", error);
 	else
 	{
-		TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
 		
 		
 		ptr->installedActions.push_back(dataPtr->action);
@@ -4098,7 +4098,7 @@ receiveGrowBoxClick		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			// remember the previous view mode, so that it can be restored later
 			if (nullptr != focusedView)
 			{
-				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 				
 				
 				ptr->preResizeViewDisplayMode = TerminalView_ReturnDisplayMode(focusedView);
@@ -4373,7 +4373,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							for (HIWindowRef targetWindow = activeWindow; targetWindow != nullptr; ++gNumberOfDisplaysUsed)
 							{
 								TerminalWindowRef				targetTerminalWindow = TerminalWindow_ReturnFromWindow(targetWindow);
-								TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), targetTerminalWindow);
+								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), targetTerminalWindow);
 								TerminalView_DisplayMode const	kOldMode = TerminalView_ReturnDisplayMode(ptr->allViews.front());
 								Rect							maxBounds;
 								
@@ -4451,8 +4451,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandFormatDefault:
 					{
 						// reformat frontmost window using the Default preferences
-						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Preferences_ContextRef		defaultSettings = nullptr;
+						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						Preferences_ContextRef			defaultSettings = nullptr;
 						
 						
 						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::FORMAT))
@@ -4473,8 +4473,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// reformat frontmost window using the specified preferences
 						if (received.attributes & kHICommandFromMenu)
 						{
-							TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-							CFStringRef					collectionName = nullptr;
+							My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+							CFStringRef						collectionName = nullptr;
 							
 							
 							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
@@ -4499,9 +4499,9 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandFormat:
 					{
 						// display a format customization dialog
-						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Preferences_ContextRef		temporaryContext = sheetContextBegin(ptr, Quills::Prefs::FORMAT,
-																							kMy_TerminalWindowSheetTypeFormat);
+						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						Preferences_ContextRef			temporaryContext = sheetContextBegin(ptr, Quills::Prefs::FORMAT,
+																								kMy_SheetTypeFormat);
 						
 						
 						if (nullptr == temporaryContext)
@@ -4624,9 +4624,9 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandSetScreenSize:
 					{
 						// display a screen size customization dialog
-						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Preferences_ContextRef		temporaryContext = sheetContextBegin(ptr, Quills::Prefs::TERMINAL,
-																							kMy_TerminalWindowSheetTypeScreenSize);
+						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						Preferences_ContextRef			temporaryContext = sheetContextBegin(ptr, Quills::Prefs::TERMINAL,
+																								kMy_SheetTypeScreenSize);
 						
 						
 						if (nullptr == temporaryContext)
@@ -4653,8 +4653,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandTranslationTableDefault:
 					{
 						// change character set of frontmost window according to Default preferences
-						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Preferences_ContextRef		defaultSettings = nullptr;
+						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						Preferences_ContextRef			defaultSettings = nullptr;
 						
 						
 						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::TRANSLATION))
@@ -4675,8 +4675,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// change character set of frontmost window according to the specified preferences
 						if (received.attributes & kHICommandFromMenu)
 						{
-							TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-							CFStringRef					collectionName = nullptr;
+							My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+							CFStringRef						collectionName = nullptr;
 							
 							
 							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
@@ -4701,9 +4701,9 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandSetTranslationTable:
 					{
 						// display a translation customization dialog
-						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Preferences_ContextRef		temporaryContext = sheetContextBegin(ptr, Quills::Prefs::TRANSLATION,
-																							kMy_TerminalWindowSheetTypeTranslation);
+						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						Preferences_ContextRef			temporaryContext = sheetContextBegin(ptr, Quills::Prefs::TRANSLATION,
+																								kMy_SheetTypeTranslation);
 						
 						
 						if (nullptr == temporaryContext)
@@ -4947,15 +4947,15 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						if (allowScrolling)
 						{
-							TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-							HIViewRef					scrollBar = ptr->controls.scrollBarV;
-							HIViewPartCode				hitPart = (delta > 0)
-																? (modifiers & optionKey)
-																	? kControlPageUpPart
-																	: kControlUpButtonPart
-																: (modifiers & optionKey)
-																	? kControlPageDownPart
-																	: kControlDownButtonPart;
+							My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+							HIViewRef						scrollBar = ptr->controls.scrollBarV;
+							HIViewPartCode					hitPart = (delta > 0)
+																		? (modifiers & optionKey)
+																			? kControlPageUpPart
+																			: kControlUpButtonPart
+																		: (modifiers & optionKey)
+																			? kControlPageDownPart
+																			: kControlDownButtonPart;
 							
 							
 							// vertically scroll the terminal, but 3 lines at a time (scroll wheel)
@@ -5158,7 +5158,7 @@ receiveTabContextualMenuClick	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
 		if (noErr == result)
 		{
-			TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 			
 			
 			// make this the current focus, so that menu commands are sent to it!
@@ -5218,8 +5218,8 @@ receiveTabDragDrop	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kEventControlDragEnter:
 					// indicate whether or not this drag is interesting
 					{
-						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Boolean						acceptDrag = true;
+						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						Boolean							acceptDrag = true;
 						
 						
 						result = SetEventParameter(inEvent, kEventParamControlWouldAcceptDrop,
@@ -5386,7 +5386,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							// all LED items are very similar in appearance, so check all at once
 							if ((kIs1) || (kIs2) || (kIs3) || (kIs4))
 							{
-								TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 								
 								
 								if (noErr == HIToolbarItemCreate(identifierCFString,
@@ -5498,7 +5498,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDScrollLock,
 																			identifierCFString, kCFCompareBackwards))
 							{
-								TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 								
 								
 								result = HIToolbarItemCreate(identifierCFString,
@@ -5533,7 +5533,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDHideWindow,
 																			identifierCFString, kCFCompareBackwards))
 							{
-								TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 								
 								
 								result = HIToolbarItemCreate(identifierCFString,
@@ -5562,7 +5562,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDFullScreen,
 																			identifierCFString, kCFCompareBackwards))
 							{
-								TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 								
 								
 								result = HIToolbarItemCreate(identifierCFString,
@@ -5591,7 +5591,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDCustomize,
 																			identifierCFString, kCFCompareBackwards))
 							{
-								TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 								
 								
 								result = HIToolbarItemCreate(identifierCFString,
@@ -5620,7 +5620,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDPrint,
 																			identifierCFString, kCFCompareBackwards))
 							{
-								TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 								
 								
 								result = HIToolbarItemCreate(identifierCFString,
@@ -5649,7 +5649,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalBell,
 																			identifierCFString, kCFCompareBackwards))
 							{
-								TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 								
 								
 								result = HIToolbarItemCreate(identifierCFString,
@@ -5712,7 +5712,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						result = HIToolbarItemCopyIdentifier(removedItem, &identifierCFString);
 						if (noErr == result)
 						{
-							TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+							My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 							
 							
 							// forget any stale references to important items being removed
@@ -5873,7 +5873,7 @@ receiveWindowDragCompleted	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef
 		// if the window was found, proceed
 		if (result == noErr)
 		{
-			TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 			
 			
 			// check the tab location and fix if necessary
@@ -5932,10 +5932,10 @@ receiveWindowGetClickActivation		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 		// if the window was found, proceed
 		if (result == noErr)
 		{
-			TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-			HIViewRef					control = nullptr;
-			UInt32						actualSize = 0L;
-			EventParamType				actualType = typeNull;
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+			HIViewRef						control = nullptr;
+			UInt32							actualSize = 0L;
+			EventParamType					actualType = typeNull;
 			
 			
 			// only clicks in controls matter for this
@@ -5944,7 +5944,7 @@ receiveWindowGetClickActivation		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 											sizeof(control), &actualSize, &control))
 			{
 				// find clicks in terminal regions
-				TerminalViewList::const_iterator	viewIterator;
+				My_TerminalViewList::const_iterator		viewIterator;
 				
 				
 				for (viewIterator = ptr->allViews.begin(); viewIterator != ptr->allViews.end(); ++viewIterator)
@@ -6023,13 +6023,9 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// if the window was found, proceed
 		if (result == noErr)
 		{
-			// a dimensions window is displayed during resize; but this does
-			// not work prior to 10.3 for an as-yet-undetermined reason, so
-			// only show it on 10.3 and beyond
-			//Boolean					useSheet = FlagManager_Test(kFlagOS10_3API);
-			Boolean						useSheet = false;
-			Boolean						showWindow = FlagManager_Test(kFlagOS10_3API);
-			TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+			Boolean							useSheet = false;
+			Boolean							showWindow = FlagManager_Test(kFlagOS10_3API);
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 			
 			
 			if (kEventKind == kEventWindowResizeStarted)
@@ -6183,7 +6179,7 @@ Implementation of TerminalWindow_ReturnWindow().
 (4.0)
 */
 HIWindowRef
-returnCarbonWindow		(TerminalWindowPtr	inPtr)
+returnCarbonWindow		(My_TerminalWindowPtr	inPtr)
 {
 	AutoPool		_;
 	HIWindowRef		result = nullptr;
@@ -6283,7 +6279,7 @@ reverseFullScreenChanges	(Undoables_ActionInstruction	inDoWhat,
 		case kUndoables_ActionInstructionUndo:
 			// exit Full Screen mode and restore the window
 			{
-				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), dataPtr->terminalWindow);
+				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), dataPtr->terminalWindow);
 				
 				
 				// restore the size box
@@ -6409,10 +6405,10 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 		{
 			kPageScrollDelayTicks = 2
 		};
-		TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 		TerminalScreenRef				screen = nullptr;
 		TerminalViewRef					view = nullptr;
-		TerminalWindowScrollBarKind		kind = kInvalidTerminalWindowScrollBarKind;
+		My_ScrollBarKind				kind = kMy_InvalidScrollBarKind;
 		SInt16							visibleColumnCount = 0;
 		SInt16							visibleRowCount = 0;
 		
@@ -6424,7 +6420,7 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 		visibleColumnCount = Terminal_ReturnColumnCount(screen);
 		visibleRowCount = Terminal_ReturnRowCount(screen);
 		
-		if (kind == kTerminalWindowScrollBarKindHorizontal)
+		if (kMy_ScrollBarKindHorizontal == kind)
 		{
 			switch (inPartCode)
 			{
@@ -6476,7 +6472,7 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 				break;
 			}
 		}
-		else if (kind == kTerminalWindowScrollBarKindVertical)
+		else if (kMy_ScrollBarKindVertical == kind)
 		{
 			switch (inPartCode)
 			{
@@ -6560,7 +6556,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			// but the response is specific to one, so check first
 			if (Session_ReturnActiveTerminalWindow(session) == terminalWindow)
 			{
-				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 				
 				
 				TerminalWindow_SetObscured(terminalWindow, false);
@@ -6572,8 +6568,8 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kSession_ChangeState:
 		// update various GUI elements to reflect the new session state
 		{
-			SessionRef					session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
-			TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+			SessionRef						session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 			
 			
 			// this handler is invoked for changes to ANY session,
@@ -6619,8 +6615,8 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			// but the response is specific to one, so check first
 			if (Session_ReturnActiveTerminalWindow(session) == terminalWindow)
 			{
-				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-				Session_StateAttributes		currentAttributes = Session_ReturnStateAttributes(session);
+				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+				Session_StateAttributes			currentAttributes = Session_ReturnStateAttributes(session);
 				
 				
 				// the scroll lock toolbar item, if visible, should have its icon changed
@@ -6800,7 +6796,7 @@ See also TerminalWindow_SetScreenDimensions().
 (4.0)
 */
 void
-setScreenPreferences	(TerminalWindowPtr			inPtr,
+setScreenPreferences	(My_TerminalWindowPtr		inPtr,
 						 Preferences_ContextRef		inContext)
 {
 	TerminalScreenRef		activeScreen = getActiveScreen(inPtr);
@@ -6851,10 +6847,10 @@ size by zooming “out”, or by passing "true" for
 (3.0)
 */
 void
-setStandardState	(TerminalWindowPtr	inPtr,
-					 UInt16				inScreenWidthInPixels,
-					 UInt16				inScreenHeightInPixels,
-					 Boolean			inResizeWindow)
+setStandardState	(My_TerminalWindowPtr	inPtr,
+					 UInt16					inScreenWidthInPixels,
+					 UInt16					inScreenHeightInPixels,
+					 Boolean				inResizeWindow)
 {
 	SInt16		windowWidth = 0;
 	SInt16		windowHeight = 0;
@@ -6893,7 +6889,7 @@ See also TerminalWindow_SetFontAndSize().
 (4.0)
 */
 void
-setViewFormatPreferences	(TerminalWindowPtr			inPtr,
+setViewFormatPreferences	(My_TerminalWindowPtr		inPtr,
 							 Preferences_ContextRef		inContext)
 {
 	TerminalViewRef		activeView = getActiveView(inPtr);
@@ -6941,8 +6937,8 @@ bigger than it needs to be.
 (4.0)
 */
 void
-setViewSizeIndependentFromWindow	(TerminalWindowPtr	inPtr,
-									 Boolean			inWindowResizesWhenViewSizeChanges)
+setViewSizeIndependentFromWindow	(My_TerminalWindowPtr	inPtr,
+									 Boolean				inWindowResizesWhenViewSizeChanges)
 {
 	inPtr->viewSizeIndependent = inWindowResizesWhenViewSizeChanges;
 }// setViewSizeIndependentFromWindow
@@ -6955,7 +6951,7 @@ the given context to every view in the window.
 (4.0)
 */
 void
-setViewTranslationPreferences	(TerminalWindowPtr			inPtr,
+setViewTranslationPreferences	(My_TerminalWindowPtr		inPtr,
 								 Preferences_ContextRef		inContext)
 {
 	TerminalViewRef		activeView = getActiveView(inPtr);
@@ -6990,8 +6986,8 @@ NOTE:	This does NOT force a warning message to
 (3.0)
 */
 void
-setWarningOnWindowClose		(TerminalWindowPtr	inPtr,
-							 Boolean			inCloseBoxHasDot)
+setWarningOnWindowClose		(My_TerminalWindowPtr	inPtr,
+							 Boolean				inCloseBoxHasDot)
 {
 	if (nil != inPtr->window)
 	{
@@ -7012,8 +7008,8 @@ See also TerminalWindow_SetWindowTitle().
 (4.0)
 */
 void
-setWindowAndTabTitle	(TerminalWindowPtr	inPtr,
-						 CFStringRef		inNewTitle)
+setWindowAndTabTitle	(My_TerminalWindowPtr	inPtr,
+						 CFStringRef			inNewTitle)
 {
 	AutoPool	_;
 	
@@ -7054,7 +7050,7 @@ size.  Split-pane views are removed.
 (4.0)
 */
 void
-setWindowToIdealSizeForDimensions	(TerminalWindowPtr		inPtr,
+setWindowToIdealSizeForDimensions	(My_TerminalWindowPtr	inPtr,
 									 UInt16					inColumns,
 									 UInt16					inRows)
 {
@@ -7082,7 +7078,7 @@ and font size of the view.
 (4.0)
 */
 void
-setWindowToIdealSizeForFont		(TerminalWindowPtr		inPtr)
+setWindowToIdealSizeForFont		(My_TerminalWindowPtr	inPtr)
 {
 	TerminalViewRef		activeView = getActiveView(inPtr);
 	
@@ -7113,9 +7109,9 @@ void
 sheetClosed		(GenericDialog_Ref		inDialogThatClosed,
 				 Boolean				inOKButtonPressed)
 {
-	TerminalWindowRef			ref = TerminalWindow_ReturnFromWindow
-										(GenericDialog_ReturnParentWindow(inDialogThatClosed));
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), ref);
+	TerminalWindowRef				ref = TerminalWindow_ReturnFromWindow
+											(GenericDialog_ReturnParentWindow(inDialogThatClosed));
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), ref);
 	
 	
 	if (nullptr == ptr)
@@ -7128,15 +7124,15 @@ sheetClosed		(GenericDialog_Ref		inDialogThatClosed,
 		{
 			switch (ptr->sheetType)
 			{
-			case kMy_TerminalWindowSheetTypeFormat:
+			case kMy_SheetTypeFormat:
 				setViewFormatPreferences(ptr, ptr->recentSheetContext.returnRef());
 				break;
 			
-			case kMy_TerminalWindowSheetTypeScreenSize:
+			case kMy_SheetTypeScreenSize:
 				setScreenPreferences(ptr, ptr->recentSheetContext.returnRef());
 				break;
 			
-			case kMy_TerminalWindowSheetTypeTranslation:
+			case kMy_SheetTypeTranslation:
 				setViewTranslationPreferences(ptr, ptr->recentSheetContext.returnRef());
 				break;
 			
@@ -7162,15 +7158,15 @@ error.
 (4.0)
 */
 Preferences_ContextRef
-sheetContextBegin	(TerminalWindowPtr				inPtr,
-					 Quills::Prefs::Class			inClass,
-					 My_TerminalWindowSheetType		inSheetType)
+sheetContextBegin	(My_TerminalWindowPtr	inPtr,
+					 Quills::Prefs::Class	inClass,
+					 My_SheetType			inSheetType)
 {
 	Preferences_ContextWrap		newContext(Preferences_NewContext(inClass), true/* is retained */);
 	Preferences_ContextRef		result = nullptr;
 	
 	
-	if (kMy_TerminalWindowSheetTypeNone == inPtr->sheetType)
+	if (kMy_SheetTypeNone == inPtr->sheetType)
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		Boolean					copyOK = false;
@@ -7183,7 +7179,7 @@ sheetContextBegin	(TerminalWindowPtr				inPtr,
 		// setViewTranslationPreferences())
 		switch (inSheetType)
 		{
-		case kMy_TerminalWindowSheetTypeFormat:
+		case kMy_SheetTypeFormat:
 			{
 				Preferences_TagSetRef	tagSet = PrefPanelFormats_NewTagSet();
 				
@@ -7198,7 +7194,7 @@ sheetContextBegin	(TerminalWindowPtr				inPtr,
 			}
 			break;
 		
-		case kMy_TerminalWindowSheetTypeScreenSize:
+		case kMy_SheetTypeScreenSize:
 			{
 				Preferences_TagSetRef	tagSet = PrefPanelTerminals_NewScreenPaneTagSet();
 				
@@ -7213,7 +7209,7 @@ sheetContextBegin	(TerminalWindowPtr				inPtr,
 			}
 			break;
 		
-		case kMy_TerminalWindowSheetTypeTranslation:
+		case kMy_SheetTypeTranslation:
 			{
 				Preferences_TagSetRef	tagSet = PrefPanelTranslations_NewTagSet();
 				
@@ -7258,13 +7254,13 @@ active sheets.
 (4.0)
 */
 void
-sheetContextEnd		(TerminalWindowPtr		inPtr)
+sheetContextEnd		(My_TerminalWindowPtr	inPtr)
 {
 	if (Preferences_ContextIsValid(inPtr->recentSheetContext.returnRef()))
 	{
 		inPtr->recentSheetContext.clear();
 	}
-	inPtr->sheetType = kMy_TerminalWindowSheetTypeNone;
+	inPtr->sheetType = kMy_SheetTypeNone;
 }// sheetContextEnd
 
 
@@ -7281,8 +7277,8 @@ stackWindowTerminalWindowOp		(TerminalWindowRef	inTerminalWindow,
 								 SInt32				UNUSED_ARGUMENT(inData2),
 								 void*				UNUSED_ARGUMENT(inoutResultPtr))
 {
-	AutoPool					_;
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
+	AutoPool						_;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
 	
 	
 	if (nullptr != ptr)
@@ -7405,9 +7401,9 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (nullptr != terminalWindow)
 			{
-				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-				HIToolbarItemRef			bellItem = nullptr;
-				OSStatus					error = noErr;
+				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+				HIToolbarItemRef				bellItem = nullptr;
+				OSStatus						error = noErr;
 				
 				
 				bellItem = REINTERPRET_CAST(ptr->toolbarItemBell.returnHIObjectRef(), HIToolbarItemRef);
@@ -7430,11 +7426,11 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (nullptr != terminalWindow)
 			{
-				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-				AlertMessages_BoxRef		warningBox = Alert_New();
-				UIStrings_Result			stringResult = kUIStrings_ResultOK;
-				CFStringRef					dialogTextCFString = nullptr;
-				CFStringRef					helpTextCFString = nullptr;
+				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+				AlertMessages_BoxRef			warningBox = Alert_New();
+				UIStrings_Result				stringResult = kUIStrings_ResultOK;
+				CFStringRef						dialogTextCFString = nullptr;
+				CFStringRef						helpTextCFString = nullptr;
 				
 				
 				Alert_SetParamsFor(warningBox, kAlert_StyleOK);
@@ -7473,10 +7469,10 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			if ((nullptr != screen) && (nullptr != terminalWindow))
 			{
 				// find the 4 terminal LED states; update internal state, and the toolbar
-				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-				HIToolbarItemRef			relevantItem = nullptr;
-				UInt16						i = 0;
-				OSStatus					error = noErr;
+				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+				HIToolbarItemRef				relevantItem = nullptr;
+				UInt16							i = 0;
+				OSStatus						error = noErr;
 				
 				
 				ptr->isLEDOn[i] = Terminal_LEDIsOn(screen, i + 1/* LED # */);
@@ -7527,7 +7523,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (nullptr != terminalWindow)
 			{
-				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 				
 				
 				updateScrollBars(ptr);
@@ -7544,8 +7540,8 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (nullptr != terminalWindow)
 			{
-				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-				CFStringRef					titleCFString = nullptr;
+				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+				CFStringRef						titleCFString = nullptr;
 				
 				
 				Terminal_CopyTitleForWindow(screen, titleCFString);
@@ -7568,8 +7564,8 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (nullptr != terminalWindow)
 			{
-				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-				CFStringRef					titleCFString = nullptr;
+				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+				CFStringRef						titleCFString = nullptr;
 				
 				
 				Terminal_CopyTitleForIcon(screen, titleCFString);
@@ -7597,7 +7593,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (nullptr != terminalWindow)
 			{
-				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 				
 				
 				if (Terminal_WindowIsToBeMinimized(screen))
@@ -7632,8 +7628,8 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							 void*					inEventContextPtr,
 							 void*					inListenerContextPtr)
 {
-	TerminalWindowRef			ref = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), ref);
+	TerminalWindowRef				ref = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), ref);
 	
 	
 	// currently, only one type of event is expected
@@ -7690,7 +7686,7 @@ screen area that is currently visible in the window.
 (3.0)
 */
 void
-updateScrollBars	(TerminalWindowPtr		inPtr)
+updateScrollBars	(My_TerminalWindowPtr	inPtr)
 {
 	TerminalViewRef		view = getActiveView(inPtr);
 	
@@ -8306,7 +8302,7 @@ or nullptr if there is none.
 - (TerminalWindowRef)
 terminalWindowRef
 {
-	NSWindowToTerminalWindowMap::const_iterator		toPair = gTerminalNSWindows().find(self);
+	My_TerminalWindowByNSWindow::const_iterator		toPair = gTerminalNSWindows().find(self);
 	TerminalWindowRef								result = nullptr;
 	
 	
