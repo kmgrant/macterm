@@ -81,7 +81,6 @@
 		0AC6BB230A8C0BA000AFF37A /* UIStrings.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE3055432A400ACDF3A /* UIStrings.cp */; };
 		0AC6BB240A8C0BA000AFF37A /* FindDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD7055432A400ACDF3A /* FindDialog.cp */; };
 		0AC6BB260A8C0BA000AFF37A /* DialogUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */; };
-		0AC6BB280A8C0BA000AFF37A /* RasterGraphicsKernel.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE0D055432A400ACDF3A /* RasterGraphicsKernel.cp */; };
 		0AC6BB290A8C0BA000AFF37A /* Commands.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC3055432A400ACDF3A /* Commands.mm */; };
 		0AC6BB2B0A8C0BA000AFF37A /* RegionUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF6055432A400ACDF3A /* RegionUtilities.cp */; };
 		0AC6BB2D0A8C0BA000AFF37A /* TextTranslation.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE2D055432A400ACDF3A /* TextTranslation.cp */; };
@@ -101,7 +100,6 @@
 		0AC6BB400A8C0BA100AFF37A /* AppleEventUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */; };
 		0AC6BB410A8C0BA100AFF37A /* PrefPanelKiosk.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF4B5460A1D61E400D187A3 /* PrefPanelKiosk.cp */; };
 		0AC6BB420A8C0BA100AFF37A /* Cursors.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDCC055432A400ACDF3A /* Cursors.cp */; };
-		0AC6BB430A8C0BA100AFF37A /* RasterGraphicsScreen.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE0E055432A400ACDF3A /* RasterGraphicsScreen.cp */; };
 		0AC6BB440A8C0BA100AFF37A /* URL.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE38055432A400ACDF3A /* URL.cp */; };
 		0AC6BB450A8C0BA100AFF37A /* FileSelectionDialogs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFD055432A400ACDF3A /* FileSelectionDialogs.cp */; };
 		0AC6BB470A8C0BA100AFF37A /* WindowInfo.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE3B055432A400ACDF3A /* WindowInfo.cp */; };
@@ -296,8 +294,6 @@
 		0A4604190554376100ACDF3A /* PrefsWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefsWindow.h; path = Application/Code/PrefsWindow.h; sourceTree = "<group>"; };
 		0A46041A0554376100ACDF3A /* UniversalPrint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UniversalPrint.h; path = Shared/Code/UniversalPrint.h; sourceTree = "<group>"; };
 		0A46041B0554376100ACDF3A /* ProgressDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ProgressDialog.h; path = Application/Code/ProgressDialog.h; sourceTree = "<group>"; };
-		0A46041E0554376100ACDF3A /* RasterGraphicsKernel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RasterGraphicsKernel.h; path = Application/Code/RasterGraphicsKernel.h; sourceTree = "<group>"; };
-		0A46041F0554376100ACDF3A /* RasterGraphicsScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RasterGraphicsScreen.h; path = Application/Code/RasterGraphicsScreen.h; sourceTree = "<group>"; };
 		0A4604200554376100ACDF3A /* RecordAE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RecordAE.h; path = Application/Code/RecordAE.h; sourceTree = "<group>"; };
 		0A4604230554376100ACDF3A /* AppResources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppResources.h; path = Application/Code/AppResources.h; sourceTree = "<group>"; };
 		0A4604250554376100ACDF3A /* Session.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Session.h; path = Application/Code/Session.h; sourceTree = "<group>"; };
@@ -379,8 +375,6 @@
 		0A46FE08055432A400ACDF3A /* PrefsWindow.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefsWindow.cp; path = Application/Code/PrefsWindow.cp; sourceTree = "<group>"; };
 		0A46FE09055432A400ACDF3A /* UniversalPrint.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UniversalPrint.cp; path = Shared/Code/UniversalPrint.cp; sourceTree = "<group>"; };
 		0A46FE0A055432A400ACDF3A /* ProgressDialog.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ProgressDialog.cp; path = Application/Code/ProgressDialog.cp; sourceTree = "<group>"; };
-		0A46FE0D055432A400ACDF3A /* RasterGraphicsKernel.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RasterGraphicsKernel.cp; path = Application/Code/RasterGraphicsKernel.cp; sourceTree = "<group>"; };
-		0A46FE0E055432A400ACDF3A /* RasterGraphicsScreen.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RasterGraphicsScreen.cp; path = Application/Code/RasterGraphicsScreen.cp; sourceTree = "<group>"; };
 		0A46FE0F055432A400ACDF3A /* RecordAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RecordAE.cp; path = Application/Code/RecordAE.cp; sourceTree = "<group>"; };
 		0A46FE12055432A400ACDF3A /* AppResources.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AppResources.cp; path = Application/Code/AppResources.cp; sourceTree = "<group>"; };
 		0A46FE14055432A400ACDF3A /* Session.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Session.cp; path = Application/Code/Session.cp; sourceTree = "<group>"; };
@@ -765,8 +759,6 @@
 				0AFF137E0AF421AD006CCA34 /* Preferences */,
 				0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */,
 				0A46FE0A055432A400ACDF3A /* ProgressDialog.cp */,
-				0A46FE0D055432A400ACDF3A /* RasterGraphicsKernel.cp */,
-				0A46FE0E055432A400ACDF3A /* RasterGraphicsScreen.cp */,
 				0A46FDF6055432A400ACDF3A /* RegionUtilities.cp */,
 				0AE103B00F71D018003127C7 /* ServerBrowser.mm */,
 				0A46FE14055432A400ACDF3A /* Session.cp */,
@@ -830,8 +822,6 @@
 				0AFF137F0AF421C5006CCA34 /* Preferences */,
 				0A1A06860ABA6236002C95D7 /* PrintTerminal.h */,
 				0A46041B0554376100ACDF3A /* ProgressDialog.h */,
-				0A46041E0554376100ACDF3A /* RasterGraphicsKernel.h */,
-				0A46041F0554376100ACDF3A /* RasterGraphicsScreen.h */,
 				0A4603FF0554376100ACDF3A /* RegionUtilities.h */,
 				0AE103AE0F71D003003127C7 /* ServerBrowser.h */,
 				0A4604250554376100ACDF3A /* Session.h */,
@@ -1389,7 +1379,6 @@
 				0AC6BB230A8C0BA000AFF37A /* UIStrings.cp in Sources */,
 				0AC6BB240A8C0BA000AFF37A /* FindDialog.cp in Sources */,
 				0AC6BB260A8C0BA000AFF37A /* DialogUtilities.cp in Sources */,
-				0AC6BB280A8C0BA000AFF37A /* RasterGraphicsKernel.cp in Sources */,
 				0AC6BB290A8C0BA000AFF37A /* Commands.mm in Sources */,
 				0AC6BB2B0A8C0BA000AFF37A /* RegionUtilities.cp in Sources */,
 				0AC6BB2D0A8C0BA000AFF37A /* TextTranslation.cp in Sources */,
@@ -1409,7 +1398,6 @@
 				0AC6BB400A8C0BA100AFF37A /* AppleEventUtilities.cp in Sources */,
 				0AC6BB410A8C0BA100AFF37A /* PrefPanelKiosk.cp in Sources */,
 				0AC6BB420A8C0BA100AFF37A /* Cursors.cp in Sources */,
-				0AC6BB430A8C0BA100AFF37A /* RasterGraphicsScreen.cp in Sources */,
 				0AC6BB440A8C0BA100AFF37A /* URL.cp in Sources */,
 				0AC6BB450A8C0BA100AFF37A /* FileSelectionDialogs.cp in Sources */,
 				0AC6BB470A8C0BA100AFF37A /* WindowInfo.cp in Sources */,

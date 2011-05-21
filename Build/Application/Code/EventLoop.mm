@@ -72,7 +72,6 @@
 #import "EventLoop.h"
 #import "MenuBar.h"
 #import "QuillsSession.h"
-#import "RasterGraphicsScreen.h"
 #import "Session.h"
 #import "SessionFactory.h"
 #import "TerminalView.h"

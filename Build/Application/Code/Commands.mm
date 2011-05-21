@@ -88,7 +88,6 @@ extern "C"
 #import "PrintTerminal.h"
 #import "QuillsEvents.h"
 #import "QuillsSession.h"
-#import "RasterGraphicsScreen.h"
 #import "Session.h"
 #import "SessionDescription.h"
 #import "SessionFactory.h"
@@ -705,12 +704,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				(inCommandID == kCommandCopyTable))
 			{
 				// all of these operations involving copying to the clipboard
-				SInt16		j = 0;
-				
-				
-				j = MacRGfindwind(EventLoop_ReturnRealFrontWindow()); // ICR window?
-				if (j >= 0) MacRGcopy(EventLoop_ReturnRealFrontWindow()); // copy the ICR window
-				else if (isDialog)
+				if (isDialog)
 				{
 					if (inCommandID == kCommandCut) DialogCut(GetDialogFromWindow(EventLoop_ReturnRealFrontWindow()));
 					else if (inCommandID == kCommandCopy) DialogCopy(GetDialogFromWindow(EventLoop_ReturnRealFrontWindow()));

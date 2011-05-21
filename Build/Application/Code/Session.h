@@ -170,10 +170,8 @@ enum Session_DataTarget
 	kSession_DataTargetStandardTerminal = 1,						//!< data goes to a VT (data: TerminalScreenRef)
 	kSession_DataTargetTektronixGraphicsCanvas = 2,					//!< data goes to a TEK window  (data: SInt16*,
 																	//!  the TEK window ID)
-	kSession_DataTargetDumbTerminal = 3,							//!< data goes to a DUMB terminal (data:
-																	//!  TerminalScreenRef)	
-	kSession_DataTargetInteractiveColorRasterGraphicsScreen = 4		//!< data goes to an ICR window (data: SInt16*,
-																	//!  the ICR window ID)
+	kSession_DataTargetDumbTerminal = 3								//!< data goes to a DUMB terminal (data:
+																	//!  TerminalScreenRef)
 };
 
 /*!

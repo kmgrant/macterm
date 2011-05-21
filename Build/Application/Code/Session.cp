@@ -86,8 +86,6 @@
 #include "PrefPanelSessions.h"
 #include "PrefsContextDialog.h"
 #include "QuillsSession.h"
-#include "RasterGraphicsKernel.h"
-#include "RasterGraphicsScreen.h"
 #include "Session.h"
 #include "SessionDescription.h"
 #include "SessionFactory.h"
@@ -234,8 +232,6 @@ private:
 
 typedef std::vector< TerminalScreenRef >	My_PrintJobList;
 
-typedef std::vector< SInt16 >				My_RasterGraphicsScreenList;
-
 typedef std::vector< SInt16 >				My_TEKGraphicList;
 
 typedef std::vector< TerminalScreenRef >	My_TerminalScreenList;
@@ -289,7 +285,6 @@ struct My_Session
 	Local_ProcessRef			mainProcess;				// the command whose output is directly attached to the terminal
 	Session_EventKeys			eventKeys;					// information on keyboard short-cuts for major events
 	My_TEKGraphicList			targetVectorGraphics;		// list of TEK graphics attached to this session
-	My_RasterGraphicsScreenList	targetRasterGraphicsScreens;	// list of open ICR graphics screens, if any
 	My_TerminalScreenList		targetDumbTerminals;		// list of DUMB terminals to which incoming data is being copied
 	My_TerminalScreenList		targetTerminals;			// list of screen buffers to which incoming data is being copied
 	Boolean						vectorGraphicsPageOpensNewWindow;	// true if a TEK PAGE opens a new window instead of clearing the current one
@@ -421,46 +416,6 @@ My_SessionRefTracker&	gInvalidSessions () { static My_SessionRefTracker x; retur
 
 #pragma mark Functors
 namespace {
-
-/*!
-Writes the specified data to a given Interactive
-Color Raster Graphics screen.
-
-Model of STL Unary Function.
-
-(1.0)
-*/
-#pragma mark rasterGraphicsDataWriter
-class rasterGraphicsDataWriter:
-public std::unary_function< SInt16/* argument */, void/* return */ >
-{
-public:
-	rasterGraphicsDataWriter	(UInt8 const*	inBuffer,
-								 size_t			inBufferSize)
-	: _buffer(inBuffer), _bufferSize(inBufferSize)
-	{
-	}
-	
-	void
-	operator()	(SInt16		UNUSED_ARGUMENT(inICRWindowID))
-	{
-		char*	mutableCopy = REINTERPRET_CAST(Memory_NewPtr(_bufferSize), char*);
-		
-		
-		if (mutableCopy != nullptr)
-		{
-			BlockMoveData(_buffer, mutableCopy, INTEGER_MINIMUM(GetPtrSize(mutableCopy), _bufferSize));
-			VRwrite(mutableCopy, GetPtrSize(mutableCopy));
-			Memory_DisposePtr(&mutableCopy);
-		}
-	}
-
-protected:
-
-private:
-	UInt8 const*	_buffer;
-	size_t			_bufferSize;
-};
 
 /*!
 Writes the specified data to a given terminal,
@@ -722,16 +677,6 @@ Session_AddDataTarget	(SessionRef				inRef,
 			
 			ptr->targetVectorGraphics.push_back(*(REINTERPRET_CAST(inTargetData, SInt16 const*/* TEK graphics ID */)));
 			assert(ptr->targetVectorGraphics.size() == (1 + listSize));
-		}
-		break;
-	
-	case kSession_DataTargetInteractiveColorRasterGraphicsScreen:
-		{
-			My_RasterGraphicsScreenList::size_type	listSize = ptr->targetRasterGraphicsScreens.size();
-			
-			
-			ptr->targetRasterGraphicsScreens.push_back(*(REINTERPRET_CAST(inTargetData, SInt16 const*/* ICR window ID */)));
-			assert(ptr->targetRasterGraphicsScreens.size() == (1 + listSize));
 		}
 		break;
 	
@@ -1755,19 +1700,8 @@ Session_ReceiveData		(SessionRef		inRef,
 		// if any TEK canvases are installed, they take precedence
 		if (ptr->targetVectorGraphics.empty())
 		{
-			// ICR windows are lower precedence than TEK, but still take
-			// precedence over any installed standard terminals or files
-			if (ptr->targetRasterGraphicsScreens.empty())
-			{
-				// this is the typical case; send data to a sophisticated terminal emulator
-				std::for_each(ptr->targetTerminals.begin(), ptr->targetTerminals.end(), terminalDataWriter(kBuffer, inByteCount));
-			}
-			else
-			{
-				// write to all attached ICR windows
-				std::for_each(ptr->targetRasterGraphicsScreens.begin(), ptr->targetRasterGraphicsScreens.end(),
-								rasterGraphicsDataWriter(kBuffer, inByteCount));
-			}
+			// this is the typical case; send data to a sophisticated terminal emulator
+			std::for_each(ptr->targetTerminals.begin(), ptr->targetTerminals.end(), terminalDataWriter(kBuffer, inByteCount));
 		}
 		else
 		{
@@ -1829,13 +1763,6 @@ Session_RemoveDataTarget	(SessionRef				inRef,
 		ptr->targetVectorGraphics.erase(std::remove(ptr->targetVectorGraphics.begin(), ptr->targetVectorGraphics.end(),
 													*(REINTERPRET_CAST(inTargetData, SInt16*/* TEK graphic ID */))),
 										ptr->targetVectorGraphics.end());
-		break;
-	
-	case kSession_DataTargetInteractiveColorRasterGraphicsScreen:
-		ptr->targetRasterGraphicsScreens.erase(std::remove(ptr->targetRasterGraphicsScreens.begin(),
-															ptr->targetRasterGraphicsScreens.end(),
-															*(REINTERPRET_CAST(inTargetData, SInt16*/* ICR window ID */))),
-												ptr->targetRasterGraphicsScreens.end());
 		break;
 	
 	default:
@@ -4245,7 +4172,6 @@ terminalWindow(nullptr), // set at window validation time
 mainProcess(nullptr),
 // controlKey is initialized below
 targetVectorGraphics(),
-targetRasterGraphicsScreens(),
 targetDumbTerminals(),
 targetTerminals(),
 vectorGraphicsPageOpensNewWindow(true),

@@ -74,8 +74,6 @@
 #include "InternetPrefs.h"
 #include "Preferences.h"
 #include "PrefsWindow.h"
-#include "RasterGraphicsKernel.h"
-#include "RasterGraphicsScreen.h"
 #include "RecordAE.h"
 #include "SessionFactory.h"
 #include "TerminalBackground.h"
@@ -190,11 +188,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		InfoWindow_Init(); // installs command handler to enable this window to be displayed and hidden
 	#if RUN_MODULE_TESTS
 		//InfooWindow_RunTests();
-	#endif
-		
-		RasterGraphicsKernel_Init(); // ICR setup
-	#if RUN_MODULE_TESTS
-		//RasterGraphicsKernel_RunTests();
 	#endif
 		
 		InternetPrefs_Init();
