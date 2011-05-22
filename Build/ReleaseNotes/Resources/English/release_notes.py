@@ -383,6 +383,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20110521': [
         'Fixed display glitches on Mac OS X Panther in the "Servers" window and the "IP Addresses of This Mac" window.',
+        'Alert messages now have a slightly different title style.',
     ],
     '20110427': [
         'The factory default for "Treat backquote key like Escape" has changed to be false (though existing user preferences will not change).',
