@@ -205,6 +205,12 @@ Sets text encoding preferences in the given context: both
 kPreferences_TagTextEncodingIANAName and
 kPreferences_TagTextEncodingID.
 
+If "inViaCopy" is true, then the tags are not written
+individually; rather, they are written in “batch mode”,
+by Preferences_ContextCopy().  This is required in certain
+cases where only batch-mode changes to a context are being
+monitored.
+
 Returns true only if successful.
 
 See also TextTranslation_ContextReturnEncoding().
@@ -213,29 +219,65 @@ See also TextTranslation_ContextReturnEncoding().
 */
 Boolean
 TextTranslation_ContextSetEncoding	(Preferences_ContextRef		inContext,
-									 CFStringEncoding			inEncodingToSet)
+									 CFStringEncoding			inEncodingToSet,
+									 Boolean					inViaCopy)
 {
-	Boolean				result = false;
-	CFStringRef			selectedEncodingIANAName = CFStringConvertEncodingToIANACharSetName(inEncodingToSet);
-	Preferences_Result	prefsResult = kPreferences_ResultOK;
+	Boolean					result = false;
+	CFStringRef				selectedEncodingIANAName = CFStringConvertEncodingToIANACharSetName(inEncodingToSet);
+	Preferences_ContextRef	targetContext = (inViaCopy)
+											? Preferences_NewContext(Quills::Prefs::TRANSLATION)
+											: inContext;
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	
 	
 	// set name; this is preferred by readers since it is easier to
 	// tell at a glance what the preference actually is
 	if (nullptr != selectedEncodingIANAName)
 	{
-		prefsResult = Preferences_ContextSetData(inContext, kPreferences_TagTextEncodingIANAName,
+		prefsResult = Preferences_ContextSetData(targetContext, kPreferences_TagTextEncodingIANAName,
 													sizeof(selectedEncodingIANAName), &selectedEncodingIANAName);
-		if (kPreferences_ResultOK == prefsResult) result = true;
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			result = true;
+		}
 	}
 	
 	// set the “machine readable” encoding number; this is very
 	// convenient for programmers, but in practice is only read
 	// if a name preference does not exist
 	{
-		prefsResult = Preferences_ContextSetData(inContext, kPreferences_TagTextEncodingID,
+		prefsResult = Preferences_ContextSetData(targetContext, kPreferences_TagTextEncodingID,
 													sizeof(inEncodingToSet), &inEncodingToSet);
-		if (kPreferences_ResultOK == prefsResult) result = true;
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			result = true;
+		}
+	}
+	
+	// if copy-mode is requested, the original context may only be
+	// changed by copying the specified tags into it
+	if (inViaCopy)
+	{
+		std::vector< Preferences_Tag >		tagList;
+		Preferences_TagSetRef				tagSet = nullptr;
+		
+		
+		result = false; // initially...
+		tagList.push_back(kPreferences_TagTextEncodingIANAName);
+		tagList.push_back(kPreferences_TagTextEncodingID);
+		tagSet = Preferences_NewTagSet(tagList);
+		if (nullptr != tagSet)
+		{
+			prefsResult = Preferences_ContextCopy(targetContext, inContext, tagSet);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				result = true;
+			}
+			Preferences_ReleaseTagSet(&tagSet);
+		}
+		
+		// delete the temporary context that was allocated in this mode
+		Preferences_ReleaseContext(&targetContext);
 	}
 	
 	return result;

@@ -82,7 +82,8 @@ CFStringEncoding
 
 Boolean
 	TextTranslation_ContextSetEncoding			(Preferences_ContextRef	inContext,
-												 CFStringEncoding		inEncodingToSet);
+												 CFStringEncoding		inEncodingToSet,
+												 Boolean				inViaCopy = false);
 
 CFStringRef
 	TextTranslation_PersistentCFStringCreate	(CFAllocatorRef			inAllocator,
