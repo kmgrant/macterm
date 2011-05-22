@@ -93,6 +93,7 @@
 #include "TerminalView.h"
 #include "TerminalWindow.h"
 #include "Terminology.h"
+#include "TextTranslation.h"
 #include "UIStrings.h"
 #include "VectorCanvas.h"
 #include "VectorInterpreter.h"
@@ -248,6 +249,7 @@ struct My_Session
 	~My_Session		();
 	
 	Preferences_ContextWrap		configuration;				// not always in sync; see Session_ReturnConfiguration()
+	Preferences_ContextWrap		translationConfiguration;	// not always in sync; see Session_ReturnTranslationConfiguration()
 	Boolean						readOnly;					// whether or not user input is allowed
 	Session_Type				kind;						// type of session; affects use of the union below
 	Session_State				status;						// indicates whether session is initialized, etc.
@@ -2066,6 +2068,56 @@ Session_ReturnStateAttributes	(SessionRef		inRef)
 	
 	return result;
 }// ReturnStateAttributes
+
+
+/*!
+Returns translation-related preferences (such as text encoding)
+that are shared by the views of the session as well as the
+session itself.
+
+You can make changes to this context ONLY if you do it in “batch
+mode” with Preferences_ContextCopy().  In other words, even to
+make a single change, you must first add the change to a new
+temporary context, then use Preferences_ContextCopy() to read
+the temporary settings into the context returned by this routine.
+Batch mode changes are detected by the Session and used to
+automatically update internal data structures and related things
+like the underlying process’ pseudo-terminal.
+
+Note that you cannot expect all possible tags to be present;
+be prepared to not find what you look for.  In addition, tags
+that are present in one session may be absent in another.
+
+(4.0)
+*/
+Preferences_ContextRef
+Session_ReturnTranslationConfiguration		(SessionRef		inRef)
+{
+	My_SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
+	Preferences_ContextRef		result = ptr->translationConfiguration.returnRef();
+	
+	
+	// since many settings are represented elsewhere, this context
+	// will not contain the latest information; update the context
+	// based on current settings
+	
+	{
+		TerminalScreenRef	screen = ptr->targetTerminals.front();
+		Boolean				copyOK = (nullptr != screen)
+										? TextTranslation_ContextSetEncoding(result, Terminal_ReturnTextEncoding(screen))
+										: false;
+		
+		
+		if (false == copyOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to read text encoding of a terminal screen in the session");
+		}
+	}
+	
+	// INCOMPLETE - only care about text encoding for now
+	
+	return result;
+}// ReturnTranslationConfiguration
 
 
 /*!
@@ -4134,6 +4186,8 @@ configuration((nullptr == inConfigurationOrNull)
 				? Preferences_NewContext(Quills::Prefs::SESSION)
 				: Preferences_NewCloneContext(inConfigurationOrNull, true/* detach */),
 				true/* is retained */),
+translationConfiguration(Preferences_NewContext(Quills::Prefs::TRANSLATION),
+							true/* is retained */),
 readOnly(inIsReadOnly),
 kind(kSession_TypeLocalNonLoginShell),
 status(kSession_StateBrandNew),
@@ -4230,6 +4284,8 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 								true/* call immediately to initialize */);
 	Preferences_ContextStartMonitoring(this->configuration.returnRef(), this->preferencesListener.returnRef(),
 										kPreferences_ChangeContextBatchMode);
+	Preferences_ContextStartMonitoring(this->translationConfiguration.returnRef(), this->preferencesListener.returnRef(),
+										kPreferences_ChangeContextBatchMode);
 }// My_Session default constructor
 
 
@@ -4274,6 +4330,8 @@ My_Session::
 	
 	// clean up
 	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration.returnRef(), this->preferencesListener.returnRef(),
+															kPreferences_ChangeContextBatchMode);
+	(Preferences_Result)Preferences_ContextStopMonitoring(this->translationConfiguration.returnRef(), this->preferencesListener.returnRef(),
 															kPreferences_ChangeContextBatchMode);
 	Preferences_StopMonitoring(this->preferencesListener.returnRef(), kPreferences_TagCursorBlinks);
 	Preferences_StopMonitoring(this->preferencesListener.returnRef(), kPreferences_TagMapBackquote);
@@ -5961,9 +6019,36 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		if (kPreferences_ChangeContextBatchMode == inPreferenceTagThatChanged)
 		{
 			// batch mode; multiple things have changed, so check for the new values
-			// of everything that is understood by a terminal view
-			(UInt16)copyEventKeyPreferences(ptr, prefsContext, false/* search for defaults */);
-			(UInt16)copyVectorGraphicsPreferences(ptr, prefsContext, false/* search for defaults */);
+			// of everything that is understood by a session
+			if (ptr->translationConfiguration.returnRef() == prefsContext)
+			{
+				// this context is a proxy for translation settings; these
+				// settings are “forwarded” to views and terminal screens
+				// underneath, but may also be processed by the Session itself
+				Boolean		changeOK = TerminalWindow_ReconfigureViewsInGroup
+										(ptr->terminalWindow, kTerminalWindow_ViewGroupActive,
+											prefsContext, Quills::Prefs::TRANSLATION);
+				
+				
+				if (false == changeOK)
+				{
+					Console_Warning(Console_WriteLine, "detected session translation changes but failed to apply them to the terminal window");
+				}
+				
+				// if the session is entering or leaving UTF-8 encoding, update the
+				// underlying process’ pseudo-terminal accordingly (typically, this
+				// at least means that a deleted character may absorb more than one
+				// byte instead of the usual single byte)
+				// UNIMPLEMENTED
+			}
+			else
+			{
+				// the session’s “normal” configuration, containing settings that
+				// apply DIRECTLY to the session (not acting as a proxy for
+				// anything else)
+				(UInt16)copyEventKeyPreferences(ptr, prefsContext, false/* search for defaults */);
+				(UInt16)copyVectorGraphicsPreferences(ptr, prefsContext, false/* search for defaults */);
+			}
 		}
 		else
 		{

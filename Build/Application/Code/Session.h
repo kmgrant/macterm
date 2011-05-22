@@ -581,6 +581,7 @@ HIWindowRef
 CFArrayRef
 	Session_ReturnCommandLine				(SessionRef							inRef);
 
+// SEE ALSO Session_ReturnTranslationConfiguration()
 Preferences_ContextRef
 	Session_ReturnConfiguration				(SessionRef							inRef);
 
@@ -601,6 +602,10 @@ Session_State
 
 Session_StateAttributes
 	Session_ReturnStateAttributes			(SessionRef							inRef);
+
+// SEE ALSO Session_ReturnConfiguration()
+Preferences_ContextRef
+	Session_ReturnTranslationConfiguration	(SessionRef							inRef);
 
 void
 	Session_SetEventKeys					(SessionRef							inRef,

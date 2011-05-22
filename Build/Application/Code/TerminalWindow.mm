@@ -1058,6 +1058,14 @@ Currently, the only supported group is the active view,
 
 Returns true only if successful.
 
+WARNING:	The Quills::Prefs::TRANSLATION class can be set up
+			with this API, but only as a helper for Session APIs!
+			If you actually want to change encodings, be sure to
+			use Session_ReturnTranslationConfiguration() and
+			copy changes there, so that the Session can see them.
+			A Session-level change will, in turn, call this
+			routine to update the views.
+
 (4.0)
 */
 Boolean
@@ -4654,14 +4662,42 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					{
 						// change character set of frontmost window according to Default preferences
 						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Preferences_ContextRef			defaultSettings = nullptr;
+						SessionRef						session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
 						
 						
-						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::TRANSLATION))
+						if (nullptr != session)
 						{
-							setViewTranslationPreferences(ptr, defaultSettings);
+							Preferences_ContextRef		sessionSettings = Session_ReturnTranslationConfiguration(session);
+							
+							
+							if (nullptr != sessionSettings)
+							{
+								Preferences_TagSetRef		translationTags = PrefPanelTranslations_NewTagSet();
+								
+								
+								if (nullptr != translationTags)
+								{
+									Preferences_ContextRef		defaultSettings = nullptr;
+									Preferences_Result			prefsResult = Preferences_GetDefaultContext
+																				(&defaultSettings, Quills::Prefs::TRANSLATION);
+									
+									
+									if (kPreferences_ResultOK != prefsResult)
+									{
+										Console_Warning(Console_WriteValue, "failed to locate default translation settings, error", prefsResult);
+									}
+									else
+									{
+										prefsResult = Preferences_ContextCopy(defaultSettings, sessionSettings, translationTags);
+										if (kPreferences_ResultOK != prefsResult)
+										{
+											Console_Warning(Console_WriteValue, "failed to apply named translation settings to session, error", prefsResult);
+										}
+									}
+									Preferences_ReleaseTagSet(&translationTags);
+								}
+							}
 						}
-						
 						result = noErr;
 					}
 					break;
@@ -4676,19 +4712,37 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (received.attributes & kHICommandFromMenu)
 						{
 							My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+							SessionRef						session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
 							CFStringRef						collectionName = nullptr;
 							
 							
-							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
+							if ((nullptr != session) &&
+								(noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName)))
 							{
 								Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 																			(Quills::Prefs::TRANSLATION, collectionName),
 																			true/* is retained */);
+								Preferences_ContextRef		sessionSettings = Session_ReturnTranslationConfiguration(session);
 								
 								
-								if (namedSettings.exists())
+								if (namedSettings.exists() && (nullptr != sessionSettings))
 								{
-									setViewTranslationPreferences(ptr, namedSettings.returnRef());
+									Preferences_TagSetRef		translationTags = PrefPanelTranslations_NewTagSet();
+									
+									
+									if (nullptr != translationTags)
+									{
+										// change character set of frontmost window according to the specified preferences
+										Preferences_Result		prefsResult = Preferences_ContextCopy
+																				(namedSettings.returnRef(), sessionSettings, translationTags);
+										
+										
+										if (kPreferences_ResultOK != prefsResult)
+										{
+											Console_Warning(Console_WriteLine, "failed to apply named translation settings to session");
+										}
+										Preferences_ReleaseTagSet(&translationTags);
+									}
 								}
 								CFRelease(collectionName), collectionName = nullptr;
 							}
@@ -6947,6 +7001,13 @@ setViewSizeIndependentFromWindow	(My_TerminalWindowPtr	inPtr,
 /*!
 Copies the translation settings (like the character set) from
 the given context to every view in the window.
+
+WARNING:	This is done internally to propagate settings to all
+			the right places beneath a window, but this is not a
+			good entry point for changing translation settings!
+			Copy changes into a Session-level configuration, as
+			returned by Session_ReturnTranslationConfiguration(),
+			so that the Session is always aware of them.
 
 (4.0)
 */

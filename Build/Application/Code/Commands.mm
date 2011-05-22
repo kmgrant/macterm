@@ -84,6 +84,7 @@ extern "C"
 #import "MacroManager.h"
 #import "MenuBar.h"
 #import "Network.h"
+#import "PrefPanelTranslations.h"
 #import "PrefsWindow.h"
 #import "PrintTerminal.h"
 #import "QuillsEvents.h"
@@ -4880,6 +4881,7 @@ performMappingCustom:(id)	sender
 performTranslationSwitchByFavoriteName:(id)		sender
 {
 	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	SessionRef			session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
 	BOOL				isError = YES;
 	
 	
@@ -4890,22 +4892,30 @@ performTranslationSwitchByFavoriteName:(id)		sender
 		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
 		
 		
-		if (nil != collectionName)
+		if ((nullptr != session) && (nil != collectionName))
 		{
 			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 														(Quills::Prefs::TRANSLATION, collectionName),
 														true/* is retained */);
+			Preferences_ContextRef		sessionSettings = Session_ReturnTranslationConfiguration(session);
 			
 			
-			if (namedSettings.exists())
+			if (namedSettings.exists() && (nullptr != sessionSettings))
 			{
-				// change character set of frontmost window according to the specified preferences
-				Boolean		changeOK = TerminalWindow_ReconfigureViewsInGroup
-										(terminalWindow, kTerminalWindow_ViewGroupActive,
-											namedSettings.returnRef(), Quills::Prefs::TRANSLATION);
+				Preferences_TagSetRef		translationTags = PrefPanelTranslations_NewTagSet();
 				
 				
-				isError = (false == changeOK);
+				if (nullptr != translationTags)
+				{
+					// change character set of frontmost window according to the specified preferences
+					Preferences_Result		prefsResult = Preferences_ContextCopy
+															(namedSettings.returnRef(), sessionSettings, translationTags);
+					
+					
+					isError = (kPreferences_ResultOK != prefsResult);
+					
+					Preferences_ReleaseTagSet(&translationTags);
+				}
 			}
 		}
 	}
@@ -4913,6 +4923,7 @@ performTranslationSwitchByFavoriteName:(id)		sender
 	if (isError)
 	{
 		// failed...
+		Console_Warning(Console_WriteLine, "failed to apply named translation settings to session");
 		Sound_StandardAlert();
 	}
 }
