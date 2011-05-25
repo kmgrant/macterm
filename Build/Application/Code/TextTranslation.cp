@@ -447,7 +447,7 @@ TextTranslation_PersistentCFStringCreate	(CFAllocatorRef			inAllocator,
 		// proportionate to the original size, but at least one byte
 		if ((nullptr == result) && (outBytesUsed > 0))
 		{
-			CFIndex		reductionAmount = STATIC_CAST(STATIC_CAST(inByteCount, Float32) / 2.0f, CFIndex);
+			CFIndex		reductionAmount = STATIC_CAST(STATIC_CAST(outBytesUsed, Float32) / 2.0f, CFIndex);
 			
 			
 			if (reductionAmount < 1)
