@@ -5364,16 +5364,26 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																	typeCFMutableArrayRef, defaultIdentifiers);
 					if (noErr == result)
 					{
-						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDScrollLock);
+						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
+						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDHideWindow);
 						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSeparatorIdentifier);
+						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDScrollLock);
+						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSeparatorIdentifier);
+						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalBell);
+						CFArrayAppendValue(defaultIdentifiers, kHIToolbarFlexibleSpaceIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED1);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED2);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED3);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED4);
+						CFArrayAppendValue(defaultIdentifiers, kHIToolbarFlexibleSpaceIdentifier);
+						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDPrint);
 						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSeparatorIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDFullScreen);
+						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSeparatorIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDCustomize);
+						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
+						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
 					}
 				}
 				break;

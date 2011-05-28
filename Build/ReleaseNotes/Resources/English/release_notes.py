@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110527',
     '20110521',
     '20110427',
     '20110423',
@@ -381,6 +382,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110527': [
+        'Terminal window toolbars now have a different default arrangement of items.',
+    ],
     '20110521': [
         'Fixed display glitches on Mac OS X Panther in the "Servers" window and the "IP Addresses of This Mac" window.',
         'Alert messages now have a slightly different title style.',
