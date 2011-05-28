@@ -383,6 +383,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20110527': [
+        'Fixed some menu commands so that they are disabled when no terminal windows are open.',
         'Terminal window toolbars now have a different default arrangement of items.',
     ],
     '20110521': [

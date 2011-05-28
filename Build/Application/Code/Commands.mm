@@ -4017,7 +4017,9 @@ performDuplicate:(id)		sender
 canPerformDuplicate:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5149,7 +5151,9 @@ performScreenResizeCustom:(id)	sender
 canPerformScreenResizeCustom:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5166,7 +5170,9 @@ performScreenResizeNarrower:(id)	sender
 canPerformScreenResizeNarrower:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5183,7 +5189,9 @@ performScreenResizeShorter:(id)	sender
 canPerformScreenResizeShorter:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5200,7 +5208,9 @@ performScreenResizeStandard:(id)	sender
 canPerformScreenResizeStandard:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5217,7 +5227,9 @@ performScreenResizeTall:(id)	sender
 canPerformScreenResizeTall:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5234,7 +5246,9 @@ performScreenResizeTaller:(id)	sender
 canPerformScreenResizeTaller:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5251,7 +5265,9 @@ performScreenResizeWide:(id)	sender
 canPerformScreenResizeWide:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5268,7 +5284,9 @@ performScreenResizeWider:(id)	sender
 canPerformScreenResizeWider:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5359,7 +5377,9 @@ performFormatByFavoriteName:(id)	sender
 canPerformFormatByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5376,7 +5396,9 @@ performFormatCustom:(id)	sender
 canPerformFormatCustom:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5427,7 +5449,9 @@ performFormatDefault:(id)	sender
 canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5444,7 +5468,9 @@ performFormatTextBigger:(id)	sender
 canPerformFormatTextBigger:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5461,7 +5487,9 @@ performFormatTextMaximum:(id)	sender
 canPerformFormatTextMaximum:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5478,7 +5506,9 @@ performFormatTextSmaller:(id)	sender
 canPerformFormatTextSmaller:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
@@ -5538,7 +5568,9 @@ performHideWindow:(id)	sender
 canPerformHideWindow:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
+						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
+											(SessionFactory_ReturnCount() > 0)));
 	
 	
 	return [NSNumber numberWithBool:result];
