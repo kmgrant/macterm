@@ -783,8 +783,9 @@ public:
 	bool
 	operator ()	(My_ContextInterfacePtr		inContextPtr)
 	{
-		return (kCFCompareEqualTo == CFStringCompare
-										(inContextPtr->returnName(), _name.returnCFStringRef(), 0/* options */));
+		return (_name.exists() && (nullptr != inContextPtr->returnName()) &&
+				(kCFCompareEqualTo == CFStringCompare
+										(inContextPtr->returnName(), _name.returnCFStringRef(), 0/* options */)));
 	}
 
 protected:
@@ -1586,6 +1587,10 @@ Creates a new preferences context according to the given
 specifications, or returns an existing one that matches.
 The reference is automatically retained, but you need to
 invoke Preferences_ReleaseContext() when finished.
+
+If you only want to create contexts with names that match
+those on disk, call Preferences_IsContextNameInUse() to
+ensure that your proposed name is going to match.
 
 The domain name should be "nullptr" unless this is being
 called as part of the initialization loop (as that is the
@@ -3040,6 +3045,8 @@ Since this routine uses a list of contexts in memory, it
 is able to generate a unique name even among recently
 constructed contexts that have not yet been saved.
 
+See also Preferences_IsContextNameInUse().
+
 \retval kPreferences_ResultOK
 if a name was created successfully
 
@@ -3062,15 +3069,11 @@ Preferences_CreateUniqueContextName		(Quills::Prefs::Class	inClass,
 	
 	if (getListOfContexts(inClass, listPtr))
 	{
-		CFIndex const								kMaxTries = 100; // arbitrary
-		CFStringRef const							kBaseName = (nullptr == inBaseNameOrNull)
-																? CFSTR("untitled") // LOCALIZE THIS
-																: inBaseNameOrNull;
-		My_FavoriteContextList::const_iterator		toContextPtr = listPtr->end();
-		CFMutableStringRef							nameTemplateCFString = CFStringCreateMutableCopy
-																			(kCFAllocatorDefault,
-																				0/* maximum length */,
-																				kBaseName);
+		CFIndex const			kMaxTries = 100; // arbitrary
+		CFStringRef const		kBaseName = (nullptr == inBaseNameOrNull)
+												? CFSTR("untitled") // LOCALIZE THIS
+												: inBaseNameOrNull;
+		CFMutableStringRef		nameTemplateCFString = CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* maximum length */, kBaseName);
 		
 		
 		// keep trying names until a unique one is found
@@ -3088,9 +3091,7 @@ Preferences_CreateUniqueContextName		(Quills::Prefs::Class	inClass,
 				
 				if (nullptr != currentNameCFString)
 				{
-					toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
-												contextNameEqualTo(currentNameCFString));
-					if (listPtr->end() == toContextPtr)
+					if (false == Preferences_IsContextNameInUse(inClass, currentNameCFString))
 					{
 						// success!
 						outNewName = CFStringCreateCopy(kCFAllocatorDefault, currentNameCFString);
@@ -3403,6 +3404,42 @@ Preferences_InsertContextNamesInMenu	(Quills::Prefs::Class	inClass,
 	
 	return result;
 }// InsertContextNamesInMenu
+
+
+/*!
+Returns true only if there is a context in the given class
+that has the specified name.
+
+This is useful for Preferences_NewContextFromFavorites() calls,
+in case you want to avoid creating new contexts for names that
+do not correspond to existing contexts.
+
+See also Preferences_CreateUniqueContextName().
+
+(4.0)
+*/
+Boolean
+Preferences_IsContextNameInUse		(Quills::Prefs::Class	inClass,
+									 CFStringRef			inProposedName)
+{
+	Boolean						result = false;
+	My_FavoriteContextList*		listPtr = nullptr;
+	
+	
+	if (getListOfContexts(inClass, listPtr))
+	{
+		My_FavoriteContextList::const_iterator		toContextPtr = toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
+																								contextNameEqualTo(inProposedName));
+		
+		
+		if (listPtr->end() != toContextPtr)
+		{
+			result = true;
+		}
+	}
+	
+	return result;
+}// IsContextNameInUse
 
 
 /*!

@@ -536,6 +536,10 @@ Preferences_Result
 													 UInt32								inCommandID,
 													 MenuItemIndex&						outHowManyItemsAdded);
 
+Boolean
+	Preferences_IsContextNameInUse					(Quills::Prefs::Class				inClass,
+													 CFStringRef						inProposedName);
+
 //@}
 
 //!\name Accessing Contextual Preferences
