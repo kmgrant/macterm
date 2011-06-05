@@ -115,7 +115,7 @@
 	<key>macro-01-name-string</key>
 	<string></string>
 	<key>macro-01-key</key>
-	<string>f1</string>
+	<string></string>
 	<key>macro-01-modifiers</key>
 	<array/>
 	<key>macro-02-action</key>
@@ -125,7 +125,7 @@
 	<key>macro-02-name-string</key>
 	<string></string>
 	<key>macro-02-key</key>
-	<string>f2</string>
+	<string></string>
 	<key>macro-02-modifiers</key>
 	<array/>
 	<key>macro-03-action</key>
@@ -135,7 +135,7 @@
 	<key>macro-03-name-string</key>
 	<string></string>
 	<key>macro-03-key</key>
-	<string>f3</string>
+	<string></string>
 	<key>macro-03-modifiers</key>
 	<array/>
 	<key>macro-04-action</key>
@@ -145,7 +145,7 @@
 	<key>macro-04-name-string</key>
 	<string></string>
 	<key>macro-04-key</key>
-	<string>f4</string>
+	<string></string>
 	<key>macro-04-modifiers</key>
 	<array/>
 	<key>macro-05-action</key>
@@ -155,7 +155,7 @@
 	<key>macro-05-name-string</key>
 	<string></string>
 	<key>macro-05-key</key>
-	<string>f5</string>
+	<string></string>
 	<key>macro-05-modifiers</key>
 	<array/>
 	<key>macro-06-action</key>
@@ -165,7 +165,7 @@
 	<key>macro-06-name-string</key>
 	<string></string>
 	<key>macro-06-key</key>
-	<string>f6</string>
+	<string></string>
 	<key>macro-06-modifiers</key>
 	<array/>
 	<key>macro-07-action</key>
@@ -175,7 +175,7 @@
 	<key>macro-07-name-string</key>
 	<string></string>
 	<key>macro-07-key</key>
-	<string>f7</string>
+	<string></string>
 	<key>macro-07-modifiers</key>
 	<array/>
 	<key>macro-08-action</key>
@@ -185,7 +185,7 @@
 	<key>macro-08-name-string</key>
 	<string></string>
 	<key>macro-08-key</key>
-	<string>f8</string>
+	<string></string>
 	<key>macro-08-modifiers</key>
 	<array/>
 	<key>macro-09-action</key>
@@ -195,7 +195,7 @@
 	<key>macro-09-name-string</key>
 	<string></string>
 	<key>macro-09-key</key>
-	<string>f9</string>
+	<string></string>
 	<key>macro-09-modifiers</key>
 	<array/>
 	<key>macro-10-action</key>
@@ -205,7 +205,7 @@
 	<key>macro-10-name-string</key>
 	<string></string>
 	<key>macro-10-key</key>
-	<string>f10</string>
+	<string></string>
 	<key>macro-10-modifiers</key>
 	<array/>
 	<key>macro-11-action</key>
@@ -215,7 +215,7 @@
 	<key>macro-11-name-string</key>
 	<string></string>
 	<key>macro-11-key</key>
-	<string>f11</string>
+	<string></string>
 	<key>macro-11-modifiers</key>
 	<array/>
 	<key>macro-12-action</key>
@@ -225,7 +225,7 @@
 	<key>macro-12-name-string</key>
 	<string></string>
 	<key>macro-12-key</key>
-	<string>f12</string>
+	<string></string>
 	<key>macro-12-modifiers</key>
 	<array/>
 	<key>macro-order</key>

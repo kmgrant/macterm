@@ -1088,7 +1088,7 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			else
 			{
 				Console_Warning(Console_WriteLine, "unable to find existing macro key setting");
-				this->setKeyType(0);
+				this->setKeyType(kCommandSetMacroKeyTypeOrdinaryChar);
 				this->setOrdinaryKeyCharacter(0);
 			}
 		}

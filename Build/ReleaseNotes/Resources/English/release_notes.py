@@ -385,6 +385,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20110605': [
         'Saved session files now remember and restore the name of the active macro set.',
+        'Preferences window Macros pane now uses no key mapping as a factory default instead of overriding function keys.',
     ],
     '20110527': [
         'Fixed some menu commands so that they are disabled when no terminal windows are open.',
