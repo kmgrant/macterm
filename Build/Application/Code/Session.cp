@@ -81,6 +81,7 @@
 #include "Clipboard.h"
 #include "Commands.h"
 #include "DialogUtilities.h"
+#include "MacroManager.h"
 #include "NetEvents.h"
 #include "Preferences.h"
 #include "PrefPanelSessions.h"
@@ -1217,6 +1218,7 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 		if (saveFileMemoryModel != nullptr)
 		{
 			My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+			Preferences_ContextRef	currentMacros = MacroManager_ReturnCurrentMacros();
 			TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(inRef);
 			TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
 			
@@ -1245,6 +1247,20 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 					saveError = SessionDescription_SetStringData
 									(saveFileMemoryModel, kSessionDescription_StringTypeCommandLine, stringValue);
 					CFRelease(stringValue), stringValue = nullptr;
+				}
+				
+				// macro info
+				if (nullptr != currentMacros)
+				{
+					Preferences_Result		prefsResult = Preferences_ContextGetName(currentMacros, stringValue);
+					
+					
+					// note: string is not allocated so it must not be released
+					if ((kPreferences_ResultOK == prefsResult) && (nullptr != stringValue))
+					{
+						saveError = SessionDescription_SetStringData
+										(saveFileMemoryModel, kSessionDescription_StringTypeMacroSet, stringValue);
+					}
 				}
 				
 				// font info

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110605',
     '20110527',
     '20110521',
     '20110427',
@@ -382,6 +383,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110605': [
+        'Saved session files now remember and restore the name of the active macro set.',
+    ],
     '20110527': [
         'Fixed some menu commands so that they are disabled when no terminal windows are open.',
         'Terminal window toolbars now have a different default arrangement of items.',

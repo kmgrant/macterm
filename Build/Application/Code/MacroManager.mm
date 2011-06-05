@@ -75,7 +75,7 @@ namespace {
 
 void						macroSetChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void						preferenceChanged		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-Preferences_ContextRef		returnDefaultMacroSet	();
+Preferences_ContextRef		returnDefaultMacroSet	(Boolean);
 NSMenu*						returnMacrosMenu		();
 unichar						virtualKeyToUnicode		(UInt16);
 
@@ -86,7 +86,7 @@ namespace {
 
 ListenerModel_ListenerRef&	gMacroSetMonitor ()		{ static ListenerModel_ListenerRef x = ListenerModel_NewStandardListener(macroSetChanged); return x; }
 ListenerModel_ListenerRef&	gPreferencesMonitor ()	{ static ListenerModel_ListenerRef x = ListenerModel_NewStandardListener(preferenceChanged); return x; }
-Preferences_ContextRef&		gCurrentMacroSet ()		{ static Preferences_ContextRef x = returnDefaultMacroSet(); return x; }
+Preferences_ContextRef&		gCurrentMacroSet ()		{ static Preferences_ContextRef x = returnDefaultMacroSet(true/* retain */); return x; }
 
 } // anonymous namespace
 
@@ -136,7 +136,7 @@ MacroManager_ReturnDefaultMacros ()
 		gDidInstallPrefsMonitor = true;
 	}
 	
-	return returnDefaultMacroSet();
+	return returnDefaultMacroSet(false/* retain */);
 }// ReturnDefaultMacros
 
 
@@ -164,61 +164,75 @@ MacroManager_Result
 MacroManager_SetCurrentMacros	(Preferences_ContextRef		inMacroSetOrNullForNone)
 {
 	MacroManager_Result		result = kMacroManager_ResultGenericFailure;
-	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	
 	
-	// perform last action for previous context
-	if (nullptr != gCurrentMacroSet())
+	if (inMacroSetOrNullForNone == gCurrentMacroSet())
 	{
-		// remove monitors from the context that is about to be non-current
-		for (UInt16 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+		result = kMacroManager_ResultOK;
+	}
+	else
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		// perform last action for previous context
+		if (nullptr != gCurrentMacroSet())
 		{
-			prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-															Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i));
-			prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-															Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, i));
-			prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-															Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, i));
-			prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-															Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, i));
-			prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-															Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, i));
+			// remove monitors from the context that is about to be non-current
+			for (UInt16 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+			{
+				prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i));
+				prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, i));
+				prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, i));
+				prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, i));
+				prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, i));
+			}
+			
+			Preferences_ReleaseContext(&(gCurrentMacroSet()));
 		}
+		
+		// set the new current context
+		gCurrentMacroSet() = inMacroSetOrNullForNone;
+		
+		// monitor the new current context so that caches and menus can be updated, etc.
+		if (nullptr != gCurrentMacroSet())
+		{
+			Preferences_RetainContext(gCurrentMacroSet());
+			
+			// monitor Preferences for changes to macro settings that are important in the Macro Manager module
+			for (UInt16 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+			{
+				prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																	Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i),
+																	true/* notify of initial value */);
+				assert(kPreferences_ResultOK == prefsResult);
+				prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																	Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, i),
+																	true/* notify of initial value */);
+				assert(kPreferences_ResultOK == prefsResult);
+				prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																	Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, i),
+																	true/* notify of initial value */);
+				assert(kPreferences_ResultOK == prefsResult);
+				prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																	Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, i),
+																	true/* notify of initial value */);
+				assert(kPreferences_ResultOK == prefsResult);
+				prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																	Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, i),
+																	true/* notify of initial value */);
+				assert(kPreferences_ResultOK == prefsResult);
+			}
+		}
+		
+		result = kMacroManager_ResultOK;
 	}
 	
-	// set the new current context
-	gCurrentMacroSet() = inMacroSetOrNullForNone;
-	
-	// monitor the new current context so that caches and menus can be updated, etc.
-	if (nullptr != gCurrentMacroSet())
-	{
-		// monitor Preferences for changes to macro settings that are important in the Macro Manager module
-		for (UInt16 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
-		{
-			prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i),
-																true/* notify of initial value */);
-			assert(kPreferences_ResultOK == prefsResult);
-			prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, i),
-																true/* notify of initial value */);
-			assert(kPreferences_ResultOK == prefsResult);
-			prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, i),
-																true/* notify of initial value */);
-			assert(kPreferences_ResultOK == prefsResult);
-			prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, i),
-																true/* notify of initial value */);
-			assert(kPreferences_ResultOK == prefsResult);
-			prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, i),
-																true/* notify of initial value */);
-			assert(kPreferences_ResultOK == prefsResult);
-		}
-	}
-	
-	result = kMacroManager_ResultOK;
 	return result;
 }// SetCurrentMacros
 
@@ -788,10 +802,13 @@ this function was written to return a value.  Otherwise, it is
 no different than calling Preferences_GetDefaultContext()
 directly for a macro set class.
 
+If "inRetain" is true, then the context is retained before it
+is returned, so that it may be safely released.
+
 (4.0)
 */
 Preferences_ContextRef
-returnDefaultMacroSet ()
+returnDefaultMacroSet	(Boolean	inRetain)
 {
 	Preferences_ContextRef		result = nullptr;
 	Preferences_Result			prefsResult = kPreferences_ResultOK;
@@ -799,6 +816,12 @@ returnDefaultMacroSet ()
 	
 	prefsResult = Preferences_GetDefaultContext(&result, Quills::Prefs::MACRO_SET);
 	assert(kPreferences_ResultOK == prefsResult);
+	
+	if (inRetain)
+	{
+		Preferences_RetainContext(result);
+	}
+	
 	return result;
 }// returnDefaultMacroSet
 

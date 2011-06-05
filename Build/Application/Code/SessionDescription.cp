@@ -95,6 +95,7 @@ struct My_SessionFile
 	
 	// data common to all session files
 	CFStringRef					windowName;			//!< name of terminal window
+	CFStringRef					currentMacrosName;	//!< name of macro set preference collection that should be selected
 	CFStringRef					terminalFont;		//!< name of font used for rendering regular terminal text
 	CFStringRef					answerBack;			//!< string identifying terminal emulation type
 	CFStringRef					toolbarInfo;		//!< string describing toolbar state
@@ -325,6 +326,10 @@ SessionDescription_Release	(SessionDescription_Ref*	inoutRefPtr)
 			if (ptr->windowName != nullptr)
 			{
 				CFRelease(ptr->windowName), ptr->windowName = nullptr;
+			}
+			if (ptr->currentMacrosName != nullptr)
+			{
+				CFRelease(ptr->currentMacrosName), ptr->currentMacrosName = nullptr;
 			}
 			if (ptr->colorTextNormalPtr != nullptr)
 			{
@@ -657,6 +662,10 @@ SessionDescription_GetStringData	(SessionDescription_Ref			inRef,
 	
 	case kSessionDescription_StringTypeWindowName:
 		outString = ptr->windowName;
+		break;
+	
+	case kSessionDescription_StringTypeMacroSet:
+		outString = ptr->currentMacrosName;
 		break;
 	
 	case kSessionDescription_StringTypeTerminalFont:
@@ -1067,26 +1076,32 @@ SessionDescription_SetStringData	(SessionDescription_Ref			inRef,
 		break;
 	
 	case kSessionDescription_StringTypeWindowName:
-		if (ptr->windowName != nullptr) CFRelease(ptr->windowName);
 		CFRetain(inString);
+		if (ptr->windowName != nullptr) CFRelease(ptr->windowName);
 		ptr->windowName = inString;
 		break;
 	
-	case kSessionDescription_StringTypeTerminalFont:
-		if (ptr->terminalFont != nullptr) CFRelease(ptr->terminalFont);
+	case kSessionDescription_StringTypeMacroSet:
 		CFRetain(inString);
+		if (ptr->currentMacrosName != nullptr) CFRelease(ptr->currentMacrosName);
+		ptr->currentMacrosName = inString;
+		break;
+	
+	case kSessionDescription_StringTypeTerminalFont:
+		CFRetain(inString);
+		if (ptr->terminalFont != nullptr) CFRelease(ptr->terminalFont);
 		ptr->terminalFont = inString;
 		break;
 	
 	case kSessionDescription_StringTypeAnswerBack:
-		if (ptr->answerBack != nullptr) CFRelease(ptr->answerBack);
 		CFRetain(inString);
+		if (ptr->answerBack != nullptr) CFRelease(ptr->answerBack);
 		ptr->answerBack = inString;
 		break;
 	
 	case kSessionDescription_StringTypeToolbarInfo:
-		if (ptr->toolbarInfo != nullptr) CFRelease(ptr->toolbarInfo);
 		CFRetain(inString);
+		if (ptr->toolbarInfo != nullptr) CFRelease(ptr->toolbarInfo);
 		ptr->toolbarInfo = inString;
 		break;
 	
@@ -1157,7 +1172,6 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 		// If you write any more or fewer keys than this, or you write them
 		// out of order, then NCSA Telnet 2.6 will be unable to import them.
 		
-		if (inoutDataPtr->windowName != nullptr)
 		{
 			Boolean		flag = true;
 			
@@ -1334,6 +1348,12 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 			{
 				success = TextDataFile_AddNameValueCFString(writer, nullptr/* class */, "toolbar",
 															inoutDataPtr->toolbarInfo);
+			}
+			
+			if (inoutDataPtr->currentMacrosName != nullptr)
+			{
+				success = TextDataFile_AddNameValueCFString(writer, nullptr/* class */, "macros",
+															inoutDataPtr->currentMacrosName);
 			}
 		}
 		
@@ -1973,6 +1993,19 @@ parseFile	(SInt16				inFileReferenceNumber,
 				{
 					sessionFileError = SessionDescription_SetStringData
 										(inoutDataPtr->selfRef, kSessionDescription_StringTypeToolbarInfo,
+											CFStringCreateWithCString
+											(kCFAllocatorDefault,
+												valueList.at(keyNameToKeyValueArrayIndexIterator->second),
+												kCFStringEncodingMacRoman),
+											true/* validate before storing */);
+				}
+				
+				// set macro set
+				keyNameToKeyValueArrayIndexIterator = hashTable.find("macros");
+				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
+				{
+					sessionFileError = SessionDescription_SetStringData
+										(inoutDataPtr->selfRef, kSessionDescription_StringTypeMacroSet,
 											CFStringCreateWithCString
 											(kCFAllocatorDefault,
 												valueList.at(keyNameToKeyValueArrayIndexIterator->second),

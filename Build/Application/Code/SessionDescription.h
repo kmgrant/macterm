@@ -1,21 +1,16 @@
 /*!	\file SessionDescription.h
 	\brief All code related to opening and saving session
-	description files.  Updated for Navigation Services support.
+	description files.
 	
-	In MacTelnet 3.0, a session file is just that: a file and a
-	corresponding in-memory data structure.  This module under-
-	complicates the open and save process by focusing on raw
-	data: you can no longer directly spawn sessions from here,
-	for example.  Instead, you must open a file, create a
-	Session File object (thereby parsing its contents), and then
-	ask for the data you are interested in.  Once you have the
-	data, it is your responsibility to, for instance, recreate
-	all of a user’s saved sessions.
+	Note that this will eventually be replaced by pure Python
+	code.  A basic parser is already implemented in Python,
+	but the Quills API must be extended to allow all of the
+	data from this file format to be passed in.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -234,7 +229,14 @@ enum SessionDescription_StringType
 	the toolbar is invisible.  Other possible values are "icon+text",
 	"icon+text+small", "icon", "icon+small", "text" and "text+small".
 	*/
-	kSessionDescription_StringTypeToolbarInfo		= 'Tbar'
+	kSessionDescription_StringTypeToolbarInfo		= 'Tbar',
+	
+	/*!
+	The name of the Macro Set preferences collection that should be enabled
+	when this session is active.  If the string is empty or does not match
+	any valid set, then no macros are enabled (the None set).
+	*/
+	kSessionDescription_StringTypeMacroSet			= 'Mcro'
 };
 
 #pragma mark Types

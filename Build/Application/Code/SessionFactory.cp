@@ -61,6 +61,7 @@
 #include "EventLoop.h"
 #include "InfoWindow.h"
 #include "Local.h"
+#include "MacroManager.h"
 #include "NetEvents.h"
 #include "NewSessionDialog.h"
 #include "Preferences.h"
@@ -742,6 +743,50 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
 	
 	// read terminal customization parameters
 	// INCOMPLETE
+	{
+		// macro set
+		CFStringRef		macroSetNameCFString = nullptr;
+		
+		
+		if (nullptr == macroSetNameCFString)
+		{
+			(MacroManager_Result)MacroManager_SetCurrentMacros(nullptr);
+		}
+		else
+		{
+			dataAccessError = SessionDescription_GetStringData
+								(inSessionDescription, kSessionDescription_StringTypeMacroSet, macroSetNameCFString);
+			if ((kSessionDescription_ResultOK != dataAccessError) ||
+				(false == Preferences_IsContextNameInUse(Quills::Prefs::MACRO_SET, macroSetNameCFString)))
+			{
+				Console_Warning(Console_WriteValueCFString, "unable to find requested macro set", macroSetNameCFString);
+				(MacroManager_Result)MacroManager_SetCurrentMacros(nullptr);
+			}
+			else
+			{
+				Preferences_ContextWrap		macroSet(Preferences_NewContextFromFavorites(Quills::Prefs::MACRO_SET,
+																							macroSetNameCFString),
+														true/* is retained */);
+				
+				
+				if (false == macroSet.exists())
+				{
+					Console_Assert("macro set not found by name even though Preferences module claims it exists", false);
+					(MacroManager_Result)MacroManager_SetCurrentMacros(nullptr);
+				}
+				else
+				{
+					MacroManager_Result		macroResult = MacroManager_SetCurrentMacros(macroSet.returnRef());
+					
+					
+					if (false == macroResult.ok())
+					{
+						Console_Warning(Console_WriteValueCFString, "unable to choose macro set", macroSetNameCFString);
+					}
+				}
+			}
+		}
+	}
 	{
 		// screen dimensions (total)
 		SInt32		rows = 0;
