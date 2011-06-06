@@ -3433,10 +3433,10 @@ notifying listeners of "kTerminal_ChangeFileCaptureEnding"
 events just prior to clearing internal file capture state.
 
 Since the Terminal module does not open the capture file,
-you must normally close it yourself using FSClose() after
+you’d normally close it yourself using FSCloseFork() after
 this routine returns.  HOWEVER, if you set the auto-close
-flag in Terminal_FileCaptureBegin(), then FSClose() WILL
-be called for you, and you lose ownership of the file.
+flag in Terminal_FileCaptureBegin(), then FSCloseFork()
+WILL be called for you, and you lose ownership of the file.
 
 (3.0)
 */
@@ -5787,7 +5787,7 @@ printingEnd		(Boolean	inSendRemainderToPrinter)
 {
 	if ((nullptr != this->printingStream) && (0 == this->printingModes))
 	{
-		FSClose(StreamCapture_ReturnReferenceNumber(this->printingStream));
+		FSCloseFork(StreamCapture_ReturnReferenceNumber(this->printingStream));
 		StreamCapture_End(this->printingStream);
 		StreamCapture_Release(&this->printingStream);
 		

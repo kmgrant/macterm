@@ -8096,7 +8096,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 								byteCountToWrite = total; // prepare for next loop
 							}
 							
-							error = FSClose(fileRefNum), fileRefNum = -1;
+							error = FSCloseFork(fileRefNum), fileRefNum = -1;
 							
 							// finally, “swap” the new file into the right place on disk
 							error = FSExchangeObjects(&temporaryFile, &saveFile);

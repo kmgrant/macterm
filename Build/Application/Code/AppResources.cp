@@ -158,12 +158,12 @@ AppResources_GetDockTileAttentionPicture	(PicHandle&		outPicture,
 		result = createPictureFromFile(fileRefNum, outPicture);
 		if (result == noErr)
 		{
-			FSClose(fileRefNum), fileRefNum = 0;
+			FSCloseFork(fileRefNum), fileRefNum = 0;
 			result = openPictureWithName(kUIStrings_FileNameDockTileAttentionMask, &fileRefNum);
 			if (result == noErr)
 			{
 				result = createPictureFromFile(fileRefNum, outMask);
-				FSClose(fileRefNum), fileRefNum = 0;
+				FSCloseFork(fileRefNum), fileRefNum = 0;
 			}
 		}
 	}
@@ -251,12 +251,12 @@ AppResources_GetToolbarPoofPictures		(UInt16			inZeroBasedAnimationStageIndex,
 			result = createPictureFromFile(fileRefNum, outFramePicture);
 			if (result == noErr)
 			{
-				FSClose(fileRefNum), fileRefNum = 0;
+				FSCloseFork(fileRefNum), fileRefNum = 0;
 				result = openPictureWithName(maskName, &fileRefNum);
 				if (result == noErr)
 				{
 					result = createPictureFromFile(fileRefNum, outFrameMask);
-					FSClose(fileRefNum), fileRefNum = 0;
+					FSCloseFork(fileRefNum), fileRefNum = 0;
 				}
 			}
 		}

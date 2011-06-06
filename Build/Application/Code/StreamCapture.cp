@@ -63,7 +63,7 @@ public:
 	{
 		if ((this->autoClose) && (0 != this->captureFileRefNum))
 		{
-			(OSErr)FSClose(this->captureFileRefNum);
+			(OSErr)FSCloseFork(this->captureFileRefNum);
 		}
 		this->captureFileRefNum = 0;
 	}
@@ -199,12 +199,12 @@ Terminates any file capture in progress that is associated
 with the specified object.
 
 Since the Stream Capture module does not open the capture
-file, you must subsequently close it using FSClose().
+file, you must subsequently close it using FSCloseFork().
 
 Since the Stream Capture module does not open the capture
-file, you must normally close it yourself using FSClose()
+file, you’d normally close it yourself using FSCloseFork()
 after this routine returns.  HOWEVER, if you set the
-auto-close flag in StreamCapture_Begin(), then FSClose()
+auto-close flag in StreamCapture_Begin(), then FSCloseFork()
 WILL be called for you, and you lose ownership of the file.
 
 (4.0)

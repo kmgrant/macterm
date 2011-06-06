@@ -144,8 +144,8 @@ FileUtilities_OpenDocuments		(AEDescList const&	inList)
 /*!
 Creates a unique new temporary file, and opens it for
 read and write, returning its reference number.  When
-you are finished, call FSClose() on the file.  Returns
-a positive number, and defines "outTemporaryFile", only
+finished, call FSCloseFork() on the file.  Returns a
+positive number, and defines "outTemporaryFile", only
 if successful.
 
 It is your responsibility to subsequently delete the
@@ -223,7 +223,7 @@ FileUtilities_OpenTemporaryFile		(FSRef&		outTemporaryFile)
 				else
 				{
 					// success!
-					SetEOF(result, (long)0);
+					(OSStatus)FSSetForkSize(result, fsFromStart, 0);
 				}
 			}
 		}

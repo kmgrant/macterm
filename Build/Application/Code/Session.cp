@@ -5766,7 +5766,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 							// The capture file is opened for writing at this point, but it is not necessary to
 							// close the file in the Session module because of the argument, below, that
 							// transfers responsibility for closing the file to the Terminal module.
-							SetEOF(fileRefNum, (long)0);
+							(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
 							// TEMPORARY - this command is not capable of handling multiple screens per window
 							Terminal_FileCaptureBegin(ptr->targetTerminals.front(), fileRefNum, true/* auto-close */);
 							
@@ -5881,9 +5881,9 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 							SessionDescription_Result	saveError = kSessionDescription_ResultOK;
 							
 							
-							SetEOF(fileRefNum, 0L);
+							(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
 							saveError = SessionDescription_Save(saveFileMemoryModel, fileRefNum);
-							FSClose(fileRefNum), fileRefNum = -1;
+							FSCloseFork(fileRefNum), fileRefNum = -1;
 							if (saveError == kSessionDescription_ResultOK)
 							{
 								error = FSExchangeObjects(&temporaryFile, &saveFile);
@@ -5894,9 +5894,9 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 									error = FSOpenFork(&saveFile, 0/* fork name length */, nullptr/* fork name */, fsWrPerm, &fileRefNum);
 									if (error == noErr)
 									{
-										SetEOF(fileRefNum, 0L);
+										(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
 										saveError = SessionDescription_Save(saveFileMemoryModel, fileRefNum);
-										FSClose(fileRefNum), fileRefNum = -1;
+										FSCloseFork(fileRefNum), fileRefNum = -1;
 									}
 								}
 							}
