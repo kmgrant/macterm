@@ -748,40 +748,70 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
 		CFStringRef		macroSetNameCFString = nullptr;
 		
 		
-		if (nullptr == macroSetNameCFString)
+		dataAccessError = SessionDescription_GetStringData
+							(inSessionDescription, kSessionDescription_StringTypeMacroSet, macroSetNameCFString);
+		if ((kSessionDescription_ResultOK != dataAccessError) || (nullptr == macroSetNameCFString))
 		{
 			(MacroManager_Result)MacroManager_SetCurrentMacros(nullptr);
 		}
 		else
 		{
-			dataAccessError = SessionDescription_GetStringData
-								(inSessionDescription, kSessionDescription_StringTypeMacroSet, macroSetNameCFString);
-			if ((kSessionDescription_ResultOK != dataAccessError) ||
-				(false == Preferences_IsContextNameInUse(Quills::Prefs::MACRO_SET, macroSetNameCFString)))
+			Preferences_ContextRef		defaultMacroSet = MacroManager_ReturnDefaultMacros();
+			CFStringRef					defaultName = nullptr;
+			
+			
+			if (nullptr != defaultMacroSet)
 			{
-				Console_Warning(Console_WriteValueCFString, "unable to find requested macro set", macroSetNameCFString);
-				(MacroManager_Result)MacroManager_SetCurrentMacros(nullptr);
+				Preferences_Result		prefsResult = Preferences_ContextGetName(defaultMacroSet, defaultName);
+				
+				
+				if (kPreferences_ResultOK != prefsResult)
+				{
+					defaultName = nullptr;
+				}
+			}
+			
+			if ((nullptr != defaultName) &&
+				(kCFCompareEqualTo == CFStringCompare(defaultName, macroSetNameCFString, 0/* flags */)))
+			{
+				// this is the Default macro set; assign accordingly
+				MacroManager_Result		macroResult = MacroManager_SetCurrentMacros(defaultMacroSet);
+				
+				
+				if (false == macroResult.ok())
+				{
+					Console_Warning(Console_WriteLine, "unable to choose default macro set");
+				}
 			}
 			else
 			{
-				Preferences_ContextWrap		macroSet(Preferences_NewContextFromFavorites(Quills::Prefs::MACRO_SET,
-																							macroSetNameCFString),
-														true/* is retained */);
-				
-				
-				if (false == macroSet.exists())
+				// non-Default macro set
+				if (false == Preferences_IsContextNameInUse(Quills::Prefs::MACRO_SET, macroSetNameCFString))
 				{
-					Console_Assert("macro set not found by name even though Preferences module claims it exists", false);
+					Console_Warning(Console_WriteValueCFString, "unable to find requested macro set", macroSetNameCFString);
 					(MacroManager_Result)MacroManager_SetCurrentMacros(nullptr);
 				}
 				else
 				{
-					MacroManager_Result		macroResult = MacroManager_SetCurrentMacros(macroSet.returnRef());
+					Preferences_ContextWrap		macroSet(Preferences_NewContextFromFavorites(Quills::Prefs::MACRO_SET,
+																								macroSetNameCFString),
+															true/* is retained */);
 					
 					
-					if (false == macroResult.ok())
+					if (false == macroSet.exists())
 					{
-						Console_Warning(Console_WriteValueCFString, "unable to choose macro set", macroSetNameCFString);
+						Console_Assert("macro set not found by name even though Preferences module claims it exists", false);
+						(MacroManager_Result)MacroManager_SetCurrentMacros(nullptr);
+					}
+					else
+					{
+						MacroManager_Result		macroResult = MacroManager_SetCurrentMacros(macroSet.returnRef());
+						
+						
+						if (false == macroResult.ok())
+						{
+							Console_Warning(Console_WriteValueCFString, "unable to choose macro set", macroSetNameCFString);
+						}
 					}
 				}
 			}
