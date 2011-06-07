@@ -271,6 +271,7 @@ enum
 	kPreferences_TagTerminalScreenScrollbackRows		= 'scrb',	//!< data: "UInt32"
 	kPreferences_TagTerminalScreenScrollbackType		= 'scrt',	//!< data: "Terminal_ScrollbackType"
 	kPreferences_TagVT100FixLineWrappingBug				= 'vlwr',	//!< data: "Boolean"
+	kPreferences_TagXTermBackgroundColorEraseEnabled	= 'xbce',	//!< data: "Boolean"
 	kPreferences_TagXTermColorEnabled					= 'xtcl',	//!< data: "Boolean"
 	kPreferences_TagXTerm256ColorsEnabled				= 'x256',	//!< data: "Boolean"
 	kPreferences_TagXTermGraphicsEnabled				= 'xtgr',	//!< data: "Boolean"

@@ -1268,6 +1268,8 @@ Preferences_Init ()
 									sizeof(OptionBits), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagVT100FixLineWrappingBug,
 										CFSTR("terminal-emulator-vt100-fix-line-wrapping-bug"), Quills::Prefs::TERMINAL);
+	My_PreferenceDefinition::createFlag(kPreferences_TagXTermBackgroundColorEraseEnabled,
+										CFSTR("terminal-emulator-xterm-enable-background-color-erase"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagXTerm256ColorsEnabled,
 										CFSTR("terminal-emulator-xterm-enable-color-256"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagXTermColorEnabled,
@@ -7370,6 +7372,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagTerminalLineWrap:
 				case kPreferences_TagVT100FixLineWrappingBug:
 				case kPreferences_TagXTerm256ColorsEnabled:
+				case kPreferences_TagXTermBackgroundColorEraseEnabled:
 				case kPreferences_TagXTermColorEnabled:
 				case kPreferences_TagXTermGraphicsEnabled:
 				case kPreferences_TagXTermWindowAlterationEnabled:
@@ -9578,6 +9581,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagVT100FixLineWrappingBug:
 			case kPreferences_TagXTerm256ColorsEnabled:
+			case kPreferences_TagXTermBackgroundColorEraseEnabled:
 			case kPreferences_TagXTermColorEnabled:
 			case kPreferences_TagXTermGraphicsEnabled:
 			case kPreferences_TagXTermWindowAlterationEnabled:

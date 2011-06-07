@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110606',
     '20110605',
     '20110527',
     '20110521',
@@ -383,6 +384,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110606': [
+        'Preferences window Terminals pane Emulation tab now offers the tweak "XTerm Background Color Erase", which is enabled by default.  This setting greatly improves the appearance of text editors and other "full window" programs that set their own terminal colors.',
+    ],
     '20110605': [
         'Saved session files now remember and restore the name of the active macro set.',
         'Preferences window Macros pane now uses no key mapping as a factory default instead of overriding function keys.',

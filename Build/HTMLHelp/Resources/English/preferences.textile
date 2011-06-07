@@ -820,6 +820,16 @@ Note that this feature could significantly increase the memory
 For this to work, your Identity may need to be "xterm-256color"
  or a 256-color variant such as "gnome-256color".
 
+h6. Background Color Erase
+
+In programs such as text editors that customize terminal colors,
+ this mode allows the most recent custom color to be applied to
+ any erased region (for efficiency, so that color settings do not
+ have to be repeatedly transmitted).
+
+This is a very important mode that is needed by many modern
+ terminal-based programs, so it is enabled by default.
+
 h6. Color
 
 Enables *only* the 16 basic colors commonly called "ANSI colors",

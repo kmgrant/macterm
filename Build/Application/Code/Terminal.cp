@@ -370,21 +370,26 @@ enum
 
 enum My_AttributeRule
 {
-	kMy_AttributeRuleInitialize		= 0,	//!< newly-created lines have cleared attributes
-	kMy_AttributeRuleCopyLastLine	= 1		//!< newly-created lines copy all of the attributes of the line that used to be at the end
+	kMy_AttributeRuleInitialize				= 0,	//!< newly-created lines have cleared attributes
+	kMy_AttributeRuleCopyLast				= 1,	//!< newly-created lines copy all of the attributes of the line that used to be at the end (or, for
+													//!  insertions of characters on a single line, new characters copy the attributes of the last character)
+	kMy_AttributeRuleCopyLatentBackground	= 2		//!< newly-created lines or characters have cleared attributes EXCEPT they copy the latent background color
 };
 
 typedef UInt32 My_BufferChanges;
 enum
 {
 	kMy_BufferChangesEraseAllText				= (1 << 0),		//!< erase every character (otherwise, only erasable text from selective erase is removed)
-	kMy_BufferChangesResetCharacterAttributes	= (1 << 1),		//!< every character is set to normal (otherwise, SGR-defined attributes are untouched)
-	kMy_BufferChangesResetLineAttributes		= (1 << 1),		//!< any completely-erased line resets line attributes, such as double-sized text, to normal;
+	kMy_BufferChangesResetCharacterAttributes	= (1 << 1),		//!< every character is set to normal (otherwise, SGR-defined attributes are untouched);
+																//!  if this flag is provided alongside other flags that specify new attributes, such as
+																//!  "kMy_BufferChangesKeepBackgroundColor", then this reset flag shall be applied FIRST
+																//!  and the attributes added by other flags shall be applied SECOND
+	kMy_BufferChangesResetLineAttributes		= (1 << 2),		//!< any completely-erased line resets line attributes, such as double-sized text, to normal;
 																//!  if you use this option then you must also use kMy_BufferChangesResetCharacterAttributes
-	kMy_BufferChangesNormal = (kMy_BufferChangesEraseAllText |
-								kMy_BufferChangesResetCharacterAttributes |
-								kMy_BufferChangesResetLineAttributes),
-	kMy_BufferChangesSelective = 0
+	kMy_BufferChangesKeepBackgroundColor		= (1 << 3)		//!< copies the background color that was most recently set, to ALL reset cells; this is a
+																//!  relatively efficient way to preserve background color across a large area (e.g. without
+																//!  requiring spaces), though it is technically non-standard behavior in a lot of terminals;
+																//!  note that the foreground color is not affected
 };
 
 enum My_CharacterSet
@@ -925,6 +930,18 @@ parameters collected and any pending operations.
 struct My_Emulator
 {
 public:
+	//! Variants allow emulators to be tweaked so that the
+	//! behavior is non-standard in some way.  They can also
+	//! allow memory or runtime optimizations when disabled.
+	typedef UInt8		VariantFlags;
+	enum
+	{
+		kVariantFlagsNone				= 0,
+		kVariantFlagXTerm256Color		= (1 << 0),		//!< corresponds to kPreferences_TagXTerm256ColorsEnabled
+		kVariantFlagXTermAlterWindow	= (1 << 1),		//!< corresponds to kPreferences_TagXTermWindowAlterationEnabled
+		kVariantFlagXTermBCE			= (1 << 2),		//!< corresponds to kPreferences_TagXTermBackgroundColorEraseEnabled
+	};
+	
 	struct Callbacks
 	{
 	public:
@@ -943,9 +960,8 @@ public:
 		My_EmulatorStateTransitionProcPtr	transitionHandler;		//!< handles new parser states, driving the terminal; varies based on the emulator
 	};
 	
-	typedef std::vector< Callbacks >		VariantChain;
-	typedef std::vector< SInt16 >			ParameterList;
-	typedef std::set< Preferences_Tag >		TagSet;
+	typedef std::vector< Callbacks >	VariantChain;
+	typedef std::vector< SInt16 >		ParameterList;
 	
 	My_Emulator		(Terminal_Emulator, CFStringRef, CFStringEncoding);
 	
@@ -964,6 +980,12 @@ public:
 	void
 	reset	(Boolean);
 	
+	My_BufferChanges
+	returnEraseEffectsForNormalUse ();
+	
+	My_BufferChanges
+	returnEraseEffectsForSelectiveUse ();
+	
 	void
 	sendEscape	(SessionRef, void const*, size_t);
 	
@@ -977,7 +999,7 @@ public:
 	set8BitTransmitNever	();
 	
 	Boolean
-	supportsVariant		(Preferences_Tag);
+	supportsVariant		(VariantFlags);
 	
 	Terminal_Emulator					primaryType;			//!< VT100, VT220, etc.
 	CFStringEncoding					inputTextEncoding;		//!< specifies the encoding used by the input data stream
@@ -994,7 +1016,7 @@ public:
 																//!  absorb too many actions, so every pre-callback must be ITS OWN CLASS and be lightweight
 	Callbacks							currentCallbacks;		//!< emulator-type-specific handlers to drive the state machine
 	Callbacks							pushedCallbacks;		//!< for emulators that can switch modes, the previous set of callbacks
-	TagSet								supportedVariants;		//!< tags identifying minor features, e.g. "kPreferences_TagXTerm256ColorsEnabled"
+	VariantFlags						supportedVariants;		//!< tags identifying minor features, e.g. 256-color support
 	Boolean								addedXTerm;				//!< since multiple variants reuse these callbacks, only insert them once
 
 protected:
@@ -1059,6 +1081,9 @@ public:
 	
 	Boolean
 	returnXTerm256	(Preferences_ContextRef);
+	
+	Boolean
+	returnXTermBackgroundColorErase		(Preferences_ContextRef);
 	
 	Boolean
 	returnXTermWindowAlteration		(Preferences_ContextRef);
@@ -1214,6 +1239,9 @@ public:
 																//!  in a way that does not clash with these attributes (e.g. by choosing opposite colors)
 		TerminalTextAttributes			drawingAttributes;		//!< text attributes for the line the cursor is on; these should be updated as the cursor
 																//!  moves, or as terminal sequences are processed by the emulator
+		TerminalTextAttributes			latentAttributes;		//!< used to implement Background Color Erase; records the most recent attribute settings
+																//!  (currently for background color bits ONLY, this is NOT properly updated for other
+																//!  attribute changes)
 		SInt16							cursorX;				//!< column number of current cursor position;
 																//!  WARNING: do not change this value except with a moveCursor...() routine
 		My_ScreenRowIndex				cursorY;				//!< row number of current cursor position;
@@ -1629,18 +1657,18 @@ void						bufferEraseFromHomeToCursor				(My_ScreenBufferPtr, My_BufferChanges);
 void						bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr, My_BufferChanges);
 void						bufferEraseLineWithoutUpdate			(My_ScreenBufferPtr, My_BufferChanges, My_ScreenBufferLine&);
 void						bufferEraseVisibleScreen				(My_ScreenBufferPtr, My_BufferChanges);
-void						bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr, SInt16);
+void						bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr, SInt16, My_AttributeRule);
 void						bufferInsertBlankLines					(My_ScreenBufferPtr, UInt16,
 																	 My_ScreenBufferLineList::iterator&,
-																	 My_AttributeRule = kMy_AttributeRuleInitialize);
+																	 My_AttributeRule);
 void						bufferLineFill							(My_ScreenBufferPtr, My_ScreenBufferLine&, UInt8,
 																	 TerminalTextAttributes =
 																		kTerminalTextAttributesAllOff,
 																	 Boolean = true);
-void						bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr, SInt16);
+void						bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr, SInt16, My_AttributeRule);
 void						bufferRemoveLines						(My_ScreenBufferPtr, UInt16,
 																	 My_ScreenBufferLineList::iterator&,
-																	 My_AttributeRule = kMy_AttributeRuleInitialize);
+																	 My_AttributeRule);
 void						changeLineAttributes					(My_ScreenBufferPtr, My_ScreenBufferLine&,
 																	 TerminalTextAttributes, TerminalTextAttributes);
 void						changeLineGlobalAttributes				(My_ScreenBufferPtr, My_ScreenBufferLine&,
@@ -5057,7 +5085,7 @@ currentCallbacks(returnDataWriter(inPrimaryEmulation),
 					returnStateTransitionHandler(inPrimaryEmulation),
 					returnResetHandler(inPrimaryEmulation)),
 pushedCallbacks(),
-supportedVariants(),
+supportedVariants(kVariantFlagsNone),
 addedXTerm(false),
 eightBitReceiver(false),
 eightBitTransmitter(false),
@@ -5215,6 +5243,69 @@ returnDataWriter	(Terminal_Emulator		inPrimaryEmulation)
 	}
 	return result;
 }// returnDataWriter
+
+
+/*!
+When implementing a type of erase that is not selective, this
+method should be called to determine the proper effects on the
+screen buffer.
+
+A normal erase will clear all text (to whitespace) and reset
+all attributes that are set on individual characters.  It will
+also set a flag to reset line-global attributes, but note that
+the internal routines that erase parts of the buffer will
+ignore this flag when only part of a line is being erased.
+
+If an emulator is configured for background-color-erase, then
+the returned attributes will specify that behavior.
+
+(4.0)
+*/
+My_BufferChanges
+My_Emulator::
+returnEraseEffectsForNormalUse ()
+{
+	My_BufferChanges	result = (kMy_BufferChangesEraseAllText |
+									kMy_BufferChangesResetCharacterAttributes |
+									kMy_BufferChangesResetLineAttributes);
+	
+	
+	if (supportsVariant(kVariantFlagXTermBCE))
+	{
+		result |= kMy_BufferChangesKeepBackgroundColor;
+	}
+	
+	return result;
+}// returnEraseEffectsForNormalUse
+
+
+/*!
+When implementing a type of erase that is selective, this method
+should be called to determine the proper effects on the screen
+buffer.
+
+A selective erase will not ordinarily touch any attributes and
+will not clear any text.
+
+If an emulator is configured for background-color-erase, then
+the returned attributes will specify that behavior.
+
+(4.0)
+*/
+My_BufferChanges
+My_Emulator::
+returnEraseEffectsForSelectiveUse ()
+{
+	My_BufferChanges	result = 0;
+	
+	
+	if (supportsVariant(kVariantFlagXTermBCE))
+	{
+		result |= kMy_BufferChangesKeepBackgroundColor;
+	}
+	
+	return result;
+}// returnEraseEffectsForSelectiveUse
 
 
 /*!
@@ -5479,17 +5570,13 @@ set8BitTransmitNever ()
 Returns true only if this terminal emulator has been configured
 to support the specified variant.
 
-Currently, the only expected tags are those identifying special
-terminal features, e.g. "kPreferences_TagXTerm256ColorsEnabled",
-"kPreferences_TagVT100FixLineWrappingBug".
-
 (4.0)
 */
 Boolean
 My_Emulator::
-supportsVariant		(Preferences_Tag	inTag)
+supportsVariant		(VariantFlags	inFlag)
 {
-	Boolean		result = (this->supportedVariants.end() != this->supportedVariants.find(inTag));
+	Boolean		result = (0 != (this->supportedVariants & inFlag));
 	
 	
 	return result;
@@ -5647,14 +5734,16 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	this->text.visibleScreen.numberOfColumnsPermitted = returnScreenColumns(inTerminalConfig);
 	this->current.cursorAttributes = kNoTerminalTextAttributes;
 	this->current.drawingAttributes = kNoTerminalTextAttributes;
+	this->current.latentAttributes = kNoTerminalTextAttributes;
 	this->previous.drawingAttributes = kInvalidTerminalTextAttributes; // initially no saved attribute
 	
 	// speech setup
 	this->speech.mode = kTerminal_SpeechModeSpeakNever;
 	
+	// set up optional terminal emulator features
 	if (returnXTerm256(inTerminalConfig))
 	{
-		this->emulator.supportedVariants.insert(kPreferences_TagXTerm256ColorsEnabled);
+		this->emulator.supportedVariants |= My_Emulator::kVariantFlagXTerm256Color;
 		if (false == this->emulator.addedXTerm)
 		{
 			this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
@@ -5665,9 +5754,16 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 			this->emulator.addedXTerm = true;
 		}	
 	}
+	if (returnXTermBackgroundColorErase(inTerminalConfig))
+	{
+		// although named for XTerm, this mode is technically handled at a very low level
+		// and is therefore supported by any kind of emulator; so, it is not necessary to
+		// install any extra callbacks (even though other variants install callbacks)
+		this->emulator.supportedVariants |= My_Emulator::kVariantFlagXTermBCE;
+	}
 	if (returnXTermWindowAlteration(inTerminalConfig))
 	{
-		this->emulator.supportedVariants.insert(kPreferences_TagXTermWindowAlterationEnabled);
+		this->emulator.supportedVariants |= My_Emulator::kVariantFlagXTermAlterWindow;
 		if (false == this->emulator.addedXTerm)
 		{
 			this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
@@ -6074,6 +6170,29 @@ returnXTerm256	(Preferences_ContextRef		inTerminalConfig)
 	
 	return result;
 }// returnXTerm256
+
+
+/*!
+Reads "kPreferences_TagXTermBackgroundColorEraseEnabled" from
+a Preferences context, and returns either that value or the
+default of true if none was found.
+
+(4.0)
+*/
+Boolean
+My_ScreenBuffer::
+returnXTermBackgroundColorErase		(Preferences_ContextRef		inTerminalConfig)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	Boolean					result = true;
+	
+	
+	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagXTermBackgroundColorEraseEnabled,
+												sizeof(result), &result);
+	if (kPreferences_ResultOK != prefsResult) result = true; // arbitrary
+	
+	return result;
+}// returnXTermBackgroundColorErase
 
 
 /*!
@@ -7425,7 +7544,7 @@ My_VT100::
 alignmentDisplay	(My_ScreenBufferPtr		inDataPtr)
 {
 	// first clear the buffer, saving it to scrollback if appropriate
-	bufferEraseVisibleScreen(inDataPtr, kMy_BufferChangesNormal);
+	bufferEraseVisibleScreen(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse());
 	
 	// now fill the lines with letter-E characters; technically this
 	// also will reset all attributes and this may not be part of the
@@ -7726,15 +7845,15 @@ eraseInDisplay		(My_ScreenBufferPtr		inDataPtr)
 	{
 	case kMy_ParamUndefined: // when nothing is given, the default value is 0
 	case 0:
-		bufferEraseFromCursorToEnd(inDataPtr, kMy_BufferChangesNormal);
+		bufferEraseFromCursorToEnd(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse());
 		break;
 	
 	case 1:
-		bufferEraseFromHomeToCursor(inDataPtr, kMy_BufferChangesNormal);
+		bufferEraseFromHomeToCursor(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse());
 		break;
 	
 	case 2:
-		bufferEraseVisibleScreen(inDataPtr, kMy_BufferChangesNormal);
+		bufferEraseVisibleScreen(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse());
 		break;
 	
 	default:
@@ -7758,15 +7877,15 @@ eraseInLine		(My_ScreenBufferPtr		inDataPtr)
 	{
 	case kMy_ParamUndefined: // when nothing is given, the default value is 0
 	case 0:
-		bufferEraseFromCursorColumnToLineEnd(inDataPtr, kMy_BufferChangesNormal);
+		bufferEraseFromCursorColumnToLineEnd(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse());
 		break;
 	
 	case 1:
-		bufferEraseFromLineBeginToCursorColumn(inDataPtr, kMy_BufferChangesNormal);
+		bufferEraseFromLineBeginToCursorColumn(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse());
 		break;
 	
 	case 2:
-		bufferEraseCursorLine(inDataPtr, kMy_BufferChangesNormal);
+		bufferEraseCursorLine(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse());
 		break;
 	
 	default:
@@ -8985,7 +9104,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				// Other values are basically recognized because they are
 				// compatible with VT100 and are very often used (ANSI
 				// colors in particular).
-				if (p == 0) STYLE_REMOVE(inDataPtr->current.drawingAttributes, kAllStyleOrColorTerminalTextAttributes); // all style bits off
+				if (p == 0)
+				{
+					STYLE_REMOVE(inDataPtr->current.drawingAttributes, kAllStyleOrColorTerminalTextAttributes); // all style bits off
+					STYLE_COPY_BACKGROUND(inDataPtr->current.drawingAttributes, inDataPtr->current.latentAttributes);
+				}
 				else if (p < 9) STYLE_ADD(inDataPtr->current.drawingAttributes, styleOfVTParameter(p)); // set attribute
 				else if (p == 10) { /* set normal font - unsupported */ }
 				else if (p == 11) { /* set alternate font - unsupported */ }
@@ -9001,10 +9124,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					else if ((p >= 40) && (p < 48))
 					{
 						STYLE_SET_BACKGROUND_INDEX(inDataPtr->current.drawingAttributes, p - 40);
+						STYLE_COPY_BACKGROUND(inDataPtr->current.drawingAttributes, inDataPtr->current.latentAttributes);
 					}
 					else if ((38 == p) || (48 == p))
 					{
-						if (inDataPtr->emulator.supportsVariant(kPreferences_TagXTerm256ColorsEnabled))
+						if (inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTerm256Color))
 						{
 							//Console_WriteLine("request to set one of 256 background or foreground colors");
 							if (2 != (inDataPtr->emulator.argLastIndex - i))
@@ -9039,6 +9163,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 									else
 									{
 										STYLE_SET_BACKGROUND_INDEX(inDataPtr->current.drawingAttributes, kColorParam);
+										STYLE_COPY_BACKGROUND(inDataPtr->current.drawingAttributes, inDataPtr->current.latentAttributes);
 									}
 								}
 								++i; // skip next parameter (2)
@@ -9055,6 +9180,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					{
 						// generally means “reset background”
 						STYLE_CLEAR_BACKGROUND_INDEX(inDataPtr->current.drawingAttributes);
+						STYLE_COPY_BACKGROUND(inDataPtr->current.drawingAttributes, inDataPtr->current.latentAttributes);
 					}
 					else if ((p >= 90) && (p < 98))
 					{
@@ -9063,6 +9189,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					else if ((p >= 100) && (p < 108))
 					{
 						STYLE_SET_BACKGROUND_INDEX(inDataPtr->current.drawingAttributes, 8 + (p - 100));
+						STYLE_COPY_BACKGROUND(inDataPtr->current.drawingAttributes, inDataPtr->current.latentAttributes);
 					}
 					else
 					{
@@ -9430,11 +9557,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateEES:
-		bufferEraseFromCursorToEnd(inDataPtr, kMy_BufferChangesNormal); // erase to end of screen, in VT52 compatibility mode of VT100
+		bufferEraseFromCursorToEnd(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse()); // erase to end of screen, in VT52 compatibility mode of VT100
 		break;
 	
 	case kStateEEL:
-		bufferEraseFromCursorColumnToLineEnd(inDataPtr, kMy_BufferChangesNormal); // erase to end of line, in VT52 compatibility mode of VT100
+		bufferEraseFromCursorColumnToLineEnd(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse()); // erase to end of line, in VT52 compatibility mode of VT100
 		break;
 	
 	case kStateDCA:
@@ -9550,7 +9677,10 @@ deleteCharacters	(My_ScreenBufferPtr		inDataPtr)
 			++totalChars;
 		}
 	}
-	bufferRemoveCharactersAtCursorColumn(inDataPtr, totalChars);
+	bufferRemoveCharactersAtCursorColumn(inDataPtr, totalChars,
+											inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTermBCE)
+											? kMy_AttributeRuleCopyLatentBackground
+											: kMy_AttributeRuleCopyLast);
 }// My_VT102::deleteCharacters
 
 
@@ -9607,7 +9737,10 @@ deleteLines		(My_ScreenBufferPtr		inDataPtr)
 				++totalLines;
 			}
 		}
-		bufferRemoveLines(inDataPtr, totalLines, lineIterator, kMy_AttributeRuleCopyLastLine);
+		bufferRemoveLines(inDataPtr, totalLines, lineIterator,
+							inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTermBCE)
+							? kMy_AttributeRuleCopyLatentBackground
+							: kMy_AttributeRuleCopyLast);
 	}
 }// My_VT102::deleteLines
 
@@ -9645,7 +9778,10 @@ insertLines		(My_ScreenBufferPtr		inDataPtr)
 				++totalLines;
 			}
 		}
-		bufferInsertBlankLines(inDataPtr, totalLines, lineIterator, kMy_AttributeRuleInitialize);
+		bufferInsertBlankLines(inDataPtr, totalLines, lineIterator,
+								inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTermBCE)
+								? kMy_AttributeRuleCopyLatentBackground
+								: kMy_AttributeRuleInitialize);
 	}
 }// My_VT102::insertLines
 
@@ -10091,7 +10227,7 @@ eraseCharacters		(My_ScreenBufferPtr		inDataPtr)
 			characterCount = 1;
 		}
 		
-		bufferEraseFromCursorColumn(inDataPtr, kMy_BufferChangesNormal, characterCount);
+		bufferEraseFromCursorColumn(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse(), characterCount);
 	}
 }// My_VT220::eraseCharacters
 
@@ -10155,7 +10291,10 @@ insertBlankCharacters	(My_ScreenBufferPtr		inDataPtr)
 			characterCount = 1;
 		}
 		
-		bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, characterCount);
+		bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, characterCount,
+														inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTermBCE)
+														? kMy_AttributeRuleCopyLatentBackground
+														: kMy_AttributeRuleInitialize);
 		
 		// add the effects of the insert to the text-change region;
 		// this should trigger things like Terminal View updates
@@ -10303,15 +10442,15 @@ selectiveEraseInDisplay		(My_ScreenBufferPtr		inDataPtr)
 		{
 		case kMy_ParamUndefined: // when nothing is given, the default value is 0
 		case 0:
-			bufferEraseFromCursorToEnd(inDataPtr, kMy_BufferChangesSelective);
+			bufferEraseFromCursorToEnd(inDataPtr, inDataPtr->emulator.returnEraseEffectsForSelectiveUse());
 			break;
 		
 		case 1:
-			bufferEraseFromHomeToCursor(inDataPtr, kMy_BufferChangesSelective);
+			bufferEraseFromHomeToCursor(inDataPtr, inDataPtr->emulator.returnEraseEffectsForSelectiveUse());
 			break;
 		
 		case 2:
-			bufferEraseVisibleScreen(inDataPtr, kMy_BufferChangesSelective);
+			bufferEraseVisibleScreen(inDataPtr, inDataPtr->emulator.returnEraseEffectsForSelectiveUse());
 			break;
 		
 		default:
@@ -10347,15 +10486,15 @@ selectiveEraseInLine	(My_ScreenBufferPtr		inDataPtr)
 		{
 		case kMy_ParamUndefined: // when nothing is given, the default value is 0
 		case 0:
-			bufferEraseFromCursorColumnToLineEnd(inDataPtr, kMy_BufferChangesSelective);
+			bufferEraseFromCursorColumnToLineEnd(inDataPtr, inDataPtr->emulator.returnEraseEffectsForSelectiveUse());
 			break;
 		
 		case 1:
-			bufferEraseFromLineBeginToCursorColumn(inDataPtr, kMy_BufferChangesSelective);
+			bufferEraseFromLineBeginToCursorColumn(inDataPtr, inDataPtr->emulator.returnEraseEffectsForSelectiveUse());
 			break;
 		
 		case 2:
-			bufferEraseCursorLine(inDataPtr, kMy_BufferChangesSelective);
+			bufferEraseCursorLine(inDataPtr, inDataPtr->emulator.returnEraseEffectsForSelectiveUse());
 			break;
 		
 		default:
@@ -11368,7 +11507,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	#endif
 	
 	case kStateSWITAcquireStr:
-		if (inEmulatorPtr->supportsVariant(kPreferences_TagXTermWindowAlterationEnabled))
+		if (inEmulatorPtr->supportsVariant(My_Emulator::kVariantFlagXTermAlterWindow))
 		{
 			switch (kTriggerChar)
 			{
@@ -11395,7 +11534,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		break;
 	
 	case kStateSITAcquireStr:
-		if (inEmulatorPtr->supportsVariant(kPreferences_TagXTermWindowAlterationEnabled))
+		if (inEmulatorPtr->supportsVariant(My_Emulator::kVariantFlagXTermAlterWindow))
 		{
 			switch (kTriggerChar)
 			{
@@ -11422,7 +11561,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		break;
 	
 	case kStateSWTAcquireStr:
-		if (inEmulatorPtr->supportsVariant(kPreferences_TagXTermWindowAlterationEnabled))
+		if (inEmulatorPtr->supportsVariant(My_Emulator::kVariantFlagXTermAlterWindow))
 		{
 			switch (kTriggerChar)
 			{
@@ -11449,7 +11588,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		break;
 	
 	case kStateColorAcquireStr:
-		if (inEmulatorPtr->supportsVariant(kPreferences_TagXTerm256ColorsEnabled))
+		if (inEmulatorPtr->supportsVariant(My_Emulator::kVariantFlagXTerm256Color))
 		{
 			switch (kTriggerChar)
 			{
@@ -11549,7 +11688,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		case kStateSWIT:
 		case kStateSIT:
 		case kStateSWT:
-			if (inDataPtr->emulator.supportsVariant(kPreferences_TagXTermWindowAlterationEnabled))
+			if (inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTermAlterWindow))
 			{
 				CFStringRef		titleString = CFStringCreateWithCString(kCFAllocatorDefault,
 																		inDataPtr->emulator.stringAccumulator.c_str(),
@@ -11581,7 +11720,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			break;
 		
 		case kStateSetColor:
-			if (inDataPtr->emulator.supportsVariant(kPreferences_TagXTerm256ColorsEnabled))
+			if (inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTerm256Color))
 			{
 				// the accumulated string up to this point actually needs to be parsed; currently,
 				// only strings of this form are allowed:
@@ -11801,11 +11940,21 @@ bufferEraseFromCursorColumn		(My_ScreenBufferPtr		inDataPtr,
 	endText = textIterator;
 	std::advance(endText, fillDistance);
 	
-	// clear attributes if appropriate; note that since a partial line is
+	// change attributes if appropriate; note that since a partial line is
 	// being erased, "kMy_BufferChangesResetLineAttributes" does NOT apply
 	if (inChanges & kMy_BufferChangesResetCharacterAttributes)
 	{
 		std::fill(attrIterator, endAttrs, cursorLineIterator->globalAttributes);
+	}
+	if (inChanges & kMy_BufferChangesKeepBackgroundColor)
+	{
+		My_TextAttributesList::iterator		tmpAttrIterator;
+		
+		
+		for (tmpAttrIterator = attrIterator; tmpAttrIterator != endAttrs; ++tmpAttrIterator)
+		{
+			STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, *tmpAttrIterator);
+		}
 	}
 	
 	// clear out the specified part of the screen line
@@ -11884,11 +12033,21 @@ bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr,
 	std::advance(textIterator, postWrapCursorX);
 	endText = cursorLineIterator->textVectorEnd;
 	
-	// clear attributes if appropriate; note that since a partial line is
+	// change attributes if appropriate; note that since a partial line is
 	// being erased, "kMy_BufferChangesResetLineAttributes" does NOT apply
 	if (inChanges & kMy_BufferChangesResetCharacterAttributes)
 	{
 		std::fill(attrIterator, endAttrs, cursorLineIterator->globalAttributes);
+	}
+	if (inChanges & kMy_BufferChangesKeepBackgroundColor)
+	{
+		My_TextAttributesList::iterator		tmpAttrIterator;
+		
+		
+		for (tmpAttrIterator = attrIterator; tmpAttrIterator != endAttrs; ++tmpAttrIterator)
+		{
+			STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, *tmpAttrIterator);
+		}
 	}
 	
 	// clear out the specified screen line
@@ -12083,11 +12242,21 @@ bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr		inDataPtr,
 	endText = textIterator;
 	std::advance(endText, fillDistance);
 	
-	// clear attributes if appropriate; note that since a partial line is
+	// change attributes if appropriate; note that since a partial line is
 	// being erased, "kMy_BufferChangesResetLineAttributes" does NOT apply
 	if (inChanges & kMy_BufferChangesResetCharacterAttributes)
 	{
 		std::fill(attrIterator, endAttrs, cursorLineIterator->globalAttributes);
+	}
+	if (inChanges & kMy_BufferChangesKeepBackgroundColor)
+	{
+		My_TextAttributesList::iterator		tmpAttrIterator;
+		
+		
+		for (tmpAttrIterator = attrIterator; tmpAttrIterator != endAttrs; ++tmpAttrIterator)
+		{
+			STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, *tmpAttrIterator);
+		}
 	}
 	
 	// clear out the specified part of the screen line
@@ -12134,7 +12303,7 @@ more specific "bufferErase...()" routines.
 (2.6)
 */
 void
-bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	UNUSED_ARGUMENT(inDataPtr),
+bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
 								 My_BufferChanges		inChanges,
 								 My_ScreenBufferLine&	inRow)
 {
@@ -12153,7 +12322,7 @@ bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	UNUSED_ARGUMENT(inDataPtr),
 	// 3.0 - line-global attributes are cleared only if clearing an entire line
 	inRow.globalAttributes = kTerminalTextAttributesAllOff;
 	
-	// clear attributes if appropriate
+	// change attributes if appropriate
 	if (inChanges & kMy_BufferChangesResetLineAttributes)
 	{
 		inRow.globalAttributes = kTerminalTextAttributesAllOff;
@@ -12161,6 +12330,16 @@ bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	UNUSED_ARGUMENT(inDataPtr),
 	if (inChanges & kMy_BufferChangesResetCharacterAttributes)
 	{
 		std::fill(attrIterator, endAttrs, inRow.globalAttributes);
+	}
+	if (inChanges & kMy_BufferChangesKeepBackgroundColor)
+	{
+		My_TextAttributesList::iterator		tmpAttrIterator;
+		
+		
+		for (tmpAttrIterator = attrIterator; tmpAttrIterator != endAttrs; ++tmpAttrIterator)
+		{
+			STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, *tmpAttrIterator);
+		}
 	}
 	
 	// clear out the screen line
@@ -12229,21 +12408,26 @@ bufferEraseVisibleScreen	(My_ScreenBufferPtr		inDataPtr,
 
 
 /*!
-Inserts the specified number of blank characters at the
-current cursor position, truncating that many characters
-from the end of the line when the line is shifted.  The
-display is NOT updated.
+Inserts the specified number of blank characters at the current
+cursor position, truncating that many characters from the end of
+the line when the line is shifted.  The display is NOT updated.
+
+If "inAttributeRule" is "kMy_AttributeRuleCopyLatentBackground",
+then the background color attribute of each new blank character
+comes from the most recent background color setting.
 
 (2.6)
 */
 void
 bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
-												 SInt16					inNumberOfBlankCharactersToInsert)
+												 SInt16					inNumberOfBlankCharactersToInsert,
+												 My_AttributeRule		inAttributeRule)
 {
 	UInt16								numBlanksToAdd = inNumberOfBlankCharactersToInsert;
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
 	My_ScreenBufferLineList::iterator	toCursorLine;
+	TerminalTextAttributes				copiedAttributes = kNoTerminalTextAttributes;
 	
 	
 	// wrap cursor
@@ -12255,6 +12439,13 @@ bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 	if ((postWrapCursorX + numBlanksToAdd) >= inDataPtr->current.returnNumberOfColumnsPermitted())
 	{
 		numBlanksToAdd = inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX;
+	}
+	
+	// change attributes if necessary
+	copiedAttributes = toCursorLine->globalAttributes;
+	if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
+	{
+		STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, copiedAttributes);
 	}
 	
 	// update attributes
@@ -12275,7 +12466,7 @@ bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 		std::advance(pastLastPreservedAttr, -numBlanksToAdd);
 		
 		std::copy_backward(toCursorAttr, pastLastPreservedAttr, pastVisibleEnd);
-		std::fill(toCursorAttr, toFirstRelocatedAttr, toCursorLine->globalAttributes);
+		std::fill(toCursorAttr, toFirstRelocatedAttr, copiedAttributes);
 	}
 	
 	// update text
@@ -12306,10 +12497,9 @@ Inserts the specified number of blank lines, scrolling the
 remaining ones down and dropping any that fall off the end
 of the scrolling region.  The display is updated.
 
-New blank lines normally have cleared attributes.  However, if
-"inAttributeRule" is set to "kMy_AttributeRuleCopyLastLine",
-they will instead copy the attributes of the given insertion
-line.
+New blank lines normally have cleared attributes.  If however
+"inAttributeRule" is set to "kMy_AttributeRuleCopyLast", they
+will instead copy the attributes of the given insertion line.
 
 See also bufferRemoveLines().
 
@@ -12344,13 +12534,27 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 		
 		
 		// insert blank lines
-		if ((kMy_AttributeRuleCopyLastLine == inAttributeRule) && (scrollingRegionEnd != scrollingRegionBegin))
+		if ((kMy_AttributeRuleCopyLast == inAttributeRule) && (scrollingRegionEnd != scrollingRegionBegin))
 		{
 			My_ScreenBufferLine		lineTemplate = gEmptyScreenBufferLine();
 			
 			
 			lineTemplate.attributeVector = (*inInsertionLine).attributeVector;
 			lineTemplate.globalAttributes = (*inInsertionLine).globalAttributes;
+			inDataPtr->screenBuffer.insert(inInsertionLine, kMostLines, lineTemplate);
+		}
+		else if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
+		{
+			My_ScreenBufferLine					lineTemplate = gEmptyScreenBufferLine();
+			My_TextAttributesList::iterator		tmpAttrIterator;
+			
+			
+			// the new lines have no attributes EXCEPT for a custom background color
+			for (tmpAttrIterator = lineTemplate.attributeVector.begin();
+					tmpAttrIterator != lineTemplate.attributeVector.end(); ++tmpAttrIterator)
+			{
+				STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, *tmpAttrIterator);
+			}
 			inDataPtr->screenBuffer.insert(inInsertionLine, kMostLines, lineTemplate);
 		}
 		else
@@ -12409,15 +12613,23 @@ bufferLineFill	(My_ScreenBufferPtr			UNUSED_ARGUMENT(inDataPtr),
 
 
 /*!
-Deletes characters starting at the current cursor
-position and moving forwards.  The rest of the line
-is shifted to the left as a result.
+Deletes characters starting at the current cursor position and
+moving forwards.  The rest of the line is shifted to the left
+as a result.
+
+If "inAttributeRule" is set to "kMy_AttributeRuleCopyLast",
+all new blank characters copy the attributes of the last
+character on the cursor line.  If the rule is set to
+"kMy_AttributeRuleCopyLatentBackground", then the background
+color attribute comes from the most recent background color
+setting.
 
 (3.0)
 */
 void
 bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
-										 SInt16					inNumberOfCharactersToDelete)
+										 SInt16					inNumberOfCharactersToDelete,
+										 My_AttributeRule		inAttributeRule)
 {
 	UInt16								numCharsToRemove = inNumberOfCharactersToDelete;
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
@@ -12437,8 +12649,16 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 		numCharsToRemove = inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX;
 	}
 	
-	// the VT102 specification says that the blank attributes are copied from the last character
-	copiedAttributes = toCursorLine->attributeVector[inDataPtr->current.returnNumberOfColumnsPermitted() - 1];
+	// change attributes if necessary
+	copiedAttributes = toCursorLine->globalAttributes;
+	if (kMy_AttributeRuleCopyLast == inAttributeRule)
+	{
+		copiedAttributes = toCursorLine->attributeVector[inDataPtr->current.returnNumberOfColumnsPermitted() - 1];
+	}
+	else if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
+	{
+		STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, copiedAttributes);
+	}
 	
 	// update attributes
 	{
@@ -12505,10 +12725,10 @@ Deletes lines from the screen buffer, scrolling up the
 remainder and inserting new blank lines at the bottom of the
 scrolling region.  The display is updated.
 
-New blank lines normally have cleared attributes.  However, if
-"inAttributeRule" is set to "kMy_AttributeRuleCopyLastLine",
-they will instead copy the attributes of the line that was at
-the end prior to new lines being inserted.
+New blank lines normally have cleared attributes.  If however
+"inAttributeRule" is set to "kMy_AttributeRuleCopyLast", they
+will instead copy the attributes of the line that was at the
+end prior to new lines being inserted.
 
 See also bufferInsertBlankLines().
 
@@ -12543,7 +12763,7 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 		
 		
 		// insert blank lines
-		if ((kMy_AttributeRuleCopyLastLine == inAttributeRule) && (scrollingRegionEnd != scrollingRegionBegin))
+		if ((kMy_AttributeRuleCopyLast == inAttributeRule) && (scrollingRegionEnd != scrollingRegionBegin))
 		{
 			My_ScreenBufferLine					lineTemplate = gEmptyScreenBufferLine();
 			My_ScreenBufferLineList::iterator	toCopiedLine = scrollingRegionEnd;
@@ -12552,6 +12772,20 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 			std::advance(toCopiedLine, -1);
 			lineTemplate.attributeVector = (*toCopiedLine).attributeVector;
 			lineTemplate.globalAttributes = (*toCopiedLine).globalAttributes;
+			inDataPtr->screenBuffer.insert(scrollingRegionEnd, kMostLines, lineTemplate);
+		}
+		else if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
+		{
+			My_ScreenBufferLine					lineTemplate = gEmptyScreenBufferLine();
+			My_TextAttributesList::iterator		tmpAttrIterator;
+			
+			
+			// the new lines have no attributes EXCEPT for a custom background color
+			for (tmpAttrIterator = lineTemplate.attributeVector.begin();
+					tmpAttrIterator != lineTemplate.attributeVector.end(); ++tmpAttrIterator)
+			{
+				STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, *tmpAttrIterator);
+			}
 			inDataPtr->screenBuffer.insert(scrollingRegionEnd, kMostLines, lineTemplate);
 		}
 		else
@@ -12898,7 +13132,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			// write characters on a single line
 			if (inDataPtr->modeInsertNotReplace)
 			{
-				bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, 1/* number of blank characters */);
+				bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, 1/* number of blank characters */, kMy_AttributeRuleInitialize);
 			}
 			cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, thisCharacter,
 																									inDataPtr->current.drawingAttributes,
@@ -13190,7 +13424,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					// write characters on a single line
 					if (inDataPtr->modeInsertNotReplace)
 					{
-						bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, 1/* number of blank characters */);
+						bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, 1/* number of blank characters */, kMy_AttributeRuleInitialize);
 					}
 					cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *c, attrib,
 																											temporaryAttributes);
@@ -13343,11 +13577,11 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				goto ShortCut;
 			
 			case 'J':
-				unless (inDataPtr->modeANSIEnabled) bufferEraseFromCursorToEnd(inDataPtr, kMy_BufferChangesNormal); // erase to end of screen, in VT52 compatibility mode of VT100
+				unless (inDataPtr->modeANSIEnabled) bufferEraseFromCursorToEnd(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse()); // erase to end of screen, in VT52 compatibility mode of VT100
 				goto ShortCut;
 			
 			case 'K':
-				unless (inDataPtr->modeANSIEnabled) bufferEraseFromCursorColumnToLineEnd(inDataPtr, kMy_BufferChangesNormal); // erase to end of line, in VT52 compatibility mode of VT100
+				unless (inDataPtr->modeANSIEnabled) bufferEraseFromCursorColumnToLineEnd(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse()); // erase to end of line, in VT52 compatibility mode of VT100
 				goto ShortCut;
 			
 			case 'M':
@@ -13851,20 +14085,21 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					{
 						inDataPtr->emulator.argList[0] = 1;
 					}
-					bufferRemoveLines(inDataPtr, inDataPtr->emulator.argList[0], cursorLineIterator, kMy_AttributeRuleCopyLastLine);
+					bufferRemoveLines(inDataPtr, inDataPtr->emulator.argList[0], cursorLineIterator, kMy_AttributeRuleCopyLast);
 				}
 				goto ShortCut;
 			
 			case '@':
 				if (inDataPtr->emulator.argList[0] < 1)
 					inDataPtr->emulator.argList[0] = 1;
-				bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, inDataPtr->emulator.argList[0]/* number of blank characters */);
+				bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, inDataPtr->emulator.argList[0]/* number of blank characters */,
+																kMy_AttributeRuleInitialize);
 				goto ShortCut;
 			
 			case 'P':
 				if (inDataPtr->emulator.argList[0] < 1)
 					inDataPtr->emulator.argList[0] = 1;
-				bufferRemoveCharactersAtCursorColumn(inDataPtr, inDataPtr->emulator.argList[0]);
+				bufferRemoveCharactersAtCursorColumn(inDataPtr, inDataPtr->emulator.argList[0], kMy_AttributeRuleCopyLast);
 				goto ShortCut;				
 			
 			case 'r':
@@ -14842,6 +15077,7 @@ resetTerminal   (My_ScreenBufferPtr		inDataPtr,
 	inDataPtr->originRegionPtr = &inDataPtr->visibleBoundary.rows;
 	inDataPtr->previous.drawingAttributes = kInvalidTerminalTextAttributes;
 	inDataPtr->current.drawingAttributes = kNoTerminalTextAttributes;
+	inDataPtr->current.latentAttributes = kNoTerminalTextAttributes;
 	inDataPtr->modeInsertNotReplace = false;
 	inDataPtr->modeNewLineOption = false;
 	inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG0;
@@ -14855,7 +15091,7 @@ resetTerminal   (My_ScreenBufferPtr		inDataPtr,
 	unless (inSoftReset)
 	{
 		moveCursor(inDataPtr, 0, 0);
-		bufferEraseVisibleScreen(inDataPtr, kMy_BufferChangesNormal);
+		bufferEraseVisibleScreen(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse());
 	}
 	tabStopInitialize(inDataPtr);
 	highlightLED(inDataPtr, 0/* zero means “turn off all LEDs” */);
@@ -15218,7 +15454,10 @@ screenScroll	(My_ScreenBufferPtr		inDataPtr,
 				
 				// region being scrolled is not entire screen; no saving of lines
 				locateScrollingRegionTop(inDataPtr, scrollingRegionBegin);
-				bufferRemoveLines(inDataPtr, inLineCount, scrollingRegionBegin);
+				bufferRemoveLines(inDataPtr, inLineCount, scrollingRegionBegin,
+									inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTermBCE)
+									? kMy_AttributeRuleCopyLatentBackground
+									: kMy_AttributeRuleInitialize);
 			}
 		}
 	}
@@ -15230,7 +15469,10 @@ screenScroll	(My_ScreenBufferPtr		inDataPtr,
 		
 		
 		locateScrollingRegionTop(inDataPtr, scrollingRegionBegin);
-		bufferInsertBlankLines(inDataPtr, -inLineCount, scrollingRegionBegin/* insertion row */);
+		bufferInsertBlankLines(inDataPtr, -inLineCount, scrollingRegionBegin/* insertion row */,
+								inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTermBCE)
+								? kMy_AttributeRuleCopyLatentBackground
+								: kMy_AttributeRuleInitialize);
 	}
 }// screenScroll
 

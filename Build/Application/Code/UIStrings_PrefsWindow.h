@@ -97,6 +97,7 @@ enum UIStrings_PreferencesWindowCFString
 	// For simplicity, code in Preferences user interfaces assumes that tags can be
 	// used instead of the “proper” enumeration names, for these “named preferences”.
 	kUIStrings_PreferencesWindowTerminalsVT100FixLineWrapBug	= kPreferences_TagVT100FixLineWrappingBug,
+	kUIStrings_PreferencesWindowTerminalsXTermBackColorErase	= kPreferences_TagXTermBackgroundColorEraseEnabled,
 	kUIStrings_PreferencesWindowTerminalsXTerm256ColorsEnabled	= kPreferences_TagXTerm256ColorsEnabled,
 	kUIStrings_PreferencesWindowTerminalsXTermColorEnabled		= kPreferences_TagXTermColorEnabled,
 	kUIStrings_PreferencesWindowTerminalsXTermGraphicsEnabled	= kPreferences_TagXTermGraphicsEnabled,

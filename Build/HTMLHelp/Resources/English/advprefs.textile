@@ -245,6 +245,8 @@ table(deftable).
 (defbottom). |\2(desc). Default behavior (such as which sequences are read, and what effects they have) follows the specification of this terminal.|
 (deftop). |(key). @terminal-emulator-vt100-fix-line-wrapping-bug@|(types). _true or false_|
 (defbottom). |\2(desc). Avoids strict VT100 emulation, preventing a real bug in VT100s that causes the last terminal line to scroll when wrapped.|
+(deftop). |(key). @terminal-emulator-xterm-enable-background-color-erase@|(types). _true or false_|
+(defbottom). |\2(desc). Events such as screen-clears will apply the last-set background color instead of the default background color.|
 (deftop). |(key). @terminal-emulator-xterm-enable-color@|(types). _true or false_|
 (defbottom). |\2(desc). 16 ANSI colors are allowed (regardless of terminal type).|
 (deftop). |(key). @terminal-emulator-xterm-enable-color-256@|(types). _true or false_|

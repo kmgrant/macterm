@@ -1197,6 +1197,11 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 													CFSTR("kUIStrings_PreferencesWindowTerminalsXTerm256ColorsEnabled"));
 		break;
 	
+	case kUIStrings_PreferencesWindowTerminalsXTermBackColorErase:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Background Color Erase"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowTerminalsXTermBackColorErase"));
+		break;
+	
 	case kUIStrings_PreferencesWindowTerminalsXTermColorEnabled:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Color"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowTerminalsXTermColorEnabled"));

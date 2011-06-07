@@ -206,6 +206,12 @@ static inline TerminalTextAttributes& STYLE_CLEAR_BACKGROUND_INDEX	(TerminalText
 	x = (x & (~kMaskTerminalTextAttributeBackground | ~kTerminalTextAttributeEnableBackground));
 	return x;
 }
+static inline TerminalTextAttributes& STYLE_COPY_BACKGROUND		(TerminalTextAttributes x, TerminalTextAttributes& y)
+{
+	y &= ~(kMaskTerminalTextAttributeBackground | kTerminalTextAttributeEnableBackground);
+	y |= (x & (kMaskTerminalTextAttributeBackground | kTerminalTextAttributeEnableBackground));
+	return y;
+}
 
 static inline Boolean STYLE_IS_DOUBLE_ANY				(TerminalTextAttributes x) { return (0 != (x & kMaskTerminalTextAttributeDoubleText)); }
 // careful, when testing a multiple-bit field, make sure only the desired values are set to 1!

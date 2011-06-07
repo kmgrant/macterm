@@ -725,6 +725,7 @@ createContainerView		(Panel_Ref		inPanel,
 										{
 											kPreferences_TagVT100FixLineWrappingBug,
 											kPreferences_TagXTerm256ColorsEnabled,
+											kPreferences_TagXTermBackgroundColorEraseEnabled,
 											kPreferences_TagXTermColorEnabled,
 											kPreferences_TagXTermGraphicsEnabled,
 											kPreferences_TagXTermWindowAlterationEnabled
@@ -1116,6 +1117,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							
 							(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTerm256ColorsEnabled,
+																			sizeof(flagValue), &flagValue);
+							(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermBackgroundColorEraseEnabled,
 																			sizeof(flagValue), &flagValue);
 							(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermColorEnabled,
 																			sizeof(flagValue), &flagValue);
