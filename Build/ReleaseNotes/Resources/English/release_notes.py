@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110607',
     '20110606',
     '20110605',
     '20110527',
@@ -384,6 +385,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110607': [
+        'Fixed a preferences problem that caused blank collections to be saved under the old names of renamed collections.',
+    ],
     '20110606': [
         'Preferences window Terminals pane Emulation tab now offers the tweak "XTerm Background Color Erase", which is enabled by default.  This setting greatly improves the appearance of text editors and other "full window" programs that set their own terminal colors.',
     ],

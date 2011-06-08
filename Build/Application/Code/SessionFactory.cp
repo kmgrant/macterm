@@ -1235,26 +1235,33 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 													false/* search defaults too */, &actualSize);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-														(Quills::Prefs::SESSION, associatedSessionName),
-														true/* is retained */);
-			
-			
-			if (false == namedSettings.exists())
+			if (false == Preferences_IsContextNameInUse(Quills::Prefs::SESSION, associatedSessionName))
 			{
 				result = false;
 			}
 			else
 			{
-				TerminalWindowRef	terminalWindow = createTerminalWindow();
-				SessionRef			session = SessionFactory_NewSessionUserFavorite(terminalWindow,
-																					namedSettings.returnRef(),
-																					inWorkspaceContext, i);
+				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+															(Quills::Prefs::SESSION, associatedSessionName),
+															true/* is retained */);
 				
 				
-				if (nullptr == session)
+				if (false == namedSettings.exists())
 				{
 					result = false;
+				}
+				else
+				{
+					TerminalWindowRef	terminalWindow = createTerminalWindow();
+					SessionRef			session = SessionFactory_NewSessionUserFavorite(terminalWindow,
+																						namedSettings.returnRef(),
+																						inWorkspaceContext, i);
+					
+					
+					if (nullptr == session)
+					{
+						result = false;
+					}
 				}
 			}
 			CFRelease(associatedSessionName), associatedSessionName = nullptr;
@@ -2271,19 +2278,26 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 													false/* search defaults too */, &actualSize);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			Preferences_ContextWrap		associatedContext(Preferences_NewContextFromFavorites
-															(Quills::Prefs::FORMAT, contextName), true/* is retained */);
-			
-			
-			if (false == associatedContext.exists())
+			if (false == Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, contextName))
 			{
 				Console_Warning(Console_WriteValueCFString, "associated Format not found", contextName);
 			}
 			else
 			{
-				result = TerminalWindow_ReconfigureViewsInGroup
-							(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext.returnRef(),
-								Quills::Prefs::FORMAT);
+				Preferences_ContextWrap		associatedContext(Preferences_NewContextFromFavorites
+																(Quills::Prefs::FORMAT, contextName), true/* is retained */);
+				
+				
+				if (false == associatedContext.exists())
+				{
+					Console_Warning(Console_WriteValueCFString, "associated Format could not be used", contextName);
+				}
+				else
+				{
+					result = TerminalWindow_ReconfigureViewsInGroup
+								(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext.returnRef(),
+									Quills::Prefs::FORMAT);
+				}
 			}
 			CFRelease(contextName), contextName = nullptr;
 		}
@@ -2294,19 +2308,26 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 													false/* search defaults too */, &actualSize);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			Preferences_ContextWrap		associatedContext(Preferences_NewContextFromFavorites
-															(Quills::Prefs::TERMINAL, contextName), true/* is retained */);
-			
-			
-			if (false == associatedContext.exists())
+			if (false == Preferences_IsContextNameInUse(Quills::Prefs::TERMINAL, contextName))
 			{
 				Console_Warning(Console_WriteValueCFString, "associated Terminal not found", contextName);
 			}
 			else
 			{
-				result = TerminalWindow_ReconfigureViewsInGroup
-							(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext.returnRef(),
-								Quills::Prefs::TERMINAL);
+				Preferences_ContextWrap		associatedContext(Preferences_NewContextFromFavorites
+																(Quills::Prefs::TERMINAL, contextName), true/* is retained */);
+				
+				
+				if (false == associatedContext.exists())
+				{
+					Console_Warning(Console_WriteValueCFString, "associated Terminal could not be used", contextName);
+				}
+				else
+				{
+					result = TerminalWindow_ReconfigureViewsInGroup
+								(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext.returnRef(),
+									Quills::Prefs::TERMINAL);
+				}
 			}
 			CFRelease(contextName), contextName = nullptr;
 		}
@@ -2317,19 +2338,26 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 													false/* search defaults too */, &actualSize);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			Preferences_ContextWrap		associatedContext(Preferences_NewContextFromFavorites
-															(Quills::Prefs::TRANSLATION, contextName), true/* is retained */);
-			
-			
-			if (false == associatedContext.exists())
+			if (false == Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, contextName))
 			{
 				Console_Warning(Console_WriteValueCFString, "associated Translation not found", contextName);
 			}
 			else
 			{
-				result = TerminalWindow_ReconfigureViewsInGroup
-							(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext.returnRef(),
-								Quills::Prefs::TRANSLATION);
+				Preferences_ContextWrap		associatedContext(Preferences_NewContextFromFavorites
+																(Quills::Prefs::TRANSLATION, contextName), true/* is retained */);
+				
+				
+				if (false == associatedContext.exists())
+				{
+					Console_Warning(Console_WriteValueCFString, "associated Translation could not be used", contextName);
+				}
+				else
+				{
+					result = TerminalWindow_ReconfigureViewsInGroup
+								(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext.returnRef(),
+									Quills::Prefs::TRANSLATION);
+				}
 			}
 			CFRelease(contextName), contextName = nullptr;
 		}
@@ -2803,9 +2831,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																							preferredName.c_str(),
 																							kCFStringEncodingUTF8),
 																true/* is retained */);
-						Preferences_ContextRef		workspaceContext = Preferences_NewContextFromFavorites
-																		(Quills::Prefs::WORKSPACE,
-																			asCFString.returnCFStringRef());
+						Preferences_ContextRef		workspaceContext = Preferences_IsContextNameInUse
+																		(Quills::Prefs::WORKSPACE, asCFString.returnCFStringRef())
+																		? Preferences_NewContextFromFavorites
+																			(Quills::Prefs::WORKSPACE, asCFString.returnCFStringRef())
+																		: nullptr;
 						Boolean						releaseContext = (nullptr != workspaceContext);
 						
 						

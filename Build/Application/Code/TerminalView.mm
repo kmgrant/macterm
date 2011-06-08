@@ -12185,7 +12185,7 @@ performFormatByFavoriteName:(id)	sender
 		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
 		
 		
-		if (nil != collectionName)
+		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, collectionName))
 		{
 			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 														(Quills::Prefs::FORMAT, collectionName), true/* is retained */);

@@ -4039,7 +4039,7 @@ performNewByFavoriteName:(id)	sender
 		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
 		
 		
-		if (nil != collectionName)
+		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::SESSION, collectionName))
 		{
 			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 														(Quills::Prefs::SESSION, collectionName),
@@ -4205,7 +4205,7 @@ performRestoreWorkspaceByFavoriteName:(id)	sender
 		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
 		
 		
-		if (nil != collectionName)
+		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::WORKSPACE, collectionName))
 		{
 			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 														(Quills::Prefs::WORKSPACE, collectionName),
@@ -4503,7 +4503,7 @@ performMacroSwitchByFavoriteName:(id)	sender
 		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
 		
 		
-		if (nil != collectionName)
+		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::MACRO_SET, collectionName))
 		{
 			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 														(Quills::Prefs::MACRO_SET, collectionName),
@@ -4894,7 +4894,7 @@ performTranslationSwitchByFavoriteName:(id)		sender
 		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
 		
 		
-		if ((nullptr != session) && (nil != collectionName))
+		if ((nullptr != session) && (nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, collectionName))
 		{
 			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 														(Quills::Prefs::TRANSLATION, collectionName),
@@ -5346,7 +5346,7 @@ performFormatByFavoriteName:(id)	sender
 			CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
 			
 			
-			if (nil != collectionName)
+			if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, collectionName))
 			{
 				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 															(Quills::Prefs::FORMAT, collectionName),

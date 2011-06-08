@@ -4485,7 +4485,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							CFStringRef						collectionName = nullptr;
 							
 							
-							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
+							if ((noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName)) &&
+								Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, collectionName))
 							{
 								Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 																			(Quills::Prefs::FORMAT, collectionName),
@@ -4717,7 +4718,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							
 							if ((nullptr != session) &&
-								(noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName)))
+								(noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName)) &&
+								Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, collectionName))
 							{
 								Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 																			(Quills::Prefs::TRANSLATION, collectionName),
