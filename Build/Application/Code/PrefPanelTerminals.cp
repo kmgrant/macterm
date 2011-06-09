@@ -1197,12 +1197,15 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 			
 			
 			GetControlTextAsCFString(HIViewWrap(idMyFieldAnswerBackMessage, kOwningWindow), messageCFString);
-			
-			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagTerminalAnswerBackMessage,
-														sizeof(messageCFString), &messageCFString);
-			if (kPreferences_ResultOK != prefsResult)
+			if (nullptr != messageCFString)
 			{
-				Console_Warning(Console_WriteLine, "failed to set answer-back message");
+				prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagTerminalAnswerBackMessage,
+															sizeof(messageCFString), &messageCFString);
+				if (kPreferences_ResultOK != prefsResult)
+				{
+					Console_Warning(Console_WriteLine, "failed to set answer-back message");
+				}
+				CFRelease(messageCFString), messageCFString = nullptr;
 			}
 		}
 	}

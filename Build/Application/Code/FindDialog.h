@@ -93,10 +93,6 @@ void
 void
 	FindDialog_Display					(FindDialog_Ref					inDialog);
 
-void
-	FindDialog_GetSearchString			(FindDialog_Ref					inDialog,
-										 CFStringRef&					outString);
-
 FindDialog_Options
 	FindDialog_ReturnOptions			(FindDialog_Ref					inDialog);
 

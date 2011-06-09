@@ -448,10 +448,18 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 				case kControlKindEditUnicodeText:
 					{
 						CFStringRef		textCFString = nullptr;
+						Boolean			releaseString = false;
 						
 						
 						GetControlTextAsCFString(inTemplateControl, textCFString);
-						if (nullptr == textCFString) textCFString = CFSTR("");
+						if (nullptr == textCFString)
+						{
+							textCFString = CFSTR("");
+						}
+						else
+						{
+							releaseString = true;
+						}
 						
 						{
 							ControlFontStyleRec		styleInfo;
@@ -464,6 +472,11 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 														sizeof(styleInfo), &styleInfo, &actualSize);
 							result = CreateEditUnicodeTextControl(inDestinationWindow, &templateBounds, textCFString,
 																	false/* is password */, &styleInfo, &outNewControl);
+						}
+						
+						if (releaseString)
+						{
+							CFRelease(textCFString), textCFString = nullptr;
 						}
 					}
 					break;
@@ -698,10 +711,18 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 				case kControlKindStaticText:
 					{
 						CFStringRef		textCFString = nullptr;
+						Boolean			releaseString = false;
 						
 						
 						GetControlTextAsCFString(inTemplateControl, textCFString);
-						if (nullptr == textCFString) textCFString = CFSTR("");
+						if (nullptr == textCFString)
+						{
+							textCFString = CFSTR("");
+						}
+						else
+						{
+							releaseString = true;
+						}
 						
 						{
 							ControlFontStyleRec		styleInfo;
@@ -714,6 +735,11 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 														sizeof(styleInfo), &styleInfo, &actualSize);
 							result = CreateStaticTextControl(inDestinationWindow, &templateBounds,
 																textCFString, &styleInfo, &outNewControl);
+						}
+						
+						if (releaseString)
+						{
+							CFRelease(textCFString), textCFString = nullptr;
 						}
 					}
 					break;
@@ -942,6 +968,7 @@ GetControlText	(ControlRef			inControl,
 
 /*!
 Returns the specified control’s text as a CFString.
+You must release the string yourself.
 
 (3.0)
 */

@@ -1262,13 +1262,16 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings,
 			
 			
 			GetControlTextAsCFString(HIViewWrap(idMyFieldMacroText, kOwningWindow), actionCFString);
-			
-			prefsResult = Preferences_ContextSetData
-							(inoutSettings, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, inOneBasedIndex),
-								sizeof(actionCFString), &actionCFString);
-			if (kPreferences_ResultOK != prefsResult)
+			if (nullptr != actionCFString)
 			{
-				Console_Warning(Console_WriteValue, "failed to set action text of macro with index", inOneBasedIndex);
+				prefsResult = Preferences_ContextSetData
+								(inoutSettings, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, inOneBasedIndex),
+									sizeof(actionCFString), &actionCFString);
+				if (kPreferences_ResultOK != prefsResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to set action text of macro with index", inOneBasedIndex);
+				}
+				CFRelease(actionCFString), actionCFString = nullptr;
 			}
 		}
 	}
@@ -1308,17 +1311,21 @@ saveKeyTypeAndCharacterPreferences	(Preferences_ContextRef		inoutSettings,
 			
 			
 			GetControlTextAsCFString(HIViewWrap(idMyFieldMacroKeyCharacter, kOwningWindow), ordinaryCharCFString);
-			if (0 != CFStringGetLength(ordinaryCharCFString))
+			if (nullptr != ordinaryCharCFString)
 			{
-				keyChar = CFStringGetCharacterAtIndex(ordinaryCharCFString, 0);
-				if (1 != CFStringGetLength(ordinaryCharCFString))
+				if (0 != CFStringGetLength(ordinaryCharCFString))
 				{
-					Console_Warning(Console_WriteLine, "more than one character entered for macro key, using only the first character");
+					keyChar = CFStringGetCharacterAtIndex(ordinaryCharCFString, 0);
+					if (1 != CFStringGetLength(ordinaryCharCFString))
+					{
+						Console_Warning(Console_WriteLine, "more than one character entered for macro key, using only the first character");
+					}
 				}
-			}
-			else
-			{
-				Console_Warning(Console_WriteLine, "ordinary character requested for macro, but no character was entered");
+				else
+				{
+					Console_Warning(Console_WriteLine, "ordinary character requested for macro, but no character was entered");
+				}
+				CFRelease(ordinaryCharCFString), ordinaryCharCFString = nullptr;
 			}
 		}
 		

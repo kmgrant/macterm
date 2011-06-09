@@ -413,26 +413,6 @@ FindDialog_Display		(FindDialog_Ref		inDialog)
 
 
 /*!
-Returns the string most recently entered into the
-search field by the user, WITHOUT retaining it.
-
-(3.0)
-*/
-void
-FindDialog_GetSearchString	(FindDialog_Ref		inDialog,
-							 CFStringRef&		outString)
-{
-	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), inDialog);
-	
-	
-	if (nullptr != ptr)
-	{
-		GetControlTextAsCFString(ptr->fieldKeywords, outString);
-	}
-}// GetSearchString
-
-
-/*!
 Returns a set of flags indicating whether or not
 certain options are enabled for the specified dialog
 (which may be open or closed).  Use this inside a
@@ -582,8 +562,12 @@ handleItemHit	(My_FindDialogPtr	inPtr,
 			CFStringRef		newHistoryString = nullptr;
 			
 			
-			FindDialog_GetSearchString(inPtr->selfRef, newHistoryString);
-			addToHistory(inPtr, newHistoryString);
+			GetControlTextAsCFString(inPtr->fieldKeywords, newHistoryString);
+			if (nullptr != newHistoryString)
+			{
+				addToHistory(inPtr, newHistoryString);
+				CFRelease(newHistoryString), newHistoryString = nullptr;
+			}
 		}
 		
 		// notify of close
@@ -690,7 +674,7 @@ initiateSearch	(My_FindDialogPtr	inPtr,
 	
 	
 	GetControlTextAsCFString(inPtr->fieldKeywords, searchQueryCFString);
-	searchQueryLength = CFStringGetLength(searchQueryCFString);
+	searchQueryLength = (nullptr == searchQueryCFString) ? 0 : CFStringGetLength(searchQueryCFString);
 	if (0 == searchQueryLength)
 	{
 		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow);
@@ -824,6 +808,11 @@ initiateSearch	(My_FindDialogPtr	inPtr,
 				ActivateControl(inPtr->checkboxIgnoreCase);
 			}
 		}
+	}
+	
+	if (nullptr != searchQueryCFString)
+	{
+		CFRelease(searchQueryCFString), searchQueryCFString = nullptr;
 	}
 	
 	return result;
