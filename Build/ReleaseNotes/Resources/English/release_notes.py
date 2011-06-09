@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110608',
     '20110607',
     '20110606',
     '20110605',
@@ -385,6 +386,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110608': [
+        'Preferences window Macros pane now has an "Insert Control Key Character..." button, which simplifies escape code entry in macros that allow substitution.',
+    ],
     '20110607': [
         'Fixed a preferences problem that caused blank collections to be saved under the old names of renamed collections.',
     ],

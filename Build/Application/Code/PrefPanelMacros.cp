@@ -69,6 +69,7 @@
 #include "Commands.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
+#include "Keypads.h"
 #include "MacroManager.h"
 #include "Panel.h"
 #include "Preferences.h"
@@ -110,6 +111,7 @@ HIViewID const	idMyButtonInvokeWithModifierOption		= { 'McMO', 0/* ID */ };
 HIViewID const	idMyButtonInvokeWithModifierShift		= { 'McMS', 0/* ID */ };
 HIViewID const	idMyPopUpMenuMacroAction				= { 'MMTy', 0/* ID */ };
 HIViewID const	idMyFieldMacroText						= { 'McAc', 0/* ID */ };
+HIViewID const	idMyButtonInsertControlKey				= { 'EMTC', 0/* ID */ };
 HIViewID const	idMyHelpTextMacroKeys					= { 'MHlp', 0/* ID */ };
 
 } // anonymous namespace
@@ -1366,6 +1368,14 @@ setAction		(UInt32		inSetMacroActionCommandID)
 	
 	viewWrap = HIViewWrap(idMyPopUpMenuMacroAction, kOwningWindow);
 	(OSStatus)DialogUtilities_SetPopUpItemByCommand(viewWrap, inSetMacroActionCommandID);
+	if (inSetMacroActionCommandID != kCommandSetMacroActionEnterText)
+	{
+		(OSStatus)DeactivateControl(HIViewWrap(idMyButtonInsertControlKey, kOwningWindow));
+	}
+	else
+	{
+		(OSStatus)ActivateControl(HIViewWrap(idMyButtonInsertControlKey, kOwningWindow));
+	}
 }// My_MacrosPanelUI::setAction
 
 
@@ -1900,6 +1910,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// if the command information was found, proceed
 		if (noErr == result)
 		{
+			HIWindowRef		window = HIViewGetWindow(interfacePtr->mainView);
+			CFStringRef		insertedCFString = nullptr;
+			
+			
 			result = eventNotHandledErr; // initially...
 			
 			switch (received.commandID)
@@ -2041,8 +2055,191 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				}
 				break;
 			
+			case kCommandEditMacroTextWithControlKeys:
+				{
+					HIViewWrap		buttonInsertControlKey(idMyButtonInsertControlKey, window);
+					
+					
+					if (kControlCheckBoxCheckedValue == GetControl32BitValue(buttonInsertControlKey))
+					{
+						// stop sending keypad control keys to the field
+						Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, nullptr);
+						
+						// remove the selected state from the button
+						SetControl32BitValue(buttonInsertControlKey, kControlCheckBoxUncheckedValue);
+					}
+					else
+					{
+						// show the control keys palette and target the button
+						Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(window));
+						
+						// try to avoid confusing the user by removing all focus in this window
+						// (to emphasize that the focus is in the palette)
+						(OSStatus)ClearKeyboardFocus(window);
+						
+						// give the button a selected state
+						SetControl32BitValue(buttonInsertControlKey, kControlCheckBoxCheckedValue);
+					}
+				}
+				break;
+			
+			case kCommandKeypadControlAtSign:
+				insertedCFString = CFSTR("\\000");
+				break;
+			
+			case kCommandKeypadControlA:
+				insertedCFString = CFSTR("\\001");
+				break;
+			
+			case kCommandKeypadControlB:
+				insertedCFString = CFSTR("\\002");
+				break;
+			
+			case kCommandKeypadControlC:
+				insertedCFString = CFSTR("\\003");
+				break;
+			
+			case kCommandKeypadControlD:
+				insertedCFString = CFSTR("\\004");
+				break;
+			
+			case kCommandKeypadControlE:
+				insertedCFString = CFSTR("\\005");
+				break;
+			
+			case kCommandKeypadControlF:
+				insertedCFString = CFSTR("\\006");
+				break;
+			
+			case kCommandKeypadControlG:
+				insertedCFString = CFSTR("\\007");
+				break;
+			
+			case kCommandKeypadControlH:
+				insertedCFString = CFSTR("\\010");
+				break;
+			
+			case kCommandKeypadControlI:
+				insertedCFString = CFSTR("\\011");
+				break;
+			
+			case kCommandKeypadControlJ:
+				insertedCFString = CFSTR("\\012");
+				break;
+			
+			case kCommandKeypadControlK:
+				insertedCFString = CFSTR("\\013");
+				break;
+			
+			case kCommandKeypadControlL:
+				insertedCFString = CFSTR("\\014");
+				break;
+			
+			case kCommandKeypadControlM:
+				insertedCFString = CFSTR("\\015");
+				break;
+			
+			case kCommandKeypadControlN:
+				insertedCFString = CFSTR("\\016");
+				break;
+			
+			case kCommandKeypadControlO:
+				insertedCFString = CFSTR("\\017");
+				break;
+			
+			case kCommandKeypadControlP:
+				insertedCFString = CFSTR("\\020");
+				break;
+			
+			case kCommandKeypadControlQ:
+				insertedCFString = CFSTR("\\021");
+				break;
+			
+			case kCommandKeypadControlR:
+				insertedCFString = CFSTR("\\022");
+				break;
+			
+			case kCommandKeypadControlS:
+				insertedCFString = CFSTR("\\023");
+				break;
+			
+			case kCommandKeypadControlT:
+				insertedCFString = CFSTR("\\024");
+				break;
+			
+			case kCommandKeypadControlU:
+				insertedCFString = CFSTR("\\025");
+				break;
+			
+			case kCommandKeypadControlV:
+				insertedCFString = CFSTR("\\026");
+				break;
+			
+			case kCommandKeypadControlW:
+				insertedCFString = CFSTR("\\027");
+				break;
+			
+			case kCommandKeypadControlX:
+				insertedCFString = CFSTR("\\030");
+				break;
+			
+			case kCommandKeypadControlY:
+				insertedCFString = CFSTR("\\031");
+				break;
+			
+			case kCommandKeypadControlZ:
+				insertedCFString = CFSTR("\\032");
+				break;
+			
+			case kCommandKeypadControlLeftSquareBracket:
+				//insertedCFString = CFSTR("\\033"); // could use this, but "\e" is friendlier
+				insertedCFString = CFSTR("\\e");
+				break;
+			
+			case kCommandKeypadControlBackslash:
+				insertedCFString = CFSTR("\\034");
+				break;
+			
+			case kCommandKeypadControlRightSquareBracket:
+				insertedCFString = CFSTR("\\035");
+				break;
+			
+			case kCommandKeypadControlTilde:
+				insertedCFString = CFSTR("\\036");
+				break;
+			
+			case kCommandKeypadControlQuestionMark:
+				insertedCFString = CFSTR("\\037");
+				break;
+			
 			default:
 				break;
+			}
+			
+			// if a control key in the palette was clicked, insert the
+			// equivalent escaped octal sequence into the macro text field
+			if (nullptr != insertedCFString)
+			{
+				HIViewWrap		macroTextField(idMyFieldMacroText, window);
+				CFStringRef		fieldText = nullptr;
+				
+				
+				GetControlTextAsCFString(macroTextField, fieldText);
+				if (nullptr != fieldText)
+				{
+					CFRetainRelease		newText(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* maximum size */, fieldText));
+					
+					
+					if (newText.exists())
+					{
+						CFStringAppend(newText.returnCFMutableStringRef(), insertedCFString);
+						SetControlTextWithCFString(macroTextField, newText.returnCFStringRef());
+						
+						// try to avoid confusing the user by removing all focus in this window
+						// (to emphasize that the focus is in the palette)
+						(OSStatus)ClearKeyboardFocus(window);
+					}
+				}
 			}
 		}
 		else

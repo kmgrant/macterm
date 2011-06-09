@@ -330,7 +330,15 @@ This mode is very useful if your macro contains things like
  common when "emulating key codes":keys.html from other
  operating systems, for example).
 
-But note that macros with substitutions can fail if your macro
+Many substitution sequences correspond directly to the codes
+ used by control keys.  For this reason, MacTelnet offers an
+ "Insert Control Key Character..." button that helps you type
+ the correct sequences with a single click.  For example, the
+ control-D character is equivalent to "\004", and when the
+ palette is opened you can simply click the "^D" button to
+ insert a "\004" sequence.
+
+Note that macros with substitutions can fail if your macro
  has errors.  You can use the Console application to see errors
  that MacTelnet generated for your macro.
 
@@ -351,7 +359,9 @@ table(deftable).
 
 fn1. To see the octal versions of all ASCII characters,
  look at <a href="x-man-page://ascii">x-man-page://ascii</a> (opens a
- MacTelnet window and runs "man ascii").
+ MacTelnet window and runs "man ascii").  Also note that the button
+ "Insert Control Key Character..." can be used to help insert the
+ right code for a variety of keys.
 
 fn2. Currently, there is no way to choose which IP address is actually
  sent with "\i".  But you can use Window >> Show IP Addresses to
