@@ -233,7 +233,9 @@ protected:
 
 private:
 	CommonEventHandlers_HIViewResizer	_containerResizer;
-	CarbonEventHandlerWrap				_buttonCommandsHandler;		//!< invoked when a button is clicked
+	CarbonEventHandlerWrap				_button1CommandHandler;		//!< invoked when a button is clicked
+	CarbonEventHandlerWrap				_button2CommandHandler;		//!< invoked when a button is clicked
+	CarbonEventHandlerWrap				_button3CommandHandler;		//!< invoked when a button is clicked
 };
 
 /*!
@@ -1389,7 +1391,13 @@ mainView				(createContainerView(inPanel, inOwningWindow)
 							<< HIViewWrap_AssertExists),
 _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
 							My_SessionsPanelKeyboardUI::deltaSize, this/* context */),
-_buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
+_button1CommandHandler	(GetControlEventTarget(HIViewWrap(idMyButtonChangeInterruptKey, inOwningWindow)), receiveHICommand,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+							this/* user data */),
+_button2CommandHandler	(GetControlEventTarget(HIViewWrap(idMyButtonChangeSuspendKey, inOwningWindow)), receiveHICommand,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+							this/* user data */),
+_button3CommandHandler	(GetControlEventTarget(HIViewWrap(idMyButtonChangeResumeKey, inOwningWindow)), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */)
 {
@@ -1821,7 +1829,24 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					
 					
 					// show the control keys palette and target the button
-					Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(window));
+					switch (received.commandID)
+					{
+					case kCommandEditInterruptKey:
+						Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetControlEventTarget(buttonSetInterruptKey));
+						break;
+					
+					case kCommandEditSuspendKey:
+						Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetControlEventTarget(buttonSetSuspendKey));
+						break;
+					
+					case kCommandEditResumeKey:
+						Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetControlEventTarget(buttonSetResumeKey));
+						break;
+					
+					default:
+						// ???
+						break;
+					}
 					
 					// change the active button
 					SetControl32BitValue(buttonSetInterruptKey,
