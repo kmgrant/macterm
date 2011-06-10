@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110609',
     '20110608',
     '20110607',
     '20110606',
@@ -386,6 +387,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110609': [
+        'Fixed constraints on window resizing in certain sheets.',
+    ],
     '20110608': [
         'Preferences window Macros pane now has an "Insert Control Key Character..." button, which simplifies escape code entry in macros that allow substitution.',
     ],

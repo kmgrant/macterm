@@ -201,6 +201,15 @@ kPanel_MessageGetIdealSize
 	Your handler should fill in the data structure and
 	return "kPanel_ResponseSizeProvided".
 
+kPanel_MessageGetUsefulResizeAxes
+	Offers a hint as to the kind of resizing that is most
+	useful for the content.  Although all panels should be
+	capable of resizing in any direction, some may only be
+	useful to resize in one direction and some may not be
+	worth resizing at all.  If a panel is wrapped in a
+	window with a size box, this information might be used
+	to determine if the window is even resizable.
+
 kPanel_MessageNewAppearanceTheme
 	This property indicates that the application has
 	received a theme switch event, and therefore should
@@ -234,15 +243,20 @@ enum
 	kPanel_MessageFocusGained = 'focg',					// data: -> HIViewRef*, the field gaining focus
 	kPanel_MessageFocusLost = 'focl',					// data: -> HIViewRef*, the field losing focus
 	kPanel_MessageGetEditType = 'edit',					// data: -> nullptr
-		kPanel_ResponseEditTypeInspector = (1U >> 0),		// result code of the above
-		kPanel_ResponseEditTypeModelessSingle = (0 >> 0),	// result code of the above
+		kPanel_ResponseEditTypeInspector = 1,				// result code of the above
+		kPanel_ResponseEditTypeModelessSingle = 0,			// result code of the above (default if panel does not provide)
 	kPanel_MessageGetGrowBoxLook = 'grow',				// data: <- nullptr
-		kPanel_ResponseGrowBoxOpaque = (1U >> 0),			// result code of the above
-		kPanel_ResponseGrowBoxTransparent = (0 >> 0),		// result code of the above
+		kPanel_ResponseGrowBoxOpaque = 1,					// result code of the above
+		kPanel_ResponseGrowBoxTransparent = 0,				// result code of the above (default if panel does not provide)
 	kPanel_MessageGetHelpKeyPhrase = 'help',			// data: <- HelpSystem_KeyPhrase
 	kPanel_MessageGetIdealSize = 'idsz',				// data: <- HISize*
-		kPanel_ResponseSizeProvided = (1U >> 0),			// result code of the above
-		kPanel_ResponseSizeNotProvided = (0 >> 0),			// result code of the above
+		kPanel_ResponseSizeProvided = 1,					// result code of the above
+		kPanel_ResponseSizeNotProvided = 0,					// result code of the above (default if panel does not provide)
+	kPanel_MessageGetUsefulResizeAxes = 'axes',			// data: <- nullptr
+		kPanel_ResponseResizeVertical = 3,					// result code of the above
+		kPanel_ResponseResizeHorizontal = 2,				// result code of the above
+		kPanel_ResponseResizeNotNeeded = 1,					// result code of the above
+		kPanel_ResponseResizeBothAxes = 0,					// result code of the above (default if panel does not provide)
 	kPanel_MessageNewAppearanceTheme = 'athm',			// data: -> nullptr
 	kPanel_MessageNewDataSet = 'cset',					// data: -> Panel_DataSetTransition*
 	kPanel_MessageNewVisibility = 'visb'				// data: -> Boolean*, “is now visible?”
@@ -363,6 +377,9 @@ SInt32
 SInt32
 	Panel_SendMessageGetIdealSize		(Panel_Ref					inRef,
 										 HISize&					outData);
+
+SInt32
+	Panel_SendMessageGetUsefulResizeAxes	(Panel_Ref				inRef);
 
 void
 	Panel_SendMessageNewAppearanceTheme	(Panel_Ref					inRef);

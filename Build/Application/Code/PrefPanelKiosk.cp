@@ -470,6 +470,10 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
+	case kPanel_MessageGetUsefulResizeAxes: // request for panel to return the directions in which resizing makes sense
+		result = kPanel_ResponseResizeHorizontal;
+		break;
+	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate control sizes
 		{
 			// do nothing

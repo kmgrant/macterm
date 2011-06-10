@@ -902,6 +902,10 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
+	case kPanel_MessageGetUsefulResizeAxes: // request for panel to return the directions in which resizing makes sense
+		result = kPanel_ResponseResizeHorizontal;
+		break;
+	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
 		{
 			// this notification is currently ignored, but shouldn’t be...
@@ -1538,6 +1542,10 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
+	case kPanel_MessageGetUsefulResizeAxes: // request for panel to return the directions in which resizing makes sense
+		result = kPanel_ResponseResizeHorizontal;
+		break;
+	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
 		{
 			// this notification is currently ignored, but shouldn’t be...
@@ -1831,6 +1839,10 @@ panelChanged	(Panel_Ref		inPanel,
 				result = kPanel_ResponseSizeProvided;
 			}
 		}
+		break;
+	
+	case kPanel_MessageGetUsefulResizeAxes: // request for panel to return the directions in which resizing makes sense
+		result = kPanel_ResponseResizeNotNeeded;
 		break;
 	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes

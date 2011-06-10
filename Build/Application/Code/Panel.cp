@@ -749,6 +749,33 @@ Panel_SendMessageGetIdealSize	(Panel_Ref	inRef,
 
 
 /*!
+Sends the "kPanel_MessageGetUsefulResizeAxes" to the
+specified panel’s handler, and returns the panel’s
+response.
+
+See "Panel.h" for more information on this event.
+
+(4.0)
+*/
+SInt32
+Panel_SendMessageGetUsefulResizeAxes	(Panel_Ref	inRef)
+{
+	SInt32	result = 0L;
+	
+	
+	if (nullptr != inRef)
+	{
+		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
+		
+		
+		result = panelChanged(ptr, kPanel_MessageGetUsefulResizeAxes, nullptr/* message data */);
+	}
+	
+	return result;
+}// SendMessageGetUsefulResizeAxes
+
+
+/*!
 Sends the "kPanel_MessageNewAppearanceTheme" to
 the specified panel’s handler.
 

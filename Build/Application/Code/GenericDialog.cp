@@ -564,34 +564,59 @@ userDataPtr						(nullptr)
 		}
 	}
 	
-	// install a callback that responds as a window is resized
+	// set up window resizing
 	{
-		Rect		currentBounds;
+		SInt32		resizeRequirements = Panel_SendMessageGetUsefulResizeAxes(this->hostedPanel);
+		UInt16		maxWidthOffset = 200; // arbitrary
+		UInt16		maxHeightOffset = 100; // arbitrary
 		
 		
-		error = GetWindowBounds(this->dialogWindow, kWindowContentRgn, &currentBounds);
-		assert_noerr(error);
-		this->windowResizeHandler.install(this->dialogWindow, handleNewSize, this->selfRef/* user data */,
-											currentBounds.right - currentBounds.left/* minimum width */,
-											currentBounds.bottom - currentBounds.top/* minimum height */,
-											currentBounds.right - currentBounds.left + 200/* arbitrary maximum width */,
-											currentBounds.bottom - currentBounds.top/* maximum height */);
-		assert(this->windowResizeHandler.isInstalled());
+		// adjust offsets
+		if (kPanel_ResponseResizeHorizontal == resizeRequirements)
+		{
+			maxHeightOffset = 0;
+		}
+		if (kPanel_ResponseResizeVertical == resizeRequirements)
+		{
+			maxWidthOffset = 0;
+		}
+		
+		// hide the grow box completely if it is not useful to resize the panel
+		if (kPanel_ResponseResizeNotNeeded == resizeRequirements)
+		{
+			(OSStatus)ChangeWindowAttributes(this->dialogWindow, 0/* attributes to set */,
+												kWindowResizableAttribute/* attributes to clear */);
+		}
+		
+		// install a callback that responds as a window is resized
+		{
+			Rect		currentBounds;
+			
+			
+			error = GetWindowBounds(this->dialogWindow, kWindowContentRgn, &currentBounds);
+			assert_noerr(error);
+			this->windowResizeHandler.install(this->dialogWindow, handleNewSize, this->selfRef/* user data */,
+												currentBounds.right - currentBounds.left/* minimum width */,
+												currentBounds.bottom - currentBounds.top/* minimum height */,
+												currentBounds.right - currentBounds.left + 200/* arbitrary maximum width */,
+												currentBounds.bottom - currentBounds.top/* maximum height */);
+			assert(this->windowResizeHandler.isInstalled());
+		}
+		
+		// adjust for ideal size
+		if (kPanel_ResponseSizeProvided != Panel_SendMessageGetIdealSize(this->hostedPanel, this->panelIdealSize))
+		{
+			// some problem setting the size; choose one arbitrarily
+			Console_Warning(Console_WriteLine, "unable to determine ideal size of dialog panel");
+			panelIdealSize = CGSizeMake(400.0, 250.0); // arbitrary
+		}
+		windowInitialSize = CGSizeMake(panelMarginsTopLeft.width + this->panelIdealSize.width + panelMarginsBottomRight.width,
+										panelMarginsTopLeft.height + this->panelIdealSize.height + panelMarginsBottomRight.height);
+		this->windowResizeHandler.setWindowIdealSize(windowInitialSize.width, windowInitialSize.height);
+		this->windowResizeHandler.setWindowMinimumSize(windowInitialSize.width, windowInitialSize.height);
+		this->windowResizeHandler.setWindowMaximumSize(windowInitialSize.width + maxWidthOffset,
+														windowInitialSize.height + maxHeightOffset);
 	}
-	
-	// adjust for ideal size
-	if (kPanel_ResponseSizeProvided != Panel_SendMessageGetIdealSize(this->hostedPanel, this->panelIdealSize))
-	{
-		// some problem setting the size; choose one arbitrarily
-		Console_Warning(Console_WriteLine, "unable to determine ideal size of dialog panel");
-		panelIdealSize = CGSizeMake(400.0, 250.0); // arbitrary
-	}
-	windowInitialSize = CGSizeMake(panelMarginsTopLeft.width + this->panelIdealSize.width + panelMarginsBottomRight.width,
-									panelMarginsTopLeft.height + this->panelIdealSize.height + panelMarginsBottomRight.height);
-	this->windowResizeHandler.setWindowIdealSize(windowInitialSize.width, windowInitialSize.height);
-	this->windowResizeHandler.setWindowMinimumSize(windowInitialSize.width, windowInitialSize.height);
-	this->windowResizeHandler.setWindowMaximumSize(windowInitialSize.width + 200/* arbitrary */,
-													windowInitialSize.height + 100/* arbitrary */);
 	
 	// resize the window; due to event handlers, a resize of the window
 	// changes the panel size too
