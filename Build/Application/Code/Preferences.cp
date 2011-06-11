@@ -3430,8 +3430,8 @@ Preferences_IsContextNameInUse		(Quills::Prefs::Class	inClass,
 	
 	if (getListOfContexts(inClass, listPtr))
 	{
-		My_FavoriteContextList::const_iterator		toContextPtr = toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
-																								contextNameEqualTo(inProposedName));
+		My_FavoriteContextList::const_iterator		toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
+																				contextNameEqualTo(inProposedName));
 		
 		
 		if (listPtr->end() != toContextPtr)
