@@ -1496,11 +1496,15 @@ error:(NSError**)					outError
 		// first strip whitespace
 		*ioValue = [[*ioValue stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] retain];
 		
-		NSScanner*	scanner = [NSScanner scannerWithString:*ioValue];
-		NSString*	value = nil;
+		NSScanner*				scanner = [NSScanner scannerWithString:*ioValue];
+		NSMutableCharacterSet*	validCharacters = [[[NSCharacterSet alphanumericCharacterSet] mutableCopy] autorelease];
+		NSString*				value = nil;
 		
 		
-		if ([scanner scanCharactersFromSet:[NSCharacterSet alphanumericCharacterSet] intoString:&value] && [scanner isAtEnd])
+		// periods, underscores and hyphens are also valid in Unix user names
+		[validCharacters addCharactersInString:@".-_"];
+		
+		if ([scanner scanCharactersFromSet:validCharacters intoString:&value] && [scanner isAtEnd])
 		{
 			result = YES;
 		}
@@ -1516,8 +1520,9 @@ error:(NSError**)					outError
 							code:kConstantsRegistry_NSErrorBadPortNumber
 							userInfo:[[[NSDictionary alloc] initWithObjectsAndKeys:
 										NSLocalizedStringFromTable
-										(@"The user ID must only use letters and numbers.", @"ServerBrowser"/* table */,
-											@"message displayed for bad user IDs"), NSLocalizedDescriptionKey,
+										(@"The user ID must only use letters, numbers, dashes, underscores, and periods.",
+											@"ServerBrowser"/* table */, @"message displayed for bad user IDs"),
+										NSLocalizedDescriptionKey,
 										nil] autorelease]];
 			[self setErrorMessage:[[*outError userInfo] objectForKey:NSLocalizedDescriptionKey]];
 			[self setHidesUserIDError:NO];

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110618',
     '20110609',
     '20110608',
     '20110607',
@@ -387,6 +388,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110618': [
+        'Fixed a problem with the Servers panel where user IDs were unreasonably limited to only letters and numbers.',
+    ],
     '20110609': [
         'Fixed constraints on window resizing in certain sheets.',
     ],
