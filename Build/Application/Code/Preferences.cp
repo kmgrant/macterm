@@ -1098,6 +1098,8 @@ Preferences_Init ()
 									sizeof(UInt32), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagNoPasteWarning,
 										CFSTR("data-send-paste-no-warning"), Quills::Prefs::SESSION);
+	My_PreferenceDefinition::createFlag(kPreferences_TagNoUpdateWarning,
+										CFSTR("no-update-warning"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagNotification,
 									CFSTR("when-alert-in-background"), typeCFStringRef/* "alert", "animate", "badge", "ignore" */,
 									sizeof(SInt16), Quills::Prefs::GENERAL);
@@ -6251,6 +6253,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagKioskShowsScrollBar:
 				case kPreferences_TagKioskShowsWindowFrame:
 				case kPreferences_TagKioskUsesSuperfluousEffects:
+				case kPreferences_TagNoUpdateWarning:
 					{
 						assert(typeNetEvents_CFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
@@ -8551,6 +8554,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagKioskShowsScrollBar:
 			case kPreferences_TagKioskShowsWindowFrame:
 			case kPreferences_TagKioskUsesSuperfluousEffects:
+			case kPreferences_TagNoUpdateWarning:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					

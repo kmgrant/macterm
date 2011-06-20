@@ -392,6 +392,7 @@ notes_by_version = {
     '20110619': [
         'Fixed alert messages that showed a miniature application icon in the wrong corner of the larger icon.',
         'Notification windows (background alerts) are now Cocoa-based and have a more refined appearance and behavior.',
+        'MacTelnet now displays a background message at launch time if its version is more than 2 months old.  The message has an Ignore button that quells future warnings.',
     ],
     '20110618': [
         'Fixed a problem with the Servers panel where user IDs were unreasonably limited to only letters and numbers.',

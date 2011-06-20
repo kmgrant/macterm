@@ -95,6 +95,9 @@ The string encoding is UTF-8.\n\
 	
 	// intended only for direct use by MacTelnet
 	static std::string _initial_workspace_name ();
+	
+	// intended only for direct use by MacTelnet
+	static void _version_warning ();
 
 private:
 	Base (); // class is not instantiated

@@ -73,6 +73,8 @@ table(deftable).
 (defbottom). |\2(desc). The window stays open after the process exits for any reason.|
 (deftop). |(key). @no-auto-new@|(types). _true or false_|
 (defbottom). |\2(desc). A new window is not opened automatically when no other windows are open.|
+(deftop). |(key). @no-update-warning@|(types). _true or false_|
+(defbottom). |\2(desc). Messages recommending new versions of the program are not displayed.|
 (deftop). |(key). @spaces-per-tab@|(types). _integer_|
 (defbottom). |\2(desc). "Copy with Tab Substitution" uses this many spaces in place of each tab it finds.|
 (deftop). |(key). @terminal-auto-copy-on-select@|(types). _true or false_|

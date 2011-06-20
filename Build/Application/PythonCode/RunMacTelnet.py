@@ -181,6 +181,44 @@ if __name__ == "__main__":
     # banner
     print "MacTelnet: Base initialization complete.  This is MacTelnet version %s." % Base.version()
     
+    # if the current version is very old, warn the user
+    try:
+        parts = str(Base.version()).split(".")
+        if len(parts) > 4:
+            build = parts[4] # formatted as 8 digits and YYYYMMDD, e.g. 20110610
+            latest_yyyymmdd = now.strftime("%Y%m%d") # also 8 digits and YYYYMMDD
+            if (len(latest_yyyymmdd) == 8) and (len(build) == 8):
+                year_now = int(latest_yyyymmdd[0:4])
+                year_build = int(build[0:4])
+                old = False
+                # arbitrary; releases more than this many months old
+                # are considered out-of-date
+                months_for_old = 2
+                if 1 == (year_now - year_build):
+                    # when the years are different but it's just the
+                    # previous year, the releases might still be close
+                    # (e.g. December versus January); so check months,
+                    # subtracting 12 from the older one so that it is
+                    # always considered less
+                    month_now = int(latest_yyyymmdd[4:6])
+                    month_build = int(build[4:6]) - 12
+                    diff = int(month_now) - int(month_build)
+                    old = (diff > months_for_old)
+                elif (year_now - year_build) > 1:
+                    # over a year, definitely old
+                    old = True
+                else:
+                    # builds are same year, do a diff of months (and
+                    # because of the way the numbers are, it's enough
+                    # to subtract the whole thing without breaking it
+                    # up into parts)
+                    diff = int(latest_yyyymmdd) - int(build)
+                    old = (diff > months_for_old)
+                if old:
+                    Base._version_warning()
+    except Exception, e:
+        print "exception in version check", e
+    
     # optionally invoke some unit tests
     do_testing = ("MACTELNET_RUN_TESTS" in os.environ)
     if do_testing:
