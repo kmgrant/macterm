@@ -236,6 +236,21 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 													CFSTR("kUIStrings_AlertWindowShowIPAddressesPrimaryText"));
 		break;
 	
+	case kUIStrings_AlertWindowUpdateCheckHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("A new version may be available on the web!"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowUpdateCheckHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowUpdateCheckPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("It has been some time since this copy of MacTelnet was updated."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowUpdateCheckPrimaryText"));
+		break;
+	
+	case kUIStrings_AlertWindowUpdateCheckTitle:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("MacTelnet Update"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowUpdateCheckTitle"));
+		break;
+	
 	case kUIStrings_AlertWindowQuitName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Quit"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowQuitName"));
@@ -339,6 +354,16 @@ UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 	case kUIStrings_ButtonContinue:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Continue"), CFSTR("Buttons"),
 													CFSTR("kUIStrings_ButtonContinue"));
+		break;
+	
+	case kUIStrings_ButtonIgnore:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Ignore"), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonIgnore"));
+		break;
+	
+	case kUIStrings_ButtonCheckForUpdatesWithEllipsis:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Check for Updates..."), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonCheckForUpdatesWithEllipsis"));
 		break;
 	
 	case kUIStrings_ButtonReviewWithEllipsis:

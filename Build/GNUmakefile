@@ -236,6 +236,7 @@ English.lproj/WindowTitleDialog.nib
 # should be an <xyz>.xib source and implied <xyz>.nib output
 XIB_PREFIXES := \
 English.lproj/AddressDialogCocoa \
+English.lproj/AlertMessagesModelessCocoa \
 English.lproj/ClipboardCocoa \
 English.lproj/CommandLineCocoa \
 English.lproj/DebugInterfaceCocoa \

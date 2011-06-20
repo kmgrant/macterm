@@ -9,8 +9,8 @@
 */
 /*###############################################################
 
-	Interface Library 2.0
-	© 1998-2010 by Kevin Grant
+	Interface Library 2.3
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -40,12 +40,147 @@
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
+#ifdef __OBJC__
+#	import <Cocoa/Cocoa.h>
+#endif
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 
 
 
 #pragma mark Types
+
+#ifdef __OBJC__
+
+/*!
+The base type for Cocoa-based alerts.  This class will not
+be used directly in XIB files, but the names it uses for
+various properties, etc. are still important and must be
+kept in sync with the XIBs that instantiate derived classes.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface AlertMessages_WindowController : NSWindowController
+{
+@public
+	IBOutlet NSButton*		helpButtonUI;
+	IBOutlet NSButton*		tertiaryButtonUI;
+	IBOutlet NSButton*		secondaryButtonUI;
+	IBOutlet NSButton*		primaryButtonUI;
+	IBOutlet NSTextField*	titleTextUI;
+	IBOutlet NSTextView*	dialogTextUI;
+	IBOutlet NSTextView*	helpTextUI;
+	IBOutlet NSImageView*	mainIconUI;
+
+@private
+	void*		dataPtr;
+	NSString*	titleText;
+	NSString*	dialogText;
+	NSString*	helpText;
+	NSString*	primaryButtonText;
+	NSString*	secondaryButtonText;
+	NSString*	tertiaryButtonText;
+	NSString*	iconImageName;
+	BOOL		hidesHelpButton;
+	BOOL		hidesSecondaryButton;
+	BOOL		hidesTertiaryButton;
+}
+
+- (void)
+adjustViews;
+
+- (IBAction)
+performPrimaryAction:(id)_;
+
+- (IBAction)
+performSecondaryAction:(id)_;
+
+- (IBAction)
+performTertiaryAction:(id)_;
+
+- (IBAction)
+performHelpAction:(id)_;
+
+- (void)
+setUpFonts;
+
+// accessors
+
+- (void*)
+dataPtr;
+- (void)
+setDataPtr:(void*)_;
+
+- (NSString*)
+dialogText;
+- (void)
+setDialogText:(NSString*)_; // binding
+
+- (NSString*)
+helpText;
+- (void)
+setHelpText:(NSString*)_; // binding
+
+- (BOOL)
+hidesHelpButton;
+- (void)
+setHidesHelpButton:(BOOL)_; // binding
+
+- (BOOL)
+hidesSecondaryButton;
+- (void)
+setHidesSecondaryButton:(BOOL)_; // binding
+
+- (BOOL)
+hidesTertiaryButton;
+- (void)
+setHidesTertiaryButton:(BOOL)_; // binding
+
+- (NSString*)
+iconImageName;
+- (void)
+setIconImageName:(NSString*)_;
+
+- (NSString*)
+primaryButtonText;
+- (void)
+setPrimaryButtonText:(NSString*)_; // binding
+
+- (NSString*)
+secondaryButtonText;
+- (void)
+setSecondaryButtonText:(NSString*)_; // binding
+
+- (NSString*)
+tertiaryButtonText;
+- (void)
+setTertiaryButtonText:(NSString*)_; // binding
+
+- (NSString*)
+titleText;
+- (void)
+setTitleText:(NSString*)_; // binding
+
+@end
+
+
+/*!
+Implements the modeless alert.  This class must be in sync
+with references in "AlertMessageNotificationCocoa.xib".
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface AlertMessages_NotificationWindowController : AlertMessages_WindowController
+{
+}
+
+@end
+
+#endif // __OBJC__
 
 typedef struct AlertMessages_OpaqueBox*		AlertMessages_BoxRef;
 typedef AlertMessages_BoxRef		InterfaceLibAlertRef; // DEPRECATED NAME
@@ -159,8 +294,12 @@ void
 AlertMessages_BoxRef
 	Alert_New							();
 
+AlertMessages_BoxRef
+	Alert_NewModeless					(AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+										 void*								inCloseNotifyProcUserData);
+
 void
-	Alert_Dispose						(AlertMessages_BoxRef*		inoutAlert);
+	Alert_Dispose						(AlertMessages_BoxRef*				inoutAlert);
 
 //@}
 
@@ -195,11 +334,6 @@ SInt16
 	Alert_ItemHit						(AlertMessages_BoxRef				inAlert);
 
 void
-	Alert_MakeModeless					(AlertMessages_BoxRef				inAlert,
-										 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-										 void*								inCloseNotifyProcUserData);
-
-void
 	Alert_MakeWindowModal				(AlertMessages_BoxRef				inAlert,
 										 WindowRef							inParentWindow,
 										 Boolean							inIsParentWindowCloseWarning,
@@ -226,18 +360,8 @@ void
 										 Boolean					inIsHelpButton);
 
 void
-	Alert_SetMovable					(AlertMessages_BoxRef		inAlert,
-										 Boolean					inIsMovable);
-
-void
 	Alert_SetParamsFor					(AlertMessages_BoxRef		inAlert,
 										 SInt16						inAlertStyle);
-
-// DEPRECATED - USE Alert_SetTextCFStrings() INSTEAD
-void
-	Alert_SetText						(AlertMessages_BoxRef		inAlert,
-										 ConstStringPtr				inDialogText,
-										 ConstStringPtr				inHelpText);
 
 void
 	Alert_SetTextCFStrings				(AlertMessages_BoxRef		inAlert,

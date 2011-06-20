@@ -11,6 +11,7 @@
 		0A0627500FB3AF4900EBC8BB /* __init__.py in pymactelnet-url */ = {isa = PBXBuildFile; fileRef = 0A06274F0FB3AF4900EBC8BB /* __init__.py */; };
 		0A1A068A0ABA6241002C95D7 /* PrintTerminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */; };
 		0A2890DD0D68017D0017D99E /* GenericPanelTabs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */; };
+		0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */; };
 		0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A35F5130DEDD9E300F16B03 /* CommandLine.mm */; };
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
 		0A377E630D38806B001F3573 /* open.py in pymactelnet-file */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* open.py */; };
@@ -104,7 +105,7 @@
 		0AC6BB450A8C0BA100AFF37A /* FileSelectionDialogs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFD055432A400ACDF3A /* FileSelectionDialogs.cp */; };
 		0AC6BB470A8C0BA100AFF37A /* WindowInfo.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE3B055432A400ACDF3A /* WindowInfo.cp */; };
 		0AC6BB480A8C0BA100AFF37A /* Clipboard.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDBC055432A400ACDF3A /* Clipboard.mm */; };
-		0AC6BB490A8C0BA100AFF37A /* AlertMessages.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB8055432A400ACDF3A /* AlertMessages.cp */; };
+		0AC6BB490A8C0BA100AFF37A /* AlertMessages.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB8055432A400ACDF3A /* AlertMessages.mm */; };
 		0AC6BB4B0A8C0BA100AFF37A /* Terminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE25055432A400ACDF3A /* Terminal.cp */; };
 		0AC6BB4D0A8C0BA100AFF37A /* DialogAdjust.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */; };
 		0AC6BB4E0A8C0BA100AFF37A /* PrefsContextDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDDB055432A400ACDF3A /* PrefsContextDialog.cp */; };
@@ -224,6 +225,8 @@
 		0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GenericPanelTabs.cp; path = Application/Code/GenericPanelTabs.cp; sourceTree = "<group>"; };
 		0A2890DE0D68019E0017D99E /* GenericPanelTabs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericPanelTabs.h; path = Application/Code/GenericPanelTabs.h; sourceTree = "<group>"; };
 		0A2A06020DF4B8F900DF8C98 /* Growl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Growl.framework; path = GrowlSDK/Frameworks/Growl.framework; sourceTree = SOURCE_ROOT; };
+		0A2A35D313AD2EFF007A1E35 /* CocoaExtensions.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "CocoaExtensions.objc++.h"; path = "Shared/Code/CocoaExtensions.objc++.h"; sourceTree = "<group>"; };
+		0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaExtensions.mm; path = Shared/Code/CocoaExtensions.mm; sourceTree = "<group>"; };
 		0A317CAD10A0C775002EDEFB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/MainMenuCocoa.xib; sourceTree = "<group>"; };
 		0A33CCF607FAC04200248DDF /* ListenerModel.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ListenerModel.cp; path = Shared/Code/ListenerModel.cp; sourceTree = "<group>"; };
 		0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MemoryBlocks.cp; path = Shared/Code/MemoryBlocks.cp; sourceTree = "<group>"; };
@@ -327,7 +330,7 @@
 		0A46059605543D7C00ACDF3A /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
 		0A46059705543D7C00ACDF3A /* System.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = System.framework; path = /System/Library/Frameworks/System.framework; sourceTree = "<absolute>"; };
 		0A46079705543DE400ACDF3A /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
-		0A46FDB8055432A400ACDF3A /* AlertMessages.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlertMessages.cp; path = Application/Code/AlertMessages.cp; sourceTree = "<group>"; };
+		0A46FDB8055432A400ACDF3A /* AlertMessages.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AlertMessages.mm; path = Application/Code/AlertMessages.mm; sourceTree = "<group>"; };
 		0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AppleEventUtilities.cp; path = Application/Code/AppleEventUtilities.cp; sourceTree = "<group>"; };
 		0A46FDBA055432A400ACDF3A /* BasicTypesAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BasicTypesAE.cp; path = Application/Code/BasicTypesAE.cp; sourceTree = "<group>"; };
 		0A46FDBC055432A400ACDF3A /* Clipboard.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Clipboard.mm; path = Application/Code/Clipboard.mm; sourceTree = "<group>"; };
@@ -531,6 +534,7 @@
 		0AD7483813074260003E368B /* IconForPrint.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrint.icns; path = Application/Resources/IconForPrint.icns; sourceTree = "<group>"; };
 		0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AddressDialog.mm; path = Application/Code/AddressDialog.mm; sourceTree = "<group>"; };
 		0ADB0D3305A7FBD90054A4E9 /* DefaultPreferences.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = DefaultPreferences.plist; path = Application/Resources/DefaultPreferences.plist; sourceTree = "<group>"; };
+		0ADF9D1313A565920098675F /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/AlertMessagesModelessCocoa.xib; sourceTree = "<group>"; };
 		0AE103AE0F71D003003127C7 /* ServerBrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ServerBrowser.h; path = Application/Code/ServerBrowser.h; sourceTree = "<group>"; };
 		0AE103B00F71D018003127C7 /* ServerBrowser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ServerBrowser.mm; path = Application/Code/ServerBrowser.mm; sourceTree = "<group>"; };
 		0AE1F16B0AF3E2C000D2DC13 /* QuillsCallbacks.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsCallbacks.typedef.h; path = Application/Code/QuillsCallbacks.typedef.h; sourceTree = "<group>"; };
@@ -631,8 +635,9 @@
 				0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */,
 				0AF502330F872D420068CB19 /* CFUtilities.cp */,
 				0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */,
-				0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */,
 				0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */,
+				0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */,
+				0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */,
 				0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */,
 				0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */,
 				0A46FDC6055432A400ACDF3A /* Console.cp */,
@@ -662,8 +667,9 @@
 				0AF5022E0F872CAF0068CB19 /* CFRetainRelease.h */,
 				0AF5022F0F872CC30068CB19 /* CFUtilities.h */,
 				0AF502300F872D150068CB19 /* CGContextSaveRestore.h */,
-				0ABAA71A13491CFB006B1EF6 /* CocoaFuture.objc++.h */,
 				0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */,
+				0A2A35D313AD2EFF007A1E35 /* CocoaExtensions.objc++.h */,
+				0ABAA71A13491CFB006B1EF6 /* CocoaFuture.objc++.h */,
 				0AE852740D9463B900B6834B /* CocoaUserDefaults.h */,
 				0A4603C50554376100ACDF3A /* ColorUtilities.h */,
 				0A4603CB0554376100ACDF3A /* Console.h */,
@@ -719,7 +725,7 @@
 				0AA6A2AA0DF4CF1C00B2B598 /* GrowlRegistrationTicket.growlRegDict */,
 				0AD62711055DEB7000843EA9 /* MacTelnetPrefix.pch */,
 				0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */,
-				0A46FDB8055432A400ACDF3A /* AlertMessages.cp */,
+				0A46FDB8055432A400ACDF3A /* AlertMessages.mm */,
 				0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */,
 				0A46FE12055432A400ACDF3A /* AppResources.cp */,
 				0A46FDBC055432A400ACDF3A /* Clipboard.mm */,
@@ -946,6 +952,7 @@
 			isa = PBXGroup;
 			children = (
 				0AB2273012D2D1DC00D663BB /* AddressDialogCocoa.xib */,
+				0ADF9D1213A565920098675F /* AlertMessagesModelessCocoa.xib */,
 				0A6315B812348AB4003890B8 /* ClipboardCocoa.xib */,
 				0AB2273212D2D27000D663BB /* CommandLineCocoa.xib */,
 				0AB2272E12D2D03F00D663BB /* DebugInterfaceCocoa.xib */,
@@ -1402,7 +1409,7 @@
 				0AC6BB450A8C0BA100AFF37A /* FileSelectionDialogs.cp in Sources */,
 				0AC6BB470A8C0BA100AFF37A /* WindowInfo.cp in Sources */,
 				0AC6BB480A8C0BA100AFF37A /* Clipboard.mm in Sources */,
-				0AC6BB490A8C0BA100AFF37A /* AlertMessages.cp in Sources */,
+				0AC6BB490A8C0BA100AFF37A /* AlertMessages.mm in Sources */,
 				0AC6BB4B0A8C0BA100AFF37A /* Terminal.cp in Sources */,
 				0AC6BB4D0A8C0BA100AFF37A /* DialogAdjust.cp in Sources */,
 				0AC6BB4E0A8C0BA100AFF37A /* PrefsContextDialog.cp in Sources */,
@@ -1435,6 +1442,7 @@
 				0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */,
 				0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */,
 				0ABAA71B13491D06006B1EF6 /* CocoaFuture.mm in Sources */,
+				0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1687,6 +1695,14 @@
 				0ACFBF4712F13506008E4203 /* English */,
 			);
 			name = TerminalWindowCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0ADF9D1213A565920098675F /* AlertMessagesModelessCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0ADF9D1313A565920098675F /* English */,
+			);
+			name = AlertMessagesModelessCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0AEA45D70642041B00E701DA /* Dictionary.sdef */ = {

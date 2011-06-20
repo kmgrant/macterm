@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110619',
     '20110618',
     '20110609',
     '20110608',
@@ -388,6 +389,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110619': [
+        'Fixed alert messages that showed a miniature application icon in the wrong corner of the larger icon.',
+        'Notification windows (background alerts) are now Cocoa-based and have a more refined appearance and behavior.',
+    ],
     '20110618': [
         'Fixed a problem with the Servers panel where user IDs were unreasonably limited to only letters and numbers.',
     ],

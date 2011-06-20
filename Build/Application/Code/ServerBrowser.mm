@@ -33,6 +33,7 @@
 
 // Mac includes
 #import <Cocoa/Cocoa.h>
+#import <objc/objc-runtime.h>
 
 // Unix includes
 extern "C"
@@ -46,6 +47,7 @@ extern "C"
 #import <AutoPool.objc++.h>
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
+#import <CocoaExtensions.objc++.h>
 #import <Console.h>
 #import <SoundSystem.h>
 
@@ -927,68 +929,6 @@ rediscoverServices
 }// rediscoverServices
 
 
-/*!
-Given a property method name, such as fooBar, returns the
-conventional name for a selector to indicate whether or not
-changes to that key will automatically notify observers; in
-this case, autoNotifyOnChangeToFooBar.
-
-The idea is to keep property information close to the
-accessors for those properties, instead of making the
-"automaticallyNotifiesObserversForKey:" method big and ugly.
-
-IMPORTANT:	This method is completely generic and is only
-			here temporarily.  It should move elsewhere.
-
-(4.0)
-*/
-+ (NSString*)
-selectorNameForKeyChangeAutoNotifyFlag:(NSString*)	aPropertySelectorName
-{
-	NSString*			result = nil;
-	NSMutableString*	nameOfAccessor = [[[NSMutableString alloc] initWithString:aPropertySelectorName]
-											autorelease];
-	NSString*			accessorFirstChar = [nameOfAccessor substringToIndex:1];
-	
-	
-	[nameOfAccessor replaceCharactersInRange:NSMakeRange(0, 1/* length */)
-												withString:[accessorFirstChar uppercaseString]];
-	result = [@"autoNotifyOnChangeTo" stringByAppendingString:nameOfAccessor];
-	return result;
-}
-
-
-/*!
-Given a selector, such as @selector(fooBar), returns the
-conventional selector for a method that would determine whether
-or not property changes will automatically notify any observers;
-in this case, @selector(autoNotifyOnChangeToFooBar).
-
-The signature of the validator is expected to be:
-- (id) autoNotifyOnChangeToFooBar;
-Due to limitations in performSelector:, the result is not a
-BOOL, but rather an object of type NSNumber, whose "boolValue"
-method is called.  Validators are encouraged to use the method
-[NSNumber numberWithBool:] when returning their results.
-
-See selectorNameForKeyChangeAutoNotifyFlag: and
-automaticallyNotifiesObserversForKey:.
-
-IMPORTANT:	This method is completely generic and is only
-			here temporarily.  It should move elsewhere.
-
-(4.0)
-*/
-+ (SEL)
-selectorToReturnKeyChangeAutoNotifyFlag:(SEL)	anAccessor
-{
-	SEL		result = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:NSStringFromSelector(anAccessor)]);
-	
-	
-	return result;
-}
-
-
 #pragma mark Accessors
 
 /*!
@@ -1183,7 +1123,7 @@ hostName
 {
 	return [[hostName copy] autorelease];
 }
-- (id)
++ (id)
 autoNotifyOnChangeToHostName
 {
 	return flagNo();
@@ -1240,7 +1180,7 @@ portNumber
 {
 	return [[portNumber copy] autorelease];
 }
-- (id)
++ (id)
 autoNotifyOnChangeToPortNumber
 {
 	return flagNo();
@@ -1309,7 +1249,7 @@ setProtocolIndexByProtocol:(Session_Protocol)	aProtocol
 		++i;
 	}
 }
-- (id)
++ (id)
 autoNotifyOnChangeToProtocolIndexes
 {
 	return flagNo();
@@ -1350,7 +1290,7 @@ target
 {
 	return target;
 }
-- (id)
++ (id)
 autoNotifyOnChangeToTarget
 {
 	return flagNo();
@@ -1386,7 +1326,7 @@ userID
 {
 	return [[userID copy] autorelease];
 }
-- (id)
++ (id)
 autoNotifyOnChangeToUserID
 {
 	return flagNo();
@@ -1548,7 +1488,7 @@ automaticallyNotifiesObserversForKey:(NSString*)	theKey
 	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if ([self respondsToSelector:flagSource])
+	if (NULL != class_getClassMethod([self class], flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];

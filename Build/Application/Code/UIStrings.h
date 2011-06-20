@@ -115,6 +115,9 @@ enum UIStrings_AlertWindowCFString
 	kUIStrings_AlertWindowScriptErrorName				= 'Scpt',
 	kUIStrings_AlertWindowScriptErrorHelpText			= 'HScp',
 	kUIStrings_AlertWindowShowIPAddressesPrimaryText	= 'IPAd',
+	kUIStrings_AlertWindowUpdateCheckHelpText			= 'HUpd',
+	kUIStrings_AlertWindowUpdateCheckPrimaryText		= 'PUpd',
+	kUIStrings_AlertWindowUpdateCheckTitle				= 'TUpd',
 	kUIStrings_AlertWindowQuitName						= 'ImmQ',
 	kUIStrings_AlertWindowQuitHelpText					= 'HQui',
 	kUIStrings_AlertWindowQuitPrimaryText				= 'PQui'
@@ -132,6 +135,7 @@ enum UIStrings_ButtonCFString
 {
 	kUIStrings_ButtonAddAccessibilityDesc				= 'AdAA',
 	kUIStrings_ButtonCancel								= 'Cncl',
+	kUIStrings_ButtonCheckForUpdatesWithEllipsis		= 'Updt',
 	kUIStrings_ButtonClose								= 'Clos',
 	kUIStrings_ButtonColorBoxAccessibilityDesc			= 'CBAA',
 	kUIStrings_ButtonContinue							= 'Cont',
@@ -140,6 +144,7 @@ enum UIStrings_ButtonCFString
 	kUIStrings_ButtonEditTextArrowsAccessibilityDesc	= 'ETAA',
 	kUIStrings_ButtonEditTextHistoryAccessibilityDesc	= 'HiMA',
 	kUIStrings_ButtonHelpAccessibilityDesc				= 'HlpA',
+	kUIStrings_ButtonIgnore								= 'Ignr',
 	kUIStrings_ButtonMakeOneLine						= 'OneL',
 	kUIStrings_ButtonMoveDownAccessibilityDesc			= 'MDAA',
 	kUIStrings_ButtonMoveUpAccessibilityDesc			= 'MUAA',

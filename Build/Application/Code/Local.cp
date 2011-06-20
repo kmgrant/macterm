@@ -2183,7 +2183,7 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 				
 				if ((kDisplayNormal) && (canDisplayAlert))
 				{
-					InterfaceLibAlertRef	box = Alert_New();
+					InterfaceLibAlertRef	box = Alert_NewModeless(Alert_StandardCloseNotifyProc, nullptr/* context */);
 					
 					
 					Alert_SetParamsFor(box, kAlert_StyleOK);
@@ -2195,7 +2195,6 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 					}
 					
 					// show the message; it is disposed asynchronously
-					Alert_MakeModeless(box, Alert_StandardCloseNotifyProc, nullptr/* context */);
 					Alert_Display(box);
 				}
 			}

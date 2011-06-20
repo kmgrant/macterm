@@ -7239,7 +7239,7 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 					// basic setup
 					watchAlertInfoPtr->sessionBeingWatched = inPtr->selfRef;
 					assert(nullptr == inPtr->watchBox);
-					inPtr->watchBox = Alert_New();
+					inPtr->watchBox = Alert_NewModeless(watchCloseNotifyProc, watchAlertInfoPtr/* context */);
 					Alert_SetParamsFor(inPtr->watchBox, kAlert_StyleOK);
 					Alert_SetType(inPtr->watchBox, kAlertNoteAlert);
 					
@@ -7249,7 +7249,6 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 					}
 					
 					// show the message; it is disposed asynchronously
-					Alert_MakeModeless(inPtr->watchBox, watchCloseNotifyProc, watchAlertInfoPtr/* context */);
 					Alert_Display(inPtr->watchBox);
 				}
 				
