@@ -388,13 +388,9 @@ void					delayMinimumTicks				(UInt16 = 8);
 void					ensureTopLeftCornersExists		();
 TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
 TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
-UInt16					getGrowBoxHeight				(My_TerminalWindowPtr);
-UInt16					getGrowBoxWidth					();
 My_ScrollBarKind		getScrollBarKind				(My_TerminalWindowPtr, HIViewRef);
 TerminalScreenRef		getScrollBarScreen				(My_TerminalWindowPtr, HIViewRef);
 TerminalViewRef			getScrollBarView				(My_TerminalWindowPtr, HIViewRef);
-UInt16					getStatusBarHeight				(My_TerminalWindowPtr);
-UInt16					getToolbarHeight				(My_TerminalWindowPtr);
 void					getViewSizeFromWindowSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
 void					getWindowSizeFromViewSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
 void					handleFindDialogClose			(FindDialog_Ref);
@@ -417,6 +413,12 @@ OSStatus				receiveWindowDragCompleted		(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowGetClickActivation	(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
 HIWindowRef				returnCarbonWindow				(My_TerminalWindowPtr);
+UInt16					returnGrowBoxHeight				(My_TerminalWindowPtr);
+UInt16					returnGrowBoxWidth				(My_TerminalWindowPtr);
+UInt16					returnScrollBarHeight			(My_TerminalWindowPtr);
+UInt16					returnScrollBarWidth			(My_TerminalWindowPtr);
+UInt16					returnStatusBarHeight			(My_TerminalWindowPtr);
+UInt16					returnToolbarHeight				(My_TerminalWindowPtr);
 void					reverseFontChanges				(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					reverseFullScreenChanges		(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_ActionRef, void*);
@@ -1258,59 +1260,6 @@ TerminalWindow_ReturnScreenWithFocus	(TerminalWindowRef	inRef)
 	result = getActiveScreen(ptr);
 	return result;
 }// ReturnScreenWithFocus
-
-
-/*!
-Returns the height in pixels of a scroll bar in any terminal
-window.  In Carbon, this routine automatically calls an
-Appearance API to determine the current system-wide scroll bar
-size.
-
-(3.0)
-*/
-UInt16
-TerminalWindow_ReturnScrollBarHeight ()
-{
-	UInt16		result = 0;
-	//SInt32		data = 0L;
-	//OSStatus	error = noErr;
-	
-	
-	// temporarily disable horizontal scroll bars; one option
-	// is to have this routine dynamically return a nonzero
-	// height if the terminal actually needs horizontal
-	// scrolling (extremely rare), and to otherwise use 0 to
-	// effectively hide the scroll bar and save some space
-#if 0
-	error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
-	if (error != noErr) Console_WriteValue("unexpected error using GetThemeMetric()", error);
-	result = data;
-#endif
-	return result;
-}// ReturnScrollBarHeight
-
-
-/*!
-Returns the width in pixels of a scroll bar in any terminal
-window.  In Carbon, this routine automatically calls an
-Appearance API to determine the current system-wide scroll bar
-size.
-
-(3.0)
-*/
-UInt16
-TerminalWindow_ReturnScrollBarWidth ()
-{
-	UInt16		result = 0;
-	SInt32		data = 0L;
-	OSStatus	error = noErr;
-	
-	
-	error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
-	if (error != noErr) Console_WriteValue("unexpected error using GetThemeMetric()", error);
-	result = data;
-	return result;
-}// ReturnScrollBarWidth
 
 
 /*!
@@ -3455,75 +3404,6 @@ getActiveView	(My_TerminalWindowPtr	inPtr)
 
 
 /*!
-Returns the height in pixels of the grow box in a terminal
-window.  Currently this is identical to the height of a
-horizontal scroll bar, but this function exists so that
-code can explicitly identify this metric when no horizontal
-scroll bar may be present or when the size box is missing
-(Full Screen mode).
-
-(3.0)
-*/
-UInt16
-getGrowBoxHeight	(My_TerminalWindowPtr	inPtr)
-{
-	UInt16				result = 0;
-	Boolean				hasSizeBox = false;
-	WindowAttributes	attributes = kWindowNoAttributes;
-	OSStatus			error = noErr;
-	
-	
-	error = GetWindowAttributes(returnCarbonWindow(inPtr), &attributes);
-	if (noErr != error)
-	{
-		// not sure if the window has a size box; assume it does
-		hasSizeBox = true;
-	}
-	else
-	{
-		if (attributes & kWindowResizableAttribute)
-		{
-			hasSizeBox = true;
-		}
-	}
-	
-	if (hasSizeBox)
-	{
-		SInt32		data = 0;
-		
-		
-		error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
-		if (noErr != error)
-		{
-			Console_WriteValue("unexpected error using GetThemeMetric()", error);
-			result = 16; // arbitrary
-		}
-		else
-		{
-			result = data;
-		}
-	}
-	return result;
-}// getGrowBoxHeight
-
-
-/*!
-Returns the width in pixels of the grow box in a terminal
-window.  Currently this is identical to the width of a
-vertical scroll bar, but this function exists so that code
-can explicitly identify this metric when no vertical scroll
-bar may be present.
-
-(3.0)
-*/
-UInt16
-getGrowBoxWidth ()
-{
-	return TerminalWindow_ReturnScrollBarWidth();
-}// getGrowBoxWidth
-
-
-/*!
 Returns a constant describing the type of scroll bar that is
 given.  If the specified control does not belong to the given
 terminal window, "kMy_InvalidScrollBarKind" is returned;
@@ -3576,36 +3456,6 @@ getScrollBarView	(My_TerminalWindowPtr	inPtr,
 
 
 /*!
-Returns the height in pixels of the status bar.  The status bar
-height is defined as the number of pixels between the toolbar
-and the top edge of the terminal screen; thus, an invisible
-status bar has zero height.
-
-(3.0)
-*/
-UInt16
-getStatusBarHeight	(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
-{
-	return 0;
-}// getStatusBarHeight
-
-
-/*!
-Returns the height in pixels of the toolbar.  The toolbar
-height is defined as the number of pixels between the top
-edge of the window and the top edge of the status bar; thus,
-an invisible toolbar has zero height.
-
-(3.0)
-*/
-UInt16
-getToolbarHeight	(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
-{
-	return 0;
-}// getToolbarHeight
-
-
-/*!
 Returns the width and height of the screen interior
 (i.e. not including insets) of a terminal window
 whose content region has the specified dimensions.
@@ -3631,13 +3481,12 @@ getViewSizeFromWindowSize	(My_TerminalWindowPtr	inPtr,
 {
 	if (nullptr != outScreenInteriorWidthInPixels)
 	{
-		*outScreenInteriorWidthInPixels = inWindowContentWidthInPixels -
-											TerminalWindow_ReturnScrollBarWidth();
+		*outScreenInteriorWidthInPixels = inWindowContentWidthInPixels - returnScrollBarWidth(inPtr);
 	}
 	if (nullptr != outScreenInteriorHeightInPixels)
 	{
-		*outScreenInteriorHeightInPixels = inWindowContentHeightInPixels - getStatusBarHeight(inPtr) - getToolbarHeight(inPtr) -
-											TerminalWindow_ReturnScrollBarHeight();
+		*outScreenInteriorHeightInPixels = inWindowContentHeightInPixels - returnStatusBarHeight(inPtr) -
+											returnToolbarHeight(inPtr) - returnScrollBarHeight(inPtr);
 	}
 }// getViewSizeFromWindowSize
 
@@ -3665,14 +3514,12 @@ getWindowSizeFromViewSize	(My_TerminalWindowPtr	inPtr,
 {
 	if (nullptr != outWindowContentWidthInPixels)
 	{
-		*outWindowContentWidthInPixels = inScreenInteriorWidthInPixels +
-											TerminalWindow_ReturnScrollBarWidth();
+		*outWindowContentWidthInPixels = inScreenInteriorWidthInPixels + returnScrollBarWidth(inPtr);
 	}
 	if (nullptr != outWindowContentHeightInPixels)
 	{
-		*outWindowContentHeightInPixels = inScreenInteriorHeightInPixels +
-											getStatusBarHeight(inPtr) + getToolbarHeight(inPtr) +
-											TerminalWindow_ReturnScrollBarHeight();
+		*outWindowContentHeightInPixels = inScreenInteriorHeightInPixels + returnStatusBarHeight(inPtr) +
+											returnToolbarHeight(inPtr) + returnScrollBarHeight(inPtr);
 	}
 }// getWindowSizeFromViewSize
 
@@ -3769,10 +3616,10 @@ handleNewSize	(WindowRef	inWindow,
 		// glue the vertical scroll bar to the new right side of the window and to the
 		// bottom edge of the status bar, and ensure it is glued to the size box in the
 		// corner (so vertically resize it)
-		viewBounds.origin.x = contentBounds.size.width - TerminalWindow_ReturnScrollBarWidth();
+		viewBounds.origin.x = contentBounds.size.width - returnScrollBarWidth(ptr);
 		viewBounds.origin.y = -1; // frame thickness
-		viewBounds.size.width = TerminalWindow_ReturnScrollBarWidth();
-		viewBounds.size.height = contentBounds.size.height - getGrowBoxHeight(ptr);
+		viewBounds.size.width = returnScrollBarWidth(ptr);
+		viewBounds.size.height = contentBounds.size.height - returnGrowBoxHeight(ptr);
 		error = HIViewSetFrame(ptr->controls.scrollBarV, &viewBounds);
 		assert_noerr(error);
 		
@@ -3780,9 +3627,9 @@ handleNewSize	(WindowRef	inWindow,
 		// also move because its left edge is glued to the window edge, and it must resize
 		// because its right edge is glued to the size box in the corner
 		viewBounds.origin.x = -1; // frame thickness
-		viewBounds.origin.y = contentBounds.size.height - TerminalWindow_ReturnScrollBarHeight();
-		viewBounds.size.width = contentBounds.size.width - getGrowBoxWidth();
-		viewBounds.size.height = TerminalWindow_ReturnScrollBarHeight();
+		viewBounds.origin.y = contentBounds.size.height - returnScrollBarHeight(ptr);
+		viewBounds.size.width = contentBounds.size.width - returnGrowBoxWidth(ptr);
+		viewBounds.size.height = returnScrollBarHeight(ptr);
 		error = HIViewSetFrame(ptr->controls.scrollBarH, &viewBounds);
 		//assert_noerr(error); // ignore this error since the scroll bar is not used
 		
@@ -6254,6 +6101,170 @@ returnCarbonWindow		(My_TerminalWindowPtr	inPtr)
 	result = (HIWindowRef)[inPtr->window windowRef];
 	return result;
 }// returnCarbonWindow
+
+
+/*!
+Returns the height in pixels of the grow box in a terminal
+window.  Currently this is identical to the height of a
+horizontal scroll bar, but this function exists so that
+code can explicitly identify this metric when no horizontal
+scroll bar may be present or when the size box is missing
+(Full Screen mode).
+
+(3.0)
+*/
+UInt16
+returnGrowBoxHeight		(My_TerminalWindowPtr	inPtr)
+{
+	UInt16				result = 0;
+	Boolean				hasSizeBox = false;
+	WindowAttributes	attributes = kWindowNoAttributes;
+	OSStatus			error = noErr;
+	
+	
+	error = GetWindowAttributes(returnCarbonWindow(inPtr), &attributes);
+	if (noErr != error)
+	{
+		// not sure if the window has a size box; assume it does
+		hasSizeBox = true;
+	}
+	else
+	{
+		if (attributes & kWindowResizableAttribute)
+		{
+			hasSizeBox = true;
+		}
+	}
+	
+	if (hasSizeBox)
+	{
+		SInt32		data = 0;
+		
+		
+		error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
+		if (noErr != error)
+		{
+			Console_WriteValue("unexpected error using GetThemeMetric()", error);
+			result = 16; // arbitrary
+		}
+		else
+		{
+			result = data;
+		}
+	}
+	return result;
+}// returnGrowBoxHeight
+
+
+/*!
+Returns the width in pixels of the grow box in a terminal
+window.  Currently this is identical to the width of a
+vertical scroll bar, but this function exists so that code
+can explicitly identify this metric when no vertical scroll
+bar may be present.
+
+(3.0)
+*/
+UInt16
+returnGrowBoxWidth		(My_TerminalWindowPtr	inPtr)
+{
+	return returnScrollBarWidth(inPtr);
+}// returnGrowBoxWidth
+
+
+/*!
+Returns the height in pixels of a scroll bar in the given
+terminal window.  If the scroll bar is invisible, the height
+is set to 0.
+
+(3.0)
+*/
+UInt16
+returnScrollBarHeight	(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
+{
+	UInt16		result = 0;
+	//SInt32		data = 0L;
+	//OSStatus	error = noErr;
+	
+	
+	// temporarily disable horizontal scroll bars; one option
+	// is to have this routine dynamically return a nonzero
+	// height if the terminal actually needs horizontal
+	// scrolling (extremely rare), and to otherwise use 0 to
+	// effectively hide the scroll bar and save some space
+#if 0
+	error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
+	if (error != noErr) Console_WriteValue("unexpected error using GetThemeMetric()", error);
+	result = data;
+#endif
+	return result;
+}// returnScrollBarHeight
+
+
+/*!
+Returns the width in pixels of a scroll bar in the given
+terminal window.  If the scroll bar is invisible, the width
+is set to 0.
+
+(3.0)
+*/
+UInt16
+returnScrollBarWidth	(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
+{
+	UInt16		result = 0;
+	Boolean		showScrollBar = true;
+	size_t		actualSize = 0;
+	
+	
+	if (kPreferences_ResultOK !=
+		Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(showScrollBar),
+							&showScrollBar, &actualSize))
+	{
+		showScrollBar = true; // assume a value if the preference cannot be found
+	}
+	
+	if ((false == FlagManager_Test(kFlagKioskMode)) || (showScrollBar))
+	{
+		SInt32		data = 0L;
+		OSStatus	error = noErr;
+		
+		
+		error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
+		if (error != noErr) Console_WriteValue("unexpected error using GetThemeMetric()", error);
+		result = data;
+	}
+	return result;
+}// returnScrollBarWidth
+
+
+/*!
+Returns the height in pixels of the status bar.  The status bar
+height is defined as the number of pixels between the toolbar
+and the top edge of the terminal screen; thus, an invisible
+status bar has zero height.
+
+(3.0)
+*/
+UInt16
+returnStatusBarHeight	(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
+{
+	return 0;
+}// returnStatusBarHeight
+
+
+/*!
+Returns the height in pixels of the toolbar.  The toolbar
+height is defined as the number of pixels between the top
+edge of the window and the top edge of the status bar; thus,
+an invisible toolbar has zero height.
+
+(3.0)
+*/
+UInt16
+returnToolbarHeight		(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
+{
+	return 0;
+}// returnToolbarHeight
 
 
 /*!

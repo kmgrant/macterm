@@ -229,12 +229,6 @@ UInt16
 TerminalScreenRef
 	TerminalWindow_ReturnScreenWithFocus			(TerminalWindowRef			inRef);
 
-UInt16
-	TerminalWindow_ReturnScrollBarHeight			();
-
-UInt16
-	TerminalWindow_ReturnScrollBarWidth				();
-
 // EQUIVALENT TO TerminalWindow_ReturnViewCountInGroup(inRef, kTerminalWindow_ViewGroupEverything)
 UInt16
 	TerminalWindow_ReturnViewCount					(TerminalWindowRef			inRef);

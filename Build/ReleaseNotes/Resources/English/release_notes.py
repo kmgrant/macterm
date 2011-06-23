@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110622',
     '20110619',
     '20110618',
     '20110609',
@@ -389,6 +390,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110622': [
+        'Fixed Full Screen mode when the scroll bar is set to hidden so that the terminal occupies all extra space on the side.',
+    ],
     '20110619': [
         'Fixed alert messages that showed a miniature application icon in the wrong corner of the larger icon.',
         'Notification windows (background alerts) are now Cocoa-based and have a more refined appearance and behavior.',
