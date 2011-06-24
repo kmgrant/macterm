@@ -3,8 +3,8 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.0
-	© 2008 by Kevin Grant
+	Simple Cocoa Wrappers Library 1.7
+	© 2008-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -36,6 +36,10 @@
 
 
 #pragma mark Public Methods
+
+void
+	CocoaUserDefaults_CopyDomain			(CFStringRef	inFromName,
+											 CFStringRef	inToName);
 
 void
 	CocoaUserDefaults_DeleteDomain			(CFStringRef);
