@@ -2,14 +2,67 @@
 # vim: set fileencoding=UTF-8 :
 """Utility routines that are highly generic.
 
+command_data -- run a program and return its standard output
 mac_os_name -- return a name like Panther, Tiger, Leopard, etc.
 slash_free_path -- remove all leading and trailing slashes
 sort_dict -- for testing, return deterministic "dict" description
+
+For convenience, 'used_subprocess_module' can be consulted to
+see if the interpreter is new enough to support that module (or
+if the deprecated 'popen2' must be used).
 
 """
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '30 December 2006'
 __version__ = '4.0.0'
+
+import sys
+
+used_subprocess_module = False
+if sys.hexversion > 0x020400F0:
+    import subprocess
+    used_subprocess_module = True
+else:
+    import popen2
+
+def command_data(cmdline_tuple, force_popen2=False):
+    """command_data(tuple) -> string
+    
+    Runs a program (using either the popen2 or subprocess
+    modules, depending on the Python interpreter's version)
+    and returns its standard output as a string without
+    any editing.  If there is ANY problem running the
+    program, the result will be None.
+    
+    >>> command_data(('/this/does/not/exist'))
+    
+    >>> command_data(('/this/does/not/exist'), force_popen2=True)
+    
+    >>> command_data(('/bin/echo', 'hello, world!'))
+    'hello, world!\\n'
+    
+    >>> command_data(('/bin/echo', 'hello, world!'), force_popen2=True)
+    'hello, world!\\n'
+    
+    """
+    result = None
+    if force_popen2: # useful for testing older code in newer Python interpreters
+        import popen2
+    if used_subprocess_module and not force_popen2:
+        try:
+            cmd_run = subprocess.Popen(cmdline_tuple, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+            (cmd_stdout, cmd_stderr) = cmd_run.communicate()
+            if cmd_run.returncode == 0:
+                result = str(cmd_stdout)
+        except Exception, e:
+            #print "exception in subprocess.Popen of %r:" % cmdline_tuple, e
+            pass
+    else:
+        cmd_run = popen2.Popen4(cmdline_tuple)
+        cmd_status = cmd_run.wait()
+        if cmd_status == 0:
+            result = ''.join(cmd_run.fromchild.readlines()) # newlines are already present
+    return result
 
 def mac_os_name():
     """mac_os_name() -> string
