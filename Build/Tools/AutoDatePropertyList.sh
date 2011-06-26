@@ -33,6 +33,7 @@ perl -pi -e "s|\%MY_MAJOR_NUMBER\%|${MY_MAJOR_NUMBER}|g" "${target}"
 perl -pi -e "s|\%MY_MINOR_NUMBER\%|${MY_MINOR_NUMBER}|g" "${target}"
 perl -pi -e "s|\%MY_SUBMINOR_NUMBER\%|${MY_SUBMINOR_NUMBER}|g" "${target}"
 perl -pi -e "s|\%MY_ALPHA_BETA\%|${MY_ALPHA_BETA}|g" "${target}"
+perl -pi -e "s|\%MY_PREFS_VERSION\%|${MY_PREFS_VERSION}|g" "${target}"
 
 # ideal case: replace variable reference
 perl -pi -e "s|\%MY_BUILD_NUMBER\%|${build}|g" "${target}"
