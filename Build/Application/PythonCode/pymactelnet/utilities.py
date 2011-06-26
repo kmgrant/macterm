@@ -20,10 +20,7 @@ import sys
 
 used_subprocess_module = False
 if sys.hexversion > 0x020400F0:
-    import subprocess
     used_subprocess_module = True
-else:
-    import popen2
 
 def command_data(cmdline_tuple, force_popen2=False):
     """command_data(tuple) -> string
@@ -46,9 +43,8 @@ def command_data(cmdline_tuple, force_popen2=False):
     
     """
     result = None
-    if force_popen2: # useful for testing older code in newer Python interpreters
-        import popen2
     if used_subprocess_module and not force_popen2:
+        import subprocess
         try:
             cmd_run = subprocess.Popen(cmdline_tuple, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
             (cmd_stdout, cmd_stderr) = cmd_run.communicate()
@@ -58,6 +54,7 @@ def command_data(cmdline_tuple, force_popen2=False):
             #print "exception in subprocess.Popen of %r:" % cmdline_tuple, e
             pass
     else:
+        import popen2
         cmd_run = popen2.Popen4(cmdline_tuple)
         cmd_status = cmd_run.wait()
         if cmd_status == 0:
