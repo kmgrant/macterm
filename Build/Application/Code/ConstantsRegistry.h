@@ -97,7 +97,7 @@ For example:
 	[NSError errorWithDomain:(NSString*)kConstantsRegistry_NSErrorDomainAppDefault
 		code:kConstantsRegistry_NSErrorBadUserID . . .]
 */
-CFStringRef const kConstantsRegistry_NSErrorDomainAppDefault				= CFSTR("com.mactelnet.errors");
+CFStringRef const kConstantsRegistry_NSErrorDomainAppDefault				= CFSTR("net.macterm.errors");
 enum
 {
 	kConstantsRegistry_NSErrorBadPortNumber		= 1,
@@ -114,32 +114,36 @@ unique value.
 Note that these strings are also used as HIObject IDs for
 toolbar items.
 */
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorGeneral				= CFSTR("com.mactelnet.prefpanels.general");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessions			= CFSTR("com.mactelnet.prefpanels.sessions");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionDataFlow		= CFSTR("com.mactelnet.prefpanels.sessions.dataflow");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionKeyboard		= CFSTR("com.mactelnet.prefpanels.sessions.keyboard");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionGraphics		= CFSTR("com.mactelnet.prefpanels.sessions.graphics");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionResource		= CFSTR("com.mactelnet.prefpanels.sessions.resource");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorMacros				= CFSTR("com.mactelnet.prefpanels.macros");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminals			= CFSTR("com.mactelnet.prefpanels.terminals");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsEmulation	= CFSTR("com.mactelnet.prefpanels.terminals.emulation");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsHacks		= CFSTR("com.mactelnet.prefpanels.terminals.hacks");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsOptions	= CFSTR("com.mactelnet.prefpanels.terminals.options");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsScreen		= CFSTR("com.mactelnet.prefpanels.terminals.screen");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormats				= CFSTR("com.mactelnet.prefpanels.formats");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormatsANSI			= CFSTR("com.mactelnet.prefpanels.formats.ansicolors");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormatsNormal		= CFSTR("com.mactelnet.prefpanels.formats.normal");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorKiosk				= CFSTR("com.mactelnet.prefpanels.kiosk");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorScripts				= CFSTR("com.mactelnet.prefpanels.scripts");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTranslations		= CFSTR("com.mactelnet.prefpanels.translations");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorWorkspaces			= CFSTR("com.mactelnet.prefpanels.workspaces");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorGeneral				= CFSTR("net.macterm.prefpanels.general");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessions			= CFSTR("net.macterm.prefpanels.sessions");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionDataFlow		= CFSTR("net.macterm.prefpanels.sessions.dataflow");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionKeyboard		= CFSTR("net.macterm.prefpanels.sessions.keyboard");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionGraphics		= CFSTR("net.macterm.prefpanels.sessions.graphics");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionResource		= CFSTR("net.macterm.prefpanels.sessions.resource");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorMacros				= CFSTR("net.macterm.prefpanels.macros");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminals			= CFSTR("net.macterm.prefpanels.terminals");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsEmulation	= CFSTR("net.macterm.prefpanels.terminals.emulation");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsHacks		= CFSTR("net.macterm.prefpanels.terminals.hacks");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsOptions	= CFSTR("net.macterm.prefpanels.terminals.options");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsScreen		= CFSTR("net.macterm.prefpanels.terminals.screen");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormats				= CFSTR("net.macterm.prefpanels.formats");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormatsANSI			= CFSTR("net.macterm.prefpanels.formats.ansicolors");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormatsNormal		= CFSTR("net.macterm.prefpanels.formats.normal");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorKiosk				= CFSTR("net.macterm.prefpanels.kiosk");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorScripts				= CFSTR("net.macterm.prefpanels.scripts");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorTranslations		= CFSTR("net.macterm.prefpanels.translations");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorWorkspaces			= CFSTR("net.macterm.prefpanels.workspaces");
 
 /*!
 Used with HIObject routines (such as HIObjectCreate()) to
 implement custom user interface elements.
 */
-CFStringRef const kConstantsRegistry_HIObjectClassIDTerminalBackgroundView	= CFSTR("com.mactelnet.terminal.background");
-CFStringRef const kConstantsRegistry_HIObjectClassIDTerminalTextView		= CFSTR("com.mactelnet.terminal.text");
+CFStringRef const kConstantsRegistry_HIObjectClassIDTerminalBackgroundView	= CFSTR("net.macterm.terminal.background");
+CFStringRef const kConstantsRegistry_HIObjectClassIDTerminalTextView		= CFSTR("net.macterm.terminal.text");
+// IMPORTANT: Since old toolbar item identifiers might be referenced by user preferences,
+// these cannot migrate to a new domain name until the associated preferences can be
+// properly converted.  Of course, a transition to Cocoa-based toolbars has the same
+// issue, so maybe it is unavoidable.
 CFStringRef const kConstantsRegistry_HIToolbarIDPreferences					= CFSTR("com.mactelnet.toolbar.preferences");
 CFStringRef const kConstantsRegistry_HIToolbarIDSessionInfo					= CFSTR("com.mactelnet.toolbar.sessioninfo");
 CFStringRef const kConstantsRegistry_HIToolbarIDTerminal					= CFSTR("com.mactelnet.toolbar.terminal");

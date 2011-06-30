@@ -46,7 +46,7 @@ if __name__ == "__main__":
         Base.all_done()
     def initial_workspace():
         return ""
-    # User-Defined Customizations Module "customize_mactelnet"
+    # User-Defined Customizations Module "customize_macterm"
     #
     # If your default Python path includes this module name, then the module
     # will be imported automatically!  And, any functions it defines that match
@@ -57,9 +57,9 @@ if __name__ == "__main__":
     # Although the path usually contains many directories, the following choices
     # will probably work best:
     #     Mac OS X 10.5.x and 10.6.x
-    #         /Library/Python/2.5/site-packages/customize_mactelnet.py
+    #         /Library/Python/2.5/site-packages/customize_macterm.py
     #     Mac OS X 10.3.9 and 10.4.x
-    #         /Library/Python/2.3/site-packages/customize_mactelnet.py
+    #         /Library/Python/2.3/site-packages/customize_macterm.py
     # NOTE: The path includes the interpreter version, which changes across OS
     #       upgrades.  It is also possible that the new Python version won't
     #       like your code.  Expect to relocate and possibly update your code
@@ -118,24 +118,30 @@ if __name__ == "__main__":
     #
     # --------------------------------------------------------------------------
     if "MACTELNET_SKIP_CUSTOM_LIBS" in os.environ:
-        print "MacTelnet: ignoring any 'customize_mactelnet' module (environment setting)"
+        print "MacTelnet: ignoring any 'customize_macterm' module (environment setting)"
     else:
         try:
+            # try to import using the obsolete name, and emit a console warning if it exists
             import customize_mactelnet
-            user_syms = dir(customize_mactelnet)
+            print "MacTelnet: warning, 'customize_mactelnet' legacy module will be ignored; rename it to 'customize_macterm'"
+        except ImportError, err:
+            pass
+        try:
+            import customize_macterm
+            user_syms = dir(customize_macterm)
             if '__file__' in user_syms:
-                print "MacTelnet: imported 'customize_mactelnet' module from", customize_mactelnet.__file__ # could be a list
+                print "MacTelnet: imported 'customize_macterm' module from", customize_macterm.__file__ # could be a list
             else:
-                print "MacTelnet: imported 'customize_mactelnet' module"
+                print "MacTelnet: imported 'customize_macterm' module"
             # look for valid user overrides (EVERYTHING used here should be
             # documented above and initialized at the beginning)
             print "MacTelnet: module contains:", user_syms
             if 'app_will_finish' in user_syms:
                 print "MacTelnet: employing user customization 'app_will_finish'"
-                app_will_finish = customize_mactelnet.app_will_finish
+                app_will_finish = customize_macterm.app_will_finish
             if 'initial_workspace' in user_syms:
                 print "MacTelnet: employing user customization 'initial_workspace'"
-                initial_workspace = customize_mactelnet.initial_workspace
+                initial_workspace = customize_macterm.initial_workspace
         except ImportError, err:
             # assume the module was never created, and ignore (nothing is
             # printed as an error in this case because the overwhelming

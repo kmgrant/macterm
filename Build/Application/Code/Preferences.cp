@@ -707,16 +707,16 @@ Preferences_Result		getWorkspacePreference					(My_ContextInterfaceConstPtr, Pre
 																 size_t, void*, size_t*);
 OSStatus				mergeInDefaultPreferences				();
 Preferences_Result		overwriteClassDomainCFArray				(Quills::Prefs::Class, CFArrayRef);
-void					readMacTelnetArrayPreference			(CFStringRef, CFArrayRef&);
+void					readApplicationArrayPreference			(CFStringRef, CFArrayRef&);
 OSStatus				readPreferencesDictionary				(CFDictionaryRef, Boolean);
 OSStatus				readPreferencesDictionaryInContext		(My_ContextInterfacePtr, CFDictionaryRef, Boolean);
+void					setApplicationPreference				(CFStringRef, CFPropertyListRef);
 Preferences_Result		setFormatPreference						(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
 Preferences_Result		setGeneralPreference					(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
 Preferences_Result		setMacroPreference						(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
-void					setMacTelnetPreference					(CFStringRef, CFPropertyListRef);
 Preferences_Result		setSessionPreference					(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
 Preferences_Result		setTerminalPreference					(My_ContextInterfacePtr, Preferences_Tag,
@@ -821,13 +821,14 @@ private:
 #pragma mark Public Methods
 
 /*!
-Initializes this module, launching the MacTelnet
-Preferences Converter application if necessary.
+Initializes this module.  Factory default values are copied
+for any important user preferences that have not been set yet,
+and context structures are constructed to represent all user
+collections read from disk.
 
-WARNING:	This is called automatically as needed;
-			therefore, its implementation should
-			not invoke any Preferences module routine
-			that would recurse back into this code.
+WARNING:	This is called automatically as needed; therefore,
+			its implementation should not invoke any Preferences
+			module routine that would loop back into this code.
 
 \retval kPreferences_ResultOK
 if the module was initialized completely
@@ -5377,7 +5378,7 @@ copyClassDomainCFArray	(Quills::Prefs::Class	inClass,
 	// set default value
 	outCFArrayOfCFStrings = nullptr;
 	
-	// figure out which MacTelnet preferences key holds the relevant list of domains
+	// figure out which main application preferences key holds the relevant list of domains
 	switch (inClass)
 	{
 	case Quills::Prefs::GENERAL:
@@ -5386,32 +5387,32 @@ copyClassDomainCFArray	(Quills::Prefs::Class	inClass,
 		break;
 	
 	case Quills::Prefs::FORMAT:
-		readMacTelnetArrayPreference(CFSTR("favorite-formats"), outCFArrayOfCFStrings);
+		readApplicationArrayPreference(CFSTR("favorite-formats"), outCFArrayOfCFStrings);
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
 	case Quills::Prefs::MACRO_SET:
-		readMacTelnetArrayPreference(CFSTR("favorite-macro-sets"), outCFArrayOfCFStrings);
+		readApplicationArrayPreference(CFSTR("favorite-macro-sets"), outCFArrayOfCFStrings);
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
 	case Quills::Prefs::SESSION:
-		readMacTelnetArrayPreference(CFSTR("favorite-sessions"), outCFArrayOfCFStrings);
+		readApplicationArrayPreference(CFSTR("favorite-sessions"), outCFArrayOfCFStrings);
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
 	case Quills::Prefs::TERMINAL:
-		readMacTelnetArrayPreference(CFSTR("favorite-terminals"), outCFArrayOfCFStrings);
+		readApplicationArrayPreference(CFSTR("favorite-terminals"), outCFArrayOfCFStrings);
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
 	case Quills::Prefs::TRANSLATION:
-		readMacTelnetArrayPreference(CFSTR("favorite-translations"), outCFArrayOfCFStrings);
+		readApplicationArrayPreference(CFSTR("favorite-translations"), outCFArrayOfCFStrings);
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
 	case Quills::Prefs::WORKSPACE:
-		readMacTelnetArrayPreference(CFSTR("favorite-workspaces"), outCFArrayOfCFStrings);
+		readApplicationArrayPreference(CFSTR("favorite-workspaces"), outCFArrayOfCFStrings);
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
@@ -7905,31 +7906,31 @@ overwriteClassDomainCFArray		(Quills::Prefs::Class	inClass,
 	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
-	// figure out which MacTelnet preferences key should hold this list of domains
+	// figure out which main application preferences key should hold this list of domains
 	switch (inClass)
 	{
 	case Quills::Prefs::FORMAT:
-		setMacTelnetPreference(CFSTR("favorite-formats"), inCFArrayOfCFStrings);
+		setApplicationPreference(CFSTR("favorite-formats"), inCFArrayOfCFStrings);
 		break;
 	
 	case Quills::Prefs::MACRO_SET:
-		setMacTelnetPreference(CFSTR("favorite-macro-sets"), inCFArrayOfCFStrings);
+		setApplicationPreference(CFSTR("favorite-macro-sets"), inCFArrayOfCFStrings);
 		break;
 	
 	case Quills::Prefs::SESSION:
-		setMacTelnetPreference(CFSTR("favorite-sessions"), inCFArrayOfCFStrings);
+		setApplicationPreference(CFSTR("favorite-sessions"), inCFArrayOfCFStrings);
 		break;
 	
 	case Quills::Prefs::TERMINAL:
-		setMacTelnetPreference(CFSTR("favorite-terminals"), inCFArrayOfCFStrings);
+		setApplicationPreference(CFSTR("favorite-terminals"), inCFArrayOfCFStrings);
 		break;
 	
 	case Quills::Prefs::TRANSLATION:
-		setMacTelnetPreference(CFSTR("favorite-translations"), inCFArrayOfCFStrings);
+		setApplicationPreference(CFSTR("favorite-translations"), inCFArrayOfCFStrings);
 		break;
 	
 	case Quills::Prefs::WORKSPACE:
-		setMacTelnetPreference(CFSTR("favorite-workspaces"), inCFArrayOfCFStrings);
+		setApplicationPreference(CFSTR("favorite-workspaces"), inCFArrayOfCFStrings);
 		break;
 	
 	case Quills::Prefs::GENERAL:
@@ -7944,9 +7945,9 @@ overwriteClassDomainCFArray		(Quills::Prefs::Class	inClass,
 
 
 /*!
-Reads MacTelnet’s XML preferences as requested.
-Also prints to standard output information about
-the data being read (if debugging is enabled).
+Reads the main application’s preferences as requested.
+Also prints to standard output information about the
+data being read (if debugging is enabled).
 
 The resultant Core Foundation type must be released
 when you are finished using it.
@@ -7957,7 +7958,7 @@ IMPORTANT:	Do not use for keys that do not really
 (3.1)
 */
 void
-readMacTelnetArrayPreference	(CFStringRef	inKey,
+readApplicationArrayPreference	(CFStringRef	inKey,
 								 CFArrayRef&	outValue)
 {
 	assert(nullptr != inKey);
@@ -8032,7 +8033,7 @@ readMacTelnetArrayPreference	(CFStringRef	inKey,
 		if (disposeDescriptionString) delete [] descriptionString, descriptionString = nullptr;
 	}
 #endif
-}// readMacTelnetArrayPreference
+}// readApplicationArrayPreference
 
 
 /*!
@@ -8329,7 +8330,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFStringRef == keyValueType);
-					setMacTelnetPreference(keyName, data);
+					setApplicationPreference(keyName, data);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
@@ -8347,7 +8348,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					if (nullptr != stringRef)
 					{
 						assert(typeCFStringRef == keyValueType);
-						setMacTelnetPreference(keyName, stringRef);
+						setApplicationPreference(keyName, stringRef);
 						CFRelease(stringRef), stringRef = nullptr;
 					}
 				}
@@ -8362,16 +8363,16 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					switch (data)
 					{
 					case kSession_LineEndingCR:
-						setMacTelnetPreference(keyName, CFSTR("cr"));
+						setApplicationPreference(keyName, CFSTR("cr"));
 						break;
 					
 					case kSession_LineEndingCRLF:
-						setMacTelnetPreference(keyName, CFSTR("crlf"));
+						setApplicationPreference(keyName, CFSTR("crlf"));
 						break;
 					
 					case kSession_LineEndingLF:
 					default:
-						setMacTelnetPreference(keyName, CFSTR("lf"));
+						setApplicationPreference(keyName, CFSTR("lf"));
 						break;
 					}
 				}
@@ -8383,7 +8384,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
@@ -8396,7 +8397,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					if (nullptr != numberRef)
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
-						setMacTelnetPreference(keyName, numberRef);
+						setApplicationPreference(keyName, numberRef);
 						CFRelease(numberRef), numberRef = nullptr;
 					}
 				}
@@ -8408,7 +8409,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
@@ -8419,7 +8420,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
@@ -8429,7 +8430,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
@@ -8439,7 +8440,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
@@ -8449,7 +8450,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
@@ -8460,7 +8461,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
@@ -8471,7 +8472,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
@@ -8487,7 +8488,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
@@ -8497,7 +8498,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFStringRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? CFSTR("\\e") : CFSTR(""));
+					setApplicationPreference(keyName, (data) ? CFSTR("\\e") : CFSTR(""));
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
@@ -8511,20 +8512,20 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					switch (data)
 					{
 					case kCommandNewSessionDialog:
-						setMacTelnetPreference(keyName, CFSTR("dialog"));
+						setApplicationPreference(keyName, CFSTR("dialog"));
 						break;
 					
 					case kCommandNewSessionDefaultFavorite:
-						setMacTelnetPreference(keyName, CFSTR("default"));
+						setApplicationPreference(keyName, CFSTR("default"));
 						break;
 					
 					case kCommandNewSessionShell:
-						setMacTelnetPreference(keyName, CFSTR("shell"));
+						setApplicationPreference(keyName, CFSTR("shell"));
 						break;
 					
 					case kCommandNewSessionLoginShell:
 					default:
-						setMacTelnetPreference(keyName, CFSTR("log-in shell"));
+						setApplicationPreference(keyName, CFSTR("log-in shell"));
 						break;
 					}
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
@@ -8540,20 +8541,20 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					switch (data)
 					{
 					case kAlert_NotifyDoNothing:
-						setMacTelnetPreference(keyName, CFSTR("ignore"));
+						setApplicationPreference(keyName, CFSTR("ignore"));
 						break;
 					
 					case kAlert_NotifyDisplayIconAndDiamondMark:
-						setMacTelnetPreference(keyName, CFSTR("animate"));
+						setApplicationPreference(keyName, CFSTR("animate"));
 						break;
 					
 					case kAlert_NotifyAlsoDisplayAlert:
-						setMacTelnetPreference(keyName, CFSTR("alert"));
+						setApplicationPreference(keyName, CFSTR("alert"));
 						break;
 					
 					case kAlert_NotifyDisplayDiamondMark:
 					default:
-						setMacTelnetPreference(keyName, CFSTR("badge"));
+						setApplicationPreference(keyName, CFSTR("badge"));
 						break;
 					}
 					Alert_SetNotificationPreferences(data);
@@ -8566,7 +8567,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFStringRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? CFSTR("notify") : CFSTR("ignore"));
+					setApplicationPreference(keyName, (data) ? CFSTR("notify") : CFSTR("ignore"));
 				}
 				break;
 			
@@ -8576,7 +8577,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
@@ -8587,7 +8588,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
@@ -8600,24 +8601,24 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					switch (data)
 					{
 					case kTerminalView_CursorTypeUnderscore:
-						setMacTelnetPreference(keyName, CFSTR("underline"));
+						setApplicationPreference(keyName, CFSTR("underline"));
 						break;
 					
 					case kTerminalView_CursorTypeVerticalLine:
-						setMacTelnetPreference(keyName, CFSTR("vertical bar"));
+						setApplicationPreference(keyName, CFSTR("vertical bar"));
 						break;
 					
 					case kTerminalView_CursorTypeThickUnderscore:
-						setMacTelnetPreference(keyName, CFSTR("thick underline"));
+						setApplicationPreference(keyName, CFSTR("thick underline"));
 						break;
 					
 					case kTerminalView_CursorTypeThickVerticalLine:
-						setMacTelnetPreference(keyName, CFSTR("thick vertical bar"));
+						setApplicationPreference(keyName, CFSTR("thick vertical bar"));
 						break;
 					
 					case kTerminalView_CursorTypeBlock:
 					default:
-						setMacTelnetPreference(keyName, CFSTR("block"));
+						setApplicationPreference(keyName, CFSTR("block"));
 						break;
 					}
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
@@ -8630,7 +8631,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFStringRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? CFSTR("font") : CFSTR("screen"));
+					setApplicationPreference(keyName, (data) ? CFSTR("font") : CFSTR("screen"));
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
@@ -8645,7 +8646,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					if (nullptr != numberRef)
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
-						setMacTelnetPreference(keyName, numberRef);
+						setApplicationPreference(keyName, numberRef);
 						changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 						CFRelease(numberRef), numberRef = nullptr;
 					}
@@ -8658,7 +8659,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFStringRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? CFSTR("visual") : CFSTR("audio"));
+					setApplicationPreference(keyName, (data) ? CFSTR("visual") : CFSTR("audio"));
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
@@ -8669,7 +8670,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
@@ -8679,7 +8680,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
@@ -8689,7 +8690,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
@@ -8699,7 +8700,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
@@ -8709,7 +8710,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
@@ -8719,7 +8720,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
@@ -8748,7 +8749,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 							if (nullptr != coords)
 							{
 								assert(typeCFArrayRef == keyValueType);
-								setMacTelnetPreference(keyName, coords);
+								setApplicationPreference(keyName, coords);
 								CFRelease(coords), coords = nullptr;
 							}
 							CFRelease(topCoord), topCoord = nullptr;
@@ -8767,20 +8768,20 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					switch (data)
 					{
 					case kWindowEdgeLeft:
-						setMacTelnetPreference(keyName, CFSTR("left"));
+						setApplicationPreference(keyName, CFSTR("left"));
 						break;
 					
 					case kWindowEdgeRight:
-						setMacTelnetPreference(keyName, CFSTR("right"));
+						setApplicationPreference(keyName, CFSTR("right"));
 						break;
 					
 					case kWindowEdgeBottom:
-						setMacTelnetPreference(keyName, CFSTR("bottom"));
+						setApplicationPreference(keyName, CFSTR("bottom"));
 						break;
 					
 					case kWindowEdgeTop:
 					default:
-						setMacTelnetPreference(keyName, CFSTR("top"));
+						setApplicationPreference(keyName, CFSTR("top"));
 						break;
 					}
 				}
@@ -8983,15 +8984,15 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 
 
 /*!
-Updates MacTelnet’s XML preferences as requested.
-Also prints to standard output information about
-the data being written (if debugging is enabled).
+Updates the main application’s preferences as requested.
+Also prints to standard output information about the data
+being written (if debugging is enabled).
 
 (3.1)
 */
 void
-setMacTelnetPreference	(CFStringRef		inKey,
-						 CFPropertyListRef	inValue)
+setApplicationPreference	(CFStringRef		inKey,
+							 CFPropertyListRef	inValue)
 {
 	CFPreferencesSetAppValue(inKey, inValue, kCFPreferencesCurrentApplication);
 #if 1
@@ -9062,7 +9063,7 @@ setMacTelnetPreference	(CFStringRef		inKey,
 		if (disposeDescriptionString) delete [] descriptionString, descriptionString = nullptr;
 	}
 #endif
-}// setMacTelnetPreference
+}// setApplicationPreference
 
 
 /*!

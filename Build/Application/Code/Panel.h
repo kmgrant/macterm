@@ -21,7 +21,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -75,7 +75,7 @@ class NSWindow;
 #pragma mark Constants
 
 typedef CFStringRef Panel_Kind;
-CFStringRef const kPanel_InvalidKind = CFSTR("com.mactelnet.prefpanels.invalid");
+CFStringRef const kPanel_InvalidKind = CFSTR("net.macterm.prefpanels.invalid");
 
 #pragma mark Types
 

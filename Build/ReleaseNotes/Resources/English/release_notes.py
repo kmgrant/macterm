@@ -394,6 +394,7 @@ notes_by_version = {
     '20110629': [
         'Preferences have migrated to the "net.macterm" domain, in preparation for a widescale renaming of the project.',
         'Converter utility that runs for out-of-date preferences will move all "com.mactelnet" settings to the new domain.',
+        'The automatically-imported customization module must now be named "customize_macterm", not "customize_mactelnet".',
     ],
     '20110622': [
         'Fixed Full Screen mode when the scroll bar is set to hidden so that the terminal occupies all extra space on the side.',
