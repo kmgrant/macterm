@@ -13,7 +13,7 @@ __version__ = '4.0.0'
 
 import sys
 
-import pymactelnet.file.kvp
+import pymacterm.file.kvp
 # note: Quills is a compiled module, library path must be set properly
 import quills
 
@@ -43,7 +43,7 @@ def macros(pathname):
     """
     mfile = open(pathname, 'rU')
     try:
-        parser = pymactelnet.file.kvp.Parser(file_object=mfile)
+        parser = pymacterm.file.kvp.Parser(file_object=mfile)
         defs = parser.results()
         macro_set = quills.Prefs(quills.Prefs.MACRO_SET)
         for key in defs:
@@ -86,7 +86,7 @@ def session(pathname):
     """
     sfile = open(pathname, 'rU')
     try:
-        parser = pymactelnet.file.kvp.Parser(file_object=sfile)
+        parser = pymacterm.file.kvp.Parser(file_object=sfile)
         defs = parser.results()
         if 'command' in defs:
             args = defs['command'].split()
@@ -98,5 +98,5 @@ def session(pathname):
 
 def _test():
     import doctest
-    import pymactelnet.file.open
-    return doctest.testmod(pymactelnet.file.open)
+    import pymacterm.file.open
+    return doctest.testmod(pymacterm.file.open)

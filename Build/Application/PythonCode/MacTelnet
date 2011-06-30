@@ -25,19 +25,19 @@ if __name__ == "__main__":
     frameworks_dir = os.path.join(contents_dir, "Frameworks")
     resources_dir = os.path.join(contents_dir, "Resources")
     
-    # the PyMacTelnet.framework code is not compiled, so its version
+    # the PyMacTerm.framework code is not compiled, so its version
     # will depend only on whatever the current implementation is
-    pymactelnet_pylib_ver = "2.3"
-    pymactelnet_dir = os.path.join(frameworks_dir, "PyMacTelnet.framework")
-    pymactelnet_versions_dir = os.path.join(pymactelnet_dir, "Versions")
-    pymactelnet_current_version_dir = os.path.join(pymactelnet_versions_dir, "Current")
-    pymactelnet_pylib_dir = os.path.join(pymactelnet_current_version_dir, "lib", "python" + pymactelnet_pylib_ver)
+    pymacterm_pylib_ver = "2.3"
+    pymacterm_dir = os.path.join(frameworks_dir, "PyMacTerm.framework")
+    pymacterm_versions_dir = os.path.join(pymacterm_dir, "Versions")
+    pymacterm_current_version_dir = os.path.join(pymacterm_versions_dir, "Current")
+    pymacterm_pylib_dir = os.path.join(pymacterm_current_version_dir, "lib", "python" + pymacterm_pylib_ver)
     
     # now import utility modules
-    sys.path.insert(0, pymactelnet_pylib_dir)
-    import pymactelnet.utilities
-    import pymactelnet.versions
-    mac_os_name = pymactelnet.utilities.mac_os_name()
+    sys.path.insert(0, pymacterm_pylib_dir)
+    import pymacterm.utilities
+    import pymacterm.versions
+    mac_os_name = pymacterm.utilities.mac_os_name()
     
     # notes on the platform-dependent setup below...
     #
@@ -103,11 +103,11 @@ if __name__ == "__main__":
                     ('/usr/bin/defaults', 'read', 'com.mactelnet.MacTelnet', 'prefs-version'))
         all_output = None
         for def_cmd in def_cmds:
-            all_output = pymactelnet.utilities.command_data(def_cmd)
+            all_output = pymacterm.utilities.command_data(def_cmd)
             if all_output is not None:
                 break
         user_prefs_version = 0
-        latest_prefs_version = pymactelnet.versions.prefs_version
+        latest_prefs_version = pymacterm.versions.prefs_version
         if all_output is not None:
             try:
                 lines = all_output.split('\n')
@@ -131,7 +131,7 @@ if __name__ == "__main__":
                     # run, so everything will be fine.)
                     require_restart = True
                     os.environ['CONVERTER_ASK_USER_TO_RESTART'] = '1'
-                if pymactelnet.utilities.used_subprocess_module:
+                if pymacterm.utilities.used_subprocess_module:
                     import subprocess
                     code = subprocess.call(conv_path, shell=False)
                 else:
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     pypath_append = ""
     if "PYTHONPATH" in os.environ:
         pypath_append = ":" + os.environ["PYTHONPATH"]
-    os.environ["PYTHONPATH"] = quills_pylib_dir + ":" + pymactelnet_pylib_dir + pypath_append
+    os.environ["PYTHONPATH"] = quills_pylib_dir + ":" + pymacterm_pylib_dir + pypath_append
     os.environ["DYLD_LIBRARY_PATH"] = quills_proper_version_dir
     
     # the following is NOT required for MacTelnet to run, however it is

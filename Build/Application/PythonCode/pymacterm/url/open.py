@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
-"""Routines to open MacTelnet sessions using information in URLs.
+"""Routines to open MacTerm sessions using information in URLs.
 
 Below, example URLs fully specify all parts, although each type
 has a number of optional parts that may be omitted (e.g. user
@@ -21,7 +21,7 @@ __version__ = '4.0.0'
 
 # note: Quills is a compiled module, library path must be set properly
 import quills
-from pymactelnet.url.parse import \
+from pymacterm.url.parse import \
     file as _parse_file, \
     ftp as _parse_ftp, \
     sftp as _parse_sftp, \
@@ -289,10 +289,10 @@ def x_man_page(url):
 
 def _test():
     import doctest
-    import pymactelnet.url.open
+    import pymacterm.url.open
     result = None
     try:
-        result = doctest.testmod(pymactelnet.url.open)
+        result = doctest.testmod(pymacterm.url.open)
     except Exception, e:
         import sys
         print >>sys.stderr, "unexpected exception caught: %s" % str(e)

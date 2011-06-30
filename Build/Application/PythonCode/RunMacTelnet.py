@@ -4,8 +4,8 @@
 indirectly by using the "./MacTelnet" script (which sets all the library paths).
 
 This Python code relies on compiled C++ routines from MacTelnet, which are in
-the module "quills".  Most Python code is in the "pymactelnet" module, and any
-of it may require "quills" in order to work.
+the module "quills".  Most Python code is in the "pymacterm" module, and any of
+it may require "quills" in order to work.
 
 When the MacTelnet GUI runs, the event loop prevents normal flow of Python code.
 So, "quills" relies heavily on callbacks: functions can be defined ahead of time
@@ -33,9 +33,9 @@ except ImportError, err:
         print >>sys.stderr, "Shared library path:", os.environ["DYLD_LIBRARY_PATH"]
     print >>sys.stderr, "Python path:", sys.path
     raise err
-import pymactelnet.file.open
-import pymactelnet.term.text
-import pymactelnet.url.open
+import pymacterm.file.open
+import pymacterm.term.text
+import pymacterm.url.open
 
 if __name__ == "__main__":
     # Define default symbols for ALL possible user customizations.  This
@@ -222,39 +222,39 @@ if __name__ == "__main__":
     # optionally invoke some unit tests
     do_testing = ("MACTELNET_RUN_TESTS" in os.environ)
     if do_testing:
-        import pymactelnet
-        pymactelnet.run_all_tests()
+        import pymacterm
+        pymacterm.run_all_tests()
     
     # register MacTelnet features that are actually implemented in Python!
-    Session.on_urlopen_call(pymactelnet.url.open.file, 'file')
-    Session.on_urlopen_call(pymactelnet.url.open.ftp, 'ftp')
-    Session.on_urlopen_call(pymactelnet.url.open.sftp, 'sftp')
-    Session.on_urlopen_call(pymactelnet.url.open.ssh, 'ssh')
-    Session.on_urlopen_call(pymactelnet.url.open.telnet, 'telnet')
-    Session.on_urlopen_call(pymactelnet.url.open.x_man_page, 'x-man-page')
-    Session.on_fileopen_call(pymactelnet.file.open.script, 'bash')
-    Session.on_fileopen_call(pymactelnet.file.open.script, 'command')
-    Session.on_fileopen_call(pymactelnet.file.open.script, 'csh')
-    Session.on_fileopen_call(pymactelnet.file.open.script, 'pl')
-    Session.on_fileopen_call(pymactelnet.file.open.script, 'py')
-    Session.on_fileopen_call(pymactelnet.file.open.script, 'sh')
-    Session.on_fileopen_call(pymactelnet.file.open.script, 'tcl')
-    Session.on_fileopen_call(pymactelnet.file.open.script, 'tcsh')
-    Session.on_fileopen_call(pymactelnet.file.open.script, 'tool')
-    Session.on_fileopen_call(pymactelnet.file.open.script, 'zsh')
-    Session.on_fileopen_call(pymactelnet.file.open.macros, 'macros')
+    Session.on_urlopen_call(pymacterm.url.open.file, 'file')
+    Session.on_urlopen_call(pymacterm.url.open.ftp, 'ftp')
+    Session.on_urlopen_call(pymacterm.url.open.sftp, 'sftp')
+    Session.on_urlopen_call(pymacterm.url.open.ssh, 'ssh')
+    Session.on_urlopen_call(pymacterm.url.open.telnet, 'telnet')
+    Session.on_urlopen_call(pymacterm.url.open.x_man_page, 'x-man-page')
+    Session.on_fileopen_call(pymacterm.file.open.script, 'bash')
+    Session.on_fileopen_call(pymacterm.file.open.script, 'command')
+    Session.on_fileopen_call(pymacterm.file.open.script, 'csh')
+    Session.on_fileopen_call(pymacterm.file.open.script, 'pl')
+    Session.on_fileopen_call(pymacterm.file.open.script, 'py')
+    Session.on_fileopen_call(pymacterm.file.open.script, 'sh')
+    Session.on_fileopen_call(pymacterm.file.open.script, 'tcl')
+    Session.on_fileopen_call(pymacterm.file.open.script, 'tcsh')
+    Session.on_fileopen_call(pymacterm.file.open.script, 'tool')
+    Session.on_fileopen_call(pymacterm.file.open.script, 'zsh')
+    Session.on_fileopen_call(pymacterm.file.open.macros, 'macros')
     
     # if desired, override what string is sent after keep-alive timers expire
     #Session.set_keep_alive_transmission(".")
     
     try:
-        Terminal.on_seekword_call(pymactelnet.term.text.find_word)
+        Terminal.on_seekword_call(pymacterm.term.text.find_word)
     except Exception, e:
         print "warning, exception while trying to register word finder for double clicks:", e
     
     for i in range(0, 256):
         try:
-            Terminal.set_dumb_string_for_char(i, pymactelnet.term.text.get_dumb_rendering(i))
+            Terminal.set_dumb_string_for_char(i, pymacterm.term.text.get_dumb_rendering(i))
         except Exception, e:
             print "warning, exception while setting character code %i:" % i, e
             pass

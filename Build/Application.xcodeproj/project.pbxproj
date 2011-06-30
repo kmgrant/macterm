@@ -7,24 +7,24 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0A06274B0FB3AF3C00EBC8BB /* __init__.py in pymactelnet-file */ = {isa = PBXBuildFile; fileRef = 0A06274A0FB3AF3C00EBC8BB /* __init__.py */; };
-		0A0627500FB3AF4900EBC8BB /* __init__.py in pymactelnet-url */ = {isa = PBXBuildFile; fileRef = 0A06274F0FB3AF4900EBC8BB /* __init__.py */; };
+		0A06274B0FB3AF3C00EBC8BB /* __init__.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A06274A0FB3AF3C00EBC8BB /* __init__.py */; };
+		0A0627500FB3AF4900EBC8BB /* __init__.py in pymacterm-url */ = {isa = PBXBuildFile; fileRef = 0A06274F0FB3AF4900EBC8BB /* __init__.py */; };
 		0A1A068A0ABA6241002C95D7 /* PrintTerminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */; };
 		0A2890DD0D68017D0017D99E /* GenericPanelTabs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */; };
 		0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */; };
 		0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A35F5130DEDD9E300F16B03 /* CommandLine.mm */; };
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
-		0A377E630D38806B001F3573 /* open.py in pymactelnet-file */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* open.py */; };
+		0A377E630D38806B001F3573 /* open.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* open.py */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
 		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.cp */; };
 		0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A68811112F537A1005F418A /* GrowlSupport.mm */; };
 		0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A70B8AC1079C33B0013E76F /* PythonMain.cp */; };
-		0A766E0B0FB54D8E00259E56 /* kvp.py in pymactelnet-file */ = {isa = PBXBuildFile; fileRef = 0A766E0A0FB54D8E00259E56 /* kvp.py */; };
+		0A766E0B0FB54D8E00259E56 /* kvp.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A766E0A0FB54D8E00259E56 /* kvp.py */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
-		0A9D796F12A234650006CECA /* __init__.py in pymactelnet-term */ = {isa = PBXBuildFile; fileRef = 0A9D796B12A2342B0006CECA /* __init__.py */; };
-		0A9D797012A234650006CECA /* text.py in pymactelnet-term */ = {isa = PBXBuildFile; fileRef = 0A9D796C12A2342B0006CECA /* text.py */; };
-		0AB3B2670F0C1B92000559AB /* __init__.py in pymactelnet */ = {isa = PBXBuildFile; fileRef = 0AB3B2640F0C1B69000559AB /* __init__.py */; };
+		0A9D796F12A234650006CECA /* __init__.py in pymacterm-term */ = {isa = PBXBuildFile; fileRef = 0A9D796B12A2342B0006CECA /* __init__.py */; };
+		0A9D797012A234650006CECA /* text.py in pymacterm-term */ = {isa = PBXBuildFile; fileRef = 0A9D796C12A2342B0006CECA /* text.py */; };
+		0AB3B2670F0C1B92000559AB /* __init__.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0AB3B2640F0C1B69000559AB /* __init__.py */; };
 		0ABAA71B13491D06006B1EF6 /* CocoaFuture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */; };
 		0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABD01CF1068000A00BBB87A /* DebugInterface.mm */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
@@ -133,9 +133,9 @@
 		0AF502320F872D2F0068CB19 /* CGContextSaveRestore.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */; };
 		0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502330F872D420068CB19 /* CFUtilities.cp */; };
 		0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */; };
-		0AFA782C0B470144001FCE83 /* parse.py in pymactelnet-url */ = {isa = PBXBuildFile; fileRef = 0AFA78260B470136001FCE83 /* parse.py */; };
-		0AFA782D0B470144001FCE83 /* utilities.py in pymactelnet */ = {isa = PBXBuildFile; fileRef = 0AFA78270B470136001FCE83 /* utilities.py */; };
-		0AFA782E0B470144001FCE83 /* open.py in pymactelnet-url */ = {isa = PBXBuildFile; fileRef = 0AFA78280B470136001FCE83 /* open.py */; };
+		0AFA782C0B470144001FCE83 /* parse.py in pymacterm-url */ = {isa = PBXBuildFile; fileRef = 0AFA78260B470136001FCE83 /* parse.py */; };
+		0AFA782D0B470144001FCE83 /* utilities.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0AFA78270B470136001FCE83 /* utilities.py */; };
+		0AFA782E0B470144001FCE83 /* open.py in pymacterm-url */ = {isa = PBXBuildFile; fileRef = 0AFA78280B470136001FCE83 /* open.py */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -154,54 +154,54 @@
 /* End PBXBuildRule section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		0A0627530FB3AFA700EBC8BB /* pymactelnet-file */ = {
+		0A0627530FB3AFA700EBC8BB /* pymacterm-file */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.3/pymactelnet/file/";
+			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.3/pymacterm/file/";
 			dstSubfolderSpec = 0;
 			files = (
-				0A06274B0FB3AF3C00EBC8BB /* __init__.py in pymactelnet-file */,
-				0A766E0B0FB54D8E00259E56 /* kvp.py in pymactelnet-file */,
-				0A377E630D38806B001F3573 /* open.py in pymactelnet-file */,
+				0A06274B0FB3AF3C00EBC8BB /* __init__.py in pymacterm-file */,
+				0A766E0B0FB54D8E00259E56 /* kvp.py in pymacterm-file */,
+				0A377E630D38806B001F3573 /* open.py in pymacterm-file */,
 			);
-			name = "pymactelnet-file";
+			name = "pymacterm-file";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0A0627580FB3AFF200EBC8BB /* pymactelnet-url */ = {
+		0A0627580FB3AFF200EBC8BB /* pymacterm-url */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.3/pymactelnet/url/";
+			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.3/pymacterm/url/";
 			dstSubfolderSpec = 0;
 			files = (
-				0A0627500FB3AF4900EBC8BB /* __init__.py in pymactelnet-url */,
-				0AFA782E0B470144001FCE83 /* open.py in pymactelnet-url */,
-				0AFA782C0B470144001FCE83 /* parse.py in pymactelnet-url */,
+				0A0627500FB3AF4900EBC8BB /* __init__.py in pymacterm-url */,
+				0AFA782E0B470144001FCE83 /* open.py in pymacterm-url */,
+				0AFA782C0B470144001FCE83 /* parse.py in pymacterm-url */,
 			);
-			name = "pymactelnet-url";
+			name = "pymacterm-url";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0A9AF6810AF5A81100E7DF18 /* pymactelnet */ = {
+		0A9AF6810AF5A81100E7DF18 /* pymacterm */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.3/pymactelnet/";
+			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.3/pymacterm/";
 			dstSubfolderSpec = 0;
 			files = (
-				0AB3B2670F0C1B92000559AB /* __init__.py in pymactelnet */,
-				0AFA782D0B470144001FCE83 /* utilities.py in pymactelnet */,
+				0AB3B2670F0C1B92000559AB /* __init__.py in pymacterm */,
+				0AFA782D0B470144001FCE83 /* utilities.py in pymacterm */,
 			);
-			name = pymactelnet;
+			name = pymacterm;
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0A9D796812A2340A0006CECA /* pymactelnet-term */ = {
+		0A9D796812A2340A0006CECA /* pymacterm-term */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.3/pymactelnet/term/";
+			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.3/pymacterm/term/";
 			dstSubfolderSpec = 0;
 			files = (
-				0A9D796F12A234650006CECA /* __init__.py in pymactelnet-term */,
-				0A9D797012A234650006CECA /* text.py in pymactelnet-term */,
+				0A9D796F12A234650006CECA /* __init__.py in pymacterm-term */,
+				0A9D797012A234650006CECA /* text.py in pymacterm-term */,
 			);
-			name = "pymactelnet-term";
+			name = "pymacterm-term";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -210,8 +210,8 @@
 		0A03DBC7063F6BA400C38B78 /* MacroManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MacroManager.mm; path = Application/Code/MacroManager.mm; sourceTree = "<group>"; };
 		0A03DBC9063F6BCC00C38B78 /* MacroManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacroManager.h; path = Application/Code/MacroManager.h; sourceTree = "<group>"; };
 		0A060B2A078BA0D500A8BB55 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/ColorBox.nib; sourceTree = "<group>"; };
-		0A06274A0FB3AF3C00EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymactelnet/file/__init__.py; sourceTree = "<group>"; };
-		0A06274F0FB3AF4900EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymactelnet/url/__init__.py; sourceTree = "<group>"; };
+		0A06274A0FB3AF3C00EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/file/__init__.py; sourceTree = "<group>"; };
+		0A06274F0FB3AF4900EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/url/__init__.py; sourceTree = "<group>"; };
 		0A11F54B059FE55D00A565C3 /* IconForPrefPanelGeneral.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelGeneral.icns; path = Application/Resources/IconForPrefPanelGeneral.icns; sourceTree = "<group>"; };
 		0A11F54D059FE55D00A565C3 /* IconForPrefPanelMacros.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelMacros.icns; path = Application/Resources/IconForPrefPanelMacros.icns; sourceTree = "<group>"; };
 		0A1427340DA5D4270028510F /* VectorInterpreterID.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreterID.typedef.h; path = Application/Code/VectorInterpreterID.typedef.h; sourceTree = "<group>"; };
@@ -238,7 +238,7 @@
 		0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TextDataFile.cp; path = Shared/Code/TextDataFile.cp; sourceTree = "<group>"; };
 		0A35F5130DEDD9E300F16B03 /* CommandLine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CommandLine.mm; path = Application/Code/CommandLine.mm; sourceTree = "<group>"; };
 		0A36176A0DD286240081A445 /* Keypads.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Keypads.mm; path = Application/Code/Keypads.mm; sourceTree = "<group>"; };
-		0A377E610D38804B001F3573 /* open.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = open.py; path = Application/PythonCode/pymactelnet/file/open.py; sourceTree = "<group>"; };
+		0A377E610D38804B001F3573 /* open.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = open.py; path = Application/PythonCode/pymacterm/file/open.py; sourceTree = "<group>"; };
 		0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommonEventHandlers.cp; path = Application/Code/CommonEventHandlers.cp; sourceTree = "<group>"; };
 		0A3D04C10A4CEB4E00A79DDF /* CommonEventHandlers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommonEventHandlers.h; path = Application/Code/CommonEventHandlers.h; sourceTree = "<group>"; };
 		0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelTranslations.cp; path = Application/Code/PrefPanelTranslations.cp; sourceTree = "<group>"; };
@@ -425,7 +425,7 @@
 		0A70B8AC1079C33B0013E76F /* PythonMain.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PythonMain.cp; path = Shared/Code/PythonMain.cp; sourceTree = "<group>"; };
 		0A719D33055D95EE009B0A88 /* SpacingConstants.r */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.rez; name = SpacingConstants.r; path = Application/Resources/SpacingConstants.r; sourceTree = "<group>"; };
 		0A7236F510841FAB00BB36C2 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrintPreviewCocoa.xib; sourceTree = "<group>"; };
-		0A766E0A0FB54D8E00259E56 /* kvp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = kvp.py; path = Application/PythonCode/pymactelnet/file/kvp.py; sourceTree = "<group>"; };
+		0A766E0A0FB54D8E00259E56 /* kvp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = kvp.py; path = Application/PythonCode/pymacterm/file/kvp.py; sourceTree = "<group>"; };
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
 		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
 		0A84509E0554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/FindDialog.nib; sourceTree = "<group>"; };
@@ -440,7 +440,7 @@
 		0A90CD8C0DAD28F300B6E89E /* RandomWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RandomWrap.h; path = Shared/Code/RandomWrap.h; sourceTree = "<group>"; };
 		0A984182083452E6002E1BCE /* TerminalBackground.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalBackground.cp; path = Application/Code/TerminalBackground.cp; sourceTree = "<group>"; };
 		0A9841C7083457A4002E1BCE /* TerminalBackground.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalBackground.h; path = Application/Code/TerminalBackground.h; sourceTree = "<group>"; };
-		0A9AF64E0AF5A50500E7DF18 /* PyMacTelnet.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PyMacTelnet.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0A9AF64E0AF5A50500E7DF18 /* PyMacTerm.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PyMacTerm.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A9B317E0D538E2800C1616D /* TextDataFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TextDataFile.h; path = Shared/Code/TextDataFile.h; sourceTree = "<group>"; };
 		0A9B31800D538E3C00C1616D /* StringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StringUtilities.h; path = Shared/Code/StringUtilities.h; sourceTree = "<group>"; };
 		0A9B31820D538E4400C1616D /* SoundSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoundSystem.h; path = Shared/Code/SoundSystem.h; sourceTree = "<group>"; };
@@ -458,10 +458,10 @@
 		0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockReferenceTracker.template.h; path = Shared/Code/MemoryBlockReferenceTracker.template.h; sourceTree = "<group>"; };
 		0A9B319E0D538EFA00C1616D /* Releases.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Releases.h; path = Shared/Code/Releases.h; sourceTree = "<group>"; };
 		0A9CC37A06DC470D00DCD12E /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanels.nib; sourceTree = "<group>"; };
-		0A9D796B12A2342B0006CECA /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymactelnet/term/__init__.py; sourceTree = "<group>"; };
-		0A9D796C12A2342B0006CECA /* text.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = text.py; path = Application/PythonCode/pymactelnet/term/text.py; sourceTree = "<group>"; };
+		0A9D796B12A2342B0006CECA /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/term/__init__.py; sourceTree = "<group>"; };
+		0A9D796C12A2342B0006CECA /* text.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = text.py; path = Application/PythonCode/pymacterm/term/text.py; sourceTree = "<group>"; };
 		0AA42A290F0C95B80057B393 /* Template-Application-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-Application-Info.plist"; path = "Application/Resources/Template-Application-Info.plist"; sourceTree = "<group>"; };
-		0AA42A2A0F0C95BD0057B393 /* Template-PyMacTelnet.framework-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-PyMacTelnet.framework-Info.plist"; path = "Application/Resources/Template-PyMacTelnet.framework-Info.plist"; sourceTree = "<group>"; };
+		0AA42A2A0F0C95BD0057B393 /* Template-PyMacTerm.framework-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-PyMacTerm.framework-Info.plist"; path = "Application/Resources/Template-PyMacTerm.framework-Info.plist"; sourceTree = "<group>"; };
 		0AA42A2B0F0C95C20057B393 /* Template-Quills.framework-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-Quills.framework-Info.plist"; path = "Application/Resources/Template-Quills.framework-Info.plist"; sourceTree = "<group>"; };
 		0AA66DFB1315F15C00B234C4 /* DefaultFormat1.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = DefaultFormat1.plist; path = Application/Resources/DefaultFormat1.plist; sourceTree = "<group>"; };
 		0AA66E3713160F0700B234C4 /* DefaultFormat2.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = DefaultFormat2.plist; path = Application/Resources/DefaultFormat2.plist; sourceTree = "<group>"; };
@@ -481,7 +481,7 @@
 		0AB2273B12D2D37900D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/KeypadFullScreenCocoa.xib; sourceTree = "<group>"; };
 		0AB2273D12D2D3BB00D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/KeypadFunctionKeysCocoa.xib; sourceTree = "<group>"; };
 		0AB2273F12D2D41300D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/KeypadVT220KeysCocoa.xib; sourceTree = "<group>"; };
-		0AB3B2640F0C1B69000559AB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymactelnet/__init__.py; sourceTree = "<group>"; };
+		0AB3B2640F0C1B69000559AB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/__init__.py; sourceTree = "<group>"; };
 		0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaFuture.mm; path = Shared/Code/CocoaFuture.mm; sourceTree = "<group>"; };
 		0ABAA71A13491CFB006B1EF6 /* CocoaFuture.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "CocoaFuture.objc++.h"; path = "Shared/Code/CocoaFuture.objc++.h"; sourceTree = "<group>"; };
 		0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelSessions.icns; path = Application/Resources/IconForPrefPanelSessions.icns; sourceTree = "<group>"; };
@@ -566,9 +566,9 @@
 		0AF5B8B00B8ED24A0061B480 /* IconForKeypadInsert.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadInsert.icns; path = Application/Resources/IconForKeypadInsert.icns; sourceTree = "<group>"; };
 		0AF995F20CC3C849000A11DC /* IconForBellOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBellOff.icns; path = Application/Resources/IconForBellOff.icns; sourceTree = "<group>"; };
 		0AF995F30CC3C849000A11DC /* IconForBellOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBellOn.icns; path = Application/Resources/IconForBellOn.icns; sourceTree = "<group>"; };
-		0AFA78260B470136001FCE83 /* parse.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = parse.py; path = Application/PythonCode/pymactelnet/url/parse.py; sourceTree = "<group>"; };
-		0AFA78270B470136001FCE83 /* utilities.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; lineEnding = 0; name = utilities.py; path = Application/PythonCode/pymactelnet/utilities.py; sourceTree = "<group>"; };
-		0AFA78280B470136001FCE83 /* open.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = open.py; path = Application/PythonCode/pymactelnet/url/open.py; sourceTree = "<group>"; };
+		0AFA78260B470136001FCE83 /* parse.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = parse.py; path = Application/PythonCode/pymacterm/url/parse.py; sourceTree = "<group>"; };
+		0AFA78270B470136001FCE83 /* utilities.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; lineEnding = 0; name = utilities.py; path = Application/PythonCode/pymacterm/utilities.py; sourceTree = "<group>"; };
+		0AFA78280B470136001FCE83 /* open.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = open.py; path = Application/PythonCode/pymacterm/url/open.py; sourceTree = "<group>"; };
 		0AFD1266087A0A3C00439BEA /* CarbonEventHandlerWrap.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CarbonEventHandlerWrap.template.h; path = Shared/Code/CarbonEventHandlerWrap.template.h; sourceTree = "<group>"; };
 		0AFD12B5087A147D00439BEA /* NIBLoader.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NIBLoader.cp; path = Shared/Code/NIBLoader.cp; sourceTree = "<group>"; };
 		0AFD12B7087A148B00439BEA /* NIBLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NIBLoader.h; path = Shared/Code/NIBLoader.h; sourceTree = "<group>"; };
@@ -720,7 +720,7 @@
 				0A21A1CD131766EA0012240D /* DefaultFormat4.plist */,
 				0AA42A290F0C95B80057B393 /* Template-Application-Info.plist */,
 				0ADB0D3305A7FBD90054A4E9 /* Template-DefaultPreferences.plist */,
-				0AA42A2A0F0C95BD0057B393 /* Template-PyMacTelnet.framework-Info.plist */,
+				0AA42A2A0F0C95BD0057B393 /* Template-PyMacTerm.framework-Info.plist */,
 				0AA42A2B0F0C95C20057B393 /* Template-Quills.framework-Info.plist */,
 				0AA6A2AA0DF4CF1C00B2B598 /* GrowlRegistrationTicket.growlRegDict */,
 				0AD62711055DEB7000843EA9 /* MacTelnetPrefix.pch */,
@@ -874,7 +874,7 @@
 			isa = PBXGroup;
 			children = (
 				0AC6BAD20A8C0A8B00AFF37A /* Quills.framework */,
-				0A9AF64E0AF5A50500E7DF18 /* PyMacTelnet.framework */,
+				0A9AF64E0AF5A50500E7DF18 /* PyMacTerm.framework */,
 				0AC1FAF30D1992D600ED3102 /* _Quills.so */,
 				0A70B8A31079C1EB0013E76F /* PythonInvoker */,
 			);
@@ -896,7 +896,7 @@
 				0A70B8AC1079C33B0013E76F /* PythonMain.cp */,
 				0AE1F38D0AF41DA200D2DC13 /* MacTelnet */,
 				0AFF11220AF41FEE006CCA34 /* RunMacTelnet.py */,
-				0AE960170F0C13D900E75E26 /* pymactelnet */,
+				0AE960170F0C13D900E75E26 /* pymacterm */,
 				0AD0B0A00A9EAB4A002064BA /* Quills */,
 			);
 			name = Python;
@@ -936,7 +936,7 @@
 			name = AppleScript;
 			sourceTree = "<group>";
 		};
-		0AE960170F0C13D900E75E26 /* pymactelnet */ = {
+		0AE960170F0C13D900E75E26 /* pymacterm */ = {
 			isa = PBXGroup;
 			children = (
 				0AB3B2640F0C1B69000559AB /* __init__.py */,
@@ -945,7 +945,7 @@
 				0A0627410FB3AF2300EBC8BB /* url */,
 				0AFA78270B470136001FCE83 /* utilities.py */,
 			);
-			name = pymactelnet;
+			name = pymacterm;
 			sourceTree = "<group>";
 		};
 		0AFF112F0AF4202B006CCA34 /* NIBs */ = {
@@ -1163,24 +1163,24 @@
 			productReference = 0AC1FAF30D1992D600ED3102 /* _Quills.so */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
-		0A9AF64D0AF5A50500E7DF18 /* PyMacTelnet.framework */ = {
+		0A9AF64D0AF5A50500E7DF18 /* PyMacTerm.framework */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0A9AF6500AF5A50500E7DF18 /* Build configuration list for PBXNativeTarget "PyMacTelnet.framework" */;
+			buildConfigurationList = 0A9AF6500AF5A50500E7DF18 /* Build configuration list for PBXNativeTarget "PyMacTerm.framework" */;
 			buildPhases = (
 				0A79B1EB0AF71FEA0052ECD3 /* Auto-Date Property List */,
 				0A9AF64A0AF5A50500E7DF18 /* Resources */,
-				0A9AF6810AF5A81100E7DF18 /* pymactelnet */,
-				0A0627530FB3AFA700EBC8BB /* pymactelnet-file */,
-				0A9D796812A2340A0006CECA /* pymactelnet-term */,
-				0A0627580FB3AFF200EBC8BB /* pymactelnet-url */,
+				0A9AF6810AF5A81100E7DF18 /* pymacterm */,
+				0A0627530FB3AFA700EBC8BB /* pymacterm-file */,
+				0A9D796812A2340A0006CECA /* pymacterm-term */,
+				0A0627580FB3AFF200EBC8BB /* pymacterm-url */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = PyMacTelnet.framework;
+			name = PyMacTerm.framework;
 			productName = PyMacTelnet;
-			productReference = 0A9AF64E0AF5A50500E7DF18 /* PyMacTelnet.framework */;
+			productReference = 0A9AF64E0AF5A50500E7DF18 /* PyMacTerm.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		0AC6BAD10A8C0A8B00AFF37A /* Quills.framework */ = {
@@ -1227,7 +1227,7 @@
 				0AC6BAD10A8C0A8B00AFF37A /* Quills.framework */,
 				0A70B8A21079C1EB0013E76F /* PythonInvoker */,
 				0A983A9B0D11087A0054B4D2 /* PythonWrapper */,
-				0A9AF64D0AF5A50500E7DF18 /* PyMacTelnet.framework */,
+				0A9AF64D0AF5A50500E7DF18 /* PyMacTerm.framework */,
 			);
 		};
 /* End PBXProject section */
@@ -1877,8 +1877,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-PyMacTelnet.framework-Info.plist";
-				PRODUCT_NAME = PyMacTelnet;
+				INFOPLIST_FILE = "Application/Resources/Template-PyMacTerm.framework-Info.plist";
+				PRODUCT_NAME = PyMacTerm;
 			};
 			name = ForPantherDebug;
 		};
@@ -1957,8 +1957,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-PyMacTelnet.framework-Info.plist";
-				PRODUCT_NAME = PyMacTelnet;
+				INFOPLIST_FILE = "Application/Resources/Template-PyMacTerm.framework-Info.plist";
+				PRODUCT_NAME = PyMacTerm;
 			};
 			name = ForTigerDebug;
 		};
@@ -2073,8 +2073,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-PyMacTelnet.framework-Info.plist";
-				PRODUCT_NAME = PyMacTelnet;
+				INFOPLIST_FILE = "Application/Resources/Template-PyMacTerm.framework-Info.plist";
+				PRODUCT_NAME = PyMacTerm;
 			};
 			name = ForLeopardDebug;
 		};
@@ -2189,7 +2189,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = ForTigerDebug;
 		};
-		0A9AF6500AF5A50500E7DF18 /* Build configuration list for PBXNativeTarget "PyMacTelnet.framework" */ = {
+		0A9AF6500AF5A50500E7DF18 /* Build configuration list for PBXNativeTarget "PyMacTerm.framework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0A9AF6510AF5A50500E7DF18 /* ForTigerDebug */,

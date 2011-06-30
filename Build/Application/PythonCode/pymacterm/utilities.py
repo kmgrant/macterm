@@ -153,8 +153,8 @@ def sort_dict(keys_values):
     return result
 
 def _test():
-    import doctest, pymactelnet.utilities
-    return doctest.testmod(pymactelnet.utilities)
+    import doctest, pymacterm.utilities
+    return doctest.testmod(pymacterm.utilities)
 
 if __name__ == '__main__':
     _test()

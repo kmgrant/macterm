@@ -121,7 +121,7 @@ def get_dumb_rendering(ord_unicode_16):
     if ord_unicode_16 < 128:
         as_ascii = ord_unicode_16
         if as_ascii == 27: result = '<ESC>'
-        # a "proper" control symbol is preferred, but MacTelnet cannot render
+        # a "proper" control symbol is preferred, but MacTerm cannot render
         # higher Unicode characters just yet...
         #elif as_ascii < ord(' '): result = '⌃%c' % chr(ord('@') + as_ascii)
         elif as_ascii < ord(' '): result = '^%c' % chr(ord('@') + as_ascii)
@@ -133,5 +133,5 @@ def get_dumb_rendering(ord_unicode_16):
 
 def _test():
     import doctest
-    import pymactelnet.term.text
-    return doctest.testmod(pymactelnet.term.text)
+    import pymacterm.term.text
+    return doctest.testmod(pymacterm.term.text)

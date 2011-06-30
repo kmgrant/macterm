@@ -95,8 +95,8 @@ FOR_TIGER=yes
 USE_GROWL=yes
 #GROWL_SDK_ROOT := <defined in Xcode config>
 
-# the PyMacTelnet.framework target is platform-independent, but
-# an arbitrary configuration must be given to have Xcode build it
+# the PyMacTerm.framework target is platform-independent, but an
+# arbitrary configuration must be given to have Xcode build it
 # (and decide the output directory from which to copy)
 PY_CONFIG := ForLeopardDebug
 
@@ -111,7 +111,7 @@ SRC_BUGREPORTER_BUILD_TOP := $(SYMROOT)/ForDebugging
 SRC_BUGREPORTER_TOP := $(SRC_BUGREPORTER_BUILD_TOP)/BugReporter.app
 SRC_PREFSCONVERTER_BUILD_TOP := $(SYMROOT)/ForDebugging
 SRC_PREFSCONVERTER_TOP := $(SRC_PREFSCONVERTER_BUILD_TOP)/PrefsConverter.app
-SRC_PY_TOP := $(SYMROOT)/$(PY_CONFIG)/PyMacTelnet.framework
+SRC_PY_TOP := $(SYMROOT)/$(PY_CONFIG)/PyMacTerm.framework
 SRC_PYINVOKER_TOP_LEOPARD := $(SYMROOT)/ForLeopardDebug
 SRC_PYINVOKER_TOP_TIGER := $(SYMROOT)/ForTigerDebug
 SRC_PYINVOKER_TOP_PANTHER := $(SYMROOT)/ForPantherDebug
@@ -125,8 +125,8 @@ DEST_APP_MACOS_TOP := $(DEST_APP_TOP)/MacOS
 DEST_APP_RESOURCES_TOP := $(DEST_APP_TOP)/Resources
 DEST_BUGREPORTER_TOP := $(DEST_APP_RESOURCES_TOP)/BugReporter.app
 DEST_PREFSCONVERTER_TOP := $(DEST_APP_RESOURCES_TOP)/PrefsConverter.app
-DEST_PY_TOP := $(DEST_APP_FW_TOP)/PyMacTelnet.framework
-DEST_PY_CODE_TOP := $(DEST_PY_TOP)/Versions/A/lib/python2.3/pymactelnet
+DEST_PY_TOP := $(DEST_APP_FW_TOP)/PyMacTerm.framework
+DEST_PY_CODE_TOP := $(DEST_PY_TOP)/Versions/A/lib/python2.3/pymacterm
 DEST_QUILLS_TOP := $(DEST_APP_FW_TOP)/Quills.framework
 DEST_GROWL_TOP := $(DEST_APP_FW_TOP)/Growl.framework
 DEST_SWIG_TOP_LEOPARD := $(DEST_QUILLS_TOP)/Versions/B/lib/python2.5
@@ -374,13 +374,13 @@ endif
 	-$(RMDIR) $(DEST_SWIG_TOP_LEOPARD)
 	@echo
 
-# Component: PyMacTelnet.framework
+# Component: PyMacTerm.framework
 
 .PHONY: install-py-framework
 install-py-framework:
 	$(call banner,$@)
 	@# keep in sync with the matching clean rule
-	$(XCB) -project Application.xcodeproj -target PyMacTelnet.framework -configuration $(PY_CONFIG)
+	$(XCB) -project Application.xcodeproj -target PyMacTerm.framework -configuration $(PY_CONFIG)
 	@# avoid rsyncing from /
 	@if [ "x$(SRC_PY_TOP)" = "x" ] ; then \
 		echo "SRC_PY_TOP variable unset" >&2 ; \
@@ -400,7 +400,7 @@ install-py-framework:
 
 .PHONY: clean-py-framework
 clean-py-framework:
-	$(XCB) clean -project Application.xcodeproj -target PyMacTelnet.framework -configuration $(PY_CONFIG)
+	$(XCB) clean -project Application.xcodeproj -target PyMacTerm.framework -configuration $(PY_CONFIG)
 	@# avoid accidental over-deletion
 	@if [ "x$(DEST_PY_TOP)" = "x" ] ; then \
 		echo "DEST_PY_TOP variable unset" >&2 ; \

@@ -167,8 +167,8 @@ class Parser (file):
 
 def _test():
     import doctest
-    import pymactelnet.file.kvp
-    return doctest.testmod(pymactelnet.file.kvp)
+    import pymacterm.file.kvp
+    return doctest.testmod(pymacterm.file.kvp)
 
 if __name__ == '__main__':
     _test()

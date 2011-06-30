@@ -28,7 +28,7 @@ __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '24 August 2006'
 __version__ = '4.0.0'
 
-from pymactelnet.utilities import \
+from pymacterm.utilities import \
     slash_free_path as _slash_free_path, \
     sort_dict as _sort_dict
 import urlparse
@@ -57,7 +57,7 @@ def _host_port(netloc):
     host = None
     port = None
     if len(elements) > 2 or len(elements) == 0:
-        print "MacTelnet: unexpected number of host:port elements in URL"
+        print "MacTerm: unexpected number of host:port elements in URL"
     else:
         host = elements[0]
         if len(host) == 0: host = None
@@ -105,7 +105,7 @@ def _user_host_port(netloc):
     host = None
     port = None
     if len(elements) > 2 or len(elements) == 0:
-        print "MacTelnet: unexpected number of @ elements in URL"
+        print "MacTerm: unexpected number of @ elements in URL"
     else:
         if len(elements) == 2:
             user = elements[0]
@@ -325,7 +325,7 @@ def x_man_page(url):
     elif len(elements) == 1:
         cmd = elements[0]
     else:
-        print "MacTelnet: unsupported form of x-man-page URL"
+        print "MacTerm: unsupported form of x-man-page URL"
         pass
     result['section'] = section
     result['cmd'] = cmd
@@ -333,8 +333,8 @@ def x_man_page(url):
 
 def _test():
     import doctest
-    import pymactelnet.url.parse
-    return doctest.testmod(pymactelnet.url.parse)
+    import pymacterm.url.parse
+    return doctest.testmod(pymacterm.url.parse)
 
 if __name__ == '__main__':
     _test()
