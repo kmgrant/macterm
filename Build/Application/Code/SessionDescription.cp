@@ -703,7 +703,8 @@ void
 SessionDescription_Load ()
 {
 	// IMPORTANT: These should be consistent with declared types in the application "Info.plist".
-	void const*			kTypeList[] = { CFSTR("com.mactelnet.session"),
+	void const*			kTypeList[] = { CFSTR("net.macterm.session"),
+										CFSTR("com.mactelnet.session"),/* legacy type */
 										CFSTR("session"),/* redundant, needed for older systems */
 										CFSTR("CONF")/* redundant, needed for older systems */ };
 	CFRetainRelease		fileTypes(CFArrayCreate(kCFAllocatorDefault, kTypeList,

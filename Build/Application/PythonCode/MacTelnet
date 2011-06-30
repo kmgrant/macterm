@@ -36,6 +36,7 @@ if __name__ == "__main__":
     # now import utility modules
     sys.path.insert(0, pymactelnet_pylib_dir)
     import pymactelnet.utilities
+    import pymactelnet.versions
     mac_os_name = pymactelnet.utilities.mac_os_name()
     
     # notes on the platform-dependent setup below...
@@ -89,6 +90,60 @@ if __name__ == "__main__":
     quills_versions_dir = os.path.join(quills_dir, "Versions")
     quills_proper_version_dir = os.path.join(quills_versions_dir, quills_fw_ver)
     quills_pylib_dir = os.path.join(quills_proper_version_dir, "lib", "python" + quills_pylib_ver)
+
+    # if the user's preferences are out of date, convert as needed
+    convert_preferences = True
+    if convert_preferences:
+        # check the current bundle's preferences, and look for the version;
+        # if it is out of date (with respect to the current version) then
+        # automatically invoke the Preferences Converter before going any
+        # further; this must be done before initialization so that the
+        # updated preferences are read and not the out-of-date settings
+        def_cmds = (('/usr/bin/defaults', 'read', 'net.macterm.MacTerm', 'prefs-version'),
+                    ('/usr/bin/defaults', 'read', 'com.mactelnet.MacTelnet', 'prefs-version'))
+        all_output = None
+        for def_cmd in def_cmds:
+            all_output = pymactelnet.utilities.command_data(def_cmd)
+            if all_output is not None:
+                break
+        user_prefs_version = 0
+        latest_prefs_version = pymactelnet.versions.prefs_version
+        if all_output is not None:
+            try:
+                lines = all_output.split('\n')
+                user_prefs_version = int(lines[0])
+            except Exception, e:
+                print "exception when trying to find integer from prefs-version", e
+        print "MacTelnet: latest preferences are version", latest_prefs_version, "and user preferences are version", user_prefs_version
+        try:
+            if latest_prefs_version > user_prefs_version:
+                conv_path = os.path.join(bundle_dir, 'Contents', 'Resources', 'PrefsConverter.app', 'Contents', 'MacOS', 'PrefsConverter')
+                print "MacTelnet: launching Preferences Converter application (%s)..." % conv_path
+                require_restart = False
+                if mac_os_name in ("Panther", "Tiger", "Leopard"):
+                    # While not apparently a problem at least on Snow Leopard, on Panther there is
+                    # a problem if multiple applications are launched: a RegisterProcess failure,
+                    # error -2805.  This error occurs only if the converter application launches,
+                    # and only in C++ at the point where the main application begins initialization.
+                    # Unfortunately, all attempts at finding a work-around have failed, so for now
+                    # an alert is displayed after preferences conversion asking the user to simply
+                    # re-launch the application again.  (On the next launch the converter will not
+                    # run, so everything will be fine.)
+                    require_restart = True
+                    os.environ['CONVERTER_ASK_USER_TO_RESTART'] = '1'
+                if pymactelnet.utilities.used_subprocess_module:
+                    import subprocess
+                    code = subprocess.call(conv_path, shell=False)
+                else:
+                    import popen2
+                    cmd_run = popen2.Popen4((conv_path))
+                    code = cmd_run.wait()
+                if code != 0:
+                    print "MacTelnet: preferences converter exited with nonzero status", code
+                if require_restart:
+                    sys.exit(0)
+        except Exception, e:
+            print "exception when trying to launch preferences converter", e
     
     # put the initial bundle location in the environment, for convenience
     # when initializing other components

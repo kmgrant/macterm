@@ -99,12 +99,12 @@
 namespace {
 
 CFStringEncoding const		kMy_SavedNameEncoding = kCFStringEncodingUnicode;
-CFStringRef const			kMy_PreferencesSubDomainFormats = CFSTR("com.mactelnet.MacTelnet.formats");
-CFStringRef const			kMy_PreferencesSubDomainMacros = CFSTR("com.mactelnet.MacTelnet.macros");
-CFStringRef const			kMy_PreferencesSubDomainSessions = CFSTR("com.mactelnet.MacTelnet.sessions");
-CFStringRef const			kMy_PreferencesSubDomainTerminals = CFSTR("com.mactelnet.MacTelnet.terminals");
-CFStringRef const			kMy_PreferencesSubDomainTranslations = CFSTR("com.mactelnet.MacTelnet.translations");
-CFStringRef const			kMy_PreferencesSubDomainWorkspaces = CFSTR("com.mactelnet.MacTelnet.workspaces");
+CFStringRef const			kMy_PreferencesSubDomainFormats = CFSTR("net.macterm.MacTerm.formats");
+CFStringRef const			kMy_PreferencesSubDomainMacros = CFSTR("net.macterm.MacTerm.macros");
+CFStringRef const			kMy_PreferencesSubDomainSessions = CFSTR("net.macterm.MacTerm.sessions");
+CFStringRef const			kMy_PreferencesSubDomainTerminals = CFSTR("net.macterm.MacTerm.terminals");
+CFStringRef const			kMy_PreferencesSubDomainTranslations = CFSTR("net.macterm.MacTerm.translations");
+CFStringRef const			kMy_PreferencesSubDomainWorkspaces = CFSTR("net.macterm.MacTerm.workspaces");
 
 } // anonymous namespace
 
@@ -739,7 +739,6 @@ Boolean					unitTest003_Begin						();
 namespace {
 
 ListenerModel_Ref			gPreferenceEventListenerModel = nullptr;
-Boolean						gHaveRunConverter = false;
 Boolean						gInitialized = false;
 My_ContextPtrLocker&		gMyContextPtrLocks ()	{ static My_ContextPtrLocker x; return x; }
 My_ContextReferenceLocker&	gMyContextRefLocks ()	{ static My_ContextReferenceLocker x; return x; }
@@ -844,85 +843,13 @@ Preferences_Init ()
 	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
-	// If MacTelnetPrefsConverter runs and succeeds, it will write a
-	// preferences version value to MacTelnet’s core preferences;
-	// if that value is nonexistent or is not what MacTelnet expects,
-	// MacTelnetPrefsConverter will be launched to update the user’s
-	// preferences to the new format.  Basically, this code ensures
-	// the converter is run whenever it is appropriate to do so, and
-	// not otherwise.
-	unless (gHaveRunConverter)
-	{
-		CFDictionaryRef		defaultPrefDictionary = createDefaultPrefDictionary();
-		SInt16				currentPrefsVersion = 4; // only a default...
-		
-		
-		// The "prefs-version" key in DefaultPreferences.plist defines the
-		// version of preferences shipped with this version of MacTelnet.
-		if (nullptr != defaultPrefDictionary)
-		{
-			CFNumberRef		numberRef = CFUtilities_NumberCast(CFDictionaryGetValue(defaultPrefDictionary,
-																					CFSTR("prefs-version")));
-			
-			
-			if (nullptr != numberRef)
-			{
-				Boolean		gotNumber = false;
-				
-				
-				gotNumber = CFNumberGetValue(numberRef, kCFNumberSInt16Type, &currentPrefsVersion);
-				assert(gotNumber);
-			}
-			CFRelease(defaultPrefDictionary), defaultPrefDictionary = nullptr;
-		}
-		
-		// Whenever the preferences for this version of MacTelnet are
-		// newer than what is saved for the user, run the converter.
-		{
-			SInt16 const	kCurrentPrefsVersion = currentPrefsVersion;
-			CFIndex			diskVersion = 0;
-			Boolean			existsAndIsValidFormat = false;
-			
-			
-			// The preference key used here MUST match what MacTelnetPrefsConverter
-			// uses to write the value, for obvious reasons.  Similarly, the
-			// application domain must match what MacTelnetPrefsConverter uses.
-			diskVersion = CFPreferencesGetAppIntegerValue
-							(CFSTR("prefs-version"), kCFPreferencesCurrentApplication,
-								&existsAndIsValidFormat);
-			if ((!existsAndIsValidFormat) || (kCurrentPrefsVersion > diskVersion))
-			{
-				AppResources_Result		launchResult = noErr;
-				
-				
-				// launch the converter and wait for it to complete
-				launchResult = AppResources_LaunchPreferencesConverter();
-				gHaveRunConverter = true;
-				if (launchResult == noErr)
-				{
-				#if 0
-					// for error checking purposes, could synchronize preferences and read
-					// back the version value; it should be up to date if all went well
-					// (but note, MacTelnetPrefsConverter should already inform the user
-					// if any problems occur)
-					CFIndex		updatedVersion = 0;
-					
-					
-					(Boolean)CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
-					updatedVersion = CFPreferencesGetAppIntegerValue
-										(CFSTR("prefs-version"), kCFPreferencesCurrentApplication,
-											&existsAndIsValidFormat);
-					assert(kCurrentPrefsVersion >= updatedVersion);
-				#endif
-				}
-				else
-				{
-					// unable to run MacTelnetPrefsConverter!
-					Console_Warning(Console_WriteValue, "error launching preferences converter", launchResult);
-				}
-			}
-		}
-	}
+	// IMPORTANT: The Python front-end will perform a preemptive check of
+	//            the "prefs-version" key and automatically run a program
+	//            to upgrade user preferences if they are out of date.
+	//            That occurs before Cocoa is even initialized, before
+	//            anything attempts to read the application bundle’s
+	//            current preferences; so all references to settings at
+	//            this point can be assumed to be up-to-date.
 	
 	// Create definitions for all possible settings; these are used for
 	// efficient access later, and to guarantee no duplication.

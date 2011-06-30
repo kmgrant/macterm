@@ -7,16 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0A33CC4E07FABA6500248DDF /* PrefsConverterPrefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC4D07FABA6500248DDF /* PrefsConverterPrefix.pch */; };
-		0A33CC5307FABACC00248DDF /* CFDictionaryManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC5207FABACC00248DDF /* CFDictionaryManager.h */; };
-		0A33CC5707FABAF800248DDF /* UniversalDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC5507FABAF800248DDF /* UniversalDefines.h */; };
-		0A33CC5807FABAF800248DDF /* CFKeyValueInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC5607FABAF800248DDF /* CFKeyValueInterface.h */; };
+		0A2D6A7713B435F700714A1D /* CocoaUserDefaults.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2D6A7613B435F700714A1D /* CocoaUserDefaults.mm */; };
+		0A2D6B3C13B4368D00714A1D /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A2D6B3B13B4368D00714A1D /* Cocoa.framework */; };
 		0A33CC5F07FABB5200248DDF /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */; };
 		0A33CC6307FABB6F00248DDF /* CFDictionaryManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */; };
 		0AA163210825E7CE0071EA63 /* PrefsConverter.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AA1631F0825E7CE0071EA63 /* PrefsConverter.nib */; };
 		0AA742CB06E45F5A00CBC7B5 /* IconForBundle.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */; };
 		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */; };
-		0AF2E26E06EBA1D200A7C4A9 /* PreferencesData.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AF2E26D06EBA1D200A7C4A9 /* PreferencesData.h */; };
 		8D0C4E920486CD37000505A6 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 20286C33FDCF999611CA2CEA /* Carbon.framework */; };
 /* End PBXBuildFile section */
 
@@ -40,6 +37,9 @@
 /* End PBXBuildRule section */
 
 /* Begin PBXFileReference section */
+		0A2D6A7613B435F700714A1D /* CocoaUserDefaults.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaUserDefaults.mm; path = Shared/Code/CocoaUserDefaults.mm; sourceTree = "<group>"; };
+		0A2D6A7D13B4361300714A1D /* CocoaUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaUserDefaults.h; path = Shared/Code/CocoaUserDefaults.h; sourceTree = "<group>"; };
+		0A2D6B3B13B4368D00714A1D /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		0A33CC4D07FABA6500248DDF /* PrefsConverterPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefsConverterPrefix.pch; path = PrefsConverter/Code/PrefsConverterPrefix.pch; sourceTree = "<group>"; };
 		0A33CC5207FABACC00248DDF /* CFDictionaryManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFDictionaryManager.h; path = Shared/Code/CFDictionaryManager.h; sourceTree = "<group>"; };
 		0A33CC5507FABAF800248DDF /* UniversalDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UniversalDefines.h; path = Shared/Code/UniversalDefines.h; sourceTree = "<group>"; };
@@ -62,6 +62,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D0C4E920486CD37000505A6 /* Carbon.framework in Frameworks */,
+				0A2D6B3C13B4368D00714A1D /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -73,8 +74,10 @@
 			children = (
 				0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */,
 				0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */,
+				0A2D6A7613B435F700714A1D /* CocoaUserDefaults.mm */,
 				0A33CC5207FABACC00248DDF /* CFDictionaryManager.h */,
 				0A33CC5607FABAF800248DDF /* CFKeyValueInterface.h */,
+				0A2D6A7D13B4361300714A1D /* CocoaUserDefaults.h */,
 				0A33CC5507FABAF800248DDF /* UniversalDefines.h */,
 			);
 			name = Shared;
@@ -95,10 +98,11 @@
 				195DF8CFFE9D517E11CA2CBB /* Products */,
 				4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */,
 				20286C33FDCF999611CA2CEA /* Carbon.framework */,
+				0A2D6B3B13B4368D00714A1D /* Cocoa.framework */,
 				4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */,
-				0A33CC4D07FABA6500248DDF /* PrefsConverterPrefix.pch */,
 				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */,
 				0AF2E26D06EBA1D200A7C4A9 /* PreferencesData.h */,
+				0A33CC4D07FABA6500248DDF /* PrefsConverterPrefix.pch */,
 				0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */,
 				0AA1631F0825E7CE0071EA63 /* PrefsConverter.nib */,
 			);
@@ -112,11 +116,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0AF2E26E06EBA1D200A7C4A9 /* PreferencesData.h in Headers */,
-				0A33CC4E07FABA6500248DDF /* PrefsConverterPrefix.pch in Headers */,
-				0A33CC5307FABACC00248DDF /* CFDictionaryManager.h in Headers */,
-				0A33CC5707FABAF800248DDF /* UniversalDefines.h in Headers */,
-				0A33CC5807FABAF800248DDF /* CFKeyValueInterface.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -188,6 +187,7 @@
 				0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.cp in Sources */,
 				0A33CC5F07FABB5200248DDF /* CFKeyValueInterface.cp in Sources */,
 				0A33CC6307FABB6F00248DDF /* CFDictionaryManager.cp in Sources */,
+				0A2D6A7713B435F700714A1D /* CocoaUserDefaults.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

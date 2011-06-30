@@ -31,7 +31,7 @@
 			<false/>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>com.mactelnet.macros</string>
+				<string>net.macterm.macros</string>
 			</array>
 		</dict>
 		<dict>
@@ -57,7 +57,7 @@
 			<false/>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>com.mactelnet.session</string>
+				<string>net.macterm.session</string>
 			</array>
 		</dict>
 		<dict>
@@ -79,7 +79,7 @@
 			<true/>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>com.mactelnet.workspace</string>
+				<string>net.macterm.workspace</string>
 			</array>
 		</dict>
 		<dict>
@@ -143,7 +143,7 @@
 	<key>CFBundleIconFile</key>
 	<string>IconForBundle.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.mactelnet.MacTelnet</string>
+	<string>net.macterm.MacTerm</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -302,7 +302,7 @@
 			<key>UTTypeIconName</key>
 			<string>IconForMacroSet.icns</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.mactelnet.macros</string>
+			<string>net.macterm.macros</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>com.apple.ostype</key>
@@ -325,7 +325,7 @@
 			<key>UTTypeIconName</key>
 			<string>IconForSession.icns</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.mactelnet.session</string>
+			<string>net.macterm.session</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>com.apple.ostype</key>
@@ -348,7 +348,7 @@
 			<key>UTTypeIconName</key>
 			<string>IconForWorkspace.icns</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.mactelnet.workspace</string>
+			<string>net.macterm.workspace</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>com.apple.ostype</key>

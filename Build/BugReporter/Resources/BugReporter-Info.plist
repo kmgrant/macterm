@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BugReporterMailURLToOpen</key>
+	<string>mailto:kmg@mac.com?subject=MacTelnet%20Crash%20Report&amp;body=Please%20describe%20the%20problem%20below.%0D%0D</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
@@ -9,7 +11,7 @@
 	<key>CFBundleIconFile</key>
 	<string>IconForBundle.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.mactelnet.BugReporter</string>
+	<string>net.macterm.BugReporter</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
@@ -22,7 +24,5 @@
 	<true/>
 	<key>LSUIElement</key>
 	<string>1</string>
-	<key>BugReporterMailURLToOpen</key>
-	<string>mailto:kmg@mac.com?subject=MacTelnet%20Crash%20Report&amp;body=Please%20describe%20the%20problem%20below.%0D%0D</string>
 </dict>
 </plist>

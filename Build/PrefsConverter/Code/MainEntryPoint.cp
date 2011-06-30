@@ -2,7 +2,7 @@
 
 	MainEntryPoint.cp
 	
-	MacTelnet Preferences Converter
+	MacTerm Preferences Converter
 		© 2004-2011 by Kevin Grant.
 	
 	This program is free software; you can redistribute it or
@@ -38,9 +38,10 @@
 // library includes
 #include <CFDictionaryManager.h>
 #include <CFKeyValueInterface.h>
+#include <CocoaUserDefaults.h>
 #include <UniversalDefines.h>
 
-// MacTelnet Preferences Converter includes
+// MacTerm Preferences Converter includes
 #include "PreferencesData.h"
 
 
@@ -48,11 +49,11 @@
 #pragma mark Constants
 namespace {
 
-// these should match what is in MacTelnet’s Info.plist file;
-// note also that IF MacTelnet’s identifier ever changes,
-// the old names may need to be preserved for the purpose of
-// reading older preferences
-CFStringRef const		kMacTelnetApplicationID = CFSTR("com.mactelnet.MacTelnet");
+// the legacy MacTelnet bundle ID
+CFStringRef const	kMacTelnetApplicationID = CFSTR("com.mactelnet.MacTelnet");
+
+// the new bundle ID for MacTerm
+CFStringRef const	kMacTermApplicationID = CFSTR("net.macterm.MacTerm");
 
 enum
 {
@@ -120,6 +121,7 @@ My_PrefsResult		actionLegacyUpdates			();
 My_PrefsResult		actionVersion3				();
 My_PrefsResult		actionVersion4				();
 My_PrefsResult		actionVersion5				();
+My_PrefsResult		actionVersion6				();
 OSStatus			addErrorToReply				(ConstStringPtr, OSStatus, AppleEventPtr);
 Boolean				convertRGBColorToCFArray	(RGBColor const*, CFArrayRef&);
 My_StringResult		copyFileOrFolderCFString	(My_FolderStringType, CFStringRef*);
@@ -136,6 +138,7 @@ pascal OSErr		receiveOpenDocuments		(AppleEvent const*, AppleEvent*, SInt32);
 pascal OSErr		receivePrintDocuments		(AppleEvent const*, AppleEvent*, SInt32);
 Boolean				setMacTelnetCoordPreference	(CFStringRef, SInt16, SInt16);
 void				setMacTelnetPreference		(CFStringRef, CFPropertyListRef);
+void				setMacTermPreference		(CFStringRef, CFPropertyListRef);
 void				transformFolderFSSpec		(FSSpec*);
 
 } // anonymous namespace
@@ -207,6 +210,16 @@ INCOMPLETE
 - must read MacTelnet Preferences and import
   resource data into XML
 - must delete unused folders
+
+IMPORTANT:	Even though the program is now MacTerm,
+			this legacy code MUST NOT change; the
+			update steps are handled sequentially,
+			pulling data from older domains and
+			versions into the modern domain (even
+			if intermediate steps continue to put
+			data into a legacy domain, the final
+			step imports everything into the modern
+			domain).
 
 (3.1)
 */
@@ -1063,6 +1076,16 @@ Upgrades from version 2 to version 3.  Some keys are
 now obsolete that were never available to users, so
 they are deleted.
 
+IMPORTANT:	Even though the program is now MacTerm,
+			this legacy code MUST NOT change; the
+			update steps are handled sequentially,
+			pulling data from older domains and
+			versions into the modern domain (even
+			if intermediate steps continue to put
+			data into a legacy domain, the final
+			step imports everything into the modern
+			domain).
+
 (3.1)
 */
 My_PrefsResult
@@ -1084,6 +1107,16 @@ actionVersion3 ()
 /*!
 Upgrades from version 3 to version 4.  Some keys are
 now obsolete, so they are deleted.
+
+IMPORTANT:	Even though the program is now MacTerm,
+			this legacy code MUST NOT change; the
+			update steps are handled sequentially,
+			pulling data from older domains and
+			versions into the modern domain (even
+			if intermediate steps continue to put
+			data into a legacy domain, the final
+			step imports everything into the modern
+			domain).
 
 (4.0)
 */
@@ -1118,6 +1151,16 @@ actionVersion4 ()
 Upgrades from version 4 to version 5.  Some keys are
 now obsolete, so they are deleted.
 
+IMPORTANT:	Even though the program is now MacTerm,
+			this legacy code MUST NOT change; the
+			update steps are handled sequentially,
+			pulling data from older domains and
+			versions into the modern domain (even
+			if intermediate steps continue to put
+			data into a legacy domain, the final
+			step imports everything into the modern
+			domain).
+
 (4.0)
 */
 My_PrefsResult
@@ -1137,6 +1180,127 @@ actionVersion5 ()
 	
 	return result;
 }// actionVersion5
+
+
+/*!
+Upgrades from version 5 to version 6.  All preferences are
+imported into the MacTerm preferences domain.  This is not
+completely trivial because there are embedded references
+to the old domain, e.g. in lists of Favorites.  So, the
+existing preferences’ key-value pairs are scanned to find
+the names of all legacy domains, and those domains are
+converted.  For example, "com.mactelnet.MacTelnet.formats.1"
+might be a user collection, and "net.macterm.MacTerm.formats.1"
+would be its converted name.
+
+(4.0)
+*/
+My_PrefsResult
+actionVersion6 ()
+{
+	My_PrefsResult		result = kMy_PrefsResultOK;
+	Boolean				syncOK = false;
+	
+	
+	// copy everything from the base set into the new domain
+	CocoaUserDefaults_CopyDomain(kMacTelnetApplicationID, kMacTermApplicationID);
+	
+	// look for references to the old domain and update those settings accordingly
+	{
+		CFStringRef		keyLists[] =
+						{
+							CFSTR("favorite-formats"),
+							CFSTR("favorite-macro-sets"),
+							CFSTR("favorite-sessions"),
+							CFSTR("favorite-terminals"),
+							CFSTR("favorite-translations"),
+							CFSTR("favorite-workspaces")
+						};
+		
+		
+		for (size_t i = 0; i < sizeof(keyLists) / sizeof(CFStringRef); ++i)
+		{
+			CFRetainRelease		valueList(CFPreferencesCopyAppValue(keyLists[i], kMacTelnetApplicationID),
+											true/* is retained */);
+			
+			
+			if (valueList.exists())
+			{
+				CFArrayRef const	kAsArray = valueList.returnCFArrayRef();
+				CFIndex const		kArraySize = CFArrayGetCount(kAsArray);
+				
+				
+				if (kArraySize > 0)
+				{
+					CFRetainRelease		newArray(CFArrayCreateMutable(kCFAllocatorDefault, 0/* capacity */, &kCFTypeArrayCallBacks),
+													true/* is retained */);
+					
+					
+					for (CFIndex j = 0; j < kArraySize; ++j)
+					{
+						CFStringRef		oldDomainCFString = CFUtilities_StringCast(CFArrayGetValueAtIndex(kAsArray, j));
+						
+						
+						if (nullptr != oldDomainCFString)
+						{
+							CFRetainRelease		newDomainCFString(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* maximum length */,
+																							oldDomainCFString),
+																	true/* is retained */);
+							
+							
+							(CFIndex)CFStringFindAndReplace(newDomainCFString.returnCFMutableStringRef(), kMacTelnetApplicationID,
+															kMacTermApplicationID, CFRangeMake(0, CFStringGetLength(newDomainCFString.returnCFStringRef())),
+															kCFCompareCaseInsensitive);
+							
+							// store only the new domain, and copy all settings from the
+							// old collection domain to the new collection domain; at
+							// that point, the old settings can be removed
+							CFArrayAppendValue(newArray.returnCFMutableArrayRef(), newDomainCFString.returnCFStringRef());
+							CocoaUserDefaults_CopyDomain(oldDomainCFString, newDomainCFString.returnCFStringRef());
+							syncOK = CFPreferencesAppSynchronize(newDomainCFString.returnCFStringRef());
+							if (false == syncOK)
+							{
+								std::cerr << "MacTerm Preferences Converter: actionVersion6(): synchronization of a preference collection failed!" << std::endl;
+							}
+							else
+							{
+								// new settings were successfully saved; delete the old ones
+								CocoaUserDefaults_DeleteDomain(oldDomainCFString);
+								syncOK = CFPreferencesAppSynchronize(oldDomainCFString);
+								if (false == syncOK)
+								{
+									std::cerr << "MacTerm Preferences Converter: actionVersion6(): failed to delete legacy MacTelnet preferences collection" << std::endl;
+								}
+							}
+						}
+					}
+					CFPreferencesSetAppValue(keyLists[i], newArray.returnCFArrayRef(), kMacTermApplicationID);
+					assert(kArraySize == CFArrayGetCount(newArray.returnCFArrayRef()));
+				}
+			}
+		}
+	}
+	
+	// final step: delete all the old settings, but first MAKE SURE that
+	// the new settings are readable in the new domain
+	syncOK = CFPreferencesAppSynchronize(kMacTermApplicationID);
+	if (false == syncOK)
+	{
+		std::cerr << "MacTerm Preferences Converter: actionVersion6(): synchronization of new MacTerm preferences failed!" << std::endl;
+	}
+	else
+	{
+		// new settings were successfully saved; delete the old ones
+		CocoaUserDefaults_DeleteDomain(kMacTelnetApplicationID);
+	}
+	syncOK = CFPreferencesAppSynchronize(kMacTelnetApplicationID);
+	if (false == syncOK)
+	{
+		std::cerr << "MacTerm Preferences Converter: actionVersion6(): failed to delete legacy MacTelnet preferences" << std::endl;
+	}
+	
+	return result;
+}// actionVersion6
 
 
 /*!
@@ -1581,8 +1745,8 @@ makeLocalizedFSSpec		(SInt16					inVRefNum,
 
 
 /*!
-Handles the "kASRequiredSuite" Apple Event
-of type "kAEOpenApplication".
+Handles the "kASRequiredSuite" Apple Event of type
+"kAEOpenApplication".
 
 (3.1)
 */
@@ -1591,10 +1755,17 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 						 AppleEvent*		outReplyAppleEventPtr,
 						 SInt32				inData)
 {
-	// The preferences version MUST match what is used by the version of
-	// MacTelnet that ships with this preferences converter; it should
-	// be changed here if it is changed in MacTelnet.
-	SInt16 const	kCurrentPrefsVersion = 5;
+	// The current preferences version MUST match the value that is
+	// emitted by "VersionInfo.sh" (the golden value that is mirrored
+	// to other generated files in the bundle), because only that
+	// value is consulted in order to determine when to run this
+	// converter program.  The converter itself is not automatically
+	// updated because NEW CODE MUST BE WRITTEN whenever the version
+	// is incremented!  You should write a new function of the form
+	// "actionVersionX()" and add a call to it below, in a form
+	// similar to what has been done for previous versions.  Finally,
+	// note that the version should never be decremented.
+	SInt16 const	kCurrentPrefsVersion = 6;
 	CFIndex			diskVersion = 0;
 	Boolean			doConvert = false;
 	Boolean			conversionSuccessful = false;
@@ -1619,17 +1790,37 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		Boolean		existsAndIsValidFormat = false;
 		
 		
-		// The preference key used here MUST match what MacTelnet reads in,
-		// for obvious reasons.  Similarly, the application domain must match
-		// what MacTelnet used FOR THE VERSION OF PREFERENCES DESIRED.  So if
-		// MacTelnet’s identifier changes in the future, its old identifier
-		// will still be needed to find the old version number.
+		// the application domain must match what was used FOR THE VERSION
+		// OF PREFERENCES DESIRED; in this case, versions 6 and beyond are
+		// in the MacTerm domain
 		diskVersion = CFPreferencesGetAppIntegerValue
-						(CFSTR("prefs-version"), kMacTelnetApplicationID,
+						(CFSTR("prefs-version"), kMacTermApplicationID,
 							&existsAndIsValidFormat);
-		unless (existsAndIsValidFormat)
+		if (existsAndIsValidFormat)
+		{
+			// sanity check the saved version number; it ought to be no smaller
+			// than the first version where the new domain was used (6)
+			assert((diskVersion >= 6) && "transition to MacTerm domain started at version 6; it does not make sense for any older number to be present");
+		}
+		else
 		{
 			diskVersion = 0;
+		}
+		
+		// maybe the preferences are saved in an older domain...
+		if (0 == diskVersion)
+		{
+			// the application domain must match what was used FOR THE VERSION
+			// OF PREFERENCES DESIRED; in this case, versions 5 and older were
+			// in the MacTelnet domain, and later versions are now MacTerm, so
+			// we must check the legacy domain as a fallback
+			diskVersion = CFPreferencesGetAppIntegerValue
+							(CFSTR("prefs-version"), kMacTelnetApplicationID,
+								&existsAndIsValidFormat);
+			unless (existsAndIsValidFormat)
+			{
+				diskVersion = 0;
+			}
 		}
 	}
 	
@@ -1640,14 +1831,14 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 	{
 		// preferences are identical, nothing to do; if the application
 		// was launched automatically, then it should not have been
-		std::cerr << "MacTelnet Preferences Converter: prefs-version on disk (" << diskVersion << ") is current, nothing to convert" << std::endl;
+		std::cerr << "MacTerm Preferences Converter: prefs-version on disk (" << diskVersion << ") is current, nothing to convert" << std::endl;
 		doConvert = false;
 	}
 	else if (diskVersion > kCurrentPrefsVersion)
 	{
 		// preferences are newer, nothing to do; if the application
 		// was launched automatically, then it should not have been
-		std::cerr << "MacTelnet Preferences Converter: prefs-version on disk (" << diskVersion << ") is newer than this converter ("
+		std::cerr << "MacTerm Preferences Converter: prefs-version on disk (" << diskVersion << ") is newer than this converter ("
 					<< kCurrentPrefsVersion << "), unable to convert" << std::endl;
 		doConvert = false;
 	}
@@ -1706,6 +1897,13 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 			// Version 5 deleted some obsolete keys.
 			actionResult = actionVersion5();
 		}
+		if (diskVersion < 6)
+		{
+			// Version 6 migrated settings into a new domain.
+			actionResult = actionVersion6();
+		}
+		// IMPORTANT: The maximum version considered here should be the
+		//            current value of "kCurrentPrefsVersion"!!!
 		//if (diskVersion < X)
 		//{
 		//	// Perform actions that update ONLY the immediately preceding
@@ -1717,7 +1915,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		gFinished = true;
 		
 		// If conversion is successful, save a preference indicating the
-		// current preferences version; MacTelnet will read that setting
+		// current preferences version; MacTerm will read that setting
 		// in the future to determine if this program ever needs to be
 		// run again.
 		//
@@ -1733,8 +1931,8 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 				// The preference key used here MUST match what MacTelnet uses to
 				// read the value in, for obvious reasons.  Similarly, the application
 				// domain must match what is in MacTelnet’s Info.plist file.
-				CFPreferencesSetAppValue(CFSTR("prefs-version"), numberRef, kMacTelnetApplicationID);
-				(Boolean)CFPreferencesAppSynchronize(kMacTelnetApplicationID);
+				CFPreferencesSetAppValue(CFSTR("prefs-version"), numberRef, kMacTermApplicationID);
+				(Boolean)CFPreferencesAppSynchronize(kMacTermApplicationID);
 				CFRelease(numberRef), numberRef = nullptr;
 			}
 		}
@@ -1742,7 +1940,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		
 		// This is probably not something the user really needs to see.
 	#if 1
-		std::cerr << "MacTelnet Preferences Converter: conversion successful, new prefs-version is " << kCurrentPrefsVersion << std::endl;
+		std::cerr << "MacTerm Preferences Converter: conversion successful, new prefs-version is " << kCurrentPrefsVersion << std::endl;
 	#else
 		// display status to the user
 		{
@@ -1791,6 +1989,41 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 			}
 		}
 	#endif
+		
+		// on older versions of Mac OS X, it is necessary to require the user to
+		// restart the main application instead of simply continuing
+		{
+			char*	envValue = getenv("CONVERTER_ASK_USER_TO_RESTART");
+			
+			
+			if ((nullptr != envValue) && (0 == strcmp(envValue, "1")))
+			{
+				// prompt the user to restart; the actual forced-quit is not performed
+				// within the converter, but rather within the main Python script front-end
+				AlertStdCFStringAlertParamRec	params;
+				AlertType						alertType = kAlertStopAlert;
+				CFStringRef						messageText = nullptr;
+				CFStringRef						helpText = nullptr;
+				DialogRef						dialog = nullptr;
+				
+				
+				error = GetStandardAlertDefaultParams(&params, kStdCFStringAlertVersionOne);
+				params.defaultButton = kAlertStdAlertOKButton;
+				params.defaultText = CFCopyLocalizedStringFromTable(CFSTR("Quit Preferences Converter"), CFSTR("Alerts"), CFSTR("button label"));
+				messageText = CFCopyLocalizedStringFromTable
+								(CFSTR("Your preferences have been migrated to a new format.  Please run MacTelnet again to use the migrated settings."),
+									CFSTR("Alerts"), CFSTR("displayed upon successful conversion"));
+				helpText = CFCopyLocalizedStringFromTable
+							(CFSTR("This version of MacTelnet will now be able to read your existing preferences."),
+								CFSTR("Alerts"), CFSTR("displayed upon successful conversion"));
+				
+				if (nullptr != messageText)
+				{
+					error = CreateStandardAlert(alertType, messageText, helpText, &params, &dialog);
+					error = RunStandardAlert(dialog, nullptr/* filter */, nullptr/* item hit */);
+				}
+			}
+		}
 	}
 	else
 	{
@@ -1991,6 +2224,11 @@ containing two CFNumberRefs is done for you.
 Returns "true" only if it was possible to create the
 necessary Core Foundation types.
 
+IMPORTANT:	This is a legacy preferences domain.  It no
+			longer makes any sense to use this except in
+			converters that deal with older versions of
+			the program.
+
 (3.1)
 */
 Boolean
@@ -2032,9 +2270,14 @@ setMacTelnetCoordPreference		(CFStringRef	inKey,
 
 
 /*!
-Updates MacTelnet’s XML preferences as requested.
-Also prints to standard output information about
-the data being written (if debugging is enabled).
+Updates MacTelnet’s XML preferences as requested.  Also
+prints to standard output information about the data being
+written (if debugging is enabled).
+
+IMPORTANT:	This is a legacy preferences domain.  It no
+			longer makes any sense to use this except in
+			converters that deal with older versions of
+			the program.
 
 (3.1)
 */
@@ -2112,6 +2355,19 @@ setMacTelnetPreference	(CFStringRef		inKey,
 	}
 #endif
 }// setMacTelnetPreference
+
+
+/*!
+Updates MacTerm’s XML preferences as requested.
+
+(4.0)
+*/
+void
+setMacTermPreference	(CFStringRef		inKey,
+						 CFPropertyListRef	inValue)
+{
+	CFPreferencesSetAppValue(inKey, inValue, kMacTermApplicationID);
+}// setMacTermPreference
 
 
 /*!

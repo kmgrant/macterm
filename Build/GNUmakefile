@@ -126,6 +126,7 @@ DEST_APP_RESOURCES_TOP := $(DEST_APP_TOP)/Resources
 DEST_BUGREPORTER_TOP := $(DEST_APP_RESOURCES_TOP)/BugReporter.app
 DEST_PREFSCONVERTER_TOP := $(DEST_APP_RESOURCES_TOP)/PrefsConverter.app
 DEST_PY_TOP := $(DEST_APP_FW_TOP)/PyMacTelnet.framework
+DEST_PY_CODE_TOP := $(DEST_PY_TOP)/Versions/A/lib/python2.3/pymactelnet
 DEST_QUILLS_TOP := $(DEST_APP_FW_TOP)/Quills.framework
 DEST_GROWL_TOP := $(DEST_APP_FW_TOP)/Growl.framework
 DEST_SWIG_TOP_LEOPARD := $(DEST_QUILLS_TOP)/Versions/B/lib/python2.5
@@ -163,7 +164,6 @@ $(wildcard $(SRC_APP_CODE_TOP)/Quills*)
 # bundles) for convenience when writing rules that
 # need different commands for recursive trees
 APP_RESOURCES_FILES := \
-DefaultPreferences.plist \
 DefaultFormat1.plist \
 DefaultFormat2.plist \
 DefaultFormat3.plist \
@@ -388,6 +388,15 @@ install-py-framework:
 	fi
 	$(MKDIR_P) $(dir $(DEST_PY_TOP))
 	$(RSYNC) --archive $(SRC_PY_TOP)/ $(DEST_PY_TOP)
+	echo "# automatically-generated Python file with basic version data" > $(DEST_PY_CODE_TOP)/versions.py
+	$(CURDIR)/VersionInfo.sh perl -e 'print "major_version = $$ENV{MY_MAJOR_NUMBER}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
+	$(CURDIR)/VersionInfo.sh perl -e 'print "minor_version = $$ENV{MY_MINOR_NUMBER}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
+	$(CURDIR)/VersionInfo.sh perl -e 'print "subminor_version = $$ENV{MY_SUBMINOR_NUMBER}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
+	$(CURDIR)/VersionInfo.sh perl -e 'print "alpha_beta = @{[ chr(39) ]}$$ENV{MY_ALPHA_BETA}@{[ chr(39) ]}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
+	$(CURDIR)/VersionInfo.sh perl -e 'print "build_number = $$ENV{MY_BUILD_NUMBER}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
+	$(CURDIR)/VersionInfo.sh perl -e 'print "prefs_version = $$ENV{MY_PREFS_VERSION}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
+	@# validate generated code...
+	python $(DEST_PY_CODE_TOP)/versions.py
 
 .PHONY: clean-py-framework
 clean-py-framework:
@@ -397,6 +406,7 @@ clean-py-framework:
 		echo "DEST_PY_TOP variable unset" >&2 ; \
 		exit 1 ; \
 	fi
+	$(RM) $(DEST_PY_CODE_TOP)/versions.py
 	$(RM) -R $(DEST_PY_TOP)
 
 # Component: Growl.framework
@@ -587,13 +597,24 @@ clean-resources:
 	-$(RMDIR) $(DEST_APP_RESOURCES_TOP)
 
 #
+# DefaultPreferences.plist file
+#
+
+$(DEST_APP_RESOURCES_TOP)/DefaultPreferences.plist: FORCE
+	$(MKDIR_P) $(dir $@)
+	@# this is always regenerated because it changes often and is a tiny file
+	$(COPY) $(SRC_APP_RESOURCES_TOP)/Template-DefaultPreferences.plist $@
+	env BUILT_PRODUCTS_DIR="$(DEST_APP_RESOURCES_TOP)" INFOPLIST_PATH=DefaultPreferences.plist \
+		$(CURDIR)/VersionInfo.sh $(CURDIR)/Tools/AutoDatePropertyList.sh
+
+#
 # Info.plist file
 #
 
 $(DEST_APP_TOP)/Info.plist: FORCE
 	$(MKDIR_P) $(dir $@)
 	@# this is always regenerated because it changes daily and is a tiny file
-	$(COPY) $(SRC_APP_RESOURCES_TOP)/Template-MacTelnet-Info.plist $@
+	$(COPY) $(SRC_APP_RESOURCES_TOP)/Template-Application-Info.plist $@
 	env BUILT_PRODUCTS_DIR="$(DEST_APP_TOP)" INFOPLIST_PATH=Info.plist \
 		$(CURDIR)/VersionInfo.sh $(CURDIR)/Tools/AutoDatePropertyList.sh
 
@@ -645,6 +666,7 @@ bundle:
 	@# still works with most of its components missing
 	$(MAKE) $(DEST_APP_TOP)/Info.plist
 	$(MAKE) $(DEST_APP_TOP)/PkgInfo
+	$(MAKE) $(DEST_APP_RESOURCES_TOP)/DefaultPreferences.plist
 	$(MAKE) install-frameworks
 	$(MAKE) install-executables
 	$(MAKE) install-resources
@@ -658,6 +680,7 @@ clean:
 	$(MAKE) clean-frameworks
 	$(RM) $(DEST_APP_TOP)/PkgInfo
 	$(RM) $(DEST_APP_TOP)/Info.plist
+	$(RM) $(DEST_APP_RESOURCES_TOP)/DefaultPreferences.plist
 	-$(RMDIR) $(SRC_PREFSCONVERTER_BUILD_TOP)
 	-$(RMDIR) $(SRC_BUGREPORTER_BUILD_TOP)
 	-$(RMDIR) $(SYMROOT)/ForLeopardDebug

@@ -9,7 +9,7 @@
 	
 	This file defines MacTelnet's default preferences.  It has EXACTLY
 	the same format as the main Core Foundation Preferences file (i.e.
-	com.mactelnet.MacTelnet.plist in ~/Library/Preferences).
+	net.macterm.MacTerm.plist in ~/Library/Preferences).
 	
 	Keeping this data external helps simplify development.  It is also
 	useful to administrators who distribute MacTelnet; for example, a
@@ -23,7 +23,8 @@
 				the Preferences Converter that imports the previous
 				version.  MacTelnet automatically runs the Preferences
 				Converter when the default "prefs-version" is greater
-				than that of current user preferences.
+				than that of current user preferences.  Note that the
+				version is now controlled by "VersionInfo.sh".
 -->
 
 <plist version="1.0">
@@ -250,7 +251,7 @@
 	<key>no-auto-new</key>
 	<false/>
 	<key>prefs-version</key>
-	<integer>5</integer>
+	<integer>%MY_PREFS_VERSION%</integer>
 	<key>server-host</key>
 	<string>nowhere.loopback.edu</string>
 	<key>server-port</key>

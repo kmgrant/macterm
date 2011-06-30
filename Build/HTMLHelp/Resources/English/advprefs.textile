@@ -27,12 +27,12 @@ p(#abstract). This page describes preferences that generally require special
 h2(#overview). Overview
 
 MacTelnet preferences are hierarchical.  Every default value is
- in "com.mactelnet.MacTelnet.plist" (in the Preferences folder of
+ in "net.macterm.MacTerm.plist" (in the Preferences folder of
  the user Library folder), even if it appears to be a Default
  collection in the user interface.
 
 Collections themselves are separate property list files, of the
- form "com.mactelnet.MacTelnet.[type].[number].plist".  The names
+ form "net.macterm.MacTerm.[type].[number].plist".  The names
  of these domains are recorded in the primary defaults file.
 
 Each collection file contains either a "name" key of type Data,
