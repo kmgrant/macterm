@@ -2,7 +2,7 @@
 
 	DialogUtilities.cp
 	
-	MacTelnet
+	MacTerm
 		© 1998-2006 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees

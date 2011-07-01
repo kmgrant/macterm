@@ -34,7 +34,7 @@
 	  the user Control-clicks, and delays the display of the
 	  menu to the user!
 	
-	MacTelnet
+	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
