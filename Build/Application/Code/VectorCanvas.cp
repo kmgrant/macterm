@@ -61,7 +61,7 @@ Routines for Macintosh Window output.
 // Mac includes
 #include <Carbon/Carbon.h>
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 #include "Console.h"
 #include "ConstantsRegistry.h"

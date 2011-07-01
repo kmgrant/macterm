@@ -46,7 +46,7 @@
 // resource includes
 #include "SpacingConstants.r"
 
-// MacTelnet includes
+// application includes
 #include "ConstantsRegistry.h"
 #include "Panel.h"
 

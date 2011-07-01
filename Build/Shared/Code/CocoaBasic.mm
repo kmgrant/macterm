@@ -41,7 +41,7 @@
 #import <HIViewWrap.h>
 #import <SoundSystem.h>
 
-// MacTelnet includes
+// application includes
 #import "AppResources.h"
 #import "ColorBox.h"
 #import "FileUtilities.h"

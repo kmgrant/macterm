@@ -46,7 +46,7 @@
 #include <HIViewWrap.h>
 #include <HIViewWrapManip.h>
 
-// MacTelnet includes
+// application includes
 #include "GenericPanelTabs.h"
 
 

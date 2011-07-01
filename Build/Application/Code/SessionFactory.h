@@ -54,7 +54,7 @@
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
-// MacTelnet includes
+// application includes
 #include "Preferences.h"
 #include "Session.h"
 #include "SessionDescription.h"

@@ -46,7 +46,7 @@
 #include <MemoryBlocks.h>
 #include <WindowInfo.h>
 
-// MacTelnet includes
+// application includes
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "DragAndDrop.h"

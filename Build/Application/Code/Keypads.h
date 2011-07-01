@@ -42,7 +42,7 @@
 #	import <Cocoa/Cocoa.h>
 #endif
 
-// MacTelnet includes
+// application includes
 #include "Preferences.h"
 
 

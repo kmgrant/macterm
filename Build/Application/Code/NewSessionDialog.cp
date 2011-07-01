@@ -39,7 +39,7 @@
 #include <MemoryBlockPtrLocker.template.h>
 #include <SoundSystem.h>
 
-// MacTelnet includes
+// application includes
 #include "GenericDialog.h"
 #include "PrefPanelSessions.h"
 #include "NewSessionDialog.h"

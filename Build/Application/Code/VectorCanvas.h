@@ -39,7 +39,7 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
 
-// MacTelnet includes
+// application includes
 #include "SessionRef.typedef.h"
 #include "VectorInterpreterID.typedef.h"
 

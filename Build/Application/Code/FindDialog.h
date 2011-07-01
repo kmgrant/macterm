@@ -40,7 +40,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 
-// MacTelnet includes
+// application includes
 #include "TerminalWindow.h"
 
 

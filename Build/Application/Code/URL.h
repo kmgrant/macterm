@@ -42,7 +42,7 @@
 #ifndef __URL__
 #define __URL__
 
-// MacTelnet includes
+// application includes
 #include "TerminalScreenRef.typedef.h"
 #include "TerminalView.h"
 

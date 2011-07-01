@@ -46,7 +46,7 @@
 #include <FlagManager.h>
 #include <RegionUtilities.h>
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 #include "ColorBox.h"
 #include "ConstantsRegistry.h"

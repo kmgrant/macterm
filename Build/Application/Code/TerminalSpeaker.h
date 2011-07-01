@@ -49,7 +49,7 @@
 #ifndef __TERMINALSPEAKER__
 #define __TERMINALSPEAKER__
 
-// MacTelnet includes
+// application includes
 #include "TerminalScreenRef.typedef.h"
 
 

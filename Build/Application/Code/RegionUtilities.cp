@@ -33,7 +33,7 @@
 #include <MemoryBlocks.h>
 #include <RegionUtilities.h>
 
-// MacTelnet includes
+// application includes
 #include "ConstantsRegistry.h"
 
 

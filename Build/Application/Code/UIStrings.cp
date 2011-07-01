@@ -51,7 +51,7 @@
 // resource includes
 #include "CFRetainRelease.h"
 
-// MacTelnet includes
+// application includes
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"
 

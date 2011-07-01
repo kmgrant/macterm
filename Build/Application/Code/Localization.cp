@@ -45,7 +45,7 @@
 #include <MemoryBlocks.h>
 #include <Releases.h>
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 
 // resource includes

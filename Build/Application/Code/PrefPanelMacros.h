@@ -44,7 +44,7 @@
 #ifndef __PREFPANELMACROS__
 #define __PREFPANELMACROS__
 
-// MacTelnet includes
+// application includes
 #include "Panel.h"
 
 

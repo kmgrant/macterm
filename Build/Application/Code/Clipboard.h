@@ -44,7 +44,7 @@
 #endif
 #include <CoreServices/CoreServices.h>
 
-// MacTelnet includes
+// application includes
 #include "SessionRef.typedef.h"
 #include "TerminalViewRef.typedef.h"
 #include "VectorInterpreterID.typedef.h"

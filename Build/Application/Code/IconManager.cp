@@ -40,7 +40,7 @@
 #include <IconManager.h>
 #include <MemoryBlocks.h>
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 #include "ConstantsRegistry.h"
 

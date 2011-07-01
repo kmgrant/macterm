@@ -43,7 +43,7 @@
 #include <MemoryBlockPtrLocker.template.h>
 #include <SoundSystem.h>
 
-// MacTelnet includes
+// application includes
 #include "Session.h"
 #include "StreamCapture.h"
 

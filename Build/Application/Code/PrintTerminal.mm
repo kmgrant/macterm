@@ -50,7 +50,7 @@
 // library includes
 #import <FlagManager.h>
 
-// MacTelnet includes
+// application includes
 #import "Console.h"
 #import "ConstantsRegistry.h"
 #import "HelpSystem.h"

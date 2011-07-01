@@ -68,7 +68,7 @@ extern "C"
 #import <Undoables.h>
 #import <UniversalPrint.h>
 
-// MacTelnet includes
+// application includes
 #import "AddressDialog.h"
 #import "AppResources.h"
 #import "Commands.h"

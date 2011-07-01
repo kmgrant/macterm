@@ -43,7 +43,7 @@ extern "C"
 #	include <sys/types.h>
 }
 
-// MacTelnet includes
+// application includes
 #include "SessionRef.typedef.h"
 #include "TerminalScreenRef.typedef.h"
 

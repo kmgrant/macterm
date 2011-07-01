@@ -48,7 +48,7 @@
 #include <MemoryBlocks.h>
 #include <NIBLoader.h>
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"

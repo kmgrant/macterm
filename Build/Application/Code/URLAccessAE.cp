@@ -40,7 +40,7 @@
 #include <Console.h>
 #include <MemoryBlocks.h>
 
-// MacTelnet includes
+// application includes
 #include "AppleEventUtilities.h"
 #include "QuillsSession.h"
 #include "Terminology.h"

@@ -64,7 +64,7 @@
 #import <StringUtilities.h>
 #import <WindowInfo.h>
 
-// MacTelnet includes
+// application includes
 #import "Clipboard.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"

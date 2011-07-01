@@ -46,7 +46,7 @@ extern "C"
 // library includes
 #include <MemoryBlocks.h>
 
-// MacTelnet includes
+// application includes
 #include "DNR.h"
 #include "NetEvents.h"
 

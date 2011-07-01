@@ -40,7 +40,7 @@
 #import <Console.h>
 #import <SoundSystem.h>
 
-// MacTelnet includes
+// application includes
 #import "CommandLine.h"
 #import "HelpSystem.h"
 #import "Preferences.h"

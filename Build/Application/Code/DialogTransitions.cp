@@ -47,7 +47,7 @@
 #include <RegionUtilities.h>
 #include <WindowInfo.h>
 
-// MacTelnet includes
+// application includes
 #include "DialogTransitions.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"

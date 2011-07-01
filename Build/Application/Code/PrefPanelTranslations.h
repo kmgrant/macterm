@@ -39,7 +39,7 @@
 #ifndef __PREFPANELTRANSLATIONS__
 #define __PREFPANELTRANSLATIONS__
 
-// MacTelnet includes
+// application includes
 #include "Panel.h"
 #include "Preferences.h"
 

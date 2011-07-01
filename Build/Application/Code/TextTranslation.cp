@@ -47,7 +47,7 @@
 #include <MemoryBlocks.h>
 #include <StringUtilities.h>
 
-// MacTelnet includes
+// application includes
 #include "TextTranslation.h"
 
 

@@ -35,7 +35,7 @@
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlocks.h>
 
-// MacTelnet includes
+// application includes
 #include "VirtualDevice.h"
 
 

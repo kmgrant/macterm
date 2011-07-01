@@ -43,7 +43,7 @@
 #include <NIBLoader.h>
 #include <RegionUtilities.h>
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 #include "DialogUtilities.h"
 #include "ProgressDialog.h"

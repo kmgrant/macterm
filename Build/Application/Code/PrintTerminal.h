@@ -39,7 +39,7 @@
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
-// MacTelnet includes
+// application includes
 #include "TerminalScreenRef.typedef.h"
 #include "TerminalViewRef.typedef.h"
 

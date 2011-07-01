@@ -51,7 +51,7 @@
 #include <MemoryBlockPtrLocker.template.h>
 #include <SoundSystem.h>
 
-// MacTelnet includes
+// application includes
 #include "ConstantsRegistry.h"
 #include "CommonEventHandlers.h"
 #include "DialogUtilities.h"

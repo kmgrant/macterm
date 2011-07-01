@@ -62,7 +62,7 @@
 #include <Releases.h>
 #include <Undoables.h>
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 #include "Clipboard.h"
 #include "Commands.h"

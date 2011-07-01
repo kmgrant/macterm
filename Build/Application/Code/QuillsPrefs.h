@@ -44,7 +44,7 @@
 #include <string>
 #include <vector>
 
-// MacTelnet includes
+// application includes
 #include "PreferencesContextRef.typedef.h"
 
 

@@ -69,7 +69,7 @@ class NSWindow;
 // library includes
 #include "ListenerModel.h"
 
-// MacTelnet includes
+// application includes
 #include "Preferences.h"
 #include "TerminalRangeDescription.typedef.h"
 #include "TerminalScreenRef.typedef.h"

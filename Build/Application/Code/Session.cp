@@ -76,7 +76,7 @@
 // resource includes
 #include "SpacingConstants.r"
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 #include "Clipboard.h"
 #include "Commands.h"

@@ -56,7 +56,7 @@
 #include <ListenerModel.h>
 #include <ResultCode.template.h>
 
-// MacTelnet includes
+// application includes
 #include "ConstantsRegistry.h"
 #include "Local.h"
 #include "SessionDescription.h"

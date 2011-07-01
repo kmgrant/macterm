@@ -42,7 +42,7 @@
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
-// MacTelnet includes
+// application includes
 #include "VectorCanvas.h"
 #include "VectorInterpreterID.typedef.h"
 

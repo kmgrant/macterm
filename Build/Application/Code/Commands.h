@@ -66,7 +66,7 @@ class NSMenu;
 #include <ListenerModel.h>
 #include <ResultCode.template.h>
 
-// MacTelnet includes
+// application includes
 #include <QuillsPrefs.h>
 
 

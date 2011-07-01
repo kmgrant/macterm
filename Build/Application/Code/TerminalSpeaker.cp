@@ -46,7 +46,7 @@
 #include <MemoryBlocks.h>
 #include <SoundSystem.h>
 
-// MacTelnet includes
+// application includes
 #include "ConstantsRegistry.h"
 #include "Preferences.h"
 #include "Terminal.h"

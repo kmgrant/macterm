@@ -80,7 +80,7 @@
 #include <RegionUtilities.h>
 #include <WindowInfo.h>
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 #include "Clipboard.h"
 #include "Commands.h"

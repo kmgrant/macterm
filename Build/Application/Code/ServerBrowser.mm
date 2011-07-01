@@ -51,7 +51,7 @@ extern "C"
 #import <Console.h>
 #import <SoundSystem.h>
 
-// MacTelnet includes
+// application includes
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "DNR.h"

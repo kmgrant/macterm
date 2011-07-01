@@ -48,7 +48,7 @@
 #include <MemoryBlocks.h>
 #include <TerminalFile.h>
 
-// MacTelnet includes
+// application includes
 #include "TerminalView.h"
 
 

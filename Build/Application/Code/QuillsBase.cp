@@ -40,7 +40,7 @@
 #include <Console.h>
 #include <StringUtilities.h>
 
-// MacTelnet includes
+// application includes
 #include "AlertMessages.h"
 #include "AppResources.h"
 #include "Commands.h"

@@ -73,7 +73,7 @@ extern "C"
 #include <FlagManager.h>
 #include <SoundSystem.h>
 
-// MacTelnet includes
+// application includes
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "DNR.h"

@@ -75,7 +75,7 @@
 #include <MemoryBlocks.h>
 #include <TextDataFile.h>
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 #include "DialogUtilities.h"
 #include "Preferences.h"

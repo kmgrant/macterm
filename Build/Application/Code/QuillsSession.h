@@ -41,7 +41,7 @@
 #include <string>
 #include <vector>
 
-// MacTelnet includes
+// application includes
 #include "QuillsCallbacks.typedef.h"
 #include "SessionRef.typedef.h"
 

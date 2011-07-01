@@ -40,7 +40,7 @@
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
-// MacTelnet includes
+// application includes
 #include "Preferences.h"
 
 

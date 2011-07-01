@@ -35,7 +35,7 @@
 #ifndef __PREFPANELFORMATS__
 #define __PREFPANELFORMATS__
 
-// MacTelnet includes
+// application includes
 #include "Panel.h"
 #include "Preferences.h"
 

@@ -47,7 +47,7 @@
 #endif
 #include <CoreServices/CoreServices.h>
 
-// MacTelnet includes
+// application includes
 #include "SessionRef.typedef.h"
 
 

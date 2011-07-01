@@ -36,7 +36,7 @@
 #ifndef __SERVERBROWSER__
 #define __SERVERBROWSER__
 
-// MacTelnet includes
+// application includes
 #include "Session.h"
 
 

@@ -74,7 +74,7 @@
 #include <MemoryBlocks.h>
 #include <WindowInfo.h>
 
-// MacTelnet includes
+// application includes
 #include "AppleEventUtilities.h"
 #include "Commands.h"
 #include "ConstantsRegistry.h"

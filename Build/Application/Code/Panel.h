@@ -67,7 +67,7 @@ class NSView;
 class NSWindow;
 #endif
 
-// MacTelnet includes
+// application includes
 #include "Console.h"
 
 

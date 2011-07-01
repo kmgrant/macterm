@@ -62,7 +62,7 @@
 // library includes
 #include "ListenerModel.h"
 
-// MacTelnet includes
+// application includes
 #include "Preferences.h"
 #include "SessionRef.typedef.h"
 #include "TerminalSpeaker.h"

@@ -40,7 +40,7 @@
 // library includes
 #include <Console.h>
 
-// MacTelnet includes
+// application includes
 #include "QuillsTerminal.h"
 
 

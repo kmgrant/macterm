@@ -46,7 +46,7 @@
 #ifndef __TERMINOLOGY__
 #define __TERMINOLOGY__
 
-// MacTelnet includes
+// application includes
 #include "ConstantsRegistry.h"
 
 

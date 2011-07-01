@@ -60,7 +60,7 @@
 #import <SoundSystem.h>
 #import <WindowInfo.h>
 
-// MacTelnet includes
+// application includes
 #import "AppResources.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"

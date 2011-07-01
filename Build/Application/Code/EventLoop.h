@@ -46,7 +46,7 @@
 // library includes
 #include <ListenerModel.h>
 
-// MacTelnet includes
+// application includes
 #include "ConstantsRegistry.h"
 
 

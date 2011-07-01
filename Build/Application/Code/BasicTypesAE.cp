@@ -38,7 +38,7 @@
 // library includes
 #include <Console.h>
 
-// MacTelnet includes
+// application includes
 #include "AppleEventUtilities.h"
 #include "BasicTypesAE.h"
 #include "Terminology.h"

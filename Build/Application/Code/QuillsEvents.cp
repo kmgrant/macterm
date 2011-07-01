@@ -31,7 +31,7 @@
 
 #include "UniversalDefines.h"
 
-// MacTelnet includes
+// application includes
 #include "EventLoop.h"
 #include "QuillsEvents.h"
 

@@ -44,7 +44,7 @@
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
-// MacTelnet includes
+// application includes
 #include "SessionRef.typedef.h"
 #include "VectorCanvas.h"
 

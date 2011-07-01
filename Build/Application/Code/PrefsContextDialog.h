@@ -45,7 +45,7 @@
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
-// MacTelnet includes
+// application includes
 #include "GenericDialog.h"
 #include "Panel.h"
 #include "Preferences.h"

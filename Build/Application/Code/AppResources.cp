@@ -39,7 +39,7 @@
 #include <CFRetainRelease.h>
 #include <Console.h>
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 #include "Local.h"
 #include "UIStrings.h"

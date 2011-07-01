@@ -58,7 +58,7 @@
 // resource includes
 #import "SpacingConstants.r"
 
-// MacTelnet includes
+// application includes
 #import "AppResources.h"
 #import "Commands.h"
 #import "DialogUtilities.h"

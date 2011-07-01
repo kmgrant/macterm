@@ -48,7 +48,7 @@
 #include <SoundSystem.h>
 #include <StringUtilities.h>
 
-// MacTelnet includes
+// application includes
 #include "AppleEventUtilities.h"
 #include "FileUtilities.h"
 #include "UIStrings.h"

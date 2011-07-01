@@ -39,7 +39,7 @@
 #include <Console.h>
 #include <MemoryBlocks.h>
 
-// MacTelnet includes
+// application includes
 #include "AppleEventUtilities.h"
 #include "ConstantsRegistry.h"
 #include "RecordAE.h"

@@ -41,7 +41,7 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
 
-// MacTelnet includes
+// application includes
 #include "ConstantsRegistry.h"
 
 

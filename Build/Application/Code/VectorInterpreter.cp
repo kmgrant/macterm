@@ -50,7 +50,7 @@
 #include <RegionUtilities.h>
 #include <SoundSystem.h>
 
-// MacTelnet includes
+// application includes
 #include "VectorCanvas.h"
 #include "VectorInterpreter.h"
 

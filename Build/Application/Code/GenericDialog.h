@@ -40,7 +40,7 @@
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
-// MacTelnet includes
+// application includes
 #include "HelpSystem.h"
 #include "Panel.h"
 

@@ -41,7 +41,7 @@
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
-// MacTelnet includes
+// application includes
 #include "UIStrings.h"
 
 #endif

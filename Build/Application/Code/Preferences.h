@@ -64,7 +64,7 @@
 #include <ListenerModel.h>
 #include <RetainRelease.template.h>
 
-// MacTelnet includes
+// application includes
 #include "Commands.h"
 #include "QuillsPrefs.h"
 

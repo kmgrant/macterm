@@ -69,7 +69,7 @@ class NSMenuItem;
 #include <ListenerModel.h>
 #include <ResultCode.template.h>
 
-// MacTelnet includes
+// application includes
 #include "Preferences.h"
 #include "SessionRef.typedef.h"
 

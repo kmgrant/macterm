@@ -68,7 +68,7 @@
 #import <RegionUtilities.h>
 #import <SoundSystem.h>
 
-// MacTelnet includes
+// application includes
 #import "AppResources.h"
 #import "Clipboard.h"
 #import "Commands.h"

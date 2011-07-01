@@ -68,7 +68,7 @@
 #include <RegionUtilities.h>
 #include <SoundSystem.h>
 
-// MacTelnet includes
+// application includes
 #include "Commands.h"
 #include "DebugInterface.h"
 #include "DialogUtilities.h"

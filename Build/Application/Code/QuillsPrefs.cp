@@ -44,7 +44,7 @@
 #include <CFRetainRelease.h>
 #include <Console.h>
 
-// MacTelnet includes
+// application includes
 #include "MacroManager.h"
 #include "Preferences.h"
 #include "QuillsPrefs.h"

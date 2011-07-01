@@ -49,7 +49,7 @@
 // Mac includes
 #include <CoreFoundation/CoreFoundation.h>
 
-// MacTelnet includes
+// application includes
 #include "Panel.h"
 
 

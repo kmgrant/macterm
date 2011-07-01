@@ -37,7 +37,7 @@
 #import <AutoPool.objc++.h>
 #import <Console.h>
 
-// MacTelnet includes
+// application includes
 #import "AddressDialog.h"
 #import "Network.h"
 

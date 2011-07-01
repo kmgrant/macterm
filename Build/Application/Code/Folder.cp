@@ -37,7 +37,7 @@
 // library includes
 #include <Localization.h>
 
-// MacTelnet includes
+// application includes
 #include "Folder.h"
 #include "UIStrings.h"
 

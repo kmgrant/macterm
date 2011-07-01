@@ -37,7 +37,7 @@
 #ifndef __PREFPANELKIOSK__
 #define __PREFPANELKIOSK__
 
-// MacTelnet includes
+// application includes
 #include "Panel.h"
 
 

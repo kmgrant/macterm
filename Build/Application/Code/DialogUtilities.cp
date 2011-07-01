@@ -60,7 +60,7 @@
 #include <SoundSystem.h>
 #include <WindowInfo.h>
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"

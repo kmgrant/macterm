@@ -39,7 +39,7 @@
 #ifndef __STREAMCAPTURE__
 #define __STREAMCAPTURE__
 
-// MacTelnet includes
+// application includes
 #include "Session.h"
 
 

@@ -34,7 +34,7 @@
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 #include "ConstantsRegistry.h"
 #include "InternetPrefs.h"

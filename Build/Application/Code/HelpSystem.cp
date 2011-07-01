@@ -40,7 +40,7 @@
 // library includes
 #include "MacHelpUtilities.h"
 
-// MacTelnet includes
+// application includes
 #include "EventLoop.h"
 #include "HelpSystem.h"
 #include "UIStrings.h"

@@ -38,7 +38,7 @@
 #import <Console.h>
 #import <SoundSystem.h>
 
-// MacTelnet includes
+// application includes
 #import "AppResources.h"
 #import "DebugInterface.h"
 #import "Session.h"

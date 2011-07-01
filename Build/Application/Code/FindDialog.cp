@@ -59,7 +59,7 @@
 #include <NIBLoader.h>
 #include <WindowInfo.h>
 
-// MacTelnet includes
+// application includes
 #include "AppResources.h"
 #include "Commands.h"
 #include "ConstantsRegistry.h"
