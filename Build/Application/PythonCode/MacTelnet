@@ -114,11 +114,11 @@ if __name__ == "__main__":
                 user_prefs_version = int(lines[0])
             except Exception, e:
                 print "exception when trying to find integer from prefs-version", e
-        print "MacTelnet: latest preferences are version", latest_prefs_version, "and user preferences are version", user_prefs_version
+        print "MacTerm: latest preferences are version", latest_prefs_version, "and user preferences are version", user_prefs_version
         try:
             if latest_prefs_version > user_prefs_version:
                 conv_path = os.path.join(bundle_dir, 'Contents', 'Resources', 'PrefsConverter.app', 'Contents', 'MacOS', 'PrefsConverter')
-                print "MacTelnet: launching Preferences Converter application (%s)..." % conv_path
+                print "MacTerm: launching Preferences Converter application (%s)..." % conv_path
                 require_restart = False
                 if mac_os_name in ("Panther", "Tiger", "Leopard"):
                     # While not apparently a problem at least on Snow Leopard, on Panther there is
@@ -139,7 +139,7 @@ if __name__ == "__main__":
                     cmd_run = popen2.Popen4((conv_path))
                     code = cmd_run.wait()
                 if code != 0:
-                    print "MacTelnet: preferences converter exited with nonzero status", code
+                    print "MacTerm: preferences converter exited with nonzero status", code
                 if require_restart:
                     sys.exit(0)
         except Exception, e:

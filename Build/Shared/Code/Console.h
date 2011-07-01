@@ -160,7 +160,7 @@ inline bool __Console_CrashTraceably ()
 }
 inline bool __Console_AssertHelper (char const* t, char const* file, unsigned long line)
 {
-	(int)printf("MacTelnet: ASSERTION FAILURE: %s [%s:%lu]\n", t, file, line);
+	(int)printf("MacTerm: ASSERTION FAILURE: %s [%s:%lu]\n", t, file, line);
 	__Console_CrashTraceably();
 	return false;
 }
@@ -168,9 +168,9 @@ inline bool __Console_AssertNoErrHelper (OSStatus e, char const* t, char const* 
 {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	char const*		desc = GetMacOSStatusCommentString(e);
-	(int)printf("MacTelnet: ASSERTION FAILURE: OSStatus value was %ld (%s) for \"%s\" [%s:%lu]\n", e, desc, t, file, line);
+	(int)printf("MacTerm: ASSERTION FAILURE: OSStatus value was %ld (%s) for \"%s\" [%s:%lu]\n", e, desc, t, file, line);
 #else
-	(int)printf("MacTelnet: ASSERTION FAILURE: OSStatus value was %ld for \"%s\" [%s:%lu]\n", e, t, file, line);
+	(int)printf("MacTerm: ASSERTION FAILURE: OSStatus value was %ld for \"%s\" [%s:%lu]\n", e, t, file, line);
 #endif
 	__Console_CrashTraceably();
 	return false;

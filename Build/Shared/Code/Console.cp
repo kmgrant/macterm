@@ -221,7 +221,7 @@ Console_WriteLine	(char const*	inString)
 {
 	if (gConsoleInitialized)
 	{
-		std::cerr << "MacTelnet: " << gIndentPrefix << inString << "\015\012";
+		std::cerr << "MacTerm: " << gIndentPrefix << inString << "\015\012";
 		std::cerr.flush();
 	}
 }// WriteLine

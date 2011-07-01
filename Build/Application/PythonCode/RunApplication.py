@@ -111,36 +111,36 @@ if __name__ == "__main__":
     #         ws = ""
     #         from socket import gethostname
     #         host = str(gethostname())
-    #         print "MacTelnet: Current machine hostname is '%s'." % host
+    #         print "MacTerm: Current machine hostname is '%s'." % host
     #         if host.endswith("mycompany.com"):
     #             ws = "Company Servers" # or whatever you used
     #         return ws
     #
     # --------------------------------------------------------------------------
     if "MACTELNET_SKIP_CUSTOM_LIBS" in os.environ:
-        print "MacTelnet: ignoring any 'customize_macterm' module (environment setting)"
+        print "MacTerm: ignoring any 'customize_macterm' module (environment setting)"
     else:
         try:
             # try to import using the obsolete name, and emit a console warning if it exists
             import customize_mactelnet
-            print "MacTelnet: warning, 'customize_mactelnet' legacy module will be ignored; rename it to 'customize_macterm'"
+            print "MacTerm: warning, 'customize_mactelnet' legacy module will be ignored; rename it to 'customize_macterm'"
         except ImportError, err:
             pass
         try:
             import customize_macterm
             user_syms = dir(customize_macterm)
             if '__file__' in user_syms:
-                print "MacTelnet: imported 'customize_macterm' module from", customize_macterm.__file__ # could be a list
+                print "MacTerm: imported 'customize_macterm' module from", customize_macterm.__file__ # could be a list
             else:
-                print "MacTelnet: imported 'customize_macterm' module"
+                print "MacTerm: imported 'customize_macterm' module"
             # look for valid user overrides (EVERYTHING used here should be
             # documented above and initialized at the beginning)
-            print "MacTelnet: module contains:", user_syms
+            print "MacTerm: module contains:", user_syms
             if 'app_will_finish' in user_syms:
-                print "MacTelnet: employing user customization 'app_will_finish'"
+                print "MacTerm: employing user customization 'app_will_finish'"
                 app_will_finish = customize_macterm.app_will_finish
             if 'initial_workspace' in user_syms:
-                print "MacTelnet: employing user customization 'initial_workspace'"
+                print "MacTerm: employing user customization 'initial_workspace'"
                 initial_workspace = customize_macterm.initial_workspace
         except ImportError, err:
             # assume the module was never created, and ignore (nothing is
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     
     # preamble
     now = datetime.datetime.now()
-    print "MacTelnet: %s" % now.strftime("%A, %B %d, %Y, %I:%M %p")
+    print "MacTerm: %s" % now.strftime("%A, %B %d, %Y, %I:%M %p")
     
     # load all required MacTelnet modules
     Base.all_init(initial_workspace=initial_workspace())
@@ -185,7 +185,7 @@ if __name__ == "__main__":
         if removed_var in os.environ: del os.environ[removed_var]
     
     # banner
-    print "MacTelnet: Base initialization complete.  This is MacTelnet version %s." % Base.version()
+    print "MacTerm: Base initialization complete.  This is version %s." % Base.version()
     
     # if the current version is very old, warn the user
     try:
@@ -266,7 +266,7 @@ if __name__ == "__main__":
             pass
     
     # banner
-    print "MacTelnet: Full initialization complete."
+    print "MacTerm: Full initialization complete."
     
     # (if desired, insert code at this point to interact with MacTelnet)
     

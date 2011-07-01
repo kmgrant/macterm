@@ -1783,7 +1783,7 @@ NOTE:	If the specified signal is synchronous, such as a
 void
 receiveSignal	(int	UNUSED_ARGUMENT(inSignal))
 {
-	char	buffer[] = "MacTelnet: caught signal\n";
+	char	buffer[] = "MacTerm: caught signal\n";
 	
 	
 	// safe printf()...
