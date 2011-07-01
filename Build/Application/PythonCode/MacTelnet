@@ -180,7 +180,7 @@ if __name__ == "__main__":
     # locate the "real" main entry point script, the one depending on C++
     # libraries (hence the environment setup above); ensure it is passed as
     # the main argument to the interpreter
-    main_script = os.path.join(macos_dir, "RunMacTelnet.py")
+    main_script = os.path.join(macos_dir, "RunApplication.py")
     sys.argv.insert(1, main_script)
     
     # WARNING: the Finder will include arguments (e.g. -psn_0_10223617) that

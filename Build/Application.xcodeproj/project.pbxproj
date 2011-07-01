@@ -527,7 +527,7 @@
 		0AD0B37B0A9EB8BD002064BA /* QuillsEvents.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsEvents.h; path = Application/Code/QuillsEvents.h; sourceTree = "<group>"; };
 		0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsPrefs.cp; path = Application/Code/QuillsPrefs.cp; sourceTree = "<group>"; };
 		0AD0B3C20A9EBDFC002064BA /* QuillsPrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsPrefs.h; path = Application/Code/QuillsPrefs.h; sourceTree = "<group>"; };
-		0AD62711055DEB7000843EA9 /* MacTelnetPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacTelnetPrefix.pch; path = Application/Code/MacTelnetPrefix.pch; sourceTree = "<group>"; };
+		0AD62711055DEB7000843EA9 /* ApplicationPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ApplicationPrefix.pch; path = Application/Code/ApplicationPrefix.pch; sourceTree = "<group>"; };
 		0AD638F91350172E00035D4E /* RetainRelease.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RetainRelease.template.h; path = Shared/Code/RetainRelease.template.h; sourceTree = "<group>"; };
 		0AD7481C13072342003E368B /* IconForFullScreen.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForFullScreen.icns; path = Application/Resources/IconForFullScreen.icns; sourceTree = "<group>"; };
 		0AD7483013073E56003E368B /* IconForCustomize.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForCustomize.icns; path = Application/Resources/IconForCustomize.icns; sourceTree = "<group>"; };
@@ -572,7 +572,7 @@
 		0AFD1266087A0A3C00439BEA /* CarbonEventHandlerWrap.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CarbonEventHandlerWrap.template.h; path = Shared/Code/CarbonEventHandlerWrap.template.h; sourceTree = "<group>"; };
 		0AFD12B5087A147D00439BEA /* NIBLoader.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NIBLoader.cp; path = Shared/Code/NIBLoader.cp; sourceTree = "<group>"; };
 		0AFD12B7087A148B00439BEA /* NIBLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NIBLoader.h; path = Shared/Code/NIBLoader.h; sourceTree = "<group>"; };
-		0AFF11220AF41FEE006CCA34 /* RunMacTelnet.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = RunMacTelnet.py; path = Application/PythonCode/RunMacTelnet.py; sourceTree = "<group>"; };
+		0AFF11220AF41FEE006CCA34 /* RunApplication.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = RunApplication.py; path = Application/PythonCode/RunApplication.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -723,7 +723,7 @@
 				0AA42A2A0F0C95BD0057B393 /* Template-PyMacTerm.framework-Info.plist */,
 				0AA42A2B0F0C95C20057B393 /* Template-Quills.framework-Info.plist */,
 				0AA6A2AA0DF4CF1C00B2B598 /* GrowlRegistrationTicket.growlRegDict */,
-				0AD62711055DEB7000843EA9 /* MacTelnetPrefix.pch */,
+				0AD62711055DEB7000843EA9 /* ApplicationPrefix.pch */,
 				0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */,
 				0A46FDB8055432A400ACDF3A /* AlertMessages.mm */,
 				0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */,
@@ -895,7 +895,7 @@
 			children = (
 				0A70B8AC1079C33B0013E76F /* PythonMain.cp */,
 				0AE1F38D0AF41DA200D2DC13 /* MacTelnet */,
-				0AFF11220AF41FEE006CCA34 /* RunMacTelnet.py */,
+				0AFF11220AF41FEE006CCA34 /* RunApplication.py */,
 				0AE960170F0C13D900E75E26 /* pymacterm */,
 				0AD0B0A00A9EAB4A002064BA /* Quills */,
 			);
@@ -1813,7 +1813,7 @@
 				BUILD_VARIANTS = debug;
 				COPY_PHASE_STRIP = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
+				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				GCC_VERSION = 4.0;
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
@@ -1865,7 +1865,7 @@
 				FRAMEWORK_VERSION = A;
 				GCC_MODEL_TUNING = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
+				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
 				OTHER_LDFLAGS = "$(LDFLAGS_EXTRA_FRAMEWORKS)";
 				PREBINDING = NO;
@@ -1969,7 +1969,7 @@
 				BUILD_VARIANTS = debug;
 				COPY_PHASE_STRIP = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
+				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				GCC_VERSION = 4.0;
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
@@ -2021,7 +2021,7 @@
 				FRAMEWORK_VERSION = B;
 				GCC_MODEL_TUNING = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
+				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
 				OTHER_LDFLAGS = "$(LDFLAGS_EXTRA_FRAMEWORKS)";
 				PREBINDING = NO;
@@ -2092,7 +2092,7 @@
 				FRAMEWORK_VERSION = B;
 				GCC_MODEL_TUNING = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
+				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
 				OTHER_LDFLAGS = "$(LDFLAGS_EXTRA_FRAMEWORKS)";
 				PREBINDING = NO;
@@ -2107,7 +2107,7 @@
 				BUILD_VARIANTS = debug;
 				COPY_PHASE_STRIP = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
+				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				GCC_VERSION = 4.0;
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;

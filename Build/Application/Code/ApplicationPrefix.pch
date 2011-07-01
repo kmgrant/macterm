@@ -1,5 +1,5 @@
 //
-// Prefix header for all source files of the 'MacTelnet' target in the 'MacTelnet' project.
+// Prefix header for all source files of the main application target in the project.
 //
 
 #include <ApplicationServices/ApplicationServices.h>
@@ -8,4 +8,4 @@
 #include <CoreServices/CoreServices.h>
 #include <QuickTime/QuickTime.h>
 
-#include <UniversalDefines.h>
+#include "UniversalDefines.h"

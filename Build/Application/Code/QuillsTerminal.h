@@ -126,7 +126,7 @@ byte offsets!  In particular, UTF-8 supports single characters\n\
 that are described by multiple bytes, and you should be skipping\n\
 all of the bytes to reach the next character in the string.  (It\n\
 can be quite helpful to use the Python 'unicode' built-in object\n\
-for this; see the default, registered in 'RunMacTelnet.py'.)\n\
+for this; see the default, registered in 'RunApplication.py'.)\n\
 \n\
 Typically, this is used in response to double-clicks, so the\n\
 returned range should surround the original offset location.\n\

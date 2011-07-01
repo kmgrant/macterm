@@ -3525,11 +3525,11 @@ openFiles:(NSArray*)			filenames
 		// Cocoa overzealously pulls paths from the command line and
 		// translates them into open-document requests.  The problem is,
 		// this is no normal application, the binary is PYTHON, and it
-		// is given the path to "RunMacTelnet.py" as an argument.  There
+		// is given the path to "RunApplication.py" as an argument.  There
 		// appears to be no way to tell AppKit to ignore the command
 		// line, so the work-around is to ignore any request to open a
-		// path to "RunMacTelnet.py".
-		if ([path hasSuffix:@"RunMacTelnet.py"])
+		// path to "RunApplication.py".
+		if ([path hasSuffix:@"RunApplication.py"])
 		{
 			break;
 		}

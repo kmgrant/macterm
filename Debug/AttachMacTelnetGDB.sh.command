@@ -7,7 +7,7 @@
 PATH=/Developer/usr/bin:$PATH
 export PATH
 
-attached_pid=`ps -A -o 'pid command' | grep -i MacTelnet_python | grep RunMacTelnet | awk '{print $1}'`
+attached_pid=`ps -A -o 'pid command' | grep -i MacTelnet_python | grep RunApplication | awk '{print $1}'`
 if [ "x$attached_pid" = "x" ] ; then
     echo "$0: could not find process ID of MacTelnet" >&2
     exit 1

@@ -477,7 +477,7 @@ $(DEST_APP_MACOS_TOP)/%: $(SRC_APP_PYCODE_TOP)/%
 .PHONY: install-executables
 install-executables: \
 $(DEST_APP_MACOS_TOP)/MacTelnet \
-$(DEST_APP_MACOS_TOP)/RunMacTelnet.py
+$(DEST_APP_MACOS_TOP)/RunApplication.py
 	@# keep in sync with the matching clean rule
 	$(MKDIR_P) $(DEST_APP_MACOS_TOP)
 	$(SYMLINK_REPLACE) /usr/bin/python $(DEST_APP_MACOS_TOP)/MacTelnet_python2.x
@@ -490,7 +490,7 @@ $(DEST_APP_MACOS_TOP)/RunMacTelnet.py
 .PHONY: clean-executables
 clean-executables:
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet
-	$(RM) $(DEST_APP_MACOS_TOP)/RunMacTelnet.py
+	$(RM) $(DEST_APP_MACOS_TOP)/RunApplication.py
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.x
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.3.5
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.3
