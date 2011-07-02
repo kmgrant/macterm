@@ -1,9 +1,9 @@
 
-                    MacTelnet Source Licenses          2005-04-12
+                     MacTerm Source Licenses           2005-04-12
 
 MAIN SOURCE CODE LICENSE
-  MacTelnet is free software; you may distribute it or modify
-  it under the terms of the GNU General Public License, either
+  MacTerm is free software; you may distribute it or modify it
+  under the terms of the GNU General Public License, either
   version 2 of the license or (at your option) a later version.
   
   A copy of the GPL license is in Licenses/.
@@ -13,10 +13,10 @@ GENERIC CODE LICENSE
   library code, which is under the less-restricting terms of
   the GNU Lesser General Public License, version 2.1.  This
   allows companies, for instance, more freedom to benefit from
-  at least some of MacTelnet's code.
+  at least some of MacTerm's code.
   
   A copy of the LPL license is in Licenses/.
 
                                         Kevin Grant (kmg@mac.com)
-                                        Lead Developer, MacTelnet
+                                        Lead Developer, MacTerm
 

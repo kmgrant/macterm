@@ -1,15 +1,15 @@
 
-                     How to Debug MacTelnet            2006-09-27
+                      How to Debug MacTerm             2006-09-27
 
 BACKGROUND
-  MacTelnet is in many ways very easy to debug because it is
+  MacTerm is in many ways very easy to debug because it is
   launched by a Python interpreter: code in the application can
   use the simplicity of scripting where practical to test, even
   taking full advantage of Python testing capabilities like
   "doctest" within scripts.
   
   However, this also brings a few complications you should be
-  aware of.  The biggest one is that MacTelnet is *not* the main
+  aware of.  The biggest one is that MacTerm is *not* the main
   executable, *Python* is.  You are therefore debugging "python"
   from the point of view of MallocDebug or any other tool that
   attaches to running processes.  This does not change anything
@@ -17,17 +17,17 @@ BACKGROUND
   of the familiar application entry points.
 
 INVOKING GDB ON LEOPARD
-  See the script "Debug/DebugMacTelnet.sh.command" for a utility
+  See the script "Debug/ApplicationGDB.sh.command" for a utility
   script to invoke the GNU debugger, as well as comments that
   explain what to do.  In a nutshell, since Python is the front
   end, "gdb" must run against the Python interpreter and you must
-  continue past the framework load breakpoint for MacTelnet.
+  continue past the framework load breakpoint for MacTerm.
   
   WARNING: On Leopard, do not allow the debug script to launch in
-  MacTelnet!  (For example, open it in Terminal instead.)  It is
+  MacTerm!  (For example, open it in Terminal instead.)  It is
   currently necessary for the script to to launch and then attach
   GDB, instead of launching the interpreter wrapper directly; if
-  MacTelnet is already open, the script can choose the wrong
+  MacTerm is already open, the script can choose the wrong
   interpreter and create an unkillable process.
   
   If you don't want gdb, but do want a console, you can manually
@@ -38,7 +38,7 @@ INVOKING GDB ON LEOPARD
 THE CALL STACK
   The Python interpreter has multiple threads and a moderately
   deep call stack.  It can be daunting to figure out where the
-  main event loop for MacTelnet is actually invoked, so this
+  main event loop for MacTerm is actually invoked, so this
   section helps you with that.
   
   In MallocDebug or another program that traces the call stack,
@@ -65,4 +65,4 @@ THE CALL STACK
   #21 0x00002574 in start ()
 
                                         Kevin Grant (kmg@mac.com)
-                                        Lead Developer, MacTelnet
+                                        Lead Developer, MacTerm

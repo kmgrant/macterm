@@ -2,7 +2,7 @@
 
 # __MakeSourceDistribution.sh.command
 #
-# Creates a tarball with all necessary files to build MacTelnet.
+# Creates a tarball with all necessary files to build MacTerm.
 #
 # You may need to set your PATH appropriately to find the
 # Subversion (svn) program.
@@ -57,7 +57,7 @@ elif [ "x$sub" != "x" ] ; then
 	sub=.${sub}
 fi
 version=${maj}.${min}${sub}${alb}${bld}
-directory=sourceMacTelnet${version}
+directory=sourceMacTerm${version}
 target=$root/$directory
 
 # use Subversion to dump all checked-in files to the target;

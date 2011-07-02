@@ -11,7 +11,7 @@
 #	$dot_app_dir	path to <whatever>.app
 #
 # IMPORTANT: Define "top_dir" to be the root of
-# the MacTelnet project.  Your source script may
+# the MacTerm project.  Your source script may
 # be in a different location than this file, so
 # this directory is not derived.
 #

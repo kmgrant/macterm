@@ -2,14 +2,14 @@
 # that tells shareware sites about new releases.
 #
 # The release notes are published online and referred to by the
-# MacTelnet Check for Updates command.
+# application's Check for Updates command.
 #
 # Kevin Grant (kmg@mac.com)
 # October 12, 2006
 
-# determine MacTelnet version
-# IMPORTANT: read from a built MacTelnet.app's Info.plist;
-# if you don't build MacTelnet first, this won't work
+# determine application version
+# IMPORTANT: read from a built Info.plist only;
+# if you don't build the bundle first, this won't work
 VERSION_INFO := $(shell cd $(CURDIR)/.. ; ./VersionInfo.sh ; cd $(CURDIR))
 MAJOR := $(word 1,$(VERSION_INFO))
 MINOR := $(word 2,$(VERSION_INFO))

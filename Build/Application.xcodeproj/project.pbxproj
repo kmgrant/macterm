@@ -1179,7 +1179,7 @@
 			dependencies = (
 			);
 			name = PyMacTerm.framework;
-			productName = PyMacTelnet;
+			productName = PyMacTerm.framework;
 			productReference = 0A9AF64E0AF5A50500E7DF18 /* PyMacTerm.framework */;
 			productType = "com.apple.product-type.framework";
 		};
@@ -1199,7 +1199,7 @@
 			dependencies = (
 			);
 			name = Quills.framework;
-			productName = MacTelnet.framework;
+			productName = Quills.framework;
 			productReference = 0AC6BAD20A8C0A8B00AFF37A /* Quills.framework */;
 			productType = "com.apple.product-type.framework";
 		};

@@ -6,7 +6,7 @@ export PATH
 cd `dirname $0`
 
 # !!! IMPORTANT !!!
-# Since MacTelnet runs from a shared library referenced by a
+# Since MacTerm runs from a shared library referenced by a
 # Python interpreter, gdb can only run on the Python binary
 # and it will auto-breakpoint at the library load point.
 #
@@ -14,7 +14,7 @@ cd `dirname $0`
 # is the argument passed to the Python interpreter, and works
 # because the current directory is changed to "MacOS" first.)
 #
-# A trap will automatically trigger when MacTelnet's framework
+# A trap will automatically trigger when MacTerm's framework
 # is loaded, which is normal.  Simply continue ("c") past it.
 #
 # Below is an example scenario within the debugger.  Usually
@@ -40,14 +40,14 @@ cd `dirname $0`
 #     Continuing.
 #     Reading symbols for shared libraries . done
 #     ...
-#     MacTelnet: Starting up.
+#     MacTerm: Starting up.
 #     ...
 
 if [ -r "/usr/bin/python2.5" ] ; then
     # apparently Leopard...the normal method will not work, so use run-then-attach method
     '../Build/MacTelnet.app/Contents/MacOS/MacTelnet' &
     sleep 1
-    exec './AttachMacTelnetGDB.sh.command'
+    exec './AppAttachGDB.sh.command'
 else
     # prior to Leopard, execute gdb normally
     cd '../Build/MacTelnet.app/Contents/MacOS'
@@ -55,7 +55,7 @@ else
     echo '______________________________________________________________________________'
     echo
     echo 'IMPORTANT: When in gdb, say "run MacTelnet".  This will auto-breakpoint at'
-    echo '           __dyld__dyld_start().  Start MacTelnet by using the "c" command.'
+    echo '           __dyld__dyld_start().  Start MacTerm by using the "c" command.'
     echo '           (On Leopard, you may have to "c" multiple times.)'
     echo '______________________________________________________________________________'
     echo

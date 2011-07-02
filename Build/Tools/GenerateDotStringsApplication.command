@@ -2,7 +2,7 @@
 
 # GenerateDotStringsApplication.sh.command
 #
-# Runs genstrings on the MacTelnet source files that
+# Runs genstrings on the application source files that
 # actually contain localized string calls, and writes
 # output to the proper location (application bundle).
 #

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # when double-clicked in the Finder, this will run a
-# terminal (preferably, MacTelnet!) to run "make" for you
+# terminal (preferably, MacTerm!) to run "make" for you
 
 PATH=/Developer/usr/bin:$PATH
 export PATH

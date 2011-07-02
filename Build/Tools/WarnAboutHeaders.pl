@@ -2,12 +2,12 @@
 
 # WarnAboutHeaders.pl
 #
-# Scans the specified MacTelnet source files and
+# Scans the specified application source files and
 # looks for #include or #import statements that
 # may not be necessary.  Warnings are printed to
 # standard output, one per line, for each case.
 #
-# The algorithm is quite simple; since MacTelnet
+# The algorithm is quite simple; since MacTerm
 # follows the naming standard of prefixing symbol
 # names with "<filename>_", this script just looks
 # for at least one reference to "foo_" when it
@@ -19,7 +19,7 @@
 use strict;
 use FileHandle;
 
-# the following MacTelnet modules do not follow the
+# the following MacTerm modules do not follow the
 # proper convention, or are expected to be included
 # frequently, so no warnings are issued for them
 #
@@ -56,14 +56,14 @@ foreach my $file (@files)
 	my %module_info; # retain information about which modules are used
 	
 	# do not start looking for modules until the
-	# "MacTelnet includes" marker is found
+	# "application includes" marker is found
 	#
 	while (defined($_ = <$fh>))
 	{
-		last if /MacTelnet includes/; # skip Mac headers, etc.
+		last if /application includes/; # skip Mac headers, etc.
 	}
 	
-	# figure out which MacTelnet modules are included
+	# figure out which application modules are included
 	#
 	while (defined($_ = <$fh>))
 	{

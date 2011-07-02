@@ -2,7 +2,7 @@
 
 # FindDeprecatedCalls.pl
 #
-# Scans the specified MacTelnet source files and
+# Scans the specified application source files and
 # looks for apparent calls to APIs that Apple has
 # deprecated (suggesting they may not be supported
 # soon).  Warnings are printed to standard output,

@@ -13,10 +13,10 @@
 <!--
 	ScriptingTerminology.sdef
 	
-	MacTelnet 4
-	(c) 1998-2009 by Kevin Grant
+	MacTerm
+	(c) 1998-2011 by Kevin Grant
 	
-	This file defines MacTelnet's AppleScript Dictionary.  Various codes
+	This file defines MacTerm's AppleScript Dictionary.  Various codes
 	used in this file come from AERegistry.h (in AE.framework in
 	ApplicationServices.framework).
 	
@@ -26,7 +26,7 @@
 	input into the resource database of the application bundle.
 	
 	The Xcode project should do this automatically.  If you are not using
-	Xcode, run "CreateASDictionaryRezInput.tcsh.command" from MacTelnet's
+	Xcode, run "CreateASDictionaryRezInput.tcsh.command" from MacTerm's
 	Tools directory.
 -->
 
@@ -61,7 +61,7 @@
 	text in a line).
 -->
 
-<dictionary title="MacTelnet dictionary">
+<dictionary title="MacTerm dictionary">
 
 	<suite name=
 	"Required Suite"

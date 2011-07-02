@@ -2,7 +2,7 @@
 
 # CreateASDictionaryRezInput.sh
 #
-# Runs sdp on the MacTelnet .sdef file that actually defines the
+# Runs sdp on the MacTerm .sdef file that actually defines the
 # AppleScript dictionary, and writes output to a Rez input file.
 #
 # The input and output are set from Xcode to allow certain

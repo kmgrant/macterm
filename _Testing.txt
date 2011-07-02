@@ -1,5 +1,5 @@
 
-                      How to Test MacTelnet            2008-03-22
+                       How to Test MacTerm             2008-03-22
 
 OVERVIEW
   To be perfectly honest, automated testing is a huge hole in the
@@ -49,4 +49,4 @@ GRAPHICAL USER INTERFACE TESTS
   myself until I cause a crash. :)
 
                                         Kevin Grant (kmg@mac.com)
-                                        Lead Developer, MacTelnet
+                                        Lead Developer, MacTerm

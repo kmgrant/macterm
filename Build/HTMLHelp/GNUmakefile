@@ -1,4 +1,4 @@
-# GNU makefile for building MacTelnet.help.
+# GNU makefile for building the help bundle.
 #
 # DESIGN OVERVIEW:
 # - primary rules are listed first
@@ -23,13 +23,13 @@ ALL_LANGUAGES = English
 MODULES := $(filter-out index,$(sort $(notdir $(subst .textile,,$(wildcard $(strip $(MAIN_SRC))/English/*.textile)))))
 
 # use these within "xyz-%" rules where the pattern is the language (e.g. English)
-define MACTELNET_HELP_LOCALIZED_ROOT
+define APP_HELP_LOCALIZED_ROOT
 $(strip $(DEST))/$*
 endef
-define MACTELNET_HELP_LOCALIZED
+define APP_HELP_LOCALIZED
 $(strip $(DEST))/$*/Help
 endef
-define MACTELNET_HELP_LOCALIZED_CONTENT
+define APP_HELP_LOCALIZED_CONTENT
 $(strip $(DEST))/$*/Help/content
 endef
 
@@ -77,53 +77,53 @@ build: $(foreach L,$(ALL_LANGUAGES),build-$(L))
 
 build-%:
 	$(begin_target)
-	install -d "$(strip $(MACTELNET_HELP_LOCALIZED))"
+	install -d "$(strip $(APP_HELP_LOCALIZED))"
 	$(MAKE) install-html-$*
 	$(MAKE) install-images-$*
 	$(MAKE) install-plist-$*
 	$(MAKE) install-stylesheets-$*
 	perl -pi -e 's/LAST_UPDATED/$(shell date +"%A, %B %d, %Y, %H:%M %Z")/' \
-		"$(strip $(MACTELNET_HELP_LOCALIZED))/index.html"
+		"$(strip $(APP_HELP_LOCALIZED))/index.html"
 	$(end_target)
 
 install-html-%: $(call SOURCE_HTML,%) $(call SOURCE_INDEX_HTML,%)
-	install -d "$(strip $(MACTELNET_HELP_LOCALIZED_CONTENT))/"
-	cp $(call SOURCE_HTML,$*) "$(strip $(MACTELNET_HELP_LOCALIZED_CONTENT))/"
-	cp $(call SOURCE_INDEX_HTML,$*) "$(strip $(MACTELNET_HELP_LOCALIZED))/"
+	install -d "$(strip $(APP_HELP_LOCALIZED_CONTENT))/"
+	cp $(call SOURCE_HTML,$*) "$(strip $(APP_HELP_LOCALIZED_CONTENT))/"
+	cp $(call SOURCE_INDEX_HTML,$*) "$(strip $(APP_HELP_LOCALIZED))/"
 
 clean-install-html-%:
-	$(RM) $(foreach PAGE,$(notdir $(call SOURCE_HTML,$*)),"$(strip $(MACTELNET_HELP_LOCALIZED_CONTENT))/$(PAGE)")
-	$(RM) $(foreach PAGE,$(notdir $(call SOURCE_INDEX_HTML,$*)),"$(strip $(MACTELNET_HELP_LOCALIZED))/$(PAGE)")
-	-rmdir "$(strip $(MACTELNET_HELP_LOCALIZED_CONTENT))"
+	$(RM) $(foreach PAGE,$(notdir $(call SOURCE_HTML,$*)),"$(strip $(APP_HELP_LOCALIZED_CONTENT))/$(PAGE)")
+	$(RM) $(foreach PAGE,$(notdir $(call SOURCE_INDEX_HTML,$*)),"$(strip $(APP_HELP_LOCALIZED))/$(PAGE)")
+	-rmdir "$(strip $(APP_HELP_LOCALIZED_CONTENT))"
 	$(RM) $(call SOURCE_HTML,$*)
 	$(RM) $(call SOURCE_INDEX_HTML,$*)
 
 install-images-%:
-	cp $(call SOURCE_IMG,$*) "$(strip $(MACTELNET_HELP_LOCALIZED_CONTENT))/"
+	cp $(call SOURCE_IMG,$*) "$(strip $(APP_HELP_LOCALIZED_CONTENT))/"
 
 clean-install-images-%:
-	$(RM) $(foreach IMG,$(notdir $(call SOURCE_IMG,$*)),"$(strip $(MACTELNET_HELP_LOCALIZED_CONTENT))/$(IMG)")
+	$(RM) $(foreach IMG,$(notdir $(call SOURCE_IMG,$*)),"$(strip $(APP_HELP_LOCALIZED_CONTENT))/$(IMG)")
 
 install-plist-%: $(call SOURCE_PLIST,%)
-	cp $(call SOURCE_PLIST,$*) "$(strip $(MACTELNET_HELP_LOCALIZED))/"
+	cp $(call SOURCE_PLIST,$*) "$(strip $(APP_HELP_LOCALIZED))/"
 
 clean-install-plist-%:
-	$(RM) $(foreach PLIST,$(notdir $(call SOURCE_PLIST,$*)),"$(strip $(MACTELNET_HELP_LOCALIZED))/$(PLIST)")
+	$(RM) $(foreach PLIST,$(notdir $(call SOURCE_PLIST,$*)),"$(strip $(APP_HELP_LOCALIZED))/$(PLIST)")
 
 install-stylesheets-%:
-	cp $(call SOURCE_CSS,$*) "$(strip $(MACTELNET_HELP_LOCALIZED_CONTENT))/"
+	cp $(call SOURCE_CSS,$*) "$(strip $(APP_HELP_LOCALIZED_CONTENT))/"
 
 clean-install-stylesheets-%:
-	$(RM) $(foreach CSS,$(notdir $(call SOURCE_CSS,$*)),"$(strip $(MACTELNET_HELP_LOCALIZED_CONTENT))/$(CSS)")
+	$(RM) $(foreach CSS,$(notdir $(call SOURCE_CSS,$*)),"$(strip $(APP_HELP_LOCALIZED_CONTENT))/$(CSS)")
 
 clean-install-index-%:
-	$(RM) "$(strip $(MACTELNET_HELP_LOCALIZED))/Help.helpindex"
-	$(RM) "$(strip $(MACTELNET_HELP_LOCALIZED))/Help idx"
+	$(RM) "$(strip $(APP_HELP_LOCALIZED))/Help.helpindex"
+	$(RM) "$(strip $(APP_HELP_LOCALIZED))/Help idx"
 
 clean-%: clean-install-images-% clean-install-stylesheets-% clean-install-plist-% clean-install-html-% clean-install-index-%
 	$(begin_target)
-	-rmdir "$(strip $(MACTELNET_HELP_LOCALIZED))"
-	-rmdir "$(strip $(MACTELNET_HELP_LOCALIZED_ROOT))"
+	-rmdir "$(strip $(APP_HELP_LOCALIZED))"
+	-rmdir "$(strip $(APP_HELP_LOCALIZED_ROOT))"
 	$(end_target)
 
 # "make" considers the HTML files intermediates normally,

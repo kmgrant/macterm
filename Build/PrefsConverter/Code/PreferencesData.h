@@ -3,14 +3,14 @@
 	PreferencesData.h
 	
 	This file contains the layout of preferences structures as
-	they were defined in NCSA Telnet 2.6 and MacTelnet 3.0.
+	they were defined in NCSA Telnet 2.6 and version 3.0.
 	The format of these structures CANNOT change, because the
 	layout is (unfortunately) required to read the binary data
 	from old resource files correctly.
 	
-	Newer MacTelnet preferences are in XML format.
+	Newer preferences are in Mac OS X's default format.
 	
-	MacTelnet Preferences Converter
+	Preferences Converter
 		© 2004-2011 by Kevin Grant.
 	
 	This program is free software; you can redistribute it or
@@ -97,7 +97,7 @@ struct ApplicationPrefs
 						dynamicResizing,			// Dragging the size box causes window size to change?
 						useBackgroundPicture,		// Terminal windows use 'PICT' 1024?
 						dontDimBackgroundScreens,	// Terminal colors never change for background windows?
-						newSessionsDialogOnStartup,	// Show New Sessions dialog as soon as MacTelnet starts?
+						newSessionsDialogOnStartup,	// Show New Sessions dialog as soon as the program starts?
 						invertedTextHighlighting,	// Highlight text by inverting, not using the highlight color?
 						copySelectedText,			// Automatically copy selected text?
 						autoCursorMoveOnDrop,		// Automatically issue cursor movement sequences to the drop location?

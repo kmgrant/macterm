@@ -1,10 +1,14 @@
 
-                        MacTelnet Project              2005-04-08
+                         MacTerm Project               2005-04-08
 
-ABOUT THE MACTELNET PROJECT
-  Welcome to this source release of MacTelnet for Mac OS X!
+ABOUT THE MACTERM PROJECT
+  Welcome to this source release of MacTerm for Mac OS X!
   
-  MacTelnet's goal is to be an excellent terminal emulation
+  Formerly known as MacTelnet (and before that, NCSA Telnet),
+  this is now primarily a Mac OS X terminal program and is not
+  really devoted to remote connections anymore.
+  
+  MacTerm's goal is to be an excellent terminal emulation
   program for Mac OS X, while also being very easy to use.  It
   streamlines terminal work on both local and remote machines,
   by giving the user just the right set of powerful features, a
@@ -18,7 +22,7 @@ ABOUT THE MACTELNET PROJECT
   various infrastructure and the documentation utilities.
   
   Useful web resources:
-    http://www.mactelnet.com/
+    http://macterm.net/ [legacy: http://www.mactelnet.com/]
     http://sourceforge.net/projects/mactelnet/
     http://www.swig.org/
     http://www.doxygen.org/
@@ -32,5 +36,5 @@ CONTACT
 
 Thank you for your interest!
                                         Kevin Grant (kmg@mac.com)
-                                        Lead Developer, MacTelnet
+                                        Lead Developer, MacTerm
 

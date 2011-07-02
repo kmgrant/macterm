@@ -3,7 +3,7 @@
 	MainEntryPoint.cp
 	
 	Bug Reporter
-		© 2005-2006 by Kevin Grant.
+		© 2005-2011 by Kevin Grant.
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -256,7 +256,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		params.defaultText = CFCopyLocalizedStringFromTable(CFSTR("Compose E-Mail"), CFSTR("Alerts"), CFSTR("button label"));
 		params.cancelText = CFCopyLocalizedStringFromTable(CFSTR("Quit Without Reporting"), CFSTR("Alerts"), CFSTR("button label"));
 		messageText = CFCopyLocalizedStringFromTable
-						(CFSTR("MacTelnet has quit because of a software defect.  Please notify the authors so this can be fixed."),
+						(CFSTR("MacTerm has quit because of a software defect.  Please notify the authors so this can be fixed."),
 							CFSTR("Alerts"), CFSTR("main message"));
 		helpText = CFCopyLocalizedStringFromTable
 					(CFSTR("A starting point for your mail message will be automatically created for you."),
@@ -278,7 +278,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		// is physically located within the Resources folder of that bundle
 		// (so in particular, THIS WILL NOT WORK IN TESTING unless you
 		// PHYSICALLY MOVE the built executable into the Resources directory
-		// of a built MacTelnet.app!!!)
+		// of a built application bundle!!!)
 		{
 			// create “...Foo.app/Contents/Resources/BugReporter.app”
 			CFURLRef	bugReporterBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
@@ -380,7 +380,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 				// (again, this must be in URL-encoded format!)
 			#if BUG_REPORT_INCLUDES_APP_VERSION
 				// NOTE: again, as mentioned above, this will only be defined if the
-				// BugReporter is physically located in MacTelnet.app/Contents/Resources
+				// BugReporter is physically located in the bundle's "Contents/Resources"
 				if (nullptr != buggyAppBundle)
 				{
 					CFStringRef		appVersionCFString = CFUtilities_StringCast

@@ -11,9 +11,9 @@ OUTPUT_DIR_PY := $(CURDIR)/docs-python/
 # you can download it (GPL'd) from http://code.foosel.org/doxypy
 FILTER_COMMAND_PY := python /opt/doxypy/bin/doxypy.py
 
-# determine MacTelnet version
-# IMPORTANT: read from a built MacTelnet.app's Info.plist;
-# if you don't build MacTelnet first, this won't work
+# determine application version
+# IMPORTANT: read from a built Info.plist only;
+# if you don't build the bundle first, this won't work
 VERSION_INFO := $(shell $(CURDIR)/../VersionInfo.sh)
 MAJOR := $(word 1,$(VERSION_INFO))
 MINOR := $(word 2,$(VERSION_INFO))
@@ -43,7 +43,7 @@ all:
 
 .PHONY: build_app
 build_app:
-	@# MacTelnet (C++) API
+	@# C++ API
 	$(begin_target)
 	$(config_for_app)
 	install -d "$(strip $(OUTPUT_DIR_APP))"
@@ -149,13 +149,13 @@ endef
 
 define config_for_app
 	@# create the Doxygen configuration file that will actually be used;
-	@# substitute values appropriate for MacTelnet C++ documentation
-	@echo "Creating Doxygen configuration file for MacTelnet C++ by substituting template variables..."
+	@# substitute values appropriate for the C++ documentation
+	@echo "Creating Doxygen configuration file for C++ by substituting template variables..."
 	$(RM) "$(strip $(TMP_CONF))"
 	cp "$(strip $(DOXYGEN_CONF_TEMPLATE))" "$(strip $(TMP_CONF))"
 	@# replace template variables with actual values
 	perl -pi -e "\
-			s|===PROJECT===|\"MacTelnet C++ Code\"|; \
+			s|===PROJECT===|\"MacTerm C++ Code\"|; \
 			s|===FILTER_YES_NO===|NO|; \
 			s|===FILTER_COMMAND===||; \
 			s|===APP_SOURCE===|$(strip $(APP_SRC))|; \
@@ -179,7 +179,7 @@ define config_for_py
 	@$(FILTER_COMMAND_PY) --help > /dev/null 2>&1 || (echo "failed: $(FILTER_COMMAND_PY) (maybe not installed; see FILTER_COMMAND_PY variable)" && exit 1)
 	@# replace template variables with actual values
 	perl -pi -e "\
-			s|===PROJECT===|\"Quills - MacTelnet Python API\"|; \
+			s|===PROJECT===|\"Quills - MacTerm Python API\"|; \
 			s|===FILTER_YES_NO===|YES|; \
 			s|===FILTER_COMMAND===|\"$(FILTER_COMMAND_PY)\"|; \
 			s|===APP_SOURCE===|$(strip $(PY_SRC))|; \

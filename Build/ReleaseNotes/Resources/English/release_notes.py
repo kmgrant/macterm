@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
-"""Notes on changes in each MacTelnet release.
+"""Notes on changes in each MacTerm release.
 
 Import this module to access its variables, or run it as a script to see the
 sorted, formatted release notes as text (see to_rst()).
@@ -8,7 +8,7 @@ sorted, formatted release notes as text (see to_rst()).
 __author__ = "Kevin Grant <kmg@mac.com>"
 __date__ = "28 September 2006"
 
-# IMPORTANT: Released versions of MacTelnet will always point to
+# IMPORTANT: Released versions of MacTerm will always point to
 # a specific version page, so don't ever remove old versions from
 # this list (that is, even ancient versions pages should be
 # generated).  Also, the order of this list matters; the newest
@@ -406,7 +406,7 @@ notes_by_version = {
     '20110619': [
         'Fixed alert messages that showed a miniature application icon in the wrong corner of the larger icon.',
         'Notification windows (background alerts) are now Cocoa-based and have a more refined appearance and behavior.',
-        'MacTelnet now displays a background message at launch time if its version is more than 2 months old.  The message has an Ignore button that quells future warnings.',
+        'Now displays a background message at launch time if its version is more than 2 months old.  The message has an Ignore button that quells future warnings.',
     ],
     '20110618': [
         'Fixed a problem with the Servers panel where user IDs were unreasonably limited to only letters and numbers.',
@@ -513,7 +513,7 @@ notes_by_version = {
         "Fixed a possible crash after clicking in the terminal window margin near the window's size box.",
     ],
     '20110311': [
-        'MacTelnet Help has been updated to include examples of mapping various function keys to macros.',
+        'Help has been updated to include examples of mapping various function keys to macros.',
     ],
     '20110227': [
         'Fixed a problem with colors and formatting not being cleared in certain programs when lines were scrolled.',
@@ -526,7 +526,7 @@ notes_by_version = {
         'XTerm sequences for jumping by tab stop ("CHT" and "CBT") are now implemented.',
         'XTerm sequences for arbitrary scrolling of lines ("SU" and "SD") are now implemented.',
         'XTerm window and icon title sequences now allow new-style string terminators in addition to old-style bell terminators.',
-        'MacTelnet Help style and layout have improved, including changes to the font, text wrapping and headings.',
+        'Help style and layout have improved, including changes to the font, text wrapping and headings.',
     ],
     '20110224': [
         'Fixed menus so that command keys for disabled items are no longer typed into the active terminal window.',
@@ -577,7 +577,7 @@ notes_by_version = {
         'Preferences window Formats pane Character Width setting may now be adjusted from 60% to 140%.',
     ],
     '20110108': [
-        'Any "customize_mactelnet" Python module in the path is now imported implicitly; see "RunMacTelnet.py" for more.',
+        'A special customization module is now imported implicitly if it exists.',
     ],
     '20110107': [
         'Added keyword parameter for Base.all_init() to Quills, allowing Python code to customize the startup workspace.',
@@ -594,7 +594,7 @@ notes_by_version = {
         'Terminal views that use proportional fonts now look better, thanks to a letter-sensitive heuristic for manual alignment.',
     ],
     '20101231': [
-        'In XTerm 256-color mode, MacTelnet now responds to the XTerm sequences that customize colors.',
+        'In XTerm 256-color mode, the application now responds to the XTerm sequences that customize colors.',
         'Changed color storage for terminal views, which makes blinking text animate more smoothly (among other things).',
     ],
     '20101221': [
@@ -669,8 +669,8 @@ notes_by_version = {
         'Fixed session activity notifications to not open multiple alerts (or post multiple Growl notifications).',
     ],
     '20100829': [
-        'Fixed Session Info window to appear at startup only if it was visible the last time MacTelnet quit.',
-        'Fixed Clipboard window to appear at startup only if it was visible the last time MacTelnet quit.',
+        'Fixed Session Info window to appear at startup only if it was visible the last time the application quit.',
+        'Fixed Clipboard window to appear at startup only if it was visible the last time the application quit.',
         'Added Events.on_endloop_call(func) to Quills, allowing Python code to continue after the event loop terminates.',
     ],
     '20100826': [
@@ -725,7 +725,7 @@ notes_by_version = {
         'Terminal window tabs will now reposition automatically when "Move to New Workspace" leaves a gap between tabs.',
     ],
     '20100617': [
-        "Fixed an initialization problem when MacTelnet was run from certain paths (like its disk image).",
+        "Fixed an initialization problem when the application was run from certain paths (like its disk image).",
     ],
     '20100608': [
         'Fixed a possible crash when changing preferences (among other things), due to improper cleanup in closed terminals.',
@@ -775,7 +775,7 @@ notes_by_version = {
         'Terminal windows will now warn the user (at most once) when an exceptional number of data errors have occurred.',
     ],
     '20091204': [
-        'Fixed MacTelnet Help to no longer mention certain preferences that were recently removed.',
+        'Fixed Help to no longer mention certain preferences that were recently removed.',
     ],
     '20091130': [
         'Fixed Window menu items to once again use italic text for hidden windows.',
@@ -873,7 +873,7 @@ notes_by_version = {
         'Fixed display problems that could appear when the Find sheet was used on Snow Leopard.',
         'Fixed a bug introduced in the previous build, where sheet changes could occasionally be ignored.',
         'A help tag now appears above the cursor in the terminal window when its output is being redirected to a graphics window.',
-        'MacTelnet Help now has a direct link on its front page for setting up tabbed terminal windows.',
+        'Help now has a direct link on its front page for setting up tabbed terminal windows.',
     ],
     '20090830': [
         'Preferences window Formats pane now provides checkboxes that allow settings to inherit from existing (or Default) values.',
@@ -895,7 +895,7 @@ notes_by_version = {
         'Preferences window Sessions pane Keyboard tab is now fully implemented.',
         'Custom Key Sequences dialog is now internally identical to the Preferences window Sessions pane Keyboard tab.',
         'The "Emacs Cursor" arrow mapping settings have expanded in meaning to include several standard Mac modifiers for editing; for instance, option-right-arrow now sends the Emacs command for moving one word, and command-down-arrow sends the command for moving to the end of the buffer.',
-        'The more common contemporary spelling "Emacs" is now used wherever it appears in MacTelnet, instead of the original "EMACS".',
+        'The more common contemporary spelling "Emacs" is now used wherever it appears, instead of the original "EMACS".',
     ],
     '20090813': [
         'Fixed default control key preferences to be the fallback for all sessions, including shells.',
@@ -982,7 +982,7 @@ notes_by_version = {
         'The "Simplified user interface" option has been removed to eliminate internal complexity; so all menus are now visible.',
     ],
     '20090522': [
-        'MacTelnet Help now includes a tutorial on how to use serial ports (via "screen").',
+        'Help now includes a tutorial on how to use serial ports (via "screen").',
         'Terminal window tabs can now be hovered over to display their full window titles (when Show Help Tags is on).',
     ],
     '20090521': [
@@ -994,7 +994,7 @@ notes_by_version = {
     ],
     '20090515': [
         'Added a hidden preference (accessible through the "defaults" program) to set the preferred window edge for tabs.',
-        'MacTelnet Help expanded to describe more low-level preference keys, including those of macro sets.',
+        'Help expanded to describe more low-level preference keys, including those of macro sets.',
     ],
     '20090510': [
         'Fixed enabling/disabling of menu items representing Preferences collections.',
@@ -1028,7 +1028,7 @@ notes_by_version = {
         'Fixed Terminal window scroll bars to no longer disappear for large scrollback sizes.',
     ],
     '20090411': [
-        'MacTelnet Help now includes a tutorial on how to make typical BBS games (or MUDs) work properly.',
+        'Help now includes a tutorial on how to make typical BBS games (or MUDs) work properly.',
     ],
     '20090410': [
         'Terminal window text selections are now exposed to system-wide Services, allowing (for instance) a synthesizer to speak selected text, or the Finder to reveal a file or folder when its path is selected.',
@@ -1040,7 +1040,7 @@ notes_by_version = {
     '20090408': [
         'Fixed various border glitches in rendering graphics character cells.',
         'Several graphics now have high-quality renderings, which can be seen when using Translations such as Latin-US (DOS).',
-        'MacTelnet Help style changed slightly to be more compact.',
+        'Help style changed slightly to be more compact.',
     ],
     '20090407': [
         'Preferences window Sessions pane Resource tab (and Custom New Session sheet) now allow a default Translation association.',
@@ -1058,7 +1058,7 @@ notes_by_version = {
         'Session exits are now handled more cleanly, with a modeless alert if a process has exited with nonzero status or a crashing signal.',
         'Growl notification "Session ended" is now available, to find out about normal process exits.',
         'Growl notification "Session failed" is now available, to find out about unexpected process exits (and to quell the default alert).',
-        'MacTelnet Help now has a section on the available Growl notifications.',
+        'Help now has a section on the available Growl notifications.',
     ],
     '20090330': [
         'Preferences window Sessions pane Resource tab (and Custom New Session sheet) are now simpler, and use a separate panel for servers.',
@@ -1120,7 +1120,7 @@ notes_by_version = {
         'Fixed Window menu bug where choosing a session menu item would sometimes activate the wrong session.',
     ],
     '20090108': [
-        'MacTelnet Help now uses a slightly different style for table views, to improve readability.',
+        'Help now uses a slightly different style for table views, to improve readability.',
     ],
     '20090101': [
         'Terminal view drag-and-drop now uses the same implementation as Paste, allowing such things as Multi-Line Paste warnings.',
@@ -1162,7 +1162,7 @@ notes_by_version = {
     '20081208': [
         'Terminal view renderer is now more efficient at rendering small changes to the contents of the screen.',
         'Fixed a rendering glitch that caused lines to be erased in certain cases, such as in text editors.',
-        'MacTelnet Help updated to correct some minor points and expand on Preferences documentation.',
+        'Help updated to correct some minor points and expand on Preferences documentation.',
     ],
     '20081207': [
         'Terminal view renderer is now more efficient when drawing text that uses the normal background color.',
@@ -1189,10 +1189,10 @@ notes_by_version = {
     ],
     '20081106': [
         'Fixed the tendency for certain new tabs to shift multiple spots, which also caused assertion failures in some cases.',
-        'Improved the performance of MacTelnet Help.',
+        'Improved the performance of Help.',
     ],
     '20081105': [
-        'Contextual help items and help buttons once again bring up relevant search results in MacTelnet Help.',
+        'Contextual help items and help buttons once again bring up relevant search results in Help.',
         'Fixed the "New Default Session" command in the Dock menu.',
     ],
     '20081030': [
@@ -1227,8 +1227,8 @@ notes_by_version = {
         'Preferences window Macros pane has been redesigned (again), as work on enhanced macros continues.',
     ],
     '20080703': [
-        'MacTelnet should no longer crash if the system Python has changed, as it can now locate another suitable interpreter.',
-        'MacTelnet now uses a more descriptive interpreter process name, of the form "MacTelnet_python2.x".',
+        'Application should no longer crash if the system Python has changed, as it can now locate another suitable interpreter.',
+        'Application now uses a more descriptive interpreter process name, with only a suffix of "_python2.x".',
     ],
     '20080701': [
         'The Find Next and Find Previous commands now work, focusing on each match in turn (though all are highlighted at once).',
@@ -1295,7 +1295,7 @@ notes_by_version = {
     '20080522': [
         'Fixed the sample terminal display in places like the Preferences window Formats pane.',
         'The command line displayed as the default window title no longer has a trailing space.',
-        'MacTelnet Help now contains some basic information on how to use Automator with MacTelnet.',
+        'Help now contains some basic information on how to use Automator.',
     ],
     '20080520': [
         'The Open dialog is now implemented using Cocoa, which is an improvement on older versions of Mac OS X.',
@@ -1346,10 +1346,10 @@ notes_by_version = {
         'Fixed "Move cursor to text drop location" behavior.',
     ],
     '20080424': [
-        'Added even more to the Low-Level Settings section in MacTelnet Help.',
+        'Added even more to the Low-Level Settings section in Help.',
     ],
     '20080422': [
-        'Added more to the Low-Level Settings section in MacTelnet Help.',
+        'Added more to the Low-Level Settings section in Help.',
     ],
     '20080421': [
         'Fixed the Preferences window Translations pane.',
@@ -1360,10 +1360,10 @@ notes_by_version = {
     ],
     '20080417': [
         'Fixed background window text selections to allow immediate drags, as their enabled states imply.',
-        'Changed the style of MacTelnet Help somewhat, to better fit the monospaced layout that the content generates.',
+        'Changed the style of Help somewhat, to better fit the monospaced layout that the content generates.',
     ],
     '20080416': [
-        'Started a Low-Level Settings section in MacTelnet Help to document preferences hidden from the main user interface.',
+        'Started a Low-Level Settings section in Help to document preferences hidden from the main user interface.',
     ],
     '20080413': [
         'Fixed font selection in the Preferences window Translations pane.',
@@ -1401,7 +1401,7 @@ notes_by_version = {
     ],
     '20080403': [
         'Fixed all known stability problems when using multiple TEK windows.',
-        'Since MacTelnet cannot currently input text directly to TEK windows, it no longer puts them in front when they open.',
+        'Since the application cannot currently input text directly to TEK windows, it no longer puts them in front when they open.',
     ],
     '20080401': [
         'Fixed dynamic resize of TEK graphics, so they once again scale as the window is resized.',
@@ -1429,7 +1429,7 @@ notes_by_version = {
     ],
     '20080324': [
         'Various minor changes to the menu bar layout, including the removal of the Action menu.',
-        'MacTelnet Help updated with additional preferences information, and a few minor corrections.',
+        'Help updated with additional preferences information, and a few minor corrections.',
     ],
     '20080323': [
         'Fixed Preferences window Sessions pane Resource tab to properly handle text field entries.',
@@ -1466,7 +1466,7 @@ notes_by_version = {
         'Terminal view now renders extra space between the focus ring and text of a view, in the default background color; this is known as padding.',
         'Terminal views now read terminal margin preferences (hidden, but accessible through the "defaults" program) when setting matte thickness.',
         'Terminal views now interpret terminal padding preferences as the size of the new interior space, not the thickness of the matte.',
-        'MacTelnet Help updated with additional preferences information, and a few minor corrections.',
+        'Help updated with additional preferences information, and a few minor corrections.',
     ],
     '20080316': [
         'Preferences window Formats pane and other color box interfaces now use a floating color panel.',
@@ -1520,7 +1520,7 @@ notes_by_version = {
     '20080302': [
         'Preferences window Formats pane now correctly updates font and color preferences.',
         'Preferences window Formats pane now uses the system font panel; though only for font name and size settings.',
-        'Any font can now be chosen, but MacTelnet takes a performance hit from forcing monospaced layout on proportional fonts.',
+        'Any font can now be chosen, but the application takes a performance hit from forcing monospaced layout on proportional fonts.',
         'A warning is now displayed in the Format pane if the user chooses a font that will be slow.',
         'Terminal inactivity notification now supports an additional reaction, "keep alive", which sends text to the server after 10 minutes.',
         'Added Session.set_keep_alive_transmission(str) to Quills, allowing Python to override what is sent after a keep-alive timer expires.',
@@ -1567,7 +1567,7 @@ notes_by_version = {
     ],
     '20080220': [
         'Fixed presentation of Custom Format dialog.',
-        'MacTelnet Help has received several minor corrections and other edits.',
+        'Help has received several minor corrections and other edits.',
     ],
     '20080216': [
         'Terminal bell sound can once again be arbitrary.  See Preferences window, General pane, Notification tab.',
@@ -1622,7 +1622,7 @@ notes_by_version = {
     '20080120': [
         'Implemented the special editing modes of the VT102 (delete character, insert line, delete line).',
         'Improved some rendering in the Clipboard window.',
-        'MacTelnet Help updated with some terminal emulator information.',
+        'Help updated with some terminal emulator information.',
     ],
     '20080115': [
         'Fixed drag and drop of text into terminal windows.',
@@ -1632,7 +1632,7 @@ notes_by_version = {
     '20080111': [
         'Added Session.on_fileopen_call(func, extension) to Quills, allowing Python functions to respond to file open requests by type.',
         'Added Session.stop_fileopen_call(func, extension) to Quills, to mirror Session.on_fileopen_call().',
-        'Now any common scripting extension (like ".py" and ".sh") can be opened by MacTelnet.',
+        'Now any common scripting extension (like ".py" and ".sh") can be opened.',
         'Preferences window Formats pane now has correctly sized tab content.',
         'Preferences window Translations pane is now visible, though incomplete.',
     ],
@@ -1640,7 +1640,7 @@ notes_by_version = {
         'Terminal window tabs forced to the bottom edge by the system (window too close to menu bar) are now corrected when you move the window.',
     ],
     '20080101': [
-        'MacTelnet Help has received several minor corrections and other edits.',
+        'Help has received several minor corrections and other edits.',
     ],
     '20071231': [
         'Fixed window review on Quit to automatically show hidden sessions instead of ignoring them.',
@@ -1679,7 +1679,7 @@ notes_by_version = {
         'Preferences window Macros pane now has an option to display the active macro set in a menu.',
     ],
     '20071104': [
-        'Internal changes to make MacTelnet run properly on Leopard.',
+        'Internal changes to make the application run properly on Leopard.',
     ],
     '20071103': [
         'Added support for the file URL type.  The default behavior is to run "emacs" in file browser mode.',
@@ -1754,8 +1754,8 @@ notes_by_version = {
         'Added placeholder Fix Character command.',
     ],
     '20070207': [
-        'A new, simpler look for MacTelnet Help.',
-        'Internal changes to improve the MacTelnet Help build system.',
+        'A new, simpler look for Help.',
+        'Internal changes to improve the Help build system.',
     ],
     '20070124': [
         'Fixed a case where terminal windows could open with toolbar focus instead of terminal keyboard focus.',
@@ -1778,8 +1778,8 @@ notes_by_version = {
         'Identified a possible crash when switching the Window Resize Affects preference.  No fix is available yet.',
         'Corrected possible parsing problem when entering URLs containing whitespace into the command line.',
         'Internal changes to separate URL parsing code from handling code, which also simplifies tests.',
-        'Internal changes to make MacTelnet Python files have very unique names, avoiding risk of import collisions.',
-        'Internal changes to unit testing code in RunMacTelnet.py, to make it cleaner and easier to filter modules.',
+        'Internal changes to make Python files have very unique names, avoiding risk of import collisions.',
+        'Internal changes to unit testing code, to make it cleaner and easier to filter modules.',
     ],
     '20061227': [
         'Updated color box buttons to use Core Graphics natively.',
@@ -1834,11 +1834,11 @@ notes_by_version = {
     ],
     '20061029': [
         'Once again supporting rlogin URLs.',
-        'Updated property list so the Finder, etc. realizes MacTelnet can handle a number of different types of URLs.',
+        'Updated property list so the Finder, etc. realizes the application can handle a number of different types of URLs.',
         'Once again printing random biline text on the splash screen.  However, it is now localizable.',
-        'Internal changes to put the MacTelnet core and generated Python API into a framework called Quills.framework.',
-        'Internal changes to put Python-based portions of MacTelnet into a framework called PyMacTelnet.framework.',
-        'Minor corrections to MacTelnet Help.',
+        'Internal changes to put the application core and generated Python API into a framework called Quills.framework.',
+        'Internal changes to put Python-based portions of the application into a separate framework.',
+        'Minor corrections to Help.',
     ],
     '20061028': [
         'More than any other release so far, this build shows off the true power of the new Quills interface in Python!',
@@ -1858,7 +1858,7 @@ notes_by_version = {
         'Internal change to fix to cursor positioning code in renderer.',
     ],
     '20061025': [
-        'MacTelnet Help has received several minor corrections and other edits.',
+        'Help has received several minor corrections and other edits.',
         'Jump Scrolling menu item now has a help tag.',
         'Internal changes to add icon identifiers to a central registry.',
         'Internal changes to allow a terminal view to not render a focus ring, if a special flag is set.',
@@ -1934,7 +1934,7 @@ notes_by_version = {
         'Most file interfaces now support Unicode names.',
         'Most file interfaces now use sheets.',
         'Printing dialogs now use sheets.',
-        'Preferences have been reimplemented as com.mactelnet.MacTelnet.plist.',
+        'Preferences have been reimplemented as a property list.',
         'New preferences are now initialized exclusively from DefaultPreferences.plist.',
         'Converter utility now automatically imports older preferences files.',
         'Preferences window now has a toolbar like in other Mac OS X applications.',
@@ -1949,13 +1949,13 @@ notes_by_version = {
         'Show IP Addresses command now displays a more sophisticated dialog with a proper list view for addresses.',
         'Show IP Addresses dialog now allows addresses to be copied to the Clipboard individually.',
         'Significant AppleScript interfaces are broken.  They will be removed in the future.',
-        'MacTelnet core reimplemented as a framework loaded into the Python interpreter!!!',
-        'Python API called "Quills" is now available, allowing Python scripts to call MacTelnet!',
-        'Python functions can also be called *by* MacTelnet, allowing simple extensibility!',
+        'Application core reimplemented as a framework loaded into the Python interpreter!!!',
+        'Python API called "Quills" is now available!',
+        'Python functions can also be called *by* the application core, allowing simple extensibility!',
         'Python API is very minimal right now, the plan is for this to become much bigger.',
         'Text translation is currently broken.  However, Quills will make this much easier.',
-        'Apple ".command" files can now be opened by MacTelnet.',
-        'Apple ".term" files can now be opened by MacTelnet, but some settings are ignored.',
+        'Apple ".command" files can now be opened.',
+        'Apple ".term" files can now be opened, but some settings are ignored.',
         'Added support for the file URL type. The default behavior is to run "emacs" in file browser mode.',
         'Added support for the x-man-page URL type.  For example, "x-man-page://ls" or "x-man-page://3/printf".',
         'Several new application menu commands, including Check for Updates.',

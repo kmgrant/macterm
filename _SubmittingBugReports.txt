@@ -1,5 +1,5 @@
 
-                   Reporting Bugs in MacTelnet         2005-04-08
+                    Reporting Bugs in MacTerm          2005-04-08
 
 REPORTING BUGS
   You are welcome to submit via E-mail to "kmg@mac.com".  But
@@ -11,5 +11,5 @@ REPORTING BUGS
   for a variety of advice on submitting useful bug reports.
 
                                         Kevin Grant (kmg@mac.com)
-                                        Lead Developer, MacTelnet
+                                        Lead Developer, MacTerm
 

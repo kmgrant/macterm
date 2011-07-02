@@ -2,10 +2,9 @@
 
 # GenerateDotStringsBugReporter.sh.command
 #
-# Runs genstrings on the MacTelnet Bug Reporter source
-# files that actually contain localized string calls,
-# and writes output to the proper location (application
-# bundle).
+# Runs genstrings on the Bug Reporter source files that
+# actually contain localized string calls, and writes
+# output to the proper location (application bundle).
 #
 # Kevin Grant (kmg@mac.com)
 # March 24, 2003

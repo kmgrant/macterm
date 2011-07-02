@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# MacTelnetSwigConfig.sh
+# SwigConfig.sh
 #
-# Allows you to build SWIG for MacTelnet's use.
+# Allows you to build SWIG for MacTerm's use.
 # (Download SWIG from "http://www.swig.org/".)
 #
 # Run this instead of "./configure" from your untarred
@@ -14,13 +14,13 @@
 #
 # Note the choice of /opt/pcre below as the location
 # of PCRE; you could probably use "--without-pcre" if
-# you don't have it installed, because MacTelnet does
+# you don't have it installed, because MacTerm does
 # not currently rely on PCRE support in SWIG.
 #
 # Kevin Grant (kmg@mac.com)
 # July 29, 2006
 
-# IMPORTANT: MacTelnet's build system assumes /opt/swig
+# IMPORTANT: MacTerm's build system assumes /opt/swig
 # regardless of what you may customize here.  See the
 # Xcode configuration files for a SWIG_PREFIX variable.
 #

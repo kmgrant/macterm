@@ -1,6 +1,6 @@
 # GNUmakefile
 #
-# Builds MacTelnet's application bundle by running each project
+# Builds MacTerm's application bundle by running each project
 # (in all required configurations) and copying the resulting
 # components into place.
 #
@@ -80,17 +80,17 @@ XARGS=/usr/bin/xargs
 XCB=$(DEVELOPER_DIR)/usr/bin/xcodebuild $(XCODE_ENV)
 
 # set this to "no" if you want to disable Panther support (may
-# make MacTelnet easier to build if you don't care about 10.3);
+# make MacTerm easier to build if you don't care about 10.3);
 # e.g. "make FOR_PANTHER=no ..."
 FOR_PANTHER=yes
 
 # set this to "no" if you want to disable Tiger support (may
-# make MacTelnet easier to build if you don't care about 10.4);
+# make MacTerm easier to build if you don't care about 10.4);
 # e.g. "make FOR_TIGER=no ..."
 FOR_TIGER=yes
 
 # set this to "no" if you want to disable Growl support for
-# notifications in MacTelnet (not recommended unless you don't
+# notifications in MacTerm (not recommended unless you don't
 # want to download the Growl SDK); see "http://www.growl.info/"
 USE_GROWL=yes
 #GROWL_SDK_ROOT := <defined in Xcode config>
@@ -515,7 +515,7 @@ install-app-dot-strings: $(SRC_APP_CODE_TOP)/UIStrings.cp
 clean-app-dot-strings:
 	$(foreach FILE,$(wildcard $(DEST_APP_RESOURCES_TOP)/English.lproj/*.strings),$(RM) $(FILE) ;)
 
-# Component: MacTelnet Help
+# Component: Help
 
 $(DEST_APP_RESOURCES_TOP)/English.lproj/Help:
 	$(call banner,$@)
@@ -662,7 +662,7 @@ endef
 
 .PHONY: bundle
 bundle:
-	@# just comment-out anything you don't care about; MacTelnet
+	@# just comment-out anything you don't care about; MacTerm
 	@# still works with most of its components missing
 	$(MAKE) $(DEST_APP_TOP)/Info.plist
 	$(MAKE) $(DEST_APP_TOP)/PkgInfo
