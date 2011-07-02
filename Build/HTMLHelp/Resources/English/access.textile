@@ -1,6 +1,6 @@
 notextile. <div class="navigation">
 
-* MacTELNET Help
+* MacTerm Help
 * "Home":../index.html
 
 notextile. </div>
@@ -43,10 +43,10 @@ You have a few options for new commands:
 
 * File >> Custom New Session... can also be used; simply ignore the "Server Settings..." button, and enter command line text.
 
-* Hold down Option to see File >> Log-In Shell.  This invokes a shell in log-in mode (with shell-dependent settings) that will not inherit any environment variable settings from MacTelnet.
+* Hold down Option to see File >> Log-In Shell.  This invokes a shell in log-in mode (with shell-dependent settings) that will not inherit any environment variable settings from MacTerm.
 
 bq. Most session creation commands are also available
- from the MacTelnet icon's Dock menu.
+ from the MacTerm icon's Dock menu.
 
 h2(#workspaces). Workspaces: Starting Several Sessions
 

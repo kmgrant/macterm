@@ -1,6 +1,6 @@
 notextile. <div class="navigation">
 
-* MacTELNET Help
+* MacTerm Help
 * "Home":../index.html
 
 notextile. </div>
@@ -12,7 +12,7 @@ notextile. <div class="content">
 p(#abstract). This page describes preferences that generally require special
  edits to make.  For example, you may need to use the command-line
  "defaults" program, or edit XML directly, instead of interacting
- with a window in MacTelnet.
+ with a window in MacTerm.
 
 * "Overview":#overview
 * "Preference Keys":#keys
@@ -26,7 +26,7 @@ p(#abstract). This page describes preferences that generally require special
 
 h2(#overview). Overview
 
-MacTelnet preferences are hierarchical.  Every default value is
+MacTerm preferences are hierarchical.  Every default value is
  in "net.macterm.MacTerm.plist" (in the Preferences folder of
  the user Library folder), even if it appears to be a Default
  collection in the user interface.
@@ -40,10 +40,10 @@ Each collection file contains either a "name" key of type Data,
  version is less precise, but is useful for easy viewing and
  debugging of names.  The Data version is preferred and is an
  external representation of Unicode.  These names determine how
- MacTelnet displays the collection in any user interface, such as
+ MacTerm displays the collection in any user interface, such as
  a menu or a list in the Preferences window.
 
-MacTelnet settings are designed so that *any* preferences key
+MacTerm settings are designed so that *any* preferences key
  might one day fit into any collection.  However, currently, only
  related settings are actually expected; for instance, nothing
  will check for colors in a Session collection.

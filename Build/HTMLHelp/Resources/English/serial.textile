@@ -1,6 +1,6 @@
 notextile. <div class="navigation">
 
-* MacTELNET Help
+* MacTerm Help
 * "Home":../index.html
 
 notextile. </div>
@@ -9,7 +9,7 @@ h1(pagetitle). Using Serial Ports
 
 notextile. <div class="content">
 
-p(#abstract). MacTelnet does *not* yet support serial ports directly, but you
+p(#abstract). MacTerm does *not* yet support serial ports directly, but you
  can easily use GNU "screen" to do it.  This tutorial will help
  you make settings appropriate for a basic device connection.
 
@@ -18,7 +18,7 @@ h2. Overview
 GNU "screen" is a program that, among other things, is its own
  terminal emulator.  It has many powerful features (for instance,
  it lets you open multiple terminals in one window, as an
- alternative to MacTelnet's tabs).
+ alternative to MacTerm's tabs).
 
 In the case of this tutorial, "screen" is used because its
  terminals have the ability to directly communicate with devices
@@ -60,7 +60,7 @@ h2. Interaction
 
 Once the session starts, you are actually running inside a
  "screen" session, so all of its commands are available.  It can
- be helpful to use MacTelnet's macros feature to create short-cuts
+ be helpful to use MacTerm's macros feature to create short-cuts
  for some of the "screen" features that you use more frequently.
 
 Since you are directly connected to a device, anything you enter

@@ -1,6 +1,6 @@
 notextile. <div class="navigation">
 
-* MacTELNET Help
+* MacTerm Help
 * "Home":../index.html
 
 notextile. </div>
@@ -17,13 +17,13 @@ Each application running in a terminal must be told the type of
  emulator that is in use, so that appropriate requests are sent
  when rendering.
 
-If a program is run directly by MacTelnet (such as a shell or
- "ssh"), the "TERM" variable will be preset by MacTelnet to match
+If a program is run directly by MacTerm (such as a shell or
+ "ssh"), the "TERM" variable will be preset by MacTerm to match
  the emulator selected for that window.
 
 However, there are cases where you may have to set this yourself:
 
-* if you ask MacTelnet to change the emulator of a window
+* if you ask MacTerm to change the emulator of a window
 * if you connect to a remote server that has its own method for setting the terminal type (e.g. different operating system)
 * if there are defects in the active emulator and you want to try a different one (e.g. downgrading from "vt102" to "vt100")
 
@@ -45,26 +45,26 @@ You can set "TERM" to any value that is understood by the
 pre. vt100 vt102 vt220 xterm xterm-256color linux
 
 But, it can also be set to other names that are considered
- compatible (more or less) with one of MacTelnet's own emulators.
+ compatible (more or less) with one of MacTerm's own emulators.
 
 h2(#vt100). VT100
 
-MacTelnet has a very accurate VT100 terminal emulator, including
+MacTerm has a very accurate VT100 terminal emulator, including
  the VT52 mode of the VT100.  The main flaws right now relate to
  rendering of double-sized text in certain situations.
 
 h2(#vt102). VT102
 
 The VT102 is almost entirely the same as the VT100, but with
- enhanced editing and printing features.  MacTelnet handles the
+ enhanced editing and printing features.  MacTerm handles the
  additional editing features, and implements some printing
  features (for instance, print-from-terminal will automatically
- generate a MacTelnet print preview).  You cannot use line-by-line
+ generate a MacTerm print preview).  You cannot use line-by-line
  printing yet.
 
 h2(#vt220). VT220
 
-The VT220 is a superset of the VT100 series.  MacTelnet has an
+The VT220 is a superset of the VT100 series.  MacTerm has an
  implementation of this emulator, but in development versions it
  is largely disabled for testing.
 
@@ -73,19 +73,19 @@ You can use the Window menu to access key palettes for a number
 
 h2(#vt320). VT320
 
-The VT320 is a superset of the VT220.  MacTelnet does not support
+The VT320 is a superset of the VT220.  MacTerm does not support
  this terminal type (yet).
 
 h2(#vt420). VT420
 
-The VT420 is a superset of the VT320.  MacTelnet does not support
+The VT420 is a superset of the VT320.  MacTerm does not support
  this terminal type (yet).
 
 h2(#xterm). XTerm
 
 The XTerm is a superset of the VT100 series that is notable for
  window management features like minimization, size, and title, as
- well as mouse support.  MacTelnet implements a number of useful
+ well as mouse support.  MacTerm implements a number of useful
  XTerm features, *in addition to those already in the VT102*:
 
 * 256 colors (set "xterm-256color" TERM for apps to use it)
@@ -98,7 +98,7 @@ The XTerm is a superset of the VT100 series that is notable for
 
 h2(#linux). Linux
 
-The Linux terminal is a superset of the color XTerm.  MacTelnet
+The Linux terminal is a superset of the color XTerm.  MacTerm
  does not support the extensions from this terminal type (yet).
 
 h2(#ansibbs). ANSI-BBS
@@ -108,7 +108,7 @@ The ANSI-BBS terminal type has many names, and is perhaps best
  entirely standardized, but it is known for using Code Page 437
  extended ASCII as its character set.  PC console applications
  commonly rely on this to do relatively sophisticated graphics
- rendering.  MacTelnet has a very good rendering of CP437, but
+ rendering.  MacTerm has a very good rendering of CP437, but
  to enable it you must set up a Translation preference that
  chooses "Latin-US (DOS)" as its character set.
 

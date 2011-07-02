@@ -1,10 +1,10 @@
 notextile. <div class="navigation">
 
-* MacTELNET Help
+* MacTerm Help
 
 notextile. </div>
 
-p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
+p(#externalnavigation). "MacTerm.net":http://macterm.net/
 
 notextile. <table id="mainnavigation">
 

@@ -1,6 +1,6 @@
 notextile. <div class="navigation">
 
-* MacTELNET Help
+* MacTerm Help
 * "Home":../index.html
 
 notextile. </div>
@@ -105,7 +105,7 @@ The colors of the command line are read from your Default Format
 
 h2. Window Operations
 
-MacTelnet provides many sophisticated ways to manage windows.
+MacTerm provides many sophisticated ways to manage windows.
 
 h3(#dimensions). Screen Sizes
 
@@ -114,7 +114,7 @@ notextile. <a name="helpsettingthescreensize"></a><!-- must use this exact tag; 
 Some applications that run in terminals will either assume one of
  a few standard sizes, or have issues at certain (typically large)
  sizes; for instance, text editors may run out of memory with wide
- terminals.  While MacTelnet does not restrict your window size,
+ terminals.  While MacTerm does not restrict your window size,
  it does provide a few short-cut commands to let you immediately
  change to common sizes (80x24, 80x40, 132x24).
 
@@ -165,8 +165,8 @@ When arranged, _all_ terminal windows return to a diagonal
 
 h3(#arrange). Session-Induced Window Changes
 
-MacTelnet respects some of XTerm's window sequences, so a
- terminal application may also affect a window.  Typically an
- application will rename the window or minimize it into the Dock.
+MacTerm respects some of XTerm's window sequences, so a terminal
+ application may also affect a window.  Typically an application
+ will rename the window or minimize it into the Dock.
 
 notextile. </div>

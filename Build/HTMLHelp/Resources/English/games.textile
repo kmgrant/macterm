@@ -1,6 +1,6 @@
 notextile. <div class="navigation">
 
-* MacTELNET Help
+* MacTerm Help
 * "Home":../index.html
 
 notextile. </div>
@@ -9,7 +9,7 @@ h1(pagetitle). Playing BBS Games
 
 notextile. <div class="content">
 
-p(#abstract). While it is possible to configure MacTelnet to work well with
+p(#abstract). While it is possible to configure MacTerm to work well with
  typical games, the defaults will not work well at all!  This
  tutorial will help you make settings appropriate for most games.
 
@@ -20,7 +20,7 @@ Historically, many so-called BBS (Bulletin Board System) games,
  under DOS.  They also typically rely on non-standard extensions
  to the VT100 terminal, that collectively are known as ANSI-BBS.
 
-MacTelnet's default VT100 emulator has a few of the common
+MacTerm's default VT100 emulator has a few of the common
  extensions that make it compatible with ANSI-BBS.  It also knows
  how to translate characters from other character sets (DOS has
  its own character set), and special graphics characters are
@@ -50,15 +50,15 @@ h3. Format
 While you do not have to change fonts or colors (configured in
  Format preferences), you should be aware of some side effects.
 
-One, there is currently a bug in MacTelnet where any font that is
+One, there is currently a bug in MacTerm where any font that is
  not natively encoded as Mac Roman, may incorrectly display some
  international characters.  If your game relies on things like
  accented characters, be sure to choose a more basic font (like
  Monaco).
 
-Two, MacTelnet automatically chooses a different color for text
- or backgrounds that are considered "bold" and "blinking".  If you
- do not want this effect, you should configure the Format that you
+Two, MacTerm automatically chooses a different color for text or
+ backgrounds that are considered "bold" and "blinking".  If you do
+ not want this effect, you should configure the Format that you
  use to have the same colors for bold, blinking, and normal text.
 
 Three, if you have customized any of the 16 "ANSI Colors" in a
@@ -67,8 +67,8 @@ Three, if you have customized any of the 16 "ANSI Colors" in a
  button on the "ANSI Colors" tab of the Formats pane allows you to
  make these 16 colors return to their expected defaults for a PC.
 
-Four, MacTelnet supports up to 256 colors, but programs that may
- use them will often only attempt to do so when the terminal is
+Four, MacTerm supports up to 256 colors, but programs that may use
+ them will often only attempt to do so when the terminal is
  identified as "xterm-256color".  Note that you cannot customize
  these 256 colors, except for the 16 that are in the "ANSI Colors"
  subset.  (Do not worry about 256 colors unless you know that your
@@ -79,7 +79,7 @@ h3. Terminal
 You should have a Terminal set up in Preferences with a "Base
  Emulator:" set to VT100.
 
-MacTelnet automatically recognizes certain ANSI-specific add-ons
+MacTerm automatically recognizes certain ANSI-specific add-ons
  to VT100, so if a game uses them they will be handled correctly.
 
 Note that some games assume that the screen size is 80 x 25.  If
@@ -107,23 +107,22 @@ The pane also has pop-up menus that will let you choose the
  contacted.
 
 Note that "environment variables" on the server side sometimes
- need to be manually synchronized with MacTelnet settings.  Talk
- to a server administrator to determine if this is true in your
- case.
+ need to be manually synchronized with MacTerm settings.  Talk to
+ a server administrator to determine if this is true in your case.
 
 h2. Game Play
 
-Some MacTelnet features are particularly well suited to games.
+Some MacTerm features are particularly well suited to games.
 
 The "No window close on process exit" preference prevents windows
  from immediately closing at disconnect time.  Many game servers
  display information during logout that would otherwise disappear
  immediately.
 
-The "Full Screen" command in the MacTelnet application menu lets
- you focus entirely on the game.  Depending on the current setting
- of "Window Resize Effect", this may either change the font or
- the terminal size; hold down the Option key to temporarily do the
+The "Full Screen" command in the MacTerm application menu lets you
+ focus entirely on the game.  Depending on the current setting of
+ "Window Resize Effect", this may either change the font or the
+ terminal size; hold down the Option key to temporarily do the
  opposite as you enter Full Screen.
 
 The "Command Line" window can be displayed using the Window menu.

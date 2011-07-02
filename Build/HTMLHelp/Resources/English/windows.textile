@@ -1,6 +1,6 @@
 notextile. <div class="navigation">
 
-* MacTELNET Help
+* MacTerm Help
 * "Home":../index.html
 
 notextile. </div>
@@ -11,7 +11,7 @@ notextile. <div class="content">
 
 h2(#terminal). Terminal
 
-A terminal window is what you will use most in MacTelnet.  It
+A terminal window is what you will use most in MacTerm.  It
  displays a primarily-text interface to other applications.
 
 There are so many things you can do with terminal windows that
@@ -75,7 +75,7 @@ In the Host field, you can enter a name like "apple.com" if one
  server name is valid (if so, it is transformed into a numeric
  address; otherwise, it is unchanged).
 
-bq. MacTelnet supports IP version 6 addresses too, so
+bq. MacTerm supports IP version 6 addresses too, so
  you could also enter something like
  "0000:0000:0000:0000:0000:ffff:9d16:0164".
 
@@ -106,7 +106,7 @@ Hovering the mouse over the Status column can show a few
  different text descriptions:
 
 * **Running (just opened):** It has only been a few seconds since the window opened, so you can close it without warning.
-* **Running:** The session has been open for awhile; MacTelnet will confirm when you try to close it.
+* **Running:** The session has been open for awhile; MacTerm will confirm when you try to close it.
 * **Not Running:** The application running in the window has quit, but the window is still open; only possible when you have set the "Don't automatically close windows" preference.
 
 An icon is also displayed, and normally matches the text above;
@@ -130,7 +130,7 @@ The command line is a special interface to the active terminal
 h2(#ipaddr). IP Addresses of This Mac
 
 Using Window >> IP Addresses of This Mac or the equivalent command
- from MacTelnet's Dock menu, you can display a floating window
+ from MacTerm's Dock menu, you can display a floating window
  with a list of IPv4 and/or IPv6 addresses for your computer's
  network interfaces.
 
@@ -143,14 +143,14 @@ See also the Macros pane in the Preferences window, which can be
 
 h2(#keypads). Keypads
 
-MacTelnet provides a number of powerful keypad windows.  Clicking
+MacTerm provides a number of powerful keypad windows.  Clicking
  a keypad button is equivalent to typing the key or key sequence
  it represents.  However, keypad buttons __always__ send the right
  character code or character sequence, even in cases where the
  keyboard might not work (because of a terminal mode or a
  conflicting Mac OS X keyboard mapping, etc.).
 
-**Tip:** On later versions of Mac OS X, MacTelnet will allow you
+**Tip:** On later versions of Mac OS X, MacTerm will allow you
  to navigate keypad keys using the keyboard.  By default, you use
  Control-F1 to turn on Full Keyboard Access and Control-F6 to give
  keyboard focus to one of the floating keypad windows.
@@ -165,7 +165,7 @@ This is a floating window providing access to 32 control key
 h3(#functionkeys). VT220 Function Keys
 
 This is a floating window providing access to the function keys
- of a VT220 terminal.  MacTelnet will not prevent their use when
+ of a VT220 terminal.  MacTerm will not prevent their use when
  you have selected a terminal emulator other than VT220, however
  your session may respond oddly to the input.
 
@@ -181,13 +181,13 @@ Unless you have used the macro editor to map your keyboard's
 h3(#vt220keypad). VT220 Keypad
 
 This is a floating window providing access to the special keypad
- functions of a real VT220 terminal.  MacTelnet will not prevent
+ functions of a real VT220 terminal.  MacTerm will not prevent
  their use when you have selected a terminal emulator other than
  VT220, however your session may respond oddly to some of the
  keys.
 
 You can use the "Show Help Tags" command of the Help menu in
- MacTelnet to enable contextual descriptions of the buttons; then
+ MacTerm to enable contextual descriptions of the buttons; then
  point your mouse at one of the VT220 Keypad icons to see what it
  means.
 

@@ -1,15 +1,15 @@
 notextile. <div class="navigation">
 
-* MacTELNET Help
+* MacTerm Help
 * "Home":../index.html
 
 notextile. </div>
 
-h1(pagetitle). Using Automator with MacTelnet
+h1(pagetitle). Using Automator with MacTerm
 
 notextile. <div class="content">
 
-p(#abstract). MacTelnet support for Automator is currently limited, however
+p(#abstract). MacTerm support for Automator is currently limited, however
  there are ways to use existing actions that you may not have
  realized.
 
@@ -17,17 +17,17 @@ h2(#urls). Opening Sessions With URLs
 
 The default Internet actions in Automator (Mac OS X 10.4+) are
  often named or described in terms of web pages, but in fact they
- are general: opening sessions for URLs that MacTelnet supports.
+ are general: opening sessions for URLs that MacTerm supports.
 
 A simple workflow in Automator would be to connect (from the
  Internet category) "Get Specified URLs" to "Display Webpages".
 
-Automator will call on MacTelnet if MacTelnet is the default
+Automator will call on MacTerm if MacTerm is the default
  application for a particular type of URL.  Otherwise, different
  applications will handle the URL.  (3rd party software such as
  "Default Apps" can change the URL mappings on your system.)
 
-MacTelnet can handle several kinds of URLs, including:
+MacTerm can handle several kinds of URLs, including:
 
 * file
 * ftp
@@ -38,7 +38,7 @@ MacTelnet can handle several kinds of URLs, including:
 * x-man-page (non-standard)
 
 It is also possible to add or change URL handlers, through the
- lower-level Python API in MacTelnet.  For instance, you could add
+ lower-level Python API in MacTerm.  For instance, you could add
  a handler that runs a terminal-based browser for "http" URLs.
 
 notextile. </div>

@@ -1,6 +1,6 @@
 notextile. <div class="navigation">
 
-* MacTELNET Help
+* MacTerm Help
 * "Home":../index.html
 
 notextile. </div>
@@ -11,10 +11,10 @@ notextile. <div class="content">
 
 notextile. <a name="helpwithpreferences"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
-p(#abstract). This page is arranged in the same categories as those in the
- MacTelnet Preferences window.  To access any of the settings
+p(#abstract). This page is arranged in the same categories as those in
+ the MacTerm Preferences window.  To access any of the settings
  mentioned here, start by choosing the "Preferences..." item in
- the MacTelnet menu.
+ the MacTerm menu.
 
 * "General":#general
 * "Macros":#macros
@@ -75,7 +75,7 @@ However, not all terminal applications properly respond to arrow
 
 h5(#nodim). Don't dim background terminal text
 
-To help emphasize the active terminal, MacTelnet alters the color
+To help emphasize the active terminal, MacTerm alters the color
  hues of background windows.  Use this option to quell recoloring.
 
 h5(#nodim). Don't warn about multi-line Paste
@@ -117,7 +117,7 @@ h4. Terminal Cursor
 
 h5(#cursorshape). Shape
 
-MacTelnet allows one of 5 different shapes for the terminal
+MacTerm allows one of 5 different shapes for the terminal
  cursor; a solid square is typical, but you may wish to have the
  standard Mac vertical bar, a horizontal underline, or thicker
  versions of either (more noticeable on LCD displays).
@@ -143,11 +143,11 @@ The Window Resize Effect determines how terminal windows are
  altered when resized explicitly with the mouse, or implicitly
  when entering Full Screen mode.
 
-When window resizes affect terminal screen size, MacTelnet
+When window resizes affect terminal screen size, MacTerm
  dynamically calculates the maximum number of rows and columns
  that can fit in the current window size (at current font size).
 
-When window resizes affect text size, MacTelnet dynamically
+When window resizes affect text size, MacTerm dynamically
  calculates the maximum font size that can be used (in the current
  terminal font) to fit the current number of rows and columns in
  the current window size.
@@ -164,7 +164,7 @@ When copying text using Copy with Tab Substitution, this number
 
 h4(#commandN). Command-N Key Equivalent
 
-MacTelnet has several ways to create sessions, and you may wish
+MacTerm has several ways to create sessions, and you may wish
  to use one of them more than others.  You can map command-N as a
  short-cut to whichever one you use most.
 
@@ -178,7 +178,7 @@ h4. Terminal Bell
 
 h5. Sound
 
-When a terminal audio event occurs, you can have MacTelnet ignore
+When a terminal audio event occurs, you can have MacTerm ignore
  it, or play the standard system beep, or any other library sound.
 
 The set of sounds in the menu is defined the first time the
@@ -201,7 +201,7 @@ However, you can choose to enable visuals all the time, in which
 
 h5(#notifybeeps). Background notification on bell
 
-If MacTelnet is not the active application, you can ask that you
+If MacTerm is not the active application, you can ask that you
  receive special notification from the OS when one of your
  terminals generates a bell.
 
@@ -209,9 +209,9 @@ h4(#notifymethod). Background Notification
 
 For "Background notification on bell", as well as any other alert
  that may show up when you are in another application (such as an
- error message), you can specify how "annoying" MacTelnet may be.
+ error message), you can specify how "annoying" MacTerm may be.
  The options range from no interruptions at all, to an immediate
- alert in your other application telling you that MacTelnet needs
+ alert in your other application telling you that MacTerm needs
  your attention.
 
 h2(#macros). Macros
@@ -271,7 +271,7 @@ Alternately, you can choose from a number of "special" keys
  in the menu.
 
 No matter which keys you choose, you have to be mindful of
- what may already be in use by MacTelnet, your computer's
+ what may already be in use by MacTerm, your computer's
  defaults, or the application you're going to run in the
  terminal.  In general, it's not a good idea to choose very
  simple key combinations.
@@ -331,7 +331,7 @@ This mode is very useful if your macro contains things like
  operating systems, for example).
 
 Many substitution sequences correspond directly to the codes
- used by control keys.  For this reason, MacTelnet offers an
+ used by control keys.  For this reason, MacTerm offers an
  "Insert Control Key Character..." button that helps you type
  the correct sequences with a single click.  For example, the
  control-D character is equivalent to "\004", and when the
@@ -340,7 +340,7 @@ Many substitution sequences correspond directly to the codes
 
 Note that macros with substitutions can fail if your macro
  has errors.  You can use the Console application to see errors
- that MacTelnet generated for your macro.
+ that MacTerm generated for your macro.
 
 The possible substitutions are:
 
@@ -359,7 +359,7 @@ table(deftable).
 
 fn1. To see the octal versions of all ASCII characters,
  look at <a href="x-man-page://ascii">x-man-page://ascii</a> (opens a
- MacTelnet window and runs "man ascii").  Also note that the button
+ MacTerm window and runs "man ascii").  Also note that the button
  "Insert Control Key Character..." can be used to help insert the
  right code for a variety of keys.
 
@@ -432,7 +432,7 @@ New windows are added to the tab group of the active window.
 **Tip:** If you're using more than one display, or Spaces, it
  is handy to have a tab group for each space.
 
-It is important to notice that MacTelnet tabs are normal
+It is important to notice that MacTerm tabs are normal
  windows, so they are independent and can be modified in the
  usual ways.  The _only_ exception is that all the windows in
  the group will move together.
@@ -459,7 +459,7 @@ These collections specify how to access a resource (typically a
  define key mappings, set up vector graphics, and precisely
  control data transfers.
 
-Note that MacTelnet can also save session details to files with
+Note that MacTerm can also save session details to files with
  File >> Save As, though the files do not contain as many details
  as Preferences do.
 
@@ -477,11 +477,11 @@ For remote sessions, you can either enter a command yourself, or
  overwrite the command line field!  To learn more about the
  Servers panel, review "its documentation":windows.html#serverbrowser.
 
-It is important to note that MacTelnet splits this line into
+It is important to note that MacTerm splits this line into
  words (on whitespace), and does not interpret *any* characters:
  not even those common to Unix shells like "~", "|" and ">".  If
  you want to run a more complex command, you can save it in a
- script for the target shell, and ask MacTelnet to run the script.
+ script for the target shell, and ask MacTerm to run the script.
 
 h4. Terminal
 
@@ -518,16 +518,16 @@ h3(#sessiondataflow). Data Flow
 
 h4. Duplication
 
-MacTelnet can send keyboard characters directly to the terminal
+MacTerm can send keyboard characters directly to the terminal
  as it transmits them to a session; this is known as Local Echo.
 
 Local Echo is useful for slow connections, because it displays
  what you type immediately instead of waiting for a server
- response.  (The floating Command Line in MacTelnet gives a
+ response.  (The floating Command Line in MacTerm gives a
  similar benefit; see the Window menu.)
 
 There are downsides to echoing, that basically boil down to how
- well the session and MacTelnet agree.  When half-duplex, the
+ well the session and MacTerm agree.  When half-duplex, the
  server does not send back what you type; so you cannot be sure
  if it was received, even if it _looks_ right in your terminal.
  When full-duplex, you do see confirmation from the server, but
@@ -540,8 +540,8 @@ When you use Paste for a large amount of text, the session may
  not be prepared to receive that much data at once; this can cause
  problems, like losing or garbling some of the characters.
 
-MacTelnet allows you to locally buffer Paste on a per-session
- basis.  This means that MacTelnet does not send all text at once,
+MacTerm allows you to locally buffer Paste on a per-session
+ basis.  This means that MacTerm does not send all text at once,
  it splits the data into small chunks and sends each piece
  separately.
 
@@ -562,7 +562,7 @@ You can choose to automatically capture this session to a
  specific file when it starts.  Note also that this can be done
  from a menu, File >> Begin Capture to File.
 
-Currently, MacTelnet does not have sophisticated ways to handle
+Currently, MacTerm does not have sophisticated ways to handle
  automatic file captures.  It would be nice, for instance, if
  successive sessions could use new files in a target folder and
  not overwrite the same file.
@@ -622,14 +622,14 @@ The Emacs text editor has its own commands for moving the cursor
  trigger the appropriate Emacs commands; this includes the effects
  of using Option and Command on arrow keys to move by larger
  increments.  For instance, in Mac text editors, you can move to
- the next word with option-right-arrow; MacTelnet will cause this
+ the next word with option-right-arrow; MacTerm will cause this
  sequence to send a "forward-word" Emacs command.
 
 h4. Emacs Meta
 
 The Emacs text editor relies heavily on a key that is not
  available on Mac keyboards, the meta key.  However, you can ask
- MacTelnet to emulate the meta key by using other keys.
+ MacTerm to emulate the meta key by using other keys.
 
 h4. Delete
 
@@ -642,14 +642,14 @@ Specifies what a Delete keypress on your Mac keyboard will do.
 Note that you can temporarily choose the alternate mapping by
  using shift-Delete or command-Delete in a terminal window.
 
-Note further that MacTelnet's Macros are very flexible and could
+Note further that MacTerm's Macros are very flexible and could
  be configured to set your own custom mapping for Delete (or many
  other keys).
 
 h4. New Line
 
 Since some systems or applications recognize different characters
- for end-of-line, you can specify how MacTelnet sends a new-line
+ for end-of-line, you can specify how MacTerm sends a new-line
  (say, when pressing Return or pasting multi-line text).
 
 "CF LF" means "carriage return, line feed" and sends two
@@ -660,9 +660,9 @@ Since some systems or applications recognize different characters
 
 h3(#sessiontek). Graphics (TEK)
 
-MacTelnet is not only a terminal emulator, but also a display for
+MacTerm is not only a terminal emulator, but also a display for
  various kinds of images.  You can enable a vector graphics
- command set for a session so that, when MacTelnet receives
+ command set for a session so that, when MacTerm receives
  certain special sequences, it will automatically render the data
  as a picture instead of dumping it to the terminal screen.
 
@@ -677,7 +677,7 @@ h4. PAGE clears screen
 
 When a new vector graphics image is created (known in TEK as a
  PAGE command), it is normally put into its own window.  If you do
- not want several windows and instead want MacTelnet to reuse the
+ not want several windows and instead want MacTerm to reuse the
  same window, enable the clear-screen option.
 
 h2(#terminals). Terminals
@@ -692,7 +692,7 @@ bq. You can create more than one set of preferences in
 Terminals decide somewhat technical aspects of a window, such as
  the emulation type.  Usually, you set up one or more of these
  with the help of an administrator or application documentation,
- so that MacTelnet behaves correctly when you use an application
+ so that MacTerm behaves correctly when you use an application
  in a terminal window.  Custom and collection Sessions can
  associate a Terminal collection with them, ensuring that these
  important settings are always made for you.
@@ -701,7 +701,7 @@ h3. Emulation
 
 h4. Base Emulator
 
-This selects which terminal emulator implementation in MacTelnet
+This selects which terminal emulator implementation in MacTerm
  will be used to interpret commands (encoded as special sequences
  in transmitted text).
 
@@ -714,7 +714,7 @@ A "dumb terminal" doesn't actually emulate anything, though it
  useful when communicating with certain kinds of servers, or
  when debugging commands.
 
-Advanced users should note that MacTelnet's Python interface
+Advanced users should note that MacTerm's Python interface
  lets you customize the "pretty printing" of the dumb terminal.
 
 h5. VT100
@@ -727,12 +727,12 @@ h5. VT102
 
 Largely compatible with any system that wants a VT100, this
  device has additional capabilities like print streaming.
- MacTelnet is a very good VT102 emulator.
+ MacTerm is a very good VT102 emulator.
 
 h5. VT220
 
 This device has additional capabilities like special keyboard
- keys and 8-bit controls.  MacTelnet is a very good VT220
+ keys and 8-bit controls.  MacTerm is a very good VT220
  emulator, but it does not currently support all features, like
  user-defined keys (UDKs) and certain character set registers.
 
@@ -745,11 +745,11 @@ h5. XTerm
 
 Mostly a superset of VT emulators, the XTerm terminal type also
  refers to the behavior of the @xterm@ Unix terminal program.
- MacTelnet supports certain standard sequences such as cursor
+ MacTerm supports certain standard sequences such as cursor
  movement, although mouse support is not yet implemented.  If
  you are using a highly complex terminal program, you may want
  to try both the VT220 and XTerm types to see which works best
- for now.  MacTelnet's XTerm support has improved over time.
+ for now.  MacTerm's XTerm support has improved over time.
 
 It is important to note that several XTerm features have been
  extracted into Emulation Tweaks (see below) so that they may be
@@ -759,7 +759,7 @@ It is important to note that several XTerm features have been
  possible results.
 
 In addition, note that TEK vector graphics is a feature of XTerm
- that MacTelnet enables separately; see "Graphics (TEK)":#sessiontek.
+ that MacTerm enables separately; see "Graphics (TEK)":#sessiontek.
  You must enable TEK for a Session, it is not automatically
  handled just because you chose the XTerm type.
 
@@ -778,16 +778,16 @@ This name is suggested for you automatically when you choose
  change it depending on any Emulation Tweaks (below).
 
 This should be reflected in the "TERM" environment variable
- on Unix-like systems, and MacTelnet tries to set this for you
+ on Unix-like systems, and MacTerm tries to set this for you
  when you start a local command.  For remote commands, such as
  a secure shell (SSH) session, you may have to fix this yourself!
 
 h4. Emulation Tweaks
 
-MacTelnet allows you to customize some of the features of its
+MacTerm allows you to customize some of the features of its
  emulators.  There are a couple of main reasons for this:
 
-* Some applications rely on bugs in common emulators or the original devices, and won't work unless MacTelnet is also buggy.
+* Some applications rely on bugs in common emulators or the original devices, and won't work unless MacTerm is also buggy.
 
 * Sometimes an environment assumes that popular features of advanced terminals are available (such as XTerm window titles) even though it is mostly dependent on a more basic terminal type like VT102.
 
@@ -819,7 +819,7 @@ Note that XTerm is also an emulator type of its own, that has
 h6. 256 Colors
 
 Enables all 256 new XTerm colors, which includes the 16 basic
- "ANSI colors" that can be customized in MacTelnet's Formats
+ "ANSI colors" that can be customized in MacTerm's Formats
  preferences.  This allows an application to give text a specific
  foreground and background color, instead of relying on terminal
  defaults.
@@ -843,7 +843,7 @@ This is a very important mode that is needed by many modern
 h6. Color
 
 Enables *only* the 16 basic colors commonly called "ANSI colors",
- which can be customized in MacTelnet's Formats preferences.
+ which can be customized in MacTerm's Formats preferences.
  This allows an application to give text a specific foreground
  and background color, instead of relying on terminal defaults.
 
@@ -865,7 +865,7 @@ h6. Window Alteration
 
 Allows applications to change the title of your terminal window,
  as well as its minimized state, position, size, and other
- attributes.  This is not completely supported by MacTelnet 4.0
+ attributes.  This is not completely supported by MacTerm's
  daily builds yet, but it will be soon.
 
 For this to work, your Identity may need to be "xterm" or
@@ -883,7 +883,7 @@ h4. Width
 
 The maximum number of columns of text (equivalent to characters,
  in Western locales, when in single-width) that are stored and
- visible on each line.  Currently, MacTelnet won't horizontally
+ visible on each line.  Currently, MacTerm won't horizontally
  scroll terminals, so this is also the display width.
 
 If a window is reduced in size, it may internally retain the
@@ -957,8 +957,8 @@ This sets the default for Terminal >> Line Wrap.
 h5. Do not strip high bit of bytes
 
 Specifies that the data is 8 bits instead of 7 bits.  The
- MacTelnet 4.0 daily builds currently do not handle this
- setting reliably.
+ MacTerm daily builds currently do not handle this setting
+ reliably.
 
 h5. Save lines when screen clears
 
@@ -1067,7 +1067,7 @@ h3. Settings
 
 h4. Character Set
 
-Choose an encoding from the list to tell MacTelnet how to
+Choose an encoding from the list to tell MacTerm how to
  interpret text while these translation settings are active.
  Typically a good value is "Unicode (UTF-8)".
 
@@ -1085,7 +1085,7 @@ Unfortunately, not all fonts are the same: some of them cannot
 h2(#fullscreen). Full Screen
 
 Settings that control "kiosk mode", the Full Screen command in
- the MacTelnet application menu.  You can use these preferences to
+ the MacTerm application menu.  You can use these preferences to
  create a more complete kiosk (by hiding the menu bar, for
  example).
 
@@ -1126,8 +1126,8 @@ To make kiosks harder to mess with, you can prevent the user from
  accessing the system Force Quit function.
 
 Note that this offers "pretty good" security, but does not guard
- against all possible ways that MacTelnet could be interrupted.
- For example, a background application could pop up, MacTelnet
+ against all possible ways that MacTerm could be interrupted.
+ For example, a background application could pop up, MacTerm
  could crash, or the user may be able to command-Tab to some other
  program.
 
@@ -1135,7 +1135,7 @@ h4. Effects
 
 h5. Superfluous graphical effects
 
-In full screen mode, MacTelnet has significantly more screen
+In full screen mode, MacTerm has significantly more screen
  resolution and therefore has more options for rendering terminals
  in interesting ways!  If you do not want kiosks to look much
  different from normal terminal windows, disable this option.

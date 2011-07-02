@@ -1,6 +1,6 @@
 notextile. <div class="navigation">
 
-* MacTELNET Help
+* MacTerm Help
 * "Home":../index.html
 
 notextile. </div>
@@ -11,7 +11,7 @@ notextile. <div class="content">
 
 p(#abstract). Although you can use "palettes":windows.html#keypads
  to help interact with certain programs in a terminal, you may need
- keys that aren't in any palette.  Fortunately, MacTelnet's
+ keys that aren't in any palette.  Fortunately, MacTerm's
  "Macro preferences":preferences.html#macros allow you to map anything
  you want to your Mac's keyboard, including key sequences that just
  "do the right thing" on another computer.
