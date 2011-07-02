@@ -8,7 +8,7 @@ export PATH
 
 cd `dirname $0`
 
-ps_output=`ps -A -o 'pid command' | grep -i MacTelnet_python | grep RunApplication`
+ps_output=`ps -A -o 'pid command' | grep -i MacTerm_python | grep RunApplication`
 attached_pid=`echo $ps_output | awk '{print $1}'`
 executable_path=`echo $ps_output | awk '{print $2}'`
 if [ "x$attached_pid" = "x" ] ; then

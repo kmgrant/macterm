@@ -20,7 +20,7 @@ cd `dirname $0`
 # Below is an example scenario within the debugger.  Usually
 # only one "c" is required, but on Leopard there will be more.
 #     (gdb) r MacTelnet
-#     Starting program: Build/MacTelnet.app/Contents/MacOS/MacTelnet_python2.5 MacTelnet
+#     Starting program: Build/MacTelnet.app/Contents/MacOS/MacTerm_python2.5 MacTelnet
 #     Reading symbols for shared libraries ++. done
 #     
 #     Program received signal SIGTRAP, Trace/breakpoint trap.
@@ -59,5 +59,5 @@ else
     echo '           (On Leopard, you may have to "c" multiple times.)'
     echo '______________________________________________________________________________'
     echo
-    exec gdb './MacTelnet_python2.x'
+    exec gdb './MacTerm_python2.x'
 fi

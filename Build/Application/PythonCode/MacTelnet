@@ -45,7 +45,7 @@ if __name__ == "__main__":
     # bundle in order for the system to assign the correct bundle for such
     # things as the application menu and preferences; prior to Leopard, a
     # symlink is sufficient, but as of Leopard, a tiny executable is built to
-    # run the Python interpreter from C++ ("MacTelnet_python2.5_wrap")
+    # run the Python interpreter from C++ ("MacTerm_python2.5_wrap")
     #
     # the Quills.framework code is compiled, so it is architecture-dependent;
     # the SWIG wrappers must be built for every possible Python version that
@@ -61,28 +61,28 @@ if __name__ == "__main__":
     # - version "A" of the framework supports PowerPC only (and Python 2.3)
     # - version "B" of the framework is universal (for Python 2.3.5 or 2.5)
     if mac_os_name == "Lion":
-        py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.5_wrap")
+        py_interpreter = os.path.join(macos_dir, "MacTerm_python2.5_wrap")
         quills_fw_ver = "B"
         quills_pylib_ver = "2.5"
     elif mac_os_name == "Snow Leopard":
-        py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.5_wrap")
+        py_interpreter = os.path.join(macos_dir, "MacTerm_python2.5_wrap")
         quills_fw_ver = "B"
         quills_pylib_ver = "2.5"
     elif mac_os_name == "Leopard":
-        py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.5_wrap")
+        py_interpreter = os.path.join(macos_dir, "MacTerm_python2.5_wrap")
         quills_fw_ver = "B"
         quills_pylib_ver = "2.5"
     elif mac_os_name == "Tiger":
-        py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.3.5")
+        py_interpreter = os.path.join(macos_dir, "MacTerm_python2.3.5")
         quills_fw_ver = "B" # Tiger and Leopard use the same framework
         quills_pylib_ver = "2.3.5"
     elif mac_os_name == "Panther":
-        py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.3")
+        py_interpreter = os.path.join(macos_dir, "MacTerm_python2.3")
         quills_fw_ver = "A"
         quills_pylib_ver = "2.3"
     else:
         print >>sys.stderr, "WARNING: MacTelnet may not work on your system, the Python interpreter is unrecognized."
-        py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.x")
+        py_interpreter = os.path.join(macos_dir, "MacTerm_python2.x")
         quills_fw_ver = "A"
         quills_pylib_ver = "2.3"
     os.environ["PYTHONEXECUTABLE"] = py_interpreter

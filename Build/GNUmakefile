@@ -480,21 +480,21 @@ $(DEST_APP_MACOS_TOP)/MacTelnet \
 $(DEST_APP_MACOS_TOP)/RunApplication.py
 	@# keep in sync with the matching clean rule
 	$(MKDIR_P) $(DEST_APP_MACOS_TOP)
-	$(SYMLINK_REPLACE) /usr/bin/python $(DEST_APP_MACOS_TOP)/MacTelnet_python2.x
+	$(SYMLINK_REPLACE) /usr/bin/python $(DEST_APP_MACOS_TOP)/MacTerm_python2.x
 	@# note that Tiger's Python 2.3.5 is in the same path as Panther's Python 2.3.0
-	$(SYMLINK_REPLACE) /System/Library/Frameworks/Python.framework/Versions/2.3/bin/python $(DEST_APP_MACOS_TOP)/MacTelnet_python2.3.5
-	$(SYMLINK_REPLACE) /System/Library/Frameworks/Python.framework/Versions/2.3/bin/python $(DEST_APP_MACOS_TOP)/MacTelnet_python2.3
+	$(SYMLINK_REPLACE) /System/Library/Frameworks/Python.framework/Versions/2.3/bin/python $(DEST_APP_MACOS_TOP)/MacTerm_python2.3.5
+	$(SYMLINK_REPLACE) /System/Library/Frameworks/Python.framework/Versions/2.3/bin/python $(DEST_APP_MACOS_TOP)/MacTerm_python2.3
 	$(XCB) -project Application.xcodeproj -target PythonInvoker -configuration ForLeopardDebug
-	$(COPY) $(SRC_PYINVOKER_TOP_LEOPARD)/PythonInvoker_debug $(DEST_APP_MACOS_TOP)/MacTelnet_python2.5_wrap
+	$(COPY) $(SRC_PYINVOKER_TOP_LEOPARD)/PythonInvoker_debug $(DEST_APP_MACOS_TOP)/MacTerm_python2.5_wrap
 
 .PHONY: clean-executables
 clean-executables:
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet
 	$(RM) $(DEST_APP_MACOS_TOP)/RunApplication.py
-	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.x
-	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.3.5
-	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.3
-	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.5_wrap
+	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.x
+	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.3.5
+	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.3
+	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.5_wrap
 	-$(RMDIR) $(DEST_APP_MACOS_TOP)
 	$(XCB) clean -project Application.xcodeproj -target PythonInvoker -configuration ForLeopardDebug
 
