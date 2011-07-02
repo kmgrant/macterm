@@ -25,9 +25,9 @@ October 13, 2006
 	<key>companyPhone</key>
 	<string></string>
 	<key>companyWebSite</key>
-	<string>http://www.mactelnet.com/</string>
+	<string>http://macterm.net/</string>
 	<key>fileBundleID</key>
-	<string>com.mactelnet.MacTelnet</string>
+	<string>net.macterm.MacTerm</string>
 	<key>fileCreator</key>
 	<string>KevG</string>
 	<key>fileReleaseDateD</key>
@@ -53,7 +53,7 @@ It natively runs Unix applications on Mac OS X, however it provides support for 
 	<key>productFileSize</key>
 	<string></string>
 	<key>productIconURL</key>
-	<string>http://homepage.mac.com/kmg/mactelnet/releases/osx/AppIcon96x96.png</string>
+	<string>http://macterm.net/images/AppIcon96x96.png</string>
 	<key>productKeywords</key>
 	<array>
 		<string>terminal</string>
@@ -70,7 +70,7 @@ It natively runs Unix applications on Mac OS X, however it provides support for 
 	<key>productLicense</key>
 	<string>Freeware</string>
 	<key>productName</key>
-	<string>MacTelnet</string>
+	<string>MacTerm</string>
 	<key>productOS</key>
 	<array>
 		<string>10.3</string>
@@ -79,7 +79,7 @@ It natively runs Unix applications on Mac OS X, however it provides support for 
 		<string>10.6</string>
 	</array>
 	<key>productPageURL</key>
-	<string>http://www.mactelnet.com/</string>
+	<string>http://macterm.net/</string>
 	<key>productPrice</key>
 	<string></string>
 	<key>productReleaseNotes</key>
