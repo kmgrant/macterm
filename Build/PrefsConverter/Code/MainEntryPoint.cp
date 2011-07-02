@@ -1961,7 +1961,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 								(CFSTR("Your preferences have been saved in an updated format, and outdated files (if any) have been moved to the Trash."),
 									CFSTR("Alerts"), CFSTR("displayed upon successful conversion"));
 				helpText = CFCopyLocalizedStringFromTable
-							(CFSTR("This version of MacTelnet will now be able to read your existing preferences."),
+							(CFSTR("This version of MacTerm will now be able to read your existing preferences."),
 								CFSTR("Alerts"), CFSTR("displayed upon successful conversion"));
 			}
 			else
@@ -1973,7 +1973,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 				default:
 					alertType = kAlertCautionAlert;
 					messageText = CFCopyLocalizedStringFromTable
-									(CFSTR("This version of MacTelnet cannot read your existing preferences.  Normally, old preferences are converted automatically, but this has failed for some reason."),
+									(CFSTR("This version of MacTerm cannot read your existing preferences.  Normally, old preferences are converted automatically, but this has failed for some reason."),
 										CFSTR("Alerts"), CFSTR("displayed upon unsuccessful conversion, generic reason"));
 					helpText = CFCopyLocalizedStringFromTable
 								(CFSTR("Please check for file and disk problems, and try again.  Default preferences will be used instead."),
@@ -2011,10 +2011,10 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 				params.defaultButton = kAlertStdAlertOKButton;
 				params.defaultText = CFCopyLocalizedStringFromTable(CFSTR("Quit Preferences Converter"), CFSTR("Alerts"), CFSTR("button label"));
 				messageText = CFCopyLocalizedStringFromTable
-								(CFSTR("Your preferences have been migrated to a new format.  Please run MacTelnet again to use the migrated settings."),
+								(CFSTR("Your preferences have been migrated to a new format.  Please run MacTerm again to use the migrated settings."),
 									CFSTR("Alerts"), CFSTR("displayed upon successful conversion"));
 				helpText = CFCopyLocalizedStringFromTable
-							(CFSTR("This version of MacTelnet will now be able to read your existing preferences."),
+							(CFSTR("This version of MacTerm will now be able to read your existing preferences."),
 								CFSTR("Alerts"), CFSTR("displayed upon successful conversion"));
 				
 				if (nullptr != messageText)
