@@ -3,7 +3,7 @@
 	DNR.cp
 	
 	MacTerm
-		© 1998-2007 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -92,7 +92,7 @@ If "inRestrictIPv4" is true, then the result will be in IPv4
 (traditional) format; otherwise, it will use the IPv6 (longer)
 format.
 
-The domain name resolver has been re-written in MacTelnet 3.1
+The domain name resolver has been re-written in version 3.1
 to use BSD calls (sigh, to replace the one rewritten in 3.0 to
 use Open Transport natively...when will the next “wave of the
 future” hit?).
@@ -108,7 +108,7 @@ DNR_New		(char const*	inHostNameCString,
 	int					error = 0;
 	
 	
-	// start a thread for DNS lookup so that MacTelnet’s main event loop can still run
+	// start a thread for DNS lookup so that the main event loop can still run
 	error = pthread_attr_init(&attr);
 	if (0 != error) result = kDNR_ResultThreadError;
 	else
@@ -259,10 +259,10 @@ DNR_CopyResolvedHostAsCFString	(struct hostent const*	inDNR,
 
 /*!
 A POSIX thread (which can be preempted) that handles
-otherwise-synchronous DNS lookups.  Using preemptive
-threads for this allows MacTelnet to “block” waiting
-for data, without actually halting other important
-things like the main event loop!
+otherwise-synchronous DNS lookups.  Since preemptive
+threads are used, the application will not “block”
+waiting for data and will not halt important things
+like the main event loop!
 
 WARNING:	As this is a preemptable thread, you MUST
 			NOT use thread-unsafe system calls here.

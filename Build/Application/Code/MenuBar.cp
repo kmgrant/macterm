@@ -269,11 +269,7 @@ MenuBar_HandleMenuCommand	(MenuRef			inMenu,
 
 
 /*!
-This method handles menu commands using the new
-command IDs assigned in MacTelnet 3.0 for OS 8.
-The command ID to use can be found in the file
-"Commands.h", and the modifiers come from a
-standard event record.
+Deprecated; just use Commands_ExecuteByID() from now on.
 
 (3.0)
 */

@@ -1,20 +1,16 @@
 /*!	\file Folder.h
 	\brief Abstract way to find folders of importance in the
-	system and among those created by MacTelnet.
+	system and among those created by the application.
 	
-	The Folder Manager has been created in MacTelnet 3.0 so that
-	MacTelnet manages folder information dynamically and without
-	global variables.  Unlike Telnet 2.6, folders can always be
-	found in version 3.0, even if the user moves or renames a
-	folder while MacTelnet is running.  Also, using these methods
-	guarantees consistent results, since you can request a folder
-	in terms of a context, instead of using hard-coded file or
-	path information.  You should use this whenever possible!
+	It is important to rely on this API for consistent results,
+	Use this whenever possible, certainly instead of direct
+	path dependencies!  (In the future, this should be exposed
+	to Python as well.)
 */
 /*###############################################################
 
 	MacTerm
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -55,15 +51,15 @@
 typedef UInt16 Folder_Ref;
 enum
 {
-	// folders defined by MacTelnet
-	kFolder_RefApplicationSupport = 1,			// MacTelnet’s folder in the Application Support folder.
+	// folders defined by the application
+	kFolder_RefApplicationSupport = 1,			// the application’s folder in the Application Support folder
 	
-	kFolder_RefPreferences = 3,					// The folder “MacTelnet Preferences”, in the preferences
-												//   folder of the user currently logged in.
+	kFolder_RefPreferences = 3,					// legacy folder for auxiliary files in the preferences
+												//   folder of the user currently logged in
 	
-	kFolder_RefScriptsMenuItems = 4,			// MacTelnet’s “Scripts Menu Items” folder.
+	kFolder_RefScriptsMenuItems = 4,			// legacy “Scripts Menu Items” folder
 	
-	kFolder_RefUserLogs = 6,					// where the MacTelnet Debugging Log goes, or any other log
+	kFolder_RefUserLogs = 6,					// where the debugging log goes, or any other log
 	
 	// folders defined by Mac OS X
 	kFolder_RefMacApplicationSupport = 9,		// the Application Support folder

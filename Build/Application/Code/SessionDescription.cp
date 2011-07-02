@@ -690,12 +690,10 @@ SessionDescription_GetStringData	(SessionDescription_Ref			inRef,
 
 
 /*!
-Displays a file selection dialog asking the user to
-open a session description file.  In MacTelnet 3.0,
-this method responds by sending an “open documents”
-Apple Event back to MacTelnet (making it recordable),
-instead of directly parsing the file specification
-of the chosen file.
+Displays a file selection dialog asking the user to open a
+session description file.  An “open documents” Apple Event
+is sent back to the application instead of directly handling
+the chosen file(s).
 
 (2.6)
 */
@@ -1302,7 +1300,7 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 														inoutDataPtr->answerBack);
 	  	}
 		
-		// these flags are new to MacTelnet 2.7 and beyond
+		// these flags are new to version 2.7 and beyond
 		unless (makeCompatibleWithNCSATelnet)
 		{
 			if (inoutDataPtr->colorTextBoldPtr != nullptr)
@@ -1451,7 +1449,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 		
 		// now look up all known keys and read the data into a
 		// structure in memory; note that unlike NCSA Telnet 2.6,
-		// MacTelnet 3.0 is fairly flexible and is willing to
+		// version 3.0 is fairly flexible and is willing to
 		// proceed even if most expected keys from the file are
 		// missing or if unexpected (ignored) extra keys exist;
 		// also unlike 2.6, the processing order is unimportant
@@ -1460,7 +1458,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 			
 			
 			// a name is required, and either a host or a command;
-			// otherwise, MacTelnet 3.0 doesn’t care, it just uses
+			// otherwise, version 3.0 doesn’t care, it just uses
 			// default values for other session attributes
 			if ((hashTable.find("name") != hashTable.end()) &&
 				((hashTable.find("host") != hashTable.end()) ||
@@ -1585,7 +1583,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("commandkeys");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					// this is not supported by MacTelnet 3.0 right now
+					// this is not supported by version 3.0 right now
 					//Boolean		menusHaveCommandKeys = false;
 					
 					
@@ -1904,14 +1902,14 @@ parseFile	(SInt16				inFileReferenceNumber,
 				//keyNameToKeyValueArrayIndexIterator = hashTable.find("serial");
 				//if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				//{
-				//	// not supported by MacTelnet 3.0
+				//	// not supported by version 3.0
 				//}
 				
 				// set port flag
 				//keyNameToKeyValueArrayIndexIterator = hashTable.find("port");
 				//if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				//{
-				//	// not supported by MacTelnet 3.0
+				//	// not supported by version 3.0
 				//}
 				
 				// set name of translation table to use

@@ -1,5 +1,5 @@
 %define DOCSTRING
-"The `Quills` module exposes the entire MacTelnet API to Python,
+"The `Quills` module exposes the entire MacTerm API to Python,
 allowing you to directly access core functionality from scripts!"
 %enddef
 
@@ -364,9 +364,9 @@ CallPythonVoidReturnVoid	(void*	inPythonFunctionObject)
 %}
 #endif
 
-// NOTE: Quills headers are the only MacTelnet headers designed to
+// NOTE: Quills headers are the only MacTerm headers designed to
 // interact with SWIG.  They also define the entire Python API for
-// MacTelnet in an organized way.  Try not to include other headers here.
+// MacTerm in an organized way.  Try not to include other headers here.
 
 // WARNING: Currently, PythonWrapper/GNUmakefile assumes the list of
 // dependencies below.  If you add more includes, you should ensure the

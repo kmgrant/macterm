@@ -3632,7 +3632,7 @@ telnet "IP" sequence.
 void
 Session_UserInputInterruptProcess	(SessionRef		inRef)
 {
-	// clear the Suspend state from MacTelnet’s point of view,
+	// clear the Suspend state from MacTerm’s point of view,
 	// since the process already considers the pipe reopened
 	Session_SetNetworkSuspended(inRef, false);
 	
@@ -5779,7 +5779,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 								// I can’t remember if it’s a memory leak to forget about an alias or not...warning...
 								if (noErr == NewAliasMinimal(&captureFile, &alias))
 								{
-									// TEMPORARY - one day it might be nice if MacTelnet could display the same screen
+									// TEMPORARY - one day it might be nice if MacTerm could display the same screen
 									//             in more than one window; in such case, the following would have to
 									//             adapt to iterate over a list of windows (or better yet, Terminal Window
 									//             module would simply do this automatically)
@@ -6629,7 +6629,7 @@ receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// has the preference set) close the window automatically;
 				// a confirmation message is displayed UNLESS it has been less
 				// than a few seconds since the connection opened, in which
-				// case MacTelnet assumes the user doesn’t care and bypasses
+				// case MacTerm assumes the user doesn’t care and bypasses
 				// the confirmation message (what can I say, I’m a nice guy)
 				Session_DisplayTerminationWarning(session);
 			}

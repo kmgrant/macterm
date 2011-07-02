@@ -205,7 +205,7 @@ ContextualMenuBuilder_DisplayMenuForView	(HIViewRef								inWhichView,
 				}
 			}
 			
-			// display and track the menu, getting the name of the Help item from the MacTelnet resource file
+			// display and track the menu
 			if (noErr == error)
 			{
 				HelpSystem_Result	helpSystemResult = kHelpSystem_ResultOK;
@@ -356,7 +356,7 @@ ContextualMenuBuilder_DisplayMenuForWindow	(HIWindowRef							inWhichWindow,
 			UInt16		itemNumber = 0;
 			
 			
-			// display and track the menu, getting the name of the Help item from the MacTelnet resource file
+			// display and track the menu
 			{
 				HelpSystem_Result	helpSystemResult = kHelpSystem_ResultOK;
 				CFStringRef			helpCFString = nullptr;

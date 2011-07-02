@@ -1,6 +1,6 @@
 /*!	\file PrintTerminal.h
 	\brief The new Mac OS X native printing mechanism for
-	terminal views in MacTelnet.
+	terminal views in MacTerm.
 */
 /*###############################################################
 

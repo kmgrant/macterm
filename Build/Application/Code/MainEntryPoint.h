@@ -1,16 +1,12 @@
 /*!	\file MainEntryPoint.h
-	\brief Contains main(), routines to quit the program, and
-	a mechanism for modules to register themselves.
+	\brief Legacy entry point and shutdown mechanism.
 	
-	This is where MacTelnet starts up from, and also (in a
-	perfect world) the only place where it can quit.  There are
-	routines that cause MacTelnet to quit, either forcefully or
-	gracefully.
+	This module is obsolete now that Python is used.
 */
 /*###############################################################
 
 	MacTerm
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).

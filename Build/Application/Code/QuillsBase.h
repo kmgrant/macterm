@@ -2,7 +2,7 @@
 	\brief Fundamental APIs exposed to scripting languages.
 	
 	This is the core header, containing APIs necessary for
-	starting MacTelnet from a scripting environment.
+	starting MacTerm from a scripting environment.
 	
 	Information on these APIs is available through "pydoc".
 */
@@ -93,10 +93,10 @@ The string encoding is UTF-8.\n\
 #endif
 	static std::string version ();
 	
-	// intended only for direct use by MacTelnet
+	// intended only for direct use by MacTerm
 	static std::string _initial_workspace_name ();
 	
-	// intended only for direct use by MacTelnet
+	// intended only for direct use by MacTerm
 	static void _version_warning ();
 
 private:

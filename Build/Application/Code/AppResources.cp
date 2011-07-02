@@ -267,7 +267,7 @@ AppResources_GetToolbarPoofPictures		(UInt16			inZeroBasedAnimationStageIndex,
 
 /*!
 Launches a separate application informing the user
-that MacTelnet has crashed.  This should be called
+that MacTerm has crashed.  This should be called
 from within a termination signal handler.
 
 (3.0)

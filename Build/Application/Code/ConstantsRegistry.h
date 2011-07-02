@@ -10,7 +10,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2008 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -231,18 +231,18 @@ enum
 };
 
 /*!
-MacTelnet window descriptors, used with Window Info.
+Application window descriptors, used with Window Info.
 These are all to be considered of the type
 "WindowInfoDescriptor".  A descriptor should be unique
-to a class of MacTelnet windows - often, only a single
-MacTelnet window will have a particular descriptor
+to a class of application windows - often, only a single
+application window will have a particular descriptor
 (but most terminals, and all sheets of the same kind,
 share descriptors).
 
 You will find that certain code modules switch on
 window descriptors to determine what to do with an
 unknown window.  Therefore, every time a new kind of
-window is added to MacTelnet, a unique descriptor for
+window is added to application, a unique descriptor for
 it should appear in the list below, and search source
 files (e.g. for "kConstantsRegistry_WindowDescriptor")
 to find switches that should perhaps be augmented to
@@ -281,7 +281,7 @@ enum
 };
 
 /*!
-Possible return values from GetWindowKind() on MacTelnet windows.
+Possible return values from GetWindowKind() on application windows.
 */
 enum
 {
@@ -387,7 +387,7 @@ enum
 	kFlagOS10_5API					= (kFlagManager_FirstValidFlag + 8),	//!< is Mac OS 10.5 or later in use?
 	kFlagOS10_6API					= (kFlagManager_FirstValidFlag + 9),	//!< is Mac OS 10.6 or later in use?
 	kFlagOS10_7API					= (kFlagManager_FirstValidFlag + 10),	//!< is Mac OS 10.7 or later in use?
-	kFlagSuspended					= (kFlagManager_FirstValidFlag + 12),	//!< is MacTelnet’s process in the background?
+	kFlagSuspended					= (kFlagManager_FirstValidFlag + 12),	//!< is this application’s process in the background?
 	kFlagUserOverrideAutoNew		= (kFlagManager_FirstValidFlag + 14)	//!< skip auto-new-window on application launch?
 };
 

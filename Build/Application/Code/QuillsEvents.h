@@ -3,14 +3,14 @@
 	languages.
 	
 	Use this class to interact with the user via the
-	MacTelnet graphical user interface.
+	application’s graphical user interface.
 	
 	Information on these APIs is available through "pydoc".
 */
 /*###############################################################
 
 	MacTerm
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -80,7 +80,7 @@ IMPORTANT: This call blocks until the user asks to quit.\n\
 	SWIG_CATCH_UNKNOWN
 }
 #endif
-	// only intended for direct use by MacTelnet’s application delegate in Cocoa
+	// only intended for direct use by the application delegate in Cocoa
 	static void _handle_endloop ();
 	
 	// only intended for direct use by the SWIG wrapper
@@ -99,7 +99,7 @@ immediately after the main event loop terminates.\n\
 \n\
 This is the only way for Python code to continue running after\n\
 you call Events.run_loop().  At some point in this callback,\n\
-you MUST call Base.all_done() to clean up MacTelnet modules.\n\
+you MUST call Base.all_done() to clean up application modules.\n\
 ") on_endloop_call;
 	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
 	// "CallPythonVoidReturnVoid" is defined in Quills.i

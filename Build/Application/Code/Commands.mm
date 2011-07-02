@@ -649,7 +649,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandHandleURL:
 			// open the appropriate helper application for the URL in the selected
-			// text (which may be MacTelnet itself), and send a “handle URL” event
+			// text (which may be MacTerm itself), and send a “handle URL” event
 			if (isSession) URL_HandleForScreenView(activeScreen, activeView);
 			else Sound_StandardAlert();
 			break;
@@ -733,9 +733,9 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			if (inCommandID == kCommandClear)
 			{
 				// delete selection -- unimplemented, impossible to implement?
-				// at least, impossible until MacTelnet supports “generic”
-				// terminal windows (i.e. windows that are not tied to read-only
-				// concepts like connections to remote servers)
+				// at least, impossible until MacTerm supports “generic” terminal
+				// windows (i.e. windows that are not tied to read-only concepts
+				// like connections to remote servers)
 				if (isDialog)
 				{
 					DialogDelete(GetDialogFromWindow(EventLoop_ReturnRealFrontWindow()));
@@ -1249,7 +1249,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandContextSensitiveHelp:
-			// open MacTelnet Help to a particular topic
+			// open the help system to a particular topic
 			HelpSystem_DisplayHelpInCurrentContext();
 			break;
 		
@@ -3579,8 +3579,8 @@ hasVisibleWindows:(BOOL)						flag
 	
 	if ((NO == flag) && (NO == quellAutoNew()))
 	{
-		// handle the case where MacTelnet has no open windows and the user
-		// double-clicks its icon in the Finder
+		// handle the case where the application has no open windows and
+		// the user double-clicks the application icon in the Finder
 		UInt32		newCommandID = kCommandNewSessionDefaultFavorite;
 		size_t		actualSize = 0;
 		

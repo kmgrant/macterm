@@ -2,22 +2,29 @@
 	\brief Interfaces to access and modify user preferences,
 	or be notified when they are changed.
 	
-	Preferences in MacTelnet 3.0 are now accessed through a
-	layer of indirection, in part to reduce the number of code
-	modules that have access to the “guts” of preferences data
+	Preferences in MacTerm are accessed through a layer of
+	indirection, in part to reduce the number of code modules
+	that have access to the “guts” of preferences data
 	structures, and in part to allow this module to notify
 	interested parties when settings are changed.
 	
-	Also new in version 3.0 is the notion of a “preference
-	context”.  A context allows settings to be saved in very
-	specific places, but retrieved through an automatic scan
-	of a chain of possible locations for a given setting.  For
-	example, you start with the frontmost window, and if no
-	window-specific preference is available, an associated
-	workspace file could be searched, and finally consulting
-	the global defaults from the application preferences file.
-	A window only has to ask for a setting, it does not have
-	to know where the setting is!
+	A preferences “context” allows virtually any kind of
+	backing store to access settings that are known to the
+	preferences system.  This has many facets; for example,
+	the “factory defaults” come from one source, the user
+	global defaults come from another, and something like a
+	temporary buffer in memory is yet another possible
+	context.  The exact same Preferences APIs can be used
+	with ANY context, allowing very generic modules that can
+	manipulate different data sources with the same code
+	(for instance, many panels are presented both as sheets
+	to edit temporary data, and as global preference panels
+	to edit user data).  It is also possible for a module to
+	safely expose a context that others can copy settings
+	into, where changes are detected.  This prevents modules
+	from requiring APIs to set various things, they can
+	simply rely on established Preferences tags that already
+	refer to a wide variety of settings and data types.
 */
 /*###############################################################
 
@@ -740,7 +747,7 @@ as appropriate, and your reference is safe.  Note that there is
 a constructor that allows you to store pre-retained (e.g. newly
 allocated) contexts too.
 */
-typedef RetainRelease<_Preferences_ContextRefMgr>	Preferences_ContextWrap;
+typedef RetainRelease< _Preferences_ContextRefMgr >		Preferences_ContextWrap;
 
 
 

@@ -391,7 +391,7 @@ into a C string for use in low-level system calls.
 
 If the string is empty, it means that no chdir() was done to
 set a directory, so the working directory was implicitly that
-of the shell that launched MacTelnet itself (typically, the
+of the shell that launched MacTerm itself (typically, the
 Finder).
 
 Do not release the reference that is returned.
@@ -659,7 +659,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 		// Apple’s Terminal sets the variables TERM_PROGRAM and
 		// TERM_PROGRAM_VERSION for some reason; it is possible
 		// that scripts could start to rely on these, so it seems
-		// harmless enough to set them correctly for MacTelnet
+		// harmless enough to set them correctly for MacTerm
 		{
 			CFBundleRef		mainBundle = AppResources_ReturnBundleForInfo();
 			CFStringRef		valueCFString = nullptr;
@@ -696,7 +696,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 		}
 		
 		// TEMPORARY - the UNIX structures are filled in with defaults that work,
-		//             but eventually MacTelnet has to map user preferences, etc.
+		//             but eventually MacTerm has to map user preferences, etc.
 		//             to these so that they affect “local” terminals in the same
 		//             way as they affect remote ones
 		std::memset(&terminalControl, 0, sizeof(terminalControl));
@@ -704,7 +704,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 		
 		// spawn a child process attached to a pseudo-terminal device; the child
 		// will be used to run the shell, and the shell’s I/O will be handled in
-		// a separate preemptive thread by MacTelnet’s awesome terminal emulator
+		// a separate preemptive thread by MacTerm’s awesome terminal emulator
 		// and main event loop
 		{
 			struct winsize		terminalSize; // defined in "/usr/include/sys/ttycom.h"
@@ -729,7 +729,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				//
 				// this is executed inside the child process; note that any
 				// console print-outs at this point will actually go to the
-				// child terminal (rendered by a MacTelnet window!)
+				// child terminal (rendered by a MacTerm window!)
 				//
 				
 				// IMPORTANT: There are limitations on what a child process can do.
@@ -799,7 +799,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				}
 			}
 			
-			// start a thread for data processing so that MacTelnet’s main event loop can still run
+			// start a thread for data processing so that MacTerm’s main event loop can still run
 			{
 				pthread_attr_t	attr;
 				int				error = 0;
@@ -1160,7 +1160,7 @@ My_Process::
 
 /*!
 Fills in a UNIX "termios" structure using information
-that MacTelnet provides about the environment.  Valid
+that MacTerm provides about the environment.  Valid
 flag values are typically in "/usr/include/sys/termios.h"
 and defaults are in "/usr/include/sys/ttydefaults.h".
 
@@ -1207,14 +1207,14 @@ fillInTerminalControlStructure	(struct termios*	outTerminalControlPtr)
 	// - OPOST must be enabled for any other flags to have effect.
 	//
 	// - ONLCR is enabled so that newlines are translated to carriage returns
-	//   and line-feeds.  NOTE that this may be a bad idea, as MacTelnet
+	//   and line-feeds.  NOTE that this may be a bad idea, as MacTerm
 	//   likes to do this at the Session level...TEMPORARY?
 	*outputFlagsPtr = OPOST | ONLCR;
 	
 	// Turn ON the following control flags:
 	//
 	// - CS8 means characters are 8 bits, that is, no bits are masked.  NOTE
-	//   that although MacTelnet has an option for 7-bit, this is handled
+	//   that although MacTerm has an option for 7-bit, this is handled
 	//   elsewhere currently.  Perhaps performance benchmarks will show that
 	//   it is better to set a flag here than to strip bits later, but there
 	//   still needs to be a handler for remote sessions anyway, so it is
@@ -1256,19 +1256,19 @@ fillInTerminalControlStructure	(struct termios*	outTerminalControlPtr)
 	controlCharacterArray[VWERASE] = CWERASE;
 	controlCharacterArray[VKILL] = CKILL;
 	controlCharacterArray[VREPRINT] = CREPRINT;
-	controlCharacterArray[VINTR] = 'C' - '@'; // TEMPORARY - should set from MacTelnet preferences
+	controlCharacterArray[VINTR] = 'C' - '@'; // TEMPORARY - should set from MacTerm preferences
 	controlCharacterArray[VQUIT] = CQUIT;
 	controlCharacterArray[VSUSP] = CSUSP;
 	controlCharacterArray[VDSUSP] = CDSUSP;
-	controlCharacterArray[VSTART] = 'Q' - '@'; // TEMPORARY - should set from MacTelnet preferences
-	controlCharacterArray[VSTOP] = 'S' - '@'; // TEMPORARY - should set from MacTelnet preferences
+	controlCharacterArray[VSTART] = 'Q' - '@'; // TEMPORARY - should set from MacTerm preferences
+	controlCharacterArray[VSTOP] = 'S' - '@'; // TEMPORARY - should set from MacTerm preferences
 	controlCharacterArray[VLNEXT] = CLNEXT;
 	controlCharacterArray[VDISCARD] = CDISCARD;
 	controlCharacterArray[VMIN] = CMIN;
 	controlCharacterArray[VTIME] = CTIME;
 	controlCharacterArray[VSTATUS] = STATIC_CAST(255, cc_t);
 	
-	// It’s hard to say what to put here...MacTelnet is not a
+	// It’s hard to say what to put here...MacTerm is not a
 	// modem!  Oh well, 9600 baud is what Terminal.app uses...
 	*inputSpeedPtr = B9600;
 	*outputSpeedPtr = B9600;
@@ -1612,7 +1612,7 @@ putTTYInOriginalMode	(Local_TerminalID		inTTY)
 /*!
 A standard atexit() handler; resets a modified terminal to
 whatever state it was in originally, before being put in
-“raw mode” by MacTelnet.
+“raw mode” by MacTerm.
 
 (3.0)
 */
@@ -1698,7 +1698,7 @@ putTTYInRawMode		(Local_TerminalID		inTTY)
 		// - INPCK is disabled, parity errors are not checked.
 		//
 		// - ISTRIP is disabled so that all 8 bits are kept around in case
-		//   MacTelnet processes them.  The trouble is, this is a user
+		//   MacTerm processes them.  The trouble is, this is a user
 		//   option, and it *may* be more efficient to strip bits by setting
 		//   the flag here than doing it later.  After doing some benchmarks
 		//   this flag might be conditionally cleared here instead of
@@ -1821,7 +1821,7 @@ sendTerminalResizeMessage   (Local_TerminalID			inTTY,
 A POSIX thread (which can be preempted) that handles
 the data processing loop for a particular pseudo-
 terminal device.  Using preemptive threads for this
-allows MacTelnet to “block” waiting for data, without
+allows MacTerm to “block” waiting for data, without
 actually halting other important things like the main
 event loop!
 
@@ -2157,7 +2157,7 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 			else if (WIFSTOPPED(currentStatus))
 			{
 				// ignore (could examine WSTOPSIG(currentStatus))
-				// NOTE: this should never happen anyway, as MacTelnet does not use ptrace() or the WUNTRACED option
+				// NOTE: this should never happen anyway, as MacTerm does not use ptrace() or the WUNTRACED option
 			}
 			else
 			{

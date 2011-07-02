@@ -3,17 +3,13 @@
 	shells.
 	
 	Manages sessions, which are the user interface components
-	surrounding client connections to servers.  Sessions can
-	target terminal windows, Tektronix vector graphics canvases,
-	or interactive color raster graphics screens.
+	surrounding connections to pseudo-terminal devices that
+	are running Unix processes.  Sessions can target different
+	virtual devices, such as terminal screens or vector graphics
+	canvases.
 	
-	In MacTelnet 3.0, the implementation of a session is opaque;
-	data previously accessible through public data structures
-	must now be managed via Session objects.  This approach has
-	proved particularly useful when dealing with local Unix
-	shells, because it is now possible to treat local and remote
-	shells the same at some level, even though they are
-	completely different underneath.
+	The implementation of a session is opaque; data must be
+	managed via Session objects.
 */
 /*###############################################################
 
@@ -78,7 +74,7 @@ Session_Result const	kSession_ResultInsufficientBufferSpace(4);	//!< not enough 
 Session_Result const	kSession_ResultNotReady(5);					//!< session is not in a state that can accept this action right now
 
 /*!
-Setting changes that MacTelnet allows other modules to “listen” for,
+Setting changes that MacTerm allows other modules to “listen” for,
 via Session_StartMonitoring().
 */
 typedef ListenerModel_Event		Session_Change;

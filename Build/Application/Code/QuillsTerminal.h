@@ -89,7 +89,7 @@ first element, and the second element is 1.\n\
 The character encoding of the given string must be UTF-8.\n\
 \n\
 Note that this calls what was registered with on_seekword_call(),\n\
-and MacTelnet installs its own routine by default.\n\
+and MacTerm installs its own routine by default.\n\
 ") word_of_char_in_string;
 
 // raise Python exception if C++ throws anything

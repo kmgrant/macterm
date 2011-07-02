@@ -9,7 +9,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -65,7 +65,7 @@ enum
 };
 
 /*!
-Events that MacTelnet allows other modules to “listen” for, via EventLoop_StartMonitoring().
+Events that MacTerm allows other modules to “listen” for, via EventLoop_StartMonitoring().
 All control and window event types are also valid global events, so that you can monitor all
 controls or all windows for a certain kind of event.
 */

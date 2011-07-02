@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -67,12 +67,8 @@ traditionally supported by NCSA Telnet 2.6.  They are generally
 designed to coincide with VT-assigned values, so you shouldn’t
 move the bits around.
 
-The upper 16 bits are new in MacTelnet 3.0 and finally give some
-flexibility where it was badly needed.
-
-The bit values have been somewhat redefined in MacTelnet 4, to
-allow up to 256 possible custom colors.  The color indices now
-also occupy the upper 16 bits, to allow for a possible future
+The bit values allow up to 256 possible custom colors; indices
+occupy the upper 16 bits, to allow for a possible future
 optimization to save memory when a terminal does not use any
 custom colors.
 

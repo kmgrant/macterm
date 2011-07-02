@@ -273,7 +273,7 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 Constructs a new session if the specified Core Foundation
 string buffer contains a valid URL.  The configuration of
 the session tries to match all the information given in
-the URL.  If the URL is not something MacTelnet understands,
+the URL.  If the URL is not something MacTerm understands,
 another application may be launched instead.
 
 WARNING:	You probably want Quills::Session::handle_url()

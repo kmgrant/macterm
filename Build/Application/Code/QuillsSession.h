@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -137,7 +137,7 @@ The character encoding is UTF-8.\n\
 #if SWIG
 %feature("docstring",
 "Either invoke a Python callback to handle the specified file,\n\
-or trigger the default MacTelnet handler if no Python callback\n\
+or trigger the default MacTerm handler if no Python callback\n\
 is available.  Callbacks registered via on_fileopen_call() are\n\
 considered.\n\
 \n\
@@ -165,7 +165,7 @@ new sessions when they appear.\n\
 #if SWIG
 %feature("docstring",
 "Either invoke a Python callback to handle the specified URL,\n\
-or trigger the default MacTelnet handler if no Python callback\n\
+or trigger the default MacTerm handler if no Python callback\n\
 is available.  Callbacks registered via on_urlopen_call() are\n\
 considered.\n\
 \n\
@@ -237,12 +237,12 @@ Finder obeys extension mappings in the 'Info.plist' file of the\n\
 application bundle, so you may wish to update that file when\n\
 adding new handlers.  If the 'Info.plist' does not include the\n\
 extension you choose, your handler will only be used for files\n\
-that are forced to open with MacTelnet (say, when they are\n\
-dragged onto the Dock icon).\n\
+that are forced to open with MacTerm (say, when they are dragged\n\
+onto the Dock icon).\n\
 \n\
 You cannot register more than one Python function for the same\n\
 attribute.  Registering a Python function for an attribute that\n\
-MacTelnet natively handles will override the default MacTelnet\n\
+MacTerm natively handles will override the default MacTerm\n\
 implementation.\n\
 \n\
 Your handler is given a single argument, the pathname string,\n\
@@ -285,13 +285,13 @@ argument, every time an open is requested for a URL whose schema\n\
 (e.g. 'http') matches the schema given as the argument to\n\
 on_urlopen_call().  You cannot register more than one Python\n\
 function for a particular URL schema.  Registering a Python\n\
-function for a schema that MacTelnet natively handles will\n\
-override the default MacTelnet implementation.\n\
+function for a schema that MacTerm natively handles will\n\
+override the default MacTerm implementation.\n\
 \n\
 Your handler is given a single argument, the URL string, which\n\
 you must decompose yourself (but note that Python has built-in\n\
 libraries such as the 'urlparse' module to help, and the default\n\
-MacTelnet parsers are also available in a Python module).\n\
+MacTerm parsers are also available in a Python module).\n\
 Generally your handler constructs a Session object with a command\n\
 that is appropriate for the URL, although you could do something\n\
 else: for instance, using Python's built-in 'webbrowser' or\n\

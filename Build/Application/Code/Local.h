@@ -1,12 +1,12 @@
 /*!	\file Local.h
 	\brief UNIX-based routines for running local command-line
 	programs on Mac OS X only, routing the data through some
-	MacTelnet terminal window.
+	MacTerm terminal window.
 */
 /*###############################################################
 
 	MacTerm
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).

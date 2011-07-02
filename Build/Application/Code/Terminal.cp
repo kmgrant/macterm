@@ -1756,7 +1756,7 @@ My_ScreenBufferLine&		gEmptyScreenBufferLine ()	{ static My_ScreenBufferLine x; 
 Creates a new terminal screen and initial view according
 to the given specifications.
 
-MacTelnet 3.0 is designed so that a terminal screen buffer
+Version 3.0 is designed so that a terminal screen buffer
 can have multiple views, or vice-versa (a view can display
 the contents of multiple buffers).  Therefore, although a
 single buffer and view is created by this routine, more
@@ -2339,7 +2339,7 @@ ranges of Unicode characters.
 IMPORTANT:	This concept is under evaluation.  Probably,
 			most interactions with terminal data are not
 			necessary or, at a minimum, do not require
-			copying data - in the future MacTelnet will
+			copying data - in the future MacTerm will
 			attempt to avoid duplicating large text blocks.
 
 The end-of-line sequence is inserted at line boundaries.
@@ -2351,8 +2351,8 @@ NOTE:	You can set the first character of the sequence to
 		copy multiple lines of terminal text that “really
 		are one line”.
 
-In MacTelnet 3.0, this method now copies text differently
-if the coordinates are to define a rectangular selection.
+In version 3.0, this method now copies text differently if
+the coordinates are to define a rectangular selection.
 That is, while normal Macintosh text selection includes all
 text in the rows between the start and end anchors, a text
 selection that is “rectangular” will only include text in
@@ -2509,7 +2509,7 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 
 /*!
 Returns the title assigned to the iconified version of this
-terminal.  In MacTelnet this is symbolic, as no assumption is
+terminal.  In MacTerm this is symbolic, as no assumption is
 made that a terminal corresponds to a single minimized window;
 the exact usage of the “icon title” is not decided by this
 module.
@@ -2536,7 +2536,7 @@ Terminal_CopyTitleForIcon	(TerminalScreenRef	inRef,
 
 /*!
 Returns the title assigned to the window of this terminal.  In
-MacTelnet this is symbolic, as no assumption is made that a
+MacTerm this is symbolic, as no assumption is made that a
 terminal corresponds to a single window; the exact usage of the
 “window title” is not decided by this module.
 
@@ -3362,7 +3362,7 @@ message) for the emulator being used by the given screen.
 This value really could be anything; it is typically used
 to set a TERM environment variable for communication
 about terminal type with a running process.  If the
-process does not directly support a MacTelnet emulator,
+process does not directly support a MacTerm emulator,
 but supports something mostly compatible, this routine
 may return the name of the compatible terminal.
 
@@ -8006,8 +8006,8 @@ modeSetReset	(My_ScreenBufferPtr		inDataPtr,
 					{
 					#if 0
 						// the original VT100 has a bug where as soon as DECOM is set or cleared,
-						// ALL subsequent mode changes are ignored; since technically MacTelnet
-						// is emulating a *real* VT100 and not the ideal manual, you could enable
+						// ALL subsequent mode changes are ignored; since technically MacTerm is
+						// emulating a *real* VT100 and not the ideal manual, you could enable
 						// this flag to replicate VT100 behavior instead of what the manual says
 						emulateDECOMBug = true;
 					#endif
@@ -13211,7 +13211,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 
 /*!
 Old terminal emulator implementation.  (Ugly, huh?)
-MacTelnet 3.1 finally scraps this implementation and
+Version 3.1 finally scraps this implementation and
 moves to the fast, flexible and correct-by-construction
 callback-based mechanism.  For more information, see
 Terminal_EmulatorProcessData().

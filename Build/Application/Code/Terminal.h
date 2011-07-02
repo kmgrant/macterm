@@ -1,7 +1,7 @@
 /*!	\file Terminal.h
 	\brief Terminal screen buffer and emulators.
 	
-	MacTelnet splits terminals into two main concepts.  The
+	MacTerm splits terminals into two primary concepts.  The
 	first is the Screen, which this file implements, consisting
 	of a screen buffer and underlying emulator that parses all
 	data inserted into the terminal.  The second is the View
@@ -9,23 +9,15 @@
 	Mac OS window controls that render a terminal screen.
 	
 	Simply put, a Screen drives the back-end, and a View drives
-	the front-end.  MacTelnet 3.0 significantly advances the
-	NCSA Telnet code base by allowing Screens and Views to have
-	unlimited association.  What this means is that it will soon
-	be trivial to add any of the following features: viewing the
-	same terminal in more than one window, viewing the same
-	terminal in multiple (split-pane) views in the same window,
-	or using the same view to overlay data from any number of
-	source screen buffers!
-	
-	This was originally the NCSA virtual screen kernel, written
-	in large part by Gaige B. Paulsen.  It has been revamped in
-	MacTelnet 3.0.
+	the front-end.  There is no longer any practical limit on
+	how many views can share a screen buffer, or vice-versa, so
+	this will enable features like split-pane views and windows
+	that can dump more than one session’s terminal output.
 */
 /*###############################################################
 
 	MacTerm
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -87,7 +79,7 @@ enum Terminal_Result
 };
 
 /*!
-Setting changes that MacTelnet allows other modules to “listen” for, via
+Setting changes that MacTerm allows other modules to “listen” for, via
 Terminal_StartMonitoring().
 */
 typedef FourCharCode Terminal_Change;
@@ -209,9 +201,9 @@ enum
 {
 	kTerminal_ResetFlagsGraphicsCharacters  = (1 << 0),		//!< pass this value to reset only the active
 															//!  character set; this is primarily used when
-															//!  something screws up (either in MacTelnet
-															//!  or in the program using the terminal)
-															//!  that leaves the screen rendered entirely
+															//!  something screws up (either in MacTerm or
+															//!  in the program using the terminal) that
+															//!  leaves the screen rendered entirely
 															//!  in the graphics character set
 	kTerminal_ResetFlagsAll					= 0xFFFFFFFF	//!< pass this value to do a full reset
 };

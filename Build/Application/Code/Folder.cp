@@ -3,7 +3,7 @@
 	Folder.cp
 	
 	MacTerm
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -73,7 +73,7 @@ Folder_GetFSRef		(Folder_Ref		inFolderType,
 	
 	switch (inFolderType)
 	{
-	case kFolder_RefApplicationSupport: // the “MacTelnet” folder inside the Application Support folder
+	case kFolder_RefApplicationSupport: // the “MacTerm” folder inside the Application Support folder
 		result = Folder_GetFSRef(kFolder_RefMacApplicationSupport, parentFolderRef);
 		if (noErr == result)
 		{
@@ -90,7 +90,7 @@ Folder_GetFSRef		(Folder_Ref		inFolderType,
 				
 				CFStringGetCharacters(supportFolderNameCFString, CFRangeMake(0, kBufferSize), buffer);
 				
-				// if no MacTelnet folder exists in the Application Support folder, create it
+				// if no MacTerm folder exists in the Application Support folder, create it
 				result = FSMakeFSRefUnicode(&parentFolderRef, kBufferSize, buffer,
 											CFStringGetSmallestEncoding(supportFolderNameCFString),
 											&outFolderFSRef);
@@ -108,20 +108,20 @@ Folder_GetFSRef		(Folder_Ref		inFolderType,
 		}
 		break;
 	
-	case kFolder_RefPreferences: // the “MacTelnet Preferences” folder inside the system “Preferences” folder
+	case kFolder_RefPreferences: // the legacy application preferences folder inside the system “Preferences” folder
 		result = Folder_GetFSRef(kFolder_RefMacPreferences, parentFolderRef);
 		if (noErr == result)
 		{
 			UInt32		unusedDirID = 0L;
 			
 			
-			// if no MacTelnet Preferences folder exists in the current user’s Preferences folder, create it
+			// if no folder exists in the current user’s Preferences folder, create it
 			result = UIStrings_CreateFileOrDirectory(parentFolderRef, kUIStrings_FolderNameApplicationPreferences,
 														outFolderFSRef, &unusedDirID);
 		}
 		break;
 	
-	case kFolder_RefScriptsMenuItems: // the MacTelnet “Scripts Menu Items” folder, in MacTelnet’s preferences folder
+	case kFolder_RefScriptsMenuItems: // the legacy “Scripts Menu Items” folder, in the application’s preferences folder
 		result = Folder_GetFSRef(kFolder_RefPreferences, parentFolderRef);
 		if (noErr == result)
 		{

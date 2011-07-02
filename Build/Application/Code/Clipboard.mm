@@ -1265,7 +1265,7 @@ leaving a copy on the clipboard (replacing anything
 there).  If nothing is selected, this routine does
 nothing.
 
-Intelligently, MacTelnet automatically uses “inline”
+Intelligently, MacTerm automatically uses “inline”
 copy-and-paste for this type of operation, since
 virtually the only reason to use “type” would be to
 copy and paste a command line from the scrollback
@@ -1321,7 +1321,7 @@ clipboardUpdatesTimer	(EventLoopTimerRef	UNUSED_ARGUMENT(inTimer),
 	
 	
 	// The modification flag ONLY refers to changes made by OTHER applications.
-	// Changes to the local pasteboard by MacTelnet are therefore tracked in a
+	// Changes to the local pasteboard by MacTerm are therefore tracked in a
 	// separate map.
 	if ((flags & kPasteboardModified) ||
 		(gClipboardLocalChanges().end() != gClipboardLocalChanges().find(kPasteboard)))

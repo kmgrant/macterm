@@ -575,7 +575,7 @@ Constructs the internal menu of available text
 encodings, and the sorted list of character set
 info.
 
-NOTE:	MacTelnet should re-invoke this method
+NOTE:	MacTerm should re-invoke this method
 		whenever the user changes the current
 		key script; it currently DOES NOT.
 

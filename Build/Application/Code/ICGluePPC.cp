@@ -116,14 +116,14 @@ OSStatus ICCStop(ComponentInstance inst)
 	return (ICStop((ICInstance)inst));
 }
 
-// MacTelnet 3.0 - changed Ptr to ComponentInstance
+// version 3.0 - changed Ptr to ComponentInstance
 OSStatus ICGetComponentInstance(ICInstance inst, ComponentInstance *component_inst)
 {
 	*component_inst = (ComponentInstance)inst;
 	return (noErr);
 }
 
-// MacTelnet 3.0 - changed Ptr to ComponentInstance
+// version 3.0 - changed Ptr to ComponentInstance
 OSStatus ICCGetComponentInstance(ComponentInstance inst, ComponentInstance *component_inst)
 {
 	return (ICGetComponentInstance((ICInstance)inst, component_inst));

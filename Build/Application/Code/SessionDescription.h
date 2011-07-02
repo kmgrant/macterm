@@ -67,7 +67,7 @@ enum SessionDescription_ContentType
 	kSessionDescription_ContentTypeUnknown				= '----'	//!< unknown contents, either because the
 																	//!  data model has just been created or
 																	//!  perhaps has been read from a file
-																	//!  created by a future MacTelnet version
+																	//!  created by a future MacTerm version
 };
 
 /*!

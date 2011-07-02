@@ -20,7 +20,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -71,7 +71,7 @@ enum SessionFactory_Result
 };
 
 /*!
-Setting changes that MacTelnet allows other modules to
+Setting changes that MacTerm allows other modules to
 “listen” for, via SessionFactory_StartMonitoring().
 */
 typedef FourCharCode SessionFactory_Change;
@@ -124,8 +124,8 @@ This procedure type defines a convenient function that,
 among other things, can be used as an iterator of all
 terminal windows representing sessions.  A wealth of
 useful information can be found using only the provided
-parameters, shielding code in the rest of MacTelnet
-from the actual session list implementation.
+parameters, shielding code in the rest of MacTerm from
+the actual session list implementation.
 */
 typedef void (*SessionFactory_SessionOpProcPtr)	(SessionRef		inSession,
 												 void*			inData1,
@@ -148,8 +148,8 @@ This procedure type defines a convenient function that,
 among other things, can be used as an iterator of all
 terminal windows of any kind.  A wealth of useful
 information can be found using only the provided
-parameters, shielding code in the rest of MacTelnet
-from the actual terminal window list implementation.
+parameters, shielding code in the rest of MacTerm from
+the actual terminal window list implementation.
 
 Note that it is sometimes more appropriate to iterate
 over Sessions than Terminal Windows.  Carefully consider

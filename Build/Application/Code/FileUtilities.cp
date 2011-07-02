@@ -3,7 +3,7 @@
 	FileUtilities.cp
 	
 	MacTerm
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -53,7 +53,7 @@
 
 /*!
 Use this convenient routine to fire an Apple Event
-back to MacTelnet (that is hence recordable) to “open”
+back to MacTerm (that is hence recordable) to “open”
 the specified file via an “open documents” event.  If
 you are opening a file for any reason, you should
 generally handle it by calling this routine, and then
@@ -70,7 +70,7 @@ FileUtilities_OpenDocument	(FSRef const&	inFSRef)
 	
 	
 	// Create a “list” of documents containing only the specified file, add the file’s
-	// OS data structure and then send it back to MacTelnet as an “open documents” event.
+	// OS data structure and then send it back to MacTerm as an “open documents” event.
 	// A list is used because it is more versatile.
 	result = AppleEventUtilities_InitAEDesc(&docList);
 	if (noErr == result)
@@ -110,7 +110,7 @@ FileUtilities_OpenDocuments		(AEDescList const&	inList)
 	AppleEvent	openDocumentsEvent;
 	
 	
-	// send the list back to MacTelnet as an “open documents” event
+	// send the list back to MacTerm as an “open documents” event
 	result = AppleEventUtilities_InitAEDesc(&openDocumentsEvent);
 	if (noErr == result)
 	{

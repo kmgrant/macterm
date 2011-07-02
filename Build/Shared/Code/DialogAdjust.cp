@@ -310,14 +310,6 @@ DialogAdjust_EndAdjustment		(SInt32		inDialogDeltaSizeX,
 	delta.deltaX = inDialogDeltaSizeX;
 	delta.deltaY = inDialogDeltaSizeY;
 	
-	// Mac OS X 10.2 and beyond offer compositing mode in windows,
-	// which MacTelnet has always had.  Basically, the control changes
-	// can occur with a minimum of redrawing.  Ironically, MacTelnet’s
-	// compositing is actually *detrimental* to Mac OS X 10.2 windows
-	// that are compositing.  So, in that case, the control adjustments
-	// are made directly, without any special drawing on this end.  If
-	// a window is not compositing, it still requires the MacTelnet
-	// graphics world cache to make the image look correct.
 	if (Embedding_WindowUsesCompositingMode(gPendingAdjustmentWindowRef))
 	{
 		HIViewRef	root = nullptr;

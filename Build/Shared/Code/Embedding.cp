@@ -661,7 +661,7 @@ offscreenDumpDeviceLoop		(short		inColorDepth,
 #if 0
 	if (dataPtr->result != noErr)
 	{
-		// send an Apple Event to MacTelnet to print the error
+		// send an Apple Event back to the application to print the error
 		Str255		string;
 		Str31		numString;
 		

@@ -1511,7 +1511,7 @@ TerminalView_IgnoreChangesToPreference	(TerminalViewRef	inView,
 
 
 /*!
-MacTelnet 3.0 supports two modes of text selection:
+Version 3.0 supports two modes of text selection:
 standard, like most Macintosh applications, and
 rectangular, which allows only rectangular regions,
 anywhere in a terminal window, to be highlighted.
@@ -1525,7 +1525,7 @@ window, use this method and pass a value of "true"
 for the second parameter.  To reset text selections
 to normal, pass "false".
 
-IMPORTANT:	All of MacTelnet’s functions, including
+IMPORTANT:	All of MacTerm’s functions, including
 			updating the terminal text selection of a
 			window, rely on this flag.  Thus, you
 			should ensure a text selection is *empty*
@@ -1601,13 +1601,12 @@ TerminalView_MoveCursorWithArrowKeys	(TerminalViewRef	inView,
 
 
 /*!
-Determines whether a point in the coordinate
-system of a window’s graphics port is in the
-boundaries of the highlighted text in that
-window (if any).
+Determines whether a point in the coordinate system of a
+window’s graphics port is in the boundaries of the
+highlighted text in that window (if any).
 
-Updated in MacTelnet 3.0 to account for a
-selection area that is rectangular.
+Updated in version 3.0 to account for a selection area
+that is rectangular.
 
 (2.6)
 */
@@ -2726,17 +2725,16 @@ TerminalView_SelectNothing	(TerminalViewRef	inView)
 
 
 /*!
-Highlights the specified range of text, clearing any
-other selection outside the range.
+Highlights the specified range of text, clearing any other
+selection outside the range.
 
-In MacTelnet 3.0, the exact characters selected depends
-on the current selection mode: in normal mode, the
-specified anchors mark the first and last characters of
-a Macintosh-style selection range.  However, if the new
-“rectangular text selection” mode is being used, the
-width of each line of the selected region is the same,
-equal to the difference between the horizontal coordinates
-of the given points.
+In version 3.0, the exact characters selected depends on the
+current selection mode: in normal mode, the specified anchors
+mark the first and last characters of a Macintosh-style
+selection range.  However, if the new “rectangular text
+selection” mode is being used, the width of each line of the
+selected region is the same, equal to the difference between
+the horizontal coordinates of the given points.
 
 (2.6)
 */
@@ -2985,7 +2983,7 @@ TerminalView_ReturnDisplayMode() routine to determine
 what the display mode is.
 
 Remember, this only affects a single screen!  It is now
-customary in MacTelnet to perform these kinds of actions
+customary in MacTerm to perform these kinds of actions
 at the highest level possible; therefore, if you are
 responding to a user command, look for a similar API at,
 say, the Terminal Window level.
@@ -3245,10 +3243,10 @@ TerminalView_TextSelectionExists	(TerminalViewRef	inView)
 Returns "true" only if text selections in the specified
 view are currently forced to be rectangular.
 
-MacTelnet 3.0 supports two modes of text selection:
-standard, like most Macintosh applications, and
-rectangular, useful for capturing columns of output (for
-example, data from a UNIX command like "top").
+Version 3.0 supports two modes of text selection: standard,
+like most Macintosh applications, and rectangular, useful
+for capturing columns of output (for example, data from a
+UNIX command like "top").
 
 (3.0)
 */
@@ -5250,7 +5248,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 		// at a time; bold fonts typically increase the font spacing, and double-
 		// sized text needs to occupy twice the normal font spacing, so a regular
 		// DrawText() won’t work; instead, each character must be drawn
-		// individually, allowing MacTelnet to correct the pen location after
+		// individually, allowing MacTerm to correct the pen location after
 		// each character *as if* a normal character were just rendered (this
 		// ensures that everything remains aligned with text in the same column)
 		if (terminalFontSize == kArbitraryDoubleWidthDoubleHeightPseudoFontSize)
@@ -5423,9 +5421,9 @@ old drawing code that must use QuickDraw.
 
 Due to the difficulty of creating vector-based fonts
 that line graphics up properly, and the lousy look
-of scaled-up bitmapped fonts, MacTelnet renders most
+of scaled-up bitmapped fonts, MacTerm renders most
 VT font characters on its own, using line drawing.
-In addition, MacTelnet uses international symbols
+In addition, MacTerm uses international symbols
 for glyphs such as CR, HT, etc. instead of the Roman-
 based ones prescribed by the standard VT font.
 
@@ -6739,7 +6737,7 @@ getScreenColorsForAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 		TerminalView_ColorIndex		fg = kTerminalView_ColorIndexNormalText;
 		
 		
-		// the blinking text color is favored because MacTelnet 3.0 has
+		// the blinking text color is favored because version 3.0 has
 		// “real” bold text; therefore, if some text happens to be both
 		// boldface and blinking, using the blinking text color ensures
 		// the text will still be recognizeable as boldface
@@ -6776,7 +6774,7 @@ getScreenColorsForAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 		TerminalView_ColorIndex		bg = kTerminalView_ColorIndexNormalBackground;
 		
 		
-		// the blinking text color is favored because MacTelnet 3.0 has
+		// the blinking text color is favored because version 3.0 has
 		// “real” bold text; therefore, if some text happens to be both
 		// boldface and blinking, using the blinking text color ensures
 		// the text will still be recognizeable as boldface
@@ -7852,7 +7850,7 @@ Invalid areas are redrawn at the next opportunity, and
 may not be drawn at all if the invalid area becomes
 irrelevant before the next drawing occurs.
 
-MacTelnet maintains invalid regions in terms of logical
+MacTerm maintains invalid regions in terms of logical
 sections of the terminal, so that the right area is
 always redrawn even after scrolling, font size changes,
 etc.
@@ -11126,14 +11124,14 @@ attributes of the font information for the specified
 screen.  The font information is determined by looking
 at the current settings for the specified port.
 
-This routine corrects a long-standing bug where MacTelnet
+This routine corrects a long-standing bug where MacTerm
 would incorrectly recalculate the font width attribute
 based on the current font of the specified port, not the
 default font of the specified screen.  On a terminal
 screen, every cell must be the same width, so all
 rendered fonts must use the same width, regardless of
 the width that they might otherwise require.  Thus, as
-of MacTelnet 3.0, font metrics ignore the current font
+of version 3.0, font metrics ignore the current font
 of the screen (e.g. regardless of whether boldface text
 is currently being drawn) and use the default font.
 
@@ -11915,8 +11913,8 @@ off (“visual bell”), no bell is heard, but the window
 is flashed.  If the specified window is not in front
 at the time this method is invoked, the window will
 flash regardless of the “visual bell” setting.  If
-MacTelnet is suspended when the bell occurs, and the
-user has notification preferences set, MacTelnet will
+MacTerm is suspended when the bell occurs, and the
+user has notification preferences set, MacTerm will
 post a notification event.
 
 (3.0)

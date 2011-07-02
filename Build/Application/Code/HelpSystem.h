@@ -1,7 +1,7 @@
 /*!	\file HelpSystem.h
-	\brief A simple mechanism for managing access to MacTelnet
-	Help, especially context-sensitive help for use with things
-	like dialog help buttons.
+	\brief A simple mechanism for managing access to the
+	application’s user documentation and context-sensitive
+	help.
 	
 	To reduce dependencies on the actual string value of a
 	contextual help search, this module usually operates in
@@ -12,7 +12,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2008 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -62,7 +62,7 @@ enum HelpSystem_Result
 typedef FourCharCode HelpSystem_KeyPhrase;
 enum
 {
-	// identifiers that trigger actions in MacTelnet Help (usually, opening specific pages)
+	// identifiers that trigger actions in MacTerm Help (usually, opening specific pages)
 	kHelpSystem_KeyPhraseDefault		= '----', // used to open “nothing in particular”
 	kHelpSystem_KeyPhraseCommandLine	= 'CmdL',
 	kHelpSystem_KeyPhraseConnections	= 'Cnxn',

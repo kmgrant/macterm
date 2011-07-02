@@ -1352,7 +1352,7 @@ backgroundNotification ()
 			gNotificationPtr->nmResp = nullptr;
 			gNotificationPtr->nmRefCon = 0L;
 			
-			// badge MacTelnet’s Dock tile with a caution icon, if that preference is set
+			// badge the application’s Dock tile with a caution icon, if that preference is set
 			if (gNotificationPreferences >= kAlert_NotifyDisplayDiamondMark)
 			{
 				badgeApplicationDockTile();

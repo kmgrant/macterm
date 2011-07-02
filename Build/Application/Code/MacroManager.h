@@ -2,13 +2,11 @@
 	\brief Lists methods to access the strings associated with
 	keyboard equivalents.
 	
-	The MacTelnet 4 implementation of macros is even more
-	sophisticated than the one from 3.0 (which itself was a
-	rewrite of older approaches!).  All limits on the number
-	of possible sets have now been removed.  Macros can now
-	have actions other than sending text; for instance, they
-	can open URLs.  And, they now support many more key
-	combinations!
+	The MacTerm implementation of macros is very sophisticated.
+	There are no practical limits on the number of possible
+	macro sets.  Macros can now have actions other than sending
+	text; for instance, they can open URLs.  And, they now
+	support many more key combinations!
 	
 	The Preferences module now handles low-level access to
 	basic macro information.  Therefore, you can modify, read,
@@ -26,7 +24,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2008 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).

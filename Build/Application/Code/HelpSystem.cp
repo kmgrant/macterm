@@ -3,7 +3,7 @@
 	HelpSystem.cp
 	
 	MacTerm
-		© 1998-2007 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -70,9 +70,9 @@ static HelpSystem_KeyPhrase		getCurrentContextKeyPhrase 		();
 #pragma mark Public Methods
 
 /*!
-Opens MacTelnet Help and displays a page appropriate
-for the given key phrase.  Normally, this is how you
-would handle a click in a dialog box help button.
+Opens the main help system and displays a page appropriate
+for the given key phrase.  Normally, this is how you would
+handle a click in a dialog box help button.
 
 DEPRECATED.
 
@@ -101,12 +101,11 @@ HelpSystem_DisplayHelpFromKeyPhrase		(HelpSystem_KeyPhrase	inKeyPhrase)
 
 
 /*!
-Opens MacTelnet Help and displays a page appropriate
-for the current context.  Typically you set a context
-(say, when a window opens) using the routine
-HelpSystem_SetCurrentContextKeyPhrase(), and then you
-display help for that context with this routine (say,
-when the user clicks a help button).
+Opens the main help system and displays a page appropriate
+for the current context.  Typically you set a context (say,
+for a window) using HelpSystem_SetCurrentContextKeyPhrase(),
+and then you display help for that context with this routine
+when the user clicks a help button or uses a menu.
 
 (3.0)
 */
@@ -302,7 +301,7 @@ copyCFStringHelpSearch	(HelpSystem_KeyPhrase	inKeyPhrase,
 
 
 /*!
-Opens MacTelnet Help and displays a page appropriate
+Opens the main help system and displays a page appropriate
 for the given key phrase.
 
 \retval kHelpSystem_ResultOK

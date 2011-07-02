@@ -199,7 +199,7 @@ When Python code determines that the current version of the
 program is out of date, this function should be called to
 trigger an appropriate warning to the user.
 
-This is for MacTelnet internal use, and is only exposed to
+This is for application internal use, and is only exposed to
 Python because the majority of the checking code is in Python.
 
 (4.0)

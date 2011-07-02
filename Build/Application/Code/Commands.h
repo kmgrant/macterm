@@ -1,6 +1,6 @@
 /*!	\file Commands.h
 	\brief A list of all command IDs, and a mechanism for
-	invoking MacTelnet’s main features.
+	invoking the application’s main features.
 	
 	A command is a series of primitive actions that leads to a
 	result; usually, there is a menu item for each command (but
@@ -88,7 +88,7 @@ Command IDs
 
 WARNING:	Although all source code should refer to these
 			IDs only via the constants below, a number of
-			Interface Builder NIB files for MacTelnet will
+			Interface Builder NIB files for MacTerm will
 			refer to these by value.  Do not arbitrarily
 			change command IDs without realizing all the
 			places they may be used.
@@ -103,11 +103,11 @@ uses.  This has a number of advantages.  For one, a lot of
 things “just work right” as a result (the OS knows when to
 disable the Minimize Window menu command, for example, since
 it can tell whether the frontmost window has a minimization
-button).  Also, using standard commands means that MacTelnet
+button).  Also, using standard commands means that MacTerm
 will receive events properly when future OS capabilities are
 added (for example, window content controls might gain
 contextual menus that can automatically execute the right
-MacTelnet commands, such as Cut, Copy, Paste or Undo).
+MacTerm commands, such as Cut, Copy, Paste or Undo).
 */
 
 // Application (Apple) menu

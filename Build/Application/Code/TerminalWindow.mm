@@ -682,7 +682,7 @@ and pass the count as "inArrayLength".  Note that this
 is the number of elements, not necessarily the number
 of bytes!
 
-Currently, MacTelnet only has one screen per window, so
+Currently, MacTerm only has one screen per window, so
 only one screen will be returned.  However, if your code
 *could* vary depending on the number of screens in a
 window, you should use this API to iterate properly now,
@@ -873,7 +873,7 @@ and pass the count as "inArrayLength".  Note that this
 is the number of elements, not necessarily the number
 of bytes!
 
-Currently, MacTelnet only has one view per window, so
+Currently, MacTerm only has one view per window, so
 only one view will be returned.  However, if your code
 *could* vary depending on the number of views in a
 window, you should use this API to iterate properly now,
@@ -927,7 +927,7 @@ sure to pass the same group constant, too!).  Note
 that this is the number of *elements*, not necessarily
 the number of bytes!
 
-Currently, MacTelnet only has one view per window, so
+Currently, MacTerm only has one view per window, so
 only one view will be returned.  However, if your code
 *could* vary depending on the number of views in a
 window, you should use this API to iterate properly now,
@@ -1215,7 +1215,7 @@ buffers in the given terminal window.  For example,
 even if the window contains 3 split-pane views of the
 same screen buffer, the result will still be 1.
 
-Currently, MacTelnet only has one screen per window,
+Currently, MacTerm only has one screen per window,
 so the return value will always be 1.  However, if your
 code *could* vary depending on the number of screens in
 a window, you should use this API along with
@@ -1242,7 +1242,7 @@ recently had keyboard focus in the given terminal window.
 Thus, a valid reference is returned even if no terminal
 screen control has the keyboard focus.
 
-WARNING:	MacTelnet could change in the future to
+WARNING:	MacTerm is going to change in the future to
 			support multiple screens per window.  Be sure
 			to use TerminalWindow_GetScreens() instead of
 			this routine if it is appropriate to iterate
@@ -1267,7 +1267,7 @@ Returns the number of distinct terminal views in the
 given terminal window.  For example, if a window has a
 single split, the result will be 2.
 
-Currently, MacTelnet only has one view per window, so
+Currently, MacTerm only has one view per window, so
 the return value will always be 1.  However, if your
 code *could* vary depending on the number of views in
 a window, you should use this API along with
@@ -1335,7 +1335,7 @@ recently had keyboard focus in the given terminal window.
 Thus, a valid reference is returned even if no terminal
 screen control has the keyboard focus.
 
-WARNING:	MacTelnet could change in the future to
+WARNING:	MacTerm is going to change in the future to
 			support multiple views per window.  Be sure
 			to use TerminalWindow_GetViews() instead of
 			this routine if it is appropriate to iterate
@@ -2729,11 +2729,7 @@ calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 
 
 /*!
-Calculates the position of windows.  In MacTelnet 3.0,
-there is no user preference for staggering windows:
-windows are ALWAYS staggered upon creation, and the
-amount to stagger by changes depending on the current
-Appearance theme.
+Calculates the stagger position of windows.
 
 (2.6)
 */
@@ -6454,9 +6450,8 @@ reverseScreenDimensionChanges	(Undoables_ActionInstruction	inDoWhat,
 
 
 /*!
-This is a standard control action procedure which,
-as of MacTelnet 3.0, dynamically scrolls a terminal
-window.
+This is a standard control action procedure that dynamically
+scrolls a terminal window.
 
 (2.6)
 */

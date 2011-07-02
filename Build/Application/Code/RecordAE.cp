@@ -81,7 +81,7 @@ OSStatus	stopRecording						();
 /*!
 This method initializes the Apple Event handlers
 for the Required Suite, and creates an address
-descriptor so MacTelnet can send events to itself
+descriptor so MacTerm can send events to itself
 (for recordability).
 
 \retval kRecordAE_ResultOK
@@ -99,11 +99,11 @@ RecordAE_Init ()
 	OSStatus			error = noErr;
 	
 	
-	// Set up a self-addressed, stamped envelope so MacTelnet can perform all
+	// Set up a self-addressed, stamped envelope so MacTerm can perform all
 	// of its operations by making an end run through the system.  This odd
 	// but powerful approach allows recording applications, such as the
 	// Script Editor, to automatically write scripts based on what users do
-	// in MacTelnet!
+	// in MacTerm!
 	gSelfProcessID.highLongOfPSN = 0;
 	gSelfProcessID.lowLongOfPSN = kCurrentProcess; // don’t use GetCurrentProcess()!
 	error = AECreateDesc(typeProcessSerialNumber, &gSelfProcessID, sizeof(gSelfProcessID), &gSelfAddress);

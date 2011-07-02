@@ -74,7 +74,7 @@ enum TerminalWindow_Result
 };
 
 /*!
-Setting changes that MacTelnet allows other modules to “listen” for,
+Setting changes that MacTerm allows other modules to “listen” for,
 via TerminalWindow_StartMonitoring().
 */
 enum TerminalWindow_Change

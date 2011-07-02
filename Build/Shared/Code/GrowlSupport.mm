@@ -297,7 +297,7 @@ application.
 growlIsReady
 {
 	// this might only be received upon restart of Growl, not at startup;
-	// but it is handled in case Growl is started after MacTelnet starts
+	// but it is handled in case Growl is started after MacTerm starts
 	self->isReady = true;
 }// growlIsReady
 
