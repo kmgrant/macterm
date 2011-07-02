@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110702',
     '20110701',
     '20110629',
     '20110622',
@@ -392,6 +393,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110702': [
+        'Renamed!  MacTelnet on Mac OS X will be known as "MacTerm" from now on.',
+    ],
     '20110701': [
         'Fixed a problem with the time calculation that determines when to display a Check for Updates warning.',
     ],
