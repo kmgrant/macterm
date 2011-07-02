@@ -214,11 +214,10 @@ if __name__ == "__main__":
                     # over a year, definitely old
                     old = True
                 else:
-                    # builds are same year, do a diff of months (and
-                    # because of the way the numbers are, it's enough
-                    # to subtract the whole thing without breaking it
-                    # up into parts)
-                    diff = int(latest_yyyymmdd) - int(build)
+                    # builds are same year, do a diff of months
+                    month_now = int(latest_yyyymmdd[4:6])
+                    month_build = int(build[4:6])
+                    diff = int(month_now) - int(month_build)
                     old = (diff > months_for_old)
                 if old:
                     Base._version_warning()
