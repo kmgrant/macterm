@@ -91,7 +91,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		20286C29FDCF999611CA2CEA /* MacTelnetPrefsConverter */ = {
+		20286C29FDCF999611CA2CEA /* PrefsConverter */ = {
 			isa = PBXGroup;
 			children = (
 				0A33CC5407FABADE00248DDF /* Shared */,
@@ -106,7 +106,7 @@
 				0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */,
 				0AA1631F0825E7CE0071EA63 /* PrefsConverter.nib */,
 			);
-			name = MacTelnetPrefsConverter;
+			name = PrefsConverter;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -139,7 +139,7 @@
 			);
 			name = PrefsConverter;
 			productInstallPath = "$(HOME)/Applications";
-			productName = MacTelnetPrefsConverter;
+			productName = PrefsConverter;
 			productReference = 8D0C4E970486CD37000505A6 /* PrefsConverter.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -158,7 +158,7 @@
 				French,
 				German,
 			);
-			mainGroup = 20286C29FDCF999611CA2CEA /* MacTelnetPrefsConverter */;
+			mainGroup = 20286C29FDCF999611CA2CEA /* PrefsConverter */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (

@@ -670,7 +670,7 @@
         <object class="IBCarbonCheckBox" id="1227">
           <ostype name="controlSignature">BelN</ostype>
           <ostype name="command">MarB</ostype>
-          <string name="helpTagText">What to do if MacTelnet is not the active application when a terminal bell occurs.</string>
+          <string name="helpTagText">What to do if MacTerm is not the active application when a terminal bell occurs.</string>
           <string name="title">Background notification on bell</string>
           <string name="viewFrame">228 102 254 18 </string>
           <string name="bounds">102 228 120 482 </string>

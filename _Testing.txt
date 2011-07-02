@@ -25,7 +25,7 @@ PYTHON MODULE TESTS
   
   Keep in mind that if a Python module depends on Quills, it will
   also depend on compiled libraries, and therefore is easiest to
-  run within the main script (MacTelnet.app/Contents/MacOS/...)
+  run within the main script (MacTerm.app/Contents/MacOS/...)
   where library environment variables are already set correctly.
 
 TERMINAL TESTS

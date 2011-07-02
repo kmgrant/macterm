@@ -39,7 +39,7 @@
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<object class="NSMenuItem" id="694149608">
 						<reference key="NSMenu" ref="649796088"/>
-						<string key="NSTitle">MacTelnet</string>
+						<string key="NSTitle">MacTerm</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<object class="NSCustomResource" key="NSOnImage" id="229763992">
@@ -53,12 +53,12 @@
 						<string key="NSAction">submenuAction:</string>
 						<int key="NSTag">512</int>
 						<object class="NSMenu" key="NSSubmenu" id="110575045">
-							<string key="NSTitle">MacTelnet</string>
+							<string key="NSTitle">MacTerm</string>
 							<object class="NSMutableArray" key="NSMenuItems">
 								<bool key="EncodedWithXMLCoder">YES</bool>
 								<object class="NSMenuItem" id="238522557">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">About MacTelnet</string>
+									<string key="NSTitle">About MacTerm</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="229763992"/>
@@ -130,7 +130,7 @@
 								</object>
 								<object class="NSMenuItem" id="639115496">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">MacTelnet Web Site</string>
+									<string key="NSTitle">MacTerm Web Site</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="229763992"/>
@@ -138,7 +138,7 @@
 								</object>
 								<object class="NSMenuItem" id="308688771">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Provide MacTelnet Feedback</string>
+									<string key="NSTitle">Provide MacTerm Feedback</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="229763992"/>
@@ -182,7 +182,7 @@
 								</object>
 								<object class="NSMenuItem" id="328456687">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Hide MacTelnet</string>
+									<string key="NSTitle">Hide MacTerm</string>
 									<string key="NSKeyEquiv">h</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -218,7 +218,7 @@
 								</object>
 								<object class="NSMenuItem" id="841890464">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Quit MacTelnet</string>
+									<string key="NSTitle">Quit MacTerm</string>
 									<string key="NSKeyEquiv">q</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -1654,7 +1654,7 @@
 								<bool key="EncodedWithXMLCoder">YES</bool>
 								<object class="NSMenuItem" id="456947921">
 									<reference key="NSMenu" ref="227753972"/>
-									<string key="NSTitle">MacTelnet Help</string>
+									<string key="NSTitle">MacTerm Help</string>
 									<string key="NSKeyEquiv">?</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -1767,7 +1767,7 @@
 					</object>
 					<object class="NSMenuItem" id="972153768">
 						<reference key="NSMenu" ref="589872605"/>
-						<string key="NSTitle">About MacTelnet</string>
+						<string key="NSTitle">About MacTerm</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="229763992"/>
@@ -1785,7 +1785,7 @@
 					</object>
 					<object class="NSMenuItem" id="972761311">
 						<reference key="NSMenu" ref="589872605"/>
-						<string key="NSTitle">MacTelnet Web Site</string>
+						<string key="NSTitle">MacTerm Web Site</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="229763992"/>

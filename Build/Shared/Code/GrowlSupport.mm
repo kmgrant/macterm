@@ -160,7 +160,7 @@ GrowlSupport_Notify		(CFStringRef	inNotificationName,
 		NSAppleEventDescriptor*	returnDescriptor = nil;
 		NSString*				scriptText = [[NSString alloc] initWithFormat:@"\
 			tell application \"GrowlHelperApp\"\n\
-				notify with name \"%@\" title \"%@\" description \"%@\" application name \"MacTelnet\"\n\
+				notify with name \"%@\" title \"%@\" description \"%@\" application name \"MacTerm\"\n\
 			end tell",
 			(NSString*)inNotificationName,
 			(NSString*)inTitle,

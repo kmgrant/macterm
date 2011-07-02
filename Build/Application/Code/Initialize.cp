@@ -128,7 +128,7 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	// initialize memory manager, start up toolbox managers, etc.
 	initMacOSToolbox();
 	
-	// on Mac OS X the following call also stops the bouncing of MacTelnet’s Dock icon
+	// on Mac OS X the following call also stops the bouncing of the Dock icon
 	//FlushEvents(everyEvent/* events to flush */, 0/* events to not flush */);
 	
 	initApplicationCore();
@@ -328,9 +328,9 @@ Initialize_ApplicationShutDownRemainingComponents ()
 
 /*!
 This method initializes key modules (both
-internally and from MacTelnet’s libraries),
+internally and from MacTerm’s libraries),
 installs Apple Event handlers for the
-Apple Events that MacTelnet supports and
+Apple Events that MacTerm supports and
 requires, and reads user preferences.
 
 If errors occur at this stage, this method
@@ -413,13 +413,13 @@ initApplicationCore ()
 
 /*!
 This method starts up all of the Mac OS tool sets
-needed by MacTelnet 3.0, and allocates a memory
+needed by version 3.0, and allocates a memory
 reserve.
 
 If errors occur at this stage, this method may
 not return.  If this routine actually returns,
 then the user’s computer is at least minimally
-capable of running MacTelnet 3.0.  However, more
+capable of running version 3.0.  However, more
 tests are done in initApplicationCore()...
 
 (3.0)

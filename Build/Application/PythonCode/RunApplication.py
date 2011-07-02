@@ -1,20 +1,20 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
-"""This is where the bulk of MacTelnet is initialized, but it's best to run it
-indirectly by using the "./MacTelnet" script (which sets all the library paths).
+"""This is where the bulk of MacTerm is initialized, but it's best to run it
+indirectly by using the "./MacTerm" script (which sets all the library paths).
 
-This Python code relies on compiled C++ routines from MacTelnet, which are in
+This Python code relies on compiled C++ routines from MacTerm, which are in
 the module "quills".  Most Python code is in the "pymacterm" module, and any of
 it may require "quills" in order to work.
 
-When the MacTelnet GUI runs, the event loop prevents normal flow of Python code.
+When the MacTerm GUI runs, the event loop prevents normal flow of Python code.
 So, "quills" relies heavily on callbacks: functions can be defined ahead of time
 in Python, registered according to their purpose, and used only when they're
 needed.
 
 This exposure to Python simplifies debugging, and gives you extensibility and
 configuration options that most applications lack!  This file shows just a few
-examples of what you can do...look for more information at MacTelnet.com.
+examples of what you can do...look for more information at MacTerm.net.
 """
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '24 August 2006'
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     # will be imported automatically!  And, any functions it defines that match
     # a known protocol will be called.  This allows "cleaner" customization,
     # because you can affect the behavior of this startup code without actually
-    # editing the file (MacTelnet upgrades will also be smoother).
+    # editing the file (MacTerm upgrades will also be smoother).
     #
     # Although the path usually contains many directories, the following choices
     # will probably work best:
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     #
     # The following user customizations are defined.  If you do not want to use
     # something, just leave it out; but what you do define must EXACTLY match
-    # what is expected in this file, or MacTelnet may have problems starting up!
+    # what is expected in this file, or MacTerm may have problems starting up!
     # (If you see a failure, run the Console application to help debug.)
     #
     # --------------------------------------------------------------------------
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     #         return ws
     #
     # --------------------------------------------------------------------------
-    if "MACTELNET_SKIP_CUSTOM_LIBS" in os.environ:
+    if "MACTERM_SKIP_CUSTOM_LIBS" in os.environ:
         print "MacTerm: ignoring any 'customize_macterm' module (environment setting)"
     else:
         try:
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     # if you intend to use your own GUI elements with "wx", you need to
     # import and construct the application object at this point (that is,
     # before Quills is initialized); this allows your callbacks to pop up
-    # simple interfaces, such as wx.MessageDialog(), within MacTelnet!
+    # simple interfaces, such as wx.MessageDialog(), within MacTerm!
     #import wx
     #app = wx.PySimpleApp()
     
@@ -168,14 +168,14 @@ if __name__ == "__main__":
     now = datetime.datetime.now()
     print "MacTerm: %s" % now.strftime("%A, %B %d, %Y, %I:%M %p")
     
-    # load all required MacTelnet modules
+    # load all required MacTerm modules
     Base.all_init(initial_workspace=initial_workspace())
     
-    # undo environment settings made by the "MacTelnet" script, so as not
+    # undo environment settings made by the "MacTerm" script, so as not
     # to pollute the user environment too much
     for removed_var in (
         # this list should basically correspond to any uses of
-        # "os.environ" in the "MacTelnet" front-end script
+        # "os.environ" in the "MacTerm" front-end script
         'DYLD_FRAMEWORK_PATH',
         'DYLD_LIBRARY_PATH',
         'INITIAL_APP_BUNDLE_DIR',
@@ -225,12 +225,12 @@ if __name__ == "__main__":
         print "exception in version check", e
     
     # optionally invoke some unit tests
-    do_testing = ("MACTELNET_RUN_TESTS" in os.environ)
+    do_testing = ("MACTERM_RUN_TESTS" in os.environ)
     if do_testing:
         import pymacterm
         pymacterm.run_all_tests()
     
-    # register MacTelnet features that are actually implemented in Python!
+    # register MacTerm features that are actually implemented in Python!
     Session.on_urlopen_call(pymacterm.url.open.file, 'file')
     Session.on_urlopen_call(pymacterm.url.open.ftp, 'ftp')
     Session.on_urlopen_call(pymacterm.url.open.sftp, 'sftp')
@@ -267,12 +267,12 @@ if __name__ == "__main__":
     # banner
     print "MacTerm: Full initialization complete."
     
-    # (if desired, insert code at this point to interact with MacTelnet)
+    # (if desired, insert code at this point to interact with MacTerm)
     
     # if you want to find out when new sessions are created, you can
     # define a Python function and simply register it...
     #def my_py_func():
-    #    print "\n\nI was called by MacTelnet!\n\n"
+    #    print "\n\nI was called by MacTerm!\n\n"
     #Session.on_new_call(my_py_func)
     
     # the following line would run a command every time you start up...

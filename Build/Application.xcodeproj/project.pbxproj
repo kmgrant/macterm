@@ -538,7 +538,7 @@
 		0AE103AE0F71D003003127C7 /* ServerBrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ServerBrowser.h; path = Application/Code/ServerBrowser.h; sourceTree = "<group>"; };
 		0AE103B00F71D018003127C7 /* ServerBrowser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ServerBrowser.mm; path = Application/Code/ServerBrowser.mm; sourceTree = "<group>"; };
 		0AE1F16B0AF3E2C000D2DC13 /* QuillsCallbacks.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsCallbacks.typedef.h; path = Application/Code/QuillsCallbacks.typedef.h; sourceTree = "<group>"; };
-		0AE1F38D0AF41DA200D2DC13 /* MacTelnet */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = MacTelnet; path = Application/PythonCode/MacTelnet; sourceTree = "<group>"; };
+		0AE1F38D0AF41DA200D2DC13 /* MacTerm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = MacTerm; path = Application/PythonCode/MacTerm; sourceTree = "<group>"; };
 		0AE2859B0B8D6E7000E2253A /* IconForKeypadEnter.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadEnter.icns; path = Application/Resources/IconForKeypadEnter.icns; sourceTree = "<group>"; };
 		0AE285A20B8D732600E2253A /* IconForKeypadArrowLeft.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadArrowLeft.icns; path = Application/Resources/IconForKeypadArrowLeft.icns; sourceTree = "<group>"; };
 		0AE285B80B8D75F200E2253A /* IconForKeypadArrowRight.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadArrowRight.icns; path = Application/Resources/IconForKeypadArrowRight.icns; sourceTree = "<group>"; };
@@ -894,7 +894,7 @@
 			isa = PBXGroup;
 			children = (
 				0A70B8AC1079C33B0013E76F /* PythonMain.cp */,
-				0AE1F38D0AF41DA200D2DC13 /* MacTelnet */,
+				0AE1F38D0AF41DA200D2DC13 /* MacTerm */,
 				0AFF11220AF41FEE006CCA34 /* RunApplication.py */,
 				0AE960170F0C13D900E75E26 /* pymacterm */,
 				0AD0B0A00A9EAB4A002064BA /* Quills */,
@@ -2148,21 +2148,21 @@
 		0AFB6A1F0E86FD27005C5A07 /* ForTigerDebug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = MacTelnet;
+				PRODUCT_NAME = MacTerm;
 			};
 			name = ForTigerDebug;
 		};
 		0AFB6A200E86FD27005C5A07 /* ForLeopardDebug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = MacTelnet;
+				PRODUCT_NAME = MacTerm;
 			};
 			name = ForLeopardDebug;
 		};
 		0AFB6A210E86FD27005C5A07 /* ForPantherDebug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = MacTelnet;
+				PRODUCT_NAME = MacTerm;
 			};
 			name = ForPantherDebug;
 		};

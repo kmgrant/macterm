@@ -133,13 +133,13 @@
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
-	<string>MacTelnet</string>
+	<string>MacTerm</string>
 	<key>CFBundleGetInfoString</key>
 	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%%MY_ALPHA_BETA%, build %MY_BUILD_NUMBER%</string>
 	<key>CFBundleHelpBookFolder</key>
 	<string>Help</string>
 	<key>CFBundleHelpBookName</key>
-	<string>MacTelnet Help</string>
+	<string>MacTerm Help</string>
 	<key>CFBundleIconFile</key>
 	<string>IconForBundle.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -147,7 +147,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>MacTelnet</string>
+	<string>MacTerm</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -241,15 +241,15 @@
 		<string>DefaultFormat4</string>
 	</array>
 	<key>MyHomePageURL</key>
-	<string>http://www.mactelnet.com/</string>
+	<string>http://macterm.net/</string>
 	<key>MySourceCodeLicenseURL</key>
 	<string>http://www.gnu.org/copyleft/gpl.html</string>
 	<key>MySourceForgeProjectURL</key>
 	<string>http://sourceforge.net/projects/mactelnet/</string>
 	<key>MySupportEMailURL</key>
-	<string>mailto:kmg@mac.com?Subject=MacTelnet</string>
+	<string>mailto:kmg@mac.com?Subject=MacTerm</string>
 	<key>MyUpdatesURL</key>
-	<string>http://homepage.mac.com/kmg/mactelnet/updates/daily.html</string>
+	<string>http://macterm.net/updates/daily.html</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
@@ -265,12 +265,12 @@
 			<key>NSMenuItem</key>
 			<dict>
 				<key>default</key>
-				<string>Open URL in MacTelnet</string>
+				<string>Open URL in MacTerm</string>
 			</dict>
 			<key>NSMessage</key>
 			<string>openURL</string>
 			<key>NSPortName</key>
-			<string>MacTelnet</string>
+			<string>MacTerm</string>
 			<key>NSSendTypes</key>
 			<array>
 				<string>NSStringPboardType</string>

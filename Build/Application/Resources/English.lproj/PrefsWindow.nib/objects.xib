@@ -193,7 +193,7 @@
       <boolean name="inWindowMenu">FALSE</boolean>
       <int name="themeBrush">1</int>
       <int name="windowPosition">1</int>
-      <string name="title">Preferences: MacTelnet</string>
+      <string name="title">Preferences: MacTerm</string>
       <reference name="rootControl" idRef="186"/>
       <string name="windowRect">189 590 695 1013 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>

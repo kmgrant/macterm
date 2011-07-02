@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
-"""The main entry point to MacTelnet.
+"""The main entry point to MacTerm.
 
 This file's name must match the value of CFBundleExecutableName in "Info.plist".
 
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         quills_fw_ver = "A"
         quills_pylib_ver = "2.3"
     else:
-        print >>sys.stderr, "WARNING: MacTelnet may not work on your system, the Python interpreter is unrecognized."
+        print >>sys.stderr, "WARNING: MacTerm may not work on your system, the Python interpreter is unrecognized."
         py_interpreter = os.path.join(macos_dir, "MacTerm_python2.x")
         quills_fw_ver = "A"
         quills_pylib_ver = "2.3"
@@ -116,7 +116,7 @@ if __name__ == "__main__":
                 print "exception when trying to find integer from prefs-version", e
         print "MacTerm: latest preferences are version", latest_prefs_version, "and user preferences are version", user_prefs_version
         try:
-            if latest_prefs_version > user_prefs_version:
+            if (latest_prefs_version > user_prefs_version) and (user_prefs_version > 0):
                 conv_path = os.path.join(bundle_dir, 'Contents', 'Resources', 'PrefsConverter.app', 'Contents', 'MacOS', 'PrefsConverter')
                 print "MacTerm: launching Preferences Converter application (%s)..." % conv_path
                 require_restart = False
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     os.environ["PYTHONPATH"] = quills_pylib_dir + ":" + pymacterm_pylib_dir + pypath_append
     os.environ["DYLD_LIBRARY_PATH"] = quills_proper_version_dir
     
-    # the following is NOT required for MacTelnet to run, however it is
+    # the following is NOT required for MacTerm to run, however it is
     # useful for such things as conveniently running "pydoc" on Quills;
     # attempts to load Quills will call dependent frameworks (currently,
     # Growl.framework), and without a path these loads would fail

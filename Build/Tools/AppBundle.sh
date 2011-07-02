@@ -18,8 +18,8 @@
 # You may also defined "target_project" and
 # "target_bundle" to locate another bundle (like
 # "PrefsConverter" and "PrefsConverter").  The
-# default is "Application" and "MacTelnet" (i.e.
-# MacTelnet.app).
+# default is "Application" and "MacTerm" (i.e.
+# MacTerm.app).
 #
 # Kevin Grant (kmg@mac.com)
 # August 29, 2006
@@ -34,7 +34,7 @@ if [ "x${target_project}" = "x" ] ; then
 fi
 
 if [ "x${target_bundle}" = "x" ] ; then
-    target_bundle=MacTelnet
+    target_bundle=MacTerm
 fi
 
 project_dir=${top_dir}/${target_project}

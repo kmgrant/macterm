@@ -119,7 +119,7 @@ SRC_GROWL_TOP := $(GROWL_SDK_ROOT)/Frameworks/Growl.framework
 SRC_QUILLS_TOP_TIGER := $(SYMROOT)/ForTigerDebug/Quills.framework
 SRC_QUILLS_TOP_PANTHER := $(SYMROOT)/ForPantherDebug/Quills.framework
 
-DEST_APP_TOP := $(CURDIR)/MacTelnet.app/Contents
+DEST_APP_TOP := $(CURDIR)/MacTerm.app/Contents
 DEST_APP_FW_TOP := $(DEST_APP_TOP)/Frameworks
 DEST_APP_MACOS_TOP := $(DEST_APP_TOP)/MacOS
 DEST_APP_RESOURCES_TOP := $(DEST_APP_TOP)/Resources
@@ -473,10 +473,10 @@ $(DEST_APP_MACOS_TOP)/%: $(SRC_APP_PYCODE_TOP)/%
 
 # This rule sets up virtual paths in the bundle that point to (or
 # create wrappers for) interpreter executables.  For more on the
-# requirements of these, see the "MacOS/MacTelnet" (main) script.
+# requirements of these, see the "MacOS/MacTerm" (main) script.
 .PHONY: install-executables
 install-executables: \
-$(DEST_APP_MACOS_TOP)/MacTelnet \
+$(DEST_APP_MACOS_TOP)/MacTerm \
 $(DEST_APP_MACOS_TOP)/RunApplication.py
 	@# keep in sync with the matching clean rule
 	$(MKDIR_P) $(DEST_APP_MACOS_TOP)
@@ -489,7 +489,7 @@ $(DEST_APP_MACOS_TOP)/RunApplication.py
 
 .PHONY: clean-executables
 clean-executables:
-	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet
+	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm
 	$(RM) $(DEST_APP_MACOS_TOP)/RunApplication.py
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.x
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.3.5

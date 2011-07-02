@@ -959,7 +959,7 @@ receiveServicesEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		break;
 	
 	case kEventServicePerform:
-		// handle “Open URL in MacTelnet” event
+		// handle an open-URL event
 		{
 			PasteboardRef	sourcePasteboard = nullptr;
 			

@@ -4,7 +4,7 @@
 <!--
 	Growl Registration Ticket.growlRegDict
 	
-	MacTelnet 4.0
+	MacTerm
 	© 1998-2011 by Kevin Grant
 	
 	This file is used to configure Growl.  See "http://www.growl.info/".
@@ -20,7 +20,7 @@
 	<key>TicketVersion</key>
 	<integer>1</integer>
 	<key>ApplicationName</key><!-- this is required because it otherwise deduces the name "python" -->
-	<string>MacTelnet</string>
+	<string>MacTerm</string>
 	<key>AllNotifications</key>
 	<array>
 		<string>Script error</string>

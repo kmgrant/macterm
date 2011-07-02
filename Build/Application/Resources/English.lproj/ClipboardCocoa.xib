@@ -43,7 +43,7 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{66, 47}, {800, 300}}</string>
 				<int key="NSWTFlags">-529005568</int>
-				<string key="NSWindowTitle">Clipboard: MacTelnet</string>
+				<string key="NSWindowTitle">Clipboard: MacTerm</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
 				<string key="NSWindowContentMaxSize">{1500, 450}</string>

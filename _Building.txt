@@ -47,7 +47,7 @@ UNDERSTANDING THE DIRECTORY STRUCTURE
         Scripts that simplify MacTerm debugging in "gdb".
 
 HOW TO BUILD
-  The MacTelnet.app bundle is constructed using a makefile, since
+  The MacTerm.app bundle is constructed using a makefile, since
   it has an unusual file layout.  However, Xcode is still called
   by the makefile to do builds and cleans; so if a build was
   initiated from the GUI, those results will be used by "make".

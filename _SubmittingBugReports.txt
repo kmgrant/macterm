@@ -7,8 +7,8 @@ REPORTING BUGS
   submit directly:
     http://sourceforge.net/projects/mactelnet/
   
-  Please see http://homepage.mac.com/kmg/mactelnet/bug-reporter/
-  for a variety of advice on submitting useful bug reports.
+  Please see http://macterm.net/bug-reporter/ for a variety of
+  advice on submitting useful bug reports.
 
                                         Kevin Grant (kmg@mac.com)
                                         Lead Developer, MacTerm

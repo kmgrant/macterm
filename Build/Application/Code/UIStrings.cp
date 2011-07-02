@@ -127,7 +127,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowExcessiveErrorsPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("A significant number of data errors are occurring.  For stability reasons, MacTelnet has avoided trying to render some of the text."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("A significant number of data errors are occurring.  For stability reasons, MacTerm has avoided trying to render some of the text."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowExcessiveErrorsPrimaryText"));
 		break;
 	
@@ -242,12 +242,12 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowUpdateCheckPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("It has been some time since this copy of MacTelnet was updated."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("It has been some time since this copy of MacTerm was updated."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowUpdateCheckPrimaryText"));
 		break;
 	
 	case kUIStrings_AlertWindowUpdateCheckTitle:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("MacTelnet Update"), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("MacTerm Update"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowUpdateCheckTitle"));
 		break;
 	
@@ -942,7 +942,7 @@ UIStrings_Copy	(UIStrings_HelpSystemCFString	inWhichString,
 	switch (inWhichString)
 	{
 	case kUIStrings_HelpSystemName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("MacTelnet Help"), CFSTR("HelpSystem"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("MacTerm Help"), CFSTR("HelpSystem"),
 													CFSTR("kUIStrings_HelpSystemName; must match AppleTitle in HTML"));
 		break;
 	
@@ -1546,17 +1546,17 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 		break;
 	
 	case kUIStrings_TerminalPrintFromTerminalJobTitle:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Print From Terminal: MacTelnet"), CFSTR("Terminal"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Print From Terminal: MacTerm"), CFSTR("Terminal"),
 													CFSTR("kUIStrings_TerminalPrintFromTerminalJobTitle"));
 		break;
 	
 	case kUIStrings_TerminalPrintScreenJobTitle:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Print Screen: MacTelnet"), CFSTR("Terminal"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Print Screen: MacTerm"), CFSTR("Terminal"),
 													CFSTR("kUIStrings_TerminalPrintScreenJobTitle"));
 		break;
 	
 	case kUIStrings_TerminalPrintSelectionJobTitle:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Print Selection: MacTelnet"), CFSTR("Terminal"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Print Selection: MacTerm"), CFSTR("Terminal"),
 													CFSTR("kUIStrings_TerminalPrintSelectionJobTitle"));
 		break;
 	

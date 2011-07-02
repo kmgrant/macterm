@@ -31,7 +31,7 @@ INVOKING GDB ON LEOPARD
   interpreter and create an unkillable process.
   
   If you don't want gdb, but do want a console, you can manually
-  run the main "MacOS/MacTelnet" script from a shell.  This can
+  run the main "MacOS/MacTerm" script from a shell.  This can
   also be invoked from the Finder if you "Show Package Contents"
   on the bundle and make an alias to the script inside.
 

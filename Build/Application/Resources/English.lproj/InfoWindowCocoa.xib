@@ -43,7 +43,7 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{19, 18}, {700, 200}}</string>
 				<int key="NSWTFlags">1618477056</int>
-				<string key="NSWindowTitle">Session Info: MacTelnet</string>
+				<string key="NSWindowTitle">Session Info: MacTerm</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
 				<string key="NSWindowContentMaxSize">{1800, 350}</string>
