@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110701',
     '20110629',
     '20110622',
     '20110619',
@@ -391,6 +392,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110701': [
+        'Fixed a problem with the time calculation that determines when to display a Check for Updates warning.',
+    ],
     '20110629': [
         'Preferences have migrated to the "net.macterm" domain, in preparation for a widescale renaming of the project.',
         'Converter utility that runs for out-of-date preferences will move all "com.mactelnet" settings to the new domain.',
