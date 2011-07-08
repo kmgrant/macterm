@@ -2878,6 +2878,48 @@ receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			// update the sample area
 			panelDataPtr->interfacePtr->setSampleArea(panelDataPtr->dataModel);
+			
+			// TEMPORARY UGLY HACK: since the Cocoa font panel contains a slider with its
+			// own event loop, it is possible for update routines to be invoked continuously
+			// in such a way that the window is ERASED without an update; all attempts to
+			// render the window in other ways have failed, but slightly RESIZING the window
+			// performs a full redraw and is still fairly subtle (the user might notice a
+			// slight shift on the right edge of the window, but this is still far better
+			// than having the entire window turn white); it is not clear why this is
+			// happening, other than the usual theory that Carbon and Cocoa just weren’t
+			// meant to play nicely together and crap like this will never be truly fixed
+			// until the user interface can migrate to Cocoa completely...
+			{
+				HIWindowRef		window = HIViewGetWindow(normalDataPtr->mainView);
+				WindowClass		windowClass = kDocumentWindowClass;
+				Rect			bounds;
+				
+				
+				// for sheets, the PARENT window can sometimes be erased too...sigh
+				error = GetWindowClass(window, &windowClass);
+				if (kSheetWindowClass == windowClass)
+				{
+					HIWindowRef		parentWindow;
+					
+					
+					error = GetSheetWindowParent(window, &parentWindow);
+					if (noErr == error)
+					{
+						(OSStatus)HIViewRender(HIViewGetRoot(parentWindow));
+					}
+				}
+				
+				// view rendering does not seem to work for the main window, so
+				// use a resize hack to force a complete update
+				error = GetWindowBounds(window, kWindowContentRgn, &bounds);
+				if (noErr == error)
+				{
+					++bounds.right;
+					(OSStatus)SetWindowBounds(window, kWindowContentRgn, &bounds);
+					--bounds.right;
+					(OSStatus)SetWindowBounds(window, kWindowContentRgn, &bounds);
+				}
+			}
 		}
 		break;
 	
