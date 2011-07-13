@@ -758,7 +758,8 @@ Colors panel.
 changeColor:(id)	sender
 {
 #pragma unused(sender)
-	NSColor*		newColor = [[NSColorPanel sharedColorPanel] color];
+	NSColorPanel*	colorPanel = [NSColorPanel sharedColorPanel];
+	NSColor*		newColor = [[colorPanel color] colorUsingColorSpaceName:NSDeviceRGBColorSpace];
 	CGDeviceColor	newColorFloat;
 	float			ignoredAlpha = 0;
 	RGBColor		newColorRGB;

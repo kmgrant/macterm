@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110713',
     '20110707',
     '20110702',
     '20110701',
@@ -394,8 +395,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110713': [
+        'Fixed color boxes to recognize non-RGB colors from the Colors panel.',
+    ],
     '20110707': [
-        'Fixed a problem where Font Panel or Color Panel sliders could erase MacTerm windows.',
+        'Fixed a problem where sliders in the Fonts panel or Colors panel could erase MacTerm windows.',
     ],
     '20110702': [
         'Renamed!  MacTelnet on Mac OS X will be known as "MacTerm" from now on.',
