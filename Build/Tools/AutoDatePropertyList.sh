@@ -39,9 +39,12 @@ perl -pi -e "s|\%MY_PREFS_VERSION\%|${MY_PREFS_VERSION}|g" "${target}"
 perl -pi -e "s|\%MY_BUILD_NUMBER\%|${build}|g" "${target}"
 
 # hack case: if Xcode doesn't realize it should run this script,
-# a search for instances of 8 continuous digits will do the trick!
-perl -pi -e "s|\d\d\d\d\d\d\d\d|${build}|g" "${target}"
+# a search for instances of 8 continuous digits will do the trick
+# (but require the line to have a <string> clause, otherwise it
+# might replace digits in things like default color values!)
+perl -pi -e "/<string>/ and s|\d\d\d\d\d\d\d\d|${build}|g" "${target}"
 
-echo "Automatically set build number to ${build} in ${target}, with results of:"
+echo "Automatically substituted version variable references in ${target}."
+echo "Also automatically set the build number to ${build} in ${target}, with results of:"
 cat "${target}" | grep "${build}"
 exit 0

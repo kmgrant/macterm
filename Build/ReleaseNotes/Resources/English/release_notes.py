@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110714',
     '20110713',
     '20110707',
     '20110702',
@@ -395,6 +396,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110714': [
+        'Fixed Preferences window Formats pane ANSI Colors tab so that a reset uses the right colors.',
+    ],
     '20110713': [
         'Fixed color boxes to recognize non-RGB colors from the Colors panel.',
     ],
