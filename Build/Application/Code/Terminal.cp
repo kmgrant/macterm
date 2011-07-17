@@ -227,8 +227,10 @@ enum
 	kMy_ParserStateSeenESCPlusLessThan			= 'ES+<',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCPlusEquals			= 'ES+=',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracket			= 'ESC[',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketEquals	= 'ES[=',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketExPoint	= 'ES[!',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketExPointp	= 'E[!p',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketGreaterThan	= 'ES[>',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParams	= 'E[;;',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsA	= 'E[;A',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsB	= 'E[;B',	//!< generic state used to define emulator-specific states, below
@@ -265,6 +267,8 @@ enum
 	kMy_ParserStateSeenESCLeftSqBracketParamsAt	= 'E[;@',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsBackquote	= 'E[;`',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsQuotes		= 'E[;\"',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketQuestionMark	= 'ES[?',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketSemicolon	= 'ES[;',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParen				= 'ESC(',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParenA			= 'ES(A',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParenB			= 'ES(B',	//!< generic state used to define emulator-specific states, below
@@ -1297,9 +1301,10 @@ handles sequences specific to VT52 mode.
 class My_VT100
 {
 public:
-	static void		hardSoftReset		(My_EmulatorPtr, Boolean);
-	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
-	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	static void				hardSoftReset		(My_EmulatorPtr, Boolean);
+	static My_ParserState	returnCSINextState	(My_ParserState, UInt8, Boolean&);
+	static UInt32			stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32			stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
 	static void		alignmentDisplay			(My_ScreenBufferPtr);
 	static void		ansiMode					(My_ScreenBufferPtr);
@@ -1313,7 +1318,6 @@ public:
 	static void		eraseInLine					(My_ScreenBufferPtr);
 	static void		loadLEDs					(My_ScreenBufferPtr);
 	static void		modeSetReset				(My_ScreenBufferPtr, Boolean);
-	static UInt32	readCSIParameters			(My_ScreenBufferPtr, UInt8 const*, UInt32);
 	static void		reportTerminalParameters	(My_ScreenBufferPtr);
 	static void		setTopAndBottomMargins		(My_ScreenBufferPtr);
 	static void		vt52Mode					(My_ScreenBufferPtr);
@@ -1377,7 +1381,18 @@ public:
 		
 		// VT100 sequences (in the order they appear in the manual) - see VT100 manual for full details
 		kStateCSI				= kMy_ParserStateSeenESCLeftSqBracket,	//!< control sequence inducer
-		kStateCSIParamScan		= kMy_ParserStateSeenESCLeftSqBracketParams,	//!< state of accumulating parameters
+		kStateCSIParamDigit0	= 'PNm0',				//!< digit has been encountered; define or extend current numerical parameter value;
+		kStateCSIParamDigit1	= 'PNm1',				//!  IMPORTANT: the 10 digit state values must be defined consecutively, as the code uses a
+		kStateCSIParamDigit2	= 'PNm2',				//!  short-cut that relies on arithmetic...
+		kStateCSIParamDigit3	= 'PNm3',
+		kStateCSIParamDigit4	= 'PNm4',
+		kStateCSIParamDigit5	= 'PNm5',
+		kStateCSIParamDigit6	= 'PNm6',
+		kStateCSIParamDigit7	= 'PNm7',
+		kStateCSIParamDigit8	= 'PNm8',
+		kStateCSIParamDigit9	= 'PNm9',
+		kStateCSIParameterEnd	= kMy_ParserStateSeenESCLeftSqBracketSemicolon,		//!< end of parameter (semicolons can appear more than once)
+		kStateCSIPrivate		= kMy_ParserStateSeenESCLeftSqBracketQuestionMark,	//!< parameter list prefixed by '?' to indicate a private sequence
 		kStateCUB				= kMy_ParserStateSeenESCLeftSqBracketParamsD,	//!< cursor backward
 		kStateCUD				= kMy_ParserStateSeenESCLeftSqBracketParamsB,	//!< cursor down
 		kStateCUF				= kMy_ParserStateSeenESCLeftSqBracketParamsC,	//!< cursor forward
@@ -1448,8 +1463,10 @@ public:
 	static void		deviceAttributes	(My_ScreenBufferPtr);
 	static void		insertLines			(My_ScreenBufferPtr);
 	static void		loadLEDs			(My_ScreenBufferPtr);
-	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
-	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	
+	static My_ParserState	returnCSINextState	(My_ParserState, UInt8, Boolean&);
+	static UInt32			stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32			stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 
 protected:
 	// The names of these constants use the same mnemonics from
@@ -1470,9 +1487,10 @@ terminal emulator.
 class My_VT220
 {
 public:
-	static void		hardSoftReset		(My_EmulatorPtr, Boolean);
-	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
-	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	static void				hardSoftReset		(My_EmulatorPtr, Boolean);
+	static My_ParserState	returnCSINextState	(My_ParserState, UInt8, Boolean&);
+	static UInt32			stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32			stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
 	static void		compatibilityLevel					(My_ScreenBufferPtr);
 	static void		deviceStatusReportKeyboardLanguage	(My_ScreenBufferPtr);
@@ -1486,11 +1504,12 @@ public:
 	static void		selectiveEraseInDisplay				(My_ScreenBufferPtr);
 	static void		selectiveEraseInLine				(My_ScreenBufferPtr);
 
-protected:
 	// The names of these constants use the same mnemonics from
 	// the programming manual of the original terminal.
 	enum State
 	{
+		// Ideally these are "protected", but XTerm may require them.
+		kStateCSISecondaryDA	= kMy_ParserStateSeenESCLeftSqBracketGreaterThan,	//!< parameter list indicates secondary device attributes
 		kStateDECSCA			= 'VSCA',								//!< select character attributes
 		kStateDECSCL			= 'VSCL',								//!< compatibility level
 		kStateDECSTR			= kMy_ParserStateSeenESCLeftSqBracketExPointp,	//!< soft terminal reset
@@ -1577,8 +1596,9 @@ the XTerm terminal type.
 class My_XTerm
 {
 public:
-	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
-	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	static My_ParserState	returnCSINextState	(My_ParserState, UInt8, Boolean&);
+	static UInt32			stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32			stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
 	
 	static void		cursorBackwardTabulation		(My_ScreenBufferPtr);
 	static void		cursorCharacterAbsolute			(My_ScreenBufferPtr);
@@ -1593,6 +1613,7 @@ public:
 	enum State
 	{
 		// Ideally these are "protected", but loop evasion code requires them.
+		kStateCSITertiaryDA		= kMy_ParserStateSeenESCLeftSqBracketEquals,			//!< parameter list indicates tertiary device attributes (VT420)
 		kStateCBT				= kMy_ParserStateSeenESCLeftSqBracketParamsZ,			//!< cursor backward tabulation
 		kStateCHA				= kMy_ParserStateSeenESCLeftSqBracketParamsG,			//!< cursor character absolute
 		kStateCHT				= kMy_ParserStateSeenESCLeftSqBracketParamsI,			//!< cursor forward tabulation
@@ -6498,837 +6519,857 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 	// by default, the state does not change
 	inNowOutNext.second = inNowOutNext.first;
 	
-	switch (inNowOutNext.first)
+	// some characters are independent of the current state by default
+	switch (kTriggerChar)
 	{
-	case kMy_ParserStateInitial:
-	case kMy_ParserStateAccumulateForEcho:
-		inNowOutNext.second = kDefaultNextState;
-		result = 0; // do not absorb the unknown
-		break;
-	
-	case kMy_ParserStateSeenESC:
-		switch (kTriggerChar)
-		{
-		case '[':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracket;
-			break;
-		
-		case ']':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket;
-			break;
-		
-		case '(':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParen;
-			break;
-		
-		case ')':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParen;
-			break;
-		
-		case '}':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightBrace;
-			break;
-		
-		case 'A':
-			inNowOutNext.second = kMy_ParserStateSeenESCA;
-			break;
-		
-		case 'B':
-			inNowOutNext.second = kMy_ParserStateSeenESCB;
-			break;
-		
-		case 'C':
-			inNowOutNext.second = kMy_ParserStateSeenESCC;
-			break;
-		
-		case 'c':
-			inNowOutNext.second = kMy_ParserStateSeenESCc;
-			break;
-		
-		case 'D':
-			inNowOutNext.second = kMy_ParserStateSeenESCD;
-			break;
-		
-		case 'E':
-			inNowOutNext.second = kMy_ParserStateSeenESCE;
-			break;
-		
-		case 'F':
-			inNowOutNext.second = kMy_ParserStateSeenESCF;
-			break;
-		
-		case 'G':
-			inNowOutNext.second = kMy_ParserStateSeenESCG;
-			break;
-		
-		case 'H':
-			inNowOutNext.second = kMy_ParserStateSeenESCH;
-			break;
-		
-		case 'I':
-			inNowOutNext.second = kMy_ParserStateSeenESCI;
-			break;
-		
-		case 'J':
-			inNowOutNext.second = kMy_ParserStateSeenESCJ;
-			break;
-		
-		case 'K':
-			inNowOutNext.second = kMy_ParserStateSeenESCK;
-			break;
-		
-		case 'M':
-			inNowOutNext.second = kMy_ParserStateSeenESCM;
-			break;
-		
-		case 'n':
-			inNowOutNext.second = kMy_ParserStateSeenESCn;
-			break;
-		
-		case 'o':
-			inNowOutNext.second = kMy_ParserStateSeenESCo;
-			break;
-		
-		case 'Y':
-			inNowOutNext.second = kMy_ParserStateSeenESCY;
-			break;
-		
-		case 'Z':
-			inNowOutNext.second = kMy_ParserStateSeenESCZ;
-			break;
-		
-		case '7':
-			inNowOutNext.second = kMy_ParserStateSeenESC7;
-			break;
-		
-		case '8':
-			inNowOutNext.second = kMy_ParserStateSeenESC8;
-			break;
-		
-		case '*':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk;
-			break;
-		
-		case '+':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlus;
-			break;
-		
-		case '#':
-			inNowOutNext.second = kMy_ParserStateSeenESCPound;
-			break;
-		
-		case '~':
-			inNowOutNext.second = kMy_ParserStateSeenESCTilde;
-			break;
-		
-		case '=':
-			inNowOutNext.second = kMy_ParserStateSeenESCEquals;
-			break;
-		
-		case '<':
-			inNowOutNext.second = kMy_ParserStateSeenESCLessThan;
-			break;
-		
-		case '>':
-			inNowOutNext.second = kMy_ParserStateSeenESCGreaterThan;
-			break;
-		
-		case '\\':
-			inNowOutNext.second = kMy_ParserStateSeenESCBackslash;
-			break;
-		
-		case '|':
-			inNowOutNext.second = kMy_ParserStateSeenESCVerticalBar;
-			break;
-		
-		case ' ':
-			inNowOutNext.second = kMy_ParserStateSeenESCSpace;
-			break;
-		
-		default:
-			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape", kTriggerChar);
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCLeftSqBracket:
-		switch (kTriggerChar)
-		{
-		case '!':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketExPoint;
-			break;
-		
-		default:
-			// immediately begin parsing parameters, but do not absorb these characters
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParams;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCLeftSqBracketExPoint:
-		switch (kTriggerChar)
-		{
-		case 'p':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketExPointp;
-			break;
-		
-		default:
-			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-!", kTriggerChar);
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCLeftSqBracketParams:
-		switch (kTriggerChar)
-		{
-		case 'A':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsA;
-			break;
-		
-		case 'B':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsB;
-			break;
-		
-		case 'c':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsc;
-			break;
-		
-		case 'C':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsC;
-			break;
-		
-		case 'd':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsd;
-			break;
-		
-		case 'D':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsD;
-			break;
-		
-		case 'E':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsE;
-			break;
-		
-		case 'f':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsf;
-			break;
-		
-		case 'F':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsF;
-			break;
-		
-		case 'g':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsg;
-			break;
-		
-		case 'G':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsG;
-			break;
-		
-		case 'h':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsh;
-			break;
-		
-		case 'H':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsH;
-			break;
-		
-		case 'i':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsi;
-			break;
-		
-		case 'I':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsI;
-			break;
-		
-		case 'J':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsJ;
-			break;
-		
-		case 'K':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsK;
-			break;
-		
-		case 'l':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsl;
-			break;
-		
-		case 'L':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsL;
-			break;
-		
-		case 'm':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsm;
-			break;
-		
-		case 'M':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsM;
-			break;
-		
-		case 'n':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsn;
-			break;
-		
-		case 'P':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsP;
-			break;
-		
-		case 'q':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsq;
-			break;
-		
-		case 'r':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsr;
-			break;
-		
-		case 's':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamss;
-			break;
-		
-		case 'u':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsu;
-			break;
-		
-		case 'x':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsx;
-			break;
-		
-		case 'X':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsX;
-			break;
-		
-		case 'Z':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsZ;
-			break;
-		
-		case '@':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsAt;
-			break;
-		
-		case '`':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsBackquote;
-			break;
-		
-		case '\"':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsQuotes;
-			break;
-		
-		default:
-			// continue looking for parameters until a known terminator is found
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParams;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCAsterisk:
-		switch (kTriggerChar)
-		{
-		case 'A':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskA;
-			break;
-		
-		case 'B':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskB;
-			break;
-		
-		case 'C':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskC;
-			break;
-		
-		case 'E':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskE;
-			break;
-		
-		case 'H':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskH;
-			break;
-		
-		case 'K':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskK;
-			break;
-		
-		case 'Q':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskQ;
-			break;
-		
-		case 'R':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskR;
-			break;
-		
-		case 'Y':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskY;
-			break;
-		
-		case 'Z':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskZ;
-			break;
-		
-		case '0':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk0;
-			break;
-		
-		case '1':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk1;
-			break;
-		
-		case '2':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk2;
-			break;
-		
-		case '4':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk4;
-			break;
-		
-		case '5':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk5;
-			break;
-		
-		case '6':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk6;
-			break;
-		
-		case '7':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsterisk7;
-			break;
-		
-		case '<':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskLessThan;
-			break;
-		
-		case '=':
-			inNowOutNext.second = kMy_ParserStateSeenESCAsteriskEquals;
-			break;
-		
-		default:
-			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-*", kTriggerChar);
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCPlus:
-		switch (kTriggerChar)
-		{
-		case 'A':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlusA;
-			break;
-		
-		case 'B':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlusB;
-			break;
-		
-		case 'C':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlusC;
-			break;
-		
-		case 'E':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlusE;
-			break;
-		
-		case 'H':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlusH;
-			break;
-		
-		case 'K':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlusK;
-			break;
-		
-		case 'Q':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlusQ;
-			break;
-		
-		case 'R':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlusR;
-			break;
-		
-		case 'Y':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlusY;
-			break;
-		
-		case 'Z':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlusZ;
-			break;
-		
-		case '0':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlus0;
-			break;
-		
-		case '1':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlus1;
-			break;
-		
-		case '2':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlus2;
-			break;
-		
-		case '4':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlus4;
-			break;
-		
-		case '5':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlus5;
-			break;
-		
-		case '6':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlus6;
-			break;
-		
-		case '7':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlus7;
-			break;
-		
-		case '<':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlusLessThan;
-			break;
-		
-		case '=':
-			inNowOutNext.second = kMy_ParserStateSeenESCPlusEquals;
-			break;
-		
-		default:
-			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-+", kTriggerChar);
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCLeftParen:
-		switch (kTriggerChar)
-		{
-		case 'A':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenA;
-			break;
-		
-		case 'B':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenB;
-			break;
-		
-		case 'C':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenC;
-			break;
-		
-		case 'E':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenE;
-			break;
-		
-		case 'H':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenH;
-			break;
-		
-		case 'K':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenK;
-			break;
-		
-		case 'Q':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenQ;
-			break;
-		
-		case 'R':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenR;
-			break;
-		
-		case 'Y':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenY;
-			break;
-		
-		case 'Z':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenZ;
-			break;
-		
-		case '0':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParen0;
-			break;
-		
-		case '1':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParen1;
-			break;
-		
-		case '2':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParen2;
-			break;
-		
-		case '4':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParen4;
-			break;
-		
-		case '5':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParen5;
-			break;
-		
-		case '6':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParen6;
-			break;
-		
-		case '7':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParen7;
-			break;
-		
-		case '<':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenLessThan;
-			break;
-		
-		case '=':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftParenEquals;
-			break;
-		
-		default:
-			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-(", kTriggerChar);
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCRightParen:
-		switch (kTriggerChar)
-		{
-		case 'A':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParenA;
-			break;
-		
-		case 'B':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParenB;
-			break;
-		
-		case 'C':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParenC;
-			break;
-		
-		case 'E':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParenE;
-			break;
-		
-		case 'H':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParenH;
-			break;
-		
-		case 'K':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParenK;
-			break;
-		
-		case 'Q':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParenQ;
-			break;
-		
-		case 'R':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParenR;
-			break;
-		
-		case 'Y':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParenY;
-			break;
-		
-		case 'Z':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParenZ;
-			break;
-		
-		case '0':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParen0;
-			break;
-		
-		case '1':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParen1;
-			break;
-		
-		case '2':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParen2;
-			break;
-		
-		case '4':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParen4;
-			break;
-		
-		case '5':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParen5;
-			break;
-		
-		case '6':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParen6;
-			break;
-		
-		case '7':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParen7;
-			break;
-		
-		case '<':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParenLessThan;
-			break;
-		
-		case '=':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightParenEquals;
-			break;
-		
-		default:
-			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-)", kTriggerChar);
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCRightSqBracket:
-		switch (kTriggerChar)
-		{
-		case '0':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket0;
-			break;
-		
-		case '1':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket1;
-			break;
-		
-		case '2':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket2;
-			break;
-		
-		case '3':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket3;
-			break;
-		
-		case '4':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket4;
-			break;
-		
-		default:
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCRightSqBracket0:
-		switch (kTriggerChar)
-		{
-		case ';':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket0Semi;
-			break;
-		
-		default:
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCRightSqBracket1:
-		switch (kTriggerChar)
-		{
-		case ';':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket1Semi;
-			break;
-		
-		default:
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCRightSqBracket2:
-		switch (kTriggerChar)
-		{
-		case ';':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket2Semi;
-			break;
-		
-		default:
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCRightSqBracket3:
-		switch (kTriggerChar)
-		{
-		case ';':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket3Semi;
-			break;
-		
-		default:
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCRightSqBracket4:
-		switch (kTriggerChar)
-		{
-		case ';':
-			inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket4Semi;
-			break;
-		
-		default:
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCPound:
-		switch (kTriggerChar)
-		{
-		case '3':
-			inNowOutNext.second = kMy_ParserStateSeenESCPound3;
-			break;
-		
-		case '4':
-			inNowOutNext.second = kMy_ParserStateSeenESCPound4;
-			break;
-		
-		case '5':
-			inNowOutNext.second = kMy_ParserStateSeenESCPound5;
-			break;
-		
-		case '6':
-			inNowOutNext.second = kMy_ParserStateSeenESCPound6;
-			break;
-		
-		case '8':
-			inNowOutNext.second = kMy_ParserStateSeenESCPound8;
-			break;
-		
-		default:
-			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-#", kTriggerChar);
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kMy_ParserStateSeenESCSpace:
-		switch (kTriggerChar)
-		{
-		case 'F':
-			inNowOutNext.second = kMy_ParserStateSeenESCSpaceF;
-			break;
-		
-		case 'G':
-			inNowOutNext.second = kMy_ParserStateSeenESCSpaceG;
-			break;
-		
-		default:
-			//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-space", kTriggerChar);
-			inNowOutNext.second = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
+	case '\033':
+		inNowOutNext.second = kMy_ParserStateSeenESC;
 		break;
 	
 	default:
-		// unknown state!
-		//Console_Warning(Console_WriteValueCharacter, "terminal entered unknown state; choosing a valid state based on character", kTriggerChar);
-		inNowOutNext.second = kDefaultNextState;
-		result = 0; // do not absorb the unknown
+		// most characters however are not sufficient by themselves to
+		// determine a new state; the current state must be checked too
+		switch (inNowOutNext.first)
+		{
+		case kMy_ParserStateInitial:
+		case kMy_ParserStateAccumulateForEcho:
+			inNowOutNext.second = kDefaultNextState;
+			result = 0; // do not absorb the unknown
+			break;
+		
+		case kMy_ParserStateSeenESC:
+			switch (kTriggerChar)
+			{
+			case '[':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracket;
+				break;
+			
+			case ']':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket;
+				break;
+			
+			case '(':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParen;
+				break;
+			
+			case ')':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParen;
+				break;
+			
+			case '}':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightBrace;
+				break;
+			
+			case 'A':
+				inNowOutNext.second = kMy_ParserStateSeenESCA;
+				break;
+			
+			case 'B':
+				inNowOutNext.second = kMy_ParserStateSeenESCB;
+				break;
+			
+			case 'C':
+				inNowOutNext.second = kMy_ParserStateSeenESCC;
+				break;
+			
+			case 'c':
+				inNowOutNext.second = kMy_ParserStateSeenESCc;
+				break;
+			
+			case 'D':
+				inNowOutNext.second = kMy_ParserStateSeenESCD;
+				break;
+			
+			case 'E':
+				inNowOutNext.second = kMy_ParserStateSeenESCE;
+				break;
+			
+			case 'F':
+				inNowOutNext.second = kMy_ParserStateSeenESCF;
+				break;
+			
+			case 'G':
+				inNowOutNext.second = kMy_ParserStateSeenESCG;
+				break;
+			
+			case 'H':
+				inNowOutNext.second = kMy_ParserStateSeenESCH;
+				break;
+			
+			case 'I':
+				inNowOutNext.second = kMy_ParserStateSeenESCI;
+				break;
+			
+			case 'J':
+				inNowOutNext.second = kMy_ParserStateSeenESCJ;
+				break;
+			
+			case 'K':
+				inNowOutNext.second = kMy_ParserStateSeenESCK;
+				break;
+			
+			case 'M':
+				inNowOutNext.second = kMy_ParserStateSeenESCM;
+				break;
+			
+			case 'n':
+				inNowOutNext.second = kMy_ParserStateSeenESCn;
+				break;
+			
+			case 'o':
+				inNowOutNext.second = kMy_ParserStateSeenESCo;
+				break;
+			
+			case 'Y':
+				inNowOutNext.second = kMy_ParserStateSeenESCY;
+				break;
+			
+			case 'Z':
+				inNowOutNext.second = kMy_ParserStateSeenESCZ;
+				break;
+			
+			case '7':
+				inNowOutNext.second = kMy_ParserStateSeenESC7;
+				break;
+			
+			case '8':
+				inNowOutNext.second = kMy_ParserStateSeenESC8;
+				break;
+			
+			case '*':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsterisk;
+				break;
+			
+			case '+':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlus;
+				break;
+			
+			case '#':
+				inNowOutNext.second = kMy_ParserStateSeenESCPound;
+				break;
+			
+			case '~':
+				inNowOutNext.second = kMy_ParserStateSeenESCTilde;
+				break;
+			
+			case '=':
+				inNowOutNext.second = kMy_ParserStateSeenESCEquals;
+				break;
+			
+			case '<':
+				inNowOutNext.second = kMy_ParserStateSeenESCLessThan;
+				break;
+			
+			case '>':
+				inNowOutNext.second = kMy_ParserStateSeenESCGreaterThan;
+				break;
+			
+			case '\\':
+				inNowOutNext.second = kMy_ParserStateSeenESCBackslash;
+				break;
+			
+			case '|':
+				inNowOutNext.second = kMy_ParserStateSeenESCVerticalBar;
+				break;
+			
+			case ' ':
+				inNowOutNext.second = kMy_ParserStateSeenESCSpace;
+				break;
+			
+			default:
+				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape", kTriggerChar);
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCLeftSqBracket:
+			// these cases are only fallbacks; in general, more specific emulators should
+			// already be catching the terminator types that they consider to be valid
+			switch (kTriggerChar)
+			{
+			case 'A':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsA;
+				break;
+			
+			case 'B':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsB;
+				break;
+			
+			case 'c':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsc;
+				break;
+			
+			case 'C':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsC;
+				break;
+			
+			case 'd':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsd;
+				break;
+			
+			case 'D':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsD;
+				break;
+			
+			case 'E':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsE;
+				break;
+			
+			case 'f':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsf;
+				break;
+			
+			case 'F':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsF;
+				break;
+			
+			case 'g':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsg;
+				break;
+			
+			case 'G':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsG;
+				break;
+			
+			case 'h':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsh;
+				break;
+			
+			case 'H':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsH;
+				break;
+			
+			case 'i':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsi;
+				break;
+			
+			case 'I':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsI;
+				break;
+			
+			case 'J':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsJ;
+				break;
+			
+			case 'K':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsK;
+				break;
+			
+			case 'l':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsl;
+				break;
+			
+			case 'L':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsL;
+				break;
+			
+			case 'm':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsm;
+				break;
+			
+			case 'M':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsM;
+				break;
+			
+			case 'n':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsn;
+				break;
+			
+			case 'P':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsP;
+				break;
+			
+			case 'q':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsq;
+				break;
+			
+			case 'r':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsr;
+				break;
+			
+			case 's':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamss;
+				break;
+			
+			case 'u':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsu;
+				break;
+			
+			case 'x':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsx;
+				break;
+			
+			case 'X':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsX;
+				break;
+			
+			case 'Z':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsZ;
+				break;
+			
+			case '@':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsAt;
+				break;
+			
+			case '`':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsBackquote;
+				break;
+			
+			case '\"':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsQuotes;
+				break;
+			
+			case '>':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketGreaterThan;
+				break;
+			
+			case '=':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketEquals;
+				break;
+			
+			case '?':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketQuestionMark;
+				break;
+			
+			case '!':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketExPoint;
+				break;
+			
+			case ';':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketSemicolon;
+				break;
+			
+			default:
+				// more specific emulators should detect parameter terminators that they care about
+				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-[", kTriggerChar);
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCLeftSqBracketExPoint:
+			switch (kTriggerChar)
+			{
+			case 'p':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketExPointp;
+				break;
+			
+			default:
+				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-!", kTriggerChar);
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCAsterisk:
+			switch (kTriggerChar)
+			{
+			case 'A':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsteriskA;
+				break;
+			
+			case 'B':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsteriskB;
+				break;
+			
+			case 'C':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsteriskC;
+				break;
+			
+			case 'E':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsteriskE;
+				break;
+			
+			case 'H':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsteriskH;
+				break;
+			
+			case 'K':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsteriskK;
+				break;
+			
+			case 'Q':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsteriskQ;
+				break;
+			
+			case 'R':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsteriskR;
+				break;
+			
+			case 'Y':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsteriskY;
+				break;
+			
+			case 'Z':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsteriskZ;
+				break;
+			
+			case '0':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsterisk0;
+				break;
+			
+			case '1':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsterisk1;
+				break;
+			
+			case '2':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsterisk2;
+				break;
+			
+			case '4':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsterisk4;
+				break;
+			
+			case '5':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsterisk5;
+				break;
+			
+			case '6':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsterisk6;
+				break;
+			
+			case '7':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsterisk7;
+				break;
+			
+			case '<':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsteriskLessThan;
+				break;
+			
+			case '=':
+				inNowOutNext.second = kMy_ParserStateSeenESCAsteriskEquals;
+				break;
+			
+			default:
+				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-*", kTriggerChar);
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCPlus:
+			switch (kTriggerChar)
+			{
+			case 'A':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlusA;
+				break;
+			
+			case 'B':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlusB;
+				break;
+			
+			case 'C':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlusC;
+				break;
+			
+			case 'E':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlusE;
+				break;
+			
+			case 'H':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlusH;
+				break;
+			
+			case 'K':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlusK;
+				break;
+			
+			case 'Q':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlusQ;
+				break;
+			
+			case 'R':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlusR;
+				break;
+			
+			case 'Y':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlusY;
+				break;
+			
+			case 'Z':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlusZ;
+				break;
+			
+			case '0':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlus0;
+				break;
+			
+			case '1':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlus1;
+				break;
+			
+			case '2':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlus2;
+				break;
+			
+			case '4':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlus4;
+				break;
+			
+			case '5':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlus5;
+				break;
+			
+			case '6':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlus6;
+				break;
+			
+			case '7':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlus7;
+				break;
+			
+			case '<':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlusLessThan;
+				break;
+			
+			case '=':
+				inNowOutNext.second = kMy_ParserStateSeenESCPlusEquals;
+				break;
+			
+			default:
+				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-+", kTriggerChar);
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCLeftParen:
+			switch (kTriggerChar)
+			{
+			case 'A':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParenA;
+				break;
+			
+			case 'B':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParenB;
+				break;
+			
+			case 'C':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParenC;
+				break;
+			
+			case 'E':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParenE;
+				break;
+			
+			case 'H':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParenH;
+				break;
+			
+			case 'K':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParenK;
+				break;
+			
+			case 'Q':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParenQ;
+				break;
+			
+			case 'R':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParenR;
+				break;
+			
+			case 'Y':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParenY;
+				break;
+			
+			case 'Z':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParenZ;
+				break;
+			
+			case '0':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParen0;
+				break;
+			
+			case '1':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParen1;
+				break;
+			
+			case '2':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParen2;
+				break;
+			
+			case '4':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParen4;
+				break;
+			
+			case '5':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParen5;
+				break;
+			
+			case '6':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParen6;
+				break;
+			
+			case '7':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParen7;
+				break;
+			
+			case '<':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParenLessThan;
+				break;
+			
+			case '=':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftParenEquals;
+				break;
+			
+			default:
+				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-(", kTriggerChar);
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCRightParen:
+			switch (kTriggerChar)
+			{
+			case 'A':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParenA;
+				break;
+			
+			case 'B':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParenB;
+				break;
+			
+			case 'C':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParenC;
+				break;
+			
+			case 'E':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParenE;
+				break;
+			
+			case 'H':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParenH;
+				break;
+			
+			case 'K':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParenK;
+				break;
+			
+			case 'Q':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParenQ;
+				break;
+			
+			case 'R':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParenR;
+				break;
+			
+			case 'Y':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParenY;
+				break;
+			
+			case 'Z':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParenZ;
+				break;
+			
+			case '0':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParen0;
+				break;
+			
+			case '1':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParen1;
+				break;
+			
+			case '2':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParen2;
+				break;
+			
+			case '4':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParen4;
+				break;
+			
+			case '5':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParen5;
+				break;
+			
+			case '6':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParen6;
+				break;
+			
+			case '7':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParen7;
+				break;
+			
+			case '<':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParenLessThan;
+				break;
+			
+			case '=':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightParenEquals;
+				break;
+			
+			default:
+				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-)", kTriggerChar);
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCRightSqBracket:
+			switch (kTriggerChar)
+			{
+			case '0':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket0;
+				break;
+			
+			case '1':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket1;
+				break;
+			
+			case '2':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket2;
+				break;
+			
+			case '3':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket3;
+				break;
+			
+			case '4':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket4;
+				break;
+			
+			default:
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCRightSqBracket0:
+			switch (kTriggerChar)
+			{
+			case ';':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket0Semi;
+				break;
+			
+			default:
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCRightSqBracket1:
+			switch (kTriggerChar)
+			{
+			case ';':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket1Semi;
+				break;
+			
+			default:
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCRightSqBracket2:
+			switch (kTriggerChar)
+			{
+			case ';':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket2Semi;
+				break;
+			
+			default:
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCRightSqBracket3:
+			switch (kTriggerChar)
+			{
+			case ';':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket3Semi;
+				break;
+			
+			default:
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCRightSqBracket4:
+			switch (kTriggerChar)
+			{
+			case ';':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket4Semi;
+				break;
+			
+			default:
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCPound:
+			switch (kTriggerChar)
+			{
+			case '3':
+				inNowOutNext.second = kMy_ParserStateSeenESCPound3;
+				break;
+			
+			case '4':
+				inNowOutNext.second = kMy_ParserStateSeenESCPound4;
+				break;
+			
+			case '5':
+				inNowOutNext.second = kMy_ParserStateSeenESCPound5;
+				break;
+			
+			case '6':
+				inNowOutNext.second = kMy_ParserStateSeenESCPound6;
+				break;
+			
+			case '8':
+				inNowOutNext.second = kMy_ParserStateSeenESCPound8;
+				break;
+			
+			default:
+				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-#", kTriggerChar);
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCSpace:
+			switch (kTriggerChar)
+			{
+			case 'F':
+				inNowOutNext.second = kMy_ParserStateSeenESCSpaceF;
+				break;
+			
+			case 'G':
+				inNowOutNext.second = kMy_ParserStateSeenESCSpaceG;
+				break;
+			
+			default:
+				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-space", kTriggerChar);
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		default:
+			// unknown state!
+			//Console_Warning(Console_WriteValueCharacter, "terminal entered unknown state; choosing a valid state based on character", kTriggerChar);
+			inNowOutNext.second = kDefaultNextState;
+			result = 0; // do not absorb the unknown
+			break;
+		}
 		break;
 	}
 	
@@ -8071,128 +8112,6 @@ modeSetReset	(My_ScreenBufferPtr		inDataPtr,
 
 
 /*!
-Scans the specified buffer for parameter-like data
-(e.g. ;0;05;21;2) and saves all the parameters it
-finds.  The number of characters “used” is returned
-(you can use this to offset your original buffer
-pointer appropriately).
-
-Typically this is done immediately after a VT100
-control sequence inducer (CSI, a.k.a. ESC-[) is
-received.  That way, any terminal sequence which
-has a CSI in it (i.e. anything that needs parameters)
-will have all defined parameters available to it.
-
-(3.1)
-*/
-UInt32
-My_VT100::
-readCSIParameters	(My_ScreenBufferPtr		inDataPtr,
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength)
-{
-	UInt32			result = 0;
-	UInt8 const*	bufferIterator = inBuffer;
-	Boolean			done = false;
-	SInt16&			terminalEndIndexRef = inDataPtr->emulator.argLastIndex;
-	
-	
-	for (; (false == done) && (bufferIterator != (inBuffer + inLength)); ++bufferIterator, ++result)
-	{
-		//Console_WriteValueCharacter("scan", *bufferIterator);
-		switch (*bufferIterator)
-		{
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-			// parse numeric parameter
-			{
-				// rename this incredibly long expression, since it’s needed a lot here!
-				SInt16&		valueRef = inDataPtr->emulator.argList[terminalEndIndexRef];
-				
-				
-				if (valueRef < 0) valueRef = 0;
-				valueRef *= 10;
-				valueRef += *bufferIterator - '0';
-			}
-			break;
-		
-		case ';':
-			// parameter separator
-			if (terminalEndIndexRef < kMy_MaximumANSIParameters) ++terminalEndIndexRef;
-			break;
-		
-		case '?':
-			// manual says the FIRST character must be this to enter
-			// DEC-private parameter mode; otherwise, ignore (stop here)
-			if (0 == result)
-			{
-				// DEC-private parameters
-				inDataPtr->emulator.argList[terminalEndIndexRef++] = kMy_ParamPrivate;
-			}
-			else
-			{
-				done = true;
-			}
-			break;
-		
-		case '>':
-			// the FIRST character must be this in order to recognize that
-			// this is a special type of sequence; otherwise, ignore (stop here)
-			if (0 == result)
-			{
-				// secondary device attributes (technically VT220)
-				inDataPtr->emulator.argList[terminalEndIndexRef++] = kMy_ParamSecondaryDA;
-			}
-			else
-			{
-				done = true;
-			}
-			break;
-		
-		case '=':
-			// the FIRST character must be this in order to recognize that
-			// this is a special type of sequence; otherwise, ignore (stop here)
-			if (0 == result)
-			{
-				// tertiary device attributes (technically VT420)
-				inDataPtr->emulator.argList[terminalEndIndexRef++] = kMy_ParamTertiaryDA;
-			}
-			else
-			{
-				done = true;
-			}
-			break;
-		
-		default:
-			// not part of a parameter sequence
-			done = true;
-			break;
-		}
-	}
-	
-	// ignore final character if the loop was broken prematurely
-	if (done) --result;
-	
-	// debug - write results to console
-	//Console_WriteValue("parameters found", terminalEndIndexRef + 1);
-	//for (register SInt16 i = 0; i <= terminalEndIndexRef; ++i)
-	//{
-	//	Console_WriteValue("found post-CSI parameter", inDataPtr->emulator.argList[i]);
-	//}
-	
-	return result;
-}// My_VT100::readCSIParameters
-
-
-/*!
 Handles the VT100 'DECREQT' sequence.  See the VT100
 manual for complete details.
 
@@ -8266,6 +8185,189 @@ reportTerminalParameters	(My_ScreenBufferPtr		inDataPtr)
 		}
 	}
 }// My_VT100::reportTerminalParameters
+
+
+/*!
+Returns the next logical state of CSI parameter processing,
+given the current state and the most recent code point.
+
+Parameter sequences can be terminated by many characters, and
+this must be checked from multiple states and emulators, so
+this routine was created to simplify maintenance.
+
+NOTE:	This is the VT100 version, and later emulators will
+		have additional valid terminators.  It is typical for
+		other emulators’ methods to invoke the VT100 one as a
+		fallback.
+
+(4.0)
+*/
+My_ParserState
+My_VT100::
+returnCSINextState		(My_ParserState		inPreviousState,
+						 UInt8				inByte,
+						 Boolean&			outHandled)
+{
+	My_ParserState		result = inPreviousState;
+	
+	
+	outHandled = true; // initially...
+	
+	// currently the VT100 emulator is the lowest terminal type among
+	// terminals that share CSI parameter sequences, so the majority of
+	// common characters and state transitions are checked here (and
+	// only characters recognized by a VT100 should be here); higher
+	// terminals such as the VT102 check only their exclusive cases and
+	// fall back on the VT100 as needed
+	switch (inByte)
+	{
+	case '0':
+		result = kStateCSIParamDigit0;
+		break;
+	
+	case '1':
+		result = kStateCSIParamDigit1;
+		break;
+	
+	case '2':
+		result = kStateCSIParamDigit2;
+		break;
+	
+	case '3':
+		result = kStateCSIParamDigit3;
+		break;
+	
+	case '4':
+		result = kStateCSIParamDigit4;
+		break;
+	
+	case '5':
+		result = kStateCSIParamDigit5;
+		break;
+	
+	case '6':
+		result = kStateCSIParamDigit6;
+		break;
+	
+	case '7':
+		result = kStateCSIParamDigit7;
+		break;
+	
+	case '8':
+		result = kStateCSIParamDigit8;
+		break;
+	
+	case '9':
+		result = kStateCSIParamDigit9;
+		break;
+	
+	case ';':
+		result = kStateCSIParameterEnd;
+		break;
+	
+	case 'A':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsA;
+		break;
+	
+	case 'B':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsB;
+		break;
+	
+	case 'c':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsc;
+		break;
+	
+	case 'C':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsC;
+		break;
+	
+	case 'D':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsD;
+		break;
+	
+	case 'f':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsf;
+		break;
+	
+	case 'g':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsg;
+		break;
+	
+	case 'h':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsh;
+		break;
+	
+	case 'H':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsH;
+		break;
+	
+	case 'J':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsJ;
+		break;
+	
+	case 'K':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsK;
+		break;
+	
+	case 'l':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsl;
+		break;
+	
+	case 'm':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsm;
+		break;
+	
+	case 'n':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsn;
+		break;
+	
+	case 'q':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsq;
+		break;
+	
+	case 'r':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsr;
+		break;
+	
+	case 's':
+		// TEMPORARY - ANSI compatibility hack, should be a separate terminal type
+		result = kMy_ParserStateSeenESCLeftSqBracketParamss;
+		break;
+	
+	case 'u':
+		// TEMPORARY - ANSI compatibility hack, should be a separate terminal type
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsu;
+		break;
+	
+	case 'x':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsx;
+		break;
+	
+	case '?':
+		// this is not a terminator; it may only come first
+		if (My_VT100::kStateCSI == inPreviousState)
+		{
+			// this is identical to "kStateCSIPrivate"
+			result = kMy_ParserStateSeenESCLeftSqBracketQuestionMark;
+		}
+		else
+		{
+			outHandled = false;
+		}
+		break;
+	
+	default:
+		outHandled = false;
+		break;
+	}
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< VT100 in parameter state", inPreviousState);
+	//Console_WriteValueFourChars(">>>     VT100 proposes parameter state", result);
+	//Console_WriteValueCharacter("        VT100 bases this at least on character", inByte);
+	
+	return result;
+}// My_VT100::returnCSINextState
 
 
 /*!
@@ -8464,141 +8566,43 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	// the available data to determine the next logical state
 	if ((false == outInterrupt) && (false == isEightBitControl))
 	{
+		// first handle various parameter states
 		switch (inNowOutNext.first)
 		{
 		case kStateCSI:
-			inNowOutNext.second = kStateCSIParamScan;
-			result = 0; // absorb nothing
-			break;
-		
-		case kStateCSIParamScan:
-			// look for a terminating character (anything not legal in a parameter)
-			switch (*inBuffer)
-			{
-			case 'A':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsA;
-				break;
-			
-			case 'B':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsB;
-				break;
-			
-			case 'c':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsc;
-				break;
-			
-			case 'C':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsC;
-				break;
-			
-			case 'D':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsD;
-				break;
-			
-			case 'f':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsf;
-				break;
-			
-			case 'g':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsg;
-				break;
-			
-			case 'h':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsh;
-				break;
-			
-			case 'H':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsH;
-				break;
-			
-			case 'J':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsJ;
-				break;
-			
-			case 'K':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsK;
-				break;
-			
-			case 'l':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsl;
-				break;
-			
-			case 'm':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsm;
-				break;
-			
-			case 'n':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsn;
-				break;
-			
-			case 'q':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsq;
-				break;
-			
-			case 'r':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsr;
-				break;
-			
-			case 's':
-				// TEMPORARY - ANSI compatibility hack, should be a separate terminal type
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamss;
-				break;
-			
-			case 'u':
-				// TEMPORARY - ANSI compatibility hack, should be a separate terminal type
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsu;
-				break;
-			
-			case 'x':
-				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsx;
-				break;
-			
-			// continue scanning as long as characters are LEGAL in a parameter sequence
-			// (the set below should be consistent with My_VT100::readCSIParameters())
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-			case ';':
-			case '?':
-			case '>': // VT220-specific
-			case '=': // VT420-specific
-				inNowOutNext.second = kStateCSIParamScan;
-				result = 0; // do not absorb this character
-				break;
-			
-			case '\033':
-				inNowOutNext.second = kMy_ParserStateSeenESC;
-				break;
-			
-			default:
-				// this is unexpected data; choose a new state
-				if (DebugInterface_LogsTerminalInputChar())
-				{
-					Console_Warning(Console_WriteValueCharacter, "VT100 in CSI parameter mode did not expect character", *inBuffer);
-				}
-				outHandled = false;
-				break;
-			}
+		case kStateCSIParamDigit0:
+		case kStateCSIParamDigit1:
+		case kStateCSIParamDigit2:
+		case kStateCSIParamDigit3:
+		case kStateCSIParamDigit4:
+		case kStateCSIParamDigit5:
+		case kStateCSIParamDigit6:
+		case kStateCSIParamDigit7:
+		case kStateCSIParamDigit8:
+		case kStateCSIParamDigit9:
+		case kStateCSIParameterEnd:
+		case kStateCSIPrivate:
+			inNowOutNext.second = My_VT100::returnCSINextState(inNowOutNext.first, *inBuffer, outHandled);
 			break;
 		
 		default:
-			if (*inBuffer == '\033')
-			{
-				// this character forces any partial sequence that came before it to be ignored
-				inNowOutNext.second = kMy_ParserStateSeenESC;
-			}
-			else
-			{
-				outHandled = false;
-			}
+			// not in a parameter
+			outHandled = false;
 			break;
+		}
+		
+		if (false == outHandled)
+		{
+			// use the current state and the available data to determine the next logical state
+			switch (inNowOutNext.first)
+			{
+			// currently, no special cases are needed (they are handled
+			// entirely by the default terminal transitioning between
+			// states based on character sequences alone)
+			default:
+				outHandled = false;
+				break;
+			}
 		}
 	}
 	
@@ -8772,9 +8776,41 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		inDataPtr->emulator.clearEscapeSequenceParameters();
 		break;
 	
-	case kStateCSIParamScan:
-		// continue to accumulate parameters (this could require multiple passes)
-		result += My_VT100::readCSIParameters(inDataPtr, inBuffer, inLength);
+	case kStateCSIParamDigit0:
+	case kStateCSIParamDigit1:
+	case kStateCSIParamDigit2:
+	case kStateCSIParamDigit3:
+	case kStateCSIParamDigit4:
+	case kStateCSIParamDigit5:
+	case kStateCSIParamDigit6:
+	case kStateCSIParamDigit7:
+	case kStateCSIParamDigit8:
+	case kStateCSIParamDigit9:
+		{
+			SInt16&		valueRef = inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex];
+			
+			
+			if (valueRef < 0)
+			{
+				valueRef = 0;
+			}
+			valueRef *= 10;
+			valueRef += (inOldNew.second - kStateCSIParamDigit0); // WARNING: requires states to be defined consecutively
+		}
+		break;
+	
+	case kStateCSIParameterEnd:
+		// end of control sequence parameter
+		if (inDataPtr->emulator.argLastIndex < kMy_MaximumANSIParameters)
+		{
+			++(inDataPtr->emulator.argLastIndex);
+		}
+		break;
+	
+	case kStateCSIPrivate:
+		// flag to mark the control sequence as private
+		inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] = kMy_ParamPrivate;
+		++(inDataPtr->emulator.argLastIndex);
 		break;
 	
 	case kStateCUB:
@@ -9816,6 +9852,68 @@ loadLEDs	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+Returns the next logical state of CSI parameter processing,
+given the current state and the most recent code point.
+
+Parameter sequences can be terminated by many characters, and
+this must be checked from multiple states and emulators, so
+this routine was created to simplify maintenance.
+
+(4.0)
+*/
+My_ParserState
+My_VT102::
+returnCSINextState		(My_ParserState		inPreviousState,
+						 UInt8				inByte,
+						 Boolean&			outHandled)
+{
+	My_ParserState		result = inPreviousState;
+	
+	
+	outHandled = true; // initially...
+	
+	// there should be an entry here for each parameter list terminator that is
+	// valid AT LEAST in a VT102 terminal; any that are also valid in lesser
+	// terminals can be omitted, since they will be handled in the VT100 fallback
+	switch (inByte)
+	{
+	case 'i':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsi;
+		break;
+	
+	case 'L':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsL;
+		break;
+	
+	case 'M':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsM;
+		break;
+	
+	case 'P':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsP;
+		break;
+	
+	default:
+		outHandled = false;
+		break;
+	}
+	
+	if (false == outHandled)
+	{
+		// fall back to VT100
+		result = My_VT100::returnCSINextState(inPreviousState, inByte, outHandled);
+	}
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< VT102 in parameter state", inPreviousState);
+	//Console_WriteValueFourChars(">>>     VT102 proposes parameter state", result);
+	//Console_WriteValueCharacter("        VT102 bases this at least on character", inByte);
+	
+	return result;
+}// My_VT102::returnCSINextState
+
+
+/*!
 A standard "My_EmulatorStateDeterminantProcPtr" that sets
 VT102-specific states based on the characters of the given
 buffer.
@@ -9838,39 +9936,43 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
 	
 	
-	// if no interrupt has occurred, use the current state and
-	// the available data to determine the next logical state
+	// first handle various parameter states
 	switch (inNowOutNext.first)
 	{
-	case My_VT100::kStateCSIParamScan:
-		// look for a terminating character (anything not legal in a parameter)
-		switch (*inBuffer)
+	case My_VT100::kStateCSI:
+	case My_VT100::kStateCSIParamDigit0:
+	case My_VT100::kStateCSIParamDigit1:
+	case My_VT100::kStateCSIParamDigit2:
+	case My_VT100::kStateCSIParamDigit3:
+	case My_VT100::kStateCSIParamDigit4:
+	case My_VT100::kStateCSIParamDigit5:
+	case My_VT100::kStateCSIParamDigit6:
+	case My_VT100::kStateCSIParamDigit7:
+	case My_VT100::kStateCSIParamDigit8:
+	case My_VT100::kStateCSIParamDigit9:
+	case My_VT100::kStateCSIParameterEnd:
+	case My_VT100::kStateCSIPrivate:
+		inNowOutNext.second = My_VT102::returnCSINextState(inNowOutNext.first, *inBuffer, outHandled);
+		break;
+	
+	default:
+		// not in a parameter
+		outHandled = false;
+		break;
+	}
+	
+	if (false == outHandled)
+	{
+		// use the current state and the available data to determine the next logical state
+		switch (inNowOutNext.first)
 		{
-		case 'i':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsi;
-			break;
-		
-		case 'L':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsL;
-			break;
-		
-		case 'M':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsM;
-			break;
-		
-		case 'P':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsP;
-			break;
-		
+		// currently, no special cases are needed (they are handled
+		// entirely by the default terminal transitioning between
+		// states based on character sequences alone)
 		default:
 			outHandled = false;
 			break;
 		}
-		break;
-	
-	default:
-		outHandled = false;
-		break;
 	}
 	
 	if (false == outHandled)
@@ -10362,6 +10464,98 @@ primaryDeviceAttributes		(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+Returns the next logical state of CSI parameter processing,
+given the current state and the most recent code point.
+
+Parameter sequences can be terminated by many characters, and
+this must be checked from multiple states and emulators, so
+this routine was created to simplify maintenance.
+
+(4.0)
+*/
+My_ParserState
+My_VT220::
+returnCSINextState		(My_ParserState		inPreviousState,
+						 UInt8				inByte,
+						 Boolean&			outHandled)
+{
+	My_ParserState		result = inPreviousState;
+	
+	
+	outHandled = true; // initially...
+	
+	if (kMy_ParserStateSeenESCLeftSqBracketParamsQuotes == inPreviousState)
+	{
+		// the weird double-terminator case ("p) is handled by using two states
+		switch (inByte)
+		{
+		case 'p':
+			result = kStateDECSCL;
+			break;
+		
+		case 'q':
+			result = kStateDECSCA;
+			break;
+		
+		default:
+			outHandled = false;
+			break;
+		}
+	}
+	else
+	{
+		// there should be an entry here for each parameter list terminator that is
+		// valid AT LEAST in a VT220 terminal; any that are also valid in lesser
+		// terminals can be omitted, since they will be handled in the VT102 fallback
+		switch (inByte)
+		{
+		case 'X':
+			result = kMy_ParserStateSeenESCLeftSqBracketParamsX;
+			break;
+		
+		case '@':
+			result = kMy_ParserStateSeenESCLeftSqBracketParamsAt;
+			break;
+		
+		case '\"':
+			result = kMy_ParserStateSeenESCLeftSqBracketParamsQuotes;
+			break;
+		
+		case '>':
+			// this is not a terminator; it may only come first
+			if (My_VT100::kStateCSI == inPreviousState)
+			{
+				// this is identical to "kStateCSISecondaryDA"
+				result = kMy_ParserStateSeenESCLeftSqBracketGreaterThan;
+			}
+			else
+			{
+				outHandled = false;
+			}
+			break;
+		
+		default:
+			outHandled = false;
+			break;
+		}
+	}
+	
+	if (false == outHandled)
+	{
+		// fall back to VT102
+		result = My_VT102::returnCSINextState(inPreviousState, inByte, outHandled);
+	}
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< VT220 in parameter state", inPreviousState);
+	//Console_WriteValueFourChars(">>>     VT220 proposes parameter state", result);
+	//Console_WriteValueCharacter("        VT220 bases this at least on character", inByte);
+	
+	return result;
+}// My_VT220::returnCSINextState
+
+
+/*!
 Handles the VT220 'DA' sequence for secondary device attributes.
 See the VT220 manual for complete details.
 
@@ -10530,59 +10724,45 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
 	
 	
-	// if no interrupt has occurred, use the current state and
-	// the available data to determine the next logical state
+	// first handle various parameter states
 	switch (inNowOutNext.first)
 	{
 	case My_VT100::kStateCSI:
-		switch (*inBuffer)
-		{
-		case '!':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketExPoint;
-			break;
-		
-		default:
-			inNowOutNext.second = My_VT100::kStateCSIParamScan;
-			result = 0; // absorb nothing
-			break;
-		}
-		break;
-	
-	case My_VT100::kStateCSIParamScan:
-		// look for a terminating character (anything not legal in a parameter)
-		switch (*inBuffer)
-		{
-		case '\"':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsQuotes;
-			break;
-		
-		default:
-			outHandled = false;
-			break;
-		}
-		break;
-	
+	case My_VT100::kStateCSIParamDigit0:
+	case My_VT100::kStateCSIParamDigit1:
+	case My_VT100::kStateCSIParamDigit2:
+	case My_VT100::kStateCSIParamDigit3:
+	case My_VT100::kStateCSIParamDigit4:
+	case My_VT100::kStateCSIParamDigit5:
+	case My_VT100::kStateCSIParamDigit6:
+	case My_VT100::kStateCSIParamDigit7:
+	case My_VT100::kStateCSIParamDigit8:
+	case My_VT100::kStateCSIParamDigit9:
+	case My_VT100::kStateCSIParameterEnd:
+	case My_VT100::kStateCSIPrivate:
 	case kMy_ParserStateSeenESCLeftSqBracketParamsQuotes:
-		// the weird double-terminator case ("p) is handled by using two states
-		switch (*inBuffer)
-		{
-		case 'p':
-			inNowOutNext.second = kStateDECSCL;
-			break;
-		
-		case 'q':
-			inNowOutNext.second = kStateDECSCA;
-			break;
-		
-		default:
-			outHandled = false;
-			break;
-		}
+	case kStateCSISecondaryDA:
+		inNowOutNext.second = My_VT220::returnCSINextState(inNowOutNext.first, *inBuffer, outHandled);
 		break;
 	
 	default:
+		// not in a parameter
 		outHandled = false;
 		break;
+	}
+	
+	if (false == outHandled)
+	{
+		// use the current state and the available data to determine the next logical state
+		switch (inNowOutNext.first)
+		{
+		// currently, no special cases are needed (they are handled
+		// entirely by the default terminal transitioning between
+		// states based on character sequences alone)
+		default:
+			outHandled = false;
+			break;
+		}
 	}
 	
 	if (false == outHandled)
@@ -10762,12 +10942,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		}
 		break;
 	
-	case kStateECH:
-		My_VT220::eraseCharacters(inDataPtr);
-		break;
-	
-	case kStateICH:
-		My_VT220::insertBlankCharacters(inDataPtr);
+	case kStateCSISecondaryDA:
+		// flag to mark the control sequence as secondary device attributes
+		inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] = kMy_ParamSecondaryDA;
+		++(inDataPtr->emulator.argLastIndex);
 		break;
 	
 	case kStateDECSCA:
@@ -10783,6 +10961,14 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateDECSTR:
 		// soft terminal reset; note that hard reset is handled by My_VT100::kStateRIS
 		resetTerminal(inDataPtr, true/* is soft reset */);
+		break;
+	
+	case kStateECH:
+		My_VT220::eraseCharacters(inDataPtr);
+		break;
+	
+	case kStateICH:
+		My_VT220::insertBlankCharacters(inDataPtr);
 		break;
 	
 	case kStateLS1R:
@@ -11175,6 +11361,101 @@ horizontalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+Returns the next logical state of CSI parameter processing,
+given the current state and the most recent code point.
+
+Parameter sequences can be terminated by many characters, and
+this must be checked from multiple states and emulators, so
+this routine was created to simplify maintenance.
+
+(4.0)
+*/
+My_ParserState
+My_XTerm::
+returnCSINextState		(My_ParserState		inPreviousState,
+						 UInt8				inByte,
+						 Boolean&			outHandled)
+{
+	My_ParserState		result = inPreviousState;
+	
+	
+	outHandled = true; // initially...
+	
+	// there should be an entry here for each parameter list terminator that is
+	// valid AT LEAST in an XTerm terminal; any that are also valid in lesser
+	// terminals can be omitted, since they will be handled in the VT220 fallback
+	switch (inByte)
+	{
+	case 'd':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsd;
+		break;
+	
+	case 'E':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsE;
+		break;
+	
+	case 'F':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsF;
+		break;
+	
+	case 'G':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsG;
+		break;
+	
+	case 'I':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsI;
+		break;
+	
+	case 'S':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsS;
+		break;
+	
+	case 'T':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsT;
+		break;
+	
+	case 'Z':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsZ;
+		break;
+	
+	case '`':
+		result = kMy_ParserStateSeenESCLeftSqBracketParamsBackquote;
+		break;
+	
+	case '=':
+		// this is not a terminator; it may only come first
+		if (My_VT100::kStateCSI == inPreviousState)
+		{
+			// this is identical to "kStateCSITertiaryDA"
+			result = kMy_ParserStateSeenESCLeftSqBracketEquals;
+		}
+		else
+		{
+			outHandled = false;
+		}
+		break;
+	
+	default:
+		outHandled = false;
+		break;
+	}
+	
+	if (false == outHandled)
+	{
+		// fall back to VT220
+		result = My_VT220::returnCSINextState(inPreviousState, inByte, outHandled);
+	}
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< XTerm in parameter state", inPreviousState);
+	//Console_WriteValueFourChars(">>>     XTerm proposes parameter state", result);
+	//Console_WriteValueCharacter("        XTerm bases this at least on character", inByte);
+	
+	return result;
+}// My_XTerm::returnCSINextState
+
+
+/*!
 Handles the XTerm 'SD' sequence.
 
 This should accept zero or one parameters.  With no parameters,
@@ -11252,70 +11533,47 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
 	
 	
+	// first handle various parameter states
 	switch (inNowOutNext.first)
 	{
-	case My_VT100::kStateCSIParamScan:
-		// look for a terminating character (anything not legal in a parameter)
-		switch (*inBuffer)
-		{
-		case 'd':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsd;
-			break;
-		
-		case 'E':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsE;
-			break;
-		
-		case 'F':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsF;
-			break;
-		
-		case 'G':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsG;
-			break;
-		
-		case 'I':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsI;
-			break;
-		
-		case 'S':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsS;
-			break;
-		
-		case 'T':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsT;
-			break;
-		
-		case 'X':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsX;
-			break;
-		
-		case 'Z':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsZ;
-			break;
-		
-		case '@':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsAt;
-			break;
-		
-		case '`':
-			inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsBackquote;
-			break;
-		
-		default:
-			outHandled = false;
-			break;
-		}
+	case My_VT100::kStateCSI:
+	case My_VT100::kStateCSIParamDigit0:
+	case My_VT100::kStateCSIParamDigit1:
+	case My_VT100::kStateCSIParamDigit2:
+	case My_VT100::kStateCSIParamDigit3:
+	case My_VT100::kStateCSIParamDigit4:
+	case My_VT100::kStateCSIParamDigit5:
+	case My_VT100::kStateCSIParamDigit6:
+	case My_VT100::kStateCSIParamDigit7:
+	case My_VT100::kStateCSIParamDigit8:
+	case My_VT100::kStateCSIParamDigit9:
+	case My_VT100::kStateCSIParameterEnd:
+	case My_VT100::kStateCSIPrivate:
+	case My_VT220::kStateCSISecondaryDA:
+	case kStateCSITertiaryDA:
+		inNowOutNext.second = My_XTerm::returnCSINextState(inNowOutNext.first, *inBuffer, outHandled);
 		break;
 	
 	default:
-		// call the XTerm “core” to handle the sequence and update "outHandled" appropriately;
-		// note that the core IS NOT a complete emulator, which is why this routine falls
-		// back to a proper VT220 at the end instead of falling back to the core exclusively
-		result = invokeEmulatorStateDeterminantProc
-					(My_XTermCore::stateDeterminant, inEmulatorPtr, inBuffer, inLength, inNowOutNext,
-						outInterrupt, outHandled);
+		// not in a parameter
+		outHandled = false;
 		break;
+	}
+	
+	if (false == outHandled)
+	{
+		// use the current state and the available data to determine the next logical state
+		switch (inNowOutNext.first)
+		{
+		default:
+			// call the XTerm “core” to handle the sequence and update "outHandled" appropriately;
+			// note that the core IS NOT a complete emulator, which is why this routine falls
+			// back to a proper VT220 at the end instead of falling back to the core exclusively
+			result = invokeEmulatorStateDeterminantProc
+						(My_XTermCore::stateDeterminant, inEmulatorPtr, inBuffer, inLength, inNowOutNext,
+							outInterrupt, outHandled);
+			break;
+		}
 	}
 	
 	if (false == outHandled)
@@ -11380,6 +11638,12 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateCPL:
 		cursorPreviousLine(inDataPtr);
+		break;
+	
+	case kStateCSITertiaryDA:
+		// flag to mark the control sequence as tertiary device attributes
+		inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] = kMy_ParamTertiaryDA;
+		++(inDataPtr->emulator.argLastIndex);
 		break;
 	
 	case kStateHPA:
