@@ -85,9 +85,12 @@
 
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static void		initApplicationCore		();
-static void		initMacOSToolbox		();
+void	initApplicationCore		();
+void	initMacOSToolbox		();
+
+} // anonymous namespace
 
 
 
@@ -292,7 +295,6 @@ Initialize_ApplicationShutDownIsolatedComponents ()
 	PrefsWindow_Done(); // also saves other preferences
 	Preferences_Done();
 	EventLoop_Done();
-	FlagManager_Done();
 }// ApplicationShutDownIsolatedComponents
 
 
@@ -324,7 +326,46 @@ Initialize_ApplicationShutDownRemainingComponents ()
 }// ApplicationShutDownRemainingComponents
 
 
+/*!
+This function is not normally invoked directly.  It is only
+needed when depending on OS version flags like "kFlagOS10_5API"
+in code that is called at an unknown time or that might be
+called very early in the startup process.  In those situations,
+call Initialize_SetVersionFlags() as a guard to ensure that the
+right API flags are actually defined before you use them.
+
+In the vast majority of cases, initialization has already
+occurred and you can simply test version flags normally without
+explicitly invoking this routine first.
+
+(4.0)
+*/
+void
+Initialize_SetVersionFlags ()
+{
+	long	gestaltResult = 0L;
+	UInt8   majorRev = 0;
+	UInt8   minorRev = 0;
+	
+	
+	(OSStatus)Gestalt(gestaltSystemVersion, &gestaltResult);
+	majorRev = Releases_ReturnMajorRevisionForVersion(gestaltResult);
+	minorRev = Releases_ReturnMinorRevisionForVersion(gestaltResult);
+	
+	// any advanced APIs available?
+	FlagManager_Set(kFlagOS10_0API, true); // this source tree is Mac OS X only
+	FlagManager_Set(kFlagOS10_1API, (((majorRev == 0x0A) && (minorRev >= 0x01)) || (majorRev > 0x0A)));
+	FlagManager_Set(kFlagOS10_2API, (((majorRev == 0x0A) && (minorRev >= 0x02)) || (majorRev > 0x0A)));
+	FlagManager_Set(kFlagOS10_3API, (((majorRev == 0x0A) && (minorRev >= 0x03)) || (majorRev > 0x0A)));
+	FlagManager_Set(kFlagOS10_4API, (((majorRev == 0x0A) && (minorRev >= 0x04)) || (majorRev > 0x0A)));
+	FlagManager_Set(kFlagOS10_5API, (((majorRev == 0x0A) && (minorRev >= 0x05)) || (majorRev > 0x0A)));
+	FlagManager_Set(kFlagOS10_6API, (((majorRev == 0x0A) && (minorRev >= 0x06)) || (majorRev > 0x0A)));
+	FlagManager_Set(kFlagOS10_7API, (((majorRev == 0x0A) && (minorRev >= 0x07)) || (majorRev > 0x0A)));
+}// SetVersionFlags
+
+
 #pragma mark Internal Methods
+namespace {
 
 /*!
 This method initializes key modules (both
@@ -339,7 +380,7 @@ to the user.
 
 (3.0)
 */
-static void
+void
 initApplicationCore ()
 {
 	// set up the Localization module, and define where all user interface resources should come from
@@ -424,36 +465,14 @@ tests are done in initApplicationCore()...
 
 (3.0)
 */
-static void
+void
 initMacOSToolbox ()
 {
-	FlagManager_Init();
-	
 	// Launch Services seems to recommend this, so do it
 	LSInit(kLSInitializeDefaults);
 	
-	// At least Mac OS 8 is now required.  Is Mac OS 8.5 or
-	// later being used?  If so, use the cool new stuff
-	// where possible.
-	{
-		long	gestaltResult = 0L;
-		UInt8   majorRev = 0;
-		UInt8   minorRev = 0;
-		
-		
-		(OSStatus)Gestalt(gestaltSystemVersion, &gestaltResult);
-		majorRev = Releases_ReturnMajorRevisionForVersion(gestaltResult);
-		minorRev = Releases_ReturnMinorRevisionForVersion(gestaltResult);
-		
-		// any advanced APIs available?
-		FlagManager_Set(kFlagOS10_0API, true); // this source tree is Mac OS X only
-		FlagManager_Set(kFlagOS10_1API, (((majorRev == 0x0A) && (minorRev >= 0x01)) || (majorRev > 0x0A)));
-		FlagManager_Set(kFlagOS10_2API, (((majorRev == 0x0A) && (minorRev >= 0x02)) || (majorRev > 0x0A)));
-		FlagManager_Set(kFlagOS10_3API, (((majorRev == 0x0A) && (minorRev >= 0x03)) || (majorRev > 0x0A)));
-		FlagManager_Set(kFlagOS10_4API, (((majorRev == 0x0A) && (minorRev >= 0x04)) || (majorRev > 0x0A)));
-		FlagManager_Set(kFlagOS10_5API, (((majorRev == 0x0A) && (minorRev >= 0x05)) || (majorRev > 0x0A)));
-		FlagManager_Set(kFlagOS10_6API, (((majorRev == 0x0A) && (minorRev >= 0x06)) || (majorRev > 0x0A)));
-	}
+	// see "kFlagOS10_5API", etc.
+	Initialize_SetVersionFlags();
 	
 	InitCursor();
 	
@@ -477,5 +496,7 @@ initMacOSToolbox ()
 	// UNIMPLEMENTED - if recording setup fails, notify the user
 	(RecordAE_Result)RecordAE_Init();
 }// initMacOSToolbox
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

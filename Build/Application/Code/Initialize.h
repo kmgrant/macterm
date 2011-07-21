@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2006 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -40,9 +40,8 @@
 
 #pragma mark Public Methods
 
-/*###############################################################
-	INITIALIZING OR FINISHING WITH THE APPLICATION
-###############################################################*/
+//!\name Initialization Routines
+//@{
 
 void
 	Initialize_ApplicationStartup							(CFBundleRef	inApplicationBundle);
@@ -52,6 +51,11 @@ void
 
 void
 	Initialize_ApplicationShutDownRemainingComponents		();
+
+void
+	Initialize_SetVersionFlags								();
+
+//@}
 
 #endif // __INITIALIZE__
 

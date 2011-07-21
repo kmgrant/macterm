@@ -1,19 +1,11 @@
+/*!	\file FlagManager.h
+	\brief This module stores and retrieves true/false values
+	globally, so that they are easily accessible.
+*/
 /*###############################################################
 
-	FlagManager.h
-	
-	To organize and streamline storage of and access to those
-	inevitable Boolean globals, use this module.  Every modern
-	Mac OS application is storing the typical existence flags:
-	Color QuickDraw, Apple Guide, Navigation Services, and even
-	Contextual Menus.  Now, you can maximize efficiency in
-	storing such flags by simply assigning each a unique ID
-	number reflecting the flag, and using this module to set or
-	test the value.  Assign your application-defined flags
-	relative to "kFlagManager_FirstValidFlag".
-	
-	Data Access Library 1.3
-	© 1998-2006 by Kevin Grant
+	Data Access Library 2.5
+	ï¿½ 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -47,38 +39,28 @@
 
 #pragma mark Types
 
-typedef UInt16 FlagManagerFlag;
+typedef UInt16 FlagManager_Flag;
 enum
 {
-	kFlagManager_FirstValidFlag = 0
+	kFlagManager_FirstValidFlag		= 0,
+	kFlagManager_LastValidFlag		= 31
 };
 
 
 
 #pragma mark Public Methods
 
-/*###############################################################
-	INITIALIZING AND FINISHING WITH THE FLAG MANAGER
-###############################################################*/
-
-// CALL THIS ROUTINE ONCE, BEFORE ANY OTHER FLAG MANAGER ROUTINE
-void
-	FlagManager_Init		();
-
-// CALL THIS ROUTINE AFTER YOU ARE PERMANENTLY DONE WITH THE FLAG MANAGER
-void
-	FlagManager_Done		();
-
-/*###############################################################
-	MANIPULATING FLAG MANAGER FLAGS IN THE GLOBAL SET
-###############################################################*/
+//!\name Accessing True/False Values
+//@{
 
 void
-	FlagManager_Set			(FlagManagerFlag				inFlag,
-							 Boolean						inIsSet);
+	FlagManager_Set			(FlagManager_Flag		inFlag,
+							 Boolean				inIsSet);
 
 Boolean
-	FlagManager_Test		(FlagManagerFlag				inFlag);
+	FlagManager_Test		(FlagManager_Flag		inFlag);
+
+//@}
 
 #endif
 
