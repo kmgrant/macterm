@@ -229,6 +229,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%.%MY_ALPHA_BETA%.%MY_BUILD_NUMBER%</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.3.9</string>
 	<key>LSRequiresCarbon</key>
@@ -286,10 +288,6 @@
 	</array>
 	<key>NSInitialToolTipDelay</key>
 	<integer>0</integer>
-	<key>SmartCrashReports_CompanyName</key>
-	<string>Kevin Grant</string>
-	<key>SmartCrashReports_EmailTicket</key>
-	<string>SCR-720E55B50D</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
