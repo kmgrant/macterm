@@ -123,6 +123,7 @@ Tags for use with Quills::Prefs::FORMAT.
 */
 enum
 {
+	kPreferences_TagFadeAlpha							= 'falp',	//!< data: "Float32"
 	kPreferences_TagFontName							= 'font',	//!< data: "Str255"
 	kPreferences_TagFontSize							= 'fsiz',	//!< data: "SInt16"
 	kPreferences_TagFontCharacterWidthMultiplier		= 'cwid',	//!< data: "Float32"
@@ -176,6 +177,7 @@ enum
 	kPreferences_TagDontAutoClose						= 'wdga',	//!< data: "Boolean"
 	kPreferences_TagDontAutoNewOnApplicationReopen		= 'nonu',	//!< data: "Boolean"
 	kPreferences_TagDontDimBackgroundScreens			= 'wddb',	//!< data: "Boolean"
+	kPreferences_TagFadeBackgroundWindows				= 'fade',	//!< data: "Boolean"
 	kPreferences_TagFocusFollowsMouse					= 'fcfm',	//!< data: "Boolean"
 	kPreferences_TagHeadersCollapsed					= 'hdcl',	//!< data: "Boolean"
 	kPreferences_TagKioskAllowsForceQuit				= 'kafq',	//!< data: "Boolean"

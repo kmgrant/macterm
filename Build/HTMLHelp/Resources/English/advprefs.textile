@@ -87,6 +87,8 @@ table(deftable).
 (defbottom). |\2(desc). The text input marker in terminals flashes on and off.|
 (deftop). |(key). @terminal-cursor-shape@|(types). _string_: @block@, @underline@, @thick underline@, @vertical bar@ or @thick vertical bar@| 
 (defbottom). |\2(desc). The appearance of the text input marker in terminals.|
+(deftop). |(key). @terminal-fade-in-background@|(types). _true or false_|
+(defbottom). |\2(desc). Every terminal window becomes slightly transparent when the application is in the background.  The background alpha fraction is determined by @terminal-fade-alpha@.|
 (deftop). |(key). @terminal-focus-follows-mouse@|(types). _true or false_|
 (defbottom). |\2(desc). The terminal view beneath the mouse always accepts keyboard input regardless of which window is in front.|
 (deftop). |(key). @terminal-format-random@|(types). _true or false_|
@@ -317,6 +319,8 @@ table(deftable).
 (defbottom). |\2(desc). Color for rendering almost all text.|
 (deftop). |(key). @terminal-color-matte-background-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
 (defbottom). |\2(desc). Color for rendering the border.|
+(deftop). |(key). @terminal-fade-alpha@|(types). _float_|
+(defbottom). |\2(desc). Adjustment to transparency of terminal windows when the application is backgrounded.  From 0.0 to 1.0, where 1.0 is completely opaque.  Has no effect unless @terminal-fade-in-background@ is enabled.|
 (deftop). |(key). @terminal-font-family@|(types). _string_|
 (defbottom). |\2(desc). This font is used for the majority of text rendering.|
 (deftop). |(key). @terminal-font-size-points@|(types). _integer_|

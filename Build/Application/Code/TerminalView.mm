@@ -80,9 +80,11 @@
 #import "NetEvents.h"
 #import "Preferences.h"
 #import "QuillsTerminal.h"
+#import "SessionFactory.h"
 #import "Terminal.h"
 #import "TerminalBackground.h"
 #import "TerminalView.h"
+#import "TerminalWindow.h"
 #import "TextTranslation.h"
 #import "UIStrings.h"
 #import "URL.h"
@@ -500,6 +502,7 @@ void				screenBufferChanged					(ListenerModel_Ref, ListenerModel_Event, void*, 
 void				screenCursorChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				screenToLocal						(My_TerminalViewPtr, SInt16*, SInt16*);
 void				screenToLocalRect					(My_TerminalViewPtr, Rect*);
+void				setAlphaTerminalWindowOp			(TerminalWindowRef, void*, SInt32, void*);
 void				setBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGDeviceColor const*);
 void				setBlinkingTimerActive				(My_TerminalViewPtr, Boolean);
 void				setCursorGhostVisibility			(My_TerminalViewPtr, Boolean);
@@ -7999,8 +8002,49 @@ mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	switch (inEventThatOccurred)
 	{
 	case kEventLoop_GlobalEventSuspendResume:
-		// update the internal variable to reflect the current suspended state of the application
-		gApplicationIsSuspended = FlagManager_Test(kFlagSuspended);
+		{
+			Boolean		fadeWindows = false;
+			size_t		actualSize = 0;
+			Float32		alpha = 1.0;
+			
+			
+			// update the internal variable to reflect the current suspended state of the application
+			gApplicationIsSuspended = FlagManager_Test(kFlagSuspended);
+			
+			unless (kPreferences_ResultOK ==
+					Preferences_GetData(kPreferences_TagFadeBackgroundWindows,
+					sizeof(fadeWindows), &fadeWindows, &actualSize))
+			{
+				fadeWindows = false; // assume a value, if preference can’t be found
+			}
+			
+			// modify windows
+			if (fadeWindows)
+			{
+				Float32		fadeAlpha = 1.0;
+				
+				
+				// update the internal variable to reflect the current suspended state of the application
+				gApplicationIsSuspended = FlagManager_Test(kFlagSuspended);
+				
+				unless (kPreferences_ResultOK ==
+						Preferences_GetData(kPreferences_TagFadeAlpha,
+						sizeof(fadeAlpha), &fadeAlpha, &actualSize))
+				{
+					fadeAlpha = 1.0; // assume a value, if preference can’t be found
+				}
+				
+				if (gApplicationIsSuspended)
+				{
+					alpha = fadeAlpha;
+					SessionFactory_ForEveryTerminalWindowDo(setAlphaTerminalWindowOp, &alpha/* data 1 */, 0/* data 2 */, nullptr/* result */);
+				}
+				else
+				{
+					SessionFactory_ForEveryTerminalWindowDo(setAlphaTerminalWindowOp, &alpha/* data 1 */, 0/* data 2 */, nullptr/* result */);
+				}
+			}
+		}
 		break;
 	
 	default:
@@ -10576,6 +10620,39 @@ screenToLocalRect	(My_TerminalViewPtr		inTerminalViewPtr,
 		screenToLocal(inTerminalViewPtr, &inoutScreenOriginBoundsPtr->right, &inoutScreenOriginBoundsPtr->bottom);
 	}
 }// screenToLocalRect
+
+
+/*!
+This routine, of "SessionFactory_TerminalWindowOpProcPtr"
+form, changes the opacity of the specified terminal window.
+The "inAlphaFloatPtr" must be a pointer to a "float".
+
+(4.0)
+*/
+void
+setAlphaTerminalWindowOp	(TerminalWindowRef	inTerminalWindow,
+							 void*				inAlphaFloatPtr,
+							 SInt32				UNUSED_ARGUMENT(inData2),
+							 void*				UNUSED_ARGUMENT(inoutResultPtr))
+{
+	float const*		kAlphaPtr = REINTERPRET_CAST(inAlphaFloatPtr, float const*);
+	HIWindowRef const	kWindow  = (nullptr != inTerminalWindow)
+									? TerminalWindow_ReturnWindow(inTerminalWindow)
+									: nullptr;
+	HIWindowRef const	kTabWindow  = (nullptr != inTerminalWindow)
+										? TerminalWindow_ReturnTabWindow(inTerminalWindow)
+										: nullptr;
+	
+	
+	if (nullptr != kTabWindow)
+	{
+		(OSStatus)SetWindowAlpha(kTabWindow, *kAlphaPtr);
+	}
+	if (nullptr != kWindow)
+	{
+		(OSStatus)SetWindowAlpha(kWindow, *kAlphaPtr);
+	}
+}// setAlphaTerminalWindowOp
 
 
 /*!

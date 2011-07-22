@@ -440,6 +440,10 @@
 	<true/>
 	<key>terminal-emulator-xterm-enable-window-alteration-sequences</key>
 	<true/>
+	<key>terminal-fade-alpha</key>
+	<real>0.4</real>
+	<key>terminal-fade-in-background</key>
+	<false/>
 	<key>terminal-focus-follows-mouse</key>
 	<false/>
 	<key>terminal-font-family</key>

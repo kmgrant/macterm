@@ -229,6 +229,10 @@ UInt16
 TerminalScreenRef
 	TerminalWindow_ReturnScreenWithFocus			(TerminalWindowRef			inRef);
 
+// NOT FOR GENERAL USE; POSSIBLY A TEMPORARY ACCESSOR
+HIWindowRef
+	TerminalWindow_ReturnTabWindow					(TerminalWindowRef			inRef);
+
 // EQUIVALENT TO TerminalWindow_ReturnViewCountInGroup(inRef, kTerminalWindow_ViewGroupEverything)
 UInt16
 	TerminalWindow_ReturnViewCount					(TerminalWindowRef			inRef);

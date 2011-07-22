@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110721',
     '20110714',
     '20110713',
     '20110707',
@@ -396,6 +397,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110721': [
+        'Preferences window General pane Options tab has a new "Fade in background" preference that makes all terminal windows semi-transparent when the application is in the background.',
+        'New low-level preference "terminal-fade-alpha" (float, in Formats), to determine the amount of fading in background windows; the factory default is 0.4.',
+    ],
     '20110714': [
         'Fixed Preferences window Formats pane ANSI Colors tab so that a reset uses the right colors.',
     ],

@@ -107,6 +107,7 @@ static HIViewID const	idMyCheckBoxMoveCursorToDropArea			= { 'MCTD', 0/* ID */ }
 static HIViewID const	idMyCheckBoxDoNotDimInactive				= { 'DDBW', 0/* ID */ };
 static HIViewID const	idMyCheckBoxDoNotWarnOnPaste				= { 'NPWR', 0/* ID */ };
 static HIViewID const	idMyCheckBoxMapBackquoteToEscape			= { 'MBQE', 0/* ID */ };
+static HIViewID const	idMyCheckBoxFadeBackgroundWindows			= { 'FADE', 0/* ID */ };
 static HIViewID const	idMyCheckBoxFocusFollowsMouse				= { 'FcFM', 0/* ID */ };
 static HIViewID const	idMyLabelTerminalCursor						= { 'LCrs', 0/* ID */ };
 static HIViewID const	idMyCheckBoxCursorFlashing					= { 'CurF', 0/* ID */ };
@@ -1053,6 +1054,18 @@ const
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
+	{
+		HIViewWrap		checkBox(idMyCheckBoxFadeBackgroundWindows, inOwningWindow);
+		
+		
+		assert(checkBox.exists());
+		unless (Preferences_GetData(kPreferences_TagFadeBackgroundWindows, sizeof(flag), &flag,
+									&actualSize) == kPreferences_ResultOK)
+		{
+			flag = false; // assume a value, if preference can’t be found
+		}
+		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
+	}
 	return result;
 }// My_GeneralTabOptions::createPaneView
 
@@ -1988,6 +2001,12 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 			else if (HIViewIDWrap(idMyCheckBoxFocusFollowsMouse) == viewID)
 			{
 				Preferences_SetData(kPreferences_TagFocusFollowsMouse,
+									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
+				result = true;
+			}
+			else if (HIViewIDWrap(idMyCheckBoxFadeBackgroundWindows) == viewID)
+			{
+				Preferences_SetData(kPreferences_TagFadeBackgroundWindows,
 									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
 				result = true;
 			}

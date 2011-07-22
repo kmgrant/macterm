@@ -1263,6 +1263,29 @@ TerminalWindow_ReturnScreenWithFocus	(TerminalWindowRef	inRef)
 
 
 /*!
+Returns the Mac OS window reference for the tab drawer that
+is sometimes attached to a terminal window.
+
+IMPORTANT:	This is not for general use.  It is an accessor
+			temporarily required to enable alpha-channel
+			changes, and will probably go way.
+
+(4.0)
+*/
+HIWindowRef
+TerminalWindow_ReturnTabWindow		(TerminalWindowRef	inRef)
+{
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	HIWindowRef						result = (ptr->tab.exists())
+												? REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef)
+												: nullptr;
+	
+	
+	return result;
+}// ReturnTabWindow
+
+
+/*!
 Returns the number of distinct terminal views in the
 given terminal window.  For example, if a window has a
 single split, the result will be 2.

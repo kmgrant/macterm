@@ -924,6 +924,11 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagEmacsMetaKey,
 									CFSTR("key-map-emacs-meta"), typeCFStringRef,
 									sizeof(Session_EmacsMetaKey), Quills::Prefs::TERMINAL);
+	My_PreferenceDefinition::createFlag(kPreferences_TagFadeBackgroundWindows,
+										CFSTR("terminal-fade-in-background"), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::create(kPreferences_TagFadeAlpha,
+									CFSTR("terminal-fade-alpha"), typeNetEvents_CFNumberRef,
+									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createFlag(kPreferences_TagFocusFollowsMouse,
 										CFSTR("terminal-focus-follows-mouse"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagFontCharacterWidthMultiplier,
@@ -5973,6 +5978,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagFadeAlpha:
 				case kPreferences_TagTerminalMarginLeft:
 				case kPreferences_TagTerminalMarginRight:
 				case kPreferences_TagTerminalMarginTop:
@@ -6149,6 +6155,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagDontAutoClose:
 				case kPreferences_TagDontAutoNewOnApplicationReopen:
 				case kPreferences_TagDontDimBackgroundScreens:
+				case kPreferences_TagFadeBackgroundWindows:
 				case kPreferences_TagFocusFollowsMouse:
 				case kPreferences_TagHeadersCollapsed:
 				case kPreferences_TagPureInverse:
@@ -8266,6 +8273,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
+			case kPreferences_TagFadeAlpha:
 			case kPreferences_TagTerminalMarginLeft:
 			case kPreferences_TagTerminalMarginRight:
 			case kPreferences_TagTerminalMarginTop:
@@ -8452,6 +8460,16 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
+				}
+				break;
+			
+			case kPreferences_TagFadeBackgroundWindows:
+				{
+					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
+					
+					
+					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			
