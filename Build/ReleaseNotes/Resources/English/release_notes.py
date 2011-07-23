@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110723',
     '20110721',
     '20110714',
     '20110713',
@@ -397,6 +398,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110723': [
+        'The command for full-screen terminals is now named "Enter Full Screen" and has the key equivalent of control-command-F to match the convention of Mac OS X Lion.',
+    ],
     '20110721': [
         'Preferences window General pane Options tab has a new "Fade in background" preference that makes all terminal windows semi-transparent when the application is in the background.',
         'New low-level preference "terminal-fade-alpha" (float, in Formats), to determine the amount of fading in background windows; the factory default is 0.4.',

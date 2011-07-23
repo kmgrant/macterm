@@ -119,7 +119,7 @@ The "No window close on process exit" preference prevents windows
  display information during logout that would otherwise disappear
  immediately.
 
-The "Full Screen" command in the MacTerm application menu lets you
+"Enter Full Screen" in the MacTerm application menu lets you
  focus entirely on the game.  Depending on the current setting of
  "Window Resize Effect", this may either change the font or the
  terminal size; hold down the Option key to temporarily do the
