@@ -2,6 +2,8 @@
 
 @import url('default.css');
 
+/* NOTE: if any new image files are added here, make sure the makefile installs them */
+
 #lastupdated
 {
 	background:			#f2f2f2;

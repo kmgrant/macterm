@@ -1,5 +1,7 @@
 @charset "UTF-8";
 
+/* NOTE: if any new image files are added here, make sure the makefile installs them */
+
 body
 {
 	background:			white;
@@ -22,20 +24,6 @@ body
 	padding-right:		0;
 	border-right:		0;
 	margin-right:		0;
-}
-
-.elementremover
-{
-	background:			transparent url('DisclosureTriangleOpen.gif') no-repeat;
-	cursor:				pointer;
-	padding-left:		20px;
-}
-
-.elementdisplayer
-{
-	background:			transparent url('DisclosureTriangleClosed.gif') no-repeat;
-	cursor:				pointer;
-	padding-left:		20px;
 }
 
 a:link,

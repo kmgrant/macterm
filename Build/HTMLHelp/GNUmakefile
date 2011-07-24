@@ -51,10 +51,11 @@ define SOURCE_INDEX_HTML
 $(foreach PREFIX,index,$(strip $(MAIN_SRC))/$(1)/$(strip $(PREFIX)).html)
 endef
 
+# IMPORTANT: This list should agree with style sheets or
+#            meta tags that refer to image files.
 define SOURCE_IMG
-$(wildcard $(call MAIN_SRC_SUB,$(1))/*.png) \
-$(wildcard $(strip $(SHARED_SRC))/*.jpg) \
-$(wildcard $(strip $(SHARED_SRC))/*.png)
+$(call MAIN_SRC_SUB,$(1))/HelpBookIcon.png \
+$(strip $(SHARED_SRC))/SubtleBorderTop.png
 endef
 
 define SOURCE_PLIST
