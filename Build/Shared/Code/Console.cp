@@ -622,6 +622,33 @@ Console_WriteValueStdString	(char const*			inLabel,
 
 
 /*!
+Works like Console_WriteValueCharacter() for ASCII-range
+values, and otherwise prints an escaped Unicode value.
+
+(1.0)
+*/
+void
+Console_WriteValueUnicodePoint	(char const*			inLabel,
+								 UnicodeScalarValue		inCodePoint)
+{
+	if (0 == (inCodePoint & 0xFFFFFF00))
+	{
+		Console_WriteValueCharacter(inLabel, STATIC_CAST(inCodePoint, UInt8));
+	}
+	else
+	{
+		std::ostringstream		s;
+		
+		
+		s << inLabel << " = \\u0x" << std::hex << inCodePoint;
+		
+		std::string		sString = s.str();
+		Console_WriteLine(sString.c_str());
+	}
+}// WriteValueUnicodePoint
+
+
+/*!
 Return true if Console_Warning() calls should trigger a crash
 that is traceable in a debugger (useful in ultra-debug mode
 near a final release); otherwise, return false to just make
