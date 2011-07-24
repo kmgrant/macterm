@@ -581,28 +581,7 @@ IconManager_SetMenuTitleIcon	(MenuRef				inMenu,
 	if (ptr == nullptr) result = memPCErr;
 	else
 	{
-		// Make the menu’s title iconic.  To do this on Mac OS 8 or 9, the first two
-		// bytes of the menu data must be "0x0501" and the remaining data must be an
-		// icon suite handle; on Mac OS X, use the new API for this purpose.
-	#if TARGET_API_MAC_OS8
-		if (IconManager_IsIconServices(inRef))
-		{
-			// UNSUPPORTED
-			result = unimpErr;
-		}
-		else if (IconManager_IsOldColorIcon(inRef))
-		{
-			// UNSUPPORTED
-			result = unimpErr;
-		}
-		else
-		{
-			// for some reason, explicitly setting the length field causes a crash
-			//(**menu).menuData[0] = 0x05; // length of data that follows (this is still a Pascal string here)
-			(**inMenu).menuData[1] = 0x01;
-			*((UInt32*)&((**inMenu).menuData[2])) = (UInt32)ptr->data.OS8;
-		}
-	#else
+		// Make the menu’s title iconic.
 		if (IconManager_IsIconServices(inRef))
 		{
 			(OSStatus)SetMenuTitleIcon(inMenu, kMenuIconRefType, ptr->data.OSX);
@@ -616,7 +595,6 @@ IconManager_SetMenuTitleIcon	(MenuRef				inMenu,
 		{
 			(OSStatus)SetMenuTitleIcon(inMenu, kMenuIconSuiteType, ptr->data.OS8);
 		}
-	#endif
 		refReleaseLock(inRef, &ptr);
 	}
 	

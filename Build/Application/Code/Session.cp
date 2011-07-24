@@ -5789,11 +5789,8 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 									if (nullptr != window)
 									{
 										(OSStatus)SetWindowProxyAlias(window, alias);
-										if (API_AVAILABLE(SetWindowProxyCreatorAndType))
-										{
-											(OSStatus)SetWindowProxyCreatorAndType(window, captureFileCreator, 'TEXT',
-																					captureFile.vRefNum);
-										}
+										(OSStatus)SetWindowProxyCreatorAndType(window, captureFileCreator, 'TEXT',
+																				captureFile.vRefNum);
 									}
 									Memory_DisposeHandle(REINTERPRET_CAST(&alias, Handle*));
 								}
@@ -5805,7 +5802,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 			}
 			else
 			{
-Console_WriteLine("invalid record");
+				Console_Warning(Console_WriteLine, "save skipped, no valid reply record given");
 			}
 			Alert_ReportOSStatus(error);
 			error = FileSelectionDialogs_CompleteSave(&reply);

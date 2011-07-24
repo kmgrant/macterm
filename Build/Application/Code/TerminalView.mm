@@ -10718,13 +10718,10 @@ setCursorGhostVisibility	(My_TerminalViewPtr		inTerminalViewPtr,
 	Boolean			renderCursor = (inTerminalViewPtr->screen.cursor.ghostState != newGhostCursorState);
 	
 	
-	if (API_AVAILABLE(IsValidWindowRef))
-	{
-		// cursor flashing is done within a thread; after a window closes,
-		// the flashing ought to stop, but to make sure of that the window
-		// must be valid (otherwise drawing occurs in the desktop!)
-		renderCursor = (renderCursor && IsValidWindowRef(HIViewGetWindow(inTerminalViewPtr->contentHIView)));
-	}
+	// cursor flashing is done within a thread; after a window closes,
+	// the flashing ought to stop, but to make sure of that the window
+	// must be valid (otherwise drawing occurs in the desktop!)
+	renderCursor = (renderCursor && IsValidWindowRef(HIViewGetWindow(inTerminalViewPtr->contentHIView)));
 	
 	// change state
 	inTerminalViewPtr->screen.cursor.ghostState = newGhostCursorState;
@@ -10758,13 +10755,10 @@ setCursorVisibility		(My_TerminalViewPtr		inTerminalViewPtr,
 		Boolean			renderCursor = (inTerminalViewPtr->screen.cursor.currentState != newCursorState);
 		
 		
-		if (API_AVAILABLE(IsValidWindowRef))
-		{
-			// cursor flashing is done within a thread; after a window closes,
-			// the flashing ought to stop, but to make sure of that the window
-			// must be valid (otherwise drawing occurs in the desktop!)
-			renderCursor = (renderCursor && IsValidWindowRef(HIViewGetWindow(inTerminalViewPtr->contentHIView)));
-		}
+		// cursor flashing is done within a thread; after a window closes,
+		// the flashing ought to stop, but to make sure of that the window
+		// must be valid (otherwise drawing occurs in the desktop!)
+		renderCursor = (renderCursor && IsValidWindowRef(HIViewGetWindow(inTerminalViewPtr->contentHIView)));
 		
 		// change state
 		inTerminalViewPtr->screen.cursor.currentState = newCursorState;

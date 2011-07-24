@@ -146,7 +146,6 @@ DialogTransitions_CloseLowerRight	(WindowRef	inWindow)
 }// CloseLowerRight
 
 
-#if TARGET_API_MAC_CARBON
 /*!
 Removes a sheet window from view, with the
 appropriate window sliding effect.
@@ -161,10 +160,8 @@ DialogTransitions_CloseSheet	(WindowRef	inWindow,
 {
 	dialogClose(inWindow, true/* is sheet */, false/* no animation */);
 }// CloseSheet
-#endif
 
 
-#if TARGET_API_MAC_CARBON
 /*!
 Removes a sheet window from view with no closing
 animation.  This is used for standard “close warning”
@@ -181,7 +178,6 @@ DialogTransitions_CloseSheetImmediately		(WindowRef		inWindow,
 {
 	dialogClose(inWindow, true/* is sheet */, true/* no animation */);
 }// CloseSheetImmediately
-#endif
 
 
 /*!
@@ -438,7 +434,6 @@ DialogTransitions_DisplayFromWindowRegion	(WindowRef			inWindow,
 }// DisplayFromWindowRegion
 
 
-#if TARGET_API_MAC_CARBON
 /*!
 Displays and activates a sheet window, with the
 appropriate window sliding effect.
@@ -474,10 +469,8 @@ DialogTransitions_DisplaySheet	(WindowRef		inWindow,
 #endif
 	dialogDisplayEnsureVisibility(inWindow);
 }// DisplaySheet
-#endif
 
 
-#if TARGET_API_MAC_CARBON
 /*!
 Displays and activates a sheet window, with the
 appropriate window sliding effect, from a non-
@@ -521,7 +514,6 @@ DialogTransitions_DisplaySheetFromRectangle		(WindowRef		inWindow,
 		dialogDisplayEnsureVisibility(inWindow);
 	}
 }// DisplaySheetFromRectangle
-#endif
 
 
 #pragma mark Internal Methods
@@ -540,10 +532,6 @@ dialogClose		(HIWindowRef	inWindow,
 {
 	if (inIsSheet)
 	{
-	#if TARGET_API_MAC_OS8
-		// sheets are not allowed prior to Mac OS X!
-		HideWindow(inWindow);
-	#else
 		WindowRef		parentWindow = nullptr;
 		
 		
@@ -559,7 +547,6 @@ dialogClose		(HIWindowRef	inWindow,
 		// close the dialog
 		if (inNoAnimation) HideWindow(inWindow);
 		else (OSStatus)HideSheetWindow(inWindow);
-	#endif
 	}
 	else
 	{

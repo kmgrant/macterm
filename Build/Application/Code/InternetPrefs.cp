@@ -3,7 +3,7 @@
 	InternetPrefs.cp
 	
 	MacTerm
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -36,18 +36,16 @@
 
 // application includes
 #include "AppResources.h"
-#include "ConstantsRegistry.h"
 #include "InternetPrefs.h"
 
 
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	ICInstance	gInternetConfigInstance = nullptr;
-	Boolean		gHaveIC = false;
-}
+ICInstance		gInternetConfigInstance = nullptr;
+
+} // anonymous namespace
 
 
 
@@ -70,28 +68,6 @@ InternetPrefs_Init ()
 	
 	folderSpec[0].vRefNum = -1; // -1 = search for system preferences
 	folderSpec[0].dirID = 2;
-#if TARGET_API_MAC_OS8
-	error = ICFindConfigFile(gInternetConfigInstance, 1, (ICDirSpecArrayPtr)&folderSpec);
-#else
-	error = cfragNoSymbolErr;
-#endif
-	gHaveIC = (error == noErr);
 }// Init
-
-
-/*!
-Call this method when you are completely
-done with this module.
-
-(2.6)
-*/
-void
-InternetPrefs_Done ()
-{
-	if (gHaveIC)
-	{
-		(OSStatus)ICStop(gInternetConfigInstance);
-	}
-}// Done
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

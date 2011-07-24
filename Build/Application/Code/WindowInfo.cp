@@ -402,14 +402,10 @@ WindowInfo_GrowWindow	(HIWindowRef		inWindow,
 				// *other* applications while the window is being resized!
 				while (!done)
 				{
-					WaitNextEvent(mUpMask | osMask, &event,
-								#if TARGET_API_MAC_OS8
-									4L/* sleep ticks */,
-								#else
+					WaitNextEvent(mUpMask | osMask, &event,\
 									// on Mac OS X, this value should be huge, to reduce
 									// polling drags on the system
 									0x7FFFFFFF,
-								#endif
 									region/* mouse-moved region */);
 					
 					done = (event.what == mouseUp); // stop when the mouse button is released
@@ -478,10 +474,6 @@ WindowInfo_GrowWindow	(HIWindowRef		inWindow,
 						}
 					}
 					++x;
-				#if TARGET_API_MAC_OS8
-					// it is only safe to do this yield here on a cooperatively-multitasked OS
-					(OSStatus)YieldToAnyThread();
-				#endif
 				}
 				
 				// get rid of extra events
@@ -506,10 +498,6 @@ WindowInfo_GrowWindow	(HIWindowRef		inWindow,
 			SetRect(&contentRect, 0, 0, (contentRect.right - contentRect.left),
 					(contentRect.bottom - contentRect.top));
 			
-		#if TARGET_API_MAC_OS8
-			growResult = GrowWindow(inWindow, inoutEventPtr->where,
-									WindowInfo_ReturnWindowResizeLimits(windowInfoRef));
-		#else
 			{
 				Rect	newContentRect;
 				
@@ -526,7 +514,6 @@ WindowInfo_GrowWindow	(HIWindowRef		inWindow,
 					growResult = 0;
 				}
 			}
-		#endif
 			if (growResult != 0)
 			{
 				SInt32		deltaX = 0L;

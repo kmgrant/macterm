@@ -2,8 +2,8 @@
 
 	Embedding.cp
 	
-	Interface Library 2.0
-	© 1998-2008 by Kevin Grant
+	Interface Library 2.4
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -67,7 +67,6 @@ static Boolean	swapControlsOperation			(ControlRef, SInt16, SInt16, GDHandle, SI
 
 #pragma mark Public Methods
 
-#if TARGET_API_MAC_CARBON
 /*!
 Creates offscreen graphics worlds for two images,
 and then builds a composite image with an alpha
@@ -129,7 +128,6 @@ Embedding_BuildCGImageFromPictureAndMask	(PicHandle		inPicture,
 	
 	return result;
 }// BuildCGImageFromPictureAndMask
-#endif
 
 
 /*!

@@ -114,14 +114,8 @@ void
 StringUtilities_CToP	(char const*	inString,
 						 StringPtr		outBuffer)
 {
-#if TARGET_API_MAC_OS8
-	// traditional Mac OS has C2PStr
-	CPP_STD::strcpy(REINTERPRET_CAST(outBuffer, char*), inString);
-	C2PStr(REINTERPRET_CAST(outBuffer, char*));
-#else
 	// Carbon offers a new CopyCStringToPascal function
 	CopyCStringToPascal(inString, outBuffer);
-#endif
 }// CToP
 
 
@@ -138,14 +132,9 @@ to bugs if “constness” is casted away incorrectly.
 StringPtr
 StringUtilities_CToPInPlace		(char		inoutString[])
 {
-#if TARGET_API_MAC_OS8
-	// traditional Mac OS has C2PStr
-	return C2PStr(inoutString);
-#else
 	// Carbon offers a new CopyCStringToPascal function
 	CopyCStringToPascal(inoutString, REINTERPRET_CAST(inoutString, StringPtr));
 	return REINTERPRET_CAST(inoutString, StringPtr);
-#endif
 }// CToPInPlace
 
 
@@ -507,14 +496,8 @@ void
 StringUtilities_PToC	(ConstStringPtr		inString,
 						 char				outBuffer[])
 {
-#if TARGET_API_MAC_OS8
-	// traditional Mac OS has P2CStr
-	PLstrcpy(REINTERPRET_CAST(outBuffer, StringPtr), inString);
-	P2CStr(REINTERPRET_CAST(outBuffer, StringPtr));
-#else
 	// Carbon offers a new CopyPascalStringToC function
 	CopyPascalStringToC(inString, outBuffer);
-#endif
 }// PToC
 
 
@@ -531,14 +514,9 @@ and can lead to bugs if “constness” is casted away incorrectly.
 char*
 StringUtilities_PToCInPlace		(StringPtr		inoutString)
 {
-#if TARGET_API_MAC_OS8
-	// traditional Mac OS has P2CStr
-	return P2CStr(inoutString);
-#else
 	// Carbon offers a new CopyPascalStringToC function
 	CopyPascalStringToC(inoutString, REINTERPRET_CAST(inoutString, char*));
 	return REINTERPRET_CAST(inoutString, char*);
-#endif
 }// PToCInPlace
 
 

@@ -115,11 +115,6 @@ enum
 	RGBCOLOR_INTENSITY_MAX = 65535
 };
 
-//! has a value of true if the specified Mac OS application programming interface can be found,
-//! or false otherwise; this is Apple’s supported method for determining the presence of any
-//! particular Mac OS system call at runtime
-#define API_AVAILABLE(a)	((UInt32)(a) != (UInt32)kUnresolvedCFragSymbolAddress)
-
 //! use this to “reference” a constant that is not available in current headers (for example,
 //! something declared in the headers of a future OS); the 2nd parameter is ignored, the 1st
 //! value is substituted directly; this is useful both to retain the extra context provided

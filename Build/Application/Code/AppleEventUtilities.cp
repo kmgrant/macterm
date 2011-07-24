@@ -249,23 +249,8 @@ AppleEventUtilities_CopyDescriptorDataAs	(DescType		inDesiredType,
 		
 		if (result == noErr)
 		{
-		#if TARGET_API_MAC_OS8
-			Size		byteCountToCopy = AEGetDescDataSize(descPtr);
-			
-			
-			// copy the data, reporting an error (but not aborting the copy) if there’s not enough room
-			Console_WriteLine("determining how much to copy");
-			if (byteCountToCopy > inDataPtrMaximumSize)
-			{
-				Console_WriteLine("too little space to copy completely!");
-				byteCountToCopy = inDataPtrMaximumSize;
-				result = memSCErr;
-			}
-			BlockMoveData(*(descPtr->dataHandle), outDataPtr, byteCountToCopy);
-		#else
 			// under Carbon, there is a new API for this purpose
 			result = AEGetDescData(descPtr, outDataPtr, inDataPtrMaximumSize);
-		#endif
 			if (outActualSizePtr != nullptr) *outActualSizePtr = AEGetDescDataSize(descPtr);
 		}
 		if (descPtr != nullptr) Memory_DisposePtr((Ptr*)&descPtr);

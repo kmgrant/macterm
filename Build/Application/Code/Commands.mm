@@ -66,7 +66,6 @@ extern "C"
 #import <MemoryBlocks.h>
 #import <SoundSystem.h>
 #import <Undoables.h>
-#import <UniversalPrint.h>
 
 // application includes
 #import "AddressDialog.h"
@@ -1095,7 +1094,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				
 				if (nullptr != frontWindow)
 				{
-				#if TARGET_API_MAC_CARBON
 					WindowRef		sheetParentWindow = nullptr;
 					
 					
@@ -1105,7 +1103,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 						// the front window is a sheet; minimize its parent window instead
 						frontWindow = sheetParentWindow;
 					}
-				#endif
 					collapsing = !IsWindowCollapsed(frontWindow);
 					CollapseWindow(frontWindow, collapsing);
 				}

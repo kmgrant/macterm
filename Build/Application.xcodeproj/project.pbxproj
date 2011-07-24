@@ -29,7 +29,6 @@
 		0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABD01CF1068000A00BBB87A /* DebugInterface.mm */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
-		0AC6BADC0A8C0BA000AFF37A /* UniversalPrint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE09055432A400ACDF3A /* UniversalPrint.cp */; };
 		0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */; };
 		0AC6BADE0A8C0BA000AFF37A /* ErrorAlerts.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD4055432A400ACDF3A /* ErrorAlerts.cp */; };
 		0AC6BADF0A8C0BA000AFF37A /* Localization.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF4055432A400ACDF3A /* Localization.cp */; };
@@ -110,7 +109,6 @@
 		0AC6BB4D0A8C0BA100AFF37A /* DialogAdjust.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */; };
 		0AC6BB4E0A8C0BA100AFF37A /* PrefsContextDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDDB055432A400ACDF3A /* PrefsContextDialog.cp */; };
 		0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */; };
-		0AC6BB520A8C0BA100AFF37A /* ICGluePPC.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE4055432A400ACDF3A /* ICGluePPC.cp */; };
 		0AC6BB540A8C0BA100AFF37A /* Network.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFF055432A400ACDF3A /* Network.cp */; };
 		0AC6BB550A8C0BA100AFF37A /* ListenerModel.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF607FAC04200248DDF /* ListenerModel.cp */; };
 		0AC6BB560A8C0BA100AFF37A /* TextDataFile.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */; };
@@ -295,7 +293,6 @@
 		0A4604170554376100ACDF3A /* PrefPanelMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelMacros.h; path = Application/Code/PrefPanelMacros.h; sourceTree = "<group>"; };
 		0A4604180554376100ACDF3A /* PrefPanelScripts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelScripts.h; path = Application/Code/PrefPanelScripts.h; sourceTree = "<group>"; };
 		0A4604190554376100ACDF3A /* PrefsWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefsWindow.h; path = Application/Code/PrefsWindow.h; sourceTree = "<group>"; };
-		0A46041A0554376100ACDF3A /* UniversalPrint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UniversalPrint.h; path = Shared/Code/UniversalPrint.h; sourceTree = "<group>"; };
 		0A46041B0554376100ACDF3A /* ProgressDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ProgressDialog.h; path = Application/Code/ProgressDialog.h; sourceTree = "<group>"; };
 		0A4604200554376100ACDF3A /* RecordAE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RecordAE.h; path = Application/Code/RecordAE.h; sourceTree = "<group>"; };
 		0A4604230554376100ACDF3A /* AppResources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppResources.h; path = Application/Code/AppResources.h; sourceTree = "<group>"; };
@@ -355,7 +352,6 @@
 		0A46FDDB055432A400ACDF3A /* PrefsContextDialog.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefsContextDialog.cp; path = Application/Code/PrefsContextDialog.cp; sourceTree = "<group>"; };
 		0A46FDE1055432A400ACDF3A /* HelpSystem.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HelpSystem.cp; path = Application/Code/HelpSystem.cp; sourceTree = "<group>"; };
 		0A46FDE3055432A400ACDF3A /* UIStrings.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UIStrings.cp; path = Application/Code/UIStrings.cp; sourceTree = "<group>"; };
-		0A46FDE4055432A400ACDF3A /* ICGluePPC.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ICGluePPC.cp; path = Application/Code/ICGluePPC.cp; sourceTree = "<group>"; };
 		0A46FDE6055432A400ACDF3A /* IconManager.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IconManager.cp; path = Application/Code/IconManager.cp; sourceTree = "<group>"; };
 		0A46FDE7055432A400ACDF3A /* InfoWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = InfoWindow.mm; path = Application/Code/InfoWindow.mm; sourceTree = "<group>"; };
 		0A46FDE8055432A400ACDF3A /* Initialize.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Initialize.cp; path = Application/Code/Initialize.cp; sourceTree = "<group>"; };
@@ -376,7 +372,6 @@
 		0A46FE06055432A400ACDF3A /* PrefPanelMacros.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelMacros.cp; path = Application/Code/PrefPanelMacros.cp; sourceTree = "<group>"; };
 		0A46FE07055432A400ACDF3A /* PrefPanelScripts.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelScripts.cp; path = Application/Code/PrefPanelScripts.cp; sourceTree = "<group>"; };
 		0A46FE08055432A400ACDF3A /* PrefsWindow.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefsWindow.cp; path = Application/Code/PrefsWindow.cp; sourceTree = "<group>"; };
-		0A46FE09055432A400ACDF3A /* UniversalPrint.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UniversalPrint.cp; path = Shared/Code/UniversalPrint.cp; sourceTree = "<group>"; };
 		0A46FE0A055432A400ACDF3A /* ProgressDialog.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ProgressDialog.cp; path = Application/Code/ProgressDialog.cp; sourceTree = "<group>"; };
 		0A46FE0F055432A400ACDF3A /* RecordAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RecordAE.cp; path = Application/Code/RecordAE.cp; sourceTree = "<group>"; };
 		0A46FE12055432A400ACDF3A /* AppResources.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AppResources.cp; path = Application/Code/AppResources.cp; sourceTree = "<group>"; };
@@ -658,7 +653,6 @@
 				0A33CCFC07FAC06200248DDF /* StringUtilities.cp */,
 				0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */,
 				0A46FE36055432A400ACDF3A /* Undoables.cp */,
-				0A46FE09055432A400ACDF3A /* UniversalPrint.cp */,
 				0AE852680D94613300B6834B /* AutoPool.objc++.h */,
 				0AFD1266087A0A3C00439BEA /* CarbonEventHandlerWrap.template.h */,
 				0A4603BE0554376100ACDF3A /* CarbonEventUtilities.template.h */,
@@ -702,7 +696,6 @@
 				0A9B317E0D538E2800C1616D /* TextDataFile.h */,
 				0A9B31840D538E4D00C1616D /* Undoables.h */,
 				0A4604520554376100ACDF3A /* UniversalDefines.h */,
-				0A46041A0554376100ACDF3A /* UniversalPrint.h */,
 			);
 			name = Shared;
 			sourceTree = "<group>";
@@ -747,7 +740,6 @@
 				0ACA57D20AEADDE700B5F482 /* GenericDialog.cp */,
 				0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */,
 				0A46FDE1055432A400ACDF3A /* HelpSystem.cp */,
-				0A46FDE4055432A400ACDF3A /* ICGluePPC.cp */,
 				0A46FDE6055432A400ACDF3A /* IconManager.cp */,
 				0A46FDE7055432A400ACDF3A /* InfoWindow.mm */,
 				0A46FDE8055432A400ACDF3A /* Initialize.cp */,
@@ -1333,7 +1325,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0AC6BADC0A8C0BA000AFF37A /* UniversalPrint.cp in Sources */,
 				0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.cp in Sources */,
 				0AC6BADE0A8C0BA000AFF37A /* ErrorAlerts.cp in Sources */,
 				0AC6BADF0A8C0BA000AFF37A /* Localization.cp in Sources */,
@@ -1414,7 +1405,6 @@
 				0AC6BB4D0A8C0BA100AFF37A /* DialogAdjust.cp in Sources */,
 				0AC6BB4E0A8C0BA100AFF37A /* PrefsContextDialog.cp in Sources */,
 				0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */,
-				0AC6BB520A8C0BA100AFF37A /* ICGluePPC.cp in Sources */,
 				0AC6BB540A8C0BA100AFF37A /* Network.cp in Sources */,
 				0AC6BB550A8C0BA100AFF37A /* ListenerModel.cp in Sources */,
 				0AC6BB560A8C0BA100AFF37A /* TextDataFile.cp in Sources */,

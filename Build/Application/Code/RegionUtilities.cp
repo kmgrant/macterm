@@ -332,11 +332,7 @@ RegionUtilities_GetWindowMaximumBounds	(WindowRef	inWindow,
 	RegionUtilities_GetPositioningBounds(inWindow, &maximumScreenBounds);
 	unless (inNoInsets)
 	{
-	#if TARGET_API_MAC_CARBON
 		InsetRect(&maximumScreenBounds, 7, 10); // Aqua Human Interface Guidelines - inset from screen edges by many pixels
-	#else
-		InsetRect(&maximumScreenBounds, 3, 3); // Human Interface Guidelines - inset from screen edges by 3 pixels
-	#endif
 	}
 	
 	// if requested, return the old size as well

@@ -22,8 +22,8 @@
 */
 /*###############################################################
 
-	Interface Library 2.2
-	© 1998-2010 by Kevin Grant
+	Interface Library 2.4
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -57,30 +57,6 @@
 
 
 
-#pragma mark Types
-
-struct ColorPenState
-{
-#if TARGET_API_MAC_OS8
-	// under Classic, parameters are explicitly saved and restored
-	Boolean				isColorPort;
-	RGBColor			foreColor;
-	RGBColor			backColor;
-	PenState			pen;
-	SInt16				textMode;
-	PixPatHandle		pnPixPat;
-	PixPatHandle		bkPixPat;
-	Pattern				bkPat;
-	UInt32				fgColor;
-	UInt32				bkColor;
-#else
-	// under Carbon, the OS does this automatically
-	ThemeDrawingState	parameters;
-#endif
-};
-
-
-
 #pragma mark Public Methods
 
 //!\name Core Graphics Helpers
@@ -105,25 +81,8 @@ RGBColor
 Boolean
 	ColorUtilities_IsColorDevice				(GDHandle				inDevice);
 
-Boolean
-	ColorUtilities_IsColorGrafPort				(GrafPtr				inPort);
-
 SInt16
 	ColorUtilities_ReturnCurrentDepth			(CGrafPtr				inPort);
-
-//@}
-
-//!\name Saving, Restoring and Normalizing QuickDraw Port States
-//@{
-
-void
-	ColorUtilities_NormalizeColorAndPen			();
-
-void
-	ColorUtilities_PreserveColorAndPenState		(ColorPenState*			outStatePtr);
-
-void
-	ColorUtilities_RestoreColorAndPenState		(ColorPenState*			inoutStatePtr);
 
 //@}
 

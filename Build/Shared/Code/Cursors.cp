@@ -369,12 +369,7 @@ Cursors_Use		(SInt16		inCursorID)
 				break;
 				
 			case kCursor_Watch:
-			#if TARGET_API_MAC_OS8
-				cursor = kThemeWatchCursor;
-				gAppearanceCursorInEffect = gAnimatedCursorInEffect = true;
-			#else
 				// under Mac OS X, the spinning cursor appears automatically, when appropriate
-			#endif
 				break;
 			
 			case kCursor_ArrowHelp:

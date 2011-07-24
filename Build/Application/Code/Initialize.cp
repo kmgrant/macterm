@@ -313,7 +313,6 @@ by moving to Cocoa.
 void
 Initialize_ApplicationShutDownRemainingComponents ()
 {
-	InternetPrefs_Done();
 	Console_Done();
 	TerminalView_Done();
 	TerminalBackground_Done();

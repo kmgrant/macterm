@@ -7,8 +7,8 @@
 	for Appearance 1.0), and are written by Ed Voas.  Copyright
 	© 1997 by Apple Computer, Inc., all rights reserved.
 	
-	Interface Library 2.0
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.4
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -432,117 +432,6 @@ ColorUtilities_IsColorDevice	(GDHandle	inDevice)
 
 
 /*!
-Determines if the specified port uses Color QuickDraw.
-Once Mac OS 8 code is abandoned completely, this check
-will become obsolete.
-
-(1.0)
-*/
-Boolean
-ColorUtilities_IsColorGrafPort	(GrafPtr	UNUSED_ARGUMENT(inPort))
-{
-	Boolean		result = true;
-	
-	
-#if TARGET_API_MAC_OS8
-	result = (((inPort)->portBits.rowBytes & 0xC000) == 0xC000);
-#endif
-	return result;
-}// IsColorGrafPort
-
-
-/*!
-Standardizes a graphics port for use with theme
-brushes under Appearance 1.0 (that is, slightly
-more than what PenNormal() does).
-
-© 1997-1999 by Apple Computer, Inc.
-
-(1.0)
-*/
-void
-ColorUtilities_NormalizeColorAndPen	()
-{
-	RGBColor	black,
-				white;
-	
-	
-	black.red = black.green = black.blue = 0x0000;
-	white.red = white.green = white.blue = RGBCOLOR_INTENSITY_MAX;
-	
-	RGBForeColor(&black);
-	RGBBackColor(&white);
-	PenNormal();
-	ColorUtilities_SetWhiteBackgroundPattern();
-	TextMode(srcOr);
-}// NormalizeColorAndPen
-
-
-/*!
-To save all pen state information that might
-get affected by using a theme brush under
-Appearance 1.0, invoke this method.
-
-© 1997-1999 by Apple Computer, Inc.
-
-(1.0)
-*/
-void
-ColorUtilities_PreserveColorAndPenState		(ColorPenState*		outStatePtr)
-{
-#if TARGET_API_MAC_CARBON
-	// Carbon has an API for this
-	(OSStatus)GetThemeDrawingState(&outStatePtr->parameters);
-#else
-	// under Classic, Apple has specified the parameters that need saving
-	CGrafPtr	currentPort = nullptr;
-	GDHandle	currentDevice = nullptr;
-	
-	
-	GetGWorld(&currentPort, &currentDevice);
-	
-	outStatePtr->pnPixPat = nullptr;
-	outStatePtr->bkPixPat = nullptr;
-	
-	// these are non-color graphics port features
-	outStatePtr->bkPat = currentPort->bkPat;
-	outStatePtr->bkColor = currentPort->bkColor;
-	outStatePtr->fgColor = currentPort->fgColor;
-	outStatePtr->isColorPort = ColorUtilities_IsColorGrafPort(currentPort);
-	
-	if (outStatePtr->isColorPort)
-	{
-		GetForeColor(&outStatePtr->foreColor);
-		GetBackColor(&outStatePtr->backColor);
-		
-		// If the pen pattern is not an old-style pattern,
-		// copy the handle.  If it is an old style pattern,
-		// GetPenState(), below, will save the right thing.
-		if ((**currentPort->pnPixPat).patType != 0)
-		{
-			outStatePtr->pnPixPat = currentPort->pnPixPat;
-		}
-		
-		// If the pen pattern is not an old style pattern,
-		// copy the handle.  Otherwise, get the old pattern
-		// into "bkPat", for restoring that way.
-		if ((**currentPort->bkPixPat).patType != 0)
-		{
-			outStatePtr->bkPixPat = currentPort->bkPixPat;
-		}
-		else
-		{
-			outStatePtr->bkPat = *(PatPtr)(*(**(currentPort)->bkPixPat).patData);
-		}
-	}
-	
-	GetPenState(&outStatePtr->pen);
-	outStatePtr->textMode = GetPortTextMode(currentPort);
-#endif
-}// PreserveColorAndPenState
-
-
-/*!
 Creates a QuickDraw color by converting the red, green and blue
 intensity values from the given device color.  The resulting
 color will obviously be limited by the number of color values
@@ -576,49 +465,6 @@ ColorUtilities_QuickDrawColorMake	(CGDeviceColor const&	inDeviceColor)
 
 
 /*!
-To restore all pen state information that was previously
-saved with ColorUtilities_GetColorAndPenState(), invoke
-this method.
-
-© 1997-1999 by Apple Computer, Inc.
-
-(1.0)
-*/
-void
-ColorUtilities_RestoreColorAndPenState	(ColorPenState*		inoutStatePtr)
-{
-#if TARGET_API_MAC_CARBON
-	// Carbon has an API for this
-	(OSStatus)SetThemeDrawingState(inoutStatePtr->parameters, true/* dispose now */);
-#else
-	// under Classic, Apple has specified the parameters that need restoring
-	SetPenState(&inoutStatePtr->pen);
-	if (inoutStatePtr->isColorPort)
-	{
-		RGBForeColor(&inoutStatePtr->foreColor);
-		RGBBackColor(&inoutStatePtr->backColor);
-		if (inoutStatePtr->pnPixPat != nullptr)
-		{
-			PenPixPat(inoutStatePtr->pnPixPat);
-		}
-		if (inoutStatePtr->bkPixPat != nullptr)
-		{
-			BackPixPat(inoutStatePtr->bkPixPat);
-		}
-	}
-	else
-	{
-		BackPat(&inoutStatePtr->bkPat);
-		ForeColor(inoutStatePtr->fgColor);
-		BackColor(inoutStatePtr->bkColor);
-	}
-	
-	TextMode(inoutStatePtr->textMode);
-#endif
-}// RestoreColorAndPenState
-
-
-/*!
 Determines the color depth of the specified port.
 
 (1.0)
@@ -629,12 +475,9 @@ ColorUtilities_ReturnCurrentDepth	(CGrafPtr	inPort)
 	SInt16		result = 1;
 	
 	
-#if TARGET_API_MAC_OS8
-	result = (ColorUtilities_IsColorGrafPort((GrafPtr)inPort) ? (**(inPort)->portPixMap).pixelSize : 1);
-#else
 	//result = (**GetPortPixMap(inPort)).pixelSize;
 	result = GetPixDepth(GetPortPixMap(inPort));
-#endif
+	
 	return result;
 }// ReturnCurrentDepth
 

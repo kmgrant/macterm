@@ -455,7 +455,7 @@ Localization_GetFontTextEncoding	(ConstStringPtr		inFontName,
 	
 	
 	if (outTextEncoding == nullptr) result = memPCErr;
-	else if (API_AVAILABLE(FontToScript) && API_AVAILABLE(UpgradeScriptInfoToTextEncoding))
+	else
 	{
 		//LangCode		textLanguageID = GetScriptVariable(smSystemScript, smScriptLang);
 		SInt16			fontID = 0;
@@ -473,11 +473,6 @@ Localization_GetFontTextEncoding	(ConstStringPtr		inFontName,
 		// get this behavior, the language and region must be “don’t care”.
 		result = UpgradeScriptInfoToTextEncoding(scriptCode, kTextLanguageDontCare, kTextRegionDontCare,
 													inFontName, &encoding);
-	}
-	else
-	{
-		*outTextEncoding = kTextEncodingMacRoman; // assume this when an error occurs
-		result = cfragNoSymbolErr;
 	}
 	
 	return result;
