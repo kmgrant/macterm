@@ -89,14 +89,10 @@ typedef struct Local_OpaqueProcess*		Local_ProcessRef;
 //@{
 
 Local_Result
-	Local_SpawnDefaultShell					(SessionRef					inUninitializedSession,
-											 TerminalScreenRef			inContainer,
-											 CFStringRef				inWorkingDirectoryOrNull = nullptr);
+	Local_GetDefaultShellCommandLine		(CFArrayRef&				outNewArgumentsArray);
 
 Local_Result
-	Local_SpawnLoginShell					(SessionRef					inUninitializedSession,
-											 TerminalScreenRef			inContainer,
-											 CFStringRef				inWorkingDirectoryOrNull = nullptr);
+	Local_GetLoginShellCommandLine			(CFArrayRef&				outNewArgumentsArray);
 
 Local_Result
 	Local_SpawnProcess						(SessionRef					inUninitializedSession,
@@ -169,9 +165,6 @@ ssize_t
 
 //!\name General Information
 //@{
-
-Local_Result
-	Local_GetDefaultShell					(char**						outStringPtr);
 
 Boolean
 	Local_StandardInputIsATerminal			();

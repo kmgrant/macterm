@@ -573,59 +573,49 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 
 
 /*!
-Creates a terminal window and attempts to run
-a shell process inside it, corresponding to the
-user’s preferred shell.
+Creates a new session whose command line is implicitly set to
+the user’s preferred shell, and whose other session preferences
+come from user defaults.  A workspace may be given however to
+customize where the window is displayed.
 
-If unsuccessful, nullptr is returned and an alert
-message may be displayed to the user; otherwise,
-the session reference for the new local process
-is returned.
+See SessionFactory_NewSessionArbitraryCommand() for more on
+how the returned session is constructed.
 
-(3.0)
+(3.1)
 */
 SessionRef
 SessionFactory_NewSessionDefaultShell	(TerminalWindowRef			inTerminalWindow,
 										 Preferences_ContextRef		inWorkspaceOrNull,
 										 UInt16						inWindowIndexInWorkspaceOrZero)
 {
-	SessionRef			result = nullptr;
-	TerminalWindowRef	terminalWindow = inTerminalWindow;
-	Boolean				displayOK = false;
+	SessionRef				result = nullptr;
+	TerminalWindowRef		terminalWindow = inTerminalWindow;
 	
 	
 	assert(nullptr != terminalWindow);
+	
+	// display the window
 	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 	{
+		// some kind of problem?!?
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
 	}
 	else
 	{
-		result = Session_New();
-		if (nullptr != result)
+		CFArrayRef		argumentCFArray = nullptr;
+		Local_Result	localResult = kLocal_ResultOK;
+		
+		
+		localResult = Local_GetDefaultShellCommandLine(argumentCFArray);
+		if ((kLocal_ResultOK == localResult) && (nullptr != argumentCFArray))
 		{
-			Local_Result	localResult = kLocal_ResultOK;
-			HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
-			
-			
-			SetWindowKind(window, WIN_SHELL);
-			localResult = Local_SpawnDefaultShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow));
-			if (kLocal_ResultOK == localResult)
-			{
-				// success!
-				displayOK = true;
-				startTrackingSession(result, terminalWindow);
-			}
-			
-			unless (displayOK)
-			{
-				// TEMPORARY - NEED to display some kind of user alert here
-				Sound_StandardAlert();
-				Session_Dispose(&result);
-			}
+			result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argumentCFArray,
+																nullptr/* session context */, false/* reconfigure terminal */,
+																inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero);
+			CFRelease(argumentCFArray), argumentCFArray = nullptr;
 		}
+		// INCOMPLETE!!!
 	}
-	
 	return result;
 }// NewSessionDefaultShell
 
@@ -648,63 +638,41 @@ SessionFactory_NewSessionFromCommandFile	(TerminalWindowRef			inTerminalWindow,
 											 Preferences_ContextRef		inWorkspaceOrNull,
 											 UInt16						inWindowIndexInWorkspaceOrZero)
 {
-	SessionRef			result = nullptr;
-	TerminalWindowRef	terminalWindow = inTerminalWindow;
+	SessionRef		result = SessionFactory_NewSessionDefaultShell(inTerminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero);
 	
 	
-	assert(nullptr != terminalWindow);
-	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
+	if (nullptr != result)
 	{
-		Console_WriteLine("unexpected problem displaying terminal window!!!");
-	}
-	else
-	{
-		Boolean		displayOK = false;
+		Boolean			displayOK = false;
+		std::string		buffer(inCommandFilePath);
 		
 		
-		result = Session_New();
-		if (nullptr != result)
+		// construct a command that runs the shell script and then exits;
+		// escape the path from the shell by using apostrophes
+		buffer = std::string("\'") + buffer;
+		buffer += "\' ; exit\n";
+		
+		// pass the command line to the running shell
 		{
-			Local_Result	localResult = kLocal_ResultOK;
-			HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
+			CFRetainRelease		asObject(CFStringCreateWithCString(kCFAllocatorDefault, buffer.c_str(), kCFStringEncodingUTF8),
+											true/* is retained */);
 			
 			
-			SetWindowKind(window, WIN_SHELL);
-			localResult = Local_SpawnDefaultShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow));
-			if (kLocal_ResultOK == localResult)
+			if (asObject.exists())
 			{
-				std::string		buffer(inCommandFilePath);
+				Session_UserInputCFString(result, asObject.returnCFStringRef());
 				
-				
-				// construct a command that runs the shell script and then exits;
-				// escape the path from the shell by using apostrophes
-				buffer = std::string("\'") + buffer;
-				buffer += "\' ; exit\n";
-				
-				// pass the command line to the running shell
-				{
-					CFRetainRelease		asObject(CFStringCreateWithCString(kCFAllocatorDefault, buffer.c_str(),
-																			kCFStringEncodingUTF8),
-													true/* is retained */);
-					
-					
-					if (asObject.exists())
-					{
-						Session_UserInputCFString(result, asObject.returnCFStringRef());
-						
-						// success!
-						displayOK = true;
-						startTrackingSession(result, terminalWindow);
-					}
-				}
+				// success!
+				displayOK = true;
 			}
-			
-			unless (displayOK)
-			{
-				// TEMPORARY - NEED to display some kind of user alert here
-				Sound_StandardAlert();
-				Session_Dispose(&result);
-			}
+		}
+		
+		unless (displayOK)
+		{
+			// TEMPORARY - NEED to display some kind of user alert here
+			Sound_StandardAlert();
+			stopTrackingSession(result);
+			Session_Dispose(&result);
 		}
 	}
 	
@@ -1082,60 +1050,49 @@ SessionFactory_NewSessionFromTerminalFile	(TerminalWindowRef			inTerminalWindow,
 
 
 /*!
-Creates a terminal window and attempts to run
-"/usr/bin/login" in it.
+Creates a new session whose command line is implicitly set
+to construct a login shell, and whose other session preferences
+come from user defaults.  A workspace may be given however to
+customize where the window is displayed.
 
-If unsuccessful, nullptr is returned and an alert
-message may be displayed to the user; otherwise,
-the session reference for the new local process
-is returned.
+See SessionFactory_NewSessionArbitraryCommand() for more on
+how the returned session is constructed.
 
-(3.0)
+(3.1)
 */
 SessionRef
 SessionFactory_NewSessionLoginShell		(TerminalWindowRef			inTerminalWindow,
 										 Preferences_ContextRef		inWorkspaceOrNull,
 										 UInt16						inWindowIndexInWorkspaceOrZero)
 {
-	SessionRef			result = nullptr;
-	TerminalWindowRef	terminalWindow = inTerminalWindow;
+	SessionRef				result = nullptr;
+	TerminalWindowRef		terminalWindow = inTerminalWindow;
 	
 	
 	assert(nullptr != terminalWindow);
+	
+	// display the window
 	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 	{
+		// some kind of problem?!?
 		Console_WriteLine("unexpected problem displaying terminal window!!!");
 	}
 	else
 	{
-		Boolean		displayOK = false;
+		CFArrayRef		argumentCFArray = nullptr;
+		Local_Result	localResult = kLocal_ResultOK;
 		
 		
-		result = Session_New();
-		if (nullptr != result)
+		localResult = Local_GetLoginShellCommandLine(argumentCFArray);
+		if ((kLocal_ResultOK == localResult) && (nullptr != argumentCFArray))
 		{
-			Local_Result	localResult = kLocal_ResultOK;
-			HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
-			
-			
-			SetWindowKind(window, WIN_SHELL);
-			localResult = Local_SpawnLoginShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow));
-			if (kLocal_ResultOK == localResult)
-			{
-				// success!
-				displayOK = true;
-				startTrackingSession(result, terminalWindow);
-			}
-			
-			unless (displayOK)
-			{
-				// TEMPORARY - NEED to display some kind of user alert here
-				Sound_StandardAlert();
-				Session_Dispose(&result);
-			}
+			result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argumentCFArray,
+																nullptr/* session context */, false/* reconfigure terminal */,
+																inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero);
+			CFRelease(argumentCFArray), argumentCFArray = nullptr;
 		}
+		// INCOMPLETE!!!
 	}
-	
 	return result;
 }// NewSessionLoginShell
 

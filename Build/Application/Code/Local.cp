@@ -235,44 +235,77 @@ sigset_t&					gSignalsBlockedInThreads	(Boolean	inBlock = true)
 #pragma mark Public Methods
 
 /*!
-Returns the current Unix user’s login shell preference,
-as a pointer to an array of characters in C string format.
+Constructs a command line based on the current user’s
+preferred shell, or the "SHELL" environment variable if
+the user’s preferred shell cannot be found.  A new array
+of arguments is allocated for the command line.  (You
+must call CFRelease() on the array yourself.)
+
+See also Local_GetLoginShellCommandLine(), which is usually
+the better choice (as it creates a pristine environment).
 
 \retval kLocal_ResultOK
-if the resultant string pointer is valid
+if the command line was constructed successfully
 
-\retval kLocal_ResultParameterError
-if "outStringPtr" is nullptr
+\retval kLocalResultInsufficientBufferSpace
+if the command line array could not be constructed
 
-(3.0)
+(4.0)
 */
 Local_Result
-Local_GetDefaultShell	(char**		outStringPtr)
+Local_GetDefaultShellCommandLine	(CFArrayRef&	outNewArgumentsArray)
 {
-	Local_Result	result = kLocal_ResultOK;
+	Local_Result		result = kLocalResultInsufficientBufferSpace;
+	struct passwd*		userInfoPtr = getpwuid(getuid());
+	CFRetainRelease		userShell(CFStringCreateWithCString
+									(kCFAllocatorDefault,
+										(nullptr != userInfoPtr) ? userInfoPtr->pw_shell : getenv("SHELL"),
+										kCFStringEncodingASCII),
+									true/* is retained */);
+	void const*			args[] = { userShell.returnCFStringRef() };
 	
 	
-	if (nullptr == outStringPtr) result = kLocal_ResultParameterError;
-	else
+	outNewArgumentsArray = CFArrayCreate(kCFAllocatorDefault, args, sizeof(args) / sizeof(void const*), &kCFTypeArrayCallBacks);
+	if (nullptr != outNewArgumentsArray)
 	{
-		// normally the password file is used to find the user’s shell;
-		// but if that fails, the SHELL environment variable is a good bet
-		struct passwd*		userInfoPtr = getpwuid(getuid());
-		
-		
-		if (nullptr != userInfoPtr)
-		{
-			// grab the user’s preferred shell from the password file
-			*outStringPtr = userInfoPtr->pw_shell;
-		}
-		else
-		{
-			// revert to the $SHELL method, which usually works but is less reliable...
-			*outStringPtr = getenv("SHELL");
-		}
+		result = kLocal_ResultOK;
 	}
+	
 	return result;
-}// GetDefaultShell
+}// GetDefaultShellCommandLine
+
+
+/*!
+Constructs a command line of "/usr/bin/login -p -f $USER"
+for whatever the current user’s ID is, allocating a new
+array of arguments for the command line.  (You must call
+CFRelease() on the array yourself.)
+
+\retval kLocal_ResultOK
+if the command line was constructed successfully
+
+\retval kLocalResultInsufficientBufferSpace
+if the command line array could not be constructed
+
+(4.0)
+*/
+Local_Result
+Local_GetLoginShellCommandLine		(CFArrayRef&	outNewArgumentsArray)
+{
+	Local_Result		result = kLocalResultInsufficientBufferSpace;
+	CFRetainRelease		userName(CFStringCreateWithCString(kCFAllocatorDefault, getenv("USER"), kCFStringEncodingASCII),
+									true/* is retained */);
+	void const*			args[] = { CFSTR("/usr/bin/login"), CFSTR("-p"), CFSTR("-f"), userName.returnCFStringRef() };
+	
+	
+	outNewArgumentsArray = CFArrayCreate(kCFAllocatorDefault, args, sizeof(args) / sizeof(void const*), &kCFTypeArrayCallBacks);
+	if (nullptr != outNewArgumentsArray)
+	{
+		result = kLocal_ResultOK;
+	}
+	
+	return result;
+}// GetLoginShellCommandLine
 
 
 /*!
@@ -446,72 +479,6 @@ Local_ProcessReturnUnixID	(Local_ProcessRef	inProcess)
 	result = ptr->_processID;
 	return result;
 }// ProcessReturnUnixID
-
-
-/*!
-Calls Local_SpawnProcess() with the user’s default
-shell as the process (determined using getpwuid()
-or falling back to the SHELL environment variable).
-
-See the documentation on Local_SpawnProcess() for
-more on how the working directory is handled.
-
-\retval any code that Local_SpawnProcess() can return
-
-(3.0)
-*/
-Local_Result
-Local_SpawnDefaultShell	(SessionRef			inUninitializedSession,
-						 TerminalScreenRef	inContainer,
-						 CFStringRef		inWorkingDirectoryOrNull)
-{
-	struct passwd*		userInfoPtr = getpwuid(getuid());
-	CFRetainRelease		userShell(CFStringCreateWithCString
-									(kCFAllocatorDefault,
-										(nullptr != userInfoPtr) ? userInfoPtr->pw_shell : getenv("SHELL"),
-										kCFStringEncodingASCII),
-									true/* is retained */);
-	void const*			args[] = { userShell.returnCFStringRef() };
-	CFRetainRelease		argsObject(CFArrayCreate
-									(kCFAllocatorDefault, args, sizeof(args) / sizeof(void const*),
-										&kCFTypeArrayCallBacks),
-									true/* is retained */);
-	
-	
-	return Local_SpawnProcess(inUninitializedSession, inContainer, argsObject.returnCFArrayRef(),
-								inWorkingDirectoryOrNull);
-}// SpawnDefaultShell
-
-
-/*!
-Calls Local_SpawnProcess() with "/usr/bin/login -p -f $USER",
-which launches the default login shell without requiring
-a password.
-
-See the documentation on Local_SpawnProcess() for more on
-how the working directory is handled.
-
-\retval any code that Local_SpawnProcess() can return
-
-(3.0)
-*/
-Local_Result
-Local_SpawnLoginShell	(SessionRef			inUninitializedSession,
-						 TerminalScreenRef	inContainer,
-						 CFStringRef		inWorkingDirectoryOrNull)
-{
-	CFRetainRelease		userName(CFStringCreateWithCString(kCFAllocatorDefault, getenv("USER"), kCFStringEncodingASCII),
-									true/* is retained */);
-	void const*			args[] = { CFSTR("/usr/bin/login"), CFSTR("-p"), CFSTR("-f"), userName.returnCFStringRef() };
-	CFRetainRelease		argsObject(CFArrayCreate
-									(kCFAllocatorDefault, args, sizeof(args) / sizeof(void const*),
-										&kCFTypeArrayCallBacks),
-									true/* is retained */);
-	
-	
-	return Local_SpawnProcess(inUninitializedSession, inContainer, argsObject.returnCFArrayRef(),
-								inWorkingDirectoryOrNull);
-}// SpawnLoginShell
 
 
 /*!
