@@ -15,6 +15,7 @@ __date__ = "28 September 2006"
 import sys
 import os
 import os.path as path
+import re
 from Resources.English.release_notes import version_lineage, daily_build_lineage, notes_by_version
 
 def subst_line(line, vars):
@@ -103,6 +104,7 @@ def generate_version_history_file(version, ofh, template_lines, recent_versions)
     if version_loop: raise RuntimeError("version loop was not closed")
     if update_loop: raise RuntimeError("new-update loop was not closed")
     # now use the fragments to generate a specific-version file
+    http_link_regex = re.compile(r'<(http://[^>]*)>')
     for line in main_lines:
         if '<!-- BEGIN NEW UPDATE -->' in line and len(recent_versions) > 0:
             for update_line in update_loop_lines:
@@ -113,6 +115,7 @@ def generate_version_history_file(version, ofh, template_lines, recent_versions)
                             if '<!-- BEGIN RELEASE NOTES LOOP -->' in version_line:
                                 for release_note in version_notes:
                                     for note_line in release_notes_loop_lines:
+                                        release_note = http_link_regex.sub(r'<a href="\1">\1</a>', release_note)
                                         write_subst(ofh, note_line, locals())
                             else:
                                 write_subst(ofh, version_line, locals())
