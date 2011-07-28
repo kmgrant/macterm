@@ -17621,6 +17621,9 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		case 0x2502: // vertical line
 		case 0x2503: // vertical line, bold version
 		case 0x2551: // vertical line, double-line version
+		case 0x2571: // diagonal line from top-right to bottom-left
+		case 0x2572: // diagonal line from top-left to bottom-right
+		case 0x2573: // diagonal lines from each corner crossing in the center
 		case 0x2588: // solid block
 		case 0x2584: // lower-half block
 		case 0x258C: // left-half block

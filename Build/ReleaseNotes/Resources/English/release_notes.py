@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110728',
     '20110727',
     '20110723',
     '20110721',
@@ -399,6 +400,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110728': [
+        'Terminal views now correctly render diagonal line characters and the diagonal cross character.',
+    ],
     '20110727': [
         "Fixed UTF-8 decoder corner cases based on problems discovered by Markus Kuhn's decoder stress test, <http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt>.",
         'Fixed terminals to decode UTF-8 up front (when enabled by the current Translation) instead of at echo time.',

@@ -6001,6 +6001,23 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
 		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
 		break;
 	
+	case 0x2571: // diagonal line from top-right to bottom-left
+		MoveTo(cellRight, cellTop);
+		LineTo(cellLeft, cellBottom);
+		break;
+	
+	case 0x2572: // diagonal line from top-left to bottom-right
+		MoveTo(cellLeft, cellTop);
+		LineTo(cellRight, cellBottom);
+		break;
+	
+	case 0x2573: // diagonal lines from each corner crossing in the center
+		MoveTo(cellLeft, cellTop);
+		LineTo(cellRight, cellBottom);
+		MoveTo(cellRight, cellTop);
+		LineTo(cellLeft, cellBottom);
+		break;
+	
 	case 0x2588: // solid block
 		PaintRect(&cellRect);
 		break;
