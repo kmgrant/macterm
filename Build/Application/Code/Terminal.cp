@@ -993,7 +993,7 @@ struct My_UTF8StateMachine
 	
 	template < typename indexable_container >
 	static UnicodeScalarValue
-	byteSequenceTotalValue		(indexable_container, size_t,	//!< find Unicode value by extracting bits from a sequence of bytes
+	byteSequenceTotalValue		(indexable_container const&, size_t,	//!< find Unicode value by extracting bits from a sequence of bytes
 								 size_t, size_t* = nullptr);
 	
 	static Boolean	isContinuationByte	(UInt8);	//!< true only for a valid byte that cannot be the first in its sequence
@@ -6757,10 +6757,10 @@ properly into the implied number of bytes.
 template < typename indexable_container >
 inline UnicodeScalarValue
 My_UTF8StateMachine::
-byteSequenceTotalValue	(indexable_container	inBytes,
-						 size_t					inOffset,
-						 size_t					inByteCount,
-						 size_t*				outBytesUsedOrNull)
+byteSequenceTotalValue	(indexable_container const&		inBytes,
+						 size_t							inOffset,
+						 size_t							inByteCount,
+						 size_t*						outBytesUsedOrNull)
 {
 	UnicodeScalarValue		result = kMy_InvalidUnicodeCodePoint;
 	
