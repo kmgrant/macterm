@@ -7581,6 +7581,10 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 				inNowOutNext.second = kMy_ParserStateSeenESCPound;
 				break;
 			
+			case '%':
+				inNowOutNext.second = kMy_ParserStateSeenESCPercent;
+				break;
+			
 			case '~':
 				inNowOutNext.second = kMy_ParserStateSeenESCTilde;
 				break;
@@ -8277,6 +8281,52 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			}
 			break;
 		
+		case kMy_ParserStateSeenESCPercent:
+			switch (kTriggerChar)
+			{
+			case 'G':
+				inNowOutNext.second = kMy_ParserStateSeenESCPercentG;
+				break;
+			
+			case '@':
+				inNowOutNext.second = kMy_ParserStateSeenESCPercentAt;
+				break;
+			
+			case '/':
+				inNowOutNext.second = kMy_ParserStateSeenESCPercentSlash;
+				break;
+			
+			default:
+				//Console_Warning(Console_WriteValueUnicodePoint, "terminal received unknown character following escape-%", kTriggerChar);
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCPercentSlash:
+			switch (kTriggerChar)
+			{
+			case 'G':
+				inNowOutNext.second = kMy_ParserStateSeenESCPercentSlashG;
+				break;
+			
+			case 'H':
+				inNowOutNext.second = kMy_ParserStateSeenESCPercentSlashH;
+				break;
+			
+			case 'I':
+				inNowOutNext.second = kMy_ParserStateSeenESCPercentSlashI;
+				break;
+			
+			default:
+				//Console_Warning(Console_WriteValueUnicodePoint, "terminal received unknown character following escape-%", kTriggerChar);
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
 		case kMy_ParserStateSeenESCSpace:
 			switch (kTriggerChar)
 			{
@@ -8584,7 +8634,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				if ((false == inDataPtr->emulator.lockUTF8) && (nullptr != translationConfig))
 				{
 					(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingASCII/* arbitrary */, true/* copy only */);
-					inDataPtr->emulator.disableShifts = true;
+					inDataPtr->emulator.disableShifts = false;
 				}
 				break;
 			
@@ -9805,31 +9855,37 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateControlSO:
 		// shift out
-		inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG1;
-		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
+		if (false == inDataPtr->emulator.disableShifts)
 		{
-			// set attribute
-			STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
-		}
-		else
-		{
-			// clear attribute
-			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+			inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG1;
+			if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
+			{
+				// set attribute
+				STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+			}
+			else
+			{
+				// clear attribute
+				STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+			}
 		}
 		break;
 	
 	case kStateControlSI:
 		// shift in
-		inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG0;
-		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
+		if (false == inDataPtr->emulator.disableShifts)
 		{
-			// set attribute
-			STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
-		}
-		else
-		{
-			// clear attribute
-			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+			inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG0;
+			if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
+			{
+				// set attribute
+				STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+			}
+			else
+			{
+				// clear attribute
+				STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+			}
 		}
 		break;
 	
