@@ -371,6 +371,10 @@ struct My_TerminalView
 			SInt16			widthPerCharacter;	// number of pixels wide each character is (multiply by 2 on double-width lines);
 												// generally, you should call getRowCharacterWidth() instead of referencing this!
 			SInt16			heightPerCharacter;	// number of pixels high each character is (multiply by 2 if double-height text)
+			Float32			thicknessHorizontalLines;	// thickness of non-bold horizontal lines in manually-drawn glyphs; diagonal lines may use based on angle
+			Float32			thicknessHorizontalBold;	// thickness of bold horizontal lines in manually-drawn glyphs; diagonal lines may use based on angle
+			Float32			thicknessVerticalLines;		// thickness of non-bold vertical lines in manually-drawn glyphs; diagonal lines may use based on angle
+			Float32			thicknessVerticalBold;		// thickness of bold vertical lines in manually-drawn glyphs; diagonal lines may use based on angle
 		} font;
 		
 		CGDeviceColor	colors[kMyBasicColorCount];	// indices are "kMyBasicColorIndexNormalText", etc.
@@ -11271,6 +11275,12 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 	// now use the font metrics to determine how big double-width text should be
 	calculateDoubleSize(inTerminalViewPtr, inTerminalViewPtr->text.font.doubleMetrics.size,
 						inTerminalViewPtr->text.font.doubleMetrics.ascent);
+	
+	// the thickness of lines in certain glyphs is also scaled with the font size
+	inTerminalViewPtr->text.font.thicknessHorizontalLines = std::max(1.0, inTerminalViewPtr->text.font.widthPerCharacter / 5.0); // arbitrary
+	inTerminalViewPtr->text.font.thicknessHorizontalBold = 2.0 * inTerminalViewPtr->text.font.thicknessHorizontalLines; // arbitrary
+	inTerminalViewPtr->text.font.thicknessVerticalLines = std::max(1.0, inTerminalViewPtr->text.font.heightPerCharacter / 7.0); // arbitrary
+	inTerminalViewPtr->text.font.thicknessVerticalBold = 2.0 * inTerminalViewPtr->text.font.thicknessVerticalLines; // arbitrary
 }// setUpScreenFontMetrics
 	
 
@@ -11921,17 +11931,10 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 			
 			// set pen...
 			PenNormal();
-			{
-				Float32		scaleH = 0.0;
-				Float32		scaleV = 0.0;
-				
-				
-				// if the text is really big, drawn lines should be bigger as well, so
-				// multiply 1 pixel by a scaling factor based on the size of the text
-				scaleH = inTerminalViewPtr->text.font.widthPerCharacter / 5.0;
-				scaleV = inTerminalViewPtr->text.font.heightPerCharacter / 7.0;
-				PenSize(INTEGER_MAXIMUM(1, STATIC_CAST(scaleH, SInt16)), INTEGER_MAXIMUM(1, STATIC_CAST(scaleV, SInt16)));
-			}
+			// if the text is really big, drawn lines should be bigger as well, so
+			// multiply 1 pixel by a scaling factor based on the size of the text
+			PenSize(STATIC_CAST(inTerminalViewPtr->text.font.thicknessVerticalLines, SInt16),
+					STATIC_CAST(inTerminalViewPtr->text.font.thicknessHorizontalLines, SInt16));
 			
 			// 3.0 - for a sufficiently large font, allow boldface
 			if (STYLE_BOLD(inAttributes) || STYLE_SEARCH_RESULT(inAttributes))
@@ -11945,13 +11948,8 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 					TextFace(fontFace | bold);
 					
 					// VT graphics use the pen size when rendering, so that should be “bolded” as well
-					{
-						PenState	penState;
-						
-						
-						GetPenState(&penState);
-						PenSize(INTEGER_DOUBLED(penState.pnSize.h)/* width */, INTEGER_DOUBLED(penState.pnSize.v)/* height */);
-					}
+					PenSize(STATIC_CAST(inTerminalViewPtr->text.font.thicknessVerticalBold, SInt16),
+							STATIC_CAST(inTerminalViewPtr->text.font.thicknessHorizontalBold, SInt16));
 				}
 			}
 			
