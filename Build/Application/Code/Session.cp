@@ -1531,7 +1531,7 @@ destroyed at any time).
 Boolean
 Session_IsValid		(SessionRef		inRef)
 {
-	Boolean		result = (gInvalidSessions().find(inRef) == gInvalidSessions().end());
+	Boolean		result = ((nullptr != inRef) && (gInvalidSessions().find(inRef) == gInvalidSessions().end()));
 	
 	
 	return result;
@@ -2116,7 +2116,7 @@ Session_ReturnTranslationConfiguration		(SessionRef		inRef)
 	// since many settings are represented elsewhere, this context
 	// will not contain the latest information; update the context
 	// based on current settings
-	
+	if (false == ptr->targetTerminals.empty())
 	{
 		TerminalScreenRef	screen = ptr->targetTerminals.front();
 		Boolean				copyOK = (nullptr != screen)
@@ -2588,43 +2588,6 @@ Session_SetProcess	(SessionRef			inRef,
 	
 	changeNotifyForSession(ptr, kSession_ChangeResourceLocation, inRef/* context */);
 }// SetProcess
-
-
-/*!
-Specifies the encoding to use for data that is sent to the
-session via encoding-aware APIs such as Session_SendData()
-(with a CFStringRef parameter).
-
-WARNING:	This should generally match what the currently
-			running application in a terminal is capable of
-			handling.  It is probably user-specified if it
-			cannot be determined automatically.
-
-\retval kSession_ResultOK
-if there are no errors
-
-\retval kSession_ResultInvalidReference
-if the specified session is unrecognized
-
-(3.1)
-*/
-Session_Result
-Session_SetSendDataEncoding		(SessionRef			inRef,
-								 CFStringEncoding	inEncoding)
-{
-	Session_Result		result = kSession_ResultOK;
-	
-	
-	if (nullptr == inRef) result = kSession_ResultInvalidReference;
-	else
-	{
-		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-		
-		
-		ptr->writeEncoding = inEncoding;
-	}
-	return result;
-}// SetSendDataEncoding
 
 
 /*!
@@ -6038,21 +6001,36 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				// this context is a proxy for translation settings; these
 				// settings are “forwarded” to views and terminal screens
 				// underneath, but may also be processed by the Session itself
-				Boolean		changeOK = TerminalWindow_ReconfigureViewsInGroup
-										(ptr->terminalWindow, kTerminalWindow_ViewGroupActive,
-											prefsContext, Quills::Prefs::TRANSLATION);
-				
-				
-				if (false == changeOK)
+				if (nullptr != ptr->terminalWindow)
 				{
-					Console_Warning(Console_WriteLine, "detected session translation changes but failed to apply them to the terminal window");
+					Boolean		changeOK = TerminalWindow_ReconfigureViewsInGroup
+											(ptr->terminalWindow, kTerminalWindow_ViewGroupActive,
+												prefsContext, Quills::Prefs::TRANSLATION);
+					
+					
+					if (false == changeOK)
+					{
+						Console_Warning(Console_WriteLine, "detected session translation changes but failed to apply them to the terminal window");
+					}
 				}
 				
 				// if the session is entering or leaving UTF-8 encoding, update the
 				// underlying process’ pseudo-terminal accordingly (typically, this
 				// at least means that a deleted character may absorb more than one
 				// byte instead of the usual single byte)
-				// UNIMPLEMENTED
+				if (nullptr != ptr->mainProcess)
+				{
+					CFStringEncoding const	kGivenTextEncoding = TextTranslation_ContextReturnEncoding(prefsContext);
+					Boolean const			kIsUTF8 = (kCFStringEncodingUTF8 == kGivenTextEncoding);
+					Boolean					deviceUpdateOK = false;
+					
+					
+					deviceUpdateOK = Local_TerminalSetUTF8Encoding(Local_ProcessReturnMasterTerminal(ptr->mainProcess), kIsUTF8);
+					if (false == deviceUpdateOK)
+					{
+						Console_Warning(Console_WriteLine, "failed to update UTF-8 mode of pseudo-terminal device");
+					}
+				}
 			}
 			else
 			{

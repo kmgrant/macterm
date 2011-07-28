@@ -72,6 +72,7 @@
 #include "TerminalFile.h"
 #include "TerminalView.h"
 #include "Terminology.h"
+#include "TextTranslation.h"
 #include "UIStrings.h"
 #include "Workspace.h"
 
@@ -556,6 +557,82 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 				// success!
 				displayOK = true;
 				startTrackingSession(result, terminalWindow);
+				
+				// fix initial text encoding at the Session level; it is generally set for
+				// the window and view elsewhere, but UTF-8 makes it important to fix the
+				// local process as well (that is why it is set here, after the process
+				// exists, and not any sooner)
+				{
+					CFStringEncoding const		kDefaultEncoding = kCFStringEncodingUTF8;
+					Preferences_ContextRef		translationSettings = nullptr;
+					Preferences_Result			prefsResult = kPreferences_ResultOK;
+					Boolean						releaseSettings = false;
+					
+					
+					if (nullptr != inContextOrNull)
+					{
+						// a Session context could be associated with a Translation context;
+						// if so, a little work must be done to find the actual context
+						CFStringRef				contextName;
+						size_t					actualSize = 0;
+						
+						
+						prefsResult = Preferences_ContextGetData(inContextOrNull, kPreferences_TagAssociatedTranslationFavorite,
+																	sizeof(contextName), &contextName,
+																	false/* search defaults too */, &actualSize);
+						if (kPreferences_ResultOK == prefsResult)
+						{
+							if (false == Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, contextName))
+							{
+								Console_Warning(Console_WriteValueCFString, "associated Translation not found", contextName);
+							}
+							else
+							{
+								translationSettings = Preferences_NewContextFromFavorites(Quills::Prefs::TRANSLATION, contextName);
+								if (nullptr == translationSettings)
+								{
+									Console_Warning(Console_WriteLine, "text translation settings could not be found!");
+								}
+								else
+								{
+									releaseSettings = true;
+								}
+							}
+							CFRelease(contextName), contextName = nullptr;
+						}
+					}
+					
+					// if necessary, fall back on default translation settings
+					if (nullptr == translationSettings)
+					{
+						prefsResult = Preferences_GetDefaultContext(&translationSettings, Quills::Prefs::TRANSLATION);
+						if (kPreferences_ResultOK != prefsResult)
+						{
+							translationSettings = nullptr;
+						}
+					}
+					
+					// apply translation settings
+					if (nullptr == translationSettings)
+					{
+						Console_Warning(Console_WriteLine, "no text translation settings could be found, not even default values!");
+					}
+					else
+					{
+						if (false == TextTranslation_ContextSetEncoding(Session_ReturnTranslationConfiguration(result),
+																		TextTranslation_ContextReturnEncoding
+																		(translationSettings, kDefaultEncoding),
+																		true/* via copy */))
+						{
+							Console_Warning(Console_WriteLine, "failed to set text encoding of new session");
+						}
+					}
+					
+					if (releaseSettings)
+					{
+						Preferences_ReleaseContext(&translationSettings);
+					}
+				}
 			}
 			
 			unless (displayOK)

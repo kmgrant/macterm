@@ -153,6 +153,10 @@ int
 int
 	Local_TerminalReturnInterruptCharacter	(Local_TerminalID			inPseudoTerminalID);
 
+Boolean
+	Local_TerminalSetUTF8Encoding			(Local_TerminalID			inPseudoTerminalID,
+											 Boolean					inIsUTF8);
+
 extern "C"
 {
 ssize_t

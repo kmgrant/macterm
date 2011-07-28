@@ -891,16 +891,16 @@ control routines.
 int
 Local_TerminalDisableLocalEcho		(Local_TerminalID		inPseudoTerminalID)
 {
-	struct termios	stermios;
+	struct termios	terminalInfo;
 	int				result = 0;
 	
 	
-	result = tcgetattr(inPseudoTerminalID, &stermios);
+	result = tcgetattr(inPseudoTerminalID, &terminalInfo);
 	if (0 == result)
 	{
-		stermios.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
-		stermios.c_oflag &= ~(ONLCR); // also disable mapping from newline to newline-carriage-return
-		result = tcsetattr(inPseudoTerminalID, TCSANOW/* when to apply changes */, &stermios);
+		terminalInfo.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
+		terminalInfo.c_oflag &= ~(ONLCR); // also disable mapping from newline to newline-carriage-return
+		result = tcsetattr(inPseudoTerminalID, TCSANOW/* when to apply changes */, &terminalInfo);
 	}
 	return result;
 }// TerminalDisableLocalEcho
@@ -917,16 +917,16 @@ control routines.
 int
 Local_TerminalReturnFlowStartCharacter	(Local_TerminalID		inPseudoTerminalID)
 {
-	struct termios	stermios;
+	struct termios	terminalInfo;
 	int				result = 0;
 	int				error = 0;
 	
 	
-	error = tcgetattr(inPseudoTerminalID, &stermios);
+	error = tcgetattr(inPseudoTerminalID, &terminalInfo);
 	if (0 == error)
 	{
 		// success!
-		result = stermios.c_cc[VSTART];
+		result = terminalInfo.c_cc[VSTART];
 	}
 	else
 	{
@@ -949,16 +949,16 @@ routines.
 int
 Local_TerminalReturnFlowStopCharacter	(Local_TerminalID		inPseudoTerminalID)
 {
-	struct termios	stermios;
+	struct termios	terminalInfo;
 	int				result = 0;
 	int				error = 0;
 	
 	
-	error = tcgetattr(inPseudoTerminalID, &stermios);
+	error = tcgetattr(inPseudoTerminalID, &terminalInfo);
 	if (0 == error)
 	{
 		// success!
-		result = stermios.c_cc[VSTOP];
+		result = terminalInfo.c_cc[VSTOP];
 	}
 	else
 	{
@@ -981,16 +981,16 @@ control routines.
 int
 Local_TerminalReturnInterruptCharacter	(Local_TerminalID		inPseudoTerminalID)
 {
-	struct termios	stermios;
+	struct termios	terminalInfo;
 	int				result = 0;
 	int				error = 0;
 	
 	
-	error = tcgetattr(inPseudoTerminalID, &stermios);
+	error = tcgetattr(inPseudoTerminalID, &terminalInfo);
 	if (0 == error)
 	{
 		// success!
-		result = stermios.c_cc[VINTR];
+		result = terminalInfo.c_cc[VINTR];
 	}
 	else
 	{
@@ -1040,10 +1040,64 @@ Local_TerminalResize	(Local_TerminalID	inPseudoTerminalID,
 
 
 /*!
+Specifies that input to the terminal should be assumed to be in
+UTF-8 encoding already.  One important benefit of this setting
+is that an erase can clear characters wider than one byte.
+This setting alone is not sufficient to support UTF-8 properly;
+the majority of translation work is done in the Session module.
+
+Returns true only if successful.
+
+NOTE:	The low-level terminal control flag needed to set this
+		mode does not exist on all versions of Mac OS X.
+
+(4.0)
+*/
+Boolean
+Local_TerminalSetUTF8Encoding	(Local_TerminalID	inPseudoTerminalID,
+								 Boolean			inIsUTF8)
+{
+	struct termios	terminalInfo;
+	Boolean			result = false;
+	
+	
+	if (FlagManager_Test(kFlagOS10_6API))
+	{
+		int		tcStatus = tcgetattr(inPseudoTerminalID, &terminalInfo);
+		
+		
+		if (0 == tcStatus)
+		{
+			if (inIsUTF8)
+			{
+				terminalInfo.c_iflag |= (FUTURE_SYMBOL(0x00004000, IUTF8));
+			}
+			else
+			{
+				terminalInfo.c_iflag &= ~(FUTURE_SYMBOL(0x00004000, IUTF8));
+			}
+			tcStatus = tcsetattr(inPseudoTerminalID, TCSANOW/* when to apply changes */, &terminalInfo);
+			if (0 == tcStatus)
+			{
+				result = true;
+			}
+		}
+	}
+	return result;
+}// TerminalSetUTF8Encoding
+
+
+/*!
 Writes the specified data to the stream described by the file
 descriptor.  Returns the number of bytes actually written; if
 this number is less than "inByteCount", offset the buffer by
 the difference and try again to send the rest.
+
+IMPORTANT:	Writing bytes to a process is a very low-level
+			operation, and you should usually be calling a
+			higher-level API (see the Session module).  For
+			example, the Session knows what text encoding is
+			supposed to be used.
 
 (3.0)
 */

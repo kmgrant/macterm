@@ -91,6 +91,12 @@
 namespace {
 
 /*!
+This value is returned by certain routines to indicate that a
+valid Unicode value was not found.
+*/
+UnicodeScalarValue const	kMy_InvalidUnicodeCodePoint = 0xFFFF;
+
+/*!
 Valid terminal emulator parameter values (as stored by the class
 My_Emulator) can be any integer starting from 0.  Any negative
 value is invalid, but these are overloaded to represent special
@@ -345,6 +351,13 @@ enum
 	kMy_ParserStateSeenESCPound5				= 'ES#5',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCPound6				= 'ES#6',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCPound8				= 'ES#8',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPercent				= 'ESC%',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPercentG				= 'ES%G',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPercentAt				= 'ES%@',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPercentSlash			= 'ES%/',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPercentSlashG			= 'E%/G',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPercentSlashH			= 'E%/H',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPercentSlashI			= 'E%/I',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCEquals				= 'ESC=',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCTilde					= 'ESC~',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLessThan				= 'ESC<',	//!< generic state used to define emulator-specific states, below
@@ -510,13 +523,16 @@ invokeEmulatorResetProc		(My_EmulatorResetProcPtr	inProc,
 Emulator State Determinant Routine
 
 Specifies the next state for the parser, based on the given
-data and/or current state.  The number of bytes read is
-returned; this is generally 1, but may be zero or more if
-you used look-ahead to set a more precise next state or do
-not wish to consume any bytes.
+data and/or current state.  The number of code points read is
+returned; this is generally 1, but may be zero or more if you
+used look-ahead to set a more precise next state or do not
+wish to consume any code points.
 
-The specified buffer should use the default text encoding of
-the given emulator.
+The emulator can be queried for the most recent code point,
+which is often just one byte.  When the UTF-8 encoding is
+active, the original byte stream will have already been
+decoded and the recent code point reflects the last valid
+code point that was decoded.
 
 WARNING:	The specified buffer is a limited slice of the
 			overall data stream.  It is not guaranteed to
@@ -553,22 +569,18 @@ is ALWAYS initialized to true, but can be cleared by the
 callback.
 */
 typedef UInt32 (*My_EmulatorStateDeterminantProcPtr)	(My_Emulator*			inDataPtr,
-														 UInt8 const*			inBuffer,
-														 UInt32					inLength,
 														 My_ParserStatePair&	inNowOutNext,
 														 Boolean&				outInterrupt,
 														 Boolean&				outHandled);
 inline UInt32
 invokeEmulatorStateDeterminantProc	(My_EmulatorStateDeterminantProcPtr		inProc,
 									 My_Emulator*							inEmulatorPtr,
-									 UInt8 const*							inBuffer,
-									 UInt32									inLength,
 									 My_ParserStatePair&					inNowOutNext,
 									 Boolean&								outInterrupt,
 									 Boolean&								outHandled)
 {
 	outHandled = true; // initially...
-	return (*inProc)(inEmulatorPtr, inBuffer, inLength, inNowOutNext, outInterrupt, outHandled);
+	return (*inProc)(inEmulatorPtr, inNowOutNext, outInterrupt, outHandled);
 }
 
 /*!
@@ -579,8 +591,11 @@ what the next state should be, this routine *performs an
 action* based on the *current* state.  Some context is given
 (like the previous state), in case this matters to you.
 
-The specified buffer should use the default text encoding of
-the given screen’s current emulator.
+The screen buffer’s emulator can be queried for the most
+recent code point, in case this is needed to help determine the
+appropriate course of action.  Note that if a sequence of code
+points is significant, they should generally be given separate
+states.
 
 The number of bytes read is returned; this is generally 0, but
 may be more if you use look-ahead to absorb data (e.g. the echo
@@ -593,20 +608,16 @@ the flag is ALWAYS initialized to true, but can be cleared by
 the callback.
 */
 typedef UInt32 (*My_EmulatorStateTransitionProcPtr)	(My_ScreenBuffer*			inDataPtr,
-													 UInt8 const*				inBuffer,
-													 UInt32						inLength,
 													 My_ParserStatePair const&	inOldNew,
 													 Boolean&					outHandled);
 inline UInt32
 invokeEmulatorStateTransitionProc	(My_EmulatorStateTransitionProcPtr	inProc,
 									 My_ScreenBuffer*					inDataPtr,
-									 UInt8 const*						inBuffer,
-									 UInt32								inLength,
 									 My_ParserStatePair const&			inOldNew,
 									 Boolean&							outHandled)
 {
 	outHandled = true; // initially...
-	return (*inProc)(inDataPtr, inBuffer, inLength, inOldNew, outHandled);
+	return (*inProc)(inDataPtr, inOldNew, outHandled);
 }
 
 /*!
@@ -647,6 +658,8 @@ invokeScreenLineOperationProc	(My_ScreenLineOperationProcPtr	inUserRoutine,
 
 #pragma mark Types
 namespace {
+
+typedef std::basic_string<UInt8>				My_ByteString;
 
 typedef UniChar*								My_TextIterator;
 typedef std::map< UniChar, CFRetainRelease >	My_PrintableByUniChar;
@@ -928,6 +941,80 @@ private:
 typedef My_LineIterator*	My_LineIteratorPtr;
 
 /*!
+Represents the state of a UTF-8 code point that is in the
+process of being decoded from a series of bytes.
+*/
+struct My_UTF8StateMachine
+{
+	enum State
+	{
+		kStateInitial				= 'init',	//!< the very first state, no bytes have yet been seen
+		kStateUTF8IllegalSequence	= 'U8XX',	//!< single illegal byte was seen (0xC0, 0xC1, or a value of 0xF5 or greater), or illegal sequence;
+												//!  in this case, the "multiByteAccumulator" contains a valid sequence for an error character
+		kStateUTF8ValidSequence		= 'U8OK',	//!< the "multiByteAccumulator" contains a valid sequence of 0-6 bytes in UTF-8 encoding
+		kStateUTF8ExpectingTwo		= 'U82B',	//!< byte with high bits of "110" received; one more continuation byte (only) should follow
+		kStateUTF8ExpectingThree	= 'U83B',	//!< byte with high bits of "1110" received; two more continuation bytes (only) should follow
+		kStateUTF8ExpectingFour		= 'U84B',	//!< byte with high bits of "11110" received; three more continuation bytes (only) should follow
+		kStateUTF8ExpectingFive		= 'U85B',	//!< byte with high bits of "111110" received; four more continuation bytes (only) should follow
+		kStateUTF8ExpectingSix		= 'U86B',	//!< byte with high bits of "1111110" received; five more continuation bytes (only) should follow
+		
+	};
+	
+	My_ByteString	multiByteAccumulator;		//!< shows all bytes that comprise the most-recently-started UTF-8 code point
+	
+	My_UTF8StateMachine ();
+	
+	//! Returns true if the current sequence is incomplete.
+	Boolean
+	incompleteSequence ();
+	
+	//! Transitions to a new state based on the current state and the given byte.
+	void
+	nextState	(UInt8, UInt32&);
+	
+	//! Returns the state machine to its initial state and clears the accumulator.
+	void
+	reset ()
+	{
+		currentState = kStateInitial;
+		multiByteAccumulator.clear();
+	}
+	
+	//! Returns the state the machine is in.
+	State
+	returnState ()
+	{
+		return currentState;
+	}
+	
+	template < typename push_backable_container >
+	static void
+	appendErrorCharacter	(push_backable_container&);		//!< insert one or more bytes in UTF-8 encoding to represent an error character
+	
+	template < typename indexable_container >
+	static UnicodeScalarValue
+	byteSequenceTotalValue		(indexable_container, size_t,	//!< find Unicode value by extracting bits from a sequence of bytes
+								 size_t, size_t* = nullptr);
+	
+	static Boolean	isContinuationByte	(UInt8);	//!< true only for a valid byte that cannot be the first in its sequence
+	static Boolean	isFirstOfTwo		(UInt8);	//!< true only for a byte that must be followed by exactly one continuation byte to complete its sequence
+	static Boolean	isFirstOfThree		(UInt8);	//!< true only for a byte that must be followed by exactly 2 continuation bytes to complete its sequence
+	static Boolean	isFirstOfFour		(UInt8);	//!< true only for a byte that must be followed by exactly 3 continuation bytes to complete its sequence
+	static Boolean	isFirstOfFive		(UInt8);	//!< true only for a byte that must be followed by exactly 4 continuation bytes to complete its sequence
+	static Boolean	isFirstOfSix		(UInt8);	//!< true only for a byte that must be followed by exactly 5 continuation bytes to complete its sequence
+	static Boolean	isIllegalByte		(UInt8);	//!< true for byte values that will never be valid in any situation in UTF-8
+	static Boolean	isSingleByteGlyph	(UInt8);	//!< true only for a byte that is itself a complete sequence (normal ASCII)
+	static Boolean	isStartingByte		(UInt8);	//!< if false, implies that this is a continuation byte
+
+protected:
+	Boolean
+	isOverLong ();
+
+private:
+	State		currentState;		//!< determines which additional bytes are valid
+};
+
+/*!
 Represents the state of a terminal emulator, such as any
 parameters collected and any pending operations.
 */
@@ -981,6 +1068,12 @@ public:
 	Boolean
 	is8BitReceiver ();
 	
+	Boolean
+	is8BitTransmitter ();
+	
+	UInt32
+	recentCodePoint ();
+	
 	void
 	reset	(Boolean);
 	
@@ -1006,11 +1099,23 @@ public:
 	supportsVariant		(VariantFlags);
 	
 	Terminal_Emulator					primaryType;			//!< VT100, VT220, etc.
+	Boolean								isUTF8Encoding;			//!< the emulator is using the UTF-8 encoding, and should ignore any specific sequences
+																//!  that would change character sets in other ways (such as those defined for a VT220); in
+																//!  addition, the data stream is decoded as UTF-8 BEFORE it is searched for any control
+																//!  sequences, instead of being decoded in the echo-data phase; WARNING: do not assign this
+																//!  flag casually, it is usually only correct to use Session APIs to change the text encoding
+	Boolean								lockUTF8;				//!< set if UTF-8 should be set permanently, ignoring any sequences to switch it back until
+																//!  a full reset occurs
+	Boolean								disableShifts;			//!< prevents shift-in, shift-out, and any related old-style character set mechanism from working;
+																//!  usually this should be set only when a Unicode encoding is present (which is large enough to
+																//!  support all characters, making alternate sets unnecessary), but it is a separate state anyway
+	UInt8								recentCodePointByte;	//!< for 8-bit encodings, the most recent byte read; see also "multiByteDecoder"
 	CFStringEncoding					inputTextEncoding;		//!< specifies the encoding used by the input data stream
 	CFRetainRelease						answerBackCFString;		//!< similar to "primaryType", but can be an arbitrary string
 	My_ParserState						currentState;			//!< state the terminal input parser is in now
 	My_ParserState						stringAccumulatorState;	//!< state that was in effect when the "stringAccumulator" was recently cleared
 	std::string							stringAccumulator;		//!< used to gather characters for such things as XTerm window changes
+	My_UTF8StateMachine					multiByteDecoder;		//!< as individual bytes are processed, this tracks complete or invalid sequences
 	UInt16								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
 	SInt16								argLastIndex;			//!< zero-based last parameter position in the "values" array
 	ParameterList						argList;				//!< all values provided for the current escape sequence
@@ -1040,7 +1145,7 @@ private:
 	Boolean								eightBitReceiver;		//!< if true, equivalent 8-bit codes should be recognized by the emulator’s state determinant
 																//!  (for example, in a VT100, the 7-bit ESC-[ sequence is equivalent to the 8-bit code 155)
 	Boolean								eightBitTransmitter;	//!< if true, any sequences returned to the listening session should use 8-bit codes only
-	Boolean								sevenBitTransmitLocked;	//!< if true, the emulator can never be set to 8-bit; useful in weird emulation corner cases
+	Boolean								lockSevenBitTransmit;	//!< if true, the emulator can never be set to 8-bit; useful in weird emulation corner cases
 };
 typedef My_Emulator*	My_EmulatorPtr;
 
@@ -1114,7 +1219,11 @@ public:
 	My_ScreenBufferLineList				screenBuffer;				//!< a double-ended queue containing all the visible text for the terminal;
 																	//!  insertion or deletion from either end is fast, other operations are slow;
 																	//!  NOTE you should ONLY modify this using screen...() routines!
-	std::basic_string<UInt8>			bytesToEcho;				//!< captures contiguous blocks of text to be translated and echoed
+	My_ByteString						bytesToEcho;				//!< captures contiguous blocks of text to be translated and echoed; this is used for
+																	//!  encodings that are translated at echo time, but NOT for UTF-8!
+	CFRetainRelease						stringToEcho;				//!< when capturing bytes, this is not strictly needed but is used to stored the
+																	//!  translated string just before echoing; when in UTF-8 mode, this IS the buffer
+																	//!  for accumulating characters, as incoming bytes are translated beforehand
 	
 	// Error Counts
 	//
@@ -1276,8 +1385,8 @@ class My_DefaultEmulator
 public:
 	static UInt32	echoData			(My_ScreenBufferPtr, UInt8 const*, UInt32);
 	static void		hardSoftReset		(My_EmulatorPtr, Boolean);
-	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
-	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	static UInt32	stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32	stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
 };
 
 /*!
@@ -1289,8 +1398,31 @@ class My_DumbTerminal
 {
 public:
 	static UInt32	echoData			(My_ScreenBufferPtr, UInt8 const*, UInt32);
-	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
-	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	static UInt32	stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32	stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
+};
+
+/*!
+A lightweight terminal implementation, suitable ONLY as a
+pre-callback.  Implements sequences that are unique to the
+UTF-8 encoding (Unicode).
+*/
+class My_UTF8Core
+{
+public:
+	static UInt32	stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32	stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
+
+protected:
+	enum State
+	{
+		// Ideally these are "protected", but loop evasion code requires them.
+		kStateUTF8OnUnspecifiedImpl		= kMy_ParserStateSeenESCPercentG,		//!< switch to UTF-8, allow return to normal mode; unspecified behavior
+		kStateUTF8Off					= kMy_ParserStateSeenESCPercentAt,		//!< disable UTF-8, return to ordinary emulator character set behavior
+		kStateToUTF8Level1				= kMy_ParserStateSeenESCPercentSlashG,	//!< switch to UTF-8 level 1; cannot switch back
+		kStateToUTF8Level2				= kMy_ParserStateSeenESCPercentSlashH,	//!< switch to UTF-8 level 2; cannot switch back
+		kStateToUTF8Level3				= kMy_ParserStateSeenESCPercentSlashI,	//!< switch to UTF-8 level 3; cannot switch back
+	};
 };
 
 /*!
@@ -1302,9 +1434,9 @@ class My_VT100
 {
 public:
 	static void				hardSoftReset		(My_EmulatorPtr, Boolean);
-	static My_ParserState	returnCSINextState	(My_ParserState, UInt8, Boolean&);
-	static UInt32			stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
-	static UInt32			stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	static My_ParserState	returnCSINextState	(My_ParserState, UnicodeScalarValue, Boolean&);
+	static UInt32			stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32			stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
 	
 	static void		alignmentDisplay			(My_ScreenBufferPtr);
 	static void		ansiMode					(My_ScreenBufferPtr);
@@ -1327,8 +1459,8 @@ public:
 		friend class My_VT100;
 		
 	public:
-		static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
-		static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+		static UInt32	stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
+		static UInt32	stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
 		
 		static void		cursorBackward		(My_ScreenBufferPtr);
 		static void		cursorDown			(My_ScreenBufferPtr);
@@ -1464,9 +1596,9 @@ public:
 	static void		insertLines			(My_ScreenBufferPtr);
 	static void		loadLEDs			(My_ScreenBufferPtr);
 	
-	static My_ParserState	returnCSINextState	(My_ParserState, UInt8, Boolean&);
-	static UInt32			stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
-	static UInt32			stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	static My_ParserState	returnCSINextState	(My_ParserState, UnicodeScalarValue, Boolean&);
+	static UInt32			stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32			stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
 
 protected:
 	// The names of these constants use the same mnemonics from
@@ -1488,9 +1620,9 @@ class My_VT220
 {
 public:
 	static void				hardSoftReset		(My_EmulatorPtr, Boolean);
-	static My_ParserState	returnCSINextState	(My_ParserState, UInt8, Boolean&);
-	static UInt32			stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
-	static UInt32			stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	static My_ParserState	returnCSINextState	(My_ParserState, UnicodeScalarValue, Boolean&);
+	static UInt32			stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32			stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
 	
 	static void		compatibilityLevel					(My_ScreenBufferPtr);
 	static void		deviceStatusReportKeyboardLanguage	(My_ScreenBufferPtr);
@@ -1596,9 +1728,9 @@ the XTerm terminal type.
 class My_XTerm
 {
 public:
-	static My_ParserState	returnCSINextState	(My_ParserState, UInt8, Boolean&);
-	static UInt32			stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
-	static UInt32			stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	static My_ParserState	returnCSINextState	(My_ParserState, UnicodeScalarValue, Boolean&);
+	static UInt32			stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32			stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
 	
 	static void		cursorBackwardTabulation		(My_ScreenBufferPtr);
 	static void		cursorCharacterAbsolute			(My_ScreenBufferPtr);
@@ -1643,8 +1775,8 @@ NOTE:	Almost all of XTerm is ignored by this class.  See
 class My_XTermCore
 {
 public:
-	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserStatePair&, Boolean&, Boolean&);
-	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserStatePair const&, Boolean&);
+	static UInt32	stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32	stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
 	
 	enum State
 	{
@@ -2752,6 +2884,10 @@ Terminal_DebugDumpDetailedSnapshot		(TerminalScreenRef		inRef)
 	Console_WriteValue("Mode: origin redefined", dataPtr->modeOriginRedefined);
 	Console_WriteValue("Mode: insert, not replace", dataPtr->modeInsertNotReplace);
 	Console_WriteValue("Mode: new-line option", dataPtr->modeNewLineOption);
+	Console_WriteValue("Emulator UTF-8 mode", dataPtr->emulator.isUTF8Encoding);
+	Console_WriteValue("Emulator ignores requests to shift character sets", dataPtr->emulator.disableShifts);
+	Console_WriteValue("Emulator accepts 8-bit and 7-bit codes", dataPtr->emulator.is8BitReceiver());
+	Console_WriteValue("Emulator transmits 8-bit codes", dataPtr->emulator.is8BitTransmitter());
 	// INCOMPLETE - could put just about anything here, whatever is interesting to know
 }// DebugDumpDetailedSnapshot
 
@@ -2939,18 +3075,30 @@ Terminal_EmulatorProcessCString		(TerminalScreenRef	inRef,
 
 
 /*!
-Sends a stream of characters to the specified
-screen’s terminal emulator, interpreting escape
-sequences, etc. which may affect the terminal
-display.
+Sends a stream of characters to the specified screen’s terminal
+emulator, interpreting escape sequences, etc. which may affect
+the terminal display.
 
-USE WITH CARE.  Generally, you send data to this
-routine that comes directly from a program that
-knows what it’s doing.  There are more elegant
-ways to have specific effects on terminal screens
-in an emulator-independent fashion; you should
-use those routines before hacking up a string as
-input to this routine.
+The given buffer is considered a fragment of an infinite stream
+that continues from text sent by previous calls.  So, do not
+assume that "inBuffer" will be the start or end of anything in
+particular!  For example, if the previous byte stream ended with
+an incomplete multi-byte code point then the first few bytes of
+"inBuffer" may act as the terminator of the previous sequence.
+
+If the encoding, as set by Terminal_SetTextEncoding(), is UTF-8
+then the specified buffer is decoded BEFORE any bytes are
+examined for things like control characters.  (Text in the 7-bit
+range of ASCII is considered valid UTF-8 and acts the same in
+any case.)  If you intend to include special sequences such as
+8-bit control characters, you MUST ensure they are encoded as
+proper multi-byte sequences in UTF-8 terminals.
+
+USE WITH CARE.  Generally, you send data to this routine that
+comes directly from a program that knows what it’s doing.  There
+are more elegant ways to have specific effects on terminal
+screens in an emulator-independent fashion; you should use those
+approaches before hacking up a string as input to this routine.
 
 \retval kTerminal_ResultOK
 if the text is processed without errors
@@ -2968,14 +3116,18 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 	Terminal_Result		result = kTerminal_ResultOK;
 	
 	
-	if (inLength != 0)
+	if (0 != inLength)
 	{
 		My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 		
 		
-		if (dataPtr == nullptr) result = kTerminal_ResultInvalidID;
+		if (nullptr == dataPtr)
+		{
+			result = kTerminal_ResultInvalidID;
+		}
 		else
 		{
+			Boolean const	kIsUTF8 = (kCFStringEncodingUTF8 == dataPtr->emulator.inputTextEncoding);
 			UInt8 const*	ptr = inBuffer;
 			UInt32			countRead = 0;
 			
@@ -2991,195 +3143,282 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 			// function is called)
 			for (register UInt32 i = inLength; i > 0; )
 			{
-				My_ParserStatePair	states = std::make_pair(dataPtr->emulator.currentState,
-															dataPtr->emulator.currentState);
-				Boolean				isHandled = false;
-				Boolean				isInterrupt = false;
+				Boolean		skipEmulators = false;
 				
 				
-				// debugging only
-				if (DebugInterface_LogsTerminalInputChar())
-				{
-					Console_WriteValueCharacter("terminal loop: received character", *ptr);
-				}
+				dataPtr->emulator.recentCodePointByte = *ptr;
 				
-				// find a new state, which may or may not interrupt the
-				// state that is currently forming
-				isHandled = false;
-				for (My_Emulator::VariantChain::const_iterator toCallbacks = dataPtr->emulator.preCallbackSet.begin();
-						((false == isHandled) && (toCallbacks != dataPtr->emulator.preCallbackSet.end())); ++toCallbacks)
+				// when UTF-8 is in use, the stream is decoded BEFORE anything processes
+				// the bytes further (including emulators), and a separate set of states
+				// prevents emulators from even seeing bytes until complete sequences
+				// are discovered
+				if (kIsUTF8)
 				{
-					countRead = invokeEmulatorStateDeterminantProc
-								(toCallbacks->stateDeterminant, &dataPtr->emulator,
-									ptr, i, states, isInterrupt, isHandled);
-				}
-				unless (isHandled)
-				{
-					// most of the time, the ordinary emulator is used
-					countRead = invokeEmulatorStateDeterminantProc
-								(dataPtr->emulator.currentCallbacks.stateDeterminant, &dataPtr->emulator,
-									ptr, i, states, isInterrupt, isHandled);
-				}
-				assert(countRead <= i);
-				//Console_WriteValue("number of characters absorbed by state determinant", countRead); // debug
-				i -= countRead; // could be zero (no-op)
-				ptr += countRead; // could be zero (no-op)
-				
-				// interrupts are never captured for echo
-				if (false == isInterrupt)
-				{
-					// DEBUG:
-					//Console_WriteValueFourChars("transition to state", states.second);
+					UInt32		errorCount = 0;
 					
-					// LOOPING GUARD: whenever the proposed next state matches the
-					// current state, a counter is incremented; if this count
-					// exceeds an arbitrary value, the next state is FORCED to
-					// return to the initial state (flagging a console error) so
-					// that this does not hang the application in an infinite loop
-					if (states.first == states.second)
+					
+					dataPtr->emulator.multiByteDecoder.nextState(*ptr, errorCount);
+					
+					// errors might be detected, although not necessarily in the current byte itself
+					// (for instance, the byte may start a new sequence while the previous sequence
+					// has not yet seen enough continuation bytes); if both the previous sequence
+					// and the current byte indicate separate errors, more than one character can
+					// possibly be printed here; but the normal case hopefully is zero!
+					for (UInt32 j = 0; j < errorCount; ++j)
 					{
-						// exclude the echo data, because this is the most likely state
-						// to last awhile (e.g. long strings of printable text)
-						if (states.second != kMy_ParserStateAccumulateForEcho)
-						{
-							Boolean		interrupt = (dataPtr->emulator.stateRepetitions > 100/* arbitrary */);
-							
-							
-							++dataPtr->emulator.stateRepetitions;
-							
-							if (interrupt)
-							{
-								// some states allow a bit more leeway before panicking,
-								// because there could be good reasons for long data streams
-								// TEMPORARY; it may make the most sense to also defer loop
-								// evasion to an emulator method, so that each emulator type
-								// can handle its own custom states (and only when that
-								// emulator is actually in use!)
-								if ((states.second == My_XTermCore::kStateSITAcquireStr) ||
-									(states.second == My_XTermCore::kStateSWTAcquireStr) ||
-									(states.second == My_XTermCore::kStateSWITAcquireStr))
-								{
-									interrupt = (dataPtr->emulator.stateRepetitions > 255/* arbitrary */);
-								}
-							}
-							
-							if (interrupt)
-							{
-								Boolean const	kLogThis = DebugInterface_LogsTerminalState();
-								
-								
-								if (kLogThis)
-								{
-									Console_WriteHorizontalRule();
-									Console_WriteValueFourChars("SERIOUS PARSER ERROR: appears to be stuck, state", states.first);
-								}
-								
-								if (kMy_ParserStateInitial == states.first)
-								{
-									// if somehow stuck oddly in the initial state, assume
-									// the trigger character is responsible and simply
-									// ignore the troublesome sequence of characters
-									if (kLogThis)
-									{
-										Console_WriteValueCharacter("FORCING step-over of trigger character", *ptr);
-									}
-									--i;
-									++ptr;
-								}
-								else
-								{
-									if (kLogThis)
-									{
-										Console_WriteLine("FORCING a return to the initial state");
-									}
-									states.second = kMy_ParserStateInitial;
-								}
-								
-								if (kLogThis)
-								{
-									Console_WriteHorizontalRule();
-								}
-								
-								dataPtr->emulator.stateRepetitions = 0;
-							}
-						}
-					}
-					else
-					{
-						dataPtr->emulator.stateRepetitions = 0;
+						My_UTF8StateMachine::appendErrorCharacter(dataPtr->bytesToEcho);
 					}
 					
-					if (kMy_ParserStateAccumulateForEcho == states.second)
+					if (My_UTF8StateMachine::kStateUTF8ValidSequence != dataPtr->emulator.multiByteDecoder.returnState())
 					{
-						// gather a byte for later use in display, but do not display yet;
-						// while it would be nice to feed the raw data stream into the
-						// translation APIs, translators might not stop when they see
-						// special characters such as control characters; so, the terminal
-						// emulator (above) has the first crack at the byte to see if there
-						// is any special meaning, and the byte is cached only if the
-						// terminal allows the byte to be echoed; the echo does not actually
-						// occur until a future byte triggers a non-echo state; at that
-						// time, the cached array of bytes is sent to the translator and
-						// converted into human-readable text
-						dataPtr->bytesToEcho.push_back(*ptr);
-						--i;
-						++ptr;
+						// sequence is incomplete; only allow emulators to process complete code points
+						skipEmulators = true;
+					}
+					
+					// skip over the byte that was read
+					--i;
+					++ptr;
+				}
+				
+				if (skipEmulators)
+				{
+					// debugging only
+					if (DebugInterface_LogsTerminalInputChar())
+					{
+						Console_WriteValueCharacter("terminal loop: next byte of incomplete sequence", *ptr);
 					}
 				}
-				
-				// if the new state is no longer echo accumulation, or this chunk of the
-				// infinite stream ended with echo-ready data, flush as much as possible
-				if ((kMy_ParserStateAccumulateForEcho != states.second) || (0 == i))
+				else
 				{
-					if (false == dataPtr->bytesToEcho.empty())
+					My_ParserStatePair	states = std::make_pair(dataPtr->emulator.currentState,
+																dataPtr->emulator.currentState);
+					Boolean				isHandled = false;
+					Boolean				isInterrupt = false;
+					
+					
+					// debugging only
+					if (DebugInterface_LogsTerminalInputChar())
 					{
-						std::string::size_type const	kOldSize = dataPtr->bytesToEcho.size();
-						UInt32							bytesUsed = invokeEmulatorEchoDataProc
-																	(dataPtr->emulator.currentCallbacks.dataWriter, dataPtr,
-																		dataPtr->bytesToEcho.data(), kOldSize);
+						Console_WriteValueUnicodePoint("terminal loop: recent code point", dataPtr->emulator.recentCodePoint());
+					}
+					
+					// find a new state, which may or may not interrupt the state that is
+					// currently forming
+					isHandled = false;
+					for (My_Emulator::VariantChain::const_iterator toCallbacks = dataPtr->emulator.preCallbackSet.begin();
+							((false == isHandled) && (toCallbacks != dataPtr->emulator.preCallbackSet.end())); ++toCallbacks)
+					{
+						countRead = invokeEmulatorStateDeterminantProc
+									(toCallbacks->stateDeterminant, &dataPtr->emulator,
+										states, isInterrupt, isHandled);
+					}
+					unless (isHandled)
+					{
+						// most of the time, the ordinary emulator is used
+						countRead = invokeEmulatorStateDeterminantProc
+									(dataPtr->emulator.currentCallbacks.stateDeterminant, &dataPtr->emulator,
+										states, isInterrupt, isHandled);
+					}
+					unless (kIsUTF8)
+					{
+						assert(countRead <= i);
+						//Console_WriteValue("number of characters absorbed by state determinant", countRead); // debug
+						i -= countRead; // could be zero (no-op)
+						ptr += countRead; // could be zero (no-op)
+					}
+					
+					// interrupts are never captured for echo
+					if (false == isInterrupt)
+					{
+						// DEBUG:
+						//Console_WriteValueFourChars("transition to state", states.second);
 						
-						
-						// it is possible for this chunk of the stream to terminate with
-						// an incomplete encoding of bytes, so preserve anything that
-						// could not be echoed this time around
-						assert(bytesUsed <= kOldSize);
-						if (0 == bytesUsed)
+						// LOOPING GUARD: whenever the proposed next state matches the
+						// current state, a counter is incremented; if this count
+						// exceeds an arbitrary value, the next state is FORCED to
+						// return to the initial state (flagging a console error) so
+						// that this does not hang the application in an infinite loop
+						if (states.first == states.second)
 						{
-							// special case...some kind of error, no bytes were translated;
-							// dump the buffer, which LOSES DATA, but this is a spin control
-							++(dataPtr->echoErrorCount);
-							dataPtr->bytesToEcho.clear();
+							// exclude the echo data, because this is the most likely state
+							// to last awhile (e.g. long strings of printable text)
+							if (states.second != kMy_ParserStateAccumulateForEcho)
+							{
+								Boolean		interrupt = (dataPtr->emulator.stateRepetitions > 100/* arbitrary */);
+								
+								
+								++dataPtr->emulator.stateRepetitions;
+								
+								if (interrupt)
+								{
+									// some states allow a bit more leeway before panicking,
+									// because there could be good reasons for long data streams
+									// TEMPORARY; it may make the most sense to also defer loop
+									// evasion to an emulator method, so that each emulator type
+									// can handle its own custom states (and only when that
+									// emulator is actually in use!)
+									if ((states.second == My_XTermCore::kStateSITAcquireStr) ||
+										(states.second == My_XTermCore::kStateSWTAcquireStr) ||
+										(states.second == My_XTermCore::kStateSWITAcquireStr))
+									{
+										interrupt = (dataPtr->emulator.stateRepetitions > 255/* arbitrary */);
+									}
+								}
+								
+								if (interrupt)
+								{
+									Boolean const	kLogThis = DebugInterface_LogsTerminalState();
+									
+									
+									if (kLogThis)
+									{
+										Console_WriteHorizontalRule();
+										Console_WriteValueFourChars("SERIOUS PARSER ERROR: appears to be stuck, state", states.first);
+									}
+									
+									if (kMy_ParserStateInitial == states.first)
+									{
+										unless (kIsUTF8)
+										{
+											// if somehow stuck oddly in the initial state, assume
+											// the trigger character is responsible and simply
+											// ignore the troublesome sequence of characters
+											if (kLogThis)
+											{
+												Console_WriteValueCharacter("FORCING step-over of byte", *ptr);
+											}
+											--i;
+											++ptr;
+										}
+									}
+									else
+									{
+										if (kLogThis)
+										{
+											Console_WriteLine("FORCING a return to the initial state");
+										}
+										states.second = kMy_ParserStateInitial;
+									}
+									
+									if (kLogThis)
+									{
+										Console_WriteHorizontalRule();
+									}
+									
+									dataPtr->emulator.stateRepetitions = 0;
+								}
+							}
 						}
-						else if (bytesUsed > 0)
+						else
 						{
-							dataPtr->bytesToEcho.erase(0/* starting position */, bytesUsed/* count */);
+							dataPtr->emulator.stateRepetitions = 0;
+						}
+						
+						if (kMy_ParserStateAccumulateForEcho == states.second)
+						{
+							// gather a byte for later use in display, but do not display yet;
+							// while it would be nice to feed the raw data stream into the
+							// translation APIs, translators might not stop when they see
+							// special characters such as control characters; so, the terminal
+							// emulator (above) has the first crack at the byte to see if there
+							// is any special meaning, and the byte is cached only if the
+							// terminal allows the byte to be echoed; the echo does not actually
+							// occur until a future byte triggers a non-echo state; at that
+							// time, the cached array of bytes is sent to the translator and
+							// converted into human-readable text
+							if (kIsUTF8)
+							{
+								// in UTF-8 mode, it is certainly possible to have illegal sequences,
+								// so only capture bytes for echo when a sequence is complete; also,
+								// it is not necessary to offset "i" or "ptr" in this mode because
+								// the current byte was already skipped by the initial decoding
+								if (My_UTF8StateMachine::kStateUTF8ValidSequence == dataPtr->emulator.multiByteDecoder.returnState())
+								{
+									if (false == dataPtr->emulator.multiByteDecoder.multiByteAccumulator.empty())
+									{
+										std::copy(dataPtr->emulator.multiByteDecoder.multiByteAccumulator.begin(),
+													dataPtr->emulator.multiByteDecoder.multiByteAccumulator.end(),
+													std::back_inserter(dataPtr->bytesToEcho));
+										dataPtr->emulator.multiByteDecoder.reset();
+									}
+									else
+									{
+										dataPtr->bytesToEcho.push_back(*ptr);
+									}
+								}
+							}
+							else
+							{
+								dataPtr->bytesToEcho.push_back(*ptr);
+								--i;
+								++ptr;
+							}
 						}
 					}
-				}
-				
-				// perform whatever action is appropriate to enter this state
-				isHandled = false;
-				for (My_Emulator::VariantChain::const_iterator toCallbacks = dataPtr->emulator.preCallbackSet.begin();
-						((false == isHandled) && (toCallbacks != dataPtr->emulator.preCallbackSet.end())); ++toCallbacks)
-				{
-					countRead = invokeEmulatorStateTransitionProc
-								(toCallbacks->transitionHandler, dataPtr, ptr, i, states, isHandled);
-				}
-				unless (isHandled)
-				{
-					countRead = invokeEmulatorStateTransitionProc
-								(dataPtr->emulator.currentCallbacks.transitionHandler,
-									dataPtr, ptr, i, states, isHandled);
-				}
-				assert(countRead <= i);
-				//Console_WriteValue("number of characters absorbed by transition handler", countRead); // debug
-				i -= countRead; // could be zero (no-op)
-				ptr += countRead; // could be zero (no-op)
-				
-				if (false == isInterrupt)
-				{
-					// remember this new state
-					dataPtr->emulator.currentState = states.second;
+					
+					// if the new state is no longer echo accumulation, or this chunk of the
+					// infinite stream ended with echo-ready data, flush as much as possible
+					if ((kMy_ParserStateAccumulateForEcho != states.second) || (0 == i))
+					{
+						if (false == dataPtr->bytesToEcho.empty())
+						{
+							std::string::size_type const	kOldSize = dataPtr->bytesToEcho.size();
+							UInt32							bytesUsed = invokeEmulatorEchoDataProc
+																		(dataPtr->emulator.currentCallbacks.dataWriter, dataPtr,
+																			dataPtr->bytesToEcho.data(), kOldSize);
+							
+							
+							// it is possible for this chunk of the stream to terminate with
+							// an incomplete encoding of bytes, so preserve anything that
+							// could not be echoed this time around
+							assert(bytesUsed <= kOldSize);
+							if (0 == bytesUsed)
+							{
+								// special case...some kind of error, no bytes were translated;
+								// dump the buffer, which LOSES DATA, but this is a spin control
+								++(dataPtr->echoErrorCount);
+								dataPtr->bytesToEcho.clear();
+							}
+							else if (bytesUsed > 0)
+							{
+								dataPtr->bytesToEcho.erase(0/* starting position */, bytesUsed/* count */);
+							}
+						}
+					}
+					
+					// perform whatever action is appropriate to enter this state
+					isHandled = false;
+					for (My_Emulator::VariantChain::const_iterator toCallbacks = dataPtr->emulator.preCallbackSet.begin();
+							((false == isHandled) && (toCallbacks != dataPtr->emulator.preCallbackSet.end())); ++toCallbacks)
+					{
+						countRead = invokeEmulatorStateTransitionProc
+									(toCallbacks->transitionHandler, dataPtr, states, isHandled);
+					}
+					unless (isHandled)
+					{
+						countRead = invokeEmulatorStateTransitionProc
+									(dataPtr->emulator.currentCallbacks.transitionHandler,
+										dataPtr, states, isHandled);
+					}
+					unless (kIsUTF8)
+					{
+						assert(countRead <= i);
+						//Console_WriteValue("number of characters absorbed by transition handler", countRead); // debug
+						i -= countRead; // could be zero (no-op)
+						ptr += countRead; // could be zero (no-op)
+					}
+					
+					if (false == isInterrupt)
+					{
+						// remember this new state
+						dataPtr->emulator.currentState = states.second;
+					}
+					
+					// if a complete sequence has been read, throw those cached bytes away
+					unless (dataPtr->emulator.multiByteDecoder.incompleteSequence())
+					{
+						dataPtr->emulator.multiByteDecoder.reset();
+					}
 				}
 			}
 			
@@ -3217,7 +3456,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 			{
 				if (kDebugExcessiveErrors)
 				{
-					Console_WriteValueCharacter("current terminal text encoding", dataPtr->emulator.inputTextEncoding);
+					Console_WriteValue("current terminal text encoding", dataPtr->emulator.inputTextEncoding);
 					Console_Warning(Console_WriteValue, "number of times that translation unexpectedly failed", dataPtr->translationErrorCount);
 				}
 				dataPtr->translationErrorCount = 0;
@@ -4596,6 +4835,11 @@ Specifies the encoding of text streams read by the terminal
 emulator.  This does *not* indicate the internal buffer
 encoding, which might be Unicode regardless.
 
+WARNING:	This should only be called by the Session module.
+			Use Session APIs to change encoding information,
+			because other things may need to be in sync with
+			that change.
+
 \retval kTerminal_ResultOK
 if the encoding is set successfully
 
@@ -4615,6 +4859,18 @@ Terminal_SetTextEncoding	(TerminalScreenRef		inRef,
 	if (nullptr != dataPtr)
 	{
 		dataPtr->emulator.inputTextEncoding = inNewEncoding;
+		if (kCFStringEncodingUTF8 == inNewEncoding)
+		{
+			// this mode is not normally set by the user, but the exception
+			// is here, when the encoding is assigned; if the input is
+			// explicitly UTF-8, it can be assumed that everything is UTF-8
+			dataPtr->emulator.isUTF8Encoding = true;
+		}
+		else
+		{
+			dataPtr->emulator.isUTF8Encoding = false;
+			dataPtr->emulator.lockUTF8 = false;
+		}
 		result = kTerminal_ResultOK;
 	}
 	return result;
@@ -5092,11 +5348,16 @@ My_Emulator		(Terminal_Emulator		inPrimaryEmulation,
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 primaryType(inPrimaryEmulation),
+isUTF8Encoding(kCFStringEncodingUTF8 == inInputTextEncoding),
+lockUTF8(false),
+disableShifts(false),
+recentCodePointByte('\0'),
 inputTextEncoding(inInputTextEncoding),
 answerBackCFString(inAnswerBack),
 currentState(kMy_ParserStateInitial),
 stringAccumulatorState(kMy_ParserStateInitial),
 stringAccumulator(),
+multiByteDecoder(),
 stateRepetitions(0),
 argLastIndex(0),
 argList(kMy_MaximumANSIParameters),
@@ -5110,7 +5371,7 @@ supportedVariants(kVariantFlagsNone),
 addedXTerm(false),
 eightBitReceiver(false),
 eightBitTransmitter(false),
-sevenBitTransmitLocked(false)
+lockSevenBitTransmit(false)
 {
 	initializeParserStateStack();
 }// My_Emulator default constructor
@@ -5204,6 +5465,75 @@ is8BitReceiver ()
 
 
 /*!
+Returns true only if the emulator is in 8-bit transmit mode,
+which means that any reports will use single bytes for control
+codes instead of multi-byte escape sequences.
+
+(4.0)
+*/
+inline Boolean
+My_Emulator::
+is8BitTransmitter ()
+{
+	return this->eightBitTransmitter;
+}// is8BitTransmitter
+
+
+/*!
+If the emulator is currently using a Unicode encoding, this
+routine returns the most recent complete (valid) code point
+that was represented; for example, in UTF-8 this comes from
+the last 0-6 bytes.  Since UTF-8 is always decoded prior to
+calling emulators, the code point is exact and requires no
+further translation.  Note that the return value can be
+considered of type "UnicodeScalarValue" when UTF-8 is in use.
+
+For “normal” cases of single-byte encodings however, the text
+translation only occurs AFTER bytes have passed into emulators.
+In these cases, the return value is going to contain only one
+byte, and its meaning depends entirely on the encoding.  Note
+that low ASCII values are the same across many encodings, so
+in almost all cases an emulator can read values as-is and only
+worry about translation for things that compose strings (like
+echoes or XTerm window titles).
+
+Note that this function is intended to prevent emulators from
+having to know anything about UTF-8!  It allows emulators to
+handle things like 8-bit control sequences without caring how
+that sequence might have been originally encoded.
+
+The value "kMy_InvalidUnicodeCodePoint" is returned if there
+is no apparent value available in the buffer.
+
+(4.0)
+*/
+UInt32
+My_Emulator::
+recentCodePoint ()
+{
+	UInt32		result = this->recentCodePointByte;
+	
+	
+	if (kCFStringEncodingUTF8 == this->inputTextEncoding)
+	{
+		if (this->multiByteDecoder.incompleteSequence())
+		{
+			result = kMy_InvalidUnicodeCodePoint;
+		}
+		else
+		{
+			size_t		bytesUsed = 0;
+			
+			
+			result = My_UTF8StateMachine::byteSequenceTotalValue(this->multiByteDecoder.multiByteAccumulator, 0/* offset */,
+																	this->multiByteDecoder.multiByteAccumulator.size(), &bytesUsed);
+		}
+	}
+	return result;
+}// recentCodePoint
+
+
+/*!
 Responds to a terminal reset by returning certain emulator
 settings to defaults.  This does NOT reinitialize settings in
 the instance that are not directly attributed to terminal state.
@@ -5222,7 +5552,7 @@ reset	(Boolean	UNUSED_ARGUMENT(inIsSoftReset))
 	initializeParserStateStack();
 	this->eightBitReceiver = false;
 	this->eightBitTransmitter = false;
-	this->sevenBitTransmitLocked = false;
+	this->lockSevenBitTransmit = false;
 }// reset
 
 
@@ -5567,7 +5897,7 @@ set8BitTransmit		(Boolean	inIs8Bit)
 	else
 	{
 		// if locked in a 7-bit mode then refuse to return to 8-bit mode
-		this->eightBitTransmitter = (false == this->sevenBitTransmitLocked);
+		this->eightBitTransmitter = (false == this->lockSevenBitTransmit);
 	}
 }// set8BitTransmit
 
@@ -5583,7 +5913,7 @@ void
 My_Emulator::
 set8BitTransmitNever ()
 {
-	this->sevenBitTransmitLocked = true;
+	this->lockSevenBitTransmit = true;
 }// set8BitTransmitNever
 
 
@@ -5795,6 +6125,11 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 			this->emulator.addedXTerm = true;
 		}
 	}
+	this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
+											My_Emulator::Callbacks(nullptr/* echo - override is not allowed in a pre-callback */,
+																	My_UTF8Core::stateDeterminant,
+																	My_UTF8Core::stateTransition,
+																	nullptr/* reset - override is not allowed in a pre-callback */));
 	
 	// IMPORTANT: Within constructors, calls to routines expecting a *self reference* should be
 	//            *last*; otherwise, there’s no telling whether or not the data that the routine
@@ -6358,6 +6693,607 @@ structureInitialize ()
 
 
 /*!
+Constructor.
+
+(4.0)
+*/
+My_UTF8StateMachine::
+My_UTF8StateMachine ()
+:
+multiByteAccumulator(),
+currentState(kStateInitial)
+{
+	this->reset();
+}// My_UTF8StateMachine default constructor
+
+
+/*!
+Appends a valid sequence of bytes to the specified string, that
+represent the “invalid character” code point.
+
+(4.0)
+*/
+template < typename push_backable_container >
+inline void
+My_UTF8StateMachine::
+appendErrorCharacter	(push_backable_container&	inoutContainer)
+{
+#if 0
+	// insert an error character, which arbitrarily will match the one used
+	// by VT terminals, a checkered box (Unicode 0x2593 but encoded as UTF-8)
+	inoutContainer.push_back(0xE2);
+	inoutContainer.push_back(0x96);
+	inoutContainer.push_back(0x93);
+#else
+	// another option is the replacement character (Unicode 0xFFFD but encoded
+	// as UTF-8)
+	inoutContainer.push_back(0xEF);
+	inoutContainer.push_back(0xBF);
+	inoutContainer.push_back(0xBD);
+#endif
+}// My_UTF8StateMachine::appendErrorCharacter
+
+
+/*!
+Returns the complete value represented by the specified range
+of bytes in a UTF-8-encoded container.
+
+The count is relative to the offset, and should be at least as
+large as the number of continuation bytes implied by the byte
+at the offset point.  Any unused bytes at the end are ignored,
+as the value will represent bytes referenced by the encoding;
+but if you set "outBytesUsedOrNull" to a non-nullptr value, you
+can find out how many bytes were required to determine the
+value.  (This is useful if you want to pass in an entire buffer
+of a set size, and just want to pull the first complete value
+off the front.)
+
+The value "kMy_InvalidUnicodeCodePoint" is returned by default,
+e.g. if the specified byte sequence does not actually decode
+properly into the implied number of bytes.
+
+(4.0)
+*/
+template < typename indexable_container >
+inline UnicodeScalarValue
+My_UTF8StateMachine::
+byteSequenceTotalValue	(indexable_container	inBytes,
+						 size_t					inOffset,
+						 size_t					inByteCount,
+						 size_t*				outBytesUsedOrNull)
+{
+	UnicodeScalarValue		result = kMy_InvalidUnicodeCodePoint;
+	
+	
+	if (nullptr != outBytesUsedOrNull)
+	{
+		*outBytesUsedOrNull = 0;
+	}
+	
+	if ((inByteCount >= 1) && isSingleByteGlyph(inBytes[inOffset]))
+	{
+		result = inBytes[inOffset];
+		if (nullptr != outBytesUsedOrNull)
+		{
+			*outBytesUsedOrNull = 1;
+		}
+	}
+	else if ((inByteCount >= 2) && isFirstOfTwo(inBytes[inOffset]) &&
+				isContinuationByte(inBytes[inOffset + 1]))
+	{
+		result = (((inBytes[inOffset] & 0x1F) << 6) +
+					((inBytes[inOffset + 1] & 0x3F) << 0));
+		if (nullptr != outBytesUsedOrNull)
+		{
+			*outBytesUsedOrNull = 2;
+		}
+	}
+	else if ((inByteCount >= 3) && isFirstOfThree(inBytes[inOffset]) &&
+				isContinuationByte(inBytes[inOffset + 1]) &&
+				isContinuationByte(inBytes[inOffset + 2]))
+	{
+		result = (((inBytes[inOffset] & 0x0F) << 12) +
+					((inBytes[inOffset + 1] & 0x3F) << 6) +
+					((inBytes[inOffset + 2] & 0x3F) << 0));
+		if (nullptr != outBytesUsedOrNull)
+		{
+			*outBytesUsedOrNull = 3;
+		}
+	}
+	else if ((inByteCount >= 4) && isFirstOfFour(inBytes[inOffset]) &&
+				isContinuationByte(inBytes[inOffset + 1]) &&
+				isContinuationByte(inBytes[inOffset + 2]) &&
+				isContinuationByte(inBytes[inOffset + 3]))
+	{
+		result = (((inBytes[inOffset] & 0x07) << 18) +
+					((inBytes[inOffset + 1] & 0x3F) << 12) +
+					((inBytes[inOffset + 2] & 0x3F) << 6) +
+					((inBytes[inOffset + 3] & 0x3F) << 0));
+		if (nullptr != outBytesUsedOrNull)
+		{
+			*outBytesUsedOrNull = 4;
+		}
+	}
+	else if ((inByteCount >= 5) && isFirstOfFive(inBytes[inOffset]) &&
+				isContinuationByte(inBytes[inOffset + 1]) &&
+				isContinuationByte(inBytes[inOffset + 2]) &&
+				isContinuationByte(inBytes[inOffset + 3]) &&
+				isContinuationByte(inBytes[inOffset + 4]))
+	{
+		result = (((inBytes[inOffset] & 0x03) << 24) +
+					((inBytes[inOffset + 1] & 0x3F) << 18) +
+					((inBytes[inOffset + 2] & 0x3F) << 12) +
+					((inBytes[inOffset + 3] & 0x3F) << 6) +
+					((inBytes[inOffset + 4] & 0x3F) << 0));
+		if (nullptr != outBytesUsedOrNull)
+		{
+			*outBytesUsedOrNull = 5;
+		}
+	}
+	else if ((inByteCount >= 6) && isFirstOfSix(inBytes[inOffset]) &&
+				isContinuationByte(inBytes[inOffset + 1]) &&
+				isContinuationByte(inBytes[inOffset + 2]) &&
+				isContinuationByte(inBytes[inOffset + 3]) &&
+				isContinuationByte(inBytes[inOffset + 4]) &&
+				isContinuationByte(inBytes[inOffset + 5]))
+	{
+		result = (((inBytes[inOffset] & 0x01) << 30) +
+					((inBytes[inOffset + 1] & 0x3F) << 24) +
+					((inBytes[inOffset + 2] & 0x3F) << 18) +
+					((inBytes[inOffset + 3] & 0x3F) << 12) +
+					((inBytes[inOffset + 4] & 0x3F) << 6) +
+					((inBytes[inOffset + 5] & 0x3F) << 0));
+		if (nullptr != outBytesUsedOrNull)
+		{
+			*outBytesUsedOrNull = 6;
+		}
+	}
+	return result;
+}// My_UTF8StateMachine::byteSequenceTotalValue
+
+
+/*!
+Returns true only if the current sequence of bytes is
+incomplete.
+
+(4.0)
+*/
+Boolean
+My_UTF8StateMachine::
+incompleteSequence ()
+{
+	Boolean		result = ((false == this->multiByteAccumulator.empty()) &&
+							(kStateInitial != this->currentState) &&
+							(kStateUTF8ValidSequence != this->currentState));
+	
+	
+	return result;
+}// My_UTF8StateMachine::incompleteSequence
+
+
+/*!
+Returns true only for bytes that are intended to follow a
+“first byte” (satisfying isFirstOfTwo(), isFirstOfThree(),
+etc.).
+
+(4.0)
+*/
+inline Boolean
+My_UTF8StateMachine::
+isContinuationByte	(UInt8		inByte)
+{
+	return (0x80 == (inByte & 0xC0));
+}// My_UTF8StateMachine::isContinuationByte
+
+
+/*!
+Returns true only for bytes that indicate the start of a
+sequence of exactly two bytes.
+
+(4.0)
+*/
+inline Boolean
+My_UTF8StateMachine::
+isFirstOfTwo	(UInt8		inByte)
+{
+	return (0xC0 == (inByte & 0xE0));
+}// My_UTF8StateMachine::isFirstOfTwo
+
+
+/*!
+Returns true only for bytes that indicate the start of a
+sequence of exactly 3 bytes.
+
+(4.0)
+*/
+inline Boolean
+My_UTF8StateMachine::
+isFirstOfThree	(UInt8		inByte)
+{
+	return (0xE0 == (inByte & 0xF0));
+}// My_UTF8StateMachine::isFirstOfThree
+
+
+/*!
+Returns true only for bytes that indicate the start of a
+sequence of exactly 4 bytes.
+
+(4.0)
+*/
+inline Boolean
+My_UTF8StateMachine::
+isFirstOfFour	(UInt8		inByte)
+{
+	return (0xF0 == (inByte & 0xF8));
+}// My_UTF8StateMachine::isFirstOfFour
+
+
+/*!
+Returns true only for bytes that indicate the start of a
+sequence of exactly 5 bytes.
+
+Not to be confused with Third of Five or Seven of Nine.
+
+(4.0)
+*/
+inline Boolean
+My_UTF8StateMachine::
+isFirstOfFive	(UInt8		inByte)
+{
+	return (0xF8 == (inByte & 0xFC));
+}// My_UTF8StateMachine::isFirstOfFive
+
+
+/*!
+Returns true only for bytes that indicate the start of a
+sequence of exactly 6 bytes.
+
+(4.0)
+*/
+inline Boolean
+My_UTF8StateMachine::
+isFirstOfSix	(UInt8		inByte)
+{
+	return (0xFC == (inByte & 0xFE));
+}// My_UTF8StateMachine::isFirstOfSix
+
+
+/*!
+Returns true only for bytes that cannot ever be considered
+valid UTF-8, no matter what the context.
+
+Note that this does not reject bytes that could be used to
+begin over-long encodings (such as 0xC0).  Those problems
+are detected later so that they can be represented as a
+single error character.
+
+(4.0)
+*/
+inline Boolean
+My_UTF8StateMachine::
+isIllegalByte	(UInt8		inByte)
+{
+	return ((0xFE == inByte) || (0xFF == inByte));
+}// My_UTF8StateMachine::isIllegalByte
+
+
+/*!
+Returns true if the currently-formed sequence of bytes in
+"multiByteAccumulator" is over-long; that is, there is a way
+to encode the same point with fewer bytes than were actually
+used.  These kinds of sequences are illegal in UTF-8.
+
+(4.0)
+*/
+Boolean
+My_UTF8StateMachine::
+isOverLong ()
+{
+	My_ByteString const&	kBuffer = this->multiByteAccumulator;
+	size_t const			kPastEnd = this->multiByteAccumulator.size();
+	size_t const			kSequenceLength = this->multiByteAccumulator.size();
+	Boolean					result = false;
+	
+	
+	if (kSequenceLength <= kPastEnd)
+	{
+		size_t const	kStartIndex = kPastEnd - kSequenceLength;
+		
+		
+		if ((0xC0 == kBuffer[kStartIndex]) ||
+			(0xC1 == kBuffer[kStartIndex]))
+		{
+			// always means the sequence is over-long
+			result = true;
+		}
+		else if (kSequenceLength > 5)
+		{
+			if ((0xFC == kBuffer[kStartIndex]) &&
+				(byteSequenceTotalValue(kBuffer, kStartIndex, 6) <= 0x03FFFFFF))
+			{
+				// a sequence that starts with 0xFC cannot decode to a value
+				// in the 5-byte range (0x03FFFFFF) unless it is over-long
+				result = true;
+			}
+		}
+		else if (kSequenceLength > 4)
+		{
+			if ((0xF8 == kBuffer[kStartIndex]) &&
+				(byteSequenceTotalValue(kBuffer, kStartIndex, 5) <= 0x001FFFFF))
+			{
+				// a sequence that starts with 0xF8 cannot decode to a value
+				// in the 4-byte range (0x001FFFFF) unless it is over-long
+				result = true;
+			}
+		}
+		else if (kSequenceLength > 3)
+		{
+			if ((0xF0 == kBuffer[kStartIndex]) &&
+				(byteSequenceTotalValue(kBuffer, kStartIndex, 4) <= 0xFFFF))
+			{
+				// a sequence that starts with 0xF0 cannot decode to a value
+				// in the 3-byte range (0xFFFF) unless it is over-long
+				result = true;
+			}
+		}
+		else if (kSequenceLength > 2)
+		{
+			if ((0xE0 == kBuffer[kStartIndex]) &&
+				(byteSequenceTotalValue(kBuffer, kStartIndex, 3) <= 0x07FF))
+			{
+				// a sequence that starts with 0xE0 cannot decode to a value
+				// in the 2-byte range (0x07FF) unless it is over-long
+				result = true;
+			}
+		}
+	}
+	return result;
+}// My_UTF8StateMachine::isOverLong
+
+
+/*!
+Returns true only for bytes that are sufficient to describe
+entire UTF-8 code points by themselves (i.e. normal ASCII).
+
+(4.0)
+*/
+inline Boolean
+My_UTF8StateMachine::
+isSingleByteGlyph	(UInt8		inByte)
+{
+	return (inByte <= 0x7F);
+}// My_UTF8StateMachine::isSingleByteGlyph
+
+
+/*!
+Returns true only for bytes that must form the first (or
+perhaps only) byte of a code point in the UTF-8 encoding.
+
+(4.0)
+*/
+inline Boolean
+My_UTF8StateMachine::
+isStartingByte	(UInt8		inByte)
+{
+#if 1
+	// this should be logically equivalent to checking everything else
+	return (false == isContinuationByte(inByte));
+#else
+	// this is the paranoid form that should never be necessary given
+	// the actual definition of the bits in the encoding
+	return (isSingleByteGlyph(inByte) || isFirstOfTwo(inByte) || isFirstOfThree(inByte) ||
+			isFirstOfFour(inByte) || isFirstOfFive(inByte) || isFirstOfSix(inByte));
+#endif
+}// My_UTF8StateMachine::isStartingByte
+
+
+/*!
+Uses the current multi-byte decoder state and the given byte
+to transition to the next decoder state.  For example, if the
+decoder is currently expecting 3 continuation bytes and has
+received 2 already, a continuation byte in "inNextByte" will
+complete the sequence.
+
+If the given byte indicates an error condition, "outErrorCount"
+is greater than 0.  Note that this does NOT mean the given byte
+is itself bad; errors may occur for instance if the PREVIOUS
+sequence was not completed because the given byte is the start
+of a new sequence (possibly indicating that the previous one
+did not encounter enough bytes to be completed).  The caller
+should arrange to send an error character to the user once for
+EACH counted error, and prior to doing anything else as a
+result of the current byte.
+
+(4.0)
+*/
+void
+My_UTF8StateMachine::
+nextState	(UInt8		inNextByte,
+			 UInt32&	outErrorCount)
+{
+	// for debugging
+	//Console_WriteValue("UTF-8 original state", this->currentState);
+	//Console_WriteValue("UTF-8 byte", inNextByte);
+	
+	outErrorCount = 0; // initially...
+	
+	// automatically handle the starting bytes and continuation bytes of
+	// multi-byte sequences; the current decoder state is used as a guide
+	if (isSingleByteGlyph(inNextByte))
+	{
+		if (this->incompleteSequence())
+		{
+			++outErrorCount;
+			this->reset();
+		}
+		this->multiByteAccumulator.push_back(inNextByte); // should not strictly be necessary to copy this
+		this->currentState = kStateUTF8ValidSequence;
+	}
+	else if (isIllegalByte(inNextByte))
+	{
+		// a byte value that is never allowed in a valid UTF-8 sequence;
+		// note that this must be checked relatively early because other
+		// checks that follow examine just a few bits that could well be
+		// set for byte values in the illegal range
+		if (this->incompleteSequence())
+		{
+			++outErrorCount;
+			this->reset();
+		}
+		++outErrorCount; // yes, in this case 2 errors in a row are possible
+		this->reset();
+		this->currentState = kStateUTF8IllegalSequence;
+	}
+	else if (isFirstOfTwo(inNextByte))
+	{
+		// first byte in a sequence of 2
+		if (this->incompleteSequence())
+		{
+			++outErrorCount;
+			this->reset();
+		}
+		this->multiByteAccumulator.push_back(inNextByte);
+		this->currentState = kStateUTF8ExpectingTwo;
+	}
+	else if (isFirstOfThree(inNextByte))
+	{
+		// first byte in a sequence of 3
+		if (this->incompleteSequence())
+		{
+			++outErrorCount;
+			this->reset();
+		}
+		this->multiByteAccumulator.push_back(inNextByte);
+		this->currentState = kStateUTF8ExpectingThree;
+	}
+	else if (isFirstOfFour(inNextByte))
+	{
+		// first byte in a sequence of 4
+		if (this->incompleteSequence())
+		{
+			++outErrorCount;
+			this->reset();
+		}
+		this->multiByteAccumulator.push_back(inNextByte);
+		this->currentState = kStateUTF8ExpectingFour;
+	}
+	else if (isFirstOfFive(inNextByte))
+	{
+		// first byte in a sequence of 5
+		if (this->incompleteSequence())
+		{
+			++outErrorCount;
+			this->reset();
+		}
+		this->multiByteAccumulator.push_back(inNextByte);
+		this->currentState = kStateUTF8ExpectingFive;
+	}
+	else if (isFirstOfSix(inNextByte))
+	{
+		// first byte in a sequence of 6
+		if (this->incompleteSequence())
+		{
+			++outErrorCount;
+			this->reset();
+		}
+		this->multiByteAccumulator.push_back(inNextByte);
+		this->currentState = kStateUTF8ExpectingSix;
+	}
+	else if (isContinuationByte(inNextByte))
+	{
+		// continuation byte, possibly the final byte; the next state
+		// becomes the illegal state if there are now too many bytes,
+		// otherwise it flags a complete code point
+		Boolean		isIllegal = false;
+		size_t		endSize = 0;
+		
+		
+		this->multiByteAccumulator.push_back(inNextByte);
+		
+		switch (this->currentState)
+		{
+		case kStateUTF8ExpectingTwo:
+			endSize = 2;
+			break;
+		
+		case kStateUTF8ExpectingThree:
+			endSize = 3;
+			break;
+		
+		case kStateUTF8ExpectingFour:
+			endSize = 4;
+			break;
+		
+		case kStateUTF8ExpectingFive:
+			endSize = 5;
+			break;
+		
+		case kStateUTF8ExpectingSix:
+			endSize = 6;
+			break;
+		
+		default:
+			// ???
+			isIllegal = true;
+			break;
+		}
+		
+		// a multi-byte sequence is illegal if it has too many continuation
+		// bytes or it is “over-long” (e.g. by starting with 0xC0, or in
+		// some cases by starting with 0xE0 or 0xF0)
+		if ((false == isIllegal) && (0 != endSize))
+		{
+			isIllegal = ((this->multiByteAccumulator.size() > endSize) || this->isOverLong());
+		}
+		
+		if (isIllegal)
+		{
+			// previous sequence is now over-long
+			//Console_WriteValue("sequence is now over-long, byte count", this->multiByteAccumulator.size());
+			++outErrorCount;
+			this->reset();
+		}
+		else if (endSize == this->multiByteAccumulator.size())
+		{
+			// this is the normal case, the sequence is complete...but even here, if
+			// the composed code point is invalid (such as part of a surrogate pair
+			// belonging to a different Unicode encoding) it is an error anyway!
+			UnicodeScalarValue const	kCodePoint = byteSequenceTotalValue(this->multiByteAccumulator, 0/* start index */,
+																			this->multiByteAccumulator.size());
+			
+			
+			if ((kCodePoint >= 0x10FFFF)/* high range of illegal UTF-8 values */ ||
+				((kCodePoint >= 0xD800) && (kCodePoint <= 0xDFFF))/* surrogate halves used by UTF-16 */)
+			{
+				// a technically valid sequence of UTF-8 bytes, but it resolves to an illegal code point
+				this->currentState = kStateUTF8IllegalSequence;
+				++outErrorCount;
+				this->reset();
+			}
+			else
+			{
+				// the common case, hopefully...this multi-byte sequence is completely valid!
+				//Console_WriteValue("complete sequence, bytes", this->multiByteAccumulator.size());
+				this->currentState = kStateUTF8ValidSequence;
+			}
+		}
+		else
+		{
+			// no error yet; the sequence is not finished yet
+			//Console_WriteValue("incomplete sequence, bytes so far", this->multiByteAccumulator.size());
+		}
+	}
+	else
+	{
+		// ???
+	}
+	
+	// for debugging
+	//Console_WriteValue("                      UTF-8 next state", this->currentState);
+}// My_UTF8StateMachine::nextState
+
+
+/*!
 Translates the specified buffer into Unicode (from the input
 text encoding of the terminal), and echoes it to the screen.
 Also pipes the data to additional targets, such as spoken voice,
@@ -6501,15 +7437,12 @@ IMPORTANT:	Even if this routine can handle a sequence
 */
 UInt32
 My_DefaultEmulator::
-stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength,
+stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 					 My_ParserStatePair&	inNowOutNext,
 					 Boolean&				UNUSED_ARGUMENT(outInterrupt),
 					 Boolean&				UNUSED_ARGUMENT(outHandled))
 {
-	assert(inLength > 0);
-	UInt8 const				kTriggerChar = *inBuffer; // for convenience; usually only first character matters
+	UInt32 const			kTriggerChar = inEmulatorPtr->recentCodePoint(); // for convenience; usually only first character matters
 	// if no specific next state seems appropriate, the character will either
 	// be printed (if possible) or be re-evaluated from the initial state
 	My_ParserState const	kDefaultNextState = kMy_ParserStateAccumulateForEcho;
@@ -6677,7 +7610,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 				break;
 			
 			default:
-				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape", kTriggerChar);
+				//Console_Warning(Console_WriteValueUnicodePoint, "terminal received unknown character following escape", kTriggerChar);
 				inNowOutNext.second = kDefaultNextState;
 				result = 0; // do not absorb the unknown
 				break;
@@ -6843,7 +7776,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 			
 			default:
 				// more specific emulators should detect parameter terminators that they care about
-				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-[", kTriggerChar);
+				//Console_Warning(Console_WriteValueUnicodePoint, "terminal received unknown character following escape-[", kTriggerChar);
 				inNowOutNext.second = kDefaultNextState;
 				result = 0; // do not absorb the unknown
 				break;
@@ -6858,7 +7791,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 				break;
 			
 			default:
-				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-!", kTriggerChar);
+				//Console_Warning(Console_WriteValueUnicodePoint, "terminal received unknown character following escape-!", kTriggerChar);
 				inNowOutNext.second = kDefaultNextState;
 				result = 0; // do not absorb the unknown
 				break;
@@ -6945,7 +7878,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 				break;
 			
 			default:
-				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-*", kTriggerChar);
+				//Console_Warning(Console_WriteValueUnicodePoint, "terminal received unknown character following escape-*", kTriggerChar);
 				inNowOutNext.second = kDefaultNextState;
 				result = 0; // do not absorb the unknown
 				break;
@@ -7032,7 +7965,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 				break;
 			
 			default:
-				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-+", kTriggerChar);
+				//Console_Warning(Console_WriteValueUnicodePoint, "terminal received unknown character following escape-+", kTriggerChar);
 				inNowOutNext.second = kDefaultNextState;
 				result = 0; // do not absorb the unknown
 				break;
@@ -7119,7 +8052,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 				break;
 			
 			default:
-				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-(", kTriggerChar);
+				//Console_Warning(Console_WriteValueUnicodePoint, "terminal received unknown character following escape-(", kTriggerChar);
 				inNowOutNext.second = kDefaultNextState;
 				result = 0; // do not absorb the unknown
 				break;
@@ -7206,7 +8139,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 				break;
 			
 			default:
-				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-)", kTriggerChar);
+				//Console_Warning(Console_WriteValueUnicodePoint, "terminal received unknown character following escape-)", kTriggerChar);
 				inNowOutNext.second = kDefaultNextState;
 				result = 0; // do not absorb the unknown
 				break;
@@ -7337,7 +8270,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 				break;
 			
 			default:
-				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-#", kTriggerChar);
+				//Console_Warning(Console_WriteValueUnicodePoint, "terminal received unknown character following escape-#", kTriggerChar);
 				inNowOutNext.second = kDefaultNextState;
 				result = 0; // do not absorb the unknown
 				break;
@@ -7356,7 +8289,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 				break;
 			
 			default:
-				//Console_Warning(Console_WriteValueCharacter, "terminal received unknown character following escape-space", kTriggerChar);
+				//Console_Warning(Console_WriteValueUnicodePoint, "terminal received unknown character following escape-space", kTriggerChar);
 				inNowOutNext.second = kDefaultNextState;
 				result = 0; // do not absorb the unknown
 				break;
@@ -7365,7 +8298,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 		
 		default:
 			// unknown state!
-			//Console_Warning(Console_WriteValueCharacter, "terminal entered unknown state; choosing a valid state based on character", kTriggerChar);
+			//Console_Warning(Console_WriteValueUnicodePoint, "terminal entered unknown state; choosing a valid state based on character", kTriggerChar);
 			inNowOutNext.second = kDefaultNextState;
 			result = 0; // do not absorb the unknown
 			break;
@@ -7376,7 +8309,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 	// debug
 	//Console_WriteValueFourChars("    <<< default in state", inNowOutNext.first);
 	//Console_WriteValueFourChars(">>>     default proposes state", inNowOutNext.second);
-	//Console_WriteValueCharacter("        default bases this at least on character", *inBuffer);
+	//Console_WriteValueUnicodePoint("        default bases this at least on character", kTriggerChar);
 	
 	return result;
 }// My_DefaultEmulator::stateDeterminant
@@ -7392,8 +8325,6 @@ arguments.
 UInt32
 My_DefaultEmulator::
 stateTransition		(My_ScreenBufferPtr			UNUSED_ARGUMENT(inDataPtr),
-					 UInt8 const*				UNUSED_ARGUMENT(inBuffer),
-					 UInt32						UNUSED_ARGUMENT(inLength),
 					 My_ParserStatePair const&	inOldNew,
 					 Boolean&					UNUSED_ARGUMENT(outHandled))
 {
@@ -7518,13 +8449,10 @@ buffer.
 UInt32
 My_DumbTerminal::
 stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
-					 UInt8 const*			UNUSED_ARGUMENT(inBuffer),
-					 UInt32					inLength,
 					 My_ParserStatePair&	inNowOutNext,
 					 Boolean&				UNUSED_ARGUMENT(outInterrupt),
 					 Boolean&				UNUSED_ARGUMENT(outHandled))
 {
-	assert(inLength > 0);
 	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
 	
 	
@@ -7535,7 +8463,7 @@ stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 	// debug
 	//Console_WriteValueFourChars("    <<< dumb terminal in state", inNowOutNext.first);
 	//Console_WriteValueFourChars(">>>     dumb terminal proposes state", inNowOutNext.second);
-	//Console_WriteValueCharacter("        dumb terminal bases this at least on character", *inBuffer);
+	//Console_WriteValueUnicodePoint("        dumb terminal bases this at least on character", kTriggerChar);
 	
 	return result;
 }// My_DumbTerminal::stateDeterminant
@@ -7550,8 +8478,6 @@ to dumb terminal state changes.
 UInt32
 My_DumbTerminal::
 stateTransition		(My_ScreenBufferPtr			inDataPtr,
-					 UInt8 const*				inBuffer,
-					 UInt32						inLength,
 					 My_ParserStatePair const&	inOldNew,
 					 Boolean&					outHandled)
 {
@@ -7567,11 +8493,158 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// decide what to do based on the proposed transition
 	result = invokeEmulatorStateTransitionProc
-				(My_DefaultEmulator::stateTransition, inDataPtr, inBuffer, inLength,
+				(My_DefaultEmulator::stateTransition, inDataPtr,
 					inOldNew, outHandled);
 	
 	return result;
 }// My_DumbTerminal::stateTransition
+
+
+/*!
+A standard "My_EmulatorStateDeterminantProcPtr" that sets
+UTF-8-specific window states based on the characters of the
+given buffer.
+
+(4.0)
+*/
+UInt32
+My_UTF8Core::
+stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
+					 My_ParserStatePair&	UNUSED_ARGUMENT(inNowOutNext),
+					 Boolean&				UNUSED_ARGUMENT(outInterrupt),
+					 Boolean&				outHandled)
+{
+	//UInt32 const	kTriggerChar = inEmulatorPtr->recentCodePoint();
+	UInt32			result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	
+	
+	// WARNING: Do not call any other full emulator here!  This is a
+	//          pre-callback ONLY, which is designed to fall through
+	//          to something else (such as a VT100).
+	
+	outHandled = false;
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< UTF-8 handler in state", inNowOutNext.first);
+	//Console_WriteValueFourChars(">>>     UTF-8 handler proposes state", inNowOutNext.second);
+	//Console_WriteValueUnicodePoint("        UTF-8 handler bases this at least on character", kTriggerChar);
+	
+	return result;
+}// My_UTF8Core::stateDeterminant
+
+
+/*!
+A standard "My_EmulatorStateTransitionProcPtr" that responds to
+UTF-8-specific window state changes.
+
+(4.0)
+*/
+UInt32
+My_UTF8Core::
+stateTransition		(My_ScreenBufferPtr			inDataPtr,
+					 My_ParserStatePair const&	inOldNew,
+					 Boolean&					outHandled)
+{
+	UInt32		result = 0; // usually, no characters are consumed at the transition stage
+	
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< UTF-8 handler transition from state", inOldNew.first);
+	if (DebugInterface_LogsTerminalState())
+	{
+		Console_WriteValueFourChars(">>>     UTF-8 handler transition to state  ", inOldNew.second);
+	}
+	
+	// decide what to do based on the proposed transition; note that
+	// although certain UTF-8 state is maintained in the terminal as well,
+	// character set changes are in the domain of the Session and should
+	// only occur at that level (the Session API may then trigger changes
+	// in the terminal emulator state anyway)
+	// INCOMPLETE
+	switch (inOldNew.second)
+	{
+	case kStateUTF8Off:
+	case kStateUTF8OnUnspecifiedImpl:
+	case kStateToUTF8Level1:
+	case kStateToUTF8Level2:
+	case kStateToUTF8Level3:
+		// collect all of these states together so that the relatively-expensive
+		// lookup of translation configuration will occur when one of these
+		// states is actually entered
+		{
+			SessionRef				listeningSession = returnListeningSession(inDataPtr);
+			Preferences_ContextRef	translationConfig = Session_IsValid(listeningSession)
+														? Session_ReturnTranslationConfiguration(listeningSession)
+														: nullptr;
+			
+			
+			switch (inOldNew.second)
+			{
+			case kStateUTF8Off:
+				if ((false == inDataPtr->emulator.lockUTF8) && (nullptr != translationConfig))
+				{
+					(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingASCII/* arbitrary */, true/* copy only */);
+					inDataPtr->emulator.disableShifts = true;
+				}
+				break;
+			
+			case kStateUTF8OnUnspecifiedImpl:
+				if (nullptr != translationConfig)
+				{
+					(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingUTF8, true/* copy only */);
+					inDataPtr->emulator.disableShifts = true;
+				}
+				break;
+			
+			case kStateToUTF8Level1:
+				if (nullptr != translationConfig)
+				{
+					(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingUTF8, true/* copy only */);
+					inDataPtr->emulator.disableShifts = true;
+				}
+				inDataPtr->emulator.lockUTF8 = true;
+				// INCOMPLETE
+				break;
+			
+			case kStateToUTF8Level2:
+				if (nullptr != translationConfig)
+				{
+					(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingUTF8, true/* copy only */);
+					inDataPtr->emulator.disableShifts = true;
+				}
+				inDataPtr->emulator.lockUTF8 = true;
+				// INCOMPLETE
+				break;
+			
+			case kStateToUTF8Level3:
+				if (nullptr != translationConfig)
+				{
+					(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingUTF8, true/* copy only */);
+					inDataPtr->emulator.disableShifts = true;
+				}
+				inDataPtr->emulator.lockUTF8 = true;
+				// INCOMPLETE
+				break;
+			
+			default:
+				assert(false); // this should be impossible to reach
+				break;
+			}
+		}
+		break;
+	
+	default:
+		// other state transitions are not handled at all
+		outHandled = false;
+		break;
+	}
+	
+	// WARNING: Do not call any other full emulator here!  This is a
+	//          pre-callback ONLY, which is designed to fall through
+	//          to something else (such as a VT100).
+	
+	return result;
+}// My_UTF8Core::stateTransition
 
 
 /*!
@@ -8204,9 +9277,9 @@ NOTE:	This is the VT100 version, and later emulators will
 */
 My_ParserState
 My_VT100::
-returnCSINextState		(My_ParserState		inPreviousState,
-						 UInt8				inByte,
-						 Boolean&			outHandled)
+returnCSINextState		(My_ParserState			inPreviousState,
+						 UnicodeScalarValue		inCodePoint,
+						 Boolean&				outHandled)
 {
 	My_ParserState		result = inPreviousState;
 	
@@ -8219,7 +9292,7 @@ returnCSINextState		(My_ParserState		inPreviousState,
 	// only characters recognized by a VT100 should be here); higher
 	// terminals such as the VT102 check only their exclusive cases and
 	// fall back on the VT100 as needed
-	switch (inByte)
+	switch (inCodePoint)
 	{
 	case '0':
 		result = kStateCSIParamDigit0;
@@ -8364,7 +9437,7 @@ returnCSINextState		(My_ParserState		inPreviousState,
 	// debug
 	//Console_WriteValueFourChars("    <<< VT100 in parameter state", inPreviousState);
 	//Console_WriteValueFourChars(">>>     VT100 proposes parameter state", result);
-	//Console_WriteValueCharacter("        VT100 bases this at least on character", inByte);
+	//Console_WriteValueUnicodePoint("        VT100 bases this at least on character", inCodePoint);
 	
 	return result;
 }// My_VT100::returnCSINextState
@@ -8452,15 +9525,13 @@ buffer.
 UInt32
 My_VT100::
 stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength,
 					 My_ParserStatePair&	inNowOutNext,
 					 Boolean&				outInterrupt,
 					 Boolean&				outHandled)
 {
-	assert(inLength > 0);
-	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
-	Boolean		isEightBitControl = false;
+	UInt32 const	kTriggerChar = inEmulatorPtr->recentCodePoint();
+	UInt32			result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	Boolean			isEightBitControl = false;
 	
 	
 	// all control characters are interrupt-class: they should
@@ -8472,7 +9543,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	// see if the given character is a control character; if so,
 	// it will not contribute to the current sequence and may
 	// even reset the parser
-	switch (*inBuffer)
+	switch (kTriggerChar)
 	{
 	case '\000':
 		// ignore this character for the purposes of sequencing
@@ -8543,11 +9614,11 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	
 	default:
 		outInterrupt = false;
-		if (inEmulatorPtr->is8BitReceiver())
+		if ((inEmulatorPtr->is8BitReceiver()) && (0 == (kTriggerChar & 0xFFFFFF00)))
 		{
 			// in 8-bit receive mode, single bytes in a certain range are
 			// equivalent to an ESC followed by some 7-bit character
-			SInt16		secondSevenBitChar = (*inBuffer - 0x40);
+			SInt16		secondSevenBitChar = (STATIC_CAST(kTriggerChar, UInt8) - 0x40);
 			
 			
 			if ((secondSevenBitChar >= 0x40/* @ */) && (secondSevenBitChar <= 0x5F/* _ */))
@@ -8582,7 +9653,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		case kStateCSIParamDigit9:
 		case kStateCSIParameterEnd:
 		case kStateCSIPrivate:
-			inNowOutNext.second = My_VT100::returnCSINextState(inNowOutNext.first, *inBuffer, outHandled);
+			inNowOutNext.second = My_VT100::returnCSINextState(inNowOutNext.first, kTriggerChar, outHandled);
 			break;
 		
 		default:
@@ -8609,14 +9680,14 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	if ((false == outHandled) && (false == isEightBitControl))
 	{
 		result = invokeEmulatorStateDeterminantProc
-					(My_DefaultEmulator::stateDeterminant, inEmulatorPtr, inBuffer, inLength,
+					(My_DefaultEmulator::stateDeterminant, inEmulatorPtr,
 						inNowOutNext, outInterrupt, outHandled);
 	}
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT100 in state", inNowOutNext.first);
 	//Console_WriteValueFourChars(">>>     VT100 proposes state", inNowOutNext.second);
-	//Console_WriteValueCharacter("        VT100 bases this at least on character", *inBuffer);
+	//Console_WriteValueUnicodePoint("        VT100 bases this at least on character", kTriggerChar);
 	
 	return result;
 }// My_VT100::stateDeterminant
@@ -8642,8 +9713,6 @@ IMPORTANT:	This emulator should ONLY be called when the
 UInt32
 My_VT100::
 stateTransition		(My_ScreenBufferPtr			inDataPtr,
-					 UInt8 const*				inBuffer,
-					 UInt32						inLength,
 					 My_ParserStatePair const&	inOldNew,
 					 Boolean&					outHandled)
 {
@@ -8695,7 +9764,12 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateControlHT:
 		// horizontal tab
 		moveCursorRightToNextTabStop(inDataPtr);
-		StreamCapture_WriteUTF8Data(inDataPtr->captureStream, inBuffer, 1);
+		{
+			UInt8 const		kTabChar = 0x09;
+			
+			
+			StreamCapture_WriteUTF8Data(inDataPtr->captureStream, &kTabChar, 1);
+		}
 		break;
 	
 	case kStateControlLFVTFF:
@@ -8721,7 +9795,12 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			moveCursorDownOrScroll(inDataPtr);
 		}
 	#endif
-		StreamCapture_WriteUTF8Data(inDataPtr->captureStream, inBuffer, 1);
+		{
+			UInt8 const		kReturnChar = 0x0D;
+			
+			
+			StreamCapture_WriteUTF8Data(inDataPtr->captureStream, &kReturnChar, 1);
+		}
 		break;
 	
 	case kStateControlSO:
@@ -9048,8 +10127,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateSCSG0UK:
 	case kStateSCSG1UK:
+		// U.K. character set, normal ROM, no graphics
+		if (false == inDataPtr->emulator.disableShifts)
 		{
-			// U.K. character set, normal ROM, no graphics
 			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
 			
 			
@@ -9063,8 +10143,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateSCSG0ASCII:
 	case kStateSCSG1ASCII:
+		// U.S. character set, normal ROM, no graphics
+		if (false == inDataPtr->emulator.disableShifts)
 		{
-			// U.S. character set, normal ROM, no graphics
 			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
 			
 			
@@ -9078,8 +10159,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateSCSG0SG:
 	case kStateSCSG1SG:
+		// normal ROM, graphics mode
+		if (false == inDataPtr->emulator.disableShifts)
 		{
-			// normal ROM, graphics mode
 			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
 			
 			
@@ -9092,8 +10174,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateSCSG0ACRStd:
 	case kStateSCSG1ACRStd:
+		// alternate ROM, no graphics
+		if (false == inDataPtr->emulator.disableShifts)
 		{
-			// alternate ROM, no graphics
 			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
 			
 			
@@ -9106,8 +10189,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateSCSG0ACRSG:
 	case kStateSCSG1ACRSG:
+		// normal ROM, graphics mode
+		if (false == inDataPtr->emulator.disableShifts)
 		{
-			// normal ROM, graphics mode
 			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
 			
 			
@@ -9284,7 +10368,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	if (false == outHandled)
 	{
 		result = invokeEmulatorStateTransitionProc
-					(My_DefaultEmulator::stateTransition, inDataPtr, inBuffer, inLength,
+					(My_DefaultEmulator::stateTransition, inDataPtr,
 						inOldNew, outHandled);
 	}
 	
@@ -9413,20 +10497,18 @@ buffer.
 UInt32
 My_VT100::VT52::
 stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength,
 					 My_ParserStatePair&	inNowOutNext,
 					 Boolean&				outInterrupt,
 					 Boolean&				outHandled)
 {
-	assert(inLength > 0);
-	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	UInt32 const	kTriggerChar = inEmulatorPtr->recentCodePoint();
+	UInt32			result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
 	
 	
 	switch (inNowOutNext.first)
 	{
 	case kMy_ParserStateSeenESC:
-		switch (*inBuffer)
+		switch (kTriggerChar)
 		{
 		case 'A':
 			inNowOutNext.second = kMy_ParserStateSeenESCA;
@@ -9492,7 +10574,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			// this is unexpected data; choose a new state
 			if (DebugInterface_LogsTerminalInputChar())
 			{
-				Console_Warning(Console_WriteValueCharacter, "VT52 did not expect an ESC to be followed by character", *inBuffer);
+				Console_Warning(Console_WriteValueUnicodePoint, "VT52 did not expect an ESC to be followed by character", kTriggerChar);
 			}
 			outHandled = false;
 			break;
@@ -9519,14 +10601,14 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	if (false == outHandled)
 	{
 		result = invokeEmulatorStateDeterminantProc
-					(My_VT100::stateDeterminant, inEmulatorPtr, inBuffer, inLength,
+					(My_VT100::stateDeterminant, inEmulatorPtr,
 						inNowOutNext, outInterrupt, outHandled);
 	}
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT100 in VT52 mode in state", inNowOutNext.first);
 	//Console_WriteValueFourChars(">>>     VT100 in VT52 mode proposes state", inNowOutNext.second);
-	//Console_WriteValueCharacter("        VT100 in VT52 mode bases this at least on character", *inBuffer);
+	//Console_WriteValueUnicodePoint("        VT100 in VT52 mode bases this at least on character", kTriggerChar);
 	
 	return result;
 }// My_VT100::VT52::stateDeterminant
@@ -9541,8 +10623,6 @@ responds to VT100-specific (VT52 mode) state changes.
 UInt32
 My_VT100::VT52::
 stateTransition		(My_ScreenBufferPtr			inDataPtr,
-					 UInt8 const*				inBuffer,
-					 UInt32						inLength,
 					 My_ParserStatePair const&	inOldNew,
 					 Boolean&					outHandled)
 {
@@ -9614,7 +10694,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			My_ScreenRowIndex	newY = 0;
 			
 			
-			newY = *inBuffer - 32/* - 31 - 1 to convert from one-based to zero-based */;
+			newY = inDataPtr->emulator.recentCodePoint() - 32/* - 31 - 1 to convert from one-based to zero-based */;
 			++result;
 			
 			// constrain the value and then change it safely
@@ -9633,7 +10713,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			SInt16		newX = 0;
 			
 			
-			newX = *inBuffer - 32/* - 31 - 1 to convert from one-based to zero-based */;
+			newX = inDataPtr->emulator.recentCodePoint() - 32/* - 31 - 1 to convert from one-based to zero-based */;
 			++result;
 			
 			// constrain the value and then change it safely
@@ -9678,7 +10758,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	if (false == outHandled)
 	{
 		result = invokeEmulatorStateTransitionProc
-					(My_VT100::stateTransition, inDataPtr, inBuffer, inLength,
+					(My_VT100::stateTransition, inDataPtr,
 						inOldNew, outHandled);
 	}
 	
@@ -9863,9 +10943,9 @@ this routine was created to simplify maintenance.
 */
 My_ParserState
 My_VT102::
-returnCSINextState		(My_ParserState		inPreviousState,
-						 UInt8				inByte,
-						 Boolean&			outHandled)
+returnCSINextState		(My_ParserState			inPreviousState,
+						 UnicodeScalarValue		inCodePoint,
+						 Boolean&				outHandled)
 {
 	My_ParserState		result = inPreviousState;
 	
@@ -9875,7 +10955,7 @@ returnCSINextState		(My_ParserState		inPreviousState,
 	// there should be an entry here for each parameter list terminator that is
 	// valid AT LEAST in a VT102 terminal; any that are also valid in lesser
 	// terminals can be omitted, since they will be handled in the VT100 fallback
-	switch (inByte)
+	switch (inCodePoint)
 	{
 	case 'i':
 		result = kMy_ParserStateSeenESCLeftSqBracketParamsi;
@@ -9901,13 +10981,13 @@ returnCSINextState		(My_ParserState		inPreviousState,
 	if (false == outHandled)
 	{
 		// fall back to VT100
-		result = My_VT100::returnCSINextState(inPreviousState, inByte, outHandled);
+		result = My_VT100::returnCSINextState(inPreviousState, inCodePoint, outHandled);
 	}
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT102 in parameter state", inPreviousState);
 	//Console_WriteValueFourChars(">>>     VT102 proposes parameter state", result);
-	//Console_WriteValueCharacter("        VT102 bases this at least on character", inByte);
+	//Console_WriteValueUnicodePoint("        VT102 bases this at least on character", inCodePoint);
 	
 	return result;
 }// My_VT102::returnCSINextState
@@ -9926,14 +11006,12 @@ of state analysis is done by the VT100 routine.
 UInt32
 My_VT102::
 stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength,
 					 My_ParserStatePair&	inNowOutNext,
 					 Boolean&				outInterrupt,
 					 Boolean&				outHandled)
 {
-	assert(inLength > 0);
-	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	UInt32 const	kTriggerChar = inEmulatorPtr->recentCodePoint();
+	UInt32			result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
 	
 	
 	// first handle various parameter states
@@ -9952,7 +11030,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	case My_VT100::kStateCSIParamDigit9:
 	case My_VT100::kStateCSIParameterEnd:
 	case My_VT100::kStateCSIPrivate:
-		inNowOutNext.second = My_VT102::returnCSINextState(inNowOutNext.first, *inBuffer, outHandled);
+		inNowOutNext.second = My_VT102::returnCSINextState(inNowOutNext.first, kTriggerChar, outHandled);
 		break;
 	
 	default:
@@ -9978,14 +11056,14 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	if (false == outHandled)
 	{
 		result = invokeEmulatorStateDeterminantProc
-					(My_VT100::stateDeterminant, inEmulatorPtr, inBuffer, inLength,
+					(My_VT100::stateDeterminant, inEmulatorPtr,
 						inNowOutNext, outInterrupt, outHandled);
 	}
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT102 in state", inNowOutNext.first);
 	//Console_WriteValueFourChars(">>>     VT102 proposes state", inNowOutNext.second);
-	//Console_WriteValueCharacter("        VT102 bases this at least on character", *inBuffer);
+	//Console_WriteValueUnicodePoint("        VT102 bases this at least on character", kTriggerChar);
 	
 	return result;
 }// My_VT102::stateDeterminant
@@ -10000,8 +11078,6 @@ responds to VT102-specific state changes.
 UInt32
 My_VT102::
 stateTransition		(My_ScreenBufferPtr			inDataPtr,
-					 UInt8 const*				inBuffer,
-					 UInt32						inLength,
 					 My_ParserStatePair const&	inOldNew,
 					 Boolean&					outHandled)
 {
@@ -10151,7 +11227,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	if (false == outHandled)
 	{
 		result = invokeEmulatorStateTransitionProc
-					(My_VT100::stateTransition, inDataPtr, inBuffer, inLength,
+					(My_VT100::stateTransition, inDataPtr,
 						inOldNew, outHandled);
 	}
 	
@@ -10475,9 +11551,9 @@ this routine was created to simplify maintenance.
 */
 My_ParserState
 My_VT220::
-returnCSINextState		(My_ParserState		inPreviousState,
-						 UInt8				inByte,
-						 Boolean&			outHandled)
+returnCSINextState		(My_ParserState			inPreviousState,
+						 UnicodeScalarValue		inCodePoint,
+						 Boolean&				outHandled)
 {
 	My_ParserState		result = inPreviousState;
 	
@@ -10487,7 +11563,7 @@ returnCSINextState		(My_ParserState		inPreviousState,
 	if (kMy_ParserStateSeenESCLeftSqBracketParamsQuotes == inPreviousState)
 	{
 		// the weird double-terminator case ("p) is handled by using two states
-		switch (inByte)
+		switch (inCodePoint)
 		{
 		case 'p':
 			result = kStateDECSCL;
@@ -10507,7 +11583,7 @@ returnCSINextState		(My_ParserState		inPreviousState,
 		// there should be an entry here for each parameter list terminator that is
 		// valid AT LEAST in a VT220 terminal; any that are also valid in lesser
 		// terminals can be omitted, since they will be handled in the VT102 fallback
-		switch (inByte)
+		switch (inCodePoint)
 		{
 		case 'X':
 			result = kMy_ParserStateSeenESCLeftSqBracketParamsX;
@@ -10543,13 +11619,13 @@ returnCSINextState		(My_ParserState		inPreviousState,
 	if (false == outHandled)
 	{
 		// fall back to VT102
-		result = My_VT102::returnCSINextState(inPreviousState, inByte, outHandled);
+		result = My_VT102::returnCSINextState(inPreviousState, inCodePoint, outHandled);
 	}
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT220 in parameter state", inPreviousState);
 	//Console_WriteValueFourChars(">>>     VT220 proposes parameter state", result);
-	//Console_WriteValueCharacter("        VT220 bases this at least on character", inByte);
+	//Console_WriteValueUnicodePoint("        VT220 bases this at least on character", inCodePoint);
 	
 	return result;
 }// My_VT220::returnCSINextState
@@ -10714,14 +11790,12 @@ buffer.
 UInt32
 My_VT220::
 stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength,
 					 My_ParserStatePair&	inNowOutNext,
 					 Boolean&				outInterrupt,
 					 Boolean&				outHandled)
 {
-	assert(inLength > 0);
-	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	UInt32 const	kTriggerChar = inEmulatorPtr->recentCodePoint();
+	UInt32			result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
 	
 	
 	// first handle various parameter states
@@ -10742,7 +11816,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	case My_VT100::kStateCSIPrivate:
 	case kMy_ParserStateSeenESCLeftSqBracketParamsQuotes:
 	case kStateCSISecondaryDA:
-		inNowOutNext.second = My_VT220::returnCSINextState(inNowOutNext.first, *inBuffer, outHandled);
+		inNowOutNext.second = My_VT220::returnCSINextState(inNowOutNext.first, kTriggerChar, outHandled);
 		break;
 	
 	default:
@@ -10768,14 +11842,14 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	if (false == outHandled)
 	{
 		result = invokeEmulatorStateDeterminantProc
-					(My_VT102::stateDeterminant, inEmulatorPtr, inBuffer, inLength, inNowOutNext,
+					(My_VT102::stateDeterminant, inEmulatorPtr, inNowOutNext,
 						outInterrupt, outHandled);
 	}
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT220 in state", inNowOutNext.first);
 	//Console_WriteValueFourChars(">>>     VT220 proposes state", inNowOutNext.second);
-	//Console_WriteValueCharacter("        VT220 bases this at least on character", *inBuffer);
+	//Console_WriteValueUnicodePoint("        VT220 bases this at least on character", kTriggerChar);
 	
 	return result;
 }// My_VT220::stateDeterminant
@@ -10790,8 +11864,6 @@ responds to VT220-specific state changes.
 UInt32
 My_VT220::
 stateTransition		(My_ScreenBufferPtr			inDataPtr,
-					 UInt8 const*				inBuffer,
-					 UInt32						inLength,
 					 My_ParserStatePair const&	inOldNew,
 					 Boolean&					outHandled)
 {
@@ -10972,45 +12044,62 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateLS1R:
-		Console_Warning(Console_WriteLine, "request for VT220 to lock shift G1 right side, which is unsupported");
+		if (false == inDataPtr->emulator.disableShifts)
+		{
+			Console_Warning(Console_WriteLine, "request for VT220 to lock shift G1 right side, which is unsupported");
+		}
 		break;
 	
 	case kStateLS2:
 		// lock shift (left) the G2 setting
-		inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG2;
-		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
+		if (false == inDataPtr->emulator.disableShifts)
 		{
-			// set attribute
-			STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
-		}
-		else
-		{
-			// clear attribute
-			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+			inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG2;
+			if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
+			{
+				// set attribute
+				STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+			}
+			else
+			{
+				// clear attribute
+				STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+			}
 		}
 		break;
 	
 	case kStateLS2R:
-		Console_Warning(Console_WriteLine, "request for VT220 to lock shift G2 right side, which is unsupported");
+		// lock shift (left) the G2 setting, but for the “right” (requiring 8 bits) code section
+		if (false == inDataPtr->emulator.disableShifts)
+		{
+			Console_Warning(Console_WriteLine, "request for VT220 to lock shift G2 right side, which is unsupported");
+		}
 		break;
 	
 	case kStateLS3:
 		// lock shift (left) the G3 setting
-		inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG3;
-		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
+		if (false == inDataPtr->emulator.disableShifts)
 		{
-			// set attribute
-			STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
-		}
-		else
-		{
-			// clear attribute
-			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+			inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG3;
+			if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
+			{
+				// set attribute
+				STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+			}
+			else
+			{
+				// clear attribute
+				STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
+			}
 		}
 		break;
 	
 	case kStateLS3R:
-		Console_Warning(Console_WriteLine, "request for VT220 to lock shift G3 right side, which is unsupported");
+		// lock shift (left) the G3 setting, but for the “right” (requiring 8 bits) code section
+		if (false == inDataPtr->emulator.disableShifts)
+		{
+			Console_Warning(Console_WriteLine, "request for VT220 to lock shift G3 right side, which is unsupported");
+		}
 		break;
 	
 	case kStateS7C1T:
@@ -11035,7 +12124,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateSCSG0Swedish1:
 	case kStateSCSG0Swedish2:
 	case kStateSCSG0Swiss:
-		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G0 character set", inOldNew.second);
+		if (false == inDataPtr->emulator.disableShifts)
+		{
+			Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G0 character set", inOldNew.second);
+		}
 		break;
 	
 	case kStateSCSG1DECSupplemental:
@@ -11052,11 +12144,15 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateSCSG1Swedish1:
 	case kStateSCSG1Swedish2:
 	case kStateSCSG1Swiss:
-		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G1 character set", inOldNew.second);
+		if (false == inDataPtr->emulator.disableShifts)
+		{
+			Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G1 character set", inOldNew.second);
+		}
 		break;
 	
 	case kStateSCSG2UK:
 	case kStateSCSG3UK:
+		if (false == inDataPtr->emulator.disableShifts)
 		{
 			// U.K. character set, normal ROM, no graphics
 			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG2;
@@ -11072,6 +12168,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateSCSG2ASCII:
 	case kStateSCSG3ASCII:
+		if (false == inDataPtr->emulator.disableShifts)
 		{
 			// U.S. character set, normal ROM, no graphics
 			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG2;
@@ -11087,6 +12184,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	case kStateSCSG2SG:
 	case kStateSCSG3SG:
+		if (false == inDataPtr->emulator.disableShifts)
 		{
 			// normal ROM, graphics mode
 			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG2;
@@ -11113,7 +12211,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateSCSG2Swedish1:
 	case kStateSCSG2Swedish2:
 	case kStateSCSG2Swiss:
-		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G2 character set", inOldNew.second);
+		if (false == inDataPtr->emulator.disableShifts)
+		{
+			Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G2 character set", inOldNew.second);
+		}
 		break;
 	
 	case kStateSCSG3DECSupplemental:
@@ -11130,7 +12231,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateSCSG3Swedish1:
 	case kStateSCSG3Swedish2:
 	case kStateSCSG3Swiss:
-		Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G3 character set", inOldNew.second);
+		if (false == inDataPtr->emulator.disableShifts)
+		{
+			Console_Warning(Console_WriteValueFourChars, "request for VT220 to use unsupported G3 character set", inOldNew.second);
+		}
 		break;
 	
 	default:
@@ -11142,7 +12246,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	{
 		// other state transitions should still basically be handled as if in VT100
 		result = invokeEmulatorStateTransitionProc
-					(My_VT102::stateTransition, inDataPtr, inBuffer, inLength,
+					(My_VT102::stateTransition, inDataPtr,
 						inOldNew, outHandled);
 	}
 	
@@ -11372,9 +12476,9 @@ this routine was created to simplify maintenance.
 */
 My_ParserState
 My_XTerm::
-returnCSINextState		(My_ParserState		inPreviousState,
-						 UInt8				inByte,
-						 Boolean&			outHandled)
+returnCSINextState		(My_ParserState			inPreviousState,
+						 UnicodeScalarValue		inCodePoint,
+						 Boolean&				outHandled)
 {
 	My_ParserState		result = inPreviousState;
 	
@@ -11384,7 +12488,7 @@ returnCSINextState		(My_ParserState		inPreviousState,
 	// there should be an entry here for each parameter list terminator that is
 	// valid AT LEAST in an XTerm terminal; any that are also valid in lesser
 	// terminals can be omitted, since they will be handled in the VT220 fallback
-	switch (inByte)
+	switch (inCodePoint)
 	{
 	case 'd':
 		result = kMy_ParserStateSeenESCLeftSqBracketParamsd;
@@ -11443,13 +12547,13 @@ returnCSINextState		(My_ParserState		inPreviousState,
 	if (false == outHandled)
 	{
 		// fall back to VT220
-		result = My_VT220::returnCSINextState(inPreviousState, inByte, outHandled);
+		result = My_VT220::returnCSINextState(inPreviousState, inCodePoint, outHandled);
 	}
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< XTerm in parameter state", inPreviousState);
 	//Console_WriteValueFourChars(">>>     XTerm proposes parameter state", result);
-	//Console_WriteValueCharacter("        XTerm bases this at least on character", inByte);
+	//Console_WriteValueUnicodePoint("        XTerm bases this at least on character", inCodePoint);
 	
 	return result;
 }// My_XTerm::returnCSINextState
@@ -11523,14 +12627,12 @@ given buffer.
 UInt32
 My_XTerm::
 stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength,
 					 My_ParserStatePair&	inNowOutNext,
 					 Boolean&				outInterrupt,
 					 Boolean&				outHandled)
 {
-	assert(inLength > 0);
-	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	UInt32 const	kTriggerChar = inEmulatorPtr->recentCodePoint();
+	UInt32			result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
 	
 	
 	// first handle various parameter states
@@ -11551,7 +12653,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	case My_VT100::kStateCSIPrivate:
 	case My_VT220::kStateCSISecondaryDA:
 	case kStateCSITertiaryDA:
-		inNowOutNext.second = My_XTerm::returnCSINextState(inNowOutNext.first, *inBuffer, outHandled);
+		inNowOutNext.second = My_XTerm::returnCSINextState(inNowOutNext.first, kTriggerChar, outHandled);
 		break;
 	
 	default:
@@ -11570,7 +12672,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			// note that the core IS NOT a complete emulator, which is why this routine falls
 			// back to a proper VT220 at the end instead of falling back to the core exclusively
 			result = invokeEmulatorStateDeterminantProc
-						(My_XTermCore::stateDeterminant, inEmulatorPtr, inBuffer, inLength, inNowOutNext,
+						(My_XTermCore::stateDeterminant, inEmulatorPtr, inNowOutNext,
 							outInterrupt, outHandled);
 			break;
 		}
@@ -11579,14 +12681,14 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	if (false == outHandled)
 	{
 		result = invokeEmulatorStateDeterminantProc
-					(My_VT220::stateDeterminant, inEmulatorPtr, inBuffer, inLength, inNowOutNext,
+					(My_VT220::stateDeterminant, inEmulatorPtr, inNowOutNext,
 						outInterrupt, outHandled);
 	}
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< XTerm in state", inNowOutNext.first);
 	//Console_WriteValueFourChars(">>>     XTerm proposes state", inNowOutNext.second);
-	//Console_WriteValueCharacter("        XTerm bases this at least on character", *inBuffer);
+	//Console_WriteValueUnicodePoint("        XTerm bases this at least on character", kTriggerChar);
 	
 	return result;
 }// My_XTerm::stateDeterminant
@@ -11601,8 +12703,6 @@ XTerm-specific window state changes.
 UInt32
 My_XTerm::
 stateTransition		(My_ScreenBufferPtr			inDataPtr,
-					 UInt8 const*				inBuffer,
-					 UInt32						inLength,
 					 My_ParserStatePair const&	inOldNew,
 					 Boolean&					outHandled)
 {
@@ -11667,7 +12767,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		// note that the core IS NOT a complete emulator, which is why this routine falls
 		// back to a proper VT220 at the end instead of falling back to the core exclusively
 		result = invokeEmulatorStateTransitionProc
-					(My_XTermCore::stateTransition, inDataPtr, inBuffer, inLength,
+					(My_XTermCore::stateTransition, inDataPtr,
 						inOldNew, outHandled);
 		break;
 	}
@@ -11676,7 +12776,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	{
 		// other state transitions should still basically be handled as if in VT100
 		result = invokeEmulatorStateTransitionProc
-					(My_VT220::stateTransition, inDataPtr, inBuffer, inLength,
+					(My_VT220::stateTransition, inDataPtr,
 						inOldNew, outHandled);
 	}
 	
@@ -11749,14 +12849,11 @@ given buffer.
 UInt32
 My_XTermCore::
 stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength,
 					 My_ParserStatePair&	inNowOutNext,
 					 Boolean&				UNUSED_ARGUMENT(outInterrupt),
 					 Boolean&				outHandled)
 {
-	assert(inLength > 0);
-	UInt8 const		kTriggerChar = *inBuffer; // for convenience; usually only first character matters
+	UInt32 const	kTriggerChar = inEmulatorPtr->recentCodePoint();
 	UInt32			result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
 	
 	
@@ -11892,7 +12989,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	// debug
 	//Console_WriteValueFourChars("    <<< XTerm in state", inNowOutNext.first);
 	//Console_WriteValueFourChars(">>>     XTerm proposes state", inNowOutNext.second);
-	//Console_WriteValueCharacter("        XTerm bases this at least on character", *inBuffer);
+	//Console_WriteValueUnicodePoint("        XTerm bases this at least on character", kTriggerChar);
 	
 	return result;
 }// My_XTermCore::stateDeterminant
@@ -11907,8 +13004,6 @@ XTerm-specific window state changes.
 UInt32
 My_XTermCore::
 stateTransition		(My_ScreenBufferPtr			inDataPtr,
-					 UInt8 const*				inBuffer,
-					 UInt32						UNUSED_ARGUMENT(inLength),
 					 My_ParserStatePair const&	inOldNew,
 					 Boolean&					outHandled)
 {
@@ -11938,8 +13033,26 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateSITAcquireStr:
 	case kStateSWTAcquireStr:
 	case kStateColorAcquireStr:
-		inDataPtr->emulator.stringAccumulator += *inBuffer;
-		result = 1;
+		// upon first entry to the state, ignore the code point (semicolon)
+		// that caused the state to be selected; only accumulate code points
+		// that occurred while the previous state was also accumulating
+		if (inOldNew.first == inOldNew.second)
+		{
+			if (inDataPtr->emulator.isUTF8Encoding)
+			{
+				if (My_UTF8StateMachine::kStateUTF8ValidSequence == inDataPtr->emulator.multiByteDecoder.returnState())
+				{
+					std::copy(inDataPtr->emulator.multiByteDecoder.multiByteAccumulator.begin(),
+								inDataPtr->emulator.multiByteDecoder.multiByteAccumulator.end(),
+								std::back_inserter(inDataPtr->emulator.stringAccumulator));
+					result = 1;
+				}
+			}
+			else
+			{
+				inDataPtr->emulator.stringAccumulator.push_back(STATIC_CAST(inDataPtr->emulator.recentCodePoint(), UInt8));
+			}
+		}
 		break;
 	
 	case kStateStringTerminator:
@@ -15344,6 +16457,9 @@ resetTerminal   (My_ScreenBufferPtr		inDataPtr,
 	inDataPtr->current.latentAttributes = kNoTerminalTextAttributes;
 	inDataPtr->modeInsertNotReplace = false;
 	inDataPtr->modeNewLineOption = false;
+	inDataPtr->emulator.isUTF8Encoding = (kCFStringEncodingUTF8 == inDataPtr->emulator.inputTextEncoding);
+	inDataPtr->emulator.lockUTF8 = false;
+	inDataPtr->emulator.disableShifts = false;
 	inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG0;
 	inDataPtr->printingModes = 0;
 	inDataPtr->printingEnd();

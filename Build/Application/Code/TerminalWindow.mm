@@ -6987,11 +6987,9 @@ void
 setViewFormatPreferences	(My_TerminalWindowPtr		inPtr,
 							 Preferences_ContextRef		inContext)
 {
-	TerminalViewRef		activeView = getActiveView(inPtr);
-	
-	
-	if (nullptr != activeView)
+	if (false == inPtr->allViews.empty())
 	{
+		TerminalViewRef				activeView = getActiveView(inPtr);
 		TerminalView_DisplayMode	oldMode = kTerminalView_DisplayModeNormal;
 		TerminalView_Result			viewResult = kTerminalView_ResultOK;
 		Preferences_TagSetRef		tagSet = PrefPanelFormats_NewTagSet();
@@ -7056,11 +7054,9 @@ void
 setViewTranslationPreferences	(My_TerminalWindowPtr		inPtr,
 								 Preferences_ContextRef		inContext)
 {
-	TerminalViewRef		activeView = getActiveView(inPtr);
-	
-	
-	if (nullptr != activeView)
+	if (false == inPtr->allViews.empty())
 	{
+		TerminalViewRef				activeView = getActiveView(inPtr);
 		Preferences_TagSetRef		tagSet = PrefPanelTranslations_NewTagSet();
 		Preferences_Result			prefsResult = kPreferences_ResultOK;
 		
@@ -7156,13 +7152,11 @@ setWindowToIdealSizeForDimensions	(My_TerminalWindowPtr	inPtr,
 									 UInt16					inColumns,
 									 UInt16					inRows)
 {
-	TerminalViewRef		activeView = getActiveView(inPtr);
-	
-	
-	if (nullptr != activeView)
+	if (false == inPtr->allViews.empty())
 	{
-		SInt16		screenWidth = 0;
-		SInt16		screenHeight = 0;
+		TerminalViewRef		activeView = getActiveView(inPtr);
+		SInt16				screenWidth = 0;
+		SInt16				screenHeight = 0;
 		
 		
 		TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
@@ -7182,13 +7176,11 @@ and font size of the view.
 void
 setWindowToIdealSizeForFont		(My_TerminalWindowPtr	inPtr)
 {
-	TerminalViewRef		activeView = getActiveView(inPtr);
-	
-	
-	if (nullptr != activeView)
+	if (false == inPtr->allViews.empty())
 	{
-		SInt16		screenWidth = 0;
-		SInt16		screenHeight = 0;
+		TerminalViewRef		activeView = getActiveView(inPtr);
+		SInt16				screenWidth = 0;
+		SInt16				screenHeight = 0;
 		
 		
 		TerminalView_GetIdealSize(activeView/* TEMPORARY - must consider a list of views */,
@@ -7790,12 +7782,10 @@ screen area that is currently visible in the window.
 void
 updateScrollBars	(My_TerminalWindowPtr	inPtr)
 {
-	TerminalViewRef		view = getActiveView(inPtr);
-	
-	
-	assert(nullptr != view);
+	if (false == inPtr->allViews.empty())
 	{
 		// update the scroll bars to reflect the contents of the selected view
+		TerminalViewRef			view = getActiveView(inPtr);
 		HIViewRef				scrollBarView = nullptr;
 		SInt32					scrollVStartView = 0;
 		SInt32					scrollVPastEndView = 0;

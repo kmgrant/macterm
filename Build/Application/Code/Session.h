@@ -385,10 +385,6 @@ Session_Result
 Session_Result
 	Session_Select							(SessionRef							inRef);
 
-Session_Result
-	Session_SetSendDataEncoding				(SessionRef							inRef,
-											 CFStringEncoding					inEncoding);
-
 void
 	Session_UserInputCFString				(SessionRef							inRef,
 											 CFStringRef						inStringBuffer);

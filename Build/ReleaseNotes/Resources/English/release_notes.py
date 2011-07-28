@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110727',
     '20110723',
     '20110721',
     '20110714',
@@ -398,6 +399,13 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110727': [
+        "Fixed UTF-8 decoder corner cases based on problems discovered by Markus Kuhn's decoder stress test, <http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt>.",
+        'Fixed terminals to decode UTF-8 up front (when enabled by the current Translation) instead of at echo time.',
+        'Fixed VT220 and higher emulators to interpret 8-bit/unescaped control sequences correctly, even in UTF-8 terminals.',
+        'Terminals now recognize the sequences for entering and exiting "UTF-8 mode", as registered with ISO 2022.',
+        'On later versions of Mac OS X, UTF-8 sessions now configure pseudo-terminal devices so that backspace will remove as many bytes as necessary to delete the previous code point.',
+    ],
     '20110723': [
         'The command for full-screen terminals is now named "Enter Full Screen" and has the key equivalent of control-command-F to match the convention of Mac OS X Lion.',
     ],
