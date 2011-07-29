@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110729',
     '20110728',
     '20110727',
     '20110723',
@@ -400,6 +401,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110729': [
+        'Application-modal alert windows are now Cocoa-based and have a more refined appearance and behavior, including animation on Mac OS X Lion.',
+    ],
     '20110728': [
         'Terminal views now correctly render diagonal line characters and the diagonal cross character.',
     ],

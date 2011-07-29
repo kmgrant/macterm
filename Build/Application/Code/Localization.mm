@@ -1,6 +1,6 @@
 /*###############################################################
 
-	Localization.cp
+	Localization.mm
 	
 	Use the powerful methods in this module to perform all kinds
 	of useful operations on dialog box controls, often a must
@@ -29,27 +29,28 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#import "UniversalDefines.h"
 
 // standard-C includes
-#include <cctype>
+#import <cctype>
 
 // Mac includes
-#include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <ApplicationServices/ApplicationServices.h>
+#import <Carbon/Carbon.h>
+#import <CoreServices/CoreServices.h>
 
 // library includes
-#include <CFRetainRelease.h>
-#include <Localization.h>
-#include <MemoryBlocks.h>
-#include <Releases.h>
+#import <AutoPool.objc++.h>
+#import <CFRetainRelease.h>
+#import <Localization.h>
+#import <MemoryBlocks.h>
+#import <Releases.h>
 
 // application includes
-#include "AppResources.h"
+#import "AppResources.h"
 
 // resource includes
-#include "SpacingConstants.r"
+#import "SpacingConstants.r"
 
 
 
@@ -424,6 +425,59 @@ Localization_AutoSizeButtonControl	(ControlRef		inControl,
 	}
 	return result;
 }// AutoSizeButtonControl
+
+
+/*!
+Determines the width of the specified button that would
+comfortably fit its current title, or else the specified
+minimum width.  The chosen width for the button is returned.
+If "inResize" is set to true, the button is resized to this
+ideal width (the height and location are not changed).
+
+Although NSControl has "sizeToFit", in practice this does not
+work very well for buttons as the button appears to be too
+constricted.
+
+Note that this routine currently ignores other attributes of
+a button that might affect its layout, such as the presence
+of an image.
+
+(2.5)
+*/
+UInt16
+Localization_AutoSizeNSButton	(NSButton*		inButton,
+								 UInt16			inMinimumWidth,
+								 Boolean		inResize)
+{
+	AutoPool	_;
+	UInt16		result = inMinimumWidth;
+	
+	
+	if (nil != inButton)
+	{
+		NSString*	stringValue = [inButton title];
+		NSFont*		font = [inButton font];
+		
+		
+		// This is obviously a simplistic approach, but it is enough for now.
+		// LOCALIZE THIS
+		result = [font widthOfString:stringValue] + INTEGER_DOUBLED(MINIMUM_BUTTON_TITLE_CUSHION);
+		if (result < inMinimumWidth)
+		{
+			result = inMinimumWidth;
+		}
+		
+		if (inResize)
+		{
+			NSRect		frame = [inButton frame];
+			
+			
+			frame.size.width = result;
+			[inButton setFrame:frame];
+		}
+	}
+	return result;
+}// AutoSizeNSButton
 
 
 /*!

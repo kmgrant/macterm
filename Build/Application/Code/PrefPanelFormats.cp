@@ -1208,13 +1208,12 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					stringResult = UIStrings_Copy(kUIStrings_AlertWindowGenericCannotUndoHelpText, helpTextCFString);
 					assert(stringResult.ok());
 					
-					box = Alert_New();
+					box = Alert_NewWindowModal(HIViewGetWindow(interfacePtr->mainView), false/* is window close alert */,
+												resetANSIWarningCloseNotifyProc, interfacePtr/* user data */);
 					Alert_SetHelpButton(box, false);
 					Alert_SetParamsFor(box, kAlert_StyleOKCancel);
 					Alert_SetTextCFStrings(box, dialogTextCFString, helpTextCFString);
 					Alert_SetType(box, kAlertCautionAlert);
-					Alert_MakeWindowModal(box, HIViewGetWindow(interfacePtr->mainView), false/* is window close alert */,
-											resetANSIWarningCloseNotifyProc, interfacePtr/* user data */);
 					Alert_Display(box); // notifier disposes the alert when the sheet eventually closes
 				}
 				result = noErr; // event is handled

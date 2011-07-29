@@ -31,7 +31,7 @@
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
 		0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */; };
 		0AC6BADE0A8C0BA000AFF37A /* ErrorAlerts.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD4055432A400ACDF3A /* ErrorAlerts.cp */; };
-		0AC6BADF0A8C0BA000AFF37A /* Localization.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF4055432A400ACDF3A /* Localization.cp */; };
+		0AC6BADF0A8C0BA000AFF37A /* Localization.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF4055432A400ACDF3A /* Localization.mm */; };
 		0AC6BAE00A8C0BA000AFF37A /* PrefPanelScripts.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE07055432A400ACDF3A /* PrefPanelScripts.cp */; };
 		0AC6BAE20A8C0BA000AFF37A /* InternetPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */; };
 		0AC6BAE30A8C0BA000AFF37A /* MenuBar.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFB055432A400ACDF3A /* MenuBar.cp */; };
@@ -357,7 +357,7 @@
 		0A46FDE8055432A400ACDF3A /* Initialize.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Initialize.cp; path = Application/Code/Initialize.cp; sourceTree = "<group>"; };
 		0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InternetPrefs.cp; path = Application/Code/InternetPrefs.cp; sourceTree = "<group>"; };
 		0A46FDF3055432A400ACDF3A /* Local.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Local.cp; path = Application/Code/Local.cp; sourceTree = "<group>"; };
-		0A46FDF4055432A400ACDF3A /* Localization.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Localization.cp; path = Application/Code/Localization.cp; sourceTree = "<group>"; };
+		0A46FDF4055432A400ACDF3A /* Localization.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Localization.mm; path = Application/Code/Localization.mm; sourceTree = "<group>"; };
 		0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MacHelpUtilities.cp; path = Shared/Code/MacHelpUtilities.cp; sourceTree = "<group>"; };
 		0A46FDF6055432A400ACDF3A /* RegionUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RegionUtilities.cp; path = Application/Code/RegionUtilities.cp; sourceTree = "<group>"; };
 		0A46FDF9055432A400ACDF3A /* MainEntryPoint.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MainEntryPoint.cp; path = Application/Code/MainEntryPoint.cp; sourceTree = "<group>"; };
@@ -406,6 +406,7 @@
 		0A66CA450887464200FD616C /* HIViewWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.h; path = Shared/Code/HIViewWrap.h; sourceTree = "<group>"; };
 		0A66CA4B0887467000FD616C /* HIViewWrap.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HIViewWrap.cp; path = Shared/Code/HIViewWrap.cp; sourceTree = "<group>"; };
 		0A66CA950887505200FD616C /* HIViewWrap.fwd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.fwd.h; path = Shared/Code/HIViewWrap.fwd.h; sourceTree = "<group>"; };
+		0A670D3513E15C4A00CD2A1C /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/AlertMessagesModalCocoa.xib; sourceTree = "<group>"; };
 		0A68811012F5378C005F418A /* GrowlSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrowlSupport.h; path = Shared/Code/GrowlSupport.h; sourceTree = "<group>"; };
 		0A68811112F537A1005F418A /* GrowlSupport.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GrowlSupport.mm; path = Shared/Code/GrowlSupport.mm; sourceTree = "<group>"; };
 		0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrapManip.h; path = Shared/Code/HIViewWrapManip.h; sourceTree = "<group>"; };
@@ -746,7 +747,7 @@
 				0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */,
 				0A36176A0DD286240081A445 /* Keypads.mm */,
 				0A46FDF3055432A400ACDF3A /* Local.cp */,
-				0A46FDF4055432A400ACDF3A /* Localization.cp */,
+				0A46FDF4055432A400ACDF3A /* Localization.mm */,
 				0A03DBC7063F6BA400C38B78 /* MacroManager.mm */,
 				0A46FDF9055432A400ACDF3A /* MainEntryPoint.cp */,
 				0A46FDFB055432A400ACDF3A /* MenuBar.cp */,
@@ -944,6 +945,7 @@
 			isa = PBXGroup;
 			children = (
 				0AB2273012D2D1DC00D663BB /* AddressDialogCocoa.xib */,
+				0A670D3413E15C4A00CD2A1C /* AlertMessagesModalCocoa.xib */,
 				0ADF9D1213A565920098675F /* AlertMessagesModelessCocoa.xib */,
 				0A6315B812348AB4003890B8 /* ClipboardCocoa.xib */,
 				0AB2273212D2D27000D663BB /* CommandLineCocoa.xib */,
@@ -1327,7 +1329,7 @@
 			files = (
 				0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.cp in Sources */,
 				0AC6BADE0A8C0BA000AFF37A /* ErrorAlerts.cp in Sources */,
-				0AC6BADF0A8C0BA000AFF37A /* Localization.cp in Sources */,
+				0AC6BADF0A8C0BA000AFF37A /* Localization.mm in Sources */,
 				0AC6BAE00A8C0BA000AFF37A /* PrefPanelScripts.cp in Sources */,
 				0AC6BAE20A8C0BA000AFF37A /* InternetPrefs.cp in Sources */,
 				0AC6BAE30A8C0BA000AFF37A /* MenuBar.cp in Sources */,
@@ -1509,6 +1511,14 @@
 				0A6315B912348AB4003890B8 /* English */,
 			);
 			name = ClipboardCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A670D3413E15C4A00CD2A1C /* AlertMessagesModalCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A670D3513E15C4A00CD2A1C /* English */,
+			);
+			name = AlertMessagesModalCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A6E225806CF42F0004AC0A4 /* KioskPasswordDialog.nib */ = {

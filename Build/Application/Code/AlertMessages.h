@@ -9,7 +9,7 @@
 */
 /*###############################################################
 
-	Interface Library 2.3
+	Interface Library 2.5
 	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -167,8 +167,23 @@ setTitleText:(NSString*)_; // binding
 
 
 /*!
+Implements the modal alert.  This class must be in sync
+with references in "AlertMessagesModalCocoa.xib".
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface AlertMessages_ModalWindowController : AlertMessages_WindowController
+{
+}
+
+@end
+
+
+/*!
 Implements the modeless alert.  This class must be in sync
-with references in "AlertMessageNotificationCocoa.xib".
+with references in "AlertMessagesModelessCocoa.xib".
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
@@ -298,6 +313,12 @@ AlertMessages_BoxRef
 	Alert_NewModeless					(AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 										 void*								inCloseNotifyProcUserData);
 
+InterfaceLibAlertRef
+	Alert_NewWindowModal				(WindowRef							inParentWindow,
+										 Boolean							inIsParentWindowCloseWarning,
+										 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+										 void*								inCloseNotifyProcUserData);
+
 void
 	Alert_Dispose						(AlertMessages_BoxRef*				inoutAlert);
 
@@ -332,13 +353,6 @@ void
 
 SInt16
 	Alert_ItemHit						(AlertMessages_BoxRef				inAlert);
-
-void
-	Alert_MakeWindowModal				(AlertMessages_BoxRef				inAlert,
-										 WindowRef							inParentWindow,
-										 Boolean							inIsParentWindowCloseWarning,
-										 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-										 void*								inCloseNotifyProcUserData);
 
 void
 	Alert_StandardCloseNotifyProc		(AlertMessages_BoxRef				inAlertThatClosed,

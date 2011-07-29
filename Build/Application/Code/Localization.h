@@ -49,6 +49,11 @@
 #include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
+#ifdef __OBJC__
+@class NSButton;
+#else
+class NSButton;
+#endif
 
 // Data Access Library includes
 #include <StringUtilities.h>
@@ -181,6 +186,11 @@ Boolean
 UInt16
 	Localization_AutoSizeButtonControl			(ControlRef					inControl,
 												 UInt16						inMinimumWidth = 86);
+
+UInt16
+	Localization_AutoSizeNSButton				(NSButton*					inButton,
+												 UInt16						inMinimumWidth = 86,
+												 Boolean					inResize = true);
 
 void
 	Localization_HorizontallyCenterControlWithinContainer	(ControlRef		inControlToCenterHorizontally,

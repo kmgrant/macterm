@@ -7521,7 +7521,9 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			if (nullptr != terminalWindow)
 			{
 				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-				AlertMessages_BoxRef			warningBox = Alert_New();
+				AlertMessages_BoxRef			warningBox = Alert_NewWindowModal(TerminalWindow_ReturnWindow(terminalWindow),
+																					false/* is close warning */, Alert_StandardCloseNotifyProc,
+																					nullptr/* context */);
 				UIStrings_Result				stringResult = kUIStrings_ResultOK;
 				CFStringRef						dialogTextCFString = nullptr;
 				CFStringRef						helpTextCFString = nullptr;
@@ -7537,8 +7539,6 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				Alert_SetTextCFStrings(warningBox, dialogTextCFString, helpTextCFString);
 				
 				// show the message; it is disposed asynchronously
-				Alert_MakeWindowModal(warningBox, TerminalWindow_ReturnWindow(terminalWindow), false/* is close warning */,
-										Alert_StandardCloseNotifyProc, nullptr/* context */);
 				Alert_Display(warningBox);
 				
 				if (nullptr != dialogTextCFString)

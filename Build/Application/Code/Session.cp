@@ -983,13 +983,41 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 	}
 	else
 	{
-		AlertMessages_BoxRef	alertBox = Alert_New();
+		AlertMessages_BoxRef	alertBox = nullptr;
 		TerminalWindowRef		terminalWindow = nullptr;
 		HIWindowRef				window = Session_ReturnActiveWindow(inRef);
 		Rect					originalStructureBounds;
 		Rect					centeredStructureBounds;
+		Boolean					willLeaveTerminalWindowOpen = false;
+		size_t					actualSize = 0;
 		OSStatus				error = noErr;
 		
+		
+		unless (inForceModalDialog)
+		{
+			// under Mac OS X, the sheet should close immediately if the
+			// user clicks the Close button and the terminal window will
+			// disappear immediately; however, if the window is going to
+			// remain on the screen, the sheet must close normally; so,
+			// here the preference value is checked so that the sheet
+			// can behave properly
+			unless (Preferences_GetData(kPreferences_TagDontAutoClose, sizeof(willLeaveTerminalWindowOpen),
+										&willLeaveTerminalWindowOpen, &actualSize) ==
+					kPreferences_ResultOK)
+			{
+				willLeaveTerminalWindowOpen = false; // assume windows automatically close, if preference can’t be found
+			}
+		}
+		
+		if (inForceModalDialog)
+		{
+			alertBox = Alert_New();
+		}
+		else
+		{
+			alertBox = Alert_NewWindowModal(window/* parent */, !willLeaveTerminalWindowOpen/* is window close alert */,
+											terminationWarningCloseNotifyProc, terminateAlertInfoPtr/* user data */);
+		}
 		
 		// TEMPORARY - this should really take into account whether the quit event is interactive
 		error = GetWindowBounds(window, kWindowStructureRgn, &originalStructureBounds);
@@ -1101,81 +1129,56 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			}
 		}
 		
-		// finally, display the message
+		// apply the alert status attribute to the session; this may,
+		// for instance, affect session status icon displays
 		{
-			Boolean		willLeaveTerminalWindowOpen = false;
-			size_t		actualSize = 0;
+			My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 			
 			
-			unless (inForceModalDialog)
+			changeStateAttributes(ptr, kSession_StateAttributeOpenDialog/* attributes to set */,
+									0/* attributes to clear */);
+		}
+		
+		// display the confirmation alert; depending on the kind of
+		// alert (sheet or modal dialog), the following code may
+		// return immediately without session termination (yet);
+		// ensure that the relevant window is visible and frontmost
+		// when the message appears
+		TerminalWindow_SetVisible(terminalWindow, true);
+		TerminalWindow_Select(terminalWindow);
+		if (inForceModalDialog)
+		{
+			Alert_Display(alertBox);
+			if (Alert_ItemHit(alertBox) == kAlertStdAlertCancelButton)
 			{
-				// under Mac OS X, the sheet should close immediately if the
-				// user clicks the Close button and the terminal window will
-				// disappear immediately; however, if the window is going to
-				// remain on the screen, the sheet must close normally; so,
-				// here the preference value is checked so that the sheet
-				// can behave properly
-				unless (Preferences_GetData(kPreferences_TagDontAutoClose, sizeof(willLeaveTerminalWindowOpen),
-											&willLeaveTerminalWindowOpen, &actualSize) ==
-						kPreferences_ResultOK)
-				{
-					willLeaveTerminalWindowOpen = false; // assume windows automatically close, if preference can’t be found
-				}
-			}
-			
-			// apply the alert status attribute to the session; this may,
-			// for instance, affect session status icon displays
-			{
-				My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+				// in the event that the user cancelled and the window
+				// was transitioned to the screen center, “un-transition”
+				// the most recent window back to its original location -
+				// unless of course the user has since moved the window
+				Rect	currentStructureBounds;
 				
 				
-				changeStateAttributes(ptr, kSession_StateAttributeOpenDialog/* attributes to set */,
-										0/* attributes to clear */);
-			}
-			
-			// display the confirmation alert; depending on the kind of
-			// alert (sheet or modal dialog), the following code may
-			// return immediately without session termination (yet);
-			// ensure that the relevant window is visible and frontmost
-			// when the message appears
-			TerminalWindow_SetVisible(terminalWindow, true);
-			TerminalWindow_Select(terminalWindow);
-			if (inForceModalDialog)
-			{
-				Alert_Display(alertBox);
-				if (Alert_ItemHit(alertBox) == kAlertStdAlertCancelButton)
+				(OSStatus)GetWindowBounds(window, kWindowStructureRgn, &currentStructureBounds);
+				if (EqualRect(&currentStructureBounds, &centeredStructureBounds))
 				{
-					// in the event that the user cancelled and the window
-					// was transitioned to the screen center, “un-transition”
-					// the most recent window back to its original location -
-					// unless of course the user has since moved the window
-					Rect	currentStructureBounds;
+					HIRect						floatBounds = CGRectMake(originalStructureBounds.left, originalStructureBounds.top,
+																			originalStructureBounds.right - originalStructureBounds.left,
+																			originalStructureBounds.bottom - originalStructureBounds.top);
+					TransitionWindowOptions		transitionOptions;
 					
 					
-					(OSStatus)GetWindowBounds(window, kWindowStructureRgn, &currentStructureBounds);
-					if (EqualRect(&currentStructureBounds, &centeredStructureBounds))
-					{
-						HIRect						floatBounds = CGRectMake(originalStructureBounds.left, originalStructureBounds.top,
-																				originalStructureBounds.right - originalStructureBounds.left,
-																				originalStructureBounds.bottom - originalStructureBounds.top);
-						TransitionWindowOptions		transitionOptions;
-						
-						
-						bzero(&transitionOptions, sizeof(transitionOptions));
-						transitionOptions.version = 0;
-						(OSStatus)TransitionWindowWithOptions(window, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
-																&floatBounds, true/* asynchronous */, &transitionOptions);
-					}
+					bzero(&transitionOptions, sizeof(transitionOptions));
+					transitionOptions.version = 0;
+					(OSStatus)TransitionWindowWithOptions(window, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
+															&floatBounds, true/* asynchronous */, &transitionOptions);
 				}
-				terminationWarningCloseNotifyProc(alertBox, Alert_ItemHit(alertBox),
-													terminateAlertInfoPtr/* user data */);
 			}
-			else
-			{
-				Alert_MakeWindowModal(alertBox, window/* parent */, !willLeaveTerminalWindowOpen/* is window close alert */,
-										terminationWarningCloseNotifyProc, terminateAlertInfoPtr/* user data */);
-				Alert_Display(alertBox); // notifier disposes the alert when the sheet eventually closes
-			}
+			terminationWarningCloseNotifyProc(alertBox, Alert_ItemHit(alertBox),
+												terminateAlertInfoPtr/* user data */);
+		}
+		else
+		{
+			Alert_Display(alertBox); // notifier disposes the alert when the sheet eventually closes
 		}
 	}
 }// DisplaySessionTerminationWarning
@@ -3971,7 +3974,7 @@ Session_UserInputPaste	(SessionRef			inRef,
 		
 		// now, paste (perhaps displaying a warning first)
 		{
-			AlertMessages_BoxRef	box = Alert_New();
+			AlertMessages_BoxRef	box = nullptr;
 			
 			
 			if (isOneLine)
@@ -3988,6 +3991,8 @@ Session_UserInputPaste	(SessionRef			inRef,
 			else
 			{
 				// configure and display the confirmation alert
+				box = Alert_NewWindowModal(returnActiveWindow(ptr)/* parent */, false/* is window close alert */,
+											pasteWarningCloseNotifyProc, pasteAlertInfoPtr/* user data */);
 				
 				// set basics
 				Alert_SetParamsFor(box, kAlert_StyleOKCancel);
@@ -4053,8 +4058,6 @@ Session_UserInputPaste	(SessionRef			inRef,
 				// when the message appears
 				TerminalWindow_SetVisible(ptr->terminalWindow, true);
 				TerminalWindow_Select(ptr->terminalWindow);
-				Alert_MakeWindowModal(box, returnActiveWindow(ptr)/* parent */, false/* is window close alert */,
-										pasteWarningCloseNotifyProc, pasteAlertInfoPtr/* user data */);
 				
 				// returns immediately; notifier disposes the alert when the sheet
 				// eventually closes
@@ -5906,7 +5909,12 @@ hit the Other button, the Clipboard text is slightly modified
 to form a single line, before Paste.  Otherwise, the Paste does
 not occur.
 
-The given alert is destroyed.
+NOTE:	This callback may be invoked by the Alert Messages
+		module, but it is also called separately (with nullptr
+		for "inAlertThatClosed") to trigger desired pasting
+		behaviors.
+
+The given alert is destroyed if it exists.
 
 (3.1)
 */
@@ -7061,10 +7069,7 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 	}
 	
 	// dispose of the alert
-	if (nullptr != inAlertThatClosed)
-	{
-		Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
-	}
+	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
 }// terminationWarningCloseNotifyProc
 
 
