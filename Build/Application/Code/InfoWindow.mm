@@ -1261,8 +1261,11 @@ Returns the size of the internal array.
 - (int)
 numberOfRowsInTableView:(NSTableView*)	tableView
 {
-	assert(self->infoTable == tableView);
-	return [self->dataArray count];
+	if (self->infoTable == tableView)
+	{
+		return [self->dataArray count];
+	}
+	return 0;
 }// numberOfRowsInTableView:
 
 

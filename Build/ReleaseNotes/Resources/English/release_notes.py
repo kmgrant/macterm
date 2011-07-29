@@ -402,6 +402,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20110729': [
+        'Fixed a possible startup failure on older versions of Mac OS X.',
         'Application-modal alert windows are now Cocoa-based and have a more refined appearance and behavior, including animation on Mac OS X Lion.',
     ],
     '20110728': [
