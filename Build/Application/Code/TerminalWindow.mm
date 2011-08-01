@@ -401,7 +401,6 @@ void					installTickHandler				(My_TerminalWindowPtr);
 void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
 void					installUndoFullScreenChanges	(TerminalWindowRef, TerminalView_DisplayMode, TerminalView_DisplayMode);
 void					installUndoScreenDimensionChanges	(TerminalWindowRef);
-OSStatus				receiveGrowBoxClick				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveScrollBarDraw			(EventHandlerCallRef, EventRef, void*);
@@ -2436,25 +2435,6 @@ installedActions()
 		assert_noerr(error);
 	}
 	
-	// install a callback that detects key modifiers when the size box is clicked
-	{
-		EventTypeSpec const		whenGrowBoxClicked[] =
-								{
-									{ kEventClassControl, kEventControlClick }
-								};
-		HIViewRef				growBoxView = nullptr;
-		OSStatus				error = noErr;
-		
-		
-		this->growBoxClickUPP = NewEventHandlerUPP(receiveGrowBoxClick);
-		error = HIViewFindByID(HIViewGetRoot(returnCarbonWindow(this)), kHIViewWindowGrowBoxID, &growBoxView);
-		assert_noerr(error);
-		error = HIViewInstallEventHandler(growBoxView, this->growBoxClickUPP, GetEventTypeCount(whenGrowBoxClicked),
-											whenGrowBoxClicked, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
-											&this->growBoxClickHandler/* event handler reference */);
-		assert_noerr(error);
-	}
-	
 	// put the toolbar in the window
 	{
 		OSStatus	error = noErr;
@@ -3932,78 +3912,6 @@ installUndoScreenDimensionChanges	(TerminalWindowRef		inTerminalWindow)
 
 
 /*!
-Handles "kEventControlClick" of "kEventClassControl"
-for a terminal window’s grow box.
-
-(3.1)
-*/
-OSStatus
-receiveGrowBoxClick		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					inTerminalWindowRef)
-{
-	OSStatus			result = eventNotHandledErr;
-	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlClick);
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// determine the view in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		
-		// if the grow box was found, proceed
-		if (noErr == result)
-		{
-			TerminalViewRef		focusedView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-			UInt32				eventModifiers = 0L;
-			OSStatus			getModifiersError = noErr;
-			
-			
-			// the event is never completely handled; it is sent to the
-			// parent so that a resize will still occur automatically!
-			result = eventNotHandledErr;
-			
-			// remember the previous view mode, so that it can be restored later
-			if (nullptr != focusedView)
-			{
-				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-				
-				
-				ptr->preResizeViewDisplayMode = TerminalView_ReturnDisplayMode(focusedView);
-			}
-			
-			getModifiersError = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, eventModifiers);
-			if (noErr == getModifiersError)
-			{
-				if (eventModifiers & optionKey)
-				{
-					if (nullptr != focusedView)
-					{
-						// when the option key is held down, the resize behavior is inverted;
-						// this MUST BE UNDONE, but it is undone within the “resize ended”
-						// event handler; see receiveWindowResize()
-						TerminalView_SetDisplayMode(focusedView,
-													(kTerminalView_DisplayModeNormal ==
-														TerminalView_ReturnDisplayMode(focusedView))
-														? kTerminalView_DisplayModeZoom
-														: kTerminalView_DisplayModeNormal);
-					}
-				}
-			}
-		}
-	}
-	
-	return result;
-}// receiveGrowBoxClick
-
-
-/*!
 Handles "kEventCommandProcess" of "kEventClassCommand" for
 terminal window commands.
 
@@ -4255,6 +4163,12 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								// resize the window and fill its monitor
 								if (modalFullScreen)
 								{
+									// NOTE: while it would be more consistent to require the Control key,
+									// this isn't really possible (it would cause problems when trying to
+									// Control-click the Full Screen toolbar icon, and it would cause the
+									// default Control-command-F key equivalent to always trigger a swap);
+									// so a Full Screen preference swap requires Option, even though the
+									// equivalent behavior during a window resize requires the Control key
 									Boolean const					kSwapModes = EventLoop_IsOptionKeyDown();
 									TerminalView_DisplayMode const	kNewMode = (false == kSwapModes)
 																				? kOldMode
@@ -5962,6 +5876,30 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			if (kEventKind == kEventWindowResizeStarted)
 			{
+				TerminalViewRef		focusedView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+				
+				
+				// on Mac OS X 10.7 and beyond, the system can initiate resizes in ways that do
+				// not allow the detection of modifier keys; so unfortunately it is necessary
+				// to check the raw key state at this point (e.g. responding to clicks in a
+				// size box will no longer work)
+				if (nullptr != focusedView)
+				{
+					// remember the previous view mode, so that it can be restored later
+					ptr->preResizeViewDisplayMode = TerminalView_ReturnDisplayMode(focusedView);
+					
+					// the Control key must be used because Mac OS X 10.7 assigns special
+					// meaning to the Shift and Option keys during a window resize
+					if (EventLoop_IsControlKeyDown())
+					{
+						TerminalView_SetDisplayMode(focusedView,
+													(kTerminalView_DisplayModeNormal ==
+														TerminalView_ReturnDisplayMode(focusedView))
+														? kTerminalView_DisplayModeZoom
+														: kTerminalView_DisplayModeNormal);
+					}
+				}	
+				
 				// load the NIB containing this dialog (automatically finds the right localization)
 				ptr->resizeFloater = NIBWindow(AppResources_ReturnBundleForNIBs(), CFSTR("TerminalWindow"),
 												useSheet ? CFSTR("DimensionsSheet") : CFSTR("DimensionsFloater"))

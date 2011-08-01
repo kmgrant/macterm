@@ -152,9 +152,10 @@ When window resizes affect text size, MacTerm dynamically
  terminal font) to fit the current number of rows and columns in
  the current window size.
 
-You can hold down the Option key prior to starting a window
- resize or entering Full Screen mode, to temporarily switch this
- preference.
+You can hold down the Control key prior to starting a window resize
+ to temporarily switch this preference for that resize only.  The
+ Option key can be held down to have the same effect when you use
+ the "Enter Full Screen" command.
 
 h4(#spacesfortab). Copy With Tab Substitution
 
@@ -1091,6 +1092,14 @@ Settings that control "kiosk mode", the Full Screen command in
 
 Note also the General preference (above) for removing all menu
  command keys, which can also be useful for kiosks.
+
+A Full Screen terminal window will implicitly obey your setting
+ for "Window Resize Effect" (in General); that is, it will either
+ cause the screen dimensions to stay the same and increase the
+ font size, or it will keep the font size the same and increase
+ the number of columns and/or rows of the terminal screen.  You
+ can temporarily invert this setting by holding down the Option
+ key while entering Full Screen mode.
 
 h3. Options
 
