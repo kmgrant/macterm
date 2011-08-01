@@ -165,6 +165,9 @@ Boolean
 	EventLoop_IsCommandKeyDown					();
 
 Boolean
+	EventLoop_IsControlKeyDown					();
+
+Boolean
 	EventLoop_IsOptionKeyDown					();
 
 Boolean

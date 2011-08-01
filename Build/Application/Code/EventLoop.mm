@@ -189,7 +189,8 @@ CarbonEventHandlerWrap				gCarbonEventModifiersHandler(GetApplicationEventTarget
 																	updateModifiers,
 																	CarbonEventSetInClass
 																		(CarbonEventClass(kEventClassKeyboard),
-																			kEventRawKeyModifiersChanged),
+																			kEventRawKeyModifiersChanged,
+																			kEventRawKeyUp),
 																	nullptr/* user data */);
 Console_Assertion					_2(gCarbonEventModifiersHandler.isInstalled(), __FILE__, __LINE__);
 CarbonEventHandlerWrap				gCarbonEventServiceHandler(GetApplicationEventTarget(),
@@ -406,6 +407,22 @@ EventLoop_IsCommandKeyDown ()
 	// modifier keys change; therefore, just check that value!
 	return ((gCarbonEventModifiers & cmdKey) != 0);
 }// IsCommandKeyDown
+
+
+/*!
+Determines the state of the Control key when you
+do not have access to an event record.  Returns
+"true" only if the key is down.
+
+(4.0)
+*/
+Boolean
+EventLoop_IsControlKeyDown ()
+{
+	// under Carbon, a callback updates a variable whenever
+	// modifier keys change; therefore, just check that value!
+	return ((gCarbonEventModifiers & controlKey) != 0);
+}// IsControlKeyDown
 
 
 /*!
@@ -1174,11 +1191,10 @@ receiveWindowActivated	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
-Invoked by Mac OS X whenever a modifier key’s
-state changes (e.g. option, control, command,
-or shift).  This routine updates an internal
-variable that is used by other functions
-(such as EventLoop_IsCommandKeyDown()).
+Invoked by Mac OS X whenever a modifier key’s state changes
+(e.g. option, control, command, or shift).  This routine updates
+an internal variable that is used by other functions (such as
+EventLoop_IsCommandKeyDown()).
 
 (3.0)
 */
@@ -1193,15 +1209,23 @@ updateModifiers		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	
 	assert(kEventClass == kEventClassKeyboard);
-	assert(kEventKind == kEventRawKeyModifiersChanged);
+	assert((kEventKind == kEventRawKeyModifiersChanged) || (kEventKind == kEventRawKeyUp));
 	{
-		// extract modifier key bits from the given event
+		// extract modifier key bits from the given event; it is important to
+		// track both original key presses (kEventRawKeyModifiersChanged) and
+		// key releases (kEventRawKeyUp) to know for sure, and both events
+		// are documented as having a "kEventParamKeyModifiers" parameter
 		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, gCarbonEventModifiers);
 		
 		// if the modifier key information was found, proceed
 		if (result == noErr)
 		{
 			if (FlagManager_Test(kFlagSuspended)) result = eventNotHandledErr;
+		}
+		else
+		{
+			// no modifier data available; assume no modifiers are in use!
+			gCarbonEventModifiers = 0L;
 		}
 	}
 	return result;
