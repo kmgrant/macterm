@@ -14,7 +14,7 @@ notextile. <a name="helpwithpreferences"></a><!-- must use this exact tag; see E
 p(#abstract). This page is arranged in the same categories as those in
  the MacTerm Preferences window.  To access any of the settings
  mentioned here, start by choosing the "Preferences..." item in
- the MacTerm menu.
+ the MacTerm menu.  See also the "low-level settings":advprefs.html page.
 
 * "General":#general
 * "Macros":#macros
@@ -29,7 +29,7 @@ h2(#general). General
 
 h3(#generaloptions). Options
 
-h4. Menus and Windows
+h4. Terminal Windows
 
 h5(#noautoclose). No window close on process exit
 
@@ -47,6 +47,13 @@ Prevents a new session from being created at startup, or when the
 
 Note that the type of session created will implicitly match the
  "Command-N Key Equivalent" preference.
+
+h5(#fadebkgnd). Fade in background
+
+Causes terminal windows to become translucent when MacTerm is not
+ the active application.
+
+Low-level preferences can be used to further customize this mode.
 
 h4. Text
 
