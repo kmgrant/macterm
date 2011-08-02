@@ -68,7 +68,7 @@ enum
 	kLocal_ResultConnectionRefused			= 8,	//!< if a connection was not allowed by the server
 	kLocal_ResultCannotResolveAtAll			= 9,	//!< if a host name was given whose address cannot be found
 	kLocal_ResultCannotResolveForNow		= 10,	//!< if an address cannot be found, but a retry might find it
-	kLocalResultInsufficientBufferSpace		= 11	//!< out of memory; free more memory and try again
+	kLocal_ResultInsufficientBufferSpace	= 11	//!< out of memory; free more memory and try again
 };
 
 typedef int/* file descriptor */	Local_TerminalID;

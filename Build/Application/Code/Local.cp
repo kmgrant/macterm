@@ -247,7 +247,7 @@ the better choice (as it creates a pristine environment).
 \retval kLocal_ResultOK
 if the command line was constructed successfully
 
-\retval kLocalResultInsufficientBufferSpace
+\retval kLocal_ResultInsufficientBufferSpace
 if the command line array could not be constructed
 
 (4.0)
@@ -255,7 +255,7 @@ if the command line array could not be constructed
 Local_Result
 Local_GetDefaultShellCommandLine	(CFArrayRef&	outNewArgumentsArray)
 {
-	Local_Result		result = kLocalResultInsufficientBufferSpace;
+	Local_Result		result = kLocal_ResultInsufficientBufferSpace;
 	struct passwd*		userInfoPtr = getpwuid(getuid());
 	CFRetainRelease		userShell(CFStringCreateWithCString
 									(kCFAllocatorDefault,
@@ -284,7 +284,7 @@ CFRelease() on the array yourself.)
 \retval kLocal_ResultOK
 if the command line was constructed successfully
 
-\retval kLocalResultInsufficientBufferSpace
+\retval kLocal_ResultInsufficientBufferSpace
 if the command line array could not be constructed
 
 (4.0)
@@ -292,7 +292,7 @@ if the command line array could not be constructed
 Local_Result
 Local_GetLoginShellCommandLine		(CFArrayRef&	outNewArgumentsArray)
 {
-	Local_Result		result = kLocalResultInsufficientBufferSpace;
+	Local_Result		result = kLocal_ResultInsufficientBufferSpace;
 	CFRetainRelease		userName(CFStringCreateWithCString(kCFAllocatorDefault, getenv("USER"), kCFStringEncodingASCII),
 									true/* is retained */);
 	void const*			args[] = { CFSTR("/usr/bin/login"), CFSTR("-p"), CFSTR("-f"), userName.returnCFStringRef() };
@@ -500,7 +500,13 @@ process exits as a precaution.
 if the process was created successfully
 
 \retval kLocal_ResultParameterError
-if a storage variable is nullptr, or the argument array is empty
+if a storage variable is nullptr, the argument array is empty,
+or the given working directory was found to be nonexistent
+(note that a directory could exist at the time this is checked
+and be deleted in the interim before execution starts, so this
+early check is only an optimization; you should assume that a
+nonexistent directory could trigger failures at any time, such
+as when command execution fails)
 
 \retval kLocal_ResultForkError
 if the process cannot be spawned
@@ -516,9 +522,13 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 					 CFArrayRef			inArgumentArray,
 					 CFStringRef		inWorkingDirectoryOrNull)
 {
-	CFIndex const	kArgumentCount = CFArrayGetCount(inArgumentArray);
-	char**			argvCopy = new char*[1 + kArgumentCount];
-	Local_Result	result = kLocal_ResultOK;
+	CFStringEncoding const	kPathEncoding = kCFStringEncodingUTF8;
+	CFIndex const			kArgumentCount = CFArrayGetCount(inArgumentArray);
+	char**					argvCopy = new char*[1 + kArgumentCount];
+	char const*				targetDir = nullptr;
+	CFRetainRelease			targetDirCFString = inWorkingDirectoryOrNull;
+	Boolean					deleteTargetDir = false;
+	Local_Result			result = kLocal_ResultOK;
 	
 	
 	if (kArgumentCount > 0)
@@ -551,58 +561,86 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 		argvCopy[j] = nullptr;
 	}
 	
+	// determine the directory to be in when the command is run
+	if ((false == targetDirCFString.exists()) || (0 == CFStringGetLength(targetDirCFString.returnCFStringRef())))
+	{
+		struct passwd*	userInfoPtr = getpwuid(getuid());
+		
+		
+		if (nullptr != userInfoPtr)
+		{
+			targetDir = userInfoPtr->pw_dir;
+		}
+		else
+		{
+			// revert to the $HOME method, which usually works but is less reliable...
+			targetDir = getenv("HOME");
+		}
+		
+		targetDirCFString.setCFTypeRef(CFStringCreateWithCString(kCFAllocatorDefault, targetDir, kPathEncoding),
+										true/* is retained */);
+	}
+	else
+	{
+		// convert path to a form that is accepted by chdir()
+		targetDir = CFStringGetCStringPtr(targetDirCFString.returnCFStringRef(), kPathEncoding);
+		if (nullptr == targetDir)
+		{
+			size_t const	kBufferSize = 1 + CFStringGetMaximumSizeForEncoding
+												(CFStringGetLength(targetDirCFString.returnCFStringRef()),
+													kPathEncoding);
+			char*			valueString = new char[kBufferSize];
+			
+			
+			CFStringGetCString(targetDirCFString.returnCFStringRef(), valueString, kBufferSize, kPathEncoding);
+			targetDir = valueString;
+			deleteTargetDir = true;
+		}
+	}
+	
+	// require any target working directory to exist before bothering to
+	// spawn the process; note that this is only a slight optimization
+	// to save time in the case of common failures, and is NOT meant to
+	// be the only validation ever performed (for example, even after
+	// this check, the directory might disappear before the process is
+	// spawned; the only way to really know it will work is to use it!!!)
+	if (kLocal_ResultOK == result)
+	{
+		struct stat		dirInfo;
+		
+		
+		bzero(&dirInfo, sizeof(dirInfo));
+		
+		// NOTE: stat() follows symbolic links implicitly, so a link to a
+		// directory will still be considered a directory and not a link
+		if (0 != stat(targetDir, &dirInfo))
+		{
+			Console_WriteValueCString("failed to stat target working directory", targetDir);
+			result = kLocal_ResultParameterError;
+		}
+		else if (S_ISDIR(dirInfo.st_mode))
+		{
+			// this is OK, a directory is what is required!
+			result = kLocal_ResultOK;
+		}
+		else
+		{
+			Console_WriteValueCString("target working directory is not a directory", targetDir);
+			result = kLocal_ResultParameterError;
+		}
+	}
+	
 	if ((nullptr == inArgumentArray) || (kArgumentCount < 1) || (nullptr == argvCopy[0]))
 	{
 		result = kLocal_ResultParameterError;
 	}
-	else
+	else if (kLocal_ResultOK == result)
 	{
-		CFStringEncoding const	kPathEncoding = kCFStringEncodingUTF8;
-		My_TTYMasterID			masterTTY = 0;
-		char					slaveDeviceName[20/* arbitrary */];
-		pid_t					processID = -1;
-		char const*				targetDir = nullptr;
-		CFRetainRelease			targetDirCFString = inWorkingDirectoryOrNull;
-		Boolean					deleteTargetDir = false;
-		struct termios			terminalControl;
+		My_TTYMasterID		masterTTY = 0;
+		char				slaveDeviceName[20/* arbitrary */];
+		pid_t				processID = -1;
+		struct termios		terminalControl;
 		
-		
-		// determine the directory to be in when the command is run
-		if ((false == targetDirCFString.exists()) || (0 == CFStringGetLength(targetDirCFString.returnCFStringRef())))
-		{
-			struct passwd*	userInfoPtr = getpwuid(getuid());
-			
-			
-			if (nullptr != userInfoPtr)
-			{
-				targetDir = userInfoPtr->pw_dir;
-			}
-			else
-			{
-				// revert to the $HOME method, which usually works but is less reliable...
-				targetDir = getenv("HOME");
-			}
-			
-			targetDirCFString.setCFTypeRef(CFStringCreateWithCString(kCFAllocatorDefault, targetDir, kPathEncoding),
-											true/* is retained */);
-		}
-		else
-		{
-			// convert path to a form that is accepted by chdir()
-			targetDir = CFStringGetCStringPtr(targetDirCFString.returnCFStringRef(), kPathEncoding);
-			if (nullptr == targetDir)
-			{
-				size_t const	kBufferSize = 1 + CFStringGetMaximumSizeForEncoding
-													(CFStringGetLength(targetDirCFString.returnCFStringRef()),
-														kPathEncoding);
-				char*			valueString = new char[kBufferSize];
-				
-				
-				CFStringGetCString(targetDirCFString.returnCFStringRef(), valueString, kBufferSize, kPathEncoding);
-				targetDir = valueString;
-				deleteTargetDir = true;
-			}
-		}
 		
 		// set the answer-back message
 		{
@@ -810,16 +848,14 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				}
 			}
 		}
-		
-		if (deleteTargetDir)
-		{
-			// WARNING: this cleanup is not exception-safe, and should change
-			delete [] targetDir, targetDir = nullptr;
-		}
 	}
 	
 	// WARNING: this cleanup is not exception-safe, and should change
 	delete [] argvCopy, argvCopy = nullptr;
+	if (deleteTargetDir)
+	{
+		delete [] targetDir, targetDir = nullptr;
+	}
 	
 	// with the preemptive thread handling data transfer
 	// to and from the process, return immediately
@@ -1443,7 +1479,7 @@ Finds an available master TTY for the specified slave.
 \retval kLocal_ResultOK
 if no error occurred
 
-\retval kLocalResultInsufficientBufferSpace
+\retval kLocal_ResultInsufficientBufferSpace
 if the given name buffer is not big enough for a device path
 
 \retval kLocal_ResultTermCapError
@@ -1466,7 +1502,7 @@ openMasterTeletypewriter	(size_t				inNameSize,
 	outID = kLocal_InvalidTerminalID;
 	if (inNameSize < CPP_STD::strlen(kSlaveTemplate))
 	{
-		result = kLocalResultInsufficientBufferSpace;
+		result = kLocal_ResultInsufficientBufferSpace;
 	}
 	else
 	{
