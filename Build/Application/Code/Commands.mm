@@ -105,6 +105,29 @@ extern "C"
 #pragma mark Types
 
 /*!
+An instance of this class handles the application’s entries in
+the Services menu.  Note that the names of messages in this
+class should match those published under NSServices (using the
+"NSMessage" key) in the generated Info.plist file.
+*/
+@interface Commands_ServiceProviders : NSObject
+{
+}
+
+- (void)
+openPathInShell:(NSPasteboard*)_
+userData:(NSString*)_
+error:(NSString**)_;
+
+- (void)
+openURL:(NSPasteboard*)_
+userData:(NSString*)_
+error:(NSString**)_;
+
+@end
+
+
+/*!
 This class exists so that it is easier to associate a SessionRef
 with an NSMenuItem, via setRepresentedObject:.
 */
@@ -118,6 +141,7 @@ with an NSMenuItem, via setRepresentedObject:.
 initWithSession:(SessionRef)_;
 
 @end
+
 
 namespace {
 
@@ -3659,6 +3683,26 @@ applicationShouldTerminate:(NSApplication*)		sender
 
 
 /*!
+Installs the handlers for Services.  The Info.plist of the main
+bundle must also advertise the methods of each Service.
+
+(4.0)
+*/
+- (void)
+applicationDidFinishLaunching:(NSNotification*)	aNotification
+{
+	NSApplication*				application = (NSApplication*)[aNotification object];
+	Commands_ServiceProviders*	providers = [[Commands_ServiceProviders alloc] init];
+	
+	
+	// note: it is not clear if the system retains the given object, so
+	// for now it will not be released (it doesn’t need to be released
+	// anyway; it will be needed for the entire lifetime of the program)
+	[application setServicesProvider:providers];
+}// applicationDidFinishLaunching:
+
+
+/*!
 Installs extra Apple Event handlers.  The Info.plist of the main
 bundle must also advertise the types of URLs that are supported.
 
@@ -6771,6 +6815,211 @@ validateUserInterfaceItem:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 
 
 @end // Commands_Executor (Commands_Validation)
+
+
+@implementation Commands_ServiceProviders
+
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
+- (id)
+init
+{
+	self = [super init];
+	if (nil != self)
+	{
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+/*!
+Of standard <messageName>:userData:error form, this is a
+provider for the Service that opens shells to custom working
+directories.
+
+The pasteboard data can be a string containing a POSIX pathname
+or a file URL, either of which must refer to a directory.
+
+IMPORTANT:	It MUST be advertised in the application bundle’s
+			Info.plist file with an NSMessage that matches the
+			<messageName> (first) portion of this method name.
+
+(4.0)
+*/
+- (void)
+openPathInShell:(NSPasteboard*)		aPasteboard
+userData:(NSString*)				userData
+error:(NSString**)					error
+{
+#pragma unused(userData)
+	// NOTE: later versions of Mac OS X change pasteboard APIs significantly; this will eventually change
+	NSString*	pathString = [aPasteboard stringForType:NSStringPboardType];
+	NSString*	errorString = nil;
+	
+	
+	if (nil != pathString)
+	{
+		NSURL*		testURL = nil;
+		
+		
+		// ignore leading and trailing whitespace
+		pathString = [pathString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		
+		// in the off chance that a file URL was given, just strip off the
+		// file scheme component and implicitly pull out the path
+		testURL = [NSURL URLWithString:pathString];
+		if ((nil != testURL) && (nil != [testURL path]) && ([[testURL scheme] isEqualToString:@"file"]))
+		{
+			pathString = [testURL path];
+		}
+	}
+	
+	if (nil == pathString)
+	{
+		errorString = NSLocalizedStringFromTable(@"Unable to find a path in the given selection.", @"Services"/* table */,
+													@"error message for non-strings given to the open-at-path Service provider");
+	}
+	else
+	{
+		// open log-in shell and change to the specified directory
+		TerminalWindowRef	terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
+		SessionRef			newSession = nullptr;
+		
+		
+		// create a shell
+		if (nullptr != terminalWindow)
+		{
+			newSession = SessionFactory_NewSessionDefaultShell(terminalWindow, nullptr/* workspace */, 0/* window index in workspace */,
+																(CFStringRef)pathString/* current working directory */);
+		}
+		if (nullptr == newSession)
+		{
+			errorString = NSLocalizedStringFromTable(@"Unable to start a shell for the given folder.", @"Services"/* table */,
+														@"error message when a session cannot be created by the open-at-path Service provider");
+		}
+		else
+		{
+			// successfully created; initialize the window title to the starting path
+			// to remind the user of the location that was set
+			Session_SetWindowUserDefinedTitle(newSession, (CFStringRef)pathString);
+		}
+	}
+	
+	if (nil != errorString)
+	{
+		AlertMessages_BoxRef	box = Alert_New();
+		
+		
+		*error = errorString;
+		Alert_SetParamsFor(box, kAlert_StyleOK);
+		Alert_SetType(box, kAlertNoteAlert);
+		Alert_SetTextCFStrings(box, (CFStringRef)*error, ([pathString length] > 100/* arbitrary */)
+															? (CFStringRef)[pathString substringToIndex:99]
+															: (CFStringRef)pathString/* help text */);
+		Alert_Display(box);
+	}
+}// openPathInShell:userData:error:
+
+
+/*!
+Of standard <messageName>:userData:error form, this is a
+provider for the Service that opens URLs.
+
+IMPORTANT:	It MUST be advertised in the application bundle’s
+			Info.plist file with an NSMessage that matches the
+			<messageName> (first) portion of this method name.
+
+(4.0)
+*/
+- (void)
+openURL:(NSPasteboard*)		aPasteboard
+userData:(NSString*)		userData
+error:(NSString**)			error
+{
+#pragma unused(userData)
+	// NOTE: later versions of Mac OS X change pasteboard APIs significantly; this will eventually change
+	NSString*	theURLString = [aPasteboard stringForType:NSStringPboardType];
+	NSString*	errorString = nil;
+	
+	
+	if (nil == theURLString)
+	{
+		errorString = NSLocalizedStringFromTable(@"Unable to find a string in the given selection.", @"Services"/* table */,
+													@"error message for non-strings given to the open-URL Service provider");
+	}
+	else
+	{
+		NSURL*	testURL = nil;
+		
+		
+		// ignore leading and trailing whitespace
+		theURLString = [theURLString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		
+		testURL = [NSURL URLWithString:theURLString];
+		if ((nil == testURL) || (nil == [testURL scheme]))
+		{
+			errorString = NSLocalizedStringFromTable(@"Unable to find an actual URL in the given selection.", @"Services"/* table */,
+														@"error message for non-URLs given to the open-URL Service provider");
+		}
+		else
+		{
+			// handle the URL!
+			std::string		urlString = [theURLString UTF8String];
+			
+			
+			try
+			{
+				Quills::Session::handle_url(urlString);
+			}
+			catch (std::exception const&	e)
+			{
+				NSString*				titleText = NSLocalizedStringFromTable(@"Exception while trying to handle URL for Service", @"Services"/* table */,
+																				@"title of script error");
+				CFRetainRelease			messageCFString(CFStringCreateWithCString
+														(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
+														true/* is retained */); // LOCALIZE THIS?
+				
+				
+				Console_WriteScriptError((CFStringRef)titleText, messageCFString.returnCFStringRef());
+				errorString = NSLocalizedStringFromTable(@"Unable to do anything with the given resource.", @"Services"/* table */,
+															@"error message when an exception is raised within the open-URL Service provider");
+			}
+		}
+	}
+	
+	if (nil != errorString)
+	{
+		AlertMessages_BoxRef	box = Alert_New();
+		
+		
+		*error = errorString;
+		Alert_SetParamsFor(box, kAlert_StyleOK);
+		Alert_SetType(box, kAlertNoteAlert);
+		Alert_SetTextCFStrings(box, (CFStringRef)*error, ([theURLString length] > 100/* arbitrary */)
+															? (CFStringRef)[theURLString substringToIndex:99]
+															: (CFStringRef)theURLString/* help text */);
+		Alert_Display(box);
+	}
+}// openURL:userData:error:
+
+
+@end // Commands_ServiceProviders
 
 
 @implementation Commands_SessionWrap

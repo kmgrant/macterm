@@ -537,9 +537,6 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 	}
 	else
 	{
-		Boolean		displayOK = false;
-		
-		
 		result = Session_New(inContextOrNull);
 		if (nullptr != result)
 		{
@@ -547,15 +544,13 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 			HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
 			
 			
-			SetWindowKind(window, WIN_SHELL);
-			
 			// see also SessionFactory_RespawnSession(), which must do something similar
 			localResult = Local_SpawnProcess(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
 												inArgumentArray, inWorkingDirectoryOrNull);
 			if (kLocal_ResultOK == localResult)
 			{
 				// success!
-				displayOK = true;
+				SetWindowKind(window, WIN_SHELL);
 				startTrackingSession(result, terminalWindow);
 				
 				// fix initial text encoding at the Session level; it is generally set for
@@ -634,13 +629,16 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 					}
 				}
 			}
-			
-			unless (displayOK)
+			else
 			{
 				// TEMPORARY - NEED to display some kind of user alert here
 				Console_WriteValue("process spawn failed, error", localResult);
 				Sound_StandardAlert();
 				Session_Dispose(&result);
+				
+				// NOTE: normally destroying a session will also release the terminal
+				// window, but in this case it isn’t associated with the session yet
+				TerminalWindow_Dispose(&terminalWindow);
 			}
 		}
 	}
@@ -653,7 +651,9 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 Creates a new session whose command line is implicitly set to
 the user’s preferred shell, and whose other session preferences
 come from user defaults.  A workspace may be given however to
-customize where the window is displayed.
+customize where the window is displayed, and a different
+starting directory may also be used (user’s home directory by
+default).
 
 See SessionFactory_NewSessionArbitraryCommand() for more on
 how the returned session is constructed.
@@ -663,7 +663,8 @@ how the returned session is constructed.
 SessionRef
 SessionFactory_NewSessionDefaultShell	(TerminalWindowRef			inTerminalWindow,
 										 Preferences_ContextRef		inWorkspaceOrNull,
-										 UInt16						inWindowIndexInWorkspaceOrZero)
+										 UInt16						inWindowIndexInWorkspaceOrZero,
+										 CFStringRef				inWorkingDirectoryOrNull)
 {
 	SessionRef				result = nullptr;
 	TerminalWindowRef		terminalWindow = inTerminalWindow;
@@ -688,7 +689,8 @@ SessionFactory_NewSessionDefaultShell	(TerminalWindowRef			inTerminalWindow,
 		{
 			result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argumentCFArray,
 																nullptr/* session context */, false/* reconfigure terminal */,
-																inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero);
+																inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero,
+																inWorkingDirectoryOrNull);
 			CFRelease(argumentCFArray), argumentCFArray = nullptr;
 		}
 		// INCOMPLETE!!!
@@ -1127,10 +1129,14 @@ SessionFactory_NewSessionFromTerminalFile	(TerminalWindowRef			inTerminalWindow,
 
 
 /*!
-Creates a new session whose command line is implicitly set
-to construct a login shell, and whose other session preferences
+Creates a new session whose command line is implicitly set to
+construct a login shell, and whose other session preferences
 come from user defaults.  A workspace may be given however to
 customize where the window is displayed.
+
+Unlike SessionFactory_NewSessionDefaultShell(), this function
+does not allow a custom working directory to be set because a
+login shell will always reset this to the user’s home directory.
 
 See SessionFactory_NewSessionArbitraryCommand() for more on
 how the returned session is constructed.

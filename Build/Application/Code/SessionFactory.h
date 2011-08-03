@@ -204,7 +204,8 @@ SessionRef
 SessionRef
 	SessionFactory_NewSessionDefaultShell			(TerminalWindowRef				inTerminalWindow,
 													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
-													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
+													 UInt16							inWindowIndexInWorkspaceOrZero = 0,
+													 CFStringRef					inWorkingDirectoryOrNull = nullptr);
 
 SessionRef
 	SessionFactory_NewSessionFromCommandFile		(TerminalWindowRef				inTerminalWindow,

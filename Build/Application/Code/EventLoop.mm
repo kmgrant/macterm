@@ -156,7 +156,6 @@ void					eventNotifyGlobal				(EventLoop_GlobalEvent, void*);
 My_GlobalEventTargetRef	newGlobalEventTarget			();
 OSStatus				receiveApplicationSwitch		(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveServicesEvent			(EventHandlerCallRef, EventRef, void*);
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 OSStatus				receiveSheetOpening				(EventHandlerCallRef, EventRef, void*);
 #endif
@@ -193,27 +192,20 @@ CarbonEventHandlerWrap				gCarbonEventModifiersHandler(GetApplicationEventTarget
 																			kEventRawKeyUp),
 																	nullptr/* user data */);
 Console_Assertion					_2(gCarbonEventModifiersHandler.isInstalled(), __FILE__, __LINE__);
-CarbonEventHandlerWrap				gCarbonEventServiceHandler(GetApplicationEventTarget(),
-																receiveServicesEvent,
-																CarbonEventSetInClass
-																	(CarbonEventClass(kEventClassService),
-																		kEventServiceGetTypes, kEventServiceCopy, kEventServicePerform),
-																nullptr/* user data */);
-Console_Assertion					_3(gCarbonEventServiceHandler.isInstalled(), __FILE__, __LINE__);
 CarbonEventHandlerWrap				gCarbonEventSwitchHandler(GetApplicationEventTarget(),
 																receiveApplicationSwitch,
 																CarbonEventSetInClass
 																	(CarbonEventClass(kEventClassApplication),
 																		kEventAppActivated, kEventAppDeactivated),
 																nullptr/* user data */);
-Console_Assertion					_4(gCarbonEventSwitchHandler.isInstalled(), __FILE__, __LINE__);
+Console_Assertion					_3(gCarbonEventSwitchHandler.isInstalled(), __FILE__, __LINE__);
 CarbonEventHandlerWrap				gCarbonEventWindowActivateHandler(GetApplicationEventTarget(),
 																		receiveWindowActivated,
 																		CarbonEventSetInClass
 																			(CarbonEventClass(kEventClassWindow),
 																				kEventWindowActivated),
 																		nullptr/* user data */);
-Console_Assertion					_5(gCarbonEventWindowActivateHandler.isInstalled(), __FILE__, __LINE__);
+Console_Assertion					_4(gCarbonEventWindowActivateHandler.isInstalled(), __FILE__, __LINE__);
 EventHandlerUPP						gCarbonEventSheetOpeningUPP = nullptr;
 EventHandlerRef						gCarbonEventSheetOpeningHandler = nullptr;
 
@@ -875,161 +867,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	return result;
 }// receiveHICommand
-
-
-/*!
-Handles "kEventServiceGetTypes", "kEventServiceCopy" and
-"kEventServicePerform" of "kEventClassService".
-
-Invoked by Mac OS X whenever an item in the Services menu is
-invoked for a piece of data.
-
-(3.0)
-*/
-OSStatus
-receiveServicesEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					UNUSED_ARGUMENT(inUserData))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassService);
-	assert((kEventKind == kEventServiceGetTypes) || (kEventKind == kEventServiceCopy) || (kEventKind == kEventServicePerform));
-	
-	switch (kEventKind)
-	{
-	case kEventServiceCopy:
-	case kEventServiceGetTypes:
-		// return data or type information for the current selection;
-		// currently, only terminal window text is supported
-		{
-			SessionRef		activeSession = SessionFactory_ReturnUserRecentSession();
-			
-			
-			if (nullptr != activeSession)
-			{
-				TerminalWindowRef	activeTerminalWindow = Session_ReturnActiveTerminalWindow(activeSession);
-				
-				
-				if (nullptr != activeTerminalWindow)
-				{
-					TerminalViewRef		activeTerminalView = TerminalWindow_ReturnViewWithFocus(activeTerminalWindow);
-					
-					
-					if (nullptr != activeTerminalView)
-					{
-						if (kEventKind == kEventServiceGetTypes)
-						{
-							// return the data types that are possible to Copy from this window
-							if (TerminalView_TextSelectionExists(activeTerminalView))
-							{
-								CFMutableArrayRef	copiedTypes = nullptr;
-								
-								
-								// grab the scrap that contains the data on which to perform the Open URL service
-								result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamServiceCopyTypes, typeCFMutableArrayRef, copiedTypes);
-								
-								// if the array was found, proceed
-								if (noErr == result)
-								{
-									CFArrayAppendValue(copiedTypes, CFSTR("TEXT")/* ??? necessary ??? */);
-									CFArrayAppendValue(copiedTypes, FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"), kUTTypeUTF16ExternalPlainText));
-									CFArrayAppendValue(copiedTypes, FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"), kUTTypeUTF8PlainText));
-									CFArrayAppendValue(copiedTypes, FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText));
-								}
-							}
-						}
-						else if (kEventKind == kEventServiceCopy)
-						{
-							// copy selected text for the Service to use
-							PasteboardRef	destinationPasteboard = nullptr;
-							
-							
-							// grab the pasteboard to which the current selection should be copied
-							result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamPasteboardRef, typePasteboardRef, destinationPasteboard);
-							
-							// if the source pasteboard was found, proceed
-							if (noErr == result)
-							{
-								CFStringRef		selectedText = TerminalView_ReturnSelectedTextAsNewUnicode
-																(activeTerminalView, 0/* number of spaces to replace with one tab */, 0/* flags */);
-								
-								
-								if (nullptr != selectedText)
-								{
-									result = Clipboard_AddCFStringToPasteboard(selectedText, destinationPasteboard);
-									CFRelease(selectedText), selectedText = nullptr;
-								}
-							}
-						}
-						else
-						{
-							assert(false && "unexpected Services event kind");
-						}
-					}
-				}
-			}
-		}
-		break;
-	
-	case kEventServicePerform:
-		// handle an open-URL event
-		{
-			PasteboardRef	sourcePasteboard = nullptr;
-			
-			
-			// grab the pasteboard that contains the data on which to perform the Open URL service
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamPasteboardRef, typePasteboardRef, sourcePasteboard);
-			
-			// if the source pasteboard was found, proceed
-			if (noErr == result)
-			{
-				CFStringRef		urlCFString = nullptr;
-				CFStringRef		utiCFString = nullptr;
-				
-				
-				// register the pasteboard
-				Clipboard_SetPasteboardModified(sourcePasteboard);
-				
-				// retrieve text from the given pasteboard and interpret it as a URL
-				if (Clipboard_CreateCFStringFromPasteboard(urlCFString, utiCFString, sourcePasteboard))
-				{
-					// handle the URL!
-					std::string		urlString;
-					
-					
-					StringUtilities_CFToUTF8(urlCFString, urlString);
-					try
-					{
-						Quills::Session::handle_url(urlString);
-					}
-					catch (std::exception const&	e)
-					{
-						CFStringRef			titleCFString = CFSTR("Exception while trying to handle URL for Service"); // LOCALIZE THIS
-						CFRetainRelease		messageCFString(CFStringCreateWithCString
-															(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
-															true/* is retained */); // LOCALIZE THIS?
-						
-						
-						Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());
-						result = eventNotHandledErr;
-					}
-					if (nullptr != urlCFString) CFRelease(urlCFString), urlCFString = nullptr;
-					CFRelease(utiCFString), utiCFString = nullptr;
-				}
-			}
-		}
-		break;
-	
-	default:
-		Console_WriteLine("unknown Services event received!");
-		break;
-	}
-	return result;
-}// receiveServicesEvent
 
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4

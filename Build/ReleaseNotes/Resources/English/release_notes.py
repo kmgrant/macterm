@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110802',
     '20110731',
     '20110729',
     '20110728',
@@ -402,6 +403,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110802': [
+        'Service "Open Folder in MacTerm" is now available; System Preferences (Keyboard) may be used to enable it.',
+        'Services are now implemented using Cocoa, which makes them slightly more robust on newer OS versions.',
+    ],
     '20110731': [
         'Since Mac OS X Lion has its own meaning for Option-resizing a window, MacTerm now requires the Control key to activate its "swap resize preference" behavior.',
     ],

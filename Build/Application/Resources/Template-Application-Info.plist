@@ -273,17 +273,41 @@
 			<string>openURL</string>
 			<key>NSPortName</key>
 			<string>MacTerm</string>
+			<key>NSRequiredContext</key>
+			<dict>
+				<key>NSTextContent</key>
+				<string>URL</string>
+				<key>NSWordLimit</key>
+				<integer>1</integer>
+			</dict>
 			<key>NSSendTypes</key>
 			<array>
 				<string>NSStringPboardType</string>
-				<string>public.utf16-external-plain-text</string>
-				<string>public.utf8-plain-text</string>
-				<string>public.plain-text</string>
 			</array>
-			<key>NSTextContent</key>
-			<string>URL</string>
-			<key>NSWordLimit</key>
-			<integer>1</integer>
+			<key>NSServiceDescription</key>
+			<string>Open terminal window with command based on contents of URL.</string>
+		</dict>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Open Folder in MacTerm</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>openPathInShell</string>
+			<key>NSPortName</key>
+			<string>MacTerm</string>
+			<key>NSRequiredContext</key>
+			<dict>
+				<key>NSTextContent</key>
+				<string>FilePath</string>
+			</dict>
+			<key>NSSendTypes</key>
+			<array>
+				<string>NSStringPboardType</string>
+			</array>
+			<key>NSServiceDescription</key>
+			<string>Open terminal window with working directory set to given path, in default shell.</string>
 		</dict>
 	</array>
 	<key>NSInitialToolTipDelay</key>
