@@ -404,6 +404,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20110802': [
+        'Fixed "Show Clipboard" so that it can be invoked at any time, not just when a terminal window is active.',
         'Service "Open Folder in MacTerm" is now available; System Preferences (Keyboard) may be used to enable it.',
         'Services are now implemented using Cocoa, which makes them slightly more robust on newer OS versions.',
     ],

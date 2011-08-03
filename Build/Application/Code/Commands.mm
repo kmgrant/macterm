@@ -5963,6 +5963,11 @@ orderFrontClipboard:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandShowClipboard, nullptr/* target */);
 }
+- (id)
+canOrderFrontClipboard:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+	return validatorYes(anItem);
+}
 
 
 - (IBAction)
