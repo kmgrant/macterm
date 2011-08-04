@@ -638,6 +638,7 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 				
 				// NOTE: normally destroying a session will also release the terminal
 				// window, but in this case it isn’t associated with the session yet
+				stopTrackingTerminalWindow(terminalWindow);
 				TerminalWindow_Dispose(&terminalWindow);
 			}
 		}
