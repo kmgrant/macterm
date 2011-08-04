@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110803',
     '20110802',
     '20110731',
     '20110729',
@@ -403,6 +404,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110803': [
+        'Session exit notification windows now include error descriptions for processes that return standard system exit status values.',
+    ],
     '20110802': [
         'Fixed "Show Clipboard" so that it can be invoked at any time, not just when a terminal window is active.',
         'Service "Open Folder in MacTerm" is now available; System Preferences (Keyboard) may be used to enable it.',

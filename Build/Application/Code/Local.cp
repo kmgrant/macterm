@@ -333,7 +333,17 @@ Local_KillProcess	(Local_ProcessRef*	inoutRefPtr)
 				int		killResult = kill(ptr->_processID, SIGKILL);
 				
 				
-				if (0 != killResult) Console_Warning(Console_WriteValue, "unable to kill process: Unix error", errno);
+				if (-1 == killResult)
+				{
+					int const	kActualError = errno;
+					
+					
+					// ignore “no such process” errors
+					if (ESRCH != kActualError)
+					{
+						Console_Warning(Console_WriteValue, "unable to kill process: Unix error", kActualError);
+					}
+				}
 				else
 				{
 					// successful kill, ID is no longer valid
@@ -1394,6 +1404,7 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 	if (kLocal_ResultOK == localResult)
 	{
 		My_TTYSlaveID	slaveTTY = kLocal_InvalidTerminalID;
+		int				sysResult = 0;
 		
 		
 		// split into child and parent processes; 0 is returned
@@ -1416,24 +1427,54 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 				// create a session
 				if (-1 == setsid())
 				{
+					int const	kActualError = errno;
+					
+					
+					Console_Warning(Console_WriteValue, "failed to create a session ID, errno", kActualError);
 					exit(EX_NOPERM);
 				}
 				
-				// SVR4 acquires controlling terminal on open()
+				// BSD does not acquire the controlling terminal at this point...
 				slaveTTY = openSlaveTeletypewriter(outSlaveTeletypewriterName);
-				if (slaveTTY >= 0) close(masterTTY); // child process no longer needs the master TTY
-				
-				// this is the BSD 4.4 way to acquire the controlling terminal
-				if (-1 == ioctl(slaveTTY, TIOCSCTTY/* command */, NULL/* data */))
+				if (kLocal_InvalidTerminalID == slaveTTY)
 				{
-					exit(EX_OSERR);
+					Console_Warning(Console_WriteLine, "failed to open the slave TTY");
+					exit(EX_UNAVAILABLE);
+				}
+				
+				// the child process no longer needs the master TTY
+				{
+					sysResult = close(masterTTY);
+					if (-1 == sysResult)
+					{
+						int const	kActualError = errno;
+						
+						
+						Console_Warning(Console_WriteValue, "failed to close the master TTY from the child process, errno", kActualError);
+					}
+				}
+				
+				// ...BSD acquires the controlling terminal here
+				sysResult = ioctl(slaveTTY, TIOCSCTTY/* command */, NULL/* data */);
+				if (-1 == sysResult)
+				{
+					int const	kActualError = errno;
+					
+					
+					Console_Warning(Console_WriteValue, "failed to acquire the controlling terminal, errno", kActualError);
+					exit(EX_UNAVAILABLE);
 				}
 				
 				// set slave’s terminal control information and terminal screen size
 				if (nullptr != inSlaveTerminalControlPtrOrNull)
 				{
-					if (-1 == tcsetattr(slaveTTY, TCSANOW/* when to apply changes */, inSlaveTerminalControlPtrOrNull))
+					sysResult = tcsetattr(slaveTTY, TCSANOW/* when to apply changes */, inSlaveTerminalControlPtrOrNull);
+					if (-1 == sysResult)
 					{
+						int const	kActualError = errno;
+						
+						
+						Console_Warning(Console_WriteValue, "failed to apply terminal control parameters, errno", kActualError);
 						exit(EX_OSERR);
 					}
 					if (gInDebuggingMode && DebugInterface_LogsTeletypewriterState())
@@ -1445,6 +1486,7 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 				}
 				if (nullptr != inSlaveTerminalSizePtrOrNull)
 				{
+					// NOTE: this function prints its own console warnings
 					if (kLocal_ResultOK != sendTerminalResizeMessage
 											(slaveTTY, inSlaveTerminalSizePtrOrNull))
 					{
@@ -1453,10 +1495,33 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 				}
 				
 				// make the slave terminal the standard input, output, and standard error of this process
-				if (STDIN_FILENO != dup2(slaveTTY, STDIN_FILENO)) exit(EX_UNAVAILABLE);
-				if (STDOUT_FILENO != dup2(slaveTTY, STDOUT_FILENO)) exit(EX_UNAVAILABLE);
-				if (STDERR_FILENO != dup2(slaveTTY, STDERR_FILENO)) exit(EX_UNAVAILABLE);
-				if (slaveTTY > STDERR_FILENO) close(slaveTTY);
+				if (STDIN_FILENO != dup2(slaveTTY, STDIN_FILENO))
+				{
+					Console_Warning(Console_WriteLine, "failed to duplicate standard input");
+					exit(EX_UNAVAILABLE);
+				}
+				if (STDOUT_FILENO != dup2(slaveTTY, STDOUT_FILENO))
+				{
+					Console_Warning(Console_WriteLine, "failed to duplicate standard output");
+					exit(EX_UNAVAILABLE);
+				}
+				if (STDERR_FILENO != dup2(slaveTTY, STDERR_FILENO))
+				{
+					Console_Warning(Console_WriteLine, "failed to duplicate standard error");
+					exit(EX_UNAVAILABLE);
+				}
+				if (slaveTTY > STDERR_FILENO)
+				{
+					sysResult = close(slaveTTY);
+					if (-1 == sysResult)
+					{
+						int const	kActualError = errno;
+						
+						
+						Console_Warning(Console_WriteValue, "failed to close original slave TTY, errno", kActualError);
+					}
+				}
+				
 				result = 0; // return 0, this is what fork() normally does within its child
 			}
 			else
@@ -1554,35 +1619,73 @@ openMasterTeletypewriter	(size_t				inNameSize,
 Opens a slave TTY with the given name, or returns
 "kLocal_InvalidTerminalID" if any problems occur.
 
+IMPORTANT:	This function is called within the child
+			portion of a fork, which limits its behavior!
+
 (3.0)
 */
 My_TTYSlaveID
 openSlaveTeletypewriter		(char const*	inSlaveTeletypewriterName)
 {
-	My_TTYSlaveID	result = kLocal_InvalidTerminalID;
+	My_TTYSlaveID			result = kLocal_InvalidTerminalID;
+	int						sysResult = 0;
+	struct group const*		groupInfoPtr = nullptr;
+	int						gid = 0;
 	
 	
-	// chown/chmod calls may only be done by root
+	if (nullptr != (groupInfoPtr = getgrnam("tty")))
 	{
-		struct group const*		groupInfoPtr = nullptr;
-		int						gid = 0;
+		gid = groupInfoPtr->gr_gid;
+	}
+	else
+	{
+		gid = -1; // group "tty" is not in the group file
+	}
+	
+	sysResult = chown(inSlaveTeletypewriterName, getuid(), gid);
+	if (-1 == sysResult)
+	{
+		// chown/chmod calls may only be done by root, so they are
+		// actually very likely to fail; TEMPORARY, maybe it makes
+		// sense to provide an option to inject security framework
+		// calls (e.g. graphical administrator password prompt)
+		// for users who want this to always happen
+		//int const		kActualError = errno;
 		
 		
-		if (nullptr != (groupInfoPtr = getgrnam("tty"))) gid = groupInfoPtr->gr_gid;
-		else gid = -1; // group "tty" is not in the group file
+		//Console_Warning(Console_WriteValueCString, "error targeting path", inSlaveTeletypewriterName);
+		//Console_Warning(Console_WriteValuePair, "unable to 'chown' the slave: target gid,error", gid, kActualError);
+	}
+	sysResult = chmod(inSlaveTeletypewriterName, S_IRUSR | S_IWUSR | S_IWGRP);
+	if (-1 == sysResult)
+	{
+		// chown/chmod calls may only be done by root, so they are
+		// actually very likely to fail; TEMPORARY, maybe it makes
+		// sense to provide an option to inject security framework
+		// calls (e.g. graphical administrator password prompt)
+		// for users who want this to always happen
+		//int const		kActualError = errno;
 		
-		chown(inSlaveTeletypewriterName, getuid(), gid);
-		chmod(inSlaveTeletypewriterName, S_IRUSR | S_IWUSR | S_IWGRP);
+		
+		//Console_Warning(Console_WriteValueCString, "error targeting path", inSlaveTeletypewriterName);
+		//Console_Warning(Console_WriteValue, "unable to 'chmod' the slave: error", kActualError);
 	}
 	
 	result = open(inSlaveTeletypewriterName, O_RDWR);
-	if (-1 == result) result = kLocal_InvalidTerminalID;
+	if (-1 == result)
+	{
+		result = kLocal_InvalidTerminalID;
+	}
 	return result;
 }// openSlaveTeletypewriter
 
 
 /*!
-For debugging - prints the data in a UNIX "termios" structure.
+For debugging - prints the data in a UNIX "termios"
+structure.
+
+IMPORTANT:	This function is called within the child
+			portion of a fork, which limits its behavior!
 
 (3.0)
 */
@@ -1851,6 +1954,9 @@ receiveSignal	(int	UNUSED_ARGUMENT(inSignal))
 /*!
 Internal version of Local_TerminalResize().
 
+IMPORTANT:	This function is called within the child
+			portion of a fork, which limits its behavior!
+
 \retval kLocal_ResultOK
 if the message is sent successfully
 
@@ -1868,6 +1974,10 @@ sendTerminalResizeMessage   (Local_TerminalID			inTTY,
 	
 	if (-1 == ioctl(inTTY, TIOCSWINSZ/* command */, inTerminalSizePtr))
 	{
+		int const	kActualError = errno;
+		
+		
+		Console_Warning(Console_WriteValue, "failed to send terminal resize message, errno", kActualError);
 		result = kLocal_ResultIOControlError;
 	}
 	return result;
@@ -2004,7 +2114,18 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 	}
 	
 	// loop terminated, ensure TTY is closed
-	close(contextPtr->masterTTY);
+	{
+		int		sysResult = close(contextPtr->masterTTY);
+		
+		
+		if (-1 == sysResult)
+		{
+			int const	kActualError = errno;
+			
+			
+			Console_Warning(Console_WriteValue, "failed to close the master TTY, errno", kActualError);
+		}
+	}
 	
 	// update the state; for thread safety, this is done indirectly
 	// by posting a session-state-update event to the main queue
@@ -2107,11 +2228,13 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 		{
 			CFStringRef			dialogTextTemplateCFString = nullptr;
 			CFStringRef			dialogTextCFString = nullptr;
+			CFStringRef			helpTextCFString = CFSTR(""); // not always used
 			CFStringRef			growlNotificationName = nullptr; // not released
 			CFStringRef			growlNotificationTitle = nullptr;
 			UIStrings_Result	stringResult = kUIStrings_ResultOK;
 			Boolean				canDisplayAlert = false;
 			Boolean				canNotifyGrowl = false;
+			Boolean				releaseHelpText = false;
 			
 			
 			if (WIFEXITED(currentStatus))
@@ -2125,6 +2248,86 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 					// failed exit
 					canDisplayAlert = true;
 					Console_WriteValuePair("process exit: pid,code", kProcessID, kExitCode);
+					
+					// if more is known about the type of exit status, add help text
+					helpTextCFString = nullptr; // initially...
+					switch (kExitCode)
+					{
+					case EX_USAGE:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitUsageHelpText, helpTextCFString);
+						break;
+					
+					case EX_DATAERR:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitDataErrHelpText, helpTextCFString);
+						break;
+					
+					case EX_NOINPUT:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitNoInputHelpText, helpTextCFString);
+						break;
+					
+					case EX_NOUSER:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitNoUserHelpText, helpTextCFString);
+						break;
+					
+					case EX_NOHOST:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitNoHostHelpText, helpTextCFString);
+						break;
+					
+					case EX_UNAVAILABLE:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitUnavailHelpText, helpTextCFString);
+						break;
+					
+					case EX_SOFTWARE:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitSoftwareHelpText, helpTextCFString);
+						break;
+					
+					case EX_OSERR:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitOSErrHelpText, helpTextCFString);
+						break;
+					
+					case EX_OSFILE:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitOSFileHelpText, helpTextCFString);
+						break;
+					
+					case EX_CANTCREAT:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitCreateHelpText, helpTextCFString);
+						break;
+					
+					case EX_IOERR:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitIOErrHelpText, helpTextCFString);
+						break;
+					
+					case EX_TEMPFAIL:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitTempFailHelpText, helpTextCFString);
+						break;
+					
+					case EX_PROTOCOL:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitProtocolHelpText, helpTextCFString);
+						break;
+					
+					case EX_NOPERM:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitNoPermHelpText, helpTextCFString);
+						break;
+					
+					case EX_CONFIG:
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitConfigHelpText, helpTextCFString);
+						break;
+					
+					default:
+						break;
+					}
+					if (false == stringResult.ok())
+					{
+						helpTextCFString = nullptr;
+					}
+					if (nullptr != helpTextCFString)
+					{
+						releaseHelpText = true;
+					}
+					else
+					{
+						helpTextCFString = CFSTR("");
+					}
 					
 					growlNotificationName = CFSTR("Session failed"); // MUST match "Growl Registration Ticket.growlRegDict"
 					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessDieTitle, growlNotificationTitle);
@@ -2219,7 +2422,6 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 			else
 			{
 				Console_WriteValuePair("process returned unknown status", kProcessID, currentStatus);
-				assert(false && "process returned unknown status");
 			}
 			
 			// display a non-blocking alert to the user, or post a Growl notification;
@@ -2248,7 +2450,7 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 					
 					if (nullptr != dialogTextCFString)
 					{
-						Alert_SetTextCFStrings(box, dialogTextCFString, CFSTR(""));
+						Alert_SetTextCFStrings(box, dialogTextCFString, helpTextCFString);
 					}
 					
 					// show the message; it is disposed asynchronously
@@ -2263,6 +2465,10 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 			if (nullptr != dialogTextCFString)
 			{
 				CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
+			}
+			if (releaseHelpText)
+			{
+				CFRelease(helpTextCFString), helpTextCFString = nullptr;
 			}
 			if (nullptr != dialogTextTemplateCFString)
 			{

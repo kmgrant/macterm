@@ -236,6 +236,81 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 													CFSTR("kUIStrings_AlertWindowShowIPAddressesPrimaryText"));
 		break;
 	
+	case kUIStrings_AlertWindowNotifySysExitUsageHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("The command was not run correctly (for example, wrong number of arguments)."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitUsageHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitDataErrHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Some of the given data was incorrect."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitDataErrHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitNoInputHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("One or more input files does not exist or is not readable."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitNoInputHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitNoUserHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Specified user was not found."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitNoUserHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitNoHostHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Specified host was not found."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitNoHostHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitUnavailHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Requested service is unavailable."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitUnavailHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitSoftwareHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Internal software error."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitSoftwareHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitOSErrHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("A system error has occurred (not enough resources, for example)."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitOSErrorHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitOSFileHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("A critical operating system file is missing."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitOSFileHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitCreateHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Requested output file could not be created."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitCreateHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitIOErrHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("An input or output error has occurred."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitIOErrorHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitTempFailHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("This failure appears to be temporary; please try again."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitTempFailHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitProtocolHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Server-side error in protocol."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitProtocolHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitNoPermHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("You do not have permission to perform the requested action."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitNoPermHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifySysExitConfigHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Error in configuration."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifySysExitConfigHelpText"));
+		break;
+	
 	case kUIStrings_AlertWindowUpdateCheckHelpText:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("A new version may be available on the web!"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowUpdateCheckHelpText"));
