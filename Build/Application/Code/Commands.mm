@@ -6878,6 +6878,29 @@ error:(NSString**)					error
 	NSString*	errorString = nil;
 	
 	
+	// for a completely incomprehensible reason, it seems that the system converts
+	// simple text selections containing pathnames into multiple-line text strings
+	// where one line is the path and another line is a file URL; so instead of
+	// just opening the damned path, it is necessary to first look for this
+	// bastardized version of the string and strip out whatever was appended...
+	{
+		NSArray*	components = [pathString componentsSeparatedByString:@"\015"/* carriage return */];
+		
+		
+		if ((nil != components) && ([components count] > 1))
+		{
+			pathString = (NSString*)[components objectAtIndex:0];
+		}
+		else
+		{
+			components = [pathString componentsSeparatedByString:@"\012"/* line feed */];
+			if ((nil != components) && ([components count] > 1))
+			{
+				pathString = (NSString*)[components objectAtIndex:0];
+			}
+		}
+	}
+	
 	if (nil != pathString)
 	{
 		NSURL*		testURL = nil;
