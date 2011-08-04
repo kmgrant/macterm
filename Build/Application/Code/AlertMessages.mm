@@ -2245,7 +2245,7 @@ used for alerts.
 setUpFonts
 {
 	[super setUpFonts];
-	[titleTextUI setFont:[NSFont userFontOfSize:18.0/* arbitrary */]];
+	//[titleTextUI setFont:[NSFont userFontOfSize:18.0/* arbitrary */]];
 	[dialogTextUI setFont:[NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]]];
 	[helpTextUI setFont:[NSFont systemFontOfSize:[NSFont labelFontSize]]];
 }// setUpFonts
@@ -2659,7 +2659,7 @@ use smaller fonts, e.g. for modeless notification windows.
 - (void)
 setUpFonts
 {
-	[titleTextUI setFont:[NSFont userFontOfSize:20.0/* arbitrary */]];
+	//[titleTextUI setFont:[NSFont userFontOfSize:20.0/* arbitrary */]];
 	[dialogTextUI setFont:[NSFont boldSystemFontOfSize:[NSFont systemFontSize]]];
 	[helpTextUI setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
 }// setUpFonts

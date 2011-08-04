@@ -405,6 +405,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20110803': [
+        'Fixed the font of alert message titles.',
         'Session exit notification windows now include error descriptions for processes that return standard system exit status values.',
     ],
     '20110802': [
