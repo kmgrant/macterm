@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110804',
     '20110803',
     '20110802',
     '20110731',
@@ -404,6 +405,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110804': [
+        'Fixed terminal device allocation so that sessions cannot fail to open in multi-user environments where some devices are already in use.',
+    ],
     '20110803': [
         'Fixed a possible crash if the application was backgrounded after a session failed to open.',
         'Fixed the font of alert message titles.',

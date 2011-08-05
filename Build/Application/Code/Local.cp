@@ -1438,7 +1438,7 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 				slaveTTY = openSlaveTeletypewriter(outSlaveTeletypewriterName);
 				if (kLocal_InvalidTerminalID == slaveTTY)
 				{
-					Console_Warning(Console_WriteLine, "failed to open the slave TTY");
+					Console_Warning(Console_WriteValueCString, "failed to open the slave TTY", outSlaveTeletypewriterName);
 					exit(EX_UNAVAILABLE);
 				}
 				
@@ -1571,42 +1571,55 @@ openMasterTeletypewriter	(size_t				inNameSize,
 	}
 	else
 	{
-		char*		ptr1 = nullptr;
-		char*		ptr2 = nullptr;
-		Boolean		doneSearch = false;
+		char*			ptr1 = nullptr;
+		char*			ptr2 = nullptr;
+		Boolean			doneSearch = false;
+		struct stat		slaveInfo;
 		
 		
 		strcpy(outSlaveTeletypewriterName, kSlaveTemplate);
-		outSlaveTeletypewriterName[kIndexW] = 'p'; // use "pty"
 		
 		// vary the name of the pseudo-teletypewriter until
 		// an available device is found; the choices are
 		// based on what appears in /dev on Mac OS X 10.1
-		for (ptr1 = "pqrstuvwxyzPQRST"; ((!doneSearch) && (0 != *ptr1)); ++ptr1)
+		for (ptr1 = "pqrstuvwxyzPQRST"; ((!doneSearch) && ('\0' != *ptr1)); ++ptr1)
 		{
 			outSlaveTeletypewriterName[kIndexX] = *ptr1;
-			for (ptr2 = "0123456789abcdef"; ((!doneSearch) && (0 != *ptr2)); ++ptr2)
+			for (ptr2 = "0123456789abcdef"; ((!doneSearch) && ('\0' != *ptr2)); ++ptr2)
 			{
+				outSlaveTeletypewriterName[kIndexW] = 'p'; // use "pty"
 				outSlaveTeletypewriterName[kIndexY] = *ptr2;
 				
-				// try to open master
-				outID = open(outSlaveTeletypewriterName, O_RDWR);
-				if (-1 != outID)
+				// test the corresponding slave first; if it is owned by
+				// another user then the subprocess would fail to open it,
+				// so just skip the pair and try a different one
+				outSlaveTeletypewriterName[kIndexW] = 't'; // use "tty"
+				bzero(&slaveInfo, sizeof(slaveInfo));
+				if ((-1 != stat(outSlaveTeletypewriterName, &slaveInfo)) &&
+					((0 == slaveInfo.st_uid) || (getuid() == slaveInfo.st_uid) || (geteuid() == slaveInfo.st_uid)))
 				{
-					outSlaveTeletypewriterName[kIndexW] = 't'; // use "tty"
-					doneSearch = true;
-					result = kLocal_ResultOK;
-				}
-				else
-				{
-					// only quit if there are no more devices available;
-					// other errors might be avoided by trying another “pty”
-					if (ENOENT == errno)
+					// this slave suitable; try to open master
+					outSlaveTeletypewriterName[kIndexW] = 'p'; // use "pty"
+					outID = open(outSlaveTeletypewriterName, O_RDWR);
+					if (-1 != outID)
 					{
+						// master opened successfully; return to the name of the slave
+						outSlaveTeletypewriterName[kIndexW] = 't'; // use "tty"
+						
 						doneSearch = true;
-						result = kLocal_ResultTermCapError;
+						result = kLocal_ResultOK;
 					}
-					outID = kLocal_InvalidTerminalID;
+					else
+					{
+						// only quit if there are no more devices available;
+						// other errors might be avoided by trying another “pty”
+						if (ENOENT == errno)
+						{
+							doneSearch = true;
+							result = kLocal_ResultTermCapError;
+						}
+						outID = kLocal_InvalidTerminalID;
+					}
 				}
 			}
 		}
