@@ -273,16 +273,10 @@
 			<string>openURL</string>
 			<key>NSPortName</key>
 			<string>MacTerm</string>
-			<key>NSRequiredContext</key>
-			<dict>
-				<key>NSTextContent</key>
-				<string>URL</string>
-				<key>NSWordLimit</key>
-				<integer>1</integer>
-			</dict>
 			<key>NSSendTypes</key>
 			<array>
 				<string>NSStringPboardType</string>
+				<string>NSURLPboardType</string>
 			</array>
 			<key>NSServiceDescription</key>
 			<string>Open terminal window with command based on contents of URL.</string>
@@ -300,11 +294,16 @@
 			<key>NSRequiredContext</key>
 			<dict>
 				<key>NSTextContent</key>
-				<string>FilePath</string>
+				<array>
+					<string>FilePath</string>
+					<string>URL</string>
+				</array>
 			</dict>
 			<key>NSSendTypes</key>
 			<array>
+				<string>NSFilenamesPboardType</string>
 				<string>NSStringPboardType</string>
+				<string>NSURLPboardType</string>
 			</array>
 			<key>NSServiceDescription</key>
 			<string>Open terminal window with working directory set to given path, in default shell.</string>

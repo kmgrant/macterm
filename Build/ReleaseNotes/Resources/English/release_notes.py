@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110805',
     '20110804',
     '20110803',
     '20110802',
@@ -405,6 +406,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110805': [
+        'Service "Open Folder in MacTerm" has been enhanced so that it works from folder contextual menus in the Finder.',
+    ],
     '20110804': [
         'Fixed terminal device allocation so that sessions cannot fail to open in multi-user environments where some devices are already in use.',
     ],

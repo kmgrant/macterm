@@ -6878,6 +6878,15 @@ error:(NSString**)					error
 	NSString*	errorString = nil;
 	
 	
+	if (nil == pathString)
+	{
+		pathString = [aPasteboard stringForType:NSURLPboardType];
+	}
+	if (nil == pathString)
+	{
+		pathString = [aPasteboard stringForType:NSFilenamesPboardType];
+	}
+	
 	// for a completely incomprehensible reason, it seems that the system converts
 	// simple text selections containing pathnames into multiple-line text strings
 	// where one line is the path and another line is a file URL; so instead of
@@ -6985,6 +6994,11 @@ error:(NSString**)			error
 	NSString*	theURLString = [aPasteboard stringForType:NSStringPboardType];
 	NSString*	errorString = nil;
 	
+	
+	if (nil == theURLString)
+	{
+		theURLString = [aPasteboard stringForType:NSURLPboardType];
+	}
 	
 	if (nil == theURLString)
 	{
