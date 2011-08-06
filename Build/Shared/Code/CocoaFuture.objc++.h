@@ -56,6 +56,13 @@ setCollectionBehavior:(unsigned int)_;
 
 @end
 
+@interface NSSegmentedControl (NSSegmentedControlExtensionsFromLeopard)
+
+- (void)
+setSegmentStyle:(int/*NSInteger*//*NSSegmentStyle*/)_;
+
+@end
+
 #endif // MAC_OS_X_VERSION_10_5
 
 

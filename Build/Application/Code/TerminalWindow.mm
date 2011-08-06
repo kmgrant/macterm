@@ -67,6 +67,7 @@ extern "C"
 #import <CFRetainRelease.h>
 #import <CGContextSaveRestore.h>
 #import <CocoaBasic.h>
+#import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
@@ -121,6 +122,7 @@ NSString*	kMy_ToolbarItemIDLED4		= @"com.mactelnet.MacTelnet.toolbaritem.led4";
 NSString*	kMy_ToolbarItemIDPrint		= @"com.mactelnet.MacTelnet.toolbaritem.print";
 // WARNING: The Customize item ID is currently redundantly specified in the Info Window module; this is TEMPORARY, but both should agree.
 NSString*	kMy_ToolbarItemIDCustomize	= @"com.mactelnet.MacTelnet.toolbaritem.customize";
+NSString*	kMy_ToolbarItemIDTabs		= @"net.macterm.MacTerm.toolbaritem.tabs";
 
 SInt16 const	kMy_MaximumNumberOfArrangedWindows = 20; // TEMPORARY RESTRICTION
 
@@ -362,6 +364,22 @@ Toolbar item “Print”.
 @interface TerminalWindow_ToolbarItemPrint : NSToolbarItem
 {
 }
+@end
+
+/*!
+Toolbar item “Tabs”.
+*/
+@interface TerminalWindow_ToolbarItemTabs : NSToolbarItem
+{
+	NSSegmentedControl*		segmentedControl;
+	NSArray*				targets;
+	SEL						action;
+}
+
+- (void)
+setTabTargets:(NSArray*)_
+andAction:(SEL)_;
+
 @end
 
 #pragma mark Internal Method Prototypes
@@ -7860,6 +7878,10 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	{
 		result = [[[TerminalWindow_ToolbarItemPrint alloc] init] autorelease];
 	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDTabs])
+	{
+		result = [[[TerminalWindow_ToolbarItemTabs alloc] init] autorelease];
+	}
 	return result;
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
 
@@ -7875,15 +7897,16 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 {
 #pragma unused(toolbar)
 	return [NSArray arrayWithObjects:
+						kMy_ToolbarItemIDTabs,
+						NSToolbarSpaceItemIdentifier,
+						NSToolbarFlexibleSpaceItemIdentifier,
+						kMy_ToolbarItemIDCustomize,
 						kMy_ToolbarItemIDLED1,
 						kMy_ToolbarItemIDLED2,
 						kMy_ToolbarItemIDLED3,
 						kMy_ToolbarItemIDLED4,
 						NSToolbarSeparatorItemIdentifier,
-						NSToolbarSpaceItemIdentifier,
-						NSToolbarFlexibleSpaceItemIdentifier,
 						kMy_ToolbarItemIDPrint,
-						kMy_ToolbarItemIDCustomize,
 						nil];
 }// toolbarAllowedItemIdentifiers
 
@@ -7899,13 +7922,14 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 {
 #pragma unused(toolbar)
 	return [NSArray arrayWithObjects:
-						NSToolbarSpaceItemIdentifier,
+						kMy_ToolbarItemIDTabs,
+						NSToolbarFlexibleSpaceItemIdentifier,
 						NSToolbarSpaceItemIdentifier,
 						kMy_ToolbarItemIDLED1,
 						kMy_ToolbarItemIDLED2,
 						kMy_ToolbarItemIDLED3,
 						kMy_ToolbarItemIDLED4,
-						NSToolbarFlexibleSpaceItemIdentifier,
+						NSToolbarSpaceItemIdentifier,
 						kMy_ToolbarItemIDPrint,
 						NSToolbarSpaceItemIdentifier,
 						NSToolbarSpaceItemIdentifier,
@@ -8318,6 +8342,255 @@ performToolbarItemAction:(id)	sender
 
 
 @end // TerminalWindow_ToolbarItemPrint
+
+
+@interface Thing : NSObject
+{
+	NSAttributedString*		description;
+}
+
+- (id)
+initWithDescription:(NSAttributedString*)_;
+
+- (NSAttributedString*)
+attributedDescription;
+
+- (void)
+performAction:(id)_;
+
+@end
+
+@implementation Thing
+
+- (id)
+initWithDescription:(NSAttributedString*)	aDescription
+{
+	self = [super init];
+	if (nil != self)
+	{
+		self->description = [aDescription copy];
+	}
+	return self;
+}
+
+- (void)
+dealloc
+{
+	[description release];
+	[super dealloc];
+}
+
+- (NSAttributedString*)
+attributedDescription
+{
+	return description;
+}
+
+- (NSString*)
+toolTip
+{
+	return @"tooltip";
+}
+
+- (void)
+performAction:(id) sender
+{
+	NSLog(@"%@ invoked with obj %@", self, sender);
+}
+
+@end
+
+
+@implementation TerminalWindow_ToolbarItemTabs
+
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
+- (id)
+init
+{
+	self = [super initWithItemIdentifier:kMy_ToolbarItemIDTabs];
+	if (nil != self)
+	{
+		self->segmentedControl = [[NSSegmentedControl alloc] initWithFrame:NSZeroRect];
+		[self->segmentedControl setTarget:self];
+		[self->segmentedControl setAction:@selector(performSegmentedControlAction:)];
+		if (FlagManager_Test(kFlagOS10_5API))
+		{
+			if ([self->segmentedControl respondsToSelector:@selector(setSegmentStyle:)])
+			{
+				[self->segmentedControl setSegmentStyle:FUTURE_SYMBOL(4, NSSegmentStyleTexturedSquare)];
+			}
+		}
+		
+		//[self setAction:@selector(performToolbarItemAction:)];
+		//[self setTarget:self];
+		[self setEnabled:YES];
+		[self setView:self->segmentedControl];
+		[self setMinSize:NSMakeSize(120, 25)]; // arbitrary
+		[self setMaxSize:NSMakeSize(1024, 25)]; // arbitrary
+		[self setLabel:@""];
+		[self setPaletteLabel:NSLocalizedString(@"Tabs", @"toolbar item name; for tabs")];
+		
+		[self setTabTargets:[NSArray arrayWithObjects:
+										[[[Thing alloc]
+											initWithDescription:[[[NSAttributedString alloc]
+																	initWithString:NSLocalizedString
+																					(@"Tab 1", @"toolbar item tabs; default segment 0 name")]
+																	autorelease]] autorelease],
+										[[[Thing alloc]
+											initWithDescription:[[[NSAttributedString alloc]
+																	initWithString:NSLocalizedString
+																					(@"Tab 2", @"toolbar item tabs; default segment 1 name")]
+																	autorelease]] autorelease],
+										nil]
+				andAction:nil];
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
+- (void)
+dealloc
+{
+	[self->segmentedControl release];
+	[self->targets release];
+	[super dealloc];
+}// dealloc
+
+
+/*!
+Responds to an action in the menu of a toolbar item by finding
+the corresponding object in the target array and making it
+perform the action set by "setTabTargets:andAction:".
+
+(4.0)
+*/
+- (void)
+performMenuAction:(id)		sender
+{
+	if (nullptr != self->action)
+	{
+		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+		NSMenu*			menu = [asMenuItem menu];
+		
+		
+		if (nil != menu)
+		{
+			unsigned int const		kIndex = STATIC_CAST([menu indexOfItem:asMenuItem], unsigned int);
+			
+			
+			if (kIndex < [self->targets count])
+			{
+				(id)[[self->targets objectAtIndex:kIndex] performSelector:self->action withObject:self];
+			}
+		}
+	}
+}// performMenuAction:
+
+
+/*!
+Responds to an action in a segmented control by finding the
+corresponding object in the target array and making it perform
+the action set by "setTabTargets:andAction:".
+
+(4.0)
+*/
+- (void)
+performSegmentedControlAction:(id)		sender
+{
+	if (nullptr != self->action)
+	{
+		if (self->segmentedControl == sender)
+		{
+			unsigned int const		kIndex = STATIC_CAST([self->segmentedControl selectedSegment], unsigned int);
+			
+			
+			if (kIndex < [self->targets count])
+			{
+				(id)[[self->targets objectAtIndex:kIndex] performSelector:self->action withObject:self];
+			}
+		}
+	}
+}// performSegmentedControlAction:
+
+
+/*!
+Specifies the model on which the tab display is based.
+
+When any tab is selected the specified selector is invoked
+on one of the given objects, with this toolbar item as the
+sender.  This is true no matter how the item is found: via
+segmented control or overflow menu.
+
+Each object:
+- MUST respond to an "attributedDescription" selector that
+  returns an "NSAttributedString*" for that tab’s label.
+- MAY respond to a "toolTip" selector to return a string for
+  that tab’s tooltip.
+
+In the future, additional selectors may be prescribed for the
+object (to set an icon, for instance).
+
+(4.0)
+*/
+- (void)
+setTabTargets:(NSArray*)	anObjectArray
+andAction:(SEL)				aSelector
+{
+	if (self->targets != anObjectArray)
+	{
+		[self->targets release];
+		self->targets = [anObjectArray copy];
+	}
+	self->action = aSelector;
+	
+	// update the user interface
+	[self->segmentedControl setSegmentCount:[self->targets count]];
+	[self->segmentedControl setSelectedSegment:0];
+	{
+		NSEnumerator*	toObject = [self->targets objectEnumerator];
+		NSMenu*			menuRep = [[[NSMenu alloc] init] autorelease];
+		NSMenuItem*		menuItem = [[[NSMenuItem alloc] initWithTitle:@"" action:self->action keyEquivalent:@""] autorelease];
+		unsigned int	i = 0;
+		
+		
+		// with "performMenuAction:" and "performSegmentedControlAction:",
+		// actions can be handled consistently by the caller; those
+		// methods reroute invocations by menu item or segmented control,
+		// and present the same sender (this NSToolbarItem) instead
+		while (id object = [toObject nextObject])
+		{
+			NSMenuItem*		newItem = [[[NSMenuItem alloc] initWithTitle:[[object attributedDescription] string]
+																			action:@selector(performMenuAction:) keyEquivalent:@""]
+										autorelease];
+			
+			
+			[newItem setAttributedTitle:[object attributedDescription]];
+			[newItem setTarget:self];
+			[self->segmentedControl setLabel:[[object attributedDescription] string] forSegment:i];
+			if ([object respondsToSelector:@selector(toolTip)])
+			{
+				[[self->segmentedControl cell] setToolTip:[object toolTip] forSegment:i];
+			}
+			[menuRep addItem:newItem];
+			++i;
+		}
+		[menuItem setSubmenu:menuRep];
+		[self setMenuFormRepresentation:menuItem];
+	}
+}// setTabTargets:andAction:
+
+
+@end // TerminalWindow_ToolbarItemTabs
 
 
 @implementation NSWindow (TerminalWindow_NSWindowExtensions)
