@@ -382,6 +382,26 @@ andAction:(SEL)_;
 
 @end
 
+/*!
+A sample object type that can be used to represent a tab in
+the object array of a TerminalWindow_ToolbarItemTabs instance.
+*/
+@interface TerminalWindow_TabSource : NSObject
+{
+	NSAttributedString*		description;
+}
+
+- (id)
+initWithDescription:(NSAttributedString*)_;
+
+- (NSAttributedString*)
+attributedDescription;
+
+- (void)
+performAction:(id)_;
+
+@end
+
 #pragma mark Internal Method Prototypes
 namespace {
 
@@ -8344,24 +8364,14 @@ performToolbarItemAction:(id)	sender
 @end // TerminalWindow_ToolbarItemPrint
 
 
-@interface Thing : NSObject
-{
-	NSAttributedString*		description;
-}
+@implementation TerminalWindow_TabSource
 
-- (id)
-initWithDescription:(NSAttributedString*)_;
 
-- (NSAttributedString*)
-attributedDescription;
+/*!
+Designated initializer.
 
-- (void)
-performAction:(id)_;
-
-@end
-
-@implementation Thing
-
+(4.0)
+*/
 - (id)
 initWithDescription:(NSAttributedString*)	aDescription
 {
@@ -8371,34 +8381,63 @@ initWithDescription:(NSAttributedString*)	aDescription
 		self->description = [aDescription copy];
 	}
 	return self;
-}
+}// initWithDescription:
 
+
+/*!
+Destructor.
+
+(4.0)
+*/
 - (void)
 dealloc
 {
 	[description release];
 	[super dealloc];
-}
+}// dealloc
 
+
+/*!
+The attributed string describing the title of the tab; this
+is used in the segmented control as well as any overflow menu.
+
+(4.0)
+*/
 - (NSAttributedString*)
 attributedDescription
 {
 	return description;
-}
+}// attributedDescription
 
+
+/*!
+The tooltip that is displayed when the mouse points to the
+tab’s segment in the toolbar.
+
+(4.0)
+*/
 - (NSString*)
 toolTip
 {
-	return @"tooltip";
-}
+	return @"";
+}// toolTip
 
+
+/*!
+Performs the action for this tab (namely, to bring something
+to the front).  The sender will be an instance of the
+"TerminalWindow_ToolbarItemTabs" class.
+
+(4.0)
+*/
 - (void)
 performAction:(id) sender
 {
-	NSLog(@"%@ invoked with obj %@", self, sender);
-}
+#pragma unused(sender)
+}// performAction:
 
-@end
+
+@end // TerminalWindow_TabSource
 
 
 @implementation TerminalWindow_ToolbarItemTabs
@@ -8436,12 +8475,12 @@ init
 		[self setPaletteLabel:NSLocalizedString(@"Tabs", @"toolbar item name; for tabs")];
 		
 		[self setTabTargets:[NSArray arrayWithObjects:
-										[[[Thing alloc]
+										[[[TerminalWindow_TabSource alloc]
 											initWithDescription:[[[NSAttributedString alloc]
 																	initWithString:NSLocalizedString
 																					(@"Tab 1", @"toolbar item tabs; default segment 0 name")]
 																	autorelease]] autorelease],
-										[[[Thing alloc]
+										[[[TerminalWindow_TabSource alloc]
 											initWithDescription:[[[NSAttributedString alloc]
 																	initWithString:NSLocalizedString
 																					(@"Tab 2", @"toolbar item tabs; default segment 1 name")]
@@ -8536,6 +8575,9 @@ Each object:
   returns an "NSAttributedString*" for that tab’s label.
 - MAY respond to a "toolTip" selector to return a string for
   that tab’s tooltip.
+
+See the class "TerminalWindow_TabSource" which is an example
+of a valid object for the array.
 
 In the future, additional selectors may be prescribed for the
 object (to set an icon, for instance).
