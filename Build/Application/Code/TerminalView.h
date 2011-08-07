@@ -405,6 +405,18 @@ TerminalView_Result
 												 UInt16						inNumberOfColumnsToScroll);
 
 TerminalView_Result
+	TerminalView_ScrollPageTowardBottomEdge		(TerminalViewRef			inView);
+
+TerminalView_Result
+	TerminalView_ScrollPageTowardLeftEdge		(TerminalViewRef			inView);
+
+TerminalView_Result
+	TerminalView_ScrollPageTowardRightEdge		(TerminalViewRef			inView);
+
+TerminalView_Result
+	TerminalView_ScrollPageTowardTopEdge		(TerminalViewRef			inView);
+
+TerminalView_Result
 	TerminalView_ScrollRowsTowardBottomEdge		(TerminalViewRef			inView,
 												 UInt32						inNumberOfRowsToScroll);
 

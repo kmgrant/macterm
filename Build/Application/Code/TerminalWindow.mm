@@ -422,7 +422,6 @@ IconRef					createPrintIcon					();
 void					createViews						(My_TerminalWindowPtr);
 Boolean					createTabWindow					(My_TerminalWindowPtr);
 NSWindow*				createWindow					();
-void					delayMinimumTicks				(UInt16 = 8);
 void					ensureTopLeftCornersExists		();
 TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
 TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
@@ -434,7 +433,6 @@ void					getWindowSizeFromViewSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt1
 void					handleFindDialogClose			(FindDialog_Ref);
 void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
 void					handleNewSize					(WindowRef, Float32, Float32, void*);
-void					handlePendingUpdates			();
 void					installTickHandler				(My_TerminalWindowPtr);
 void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
 void					installUndoFullScreenChanges	(TerminalWindowRef, TerminalView_DisplayMode, TerminalView_DisplayMode);
@@ -3370,22 +3368,6 @@ createWindow ()
 
 
 /*!
-Delays the active thread by the specified amount
-(in 60ths of a second).
-
-(4.0)
-*/
-void
-delayMinimumTicks	(UInt16		inTickCount)
-{
-	UInt32		dummy = 0L;
-	
-	
-	Delay(inTickCount, &dummy);
-}// delayMinimumTicks
-
-
-/*!
 Allocates the "gTopLeftCorners" array if it does
 not already exist.
 
@@ -3741,35 +3723,6 @@ handleNewSize	(WindowRef	inWindow,
 		updateScrollBars(ptr);
 	}
 }// handleNewSize
-
-
-/*!
-On Mac OS X, displays all unrendered changes to
-visible graphics ports.  Useful in unusual
-circumstances, namely any time drawing must occur
-so soon that an event loop iteration is not
-guaranteed to run first.  (An event loop iteration
-will automatically handle pending updates.)
-
-This has no real use on Mac OS 8 or 9, so it is not
-available for Classic builds.
-
-(3.1)
-*/
-void
-handlePendingUpdates ()
-{
-	EventRecord		updateEvent;
-	Boolean			isEvent = false;
-	
-	
-	// simply *checking* for events triggers approprate
-	// flushing to the display; so would WaitNextEvent(),
-	// but this is nice because it does not pull any
-	// events from the queue (after all, this routine
-	// couldn’t handle the events if they were pulled)
-	isEvent = EventAvail(updateMask, &updateEvent);
-}// handlePendingUpdates
 
 
 /*!
@@ -6472,10 +6425,6 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 	
 	if (nullptr != terminalWindow)
 	{
-		enum
-		{
-			kPageScrollDelayTicks = 2
-		};
 		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 		TerminalScreenRef				screen = nullptr;
 		TerminalViewRef					view = nullptr;
@@ -6496,46 +6445,24 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 			switch (inPartCode)
 			{
 			case kControlUpButtonPart: // “up arrow” on a horizontal scroll bar means “left arrow”
-				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, 1/* number of columns to scroll */);
+				(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(view, 1/* number of columns to scroll */);
 				break;
 			
 			case kControlDownButtonPart: // “down arrow” on a horizontal scroll bar means “right arrow”
-				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, 1/* number of columns to scroll */);
+				(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, 1/* number of columns to scroll */);
 				break;
 			
 			case kControlPageUpPart:
-				// 3.0 - animate page scrolling a bit (users can more easily see what is happening)
-				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, INTEGER_QUARTERED(visibleColumnCount));
-				handlePendingUpdates();
-				delayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, INTEGER_QUARTERED(visibleColumnCount));
-				handlePendingUpdates();
-				delayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, INTEGER_QUARTERED(visibleColumnCount));
-				handlePendingUpdates();
-				delayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, visibleColumnCount - 3 * INTEGER_QUARTERED(visibleColumnCount));
+				(TerminalView_Result)TerminalView_ScrollPageTowardRightEdge(view);
 				break;
 			
 			case kControlPageDownPart:
-				// 3.0 - animate page scrolling a bit (users can more easily see what is happening)
-				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, INTEGER_QUARTERED(visibleColumnCount));
-				handlePendingUpdates();
-				delayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, INTEGER_QUARTERED(visibleColumnCount));
-				handlePendingUpdates();
-				delayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, INTEGER_QUARTERED(visibleColumnCount));
-				handlePendingUpdates();
-				delayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, visibleColumnCount - 3 * INTEGER_QUARTERED(visibleColumnCount));
-				handlePendingUpdates();
+				(TerminalView_Result)TerminalView_ScrollPageTowardLeftEdge(view);
 				break;
 			
 			case kControlIndicatorPart:
-				// 3.0 - live scrolling
-				TerminalView_ScrollTo(view, GetControl32BitValue(ptr->controls.scrollBarV),
-											GetControl32BitValue(ptr->controls.scrollBarH));
+				(TerminalView_Result)TerminalView_ScrollTo(view, GetControl32BitValue(ptr->controls.scrollBarV),
+															GetControl32BitValue(ptr->controls.scrollBarH));
 				break;
 			
 			default:
@@ -6548,44 +6475,23 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 			switch (inPartCode)
 			{
 			case kControlUpButtonPart:
-				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, 1/* number of rows to scroll */);
+				(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(view, 1/* number of rows to scroll */);
 				break;
 			
 			case kControlDownButtonPart:
-				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, 1/* number of rows to scroll */);
+				(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(view, 1/* number of rows to scroll */);
 				break;
 			
 			case kControlPageUpPart:
-				// 3.0 - animate page scrolling a bit (users can more easily see what is happening)
-				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, INTEGER_QUARTERED(visibleRowCount));
-				handlePendingUpdates();
-				delayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, INTEGER_QUARTERED(visibleRowCount));
-				handlePendingUpdates();
-				delayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, INTEGER_QUARTERED(visibleRowCount));
-				handlePendingUpdates();
-				delayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, visibleRowCount - 3 * INTEGER_QUARTERED(visibleRowCount));
+				(TerminalView_Result)TerminalView_ScrollPageTowardBottomEdge(view);
 				break;
 			
 			case kControlPageDownPart:
-				// 3.0 - animate page scrolling a bit (users can more easily see what is happening)
-				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, INTEGER_QUARTERED(visibleRowCount));
-				handlePendingUpdates();
-				delayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, INTEGER_QUARTERED(visibleRowCount));
-				handlePendingUpdates();
-				delayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, INTEGER_QUARTERED(visibleRowCount));
-				handlePendingUpdates();
-				delayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, visibleRowCount - 3 * INTEGER_QUARTERED(visibleRowCount));
+				(TerminalView_Result)TerminalView_ScrollPageTowardTopEdge(view);
 				break;
 			
 			case kControlIndicatorPart:
-				// 3.0 - live scrolling
-				TerminalView_ScrollTo(view, GetControl32BitValue(ptr->controls.scrollBarV));
+				(TerminalView_Result)TerminalView_ScrollTo(view, GetControl32BitValue(ptr->controls.scrollBarV));
 				break;
 			
 			default:

@@ -122,6 +122,13 @@ used to blink.
 UInt16 const		kMy_BlinkingColorCount		= 10;
 
 /*!
+Used to break a single-page scroll into animated parts, where
+each stage takes approximately this much time (in 60ths of a
+second) to appear.
+*/
+UInt16 const		kMy_PageScrollDelayTicks	= 2;
+
+/*!
 This delta value is used to shift the alpha used for
 cursor rendering, and for simplicity it is defined in
 terms of the existing blink timer.
@@ -440,6 +447,7 @@ void				copyTranslationPreferences			(My_TerminalViewPtr, Preferences_ContextRef
 OSStatus			createWindowColorPalette			(My_TerminalViewPtr, Preferences_ContextRef, Boolean = true);
 Boolean				cursorBlinks						(My_TerminalViewPtr);
 TerminalView_CursorType	cursorType						(My_TerminalViewPtr);
+void				delayMinimumTicks					(UInt16 = 8);
 OSStatus			dragTextSelection					(My_TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
 Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, UInt16, UInt16, UInt16);
 void				drawSymbolFontLetter				(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char, Boolean);
@@ -476,6 +484,7 @@ RgnHandle			getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr, TerminalView
 void				getVirtualVisibleRegion				(My_TerminalViewPtr, SInt16*, SInt16*, SInt16*, SInt16*);
 void				handleMultiClick					(My_TerminalViewPtr, UInt16);
 void				handleNewViewContainerBounds		(HIViewRef, Float32, Float32, void*);
+void				handlePendingUpdates				();
 void				highlightCurrentSelection			(My_TerminalViewPtr, Boolean, Boolean);
 void				highlightVirtualRange				(My_TerminalViewPtr, TerminalView_CellRange const&, TerminalTextAttributes,
 														 Boolean, Boolean);
@@ -2325,6 +2334,170 @@ TerminalView_ScrollColumnsTowardRightEdge	(TerminalViewRef	inView,
 	}
 	return result;
 }// ScrollColumnsTowardRightEdge
+
+
+/*!
+Scrolls the contents of the terminal screen as if the user
+clicked the page-up region.  Currently, this is done in a
+synchronously-animated fashion that cannot be disabled.
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+(4.0)
+*/
+TerminalView_Result
+TerminalView_ScrollPageTowardBottomEdge		(TerminalViewRef	inView)
+{
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		UInt16 const	kVisibleRowCount = Terminal_ReturnRowCount(viewPtr->screen.ref);
+		
+		
+		(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		handlePendingUpdates();
+		delayMinimumTicks(kMy_PageScrollDelayTicks);
+		(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		handlePendingUpdates();
+		delayMinimumTicks(kMy_PageScrollDelayTicks);
+		(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		handlePendingUpdates();
+		delayMinimumTicks(kMy_PageScrollDelayTicks);
+		(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, kVisibleRowCount - 3 * INTEGER_QUARTERED(kVisibleRowCount));
+	}
+	return result;
+}// ScrollPageTowardBottomEdge
+
+
+/*!
+Scrolls the contents of the terminal screen as if the user
+clicked the page-right region.  Currently, this is done in a
+synchronously-animated fashion that cannot be disabled.
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+(4.0)
+*/
+TerminalView_Result
+TerminalView_ScrollPageTowardLeftEdge		(TerminalViewRef	inView)
+{
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		UInt16 const	kVisibleColumnCount = Terminal_ReturnColumnCount(viewPtr->screen.ref);
+		
+		
+		(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		handlePendingUpdates();
+		delayMinimumTicks(kMy_PageScrollDelayTicks);
+		(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		handlePendingUpdates();
+		delayMinimumTicks(kMy_PageScrollDelayTicks);
+		(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		handlePendingUpdates();
+		delayMinimumTicks(kMy_PageScrollDelayTicks);
+		(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, kVisibleColumnCount - 3 * INTEGER_QUARTERED(kVisibleColumnCount));
+	}
+	return result;
+}// ScrollPageTowardLeftEdge
+
+
+/*!
+Scrolls the contents of the terminal screen as if the user
+clicked the page-left region.  Currently, this is done in a
+synchronously-animated fashion that cannot be disabled.
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+(4.0)
+*/
+TerminalView_Result
+TerminalView_ScrollPageTowardRightEdge		(TerminalViewRef	inView)
+{
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		UInt16 const	kVisibleColumnCount = Terminal_ReturnColumnCount(viewPtr->screen.ref);
+		
+		
+		(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		handlePendingUpdates();
+		delayMinimumTicks(kMy_PageScrollDelayTicks);
+		(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		handlePendingUpdates();
+		delayMinimumTicks(kMy_PageScrollDelayTicks);
+		(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		handlePendingUpdates();
+		delayMinimumTicks(kMy_PageScrollDelayTicks);
+		(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, kVisibleColumnCount - 3 * INTEGER_QUARTERED(kVisibleColumnCount));
+	}
+	return result;
+}// ScrollPageTowardRightEdge
+
+
+/*!
+Scrolls the contents of the terminal screen as if the user
+clicked the page-down region.  Currently, this is done in a
+synchronously-animated fashion that cannot be disabled.
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+(4.0)
+*/
+TerminalView_Result
+TerminalView_ScrollPageTowardTopEdge		(TerminalViewRef	inView)
+{
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		UInt16 const	kVisibleRowCount = Terminal_ReturnRowCount(viewPtr->screen.ref);
+		
+		
+		(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		handlePendingUpdates();
+		delayMinimumTicks(kMy_PageScrollDelayTicks);
+		(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		handlePendingUpdates();
+		delayMinimumTicks(kMy_PageScrollDelayTicks);
+		(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		handlePendingUpdates();
+		delayMinimumTicks(kMy_PageScrollDelayTicks);
+		(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, kVisibleRowCount - 3 * INTEGER_QUARTERED(kVisibleRowCount));
+	}
+	return result;
+}// ScrollPageTowardTopEdge
 
 
 /*!
@@ -4775,6 +4948,22 @@ cursorType		(My_TerminalViewPtr		UNUSED_ARGUMENT(inTerminalViewPtr))
 {
 	return gPreferenceProxies.cursorType;
 }// cursorType
+
+
+/*!
+Delays the active thread by the specified amount
+(in 60ths of a second).
+
+(4.0)
+*/
+void
+delayMinimumTicks	(UInt16		inTickCount)
+{
+	UInt32		dummy = 0L;
+	
+	
+	Delay(inTickCount, &dummy);
+}// delayMinimumTicks
 
 
 /*!
@@ -7715,6 +7904,30 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 		setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
 	}
 }// handleNewViewContainerBounds
+
+
+/*!
+On Mac OS X, displays all unrendered changes to visible graphics
+ports.  Useful in unusual circumstances, namely any time drawing
+must occur so soon that an event loop iteration is not guaranteed
+to run first.  (An event loop iteration will automatically handle
+pending updates.)
+
+(3.1)
+*/
+void
+handlePendingUpdates ()
+{
+	EventRecord		updateEvent;
+	Boolean			isEvent = false;
+	
+	
+	// simply *checking* for events triggers approprate flushing to the
+	// display; so would WaitNextEvent(), but this is nice because it
+	// does not pull any events from the queue (after all, this routine
+	// couldn’t handle the events if they were pulled)
+	isEvent = EventAvail(updateMask, &updateEvent);
+}// handlePendingUpdates
 
 
 /*!
