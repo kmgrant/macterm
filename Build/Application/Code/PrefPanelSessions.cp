@@ -244,7 +244,7 @@ Implements the “Resource” tab.
 struct My_SessionsPanelResourceUI
 {
 	My_SessionsPanelResourceUI	(Panel_Ref, HIWindowRef);
-	My_SessionsPanelResourceUI	();
+	~My_SessionsPanelResourceUI	();
 	
 	Panel_Ref			panel;				//!< the panel using this UI
 	Float32				idealWidth;			//!< best size in pixels
@@ -2250,7 +2250,7 @@ Tears down a My_SessionsPanelResourceUI structure.
 (3.1)
 */
 My_SessionsPanelResourceUI::
-My_SessionsPanelResourceUI ()
+~My_SessionsPanelResourceUI ()
 {
 	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler.returnRef(), kPreferences_ChangeNumberOfContexts);
 	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler.returnRef(), kPreferences_ChangeContextName);
