@@ -3,7 +3,7 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.5
+	Simple Cocoa Wrappers Library 1.6
 	© 2008-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -37,6 +37,7 @@
 // library includes
 #import <AutoPool.objc++.h>
 #import <CocoaBasic.h>
+#import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <HIViewWrap.h>
 #import <SoundSystem.h>
@@ -301,6 +302,51 @@ CocoaBasic_GetGray	(CGDeviceColor const&	inColor1,
 	}
 	return result;
 }// GetGray
+
+
+/*!
+On Mac OS X 10.7 and beyond, calls "invalidateRestorableState"
+on NSApp.  On earlier versions of the OS, has no effect.
+
+This is used to tell the OS when something has changed that is
+normally saved and restored by “Quit and Keep Windows”.
+
+See also CocoaBasic_InvalidateRestorableState().
+
+(1.6)
+*/
+void
+CocoaBasic_InvalidateAppRestorableState ()
+{
+	CocoaBasic_InvalidateRestorableState(NSApp);
+}// InvalidateAppRestorableState
+
+
+/*!
+On Mac OS X 10.7 and beyond, calls "invalidateRestorableState"
+on the specified responder (e.g. NSApp, or any NSWindow).  On
+earlier versions of the OS, has no effect.
+
+This is used to tell the OS when something has changed that is
+normally saved and restored by “Quit and Keep Windows”.
+
+See also CocoaBasic_InvalidateAppRestorableState(), which is a
+short-cut for passing "NSApp" as the responder (useful mostly
+in code that is not yet Cocoa-based).
+
+(1.6)
+*/
+void
+CocoaBasic_InvalidateRestorableState	(NSResponder*	inResponder)
+{
+	AutoPool	_;
+	
+	
+	if ([inResponder respondsToSelector:@selector(invalidateRestorableState)])
+	{
+		[inResponder invalidateRestorableState];
+	}
+}// InvalidateRestorableState
 
 
 /*!

@@ -34,8 +34,10 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 #ifdef __OBJC__
+@class NSResponder;
 @class NSWindow;
 #else
+class NSResponder;
 class NSWindow;
 #endif
 
@@ -110,6 +112,13 @@ Boolean
 
 //!\name Window Management
 //@{
+
+void
+	CocoaBasic_InvalidateAppRestorableState			();
+
+// WORKS WITH NSApp AND ANY NSWindow, FOR EXAMPLE
+void
+	CocoaBasic_InvalidateRestorableState			(NSResponder*);
 
 void
 	CocoaBasic_MakeFrontWindowCarbonUserFocusWindow	();
