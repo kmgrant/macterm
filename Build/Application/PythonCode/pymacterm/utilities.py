@@ -22,14 +22,15 @@ used_subprocess_module = False
 if sys.hexversion > 0x020400F0:
     used_subprocess_module = True
 
-def command_data(cmdline_tuple, force_popen2=False):
+def command_data(cmdline_tuple, force_popen2=False, allow_nonzero_exit=False):
     """command_data(tuple) -> string
     
     Runs a program (using either the popen2 or subprocess
     modules, depending on the Python interpreter's version)
     and returns its standard output as a string without
     any editing.  If there is ANY problem running the
-    program, the result will be None.
+    program, the result will be None unless the keyword
+    argument "allow_nonzero_exit" is set to True.
     
     >>> command_data(('/this/does/not/exist'))
     
@@ -41,6 +42,16 @@ def command_data(cmdline_tuple, force_popen2=False):
     >>> command_data(('/bin/echo', 'hello, world!'), force_popen2=True)
     'hello, world!\\n'
     
+    >>> command_data(('/usr/bin/perl', '-e', 'print "hello\\n"; exit 1'), allow_nonzero_exit=False)
+    
+    >>> command_data(('/usr/bin/perl', '-e', 'print "hello\\n"; exit 1'), allow_nonzero_exit=False, force_popen2=True)
+    
+    >>> command_data(('/usr/bin/perl', '-e', 'print "hello\\n"; exit 1'), allow_nonzero_exit=True)
+    'hello\\n'
+    
+    >>> command_data(('/usr/bin/perl', '-e', 'print "hello\\n"; exit 1'), allow_nonzero_exit=True, force_popen2=True)
+    'hello\\n'
+    
     """
     result = None
     if used_subprocess_module and not force_popen2:
@@ -48,7 +59,7 @@ def command_data(cmdline_tuple, force_popen2=False):
         try:
             cmd_run = subprocess.Popen(cmdline_tuple, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
             (cmd_stdout, cmd_stderr) = cmd_run.communicate()
-            if cmd_run.returncode == 0:
+            if (cmd_run.returncode == 0) or allow_nonzero_exit:
                 result = str(cmd_stdout)
         except Exception, e:
             #print "exception in subprocess.Popen of %r:" % cmdline_tuple, e
@@ -57,7 +68,7 @@ def command_data(cmdline_tuple, force_popen2=False):
         import popen2
         cmd_run = popen2.Popen4(cmdline_tuple)
         cmd_status = cmd_run.wait()
-        if cmd_status == 0:
+        if (cmd_status == 0) or allow_nonzero_exit:
             result = ''.join(cmd_run.fromchild.readlines()) # newlines are already present
     return result
 
