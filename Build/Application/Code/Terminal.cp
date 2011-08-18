@@ -13107,6 +13107,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			else
 			{
 				inDataPtr->emulator.stringAccumulator.push_back(STATIC_CAST(inDataPtr->emulator.recentCodePoint(), UInt8));
+				result = 1;
 			}
 		}
 		break;

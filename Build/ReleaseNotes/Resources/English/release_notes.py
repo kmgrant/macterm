@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110817',
     '20110805',
     '20110804',
     '20110803',
@@ -406,6 +407,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110817': [
+        'Fixed a problem with XTerm sequences (window titles and colors) in non-UTF-8 terminals.',
+    ],
     '20110805': [
         'Service "Open Folder in MacTerm" has been enhanced so that it works from folder contextual menus in the Finder.',
     ],
