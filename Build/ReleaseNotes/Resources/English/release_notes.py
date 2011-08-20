@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110820',
     '20110817',
     '20110805',
     '20110804',
@@ -407,6 +408,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110820': [
+        'Floating windows that were visible at last Quit are now redisplayed at startup time.',
+    ],
     '20110817': [
         'Fixed a problem with XTerm sequences (window titles and colors) in non-UTF-8 terminals.',
     ],

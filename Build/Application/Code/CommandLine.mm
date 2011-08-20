@@ -49,7 +49,78 @@
 
 
 
+#pragma mark Variables
+namespace {
+
+CommandLine_PanelController*	gCommandLine_PanelController = nil;
+
+} // anonymous namespace
+
+
+
 #pragma mark Public Methods
+
+/*!
+If the command line window was visible the last time the
+application quit, then this will initialize and display it;
+otherwise, nothing is done (deferring initialization until
+the window is actually requested).
+
+(4.0)
+*/
+void
+CommandLine_Init ()
+{
+	Boolean		windowIsVisible = false;
+	size_t		actualSize = 0L;
+	
+	
+	unless (Preferences_GetData(kPreferences_TagWasCommandLineShowing,
+								sizeof(windowIsVisible), &windowIsVisible,
+								&actualSize) == kPreferences_ResultOK)
+	{
+		windowIsVisible = false; // assume invisible if the preference can’t be found
+	}
+	
+	if (windowIsVisible)
+	{
+		CommandLine_Display();
+	}
+}// Init
+
+
+/*!
+Saves the visibility of the command line window.  Nothing is
+saved if the window was never used.
+
+(4.0)
+*/
+void
+CommandLine_Done ()
+{
+	// do not initialize the window here if it was never constructed!
+	if (nil != gCommandLine_PanelController)
+	{
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
+		Boolean				windowIsVisible = false;
+		
+		
+		// save current visibility
+		windowIsVisible = [[[CommandLine_PanelController sharedCommandLinePanelController] window] isVisible];
+		prefsResult = Preferences_SetData(kPreferences_TagWasCommandLineShowing,
+											sizeof(windowIsVisible), &windowIsVisible);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to store visibility of command line, error", prefsResult);
+		}
+		
+		if (NO == [[NSUserDefaults standardUserDefaults] synchronize])
+		{
+			Console_Warning(Console_WriteLine, "failed to save command line visibility setting");
+		}
+	}
+}// Done
+
 
 /*!
 Shows the command line floating window, and focuses it.
@@ -80,8 +151,11 @@ Designated initializer.
 init
 {
 	self = [super init];
-	// arrays grow automatically, this is just an initial size
-	_commandHistoryArray = [[NSMutableArray alloc] initWithCapacity:15/* initial capacity; arbitrary */];
+	if (nil != self)
+	{
+		// arrays grow automatically, this is just an initial size
+		_commandHistoryArray = [[NSMutableArray alloc] initWithCapacity:15/* initial capacity; arbitrary */];
+	}
 	return self;
 }// init
 
@@ -190,16 +264,13 @@ textDidBeginEditing:(NSNotification*)	notification
 		[fieldEditorAsView setInsertionPointColor:
 							[[CommandLine_PanelController sharedCommandLinePanelController] textColor]];
 	}
-}
+}// textDidBeginEditing:
 
 
 @end // CommandLine_TerminalLikeComboBox
 
 
 @implementation CommandLine_PanelController
-
-
-static CommandLine_PanelController*		gCommandLine_PanelController = nil;
 
 
 /*!

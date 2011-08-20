@@ -113,6 +113,12 @@ textColor;
 #pragma mark Public Methods
 
 void
+	CommandLine_Init			();
+
+void
+	CommandLine_Done			();
+
+void
 	CommandLine_Display			();
 
 #endif

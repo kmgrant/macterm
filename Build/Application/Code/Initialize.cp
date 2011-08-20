@@ -65,6 +65,7 @@
 // application includes
 #include "AppResources.h"
 #include "Clipboard.h"
+#include "CommandLine.h"
 #include "Commands.h"
 #include "ContextualMenuBuilder.h"
 #include "DialogUtilities.h"
@@ -183,6 +184,11 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		//TerminalView_RunTests();
 	#endif
 		
+		CommandLine_Init();
+	#if RUN_MODULE_TESTS
+		//CommandLine_RunTests();
+	#endif
+		
 		Clipboard_Init();
 	#if RUN_MODULE_TESTS
 		//Clipboard_RunTests();
@@ -290,6 +296,7 @@ See also Initialize_ApplicationShutDownRemainingComponents().
 void
 Initialize_ApplicationShutDownIsolatedComponents ()
 {
+	CommandLine_Done();
 	Clipboard_Done();
 	InfoWindow_Done();
 	PrefsWindow_Done(); // also saves other preferences

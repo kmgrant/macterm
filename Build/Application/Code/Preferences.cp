@@ -84,6 +84,7 @@
 #include "AppResources.h"
 #include "Clipboard.h"
 #include "Commands.h"
+#include "Keypads.h"
 #include "MacroManager.h"
 #include "NetEvents.h"
 #include "Preferences.h"
@@ -1239,6 +1240,52 @@ Preferences_Init ()
 		gInitialized = true;
 	}
 	
+	// if keypads were open at last Quit, construct them now;
+	// otherwise, wait until each one is requested by the user
+	// (TEMPORARY; a bit of a hack to do this here...but there
+	// is no cleanup function in the Keypads module)
+	{
+		Boolean		windowIsVisible = false;
+		size_t		actualSize = 0L;
+		
+		
+		unless (Preferences_GetData(kPreferences_TagWasControlKeypadShowing,
+									sizeof(windowIsVisible), &windowIsVisible,
+									&actualSize) == kPreferences_ResultOK)
+		{
+			windowIsVisible = false; // assume invisible if the preference can’t be found
+		}
+		
+		if (windowIsVisible)
+		{
+			Keypads_SetVisible(kKeypads_WindowTypeControlKeys, true);
+		}
+		
+		unless (Preferences_GetData(kPreferences_TagWasFunctionKeypadShowing,
+									sizeof(windowIsVisible), &windowIsVisible,
+									&actualSize) == kPreferences_ResultOK)
+		{
+			windowIsVisible = false; // assume invisible if the preference can’t be found
+		}
+		
+		if (windowIsVisible)
+		{
+			Keypads_SetVisible(kKeypads_WindowTypeFunctionKeys, true);
+		}
+		
+		unless (Preferences_GetData(kPreferences_TagWasVT220KeypadShowing,
+									sizeof(windowIsVisible), &windowIsVisible,
+									&actualSize) == kPreferences_ResultOK)
+		{
+			windowIsVisible = false; // assume invisible if the preference can’t be found
+		}
+		
+		if (windowIsVisible)
+		{
+			Keypads_SetVisible(kKeypads_WindowTypeVT220Keys, true);
+		}
+	}
+	
 	return result;
 }// Init
 
@@ -1253,6 +1300,42 @@ Preferences_Done ()
 {
 	if (gInitialized)
 	{
+		// save floating-window visibility preferences implicitly
+		// (TEMPORARY; a bit of a hack to do this here...but there
+		// is no cleanup function in the Keypads module)
+		{
+			Preferences_Result	prefsResult = kPreferences_ResultOK;
+			Boolean				windowIsVisible = false;
+			
+			
+			windowIsVisible = Keypads_IsVisible(kKeypads_WindowTypeControlKeys);
+			prefsResult = Preferences_SetData(kPreferences_TagWasControlKeypadShowing,
+												sizeof(windowIsVisible), &windowIsVisible);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_Warning(Console_WriteValue, "failed to store visibility of control keys palette, error", prefsResult);
+			}
+			windowIsVisible = Keypads_IsVisible(kKeypads_WindowTypeFunctionKeys);
+			prefsResult = Preferences_SetData(kPreferences_TagWasFunctionKeypadShowing,
+												sizeof(windowIsVisible), &windowIsVisible);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_Warning(Console_WriteValue, "failed to store visibility of function keys palette, error", prefsResult);
+			}
+			windowIsVisible = Keypads_IsVisible(kKeypads_WindowTypeVT220Keys);
+			prefsResult = Preferences_SetData(kPreferences_TagWasVT220KeypadShowing,
+												sizeof(windowIsVisible), &windowIsVisible);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_Warning(Console_WriteValue, "failed to store visibility of VT220 keys palette, error", prefsResult);
+			}
+			
+			if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
+			{
+				Console_Warning(Console_WriteLine, "failed to save keypad visibility settings");
+			}
+		}
+		
 		// dispose of the listener model
 		ListenerModel_Dispose(&gPreferenceEventListenerModel);
 		
