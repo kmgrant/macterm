@@ -264,9 +264,9 @@ $(APP_RESOURCES_BUNDLES) \
 $(DEST_APP_RESOURCES_TOP)/%: $(SRC_APP_RESOURCES_TOP)/%
 	$(MKDIR_P) $(dir $@)
 	@if [ -d "$<" ] ; then \
-		$(RSYNC) --archive --exclude=.svn/ $</ $@ ; \
+		$(RSYNC) --archive --exclude=.svn/ --exclude=.LSOverride $</ $@ ; \
 	else \
-		$(RSYNC) --archive --exclude=.svn/ $< $@ ; \
+		$(RSYNC) --archive --exclude=.svn/ --exclude=.LSOverride $< $@ ; \
 	fi
 
 #
