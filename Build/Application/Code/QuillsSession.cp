@@ -1,7 +1,8 @@
+/*!	\file QuillsSession.cp
+	\brief Session APIs exposed to scripting languages.
+*/
 /*###############################################################
 
-	QuillsSession.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -80,17 +81,19 @@ typedef std::map< std::string, MyURLHandlerPythonObjectPair >					MyURLHandlerPy
 #pragma mark Variables
 namespace {
 
-Quills::FunctionReturnVoidArg1VoidPtr		gSessionOpenedCallbackInvoker = nullptr;
-void*										gSessionOpenedPythonCallback = nullptr;
-MyFileHandlerPythonObjectPairByExtension&	gFileOpenCallbackInvokerPythonObjectPairsByExtension ()
-											{
-												static MyFileHandlerPythonObjectPairByExtension x; return x;
-											}
-MyURLHandlerPythonObjectPairBySchema&		gURLOpenCallbackInvokerPythonObjectPairsBySchema ()
-											{
-												static MyURLHandlerPythonObjectPairBySchema x; return x;
-											}
-std::string									gKeepAliveText(" "); // note; to override default, use Python
+Quills::FunctionReturnStringByLongArg1VoidPtrArg2LongVector		gProcessWorkingDirCallbackInvoker = nullptr;
+void*															gProcessWorkingDirPythonCallback = nullptr;
+Quills::FunctionReturnVoidArg1VoidPtr							gSessionOpenedCallbackInvoker = nullptr;
+void*															gSessionOpenedPythonCallback = nullptr;
+MyFileHandlerPythonObjectPairByExtension&						gFileOpenCallbackInvokerPythonObjectPairsByExtension ()
+																{
+																	static MyFileHandlerPythonObjectPairByExtension x; return x;
+																}
+MyURLHandlerPythonObjectPairBySchema&							gURLOpenCallbackInvokerPythonObjectPairsBySchema ()
+																{
+																	static MyURLHandlerPythonObjectPairBySchema x; return x;
+																}
+std::string														gKeepAliveText(" "); // note; to override default, use Python
 
 } // anonymous namespace
 
@@ -403,6 +406,25 @@ Session::keep_alive_transmission ()
 /*!
 See header or "pydoc" for Python docstrings.
 
+(4.0)
+*/
+std::map< long, std::string >
+Session::pids_cwds		(const std::vector< long >&		inProcessIDs)
+{
+	std::map< long, std::string >	result;
+	
+	
+	if (nullptr != gProcessWorkingDirCallbackInvoker)
+	{
+		result = gProcessWorkingDirCallbackInvoker(gProcessWorkingDirPythonCallback, inProcessIDs);
+	}
+	return result;
+}// pids_cwds
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
 (3.1)
 */
 void
@@ -441,6 +463,20 @@ Session::_on_new_call_py	(FunctionReturnVoidArg1VoidPtr	inRoutine,
 	gSessionOpenedCallbackInvoker = inRoutine;
 	gSessionOpenedPythonCallback = inPythonFunctionObject;
 }// _on_new_call_py
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(4.0)
+*/
+void
+Session::_on_seekpidscwds_call_py	(FunctionReturnStringByLongArg1VoidPtrArg2LongVector	inRoutine,
+									 void*													inPythonFunctionObject)
+{
+	gProcessWorkingDirCallbackInvoker = inRoutine;
+	gProcessWorkingDirPythonCallback = inPythonFunctionObject;
+}// _on_seekpidscwds_call_py
 
 
 /*!

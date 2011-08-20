@@ -36,6 +36,7 @@ except ImportError, err:
 import pymacterm.file.open
 import pymacterm.term.text
 import pymacterm.url.open
+import pymacterm.utilities
 
 if __name__ == "__main__":
     # Define default symbols for ALL possible user customizations.  This
@@ -248,6 +249,39 @@ if __name__ == "__main__":
     Session.on_fileopen_call(pymacterm.file.open.script, 'tool')
     Session.on_fileopen_call(pymacterm.file.open.script, 'zsh')
     Session.on_fileopen_call(pymacterm.file.open.macros, 'macros')
+
+    # arrange to have "lsof" invoked for one or more process IDs
+    # whenever MacTerm needs to find their current working directories;
+    # returns a map from process ID integers to directory path strings
+    def pids_cwds(pids_tuple):
+        # run 'lsof' to find the current working directories of given processes
+        # (if you need many, give them all at once so the data can be found in
+        # a single invocation; individual lookups will be much slower)
+        result = dict()
+        if len(pids_tuple) > 0:
+            cmd = ['/usr/sbin/lsof', '-a', '-d', 'cwd', '-Fn']
+            for pid in pids_tuple:
+                cmd.extend(('-p', str(pid)))
+            # allow nonzero exits; if a list of process IDs is given and ANY of them
+            # doesn't return something, the others might still return valid data
+            all_output = pymacterm.utilities.command_data(cmd, allow_nonzero_exit=True)
+            if all_output is not None:
+                # each line of output has a single letter type prefix; the
+                # first should be a line with, e.g. "p12345" (process ID);
+                # the second should be the directory, e.g. "n/some/path"
+                fields = all_output.split('\n')
+                pid = None
+                for field in fields:
+                    if (len(field) > 1) and (field[0] == 'p'):
+                        pid = int(field[1:])
+                        path = None
+                    elif (len(field) > 1) and (field[0] == 'n'):
+                        path = field[1:]
+                        if (pid is not None) and (path is not None):
+                            result[pid] = path
+                            pid = None
+        return result
+    Session._on_seekpidscwds_call(pids_cwds)
     
     # if desired, override what string is sent after keep-alive timers expire
     #Session.set_keep_alive_transmission(".")

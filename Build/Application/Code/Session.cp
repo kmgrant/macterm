@@ -81,6 +81,7 @@
 #include "Clipboard.h"
 #include "Commands.h"
 #include "DialogUtilities.h"
+#include "Local.h"
 #include "MacroManager.h"
 #include "NetEvents.h"
 #include "Preferences.h"
@@ -1856,6 +1857,40 @@ Session_ReturnActiveWindow	(SessionRef		inRef)
 
 
 /*!
+Returns the POSIX path of the directory that was current as of
+the most recent call to Local_UpdateCurrentDirectoryCache().
+If this is empty, it means that the information may not be
+available (due to permission issues, for example, or because
+Local_UpdateCurrentDirectoryCache() was never called).
+
+IMPORTANT:	Local_UpdateCurrentDirectoryCache() does expensive
+			scans that (in exchange for being slow) update the
+			results for ALL open Sessions.  So be sure to gather
+			this information for as many relevant Sessions as
+			possible, and avoid unnecessary cache updates.
+
+See also Session_ReturnOriginalWorkingDirectory().
+
+(4.0)
+*/
+CFStringRef
+Session_ReturnCachedWorkingDirectory	(SessionRef		inRef)
+{
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	CFStringRef				result = CFSTR("");
+	
+	
+	if (nullptr != ptr->mainProcess)
+	{
+		// this might return an empty string on failure
+		result = Local_ProcessReturnCurrentDirectory(ptr->mainProcess);
+	}
+	
+	return result;
+}// ReturnCachedWorkingDirectory
+
+
+/*!
 Returns the program name and command line arguments used
 to start the session originally.  Each array element is
 a CFStringRef, but it can be converted back into a C string
@@ -2001,6 +2036,9 @@ when the session was started.  If this is empty, it means
 that no particular directory was chosen (so it will be
 the current directory from its spawning shell, typically
 the Finder).
+
+See also Session_ReturnCachedWorkingDirectory(), which can
+be used to find more recent values.
 
 (4.0)
 */

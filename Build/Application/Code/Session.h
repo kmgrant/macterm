@@ -570,6 +570,9 @@ TerminalWindowRef
 HIWindowRef
 	Session_ReturnActiveWindow				(SessionRef							inRef);
 
+CFStringRef
+	Session_ReturnCachedWorkingDirectory	(SessionRef							inRef);
+
 CFArrayRef
 	Session_ReturnCommandLine				(SessionRef							inRef);
 

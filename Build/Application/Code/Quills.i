@@ -27,8 +27,10 @@ allowing you to directly access core functionality from scripts!"
 
 // instantiate template types relied upon by Quills
 %template(_float_list) std::vector< double >;
+%template(_long_list) std::vector< long >;
 %template(_long_pair) std::pair< long, long >;
 %template(_string_list) std::vector< std::string >;
+%template(_string_by_long) std::map< long, std::string >;
 
 // enable callbacks to be written in Python
 #ifdef SWIGPYTHON
@@ -37,7 +39,7 @@ allowing you to directly access core functionality from scripts!"
 	if (false == PyCallable_Check($input))
 	{
 		PyErr_SetString(PyExc_TypeError, "Parameter is not a function");
-		return NULL;
+		return nullptr;
 	}
 	$1 = $input;
 }
@@ -100,7 +102,7 @@ _Quills_PyStringDesc	(PyObject*		inString)
 	std::string		result;
 	
 	
-	if ((NULL != inString) && (NULL != PyString_AsString(inString)))
+	if ((nullptr != inString) && (nullptr != PyString_AsString(inString)))
 	{
 		result = PyString_AsString(inString);
 	}
@@ -115,7 +117,7 @@ _Quills_PyStringDesc	(PyObject*		inString)
 /*!
 Utility routine.  Given the Python objects representing the
 value and traceback of an exception (both of which might be
-NULL), returns an appropriate description of that exception.
+nullptr), returns an appropriate description of that exception.
 
 (4.0)
 */
@@ -127,7 +129,7 @@ _Quills_PyExceptionDesc		(PyObject*		inType,
 	
 	
 	// sort out the type
-	if (NULL != inType)
+	if (nullptr != inType)
 	{
 		// this is arbitrary; the more cases that are here, the more “helpful” the message;
 		// should follow the inheritance tree documented by "pydoc exceptions"
@@ -171,7 +173,7 @@ _Quills_PyExceptionDesc		(PyObject*		inType,
 	}
 	
 	// sort out the value
-	if (NULL != inValue)
+	if (nullptr != inValue)
 	{
 		result += _Quills_PyStringDesc(inValue);
 	}
@@ -186,11 +188,16 @@ _Quills_PyExceptionDesc		(PyObject*		inType,
 
 /*!
 Utility routine.  Given a Python object returned by a call to
-PyEval_CallObject(), checks to see if it is NULL and if so,
+PyEval_CallObject(), checks to see if it is nullptr and if so,
 propagates the exception to the caller; otherwise, does nothing.
-Certain exceptions will contain the specified description,
-which should help the user to narrow down what the calling
-routine is.
+
+The first context argument (and optionally a 2nd string, which
+is directly concatenated without extra whitespace) should help
+the user to narrow down what the calling routine is.  It is
+typical to use PyEval_GetFuncName() as the first context and
+PyEval_GetFuncDesc() as the second context, but you may use any
+description strings.  The first string should be the most
+descriptive and it is mandatory; the 2nd may be nullptr.
 
 A “descriptive” C++ exception is thrown.  If the caller ends
 up being Python, SWIG will re-translate this back to raise a
@@ -200,29 +207,109 @@ the exception normally.
 (4.0)
 */
 static void
-_Quills_PropagateExceptions		(void*					inResultObject,
-								 std::string const&		inContext)
+_Quills_PropagateExceptions		(void*			inResultObject,
+								 char const*	inContext1,
+								 char const*	inContext2OrNull)
 {
-	if (NULL == inResultObject)
+	if (nullptr == inResultObject)
 	{
-		Console_WriteValueCString("Python exception was thrown", inContext.c_str());
+		Console_WriteValueCString("Python exception was thrown", inContext1);
 		// an exception was thrown; translate it to an appropriate C++ exception
 		// (which, actually, will AGAIN be translated back to Python by SWIG, if
 		// in fact this was called via Python; otherwise, it can be trapped in C++)
-		PyObject*		excType = NULL;
-		PyObject*		excValue = NULL;
-		PyObject*		excTrace = NULL;
+		PyObject*		excType = nullptr;
+		PyObject*		excValue = nullptr;
+		PyObject*		excTrace = nullptr;
 		std::string		excMessage;
 		PyErr_Fetch(&excType, &excValue, &excTrace);
 		excMessage = "Python raised " + _Quills_PyExceptionDesc(excType, excValue);
 		excMessage += "; ";
-		excMessage += inContext;
-		Py_XDECREF(excType), excType = NULL;
-		Py_XDECREF(excValue), excValue = NULL;
-		Py_XDECREF(excTrace), excTrace = NULL;
+		excMessage += inContext1;
+		if (nullptr != inContext2OrNull)
+		{
+			excMessage += inContext2OrNull;
+		}
+		Py_XDECREF(excType), excType = nullptr;
+		Py_XDECREF(excValue), excValue = nullptr;
+		Py_XDECREF(excTrace), excTrace = nullptr;
 		if (false == excMessage.empty()) throw std::runtime_error(excMessage);
 	}
 }// _Quills_PropagateExceptions
+%}
+#endif
+
+// enable callbacks that take a long-integer-vector argument and return a map from long-integer to string
+#ifdef SWIGPYTHON
+%{
+static std::map< long, std::string >
+CallPythonLongVectorReturnStringByLong	(void*							inPythonFunctionObject,
+										 const std::vector< long >&		inLongVector)
+{
+	std::vector< long >::size_type const	kNumLongs = inLongVector.size();
+	PyObject*								pythonDef = nullptr;
+	PyObject*								arguments = nullptr;	
+	PyObject*								pythonResult = nullptr;
+	std::map< long, std::string >			result;
+	
+	
+	pythonDef = reinterpret_cast< PyObject* >(inPythonFunctionObject);
+	arguments = PyTuple_New(kNumLongs);
+	assert(nullptr != arguments);
+	for (size_t i = 0; i < kNumLongs; ++i)
+	{
+		PyObject*	argValue = PyLong_FromLong(inLongVector[i]);
+		
+		
+		if (nullptr == argValue)
+		{
+			Py_DECREF(arguments), arguments = nullptr;
+			throw _Quills_CallbackError("Unable to construct long integer object for argument list", pythonDef);
+		}
+		PyTuple_SET_ITEM(arguments, i, argValue);
+	}
+	arguments = Py_BuildValue("(O)", arguments); // produce ((tuple)), as required to pass a single argument of a tuple
+	assert(nullptr != arguments);
+	pythonResult = PyEval_CallObject(pythonDef, arguments); // call Python
+	Py_DECREF(arguments), arguments = nullptr;
+	_Quills_PropagateExceptions(pythonResult, PyEval_GetFuncName(pythonDef), PyEval_GetFuncDesc(pythonDef));
+	if (nullptr != pythonResult)
+	{
+		PyObject*	keys = nullptr;
+		int			keyCount = 0;
+		
+		
+		if (false == PyDict_Check(pythonResult))
+		{
+			throw _Quills_CallbackError("Dictionary must be returned", pythonDef);
+		}
+		keys = PyDict_Keys(pythonResult);
+		if (false == PyList_CheckExact(keys))
+		{
+			throw _Quills_CallbackError("Expected dictionary keys to be a list", pythonDef);
+		}
+		keyCount = PyList_Size(keys);
+		for (int i = 0; i < keyCount; ++i)
+		{
+			PyObject*	aKey = PyList_GetItem(keys, i);
+			PyObject*	stringValue = nullptr;
+			
+			
+			if (false == PyInt_Check(aKey))
+			{
+				throw _Quills_CallbackError("Returned dictionary key must be an integer", pythonDef);
+			}
+			stringValue = PyDict_GetItem(pythonResult, aKey);
+			if (false == PyString_Check(stringValue))
+			{
+				throw _Quills_CallbackError("Returned dictionary value must be a string", pythonDef);
+			}
+			result[PyInt_AsLong(aKey)] = PyString_AsString(stringValue);
+		}
+	}
+	Py_XDECREF(pythonResult), pythonResult = nullptr;
+	
+	return result;
+}
 %}
 #endif
 
@@ -233,18 +320,18 @@ static void
 CallPythonStringReturnVoid	(void*	inPythonFunctionObject,
 							 char*	inoutString)
 {
-	PyObject*	pythonDef = NULL;
-	PyObject*	arguments = NULL;	
-	PyObject*	pythonResult = NULL;
+	PyObject*	pythonDef = nullptr;
+	PyObject*	arguments = nullptr;	
+	PyObject*	pythonResult = nullptr;
 	
 	
 	pythonDef = reinterpret_cast< PyObject* >(inPythonFunctionObject);
 	arguments = Py_BuildValue("(s)", inoutString);
-	assert(NULL != arguments);
+	assert(nullptr != arguments);
 	pythonResult = PyEval_CallObject(pythonDef, arguments); // call Python
-	Py_DECREF(arguments), arguments = NULL;
-	_Quills_PropagateExceptions(pythonResult, "while C++ called a Python single-string-argument function that returns nothing");
-	Py_XDECREF(pythonResult), pythonResult = NULL;
+	Py_DECREF(arguments), arguments = nullptr;
+	_Quills_PropagateExceptions(pythonResult, PyEval_GetFuncName(pythonDef), PyEval_GetFuncDesc(pythonDef));
+	Py_XDECREF(pythonResult), pythonResult = nullptr;
 }
 %}
 #endif
@@ -256,21 +343,21 @@ static std::string
 CallPythonStringReturnString	(void*	inPythonFunctionObject,
 								 char*	inoutString)
 {
-	PyObject*		pythonDef = NULL;
-	PyObject*		arguments = NULL;	
-	PyObject*		pythonResult = NULL;
+	PyObject*		pythonDef = nullptr;
+	PyObject*		arguments = nullptr;	
+	PyObject*		pythonResult = nullptr;
 	std::string		result;
 	
 	
 	pythonDef = reinterpret_cast< PyObject* >(inPythonFunctionObject);
 	arguments = Py_BuildValue("(s)", inoutString);
-	assert(NULL != arguments);
+	assert(nullptr != arguments);
 	pythonResult = PyEval_CallObject(pythonDef, arguments); // call Python
-	Py_DECREF(arguments), arguments = NULL;
-	_Quills_PropagateExceptions(pythonResult, PyEval_GetFuncDesc(pythonDef));
-	if (NULL != pythonResult)
+	Py_DECREF(arguments), arguments = nullptr;
+	_Quills_PropagateExceptions(pythonResult, PyEval_GetFuncName(pythonDef), PyEval_GetFuncDesc(pythonDef));
+	if (nullptr != pythonResult)
 	{
-		char const*		stringPtr = NULL;
+		char const*		stringPtr = nullptr;
 		
 		
 		if (false == PyString_CheckExact(pythonResult))
@@ -281,7 +368,7 @@ CallPythonStringReturnString	(void*	inPythonFunctionObject,
 		stringPtr = PyString_AsString(pythonResult);
 		result = stringPtr;
 	}
-	Py_XDECREF(pythonResult), pythonResult = NULL;
+	Py_XDECREF(pythonResult), pythonResult = nullptr;
 	
 	return result;
 }
@@ -291,15 +378,15 @@ CallPythonStringReturnString	(void*	inPythonFunctionObject,
 // enable callbacks that take a string argument and a long-integer argument and return a long-integer pair
 #ifdef SWIGPYTHON
 %{
-static std::pair<long, long>
+static std::pair< long, long >
 CallPythonStringLongReturnLongPair	(void*	inPythonFunctionObject,
 									 char*	inoutString,
 									 long	inLong)
 {
-	PyObject*				pythonDef = NULL;
-	PyObject*				arguments = NULL;	
-	PyObject*				pythonResult = NULL;
-	std::pair<long, long>	result;
+	PyObject*				pythonDef = nullptr;
+	PyObject*				arguments = nullptr;	
+	PyObject*				pythonResult = nullptr;
+	std::pair< long, long >	result;
 	
 	
 	result.first = inLong;
@@ -307,11 +394,11 @@ CallPythonStringLongReturnLongPair	(void*	inPythonFunctionObject,
 	
 	pythonDef = reinterpret_cast< PyObject* >(inPythonFunctionObject);
 	arguments = Py_BuildValue("(s,l)", inoutString, inLong);
-	assert(NULL != arguments);
+	assert(nullptr != arguments);
 	pythonResult = PyEval_CallObject(pythonDef, arguments); // call Python
-	Py_DECREF(arguments), arguments = NULL;
-	_Quills_PropagateExceptions(pythonResult, "while C++ called a Python single-string-argument function that returns an integer pair");
-	if (NULL != pythonResult)
+	Py_DECREF(arguments), arguments = nullptr;
+	_Quills_PropagateExceptions(pythonResult, PyEval_GetFuncName(pythonDef), PyEval_GetFuncDesc(pythonDef));
+	if (nullptr != pythonResult)
 	{
 		PyObject*	item0 = nullptr;
 		PyObject*	item1 = nullptr;
@@ -336,7 +423,7 @@ CallPythonStringLongReturnLongPair	(void*	inPythonFunctionObject,
 		}
 		result.second = PyInt_AsLong(item1);
 	}
-	Py_XDECREF(pythonResult), pythonResult = NULL;
+	Py_XDECREF(pythonResult), pythonResult = nullptr;
 	
 	return result;
 }
@@ -349,17 +436,17 @@ CallPythonStringLongReturnLongPair	(void*	inPythonFunctionObject,
 static void
 CallPythonVoidReturnVoid	(void*	inPythonFunctionObject)
 {
-	PyObject*	pythonDef = NULL;
-	PyObject*	arguments = NULL;	
-	PyObject*	pythonResult = NULL;
+	PyObject*	pythonDef = nullptr;
+	PyObject*	arguments = nullptr;	
+	PyObject*	pythonResult = nullptr;
 	
 	
 	pythonDef = reinterpret_cast< PyObject* >(inPythonFunctionObject);
 	//arguments = Py_BuildValue("{items}");
 	pythonResult = PyEval_CallObject(pythonDef, arguments); // call Python
-	//Py_DECREF(arguments), arguments = NULL;
-	_Quills_PropagateExceptions(pythonResult, "while C++ called a Python no-argument function that returns nothing");
-	Py_XDECREF(pythonResult), pythonResult = NULL;
+	//Py_DECREF(arguments), arguments = nullptr;
+	_Quills_PropagateExceptions(pythonResult, PyEval_GetFuncName(pythonDef), PyEval_GetFuncDesc(pythonDef));
+	Py_XDECREF(pythonResult), pythonResult = nullptr;
 }
 %}
 #endif

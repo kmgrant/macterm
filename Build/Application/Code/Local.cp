@@ -1,7 +1,10 @@
+/*!	\file Local.cp
+	\brief UNIX-based routines for running local command-line
+	programs on Mac OS X only, routing the data through some
+	MacTerm terminal window.
+*/
 /*###############################################################
 
-	Local.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -36,6 +39,7 @@
 #include <cstdlib>
 
 // standard-C++ includes
+#include <map>
 #include <set>
 #include <string>
 
@@ -81,6 +85,7 @@ extern "C"
 #include "DialogUtilities.h"
 #include "Local.h"
 #include "NetEvents.h"
+#include "QuillsSession.h"
 #include "Session.h"
 #include "Terminal.h"
 #include "UIStrings.h"
@@ -132,6 +137,7 @@ struct My_Process
 	Local_TerminalID	_pseudoTerminal;	// file descriptor of pseudo-terminal master
 	char const*			_slaveDeviceName;	// e.g. "/dev/ttyp0", data sent here goes to the terminal emulator (not the process)
 	CFRetainRelease		_commandLine;		// array of strings for parent process’ command line arguments (first is program name)
+	CFRetainRelease		_recentDirectory;	// empty until a query is done to determine the value
 	CFRetainRelease		_originalDirectory;	// empty if no chdir() was used, otherwise the chdir() value at spawn time
 };
 typedef My_Process*			My_ProcessPtr;
@@ -408,6 +414,33 @@ Local_ProcessReturnCommandLine	(Local_ProcessRef	inProcess)
 
 
 /*!
+Returns the POSIX path of the directory that was current for the
+given process when Local_UpdateCurrentDirectoryCache() was most
+recently invoked.  The string can be decoded into a C string for
+use in low-level system calls.
+
+If the string is empty, it either means that no query was ever
+done, or that the query could not determine the value (for
+example, due to a permission issue or a failure to find some
+utility that is needed to perform the query).
+
+See also Local_ProcessReturnOriginalDirectory().
+
+(4.0)
+*/
+CFStringRef
+Local_ProcessReturnCurrentDirectory		(Local_ProcessRef	inProcess)
+{
+	My_ProcessAutoLocker	ptr(gProcessPtrLocks(), inProcess);
+	CFStringRef				result = nullptr;
+	
+	
+	result = ptr->_recentDirectory.returnCFStringRef();
+	return result;
+}// ProcessReturnCurrentDirectory
+
+
+/*!
 Returns the file descriptor of the pseudo-terminal device that
 is the master.  Data sent to this device will interact directly
 with the running process, and have only indirect effects on any
@@ -438,6 +471,8 @@ of the shell that launched MacTerm itself (typically, the
 Finder).
 
 Do not release the reference that is returned.
+
+See also Local_ProcessReturnCurrentDirectory().
 
 (4.0)
 */
@@ -1188,6 +1223,71 @@ Local_TerminalWriteBytes	(int			inFileDescriptor,
 }// TerminalWriteBytes
 
 
+/*!
+For each known child process, updates a cache of current working
+directories.  The cached values can be returned by invoking the
+Local_ProcessReturnCurrentDirectory() function.
+
+NOTE:	This routine is not fast because it calls out to Python
+		code that in turn runs the "lsof" program.  This approach
+		is a bit weird but it does work on all Mac OS X versions.
+		Also, because Python is the ultimate caller, Python code
+		can be used to easily post-process the output.  The cost
+		of the call is offset by doing it rarely and by pulling
+		results for every process at the same time.
+
+(4.0)
+*/
+void
+Local_UpdateCurrentDirectoryCache ()
+{
+	typedef std::map< long, std::string >	StringByLong;
+	// make a copy of the internal map; the global map intentionally has NO VALUES
+	// and is used as a convenient way to store keys, but the copy will have the
+	// values filled in with whatever directories were found
+	My_ProcessByID::const_iterator	toProcessByID;
+	std::vector< long >				processIDs;
+	StringByLong					pathsByProcess;
+	
+	
+	// find the Unix process IDs for every known child process
+	for (toProcessByID = gProcessesByID().begin();
+			toProcessByID != gProcessesByID().end(); ++toProcessByID)
+	{
+		processIDs.push_back(toProcessByID->first);
+	}
+	
+	// in a SINGLE query, find ALL requested process’ directories
+	try
+	{
+		pathsByProcess = Quills::Session::pids_cwds(processIDs);
+	}
+	catch (std::exception const&	inException)
+	{
+		Console_Warning(Console_WriteValueCString, "exception during lookup of process working directory", inException.what());
+	}
+	
+	// now update all cached strings with the results
+	for (StringByLong::const_iterator toLongStrPair = pathsByProcess.begin();
+			toLongStrPair != pathsByProcess.end(); ++toLongStrPair)
+	{
+		toProcessByID = gProcessesByID().find(STATIC_CAST(toLongStrPair->first, pid_t));
+		if (gProcessesByID().end() != toProcessByID)
+		{
+			Local_ProcessRef		ref = toProcessByID->second;
+			My_ProcessAutoLocker	ptr(gProcessPtrLocks(), ref);
+			
+			
+			if (nullptr != ptr)
+			{
+				ptr->_recentDirectory.setCFTypeRef(CFStringCreateWithCString(kCFAllocatorDefault, toLongStrPair->second.c_str(),
+																				kCFStringEncodingUTF8), true/* is retained */);
+			}
+		}
+	}
+}// UpdateCurrentDirectoryCache
+
+
 #pragma mark Internal Methods
 namespace {
 
@@ -1204,6 +1304,7 @@ _stopped(false),
 _pseudoTerminal(inMasterTerminal),
 _slaveDeviceName(inSlaveDeviceName),
 _commandLine(inArgumentArray),
+_recentDirectory(CFSTR("")),
 _originalDirectory(inWorkingDirectory)
 {
 #if 0

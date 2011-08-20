@@ -37,11 +37,17 @@
 #ifndef __LOCAL__
 #define __LOCAL__
 
+// standard-C++ includes
+#include <map>
+
 // UNIX includes
 extern "C"
 {
 #	include <sys/types.h>
 }
+
+// Mac includes
+#include <CoreFoundation/CoreFoundation.h>
 
 // application includes
 #include "SessionRef.typedef.h"
@@ -81,6 +87,8 @@ enum
 
 typedef struct Local_OpaqueProcess*		Local_ProcessRef;
 
+typedef std::map< Local_ProcessRef, CFStringRef >	Local_PathByProcess;
+
 
 
 #pragma mark Public Methods
@@ -116,6 +124,10 @@ Boolean
 
 CFArrayRef
 	Local_ProcessReturnCommandLine			(Local_ProcessRef			inProcess);
+
+// NOTE: MUST CALL Local_UpdateCurrentDirectoryCache() PRIOR TO RELYING ON THIS VALUE
+CFStringRef
+	Local_ProcessReturnCurrentDirectory		(Local_ProcessRef			inProcess);
 
 Local_TerminalID
 	Local_ProcessReturnMasterTerminal		(Local_ProcessRef			inProcess);
@@ -167,11 +179,14 @@ ssize_t
 
 //@}
 
-//!\name General Information
+//!\name General
 //@{
 
 Boolean
 	Local_StandardInputIsATerminal			();
+
+void
+	Local_UpdateCurrentDirectoryCache		();
 
 //@}
 

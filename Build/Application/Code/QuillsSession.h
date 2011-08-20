@@ -38,6 +38,7 @@
 #define __QUILLSSESSION__
 
 // standard-C++ includes
+#include <map>
 #include <string>
 #include <vector>
 
@@ -196,6 +197,30 @@ new sessions when they appear.\n\
 	
 #if SWIG
 %feature("docstring",
+"Determine the current working directories of the specified\n\
+processes, among user-owned processes.  The result is a map by\n\
+process ID, where nonexistent entries could not be determined\n\
+(because a process no longer exists or you lack permission,\n\
+etc.).  Each process ID maps to a directory path string.\n\
+\n\
+The character encoding of directory path strings is UTF-8.\n\
+") pids_cwds;
+
+// do not lose exceptions that may be raised by callbacks
+%exception pids_cwds
+{
+	try
+	{
+		$action
+	}
+    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	SWIG_CATCH_UNKNOWN
+}
+#endif
+	static std::map< long, std::string > pids_cwds (const std::vector< long >&	pids);
+	
+#if SWIG
+%feature("docstring",
 "Specify the text to send to the server when a long idle timer\n\
 expires on a session that is watching for inactivity.\n\
 \n\
@@ -209,6 +234,7 @@ single space is typical.\n\
 	// only intended for direct use by the SWIG wrapper
 	static void _on_fileopen_ext_call_py (Quills::FunctionReturnVoidArg1VoidPtrArg2CharPtr, void*, std::string);
 	static void _on_new_call_py (Quills::FunctionReturnVoidArg1VoidPtr, void*);
+	static void _on_seekpidscwds_call_py (Quills::FunctionReturnStringByLongArg1VoidPtrArg2LongVector, void*);
 	static void _on_urlopen_call_py (Quills::FunctionReturnVoidArg1VoidPtrArg2CharPtr, void*, std::string);
 	static void _stop_fileopen_ext_call_py (Quills::FunctionReturnVoidArg1VoidPtrArg2CharPtr, std::string);
 	static void _stop_new_call_py (Quills::FunctionReturnVoidArg1VoidPtr);
@@ -276,6 +302,34 @@ every single time a session is created.\n\
 	on_new_call	(PyObject*	inPythonFunction)
 	{
 		Quills::Session::_on_new_call_py(CallPythonVoidReturnVoid, reinterpret_cast< void* >(inPythonFunction));
+		Py_INCREF(inPythonFunction);
+	}
+	
+%feature("docstring",
+"Register a Python function to be called (with a list argument)\n\
+every time the current working directory of one or more processes\n\
+is needed.  Each argument is an integer, the process ID to check.\n\
+\n\
+Return a dictionary that maps integers to strings.  Each integer\n\
+is a process ID for which a directory could be found, and the\n\
+corresponding string in UTF-8 encoding should be a POSIX path for\n\
+a directory (the string may be empty if nothing was found, but it\n\
+is also OK to simply omit process IDs that had errors).\n\
+\n\
+This function takes multiple arguments and returns a batch of\n\
+results because it is very likely to require a fairly expensive\n\
+lookup (currently, spawning a separate process).  Therefore, it\n\
+is advantageous to request directories for as many processes as\n\
+possible in a single call.\n\
+\n\
+This is currently for MacTerm internal use only.\n\
+") _on_seekpidscwds_call;
+	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
+	// "CallPythonLongVectorReturnStringByLong" is defined in Quills.i
+	static void
+	_on_seekpidscwds_call	(PyObject*	inPythonFunction)
+	{
+		Quills::Session::_on_seekpidscwds_call_py(CallPythonLongVectorReturnStringByLong, reinterpret_cast< void* >(inPythonFunction));
 		Py_INCREF(inPythonFunction);
 	}
 	
