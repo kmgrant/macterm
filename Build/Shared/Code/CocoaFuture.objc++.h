@@ -113,6 +113,13 @@ invalidateRestorableState;
 
 @end
 
+@interface NSWindow (NSWindowExtensionsFromLion)
+
+- (void)
+setAnimationBehavior:(int/*NSInteger*//*NSWindowAnimationBehavior*/)_;
+
+@end
+
 #endif // MAC_OS_X_VERSION_10_7
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

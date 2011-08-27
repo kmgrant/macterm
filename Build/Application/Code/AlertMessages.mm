@@ -44,6 +44,7 @@
 #import <CFRetainRelease.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
+#import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <Cursors.h>
 #import <Embedding.h>
@@ -2195,6 +2196,10 @@ done in "init".)
 windowDidLoad
 {
 	[super windowDidLoad];
+	if (FlagManager_Test(kFlagOS10_7API) && [[self window] respondsToSelector:@selector(setAnimationBehavior:)])
+	{
+		[[self window] setAnimationBehavior:FUTURE_SYMBOL(5, NSWindowAnimationBehaviorAlertPanel)];
+	}
 }// windowDidLoad
 
 
