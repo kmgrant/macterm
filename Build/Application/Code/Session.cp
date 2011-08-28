@@ -3684,9 +3684,1000 @@ Session_UserInputInterruptProcess	(SessionRef		inRef)
 
 
 /*!
+Sends the appropriate multi-character sequence to the terminal
+for the session, based on the given function key number and
+function key layout.  Note that some layouts do not use all
+keys, and requests for unused keys will have no effect.
+
+Traditionally, “function keys” tended to mean the VT220 layout
+because it was the most elaborate at the time.  But some popular
+other layouts have emerged that are useful to support, so this
+function can send sequences from multiple layouts.
+
+\retval kSession_ResultOK
+if the key was apparently input successfully
+
+\retval kSession_ResultInvalidReference
+if "inRef" is invalid
+
+\retval kSession_ResultParameterError
+if the key index is not in the range [1, 48]
+
+\retval kSession_ResultNotReady
+if the key cannot be handled right now (e.g. sheet is open)
+
+(4.0)
+*/
+Session_Result
+Session_UserInputFunctionKey	(SessionRef					inRef,
+								 UInt8						inFunctionKeyNumber,
+								 Session_FunctionKeyLayout	inKeyboardLayout)
+{
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Session_Result			result = kSession_ResultOK;
+	
+	
+	if (nullptr == ptr)
+	{
+		result = kSession_ResultInvalidReference;
+	}
+	else if (kMy_SessionSheetTypeNone != ptr->currentSheet)
+	{
+		result = kSession_ResultNotReady;
+	}
+	else if ((inFunctionKeyNumber < 1) || (inFunctionKeyNumber > 48))
+	{
+		result = kSession_ResultParameterError;
+	}
+	else
+	{
+		VTKeys_FKey		keyCode = kVTKeys_FKeyVT100PF1;
+		Boolean			sendOK = true;
+		
+		
+		switch (inFunctionKeyNumber)
+		{
+		case 1:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyVT100PF1;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyXTermX11F1;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 2:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyVT100PF2;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyXTermX11F2;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 3:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyVT100PF3;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyXTermX11F3;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 4:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyVT100PF4;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyXTermX11F4;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 5:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyXTermX11F5;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 6:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F6;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 7:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F7;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 8:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F8;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 9:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F9;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 10:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F10;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 11:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F11;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 12:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F12;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 13:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F13;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+				keyCode = kVTKeys_FKeyXTermX11F13;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXFree86F13;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 14:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F14;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+				keyCode = kVTKeys_FKeyXTermX11F14;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXFree86F14;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 15:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F15;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+				keyCode = kVTKeys_FKeyXTermX11F15;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXFree86F15;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 16:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F16;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+				keyCode = kVTKeys_FKeyXTermX11F16;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXFree86F16;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 17:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F17;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F17;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 18:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F18;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F18;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 19:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F19;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F19;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 20:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyVT220F20;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F20;
+				break;
+			
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 21:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF21;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F21;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 22:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF22;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F22;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 23:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF23;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F23;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 24:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF24;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F24;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 25:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF25;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+				keyCode = kVTKeys_FKeyXTermX11F25;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXFree86F25;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 26:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF26;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+				keyCode = kVTKeys_FKeyXTermX11F26;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXFree86F26;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 27:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF27;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+				keyCode = kVTKeys_FKeyXTermX11F27;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXFree86F27;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 28:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF28;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+				keyCode = kVTKeys_FKeyXTermX11F28;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXFree86F28;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 29:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF29;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F29;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 30:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF30;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F30;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 31:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF31;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F31;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 32:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF32;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F32;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 33:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF33;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F33;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 34:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF34;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F34;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 35:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF35;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F35;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 36:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF36;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F36;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 37:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF37;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+				keyCode = kVTKeys_FKeyXTermX11F37;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXFree86F37;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 38:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF38;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+				keyCode = kVTKeys_FKeyXTermX11F38;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXFree86F38;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 39:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF39;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+				keyCode = kVTKeys_FKeyXTermX11F39;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXFree86F39;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 40:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF40;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+				keyCode = kVTKeys_FKeyXTermX11F40;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXFree86F40;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 41:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF41;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F41;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 42:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF42;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F42;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 43:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF43;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F43;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 44:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				keyCode = kVTKeys_FKeyRxvtF44;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F44;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 45:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F45;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutRxvt:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 46:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F46;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutRxvt:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 47:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F47;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutRxvt:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		case 48:
+			switch (inKeyboardLayout)
+			{
+			case kSession_FunctionKeyLayoutXTerm:
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				keyCode = kVTKeys_FKeyXTermX11F48;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			case kSession_FunctionKeyLayoutRxvt:
+			default:
+				// ???
+				sendOK = false;
+			}
+			break;
+		
+		default:
+			// ???
+			sendOK = false;
+			break;
+		}
+		
+		if (sendOK)
+		{
+			// allow the terminal to send the key back to the listening session
+			// (ultimately this same exact session) 
+			for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
+					toScreen != ptr->targetTerminals.end(); ++toScreen)
+			{
+				(Terminal_Result)Terminal_UserInputVTFunctionKey(*toScreen, keyCode);
+			}
+		}
+	}
+	return result;
+}// UserInputFunctionKey
+
+
+/*!
 Sends the appropriate sequence for the specified key and
 optional modifiers, taking into account terminal settings
 (such as whether or not arrows are remapped to Emacs commands).
+
+NOTE:	For historical reasons it is possible to transmit
+		certain function key codes this way, but it is better
+		to use Session_UserInputFunctionKey() for function keys.
 
 \retval kSession_ResultOK
 if the key was apparently input successfully

@@ -194,6 +194,27 @@ enum Session_EmacsMetaKey
 };
 
 /*!
+The keyboard layout to assume when a numbered function
+key is activated by Session_UserInputFunctionKey().
+
+Note that currently all keyboard layouts send exactly
+the same sequences for keys F5-F12, but can differ
+significantly for other ranges of keys.
+*/
+enum Session_FunctionKeyLayout
+{
+	kSession_FunctionKeyLayoutVT220			= 0,	//!< keys F6 through F20 send traditional VT220 sequences, and since they do not overlap
+													//!  F1-F4 are mapped to the VT100 PF1-PF4; F5 is mapped to the XTerm value; this is also
+													//!  known as the “multi-gnome-terminal” layout
+	kSession_FunctionKeyLayoutXTerm			= 1,	//!< keys F1 through F12 are similar to VT100 and VT220; keys F13-F48 send XTerm sequences
+	kSession_FunctionKeyLayoutXTermXFree86	= 2,	//!< similar to "kSession_FunctionKeyLayoutX11XTerm", except that the following key ranges
+													//!  send the values defined by the XTerm on XFree86: F1-F4, F13-F16, F25-F28, F37-F40;
+													//!  also known as the “gnome-terminal” layout, and a superset of what GNU “screen” uses
+	kSession_FunctionKeyLayoutRxvt			= 3		//!< very similar to "kSession_FunctionKeyLayoutVT220"; but F1-F4 follow XTerm instead of
+													//!  the VT100, F21-F44 have completely unique mappings, and there is no F45-F48
+};
+
+/*!
 Which characters are used for line endings in text files
 (such as file captures and saved selections).
 */
@@ -391,6 +412,11 @@ void
 
 void
 	Session_UserInputInterruptProcess		(SessionRef							inRef);
+
+Session_Result
+	Session_UserInputFunctionKey			(SessionRef							inRef,
+											 UInt8								inFunctionKeyNumber,
+											 Session_FunctionKeyLayout			inKeyboardLayout = kSession_FunctionKeyLayoutVT220);
 
 Session_Result
 	Session_UserInputKey					(SessionRef							inRef,

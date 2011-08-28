@@ -67,7 +67,7 @@ table(deftable).
 (defbottom). |\2(desc). The scroll bar (and therefore scrollback history) is available in Full Screen mode.|
 (deftop). |(key). @kiosk-window-frame-visible@|(types). _true or false_|
 (defbottom). |\2(desc). The window title and toolbar are visible in Full Screen mode.|
-(deftop). |(key). @new-means@|(types). _string_: @default@, @dialog@, @log-in shell@ or @shell@| 
+(deftop). |(key). @new-means@|(types). _string_: @default@, @dialog@, @log-in shell@ or @shell@|
 (defbottom). |\2(desc). The default command-N key equivalent creates this type of session.|
 (deftop). |(key). @no-auto-close@|(types). _true or false_|
 (defbottom). |\2(desc). The window stays open after the process exits for any reason.|
@@ -79,13 +79,13 @@ table(deftable).
 (defbottom). |\2(desc). "Copy with Tab Substitution" uses this many spaces in place of each tab it finds.|
 (deftop). |(key). @terminal-auto-copy-on-select@|(types). _true or false_|
 (defbottom). |\2(desc). Text is copied to the Clipboard as soon as it is selected via mouse or keyboard.|
-(deftop). |(key). @terminal-capture-file-line-endings@|(types). _string_: @cr@, @lf@ or @crlf@| 
+(deftop). |(key). @terminal-capture-file-line-endings@|(types). _string_: @cr@, @lf@ or @crlf@|
 (defbottom). |\2(desc). The character(s) used to terminate lines in generated text files.|
 (deftop). |(key). @terminal-cursor-auto-move-on-drop@|(types). _true or false_|
 (defbottom). |\2(desc). Cursor movement sequences are sent to the terminal prior to text drag-and-drop to position the cursor beneath the mouse.|
 (deftop). |(key). @terminal-cursor-blinking@|(types). _true or false_|
 (defbottom). |\2(desc). The text input marker in terminals flashes on and off.|
-(deftop). |(key). @terminal-cursor-shape@|(types). _string_: @block@, @underline@, @thick underline@, @vertical bar@ or @thick vertical bar@| 
+(deftop). |(key). @terminal-cursor-shape@|(types). _string_: @block@, @underline@, @thick underline@, @vertical bar@ or @thick vertical bar@|
 (defbottom). |\2(desc). The appearance of the text input marker in terminals.|
 (deftop). |(key). @terminal-fade-in-background@|(types). _true or false_|
 (defbottom). |\2(desc). Every terminal window becomes slightly transparent when the application is in the background.  The background alpha fraction is determined by @terminal-fade-alpha@.|
@@ -95,17 +95,17 @@ table(deftable).
 (defbottom). |\2(desc). Each new window selects one of the Format collections at random (affects font and colors).|
 (deftop). |(key). @terminal-inverse-selections@|(types). _true or false_|
 (defbottom). |\2(desc). Selected text inverts the screen colors instead of using a darkening or lightening effect.|
-(deftop). |(key). @terminal-resize-affects@|(types). _string_: @screen@ or @font@| 
+(deftop). |(key). @terminal-resize-affects@|(types). _string_: @screen@ or @font@|
 (defbottom). |\2(desc). Resizing a terminal view will alter its screen dimensions or its font size to best fit the new area.|
 (deftop). |(key). @terminal-show-margin-at-column@|(types). _integer_|
 (defbottom). |\2(desc). A thin vertical line is rendered after this column of text; 1 is first column, 0 turns off the feature.|
-(deftop). |(key). @terminal-when-bell@|(types). _string_: @audio@, @audio+visual@ or @visual@| 
+(deftop). |(key). @terminal-when-bell@|(types). _string_: @audio@, @audio+visual@ or @visual@|
 (defbottom). |\2(desc). Terminal bells have this effect when the source terminal is frontmost.|
-(deftop). |(key). @terminal-when-bell-in-background@|(types). _string_: @ignore@ or @notify@| 
+(deftop). |(key). @terminal-when-bell-in-background@|(types). _string_: @ignore@ or @notify@|
 (defbottom). |\2(desc). Terminal bells have this effect when the application is not frontmost.|
 (deftop). |(key). @terminal-when-bell-sound-basename@|(types). _string_|
 (defbottom). |\2(desc). Terminal bells play this sound; found in any Library/Sounds folder; no extension (e.g. ".aiff").|
-(deftop). |(key). @when-alert-in-background@|(types). _string_: @ignore@, @badge@, @animate@ or @alert@| 
+(deftop). |(key). @when-alert-in-background@|(types). _string_: @ignore@, @badge@, @animate@ or @alert@|
 (defbottom). |\2(desc). This is the type of notification used for alert messages when the application is not frontmost.|
 (deftop). |(key). @window-clipboard-visible@|(types). _true or false_|
 (defbottom). |\2(desc). This window should be displayed when the application launches.|
@@ -125,7 +125,7 @@ table(deftable).
 (defbottom). |\2(desc). This window should be displayed when the application launches.|
 (deftop). |(key). @window-terminal-position-pixels@|(types). _array of integer_: two values; horizontal and vertical pixel offsets from main display top-left|
 (defbottom). |\2(desc). Where to place the first terminal window, and where to start for "Arrange All in Front".|
-(deftop). |(key). @window-terminal-tab-edge@|(types). _string_: @top@, @bottom@, @left@ or @right@| 
+(deftop). |(key). @window-terminal-tab-edge@|(types). _string_: @top@, @bottom@, @left@ or @right@|
 (defbottom). |\2(desc). When tabs are enabled, this side of the window should be used.|
 
 h3(#macros). Macro Collections
@@ -185,19 +185,21 @@ table(deftable).
 (defbottom). |\2(desc). Prevents the multi-line Paste warning from appearing, and does not join pasted lines together.|
 (deftop). |(key). @format-favorite@|(types). _string_|
 (defbottom). |\2(desc). This Format collection is used by default when the session starts.|
-(deftop). |(key). @key-map-delete@|(types). _string_: @backspace@ or @delete@| 
+(deftop). |(key). @key-map-delete@|(types). _string_: @backspace@ or @delete@|
 (defbottom). |\2(desc). Using the Delete key sends this instruction (backspace or delete) to the session.|
-(deftop). |(key). @key-map-new-line@|(types). _string_: @\015\000@ or @\015\012@| 
+(deftop). |(key). @key-map-function-keys@|(types). _string_: @xterm-xfree86@, @xterm@, @rxvt@ or @vt220@|
+(defbottom). |\2(desc). The behavior and availability of up to 48 keys on the floating "Function Keys" keypad.|
+(deftop). |(key). @key-map-new-line@|(types). _string_: @\015\000@ or @\015\012@|
 (defbottom). |\2(desc). Using the Return or Enter key sends this sequence (character codes in C-style octal) to the session.|
 (deftop). |(key). @server-host@|(types). _string_: TCP/IP host name, or IPv4 or IPv6 address|
 (defbottom). |\2(desc). The machine where the desired remote server is located.|
 (deftop). |(key). @server-port@|(types). _integer_: TCP/IP port number|
 (defbottom). |\2(desc). The port on the host machine that the desired remote server is using; can derive default from protocol.|
-(deftop). |(key). @server-protocol@|(types). _string_: @ssh-1@, @ssh-2@, @sftp@, @ftp@ or @telnet@| 
+(deftop). |(key). @server-protocol@|(types). _string_: @ssh-1@, @ssh-2@, @sftp@, @ftp@ or @telnet@|
 (defbottom). |\2(desc). The protocol used for a remote connection.|
 (deftop). |(key). @server-user-id@|(types). _string_: typically all-lowercase and one word, for log-in|
 (defbottom). |\2(desc). The ID used for logging in to the remote server.|
-(deftop). |(key). @tek-mode@|(types). _string_: @off@, @4014@ or @4105@| 
+(deftop). |(key). @tek-mode@|(types). _string_: @off@, @4014@ or @4105@|
 (defbottom). |\2(desc). Vector graphics commands received from the session are disabled or assumed to use this command set.|
 (deftop). |(key). @tek-page-clears-screen@|(types). _true or false_|
 (defbottom). |\2(desc). A PAGE command in TEK data causes the active graphics window to be erased instead of opening a new active window.|
@@ -245,7 +247,7 @@ table(deftable).
 (defbottom). |\2(desc). A session request to clear the screen will first copy screen lines to the scrollback before obliterating them.|
 (deftop). |(key). @terminal-emulator-answerback@|(types). _string_|
 (defbottom). |\2(desc). The name sent to the session when asked about terminal type; defaults to the current emulator name.|
-(deftop). |(key). @terminal-emulator-type@|(types). _string_: @dumb@, @vt100@, @vt102@, or @vt220@| 
+(deftop). |(key). @terminal-emulator-type@|(types). _string_: @dumb@, @vt100@, @vt102@, or @vt220@|
 (defbottom). |\2(desc). Default behavior (such as which sequences are read, and what effects they have) follows the specification of this terminal.|
 (deftop). |(key). @terminal-emulator-vt100-fix-line-wrapping-bug@|(types). _true or false_|
 (defbottom). |\2(desc). Avoids strict VT100 emulation, preventing a real bug in VT100s that causes the last terminal line to scroll when wrapped.|
@@ -267,7 +269,7 @@ table(deftable).
 (defbottom). |\2(desc). The main screen (excluding scrollback) is this many rows high.|
 (deftop). |(key). @terminal-scrollback-size-lines@|(types). _integer_|
 (defbottom). |\2(desc). For scrollbacks of fixed or distributed type, the maximum number of lines used by this screen.|
-(deftop). |(key). @terminal-scrollback-type@|(types). _string_: @off@, @unlimited@, @distributed@ or @fixed@| 
+(deftop). |(key). @terminal-scrollback-type@|(types). _string_: @off@, @unlimited@, @distributed@ or @fixed@|
 (defbottom). |\2(desc). Scrollback memory is not allocated at all, or is allocated in the specified way.|
 
 h3(#formats). Format Collections

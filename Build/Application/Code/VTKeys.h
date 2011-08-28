@@ -41,6 +41,117 @@
 #pragma mark Constants
 
 /*!
+New key codes for function keys.  They are identified by the
+layouts that primarily use them, but note that many layouts
+will use a combination of keys (e.g. the F5 code is used by
+all layouts despite being credited to XTerm on X11).
+*/
+enum VTKeys_FKey
+{
+	// VT100
+	kVTKeys_FKeyVT100PF1	= 1,		//!< ^[OP
+	kVTKeys_FKeyVT100PF2	= 2,		//!< ^[OQ
+	kVTKeys_FKeyVT100PF3	= 3,		//!< ^[OR
+	kVTKeys_FKeyVT100PF4	= 4,		//!< ^[OS
+	// VT220
+	kVTKeys_FKeyVT220F6		= 6,		//!< ^[[17~
+	kVTKeys_FKeyVT220F7		= 7,		//!< ^[[18~
+	kVTKeys_FKeyVT220F8		= 8,		//!< ^[[19~
+	kVTKeys_FKeyVT220F9		= 9,		//!< ^[[20~
+	kVTKeys_FKeyVT220F10	= 10,		//!< ^[[21~
+	kVTKeys_FKeyVT220F11	= 11,		//!< ^[[23~
+	kVTKeys_FKeyVT220F12	= 12,		//!< ^[[24~
+	kVTKeys_FKeyVT220F13	= 13,		//!< ^[[25~
+	kVTKeys_FKeyVT220F14	= 14,		//!< ^[[26~
+	kVTKeys_FKeyVT220F15	= 15,		//!< ^[[28~
+	kVTKeys_FKeyVT220F16	= 16,		//!< ^[[29~
+	kVTKeys_FKeyVT220F17	= 17,		//!< ^[[31~
+	kVTKeys_FKeyVT220F18	= 18,		//!< ^[[32~
+	kVTKeys_FKeyVT220F19	= 19,		//!< ^[[33~
+	kVTKeys_FKeyVT220F20	= 20,		//!< ^[[34~
+	// XTerm (X11)
+	kVTKeys_FKeyXTermX11F1	= 21,		//!< ^[[11~
+	kVTKeys_FKeyXTermX11F2	= 22,		//!< ^[[12~
+	kVTKeys_FKeyXTermX11F3	= 23,		//!< ^[[13~
+	kVTKeys_FKeyXTermX11F4	= 24,		//!< ^[[14~
+	kVTKeys_FKeyXTermX11F5	= 25,		//!< ^[[15~
+	kVTKeys_FKeyXTermX11F13	= 33,		//!< ^[[11;2~
+	kVTKeys_FKeyXTermX11F14	= 34,		//!< ^[[12;2~
+	kVTKeys_FKeyXTermX11F15	= 35,		//!< ^[[13;2~
+	kVTKeys_FKeyXTermX11F16	= 36,		//!< ^[[14;2~
+	kVTKeys_FKeyXTermX11F17	= 37,		//!< ^[[15;2~
+	kVTKeys_FKeyXTermX11F18	= 38,		//!< ^[[17;2~
+	kVTKeys_FKeyXTermX11F19	= 39,		//!< ^[[18;2~
+	kVTKeys_FKeyXTermX11F20	= 40,		//!< ^[[19;2~
+	kVTKeys_FKeyXTermX11F21	= 41,		//!< ^[[20;2~
+	kVTKeys_FKeyXTermX11F22	= 42,		//!< ^[[21;2~
+	kVTKeys_FKeyXTermX11F23	= 43,		//!< ^[[23;2~
+	kVTKeys_FKeyXTermX11F24	= 44,		//!< ^[[24;2~
+	kVTKeys_FKeyXTermX11F25	= 45,		//!< ^[[11;5~
+	kVTKeys_FKeyXTermX11F26	= 46,		//!< ^[[12;5~
+	kVTKeys_FKeyXTermX11F27	= 47,		//!< ^[[13;5~
+	kVTKeys_FKeyXTermX11F28	= 48,		//!< ^[[14;5~
+	kVTKeys_FKeyXTermX11F29	= 49,		//!< ^[[15;5~
+	kVTKeys_FKeyXTermX11F30	= 50,		//!< ^[[17;5~
+	kVTKeys_FKeyXTermX11F31	= 51,		//!< ^[[18;5~
+	kVTKeys_FKeyXTermX11F32	= 52,		//!< ^[[19;5~
+	kVTKeys_FKeyXTermX11F33	= 53,		//!< ^[[20;5~
+	kVTKeys_FKeyXTermX11F34	= 54,		//!< ^[[21;5~
+	kVTKeys_FKeyXTermX11F35	= 55,		//!< ^[[23;5~
+	kVTKeys_FKeyXTermX11F36	= 56,		//!< ^[[24;5~
+	kVTKeys_FKeyXTermX11F37	= 57,		//!< ^[[11;6~
+	kVTKeys_FKeyXTermX11F38	= 58,		//!< ^[[12;6~
+	kVTKeys_FKeyXTermX11F39	= 59,		//!< ^[[13;6~
+	kVTKeys_FKeyXTermX11F40	= 60,		//!< ^[[14;6~
+	kVTKeys_FKeyXTermX11F41	= 61,		//!< ^[[15;6~
+	kVTKeys_FKeyXTermX11F42	= 62,		//!< ^[[17;6~
+	kVTKeys_FKeyXTermX11F43	= 63,		//!< ^[[18;6~
+	kVTKeys_FKeyXTermX11F44	= 64,		//!< ^[[19;6~
+	kVTKeys_FKeyXTermX11F45	= 65,		//!< ^[[20;6~
+	kVTKeys_FKeyXTermX11F46	= 66,		//!< ^[[21;6~
+	kVTKeys_FKeyXTermX11F47	= 67,		//!< ^[[23;6~
+	kVTKeys_FKeyXTermX11F48	= 68,		//!< ^[[24;6~
+	// XTerm (XFree86)
+	kVTKeys_FKeyXFree86F13	= 73,		//!< ^[O2P
+	kVTKeys_FKeyXFree86F14	= 74,		//!< ^[O2Q
+	kVTKeys_FKeyXFree86F15	= 75,		//!< ^[O2R
+	kVTKeys_FKeyXFree86F16	= 76,		//!< ^[O2S
+	kVTKeys_FKeyXFree86F25	= 85,		//!< ^[O5P
+	kVTKeys_FKeyXFree86F26	= 86,		//!< ^[O5Q
+	kVTKeys_FKeyXFree86F27	= 87,		//!< ^[O5R
+	kVTKeys_FKeyXFree86F28	= 88,		//!< ^[O5S
+	kVTKeys_FKeyXFree86F37	= 97,		//!< ^[O6P
+	kVTKeys_FKeyXFree86F38	= 98,		//!< ^[O6Q
+	kVTKeys_FKeyXFree86F39	= 99,		//!< ^[O6R
+	kVTKeys_FKeyXFree86F40	= 100,		//!< ^[O6S
+	// rxvt
+	kVTKeys_FKeyRxvtF21		= 101,		//!< ^[[23$
+	kVTKeys_FKeyRxvtF22		= 102,		//!< ^[[24$
+	kVTKeys_FKeyRxvtF23		= 103,		//!< ^[[11^
+	kVTKeys_FKeyRxvtF24		= 104,		//!< ^[[12^
+	kVTKeys_FKeyRxvtF25		= 105,		//!< ^[[13^
+	kVTKeys_FKeyRxvtF26		= 106,		//!< ^[[14^
+	kVTKeys_FKeyRxvtF27		= 107,		//!< ^[[15^
+	kVTKeys_FKeyRxvtF28		= 108,		//!< ^[[17^
+	kVTKeys_FKeyRxvtF29		= 109,		//!< ^[[18^
+	kVTKeys_FKeyRxvtF30		= 110,		//!< ^[[19^
+	kVTKeys_FKeyRxvtF31		= 111,		//!< ^[[20^
+	kVTKeys_FKeyRxvtF32		= 112,		//!< ^[[21^
+	kVTKeys_FKeyRxvtF33		= 113,		//!< ^[[23^
+	kVTKeys_FKeyRxvtF34		= 114,		//!< ^[[24^
+	kVTKeys_FKeyRxvtF35		= 115,		//!< ^[[25^
+	kVTKeys_FKeyRxvtF36		= 116,		//!< ^[[26^
+	kVTKeys_FKeyRxvtF37		= 117,		//!< ^[[28^
+	kVTKeys_FKeyRxvtF38		= 118,		//!< ^[[29^
+	kVTKeys_FKeyRxvtF39		= 119,		//!< ^[[31^
+	kVTKeys_FKeyRxvtF40		= 120,		//!< ^[[32^
+	kVTKeys_FKeyRxvtF41		= 121,		//!< ^[[33^
+	kVTKeys_FKeyRxvtF42		= 122,		//!< ^[[34^
+	kVTKeys_FKeyRxvtF43		= 123,		//!< ^[[23@
+	kVTKeys_FKeyRxvtF44		= 124		//!< ^[[24@
+};
+
+/*!
 Internal codes for identifying special keys.  They appear to be
 arbitrary, however their values should be above the normal ASCII
 range.

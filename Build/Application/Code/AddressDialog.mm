@@ -303,6 +303,25 @@ rebuildAddressList:(id)		sender
 }// rebuildAddressList:
 
 
+#pragma mark NSWindowController
+
+
+/*!
+Affects the preferences key under which window position
+and size information are automatically saved and
+restored.
+
+(4.0)
+*/
+- (NSString*)
+windowFrameAutosaveName
+{
+	// NOTE: do not ever change this, it would only cause existing
+	// user settings to be forgotten
+	return @"IPAddresses";
+}// windowFrameAutosaveName
+
+
 @end // AddressDialog_PanelController
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

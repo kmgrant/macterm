@@ -439,6 +439,22 @@ windowDidLoad
 }// windowDidLoad
 
 
+/*!
+Affects the preferences key under which window position
+and size information are automatically saved and
+restored.
+
+(4.0)
+*/
+- (NSString*)
+windowFrameAutosaveName
+{
+	// NOTE: do not ever change this, it would only cause existing
+	// user settings to be forgotten
+	return @"CommandLine";
+}// windowFrameAutosaveName
+
+
 @end // CommandLine_PanelController
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

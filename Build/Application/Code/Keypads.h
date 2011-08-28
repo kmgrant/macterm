@@ -44,6 +44,7 @@
 
 // application includes
 #include "Preferences.h"
+#include "Session.h"
 
 
 
@@ -69,6 +70,13 @@ This is useful to encapsulate the complexity of
 locating a target session.
 */
 @interface Keypads_PanelController : NSWindowController
+{
+	float	baseFontSize;
+}
+
+// designated initializer
+- (id)
+initWithWindowNibName:(NSString*)_;
 
 - (void)
 sendCharacter:(UInt8)_;
@@ -192,7 +200,7 @@ typeControlQuestionMark:(id)_;
 
 
 /*!
-Implements the VT220 Function Keys palette.  See
+Implements the multi-layout Function Keys palette.  See
 "KeypadFunctionKeysCocoa.xib".
 
 Note that this is only in the header for the sake of
@@ -200,9 +208,49 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface Keypads_FunctionKeysPanelController : Keypads_PanelController
+{
+	IBOutlet NSPopUpButton*		layoutMenu;
+	IBOutlet NSButton*			functionKeyF1;		// may become “PF1” (VT100)
+	IBOutlet NSButton*			functionKeyF2;		// may become “PF2” (VT100)
+	IBOutlet NSButton*			functionKeyF3;		// may become “PF3” (VT100)
+	IBOutlet NSButton*			functionKeyF4;		// may become “PF4” (VT100)
+	IBOutlet NSButton*			functionKeyF15;		// may become “?” (help)
+	IBOutlet NSButton*			functionKeyF16;		// may become “do”
+	NSWindow*					menuChildWindow;
+}
 
 + (id)
 sharedFunctionKeysPanelController;
+
+- (Session_FunctionKeyLayout)
+currentFunctionKeyLayout;
+
+- (IBAction)
+performSetFunctionKeyLayoutRxvt:(id)_;
+
+- (IBAction)
+performSetFunctionKeyLayoutVT220:(id)_;
+
+- (IBAction)
+performSetFunctionKeyLayoutXTermX11:(id)_;
+
+- (IBAction)
+performSetFunctionKeyLayoutXTermXFree86:(id)_;
+
+- (IBAction)
+typeF1:(id)_;
+
+- (IBAction)
+typeF2:(id)_;
+
+- (IBAction)
+typeF3:(id)_;
+
+- (IBAction)
+typeF4:(id)_;
+
+- (IBAction)
+typeF5:(id)_;
 
 - (IBAction)
 typeF6:(id)_;
@@ -248,6 +296,90 @@ typeF19:(id)_;
 
 - (IBAction)
 typeF20:(id)_;
+
+- (IBAction)
+typeF21:(id)_;
+
+- (IBAction)
+typeF22:(id)_;
+
+- (IBAction)
+typeF23:(id)_;
+
+- (IBAction)
+typeF24:(id)_;
+
+- (IBAction)
+typeF25:(id)_;
+
+- (IBAction)
+typeF26:(id)_;
+
+- (IBAction)
+typeF27:(id)_;
+
+- (IBAction)
+typeF28:(id)_;
+
+- (IBAction)
+typeF29:(id)_;
+
+- (IBAction)
+typeF30:(id)_;
+
+- (IBAction)
+typeF31:(id)_;
+
+- (IBAction)
+typeF32:(id)_;
+
+- (IBAction)
+typeF33:(id)_;
+
+- (IBAction)
+typeF34:(id)_;
+
+- (IBAction)
+typeF35:(id)_;
+
+- (IBAction)
+typeF36:(id)_;
+
+- (IBAction)
+typeF37:(id)_;
+
+- (IBAction)
+typeF38:(id)_;
+
+- (IBAction)
+typeF39:(id)_;
+
+- (IBAction)
+typeF40:(id)_;
+
+- (IBAction)
+typeF41:(id)_;
+
+- (IBAction)
+typeF42:(id)_;
+
+- (IBAction)
+typeF43:(id)_;
+
+- (IBAction)
+typeF44:(id)_;
+
+- (IBAction)
+typeF45:(id)_;
+
+- (IBAction)
+typeF46:(id)_;
+
+- (IBAction)
+typeF47:(id)_;
+
+- (IBAction)
+typeF48:(id)_;
 
 @end
 

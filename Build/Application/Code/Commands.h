@@ -710,6 +710,18 @@ performLocalPageKeysToggle:(id)_;
 performMappingCustom:(id)_;
 
 - (IBAction)
+performSetFunctionKeyLayoutRxvt:(id)_;
+
+- (IBAction)
+performSetFunctionKeyLayoutVT220:(id)_;
+
+- (IBAction)
+performSetFunctionKeyLayoutXTermX11:(id)_;
+
+- (IBAction)
+performSetFunctionKeyLayoutXTermXFree86:(id)_;
+
+- (IBAction)
 performTranslationSwitchDefault:(id)_;
 
 - (void)

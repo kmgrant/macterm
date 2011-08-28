@@ -4921,6 +4921,78 @@ performMappingCustom:(id)	sender
 
 
 - (IBAction)
+performSetFunctionKeyLayoutRxvt:(id)	sender
+{
+	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutRxvt:sender];
+}
+- (id)
+canPerformSetFunctionKeyLayoutRxvt:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+	BOOL	isChecked = (kSession_FunctionKeyLayoutRxvt ==
+							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
+	
+	
+	setItemCheckMark(anItem, isChecked);
+	
+	return validatorYes(anItem);
+}
+
+
+- (IBAction)
+performSetFunctionKeyLayoutVT220:(id)	sender
+{
+	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutVT220:sender];
+}
+- (id)
+canPerformSetFunctionKeyLayoutVT220:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+	BOOL	isChecked = (kSession_FunctionKeyLayoutVT220 ==
+							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
+	
+	
+	setItemCheckMark(anItem, isChecked);
+	
+	return validatorYes(anItem);
+}
+
+
+- (IBAction)
+performSetFunctionKeyLayoutXTermX11:(id)	sender
+{
+	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermX11:sender];
+}
+- (id)
+canPerformSetFunctionKeyLayoutXTermX11:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+	BOOL	isChecked = (kSession_FunctionKeyLayoutXTerm ==
+							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
+	
+	
+	setItemCheckMark(anItem, isChecked);
+	
+	return validatorYes(anItem);
+}
+
+
+- (IBAction)
+performSetFunctionKeyLayoutXTermXFree86:(id)	sender
+{
+	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermXFree86:sender];
+}
+- (id)
+canPerformSetFunctionKeyLayoutXTermXFree86:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+	BOOL	isChecked = (kSession_FunctionKeyLayoutXTermXFree86 ==
+							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
+	
+	
+	setItemCheckMark(anItem, isChecked);
+	
+	return validatorYes(anItem);
+}
+
+
+- (IBAction)
 performTranslationSwitchByFavoriteName:(id)		sender
 {
 	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();

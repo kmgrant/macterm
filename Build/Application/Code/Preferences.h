@@ -238,6 +238,7 @@ enum
 	kPreferences_TagCaptureFileAlias					= 'cfil',	//!< data: "FSRef"
 	kPreferences_TagCommandLine							= 'cmdl',	//!< data: "CFArrayRef" (of CFStrings)
 	kPreferences_TagDataReadBufferSize					= 'rdbf',	//!< data: "SInt16"
+	kPreferences_TagFunctionKeyLayout					= 'fkyl',	//!< data: "Session_FunctionKeyLayout"
 	kPreferences_TagIdleAfterInactivityInSeconds		= 'idle',	//!< data: "UInt16"
 	kPreferences_TagKeepAlivePeriodInMinutes			= 'kfqm',	//!< data: "UInt16"
 	kPreferences_TagKeyInterruptProcess					= 'kint',	//!< data: "char" (actual non-printable ASCII control character)

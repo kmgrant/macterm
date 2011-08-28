@@ -941,6 +941,9 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagFontSize,
 									CFSTR("terminal-font-size-points"), typeNetEvents_CFNumberRef,
 									sizeof(SInt16), Quills::Prefs::FORMAT);
+	My_PreferenceDefinition::create(kPreferences_TagFunctionKeyLayout,
+									CFSTR("key-map-function-keys"), typeCFStringRef,
+									sizeof(Session_FunctionKeyLayout), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagIdleAfterInactivityInSeconds,
 									CFSTR("data-receive-idle-seconds"), typeNetEvents_CFNumberRef,
 									sizeof(UInt16), Quills::Prefs::SESSION);
@@ -7113,6 +7116,42 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagFunctionKeyLayout:
+					{
+						assert(typeCFStringRef == keyValueType);
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							Session_FunctionKeyLayout*		storedValuePtr = REINTERPRET_CAST(outDataPtr, Session_FunctionKeyLayout*);
+							
+							
+							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("xterm"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_FunctionKeyLayoutXTerm;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("xterm-xfree86"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_FunctionKeyLayoutXTermXFree86;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("rxvt"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_FunctionKeyLayoutRxvt;
+							}
+							else
+							{
+								*storedValuePtr = kSession_FunctionKeyLayoutVT220;
+							}
+							CFRelease(valueCFString), valueCFString = nullptr;
+						}
+					}
+					break;
+				
 				case kPreferences_TagIdleAfterInactivityInSeconds:
 				case kPreferences_TagKeepAlivePeriodInMinutes:
 					{
@@ -9260,6 +9299,35 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFNumberRef == keyValueType);
 					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
+				}
+				break;
+			
+			case kPreferences_TagFunctionKeyLayout:
+				{
+					Session_FunctionKeyLayout const* const		data = REINTERPRET_CAST(inDataPtr, Session_FunctionKeyLayout const*);
+					
+					
+					assert(typeCFStringRef == keyValueType);
+					switch (*data)
+					{
+					case kSession_FunctionKeyLayoutRxvt:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("rxvt"));
+						break;
+					
+					case kSession_FunctionKeyLayoutXTerm:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("xterm"));
+						break;
+					
+					case kSession_FunctionKeyLayoutXTermXFree86:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("xterm-xfree86"));
+						break;
+					
+					case kSession_FunctionKeyLayoutVT220:
+					default:
+						// ???
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("vt220"));
+						break;
+					}
 				}
 				break;
 			

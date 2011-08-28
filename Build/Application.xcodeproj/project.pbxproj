@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0A06274B0FB3AF3C00EBC8BB /* __init__.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A06274A0FB3AF3C00EBC8BB /* __init__.py */; };
 		0A0627500FB3AF4900EBC8BB /* __init__.py in pymacterm-url */ = {isa = PBXBuildFile; fileRef = 0A06274F0FB3AF4900EBC8BB /* __init__.py */; };
+		0A08DD8D1405B4B50005129F /* TranslucentMenuArrow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */; };
 		0A1A068A0ABA6241002C95D7 /* PrintTerminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */; };
 		0A2890DD0D68017D0017D99E /* GenericPanelTabs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */; };
 		0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */; };
@@ -210,6 +211,8 @@
 		0A060B2A078BA0D500A8BB55 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/ColorBox.nib; sourceTree = "<group>"; };
 		0A06274A0FB3AF3C00EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/file/__init__.py; sourceTree = "<group>"; };
 		0A06274F0FB3AF4900EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/url/__init__.py; sourceTree = "<group>"; };
+		0A08DD8B1405B4AA0005129F /* TranslucentMenuArrow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TranslucentMenuArrow.h; path = Application/Code/TranslucentMenuArrow.h; sourceTree = "<group>"; };
+		0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TranslucentMenuArrow.mm; path = Application/Code/TranslucentMenuArrow.mm; sourceTree = "<group>"; };
 		0A11F54B059FE55D00A565C3 /* IconForPrefPanelGeneral.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelGeneral.icns; path = Application/Resources/IconForPrefPanelGeneral.icns; sourceTree = "<group>"; };
 		0A11F54D059FE55D00A565C3 /* IconForPrefPanelMacros.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelMacros.icns; path = Application/Resources/IconForPrefPanelMacros.icns; sourceTree = "<group>"; };
 		0A1427340DA5D4270028510F /* VectorInterpreterID.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreterID.typedef.h; path = Application/Code/VectorInterpreterID.typedef.h; sourceTree = "<group>"; };
@@ -771,6 +774,7 @@
 				0A46FE28055432A400ACDF3A /* TerminalView.mm */,
 				0A46FE29055432A400ACDF3A /* TerminalWindow.mm */,
 				0A46FE2D055432A400ACDF3A /* TextTranslation.cp */,
+				0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */,
 				0A46FDE3055432A400ACDF3A /* UIStrings.cp */,
 				0A46FE38055432A400ACDF3A /* URL.cp */,
 				0A46FE21055432A400ACDF3A /* VectorCanvas.cp */,
@@ -839,6 +843,7 @@
 				0A4604410554376100ACDF3A /* TerminalViewRef.typedef.h */,
 				0A4604420554376100ACDF3A /* TerminalWindow.h */,
 				0A4604470554376100ACDF3A /* TextTranslation.h */,
+				0A08DD8B1405B4AA0005129F /* TranslucentMenuArrow.h */,
 				0A4603EF0554376100ACDF3A /* UIStrings.h */,
 				0A8738310A5F5F59002CACA9 /* UIStrings_PrefsWindow.h */,
 				0A4604510554376100ACDF3A /* Undoables.h */,
@@ -1435,6 +1440,7 @@
 				0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */,
 				0ABAA71B13491D06006B1EF6 /* CocoaFuture.mm in Sources */,
 				0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */,
+				0A08DD8D1405B4B50005129F /* TranslucentMenuArrow.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

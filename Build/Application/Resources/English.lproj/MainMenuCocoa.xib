@@ -2,7 +2,7 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.10">
   <data>
     <int key="IBDocument.SystemTarget">1030</int>
-    <string key="IBDocument.SystemVersion">11A511</string>
+    <string key="IBDocument.SystemVersion">11B26</string>
     <string key="IBDocument.InterfaceBuilderVersion">851</string>
     <string key="IBDocument.AppKitVersion">1138</string>
     <string key="IBDocument.HIToolboxVersion">566.00</string>
@@ -12,7 +12,7 @@
     </object>
     <object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
       <bool key="EncodedWithXMLCoder">YES</bool>
-      <integer value="29"/>
+      <integer value="883"/>
     </object>
     <object class="NSArray" key="IBDocument.PluginDependencies">
       <bool key="EncodedWithXMLCoder">YES</bool>
@@ -1176,6 +1176,75 @@
                   <reference key="NSOnImage" ref="229763992"/>
                   <reference key="NSMixedImage" ref="909111550"/>
                 </object>
+                <object class="NSMenuItem" id="808964986">
+                  <reference key="NSMenu" ref="348578084"/>
+                  <bool key="NSIsDisabled">YES</bool>
+                  <bool key="NSIsSeparator">YES</bool>
+                  <string key="NSTitle"/>
+                  <string key="NSKeyEquiv"/>
+                  <int key="NSMnemonicLoc">2147483647</int>
+                  <reference key="NSOnImage" ref="229763992"/>
+                  <reference key="NSMixedImage" ref="909111550"/>
+                </object>
+                <object class="NSMenuItem" id="1037725675">
+                  <reference key="NSMenu" ref="348578084"/>
+                  <bool key="NSIsDisabled">YES</bool>
+                  <string key="NSTitle">“Function Keys” Window Layout:</string>
+                  <string key="NSKeyEquiv"/>
+                  <int key="NSMnemonicLoc">2147483647</int>
+                  <reference key="NSOnImage" ref="229763992"/>
+                  <reference key="NSMixedImage" ref="909111550"/>
+                  <string key="NSAction">_popUpItemAction:</string>
+                  <object class="NSAttributedString" key="NSAttributedTitle">
+                    <string key="NSString">“Function Keys” Window Layout:</string>
+                    <reference key="NSAttributes" ref="722957720"/>
+                  </object>
+                </object>
+                <object class="NSMenuItem" id="131152254">
+                  <reference key="NSMenu" ref="348578084"/>
+                  <int key="NSIndent">1</int>
+                  <string key="NSTitle">VT220 / “multi-gnome-terminal”</string>
+                  <string key="NSKeyEquiv"/>
+                  <int key="NSKeyEquivModMask">1048576</int>
+                  <int key="NSMnemonicLoc">2147483647</int>
+                  <int key="NSState">1</int>
+                  <reference key="NSOnImage" ref="229763992"/>
+                  <reference key="NSMixedImage" ref="909111550"/>
+                  <string key="NSAction">_popUpItemAction:</string>
+                </object>
+                <object class="NSMenuItem" id="178050341">
+                  <reference key="NSMenu" ref="348578084"/>
+                  <int key="NSIndent">1</int>
+                  <string key="NSTitle">XTerm (X11)</string>
+                  <string key="NSKeyEquiv"/>
+                  <int key="NSKeyEquivModMask">1048576</int>
+                  <int key="NSMnemonicLoc">2147483647</int>
+                  <reference key="NSOnImage" ref="229763992"/>
+                  <reference key="NSMixedImage" ref="909111550"/>
+                  <string key="NSAction">_popUpItemAction:</string>
+                </object>
+                <object class="NSMenuItem" id="326258413">
+                  <reference key="NSMenu" ref="348578084"/>
+                  <int key="NSIndent">1</int>
+                  <string key="NSTitle">XTerm (XFree86) / “gnome-terminal” / GNU “screen”</string>
+                  <string key="NSKeyEquiv"/>
+                  <int key="NSKeyEquivModMask">1048576</int>
+                  <int key="NSMnemonicLoc">2147483647</int>
+                  <reference key="NSOnImage" ref="229763992"/>
+                  <reference key="NSMixedImage" ref="909111550"/>
+                  <string key="NSAction">_popUpItemAction:</string>
+                </object>
+                <object class="NSMenuItem" id="472468611">
+                  <reference key="NSMenu" ref="348578084"/>
+                  <int key="NSIndent">1</int>
+                  <string key="NSTitle">“rxvt”</string>
+                  <string key="NSKeyEquiv"/>
+                  <int key="NSKeyEquivModMask">1048576</int>
+                  <int key="NSMnemonicLoc">2147483647</int>
+                  <reference key="NSOnImage" ref="229763992"/>
+                  <reference key="NSMixedImage" ref="909111550"/>
+                  <string key="NSAction">_popUpItemAction:</string>
+                </object>
                 <object class="NSMenuItem" id="491774112">
                   <reference key="NSMenu" ref="348578084"/>
                   <bool key="NSIsDisabled">YES</bool>
@@ -1616,7 +1685,7 @@
                 </object>
                 <object class="NSMenuItem" id="967227033">
                   <reference key="NSMenu" ref="835318025"/>
-                  <string key="NSTitle">VT220 Function Keys</string>
+                  <string key="NSTitle">Function Keys</string>
                   <string key="NSKeyEquiv">2</string>
                   <int key="NSKeyEquivModMask">786432</int>
                   <int key="NSMnemonicLoc">2147483647</int>
@@ -2849,6 +2918,38 @@
           </object>
           <int key="connectionID">1171</int>
         </object>
+        <object class="IBConnectionRecord">
+          <object class="IBActionConnection" key="connection">
+            <string key="label">performSetFunctionKeyLayoutVT220:</string>
+            <reference key="source" ref="412825009"/>
+            <reference key="destination" ref="131152254"/>
+          </object>
+          <int key="connectionID">1178</int>
+        </object>
+        <object class="IBConnectionRecord">
+          <object class="IBActionConnection" key="connection">
+            <string key="label">performSetFunctionKeyLayoutXTermX11:</string>
+            <reference key="source" ref="412825009"/>
+            <reference key="destination" ref="178050341"/>
+          </object>
+          <int key="connectionID">1179</int>
+        </object>
+        <object class="IBConnectionRecord">
+          <object class="IBActionConnection" key="connection">
+            <string key="label">performSetFunctionKeyLayoutXTermXFree86:</string>
+            <reference key="source" ref="412825009"/>
+            <reference key="destination" ref="326258413"/>
+          </object>
+          <int key="connectionID">1180</int>
+        </object>
+        <object class="IBConnectionRecord">
+          <object class="IBActionConnection" key="connection">
+            <string key="label">performSetFunctionKeyLayoutRxvt:</string>
+            <reference key="source" ref="412825009"/>
+            <reference key="destination" ref="472468611"/>
+          </object>
+          <int key="connectionID">1181</int>
+        </object>
       </object>
       <object class="IBMutableOrderedSet" key="objectRecords">
         <object class="NSArray" key="orderedObjects">
@@ -3619,6 +3720,12 @@
               <reference ref="199192003"/>
               <reference ref="425337700"/>
               <reference ref="830471425"/>
+              <reference ref="1037725675"/>
+              <reference ref="131152254"/>
+              <reference ref="178050341"/>
+              <reference ref="326258413"/>
+              <reference ref="472468611"/>
+              <reference ref="808964986"/>
             </object>
             <reference key="parent" ref="952559127"/>
           </object>
@@ -4093,6 +4200,36 @@
             <reference key="object" ref="412709528"/>
             <reference key="parent" ref="720053764"/>
           </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">1173</int>
+            <reference key="object" ref="1037725675"/>
+            <reference key="parent" ref="348578084"/>
+          </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">1174</int>
+            <reference key="object" ref="131152254"/>
+            <reference key="parent" ref="348578084"/>
+          </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">1175</int>
+            <reference key="object" ref="178050341"/>
+            <reference key="parent" ref="348578084"/>
+          </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">1176</int>
+            <reference key="object" ref="326258413"/>
+            <reference key="parent" ref="348578084"/>
+          </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">1177</int>
+            <reference key="object" ref="472468611"/>
+            <reference key="parent" ref="348578084"/>
+          </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">1182</int>
+            <reference key="object" ref="808964986"/>
+            <reference key="parent" ref="348578084"/>
+          </object>
         </object>
       </object>
       <object class="NSMutableDictionary" key="flattenedProperties">
@@ -4150,6 +4287,14 @@
           <string>1172.IBAttributePlaceholdersKey</string>
           <string>1172.IBPluginDependency</string>
           <string>1172.ImportedFromIB2</string>
+          <string>1173.IBAttributePlaceholdersKey</string>
+          <string>1173.IBPluginDependency</string>
+          <string>1173.ImportedFromIB2</string>
+          <string>1174.IBPluginDependency</string>
+          <string>1175.IBPluginDependency</string>
+          <string>1176.IBPluginDependency</string>
+          <string>1177.IBPluginDependency</string>
+          <string>1182.IBPluginDependency</string>
           <string>19.IBPluginDependency</string>
           <string>19.ImportedFromIB2</string>
           <string>23.IBPluginDependency</string>
@@ -4455,13 +4600,27 @@
           </object>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <integer value="1"/>
+          <object class="NSMutableDictionary">
+            <bool key="EncodedWithXMLCoder">YES</bool>
+            <reference key="dict.sortedKeys" ref="0"/>
+            <object class="NSMutableArray" key="dict.values">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+            </object>
+          </object>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+          <integer value="1"/>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <integer value="1"/>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <integer value="1"/>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <integer value="1"/>
-          <string>{{681, 436}, {326, 483}}</string>
+          <string>{{674, 436}, {326, 483}}</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <integer value="1"/>
           <string>{{525, 802}, {197, 73}}</string>
@@ -4629,10 +4788,10 @@
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-          <string>{{614, 606}, {123, 313}}</string>
+          <string>{{607, 606}, {123, 313}}</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-          <string>{{567, 746}, {292, 173}}</string>
+          <string>{{560, 636}, {428, 283}}</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>{{489, 536}, {306, 383}}</string>
@@ -4736,7 +4895,7 @@
         </object>
       </object>
       <nil key="sourceID"/>
-      <int key="maxID">1172</int>
+      <int key="maxID">1182</int>
     </object>
     <object class="IBClassDescriber" key="IBDocument.Classes">
       <object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -4844,6 +5003,10 @@
               <string>performSetActivityHandlerNotifyOnIdle:</string>
               <string>performSetActivityHandlerNotifyOnNext:</string>
               <string>performSetActivityHandlerSendKeepAliveOnIdle:</string>
+              <string>performSetFunctionKeyLayoutRxvt:</string>
+              <string>performSetFunctionKeyLayoutVT220:</string>
+              <string>performSetFunctionKeyLayoutXTermX11:</string>
+              <string>performSetFunctionKeyLayoutXTermXFree86:</string>
               <string>performShowHiddenWindows:</string>
               <string>performSpeechToggle:</string>
               <string>performSuspendToggle:</string>
@@ -4857,6 +5020,10 @@
             </object>
             <object class="NSMutableArray" key="dict.values">
               <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
               <string>id</string>
               <string>id</string>
               <string>id</string>
@@ -5065,6 +5232,10 @@
               <string>performSetActivityHandlerNotifyOnIdle:</string>
               <string>performSetActivityHandlerNotifyOnNext:</string>
               <string>performSetActivityHandlerSendKeepAliveOnIdle:</string>
+              <string>performSetFunctionKeyLayoutRxvt:</string>
+              <string>performSetFunctionKeyLayoutVT220:</string>
+              <string>performSetFunctionKeyLayoutXTermX11:</string>
+              <string>performSetFunctionKeyLayoutXTermXFree86:</string>
               <string>performShowHiddenWindows:</string>
               <string>performSpeechToggle:</string>
               <string>performSuspendToggle:</string>
@@ -5463,6 +5634,22 @@
                 <string key="candidateClassName">id</string>
               </object>
               <object class="IBActionInfo">
+                <string key="name">performSetFunctionKeyLayoutRxvt:</string>
+                <string key="candidateClassName">id</string>
+              </object>
+              <object class="IBActionInfo">
+                <string key="name">performSetFunctionKeyLayoutVT220:</string>
+                <string key="candidateClassName">id</string>
+              </object>
+              <object class="IBActionInfo">
+                <string key="name">performSetFunctionKeyLayoutXTermX11:</string>
+                <string key="candidateClassName">id</string>
+              </object>
+              <object class="IBActionInfo">
+                <string key="name">performSetFunctionKeyLayoutXTermXFree86:</string>
+                <string key="candidateClassName">id</string>
+              </object>
+              <object class="IBActionInfo">
                 <string key="name">performShowHiddenWindows:</string>
                 <string key="candidateClassName">id</string>
               </object>
@@ -5514,6 +5701,13 @@
           <object class="IBClassDescriptionSource" key="sourceIdentifier">
             <string key="majorKey">IBProjectSource</string>
             <string key="minorKey">Shared/Code/CocoaExtensions.objc++.h</string>
+          </object>
+        </object>
+        <object class="IBPartialClassDescription">
+          <string key="className">NSResponder</string>
+          <object class="IBClassDescriptionSource" key="sourceIdentifier">
+            <string key="majorKey">IBProjectSource</string>
+            <string key="minorKey">Shared/Code/CocoaFuture.objc++.h</string>
           </object>
         </object>
       </object>

@@ -59,6 +59,7 @@
 #include "SessionRef.typedef.h"
 #include "TerminalSpeaker.h"
 #include "TerminalTextAttributes.typedef.h"
+#include "VTKeys.h"
 
 
 
@@ -623,6 +624,10 @@ Terminal_Result
 	Terminal_UserInputOffsetCursor			(TerminalScreenRef			inScreen,
 											 SInt16						inColumnDelta,
 											 SInt16						inRowDelta);
+
+Terminal_Result
+	Terminal_UserInputVTFunctionKey			(TerminalScreenRef			inRef,
+											 VTKeys_FKey				inFunctionKey);
 
 Terminal_Result
 	Terminal_UserInputVTKey					(TerminalScreenRef			inScreen,

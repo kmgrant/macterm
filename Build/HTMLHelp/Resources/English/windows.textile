@@ -162,16 +162,26 @@ This is a floating window providing access to 32 control key
  These keys are frequently useful in terminals and therefore are
  likely to trigger special responses when used.
 
-h3(#functionkeys). VT220 Function Keys
+The tooltips for these keys are especially useful because they
+ contain additional information about each key: its short name,
+ its numeric code (in hexadecimal), and a brief description of
+ the key's usual purpose.
+
+h3(#functionkeys). Function Keys
 
 This is a floating window providing access to the function keys
- of a VT220 terminal.  MacTerm will not prevent their use when
- you have selected a terminal emulator other than VT220, however
- your session may respond oddly to the input.
+ of a VT220 terminal or an XTerm variant.  MacTerm does not
+ currently allow you to synchronize the function key layout with a
+ session, so be sure to pick the layout that works best for you.
 
-For completeness the keypad shows F1-F5, however these are not
- available (they have meaning to a real VT220 terminal, but not an
- emulated terminal).
+The pop-up menu in the title bar of the "Function Keys" window
+ can be used to modify the layout and availability of function keys.
+ The possibilities are:
+
+* **VT220 / "multi-gnome-terminal"**: This is the default, and is actually the set used by "multi-gnome-terminal" (a superset of what VT220 requires).  It sets function keys F1-F4 to match the VT100's PF1-PF4 keys (since the VT220 doesn't use them), gives F5 the code that XTerm would use, and sets function keys F6-F20 to VT220 specifications.  Keys F21-F48 are unavailable.
+* **XTerm (X11)**: This gives you access to 48 function keys, all of which have specific behavior according to the version of XTerm that comes with an ordinary X11R6 release.  Keys F1-F12 match the VT220.
+* **XTerm (XFree86) / "gnome-terminal" / GNU "screen"**: This gives you access to 48 function keys, all of which have specific behavior according to the version of XTerm that comes with XFree86.  The keys unique to XFree86 are the ranges F1-F4, F13-F16, F25-F28 and F37-F40; all others match "XTerm (X11)".  This is a superset of the keys used by "gnome-terminal" and GNU "screen".
+* **rxvt**: This gives you access to 48 function keys, all of which have specific behavior according to the "rxvt" terminal emulator.  This set has a few keys in common with XTerm, but is mostly unique.
 
 Unless you have used the macro editor to map your keyboard's
  function keys to macros, they will map to VT220 function keys by
@@ -186,9 +196,6 @@ This is a floating window providing access to the special keypad
  VT220, however your session may respond oddly to some of the
  keys.
 
-You can use the "Show Help Tags" command of the Help menu in
- MacTerm to enable contextual descriptions of the buttons; then
- point your mouse at one of the VT220 Keypad icons to see what it
- means.
+The tooltips for certain VT220 keys will give you descriptions.
 
 notextile. </div>

@@ -5128,9 +5128,464 @@ Terminal_UserInputOffsetCursor	(TerminalScreenRef		inRef,
 
 
 /*!
-Sends a special key sequence, such as a VT220 function key or a
-page-down command.  All possible key codes are defined in the
-"VTKeys.h" header.
+Sends a function key sequence.  All possible key codes are
+defined in the "VTKeys.h" header.
+
+User input of any kind should take local echoing behavior into
+account, but note that this routine does not do echoing.
+
+This could fail, if for instance there is no session listening
+to input for this terminal.
+
+IMPORTANT:	User input routines at the terminal level are rare,
+			and generally only used to handle sequences that
+			depend very directly on terminal state.  Look in the
+			Session module for preferred user input routines.
+
+See also Terminal_UserInputVTKey().
+
+\retval kTerminal_ResultOK
+if no error occurred
+
+\retval kTerminal_ResultInvalidID
+if the specified screen reference or key code are invalid
+
+\retval kTerminal_ResultNoListeningSession
+if keys cannot be sent because no session is listening
+
+(4.0)
+*/
+Terminal_Result
+Terminal_UserInputVTFunctionKey		(TerminalScreenRef		inRef,
+									 VTKeys_FKey			inFunctionKey)
+{
+	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
+	Terminal_Result			result = kTerminal_ResultOK;
+	
+	
+	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
+	else if (nullptr == dataPtr->listeningSession) result = kTerminal_ResultNoListeningSession;
+	else
+	{
+		char const*		seqPtr = nullptr;
+		
+		
+		// now the fun part...determine which strange sequence corresponds
+		// to the requested function key and layout
+		switch (inFunctionKey)
+		{
+		case kVTKeys_FKeyVT100PF1:
+			seqPtr = "\033OP";
+			break;
+		
+		case kVTKeys_FKeyVT100PF2:
+			seqPtr = "\033OQ";
+			break;
+		
+		case kVTKeys_FKeyVT100PF3:
+			seqPtr = "\033OR";
+			break;
+		
+		case kVTKeys_FKeyVT100PF4:
+			seqPtr = "\033OS";
+			break;
+		
+		case kVTKeys_FKeyVT220F6:
+			seqPtr = "\033[17~";
+			break;
+		
+		case kVTKeys_FKeyVT220F7:
+			seqPtr = "\033[18~";
+			break;
+		
+		case kVTKeys_FKeyVT220F8:
+			seqPtr = "\033[19~";
+			break;
+		
+		case kVTKeys_FKeyVT220F9:
+			seqPtr = "\033[20~";
+			break;
+		
+		case kVTKeys_FKeyVT220F10:
+			seqPtr = "\033[21~";
+			break;
+		
+		case kVTKeys_FKeyVT220F11:
+			seqPtr = "\033[23~";
+			break;
+		
+		case kVTKeys_FKeyVT220F12:
+			seqPtr = "\033[24~";
+			break;
+		
+		case kVTKeys_FKeyVT220F13:
+			seqPtr = "\033[25~";
+			break;
+		
+		case kVTKeys_FKeyVT220F14:
+			seqPtr = "\033[26~";
+			break;
+		
+		case kVTKeys_FKeyVT220F15:
+			seqPtr = "\033[28~";
+			break;
+		
+		case kVTKeys_FKeyVT220F16:
+			seqPtr = "\033[29~";
+			break;
+		
+		case kVTKeys_FKeyVT220F17:
+			seqPtr = "\033[31~";
+			break;
+		
+		case kVTKeys_FKeyVT220F18:
+			seqPtr = "\033[32~";
+			break;
+		
+		case kVTKeys_FKeyVT220F19:
+			seqPtr = "\033[33~";
+			break;
+		
+		case kVTKeys_FKeyVT220F20:
+			seqPtr = "\033[34~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F1:
+			seqPtr = "\033[11~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F2:
+			seqPtr = "\033[12~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F3:
+			seqPtr = "\033[13~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F4:
+			seqPtr = "\033[14~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F5:
+			seqPtr = "\033[15~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F13:
+			seqPtr = "\033[11;2~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F14:
+			seqPtr = "\033[12;2~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F15:
+			seqPtr = "\033[13;2~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F16:
+			seqPtr = "\033[14;2~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F17:
+			seqPtr = "\033[15;2~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F18:
+			seqPtr = "\033[17;2~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F19:
+			seqPtr = "\033[18;2~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F20:
+			seqPtr = "\033[19;2~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F21:
+			seqPtr = "\033[20;2~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F22:
+			seqPtr = "\033[21;2~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F23:
+			seqPtr = "\033[23;2~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F24:
+			seqPtr = "\033[24;2~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F25:
+			seqPtr = "\033[11;5~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F26:
+			seqPtr = "\033[12;5~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F27:
+			seqPtr = "\033[13;5~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F28:
+			seqPtr = "\033[14;5~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F29:
+			seqPtr = "\033[15;5~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F30:
+			seqPtr = "\033[17;5~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F31:
+			seqPtr = "\033[18;5~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F32:
+			seqPtr = "\033[19;5~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F33:
+			seqPtr = "\033[20;5~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F34:
+			seqPtr = "\033[21;5~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F35:
+			seqPtr = "\033[23;5~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F36:
+			seqPtr = "\033[24;5~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F37:
+			seqPtr = "\033[11;6~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F38:
+			seqPtr = "\033[12;6~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F39:
+			seqPtr = "\033[13;6~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F40:
+			seqPtr = "\033[14;6~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F41:
+			seqPtr = "\033[15;6~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F42:
+			seqPtr = "\033[17;6~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F43:
+			seqPtr = "\033[18;6~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F44:
+			seqPtr = "\033[19;6~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F45:
+			seqPtr = "\033[20;6~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F46:
+			seqPtr = "\033[21;6~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F47:
+			seqPtr = "\033[23;6~";
+			break;
+		
+		case kVTKeys_FKeyXTermX11F48:
+			seqPtr = "\033[24;6~";
+			break;
+		
+		case kVTKeys_FKeyXFree86F13:
+			seqPtr = "\033O2P";
+			break;
+		
+		case kVTKeys_FKeyXFree86F14:
+			seqPtr = "\033O2Q";
+			break;
+		
+		case kVTKeys_FKeyXFree86F15:
+			seqPtr = "\033O2R";
+			break;
+		
+		case kVTKeys_FKeyXFree86F16:
+			seqPtr = "\033O2S";
+			break;
+		
+		case kVTKeys_FKeyXFree86F25:
+			seqPtr = "\033O5P";
+			break;
+		
+		case kVTKeys_FKeyXFree86F26:
+			seqPtr = "\033O5Q";
+			break;
+		
+		case kVTKeys_FKeyXFree86F27:
+			seqPtr = "\033O5R";
+			break;
+		
+		case kVTKeys_FKeyXFree86F28:
+			seqPtr = "\033O5S";
+			break;
+		
+		case kVTKeys_FKeyXFree86F37:
+			seqPtr = "\033O6P";
+			break;
+		
+		case kVTKeys_FKeyXFree86F38:
+			seqPtr = "\033O6Q";
+			break;
+		
+		case kVTKeys_FKeyXFree86F39:
+			seqPtr = "\033O6R";
+			break;
+		
+		case kVTKeys_FKeyXFree86F40:
+			seqPtr = "\033O6S";
+			break;
+		
+		case kVTKeys_FKeyRxvtF21:
+			seqPtr = "\033[23$";
+			break;
+		
+		case kVTKeys_FKeyRxvtF22:
+			seqPtr = "\033[24$";
+			break;
+		
+		case kVTKeys_FKeyRxvtF23:
+			seqPtr = "\033[11^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF24:
+			seqPtr = "\033[12^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF25:
+			seqPtr = "\033[13^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF26:
+			seqPtr = "\033[14^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF27:
+			seqPtr = "\033[15^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF28:
+			seqPtr = "\033[17^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF29:
+			seqPtr = "\033[18^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF30:
+			seqPtr = "\033[19^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF31:
+			seqPtr = "\033[20^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF32:
+			seqPtr = "\033[21^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF33:
+			seqPtr = "\033[23^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF34:
+			seqPtr = "\033[24^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF35:
+			seqPtr = "\033[25^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF36:
+			seqPtr = "\033[26^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF37:
+			seqPtr = "\033[28^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF38:
+			seqPtr = "\033[29^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF39:
+			seqPtr = "\033[31^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF40:
+			seqPtr = "\033[32^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF41:
+			seqPtr = "\033[33^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF42:
+			seqPtr = "\033[34^";
+			break;
+		
+		case kVTKeys_FKeyRxvtF43:
+			seqPtr = "\033[23@";
+			break;
+		
+		case kVTKeys_FKeyRxvtF44:
+			seqPtr = "\033[24@";
+			break;
+		
+		default:
+			// ???
+			result = kTerminal_ResultInvalidID;
+			break;
+		}
+		
+		if (nullptr != seqPtr)
+		{
+			// send the key sequence (note, escape sequences like ESC-[ will
+			// be automatically converted into single-byte codes if the
+			// emulator is in a mode that requires them)
+			dataPtr->emulator.sendEscape(dataPtr->listeningSession, seqPtr, CPP_STD::strlen(seqPtr));
+		}
+	}
+	return result;
+}// UserInputVTFunctionKey
+
+
+/*!
+Sends a special key sequence, such as a page-down command.  All
+possible key codes are defined in the "VTKeys.h" header.
+
+NOTE:	It is possible for historical reasons to use certain
+		function key codes as an argument to this routine, and
+		for the time being this is allowed.  A better way to
+		handle function keys however is with the newer routine
+		Terminal_UserInputVTFunctionKey(), which can handle a
+		much wider variety of codes.
 
 User input of any kind should take local echoing behavior into
 account, but note that this routine does not do echoing.

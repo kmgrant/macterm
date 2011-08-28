@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110827',
     '20110820',
     '20110817',
     '20110805',
@@ -408,6 +409,14 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110827': [
+        'Map menu now contains 4 layout choices for the "Function Keys" palette: VT220 / "multi-gnome-terminal", XTerm (X11), XTerm (XFree86) / "gnome-terminal" / GNU "screen", and "rxvt".',
+        'Function Keys palette now contains a pop-up menu in its title bar, offering the same 4 layout choices.',
+        'Function Keys palette now gives useful default behaviors to F1-F5 in all layouts.',
+        'Function Keys palette now contains up to 48 function keys (most new layouts use 48).',
+        'Function Keys palette may now be resized to show 24 or 48 keys, although selecting a layout does this automatically.',
+        'Floating keypad windows may now be minimized into the Dock when not in Full Screen mode.',
+    ],
     '20110820': [
         'Floating windows that were visible at last Quit are now redisplayed at startup time.',
     ],

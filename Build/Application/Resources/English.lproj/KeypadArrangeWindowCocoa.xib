@@ -134,7 +134,6 @@
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
 				<string key="NSMaxSize">{3.40282e+38, 3.40282e+38}</string>
-				<string key="NSFrameAutosaveName"/>
 			</object>
 		</object>
 		<object class="IBObjectContainer" key="IBDocument.Objects">

@@ -195,7 +195,6 @@
 				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
 				<string key="NSMinSize">{300, 116}</string>
 				<string key="NSMaxSize">{400, 216}</string>
-				<string key="NSFrameAutosaveName">IPAddresses</string>
 			</object>
 			<object class="NSArrayController" id="909544139">
 				<object class="NSMutableArray" key="NSDeclaredKeys">
