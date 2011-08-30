@@ -16,6 +16,7 @@
 		0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A35F5130DEDD9E300F16B03 /* CommandLine.mm */; };
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
 		0A377E630D38806B001F3573 /* open.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* open.py */; };
+		0A3C2C20140C73F100739966 /* CocoaAnimation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
 		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.cp */; };
@@ -240,6 +241,8 @@
 		0A35F5130DEDD9E300F16B03 /* CommandLine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CommandLine.mm; path = Application/Code/CommandLine.mm; sourceTree = "<group>"; };
 		0A36176A0DD286240081A445 /* Keypads.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Keypads.mm; path = Application/Code/Keypads.mm; sourceTree = "<group>"; };
 		0A377E610D38804B001F3573 /* open.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = open.py; path = Application/PythonCode/pymacterm/file/open.py; sourceTree = "<group>"; };
+		0A3C2C1A140C73E000739966 /* CocoaAnimation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaAnimation.h; path = Shared/Code/CocoaAnimation.h; sourceTree = "<group>"; };
+		0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaAnimation.mm; path = Shared/Code/CocoaAnimation.mm; sourceTree = "<group>"; };
 		0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommonEventHandlers.cp; path = Application/Code/CommonEventHandlers.cp; sourceTree = "<group>"; };
 		0A3D04C10A4CEB4E00A79DDF /* CommonEventHandlers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommonEventHandlers.h; path = Application/Code/CommonEventHandlers.h; sourceTree = "<group>"; };
 		0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelTranslations.cp; path = Application/Code/PrefPanelTranslations.cp; sourceTree = "<group>"; };
@@ -634,6 +637,7 @@
 				0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */,
 				0AF502330F872D420068CB19 /* CFUtilities.cp */,
 				0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */,
+				0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */,
 				0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */,
 				0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */,
 				0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */,
@@ -665,6 +669,7 @@
 				0AF5022E0F872CAF0068CB19 /* CFRetainRelease.h */,
 				0AF5022F0F872CC30068CB19 /* CFUtilities.h */,
 				0AF502300F872D150068CB19 /* CGContextSaveRestore.h */,
+				0A3C2C1A140C73E000739966 /* CocoaAnimation.h */,
 				0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */,
 				0A2A35D313AD2EFF007A1E35 /* CocoaExtensions.objc++.h */,
 				0ABAA71A13491CFB006B1EF6 /* CocoaFuture.objc++.h */,
@@ -1441,6 +1446,7 @@
 				0ABAA71B13491D06006B1EF6 /* CocoaFuture.mm in Sources */,
 				0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */,
 				0A08DD8D1405B4B50005129F /* TranslucentMenuArrow.mm in Sources */,
+				0A3C2C20140C73F100739966 /* CocoaAnimation.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

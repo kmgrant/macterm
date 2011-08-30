@@ -49,6 +49,7 @@
 #include <CarbonEventUtilities.template.h>
 #include <CFRetainRelease.h>
 #include <CFUtilities.h>
+#include <CocoaAnimation.h>
 #include <Console.h>
 #include <Cursors.h>
 #include <MemoryBlocks.h>
@@ -96,7 +97,8 @@ void					changeNotifyGlobal				(SessionFactory_Change, void*);
 Boolean					configureSessionTerminalWindow	(TerminalWindowRef, Preferences_ContextRef);
 TerminalWindowRef		createTerminalWindow			(Preferences_ContextRef = nullptr,
 														 Preferences_ContextRef = nullptr,
-														 Preferences_ContextRef = nullptr);
+														 Preferences_ContextRef = nullptr,
+														 Boolean = false);
 Workspace_Ref			createWorkspace					();
 Boolean					displayTerminalWindow			(TerminalWindowRef, Preferences_ContextRef = nullptr, UInt16 = 0);
 void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionFilterFlags,
@@ -444,6 +446,11 @@ SessionFactory_Done ()
 Creates a copy of a session in the specified terminal window
 (or a new window, if nullptr is given for the first parameter).
 
+If a new window is constructed, it is animated into its stagger
+position to reflect the fact that a duplication is occurring.
+When passing in your own window, you should first perform an
+animation with CocoaAnimation_TransitionWindowForDuplicate().
+
 NOTE:	A future version of this routine might add a parameter
 		to allow only some characteristics of the base session
 		to be duplicated, instead of all.
@@ -460,11 +467,25 @@ SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindow,
 	
 	if (nullptr == inTerminalWindow)
 	{
+		TerminalWindowRef	sourceTerminalWindow = Session_ReturnActiveTerminalWindow(inBaseSession);
+		
+		
 		// TEMPORARY; createTerminalWindow() accepts up to 3 context arguments,
 		// which should be extracted or derived from the original session somehow
 		// (to completely duplicate things like window size, fonts and colors);
 		// for now, a window style based on the default is chosen
-		inTerminalWindow = createTerminalWindow();
+		inTerminalWindow = createTerminalWindow(nullptr, nullptr, nullptr, true/* no stagger */);
+		
+		if (false == TerminalWindow_IsTab(sourceTerminalWindow))
+		{
+			// if an original terminal window was given, perform a transition to
+			// move the window from its (unstaggered) location to its new location
+			CocoaAnimation_TransitionWindowForDuplicate(TerminalWindow_ReturnNSWindow(inTerminalWindow),
+														(nullptr != sourceTerminalWindow)
+															? TerminalWindow_ReturnNSWindow(sourceTerminalWindow)
+															: TerminalWindow_ReturnNSWindow(inTerminalWindow),
+														(false == FlagManager_Test(kFlagOS10_6API))/* simplify animation */);
+		}
 	}
 	
 	if ((nullptr != argsArray) && (nullptr != inTerminalWindow))
@@ -2421,15 +2442,19 @@ used for a new session will ultimately be “configured twice”.
 TerminalWindowRef
 createTerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 						 Preferences_ContextRef		inFontInfoOrNull,
-						 Preferences_ContextRef		inTranslationInfoOrNull)
+						 Preferences_ContextRef		inTranslationInfoOrNull,
+						 Boolean					inNoStagger)
 {
 	TerminalWindowRef		result = nullptr;
 	
 	
 	// create a new terminal window to house the session
-	result = TerminalWindow_New(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationInfoOrNull);
+	result = TerminalWindow_New(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationInfoOrNull, inNoStagger);
 	
-	if (nullptr != result) startTrackingTerminalWindow(result);
+	if (nullptr != result)
+	{
+		startTrackingTerminalWindow(result);
+	}
 	return result;
 }// createTerminalWindow
 

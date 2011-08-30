@@ -66,6 +66,7 @@ extern "C"
 #import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CGContextSaveRestore.h>
+#import <CocoaAnimation.h>
 #import <CocoaBasic.h>
 #import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
@@ -193,7 +194,7 @@ typedef Registrar< TerminalWindowRef, My_RefTracker >		My_RefRegistrar;
 
 struct My_TerminalWindow
 {
-	My_TerminalWindow  (Preferences_ContextRef, Preferences_ContextRef, Preferences_ContextRef);
+	My_TerminalWindow  (Preferences_ContextRef, Preferences_ContextRef, Preferences_ContextRef, Boolean);
 	~My_TerminalWindow ();
 	
 	My_RefRegistrar				refValidator;				// ensures this reference is recognized as a valid one
@@ -506,32 +507,37 @@ Float32						gDefaultTabHeight = 0.0;	// set later
 #pragma mark Public Methods
 
 /*!
-Creates a new terminal window according to the given
-specifications.  If any problems occur, nullptr is
-returned; otherwise, a reference to the new terminal
-window is returned.
+Creates a new terminal window that is configured in the given
+ways.  If any problems occur, nullptr is returned; otherwise,
+a reference to the new terminal window is returned.
 
-Either context can be "nullptr" if you want to rely
-on defaults.  These contexts only determine initial
-settings; future changes to the preferences will not
-affect the terminal window.
+Any of the contexts can be "nullptr" if you want to rely on
+defaults.  These contexts only determine initial settings;
+future changes to the contexts will not affect the window.
 
-In general, you should NOT create terminal windows this
-way; use the Session Factory module.
+The "inNoStagger" argument should normally be set to false; it
+is used for the special case of a new window that duplicates
+an existing window (so that it can be animated into its final
+position).
+
+IMPORTANT:	In general, you should NOT create terminal windows
+			this way; use the Session Factory module.
 
 (3.0)
 */
 TerminalWindowRef
 TerminalWindow_New  (Preferences_ContextRef		inTerminalInfoOrNull,
 					 Preferences_ContextRef		inFontInfoOrNull,
-					 Preferences_ContextRef		inTranslationOrNull)
+					 Preferences_ContextRef		inTranslationOrNull,
+					 Boolean					inNoStagger)
 {
 	TerminalWindowRef	result = nullptr;
 	
 	
 	try
 	{
-		result = REINTERPRET_CAST(new My_TerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull), TerminalWindowRef);
+		result = REINTERPRET_CAST(new My_TerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull, inNoStagger),
+									TerminalWindowRef);
 	}
 	catch (std::bad_alloc)
 	{
@@ -2083,7 +2089,8 @@ Constructor.  See TerminalWindow_New().
 My_TerminalWindow::
 My_TerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 					 Preferences_ContextRef		inFontInfoOrNull,
-					 Preferences_ContextRef		inTranslationInfoOrNull)
+					 Preferences_ContextRef		inTranslationInfoOrNull,
+					 Boolean					inNoStagger)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 refValidator(REINTERPRET_CAST(this, TerminalWindowRef), gTerminalWindowValidRefs()),
@@ -2349,6 +2356,7 @@ installedActions()
 	}
 	
 	// stagger the window
+	unless (inNoStagger)
 	{
 		Rect		windowRect;
 		OSStatus	error = noErr;
@@ -2583,21 +2591,12 @@ My_TerminalWindow::
 	{
 		gTerminalNSWindows().erase(this->window);
 		
-		if ([this->window isVisible])
-		{
-			// 3.0 - use a zoom effect to close windows
-			Rect	lowerRight;
-			Rect	screenRect;
-			
-			
-			RegionUtilities_GetWindowDeviceGrayRect(returnCarbonWindow(this), &screenRect);
-			SetRect(&lowerRight, screenRect.right, screenRect.bottom, screenRect.right, screenRect.bottom);
-			if (noErr != TransitionWindow(returnCarbonWindow(this), kWindowZoomTransitionEffect,
-											kWindowHideTransitionAction, &lowerRight))
-			{
-				[this->window orderOut:nil];
-			}
-		}
+		// this will hide the window immediately and replace it with a window
+		// that looks exactly the same; that way, it is perfectly safe for
+		// the rest of the destructor to run (cleaning up other state) even
+		// if the animation finishes after the original window is destroyed
+		CocoaAnimation_TransitionWindowForRemove(this->window, (false == FlagManager_Test(kFlagOS10_6API))/* simplify animation */);
+		
 		KillControls(returnCarbonWindow(this));
 	}
 	

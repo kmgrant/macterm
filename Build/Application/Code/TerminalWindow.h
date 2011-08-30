@@ -159,7 +159,8 @@ terminalWindowRef;
 TerminalWindowRef
 	TerminalWindow_New								(Preferences_ContextRef		inTerminalInfoOrNull = nullptr,
 													 Preferences_ContextRef		inFontInfoOrNull = nullptr,
-													 Preferences_ContextRef		inTranslationInfoOrNull = nullptr);
+													 Preferences_ContextRef		inTranslationInfoOrNull = nullptr,
+													 Boolean					inNoStagger = false);
 
 void
 	TerminalWindow_Dispose							(TerminalWindowRef*			inoutRefPtr);

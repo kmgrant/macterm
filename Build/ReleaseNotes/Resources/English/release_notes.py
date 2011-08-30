@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110829',
     '20110827',
     '20110820',
     '20110817',
@@ -409,6 +410,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110829': [
+        'Animations for closing and duplicating terminal windows have been greatly enhanced.',
+    ],
     '20110827': [
         'Map menu now contains 4 layout choices for the "Function Keys" palette: VT220 / "multi-gnome-terminal", XTerm (X11), XTerm (XFree86) / "gnome-terminal" / GNU "screen", and "rxvt".',
         'Function Keys palette now contains a pop-up menu in its title bar, offering the same 4 layout choices.',
