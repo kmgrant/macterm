@@ -182,6 +182,12 @@ inline bool __Console_AssertNoErrHelper (OSStatus e, char const* t, char const* 
 #define assert_noerr(e)  \
     ((void) ((e == ::noErr) ? 0 : __Console_AssertNoErrHelper(e, #e, __FILE__, __LINE__)))
 
+// usage: e.g. static_assert_named(x_is_3, x == 3); fails AT COMPILE TIME with a negative-array-size
+// error if the condition in the assertion did not hold (the "n" parameter names the array type);
+// useful in things like constant expressions that the compiler can validate during the build
+#define static_assert_named(n,e) \
+	typedef char n[2 * (e) - 1]
+
 // usage: e.g. Console_Warning(Console_WriteValue, "message", 25); // Console_WriteValue("message", 25);
 // the first argument is a function, and all remaining arguments are the function parameters
 // IMPORTANT: the "args..." and " , ##" syntax only work in GNU compilers
