@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110831',
     '20110829',
     '20110827',
     '20110820',
@@ -410,6 +411,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110831': [
+        'Fixed offscreen windows when "Duplicate Session" was used repeatedly during an animation.',
+        'Animation for hiding terminal windows has been greatly enhanced.',
+        'Animation for closing terminal windows now scales the window size down as well.',
+    ],
     '20110829': [
         'Animations for closing and duplicating terminal windows have been greatly enhanced.',
     ],

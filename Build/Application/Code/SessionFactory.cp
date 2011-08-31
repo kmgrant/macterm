@@ -483,8 +483,7 @@ SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindow,
 			CocoaAnimation_TransitionWindowForDuplicate(TerminalWindow_ReturnNSWindow(inTerminalWindow),
 														(nullptr != sourceTerminalWindow)
 															? TerminalWindow_ReturnNSWindow(sourceTerminalWindow)
-															: TerminalWindow_ReturnNSWindow(inTerminalWindow),
-														(false == FlagManager_Test(kFlagOS10_6API))/* simplify animation */);
+															: TerminalWindow_ReturnNSWindow(inTerminalWindow));
 		}
 	}
 	

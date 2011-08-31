@@ -2595,7 +2595,7 @@ My_TerminalWindow::
 		// that looks exactly the same; that way, it is perfectly safe for
 		// the rest of the destructor to run (cleaning up other state) even
 		// if the animation finishes after the original window is destroyed
-		CocoaAnimation_TransitionWindowForRemove(this->window, (false == FlagManager_Test(kFlagOS10_6API))/* simplify animation */);
+		CocoaAnimation_TransitionWindowForRemove(this->window);
 		
 		KillControls(returnCarbonWindow(this));
 	}

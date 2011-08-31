@@ -59,6 +59,7 @@ extern "C"
 #import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
+#import <CocoaAnimation.h>
 #import <CocoaBasic.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
@@ -2750,35 +2751,34 @@ sessionWindowStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kSession_ChangeWindowObscured:
 		// update menu item icon to reflect new hidden state
 		{
-			SessionRef		session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
+			SessionRef			session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
+			TerminalWindowRef	terminalWindow = Session_ReturnActiveTerminalWindow(session);
 			
 			
-		#if 1
-			if (TerminalWindow_IsObscured(Session_ReturnActiveTerminalWindow(session)))
+			if (TerminalWindow_IsObscured(terminalWindow))
 			{
-				HIWindowRef		hiddenWindow = Session_ReturnActiveWindow(session);
+				NSWindow*		hiddenWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
+				NSScreen*		windowScreen = [hiddenWindow screen];
 				
 				
-				if (nullptr != hiddenWindow)
+				if (nil != hiddenWindow)
 				{
 					Rect	windowMenuTitleBounds;
 					
 					
 					if (MenuBar_GetMenuTitleRectangle(kMenuBar_MenuWindow, &windowMenuTitleBounds))
 					{
-						Rect	structureBounds;
+						CGRect		asInvertedCGRect = CGRectMake(windowMenuTitleBounds.left,
+																	[windowScreen frame].size.height - windowMenuTitleBounds.bottom,
+																	windowMenuTitleBounds.right - windowMenuTitleBounds.left,
+																	windowMenuTitleBounds.bottom - windowMenuTitleBounds.top);
 						
 						
 						// make the window zoom into the Window menu’s title area, for visual feedback
-						// (an error while doing this is unimportant)
-						if (noErr == GetWindowBounds(hiddenWindow, kWindowStructureRgn, &structureBounds))
-						{
-							ZoomRects(&structureBounds, &windowMenuTitleBounds, 14/* steps, arbitrary */, kZoomDecelerate);
-						}
+						CocoaAnimation_TransitionWindowForHide(hiddenWindow, asInvertedCGRect);
 					}
 				}
 			}
-		#endif
 			setWindowMenuItemMarkForSession(session);
 		}
 		break;

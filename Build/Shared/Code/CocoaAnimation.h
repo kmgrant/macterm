@@ -46,12 +46,14 @@ class NSWindow;
 
 void
 	CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*,
-													 NSWindow*,
-													 Boolean);
+													 NSWindow*);
 
 void
-	CocoaAnimation_TransitionWindowForRemove		(NSWindow*,
-													 Boolean);
+	CocoaAnimation_TransitionWindowForHide			(NSWindow*,
+													 CGRect);
+
+void
+	CocoaAnimation_TransitionWindowForRemove		(NSWindow*);
 
 //@}
 

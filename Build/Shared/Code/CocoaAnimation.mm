@@ -31,8 +31,8 @@
 
 // library includes
 #import <AutoPool.objc++.h>
+#import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
-#include "Console.h"
 
 
 
@@ -87,6 +87,8 @@ enum My_AnimationTransition
 	float*				frameOffsetsV;
 	float				frameUnitH;
 	float				frameUnitV;
+	float				frameDeltaSizeH;
+	float				frameDeltaSizeV;
 }
 
 // designated initializer
@@ -96,9 +98,20 @@ imageWindow:(NSWindow*)_
 finalWindow:(NSWindow*)_
 fromFrame:(NSRect)_
 toFrame:(NSRect)_
+totalDelay:(NSTimeInterval)_
 delayDistribution:(My_AnimationTimeDistribution)_
 effect:(My_AnimationEffect)_
 simplified:(BOOL)_;
+
+- (id)
+initWithTransition:(My_AnimationTransition)_
+imageWindow:(NSWindow*)_
+finalWindow:(NSWindow*)_
+fromFrame:(NSRect)_
+toFrame:(NSRect)_
+totalDelay:(NSTimeInterval)_
+delayDistribution:(My_AnimationTimeDistribution)_
+effect:(My_AnimationEffect)_;
 
 - (void)
 animationStep:(id)_;
@@ -131,8 +144,7 @@ but it should not be necessary for modern machines.
 */
 void
 CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
-												 NSWindow*		inRelativeToWindow,
-												 Boolean		inSlowTransition)
+												 NSWindow*		inRelativeToWindow)
 {
 	AutoPool	_;
 	
@@ -143,28 +155,101 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 	
 	// animate the change
 	{
-		NSWindow*	imageWindow = [createImageWindowOf(inTargetWindow) autorelease];
-		NSRect		oldFrame = [inRelativeToWindow frame];
-		NSRect		newFrame = [inRelativeToWindow frame];
+		float const		kAnimationDelay = 0.001;
+		NSWindow*		imageWindow = [createImageWindowOf(inTargetWindow) autorelease];
+		NSRect			oldFrame = [inRelativeToWindow frame];
+		NSRect			newFrame = NSZeroRect;
+		NSRect			mainScreenFrame = [[NSScreen mainScreen] visibleFrame];
 		
+		
+		// if by some chance the target window is offscreen, ignore its location
+		// and put the window somewhere onscreen
+		if (NO == NSContainsRect(mainScreenFrame, oldFrame))
+		{
+			oldFrame.origin = NSMakePoint(250, 250); // arbitrary
+		}
 		
 		// copy only the relative window’s location, not its size
 		oldFrame.size = [inTargetWindow frame].size;
 		
 		// target a new location that is slightly offset from the related window
+		newFrame.origin = oldFrame.origin;
 		newFrame.origin.x += 20/* arbitrary */;
 		newFrame.origin.y -= 20/* arbitrary */;
 		newFrame.size = [inTargetWindow frame].size;
+		
+		// as a precaution, arrange to move the window to the correct
+		// location after a short delay (the animation may fail)
+		{
+			NSArray*	frameCoordinates = [NSArray arrayWithObjects:
+												[NSNumber numberWithFloat:newFrame.origin.x],
+												[NSNumber numberWithFloat:newFrame.origin.y],
+												[NSNumber numberWithFloat:newFrame.size.width],
+												[NSNumber numberWithFloat:newFrame.size.height],
+												nil];
+			
+			
+			[inTargetWindow performSelector:@selector(setFrameWithArray:) withObject:frameCoordinates
+											afterDelay:(kAnimationDelay + 0.25)];
+		}
 		
 		// animate!
 		[imageWindow orderFront:nil];
 		[imageWindow setLevel:[inTargetWindow level]];
 		[[[CocoaAnimation_WindowFrameAnimator alloc]
 			initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:inTargetWindow
-								fromFrame:oldFrame toFrame:newFrame delayDistribution:kMy_AnimationTimeDistributionLinear
-								effect:kMy_AnimationEffectFadeIn simplified:((inSlowTransition) ? YES : NO)] autorelease];
+								fromFrame:oldFrame toFrame:newFrame totalDelay:0.05 delayDistribution:kMy_AnimationTimeDistributionLinear
+								effect:kMy_AnimationEffectFadeIn] autorelease];
 	}
 }// TransitionWindowForDuplicate
+
+
+/*!
+Animates "inTargetWindow" in a way that suggests it is being
+hidden.  The "inEndLocation" should be the rectangle of some
+user interface element that would redisplay the window, in
+the same coordinate system as an NSWindow’s "frame" would be.
+
+If "inSlowTransition" is true, some frames are dropped from
+the animation to try to maintain good performance.  This is
+recommended on older hardware or operating system versions
+but it should not be necessary for modern machines.
+
+In order to avoid potential problems with the lifetime of a
+window, the specified window is actually hidden immediately
+and is replaced with a borderless window that renders the
+exact same image!  The animation is then applied only to the
+window that appears to be the original window.
+
+(1.8)
+*/
+void
+CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
+										 CGRect			inEndLocation)
+{
+	AutoPool	_;
+	NSWindow*	imageWindow = [createImageWindowOf(inTargetWindow) autorelease];
+	NSRect		oldFrame = [imageWindow frame];
+	NSRect		newFrame;
+	
+	
+	newFrame.origin.x = inEndLocation.origin.x;
+	newFrame.origin.y = inEndLocation.origin.y;
+	newFrame.size.width = inEndLocation.size.width;
+	newFrame.size.height = inEndLocation.size.height;
+	
+	// animate!
+	[imageWindow orderFront:nil];
+	[imageWindow setLevel:[inTargetWindow level]];
+	[[[CocoaAnimation_WindowFrameAnimator alloc]
+		initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
+							fromFrame:oldFrame toFrame:newFrame totalDelay:0.15 delayDistribution:kMy_AnimationTimeDistributionEaseOut
+							effect:kMy_AnimationEffectNone] autorelease];
+	
+	// hide the original window immediately; the animation on the
+	// image window can take however long it needs to complete
+	[inTargetWindow orderOut:nil];
+}// TransitionWindowForHide
 
 
 /*!
@@ -185,8 +270,7 @@ window that appears to be the original window.
 (1.8)
 */
 void
-CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow,
-											 Boolean		inSlowTransition)
+CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow)
 {
 	AutoPool	_;
 	
@@ -196,19 +280,22 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow,
 		NSWindow*	imageWindow = [createImageWindowOf(inTargetWindow) autorelease];
 		NSRect		oldFrame = [imageWindow frame];
 		NSRect		newFrame = [imageWindow frame];
+		NSRect		screenFrame = [[inTargetWindow screen] frame];
 		
 		
 		// target a new location that appears to toss the window away
-		newFrame.origin.x += 250/* arbitrary */;
-		newFrame.origin.y -= 450/* arbitrary */;
+		newFrame.origin.x += (screenFrame.size.width / 3)/* arbitrary */;
+		newFrame.origin.y -= (screenFrame.size.height / 3)/* arbitrary */;
+		newFrame.size.width /= 4; // arbitrary
+		newFrame.size.height /= 4; // arbitrary
 		
 		// animate!
 		[imageWindow orderFront:nil];
 		[imageWindow setLevel:[inTargetWindow level]];
 		[[[CocoaAnimation_WindowFrameAnimator alloc]
 			initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-								fromFrame:oldFrame toFrame:newFrame delayDistribution:kMy_AnimationTimeDistributionEaseOut
-								effect:kMy_AnimationEffectFadeOut simplified:((inSlowTransition) ? YES : NO)] autorelease];
+								fromFrame:oldFrame toFrame:newFrame totalDelay:0.03 delayDistribution:kMy_AnimationTimeDistributionEaseOut
+								effect:kMy_AnimationEffectFadeOut] autorelease];
 		
 		// hide the original window immediately; the animation on the
 		// image window can take however long it needs to complete
@@ -230,7 +317,7 @@ allows a window to appear to be moving in a way that does
 not require the original window to even exist.  It also
 tends to be much more lightweight.
 
-(4.0)
+(1.8)
 */
 NSWindow*
 createImageWindowOf		(NSWindow*		inWindow)
@@ -254,6 +341,7 @@ createImageWindowOf		(NSWindow*		inWindow)
 		imageRep = [[[NSBitmapImageRep alloc] initWithFocusedViewRect:[originalContentView bounds]] autorelease];
 		[originalContentView unlockFocus];
 		[windowImage addRepresentation:imageRep];
+		[imageView setImageScaling:NSScaleToFit];
 		[imageView setImage:windowImage];
 		
 		// now construct a fake window to display the same thing
@@ -274,7 +362,7 @@ createImageWindowOf		(NSWindow*		inWindow)
 /*!
 Designated initializer.
 
-(4.0)
+(1.8)
 */
 - (id)
 initWithTransition:(My_AnimationTransition)			aTransition
@@ -282,6 +370,7 @@ imageWindow:(NSWindow*)								aBorderlessWindow
 finalWindow:(NSWindow*)								theActualWindow
 fromFrame:(NSRect)									sourceRect
 toFrame:(NSRect)									targetRect
+totalDelay:(NSTimeInterval)							aDuration
 delayDistribution:(My_AnimationTimeDistribution)	aDistribution
 effect:(My_AnimationEffect)							anEffect
 simplified:(BOOL)									isSimplified
@@ -289,6 +378,11 @@ simplified:(BOOL)									isSimplified
 	self = [super init];
 	if (nil != self)
 	{
+		NSTimeInterval		baseDuration = (isSimplified)
+											? aDuration / 2.0
+											: aDuration;
+		
+		
 		self->borderlessWindow = [aBorderlessWindow retain];
 		self->actualWindow = [theActualWindow retain];
 		self->originalFrame = sourceRect;
@@ -308,10 +402,12 @@ simplified:(BOOL)									isSimplified
 		self->frameOffsetsH = new float[self->frameCount];
 		self->frameOffsetsV = new float[self->frameCount];
 		
-		// configure animation frames; remember that the frame has
-		// its origin in the bottom-left, not the top-left; the
-		// the offsets can be any amount per frame, but the total
-		// offset should equal the number of frames above
+		// start by configuring offsets in terms of a UNIT SQUARE,
+		// which means that the sum of all frame offsets should
+		// add up to the total number of frames (at the end, all
+		// offsets are multiplied by the unit distances to produce
+		// actual frame offsets); remember that the frame has its
+		// origin in the bottom-left, not the top-left
 		switch (aTransition)
 		{
 		case kMy_AnimationTransitionSlide:
@@ -329,65 +425,61 @@ simplified:(BOOL)									isSimplified
 		switch (anEffect)
 		{
 		case kMy_AnimationEffectFadeIn:
-			if (5 == self->frameCount)
 			{
 				size_t		i = 0;
 				
 				
-				self->frameAlphas[i++] = 0.2;
-				self->frameAlphas[i++] = 0.4;
-				self->frameAlphas[i++] = 0.6;
-				self->frameAlphas[i++] = 0.8;
-				self->frameAlphas[i++] = 1.0;
-				assert(i == self->frameCount);
-			}
-			else
-			{
-				size_t		i = 0;
-				
-				
-				self->frameAlphas[i++] = 0.2;
-				self->frameAlphas[i++] = 0.3;
-				self->frameAlphas[i++] = 0.4;
-				self->frameAlphas[i++] = 0.5;
-				self->frameAlphas[i++] = 0.6;
-				self->frameAlphas[i++] = 0.7;
-				self->frameAlphas[i++] = 0.8;
-				self->frameAlphas[i++] = 0.9;
-				self->frameAlphas[i++] = 0.95;
-				self->frameAlphas[i++] = 1.0;
+				if (5 == self->frameCount)
+				{
+					self->frameAlphas[i++] = 0.2;
+					self->frameAlphas[i++] = 0.4;
+					self->frameAlphas[i++] = 0.6;
+					self->frameAlphas[i++] = 0.8;
+					self->frameAlphas[i++] = 1.0;
+				}
+				else
+				{
+					self->frameAlphas[i++] = 0.2;
+					self->frameAlphas[i++] = 0.3;
+					self->frameAlphas[i++] = 0.4;
+					self->frameAlphas[i++] = 0.5;
+					self->frameAlphas[i++] = 0.6;
+					self->frameAlphas[i++] = 0.7;
+					self->frameAlphas[i++] = 0.8;
+					self->frameAlphas[i++] = 0.9;
+					self->frameAlphas[i++] = 0.95;
+					self->frameAlphas[i++] = 1.0;
+				}
 				assert(i == self->frameCount);
 			}
 			break;
 		
 		case kMy_AnimationEffectFadeOut:
-			if (5 == self->frameCount)
 			{
 				size_t		i = 0;
 				
 				
-				self->frameAlphas[i++] = 0.7;
-				self->frameAlphas[i++] = 0.5;
-				self->frameAlphas[i++] = 0.3;
-				self->frameAlphas[i++] = 0.2;
-				self->frameAlphas[i++] = 0.1;
-				assert(i == self->frameCount);
-			}
-			else
-			{
-				size_t		i = 0;
-				
-				
-				self->frameAlphas[i++] = 0.85;
-				self->frameAlphas[i++] = 0.7;
-				self->frameAlphas[i++] = 0.55;
-				self->frameAlphas[i++] = 0.45;
-				self->frameAlphas[i++] = 0.35;
-				self->frameAlphas[i++] = 0.25;
-				self->frameAlphas[i++] = 0.2;
-				self->frameAlphas[i++] = 0.15;
-				self->frameAlphas[i++] = 0.1;
-				self->frameAlphas[i++] = 0.05;
+				if (5 == self->frameCount)
+				{
+					self->frameAlphas[i++] = 0.7;
+					self->frameAlphas[i++] = 0.5;
+					self->frameAlphas[i++] = 0.3;
+					self->frameAlphas[i++] = 0.2;
+					self->frameAlphas[i++] = 0.1;
+				}
+				else
+				{
+					self->frameAlphas[i++] = 0.85;
+					self->frameAlphas[i++] = 0.7;
+					self->frameAlphas[i++] = 0.55;
+					self->frameAlphas[i++] = 0.45;
+					self->frameAlphas[i++] = 0.35;
+					self->frameAlphas[i++] = 0.25;
+					self->frameAlphas[i++] = 0.2;
+					self->frameAlphas[i++] = 0.15;
+					self->frameAlphas[i++] = 0.1;
+					self->frameAlphas[i++] = 0.05;
+				}
 				assert(i == self->frameCount);
 			}
 			break;
@@ -397,40 +489,114 @@ simplified:(BOOL)									isSimplified
 			break;
 		}
 		
-		// configure delays
-		for (size_t i = 0; i < self->frameCount; ++i)
+		// configure delays; for some delays an algorithm is applied to
+		// create a curve against a unit scale, so that the loop portion
+		// just multiplies the linear amount against the curve
+		// (TEMPORARY; for large delays the frame count probably should
+		// be increased to smooth out the animation over time, and right
+		// now the frame count is fairly inflexible)
 		{
+			float const		kPerUnitLinearDelay = baseDuration / self->frameCount;
+			
+			
 			if (kMy_AnimationTimeDistributionEaseOut == aDistribution)
 			{
-				// gradually become slower
-				self->frameDelays[i] = 0.002 * self->frameCount + 0.005;
+				// assign initial values assuming a unit curve only; be
+				// sure that the total number is equal to the frame count
+				// so that any user-specified total delay is not exceeded
+				size_t		i = 0;
+				
+				
+				if (5 == self->frameCount)
+				{
+					self->frameDelays[i++] = 0.7;
+					self->frameDelays[i++] = 0.8;
+					self->frameDelays[i++] = 1.0;
+					self->frameDelays[i++] = 1.2;
+					self->frameDelays[i++] = 1.3;
+				}
+				else
+				{
+					self->frameDelays[i++] = 0.7;
+					self->frameDelays[i++] = 0.8;
+					self->frameDelays[i++] = 0.9;
+					self->frameDelays[i++] = 0.9;
+					self->frameDelays[i++] = 1.0;
+					self->frameDelays[i++] = 1.0;
+					self->frameDelays[i++] = 1.1;
+					self->frameDelays[i++] = 1.1;
+					self->frameDelays[i++] = 1.2;
+					self->frameDelays[i++] = 1.3;
+				}
+				assert(i == self->frameCount);
 			}
-			else
+			for (size_t i = 0; i < self->frameCount; ++i)
 			{
-				// linear
-				self->frameDelays[i] = 0.002;
+				if (kMy_AnimationTimeDistributionEaseOut == aDistribution)
+				{
+					// scale the unit curve accordingly
+					self->frameDelays[i] *= kPerUnitLinearDelay;
+				}
+				else
+				{
+					// linear
+					self->frameDelays[i] = kPerUnitLinearDelay;
+				}
 			}
 		}
 		
 		// calculate the size of each unit of the animation
 		self->frameUnitH = (self->targetFrame.origin.x - self->originalFrame.origin.x) / self->frameCount;
 		self->frameUnitV = (self->targetFrame.origin.y - self->originalFrame.origin.y) / self->frameCount;
+		self->frameDeltaSizeH = (self->targetFrame.size.width - self->originalFrame.size.width) / self->frameCount;
+		self->frameDeltaSizeV = (self->targetFrame.size.height - self->originalFrame.size.height) / self->frameCount;
+		
+		// finally, scale the offsets based on these units
+		for (size_t i = 0; i < self->frameCount; ++i)
+		{
+			self->frameOffsetsH[i] *= self->frameUnitH;
+			self->frameOffsetsV[i] *= self->frameUnitV;
+		}
 		
 		// begin animation
 		[self animationStep:nil];
 	}
 	return self;
-}// initWithTransition:window:fromFrame:toFrame:delayDistribution:effect:simplified:
+}// initWithTransition:imageWindow:finalWindow:fromFrame:toFrame:totalDelay:delayDistribution:effect:simplified:
+
+
+/*!
+Automatically decides when to reduce the complexity of the
+animation (on older machines).
+
+(1.8)
+*/
+- (id)
+initWithTransition:(My_AnimationTransition)			aTransition
+imageWindow:(NSWindow*)								aBorderlessWindow
+finalWindow:(NSWindow*)								theActualWindow
+fromFrame:(NSRect)									sourceRect
+toFrame:(NSRect)									targetRect
+totalDelay:(NSTimeInterval)							aDuration
+delayDistribution:(My_AnimationTimeDistribution)	aDistribution
+effect:(My_AnimationEffect)							anEffect
+{
+	return [self initWithTransition:aTransition imageWindow:aBorderlessWindow finalWindow:theActualWindow
+									fromFrame:sourceRect toFrame:targetRect totalDelay:aDuration
+									delayDistribution:aDistribution effect:anEffect
+									simplified:(NSAppKitVersionNumber < NSAppKitVersionNumber10_6)/* arbitrary */];
+}// initWithTransition:imageWindow:finalWindow:fromFrame:toFrame:totalDelay:delayDistribution:effect:
 
 
 /*!
 Destructor.
 
-(4.0)
+(1.8)
 */
 - (void)
 dealloc
 {
+	// if the animation is released too soon, force the correct window location
 	[self->borderlessWindow release];
 	[self->actualWindow release];
 	delete [] self->frameDelays;
@@ -450,7 +616,7 @@ step in the animation and updates the step number.  If the
 last frame has not been reached, a timer is set up to call
 this again after a short delay.
 
-(4.0)
+(1.8)
 */
 - (void)
 animationStep:(id)	unused
@@ -460,12 +626,44 @@ animationStep:(id)	unused
 	
 	
 	// the offsets assume a unit square and scale according to the actual
-	// difference between the original frame and the target frame; so an
+	// difference between the original frame and the target frame; an
 	// offset of 1 when there are 5 frames means “20% of the distance from
 	// the beginning”, 2 means 40%, etc. so offsets should generally be
 	// well represented across the spectrum from 0 to the frame count
-	newFrame.origin.x += (self->frameOffsetsH[self->currentFrame] * self->frameUnitH);
-	newFrame.origin.y += (self->frameOffsetsV[self->currentFrame] * self->frameUnitV);
+	newFrame.origin.x += self->frameOffsetsH[self->currentFrame];
+	newFrame.origin.y += self->frameOffsetsV[self->currentFrame];
+	if (0 != self->frameDeltaSizeH)
+	{
+		float	powerOfTwo = 0.0;
+		
+		
+		newFrame.size.width += (self->currentFrame * self->frameDeltaSizeH);
+		
+		// if the new width is arbitrarily close to a power of 2, it
+		// is converted into an exact power of 2 so that optimizations
+		// are possible based on this (but not necessarily guaranteed)
+		powerOfTwo = (1 << STATIC_CAST(ceilf(log2f(newFrame.size.width)), unsigned int));
+		if (fabsf(newFrame.size.width - powerOfTwo) < 5/* pixels; arbitrary */)
+		{
+			newFrame.size.width = powerOfTwo;
+		}
+	}
+	if (0 != self->frameDeltaSizeV)
+	{
+		float	powerOfTwo = 0.0;
+		
+		
+		newFrame.size.height += (self->currentFrame * self->frameDeltaSizeV);
+		
+		// if the new height is arbitrarily close to a power of 2, it
+		// is converted into an exact power of 2 so that optimizations
+		// are possible based on this (but not necessarily guaranteed)
+		powerOfTwo = (1 << STATIC_CAST(ceilf(log2f(newFrame.size.height)), unsigned int));
+		if (fabsf(newFrame.size.height - powerOfTwo) < 5/* pixels; arbitrary */)
+		{
+			newFrame.size.height = powerOfTwo;
+		}
+	}
 	[self->borderlessWindow setFrame:newFrame display:YES];
 	
 	// adjust alpha channel, if necessary
