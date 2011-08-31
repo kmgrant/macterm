@@ -28,7 +28,7 @@
 ###############################################################*/
 
 // Mac includes
-#include <Cocoa/Cocoa.h>
+#import <Cocoa/Cocoa.h>
 
 
 

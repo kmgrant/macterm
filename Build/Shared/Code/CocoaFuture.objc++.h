@@ -1,6 +1,20 @@
 /*!	\file CocoaFuture.h
-	\brief Declarations for certain methods available only
-	on newer OSes, to aid compilations for older OSes.
+	\brief Declarations for certain constants and methods
+	available only on newer OSes, to aid compilations for
+	older OSes.
+	
+	It is very important that these be based on the exact
+	definitions in later SDKs.  Symbols should be added
+	only if they are already set, e.g. a constant whose
+	value is now established in old OS versions or a
+	selector that is already implemented for a class.
+	
+	You MUST use "respondsToSelector:" or an equivalent
+	mechanism to guard against use of these methods on
+	older OSes.  The advantage of importing this file
+	is that you can directly invoke the target method
+	(in an if-statement, say) without seeing compiler
+	warnings.
 */
 /*###############################################################
 
@@ -28,9 +42,23 @@
 ###############################################################*/
 
 // Mac includes
-#include <Cocoa/Cocoa.h>
+#import <Cocoa/Cocoa.h>
 
 
+
+#pragma mark Constants
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_4
+#define NSAppKitVersionNumber10_4 824
+#endif
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5
+#define NSAppKitVersionNumber10_5 949
+#endif
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060 /* MAC_OS_X_VERSION_10_6 */
+#define NSAppKitVersionNumber10_6 1038
+#endif
 
 #pragma mark Types
 
@@ -42,12 +70,10 @@ These declarations should match the latest SDK.
 
 WARNING:	You MUST use "respondsToSelector:" or an equivalent
 			mechanism to guard against use of these methods on
-			older OSes.  The advantage of importing this method
+			older OSes.  The advantage of importing this file
 			is that you can directly invoke the target method
 			(in an if-statement, say) without seeing compiler
-			warnings.  Note that "performSelector:" is also an
-			option, but that is much more cumbersome for APIs
-			that take or return non-objects.
+			warnings.
 */
 @interface NSWindow (NSWindowExtensionsFromLeopard)
 
@@ -74,12 +100,10 @@ These declarations should match the latest SDK.
 
 WARNING:	You MUST use "respondsToSelector:" or an equivalent
 			mechanism to guard against use of these methods on
-			older OSes.  The advantage of importing this method
+			older OSes.  The advantage of importing this file
 			is that you can directly invoke the target method
 			(in an if-statement, say) without seeing compiler
-			warnings.  Note that "performSelector:" is also an
-			option, but that is much more cumbersome for APIs
-			that take or return non-objects.
+			warnings.
 */
 @interface NSWindow (NSWindowExtensionsFromSnowLeopard)
 
@@ -99,7 +123,7 @@ These declarations should match the latest SDK.
 
 WARNING:	You MUST use "respondsToSelector:" or an equivalent
 			mechanism to guard against use of these methods on
-			older OSes.  The advantage of importing this method
+			older OSes.  The advantage of importing this file
 			is that you can directly invoke the target method
 			(in an if-statement, say) without seeing compiler
 			warnings.  Note that "performSelector:" is also an
