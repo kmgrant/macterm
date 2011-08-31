@@ -46,4 +46,14 @@ selectorToReturnKeyChangeAutoNotifyFlag:(SEL)_;
 
 @end
 
+
+@interface NSWindow (CocoaExtensions_NSWindow)
+
+// helpers for setting frames with a delay
+
+- (void)
+setFrameWithArray:(id)_;
+
+@end
+
 // BELOW IS REQUIRED NEWLINE TO END FILE

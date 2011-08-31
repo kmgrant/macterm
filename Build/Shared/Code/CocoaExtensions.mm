@@ -98,4 +98,64 @@ selectorToReturnKeyChangeAutoNotifyFlag:(SEL)	anAccessor
 
 @end // NSObject(CocoaExtensions_NSObject)
 
+
+@implementation NSWindow (CocoaExtensions_NSWindow)
+
+
+/*!
+Given an NSArray with 4 floating-point numbers in the order
+X, Y, width and height, calls "setFrame:display:" on the
+window (with a display of YES).
+
+The array would be constructed using code such as:
+[NSArray arrayWithObjects:
+	[NSNumber numberWithFloat:[window frame].origin.x],
+	[NSNumber numberWithFloat:[window frame].origin.y],
+	[NSNumber numberWithFloat:[window frame].size.width],
+	[NSNumber numberWithFloat:[window frame].size.height],
+	nil];
+
+This is useful for calls that require an object, such as
+"performSelector:withObject:afterDelay:".
+
+(4.0)
+*/
+- (void)
+setFrameWithArray:(id)		anArray
+{
+	NSRect			newFrame = [self frame];
+	NSEnumerator*	eachObject = [anArray objectEnumerator];
+	id				currentObject = nil;
+	size_t			i = 0;
+	
+	
+	while (nil != (currentObject = [eachObject nextObject]))
+	{
+		NSNumber*	asNumber = (NSNumber*)currentObject;
+		
+		
+		if (0 == i)
+		{
+			newFrame.origin.x = [asNumber floatValue];
+		}
+		else if (1 == i)
+		{
+			newFrame.origin.y = [asNumber floatValue];
+		}
+		else if (2 == i)
+		{
+			newFrame.size.width = [asNumber floatValue];
+		}
+		else if (3 == i)
+		{
+			newFrame.size.height = [asNumber floatValue];
+		}
+		++i;
+	}
+	[self setFrame:newFrame display:YES];
+}// setFrameWithArray:
+
+
+@end // NSObject(CocoaExtensions_NSObject)
+
 // BELOW IS REQUIRED NEWLINE TO END FILE
