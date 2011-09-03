@@ -54,6 +54,7 @@
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
 #import <CGContextSaveRestore.h>
+#import <CocoaAnimation.h>
 #import <CocoaBasic.h>
 #import <ColorUtilities.h>
 #import <CommonEventHandlers.h>
@@ -3481,56 +3482,108 @@ TerminalView_TranslateTerminalScreenRange	(TerminalViewRef					inView,
 
 
 /*!
+Displays an “opening” animation from the current text selection.
+This is currently used for opening URLs.
+
+(4.0)
+*/
+void
+TerminalView_ZoomOpenFromSelection		(TerminalViewRef	inView)
+{
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if (nullptr != viewPtr)
+	{
+		// the selection region is currently defined in the window’s local (content view) coordinates
+		RgnHandle	selectionRegion = TerminalView_ReturnSelectedTextAsNewRegion(inView);
+		
+		
+		if (nullptr != selectionRegion)
+		{
+			HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
+			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
+			HIRect				selectionViewBounds = CGRectZero;
+			CGRect				selectionCGRect = CGRectZero;
+			Rect				selectionRect;
+			
+			
+			// since the region is currently defined in content-local coordinates,
+			// the “height” of the “view” containing the selection is actually
+			// going to be the entire content view and not just the screen part
+			(OSStatus)HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, screenWindow), &selectionViewBounds);
+			
+			// translate the selection area into Cocoa coordinates that are
+			// relative to the content view of the window
+			GetRegionBounds(selectionRegion, &selectionRect);
+			selectionCGRect.origin.x = selectionRect.left;
+			selectionCGRect.origin.y = selectionViewBounds.size.height - selectionRect.bottom;
+			selectionCGRect.size.width = selectionRect.right - selectionRect.left;
+			selectionCGRect.size.height = selectionRect.bottom - selectionRect.top;
+			
+			// animate!
+			TerminalView_FlashSelection(inView);
+			if (nullptr != terminalWindow)
+			{
+				NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
+				
+				
+				CocoaAnimation_TransitionWindowSectionForOpen(cocoaWindow, selectionCGRect);
+			}
+			
+			Memory_DisposeRegion(&selectionRegion);
+		}
+	}
+}// ZoomOpenFromSelection
+
+
+/*!
 Displays an animation that helps the user locate
 the terminal cursor.
 
 (3.0)
 */
 void
-TerminalView_ZoomToCursor	(TerminalViewRef	inView,
-							 Boolean			inQuick)
+TerminalView_ZoomToCursor	(TerminalViewRef	inView)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
 	if (viewPtr != nullptr)
 	{
-		Rect	globalCursorBounds;
-		HIRect	screenContentFloatBounds;
-		Rect	screenContentBounds;
+		HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
+		HIRect				cursorViewBounds = CGRectZero;
+		CGRect				cursorCGRect = CGRectZero;
+		Rect				cursorRect;
 		
 		
-		// find global rectangle of the screen area
-		(OSStatus)HIViewGetBounds(viewPtr->contentHIView, &screenContentFloatBounds);
-		SetRect(&screenContentBounds, 0, 0, STATIC_CAST(screenContentFloatBounds.size.width, SInt16),
-				STATIC_CAST(screenContentFloatBounds.size.height, SInt16));
-		screenToLocalRect(viewPtr, &screenContentBounds);
-		QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), &screenContentBounds);
+		cursorRect = viewPtr->screen.cursor.bounds;
+		InsetRect(&cursorRect, -30, -30); // arbitrary
 		
-		// find global rectangle of the cursor
-		globalCursorBounds = viewPtr->screen.cursor.bounds;
-		screenToLocalRect(viewPtr, &globalCursorBounds);
-		QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), &globalCursorBounds);
+		screenToLocalRect(viewPtr, &cursorRect);
 		
-		//Console_WriteValueFloat4("zoom cursor screen bounds", screenBounds.left, screenBounds.top, screenBounds.right, screenBounds.bottom);
+		// since the region is currently defined in content-local coordinates,
+		// the “height” of the “view” containing the selection is actually
+		// going to be the entire content view and not just the screen part
+		(OSStatus)HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, screenWindow), &cursorViewBounds);
+		
+		// translate the selection area into Cocoa coordinates that are
+		// relative to the content view of the window
+		cursorCGRect.origin.x = cursorRect.left;
+		cursorCGRect.origin.y = cursorViewBounds.size.height - cursorRect.bottom;
+		cursorCGRect.size.width = cursorRect.right - cursorRect.left;
+		cursorCGRect.size.height = cursorRect.bottom - cursorRect.top;
+		
+		// animate!
+		if (nullptr != terminalWindow)
 		{
-			Rect	outsetCursorBounds = globalCursorBounds;
+			NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
 			
 			
-			InsetRect(&outsetCursorBounds, -20/* arbitrary */, -20/* arbitrary */);
-			if (false == inQuick)
-			{
-				// unless in “quick” mode, be a little more obvious
-				// by zooming first from the screen edges to the cursor
-			#if 0
-				(OSStatus)ZoomRects(&outsetCursorBounds, &globalCursorBounds, 10/* steps, arbitrary */, kZoomAccelerate);
-			#else
-				(OSStatus)ZoomRects(&screenContentBounds, &globalCursorBounds, 10/* steps, arbitrary */, kZoomAccelerate);
-			#endif
-			}
-			
-			// end the animation by enlarging rectangles around the cursor position
-			(OSStatus)ZoomRects(&globalCursorBounds, &outsetCursorBounds, 20/* steps, arbitrary */, kZoomDecelerate);
+			// this is a bit of a hack, but the “search result” animation is a
+			// reasonable way to draw attention to the cursor’s rectangle
+			CocoaAnimation_TransitionWindowSectionForSearchResult(cocoaWindow, cursorCGRect);
 		}
 	}
 }// ZoomToCursor
@@ -3549,27 +3602,44 @@ TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	if ((viewPtr != nullptr) && (false == viewPtr->text.searchResults.empty()))
+	if ((nullptr != viewPtr) && (false == viewPtr->text.searchResults.empty()))
 	{
+		// the selection region is currently defined in the window’s local (content view) coordinates
 		RgnHandle	selectionRegion = getVirtualRangeAsNewRegion(viewPtr, viewPtr->text.toCurrentSearchResult->first,
 																	viewPtr->text.toCurrentSearchResult->second,
 																	false/* is rectangular */);
 		
 		
-		if (selectionRegion != nullptr)
+		if (nullptr != selectionRegion)
 		{
-			Rect	selectionBounds;
-			Rect	outsetSelectionBounds;
+			HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
+			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
+			HIRect				selectionViewBounds = CGRectZero;
+			CGRect				selectionCGRect = CGRectZero;
+			Rect				selectionRect;
 			
 			
-			// find global rectangle of selection, and its immediate surrounding area
-			QDLocalToGlobalRegion(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), selectionRegion);
-			GetRegionBounds(selectionRegion, &selectionBounds);
-			outsetSelectionBounds = selectionBounds;
-			InsetRect(&outsetSelectionBounds, -20/* arbitrary */, -20/* arbitrary */);
+			// since the region is currently defined in content-local coordinates,
+			// the “height” of the “view” containing the selection is actually
+			// going to be the entire content view and not just the screen part
+			(OSStatus)HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, screenWindow), &selectionViewBounds);
+			
+			// translate the selection area into Cocoa coordinates that are
+			// relative to the content view of the window
+			GetRegionBounds(selectionRegion, &selectionRect);
+			selectionCGRect.origin.x = selectionRect.left;
+			selectionCGRect.origin.y = selectionViewBounds.size.height - selectionRect.bottom;
+			selectionCGRect.size.width = selectionRect.right - selectionRect.left;
+			selectionCGRect.size.height = selectionRect.bottom - selectionRect.top;
 			
 			// animate!
-			(OSStatus)ZoomRects(&outsetSelectionBounds, &selectionBounds, 8/* steps, arbitrary */, kZoomDecelerate);
+			if (nullptr != terminalWindow)
+			{
+				NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
+				
+				
+				CocoaAnimation_TransitionWindowSectionForSearchResult(cocoaWindow, selectionCGRect);
+			}
 			
 			Memory_DisposeRegion(&selectionRegion);
 		}

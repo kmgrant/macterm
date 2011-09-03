@@ -7218,17 +7218,6 @@ receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 															&ptr->autoActivateDragTimer);
 						}
 						
-					#if 0
-						// if the drag can be accepted, remind the user where the cursor is
-						// (as any drop will be sent to that location, not the mouse location)
-						if (acceptDrag)
-						{
-							TerminalView_ZoomToCursor(TerminalWindow_ReturnViewWithFocus
-														(Session_ReturnActiveTerminalWindow(session)),
-														true/* quick animation */);
-						}
-					#endif
-						
 						// finally, update the event!
 						result = SetEventParameter(inEvent, kEventParamControlWouldAcceptDrop,
 													typeBoolean, sizeof(acceptDrag), &acceptDrag);

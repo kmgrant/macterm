@@ -121,7 +121,7 @@ animationStep:(id)_;
 #pragma mark Internal Method prototypes
 namespace {
 
-NSWindow*	createImageWindowOf		(NSWindow*);
+NSWindow*	createImageWindowFrom	(NSWindow*, NSRect);
 
 } // anonymous namespace
 
@@ -134,11 +134,6 @@ Animates "inTargetWindow" from a point that is staggered
 relative to "inRelativeWindow", in a way that suggests the
 target window is a copy of the relative window.  Use this
 for commands that duplicate existing windows.
-
-If "inSlowTransition" is true, some frames are dropped from
-the animation to try to maintain good performance.  This is
-recommended on older hardware or operating system versions
-but it should not be necessary for modern machines.
 
 (1.8)
 */
@@ -156,7 +151,7 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 	// animate the change
 	{
 		float const		kAnimationDelay = 0.001;
-		NSWindow*		imageWindow = [createImageWindowOf(inTargetWindow) autorelease];
+		NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds]) autorelease];
 		NSRect			oldFrame = [inRelativeToWindow frame];
 		NSRect			newFrame = NSZeroRect;
 		NSRect			mainScreenFrame = [[NSScreen mainScreen] visibleFrame];
@@ -210,11 +205,6 @@ hidden.  The "inEndLocation" should be the rectangle of some
 user interface element that would redisplay the window, in
 the same coordinate system as an NSWindow’s "frame" would be.
 
-If "inSlowTransition" is true, some frames are dropped from
-the animation to try to maintain good performance.  This is
-recommended on older hardware or operating system versions
-but it should not be necessary for modern machines.
-
 In order to avoid potential problems with the lifetime of a
 window, the specified window is actually hidden immediately
 and is replaced with a borderless window that renders the
@@ -228,9 +218,9 @@ CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
 										 CGRect			inEndLocation)
 {
 	AutoPool	_;
-	NSWindow*	imageWindow = [createImageWindowOf(inTargetWindow) autorelease];
+	NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds]) autorelease];
 	NSRect		oldFrame = [imageWindow frame];
-	NSRect		newFrame;
+	NSRect		newFrame = NSZeroRect;
 	
 	
 	newFrame.origin.x = inEndLocation.origin.x;
@@ -243,7 +233,7 @@ CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
 	[imageWindow setLevel:[inTargetWindow level]];
 	[[[CocoaAnimation_WindowFrameAnimator alloc]
 		initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-							fromFrame:oldFrame toFrame:newFrame totalDelay:0.15 delayDistribution:kMy_AnimationTimeDistributionEaseOut
+							fromFrame:oldFrame toFrame:newFrame totalDelay:0.04 delayDistribution:kMy_AnimationTimeDistributionEaseOut
 							effect:kMy_AnimationEffectNone] autorelease];
 	
 	// hide the original window immediately; the animation on the
@@ -255,11 +245,6 @@ CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
 /*!
 Animates "inTargetWindow" in a way that suggests it is being
 destroyed.
-
-If "inSlowTransition" is true, some frames are dropped from
-the animation to try to maintain good performance.  This is
-recommended on older hardware or operating system versions
-but it should not be necessary for modern machines.
 
 In order to avoid potential problems with the lifetime of a
 window, the specified window is actually hidden immediately
@@ -277,7 +262,7 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow)
 	
 	if ([inTargetWindow isVisible])
 	{
-		NSWindow*	imageWindow = [createImageWindowOf(inTargetWindow) autorelease];
+		NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds]) autorelease];
 		NSRect		oldFrame = [imageWindow frame];
 		NSRect		newFrame = [imageWindow frame];
 		NSRect		screenFrame = [[inTargetWindow screen] frame];
@@ -304,13 +289,113 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow)
 }// TransitionWindowForRemove
 
 
+/*!
+Animates the specified section of "inTargetWindow" in a way that
+makes it seem to “open”, starting at the specified frame.  The
+rectangle "inStartLocation" is relative to the boundaries of the
+content view, not its frame (in other words, the location and
+scaling of the frame are irrelevant).
+
+The animation takes place entirely in a separate window, although
+the initial frames are meant to appear integrated with the
+original window.
+
+(1.8)
+*/
+void
+CocoaAnimation_TransitionWindowSectionForOpen	(NSWindow*		inTargetWindow,
+												 CGRect			inStartLocation)
+{
+	AutoPool	_;
+	NSRect		targetWindowFrame = [inTargetWindow contentRectForFrameRect:[inTargetWindow frame]];
+	NSWindow*	imageWindow = [createImageWindowFrom
+								(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
+															inStartLocation.size.width, inStartLocation.size.height)) autorelease];
+	NSRect		oldFrame = [imageWindow frame];
+	NSRect		newFrame = oldFrame;
+	
+	
+	// this effect uses a shadow
+	[imageWindow setHasShadow:YES];
+	
+	// make the section appear to zoom open
+	newFrame.size.width *= 4; // arbitrary
+	newFrame.size.height *= 4; // arbitrary
+	newFrame.origin.x = oldFrame.origin.x - ((newFrame.size.width - oldFrame.size.width) / 2.0);
+	newFrame.origin.y = oldFrame.origin.y - ((newFrame.size.height - oldFrame.size.height) / 2.0);
+	
+	// animate!
+	[imageWindow orderFront:nil];
+	[imageWindow setLevel:[inTargetWindow level]];
+	[[[CocoaAnimation_WindowFrameAnimator alloc]
+		initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
+							fromFrame:oldFrame toFrame:newFrame totalDelay:0.05 delayDistribution:kMy_AnimationTimeDistributionEaseOut
+							effect:kMy_AnimationEffectFadeOut] autorelease];
+}// TransitionWindowSectionForOpen
+
+
+/*!
+Animates the specified section of "inTargetWindow" in a way
+that makes it seem like matching text in a search, starting at
+the specified frame.  The rectangle "inStartLocation" is relative
+to the boundaries of the content view, not its frame (in other
+words, the location and scaling of the frame are irrelevant).
+
+The animation takes place entirely in a separate window, although
+the initial frames are meant to appear integrated with the
+original window.
+
+(1.8)
+*/
+void
+CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow,
+														 CGRect			inStartLocation)
+{
+	AutoPool	_;
+	NSRect		targetWindowFrame = [inTargetWindow contentRectForFrameRect:[inTargetWindow frame]];
+	NSWindow*	imageWindow = [createImageWindowFrom
+								(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
+															inStartLocation.size.width, inStartLocation.size.height)) autorelease];
+	NSRect		oldFrame = [imageWindow frame];
+	NSRect		newFrame = oldFrame;
+	
+	
+	// this effect uses a shadow
+	[imageWindow setHasShadow:YES];
+	
+	// make the section appear to zoom down slightly;
+	// also make the closing frame bigger than the
+	// original region so that the selected area
+	// appears to be floating the entire time
+	newFrame.size.width += 8; // arbitrary
+	newFrame.size.height += 8; // arbitrary
+	newFrame.origin.x = oldFrame.origin.x - ((newFrame.size.width - oldFrame.size.width) / 2.0);
+	newFrame.origin.y = oldFrame.origin.y - ((newFrame.size.height - oldFrame.size.height) / 2.0);
+	oldFrame.size.width += 25; // arbitrary
+	oldFrame.size.height += 25; // arbitrary
+	oldFrame.origin.x = newFrame.origin.x - ((oldFrame.size.width - newFrame.size.width) / 2.0);
+	oldFrame.origin.y = newFrame.origin.y - ((oldFrame.size.height - newFrame.size.height) / 2.0);
+	
+	// animate!
+	[imageWindow orderFront:nil];
+	[imageWindow setLevel:[inTargetWindow level]];
+	[[[CocoaAnimation_WindowFrameAnimator alloc]
+		initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
+							fromFrame:oldFrame toFrame:newFrame totalDelay:0.08 delayDistribution:kMy_AnimationTimeDistributionLinear
+							effect:kMy_AnimationEffectFadeIn] autorelease];
+}// TransitionWindowSectionForSearchResult
+
+
 #pragma mark Internal Methods
 namespace {
 
 /*!
 Creates a new, borderless window whose content view is an
-image view that renders the entire content of the specified
-window.
+image view that renders the specified portion of the given
+window.   The rectangle is a section of the content view’s
+bounds (that is, the unscaled region independent of any
+chosen frame), so use "[[inWindow contentView] bounds]" to
+capture the entire window.
 
 This is very useful as a basis for animations, because it
 allows a window to appear to be moving in a way that does
@@ -320,11 +405,12 @@ tends to be much more lightweight.
 (1.8)
 */
 NSWindow*
-createImageWindowOf		(NSWindow*		inWindow)
+createImageWindowFrom	(NSWindow*		inWindow,
+						 NSRect			inContentViewSection)
 {
 	NSWindow*	result = nil;
 	NSView*		originalContentView = [inWindow contentView];
-	NSRect		zeroOriginBounds = [inWindow frame];
+	NSRect		zeroOriginBounds = inContentViewSection;
 	
 	
 	zeroOriginBounds.origin = NSZeroPoint;
@@ -334,24 +420,30 @@ createImageWindowOf		(NSWindow*		inWindow)
 		NSBitmapImageRep*	imageRep = nil;
 		NSImage*			windowImage = [[[NSImage alloc] init] autorelease];
 		NSImageView*		imageView = [[[NSImageView alloc] initWithFrame:zeroOriginBounds] autorelease];
+		NSRect				newFrame = [inWindow frame];
 		
 		
 		// capture the contents of the original window
 		[originalContentView lockFocus];
-		imageRep = [[[NSBitmapImageRep alloc] initWithFocusedViewRect:[originalContentView bounds]] autorelease];
+		imageRep = [[[NSBitmapImageRep alloc] initWithFocusedViewRect:inContentViewSection] autorelease];
 		[originalContentView unlockFocus];
 		[windowImage addRepresentation:imageRep];
 		[imageView setImageScaling:NSScaleToFit];
 		[imageView setImage:windowImage];
 		
+		// set up the window to cover its original content exactly
+		newFrame.origin.x += inContentViewSection.origin.x;
+		newFrame.origin.y += inContentViewSection.origin.y;
+		newFrame.size = inContentViewSection.size;
+		
 		// now construct a fake window to display the same thing
-		result = [[NSWindow alloc] initWithContentRect:[inWindow frame] styleMask:NSBorderlessWindowMask
+		result = [[NSWindow alloc] initWithContentRect:newFrame styleMask:NSBorderlessWindowMask
 														backing:NSBackingStoreBuffered defer:NO];
 		[result setContentView:imageView];
 	}
 	
 	return result;
-}// createImageWindowOf
+}// createImageWindowFrom
 
 } // anonymous namespace
 

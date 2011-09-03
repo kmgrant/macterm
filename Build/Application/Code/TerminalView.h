@@ -592,8 +592,10 @@ TerminalView_Result
 												 TerminalView_CellRange&			outRange);
 
 void
-	TerminalView_ZoomToCursor					(TerminalViewRef					inView,
-												 Boolean							inQuick = false);
+	TerminalView_ZoomOpenFromSelection			(TerminalViewRef					inView);
+
+void
+	TerminalView_ZoomToCursor					(TerminalViewRef					inView);
 
 void
 	TerminalView_ZoomToSearchResults			(TerminalViewRef					inView);

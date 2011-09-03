@@ -45,15 +45,23 @@ class NSWindow;
 //@{
 
 void
-	CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*,
-													 NSWindow*);
+	CocoaAnimation_TransitionWindowForDuplicate				(NSWindow*,
+															 NSWindow*);
 
 void
-	CocoaAnimation_TransitionWindowForHide			(NSWindow*,
-													 CGRect);
+	CocoaAnimation_TransitionWindowForHide					(NSWindow*,
+															 CGRect);
 
 void
-	CocoaAnimation_TransitionWindowForRemove		(NSWindow*);
+	CocoaAnimation_TransitionWindowForRemove				(NSWindow*);
+
+void
+	CocoaAnimation_TransitionWindowSectionForOpen			(NSWindow*,
+															 CGRect);
+
+void
+	CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*,
+															 CGRect);
 
 //@}
 

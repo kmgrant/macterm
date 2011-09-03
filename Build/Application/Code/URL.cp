@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -59,6 +59,7 @@
 #include "QuillsSession.h"
 #include "TerminalScreenRef.typedef.h"
 #include "TerminalView.h"
+#include "TerminalWindow.h"
 #include "Terminology.h"
 #include "URL.h"
 
@@ -140,31 +141,7 @@ URL_HandleForScreenView		(TerminalScreenRef	UNUSED_ARGUMENT(inScreen),
 			StringUtilities_CFToUTF8(urlAsCFString, urlUTF8);
 			if (false == urlUTF8.empty())
 			{
-				WindowRef		screenWindow = TerminalView_ReturnWindow(inView);
-				RgnHandle		selectionRegion = TerminalView_ReturnSelectedTextAsNewRegion(inView);
-				Rect			screenRect;
-				Rect			selectionRect;
-				
-				
-				RegionUtilities_GetWindowDeviceGrayRect(screenWindow, &screenRect);
-				
-				// display “launch application zoom rectangles” if an external helper is used
-				if (nullptr != selectionRegion)
-				{
-					CGrafPtr	oldPort = nullptr;
-					GDHandle	oldDevice = nullptr;
-					
-					
-					GetGWorld(&oldPort, &oldDevice);
-					SetPortWindowPort(screenWindow);
-					LocalToGlobalRegion(selectionRegion);
-					SetGWorld(oldPort, oldDevice);
-					GetRegionBounds(selectionRegion, &selectionRect);
-					TerminalView_FlashSelection(inView);
-					(OSStatus)ZoomRects(&selectionRect, &screenRect, 20/* steps, arbitrary */, kZoomAccelerate);
-					Memory_DisposeRegion(&selectionRegion);
-				}
-				
+				TerminalView_ZoomOpenFromSelection(inView);
 				try
 				{
 					Quills::Session::handle_url(urlUTF8);
@@ -179,9 +156,6 @@ URL_HandleForScreenView		(TerminalScreenRef	UNUSED_ARGUMENT(inScreen),
 					
 					
 					Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());
-					// in the event of an error, show “dying zoom rectangles”
-					SetRect(&selectionRect, 0, 0, 0, 0);
-					(OSStatus)ZoomRects(&screenRect, &selectionRect, 20/* steps, arbitrary */, kZoomDecelerate);
 				}
 			}
 		}

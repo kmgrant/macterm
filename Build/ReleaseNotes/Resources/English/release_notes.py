@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110902',
     '20110831',
     '20110829',
     '20110827',
@@ -411,6 +412,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110902': [
+        'Animation for highlighting search results has been greatly enhanced.',
+        'Animation for opening URLs has been greatly enhanced.',
+        'Animation for "Find Cursor" has been greatly enhanced.',
+    ],
     '20110831': [
         'Fixed offscreen windows when "Duplicate Session" was used repeatedly during an animation.',
         'Animation for hiding terminal windows has been greatly enhanced.',
