@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110910',
     '20110902',
     '20110831',
     '20110829',
@@ -412,6 +413,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110910': [
+        'Full Screen mode toolbar icon has been horizontally flipped for better consistency with Apple convention.',
+    ],
     '20110902': [
         'Animation for highlighting search results has been greatly enhanced.',
         'Animation for opening URLs has been greatly enhanced.',
