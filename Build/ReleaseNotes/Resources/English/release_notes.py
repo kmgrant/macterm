@@ -414,6 +414,8 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20110910': [
+        'Fixed Function Keys palette so that the pop-up menu is no longer killed by closing the window.',
+        'Fixed Function Keys palette so that the pop-up menu cannot be visible if the window is hidden.',
         'Full Screen mode toolbar icon has been horizontally flipped for better consistency with Apple convention.',
     ],
     '20110902': [

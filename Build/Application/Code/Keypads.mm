@@ -1315,6 +1315,10 @@ sharedFunctionKeysPanelController
 	if (nil == gKeypads_FunctionKeysPanelController)
 	{
 		gKeypads_FunctionKeysPanelController = [[[self class] allocWithZone:NULL] init];
+		
+		// force the window to load because its settings are needed
+		// elsewhere in the user interface (e.g. menu items)
+		(NSWindow*)[gKeypads_FunctionKeysPanelController window];
 	}
 	return gKeypads_FunctionKeysPanelController;
 }// sharedFunctionKeysPanelController
@@ -1341,7 +1345,9 @@ Destructor.
 - (void)
 dealloc
 {
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidBecomeKeyNotification object:[self window]];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidResizeNotification object:[self window]];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowWillCloseNotification object:[self window]];
 	[menuChildWindow release];
 	[super dealloc];
 }// dealloc
@@ -2531,6 +2537,22 @@ typeF48:(id)	sender
 
 
 /*!
+Responds to a focus of the keypad by ensuring that the
+title bar’s pop-up menu is also visible.
+
+(4.0)
+*/
+- (void)
+windowDidBecomeKey:(NSNotification*)	aNotification
+{
+	NSWindow*	keyWindow = (NSWindow*)[aNotification object];
+	
+	
+	[self->menuChildWindow orderWindow:NSWindowAbove relativeTo:[keyWindow windowNumber]];
+}// windowDidBecomeKey:
+
+
+/*!
 Responds to a change in the frame of the window by ensuring
 that the pop-up menu still seems to be “attached” to the
 window’s title bar.
@@ -2546,6 +2568,23 @@ windowDidResize:(NSNotification*)		aNotification
 	
 	[self->menuChildWindow setFrame:[self popUpMenuButtonFrame] display:YES];
 }// windowDidResize:
+
+
+/*!
+Responds to a close of the keypad by ensuring that the
+title bar’s pop-up menu is also removed.
+
+(4.0)
+*/
+- (void)
+windowWillClose:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	//NSWindow*	closingWindow = (NSWindow*)[aNotification object];
+	
+	
+	[self->menuChildWindow orderOut:NSApp];
+}// windowWillClose:
 
 
 #pragma mark NSWindowController
@@ -2604,7 +2643,10 @@ windowDidLoad
 	// must be called to work on any OS version)
 	[self->menuChildWindow setLevel:[[self window] level]];
 	[[self window] addChildWindow:self->menuChildWindow ordered:NSWindowAbove];
-	[self->menuChildWindow orderWindow:NSWindowAbove relativeTo:[[self window] windowNumber]];
+	if ([[self window] isVisible])
+	{
+		[self->menuChildWindow orderWindow:NSWindowAbove relativeTo:[[self window] windowNumber]];
+	}
 	
 	// update the menu and the global variable based on user preferences
 	{
@@ -2646,8 +2688,12 @@ windowDidLoad
 	[layoutMenu setAutoenablesItems:NO];
 	
 	// keep the window attached to the title bar
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidBecomeKey:)
+														name:NSWindowDidBecomeKeyNotification object:[self window]];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidResize:)
 														name:NSWindowDidResizeNotification object:[self window]];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillClose:)
+														name:NSWindowWillCloseNotification object:[self window]];
 }// windowDidLoad
 
 
