@@ -27,11 +27,12 @@
 ###############################################################*/
 
 // Mac includes
-#import <Carbon/Carbon.h>
+#import <CoreFoundation/CoreFoundation.h>
 #import <Cocoa/Cocoa.h>
 
 // library includes
 #import <AutoPool.objc++.h>
+#import <CFRetainRelease.h>
 #import <CocoaUserDefaults.h>
 
 
@@ -74,6 +75,47 @@ CocoaUserDefaults_DeleteDomain	(CFStringRef	inName)
 	
 	
 	[[NSUserDefaults standardUserDefaults] removePersistentDomainForName:(NSString*)inName];
+	
+	// it seems that later versions of Mac OS X no longer like the idea
+	// of deleting arbitrary domains, so try to delete the requested
+	// domain’s property list file (and lockfile, if any) manually
+	{
+		FSRef		preferencesFolder;
+		OSStatus	error = FSFindFolder(kUserDomain, kPreferencesFolderType, kDontCreateFolder, &preferencesFolder);
+		
+		
+		if (noErr == error)
+		{
+			UInt8		folderPath[PATH_MAX];
+			
+			
+			// note that this call returns a null-terminated string; but out
+			// of paranoia, the array is terminated at its end anyway
+			error = FSRefMakePath(&preferencesFolder, folderPath, sizeof(folderPath));
+			folderPath[sizeof(folderPath) - 1] = '\0';
+			if (noErr == error)
+			{
+				CFRetainRelease		folderCFString(CFStringCreateWithCString(kCFAllocatorDefault,
+																				REINTERPRET_CAST(folderPath, char const*),
+																				kCFStringEncodingUTF8),
+													true/* is retained */);
+				NSString*			filePath = [[(NSString*)folderCFString.returnCFStringRef()
+													stringByAppendingPathComponent:(NSString*)inName]
+												stringByAppendingPathExtension:@"plist"];
+				
+				
+				if ((nil != filePath) && [[NSFileManager defaultManager] fileExistsAtPath:filePath])
+				{
+					[[NSFileManager defaultManager] removeFileAtPath:filePath handler:nil];
+				}
+				filePath = [filePath stringByAppendingPathExtension:@"lockfile"];
+				if ((nil != filePath) && [[NSFileManager defaultManager] fileExistsAtPath:filePath])
+				{
+					[[NSFileManager defaultManager] removeFileAtPath:filePath handler:nil];
+				}
+			}
+		}
+	}
 }// DeleteDomain
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
