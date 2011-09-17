@@ -654,6 +654,9 @@ inline Preferences_Tag
 //@{
 
 Preferences_Result
+	Preferences_PurgeAutosaveContexts		();
+
+Preferences_Result
 	Preferences_Save						();
 
 // DEPRECATED

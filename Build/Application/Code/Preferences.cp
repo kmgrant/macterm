@@ -35,6 +35,7 @@
 #include <algorithm>
 #include <functional>
 #include <iostream>
+#include <set>
 #include <stdexcept>
 #include <vector>
 
@@ -100,6 +101,7 @@
 namespace {
 
 CFStringEncoding const		kMy_SavedNameEncoding = kCFStringEncodingUnicode;
+CFStringRef const			kMy_PreferencesSubDomainAutoSave = CFSTR("net.macterm.MacTerm.autosave");
 CFStringRef const			kMy_PreferencesSubDomainFormats = CFSTR("net.macterm.MacTerm.formats");
 CFStringRef const			kMy_PreferencesSubDomainMacros = CFSTR("net.macterm.MacTerm.macros");
 CFStringRef const			kMy_PreferencesSubDomainSessions = CFSTR("net.macterm.MacTerm.sessions");
@@ -746,6 +748,8 @@ My_ContextReferenceLocker&	gMyContextRefLocks ()	{ static My_ContextReferenceLoc
 My_ContextReferenceTracker&	gMyContextValidRefs ()	{ static My_ContextReferenceTracker x; return x; }
 My_ContextInterface&		gFactoryDefaultsContext ()	{ static My_ContextCFDictionary x(Quills::Prefs::_FACTORY_DEFAULTS, createDefaultPrefDictionary()); return x; }
 My_ContextInterface&		gGeneralDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::GENERAL); return x; }
+My_ContextInterface&		gAutoSaveDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::_RESTORE_AT_LAUNCH); return x; }
+My_FavoriteContextList&		gAutoSaveNamedContexts ()	{ static My_FavoriteContextList x; return x; }
 My_ContextInterface&		gFormatDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::FORMAT); return x; }
 My_FavoriteContextList&		gFormatNamedContexts ()		{ static My_FavoriteContextList x; return x; }
 My_ContextInterface&		gMacroSetDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::MACRO_SET); return x; }
@@ -859,6 +863,7 @@ Preferences_Init ()
 	//            and relied upon in other methods.  They are also used in
 	//            the PrefsConverter.  Check for consistency!
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("prefs-version"));
+	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("auto-save"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("favorite-formats"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("favorite-macro-sets"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("favorite-sessions"));
@@ -3466,6 +3471,68 @@ Preferences_IsContextNameInUse		(Quills::Prefs::Class	inClass,
 
 
 /*!
+Deletes all auto-save contexts stored on disk (that is, all
+contexts in the Quills::Prefs::_RESTORE_AT_LAUNCH class).
+
+This should be invoked after the application has launched in
+normal mode (without requiring a restore).  It should also be
+invoked before new windows open, or any other action occurs
+that may require a brand new auto-save context.
+
+\retval kPreferences_ResultOK
+always; no other errors are currently defined
+
+(4.0)
+*/
+Preferences_Result
+Preferences_PurgeAutosaveContexts ()
+{
+	typedef std::set< My_ContextFavoritePtr >	ContextPtrSet;
+	Preferences_Result		result = kPreferences_ResultOK;
+	ContextPtrSet			destroyedPtrs; // used only to compare addresses, never to dereference them
+	
+	
+	for (My_FavoriteContextList::iterator toPtr = gAutoSaveNamedContexts().begin();
+			toPtr != gAutoSaveNamedContexts().end(); ++toPtr)
+	{
+		// don’t delete anything twice!
+		if (destroyedPtrs.end() == destroyedPtrs.find(*toPtr))
+		{
+			My_ContextFavoritePtr	ptr = *toPtr;
+			
+			
+			if (nullptr != ptr)
+			{
+				destroyedPtrs.insert(ptr);
+				ptr->destroy();
+			}
+		}
+	}
+	
+	// it is only safe to release the contexts while iterating over
+	// a different container, because Preferences_ReleaseContext()
+	// will directly erase elements from the original list above
+	for (ContextPtrSet::const_iterator toPtr = destroyedPtrs.begin();
+			toPtr != destroyedPtrs.end(); ++toPtr)
+	{
+		// a copy must be made, since releasing the context will
+		// overwrite the location of the reference (which originates
+		// inside the memory block that might be deallocated here)
+		Preferences_ContextRef		ref = (*toPtr)->selfRef;
+		
+		
+		Preferences_ReleaseContext(&ref);
+	}
+	
+	// the list should be empty at this point, but erase it anyway
+	// so that a global save has no ability to resurrect contexts
+	gAutoSaveNamedContexts().clear();
+	
+	return result;
+}// PurgeAutosaveContexts
+
+
+/*!
 Saves any in-memory preferences data model changes to
 disk, and updates the in-memory model with any new
 settings on disk.  This includes all contexts that
@@ -3487,6 +3554,7 @@ Preferences_Save ()
 	
 	
 	// make sure all open context dictionaries are in preferences too
+	std::for_each(gAutoSaveNamedContexts().begin(), gAutoSaveNamedContexts().end(), contextSave());
 	std::for_each(gFormatNamedContexts().begin(), gFormatNamedContexts().end(), contextSave());
 	std::for_each(gMacroSetNamedContexts().begin(), gMacroSetNamedContexts().end(), contextSave());
 	std::for_each(gSessionNamedContexts().begin(), gSessionNamedContexts().end(), contextSave());
@@ -4515,6 +4583,10 @@ returnClassDomainNamePrefix		(Quills::Prefs::Class	inClass)
 	
 	switch (inClass)
 	{
+	case Quills::Prefs::_RESTORE_AT_LAUNCH:
+		result = kMy_PreferencesSubDomainAutoSave;
+		break;
+	
 	case Quills::Prefs::FORMAT:
 		result = kMy_PreferencesSubDomainFormats;
 		break;
@@ -5477,6 +5549,11 @@ copyClassDomainCFArray	(Quills::Prefs::Class	inClass,
 		result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
+	case Quills::Prefs::_RESTORE_AT_LAUNCH:
+		readApplicationArrayPreference(CFSTR("auto-save"), outCFArrayOfCFStrings);
+		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
+		break;
+	
 	case Quills::Prefs::FORMAT:
 		readApplicationArrayPreference(CFSTR("favorite-formats"), outCFArrayOfCFStrings);
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
@@ -5543,6 +5620,7 @@ createAllPreferencesContextsFromDisk ()
 	
 	// for every class that can have collections, create ALL contexts
 	// (based on saved names) for that class, so that the list is current
+	allClassesSupportingCollections.push_back(Quills::Prefs::_RESTORE_AT_LAUNCH);
 	allClassesSupportingCollections.push_back(Quills::Prefs::WORKSPACE);
 	allClassesSupportingCollections.push_back(Quills::Prefs::SESSION);
 	allClassesSupportingCollections.push_back(Quills::Prefs::TERMINAL);
@@ -5825,6 +5903,10 @@ getDefaultContext	(Quills::Prefs::Class		inClass,
 	outContextPtr = nullptr;
 	switch (inClass)
 	{
+	case Quills::Prefs::_RESTORE_AT_LAUNCH:
+		outContextPtr = &(gAutoSaveDefaultContext());
+		break;
+	
 	case Quills::Prefs::FORMAT:
 		outContextPtr = &(gFormatDefaultContext());
 		break;
@@ -6646,6 +6728,10 @@ getListOfContexts	(Quills::Prefs::Class			inClass,
 	outListPtr = nullptr;
 	switch (inClass)
 	{
+	case Quills::Prefs::_RESTORE_AT_LAUNCH:
+		outListPtr = &gAutoSaveNamedContexts();
+		break;
+	
 	case Quills::Prefs::FORMAT:
 		outListPtr = &gFormatNamedContexts();
 		break;
@@ -8038,6 +8124,10 @@ overwriteClassDomainCFArray		(Quills::Prefs::Class	inClass,
 	// figure out which main application preferences key should hold this list of domains
 	switch (inClass)
 	{
+	case Quills::Prefs::_RESTORE_AT_LAUNCH:
+		setApplicationPreference(CFSTR("auto-save"), inCFArrayOfCFStrings);
+		break;
+	
 	case Quills::Prefs::FORMAT:
 		setApplicationPreference(CFSTR("favorite-formats"), inCFArrayOfCFStrings);
 		break;

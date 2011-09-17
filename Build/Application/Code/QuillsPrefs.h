@@ -66,6 +66,9 @@ Preferences are grouped in the following classes:\n\
 - WORKSPACE -- Windows that are spawned at the same time.\n\
 - _FACTORY_DEFAULTS -- Represents the DefaultPreferences.plist,\n\
   for internal use only.\n\
+- _RESTORE_AT_LAUNCH -- Represents settings that are saved\n\
+  automatically and restored when requested by the user;\n\
+  transient and for internal use only.\n\
 ") Prefs;
 #endif
 class Prefs
@@ -81,6 +84,7 @@ public:
 		TRANSLATION = 5,
 		WORKSPACE = 6,
 		_FACTORY_DEFAULTS = 100,
+		_RESTORE_AT_LAUNCH = 101
 	};
 	
 #if SWIG

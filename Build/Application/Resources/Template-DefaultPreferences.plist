@@ -29,6 +29,8 @@
 
 <plist version="1.0">
 <dict>
+	<key>auto-save</key>
+	<array/>
 	<key>command-key-emacs-move-down</key>
 	<string></string>
 	<key>command-key-emacs-move-left</key>
