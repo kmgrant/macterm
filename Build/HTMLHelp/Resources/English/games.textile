@@ -97,9 +97,9 @@ If you will play this game often, you should create a new Session
  configuration information in the "Custom New Session" sheet.
 
 When the Sessions pane (or sheet) is visible, you will see a
- "Command:" field.  Either directly type in the telnet command or
- other command needed to reach the game, or use the button
- "Server Settings..." to help you compose a command.
+ command line field.  Either directly type in the command needed
+ to reach the game (such as some telnet setup), or use the button
+ "Remote Shell..." to help you compose a command.
 
 The pane also has pop-up menus that will let you choose the
  Terminal, Format and Translation that you created above.  This

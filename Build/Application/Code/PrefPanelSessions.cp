@@ -96,8 +96,11 @@ the NIBs from the package "PrefPanelSessions.nib".
 In addition, they MUST be unique across all panels.
 */
 HIViewID const	idMyFieldCommandLine			= { 'CmdL', 0/* ID */ };
+HIViewID const	idMyButtonShellCommand			= { 'CmSh', 0/* ID */ };
+HIViewID const	idMyButtonLogInShellCommand		= { 'CmLS', 0/* ID */ };
+HIViewID const	idMyPopUpMenuCopySessionCommand	= { 'CpSs', 0/* ID */ };
 HIViewID const	idMyButtonConnectToServer		= { 'CtoS', 0/* ID */ };
-HIViewID const	idMyHelpTextConnectToServer		= { 'ConH', 0/* ID */ };
+HIViewID const	idMySeparatorCommandRegion		= { 'ConH', 0/* ID */ };
 HIViewID const	idMyPopUpMenuTerminal			= { 'Term', 0/* ID */ };
 HIViewID const	idMyPopUpMenuFormat				= { 'Frmt', 0/* ID */ };
 HIViewID const	idMyPopUpMenuTranslation		= { 'Xlat', 0/* ID */ };
@@ -255,6 +258,9 @@ struct My_SessionsPanelResourceUI
 	panelChanged	(Panel_Ref, Panel_Message, void*);
 	
 	void
+	readCommandLinePreferenceFromSession	(Preferences_ContextRef);
+	
+	void
 	readPreferences		(Preferences_ContextRef);
 	
 	UInt16
@@ -267,6 +273,9 @@ struct My_SessionsPanelResourceUI
 	
 	void
 	rebuildFormatMenu ();
+	
+	void
+	rebuildSessionMenu ();
 	
 	void
 	rebuildTerminalMenu ();
@@ -297,6 +306,9 @@ struct My_SessionsPanelResourceUI
 	setCommandLine	(CFStringRef);
 	
 	Boolean
+	setCommandLineFromArray		(CFArrayRef);
+	
+	Boolean
 	updateCommandLine	(Session_Protocol, CFStringRef, UInt16, CFStringRef);
 
 protected:
@@ -308,6 +320,7 @@ protected:
 
 private:
 	MenuItemIndex						_numberOfFormatItemsAdded;		//!< used to manage Format pop-up menu
+	MenuItemIndex						_numberOfSessionItemsAdded;		//!< used to manage Copy From Session Preferences pop-up menu
 	MenuItemIndex						_numberOfTerminalItemsAdded;	//!< used to manage Terminal pop-up menu
 	MenuItemIndex						_numberOfTranslationItemsAdded;	//!< used to manage Translation pop-up menu
 	HIViewWrap							_fieldCommandLine;				//!< text of Unix command line to run
@@ -2208,6 +2221,7 @@ idealHeight						(0.0),
 mainView						(createContainerView(inPanel, inOwningWindow)
 									<< HIViewWrap_AssertExists),
 _numberOfFormatItemsAdded		(0),
+_numberOfSessionItemsAdded		(0),
 _numberOfTerminalItemsAdded		(0),
 _numberOfTranslationItemsAdded	(0),
 _fieldCommandLine				(HIViewWrap(idMyFieldCommandLine, inOwningWindow)
@@ -2327,7 +2341,7 @@ deltaSize	(HIViewRef		inContainer,
 	HIViewWrap						viewWrap;
 	
 	
-	viewWrap = HIViewWrap(idMyHelpTextConnectToServer, kPanelWindow);
+	viewWrap = HIViewWrap(idMySeparatorCommandRegion, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	viewWrap = HIViewWrap(idMyHelpTextPresets, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
@@ -2490,6 +2504,55 @@ panelChanged	(Panel_Ref		inPanel,
 
 
 /*!
+Fills in the command-line field using the given Session context.
+If the Session does not have a command line argument array, the
+command line is generated based on remote server information;
+and if even that fails, the Default settings will be used.
+
+(4.0)
+*/
+void
+My_SessionsPanelResourceUI::
+readCommandLinePreferenceFromSession	(Preferences_ContextRef		inSession)
+{
+	CFArrayRef				argumentListCFArray = nullptr;
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	
+	prefsResult = Preferences_ContextGetData(inSession, kPreferences_TagCommandLine,
+												sizeof(argumentListCFArray), &argumentListCFArray);
+	if ((kPreferences_ResultOK != prefsResult) ||
+		(false == this->setCommandLineFromArray(argumentListCFArray)))
+	{
+		// ONLY if no actual command line was stored, generate a
+		// command line based on other settings (like host name)
+		Session_Protocol	givenProtocol = kSession_ProtocolSSH1;
+		CFStringRef			hostCFString = nullptr;
+		UInt16				portNumber = 0;
+		CFStringRef			userCFString = nullptr;
+		UInt16				preferenceCountOK = 0;
+		Boolean				updateOK = false;
+		
+		
+		preferenceCountOK = this->readPreferencesForRemoteServers(inSession, true/* search defaults too */,
+																	givenProtocol, hostCFString, portNumber, userCFString);
+		if (4 != preferenceCountOK)
+		{
+			Console_Warning(Console_WriteLine, "unable to read one or more remote server preferences!");
+		}
+		updateOK = this->updateCommandLine(givenProtocol, hostCFString, portNumber, userCFString);
+		if (false == updateOK)
+		{
+			Console_Warning(Console_WriteLine, "unable to update some part of command line based on given preferences!");
+		}
+		
+		CFRelease(hostCFString), hostCFString = nullptr;
+		CFRelease(userCFString), userCFString = nullptr;
+	}
+}// readCommandLinePreferenceFromSession
+
+
+/*!
 Updates the display based on the given settings.
 
 (3.1)
@@ -2564,54 +2627,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		}
 		
 		// set command line
-		{
-			CFArrayRef		argumentListCFArray = nullptr;
-			
-			
-			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagCommandLine,
-														sizeof(argumentListCFArray), &argumentListCFArray);
-			if ((kPreferences_ResultOK == prefsResult) &&
-				(CFArrayGetCount(argumentListCFArray) > 0))
-			{
-				CFStringRef		concatenatedString = CFStringCreateByCombiningStrings
-														(kCFAllocatorDefault, argumentListCFArray,
-															CFSTR(" ")/* separator */);
-				
-				
-				if (nullptr != concatenatedString)
-				{
-					this->setCommandLine(concatenatedString);
-					CFRelease(concatenatedString), concatenatedString = nullptr;
-				}
-			}
-			else
-			{
-				// ONLY if no actual command line was stored, generate a
-				// command line based on other settings (like host name)
-				Session_Protocol	givenProtocol = kSession_ProtocolSSH1;
-				CFStringRef			hostCFString = nullptr;
-				UInt16				portNumber = 0;
-				CFStringRef			userCFString = nullptr;
-				UInt16				preferenceCountOK = 0;
-				Boolean				updateOK = false;
-				
-				
-				preferenceCountOK = this->readPreferencesForRemoteServers(inSettings, true/* search defaults too */,
-																			givenProtocol, hostCFString, portNumber, userCFString);
-				if (4 != preferenceCountOK)
-				{
-					Console_Warning(Console_WriteLine, "unable to read one or more remote server preferences!");
-				}
-				updateOK = this->updateCommandLine(givenProtocol, hostCFString, portNumber, userCFString);
-				if (false == updateOK)
-				{
-					Console_Warning(Console_WriteLine, "unable to update some part of command line based on given preferences!");
-				}
-				
-				CFRelease(hostCFString), hostCFString = nullptr;
-				CFRelease(userCFString), userCFString = nullptr;
-			}
-		}
+		readCommandLinePreferenceFromSession(inSettings);
 	}
 }// My_SessionsPanelResourceUI::readPreferences
 
@@ -2762,6 +2778,21 @@ rebuildFormatMenu ()
 	rebuildFavoritesMenu(idMyPopUpMenuFormat, kCommandFormatDefault/* anchor */, Quills::Prefs::FORMAT,
 							kCommandFormatByFavoriteName/* command ID of new items */, this->_numberOfFormatItemsAdded);
 }// My_SessionsPanelResourceUI::rebuildFormatMenu
+
+
+/*!
+Deletes all the items in the Copy From Session Preferences
+pop-up menu and rebuilds the menu based on current preferences.
+
+(4.0)
+*/
+void
+My_SessionsPanelResourceUI::
+rebuildSessionMenu ()
+{
+	rebuildFavoritesMenu(idMyPopUpMenuCopySessionCommand, kCommandCopySessionDefaultCommandLine/* anchor */, Quills::Prefs::SESSION,
+							kCommandCopySessionFavoriteCommandLine/* command ID of new items */, this->_numberOfSessionItemsAdded);
+}// My_SessionsPanelResourceUI::rebuildSessionMenu
 
 
 /*!
@@ -3019,6 +3050,132 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					
 					(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyFieldCommandLine, window));
 					result = noErr;
+				}
+				break;
+			
+			case kCommandCopyLogInShellCommandLine:
+				{
+					CFArrayRef		argumentCFArray = nullptr;
+					Local_Result	localResult = kLocal_ResultOK;
+					Boolean			isError = true;
+					
+					
+					localResult = Local_GetLoginShellCommandLine(argumentCFArray);
+					if ((kLocal_ResultOK == localResult) && (nullptr != argumentCFArray))
+					{
+						if (resourceInterfacePtr->setCommandLineFromArray(argumentCFArray))
+						{
+							isError = false;
+						}
+						CFRelease(argumentCFArray), argumentCFArray = nullptr;
+					}
+					
+					if (isError)
+					{
+						// failed...
+						Sound_StandardAlert();
+					}
+					
+					result = noErr;
+				}
+				break;
+			
+			case kCommandCopyShellCommandLine:
+				{
+					CFArrayRef		argumentCFArray = nullptr;
+					Local_Result	localResult = kLocal_ResultOK;
+					Boolean			isError = true;
+					
+					
+					localResult = Local_GetDefaultShellCommandLine(argumentCFArray);
+					if ((kLocal_ResultOK == localResult) && (nullptr != argumentCFArray))
+					{
+						if (resourceInterfacePtr->setCommandLineFromArray(argumentCFArray))
+						{
+							isError = false;
+						}
+						CFRelease(argumentCFArray), argumentCFArray = nullptr;
+					}
+					
+					if (isError)
+					{
+						// failed...
+						Sound_StandardAlert();
+					}
+					
+					result = noErr;
+				}
+				break;
+			
+			case kCommandCopySessionDefaultCommandLine:
+				{
+					Boolean						isError = true;
+					Preferences_ContextRef		defaultContext = nullptr;
+					Preferences_Result			prefsResult = Preferences_GetDefaultContext
+																(&defaultContext, Quills::Prefs::SESSION);
+					
+					
+					// update the pop-up button
+					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					
+					if (kPreferences_ResultOK == prefsResult)
+					{
+						resourceInterfacePtr->readCommandLinePreferenceFromSession(defaultContext);
+						isError = false;
+					}
+					
+					if (isError)
+					{
+						// failed...
+						Sound_StandardAlert();
+					}
+					
+					// pass this handler through to the window
+					result = eventNotHandledErr;
+					
+					result = noErr;
+				}
+				break;
+			
+			case kCommandCopySessionFavoriteCommandLine:
+				{
+					Boolean		isError = true;
+					
+					
+					// update the pop-up button
+					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					
+					// determine the name of the selected item
+					if (received.attributes & kHICommandFromMenu)
+					{
+						CFStringRef		collectionName = nullptr;
+						
+						
+						if (noErr == CopyMenuItemTextAsCFString(received.source.menu.menuRef,
+																received.source.menu.menuItemIndex, &collectionName))
+						{
+							Preferences_ContextWrap		sessionContext(Preferences_NewContextFromFavorites
+																		(Quills::Prefs::SESSION, collectionName),
+																		true/* is retained */);
+							
+							
+							if (sessionContext.exists())
+							{
+								resourceInterfacePtr->readCommandLinePreferenceFromSession(sessionContext.returnRef());
+								isError = false;
+							}
+							CFRelease(collectionName), collectionName = nullptr;
+						}
+					}
+					
+					if (isError)
+					{
+						// failed...
+						Sound_StandardAlert();
+					}
+					
+					// pass this handler through to the window
+					result = eventNotHandledErr;
 				}
 				break;
 			
@@ -3317,6 +3474,39 @@ setCommandLine		(CFStringRef	inCommandLine)
 {
 	SetControlTextWithCFString(_fieldCommandLine, inCommandLine);
 }// My_SessionsPanelResourceUI::setCommandLine
+
+
+/*!
+Calls setCommandLine() with a string constructed from the
+specified list of individual command-line arguments (the first
+of which is a program name).  Returns true only if a string
+could be constructed.
+
+(4.0)
+*/
+Boolean
+My_SessionsPanelResourceUI::
+setCommandLineFromArray		(CFArrayRef		inArgumentListCFArray)
+{
+	Boolean		result = false;
+	
+	
+	if (CFArrayGetCount(inArgumentListCFArray) > 0)
+	{
+		CFRetainRelease		concatenatedString(CFStringCreateByCombiningStrings
+												(kCFAllocatorDefault, inArgumentListCFArray,
+													CFSTR(" ")/* separator */),
+												true/* is retained */);
+		
+		
+		if (concatenatedString.exists())
+		{
+			this->setCommandLine(concatenatedString.returnCFStringRef());
+			result = true;
+		}
+	}
+	return result;
+}// setCommandLineFromArray
 
 
 /*!
@@ -3661,6 +3851,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kPreferences_ChangeNumberOfContexts:
 	case kPreferences_ChangeContextName:
 		ptr->rebuildFormatMenu();
+		ptr->rebuildSessionMenu();
 		ptr->rebuildTerminalMenu();
 		ptr->rebuildTranslationMenu();
 		break;

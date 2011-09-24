@@ -475,15 +475,29 @@ h3(#sessionresource). Resource
 
 h4. Command
 
-A Resource is actually defined entirely by its command line
- field.  For local Unix commands, just type in whatever you want
- to run.
+A Resource is actually defined entirely by its command line field,
+ but some helpers are available to make it easier to produce the
+ kind of command that you need.
 
-For remote sessions, you can either enter a command yourself, or
- use the "Server Settings..." button to help you.  This button
- opens the Servers panel.  Note that edits in the Servers panel
- overwrite the command line field!  To learn more about the
- Servers panel, review "its documentation":windows.html#serverbrowser.
+bq. Note that even if you use a helper (such as the "Shell" button)
+ to initialize a command, you are still allowed to edit the
+ command further.
+
+The "Shell" button writes a command to invoke your default shell.
+ For most users this is set by the version of Mac OS X that you
+ have, but MacTerm will also respect any custom shell that was
+ selected by the @chsh@ Unix utility.
+
+The "Log-In Shell" button writes a command to invoke your shell,
+ but in a more controlled way (for instance, Unix environment is
+ not inherited).  In most shells this will also affect how the
+ shell starts, so you may see slightly different behavior; for
+ example, you may see a welcome message.
+
+The "Remote Shell..." button opens the Servers panel.  Note that
+ edits in the Servers panel overwrite the command line field!  To
+ learn more about the Servers panel, review
+ "its documentation":windows.html#serverbrowser.
 
 It is important to note that MacTerm splits this line into
  words (on whitespace), and does not interpret *any* characters:

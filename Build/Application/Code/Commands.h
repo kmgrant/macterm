@@ -361,6 +361,10 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandUseBackupFont					'XUBF'		// multiple interfaces
 #define kCommandShowProtocolOptions				'POpt'		// multiple interfaces
 #define kCommandLookUpSelectedHostName			'Look'		// multiple interfaces
+#define kCommandCopyLogInShellCommandLine		'CmLS'		// multiple interfaces
+#define kCommandCopyShellCommandLine			'CmSh'		// multiple interfaces
+#define kCommandCopySessionDefaultCommandLine	'CmDf'		// multiple interfaces
+#define kCommandCopySessionFavoriteCommandLine	'CmFv'		// multiple interfaces
 #define kCommandEditCommandLine					'ECmd'		// multiple interfaces
 #define kCommandTerminalDefault					'TrmD'		// multiple interfaces
 #define kCommandTerminalByFavoriteName			'TFav'		// multiple interfaces

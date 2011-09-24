@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110924',
     '20110910',
     '20110902',
     '20110831',
@@ -413,6 +414,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110924': [
+        'Preferences window Sessions pane Resource tab (and Custom New Session sheet) now allow a command line to be initialized from the Shell or Log-In Shell types.  The previous "Server Settings..." option is still available but it is now called Remote Shell.',
+        'Preferences window Sessions pane Resource tab (and Custom New Session sheet) now allow a command line to be initialized by copying the command line of any other Session Favorite.  Note that this is not a permanent association, it is akin to copying and pasting from another set of preferences; and the command line can still be customized afterwards.',
+    ],
     '20110910': [
         'Fixed Function Keys palette so that the pop-up menu is no longer killed by closing the window.',
         'Fixed Function Keys palette so that the pop-up menu cannot be visible if the window is hidden.',
