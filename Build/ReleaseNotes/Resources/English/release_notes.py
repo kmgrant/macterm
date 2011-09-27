@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110925',
     '20110924',
     '20110910',
     '20110902',
@@ -414,6 +415,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110925': [
+        "Fixed Preferences window Sessions pane Resource tab (and Custom New Session sheet) so that command lines won't be silently ignored in certain cases after being constructed by one of the top buttons or the predefined Sessions menu.",
+    ],
     '20110924': [
         'Preferences window Sessions pane Resource tab (and Custom New Session sheet) now allow a command line to be initialized from the Shell or Log-In Shell types.  The previous "Server Settings..." option is still available but it is now called Remote Shell.',
         'Preferences window Sessions pane Resource tab (and Custom New Session sheet) now allow a command line to be initialized by copying the command line of any other Session Favorite.  Note that this is not a permanent association, it is akin to copying and pasting from another set of preferences; and the command line can still be customized afterwards.',

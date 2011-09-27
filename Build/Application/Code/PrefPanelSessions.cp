@@ -3055,9 +3055,11 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 			
 			case kCommandCopyLogInShellCommandLine:
 				{
-					CFArrayRef		argumentCFArray = nullptr;
-					Local_Result	localResult = kLocal_ResultOK;
-					Boolean			isError = true;
+					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																					My_SessionsPanelResourceDataPtr);
+					CFArrayRef							argumentCFArray = nullptr;
+					Local_Result						localResult = kLocal_ResultOK;
+					Boolean								isError = true;
 					
 					
 					localResult = Local_GetLoginShellCommandLine(argumentCFArray);
@@ -3065,6 +3067,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					{
 						if (resourceInterfacePtr->setCommandLineFromArray(argumentCFArray))
 						{
+							resourceInterfacePtr->saveFieldPreferences(dataPtr->dataModel);
 							isError = false;
 						}
 						CFRelease(argumentCFArray), argumentCFArray = nullptr;
@@ -3082,9 +3085,11 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 			
 			case kCommandCopyShellCommandLine:
 				{
-					CFArrayRef		argumentCFArray = nullptr;
-					Local_Result	localResult = kLocal_ResultOK;
-					Boolean			isError = true;
+					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																					My_SessionsPanelResourceDataPtr);
+					CFArrayRef							argumentCFArray = nullptr;
+					Local_Result						localResult = kLocal_ResultOK;
+					Boolean								isError = true;
 					
 					
 					localResult = Local_GetDefaultShellCommandLine(argumentCFArray);
@@ -3092,6 +3097,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					{
 						if (resourceInterfacePtr->setCommandLineFromArray(argumentCFArray))
 						{
+							resourceInterfacePtr->saveFieldPreferences(dataPtr->dataModel);
 							isError = false;
 						}
 						CFRelease(argumentCFArray), argumentCFArray = nullptr;
@@ -3109,10 +3115,12 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 			
 			case kCommandCopySessionDefaultCommandLine:
 				{
-					Boolean						isError = true;
-					Preferences_ContextRef		defaultContext = nullptr;
-					Preferences_Result			prefsResult = Preferences_GetDefaultContext
-																(&defaultContext, Quills::Prefs::SESSION);
+					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																					My_SessionsPanelResourceDataPtr);
+					Boolean								isError = true;
+					Preferences_ContextRef				defaultContext = nullptr;
+					Preferences_Result					prefsResult = Preferences_GetDefaultContext
+																		(&defaultContext, Quills::Prefs::SESSION);
 					
 					
 					// update the pop-up button
@@ -3121,6 +3129,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					if (kPreferences_ResultOK == prefsResult)
 					{
 						resourceInterfacePtr->readCommandLinePreferenceFromSession(defaultContext);
+						resourceInterfacePtr->saveFieldPreferences(dataPtr->dataModel);
 						isError = false;
 					}
 					
@@ -3139,7 +3148,9 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 			
 			case kCommandCopySessionFavoriteCommandLine:
 				{
-					Boolean		isError = true;
+					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																					My_SessionsPanelResourceDataPtr);
+					Boolean								isError = true;
 					
 					
 					// update the pop-up button
@@ -3162,6 +3173,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 							if (sessionContext.exists())
 							{
 								resourceInterfacePtr->readCommandLinePreferenceFromSession(sessionContext.returnRef());
+								resourceInterfacePtr->saveFieldPreferences(dataPtr->dataModel);
 								isError = false;
 							}
 							CFRelease(collectionName), collectionName = nullptr;
