@@ -12,7 +12,7 @@
     </object>
     <object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
       <bool key="EncodedWithXMLCoder">YES</bool>
-      <integer value="883"/>
+      <integer value="885"/>
     </object>
     <object class="NSArray" key="IBDocument.PluginDependencies">
       <bool key="EncodedWithXMLCoder">YES</bool>
@@ -1096,15 +1096,6 @@
                   <string key="NSTitle">Delete Entire Scrollback Buffer</string>
                   <string key="NSKeyEquiv">r</string>
                   <int key="NSKeyEquivModMask">1310720</int>
-                  <int key="NSMnemonicLoc">2147483647</int>
-                  <reference key="NSOnImage" ref="229763992"/>
-                  <reference key="NSMixedImage" ref="909111550"/>
-                </object>
-                <object class="NSMenuItem" id="684758835">
-                  <reference key="NSMenu" ref="762371197"/>
-                  <string key="NSTitle">Reset Graphics Characters</string>
-                  <string key="NSKeyEquiv">r</string>
-                  <int key="NSKeyEquivModMask">1572864</int>
                   <int key="NSMnemonicLoc">2147483647</int>
                   <reference key="NSOnImage" ref="229763992"/>
                   <reference key="NSMixedImage" ref="909111550"/>
@@ -2536,14 +2527,6 @@
         </object>
         <object class="IBConnectionRecord">
           <object class="IBActionConnection" key="connection">
-            <string key="label">performResetGraphicsCharactersOnly:</string>
-            <reference key="source" ref="412825009"/>
-            <reference key="destination" ref="684758835"/>
-          </object>
-          <int key="connectionID">1052</int>
-        </object>
-        <object class="IBConnectionRecord">
-          <object class="IBActionConnection" key="connection">
             <string key="label">performReset:</string>
             <reference key="source" ref="412825009"/>
             <reference key="destination" ref="35890147"/>
@@ -3762,7 +3745,6 @@
               <reference ref="154585218"/>
               <reference ref="617859858"/>
               <reference ref="916460096"/>
-              <reference ref="684758835"/>
               <reference ref="35890147"/>
             </object>
             <reference key="parent" ref="294058655"/>
@@ -3860,11 +3842,6 @@
           <object class="IBObjectRecord">
             <int key="objectID">904</int>
             <reference key="object" ref="916460096"/>
-            <reference key="parent" ref="762371197"/>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">905</int>
-            <reference key="object" ref="684758835"/>
             <reference key="parent" ref="762371197"/>
           </object>
           <object class="IBObjectRecord">
@@ -4480,7 +4457,6 @@
           <string>902.IBPluginDependency</string>
           <string>903.IBPluginDependency</string>
           <string>904.IBPluginDependency</string>
-          <string>905.IBPluginDependency</string>
           <string>906.IBPluginDependency</string>
           <string>907.IBPluginDependency</string>
           <string>908.IBPluginDependency</string>
@@ -4794,7 +4770,7 @@
           <string>{{560, 636}, {428, 283}}</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-          <string>{{489, 536}, {306, 383}}</string>
+          <string>{{482, 556}, {306, 363}}</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <object class="NSMutableDictionary">
             <bool key="EncodedWithXMLCoder">YES</bool>
@@ -4805,7 +4781,6 @@
           </object>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <integer value="1"/>
-          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -4981,7 +4956,6 @@
               <string>performRedo:</string>
               <string>performRename:</string>
               <string>performReset:</string>
-              <string>performResetGraphicsCharactersOnly:</string>
               <string>performRestart:</string>
               <string>performRestoreWorkspaceDefault:</string>
               <string>performSaveAs:</string>
@@ -5020,7 +4994,6 @@
             </object>
             <object class="NSMutableArray" key="dict.values">
               <bool key="EncodedWithXMLCoder">YES</bool>
-              <string>id</string>
               <string>id</string>
               <string>id</string>
               <string>id</string>
@@ -5210,7 +5183,6 @@
               <string>performRedo:</string>
               <string>performRename:</string>
               <string>performReset:</string>
-              <string>performResetGraphicsCharactersOnly:</string>
               <string>performRestart:</string>
               <string>performRestoreWorkspaceDefault:</string>
               <string>performSaveAs:</string>
@@ -5543,10 +5515,6 @@
               </object>
               <object class="IBActionInfo">
                 <string key="name">performReset:</string>
-                <string key="candidateClassName">id</string>
-              </object>
-              <object class="IBActionInfo">
-                <string key="name">performResetGraphicsCharactersOnly:</string>
                 <string key="candidateClassName">id</string>
               </object>
               <object class="IBActionInfo">

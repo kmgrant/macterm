@@ -4267,46 +4267,8 @@ Terminal_Reset		(TerminalScreenRef		inRef,
 	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr)
+	if (nullptr != dataPtr)
 	{
-		if (inFlags & kTerminal_ResetFlagsGraphicsCharacters)
-		{
-			// “rescue” the user by forcing graphics not to be used
-			{
-				Terminal_RangeDescription	range;
-				Terminal_LineRef			lineIterator = nullptr;
-				
-				
-				range.screen = dataPtr->selfRef;
-				range.firstRow = 0;
-				range.firstColumn = 0;
-				range.columnCount = dataPtr->text.visibleScreen.numberOfColumnsPermitted;
-				range.rowCount = dataPtr->screenBuffer.size();
-				
-				lineIterator = Terminal_NewMainScreenLineIterator(inRef, range.firstRow);
-				if (lineIterator != nullptr)
-				{
-					// remove this mode attribute from the current character set
-					dataPtr->current.characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOff;
-					
-					// force all visible characters to no longer use graphics
-					(Terminal_Result)Terminal_ChangeRangeAttributes
-										(dataPtr->selfRef, lineIterator/* first row */, range.rowCount,
-											range.firstColumn/* start */, range.firstColumn + range.columnCount/* past the end */,
-											false/* constrain to rectangle */, 0/* attributes to set */,
-											kTerminalTextAttributeVTGraphics/* attributes to clear */);
-					
-					// add the entire visible buffer to the text-change region;
-					// this should trigger things like Terminal View updates
-					//Console_WriteLine("text changed event: reset terminal");
-					changeNotifyForTerminal(dataPtr, kTerminal_ChangeTextEdited, &range);
-					
-					// destroy the iterator
-					Terminal_DisposeLineIterator(&lineIterator);
-				}
-			}
-		}
-		
 		// TEMPORARY - currently, this is not broken down into parts,
 		//             but if more flag bits are defined in the future
 		//             this should probably do exactly what is requested

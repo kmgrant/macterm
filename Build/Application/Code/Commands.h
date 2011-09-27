@@ -194,7 +194,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandTransmitOnInactivity			'KAlv'
 #define kCommandSpeechEnabled					'Talk'
 #define kCommandClearEntireScrollback			'ClSB'
-#define kCommandResetGraphicsCharacters			'NoGr'
 #define kCommandResetTerminal					'RTrm'
 
 // Map menu
@@ -752,9 +751,6 @@ performLocalEchoToggle:(id)_;
 
 - (IBAction)
 performReset:(id)_;
-
-- (IBAction)
-performResetGraphicsCharactersOnly:(id)_;
 
 - (IBAction)
 performSaveOnClearToggle:(id)_;

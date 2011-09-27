@@ -1005,13 +1005,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
-		case kCommandResetGraphicsCharacters:
-			if (isTerminal)
-			{
-				Terminal_Reset(activeScreen, kTerminal_ResetFlagsGraphicsCharacters);
-			}
-			break;
-		
 		case kCommandResetTerminal:
 			if (isTerminal)
 			{
@@ -5141,14 +5134,6 @@ performReset:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandResetTerminal, nullptr/* target */);
-}
-
-
-- (IBAction)
-performResetGraphicsCharactersOnly:(id)		sender
-{
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandResetGraphicsCharacters, nullptr/* target */);
 }
 
 

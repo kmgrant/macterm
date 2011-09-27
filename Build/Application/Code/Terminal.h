@@ -200,12 +200,6 @@ Controls Terminal_Reset().
 typedef UInt32 Terminal_ResetFlags;
 enum
 {
-	kTerminal_ResetFlagsGraphicsCharacters  = (1 << 0),		//!< pass this value to reset only the active
-															//!  character set; this is primarily used when
-															//!  something screws up (either in MacTerm or
-															//!  in the program using the terminal) that
-															//!  leaves the screen rendered entirely
-															//!  in the graphics character set
 	kTerminal_ResetFlagsAll					= 0xFFFFFFFF	//!< pass this value to do a full reset
 };
 

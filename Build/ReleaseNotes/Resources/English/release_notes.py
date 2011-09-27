@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110927',
     '20110925',
     '20110924',
     '20110910',
@@ -415,6 +416,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110927': [
+        '"Reset Graphics Characters" has been removed, as this is no longer feasible to support with Unicode storage and it is no longer likely to be a problem in a pure UTF-8 terminal.',
+    ],
     '20110925': [
         "Fixed Preferences window Sessions pane Resource tab (and Custom New Session sheet) so that command lines won't be silently ignored in certain cases after being constructed by one of the top buttons or the predefined Sessions menu.",
     ],
