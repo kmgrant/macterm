@@ -42,10 +42,12 @@
 #import <ApplicationServices/ApplicationServices.h>
 #import <Carbon/Carbon.h>
 #import <CoreServices/CoreServices.h>
+#import <objc/objc-runtime.h>
 #import <QuickTime/QuickTime.h>
 
 // library includes
 #import <CFUtilities.h>
+#import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
 #import <Console.h>
 #import <Cursors.h>
@@ -1814,8 +1816,15 @@ as well as any applicable drag highlights.
 - (void)
 drawRect:(NSRect)	rect
 {
-	Float32 const		kHorizontalScrollBarWidth = 15.0; // arbitrary; TEMPORARY, should retrieve dynamically from somewhere
-	Float32 const		kVerticalScrollBarWidth = 15.0; // arbitrary; TEMPORARY, should retrieve dynamically from somewhere
+	Boolean const		kHasOverlayScrollBars = (NULL != class_getClassMethod([NSScroller class], @selector(preferredScrollerStyle)))
+												? (NSScrollerStyleOverlay == [NSScroller preferredScrollerStyle])
+												: false;
+	Float32 const		kHorizontalScrollBarWidth = (kHasOverlayScrollBars)
+														? 0
+														: 15.0; // arbitrary; TEMPORARY, should retrieve dynamically from somewhere
+	Float32 const		kVerticalScrollBarWidth = (kHasOverlayScrollBars)
+													? 0
+													: 15.0; // arbitrary; TEMPORARY, should retrieve dynamically from somewhere
 	NSGraphicsContext*	contextMgr = [NSGraphicsContext currentContext];
 	CGContextRef		drawingContext = (CGContextRef)[contextMgr graphicsPort];
 	NSRect				entireRect = [self bounds];
