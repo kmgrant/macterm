@@ -11,10 +11,9 @@
 	
 	You MUST use "respondsToSelector:" or an equivalent
 	mechanism to guard against use of these methods on
-	older OSes.  The advantage of importing this file
-	is that you can directly invoke the target method
-	(in an if-statement, say) without seeing compiler
-	warnings.
+	older OSes.  The advantage of importing this file is
+	that you can directly invoke the target method (in
+	if-statements, say) without seeing compiler warnings.
 */
 /*###############################################################
 
@@ -60,27 +59,33 @@
 #define NSAppKitVersionNumber10_6 1038
 #endif
 
+
+
 #pragma mark Types
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5
 
-/*!
-Methods that are implemented ONLY on Mac OS X 10.5 and beyond.
-These declarations should match the latest SDK.
 
-WARNING:	You MUST use "respondsToSelector:" or an equivalent
-			mechanism to guard against use of these methods on
-			older OSes.  The advantage of importing this file
-			is that you can directly invoke the target method
-			(in an if-statement, say) without seeing compiler
-			warnings.
-*/
+// Things that are implemented ONLY on Mac OS X 10.5 and beyond.
+// These declarations should match the latest SDK.
+//
+// WARNING:	You MUST use "respondsToSelector:" or an equivalent
+//			mechanism to guard against use of these methods on
+//			older OSes.  The advantage of importing this file
+//			is that you can directly invoke the target method
+//			(in an if-statement, say) without seeing compiler
+//			warnings.  Note that "performSelector:" is also an
+//			option, but that is much more cumbersome for APIs
+//			that take or return non-objects.
+
+
 @interface NSWindow (NSWindowExtensionsFromLeopard)
 
 - (void)
 setCollectionBehavior:(unsigned int)_;
 
 @end
+
 
 @interface NSSegmentedControl (NSSegmentedControlExtensionsFromLeopard)
 
@@ -89,22 +94,25 @@ setSegmentStyle:(int/*NSInteger*//*NSSegmentStyle*/)_;
 
 @end
 
+
 #endif // MAC_OS_X_VERSION_10_5
 
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060 /* MAC_OS_X_VERSION_10_6 */
 
-/*!
-Methods that are implemented ONLY on Mac OS X 10.6 and beyond.
-These declarations should match the latest SDK.
+// Things that are implemented ONLY on Mac OS X 10.6 and beyond.
+// These declarations should match the latest SDK.
+//
+// WARNING:	You MUST use "respondsToSelector:" or an equivalent
+//			mechanism to guard against use of these methods on
+//			older OSes.  The advantage of importing this file
+//			is that you can directly invoke the target method
+//			(in an if-statement, say) without seeing compiler
+//			warnings.  Note that "performSelector:" is also an
+//			option, but that is much more cumbersome for APIs
+//			that take or return non-objects.
 
-WARNING:	You MUST use "respondsToSelector:" or an equivalent
-			mechanism to guard against use of these methods on
-			older OSes.  The advantage of importing this file
-			is that you can directly invoke the target method
-			(in an if-statement, say) without seeing compiler
-			warnings.
-*/
+
 @interface NSWindow (NSWindowExtensionsFromSnowLeopard)
 
 - (BOOL)
@@ -112,24 +120,32 @@ isOnActiveSpace;
 
 @end
 
+
 #endif // MAC_OS_X_VERSION_10_6
 
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1070 /* MAC_OS_X_VERSION_10_7 */
 
-/*!
-Methods that are implemented ONLY on Mac OS X 10.7 and beyond.
-These declarations should match the latest SDK.
+// Things that are implemented ONLY on Mac OS X 10.7 and beyond.
+// These declarations should match the latest SDK.
+//
+// WARNING:	You MUST use "respondsToSelector:" or an equivalent
+//			mechanism to guard against use of these methods on
+//			older OSes.  The advantage of importing this file
+//			is that you can directly invoke the target method
+//			(in an if-statement, say) without seeing compiler
+//			warnings.  Note that "performSelector:" is also an
+//			option, but that is much more cumbersome for APIs
+//			that take or return non-objects.
 
-WARNING:	You MUST use "respondsToSelector:" or an equivalent
-			mechanism to guard against use of these methods on
-			older OSes.  The advantage of importing this file
-			is that you can directly invoke the target method
-			(in an if-statement, say) without seeing compiler
-			warnings.  Note that "performSelector:" is also an
-			option, but that is much more cumbersome for APIs
-			that take or return non-objects.
-*/
+enum
+{
+	NSScrollerStyleLegacy	= 0,
+	NSScrollerStyleOverlay	= 1
+};
+typedef int/*NSInteger*/	NSScrollerStyle;
+
+
 @interface NSResponder (NSResponderExtensionsFromLion)
 
 - (void)
@@ -137,12 +153,25 @@ invalidateRestorableState;
 
 @end
 
+
+@interface NSScroller (NSScrollerExtensionsFromLion)
+
++ (NSScrollerStyle)
+preferredScrollerStyle;
+
+- (NSScrollerStyle)
+scrollerStyle;
+
+@end
+
+
 @interface NSWindow (NSWindowExtensionsFromLion)
 
 - (void)
 setAnimationBehavior:(int/*NSInteger*//*NSWindowAnimationBehavior*/)_;
 
 @end
+
 
 #endif // MAC_OS_X_VERSION_10_7
 

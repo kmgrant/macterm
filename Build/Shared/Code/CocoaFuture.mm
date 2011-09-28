@@ -1,5 +1,10 @@
 /*!	\file CocoaFuture.mm
 	\brief Methods available only in newer OS versions.
+	
+	Most symbols are only declared, to ease compilation.
+	But this file exists in case it is necessary to offer
+	implementations (using different names) of certain
+	functionality on older OSes.
 */
 /*###############################################################
 
@@ -26,10 +31,13 @@
 
 ###############################################################*/
 
-// NOTE:	This file has no implementation because the purpose of the
-//		module is to declare things only defined in certain versions
-//		of the OS.  There may come a time however when it is
-//		necessary to emulate routines in older versions of the OS
-//		instead of just bypassing them.
+
+// Mac includes
+#import <Cocoa/Cocoa.h>
+
+// library includes
+#import <CocoaFuture.objc++.h>
+
+
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
