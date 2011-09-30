@@ -1,27 +1,10 @@
+/*!	\file StringUtilities.h
+	\brief General-purpose routines for dealing with text.
+*/
 /*###############################################################
-
-	StringUtilities.h
 	
-	What powerful data access library would be complete without
-	a set of string utilities?  This module contains several
-	routines that supplement the Pascal String Functions from
-	the Mac OS Universal Interfaces.  The most powerful routine
-	is StringUtilities_PBuild(), which puts ParamText() to shame
-	by providing similar functionality but using *configurable*
-	metacharacters which can collectively be a length other than
-	two characters wide.  If you *need* to substitute more than
-	4 different things into a string, just put as many different
-	metacharacters as you need into the source string, call
-	StringUtilities_PMetaSet() to change the current set of 4,
-	and re-invoke StringUtilities_PBuild() as many times as you
-	need to.  Other useful string utilities let you *insert* a
-	string at the beginning of another string (the opposite of
-	concatenation), append a number to a string, and even
-	translate a MacTCP or Open Transport IP address into string
-	form.
-	
-	Data Access Library 1.3
-	� 1998-2004 by Kevin Grant
+	Data Access Library 2.6
+	� 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -58,18 +41,6 @@
 
 #pragma mark Constants
 
-#define EMPTY_PSTRING					"\p"
-#define kStringSubstitutionDefaultTag1	"\p%a"
-#define kStringSubstitutionDefaultTag2	"\p%b"
-#define kStringSubstitutionDefaultTag3	"\p%c"
-#define kStringSubstitutionDefaultTag4	"\p%d"
-#define kStringSubstitutionDefaultTag5	"\p%e"
-#define kStringSubstitutionDefaultTag6	"\p%f"
-enum
-{
-	kLengthMetacharacterDefault = 2
-};
-
 typedef UInt16 StringUtilitiesTruncationMethod;
 enum
 {
@@ -78,56 +49,20 @@ enum
 	kStringUtilities_TruncateAtBeginning = 2
 };
 
-#pragma mark Types
-
-typedef struct OpaqueTokenSet**		TokenSetRef;
-
-struct StringSubstitutionSpec
-{
-	ConstStringPtr		tagString;				// tag to look for (e.g. "\p^0")
-	ConstStringPtr		substitutionString;		// substitution value (e.g. "\pbar", given "\pfoo^0", yields "\pfoobar")
-};
-
 
 
 #pragma mark Public Methods
 
-/*###############################################################
-	STRING TOKENIZING UTILITIES
-###############################################################*/
+//!\name String Tokenizing
+//@{
 
-void
-	StringUtilities_PDisposeTokens				(UInt16					inArgC,
-												 TokenSetRef*			inoutArgV);
+CFArrayRef
+	StringUtilities_CFNewStringsWithLines		(CFStringRef			inString);
 
-void
-	StringUtilities_PGetToken					(UInt16					inZeroBasedTokenNumber,
-												 TokenSetRef			inArgV,
-												 StringPtr				outString);
+//@}
 
-void
-	StringUtilities_PTokenize					(ConstStringPtr			inString,
-												 UInt16*				outArgC,
-												 TokenSetRef*			outArgV);
-
-void
-	StringUtilities_PTokenizeBy					(ConstStringPtr			inString,
-												 ConstStringPtr			inTokenSeparators,
-												 UInt16*				outArgC,
-												 TokenSetRef*			outArgV);
-
-/*###############################################################
-	STRING MANIPULATION UTILITIES
-###############################################################*/
-
-void
-	StringUtilities_PAppendNumber				(StringPtr				inoutString,
-												 SInt32					inNumber);
-
-void
-	StringUtilities_PBuild						(StringPtr								inoutString,
-												 UInt16									inSubstitutionListLength,
-												 StringSubstitutionSpec const			inSubstitutionList[]);
+//!\name String Manipulation Utilities
+//@{
 
 void
 	StringUtilities_PClipHead					(StringPtr								inoutString,
@@ -146,21 +81,10 @@ Boolean
 												 UInt32									inAcceptableMaximumWidth,
 												 StringUtilitiesTruncationMethod		inTruncationMethod);
 
-/*###############################################################
-	STRING INFORMATION UTILITIES
-###############################################################*/
+//@}
 
-Boolean
-	StringUtilities_PEndsWith					(ConstStringPtr							inLongString,
-												 ConstStringPtr							inSuffixString);
-
-Boolean
-	StringUtilities_PStartsWith					(ConstStringPtr							inLongString,
-												 ConstStringPtr							inPrefixString);
-
-/*###############################################################
-	STRING CONVERSION UTILITIES
-###############################################################*/
+//!\name String Conversion Utilities
+//@{
 
 void
 	StringUtilities_CFToUTF8					(CFStringRef							inString,
@@ -174,16 +98,13 @@ StringPtr
 	StringUtilities_CToPInPlace					(char									inoutString[]);
 
 void
-	StringUtilities_PExtractFirstLine			(UInt8 const*							inSourcePtr,
-												 Size									inSize,
-												 StringPtr								outLine);
-
-void
 	StringUtilities_PToC						(ConstStringPtr							inString,
 												 char									outBuffer[]);
 
 char*
 	StringUtilities_PToCInPlace					(StringPtr								inoutString);
+
+//@}
 
 #endif
 
