@@ -654,7 +654,6 @@ Alert_Display	(InterfaceLibAlertRef	inAlert)
 		else
 		{
 			// legacy Carbon implementation; now only needed for sheets
-			Embedding_DeactivateFrontmostWindow();
 		#if 1
 			result = standardAlert(alertPtr, alertPtr->alertType, alertPtr->dialogTextCFString.returnCFStringRef(),
 									alertPtr->helpTextCFString.returnCFStringRef());
@@ -663,7 +662,6 @@ Alert_Display	(InterfaceLibAlertRef	inAlert)
 			//								alertPtr->helpTextCFString.returnCFStringRef(),
 			//								&alertPtr->params, &alertPtr->itemHit, &someDialog);
 		#endif
-			Embedding_RestoreFrontmostWindow();
 		}
 	}
 	else

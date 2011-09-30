@@ -371,7 +371,6 @@ ColorBox_UserSetColor	(HIViewRef		inView)
 		
 		bzero(&editMenuInfo, sizeof(editMenuInfo));
 		
-		Embedding_DeactivateFrontmostWindow();
 		if (ColorUtilities_ColorChooserDialogDisplay
 			(askColorCFString, &dataPtr->displayedColor/* input */, &dataPtr->displayedColor/* output */,
 				true/* is modal */, NewUserEventUPP(EventLoop_HandleColorPickerUpdate),
@@ -379,7 +378,6 @@ ColorBox_UserSetColor	(HIViewRef		inView)
 		{
 			(OSStatus)HIViewSetNeedsDisplay(inView, true);
 		}
-		Embedding_RestoreFrontmostWindow();
 		
 		if (releaseAskColorCFString)
 		{

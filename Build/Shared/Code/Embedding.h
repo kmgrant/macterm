@@ -97,17 +97,6 @@ Embedding_InvokeOffscreenOpProc	(Embedding_OffscreenOpProcPtr	inUserRoutine,
 
 #pragma mark Public Methods
 
-//!\name Automatically Activating and Deactivating Windows
-//@{
-
-void
-	Embedding_DeactivateFrontmostWindow			();
-
-void
-	Embedding_RestoreFrontmostWindow			();
-
-//@}
-
 //!\name Composited Image Utilities
 //@{
 
@@ -145,21 +134,9 @@ OSStatus
 												 SInt32							inDrawingMode);
 
 OSStatus
-	Embedding_OffscreenDrawOneControl			(ControlRef						inControl);
-
-OSStatus
 	Embedding_OffscreenSwapOverlappingControls	(WindowRef						inForWhichWindow,
 												 ControlRef						inControlToHide,
 												 ControlRef						inControlToDisplay);
-
-// EXTREMELY USEFUL ROUTINE!  USE EXCLUSIVELY OVER ActivateControl() and DeactivateControl() WHEN WORKING WITH EMBEDDERS
-OSStatus
-	Embedding_OffscreenSetControlActive			(ControlRef						inControl,
-												 Boolean						inIsActive);
-
-OSStatus
-	Embedding_OffscreenSetRootControlActive		(WindowRef						inForWhichWindow,
-												 Boolean						inIsActive);
 
 //@}
 

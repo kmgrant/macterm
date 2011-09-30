@@ -553,7 +553,6 @@ dialogClose		(HIWindowRef	inWindow,
 		// close the dialog and restore floating windows
 		HideWindow(inWindow);
 	}
-	Embedding_RestoreFrontmostWindow();
 }// dialogClose
 
 
@@ -595,7 +594,6 @@ dialogDisplayPreparation	(HIWindowRef	UNUSED_ARGUMENT(inWindow),
 		(OSStatus)ChangeWindowAttributes(EventLoop_ReturnRealFrontWindow(), 0L/* set attributes */,
 											kWindowCloseBoxAttribute | kWindowFullZoomAttribute/* clear attributes */);
 	}
-	Embedding_DeactivateFrontmostWindow();
 }// dialogDisplayPreparation
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -131,35 +131,6 @@ Embedding_BuildCGImageFromPictureAndMask	(PicHandle		inPicture,
 
 
 /*!
-To deactivate the root control of the frontmost
-window and to change the cursor to a wristwatch,
-call this method.  Usually, you do this immediately
-prior to displaying a dialog box, and then invoke
-Embedding_RestoreFrontmostWindow() after removing
-the dialog box at a later time.
-
-(1.0)
-*/
-void
-Embedding_DeactivateFrontmostWindow	()
-{
-#if 0
-	WindowRef	window = EventLoop_ReturnRealFrontWindow();
-	
-	
-	if (window != nullptr)
-	{
-		if (IsWindowHilited(window) && (GetWindowKind(window) != kDialogWindowKind))
-		{
-			(OSStatus)Embedding_OffscreenSetRootControlActive(window, false);
-		}
-	}
-#endif
-	Cursors_UseWatch();
-}// DeactivateFrontmostWindow
-
-
-/*!
 Use this convenience method to invoke the
 Embedding_OffscreenControlOperationInMode()
 routine with a "srcCopy" (normal) drawing
@@ -339,97 +310,6 @@ Embedding_OffscreenControlOperationInMode	(WindowRef						inForWhichWindow,
 
 
 /*!
-To redraw a complex control without any
-flickering (memory permitting), use this
-method.  This routine can be used instead
-of DrawOneControl() in every case: if not
-enough memory is available, this routine
-will automatically fall back and not use
-an offscreen buffer, which is the same as
-calling DrawOneControl() (but slightly
-slower, due to the logic required to
-conclude that there is insufficient
-memory).
-
-(1.0)
-*/
-OSStatus
-Embedding_OffscreenDrawOneControl	(ControlRef		inControl)
-{
-	OSStatus	result = noErr;
-	
-	
-	result = Embedding_OffscreenControlOperation(GetControlOwner(inControl), inControl, nullptr, 0L, 0L);
-	return result;
-}// OffscreenDrawOneControl
-
-
-/*!
-To minimize the flickering caused by the
-sequential activation and deactivation of
-many controls in a window, use this routine.
-It will set or clear the activated state of
-a particular control, and redirect the
-control update to an offscreen graphics
-buffer.  When all control states have been
-drawn to the buffer, the result is then
-dumped to the window, eliminating graphics
-flickering altogether.  The entire control
-region is validated.
-
-(1.0)
-*/
-OSStatus
-Embedding_OffscreenSetControlActive		(ControlRef		inControl,
-										 Boolean		inIsActive)
-{
-	OSStatus	result = noErr;
-	
-	
-	result = Embedding_OffscreenControlOperation(GetControlOwner(inControl), inControl, setControlActiveOperation, (inIsActive) ? 1L : 0L, 0L);
-	return result;
-}// OffscreenSetControlActive
-
-
-/*!
-To minimize the flickering caused by the
-sequential activation and deactivation of
-many controls in a window, use this routine.
-It will set or clear the activated state of
-a particular window’s root control, and
-redirect the control update to an offscreen
-graphics buffer.  When all control states
-have been drawn to the buffer, the result
-is then dumped to the window, eliminating
-graphics flickering altogether.  The entire
-window port rectangle is validated.
-
-(1.0)
-*/
-OSStatus
-Embedding_OffscreenSetRootControlActive		(WindowRef		inForWhichWindow,
-											 Boolean		inIsActive)
-{
-	OSStatus	result = noErr;
-	
-	
-	//result = Embedding_OffscreenControlOperation(inForWhichWindow, nullptr/* use root */, setControlActiveOperation, (inIsActive) ? 1L : 0L, 0L);
-	// TEMP - problems using embedding operations here?
-	{
-		ControlRef	root = nullptr;
-		
-		
-		if (GetRootControl(inForWhichWindow, &root) == noErr)
-		{
-			if (inIsActive) (OSStatus)ActivateControl(root);
-			else (OSStatus)DeactivateControl(root);
-		}
-	}
-	return result;
-}// OffscreenSetRootControlActive
-
-
-/*!
 If two controls overlap precisely (like tab
 panes), you can use this routine to hide the
 first control and display the second control
@@ -452,35 +332,6 @@ Embedding_OffscreenSwapOverlappingControls	(WindowRef		inForWhichWindow,
 	result = Embedding_OffscreenControlOperation(inForWhichWindow, inControlToDisplay, swapControlsOperation, (SInt32)inControlToHide, 0L);
 	return result;
 }// OffscreenSwapOverlappingControls
-
-
-/*!
-To activate the root control of the frontmost
-window and to change the cursor to the standard
-arrow, call this method.  Usually, you do this
-immediately after removing a dialog box from the
-screen, especially if you previously used the
-Embedding_DeactivateFrontmostWindow() method.
-
-(1.0)
-*/
-void
-Embedding_RestoreFrontmostWindow ()
-{
-#if 0
-	WindowRef	window = EventLoop_ReturnRealFrontWindow();
-	
-	
-	if (window != nullptr)
-	{
-		if ((!IsWindowHilited(window)) && (GetWindowKind(window) != kDialogWindowKind))
-		{
-			(OSStatus)Embedding_OffscreenSetRootControlActive(window, true);
-		}
-	}
-#endif
-	Cursors_UseArrow();
-}// RestoreFrontmostWindow
 
 
 /*!
@@ -655,22 +506,6 @@ offscreenDumpDeviceLoop		(short		inColorDepth,
 			if (world != nullptr) DisposeGWorld(world), world = nullptr;
 		}
 	}
-	
-#if 0
-	if (dataPtr->result != noErr)
-	{
-		// send an Apple Event back to the application to print the error
-		Str255		string;
-		Str31		numString;
-		
-		
-		PLstrcpy(string, "\poffscreen dump error = %a");
-		NumToString(dataPtr->result, numString);
-		StringUtilities_PMetaSetDefaults();
-		StringUtilities_PBuild(string, numString, EMPTY_PSTRING, EMPTY_PSTRING, EMPTY_PSTRING);
-		Alert_DebugSendStringToSelf(string, AppResources_ReturnCreatorCode(), '?WrL');
-	}
-#endif
 	
 	SetPort(oldPort);
 }// offscreenDumpDeviceLoop
