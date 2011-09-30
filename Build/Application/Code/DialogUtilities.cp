@@ -935,7 +935,7 @@ GetControlOSTypeText	(ControlRef		inControl,
 		Str15	typeString;
 		
 		
-		PLstrcpy(typeString, EMPTY_PSTRING);
+		PLstrcpy(typeString, "\p");
 		GetControlText(inControl, typeString);
 		typeString[0] = 4;
 		BlockMoveData(&typeString[1], outTypePtr, sizeof(OSType));
@@ -1115,7 +1115,7 @@ SetControlOSTypeText	(ControlRef		inControl,
 	Str15		typeString;
 	
 	
-	PLstrcpy(typeString, EMPTY_PSTRING);
+	PLstrcpy(typeString, "\p");
 	typeString[0] = 4;
 	BlockMoveData(&inType, &typeString[1], sizeof(OSType));
 	(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlEditTextTextTag,

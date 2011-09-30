@@ -2215,7 +2215,6 @@ installedActions()
 	assert(this->window != nil);
 	gTerminalNSWindows()[this->window] = this->selfRef;
 	WindowInfo_SetWindowDescriptor(this->windowInfo, kConstantsRegistry_WindowDescriptorAnyTerminal);
-	WindowInfo_SetWindowPotentialDropTarget(this->windowInfo, true/* can receive data via drag-and-drop */);
 	WindowInfo_SetAuxiliaryDataPtr(this->windowInfo, REINTERPRET_CAST(this, TerminalWindowRef)); // the auxiliary data is the "TerminalWindowRef"
 	WindowInfo_SetForWindow(returnCarbonWindow(this), this->windowInfo);
 	
