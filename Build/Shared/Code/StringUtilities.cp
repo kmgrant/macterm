@@ -42,11 +42,59 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <CFRetainRelease.h>
 #include <StringUtilities.h>
 
 
 
 #pragma mark Public Methods
+
+/*!
+Creates a new array containing as many strings as necessary
+to hold all of the lines from the original string.  You must
+release the array yourself with CFRelease().
+
+The strings are determined using CFStringGetLineBounds(), so
+any sequence that means “new line” could cause the split.
+None of the new-line sequences are included.
+
+Although no problems are expected when searching for lines,
+since an iterative search for lines is performed there is a
+guard against infinite looping.  The search is arbitrarily
+terminated after SHRT_MAX attempts to find lines have been
+made.
+
+(2.6)
+*/
+CFArrayRef
+StringUtilities_CFNewStringsWithLines	(CFStringRef	inString)
+{
+	CFIndex const		kLength = CFStringGetLength(inString);
+	SInt16				loopGuard = 0;
+	CFRange				startCharacter = CFRangeMake(0, 1/* count */);
+	CFIndex				lineEndIndex = 0;
+	CFIndex				lineEndWithTerminator = 0;
+	CFMutableArrayRef	mutableResult = CFArrayCreateMutable(kCFAllocatorDefault, 0/* capacity, or zero for no limit */,
+																&kCFTypeArrayCallBacks);
+	CFArrayRef			result = mutableResult;
+	
+	
+	while ((lineEndIndex < kLength) && (++loopGuard < SHRT_MAX/* arbitrary */))
+	{
+		CFRetainRelease		lineCFString;
+		
+		
+		CFStringGetLineBounds(inString, startCharacter, &startCharacter.location, &lineEndWithTerminator, &lineEndIndex);
+		lineCFString.setCFTypeRef(CFStringCreateWithSubstring(kCFAllocatorDefault, inString,
+																CFRangeMake(startCharacter.location,
+																			(lineEndIndex - startCharacter.location))),
+									true/* is retained */);
+		CFArrayAppendValue(mutableResult, lineCFString.returnCFStringRef());
+		startCharacter.location = lineEndWithTerminator;
+	}
+	return result;
+}// CFNewStringsWithLines
+
 
 /*!
 Converts a Core Foundation string into a C++ standard string
