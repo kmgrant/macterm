@@ -730,6 +730,7 @@ CFRetainRelease::
 returnCFBundleRef ()
 const
 {
+	assert(_isMutable);
 	assert((nullptr == _typeAs._modifiable.bundle) || (CFGetTypeID(_typeAs._modifiable.bundle) == CFBundleGetTypeID()));
 	return _typeAs._modifiable.bundle;
 }// returnCFBundleRef
@@ -879,6 +880,7 @@ CFRetainRelease::
 returnPasteboardRef ()
 const
 {
+	assert(_isMutable);
 	return _typeAs._modifiable.pasteboard;
 }// returnPasteboardRef
 
@@ -897,6 +899,7 @@ setCFMutableArrayRef	(CFMutableArrayRef		inNewType,
 {
 	if (nullptr != _typeAs._constant.unspecified) CFRelease(_typeAs._constant.unspecified);
 	_typeAs._modifiable.array = inNewType;
+	_isMutable = true;
 	if ((nullptr != _typeAs._constant.unspecified) &&
 		(false == inIsAlreadyRetained))
 	{
@@ -919,6 +922,7 @@ setCFMutableDictionaryRef	(CFMutableDictionaryRef		inNewType,
 {
 	if (nullptr != _typeAs._constant.unspecified) CFRelease(_typeAs._constant.unspecified);
 	_typeAs._modifiable.dictionary = inNewType;
+	_isMutable = true;
 	if ((nullptr != _typeAs._constant.unspecified) &&
 		(false == inIsAlreadyRetained))
 	{
@@ -941,6 +945,7 @@ setCFMutableStringRef	(CFMutableStringRef		inNewType,
 {
 	if (nullptr != _typeAs._constant.unspecified) CFRelease(_typeAs._constant.unspecified);
 	_typeAs._modifiable.string = inNewType;
+	_isMutable = true;
 	if ((nullptr != _typeAs._constant.unspecified) &&
 		(false == inIsAlreadyRetained))
 	{
