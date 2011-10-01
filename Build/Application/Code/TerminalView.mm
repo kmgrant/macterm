@@ -4253,7 +4253,8 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		
 		
 		this->screen.refreshTimerUPP = NewEventLoopTimerUPP(updateDisplayTimer);
-		error = InstallEventLoopTimer(GetCurrentEventLoop(), kEventDurationNoWait/* time before first fire */,
+		error = InstallEventLoopTimer(GetCurrentEventLoop(),
+										kEventDurationNoWait + 0.01/* time before first fire; must be nonzero for Mac OS X 10.3 */,
 										TicksToEventTime(1)/* time between fires */,
 										this->screen.refreshTimerUPP,
 										this->selfRef/* user data */,

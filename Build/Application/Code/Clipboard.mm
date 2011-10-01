@@ -147,7 +147,7 @@ Clipboard_Init ()
 		gClipboardUpdatesTimerUPP = NewEventLoopTimerUPP(clipboardUpdatesTimer);
 		assert(nullptr != gClipboardUpdatesTimerUPP);
 		error = InstallEventLoopTimer(GetCurrentEventLoop(),
-										kEventDurationNoWait/* seconds before timer fires the first time */,
+										kEventDurationNoWait + 0.01/* seconds before timer starts; must be nonzero for Mac OS X 10.3 */,
 										kEventDurationSecond * 3.0/* seconds between fires */,
 										gClipboardUpdatesTimerUPP, nullptr/* user data - not used */,
 										&gClipboardUpdatesTimer);
@@ -973,64 +973,6 @@ Clipboard_GraphicsToScrap	(VectorInterpreter_ID		inGraphicID)
 
 
 /*!
-Returns true only if the specified plain text contains new-line
-characters as defined by ASCII-compatible encodings.
-
-See also the Unicode version of this routine.
-
-(3.1)
-*/
-Boolean
-Clipboard_IsOneLineInBuffer		(UInt8 const*	inTextPtr,
-								 CFIndex		inLength)
-{
-	Boolean		result = (nullptr != inTextPtr);
-	
-	
-	for (CFIndex i = 0; ((result) && (i < inLength)); ++i)
-	{
-		// NOTE: It may be useful to provide a mechanism for customizing
-		//       these rules for determining what makes a “line” of text.
-		if (('\r' == inTextPtr[i]) || ('\n' == inTextPtr[i]))
-		{
-			result = false;
-		}
-	}
-	
-	return result;
-}// IsOneLineInBuffer (non-Unicode)
-
-
-/*!
-Returns true only if the specified Unicode text contains new-line
-characters.
-
-See also the non-Unicode version of this routine.
-
-(3.1)
-*/
-Boolean
-Clipboard_IsOneLineInBuffer		(UInt16 const*	inTextPtr,
-								 CFIndex		inLength)
-{
-	Boolean		result = (nullptr != inTextPtr);
-	
-	
-	for (CFIndex i = 0; ((result) && (i < inLength)); ++i)
-	{
-		// NOTE: It may be useful to provide a mechanism for customizing
-		//       these rules for determining what makes a “line” of text.
-		if (('\r' == inTextPtr[i]) || ('\n' == inTextPtr[i]))
-		{
-			result = false;
-		}
-	}
-	
-	return result;
-}// IsOneLineInBuffer (Unicode)
-
-
-/*!
 Returns a reference to the global pasteboard, creating that
 reference if necessary.
 
@@ -1111,91 +1053,6 @@ Clipboard_SetWindowVisible	(Boolean	inIsVisible)
 
 
 /*!
-Pastes text from a pasteboard into the specified session.
-If the pasteboard does not have any text, this does nothing.
-
-The modifier can be used to alter what is actually pasted.
-
-(3.1)
-*/
-void
-Clipboard_TextFromScrap		(SessionRef				inSession,
-							 Clipboard_Modifier		inModifier,
-							 PasteboardRef			inDataSourceOrNull)
-{
-	CFStringRef		clipboardString = nullptr;
-	CFStringRef		actualTypeName = nullptr;
-	
-	
-	if (nullptr == inDataSourceOrNull)
-	{
-		inDataSourceOrNull = Clipboard_ReturnPrimaryPasteboard();
-	}
-	
-	// IMPORTANT: It may be desirable to allow customization for what
-	//            identifies a line of text.  Currently, this is assumed.
-	
-	if (Clipboard_CreateCFStringFromPasteboard(clipboardString, actualTypeName, inDataSourceOrNull))
-	{
-		if (kClipboard_ModifierOneLine == inModifier)
-		{
-			CFMutableStringRef		mutableBuffer = CFStringCreateMutableCopy
-													(kCFAllocatorDefault, 0/* capacity or 0 for no limit */, clipboardString);
-			
-			
-			if (nullptr == mutableBuffer)
-			{
-				// no memory?
-				Sound_StandardAlert();
-			}
-			else
-			{
-				// ignore any new-line characters in one-line mode
-				(CFIndex)CFStringFindAndReplace(mutableBuffer, CFSTR("\r"), CFSTR(""),
-												CFRangeMake(0, CFStringGetLength(mutableBuffer)), 0/* flags */);
-				(CFIndex)CFStringFindAndReplace(mutableBuffer, CFSTR("\n"), CFSTR(""),
-												CFRangeMake(0, CFStringGetLength(mutableBuffer)), 0/* flags */);
-				Session_UserInputCFString(inSession, mutableBuffer);
-				CFRelease(mutableBuffer), mutableBuffer = nullptr;
-			}
-		}
-		else if (kClipboard_ModifierTranslateNewlineToCR == inModifier)
-		{
-			CFMutableStringRef		mutableBuffer = CFStringCreateMutableCopy
-													(kCFAllocatorDefault, 0/* capacity or 0 for no limit */, clipboardString);
-			
-			
-			if (nullptr == mutableBuffer)
-			{
-				// no memory?
-				Sound_StandardAlert();
-			}
-			else
-			{
-				// convert new-line characters into carriage-return characters
-				(CFIndex)CFStringFindAndReplace(mutableBuffer, CFSTR("\n"), CFSTR("\r"),
-												CFRangeMake(0, CFStringGetLength(mutableBuffer)), 0/* flags */);
-				Session_UserInputCFString(inSession, mutableBuffer);
-				CFRelease(mutableBuffer), mutableBuffer = nullptr;
-			}
-		}
-		else
-		{
-			// send the data unmodified to the session
-			Session_UserInputCFString(inSession, clipboardString);
-		}
-		CFRelease(clipboardString), clipboardString = nullptr;
-		CFRelease(actualTypeName), actualTypeName = nullptr;
-	}
-	else
-	{
-		// unknown or unsupported data type
-		Sound_StandardAlert();
-	}
-}// TextFromScrap
-
-
-/*!
 Copies the current selection from the indicated
 virtual screen, or does nothing if no text is
 selected.  If the selection mode is rectangular,
@@ -1259,32 +1116,6 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 	
 	gClipboardLocalChanges()[inDataTargetOrNull] = true;
 }// TextToScrap
-
-
-/*!
-Pastes whatever text is selected in the given view,
-leaving a copy on the clipboard (replacing anything
-there).  If nothing is selected, this routine does
-nothing.
-
-Intelligently, MacTerm automatically uses “inline”
-copy-and-paste for this type of operation, since
-virtually the only reason to use “type” would be to
-copy and paste a command line from the scrollback
-buffer.  If a command line spans multiple lines, it
-would normally have new-line sequences inserted to
-preserve the formatting, which is undesirable when
-pasting what “should” be seen as a single line.
-
-(3.0)
-*/
-void
-Clipboard_TextType	(TerminalViewRef	inSource,
-					 SessionRef			inTarget)
-{
-	Clipboard_TextToScrap(inSource, kClipboard_CopyMethodStandard | kClipboard_CopyMethodInline);
-	Clipboard_TextFromScrap(inTarget);
-}// TextType
 
 
 /*!

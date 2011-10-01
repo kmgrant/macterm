@@ -45,7 +45,6 @@
 #include <CoreServices/CoreServices.h>
 
 // application includes
-#include "SessionRef.typedef.h"
 #include "TerminalViewRef.typedef.h"
 #include "VectorInterpreterID.typedef.h"
 
@@ -75,17 +74,6 @@ enum Clipboard_DataConstraint
 	kClipboard_DataConstraintNone				= 0xFFFF,	//!< any type of data
 	kClipboard_DataConstraintText8Bit			= 1 << 0,	//!< only text that can be expressed as bytes
 	kClipboard_DataConstraintText16BitNative	= 1 << 1	//!< only Unicode text with native byte-ordering
-};
-
-/*!
-When pasting, you have the option of using a filtered version
-of the data actually on the Clipboard, to suit the destination.
-*/
-enum Clipboard_Modifier
-{
-	kClipboard_ModifierNone						= 0,	//!< leave data unchanged
-	kClipboard_ModifierOneLine					= 1,	//!< strip all '\r' and '\n' characters first
-	kClipboard_ModifierTranslateNewlineToCR		= 2		//!< convert all '\n' characters into '\r' first
 };
 
 #pragma mark Types
@@ -248,18 +236,9 @@ void
 	Clipboard_SetPasteboardModified			(PasteboardRef				inWhatChangedOrNullForPrimaryPasteboard = nullptr);
 
 void
-	Clipboard_TextFromScrap					(SessionRef					inSession,
-											 Clipboard_Modifier			inFilter = kClipboard_ModifierNone,
-											 PasteboardRef				inDataSourceOrNull = nullptr);
-
-void
 	Clipboard_TextToScrap					(TerminalViewRef			inView,
 											 Clipboard_CopyMethod		inHowToCopy,
 											 PasteboardRef				inDataTargetOrNull = nullptr);
-
-void
-	Clipboard_TextType						(TerminalViewRef			inSource,
-											 SessionRef					inTarget);
 
 //@}
 
@@ -271,19 +250,6 @@ void
 
 Boolean
 	Clipboard_WindowIsVisible			();
-
-//@}
-
-//!\name Utilities
-//@{
-
-Boolean
-	Clipboard_IsOneLineInBuffer			(UInt8 const*		inTextPtr,
-										 CFIndex			inLength);
-
-Boolean
-	Clipboard_IsOneLineInBuffer			(UInt16 const*		inTextPtr,
-										 CFIndex			inLength);
 
 //@}
 

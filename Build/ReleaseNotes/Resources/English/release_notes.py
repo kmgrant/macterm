@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20110930',
     '20110927',
     '20110925',
     '20110924',
@@ -416,6 +417,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20110930': [
+        'Fixed certain timer-dependent features on Panther, such as updates to the Clipboard window.',
+        "Multiple-line text inserted by Paste or drag-and-drop is now sent line-by-line, and the target Session's preferred new-line sequence is inserted after each line that originally ended with a new-line character or sequence.",
+        "Multiple-line text inserted by Paste or drag-and-drop now supports more possible line separators; not just traditional sequences like CR or CR-LF, but even Unicode delimiters.",
+        'New low-level preference "data-send-paste-line-delay-milliseconds" to control the length of the short delay between lines during line-by-line Paste; the factory default is 10 (that is, it is nearly instantaneous).',
+    ],
     '20110927': [
         '"Reset Graphics Characters" has been removed, as this is no longer feasible to support with Unicode storage and it is no longer likely to be a problem in a pure UTF-8 terminal.',
     ],

@@ -768,7 +768,21 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandCopyAndPaste:
-			if (isSession) Clipboard_TextType(activeView, frontSession); // type if there is a window to type into
+			if (isSession)
+			{
+				// type if there is a window to type into
+				CFStringRef		clipboardString = nullptr;
+				CFStringRef		actualTypeName = nullptr;
+				
+				
+				Clipboard_TextToScrap(activeView, kClipboard_CopyMethodStandard | kClipboard_CopyMethodInline);
+				
+				if (Clipboard_CreateCFStringFromPasteboard(clipboardString, actualTypeName, Clipboard_ReturnPrimaryPasteboard()))
+				{
+					Session_UserInputCFString(frontSession, clipboardString);
+					CFRelease(clipboardString), clipboardString = nullptr;
+				}
+			}
 			break;
 		
 		case kCommandPaste:	

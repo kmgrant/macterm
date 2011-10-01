@@ -1051,6 +1051,9 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagPageKeysControlLocalTerminal,
 									CFSTR("command-key-terminal-end")/* TEMPORARY - one of several key names used */, typeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::TERMINAL);
+	My_PreferenceDefinition::create(kPreferences_TagPasteNewLineDelay,
+									CFSTR("data-send-paste-line-delay-milliseconds"), typeNetEvents_CFNumberRef,
+									sizeof(EventTime), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-terminal-home"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-terminal-page-up"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-terminal-page-down"));
@@ -7342,6 +7345,17 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagPasteNewLineDelay:
+					{
+						assert(typeNetEvents_CFNumberRef == keyValueType);
+						SInt16				valueInteger = inContextPtr->returnInteger(keyName);
+						EventTime* const	data = REINTERPRET_CAST(outDataPtr, EventTime*);
+						
+						
+						*data = STATIC_CAST(valueInteger, EventTime) * kEventDurationMillisecond;
+					}
+					break;
+				
 				case kPreferences_TagScrollDelay:
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
@@ -9470,6 +9484,17 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, (*data) ? CFSTR("backspace") : CFSTR("delete"));
+				}
+				break;
+			
+			case kPreferences_TagPasteNewLineDelay:
+				{
+					EventTime const* const		data = REINTERPRET_CAST(inDataPtr, EventTime const*);
+					EventTime					junk = *data / kEventDurationMillisecond;
+					
+					
+					assert(typeNetEvents_CFNumberRef == keyValueType);
+					inContextPtr->addInteger(inDataPreferenceTag, keyName, STATIC_CAST(junk, SInt16));
 				}
 				break;
 			

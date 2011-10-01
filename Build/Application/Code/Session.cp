@@ -58,6 +58,7 @@
 #include <AlertMessages.h>
 #include <AppleEventUtilities.h>
 #include <CFRetainRelease.h>
+#include <CFUtilities.h>
 #include <CarbonEventUtilities.template.h>
 #include <CocoaBasic.h>
 #include <Console.h>
@@ -263,6 +264,8 @@ struct My_Session
 	CFRetainRelease				commandLineArguments;		// CFArrayRef of CFStringRef; typically agrees with "resourceLocationString"
 	CFRetainRelease				originalDirectoryString;	// pathname of the directory that was current when the session was executed
 	CFRetainRelease				deviceNameString;			// pathname of slave pseudo-terminal device attached to the session
+	CFRetainRelease				pendingPasteLines;			// CFArrayRef of CFStringRef; lines that have not yet been pasted
+	CFIndex						pendingPasteCurrentLine;	// index into "pendingPasteLines" of current line to be pasted
 	CFAbsoluteTime				activationAbsoluteTime;		// result of CFAbsoluteTimeGetCurrent() call when the command starts or restarts
 	CFAbsoluteTime				terminationAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call when the command ends
 	CFAbsoluteTime				watchTriggerAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call when the last watch of any kind went off
@@ -301,6 +304,8 @@ struct My_Session
 	Session_Watch				activeWatch;				// if any, what notification is currently set up for internal data events
 	EventLoopTimerUPP			inactivityWatchTimerUPP;	// procedure that is called if data has not arrived after awhile
 	EventLoopTimerRef			inactivityWatchTimer;		// short timer
+	EventLoopTimerUPP			pendingPasteTimerUPP;		// procedure that is called periodically when pasting lines
+	EventLoopTimerRef			pendingPasteTimer;			// paste timer, reset only when a Paste or an equivalent (like a drag) occurs
 	My_SessionSheetType			currentSheet;				// if "kMy_SessionSheetTypeNone", no significant sheet is currently open
 	AlertMessages_BoxRef		watchBox;					// if defined, the global alert used to show notifications for this session
 	SessionRef					selfRef;					// convenient reference to this structure
@@ -330,6 +335,7 @@ struct My_PasteAlertInfo
 	// sent to pasteWarningCloseNotifyProc()
 	SessionRef			sessionForPaste;
 	CFRetainRelease		sourcePasteboard;
+	CFRetainRelease		pendingLines;
 };
 typedef My_PasteAlertInfo*		My_PasteAlertInfoPtr;
 
@@ -377,6 +383,7 @@ void						localEchoKey						(My_SessionPtr, UInt8);
 void						localEchoString						(My_SessionPtr, CFStringRef);
 void						navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
 void						navigationSaveDialogEvent			(NavEventCallbackMessage, NavCBRecPtr, void*);
+void						pasteLineFromTimer					(EventLoopTimerRef, void*);
 void						pasteWarningCloseNotifyProc			(InterfaceLibAlertRef, SInt16, void*);
 void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
@@ -4968,13 +4975,16 @@ Session_UserInputPaste	(SessionRef			inRef,
 	pasteAlertInfoPtr->sessionForPaste = inRef;
 	if (Clipboard_CreateCFStringFromPasteboard(pastedCFString, pastedDataUTI, kPasteboard))
 	{
-		// examine the Clipboard; if the data contains new-lines, warn the user
 		Boolean		isOneLine = false;
 		Boolean		noWarning = false;
 		size_t		actualSize = 0;
 		
 		
+		// examine the Clipboard; if the data contains new-lines, warn the user
 		pasteAlertInfoPtr->sourcePasteboard = kPasteboard;
+		pasteAlertInfoPtr->pendingLines.setCFTypeRef(StringUtilities_CFNewStringsWithLines(pastedCFString),
+														true/* is retained */);
+		isOneLine = (CFArrayGetCount(pasteAlertInfoPtr->pendingLines.returnCFArrayRef()) < 2);
 		
 		// determine if the user should be warned
 		unless (kPreferences_ResultOK ==
@@ -4982,23 +4992,6 @@ Session_UserInputPaste	(SessionRef			inRef,
 									sizeof(noWarning), &noWarning, &actualSize))
 		{
 			noWarning = false; // assume a value, if preference can’t be found
-		}
-		
-		// determine if this is a multi-line paste
-		{
-			UniChar const*		bufferPtr = CFStringGetCharactersPtr(pastedCFString);
-			CFIndex				kBufferLength = CFStringGetLength(pastedCFString);
-			UniChar*			allocatedBuffer = nullptr;
-			
-			
-			if (nullptr == bufferPtr)
-			{
-				allocatedBuffer = new UniChar[kBufferLength];
-				bufferPtr = allocatedBuffer;
-				CFStringGetCharacters(pastedCFString, CFRangeMake(0, kBufferLength), allocatedBuffer);
-			}
-			isOneLine = Clipboard_IsOneLineInBuffer(bufferPtr, kBufferLength);
-			if (nullptr != allocatedBuffer) delete [] allocatedBuffer, allocatedBuffer = nullptr;
 		}
 		
 		// now, paste (perhaps displaying a warning first)
@@ -5210,6 +5203,8 @@ resourceLocationString(),
 commandLineArguments(),
 originalDirectoryString(),
 deviceNameString(),
+pendingPasteLines(),
+pendingPasteCurrentLine(0),
 activationAbsoluteTime(CFAbsoluteTimeGetCurrent()),
 terminationAbsoluteTime(0),
 watchTriggerAbsoluteTime(CFAbsoluteTimeGetCurrent()),
@@ -5249,6 +5244,8 @@ writeEncoding(kCFStringEncodingUTF8), // initially...
 activeWatch(kSession_WatchNothing),
 inactivityWatchTimerUPP(nullptr),
 inactivityWatchTimer(nullptr),
+pendingPasteTimerUPP(nullptr),
+pendingPasteTimer(nullptr),
 currentSheet(kMy_SessionSheetTypeNone),
 watchBox(nullptr),
 selfRef(REINTERPRET_CAST(this, SessionRef))
@@ -5360,6 +5357,11 @@ My_Session::
 		RemoveEventLoopTimer(this->longLifeTimer), this->longLifeTimer = nullptr;
 	}
 	DisposeEventLoopTimerUPP(this->longLifeTimerUPP), this->longLifeTimerUPP = nullptr;
+	if (nullptr != this->pendingPasteTimer)
+	{
+		RemoveEventLoopTimer(this->pendingPasteTimer), this->pendingPasteTimer = nullptr;
+	}
+	DisposeEventLoopTimerUPP(this->pendingPasteTimerUPP), this->pendingPasteTimerUPP = nullptr;
 	
 	if (kVectorInterpreter_InvalidID != this->vectorGraphicsID)
 	{
@@ -6931,6 +6933,51 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 
 
 /*!
+This is invoked after a user-defined delay, and it pastes the
+next pending line of text (if any).  Once all lines are pasted,
+the timer is destroyed and will not trigger again until the
+user tries to Paste something else.
+
+Timers that draw must save and restore the current graphics port.
+
+(4.0)
+*/
+void
+pasteLineFromTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
+					 void*					inSessionRef)
+{
+	SessionRef				ref = REINTERPRET_CAST(inSessionRef, SessionRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
+	
+	
+	if (ptr->pendingPasteLines.exists())
+	{
+		CFArrayRef		asCFArray = ptr->pendingPasteLines.returnCFArrayRef();
+		CFIndex			arrayLength = CFArrayGetCount(asCFArray);
+		
+		
+		if ((ptr->pendingPasteCurrentLine >= arrayLength) || (0 == arrayLength))
+		{
+			// all lines have been pasted; the array is no longer needed
+			ptr->pendingPasteLines.clear();
+			RemoveEventLoopTimer(ptr->pendingPasteTimer), ptr->pendingPasteTimer = nullptr;
+			DisposeEventLoopTimerUPP(ptr->pendingPasteTimerUPP), ptr->pendingPasteTimerUPP = nullptr;
+		}
+		else
+		{
+			Session_UserInputCFString(ref, CFUtilities_StringCast(CFArrayGetValueAtIndex
+																	(asCFArray, ptr->pendingPasteCurrentLine)));
+			if (ptr->pendingPasteCurrentLine < (arrayLength - 1))
+			{
+				Session_SendNewline(ref, kSession_EchoCurrentSessionValue);
+			}
+			++(ptr->pendingPasteCurrentLine);
+		}
+	}
+}// pasteLineFromTimer
+
+
+/*!
 The responder to a closed “really paste?” alert.  This routine
 performs the Paste to the specified session using the verbatim
 Clipboard text if the item hit is the OK button.  If the user
@@ -6955,7 +7002,7 @@ pasteWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 	My_PasteAlertInfoPtr	dataPtr = REINTERPRET_CAST(inMy_PasteAlertInfoPtr, My_PasteAlertInfoPtr);
 	
 	
-	if (dataPtr != nullptr)
+	if (nullptr != dataPtr)
 	{
 		My_SessionAutoLocker	sessionPtr(gSessionPtrLocks(), dataPtr->sessionForPaste);
 		
@@ -6964,15 +7011,57 @@ pasteWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 		{
 			// first join the text into one line (replace new-line sequences
 			// with single spaces), then Paste
-			Clipboard_TextFromScrap(sessionPtr->selfRef, kClipboard_ModifierOneLine,
-									dataPtr->sourcePasteboard.returnPasteboardRef());
+			CFRetainRelease		joinedCFString(CFStringCreateByCombiningStrings(kCFAllocatorDefault,
+																				dataPtr->pendingLines.returnCFArrayRef(),
+																				CFSTR("")/* separator */),
+												true/* is retained */);
+			
+			
+			Session_UserInputCFString(sessionPtr->selfRef, joinedCFString.returnCFStringRef());
 		}
 		else if (inItemHit == kAlertStdAlertOtherButton)
 		{
-			// regular Paste, use verbatim what is on the Clipboard unless the
-			// session is in “translate newlines to carriage returns” mode
-			Clipboard_TextFromScrap(sessionPtr->selfRef, kClipboard_ModifierTranslateNewlineToCR,
-									dataPtr->sourcePasteboard.returnPasteboardRef());
+			// regular Paste; periodically (but fairly rapidly) insert
+			// each line into the session, using a timer for delays
+			if (nullptr == sessionPtr->pendingPasteTimer)
+			{
+				// first time; create the timer
+				OSStatus			error = noErr;
+				Preferences_Result	prefsResult = kPreferences_ResultOK;
+				size_t				actualSize = 0L;
+				EventTime			delayValue = 0;
+				
+				
+				// determine how long the delay between lines should be
+				prefsResult = Preferences_GetData(kPreferences_TagPasteNewLineDelay, sizeof(delayValue),
+													&delayValue, &actualSize);
+				if (kPreferences_ResultOK != prefsResult)
+				{
+					// set an arbitrary default value
+					delayValue = 50 * kEventDurationMillisecond;
+				}
+				
+				// due to timer limitations the delay cannot be exactly zero
+				if (delayValue < 0.001)
+				{
+					delayValue = 0.001; // arbitrary
+				}
+				
+				sessionPtr->pendingPasteTimerUPP = NewEventLoopTimerUPP(pasteLineFromTimer);
+				error = InstallEventLoopTimer(GetCurrentEventLoop(),
+												kEventDurationNoWait + 0.01/* start time; must be nonzero for Mac OS X 10.3 */,
+												delayValue/* time between fires */,
+												sessionPtr->pendingPasteTimerUPP, sessionPtr->selfRef/* user data */,
+												&sessionPtr->pendingPasteTimer);
+				assert_noerr(error);
+			}
+			
+			// NOTE: this assignment will replace any previous set of lines
+			// that might still exist; although very unlikely, this could
+			// happen if the user decided to invoke Paste again while a
+			// large and time-consuming Paste was already in progress
+			sessionPtr->pendingPasteLines.setCFTypeRef(dataPtr->pendingLines.returnCFArrayRef());
+			sessionPtr->pendingPasteCurrentLine = 0;
 		}
 		
 		// clean up

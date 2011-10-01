@@ -195,7 +195,7 @@ EventLoopTimerRef&			gExitWatchTimer ()
 									
 									upp = NewEventLoopTimerUPP(watchForExitsTimer);
 									error = InstallEventLoopTimer(GetCurrentEventLoop(),
-																	kEventDurationNoWait/* start time */,
+																	kEventDurationNoWait + 0.01/* start time; must be nonzero for Mac OS X 10.3 */,
 																	3 * kEventDurationSecond/* time between fires - arbitrary (what is best?) */,
 																	upp, nullptr/* user data */, &x);
 									assert_noerr(error);

@@ -249,7 +249,8 @@ enum
 	kPreferences_TagLocalEchoHalfDuplex					= 'lehd',	//!< data: "Boolean"
 	kPreferences_TagMapCarriageReturnToCRNull			= 'crnl',	//!< data: "Boolean"
 	kPreferences_TagMapDeleteToBackspace				= 'delb',	//!< data: "Boolean"
-	kPreferences_TagScrollDelay							= 'scrd',	//!< data: "EventTime" in MILLISECONDS
+	kPreferences_TagPasteNewLineDelay					= 'pnld',	//!< data: "EventTime"; stored as milliseconds, but scaled to EventTime when used
+	kPreferences_TagScrollDelay							= 'scrd',	//!< data: "EventTime"; stored as milliseconds, but scaled to EventTime when used
 	kPreferences_TagServerHost							= 'host',	//!< data: "CFStringRef" (domain name or IP address)
 	kPreferences_TagServerPort							= 'port',	//!< data: "SInt16"
 	kPreferences_TagServerProtocol						= 'prcl',	//!< data: "Session_Protocol"
