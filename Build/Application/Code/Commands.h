@@ -490,7 +490,7 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandEditSuspendKey					'SSKy'		// multiple interfaces
 #define kCommandSetMetaNone						'EMNo'		// multiple interfaces
 #define kCommandSetMetaOptionKey				'EMOp'		// multiple interfaces
-#define kCommandSetMetaControlAndCommandKeys	'EMCC'		// multiple interfaces
+#define kCommandSetMetaShiftAndOptionKeys		'EMSO'		// multiple interfaces
 #define kCommandSetNewlineCarriageReturnLineFeed	'CRLF'	// multiple interfaces
 #define kCommandSetNewlineCarriageReturnNull	'CR00'		// multiple interfaces
 #define kCommandToggleTerminalLED1				'LED1'		// terminal window toolbars

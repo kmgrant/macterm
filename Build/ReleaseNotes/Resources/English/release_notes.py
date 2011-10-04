@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111004',
     '20111003',
     '20110930',
     '20110927',
@@ -420,6 +421,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20111004': [
         'Fixed Preferences window Sessions pane Keyboard tab (and Custom Key Sequences sheet) to save and restore the mapping settings at the bottom of the interface.',
+        'The Emacs meta key mapping "control + command" has been removed because this key combination is no longer detectable (perhaps it is reserved by the OS).  The meta key can now be mapped to "shift + option" however.',
     ],
     '20111003': [
         'Fixed "Select All" and other editing problems for floating windows like the Command Line and the Servers panel.',

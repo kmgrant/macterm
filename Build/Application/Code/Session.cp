@@ -5952,9 +5952,9 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	if (shiftDown) eventModifiers |= shiftKey;
 	
 	// technically add-on support for an Emacs concept
-	if (ptr->eventKeys.meta == kSession_EmacsMetaKeyControlCommand)
+	if (ptr->eventKeys.meta == kSession_EmacsMetaKeyShiftOption)
 	{
-		metaDown = ((commandDown) && (controlDown));
+		metaDown = ((shiftDown) && (optionDown));
 	}
 	else if (ptr->eventKeys.meta == kSession_EmacsMetaKeyOption)
 	{
@@ -6199,6 +6199,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					// equivalent to meta; so ESC-CtrlA is like MetaCtrlA
 					charactersToSend[1] = charactersToSend[0];
 					charactersToSend[0] = 0x1B; // ESC
+Console_WriteValueCharacter("sending escape followed by", charactersToSend[1]);
 				}
 				else if (0 == charactersToSend[0])
 				{

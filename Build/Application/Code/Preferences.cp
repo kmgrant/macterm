@@ -7562,13 +7562,18 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							{
 								*storedValuePtr = kSession_EmacsMetaKeyOff;
 							}
-							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("control+command"), kCFCompareCaseInsensitive))
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("shift+option"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kSession_EmacsMetaKeyControlCommand;
+								*storedValuePtr = kSession_EmacsMetaKeyShiftOption;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("option"), kCFCompareCaseInsensitive))
 							{
 								*storedValuePtr = kSession_EmacsMetaKeyOption;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("control+command"), kCFCompareCaseInsensitive))
+							{
+								// LEGACY VALUE; remap to require Shift and Option
+								*storedValuePtr = kSession_EmacsMetaKeyShiftOption;
 							}
 							else
 							{
@@ -9637,8 +9642,8 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("option"));
 						break;
 					
-					case kSession_EmacsMetaKeyControlCommand:
-						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("control+command"));
+					case kSession_EmacsMetaKeyShiftOption:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("shift+option"));
 						break;
 					
 					case kSession_EmacsMetaKeyOff:

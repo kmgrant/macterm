@@ -243,7 +243,7 @@ table(deftable).
 (defbottom). |\2(desc). Using this key triggers a VT220 function key or a normal keypad key.|
 (deftop). |(key). @data-receive-do-not-strip-high-bit@|(types). _true or false_|
 (defbottom). |\2(desc). Characters are considered to be 8 bits.|
-(deftop). |(key). @key-map-emacs-meta@|(types). _string_: @control+command@ or @option@ or _empty_|
+(deftop). |(key). @key-map-emacs-meta@|(types). _string_: @shift+option@ or @option@ or _empty_|
 (defbottom). |\2(desc). This Mac keyboard input is interpreted as a meta keypress in the Emacs text editor.|
 (deftop). |(key). @terminal-clear-saves-lines@|(types). _true or false_|
 (defbottom). |\2(desc). A session request to clear the screen will first copy screen lines to the scrollback before obliterating them.|

@@ -189,7 +189,7 @@ Possible mappings to simulate a meta key on a Mac keyboard
 enum Session_EmacsMetaKey
 {
 	kSession_EmacsMetaKeyOff = 0,				//!< no mapping
-	kSession_EmacsMetaKeyControlCommand = 1,	//!< by holding down control and command keys, meta is simulated
+	kSession_EmacsMetaKeyShiftOption = 1,		//!< by holding down shift and option keys, meta is simulated
 	kSession_EmacsMetaKeyOption = 2				//!< by holding down option key, meta is simulated
 };
 

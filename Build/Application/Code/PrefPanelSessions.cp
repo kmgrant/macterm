@@ -1756,8 +1756,8 @@ readPreferences		(Preferences_ContextRef		inSettings)
 				
 				switch (metaKey)
 				{
-				case kSession_EmacsMetaKeyControlCommand:
-					commandID = kCommandSetMetaControlAndCommandKeys;
+				case kSession_EmacsMetaKeyShiftOption:
+					commandID = kCommandSetMetaShiftAndOptionKeys;
 					break;
 				
 				case kSession_EmacsMetaKeyOption:
@@ -2048,7 +2048,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 			
 			case kCommandSetMetaNone:
 			case kCommandSetMetaOptionKey:
-			case kCommandSetMetaControlAndCommandKeys:
+			case kCommandSetMetaShiftAndOptionKeys:
 				{
 					Session_EmacsMetaKey	metaKey = kSession_EmacsMetaKeyOff;
 					Preferences_Result		prefsResult = kPreferences_ResultOK;
@@ -2056,8 +2056,8 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					
 					switch (received.commandID)
 					{
-					case kCommandSetMetaControlAndCommandKeys:
-						metaKey = kSession_EmacsMetaKeyControlCommand;
+					case kCommandSetMetaShiftAndOptionKeys:
+						metaKey = kSession_EmacsMetaKeyShiftOption;
 						break;
 					
 					case kCommandSetMetaOptionKey:
