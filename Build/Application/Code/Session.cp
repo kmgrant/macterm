@@ -6199,7 +6199,6 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					// equivalent to meta; so ESC-CtrlA is like MetaCtrlA
 					charactersToSend[1] = charactersToSend[0];
 					charactersToSend[0] = 0x1B; // ESC
-Console_WriteValueCharacter("sending escape followed by", charactersToSend[1]);
 				}
 				else if (0 == charactersToSend[0])
 				{
