@@ -1023,9 +1023,9 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagMapBackquote,
 									CFSTR("key-map-backquote"), typeCFStringRef/* keystroke string, e.g. blank "" or escape "\e" */,
 									sizeof(Boolean), Quills::Prefs::GENERAL);
-	My_PreferenceDefinition::create(kPreferences_TagMapCarriageReturnToCRNull,
+	My_PreferenceDefinition::create(kPreferences_TagNewLineMapping,
 									CFSTR("key-map-new-line"), typeCFStringRef,
-									sizeof(Boolean), Quills::Prefs::SESSION);
+									sizeof(Session_NewlineMode), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagMapDeleteToBackspace,
 									CFSTR("key-map-delete"), typeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::SESSION);
@@ -7289,34 +7289,6 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
-				case kPreferences_TagMapCarriageReturnToCRNull:
-					{
-						assert(typeCFStringRef == keyValueType);
-						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
-						
-						
-						if (nullptr == valueCFString)
-						{
-							result = kPreferences_ResultBadVersionDataNotAvailable;
-						}
-						else
-						{
-							Boolean*	storedValuePtr = REINTERPRET_CAST(outDataPtr, Boolean*);
-							
-							
-							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("\\015\\000"), kCFCompareCaseInsensitive))
-							{
-								*storedValuePtr = true;
-							}
-							else
-							{
-								*storedValuePtr = false;
-							}
-							CFRelease(valueCFString), valueCFString = nullptr;
-						}
-					}
-					break;
-				
 				case kPreferences_TagMapDeleteToBackspace:
 					{
 						assert(typeCFStringRef == keyValueType);
@@ -7339,6 +7311,46 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							else
 							{
 								*storedValuePtr = false;
+							}
+							CFRelease(valueCFString), valueCFString = nullptr;
+						}
+					}
+					break;
+				
+				case kPreferences_TagNewLineMapping:
+					{
+						assert(typeCFStringRef == keyValueType);
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							Session_NewlineMode*	storedValuePtr = REINTERPRET_CAST(outDataPtr, Session_NewlineMode*);
+							
+							
+							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("\\015"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_NewlineModeMapCR;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("\\015\\012"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_NewlineModeMapCRLF;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("\\015\\000"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_NewlineModeMapCRNull;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("\\012"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_NewlineModeMapLF;
+							}
+							else
+							{
+								*storedValuePtr = kSession_NewlineModeMapLF;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
@@ -9472,16 +9484,6 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
-			case kPreferences_TagMapCarriageReturnToCRNull:
-				{
-					Boolean const* const	data = REINTERPRET_CAST(inDataPtr, Boolean const*);
-					
-					
-					assert(typeCFStringRef == keyValueType);
-					inContextPtr->addString(inDataPreferenceTag, keyName, (*data) ? CFSTR("\\015\\000") : CFSTR("\\015\\012"));
-				}
-				break;
-			
 			case kPreferences_TagMapDeleteToBackspace:
 				{
 					Boolean const* const	data = REINTERPRET_CAST(inDataPtr, Boolean const*);
@@ -9489,6 +9491,34 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, (*data) ? CFSTR("backspace") : CFSTR("delete"));
+				}
+				break;
+			
+			case kPreferences_TagNewLineMapping:
+				{
+					Session_NewlineMode const* const		data = REINTERPRET_CAST(inDataPtr, Session_NewlineMode const*);
+					
+					
+					assert(typeCFStringRef == keyValueType);
+					switch (*data)
+					{
+					case kSession_NewlineModeMapCR:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("\\015"));
+						break;
+					
+					case kSession_NewlineModeMapCRLF:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("\\015\\012"));
+						break;
+					
+					case kSession_NewlineModeMapCRNull:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("\\015\\000"));
+						break;
+					
+					case kSession_NewlineModeMapLF:
+					default:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("\\012"));
+						break;
+					}
 				}
 				break;
 			

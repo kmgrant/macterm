@@ -230,9 +230,10 @@ Which characters will be sent when a new-line is requested.
 */
 enum Session_NewlineMode
 {
-	kSession_NewlineModeMapCRNormal	= 0,	//!< a Return key sends “carriage return” only
-	kSession_NewlineModeMapCRNull	= 1,	//!< Berkeley 4.3; newline means “carriage return, null”
-	kSession_NewlineModeMapCRLF		= 2		//!< newline means “carriage return, line feed”
+	kSession_NewlineModeMapCR		= 0,	//!< newline means “carriage return” only (Classic Mac OS systems)
+	kSession_NewlineModeMapCRLF		= 1,	//!< newline means “carriage return, line feed” (MS-DOS or Windows systems)
+	kSession_NewlineModeMapCRNull	= 2,	//!< BSD 4.3 Unix; newline means “carriage return, null”
+	kSession_NewlineModeMapLF		= 3		//!< newline means “line feed” only (Unix systems)
 };
 
 /*!

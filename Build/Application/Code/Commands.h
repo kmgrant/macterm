@@ -493,6 +493,8 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSetMetaShiftAndOptionKeys		'EMSO'		// multiple interfaces
 #define kCommandSetNewlineCarriageReturnLineFeed	'CRLF'	// multiple interfaces
 #define kCommandSetNewlineCarriageReturnNull	'CR00'		// multiple interfaces
+#define kCommandSetNewlineCarriageReturnOnly	'NLCR'		// multiple interfaces
+#define kCommandSetNewlineLineFeedOnly			'NLLF'		// multiple interfaces
 #define kCommandToggleTerminalLED1				'LED1'		// terminal window toolbars
 #define kCommandToggleTerminalLED2				'LED2'		// terminal window toolbars
 #define kCommandToggleTerminalLED3				'LED3'		// terminal window toolbars

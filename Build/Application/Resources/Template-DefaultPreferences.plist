@@ -98,7 +98,7 @@
 	<key>key-map-emacs-meta</key>
 	<string></string>
 	<key>key-map-new-line</key>
-	<string>\015\012</string>
+	<string>\012</string>
 	<key>kiosk-effects-enabled</key>
 	<true/>
 	<key>kiosk-force-quit-enabled</key>

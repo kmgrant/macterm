@@ -1973,11 +1973,8 @@ Session_ReturnConfiguration		(SessionRef		inRef)
 	}
 	
 	{
-		Boolean const	kMapCRToCRNull = (kSession_NewlineModeMapCRNull == ptr->eventKeys.newline);
-		
-		
-		prefsResult = Preferences_ContextSetData(result, kPreferences_TagMapCarriageReturnToCRNull,
-													sizeof(kMapCRToCRNull), &kMapCRToCRNull);
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagNewLineMapping,
+													sizeof(ptr->eventKeys.newline), &ptr->eventKeys.newline);
 		assert(kPreferences_ResultOK == prefsResult);
 	}
 	
@@ -2378,14 +2375,11 @@ Session_SendFlush	(SessionRef		inRef)
 /*!
 Sends a carriage return sequence.  Depending upon the
 user preference and terminal mode for carriage return
-handling, this may send CR, CR-LF or CR-null.
+handling, this may send CR, CR-LF, CR-null or LF.
 
-Since Apple Events allow carriage returns to not be
-echoed as an option, you must override the session
-echo setting explicitly.  For efficiency, you can
-provide a constant to use the current echo setting
-for the given session, or you can provide an explicit
-on/off value.
+The value "kSession_EchoCurrentSessionValue" is preferable
+for "inEcho" so that you are always respecting the user’s
+preferences.
 
 (3.0)
 */
@@ -2394,7 +2388,6 @@ Session_SendNewline		(SessionRef		inRef,
 						 Session_Echo	inEcho)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean					lineFeedToo = false;
 	Boolean					echo = false;
 	
 	
@@ -2414,27 +2407,44 @@ Session_SendNewline		(SessionRef		inRef,
 		echo = false;
 		break;
 	}
-	if (echo)
-	{
-		localEchoKey(ptr, 0x0D/* carriage return character */);
-	}
 	
 	// now send the new-line sequence to the session
-	if (false == ptr->targetTerminals.empty())
+	switch (ptr->eventKeys.newline)
 	{
-		lineFeedToo = Terminal_LineFeedNewLineMode(ptr->targetTerminals.front());
-	}
-	
-	if (lineFeedToo)
-	{
-		(SInt16)Session_SendFlush(inRef);
-		Session_SendData(inRef, "\015\012", 2);
-	}
-	else
-	{
-		(SInt16)Session_SendFlush(inRef);
+	case kSession_NewlineModeMapCR:
+		if (echo)
+		{
+			localEchoKey(ptr, 0x0D/* carriage return character */);
+		}
 		Session_SendData(inRef, "\015", 1);
+		break;
+	
+	case kSession_NewlineModeMapCRLF:
+		if (echo)
+		{
+			localEchoKey(ptr, 0x0D/* carriage return character */);
+		}
+		Session_SendData(inRef, "\015\012", 2);
+		break;
+	
+	case kSession_NewlineModeMapCRNull:
+		if (echo)
+		{
+			localEchoKey(ptr, 0x0D/* carriage return character */);
+		}
+		Session_SendData(inRef, "\015\000", 2);
+		break;
+	
+	case kSession_NewlineModeMapLF:
+	default:
+		if (echo)
+		{
+			localEchoKey(ptr, 0x0D/* carriage return character */);
+		}
+		Session_SendData(inRef, "\012", 1);
+		break;
 	}
+	(SInt16)Session_SendFlush(inRef);
 }// SendNewline
 
 
@@ -5529,17 +5539,11 @@ copyEventKeyPreferences		(My_SessionPtr				inPtr,
 		++result;
 	}
 	
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagNewLineMapping,
+												sizeof(inPtr->eventKeys.newline), &inPtr->eventKeys.newline, inSearchDefaults);
+	if (kPreferences_ResultOK == prefsResult)
 	{
-		Boolean		mapCRToCRNull = false;
-		
-		
-		prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagMapCarriageReturnToCRNull,
-													sizeof(mapCRToCRNull), &mapCRToCRNull, inSearchDefaults);
-		if (kPreferences_ResultOK == prefsResult)
-		{
-			inPtr->eventKeys.newline = (mapCRToCRNull) ? kSession_NewlineModeMapCRNull : kSession_NewlineModeMapCRLF;
-			++result;
-		}
+		++result;
 	}
 	
 	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagEmacsMetaKey,
@@ -6282,8 +6286,8 @@ localEchoKey	(My_SessionPtr	inPtr,
 		if (0x0D == inKeyOrASCII)
 		{
 			// carriage return; special-case this and do not print control-M
-			//UInt8	seqUTF8[] = {0xE2, 0x8F, 0x8E}; // return symbol
-			UInt8	seqUTF8[] = {0xE2, 0x86, 0xB5}; // down-left-hook symbol
+			//UInt8	seqUTF8[] = { 0xE2, 0x8F, 0x8E }; // return symbol
+			UInt8	seqUTF8[] = { 0xE2, 0x86, 0xB5 }; // down-left-hook symbol
 			
 			
 			terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));
@@ -6293,7 +6297,7 @@ localEchoKey	(My_SessionPtr	inPtr,
 		{
 			// control character; convert to a caret sequence (but with the Unicode control symbol)
 			char const*		controlSymbols = "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]~?"; // must contain exactly 32 symbols
-			UInt8			controlCharBuffer[4] = {0xE2, 0x8C, 0x83, '\0'}; // UTF-8 control symbol followed by a letter/symbol
+			UInt8			controlCharBuffer[4] = { 0xE2, 0x8C, 0x83, '\0' }; // UTF-8 control symbol followed by a letter/symbol
 			
 			
 			assert(32 == CPP_STD::strlen(controlSymbols));
@@ -6305,7 +6309,7 @@ localEchoKey	(My_SessionPtr	inPtr,
 	else if (127 == inKeyOrASCII)
 	{
 		// delete; make the Unicode (UTF-8) backward-delete symbol
-		UInt8	seqUTF8[] = { 0xE2, 0x8C, 0xAB};
+		UInt8	seqUTF8[] = { 0xE2, 0x8C, 0xAB };
 		
 		
 		terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));
@@ -6319,7 +6323,7 @@ localEchoKey	(My_SessionPtr	inPtr,
 			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
 			if (hoverEcho)
 			{
-				UInt8	seqUTF8[] = {0xE2, 0x87, 0xA0}; // keyboard left arrow
+				UInt8	seqUTF8[] = { 0xE2, 0x87, 0xA0 }; // keyboard left arrow
 				
 				
 				terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));
@@ -6331,7 +6335,7 @@ localEchoKey	(My_SessionPtr	inPtr,
 			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
 			if (hoverEcho)
 			{
-				UInt8	seqUTF8[] = {0xE2, 0x87, 0xA2}; // keyboard right arrow
+				UInt8	seqUTF8[] = { 0xE2, 0x87, 0xA2 }; // keyboard right arrow
 				
 				
 				terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));
@@ -6343,7 +6347,7 @@ localEchoKey	(My_SessionPtr	inPtr,
 			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
 			if (hoverEcho)
 			{
-				UInt8	seqUTF8[] = {0xE2, 0x87, 0xA1}; // keyboard up arrow
+				UInt8	seqUTF8[] = { 0xE2, 0x87, 0xA1 }; // keyboard up arrow
 				
 				
 				terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));
@@ -6355,7 +6359,7 @@ localEchoKey	(My_SessionPtr	inPtr,
 			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
 			if (hoverEcho)
 			{
-				UInt8	seqUTF8[] = {0xE2, 0x87, 0xA3}; // keyboard down arrow
+				UInt8	seqUTF8[] = { 0xE2, 0x87, 0xA3 }; // keyboard down arrow
 				
 				
 				terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));
@@ -6367,7 +6371,7 @@ localEchoKey	(My_SessionPtr	inPtr,
 			hoverEcho = true; // avoid insertion, since the local terminal won’t do anything with this key
 			if (hoverEcho)
 			{
-				UInt8	seqUTF8[] = {0xE2, 0x8C, 0xA4}; // enter symbol (arrow head between two bars)
+				UInt8	seqUTF8[] = { 0xE2, 0x8C, 0xA4 }; // enter symbol (arrow head between two bars)
 				
 				
 				terminalHoverLocalEchoString(inPtr, seqUTF8, sizeof(seqUTF8));

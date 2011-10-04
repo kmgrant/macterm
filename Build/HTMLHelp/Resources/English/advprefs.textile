@@ -191,8 +191,8 @@ table(deftable).
 (defbottom). |\2(desc). Using the Delete key sends this instruction (backspace or delete) to the session.|
 (deftop). |(key). @key-map-function-keys@|(types). _string_: @xterm-xfree86@, @xterm@, @rxvt@ or @vt220@|
 (defbottom). |\2(desc). The behavior and availability of up to 48 keys on the floating "Function Keys" keypad.|
-(deftop). |(key). @key-map-new-line@|(types). _string_: @\015\000@ or @\015\012@|
-(defbottom). |\2(desc). Using the Return or Enter key sends this sequence (character codes in C-style octal) to the session.|
+(deftop). |(key). @key-map-new-line@|(types). _string_: @\012@ or @\015@ or @\015\000@ or @\015\012@|
+(defbottom). |\2(desc). Using the Return or Enter key sends this sequence (character codes in C-style octal) to the session.  This is also used after each line of text inserted by Paste or drag-and-drop, regardless of the original text's line endings.|
 (deftop). |(key). @server-host@|(types). _string_: TCP/IP host name, or IPv4 or IPv6 address|
 (defbottom). |\2(desc). The machine where the desired remote server is located.|
 (deftop). |(key). @server-port@|(types). _integer_: TCP/IP port number|

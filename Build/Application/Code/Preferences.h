@@ -247,8 +247,8 @@ enum
 	kPreferences_TagLineModeEnabled						= 'linm',	//!< data: "Boolean"
 	kPreferences_TagLocalEchoEnabled					= 'echo',	//!< data: "Boolean"
 	kPreferences_TagLocalEchoHalfDuplex					= 'lehd',	//!< data: "Boolean"
-	kPreferences_TagMapCarriageReturnToCRNull			= 'crnl',	//!< data: "Boolean"
 	kPreferences_TagMapDeleteToBackspace				= 'delb',	//!< data: "Boolean"
+	kPreferences_TagNewLineMapping						= 'newl',	//!< data: "Session_NewlineMode"
 	kPreferences_TagPasteNewLineDelay					= 'pnld',	//!< data: "EventTime"; stored as milliseconds, but scaled to EventTime when used
 	kPreferences_TagScrollDelay							= 'scrd',	//!< data: "EventTime"; stored as milliseconds, but scaled to EventTime when used
 	kPreferences_TagServerHost							= 'host',	//!< data: "CFStringRef" (domain name or IP address)

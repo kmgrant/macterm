@@ -1795,21 +1795,39 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		
 		// set new-line mapping
 		{
-			Boolean		useCRNULL = false;
+			Session_NewlineMode		newLineMapping = kSession_NewlineModeMapLF;
 			
 			
-			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagMapCarriageReturnToCRNull,
-														sizeof(useCRNULL), &useCRNULL,
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagNewLineMapping,
+														sizeof(newLineMapping), &newLineMapping,
 														true/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				HIViewWrap		popUpMenu(idMyPopUpMenuNewLineMapping, window);
+				UInt32			commandID = kCommandSetNewlineCarriageReturnLineFeed;
 				
 				
-				(OSStatus)DialogUtilities_SetPopUpItemByCommand(popUpMenu,
-																(useCRNULL)
-																? kCommandSetNewlineCarriageReturnNull
-																: kCommandSetNewlineCarriageReturnLineFeed);
+				switch (newLineMapping)
+				{
+				case kSession_NewlineModeMapCR:
+					commandID = kCommandSetNewlineCarriageReturnOnly;
+					break;
+				
+				case kSession_NewlineModeMapCRLF:
+					commandID = kCommandSetNewlineCarriageReturnLineFeed;
+					break;
+				
+				case kSession_NewlineModeMapCRNull:
+					commandID = kCommandSetNewlineCarriageReturnNull;
+					break;
+				
+				case kSession_NewlineModeMapLF:
+				default:
+					commandID = kCommandSetNewlineLineFeedOnly;
+					break;
+				}
+				
+				(OSStatus)DialogUtilities_SetPopUpItemByCommand(popUpMenu, commandID);
 			}
 		}
 	}
@@ -1824,7 +1842,7 @@ for the buttons in the Keyboard tab.
 */
 OSStatus
 My_SessionsPanelKeyboardUI::
-receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inMySessionsUIPtr)
 {
@@ -2092,14 +2110,36 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 			
 			case kCommandSetNewlineCarriageReturnLineFeed:
 			case kCommandSetNewlineCarriageReturnNull:
+			case kCommandSetNewlineCarriageReturnOnly:
+			case kCommandSetNewlineLineFeedOnly:
 				{
 					Preferences_Result		prefsResult = kPreferences_ResultOK;
-					Boolean					flag = (kCommandSetNewlineCarriageReturnNull == received.commandID);
+					Session_NewlineMode		newLineMapping = kSession_NewlineModeMapLF;
 					
+					
+					switch (received.commandID)
+					{
+					case kCommandSetNewlineCarriageReturnOnly:
+						newLineMapping = kSession_NewlineModeMapCR;
+						break;
+					
+					case kCommandSetNewlineCarriageReturnLineFeed:
+						newLineMapping = kSession_NewlineModeMapCRLF;
+						break;
+					
+					case kCommandSetNewlineCarriageReturnNull:
+						newLineMapping = kSession_NewlineModeMapCRNull;
+						break;
+					
+					case kCommandSetNewlineLineFeedOnly:
+					default:
+						newLineMapping = kSession_NewlineModeMapLF;
+						break;
+					}
 					
 					prefsResult = Preferences_ContextSetData(dataPtr->dataModel,
-																kPreferences_TagMapCarriageReturnToCRNull,
-																sizeof(flag), &flag);
+																kPreferences_TagNewLineMapping,
+																sizeof(newLineMapping), &newLineMapping);
 					assert(kPreferences_ResultOK == prefsResult);
 					
 					// update the pop-up button

@@ -672,13 +672,27 @@ h4. New Line
 
 Since some systems or applications recognize different characters
  for end-of-line, you can specify how MacTerm sends a new-line
- (say, when pressing Return or pasting multi-line text).
+ (say, when pressing Return or when pasting or dragging in text
+ that spans multiple lines).  When source text such as a Paste
+ contains new-line markers already, those markers are replaced
+ with your chosen New Line mappings below.
 
-"CF LF" means "carriage return, line feed" and sends two
- characters: ASCII codes 13 and 10.
+"CR" means "carriage return" and sends one character: ASCII code 13.
+ This is most likely to be useful when connecting to a remote
+ system that is running the Classic Mac OS 9 or earlier.
 
-"CF NULL" means "carriage return, null character" and sends two
- characters: ASCII codes 13 and 0.
+"CR LF" means "carriage return, line feed" and sends two
+ characters: ASCII codes 13 and 10.  This is most likely to be
+ useful when connecting to a remote MS-DOS or Windows system.
+
+"CR NULL" means "carriage return, null character" and sends two
+ characters: ASCII codes 13 and 0.  This is most likely to be
+ useful when interacting directly with remote servers over
+ certain protocols.  It is also known to be helpful on systems
+ running BSD version 4.3.
+
+"LF" means "line feed" and sends one character: ASCII code 10.
+ This is most likely to be useful on Unix systems.
 
 h3(#sessiontek). Graphics (TEK)
 

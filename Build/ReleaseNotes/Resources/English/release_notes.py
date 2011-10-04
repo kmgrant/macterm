@@ -421,7 +421,10 @@ daily_build_lineage = [
 notes_by_version = {
     '20111004': [
         'Fixed Preferences window Sessions pane Keyboard tab (and Custom Key Sequences sheet) to save and restore the mapping settings at the bottom of the interface.',
+        'IMPORTANT NOTE: If new-lines now behave unexpectedly, use the Preferences window Sessions pane Keyboard tab (or Custom Key Sequences sheet) to update your new-line setting.',
         'The Emacs meta key mapping "control + command" has been removed because this key combination is no longer detectable (perhaps it is reserved by the OS).  The meta key can now be mapped to "shift + option" however.',
+        'Preferences window Sessions pane Keyboard tab (and Custom Key Sequences sheet) now provide more options for new-line definitions.',
+        'The factory default new-line definition is now "line feed only".  Note that this will only be seen when creating preferences from scratch.',
     ],
     '20111003': [
         'Fixed "Select All" and other editing problems for floating windows like the Command Line and the Servers panel.',
