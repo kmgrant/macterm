@@ -239,6 +239,10 @@ private:
 	CarbonEventHandlerWrap				_button1CommandHandler;		//!< invoked when a button is clicked
 	CarbonEventHandlerWrap				_button2CommandHandler;		//!< invoked when a button is clicked
 	CarbonEventHandlerWrap				_button3CommandHandler;		//!< invoked when a button is clicked
+	CarbonEventHandlerWrap				_emacsArrowsCommandHandler;	//!< invoked when this checkbox is clicked
+	CarbonEventHandlerWrap				_emacsMetaCommandHandler;	//!< invoked when this segmented view is clicked
+	CarbonEventHandlerWrap				_deleteMapCommandHandler;	//!< invoked when this segmented view is clicked
+	CarbonEventHandlerWrap				_newLineMapCommandHandler;	//!< invoked when this menu is clicked
 };
 
 /*!
@@ -1419,6 +1423,18 @@ _button2CommandHandler	(GetControlEventTarget(HIViewWrap(idMyButtonChangeSuspend
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */),
 _button3CommandHandler	(GetControlEventTarget(HIViewWrap(idMyButtonChangeResumeKey, inOwningWindow)), receiveHICommand,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+							this/* user data */),
+_emacsArrowsCommandHandler(GetControlEventTarget(HIViewWrap(idMyCheckBoxMapArrowsForEmacs, inOwningWindow)), receiveHICommand,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+							this/* user data */),
+_emacsMetaCommandHandler(GetControlEventTarget(HIViewWrap(idMySegmentsEmacsMetaKey, inOwningWindow)), receiveHICommand,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+							this/* user data */),
+_deleteMapCommandHandler(GetControlEventTarget(HIViewWrap(idMySegmentsDeleteKeyMapping, inOwningWindow)), receiveHICommand,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+							this/* user data */),
+_newLineMapCommandHandler(GetControlEventTarget(HIViewWrap(idMyPopUpMenuNewLineMapping, inOwningWindow)), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */)
 {

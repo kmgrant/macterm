@@ -418,6 +418,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111004': [
+        'Fixed Preferences window Sessions pane Keyboard tab (and Custom Key Sequences sheet) to save and restore the mapping settings at the bottom of the interface.',
+    ],
     '20111003': [
         'Fixed "Select All" and other editing problems for floating windows like the Command Line and the Servers panel.',
     ],
