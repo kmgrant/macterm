@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111003',
     '20110930',
     '20110927',
     '20110925',
@@ -417,6 +418,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111003': [
+        'Fixed "Select All" and other editing problems for floating windows like the Command Line and the Servers panel.',
+    ],
     '20110930': [
         'Fixed certain timer-dependent features on Panther, such as updates to the Clipboard window.',
         "Multiple-line text inserted by Paste or drag-and-drop is now sent line-by-line, and the target Session's preferred new-line sequence is inserted after each line that originally ended with a new-line character or sequence.",

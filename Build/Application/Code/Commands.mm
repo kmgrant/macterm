@@ -3841,14 +3841,29 @@ canPerformSaveSelection:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performCopy:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandCopy, nullptr/* target */);
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if ([[NSApp keyWindow] level] != NSNormalWindowLevel)
+	{
+		// assume that abnormal Cocoa windows should handle this directly
+		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(copy:) with:sender];
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		// assume this is potentially a Carbon window that should (for now) take a different approach;
+		// longer-term this will go away and the responder chain will be used everywhere
+		Commands_ExecuteByIDUsingEvent(kCommandCopy, nullptr/* target */);
+	}
 }
 - (id)
 canPerformCopy:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
+	NSWindow*			target = [NSApp keyWindow];
+	TerminalWindowRef	terminalWindow = [target terminalWindowRef];
+	id					keyResponder = [target firstResponder];
 	BOOL				result = NO;
 	
 	
@@ -3859,23 +3874,35 @@ canPerformCopy:(id <NSValidatedUserInterfaceItem>)		anItem
 		
 		result = TerminalView_TextSelectionExists(view);
 	}
-	else if (activeCarbonWindowHasSelectedText())
+	else if (isCarbonWindow(target))
 	{
-		result = YES;
+		if (activeCarbonWindowHasSelectedText())
+		{
+			result = YES;
+		}
+		else
+		{
+			// TEMPORARY: This is a Carbon window dependency for now.  Once the vector graphics
+			// windows become Cocoa-based, this check will be unnecessary: the NSWindow subclass
+			// will have its own performCopy: and canPerformCopy: implementations, and rebinding
+			// the menu command to the first responder will ensure that the appropriate method
+			// is used whenever a vector graphics window is key.
+			BOOL	isVectorGraphicsWindow = (WIN_TEK == GetWindowKind(ActiveNonFloatingWindow()));
+			
+			
+			result = isVectorGraphicsWindow;
+		}
 	}
-	else
+	else if ((nullptr == terminalWindow) && ([keyResponder respondsToSelector:@selector(copy:)]))
 	{
-		// TEMPORARY: This is a Carbon window dependency for now.  Once the vector graphics
-		// windows become Cocoa-based, this check will be unnecessary: the NSWindow subclass
-		// will have its own performCopy: and canPerformCopy: implementations, and rebinding
-		// the menu command to the first responder will ensure that the appropriate method
-		// is used whenever a vector graphics window is key.
-		BOOL	isVectorGraphicsWindow = (WIN_TEK == GetWindowKind(ActiveNonFloatingWindow()));
-		
-		
-		result = isVectorGraphicsWindow;
+		result = ([keyResponder respondsToSelector:@selector(isEditable)] && (NO == [keyResponder isEditable]))
+					? NO
+					: YES;
+		if (result)
+		{
+			result = ([[target fieldEditor:NO/* create */ forObject:keyResponder] selectedRange].length > 0);
+		}
 	}
-	
 	return [NSNumber numberWithBool:result];
 }
 
@@ -3917,16 +3944,50 @@ canPerformCopyWithTabSubstitution:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performCut:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandCut, nullptr/* target */);
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if ([[NSApp keyWindow] level] != NSNormalWindowLevel)
+	{
+		// assume that abnormal Cocoa windows should handle this directly
+		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(cut:) with:sender];
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		// assume this is potentially a Carbon window that should (for now) take a different approach;
+		// longer-term this will go away and the responder chain will be used everywhere
+		Commands_ExecuteByIDUsingEvent(kCommandCut, nullptr/* target */);
+	}
 }
 - (id)
 canPerformCut:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = activeCarbonWindowHasSelectedText();
+	NSWindow*			target = [NSApp keyWindow];
+	TerminalWindowRef	terminalWindow = [target terminalWindowRef];
+	id					keyResponder = [target firstResponder];
+	BOOL				result = NO;
 	
 	
+	if (nullptr != terminalWindow)
+	{
+		result = NO;
+	}
+	else if (isCarbonWindow(target))
+	{
+		result = activeCarbonWindowHasSelectedText();
+	}
+	else if ([keyResponder respondsToSelector:@selector(cut:)])
+	{
+		result = ([keyResponder respondsToSelector:@selector(isEditable)] && (NO == [keyResponder isEditable]))
+					? NO
+					: YES;
+		if (result)
+		{
+			result = ([[target fieldEditor:NO/* create */ forObject:keyResponder] selectedRange].length > 0);
+		}
+	}
 	return [NSNumber numberWithBool:result];
 }
 
@@ -3934,16 +3995,54 @@ canPerformCut:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performDelete:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandClear, nullptr/* target */);
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if ([[NSApp keyWindow] level] != NSNormalWindowLevel)
+	{
+		// assume that abnormal Cocoa windows should handle this directly
+		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(delete:) with:sender];
+		if (NO == implementedByCocoa)
+		{
+			implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(clear:) with:sender];
+		}
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		// assume this is potentially a Carbon window that should (for now) take a different approach;
+		// longer-term this will go away and the responder chain will be used everywhere
+		Commands_ExecuteByIDUsingEvent(kCommandClear, nullptr/* target */);
+	}
 }
 - (id)
 canPerformDelete:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = activeCarbonWindowHasSelectedText();
+	NSWindow*			target = [NSApp keyWindow];
+	TerminalWindowRef	terminalWindow = [target terminalWindowRef];
+	id					keyResponder = [target firstResponder];
+	BOOL				result = NO;
 	
 	
+	if (nullptr != terminalWindow)
+	{
+		result = NO;
+	}
+	else if (isCarbonWindow(target))
+	{
+		result = activeCarbonWindowHasSelectedText();
+	}
+	else if ([keyResponder respondsToSelector:@selector(delete:)] || [keyResponder respondsToSelector:@selector(clear:)])
+	{
+		result = ([keyResponder respondsToSelector:@selector(isEditable)] && (NO == [keyResponder isEditable]))
+					? NO
+					: YES;
+		if (result)
+		{
+			result = ([[target fieldEditor:NO/* create */ forObject:keyResponder] selectedRange].length > 0);
+		}
+	}
 	return [NSNumber numberWithBool:result];
 }
 
@@ -3951,18 +4050,42 @@ canPerformDelete:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performPaste:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandPaste, nullptr/* target */);
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if ([[NSApp keyWindow] level] != NSNormalWindowLevel)
+	{
+		// assume that abnormal Cocoa windows should handle this directly
+		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(paste:) with:sender];
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		// assume this is potentially a Carbon window that should (for now) take a different approach;
+		// longer-term this will go away and the responder chain will be used everywhere
+		Commands_ExecuteByIDUsingEvent(kCommandPaste, nullptr/* target */);
+	}
 }
 - (id)
 canPerformPaste:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (Clipboard_ContainsText() &&
-						((nullptr != TerminalWindow_ReturnFromKeyWindow()) ||
-							(nullptr != returnActiveCarbonWindowFocusedField())));
+	id		keyResponder = [[NSApp keyWindow] firstResponder];
+	BOOL	result = NO;
 	
 	
+	if ([keyResponder respondsToSelector:@selector(paste:)])
+	{
+		result = ([keyResponder respondsToSelector:@selector(isEditable)] && (NO == [keyResponder isEditable]))
+					? NO
+					: YES;
+	}
+	else
+	{
+		result = Clipboard_ContainsText() &&
+					((nullptr != TerminalWindow_ReturnFromKeyWindow()) ||
+						(nullptr != returnActiveCarbonWindowFocusedField()));
+	}
 	return [NSNumber numberWithBool:result];
 }
 
@@ -3999,8 +4122,34 @@ canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSelectAll:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSelectAll, nullptr/* target */);
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if ([[NSApp keyWindow] level] != NSNormalWindowLevel)
+	{
+		// assume that abnormal Cocoa windows should handle this directly
+		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(selectAll:) with:sender];
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		// assume this is potentially a Carbon window that should (for now) take a different approach;
+		// longer-term this will go away and the responder chain will be used everywhere
+		Commands_ExecuteByIDUsingEvent(kCommandSelectAll, nullptr/* target */);
+	}
+}
+- (id)
+canPerformSelectAll:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = NO;
+	
+	
+	if ([[[NSApp keyWindow] firstResponder] respondsToSelector:@selector(selectAll:)])
+	{
+		result = YES;
+	}
+	return [NSNumber numberWithBool:result];
 }
 
 
