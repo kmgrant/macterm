@@ -367,6 +367,7 @@ Initialize_SetVersionFlags ()
 	FlagManager_Set(kFlagOS10_5API, (((majorRev == 0x0A) && (minorRev >= 0x05)) || (majorRev > 0x0A)));
 	FlagManager_Set(kFlagOS10_6API, (((majorRev == 0x0A) && (minorRev >= 0x06)) || (majorRev > 0x0A)));
 	FlagManager_Set(kFlagOS10_7API, (((majorRev == 0x0A) && (minorRev >= 0x07)) || (majorRev > 0x0A)));
+	FlagManager_Set(kFlagOS10_8API, (((majorRev == 0x0A) && (minorRev >= 0x08)) || (majorRev > 0x0A)));
 }// SetVersionFlags
 
 
