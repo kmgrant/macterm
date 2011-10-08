@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111007',
     '20111004',
     '20111003',
     '20110930',
@@ -419,6 +420,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111007': [
+        'Toolbar icon artwork has significantly changed.',
+        'Toolbar "Separator" item removed from customization sheets since it is not available on Mac OS X Lion.',
+    ],
     '20111004': [
         'Fixed Preferences window Sessions pane Keyboard tab (and Custom Key Sequences sheet) to save and restore the mapping settings at the bottom of the interface.',
         'IMPORTANT NOTE: If new-lines now behave unexpectedly, use the Preferences window Sessions pane Keyboard tab (or Custom Key Sequences sheet) to update your new-line setting.',

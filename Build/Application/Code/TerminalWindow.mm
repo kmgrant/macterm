@@ -5117,7 +5117,6 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDHideWindow);
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDFullScreen);
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalBell);
-						CFArrayAppendValue(allowedIdentifiers, kHIToolbarSeparatorIdentifier);
 						CFArrayAppendValue(allowedIdentifiers, kHIToolbarSpaceIdentifier);
 						CFArrayAppendValue(allowedIdentifiers, kHIToolbarFlexibleSpaceIdentifier);
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDPrint);
@@ -5138,9 +5137,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDHideWindow);
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSeparatorIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDScrollLock);
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSeparatorIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalBell);
 						CFArrayAppendValue(defaultIdentifiers, kHIToolbarFlexibleSpaceIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED1);
@@ -5149,9 +5146,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED4);
 						CFArrayAppendValue(defaultIdentifiers, kHIToolbarFlexibleSpaceIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDPrint);
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSeparatorIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDFullScreen);
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSeparatorIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDCustomize);
 						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
@@ -7829,7 +7824,6 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 						kMy_ToolbarItemIDLED2,
 						kMy_ToolbarItemIDLED3,
 						kMy_ToolbarItemIDLED4,
-						NSToolbarSeparatorItemIdentifier,
 						kMy_ToolbarItemIDPrint,
 						nil];
 }// toolbarAllowedItemIdentifiers
