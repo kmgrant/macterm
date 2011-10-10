@@ -409,6 +409,21 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		}
 		break;
 	
+	case kCommandRestartSession:
+		switch (inNameType)
+		{
+		case kCommands_NameTypeShort:
+			if (UIStrings_Copy(kUIStrings_ToolbarItemRestartSession, outName).ok()) result = true;
+			else useMenuCommandName = true;
+			break;
+		
+		case kCommands_NameTypeDefault:
+		default:
+			useMenuCommandName = true;
+			break;
+		}
+		break;
+	
 	case kHICommandCustomizeToolbar:
 		switch (inNameType)
 		{
@@ -668,6 +683,12 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 					// UNIMPLEMENTED!!!
 					Sound_StandardAlert();
 				}
+			}
+			break;
+		
+		case kCommandRestartSession:
+			{
+				Session_DisplayTerminationWarning(frontSession, false/* is modal */, true/* restart */);
 			}
 			break;
 		
@@ -4346,15 +4367,7 @@ canPerformNewShell:(id <NSValidatedUserInterfaceItem>)		anItem
 performRestart:(id)		sender
 {
 #pragma unused(sender)
-	SessionRef	currentSession = SessionFactory_ReturnUserRecentSession();
-	Boolean		success = SessionFactory_RespawnSession(currentSession);
-	
-	
-	unless (success)
-	{
-		Sound_StandardAlert();
-		Console_Warning(Console_WriteLine, "failed to restart session");
-	}
+	Commands_ExecuteByIDUsingEvent(kCommandRestartSession, nullptr/* target */);
 }
 - (id)
 canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4364,7 +4377,7 @@ canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL			result = NO;
 	
 	
-	if ((nullptr != currentSession) && Session_StateIsDead(currentSession))
+	if (nullptr != currentSession)
 	{
 		result = YES;
 	}

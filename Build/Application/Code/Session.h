@@ -392,7 +392,8 @@ void
 
 void
 	Session_DisplayTerminationWarning		(SessionRef							inRef,
-											 Boolean							inForceModalDialog = false);
+											 Boolean							inForceModalDialog = false,
+											 Boolean							inRestart = false);
 
 Boolean
 	Session_IsReadOnly						(SessionRef							inRef);

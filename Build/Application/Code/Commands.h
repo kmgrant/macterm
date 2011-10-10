@@ -132,6 +132,7 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandCloseConnection					kHICommandClose
 #define kCommandSaveSession						kHICommandSaveAs
 #define kCommandNewDuplicateSession				'NewD'
+#define kCommandRestartSession					'RSsn'
 #define kCommandHandleURL						'HURL'
 #define kCommandSaveText						'SvTx'
 #define kCommandCaptureToFile					'Capt'

@@ -156,6 +156,7 @@ CFStringRef const kConstantsRegistry_HIToolbarItemIDNewDefaultSession		= CFSTR("
 CFStringRef const kConstantsRegistry_HIToolbarItemIDNewLoginSession			= CFSTR("com.mactelnet.toolbaritem.newloginsession");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDNewShellSession			= CFSTR("com.mactelnet.toolbaritem.newshellsession");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDPrint					= CFSTR("com.mactelnet.toolbaritem.print");
+CFStringRef const kConstantsRegistry_HIToolbarItemIDRestartSession			= CFSTR("com.mactelnet.toolbaritem.restartsession");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDScrollLock				= CFSTR("com.mactelnet.toolbaritem.scrolllock");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDStackWindows			= CFSTR("com.mactelnet.toolbaritem.stackwindows");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDTerminalBell			= CFSTR("com.mactelnet.toolbaritem.terminalbell");
@@ -209,6 +210,7 @@ enum
 	kConstantsRegistry_IconServicesIconToolbarItemLEDOff		= 'LEDO',
 	kConstantsRegistry_IconServicesIconToolbarItemLEDOn			= 'LEDI',
 	kConstantsRegistry_IconServicesIconToolbarItemPrint			= 'Prnt',
+	kConstantsRegistry_IconServicesIconToolbarItemRestartSession= 'RSsn',
 	kConstantsRegistry_IconServicesIconToolbarItemScrollLockOff	= 'XON ',
 	kConstantsRegistry_IconServicesIconToolbarItemScrollLockOn	= 'XOFF',
 	kConstantsRegistry_IconServicesIconToolbarItemStackWindows	= 'StkW'

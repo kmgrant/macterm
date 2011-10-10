@@ -1378,13 +1378,19 @@ SessionFactory_NewTerminalWindowUserFavorite	(Preferences_ContextRef		inTerminal
 
 /*!
 Reruns the same command line that was used to start the
-specified session, using the same terminal window.  The
-given session MUST be in the “dead” state (with its window
-still open).  Returns true only if successful.
+specified session, using the same terminal window.  The given
+session MUST be in the “dead” state (with its window still
+open).  Returns true only if successful.
 
-This function should have a similar implementation to that
-of SessionFactory_NewSessionArbitraryCommand(), except
-that no new session object or window are created.
+IMPORTANT:	Typically you should not invoke this directly, but
+			rather call Session_DisplayTerminationWarning()
+			and specify that a restart should occur.  This
+			will keep the user in the loop and give a warning
+			when appropriate, with an option to Cancel as well.
+
+This function should have a similar implementation to that of
+SessionFactory_NewSessionArbitraryCommand(), except that no
+new session object or window are created.
 
 (4.0)
 */
@@ -1408,8 +1414,10 @@ SessionFactory_RespawnSession	(SessionRef		inSession)
 		
 		// NOTE: the session is still being tracked from when it was first created,
 		// so there is no need to start tracking it after a respawn; however, it is
-		// still important to activate the session (which also notifies listeners)
+		// still important to activate the session (which also notifies listeners);
+		// also, make the session immediately “long lived” without the usual delay
 		Session_SetState(inSession, kSession_StateActiveUnstable);
+		Session_SetState(inSession, kSession_StateActiveStable);
 	}
 	return result;
 }// RespawnSession
@@ -3171,26 +3179,6 @@ setSessionState		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			{
 				// success!
 				Session_SetState(session, newState);
-				if (newState == kSession_StateDead)
-				{
-					Boolean		keepWindowOpen = false;
-					size_t		actualSize = 0L;
-					
-					
-					// get the user’s process service preference, if possible
-					if (kPreferences_ResultOK != Preferences_GetData(kPreferences_TagDontAutoClose,
-																		sizeof(keepWindowOpen), &keepWindowOpen,
-																		&actualSize))
-					{
-						keepWindowOpen = false; // assume window should be closed, if preference can’t be found
-					}
-					
-					// kill the session if appropriate
-					unless (keepWindowOpen)
-					{
-						Session_Dispose(&session);
-					}
-				}
 			}
 		}
 	}

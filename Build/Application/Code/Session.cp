@@ -254,6 +254,7 @@ struct My_Session
 	Preferences_ContextWrap		configuration;				// not always in sync; see Session_ReturnConfiguration()
 	Preferences_ContextWrap		translationConfiguration;	// not always in sync; see Session_ReturnTranslationConfiguration()
 	Boolean						readOnly;					// whether or not user input is allowed
+	Boolean						restartInProgress;			// a session restart is underway; prevents the death of the process from destroying the session
 	Session_Type				kind;						// type of session; affects use of the union below
 	Session_State				status;						// indicates whether session is initialized, etc.
 	Session_StateAttributes		statusAttributes;			// “tags” for the status, above
@@ -287,6 +288,8 @@ struct My_Session
 	EventLoopTimerRef			autoActivateDragTimer;		// short timer
 	EventLoopTimerUPP			longLifeTimerUPP;			// procedure that is called when a session has been open 15 seconds
 	EventLoopTimerRef			longLifeTimer;				// 15-second timer
+	EventLoopTimerUPP			respawnSessionTimerUPP;		// procedure that is called when a session should be respawned
+	EventLoopTimerRef			respawnSessionTimer;		// short timer
 	InterfaceLibAlertRef		currentTerminationAlert;	// retained while a sheet is still open so a 2nd sheet is not displayed
 	TerminalWindowRef			terminalWindow;				// terminal window housing this session
 	Local_ProcessRef			mainProcess;				// the command whose output is directly attached to the terminal
@@ -341,10 +344,12 @@ typedef My_PasteAlertInfo*		My_PasteAlertInfoPtr;
 
 struct My_TerminateAlertInfo
 {
-	My_TerminateAlertInfo	(SessionRef		inSession): sessionBeingTerminated(inSession) {}
+	My_TerminateAlertInfo	(SessionRef		inSession,
+							 Boolean		inRestart): sessionBeingTerminated(inSession), restartSession(inRestart) {}
 	
 	// sent to terminationWarningCloseNotifyProc()
 	SessionRef		sessionBeingTerminated;
+	Boolean			restartSession;
 };
 typedef My_TerminateAlertInfo*	My_TerminateAlertInfoPtr;
 
@@ -395,6 +400,7 @@ OSStatus					receiveTerminalViewEntered			(EventHandlerCallRef, EventRef, void*)
 OSStatus					receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef, void*);
 OSStatus					receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
 OSStatus					receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
+void						respawnSession						(EventLoopTimerRef, void*);
 HIWindowRef					returnActiveWindow					(My_SessionPtr);
 OSStatus					sessionDragDrop						(EventHandlerCallRef, EventRef, SessionRef,
 																 HIViewRef, DragRef);
@@ -598,7 +604,16 @@ Session_New		(Preferences_ContextRef		inConfigurationOrNull,
 
 
 /*!
-Destroys a session created with Session_New().
+Destroys a session created with Session_New(), unless the
+session is in use by something else.  Either way, your copy of
+the reference is set to nullptr.
+
+IMPORTANT:	Since it is possible (and a user preference) for a
+			window to stay open after a process has terminated,
+			you should only terminate sessions by calling
+			Session_SetState() with "kSession_StateDead".  If
+			you do destroy a session however it will terminate
+			the process correctly.
 
 (3.0)
 */
@@ -616,7 +631,13 @@ Session_Dispose		(SessionRef*	inoutRefPtr)
 			My_SessionAutoLocker	ptr(gSessionPtrLocks(), *inoutRefPtr);
 			
 			
-			delete ptr;
+			// ignore requests to destroy the session while a
+			// restart is underway, since the process is not
+			// really “dying” in the typical sense
+			if (false == ptr->restartInProgress)
+			{
+				delete ptr;
+			}
 		}
 		*inoutRefPtr = nullptr;
 	}
@@ -946,46 +967,52 @@ Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 
 
 /*!
-Displays the Close warning alert for the given terminal
-window, handling the user’s response automatically.  If it
-has been determined that the window was only recently
+Displays a warning alert for terminating the given terminal
+window’s session, handling the user’s response automatically.
+
+If "inRestart" is false, a Close warning may be displayed;
+if it has been determined that the window was only recently
 opened, it may close immediately without displaying any
 warning to the user (as if the user had clicked Close in
 the alert).
 
-On Mac OS X, a sheet is used (unless "inForceModalDialog"
-is true), so this routine may return immediately without
-the user having responded to the warning; the session
-termination (or lack thereof) is handled automatically,
-asynchronously, in that case.
+Conversely, when "inRestart" is true, a Restart warning is
+displayed, and the window always remains intact; if the
+process is terminated, a new one with the same command line
+is started in the same window, using the function
+SessionFactory_RespawnSession() (so, the SessionRef remains
+valid but it actually manages a new process ID underneath).
 
-Although the warning dialog is handled completely (e.g.
-session is automatically terminated if the user says so),
-you may still wish to find out when the user has responded
-to the warning - to handle a Close All or Quit command, for
-example.  To receive notification when a button is clicked
-in the warning alert or sheet, listen for the
-"kSession_ChangeCloseWarningAnswered" event, with the
-Session_StartMonitoring() routine.
+On Mac OS X, a sheet is used (unless "inForceModalDialog" is
+true), so this routine may return immediately without the user
+having responded to the warning; the session termination (or
+lack thereof) is handled automatically, asynchronously, in
+that case.  When no sheet is used, this routine is guaranteed
+to only return if the dialog has been dismissed.
 
-If you set "inForceModalDialog" to true, which is only
-relevant on Mac OS X, you can force the warning to be a
-modal dialog as opposed to a sheet.  In that case, this
-routine is guaranteed to only return when the dialog has
-been dismissed.
+Although the warning dialog is handled completely (e.g. session
+is automatically terminated if the user says so), you may still
+wish to find out when the user has responded to the warning -
+to handle a Close All or Quit command, for example.  To receive
+notification when a button is clicked in the warning alert or
+sheet, listen for the "kSession_ChangeCloseWarningAnswered"
+event, with the Session_StartMonitoring() routine.  (This event
+is NOT sent for Restart alerts; it is only sent if the window
+closes.)
 
 (3.0)
 */
 void
 Session_DisplayTerminationWarning	(SessionRef		inRef,
-									 Boolean		inForceModalDialog)
+									 Boolean		inForceModalDialog,
+									 Boolean		inRestart)
 {
-	My_TerminateAlertInfoPtr	terminateAlertInfoPtr = new My_TerminateAlertInfo(inRef);
+	My_TerminateAlertInfoPtr	terminateAlertInfoPtr = new My_TerminateAlertInfo(inRef, inRestart);
 	
 	
-	if (Session_StateIsActiveUnstable(inRef))
+	if (Session_StateIsActiveUnstable(inRef) || Session_StateIsDead(inRef))
 	{
-		// the connection JUST opened, so kill it without confirmation
+		// the process JUST started or is already dead, so kill the window without confirmation
 		terminationWarningCloseNotifyProc(nullptr/* alert box */, kAlertStdAlertOKButton,
 											terminateAlertInfoPtr/* user data */);
 	}
@@ -996,26 +1023,9 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 		HIWindowRef				window = Session_ReturnActiveWindow(inRef);
 		Rect					originalStructureBounds;
 		Rect					centeredStructureBounds;
-		Boolean					willLeaveTerminalWindowOpen = false;
-		size_t					actualSize = 0;
+		Boolean					willLeaveTerminalWindowOpen = inRestart;
 		OSStatus				error = noErr;
 		
-		
-		unless (inForceModalDialog)
-		{
-			// under Mac OS X, the sheet should close immediately if the
-			// user clicks the Close button and the terminal window will
-			// disappear immediately; however, if the window is going to
-			// remain on the screen, the sheet must close normally; so,
-			// here the preference value is checked so that the sheet
-			// can behave properly
-			unless (Preferences_GetData(kPreferences_TagDontAutoClose, sizeof(willLeaveTerminalWindowOpen),
-										&willLeaveTerminalWindowOpen, &actualSize) ==
-					kPreferences_ResultOK)
-			{
-				willLeaveTerminalWindowOpen = false; // assume windows automatically close, if preference can’t be found
-			}
-		}
 		
 		if (inForceModalDialog)
 		{
@@ -1037,7 +1047,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			// but quell the animation if this window should be closed without
 			// warning (so-called active unstable) or if only one window is
 			// open that would cause an alert to be displayed
-			if ((inForceModalDialog) &&
+			if ((inForceModalDialog) && (false == inRestart) &&
 				(false == Session_StateIsActiveUnstable(inRef)) &&
 				((SessionFactory_ReturnCount() - SessionFactory_ReturnStateCount(kSession_StateActiveUnstable)) > 1))
 			{
@@ -1095,13 +1105,17 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			CFStringRef			primaryTextCFString = nullptr;
 			
 			
-			stringResult = UIStrings_Copy(kUIStrings_AlertWindowClosePrimaryText, primaryTextCFString);
+			stringResult = UIStrings_Copy((inRestart)
+											? kUIStrings_AlertWindowRestartSessionPrimaryText
+											: kUIStrings_AlertWindowClosePrimaryText, primaryTextCFString);
 			if (stringResult.ok())
 			{
 				CFStringRef		helpTextCFString = nullptr;
 				
 				
-				stringResult = UIStrings_Copy(kUIStrings_AlertWindowCloseHelpText, helpTextCFString);
+				stringResult = UIStrings_Copy((inRestart)
+												? kUIStrings_AlertWindowRestartSessionHelpText
+												: kUIStrings_AlertWindowCloseHelpText, helpTextCFString);
 				if (stringResult.ok())
 				{
 					Alert_SetTextCFStrings(alertBox, primaryTextCFString, helpTextCFString);
@@ -1116,7 +1130,9 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			CFStringRef			titleCFString = nullptr;
 			
 			
-			stringResult = UIStrings_Copy(kUIStrings_AlertWindowCloseName, titleCFString);
+			stringResult = UIStrings_Copy((inRestart)
+											? kUIStrings_AlertWindowRestartSessionName
+											: kUIStrings_AlertWindowCloseName, titleCFString);
 			if (stringResult == kUIStrings_ResultOK)
 			{
 				Alert_SetTitleCFString(alertBox, titleCFString);
@@ -1129,7 +1145,9 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			CFStringRef			buttonTitleCFString = nullptr;
 			
 			
-			stringResult = UIStrings_Copy(kUIStrings_ButtonClose, buttonTitleCFString);
+			stringResult = UIStrings_Copy((inRestart)
+											? kUIStrings_ButtonRestart
+											: kUIStrings_ButtonClose, buttonTitleCFString);
 			if (stringResult == kUIStrings_ResultOK)
 			{
 				Alert_SetButtonText(alertBox, kAlertStdAlertOKButton, buttonTitleCFString);
@@ -1157,7 +1175,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 		if (inForceModalDialog)
 		{
 			Alert_Display(alertBox);
-			if (Alert_ItemHit(alertBox) == kAlertStdAlertCancelButton)
+			if ((false == inRestart) && (Alert_ItemHit(alertBox) == kAlertStdAlertCancelButton))
 			{
 				// in the event that the user cancelled and the window
 				// was transitioned to the screen center, “un-transition”
@@ -1181,8 +1199,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 															&floatBounds, true/* asynchronous */, &transitionOptions);
 				}
 			}
-			terminationWarningCloseNotifyProc(alertBox, Alert_ItemHit(alertBox),
-												terminateAlertInfoPtr/* user data */);
+			terminationWarningCloseNotifyProc(alertBox, Alert_ItemHit(alertBox), terminateAlertInfoPtr/* user data */);
 		}
 		else
 		{
@@ -2670,143 +2687,46 @@ Session_SetSpeechEnabled	(SessionRef		inRef,
 
 
 /*!
-Changes the current state of the specified session,
-which will trigger listener notification for all
-modules interested in finding out about new states
-(such as sessions that die, etc.).
+Changes the current state of the specified session, which will
+trigger listener notifications for all modules interested in
+finding out about new states (such as sessions that die, etc.).
 
-If the proposed state is "kSession_StateDead" or
-"kSession_StateImminentDisposal", a (most likely
-redundant) kill attempt is made on the process to
-be sure that it ends up dead.
+The state may not be set to "kSession_StateImminentDisposal".
+But if the state is set to "kSession_StateDead", it is possible
+that Session_Dispose() will be immediately called to destroy
+the session (and the first side effect of that is to enter the
+imminent-disposal state).  It is not necessarily destroyed
+however; a dead session remains valid if the user preference is
+set to keep the terminal window open, or if the Session module
+is currently in the process of restarting the session.  So
+setting the dead state is a valid way to kill a session’s
+underlying process, as long as you can handle the possibility
+that the whole session object will die at the same time.
 
-IMPORTANT:	Currently, this routine does not check
-			that the specified state is a valid
-			“next state” for the current state.
-			This may have bizarre consequences;
-			for example, transitioning a session
-			from a dead state back to an active one.
-			In the future, this routine will try to
-			implicitly transition a session through
-			a series of valid state transitions to
-			end up at the requested state, telling
-			all interested listeners about each
-			intermediate state.
+IMPORTANT:	Currently, this routine does not check that the
+			specified state is a valid “next state” for the
+			current state.  This may have bizarre consequences;
+			for example, transitioning a session from a dead
+			state back to an active one.  In the future, this
+			routine will try to implicitly transition a session
+			through a series of valid states to end up at the
+			requested state, telling all interested listeners
+			about each intermediate state.
 
 (3.0)
 */
 void
-Session_SetState	(SessionRef		inRef,
-					 Session_State	inNewState)
+Session_SetState	(SessionRef			inRef,
+					 Session_State		inNewState)
 {
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	CFStringRef				statusString = nullptr;
-	Boolean					keepWindowOpen = true;
+	Boolean		keepWindowOpen = false;
+	Boolean		isDifferentState = false;
 	
-	
-	// update status text to reflect new state
-	ptr->status = inNewState;
-	
-	if (nullptr != ptr->mainProcess)
-	{
-		if ((kSession_StateDead == ptr->status) || (kSession_StateImminentDisposal == ptr->status))
-		{
-			Local_KillProcess(&ptr->mainProcess);
-		}
-	}
-	
-	// once connected, set the connection time
-	if (kSession_StateActiveUnstable == ptr->status)
-	{
-		ptr->activationAbsoluteTime = CFAbsoluteTimeGetCurrent();
-	}
-	
-	// now update the session status string
-	if (kSession_StateDead == ptr->status)
-	{
-		Boolean		useTimeFreeStatusString = (0 == ptr->terminationAbsoluteTime);
-		
-		
-		if (false == useTimeFreeStatusString)
-		{
-			// if possible, be specific about the time of disconnect
-			if (UIStrings_Copy(kUIStrings_SessionInfoWindowStatusTerminatedAtTime,
-								statusString).ok())
-			{
-				CFLocaleRef		currentLocale = CFLocaleCopyCurrent();
-				
-				
-				if (nullptr != currentLocale)
-				{
-					CFDateFormatterRef	timeOnlyFormatter = CFDateFormatterCreate
-															(kCFAllocatorDefault, currentLocale,
-																kCFDateFormatterNoStyle/* date style */,
-																kCFDateFormatterShortStyle/* time style */);
-					
-					
-					if (nullptr != timeOnlyFormatter)
-					{
-						CFStringRef		timeCFString = CFDateFormatterCreateStringWithAbsoluteTime
-														(kCFAllocatorDefault, timeOnlyFormatter,
-															ptr->terminationAbsoluteTime);
-						
-						
-						if (nullptr != timeCFString)
-						{
-							CFStringRef		statusWithTime = CFStringCreateWithFormat
-																	(kCFAllocatorDefault, nullptr/* options */,
-																		statusString/* format */, timeCFString);
-							
-							
-							if (nullptr != statusWithTime)
-							{
-								ptr->statusString.setCFTypeRef(statusWithTime);
-								CFRelease(statusWithTime), statusWithTime = nullptr;
-							}
-							else
-							{
-								// on error, attempt to fall back with the time-free status string
-								useTimeFreeStatusString = true;
-							}
-							CFRelease(timeCFString), timeCFString = nullptr;
-						}
-						CFRelease(timeOnlyFormatter), timeOnlyFormatter = nullptr;
-					}
-					CFRelease(currentLocale), currentLocale = nullptr;
-				}
-			}
-		}
-		
-		if (useTimeFreeStatusString)
-		{
-			if (UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessTerminated,
-								statusString).ok())
-			{
-				ptr->statusString.setCFTypeRef(statusString);
-			}
-		}
-	}
-	else if (kSession_StateActiveUnstable == ptr->status)
-	{
-		(UIStrings_Result)UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessNewborn,
-											statusString);
-		ptr->statusString.setCFTypeRef(statusString);
-	}
-	else if (kSession_StateActiveStable == ptr->status)
-	{
-		(UIStrings_Result)UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessRunning,
-											statusString);
-		ptr->statusString.setCFTypeRef(statusString);
-	}
-	else
-	{
-		// ???
-		ptr->statusString.setCFTypeRef(CFSTR(""));
-	}
 	
 	// if the user preference is set, kill the terminal window
-	// when sessions are finished
-	if (kSession_StateDead == ptr->status)
+	// as soon as sessions finish (but see below for ways in
+	// which this flag may be overridden)
+	if (kSession_StateDead == inNewState)
 	{
 		size_t		actualSize = 0L;
 		
@@ -2820,16 +2740,144 @@ Session_SetState	(SessionRef		inRef,
 		}
 	}
 	
-	setIconFromState(ptr);
-	
-	// now that the state of the Session object is appropriate
-	// for the state, notify any other listeners of the change
-	changeNotifyForSession(ptr, kSession_ChangeState, inRef/* context */);
-	
-	unless (keepWindowOpen)
+	// locally lock the session; this is done in an inner block
+	// so that the session can be destroyed at the end if necessary
 	{
-		assert(Session_StateIsDead(inRef));
-		closeTerminalWindow(ptr);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		
+		
+		// do not waste time if the state is already up to date
+		isDifferentState = (inNewState != ptr->status);
+		if (isDifferentState)
+		{
+			CFStringRef		statusString = nullptr;
+			
+			
+			// update status text to reflect new state
+			assert(kSession_StateImminentDisposal != inNewState); // only the destructor may set this
+			ptr->status = inNewState;
+			
+			// once connected, set the connection time
+			if (kSession_StateActiveUnstable == ptr->status)
+			{
+				ptr->activationAbsoluteTime = CFAbsoluteTimeGetCurrent();
+			}
+			
+			// now update the session status string
+			if (kSession_StateDead == ptr->status)
+			{
+				Boolean		useTimeFreeStatusString = (0 == ptr->terminationAbsoluteTime);
+				
+				
+				if (false == useTimeFreeStatusString)
+				{
+					// if possible, be specific about the time of disconnect
+					if (UIStrings_Copy(kUIStrings_SessionInfoWindowStatusTerminatedAtTime,
+										statusString).ok())
+					{
+						CFLocaleRef		currentLocale = CFLocaleCopyCurrent();
+						
+						
+						if (nullptr != currentLocale)
+						{
+							CFDateFormatterRef	timeOnlyFormatter = CFDateFormatterCreate
+																	(kCFAllocatorDefault, currentLocale,
+																		kCFDateFormatterNoStyle/* date style */,
+																		kCFDateFormatterShortStyle/* time style */);
+							
+							
+							if (nullptr != timeOnlyFormatter)
+							{
+								CFStringRef		timeCFString = CFDateFormatterCreateStringWithAbsoluteTime
+																(kCFAllocatorDefault, timeOnlyFormatter,
+																	ptr->terminationAbsoluteTime);
+								
+								
+								if (nullptr != timeCFString)
+								{
+									CFStringRef		statusWithTime = CFStringCreateWithFormat
+																			(kCFAllocatorDefault, nullptr/* options */,
+																				statusString/* format */, timeCFString);
+									
+									
+									if (nullptr != statusWithTime)
+									{
+										ptr->statusString.setCFTypeRef(statusWithTime);
+										CFRelease(statusWithTime), statusWithTime = nullptr;
+									}
+									else
+									{
+										// on error, attempt to fall back with the time-free status string
+										useTimeFreeStatusString = true;
+									}
+									CFRelease(timeCFString), timeCFString = nullptr;
+								}
+								CFRelease(timeOnlyFormatter), timeOnlyFormatter = nullptr;
+							}
+							CFRelease(currentLocale), currentLocale = nullptr;
+						}
+					}
+				}
+				
+				if (useTimeFreeStatusString)
+				{
+					if (UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessTerminated,
+										statusString).ok())
+					{
+						ptr->statusString.setCFTypeRef(statusString);
+					}
+				}
+			}
+			else if (kSession_StateActiveUnstable == ptr->status)
+			{
+				(UIStrings_Result)UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessNewborn,
+													statusString);
+				ptr->statusString.setCFTypeRef(statusString);
+			}
+			else if (kSession_StateActiveStable == ptr->status)
+			{
+				(UIStrings_Result)UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessRunning,
+													statusString);
+				ptr->statusString.setCFTypeRef(statusString);
+			}
+			else
+			{
+				// ???
+				ptr->statusString.setCFTypeRef(CFSTR(""));
+			}
+			
+			setIconFromState(ptr);
+			
+			if (nullptr != ptr->mainProcess)
+			{
+				if (kSession_StateDead == ptr->status)
+				{
+					// killing the process may trigger a state change, but this
+					// is OK as long as the state it chooses is the same as
+					// the state that triggers this call
+					Local_KillProcess(&ptr->mainProcess);
+				}
+			}
+			
+			// now that the state of the Session object is appropriate
+			// for the state, notify any other listeners of the change
+			changeNotifyForSession(ptr, kSession_ChangeState, inRef/* context */);
+		}
+	}
+	
+	// this must be done outside the block above because the
+	// session cannot be destroyed while it is locked
+	if (isDifferentState)
+	{
+		if (kSession_StateDead == inNewState)
+		{
+			if (false == keepWindowOpen)
+			{
+				// a session disposal is conditional and will have no effect if
+				// the session appears to be in use (e.g. restart in progress)
+				Session_Dispose(&inRef);
+			}
+		}
 	}
 }// SetState
 
@@ -5203,6 +5251,7 @@ configuration((nullptr == inConfigurationOrNull)
 translationConfiguration(Preferences_NewContext(Quills::Prefs::TRANSLATION),
 							true/* is retained */),
 readOnly(inIsReadOnly),
+restartInProgress(false),
 kind(kSession_TypeLocalNonLoginShell),
 status(kSession_StateBrandNew),
 statusAttributes(0),
@@ -5237,6 +5286,8 @@ autoActivateDragTimerUPP(NewEventLoopTimerUPP(autoActivateWindow)),
 autoActivateDragTimer(nullptr), // installed only as needed
 longLifeTimerUPP(NewEventLoopTimerUPP(detectLongLife)),
 longLifeTimer(nullptr), // set later
+respawnSessionTimerUPP(NewEventLoopTimerUPP(respawnSession)),
+respawnSessionTimer(nullptr), // set later
 currentTerminationAlert(nullptr),
 terminalWindow(nullptr), // set at window validation time
 mainProcess(nullptr),
@@ -5372,6 +5423,11 @@ My_Session::
 		RemoveEventLoopTimer(this->pendingPasteTimer), this->pendingPasteTimer = nullptr;
 	}
 	DisposeEventLoopTimerUPP(this->pendingPasteTimerUPP), this->pendingPasteTimerUPP = nullptr;
+	if (nullptr != this->respawnSessionTimer)
+	{
+		RemoveEventLoopTimer(this->respawnSessionTimer), this->respawnSessionTimer = nullptr;
+	}
+	DisposeEventLoopTimerUPP(this->respawnSessionTimerUPP), this->respawnSessionTimerUPP = nullptr;
 	
 	if (kVectorInterpreter_InvalidID != this->vectorGraphicsID)
 	{
@@ -7712,21 +7768,11 @@ receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// if the window was found, proceed
 		if (result == noErr)
 		{
-			if (Session_StateIsDead(session))
-			{
-				// connection is already broken; close the window and clean up
-				Session_Dispose(&session);
-			}
-			else 
-			{
-				// connection is still open; disconnect first and (if the user
-				// has the preference set) close the window automatically;
-				// a confirmation message is displayed UNLESS it has been less
-				// than a few seconds since the connection opened, in which
-				// case MacTerm assumes the user doesn’t care and bypasses
-				// the confirmation message (what can I say, I’m a nice guy)
-				Session_DisplayTerminationWarning(session);
-			}
+			// arrange to close the window; this might happen immediately
+			// if the session is already dead or it has not been open
+			// for long, otherwise it will present a warning to the user
+			// and the window will be killed asynchronously (if at all)
+			Session_DisplayTerminationWarning(session);
 			
 			result = noErr; // event is completely handled
 		}
@@ -7777,6 +7823,32 @@ receiveWindowFocusChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	return result;
 }// receiveWindowFocusChange
+
+
+/*!
+Respawns the original command line for the session, using the
+same window.  This should only be invoked after the previous
+session is dead.
+
+Timers that draw must save and restore the current graphics port.
+
+(4.0)
+*/
+void
+respawnSession	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
+				 void*					inSessionRef)
+{
+	SessionRef				ref = REINTERPRET_CAST(inSessionRef, SessionRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
+	Boolean					respawnOK = SessionFactory_RespawnSession(ref);
+	
+	
+	if (false == respawnOK)
+	{
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteLine, "failed to restart session");
+	}
+}// respawnSession
 
 
 /*!
@@ -8104,7 +8176,9 @@ terminalWindowChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 The responder to a closed “terminate session?” alert.
 This routine disconnects and/or closes a session if
 the item hit is the OK button, otherwise it does not
-touch the session window in any way.  The given alert
+touch the session window in any way.  If the warning
+was also instructed to restart the session, then the
+session respawns after it is killed.  The given alert
 is destroyed.
 
 This routine is actually used whether or not there is
@@ -8126,37 +8200,50 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 	
 	if (Session_IsValid(dataPtr->sessionBeingTerminated))
 	{
-		Boolean						destroySession = false;
+		Boolean		destroySession = false;
 		
 		
 		if (nullptr != dataPtr)
 		{
-			My_SessionAutoLocker			sessionPtr(gSessionPtrLocks(), dataPtr->sessionBeingTerminated);
-			SessionCloseWarningButtonInfo	info;
+			My_SessionAutoLocker	sessionPtr(gSessionPtrLocks(), dataPtr->sessionBeingTerminated);
 			
 			
 			// clear the alert status attribute to the session
 			changeStateAttributes(sessionPtr, 0/* attributes to set */,
 									kSession_StateAttributeOpenDialog/* attributes to clear */);
 			
-			// notify listeners
-			info.session = dataPtr->sessionBeingTerminated;
-			info.buttonHit = inItemHit;
-			changeNotifyForSession(sessionPtr, kSession_ChangeCloseWarningAnswered, &info/* context */);
-			
-			if (inItemHit == kAlertStdAlertOKButton)
+			// some actions are only appropriate when the window is closing...
+			if (false == dataPtr->restartSession)
 			{
-				// implicitly update the toolbar visibility preference based
-				// on the toolbar visibility of this closing window
-				Boolean		toolbarHidden = (false == IsWindowToolbarVisible(returnActiveWindow(sessionPtr)));
+				// notify listeners
+				{
+					SessionCloseWarningButtonInfo	info;
+					
+					
+					bzero(&info, sizeof(info));
+					info.session = dataPtr->sessionBeingTerminated;
+					info.buttonHit = inItemHit;
+					changeNotifyForSession(sessionPtr, kSession_ChangeCloseWarningAnswered, &info/* context */);
+				}
 				
-				
-				(Preferences_Result)Preferences_SetData(kPreferences_TagHeadersCollapsed,
-														sizeof(toolbarHidden), &toolbarHidden);
-				
-				// flag to destroy the session; this cannot occur within this block,
-				// because the session pointer is still locked
-				destroySession = true;
+				// determine if the user accepted the alert
+				if (kAlertStdAlertOKButton == inItemHit)
+				{
+					// implicitly update the toolbar visibility preference based
+					// on the toolbar visibility of this closing window
+					{
+						Boolean		toolbarHidden = (false == IsWindowToolbarVisible(returnActiveWindow(sessionPtr)));
+						
+						
+						(Preferences_Result)Preferences_SetData(kPreferences_TagHeadersCollapsed,
+																sizeof(toolbarHidden), &toolbarHidden);
+					}
+					
+					// flag to destroy the session; this cannot occur within this block,
+					// because the session pointer is still locked (also, it will not
+					// happen for restarting sessions)
+					destroySession = true;
+				}
 			}
 			
 			// clean up
@@ -8168,6 +8255,33 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 			// this call will terminate the running process and
 			// immediately close the associated window
 			Session_Dispose(&dataPtr->sessionBeingTerminated);
+		}
+		else if (dataPtr->restartSession)
+		{
+			if (kAlertStdAlertOKButton == inItemHit)
+			{
+				My_SessionAutoLocker	ptr(gSessionPtrLocks(), dataPtr->sessionBeingTerminated);
+				
+				
+				// kill the original process; normally this could potentially dispose of
+				// the entire session and its window, so a flag is set to veto that
+				ptr->restartInProgress = true;
+				Session_SetState(dataPtr->sessionBeingTerminated, kSession_StateDead);
+				ptr->restartInProgress = false;
+				
+				// TEMPORARY; this is technically terminal-type-specific and just happens to
+				// work to clear the screen and home the cursor in any supported emulator;
+				// this should probably be more explicit
+				Session_TerminalWriteCString(dataPtr->sessionBeingTerminated, "\033[H\033[J");
+				
+				// install a one-shot timer to rerun the command line after a short delay
+				// (certain processes, such as shells, do not respawn correctly if the
+				// respawn is attempted immediately after the previous process exits)
+				(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
+												200 * kEventDurationMillisecond/* delay before start; heuristic */,
+												kEventDurationForever/* time between fires - this timer does not repeat */,
+												ptr->respawnSessionTimerUPP, dataPtr->sessionBeingTerminated, &ptr->respawnSessionTimer);
+			}
 		}
 	}
 	

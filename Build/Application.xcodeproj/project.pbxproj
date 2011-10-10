@@ -430,6 +430,7 @@
 		0A766E0A0FB54D8E00259E56 /* kvp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = kvp.py; path = Application/PythonCode/pymacterm/file/kvp.py; sourceTree = "<group>"; };
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
 		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
+		0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForRestartSession.icns; path = Application/Resources/IconForRestartSession.icns; sourceTree = "<group>"; };
 		0A84509E0554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/FindDialog.nib; sourceTree = "<group>"; };
 		0A8450A60554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefsWindow.nib; sourceTree = "<group>"; };
 		0A8450A80554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/ProgressDialog.nib; sourceTree = "<group>"; };
@@ -1045,6 +1046,7 @@
 				0A3E07400B817E9800EDC16A /* IconForPrefPanelTranslations.icns */,
 				0A4C9D5E0FE9C5B5005EAE9D /* IconForPrefPanelWorkspaces.icns */,
 				0AD7483813074260003E368B /* IconForPrint.icns */,
+				0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */,
 				0AC838690ABF917000BEF8B9 /* IconForScrollLockOff.icns */,
 				0AC8386A0ABF917000BEF8B9 /* IconForScrollLockOn.icns */,
 				0AC810B01221ED2300687DB2 /* IconForSession.icns */,

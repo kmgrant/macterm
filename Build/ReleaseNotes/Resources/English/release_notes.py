@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111009',
     '20111007',
     '20111004',
     '20111003',
@@ -420,6 +421,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111009': [
+        'The "Restart Session" command can now run at any time, not just when a session has ended.  If appropriate, a confirmation warning is displayed prior to killing the active session.',
+        'The "Restart Session" command now has a toolbar icon.',
+    ],
     '20111007': [
         'Toolbar icon artwork has significantly changed.',
         'Toolbar "Separator" item removed from customization sheets since it is not available on Mac OS X Lion.',

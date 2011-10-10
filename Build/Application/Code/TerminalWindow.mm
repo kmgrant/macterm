@@ -420,6 +420,7 @@ IconRef					createScrollLockOnIcon			();
 IconRef					createLEDOffIcon				();
 IconRef					createLEDOnIcon					();
 IconRef					createPrintIcon					();
+IconRef					createRestartSessionIcon		();
 void					createViews						(My_TerminalWindowPtr);
 Boolean					createTabWindow					(My_TerminalWindowPtr);
 NSWindow*				createWindow					();
@@ -496,6 +497,7 @@ IconRef&					gHideWindowIcon ()				{ static IconRef x = createHideWindowIcon(); 
 IconRef&					gLEDOffIcon ()					{ static IconRef x = createLEDOffIcon(); return x; }
 IconRef&					gLEDOnIcon ()					{ static IconRef x = createLEDOnIcon(); return x; }
 IconRef&					gPrintIcon ()					{ static IconRef x = createPrintIcon(); return x; }
+IconRef&					gRestartSessionIcon ()			{ static IconRef x = createRestartSessionIcon(); return x; }
 IconRef&					gScrollLockOffIcon ()			{ static IconRef x = createScrollLockOffIcon(); return x; }
 IconRef&					gScrollLockOnIcon ()			{ static IconRef x = createScrollLockOnIcon(); return x; }
 Float32						gDefaultTabWidth = 0.0;		// set later
@@ -3108,6 +3110,40 @@ createPrintIcon ()
 
 
 /*!
+Registers the “restart session” icon reference with the system,
+and returns a reference to the new icon.
+
+NOTE:	This is only being created for short-term Carbon use; it
+		will not be necessary to allocate icons at all in Cocoa
+		windows.
+
+(4.0)
+*/
+IconRef
+createRestartSessionIcon ()
+{
+	IconRef		result = nullptr;
+	FSRef		iconFile;
+	
+	
+	if (AppResources_GetArbitraryResourceFileFSRef
+		(AppResources_ReturnRestartSessionIconFilenameNoExtension(),
+			CFSTR("icns")/* type */, iconFile))
+	{
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
+												kConstantsRegistry_IconServicesIconToolbarItemRestartSession,
+												&iconFile, &result))
+		{
+			// failed!
+			result = nullptr;
+		}
+	}
+	
+	return result;
+}// createRestartSessionIcon
+
+
+/*!
 Registers the “scroll lock off” icon reference with the
 system, and returns a reference to the new icon.
 
@@ -5115,6 +5151,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED4);
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDScrollLock);
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDHideWindow);
+						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDRestartSession);
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDFullScreen);
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalBell);
 						CFArrayAppendValue(allowedIdentifiers, kHIToolbarSpaceIdentifier);
@@ -5136,20 +5173,22 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					{
 						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
+						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDHideWindow);
+						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDRestartSession);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDScrollLock);
-						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalBell);
 						CFArrayAppendValue(defaultIdentifiers, kHIToolbarFlexibleSpaceIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED1);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED2);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED3);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED4);
 						CFArrayAppendValue(defaultIdentifiers, kHIToolbarFlexibleSpaceIdentifier);
+						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalBell);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDPrint);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDFullScreen);
+						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
+						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
 						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDCustomize);
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
 					}
 				}
 				break;
@@ -5471,6 +5510,35 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										CFRelease(nameCFString), nameCFString = nullptr;
 									}
 									result = HIToolbarItemSetIconRef(itemRef, gPrintIcon());
+									assert_noerr(result);
+									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
+									assert_noerr(result);
+								}
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDRestartSession,
+																			identifierCFString, kCFCompareBackwards))
+							{
+								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+								
+								
+								result = HIToolbarItemCreate(identifierCFString,
+																kHIToolbarItemNoAttributes, &itemRef);
+								if (noErr == result)
+								{
+									UInt32 const	kMyCommandID = kCommandRestartSession;
+									CFStringRef		nameCFString = nullptr;
+									
+									
+									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
+									{
+										result = HIToolbarItemSetLabel(itemRef, nameCFString);
+										assert_noerr(result);
+										result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
+																			nullptr/* long text */);
+										assert_noerr(result);
+										CFRelease(nameCFString), nameCFString = nullptr;
+									}
+									result = HIToolbarItemSetIconRef(itemRef, gRestartSessionIcon());
 									assert_noerr(result);
 									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
 									assert_noerr(result);

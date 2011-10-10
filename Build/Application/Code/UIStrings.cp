@@ -221,6 +221,21 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 													CFSTR("kUIStrings_AlertWindowPasteLinesWarningHelpText"));
 		break;
 	
+	case kUIStrings_AlertWindowRestartSessionName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Restart Session"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowRestartSessionName"));
+		break;
+	
+	case kUIStrings_AlertWindowRestartSessionHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("You will lose any unsaved changes, but the contents of the scrollback will be kept."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowRestartSessionHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowRestartSessionPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("The processes in this window will be forced to quit.  Restart anyway?"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowRestartSessionPrimaryText"));
+		break;
+	
 	case kUIStrings_AlertWindowScriptErrorName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Script Error"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowScriptErrorName"));
@@ -419,6 +434,11 @@ UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 	case kUIStrings_ButtonClose:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Close"), CFSTR("Buttons"),
 													CFSTR("kUIStrings_ButtonClose"));
+		break;
+	
+	case kUIStrings_ButtonRestart:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Restart"), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonRestart"));
 		break;
 	
 	case kUIStrings_ButtonQuit:
@@ -1743,6 +1763,11 @@ UIStrings_Copy	(UIStrings_ToolbarItemCFString	inWhichString,
 	case kUIStrings_ToolbarItemPrint:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Print"), CFSTR("ToolbarItems"),
 													CFSTR("kUIStrings_ToolbarItemPrint"));
+		break;
+	
+	case kUIStrings_ToolbarItemRestartSession:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Restart"), CFSTR("ToolbarItems"),
+													CFSTR("kUIStrings_ToolbarItemRestartSession"));
 		break;
 	
 	case kUIStrings_ToolbarItemSearch:

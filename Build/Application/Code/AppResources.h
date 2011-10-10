@@ -379,6 +379,13 @@ inline CFStringRef
 }
 
 inline CFStringRef
+	AppResources_ReturnRestartSessionIconFilenameNoExtension			()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForRestartSession");
+}
+
+inline CFStringRef
 	AppResources_ReturnScrollLockOffIconFilenameNoExtension				()
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
