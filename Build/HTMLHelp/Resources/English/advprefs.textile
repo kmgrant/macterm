@@ -179,8 +179,6 @@ table(deftable).
 (defbottom). |\2(desc). Sessions set to send a keep-alive character on idle, do so every few minutes, according to this value.|
 (deftop). |(key). @data-send-local-echo-enabled@|(types). _true or false_|
 (defbottom). |\2(desc). Text input is immediately processed by the terminal.|
-(deftop). |(key). @data-send-local-echo-half-duplex@|(types). _true or false_|
-(defbottom). |\2(desc). The running process is instructed not to echo data coming from text input.|
 (deftop). |(key). @data-send-paste-line-delay-milliseconds@|(types). _integer_|
 (defbottom). |\2(desc). Instead of pasting as fast as possible, each new line is delayed by this number of milliseconds.  Also affects drag-and-drop text.|
 (deftop). |(key). @data-send-paste-no-warning@|(types). _true or false_|

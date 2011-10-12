@@ -1012,8 +1012,6 @@ Preferences_Init ()
 										CFSTR("line-mode-enabled"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagLocalEchoEnabled,
 										CFSTR("data-send-local-echo-enabled"), Quills::Prefs::SESSION);
-	My_PreferenceDefinition::createFlag(kPreferences_TagLocalEchoHalfDuplex,
-										CFSTR("data-send-local-echo-half-duplex"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagMapArrowsForEmacs,
 									CFSTR("command-key-emacs-move-down"), typeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::TERMINAL);
@@ -7142,7 +7140,6 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagAutoCaptureToFile:
 				case kPreferences_TagLineModeEnabled:
 				case kPreferences_TagLocalEchoEnabled:
-				case kPreferences_TagLocalEchoHalfDuplex:
 				case kPreferences_TagNoPasteWarning:
 				case kPreferences_TagTektronixPAGEClearsScreen:
 					// all of these keys have Core Foundation Boolean values
@@ -9375,7 +9372,6 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagAutoCaptureToFile:
 			case kPreferences_TagLineModeEnabled:
 			case kPreferences_TagLocalEchoEnabled:
-			case kPreferences_TagLocalEchoHalfDuplex:
 			case kPreferences_TagNoPasteWarning:
 			case kPreferences_TagTektronixPAGEClearsScreen:
 				{
