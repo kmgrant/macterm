@@ -541,31 +541,39 @@ h3(#sessiondataflow). Data Flow
 h4. Duplication
 
 MacTerm can send keyboard characters directly to the terminal
- as it transmits them to a session; this is known as Local Echo.
+ as it transmits them to a session (and also display any
+ "non-printable" keystrokes as floating tags); this is known as
+ local echo.
 
-Local Echo is useful for slow connections, because it displays
- what you type immediately instead of waiting for a server
- response.  (The floating Command Line in MacTerm gives a
- similar benefit; see the Window menu.)
+Local echoing is useful for slow connections to remote servers or
+ devices, because it displays what you type immediately instead
+ of waiting for the actual response.  (The floating Command Line
+ in MacTerm gives a similar benefit; see the Window menu.)
 
-There are downsides to echoing, that basically boil down to how
- well the session and MacTerm agree.  When half-duplex, the
- server does not send back what you type; so you cannot be sure
- if it was received, even if it _looks_ right in your terminal.
- When full-duplex, you do see confirmation from the server, but
- technically it is sending back redundant text and will cause the
- same information to appear twice in the local terminal.
+Of course, this makes it possible to see every key twice: once
+ when MacTerm shows it immediately, and again when the server
+ finally responds.  You may be able to avoid this if the remote
+ system provides a way to disable its echoing; though realize
+ that the local echo is just an approximation of what the server
+ response would be and it may not be exactly right.
 
-h4. Paste Buffering
+Disable this setting most of the time, since fast processes will
+ respond so quickly that there is no clear delay between hitting
+ a key and seeing a result in the window.
 
-When you use Paste for a large amount of text, the session may
- not be prepared to receive that much data at once; this can cause
- problems, like losing or garbling some of the characters.
+Note that this can be set temporarily by using the menu command
+ Terminal >> Local Echo.
 
-MacTerm allows you to locally buffer Paste on a per-session
- basis.  This means that MacTerm does not send all text at once,
- it splits the data into small chunks and sends each piece
- separately.
+h4. Line Insertion Delay
+
+When you use Paste or drag-and-drop for multi-line text, the
+ session may not be prepared to receive that much data at once;
+ this can cause various problems for the running process.
+
+MacTerm automatically splits these insertions into lines, and
+ gives you the option of pausing for a short period of time in
+ between each inserted line.  You can set the delay to zero for
+ immediate insertion.
 
 h4. Scrolling Speed
 

@@ -246,7 +246,6 @@ enum
 	kPreferences_TagKeySuspendOutput					= 'ksus',	//!< data: "char" (actual non-printable ASCII control character)
 	kPreferences_TagLineModeEnabled						= 'linm',	//!< data: "Boolean"
 	kPreferences_TagLocalEchoEnabled					= 'echo',	//!< data: "Boolean"
-	kPreferences_TagLocalEchoHalfDuplex					= 'lehd',	//!< data: "Boolean"
 	kPreferences_TagMapDeleteToBackspace				= 'delb',	//!< data: "Boolean"
 	kPreferences_TagNewLineMapping						= 'newl',	//!< data: "Session_NewlineMode"
 	kPreferences_TagPasteNewLineDelay					= 'pnld',	//!< data: "EventTime"; stored as milliseconds, but scaled to EventTime when used

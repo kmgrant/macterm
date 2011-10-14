@@ -485,7 +485,7 @@
 	<key>terminal-screen-dimensions-rows</key>
 	<integer>24</integer>
 	<key>terminal-scroll-delay-milliseconds</key>
-	<integer>1000</integer>
+	<integer>0</integer>
 	<key>terminal-scrollback-size-lines</key>
 	<integer>200</integer>
 	<key>terminal-scrollback-type</key>

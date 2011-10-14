@@ -7435,6 +7435,11 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						
 						*data = STATIC_CAST(valueInteger, EventTime) * kEventDurationMillisecond;
+						if (*data > 0.050/* arbitrary */)
+						{
+							// refuse to honor very long scroll delays
+							*data = 0;
+						}
 					}
 					break;
 				

@@ -18,15 +18,28 @@ Highlight terminal text by dragging over it with the mouse.  Keep
 
 h3(#selectdrag). Drag and Drop
 
+The Unix pathnames of files or folders can be typed by dropping
+ one or more icons (from the Finder, say) into a terminal.  Spaces
+ are automatically escaped by backslashes, and each dropped item's
+ pathname is followed by two spaces so that it is easy to read all
+ paths and construct a command line.
+
 Text can be copied by using the mouse to move a selection to
  another location - for instance, the Desktop (to make a text
  clipping).
 
 Text can be imported in the same way - any text dropped into a
- terminal is effectively typed into the terminal.
+ terminal is effectively typed into the terminal.  MacTerm will
+ handle the inserted text in exactly the same way that it handles
+ a Paste command.
 
-The Unix pathname of a file or folder can be typed by dropping
- the icon (from the Finder, say) into a terminal.
+bq. Multi-line text may trigger an alert if you have not set the
+ "Don't warn about multi-line Paste" General preference.  If the
+ text is pasted normally, it will first be modified to respect
+ the new-line definition of the session; then, each new line may
+ be delayed if a "Line Insertion Delay" Data Flow preference has
+ been set for the session.  See "the Preferences page":preferences.html
+ for more on these settings.
 
 h3(#selectappearance). Text Selection Preferences
 

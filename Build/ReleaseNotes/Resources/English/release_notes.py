@@ -424,6 +424,8 @@ daily_build_lineage = [
 notes_by_version = {
     '20111014': [
         'Fixed a major inheritance problem where a collection (Macro Set, Workspace, Session, Terminal, Format or Translation) did not always fall back on the Default collection for undefined settings.',
+        'Fixed Preferences window Sessions pane Data Flow tab to save settings properly.',
+        'Preferences window Sessions pane Data Flow tab now contains a Line Insertion Delay setting, which is a graphical way to modify the recently-added low-level preference "data-send-paste-line-delay-milliseconds".',
     ],
     '20111009': [
         'The "Restart Session" command can now run at any time, not just when a session has ended.  If appropriate, a confirmation warning is displayed prior to killing the active session.',

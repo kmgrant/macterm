@@ -1,7 +1,8 @@
+/*!	\file PrefPanelSessions.cp
+	\brief Implements the Sessions panel of Preferences.
+*/
 /*###############################################################
 
-	PrefPanelSessions.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -105,7 +106,8 @@ HIViewID const	idMyPopUpMenuTerminal			= { 'Term', 0/* ID */ };
 HIViewID const	idMyPopUpMenuFormat				= { 'Frmt', 0/* ID */ };
 HIViewID const	idMyPopUpMenuTranslation		= { 'Xlat', 0/* ID */ };
 HIViewID const	idMyHelpTextPresets				= { 'THlp', 0/* ID */ };
-HIViewID const	idMyPopUpMenuPasteBuffering		= { 'PBuf', 0/* ID */ };
+HIViewID const	idMyCheckBoxLocalEcho			= { 'Echo', 0/* ID */ };
+HIViewID const	idMyFieldLineInsertionDelay		= { 'LIDl', 0/* ID */ };
 HIViewID const	idMySliderScrollSpeed			= { 'SSpd', 0/* ID */ };
 HIViewID const	idMyStaticTextCaptureFilePath	= { 'CapP', 0/* ID */ };
 HIViewID const	idMyButtonNoCaptureFile			= { 'NoCF', 0/* ID */ };
@@ -137,11 +139,13 @@ Implements the “Data Flow” tab.
 struct My_SessionsPanelDataFlowUI
 {
 	My_SessionsPanelDataFlowUI	(Panel_Ref, HIWindowRef);
+	~My_SessionsPanelDataFlowUI	();
 	
-	Panel_Ref		panel;			//!< the panel using this UI
-	Float32			idealWidth;		//!< best size in pixels
-	Float32			idealHeight;	//!< best size in pixels
-	HIViewWrap		mainView;
+	Panel_Ref			panel;				//!< the panel using this UI
+	Float32				idealWidth;			//!< best size in pixels
+	Float32				idealHeight;		//!< best size in pixels
+	ControlActionUPP	sliderActionUPP;	//!< for live tracking
+	HIViewWrap			mainView;
 	
 	static SInt32
 	panelChanged	(Panel_Ref, Panel_Message, void*);
@@ -150,7 +154,22 @@ struct My_SessionsPanelDataFlowUI
 	readPreferences		(Preferences_ContextRef);
 	
 	static OSStatus
+	receiveFieldChanged		(EventHandlerCallRef, EventRef, void*);
+	
+	static OSStatus
 	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
+	
+	void
+	saveFieldPreferences	(Preferences_ContextRef);
+	
+	void
+	setLineInsertionDelay	(EventTime);
+	
+	void
+	setLocalEcho	(Boolean);
+	
+	void
+	setScrollDelay	(EventTime);
 
 protected:
 	HIViewWrap
@@ -158,10 +177,14 @@ protected:
 	
 	static void
 	deltaSize	(HIViewRef, Float32, Float32, void*);
+	
+	static void
+	sliderProc	(HIViewRef, HIViewPartCode);
 
 private:
 	CommonEventHandlers_HIViewResizer	_containerResizer;
-	CarbonEventHandlerWrap				_buttonCommandsHandler;			//!< invoked when a button is clicked or a pop-up menu item is selected
+	CarbonEventHandlerWrap				_fieldLineDelayInputHandler;	//!< invoked when text is entered in the “line insertion delay” field
+	CarbonEventHandlerWrap				_localEchoCommandHandler;		//!< invoked when the Local Echo checkbox is changed
 };
 
 /*!
@@ -668,17 +691,35 @@ My_SessionsPanelDataFlowUI	(Panel_Ref		inPanel,
 panel					(inPanel),
 idealWidth				(0.0),
 idealHeight				(0.0),
+sliderActionUPP			(NewControlActionUPP(sliderProc)),
 mainView				(createContainerView(inPanel, inOwningWindow)
 							<< HIViewWrap_AssertExists),
 _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
 							My_SessionsPanelDataFlowUI::deltaSize, this/* context */),
-_buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
+_fieldLineDelayInputHandler(GetControlEventTarget(HIViewWrap(idMyFieldLineInsertionDelay, inOwningWindow)), receiveFieldChanged,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
+								this/* user data */),
+_localEchoCommandHandler(GetControlEventTarget(HIViewWrap(idMyCheckBoxLocalEcho, inOwningWindow)), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */)
 {
 	assert(this->mainView.exists());
 	assert(_containerResizer.isInstalled());
+	assert(_fieldLineDelayInputHandler.isInstalled());
+	assert(_localEchoCommandHandler.isInstalled());
 }// My_SessionsPanelDataFlowUI 2-argument constructor
+
+
+/*!
+Tears down a My_SessionsPanelDataFlowUI structure.
+
+(4.0)
+*/
+My_SessionsPanelDataFlowUI::
+~My_SessionsPanelDataFlowUI ()
+{
+	DisposeControlActionUPP(sliderActionUPP), sliderActionUPP = nullptr;
+}// My_SessionsPanelDataFlowUI destructor
 
 
 /*!
@@ -727,8 +768,28 @@ createContainerView		(Panel_Ref		inPanel,
 		assert_noerr(error);
 	}
 	
-	// initialize values
-	// UNIMPLEMENTED
+	// permit only numbers in the line insertion delay field
+	{
+		HIViewWrap		delayField(idMyFieldLineInsertionDelay, inOwningWindow);
+		
+		
+		delayField << HIViewWrap_InstallKeyFilter(NumericalLimiterKeyFilterUPP());
+	}
+	
+	// install live tracking on the slider
+	{
+		HIViewWrap		slider(idMySliderScrollSpeed, inOwningWindow);
+		
+		
+		error = SetControlProperty(slider, AppResources_ReturnCreatorCode(),
+									kConstantsRegistry_ControlPropertyTypeOwningPanel,
+									sizeof(inPanel), &inPanel);
+		if (noErr == error)
+		{
+			assert(nullptr != this->sliderActionUPP);
+			SetControlAction(HIViewWrap(idMySliderScrollSpeed, inOwningWindow), this->sliderActionUPP);
+		}
+	}
 	
 	return result;
 }// My_SessionsPanelDataFlowUI::createContainerView
@@ -795,7 +856,23 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageDestroyed: // request to dispose of private data structures
 		{
-			delete (REINTERPRET_CAST(inDataPtr, My_SessionsPanelDataFlowDataPtr));
+			My_SessionsPanelDataFlowDataPtr		panelDataPtr = REINTERPRET_CAST(inDataPtr, My_SessionsPanelDataFlowDataPtr);
+			
+			
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+			delete panelDataPtr;
+		}
+		break;
+	
+	case kPanel_MessageFocusFirst: // notification that the first logical view should become focused
+		{
+			My_SessionsPanelDataFlowDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelDataFlowDataPtr);
+			HIWindowRef							owningWindow = HIViewGetWindow(panelDataPtr->interfacePtr->mainView);
+			HIViewWrap							delayField(idMyFieldLineInsertionDelay, owningWindow);
+			
+			
+			DialogUtilities_SetKeyboardFocus(delayField);
 		}
 		break;
 	
@@ -811,9 +888,11 @@ panelChanged	(Panel_Ref		inPanel,
 	case kPanel_MessageFocusLost: // notification that a view is no longer focused
 		{
 			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			My_SessionsPanelDataFlowDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelDataFlowDataPtr);
 			
 			
-			// do nothing
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
 		}
 		break;
 	
@@ -858,7 +937,11 @@ panelChanged	(Panel_Ref		inPanel,
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
-			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			if (nullptr != oldContext)
+			{
+				panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+				Preferences_ContextSave(oldContext);
+			}
 			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
 			assert(kPreferences_ResultOK == prefsResult);
 			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
@@ -900,8 +983,89 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		
 		
 		// INCOMPLETE
+		
+		// set duplication
+		{
+			Boolean		localEcho = false;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagLocalEchoEnabled,
+														sizeof(localEcho), &localEcho, true/* search defaults too */,
+														&actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setLocalEcho(localEcho);
+			}
+		}
+		
+		// set line insertion delay
+		{
+			EventTime	asEventTime = 0;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagPasteNewLineDelay,
+														sizeof(asEventTime), &asEventTime, true/* search defaults too */,
+														&actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setLineInsertionDelay(asEventTime);
+			}
+		}
+		
+		// set scroll speed delay
+		{	
+			EventTime	asEventTime = 0;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagScrollDelay,
+														sizeof(asEventTime), &asEventTime, true/* search defaults too */,
+														&actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setScrollDelay(asEventTime);
+			}
+		}
 	}
 }// My_SessionsPanelDataFlowUI::readPreferences
+
+
+/*!
+Embellishes "kEventTextInputUnicodeForKeyEvent" of
+"kEventClassTextInput" for the fields in this panel by saving
+their preferences when new text arrives.
+
+(4.0)
+*/
+OSStatus
+My_SessionsPanelDataFlowUI::
+receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
+						 EventRef				inEvent,
+						 void*					inMyTerminalsPanelUIPtr)
+{
+	OSStatus						result = eventNotHandledErr;
+	My_SessionsPanelDataFlowUI*		interfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_SessionsPanelDataFlowUI*);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassTextInput);
+	assert(kEventKind == kEventTextInputUnicodeForKeyEvent);
+	
+	// first ensure the keypress takes effect (that is, it updates
+	// whatever text field it is for)
+	result = CallNextEventHandler(inHandlerCallRef, inEvent);
+	
+	// now synchronize the post-input change with preferences
+	{
+		My_SessionsPanelDataFlowDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																			My_SessionsPanelDataFlowDataPtr);
+		
+		
+		interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+	}
+	
+	return result;
+}// My_SessionsPanelDataFlowUI::receiveFieldChanged
 
 
 /*!
@@ -912,7 +1076,7 @@ for the buttons in the Data Flow tab.
 */
 OSStatus
 My_SessionsPanelDataFlowUI::
-receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inMySessionsUIPtr)
 {
@@ -937,6 +1101,21 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 		{
 			switch (received.commandID)
 			{
+			case kCommandEcho:
+				{
+					HIViewWrap							checkBox(idMyCheckBoxLocalEcho, HIViewGetWindow(dataFlowInterfacePtr->mainView));
+					My_SessionsPanelDataFlowDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(dataFlowInterfacePtr->panel),
+																					My_SessionsPanelDataFlowDataPtr);
+					Boolean								flag = (GetControl32BitValue(checkBox) == kControlCheckBoxCheckedValue);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					
+					
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagLocalEchoEnabled,
+																sizeof(flag), &flag);
+					assert(kPreferences_ResultOK == prefsResult);
+				}
+				break;
+			
 			default:
 				// must return "eventNotHandledErr" here, or (for example) the user
 				// wouldn’t be able to select menu commands while the window is open
@@ -948,6 +1127,194 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 	
 	return result;
 }// My_SessionsPanelDataFlowUI::receiveHICommand
+
+
+/*!
+Saves every setting to the data model that may change outside
+of easily-detectable means (e.g. not buttons, but things like
+text fields and sliders).
+
+(4.0)
+*/
+void
+My_SessionsPanelDataFlowUI::
+saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
+{
+	if (nullptr != inoutSettings)
+	{
+		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		// set line insertion delay
+		{
+			HIViewWrap	delayField(idMyFieldLineInsertionDelay, kOwningWindow);
+			SInt32		lineInsertionDelay = 0;
+			size_t		stringLength = 0;
+			Boolean		saveFailed = true;
+			
+			
+			GetControlNumericalText(delayField, &lineInsertionDelay, &stringLength);
+			if ((stringLength > 0) && (lineInsertionDelay >= 0))
+			{
+				// convert into seconds
+				EventTime	asEventTime = STATIC_CAST(lineInsertionDelay, EventTime) * kEventDurationMillisecond;
+				
+				
+				prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagPasteNewLineDelay,
+															sizeof(asEventTime), &asEventTime);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					saveFailed = false;
+				}
+			}
+			
+			if (saveFailed)
+			{
+				Console_Warning(Console_WriteLine, "failed to set line insertion delay");
+				SetControlTextWithCFString(delayField, CFSTR(""));
+			}
+		}
+		
+		// set scroll delay
+		{
+			SInt32		delayDiscreteValue = GetControl32BitValue(HIViewWrap(idMySliderScrollSpeed, kOwningWindow));
+			EventTime	asEventTime = 0.0; // in seconds
+			
+			
+			// warning, this MUST be consistent with the NIB and setScrollDelay()
+			if (1 == delayDiscreteValue) asEventTime = 0.040;
+			else if (2 == delayDiscreteValue) asEventTime = 0.030;
+			else if (3 == delayDiscreteValue) asEventTime = 0.020;
+			else if (4 == delayDiscreteValue) asEventTime = 0.010;
+			else asEventTime = 0.0;
+			
+			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagScrollDelay,
+														sizeof(asEventTime), &asEventTime);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_Warning(Console_WriteLine, "failed to set scroll delay value");
+			}
+		}
+	}
+}// My_SessionsPanelDataFlowUI::saveFieldPreferences
+
+
+/*!
+Updates the line insertion delay display with the given value.
+(This is a visual adornment only, it does not change any stored
+preference.)
+
+(4.0)
+*/
+void
+My_SessionsPanelDataFlowUI::
+setLineInsertionDelay	(EventTime		inTime)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	
+	
+	inTime /= kEventDurationMillisecond; // convert to milliseconds
+	SetControlNumericalText(HIViewWrap(idMyFieldLineInsertionDelay, kOwningWindow), STATIC_CAST(inTime, SInt32));
+}// My_SessionsPanelDataFlowUI::setLineInsertionDelay
+
+
+/*!
+Changes the Local Echo menu selection.  (This is a visual
+adornment only, it does not change any stored preference.)
+
+(4.0)
+*/
+void
+My_SessionsPanelDataFlowUI::
+setLocalEcho	(Boolean	inLocalEcho)
+{
+	HIViewWrap	checkBox(idMyCheckBoxLocalEcho, HIViewGetWindow(this->mainView));
+	
+	
+	SetControlValue(checkBox, BooleanToCheckBoxValue(inLocalEcho));
+}// My_SessionsPanelDataFlowUI::setLocalEcho
+
+
+/*!
+Updates the scroll speed display with the given value.  (This
+is a visual adornment only, it does not change any stored
+preference.)
+
+If the value does not exactly match a slider tick, the closest
+matching value will be chosen.
+
+(4.0)
+*/
+void
+My_SessionsPanelDataFlowUI::
+setScrollDelay		(EventTime		inTime)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	EventTime const		kTolerance = 0.005;
+	
+	
+	// floating point numbers are not exact values, they technically are
+	// discrete at a very fine granularity; so do not use pure equality,
+	// use a range with a small tolerance to choose a matching number
+	if (inTime > (0.030/* warning: must be consistent with NIB label and tick marks */ + kTolerance))
+	{
+		SetControl32BitValue(HIViewWrap(idMySliderScrollSpeed, kOwningWindow), 1/* first slider value, slowest (0.040) */);
+	}
+	else if ((inTime <= (0.030/* warning: must be consistent with NIB label */ + kTolerance)) &&
+				(inTime > (0.020/* warning: must be consistent with NIB label */ + kTolerance)))
+	{
+		SetControl32BitValue(HIViewWrap(idMySliderScrollSpeed, kOwningWindow), 2/* next slider value */);
+	}
+	else if ((inTime <= (0.020/* warning: must be consistent with NIB label */ + kTolerance)) &&
+				(inTime > (0.010/* warning: must be consistent with NIB label */ + kTolerance)))
+	{
+		SetControl32BitValue(HIViewWrap(idMySliderScrollSpeed, kOwningWindow), 3/* middle slider value */);
+	}
+	else if ((inTime <= (0.010/* warning: must be consistent with NIB label */ + kTolerance)) &&
+				(inTime > (0.0/* warning: must be consistent with NIB label */ + kTolerance)))
+	{
+		SetControl32BitValue(HIViewWrap(idMySliderScrollSpeed, kOwningWindow), 4/* next slider value */);
+	}
+	else if (inTime <= (0.0/* warning: must be consistent with NIB label */ + kTolerance))
+	{
+		SetControl32BitValue(HIViewWrap(idMySliderScrollSpeed, kOwningWindow), 5/* last slider value, fastest (zero) */);
+	}
+	else
+	{
+		assert(false && "scroll delay value should have triggered one of the preceding if/else cases");
+	}
+}// My_SessionsPanelDataFlowUI::setScrollDelay
+
+
+/*!
+A standard control action routine for the slider; responds by
+immediately saving the new value in the preferences context.
+
+(4.0)
+*/
+void
+My_SessionsPanelDataFlowUI::
+sliderProc	(HIViewRef			inSlider,
+			 HIViewPartCode		UNUSED_ARGUMENT(inSliderPart))
+{
+	Panel_Ref		panel = nullptr;
+	UInt32			actualSize = 0;
+	OSStatus		error = GetControlProperty(inSlider, AppResources_ReturnCreatorCode(),
+												kConstantsRegistry_ControlPropertyTypeOwningPanel,
+												sizeof(panel), &actualSize, &panel);
+	
+	
+	if (noErr == error)
+	{
+		// now synchronize the change with preferences
+		My_SessionsPanelDataFlowDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(panel),
+																			My_SessionsPanelDataFlowDataPtr);
+		
+		
+		panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+	}
+}// My_SessionsPanelDataFlowUI::sliderProc
 
 
 /*!
