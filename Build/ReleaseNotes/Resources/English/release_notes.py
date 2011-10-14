@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111014',
     '20111009',
     '20111007',
     '20111004',
@@ -421,6 +422,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111014': [
+        'Fixed a major inheritance problem where a collection (Macro Set, Workspace, Session, Terminal, Format or Translation) did not always fall back on the Default collection for undefined settings.',
+    ],
     '20111009': [
         'The "Restart Session" command can now run at any time, not just when a session has ended.  If appropriate, a confirmation warning is displayed prior to killing the active session.',
         'The "Restart Session" command now has a toolbar icon.',

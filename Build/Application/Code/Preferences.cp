@@ -1,7 +1,9 @@
+/*!	\file Preferences.cp
+	\brief Interfaces to access and modify user preferences,
+	or be notified when they are changed.
+*/
 /*###############################################################
 
-	Preferences.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2004 by Ian Anderson.
@@ -6021,6 +6023,11 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 				switch (inDataPreferenceTag)
 				{
 				case kPreferences_TagFontCharacterWidthMultiplier:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
 						Float32* const	data = REINTERPRET_CAST(outDataPtr, Float32*);
@@ -6063,6 +6070,11 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagFontSize:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
 						SInt16* const	data = REINTERPRET_CAST(outDataPtr, SInt16*);
@@ -6156,6 +6168,11 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagTerminalPaddingRight:
 				case kPreferences_TagTerminalPaddingTop:
 				case kPreferences_TagTerminalPaddingBottom:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
 						Float32			valueFloat32 = inContextPtr->returnFloat(keyName);
@@ -6329,6 +6346,11 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagHeadersCollapsed:
 				case kPreferences_TagPureInverse:
 				case kPreferences_TagRandomTerminalFormats:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
@@ -6337,6 +6359,11 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagCopyTableThreshold:
 					assert(typeNetEvents_CFNumberRef == keyValueType);
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						UInt16*		outUInt16Ptr = REINTERPRET_CAST(outDataPtr, UInt16*);
 						
@@ -6358,6 +6385,11 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagKioskShowsWindowFrame:
 				case kPreferences_TagKioskUsesSuperfluousEffects:
 				case kPreferences_TagNoUpdateWarning:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
@@ -6391,6 +6423,11 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagTerminalShowMarginAtColumn:
 					assert(typeNetEvents_CFNumberRef == keyValueType);
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						UInt16*		outUInt16Ptr = REINTERPRET_CAST(outDataPtr, UInt16*);
 						
@@ -6614,6 +6651,11 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagWasFunctionKeypadShowing:
 				case kPreferences_TagWasSessionInfoShowing:
 				case kPreferences_TagWasVT220KeypadShowing:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
@@ -7143,6 +7185,11 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagNoPasteWarning:
 				case kPreferences_TagTektronixPAGEClearsScreen:
 					// all of these keys have Core Foundation Boolean values
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
@@ -7240,6 +7287,11 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagIdleAfterInactivityInSeconds:
 				case kPreferences_TagKeepAlivePeriodInMinutes:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
 						SInt16			valueInteger = inContextPtr->returnInteger(keyName);
@@ -7355,6 +7407,11 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagPasteNewLineDelay:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
 						SInt16				valueInteger = inContextPtr->returnInteger(keyName);
@@ -7366,6 +7423,11 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagScrollDelay:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
 						SInt16				valueInteger = inContextPtr->returnInteger(keyName);
@@ -7377,6 +7439,11 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagServerPort:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
 						SInt16* const	data = REINTERPRET_CAST(outDataPtr, SInt16*);
@@ -7546,6 +7613,11 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagXTermGraphicsEnabled:
 				case kPreferences_TagXTermWindowAlterationEnabled:
 					// all of these keys have Core Foundation Boolean values
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
@@ -7690,6 +7762,11 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagTerminalScreenColumns:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
 						SInt16			valueInteger = inContextPtr->returnInteger(keyName);
@@ -7707,6 +7784,11 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagTerminalScreenRows:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
 						SInt16			valueInteger = inContextPtr->returnInteger(keyName);
@@ -7724,6 +7806,11 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagTerminalScreenScrollbackRows:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
 						SInt32			valueInteger = inContextPtr->returnLong(keyName);
@@ -7885,6 +7972,11 @@ getTranslationPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagTextEncodingID:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
 						SInt32						valueInteger = inContextPtr->returnLong(keyName);
@@ -7954,6 +8046,11 @@ getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				switch (inDataPreferenceTag)
 				{
 				case kPreferences_TagArrangeWindowsUsingTabs:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
 					{
 						assert(typeNetEvents_CFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
