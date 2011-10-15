@@ -520,6 +520,7 @@
 		0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaBasic.mm; path = Shared/Code/CocoaBasic.mm; sourceTree = "<group>"; };
 		0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaBasic.h; path = Shared/Code/CocoaBasic.h; sourceTree = "<group>"; };
 		0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		0ACBF0101449232F00D17678 /* IconForKillSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKillSession.icns; path = Application/Resources/IconForKillSession.icns; sourceTree = "<group>"; };
 		0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FileSelectionDialogs.h; path = Shared/Code/FileSelectionDialogs.h; sourceTree = "<group>"; };
 		0ACDD9250ABD16C200040553 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AlertMessages.nib; sourceTree = "<group>"; };
 		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c.preprocessed; name = Quills.i; path = Application/Code/Quills.i; sourceTree = "<group>"; };
@@ -1031,6 +1032,7 @@
 				0AE285D70B8D7AE600E2253A /* IconForKeypadPageDown.icns */,
 				0AE285D90B8D7AEA00E2253A /* IconForKeypadPageUp.icns */,
 				0AF5B8AE0B8ED23A0061B480 /* IconForKeypadSelect.icns */,
+				0ACBF0101449232F00D17678 /* IconForKillSession.icns */,
 				0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */,
 				0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */,
 				0AC810AD1221EC9300687DB2 /* IconForMacroSet.icns */,

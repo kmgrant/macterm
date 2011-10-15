@@ -426,6 +426,9 @@ notes_by_version = {
         'Fixed a major inheritance problem where a collection (Macro Set, Workspace, Session, Terminal, Format or Translation) did not always fall back on the Default collection for undefined settings.',
         'Fixed Preferences window Sessions pane Data Flow tab to save settings properly.',
         'Preferences window Sessions pane Data Flow tab now contains a Line Insertion Delay setting, which is a graphical way to modify the recently-added low-level preference "data-send-paste-line-delay-milliseconds".',
+        'New "Force-Quit and Keep Window" command (hidden, requiring Control key in File menu); kills processes like "Restart Session" does, but without the restart.',
+        'New "Force Quit" toolbar item, which shares the space of the "Restart" item (based on whether or not anything is running).  Note that regardless of the visibility of the Restart icon, the "Restart Session" command is always available in the File menu.',
+        'Preferences window Full Screen pane "Allow Force Quit command" setting now ensures that "Force-Quit and Keep Window" and "Restart Session" will not work in Full Screen mode (in addition to prohibiting the system-wide "Force Quit" command, as before).',
     ],
     '20111009': [
         'The "Restart Session" command can now run at any time, not just when a session has ended.  If appropriate, a confirmation warning is displayed prior to killing the active session.',

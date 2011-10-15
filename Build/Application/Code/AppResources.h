@@ -267,6 +267,13 @@ inline CFStringRef
 }
 
 inline CFStringRef
+	AppResources_ReturnKillSessionIconFilenameNoExtension				()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForKillSession");
+}
+
+inline CFStringRef
 	AppResources_ReturnLEDOffIconFilenameNoExtension					()
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"

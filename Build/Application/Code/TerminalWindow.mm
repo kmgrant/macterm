@@ -211,6 +211,7 @@ struct My_TerminalWindow
 	Float32						tabSizeInPixels;			// used to position and size a tab drawer, if any
 	HIToolbarRef				toolbar;					// customizable toolbar of icons at the top
 	CFRetainRelease				toolbarItemBell;			// if present, enable/disable bell item
+	CFRetainRelease				toolbarItemKillRestart;		// if present, kill/restart item
 	CFRetainRelease				toolbarItemLED1;			// if present, LED #1 status item
 	CFRetainRelease				toolbarItemLED2;			// if present, LED #2 status item
 	CFRetainRelease				toolbarItemLED3;			// if present, LED #3 status item
@@ -415,6 +416,7 @@ IconRef					createBellOnIcon				();
 IconRef					createCustomizeToolbarIcon		();
 IconRef					createFullScreenIcon			();
 IconRef					createHideWindowIcon			();
+IconRef					createKillSessionIcon			();
 IconRef					createScrollLockOffIcon			();
 IconRef					createScrollLockOnIcon			();
 IconRef					createLEDOffIcon				();
@@ -494,6 +496,7 @@ IconRef&					gBellOnIcon ()					{ static IconRef x = createBellOnIcon(); return 
 IconRef&					gCustomizeToolbarIcon ()		{ static IconRef x = createCustomizeToolbarIcon(); return x; }
 IconRef&					gFullScreenIcon ()				{ static IconRef x = createFullScreenIcon(); return x; }
 IconRef&					gHideWindowIcon ()				{ static IconRef x = createHideWindowIcon(); return x; }
+IconRef&					gKillSessionIcon ()				{ static IconRef x = createKillSessionIcon(); return x; }
 IconRef&					gLEDOffIcon ()					{ static IconRef x = createLEDOffIcon(); return x; }
 IconRef&					gLEDOnIcon ()					{ static IconRef x = createLEDOnIcon(); return x; }
 IconRef&					gPrintIcon ()					{ static IconRef x = createPrintIcon(); return x; }
@@ -2108,6 +2111,7 @@ tabOffsetInPixels(0.0),
 tabSizeInPixels(0.0),
 toolbar(nullptr),
 toolbarItemBell(),
+toolbarItemKillRestart(),
 toolbarItemLED1(),
 toolbarItemLED2(),
 toolbarItemLED3(),
@@ -3013,6 +3017,40 @@ createHideWindowIcon ()
 	
 	return result;
 }// createHideWindowIcon
+
+
+/*!
+Registers the “kill session” icon reference with the system,
+and returns a reference to the new icon.
+
+NOTE:	This is only being created for short-term Carbon use; it
+		will not be necessary to allocate icons at all in Cocoa
+		windows.
+
+(4.0)
+*/
+IconRef
+createKillSessionIcon ()
+{
+	IconRef		result = nullptr;
+	FSRef		iconFile;
+	
+	
+	if (AppResources_GetArbitraryResourceFileFSRef
+		(AppResources_ReturnKillSessionIconFilenameNoExtension(),
+			CFSTR("icns")/* type */, iconFile))
+	{
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
+												kConstantsRegistry_IconServicesIconToolbarItemKillSession,
+												&iconFile, &result))
+		{
+			// failed!
+			result = nullptr;
+		}
+	}
+	
+	return result;
+}// createKillSessionIcon
 
 
 /*!
@@ -5525,9 +5563,15 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																kHIToolbarItemNoAttributes, &itemRef);
 								if (noErr == result)
 								{
-									UInt32 const	kMyCommandID = kCommandRestartSession;
+									UInt32 const	kMyCommandID = kCommandKillProcessesKeepWindow;
 									CFStringRef		nameCFString = nullptr;
 									
+									
+									// remember this item so its icon can be kept in sync with the session state
+									if (isPermanentItem)
+									{
+										ptr->toolbarItemKillRestart.setCFTypeRef(itemRef);
+									}
 									
 									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
 									{
@@ -5538,7 +5582,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										assert_noerr(result);
 										CFRelease(nameCFString), nameCFString = nullptr;
 									}
-									result = HIToolbarItemSetIconRef(itemRef, gRestartSessionIcon());
+									result = HIToolbarItemSetIconRef(itemRef, gKillSessionIcon());
 									assert_noerr(result);
 									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
 									assert_noerr(result);
@@ -6624,6 +6668,28 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					{
 						TerminalWindow_SetWindowTitle(terminalWindow, titleCFString);
 					}
+					
+					// the restart toolbar item, if visible, should have its icon and command set
+					if (ptr->toolbarItemKillRestart.exists())
+					{
+						UInt32 const		kNewCommandID = kCommandKillProcessesKeepWindow;
+						HIToolbarItemRef	itemRef = ptr->toolbarItemKillRestart.returnHIObjectRef();
+						CFStringRef			nameCFString = nullptr;
+						OSStatus			error = noErr;
+						
+						
+						if (Commands_CopyCommandName(kNewCommandID, kCommands_NameTypeShort, nameCFString))
+						{
+							error = HIToolbarItemSetLabel(itemRef, nameCFString);
+							assert_noerr(error);
+							(OSStatus)HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */, nullptr/* long text */);
+							CFRelease(nameCFString), nameCFString = nullptr;
+						}
+						error = HIToolbarItemSetIconRef(itemRef, gKillSessionIcon());
+						assert_noerr(error);
+						error = HIToolbarItemSetCommandID(itemRef, kNewCommandID);
+						assert_noerr(error);
+					}
 				}
 				// add or remove window adornments as appropriate; once a session has died
 				// its window (if left open by the user) won’t display a warning, so the
@@ -6634,6 +6700,28 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					ptr->isDead = true;
 					TerminalWindow_SetWindowTitle(terminalWindow, nullptr/* keep title, evaluate state again */);
 					setWarningOnWindowClose(ptr, false);
+					
+					// the restart toolbar item, if visible, should have its icon and command changed
+					if (ptr->toolbarItemKillRestart.exists())
+					{
+						UInt32 const		kNewCommandID = kCommandRestartSession;
+						HIToolbarItemRef	itemRef = ptr->toolbarItemKillRestart.returnHIObjectRef();
+						CFStringRef			nameCFString = nullptr;
+						OSStatus			error = noErr;
+						
+						
+						if (Commands_CopyCommandName(kNewCommandID, kCommands_NameTypeShort, nameCFString))
+						{
+							error = HIToolbarItemSetLabel(itemRef, nameCFString);
+							assert_noerr(error);
+							(OSStatus)HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */, nullptr/* long text */);
+							CFRelease(nameCFString), nameCFString = nullptr;
+						}
+						error = HIToolbarItemSetIconRef(itemRef, gRestartSessionIcon());
+						assert_noerr(error);
+						error = HIToolbarItemSetCommandID(itemRef, kNewCommandID);
+						assert_noerr(error);
+					}
 				}
 				else
 				{

@@ -132,6 +132,7 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandCloseConnection					kHICommandClose
 #define kCommandSaveSession						kHICommandSaveAs
 #define kCommandNewDuplicateSession				'NewD'
+#define kCommandKillProcessesKeepWindow			'Kill'
 #define kCommandRestartSession					'RSsn'
 #define kCommandHandleURL						'HURL'
 #define kCommandSaveText						'SvTx'
@@ -505,7 +506,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 // commands no longer used, may be deleted
 #define kCommandDisplayWindowContextualMenu		'CMnu'
 #define kCommandCloseWorkspace					'ClsA'
-#define kCommandKillProcessesKeepWindow			'Kill'
 #define kCommandSpeakSelectedText				'SpkS'
 #define kCommandStopSpeaking					'SpkE'
 
@@ -618,6 +618,9 @@ performRestoreWorkspaceDefault:(id)_;
 
 - (void)
 performRestoreWorkspaceByFavoriteName:(id)_;
+
+- (IBAction)
+performKill:(id)_;
 
 - (IBAction)
 performRestart:(id)_;

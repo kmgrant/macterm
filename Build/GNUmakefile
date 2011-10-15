@@ -191,6 +191,7 @@ IconForKeypadInsert.icns \
 IconForKeypadPageDown.icns \
 IconForKeypadPageUp.icns \
 IconForKeypadSelect.icns \
+IconForKillSession.icns \
 IconForLEDOff.icns \
 IconForLEDOn.icns \
 IconForMacroSet.icns \

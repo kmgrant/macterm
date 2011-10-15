@@ -141,6 +141,22 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 													CFSTR("kUIStrings_AlertWindowGenericCannotUndoHelpText"));
 		break;
 	
+	case kUIStrings_AlertWindowKillSessionName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Force-Quit Processes"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowKillSessionName"));
+		break;
+	
+	case kUIStrings_AlertWindowKillSessionHelpText:
+	case kUIStrings_AlertWindowRestartSessionHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("You will lose any unsaved changes in running programs, but the window will stay open and its text will be preserved."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowKillSessionHelpText or kUIStrings_AlertWindowRestartSessionHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowKillSessionPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Please confirm that you want all processes in this window to stop running."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowKillSessionPrimaryText"));
+		break;
+	
 	case kUIStrings_AlertWindowMacroExportNothingPrimaryText:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("No macros are active."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowMacroExportNothingPrimaryText"));
@@ -226,10 +242,9 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 													CFSTR("kUIStrings_AlertWindowRestartSessionName"));
 		break;
 	
-	case kUIStrings_AlertWindowRestartSessionHelpText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("You will lose any unsaved changes, but the contents of the scrollback will be kept."), CFSTR("Alerts"),
-													CFSTR("kUIStrings_AlertWindowRestartSessionHelpText"));
-		break;
+	//case kUIStrings_AlertWindowRestartSessionHelpText:
+		// see kUIStrings_AlertWindowKillSessionHelpText
+		//break;
 	
 	case kUIStrings_AlertWindowRestartSessionPrimaryText:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("The processes in this window will be forced to quit.  Restart anyway?"), CFSTR("Alerts"),
@@ -434,6 +449,11 @@ UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 	case kUIStrings_ButtonClose:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Close"), CFSTR("Buttons"),
 													CFSTR("kUIStrings_ButtonClose"));
+		break;
+	
+	case kUIStrings_ButtonKill:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Force Quit"), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonKill"));
 		break;
 	
 	case kUIStrings_ButtonRestart:
@@ -1743,6 +1763,11 @@ UIStrings_Copy	(UIStrings_ToolbarItemCFString	inWhichString,
 	case kUIStrings_ToolbarItemHideFrontWindow:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Hide"), CFSTR("ToolbarItems"),
 													CFSTR("kUIStrings_ToolbarItemHideFrontWindow"));
+		break;
+	
+	case kUIStrings_ToolbarItemKillSession:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Force Quit"), CFSTR("ToolbarItems"),
+													CFSTR("kUIStrings_ToolbarItemKillSession"));
 		break;
 	
 	case kUIStrings_ToolbarItemNewSessionDefault:

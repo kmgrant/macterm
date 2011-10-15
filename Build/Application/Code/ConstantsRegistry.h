@@ -207,6 +207,7 @@ enum
 	kConstantsRegistry_IconServicesIconToolbarItemCustomize		= 'CTlb',
 	kConstantsRegistry_IconServicesIconToolbarItemFullScreen	= 'Kios',
 	kConstantsRegistry_IconServicesIconToolbarItemHideWindow	= 'Hide',
+	kConstantsRegistry_IconServicesIconToolbarItemKillSession	= 'Kill',
 	kConstantsRegistry_IconServicesIconToolbarItemLEDOff		= 'LEDO',
 	kConstantsRegistry_IconServicesIconToolbarItemLEDOn			= 'LEDI',
 	kConstantsRegistry_IconServicesIconToolbarItemPrint			= 'Prnt',

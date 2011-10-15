@@ -2,17 +2,17 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.10">
   <data>
     <int key="IBDocument.SystemTarget">1030</int>
-    <string key="IBDocument.SystemVersion">11B26</string>
+    <string key="IBDocument.SystemVersion">11C74</string>
     <string key="IBDocument.InterfaceBuilderVersion">851</string>
-    <string key="IBDocument.AppKitVersion">1138</string>
-    <string key="IBDocument.HIToolboxVersion">566.00</string>
+    <string key="IBDocument.AppKitVersion">1138.23</string>
+    <string key="IBDocument.HIToolboxVersion">567.00</string>
     <object class="NSMutableDictionary" key="IBDocument.PluginVersions">
       <string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
       <string key="NS.object.0">851</string>
     </object>
     <object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
       <bool key="EncodedWithXMLCoder">YES</bool>
-      <integer value="885"/>
+      <integer value="81"/>
     </object>
     <object class="NSArray" key="IBDocument.PluginDependencies">
       <bool key="EncodedWithXMLCoder">YES</bool>
@@ -379,6 +379,16 @@
                   <string key="NSTitle">Close</string>
                   <string key="NSKeyEquiv">w</string>
                   <int key="NSKeyEquivModMask">1048576</int>
+                  <int key="NSMnemonicLoc">2147483647</int>
+                  <reference key="NSOnImage" ref="229763992"/>
+                  <reference key="NSMixedImage" ref="909111550"/>
+                </object>
+                <object class="NSMenuItem" id="1015398107">
+                  <reference key="NSMenu" ref="720053764"/>
+                  <bool key="NSIsAlternate">YES</bool>
+                  <string key="NSTitle">Force-Quit and Keep Window</string>
+                  <string key="NSKeyEquiv">w</string>
+                  <int key="NSKeyEquivModMask">1310720</int>
                   <int key="NSMnemonicLoc">2147483647</int>
                   <reference key="NSOnImage" ref="229763992"/>
                   <reference key="NSMixedImage" ref="909111550"/>
@@ -2933,6 +2943,14 @@
           </object>
           <int key="connectionID">1181</int>
         </object>
+        <object class="IBConnectionRecord">
+          <object class="IBActionConnection" key="connection">
+            <string key="label">performKill:</string>
+            <reference key="source" ref="412825009"/>
+            <reference key="destination" ref="1015398107"/>
+          </object>
+          <int key="connectionID">1185</int>
+        </object>
       </object>
       <object class="IBMutableOrderedSet" key="objectRecords">
         <object class="NSArray" key="orderedObjects">
@@ -3036,6 +3054,7 @@
               <reference ref="659855505"/>
               <reference ref="412709528"/>
               <reference ref="49316011"/>
+              <reference ref="1015398107"/>
             </object>
             <reference key="parent" ref="379814623"/>
           </object>
@@ -4207,6 +4226,11 @@
             <reference key="object" ref="808964986"/>
             <reference key="parent" ref="348578084"/>
           </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">1183</int>
+            <reference key="object" ref="1015398107"/>
+            <reference key="parent" ref="720053764"/>
+          </object>
         </object>
       </object>
       <object class="NSMutableDictionary" key="flattenedProperties">
@@ -4272,6 +4296,8 @@
           <string>1176.IBPluginDependency</string>
           <string>1177.IBPluginDependency</string>
           <string>1182.IBPluginDependency</string>
+          <string>1183.IBPluginDependency</string>
+          <string>1183.ImportedFromIB2</string>
           <string>19.IBPluginDependency</string>
           <string>19.ImportedFromIB2</string>
           <string>23.IBPluginDependency</string>
@@ -4596,6 +4622,8 @@
           <integer value="1"/>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <integer value="1"/>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+          <integer value="1"/>
           <string>{{674, 436}, {326, 483}}</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <integer value="1"/>
@@ -4681,7 +4709,7 @@
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <integer value="1"/>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-          <string>{{346, 496}, {318, 423}}</string>
+          <string>{{346, 476}, {318, 443}}</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <integer value="1"/>
           <string>{{323, 672}, {199, 203}}</string>
@@ -4870,7 +4898,7 @@
         </object>
       </object>
       <nil key="sourceID"/>
-      <int key="maxID">1182</int>
+      <int key="maxID">1185</int>
     </object>
     <object class="IBClassDescriber" key="IBDocument.Classes">
       <object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -4928,6 +4956,7 @@
               <string>performHideWindow:</string>
               <string>performInterruptProcess:</string>
               <string>performJumpScrolling:</string>
+              <string>performKill:</string>
               <string>performLineWrapToggle:</string>
               <string>performLocalEchoToggle:</string>
               <string>performLocalPageKeysToggle:</string>
@@ -5103,6 +5132,7 @@
               <string>id</string>
               <string>id</string>
               <string>id</string>
+              <string>id</string>
             </object>
           </object>
           <object class="NSMutableDictionary" key="actionInfosByName">
@@ -5155,6 +5185,7 @@
               <string>performHideWindow:</string>
               <string>performInterruptProcess:</string>
               <string>performJumpScrolling:</string>
+              <string>performKill:</string>
               <string>performLineWrapToggle:</string>
               <string>performLocalEchoToggle:</string>
               <string>performLocalPageKeysToggle:</string>
@@ -5403,6 +5434,10 @@
               </object>
               <object class="IBActionInfo">
                 <string key="name">performJumpScrolling:</string>
+                <string key="candidateClassName">id</string>
+              </object>
+              <object class="IBActionInfo">
+                <string key="name">performKill:</string>
                 <string key="candidateClassName">id</string>
               </object>
               <object class="IBActionInfo">

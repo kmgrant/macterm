@@ -393,6 +393,7 @@ void
 void
 	Session_DisplayTerminationWarning		(SessionRef							inRef,
 											 Boolean							inForceModalDialog = false,
+											 Boolean							inForceKeepWindow = false,
 											 Boolean							inRestart = false);
 
 Boolean

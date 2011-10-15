@@ -345,10 +345,13 @@ typedef My_PasteAlertInfo*		My_PasteAlertInfoPtr;
 struct My_TerminateAlertInfo
 {
 	My_TerminateAlertInfo	(SessionRef		inSession,
-							 Boolean		inRestart): sessionBeingTerminated(inSession), restartSession(inRestart) {}
+							 Boolean		inKeepWindow,
+							 Boolean		inRestart)
+	: sessionBeingTerminated(inSession), keepWindow(inKeepWindow), restartSession(inRestart) {}
 	
 	// sent to terminationWarningCloseNotifyProc()
 	SessionRef		sessionBeingTerminated;
+	Boolean			keepWindow;
 	Boolean			restartSession;
 };
 typedef My_TerminateAlertInfo*	My_TerminateAlertInfoPtr;
@@ -1005,10 +1008,17 @@ closes.)
 void
 Session_DisplayTerminationWarning	(SessionRef		inRef,
 									 Boolean		inForceModalDialog,
+									 Boolean		inForceKeepWindow,
 									 Boolean		inRestart)
 {
-	My_TerminateAlertInfoPtr	terminateAlertInfoPtr = new My_TerminateAlertInfo(inRef, inRestart);
+	Boolean const				kIsRestartCommand = ((inRestart) && (inForceKeepWindow));
+	Boolean const				kIsKillCommand = ((false == inRestart) && (inForceKeepWindow));
+	Boolean const				kIsCloseCommand = ((false == kIsRestartCommand) && (false == kIsKillCommand));
+	Boolean const				kWillRemoveTerminalWindow = kIsCloseCommand;
+	My_TerminateAlertInfoPtr	terminateAlertInfoPtr = new My_TerminateAlertInfo(inRef, (false == kWillRemoveTerminalWindow), inRestart);
 	
+	
+	assert((kIsRestartCommand) || (kIsKillCommand) || (kIsCloseCommand));
 	
 	if (Session_StateIsActiveUnstable(inRef) || Session_StateIsDead(inRef))
 	{
@@ -1023,7 +1033,6 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 		HIWindowRef				window = Session_ReturnActiveWindow(inRef);
 		Rect					originalStructureBounds;
 		Rect					centeredStructureBounds;
-		Boolean					willLeaveTerminalWindowOpen = inRestart;
 		OSStatus				error = noErr;
 		
 		
@@ -1033,7 +1042,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 		}
 		else
 		{
-			alertBox = Alert_NewWindowModal(window/* parent */, !willLeaveTerminalWindowOpen/* is window close alert */,
+			alertBox = Alert_NewWindowModal(window/* parent */, kWillRemoveTerminalWindow/* is window close alert */,
 											terminationWarningCloseNotifyProc, terminateAlertInfoPtr/* user data */);
 		}
 		
@@ -1047,7 +1056,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			// but quell the animation if this window should be closed without
 			// warning (so-called active unstable) or if only one window is
 			// open that would cause an alert to be displayed
-			if ((inForceModalDialog) && (false == inRestart) &&
+			if ((inForceModalDialog) && (kWillRemoveTerminalWindow) &&
 				(false == Session_StateIsActiveUnstable(inRef)) &&
 				((SessionFactory_ReturnCount() - SessionFactory_ReturnStateCount(kSession_StateActiveUnstable)) > 1))
 			{
@@ -1105,17 +1114,21 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			CFStringRef			primaryTextCFString = nullptr;
 			
 			
-			stringResult = UIStrings_Copy((inRestart)
+			stringResult = UIStrings_Copy((kIsRestartCommand)
 											? kUIStrings_AlertWindowRestartSessionPrimaryText
-											: kUIStrings_AlertWindowClosePrimaryText, primaryTextCFString);
+											: (kIsKillCommand)
+												? kUIStrings_AlertWindowKillSessionPrimaryText
+												: kUIStrings_AlertWindowClosePrimaryText, primaryTextCFString);
 			if (stringResult.ok())
 			{
 				CFStringRef		helpTextCFString = nullptr;
 				
 				
-				stringResult = UIStrings_Copy((inRestart)
+				stringResult = UIStrings_Copy((kIsRestartCommand)
 												? kUIStrings_AlertWindowRestartSessionHelpText
-												: kUIStrings_AlertWindowCloseHelpText, helpTextCFString);
+												: (kIsKillCommand)
+													? kUIStrings_AlertWindowKillSessionHelpText
+													: kUIStrings_AlertWindowCloseHelpText, helpTextCFString);
 				if (stringResult.ok())
 				{
 					Alert_SetTextCFStrings(alertBox, primaryTextCFString, helpTextCFString);
@@ -1130,9 +1143,11 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			CFStringRef			titleCFString = nullptr;
 			
 			
-			stringResult = UIStrings_Copy((inRestart)
+			stringResult = UIStrings_Copy((kIsRestartCommand)
 											? kUIStrings_AlertWindowRestartSessionName
-											: kUIStrings_AlertWindowCloseName, titleCFString);
+											: (kIsKillCommand)
+												? kUIStrings_AlertWindowKillSessionName
+												: kUIStrings_AlertWindowCloseName, titleCFString);
 			if (stringResult == kUIStrings_ResultOK)
 			{
 				Alert_SetTitleCFString(alertBox, titleCFString);
@@ -1145,9 +1160,11 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			CFStringRef			buttonTitleCFString = nullptr;
 			
 			
-			stringResult = UIStrings_Copy((inRestart)
+			stringResult = UIStrings_Copy((kIsRestartCommand)
 											? kUIStrings_ButtonRestart
-											: kUIStrings_ButtonClose, buttonTitleCFString);
+											: (kIsKillCommand)
+												? kUIStrings_ButtonKill
+												: kUIStrings_ButtonClose, buttonTitleCFString);
 			if (stringResult == kUIStrings_ResultOK)
 			{
 				Alert_SetButtonText(alertBox, kAlertStdAlertOKButton, buttonTitleCFString);
@@ -1175,7 +1192,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 		if (inForceModalDialog)
 		{
 			Alert_Display(alertBox);
-			if ((false == inRestart) && (Alert_ItemHit(alertBox) == kAlertStdAlertCancelButton))
+			if ((kWillRemoveTerminalWindow) && (Alert_ItemHit(alertBox) == kAlertStdAlertCancelButton))
 			{
 				// in the event that the user cancelled and the window
 				// was transitioned to the screen center, “un-transition”
@@ -8213,7 +8230,7 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 									kSession_StateAttributeOpenDialog/* attributes to clear */);
 			
 			// some actions are only appropriate when the window is closing...
-			if (false == dataPtr->restartSession)
+			if (false == dataPtr->keepWindow)
 			{
 				// notify listeners
 				{
@@ -8256,7 +8273,7 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 			// immediately close the associated window
 			Session_Dispose(&dataPtr->sessionBeingTerminated);
 		}
-		else if (dataPtr->restartSession)
+		else if (dataPtr->keepWindow)
 		{
 			if (kAlertStdAlertOKButton == inItemHit)
 			{
@@ -8269,18 +8286,22 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 				Session_SetState(dataPtr->sessionBeingTerminated, kSession_StateDead);
 				ptr->restartInProgress = false;
 				
-				// TEMPORARY; this is technically terminal-type-specific and just happens to
-				// work to clear the screen and home the cursor in any supported emulator;
-				// this should probably be more explicit
-				Session_TerminalWriteCString(dataPtr->sessionBeingTerminated, "\033[H\033[J");
-				
-				// install a one-shot timer to rerun the command line after a short delay
-				// (certain processes, such as shells, do not respawn correctly if the
-				// respawn is attempted immediately after the previous process exits)
-				(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
-												200 * kEventDurationMillisecond/* delay before start; heuristic */,
-												kEventDurationForever/* time between fires - this timer does not repeat */,
-												ptr->respawnSessionTimerUPP, dataPtr->sessionBeingTerminated, &ptr->respawnSessionTimer);
+				// if requested, restart the command afterwards
+				if (dataPtr->restartSession)
+				{
+					// TEMPORARY; this is technically terminal-type-specific and just happens to
+					// work to clear the screen and home the cursor in any supported emulator;
+					// this should probably be more explicit
+					Session_TerminalWriteCString(dataPtr->sessionBeingTerminated, "\033[H\033[J");
+					
+					// install a one-shot timer to rerun the command line after a short delay
+					// (certain processes, such as shells, do not respawn correctly if the
+					// respawn is attempted immediately after the previous process exits)
+					(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
+													200 * kEventDurationMillisecond/* delay before start; heuristic */,
+													kEventDurationForever/* time between fires - this timer does not repeat */,
+													ptr->respawnSessionTimerUPP, dataPtr->sessionBeingTerminated, &ptr->respawnSessionTimer);
+				}
 			}
 		}
 	}

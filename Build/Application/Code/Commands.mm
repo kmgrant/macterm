@@ -409,6 +409,21 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		}
 		break;
 	
+	case kCommandKillProcessesKeepWindow:
+		switch (inNameType)
+		{
+		case kCommands_NameTypeShort:
+			if (UIStrings_Copy(kUIStrings_ToolbarItemKillSession, outName).ok()) result = true;
+			else useMenuCommandName = true;
+			break;
+		
+		case kCommands_NameTypeDefault:
+		default:
+			useMenuCommandName = true;
+			break;
+		}
+		break;
+	
 	case kCommandRestartSession:
 		switch (inNameType)
 		{
@@ -686,9 +701,53 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
+		case kCommandKillProcessesKeepWindow:
+			{
+				Boolean		allowForceQuit = true;
+				size_t		actualSize = 0;
+				
+				
+				// in Full Screen mode, this command might not always be allowed
+				if (kPreferences_ResultOK !=
+					Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
+										&allowForceQuit, &actualSize))
+				{
+					allowForceQuit = true; // assume a value if the preference cannot be found
+				}
+				
+				if ((false == FlagManager_Test(kFlagKioskMode)) || (allowForceQuit))
+				{
+					Session_DisplayTerminationWarning(frontSession, false/* is modal */, true/* force keep window */, false/* restart */);
+				}
+				else
+				{
+					Sound_StandardAlert();
+				}
+			}
+			break;
+		
 		case kCommandRestartSession:
 			{
-				Session_DisplayTerminationWarning(frontSession, false/* is modal */, true/* restart */);
+				Boolean		allowForceQuit = true;
+				size_t		actualSize = 0;
+				
+				
+				// in Full Screen mode, this command might not always be allowed
+				if (kPreferences_ResultOK !=
+					Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
+										&allowForceQuit, &actualSize))
+				{
+					allowForceQuit = true; // assume a value if the preference cannot be found
+				}
+				
+				if ((false == FlagManager_Test(kFlagKioskMode)) || (allowForceQuit))
+				{
+					Session_DisplayTerminationWarning(frontSession, false/* is modal */, true/* force keep window */, true/* restart */);
+				}
+				else
+				{
+					Sound_StandardAlert();
+				}
 			}
 			break;
 		
@@ -4360,6 +4419,28 @@ canPerformNewShell:(id <NSValidatedUserInterfaceItem>)		anItem
 		return [NSNumber numberWithBool:NO];
 	}
 	return validatorYes(anItem);
+}
+
+
+- (IBAction)
+performKill:(id)		sender
+{
+#pragma unused(sender)
+	Commands_ExecuteByIDUsingEvent(kCommandKillProcessesKeepWindow, nullptr/* target */);
+}
+- (id)
+canPerformKill:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	SessionRef		currentSession = SessionFactory_ReturnUserRecentSession();
+	BOOL			result = NO;
+	
+	
+	if (nullptr != currentSession)
+	{
+		result = (false == Session_StateIsDead(currentSession));
+	}
+	return [NSNumber numberWithBool:result];
 }
 
 
