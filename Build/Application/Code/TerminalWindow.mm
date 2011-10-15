@@ -6691,6 +6691,17 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						assert_noerr(error);
 					}
 				}
+				if (Session_StateIsActiveUnstable(session) || Session_StateIsActiveStable(session))
+				{
+					// the cursor should be allowed to render once again, if it was inhibited
+					My_TerminalViewList::const_iterator		viewIterator;
+					
+					
+					for (viewIterator = ptr->allViews.begin(); viewIterator != ptr->allViews.end(); ++viewIterator)
+					{
+						(TerminalView_Result)TerminalView_SetCursorRenderingEnabled(*viewIterator, true);
+					}
+				}
 				// add or remove window adornments as appropriate; once a session has died
 				// its window (if left open by the user) won’t display a warning, so the
 				// adornment is removed in that case, although its title is then changed
@@ -6721,6 +6732,17 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						assert_noerr(error);
 						error = HIToolbarItemSetCommandID(itemRef, kNewCommandID);
 						assert_noerr(error);
+					}
+					
+					// the cursor should not be displayed for inactive sessions
+					{
+						My_TerminalViewList::const_iterator		viewIterator;
+						
+						
+						for (viewIterator = ptr->allViews.begin(); viewIterator != ptr->allViews.end(); ++viewIterator)
+						{
+							(TerminalView_Result)TerminalView_SetCursorRenderingEnabled(*viewIterator, false);
+						}
 					}
 				}
 				else
