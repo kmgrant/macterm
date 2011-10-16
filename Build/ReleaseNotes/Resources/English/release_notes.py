@@ -425,6 +425,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20111015': [
         'Fixed a problem where tilde markers (~) appeared repeatedly if sessions were killed and restarted.',
+        'Preferences window Macros pane now leaves more space for editing the content of a macro.',
     ],
     '20111014': [
         'Fixed a major inheritance problem where a collection (Macro Set, Workspace, Session, Terminal, Format or Translation) did not always fall back on the Default collection for undefined settings.',
