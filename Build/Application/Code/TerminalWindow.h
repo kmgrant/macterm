@@ -170,6 +170,10 @@ void
 //!\name Terminal Window Information
 //@{
 
+void
+	TerminalWindow_CopyWindowTitle					(TerminalWindowRef			inRef,
+													 CFStringRef&				outName);
+
 Boolean
 	TerminalWindow_EventInside						(TerminalWindowRef			inRef,
 													 EventRef					inMouseEvent);

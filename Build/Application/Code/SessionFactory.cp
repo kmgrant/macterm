@@ -3085,25 +3085,18 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					
 					if (nullptr != terminalWindow)
 					{
-						HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
+						CFStringRef		existingTitleCFString = nullptr;
 						
 						
-						if (nullptr != window)
+						TerminalWindow_CopyWindowTitle(terminalWindow, existingTitleCFString);
+						if (nullptr != existingTitleCFString)
 						{
-							CFStringRef		existingTitleCFString = nullptr;
-							OSStatus		error = noErr;
-							
-							
-							error = CopyWindowTitleAsCFString(window, &existingTitleCFString);
-							if (noErr == error)
+							if (CFStringGetLength(existingTitleCFString) > 0)
 							{
-								if (CFStringGetLength(existingTitleCFString) > 0)
-								{
-									Session_SetWindowUserDefinedTitle(session, existingTitleCFString);
-									foundTitle = true;
-								}
-								CFRelease(existingTitleCFString), existingTitleCFString = nullptr;
+								Session_SetWindowUserDefinedTitle(session, existingTitleCFString);
+								foundTitle = true;
 							}
+							CFRelease(existingTitleCFString), existingTitleCFString = nullptr;
 						}
 					}
 					

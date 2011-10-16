@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111015',
     '20111014',
     '20111009',
     '20111007',
@@ -422,6 +423,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111015': [
+        'Fixed a problem where tilde markers (~) appeared repeatedly if sessions were killed and restarted.',
+    ],
     '20111014': [
         'Fixed a major inheritance problem where a collection (Macro Set, Workspace, Session, Terminal, Format or Translation) did not always fall back on the Default collection for undefined settings.',
         'Fixed Preferences window Sessions pane Data Flow tab to save settings properly.',

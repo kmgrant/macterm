@@ -581,6 +581,31 @@ TerminalWindow_Dispose   (TerminalWindowRef*	inoutRefPtr)
 
 
 /*!
+Returns the base name of the specified terminal window,
+without any special adornments added by the Terminal Window
+module.  (To copy the complete title, just ask the OS.)
+
+(4.0)
+*/
+void
+TerminalWindow_CopyWindowTitle	(TerminalWindowRef	inRef,
+								 CFStringRef&		outName)
+{
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	
+	
+	if (ptr->baseTitleString.exists())
+	{
+		outName = CFStringCreateCopy(kCFAllocatorDefault, ptr->baseTitleString.returnCFStringRef());
+	}
+	else
+	{
+		outName = nullptr;
+	}
+}// CopyWindowTitle
+
+
+/*!
 Displays the Find dialog for the given terminal window,
 handling searches automatically.  On Mac OS X, the dialog
 is a sheet, so this routine may return immediately without
@@ -1942,6 +1967,8 @@ window title has changed.
 The value of "inName" can be nullptr if you want the current
 base title to be unchanged, but you want adornments to be
 evaluated again (an updated session status, for instance).
+
+See also TerminalWindow_CopyWindowTitle().
 
 (3.0)
 */
