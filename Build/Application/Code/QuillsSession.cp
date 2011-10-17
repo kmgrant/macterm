@@ -48,7 +48,6 @@
 #include <StringUtilities.h>
 
 // application includes
-#include "AppleEventUtilities.h"
 #include "AppResources.h"
 #include "SessionFactory.h"
 #include "QuillsSession.h"

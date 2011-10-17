@@ -65,7 +65,6 @@
 #import <WindowInfo.h>
 
 // application includes
-#import "Clipboard.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "DialogUtilities.h"
@@ -73,9 +72,6 @@
 #import "MenuBar.h"
 #import "QuillsSession.h"
 #import "Session.h"
-#import "SessionFactory.h"
-#import "TerminalView.h"
-#import "TerminalWindow.h"
 #import "Terminology.h"
 
 

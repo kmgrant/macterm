@@ -27,19 +27,14 @@ my @skip_modules = qw
 (
 	AlertMessages
 	Commands
-	Configure
 	Console
 	ConstantsRegistry
 	DialogUtilities
-	InternetConfig
-	ObjectClassesAE
 	QuillsBase
 	QuillsEvents
 	QuillsPrefs
 	QuillsSession
 	QuillsTerminal
-	RasterGraphicsKernel
-	RasterGraphicsScreen
 	Terminology
 	UIStrings_PrefsWindow
 	UniversalDefines

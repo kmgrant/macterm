@@ -67,7 +67,6 @@ extern "C"
 
 // application includes
 #include "AppResources.h"
-#include "Clipboard.h"
 #include "Commands.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"

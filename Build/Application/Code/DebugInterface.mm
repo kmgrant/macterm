@@ -39,7 +39,6 @@
 #import <SoundSystem.h>
 
 // application includes
-#import "AppResources.h"
 #import "DebugInterface.h"
 #import "Session.h"
 #import "SessionFactory.h"

@@ -1,7 +1,9 @@
+/*!	\file DialogUtilities.cp
+	\brief Lists methods that simplify window management,
+	dialog box management, and window content control management.
+*/
 /*###############################################################
 
-	DialogUtilities.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -64,9 +66,7 @@
 #include "AppResources.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
-#include "EventLoop.h"
 #include "MenuBar.h"
-#include "Preferences.h"
 #include "UIStrings.h"
 
 

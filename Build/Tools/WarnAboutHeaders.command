@@ -6,4 +6,4 @@ tools_dir=`dirname $0`
 top_dir=${tools_dir}/..
 . ${tools_dir}/AppBundle.sh
 
-exec ${top_dir}/Tools/WarnAboutHeaders.pl ${project_dir}/Code/*.cp
+exec ${top_dir}/Tools/WarnAboutHeaders.pl ${project_dir}/Code/*.{cp,mm}

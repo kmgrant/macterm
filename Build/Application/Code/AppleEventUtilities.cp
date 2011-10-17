@@ -1,14 +1,10 @@
+/*!	\file AppleEventUtilities.cp
+	\brief Useful routines for firing off Apple Events.
+*/
 /*###############################################################
 
-	AppleEventUtilities.cp
-	
-	Useful (read: indispensable) routines when programming
-	AppleScript into applications.  Several routines in this
-	file are derived from Apple’s sample code, and have the
-	appropriate copyrights.
-	
 	MacTerm
-		© 1998-2008 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -50,7 +46,6 @@
 
 // application includes
 #include "AppleEventUtilities.h"
-#include "FileUtilities.h"
 #include "UIStrings.h"
 
 

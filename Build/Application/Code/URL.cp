@@ -59,7 +59,6 @@
 #include "QuillsSession.h"
 #include "TerminalScreenRef.typedef.h"
 #include "TerminalView.h"
-#include "TerminalWindow.h"
 #include "Terminology.h"
 #include "URL.h"
 

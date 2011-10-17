@@ -1,9 +1,11 @@
+/*!	\file TerminalBackground.cp
+	\brief Renders the background of a terminal view
+	(for example, a solid color or a picture).
+*/
 /*###############################################################
 
-	TerminalBackground.cp
-	
 	MacTerm
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -53,7 +55,6 @@
 #include "ConstantsRegistry.h"
 #include "ContextualMenuBuilder.h"
 #include "DialogUtilities.h"
-#include "EventLoop.h"
 #include "NetEvents.h"
 #include "Preferences.h"
 #include "TerminalBackground.h"

@@ -85,7 +85,6 @@
 
 // application includes
 #include "AppResources.h"
-#include "Clipboard.h"
 #include "Commands.h"
 #include "Keypads.h"
 #include "MacroManager.h"

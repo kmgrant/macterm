@@ -1,7 +1,9 @@
+/*!	\file SessionDescription.cp
+	\brief All code related to opening and saving session
+	description files.
+*/
 /*###############################################################
 
-	SessionDescription.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -76,7 +78,6 @@
 #include <TextDataFile.h>
 
 // application includes
-#include "AppResources.h"
 #include "DialogUtilities.h"
 #include "Preferences.h"
 #include "SessionDescription.h"
