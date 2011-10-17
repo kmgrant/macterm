@@ -14,7 +14,7 @@
 */
 /*###############################################################
 
-	Data Access Library 2.2
+	Data Access Library 2.6
 	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -37,7 +37,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __DEBUGGINGCONSOLE__
 #define __DEBUGGINGCONSOLE__

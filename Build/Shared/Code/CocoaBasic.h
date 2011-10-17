@@ -3,7 +3,7 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.5
+	Simple Cocoa Wrappers Library 1.8
 	© 2008-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or

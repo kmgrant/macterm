@@ -38,7 +38,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __DIALOGUTILITIES__
 #define __DIALOGUTILITIES__

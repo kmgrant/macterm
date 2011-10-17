@@ -1,7 +1,8 @@
+/*!	\file PrefPanelKiosk.cp
+	\brief Implements the Kiosk panel of Preferences.
+*/
 /*###############################################################
 
-	PrefPanelKiosk.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "PrefPanelKiosk.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cstring>
@@ -59,13 +61,13 @@
 #include "DialogUtilities.h"
 #include "Panel.h"
 #include "Preferences.h"
-#include "PrefPanelKiosk.h"
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"
 
 
 
 #pragma mark Constants
+namespace {
 
 /*!
 IMPORTANT
@@ -84,7 +86,10 @@ static HIViewID const	idMyHelpTextSuperfluousEffects			= { 'HTSG', 0/* ID */ };
 static HIViewID const	idMyCheckBoxShowOffSwitchWindow			= { 'XKFW', 0/* ID */ };
 static HIViewID const	idMyHelpTextDisableKiosk				= { 'HTDK', 0/* ID */ };
 
+} // anonymous namespace
+
 #pragma mark Types
+namespace {
 
 /*!
 Implements the user interface of the panel - only
@@ -118,21 +123,26 @@ struct MyKioskPanelData
 };
 typedef MyKioskPanelData*		MyKioskPanelDataPtr;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static void			deltaSizePanelContainerHIView	(HIViewRef, Float32, Float32, void*);
-static void			disposePanel					(Panel_Ref, void*);
-static SInt32		panelChanged					(Panel_Ref, Panel_Message, void*);
-static OSStatus		receiveViewHit					(EventHandlerCallRef, EventRef, void*);
-static Boolean		updateCheckBoxPreference		(MyKioskPanelUIPtr, HIViewRef);
+#pragma mark Internal Method Prototypes
+namespace {
+
+void		deltaSizePanelContainerHIView	(HIViewRef, Float32, Float32, void*);
+void		disposePanel					(Panel_Ref, void*);
+SInt32		panelChanged					(Panel_Ref, Panel_Message, void*);
+OSStatus	receiveViewHit					(EventHandlerCallRef, EventRef, void*);
+Boolean		updateCheckBoxPreference		(MyKioskPanelUIPtr, HIViewRef);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Float32		gIdealPanelWidth = 0.0;
-	Float32		gIdealPanelHeight = 0.0;
-}
+Float32		gIdealPanelWidth = 0.0;
+Float32		gIdealPanelHeight = 0.0;
+
+} // anonymous namespace
 
 
 
@@ -177,6 +187,7 @@ PrefPanelKiosk_New ()
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Initializes a MyKioskPanelData structure.
@@ -354,7 +365,7 @@ specified change in dimensions of a panel’s container.
 
 (3.1)
 */
-static void
+void
 deltaSizePanelContainerHIView	(HIViewRef		inView,
 								 Float32		inDeltaX,
 								 Float32		UNUSED_ARGUMENT(inDeltaY),
@@ -384,7 +395,7 @@ associated with the specified panel.
 
 (3.1)
 */
-static void
+void
 disposePanel	(Panel_Ref	UNUSED_ARGUMENT(inPanel),
 				 void*		inDataPtr)
 {
@@ -405,7 +416,7 @@ of one of the preferences dialog’s panels changes.
 
 (3.1)
 */
-static SInt32
+SInt32
 panelChanged	(Panel_Ref		inPanel,
 				 Panel_Message	inMessage,
 				 void*			inDataPtr)
@@ -504,7 +515,7 @@ preferences bound to checkboxes.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				 EventRef				inEvent,
 				 void*					inMyKioskPanelUIPtr)
@@ -562,7 +573,7 @@ Otherwise, "false" is returned.
 
 (3.1)
 */
-static Boolean
+Boolean
 updateCheckBoxPreference	(MyKioskPanelUIPtr		inInterfacePtr,
 							 HIViewRef				inCheckBoxClicked)
 {
@@ -617,5 +628,7 @@ updateCheckBoxPreference	(MyKioskPanelUIPtr		inInterfacePtr,
 	
 	return result;
 }// updateCheckBoxPreference
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

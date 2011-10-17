@@ -34,7 +34,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __TERMINALTEXTATTRIBUTES__
 #define __TERMINALTEXTATTRIBUTES__

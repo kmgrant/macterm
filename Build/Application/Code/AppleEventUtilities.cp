@@ -30,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "AppleEventUtilities.h"
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -45,7 +46,6 @@
 #include <StringUtilities.h>
 
 // application includes
-#include "AppleEventUtilities.h"
 #include "UIStrings.h"
 
 

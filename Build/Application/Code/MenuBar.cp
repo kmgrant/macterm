@@ -34,7 +34,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "MenuBar.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <algorithm>
@@ -49,7 +50,6 @@
 
 // application includes
 #include "Commands.h"
-#include "MenuBar.h"
 
 
 

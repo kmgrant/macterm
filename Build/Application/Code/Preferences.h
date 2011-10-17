@@ -55,7 +55,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __PREFERENCES__
 #define __PREFERENCES__

@@ -32,7 +32,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __QUILLSSESSION__
 #define __QUILLSSESSION__

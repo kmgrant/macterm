@@ -1,9 +1,11 @@
+/*!	\file DialogAdjust.h
+	\brief Completely handles all the “dirty work” of resizing
+	windows or dialog boxes.
+*/
 /*###############################################################
 
-	DialogAdjust.cp
-	
-	Interface Library 2.0
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.4
+	© 1998-2011 by Kevin Grant
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -26,7 +28,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <DialogAdjust.h>
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <iterator>
@@ -39,7 +42,6 @@
 
 // library includes
 #include <Cursors.h>
-#include <DialogAdjust.h>
 #include <Embedding.h>
 #include <HIViewWrap.h>
 #include <MemoryBlocks.h>
@@ -48,6 +50,7 @@
 
 
 #pragma mark Types
+namespace {
 
 struct AdjustmentData
 {
@@ -78,8 +81,8 @@ struct AdjustmentDelta
 	// passed to the offscreen graphics routine
 	// without “wasting” both "data1" and "data2".
 	// See the adjustControlsOperation() method.
-	SInt32		deltaX,
-				deltaY;
+	SInt32		deltaX;
+	SInt32		deltaY;
 };
 typedef struct AdjustmentDelta	AdjustmentDelta;
 typedef AdjustmentDelta*		AdjustmentDeltaPtr;
@@ -87,19 +90,24 @@ typedef AdjustmentDelta*		AdjustmentDeltaPtr;
 typedef std::list< AdjustmentDataPtr >							AdjustmentDataList;
 typedef std::map< DialogItemAdjustment, AdjustmentDataList >	AdjustmentTypeToListOfAdjustmentsMap;
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	WindowRef								gPendingAdjustmentWindowRef = nullptr;
-	Boolean									gPendingAdjustmentListContainsDialogItems = true;
-	AdjustmentTypeToListOfAdjustmentsMap	gPendingAdjustmentsMap;
-}
+#pragma mark Variables
+namespace {
+
+WindowRef								gPendingAdjustmentWindowRef = nullptr;
+Boolean									gPendingAdjustmentListContainsDialogItems = true;
+AdjustmentTypeToListOfAdjustmentsMap	gPendingAdjustmentsMap;
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static Boolean		adjustControlsOperation		(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
-static void			beginAdjustment				(WindowRef, Boolean);
+Boolean		adjustControlsOperation		(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
+void		beginAdjustment				(WindowRef, Boolean);
+
+} // anonymous namespace
 
 
 
@@ -330,6 +338,7 @@ DialogAdjust_EndAdjustment		(SInt32		inDialogDeltaSizeX,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 This method, of standard OffscreenOperationProcPtr
@@ -349,7 +358,7 @@ returned; otherwise, "true" is returned.
 
 (1.0)
 */
-static Boolean
+Boolean
 adjustControlsOperation		(ControlRef		inSpecificControlOrRoot,
 							 SInt16			UNUSED_ARGUMENT(inColorDepth),
 							 SInt16			UNUSED_ARGUMENT(inDeviceFlags),
@@ -539,12 +548,14 @@ are legal to add to the resultant list.
 
 (1.0)
 */
-static void
+void
 beginAdjustment		(WindowRef	inWindow,
 					 Boolean	inIsDialogBox)
 {
 	gPendingAdjustmentWindowRef = inWindow;
 	gPendingAdjustmentListContainsDialogItems = inIsDialogBox;
 }// beginAdjustment
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -32,7 +32,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __CLIPBOARD__
 #define __CLIPBOARD__

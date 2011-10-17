@@ -1,7 +1,8 @@
+/*!	\file FileUtilities.cp
+	\brief Useful methods for dealing with files.
+*/
 /*###############################################################
 
-	FileUtilities.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "FileUtilities.h"
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -42,7 +44,6 @@
 // application includes
 #include "AppleEventUtilities.h"
 #include "ConstantsRegistry.h"
-#include "FileUtilities.h"
 #include "Folder.h"
 #include "RecordAE.h"
 #include "Terminology.h"

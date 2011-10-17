@@ -31,7 +31,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "Initialize.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cstdio>
@@ -71,7 +72,6 @@
 #include "DialogUtilities.h"
 #include "EventLoop.h"
 #include "InfoWindow.h"
-#include "Initialize.h"
 #include "InternetPrefs.h"
 #include "Preferences.h"
 #include "PrefsWindow.h"

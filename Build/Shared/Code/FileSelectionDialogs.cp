@@ -1,9 +1,10 @@
+/*!	\file FileSelectionDialogs.cp
+	\brief Convenient front ends to Navigation Services.
+*/
 /*###############################################################
 
-	FileSelectionDialogs.cp
-	
-	Interface Library 1.3
-	© 1998-2010 by Kevin Grant
+	Interface Library 2.4
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -25,7 +26,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <FileSelectionDialogs.h>
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -34,11 +36,8 @@
 // library includes
 #include <CFRetainRelease.h>
 #include <CocoaBasic.h>
-#include <Embedding.h>
-#include <FileSelectionDialogs.h>
 #include <Localization.h>
 #include <MemoryBlocks.h>
-#include <SoundSystem.h>
 
 
 

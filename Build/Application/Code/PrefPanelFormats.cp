@@ -1,7 +1,8 @@
+/*!	\file PrefPanelFormats.cp
+	\brief Implements the Formats panel of Preferences.
+*/
 /*###############################################################
 
-	PrefPanelFormats.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "PrefPanelFormats.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <algorithm>
@@ -68,7 +70,6 @@
 #include "GenericPanelTabs.h"
 #include "Panel.h"
 #include "Preferences.h"
-#include "PrefPanelFormats.h"
 #include "Terminal.h"
 #include "TerminalView.h"
 #include "UIStrings.h"

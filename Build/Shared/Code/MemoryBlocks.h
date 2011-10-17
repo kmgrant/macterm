@@ -1,11 +1,12 @@
+/*!	\file MemoryBlocks.h
+	\brief Memory management routines.
+	
+	This is largely legacy code.
+*/
 /*###############################################################
 
-	MemoryBlocks.h
-	
-	This module handles memory management.
-	
-	Data Access Library 1.3
-	© 1998-2005 by Kevin Grant
+	Data Access Library 2.6
+	ï¿½ 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -27,7 +28,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __MEMORYBLOCKS__
 #define __MEMORYBLOCKS__

@@ -39,7 +39,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __EMBEDDING__
 #define __EMBEDDING__

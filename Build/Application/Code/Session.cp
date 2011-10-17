@@ -33,7 +33,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "Session.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cctype>
@@ -89,7 +90,6 @@
 #include "PrefPanelSessions.h"
 #include "PrefsContextDialog.h"
 #include "QuillsSession.h"
-#include "Session.h"
 #include "SessionDescription.h"
 #include "SessionFactory.h"
 #include "Terminal.h"

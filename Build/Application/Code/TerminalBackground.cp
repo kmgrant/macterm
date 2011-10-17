@@ -31,7 +31,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "TerminalBackground.h"
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <stdexcept>
@@ -57,7 +58,6 @@
 #include "DialogUtilities.h"
 #include "NetEvents.h"
 #include "Preferences.h"
-#include "TerminalBackground.h"
 #include "TerminalView.h"
 #include "UIStrings.h"
 

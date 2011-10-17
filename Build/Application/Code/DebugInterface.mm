@@ -30,6 +30,8 @@
 
 ###############################################################*/
 
+#import "DebugInterface.h"
+
 // Mac includes
 #import <Cocoa/Cocoa.h>
 
@@ -39,7 +41,6 @@
 #import <SoundSystem.h>
 
 // application includes
-#import "DebugInterface.h"
 #import "Session.h"
 #import "SessionFactory.h"
 #import "Terminal.h"

@@ -31,6 +31,8 @@
 
 ###############################################################*/
 
+#import "TranslucentMenuArrow.h"
+
 // Mac includes
 #import <Cocoa/Cocoa.h>
 
@@ -39,7 +41,6 @@
 
 // application includes
 #import "RegionUtilities.h"
-#import "TranslucentMenuArrow.h"
 
 
 

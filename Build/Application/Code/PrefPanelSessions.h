@@ -30,7 +30,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __PREFPANELSESSIONS__
 #define __PREFPANELSESSIONS__

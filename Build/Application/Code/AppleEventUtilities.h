@@ -34,7 +34,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __APPLEEVENTUTILITIES__
 #define __APPLEEVENTUTILITIES__

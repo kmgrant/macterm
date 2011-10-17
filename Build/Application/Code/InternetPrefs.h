@@ -30,7 +30,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __INTERNETPREFS__
 #define __INTERNETPREFS__

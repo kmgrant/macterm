@@ -1,9 +1,12 @@
+/*!	\file IconManager.cp
+	\brief The most powerful icon utility there is - it allows
+	you to seamlessly use traditional icon suites, new Icon
+	Services icons, or other formats from a single reference!
+*/
 /*###############################################################
 
-	IconManager.cp
-	
-	Interface Library 2.1
-	© 1998-2010 by Kevin Grant
+	Interface Library 2.6
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -25,7 +28,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <IconManager.h>
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cstring>
@@ -37,7 +41,6 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
-#include <IconManager.h>
 #include <MemoryBlocks.h>
 
 // application includes

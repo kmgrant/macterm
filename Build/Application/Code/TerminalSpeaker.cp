@@ -1,7 +1,10 @@
+/*!	\file TerminalSpeaker.cp
+	\brief Whereas a Terminal View interprets the contents of a
+	terminal screen buffer and user interaction visually, this
+	module handles communication through sound.
+*/
 /*###############################################################
 
-	TerminalSpeaker.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +32,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "TerminalSpeaker.h"
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <stdexcept>
@@ -51,7 +55,6 @@
 #include "Preferences.h"
 #include "Terminal.h"
 #include "TerminalScreenRef.typedef.h"
-#include "TerminalSpeaker.h"
 
 
 

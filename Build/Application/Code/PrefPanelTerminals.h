@@ -30,7 +30,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __PREFPANELTERMINALS__
 #define __PREFPANELTERMINALS__

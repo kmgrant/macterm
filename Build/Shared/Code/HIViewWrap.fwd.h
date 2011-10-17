@@ -3,8 +3,8 @@
 */
 /*###############################################################
 
-	Data Access Library 1.4
-	© 1998-2006 by Kevin Grant
+	Data Access Library 2.6
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -26,7 +26,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __HIVIEWWRAP_FWD__
 #define __HIVIEWWRAP_FWD__

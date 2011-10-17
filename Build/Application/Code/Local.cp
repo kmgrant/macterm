@@ -32,7 +32,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "Local.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cstdio>
@@ -83,7 +84,6 @@ extern "C"
 #include "ConstantsRegistry.h"
 #include "DebugInterface.h"
 #include "DialogUtilities.h"
-#include "Local.h"
 #include "NetEvents.h"
 #include "QuillsSession.h"
 #include "Session.h"

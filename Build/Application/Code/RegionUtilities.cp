@@ -1,9 +1,11 @@
+/*!	\file RegionUtilities.cp
+	\brief A powerful set of rectangle, region and window
+	utilities.
+*/
 /*###############################################################
 
-	RegionUtilities.cp
-	
-	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.6
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -25,13 +27,13 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <RegionUtilities.h>
+#include <UniversalDefines.h>
 
 // library includes
 #include <CGContextSaveRestore.h>
 #include <Console.h>
 #include <MemoryBlocks.h>
-#include <RegionUtilities.h>
 
 // application includes
 #include "ConstantsRegistry.h"

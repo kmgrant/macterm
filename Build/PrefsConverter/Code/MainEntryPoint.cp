@@ -1,7 +1,8 @@
+/*!	\file MainEntryPoint.cp
+	\brief Front end to the Preferences Converter application.
+*/
 /*###############################################################
 
-	MainEntryPoint.cp
-	
 	MacTerm Preferences Converter
 		© 2004-2011 by Kevin Grant.
 	
@@ -130,12 +131,12 @@ OSStatus			getFolderFSSpec				(My_MacTelnetFolder, FSSpec*);
 Boolean				installRequiredHandlers		();
 OSStatus			loadPreferencesStructure	(void*, size_t, ResType, SInt16);
 OSStatus			makeLocalizedFSSpec			(SInt16, SInt32, My_FolderStringType, FSSpec*);
-pascal OSErr		receiveApplicationOpen		(AppleEvent const*, AppleEvent*, SInt32);
-pascal OSErr		receiveApplicationPrefs		(AppleEvent const*, AppleEvent*, SInt32);
-pascal OSErr		receiveApplicationReopen	(AppleEvent const*, AppleEvent*, SInt32);
-pascal OSErr		receiveApplicationQuit		(AppleEvent const*, AppleEvent*, SInt32);
-pascal OSErr		receiveOpenDocuments		(AppleEvent const*, AppleEvent*, SInt32);
-pascal OSErr		receivePrintDocuments		(AppleEvent const*, AppleEvent*, SInt32);
+OSErr				receiveApplicationOpen		(AppleEvent const*, AppleEvent*, SInt32);
+OSErr				receiveApplicationPrefs		(AppleEvent const*, AppleEvent*, SInt32);
+OSErr				receiveApplicationReopen	(AppleEvent const*, AppleEvent*, SInt32);
+OSErr				receiveApplicationQuit		(AppleEvent const*, AppleEvent*, SInt32);
+OSErr				receiveOpenDocuments		(AppleEvent const*, AppleEvent*, SInt32);
+OSErr				receivePrintDocuments		(AppleEvent const*, AppleEvent*, SInt32);
 Boolean				setMacTelnetCoordPreference	(CFStringRef, SInt16, SInt16);
 void				setMacTelnetPreference		(CFStringRef, CFPropertyListRef);
 void				setMacTermPreference		(CFStringRef, CFPropertyListRef);
@@ -1750,7 +1751,7 @@ Handles the "kASRequiredSuite" Apple Event of type
 
 (3.1)
 */
-pascal OSErr
+OSErr
 receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 						 AppleEvent*		outReplyAppleEventPtr,
 						 SInt32				inData)
@@ -2077,7 +2078,7 @@ of type "kAEReopenApplication".
 
 (3.1)
 */
-pascal OSErr
+OSErr
 receiveApplicationReopen	(AppleEvent const*	inAppleEventPtr,
 							 AppleEvent*		outReplyAppleEventPtr,
 							 SInt32				inData)
@@ -2099,7 +2100,7 @@ of type "kAEShowPreferences".
 
 (3.1)
 */
-pascal OSErr
+OSErr
 receiveApplicationPrefs		(AppleEvent const*	inAppleEventPtr,
 							 AppleEvent*		outReplyAppleEventPtr,
 							 SInt32				inData)
@@ -2121,7 +2122,7 @@ of type "kAEQuitApplication".
 
 (3.1)
 */
-pascal OSErr
+OSErr
 receiveApplicationQuit	(AppleEvent const*	inAppleEventPtr,
 						 AppleEvent*		outReplyAppleEventPtr,
 						 SInt32				inData)
@@ -2178,7 +2179,7 @@ of type "kAEOpenDocuments".
 
 (3.1)
 */
-pascal OSErr
+OSErr
 receiveOpenDocuments	(AppleEvent const*	inAppleEventPtr,
 						 AppleEvent*		outReplyAppleEventPtr,
 						 SInt32				inData)
@@ -2200,7 +2201,7 @@ of type "kAEPrintDocuments".
 
 (3.1)
 */
-pascal OSErr
+OSErr
 receivePrintDocuments	(AppleEvent const*	inAppleEventPtr,
 						 AppleEvent*		outReplyAppleEventPtr,
 						 SInt32				inData)

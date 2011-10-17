@@ -1,9 +1,11 @@
+/*!	\file Panel.cp
+	\brief Abstract interface to allow panel-based windows
+	to be easily constructed.
+*/
 /*###############################################################
 
-	Panel.cp
-	
 	MacTerm
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -29,7 +31,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "Panel.h"
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -48,11 +51,11 @@
 
 // application includes
 #include "ConstantsRegistry.h"
-#include "Panel.h"
 
 
 
 #pragma mark Types
+namespace {
 
 struct Panel
 {
@@ -85,16 +88,21 @@ typedef Panel*			PanelPtr;
 typedef MemoryBlockPtrLocker< Panel_Ref, Panel >	PanelPtrLocker;
 typedef LockAcquireRelease< Panel_Ref, Panel >		PanelAutoLocker;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static SInt32		panelChanged	(PanelPtr, Panel_Message, void*);
+#pragma mark Internal Method Prototypes
+namespace {
+
+SInt32		panelChanged	(PanelPtr, Panel_Message, void*);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	PanelPtrLocker&		gPanelPtrLocks ()	{ static PanelPtrLocker x; return x; }
-}
+PanelPtrLocker&		gPanelPtrLocks ()	{ static PanelPtrLocker x; return x; }
+
+} // anonymous namespace
 
 
 
@@ -1182,6 +1190,7 @@ Panel_SetToolbarItemIconAndLabel	(HIToolbarItemRef	inItem,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 When an owning window performs some kind of operation on
@@ -1196,7 +1205,7 @@ when you create a panel with Panel_New().
 
 (3.0)
 */
-static SInt32
+SInt32
 panelChanged	(PanelPtr		inPtr,
 				 Panel_Message	inMessage,
 				 void*			inDataPtr)
@@ -1228,5 +1237,7 @@ panelChanged	(PanelPtr		inPtr,
 	
 	return result;
 }// panelChanged
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

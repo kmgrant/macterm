@@ -1,7 +1,8 @@
+/*!	\file NewSessionDialog.cp
+	\brief Implements the New Session dialog box.
+*/
 /*###############################################################
 
-	NewSessionDialog.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "NewSessionDialog.h"
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -42,7 +44,6 @@
 // application includes
 #include "GenericDialog.h"
 #include "PrefPanelSessions.h"
-#include "NewSessionDialog.h"
 #include "Preferences.h"
 #include "SessionFactory.h"
 #include "SessionRef.typedef.h"

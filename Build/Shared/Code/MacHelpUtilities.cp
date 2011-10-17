@@ -1,9 +1,10 @@
+/*!	\file MacHelpUtilities.cp
+	\brief Slightly simplifies interactions with Apple Help.
+*/
 /*###############################################################
 
-	MacHelpUtilities.cp
-	
-	Contexts Library 1.1
-	© 1998-2006 by Kevin Grant
+	Contexts Library 2.0
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -25,7 +26,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "MacHelpUtilities.h"
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <CoreFoundation/CoreFoundation.h>
@@ -33,16 +35,15 @@
 
 // library includes
 #include "CFRetainRelease.h"
-#include "MacHelpUtilities.h"
 
 
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	CFRetainRelease		gHelpBookAppleTitleRetainer;		//!< string for help book name; used to focus searches better
-}
+CFRetainRelease		gHelpBookAppleTitleRetainer;	//!< string for help book name; used to focus searches better
+
+} // anonymous namespace
 
 
 

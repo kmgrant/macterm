@@ -35,7 +35,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __QUILLSPREFS__
 #define __QUILLSPREFS__

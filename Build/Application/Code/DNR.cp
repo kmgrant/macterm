@@ -1,7 +1,8 @@
+/*!	\file DNR.cp
+	\brief Domain name resolver library.
+*/
 /*###############################################################
 
-	DNR.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "DNR.h"
+#include <UniversalDefines.h>
 
 // Unix includes
 extern "C"
@@ -47,12 +49,12 @@ extern "C"
 #include <MemoryBlocks.h>
 
 // application includes
-#include "DNR.h"
 #include "NetEvents.h"
 
 
 
 #pragma mark Types
+namespace {
 
 /*!
 Thread context passed to threadForDNS().
@@ -66,9 +68,14 @@ struct DNSThreadContext
 typedef DNSThreadContext*			DNSThreadContextPtr;
 typedef DNSThreadContext const*		DNSThreadContextConstPtr;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static void*	threadForDNS		(void*);
+#pragma mark Internal Method Prototypes
+namespace {
+
+void*	threadForDNS	(void*);
+
+} // anonymous namespace
 
 
 
@@ -256,6 +263,7 @@ DNR_CopyResolvedHostAsCFString	(struct hostent const*	inDNR,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 A POSIX thread (which can be preempted) that handles
@@ -272,7 +280,7 @@ WARNING:	As this is a preemptable thread, you MUST
 
 (3.1)
 */
-static void*
+void*
 threadForDNS	(void*		inDNSThreadContextPtr)
 {
 	assert(GetCurrentEventQueue() != GetMainEventQueue());
@@ -330,5 +338,7 @@ threadForDNS	(void*		inDNSThreadContextPtr)
 	
 	return nullptr;
 }// threadForLocalProcessDataLoop
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

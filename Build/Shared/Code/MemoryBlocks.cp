@@ -1,14 +1,10 @@
+/*!	\file MemoryBlocks.cp
+	\brief Memory management routines.
+*/
 /*###############################################################
 
-	MemoryBlocks.cp
-	
-	Utility library for more-controlled memory management.
-	Consistent use of this module has many benefits, including
-	more grace if the program runs out of memory, more ability
-	to gauge memory requirements, and increased stability.
-	
-	Data Access Library 1.3
-	© 1998-2009 by Kevin Grant
+	Data Access Library 2.6
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -30,14 +26,14 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <MemoryBlocks.h>
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
 // library includes
 #include <MemoryBlockHandleLocker.template.h>
-#include <MemoryBlocks.h>
 
 
 

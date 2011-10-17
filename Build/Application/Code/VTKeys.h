@@ -31,7 +31,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __VTKEYS__
 #define __VTKEYS__

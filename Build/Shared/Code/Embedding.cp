@@ -1,7 +1,10 @@
+/*!	\file Embedding.cp
+	\brief Greatly simplified use of offscreen graphics worlds,
+	with particular attention to (human interface) control
+	embedding hierarchies.
+*/
 /*###############################################################
 
-	Embedding.cp
-	
 	Interface Library 2.4
 	© 1998-2011 by Kevin Grant
 	
@@ -25,7 +28,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <Embedding.h>
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -37,12 +41,12 @@
 #include <AlertMessages.h>
 #include <ColorUtilities.h>
 #include <Cursors.h>
-#include <Embedding.h>
 #include <MemoryBlocks.h>
 
 
 
 #pragma mark Types
+namespace {
 
 struct My_OffscreenDeviceLoopParams
 {
@@ -57,11 +61,16 @@ struct My_OffscreenDeviceLoopParams
 typedef struct My_OffscreenDeviceLoopParams		My_OffscreenDeviceLoopParams;
 typedef My_OffscreenDeviceLoopParams*			My_OffscreenDeviceLoopParamsPtr;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static void		offscreenDumpDeviceLoop			(short, short, GDHandle, long);
-static Boolean	setControlActiveOperation		(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
-static Boolean	swapControlsOperation			(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
+#pragma mark Internal Method Prototypes
+namespace {
+
+void		offscreenDumpDeviceLoop			(short, short, GDHandle, long);
+Boolean		setControlActiveOperation		(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
+Boolean		swapControlsOperation			(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
+
+} // anonymous namespace
 
 
 
@@ -366,6 +375,7 @@ Embedding_WindowUsesCompositingMode		(WindowRef		inWindow)
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 This method, of standard DeviceLoopDrawingUPP form,
@@ -374,7 +384,7 @@ the device characteristics are.
 
 (1.0)
 */
-static void
+void
 offscreenDumpDeviceLoop		(short		inColorDepth,
 							 short		inDeviceFlags,
 							 GDHandle	inTargetDevice,
@@ -525,7 +535,7 @@ returned; otherwise, true is returned.
 
 (1.0)
 */
-static Boolean
+Boolean
 setControlActiveOperation	(ControlRef		inSpecificControlOrRoot,
 							 SInt16			UNUSED_ARGUMENT(inColorDepth),
 							 SInt16			UNUSED_ARGUMENT(inDeviceFlags),
@@ -564,7 +574,7 @@ returned; otherwise, true is returned.
 
 (1.0)
 */
-static Boolean
+Boolean
 swapControlsOperation	(ControlRef		inControlToDisplay,
 						 SInt16			UNUSED_ARGUMENT(inColorDepth),
 						 SInt16			UNUSED_ARGUMENT(inDeviceFlags),
@@ -587,5 +597,7 @@ swapControlsOperation	(ControlRef		inControlToDisplay,
 	
 	return result;
 }// swapControlsOperation
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

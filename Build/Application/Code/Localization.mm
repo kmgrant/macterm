@@ -1,12 +1,10 @@
+/*!	\file Localization.mm
+	\brief Helps to make this program easier to translate into
+	other languages and cultures.
+*/
 /*###############################################################
 
-	Localization.mm
-	
-	Use the powerful methods in this module to perform all kinds
-	of useful operations on dialog box controls, often a must
-	when doing localization work.
-	
-	Interface Library 2.2
+	Interface Library 2.6
 	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -29,7 +27,8 @@
 
 ###############################################################*/
 
-#import "UniversalDefines.h"
+#import <Localization.h>
+#import <UniversalDefines.h>
 
 // standard-C includes
 #import <cctype>
@@ -42,7 +41,6 @@
 // library includes
 #import <AutoPool.objc++.h>
 #import <CFRetainRelease.h>
-#import <Localization.h>
 #import <MemoryBlocks.h>
 #import <Releases.h>
 

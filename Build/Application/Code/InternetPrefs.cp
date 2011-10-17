@@ -1,7 +1,8 @@
+/*!	\file InternetPrefs.cp
+	\brief Legacy; may need to be removed.
+*/
 /*###############################################################
 
-	InternetPrefs.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,14 +30,14 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "InternetPrefs.h"
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
 // application includes
 #include "AppResources.h"
-#include "InternetPrefs.h"
 
 
 

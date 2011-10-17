@@ -33,9 +33,10 @@
 
 ###############################################################*/
 
-#define BLINK_MEANS_BLINK	1
+#import "TerminalView.h"
+#import <UniversalDefines.h>
 
-#import "UniversalDefines.h"
+#define BLINK_MEANS_BLINK	1
 
 // standard-C includes
 #import <algorithm>
@@ -84,7 +85,6 @@
 #import "SessionFactory.h"
 #import "Terminal.h"
 #import "TerminalBackground.h"
-#import "TerminalView.h"
 #import "TerminalWindow.h"
 #import "TextTranslation.h"
 #import "UIStrings.h"

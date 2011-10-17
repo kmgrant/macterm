@@ -31,6 +31,8 @@
 
 ###############################################################*/
 
+#import "ServerBrowser.h"
+
 // Mac includes
 #import <Cocoa/Cocoa.h>
 #import <objc/objc-runtime.h>
@@ -56,7 +58,6 @@ extern "C"
 #import "ConstantsRegistry.h"
 #import "DNR.h"
 #import "NetEvents.h"
-#import "ServerBrowser.h"
 #import "Session.h"
 
 

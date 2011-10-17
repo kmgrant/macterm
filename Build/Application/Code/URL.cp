@@ -31,7 +31,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "URL.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cctype>
@@ -60,7 +61,6 @@
 #include "TerminalScreenRef.typedef.h"
 #include "TerminalView.h"
 #include "Terminology.h"
-#include "URL.h"
 
 
 
@@ -72,36 +72,36 @@
 #define IS_WHITE_SPACE_OR_CR_CHARACTER(a)	(IS_WHITE_SPACE_CHARACTER(a) || CR == (a))
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
+char*	gURLSchemeNames[] =
 {
-	char*	gURLSchemeNames[] =
-	{
-		// WARNING:	This MUST match the order of the list
-		//			URL_Type in "URL.h"; this is assumed
-		//			within code in this file.
-		":",
-		"file:",
-		"finger:",
-		"ftp:",
-		"gopher:",
-		"http:",
-		"https:",
-		"mailto:",	
-		"news:",
-		"nntp:",
-		"rlogin:",
-		"telnet:",
-		"tn3270:",
-		"rtsp:", // QuickTime
-		"sftp:",
-		"ssh:",
-		"wais:",
-		"whois:",
-		"x-man-page:",
-		nullptr // this list must end with a nullptr
-	};
-}
+	// WARNING:	This MUST match the order of the list
+	//			URL_Type in "URL.h"; this is assumed
+	//			within code in this file.
+	":",
+	"file:",
+	"finger:",
+	"ftp:",
+	"gopher:",
+	"http:",
+	"https:",
+	"mailto:",	
+	"news:",
+	"nntp:",
+	"rlogin:",
+	"telnet:",
+	"tn3270:",
+	"rtsp:", // QuickTime
+	"sftp:",
+	"ssh:",
+	"wais:",
+	"whois:",
+	"x-man-page:",
+	nullptr // this list must end with a nullptr
+};
+
+} // anonymous namespace
 
 
 #pragma mark Public Methods

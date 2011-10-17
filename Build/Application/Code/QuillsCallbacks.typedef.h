@@ -31,7 +31,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __QUILLSCALLBACKS_TYPEDEF__
 #define __QUILLSCALLBACKS_TYPEDEF__

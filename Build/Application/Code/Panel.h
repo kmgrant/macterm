@@ -47,7 +47,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __PANEL__
 #define __PANEL__

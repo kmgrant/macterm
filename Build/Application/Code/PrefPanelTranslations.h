@@ -34,7 +34,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __PREFPANELTRANSLATIONS__
 #define __PREFPANELTRANSLATIONS__

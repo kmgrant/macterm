@@ -1,24 +1,5 @@
 /*!	\file ColorUtilities.h
-	\brief Use this module to maximize the color capabilites of
-	your Mac application.
-	
-	You will find useful methods for accessing information
-	required to use Mac OS Appearance theme-brush-based routines.
-	There is also a simple way to “completely” save the current
-	graphics port’s state, in a way sufficient for any “damage”
-	that a theme brush can cause when drawing.  Finally, there’s
-	a cool routine that lets you automatically display the most
-	powerful Color Picker dialog available.  A few useful methods
-	have been thrown in that will allow you to use “standard”
-	patterns without actually accessing QuickDraw global
-	variables, very useful in preparation for the opaque
-	QuickDraw structures of Mac OS X.
-	
-	Color Pen State portions of this file are from the OS
-	Technologies group at Apple Computer Inc. (source: SDK for
-	Appearance 1.0), and are written by Ed Voas with some
-	modifications by Kevin Grant.  © 1997-1999 by Apple
-	Computer, Inc., all rights reserved.
+	\brief Various routines commonly needed for graphics.
 */
 /*###############################################################
 
@@ -45,7 +26,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __COLORUTILITIES__
 #define __COLORUTILITIES__

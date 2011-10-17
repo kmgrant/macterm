@@ -43,7 +43,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __TERMINAL__
 #define __TERMINAL__

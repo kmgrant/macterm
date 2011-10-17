@@ -32,13 +32,16 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __COMMANDLINE__
 #define __COMMANDLINE__
 
 // Mac includes
 #include <Carbon/Carbon.h>
+#ifdef __OBJC__
+#	import <Cocoa/Cocoa.h>
+#endif
 #include <CoreServices/CoreServices.h>
 
 

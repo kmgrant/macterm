@@ -36,7 +36,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __CONSTANTSREGISTRY__
 #define __CONSTANTSREGISTRY__

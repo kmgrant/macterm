@@ -29,7 +29,7 @@
 
 ###############################################################*/
 
-#import "UniversalDefines.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
 #import <climits>

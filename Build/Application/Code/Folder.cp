@@ -1,7 +1,9 @@
+/*!	\file Folder.cp
+	\brief Abstract way to find folders of importance in the
+	system and among those created by the application.
+*/
 /*###############################################################
 
-	Folder.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +31,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "Folder.h"
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -38,7 +41,6 @@
 #include <Localization.h>
 
 // application includes
-#include "Folder.h"
 #include "UIStrings.h"
 
 

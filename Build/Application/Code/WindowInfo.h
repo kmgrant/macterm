@@ -33,7 +33,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __WINDOWINFO__
 #define __WINDOWINFO__

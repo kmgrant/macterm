@@ -47,7 +47,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __TERMINALVIEW__
 #define __TERMINALVIEW__

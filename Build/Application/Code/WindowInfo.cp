@@ -27,7 +27,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <WindowInfo.h>
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <climits>
@@ -38,7 +39,6 @@
 #include <MemoryBlocks.h>
 #include <Releases.h>
 #include <SoundSystem.h>
-#include <WindowInfo.h>
 
 // Mac includes
 #include <Carbon/Carbon.h>

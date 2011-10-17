@@ -1,7 +1,8 @@
+/*!	\file PrefPanelTranslations.cp
+	\brief Implements the Translations panel of Preferences.
+*/
 /*###############################################################
 
-	PrefPanelTranslations.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "PrefPanelTranslations.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cstring>
@@ -61,7 +63,6 @@
 #include "DialogUtilities.h"
 #include "Panel.h"
 #include "Preferences.h"
-#include "PrefPanelTranslations.h"
 #include "TextTranslation.h"
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"

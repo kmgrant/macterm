@@ -1,9 +1,10 @@
+/*!	\file ContextSensitiveMenu.cp
+	\brief Simplifies handling of contextual menus.
+*/
 /*###############################################################
 
-	ContextSensitiveMenu.cp
-	
 	Contexts Library 2.0
-	© 1998-2007 by Kevin Grant
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -25,31 +26,32 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <ContextSensitiveMenu.h>
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
-// library includes
-#include <ContextSensitiveMenu.h>
-
 
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	UInt16		gItemCountAddedGroup = 0;
-	UInt16		gItemCountAddedTotal = 0;
-}
+UInt16		gItemCountAddedGroup = 0;
+UInt16		gItemCountAddedTotal = 0;
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static UInt16		getGroupAddedItemCount		();
-static UInt16		getTotalAddedItemCount		();
-static void			setGroupAddedItemCount		(UInt16);
-static void			setTotalAddedItemCount		(UInt16);
+UInt16		getGroupAddedItemCount		();
+UInt16		getTotalAddedItemCount		();
+void		setGroupAddedItemCount		(UInt16);
+void		setTotalAddedItemCount		(UInt16);
+
+} // anonymous namespace
 
 
 
@@ -289,6 +291,7 @@ ContextSensitiveMenu_NewItemGroup	(MenuRef	UNUSED_ARGUMENT(inForWhichMenu))
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 To determine the number of items from the
@@ -297,7 +300,7 @@ use this method.
 
 (1.0)
 */
-static inline UInt16
+inline UInt16
 getGroupAddedItemCount ()
 {
 	return gItemCountAddedGroup;
@@ -311,7 +314,7 @@ method.
 
 (1.0)
 */
-static inline UInt16
+inline UInt16
 getTotalAddedItemCount ()
 {
 	return gItemCountAddedTotal;
@@ -325,7 +328,7 @@ use this method.
 
 (1.0)
 */
-static inline void
+inline void
 setGroupAddedItemCount		(UInt16		inCount)
 {
 	gItemCountAddedGroup = inCount;
@@ -338,10 +341,12 @@ contextual menu, use this method.
 
 (1.0)
 */
-static inline void
+inline void
 setTotalAddedItemCount		(UInt16		inCount)
 {
 	gItemCountAddedTotal = inCount;
 }// setTotalAddedItemCount
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

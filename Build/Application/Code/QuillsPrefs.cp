@@ -1,7 +1,8 @@
+/*!	\file QuillsPrefs.cp
+	\brief User preferences APIs exposed to scripting languages.
+*/
 /*###############################################################
 
-	QuillsPrefs.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "QuillsPrefs.h"
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <stdexcept>
@@ -47,7 +49,6 @@
 // application includes
 #include "MacroManager.h"
 #include "Preferences.h"
-#include "QuillsPrefs.h"
 
 
 

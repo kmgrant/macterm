@@ -30,6 +30,9 @@
 
 ###############################################################*/
 
+#import "AddressDialog.h"
+#import <UniversalDefines.h>
+
 // Mac includes
 #import <Cocoa/Cocoa.h>
 
@@ -38,7 +41,6 @@
 #import <Console.h>
 
 // application includes
-#import "AddressDialog.h"
 #import "Network.h"
 
 

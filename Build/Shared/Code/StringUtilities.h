@@ -26,7 +26,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __STRINGUTILITIES__
 #define __STRINGUTILITIES__

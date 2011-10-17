@@ -30,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#import "CommandLine.h"
+#include <UniversalDefines.h>
 
 // Mac includes
 #import <Cocoa/Cocoa.h>
@@ -41,7 +42,6 @@
 #import <SoundSystem.h>
 
 // application includes
-#import "CommandLine.h"
 #import "HelpSystem.h"
 #import "Preferences.h"
 #import "Session.h"

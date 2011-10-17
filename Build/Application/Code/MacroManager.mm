@@ -30,7 +30,8 @@
 
 ###############################################################*/
 
-#import "UniversalDefines.h"
+#import "MacroManager.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
 #import <cctype>
@@ -58,7 +59,6 @@
 
 // application includes
 #import "ConstantsRegistry.h"
-#import "MacroManager.h"
 #import "MenuBar.h"
 #import "Network.h"
 #import "Preferences.h"

@@ -1,11 +1,11 @@
 /*!	\file StringUtilities.cp
 	\brief General-purpose routines for dealing with text.
 */
+//
+// WARNING:	The encoding of this file MUST be MacRoman, due to
+//			certain string constants used in conversion methods.
+//
 /*###############################################################
-	
-	WARNING:	The encoding of this file MUST be MacRoman, due to
-				certain string constants used in conversion
-				methods.
 	
 	Data Access Library 2.6
 	© 1998-2011 by Kevin Grant
@@ -30,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <StringUtilities.h>
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cstring>
@@ -43,7 +44,6 @@
 
 // library includes
 #include <CFRetainRelease.h>
-#include <StringUtilities.h>
 
 
 

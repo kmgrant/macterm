@@ -1,7 +1,8 @@
+/*!	\file PrefPanelMacros.cp
+	\brief Implements the Macros panel of Preferences.
+*/
 /*###############################################################
 
-	PrefPanelMacros.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "PrefPanelMacros.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cstring>
@@ -73,7 +75,6 @@
 #include "MacroManager.h"
 #include "Panel.h"
 #include "Preferences.h"
-#include "PrefPanelMacros.h"
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"
 

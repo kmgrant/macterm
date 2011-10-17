@@ -34,7 +34,8 @@
 
 ###############################################################*/
 
-#import "UniversalDefines.h"
+#import "TerminalWindow.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
 #import <cstring>
@@ -106,7 +107,6 @@ extern "C"
 #import "PrefsContextDialog.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
-#import "TerminalWindow.h"
 #import "TerminalView.h"
 #import "UIStrings.h"
 

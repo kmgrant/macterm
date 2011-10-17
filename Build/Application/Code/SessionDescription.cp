@@ -31,7 +31,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "SessionDescription.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cctype>
@@ -80,7 +81,6 @@
 // application includes
 #include "DialogUtilities.h"
 #include "Preferences.h"
-#include "SessionDescription.h"
 #include "SessionFactory.h"
 #include "TerminalView.h"
 #include "Terminology.h"
@@ -89,6 +89,7 @@
 
 
 #pragma mark Types
+namespace {
 
 struct My_SessionFile
 {
@@ -141,20 +142,26 @@ typedef MemoryBlockPtrLocker< SessionDescription_Ref, My_SessionFile >			My_Sess
 typedef LockAcquireRelease< SessionDescription_Ref, My_SessionFile >			My_SessionFileAutoLocker;
 typedef MemoryBlockReferenceLocker< SessionDescription_Ref, My_SessionFile >	My_SessionFileReferenceLocker;
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	My_SessionFilePtrLocker&		gSessionFilePtrLocks ()	{ static My_SessionFilePtrLocker x; return x; }
-	My_SessionFileReferenceLocker&	gSessionFileRefLocks ()	{ static My_SessionFileReferenceLocker x; return x; }
-}
+#pragma mark Variables
+namespace {
+
+My_SessionFilePtrLocker&		gSessionFilePtrLocks ()	{ static My_SessionFilePtrLocker x; return x; }
+My_SessionFileReferenceLocker&	gSessionFileRefLocks ()	{ static My_SessionFileReferenceLocker x; return x; }
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static OSStatus		overwriteFile		(SInt16, My_SessionFileConstPtr);
-static Boolean		parseFile			(SInt16, My_SessionFilePtr);
+OSStatus	overwriteFile		(SInt16, My_SessionFileConstPtr);
+Boolean		parseFile			(SInt16, My_SessionFilePtr);
+
+} // anonymous namespace
 
 #pragma mark Functors
+namespace {
 
 /*!
 This is a functor that determines if a pair of
@@ -209,6 +216,8 @@ protected:
 
 private:
 };
+
+} // anonymous namespace
 
 
 
@@ -1115,6 +1124,7 @@ SessionDescription_SetStringData	(SessionDescription_Ref			inRef,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Writes the specified in-memory data to the given
@@ -1374,7 +1384,7 @@ errors.
 
 (3.0)
 */
-static Boolean
+Boolean
 parseFile	(SInt16				inFileReferenceNumber,
 			 My_SessionFilePtr	inoutDataPtr)
 {
@@ -2030,5 +2040,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 	
 	return result;
 }// parseFile
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

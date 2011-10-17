@@ -1,11 +1,11 @@
+/*!	\file NIBLoader.cp
+	\brief Simplifies Interface Builder NIB loads in
+	object-oriented environments.
+*/
 /*###############################################################
 
-	NIBLoader.cp
-	
-	Implementation file (see NIBLoader.h).
-	
-	Data Access Library 1.4
-	© 1998-2006 by Kevin Grant
+	Data Access Library 2.6
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -27,9 +27,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
-
-// library includes
 #include <NIBLoader.h>
+#include <UniversalDefines.h>
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

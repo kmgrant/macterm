@@ -31,10 +31,15 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __SERVERBROWSER__
 #define __SERVERBROWSER__
+
+// Mac includes
+#ifdef __OBJC__
+#	import <Cocoa/Cocoa.h>
+#endif
 
 // application includes
 #include "Session.h"

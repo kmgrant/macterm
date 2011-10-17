@@ -36,7 +36,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __QUILLSEVENTS__
 #define __QUILLSEVENTS__

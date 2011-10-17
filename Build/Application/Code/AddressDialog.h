@@ -30,7 +30,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __ADDRESSDIALOG__
 #define __ADDRESSDIALOG__

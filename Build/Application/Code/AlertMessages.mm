@@ -6,7 +6,7 @@
 */
 /*###############################################################
 
-	Interface Library 2.5
+	Interface Library 2.6
 	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -29,7 +29,8 @@
 
 ###############################################################*/
 
-#import "UniversalDefines.h"
+#import <AlertMessages.h>
+#import <UniversalDefines.h>
 
 // Mac includes
 #import <ApplicationServices/ApplicationServices.h>
@@ -38,7 +39,6 @@
 #import <objc/objc-runtime.h>
 
 // library includes
-#import <AlertMessages.h>
 #import <AutoPool.objc++.h>
 #import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>

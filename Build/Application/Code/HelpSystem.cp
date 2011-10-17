@@ -1,7 +1,10 @@
+/*!	\file HelpSystem.cp
+	\brief A simple mechanism for managing access to the
+	application’s user documentation and context-sensitive
+	help.
+*/
 /*###############################################################
 
-	HelpSystem.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +32,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "HelpSystem.h"
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <map>
@@ -42,28 +46,33 @@
 
 // application includes
 #include "EventLoop.h"
-#include "HelpSystem.h"
 #include "UIStrings.h"
 
 
 
 #pragma mark Types
+namespace {
 
 typedef std::map< WindowRef, HelpSystem_KeyPhrase >		WindowToKeyPhraseMap;
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	WindowToKeyPhraseMap&	gWindowToKeyPhraseMap()		{ static WindowToKeyPhraseMap x; return x; }
-}
+#pragma mark Variables
+namespace {
+
+WindowToKeyPhraseMap&	gWindowToKeyPhraseMap()		{ static WindowToKeyPhraseMap x; return x; }
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static HelpSystem_Result		copyCFStringHelpSearch			(HelpSystem_KeyPhrase, CFStringRef&);
-static HelpSystem_Result		displayHelpFromKeyPhrase		(HelpSystem_KeyPhrase);
-static HelpSystem_Result		displayMainHelp					();
-static HelpSystem_KeyPhrase		getCurrentContextKeyPhrase 		();
+HelpSystem_Result		copyCFStringHelpSearch			(HelpSystem_KeyPhrase, CFStringRef&);
+HelpSystem_Result		displayHelpFromKeyPhrase		(HelpSystem_KeyPhrase);
+HelpSystem_Result		displayMainHelp					();
+HelpSystem_KeyPhrase	getCurrentContextKeyPhrase 		();
+
+} // anonymous namespace
 
 
 
@@ -230,6 +239,7 @@ HelpSystem_SetWindowKeyPhrase	(WindowRef				inWindow,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Locates the specified key phrase and copies it
@@ -246,7 +256,7 @@ if an OS error occurred
 
 (3.0)
 */
-static HelpSystem_Result
+HelpSystem_Result
 copyCFStringHelpSearch	(HelpSystem_KeyPhrase	inKeyPhrase,
 						 CFStringRef&			outString)
 {
@@ -315,7 +325,7 @@ if an OS error occurred
 
 (3.0)
 */
-static HelpSystem_Result
+HelpSystem_Result
 displayHelpFromKeyPhrase	(HelpSystem_KeyPhrase	inKeyPhrase)
 {
 	HelpSystem_Result	result = kHelpSystem_ResultOK;
@@ -348,7 +358,7 @@ if an OS error occurred
 
 (3.0)
 */
-static HelpSystem_Result
+HelpSystem_Result
 displayMainHelp ()
 {
 	HelpSystem_Result	result = kHelpSystem_ResultOK;
@@ -377,7 +387,7 @@ context.
 
 (3.0)
 */
-static HelpSystem_KeyPhrase
+HelpSystem_KeyPhrase
 getCurrentContextKeyPhrase ()
 {
 	HelpSystem_KeyPhrase	result = kHelpSystem_KeyPhraseDefault;
@@ -398,5 +408,7 @@ getCurrentContextKeyPhrase ()
 	}
 	return result;
 }// getCurrentContextKeyPhrase
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -1,11 +1,20 @@
 /*!	\file ContextualMenuBuilder.h
 	\brief Configuration and display of context-sensitive
 	pop-up menus.
+	
+	This module generates context-based pop-up menu items
+	appropriately for a particular object (such as a window).
+	Contextual menus automatically take into account the state
+	of menu items, so an item can appear in a contextual menu
+	only if it exists in the menu bar and is enabled.  However,
+	contextual menu items are allowed to use different item text
+	to represent a command, to appear more context-sensitive
+	(e.g. “Hide This Window”, not “Hide Frontmost Window”).
 */
 /*###############################################################
 
 	MacTerm
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -31,7 +40,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __CONTEXTUALMENUBUILDER__
 #define __CONTEXTUALMENUBUILDER__

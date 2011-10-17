@@ -1,9 +1,10 @@
+/*!	\file Workspace.cp
+	\brief A collection of terminal windows.
+*/
 /*###############################################################
 
-	Workspace.cp
-	
 	MacTerm
-		© 1998-2008 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "Workspace.h"
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <algorithm>
@@ -46,11 +48,11 @@
 
 // application includes
 #include "TerminalWindow.h"
-#include "Workspace.h"
 
 
 
 #pragma mark Types
+namespace {
 
 typedef std::vector< CFRetainRelease >	My_WorkspaceWindowList;
 
@@ -71,14 +73,17 @@ typedef My_Workspace const*		My_WorkspaceConstPtr;
 typedef MemoryBlockPtrLocker< Workspace_Ref, My_Workspace >		My_WorkspacePtrLocker;
 typedef LockAcquireRelease< Workspace_Ref, My_Workspace >		My_WorkspaceAutoLocker;
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	My_WorkspacePtrLocker&		gWorkspacePtrLocks ()	{ static My_WorkspacePtrLocker x; return x; }
-}
+#pragma mark Variables
+namespace {
+
+My_WorkspacePtrLocker&		gWorkspacePtrLocks ()	{ static My_WorkspacePtrLocker x; return x; }
+
+} // anonymous namespace
 
 #pragma mark Functors
+namespace {
 
 /*!
 This is a functor designed to hide the specified
@@ -122,6 +127,8 @@ protected:
 private:
 	Boolean		_isHidden;
 };
+
+} // anonymous namespace
 
 
 
@@ -402,6 +409,7 @@ Workspace_SetObscured	(Workspace_Ref	inWorkspace,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Constructor.  See Workspace_New().
@@ -448,5 +456,7 @@ My_Workspace::
 		(OSStatus)ReleaseWindowGroup(this->windowGroup), this->windowGroup = nullptr;
 	}
 }// My_Workspace default constructor
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -1,9 +1,10 @@
+/*!	\file GenericPanelTabs.cp
+	\brief Implements a panel that can contain others.
+*/
 /*###############################################################
 
-	GenericPanelTabs.cp
-	
 	MacTerm
-		© 1998-2008 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "GenericPanelTabs.h"
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <stdexcept>
@@ -46,12 +48,10 @@
 #include <HIViewWrap.h>
 #include <HIViewWrapManip.h>
 
-// application includes
-#include "GenericPanelTabs.h"
-
 
 
 #pragma mark Types
+namespace {
 
 /*!
 Implements a tab based on a panel.
@@ -127,12 +127,17 @@ struct My_GenericPanelTabsData
 };
 typedef My_GenericPanelTabsData*	My_GenericPanelTabsDataPtr;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static void			deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
-static SInt32		panelChanged						(Panel_Ref, Panel_Message, void*);
-static OSStatus		receiveViewHit						(EventHandlerCallRef, EventRef, void*);
-static void			showTabPane							(My_GenericPanelTabsUIPtr, UInt16);
+#pragma mark Internal Method Prototypes
+namespace {
+
+void			deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
+SInt32			panelChanged						(Panel_Ref, Panel_Message, void*);
+OSStatus		receiveViewHit						(EventHandlerCallRef, EventRef, void*);
+void			showTabPane							(My_GenericPanelTabsUIPtr, UInt16);
+
+} // anonymous namespace
 
 
 
@@ -173,6 +178,7 @@ GenericPanelTabs_New	(CFStringRef					inName,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Initializes a My_GenericPanelTabsData structure.  The UI is
@@ -568,7 +574,7 @@ container.
 
 (3.1)
 */
-static void
+void
 deltaSizePanelContainerHIView	(HIViewRef		UNUSED_ARGUMENT(inView),
 								 Float32		inDeltaX,
 								 Float32		inDeltaY,
@@ -605,7 +611,7 @@ can be answered accurately by this generic parent panel.
 
 (3.1)
 */
-static SInt32
+SInt32
 panelChanged	(Panel_Ref			inPanel,
 				 Panel_Message		inMessage,
 				 void*				inDataPtr)
@@ -714,7 +720,7 @@ selected tab.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				 EventRef				inEvent,
 				 void*					inMyGenericTabsPanelUIPtr)
@@ -757,7 +763,7 @@ Displays the specified tab pane and hides the others.
 
 (3.1)
 */
-static void
+void
 showTabPane		(My_GenericPanelTabsUIPtr	inUIPtr,
 				 UInt16						inTabIndex)
 {
@@ -788,5 +794,7 @@ showTabPane		(My_GenericPanelTabsUIPtr	inUIPtr,
 		assert_noerr(HIViewSetVisible(selectedTabPane, true/* visible */));
 	}
 }// showTabPane
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

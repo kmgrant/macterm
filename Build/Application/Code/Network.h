@@ -31,7 +31,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __NETWORK__
 #define __NETWORK__

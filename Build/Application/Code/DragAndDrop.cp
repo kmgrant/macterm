@@ -1,9 +1,10 @@
+/*!	\file DragAndDrop.cp
+	\brief Drag-and-drop management.
+*/
 /*###############################################################
 
-	DragAndDrop.cp
-	
 	MacTerm
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "DragAndDrop.h"
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <map>
@@ -49,7 +51,6 @@
 // application includes
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
-#include "DragAndDrop.h"
 #include "RegionUtilities.h"
 
 

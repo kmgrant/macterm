@@ -1,7 +1,9 @@
+/*!	\file SessionFactory.cp
+	\brief Construction mechanism for sessions (terminal
+	windows that run local or remote processes).
+*/
 /*###############################################################
 
-	SessionFactory.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +31,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "SessionFactory.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cctype>
@@ -68,7 +71,6 @@
 #include "Preferences.h"
 #include "QuillsBase.h"
 #include "SessionDescription.h"
-#include "SessionFactory.h"
 #include "Terminal.h"
 #include "TerminalFile.h"
 #include "TerminalView.h"

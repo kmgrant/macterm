@@ -1,7 +1,8 @@
+/*!	\file Terminal.cp
+	\brief Terminal screen buffer and emulators.
+*/
 /*###############################################################
 
-	Terminal.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "Terminal.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cctype>
@@ -78,7 +80,6 @@
 #include "PrintTerminal.h"
 #include "Session.h"
 #include "StreamCapture.h"
-#include "Terminal.h"
 #include "TerminalSpeaker.h"
 #include "TerminalView.h"
 #include "TextTranslation.h"

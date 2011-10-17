@@ -31,10 +31,14 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __DEBUGINTERFACE__
 #define __DEBUGINTERFACE__
+
+#ifdef __OBJC__
+#	import <Cocoa/Cocoa.h>
+#endif
 
 
 

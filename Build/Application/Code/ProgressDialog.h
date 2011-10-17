@@ -38,7 +38,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __PROGRESSDIALOG__
 #define __PROGRESSDIALOG__

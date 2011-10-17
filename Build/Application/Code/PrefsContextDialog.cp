@@ -1,7 +1,10 @@
+/*!	\file PrefsContextDialog.cp
+	\brief Implements a dialog that can host any panel capable
+	of editing settings in a "Preferences_ContextRef" (namely,
+	those normally used in the Preferences window).
+*/
 /*###############################################################
 
-	PrefsContextDialog.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +32,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "PrefsContextDialog.h"
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -44,7 +48,6 @@
 // application includes
 #include "GenericDialog.h"
 #include "Panel.h"
-#include "PrefsContextDialog.h"
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"
 

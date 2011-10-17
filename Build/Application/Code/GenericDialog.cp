@@ -1,9 +1,12 @@
+/*!	\file GenericDialog.cp
+	\brief Allows a user interface that is both a panel
+	and a dialog to be displayed as a modal dialog or
+	sheet.
+*/
 /*###############################################################
 
-	GenericDialog.cp
-	
 	MacTerm
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -29,7 +32,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "GenericDialog.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <climits>
@@ -71,7 +75,6 @@
 #include "Commands.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
-#include "GenericDialog.h"
 #include "HelpSystem.h"
 #include "Session.h"
 #include "Terminology.h"

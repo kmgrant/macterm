@@ -1,9 +1,10 @@
+/*!	\file Undoables.cp
+	\brief Full support for Undo using abstract commands.
+*/
 /*###############################################################
 
-	Undoables.cp
-	
 	Contexts Library 2.0
-	© 1998-2006 by Kevin Grant
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -25,7 +26,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <Undoables.h>
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <algorithm>
@@ -37,11 +39,11 @@
 // library includes
 #include <CFRetainRelease.h>
 #include <MemoryBlockPtrLocker.template.h>
-#include <Undoables.h>
 
 
 
 #pragma mark Types
+namespace {
 
 struct MyUndoData
 {
@@ -63,23 +65,22 @@ typedef MemoryBlockPtrLocker< Undoables_ActionRef, MyUndoData >		MyUndoDataPtrLo
 typedef LockAcquireRelease< Undoables_ActionRef, MyUndoData >		MyUndoDataAutoLocker;
 typedef std::deque< Undoables_ActionRef >							MyUndoStack;
 
+} // anonymous namespace
+
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	CFRetainRelease&					gDefaultUndoName ()		{ static CFRetainRelease x; return x; }
-	CFRetainRelease&					gDefaultRedoName ()		{ static CFRetainRelease x; return x; }
-	MyUndoDataPtrLocker&				gUndoDataPtrLocks ()	{ static MyUndoDataPtrLocker x; return x; }
-	Undoables_UndoHandlingMechanism		gUndoStackType = kUndoables_UndoHandlingMechanismOnlyOne;
-	MyUndoStack&						gUndoStack ()	{ static MyUndoStack x; return x; }
-	MyUndoStack&						gRedoStack ()	{ static MyUndoStack x; return x; }
-}
+CFRetainRelease&					gDefaultUndoName ()		{ static CFRetainRelease x; return x; }
+CFRetainRelease&					gDefaultRedoName ()		{ static CFRetainRelease x; return x; }
+MyUndoDataPtrLocker&				gUndoDataPtrLocks ()	{ static MyUndoDataPtrLocker x; return x; }
+Undoables_UndoHandlingMechanism		gUndoStackType = kUndoables_UndoHandlingMechanismOnlyOne;
+MyUndoStack&						gUndoStack ()	{ static MyUndoStack x; return x; }
+MyUndoStack&						gRedoStack ()	{ static MyUndoStack x; return x; }
+
+} // anonymous namespace
 
 
-
-//
-// public methods
-//
+#pragma mark Public Methods
 
 /*!
 Call this routine before any other in this module.

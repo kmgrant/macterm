@@ -32,7 +32,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __MAINENTRYPOINT__
 #define __MAINENTRYPOINT__

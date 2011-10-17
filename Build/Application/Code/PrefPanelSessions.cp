@@ -30,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "PrefPanelSessions.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cstring>
@@ -75,7 +76,6 @@ extern "C"
 #include "NetEvents.h"
 #include "Panel.h"
 #include "Preferences.h"
-#include "PrefPanelSessions.h"
 #include "ServerBrowser.h"
 #include "Session.h"
 #include "UIStrings.h"

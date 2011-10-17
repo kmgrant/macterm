@@ -1,7 +1,8 @@
+/*!	\file MainEntryPoint.cp
+	\brief Front end to the Bug Reporter application.
+*/
 /*###############################################################
 
-	MainEntryPoint.cp
-	
 	Bug Reporter
 		© 2005-2011 by Kevin Grant.
 	
@@ -43,30 +44,36 @@
 
 
 #pragma mark Constants
+namespace {
 
 enum
 {
 	kASRequiredSuite = kCoreEventClass
 };
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	AEAddressDesc			gSelfAddress;		//!< used to target send-to-self Apple Events
-	ProcessSerialNumber		gSelfProcessID;		//!< used to target send-to-self Apple Events
-}
+#pragma mark Variables
+namespace {
+
+AEAddressDesc			gSelfAddress;		//!< used to target send-to-self Apple Events
+ProcessSerialNumber		gSelfProcessID;		//!< used to target send-to-self Apple Events
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static OSStatus				addErrorToReply				(UInt8 const*, size_t, OSStatus, AppleEventPtr);
-static Boolean				installRequiredHandlers		();
-static pascal OSErr			receiveApplicationOpen		(AppleEvent const*, AppleEvent*, SInt32);
-static pascal OSErr			receiveApplicationPrefs		(AppleEvent const*, AppleEvent*, SInt32);
-static pascal OSErr			receiveApplicationReopen	(AppleEvent const*, AppleEvent*, SInt32);
-static pascal OSErr			receiveApplicationQuit		(AppleEvent const*, AppleEvent*, SInt32);
-static pascal OSErr			receiveOpenDocuments		(AppleEvent const*, AppleEvent*, SInt32);
-static pascal OSErr			receivePrintDocuments		(AppleEvent const*, AppleEvent*, SInt32);
+OSStatus	addErrorToReply				(UInt8 const*, size_t, OSStatus, AppleEventPtr);
+Boolean		installRequiredHandlers		();
+OSErr		receiveApplicationOpen		(AppleEvent const*, AppleEvent*, SInt32);
+OSErr		receiveApplicationPrefs		(AppleEvent const*, AppleEvent*, SInt32);
+OSErr		receiveApplicationReopen	(AppleEvent const*, AppleEvent*, SInt32);
+OSErr		receiveApplicationQuit		(AppleEvent const*, AppleEvent*, SInt32);
+OSErr		receiveOpenDocuments		(AppleEvent const*, AppleEvent*, SInt32);
+OSErr		receivePrintDocuments		(AppleEvent const*, AppleEvent*, SInt32);
+
+} // anonymous namespace
 
 #pragma mark Public Methods
 
@@ -119,6 +126,7 @@ main	(int	argc,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Adds an error to the reply record; at least the
@@ -132,7 +140,7 @@ a specific error code.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 addErrorToReply		(UInt8 const*		inErrorMessageOrNull,
 					 size_t				inErrorMessageSize,
 					 OSStatus			inError,
@@ -181,7 +189,7 @@ returned; otherwise, "false" is returned.
 
 (3.1)
 */
-static Boolean
+Boolean
 installRequiredHandlers ()
 {
 	Boolean			result = false;
@@ -220,7 +228,7 @@ of type "kAEOpenApplication".
 
 (3.1)
 */
-static pascal OSErr
+OSErr
 receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 						 AppleEvent*		outReplyAppleEventPtr,
 						 SInt32				inData)
@@ -494,7 +502,7 @@ of type "kAEReopenApplication".
 
 (3.1)
 */
-static pascal OSErr
+OSErr
 receiveApplicationReopen	(AppleEvent const*	inAppleEventPtr,
 							 AppleEvent*		outReplyAppleEventPtr,
 							 SInt32				inData)
@@ -516,7 +524,7 @@ of type "kAEShowPreferences".
 
 (3.1)
 */
-static pascal OSErr
+OSErr
 receiveApplicationPrefs		(AppleEvent const*	inAppleEventPtr,
 							 AppleEvent*		outReplyAppleEventPtr,
 							 SInt32				inData)
@@ -538,7 +546,7 @@ of type "kAEQuitApplication".
 
 (3.1)
 */
-static pascal OSErr
+OSErr
 receiveApplicationQuit	(AppleEvent const*	inAppleEventPtr,
 						 AppleEvent*		outReplyAppleEventPtr,
 						 SInt32				inData)
@@ -567,7 +575,7 @@ of type "kAEOpenDocuments".
 
 (3.1)
 */
-static pascal OSErr
+OSErr
 receiveOpenDocuments	(AppleEvent const*	inAppleEventPtr,
 						 AppleEvent*		outReplyAppleEventPtr,
 						 SInt32				inData)
@@ -589,7 +597,7 @@ of type "kAEPrintDocuments".
 
 (3.1)
 */
-static pascal OSErr
+OSErr
 receivePrintDocuments	(AppleEvent const*	inAppleEventPtr,
 						 AppleEvent*		outReplyAppleEventPtr,
 						 SInt32				inData)
@@ -603,5 +611,7 @@ receivePrintDocuments	(AppleEvent const*	inAppleEventPtr,
 	(OSStatus)addErrorToReply(nullptr/* message */, 0/* message string length */, error, outReplyAppleEventPtr);
 	return result;
 }// receivePrintDocuments
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

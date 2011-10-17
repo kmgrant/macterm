@@ -1,9 +1,11 @@
+/*!	\file VectorInterpreter.cp
+	\brief Takes Tektronix codes as input, and sends the output
+	to real graphics devices.
+*/
 /*###############################################################
 
-	VectorInterpreter.cp
-	
 	MacTerm
-		© 1998-2010 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -28,18 +30,8 @@
 		USA
 
 ###############################################################*/
-/*
- *	by Aaron Contorer 1987 for NCSA
- *	bugfixes by Tim Krauskopf 1988 for NCSA
- *	TEK4105 support by Dave Whittington 1990 (for NCSA, of course)
- *
- *	CHANGES TO MAKE:
- *	create a function to make sure a window is attached to a real window.
- *	  Calling program will call this whenever switching between active windows.
- *	Pass virtual window number to RG driver so it can call back.
- */
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <deque>

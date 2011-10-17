@@ -1,7 +1,8 @@
+/*!	\file PrefPanelTerminals.cp
+	\brief Implements the Terminals panel of Preferences.
+*/
 /*###############################################################
 
-	PrefPanelTerminals.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "PrefPanelTerminals.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cstring>
@@ -67,7 +69,6 @@
 #include "GenericPanelTabs.h"
 #include "Panel.h"
 #include "Preferences.h"
-#include "PrefPanelTerminals.h"
 #include "Terminal.h"
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"

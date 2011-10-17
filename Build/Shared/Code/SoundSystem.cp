@@ -1,9 +1,10 @@
+/*!	\file SoundSystem.cp
+	\brief Simplified interfaces for sound.
+*/
 /*###############################################################
 
-	SoundSystem.cp
-	
-	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.4
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -25,14 +26,14 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <SoundSystem.h>
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <algorithm>
 #include <vector>
 
 // library includes
-#include <SoundSystem.h>
 #include <MemoryBlocks.h>
 
 // Mac includes
@@ -42,6 +43,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 enum
 {
@@ -51,7 +53,10 @@ enum
 	kSoundCallBackParam1SoundComplete = 1
 };
 
+} // anonymous namespace
+
 #pragma mark Types
+namespace {
 
 struct SoundInfo
 {
@@ -65,20 +70,25 @@ typedef SoundInfoPtr*		SoundInfoHandle;
 
 typedef std::vector< SoundInfoRef >		SoundInfoRefContainer;
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	SoundInfoRefContainer&	gAsyncPlayingSoundsList()   { static SoundInfoRefContainer x; return x; }
-}
+#pragma mark Variables
+namespace {
+
+SoundInfoRefContainer&	gAsyncPlayingSoundsList()   { static SoundInfoRefContainer x; return x; }
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static void				disposeSoundInfoRef		(SoundInfoRef*);
-static SoundInfoRef		newSoundInfoRef			();
-static SoundInfoPtr		refAcquireLock			(SoundInfoRef);
-static void				refReleaseLock			(SoundInfoRef, SoundInfoPtr*);
-static void				soundCallBack			(SndChannelPtr, SndCommand*);
+void			disposeSoundInfoRef		(SoundInfoRef*);
+SoundInfoRef	newSoundInfoRef			();
+SoundInfoPtr	refAcquireLock			(SoundInfoRef);
+void			refReleaseLock			(SoundInfoRef, SoundInfoPtr*);
+void			soundCallBack			(SndChannelPtr, SndCommand*);
+
+} // anonymous namespace
 
 
 
@@ -275,6 +285,7 @@ Sound_StandardAlert ()
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 To free memory for a copy of the internal structure
@@ -283,7 +294,7 @@ method.
 
 (1.0)
 */
-static void
+void
 disposeSoundInfoRef	(SoundInfoRef*	inoutRefPtr)
 {
 
@@ -311,7 +322,7 @@ acquire a reference to it, use this method.
 
 (1.0)
 */
-static SoundInfoRef
+SoundInfoRef
 newSoundInfoRef ()
 {
 	SoundInfoRef	result = nullptr;
@@ -339,7 +350,7 @@ structure, given a reference to it.
 
 (1.0)
 */
-static SoundInfoPtr
+SoundInfoPtr
 refAcquireLock	(SoundInfoRef	inRef)
 {
 	return ((SoundInfoPtr)inRef);
@@ -352,7 +363,7 @@ to the internal structure.
 
 (1.0)
 */
-static void
+void
 refReleaseLock		(SoundInfoRef	UNUSED_ARGUMENT(inRef),
 					 SoundInfoPtr*	inoutPtr)
 {
@@ -393,5 +404,7 @@ soundCallBack	(SndChannelPtr	inChannelPtr,
 		}
 	}
 }// soundCallBack
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

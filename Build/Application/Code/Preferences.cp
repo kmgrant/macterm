@@ -6,7 +6,7 @@
 
 	MacTerm
 		© 1998-2011 by Kevin Grant.
-		© 2001-2004 by Ian Anderson.
+		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
@@ -31,7 +31,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "Preferences.h"
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <algorithm>
@@ -89,7 +90,6 @@
 #include "Keypads.h"
 #include "MacroManager.h"
 #include "NetEvents.h"
-#include "Preferences.h"
 #include "Session.h"
 #include "Terminal.h"
 #include "TerminalView.h"

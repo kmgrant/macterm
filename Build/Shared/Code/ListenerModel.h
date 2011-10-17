@@ -15,7 +15,7 @@
 */
 /*###############################################################
 
-	Data Access Library 2.4
+	Data Access Library 2.6
 	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -38,7 +38,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __LISTENERMODEL__
 #define __LISTENERMODEL__

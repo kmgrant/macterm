@@ -1,10 +1,10 @@
-/*!	\file SoundPlay.h
+/*!	\file SoundSystem.h
 	\brief Simplified interfaces for sound.
 */
 /*###############################################################
 
-	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.4
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -26,10 +26,10 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
-#ifndef __SOUNDPLAY__
-#define __SOUNDPLAY__
+#ifndef __SOUNDSYSTEM__
+#define __SOUNDSYSTEM__
 
 
 

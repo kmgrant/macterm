@@ -1,9 +1,10 @@
+/*!	\file ListenerModel.cp
+	\brief An implementation of the listener pattern.
+*/
 /*###############################################################
 
-	ListenerModel.cp
-	
-	Data Access Library 1.3
-	© 1998-2010 by Kevin Grant
+	Data Access Library 2.6
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -25,7 +26,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <ListenerModel.h>
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <algorithm>
@@ -34,7 +36,6 @@
 
 // library includes
 #include <Console.h>
-#include <ListenerModel.h>
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlockReferenceLocker.template.h>
 #include <MemoryBlockReferenceTracker.template.h>
@@ -43,6 +44,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 typedef UInt16 ListenerModelCallbackType;
 enum
@@ -62,7 +64,10 @@ enum
 	kListenerModelBehaviorNotifyUntilReturnedNonEventNotHandledErr = 2	// continue as long as callbacks return "eventNotHandledErr"
 };
 
+} // anonymous namespace
+
 #pragma mark Types
+namespace {
 
 typedef std::vector< ListenerModel_ListenerRef >			My_ListenerList;
 typedef My_ListenerList*									My_ListenerListPtr;
@@ -112,28 +117,29 @@ typedef MemoryBlockPtrLocker< ListenerModel_ListenerRef, Listener >			ListenerPt
 typedef LockAcquireRelease< ListenerModel_ListenerRef, Listener >			ListenerAutoLocker;
 typedef MemoryBlockReferenceLocker< ListenerModel_ListenerRef, Listener >	ListenerReferenceLocker;
 
+} // anonymous namespace
+
 #pragma mark Internal Method Prototypes
+namespace {
 
-static Boolean		unitTest000_Begin			();
+Boolean		unitTest000_Begin			();
+void		unitTest000_Callback1		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 
-static void			unitTest000_Callback1		(ListenerModel_Ref,
-												 ListenerModel_Event,
-												 void*,
-												 void*);
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	ListenerModelPtrLocker&		gListenerModelPtrLocks ()	{ static ListenerModelPtrLocker x; return x; }
-	ListenerModelRefTracker&	gListenerModelValidRefs ()	{ static ListenerModelRefTracker x; return x; }
-	ListenerPtrLocker&			gListenerPtrLocks ()		{ static ListenerPtrLocker x; return x; }
-	ListenerReferenceLocker&	gListenerRefLocks ()		{ static ListenerReferenceLocker x; return x; }
-	ListenerReferenceTracker&	gListenerValidRefs ()		{ static ListenerReferenceTracker x; return x; }
-	SInt32						gUnitTest000_CallCount = 0;
-	ListenerModel_Ref			gUnitTest000_Model = nullptr;
-	Boolean						gUnitTest000_Result = false;
-}
+ListenerModelPtrLocker&		gListenerModelPtrLocks ()	{ static ListenerModelPtrLocker x; return x; }
+ListenerModelRefTracker&	gListenerModelValidRefs ()	{ static ListenerModelRefTracker x; return x; }
+ListenerPtrLocker&			gListenerPtrLocks ()		{ static ListenerPtrLocker x; return x; }
+ListenerReferenceLocker&	gListenerRefLocks ()		{ static ListenerReferenceLocker x; return x; }
+ListenerReferenceTracker&	gListenerValidRefs ()		{ static ListenerReferenceTracker x; return x; }
+SInt32						gUnitTest000_CallCount = 0;
+ListenerModel_Ref			gUnitTest000_Model = nullptr;
+Boolean						gUnitTest000_Result = false;
+
+} // anonymous namespace
 
 
 #pragma mark Functors
@@ -969,6 +975,7 @@ ListenerModel_RemoveListenerForEvent	(ListenerModel_Ref			inFromWhichModel,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Initializes a new Listener instance and registers
@@ -1004,8 +1011,11 @@ eventListeners()
 {
 }// ListenerModel default constructor
 
+} // anonymous namespace
+
 
 #pragma mark Internal Methods: Unit Tests
+namespace {
 
 /*!
 Tests construction and call of standard listeners
@@ -1017,7 +1027,7 @@ printed for ALL assertion failures regardless.
 
 (1.4)
 */
-static Boolean
+Boolean
 unitTest000_Begin ()
 {
 	Boolean						result = true;
@@ -1096,7 +1106,7 @@ Test callback used with unitTest000_Begin().
 
 (1.4)
 */
-static void
+void
 unitTest000_Callback1	(ListenerModel_Ref		inModel,
 						 ListenerModel_Event	inEvent,
 						 void*					inEventContext,
@@ -1118,5 +1128,7 @@ unitTest000_Callback1	(ListenerModel_Ref		inModel,
 	// increment a global to indicate the callback was invoked
 	++gUnitTest000_CallCount;
 }// unitTest000_Callback1
+
+}// anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

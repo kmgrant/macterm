@@ -4,7 +4,7 @@
 */
 /*###############################################################
 
-	Data Access Library 2.5
+	Data Access Library 2.6
 	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -27,16 +27,14 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <FlagManager.h>
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <stdexcept>
 
 // Mac includes
 #include <CoreFoundation/CoreFoundation.h>
-
-// library includes
-#include <FlagManager.h>
 
 
 

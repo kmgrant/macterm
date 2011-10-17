@@ -30,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "QuillsSession.h"
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <algorithm>
@@ -50,7 +51,6 @@
 // application includes
 #include "AppResources.h"
 #include "SessionFactory.h"
-#include "QuillsSession.h"
 #include "URL.h"
 
 

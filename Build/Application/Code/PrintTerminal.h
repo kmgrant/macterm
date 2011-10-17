@@ -31,12 +31,15 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __PRINTTERMINAL__
 #define __PRINTTERMINAL__
 
 // Mac includes
+#ifdef __OBJC__
+#	import <Cocoa/Cocoa.h>
+#endif
 #include <CoreServices/CoreServices.h>
 
 // application includes

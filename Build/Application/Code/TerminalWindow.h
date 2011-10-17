@@ -40,7 +40,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __TERMINALWINDOW__
 #define __TERMINALWINDOW__

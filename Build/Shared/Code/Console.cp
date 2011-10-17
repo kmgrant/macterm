@@ -1,9 +1,11 @@
+/*!	\file Console.h
+	\brief Provides access to the debugging console (and log
+	file).
+*/
 /*###############################################################
 
-	Console.cp
-	
-	Data Access Library 2.2
-	© 1998-2010 by Kevin Grant
+	Data Access Library 2.6
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -25,9 +27,11 @@
 
 ###############################################################*/
 
+#include <Console.h>
+
 #ifndef NDEBUG
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <iostream>
@@ -40,7 +44,6 @@
 
 // library includes
 #include <CFRetainRelease.h>
-#include <Console.h>
 #include <GrowlSupport.h>
 #include <ListenerModel.h>
 #include <MemoryBlocks.h>

@@ -30,7 +30,8 @@
 
 ###############################################################*/
 
-#import "UniversalDefines.h"
+#import "EventLoop.h"
+#import <UniversalDefines.h>
 
 // standard-C++ includes
 #import <algorithm>
@@ -68,7 +69,6 @@
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "DialogUtilities.h"
-#import "EventLoop.h"
 #import "MenuBar.h"
 #import "QuillsSession.h"
 #import "Session.h"

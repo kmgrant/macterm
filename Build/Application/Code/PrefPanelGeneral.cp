@@ -1,7 +1,8 @@
+/*!	\file PrefPanelGeneral.cp
+	\brief Implements the General panel of Preferences.
+*/
 /*###############################################################
 
-	PrefPanelGeneral.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "PrefPanelGeneral.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cstring>
@@ -71,7 +73,6 @@
 #include "Keypads.h"
 #include "Panel.h"
 #include "Preferences.h"
-#include "PrefPanelGeneral.h"
 #include "SessionFactory.h"
 #include "TerminalView.h"
 #include "TerminalWindow.h"
@@ -81,6 +82,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 #define NUMBER_OF_GENERAL_TABPANES		3
 enum
@@ -133,7 +135,10 @@ static HIViewID const	idMyRadioButtonNotifyDisplayMessage			= { 'NotM', 0/* ID *
 static HIViewID const	idMyLabelGrowlSettings						= { 'GLab', 0/* ID */ };
 static HIViewID const	idMyButtonOpenGrowlPreferencesPane			= { 'GBut', 0/* ID */ };
 
+} // anonymous namespace
+
 #pragma mark Types
+namespace {
 
 class My_GeneralPanelUI;
 
@@ -266,27 +271,32 @@ struct My_GeneralPanelData
 };
 typedef My_GeneralPanelData*	My_GeneralPanelDataPtr;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static void				changePreferenceUpdateScreenTerminalWindowOp	(TerminalWindowRef, void*, SInt32, void*);
-static void				deltaSizePanelContainerHIView					(HIViewRef, Float32, Float32, void*);
-static SInt32			panelChanged									(Panel_Ref, Panel_Message, void*);
-static OSStatus			receiveHICommand								(EventHandlerCallRef, EventRef, void*);
-static OSStatus			receiveFieldChanged								(EventHandlerCallRef, EventRef, void*);
-static OSStatus			receiveViewHit									(EventHandlerCallRef, EventRef, void*);
-static void				saveFieldPreferences							(My_GeneralPanelUIPtr);
-static void				showTabPane										(My_GeneralPanelUIPtr, UInt16);
-static Boolean			updateCheckBoxPreference						(My_GeneralPanelUIPtr, HIViewRef);
+#pragma mark Internal Method Prototypes
+namespace {
+
+void			changePreferenceUpdateScreenTerminalWindowOp	(TerminalWindowRef, void*, SInt32, void*);
+void			deltaSizePanelContainerHIView					(HIViewRef, Float32, Float32, void*);
+SInt32			panelChanged									(Panel_Ref, Panel_Message, void*);
+OSStatus		receiveHICommand								(EventHandlerCallRef, EventRef, void*);
+OSStatus		receiveFieldChanged								(EventHandlerCallRef, EventRef, void*);
+OSStatus		receiveViewHit									(EventHandlerCallRef, EventRef, void*);
+void			saveFieldPreferences							(My_GeneralPanelUIPtr);
+void			showTabPane										(My_GeneralPanelUIPtr, UInt16);
+Boolean			updateCheckBoxPreference						(My_GeneralPanelUIPtr, HIViewRef);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Float32		gIdealPanelWidth = 0.0;
-	Float32		gIdealPanelHeight = 0.0;
-	Float32		gMaximumTabPaneWidth = 0.0;
-	Float32		gMaximumTabPaneHeight = 0.0;
-}
+Float32		gIdealPanelWidth = 0.0;
+Float32		gIdealPanelHeight = 0.0;
+Float32		gMaximumTabPaneWidth = 0.0;
+Float32		gMaximumTabPaneHeight = 0.0;
+
+} // anonymous namespace
 
 
 
@@ -332,6 +342,7 @@ PrefPanelGeneral_New ()
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Initializes a My_GeneralPanelData structure.
@@ -1440,7 +1451,7 @@ reflect the preference value.
 
 (3.0)
 */
-static void
+void
 changePreferenceUpdateScreenTerminalWindowOp	(TerminalWindowRef		inTerminalWindow,
 												 void*					UNUSED_ARGUMENT(inUnusedData1),
 												 SInt32					inDataPreferenceTag,
@@ -1468,7 +1479,7 @@ container.
 
 (3.1)
 */
-static void
+void
 deltaSizePanelContainerHIView	(HIViewRef		UNUSED_ARGUMENT(inView),
 								 Float32		inDeltaX,
 								 Float32		inDeltaY,
@@ -1498,7 +1509,7 @@ of one of the preferences dialog’s panels changes.
 
 (3.0)
 */
-static SInt32
+SInt32
 panelChanged	(Panel_Ref			inPanel,
 				 Panel_Message		inMessage,
 				 void*				inDataPtr)
@@ -1598,7 +1609,7 @@ their preferences when new text arrives.
 
 (4.0)
 */
-static OSStatus
+OSStatus
 receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
 						 EventRef				inEvent,
 						 void*					inMyGeneralPanelUIPtr)
@@ -1629,7 +1640,7 @@ for the buttons in this panel.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					UNUSED_ARGUMENT(inContext))
@@ -1779,7 +1790,7 @@ will be installed instead.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				 EventRef				inEvent,
 				 void*					inMyGeneralPanelUIPtr)
@@ -1838,7 +1849,7 @@ text field).
 
 (3.0)
 */
-static void
+void
 saveFieldPreferences	(My_GeneralPanelUIPtr	inInterfacePtr)
 {
 	if (nullptr != inInterfacePtr)
@@ -1872,7 +1883,7 @@ Displays the specified tab pane and hides the others.
 
 (3.1)
 */
-static void
+void
 showTabPane		(My_GeneralPanelUIPtr	inUIPtr,
 				 UInt16					inTabIndex)
 {
@@ -1923,7 +1934,7 @@ Otherwise, "false" is returned.
 
 (3.0)
 */
-static Boolean
+Boolean
 updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 							 HIViewRef				inCheckBoxClicked)
 {
@@ -2175,5 +2186,7 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 	
 	return result;
 }// updateCheckBoxPreference
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

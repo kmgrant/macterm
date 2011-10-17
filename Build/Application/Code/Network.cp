@@ -1,7 +1,9 @@
+/*!	\file Network.cp
+	\brief APIs dealing with the local machine’s Internet
+	protocol addresses.
+*/
 /*###############################################################
 
-	Network.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +31,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "Network.h"
+#include <UniversalDefines.h>
 
 /*!
 NOTE:	The copyIPAddressListSCF() routine is the equivalent
@@ -77,7 +80,6 @@ extern "C"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "DNR.h"
-#include "Network.h"
 #include "UIStrings.h"
 
 

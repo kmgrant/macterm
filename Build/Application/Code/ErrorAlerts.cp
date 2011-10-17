@@ -1,9 +1,11 @@
+/*!	\file ErrorAlerts.cp
+	\brief The Alert module can be used directly for modern
+	messages, since it supports sheets and other features.
+*/
 /*###############################################################
 
-	ErrorAlerts.cp
-	
 	MacTerm
-		© 1998-2007 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -29,6 +31,6 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

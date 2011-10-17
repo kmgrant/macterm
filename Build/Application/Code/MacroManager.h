@@ -50,7 +50,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __MACROMANAGER__
 #define __MACROMANAGER__

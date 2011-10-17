@@ -1,39 +1,9 @@
+/*!	\file ContextualMenuBuilder.cp
+	\brief Configuration and display of context-sensitive
+	pop-up menus.
+*/
 /*###############################################################
 
-	ContextualMenuBuilder.cp
-	
-	This module generates context-based pop-up menu items
-	appropriately for a particular object (such as a window).
-	Contextual menus automatically take into account the state
-	of menu items, so an item can appear in a contextual menu
-	only if it exists in the menu bar and is enabled.  However,
-	contextual menu items are allowed to use different item text
-	to represent a command, to appear more context-sensitive
-	(e.g. “Hide This Window”, not “Hide Frontmost Window”).
-	
-	IMPORTANT: Contextual menu implementation requires thought.
-	           Ask yourself the following questions...
-	
-	- If you are adding an item to a contextual menu, is the
-	  item available in a regular, menu bar menu as well?
-			   
-	- How many items are in this contextual menu?  Do NOT simply
-	  add every *possible* item to a contextual menu!  Restrict
-	  your choices to those items which will most certainly be
-	  useful to the user, either because they are frequently
-	  used, or because they are naturally suited to a pop-up
-	  menu (such as “Copy”).
-			   
-	- With the *sole* exception of possibly the Help item, never
-	  show disabled menu items in any contextual menu.  Items
-	  which are not available just make menus unnecessarily
-	  large, and do not help the user in any way.
-	
-	- How long does it take your context handler to do its work?
-	  Remember, all of that processing time is taken up *after*
-	  the user Control-clicks, and delays the display of the
-	  menu to the user!
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -61,7 +31,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "ContextualMenuBuilder.h"
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -79,7 +50,6 @@
 #include "Commands.h"
 #include "ConstantsRegistry.h"
 #include "Clipboard.h"
-#include "ContextualMenuBuilder.h"
 #include "DialogUtilities.h"
 #include "HelpSystem.h"
 #include "MenuBar.h"

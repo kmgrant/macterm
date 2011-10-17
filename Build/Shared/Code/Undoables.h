@@ -18,8 +18,8 @@
 */
 /*###############################################################
 
-	Contexts Library 1.1
-	© 1998-2006 by Kevin Grant
+	Contexts Library 2.0
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -41,7 +41,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __UNDOABLES__
 #define __UNDOABLES__

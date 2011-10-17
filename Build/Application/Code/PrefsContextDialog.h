@@ -37,7 +37,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __PREFSCONTEXTDIALOG__
 #define __PREFSCONTEXTDIALOG__

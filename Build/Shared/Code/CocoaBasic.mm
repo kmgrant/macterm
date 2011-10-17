@@ -3,7 +3,7 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.6
+	Simple Cocoa Wrappers Library 1.8
 	© 2008-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -26,6 +26,8 @@
 
 ###############################################################*/
 
+#import <CocoaBasic.h>
+
 // standard-C++ includes
 #import <map>
 
@@ -36,7 +38,6 @@
 
 // library includes
 #import <AutoPool.objc++.h>
-#import <CocoaBasic.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <HIViewWrap.h>

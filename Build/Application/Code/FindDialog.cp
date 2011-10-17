@@ -1,9 +1,11 @@
+/*!	\file FindDialog.cp
+	\brief A sheet used to perform searches in the scrollback
+	buffers of terminal windows.
+*/
 /*###############################################################
 
-	FindDialog.cp
-	
 	MacTerm
-		© 1998-2009 by Kevin Grant.
+		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -29,7 +31,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "FindDialog.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <climits>
@@ -64,7 +67,6 @@
 #include "Commands.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
-#include "FindDialog.h"
 #include "HelpSystem.h"
 #include "Terminal.h"
 #include "TerminalView.h"

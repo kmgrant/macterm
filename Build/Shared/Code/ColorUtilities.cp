@@ -1,12 +1,8 @@
+/*!	\file ColorUtilities.cp
+	\brief Various routines commonly needed for graphics.
+*/
 /*###############################################################
 
-	ColorUtilities.cp
-	
-	Color Pen State portions of this file are from the
-	OS Technologies group at Apple Computer Inc. (source: SDK
-	for Appearance 1.0), and are written by Ed Voas.  Copyright
-	© 1997 by Apple Computer, Inc., all rights reserved.
-	
 	Interface Library 2.4
 	© 1998-2011 by Kevin Grant
 	
@@ -30,7 +26,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <ColorUtilities.h>
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <climits>
@@ -41,7 +38,6 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
-#include <ColorUtilities.h>
 #include <Releases.h>
 
 

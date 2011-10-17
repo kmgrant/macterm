@@ -44,7 +44,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __TERMINALSPEAKER__
 #define __TERMINALSPEAKER__

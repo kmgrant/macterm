@@ -1,7 +1,8 @@
+/*!	\file QuillsBase.cp
+	\brief Fundamental APIs exposed to scripting languages.
+*/
 /*###############################################################
 
-	QuillsBase.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "QuillsBase.h"
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <stdexcept>
@@ -48,7 +50,6 @@
 #include "Initialize.h"
 #include "MainEntryPoint.h"
 #include "Preferences.h"
-#include "QuillsBase.h"
 #include "UIStrings.h"
 
 
@@ -56,7 +57,7 @@
 #pragma mark Internal Methods
 namespace {
 
-void		updateNoticeCloseNotifyProc		(InterfaceLibAlertRef, SInt16, void*);
+void	updateNoticeCloseNotifyProc		(InterfaceLibAlertRef, SInt16, void*);
 
 } // anonymous namespace
 

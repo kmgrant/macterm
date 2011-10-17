@@ -41,7 +41,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __TERMINOLOGY__
 #define __TERMINOLOGY__

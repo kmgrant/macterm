@@ -1,7 +1,9 @@
+/*!	\file TextTranslation.cp
+	\brief Lists methods for character translation (i.e. between
+	what the user sees and what is transmitted on the network).
+*/
 /*###############################################################
 
-	TextTranslation.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +31,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "TextTranslation.h"
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cstring>
@@ -46,9 +49,6 @@
 #include <Console.h>
 #include <MemoryBlocks.h>
 #include <StringUtilities.h>
-
-// application includes
-#include "TextTranslation.h"
 
 
 

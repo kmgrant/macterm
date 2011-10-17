@@ -1,7 +1,8 @@
+/*!	\file ColorBox.cp
+	\brief User interface element for selecting colors.
+*/
 /*###############################################################
 
-	ColorBox.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "ColorBox.h"
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -48,7 +50,6 @@
 
 // application includes
 #include "AppResources.h"
-#include "ColorBox.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"

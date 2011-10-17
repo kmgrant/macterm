@@ -1,9 +1,11 @@
+/*!	\file Cursors.cp
+	\brief Changes the mouse cursor in a way that allows you to
+	revert to the previous cursor at any time.
+*/
 /*###############################################################
 
-	Cursors.cp
-	
-	Interface Library 1.1
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.4
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -25,7 +27,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <Cursors.h>
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -33,7 +36,6 @@
 
 // library includes
 #include <ConstantsRegistry.h>
-#include <Cursors.h>
 #include <FlagManager.h>
 #include <MemoryBlocks.h>
 #include <Releases.h>
@@ -41,6 +43,7 @@
 
 
 #pragma mark Types
+namespace {
 
 struct CursorLink
 {
@@ -51,24 +54,29 @@ struct CursorLink
 };
 typedef struct CursorLink CursorLink;
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	CursorLink*		gDynamicCursorListPtr = nullptr;
-	SInt16			gCurrentCursor = kCursor_Arrow;
-	UInt32			gCursorStageCount = 0L;
-	UInt32			gCountAtLastUpdate = 0L;
-	UInt32			gCountAtDeferral = 0L;
-	UInt32			gDeferralTicks = 0L;
-	Boolean			gHaveAppearanceCursors = false;
-	Boolean			gAppearanceCursorInEffect = false;
-	Boolean			gAnimatedCursorInEffect = false;
-}
+#pragma mark Variables
+namespace {
+
+CursorLink*		gDynamicCursorListPtr = nullptr;
+SInt16			gCurrentCursor = kCursor_Arrow;
+UInt32			gCursorStageCount = 0L;
+UInt32			gCountAtLastUpdate = 0L;
+UInt32			gCountAtDeferral = 0L;
+UInt32			gDeferralTicks = 0L;
+Boolean			gHaveAppearanceCursors = false;
+Boolean			gAppearanceCursorInEffect = false;
+Boolean			gAnimatedCursorInEffect = false;
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static void		setCurrentCursorID		(SInt16);
+void	setCurrentCursorID		(SInt16);
+
+} // anonymous namespace
 
 
 
@@ -875,6 +883,7 @@ Cursors_UseWatch ()
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 To specify the ID of the “current”
@@ -887,10 +896,12 @@ to determine this value later.
 
 (1.0)
 */
-static void
+void
 setCurrentCursorID		(SInt16		inNewCursor)
 {
 	gCurrentCursor = inNewCursor;
 }// setCurrentCursorID
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

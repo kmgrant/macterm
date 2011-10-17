@@ -1,7 +1,8 @@
+/*!	\file PrefsWindow.cp
+	\brief Implements the shell of the Preferences window.
+*/
 /*###############################################################
 
-	PrefsWindow.cp
-	
 	MacTerm
 		© 1998-2011 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -29,7 +30,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "PrefsWindow.h"
+#include <UniversalDefines.h>
 
 // standard-C++ includes
 #include <algorithm>
@@ -80,7 +82,6 @@
 #include "PrefPanelTerminals.h"
 #include "PrefPanelTranslations.h"
 #include "PrefPanelWorkspaces.h"
-#include "PrefsWindow.h"
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"
 

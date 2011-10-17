@@ -1,13 +1,11 @@
+/*!	\file Releases.cp
+	\brief Routines for decoding the return values from the
+	Gestalt() system call.
+*/
 /*###############################################################
 
-	Releases.cp
-	
-	Utility library for managing system-defined versions.
-	See "Releases.h" for macros which manage versions for
-	shared libraries specific to one program.
-	
-	Data Access Library 1.3
-	© 1998-2007 by Kevin Grant
+	Data Access Library 2.6
+	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -29,19 +27,20 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <Releases.h>
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
-// library includes
-#include <Releases.h>
-
 
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static UInt8	nibblesToBase10		(UInt8		inNibbles);
+UInt8	nibblesToBase10		(UInt8);
+
+} // anonymous namespace
 
 
 
@@ -126,6 +125,7 @@ Releases_ReturnSuperminorRevisionForVersion 	(long const		inVersion)
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Interprets the two nibbles of a byte as if
@@ -140,10 +140,12 @@ method exists to set things straight.
 
 (3.0)
 */
-static UInt8
+UInt8
 nibblesToBase10		(UInt8		inNibbles)
 {
 	return ((inNibbles & 0x0F) + 10 * ((inNibbles >> 4) & 0x0F));
 }// nibblesToBase10
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

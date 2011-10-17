@@ -31,7 +31,8 @@
 
 ###############################################################*/
 
-#import "UniversalDefines.h"
+#import "Commands.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
 #import <climits>
@@ -71,7 +72,6 @@ extern "C"
 // application includes
 #import "AddressDialog.h"
 #import "AppResources.h"
-#import "Commands.h"
 #import "Clipboard.h"
 #import "CommandLine.h"
 #import "ContextualMenuBuilder.h"

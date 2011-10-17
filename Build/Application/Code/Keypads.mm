@@ -30,6 +30,8 @@
 
 ###############################################################*/
 
+#import "Keypads.h"
+
 // Mac includes
 #import <Cocoa/Cocoa.h>
 
@@ -43,7 +45,6 @@
 
 // application includes
 #import "Commands.h"
-#import "Keypads.h"
 #import "Session.h"
 #import "SessionFactory.h"
 #import "TranslucentMenuArrow.h"

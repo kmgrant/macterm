@@ -1,8 +1,10 @@
+/*!	\file TextDataFile.cp
+	\brief Simple reader and writer of key-value-pair-based
+	ASCII files.
+*/
 /*###############################################################
 
-	TextDataFile.cp
-	
-	Data Access Library 2.3
+	Data Access Library 2.6
 	© 1998-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -25,7 +27,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <TextDataFile.h>
+#include <UniversalDefines.h>
 
 // standard-C includes
 #include <cctype>
@@ -41,11 +44,11 @@
 #include <MemoryBlockHandleLocker.template.h>
 #include <MemoryBlocks.h>
 #include <StringUtilities.h>
-#include <TextDataFile.h>
 
 
 
 #pragma mark Types
+namespace {
 
 struct My_TextDataFile
 {
@@ -62,18 +65,23 @@ typedef My_TextDataFilePtr*		My_TextDataFileHandle;
 typedef MemoryBlockHandleLocker< TextDataFile_Ref, My_TextDataFile >	My_TextDataFileHandleLocker;
 typedef LockAcquireRelease< TextDataFile_Ref, My_TextDataFile >			My_TextDataFileHandleAutoLocker;
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	My_TextDataFileHandleLocker&	gTextDataFileHandleLocks ()	{ static My_TextDataFileHandleLocker x; return x; }
-}
+#pragma mark Variables
+namespace {
+
+My_TextDataFileHandleLocker&	gTextDataFileHandleLocks ()	{ static My_TextDataFileHandleLocker x; return x; }
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static char*							getNameValue			(char*, char** = nullptr);
-static TextDataFile_LineEndingStyle		guessLineEndingStyle	(SInt16);
-static SInt32							readLine				(SInt16, char*, SInt32, TextDataFile_LineEndingStyle);
+char*							getNameValue			(char*, char** = nullptr);
+TextDataFile_LineEndingStyle	guessLineEndingStyle	(SInt16);
+SInt32							readLine				(SInt16, char*, SInt32, TextDataFile_LineEndingStyle);
+
+} // anonymous namespace
 
 
 
@@ -882,6 +890,7 @@ TextDataFile_StringToRGBColor	(char const*		inStringPtr,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Searches for the name-value delimiter within the
@@ -901,7 +910,7 @@ IMPORTANT:	Whitespace may cause the name to start
 
 (1.0)
 */
-static char*
+char*
 getNameValue	(char*		inoutLine,
 				 char**		outValuePtrOrNull)
 {
@@ -950,7 +959,7 @@ string is also null-terminated.
 
 (1.1)
 */
-static TextDataFile_LineEndingStyle
+TextDataFile_LineEndingStyle
 guessLineEndingStyle	(SInt16		inFileRefNum)
 {
 	TextDataFile_LineEndingStyle	result = kTextDataFile_LineEndingStyleMacintosh;
@@ -1004,7 +1013,7 @@ string is also null-terminated.
 
 (1.0)
 */
-static SInt32
+SInt32
 readLine	(SInt16							inFileRefNum,
 			 char*							outLine,
 			 SInt32							inCapacityLength,
@@ -1048,5 +1057,7 @@ readLine	(SInt16							inFileRefNum,
 	
 	return result;
 }// readLine
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

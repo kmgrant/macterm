@@ -35,7 +35,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __QUILLSBASE__
 #define __QUILLSBASE__

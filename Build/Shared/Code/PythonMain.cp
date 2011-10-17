@@ -1,8 +1,7 @@
 /*###############################################################
 
-	PythonMain.cp
-	
-	© 2009 by Kevin Grant
+	Python Main
+	© 2009-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License

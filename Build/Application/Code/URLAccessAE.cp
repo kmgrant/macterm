@@ -1,10 +1,12 @@
+/*!	\file URLAccessAE.cp
+	\brief Implements part of the URL Access suite of Apple
+	Events (currently, MacTerm only supports "handle URL").
+*/
 /*###############################################################
 
-	URLAccessAE.cp
-	
 	MacTerm
-		© 1998-2010 by Kevin Grant.
-		© 2001-2002 by Ian Anderson.
+		© 1998-2011 by Kevin Grant.
+		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
@@ -29,7 +31,8 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include "URLAccessAE.h"
+#include <UniversalDefines.h>
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -44,13 +47,15 @@
 #include "AppleEventUtilities.h"
 #include "QuillsSession.h"
 #include "Terminology.h"
-#include "URLAccessAE.h"
 
 
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static OSStatus		handleURL	(AEDesc const*, AEDesc*);
+OSStatus	handleURL	(AEDesc const*, AEDesc*);
+
+} // anonymous namespace
 
 
 
@@ -100,6 +105,7 @@ URLAccessAE_HandleUniformResourceLocator		(AppleEvent const*	inAppleEventPtr,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Handles the specified URL by either opening a telnet
@@ -110,7 +116,7 @@ codes.  A result code of 0 indicates success!!!
 
 (3.0)
 */
-static OSStatus
+OSStatus
 handleURL	(AEDesc const*		inFromWhichObject,
 			 AEDesc*			outResult)
 {
@@ -220,5 +226,7 @@ handleURL	(AEDesc const*		inFromWhichObject,
 	
 	return result;
 }// handleURL
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -30,7 +30,8 @@
 
 ###############################################################*/
 
-#import "UniversalDefines.h"
+#import "PrintTerminal.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
 #import <cstdio>
@@ -54,7 +55,6 @@
 #import "Console.h"
 #import "ConstantsRegistry.h"
 #import "HelpSystem.h"
-#import "PrintTerminal.h"
 #import "Terminal.h"
 #import "TerminalView.h"
 

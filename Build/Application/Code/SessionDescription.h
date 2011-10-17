@@ -36,7 +36,7 @@
 
 ###############################################################*/
 
-#include "UniversalDefines.h"
+#include <UniversalDefines.h>
 
 #ifndef __SESSIONDESCRIPTION__
 #define __SESSIONDESCRIPTION__
