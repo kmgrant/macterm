@@ -230,7 +230,6 @@ English.lproj/PrefPanelSessions.nib \
 English.lproj/PrefPanelTerminals.nib \
 English.lproj/PrefPanelWorkspaces.nib \
 English.lproj/PrefsWindow.nib \
-English.lproj/ProgressDialog.nib \
 English.lproj/TEKWindow.nib \
 English.lproj/TerminalWindow.nib \
 English.lproj/WindowTitleDialog.nib

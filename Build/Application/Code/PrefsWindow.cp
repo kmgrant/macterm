@@ -77,7 +77,6 @@
 #include "PrefPanelGeneral.h"
 #include "PrefPanelKiosk.h"
 #include "PrefPanelMacros.h"
-#include "PrefPanelScripts.h"
 #include "PrefPanelSessions.h"
 #include "PrefPanelTerminals.h"
 #include "PrefPanelTranslations.h"
@@ -1361,7 +1360,6 @@ init ()
 		installPanel(PrefPanelFormats_New());
 		installPanel(PrefPanelTranslations_New());
 		installPanel(PrefPanelKiosk_New());
-		//installPanel(PrefPanelScripts_New());
 		
 		// footer callbacks
 		{
@@ -2049,7 +2047,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandDisplayPrefPanelGeneral:
 				case kCommandDisplayPrefPanelKiosk:
 				case kCommandDisplayPrefPanelMacros:
-				case kCommandDisplayPrefPanelScripts:
 				case kCommandDisplayPrefPanelSessions:
 				case kCommandDisplayPrefPanelTerminals:
 				case kCommandDisplayPrefPanelTranslations:

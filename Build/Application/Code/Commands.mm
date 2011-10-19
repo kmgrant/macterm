@@ -1327,7 +1327,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//kCommandDisplayPrefPanelGeneral:
 		//kCommandDisplayPrefPanelKiosk:
 		//kCommandDisplayPrefPanelMacros:
-		//kCommandDisplayPrefPanelScripts:
 		//kCommandDisplayPrefPanelSessions:
 		//kCommandDisplayPrefPanelTerminals:
 		//	see PrefsWindow.cp

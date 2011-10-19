@@ -48,7 +48,6 @@
 #include "Commands.h"
 #include "HelpSystem.h"
 #include "Initialize.h"
-#include "MainEntryPoint.h"
 #include "Preferences.h"
 #include "UIStrings.h"
 
@@ -152,7 +151,7 @@ Base::all_done ()
 	// ugly work-around for now is to simply not tear anything down at all...
 	Initialize_ApplicationShutDownRemainingComponents();
 #endif
-	MainEntryPoint_ImmediatelyQuit();
+	ExitToShell();
 }// all_done
 
 
