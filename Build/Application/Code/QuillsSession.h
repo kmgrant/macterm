@@ -60,13 +60,13 @@ class Session
 {
 public:
 #if SWIG
-%feature("kwargs") Session;
 %feature("docstring",
 "Create a new session with a terminal window, change to a\n\
 specific directory (if 'cwd' is not empty) and run a Unix\n\
 command line.  The session remains active until it is\n\
 terminated by the user or the command finishes.\n\
 ") Session;
+%feature("kwargs") Session;
 #endif
 	Session	(std::vector< std::string >		argv,
 			 std::string					cwd = "");
@@ -278,6 +278,7 @@ Generally your handler constructs a Session object with a command\n\
 that is appropriate for the file, although you could do something\n\
 else.\n\
 ") on_fileopen_call;
+%feature("kwargs") on_fileopen_call;
 	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
 	// "CallPythonStringReturnVoid" is defined in Quills.i
 	static void
@@ -368,6 +369,7 @@ requested for files with the given attribute.  Only one of the\n\
 attributes (keyword parameters) should be given.  This would be\n\
 to undo the effects of a previous call to on_fileopen_call().\n\
 ") stop_fileopen_call;
+%feature("kwargs") stop_fileopen_call;
 	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
 	// "CallPythonStringReturnVoid" is defined in Quills.i
 	static void

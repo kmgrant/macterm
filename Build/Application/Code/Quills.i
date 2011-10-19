@@ -471,7 +471,10 @@ CallPythonVoidReturnVoid	(void*	inPythonFunctionObject)
 // (basically, the function name, arguments and any return type);
 // any additional %feature("docstring", ...) lines will ADD to
 // the automatically generated lines caused by the statement below
-%feature("autodoc", "0");
+%feature("autodoc", "0"/* 0 for no parameter types, 1 otherwise */);
+
+// try to generate a single wrapper function when dealing with default arguments
+%feature("compactdefaultargs", "1");
 
 // declare C++ APIs that should be exposed to Python
 %include <QuillsBase.h>

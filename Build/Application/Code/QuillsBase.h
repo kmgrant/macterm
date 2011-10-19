@@ -70,6 +70,7 @@ your computer is connected to a VPN (based on its host name), and\n\
 choose different default windows based on the servers that are\n\
 currently visible to your computer.\n\
 ") all_init;
+%feature("kwargs") all_init;
 #endif
 	static void all_init	(std::string	initial_workspace = "");
 	

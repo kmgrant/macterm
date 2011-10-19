@@ -99,7 +99,6 @@ through this interface.\n\
 	~Prefs	();
 	
 #if SWIG
-%feature("kwargs") define_macro;
 %feature("docstring",
 "Add or modify a macro in this collection.\n\
 \n\
@@ -112,6 +111,7 @@ possible attributes can be set from scripts.\n\
 \n\
 Any given strings must use UTF-8 encoding.\n\
 ") define_macro;
+%feature("kwargs") define_macro;
 #endif
 	void define_macro	(unsigned int		index_in_set,
 						 std::string		name = "",
