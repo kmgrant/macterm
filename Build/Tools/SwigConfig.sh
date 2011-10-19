@@ -26,7 +26,7 @@
 #
 # SWIG 1.3.29 or later works with Tiger (10.4).
 # SWIG 1.3.30 or later is required for Leopard (10.5).
-swigversion=2.0.1
+swigversion=2.0.4
 prefix_with_ver=/opt/swig-${swigversion}
 prefix_no_ver=/opt/swig
 
