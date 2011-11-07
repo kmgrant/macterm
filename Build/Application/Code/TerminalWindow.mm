@@ -3666,8 +3666,6 @@ handleFindDialogClose	(FindDialog_Ref		inDialogThatClosed)
 		// the mutable array given at construction is
 		// retained by reference)
 		ptr->recentSearchOptions = FindDialog_ReturnOptions(inDialogThatClosed);
-		
-		FindDialog_Dispose(&inDialogThatClosed);
 	}
 }// handleFindDialogClose
 

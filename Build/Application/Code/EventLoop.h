@@ -173,6 +173,12 @@ Boolean
 Boolean
 	EventLoop_IsShiftKeyDown					();
 
+Boolean
+	EventLoop_KeyIsActivatingCancelButton		(EventRef	inEvent);
+
+Boolean
+	EventLoop_KeyIsActivatingDefaultButton		(EventRef	inEvent);
+
 // FAVOR EVENT-SPECIFIC KEY STATE INFORMATION IF IT IS AVAILABLE
 EventModifiers
 	EventLoop_ReturnCurrentModifiers			();

@@ -503,6 +503,108 @@ EventLoop_IsShiftKeyDown ()
 
 
 /*!
+Determines if the specified "kEventTextInputUnicodeForKeyEvent" event
+of class "kEventClassTextInput" is an Escape key or command-period key
+press, or if it would otherwise activate the Cancel button of a window
+when the button does not have direct keyboard focus.
+
+Returns false for any other kind of event.
+
+(4.0)
+*/
+Boolean
+EventLoop_KeyIsActivatingCancelButton	(EventRef	inEvent)
+{
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	Boolean			result = false;
+	
+	
+	// NOTE: the IsUserCancelEventRef() API was tried, but it does not
+	// seem to have the right effect for the kind of event handled below
+	if ((kEventClassTextInput == kEventClass) &&
+		(kEventTextInputUnicodeForKeyEvent == kEventKind))
+	{
+		EventRef	originalKeyPressEvent = nullptr;
+		OSStatus	error = noErr;
+		
+		
+		error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamTextInputSendKeyboardEvent,
+														typeEventRef, originalKeyPressEvent);
+		if (noErr == error)
+		{
+			UInt32		modifiers = 0;
+			UInt32		keyCode = '\0';
+			
+			
+			(OSStatus)CarbonEventUtilities_GetEventParameter(originalKeyPressEvent, kEventParamKeyModifiers,
+																typeUInt32, modifiers);
+			error = CarbonEventUtilities_GetEventParameter
+					(originalKeyPressEvent, kEventParamKeyCode, typeUInt32, keyCode);
+			if (noErr == error)
+			{
+				// WARNING: technically, while the Escape key code is universal, the
+				// key code for “period“ is dependent on the keyboard layout; TEMPORARY
+				result = (((FUTURE_SYMBOL(0x35, kVK_Escape) == keyCode) && (0 == modifiers)) ||
+							((FUTURE_SYMBOL(0x2F, kVK_ANSI_Period) == keyCode) && (cmdKey == modifiers)));
+			}
+		}
+	}
+	return result;
+}// KeyIsActivatingCancelButton
+
+
+/*!
+Determines if the specified "kEventTextInputUnicodeForKeyEvent" event
+of class "kEventClassTextInput" is a Return key or Enter key press,
+or if it would otherwise activate the default button of a window when
+the button does not have direct keyboard focus.
+
+Returns false for any other kind of event.
+
+(4.0)
+*/
+Boolean
+EventLoop_KeyIsActivatingDefaultButton	(EventRef	inEvent)
+{
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	Boolean			result = false;
+	
+	
+	if ((kEventClassTextInput == kEventClass) &&
+		(kEventTextInputUnicodeForKeyEvent == kEventKind))
+	{
+		EventRef	originalKeyPressEvent = nullptr;
+		OSStatus	error = noErr;
+		
+		
+		error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamTextInputSendKeyboardEvent,
+														typeEventRef, originalKeyPressEvent);
+		if (noErr == error)
+		{
+			UInt32		modifiers = 0;
+			UInt32		keyCode = '\0';
+			
+			
+			(OSStatus)CarbonEventUtilities_GetEventParameter(originalKeyPressEvent, kEventParamKeyModifiers,
+																typeUInt32, modifiers);
+			error = CarbonEventUtilities_GetEventParameter
+					(originalKeyPressEvent, kEventParamKeyCode, typeUInt32, keyCode);
+			if ((noErr == error) && (0 == modifiers))
+			{
+				// WARNING: technically, while the Return key code is universal, the
+				// key code for Enter is dependent on the keyboard layout; TEMPORARY
+				result = ((FUTURE_SYMBOL(0x24, kVK_Return) == keyCode) ||
+							(FUTURE_SYMBOL(0x4C, kVK_ANSI_KeypadEnter) == keyCode));
+			}
+		}
+	}
+	return result;
+}// KeyIsActivatingDefaultButton
+
+
+/*!
 Determines the absolutely current state of the
 modifier keys and the mouse button.  The
 modifiers are somewhat incomplete (for example,

@@ -67,6 +67,7 @@
 #include "Commands.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
+#include "EventLoop.h"
 #include "HelpSystem.h"
 #include "Terminal.h"
 #include "TerminalView.h"
@@ -159,6 +160,148 @@ My_FindDialogPtrLocker&		gFindDialogPtrLocks()	{ static My_FindDialogPtrLocker x
 
 
 #pragma mark Public Methods
+
+/*!
+This method is used to initialize the Find dialog box.
+It creates the dialog box invisibly, and searches only
+the contents of the specified window.
+
+(3.0)
+*/
+FindDialog_Ref
+FindDialog_New  (TerminalWindowRef				inTerminalWindow,
+				 FindDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+				 CFMutableArrayRef				inoutQueryStringHistory,
+				 FindDialog_Options				inFlags)
+{
+	FindDialog_Ref		result = nullptr;
+	
+	
+	try
+	{
+		result = REINTERPRET_CAST(new My_FindDialog(inTerminalWindow, inCloseNotifyProcPtr, inoutQueryStringHistory,
+													inFlags), FindDialog_Ref);
+	}
+	catch (std::bad_alloc)
+	{
+		result = nullptr;
+	}
+	return result;
+}// New
+
+
+/*!
+Call this method to destroy the screen size dialog
+box and its associated data structures.  On return,
+your copy of the dialog reference is set to nullptr.
+
+(3.0)
+*/
+void
+FindDialog_Dispose   (FindDialog_Ref*	inoutRefPtr)
+{
+	if (gFindDialogPtrLocks().isLocked(*inoutRefPtr))
+	{
+		Console_Warning(Console_WriteLine, "attempt to dispose of locked Find dialog");
+	}
+	else
+	{
+		delete *(REINTERPRET_CAST(inoutRefPtr, My_FindDialogPtr*)), *inoutRefPtr = nullptr;
+	}
+}// Dispose
+
+
+/*!
+This method displays and handles events in the
+Find dialog box.  When the user clicks a button
+in the dialog, its disposal callback is invoked.
+
+(3.0)
+*/
+void
+FindDialog_Display		(FindDialog_Ref		inDialog)
+{
+	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), inDialog);
+	
+	
+	if (nullptr == ptr) Alert_ReportOSStatus(paramErr);
+	else
+	{
+		OSStatus	error = noErr;
+		
+		
+		// display the dialog
+		ShowSheetWindow(ptr->dialogWindow, TerminalWindow_ReturnWindow(ptr->terminalWindow));
+		CocoaBasic_MakeKeyWindowCarbonUserFocusWindow();
+		
+		// set keyboard focus
+		error = DialogUtilities_SetKeyboardFocus(ptr->fieldKeywords);
+		
+		// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
+	}
+}// Display
+
+
+/*!
+Returns a set of flags indicating whether or not
+certain options are enabled for the specified dialog
+(which may be open or closed).  Use this inside a
+custom close notification routine to save user settings,
+for example.  If there are no options enabled, the
+result will be "kFindDialog_OptionsAllOff".
+
+(3.0)
+*/
+FindDialog_Options
+FindDialog_ReturnOptions	(FindDialog_Ref		inDialog)
+{
+	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), inDialog);
+	FindDialog_Options			result = kFindDialog_OptionsAllOff;
+	
+	
+	if (nullptr != ptr)
+	{
+		if (GetControl32BitValue(ptr->checkboxIgnoreCase) == kControlCheckBoxUncheckedValue) result |= kFindDialog_OptionCaseSensitivity;
+	}
+	return result;
+}// ReturnOptions
+
+
+/*!
+Returns a reference to the terminal window that this
+dialog is attached to.
+
+(3.0)
+*/
+TerminalWindowRef
+FindDialog_ReturnTerminalWindow		(FindDialog_Ref		inDialog)
+{
+	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), inDialog);
+	TerminalWindowRef			result = nullptr;
+	
+	
+	if (nullptr != ptr)
+	{
+		result = ptr->terminalWindow;
+	}
+	return result;
+}// ReturnTerminalWindow
+
+
+/*!
+The default handler for closing a search dialog.
+
+(3.0)
+*/
+void
+FindDialog_StandardCloseNotifyProc		(FindDialog_Ref		UNUSED_ARGUMENT(inDialogThatClosed))
+{
+	// do nothing
+}// StandardCloseNotifyProc
+
+
+#pragma mark Internal Methods
+namespace {
 
 /*!
 This method is used to initialize the Find dialog box.
@@ -332,152 +475,6 @@ My_FindDialog::
 	DisposeWindow(this->dialogWindow);
 }// My_FindDialog destructor
 
-
-/*!
-This method is used to initialize the Find dialog box.
-It creates the dialog box invisibly, and searches only
-the contents of the specified window.
-
-(3.0)
-*/
-FindDialog_Ref
-FindDialog_New  (TerminalWindowRef				inTerminalWindow,
-				 FindDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-				 CFMutableArrayRef				inoutQueryStringHistory,
-				 FindDialog_Options				inFlags)
-{
-	FindDialog_Ref		result = nullptr;
-	
-	
-	try
-	{
-		result = REINTERPRET_CAST(new My_FindDialog(inTerminalWindow, inCloseNotifyProcPtr, inoutQueryStringHistory,
-													inFlags), FindDialog_Ref);
-	}
-	catch (std::bad_alloc)
-	{
-		result = nullptr;
-	}
-	return result;
-}// New
-
-
-/*!
-Call this method to destroy the screen size dialog
-box and its associated data structures.  On return,
-your copy of the dialog reference is set to nullptr.
-
-(3.0)
-*/
-void
-FindDialog_Dispose   (FindDialog_Ref*	inoutRefPtr)
-{
-	if (gFindDialogPtrLocks().isLocked(*inoutRefPtr))
-	{
-		Console_Warning(Console_WriteLine, "attempt to dispose of locked Find dialog");
-	}
-	else
-	{
-		delete *(REINTERPRET_CAST(inoutRefPtr, My_FindDialogPtr*)), *inoutRefPtr = nullptr;
-	}
-}// Dispose
-
-
-/*!
-This method displays and handles events in the
-Find dialog box.  When the user clicks a button
-in the dialog, its disposal callback is invoked.
-
-(3.0)
-*/
-void
-FindDialog_Display		(FindDialog_Ref		inDialog)
-{
-	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), inDialog);
-	
-	
-	if (nullptr == ptr) Alert_ReportOSStatus(paramErr);
-	else
-	{
-		OSStatus	error = noErr;
-		
-		
-		// display the dialog
-		ShowSheetWindow(ptr->dialogWindow, TerminalWindow_ReturnWindow(ptr->terminalWindow));
-		CocoaBasic_MakeKeyWindowCarbonUserFocusWindow();
-		
-		// set keyboard focus
-		error = DialogUtilities_SetKeyboardFocus(ptr->fieldKeywords);
-		
-		// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
-	}
-}// Display
-
-
-/*!
-Returns a set of flags indicating whether or not
-certain options are enabled for the specified dialog
-(which may be open or closed).  Use this inside a
-custom close notification routine to save user settings,
-for example.  If there are no options enabled, the
-result will be "kFindDialog_OptionsAllOff".
-
-(3.0)
-*/
-FindDialog_Options
-FindDialog_ReturnOptions	(FindDialog_Ref		inDialog)
-{
-	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), inDialog);
-	FindDialog_Options			result = kFindDialog_OptionsAllOff;
-	
-	
-	if (nullptr != ptr)
-	{
-		if (GetControl32BitValue(ptr->checkboxIgnoreCase) == kControlCheckBoxUncheckedValue) result |= kFindDialog_OptionCaseSensitivity;
-	}
-	return result;
-}// ReturnOptions
-
-
-/*!
-Returns a reference to the terminal window that this
-dialog is attached to.
-
-(3.0)
-*/
-TerminalWindowRef
-FindDialog_ReturnTerminalWindow		(FindDialog_Ref		inDialog)
-{
-	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), inDialog);
-	TerminalWindowRef			result = nullptr;
-	
-	
-	if (nullptr != ptr)
-	{
-		result = ptr->terminalWindow;
-	}
-	return result;
-}// ReturnTerminalWindow
-
-
-/*!
-If you only need a close notification procedure
-for the purpose of disposing of the Find Dialog
-reference (and don’t otherwise care when a Find
-Dialog closes), you can pass this standard routine
-to FindDialog_New() as your notification procedure.
-
-(3.0)
-*/
-void
-FindDialog_StandardCloseNotifyProc		(FindDialog_Ref		inDialogThatClosed)
-{
-	FindDialog_Dispose(&inDialogThatClosed);
-}// StandardCloseNotifyProc
-
-
-#pragma mark Internal Methods
-namespace {
 
 /*!
 Adds the specified command line to the history buffer,
@@ -833,22 +830,36 @@ receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
 					 EventRef				inEvent,
 					 void*					inFindDialogRef)
 {
-	OSStatus					result = eventNotHandledErr;
-	FindDialog_Ref				ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
-	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), ref);
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
+	OSStatus			result = eventNotHandledErr;
+	FindDialog_Ref		ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassTextInput);
 	assert(kEventKind == kEventTextInputUnicodeForKeyEvent);
 	
-	// first ensure the keypress takes effect (that is, it updates
-	// whatever text field it is for)
-	result = CallNextEventHandler(inHandlerCallRef, inEvent);
-	
-	// initiate find-as-you-type (ignore results for now)
-	(Boolean)initiateSearch(ptr, true/* not final */);
+	// keystrokes that might not be handled directly in the field
+	// (such as keys to activate Cancel or default buttons) should
+	// be ignored by this embellishment, especially since the
+	// button activations should destroy the given dialog; be sure
+	// NOT to unnecessarily lock the dialog, so that button handlers
+	// will actually succeed when they attempt to destroy the dialog
+	if ((false == EventLoop_KeyIsActivatingCancelButton(inEvent)) &&
+		(false == EventLoop_KeyIsActivatingDefaultButton(inEvent)))
+	{
+		// first ensure the keypress takes effect (that is, it updates
+		// whatever text field it is for)
+		result = CallNextEventHandler(inHandlerCallRef, inEvent);
+		
+		// initiate find-as-you-type (ignore results for now)
+		{
+			My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), ref);
+			
+			
+			(Boolean)initiateSearch(ptr, true/* not final */);
+		}
+	}
 	
 	return result;
 }// receiveFieldChanged
@@ -865,11 +876,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inFindDialogRef)
 {
-	OSStatus					result = eventNotHandledErr;
-	FindDialog_Ref				ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
-	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), ref);
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
+	OSStatus			result = eventNotHandledErr;
+	FindDialog_Ref		ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassCommand);
@@ -887,23 +897,47 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			switch (received.commandID)
 			{
 			case kHICommandOK:
-				// change window title
-				if (handleItemHit(ptr, idMyButtonSearch)) result = eventNotHandledErr;
+				{
+					My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), ref);
+					
+					
+					if (handleItemHit(ptr, idMyButtonSearch)) result = eventNotHandledErr;
+				}
+				// do this outside the auto-locker block so that
+				// all locks are free when disposal is attempted
+				FindDialog_Dispose(&ref);
 				break;
 			
 			case kHICommandCancel:
-				if (handleItemHit(ptr, idMyButtonCancel)) result = eventNotHandledErr;
+				{
+					My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), ref);
+					
+					
+					if (handleItemHit(ptr, idMyButtonCancel)) result = eventNotHandledErr;
+				}
+				// do this outside the auto-locker block so that
+				// all locks are free when disposal is attempted
+				FindDialog_Dispose(&ref);
 				break;
 			
 			case kCommandRetrySearch:
-				// retry search (e.g. checkbox affecting search parameters
-				// was hit) so that terminal highlighting is up-to-date
-				(Boolean)initiateSearch(ptr, true/* not final */);
+				{
+					My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), ref);
+					
+					
+					// retry search (e.g. checkbox affecting search parameters
+					// was hit) so that terminal highlighting is up-to-date
+					(Boolean)initiateSearch(ptr, true/* not final */);
+				}
 				break;
 			
 			case kCommandContextSensitiveHelp:
-				// open the Help Viewer to the right topic
-				if (handleItemHit(ptr, idMyButtonHelp)) result = eventNotHandledErr;
+				{
+					My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), ref);
+					
+					
+					if (handleItemHit(ptr, idMyButtonHelp)) result = eventNotHandledErr;
+				}
 				break;
 			
 			default:
