@@ -17,6 +17,12 @@ GENERIC CODE LICENSE
   
   A copy of the LPL license is in Licenses/.
 
+"MAAttachedWindow" LICENSE
+  The "MAAttachedWindow.m" and "MAAttachedWindow.h" files are
+  covered by Matt Gemmell's license agreement.
+
+  A copy of Matt Gemmell's license is in Licenses/.
+
                                         Kevin Grant (kmg@mac.com)
                                         Lead Developer, MacTerm
 
