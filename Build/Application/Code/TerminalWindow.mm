@@ -237,6 +237,7 @@ struct My_TerminalWindow
 	Boolean						viewSizeIndependent;	// true only temporarily, to handle transitional cases such as full-screen mode
 	Preferences_ContextWrap		recentSheetContext;		// defined temporarily while a Preferences-dependent sheet (such as screen size) is up
 	My_SheetType				sheetType;				// if a sheet is active, this is a hint as to what settings can be put in the context
+	FindDialog_Ref				searchDialog;			// retains the user interface for finding text in the terminal buffer
 	FindDialog_Options			recentSearchOptions;	// the options used during the last search in the dialog
 	CFRetainRelease				recentSearchStrings;	// CFMutableArrayRef; the CFStrings used in searches since this window was opened
 	CFRetainRelease				baseTitleString;		// user-provided title string; may be adorned prior to becoming the window title
@@ -617,13 +618,17 @@ void
 TerminalWindow_DisplayTextSearchDialog	(TerminalWindowRef		inRef)
 {
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	FindDialog_Ref					findDialog = FindDialog_New(inRef, handleFindDialogClose,
-																ptr->recentSearchStrings.returnCFMutableArrayRef(),
-																ptr->recentSearchOptions);
 	
 	
-	// display a text search dialog (automatically disposed when the user clicks a button)
-	FindDialog_Display(findDialog);
+	if (nullptr == ptr->searchDialog)
+	{
+		ptr->searchDialog = FindDialog_New(inRef, handleFindDialogClose,
+											ptr->recentSearchStrings.returnCFMutableArrayRef(),
+											ptr->recentSearchOptions);
+	}
+	
+	// display a text search dialog (automatically closed when the user clicks a button)
+	FindDialog_Display(ptr->searchDialog);
 }// DisplayTextSearchDialog
 
 
@@ -2155,6 +2160,7 @@ isDead(false),
 viewSizeIndependent(false),
 recentSheetContext(nullptr),
 sheetType(kMy_SheetTypeNone),
+searchDialog(nullptr),
 recentSearchOptions(kFindDialog_OptionsDefault),
 recentSearchStrings(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no size limit */, &kCFTypeArrayCallBacks),
 					true/* is retained */),
@@ -2567,6 +2573,11 @@ My_TerminalWindow::
 	
 	
 	sheetContextEnd(this);
+	
+	if (nullptr != this->searchDialog)
+	{
+		FindDialog_Dispose(&this->searchDialog);
+	}
 	
 	// now that the window is going away, destroy any Undo commands
 	// that could be applied to this window
@@ -3810,6 +3821,14 @@ handleNewSize	(WindowRef	inWindow,
 				}
 			}
 			delete [] viewArray, viewArray = nullptr;
+		}
+		
+		// hide any Find dialog, to avoid the fact that it currently
+		// does not move automatically with the resized window; if
+		// the user redisplays the interface, its position is corrected
+		if (nullptr != ptr->searchDialog)
+		{
+			FindDialog_Remove(ptr->searchDialog);
 		}
 		
 		// when the window size changes, the screen dimensions are likely to change

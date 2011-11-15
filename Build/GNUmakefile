@@ -242,6 +242,7 @@ English.lproj/AlertMessagesModelessCocoa \
 English.lproj/ClipboardCocoa \
 English.lproj/CommandLineCocoa \
 English.lproj/DebugInterfaceCocoa \
+English.lproj/FindDialogCocoa \
 English.lproj/InfoWindowCocoa \
 English.lproj/KeypadArrangeWindowCocoa \
 English.lproj/KeypadControlKeysCocoa \

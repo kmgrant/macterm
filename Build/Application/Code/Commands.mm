@@ -81,6 +81,7 @@ extern "C"
 #import "Folder.h"
 #import "HelpSystem.h"
 #import "Keypads.h"
+#import "MAAttachedWindow.h"
 #import "MacroManager.h"
 #import "MenuBar.h"
 #import "PrefPanelTranslations.h"
@@ -167,6 +168,7 @@ BOOL				handleQuit										(BOOL);
 int					indexOfItemWithAction							(NSMenu*, SEL);
 Boolean				isAnyListenerForCommandExecution				(UInt32);
 BOOL				isCarbonWindow									(id);
+BOOL				isCocoaWindowMoreImportantThanCarbon			(NSWindow*);
 void				moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef, void*, SInt32, void*);
 void				preferenceChanged								(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
@@ -2422,6 +2424,29 @@ isCarbonWindow	(id		inObject)
 
 
 /*!
+Returns YES only if the specified window appears to be
+something that should override a main Carbon-based
+window.  This is important for Edit menu commands, for
+instance, containing text fields that might otherwise
+not work as the user expects.
+
+TEMPORARY, for transitional period only until all code
+is moved to Cocoa.
+
+(4.0)
+*/
+BOOL
+isCocoaWindowMoreImportantThanCarbon	(NSWindow*		inWindow)
+{
+	BOOL	result = (([inWindow level] != NSNormalWindowLevel) ||
+						([inWindow isKindOfClass:[MAAttachedWindow class]]));
+	
+	
+	return result;
+}// isCocoaWindowMoreImportantThanCarbon
+
+
+/*!
 Of "SessionFactory_SessionOpProcPtr" form, this routine
 slides the specified session’s window(s) into the center
 of the screen and then displays a MODAL alert asking the
@@ -3922,7 +3947,7 @@ performCopy:(id)	sender
 	BOOL	implementedByCocoa = NO;
 	
 	
-	if ([[NSApp keyWindow] level] != NSNormalWindowLevel)
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
 	{
 		// assume that abnormal Cocoa windows should handle this directly
 		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(copy:) with:sender];
@@ -4025,7 +4050,7 @@ performCut:(id)		sender
 	BOOL	implementedByCocoa = NO;
 	
 	
-	if ([[NSApp keyWindow] level] != NSNormalWindowLevel)
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
 	{
 		// assume that abnormal Cocoa windows should handle this directly
 		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(cut:) with:sender];
@@ -4076,7 +4101,7 @@ performDelete:(id)	sender
 	BOOL	implementedByCocoa = NO;
 	
 	
-	if ([[NSApp keyWindow] level] != NSNormalWindowLevel)
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
 	{
 		// assume that abnormal Cocoa windows should handle this directly
 		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(delete:) with:sender];
@@ -4131,7 +4156,7 @@ performPaste:(id)	sender
 	BOOL	implementedByCocoa = NO;
 	
 	
-	if ([[NSApp keyWindow] level] != NSNormalWindowLevel)
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
 	{
 		// assume that abnormal Cocoa windows should handle this directly
 		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(paste:) with:sender];
@@ -4203,7 +4228,7 @@ performSelectAll:(id)	sender
 	BOOL	implementedByCocoa = NO;
 	
 	
-	if ([[NSApp keyWindow] level] != NSNormalWindowLevel)
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
 	{
 		// assume that abnormal Cocoa windows should handle this directly
 		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(selectAll:) with:sender];

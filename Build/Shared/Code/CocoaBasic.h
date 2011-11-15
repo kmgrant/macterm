@@ -3,7 +3,7 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.8
+	Simple Cocoa Wrappers Library 1.9
 	© 2008-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -34,9 +34,11 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 #ifdef __OBJC__
+@class MAAttachedWindow;
 @class NSResponder;
 @class NSWindow;
 #else
+class MAAttachedWindow;
 class NSResponder;
 class NSWindow;
 #endif
@@ -47,6 +49,14 @@ class NSWindow;
 
 //!\name General
 //@{
+
+void
+	CocoaBasic_ApplyBlueStyleToPopover				(MAAttachedWindow*,
+													 Boolean);
+
+void
+	CocoaBasic_ApplyStandardStyleToPopover			(MAAttachedWindow*,
+													 Boolean);
 
 CGDeviceColor
 	CocoaBasic_GetGray								(CGDeviceColor const&,

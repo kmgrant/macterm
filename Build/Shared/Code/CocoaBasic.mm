@@ -3,7 +3,7 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.8
+	Simple Cocoa Wrappers Library 1.9
 	© 2008-2011 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -41,6 +41,7 @@
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <HIViewWrap.h>
+#import <MAAttachedWindow.h>
 #import <SoundSystem.h>
 
 // application includes
@@ -100,6 +101,82 @@ CocoaBasic_AboutPanelDisplay ()
 	
 	[NSApp orderFrontStandardAboutPanelWithOptions:aboutBoxOptions];
 }// AboutPanelDisplay
+
+
+/*!
+Configures a popover to have a dark blue background and a
+thick white border.  Popovers of this type should contain
+primarily white text; they do not usually contain any other
+views.
+
+If "inHasArrow" is false, various properties are tweaked so
+the popover has no arrow in its frame and so it will not
+take up any extra space for an arrow.
+
+(1.9)
+*/
+void
+CocoaBasic_ApplyBlueStyleToPopover	(MAAttachedWindow*	inoutPopover,
+									 Boolean			inHasArrow)
+{
+	[inoutPopover setBackgroundColor:[NSColor colorWithDeviceRed:0 green:0.25 blue:0.5 alpha:0.93]];
+	[inoutPopover setBorderColor:[NSColor whiteColor]];
+	[inoutPopover setViewMargin:0.0];
+	[inoutPopover setBorderWidth:3.0];
+	[inoutPopover setCornerRadius:5.0];
+	if (inHasArrow)
+	{
+		[inoutPopover setHasArrow:YES];
+		[inoutPopover setDrawsRoundCornerBesideArrow:NO];
+		[inoutPopover setArrowBaseWidth:30.0];
+		[inoutPopover setArrowHeight:15.0];
+	}
+	else
+	{
+		[inoutPopover setHasArrow:NO];
+		[inoutPopover setDrawsRoundCornerBesideArrow:YES];
+		[inoutPopover setArrowBaseWidth:0.0];
+		[inoutPopover setArrowHeight:0.0];
+	}
+}// ApplyBlueStyleToPopover
+
+
+/*!
+Configures a popover to have the appearance that the vast
+majority of popovers are expected to have.  Any view should
+look good in this type of popover, and the standard system
+text color (that is, black) should be used.
+
+If "inHasArrow" is false, various properties are tweaked so
+the popover has no arrow in its frame and so it will not
+take up any extra space for an arrow.
+
+(1.9)
+*/
+void
+CocoaBasic_ApplyStandardStyleToPopover	(MAAttachedWindow*	inoutPopover,
+										 Boolean			inHasArrow)
+{
+	[inoutPopover setBackgroundColor:[NSColor colorWithDeviceRed:0.9 green:0.9 blue:0.9 alpha:0.95]];
+	[inoutPopover setBorderColor:[NSColor colorWithDeviceRed:1.0 green:1.0 blue:1.0 alpha:0.7]];
+	[inoutPopover setViewMargin:0.0];
+	[inoutPopover setBorderWidth:1.0];
+	[inoutPopover setCornerRadius:4.0];
+	if (inHasArrow)
+	{
+		[inoutPopover setHasArrow:YES];
+		[inoutPopover setDrawsRoundCornerBesideArrow:NO];
+		[inoutPopover setArrowBaseWidth:30.0];
+		[inoutPopover setArrowHeight:15.0];
+	}
+	else
+	{
+		[inoutPopover setHasArrow:NO];
+		[inoutPopover setDrawsRoundCornerBesideArrow:YES];
+		[inoutPopover setArrowBaseWidth:0.0];
+		[inoutPopover setArrowHeight:0.0];
+	}
+}// ApplyStandardStyleToPopover
 
 
 /*!

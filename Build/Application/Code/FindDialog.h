@@ -60,6 +60,125 @@ enum
 
 typedef struct FindDialog_OpaqueStruct*		FindDialog_Ref;
 
+#ifdef __OBJC__
+
+@class FindDialog_ViewManager;
+
+@protocol FindDialog_ViewManagerChannel
+
+// use this opportunity to create and display a window to wrap the Find view
+- (void)
+findDialog:(FindDialog_ViewManager*)_
+didLoadManagedView:(NSView*)_;
+
+// perform the search yourself, then call the view manager’s "completeSearch:" when it finishes
+- (void)
+findDialog:(FindDialog_ViewManager*)_
+didSearchInManagedView:(NSView*)_
+withQuery:(NSString*)_;
+
+// perform a search yourself, but no need to update the user interface since it should be destroyed
+- (void)
+findDialog:(FindDialog_ViewManager*)_
+didFinishUsingManagedView:(NSView*)_
+acceptingSearch:(BOOL)_
+finalOptions:(FindDialog_Options)_;
+
+// return an array of NSString* to use for previous searches
+- (NSMutableArray*)
+findDialog:(FindDialog_ViewManager*)_
+returnHistoryArrayForManagedView:(NSView*)_;
+
+@end // FindDialog_ViewManagerChannel
+
+
+/*!
+Implements the Find interface.  See "FindDialogCocoa.xib".
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface FindDialog_ViewManager : NSObject
+{
+	IBOutlet NSImageView*		failureIcon;
+	IBOutlet NSTextField*		failureText;
+	IBOutlet NSView*			managedView;
+	IBOutlet NSSearchField*		searchField;
+@private
+	id< FindDialog_ViewManagerChannel >		responder;
+	TerminalWindowRef						terminalWindow;
+	NSMutableArray*							searchHistory;
+	NSString*								searchText;
+	NSString*								statusText;
+	BOOL									caseInsensitiveSearch;
+	BOOL									searchProgressHidden;
+	BOOL									successfulSearch;
+}
+
+// initializers
+
+- (id)
+initForTerminalWindow:(TerminalWindowRef)_
+responder:(id< FindDialog_ViewManagerChannel >)_
+initialOptions:(FindDialog_Options)_;
+
+// new methods
+
+- (void)
+completeSearch:(unsigned long)_;
+
+- (NSView*)
+logicalFirstResponder;
+
+- (NSSearchField*)
+searchField;
+
+// actions
+
+- (IBAction)
+performContextSensitiveHelp:(id)_;
+
+- (IBAction)
+performCloseAndRevert:(id)_;
+
+- (IBAction)
+performCloseAndSearch:(id)_;
+
+- (IBAction)
+performSearch:(id)_;
+
+// accessors
+
+- (BOOL)
+isCaseInsensitiveSearch; // binding
+- (void)
+setCaseInsensitiveSearch:(BOOL)_;
+
+- (BOOL)
+isSearchProgressHidden; // binding
+- (void)
+setSearchProgressHidden:(BOOL)_;
+
+- (BOOL)
+isSuccessfulSearch; // binding
+- (void)
+setSuccessfulSearch:(BOOL)_;
+
+- (NSString*)
+searchText; // binding
+- (void)
+setSearchText:(NSString*)_;
+
+- (NSString*)
+statusText; // binding
+- (void)
+setStatusText:(NSString*)_;
+
+@end
+
+#endif // __OBJC__
+
 #pragma mark Callbacks
 
 /*!
@@ -93,9 +212,14 @@ void
 void
 	FindDialog_Display					(FindDialog_Ref					inDialog);
 
+void
+	FindDialog_Remove					(FindDialog_Ref					inDialog);
+
+// ONLY VALID TO CALL FROM YOUR "FindDialog_CloseNotifyProcPtr"
 FindDialog_Options
 	FindDialog_ReturnOptions			(FindDialog_Ref					inDialog);
 
+// ONLY VALID TO CALL FROM YOUR "FindDialog_CloseNotifyProcPtr"
 TerminalWindowRef
 	FindDialog_ReturnTerminalWindow		(FindDialog_Ref					inDialog);
 

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111114',
     '20111015',
     '20111014',
     '20111009',
@@ -423,6 +424,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111114': [
+        'Terminal search is now Cocoa-based and has a more refined appearance and behavior.',
+        "Added Matt Gemmell's MAAttachedWindow to the project, which will be used to implement numerous pop-over windows.",
+    ],
     '20111015': [
         'Fixed a problem where tilde markers (~) appeared repeatedly if sessions were killed and restarted.',
         'Preferences window Macros pane now leaves more space for editing the content of a macro.',
