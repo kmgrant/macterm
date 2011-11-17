@@ -213,7 +213,8 @@ void
 	FindDialog_Display					(FindDialog_Ref					inDialog);
 
 void
-	FindDialog_Remove					(FindDialog_Ref					inDialog);
+	FindDialog_Remove					(FindDialog_Ref					inDialog,
+										 Float32						inDelayInSecondsOrZero = 0.0);
 
 // ONLY VALID TO CALL FROM YOUR "FindDialog_CloseNotifyProcPtr"
 FindDialog_Options

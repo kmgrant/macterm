@@ -3826,9 +3826,11 @@ handleNewSize	(WindowRef	inWindow,
 		// hide any Find dialog, to avoid the fact that it currently
 		// does not move automatically with the resized window; if
 		// the user redisplays the interface, its position is corrected
+		// (this is done after a short delay to let the window resize
+		// start smoothly)
 		if (nullptr != ptr->searchDialog)
 		{
-			FindDialog_Remove(ptr->searchDialog);
+			FindDialog_Remove(ptr->searchDialog, 0.1/* seconds */);
 		}
 		
 		// when the window size changes, the screen dimensions are likely to change

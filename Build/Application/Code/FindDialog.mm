@@ -41,13 +41,12 @@
 #import <vector>
 
 // Mac includes
-#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
 #import <objc/objc-runtime.h>
 
 // library includes
 #import <AlertMessages.h>
 #import <CFRetainRelease.h>
-#import <CFUtilities.h>
 #import <CocoaAnimation.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
@@ -55,14 +54,10 @@
 #import <Console.h>
 #import <FlagManager.h>
 #import <MAAttachedWindow.h>
-#import <WindowInfo.h>
 
 // application includes
-#import "AppResources.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
-#import "DialogUtilities.h"
-#import "EventLoop.h"
 #import "HelpSystem.h"
 #import "Terminal.h"
 #import "TerminalView.h"
@@ -229,12 +224,13 @@ time by calling FindDialog_Display() again.
 (4.0)
 */
 void
-FindDialog_Remove	(FindDialog_Ref		inDialog)
+FindDialog_Remove	(FindDialog_Ref		inDialog,
+					 Float32			inDelayInSecondsOrZero)
 {
 	FindDialog_Handler*		ptr = [FindDialog_Handler viewHandlerFromRef:inDialog];
 	
 	
-	[ptr remove];
+	[ptr performSelector:@selector(remove) withObject:nil afterDelay:inDelayInSecondsOrZero];
 }// Remove
 
 
@@ -298,6 +294,8 @@ FindDialog_StandardCloseNotifyProc		(FindDialog_Ref		UNUSED_ARGUMENT(inDialogTha
 	// do nothing
 }// StandardCloseNotifyProc
 
+
+#pragma mark Internal Methods
 
 @implementation FindDialog_Handler
 
@@ -393,7 +391,7 @@ display
 
 /*!
 Returns the location (relative to the window) where the
-popover’s bottom-right corner should appear.
+popover’s bottom-left corner should appear.
 
 See also "moveToIdealPosition".
 
@@ -676,9 +674,6 @@ If the search is accepted, initiate one final search;
 otherwise, undo any highlighting and restore the search
 results that were in effect before the Find dialog was
 opened.
-
-IMPORTANT:	Following this call, this instance of the
-			object is autoreleased.
 
 (4.0)
 */
