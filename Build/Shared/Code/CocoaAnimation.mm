@@ -370,11 +370,11 @@ CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow
 	// original region so that the selected area
 	// appears to be floating the entire time
 	newFrame.size.width += 8; // arbitrary
-	newFrame.size.height += 8; // arbitrary
+	newFrame.size.height += 8 * (newFrame.size.height / newFrame.size.width); // arbitrary
 	newFrame.origin.x = oldFrame.origin.x - ((newFrame.size.width - oldFrame.size.width) / 2.0);
 	newFrame.origin.y = oldFrame.origin.y - ((newFrame.size.height - oldFrame.size.height) / 2.0);
-	oldFrame.size.width += 25; // arbitrary
-	oldFrame.size.height += 25; // arbitrary
+	oldFrame.size.width += 128; // arbitrary
+	oldFrame.size.height += 128 * (newFrame.size.height / newFrame.size.width); // arbitrary
 	oldFrame.origin.x = newFrame.origin.x - ((oldFrame.size.width - newFrame.size.width) / 2.0);
 	oldFrame.origin.y = newFrame.origin.y - ((oldFrame.size.height - newFrame.size.height) / 2.0);
 	

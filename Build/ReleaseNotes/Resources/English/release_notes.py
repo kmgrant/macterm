@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111116',
     '20111114',
     '20111015',
     '20111014',
@@ -424,6 +425,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111116': [
+        'Animation for highlighting search results has been further enhanced.',
+        'Animation for "Find Cursor" has been further enhanced.',
+    ],
     '20111114': [
         'Terminal search is now Cocoa-based and has a more refined appearance and behavior.',
         "Added Matt Gemmell's MAAttachedWindow to the project, which will be used to implement numerous pop-over windows.",
