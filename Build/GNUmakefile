@@ -220,7 +220,6 @@ APP_RESOURCES_BUNDLES := \
 English.lproj/Help \
 English.lproj/AlertMessages.nib \
 English.lproj/ColorBox.nib \
-English.lproj/FindDialog.nib \
 English.lproj/GenericDialog.nib \
 English.lproj/KioskPasswordDialog.nib \
 English.lproj/PrefPanelFormats.nib \
