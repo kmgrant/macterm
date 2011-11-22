@@ -52,8 +52,8 @@
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
-#import <FlagManager.h>
 #import <MAAttachedWindow.h>
+#import <PopoverManager.objc++.h>
 
 // application includes
 #import "Commands.h"
@@ -67,13 +67,14 @@
 
 #pragma mark Types
 
-@interface FindDialog_Handler : NSObject< FindDialog_ViewManagerChannel >
+@interface FindDialog_Handler : NSObject< FindDialog_ViewManagerChannel, PopoverManager_Delegate >
 {
 	FindDialog_Ref					selfRef;			// identical to address of structure, but typed as ref
 	FindDialog_ViewManager*			viewMgr;			// loads the Find interface
 	MAAttachedWindow*				containerWindow;	// holds the Find dialog view
 	NSView*							managedView;		// the view that implements the majority of the interface
 	TerminalWindowRef				terminalWindow;		// the terminal window for which this dialog applies
+	PopoverManager_Ref				popoverMgr;			// manages common aspects of popover window behavior
 	FindDialog_CloseNotifyProcPtr	closeNotifyProc;	// routine to call when the dialog is dismissed
 	NSMutableArray*					historyArray;		// a list of previous search strings, held only by weak reference
 	FindDialog_Options				cachedOptions;		// options set when the user interface is closed
@@ -91,19 +92,16 @@ initialOptions:(FindDialog_Options)_;
 - (void)
 display;
 
-- (NSPoint)
-idealBottomLeftPoint;
-
 - (unsigned long)
 initiateSearchFor:(NSString*)_
 ignoringCase:(BOOL)_
 notFinal:(BOOL)_;
 
 - (void)
-moveToIdealPosition;
+remove;
 
 - (void)
-remove;
+zoomToSearchResults;
 
 // accessors
 
@@ -133,6 +131,14 @@ finalOptions:(FindDialog_Options)_;
 - (NSMutableArray*)
 findDialog:(FindDialog_ViewManager*)_
 returnHistoryArrayForManagedView:(NSView*)_;
+
+// PopoverManager_Delegate
+
+- (NSPoint)
+idealAnchorPointForParentWindowFrame:(NSRect)_;
+
+- (MAWindowPosition)
+idealArrowPositionForParentWindowFrame:(NSRect)_;
 
 @end // FindDialog_Handler
 
@@ -224,13 +230,12 @@ time by calling FindDialog_Display() again.
 (4.0)
 */
 void
-FindDialog_Remove	(FindDialog_Ref		inDialog,
-					 Float32			inDelayInSecondsOrZero)
+FindDialog_Remove	(FindDialog_Ref		inDialog)
 {
 	FindDialog_Handler*		ptr = [FindDialog_Handler viewHandlerFromRef:inDialog];
 	
 	
-	[ptr performSelector:@selector(remove) withObject:nil afterDelay:inDelayInSecondsOrZero];
+	[ptr remove];
 }// Remove
 
 
@@ -297,6 +302,7 @@ FindDialog_StandardCloseNotifyProc		(FindDialog_Ref		UNUSED_ARGUMENT(inDialogTha
 
 #pragma mark Internal Methods
 
+
 @implementation FindDialog_Handler
 
 
@@ -335,6 +341,7 @@ initialOptions:(FindDialog_Options)					options
 		self->containerWindow = nil;
 		self->managedView = nil;
 		self->terminalWindow = aTerminalWindow;
+		self->popoverMgr = nullptr;
 		self->closeNotifyProc = aProc;
 		assert(nil != aStringArray);
 		self->historyArray = aStringArray;
@@ -354,6 +361,10 @@ dealloc
 {
 	[containerWindow release];
 	[viewMgr release];
+	if (nullptr != popoverMgr)
+	{
+		PopoverManager_Dispose(&popoverMgr);
+	}
 	[super dealloc];
 }// dealloc
 
@@ -372,43 +383,15 @@ display
 		// no focus is done the first time because this is
 		// eventually done in "findDialog:didLoadManagedView:"
 		self->viewMgr = [[FindDialog_ViewManager alloc]
-							initForTerminalWindow:self->terminalWindow responder:self
+							initForTerminalWindow:[self terminalWindow] responder:self
 													initialOptions:self->cachedOptions];
 	}
 	else
 	{
-		NSWindow*	parentWindow = TerminalWindow_ReturnNSWindow(self->terminalWindow);
-		
-		
 		// window is already loaded, just activate it
-		[self moveToIdealPosition];
-		[parentWindow addChildWindow:self->containerWindow ordered:NSWindowAbove];
-		[self->containerWindow makeFirstResponder:[self->viewMgr logicalFirstResponder]];
-		[self->containerWindow makeKeyAndOrderFront:NSApp];
+		PopoverManager_DisplayPopover(self->popoverMgr);
 	}
 }// display
-
-
-/*!
-Returns the location (relative to the window) where the
-popover’s bottom-left corner should appear.
-
-See also "moveToIdealPosition".
-
-(4.0)
-*/
-- (NSPoint)
-idealBottomLeftPoint
-{
-	NSWindow*	parentWindow = TerminalWindow_ReturnNSWindow(self->terminalWindow);
-	NSRect		managedViewFrame = [self->managedView frame];
-	NSPoint		result = NSMakePoint([parentWindow frame].size.width -
-										managedViewFrame.size.width - 16.0/* arbitrary */,
-										0.0);
-	
-	
-	return result;
-}// idealBottomLeftPoint
 
 
 /*!
@@ -438,7 +421,7 @@ notFinal:(BOOL)					isNotFinal
 	searchQueryLength = (nullptr == searchQueryCFString) ? 0 : CFStringGetLength(searchQueryCFString);
 	if (0 == searchQueryLength)
 	{
-		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(self->terminalWindow);
+		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus([self terminalWindow]);
 		
 		
 		// special case; empty queries always “succeed”, but deselect everything
@@ -474,8 +457,8 @@ notFinal:(BOOL)					isNotFinal
 		
 		if (queryOK)
 		{
-			TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(self->terminalWindow);
-			TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(self->terminalWindow);
+			TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus([self terminalWindow]);
+			TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus([self terminalWindow]);
 			My_TerminalRangeList	searchResults;
 			Terminal_SearchFlags	flags = 0;
 			Terminal_Result			searchStatus = kTerminal_ResultOK;
@@ -531,47 +514,35 @@ notFinal:(BOOL)					isNotFinal
 
 
 /*!
-Moves the popover to its correct position relative to its
-parent terminal window.
-
-See also "idealBottomLeftPoint".
-
-(4.0)
-*/
-- (void)
-moveToIdealPosition
-{
-	NSWindow*	parentWindow = TerminalWindow_ReturnNSWindow(self->terminalWindow);
-	NSPoint		popoverLocation = [self idealBottomLeftPoint];
-	NSRect		parentFrame = [parentWindow frame];
-	NSRect		newFrame = [self->containerWindow frame];
-	
-	
-	newFrame.origin.x = popoverLocation.x + parentFrame.origin.x;
-	newFrame.origin.y = popoverLocation.y + parentFrame.origin.y;
-	[self->containerWindow setFrame:newFrame display:NO];
-}// moveToIdealPosition
-
-
-/*!
-Hides the Find dialog’s window, removing it as a child
-of its terminal window.
-
-See also "display".
+Hides the popover.  It can be shown again at any time
+using the "display" method.
 
 (4.0)
 */
 - (void)
 remove
 {
-	NSWindow*	parentWindow = TerminalWindow_ReturnNSWindow(self->terminalWindow);
-	
-	
-	// hide the popover; remove the parent window association first to keep
-	// the parent window from disappearing on some versions of Mac OS X!
-	[parentWindow removeChildWindow:self->containerWindow];
-	[self->containerWindow orderOut:NSApp];
+	if (nil != self->popoverMgr)
+	{
+		PopoverManager_RemovePopover(self->popoverMgr);
+	}
 }// remove
+
+
+/*!
+Highlights the location of the first search result.
+
+This is in an Objective-C method so that it can be
+conveniently invoked after a short delay.
+
+(4.0)
+*/
+- (void)
+zoomToSearchResults
+{
+	// show the user where the text is
+	TerminalView_ZoomToSearchResults(TerminalWindow_ReturnViewWithFocus([self terminalWindow]));
+}// zoomToSearchResults
 
 
 #pragma mark Accessors
@@ -621,24 +592,19 @@ didLoadManagedView:(NSView*)			aManagedView
 	self->managedView = aManagedView;
 	if (nil == self->containerWindow)
 	{
-		NSWindow*	parentWindow = TerminalWindow_ReturnNSWindow(self->terminalWindow);
-		NSPoint		popoverLocation = [self idealBottomLeftPoint];
+		NSWindow*	parentWindow = TerminalWindow_ReturnNSWindow([self terminalWindow]);
 		
 		
 		self->containerWindow = [[MAAttachedWindow alloc] initWithView:aManagedView
-																		attachedToPoint:popoverLocation
+																		attachedToPoint:NSZeroPoint/* see delegate */
 																		inWindow:parentWindow
-																		onSide:MAPositionTopRight
+																		onSide:MAPositionAutomatic/* see delegate */
 																		atDistance:0.0];
 		CocoaBasic_ApplyStandardStyleToPopover(self->containerWindow, false/* has arrow */);
-		[self moveToIdealPosition];
-		if (FlagManager_Test(kFlagOS10_7API) && [NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
-		{
-			[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(4, NSWindowAnimationBehaviorUtilityWindow)];
-		}
-		[parentWindow addChildWindow:self->containerWindow ordered:NSWindowAbove];
-		[self->containerWindow makeFirstResponder:[aViewMgr logicalFirstResponder]];
-		[self->containerWindow makeKeyAndOrderFront:NSApp];
+		self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
+												self/* delegate */, kPopoverManager_AnimationTypeNone,
+												TerminalWindow_ReturnWindow([self terminalWindow]));
+		PopoverManager_DisplayPopover(self->popoverMgr);
 	}
 }// findDialog:didLoadManagedView:
 
@@ -719,8 +685,9 @@ finalOptions:(FindDialog_Options)		options
 	{
 		(unsigned long)[self initiateSearchFor:searchText ignoringCase:caseInsensitive notFinal:NO];
 		
-		// show the user where the text is
-		TerminalView_ZoomToSearchResults(TerminalWindow_ReturnViewWithFocus(self->terminalWindow));
+		// show the user where the text is; delay this slightly to avoid
+		// animation interference caused by the closing of the popover
+		[self performSelector:@selector(zoomToSearchResults) withObject:nil afterDelay:0.1/* seconds */];
 	}
 	else
 	{
@@ -733,7 +700,7 @@ finalOptions:(FindDialog_Options)		options
 		else
 		{
 			// no previous search available; remove all highlighting
-			TerminalView_FindNothing(TerminalWindow_ReturnViewWithFocus(self->terminalWindow));
+			TerminalView_FindNothing(TerminalWindow_ReturnViewWithFocus([self terminalWindow]));
 		}
 	}
 	
@@ -764,6 +731,45 @@ returnHistoryArrayForManagedView:(NSView*)	aManagedView
 	
 	return result;
 }// findDialog:returnHistoryArrayForManagedView:
+
+
+#pragma mark PopoverManager_Delegate
+
+
+/*!
+Returns the location (relative to the window) where the
+popover’s arrow tip should appear.  The location of the
+popover itself depends on the arrow placement chosen by
+"idealArrowPositionForParentWindowFrame:".
+
+(4.0)
+*/
+- (NSPoint)
+idealAnchorPointForParentWindowFrame:(NSRect)	parentFrame
+{
+	NSRect		managedViewFrame = [self->managedView frame];
+	NSPoint		result = NSMakePoint(parentFrame.size.width - managedViewFrame.size.width - 16.0/* arbitrary */,
+										0.0);
+	
+	
+	return result;
+}// idealAnchorPointForParentWindowFrame:
+
+
+/*!
+Returns arrow placement information for the popover.
+
+(4.0)
+*/
+- (MAWindowPosition)
+idealArrowPositionForParentWindowFrame:(NSRect)		parentFrame
+{
+#pragma unused(parentFrame)
+	MAWindowPosition	result = MAPositionTopRight;
+	
+	
+	return result;
+}// idealArrowPositionForParentWindowFrame:
 
 
 @end // FindDialog_Handler

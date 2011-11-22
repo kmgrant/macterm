@@ -396,6 +396,9 @@ void
 											 Boolean							inForceKeepWindow = false,
 											 Boolean							inRestart = false);
 
+void
+	Session_DisplayWindowRenameUI			(SessionRef							inRef);
+
 Boolean
 	Session_IsReadOnly						(SessionRef							inRef);
 

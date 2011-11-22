@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111121',
     '20111116',
     '20111114',
     '20111015',
@@ -425,6 +426,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111121': [
+        'Fixed minor behavioral problems with the new Find interface, such as when terminal windows were minimized.',
+        'The Rename menu command is now Cocoa-based and has a pop-over window style.',
+    ],
     '20111116': [
         'Animation for highlighting search results has been further enhanced.',
         'Animation for "Find Cursor" has been further enhanced.',

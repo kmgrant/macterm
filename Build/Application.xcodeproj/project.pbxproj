@@ -35,7 +35,7 @@
 		0AC6BADF0A8C0BA000AFF37A /* Localization.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF4055432A400ACDF3A /* Localization.mm */; };
 		0AC6BAE20A8C0BA000AFF37A /* InternetPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */; };
 		0AC6BAE30A8C0BA000AFF37A /* MenuBar.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFB055432A400ACDF3A /* MenuBar.cp */; };
-		0AC6BAE50A8C0BA000AFF37A /* WindowTitleDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE3C055432A400ACDF3A /* WindowTitleDialog.cp */; };
+		0AC6BAE50A8C0BA000AFF37A /* WindowTitleDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE3C055432A400ACDF3A /* WindowTitleDialog.mm */; };
 		0AC6BAE60A8C0BA000AFF37A /* DialogTransitions.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDCF055432A400ACDF3A /* DialogTransitions.cp */; };
 		0AC6BAE70A8C0BA000AFF37A /* SessionFactory.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE17055432A400ACDF3A /* SessionFactory.cp */; };
 		0AC6BAE80A8C0BA000AFF37A /* ColorBox.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC0055432A400ACDF3A /* ColorBox.cp */; };
@@ -129,6 +129,7 @@
 		0AF502320F872D2F0068CB19 /* CGContextSaveRestore.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */; };
 		0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502330F872D420068CB19 /* CFUtilities.cp */; };
 		0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */; };
+		0AF94E491477857900099BF2 /* PopoverManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AF94E481477857900099BF2 /* PopoverManager.mm */; };
 		0AFA782C0B470144001FCE83 /* parse.py in pymacterm-url */ = {isa = PBXBuildFile; fileRef = 0AFA78260B470136001FCE83 /* parse.py */; };
 		0AFA782D0B470144001FCE83 /* utilities.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0AFA78270B470136001FCE83 /* utilities.py */; };
 		0AFA782E0B470144001FCE83 /* open.py in pymacterm-url */ = {isa = PBXBuildFile; fileRef = 0AFA78280B470136001FCE83 /* open.py */; };
@@ -384,8 +385,9 @@
 		0A46FE38055432A400ACDF3A /* URL.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = URL.cp; path = Application/Code/URL.cp; sourceTree = "<group>"; };
 		0A46FE39055432A400ACDF3A /* URLAccessAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = URLAccessAE.cp; path = Application/Code/URLAccessAE.cp; sourceTree = "<group>"; };
 		0A46FE3B055432A400ACDF3A /* WindowInfo.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WindowInfo.cp; path = Application/Code/WindowInfo.cp; sourceTree = "<group>"; };
-		0A46FE3C055432A400ACDF3A /* WindowTitleDialog.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WindowTitleDialog.cp; path = Application/Code/WindowTitleDialog.cp; sourceTree = "<group>"; };
+		0A46FE3C055432A400ACDF3A /* WindowTitleDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = WindowTitleDialog.mm; path = Application/Code/WindowTitleDialog.mm; sourceTree = "<group>"; };
 		0A46FE3D055432A400ACDF3A /* Workspace.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Workspace.cp; path = Application/Code/Workspace.cp; sourceTree = "<group>"; };
+		0A495E9014734EA9005A1D3A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/WindowTitleDialogCocoa.xib; sourceTree = "<group>"; };
 		0A4C9D210FE9B1A0005EAE9D /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelWorkspaces.nib; sourceTree = "<group>"; };
 		0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelWorkspaces.cp; path = Application/Code/PrefPanelWorkspaces.cp; sourceTree = "<group>"; };
 		0A4C9D260FE9B986005EAE9D /* PrefPanelWorkspaces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelWorkspaces.h; path = Application/Code/PrefPanelWorkspaces.h; sourceTree = "<group>"; };
@@ -419,7 +421,6 @@
 		0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForRestartSession.icns; path = Application/Resources/IconForRestartSession.icns; sourceTree = "<group>"; };
 		0A8450A60554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefsWindow.nib; sourceTree = "<group>"; };
 		0A8450AA0554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/TEKWindow.nib; sourceTree = "<group>"; };
-		0A8450B00554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/WindowTitleDialog.nib; sourceTree = "<group>"; };
 		0A8738310A5F5F59002CACA9 /* UIStrings_PrefsWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UIStrings_PrefsWindow.h; path = Application/Code/UIStrings_PrefsWindow.h; sourceTree = "<group>"; };
 		0A87394D0A5F6DA0002CACA9 /* PrefPanelSessions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelSessions.h; path = Application/Code/PrefPanelSessions.h; sourceTree = "<group>"; };
 		0A87394E0A5F6DA4002CACA9 /* PrefPanelTerminals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTerminals.h; path = Application/Code/PrefPanelTerminals.h; sourceTree = "<group>"; };
@@ -555,6 +556,8 @@
 		0AF5023B0F872DF80068CB19 /* ResultCode.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ResultCode.template.h; path = Shared/Code/ResultCode.template.h; sourceTree = "<group>"; };
 		0AF5B8AE0B8ED23A0061B480 /* IconForKeypadSelect.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadSelect.icns; path = Application/Resources/IconForKeypadSelect.icns; sourceTree = "<group>"; };
 		0AF5B8B00B8ED24A0061B480 /* IconForKeypadInsert.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadInsert.icns; path = Application/Resources/IconForKeypadInsert.icns; sourceTree = "<group>"; };
+		0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PopoverManager.objc++.h"; path = "Shared/Code/PopoverManager.objc++.h"; sourceTree = "<group>"; };
+		0AF94E481477857900099BF2 /* PopoverManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopoverManager.mm; path = Shared/Code/PopoverManager.mm; sourceTree = "<group>"; };
 		0AF995F20CC3C849000A11DC /* IconForBellOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBellOff.icns; path = Application/Resources/IconForBellOff.icns; sourceTree = "<group>"; };
 		0AF995F30CC3C849000A11DC /* IconForBellOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBellOn.icns; path = Application/Resources/IconForBellOn.icns; sourceTree = "<group>"; };
 		0AFA78260B470136001FCE83 /* parse.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = parse.py; path = Application/PythonCode/pymacterm/url/parse.py; sourceTree = "<group>"; };
@@ -645,6 +648,7 @@
 				0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */,
 				0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */,
 				0AFD12B5087A147D00439BEA /* NIBLoader.cp */,
+				0AF94E481477857900099BF2 /* PopoverManager.mm */,
 				0A33CD0307FAC08800248DDF /* Releases.cp */,
 				0A46FE19055432A400ACDF3A /* SoundSystem.cp */,
 				0A33CCFC07FAC06200248DDF /* StringUtilities.cp */,
@@ -684,6 +688,7 @@
 				0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */,
 				0A9B31920D538EE400C1616D /* MemoryBlocks.h */,
 				0AFD12B7087A148B00439BEA /* NIBLoader.h */,
+				0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */,
 				0A90CD8C0DAD28F300B6E89E /* RandomWrap.h */,
 				0AB0EF76110E99570099E055 /* Registrar.template.h */,
 				0A9B319E0D538EFA00C1616D /* Releases.h */,
@@ -772,7 +777,7 @@
 				0A46FE21055432A400ACDF3A /* VectorCanvas.cp */,
 				0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */,
 				0A46FE3B055432A400ACDF3A /* WindowInfo.cp */,
-				0A46FE3C055432A400ACDF3A /* WindowTitleDialog.cp */,
+				0A46FE3C055432A400ACDF3A /* WindowTitleDialog.mm */,
 				0A46FE3D055432A400ACDF3A /* Workspace.cp */,
 				0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */,
 				0A4603F40554376100ACDF3A /* AlertMessages.h */,
@@ -962,6 +967,7 @@
 				0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */,
 				0AAEFFBF111E77F100526983 /* ServerBrowserCocoa.xib */,
 				0ACFBF4612F13506008E4203 /* TerminalWindowCocoa.xib */,
+				0A495E8F14734EA9005A1D3A /* WindowTitleDialogCocoa.xib */,
 				0ACDD9240ABD16C200040553 /* AlertMessages.nib */,
 				0A060B29078BA0D500A8BB55 /* ColorBox.nib */,
 				0ACA57C40AEADC5C00B5F482 /* GenericDialog.nib */,
@@ -975,7 +981,6 @@
 				0A8450A50554CB8E00CFF440 /* PrefsWindow.nib */,
 				0A8450A90554CB8E00CFF440 /* TEKWindow.nib */,
 				0A1BCD8805CA2B21005CF1E5 /* TerminalWindow.nib */,
-				0A8450AF0554CB8E00CFF440 /* WindowTitleDialog.nib */,
 			);
 			name = NIBs;
 			sourceTree = "<group>";
@@ -1331,7 +1336,7 @@
 				0AC6BADF0A8C0BA000AFF37A /* Localization.mm in Sources */,
 				0AC6BAE20A8C0BA000AFF37A /* InternetPrefs.cp in Sources */,
 				0AC6BAE30A8C0BA000AFF37A /* MenuBar.cp in Sources */,
-				0AC6BAE50A8C0BA000AFF37A /* WindowTitleDialog.cp in Sources */,
+				0AC6BAE50A8C0BA000AFF37A /* WindowTitleDialog.mm in Sources */,
 				0AC6BAE60A8C0BA000AFF37A /* DialogTransitions.cp in Sources */,
 				0AC6BAE70A8C0BA000AFF37A /* SessionFactory.cp in Sources */,
 				0AC6BAE80A8C0BA000AFF37A /* ColorBox.cp in Sources */,
@@ -1433,6 +1438,7 @@
 				0A08DD8D1405B4B50005129F /* TranslucentMenuArrow.mm in Sources */,
 				0A3C2C20140C73F100739966 /* CocoaAnimation.mm in Sources */,
 				0AD543CA146796B700B642C3 /* MAAttachedWindow.m in Sources */,
+				0AF94E491477857900099BF2 /* PopoverManager.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1495,6 +1501,14 @@
 			name = PrefPanelTerminals.nib;
 			sourceTree = "<group>";
 		};
+		0A495E8F14734EA9005A1D3A /* WindowTitleDialogCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A495E9014734EA9005A1D3A /* English */,
+			);
+			name = WindowTitleDialogCocoa.xib;
+			sourceTree = "<group>";
+		};
 		0A4C9D200FE9B1A0005EAE9D /* PrefPanelWorkspaces.nib */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1549,14 +1563,6 @@
 				0A8450AA0554CB8E00CFF440 /* English */,
 			);
 			name = TEKWindow.nib;
-			sourceTree = "<group>";
-		};
-		0A8450AF0554CB8E00CFF440 /* WindowTitleDialog.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A8450B00554CB8E00CFF440 /* English */,
-			);
-			name = WindowTitleDialog.nib;
 			sourceTree = "<group>";
 		};
 		0A9CC37906DC470D00DCD12E /* PrefPanels.nib */ = {

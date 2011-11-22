@@ -101,6 +101,7 @@
 #include "VectorCanvas.h"
 #include "VectorInterpreter.h"
 #include "VTKeys.h"
+#include "WindowTitleDialog.h"
 
 
 
@@ -311,6 +312,7 @@ struct My_Session
 	EventLoopTimerRef			pendingPasteTimer;			// paste timer, reset only when a Paste or an equivalent (like a drag) occurs
 	My_SessionSheetType			currentSheet;				// if "kMy_SessionSheetTypeNone", no significant sheet is currently open
 	AlertMessages_BoxRef		watchBox;					// if defined, the global alert used to show notifications for this session
+	WindowTitleDialog_Ref		renameDialog;				// if defined, the user interface for renaming the terminal window
 	SessionRef					selfRef;					// convenient reference to this structure
 	
 	struct
@@ -1224,6 +1226,27 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 		}
 	}
 }// DisplaySessionTerminationWarning
+
+
+/*!
+Displays a user interface for editing the window title.
+The interface is automatically hidden or destroyed at
+appropriate times.
+
+(4.0)
+*/
+void
+Session_DisplayWindowRenameUI	(SessionRef		inRef)
+{
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	
+	
+	if (nullptr == ptr->renameDialog)
+	{
+		ptr->renameDialog = WindowTitleDialog_NewForSession(inRef);
+	}
+	WindowTitleDialog_Display(ptr->renameDialog);
+}// DisplayWindowRenameUI
 
 
 /*!
@@ -5326,6 +5349,7 @@ pendingPasteTimerUPP(nullptr),
 pendingPasteTimer(nullptr),
 currentSheet(kMy_SessionSheetTypeNone),
 watchBox(nullptr),
+renameDialog(nullptr),
 selfRef(REINTERPRET_CAST(this, SessionRef))
 // echo initialized below
 // preferencesCache initialized below
@@ -5410,6 +5434,11 @@ My_Session::
 			// active session; terminate associated tasks
 			if (Terminal_FileCaptureInProgress(*toScreen)) Terminal_FileCaptureEnd(*toScreen);
 		}
+	}
+	
+	if (nullptr != this->renameDialog)
+	{
+		WindowTitleDialog_Dispose(&this->renameDialog);
 	}
 	
 	closeTerminalWindow(this);

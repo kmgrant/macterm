@@ -1,10 +1,9 @@
 /*!	\file WindowTitleDialog.h
-	\brief Implements a dialog box for changing the title of a
-	terminal window.
+	\brief Implements a dialog box for changing the title
+	of a terminal window.
 	
-	On Mac OS X, this dialog box is physically attached to its
-	parent window, using the new window-modal “sheet” dialog
-	type.
+	The interface has the appearance of a popover window
+	pointing at the current title in the window frame.
 */
 /*###############################################################
 
@@ -41,6 +40,9 @@
 #define __WINDOWTITLEDIALOG__
 
 // Mac includes
+#ifdef __OBJC__
+#	import <Cocoa/Cocoa.h>
+#endif
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
@@ -53,6 +55,79 @@
 #pragma mark Types
 
 typedef struct WindowTitleDialog_OpaqueStruct*		WindowTitleDialog_Ref;
+
+#ifdef __OBJC__
+
+@class WindowTitleDialog_ViewManager;
+
+@protocol WindowTitleDialog_ViewManagerChannel
+
+// use this opportunity to create and display a window to wrap the Rename view
+- (void)
+titleDialog:(WindowTitleDialog_ViewManager*)_
+didLoadManagedView:(NSView*)_;
+
+// perform the window rename yourself, but no need to update the user interface since it should be destroyed
+- (void)
+titleDialog:(WindowTitleDialog_ViewManager*)_
+didFinishUsingManagedView:(NSView*)_
+acceptingRename:(BOOL)_
+finalTitle:(NSString*)_;
+
+// return an NSString* to use for the initial title text field value
+- (NSString*)
+titleDialog:(WindowTitleDialog_ViewManager*)_
+returnInitialTitleTextForManagedView:(NSView*)_;
+
+@end // WindowTitleDialog_ViewManagerChannel
+
+
+/*!
+Implements the Rename interface.  See "WindowTitleDialogCocoa.xib".
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface WindowTitleDialog_ViewManager : NSObject
+{
+	IBOutlet NSView*		managedView;
+	IBOutlet NSTextField*	titleField;
+@private
+	id< WindowTitleDialog_ViewManagerChannel >	responder;
+	HIWindowRef									parentCarbonWindow;
+	NSString*									titleText;
+}
+
+// initializers
+
+- (id)
+initForCarbonWindow:(HIWindowRef)_
+responder:(id< WindowTitleDialog_ViewManagerChannel >)_;
+
+// new methods
+
+- (NSView*)
+logicalFirstResponder;
+
+// actions
+
+- (IBAction)
+performCloseAndRename:(id)_;
+
+- (IBAction)
+performCloseAndRevert:(id)_;
+
+// accessors
+
+- (NSString*)
+titleText; // binding
+- (void)
+setTitleText:(NSString*)_;
+
+@end
+
+#endif // __OBJC__
 
 #pragma mark Callbacks
 
@@ -101,6 +176,9 @@ void
 
 void
 	WindowTitleDialog_Display					(WindowTitleDialog_Ref					inDialog);
+
+void
+	WindowTitleDialog_Remove					(WindowTitleDialog_Ref					inDialog);
 
 #endif
 

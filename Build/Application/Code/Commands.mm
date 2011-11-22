@@ -1230,30 +1230,28 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandChangeWindowTitle:
-			// display a dialog allowing the user to change the title of a terminal window
+			// let the user change the title of certain windows
 			{
-				WindowTitleDialog_Ref	dialog = nullptr;
-				
-				
 				if (nullptr != frontSession)
 				{
-					dialog = WindowTitleDialog_NewForSession(frontSession);
+					Session_DisplayWindowRenameUI(frontSession);
 				}
-				
-				if (nullptr == dialog)
+				else
 				{
 					// see if the active window is a vector graphics canvas
 					VectorCanvas_Ref	canvas = VectorCanvas_ReturnFromWindow
 													(EventLoop_ReturnRealFrontWindow());
 					
 					
-					if (nullptr != canvas) dialog = WindowTitleDialog_NewForVectorCanvas(canvas);
-				}
-				
-				if (nullptr == dialog) Sound_StandardAlert();
-				else
-				{
-					WindowTitleDialog_Display(dialog); // automatically disposed when the user clicks a button
+					if (nullptr != canvas)
+					{
+						VectorCanvas_DisplayWindowRenameUI(canvas);
+					}
+					else
+					{
+						// ???
+						Sound_StandardAlert();
+					}
 				}
 			}
 			break;

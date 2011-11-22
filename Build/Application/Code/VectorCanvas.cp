@@ -64,6 +64,7 @@
 #include "Preferences.h"
 #include "Session.h"
 #include "VectorInterpreter.h"
+#include "WindowTitleDialog.h"
 
 
 
@@ -116,6 +117,7 @@ struct My_VectorCanvas
 	VectorInterpreter_ID	interpreter;
 	SessionRef				session;
 	HIWindowRef				owningWindow;
+	WindowTitleDialog_Ref	renameDialog;
 	EventHandlerUPP			closeUPP;
 	EventHandlerRef			closeHandler;
 	HIViewRef				canvas;
@@ -209,6 +211,7 @@ VectorCanvas_New	(VectorInterpreter_ID	inID,
 	// load the NIB containing this dialog (automatically finds the right localization)
 	ptr->owningWindow = NIBWindow(AppResources_ReturnBundleForNIBs(),
 									CFSTR("TEKWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
+	ptr->renameDialog = nullptr;
 	
 	// associate this canvas with the window so that it can be found by other things;
 	// NOTE that this is just the simplest thing for now, but a better implementation
@@ -310,6 +313,11 @@ VectorCanvas_Dispose	(VectorCanvas_Ref*		inoutRefPtr)
 		My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), *inoutRefPtr);
 		
 		
+		if (nullptr != ptr->renameDialog)
+		{
+			WindowTitleDialog_Dispose(&ptr->renameDialog);
+		}
+		
 		setPortCanvasPort(ptr);
 		if (nullptr != ptr->session)
 		{
@@ -355,6 +363,27 @@ VectorCanvas_CopyTitle	(VectorCanvas_Ref	inRef,
 	error = CopyWindowTitleAsCFString(ptr->owningWindow, &outTitle);
 	if (noErr != error) outTitle = nullptr;
 }// CopyTitle
+
+
+/*!
+Displays a user interface for editing the window title.
+The interface is automatically hidden or destroyed at
+appropriate times.
+
+(4.0)
+*/
+void
+VectorCanvas_DisplayWindowRenameUI	(VectorCanvas_Ref	inRef)
+{
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
+	
+	
+	if (nullptr == ptr->renameDialog)
+	{
+		ptr->renameDialog = WindowTitleDialog_NewForVectorCanvas(inRef);
+	}
+	WindowTitleDialog_Display(ptr->renameDialog);
+}// DisplayWindowRenameUI
 
 
 /*!

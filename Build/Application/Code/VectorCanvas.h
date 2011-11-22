@@ -93,6 +93,9 @@ void
 	VectorCanvas_CopyTitle				(VectorCanvas_Ref		inRef,
 										 CFStringRef&			outTitle);
 
+void
+	VectorCanvas_DisplayWindowRenameUI	(VectorCanvas_Ref		inRef);
+
 SInt16
 	VectorCanvas_DrawLine				(VectorCanvas_Ref		inRef,
 										 SInt16					inStartX,
