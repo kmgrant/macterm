@@ -456,7 +456,7 @@ idealAnchorPointForParentWindowFrame:(NSRect)	parentFrame
 	NSWindow*	parentWindow = [self renamedCocoaWindow];
 	NSRect		screenFrame = [[parentWindow screen] visibleFrame];
 	NSRect		managedViewFrame = [self->managedView frame];
-	NSPoint		result = NSMakePoint(parentFrame.size.width / 2.0, parentFrame.size.height - 16/* arbitrary */);
+	NSPoint		result = NSMakePoint(parentFrame.size.width / 2.0, parentFrame.size.height - 12/* arbitrary */);
 	
 	
 	// if the window position would make the popover fall off the top of the
