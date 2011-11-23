@@ -135,9 +135,9 @@ table(deftable).
 (defbottom). |\2(desc). How to interpret the content string.  If @text@, then escapes such as @\012@ are expanded; if @verbatim@, escapes are ignored.|
 (deftop). |(key). @macro-NN-contents-string@, where NN is 01 to 12|(types). _string_|
 (defbottom). |\2(desc). Text, whose meaning depends on the action: something to send (interpreted or verbatim), a URL to open, or a command line to run (without interpretation).|
-(deftop). |(key). @macro-NN-key@, where NN is 01 to 12|(types). _string_: a "key name":#specialvalues|
+(deftop). |(key). @macro-NN-key@, where NN is 01 to 12|(types). _string_: a "key name":#specialvalues |
 (defbottom). |\2(desc). Base key that activates this macro, when combined with the modifier keys.|
-(deftop). |(key). @macro-NN-modifiers@, where NN is 01 to 12|(types). _array of string_: zero or more "modifier keys":#specialvalues|
+(deftop). |(key). @macro-NN-modifiers@, where NN is 01 to 12|(types). _array of string_: zero or more "modifier keys":#specialvalues |
 (defbottom). |\2(desc). Modifier keys that must be held down before the base key is interpreted as a macro request.|
 (deftop). |(key). @macro-NN-name-string@, where NN is 01 to 12|(types). _string_|
 (defbottom). |\2(desc). Name to use in menus and other interface elements, when representing this macro.|
