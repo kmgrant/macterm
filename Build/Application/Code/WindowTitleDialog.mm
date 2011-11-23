@@ -711,13 +711,22 @@ IMPORTANT:	It is appropriate at this time for the
 performCloseAndRename:(id)	sender
 {
 #pragma unused(sender)
-	NSString*	newTitleText = (nil == self->titleText)
-								? @""
-								: [NSString stringWithString:self->titleText];
+	// remove focus from the text field to ensure that the
+	// current value has been committed; otherwise it is
+	// possible it will be lost (e.g. user has field focused
+	// but uses the mouse to click the button to proceed)
+	[[self->titleField window] makeFirstResponder:nil];
 	
-	
-	[self->responder titleDialog:self didFinishUsingManagedView:self->managedView
-										acceptingRename:YES finalTitle:newTitleText];
+	// now the binding should have the correct value...
+	{
+		NSString*	newTitleText = (nil == self->titleText)
+									? @""
+									: [NSString stringWithString:self->titleText];
+		
+		
+		[self->responder titleDialog:self didFinishUsingManagedView:self->managedView
+											acceptingRename:YES finalTitle:newTitleText];
+	}
 }// performCloseAndRename:
 
 
