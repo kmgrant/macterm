@@ -71,7 +71,9 @@ changes to an interface declared in a ".mm" file.
 	NSMutableArray*			discoveredHosts; // binding
 	NSMutableArray*			recentHosts; // binding
 	NSArray*				protocolDefinitions; // binding
+	IBOutlet NSView*		discoveredHostsContainer;
 	IBOutlet NSTableView*	discoveredHostsTableView;
+	IBOutlet NSResponder*	nextResponderWhenHidingDiscoveredHosts;
 @private
 	NSNetServiceBrowser*	browser;
 	NSIndexSet*				discoveredHostIndexes;
@@ -197,17 +199,6 @@ error:(NSError**)_;
 - (BOOL)
 validateUserID:(id*)_
 error:(NSError**)_;
-
-// internal methods
-
-- (ServerBrowser_NetService*)
-discoveredHost;
-
-- (void)
-notifyOfChangeInValueReturnedBy:(SEL)_;
-
-- (ServerBrowser_Protocol*)
-protocol;
 
 @end
 

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111126',
     '20111121',
     '20111116',
     '20111114',
@@ -426,6 +427,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111126': [
+        'Fixed Servers panel so that the host lookup progress icon is animated.',
+        'Servers panel has been modified so that discovered hosts appear in the panel instead of in a bottom drawer.',
+    ],
     '20111121': [
         'Fixed minor behavioral problems with the new Find interface, such as when terminal windows were minimized.',
         'The Rename menu command is now Cocoa-based and has a pop-over window style.',

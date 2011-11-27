@@ -169,6 +169,19 @@ OSStatus	receiveLookupComplete		(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
+@interface ServerBrowser_PanelController (ServerBrowser_PanelControllerInternal)
+
+- (ServerBrowser_NetService*)
+discoveredHost;
+
+- (void)
+notifyOfChangeInValueReturnedBy:(SEL)_;
+
+- (ServerBrowser_Protocol*)
+protocol;
+
+@end // ServerBrowser_PanelController (ServerBrowser_PanelControllerInternal)
+
 #pragma mark Variables
 namespace {
 
@@ -1030,14 +1043,40 @@ hidesDiscoveredHosts
 - (void)
 setHidesDiscoveredHosts:(BOOL)		flag
 {
+	NSRect const	kOldFrame = [[self window] frame];
+	NSRect			newFrame = [[self window] frame];
+	
+	
 	hidesDiscoveredHosts = flag;
 	if (flag)
 	{
+		NSSize		minSize = [[self window] minSize];
+		Float32		deltaHeight = (minSize.height - kOldFrame.size.height);
+		
+		
+		newFrame.size.width = minSize.width;
+		newFrame.size.height += deltaHeight;
+		newFrame.origin.y -= deltaHeight;
 		[browser stop];
+		[[self window] makeFirstResponder:self->nextResponderWhenHidingDiscoveredHosts];
 	}
 	else
 	{
+		Float32		deltaHeight = ([[self window] maxSize].height - kOldFrame.size.height);
+		
+		
+		newFrame.size.height += deltaHeight;
+		newFrame.origin.y -= deltaHeight;
 		[self rediscoverServices];
+	}
+	if (NO == flag)
+	{
+		[self->discoveredHostsContainer setHidden:flag];
+	}
+	[[self window] setFrame:newFrame display:YES animate:YES];
+	if (flag)
+	{
+		[self->discoveredHostsContainer setHidden:flag];
 	}
 }// setHidesDiscoveredHosts:
 
@@ -1578,6 +1617,9 @@ done in "init".)
 windowDidLoad
 {
 	[super windowDidLoad];
+	assert(nil != discoveredHostsContainer);
+	assert(nil != discoveredHostsTableView);
+	assert(nil != nextResponderWhenHidingDiscoveredHosts);
 	
 	// find out when the window will close, so that the event target can change
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillClose:)
@@ -1585,6 +1627,9 @@ windowDidLoad
 	
 	// since double-click bindings require 10.4 or later, do this manually now
 	[discoveredHostsTableView setDoubleAction:@selector(didDoubleClickDiscoveredHostWithSelection:)];
+	
+	// adjust initial window frame
+	[self setHidesDiscoveredHosts:YES];
 }// windowDidLoad
 
 
@@ -1690,7 +1735,10 @@ windowWillClose:(NSNotification*)	notification
 }// windowWillClose:
 
 
-#pragma mark Internal Methods
+@end
+
+
+@implementation ServerBrowser_PanelController (ServerBrowser_PanelControllerInternal)
 
 
 /*!
