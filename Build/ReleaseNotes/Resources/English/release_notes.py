@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111130',
     '20111126',
     '20111121',
     '20111116',
@@ -427,6 +428,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111130': [
+        'Preferences window Workspaces pane can now cause Full Screen to start automatically when a workspace is spawned.  This also means that Full Screen begins at startup time if you enable the setting for your Default Workspace.',
+    ],
     '20111126': [
         'Fixed Servers panel so that the host lookup progress icon is animated.',
         'Servers panel has been modified so that discovered hosts appear in the panel instead of in a bottom drawer.',

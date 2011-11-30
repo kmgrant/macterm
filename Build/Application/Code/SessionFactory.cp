@@ -1272,7 +1272,8 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindow,
 /*!
 Creates new sessions for each listed in the given workspace,
 in the order they are stored.  Any other constraints (such as
-confining them to a tab stack) are automatically respected.
+confining them to a tab stack or starting Full Screen) are
+automatically respected.
 
 (4.0)
 */
@@ -1280,9 +1281,19 @@ Boolean
 SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWorkspaceContext)
 {
 	Boolean					result = true;
+	Boolean					enterFullScreen = false;
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	size_t					actualSize = 0;
 	
+	
+	// determine if this workspace should automatically enter Full Screen
+	prefsResult = Preferences_ContextGetData(inWorkspaceContext/* context */, kPreferences_TagArrangeWindowsFullScreen,
+												sizeof(enterFullScreen), &enterFullScreen,
+												true/* search defaults */, nullptr/* actual size */);
+	if (prefsResult != kPreferences_ResultOK)
+	{
+		enterFullScreen = false;
+	}
 	
 	// not every window in the workspace may be defined; launch
 	// every session that is found
@@ -1356,6 +1367,11 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 				// this window is disabled; ignore
 			}
 		}
+	}
+	
+	if (enterFullScreen)
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandFullScreenModal);
 	}
 	
 	return result;

@@ -876,6 +876,8 @@ Preferences_Init ()
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("terminal-when-cursor-near-right-margin")); // for future use
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("name")); // for creating default collections
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("name-string")); // for creating default collections
+	My_PreferenceDefinition::createFlag(kPreferences_TagArrangeWindowsFullScreen,
+										CFSTR("window-terminal-full-screen"), Quills::Prefs::WORKSPACE);
 	My_PreferenceDefinition::createFlag(kPreferences_TagArrangeWindowsUsingTabs,
 										CFSTR("terminal-use-tabs"), Quills::Prefs::WORKSPACE);
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedFormatFavorite,
@@ -8049,6 +8051,7 @@ getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
 			{
 				switch (inDataPreferenceTag)
 				{
+				case kPreferences_TagArrangeWindowsFullScreen:
 				case kPreferences_TagArrangeWindowsUsingTabs:
 					if (false == inContextPtr->exists(keyName))
 					{
@@ -10063,6 +10066,16 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 		{
 			switch (inDataPreferenceTag)
 			{
+			case kPreferences_TagArrangeWindowsFullScreen:
+				{
+					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
+					
+					
+					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
+				}
+				break;
+			
 			case kPreferences_TagArrangeWindowsUsingTabs:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));

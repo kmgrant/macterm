@@ -149,6 +149,8 @@ h3(#workspaces). Workspace Collections
 table(deftable).
 (deftop). |(key). @terminal-use-tabs@|(types). _true or false_|
 (defbottom). |\2(desc). Windows stick together and have tabs.|
+(deftop). |(key). @window-terminal-full-screen@|(types). _true or false_|
+(defbottom). |\2(desc). Full Screen mode is automatically entered when the workspace is spawned.  If you have two displays and a workspace window is present on each display, each window will zoom to fill its display.  If there are multiple windows on a display, only the most recently used window on that display will be zoomed.|
 (deftop). |(key). @window-NN-frame-bounds-pixels@, where NN is 01 to 10|(types). _array of integer_: 4 values; horizontal and vertical pixel offsets from main display top-left, and width and height|
 (defbottom). |\2(desc). The top-left corner of the window on its display, and the frame size.|
 (deftop). |(key). @window-NN-screen-bounds-pixels@, where NN is 01 to 10|(types). _array of integer_: 4 values; horizontal and vertical pixel offsets from main display top-left, and width and height|

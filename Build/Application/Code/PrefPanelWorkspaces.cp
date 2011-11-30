@@ -106,6 +106,7 @@ HIViewID const	idMyButtonSetWindowBoundaries			= { 'WSBn', 0/* ID */ };
 HIViewID const	idMySeparatorGlobalSettings				= { 'SSWG', 0/* ID */ };
 HIViewID const	idMyLabelOptions						= { 'LWSO', 0/* ID */ };
 HIViewID const	idMyCheckBoxUseTabsToArrangeWindows		= { 'UTAW', 0/* ID */ };
+HIViewID const	idMyCheckBoxAutoFullScreen				= { 'AuFS', 0/* ID */ };
 
 } // anonymous namespace
 
@@ -826,6 +827,21 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			}
 			SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 		}
+		
+		{
+			HIViewWrap		checkBox(idMyCheckBoxAutoFullScreen, kOwningWindow);
+			Boolean			flag = false;
+			
+			
+			assert(checkBox.exists());
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagArrangeWindowsFullScreen, sizeof(flag), &flag,
+														true/* search defaults */, &actualSize, &wasDefault);
+			unless (prefsResult == kPreferences_ResultOK)
+			{
+				flag = false; // assume a value, if preference can’t be found
+			}
+			SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
+		}
 	}
 }// My_WorkspacesPanelUI::readPreferences
 
@@ -1097,6 +1113,16 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (kPreferences_ResultOK != prefsResult)
 						{
 							Console_Warning(Console_WriteLine, "unable to save window tabs setting");
+						}
+						result = noErr;
+					}
+					else if (HIViewIDWrap(idMyCheckBoxAutoFullScreen) == commandingView.identifier())
+					{
+						prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagArrangeWindowsFullScreen,
+																	sizeof(kCheckBoxFlagValue), &kCheckBoxFlagValue);
+						if (kPreferences_ResultOK != prefsResult)
+						{
+							Console_Warning(Console_WriteLine, "unable to save window full-screen setting");
 						}
 						result = noErr;
 					}
@@ -1560,6 +1586,8 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 		viewWrap = HIViewWrap(idMyLabelOptions, kPanelWindow);
 		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY/* delta Y */);
 		viewWrap = HIViewWrap(idMyCheckBoxUseTabsToArrangeWindows, kPanelWindow);
+		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY/* delta Y */);
+		viewWrap = HIViewWrap(idMyCheckBoxAutoFullScreen, kPanelWindow);
 		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY/* delta Y */);
 	}
 }// deltaSizePanelContainerHIView

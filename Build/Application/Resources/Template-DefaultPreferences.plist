@@ -494,6 +494,8 @@
 	<integer>0</integer>
 	<key>terminal-text-encoding-name</key>
 	<string>UTF-8</string>
+	<key>terminal-use-tabs</key>
+	<false/>
 	<key>terminal-when-bell</key>
 	<string>audio</string>
 	<key>terminal-when-bell-sound-basename</key>
@@ -515,6 +517,8 @@
 	<key>window-functionkeys-visible</key>
 	<false/>
 	<key>window-sessioninfo-visible</key>
+	<false/>
+	<key>window-terminal-full-screen</key>
 	<false/>
 	<key>window-terminal-position-pixels</key>
 	<array>

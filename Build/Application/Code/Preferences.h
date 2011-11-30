@@ -308,6 +308,7 @@ IMPORTANT:	Some are indexed tags, so calls to APIs must
 */
 enum
 {
+	kPreferences_TagArrangeWindowsFullScreen			= 'full',	//!< data: "Boolean"
 	kPreferences_TagArrangeWindowsUsingTabs				= 'tabs',	//!< data: "Boolean"
 	// indexed tags must have a zero byte to have space for tag variants;
 	// see also Preferences_ReturnTagVariantForIndex()
