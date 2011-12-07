@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111206',
     '20111130',
     '20111126',
     '20111121',
@@ -428,6 +429,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111206': [
+        'Fixed Growl notifications, which were accidentally disabled several builds ago.  Also added support for version 1.3.x of Growl (the App Store version).',
+    ],
     '20111130': [
         'Preferences window Workspaces pane can now cause Full Screen to start automatically when a workspace is spawned.  This also means that Full Screen begins at startup time if you enable the setting for your Default Workspace.',
     ],

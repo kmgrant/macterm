@@ -254,7 +254,7 @@ init
 {
 	self = [super init];
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-	self->isReady = ([GrowlApplicationBridge isGrowlInstalled] && [GrowlApplicationBridge isGrowlRunning]);
+	self->isReady = [GrowlApplicationBridge isGrowlRunning];
 #else
 	self->isReady = NO;
 #endif

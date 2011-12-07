@@ -115,7 +115,8 @@ SRC_PY_TOP := $(SYMROOT)/$(PY_CONFIG)/PyMacTerm.framework
 SRC_PYINVOKER_TOP_LEOPARD := $(SYMROOT)/ForLeopardDebug
 SRC_PYINVOKER_TOP_TIGER := $(SYMROOT)/ForTigerDebug
 SRC_PYINVOKER_TOP_PANTHER := $(SYMROOT)/ForPantherDebug
-SRC_GROWL_TOP := $(GROWL_SDK_ROOT)/Frameworks/Growl.framework
+# note, prior to Growl 1.3.x the subdirectory was just "Frameworks" and not "Framework/Legacy"
+SRC_GROWL_TOP := $(GROWL_SDK_ROOT)/Framework/Legacy/Growl.framework
 SRC_QUILLS_TOP_TIGER := $(SYMROOT)/ForTigerDebug/Quills.framework
 SRC_QUILLS_TOP_PANTHER := $(SYMROOT)/ForPantherDebug/Quills.framework
 
