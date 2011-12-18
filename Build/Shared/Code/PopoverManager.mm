@@ -79,6 +79,9 @@ idealAnchorPointForParentWindowFrame:(NSRect)_;
 - (MAWindowPosition)
 idealArrowPositionForParentWindowFrame:(NSRect)_;
 
+- (NSSize)
+idealSize;
+
 - (BOOL)
 isVisible;
 
@@ -102,6 +105,9 @@ removeWindowWithDelay;
 
 - (void)
 removeWindowWithDelay:(float)_;
+
+- (void)
+setToIdealSize;
 
 @end // PopoverManager_Handler
 
@@ -407,6 +413,7 @@ invisible, puts it in front and gives it keyboard focus.
 - (void)
 display
 {
+	[self setToIdealSize];
 	[self moveToIdealPosition];
 	switch (self->animationType)
 	{
@@ -478,6 +485,25 @@ idealArrowPositionForParentWindowFrame:(NSRect)		parentFrame
 
 
 /*!
+Returns the dimensions that the popover should initially have.
+
+IMPORTANT:	This must be implemented by the delegate.
+
+See also "setToIdealSize".
+
+(2.7)
+*/
+- (NSSize)
+idealSize
+{
+	NSSize		result = [self->delegate idealSize];
+	
+	
+	return result;
+}// idealSize
+
+
+/*!
 Returns YES only if the popover is currently displayed.
 
 (2.7)
@@ -505,8 +531,6 @@ moveToIdealPosition
 	MAWindowPosition	arrowType = [self idealArrowPositionForParentWindowFrame:parentFrame];
 	
 	
-	// WARNING: do not use "setFrame:" with MAAttachedWindow because it monitors
-	// its window for size changes and assumes it should keep its internal origin
 	[self->containerWindow setPoint:popoverLocation side:arrowType];
 }// moveToIdealPosition
 
@@ -618,6 +642,26 @@ removeWindowWithDelay:(float)	aDelay
 	}
 	[self->containerWindow performSelector:@selector(orderOut:) withObject:NSApp afterDelay:aDelay];
 }// removeWindowWithDelay:
+
+
+/*!
+Resizes the popover to be large enough for the minimum
+size of its content view.
+
+(2.7)
+*/
+- (void)
+setToIdealSize
+{
+	NSRect		parentFrame = [self->containerWindow frame];
+	NSSize		newSize = [self idealSize];
+	
+	
+	parentFrame.size.width = newSize.width;
+	parentFrame.size.height = newSize.height;
+	
+	[self->containerWindow setFrame:parentFrame display:NO];
+}// setToIdealSize
 
 
 #pragma mark NSWindowNotifications

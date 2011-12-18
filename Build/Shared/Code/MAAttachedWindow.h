@@ -63,7 +63,6 @@ typedef enum _MAWindowPosition {
     NSColor *_MABackgroundColor;
     __weak NSView *_view;
     __weak NSWindow *_window;
-    NSPoint _point;
     MAWindowPosition _side;
     float _distance;
     NSRect _viewFrame;
@@ -119,6 +118,10 @@ typedef enum _MAWindowPosition {
                             onSide:(MAWindowPosition)side;
 - (MAAttachedWindow *)initWithView:(NSView *)view 
                    attachedToPoint:(NSPoint)point;
+
+// utilities
+- (NSRect)viewRectForFrameRect:(NSRect)_;
+- (NSRect)frameRectForViewRect:(NSRect)_;
 
 // Accessor methods
 - (void)setPoint:(NSPoint)point side:(MAWindowPosition)side;

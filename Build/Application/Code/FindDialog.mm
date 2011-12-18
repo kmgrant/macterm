@@ -140,6 +140,9 @@ idealAnchorPointForParentWindowFrame:(NSRect)_;
 - (MAWindowPosition)
 idealArrowPositionForParentWindowFrame:(NSRect)_;
 
+- (NSSize)
+idealSize;
+
 @end // FindDialog_Handler
 
 
@@ -770,6 +773,22 @@ idealArrowPositionForParentWindowFrame:(NSRect)		parentFrame
 	
 	return result;
 }// idealArrowPositionForParentWindowFrame:
+
+
+/*!
+Returns the initial size for the popover.
+
+(4.0)
+*/
+- (NSSize)
+idealSize
+{
+	NSRect		frameRect = [self->containerWindow frameRectForViewRect:[self->managedView frame]];
+	NSSize		result = frameRect.size;
+	
+	
+	return result;
+}// idealSize
 
 
 @end // FindDialog_Handler

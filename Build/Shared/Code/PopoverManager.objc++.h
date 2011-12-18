@@ -84,6 +84,10 @@ idealAnchorPointForParentWindowFrame:(NSRect)_;
 - (MAWindowPosition)
 idealArrowPositionForParentWindowFrame:(NSRect)_;
 
+// return the dimensions the popover should initially have
+- (NSSize)
+idealSize;
+
 @end // PopoverManager_Delegate
 
 

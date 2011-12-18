@@ -110,6 +110,9 @@ idealAnchorPointForParentWindowFrame:(NSRect)_;
 - (MAWindowPosition)
 idealArrowPositionForParentWindowFrame:(NSRect)_;
 
+- (NSSize)
+idealSize;
+
 // WindowTitleDialog_ViewManagerChannel
 
 - (void)
@@ -486,6 +489,22 @@ idealArrowPositionForParentWindowFrame:(NSRect)		parentFrame
 	
 	return result;
 }// idealArrowPositionForParentWindowFrame:
+
+
+/*!
+Returns the initial size for the popover.
+
+(4.0)
+*/
+- (NSSize)
+idealSize
+{
+	NSRect		frameRect = [self->containerWindow frameRectForViewRect:[self->managedView frame]];
+	NSSize		result = frameRect.size;
+	
+	
+	return result;
+}// idealSize
 
 
 #pragma mark WindowTitleDialog_ViewManagerChannel
