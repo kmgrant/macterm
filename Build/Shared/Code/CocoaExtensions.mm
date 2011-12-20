@@ -98,7 +98,7 @@ selectorToReturnKeyChangeAutoNotifyFlag:(SEL)	anAccessor
 }// selectorToReturnKeyChangeAutoNotifyFlag:
 
 
-@end // NSObject(CocoaExtensions_NSObject)
+@end // NSObject (CocoaExtensions_NSObject)
 
 
 @implementation NSWindow (CocoaExtensions_NSWindow)
@@ -158,6 +158,6 @@ setFrameWithArray:(id)		anArray
 }// setFrameWithArray:
 
 
-@end // NSObject(CocoaExtensions_NSObject)
+@end // NSWindow (CocoaExtensions_NSWindow)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
