@@ -768,11 +768,13 @@ showTabPane		(My_GenericPanelTabsUIPtr	inUIPtr,
 				 UInt16						inTabIndex)
 {
 	HIViewRef	selectedTabPane = nullptr;
+	Panel_Ref	selectedPanel = nullptr;
 	
 	
 	if ((inTabIndex >= 1) && (inTabIndex <= inUIPtr->tabPanePtrList.size()))
 	{
 		selectedTabPane = *(inUIPtr->tabPanePtrList[inTabIndex - 1]);
+		selectedPanel = (inUIPtr->tabPanePtrList[inTabIndex - 1])->panelRef;
 		{
 			UInt16		i = 1;
 			
@@ -780,7 +782,17 @@ showTabPane		(My_GenericPanelTabsUIPtr	inUIPtr,
 			for (My_TabPanelViewPtrList::iterator toViewPtr = inUIPtr->tabPanePtrList.begin();
 					toViewPtr != inUIPtr->tabPanePtrList.end(); ++toViewPtr, ++i)
 			{
-				if (inTabIndex != i) assert_noerr(HIViewSetVisible(*(*toViewPtr), false/* visible */));
+				if (inTabIndex != i)
+				{
+					Boolean const	kWasVisible = HIViewIsVisible(*(*toViewPtr));
+					
+					
+					assert_noerr(HIViewSetVisible(*(*toViewPtr), false/* visible */));
+					if (kWasVisible)
+					{
+						Panel_SendMessageNewVisibility((*toViewPtr)->panelRef, false/* visible */);
+					}
+				}
 			}
 		}
 	}
@@ -792,6 +804,7 @@ showTabPane		(My_GenericPanelTabsUIPtr	inUIPtr,
 	if (nullptr != selectedTabPane)
 	{
 		assert_noerr(HIViewSetVisible(selectedTabPane, true/* visible */));
+		Panel_SendMessageNewVisibility(selectedPanel, true/* visible */);
 	}
 }// showTabPane
 
