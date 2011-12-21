@@ -361,6 +361,16 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 	self = [super init];
 	if (nil != self)
 	{
+		HIWindowRef		windowWatchedForMinimize = nullptr;
+		
+		
+		// if the parent of the popover is a sheet, install the
+		// minimization handler on its parent instead
+		if (noErr != GetSheetWindowParent(aWindow, &windowWatchedForMinimize))
+		{
+			windowWatchedForMinimize = aWindow;
+		}
+		
 		self->selfRef = (PopoverManager_Ref)self;
 		self->delegate = anObject;
 		self->containerWindow = aPopover;
@@ -372,7 +382,7 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 		// Carbon-based Cocoa windows on all Mac OS X versions, so for now
 		// use Carbon Events to detect important changes
 		self->minimizeHandlerPtr = new CarbonEventHandlerWrap
-										(GetWindowEventTarget(aWindow), receiveWindowCollapse,
+										(GetWindowEventTarget(windowWatchedForMinimize), receiveWindowCollapse,
 											CarbonEventSetInClass(CarbonEventClass(kEventClassWindow),
 																	kEventWindowCollapse), self/* handler data */);
 		self->resizeHandlerPtr = new CarbonEventHandlerWrap
@@ -562,7 +572,7 @@ popOver
 {
 	[self->containerWindow setLevel:(NSNormalWindowLevel + 1)];
 	[self->containerWindow makeFirstResponder:self->logicalFirstResponder];
-	[self->containerWindow makeKeyAndOrderFront:NSApp];
+	[self->containerWindow makeKeyAndOrderFront:nil];
 }// popOver
 
 
@@ -612,6 +622,9 @@ Hides the popover window, removing it as a child of its
 parent window.  If a delay is specified then the window
 is only hidden after that time period.
 
+The "close" method is invoked so you can detect this
+event through NSWindowWillCloseNotification.
+
 See also "display".
 
 (2.7)
@@ -640,7 +653,7 @@ removeWindowWithDelay:(float)	aDelay
 		}
 		break;
 	}
-	[self->containerWindow performSelector:@selector(orderOut:) withObject:NSApp afterDelay:aDelay];
+	[self->containerWindow performSelector:@selector(close) withObject:nil afterDelay:aDelay];
 }// removeWindowWithDelay:
 
 
@@ -668,7 +681,9 @@ setToIdealSize
 
 
 /*!
-Dismisses the popover when the user goes somewhere else.
+Dismisses the popover when the user goes somewhere else,
+unless the reason for that focus change was to display
+a sheet on top.
 
 (2.7)
 */
@@ -681,7 +696,10 @@ windowDidResignKey:(NSNotification*)	aNotification
 	
 	if ([self isVisible] && (formerKeyWindow == self->containerWindow))
 	{
-		[self removeWindow];
+		if (nil == [formerKeyWindow attachedSheet])
+		{
+			[self removeWindow];
+		}
 	}
 }// windowDidResignKey:
 

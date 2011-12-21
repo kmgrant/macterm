@@ -603,6 +603,7 @@ didLoadManagedView:(NSView*)			aManagedView
 																		inWindow:parentWindow
 																		onSide:MAPositionAutomatic/* see delegate */
 																		atDistance:0.0];
+		[self->containerWindow setReleasedWhenClosed:NO];
 		CocoaBasic_ApplyStandardStyleToPopover(self->containerWindow, false/* has arrow */);
 		self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
 												self/* delegate */, kPopoverManager_AnimationTypeNone,
