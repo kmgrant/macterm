@@ -95,20 +95,24 @@ idealSize;
 #pragma mark Public Methods
 
 PopoverManager_Ref
-	PopoverManager_New				(MAAttachedWindow*				inPopover,
-									 NSView*						inLogicalFirstResponder,
-									 id< PopoverManager_Delegate >	inDelegate,
-									 PopoverManager_AnimationType	inAnimation,
-									 HIWindowRef					inParentWindow);
+	PopoverManager_New							(MAAttachedWindow*				inPopover,
+												 NSView*						inLogicalFirstResponder,
+												 id< PopoverManager_Delegate >	inDelegate,
+												 PopoverManager_AnimationType	inAnimation,
+												 HIWindowRef					inParentWindow);
 
 void
-	PopoverManager_Dispose			(PopoverManager_Ref*			inoutRefPtr);
+	PopoverManager_Dispose						(PopoverManager_Ref*			inoutRefPtr);
 
 void
-	PopoverManager_DisplayPopover	(PopoverManager_Ref				inRef);
+	PopoverManager_DisplayPopover				(PopoverManager_Ref				inRef);
 
 void
-	PopoverManager_RemovePopover	(PopoverManager_Ref				inRef);
+	PopoverManager_RemovePopover				(PopoverManager_Ref				inRef);
+
+void
+	PopoverManager_UseIdealLocationAfterDelay	(PopoverManager_Ref				inRef,
+												 Float32						inDelay);
 
 #endif
 

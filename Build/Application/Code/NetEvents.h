@@ -117,7 +117,8 @@ enum
 /*!
 kEventClassNetEvents_ServerBrowser quick reference:
 
-kEventNetEvents_ServerBrowserChanged
+kEventNetEvents_ServerBrowserNewData
+kEventNetEvents_ServerBrowserClosed
 */
 enum
 {
@@ -128,14 +129,14 @@ enum
 kEventClassNetEvents_ServerBrowser / kEventNetEvents_ServerBrowserNewData
 
 Summary:
-  Issued when the user changes anything in the browser panel.
-  This is only sent to the current event target of the panel, as
+  Issued when the user changes anything in the browser popover.
+  This is only sent to the current event target of the popover, as
   set by ServerBrowser_SetEventTarget().
 
 Discussion:
-  Although there is only one instance of the browser panel, all
-  updated parameter values are given because the user could
-  switch to another target at any time.
+  The typical response to this event is to save the specified changes.
+  You might also update other user interface elements accordingly (say,
+  to generate an equivalent command line in a field).
 
 Parameters:
   --> kEventParamNetEvents_Protocol (in, typeNetEvents_SessionProtocol)
@@ -160,25 +161,22 @@ enum
 };
 
 /*!
-kEventClassNetEvents_ServerBrowser / kEventNetEvents_ServerBrowserNewEventTarget
+kEventClassNetEvents_ServerBrowser / kEventNetEvents_ServerBrowserClosed
 
 Summary:
-  Issued to the current event target of the browser panel when a
-  new target is about to be chosen.  This is also sent if the
-  panel is hidden, as removing the panel automatically clears the
-  event target.
+  Issued to the current event target of the browser popover when the
+  popover is disappearing.
 
 Discussion:
-  This can be used, for instance, to update a GUI element, to
-  reflect the fact that the panel will no longer affect the
-  element.
+  This is typically used to update GUI elements such as a button that
+  was used to spawn the popover in the first place.
 
 Parameters:
   None
 */
 enum
 {
-	kEventNetEvents_ServerBrowserNewEventTarget = 'SBET'
+	kEventNetEvents_ServerBrowserClosed = 'SBET'
 };
 
 //@}

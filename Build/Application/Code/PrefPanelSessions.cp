@@ -320,6 +320,12 @@ struct My_SessionsPanelResourceUI
 										 CFStringRef, UInt16, CFStringRef);
 	
 	void
+	serverBrowserDisplay	(Session_Protocol, CFStringRef, UInt16, CFStringRef);
+	
+	void
+	serverBrowserRemove ();
+	
+	void
 	setAssociatedFormat		(CFStringRef);
 	
 	void
@@ -349,6 +355,7 @@ private:
 	MenuItemIndex						_numberOfSessionItemsAdded;		//!< used to manage Copy From Session Preferences pop-up menu
 	MenuItemIndex						_numberOfTerminalItemsAdded;	//!< used to manage Terminal pop-up menu
 	MenuItemIndex						_numberOfTranslationItemsAdded;	//!< used to manage Translation pop-up menu
+	ServerBrowser_Ref					_serverBrowser;					//!< if requested, interface for remote servers
 	HIViewWrap							_fieldCommandLine;				//!< text of Unix command line to run
 	CommonEventHandlers_HIViewResizer	_containerResizer;
 	CarbonEventHandlerWrap				_buttonCommandsHandler;			//!< invoked when a button is clicked
@@ -2646,6 +2653,7 @@ _numberOfFormatItemsAdded		(0),
 _numberOfSessionItemsAdded		(0),
 _numberOfTerminalItemsAdded		(0),
 _numberOfTranslationItemsAdded	(0),
+_serverBrowser					(nullptr),
 _fieldCommandLine				(HIViewWrap(idMyFieldCommandLine, inOwningWindow)
 									<< HIViewWrap_AssertExists
 									<< HIViewWrap_InstallKeyFilter(UnixCommandLineLimiter)),
@@ -2657,9 +2665,10 @@ _buttonCommandsHandler			(GetWindowEventTarget(inOwningWindow), receiveHICommand
 _whenCommandLineChangedHandler	(GetControlEventTarget(this->_fieldCommandLine), receiveFieldChangedInCommandLine,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 									this/* user data */),
-_whenServerPanelChangedHandler	(GetWindowEventTarget(inOwningWindow), receiveServerBrowserEvent,
+_whenServerPanelChangedHandler	(GetWindowEventTarget(inOwningWindow)/* see serverBrowserDisplay() for target dependency */,
+									receiveServerBrowserEvent,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassNetEvents_ServerBrowser),
-															kEventNetEvents_ServerBrowserNewData, kEventNetEvents_ServerBrowserNewEventTarget),
+															kEventNetEvents_ServerBrowserNewData, kEventNetEvents_ServerBrowserClosed),
 									this/* user data */),
 _whenFavoritesChangedHandler	(ListenerModel_NewStandardListener(preferenceChanged, this/* context */), true/* is retained */)
 {
@@ -2688,6 +2697,10 @@ Tears down a My_SessionsPanelResourceUI structure.
 My_SessionsPanelResourceUI::
 ~My_SessionsPanelResourceUI ()
 {
+	if (nullptr != _serverBrowser)
+	{
+		ServerBrowser_Dispose(&_serverBrowser);
+	}
 	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler.returnRef(), kPreferences_ChangeNumberOfContexts);
 	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler.returnRef(), kPreferences_ChangeContextName);
 }// My_SessionsPanelResourceUI destructor
@@ -2811,7 +2824,7 @@ panelChanged	(Panel_Ref		inPanel,
 			
 			
 			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
-			ServerBrowser_SetVisible(false);
+			panelDataPtr->interfacePtr->serverBrowserRemove();
 			delete panelDataPtr;
 		}
 		break;
@@ -2889,11 +2902,7 @@ panelChanged	(Panel_Ref		inPanel,
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
-			// force the Servers panel to no longer be associated with this data,
-			// by resetting it; this will automatically trigger appropriate UI
-			// changes (namely, removing highlighting from the button that opened
-			// the panel)
-			ServerBrowser_RemoveEventTarget();
+			panelDataPtr->interfacePtr->serverBrowserRemove();
 			
 			if (nullptr != oldContext)
 			{
@@ -2910,10 +2919,15 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
 		{
-			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			My_SessionsPanelResourceDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelResourceDataPtr);
+			Boolean								isNowVisible = *((Boolean*)inDataPtr);
 			
 			
-			// do nothing
+			if (false == isNowVisible)
+			{
+				panelDataPtr->interfacePtr->serverBrowserRemove();
+			}
 		}
 		break;
 	
@@ -3614,34 +3628,43 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 				break;
 			
 			case kCommandEditCommandLine:
-				// show the server browser panel and target the command line field
+				// show the server browser panel and target the command line field, or hide the browser
 				{
-					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
-																					My_SessionsPanelResourceDataPtr);
-					HIWindowRef							window = HIViewGetWindow(resourceInterfacePtr->mainView);
-					HIViewWrap							panelDisplayButton(idMyButtonConnectToServer, window);
-					Session_Protocol					dataModelProtocol = kSession_ProtocolSSH1;
-					CFStringRef							dataModelHostName = nullptr;
-					UInt16								dataModelPort = 0;
-					CFStringRef							dataModelUserID = nullptr;
-					UInt16								preferenceCountOK = 0;
+					HIWindowRef		window = HIViewGetWindow(resourceInterfacePtr->mainView);
+					HIViewWrap		panelDisplayButton(idMyButtonConnectToServer, window);
 					
 					
-					preferenceCountOK = resourceInterfacePtr->readPreferencesForRemoteServers
-										(dataPtr->dataModel, true/* search defaults too */,
-											dataModelProtocol, dataModelHostName, dataModelPort, dataModelUserID);
-					if (4 != preferenceCountOK)
+					if (kControlCheckBoxCheckedValue == GetControl32BitValue(panelDisplayButton))
 					{
-						Console_Warning(Console_WriteLine, "unable to read one or more remote server preferences!");
+						resourceInterfacePtr->serverBrowserRemove();
 					}
-					SetControl32BitValue(panelDisplayButton, kControlCheckBoxCheckedValue);
-					ServerBrowser_SetVisible(true);
-					ServerBrowser_SetEventTarget(GetWindowEventTarget(window), dataModelProtocol, dataModelHostName, dataModelPort, dataModelUserID);
-					
-					CFRelease(dataModelHostName), dataModelHostName = nullptr;
-					CFRelease(dataModelUserID), dataModelUserID = nullptr;
-					
-					result = noErr;
+					else
+					{
+						My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																						My_SessionsPanelResourceDataPtr);
+						Session_Protocol					dataModelProtocol = kSession_ProtocolSSH1;
+						CFStringRef							dataModelHostName = nullptr;
+						UInt16								dataModelPort = 0;
+						CFStringRef							dataModelUserID = nullptr;
+						UInt16								preferenceCountOK = 0;
+						
+						
+						preferenceCountOK = resourceInterfacePtr->readPreferencesForRemoteServers
+											(dataPtr->dataModel, false/* search defaults too */,
+												dataModelProtocol, dataModelHostName, dataModelPort, dataModelUserID);
+						if (4 != preferenceCountOK)
+						{
+							Console_Warning(Console_WriteLine, "unable to read one or more remote server preferences!");
+						}
+						SetControl32BitValue(panelDisplayButton, kControlCheckBoxCheckedValue);
+						resourceInterfacePtr->serverBrowserDisplay(dataModelProtocol, dataModelHostName,
+																	dataModelPort, dataModelUserID);
+						
+						CFRelease(dataModelHostName), dataModelHostName = nullptr;
+						CFRelease(dataModelUserID), dataModelUserID = nullptr;
+						
+						result = noErr;
+					}
 				}
 				break;
 			
@@ -3776,6 +3799,70 @@ savePreferencesForRemoteServers		(Preferences_ContextRef		inoutSettings,
 	
 	return result;
 }// My_SessionsPanelResourceUI::savePreferencesForRemoteServers
+
+
+/*!
+Shows a popover for editing server settings such as the
+host name of a remote session’s command line.
+
+(4.0)
+*/
+void
+My_SessionsPanelResourceUI::
+serverBrowserDisplay	(Session_Protocol	inProtocol,
+						 CFStringRef		inHostName,
+						 UInt16				inPortNumber,
+						 CFStringRef		inUserID)
+{
+	HIWindowRef const	kWindow = HIViewGetWindow(_fieldCommandLine);
+	
+	
+	if (nullptr == this->_serverBrowser)
+	{
+		HIViewRef	panelView = nullptr;
+		HIRect		panelBounds;
+		
+		
+		Panel_GetContainerView(this->panel, panelView);
+		(OSStatus)HIViewGetBounds(panelView, &panelBounds);
+		
+		(OSStatus)HIViewConvertRect(&panelBounds, panelView, nullptr/* make window-relative */);
+		
+		// IMPORTANT: the event target given here should be the same one
+		// used to register event handlers in the constructor!
+		this->_serverBrowser = ServerBrowser_New
+								(kWindow, CGPointMake(panelBounds.origin.x + panelBounds.size.width - 128/* arbitrary */,
+														panelBounds.origin.y + 200)/* refers to field; see NIB setup */,
+									GetWindowEventTarget(kWindow));
+	}
+	
+	// update the browser with the new settings (might be sharing
+	// a previously-constructed interface with old data)
+	ServerBrowser_Configure(this->_serverBrowser, inProtocol, inHostName, inPortNumber, inUserID);
+	
+	// display server browser (closed by the user)
+	ServerBrowser_Display(this->_serverBrowser);
+}// My_SessionsPanelResourceUI::serverBrowserDisplay
+
+
+/*!
+Hides the popover for editing server settings.  If
+"inReset" is true, the popover is also detached from
+any target it might have forwarded events to (so the
+next time it is displayed, it will not affect that
+target).
+
+(4.0)
+*/
+void
+My_SessionsPanelResourceUI::
+serverBrowserRemove ()
+{
+	if (nullptr != this->_serverBrowser)
+	{
+		ServerBrowser_Remove(this->_serverBrowser);
+	}
+}// My_SessionsPanelResourceUI::serverBrowserRemove
 
 
 /*!
@@ -4338,7 +4425,7 @@ receiveFieldChangedInCommandLine	(EventHandlerCallRef	inHandlerCallRef,
 
 /*!
 Implements "kEventNetEvents_ServerBrowserNewData" and
-"kEventNetEvents_ServerBrowserNewEventTarget" of
+"kEventNetEvents_ServerBrowserClosed" of
 "kEventClassNetEvents_ServerBrowser" for the Resource tab.
 
 When data is changed, the command line is rewritten to use the
@@ -4363,7 +4450,7 @@ receiveServerBrowserEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 	
 	assert(kEventClass == kEventClassNetEvents_ServerBrowser);
 	assert((kEventKind == kEventNetEvents_ServerBrowserNewData) ||
-			(kEventKind == kEventNetEvents_ServerBrowserNewEventTarget));
+			(kEventKind == kEventNetEvents_ServerBrowserClosed));
 	
 	switch (kEventKind)
 	{
@@ -4447,7 +4534,7 @@ receiveServerBrowserEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 		}
 		break;
 	
-	case kEventNetEvents_ServerBrowserNewEventTarget:
+	case kEventNetEvents_ServerBrowserClosed:
 		// remove highlighting from the panel-spawning button
 		{
 			HIWindowRef		window = HIViewGetWindow(resourceInterfacePtr->mainView);

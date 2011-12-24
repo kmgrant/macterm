@@ -49,11 +49,14 @@ extern "C"
 #import <AutoPool.objc++.h>
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
+#import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
+#import <PopoverManager.objc++.h>
 #import <SoundSystem.h>
 
 // application includes
+#import "AlertMessages.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "DNR.h"
@@ -63,6 +66,74 @@ extern "C"
 
 
 #pragma mark Types
+
+@interface ServerBrowser_Handler : NSObject< ServerBrowser_ViewManagerChannel, PopoverManager_Delegate >
+{
+	ServerBrowser_Ref			selfRef;				// identical to address of structure, but typed as ref
+	ServerBrowser_ViewManager*	viewMgr;				// loads the server browser interface
+	MAAttachedWindow*			containerWindow;		// holds the main view
+	NSView*						managedView;			// the view that implements the majority of the interface
+	HIWindowRef					parentWindow;			// the Carbon window that the point is relative to
+	CGPoint						parentRelativeArrowTip;	// the point relative to the parent window where the popover arrow appears
+	EventTargetRef				eventTarget;			// temporary; allows external Carbon interfaces to respond to events
+	Session_Protocol			initialProtocol;		// used to initialize the view when it loads
+	NSString*					initialHostName;		// used to initialize the view when it loads
+	unsigned int				initialPortNumber;		// used to initialize the view when it loads
+	NSString*					initialUserID;			// used to initialize the view when it loads
+	PopoverManager_Ref			popoverMgr;				// manages common aspects of popover window behavior
+}
+
++ (ServerBrowser_Handler*)
+viewHandlerFromRef:(ServerBrowser_Ref)_;
+
+- (id)
+initWithPosition:(CGPoint)_
+relativeToParentWindow:(HIWindowRef)_
+eventTarget:(EventTargetRef)_;
+
+- (void)
+configureWithProtocol:(Session_Protocol)_
+hostName:(NSString*)_
+portNumber:(unsigned int)_
+userID:(NSString*)_;
+
+- (void)
+display;
+
+- (void)
+remove;
+
+- (NSWindow*)
+parentCocoaWindow;
+
+// PopoverManager_Delegate
+
+- (NSPoint)
+idealAnchorPointForParentWindowFrame:(NSRect)_;
+
+- (MAWindowPosition)
+idealArrowPositionForParentWindowFrame:(NSRect)_;
+
+- (NSSize)
+idealSize;
+
+// ServerBrowser_ViewManagerChannel
+
+- (void)
+serverBrowser:(ServerBrowser_ViewManager*)_
+didLoadManagedView:(NSView*)_;
+
+- (void)
+serverBrowser:(ServerBrowser_ViewManager*)_
+didFinishUsingManagedView:(NSView*)_;
+
+- (void)
+serverBrowser:(ServerBrowser_ViewManager*)_
+setManagedView:(NSView*)_
+toScreenFrame:(NSRect)_;
+
+@end // ServerBrowser_Handler
+
 
 /*!
 Implements an object wrapper for NSNetService instances returned
@@ -103,7 +174,7 @@ setBestResolvedAddress:(NSString*)_;
 - (void)
 setBestResolvedPort:(unsigned short)_;
 
-@end
+@end // ServerBrowser_NetService
 
 
 /*!
@@ -156,20 +227,20 @@ description:(NSString*)_
 serviceType:(NSString*)_
 defaultPort:(unsigned short)_;
 
-@end
+@end // ServerBrowser_Protocol
 
 #pragma mark Internal Method Prototypes
 namespace {
 
-id			flagNo						();
-void		initializePanel				(ServerBrowser_PanelController*, Session_Protocol, CFStringRef, UInt16,
-										 CFStringRef);
-void		notifyOldEventTarget		(EventTargetRef);
+void		notifyOfClosedPopover		(EventTargetRef);
 OSStatus	receiveLookupComplete		(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
-@interface ServerBrowser_PanelController (ServerBrowser_PanelControllerInternal)
+@interface ServerBrowser_ViewManager (ServerBrowser_ViewManagerInternal)
+
+- (void)
+didDoubleClickDiscoveredHostWithSelection:(NSArray*)_;
 
 - (ServerBrowser_NetService*)
 discoveredHost;
@@ -180,177 +251,131 @@ notifyOfChangeInValueReturnedBy:(SEL)_;
 - (ServerBrowser_Protocol*)
 protocol;
 
-@end // ServerBrowser_PanelController (ServerBrowser_PanelControllerInternal)
+- (void)
+serverBrowserWindowWillClose:(NSNotification*)_;
 
-#pragma mark Variables
-namespace {
-
-CarbonEventHandlerWrap&			gBrowserLookupResponder ()
-								{
-									static CarbonEventHandlerWrap		x(GetApplicationEventTarget(), receiveLookupComplete,
-																			CarbonEventSetInClass(CarbonEventClass(kEventClassNetEvents_DNS),
-																									kEventNetEvents_HostLookupComplete),
-																			nullptr/* user data */);
-									return x;
-								}
-EventTargetRef					gPanelEventTarget = nullptr;	//!< temporary, for Carbon interaction
-ServerBrowser_PanelController*	gServerBrowser_PanelController = nil;
-
-}// anonymous namespace
+@end // ServerBrowser_ViewManager (ServerBrowser_ViewManagerInternal)
 
 
 
 #pragma mark Public Methods
 
 /*!
-Returns true only if the panel is showing.
+Constructs a server browser as a popover that points to the given
+location in the parent window.  Use ServerBrowser_Display() to
+show the popover.  Use ServerBrowser_Configure() beforehand to set
+the various fields in the interface.
+
+Note that the initial position is expressed in window coordinates
+(top zero, left zero), not Cartesian (Cocoa) coordinates.
+
+For now, a Carbon Events target is used to communicate a couple
+of key events: changes to the contents of the panel (e.g. user
+modifies the host name field), and the closing of the server
+browser itself.  In the future this will probably be replaced by
+more direct invocation of Cocoa methods on a given object, but
+not until dependent interfaces have been ported to Cocoa.
 
 (4.0)
 */
-Boolean
-ServerBrowser_IsVisible ()
+ServerBrowser_Ref
+ServerBrowser_New	(HIWindowRef		inParentWindow,
+					 CGPoint			inParentRelativePoint,
+					 EventTargetRef		inResponder)
 {
-	AutoPool	_;
-	Boolean		result = false;
+	ServerBrowser_Ref	result = nullptr;
 	
 	
-	result = (YES == [[[ServerBrowser_PanelController sharedServerBrowserPanelController] window] isVisible]);
+	// WARNING: this interpretation should match "viewHandlerFromRef:"
+	result = (ServerBrowser_Ref)[[ServerBrowser_Handler alloc] initWithPosition:inParentRelativePoint
+																				relativeToParentWindow:inParentWindow
+																				eventTarget:inResponder];
 	
 	return result;
-}// IsVisible
+}// New
 
 
 /*!
-Removes any current event target, resetting the panel to
-arbitrary values and notifying the previous target of a change.
-
-This is automatically done when the window is closed.
+Releases the server browser and sets your copy of
+the reference to nullptr.
 
 (4.0)
 */
 void
-ServerBrowser_RemoveEventTarget ()
+ServerBrowser_Dispose	(ServerBrowser_Ref*		inoutDialogPtr)
 {
-	// stop associating the panel with any event target, and notify the previous target
-	ServerBrowser_SetEventTarget(nullptr/* event target */, kSession_ProtocolSSH1, CFSTR("")/* host */,
-									22/* port - arbitrary */, CFSTR("")/* user ID */);
-}// RemoveEventTarget
+	ServerBrowser_Handler*	ptr = [ServerBrowser_Handler viewHandlerFromRef:*inoutDialogPtr];
+	
+	
+	[ptr release];
+	*inoutDialogPtr = nullptr;
+}// Dispose
 
 
 /*!
-Sets the current event target.  This is for Carbon interfaces,
-and is deprecated; Cocoa interfaces are better off using the
-"setTarget:protocol:hostName:portNumber:userID:" method of
-ServerBrowser_PanelController.
-
-The target is sent an event whenever anything in the panel is
-changed by the user, which includes the given initial values.
-(Initialization is mandatory, because the panel could already be
-open and in use by some other target; to not be misleading, it
-should be refreshed to reflect the new target.)
-
-You can pass "nullptr" as the target to set no target, but it is
-easier to just call ServerBrowser_RemoveEventTarget().
-
-Before the window is shown, a valid target should be set;
-otherwise, the user could change something that goes unnoticed.
-
-IMPORTANT:	This is for Carbon compatibility and is not a
-			long-term solution.  In Cocoa, notifications are
-			sent along the responder chain, using the methods
-			declared in "ServerBrowser_PanelChanges".
+Fills in the fields of the interface with the given values.
+This should be done before calling ServerBrowser_Display().
+It allows you to reuse a browser for multiple data sources.
 
 (4.0)
 */
 void
-ServerBrowser_SetEventTarget	(EventTargetRef		inTargetOrNull,
-								 Session_Protocol	inProtocol,
-								 CFStringRef		inHostName,
-								 UInt16				inPortNumber,
-								 CFStringRef		inUserID)
+ServerBrowser_Configure		(ServerBrowser_Ref		inDialog,
+							 Session_Protocol		inProtocol,
+							 CFStringRef			inHostName,
+							 UInt16					inPortNumber,
+							 CFStringRef			inUserID)
 {
-	AutoPool						_;
-	ServerBrowser_PanelController*	panelController = [ServerBrowser_PanelController sharedServerBrowserPanelController];
+	ServerBrowser_Handler*		ptr = [ServerBrowser_Handler viewHandlerFromRef:inDialog];
 	
 	
-	// if a target already exists, send it one final event to tell it
-	// that a new target will be chosen
-	[panelController setTarget:nil protocol:kSession_ProtocolSSH1 hostName:@"" portNumber:22 userID:@""];
-	if ((nullptr != gPanelEventTarget) && (inTargetOrNull != gPanelEventTarget))
+	[ptr configureWithProtocol:inProtocol hostName:(NSString*)inHostName portNumber:inPortNumber
+								userID:(NSString*)inUserID];
+}// Configure
+
+
+/*!
+Shows the server browser, pointing at the target view
+that was given at construction time.
+
+(4.0)
+*/
+void
+ServerBrowser_Display	(ServerBrowser_Ref		inDialog)
+{
+	ServerBrowser_Handler*		ptr = [ServerBrowser_Handler viewHandlerFromRef:inDialog];
+	
+	
+	if (nullptr == ptr)
 	{
-		notifyOldEventTarget(gPanelEventTarget);
-	}
-	
-	gPanelEventTarget = inTargetOrNull;
-	
-	// now update the panel
-	initializePanel(panelController, inProtocol, inHostName, inPortNumber, inUserID);
-}// SetEventTarget
-
-
-/*!
-Shows or hides the panel.
-
-(4.0)
-*/
-void
-ServerBrowser_SetVisible	(Boolean	inIsVisible)
-{
-	AutoPool		_;
-	
-	
-	if (inIsVisible)
-	{
-		[[ServerBrowser_PanelController sharedServerBrowserPanelController] showWindow:NSApp];
+		Alert_ReportOSStatus(paramErr);
 	}
 	else
 	{
-		[[ServerBrowser_PanelController sharedServerBrowserPanelController] close];
+		// load the view asynchronously and eventually display it in a window
+		[ptr display];
 	}
-}// SetVisible
+}// Display
+
+
+/*!
+Hides the server browser.  It can be redisplayed at any
+time by calling ServerBrowser_Display() again.
+
+(4.0)
+*/
+void
+ServerBrowser_Remove	(ServerBrowser_Ref		inDialog)
+{
+	ServerBrowser_Handler*		ptr = [ServerBrowser_Handler viewHandlerFromRef:inDialog];
+	
+	
+	[ptr remove];
+}// Remove
 
 
 #pragma mark Internal Methods
 namespace {
-
-/*!
-Returns an object representing a false value, useful in many
-simple flag methods.  The given item is not used.
-
-(4.0)
-*/
-id
-flagNo ()
-{
-	BOOL	result = NO;
-	
-	
-	return [NSNumber numberWithBool:result];
-}// flagNo
-
-
-/*!
-Fills in all of the main views of the Servers panel
-with the given default values.
-
-(4.0)
-*/
-void
-initializePanel		(ServerBrowser_PanelController*		inController,
-					 Session_Protocol					inProtocol,
-					 CFStringRef						inHostName,
-					 UInt16								inPortNumber,
-					 CFStringRef						inUserID)
-{
-	if (nil != inController)
-	{
-		[inController setProtocolIndexByProtocol:inProtocol];
-		[inController setHostName:(NSString*)inHostName];
-		[inController setPortNumber:[[NSNumber numberWithUnsignedShort:inPortNumber] stringValue]];
-		[inController setUserID:(NSString*)inUserID];
-	}
-}// initializePanel
-
 
 /*!
 For Carbon compatibility, sends an event to the previous
@@ -360,35 +385,31 @@ new target is taking over.
 (4.0)
 */
 void
-notifyOldEventTarget	(EventTargetRef		inOldTarget)
+notifyOfClosedPopover	(EventTargetRef		inOldTarget)
 {
-	EventRef	panelHasNewTargetEvent = nullptr;
+	EventRef	panelClosedEvent = nullptr;
 	OSStatus	error = noErr;
 	
 	
 	// create a Carbon Event
 	error = CreateEvent(nullptr/* allocator */, kEventClassNetEvents_ServerBrowser,
-						kEventNetEvents_ServerBrowserNewEventTarget, GetCurrentEventTime(),
-						kEventAttributeNone, &panelHasNewTargetEvent);
-	
-	// attach required parameters to event, then dispatch it
-	if (noErr != error) panelHasNewTargetEvent = nullptr;
+						kEventNetEvents_ServerBrowserClosed, GetCurrentEventTime(),
+						kEventAttributeNone, &panelClosedEvent);
+	if (noErr != error)
+	{
+		panelClosedEvent = nullptr;
+	}
 	else
 	{
-		Boolean		doPost = true;
-		
-		
-		if (doPost)
-		{
-			// finally, send the message to the target
-			error = SendEventToEventTargetWithOptions(panelHasNewTargetEvent, inOldTarget,
-														kEventTargetDontPropagate);
-		}
+		error = SendEventToEventTargetWithOptions(panelClosedEvent, inOldTarget, kEventTargetDontPropagate);
 	}
 	
 	// dispose of event
-	if (nullptr != panelHasNewTargetEvent) ReleaseEvent(panelHasNewTargetEvent), panelHasNewTargetEvent = nullptr;
-}// notifyOldEventTarget
+	if (nullptr != panelClosedEvent)
+	{
+		ReleaseEvent(panelClosedEvent), panelClosedEvent = nullptr;
+	}
+}// notifyOfClosedPopover
 
 
 /*!
@@ -401,13 +422,13 @@ field containing the remote host name.
 OSStatus
 receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
-						 void*					UNUSED_ARGUMENT(inContext))
+						 void*					inViewManager)
 {
-	AutoPool						_;
-	UInt32 const					kEventClass = GetEventClass(inEvent);
-	UInt32 const					kEventKind = GetEventKind(inEvent);
-	ServerBrowser_PanelController*	panelController = [ServerBrowser_PanelController sharedServerBrowserPanelController];
-	OSStatus						result = eventNotHandledErr;
+	AutoPool					_;
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
+	ServerBrowser_ViewManager*	serverBrowser = REINTERPRET_CAST(inViewManager, ServerBrowser_ViewManager*);
+	OSStatus					result = eventNotHandledErr;
 	
 	
 	assert(kEventClass == kEventClassNetEvents_DNS);
@@ -430,7 +451,7 @@ receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				if (nullptr != addressCFString)
 				{
-					[panelController setHostName:(NSString*)addressCFString];
+					[serverBrowser setHostName:(NSString*)addressCFString];
 					CFRelease(addressCFString), addressCFString = nullptr;
 					result = noErr;
 				}
@@ -440,12 +461,346 @@ receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	
 	// hide progress indicator
-	[panelController setHidesProgress:YES];
+	[serverBrowser setHidesProgress:YES];
 	
 	return result;
 }// receiveLookupComplete
 
 } // anonymous namespace
+
+
+@implementation ServerBrowser_Handler
+
+
+/*!
+Converts from the opaque reference type to the internal type.
+
+(4.0)
+*/
++ (ServerBrowser_Handler*)
+viewHandlerFromRef:(ServerBrowser_Ref)		aRef
+{
+	return (ServerBrowser_Handler*)aRef;
+}// viewHandlerFromRef
+
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
+- (id)
+initWithPosition:(CGPoint)				aPoint
+relativeToParentWindow:(HIWindowRef)	aWindow
+eventTarget:(EventTargetRef)			aTarget
+{
+	self = [super init];
+	if (nil != self)
+	{
+		self->selfRef = (ServerBrowser_Ref)self;
+		self->viewMgr = nil;
+		self->containerWindow = nil;
+		self->managedView = nil;
+		self->parentWindow = aWindow;
+		self->parentRelativeArrowTip = aPoint;
+		self->eventTarget = aTarget;
+		self->initialProtocol = kSession_ProtocolSSH1;
+		self->initialHostName = [@"" retain];
+		self->initialPortNumber = 22;
+		self->initialUserID = [@"" retain];
+		self->popoverMgr = nullptr;
+	}
+	return self;
+}// initWithPosition:relativeToParentWindow:eventTarget:
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
+- (void)
+dealloc
+{
+	[managedView release];
+	[viewMgr release];
+	[initialHostName release];
+	[initialUserID release];
+	if (nullptr != popoverMgr)
+	{
+		PopoverManager_Dispose(&popoverMgr);
+	}
+	[super dealloc];
+}// dealloc
+
+
+/*!
+Specifies the initial values for the user interface.  This is
+typically done just before calling "display".
+
+(4.0)
+*/
+- (void)
+configureWithProtocol:(Session_Protocol)	aProtocol
+hostName:(NSString*)						aHostName
+portNumber:(unsigned int)					aPortNumber
+userID:(NSString*)							aUserID
+{
+	self->initialProtocol = aProtocol;
+	self->initialHostName = [aHostName retain];
+	self->initialPortNumber = aPortNumber;
+	self->initialUserID = [aUserID retain];
+}// configureWithProtocol:hostName:portNumber:userID:
+
+
+/*!
+Creates the server browser view asynchronously; when the view
+is ready, it calls "serverBrowser:didLoadManagedView:".
+
+(4.0)
+*/
+- (void)
+display
+{
+	if (nil == self->viewMgr)
+	{
+		// no focus is done the first time because this is
+		// eventually done in "serverBrowser:didLoadManagedView:"
+		self->viewMgr = [[ServerBrowser_ViewManager alloc]
+							initWithResponder:self eventTarget:self->eventTarget];
+	}
+	else
+	{
+		// window is already loaded, just activate it (but also initialize
+		// again, to mimic initialization performed in the “create new” case)
+		[self->viewMgr setProtocolIndexByProtocol:self->initialProtocol];
+		[self->viewMgr setHostName:self->initialHostName];
+		[self->viewMgr setPortNumber:[NSString stringWithFormat:@"%d", self->initialPortNumber]];
+		[self->viewMgr setUserID:self->initialUserID];
+		PopoverManager_DisplayPopover(self->popoverMgr);
+	}
+}// display
+
+
+/*!
+Hides the popover.  It can be shown again at any time
+using the "display" method.
+
+(4.0)
+*/
+- (void)
+remove
+{
+	if (nil != self->popoverMgr)
+	{
+		PopoverManager_RemovePopover(self->popoverMgr);
+	}
+}// remove
+
+
+/*!
+Returns the parent window of the target view.
+
+(4.0)
+*/
+- (HIWindowRef)
+parentCarbonWindow
+{
+	HIWindowRef		result = self->parentWindow;
+	
+	
+	return result;
+}// parentCarbonWindow
+
+
+/*!
+Returns the Cocoa window that represents the parent
+of the target view, even if that is a Carbon window.
+
+(4.0)
+*/
+- (NSWindow*)
+parentCocoaWindow
+{
+	NSWindow*	result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow([self parentCarbonWindow]);
+	
+	
+	return result;
+}// parentCocoaWindow
+
+
+#pragma mark NSWindowDelegate
+
+
+/*!
+Returns the appropriate animation rectangle for the
+given sheet.
+
+(4.0)
+*/
+- (NSRect)
+window:(NSWindow*)				window
+willPositionSheet:(NSWindow*)	sheet
+usingRect:(NSRect)				rect
+{
+#pragma unused(window, sheet)
+	NSRect	result = rect;
+	NSRect	someFrame = [self->containerWindow frameRectForViewRect:NSZeroRect];
+	
+	
+	// move an arbitrary distance away from the top edge
+	result.origin.y -= 1;
+	
+	// also offset further using the view position as a clue (namely, if the arrow is on top the sheet moves further)
+	result.origin.y -= (someFrame.origin.y + someFrame.size.height);
+	
+	// the meaning of the height is undefined, so make it zero
+	result.size.height = 0;
+	
+	// force the fold-out animation, which seems to look better with popovers
+	result.size.width -= 200;
+	result.origin.x += 100;
+	
+	return result;
+}// window:willPositionSheet:usingRect:
+
+
+#pragma mark PopoverManager_Delegate
+
+
+/*!
+Returns the location (relative to the window) where the
+popover’s arrow tip should appear.  The location of the
+popover itself depends on the arrow placement chosen by
+"idealArrowPositionForParentWindowFrame:".
+
+(4.0)
+*/
+- (NSPoint)
+idealAnchorPointForParentWindowFrame:(NSRect)	parentFrame
+{
+#pragma unused(parentFrame)
+	NSPoint		result = NSMakePoint(parentRelativeArrowTip.x, parentFrame.size.height - parentRelativeArrowTip.y);
+	
+	
+	return result;
+}// idealAnchorPointForParentWindowFrame:
+
+
+/*!
+Returns arrow placement information for the popover.
+
+(4.0)
+*/
+- (MAWindowPosition)
+idealArrowPositionForParentWindowFrame:(NSRect)		parentFrame
+{
+#pragma unused(parentFrame)
+	MAWindowPosition	result = MAPositionAutomatic;
+	
+	
+	return result;
+}// idealArrowPositionForParentWindowFrame:
+
+
+/*!
+Returns the initial size for the popover.
+
+(4.0)
+*/
+- (NSSize)
+idealSize
+{
+	NSRect		frameRect = [self->containerWindow frameRectForViewRect:[self->managedView frame]];
+	NSSize		result = frameRect.size;
+	
+	
+	return result;
+}// idealSize
+
+
+#pragma mark ServerBrowser_ViewManagerChannel
+
+
+/*!
+Called when a ServerBrowser_ViewManager has finished
+loading and initializing its view; responds by displaying
+the view in a window and giving it keyboard focus.
+
+Since this may be invoked multiple times, the window is
+only created during the first invocation.
+
+(4.0)
+*/
+- (void)
+serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
+didLoadManagedView:(NSView*)				aManagedView
+{
+	self->managedView = aManagedView;
+	[self->managedView retain];
+	
+	[aBrowser setProtocolIndexByProtocol:self->initialProtocol];
+	[aBrowser setHostName:self->initialHostName];
+	[aBrowser setPortNumber:[NSString stringWithFormat:@"%d", self->initialPortNumber]];
+	[aBrowser setUserID:self->initialUserID];
+	
+	if (nil == self->containerWindow)
+	{
+		self->containerWindow = [[MAAttachedWindow alloc] initWithView:aManagedView
+																		attachedToPoint:NSZeroPoint/* see delegate */
+																		inWindow:[self parentCocoaWindow]
+																		onSide:MAPositionAutomatic/* see delegate */
+																		atDistance:0.0];
+		[self->containerWindow setDelegate:self];
+		[self->containerWindow setReleasedWhenClosed:NO];
+		CocoaBasic_ApplyStandardStyleToPopover(self->containerWindow, true/* has arrow */);
+		self->popoverMgr = PopoverManager_New(self->containerWindow, [aBrowser logicalFirstResponder],
+												self/* delegate */, kPopoverManager_AnimationTypeMinimal,
+												[self parentCarbonWindow]);
+		PopoverManager_DisplayPopover(self->popoverMgr);
+	}
+}// serverBrowser:didLoadManagedView:
+
+
+/*!
+Responds to a close of the interface by updating
+any associated interface elements (such as a button
+that opened the popover in the first place).
+
+(4.0)
+*/
+- (void)
+serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
+didFinishUsingManagedView:(NSView*)			aManagedView
+{
+#pragma unused(aBrowser, aManagedView)
+	notifyOfClosedPopover(self->eventTarget);
+}// serverBrowser:didFinishUsingManagedView:
+
+
+/*!
+Requests that the containing window be resized to allow the given
+view size.  This is only for odd cases like a user interface
+element causing part of the display to appear or disappear;
+normally the window can just be manipulated directly.
+
+(4.0)
+*/
+- (void)
+serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
+setManagedView:(NSView*)					aManagedView
+toScreenFrame:(NSRect)						aRect
+{
+#pragma unused(aBrowser, aManagedView)
+	NSRect	windowFrame = [self->containerWindow frameRectForViewRect:aRect];
+	
+	
+	[self->containerWindow setFrame:windowFrame display:YES animate:YES];
+	PopoverManager_UseIdealLocationAfterDelay(self->popoverMgr, 0.1/* arbitrary delay */);
+}// serverBrowser:setManagedView:toScreenFrame:
+
+
+@end // ServerBrowser_Handler
 
 
 @implementation ServerBrowser_NetService
@@ -640,7 +995,7 @@ netServiceDidResolveAddress:(NSNetService*)		resolvingService
 }// netServiceDidResolveAddress:
 
 
-@end
+@end // ServerBrowser_NetService
 
 
 @implementation ServerBrowser_Protocol
@@ -776,26 +1131,10 @@ setServiceType:(NSString*)		aString
 }// setServiceType:
 
 
-@end
+@end // ServerBrowser_Protocol
 
 
-@implementation ServerBrowser_PanelController
-
-
-/*!
-Returns the singleton.
-
-(4.0)
-*/
-+ (id)
-sharedServerBrowserPanelController
-{
-	if (nil == gServerBrowser_PanelController)
-	{
-		gServerBrowser_PanelController = [[[self class] allocWithZone:NULL] init];
-	}
-	return gServerBrowser_PanelController;
-}// sharedServerBrowserPanelController
+@implementation ServerBrowser_ViewManager
 
 
 /*!
@@ -804,13 +1143,77 @@ Designated initializer.
 (4.0)
 */
 - (id)
-init
+initWithResponder:(id< ServerBrowser_ViewManagerChannel >)	aResponder
+eventTarget:(EventTargetRef)								aTarget
 {
-	// The correct place for pre-NIB initialization is "windowWillLoad".
-	// The correct place for post-NIB initialization is "windowDidLoad".
-	self = [super initWithWindowNibName:@"ServerBrowserCocoa"];
+	self = [super init];
+	if (nil != self)
+	{
+		discoveredHosts = [[NSMutableArray alloc] init];
+		recentHosts = [[NSMutableArray alloc] init];
+		// TEMPORARY - it should be possible to externally define these (probably via Python)
+		protocolDefinitions = [[[NSArray alloc] initWithObjects:
+								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSSH1
+									description:NSLocalizedStringFromTable(@"SSH Version 1", @"ServerBrowser"/* table */, @"ssh-1")
+									serviceType:@"_ssh._tcp."
+									defaultPort:22] autorelease],
+								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSSH2
+									description:NSLocalizedStringFromTable(@"SSH Version 2", @"ServerBrowser"/* table */, @"ssh-2")
+									serviceType:@"_ssh._tcp."
+									defaultPort:22] autorelease],
+								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolTelnet
+									description:NSLocalizedStringFromTable(@"TELNET", @"ServerBrowser"/* table */, @"telnet")
+									serviceType:@"_telnet._tcp."
+									defaultPort:23] autorelease],
+								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolFTP
+									description:NSLocalizedStringFromTable(@"FTP", @"ServerBrowser"/* table */, @"ftp")
+									serviceType:@"_ftp._tcp."
+									defaultPort:21] autorelease],
+								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSFTP
+									description:NSLocalizedStringFromTable(@"SFTP", @"ServerBrowser"/* table */, @"sftp")
+									serviceType:@"_ssh._tcp."
+									defaultPort:22] autorelease],
+								nil] autorelease];
+		discoveredHostsContainer = nil;
+		discoveredHostsTableView = nil;
+		managedView = nil;
+		nextResponderWhenHidingDiscoveredHosts = nil;
+		
+		responder = aResponder;
+		eventTarget = aTarget;
+		lookupHandlerPtr = nullptr;
+		browser = [[NSNetServiceBrowser alloc] init];
+		[browser setDelegate:self];
+		discoveredHostIndexes = [[NSIndexSet alloc] init];
+		hidesDiscoveredHosts = YES;
+		hidesErrorMessage = YES;
+		hidesPortNumberError = YES;
+		hidesProgress = YES;
+		hidesUserIDError = YES;
+		protocolIndexes = [[NSIndexSet alloc] init];
+		hostName = [[[NSString alloc] initWithString:@""] autorelease];
+		portNumber = [[[NSString alloc] initWithString:@""] autorelease];
+		userID = [[[NSString alloc] initWithString:@""] autorelease];
+		errorMessage = [[NSString string] retain];
+		
+		// it is necessary to capture and release all top-level objects here
+		// so that "self" can actually be deallocated; otherwise, the implicit
+		// retain-count of 1 on each top-level object prevents deallocation
+		{
+			NSArray*	objects = nil;
+			NSNib*		loader = [[NSNib alloc] initWithNibNamed:@"ServerBrowserCocoa" bundle:nil];
+			
+			
+			if (NO == [loader instantiateNibWithOwner:self topLevelObjects:&objects])
+			{
+				[self dealloc], self = nil;
+			}
+			[loader release];
+			[objects makeObjectsPerformSelector:@selector(release)];
+		}
+	}
 	return self;
-}// init
+}// initWithResponder:eventTarget:
 
 
 /*!
@@ -821,7 +1224,8 @@ Destructor.
 - (void)
 dealloc
 {
-	// See "init", "windowWillLoad", and "windowDidLoad" for initializations to clean up here.
+	// See the initializer and "awakeFromNib" for initializations to clean up here.
+	delete lookupHandlerPtr, lookupHandlerPtr = nullptr;
 	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
 	[discoveredHosts release];
 	[recentHosts release];
@@ -838,22 +1242,16 @@ dealloc
 
 
 /*!
-Responds to a double-click of a discovered host by
-automatically closing the drawer.
-
-Note that there is already a single-click action (handled
-via selection bindings) for actually using the selected
-service’s host and port, so double-clicks do not need to
-do further processing.
+Returns the view that a window ought to focus first
+using NSWindow’s "makeFirstResponder:".
 
 (4.0)
 */
-- (void)
-didDoubleClickDiscoveredHostWithSelection:(NSArray*)	objects
+- (NSView*)
+logicalFirstResponder
 {
-#pragma unused(objects)
-	[self setHidesDiscoveredHosts:YES];
-}// didDoubleClickDiscoveredHostWithSelection:
+	return self->logicalFirstResponder;
+}// logicalFirstResponder
 
 
 /*!
@@ -880,7 +1278,17 @@ lookUpHostName:(id)		sender
 		char	hostNameBuffer[256];
 		
 		
-		gBrowserLookupResponder(); // install lookup handler if none exists
+		// install lookup handler if none exists
+		if (nullptr == self->lookupHandlerPtr)
+		{
+			self->lookupHandlerPtr = new CarbonEventHandlerWrap(GetApplicationEventTarget(), receiveLookupComplete,
+																CarbonEventSetInClass
+																(CarbonEventClass(kEventClassNetEvents_DNS),
+																	kEventNetEvents_HostLookupComplete),
+																self/* user data */);
+		}
+		
+		// begin lookup of the domain name
 		[self setHidesProgress:NO];
 		if (CFStringGetCString((CFStringRef)[self hostName], hostNameBuffer, sizeof(hostNameBuffer), kCFStringEncodingASCII))
 		{
@@ -1043,40 +1451,70 @@ hidesDiscoveredHosts
 - (void)
 setHidesDiscoveredHosts:(BOOL)		flag
 {
-	NSRect const	kOldFrame = [[self window] frame];
-	NSRect			newFrame = [[self window] frame];
+	NSRect const	kOldFrame = [self->managedView frame];
+	NSRect			newFrame = [self->managedView frame];
+	NSRect			convertedFrame = [self->managedView frame];
 	
 	
 	hidesDiscoveredHosts = flag;
 	if (flag)
 	{
-		NSSize		minSize = [[self window] minSize];
-		Float32		deltaHeight = (minSize.height - kOldFrame.size.height);
+		Float32 const	kPersistentHeight = 200; // IMPORTANT: must agree with NIB layout!!!
+		Float32			deltaHeight = (kPersistentHeight - kOldFrame.size.height);
 		
 		
-		newFrame.size.width = minSize.width;
-		newFrame.size.height += deltaHeight;
-		newFrame.origin.y -= deltaHeight;
 		[browser stop];
-		[[self window] makeFirstResponder:self->nextResponderWhenHidingDiscoveredHosts];
+		
+		newFrame.size.height += deltaHeight;
+		convertedFrame.size.height += deltaHeight;
+		convertedFrame.origin.y -= deltaHeight;
+		
+		// fix the current keyboard focus, if necessary
+		{
+			NSWindow*		popoverWindow = [self->managedView window];
+			NSResponder*	firstResponder = [popoverWindow firstResponder];
+			
+			
+			if ((nil != firstResponder) && [firstResponder isKindOfClass:[NSView class]])
+			{
+				NSView*		asView = (NSView*)firstResponder;
+				NSRect		windowRelativeFrame = [[asView superview] convertRect:[asView frame]
+																					toView:[popoverWindow contentView]];
+				
+				
+				// NOTE: this calculation assumes the persistent part is always at the top window edge
+				if (windowRelativeFrame.origin.y < (kOldFrame.size.height - kPersistentHeight))
+				{
+					// current keyboard focus is in the region that is being hidden;
+					// force the keyboard focus to change to something that is visible
+					[[self->managedView window] makeFirstResponder:self->nextResponderWhenHidingDiscoveredHosts];
+				}
+			}
+		}
 	}
 	else
 	{
-		Float32		deltaHeight = ([[self window] maxSize].height - kOldFrame.size.height);
+		Float32		deltaHeight = (450/* IMPORTANT: must agree with NIB layout!!! */ - kOldFrame.size.height);
 		
 		
 		newFrame.size.height += deltaHeight;
-		newFrame.origin.y -= deltaHeight;
+		convertedFrame.size.height += deltaHeight;
+		convertedFrame.origin.y -= deltaHeight;
 		[self rediscoverServices];
 	}
-	if (NO == flag)
-	{
-		[self->discoveredHostsContainer setHidden:flag];
-	}
-	[[self window] setFrame:newFrame display:YES animate:YES];
+	convertedFrame.origin = [[self->managedView window] convertBaseToScreen:convertedFrame.origin];
+	
 	if (flag)
 	{
+		[self->responder serverBrowser:self setManagedView:self->managedView toScreenFrame:convertedFrame];
+		[self->managedView setFrame:newFrame];
 		[self->discoveredHostsContainer setHidden:flag];
+	}
+	else
+	{
+		[self->discoveredHostsContainer setHidden:flag];
+		[self->responder serverBrowser:self setManagedView:self->managedView toScreenFrame:convertedFrame];
+		[self->managedView setFrame:newFrame];
 	}
 }// setHidesDiscoveredHosts:
 
@@ -1166,7 +1604,7 @@ hostName
 + (id)
 autoNotifyOnChangeToHostName
 {
-	return flagNo();
+	return [NSNumber numberWithBool:NO];
 }
 - (void)
 setHostName:(NSString*)		aString
@@ -1223,7 +1661,7 @@ portNumber
 + (id)
 autoNotifyOnChangeToPortNumber
 {
-	return flagNo();
+	return [NSNumber numberWithBool:NO];
 }
 - (void)
 setPortNumber:(NSString*)	aString
@@ -1292,7 +1730,7 @@ setProtocolIndexByProtocol:(Session_Protocol)	aProtocol
 + (id)
 autoNotifyOnChangeToProtocolIndexes
 {
-	return flagNo();
+	return [NSNumber numberWithBool:NO];
 }
 - (void)
 setProtocolIndexes:(NSIndexSet*)	indexes
@@ -1333,14 +1771,10 @@ target
 + (id)
 autoNotifyOnChangeToTarget
 {
-	return flagNo();
+	return [NSNumber numberWithBool:NO];
 }
 - (void)
-setTarget:(id)				anObject
-protocol:(Session_Protocol)	aProtocol
-hostName:(NSString*)		aString
-portNumber:(unsigned int)	aNumber
-userID:(NSString*)			anID
+setTarget:(id)		anObject
 {
 	if (anObject != target)
 	{
@@ -1350,10 +1784,8 @@ userID:(NSString*)			anID
 		target = [anObject retain];
 		
 		[self didChangeValueForKey:@"target"];
-		
-		initializePanel(self, aProtocol, (CFStringRef)aString, aNumber, (CFStringRef)anID);
 	}
-}// setTarget:protocol:hostName:portNumber:userID:
+}// setTarget:
 
 
 /*!
@@ -1369,7 +1801,7 @@ userID
 + (id)
 autoNotifyOnChangeToUserID
 {
-	return flagNo();
+	return [NSNumber numberWithBool:NO];
 }
 - (void)
 setUserID:(NSString*)	aString
@@ -1603,7 +2035,7 @@ netServiceBrowserWillSearch:(NSNetServiceBrowser*)	aNetServiceBrowser
 }// netServiceBrowserWillSearch:
 
 
-#pragma mark NSWindowController
+#pragma mark NSNibAwaking
 
 
 /*!
@@ -1614,131 +2046,51 @@ done in "init".)
 (4.0)
 */
 - (void)
-windowDidLoad
+awakeFromNib
 {
-	[super windowDidLoad];
+	// NOTE: superclass does not implement "awakeFromNib", otherwise it should be called here
 	assert(nil != discoveredHostsContainer);
 	assert(nil != discoveredHostsTableView);
+	assert(nil != managedView);
 	assert(nil != nextResponderWhenHidingDiscoveredHosts);
 	
-	// find out when the window will close, so that the event target can change
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillClose:)
-											name:NSWindowWillCloseNotification object:[self window]];
+	[self setHidesDiscoveredHosts:YES];
+	[self->responder serverBrowser:self didLoadManagedView:self->managedView];
+	
+	// find out when the window will close, so that the button that opened the window can return to normal
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(serverBrowserWindowWillClose:)
+											name:NSWindowWillCloseNotification object:[self->managedView window]];
 	
 	// since double-click bindings require 10.4 or later, do this manually now
+	[discoveredHostsTableView setIgnoresMultiClick:NO];
+	[discoveredHostsTableView setTarget:self];
 	[discoveredHostsTableView setDoubleAction:@selector(didDoubleClickDiscoveredHostWithSelection:)];
-	
-	// adjust initial window frame
+}// awakeFromNib
+
+
+@end // ServerBrowser_ViewManager
+
+
+@implementation ServerBrowser_ViewManager (ServerBrowser_ViewManagerInternal)
+
+
+/*!
+Responds to a double-click of a discovered host by
+automatically closing the drawer.
+
+Note that there is already a single-click action (handled
+via selection bindings) for actually using the selected
+service’s host and port, so double-clicks do not need to
+do further processing.
+
+(4.0)
+*/
+- (void)
+didDoubleClickDiscoveredHostWithSelection:(NSArray*)	objects
+{
+#pragma unused(objects)
 	[self setHidesDiscoveredHosts:YES];
-}// windowDidLoad
-
-
-/*!
-Handles initialization that should definitely occur before
-the window NIB is loaded.  (Everything else is just done in
-"init".)
-
-(4.0)
-*/
-- (void)
-windowWillLoad
-{
-	[super windowWillLoad];
-	
-	discoveredHosts = [[NSMutableArray alloc] init];
-	recentHosts = [[NSMutableArray alloc] init];
-	// TEMPORARY - it should be possible to externally define these (probably via Python)
-	protocolDefinitions = [[[NSArray alloc] initWithObjects:
-							[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSSH1
-								description:NSLocalizedStringFromTable(@"SSH Version 1", @"ServerBrowser"/* table */, @"ssh-1")
-								serviceType:@"_ssh._tcp."
-								defaultPort:22] autorelease],
-							[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSSH2
-								description:NSLocalizedStringFromTable(@"SSH Version 2", @"ServerBrowser"/* table */, @"ssh-2")
-								serviceType:@"_ssh._tcp."
-								defaultPort:22] autorelease],
-							[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolTelnet
-								description:NSLocalizedStringFromTable(@"TELNET", @"ServerBrowser"/* table */, @"telnet")
-								serviceType:@"_telnet._tcp."
-								defaultPort:23] autorelease],
-							[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolFTP
-								description:NSLocalizedStringFromTable(@"FTP", @"ServerBrowser"/* table */, @"ftp")
-								serviceType:@"_ftp._tcp."
-								defaultPort:21] autorelease],
-							[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSFTP
-								description:NSLocalizedStringFromTable(@"SFTP", @"ServerBrowser"/* table */, @"sftp")
-								serviceType:@"_ssh._tcp."
-								defaultPort:22] autorelease],
-							nil] autorelease];
-	browser = [[NSNetServiceBrowser alloc] init];
-	[browser setDelegate:self];
-	discoveredHostIndexes = [[NSIndexSet alloc] init];
-	hidesDiscoveredHosts = YES;
-	hidesErrorMessage = YES;
-	hidesPortNumberError = YES;
-	hidesProgress = YES;
-	hidesUserIDError = YES;
-	protocolIndexes = [[NSIndexSet alloc] init];
-	hostName = [[[NSString alloc] initWithString:@""] autorelease];
-	portNumber = [[[NSString alloc] initWithString:@""] autorelease];
-	userID = [[[NSString alloc] initWithString:@""] autorelease];
-	errorMessage = [[NSString string] retain];
-}// windowWillLoad
-
-
-/*!
-Affects the preferences key under which window position
-and size information are automatically saved and
-restored.
-
-(4.0)
-*/
-- (NSString*)
-windowFrameAutosaveName
-{
-	// NOTE: do not ever change this, it would only cause existing
-	// user settings to be forgotten
-	return @"ServerBrowser";
-}// windowFrameAutosaveName
-
-
-#pragma mark NSWindowNotifications
-
-
-/*!
-Responds to the panel closing by removing any ties to an
-event target, but notifying that target first.  This would
-have the effect, for instance, of associated windows
-removing highlighting from interface elements to show that
-they are no longer using this panel.
-
-Also interrupts any Bonjour scans that may be in progress.
-
-(4.0)
-*/
-- (void)
-windowWillClose:(NSNotification*)	notification
-{
-#pragma unused(notification)
-	// interrupt any Bonjour scans in progress
-	[browser stop];
-	
-	// remember the selected host as a recent item
-	[self insertObject:[[hostName copy] autorelease] inRecentHostsAtIndex:0];
-	if ([recentHosts count] > 4/* arbitrary */)
-	{
-		[self removeObjectFromRecentHostsAtIndex:([recentHosts count] - 1)];
-	}
-	
-	// stop associating the panel with any event target, and notify the previous target
-	ServerBrowser_RemoveEventTarget();
-}// windowWillClose:
-
-
-@end
-
-
-@implementation ServerBrowser_PanelController (ServerBrowser_PanelControllerInternal)
+}// didDoubleClickDiscoveredHostWithSelection:
 
 
 /*!
@@ -1785,7 +2137,7 @@ appropriate type.
 - (void)
 notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 {
-	if (nullptr != gPanelEventTarget)
+	if (nullptr != self->eventTarget)
 	{
 		EventRef	panelChangedEvent = nullptr;
 		OSStatus	error = noErr;
@@ -1797,7 +2149,10 @@ notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 							kEventAttributeNone, &panelChangedEvent);
 		
 		// attach required parameters to event, then dispatch it
-		if (noErr != error) panelChangedEvent = nullptr;
+		if (noErr != error)
+		{
+			panelChangedEvent = nullptr;
+		}
 		else
 		{
 			Boolean		doPost = true;
@@ -1849,13 +2204,16 @@ notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 			if (doPost)
 			{
 				// finally, send the message to the target
-				error = SendEventToEventTargetWithOptions(panelChangedEvent, gPanelEventTarget,
+				error = SendEventToEventTargetWithOptions(panelChangedEvent, self->eventTarget,
 															kEventTargetDontPropagate);
 			}
 		}
 		
 		// dispose of event
-		if (nullptr != panelChangedEvent) ReleaseEvent(panelChangedEvent), panelChangedEvent = nullptr;
+		if (nullptr != panelChangedEvent)
+		{
+			ReleaseEvent(panelChangedEvent), panelChangedEvent = nullptr;
+		}
 	}
 }// notifyOfChangeInValueReturnedBy:
 
@@ -1878,6 +2236,36 @@ protocol
 	}
 	return result;
 }// protocol
+
+
+/*!
+Responds to the panel closing by removing any ties to an
+event target, but notifying that target first.  This would
+have the effect, for instance, of associated windows
+removing highlighting from interface elements to show that
+they are no longer using this panel.
+
+Also interrupts any Bonjour scans that may be in progress.
+
+(4.0)
+*/
+- (void)
+serverBrowserWindowWillClose:(NSNotification*)	notification
+{
+#pragma unused(notification)
+	// interrupt any Bonjour scans in progress
+	[browser stop];
+	
+	// remember the selected host as a recent item
+	[self insertObject:[[hostName copy] autorelease] inRecentHostsAtIndex:0];
+	if ([recentHosts count] > 4/* arbitrary */)
+	{
+		[self removeObjectFromRecentHostsAtIndex:([recentHosts count] - 1)];
+	}
+	
+	// notify the handler
+	[self->responder serverBrowser:self didFinishUsingManagedView:self->managedView];
+}// serverBrowserWindowWillClose:
 
 
 @end

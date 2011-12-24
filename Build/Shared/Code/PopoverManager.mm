@@ -204,6 +204,32 @@ PopoverManager_RemovePopover	(PopoverManager_Ref		inRef)
 }// Remove
 
 
+/*!
+For popovers that use “automatic” placement, recalculates
+the best place for the arrow and relocates the popover so
+that it is pointing (in a possibly new direction) at its
+original ideal point.  If the arrow is on a different side
+of the popover as a result, the frame size may change
+slightly to accommodate the arrow along the new edge.
+
+This is done automatically as a side effect of displaying
+a popover, so you only need this API in special situations;
+for example, if you need to resize the popover window then
+you may want to correct its position.
+
+(2.7)
+*/
+void
+PopoverManager_UseIdealLocationAfterDelay	(PopoverManager_Ref		inRef,
+											 Float32				inDelay)
+{
+	PopoverManager_Handler*		ptr = [PopoverManager_Handler popoverHandlerFromRef:inRef];
+	
+	
+	[ptr performSelector:@selector(moveToIdealPosition) withObject:nil afterDelay:inDelay];
+}// UseIdealLocationAfterDelay
+
+
 #pragma mark Internal Methods
 namespace {
 
@@ -570,7 +596,14 @@ and gives it the keyboard focus.
 - (void)
 popOver
 {
-	[self->containerWindow setLevel:(NSNormalWindowLevel + 1)];
+	// TEMPORARY; in Carbon-Cocoa hybrid environments popovers do not necessarily
+	// handle the parent window correctly in all situations, so the simplest
+	// solution is just to force the parent window to deactivate (in the future
+	// when all windows are pure Cocoa, it should be very easy to support cases
+	// where popovers do not dim their parent windows at any time)
+	[[self parentCocoaWindow] resignMainWindow];
+	
+	[self->containerWindow setLevel:([[self parentCocoaWindow] level] + 1)];
 	[self->containerWindow makeFirstResponder:self->logicalFirstResponder];
 	[self->containerWindow makeKeyAndOrderFront:nil];
 }// popOver
@@ -586,7 +619,7 @@ done when the parent window of the popover is deactivated.
 - (void)
 popUnder
 {
-	[self->containerWindow setLevel:NSNormalWindowLevel];
+	[self->containerWindow setLevel:[[self parentCocoaWindow] level]];
 }// popUnder
 
 

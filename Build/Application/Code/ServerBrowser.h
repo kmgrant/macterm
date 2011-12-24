@@ -41,6 +41,15 @@
 #	import <Cocoa/Cocoa.h>
 #endif
 
+// library includes
+#ifdef __OBJC__
+@class CarbonEventHandlerWrap;
+@class NSWindow;
+#else
+class CarbonEventHandlerWrap;
+class NSWindow;
+#endif
+
 // application includes
 #include "Session.h"
 
@@ -48,13 +57,38 @@
 
 #pragma mark Types
 
+typedef struct ServerBrowser_OpaqueStruct*		ServerBrowser_Ref;
+
 #ifdef __OBJC__
+
+@class ServerBrowser_ViewManager;
+
+@protocol ServerBrowser_ViewManagerChannel
+
+// use this opportunity to create and display a window to wrap the view
+- (void)
+serverBrowser:(ServerBrowser_ViewManager*)_
+didLoadManagedView:(NSView*)_;
+
+// when the view is going away, perform any final updates
+- (void)
+serverBrowser:(ServerBrowser_ViewManager*)_
+didFinishUsingManagedView:(NSView*)_;
+
+// user interface has hidden or displayed something that requires the view size to change
+- (void)
+serverBrowser:(ServerBrowser_ViewManager*)_
+setManagedView:(NSView*)_
+toScreenFrame:(NSRect)_;
+
+@end // ServerBrowser_ViewManagerChannel
+
 
 @class ServerBrowser_NetService;
 @class ServerBrowser_Protocol;
 
 /*!
-Implements the server browser panel.  See "ServerBrowserCocoa.xib".
+Implements the server browser.  See "ServerBrowserCocoa.xib".
 
 This class is KVO-compliant for the following keys:
 	hostName
@@ -66,37 +100,45 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface ServerBrowser_PanelController : NSWindowController // NSKeyValueObservingCustomization, NSNetServiceBrowserDelegateMethods, NSWindowNotifications
+@interface ServerBrowser_ViewManager : NSObject
 {
 	NSMutableArray*			discoveredHosts; // binding
 	NSMutableArray*			recentHosts; // binding
 	NSArray*				protocolDefinitions; // binding
 	IBOutlet NSView*		discoveredHostsContainer;
 	IBOutlet NSTableView*	discoveredHostsTableView;
+	IBOutlet NSView*		managedView;
+	IBOutlet NSView*		logicalFirstResponder;
 	IBOutlet NSResponder*	nextResponderWhenHidingDiscoveredHosts;
 @private
-	NSNetServiceBrowser*	browser;
-	NSIndexSet*				discoveredHostIndexes;
-	BOOL					hidesDiscoveredHosts;
-	BOOL					hidesErrorMessage;
-	BOOL					hidesPortNumberError;
-	BOOL					hidesProgress;
-	BOOL					hidesUserIDError;
-	NSIndexSet*				protocolIndexes;
-	NSString*				hostName;
-	NSString*				portNumber;
-	id						target;
-	NSString*				userID;
-	NSString*				errorMessage;
+	id< ServerBrowser_ViewManagerChannel >	responder;
+	EventTargetRef							eventTarget;
+	CarbonEventHandlerWrap*					lookupHandlerPtr;
+	NSNetServiceBrowser*					browser;
+	NSIndexSet*								discoveredHostIndexes;
+	BOOL									hidesDiscoveredHosts;
+	BOOL									hidesErrorMessage;
+	BOOL									hidesPortNumberError;
+	BOOL									hidesProgress;
+	BOOL									hidesUserIDError;
+	NSIndexSet*								protocolIndexes;
+	NSString*								hostName;
+	NSString*								portNumber;
+	id										target;
+	NSString*								userID;
+	NSString*								errorMessage;
 }
 
-+ (id)
-sharedServerBrowserPanelController;
+// initializers
+
+- (id)
+initWithResponder:(id< ServerBrowser_ViewManagerChannel >)_
+eventTarget:(EventTargetRef)_;
 
 // new methods
 
-- (void)
-didDoubleClickDiscoveredHostWithSelection:(NSArray*)_;
+- (NSView*)
+logicalFirstResponder;
 
 - (IBAction)
 lookUpHostName:(id)_;
@@ -179,11 +221,7 @@ removeObjectFromRecentHostsAtIndex:(unsigned long)_;
 - (id)
 target;
 - (void)
-setTarget:(id)_
-protocol:(Session_Protocol)_
-hostName:(NSString*)_
-portNumber:(unsigned int)_
-userID:(NSString*)_;
+setTarget:(id)_;
 
 - (NSString*)
 userID;
@@ -208,21 +246,26 @@ error:(NSError**)_;
 
 #pragma mark Public Methods
 
-Boolean
-	ServerBrowser_IsVisible				();
+ServerBrowser_Ref
+	ServerBrowser_New			(HIWindowRef			inParentWindow,
+								 CGPoint				inParentRelativePoint,
+								 EventTargetRef			inResponder);
 
 void
-	ServerBrowser_RemoveEventTarget		();
+	ServerBrowser_Dispose		(ServerBrowser_Ref*		inoutDialogPtr);
 
 void
-	ServerBrowser_SetEventTarget		(EventTargetRef		inTarget,
-										 Session_Protocol	inProtocol,
-										 CFStringRef		inHostName,
-										 UInt16				inPortNumber,
-										 CFStringRef		inUserID);
+	ServerBrowser_Configure		(ServerBrowser_Ref		inDialog,
+								 Session_Protocol		inProtocol,
+								 CFStringRef			inHostName,
+								 UInt16					inPortNumber,
+								 CFStringRef			inUserID);
 
 void
-	ServerBrowser_SetVisible			(Boolean			inIsVisible);
+	ServerBrowser_Display		(ServerBrowser_Ref		inDialog);
+
+void
+	ServerBrowser_Remove		(ServerBrowser_Ref		inDialog);
 
 #endif
 
