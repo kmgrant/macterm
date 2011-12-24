@@ -902,18 +902,22 @@
 
 - (void)setPoint:(NSPoint)point side:(MAWindowPosition)side
 {
-	// Thanks to Martin Redington.
+	if (side == MAPositionAutomatic) {
+		side = [[self class] _bestSideForAutomaticPositionOfViewWithSize:[self frame].size andMargin:[self viewMargin]
+																			arrowHeight:[self arrowHeight]
+																			arrowInset:[self _arrowInset]
+																			distance:_distance at:point
+																			onParentWindow:_window];
+	}
 	_side = side;
+	NSRect windowFrame = [self frameRectForViewRect:[_view frame]]; // ignore origin, use only size
+	NSPoint idealOrigin = [self _idealFrameOriginForPoint:point];
+	windowFrame.origin.x = idealOrigin.x;
+	windowFrame.origin.y = idealOrigin.y;
 	NSDisableScreenUpdates();
+	[self setFrame:windowFrame display:NO];
 	[self _fixViewFrame];
 	[self _updateBackground];
-	{
-		NSRect		windowFrame = [self frame];
-		NSPoint		idealOrigin = [self _idealFrameOriginForPoint:point];
-		windowFrame.origin.x = idealOrigin.x;
-		windowFrame.origin.y = idealOrigin.y;
-		[self setFrame:windowFrame display:NO];
-	}
 	NSEnableScreenUpdates();
 }
 
