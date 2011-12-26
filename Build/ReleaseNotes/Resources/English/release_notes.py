@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111225',
     '20111224',
     '20111206',
     '20111130',
@@ -430,6 +431,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111225': [
+        'Fixed certain rare alert messages to omit Quit buttons because catastrophic errors had not occurred.',
+        'Alert messages for certain rare errors are now better at explaining the problem.',
+    ],
     '20111224': [
         'Servers panel now has a pop-over window style.',
     ],

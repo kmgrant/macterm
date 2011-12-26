@@ -61,12 +61,6 @@
 
 
 
-#pragma mark Internal Methods
-
-#define createCFStringWithPascalString (s)		CFStringCreateWithPascalString(kCFAllocatorDefault, s, CFStringGetSystemEncoding())
-
-
-
 #pragma mark Public Methods
 
 /*!
@@ -121,13 +115,23 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowCommandFailedHelpText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Click Quit to shut down this program instantly.  Click Continue to ignore the error (not recommended for some types of errors)."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Please report this unexpected problem to the MacTerm maintainers.  Click Quit to exit immediately, or Continue to ignore this error (not recommended)."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowCommandFailedHelpText"));
 		break;
 	
 	case kUIStrings_AlertWindowCommandFailedPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("The command could not be completed, because an error of type %1$d occurred."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("The command could not be completed because an error of type %1$d occurred."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowCommandFailedPrimaryText; %1$d will be an error code"));
+		break;
+	
+	case kUIStrings_AlertWindowCFFileExistsPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("The command could not be completed because the requested file is already in use (error %1$d)."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowCFFileExistsPrimaryText; %1$d will be an error code"));
+		break;
+	
+	case kUIStrings_AlertWindowCFNoWritePermissionPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("The command could not be completed because the requested disk location is not allowed to change (error %1$d)."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowCFNoWritePermissionPrimaryText; %1$d will be an error code"));
 		break;
 	
 	case kUIStrings_AlertWindowExcessiveErrorsPrimaryText:

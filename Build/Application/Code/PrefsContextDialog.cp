@@ -175,7 +175,7 @@ PrefsContextDialog_Display	(PrefsContextDialog_Ref		inDialog)
 	My_PrefsContextDialogAutoLocker		ptr(gPrefsContextDialogPtrLocks(), inDialog);
 	
 	
-	if (nullptr == ptr) Alert_ReportOSStatus(memFullErr);
+	if (nullptr == ptr) Alert_ReportOSStatus(paramErr);
 	else
 	{
 		ptr->wasDisplayed = true;

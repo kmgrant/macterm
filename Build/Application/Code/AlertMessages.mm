@@ -738,40 +738,23 @@ Alert_Message	(CFStringRef	inDialogText,
 
 
 /*!
-Automatically reports 16-bit error results.  If the
-specified error is either "noErr" or "userCanceledErr",
-no alert is displayed and false is returned; otherwise,
-true is returned to indicate a serious error.  The
-alert offers the user the option to quit the program or
-continue.  If the user chooses to quit, ExitToShell()
-is invoked.
-
-(1.0)
-*/
-Boolean
-Alert_ReportOSErr	(OSErr	inErrorCode)
-{
-	OSStatus		error = 0L;
-	
-	
-	error = inErrorCode;
-	return Alert_ReportOSStatus(error);
-}// ReportOSErr
-
-
-/*!
 Automatically reports 16-bit or 32-bit error result
 codes.  If the specified error is either "noErr" or
 "userCanceledErr", no alert is displayed and false is
 returned; otherwise, true is returned to indicate a
-serious error.  The alert offers the user the option
-to quit the program or continue.  If the user chooses
-to quit, ExitToShell() is invoked.
+serious error.
+
+If "inAssertion" is true, the alert offers the user
+the option to quit the program or continue.  If the
+user chooses to quit, ExitToShell() is invoked.
+Without an assertion flag, only a single Continue
+button is provided in the alert.
 
 (1.0)
 */
 Boolean
-Alert_ReportOSStatus	(OSStatus	inErrorCode)
+Alert_ReportOSStatus	(OSStatus	inErrorCode,
+						 Boolean	inAssertion)
 {
 	Boolean			result = true;
 	
@@ -788,49 +771,117 @@ Alert_ReportOSStatus	(OSStatus	inErrorCode)
 		Boolean					doExit = false;
 		
 		
-		// generate dialog text
-		stringResult = UIStrings_Copy(kUIStrings_AlertWindowCommandFailedPrimaryText, primaryTextTemplateCFString);
-		if (stringResult.ok())
+		// generate dialog text; some “common” errors may have custom messages
+		switch (inErrorCode)
 		{
-			primaryTextCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
-															primaryTextTemplateCFString, inErrorCode);
-		}
-		else
-		{
-			primaryTextCFString = CFSTR("");
+		case dupFNErr:
+			stringResult = UIStrings_Copy(kUIStrings_AlertWindowCFFileExistsPrimaryText, primaryTextTemplateCFString);
+			if (stringResult.ok())
+			{
+				primaryTextCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
+																primaryTextTemplateCFString, inErrorCode);
+			}
+			else
+			{
+				primaryTextCFString = CFSTR("");
+			}
+			break;
+		
+		case wrPermErr:
+			stringResult = UIStrings_Copy(kUIStrings_AlertWindowCFNoWritePermissionPrimaryText, primaryTextTemplateCFString);
+			if (stringResult.ok())
+			{
+				primaryTextCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
+																primaryTextTemplateCFString, inErrorCode);
+			}
+			else
+			{
+				primaryTextCFString = CFSTR("");
+			}
+			break;
+		
+		default:
+			stringResult = UIStrings_Copy(kUIStrings_AlertWindowCommandFailedPrimaryText, primaryTextTemplateCFString);
+			if (stringResult.ok())
+			{
+				primaryTextCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
+																primaryTextTemplateCFString, inErrorCode);
+			}
+			else
+			{
+				primaryTextCFString = CFSTR("");
+			}
+			break;
 		}
 		
 		// generate help text
-		stringResult = UIStrings_Copy(kUIStrings_AlertWindowCommandFailedHelpText, helpTextCFString);
-		if (false == stringResult.ok())
+		if (inAssertion)
+		{
+			stringResult = UIStrings_Copy(kUIStrings_AlertWindowCommandFailedHelpText, helpTextCFString);
+			if (false == stringResult.ok())
+			{
+				helpTextCFString = CFSTR("");
+			}
+		}
+		else
 		{
 			helpTextCFString = CFSTR("");
 		}
 		
 		box = Alert_New();
 		Alert_SetHelpButton(box, false);
-		Alert_SetParamsFor(box, kAlert_StyleOKCancel);
+		if (inAssertion)
 		{
-			CFRetainRelease		buttonString;
-			
-			
-			newButtonString(buttonString, kUIStrings_ButtonQuit);
-			if (buttonString.exists())
+			Alert_SetParamsFor(box, kAlert_StyleOKCancel);
 			{
-				Alert_SetButtonText(box, kAlertStdAlertOKButton, buttonString.returnCFStringRef());
+				CFRetainRelease		buttonString;
+				
+				
+				newButtonString(buttonString, kUIStrings_ButtonQuit);
+				if (buttonString.exists())
+				{
+					Alert_SetButtonText(box, kAlertStdAlertOKButton, buttonString.returnCFStringRef());
+				}
+				newButtonString(buttonString, kUIStrings_ButtonContinue);
+				if (buttonString.exists())
+				{
+					Alert_SetButtonText(box, kAlertStdAlertCancelButton, buttonString.returnCFStringRef());
+				}
 			}
-			newButtonString(buttonString, kUIStrings_ButtonContinue);
-			if (buttonString.exists())
+			Alert_SetType(box, kAlertStopAlert);
+		}
+		else
+		{
+			Alert_SetParamsFor(box, kAlert_StyleOK);
 			{
-				Alert_SetButtonText(box, kAlertStdAlertCancelButton, buttonString.returnCFStringRef());
+				CFRetainRelease		buttonString;
+				
+				
+				newButtonString(buttonString, kUIStrings_ButtonContinue);
+				if (buttonString.exists())
+				{
+					Alert_SetButtonText(box, kAlertStdAlertOKButton, buttonString.returnCFStringRef());
+				}
 			}
+			Alert_SetType(box, kAlertCautionAlert);
 		}
 		Alert_SetTextCFStrings(box, primaryTextCFString, helpTextCFString);
-		Alert_SetType(box, kAlertStopAlert);
+		
 		Alert_Display(box);
-		doExit = (Alert_ItemHit(box) == kAlertStdAlertOKButton);
+		if (inAssertion)
+		{
+			doExit = (Alert_ItemHit(box) == kAlertStdAlertOKButton);
+		}
+		else
+		{
+			doExit = false;
+		}
 		Alert_Dispose(&box);
-		if (doExit) ExitToShell();
+		
+		if (doExit)
+		{
+			ExitToShell();
+		}
 	}
 	return result;
 }// ReportOSStatus

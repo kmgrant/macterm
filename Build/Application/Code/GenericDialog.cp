@@ -286,7 +286,7 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog)
 	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
 	
 	
-	if (nullptr == ptr) Alert_ReportOSStatus(memFullErr);
+	if (nullptr == ptr) Alert_ReportOSStatus(paramErr);
 	else
 	{
 		HIViewRef	panelContainer = nullptr;

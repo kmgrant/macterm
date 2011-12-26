@@ -2263,7 +2263,7 @@ void
 showWindow ()
 {
 	if (nullptr == gPreferencesWindow) init();
-	if (nullptr == gPreferencesWindow) Alert_ReportOSStatus(memPCErr);
+	if (nullptr == gPreferencesWindow) Alert_ReportOSStatus(memPCErr, true/* assertion */);
 	else
 	{
 		// display the window and handle events

@@ -336,10 +336,8 @@ void
 										 Boolean					inIsHelpButton);
 
 Boolean
-	Alert_ReportOSErr					(OSErr						inErrorCode);
-
-Boolean
-	Alert_ReportOSStatus				(OSStatus					inErrorCode);
+	Alert_ReportOSStatus				(OSStatus					inErrorCode,
+										 Boolean					inAssertion = false);
 
 //@}
 

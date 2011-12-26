@@ -161,7 +161,7 @@ NewSessionDialog_Display	(NewSessionDialog_Ref		inDialog)
 	My_NewSessionDialogAutoLocker	ptr(gNewSessionDialogPtrLocks(), inDialog);
 	
 	
-	if (ptr == nullptr) Alert_ReportOSStatus(memFullErr);
+	if (ptr == nullptr) Alert_ReportOSStatus(paramErr);
 	else
 	{
 		ptr->wasDisplayed = true;
