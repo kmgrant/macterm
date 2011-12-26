@@ -243,7 +243,7 @@
 		<string>DefaultFormat4</string>
 	</array>
 	<key>MyHomePageURL</key>
-	<string>http://macterm.net/</string>
+	<string>http://www.macterm.net/</string>
 	<key>MySourceCodeLicenseURL</key>
 	<string>http://www.gnu.org/copyleft/gpl.html</string>
 	<key>MySourceForgeProjectURL</key>
@@ -251,7 +251,7 @@
 	<key>MySupportEMailURL</key>
 	<string>mailto:kmg@mac.com?Subject=MacTerm</string>
 	<key>MyUpdatesURL</key>
-	<string>http://macterm.net/updates/daily.html</string>
+	<string>http://www.macterm.net/updates/daily.html</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
