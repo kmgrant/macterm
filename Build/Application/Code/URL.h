@@ -108,11 +108,6 @@ URL_Type
 	URL_ReturnTypeFromCharacterRange	(char const*					inBegin,
 										 char const*					inPastEnd);
 
-Boolean
-	URL_SetSelectionToProximalURL		(TerminalView_Cell const&		inCommandClickColumnRow,
-										 TerminalScreenRef				inScreen,
-										 TerminalViewRef				inView);
-
 #endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

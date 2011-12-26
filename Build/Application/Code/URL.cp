@@ -383,24 +383,4 @@ URL_ReturnTypeFromCharacterRange	(char const*	inBegin,
 	return result;
 }// ReturnTypeFromCharacterRange
 
-
-/*!
-Searches the text from the given screen surrounding
-the given point in the specified view, and if a URL
-appears to be beneath the point, the view’s text
-selection changes to highlight the URL.
-
-Returns "true" only if a URL was found.
-
-(2.6)
-*/
-Boolean
-URL_SetSelectionToProximalURL	(TerminalView_Cell const&	inCommandClickColumnRow,
-								 TerminalScreenRef			inScreen,
-								 TerminalViewRef			inView)
-{
-	// TEMPORARY - REIMPLEMENT
-	return false;
-}// SetSelectionToProximalURL
-
 // BELOW IS REQUIRED NEWLINE TO END FILE

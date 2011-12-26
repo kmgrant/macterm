@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111226',
     '20111225',
     '20111224',
     '20111206',
@@ -431,6 +432,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111226': [
+        'Fixed command-click to once again be a short-cut for selecting and opening a URL.  (It has always been possible to do this manually via the "Open URL" command in the File menu.)',
+    ],
     '20111225': [
         'Fixed certain rare alert messages to omit Quit buttons because catastrophic errors had not occurred.',
         'Alert messages for certain rare errors are now better at explaining the problem.',

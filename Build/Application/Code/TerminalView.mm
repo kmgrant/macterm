@@ -10416,31 +10416,27 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 					{
 						cannotBeDoubleClick = true;
 						SetPortWindowPort(GetControlOwner(view));
-						if ((viewPtr->text.selection.exists) && (TerminalView_PtInSelection(viewPtr->selfRef, localMouse)))
+						if ((false == viewPtr->text.selection.exists) ||
+							(false == TerminalView_PtInSelection(viewPtr->selfRef, localMouse)))
 						{
-							URL_HandleForScreenView(viewPtr->screen.ref, viewPtr->selfRef);
-						}
-						else
-						{
-							TerminalView_Cell	newColumnRow;
-							SInt16				deltaColumn = 0;
-							SInt16				deltaRow = 0;
-							
-							
-							(Boolean)findVirtualCellFromLocalPoint(viewPtr, localMouse, newColumnRow, deltaColumn, deltaRow);
-							
 							// find the URL around the click location, if possible
-							if (URL_SetSelectionToProximalURL(newColumnRow, viewPtr->screen.ref, viewPtr->selfRef))
-							{
-								// open the selected resource
-								URL_HandleForScreenView(viewPtr->screen.ref, viewPtr->selfRef);
-							}
-							else
-							{
-								// does not appear to be a valid URL; signal this to the user
-								Sound_StandardAlert();
-							}
+							SInt16		deltaColumn = 0;
+							SInt16		deltaRow = 0;
+							
+							
+							// cancel any previous selection
+							TerminalView_SelectNothing(viewPtr->selfRef);
+							
+							// select an entire word
+							(Boolean)findVirtualCellFromLocalPoint(viewPtr, localMouse,
+																	viewPtr->text.selection.range.first,
+																	deltaColumn, deltaRow);
+							viewPtr->text.selection.range.second = viewPtr->text.selection.range.first;
+							handleMultiClick(viewPtr, 2/* click count */);
 						}
+						
+						// open the selection (apparently a URL)
+						URL_HandleForScreenView(viewPtr->screen.ref, viewPtr->selfRef);
 					}
 					
 					// see if a double- or triple-click occurs
