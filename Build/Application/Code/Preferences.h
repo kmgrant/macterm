@@ -458,18 +458,6 @@ Preferences_ContextRef
 											 CFStringRef						inDomainNameIfInitializingOrNull = nullptr);
 
 Preferences_ContextRef
-	Preferences_NewContextFromXMLData		(Quills::Prefs::Class				inClass,
-											 CFDataRef							inData);
-
-Preferences_ContextRef
-	Preferences_NewContextFromXMLFileRef	(Quills::Prefs::Class				inClass,
-											 FSRef const&						inFile);
-
-Preferences_ContextRef
-	Preferences_NewContextFromXMLFileURL	(Quills::Prefs::Class				inClass,
-											 CFURLRef							inFileURL);
-
-Preferences_ContextRef
 	Preferences_NewCloneContext				(Preferences_ContextRef				inBaseContext,
 											 Boolean							inForceDetach = false);
 
@@ -582,6 +570,24 @@ Preferences_Result
 Boolean
 	Preferences_ContextIsValid				(Preferences_ContextRef				inContext);
 
+Preferences_Result
+	Preferences_ContextMergeInXMLData		(Preferences_ContextRef				inContext,
+											 CFDataRef							inData,
+											 Quills::Prefs::Class*				outInferredClassOrNull = nullptr,
+											 CFStringRef*						outInferredNameOrNull = nullptr);
+
+Preferences_Result
+	Preferences_ContextMergeInXMLFileRef	(Preferences_ContextRef				inContext,
+											 FSRef const&						inFile,
+											 Quills::Prefs::Class*				outInferredClassOrNull = nullptr,
+											 CFStringRef*						outInferredNameOrNull = nullptr);
+
+Preferences_Result
+	Preferences_ContextMergeInXMLFileURL	(Preferences_ContextRef				inContext,
+											 CFURLRef							inFileURL,
+											 Quills::Prefs::Class*				outInferredClassOrNull = nullptr,
+											 CFStringRef*						outInferredNameOrNull = nullptr);
+
 Quills::Prefs::Class
 	Preferences_ContextReturnClass			(Preferences_ContextRef				inContext);
 
@@ -590,6 +596,7 @@ Preferences_Result
 
 Preferences_Result
 	Preferences_ContextSaveAsXMLData		(Preferences_ContextRef				inContext,
+											 Boolean							inIncludeOtherClassValues,
 											 CFDataRef&							outData);
 
 Preferences_Result

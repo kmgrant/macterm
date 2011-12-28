@@ -676,6 +676,7 @@ namespace {
 Preferences_Result		assertInitialized						();
 void					changeNotify							(Preferences_Change, Preferences_ContextRef = nullptr,
 																 Boolean = false);
+CFStringRef				chooseUserSpecifiedName					(CFDataRef, CFStringRef);
 Preferences_Result		contextGetData							(My_ContextInterfacePtr, Quills::Prefs::Class, Preferences_Tag,
 																 size_t, void*, size_t*);
 Boolean					convertCFArrayToHIRect					(CFArrayRef, HIRect&);
@@ -713,7 +714,8 @@ OSStatus				mergeInDefaultPreferences				();
 Preferences_Result		overwriteClassDomainCFArray				(Quills::Prefs::Class, CFArrayRef);
 void					readApplicationArrayPreference			(CFStringRef, CFArrayRef&);
 OSStatus				readPreferencesDictionary				(CFDictionaryRef, Boolean);
-OSStatus				readPreferencesDictionaryInContext		(My_ContextInterfacePtr, CFDictionaryRef, Boolean);
+OSStatus				readPreferencesDictionaryInContext		(My_ContextInterfacePtr, CFDictionaryRef, Boolean,
+																 Quills::Prefs::Class*, CFStringRef*);
 void					setApplicationPreference				(CFStringRef, CFPropertyListRef);
 Preferences_Result		setFormatPreference						(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
@@ -731,7 +733,8 @@ Preferences_Result		setWorkspacePreference					(My_ContextInterfacePtr, Preferen
 																 size_t, void const*);
 CFStringRef				virtualKeyCreateName					(UInt16);
 Boolean					virtualKeyParseName						(CFStringRef, UInt16&, Boolean&);
-OSStatus				writePreferencesDictionaryFromContext	(My_ContextInterfacePtr, CFMutableDictionaryRef, Boolean);
+OSStatus				writePreferencesDictionaryFromContext	(My_ContextInterfacePtr, CFMutableDictionaryRef,
+																 Boolean, Boolean);
 Boolean					unitTest000_Begin						();
 Boolean					unitTest001_Begin						();
 Boolean					unitTest002_Begin						();
@@ -1651,10 +1654,6 @@ IMPORTANT:	Contexts can be renamed.  Make sure you
 			of date and any attempt to access its
 			context will end up creating a new blank.
 
-WARNING:	Despite the name, the 2nd parameter does
-			not (yet) automatically generate a unique
-			value when nullptr is used.
-
 (3.1)
 */
 Preferences_ContextRef
@@ -1727,157 +1726,6 @@ Preferences_NewContextFromFavorites		(Quills::Prefs::Class	inClass,
 	}
 	return result;
 }// NewContextFromFavorites
-
-
-/*!
-Creates a new preferences context in the given class using
-XML data (presumably read from a file, but technically the
-same as Preferences_ContextSaveAsXMLData()).  The data must
-represent a root dictionary.
-
-The new context is isolated, not part of the ordinary list
-of contexts stored in user preferences.  The reference is
-automatically retained, but you need to invoke
-Preferences_ReleaseContext() when finished.
-
-Since the context is isolated it does not need a name, it
-is not registered in the list of known contexts, and
-creating it does not trigger any notifications (for example,
-there is no kPreferences_ChangeNumberOfContexts event).
-
-If any problems occur, nullptr is returned; otherwise, a
-reference to the new context is returned.
-
-WARNING:	It is typical for a file to contain several
-			different classes of preferences, so (as usual)
-			the given class is, at best, a hint.  In the
-			future, it probably makes sense to not use
-			preferences classes as much, if at all, and
-			simply rely on the existence of a key.
-
-(4.0)
-*/
-Preferences_ContextRef
-Preferences_NewContextFromXMLData	(Quills::Prefs::Class	inClass,
-									 CFDataRef				inData)
-{
-	Preferences_ContextRef		result = nullptr;
-	
-	
-	try
-	{
-		My_ContextInterfacePtr		contextPtr = nullptr;
-		My_ContextCFDictionaryPtr	newDictionary = new My_ContextCFDictionary(inClass);
-		
-		
-		contextPtr = newDictionary;
-		
-		if (nullptr != contextPtr)
-		{
-			result = REINTERPRET_CAST(contextPtr, Preferences_ContextRef);
-			Preferences_RetainContext(result);
-			
-			// now read the data!
-			{
-				CFStringRef			errorCFString = nullptr;
-				CFPropertyListRef	root = CFPropertyListCreateFromXMLData
-											(kCFAllocatorDefault, inData, kCFPropertyListImmutable,
-												&errorCFString);
-				
-				
-				if (nullptr == root)
-				{
-					if (nullptr != errorCFString)
-					{
-						Console_Warning(Console_WriteValueCFString, "unable to create preferences property list from XML data",
-										errorCFString);
-						CFRelease(errorCFString), errorCFString = nullptr;
-					}
-				}
-				else
-				{
-					CFDictionaryRef		rootAsDictionary = CFUtilities_DictionaryCast(root);
-					OSStatus			error = noErr;
-					
-					
-					assert(CFPropertyListIsValid(root, kCFPropertyListXMLFormat_v1_0));
-					error = readPreferencesDictionaryInContext(contextPtr, rootAsDictionary, false/* merge */);
-					if (noErr != error)
-					{
-						Console_Warning(Console_WriteValue, "unable to read dictionary created from XML data", error);
-					}
-					CFRelease(root), root = nullptr;
-				}
-			}
-		}
-	}
-	catch (std::exception const&	inException)
-	{
-		Console_WriteLine(inException.what());
-		result = nullptr;
-	}
-	return result;
-}// NewContextFromXMLData
-
-
-/*!
-Convenience method to invoke Preferences_NewContextFromXMLData()
-using the data in an XML file, as specified by an FSRef.
-
-(4.0)
-*/
-Preferences_ContextRef
-Preferences_NewContextFromXMLFileRef	(Quills::Prefs::Class	inClass,
-										 FSRef const&			inFile)
-{
-	Preferences_ContextRef		result = nullptr;
-	CFURLRef					fileURL = CFURLCreateFromFSRef(kCFAllocatorDefault, &inFile);
-	
-	
-	if (nullptr == fileURL)
-	{
-		Console_Warning(Console_WriteLine, "unable to create URL for file");
-	}
-	else
-	{
-		result = Preferences_NewContextFromXMLFileURL(inClass, fileURL);
-		CFRelease(fileURL), fileURL = nullptr;
-	}
-	return result;
-}// NewContextFromXMLFileRef
-
-
-/*!
-Convenience method to invoke Preferences_NewContextFromXMLData()
-using the data in an XML file, as specified by a URL.
-
-(4.0)
-*/
-Preferences_ContextRef
-Preferences_NewContextFromXMLFileURL	(Quills::Prefs::Class	inClass,
-										 CFURLRef				inFileURL)
-{
-	Preferences_ContextRef		result = nullptr;
-	CFDataRef					xmlData = nullptr;
-	SInt32						errorForFileURL = 0;
-	Boolean						readOK = false;
-	
-	
-	readOK = CFURLCreateDataAndPropertiesFromResource
-				(kCFAllocatorDefault, inFileURL, &xmlData, nullptr/* returned properties dictionary */,
-					nullptr/* list of desired properties */, &errorForFileURL);
-	if (false == readOK)
-	{
-		Console_Warning(Console_WriteValue, "unable to read XML data from file, URL error", errorForFileURL);
-	}
-	else
-	{
-		result = Preferences_NewContextFromXMLData(inClass, xmlData);
-		CFRelease(xmlData), xmlData = nullptr;
-	}
-	
-	return result;
-}// NewContextFromXMLFileURL
 
 
 /*!
@@ -2409,6 +2257,158 @@ Preferences_ContextIsValid	(Preferences_ContextRef		inContext)
 
 
 /*!
+Adds key-value data to an existing preferences context using
+XML data (presumably read from a file, but technically the
+same as Preferences_ContextSaveAsXMLData()).  The data must
+represent a root dictionary.
+
+If the data contains name information (such as a "name-string"
+key), an attempt is made to rename the context accordingly.
+The rename only succeeds if the context is of a type that
+allows names (such as user Favorites) and if the new name is
+not already in use by another context of the same class.  If
+a rename occurs, it sends the usual rename notification.
+
+\retval kPreferences_ResultOK
+if the data is valid and the context is successfully modified
+
+\retval kPreferences_ResultInvalidContextReference
+if the specified context does not exist
+
+\retval kPreferences_ResultBadVersionDataNotAvailable
+if the data is invalid in some way
+
+(4.0)
+*/
+Preferences_Result
+Preferences_ContextMergeInXMLData	(Preferences_ContextRef		inContext,
+									 CFDataRef					inData,
+									 Quills::Prefs::Class*		outInferredClassOrNull,
+									 CFStringRef*				outInferredNameOrNull)
+{
+	Preferences_Result		result = kPreferences_ResultBadVersionDataNotAvailable;
+	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
+	
+	
+	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
+	else
+	{
+		CFStringRef			errorCFString = nullptr;
+		CFPropertyListRef	root = CFPropertyListCreateFromXMLData
+									(kCFAllocatorDefault, inData, kCFPropertyListImmutable,
+										&errorCFString);
+		
+		
+		if (nullptr == root)
+		{
+			if (nullptr != errorCFString)
+			{
+				result = kPreferences_ResultBadVersionDataNotAvailable;
+				Console_Warning(Console_WriteValueCFString,
+								"unable to create preferences property list from XML data", errorCFString);
+				CFRelease(errorCFString), errorCFString = nullptr;
+			}
+		}
+		else
+		{
+			CFDictionaryRef		rootAsDictionary = CFUtilities_DictionaryCast(root);
+			OSStatus			error = noErr;
+			
+			
+			assert(CFPropertyListIsValid(root, kCFPropertyListXMLFormat_v1_0));
+			// reading the dictionary will also trigger the context rename if name data exists
+			error = readPreferencesDictionaryInContext(ptr, rootAsDictionary, true/* merge */,
+														outInferredClassOrNull, outInferredNameOrNull);
+			if (noErr != error)
+			{
+				result = kPreferences_ResultBadVersionDataNotAvailable;
+				Console_Warning(Console_WriteValue, "unable to read dictionary created from XML data", error);
+			}
+			else
+			{
+				// successfully merged
+				result = kPreferences_ResultOK;
+			}
+			CFRelease(root), root = nullptr;
+		}
+	}
+	return result;
+}// ContextMergeInXMLData
+
+
+/*!
+Convenience method to invoke Preferences_ContextMergeInXMLData()
+using the data in an XML file, as specified by an FSRef.
+
+Returns anything that Preferences_ContextMergeInXMLData() can
+return.
+
+(4.0)
+*/
+Preferences_Result
+Preferences_ContextMergeInXMLFileRef	(Preferences_ContextRef		inContext,
+										 FSRef const&				inFile,
+										 Quills::Prefs::Class*		outInferredClassOrNull,
+										 CFStringRef*				outInferredNameOrNull)
+{
+	Preferences_Result	result = kPreferences_ResultBadVersionDataNotAvailable;
+	CFURLRef			fileURL = CFURLCreateFromFSRef(kCFAllocatorDefault, &inFile);
+	
+	
+	if (nullptr == fileURL)
+	{
+		Console_Warning(Console_WriteLine, "unable to create URL for file");
+	}
+	else
+	{
+		result = Preferences_ContextMergeInXMLFileURL(inContext, fileURL, outInferredClassOrNull,
+														outInferredNameOrNull);
+		CFRelease(fileURL), fileURL = nullptr;
+	}
+	return result;
+}// ContextMergeInXMLFileRef
+
+
+/*!
+Convenience method to invoke Preferences_ContextMergeInXMLData()
+using the data in an XML file, as specified by a URL.
+
+Returns anything that Preferences_ContextMergeInXMLData() can
+return.
+
+(4.0)
+*/
+Preferences_Result
+Preferences_ContextMergeInXMLFileURL	(Preferences_ContextRef		inContext,
+										 CFURLRef					inFileURL,
+										 Quills::Prefs::Class*		outInferredClassOrNull,
+										 CFStringRef*				outInferredNameOrNull)
+{
+	Preferences_Result	result = kPreferences_ResultBadVersionDataNotAvailable;
+	CFDataRef			xmlData = nullptr;
+	SInt32				errorForFileURL = 0;
+	Boolean				readOK = false;
+	
+	
+	readOK = CFURLCreateDataAndPropertiesFromResource
+				(kCFAllocatorDefault, inFileURL, &xmlData, nullptr/* returned properties dictionary */,
+					nullptr/* list of desired properties */, &errorForFileURL);
+	if (false == readOK)
+	{
+		Console_Warning(Console_WriteValue, "unable to read XML data from file, URL error", errorForFileURL);
+	}
+	else
+	{
+		result = Preferences_ContextMergeInXMLData(inContext, xmlData, outInferredClassOrNull,
+													outInferredNameOrNull);
+		CFRelease(xmlData), xmlData = nullptr;
+	}
+	
+	return result;
+}// ContextMergeInXMLFileURL
+
+
+/*!
 Changes the name of a context (which is typically displayed
 in user interface elements); this will become permanent the
 next time application preferences are synchronized.
@@ -2674,8 +2674,14 @@ Preferences_ContextSave		(Preferences_ContextRef		inContext)
 Converts in-memory preferences data model changes to XML data,
 suitable for writing to a UTF-8-encoded text file.
 
-This data can later recreate a context using the method
-Preferences_NewContextFromXML().
+Normally only the keys that belong to the source context’s class
+are saved and any other settings are ignored.  To force all keys
+to be included, set "inIncludeOtherClassValues" to true (but
+note that this will make the data dictionary large if the source
+context contains unrelated settings such as global defaults).
+
+This data can later recreate a context using a method like
+Preferences_ContextMergeInXMLData().
 
 Unlike Preferences_ContextSave(), this has no side effects.
 
@@ -2694,6 +2700,7 @@ if any other problem prevents data generation
 */
 Preferences_Result
 Preferences_ContextSaveAsXMLData	(Preferences_ContextRef		inContext,
+									 Boolean					inIncludeOtherClassValues,
 									 CFDataRef&					outData)
 {
 	Preferences_Result		result = kPreferences_ResultGenericFailure;
@@ -2709,7 +2716,8 @@ Preferences_ContextSaveAsXMLData	(Preferences_ContextRef		inContext,
 		OSStatus			error = noErr;
 		
 		
-		error = writePreferencesDictionaryFromContext(ptr, targetDictionary.returnCFMutableDictionaryRef(), false/* merge */);
+		error = writePreferencesDictionaryFromContext(ptr, targetDictionary.returnCFMutableDictionaryRef(),
+														false/* merge */, (false == inIncludeOtherClassValues));
 		if (noErr != error) result = kPreferences_ResultGenericFailure;
 		else
 		{
@@ -2798,7 +2806,7 @@ Preferences_ContextSaveAsXMLFileURL		(Preferences_ContextRef		inContext,
 		CFDataRef	xmlData = nullptr;
 		
 		
-		result = Preferences_ContextSaveAsXMLData(inContext, xmlData);
+		result = Preferences_ContextSaveAsXMLData(inContext, false/* include other class values */, xmlData);
 		if (kPreferences_ResultOK == result)
 		{
 			SInt32		errorForFileURL = 0;
@@ -3154,7 +3162,7 @@ Preferences_DebugDumpContext	(Preferences_ContextRef		inContext)
 	Boolean					dumpOK = false;
 	
 	
-	prefsResult = Preferences_ContextSaveAsXMLData(inContext, dataRef);
+	prefsResult = Preferences_ContextSaveAsXMLData(inContext, true/* include other class values */, dataRef);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		CFStringRef		asString = CFStringCreateFromExternalRepresentation
@@ -5213,6 +5221,43 @@ changeNotify	(Preferences_Change			inWhatChanged,
 
 
 /*!
+A name for a context may be stored in two ways, and not
+necessarily both: as a "name" key of Core Foundation Data
+type (external representation of Unicode) and as a
+"name-string" key of Core Foundation String type.  Pass
+one or both of those values (nullptr is acceptable) and
+a string is constructed appropriately.
+
+(4.0)
+*/
+CFStringRef
+chooseUserSpecifiedName		(CFDataRef		inNameExternalUnicodeDataValue,
+							 CFStringRef	inNameStringValue)
+{
+	CFStringRef		result = nullptr;
+	
+	
+	if (nullptr != inNameExternalUnicodeDataValue)
+	{
+		// Unicode string was found
+		result = CFStringCreateFromExternalRepresentation
+					(kCFAllocatorDefault, inNameExternalUnicodeDataValue, kCFStringEncodingUnicode);
+	}
+	else if (nullptr != inNameStringValue)
+	{
+		// raw string was found
+		result = CFStringCreateCopy(kCFAllocatorDefault, inNameStringValue);
+	}
+	else
+	{
+		result = CFSTR("");
+		CFRetain(result);
+	}
+	return result;
+}// chooseUserSpecifiedName
+
+
+/*!
 Internal version of Preferences_ContextGetData().
 
 (3.1)
@@ -5671,36 +5716,27 @@ createAllPreferencesContextsFromDisk ()
 					
 					if (savedFormat.exists())
 					{
-						Preferences_ContextWrap		sourceFormat(Preferences_NewContextFromXMLFileURL(Quills::Prefs::FORMAT, fileURL),
-																	true/* is retained */);
+						CFStringRef		inferredName = nullptr;
 						
 						
-						if (sourceFormat.exists())
+						prefsResult = Preferences_ContextMergeInXMLFileURL(savedFormat.returnRef(), fileURL,
+																			nullptr/* class */, &inferredName);
+						if (kPreferences_ResultOK == prefsResult)
 						{
-							prefsResult = Preferences_ContextCopy(sourceFormat.returnRef(), savedFormat.returnRef());
+							if (nullptr != inferredName)
+							{
+								prefsResult = Preferences_ContextRename(savedFormat.returnRef(), inferredName);
+								if (kPreferences_ResultOK != prefsResult)
+								{
+									Console_Warning(Console_WriteValueCFString,
+													"unable to rename default format; name should be", inferredName);
+								}
+							}
+							
+							prefsResult = Preferences_ContextSave(savedFormat.returnRef());
 							if (kPreferences_ResultOK == prefsResult)
 							{
-								// since the name key of a Favorites context is normally set automatically
-								// when saved, any dictionary value (technically added by the copy above)
-								// will be ignored; so, it is necessary to explicitly set the desired name
-								// with an API call
-								{
-									My_ContextAutoLocker	savedFormatPtr(gMyContextPtrLocks(), savedFormat.returnRef());
-									My_ContextAutoLocker	sourceFormatPtr(gMyContextPtrLocks(), sourceFormat.returnRef());
-									CFRetainRelease			desiredName(sourceFormatPtr->returnStringCopy(CFSTR("name-string")), true/* is retained */);
-									
-									
-									if (desiredName.exists())
-									{
-										savedFormatPtr->rename(desiredName.returnCFStringRef());
-									}
-								}
-								
-								prefsResult = Preferences_ContextSave(savedFormat.returnRef());
-								if (kPreferences_ResultOK == prefsResult)
-								{
-									// success!
-								}
+								// success!
 							}
 						}
 					}
@@ -5865,28 +5901,20 @@ nullptr; if not, you must call CFRelease() on it.
 CFStringRef
 findDomainUserSpecifiedName		(CFStringRef	inDomainName)
 {
-	CFStringRef		result = nullptr;
-	CFDataRef		externalStringRepresentationCFData = nullptr;
+	CFStringRef			result = nullptr;
+	CFRetainRelease		dataObject(CFPreferencesCopyAppValue(CFSTR("name"), inDomainName),
+									true/* is retained */);
+	CFRetainRelease		stringObject(CFPreferencesCopyAppValue(CFSTR("name-string"), inDomainName),
+										true/* is retained */);
 	
 	
 	// in order to support many languages, the "name" field is stored as
 	// Unicode data (string external representation); however, if that
 	// is not available, purely for convenience a "name-string" alternate
 	// is supported, holding a raw string
-	externalStringRepresentationCFData = CFUtilities_DataCast(CFPreferencesCopyAppValue(CFSTR("name"), inDomainName));
-	if (nullptr != externalStringRepresentationCFData)
-	{
-		// Unicode string was found
-		result = CFStringCreateFromExternalRepresentation
-					(kCFAllocatorDefault, externalStringRepresentationCFData,
-						kCFStringEncodingUnicode);
-		CFRelease(externalStringRepresentationCFData), externalStringRepresentationCFData = nullptr;
-	}
-	else
-	{
-		// raw string was found
-		result = CFUtilities_StringCast(CFPreferencesCopyAppValue(CFSTR("name-string"), inDomainName));
-	}
+	result = chooseUserSpecifiedName(CFUtilities_DataCast(dataObject.returnCFTypeRef()),
+										stringObject.returnCFStringRef());
+	
 	return result;
 }// findDomainUserSpecifiedName
 
@@ -8410,7 +8438,8 @@ readPreferencesDictionary	(CFDictionaryRef	inPreferenceDictionary,
 	
 	
 	assert(gotContext);
-	return readPreferencesDictionaryInContext(contextPtr, inPreferenceDictionary, inMerge);
+	return readPreferencesDictionaryInContext(contextPtr, inPreferenceDictionary, inMerge,
+												nullptr/* inferred class */, nullptr/* inferred name */);
 }// readPreferencesDictionary
 
 
@@ -8419,6 +8448,23 @@ Updates stored preference values in the specified context, using
 master preferences from the given dictionary.  If merging,
 conflicting keys are skipped; otherwise, they are replaced with
 the new dictionary values.
+
+You can request that the class of the data be inferred by passing
+a value other than nullptr for "outInferredClassOrNull".  If you
+do, the preference definitions for all keys in the source
+dictionary are checked and the dominant class is returned.  So
+for example, if the dictionary contains primarily font and color
+data, the inferred class would be Quills::Prefs::FORMAT.  This
+can be useful for constructing a saved context of the appropriate
+class.
+
+The "name-string" key has special significance because it stores
+the name of a managed context.  If the source dictionary contains
+a name, it is returned in "outInferredNameOrNull" and is NOT
+automatically stored as a regular key-value pair.  (Usually you
+should call Preferences_ContextRename() on your final target
+context with the inferred name.)  A new string is allocated for
+an inferred name so you must call CFRelease() when finished.
 
 All of the keys in the specified dictionary must be of type
 CFStringRef.
@@ -8429,28 +8475,46 @@ currently always returned; there is no way to detect errors
 (4.0)
 */
 OSStatus
-readPreferencesDictionaryInContext		(My_ContextInterfacePtr		inContextPtr,
-										 CFDictionaryRef			inPreferenceDictionary,
-										 Boolean					inMerge)
+readPreferencesDictionaryInContext	(My_ContextInterfacePtr		inContextPtr,
+									 CFDictionaryRef			inPreferenceDictionary,
+									 Boolean					inMerge,
+									 Quills::Prefs::Class*		outInferredClassOrNull,
+									 CFStringRef*				outInferredNameOrNull)
 {
 	// the keys can have their values copied directly into the application
 	// preferences property list; they are identical in format and even use
 	// the same key names
-	CFIndex const	kDictLength = CFDictionaryGetCount(inPreferenceDictionary);
-	CFIndex			i = 0;
-	void const*		keyValue = nullptr;
-	void const**	keys = new void const*[kDictLength];
-	OSStatus		result = noErr;
+	typedef std::map< Quills::Prefs::Class, UInt16 >	CountByClass;
+	CFIndex const		kDictLength = CFDictionaryGetCount(inPreferenceDictionary);
+	CFIndex				i = 0;
+	void const*			keyValue = nullptr;
+	void const**		keys = new void const*[kDictLength];
+	CountByClass		classPopularity; // keep track of keys belonging to each class
+	CFPropertyListRef	nameDataValue = nullptr;
+	CFPropertyListRef	nameStringValue = nullptr;
+	OSStatus			result = noErr;
 	
 	
 	CFDictionaryGetKeysAndValues(inPreferenceDictionary, keys, nullptr/* values */);
 	for (i = 0; i < kDictLength; ++i)
 	{
 		CFStringRef const	kKey = CFUtilities_StringCast(keys[i]);
-		Boolean				useDefault = true;
+		Boolean				useKey = true;
 		
 		
-		if (inMerge)
+		// check for special name keys; do not overwrite these
+		if (kCFCompareEqualTo == CFStringCompare(kKey, CFSTR("name"), 0/* options */))
+		{
+			useKey = false;
+			(Boolean)CFDictionaryGetValueIfPresent(inPreferenceDictionary, CFSTR("name"), &nameDataValue);
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(kKey, CFSTR("name-string"), 0/* options */))
+		{
+			useKey = false;
+			(Boolean)CFDictionaryGetValueIfPresent(inPreferenceDictionary, CFSTR("name-string"), &nameStringValue);
+		}
+		
+		if ((useKey) && (inMerge))
 		{
 			// when merging, do not replace any key that is already defined
 			CFPropertyListRef	foundValue = inContextPtr->returnValueCopy(kKey);
@@ -8458,16 +8522,17 @@ readPreferencesDictionaryInContext		(My_ContextInterfacePtr		inContextPtr,
 			
 			if (nullptr != foundValue)
 			{
-				useDefault = false;
+				useKey = false;
 				CFRelease(foundValue), foundValue = nullptr;
 			}
 			else
 			{
 				// value is not yet defined
-				useDefault = true;
+				useKey = true;
 			}
 		}
-		if (useDefault)
+		
+		if (useKey)
 		{
 			if (CFDictionaryGetValueIfPresent(inPreferenceDictionary, kKey, &keyValue))
 			{
@@ -8492,11 +8557,37 @@ readPreferencesDictionaryInContext		(My_ContextInterfacePtr		inContextPtr,
 					//Console_WriteValueCFString("using given dictionary value for key", kKey); // debug
 					assert(kCFCompareEqualTo == CFStringCompare(kKey, definitionPtr->keyName.returnCFStringRef(), 0/* options */));
 					inContextPtr->addValue(definitionPtr->tag, definitionPtr->keyName.returnCFStringRef(), keyValue);
+					++(classPopularity[definitionPtr->preferenceClass]);
 				}
 			}
 		}
 	}
 	delete [] keys;
+	
+	// check for an established name for the context
+	if ((nullptr != outInferredNameOrNull) && ((nullptr != nameDataValue) || (nullptr != nameStringValue)))
+	{
+		*outInferredNameOrNull = chooseUserSpecifiedName(CFUtilities_DataCast(nameDataValue),
+															CFUtilities_StringCast(nameStringValue));
+	}
+	
+	// check for the dominant class of these settings
+	if (nullptr != outInferredClassOrNull)
+	{
+		UInt16	highestPopularity = 0;
+		
+		
+		*outInferredClassOrNull = Quills::Prefs::GENERAL;
+		for (CountByClass::const_iterator toPair = classPopularity.begin();
+				toPair != classPopularity.end(); ++toPair)
+		{
+			if (toPair->second > highestPopularity)
+			{
+				*outInferredClassOrNull = toPair->first;
+				highestPopularity = toPair->second;
+			}
+		}
+	}
 	
 	return result;
 }// readPreferencesDictionaryInContext
@@ -10504,6 +10595,13 @@ Updates the given dictionary using stored preference values from
 the specified context.  If merging, conflicting keys are skipped;
 otherwise, they are replaced with the new dictionary values.
 
+If "inClassKeysOnly" is true, the preference class of the given
+context is used to determine which keys to include in the
+dictionary.  This is especially useful if the source context is
+something large and varied such as the set of global defaults.
+Usually this flag should be set to true so that the resulting
+dictionary is no larger than it really needs to be.
+
 All of the keys added to the dictionary will be of type
 CFStringRef.
 
@@ -10515,7 +10613,8 @@ currently always returned; there is no way to detect errors
 OSStatus
 writePreferencesDictionaryFromContext	(My_ContextInterfacePtr		inContextPtr,
 										 CFMutableDictionaryRef		inoutPreferenceDictionary,
-										 Boolean					inMerge)
+										 Boolean					inMerge,
+										 Boolean					inClassKeysOnly)
 {
 	CFRetainRelease		keyListCFArrayObject(inContextPtr->returnKeyListCopy(), true/* is retained */);
 	CFArrayRef			keyListCFArray = keyListCFArrayObject.returnCFArrayRef();
@@ -10525,7 +10624,7 @@ writePreferencesDictionaryFromContext	(My_ContextInterfacePtr		inContextPtr,
 	for (CFIndex i = 0; i < CFArrayGetCount(keyListCFArray); ++i)
 	{
 		CFStringRef const	kKey = CFUtilities_StringCast(CFArrayGetValueAtIndex(keyListCFArray, i));
-		Boolean				useDefault = true;
+		Boolean				useKey = true;
 		
 		
 		if (inMerge)
@@ -10533,15 +10632,39 @@ writePreferencesDictionaryFromContext	(My_ContextInterfacePtr		inContextPtr,
 			// when merging, do not replace any key that is already defined
 			if (CFDictionaryContainsKey(inoutPreferenceDictionary, kKey))
 			{
-				useDefault = false;
+				useKey = false;
 			}
 			else
 			{
 				// value is not yet defined
-				useDefault = true;
+				useKey = true;
 			}
 		}
-		if (useDefault)
+		
+		// check for class restrictions; the "name" and "name-string" keys
+		// are exempt because they are used in all classes to name collections
+		if ((useKey) &&
+			(inClassKeysOnly) &&
+			(kCFCompareEqualTo != CFStringCompare(kKey, CFSTR("name"), 0/* options */)) &&
+			(kCFCompareEqualTo != CFStringCompare(kKey, CFSTR("name-string"), 0/* options */)))
+		{
+			My_PreferenceDefinition*	defPtr = My_PreferenceDefinition::findByKeyName(kKey);
+			
+			
+			// when restricting to a class, do not save a key unless it has
+			// a definition that belongs to the source context’s class
+			if (nullptr != defPtr)
+			{
+				useKey = (inContextPtr->returnClass() == defPtr->preferenceClass);
+			}
+			else
+			{
+				// unknown, e.g. a preference key written by Mac OS X itself
+				useKey = false;
+			}
+		}
+		
+		if (useKey)
 		{
 			CFRetainRelease		prefsValueCFProperty(inContextPtr->returnValueCopy(kKey), true/* is retained */);
 			
