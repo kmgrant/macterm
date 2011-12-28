@@ -16,6 +16,7 @@ p(#abstract). This page is arranged in the same categories as those in
  mentioned here, start by choosing the "Preferences..." item in
  the MacTerm menu.  See also the "low-level settings":advprefs.html page.
 
+* "About Grouped Preferences":#collections
 * "General":#general
 * "Macros":#macros
 * "Workspaces":#workspaces
@@ -24,6 +25,80 @@ p(#abstract). This page is arranged in the same categories as those in
 * "Formats":#formats
 * "Translations":#translations
 * "Full Screen":#fullscreen
+
+h2(#collections). About Grouped Preferences
+
+When you select the Macros, Workspaces, Sessions, Terminals,
+ Formats or Translations categories, a special list of collections
+ appears.  This means you may create *groups of preferences*.  The
+ list is unique for every category.
+
+h3. "Default" Item
+
+Every list starts with a Default item.  If you do not want to
+ create other groups, you can just edit the Default.  Keep in
+ mind though that the Default is implicitly inherited by all
+ other collections for settings that are not made explicitly in
+ those collections.  The Default items also have special meanings
+ for each category:
+
+* The Default under "Macros" determines the set of macros that is first enabled in the Macros menu for any session that does not specify its own macro set (such as log-in shells).
+
+* The Default under "Workspaces" determines what sessions spawn when MacTerm starts.  (You can use this to spawn several windows automatically if you wish.  You can also choose to disable all window slots in the Default Workspace so that no windows are spawned at startup time.)
+
+* The Default under "Sessions" is always listed first in the File menu and there is an option to map it to a key equivalent.
+
+* The Default under "Terminals" is used in any session that does not specify its own terminal (such as a log-in shell).
+
+* The Default under "Formats" is used in any session that does not specify its own format (such as a log-in shell).
+
+* The Default under "Translations" is used in any session that does not specify its own translation (such as a log-in shell).
+
+h3. "+" Button
+
+Use this button to add a new item to the list.
+
+h3. "-" Button
+
+First select an item in the list and then use this button to
+ remove the item.  (NOTE: So far in the beta there is a known
+ bug where items may not disappear the first time you attempt to
+ delete them.  It is possible you may have to click "-" several
+ times before an item is actually removed from the list.  This
+ bug will obviously be fixed before MacTerm is completed.)
+
+h3. Up-Arrow Button
+
+First select an item in the list and then use this button to move
+ the item higher in the list.  You can use this repeatedly to
+ move the item further.  Note that "Default" is always the first
+ item and nothing can be moved above it.
+
+h3. Down-Arrow Button
+
+First select an item in the list and then use this button to move
+ the item lower in the list.  You can use this repeatedly to
+ move the item further.  Note that "Default" is always the first
+ item and it cannot be moved down.
+
+h3. Gear Menu Button
+
+This is a contextual menu that provides additional commands for
+ acting on whatever item in the list is selected:
+
+h4. Duplicate Collection
+
+Makes a copy of the selected collection of preferences and
+ also creates a field for renaming the new collection.  Note
+ that only defined settings are copied; anything that was being
+ inherited by the original (from Default) continues to be
+ inherited in the copy.
+
+h4. Rename Collection
+
+Creates an editable field around the name of the item so that
+ you can call it something else.  Note that "Default" cannot be
+ renamed.  *The Return key is a short-cut for this action.*
 
 h2(#general). General
 

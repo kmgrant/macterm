@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111228',
     '20111226',
     '20111225',
     '20111224',
@@ -432,6 +433,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111228': [
+        'Help has been updated to describe how collections of preferences generally work.',
+    ],
     '20111226': [
         'Fixed command-click to once again be a short-cut for selecting and opening a URL.  (It has always been possible to do this manually via the "Open URL" command in the File menu.)',
         'Document icon artwork has significantly changed.',
