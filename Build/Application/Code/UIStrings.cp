@@ -909,6 +909,11 @@ UIStrings_Copy	(UIStrings_FileOrFolderCFString		inWhichString,
 													CFSTR("kUIStrings_FileDefaultCaptureFile; please localize the name but keep the .txt suffix"));
 		break;
 	
+	case kUIStrings_FileDefaultExportPreferences:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("untitled.plist"), CFSTR("FileOrFolderNames"),
+													CFSTR("kUIStrings_FileDefaultExportPreferences; please localize the name but keep the .plist suffix"));
+		break;
+	
 	case kUIStrings_FileDefaultMacroSet:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("untitled.macros"), CFSTR("FileOrFolderNames"),
 													CFSTR("kUIStrings_FileDefaultMacroSet; please localize the name but keep the .macros suffix"));
@@ -1578,10 +1583,22 @@ UIStrings_Copy	(UIStrings_SystemDialogCFString		inWhichString,
 													CFSTR("kUIStrings_SystemDialogPromptOpenMacroSet"));
 		break;
 	
+	case kUIStrings_SystemDialogPromptOpenPrefs:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Choose one or more settings files to open."),
+													CFSTR("SystemDialogs"),
+													CFSTR("kUIStrings_SystemDialogPromptOpenPrefs"));
+		break;
+	
 	case kUIStrings_SystemDialogPromptOpenSession:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Choose one or more settings files to open."),
 													CFSTR("SystemDialogs"),
 													CFSTR("kUIStrings_SystemDialogPromptOpenSession"));
+		break;
+	
+	case kUIStrings_SystemDialogPromptSavePrefs:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Enter a name for the file to contain your settings."),
+													CFSTR("SystemDialogs"),
+													CFSTR("kUIStrings_SystemDialogPromptSavePrefs"));
 		break;
 	
 	case kUIStrings_SystemDialogPromptSaveSession:
@@ -1600,6 +1617,12 @@ UIStrings_Copy	(UIStrings_SystemDialogCFString		inWhichString,
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Open Macro Set"),
 													CFSTR("SystemDialogs"),
 													CFSTR("kUIStrings_SystemDialogTitleOpenMacroSet"));
+		break;
+	
+	case kUIStrings_SystemDialogTitleOpenPrefs:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Import Preferences"),
+													CFSTR("SystemDialogs"),
+													CFSTR("kUIStrings_SystemDialogTitleOpenPrefs"));
 		break;
 	
 	case kUIStrings_SystemDialogTitleOpenSession:

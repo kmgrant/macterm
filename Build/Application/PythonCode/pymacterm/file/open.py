@@ -3,6 +3,7 @@
 """Routines to open various types of files.
 
 macros -- set current macro set according to a ".macros" key-value-pair file
+prefs -- import preferences stored in a standard XML property list
 script -- run any executable file as a Session
 session -- start a Session according to a ".session" key-value-pair file
 
@@ -57,6 +58,16 @@ def macros(pathname):
         quills.Prefs.set_current_macros(macro_set)
     finally:
         mfile.close()
+
+def prefs(pathname):
+    """prefs(pathname) -> None
+    
+    Synchronously import preferences from the given XML file
+    and automatically generate a unique name if necessary.
+    Raise an exception on failure.
+    
+    """
+    quills.Prefs.import_from_file(pathname, allow_rename=True)
 
 def script(pathname):
     """script(pathname) -> None

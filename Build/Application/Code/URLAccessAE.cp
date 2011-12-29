@@ -34,17 +34,25 @@
 #include "URLAccessAE.h"
 #include <UniversalDefines.h>
 
+// standard-C++ includes
+#include <stdexcept>
+
+// Unix includes
+#include <sys/param.h>
+
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
 #include <CoreServices/CoreServices.h>
 
 // library includes
 #include <CFRetainRelease.h>
+#include <CFUtilities.h>
 #include <Console.h>
 #include <MemoryBlocks.h>
 
 // application includes
 #include "AppleEventUtilities.h"
+#include "QuillsPrefs.h"
 #include "QuillsSession.h"
 #include "Terminology.h"
 
@@ -183,12 +191,69 @@ handleURL	(AEDesc const*		inFromWhichObject,
 																		GetHandleSize(handle), &actualSize);
 						if (result == noErr)
 						{
-							std::string		urlString(*handle, *handle + GetHandleSize(handle));
+							std::string					urlString(*handle, *handle + GetHandleSize(handle));
+							std::string::size_type		indexOfColon = urlString.find_first_of(':');
+							std::string::size_type		indexOfExtension = urlString.find_last_of('.');
+							std::string					urlType(urlString.substr(0, indexOfColon));
+							std::string					extensionName(urlString.substr
+																		(indexOfExtension + 1/* skip dot */,
+																			urlString.npos));
 							
 							
 							try
 							{
-								Quills::Session::handle_url(urlString);
+								// the mechanism for opening files is actually not consistent;
+								// sometimes a Finder icon may cause an open-documents event,
+								// but other times it may be passed in as an open-URL (for a
+								// "file" URL type); this inconsistency is a bit maddening
+								// and this code only handles the URL variant so please be
+								// sure to keep it consistent with the open-document handler
+								if (urlType == "file")
+								{
+									CFRetainRelease		urlCFString(CFStringCreateWithCString
+																	(kCFAllocatorDefault, urlString.c_str(),
+																		kCFStringEncodingUTF8),
+																	true/* is retained */);
+									CFRetainRelease		urlCFURL(CFURLCreateWithBytes
+																	(kCFAllocatorDefault,
+																		REINTERPRET_CAST
+																		(urlString.data(), UInt8 const*),
+																		urlString.size(), kCFStringEncodingUTF8,
+																		nullptr/* base URL */),
+																	true/* is retained */);
+									UInt8				filePath[MAXPATHLEN];
+									Boolean				importOK = false;
+									
+									
+									// note: CFURLGetFileSystemRepresentation() null-terminates the result
+									if (CFURLGetFileSystemRepresentation
+										(CFUtilities_URLCast(urlCFURL.returnCFTypeRef()), true/* return absolute path */,
+											filePath, sizeof(filePath)))
+									{
+										char const*		kAsCString = REINTERPRET_CAST(filePath, char const*);
+										
+										
+										if ((extensionName == "plist") || (extensionName == "xml"))
+										{
+											Quills::Prefs::import_from_file(kAsCString, true/* allow renaming */);
+											importOK = true;
+										}
+										else
+										{
+											Quills::Session::handle_file(kAsCString);
+											importOK = true;
+										}
+									}
+									
+									if (false == importOK)
+									{
+										throw std::runtime_error("unspecified problem interpreting URL bytes");
+									}
+								}
+								else
+								{
+									Quills::Session::handle_url(urlString);
+								}
 							}
 							catch (std::exception const&	e)
 							{

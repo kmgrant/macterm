@@ -242,13 +242,14 @@ if __name__ == "__main__":
     Session.on_fileopen_call(pymacterm.file.open.script, 'command')
     Session.on_fileopen_call(pymacterm.file.open.script, 'csh')
     Session.on_fileopen_call(pymacterm.file.open.script, 'pl')
+    Session.on_fileopen_call(pymacterm.file.open.prefs, 'plist')
     Session.on_fileopen_call(pymacterm.file.open.script, 'py')
     Session.on_fileopen_call(pymacterm.file.open.script, 'sh')
     Session.on_fileopen_call(pymacterm.file.open.script, 'tcl')
     Session.on_fileopen_call(pymacterm.file.open.script, 'tcsh')
     Session.on_fileopen_call(pymacterm.file.open.script, 'tool')
+    Session.on_fileopen_call(pymacterm.file.open.prefs, 'xml')
     Session.on_fileopen_call(pymacterm.file.open.script, 'zsh')
-    Session.on_fileopen_call(pymacterm.file.open.macros, 'macros')
 
     # arrange to have "lsof" invoked for one or more process IDs
     # whenever MacTerm needs to find their current working directories;

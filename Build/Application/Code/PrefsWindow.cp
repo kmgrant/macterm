@@ -48,11 +48,13 @@
 #include <CarbonEventUtilities.template.h>
 #include <CFRetainRelease.h>
 #include <CFUtilities.h>
+#include <CocoaBasic.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
 #include <Cursors.h>
 #include <DialogAdjust.h>
 #include <Embedding.h>
+#include <FileSelectionDialogs.h>
 #include <HIViewWrap.h>
 #include <HIViewWrapManip.h>
 #include <IconManager.h>
@@ -153,6 +155,7 @@ void					handleNewMainWindowSize			(WindowRef, Float32, Float32, void*);
 void					init							();
 void					installPanel					(Panel_Ref);
 void					monitorDataBrowserItems			(ControlRef, DataBrowserItemID, DataBrowserItemNotification);
+void					navigationExportPrefsDialogEvent(NavEventCallbackMessage, NavCBRecPtr, void*);
 void					newPanelSelector				(Panel_Ref);
 void					preferenceChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					rebuildList						();
@@ -195,7 +198,7 @@ ListenerModel_ListenerRef				gPreferenceChangeEventListener = nullptr;
 HISize									gMaximumWindowSize = CGSizeMake(600, 400); // arbitrary; overridden later
 HIViewWrap								gDataBrowserTitle;
 HIViewWrap								gDataBrowserForCollections;
-HIViewWrap								gCollectionAddButton;
+HIViewWrap								gCollectionAddMenuButton;
 HIViewWrap								gCollectionRemoveButton;
 HIViewWrap								gCollectionMoveUpButton;
 HIViewWrap								gCollectionMoveDownButton;
@@ -1142,7 +1145,7 @@ init ()
 		// (button clicks, dealing with text or responding to window resizing)
 		gDataBrowserTitle = (drawerWindow.returnHIViewWithID(idMyStaticTextListTitle) << HIViewWrap_AssertExists);
 		gDataBrowserForCollections = (drawerWindow.returnHIViewWithID(idMyDataBrowserCollections) << HIViewWrap_AssertExists);
-		gCollectionAddButton = (drawerWindow.returnHIViewWithID(idMyButtonAddCollection) << HIViewWrap_AssertExists);
+		gCollectionAddMenuButton = (drawerWindow.returnHIViewWithID(idMyButtonAddCollection) << HIViewWrap_AssertExists);
 		gCollectionRemoveButton = (drawerWindow.returnHIViewWithID(idMyButtonRemoveCollection) << HIViewWrap_AssertExists);
 		gCollectionMoveUpButton = (drawerWindow.returnHIViewWithID(idMyButtonMoveCollectionUp) << HIViewWrap_AssertExists);
 		gCollectionMoveDownButton = (drawerWindow.returnHIViewWithID(idMyButtonMoveCollectionDown) << HIViewWrap_AssertExists);
@@ -1185,10 +1188,10 @@ init ()
 									AppResources_ReturnCreatorCode(),
 									kConstantsRegistry_IconServicesIconItemAdd))
 				{
-					if (noErr == IconManager_SetButtonIcon(gCollectionAddButton, buttonIcon))
+					if (noErr == IconManager_SetButtonIcon(gCollectionAddMenuButton, buttonIcon))
 					{
 						// once the icon is set successfully, the equivalent text title can be removed
-						(OSStatus)SetControlTitleWithCFString(gCollectionAddButton, CFSTR(""));
+						(OSStatus)SetControlTitleWithCFString(gCollectionAddMenuButton, CFSTR(""));
 					}
 				}
 				IconManager_DisposeIcon(&buttonIcon);
@@ -1242,7 +1245,7 @@ init ()
 				
 				
 				error = HIObjectSetAuxiliaryAccessibilityAttribute
-						(gCollectionAddButton.returnHIObjectRef(), 0/* sub-component identifier */,
+						(gCollectionAddMenuButton.returnHIObjectRef(), 0/* sub-component identifier */,
 							kAXDescriptionAttribute, accessibilityDescCFString);
 				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 			}
@@ -1586,6 +1589,100 @@ monitorDataBrowserItems		(ControlRef						inDataBrowser,
 		break;
 	}
 }// monitorDataBrowserItems
+
+
+/*!
+Invoked by the Mac OS whenever something interesting happens
+in a Navigation Services save dialog attached to the
+Preferences window.
+
+(4.0)
+*/
+void
+navigationExportPrefsDialogEvent	(NavEventCallbackMessage	inMessage,
+								 	 NavCBRecPtr				inParameters,
+								 	 void*						inPrefsContextRef)
+{
+	Preferences_ContextRef	sourceContext = REINTERPRET_CAST(inPrefsContextRef, Preferences_ContextRef);
+	
+	
+	switch (inMessage)
+	{
+	case kNavCBUserAction:
+		if (kNavUserActionSaveAs == inParameters->userAction)
+		{
+			NavReplyRecord		reply;
+			OSStatus			error = noErr;
+			
+			
+			// save file
+			error = NavDialogGetReply(inParameters->context/* dialog */, &reply);
+			if ((noErr == error) && (reply.validRecord))
+			{
+				FSRef	saveFile;
+				FSRef	temporaryFile;
+				
+				
+				error = FileSelectionDialogs_CreateOrFindUserSaveFile
+						(reply, AppResources_ReturnCreatorCode(), 'TEXT', saveFile, temporaryFile);
+				if (noErr != error)
+				{
+					Console_Warning(Console_WriteValue, "failed to create export file, error", error);
+				}
+				else
+				{
+					// export the contents of the preferences context
+					Preferences_Result	writeResult = Preferences_ContextSaveAsXMLFileRef(sourceContext, temporaryFile);
+					
+					
+					if (kPreferences_ResultOK != writeResult)
+					{
+						Console_Warning(Console_WriteValue, "failed to save preferences as XML, error", writeResult);
+					}
+					else
+					{
+						// after successfully saving the data in the temporary space,
+						// move the content to its proper location
+						error = FSExchangeObjects(&temporaryFile, &saveFile);
+						if (noErr != error)
+						{
+							Console_Warning(Console_WriteValue, "failed to create export file, error", error);
+						}
+						else
+						{
+							// success; now delete unused temporary file
+							error = FSDeleteObject(&temporaryFile);
+							if (noErr != error)
+							{
+								Console_Warning(Console_WriteValue, "failed to remove temporary file after export, error", error);
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "export skipped, no valid reply record given");
+			}
+			Alert_ReportOSStatus(error);
+			error = FileSelectionDialogs_CompleteSave(&reply);
+		}
+		break;
+	
+	case kNavCBTerminate:
+		// clean up
+		NavDialogDispose(inParameters->context);
+		(OSStatus)ChangeWindowAttributes
+		(gPreferencesWindow,
+			kWindowCollapseBoxAttribute/* attributes to set */,
+			0/* attributes to clear */);
+		break;
+	
+	default:
+		// not handled
+		break;
+	}
+}// navigationExportPrefsDialogEvent
 
 
 /*!
@@ -1986,6 +2083,90 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						{
 							Sound_StandardAlert();
 							result = eventNotHandledErr;
+						}
+					}
+					break;
+				
+				case kCommandPreferencesImportFavorite:
+					{
+						// IMPORTANT: These should be consistent with declared types in the application "Info.plist".
+						void const*			kTypeList[] = { CFSTR("com.apple.property-list"),
+															CFSTR("plist")/* redundant, needed for older systems */,
+															CFSTR("xml") };
+						CFRetainRelease		fileTypes(CFArrayCreate(kCFAllocatorDefault, kTypeList,
+														sizeof(kTypeList) / sizeof(CFStringRef), &kCFTypeArrayCallBacks),
+														true/* is retained */);
+						CFStringRef			promptCFString = nullptr;
+						CFStringRef			titleCFString = nullptr;
+						
+						
+						(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptOpenPrefs, promptCFString);
+						(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogTitleOpenPrefs, titleCFString);
+						(Boolean)CocoaBasic_FileOpenPanelDisplay(promptCFString, titleCFString, fileTypes.returnCFArrayRef());
+						
+						result = noErr;
+					}
+					break;
+				
+				case kCommandPreferencesExportFavorite:
+					{
+						DataBrowserItemID	selectedID = returnCurrentSelection();
+						Boolean				isError = false;
+						
+						
+						// fix display glitch where menu button highlighting is not removed by the OS
+						HiliteControl(gCollectionManipulateMenuButton, kControlNoPart);
+						
+						// temporarily disable minimization of the parent window because the OS does
+						// not correctly handle this (the window can be minimized but after it is
+						// restored the Navigation Services sheet is gone; also, all future export
+						// commands start failing because Navigation Services sheets do not open);
+						// minimization is restored in navigationExportPrefsDialogEvent()
+						(OSStatus)ChangeWindowAttributes
+						(gPreferencesWindow,
+							0/* attributes to set */,
+							kWindowCollapseBoxAttribute/* attributes to clear */);
+						
+						if (0 == selectedID) isError = true;
+						else
+						{
+							Preferences_ContextRef		referenceContext = REINTERPRET_CAST(selectedID,
+																							Preferences_ContextRef);
+							NavDialogCreationOptions	dialogOptions;
+							NavDialogRef				navigationServicesDialog = nullptr;
+							OSStatus					error = noErr;
+							
+							
+							error = NavGetDefaultDialogCreationOptions(&dialogOptions);
+							if (noErr == error)
+							{
+								dialogOptions.optionFlags |= kNavDontAddTranslateItems;
+								Localization_GetCurrentApplicationNameAsCFString(&dialogOptions.clientName);
+								dialogOptions.preferenceKey = kPreferences_NavPrefKeyGenericSaveFile;
+								dialogOptions.parentWindow = gPreferencesWindow;
+								(UIStrings_Result)UIStrings_Copy(kUIStrings_FileDefaultExportPreferences, dialogOptions.saveFileName);
+								(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptSavePrefs, dialogOptions.message);
+								dialogOptions.modality = kWindowModalityWindowModal;
+							}
+							error = NavCreatePutFileDialog(&dialogOptions, 'TEXT'/* type */, AppResources_ReturnCreatorCode(),
+															NewNavEventUPP(navigationExportPrefsDialogEvent),
+															referenceContext/* client data */, &navigationServicesDialog);
+							if (noErr == error)
+							{
+								// display the dialog; it is a sheet, so this will return immediately
+								// and the dialog will close whenever the user is actually done with it
+								error = NavDialogRun(navigationServicesDialog);
+							}
+						}
+						
+						if (isError)
+						{
+							Sound_StandardAlert();
+							result = eventNotHandledErr;
+						}
+						else
+						{
+							result = noErr;
 						}
 					}
 					break;

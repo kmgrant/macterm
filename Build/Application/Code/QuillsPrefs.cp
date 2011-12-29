@@ -154,6 +154,146 @@ Prefs::define_macro		(unsigned int		index_in_set,
 /*!
 See header or "pydoc" for Python docstrings.
 
+(4.0)
+*/
+void
+Prefs::import_from_file		(std::string	inPathname,
+							 bool			inAllowRename)
+{
+	FSRef		fileRef;
+	OSStatus	error = noErr;
+	
+	
+	error = FSPathMakeRef(REINTERPRET_CAST(inPathname.c_str(), UInt8 const*), &fileRef, nullptr/* is a directory */);
+	if (noErr != error)
+	{
+		throw std::invalid_argument("failed to import preferences from file");
+	}
+	else
+	{
+		// it appears to be an XML property list file; parse it
+		Preferences_ContextWrap		temporaryContext(Preferences_NewContext(Quills::Prefs::GENERAL),
+														true/* is retained */);
+		
+		
+		if (false == temporaryContext.exists())
+		{
+			throw std::runtime_error("failed to construct temporary context for importing preferences");
+		}
+		else
+		{
+			Quills::Prefs::Class	inferredClass = Quills::Prefs::GENERAL;
+			CFStringRef				inferredName = nullptr;
+			Preferences_Result		prefsResult = Preferences_ContextMergeInXMLFileRef
+													(temporaryContext.returnRef(), fileRef,
+														&inferredClass, &inferredName);
+			
+			
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				throw std::invalid_argument("failed to merge XML for preferences into context");
+			}
+			
+			// empty strings are converted to nonexistent strings so that
+			// a name will be automatically generated later
+			if ((nullptr != inferredName) && (0 == CFStringGetLength(inferredName)))
+			{
+				CFRelease(inferredName), inferredName = nullptr;
+			}
+			
+			if (Preferences_IsContextNameInUse(inferredClass, inferredName))
+			{
+				if (inAllowRename)
+				{
+					// throw away the name, have one generated automatically
+					CFRelease(inferredName), inferredName = nullptr;
+				}
+				else
+				{
+					throw std::invalid_argument("existing collection is already using the same name");
+				}
+			}
+			
+			// data was imported successfully to memory; copy to a persistent store
+			{
+				Preferences_ContextWrap		savedContext(Preferences_NewContextFromFavorites
+															(inferredClass, inferredName/* if nullptr, auto-generated */),
+															true/* is retained */);
+				
+				
+				//Console_WriteValue("import file: inferred new preferences class", inferredClass);
+				//Console_WriteValueCFString("import file: inferred new preferences collection name", inferredName);
+				if (false == savedContext.exists())
+				{
+					throw std::runtime_error("failed to create persistent context for imported preferences");
+				}
+				else
+				{
+					prefsResult = Preferences_ContextCopy(temporaryContext.returnRef(), savedContext.returnRef());
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						throw std::runtime_error("failed to copy imported preferences into persistent context");
+					}
+					else
+					{
+						prefsResult = Preferences_ContextSave(savedContext.returnRef());
+						if (kPreferences_ResultOK != prefsResult)
+						{
+							throw std::runtime_error("failed to save imported preferences");
+						}
+						else
+						{
+							UInt32		showCommand = kCommandDisplayPrefPanelGeneral;
+							
+							
+							// successfully created; now show the relevant Preferences window pane
+							switch (inferredClass)
+							{
+							case Quills::Prefs::FORMAT:
+								showCommand = kCommandDisplayPrefPanelFormats;
+								break;
+							
+							case Quills::Prefs::MACRO_SET:
+								showCommand = kCommandDisplayPrefPanelMacros;
+								break;
+							
+							case Quills::Prefs::SESSION:
+								showCommand = kCommandDisplayPrefPanelSessions;
+								break;
+							
+							case Quills::Prefs::TERMINAL:
+								showCommand = kCommandDisplayPrefPanelTerminals;
+								break;
+							
+							case Quills::Prefs::TRANSLATION:
+								showCommand = kCommandDisplayPrefPanelTranslations;
+								break;
+							
+							case Quills::Prefs::WORKSPACE:
+								showCommand = kCommandDisplayPrefPanelWorkspaces;
+								break;
+							
+							default:
+								break;
+							}
+							(Boolean)Commands_ExecuteByIDUsingEvent(showCommand);
+						}
+					}
+				}
+			}
+			
+			if (nullptr != inferredName)
+			{
+				CFRelease(inferredName), inferredName = nullptr;
+			}
+		}
+	}
+}// import_from_file
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
 (3.1)
 */
 std::vector< std::string >

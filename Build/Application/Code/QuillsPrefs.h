@@ -119,6 +119,34 @@ Any given strings must use UTF-8 encoding.\n\
 	
 #if SWIG
 %feature("docstring",
+"Create a new collection containing the settings from the given\n\
+file.  The class will be based on the majority of the settings.\n\
+\n\
+If the file contains an embedded name key such as \"name-string\"\n\
+and the name does not conflict with any other collection in the\n\
+chosen category then the collection is given that name.  If the\n\
+name does conflict, the normal behavior is to raise an exception;\n\
+but \"allow_rename\" can be set to force a unique name in this\n\
+situation.\n\
+") import_from_file;
+%feature("kwargs") import_from_file;
+
+// do not lose exceptions that may be raised by callbacks
+%exception import_from_file
+{
+	try
+	{
+		$action
+	}
+    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	SWIG_CATCH_UNKNOWN
+}
+#endif
+	static void import_from_file	(std::string	pathname,
+									 bool			allow_rename = true);
+	
+#if SWIG
+%feature("docstring",
 "Return a list of collection names for preferences saved in the\n\
 given category, if any.\n\
 \n\

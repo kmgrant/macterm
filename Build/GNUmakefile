@@ -207,6 +207,7 @@ IconForPrefPanelSessions.icns \
 IconForPrefPanelTerminals.icns \
 IconForPrefPanelTranslations.icns \
 IconForPrefPanelWorkspaces.icns \
+IconForPrefs.icns \
 IconForPrint.icns \
 IconForRestartSession.icns \
 IconForScrollLockOff.icns \

@@ -54,9 +54,25 @@ Every list starts with a Default item.  If you do not want to
 
 * The Default under "Translations" is used in any session that does not specify its own translation (such as a log-in shell).
 
-h3. "+" Button
+h3. "+" Menu Button
 
-Use this button to add a new item to the list.
+This menu provides commands for creating new collections:
+
+h4. New Collection
+
+Adds a new item to the list.
+
+h4. Import from File...
+
+Use this to create a new collection based on settings that were
+ exported to a file previously.  This can be something that was
+ created by you (see "Export to File...", below), something that
+ was given to you by someone else, or even something that you
+ downloaded from MacTerm's web site.
+
+The new collection will try to use any name that was given in
+ the file.  If the name is already in use then the collection
+ will appear under a different name.
 
 h3. "-" Button
 
@@ -99,6 +115,19 @@ h4. Rename Collection
 Creates an editable field around the name of the item so that
  you can call it something else.  Note that "Default" cannot be
  renamed.  *The Return key is a short-cut for this action.*
+
+h4. Export to File...
+
+Use this to create a property list file containing all of the
+ settings directly defined in the selected collection.  Settings
+ that were never directly set for the collection will NOT be
+ exported (if they are imported later, they will implicitly
+ inherit whatever the Default settings are at that time).
+
+Exported settings are a good way to share among users of MacTerm.
+ For instance, if you are the administrator of a school you might
+ want to export some settings and make them available to students
+ so that everyone's computer can be configured fairly easily.
 
 h2(#general). General
 
