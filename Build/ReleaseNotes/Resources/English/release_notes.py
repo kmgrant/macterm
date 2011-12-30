@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20111229',
     '20111228',
     '20111226',
     '20111225',
@@ -433,6 +434,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20111229': [
+        'Default color schemes (created only in brand new installations) have been tweaked slightly so that ANSI colors look better.',
+    ],
     '20111228': [
         'Preferences window now supports generic import and export for ALL types of collections.  When any collection drawer is open you will now find an "Export to File..." command in the submenu of the gear button and an "Import from File..." command in the submenu of the "+" button.  These files are in XML property list format.',
         'Added Prefs.import_from_file() to Quills, allowing preference file imports to be requested from Python.',

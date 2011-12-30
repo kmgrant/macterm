@@ -2,60 +2,148 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>name</key>
+	<data>
+	//5CAHIAaQBnAGgAdABlAHIAIABCAGwAdQBlAA==
+	</data>
 	<key>name-string</key>
-	<string>Bright Blue</string>
+	<string>Brighter Blue</string>
+	<key>terminal-color-ansi-black-bold-rgb</key>
+	<array>
+		<real>0.28299382328987122</real>
+		<real>0.28296330571174622</real>
+		<real>0.28302434086799622</real>
+	</array>
+	<key>terminal-color-ansi-black-normal-rgb</key>
+	<array>
+		<real>0.015686275437474251</real>
+		<real>0.019607843831181526</real>
+		<real>0.019607843831181526</real>
+	</array>
+	<key>terminal-color-ansi-blue-bold-rgb</key>
+	<array>
+		<real>0.015686275437474251</real>
+		<real>0.019607843831181526</real>
+		<real>0.99215686321258545</real>
+	</array>
+	<key>terminal-color-ansi-blue-normal-rgb</key>
+	<array>
+		<real>0.015686275437474251</real>
+		<real>0.019607843831181526</real>
+		<real>0.70196080207824707</real>
+	</array>
+	<key>terminal-color-ansi-cyan-bold-rgb</key>
+	<array>
+		<real>0.0078431377187371254</real>
+		<real>0.88627451658248901</real>
+		<real>0.89411765336990356</real>
+	</array>
+	<key>terminal-color-ansi-cyan-normal-rgb</key>
+	<array>
+		<real>0.0078431377187371254</real>
+		<real>0.64313727617263794</real>
+		<real>0.69803923368453979</real>
+	</array>
+	<key>terminal-color-ansi-green-bold-rgb</key>
+	<array>
+		<real>0.015686275437474251</real>
+		<real>0.84313726425170898</real>
+		<real>0.023529412224888802</real>
+	</array>
+	<key>terminal-color-ansi-green-normal-rgb</key>
+	<array>
+		<real>0.045426107943058014</real>
+		<real>0.38803693652153015</real>
+		<real>0.023498894646763802</real>
+	</array>
 	<key>terminal-color-ansi-magenta-bold-rgb</key>
 	<array>
-		<real>0.5985809</real>
-		<real>0.03517205</real>
-		<real>0.6018006</real>
+		<real>0.89497214555740356</real>
+		<real>0.53038835525512695</real>
+		<real>0.82615393400192261</real>
 	</array>
 	<key>terminal-color-ansi-magenta-normal-rgb</key>
 	<array>
-		<real>0.5882201</real>
-		<real>0.04017701</real>
-		<real>0.5881895</real>
+		<real>0.64715039730072021</real>
+		<real>0.015716793015599251</real>
+		<real>0.65409320592880249</real>
+	</array>
+	<key>terminal-color-ansi-red-bold-rgb</key>
+	<array>
+		<real>0.89019608497619629</real>
+		<real>0.015686275437474251</real>
+		<real>0.019607843831181526</real>
+	</array>
+	<key>terminal-color-ansi-red-normal-rgb</key>
+	<array>
+		<real>0.59607845544815063</real>
+		<real>0.019607843831181526</real>
+		<real>0.019607843831181526</real>
+	</array>
+	<key>terminal-color-ansi-white-bold-rgb</key>
+	<array>
+		<real>1</real>
+		<real>0.9999542236328125</real>
+		<real>1</real>
+	</array>
+	<key>terminal-color-ansi-white-normal-rgb</key>
+	<array>
+		<real>0.73725491762161255</real>
+		<real>0.74117648601531982</real>
+		<real>0.74901962280273438</real>
+	</array>
+	<key>terminal-color-ansi-yellow-bold-rgb</key>
+	<array>
+		<real>0.89019608497619629</real>
+		<real>0.89411765336990356</real>
+		<real>0.023529412224888802</real>
+	</array>
+	<key>terminal-color-ansi-yellow-normal-rgb</key>
+	<array>
+		<real>0.65268939733505249</real>
+		<real>0.65703821182250977</real>
+		<real>0.093171589076519012</real>
 	</array>
 	<key>terminal-color-blinking-background-rgb</key>
 	<array>
-		<real>0</real>
-		<real>0.501960813999176</real>
+		<real>0.0</real>
+		<real>0.50196081399917603</real>
 		<real>1</real>
 	</array>
 	<key>terminal-color-blinking-foreground-rgb</key>
 	<array>
 		<real>1</real>
-		<real>1</real>
+		<real>0.9999542236328125</real>
 		<real>1</real>
 	</array>
 	<key>terminal-color-bold-background-rgb</key>
 	<array>
-		<real>0</real>
-		<real>0.501960813999176</real>
+		<real>0.0</real>
+		<real>0.50196081399917603</real>
 		<real>1</real>
 	</array>
 	<key>terminal-color-bold-foreground-rgb</key>
 	<array>
 		<real>1</real>
-		<real>1</real>
+		<real>0.9999542236328125</real>
 		<real>1</real>
 	</array>
 	<key>terminal-color-matte-background-rgb</key>
 	<array>
-		<real>0.151796743273735</real>
-		<real>0.3291981518268585</real>
-		<real>0.6018005609512329</real>
+		<real>0.15178148448467255</real>
+		<real>0.32919815182685852</real>
+		<real>0.60178530216217041</real>
 	</array>
 	<key>terminal-color-normal-background-rgb</key>
 	<array>
-		<real>0</real>
-		<real>0.501960813999176</real>
+		<real>0.0</real>
+		<real>0.50196081399917603</real>
 		<real>1</real>
 	</array>
 	<key>terminal-color-normal-foreground-rgb</key>
 	<array>
 		<real>1</real>
-		<real>1</real>
+		<real>0.9999542236328125</real>
 		<real>1</real>
 	</array>
 </dict>

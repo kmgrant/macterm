@@ -2,49 +2,85 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>name</key>
+	<data>
+	//5TAGEAbgBkAA==
+	</data>
 	<key>name-string</key>
 	<string>Sand</string>
+	<key>terminal-color-ansi-cyan-bold-rgb</key>
+	<array>
+		<real>0.0</real>
+		<real>0.79668879508972168</real>
+		<real>0.80541694164276123</real>
+	</array>
+	<key>terminal-color-ansi-green-bold-rgb</key>
+	<array>
+		<real>0.14991989731788635</real>
+		<real>0.84896618127822876</real>
+		<real>0.10034333169460297</real>
+	</array>
+	<key>terminal-color-ansi-green-normal-rgb</key>
+	<array>
+		<real>0.10846112668514252</real>
+		<real>0.66608685255050659</real>
+		<real>0.068909741938114166</real>
+	</array>
+	<key>terminal-color-ansi-yellow-bold-rgb</key>
+	<array>
+		<real>0.61538112163543701</real>
+		<real>0.59642940759658813</real>
+		<real>0.0060578319244086742</real>
+	</array>
+	<key>terminal-color-ansi-yellow-normal-rgb</key>
+	<array>
+		<real>0.69681847095489502</real>
+		<real>0.68569469451904297</real>
+		<real>0.0042420080862939358</real>
+	</array>
 	<key>terminal-color-blinking-background-rgb</key>
 	<array>
 		<real>1</real>
-		<real>0.8</real>
-		<real>0.4</real>
+		<real>0.80000000000000004</real>
+		<real>0.40000000000000002</real>
 	</array>
 	<key>terminal-color-blinking-foreground-rgb</key>
 	<array>
-		<real>0.5019608</real>
-		<real>0.2509804</real>
-		<real>0</real>
+		<real>0.50196079999999998</real>
+		<real>0.25098039999999999</real>
+		<real>0.0</real>
 	</array>
 	<key>terminal-color-bold-background-rgb</key>
 	<array>
 		<real>1</real>
-		<real>0.8</real>
-		<real>0.4</real>
+		<real>0.80000000000000004</real>
+		<real>0.40000000000000002</real>
 	</array>
 	<key>terminal-color-bold-foreground-rgb</key>
 	<array>
-		<real>0.5701228</real>
-		<real>0.1357137</real>
-		<real>0.1295186</real>
+		<real>0.57012280000000004</real>
+		<real>0.13571369999999999</real>
+		<real>0.12951860000000001</real>
 	</array>
 	<key>terminal-color-matte-background-rgb</key>
 	<array>
-		<real>0.6334783</real>
-		<real>0.4920424</real>
-		<real>0.1844968</real>
+		<real>0.63347830000000005</real>
+		<real>0.49204239999999999</real>
+		<real>0.18449679999999999</real>
 	</array>
 	<key>terminal-color-normal-background-rgb</key>
 	<array>
 		<real>1</real>
-		<real>0.8</real>
-		<real>0.4</real>
+		<real>0.80000000000000004</real>
+		<real>0.40000000000000002</real>
 	</array>
 	<key>terminal-color-normal-foreground-rgb</key>
 	<array>
-		<real>0.5019608</real>
-		<real>0</real>
-		<real>0</real>
+		<real>0.50196079999999998</real>
+		<real>0.0</real>
+		<real>0.0</real>
 	</array>
+	<key>terminal-font-width-multiplier</key>
+	<real>1</real>
 </dict>
 </plist>

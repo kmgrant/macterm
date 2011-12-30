@@ -2,13 +2,35 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>name</key>
+	<data>
+	//5EAGEAcgBrACAAQgBsAHUAZQAgAGEAbgBkACAAUAB1AHIAcABsAGUA
+	</data>
 	<key>name-string</key>
 	<string>Dark Blue and Purple</string>
+	<key>terminal-color-ansi-blue-bold-rgb</key>
+	<array>
+		<real>0.22551308572292328</real>
+		<real>0.33791103959083557</real>
+		<real>0.99063098430633545</real>
+	</array>
+	<key>terminal-color-ansi-blue-normal-rgb</key>
+	<array>
+		<real>0.38338291645050049</real>
+		<real>0.57363241910934448</real>
+		<real>0.99218738079071045</real>
+	</array>
+	<key>terminal-color-ansi-magenta-bold-rgb</key>
+	<array>
+		<real>0.7448081374168396</real>
+		<real>0.0</real>
+		<real>0.75358206033706665</real>
+	</array>
 	<key>terminal-color-blinking-background-rgb</key>
 	<array>
-		<real>0.0443122</real>
-		<real>0.2451057</real>
-		<real>0.419913</real>
+		<real>0.044312200000000003</real>
+		<real>0.24510570000000001</real>
+		<real>0.41991299999999998</real>
 	</array>
 	<key>terminal-color-blinking-foreground-rgb</key>
 	<array>
@@ -18,33 +40,33 @@
 	</array>
 	<key>terminal-color-bold-background-rgb</key>
 	<array>
-		<real>0.0443122</real>
-		<real>0.2451057</real>
-		<real>0.419913</real>
+		<real>0.044312200000000003</real>
+		<real>0.24510570000000001</real>
+		<real>0.41991299999999998</real>
 	</array>
 	<key>terminal-color-bold-foreground-rgb</key>
 	<array>
-		<real>0.8554665</real>
-		<real>0.6400702</real>
+		<real>0.85546650000000002</real>
+		<real>0.64007020000000003</real>
 		<real>1</real>
 	</array>
 	<key>terminal-color-matte-background-rgb</key>
 	<array>
-		<real>0.3601282</real>
-		<real>0.2680857</real>
-		<real>0.3619898</real>
+		<real>0.36012820000000001</real>
+		<real>0.26808569999999998</real>
+		<real>0.36198979999999997</real>
 	</array>
 	<key>terminal-color-normal-background-rgb</key>
 	<array>
-		<real>0.0443122</real>
-		<real>0.2451057</real>
-		<real>0.419913</real>
+		<real>0.044312200000000003</real>
+		<real>0.24510570000000001</real>
+		<real>0.41991299999999998</real>
 	</array>
 	<key>terminal-color-normal-foreground-rgb</key>
 	<array>
-		<real>0.695964</real>
-		<real>0.7373007</real>
-		<real>0.9817197</real>
+		<real>0.69596400000000003</real>
+		<real>0.73730070000000003</real>
+		<real>0.98171969999999997</real>
 	</array>
 </dict>
 </plist>
