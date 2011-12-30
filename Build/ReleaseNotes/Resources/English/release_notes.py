@@ -434,7 +434,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20111228': [
-        'Preferences window now supports generic import and export for ALL types of collections.  When any collection drawer is open you will now find an "Export to File..." button in the submenu of the gear button and an "Import from File..." command in the submenu of the "+" button.  These files are in XML property list format.',
+        'Preferences window now supports generic import and export for ALL types of collections.  When any collection drawer is open you will now find an "Export to File..." command in the submenu of the gear button and an "Import from File..." command in the submenu of the "+" button.  These files are in XML property list format.',
         'Added Prefs.import_from_file() to Quills, allowing preference file imports to be requested from Python.',
         'Help has been updated to describe how collections of preferences generally work.',
     ],
