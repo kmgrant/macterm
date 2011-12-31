@@ -226,7 +226,7 @@ void			clipvec						(My_VectorInterpreterPtr, short, short, short, short);
 short			drawc						(My_VectorInterpreterPtr, short);
 short			fontnum						(My_VectorInterpreterPtr, UInt16);
 Boolean			isValidID					(VectorInterpreter_ID);
-short			joinup						(My_VectorInterpreterPtr, short, short);
+short			joinup						(short, short, short);
 void			linefeed					(My_VectorInterpreterPtr);
 void			newcoord					(My_VectorInterpreterPtr);
 void			storexy						(My_VectorInterpreterPtr, short, short);
@@ -238,7 +238,7 @@ void			VGdraw						(My_VectorInterpreterPtr, char);
 #pragma mark Variables
 namespace {
 
-char*		gTEK4014Font[95] =
+char const*		gTEK4014Font[95] =
 {
 	"", /* space */
 	/* ! thru / */
@@ -361,7 +361,7 @@ char*		gTEK4014Font[95] =
 	"6w2y2n2y"
 };
 
-char*		gTEK4105Font[106] =
+char const*		gTEK4105Font[106] =
 {
 	"", /* space */
 	/* ! thru / */
@@ -982,7 +982,7 @@ drawc		(My_VectorInterpreterPtr	inPtr,
 	short		strokex = 0,
 				strokey = 0;
 	short		n = 0;						/* number of times to perform command */
-	char*		pstroke = nullptr;				/* pointer into stroke data */
+	char const*	pstroke = nullptr;				/* pointer into stroke data */
 	short		hmag = 0,
 				vmag = 0;
 	short		xdir = 1,

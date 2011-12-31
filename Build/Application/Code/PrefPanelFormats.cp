@@ -2897,7 +2897,7 @@ receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				// for sheets, the PARENT window can sometimes be erased too...sigh
 				error = GetWindowClass(window, &windowClass);
-				if (kSheetWindowClass == windowClass)
+				if ((noErr == error) && (kSheetWindowClass == windowClass))
 				{
 					HIWindowRef		parentWindow;
 					

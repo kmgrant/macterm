@@ -66,9 +66,8 @@ typedef My_OffscreenDeviceLoopParams*			My_OffscreenDeviceLoopParamsPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-void		offscreenDumpDeviceLoop			(short, short, GDHandle, long);
-Boolean		setControlActiveOperation		(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
-Boolean		swapControlsOperation			(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
+void		offscreenDumpDeviceLoop		(short, short, GDHandle, long);
+Boolean		swapControlsOperation		(ControlRef, SInt16, SInt16, GDHandle, SInt32, SInt32);
 
 } // anonymous namespace
 
@@ -519,48 +518,6 @@ offscreenDumpDeviceLoop		(short		inColorDepth,
 	
 	SetPort(oldPort);
 }// offscreenDumpDeviceLoop
-
-
-/*!
-This method is in standard OffscreenOperationProcPtr
-form, and will use "inIsEnabled" (“data 1”) as the
-enabled state (true or false) for the given control.
-If nonzero, the specified control of the specified
-window is activated; otherwise, it is deactivated.
-If the desired control state is already in place,
-this method has no effect.
-
-If the operation cannot be completed, false is
-returned; otherwise, true is returned.
-
-(1.0)
-*/
-Boolean
-setControlActiveOperation	(ControlRef		inSpecificControlOrRoot,
-							 SInt16			UNUSED_ARGUMENT(inColorDepth),
-							 SInt16			UNUSED_ARGUMENT(inDeviceFlags),
-							 GDHandle		UNUSED_ARGUMENT(inTargetDevice),
-							 SInt32			inIsEnabled,
-							 SInt32			UNUSED_ARGUMENT(inData2))
-{
-	Boolean		result = true;
-	
-	
-	if (inSpecificControlOrRoot != nullptr)
-	{
-		if (inIsEnabled != IsControlActive(inSpecificControlOrRoot))
-		{
-			if (inIsEnabled) (OSStatus)ActivateControl(inSpecificControlOrRoot);
-			else (OSStatus)DeactivateControl(inSpecificControlOrRoot);
-		}
-	}
-	else
-	{
-		result = false;
-	}
-	
-	return result;
-}// setControlActiveOperation
 
 
 /*!

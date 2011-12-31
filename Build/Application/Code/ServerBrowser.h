@@ -43,7 +43,7 @@
 
 // library includes
 #ifdef __OBJC__
-@class CarbonEventHandlerWrap;
+class CarbonEventHandlerWrap;
 @class NSWindow;
 #else
 class CarbonEventHandlerWrap;

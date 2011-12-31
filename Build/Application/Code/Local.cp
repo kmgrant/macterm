@@ -1672,8 +1672,8 @@ openMasterTeletypewriter	(size_t				inNameSize,
 	}
 	else
 	{
-		char*			ptr1 = nullptr;
-		char*			ptr2 = nullptr;
+		char const*		ptr1 = nullptr;
+		char const*		ptr2 = nullptr;
 		Boolean			doneSearch = false;
 		struct stat		slaveInfo;
 		

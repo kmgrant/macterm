@@ -84,6 +84,12 @@ changes to an interface declared in a ".mm" file.
 	NSString*				paperInfo;
 }
 
+- (id)
+initWithString:(NSString*)_
+andFont:(NSFont*)_
+andTitle:(NSString*)_
+andLandscape:(BOOL)_;
+
 - (void)
 beginPreviewSheetModalForWindow:(NSWindow*)_;
 

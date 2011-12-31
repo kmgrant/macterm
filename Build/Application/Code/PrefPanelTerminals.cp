@@ -1282,7 +1282,7 @@ setEmulationTweaksDataBrowserColumnWidths ()
 			integerWidth = availableWidth;
 			(OSStatus)SetDataBrowserTableViewNamedColumnWidth
 						(dataBrowser, kMy_DataBrowserPropertyIDTweakName, integerWidth);
-			availableWidth -= integerWidth;
+			//availableWidth -= integerWidth;
 		}
 	}
 }// My_TerminalsPanelEmulationUI::setEmulationTweaksDataBrowserColumnWidths

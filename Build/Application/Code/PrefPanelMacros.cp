@@ -558,7 +558,7 @@ createContainerView		(Panel_Ref		inPanel,
 			if (noErr == error)
 			{
 				flags |= kDataBrowserPropertyIsMutable;
-				error = SetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDMacroName, flags);
+				(OSStatus)SetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDMacroName, flags);
 			}
 		}
 		
@@ -1569,6 +1569,11 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		
 		case kMyDataBrowserPropertyIDMacroName:
 			// return the text string for the macro name
+			if (nullptr == panelDataPtr)
+			{
+				result = errDataBrowserItemNotFound;
+			}
+			else
 			{
 				Preferences_Index	macroIndex = STATIC_CAST(inItemID, Preferences_Index);
 				CFStringRef			nameCFString = nullptr;
@@ -1623,6 +1628,11 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		{
 		case kMyDataBrowserPropertyIDMacroName:
 			// user has changed the macro name; update the macro in memory
+			if (nullptr == panelDataPtr)
+			{
+				result = errDataBrowserItemNotFound;
+			}
+			else
 			{
 				CFStringRef		newName = nullptr;
 				

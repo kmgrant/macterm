@@ -55,7 +55,7 @@
 #define NSAppKitVersionNumber10_5 949
 #endif
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060 /* MAC_OS_X_VERSION_10_6 */
+#if MAC_OS_X_VERSION_MIN_REQUIRED <= 1060 /* MAC_OS_X_VERSION_10_6 */
 #define NSAppKitVersionNumber10_6 1038
 #endif
 

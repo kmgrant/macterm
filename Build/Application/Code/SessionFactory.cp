@@ -2967,6 +2967,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							Console_Warning(Console_WriteLine, "failed to launch startup workspace");
 							Sound_StandardAlert();
 						}
+						
+						if ((releaseContext) && (nullptr != workspaceContext))
+						{
+							Preferences_ReleaseContext(&workspaceContext);
+						}
 					}
 					break;
 				

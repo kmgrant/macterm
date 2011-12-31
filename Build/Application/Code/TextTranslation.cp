@@ -585,7 +585,6 @@ void
 fillInCharacterSetList ()
 {
 	CFStringEncoding			currentEncoding = GetApplicationTextEncoding();
-	TextEncodingBase			oldBase = kTextEncodingMacUnicode; // arbitrary; must differ from "currentBase" for initial loop
 	TextEncodingBase			currentBase = kTextEncodingMacRoman;
 	My_TextEncodingInfoPtr		dataPtr = nullptr;
 	CFStringEncoding const*		availableEncodings = nullptr;
@@ -635,7 +634,6 @@ fillInCharacterSetList ()
 				}
 			}
 		}
-		oldBase = currentBase;
 		
 		if (loopTerminator > 500/* arbitrary */)
 		{

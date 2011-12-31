@@ -177,6 +177,22 @@ OSStatus	showHideInfoWindow			(ListenerModel_Ref, ListenerModel_Event, void*, vo
 
 } // anonymous namespace
 
+@interface InfoWindow_Controller (InfoWindow_ControllerInternal)
+
+- (void)
+didDoubleClickInView:(id)_;
+
+- (InfoWindow_SessionRow*)
+infoForRow:(int)_;
+
+- (InfoWindow_SessionRow*)
+infoForSession:(SessionRef)_;
+
+- (void)
+removeSession:(SessionRef)_;
+
+@end // InfoWindow_Controller (InfoWindow_ControllerInternal)
+
 
 
 #pragma mark Public Methods
@@ -1133,123 +1149,6 @@ dealloc
 }// dealloc
 
 
-/*!
-Returns an object representing the specified row in the table.
-
-(4.0)
-*/
-- (InfoWindow_SessionRow*)
-infoForRow:(int)	row
-{
-	InfoWindow_SessionRow*	result = nil;
-	
-	
-	if ((row >= 0) && (row < [self numberOfRowsInTableView:self->infoTable]))
-	{
-		id		infoObject = [self->dataArray objectAtIndex:row];
-		assert([infoObject isKindOfClass:[InfoWindow_SessionRow class]]);
-		
-		
-		result = (InfoWindow_SessionRow*)infoObject;
-	}
-	return result;
-}// infoForRow:
-
-
-/*!
-Returns an object representing the specified session in the
-table.
-
-(4.0)
-*/
-- (InfoWindow_SessionRow*)
-infoForSession:(SessionRef)		aSession
-{
-	InfoWindow_SessionRow*	result = nil;
-	NSEnumerator*			eachObject = [self->dataArray objectEnumerator];
-	id						currentObject = nil;
-	
-	
-	while ((currentObject = [eachObject nextObject]))
-	{
-		assert([currentObject isKindOfClass:[InfoWindow_SessionRow class]]);
-		InfoWindow_SessionRow*	asSessionRow = (InfoWindow_SessionRow*)currentObject;
-		
-		
-		if (aSession == asSessionRow->session)
-		{
-			result = asSessionRow;
-			break;
-		}
-	}
-	return result;
-}// infoForSession:
-
-
-/*!
-Responds when the user double-clicks the specified row in the
-table.
-
-(4.0)
-*/
-- (void)
-didDoubleClickInView:(id)	sender
-{
-	if ([sender isKindOfClass:[NSTableView class]])
-	{
-		NSTableView*	asTableView = (NSTableView*)sender;
-		//int			clickedColumn = [asTableView clickedColumn]; // not important in this case
-		int				clickedRow = [asTableView clickedRow];
-		
-		
-		if (clickedRow >= 0)
-		{
-			InfoWindow_SessionRow*	rowData = [self infoForRow:clickedRow];
-			
-			
-			if (nil != rowData)
-			{
-				Session_Select(rowData->session);
-			}
-		}
-	}
-}// didDoubleClickInView:
-
-
-/*!
-Locates any object representing the specified session in the
-table, and removes it.
-
-(4.0)
-*/
-- (void)
-removeSession:(SessionRef)		aSession
-{
-	NSEnumerator*	eachObject = [self->dataArray objectEnumerator];
-	id				currentObject = nil;
-	int				deletedIndex = -1;
-	int				i = 0;
-	
-	
-	for (; ((currentObject = [eachObject nextObject])); ++i)
-	{
-		assert([currentObject isKindOfClass:[InfoWindow_SessionRow class]]);
-		InfoWindow_SessionRow*	asSessionRow = (InfoWindow_SessionRow*)currentObject;
-		
-		
-		if (aSession == asSessionRow->session)
-		{
-			deletedIndex = i;
-			break;
-		}
-	}
-	if (deletedIndex >= 0)
-	{
-		[self->dataArray removeObjectAtIndex:deletedIndex];
-	}
-}// removeSession:
-
-
 #pragma mark NSTableDataSource
 
 
@@ -1584,5 +1483,128 @@ windowFrameAutosaveName
 
 
 @end // InfoWindow_Controller
+
+
+@implementation InfoWindow_Controller (InfoWindow_ControllerInternal)
+
+
+/*!
+Responds when the user double-clicks the specified row in the
+table.
+
+(4.0)
+*/
+- (void)
+didDoubleClickInView:(id)	sender
+{
+	if ([sender isKindOfClass:[NSTableView class]])
+	{
+		NSTableView*	asTableView = (NSTableView*)sender;
+		//int			clickedColumn = [asTableView clickedColumn]; // not important in this case
+		int				clickedRow = [asTableView clickedRow];
+		
+		
+		if (clickedRow >= 0)
+		{
+			InfoWindow_SessionRow*	rowData = [self infoForRow:clickedRow];
+			
+			
+			if (nil != rowData)
+			{
+				Session_Select(rowData->session);
+			}
+		}
+	}
+}// didDoubleClickInView:
+
+
+/*!
+Returns an object representing the specified row in the table.
+
+(4.0)
+*/
+- (InfoWindow_SessionRow*)
+infoForRow:(int)	row
+{
+	InfoWindow_SessionRow*	result = nil;
+	
+	
+	if ((row >= 0) && (row < [self numberOfRowsInTableView:self->infoTable]))
+	{
+		id		infoObject = [self->dataArray objectAtIndex:row];
+		assert([infoObject isKindOfClass:[InfoWindow_SessionRow class]]);
+		
+		
+		result = (InfoWindow_SessionRow*)infoObject;
+	}
+	return result;
+}// infoForRow:
+
+
+/*!
+Returns an object representing the specified session in the
+table.
+
+(4.0)
+*/
+- (InfoWindow_SessionRow*)
+infoForSession:(SessionRef)		aSession
+{
+	InfoWindow_SessionRow*	result = nil;
+	NSEnumerator*			eachObject = [self->dataArray objectEnumerator];
+	id						currentObject = nil;
+	
+	
+	while ((currentObject = [eachObject nextObject]))
+	{
+		assert([currentObject isKindOfClass:[InfoWindow_SessionRow class]]);
+		InfoWindow_SessionRow*	asSessionRow = (InfoWindow_SessionRow*)currentObject;
+		
+		
+		if (aSession == asSessionRow->session)
+		{
+			result = asSessionRow;
+			break;
+		}
+	}
+	return result;
+}// infoForSession:
+
+
+/*!
+Locates any object representing the specified session in the
+table, and removes it.
+
+(4.0)
+*/
+- (void)
+removeSession:(SessionRef)		aSession
+{
+	NSEnumerator*	eachObject = [self->dataArray objectEnumerator];
+	id				currentObject = nil;
+	int				deletedIndex = -1;
+	int				i = 0;
+	
+	
+	for (; ((currentObject = [eachObject nextObject])); ++i)
+	{
+		assert([currentObject isKindOfClass:[InfoWindow_SessionRow class]]);
+		InfoWindow_SessionRow*	asSessionRow = (InfoWindow_SessionRow*)currentObject;
+		
+		
+		if (aSession == asSessionRow->session)
+		{
+			deletedIndex = i;
+			break;
+		}
+	}
+	if (deletedIndex >= 0)
+	{
+		[self->dataArray removeObjectAtIndex:deletedIndex];
+	}
+}// removeSession:
+
+
+@end // InfoWindow_Controller (InfoWindow_ControllerInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -198,9 +198,8 @@ void				setUpWindowMenu									(NSMenu*);
 void				setUpWorkspaceFavoritesMenu						(NSMenu*);
 void				setWindowMenuItemMarkForSession					(SessionRef, NSMenuItem* = nil);
 void				showWindowTerminalWindowOp						(TerminalWindowRef, void*, SInt32, void*);
-Boolean				stateTrackerWindowMenuWindowItems				(UInt32, MenuRef, MenuItemIndex);
 BOOL				textSelectionExists								();
-id					validatorYes									(id);
+id					validatorYes									(id <NSValidatedUserInterfaceItem>);
 
 } // anonymous namespace
 
@@ -1811,7 +1810,7 @@ Commands_InsertPrefNamesIntoMenu	(Quills::Prefs::Class	inClass,
 			nameCFString = CFUtilities_StringCast(CFArrayGetValueAtIndex(nameCFStringCFArray, i));
 			if (nullptr != nameCFString)
 			{
-				id <NSMenuItem>		newItem = nil;
+				NSMenuItem*		newItem = nil;
 				
 				
 				newItem = [inoutMenu insertItemWithTitle:(NSString*)nameCFString

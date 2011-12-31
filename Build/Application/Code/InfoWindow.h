@@ -75,15 +75,6 @@ changes to an interface declared in a ".mm" file.
 + (id)
 sharedInfoWindowController;
 
-- (InfoWindow_SessionRow*)
-infoForRow:(int)_;
-
-- (InfoWindow_SessionRow*)
-infoForSession:(SessionRef)_;
-
-- (void)
-removeSession:(SessionRef)_;
-
 @end
 
 #endif // __OBJC__

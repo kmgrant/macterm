@@ -6888,9 +6888,18 @@ returnScrollbackRows	(Preferences_ContextRef		inTerminalConfig)
 												sizeof(scrollbackType), &scrollbackType);
 	if (kPreferences_ResultOK == prefsResult)
 	{
-		if (kTerminal_ScrollbackTypeDisabled == scrollbackType) result = 0;
-		else if (kTerminal_ScrollbackTypeUnlimited == scrollbackType) result = USHRT_MAX; // TEMPORARY
-		else if (kTerminal_ScrollbackTypeDistributed == scrollbackType) ; // UNIMPLEMENTED
+		if (kTerminal_ScrollbackTypeDisabled == scrollbackType)
+		{
+			result = 0;
+		}
+		else if (kTerminal_ScrollbackTypeUnlimited == scrollbackType)
+		{
+			result = USHRT_MAX; // TEMPORARY
+		}
+		else if (kTerminal_ScrollbackTypeDistributed == scrollbackType)
+		{
+			// UNIMPLEMENTED
+		}
 	}
 	
 	if (kTerminal_ScrollbackTypeFixed == scrollbackType)
@@ -12924,7 +12933,7 @@ horizontalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
 		newY = (0 == kParam0)
 				? 0
 				: (kMy_ParamUndefined != kParam0)
-					? kParam0 - 1
+					? STATIC_CAST(kParam0 - 1, My_ScreenRowIndex)
 					: inDataPtr->current.cursorY/* default is current cursor row */;
 		newX = (0 == kParam1)
 				? 0

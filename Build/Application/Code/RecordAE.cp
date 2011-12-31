@@ -53,12 +53,6 @@ namespace {
 
 AEEventHandlerUPP		gRecordingBeginUPP = nullptr;		//!< wrapper for callback that hears about new recordings
 AEEventHandlerUPP		gRecordingEndUPP = nullptr;			//!< wrapper for callback that hears about halted recordings
-EventHandlerUPP			gWindowClosedUPP = nullptr;			//!< wrapper for callback that hears about windows that have closed
-EventHandlerRef			gWindowClosedHandler = nullptr;
-EventHandlerUPP			gWindowCollapseToggleUPP = nullptr;	//!< wrapper for callback that hears about windows that have closed
-EventHandlerRef			gWindowCollapseToggleHandler = nullptr;
-EventHandlerUPP			gWindowZoomedUPP = nullptr;			//!< wrapper for callback that hears about windows that have closed
-EventHandlerRef			gWindowZoomedHandler = nullptr;
 AEAddressDesc			gSelfAddress;						//!< allows application to be recordable
 ProcessSerialNumber		gSelfProcessID;						//!< identifies application in terms of an OS process
 SInt32					gRecordingCount = 0L;				//!< number of recordings taking place

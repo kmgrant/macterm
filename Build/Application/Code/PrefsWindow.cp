@@ -2214,6 +2214,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							}
 						}
 						
+						if (isError)
+						{
+							Sound_StandardAlert();
+						}
+						
 						// refresh the data browser to show the new order
 						rebuildList();
 						selectCollection(selectedID);

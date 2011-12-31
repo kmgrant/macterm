@@ -1770,19 +1770,19 @@ performDragOperation:(id <NSDraggingInfo>)		sender
 		if (false == copyOK)
 		{
 			Console_Warning(Console_WriteLine, "failed to copy the dragged text!");
-			result = resNotFound;
+			result = NO;
 		}
 		else
 		{
 			// put the text on the clipboard
-			result = Clipboard_AddCFStringToPasteboard(copiedTextCFString, Clipboard_ReturnPrimaryPasteboard());
-			if (noErr == result)
+			error = Clipboard_AddCFStringToPasteboard(copiedTextCFString, Clipboard_ReturnPrimaryPasteboard());
+			if (noErr == error)
 			{
 				// force a view update, as obviously it is now out of date
 				updateClipboard(Clipboard_ReturnPrimaryPasteboard());
 				
 				// success!
-				result = noErr;
+				result = YES;
 			}
 			CFRelease(copiedTextCFString), copiedTextCFString = nullptr;
 			CFRelease(copiedTextUTI), copiedTextUTI = nullptr;
@@ -1790,7 +1790,6 @@ performDragOperation:(id <NSDraggingInfo>)		sender
 		CFRelease(asPasteboardRef), asPasteboardRef = nullptr;
 	}
 	
-	result = YES;
 	return result;
 }// performDragOperation:
 

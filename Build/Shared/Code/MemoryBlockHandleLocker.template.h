@@ -81,13 +81,13 @@ acquireLock	(structure_reference_type	inReference)
 	structure_type*		result = nullptr;
 	UInt16				newLockCount = 0;
 #ifndef NDEBUG
-	UInt16				oldLockCount = returnLockCount(inReference);
+	UInt16				oldLockCount = this->returnLockCount(inReference);
 #endif
 	
 	
 	HLock(REINTERPRET_CAST(inReference, Handle));
 	result = *(REINTERPRET_CAST(inReference, structure_type**));
-	newLockCount = incrementLockCount(inReference);
+	newLockCount = this->incrementLockCount(inReference);
 	assert(newLockCount > oldLockCount);
 	return result;
 }// acquireLock
@@ -102,12 +102,12 @@ releaseLock	(structure_reference_type	inReference,
 	// BE SURE THIS IMPLEMENTATION IS SYNCHRONIZED WITH THE “CONSTANT” VERSION, ABOVE
 	UInt16	newLockCount = 0;
 #ifndef NDEBUG
-	UInt16	oldLockCount = returnLockCount(inReference);
+	UInt16	oldLockCount = this->returnLockCount(inReference);
 #endif
 	
 	
 	assert(oldLockCount > 0);
-	newLockCount = decrementLockCount(inReference);
+	newLockCount = this->decrementLockCount(inReference);
 	assert(newLockCount < oldLockCount);
 	if (newLockCount == 0) HUnlock(REINTERPRET_CAST(inReference, Handle));
 	if (inoutPtrPtr != nullptr) *inoutPtrPtr = nullptr;

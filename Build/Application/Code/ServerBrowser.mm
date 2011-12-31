@@ -67,7 +67,7 @@ extern "C"
 
 #pragma mark Types
 
-@interface ServerBrowser_Handler : NSObject< ServerBrowser_ViewManagerChannel, PopoverManager_Delegate >
+@interface ServerBrowser_Handler : NSObject< PopoverManager_Delegate, ServerBrowser_ViewManagerChannel >
 {
 	ServerBrowser_Ref			selfRef;				// identical to address of structure, but typed as ref
 	ServerBrowser_ViewManager*	viewMgr;				// loads the server browser interface

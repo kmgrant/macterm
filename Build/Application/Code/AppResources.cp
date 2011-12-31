@@ -52,7 +52,6 @@
 namespace {
 
 CFRetainRelease&	gApplicationBundle ()	{ static CFRetainRelease x; return x; }
-SInt16				gResourceFilePreferences = -1;
 
 } // anonymous namespace
 
@@ -492,13 +491,14 @@ launchResourceApplication	(CFStringRef	inName)
 	{
 	#if 1
 		// the resource URL provides a bundle folder path; now use the bundle to locate the main executable file
-		CFBundleRef		executableBundle = CFBundleCreate(kCFAllocatorDefault, resourceURL);
+		CFRetainRelease		executableBundle(CFBundleCreate(kCFAllocatorDefault, resourceURL),
+												true/* is retained */);
 		
 		
-		if (executableBundle == nullptr) result = paramErr;
+		if (false == executableBundle.exists()) result = paramErr;
 		else
 		{
-			CFURLRef	executableURL = CFBundleCopyExecutableURL(executableBundle);
+			CFURLRef	executableURL = CFBundleCopyExecutableURL(executableBundle.returnCFBundleRef());
 			
 			
 			if (executableURL == nullptr) result = fnfErr;
@@ -562,8 +562,8 @@ launchResourceApplication	(CFStringRef	inName)
 		config.launchFlags = kLSLaunchDontAddToRecents;
 		config.asyncRefCon = nullptr;
 		result = LSOpenFromURLSpec(&config, nullptr/* launched URL */);
-		CFRelease(resourceURL);
 	#endif
+		CFRelease(resourceURL), resourceURL = nullptr;
 	}
 	
 	Console_WriteValue("launch result", result);

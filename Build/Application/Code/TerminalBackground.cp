@@ -1050,7 +1050,6 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 			{
 				// use current port
 				drawingPort = oldPort;
-				result = noErr;
 			}
 			
 			// determine the context to draw in with Core Graphics

@@ -353,9 +353,12 @@ sendText:(id)	sender
 	}
 	else
 	{
+		NSMutableArray*		historyArray = [(CommandLine_HistoryDataSource*)[commandLineField dataSource] historyArray];
+		
+		
 		Session_UserInputCFString(session, (CFStringRef)commandLineText);
 		Session_SendNewline(session, kSession_EchoCurrentSessionValue);
-		[[[commandLineField dataSource] historyArray] insertObject:[[NSString alloc] initWithString:commandLineText] atIndex:0];
+		[historyArray insertObject:[[NSString alloc] initWithString:commandLineText] atIndex:0];
 	}
 }// sendText:
 

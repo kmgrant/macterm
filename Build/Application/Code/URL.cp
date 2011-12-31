@@ -74,7 +74,7 @@
 #pragma mark Variables
 namespace {
 
-char*	gURLSchemeNames[] =
+char const*		gURLSchemeNames[] =
 {
 	// WARNING:	This MUST match the order of the list
 	//			URL_Type in "URL.h"; this is assumed

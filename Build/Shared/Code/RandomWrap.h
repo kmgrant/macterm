@@ -92,7 +92,7 @@ const
 {
 	unsigned long		result = (kAlgorithmArc4Random == _algorithm)
 									? ::arc4random()
-									: ::random();
+									: STATIC_CAST(::random(), unsigned long);
 	
 	
 	result %= inDomain;

@@ -309,7 +309,6 @@ CocoaAnimation_TransitionWindowSectionForOpen	(NSWindow*		inTargetWindow,
 												 CGRect			inStartLocation)
 {
 	AutoPool	_;
-	NSRect		targetWindowFrame = [inTargetWindow contentRectForFrameRect:[inTargetWindow frame]];
 	NSWindow*	imageWindow = [createImageWindowFrom
 								(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
 															inStartLocation.size.width, inStartLocation.size.height)) autorelease];
@@ -354,7 +353,6 @@ CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow
 														 CGRect			inStartLocation)
 {
 	AutoPool	_;
-	NSRect		targetWindowFrame = [inTargetWindow contentRectForFrameRect:[inTargetWindow frame]];
 	NSWindow*	imageWindow = [createImageWindowFrom
 								(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
 															inStartLocation.size.width, inStartLocation.size.height)) autorelease];

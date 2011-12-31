@@ -481,7 +481,7 @@ what type of data this is (IconSuite or IconRef).
 Handle
 IconManager_ReturnData	(IconManagerIconRef		inRef)
 {
-	Handle					result = false;
+	Handle					result = nullptr;
 	IconManagerIconPtr		ptr = refAcquireLock(inRef);
 	
 	

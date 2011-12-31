@@ -140,7 +140,7 @@ static HIViewID const	idMyButtonOpenGrowlPreferencesPane			= { 'GBut', 0/* ID */
 #pragma mark Types
 namespace {
 
-class My_GeneralPanelUI;
+struct My_GeneralPanelUI;
 
 /*!
 Implements the “Notification” tab.

@@ -85,11 +85,11 @@ acquireLock	(structure_reference_type	inReference)
 {
 	UInt16				newLockCount = 0;
 #ifndef NDEBUG
-	UInt16				oldLockCount = returnLockCount(inReference);
+	UInt16				oldLockCount = this->returnLockCount(inReference);
 #endif
 	
 	
-	newLockCount = incrementLockCount(inReference);
+	newLockCount = this->incrementLockCount(inReference);
 	assert(newLockCount > oldLockCount);
 	return nullptr; // the return value has no meaning
 }// acquireLock
@@ -116,12 +116,12 @@ releaseLock	(structure_reference_type	inReference,
 {
 	UInt16	newLockCount = 0;
 #ifndef NDEBUG
-	UInt16	oldLockCount = returnLockCount(inReference);
+	UInt16	oldLockCount = this->returnLockCount(inReference);
 #endif
 	
 	
 	assert(oldLockCount > 0);
-	newLockCount = decrementLockCount(inReference);
+	newLockCount = this->decrementLockCount(inReference);
 	assert(newLockCount < oldLockCount);
 }// releaseLock
 

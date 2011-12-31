@@ -513,8 +513,8 @@ CocoaBasic_PlaySoundByName	(CFStringRef	inName)
 	AutoPool	_;
 	
 	
-	[(NSSound*)[NSSound soundNamed:REINTERPRET_CAST(inName, NSString const*)] stop];
-	[(NSSound*)[NSSound soundNamed:REINTERPRET_CAST(inName, NSString const*)] play];
+	[(NSSound*)[NSSound soundNamed:(NSString*)inName] stop];
+	[(NSSound*)[NSSound soundNamed:(NSString*)inName] play];
 }// PlaySoundByName
 
 
@@ -529,7 +529,7 @@ CocoaBasic_PlaySoundFile	(CFURLRef	inFile)
 	AutoPool	_;
 	
 	
-	[[[[NSSound alloc] initWithContentsOfURL:REINTERPRET_CAST(inFile, NSURL const*) byReference:NO] autorelease] play];
+	[[[[NSSound alloc] initWithContentsOfURL:(NSURL*)inFile byReference:NO] autorelease] play];
 }// PlaySoundFile
 
 
