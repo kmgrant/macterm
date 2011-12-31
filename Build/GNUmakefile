@@ -173,7 +173,7 @@ GrowlRegistrationTicket.growlRegDict \
 IconForBellOff.icns \
 IconForBellOn.icns \
 IconForBundle.icns \
-IconForCaution.png \
+IconForCaution.icns \
 IconForCommand.icns \
 IconForContextMenu.icns \
 IconForCustomize.icns \
