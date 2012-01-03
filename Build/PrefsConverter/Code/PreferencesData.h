@@ -11,7 +11,7 @@
 	Newer preferences are in Mac OS X's default format.
 	
 	Preferences Converter
-		© 2004-2011 by Kevin Grant.
+		© 2004-2012 by Kevin Grant.
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License

@@ -5,7 +5,7 @@
 //  Copyright 2007 Magic Aubergine.
 //
 //  Updated version by Kevin Grant.
-//  Copyright 2011 Kevin Grant.
+//  Copyright 2011-2012 Kevin Grant.
 //  - Minor changes to add Mac OS X 10.3 support.
 //  - Removed scaling factors entirely because Core Graphics now handles scaling
 //    automatically and all previous APIs have been deprecated by Apple.
