@@ -458,9 +458,9 @@
 		0AA6A2AA0DF4CF1C00B2B598 /* GrowlRegistrationTicket.growlRegDict */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = GrowlRegistrationTicket.growlRegDict; path = Application/Resources/GrowlRegistrationTicket.growlRegDict; sourceTree = "<group>"; };
 		0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOff.icns; path = Application/Resources/IconForLEDOff.icns; sourceTree = "<group>"; };
 		0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOn.icns; path = Application/Resources/IconForLEDOn.icns; sourceTree = "<group>"; };
+		0AAB323314B2BC59002C6F33 /* IconForCaution.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForCaution.icns; path = Application/Resources/IconForCaution.icns; sourceTree = "<group>"; };
 		0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalRangeDescription.typedef.h; path = Application/Code/TerminalRangeDescription.typedef.h; sourceTree = "<group>"; };
 		0AAEFFC0111E77F100526983 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ServerBrowserCocoa.xib; sourceTree = "<group>"; };
-		0AAF4C7B1226206100D78A5A /* IconForCaution.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = IconForCaution.png; path = Application/Resources/IconForCaution.png; sourceTree = "<group>"; };
 		0AB0EF76110E99570099E055 /* Registrar.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Registrar.template.h; path = Shared/Code/Registrar.template.h; sourceTree = "<group>"; };
 		0AB2272F12D2D03F00D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/DebugInterfaceCocoa.xib; sourceTree = "<group>"; };
 		0AB2273112D2D1DC00D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/AddressDialogCocoa.xib; sourceTree = "<group>"; };
@@ -531,15 +531,6 @@
 		0AE103B00F71D018003127C7 /* ServerBrowser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ServerBrowser.mm; path = Application/Code/ServerBrowser.mm; sourceTree = "<group>"; };
 		0AE1F16B0AF3E2C000D2DC13 /* QuillsCallbacks.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsCallbacks.typedef.h; path = Application/Code/QuillsCallbacks.typedef.h; sourceTree = "<group>"; };
 		0AE1F38D0AF41DA200D2DC13 /* MacTerm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = MacTerm; path = Application/PythonCode/MacTerm; sourceTree = "<group>"; };
-		0AE2859B0B8D6E7000E2253A /* IconForKeypadEnter.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadEnter.icns; path = Application/Resources/IconForKeypadEnter.icns; sourceTree = "<group>"; };
-		0AE285A20B8D732600E2253A /* IconForKeypadArrowLeft.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadArrowLeft.icns; path = Application/Resources/IconForKeypadArrowLeft.icns; sourceTree = "<group>"; };
-		0AE285B80B8D75F200E2253A /* IconForKeypadArrowRight.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadArrowRight.icns; path = Application/Resources/IconForKeypadArrowRight.icns; sourceTree = "<group>"; };
-		0AE285CE0B8D78FD00E2253A /* IconForKeypadArrowDown.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadArrowDown.icns; path = Application/Resources/IconForKeypadArrowDown.icns; sourceTree = "<group>"; };
-		0AE285D00B8D790200E2253A /* IconForKeypadArrowUp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadArrowUp.icns; path = Application/Resources/IconForKeypadArrowUp.icns; sourceTree = "<group>"; };
-		0AE285D70B8D7AE600E2253A /* IconForKeypadPageDown.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadPageDown.icns; path = Application/Resources/IconForKeypadPageDown.icns; sourceTree = "<group>"; };
-		0AE285D90B8D7AEA00E2253A /* IconForKeypadPageUp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadPageUp.icns; path = Application/Resources/IconForKeypadPageUp.icns; sourceTree = "<group>"; };
-		0AE285F10B8D7EF800E2253A /* IconForKeypadDelete.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadDelete.icns; path = Application/Resources/IconForKeypadDelete.icns; sourceTree = "<group>"; };
-		0AE285FF0B8D830500E2253A /* IconForKeypadFind.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadFind.icns; path = Application/Resources/IconForKeypadFind.icns; sourceTree = "<group>"; };
 		0AE852680D94613300B6834B /* AutoPool.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "AutoPool.objc++.h"; path = "Shared/Code/AutoPool.objc++.h"; sourceTree = "<group>"; };
 		0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaUserDefaults.mm; path = Shared/Code/CocoaUserDefaults.mm; sourceTree = "<group>"; };
 		0AE852740D9463B900B6834B /* CocoaUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaUserDefaults.h; path = Shared/Code/CocoaUserDefaults.h; sourceTree = "<group>"; };
@@ -554,8 +545,6 @@
 		0AF502330F872D420068CB19 /* CFUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFUtilities.cp; path = Shared/Code/CFUtilities.cp; sourceTree = "<group>"; };
 		0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFRetainRelease.cp; path = Shared/Code/CFRetainRelease.cp; sourceTree = "<group>"; };
 		0AF5023B0F872DF80068CB19 /* ResultCode.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ResultCode.template.h; path = Shared/Code/ResultCode.template.h; sourceTree = "<group>"; };
-		0AF5B8AE0B8ED23A0061B480 /* IconForKeypadSelect.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadSelect.icns; path = Application/Resources/IconForKeypadSelect.icns; sourceTree = "<group>"; };
-		0AF5B8B00B8ED24A0061B480 /* IconForKeypadInsert.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadInsert.icns; path = Application/Resources/IconForKeypadInsert.icns; sourceTree = "<group>"; };
 		0AF84E8514A82F2A001F6C1D /* IconForPrefs.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefs.icns; path = Application/Resources/IconForPrefs.icns; sourceTree = "<group>"; };
 		0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PopoverManager.objc++.h"; path = "Shared/Code/PopoverManager.objc++.h"; sourceTree = "<group>"; };
 		0AF94E481477857900099BF2 /* PopoverManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopoverManager.mm; path = Shared/Code/PopoverManager.mm; sourceTree = "<group>"; };
@@ -1007,7 +996,7 @@
 				0AF995F20CC3C849000A11DC /* IconForBellOff.icns */,
 				0AF995F30CC3C849000A11DC /* IconForBellOn.icns */,
 				0A54E40D0560B62F005B4592 /* IconForBundle.icns */,
-				0AAF4C7B1226206100D78A5A /* IconForCaution.png */,
+				0AAB323314B2BC59002C6F33 /* IconForCaution.icns */,
 				0AC810AE1221ECA500687DB2 /* IconForCommand.icns */,
 				0AC838670ABF915B00BEF8B9 /* IconForContextMenu.icns */,
 				0AD7483013073E56003E368B /* IconForCustomize.icns */,
@@ -1015,17 +1004,6 @@
 				0AC7DDA90AC2579D00ED8C19 /* IconForHide.icns */,
 				0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */,
 				0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */,
-				0AE285CE0B8D78FD00E2253A /* IconForKeypadArrowDown.icns */,
-				0AE285A20B8D732600E2253A /* IconForKeypadArrowLeft.icns */,
-				0AE285B80B8D75F200E2253A /* IconForKeypadArrowRight.icns */,
-				0AE285D00B8D790200E2253A /* IconForKeypadArrowUp.icns */,
-				0AE285F10B8D7EF800E2253A /* IconForKeypadDelete.icns */,
-				0AE2859B0B8D6E7000E2253A /* IconForKeypadEnter.icns */,
-				0AE285FF0B8D830500E2253A /* IconForKeypadFind.icns */,
-				0AF5B8B00B8ED24A0061B480 /* IconForKeypadInsert.icns */,
-				0AE285D70B8D7AE600E2253A /* IconForKeypadPageDown.icns */,
-				0AE285D90B8D7AEA00E2253A /* IconForKeypadPageUp.icns */,
-				0AF5B8AE0B8ED23A0061B480 /* IconForKeypadSelect.icns */,
 				0ACBF0101449232F00D17678 /* IconForKillSession.icns */,
 				0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */,
 				0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */,

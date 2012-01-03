@@ -181,17 +181,6 @@ IconForFullScreen.icns \
 IconForHide.icns \
 IconForItemAdd.icns \
 IconForItemRemove.icns \
-IconForKeypadArrowDown.icns \
-IconForKeypadArrowLeft.icns \
-IconForKeypadArrowRight.icns \
-IconForKeypadArrowUp.icns \
-IconForKeypadDelete.icns \
-IconForKeypadEnter.icns \
-IconForKeypadFind.icns \
-IconForKeypadInsert.icns \
-IconForKeypadPageDown.icns \
-IconForKeypadPageUp.icns \
-IconForKeypadSelect.icns \
 IconForKillSession.icns \
 IconForLEDOff.icns \
 IconForLEDOn.icns \

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120102',
     '20111229',
     '20111228',
     '20111226',
@@ -434,6 +435,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120102': [
+        'VT220 keypad window now uses a font to render icons; this looks better on high-resolution displays and reduces the disk space required for MacTerm.',
+        'VT220 keypad window now uses a larger font size for numbers and symbols.',
+    ],
     '20111229': [
         'Default color schemes (created only in brand new installations) have been tweaked slightly so that ANSI colors look better.',
     ],
