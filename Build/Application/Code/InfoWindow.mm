@@ -68,6 +68,7 @@
 #import "InfoWindow.h"
 #import "Session.h"
 #import "SessionFactory.h"
+#import "TerminalToolbar.objc++.h"
 #import "UIStrings.h"
 
 
@@ -76,12 +77,10 @@
 namespace {
 
 // NOTE: do not ever change these, that would only break user preferences
-NSString*	kMyToolbarItemIDNewSessionDefaultFavorite	= @"com.mactelnet.MacTelnet.toolbaritem.newsessiondefault";
-NSString*	kMyToolbarItemIDNewSessionLogInShell		= @"com.mactelnet.MacTelnet.toolbaritem.newsessionloginshell";
-NSString*	kMyToolbarItemIDNewSessionShell				= @"com.mactelnet.MacTelnet.toolbaritem.newsessionshell";
-NSString*	kMyToolbarItemIDStackWindows				= @"com.mactelnet.MacTelnet.toolbaritem.stackwindows";
-// WARNING: The Customize item ID is currently redundantly specified in the Terminal Window module; this is TEMPORARY, but both should agree.
-NSString*	kMyToolbarItemIDCustomize					= @"com.mactelnet.MacTelnet.toolbaritem.customize";
+NSString*	kMyToolbarItemIDNewSessionDefaultFavorite	= @"net.macterm.MacTerm.toolbaritem.newsessiondefault";
+NSString*	kMyToolbarItemIDNewSessionLogInShell		= @"net.macterm.MacTerm.toolbaritem.newsessionloginshell";
+NSString*	kMyToolbarItemIDNewSessionShell				= @"net.macterm.MacTerm.toolbaritem.newsessionshell";
+NSString*	kMyToolbarItemIDStackWindows				= @"net.macterm.MacTerm.toolbaritem.stackwindows";
 
 // the following are also used in "InfoWindowCocoa.xib"
 NSString*	kMyInfoColumnCommand		= @"Command";
@@ -116,14 +115,6 @@ objectForKey:(NSString*)_;
 setObject:(id)_
 forKey:(NSString*)_;
 
-@end
-
-/*!
-Toolbar item “Customize”.
-*/
-@interface InfoWindow_ToolbarItemCustomize : NSToolbarItem
-{
-}
 @end
 
 /*!
@@ -829,62 +820,6 @@ forKey:(NSString*)	aKey
 @end // InfoWindow_SessionRow
 
 
-@implementation InfoWindow_ToolbarItemCustomize
-
-
-/*!
-Designated initializer.
-
-(4.0)
-*/
-- (id)
-init
-{
-	// WARNING: The Customize item is currently redundantly implemented in the Info Window module;
-	// this is TEMPORARY, but both implementations should agree.
-	self = [super initWithItemIdentifier:kMyToolbarItemIDCustomize];
-	if (nil != self)
-	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnCustomizeToolbarIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Customize", @"toolbar item name; for customizing the toolbar")];
-		[self setPaletteLabel:[self label]];
-	}
-	return self;
-}// init
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-/*!
-Responds when the toolbar item is used.
-
-(4.0)
-*/
-- (void)
-performToolbarItemAction:(id)	sender
-{
-#pragma unused(sender)
-	// TEMPORARY; only doing it this way during Carbon/Cocoa transition
-	[[Commands_Executor sharedExecutor] runToolbarCustomizationPaletteSetup:NSApp];
-}// performToolbarItemAction:
-
-
-@end // InfoWindow_ToolbarItemCustomize
-
-
 @implementation InfoWindow_ToolbarItemNewSessionDefaultFavorite
 
 
@@ -1336,9 +1271,9 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	{
 		result = [[[InfoWindow_ToolbarItemStackWindows alloc] init] autorelease];
 	}
-	else if ([itemIdentifier isEqualToString:kMyToolbarItemIDCustomize])
+	else if ([itemIdentifier isEqualToString:kTerminalToolbar_ItemIDCustomize])
 	{
-		result = [[[InfoWindow_ToolbarItemCustomize alloc] init] autorelease];
+		result = [[[TerminalToolbar_ItemCustomize alloc] init] autorelease];
 	}
 	return result;
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
@@ -1358,7 +1293,7 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 						kMyToolbarItemIDNewSessionDefaultFavorite,
 						kMyToolbarItemIDNewSessionShell,
 						kMyToolbarItemIDNewSessionLogInShell,
-						kMyToolbarItemIDCustomize,
+						kTerminalToolbar_ItemIDCustomize,
 						kMyToolbarItemIDStackWindows,
 						NSToolbarSpaceItemIdentifier,
 						NSToolbarFlexibleSpaceItemIdentifier,
@@ -1389,7 +1324,7 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 						NSToolbarSpaceItemIdentifier,
 						kMyToolbarItemIDNewSessionLogInShell,
 						NSToolbarSpaceItemIdentifier,
-						kMyToolbarItemIDCustomize,
+						kTerminalToolbar_ItemIDCustomize,
 						NSToolbarFlexibleSpaceItemIdentifier,
 						kMyToolbarItemIDStackWindows,
 						NSToolbarSpaceItemIdentifier,

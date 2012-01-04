@@ -48,8 +48,10 @@
 // Mac includes
 #ifdef __OBJC__
 @class NSWindow;
+@class TerminalToolbar_Delegate;
 #else
 class NSWindow;
+class TerminalToolbar_Delegate;
 #endif
 #include <CoreServices/CoreServices.h>
 
@@ -131,6 +133,8 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet TerminalView_ContentView*		testTerminalContentView;
 	IBOutlet TerminalView_BackgroundView*	testTerminalPaddingView; // should embed the content view
 	IBOutlet TerminalView_BackgroundView*	testTerminalBackgroundView; // should embed the padding view
+@private
+	TerminalToolbar_Delegate*	toolbarDelegate;
 }
 
 + (id)
