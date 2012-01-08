@@ -1,4 +1,4 @@
-/*!	\file ListenerModel.cp
+/*!	\file ListenerModel.mm
 	\brief An implementation of the listener pattern.
 */
 /*###############################################################
@@ -26,20 +26,21 @@
 
 ###############################################################*/
 
-#include <ListenerModel.h>
-#include <UniversalDefines.h>
+#import <ListenerModel.h>
+#import <UniversalDefines.h>
 
 // standard-C++ includes
-#include <algorithm>
-#include <map>
-#include <vector>
+#import <algorithm>
+#import <map>
+#import <vector>
 
 // library includes
-#include <Console.h>
-#include <MemoryBlockPtrLocker.template.h>
-#include <MemoryBlockReferenceLocker.template.h>
-#include <MemoryBlockReferenceTracker.template.h>
-#include <Registrar.template.h>
+#import <CocoaExtensions.objc++.h>
+#import <Console.h>
+#import <MemoryBlockPtrLocker.template.h>
+#import <MemoryBlockReferenceLocker.template.h>
+#import <MemoryBlockReferenceTracker.template.h>
+#import <Registrar.template.h>
 
 
 
@@ -122,6 +123,7 @@ typedef MemoryBlockReferenceLocker< ListenerModel_ListenerRef, Listener >	Listen
 #pragma mark Internal Method Prototypes
 namespace {
 
+void		objectiveCStandardListener	(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 Boolean		unitTest000_Begin			();
 void		unitTest000_Callback1		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 
@@ -1011,6 +1013,27 @@ eventListeners()
 {
 }// ListenerModel default constructor
 
+
+/*!
+This C-based callback is invoked by a listener model in the
+usual way, and it forwards the event to a particular object
+instead.
+
+(2.6)
+*/
+void
+objectiveCStandardListener	(ListenerModel_Ref		inModel,
+							 ListenerModel_Event	inEvent,
+							 void*					inEventContext,
+							 void*					inStandardListener)
+{
+	ListenerModel_StandardListener*		asStandardListener = REINTERPRET_CAST(inStandardListener,
+																				ListenerModel_StandardListener*);
+	
+	
+	[asStandardListener listenerModel:inModel firedEvent:inEvent context:inEventContext];
+}// objectiveCStandardListener
+
 } // anonymous namespace
 
 
@@ -1130,5 +1153,89 @@ unitTest000_Callback1	(ListenerModel_Ref		inModel,
 }// unitTest000_Callback1
 
 }// anonymous namespace
+
+
+@implementation ListenerModel_StandardListener
+
+
+/*!
+Constructs a “standard listener” (that has no return value)
+to invoke the specified selector on the given target object
+whenever the listener is called by some listener model.
+You can call "listenerRef" to help install it in a model.
+
+The "eventFiredSelector:" must have the following form:
+	- (void)
+	listenerModel:(ListenerModel_Ref)_
+	firedEvent:(ListenerModel_Event)_
+	context:(void*)_;
+
+Since the target object can act as a listener-specific
+context, no 4th parameter is given (unlike the traditional
+C-based listeners).
+
+(2.6)
+*/
+- (id)
+initWithTarget:(id)			aTarget
+eventFiredSelector:(SEL)	aSelector
+{
+	self = [super init];
+	if (nil != self)
+	{
+		self->listenerRef = ListenerModel_NewStandardListener(objectiveCStandardListener, self/* context */);
+		self->methodInvoker = [[NSInvocation invocationWithSelector:aSelector target:aTarget] retain];
+	}
+	return self;
+}// initWithTarget:eventFiredSelector:
+
+
+/*!
+Destructor.
+
+(2.6)
+*/
+- (void)
+dealloc
+{
+	ListenerModel_ReleaseListener(&listenerRef);
+	[self->methodInvoker release];
+	[super dealloc];
+}// dealloc
+
+
+/*!
+Invokes the selector on the target object.  The meaning
+of the context varies according to the type of event
+that has occurred (therefore it is caller-defined).
+
+(2.6)
+*/
+- (void)
+listenerModel:(ListenerModel_Ref)	aModel
+firedEvent:(ListenerModel_Event)	anEvent
+context:(void*)						aContext
+{
+	[self->methodInvoker setArgument:&aModel atIndex:2];
+	[self->methodInvoker setArgument:&anEvent atIndex:3];
+	[self->methodInvoker setArgument:&aContext atIndex:4];
+	[self->methodInvoker invoke];
+}// listenerModel:firedEvent:context:
+
+
+/*!
+Returns a reference to a listener, which is needed when
+installing this callback via an API that expects such a
+reference instead of an Objective-C object.
+
+(2.6)
+*/
+- (ListenerModel_ListenerRef)
+listenerRef
+{
+	return self->listenerRef;
+}// listenerRef
+
+@end // ListenerModel_StandardListener
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

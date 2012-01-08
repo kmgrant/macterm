@@ -12,6 +12,13 @@
 	just notify all listeners in order, blindly.  Or, you can
 	request that each listener return a flag value, and stop
 	notifying listeners as soon as one returns "true".
+	
+	NSNotificationCenter is a reasonable replacement for this
+	module but most code has not been converted to Objective-C.
+	As an interim measure, Objective-C message-passing has
+	been added to this module as an option, and longer-term
+	any code that supports listeners may change to use Cocoa
+	exclusively.
 */
 /*###############################################################
 
@@ -44,6 +51,9 @@
 #define __LISTENERMODEL__
 
 // Mac includes
+#ifdef __OBJC__
+#	import <Cocoa/Cocoa.h>
+#endif
 #include <CoreServices/CoreServices.h>
 
 // library includes
@@ -96,6 +106,51 @@ typedef FourCharCode	ListenerModel_Event;
 
 typedef struct OpaqueListenerModel**	ListenerModel_Ref;
 typedef struct OpaqueListener**			ListenerModel_ListenerRef;
+
+#ifdef __OBJC__
+
+/*!
+An object that allows you to forward listener events to a
+target object instead of having a separate C function.
+
+Typically you allocate an object of this type in another
+Objective-C object, whose "self" you pass in as the target.
+
+To install this listener via the APIs of other modules that
+may depend on listener references, use the "listenerRef"
+method.
+
+NOTE:	The underlying listener that is created uses an
+		internal C function as a callback, and sets that
+		callback’s “listener context” to be the wrapper
+		object itself.  If you require listener-specific
+		context information, just make sure that your
+		target object can access the data that it needs.
+*/
+@interface ListenerModel_StandardListener : NSObject
+{
+	ListenerModel_ListenerRef	listenerRef;
+	NSInvocation*				methodInvoker;
+}
+
+// designated initializer
+- (id)
+initWithTarget:(id)_
+eventFiredSelector:(SEL)_;
+
+// forwards an event to the selector on the target
+- (void)
+listenerModel:(ListenerModel_Ref)_
+firedEvent:(ListenerModel_Event)_
+context:(void*)_;
+
+// for compatibility with older APIs
+- (ListenerModel_ListenerRef)
+listenerRef;
+
+@end // ListenerModel_StandardListener
+
+#endif // __OBJC__
 
 #pragma mark Callbacks
 

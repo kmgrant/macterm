@@ -108,7 +108,7 @@
 		0AC6BB4E0A8C0BA100AFF37A /* PrefsContextDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDDB055432A400ACDF3A /* PrefsContextDialog.cp */; };
 		0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */; };
 		0AC6BB540A8C0BA100AFF37A /* Network.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFF055432A400ACDF3A /* Network.cp */; };
-		0AC6BB550A8C0BA100AFF37A /* ListenerModel.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF607FAC04200248DDF /* ListenerModel.cp */; };
+		0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF607FAC04200248DDF /* ListenerModel.mm */; };
 		0AC6BB560A8C0BA100AFF37A /* TextDataFile.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */; };
 		0AC6BB570A8C0BA100AFF37A /* CommonEventHandlers.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */; };
 		0AC6BD940A8C0BB100AFF37A /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059405543D7C00ACDF3A /* Carbon.framework */; };
@@ -228,7 +228,7 @@
 		0A2A35D313AD2EFF007A1E35 /* CocoaExtensions.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "CocoaExtensions.objc++.h"; path = "Shared/Code/CocoaExtensions.objc++.h"; sourceTree = "<group>"; };
 		0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaExtensions.mm; path = Shared/Code/CocoaExtensions.mm; sourceTree = "<group>"; };
 		0A317CAD10A0C775002EDEFB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/MainMenuCocoa.xib; sourceTree = "<group>"; };
-		0A33CCF607FAC04200248DDF /* ListenerModel.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ListenerModel.cp; path = Shared/Code/ListenerModel.cp; sourceTree = "<group>"; };
+		0A33CCF607FAC04200248DDF /* ListenerModel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ListenerModel.mm; path = Shared/Code/ListenerModel.mm; sourceTree = "<group>"; };
 		0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MemoryBlocks.cp; path = Shared/Code/MemoryBlocks.cp; sourceTree = "<group>"; };
 		0A33CCFC07FAC06200248DDF /* StringUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StringUtilities.cp; path = Shared/Code/StringUtilities.cp; sourceTree = "<group>"; };
 		0A33CD0007FAC07A00248DDF /* FlagManager.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FlagManager.cp; path = Shared/Code/FlagManager.cp; sourceTree = "<group>"; };
@@ -637,7 +637,7 @@
 				0A33CD0007FAC07A00248DDF /* FlagManager.cp */,
 				0A68811112F537A1005F418A /* GrowlSupport.mm */,
 				0A66CA4B0887467000FD616C /* HIViewWrap.cp */,
-				0A33CCF607FAC04200248DDF /* ListenerModel.cp */,
+				0A33CCF607FAC04200248DDF /* ListenerModel.mm */,
 				0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */,
 				0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */,
 				0AFD12B5087A147D00439BEA /* NIBLoader.cp */,
@@ -1393,7 +1393,7 @@
 				0AC6BB4E0A8C0BA100AFF37A /* PrefsContextDialog.cp in Sources */,
 				0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */,
 				0AC6BB540A8C0BA100AFF37A /* Network.cp in Sources */,
-				0AC6BB550A8C0BA100AFF37A /* ListenerModel.cp in Sources */,
+				0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */,
 				0AC6BB560A8C0BA100AFF37A /* TextDataFile.cp in Sources */,
 				0AC6BB570A8C0BA100AFF37A /* CommonEventHandlers.cp in Sources */,
 				0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */,
