@@ -35,6 +35,38 @@
 
 #pragma mark Public Methods
 
+@implementation NSInvocation (CocoaExtensions_NSInvocation)
+
+
+/*!
+Creates an NSInvocation object using the usual autorelease
+class method, but automatically pulls the method signature
+from the target object and automatically calls "setTarget:"
+and "setSelector:" accordingly.
+
+You must still call setArgument:atIndex: for any other
+arguments that the selector requires.
+
+(1.9)
+*/
++ (NSInvocation*)
+invocationWithSelector:(SEL)	aSelector
+target:(id)						aTarget
+{
+	NSInvocation*	result = [NSInvocation invocationWithMethodSignature:
+											[aTarget methodSignatureForSelector:aSelector]];
+	
+	
+	[result setTarget:aTarget]; // index 0 implicitly
+	[result setSelector:aSelector]; // index 1 implicitly
+	
+	return result;
+}// invocationWithSelector:target:
+
+
+@end // NSWindow (CocoaExtensions_NSInvocation)
+
+
 @implementation NSObject (CocoaExtensions_NSObject)
 
 
@@ -50,7 +82,7 @@ accessors for those properties, instead of making the
 
 Related: NSObject(NSKeyValueObservingCustomization).
 
-(4.0)
+(1.9)
 */
 + (NSString*)
 selectorNameForKeyChangeAutoNotifyFlag:(NSString*)	aPropertySelectorName
@@ -86,7 +118,7 @@ automaticallyNotifiesObserversForKey:.
 
 Related: NSObject(NSKeyValueObservingCustomization).
 
-(4.0)
+(1.9)
 */
 + (SEL)
 selectorToReturnKeyChangeAutoNotifyFlag:(SEL)	anAccessor
@@ -120,7 +152,7 @@ The array would be constructed using code such as:
 This is useful for calls that require an object, such as
 "performSelector:withObject:afterDelay:".
 
-(4.0)
+(1.9)
 */
 - (void)
 setFrameWithArray:(id)		anArray

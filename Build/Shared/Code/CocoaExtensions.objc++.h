@@ -34,6 +34,17 @@
 
 #pragma mark Types
 
+@interface NSInvocation (CocoaExtensions_NSInvocation)
+
+// helpers for constructing from selectors on target objects
+
++ (NSInvocation*)
+invocationWithSelector:(SEL)_
+target:(id)_;
+
+@end
+
+
 @interface NSObject (CocoaExtensions_NSObject)
 
 // helpers for key-value observing customization
