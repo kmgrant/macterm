@@ -4198,6 +4198,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									(OSStatus)ChangeWindowAttributes(returnCarbonWindow(ptr), 0/* attributes to set */,
 																		kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
 																			kWindowResizableAttribute/* attributes to clear */);
+									
+									// remove any shadow so that “neighboring” full-screen windows
+									// on other displays do not appear to have shadows over them
+									[TerminalWindow_ReturnNSWindow(targetTerminalWindow) setHasShadow:NO];
 								}
 								else
 								{
@@ -6379,6 +6383,7 @@ reverseFullScreenChanges	(Undoables_ActionInstruction	inDoWhat,
 				}
 				setViewSizeIndependentFromWindow(ptr, true);
 				SetWindowBounds(TerminalWindow_ReturnWindow(dataPtr->terminalWindow), kWindowContentRgn, &dataPtr->oldContentBounds);
+				[TerminalWindow_ReturnNSWindow(dataPtr->terminalWindow) setHasShadow:YES];
 				setViewSizeIndependentFromWindow(ptr, false);
 				if ((dataPtr->oldMode != dataPtr->newMode) && (kTerminalView_DisplayModeNormal == dataPtr->newMode))
 				{

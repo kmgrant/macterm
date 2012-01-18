@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120117',
     '20120102',
     '20111229',
     '20111228',
@@ -435,6 +436,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120117': [
+        'Fixed Full Screen mode so that the active terminal does not appear to cast a shadow on a neighboring display.',
+    ],
     '20120102': [
         'VT220 keypad window now uses a font to render icons; this looks better on high-resolution displays and reduces the disk space required for MacTerm.',
         'VT220 keypad window now uses a larger font size for numbers and symbols.',
