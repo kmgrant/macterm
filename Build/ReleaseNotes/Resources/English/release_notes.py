@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120121',
     '20120117',
     '20120102',
     '20111229',
@@ -436,6 +437,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120121': [
+        "Changed the artwork for the main application icon and added a much larger rendering that is visible in certain places such as the Finder's Cover Flow view.",
+    ],
     '20120117': [
         'Fixed Full Screen mode so that the active terminal does not appear to cast a shadow on a neighboring display.',
     ],
