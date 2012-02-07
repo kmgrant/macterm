@@ -999,6 +999,11 @@ Boolean
 	Commands_ExecuteByIDUsingEvent			(UInt32						inCommandID,
 											 EventTargetRef				inTarget = nullptr);
 
+void
+	Commands_ExecuteByIDUsingEventAfterDelay(UInt32						inCommandID,
+											 EventTargetRef				inTarget,
+											 Float32					inDelayInSeconds);
+
 // WARNING: CURRENTLY ONLY IMPLEMENTED FOR CONTEXTUAL MENU COMMAND IDS
 Boolean
 	Commands_IsCommandEnabled				(UInt32						inCommandID);

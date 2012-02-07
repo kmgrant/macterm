@@ -1388,7 +1388,7 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 	
 	if (enterFullScreen)
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandFullScreenModal);
+		Commands_ExecuteByIDUsingEventAfterDelay(kCommandFullScreenModal, nullptr/* target */, 0.5/* delay */);
 	}
 	
 	return result;

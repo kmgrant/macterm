@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120206',
     '20120121',
     '20120117',
     '20120102',
@@ -437,6 +438,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120206': [
+        'Fixed a problem where "Automatically enter Full Screen" (workspace preference) might not arrange windows correctly.',
+    ],
     '20120121': [
         "Changed the artwork for the main application icon and added a much larger rendering that is visible in certain places such as the Finder's Cover Flow view.",
     ],

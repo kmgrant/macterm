@@ -106,6 +106,31 @@ extern "C"
 #pragma mark Types
 
 /*!
+Calls Commands_ExecuteByIDUsingEvent() after a delay.
+
+This is a transitional object that will not really be needed
+once the application moves to Cocoa completely.
+*/
+@interface Commands_DelayedCommand : NSObject
+{
+@private
+	UInt32			commandID;
+	EventTargetRef	commandTarget;
+	Float32			executionDelay;
+}
+
+- (id)
+initWithCommand:(UInt32)_
+andEventTarget:(EventTargetRef)_
+andDelay:(Float32)_;
+
+- (void)
+execute;
+
+@end // Commands_DelayedCommand
+
+
+/*!
 An instance of this class handles the application’s entries in
 the Services menu.  Note that the names of messages in this
 class should match those published under NSServices (using the
@@ -125,7 +150,7 @@ openURL:(NSPasteboard*)_
 userData:(NSString*)_
 error:(NSString**)_;
 
-@end
+@end // Commands_ServiceProviders
 
 
 /*!
@@ -141,7 +166,7 @@ with an NSMenuItem, via setRepresentedObject:.
 - (id)
 initWithSession:(SessionRef)_;
 
-@end
+@end // Commands_SessionWrap
 
 
 namespace {
@@ -1494,6 +1519,29 @@ Commands_ExecuteByIDUsingEvent	(UInt32				inCommandID,
 	
 	return result;
 }// ExecuteByIDUsingEvent
+
+
+/*!
+Calls Commands_ExecuteByIDUsingEvent() after the specified
+period of time has elapsed.
+
+This is not recommended except in unusual situations.
+
+(4.0)
+*/
+void
+Commands_ExecuteByIDUsingEventAfterDelay	(UInt32				inCommandID,
+											 EventTargetRef		inTarget,
+											 Float32			inDelayInSeconds)
+{
+	Commands_DelayedCommand*	delayedExecution = [[[Commands_DelayedCommand alloc]
+														initWithCommand:inCommandID
+																		andEventTarget:inTarget
+																		andDelay:inDelayInSeconds] autorelease];
+	
+	
+	[delayedExecution execute];
+}// ExecuteByIDUsingEventAfterDelay
 
 
 /*!
@@ -3568,6 +3616,58 @@ validatorYes	(id <NSValidatedUserInterfaceItem>		UNUSED_ARGUMENT(inItem))
 }// validatorYes
 
 } // anonymous namespace
+
+
+@implementation Commands_DelayedCommand
+
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
+- (id)
+initWithCommand:(UInt32)			aCommand
+andEventTarget:(EventTargetRef)		aTarget
+andDelay:(Float32)					aDelay
+{
+	self = [super init];
+	if (nil != self)
+	{
+		self->commandID = aCommand;
+		self->commandTarget = aTarget;
+		self->executionDelay = aDelay;
+	}
+	return self;
+}// initWithCommand:andEventTarget:andDelay:
+
+
+/*!
+Executes the command after the delay specified
+in the initializer has elapsed.
+
+(4.0)
+*/
+- (void)
+execute
+{
+	[self performSelector:@selector(executeWithoutDelay) withObject:nil afterDelay:self->executionDelay];
+}// execute
+
+
+/*!
+Internal; invokes the command immediately.
+
+(4.0)
+*/
+- (void)
+executeWithoutDelay
+{
+	Commands_ExecuteByIDUsingEvent(self->commandID, self->commandTarget);
+}// executeWithoutDelay
+
+
+@end // Commands_DelayedCommand
 
 
 @implementation Commands_Executor
