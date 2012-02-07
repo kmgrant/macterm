@@ -77,7 +77,9 @@ Setting changes that MacTerm allows other modules to
 typedef FourCharCode SessionFactory_Change;
 enum
 {
-	kSessionFactory_ChangeNewSessionCount	= 'cxn#'	//!< context: reserved
+	kSessionFactory_ChangeActivatingSession		= 'news',	//!< context: SessionRef of session that is becoming active
+	kSessionFactory_ChangeDeactivatingSession	= 'olds',	//!< context: SessionRef of session that is becoming inactive
+	kSessionFactory_ChangeNewSessionCount		= 'cxn#'	//!< context: reserved
 };
 
 /*!

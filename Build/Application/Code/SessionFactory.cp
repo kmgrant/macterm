@@ -109,6 +109,8 @@ void					forEveryTerminalWindowInListDo	(TerminalWindowList const&,
 														 SessionFactory_TerminalWindowOpProcPtr, void*, SInt32, void*);
 Boolean					newSessionFromCommand			(TerminalWindowRef, UInt32, Preferences_ContextRef, UInt16);
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveWindowActivated			(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveWindowDeactivated		(EventHandlerCallRef, EventRef, void*);
 Workspace_Ref			returnActiveWorkspace			();
 void					sessionChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -135,6 +137,21 @@ CarbonEventHandlerWrap			gNewSessionCommandHandler(GetApplicationEventTarget(),
 																	kEventCommandProcess),
 															nullptr/* user data */);
 Console_Assertion				_1(gNewSessionCommandHandler.isInstalled(), __FILE__, __LINE__);
+CarbonEventHandlerWrap			gSessionFactoryWindowActivateHandler(GetApplicationEventTarget(),
+																		receiveWindowActivated,
+																		CarbonEventSetInClass
+																			(CarbonEventClass(kEventClassWindow),
+																				kEventWindowActivated),
+																		nullptr/* user data */);
+Console_Assertion				_2(gSessionFactoryWindowActivateHandler.isInstalled(), __FILE__, __LINE__);
+CarbonEventHandlerWrap			gSessionFactoryWindowDeactivateHandler(GetApplicationEventTarget(),
+																		receiveWindowDeactivated,
+																		CarbonEventSetInClass
+																			(CarbonEventClass(kEventClassWindow),
+																				kEventWindowDeactivated),
+																		nullptr/* user data */);
+Console_Assertion				_3(gSessionFactoryWindowActivateHandler.isInstalled(), __FILE__, __LINE__);
+SessionRef						gSessionFactoryRecentlyActiveSession = nullptr;
 EventHandlerUPP					gCarbonEventSessionProcessDataUPP = nullptr;
 EventHandlerUPP					gCarbonEventSessionSetStateUPP = nullptr;
 EventHandlerUPP					gCarbonEventWindowFocusUPP = nullptr;
@@ -2991,6 +3008,120 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
+Embellishes "kEventWindowActivated" of "kEventClassWindow" by
+keeping track of the session for the most-recently-activated
+window.
+
+Note that the recent-session global can also change in other
+ways, e.g. at the time a session is constructed.
+
+(4.0)
+*/
+OSStatus
+receiveWindowActivated	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+						 EventRef				inEvent,
+						 void*					UNUSED_ARGUMENT(inUserData))
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassWindow);
+	assert(kEventKind == kEventWindowActivated);
+	
+	// determine the window that was activated
+	{
+		HIWindowRef		activatedWindow = nullptr;
+		OSStatus		error = CarbonEventUtilities_GetEventParameter
+								(inEvent, kEventParamDirectObject, typeWindowRef, activatedWindow);
+		
+		
+		if (noErr == error)
+		{
+			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(activatedWindow);
+			
+			
+			if (nullptr != terminalWindow)
+			{
+				SessionRef		newSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+				
+				
+				if (newSession != gSessionFactoryRecentlyActiveSession)
+				{
+					// overwrite the value; assume that if there was a session
+					// active, it would have fired a deactivation event prior
+					// to being cleared
+					gSessionFactoryRecentlyActiveSession = newSession;
+					changeNotifyGlobal(kSessionFactory_ChangeActivatingSession, newSession);
+				}
+			}
+		}
+	}
+	
+	// IMPORTANT: Do not interfere with this event.
+	result = eventNotHandledErr;
+	
+	return result;
+}// receiveWindowActivated
+
+
+/*!
+Embellishes "kEventWindowDeactivated" of "kEventClassWindow" by
+sending an appropriate event notification for the corresponding
+session.
+
+(4.0)
+*/
+OSStatus
+receiveWindowDeactivated	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+							 EventRef				inEvent,
+							 void*					UNUSED_ARGUMENT(inUserData))
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassWindow);
+	assert(kEventKind == kEventWindowDeactivated);
+	
+	// determine if a session window was deactivated
+	{
+		HIWindowRef		deactivatedWindow = nullptr;
+		OSStatus		error = CarbonEventUtilities_GetEventParameter
+								(inEvent, kEventParamDirectObject, typeWindowRef, deactivatedWindow);
+		
+		
+		if (noErr == error)
+		{
+			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(deactivatedWindow);
+			
+			
+			if (nullptr != terminalWindow)
+			{
+				SessionRef		oldSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+				
+				
+				if (nullptr != oldSession)
+				{
+					// clear the current session completely; assume that it may be
+					// quickly restored by an activation event in another window
+					changeNotifyGlobal(kSessionFactory_ChangeDeactivatingSession, oldSession);
+					gSessionFactoryRecentlyActiveSession = nullptr;
+				}
+			}
+		}
+	}
+	
+	// IMPORTANT: Do not interfere with this event.
+	result = eventNotHandledErr;
+	
+	return result;
+}// receiveWindowDeactivated
+
+
+/*!
 Returns the most appropriate workspace for a new terminal
 window.  If no workspaces exist, one is created; otherwise,
 the workspace of the most recently active terminal window
@@ -3250,6 +3381,10 @@ startTrackingSession	(SessionRef				inSession,
 	
 	// notify global listeners that the session is now in the list
 	changeNotifyGlobal(kSessionFactory_ChangeNewSessionCount, nullptr/* context */);
+	
+	// reset this value; it can change if another window is activated later
+	gSessionFactoryRecentlyActiveSession = inSession;
+	changeNotifyGlobal(kSessionFactory_ChangeActivatingSession, inSession/* context */);
 }// startTrackingSession
 
 
@@ -3318,6 +3453,13 @@ stopTrackingSession		(SessionRef		inSession)
 			// forget the specific association of this terminal window and session
 			gTerminalWindowToSessions().erase(terminalWindow);
 		}
+	}
+	
+	// reset this value; it can change if another window is activated later
+	if (inSession == gSessionFactoryRecentlyActiveSession)
+	{
+		changeNotifyGlobal(kSessionFactory_ChangeDeactivatingSession, inSession/* context */);
+		gSessionFactoryRecentlyActiveSession = nullptr;
 	}
 	
 	// notify listeners that this has occurred
