@@ -44,6 +44,7 @@
 #import "Session.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
+#import "TerminalToolbar.objc++.h"
 #import "TerminalWindow.h"
 
 
@@ -80,6 +81,8 @@ DebugInterface_Display ()
 
 
 static DebugInterface_PanelController*	gDebugInterface_PanelController = nil;
+static TerminalToolbar_Window*			gDebugInterface_ToolbarWindow = nil;
+static NSWindowController*				gDebugInterface_ToolbarWindowController = nil;
 
 
 /*!
@@ -196,6 +199,31 @@ dumpStateOfActiveTerminal:(id)	sender
 	Console_WriteLine("End of active terminal report.");
 	Console_WriteHorizontalRule();
 }// dumpStateOfActiveTerminal:
+
+
+/*!
+Displays a Cocoa-based terminal toolbar window.
+
+(4.0)
+*/
+- (IBAction)
+showTestTerminalToolbar:(id)	sender
+{
+	if (nil == gDebugInterface_ToolbarWindow)
+	{
+		NSRect		newRect = NSMakeRect(0, 0, [[NSScreen mainScreen] visibleFrame].size.width, 0);
+		NSScreen*	targetScreen = [NSScreen mainScreen];
+		
+		
+		gDebugInterface_ToolbarWindow = [[TerminalToolbar_Window alloc] initWithContentRect:newRect
+																							screen:targetScreen];
+	}
+	if (nil == gDebugInterface_ToolbarWindowController)
+	{
+		gDebugInterface_ToolbarWindowController = [[NSWindowController alloc] initWithWindow:gDebugInterface_ToolbarWindow];
+	}
+	[gDebugInterface_ToolbarWindow makeKeyAndOrderFront:sender];
+}// showTestTerminalToolbar:
 
 
 /*!

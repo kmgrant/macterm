@@ -65,6 +65,9 @@ sharedDebugInterfacePanelController;
 dumpStateOfActiveTerminal:(id)_;
 
 - (IBAction)
+showTestTerminalToolbar:(id)_;
+
+- (IBAction)
 showTestTerminalWindow:(id)_;
 
 // accessors

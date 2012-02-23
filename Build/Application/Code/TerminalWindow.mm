@@ -7874,7 +7874,10 @@ Designated initializer.
 init
 {
 	self = [super initWithWindowNibName:@"TerminalWindowCocoa"];
-	self->toolbarDelegate = nil;
+	if (nil != self)
+	{
+		self->toolbarDelegate = nil;
+	}
 	return self;
 }// init
 
@@ -7924,7 +7927,8 @@ windowDidLoad
 			NSToolbar*		windowToolbar = [[[NSToolbar alloc] initWithIdentifier:toolbarID] autorelease];
 			
 			
-			self->toolbarDelegate = [[TerminalToolbar_Delegate alloc] init];
+			self->toolbarDelegate = [[TerminalToolbar_Delegate alloc] initForToolbar:windowToolbar
+																						experimentalItems:YES];
 			[windowToolbar setAllowsUserCustomization:YES];
 			[windowToolbar setAutosavesConfiguration:YES];
 			[windowToolbar setDelegate:self->toolbarDelegate];

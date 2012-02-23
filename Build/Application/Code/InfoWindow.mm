@@ -76,12 +76,6 @@
 #pragma mark Constants
 namespace {
 
-// NOTE: do not ever change these, that would only break user preferences
-NSString*	kMyToolbarItemIDNewSessionDefaultFavorite	= @"net.macterm.MacTerm.toolbaritem.newsessiondefault";
-NSString*	kMyToolbarItemIDNewSessionLogInShell		= @"net.macterm.MacTerm.toolbaritem.newsessionloginshell";
-NSString*	kMyToolbarItemIDNewSessionShell				= @"net.macterm.MacTerm.toolbaritem.newsessionshell";
-NSString*	kMyToolbarItemIDStackWindows				= @"net.macterm.MacTerm.toolbaritem.stackwindows";
-
 // the following are also used in "InfoWindowCocoa.xib"
 NSString*	kMyInfoColumnCommand		= @"Command";
 NSString*	kMyInfoColumnCreationTime	= @"CreationTime";
@@ -115,38 +109,6 @@ objectForKey:(NSString*)_;
 setObject:(id)_
 forKey:(NSString*)_;
 
-@end
-
-/*!
-Toolbar item “Default”.
-*/
-@interface InfoWindow_ToolbarItemNewSessionDefaultFavorite : NSToolbarItem
-{
-}
-@end
-
-/*!
-Toolbar item “Log-In Shell”.
-*/
-@interface InfoWindow_ToolbarItemNewSessionLogInShell : NSToolbarItem
-{
-}
-@end
-
-/*!
-Toolbar item “Shell”.
-*/
-@interface InfoWindow_ToolbarItemNewSessionShell : NSToolbarItem
-{
-}
-@end
-
-/*!
-Toolbar item “Arrange All Windows in Front”.
-*/
-@interface InfoWindow_ToolbarItemStackWindows : NSToolbarItem
-{
-}
 @end
 
 #pragma mark Variables
@@ -820,218 +782,6 @@ forKey:(NSString*)	aKey
 @end // InfoWindow_SessionRow
 
 
-@implementation InfoWindow_ToolbarItemNewSessionDefaultFavorite
-
-
-/*!
-Designated initializer.
-
-(4.0)
-*/
-- (id)
-init
-{
-	self = [super initWithItemIdentifier:kMyToolbarItemIDNewSessionDefaultFavorite];
-	if (nil != self)
-	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionDefaultIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Default", @"toolbar item name; for opening Default session")];
-		[self setPaletteLabel:[self label]];
-	}
-	return self;
-}// init
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-/*!
-Responds when the toolbar item is used.
-
-(4.0)
-*/
-- (void)
-performToolbarItemAction:(id)	sender
-{
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNewSessionDefaultFavorite);
-}// performToolbarItemAction:
-
-
-@end // InfoWindow_ToolbarItemNewSessionDefaultFavorite
-
-
-@implementation InfoWindow_ToolbarItemNewSessionLogInShell
-
-
-/*!
-Designated initializer.
-
-(4.0)
-*/
-- (id)
-init
-{
-	self = [super initWithItemIdentifier:kMyToolbarItemIDNewSessionLogInShell];
-	if (nil != self)
-	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionLogInShellIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Log-In Shell", @"toolbar item name; for opening log-in shells")];
-		[self setPaletteLabel:[self label]];
-	}
-	return self;
-}// init
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-/*!
-Responds when the toolbar item is used.
-
-(4.0)
-*/
-- (void)
-performToolbarItemAction:(id)	sender
-{
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNewSessionLoginShell);
-}// performToolbarItemAction:
-
-
-@end // InfoWindow_ToolbarItemNewSessionLogInShell
-
-
-@implementation InfoWindow_ToolbarItemNewSessionShell
-
-
-/*!
-Designated initializer.
-
-(4.0)
-*/
-- (id)
-init
-{
-	self = [super initWithItemIdentifier:kMyToolbarItemIDNewSessionShell];
-	if (nil != self)
-	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionShellIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Shell", @"toolbar item name; for opening shells")];
-		[self setPaletteLabel:[self label]];
-	}
-	return self;
-}// init
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-/*!
-Responds when the toolbar item is used.
-
-(4.0)
-*/
-- (void)
-performToolbarItemAction:(id)	sender
-{
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNewSessionShell);
-}// performToolbarItemAction:
-
-
-@end // InfoWindow_ToolbarItemNewSessionShell
-
-
-@implementation InfoWindow_ToolbarItemStackWindows
-
-
-/*!
-Designated initializer.
-
-(4.0)
-*/
-- (id)
-init
-{
-	self = [super initWithItemIdentifier:kMyToolbarItemIDStackWindows];
-	if (nil != self)
-	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnStackWindowsIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Arrange All Windows in Front", @"toolbar item name; for stacking windows")];
-		[self setPaletteLabel:[self label]];
-	}
-	return self;
-}// init
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-/*!
-Responds when the toolbar item is used.
-
-(4.0)
-*/
-- (void)
-performToolbarItemAction:(id)	sender
-{
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandStackWindows);
-}// performToolbarItemAction:
-
-
-@end // InfoWindow_ToolbarItemStackWindows
-
-
 @implementation InfoWindow_Controller
 
 
@@ -1255,21 +1005,21 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	
 	// NOTE: no need to handle standard items here
 	// TEMPORARY - need to create all custom items
-	if ([itemIdentifier isEqualToString:kMyToolbarItemIDNewSessionDefaultFavorite])
+	if ([itemIdentifier isEqualToString:kTerminalToolbar_ItemIDNewSessionDefaultFavorite])
 	{
-		result = [[[InfoWindow_ToolbarItemNewSessionDefaultFavorite alloc] init] autorelease];
+		result = [[[TerminalToolbar_ItemNewSessionDefaultFavorite alloc] init] autorelease];
 	}
-	else if ([itemIdentifier isEqualToString:kMyToolbarItemIDNewSessionLogInShell])
+	else if ([itemIdentifier isEqualToString:kTerminalToolbar_ItemIDNewSessionLogInShell])
 	{
-		result = [[[InfoWindow_ToolbarItemNewSessionLogInShell alloc] init] autorelease];
+		result = [[[TerminalToolbar_ItemNewSessionLogInShell alloc] init] autorelease];
 	}
-	else if ([itemIdentifier isEqualToString:kMyToolbarItemIDNewSessionShell])
+	else if ([itemIdentifier isEqualToString:kTerminalToolbar_ItemIDNewSessionShell])
 	{
-		result = [[[InfoWindow_ToolbarItemNewSessionShell alloc] init] autorelease];
+		result = [[[TerminalToolbar_ItemNewSessionShell alloc] init] autorelease];
 	}
-	else if ([itemIdentifier isEqualToString:kMyToolbarItemIDStackWindows])
+	else if ([itemIdentifier isEqualToString:kTerminalToolbar_ItemIDStackWindows])
 	{
-		result = [[[InfoWindow_ToolbarItemStackWindows alloc] init] autorelease];
+		result = [[[TerminalToolbar_ItemStackWindows alloc] init] autorelease];
 	}
 	else if ([itemIdentifier isEqualToString:kTerminalToolbar_ItemIDCustomize])
 	{
@@ -1290,11 +1040,11 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 {
 #pragma unused(toolbar)
 	return [NSArray arrayWithObjects:
-						kMyToolbarItemIDNewSessionDefaultFavorite,
-						kMyToolbarItemIDNewSessionShell,
-						kMyToolbarItemIDNewSessionLogInShell,
+						kTerminalToolbar_ItemIDNewSessionDefaultFavorite,
+						kTerminalToolbar_ItemIDNewSessionShell,
+						kTerminalToolbar_ItemIDNewSessionLogInShell,
 						kTerminalToolbar_ItemIDCustomize,
-						kMyToolbarItemIDStackWindows,
+						kTerminalToolbar_ItemIDStackWindows,
 						NSToolbarSpaceItemIdentifier,
 						NSToolbarFlexibleSpaceItemIdentifier,
 						nil];
@@ -1318,15 +1068,15 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 						NSToolbarSpaceItemIdentifier,
 						NSToolbarSpaceItemIdentifier,
 						NSToolbarFlexibleSpaceItemIdentifier,
-						kMyToolbarItemIDNewSessionDefaultFavorite,
+						kTerminalToolbar_ItemIDNewSessionDefaultFavorite,
 						NSToolbarSpaceItemIdentifier,
-						kMyToolbarItemIDNewSessionShell,
+						kTerminalToolbar_ItemIDNewSessionShell,
 						NSToolbarSpaceItemIdentifier,
-						kMyToolbarItemIDNewSessionLogInShell,
+						kTerminalToolbar_ItemIDNewSessionLogInShell,
 						NSToolbarSpaceItemIdentifier,
 						kTerminalToolbar_ItemIDCustomize,
 						NSToolbarFlexibleSpaceItemIdentifier,
-						kMyToolbarItemIDStackWindows,
+						kTerminalToolbar_ItemIDStackWindows,
 						NSToolbarSpaceItemIdentifier,
 						nil];
 }// toolbarDefaultItemIdentifiers
