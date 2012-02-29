@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120228',
     '20120206',
     '20120121',
     '20120117',
@@ -438,6 +439,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120228': [
+        "MacTerm releases now contain a code signature.",
+        "Changed the artwork for the main application icon AGAIN, to add slightly more detail at larger sizes and to clean up the edges.",
+    ],
     '20120206': [
         'Fixed a problem where "Automatically enter Full Screen" (workspace preference) might not arrange windows correctly.',
     ],
