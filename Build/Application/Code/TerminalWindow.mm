@@ -370,7 +370,7 @@ void					reverseFullScreenChanges		(Undoables_ActionInstruction, Undoables_Actio
 void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					scrollProc						(HIViewRef, HIViewPartCode);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-OSStatus				setCursorInWindow				(WindowRef, Point, UInt32);
+OSStatus				setCursorInWindow				(HIWindowRef, Point, UInt32);
 void					setScreenPreferences			(My_TerminalWindowPtr, Preferences_ContextRef);
 void					setStandardState				(My_TerminalWindowPtr, UInt16, UInt16, Boolean);
 void					setViewFormatPreferences		(My_TerminalWindowPtr, Preferences_ContextRef);
@@ -2160,7 +2160,7 @@ installedActions()
 	assert(this->window != nil);
 	gTerminalNSWindows()[this->window] = this->selfRef;
 	WindowInfo_SetWindowDescriptor(this->windowInfo, kConstantsRegistry_WindowDescriptorAnyTerminal);
-	WindowInfo_SetAuxiliaryDataPtr(this->windowInfo, REINTERPRET_CAST(this, TerminalWindowRef)); // the auxiliary data is the "TerminalWindowRef"
+	WindowInfo_SetAuxiliaryDataPtr(this->windowInfo, this->selfRef); // the auxiliary data is the "TerminalWindowRef"
 	WindowInfo_SetForWindow(returnCarbonWindow(this), this->windowInfo);
 	
 	// set up the Help System
@@ -2178,7 +2178,7 @@ installedActions()
 #endif
 	
 	// install a callback that responds as a window is resized
-	this->windowResizeHandler.install(returnCarbonWindow(this), handleNewSize, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
+	this->windowResizeHandler.install(returnCarbonWindow(this), handleNewSize, this->selfRef/* user data */,
 										250/* arbitrary minimum width */,
 										200/* arbitrary minimum height */,
 										SHRT_MAX/* maximum width */,
@@ -2253,7 +2253,7 @@ installedActions()
 			this->toolbarEventUPP = NewEventHandlerUPP(receiveToolbarEvent);
 			error = InstallEventHandler(HIObjectGetEventTarget(this->toolbar), this->toolbarEventUPP,
 										GetEventTypeCount(whenToolbarEventOccurs), whenToolbarEventOccurs,
-										REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
+										this->selfRef/* user data */,
 										&this->toolbarEventHandler/* event handler reference */);
 			assert_noerr(error);
 		}
@@ -2321,7 +2321,7 @@ installedActions()
 	SessionFactory_StartMonitoringSessions(kSession_ChangeStateAttributes, this->sessionStateChangeEventListener.returnRef());
 	SessionFactory_StartMonitoringSessions(kSession_ChangeWindowTitle, this->sessionStateChangeEventListener.returnRef());
 	this->terminalStateChangeEventListener.setRef(ListenerModel_NewStandardListener
-													(terminalStateChanged, REINTERPRET_CAST(this, TerminalWindowRef)/* context */),
+													(terminalStateChanged, this->selfRef/* context */),
 													true/* is retained */);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener.returnRef());
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeExcessiveErrors, this->terminalStateChangeEventListener.returnRef());
@@ -2331,7 +2331,7 @@ installedActions()
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener.returnRef());
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowMinimization, this->terminalStateChangeEventListener.returnRef());
 	this->terminalViewEventListener.setRef(ListenerModel_NewStandardListener
-											(terminalViewStateChanged, REINTERPRET_CAST(this, TerminalWindowRef)/* context */),
+											(terminalViewStateChanged, this->selfRef/* context */),
 											true/* is retained */);
 	TerminalView_StartMonitoring(newView, kTerminalView_EventScrolling, this->terminalViewEventListener.returnRef());
 	TerminalView_StartMonitoring(newView, kTerminalView_EventSearchResultsExistence, this->terminalViewEventListener.returnRef());
@@ -2347,7 +2347,7 @@ installedActions()
 		
 		this->commandUPP = NewEventHandlerUPP(receiveHICommand);
 		error = InstallWindowEventHandler(returnCarbonWindow(this), this->commandUPP, GetEventTypeCount(whenCommandExecuted),
-											whenCommandExecuted, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
+											whenCommandExecuted, this->selfRef/* user data */,
 											&this->commandHandler/* event handler reference */);
 		assert_noerr(error);
 	}
@@ -2366,7 +2366,7 @@ installedActions()
 		
 		this->windowClickActivationUPP = NewEventHandlerUPP(receiveWindowGetClickActivation);
 		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowClickActivationUPP, GetEventTypeCount(whenWindowClickActivationRequired),
-											whenWindowClickActivationRequired, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
+											whenWindowClickActivationRequired, this->selfRef/* user data */,
 											&this->windowClickActivationHandler/* event handler reference */);
 		assert_noerr(error);
 	}
@@ -2383,7 +2383,7 @@ installedActions()
 		
 		this->windowDragCompletedUPP = NewEventHandlerUPP(receiveWindowDragCompleted);
 		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowDragCompletedUPP, GetEventTypeCount(whenWindowDragCompleted),
-											whenWindowDragCompleted, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
+											whenWindowDragCompleted, this->selfRef/* user data */,
 											&this->windowDragCompletedHandler/* event handler reference */);
 		assert_noerr(error);
 	}
@@ -2400,7 +2400,7 @@ installedActions()
 		
 		this->windowCursorChangeUPP = NewEventHandlerUPP(receiveWindowCursorChange);
 		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowCursorChangeUPP, GetEventTypeCount(whenCursorChangeRequired),
-											whenCursorChangeRequired, this->window/* user data */,
+											whenCursorChangeRequired, this->selfRef/* user data */,
 											&this->windowCursorChangeHandler/* event handler reference */);
 		assert_noerr(error);
 	}
@@ -2418,7 +2418,7 @@ installedActions()
 		
 		this->windowResizeEmbellishUPP = NewEventHandlerUPP(receiveWindowResize);
 		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowResizeEmbellishUPP, GetEventTypeCount(whenWindowResizeStartsContinuesOrStops),
-											whenWindowResizeStartsContinuesOrStops, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
+											whenWindowResizeStartsContinuesOrStops, this->selfRef/* user data */,
 											&this->windowResizeEmbellishHandler/* event handler reference */);
 		assert_noerr(error);
 	}
@@ -2499,7 +2499,7 @@ My_TerminalWindow::
 	}
 	
 	// show a hidden window just before it is destroyed (most importantly, notifying callbacks)
-	TerminalWindow_SetObscured(REINTERPRET_CAST(this, TerminalWindowRef), false);
+	TerminalWindow_SetObscured(this->selfRef, false);
 	
 	// remove any tab contextual menu handler
 	if (nullptr != tabContextualMenuHandlerPtr) delete tabContextualMenuHandlerPtr, tabContextualMenuHandlerPtr = nullptr;
@@ -5657,19 +5657,14 @@ Handles "kEventWindowCursorChange" of "kEventClassWindow",
 or "kEventRawKeyModifiersChanged" of "kEventClassKeyboard",
 for a terminal window.
 
-IMPORTANT:	This is completely generic.  It should move
-			into some other module, so it can be used as
-			a utility for other windows.
-
 (3.1)
 */
 OSStatus
 receiveWindowCursorChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
-							 void*					inWindowRef)
+							 void*					UNUSED_ARGUMENT(inTerminalWindowRef))
 {
 	OSStatus		result = eventNotHandledErr;
-	WindowRef		targetWindow = REINTERPRET_CAST(inWindowRef, WindowRef);
 	UInt32 const	kEventClass = GetEventClass(inEvent);
 	UInt32 const	kEventKind = GetEventKind(inEvent);
 	
@@ -5678,54 +5673,48 @@ receiveWindowCursorChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 			((kEventClass == kEventClassKeyboard) && (kEventKind == kEventRawKeyModifiersChanged)));
 	
 	// do not change the cursor if this window is not active
-	if (GetUserFocusWindow() == targetWindow)
+	if (kEventClass == kEventClassWindow)
 	{
-		if (kEventClass == kEventClassWindow)
+		HIWindowRef		window = nullptr;
+		
+		
+		// determine the window in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
+		if (noErr == result)
 		{
-			WindowRef	window = nullptr;
+			Point	globalMouse;
 			
 			
-			// determine the window in question
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseLocation, typeQDPoint, globalMouse);
 			if (noErr == result)
 			{
-				Point	globalMouse;
+				UInt32		modifiers = 0;
 				
 				
-				assert(window == targetWindow);
-				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseLocation, typeQDPoint, globalMouse);
-				if (noErr == result)
+				// try to vary the cursor according to key modifiers, but it’s no
+				// catastrophe if this information isn’t available
+				if (noErr != CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers))
 				{
-					UInt32		modifiers = 0;
-					
-					
-					// try to vary the cursor according to key modifiers, but it’s no
-					// catastrophe if this information isn’t available
-					(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
-					
-					// finally, set the cursor
-					result = setCursorInWindow(window, globalMouse, modifiers);
+					modifiers = EventLoop_ReturnCurrentModifiers();
 				}
+				
+				// finally, set the cursor
+				result = setCursorInWindow(window, globalMouse, modifiers);
 			}
 		}
-		else
-		{
-			// when the key modifiers change, it is still nice to have the
-			// cursor automatically change when necessary; however, there
-			// is no mouse information available, so it must be determined
-			UInt32		modifiers = 0;
-			
-			
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
-			if (noErr == result)
-			{
-				Point	globalMouse;
-				
-				
-				GetMouse(&globalMouse);
-				result = setCursorInWindow(targetWindow, globalMouse, modifiers);
-			}
-		}
+	}
+	else
+	{
+		// when the key modifiers change, it is still nice to have the
+		// cursor automatically change when necessary; however, there
+		// is no mouse information available, so it must be determined
+		UInt32		modifiers = 0;
+		Point		globalMouse;
+		
+		
+		(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
+		GetMouse(&globalMouse);
+		result = setCursorInWindow(GetUserFocusWindow(), globalMouse, modifiers);
 	}
 	
 	return result;
@@ -6766,7 +6755,7 @@ for the given window.
 (3.1)
 */
 OSStatus
-setCursorInWindow	(WindowRef		inWindow,
+setCursorInWindow	(HIWindowRef	inWindow,
 					 Point			inGlobalMouse,
 					 UInt32			inModifiers)
 {
@@ -6801,56 +6790,13 @@ setCursorInWindow	(WindowRef		inWindow,
 		}
 		else
 		{
-			static WindowRef	gPreviousWindow = nullptr;
-			static HIViewRef	gPreviousHIView = nullptr;
-			static UInt32		gPreviousModifiers = 0;
-			ControlKind			controlKind;
-			Boolean				doSet = false;
-			Boolean				wasSet = false;
+			ControlKind		controlKind;
+			Boolean			wasSet = false;
 			
 			
 			result = GetControlKind(viewUnderMouse, &controlKind);
 			if ((AppResources_ReturnCreatorCode() == controlKind.signature) &&
 				(kConstantsRegistry_ControlKindTerminalView == controlKind.kind))
-			{
-				// for terminal views, it is possible to determine whether or not
-				// there is text selected
-				TerminalViewRef		view = nullptr;
-				UInt32				actualSize = 0;
-				
-				
-				result = GetControlProperty(viewUnderMouse, AppResources_ReturnCreatorCode(),
-											kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
-											sizeof(view), &actualSize, &view);
-				if (noErr == result)
-				{
-					if (TerminalView_TextSelectionExists(view))
-					{
-						// when text is selected, the cursor varies within the view;
-						// take the slower approach and constantly check the cursor
-						doSet = true;
-					}
-					else
-					{
-						// when no text is selected, the cursor will always have the
-						// same shape within the view (varying only by modifiers);
-						// take the efficient approach and check only when the
-						// view under the mouse is changed
-						doSet = ((gPreviousWindow != inWindow) || (gPreviousHIView != viewUnderMouse) ||
-									(gPreviousModifiers != inModifiers));
-					}
-				}							
-			}
-			else
-			{
-				// unknown control type - set only as needed
-				doSet = ((gPreviousWindow != inWindow) || (gPreviousHIView != viewUnderMouse) ||
-							(gPreviousModifiers != inModifiers));
-			}
-			
-			// to avoid wasting time, do not even tell the control about the event
-			// unless (as determined above) this seems necessary
-			if (doSet)
 			{
 				// set the cursor appropriately in whatever control is under the mouse
 				result = HandleControlSetCursor(viewUnderMouse, localMouse, inModifiers, &wasSet);
@@ -6859,17 +6805,13 @@ setCursorInWindow	(WindowRef		inWindow,
 					// some problem; restore the arrow and claim all is well
 					(SInt16)Cursors_UseArrow();
 					result = noErr;
-				}
-				
-				// update cache for next time
-				gPreviousWindow = inWindow;
-				gPreviousHIView = viewUnderMouse;
-				gPreviousModifiers = inModifiers;
+				}						
 			}
 			else
 			{
-				// no action; assume the arrow should be restored
+				// unknown control type - restore arrow
 				(SInt16)Cursors_UseArrow();
+				result = noErr;
 			}
 		}
 		SetGWorld(oldPort, oldDevice);

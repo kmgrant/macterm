@@ -9143,8 +9143,11 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 				
 				
 				// attempt to read key modifiers, so as to make the cursor change more accurate
-				(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers,
-																	typeUInt32, eventModifiers);
+				if (noErr != CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers,
+																	typeUInt32, eventModifiers))
+				{
+					eventModifiers = EventLoop_ReturnCurrentModifiers();
+				}
 				
 				// when there is a text selection, see if the mouse is in it
 				if (TerminalView_TextSelectionExists(view))
@@ -9165,7 +9168,9 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 				// the event is successfully handled
 				result = noErr;
 				
-				// change the cursor appropriately...
+				// change the cursor appropriately...the cursor for dragging
+				// terminal text selections appears in background windows
+				// because “direct drag” is implemented for selections
 				if (isInSelection)
 				{
 					// cursor applicable to regions of text that are selected
@@ -9182,26 +9187,34 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 				}
 				else
 				{
-					// cursor applicable to regions of text that are not selected
-					if (eventModifiers & controlKey)
+					// these cursors should not appear in background windows
+					if (GetUserFocusWindow() == TerminalView_ReturnWindow(view))
 					{
-						// if clicked, there would be a contextual menu
-						(SInt16)Cursors_UseArrowContextualMenu();
-					}
-					else if ((eventModifiers & optionKey) && (eventModifiers & cmdKey))
-					{
-						// if clicked, the terminal cursor will move to the mouse location
-						(SInt16)Cursors_UsePlus();
-					}
-					else if (eventModifiers & optionKey)
-					{
-						// if clicked, the text selection would be rectangular
-						(SInt16)Cursors_UseCrosshairs();
+						// cursor applicable to regions of text that are not selected
+						if (eventModifiers & controlKey)
+						{
+							// if clicked, there would be a contextual menu
+							(SInt16)Cursors_UseArrowContextualMenu();
+						}
+						else if ((eventModifiers & optionKey) && (eventModifiers & cmdKey))
+						{
+							// if clicked, the terminal cursor will move to the mouse location
+							(SInt16)Cursors_UsePlus();
+						}
+						else if (eventModifiers & optionKey)
+						{
+							// if clicked, the text selection would be rectangular
+							(SInt16)Cursors_UseCrosshairs();
+						}
+						else
+						{
+							// normal - text selection cursor
+							(SInt16)Cursors_UseIBeam();
+						}
 					}
 					else
 					{
-						// normal - text selection cursor
-						(SInt16)Cursors_UseIBeam();
+						(SInt16)Cursors_UseArrow();
 					}
 				}
 			}

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120303',
     '20120228',
     '20120206',
     '20120121',
@@ -439,6 +440,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120303': [
+        'Fixed the mouse pointer shape in terminal windows.',
+    ],
     '20120228': [
         "MacTerm releases now contain a code signature.",
         "Changed the artwork for the main application icon AGAIN, to add slightly more detail at larger sizes and to clean up the edges.",
