@@ -7,18 +7,18 @@
 	<meta name="description" content="Update page for version %(version)s of MacTerm.">
 	
 	<link rel="author" href="mailto:kmg%40mac%2Ecom">
-	<link rel="copyright" href="http://macterm.net/copyright.html">
-	<link rel="home" href="http://macterm.net/">
-	<link rel="index" href="http://macterm.net/index.html">
+	<link rel="copyright" href="http://www.macterm.net/copyright.html">
+	<link rel="home" href="http://www.macterm.net/">
+	<link rel="index" href="http://www.macterm.net/index.html">
 	
-	<link rel="stylesheet" type="text/css" href="http://macterm.net/styles/default.css" title="Default">
+	<link rel="stylesheet" type="text/css" href="http://www.macterm.net/styles/default.css" title="Default">
 </head>
 <body>
 
 <nav>
 	MacTerm.net
 	<ul>
-	<li><a href="http://macterm.net/">Home</a></li>
+	<li><a href="http://www.macterm.net/">Home</a></li>
 	</ul>
 </nav>
 
@@ -30,41 +30,41 @@
 	<header>
 		<dl>
 		<dt>Your version:</dt>
-		<dd><b>%(version)s</b></dd>
+		<dd><b>%(current_version)s</b></dd>
 		</dl>
 	</header>
 	
-<!-- BEGIN NEW UPDATE -->
+<!-- BEGIN:NEW-UPDATE -->
 	<section id="update">
 		<header>
 			<h2>A new version is available!</h2>
 			
-			<p>Please <a href="http://macterm.net/updates/"
+			<p>Please <a href="http://www.macterm.net/updates/"
 			>download the update now</a>.</p>
 		</header>
 		
-		<!-- BEGIN VERSION LOOP -->
+		<!-- BEGIN-LOOP:VERSION -->
 		<section>
 			<header>
 				<h3>New in %(version)s:</h3>
 			</header>
 			
 			<ul class="release-notes">
-			<!-- BEGIN RELEASE NOTES LOOP -->
+			<!-- BEGIN-LOOP:RELEASE-NOTES -->
 			<li>%(release_note)s</li>
-			<!-- END RELEASE NOTES LOOP -->
+			<!-- END-LOOP:RELEASE-NOTES -->
 			</ul>
 		</section>
-		<!-- END VERSION LOOP -->
+		<!-- END-LOOP:VERSION -->
 	</section>
-<!-- END NEW UPDATE -->
-<!-- BEGIN NO UPDATES -->
+<!-- END:NEW-UPDATE -->
+<!-- BEGIN:NO-UPDATES -->
 	<section id="update">
 		<p><b>Up-to-date.</b>  You are using the latest stable release.  You may wish to try
-		one of the <a href="http://macterm.net/updates/daily.html">daily builds</a> however,
-		which provide access to brand new features that are still under development.</p>
+		one of the <a href="daily.html">daily builds</a> however, which provide access to
+		brand new features that are still under development.</p>
 	</section>
-<!-- END NO UPDATES -->
+<!-- END:NO-UPDATES -->
 </article>
 
 </body>

@@ -7,18 +7,19 @@
 	<meta name="description" content="Release notes and download page for a Mac OS X terminal emulator.">
 	
 	<link rel="author" href="mailto:kmg%40mac%2Ecom">
-	<link rel="copyright" href="http://macterm.net/copyright.html">
-	<link rel="home" href="http://macterm.net/">
-	<link rel="index" href="http://macterm.net/index.html">
+	<link rel="copyright" href="http://www.macterm.net/copyright.html">
+	<link rel="home" href="http://www.macterm.net/">
+	<link rel="index" href="http://www.macterm.net/index.html">
 	
-	<link rel="stylesheet" type="text/css" href="http://macterm.net/styles/default.css" title="Default">
+	<link rel="stylesheet" type="text/css" href="http://www.macterm.net/styles/default.css" title="Default">
+	<script src="http://www.macterm.net/scripts/fade.js"></script>
 </head>
 <body>
 
 <nav>
 	MacTerm.net
 	<ul>
-	<li><a href="http://macterm.net/">Home</a></li>
+	<li><a href="http://www.macterm.net/">Home</a></li>
 	</ul>
 </nav>
 
@@ -27,10 +28,10 @@
 </header>
 
 <article class="content">
-<!-- BEGIN NEW UPDATE -->
+<!-- BEGIN:NEW-UPDATE -->
 	<header>
 		<p><a class="download-button" href=
-		"http://macterm.net/updates/macterm-latest.dmg"
+		"http://www.macterm.net/updates/macterm-latest.dmg"
 		>Download Free Update (BETA)</a></p>
 		
 		<p> </p>
@@ -41,21 +42,32 @@
 			<h2>Change Log</h2>
 		</header>
 		
-		<!-- BEGIN VERSION LOOP -->
+		<ul>
+		<!-- BEGIN-LOOP:YEAR-LINK -->
+		<li style="display:inline; margin-right:0.5em;"><a href="#%(year_heading_id)s">%(year)s</a></li>
+		<!-- END-LOOP:YEAR-LINK -->
+		</ul>
+		
+		<!-- BEGIN-LOOP:YEAR -->
 		<section>
 			<header>
-				<h3>New in %(version)s:</h3>
+				<h3 id="%(year_heading_id)s" class="%(year_element_displayer_remover)s"
+				onclick="toggle('%(year_body_id)s', event, 'block')">%(year)s</h3>
 			</header>
-			
-			<ul class="release-notes">
-			<!-- BEGIN RELEASE NOTES LOOP -->
-			<li>%(release_note)s</li>
-			<!-- END RELEASE NOTES LOOP -->
-			</ul>
+			<div id="%(year_body_id)s" style="display: %(year_element_display)s">
+			<!-- BEGIN-LOOP:VERSION -->
+				<h4>New in %(version)s:</h4>
+				<ul class="release-notes">
+				<!-- BEGIN-LOOP:RELEASE-NOTES -->
+				<li>%(release_note)s</li>
+				<!-- END-LOOP:RELEASE-NOTES -->
+				</ul>
+			<!-- END-LOOP:VERSION -->
+			</div>
 		</section>
-		<!-- END VERSION LOOP -->
+		<!-- END-LOOP:YEAR -->
 	</section>
-<!-- END NEW UPDATE -->
+<!-- END:NEW-UPDATE -->
 </article>
 
 </body>
