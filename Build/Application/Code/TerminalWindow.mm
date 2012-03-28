@@ -4008,10 +4008,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandFullScreenModal:
 				case kCommandKioskModeDisable:
 					{
-						static UInt16		gNumberOfDisplaysUsed = 0;
-						Boolean				turnOnFullScreen = (kCommandKioskModeDisable != received.commandID) &&
-																(false == FlagManager_Test(kFlagKioskMode));
-						Boolean				modalFullScreen = (kCommandFullScreenModal == received.commandID);
+						static UInt16	gNumberOfDisplaysUsed = 0;
+						Boolean			turnOnFullScreen = ((kCommandKioskModeDisable != received.commandID) &&
+															(false == FlagManager_Test(kFlagKioskMode)));
+						Boolean			modalFullScreen = (kCommandFullScreenModal == received.commandID);
 						
 						
 						// enable kiosk mode only if it is not enabled already
@@ -4233,14 +4233,20 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						}
 						else
 						{
-							// end Kiosk Mode
+							// undo all changes to affected terminal windows; since these
+							// changes were added to the Undo stack it should only be
+							// necessary to invoke Undo once for each window transformed
 							for (UInt16 i = 0; i < gNumberOfDisplaysUsed; ++i)
 							{
 								Commands_ExecuteByID(kCommandUndo);
 							}
-							result = noErr;
+							
+							// now explicitly disable settings that apply to Full Screen
+							// mode as a whole (and not to each window)
+							FlagManager_Set(kFlagKioskMode, false);
+							Keypads_SetVisible(kKeypads_WindowTypeFullScreen, false);
+							assert_noerr(SetSystemUIMode(kUIModeNormal, 0/* options */));
 						}
-						
 						result = noErr;
 					}
 					break;
@@ -6342,7 +6348,8 @@ reverseFullScreenChanges	(Undoables_ActionInstruction	inDoWhat,
 			break;
 		
 		case kUndoables_ActionInstructionUndo:
-			// exit Full Screen mode and restore the window
+			// restore the window to its normal state (so as not to occupy the
+			// whole screen or hide any terminal window user interface elements)
 			{
 				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), dataPtr->terminalWindow);
 				
@@ -6353,10 +6360,7 @@ reverseFullScreenChanges	(Undoables_ActionInstruction	inDoWhat,
 														kWindowResizableAttribute/* attributes to set */,
 													0/* attributes to clear */);
 				
-				FlagManager_Set(kFlagKioskMode, false);
-				Keypads_SetVisible(kKeypads_WindowTypeFullScreen, false);
 				if (nullptr != ptr) (OSStatus)HIViewSetVisible(ptr->controls.scrollBarV, true);
-				assert_noerr(SetSystemUIMode(kUIModeNormal, 0/* options */));
 				
 				// some mode changes do not require font size restoration; and, the boundaries
 				// may need to change before or after the display mode is restored, due to the

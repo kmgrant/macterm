@@ -178,6 +178,7 @@ IconForCommand.icns \
 IconForContextMenu.icns \
 IconForCustomize.icns \
 IconForFullScreen.icns \
+IconForFullScreenDisable.icns \
 IconForHide.icns \
 IconForItemAdd.icns \
 IconForItemRemove.icns \

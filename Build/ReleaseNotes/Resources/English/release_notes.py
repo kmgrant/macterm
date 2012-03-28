@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120327',
     '20120303',
     '20120228',
     '20120206',
@@ -440,6 +441,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120327': [
+        'Fixed Full Screen exiting problem on older Mac OS X versions.',
+        'Full Screen "off switch" window is now only an icon and it occupies less screen space.',
+    ],
     '20120303': [
         'Fixed the mouse pointer shape in terminal windows.',
     ],

@@ -212,6 +212,7 @@
 		0A06274F0FB3AF4900EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/url/__init__.py; sourceTree = "<group>"; };
 		0A08DD8B1405B4AA0005129F /* TranslucentMenuArrow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TranslucentMenuArrow.h; path = Application/Code/TranslucentMenuArrow.h; sourceTree = "<group>"; };
 		0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TranslucentMenuArrow.mm; path = Application/Code/TranslucentMenuArrow.mm; sourceTree = "<group>"; };
+		0A119C431522B545003A41B7 /* IconForFullScreenDisable.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForFullScreenDisable.icns; path = Application/Resources/IconForFullScreenDisable.icns; sourceTree = "<group>"; };
 		0A11F54B059FE55D00A565C3 /* IconForPrefPanelGeneral.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelGeneral.icns; path = Application/Resources/IconForPrefPanelGeneral.icns; sourceTree = "<group>"; };
 		0A11F54D059FE55D00A565C3 /* IconForPrefPanelMacros.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelMacros.icns; path = Application/Resources/IconForPrefPanelMacros.icns; sourceTree = "<group>"; };
 		0A1427340DA5D4270028510F /* VectorInterpreterID.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreterID.typedef.h; path = Application/Code/VectorInterpreterID.typedef.h; sourceTree = "<group>"; };
@@ -1006,6 +1007,7 @@
 				0AC838670ABF915B00BEF8B9 /* IconForContextMenu.icns */,
 				0AD7483013073E56003E368B /* IconForCustomize.icns */,
 				0AD7481C13072342003E368B /* IconForFullScreen.icns */,
+				0A119C431522B545003A41B7 /* IconForFullScreenDisable.icns */,
 				0AC7DDA90AC2579D00ED8C19 /* IconForHide.icns */,
 				0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */,
 				0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */,
