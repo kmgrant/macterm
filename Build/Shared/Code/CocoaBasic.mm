@@ -120,9 +120,10 @@ CocoaBasic_ApplyBlueStyleToPopover	(Popover_Window*	inoutPopover,
 									 Boolean			inHasArrow)
 {
 	[inoutPopover setBackgroundColor:[NSColor colorWithDeviceRed:0 green:0.25 blue:0.5 alpha:0.93]];
-	[inoutPopover setBorderColor:[NSColor whiteColor]];
-	[inoutPopover setViewMargin:0.0];
-	[inoutPopover setBorderWidth:3.0];
+	[inoutPopover setBorderOuterColor:[NSColor whiteColor]];
+	[inoutPopover setBorderPrimaryColor:[NSColor blackColor]];
+	[inoutPopover setViewMargin:5.0];
+	[inoutPopover setBorderWidth:5.0];
 	[inoutPopover setCornerRadius:5.0];
 	if (inHasArrow)
 	{
@@ -158,9 +159,10 @@ CocoaBasic_ApplyStandardStyleToPopover	(Popover_Window*	inoutPopover,
 										 Boolean			inHasArrow)
 {
 	[inoutPopover setBackgroundColor:[NSColor colorWithDeviceRed:0.9 green:0.9 blue:0.9 alpha:0.95]];
-	[inoutPopover setBorderColor:[NSColor colorWithDeviceRed:1.0 green:1.0 blue:1.0 alpha:0.7]];
-	[inoutPopover setViewMargin:0.0];
-	[inoutPopover setBorderWidth:1.0];
+	[inoutPopover setBorderOuterColor:[NSColor colorWithDeviceRed:0.25 green:0.25 blue:0.25 alpha:0.7]];
+	[inoutPopover setBorderPrimaryColor:[NSColor colorWithDeviceRed:1.0 green:1.0 blue:1.0 alpha:0.8]];
+	[inoutPopover setViewMargin:3.0];
+	[inoutPopover setBorderWidth:2.2];
 	[inoutPopover setCornerRadius:4.0];
 	if (inHasArrow)
 	{

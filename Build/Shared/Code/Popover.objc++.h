@@ -117,7 +117,8 @@ frame appearance.
 @private
 	__weak NSWindow*		popoverParentWindow;
 	__weak NSView*			embeddedView;
-	NSColor*				borderColor;
+	NSColor*				borderOuterColor;
+	NSColor*				borderPrimaryColor;
 	NSColor*				popoverBackgroundColor;
 	NSRect					viewFrame;
 	float					arrowBaseWidth;
@@ -169,9 +170,14 @@ arrowHeight;
 setArrowHeight:(float)_;
 
 - (NSColor*)
-borderColor;
+borderOuterColor;
 - (void)
-setBorderColor:(NSColor*)_;
+setBorderOuterColor:(NSColor*)_;
+
+- (NSColor*)
+borderPrimaryColor;
+- (void)
+setBorderPrimaryColor:(NSColor*)_;
 
 - (float)
 borderWidth;

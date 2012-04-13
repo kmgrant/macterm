@@ -198,7 +198,8 @@ inWindow:(NSWindow*)		aWindow
 			
 			// set up some sensible defaults for display
 			self->popoverBackgroundColor = [[NSColor colorWithCalibratedWhite:0.1 alpha:0.75] copy];
-			self->borderColor = [[NSColor whiteColor] copy];
+			self->borderOuterColor = [[NSColor grayColor] copy];
+			self->borderPrimaryColor = [[NSColor whiteColor] copy];
 			self->borderWidth = 2.0;
 			self->viewMargin = kDefaultMargin;
 			self->arrowBaseWidth = kDefaultArrowBaseWidth;
@@ -233,7 +234,8 @@ Destructor.
 dealloc
 {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	[borderColor release];
+	[borderOuterColor release];
+	[borderPrimaryColor release];
 	[popoverBackgroundColor release];
 	
 	[super dealloc];
@@ -406,24 +408,59 @@ setArrowHeight:(float)	aValue
 /*!
 Accessor.
 
-The border color is used to render a line around the edge of the
-popover window whose thickness is determined by "setBorderWidth:"
-and whose curves are determined by "setCornerRadius:".
+The outer border color is used to render the boundary of
+the popover window.  See also "setBorderPrimaryColor:".
 
-(1.0)
+The border thickness is determined by "setBorderWidth:".
+If the outer and primary colors are the same then the
+border appears to be that thickness; otherwise the width
+is divided roughly evenly between the two colors.
+
+(1.1)
 */
 - (NSColor*)
-borderColor
+borderOuterColor
 {
-	return [[borderColor retain] autorelease];
+	return [[borderOuterColor retain] autorelease];
 }
 - (void)
-setBorderColor:(NSColor*)	aValue
+setBorderOuterColor:(NSColor*)	aValue
 {
-	if (borderColor != aValue)
+	if (borderOuterColor != aValue)
 	{
-		[borderColor release];
-		borderColor = [aValue copy];
+		[borderOuterColor release];
+		borderOuterColor = [aValue copy];
+		
+		[self updateBackground];
+	}
+}
+
+
+/*!
+Accessor.
+
+The primary border color is used to render a frame inside
+the outer border (see "setBorderOuterColor:").
+
+The border thickness is determined by "setBorderWidth:".
+If the outer and primary colors are the same then the
+border appears to be that thickness; otherwise the width
+is divided roughly evenly between the two colors.
+
+(1.1)
+*/
+- (NSColor*)
+borderPrimaryColor
+{
+	return [[borderPrimaryColor retain] autorelease];
+}
+- (void)
+setBorderPrimaryColor:(NSColor*)	aValue
+{
+	if (borderPrimaryColor != aValue)
+	{
+		[borderPrimaryColor release];
+		borderPrimaryColor = [aValue copy];
 		
 		[self updateBackground];
 	}
@@ -886,7 +923,10 @@ backgroundColorPatternImage
 		{
 			// double width since drawing is clipped inside the path
 			[sourcePath setLineWidth:([self borderWidth] * 2.0)];
-			[self->borderColor set];
+			[self->borderPrimaryColor set];
+			[sourcePath stroke];
+			[sourcePath setLineWidth:[self borderWidth] - 1.0]; // arbitrary shift
+			[self->borderOuterColor set];
 			[sourcePath stroke];
 		}
 		
