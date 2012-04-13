@@ -8,7 +8,7 @@
 	popover in certain situations.  It also handles any
 	animation.
 	
-	You typically start by creating an MAAttachedWindow
+	You typically start by creating a Popover_Window
 	with the required views, and then using this routine
 	to specify that window and its parent.  Once you use
 	this interface to show the popover, its behavior is
@@ -56,7 +56,7 @@
 #import <Carbon/Carbon.h>
 
 // library includes
-#import <MAAttachedWindow.h>
+#import <Popover.objc++.h>
 
 
 
@@ -81,7 +81,7 @@ typedef struct PopoverManager_OpaqueStruct*		PopoverManager_Ref;
 idealAnchorPointForParentWindowFrame:(NSRect)_;
 
 // return the desired popover arrow placement
-- (MAWindowPosition)
+- (Popover_Properties)
 idealArrowPositionForParentWindowFrame:(NSRect)_;
 
 // return the dimensions the popover should initially have
@@ -95,7 +95,7 @@ idealSize;
 #pragma mark Public Methods
 
 PopoverManager_Ref
-	PopoverManager_New							(MAAttachedWindow*				inPopover,
+	PopoverManager_New							(Popover_Window*				inPopover,
 												 NSView*						inLogicalFirstResponder,
 												 id< PopoverManager_Delegate >	inDelegate,
 												 PopoverManager_AnimationType	inAnimation,

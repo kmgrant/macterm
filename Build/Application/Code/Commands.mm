@@ -66,6 +66,7 @@ extern "C"
 #import <Console.h>
 #import <Localization.h>
 #import <MemoryBlocks.h>
+#import <Popover.objc++.h>
 #import <SoundSystem.h>
 #import <Undoables.h>
 
@@ -81,7 +82,6 @@ extern "C"
 #import "Folder.h"
 #import "HelpSystem.h"
 #import "Keypads.h"
-#import "MAAttachedWindow.h"
 #import "MacroManager.h"
 #import "MenuBar.h"
 #import "PrefPanelTranslations.h"
@@ -2484,7 +2484,7 @@ BOOL
 isCocoaWindowMoreImportantThanCarbon	(NSWindow*		inWindow)
 {
 	BOOL	result = (([inWindow level] != NSNormalWindowLevel) ||
-						([inWindow isKindOfClass:[MAAttachedWindow class]]));
+						([inWindow isKindOfClass:[Popover_Window class]]));
 	
 	
 	return result;

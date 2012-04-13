@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120412',
     '20120327',
     '20120303',
     '20120228',
@@ -441,6 +442,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120412': [
+        'Fixed automatic positioning of pop-over windows so that windows are more likely to stay on the screen.',
+    ],
     '20120327': [
         'Fixed Full Screen exiting problem on older Mac OS X versions.',
         'Full Screen "off switch" window is now only an icon and it occupies less screen space.',

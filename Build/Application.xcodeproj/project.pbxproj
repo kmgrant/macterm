@@ -20,6 +20,7 @@
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
 		0A47A08C14B3E33A00E39136 /* TerminalToolbar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */; };
 		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */; };
+		0A4FAF951525694700B8142A /* Popover.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4FAF941525694700B8142A /* Popover.mm */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.cp */; };
 		0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A68811112F537A1005F418A /* GrowlSupport.mm */; };
 		0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A70B8AC1079C33B0013E76F /* PythonMain.cp */; };
@@ -123,7 +124,6 @@
 		0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */; };
 		0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */; };
 		0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */; };
-		0AD543CA146796B700B642C3 /* MAAttachedWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 0AD543C9146796B700B642C3 /* MAAttachedWindow.m */; };
 		0AD8B2D60DDA2CC100D5AA59 /* AddressDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */; };
 		0AE103B10F71D018003127C7 /* ServerBrowser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE103B00F71D018003127C7 /* ServerBrowser.mm */; };
 		0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */; };
@@ -396,6 +396,8 @@
 		0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelWorkspaces.cp; path = Application/Code/PrefPanelWorkspaces.cp; sourceTree = "<group>"; };
 		0A4C9D260FE9B986005EAE9D /* PrefPanelWorkspaces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelWorkspaces.h; path = Application/Code/PrefPanelWorkspaces.h; sourceTree = "<group>"; };
 		0A4C9D5E0FE9C5B5005EAE9D /* IconForPrefPanelWorkspaces.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelWorkspaces.icns; path = Application/Resources/IconForPrefPanelWorkspaces.icns; sourceTree = "<group>"; };
+		0A4FAF941525694700B8142A /* Popover.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Popover.mm; path = Shared/Code/Popover.mm; sourceTree = "<group>"; };
+		0A4FAF961525695400B8142A /* Popover.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Popover.objc++.h"; path = "Shared/Code/Popover.objc++.h"; sourceTree = "<group>"; };
 		0A54E40D0560B62F005B4592 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = Application/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0A54E40F0560B62F005B4592 /* IconForTerminal.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForTerminal.icns; path = Application/Resources/IconForTerminal.icns; sourceTree = "<group>"; };
 		0A6315B912348AB4003890B8 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ClipboardCocoa.xib; sourceTree = "<group>"; };
@@ -521,8 +523,6 @@
 		0AD0B37B0A9EB8BD002064BA /* QuillsEvents.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsEvents.h; path = Application/Code/QuillsEvents.h; sourceTree = "<group>"; };
 		0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsPrefs.cp; path = Application/Code/QuillsPrefs.cp; sourceTree = "<group>"; };
 		0AD0B3C20A9EBDFC002064BA /* QuillsPrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsPrefs.h; path = Application/Code/QuillsPrefs.h; sourceTree = "<group>"; };
-		0AD543C9146796B700B642C3 /* MAAttachedWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MAAttachedWindow.m; path = Shared/Code/MAAttachedWindow.m; sourceTree = "<group>"; };
-		0AD543CB146796C600B642C3 /* MAAttachedWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MAAttachedWindow.h; path = Shared/Code/MAAttachedWindow.h; sourceTree = "<group>"; };
 		0AD62711055DEB7000843EA9 /* ApplicationPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ApplicationPrefix.pch; path = Application/Code/ApplicationPrefix.pch; sourceTree = "<group>"; };
 		0AD638F91350172E00035D4E /* RetainRelease.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RetainRelease.template.h; path = Shared/Code/RetainRelease.template.h; sourceTree = "<group>"; };
 		0AD7481C13072342003E368B /* IconForFullScreen.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForFullScreen.icns; path = Application/Resources/IconForFullScreen.icns; sourceTree = "<group>"; };
@@ -643,6 +643,7 @@
 				0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */,
 				0AFD12B5087A147D00439BEA /* NIBLoader.cp */,
 				0AF94E481477857900099BF2 /* PopoverManager.mm */,
+				0A4FAF941525694700B8142A /* Popover.mm */,
 				0A33CD0307FAC08800248DDF /* Releases.cp */,
 				0A46FE19055432A400ACDF3A /* SoundSystem.cp */,
 				0A33CCFC07FAC06200248DDF /* StringUtilities.cp */,
@@ -683,6 +684,7 @@
 				0A9B31920D538EE400C1616D /* MemoryBlocks.h */,
 				0AFD12B7087A148B00439BEA /* NIBLoader.h */,
 				0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */,
+				0A4FAF961525695400B8142A /* Popover.objc++.h */,
 				0A90CD8C0DAD28F300B6E89E /* RandomWrap.h */,
 				0AB0EF76110E99570099E055 /* Registrar.template.h */,
 				0A9B319E0D538EFA00C1616D /* Releases.h */,
@@ -925,8 +927,6 @@
 		0AD543C8146796A800B642C3 /* External */ = {
 			isa = PBXGroup;
 			children = (
-				0AD543C9146796B700B642C3 /* MAAttachedWindow.m */,
-				0AD543CB146796C600B642C3 /* MAAttachedWindow.h */,
 			);
 			name = External;
 			sourceTree = "<group>";
@@ -1424,9 +1424,9 @@
 				0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */,
 				0A08DD8D1405B4B50005129F /* TranslucentMenuArrow.mm in Sources */,
 				0A3C2C20140C73F100739966 /* CocoaAnimation.mm in Sources */,
-				0AD543CA146796B700B642C3 /* MAAttachedWindow.m in Sources */,
 				0AF94E491477857900099BF2 /* PopoverManager.mm in Sources */,
 				0A47A08C14B3E33A00E39136 /* TerminalToolbar.mm in Sources */,
+				0A4FAF951525694700B8142A /* Popover.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

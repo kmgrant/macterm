@@ -48,7 +48,7 @@
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <FlagManager.h>
-#import <MAAttachedWindow.h>
+#import <Popover.objc++.h>
 #import <PopoverManager.objc++.h>
 
 // application includes
@@ -66,7 +66,7 @@
 {
 	WindowTitleDialog_Ref					selfRef;			// identical to address of structure, but typed as ref
 	WindowTitleDialog_ViewManager*			viewMgr;			// loads the Rename interface
-	MAAttachedWindow*						containerWindow;	// holds the Rename dialog view
+	Popover_Window*							containerWindow;	// holds the Rename dialog view
 	NSView*									managedView;		// the view that implements the majority of the interface
 	SessionRef								session;			// the session, if any, to which this applies
 	VectorCanvas_Ref						canvas;				// the canvas, if any, to which this applies
@@ -107,7 +107,7 @@ renamedCocoaWindow;
 - (NSPoint)
 idealAnchorPointForParentWindowFrame:(NSRect)_;
 
-- (MAWindowPosition)
+- (Popover_Properties)
 idealArrowPositionForParentWindowFrame:(NSRect)_;
 
 - (NSSize)
@@ -480,11 +480,11 @@ Returns arrow placement information for the popover.
 
 (4.0)
 */
-- (MAWindowPosition)
+- (Popover_Properties)
 idealArrowPositionForParentWindowFrame:(NSRect)		parentFrame
 {
 #pragma unused(parentFrame)
-	MAWindowPosition	result = MAPositionBottom;
+	Popover_Properties	result = kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameBelowArrow;
 	
 	
 	return result;
@@ -530,11 +530,9 @@ didLoadManagedView:(NSView*)					aManagedView
 		NSWindow*	asNSWindow = [self renamedCocoaWindow];
 		
 		
-		self->containerWindow = [[MAAttachedWindow alloc] initWithView:aManagedView
+		self->containerWindow = [[Popover_Window alloc] initWithView:aManagedView
 																		attachedToPoint:NSZeroPoint/* see delegate */
-																		inWindow:asNSWindow
-																		onSide:MAPositionAutomatic/* see delegate */
-																		atDistance:0.0];
+																		inWindow:asNSWindow];
 		[self->containerWindow setReleasedWhenClosed:NO];
 		CocoaBasic_ApplyStandardStyleToPopover(self->containerWindow, true/* has arrow */);
 		self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],

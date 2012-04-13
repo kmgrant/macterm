@@ -52,6 +52,7 @@ extern "C"
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
+#import <Popover.objc++.h>
 #import <PopoverManager.objc++.h>
 #import <SoundSystem.h>
 
@@ -71,7 +72,7 @@ extern "C"
 {
 	ServerBrowser_Ref			selfRef;				// identical to address of structure, but typed as ref
 	ServerBrowser_ViewManager*	viewMgr;				// loads the server browser interface
-	MAAttachedWindow*			containerWindow;		// holds the main view
+	Popover_Window*				containerWindow;		// holds the main view
 	NSView*						managedView;			// the view that implements the majority of the interface
 	HIWindowRef					parentWindow;			// the Carbon window that the point is relative to
 	CGPoint						parentRelativeArrowTip;	// the point relative to the parent window where the popover arrow appears
@@ -111,7 +112,7 @@ parentCocoaWindow;
 - (NSPoint)
 idealAnchorPointForParentWindowFrame:(NSRect)_;
 
-- (MAWindowPosition)
+- (Popover_Properties)
 idealArrowPositionForParentWindowFrame:(NSRect)_;
 
 - (NSSize)
@@ -692,11 +693,11 @@ Returns arrow placement information for the popover.
 
 (4.0)
 */
-- (MAWindowPosition)
+- (Popover_Properties)
 idealArrowPositionForParentWindowFrame:(NSRect)		parentFrame
 {
 #pragma unused(parentFrame)
-	MAWindowPosition	result = MAPositionAutomatic;
+	Popover_Properties	result = kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameBelowArrow;
 	
 	
 	return result;
@@ -746,11 +747,9 @@ didLoadManagedView:(NSView*)				aManagedView
 	
 	if (nil == self->containerWindow)
 	{
-		self->containerWindow = [[MAAttachedWindow alloc] initWithView:aManagedView
+		self->containerWindow = [[Popover_Window alloc] initWithView:aManagedView
 																		attachedToPoint:NSZeroPoint/* see delegate */
-																		inWindow:[self parentCocoaWindow]
-																		onSide:MAPositionAutomatic/* see delegate */
-																		atDistance:0.0];
+																		inWindow:[self parentCocoaWindow]];
 		[self->containerWindow setDelegate:self];
 		[self->containerWindow setReleasedWhenClosed:NO];
 		CocoaBasic_ApplyStandardStyleToPopover(self->containerWindow, true/* has arrow */);

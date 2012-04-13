@@ -52,7 +52,7 @@
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
-#import <MAAttachedWindow.h>
+#import <Popover.objc++.h>
 #import <PopoverManager.objc++.h>
 
 // application includes
@@ -71,7 +71,7 @@
 {
 	FindDialog_Ref					selfRef;			// identical to address of structure, but typed as ref
 	FindDialog_ViewManager*			viewMgr;			// loads the Find interface
-	MAAttachedWindow*				containerWindow;	// holds the Find dialog view
+	Popover_Window*					containerWindow;	// holds the Find dialog view
 	NSView*							managedView;		// the view that implements the majority of the interface
 	TerminalWindowRef				terminalWindow;		// the terminal window for which this dialog applies
 	PopoverManager_Ref				popoverMgr;			// manages common aspects of popover window behavior
@@ -137,7 +137,7 @@ returnHistoryArrayForManagedView:(NSView*)_;
 - (NSPoint)
 idealAnchorPointForParentWindowFrame:(NSRect)_;
 
-- (MAWindowPosition)
+- (Popover_Properties)
 idealArrowPositionForParentWindowFrame:(NSRect)_;
 
 - (NSSize)
@@ -598,11 +598,9 @@ didLoadManagedView:(NSView*)			aManagedView
 		NSWindow*	parentWindow = TerminalWindow_ReturnNSWindow([self terminalWindow]);
 		
 		
-		self->containerWindow = [[MAAttachedWindow alloc] initWithView:aManagedView
+		self->containerWindow = [[Popover_Window alloc] initWithView:aManagedView
 																		attachedToPoint:NSZeroPoint/* see delegate */
-																		inWindow:parentWindow
-																		onSide:MAPositionAutomatic/* see delegate */
-																		atDistance:0.0];
+																		inWindow:parentWindow];
 		[self->containerWindow setReleasedWhenClosed:NO];
 		CocoaBasic_ApplyStandardStyleToPopover(self->containerWindow, false/* has arrow */);
 		self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
@@ -751,11 +749,16 @@ popover itself depends on the arrow placement chosen by
 - (NSPoint)
 idealAnchorPointForParentWindowFrame:(NSRect)	parentFrame
 {
-	NSRect		managedViewFrame = [self->managedView frame];
-	NSPoint		result = NSMakePoint(parentFrame.size.width - managedViewFrame.size.width - 16.0/* arbitrary */,
-										0.0);
+	NSPoint		result = NSZeroPoint;
 	
 	
+	if (nil != self->managedView)
+	{
+		NSRect		managedViewFrame = [self->managedView frame];
+		
+		
+		result = NSMakePoint(parentFrame.size.width - managedViewFrame.size.width - 16.0/* arbitrary */, 0.0);
+	}
 	return result;
 }// idealAnchorPointForParentWindowFrame:
 
@@ -765,11 +768,11 @@ Returns arrow placement information for the popover.
 
 (4.0)
 */
-- (MAWindowPosition)
+- (Popover_Properties)
 idealArrowPositionForParentWindowFrame:(NSRect)		parentFrame
 {
 #pragma unused(parentFrame)
-	MAWindowPosition	result = MAPositionTopRight;
+	Popover_Properties	result = kPopover_PropertyArrowBeginning | kPopover_PropertyPlaceFrameAboveArrow;
 	
 	
 	return result;
@@ -784,10 +787,16 @@ Returns the initial size for the popover.
 - (NSSize)
 idealSize
 {
-	NSRect		frameRect = [self->containerWindow frameRectForViewRect:[self->managedView frame]];
-	NSSize		result = frameRect.size;
+	NSSize		result = NSZeroSize;
 	
 	
+	if (nil != self->containerWindow)
+	{
+		NSRect		frameRect = [self->containerWindow frameRectForViewRect:[self->managedView frame]];
+		
+		
+		result = frameRect.size;
+	}
 	return result;
 }// idealSize
 

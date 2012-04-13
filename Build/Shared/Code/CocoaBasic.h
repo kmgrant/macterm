@@ -34,13 +34,13 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 #ifdef __OBJC__
-@class MAAttachedWindow;
 @class NSResponder;
 @class NSWindow;
+@class Popover_Window;
 #else
-class MAAttachedWindow;
 class NSResponder;
 class NSWindow;
+class Popover_Window;
 #endif
 
 
@@ -51,11 +51,11 @@ class NSWindow;
 //@{
 
 void
-	CocoaBasic_ApplyBlueStyleToPopover				(MAAttachedWindow*,
+	CocoaBasic_ApplyBlueStyleToPopover				(Popover_Window*,
 													 Boolean);
 
 void
-	CocoaBasic_ApplyStandardStyleToPopover			(MAAttachedWindow*,
+	CocoaBasic_ApplyStandardStyleToPopover			(Popover_Window*,
 													 Boolean);
 
 CGDeviceColor

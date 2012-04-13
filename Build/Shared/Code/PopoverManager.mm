@@ -41,7 +41,7 @@
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
-#import <MAAttachedWindow.h>
+#import <Popover.objc++.h>
 
 
 
@@ -51,7 +51,7 @@
 {
 	PopoverManager_Ref				selfRef;				// identical to address of structure, but typed as ref
 	id< PopoverManager_Delegate >	delegate;				// used to determine dynamic popover information
-	MAAttachedWindow*				containerWindow;		// holds the popover itself (note: is an NSWindow subclass)
+	Popover_Window*					containerWindow;		// holds the popover itself (note: is an NSWindow subclass)
 	NSView*							logicalFirstResponder;	// the view to give initial keyboard focus to, in "display" method
 	PopoverManager_AnimationType	animationType;			// specifies how to open and close the popover window
 	HIWindowRef						parentWindow;			// the window the popover is relative to
@@ -65,7 +65,7 @@ popoverHandlerFromRef:(PopoverManager_Ref)_;
 // designated initializer
 - (id)
 initForCarbonWindow:(HIWindowRef)_
-popover:(MAAttachedWindow*)_
+popover:(Popover_Window*)_
 firstResponder:(NSView*)_
 animationType:(PopoverManager_AnimationType)_
 delegate:(id< PopoverManager_Delegate >)_;
@@ -76,7 +76,7 @@ display;
 - (NSPoint)
 idealAnchorPointForParentWindowFrame:(NSRect)_;
 
-- (MAWindowPosition)
+- (Popover_Properties)
 idealArrowPositionForParentWindowFrame:(NSRect)_;
 
 - (NSSize)
@@ -134,7 +134,7 @@ NOTE:	Cocoa-based parent windows are not yet implemented
 (2.7)
 */
 PopoverManager_Ref
-PopoverManager_New	(MAAttachedWindow*				inPopover,
+PopoverManager_New	(Popover_Window*				inPopover,
 					 NSView*						inLogicalFirstResponder,
 					 id< PopoverManager_Delegate >	inDelegate,
 					 PopoverManager_AnimationType	inAnimation,
@@ -379,7 +379,7 @@ for simplicity in the C-style header file.
 */
 - (id)
 initForCarbonWindow:(HIWindowRef)				aWindow
-popover:(MAAttachedWindow*)						aPopover
+popover:(Popover_Window*)						aPopover
 firstResponder:(NSView*)						aView
 animationType:(PopoverManager_AnimationType)	animationSpec
 delegate:(id< PopoverManager_Delegate >)		anObject
@@ -510,10 +510,10 @@ IMPORTANT:	This must be implemented by the delegate.
 
 (2.7)
 */
-- (MAWindowPosition)
+- (Popover_Properties)
 idealArrowPositionForParentWindowFrame:(NSRect)		parentFrame
 {
-	MAWindowPosition	result = [self->delegate idealArrowPositionForParentWindowFrame:parentFrame];
+	Popover_Properties	result = [self->delegate idealArrowPositionForParentWindowFrame:parentFrame];
 	
 	
 	return result;
@@ -564,10 +564,10 @@ moveToIdealPosition
 {
 	NSRect				parentFrame = [[self parentCocoaWindow] frame];
 	NSPoint				popoverLocation = [self idealAnchorPointForParentWindowFrame:parentFrame];
-	MAWindowPosition	arrowType = [self idealArrowPositionForParentWindowFrame:parentFrame];
+	Popover_Properties	arrowType = [self idealArrowPositionForParentWindowFrame:parentFrame];
 	
 	
-	[self->containerWindow setPoint:popoverLocation side:arrowType];
+	[self->containerWindow setPointWithAutomaticPositioning:popoverLocation preferredSide:arrowType];
 }// moveToIdealPosition
 
 

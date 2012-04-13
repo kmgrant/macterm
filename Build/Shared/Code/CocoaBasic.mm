@@ -41,7 +41,7 @@
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <HIViewWrap.h>
-#import <MAAttachedWindow.h>
+#import <Popover.objc++.h>
 #import <SoundSystem.h>
 
 // application includes
@@ -116,7 +116,7 @@ take up any extra space for an arrow.
 (1.9)
 */
 void
-CocoaBasic_ApplyBlueStyleToPopover	(MAAttachedWindow*	inoutPopover,
+CocoaBasic_ApplyBlueStyleToPopover	(Popover_Window*	inoutPopover,
 									 Boolean			inHasArrow)
 {
 	[inoutPopover setBackgroundColor:[NSColor colorWithDeviceRed:0 green:0.25 blue:0.5 alpha:0.93]];
@@ -127,14 +127,14 @@ CocoaBasic_ApplyBlueStyleToPopover	(MAAttachedWindow*	inoutPopover,
 	if (inHasArrow)
 	{
 		[inoutPopover setHasArrow:YES];
-		[inoutPopover setDrawsRoundCornerBesideArrow:NO];
+		[inoutPopover setHasRoundCornerBesideArrow:NO];
 		[inoutPopover setArrowBaseWidth:30.0];
 		[inoutPopover setArrowHeight:15.0];
 	}
 	else
 	{
 		[inoutPopover setHasArrow:NO];
-		[inoutPopover setDrawsRoundCornerBesideArrow:YES];
+		[inoutPopover setHasRoundCornerBesideArrow:YES];
 		[inoutPopover setArrowBaseWidth:0.0];
 		[inoutPopover setArrowHeight:0.0];
 	}
@@ -154,7 +154,7 @@ take up any extra space for an arrow.
 (1.9)
 */
 void
-CocoaBasic_ApplyStandardStyleToPopover	(MAAttachedWindow*	inoutPopover,
+CocoaBasic_ApplyStandardStyleToPopover	(Popover_Window*	inoutPopover,
 										 Boolean			inHasArrow)
 {
 	[inoutPopover setBackgroundColor:[NSColor colorWithDeviceRed:0.9 green:0.9 blue:0.9 alpha:0.95]];
@@ -165,14 +165,14 @@ CocoaBasic_ApplyStandardStyleToPopover	(MAAttachedWindow*	inoutPopover,
 	if (inHasArrow)
 	{
 		[inoutPopover setHasArrow:YES];
-		[inoutPopover setDrawsRoundCornerBesideArrow:NO];
+		[inoutPopover setHasRoundCornerBesideArrow:NO];
 		[inoutPopover setArrowBaseWidth:30.0];
 		[inoutPopover setArrowHeight:15.0];
 	}
 	else
 	{
 		[inoutPopover setHasArrow:NO];
-		[inoutPopover setDrawsRoundCornerBesideArrow:YES];
+		[inoutPopover setHasRoundCornerBesideArrow:YES];
 		[inoutPopover setArrowBaseWidth:0.0];
 		[inoutPopover setArrowHeight:0.0];
 	}
