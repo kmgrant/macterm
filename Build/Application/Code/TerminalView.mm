@@ -11979,7 +11979,94 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (inTerminalViewPtr->isCocoa)
 	{
 		// Cocoa and Quartz setup
+		CGDeviceColor	backgroundDeviceColor;
+		CGDeviceColor	deviceColor;
+		Boolean			usingDragHighlightColors = (inTerminalViewPtr->screen.currentRenderDragColors);
 		
+		
+		// find the correct colors in the color table
+		getScreenColorsForAttributes(inTerminalViewPtr, inAttributes, &deviceColor, &backgroundDeviceColor,
+										&inTerminalViewPtr->screen.currentRenderNoBackground);
+		
+		// set up foreground color
+		if (usingDragHighlightColors)
+		{
+			// when rendering a drag highlight, use black text
+			CGContextSetRGBStrokeColor(inDrawingContext, 0/* red */, 0/* green */, 0/* blue */, inDesiredAlpha);
+			
+			// ...and allow background (which will be the drag highlight) to show through
+			inTerminalViewPtr->screen.currentRenderNoBackground = true;
+		}
+		else
+		{
+			CGContextSetRGBStrokeColor(inDrawingContext, deviceColor.red, deviceColor.green,
+										deviceColor.blue, 1.0/* alpha */);
+		}
+		
+		// set up background color; note that in drag highlighting mode,
+		// the background color is preset by the highlight renderer
+		if (false == usingDragHighlightColors)
+		{
+			CGContextSetRGBFillColor(inDrawingContext, backgroundDeviceColor.red, backgroundDeviceColor.green,
+										backgroundDeviceColor.blue, 1.0/* alpha */);
+			
+			if (false == inTerminalViewPtr->text.selection.inhibited)
+			{
+				// “darken” the colors if text is selected, but only in the foreground;
+				// in the background, the view renders an outline of the selection, so
+				// selected text should NOT have any special appearance in that case
+				if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
+				{
+					inTerminalViewPtr->screen.currentRenderNoBackground = false;
+					
+					if (gPreferenceProxies.invertSelections)
+					{
+						// use inverted colors - UNIMPLEMENTED
+					}
+					else
+					{
+						// use selection colors - UNIMPLEMENTED
+					}
+				}
+			}
+			
+			// when the screen is inactive, it is dimmed; in addition, any text that is
+			// not selected is FURTHER dimmed so as to emphasize the selection and show
+			// that the selection is in fact a click-through region
+			unless ((inTerminalViewPtr->isActive) || (gPreferenceProxies.dontDimTerminals) ||
+					((false == inTerminalViewPtr->text.selection.inhibited) && STYLE_SELECTED(inAttributes) && !gApplicationIsSuspended))
+			{
+				inTerminalViewPtr->screen.currentRenderNoBackground = false;
+				
+				// dim screen
+				// use inactive colors - UNIMPLEMENTED
+				
+				// for text that is not selected, do an “iPhotoesque” selection where
+				// the selection appears darker than its surrounding text; this also
+				// causes the selection to look dark (appropriate because it is draggable)
+				unless ((!inTerminalViewPtr->text.selection.exists) || (gPreferenceProxies.invertSelections))
+				{
+					// use lighter colors - UNIMPLEMENTED
+				}
+			}
+			
+			// give search results a special appearance
+			if (STYLE_SEARCH_RESULT(inAttributes))
+			{
+				inTerminalViewPtr->screen.currentRenderNoBackground = false;
+				
+				// use selection colors - UNIMPLEMENTED
+				// use lighter colors - UNIMPLEMENTED
+			}
+			
+			// finally, check the foreground and background colors; do not allow
+			// them to be identical unless “concealed” is the style (e.g. perhaps
+			// text is ANSI white and the background is white; that's invisible!)
+			unless (STYLE_CONCEALED(inAttributes))
+			{
+				// UNIMPLEMENTED-
+			}
+		}
 	}
 	else
 	{
@@ -12108,7 +12195,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			// take advantage of the color blending done in the QuickDraw
 			// port for now, and simply “steal” the colors for the CG context
 			{
-				CGDeviceColor		floatRGB;
+				CGDeviceColor	floatRGB;
 				
 				
 				GetForeColor(&colorRGB);
@@ -12455,6 +12542,11 @@ drawRect:(NSRect)	rect
 }// drawRect:
 
 
+/*!
+Returns YES only if the view has no transparent parts.
+
+(4.0)
+*/
 - (BOOL)
 isOpaque
 {
@@ -12833,6 +12925,21 @@ drawRect:(NSRect)	rect
 		// UNIMPLEMENTED
 	}
 }// drawRect:
+
+
+/*!
+Returns YES only if the view’s coordinate system uses
+a top-left origin.
+
+(4.0)
+*/
+- (BOOL)
+isFlipped
+{
+	// since drawing code is originally from Carbon, keep the view
+	// flipped for the time being
+	return YES;
+}// isFlipped
 
 
 /*!
