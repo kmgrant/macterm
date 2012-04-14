@@ -75,6 +75,18 @@ DebugInterface_Display ()
 }// Display
 
 
+/*!
+Shows the experimental new terminal window (Cocoa based).
+
+(4.0)
+*/
+void
+DebugInterface_DisplayTestTerminal ()
+{
+	[[[TerminalWindow_Controller sharedTerminalWindowController] window] makeKeyAndOrderFront:nil];
+}// DisplayTestTerminal
+
+
 #pragma mark Internal Methods
 
 @implementation DebugInterface_PanelController
@@ -237,7 +249,8 @@ terminal view.
 - (IBAction)
 showTestTerminalWindow:(id)		sender
 {
-	[[[TerminalWindow_Controller sharedTerminalWindowController] window] makeKeyAndOrderFront:sender];
+#pragma unused(sender)
+	DebugInterface_DisplayTestTerminal();
 }// showTestTerminalWindow:
 
 
@@ -255,14 +268,20 @@ logsTerminalInputChar
 	return gDebugInterface_LogsTerminalInputChar;
 }
 - (void)
-setLogsTerminalInputChar:(BOOL)		flag
+setLogsTerminalInputChar:(BOOL)		aFlag
 {
-	if (flag != gDebugInterface_LogsTerminalInputChar)
+	if (aFlag != gDebugInterface_LogsTerminalInputChar)
 	{
-		if (flag) Console_WriteLine("started logging of terminal input characters");
-		else Console_WriteLine("stopped logging of terminal input characters");
+		if (aFlag)
+		{
+			Console_WriteLine("started logging of terminal input characters");
+		}
+		else
+		{
+			Console_WriteLine("stopped logging of terminal input characters");
+		}
 		
-		gDebugInterface_LogsTerminalInputChar = flag;
+		gDebugInterface_LogsTerminalInputChar = aFlag;
 	}
 }// setLogsTerminalInputChar:
 
@@ -278,14 +297,20 @@ logsTeletypewriterState
 	return gDebugInterface_LogsDeviceState;
 }
 - (void)
-setLogsTeletypewriterState:(BOOL)		flag
+setLogsTeletypewriterState:(BOOL)	aFlag
 {
-	if (flag != gDebugInterface_LogsDeviceState)
+	if (aFlag != gDebugInterface_LogsDeviceState)
 	{
-		if (flag) Console_WriteLine("started logging of pseudo-terminal device configurations");
-		else Console_WriteLine("stopped logging of pseudo-terminal device configurations");
+		if (aFlag)
+		{
+			Console_WriteLine("started logging of pseudo-terminal device configurations");
+		}
+		else
+		{
+			Console_WriteLine("stopped logging of pseudo-terminal device configurations");
+		}
 		
-		gDebugInterface_LogsDeviceState = flag;
+		gDebugInterface_LogsDeviceState = aFlag;
 	}
 }// setLogsTeletypewriterState:
 
@@ -301,14 +326,20 @@ logsTerminalState
 	return gDebugInterface_LogsTerminalState;
 }
 - (void)
-setLogsTerminalState:(BOOL)		flag
+setLogsTerminalState:(BOOL)		aFlag
 {
-	if (flag != gDebugInterface_LogsTerminalState)
+	if (aFlag != gDebugInterface_LogsTerminalState)
 	{
-		if (flag) Console_WriteLine("started logging of terminal state");
-		else Console_WriteLine("stopped logging of terminal state");
+		if (aFlag)
+		{
+			Console_WriteLine("started logging of terminal state");
+		}
+		else
+		{
+			Console_WriteLine("stopped logging of terminal state");
+		}
 		
-		gDebugInterface_LogsTerminalState = flag;
+		gDebugInterface_LogsTerminalState = aFlag;
 	}
 }// setLogsTerminalState:
 

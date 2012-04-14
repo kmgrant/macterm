@@ -105,6 +105,9 @@ extern Boolean		gDebugInterface_LogsTerminalState;
 void
 	DebugInterface_Display					();
 
+void
+	DebugInterface_DisplayTestTerminal		();
+
 inline Boolean
 	DebugInterface_LogsTerminalInputChar	()
 	{

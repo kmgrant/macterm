@@ -69,6 +69,7 @@
 #include "CommandLine.h"
 #include "Commands.h"
 #include "ContextualMenuBuilder.h"
+#include "DebugInterface.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
 #include "InfoWindow.h"
@@ -281,6 +282,17 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	
 	// set default cursor
 	Cursors_UseArrow();
+	
+	// if requested, automatically show the experimental new terminal window
+	{
+		char const*		varValue = getenv("MACTERM_AUTO_SHOW_COCOA_TERM");
+		
+		
+		if ((nullptr != varValue) && (0 == strcmp(varValue, "1")))
+		{
+			DebugInterface_DisplayTestTerminal();
+		}
+	}
 }// ApplicationStartup
 
 
