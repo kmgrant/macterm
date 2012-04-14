@@ -366,6 +366,7 @@ struct My_TerminalView
 		
 		struct
 		{
+			NSFont*				object;			// font object representing the family, size and metrics (Cocoa terminals)
 			Boolean				isMonospaced;	// whether every character in the font is the same width (expected to be true)
 			Str255				familyName;		// font name (as might appear in a Font menu)
 			CFStringEncoding	encoding;		// encoding actually used by font, which may be different than what the terminal uses!
@@ -3993,6 +3994,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.ref = inScreenDataSource;
 	
 	// miscellaneous settings
+	this->text.font.object = nil; // set later
 	this->text.selection.range.first.first = 0;
 	this->text.selection.range.first.second = 0;
 	this->text.selection.range.second.first = 0;
@@ -5402,6 +5404,14 @@ location appropriate for fitting within the given boundaries.
 If the cursor falls anywhere in the given area and is in a
 visible state, it is drawn automatically.
 
+WARNING:	For Cocoa-based drawing this routine CANNOT be called
+		outside of the content view’s "drawRect:" request.
+		Also, the given context CANNOT be different than the
+		one that is in effect during "drawRect:" because the
+		context may not always be used directly; for instance
+		drawing may occur by locking focus on the content view
+		directly.
+
 Although this function will set up text attributes such as
 font, color, graphics line width, etc., it will NOT set colors.
 The context must already be set up to use the desired stroke
@@ -5433,243 +5443,304 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 					 CFIndex					inCharacterCount,
 					 TerminalTextAttributes		inAttributes)
 {
-	// TEMPORARY: Unicode imaging is not supported yet, so the data
-	// must first be converted into Mac Roman so QuickDraw can use it
-	CFRetainRelease		oldMacRomanBufferCFString(CFStringCreateWithCharacters
-													(kCFAllocatorDefault, inTextBufferPtr, inCharacterCount),
-													true/* is retained */);
-	char const*			oldMacRomanBufferForQuickDraw = CFStringGetCStringPtr(oldMacRomanBufferCFString.returnCFStringRef(),
-																				kCFStringEncodingMacRoman);
-	UInt8*				deletedBufferPtr = nullptr;
-	
-	
-	if (nullptr == oldMacRomanBufferForQuickDraw)
+	if (inTerminalViewPtr->isCocoa)
 	{
-		// TEMPORARY (convert renderer to Unicode!)
-		// not ideal, but if the internal buffer is not a byte array,
-		// it must be copied before it can be interpreted that way
-		deletedBufferPtr = new UInt8[inCharacterCount];
+		// TEMPORARY: allocate (instead of caching) these instances here
+		// to experiment with what is required to draw text correctly;
+		// eventually the text and layout will be handled more efficiently
+		CFRetainRelease		textCFString(CFStringCreateWithCharacters
+											(kCFAllocatorDefault, inTextBufferPtr, inCharacterCount),
+												true/* is retained */);
+		NSTextStorage*		textStorage = [[NSTextStorage alloc]
+											initWithString:(NSString*)textCFString.returnCFStringRef()];
+		NSLayoutManager*	layoutMgr = [[NSLayoutManager alloc] init];
+		NSTextContainer*	container = [[NSTextContainer alloc] init];
 		
-		CFIndex		bytesUsed = 0;
-		CFIndex		conversionResult = CFStringGetBytes(oldMacRomanBufferCFString.returnCFStringRef(), CFRangeMake(0, inCharacterCount),
-														kCFStringEncodingMacRoman, '?'/* loss byte */, false/* is external representation */,
-														deletedBufferPtr, inCharacterCount, &bytesUsed);
-		if (conversionResult > 0)
+		
+		// set up text attributes; this does not necessarily modify the
+		// drawing context, it often sets current-render fields (e.g. font)
+		useTerminalTextAttributes(inTerminalViewPtr, inDrawingContext, inAttributes);
+		
+		// font attributes are set directly on the (attributed) string
+		// of the text storage, not in the graphics context
+		if (nil != inTerminalViewPtr->text.font.object)
 		{
-			oldMacRomanBufferForQuickDraw = REINTERPRET_CAST(deletedBufferPtr, char*);
+			[textStorage addAttribute:NSFontAttributeName value:inTerminalViewPtr->text.font.object
+										range:NSMakeRange(0, [textStorage length])];
+			
+			// TEMPORARY; set the color to a fixed value, but this is not the correct value
+			// (and probably not the correct place to set it)
+			[textStorage addAttribute:NSForegroundColorAttributeName value:[NSColor blackColor]
+										range:NSMakeRange(0, [textStorage length])];
 		}
-	}
-	
-	if (nullptr == oldMacRomanBufferForQuickDraw)
-	{
-		Console_Warning(Console_WriteLine, "failed to render entire range because Mac Roman buffer was not found");
+		
+		// remove the extra pixels inserted by default so that drawing
+		// begins precisely at the specified boundary origin
+		[container setLineFragmentPadding:0.0];
+		[container setContainerSize:NSMakeSize(inBoundaries.size.width, inBoundaries.size.height)];
+		
+		[layoutMgr addTextContainer:container];
+		[layoutMgr setTypesetterBehavior:NSTypesetterBehavior_10_3]; // minimum supported OS version of the project
+		
+		[textStorage addLayoutManager:layoutMgr];
+		
+		// draw the text; this does NOT use the given context but instead
+		// directly locks focus on the content view (one reason why this
+		// routine must ONLY be called via a content-view "drawRect:" request)
+		{
+			NSRange		glyphRange = [layoutMgr glyphRangeForTextContainer:container];
+			
+			
+			[inTerminalViewPtr->contentNSView lockFocus];
+			[layoutMgr drawGlyphsForGlyphRange:glyphRange
+												atPoint:NSMakePoint(inBoundaries.origin.x, inBoundaries.origin.y)];
+			[inTerminalViewPtr->contentNSView unlockFocus];
+		}
+		
+		[container release], container = nil;
+		[layoutMgr release], layoutMgr = nil;
+		[textStorage release], textStorage = nil;
 	}
 	else
 	{
-		// draw all of the text, but scan for sub-sections that could be ANSI graphics
-		SInt16		terminalFontID = 0;
-		SInt16		terminalFontSize = 0;
-		Style		terminalFontStyle = normal;
+		// TEMPORARY: Unicode imaging is not supported yet, so the data
+		// must first be converted into Mac Roman so QuickDraw can use it
+		CFRetainRelease		oldMacRomanBufferCFString(CFStringCreateWithCharacters
+														(kCFAllocatorDefault, inTextBufferPtr, inCharacterCount),
+														true/* is retained */);
+		char const*			oldMacRomanBufferForQuickDraw = CFStringGetCStringPtr(oldMacRomanBufferCFString.returnCFStringRef(),
+																					kCFStringEncodingMacRoman);
+		UInt8*				deletedBufferPtr = nullptr;
 		
 		
-		// for better performance on Mac OS X, make the intended drawing area
-		// part of the QuickDraw port’s dirty region
-		if (inOldQuickDrawBoundaries.bottom >= 0)
+		if (nullptr == oldMacRomanBufferForQuickDraw)
 		{
-			CGrafPtr	currentPort = nullptr;
-			GDHandle	currentDevice = nullptr;
+			// TEMPORARY (convert renderer to Unicode!)
+			// not ideal, but if the internal buffer is not a byte array,
+			// it must be copied before it can be interpreted that way
+			deletedBufferPtr = new UInt8[inCharacterCount];
 			
-			
-			GetGWorld(&currentPort, &currentDevice);
-			(OSStatus)QDAddRectToDirtyRegion(currentPort, &inOldQuickDrawBoundaries);
-		}
-		
-		// set up the specified graphics context (and current QuickDraw port, for
-		// legacy calls); the colors should already be set by the caller, but
-		// this will add proper settings for font, style, etc. and set internal
-		// flags that determine whether or not to use double-width and graphics
-		useTerminalTextAttributes(inTerminalViewPtr, inDrawingContext, inAttributes);
-		
-		// get current font information (used to determine what the text should
-		// look like - including “pseudo-font” and “pseudo-font-size” values
-		// indicating VT graphics or double-width text, etc.
-		{
-			CGrafPtr	currentPort = nullptr;
-			GDHandle	currentDevice = nullptr;
-			
-			
-			GetGWorld(&currentPort, &currentDevice);
-			terminalFontID = GetPortTextFont(currentPort);
-			terminalFontSize = GetPortTextSize(currentPort);
-			terminalFontStyle = GetPortTextFace(currentPort);
-		}
-		
-		// position pen at start of text, on font baseline
-		MoveTo(inOldQuickDrawBoundaries.left,
-				inOldQuickDrawBoundaries.top +
-					(STYLE_IS_DOUBLE_HEIGHT_BOTTOM(inAttributes)
-													? inTerminalViewPtr->text.font.doubleMetrics.ascent
-													: inTerminalViewPtr->text.font.normalMetrics.ascent));
-		
-		// if bold or large text or graphics are being drawn, do it one character
-		// at a time; bold fonts typically increase the font spacing, and double-
-		// sized text needs to occupy twice the normal font spacing, so a regular
-		// DrawText() won’t work; instead, each character must be drawn
-		// individually, allowing MacTerm to correct the pen location after
-		// each character *as if* a normal character were just rendered (this
-		// ensures that everything remains aligned with text in the same column)
-		if (terminalFontSize == kArbitraryDoubleWidthDoubleHeightPseudoFontSize)
-		{
-			// top half of double-sized text; this is not rendered, but the pen should move double the distance anyway
-			Move(inCharacterCount * INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter), 0);
-		}
-		else if (terminalFontSize == inTerminalViewPtr->text.font.doubleMetrics.size)
-		{
-			// bottom half of double-sized text; force the text to use
-			// twice the normal font metrics
-			register SInt16		i = 0;
-			Point				oldPen;
-			
-			
-			for (i = 0; i < inCharacterCount; ++i)
+			CFIndex		bytesUsed = 0;
+			CFIndex		conversionResult = CFStringGetBytes(oldMacRomanBufferCFString.returnCFStringRef(), CFRangeMake(0, inCharacterCount),
+															kCFStringEncodingMacRoman, '?'/* loss byte */, false/* is external representation */,
+															deletedBufferPtr, inCharacterCount, &bytesUsed);
+			if (conversionResult > 0)
 			{
-				GetPen(&oldPen);
-				if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
-				{
-					// draw a graphics character
-					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i],
-										oldMacRomanBufferForQuickDraw[i], true/* is double width */);
-				}
-				else
-				{
-					// draw a normal character
-					DrawText(oldMacRomanBufferForQuickDraw, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
-				}
-				
-				MoveTo(oldPen.h + INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter), oldPen.v);
+				oldMacRomanBufferForQuickDraw = REINTERPRET_CAST(deletedBufferPtr, char*);
 			}
 		}
-		else if ((terminalFontStyle & bold) || (terminalFontID == kArbitraryVTGraphicsPseudoFontID) ||
-					(false == inTerminalViewPtr->text.font.isMonospaced) ||
-					(1.0 != inTerminalViewPtr->text.font.scaleWidthPerCharacter))
+		
+		if (nullptr == oldMacRomanBufferForQuickDraw)
 		{
-			// proportional font, or bold, or otherwise non-standard width; force the text
-			// to draw one character at a time so that the character offset can be corrected
-			register SInt16		i = 0;
-			Point				oldPen;
-			char				previousChar = '\0'; // aids heuristic algorithm; certain letter combinations may demand different offsets
-			
-			
-			for (i = 0; i < inCharacterCount; ++i)
-			{
-				char const	thisChar = *(oldMacRomanBufferForQuickDraw + i);
-				SInt16		offset = 0;
-				
-				
-				if (false == inTerminalViewPtr->text.font.isMonospaced)
-				{
-					// the following is completely arbitrary, a heuristic; in an attempt to make
-					// font display nicer when proportional fonts are shoehorned into monospace
-					// layout, ASSUME that certain characters will TEND to be an unusual size,
-					// and nudge them a bit to center them in the fixed-size cell that they use
-					// (note: these are pixel-based instead of being proportional to the width,
-					// so at small or very large font sizes they won’t really work as intended)
-					switch (thisChar)
-					{
-					case ':':
-					case ';':
-					case '.':
-					case ',':
-					case '-':
-					case '"':
-					case '\'':
-					case '/':
-					case '\\':
-						++offset;
-						break;
-					case 'c':
-					case 'e':
-					case 'r':
-					case 's':
-					case 't':
-						++offset;
-						if (std::isupper(previousChar))
-						{
-							++offset;
-						}
-						break;
-					case 'i':
-					case 'l':
-					case '[':
-					case '{':
-					case '(':
-						offset += 2;
-						break;
-					case 'I':
-						offset += 3;
-						break;
-					case 'C':
-					case 'O':
-					case 'T':
-						if (false == std::isupper(previousChar))
-						{
-							--offset;
-						}
-						break;
-					case 'Q':
-					case 'U':
-						if (false == std::isupper(previousChar))
-						{
-							offset -= 2;
-						}
-						break;
-					case 'w':
-						offset -= 2;
-						break;
-					case 'm':
-					case 'M':
-					case 'W':
-						offset -= 3;
-						break;
-					default:
-						break;
-					}
-				}
-				
-				GetPen(&oldPen);
-				if (offset != 0)
-				{
-					MoveTo(oldPen.h + offset, oldPen.v);
-				}
-				if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
-				{
-					// draw a graphics character
-					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i],
-										oldMacRomanBufferForQuickDraw[i], false/* is double width */);
-				}
-				else
-				{
-					// draw a normal character
-					DrawText(oldMacRomanBufferForQuickDraw, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
-				}
-				MoveTo(oldPen.h + inTerminalViewPtr->text.font.widthPerCharacter, oldPen.v);
-				
-				previousChar = thisChar;
-			}
+			Console_Warning(Console_WriteLine, "failed to render entire range because Mac Roman buffer was not found");
 		}
 		else
 		{
-			// *completely* normal text (no special style, size, or character set); this is probably
-			// fastest if rendered all at once using a single QuickDraw call, and since there are no
-			// forced font metrics with normal text, this can be a lot simpler (this is also almost
-			// certainly the common case, so it’s good if this is as efficient as possible)
-			DrawText(oldMacRomanBufferForQuickDraw, 0/* offset */, inCharacterCount); // draw text using current font, size, color, etc.
+			// draw all of the text, but scan for sub-sections that could be ANSI graphics
+			SInt16		terminalFontID = 0;
+			SInt16		terminalFontSize = 0;
+			Style		terminalFontStyle = normal;
+			
+			
+			// for better performance on Mac OS X, make the intended drawing area
+			// part of the QuickDraw port’s dirty region
+			if (inOldQuickDrawBoundaries.bottom >= 0)
+			{
+				CGrafPtr	currentPort = nullptr;
+				GDHandle	currentDevice = nullptr;
+				
+				
+				GetGWorld(&currentPort, &currentDevice);
+				(OSStatus)QDAddRectToDirtyRegion(currentPort, &inOldQuickDrawBoundaries);
+			}
+			
+			// set up the specified graphics context (and current QuickDraw port, for
+			// legacy calls); the colors should already be set by the caller, but
+			// this will add proper settings for font, style, etc. and set internal
+			// flags that determine whether or not to use double-width and graphics
+			useTerminalTextAttributes(inTerminalViewPtr, inDrawingContext, inAttributes);
+			
+			// get current font information (used to determine what the text should
+			// look like - including “pseudo-font” and “pseudo-font-size” values
+			// indicating VT graphics or double-width text, etc.
+			{
+				CGrafPtr	currentPort = nullptr;
+				GDHandle	currentDevice = nullptr;
+				
+				
+				GetGWorld(&currentPort, &currentDevice);
+				terminalFontID = GetPortTextFont(currentPort);
+				terminalFontSize = GetPortTextSize(currentPort);
+				terminalFontStyle = GetPortTextFace(currentPort);
+			}
+			
+			// position pen at start of text, on font baseline
+			MoveTo(inOldQuickDrawBoundaries.left,
+					inOldQuickDrawBoundaries.top +
+						(STYLE_IS_DOUBLE_HEIGHT_BOTTOM(inAttributes)
+														? inTerminalViewPtr->text.font.doubleMetrics.ascent
+														: inTerminalViewPtr->text.font.normalMetrics.ascent));
+			
+			// if bold or large text or graphics are being drawn, do it one character
+			// at a time; bold fonts typically increase the font spacing, and double-
+			// sized text needs to occupy twice the normal font spacing, so a regular
+			// DrawText() won’t work; instead, each character must be drawn
+			// individually, allowing MacTerm to correct the pen location after
+			// each character *as if* a normal character were just rendered (this
+			// ensures that everything remains aligned with text in the same column)
+			if (terminalFontSize == kArbitraryDoubleWidthDoubleHeightPseudoFontSize)
+			{
+				// top half of double-sized text; this is not rendered, but the pen should move double the distance anyway
+				Move(inCharacterCount * INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter), 0);
+			}
+			else if (terminalFontSize == inTerminalViewPtr->text.font.doubleMetrics.size)
+			{
+				// bottom half of double-sized text; force the text to use
+				// twice the normal font metrics
+				register SInt16		i = 0;
+				Point				oldPen;
+				
+				
+				for (i = 0; i < inCharacterCount; ++i)
+				{
+					GetPen(&oldPen);
+					if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
+					{
+						// draw a graphics character
+						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i],
+											oldMacRomanBufferForQuickDraw[i], true/* is double width */);
+					}
+					else
+					{
+						// draw a normal character
+						DrawText(oldMacRomanBufferForQuickDraw, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
+					}
+					
+					MoveTo(oldPen.h + INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter), oldPen.v);
+				}
+			}
+			else if ((terminalFontStyle & bold) || (terminalFontID == kArbitraryVTGraphicsPseudoFontID) ||
+						(false == inTerminalViewPtr->text.font.isMonospaced) ||
+						(1.0 != inTerminalViewPtr->text.font.scaleWidthPerCharacter))
+			{
+				// proportional font, or bold, or otherwise non-standard width; force the text
+				// to draw one character at a time so that the character offset can be corrected
+				register SInt16		i = 0;
+				Point				oldPen;
+				char				previousChar = '\0'; // aids heuristic algorithm; certain letter combinations may demand different offsets
+				
+				
+				for (i = 0; i < inCharacterCount; ++i)
+				{
+					char const	thisChar = *(oldMacRomanBufferForQuickDraw + i);
+					SInt16		offset = 0;
+					
+					
+					if (false == inTerminalViewPtr->text.font.isMonospaced)
+					{
+						// the following is completely arbitrary, a heuristic; in an attempt to make
+						// font display nicer when proportional fonts are shoehorned into monospace
+						// layout, ASSUME that certain characters will TEND to be an unusual size,
+						// and nudge them a bit to center them in the fixed-size cell that they use
+						// (note: these are pixel-based instead of being proportional to the width,
+						// so at small or very large font sizes they won’t really work as intended)
+						switch (thisChar)
+						{
+						case ':':
+						case ';':
+						case '.':
+						case ',':
+						case '-':
+						case '"':
+						case '\'':
+						case '/':
+						case '\\':
+							++offset;
+							break;
+						case 'c':
+						case 'e':
+						case 'r':
+						case 's':
+						case 't':
+							++offset;
+							if (std::isupper(previousChar))
+							{
+								++offset;
+							}
+							break;
+						case 'i':
+						case 'l':
+						case '[':
+						case '{':
+						case '(':
+							offset += 2;
+							break;
+						case 'I':
+							offset += 3;
+							break;
+						case 'C':
+						case 'O':
+						case 'T':
+							if (false == std::isupper(previousChar))
+							{
+								--offset;
+							}
+							break;
+						case 'Q':
+						case 'U':
+							if (false == std::isupper(previousChar))
+							{
+								offset -= 2;
+							}
+							break;
+						case 'w':
+							offset -= 2;
+							break;
+						case 'm':
+						case 'M':
+						case 'W':
+							offset -= 3;
+							break;
+						default:
+							break;
+						}
+					}
+					
+					GetPen(&oldPen);
+					if (offset != 0)
+					{
+						MoveTo(oldPen.h + offset, oldPen.v);
+					}
+					if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
+					{
+						// draw a graphics character
+						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i],
+											oldMacRomanBufferForQuickDraw[i], false/* is double width */);
+					}
+					else
+					{
+						// draw a normal character
+						DrawText(oldMacRomanBufferForQuickDraw, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
+					}
+					MoveTo(oldPen.h + inTerminalViewPtr->text.font.widthPerCharacter, oldPen.v);
+					
+					previousChar = thisChar;
+				}
+			}
+			else
+			{
+				// *completely* normal text (no special style, size, or character set); this is probably
+				// fastest if rendered all at once using a single QuickDraw call, and since there are no
+				// forced font metrics with normal text, this can be a lot simpler (this is also almost
+				// certainly the common case, so it’s good if this is as efficient as possible)
+				DrawText(oldMacRomanBufferForQuickDraw, 0/* offset */, inCharacterCount); // draw text using current font, size, color, etc.
+			}
 		}
-	}
-	
-	if (nullptr != deletedBufferPtr)
-	{
-		delete [] deletedBufferPtr, deletedBufferPtr = nullptr;
+		
+		if (nullptr != deletedBufferPtr)
+		{
+			delete [] deletedBufferPtr, deletedBufferPtr = nullptr;
+		}
 	}
 }// drawTerminalText
 
@@ -11101,40 +11172,53 @@ The screen is not redrawn.
 (3.0)
 */
 void
-setFontAndSize		(My_TerminalViewPtr		inViewPtr,
+setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 					 ConstStringPtr			inFontFamilyNameOrNull,
 					 UInt16					inFontSizeOrZero,
 					 Float32				inCharacterWidthScalingOrZero,
 					 Boolean				inNotifyListeners)
 {
+	if (inTerminalViewPtr->isCocoa)
+	{
+		// TEMPORARY; should start storing font name as a CFStringRef
+		CFRetainRelease		fontNameCFString(CFStringCreateWithPascalString
+												(kCFAllocatorDefault, inFontFamilyNameOrNull,
+													kCFStringEncodingMacRoman),
+												true/* is retained */);
+		
+		
+		inTerminalViewPtr->text.font.object =
+			[NSFont fontWithName:(NSString*)fontNameCFString.returnCFStringRef() size:inFontSizeOrZero];
+	}
+	
 	if (inFontFamilyNameOrNull != nullptr)
 	{
 		// remember font selection
-		PLstrcpy(inViewPtr->text.font.familyName, inFontFamilyNameOrNull);
+		PLstrcpy(inTerminalViewPtr->text.font.familyName, inFontFamilyNameOrNull);
 	}
 	
 	if (inFontSizeOrZero > 0)
 	{
-		inViewPtr->text.font.normalMetrics.size = inFontSizeOrZero;
+		inTerminalViewPtr->text.font.normalMetrics.size = inFontSizeOrZero;
 	}
 	
 	if (inCharacterWidthScalingOrZero > 0)
 	{
-		inViewPtr->text.font.scaleWidthPerCharacter = inCharacterWidthScalingOrZero;
+		inTerminalViewPtr->text.font.scaleWidthPerCharacter = inCharacterWidthScalingOrZero;
 	}
 	
 	// determine the encoding supported by the font
 	{
 		TextEncoding	encoding = kTextEncodingMacRoman;
-		OSStatus		error = Localization_GetFontTextEncoding(inViewPtr->text.font.familyName, &encoding);
+		OSStatus		error = Localization_GetFontTextEncoding(inTerminalViewPtr->text.font.familyName, &encoding);
 		
 		
 		if (noErr != error)
 		{
 			Console_Warning(Console_WriteValuePString, "unable to determine encoding used by font",
-							inViewPtr->text.font.familyName);
+							inTerminalViewPtr->text.font.familyName);
 		}
-		inViewPtr->text.font.encoding = encoding; // TextEncoding is compatible with CFStringEncoding
+		inTerminalViewPtr->text.font.encoding = encoding; // TextEncoding is compatible with CFStringEncoding
 	}
 	
 	// set the font metrics (including double size)
@@ -11145,12 +11229,12 @@ setFontAndSize		(My_TerminalViewPtr		inViewPtr,
 		
 		
 		GetGWorld(&oldPort, &oldDevice);
-		setPortScreenPort(inViewPtr);
+		setPortScreenPort(inTerminalViewPtr);
 		Localization_PreservePortFontState(&fontState);
-		TextFontByName(inViewPtr->text.font.familyName);
-		TextSize(inViewPtr->text.font.normalMetrics.size);
+		TextFontByName(inTerminalViewPtr->text.font.familyName);
+		TextSize(inTerminalViewPtr->text.font.normalMetrics.size);
 		
-		setUpScreenFontMetrics(inViewPtr);
+		setUpScreenFontMetrics(inTerminalViewPtr);
 		
 		Localization_RestorePortFontState(&fontState);
 		SetGWorld(oldPort, oldDevice);
@@ -11163,17 +11247,19 @@ setFontAndSize		(My_TerminalViewPtr		inViewPtr,
 		UInt16				cursorY = 0;
 		
 		
-		getCursorLocationError = Terminal_CursorGetLocation(inViewPtr->screen.ref, &cursorX, &cursorY);
-		setUpCursorBounds(inViewPtr, cursorX, cursorY, &inViewPtr->screen.cursor.bounds, inViewPtr->screen.cursor.boundsAsRegion);
+		getCursorLocationError = Terminal_CursorGetLocation(inTerminalViewPtr->screen.ref, &cursorX, &cursorY);
+		setUpCursorBounds(inTerminalViewPtr, cursorX, cursorY, &inTerminalViewPtr->screen.cursor.bounds,
+							inTerminalViewPtr->screen.cursor.boundsAsRegion);
 	}
 	
 	// resize window to preserve its dimensions in character cell units
-	recalculateCachedDimensions(inViewPtr);
+	recalculateCachedDimensions(inTerminalViewPtr);
 	
 	if (inNotifyListeners)
 	{
 		// notify listeners that the size has changed
-		eventNotifyForView(inViewPtr, kTerminalView_EventFontSizeChanged, inViewPtr->selfRef/* context */);
+		eventNotifyForView(inTerminalViewPtr, kTerminalView_EventFontSizeChanged,
+							inTerminalViewPtr->selfRef/* context */);
 	}
 }// setFontAndSize
 
@@ -11525,35 +11611,60 @@ is currently being drawn) and use the default font.
 void
 setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	FontInfo	fontInfo;
-	
-	
-	GetFontInfo(&fontInfo);
-	inTerminalViewPtr->text.font.normalMetrics.ascent = fontInfo.ascent;
-	inTerminalViewPtr->text.font.heightPerCharacter = fontInfo.ascent + fontInfo.descent + fontInfo.leading;
-	inTerminalViewPtr->text.font.isMonospaced = isMonospacedFont
-												(FMGetFontFamilyFromName(inTerminalViewPtr->text.font.familyName));
-	
-	// Set the width per character; for monospaced fonts one can simply
-	// use the width of any character in the set, but for proportional
-	// fonts the question is more difficult to answer.  For one thing,
-	// should the widest character in the font be used?  Technically yes
-	// to ensure enough room to display any text, but in practice this
-	// makes everything look really spaced out.  Another consideration
-	// is the script system: not all fonts are Roman, so one cannot just
-	// pick an arbitrary character because it could map to an unexpected
-	// glyph in the font and be a different width than expected.
-	//
-	// For reasonable speed and decent spacing, proportional fonts use
-	// the width of the widest character in the font, minus an arbitrary
-	// amount proportional to the font size.
-	if (inTerminalViewPtr->text.font.isMonospaced)
+	if (inTerminalViewPtr->isCocoa)
 	{
-		inTerminalViewPtr->text.font.widthPerCharacter = CharWidth('A');
+		NSFont* const	sourceFont = [inTerminalViewPtr->text.font.object screenFont];
+		
+		
+		// TEMPORARY; eventually store floating-point values instead of casting
+		inTerminalViewPtr->text.font.normalMetrics.ascent = STATIC_CAST([sourceFont ascender], SInt16);
+		inTerminalViewPtr->text.font.heightPerCharacter = STATIC_CAST([sourceFont defaultLineHeightForFont], SInt16);
+		inTerminalViewPtr->text.font.isMonospaced = (YES == [sourceFont isFixedPitch]);
+		
+		// Set the width per character.
+		if (inTerminalViewPtr->text.font.isMonospaced)
+		{
+			inTerminalViewPtr->text.font.widthPerCharacter = STATIC_CAST([sourceFont maximumAdvancement].width, SInt16);
+		}
+		else
+		{
+			inTerminalViewPtr->text.font.widthPerCharacter = STATIC_CAST([sourceFont advancementForGlyph:
+																					[sourceFont glyphWithName:@"A"]].width,
+																			SInt16);
+		}
 	}
 	else
 	{
-		inTerminalViewPtr->text.font.widthPerCharacter = fontInfo.widMax;
+		FontInfo	fontInfo;
+		
+		
+		GetFontInfo(&fontInfo);
+		inTerminalViewPtr->text.font.normalMetrics.ascent = fontInfo.ascent;
+		inTerminalViewPtr->text.font.heightPerCharacter = fontInfo.ascent + fontInfo.descent + fontInfo.leading;
+		inTerminalViewPtr->text.font.isMonospaced = isMonospacedFont
+													(FMGetFontFamilyFromName(inTerminalViewPtr->text.font.familyName));
+		
+		// Set the width per character; for monospaced fonts one can simply
+		// use the width of any character in the set, but for proportional
+		// fonts the question is more difficult to answer.  For one thing,
+		// should the widest character in the font be used?  Technically yes
+		// to ensure enough room to display any text, but in practice this
+		// makes everything look really spaced out.  Another consideration
+		// is the script system: not all fonts are Roman, so one cannot just
+		// pick an arbitrary character because it could map to an unexpected
+		// glyph in the font and be a different width than expected.
+		//
+		// For reasonable speed and decent spacing, proportional fonts use
+		// the width of the widest character in the font, minus an arbitrary
+		// amount proportional to the font size.
+		if (inTerminalViewPtr->text.font.isMonospaced)
+		{
+			inTerminalViewPtr->text.font.widthPerCharacter = CharWidth('A');
+		}
+		else
+		{
+			inTerminalViewPtr->text.font.widthPerCharacter = fontInfo.widMax;
+		}
 	}
 	
 	// scale the font width according to user preferences
@@ -12246,15 +12357,37 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 	if ((inTerminalViewPtr->text.attributes == kInvalidTerminalTextAttributes) ||
 			(inTerminalViewPtr->text.attributes != inAttributes))
 	{
+		Float32		fontSize = 0.0;
+		
+		
+		// set text size, examining “double size” bits
+		// NOTE: there’s no real reason this should have to be checked
+		//       here, EVERY time text is rendered; it could eventually
+		//       be set somewhere else, e.g. whenever the attribute bits
+		//       or font size change, a rendering size could be updated
+		if (STYLE_IS_DOUBLE_HEIGHT_TOP(inAttributes))
+		{
+			// top half - do not render
+			fontSize = kArbitraryDoubleWidthDoubleHeightPseudoFontSize;
+		}
+		else if (STYLE_IS_DOUBLE_HEIGHT_BOTTOM(inAttributes))
+		{
+			// bottom half - double size
+			fontSize = inTerminalViewPtr->text.font.doubleMetrics.size;
+		}
+		else
+		{
+			// normal size
+			fontSize = inTerminalViewPtr->text.font.normalMetrics.size;
+		}
+		
 		inTerminalViewPtr->text.attributes = inAttributes;
 		
 		if (inTerminalViewPtr->isCocoa)
 		{
-			// Cocoa and Quartz setup
-			
-			// set terminal font - UNIMPLEMENTED
-			
-			// set text size, examining “double size” bits - UNIMPLEMENTED
+			// Cocoa and Quartz setup; note that the font and size
+			// are retrieved from the stored NSFont object and not
+			// set on the drawing context or any other temporary object
 			
 			// set font style - UNIMPLEMENTED
 			
@@ -12285,26 +12418,8 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 			if (STYLE_USE_VT_GRAPHICS(inAttributes)) TextFont(kArbitraryVTGraphicsPseudoFontID);
 			else TextFontByName(inTerminalViewPtr->text.font.familyName);
 			
-			// set text size, examining “double size” bits
-			// NOTE: there’s no real reason this should have to be checked
-			//       here, EVERY time text is rendered; it could eventually
-			//       be set somewhere else, e.g. whenever the attribute bits
-			//       or font size change, a rendering size could be updated
-			if (STYLE_IS_DOUBLE_HEIGHT_TOP(inAttributes))
-			{
-				// top half - do not render
-				TextSize(kArbitraryDoubleWidthDoubleHeightPseudoFontSize);
-			}
-			else if (STYLE_IS_DOUBLE_HEIGHT_BOTTOM(inAttributes))
-			{
-				// bottom half - double size
-				TextSize(inTerminalViewPtr->text.font.doubleMetrics.size);
-			}
-			else
-			{
-				// normal size
-				TextSize(inTerminalViewPtr->text.font.normalMetrics.size);
-			}
+			// set text size...
+			TextSize(fontSize);
 			
 			// set font style...
 			TextFace(normal);
@@ -12319,8 +12434,7 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 			// 3.0 - for a sufficiently large font, allow boldface
 			if (STYLE_BOLD(inAttributes) || STYLE_SEARCH_RESULT(inAttributes))
 			{
-				SInt16		fontSize = GetPortTextSize(currentPort);
-				Style		fontFace = GetPortTextFace(currentPort);
+				Style	fontFace = GetPortTextFace(currentPort);
 				
 				
 				if (fontSize > 8) // arbitrary (should this be a user preference?)
@@ -12336,8 +12450,7 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 			// 3.0 - for a sufficiently large font, allow italicizing
 			if (STYLE_ITALIC(inAttributes))
 			{
-				SInt16		fontSize = GetPortTextSize(currentPort);
-				Style		fontFace = GetPortTextFace(currentPort);
+				Style	fontFace = GetPortTextFace(currentPort);
 				
 				
 				if (fontSize > 12/* arbitrary (should this be a user preference?) */)
@@ -12354,8 +12467,7 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 			// 3.0 - for a sufficiently large font, allow underlining
 			if (STYLE_UNDERLINE(inAttributes) || STYLE_SEARCH_RESULT(inAttributes))
 			{
-				SInt16		fontSize = GetPortTextSize(currentPort);
-				Style		fontFace = GetPortTextFace(currentPort);
+				Style	fontFace = GetPortTextFace(currentPort);
 				
 				
 				if (fontSize > 8/* arbitrary (should this be a user preference?) */)
