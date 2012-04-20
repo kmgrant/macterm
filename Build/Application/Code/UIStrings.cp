@@ -1134,11 +1134,10 @@ UIStrings_Copy	(UIStrings_HelpSystemCFString	inWhichString,
 
 
 /*!
-Locates the specified string used by the Preferences
-window and returns a reference to a Core Foundation
-string.  Since a copy is made, you must call
-CFRelease() on the returned string when you are
-finished with it.
+Locates the specified string used by Preferences-related interfaces
+(not in any one preferences panel) and returns a reference to a Core
+Foundation string.  Since a copy is made, you must call CFRelease()
+on the returned string when you are finished with it.
 
 \retval kUIStrings_ResultOK
 if the string is copied successfully
@@ -1185,41 +1184,6 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 													CFSTR("kUIStrings_PreferencesWindowDefaultFavoriteName"));
 		break;
 	
-	case kUIStrings_PreferencesWindowFavoritesDuplicateButtonName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Duplicate"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowFavoritesDuplicateButtonName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowFavoritesDuplicateNameTemplate:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("%1$@ copy"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowFavoritesDuplicateNameTemplate; %1$@ will be the old item name"));
-		break;
-	
-	case kUIStrings_PreferencesWindowFavoritesEditButtonName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Edit..."), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowFavoritesEditButtonName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowFavoritesNewButtonName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("New..."), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowFavoritesNewButtonName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowFavoritesNewGroupButtonName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("New Group..."), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowFavoritesNewGroupButtonName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowFavoritesRemoveButtonName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Remove"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowFavoritesRemoveButtonName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowFavoritesCannotRemoveDefault:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Sorry, you cannot remove the default item in this list."), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowFavoritesCannotRemoveDefault"));
-		break;
-	
 	case kUIStrings_PreferencesWindowFavoritesRemoveWarning:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Remove item \"%1$@\" from the list?"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowFavoritesRemoveWarning; %1$@ will be a Favorite name from the list"));
@@ -1230,179 +1194,14 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 													CFSTR("kUIStrings_PreferencesWindowFavoritesRemoveWarningHelpText"));
 		break;
 	
-	case kUIStrings_PreferencesWindowFormatsCategoryName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Formats"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowFormatsCategoryName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowFormatsNormalTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Normal"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowFormatsNormalTabName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowFormatsANSIColorsTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("ANSI Colors"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowFormatsANSIColorsTabName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowGeneralCategoryName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("General"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowGeneralCategoryName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowGeneralNotificationTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Notification"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowGeneralNotificationTabName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowGeneralOptionsTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Options"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowGeneralOptionsTabName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowGeneralSpecialTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Special"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowGeneralSpecialTabName"));
-		break;
-	
 	case kUIStrings_PreferencesWindowIconName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Preferences"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowIconName"));
 		break;
 	
-	case kUIStrings_PreferencesWindowKioskCategoryName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Full Screen"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowKioskCategoryName"));
-		break;
-	
 	case kUIStrings_PreferencesWindowListHeaderNumber:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("#"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesListHeaderNumber"));
-		break;
-	
-	case kUIStrings_PreferencesWindowMacrosCategoryName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Macros"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowMacrosCategoryName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowMacrosListHeaderName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Macro Name"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowMacrosListHeaderName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowScriptsCategoryName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Scripts"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowScriptsCategoryName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowScriptsListHeaderEvent:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Event"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowScriptsListHeaderEvent"));
-		break;
-	
-	case kUIStrings_PreferencesWindowScriptsListHeaderScriptToRun:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Script To Run"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowScriptsListHeaderScriptToRun"));
-		break;
-	
-	case kUIStrings_PreferencesWindowSessionsCategoryName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Sessions"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowSessionsCategoryName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowSessionsDataFlowTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Data Flow"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowSessionsDataFlowTabName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowSessionsGraphicsTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Graphics"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowSessionsVectorGraphicsTabName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowSessionsKeyboardTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Keyboard"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowSessionsControlKeysTabName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowSessionsResourceTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Resource"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowSessionsHostTabName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTerminalsCategoryName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Terminals"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTerminalsCategoryName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTerminalsEmulationTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Emulation"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTerminalsEmulationTabName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTerminalsVT100FixLineWrapBug:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("VT100 Fix Line Wrapping Bug"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTerminalsVT100FixLineWrapBug"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTerminalsXTerm256ColorsEnabled:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm 256 Colors"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTerminalsXTerm256ColorsEnabled"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTerminalsXTermBackColorErase:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Background Color Erase"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTerminalsXTermBackColorErase"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTerminalsXTermColorEnabled:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Color"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTerminalsXTermColorEnabled"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTerminalsXTermGraphicsEnabled:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Graphics Characters"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTerminalsXTermGraphicsEnabled"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTerminalsXTermWindowAltEnabled:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Window Alteration"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTerminalsXTermWindowAltEnabled"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTerminalsListHeaderTweakName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Terminal Feature"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTerminalsListHeaderTweakName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTerminalsOptionsTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Options"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTerminalsOptionsTabName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTerminalsScreenTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Screen"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTerminalsScreenTabName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTranslationsCategoryName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Translations"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTranslationsCategoryName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Available Encodings"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable"));
-		break;
-	
-	case kUIStrings_PreferencesWindowWorkspacesCategoryName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Workspaces"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowWorkspacesCategoryName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowWindowsListHeaderName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Window Name"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowWindowsListHeaderName"));
 		break;
 	
 	default:
@@ -1412,6 +1211,476 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 	}
 	return result;
 }// Copy (preferences window strings)
+
+
+/*!
+Locates the specified string used by the Formats panel of the
+Preferences window and returns a reference to a Core Foundation
+string.  Since a copy is made, you must call CFRelease() on the
+returned string when you are finished with it.
+
+\retval kUIStrings_ResultOK
+if the string is copied successfully
+
+\retval kUIStrings_ResultNoSuchString
+if the given tag is invalid
+
+\retval kUIStrings_ResultCannotGetString
+if an OS error occurred
+
+(4.0)
+*/
+UIStrings_Result
+UIStrings_Copy	(UIStrings_PrefPanelFormatsCFString		inWhichString,
+				 CFStringRef&							outString)
+{
+	UIStrings_Result	result = kUIStrings_ResultOK;
+	
+	
+	// IMPORTANT: The external utility program "genstrings" is not smart enough to
+	//            figure out the proper string table name if you do not inline it.
+	//            If you replace the CFSTR() calls with string constants, they will
+	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            automatically generate localizable ".strings" files.
+	switch (inWhichString)
+	{
+	case kUIStrings_PrefPanelFormatsCategoryName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Formats"), CFSTR("PrefPanelFormats"),
+													CFSTR("kUIStrings_PrefPanelFormatsCategoryName"));
+		break;
+	
+	case kUIStrings_PrefPanelFormatsNormalTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Normal"), CFSTR("PrefPanelFormats"),
+													CFSTR("kUIStrings_PrefPanelFormatsNormalTabName"));
+		break;
+	
+	case kUIStrings_PrefPanelFormatsANSIColorsTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("ANSI Colors"), CFSTR("PrefPanelFormats"),
+													CFSTR("kUIStrings_PrefPanelFormatsANSIColorsTabName"));
+		break;
+	
+	default:
+		// ???
+		result = kUIStrings_ResultNoSuchString;
+		break;
+	}
+	return result;
+}// Copy (Formats preferences panel strings)
+
+
+/*!
+Locates the specified string used by the Full Screen panel of the
+Preferences window and returns a reference to a Core Foundation
+string.  Since a copy is made, you must call CFRelease() on the
+returned string when you are finished with it.
+
+\retval kUIStrings_ResultOK
+if the string is copied successfully
+
+\retval kUIStrings_ResultNoSuchString
+if the given tag is invalid
+
+\retval kUIStrings_ResultCannotGetString
+if an OS error occurred
+
+(4.0)
+*/
+UIStrings_Result
+UIStrings_Copy	(UIStrings_PrefPanelFullScreenCFString	inWhichString,
+				 CFStringRef&							outString)
+{
+	UIStrings_Result	result = kUIStrings_ResultOK;
+	
+	
+	// IMPORTANT: The external utility program "genstrings" is not smart enough to
+	//            figure out the proper string table name if you do not inline it.
+	//            If you replace the CFSTR() calls with string constants, they will
+	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            automatically generate localizable ".strings" files.
+	switch (inWhichString)
+	{
+	case kUIStrings_PrefPanelFullScreenCategoryName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Full Screen"), CFSTR("PrefPanelFullScreen"),
+													CFSTR("kUIStrings_PrefPanelFullScreenCategoryName"));
+		break;
+	
+	default:
+		// ???
+		result = kUIStrings_ResultNoSuchString;
+		break;
+	}
+	return result;
+}// Copy (Full Screen preferences panel strings)
+
+
+/*!
+Locates the specified string used by the General panel of the
+Preferences window and returns a reference to a Core Foundation
+string.  Since a copy is made, you must call CFRelease() on the
+returned string when you are finished with it.
+
+\retval kUIStrings_ResultOK
+if the string is copied successfully
+
+\retval kUIStrings_ResultNoSuchString
+if the given tag is invalid
+
+\retval kUIStrings_ResultCannotGetString
+if an OS error occurred
+
+(4.0)
+*/
+UIStrings_Result
+UIStrings_Copy	(UIStrings_PrefPanelGeneralCFString		inWhichString,
+				 CFStringRef&							outString)
+{
+	UIStrings_Result	result = kUIStrings_ResultOK;
+	
+	
+	// IMPORTANT: The external utility program "genstrings" is not smart enough to
+	//            figure out the proper string table name if you do not inline it.
+	//            If you replace the CFSTR() calls with string constants, they will
+	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            automatically generate localizable ".strings" files.
+	switch (inWhichString)
+	{
+	case kUIStrings_PrefPanelGeneralCategoryName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("General"), CFSTR("PrefPanelGeneral"),
+													CFSTR("kUIStrings_PrefPanelGeneralCategoryName"));
+		break;
+	
+	case kUIStrings_PrefPanelGeneralNotificationTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Notification"), CFSTR("PrefPanelGeneral"),
+													CFSTR("kUIStrings_PrefPanelGeneralNotificationTabName"));
+		break;
+	
+	case kUIStrings_PrefPanelGeneralOptionsTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Options"), CFSTR("PrefPanelGeneral"),
+													CFSTR("kUIStrings_PrefPanelGeneralOptionsTabName"));
+		break;
+	
+	case kUIStrings_PrefPanelGeneralSpecialTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Special"), CFSTR("PrefPanelGeneral"),
+													CFSTR("kUIStrings_PrefPanelGeneralSpecialTabName"));
+		break;
+	
+	default:
+		// ???
+		result = kUIStrings_ResultNoSuchString;
+		break;
+	}
+	return result;
+}// Copy (General preferences panel strings)
+
+
+/*!
+Locates the specified string used by the Macros panel of the
+Preferences window and returns a reference to a Core Foundation
+string.  Since a copy is made, you must call CFRelease() on the
+returned string when you are finished with it.
+
+\retval kUIStrings_ResultOK
+if the string is copied successfully
+
+\retval kUIStrings_ResultNoSuchString
+if the given tag is invalid
+
+\retval kUIStrings_ResultCannotGetString
+if an OS error occurred
+
+(4.0)
+*/
+UIStrings_Result
+UIStrings_Copy	(UIStrings_PrefPanelMacrosCFString		inWhichString,
+				 CFStringRef&							outString)
+{
+	UIStrings_Result	result = kUIStrings_ResultOK;
+	
+	
+	// IMPORTANT: The external utility program "genstrings" is not smart enough to
+	//            figure out the proper string table name if you do not inline it.
+	//            If you replace the CFSTR() calls with string constants, they will
+	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            automatically generate localizable ".strings" files.
+	switch (inWhichString)
+	{
+	case kUIStrings_PrefPanelMacrosCategoryName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Macros"), CFSTR("PrefPanelMacros"),
+													CFSTR("kUIStrings_PrefPanelMacrosCategoryName"));
+		break;
+	
+	case kUIStrings_PrefPanelMacrosListHeaderName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Macro Name"), CFSTR("PrefPanelMacros"),
+													CFSTR("kUIStrings_PrefPanelMacrosListHeaderName"));
+		break;
+	
+	default:
+		// ???
+		result = kUIStrings_ResultNoSuchString;
+		break;
+	}
+	return result;
+}// Copy (Macros preferences panel strings)
+
+
+/*!
+Locates the specified string used by the Sessions panel of the
+Preferences window and returns a reference to a Core Foundation
+string.  Since a copy is made, you must call CFRelease() on the
+returned string when you are finished with it.
+
+\retval kUIStrings_ResultOK
+if the string is copied successfully
+
+\retval kUIStrings_ResultNoSuchString
+if the given tag is invalid
+
+\retval kUIStrings_ResultCannotGetString
+if an OS error occurred
+
+(4.0)
+*/
+UIStrings_Result
+UIStrings_Copy	(UIStrings_PrefPanelSessionsCFString	inWhichString,
+				 CFStringRef&							outString)
+{
+	UIStrings_Result	result = kUIStrings_ResultOK;
+	
+	
+	// IMPORTANT: The external utility program "genstrings" is not smart enough to
+	//            figure out the proper string table name if you do not inline it.
+	//            If you replace the CFSTR() calls with string constants, they will
+	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            automatically generate localizable ".strings" files.
+	switch (inWhichString)
+	{
+	case kUIStrings_PrefPanelSessionsCategoryName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Sessions"), CFSTR("PrefPanelSessions"),
+													CFSTR("kUIStrings_PrefPanelSessionsCategoryName"));
+		break;
+	
+	case kUIStrings_PrefPanelSessionsDataFlowTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Data Flow"), CFSTR("PrefPanelSessions"),
+													CFSTR("kUIStrings_PrefPanelSessionsDataFlowTabName"));
+		break;
+	
+	case kUIStrings_PrefPanelSessionsGraphicsTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Graphics"), CFSTR("PrefPanelSessions"),
+													CFSTR("kUIStrings_PrefPanelSessionsVectorGraphicsTabName"));
+		break;
+	
+	case kUIStrings_PrefPanelSessionsKeyboardTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Keyboard"), CFSTR("PrefPanelSessions"),
+													CFSTR("kUIStrings_PrefPanelSessionsControlKeysTabName"));
+		break;
+	
+	case kUIStrings_PrefPanelSessionsResourceTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Resource"), CFSTR("PrefPanelSessions"),
+													CFSTR("kUIStrings_PrefPanelSessionsHostTabName"));
+		break;
+	
+	default:
+		// ???
+		result = kUIStrings_ResultNoSuchString;
+		break;
+	}
+	return result;
+}// Copy (Sessions preferences panel strings)
+
+
+/*!
+Locates the specified string used by the Terminals panel of the
+Preferences window and returns a reference to a Core Foundation
+string.  Since a copy is made, you must call CFRelease() on the
+returned string when you are finished with it.
+
+\retval kUIStrings_ResultOK
+if the string is copied successfully
+
+\retval kUIStrings_ResultNoSuchString
+if the given tag is invalid
+
+\retval kUIStrings_ResultCannotGetString
+if an OS error occurred
+
+(4.0)
+*/
+UIStrings_Result
+UIStrings_Copy	(UIStrings_PrefPanelTerminalsCFString	inWhichString,
+				 CFStringRef&							outString)
+{
+	UIStrings_Result	result = kUIStrings_ResultOK;
+	
+	
+	// IMPORTANT: The external utility program "genstrings" is not smart enough to
+	//            figure out the proper string table name if you do not inline it.
+	//            If you replace the CFSTR() calls with string constants, they will
+	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            automatically generate localizable ".strings" files.
+	switch (inWhichString)
+	{
+	case kUIStrings_PrefPanelTerminalsCategoryName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Terminals"), CFSTR("PrefPanelTerminals"),
+													CFSTR("kUIStrings_PrefPanelTerminalsCategoryName"));
+		break;
+	
+	case kUIStrings_PrefPanelTerminalsEmulationTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Emulation"), CFSTR("PrefPanelTerminals"),
+													CFSTR("kUIStrings_PrefPanelTerminalsEmulationTabName"));
+		break;
+	
+	case kUIStrings_PrefPanelTerminalsVT100FixLineWrapBug:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("VT100 Fix Line Wrapping Bug"), CFSTR("PrefPanelTerminals"),
+													CFSTR("kUIStrings_PrefPanelTerminalsVT100FixLineWrapBug"));
+		break;
+	
+	case kUIStrings_PrefPanelTerminalsXTerm256ColorsEnabled:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm 256 Colors"), CFSTR("PrefPanelTerminals"),
+													CFSTR("kUIStrings_PrefPanelTerminalsXTerm256ColorsEnabled"));
+		break;
+	
+	case kUIStrings_PrefPanelTerminalsXTermBackColorErase:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Background Color Erase"), CFSTR("PrefPanelTerminals"),
+													CFSTR("kUIStrings_PrefPanelTerminalsXTermBackColorErase"));
+		break;
+	
+	case kUIStrings_PrefPanelTerminalsXTermColorEnabled:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Color"), CFSTR("PrefPanelTerminals"),
+													CFSTR("kUIStrings_PrefPanelTerminalsXTermColorEnabled"));
+		break;
+	
+	case kUIStrings_PrefPanelTerminalsXTermGraphicsEnabled:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Graphics Characters"), CFSTR("PrefPanelTerminals"),
+													CFSTR("kUIStrings_PrefPanelTerminalsXTermGraphicsEnabled"));
+		break;
+	
+	case kUIStrings_PrefPanelTerminalsXTermWindowAltEnabled:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Window Alteration"), CFSTR("PrefPanelTerminals"),
+													CFSTR("kUIStrings_PrefPanelTerminalsXTermWindowAltEnabled"));
+		break;
+	
+	case kUIStrings_PrefPanelTerminalsListHeaderTweakName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Terminal Feature"), CFSTR("PrefPanelTerminals"),
+													CFSTR("kUIStrings_PrefPanelTerminalsListHeaderTweakName"));
+		break;
+	
+	case kUIStrings_PrefPanelTerminalsOptionsTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Options"), CFSTR("PrefPanelTerminals"),
+													CFSTR("kUIStrings_PrefPanelTerminalsOptionsTabName"));
+		break;
+	
+	case kUIStrings_PrefPanelTerminalsScreenTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Screen"), CFSTR("PrefPanelTerminals"),
+													CFSTR("kUIStrings_PrefPanelTerminalsScreenTabName"));
+		break;
+	
+	default:
+		// ???
+		result = kUIStrings_ResultNoSuchString;
+		break;
+	}
+	return result;
+}// Copy (Terminals preferences panel strings)
+
+
+/*!
+Locates the specified string used by the Translations panel of the
+Preferences window and returns a reference to a Core Foundation
+string.  Since a copy is made, you must call CFRelease() on the
+returned string when you are finished with it.
+
+\retval kUIStrings_ResultOK
+if the string is copied successfully
+
+\retval kUIStrings_ResultNoSuchString
+if the given tag is invalid
+
+\retval kUIStrings_ResultCannotGetString
+if an OS error occurred
+
+(4.0)
+*/
+UIStrings_Result
+UIStrings_Copy	(UIStrings_PrefPanelTranslationsCFString	inWhichString,
+				 CFStringRef&								outString)
+{
+	UIStrings_Result	result = kUIStrings_ResultOK;
+	
+	
+	// IMPORTANT: The external utility program "genstrings" is not smart enough to
+	//            figure out the proper string table name if you do not inline it.
+	//            If you replace the CFSTR() calls with string constants, they will
+	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            automatically generate localizable ".strings" files.
+	switch (inWhichString)
+	{
+	case kUIStrings_PrefPanelTranslationsCategoryName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Translations"), CFSTR("PrefPanelTranslations"),
+													CFSTR("kUIStrings_PrefPanelTranslationsCategoryName"));
+		break;
+	
+	case kUIStrings_PrefPanelTranslationsListHeaderBaseTable:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Available Encodings"), CFSTR("PrefPanelTranslations"),
+													CFSTR("kUIStrings_PrefPanelTranslationsListHeaderBaseTable"));
+		break;
+	
+	default:
+		// ???
+		result = kUIStrings_ResultNoSuchString;
+		break;
+	}
+	return result;
+}// Copy (Translations preferences panel strings)
+
+
+/*!
+Locates the specified string used by the Workspaces panel of the
+Preferences window and returns a reference to a Core Foundation
+string.  Since a copy is made, you must call CFRelease() on the
+returned string when you are finished with it.
+
+\retval kUIStrings_ResultOK
+if the string is copied successfully
+
+\retval kUIStrings_ResultNoSuchString
+if the given tag is invalid
+
+\retval kUIStrings_ResultCannotGetString
+if an OS error occurred
+
+(4.0)
+*/
+UIStrings_Result
+UIStrings_Copy	(UIStrings_PrefPanelWorkspacesCFString	inWhichString,
+				 CFStringRef&							outString)
+{
+	UIStrings_Result	result = kUIStrings_ResultOK;
+	
+	
+	// IMPORTANT: The external utility program "genstrings" is not smart enough to
+	//            figure out the proper string table name if you do not inline it.
+	//            If you replace the CFSTR() calls with string constants, they will
+	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            automatically generate localizable ".strings" files.
+	switch (inWhichString)
+	{
+	case kUIStrings_PrefPanelWorkspacesCategoryName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Workspaces"), CFSTR("PrefPanelWorkspaces"),
+													CFSTR("kUIStrings_PrefPanelWorkspacesCategoryName"));
+		break;
+	
+	case kUIStrings_PrefPanelWorkspacesWindowsListHeaderName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Window Name"), CFSTR("PrefPanelWorkspaces"),
+													CFSTR("kUIStrings_PrefPanelWorkspacesWindowsListHeaderName"));
+		break;
+	
+	default:
+		// ???
+		result = kUIStrings_ResultNoSuchString;
+		break;
+	}
+	return result;
+}// Copy (Workspaces preferences panel strings)
 
 
 /*!
@@ -1577,12 +1846,6 @@ UIStrings_Copy	(UIStrings_SystemDialogCFString		inWhichString,
 													CFSTR("kUIStrings_SystemDialogPromptCaptureToFile"));
 		break;
 	
-	case kUIStrings_SystemDialogPromptOpenMacroSet:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Choose one or more macro files to open."),
-													CFSTR("SystemDialogs"),
-													CFSTR("kUIStrings_SystemDialogPromptOpenMacroSet"));
-		break;
-	
 	case kUIStrings_SystemDialogPromptOpenPrefs:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Choose one or more settings files to open."),
 													CFSTR("SystemDialogs"),
@@ -1590,7 +1853,7 @@ UIStrings_Copy	(UIStrings_SystemDialogCFString		inWhichString,
 		break;
 	
 	case kUIStrings_SystemDialogPromptOpenSession:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Choose one or more settings files to open."),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Choose one or more session files to open."),
 													CFSTR("SystemDialogs"),
 													CFSTR("kUIStrings_SystemDialogPromptOpenSession"));
 		break;
@@ -1602,7 +1865,7 @@ UIStrings_Copy	(UIStrings_SystemDialogCFString		inWhichString,
 		break;
 	
 	case kUIStrings_SystemDialogPromptSaveSession:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Enter a name for the file to contain your settings."),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Enter a name for the file to contain your session."),
 													CFSTR("SystemDialogs"),
 													CFSTR("kUIStrings_SystemDialogPromptSaveSession"));
 		break;
@@ -1611,12 +1874,6 @@ UIStrings_Copy	(UIStrings_SystemDialogCFString		inWhichString,
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Please choose a color."),
 													CFSTR("SystemDialogs"),
 													CFSTR("kUIStrings_SystemDialogPromptPickColor"));
-		break;
-	
-	case kUIStrings_SystemDialogTitleOpenMacroSet:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Open Macro Set"),
-													CFSTR("SystemDialogs"),
-													CFSTR("kUIStrings_SystemDialogTitleOpenMacroSet"));
 		break;
 	
 	case kUIStrings_SystemDialogTitleOpenPrefs:

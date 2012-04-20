@@ -326,7 +326,7 @@ PrefPanelGeneral_New ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorGeneral);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelGeneral);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowGeneralCategoryName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelGeneralCategoryName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
@@ -514,11 +514,11 @@ const
 	tabInfo[0].enabled =
 		tabInfo[1].enabled =
 		tabInfo[2].enabled = true;
-	stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowGeneralOptionsTabName,
+	stringResult = UIStrings_Copy(kUIStrings_PrefPanelGeneralOptionsTabName,
 									tabInfo[kMy_TabIndexGeneralOptions - 1].name);
-	stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowGeneralSpecialTabName,
+	stringResult = UIStrings_Copy(kUIStrings_PrefPanelGeneralSpecialTabName,
 									tabInfo[kMy_TabIndexGeneralSpecial - 1].name);
-	stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowGeneralNotificationTabName,
+	stringResult = UIStrings_Copy(kUIStrings_PrefPanelGeneralNotificationTabName,
 									tabInfo[kMy_TabIndexGeneralNotification - 1].name);
 	SetRect(&containerBounds, 0, 0, 0, 0);
 	error = CreateTabsControl(inOwningWindow, &containerBounds, kControlTabSizeLarge, kControlTabDirectionNorth,

@@ -249,7 +249,7 @@ PrefPanelWorkspaces_New ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorWorkspaces);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelWorkspaces);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowWorkspacesCategoryName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelWorkspacesCategoryName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
@@ -513,7 +513,7 @@ createContainerView		(Panel_Ref		inPanel,
 		}
 		
 		// create name column
-		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowWindowsListHeaderName,
+		stringResult = UIStrings_Copy(kUIStrings_PrefPanelWorkspacesWindowsListHeaderName,
 										columnInfo.headerBtnDesc.titleString);
 		if (stringResult.ok())
 		{

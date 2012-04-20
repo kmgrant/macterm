@@ -225,7 +225,7 @@ PrefPanelTranslations_New ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorTranslations);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelTranslations);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowTranslationsCategoryName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelTranslationsCategoryName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
@@ -469,7 +469,7 @@ const
 		columnInfo.headerBtnDesc.btnContentInfo.contentType = kControlContentTextOnly;
 		
 		// create base table column
-		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable,
+		stringResult = UIStrings_Copy(kUIStrings_PrefPanelTranslationsListHeaderBaseTable,
 										columnInfo.headerBtnDesc.titleString);
 		if (stringResult.ok())
 		{

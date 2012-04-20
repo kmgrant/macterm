@@ -268,7 +268,7 @@ PrefPanelMacros_New ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorMacros);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelMacros);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowMacrosCategoryName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelMacrosCategoryName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
@@ -512,7 +512,7 @@ createContainerView		(Panel_Ref		inPanel,
 		}
 		
 		// create name column
-		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowMacrosListHeaderName,
+		stringResult = UIStrings_Copy(kUIStrings_PrefPanelMacrosListHeaderName,
 										columnInfo.headerBtnDesc.titleString);
 		if (stringResult.ok())
 		{

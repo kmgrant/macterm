@@ -172,7 +172,7 @@ PrefPanelKiosk_New ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorKiosk);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelKiosk);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowKioskCategoryName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelFullScreenCategoryName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;

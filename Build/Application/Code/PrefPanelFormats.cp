@@ -377,7 +377,7 @@ PrefPanelFormats_New ()
 	tabList.push_back(PrefPanelFormats_NewNormalPane());
 	tabList.push_back(PrefPanelFormats_NewANSIColorsPane());
 	
-	if (UIStrings_Copy(kUIStrings_PreferencesWindowFormatsCategoryName, nameCFString).ok())
+	if (UIStrings_Copy(kUIStrings_PrefPanelFormatsCategoryName, nameCFString).ok())
 	{
 		result = GenericPanelTabs_New(nameCFString, kConstantsRegistry_PrefPanelDescriptorFormats, tabList);
 		if (nullptr != result)
@@ -421,7 +421,7 @@ PrefPanelFormats_NewANSIColorsPane ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorFormatsANSI);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelFormatsANSI);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowFormatsANSIColorsTabName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelFormatsANSIColorsTabName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
@@ -464,7 +464,7 @@ PrefPanelFormats_NewNormalPane ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorFormatsNormal);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelFormatsNormal);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowFormatsNormalTabName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelFormatsNormalTabName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;

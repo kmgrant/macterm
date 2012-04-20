@@ -346,7 +346,7 @@ PrefPanelTerminals_New ()
 	tabList.push_back(PrefPanelTerminals_NewScreenPane());
 	tabList.push_back(PrefPanelTerminals_NewOptionsPane());
 	
-	if (UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsCategoryName, nameCFString).ok())
+	if (UIStrings_Copy(kUIStrings_PrefPanelTerminalsCategoryName, nameCFString).ok())
 	{
 		result = GenericPanelTabs_New(nameCFString, kConstantsRegistry_PrefPanelDescriptorTerminals, tabList);
 		if (nullptr != result)
@@ -389,7 +389,7 @@ PrefPanelTerminals_NewEmulationPane ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorTerminalsEmulation);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelTerminalsEmulation);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsEmulationTabName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelTerminalsEmulationTabName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
@@ -431,7 +431,7 @@ PrefPanelTerminals_NewOptionsPane ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorTerminalsOptions);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelTerminalsOptions);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsOptionsTabName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelTerminalsOptionsTabName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
@@ -473,7 +473,7 @@ PrefPanelTerminals_NewScreenPane ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorTerminalsScreen);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelTerminalsScreen);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsScreenTabName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelTerminalsScreenTabName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
@@ -703,7 +703,7 @@ createContainerView		(Panel_Ref		inPanel,
 		assert_noerr(error);
 		
 		// create tweak name column
-		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsListHeaderTweakName,
+		stringResult = UIStrings_Copy(kUIStrings_PrefPanelTerminalsListHeaderTweakName,
 										columnInfo.headerBtnDesc.titleString);
 		if (stringResult.ok())
 		{

@@ -63,52 +63,114 @@ enum UIStrings_PreferencesWindowCFString
 	kUIStrings_PreferencesWindowCollectionsDrawerDescription	= 'CDDs',
 	kUIStrings_PreferencesWindowCollectionsDrawerShowHideName	= 'SHCD',
 	kUIStrings_PreferencesWindowDefaultFavoriteName				= 'DefF',
-	kUIStrings_PreferencesWindowFavoritesDuplicateButtonName	= 'DupF',
-	kUIStrings_PreferencesWindowFavoritesDuplicateNameTemplate	= 'DupN',
-	kUIStrings_PreferencesWindowFavoritesEditButtonName			= 'Edit',
-	kUIStrings_PreferencesWindowFavoritesNewButtonName			= 'NewF',
-	kUIStrings_PreferencesWindowFavoritesNewGroupButtonName		= 'NewG',
-	kUIStrings_PreferencesWindowFavoritesRemoveButtonName		= 'DelF',
-	kUIStrings_PreferencesWindowFavoritesCannotRemoveDefault	= 'DelD',
 	kUIStrings_PreferencesWindowFavoritesRemoveWarning			= 'DelW',
 	kUIStrings_PreferencesWindowFavoritesRemoveWarningHelpText	= 'DelH',
-	kUIStrings_PreferencesWindowFormatsCategoryName				= 'ForT',
-	kUIStrings_PreferencesWindowFormatsNormalTabName			= 'ForN',
-	kUIStrings_PreferencesWindowFormatsANSIColorsTabName		= 'ForA',
-	kUIStrings_PreferencesWindowGeneralCategoryName				= 'GenT',
-	kUIStrings_PreferencesWindowGeneralNotificationTabName		= 'GenN',
-	kUIStrings_PreferencesWindowGeneralOptionsTabName			= 'GenO',
-	kUIStrings_PreferencesWindowGeneralSpecialTabName			= 'GenS',
 	kUIStrings_PreferencesWindowIconName						= 'Icon',
-	kUIStrings_PreferencesWindowKioskCategoryName				= 'KioT',
-	kUIStrings_PreferencesWindowListHeaderNumber				= 'Numb',
-	kUIStrings_PreferencesWindowMacrosCategoryName				= 'McrT',
-	kUIStrings_PreferencesWindowMacrosListHeaderName			= 'McNm',
-	kUIStrings_PreferencesWindowScriptsCategoryName				= 'ScrT',
-	kUIStrings_PreferencesWindowScriptsListHeaderEvent			= 'ScEv',
-	kUIStrings_PreferencesWindowScriptsListHeaderScriptToRun	= 'ScSc',
-	kUIStrings_PreferencesWindowSessionsCategoryName			= 'SsnT',
-	kUIStrings_PreferencesWindowSessionsDataFlowTabName			= 'SsnD',
-	kUIStrings_PreferencesWindowSessionsGraphicsTabName			= 'SsnV',
-	kUIStrings_PreferencesWindowSessionsKeyboardTabName			= 'SsnC',
-	kUIStrings_PreferencesWindowSessionsResourceTabName			= 'SsnH',
-	kUIStrings_PreferencesWindowTerminalsCategoryName			= 'TrmT',
-	kUIStrings_PreferencesWindowTerminalsEmulationTabName		= 'TrmE',
+	kUIStrings_PreferencesWindowListHeaderNumber				= 'Numb'
+};
+
+/*!
+Formats Preferences Panel String Table ("PrefPanelFormats.strings")
+
+Identifies localizable strings used in the Formats preferences panel.
+*/
+enum UIStrings_PrefPanelFormatsCFString
+{
+	kUIStrings_PrefPanelFormatsCategoryName			= 'ForT',
+	kUIStrings_PrefPanelFormatsNormalTabName		= 'ForN',
+	kUIStrings_PrefPanelFormatsANSIColorsTabName	= 'ForA'
+};
+
+/*!
+Full Screen Preferences Panel String Table ("PrefPanelFullScreen.strings")
+
+Identifies localizable strings used in the Full Screen preferences panel.
+*/
+enum UIStrings_PrefPanelFullScreenCFString
+{
+	kUIStrings_PrefPanelFullScreenCategoryName		= 'KioT'
+};
+
+/*!
+General Preferences Panel String Table ("PrefPanelGeneral.strings")
+
+Identifies localizable strings used in the General preferences panel.
+*/
+enum UIStrings_PrefPanelGeneralCFString
+{
+	kUIStrings_PrefPanelGeneralCategoryName			= 'GenT',
+	kUIStrings_PrefPanelGeneralNotificationTabName	= 'GenN',
+	kUIStrings_PrefPanelGeneralOptionsTabName		= 'GenO',
+	kUIStrings_PrefPanelGeneralSpecialTabName		= 'GenS'
+};
+
+/*!
+Macros Preferences Panel String Table ("PrefPanelMacros.strings")
+
+Identifies localizable strings used in the Macros preferences panel.
+*/
+enum UIStrings_PrefPanelMacrosCFString
+{
+	kUIStrings_PrefPanelMacrosCategoryName		= 'McrT',
+	kUIStrings_PrefPanelMacrosListHeaderName	= 'McNm'
+};
+
+/*!
+Sessions Preferences Panel String Table ("PrefPanelSessions.strings")
+
+Identifies localizable strings used in the Sessions preferences panel.
+*/
+enum UIStrings_PrefPanelSessionsCFString
+{
+	kUIStrings_PrefPanelSessionsCategoryName		= 'SsnT',
+	kUIStrings_PrefPanelSessionsDataFlowTabName		= 'SsnD',
+	kUIStrings_PrefPanelSessionsGraphicsTabName		= 'SsnV',
+	kUIStrings_PrefPanelSessionsKeyboardTabName		= 'SsnC',
+	kUIStrings_PrefPanelSessionsResourceTabName		= 'SsnH'
+};
+
+/*!
+Terminals Preferences Panel String Table ("PrefPanelTerminals.strings")
+
+Identifies localizable strings used in the Terminals preferences panel.
+*/
+enum UIStrings_PrefPanelTerminalsCFString
+{
+	kUIStrings_PrefPanelTerminalsCategoryName			= 'TrmT',
+	kUIStrings_PrefPanelTerminalsEmulationTabName		= 'TrmE',
 	// For simplicity, code in Preferences user interfaces assumes that tags can be
 	// used instead of the “proper” enumeration names, for these “named preferences”.
-	kUIStrings_PreferencesWindowTerminalsVT100FixLineWrapBug	= kPreferences_TagVT100FixLineWrappingBug,
-	kUIStrings_PreferencesWindowTerminalsXTermBackColorErase	= kPreferences_TagXTermBackgroundColorEraseEnabled,
-	kUIStrings_PreferencesWindowTerminalsXTerm256ColorsEnabled	= kPreferences_TagXTerm256ColorsEnabled,
-	kUIStrings_PreferencesWindowTerminalsXTermColorEnabled		= kPreferences_TagXTermColorEnabled,
-	kUIStrings_PreferencesWindowTerminalsXTermGraphicsEnabled	= kPreferences_TagXTermGraphicsEnabled,
-	kUIStrings_PreferencesWindowTerminalsXTermWindowAltEnabled	= kPreferences_TagXTermWindowAlterationEnabled,
-	kUIStrings_PreferencesWindowTerminalsListHeaderTweakName	= 'TrmH',
-	kUIStrings_PreferencesWindowTerminalsOptionsTabName			= 'TrmO',
-	kUIStrings_PreferencesWindowTerminalsScreenTabName			= 'TrmS',
-	kUIStrings_PreferencesWindowTranslationsCategoryName		= 'TrnT',
-	kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable	= 'TrnB',
-	kUIStrings_PreferencesWindowWorkspacesCategoryName			= 'WspT',
-	kUIStrings_PreferencesWindowWindowsListHeaderName			= 'WnNm'
+	kUIStrings_PrefPanelTerminalsVT100FixLineWrapBug	= kPreferences_TagVT100FixLineWrappingBug,
+	kUIStrings_PrefPanelTerminalsXTermBackColorErase	= kPreferences_TagXTermBackgroundColorEraseEnabled,
+	kUIStrings_PrefPanelTerminalsXTerm256ColorsEnabled	= kPreferences_TagXTerm256ColorsEnabled,
+	kUIStrings_PrefPanelTerminalsXTermColorEnabled		= kPreferences_TagXTermColorEnabled,
+	kUIStrings_PrefPanelTerminalsXTermGraphicsEnabled	= kPreferences_TagXTermGraphicsEnabled,
+	kUIStrings_PrefPanelTerminalsXTermWindowAltEnabled	= kPreferences_TagXTermWindowAlterationEnabled,
+	kUIStrings_PrefPanelTerminalsListHeaderTweakName	= 'TrmH',
+	kUIStrings_PrefPanelTerminalsOptionsTabName			= 'TrmO',
+	kUIStrings_PrefPanelTerminalsScreenTabName			= 'TrmS'
+};
+
+/*!
+Translations Preferences Panel String Table ("PrefPanelTranslations.strings")
+
+Identifies localizable strings used in the Translations preferences panel.
+*/
+enum UIStrings_PrefPanelTranslationsCFString
+{
+	kUIStrings_PrefPanelTranslationsCategoryName			= 'TrnT',
+	kUIStrings_PrefPanelTranslationsListHeaderBaseTable		= 'TrnB'
+};
+
+/*!
+Workspaces Preferences Panel String Table ("PrefPanelWorkspaces.strings")
+
+Identifies localizable strings used in the Workspaces preferences panel.
+*/
+enum UIStrings_PrefPanelWorkspacesCFString
+{
+	kUIStrings_PrefPanelWorkspacesCategoryName				= 'WspT',
+	kUIStrings_PrefPanelWorkspacesWindowsListHeaderName		= 'WnNm'
 };
 
 
@@ -119,8 +181,40 @@ enum UIStrings_PreferencesWindowCFString
 //@{
 
 UIStrings_Result
-	UIStrings_Copy			(UIStrings_PreferencesWindowCFString	inWhichString,
-							 CFStringRef&							outString);
+	UIStrings_Copy			(UIStrings_PreferencesWindowCFString		inWhichString,
+							 CFStringRef&								outString);
+
+UIStrings_Result
+	UIStrings_Copy			(UIStrings_PrefPanelFormatsCFString			inWhichString,
+							 CFStringRef&								outString);
+
+UIStrings_Result
+	UIStrings_Copy			(UIStrings_PrefPanelFullScreenCFString		inWhichString,
+							 CFStringRef&								outString);
+
+UIStrings_Result
+	UIStrings_Copy			(UIStrings_PrefPanelGeneralCFString			inWhichString,
+							 CFStringRef&								outString);
+
+UIStrings_Result
+	UIStrings_Copy			(UIStrings_PrefPanelMacrosCFString			inWhichString,
+							 CFStringRef&								outString);
+
+UIStrings_Result
+	UIStrings_Copy			(UIStrings_PrefPanelSessionsCFString		inWhichString,
+							 CFStringRef&								outString);
+
+UIStrings_Result
+	UIStrings_Copy			(UIStrings_PrefPanelTerminalsCFString		inWhichString,
+							 CFStringRef&								outString);
+
+UIStrings_Result
+	UIStrings_Copy			(UIStrings_PrefPanelTranslationsCFString	inWhichString,
+							 CFStringRef&								outString);
+
+UIStrings_Result
+	UIStrings_Copy			(UIStrings_PrefPanelWorkspacesCFString		inWhichString,
+							 CFStringRef&								outString);
 
 //@}
 

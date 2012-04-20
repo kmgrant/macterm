@@ -469,7 +469,7 @@ PrefPanelSessions_New ()
 	tabList.push_back(PrefPanelSessions_NewKeyboardPane());
 	tabList.push_back(PrefPanelSessions_NewGraphicsPane());
 	
-	if (UIStrings_Copy(kUIStrings_PreferencesWindowSessionsCategoryName, nameCFString).ok())
+	if (UIStrings_Copy(kUIStrings_PrefPanelSessionsCategoryName, nameCFString).ok())
 	{
 		result = GenericPanelTabs_New(nameCFString, kConstantsRegistry_PrefPanelDescriptorSessions, tabList);
 		if (nullptr != result)
@@ -512,7 +512,7 @@ PrefPanelSessions_NewDataFlowPane ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorSessionDataFlow);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelSessionsDataFlow);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowSessionsDataFlowTabName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelSessionsDataFlowTabName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
@@ -554,7 +554,7 @@ PrefPanelSessions_NewGraphicsPane ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorSessionGraphics);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelSessionsGraphics);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowSessionsGraphicsTabName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelSessionsGraphicsTabName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
@@ -596,7 +596,7 @@ PrefPanelSessions_NewKeyboardPane ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorSessionKeyboard);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelSessionsKeyboard);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowSessionsKeyboardTabName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelSessionsKeyboardTabName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
@@ -638,7 +638,7 @@ PrefPanelSessions_NewResourcePane ()
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorSessionResource);
 		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelSessionsResource);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowSessionsResourceTabName, nameCFString).ok())
+		if (UIStrings_Copy(kUIStrings_PrefPanelSessionsResourceTabName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
