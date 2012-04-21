@@ -66,6 +66,9 @@ XCODE_ENV := \
 ifeq ($(strip $(shell /bin/test -d $(DEVELOPER_DIR) || echo "no")),no)
 DEVELOPER_DIR := /Developer
 endif
+ifeq ($(strip $(shell /bin/test -d $(DEVELOPER_DIR) || echo "no")),no)
+DEVELOPER_DIR := /Applications/Xcode.app/Contents/Developer
+endif
 
 # tools
 COPY=/bin/cp

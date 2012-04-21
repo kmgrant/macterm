@@ -1104,7 +1104,7 @@
 			buildConfigurationList = 0AFB6A240E86FD48005C5A07 /* Build configuration list for PBXLegacyTarget "Everything" */;
 			buildPhases = (
 			);
-			buildToolPath = /Developer/usr/bin/make;
+			buildToolPath = "$(DEVELOPER_DIR)/usr/bin/make";
 			buildWorkingDirectory = "";
 			dependencies = (
 			);
