@@ -2401,7 +2401,7 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 				
 				// the item ID is a preferences tag, but for simplicity this is
 				// also guaranteed to be a valid string identifier
-				stringResult = UIStrings_Copy(STATIC_CAST(inItemID, UIStrings_PreferencesWindowCFString), preferenceDescription);
+				stringResult = UIStrings_Copy(STATIC_CAST(inItemID, UIStrings_PrefPanelTerminalsCFString), preferenceDescription);
 				if (stringResult.ok())
 				{
 					result = SetDataBrowserItemDataText(inItemData, preferenceDescription);
