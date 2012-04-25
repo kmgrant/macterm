@@ -4279,6 +4279,10 @@ My_TerminalView::
 	[this->contentNSView release];
 	[this->paddingNSView release];
 	[this->backgroundNSView release];
+	if (nil != this->text.font.object)
+	{
+		[this->text.font.object release], this->text.font.object = nil;
+	}
 	
 	// if the table is not the global one, a copy was allocated
 	if (&gColorGrid() != this->extendedColorsPtr)
@@ -11187,8 +11191,13 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 												true/* is retained */);
 		
 		
+		if (nil != inTerminalViewPtr->text.font.object)
+		{
+			[inTerminalViewPtr->text.font.object release], inTerminalViewPtr->text.font.object = nil;
+		}
 		inTerminalViewPtr->text.font.object =
 			[NSFont fontWithName:(NSString*)fontNameCFString.returnCFStringRef() size:inFontSizeOrZero];
+		[inTerminalViewPtr->text.font.object retain];
 	}
 	
 	if (inFontFamilyNameOrNull != nullptr)
