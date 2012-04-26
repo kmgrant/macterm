@@ -450,6 +450,7 @@ OSStatus			createWindowColorPalette			(My_TerminalViewPtr, Preferences_ContextRe
 Boolean				cursorBlinks						(My_TerminalViewPtr);
 TerminalView_CursorType	cursorType						(My_TerminalViewPtr);
 void				delayMinimumTicks					(UInt16 = 8);
+NSDictionary*		dictionaryWithTerminalTextAttributes(My_TerminalViewPtr, TerminalTextAttributes, Float32 = 1.0);
 OSStatus			dragTextSelection					(My_TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
 Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, UInt16, UInt16, UInt16);
 void				drawSymbolFontLetter				(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char, Boolean);
@@ -5044,6 +5045,60 @@ delayMinimumTicks	(UInt16		inTickCount)
 
 
 /*!
+Returns a dictionary suitable for use in attributed strings
+that contains the specified terminal text attributes.
+
+(4.0)
+*/
+NSDictionary*
+dictionaryWithTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
+										 TerminalTextAttributes		inAttributes,
+										 Float32					inAlpha)
+{
+	NSMutableDictionary*	result = [NSMutableDictionary dictionaryWithCapacity:4/* arbitrary initial size */];
+	
+	
+	// set font attributes
+	if (nil != inTerminalViewPtr->text.font.object)
+	{
+		[result setObject:inTerminalViewPtr->text.font.object forKey:NSFontAttributeName];
+	}
+	
+	// set color attributes
+	{
+		CGDeviceColor	backgroundDeviceColor;
+		CGDeviceColor	deviceColor;
+		Boolean			usingDragHighlightColors = (inTerminalViewPtr->screen.currentRenderDragColors);
+		
+		
+		// find the correct colors in the color table
+		getScreenColorsForAttributes(inTerminalViewPtr, inAttributes, &deviceColor, &backgroundDeviceColor,
+										&inTerminalViewPtr->screen.currentRenderNoBackground);
+		
+		// set foreground color
+		{
+			NSColor*	foregroundColor = [NSColor blackColor]; // default for drags is black
+			
+			
+			unless (usingDragHighlightColors)
+			{
+				foregroundColor = [NSColor colorWithDeviceRed:deviceColor.red green:deviceColor.green
+																blue:deviceColor.blue alpha:inAlpha];
+			}
+			[result setObject:foregroundColor forKey:NSForegroundColorAttributeName];
+		}
+		
+		// UNIMPLEMENTED: highlighted-text (possibly inverted) colors
+		// UNIMPLEMENTED: dimmed-screen colors
+		// UNIMPLEMENTED: search-result colors
+		// UNIMPLEMENTED: “concealed” style colors
+	}
+	
+	return result;
+}// dictionaryWithTerminalTextAttributes
+
+
+/*!
 This method handles dragging of a text selection.
 If the text is dropped (i.e. not cancelled), then
 "true" is returned in "outDragWasDropped".
@@ -5467,16 +5522,8 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 		
 		// font attributes are set directly on the (attributed) string
 		// of the text storage, not in the graphics context
-		if (nil != inTerminalViewPtr->text.font.object)
-		{
-			[textStorage addAttribute:NSFontAttributeName value:inTerminalViewPtr->text.font.object
-										range:NSMakeRange(0, [textStorage length])];
-			
-			// TEMPORARY; set the color to a fixed value, but this is not the correct value
-			// (and probably not the correct place to set it)
-			[textStorage addAttribute:NSForegroundColorAttributeName value:[NSColor blackColor]
-										range:NSMakeRange(0, [textStorage length])];
-		}
+		[textStorage addAttributes:dictionaryWithTerminalTextAttributes(inTerminalViewPtr, inAttributes, 1.0/* alpha */)
+									range:NSMakeRange(0, [textStorage length])];
 		
 		// remove the extra pixels inserted by default so that drawing
 		// begins precisely at the specified boundary origin
@@ -12332,6 +12379,10 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 
 
 /*!
+LEGACY.  Used for Carbon views only.  See also the routine
+dictionaryWithTerminalTextAttributes(), which returns keys and
+values suitable for use in attributed strings.
+
 Sets the screen variable for the current text attributes to be
 the specified attributes, and sets QuickDraw and Core Graphics
 settings appropriately for the requested attributes (text font,
