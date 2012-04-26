@@ -141,7 +141,7 @@ void
 //@{
 
 SInt16
-VectorInterpreter_FillInPositionReport		(VectorInterpreter_ID		inGraphicID,
+	VectorInterpreter_FillInPositionReport	(VectorInterpreter_ID		inGraphicID,
 											 UInt16						inX,
 											 UInt16						inY,
 											 char						inKeyPress,

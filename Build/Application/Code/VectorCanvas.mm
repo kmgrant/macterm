@@ -30,41 +30,41 @@
 
 ###############################################################*/
 
-#include "VectorCanvas.h"
-#include <UniversalDefines.h>
+#import "VectorCanvas.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <cstdio>
-#include <cstring>
+#import <cstdio>
+#import <cstring>
 
 // standard-C++ includes
-#include <vector>
+#import <vector>
 
 // library includes
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <ColorUtilities.h>
-#include <CommonEventHandlers.h>
-#include <HIViewWrap.h>
-#include <MemoryBlockPtrLocker.template.h>
-#include <MemoryBlocks.h>
-#include <NIBLoader.h>
-#include <RegionUtilities.h>
-#include <SoundSystem.h>
-#include <StringUtilities.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <ColorUtilities.h>
+#import <CommonEventHandlers.h>
+#import <HIViewWrap.h>
+#import <MemoryBlockPtrLocker.template.h>
+#import <MemoryBlocks.h>
+#import <NIBLoader.h>
+#import <RegionUtilities.h>
+#import <SoundSystem.h>
+#import <StringUtilities.h>
 
 // Mac includes
-#include <Carbon/Carbon.h>
+#import <Carbon/Carbon.h>
 
 // application includes
-#include "AppResources.h"
-#include "Console.h"
-#include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
-#include "Preferences.h"
-#include "Session.h"
-#include "VectorInterpreter.h"
-#include "WindowTitleDialog.h"
+#import "AppResources.h"
+#import "Console.h"
+#import "ConstantsRegistry.h"
+#import "DialogUtilities.h"
+#import "Preferences.h"
+#import "Session.h"
+#import "VectorInterpreter.h"
+#import "WindowTitleDialog.h"
 
 
 
@@ -1193,5 +1193,130 @@ setPortCanvasPort	(My_VectorCanvasPtr		inPtr)
 }// setPortCanvasPort
 
 } // anonymous namespace
+
+
+@implementation VectorCanvas_View
+
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
+- (id)
+initWithFrame:(NSRect)		aFrame
+{
+	self = [super initWithFrame:aFrame];
+	if (nil != self)
+	{
+		self->internalViewPtr = nullptr;
+	}
+	return self;
+}// initWithFrame:
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (My_VectorCanvasPtr)
+internalViewPtr
+{
+	return REINTERPRET_CAST(internalViewPtr, My_VectorCanvasPtr);
+}
+- (void)
+setInternalViewPtr:(My_VectorCanvasPtr)		aViewPtr
+{
+	internalViewPtr = aViewPtr;
+}// setInternalViewPtr:
+
+
+#pragma mark NSView
+
+
+/*!
+It is necessary for canvas views to accept “first responder”
+in order to ever receive actions such as menu commands!
+
+(4.0)
+*/
+- (BOOL)
+acceptsFirstResponder
+{
+	return YES;
+}// acceptsFirstResponder
+
+
+/*!
+Render the specified part of a vector graphics canvas.
+
+INCOMPLETE.  This is going to be the test bed for transitioning
+away from Carbon.  And given that the Carbon view is heavily
+dependent on older technologies, it will be awhile before the
+Cocoa version is exposed to users.
+
+(4.0)
+*/
+- (void)
+drawRect:(NSRect)	rect
+{
+	My_VectorCanvasPtr		canvasPtr = [self internalViewPtr];
+	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
+	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	NSRect					entireRect = [self bounds];
+	CGRect					clipBounds = CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+	CGRect					contentBounds = CGRectMake(entireRect.origin.x, entireRect.origin.y, entireRect.size.width, entireRect.size.height);
+	
+	
+	[super drawRect:rect];
+	
+	// INCOMPLETE!
+}// drawRect:
+
+
+/*!
+Returns YES only if the view’s coordinate system uses
+a top-left origin.
+
+(4.0)
+*/
+- (BOOL)
+isFlipped
+{
+	// since drawing code is originally from Carbon, keep the view
+	// flipped for the time being
+	return YES;
+}// isFlipped
+
+
+/*!
+Returns YES only if the view has no transparent parts.
+
+(4.0)
+*/
+- (BOOL)
+isOpaque
+{
+	return NO;
+}// isOpaque
+
+
+@end // VectorCanvas_View
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

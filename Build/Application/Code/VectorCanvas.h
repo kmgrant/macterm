@@ -40,6 +40,15 @@
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
+#ifdef __OBJC__
+#	import <Cocoa/Cocoa.h>
+#else
+class NSView;
+class NSWindow;
+#endif
+
+// library includes
+#include <ResultCode.template.h>
 
 // application includes
 #include "SessionRef.typedef.h"
@@ -49,15 +58,46 @@
 
 #pragma mark Constants
 
+/*!
+Possible return values from Vector Canvas module routines.
+*/
+typedef ResultCode< UInt16 >	VectorCanvas_Result;
+VectorCanvas_Result const	kVectorCanvas_ResultOK(0);					//!< no error
+VectorCanvas_Result const	kVectorCanvas_ResultInvalidReference(1);	//!< given VectorCanvas_Ref is not valid
+VectorCanvas_Result const	kVectorCanvas_ResultParameterError(2);		//!< invalid input (e.g. a null pointer)
+
 enum VectorCanvas_Target
 {
 	kVectorCanvas_TargetScreenPixels		= 0,	//!< canvas will open a new TEK window
-	kVectorCanvas_TargetQuickDrawPicture	= 1		//!< canvas will target a QuickDraw picture
+	kVectorCanvas_TargetQuickDrawPicture	= 1,	//!< canvas will target a QuickDraw picture
+	kVectorCanvas_TargetNSImage				= 2		//!< canvas will target an NSImage
 };
 
 #pragma mark Types
 
 typedef struct VectorCanvas_OpaqueStruct*	VectorCanvas_Ref;
+
+#ifdef __OBJC__
+
+/*!
+Implements the main rendering part of the Vector Canvas.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface VectorCanvas_View : NSControl
+{
+@private
+	void*	internalViewPtr;
+}
+@end
+
+#else
+
+class VectorCanvas_View;
+
+#endif // __OBJC__
 
 
 
@@ -109,14 +149,9 @@ void
 SInt16
 	VectorCanvas_MonitorMouse			(VectorCanvas_Ref		inRef);
 
-VectorCanvas_Ref
-	VectorCanvas_ReturnFromWindow		(HIWindowRef			inWindow);
-
+// DEPRECATED
 PicHandle
 	VectorCanvas_ReturnNewQuickDrawPicture	(VectorInterpreter_ID	inGraphicID);
-
-HIWindowRef
-	VectorCanvas_ReturnWindow			(VectorCanvas_Ref		inRef);
 
 VectorInterpreter_ID
 	VectorCanvas_ReturnInterpreterID	(VectorCanvas_Ref		inRef);
@@ -124,12 +159,26 @@ VectorInterpreter_ID
 SessionRef
 	VectorCanvas_ReturnListeningSession	(VectorCanvas_Ref		inRef);
 
+// DEPRECATED (RESIZE THE VIEW DIRECTLY)
 SInt16
 	VectorCanvas_SetBounds				(Rect const*			inBoundsPtr);
 
 SInt16
 	VectorCanvas_SetPenColor			(VectorCanvas_Ref		inRef,
 										 SInt16					inColor);
+
+//@}
+
+//!\name Cocoa NSView and Mac OS HIView Management
+//@{
+
+// WILL BE DEPRECATED IN FAVOR OF COCOA
+VectorCanvas_Ref
+	VectorCanvas_ReturnFromWindow		(HIWindowRef			inWindow);
+
+// WILL BE DEPRECATED IN FAVOR OF COCOA
+HIWindowRef
+	VectorCanvas_ReturnWindow			(VectorCanvas_Ref		inRef);
 
 //@}
 
