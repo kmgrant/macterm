@@ -50,6 +50,7 @@
 
 
 #pragma mark Variables
+Boolean		gDebugInterface_CocoaBasedVectorGraphics = false;
 Boolean		gDebugInterface_LogsDeviceState = false;
 Boolean		gDebugInterface_LogsTerminalInputChar = false;
 Boolean		gDebugInterface_LogsTerminalState = false;
@@ -255,6 +256,35 @@ showTestTerminalWindow:(id)		sender
 
 
 #pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (BOOL)
+cocoaBasedVectorGraphics
+{
+	return gDebugInterface_CocoaBasedVectorGraphics;
+}
+- (void)
+setCocoaBasedVectorGraphics:(BOOL)		aFlag
+{
+	if (aFlag != gDebugInterface_CocoaBasedVectorGraphics)
+	{
+		if (aFlag)
+		{
+			Console_WriteLine("enabled experimental Cocoa-based vector graphics windows");
+		}
+		else
+		{
+			Console_WriteLine("disabled experimental Cocoa-based vector graphics windows");
+		}
+		
+		gDebugInterface_CocoaBasedVectorGraphics = aFlag;
+	}
+}// setCocoaBasedVectorGraphics:
 
 
 /*!

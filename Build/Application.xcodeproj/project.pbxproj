@@ -403,6 +403,7 @@
 		0A6315B912348AB4003890B8 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ClipboardCocoa.xib; sourceTree = "<group>"; };
 		0A64C5EA1059E423005B8A48 /* StreamCapture.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StreamCapture.cp; path = Application/Code/StreamCapture.cp; sourceTree = "<group>"; };
 		0A64C5EC1059E432005B8A48 /* StreamCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamCapture.h; path = Application/Code/StreamCapture.h; sourceTree = "<group>"; };
+		0A66B705154E04DC00B98072 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/VectorCanvasCocoa.xib; sourceTree = "<group>"; };
 		0A66CA450887464200FD616C /* HIViewWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.h; path = Shared/Code/HIViewWrap.h; sourceTree = "<group>"; };
 		0A66CA4B0887467000FD616C /* HIViewWrap.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HIViewWrap.cp; path = Shared/Code/HIViewWrap.cp; sourceTree = "<group>"; };
 		0A66CA950887505200FD616C /* HIViewWrap.fwd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.fwd.h; path = Shared/Code/HIViewWrap.fwd.h; sourceTree = "<group>"; };
@@ -963,6 +964,7 @@
 				0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */,
 				0AAEFFBF111E77F100526983 /* ServerBrowserCocoa.xib */,
 				0ACFBF4612F13506008E4203 /* TerminalWindowCocoa.xib */,
+				0A66B704154E04DC00B98072 /* VectorCanvasCocoa.xib */,
 				0A495E8F14734EA9005A1D3A /* WindowTitleDialogCocoa.xib */,
 				0ACDD9240ABD16C200040553 /* AlertMessages.nib */,
 				0A060B29078BA0D500A8BB55 /* ColorBox.nib */,
@@ -1511,6 +1513,14 @@
 				0A6315B912348AB4003890B8 /* English */,
 			);
 			name = ClipboardCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A66B704154E04DC00B98072 /* VectorCanvasCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A66B705154E04DC00B98072 /* English */,
+			);
+			name = VectorCanvasCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A670D3413E15C4A00CD2A1C /* AlertMessagesModalCocoa.xib */ = {

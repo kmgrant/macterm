@@ -93,9 +93,26 @@ changes to an interface declared in a ".mm" file.
 }
 @end
 
+
+/*!
+Implements a Cocoa window to display a vector graphics
+canvas.  See "VectorGraphicsWindowCocoa.xib".
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface VectorCanvas_WindowController : NSWindowController
+{
+	IBOutlet VectorCanvas_View*		canvasView;
+}
+
+@end
+
 #else
 
 class VectorCanvas_View;
+class VectorCanvas_WindowController;
 
 #endif // __OBJC__
 

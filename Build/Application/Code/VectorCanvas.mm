@@ -60,6 +60,7 @@
 #import "AppResources.h"
 #import "Console.h"
 #import "ConstantsRegistry.h"
+#import "DebugInterface.h"
 #import "DialogUtilities.h"
 #import "Preferences.h"
 #import "Session.h"
@@ -116,12 +117,9 @@ struct My_VectorCanvas
 	VectorCanvas_Target		target;
 	VectorInterpreter_ID	interpreter;
 	SessionRef				session;
-	HIWindowRef				owningWindow;
 	WindowTitleDialog_Ref	renameDialog;
 	EventHandlerUPP			closeUPP;
 	EventHandlerRef			closeHandler;
-	HIViewRef				canvas;
-	CarbonEventHandlerWrap	canvasDrawHandler;
 	My_CGColorList			deviceColors;
 	SInt16					xorigin;
 	SInt16					yorigin;
@@ -130,6 +128,11 @@ struct My_VectorCanvas
 	SInt16					ingin;
 	SInt16					width;
 	SInt16					height;
+	VectorCanvas_WindowController*	windowController;
+	// the following are deprecated (the Carbon interface will eventually go away)
+	HIWindowRef				owningWindow;
+	HIViewRef				canvas;
+	CarbonEventHandlerWrap	canvasDrawHandler;
 };
 typedef My_VectorCanvas*		My_VectorCanvasPtr;
 typedef My_VectorCanvas const*	My_VectorCanvasConstPtr;
@@ -202,44 +205,59 @@ VectorCanvas_New	(VectorInterpreter_ID	inID,
 {
 	My_VectorCanvasPtr		ptr = new My_VectorCanvas;
 	VectorCanvas_Ref		result = REINTERPRET_CAST(ptr, VectorCanvas_Ref);
+	Boolean					isCocoaView = DebugInterface_CocoaBasedVectorGraphics();
 	
 	
 	ptr->id = 'RGMW';
 	ptr->selfRef = result;
 	ptr->target = inTarget;
 	
-	// load the NIB containing this dialog (automatically finds the right localization)
-	ptr->owningWindow = NIBWindow(AppResources_ReturnBundleForNIBs(),
-									CFSTR("TEKWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
+	// for now, choose between Cocoa and Carbon implementations
+	if (isCocoaView)
+	{
+		ptr->windowController = [[VectorCanvas_WindowController alloc] init];
+		
+		// TEMPORARY; for now, initialize but ignore Carbon equivalents
+		ptr->owningWindow = nullptr;
+	}
+	else
+	{
+		// initialize but do not use the Cocoa version
+		ptr->windowController = nil;
+		
+		// load the NIB containing this dialog (automatically finds the right localization)
+		ptr->owningWindow = NIBWindow(AppResources_ReturnBundleForNIBs(),
+										CFSTR("TEKWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
+		
+		// associate this canvas with the window so that it can be found by other things;
+		// NOTE that this is just the simplest thing for now, but a better implementation
+		// would be to use *control* properties and a custom HIView class, associating
+		// the canvas directly with the view that renders it
+		{
+			OSStatus	error = SetWindowProperty(ptr->owningWindow, AppResources_ReturnCreatorCode(),
+													kConstantsRegistry_WindowPropertyTypeVectorCanvas,
+													sizeof(ptr->selfRef), &ptr->selfRef);
+			assert_noerr(error);
+		}
+		
+		// install a close handler so TEK windows are detached properly
+		{
+			EventTypeSpec const		whenWindowClosing[] =
+									{
+										{ kEventClassWindow, kEventWindowClose }
+									};
+			OSStatus				error = noErr;
+			
+			
+			ptr->closeUPP = NewEventHandlerUPP(receiveWindowClosing);
+			error = InstallWindowEventHandler(ptr->owningWindow, ptr->closeUPP,
+												GetEventTypeCount(whenWindowClosing), whenWindowClosing,
+												ptr->selfRef/* user data */,
+												&ptr->closeHandler/* event handler reference */);
+			assert_noerr(error);
+		}
+	}
 	ptr->renameDialog = nullptr;
-	
-	// associate this canvas with the window so that it can be found by other things;
-	// NOTE that this is just the simplest thing for now, but a better implementation
-	// would be to use *control* properties and a custom HIView class, associating
-	// the canvas directly with the view that renders it
-	{
-		OSStatus	error = SetWindowProperty(ptr->owningWindow, AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_WindowPropertyTypeVectorCanvas,
-												sizeof(ptr->selfRef), &ptr->selfRef);
-		assert_noerr(error);
-	}
-	
-	// install a close handler so TEK windows are detached properly
-	{
-		EventTypeSpec const		whenWindowClosing[] =
-								{
-									{ kEventClassWindow, kEventWindowClose }
-								};
-		OSStatus				error = noErr;
-		
-		
-		ptr->closeUPP = NewEventHandlerUPP(receiveWindowClosing);
-		error = InstallWindowEventHandler(ptr->owningWindow, ptr->closeUPP,
-											GetEventTypeCount(whenWindowClosing), whenWindowClosing,
-											ptr->selfRef/* user data */,
-											&ptr->closeHandler/* event handler reference */);
-		assert_noerr(error);
-	}
 	
 	ptr->interpreter = inID;
 	ptr->session = nullptr;
@@ -273,26 +291,33 @@ VectorCanvas_New	(VectorInterpreter_ID	inID,
 		copyColorPreferences(ptr, defaultFormat);
 	}
 	
-	// install this handler last so drawing cannot occur prematurely
+	if (isCocoaView)
+	{
+		[[ptr->windowController window] makeKeyAndOrderFront:nil];
+	}
+	else
 	{
 		HIViewWrap		canvasView(idMyCanvas, ptr->owningWindow);
 		
 		
+		// install this handler last so drawing cannot occur prematurely
 		ptr->canvas = canvasView;
 		ptr->canvasDrawHandler.install(GetControlEventTarget(canvasView), receiveCanvasDraw,
 										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
 										result/* context */);
 		assert(ptr->canvasDrawHandler.isInstalled());
-	}
-	
-	SetWindowKind(ptr->owningWindow, WIN_TEK);
-	{
-		HIWindowRef		frontWindow = GetFrontWindowOfClass(kDocumentWindowClass, true/* visible */);
 		
+		// set the window kind, for the benefit of code that varies by window type
+		SetWindowKind(ptr->owningWindow, WIN_TEK);
 		
-		// unless the front window is another graphic, do not force it in front
-		if (WIN_TEK != GetWindowKind(frontWindow)) SendBehind(ptr->owningWindow, frontWindow);
-		ShowWindow(ptr->owningWindow);
+		{
+			HIWindowRef		frontWindow = GetFrontWindowOfClass(kDocumentWindowClass, true/* visible */);
+			
+			
+			// unless the front window is another graphic, do not force it in front
+			if (WIN_TEK != GetWindowKind(frontWindow)) SendBehind(ptr->owningWindow, frontWindow);
+			ShowWindow(ptr->owningWindow);
+		}
 	}
 	
 	return result;
@@ -312,6 +337,11 @@ VectorCanvas_Dispose	(VectorCanvas_Ref*		inoutRefPtr)
 	{
 		My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), *inoutRefPtr);
 		
+		
+		if (nil != ptr->windowController)
+		{
+			[ptr->windowController release], ptr->windowController = nil;
+		}
 		
 		if (nullptr != ptr->renameDialog)
 		{
@@ -1318,5 +1348,56 @@ isOpaque
 
 
 @end // VectorCanvas_View
+
+
+@implementation VectorCanvas_WindowController
+
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
+- (id)
+init
+{
+	self = [super initWithWindowNibName:@"VectorCanvasCocoa"];
+	if (nil != self)
+	{
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark NSWindowController
+
+
+/*!
+Handles initialization that depends on user interface
+elements being properly set up.  (Everything else is just
+done in "init".)
+
+(4.0)
+*/
+- (void)
+windowDidLoad
+{
+	assert(nil != canvasView);
+}// windowDidLoad
+
+
+@end // VectorCanvas_WindowController
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
