@@ -11,7 +11,7 @@
       <string key="NS.object.0">851</string>
     </object>
     <array class="NSMutableArray" key="IBDocument.EditedObjectIDs">
-      <integer value="2"/>
+      <integer value="1"/>
     </array>
     <array key="IBDocument.PluginDependencies">
       <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -39,8 +39,8 @@
         <string key="NSWindowClass">NSPanel</string>
         <nil key="NSViewClass"/>
         <nil key="NSUserInterfaceItemIdentifier"/>
-        <string key="NSWindowContentMaxSize">{466, 220}</string>
-        <string key="NSWindowContentMinSize">{466, 220}</string>
+        <string key="NSWindowContentMaxSize">{466, 240}</string>
+        <string key="NSWindowContentMinSize">{466, 240}</string>
         <object class="NSView" key="NSWindowView" id="64225887">
           <reference key="NSNextResponder"/>
           <int key="NSvFlags">256</int>
@@ -346,8 +346,8 @@
           <int key="NSViewLayerContentsRedrawPolicy">2</int>
         </object>
         <string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
-        <string key="NSMinSize">{466, 239}</string>
-        <string key="NSMaxSize">{466, 239}</string>
+        <string key="NSMinSize">{466, 259}</string>
+        <string key="NSMaxSize">{466, 259}</string>
         <bool key="NSWindowIsRestorable">YES</bool>
       </object>
     </array>
@@ -644,8 +644,8 @@
         <boolean value="YES" key="1.NSWindowTemplate.visibleAtLaunch"/>
         <boolean value="YES" key="1.windowTemplate.hasMaxSize"/>
         <boolean value="YES" key="1.windowTemplate.hasMinSize"/>
-        <string key="1.windowTemplate.maxSize">{466, 220}</string>
-        <string key="1.windowTemplate.minSize">{466, 220}</string>
+        <string key="1.windowTemplate.maxSize">{466, 240}</string>
+        <string key="1.windowTemplate.minSize">{466, 240}</string>
         <string key="112.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
         <object class="NSAffineTransform" key="112.IBViewBoundsToFrameTransform">
           <bytes key="NSTransformStruct">P4AAAL+AAABDOAAAwzAAAA</bytes>
