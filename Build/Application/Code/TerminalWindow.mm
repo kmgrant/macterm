@@ -7854,6 +7854,7 @@ done in "init".)
 - (void)
 windowDidLoad
 {
+	[super windowDidLoad];
 	assert(nil != testTerminalContentView);
 	assert(nil != testTerminalPaddingView);
 	assert(nil != testTerminalBackgroundView);
