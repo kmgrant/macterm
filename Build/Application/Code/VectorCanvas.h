@@ -65,12 +65,18 @@ typedef ResultCode< UInt16 >	VectorCanvas_Result;
 VectorCanvas_Result const	kVectorCanvas_ResultOK(0);					//!< no error
 VectorCanvas_Result const	kVectorCanvas_ResultInvalidReference(1);	//!< given VectorCanvas_Ref is not valid
 VectorCanvas_Result const	kVectorCanvas_ResultParameterError(2);		//!< invalid input (e.g. a null pointer)
+VectorCanvas_Result const	kVectorCanvas_ResultUnsupportedAction(3);	//!< current canvas mode cannot support requested action
+
+enum VectorCanvas_PathTarget
+{
+	kVectorCanvas_PathTargetPrimary			= 0,	//!< the entire vector graphic will be modified
+	kVectorCanvas_PathTargetScrap			= 1		//!< only the “scrap” path will be modified (see VectorCanvas_ScrapPathReset())
+};
 
 enum VectorCanvas_Target
 {
 	kVectorCanvas_TargetScreenPixels		= 0,	//!< canvas will open a new TEK window
-	kVectorCanvas_TargetQuickDrawPicture	= 1,	//!< canvas will target a QuickDraw picture
-	kVectorCanvas_TargetNSImage				= 2		//!< canvas will target an NSImage
+	kVectorCanvas_TargetQuickDrawPicture	= 1		//!< canvas will target a QuickDraw picture
 };
 
 #pragma mark Types
@@ -89,8 +95,26 @@ changes to an interface declared in a ".mm" file.
 @interface VectorCanvas_View : NSControl
 {
 @private
-	void*	internalViewPtr;
+	void*	internalPtr;
 }
+
+// new methods
+
+- (id)
+canPerformCopy:(id <NSValidatedUserInterfaceItem>)_;
+- (IBAction)
+performCopy:(id)_;
+
+- (id)
+canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)_;
+- (IBAction)
+performPrintScreen:(id)_;
+
+- (id)
+canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)_;
+- (IBAction)
+performPrintSelection:(id)_;
+
 @end
 
 
@@ -105,7 +129,20 @@ changes to an interface declared in a ".mm" file.
 @interface VectorCanvas_WindowController : NSWindowController
 {
 	IBOutlet VectorCanvas_View*		canvasView;
+@private
+	void*	internalPtr;
 }
+
+// designated initializer
+- (id)
+initWithInternalPtr:(void*)_;
+
+// accessors
+
+- (VectorCanvas_View*)
+canvasView;
+- (void)
+setCanvasView:(VectorCanvas_View*)_;
 
 @end
 
@@ -136,7 +173,10 @@ VectorCanvas_Ref
 										 VectorCanvas_Target	inTarget);
 
 void
-	VectorCanvas_Dispose				(VectorCanvas_Ref*		inoutPtr);
+	VectorCanvas_Retain					(VectorCanvas_Ref		inRef);
+
+void
+	VectorCanvas_Release				(VectorCanvas_Ref*		inoutPtr);
 
 //@}
 
@@ -153,12 +193,13 @@ void
 void
 	VectorCanvas_DisplayWindowRenameUI	(VectorCanvas_Ref		inRef);
 
-SInt16
+VectorCanvas_Result
 	VectorCanvas_DrawLine				(VectorCanvas_Ref		inRef,
 										 SInt16					inStartX,
 										 SInt16					inStartY,
 										 SInt16					inEndX,
-										 SInt16					inEndY);
+										 SInt16					inEndY,
+										 VectorCanvas_PathTarget	inTarget = kVectorCanvas_PathTargetPrimary);
 
 void
 	VectorCanvas_InvalidateView			(VectorCanvas_Ref		inRef);
@@ -176,11 +217,19 @@ VectorInterpreter_ID
 SessionRef
 	VectorCanvas_ReturnListeningSession	(VectorCanvas_Ref		inRef);
 
+VectorCanvas_Result
+	VectorCanvas_ScrapPathFill			(VectorCanvas_Ref		inRef,
+										 SInt16					inFillColor,
+										 Float32				inFrameWidthOrZero = 0.0);
+
+VectorCanvas_Result
+	VectorCanvas_ScrapPathReset			(VectorCanvas_Ref		inRef);
+
 // DEPRECATED (RESIZE THE VIEW DIRECTLY)
 SInt16
 	VectorCanvas_SetBounds				(Rect const*			inBoundsPtr);
 
-SInt16
+VectorCanvas_Result
 	VectorCanvas_SetPenColor			(VectorCanvas_Ref		inRef,
 										 SInt16					inColor);
 

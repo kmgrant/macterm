@@ -219,6 +219,7 @@ Boolean
 OSStatus
 	Clipboard_CreateContentsAEDesc			(AEDesc*					outDescPtr);
 
+// DEPRECATED
 void
 	Clipboard_GraphicsToScrap				(VectorInterpreter_ID		inGraphicID);
 

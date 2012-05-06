@@ -41,95 +41,32 @@
       <object class="NSWindowTemplate" id="583842220">
         <int key="NSWindowStyleMask">15</int>
         <int key="NSWindowBacking">2</int>
-        <string key="NSWindowRect">{{352, 529}, {731, 495}}</string>
+        <string key="NSWindowRect">{{552, 597}, {384, 384}}</string>
         <int key="NSWTFlags">611845120</int>
         <string key="NSWindowTitle"/>
         <string key="NSWindowClass">NSWindow</string>
         <nil key="NSViewClass"/>
         <nil key="NSUserInterfaceItemIdentifier"/>
         <string key="NSWindowContentMaxSize">{3.4028235e+38, 3.4028235e+38}</string>
-        <string key="NSWindowContentMinSize">{150, 100}</string>
+        <string key="NSWindowContentMinSize">{192, 192}</string>
         <object class="NSView" key="NSWindowView" id="406384019">
           <reference key="NSNextResponder"/>
           <int key="NSvFlags">256</int>
           <object class="NSMutableArray" key="NSSubviews">
             <bool key="EncodedWithXMLCoder">YES</bool>
-            <object class="NSScrollView" id="1007019904">
+            <object class="NSCustomView" id="406940096">
               <reference key="NSNextResponder" ref="406384019"/>
               <int key="NSvFlags">274</int>
-              <object class="NSMutableArray" key="NSSubviews">
-                <bool key="EncodedWithXMLCoder">YES</bool>
-                <object class="NSClipView" id="344751945">
-                  <reference key="NSNextResponder" ref="1007019904"/>
-                  <int key="NSvFlags">2304</int>
-                  <object class="NSMutableArray" key="NSSubviews">
-                    <bool key="EncodedWithXMLCoder">YES</bool>
-                    <object class="NSCustomView" id="900749321">
-                      <reference key="NSNextResponder" ref="344751945"/>
-                      <int key="NSvFlags">274</int>
-                      <object class="NSMutableArray" key="NSSubviews">
-                        <bool key="EncodedWithXMLCoder">YES</bool>
-                        <object class="NSCustomView" id="406940096">
-                          <reference key="NSNextResponder" ref="900749321"/>
-                          <int key="NSvFlags">274</int>
-                          <string key="NSFrame">{{5, 5}, {721, 486}}</string>
-                          <reference key="NSSuperview" ref="900749321"/>
-                          <string key="NSClassName">VectorCanvas_View</string>
-                        </object>
-                      </object>
-                      <string key="NSFrameSize">{731, 496}</string>
-                      <reference key="NSSuperview" ref="344751945"/>
-                      <string key="NSClassName">VectorCanvas_View</string>
-                    </object>
-                  </object>
-                  <string key="NSFrame">{{1, 1}, {731, 496}}</string>
-                  <reference key="NSSuperview" ref="1007019904"/>
-                  <reference key="NSDocView" ref="900749321"/>
-                  <object class="NSColor" key="NSBGColor">
-                    <int key="NSColorSpace">6</int>
-                    <string key="NSCatalogName">System</string>
-                    <string key="NSColorName">controlColor</string>
-                    <object class="NSColor" key="NSColor">
-                      <int key="NSColorSpace">3</int>
-                      <bytes key="NSWhite">MC42NjY2NjY2ODY1AA</bytes>
-                    </object>
-                  </object>
-                  <int key="NScvFlags">4</int>
-                </object>
-                <object class="NSScroller" id="403131711">
-                  <reference key="NSNextResponder" ref="1007019904"/>
-                  <int key="NSvFlags">256</int>
-                  <string key="NSFrame">{{717, 1}, {15, 496}}</string>
-                  <reference key="NSSuperview" ref="1007019904"/>
-                  <reference key="NSTarget" ref="1007019904"/>
-                  <string key="NSAction">_doScroller:</string>
-                  <double key="NSCurValue">0.99798387289047241</double>
-                  <double key="NSPercent">0.9860835075378418</double>
-                </object>
-                <object class="NSScroller" id="336072824">
-                  <reference key="NSNextResponder" ref="1007019904"/>
-                  <int key="NSvFlags">-2147483392</int>
-                  <string key="NSFrame">{{-100, -100}, {716, 15}}</string>
-                  <reference key="NSSuperview" ref="1007019904"/>
-                  <int key="NSsFlags">1</int>
-                  <reference key="NSTarget" ref="1007019904"/>
-                  <string key="NSAction">_doScroller:</string>
-                  <double key="NSPercent">0.50602412223815918</double>
-                </object>
-              </object>
-              <string key="NSFrame">{{-1, -2}, {733, 498}}</string>
+              <string key="NSFrameSize">{384, 384}</string>
               <reference key="NSSuperview" ref="406384019"/>
-              <int key="NSsFlags">133138</int>
-              <reference key="NSVScroller" ref="403131711"/>
-              <reference key="NSHScroller" ref="336072824"/>
-              <reference key="NSContentView" ref="344751945"/>
+              <string key="NSClassName">VectorCanvas_View</string>
             </object>
           </object>
-          <string key="NSFrameSize">{731, 495}</string>
+          <string key="NSFrameSize">{384, 384}</string>
           <reference key="NSSuperview"/>
         </object>
         <string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
-        <string key="NSMinSize">{150, 122}</string>
+        <string key="NSMinSize">{192, 214}</string>
         <string key="NSMaxSize">{3.4028235e+38, 3.4028235e+38}</string>
         <bool key="NSWindowIsRestorable">YES</bool>
       </object>
@@ -196,50 +133,16 @@
             <reference key="object" ref="406384019"/>
             <object class="NSMutableArray" key="children">
               <bool key="EncodedWithXMLCoder">YES</bool>
-              <reference ref="1007019904"/>
+              <reference ref="406940096"/>
             </object>
             <reference key="parent" ref="583842220"/>
             <string key="objectName">Window Content View</string>
           </object>
           <object class="IBObjectRecord">
-            <int key="objectID">5</int>
-            <reference key="object" ref="1007019904"/>
-            <object class="NSMutableArray" key="children">
-              <bool key="EncodedWithXMLCoder">YES</bool>
-              <reference ref="900749321"/>
-              <reference ref="336072824"/>
-              <reference ref="403131711"/>
-            </object>
-            <reference key="parent" ref="406384019"/>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">6</int>
-            <reference key="object" ref="900749321"/>
-            <object class="NSMutableArray" key="children">
-              <bool key="EncodedWithXMLCoder">YES</bool>
-              <reference ref="406940096"/>
-            </object>
-            <reference key="parent" ref="1007019904"/>
-            <string key="objectName">Background View</string>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">7</int>
-            <reference key="object" ref="336072824"/>
-            <reference key="parent" ref="1007019904"/>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">8</int>
-            <reference key="object" ref="403131711"/>
-            <reference key="parent" ref="1007019904"/>
-          </object>
-          <object class="IBObjectRecord">
             <int key="objectID">9</int>
             <reference key="object" ref="406940096"/>
-            <object class="NSMutableArray" key="children">
-              <bool key="EncodedWithXMLCoder">YES</bool>
-            </object>
-            <reference key="parent" ref="900749321"/>
-            <string key="objectName">Padding View</string>
+            <reference key="parent" ref="406384019"/>
+            <string key="objectName">Canvas View</string>
           </object>
         </object>
       </object>
@@ -257,9 +160,6 @@
           <string>3.windowTemplate.hasMinSize</string>
           <string>3.windowTemplate.minSize</string>
           <string>4.IBPluginDependency</string>
-          <string>5.IBViewBoundsToFrameTransform</string>
-          <string>6.IBPluginDependency</string>
-          <string>6.IBViewBoundsToFrameTransform</string>
           <string>9.IBViewBoundsToFrameTransform</string>
         </object>
         <object class="NSMutableArray" key="dict.values">
@@ -267,22 +167,15 @@
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-          <string>{{352, 529}, {731, 495}}</string>
+          <string>{{552, 597}, {384, 384}}</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-          <string>{{352, 529}, {731, 495}}</string>
+          <string>{{552, 597}, {384, 384}}</string>
           <boolean value="NO"/>
           <boolean value="YES"/>
-          <string>{150, 100}</string>
+          <string>{192, 192}</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <object class="NSAffineTransform">
-            <bytes key="NSTransformStruct">P4AAAL+AAABA4AAAw/oAAA</bytes>
-          </object>
-          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-          <object class="NSAffineTransform">
-            <bytes key="NSTransformStruct">AULWAABCQAAAA</bytes>
-          </object>
-          <object class="NSAffineTransform">
-            <bytes key="NSTransformStruct">AUCgAABCtAAAA</bytes>
+            <bytes key="NSTransformStruct">AQAAAABCeAAAA</bytes>
           </object>
         </object>
       </object>
@@ -322,21 +215,10 @@
           </object>
         </object>
         <object class="IBPartialClassDescription">
-          <string key="className">NSScroller</string>
-          <reference key="sourceIdentifier" ref="753309523"/>
-        </object>
-        <object class="IBPartialClassDescription">
           <string key="className">NSWindow</string>
           <object class="IBClassDescriptionSource" key="sourceIdentifier">
             <string key="majorKey">IBProjectSource</string>
             <string key="minorKey">Application/Code/TerminalWindow.h</string>
-          </object>
-        </object>
-        <object class="IBPartialClassDescription">
-          <string key="className">NSWindow</string>
-          <object class="IBClassDescriptionSource" key="sourceIdentifier" id="526037514">
-            <string key="majorKey">IBProjectSource</string>
-            <string key="minorKey">Application/Code/VectorCanvas.h</string>
           </object>
         </object>
         <object class="IBPartialClassDescription">
@@ -350,7 +232,21 @@
         <object class="IBPartialClassDescription">
           <string key="className">VectorCanvas_View</string>
           <string key="superclassName">NSControl</string>
-          <reference key="sourceIdentifier" ref="526037514"/>
+          <object class="NSMutableDictionary" key="actions">
+            <string key="NS.key.0">performCopy:</string>
+            <string key="NS.object.0">id</string>
+          </object>
+          <object class="NSMutableDictionary" key="actionInfosByName">
+            <string key="NS.key.0">performCopy:</string>
+            <object class="IBActionInfo" key="NS.object.0">
+              <string key="name">performCopy:</string>
+              <string key="candidateClassName">id</string>
+            </object>
+          </object>
+          <object class="IBClassDescriptionSource" key="sourceIdentifier" id="526037514">
+            <string key="majorKey">IBProjectSource</string>
+            <string key="minorKey">Application/Code/VectorCanvas.h</string>
+          </object>
         </object>
         <object class="IBPartialClassDescription">
           <string key="className">VectorCanvas_WindowController</string>

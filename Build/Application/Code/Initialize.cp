@@ -293,6 +293,17 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 			DebugInterface_DisplayTestTerminal();
 		}
 	}
+	
+	// if requested, automatically use Cocoa for vector graphics windows
+	{
+		char const*		varValue = getenv("MACTERM_AUTO_ENABLE_COCOA_TEK");
+		
+		
+		if ((nullptr != varValue) && (0 == strcmp(varValue, "1")))
+		{
+			gDebugInterface_CocoaBasedVectorGraphics = true;
+		}
+	}
 }// ApplicationStartup
 
 

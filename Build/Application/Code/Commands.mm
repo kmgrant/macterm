@@ -841,21 +841,11 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				}
 				else
 				{
-					VectorCanvas_Ref	canvasRef = VectorCanvas_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());
-					
-					
-					if (nullptr != canvasRef)
+					if (nullptr != activeView)
 					{
-						Clipboard_GraphicsToScrap(VectorCanvas_ReturnInterpreterID(canvasRef));
-					}
-					else
-					{
-						if (nullptr != activeView)
-						{
-							Clipboard_TextToScrap(activeView, (kCommandCopyTable == inCommandID)
-																? kClipboard_CopyMethodTable
-																: kClipboard_CopyMethodStandard);
-						}
+						Clipboard_TextToScrap(activeView, (kCommandCopyTable == inCommandID)
+															? kClipboard_CopyMethodTable
+															: kClipboard_CopyMethodStandard);
 					}
 				}
 			}
@@ -2484,7 +2474,8 @@ BOOL
 isCocoaWindowMoreImportantThanCarbon	(NSWindow*		inWindow)
 {
 	BOOL	result = (([inWindow level] != NSNormalWindowLevel) ||
-						([inWindow isKindOfClass:[Popover_Window class]]));
+						[inWindow isKindOfClass:[Popover_Window class]] ||
+						[[inWindow windowController] isKindOfClass:[VectorCanvas_WindowController class]]);
 	
 	
 	return result;
@@ -3985,7 +3976,19 @@ canPerformCaptureEnd:(id <NSValidatedUserInterfaceItem>)	anItem
 performPrintScreen:(id)		sender
 {
 #pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandPrintScreen, nullptr/* target */);
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
+	{
+		// assume that abnormal Cocoa windows should handle this directly
+		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(performPrintScreen:) with:sender];
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandPrintScreen, nullptr/* target */);
+	}
 }
 - (id)
 canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -4002,7 +4005,19 @@ canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
 performPrintSelection:(id)	sender
 {
 #pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandPrint, nullptr/* target */);
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
+	{
+		// assume that abnormal Cocoa windows should handle this directly
+		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(performPrintScreen:) with:sender];
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandPrint, nullptr/* target */);
+	}
 }
 - (id)
 canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -4047,7 +4062,11 @@ performCopy:(id)	sender
 	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
 	{
 		// assume that abnormal Cocoa windows should handle this directly
-		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(copy:) with:sender];
+		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(performCopy:) with:sender];
+		if (NO == implementedByCocoa)
+		{
+			implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(copy:) with:sender];
+		}
 	}
 	
 	if (NO == implementedByCocoa)
@@ -4080,21 +4099,16 @@ canPerformCopy:(id <NSValidatedUserInterfaceItem>)		anItem
 		{
 			result = YES;
 		}
-		else
-		{
-			// TEMPORARY: This is a Carbon window dependency for now.  Once the vector graphics
-			// windows become Cocoa-based, this check will be unnecessary: the NSWindow subclass
-			// will have its own performCopy: and canPerformCopy: implementations, and rebinding
-			// the menu command to the first responder will ensure that the appropriate method
-			// is used whenever a vector graphics window is key.
-			BOOL	isVectorGraphicsWindow = (WIN_TEK == GetWindowKind(ActiveNonFloatingWindow()));
-			
-			
-			result = isVectorGraphicsWindow;
-		}
+	}
+	else if ([keyResponder respondsToSelector:@selector(canPerformCopy:)])
+	{
+		// TEMPORARY; until the responder chain is fully-enabled, it’s necessary to
+		// manually query the responder for a validation routine
+		result = [[keyResponder canPerformCopy:anItem] boolValue];
 	}
 	else if ((nullptr == terminalWindow) && ([keyResponder respondsToSelector:@selector(copy:)]))
 	{
+		// text view
 		result = ([keyResponder respondsToSelector:@selector(isEditable)] && (NO == [keyResponder isEditable]))
 					? NO
 					: YES;

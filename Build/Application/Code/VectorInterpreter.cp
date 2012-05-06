@@ -222,7 +222,8 @@ typedef std::map< VectorInterpreter_ID, My_VectorInterpreterPtr >	My_Interpreter
 #pragma mark Internal Method Prototypes
 namespace {
 
-void			clipvec						(My_VectorInterpreterPtr, short, short, short, short);
+void			clipvec						(My_VectorInterpreterPtr, short, short, short, short,
+											 VectorCanvas_PathTarget = kVectorCanvas_PathTargetPrimary);
 short			drawc						(My_VectorInterpreterPtr, short);
 short			fontnum						(My_VectorInterpreterPtr, UInt16);
 Boolean			isValidID					(VectorInterpreter_ID);
@@ -530,7 +531,7 @@ VectorInterpreter_New	(VectorInterpreter_Target	inTarget,
 		fontnum(ptr, 0);
 		storexy(ptr, 0, 3071);
 		
-		VectorCanvas_SetPenColor(ptr->canvas, 1);
+		(VectorCanvas_Result)VectorCanvas_SetPenColor(ptr->canvas, 1);
 	#if 1
 		VectorInterpreter_Zoom(result, 0, 0, 4095, 3119); // important!
 	#else
@@ -559,7 +560,7 @@ VectorInterpreter_Dispose	(VectorInterpreter_ID*		inoutGraphicIDPtr)
 		My_VectorInterpreterPtr		ptr = VGwin[*inoutGraphicIDPtr];
 		
 		
-		VectorCanvas_Dispose(&ptr->canvas);
+		VectorCanvas_Release(&ptr->canvas);
 		delete ptr, ptr = nullptr;
 		VGwin.erase(*inoutGraphicIDPtr);
 	}
@@ -642,7 +643,7 @@ VectorInterpreter_PageCommand	(VectorInterpreter_ID	inGraphicID)
 	if (nullptr != ptr->canvas)
 	{
 		VectorCanvas_InvalidateView(ptr->canvas);
-		VectorCanvas_SetPenColor(ptr->canvas, 1);
+		(VectorCanvas_Result)VectorCanvas_SetPenColor(ptr->canvas, 1);
 	}
 	VGclrstor(ptr);
 	ptr->mode = ALPHA;
@@ -938,7 +939,8 @@ clipvec		(My_VectorInterpreterPtr		vp,
 			 short		xa,
 			 short		ya,
 			 short		xb,
-			 short		yb)
+			 short		yb,
+			 VectorCanvas_PathTarget	inTarget)
 {
 	short				t = 0,
 						b = 0,
@@ -956,12 +958,12 @@ clipvec		(My_VectorInterpreterPtr		vp,
 	l = vp->winleft;
 	r = vp->winright;
 
-	VectorCanvas_DrawLine(vp->canvas,
+	(VectorCanvas_Result)VectorCanvas_DrawLine(vp->canvas,
 		(short) ((long)(xa - l) * kVectorInterpreter_MaxX / (long) vp->winwide),
 		(short) ((long)(ya- b) * kVectorInterpreter_MaxY / (long) vp->wintall),
 		(short) ((long)(xb - l) * kVectorInterpreter_MaxX / (long) vp->winwide),
-		(short) ((long)(yb- b) * kVectorInterpreter_MaxY / (long) vp->wintall)
-		);
+		(short) ((long)(yb- b) * kVectorInterpreter_MaxY / (long) vp->wintall),
+		inTarget);
 }// clipvec
 
 
@@ -1022,10 +1024,10 @@ drawc		(My_VectorInterpreterPtr	inPtr,
 		if (c > 126)
 		{
 			height = 1;
-			VectorCanvas_SetPenColor(inPtr->canvas,inPtr->pencolor);
+			(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas,inPtr->pencolor);
 		}
 		else
-			VectorCanvas_SetPenColor(inPtr->canvas,inPtr->TEKIndex);
+			(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas,inPtr->TEKIndex);
 		hmag = (height*8);
 		vmag = (height*8);
 		
@@ -1105,7 +1107,7 @@ drawc		(My_VectorInterpreterPtr	inPtr,
 	}
 
 	if (kVectorInterpreter_ModeTEK4105 == inPtr->commandSet)
-		VectorCanvas_SetPenColor(inPtr->canvas,inPtr->pencolor);
+		(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas,inPtr->pencolor);
 
 	inPtr->cury = savey;
 	inPtr->curx = savex;
@@ -1244,7 +1246,6 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 	char		value;
 	char		goagain;	/* true means go thru the function a second time */
 	char		temp[80];
-	RgnHandle	PanelRgn;
 	My_PointList	temppoint;
 
 	temp[0] = c;
@@ -1692,26 +1693,19 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 						vp->savy = vp->cury = vp->current->y;
 						vp->current = vp->current->next;
 						delete temppoint;
-						PanelRgn = Memory_NewRegion();
-						OpenRgn();
+						(VectorCanvas_Result)VectorCanvas_ScrapPathReset(vp->canvas);
 						while (vp->current)
 						{
 							clipvec(vp,vp->curx,vp->cury,
-									vp->current->x,vp->current->y);
+									vp->current->x,vp->current->y, kVectorCanvas_PathTargetScrap);
 							temppoint = vp->current;
 							vp->curx = vp->current->x;
 							vp->cury = vp->current->y;
 							vp->current = vp->current->next;
 							delete temppoint;
 						}
-						CloseRgn(PanelRgn);
-						if (vp->TEKPattern <= 0)
-							VectorCanvas_SetPenColor(vp->canvas,-vp->TEKPattern);
-						PaintRgn(PanelRgn);
-				/*		if (vp->TEKOutline) 
-							FrameRgn(PanelRgn); */
-						Memory_DisposeRegion(&PanelRgn);
-						VectorCanvas_SetPenColor(vp->canvas,vp->pencolor);
+						VectorCanvas_ScrapPathFill(vp->canvas, (vp->TEKPattern <= 0) ? -vp->TEKPattern : vp->pencolor,
+													(vp->TEKOutline) ? 1.0 : 0.0);
 						vp->TEKPanel = (My_PointList) nullptr;
 						vp->curx = vp->savx;
 						vp->cury = vp->savy;
@@ -1835,7 +1829,7 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 			break;
 		case COLORINT:				/* set line index; have integer */
 			vp->pencolor = vp->intin;
-			VectorCanvas_SetPenColor(vp->canvas,vp->intin);
+			(VectorCanvas_Result)VectorCanvas_SetPenColor(vp->canvas,vp->intin);
 			vp->state = CANCEL;
 			goagain = true;			/* we ignored current char; now process it */
 			break;
