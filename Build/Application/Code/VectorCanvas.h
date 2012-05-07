@@ -190,9 +190,6 @@ void
 	VectorCanvas_CopyTitle				(VectorCanvas_Ref		inRef,
 										 CFStringRef&			outTitle);
 
-void
-	VectorCanvas_DisplayWindowRenameUI	(VectorCanvas_Ref		inRef);
-
 VectorCanvas_Result
 	VectorCanvas_DrawLine				(VectorCanvas_Ref		inRef,
 										 SInt16					inStartX,
@@ -241,6 +238,9 @@ VectorCanvas_Result
 // WILL BE DEPRECATED IN FAVOR OF COCOA
 VectorCanvas_Ref
 	VectorCanvas_ReturnFromWindow		(HIWindowRef			inWindow);
+
+NSWindow*
+	VectorCanvas_ReturnNSWindow			(VectorCanvas_Ref		inRef);
 
 // WILL BE DEPRECATED IN FAVOR OF COCOA
 HIWindowRef

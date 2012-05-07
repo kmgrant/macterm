@@ -95,14 +95,25 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSTextField*	titleField;
 @private
 	id< WindowTitleDialog_ViewManagerChannel >	responder;
+	NSWindow*									parentCocoaWindow;
 	HIWindowRef									parentCarbonWindow;
 	NSString*									titleText;
 }
 
 // initializers
 
+// designated initializer
+- (id)
+initForCocoaWindow:(NSWindow*)_
+orCarbonWindow:(HIWindowRef)_
+responder:(id< WindowTitleDialog_ViewManagerChannel >)_;
+
 - (id)
 initForCarbonWindow:(HIWindowRef)_
+responder:(id< WindowTitleDialog_ViewManagerChannel >)_;
+
+- (id)
+initForCocoaWindow:(NSWindow*)_
 responder:(id< WindowTitleDialog_ViewManagerChannel >)_;
 
 // new methods
@@ -155,11 +166,6 @@ WindowTitleDialog_InvokeCloseNotifyProc		(WindowTitleDialog_CloseNotifyProcPtr	i
 void
 	WindowTitleDialog_StandardCloseNotifyProc	(WindowTitleDialog_Ref					inDialogThatClosed,
 												 Boolean								inOKButtonPressed);
-
-WindowTitleDialog_Ref
-	WindowTitleDialog_New						(HIWindowRef							inParentWindow,
-												 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr =
-																							WindowTitleDialog_StandardCloseNotifyProc);
 
 WindowTitleDialog_Ref
 	WindowTitleDialog_NewForSession				(SessionRef								inSession,

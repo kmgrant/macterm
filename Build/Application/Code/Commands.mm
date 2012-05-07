@@ -1252,20 +1252,8 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				}
 				else
 				{
-					// see if the active window is a vector graphics canvas
-					VectorCanvas_Ref	canvas = VectorCanvas_ReturnFromWindow
-													(EventLoop_ReturnRealFrontWindow());
-					
-					
-					if (nullptr != canvas)
-					{
-						VectorCanvas_DisplayWindowRenameUI(canvas);
-					}
-					else
-					{
-						// ???
-						Sound_StandardAlert();
-					}
+					// ???
+					Sound_StandardAlert();
 				}
 			}
 			break;
@@ -4011,7 +3999,7 @@ performPrintSelection:(id)	sender
 	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
 	{
 		// assume that abnormal Cocoa windows should handle this directly
-		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(performPrintScreen:) with:sender];
+		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(performPrintSelection:) with:sender];
 	}
 	
 	if (NO == implementedByCocoa)
@@ -6298,7 +6286,19 @@ canPerformMoveWindowUp:(id <NSValidatedUserInterfaceItem>)	anItem
 performRename:(id)	sender
 {
 #pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandChangeWindowTitle, nullptr/* target */);
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
+	{
+		// assume that abnormal Cocoa windows should handle this directly
+		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(performRename:) with:sender];
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandChangeWindowTitle, nullptr/* target */);
+	}
 }
 - (id)
 canPerformRename:(id <NSValidatedUserInterfaceItem>)	anItem

@@ -70,7 +70,8 @@
 	NSView*									managedView;		// the view that implements the majority of the interface
 	SessionRef								session;			// the session, if any, to which this applies
 	VectorCanvas_Ref						canvas;				// the canvas, if any, to which this applies
-	HIWindowRef								renamedWindow;		// the window to be renamed
+	NSWindow*								targetCocoaWindow;	// the window to be renamed, if Cocoa
+	HIWindowRef								targetCarbonWindow;	// the window to be renamed, if Carbon
 	PopoverManager_Ref						popoverMgr;			// manages common aspects of popover window behavior
 	WindowTitleDialog_CloseNotifyProcPtr	closeNotifyProc;	// routine to call when the dialog is dismissed
 }
@@ -80,7 +81,12 @@ viewHandlerFromRef:(WindowTitleDialog_Ref)_;
 
 // designated initializer
 - (id)
-initForCarbonWindow:(HIWindowRef)_
+initForCocoaWindow:(NSWindow*)_
+orCarbonWindow:(HIWindowRef)_
+notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_;
+
+- (id)
+initForCocoaWindow:(NSWindow*)_
 notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_;
 
 - (id)
@@ -89,7 +95,7 @@ notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_
 session:(SessionRef)_;
 
 - (id)
-initForCarbonWindow:(HIWindowRef)_
+initForCocoaWindow:(NSWindow*)_
 notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_
 vectorGraphicsCanvas:(VectorCanvas_Ref)_;
 
@@ -134,26 +140,6 @@ returnInitialTitleTextForManagedView:(NSView*)_;
 
 
 #pragma mark Public Methods
-
-/*!
-This method is used to initialize the generic window title
-dialog box.  It creates the dialog box invisibly, and uses
-the specified window’s title as the initial field value.
-
-(3.0)
-*/
-WindowTitleDialog_Ref
-WindowTitleDialog_New	(HIWindowRef							inParentWindow,
-						 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
-{
-	WindowTitleDialog_Ref	result = nullptr;
-	
-	
-	result = (WindowTitleDialog_Ref)[[WindowTitleDialog_Handler alloc]
-										initForCarbonWindow:inParentWindow notificationProc:inCloseNotifyProcPtr];
-	return result;
-}// New
-
 
 /*!
 This method is used to initialize a session-specific window
@@ -202,7 +188,7 @@ WindowTitleDialog_NewForVectorCanvas	(VectorCanvas_Ref						inCanvas,
 	
 	
 	result = (WindowTitleDialog_Ref)[[WindowTitleDialog_Handler alloc]
-										initForCarbonWindow:VectorCanvas_ReturnWindow(inCanvas)
+										initForCocoaWindow:VectorCanvas_ReturnNSWindow(inCanvas)
 															notificationProc:inCloseNotifyProcPtr
 															vectorGraphicsCanvas:inCanvas];
 	return result;
@@ -302,10 +288,16 @@ viewHandlerFromRef:(WindowTitleDialog_Ref)		aRef
 /*!
 Designated initializer.
 
+TEMPORARY; this accepts both types of window arguments (Carbon
+and Cocoa) but only one is required.  Eventually the Cocoa-only
+window version will become the designated initializer, when
+there is no reason to support Carbon windows anymore.
+
 (4.0)
 */
 - (id)
-initForCarbonWindow:(HIWindowRef)							aWindow
+initForCocoaWindow:(NSWindow*)								aCocoaWindow
+orCarbonWindow:(HIWindowRef)								aCarbonWindow
 notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
 {
 	self = [super init];
@@ -317,12 +309,32 @@ notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
 		self->managedView = nil;
 		self->session = nullptr;
 		self->canvas = nullptr;
-		self->renamedWindow = aWindow;
+		self->targetCocoaWindow = aCocoaWindow;
+		self->targetCarbonWindow = aCarbonWindow;
 		self->popoverMgr = nullptr;
 		self->closeNotifyProc = aProc;
 	}
 	return self;
-}// initForCarbonWindow:notificationProc:
+}// initForCocoaWindow:orCarbonWindow:notificationProc:
+
+
+/*!
+Initializer for Cocoa windows.  This will eventually be the
+designated initializer, when it is no longer necessary to
+support Carbon windows.
+
+(4.0)
+*/
+- (id)
+initForCocoaWindow:(NSWindow*)								aWindow
+notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
+{
+	self = [self initForCocoaWindow:aWindow orCarbonWindow:nullptr notificationProc:aProc];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initForCocoaWindow:notificationProc:
 
 
 /*!
@@ -339,7 +351,7 @@ initForCarbonWindow:(HIWindowRef)							aWindow
 notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
 session:(SessionRef)										aSession
 {
-	self = [self initForCarbonWindow:aWindow notificationProc:aProc];
+	self = [self initForCocoaWindow:nil orCarbonWindow:aWindow notificationProc:aProc];
 	if (nil != self)
 	{
 		self->session = aSession;
@@ -355,17 +367,17 @@ windows.
 (4.0)
 */
 - (id)
-initForCarbonWindow:(HIWindowRef)							aWindow
+initForCocoaWindow:(NSWindow*)								aWindow
 notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
 vectorGraphicsCanvas:(VectorCanvas_Ref)						aCanvas
 {
-	self = [self initForCarbonWindow:aWindow notificationProc:aProc];
+	self = [self initForCocoaWindow:aWindow orCarbonWindow:nullptr notificationProc:aProc];
 	if (nil != self)
 	{
 		self->canvas = aCanvas;
 	}
 	return self;
-}// initForCarbonWindow:notificationProc:vectorGraphicsCanvas:
+}// initForCocoaWindow:notificationProc:vectorGraphicsCanvas:
 
 
 /*!
@@ -399,8 +411,16 @@ display
 	{
 		// no focus is done the first time because this is
 		// eventually done in "titleDialog:didLoadManagedView:"
-		self->viewMgr = [[WindowTitleDialog_ViewManager alloc]
-							initForCarbonWindow:self->renamedWindow responder:self];
+		if (nullptr != self->targetCarbonWindow)
+		{
+			self->viewMgr = [[WindowTitleDialog_ViewManager alloc]
+								initForCarbonWindow:self->targetCarbonWindow responder:self];
+		}
+		else
+		{
+			self->viewMgr = [[WindowTitleDialog_ViewManager alloc]
+								initForCocoaWindow:self->targetCocoaWindow responder:self];
+		}
 	}
 	else
 	{
@@ -435,8 +455,13 @@ window, even if that is a Carbon window.
 - (NSWindow*)
 renamedCocoaWindow
 {
-	NSWindow*	result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(self->renamedWindow);
+	NSWindow*	result = self->targetCocoaWindow;
 	
+	
+	if ((nil == result) && (nullptr != self->targetCarbonWindow))
+	{
+		result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(self->targetCarbonWindow);
+	}
 	
 	return result;
 }// renamedCocoaWindow
@@ -535,9 +560,18 @@ didLoadManagedView:(NSView*)					aManagedView
 																		inWindow:asNSWindow];
 		[self->containerWindow setReleasedWhenClosed:NO];
 		CocoaBasic_ApplyStandardStyleToPopover(self->containerWindow, true/* has arrow */);
-		self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
-												self/* delegate */, kPopoverManager_AnimationTypeStandard,
-												self->renamedWindow);
+		if (nullptr != self->targetCarbonWindow)
+		{
+			self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
+													self/* delegate */, kPopoverManager_AnimationTypeStandard,
+													self->targetCarbonWindow);
+		}
+		else
+		{
+			self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
+													self/* delegate */, kPopoverManager_AnimationTypeStandard,
+													self->targetCocoaWindow);
+		}
 		PopoverManager_DisplayPopover(self->popoverMgr);
 	}
 }// titleDialog:didLoadManagedView:
@@ -578,7 +612,14 @@ finalTitle:(NSString*)							newTitle
 		else
 		{
 			// set raw title
-			(OSStatus)SetWindowTitleWithCFString(self->renamedWindow, (CFStringRef)newTitle);
+			if (nullptr != self->targetCocoaWindow)
+			{
+				[self->targetCocoaWindow setTitle:newTitle];
+			}
+			if (nullptr != self->targetCarbonWindow)
+			{
+				(OSStatus)SetWindowTitleWithCFString(self->targetCarbonWindow, (CFStringRef)newTitle);
+			}
 		}
 	}
 	else
@@ -657,14 +698,16 @@ Designated initializer.
 (4.0)
 */
 - (id)
-initForCarbonWindow:(HIWindowRef)						aWindow
+initForCocoaWindow:(NSWindow*)							aCocoaWindow
+orCarbonWindow:(HIWindowRef)							aCarbonWindow
 responder:(id< WindowTitleDialog_ViewManagerChannel >)	aResponder
 {
 	self = [super init];
 	if (nil != self)
 	{
 		responder = aResponder;
-		parentCarbonWindow = aWindow;
+		parentCarbonWindow = aCarbonWindow;
+		parentCocoaWindow = aCocoaWindow;
 		titleText = [@"" retain];
 		
 		// it is necessary to capture and release all top-level objects here
@@ -684,7 +727,42 @@ responder:(id< WindowTitleDialog_ViewManagerChannel >)	aResponder
 		}
 	}
 	return self;
-}// initForTerminalWindow:responder:initialOptions:
+}// initForCocoaWindow:orCarbonWindow:responder:
+
+
+/*!
+Initializer for Carbon-based windows.
+
+(4.0)
+*/
+- (id)
+initForCarbonWindow:(HIWindowRef)						aWindow
+responder:(id< WindowTitleDialog_ViewManagerChannel >)	aResponder
+{
+	self = [self initForCocoaWindow:nil orCarbonWindow:aWindow responder:aResponder];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initForCarbonWindow:responder:
+
+
+/*!
+Initializer for Cocoa-based windows; this will eventually
+be the designated initializer.
+
+(4.0)
+*/
+- (id)
+initForCocoaWindow:(NSWindow*)							aWindow
+responder:(id< WindowTitleDialog_ViewManagerChannel >)	aResponder
+{
+	self = [self initForCocoaWindow:aWindow orCarbonWindow:nullptr responder:aResponder];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initForCocoaWindow:responder:
 
 
 /*!

@@ -494,33 +494,11 @@ VectorCanvas_CopyTitle	(VectorCanvas_Ref	inRef,
 						 CFStringRef&		outTitle)
 {
 	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
-	OSStatus					error = noErr;
+	NSWindow*					owningWindow = [ptr->windowController window];
 	
 	
-	error = CopyWindowTitleAsCFString(ptr->owningWindow, &outTitle);
-	if (noErr != error) outTitle = nullptr;
+	outTitle = (CFStringRef)[[owningWindow title] copy];
 }// CopyTitle
-
-
-/*!
-Displays a user interface for editing the window title.
-The interface is automatically hidden or destroyed at
-appropriate times.
-
-(4.0)
-*/
-void
-VectorCanvas_DisplayWindowRenameUI	(VectorCanvas_Ref	inRef)
-{
-	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
-	
-	
-	if (nullptr == ptr->renameDialog)
-	{
-		ptr->renameDialog = WindowTitleDialog_NewForVectorCanvas(inRef);
-	}
-	WindowTitleDialog_Display(ptr->renameDialog);
-}// DisplayWindowRenameUI
 
 
 /*!
@@ -777,6 +755,22 @@ VectorCanvas_ReturnNewQuickDrawPicture		(VectorInterpreter_ID	inDrawingNumber)
 	}
 	return result;
 }// ReturnNewQuickDrawPicture
+
+
+/*!
+Returns the window that a canvas belongs to.
+
+(4.0)
+*/
+NSWindow*
+VectorCanvas_ReturnNSWindow		(VectorCanvas_Ref	inRef)
+{
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
+	NSWindow*					result = [ptr->windowController window];
+	
+	
+	return result;
+}// ReturnNSWindow
 
 
 /*!
@@ -1100,9 +1094,10 @@ VectorCanvas_SetTitle	(VectorCanvas_Ref	inRef,
 						 CFStringRef		inTitle)
 {
 	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
+	NSWindow*					owningWindow = [ptr->windowController window];
 	
 	
-	(OSStatus)SetWindowTitleWithCFString(ptr->owningWindow, inTitle);
+	[owningWindow setTitle:(NSString*)inTitle];
 	
 	return 0;
 }// SetTitle
@@ -1798,6 +1793,32 @@ performPrintSelection:(id)	sender
 }
 - (id)
 canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	return [NSNumber numberWithBool:YES];
+}
+
+
+/*!
+Displays an interface for setting the title of the canvas window.
+
+(4.0)
+*/
+- (IBAction)
+performRename:(id)	sender
+{
+#pragma unused(sender)
+	My_VectorCanvasPtr		canvasPtr = [self internalPtrAsVectorCanvasPtr];
+	
+	
+	if (nullptr == canvasPtr->renameDialog)
+	{
+		canvasPtr->renameDialog = WindowTitleDialog_NewForVectorCanvas(canvasPtr->selfRef);
+	}
+	WindowTitleDialog_Display(canvasPtr->renameDialog);
+}
+- (id)
+canPerformRename:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
 	return [NSNumber numberWithBool:YES];

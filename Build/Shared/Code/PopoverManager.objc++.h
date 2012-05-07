@@ -99,6 +99,13 @@ PopoverManager_Ref
 												 NSView*						inLogicalFirstResponder,
 												 id< PopoverManager_Delegate >	inDelegate,
 												 PopoverManager_AnimationType	inAnimation,
+												 NSWindow*						inParentWindow);
+
+PopoverManager_Ref
+	PopoverManager_New							(Popover_Window*				inPopover,
+												 NSView*						inLogicalFirstResponder,
+												 id< PopoverManager_Delegate >	inDelegate,
+												 PopoverManager_AnimationType	inAnimation,
 												 HIWindowRef					inParentWindow);
 
 void

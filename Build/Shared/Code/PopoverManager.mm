@@ -54,7 +54,8 @@
 	Popover_Window*					containerWindow;		// holds the popover itself (note: is an NSWindow subclass)
 	NSView*							logicalFirstResponder;	// the view to give initial keyboard focus to, in "display" method
 	PopoverManager_AnimationType	animationType;			// specifies how to open and close the popover window
-	HIWindowRef						parentWindow;			// the window the popover is relative to
+	NSWindow*						parentCocoaWindow;		// the window the popover is relative to, if Cocoa
+	HIWindowRef						parentCarbonWindow;		// the window the popover is relative to, if Carbon
 	CarbonEventHandlerWrap*			minimizeHandlerPtr;		// embellishes Carbon Event for minimizing window
 	CarbonEventHandlerWrap*			resizeHandlerPtr;		// embellishes Carbon Event for resizing window
 }
@@ -64,7 +65,8 @@ popoverHandlerFromRef:(PopoverManager_Ref)_;
 
 // designated initializer
 - (id)
-initForCarbonWindow:(HIWindowRef)_
+initForCocoaWindow:(NSWindow*)_
+orCarbonWindow:(HIWindowRef)_
 popover:(Popover_Window*)_
 firstResponder:(NSView*)_
 animationType:(PopoverManager_AnimationType)_
@@ -126,10 +128,31 @@ OSStatus	receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
 
 /*!
 Constructs a new popover manager, where the parent window is
-Carbon-based.
+Cocoa-based.
 
-NOTE:	Cocoa-based parent windows are not yet implemented
-		because they have not been required.
+(2.7)
+*/
+PopoverManager_Ref
+PopoverManager_New	(Popover_Window*				inPopover,
+					 NSView*						inLogicalFirstResponder,
+					 id< PopoverManager_Delegate >	inDelegate,
+					 PopoverManager_AnimationType	inAnimation,
+					 NSWindow*						inParentWindow)
+{
+	PopoverManager_Ref	result = nullptr;
+	
+	
+	result = (PopoverManager_Ref)[[PopoverManager_Handler alloc]
+									initForCocoaWindow:inParentWindow orCarbonWindow:nullptr popover:inPopover
+														firstResponder:inLogicalFirstResponder
+														animationType:inAnimation delegate:inDelegate];
+	return result;
+}// New
+
+
+/*!
+Constructs a new popover manager, where the parent window is
+Carbon-based.
 
 (2.7)
 */
@@ -144,7 +167,7 @@ PopoverManager_New	(Popover_Window*				inPopover,
 	
 	
 	result = (PopoverManager_Ref)[[PopoverManager_Handler alloc]
-									initForCarbonWindow:inParentWindow popover:inPopover
+									initForCocoaWindow:nil orCarbonWindow:inParentWindow popover:inPopover
 														firstResponder:inLogicalFirstResponder
 														animationType:inAnimation delegate:inDelegate];
 	return result;
@@ -378,7 +401,8 @@ for simplicity in the C-style header file.
 (2.7	)
 */
 - (id)
-initForCarbonWindow:(HIWindowRef)				aWindow
+initForCocoaWindow:(NSWindow*)					aCocoaWindow
+orCarbonWindow:(HIWindowRef)					aCarbonWindow
 popover:(Popover_Window*)						aPopover
 firstResponder:(NSView*)						aView
 animationType:(PopoverManager_AnimationType)	animationSpec
@@ -390,11 +414,14 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 		HIWindowRef		windowWatchedForMinimize = nullptr;
 		
 		
-		// if the parent of the popover is a sheet, install the
-		// minimization handler on its parent instead
-		if (noErr != GetSheetWindowParent(aWindow, &windowWatchedForMinimize))
+		if (nullptr != aCarbonWindow)
 		{
-			windowWatchedForMinimize = aWindow;
+			// if the parent of the popover is a sheet, install the
+			// minimization handler on its parent instead
+			if (noErr != GetSheetWindowParent(aCarbonWindow, &windowWatchedForMinimize))
+			{
+				windowWatchedForMinimize = aCarbonWindow;
+			}
 		}
 		
 		self->selfRef = (PopoverManager_Ref)self;
@@ -403,18 +430,24 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 		[self->containerWindow retain];
 		self->logicalFirstResponder = aView;
 		self->animationType = animationSpec;
-		self->parentWindow = aWindow;
-		// unfortunately Cocoa window notifications do not seem to work for
-		// Carbon-based Cocoa windows on all Mac OS X versions, so for now
-		// use Carbon Events to detect important changes
-		self->minimizeHandlerPtr = new CarbonEventHandlerWrap
-										(GetWindowEventTarget(windowWatchedForMinimize), receiveWindowCollapse,
-											CarbonEventSetInClass(CarbonEventClass(kEventClassWindow),
-																	kEventWindowCollapse), self/* handler data */);
-		self->resizeHandlerPtr = new CarbonEventHandlerWrap
-										(GetWindowEventTarget(aWindow), receiveWindowResize,
-											CarbonEventSetInClass(CarbonEventClass(kEventClassWindow),
-																	kEventWindowBoundsChanged), self/* handler data */);
+		self->parentCocoaWindow = aCocoaWindow;
+		self->parentCarbonWindow = aCarbonWindow;
+		
+		if (nullptr != aCarbonWindow)
+		{
+			// unfortunately Cocoa window notifications do not seem to work for
+			// Carbon-based Cocoa windows on all Mac OS X versions, so for now
+			// use Carbon Events to detect important changes
+			self->minimizeHandlerPtr = new CarbonEventHandlerWrap
+											(GetWindowEventTarget(windowWatchedForMinimize), receiveWindowCollapse,
+												CarbonEventSetInClass(CarbonEventClass(kEventClassWindow),
+																		kEventWindowCollapse), self/* handler data */);
+			self->resizeHandlerPtr = new CarbonEventHandlerWrap
+											(GetWindowEventTarget(aCarbonWindow), receiveWindowResize,
+												CarbonEventSetInClass(CarbonEventClass(kEventClassWindow),
+																		kEventWindowBoundsChanged), self/* handler data */);
+		}
+		
 		// also monitor the popover itself to know when to auto-hide
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidResignKey:)
 															name:NSWindowDidResignKeyNotification
@@ -460,6 +493,7 @@ display
 			[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(2, NSWindowAnimationBehaviorNone)];
 		}
 		break;
+	
 	case kPopoverManager_AnimationTypeMinimal:
 		if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
 		{
@@ -467,6 +501,7 @@ display
 			[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(4, NSWindowAnimationBehaviorUtilityWindow)];
 		}
 		break;
+	
 	case kPopoverManager_AnimationTypeStandard:
 	default:
 		if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
@@ -580,8 +615,13 @@ window, even if that is a Carbon window.
 - (NSWindow*)
 parentCocoaWindow
 {
-	NSWindow*	result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(self->parentWindow);
+	NSWindow*	result = self->parentCocoaWindow;
 	
+	
+	if ((nil == result) && (nullptr != self->parentCarbonWindow))
+	{
+		result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(self->parentCarbonWindow);
+	}
 	
 	return result;
 }// parentCocoaWindow
@@ -677,6 +717,7 @@ removeWindowWithDelay:(float)	aDelay
 			[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(2, NSWindowAnimationBehaviorNone)];
 		}
 		break;
+	
 	default:
 		// currently, all other closing animations are the same
 		if ([self->containerWindow respondsToSelector:@selector(setAnimationBehavior:)])
