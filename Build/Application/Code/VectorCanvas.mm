@@ -43,6 +43,7 @@
 // library includes
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
+#import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
 #import <CommonEventHandlers.h>
 #import <HIViewWrap.h>
@@ -2168,8 +2169,14 @@ windowDidLoad
 {
 	[super windowDidLoad];
 	assert(nil != canvasView);
+	
 	[canvasView setInternalPtr:self->internalPtr];
 	[self setInternalPtr:nullptr]; // no longer needed by the controller itself
+	
+	if (FlagManager_Test(kFlagOS10_7API) && [[self window] respondsToSelector:@selector(setAnimationBehavior:)])
+	{
+		[[self window] setAnimationBehavior:FUTURE_SYMBOL(3, NSWindowAnimationBehaviorDocumentWindow)];
+	}
 }// windowDidLoad
 
 
