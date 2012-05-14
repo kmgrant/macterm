@@ -73,11 +73,6 @@ showTestTerminalWindow:(id)_;
 // accessors
 
 - (BOOL)
-cocoaBasedVectorGraphics;
-- (void)
-setCocoaBasedVectorGraphics:(BOOL)_; // binding
-
-- (BOOL)
 logsTerminalInputChar;
 - (void)
 setLogsTerminalInputChar:(BOOL)_; // binding
@@ -99,7 +94,6 @@ setLogsTerminalState:(BOOL)_; // binding
 #pragma mark Variables
 
 // These are exposed for maximum efficiency.
-extern Boolean		gDebugInterface_CocoaBasedVectorGraphics;
 extern Boolean		gDebugInterface_LogsDeviceState;
 extern Boolean		gDebugInterface_LogsTerminalInputChar;
 extern Boolean		gDebugInterface_LogsTerminalState;
@@ -113,16 +107,6 @@ void
 
 void
 	DebugInterface_DisplayTestTerminal		();
-
-inline Boolean
-	DebugInterface_CocoaBasedVectorGraphics	()
-	{
-	#ifndef NDEBUG
-		return gDebugInterface_CocoaBasedVectorGraphics;
-	#else
-		return false;
-	#endif
-	}
 
 inline Boolean
 	DebugInterface_LogsTerminalInputChar	()

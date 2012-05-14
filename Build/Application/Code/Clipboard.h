@@ -46,7 +46,6 @@
 
 // application includes
 #include "TerminalViewRef.typedef.h"
-#include "VectorInterpreterID.typedef.h"
 
 
 
@@ -218,10 +217,6 @@ Boolean
 
 OSStatus
 	Clipboard_CreateContentsAEDesc			(AEDesc*					outDescPtr);
-
-// DEPRECATED
-void
-	Clipboard_GraphicsToScrap				(VectorInterpreter_ID		inGraphicID);
 
 Boolean
 	Clipboard_GetData						(Clipboard_DataConstraint	inConstraint,

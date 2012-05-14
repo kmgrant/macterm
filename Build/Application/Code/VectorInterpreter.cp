@@ -35,11 +35,15 @@
 
 // standard-C++ includes
 #include <deque>
-#include <map>
 
 // library includes
+#include <Console.h>
+#include <MemoryBlockPtrLocker.template.h>
+#include <MemoryBlockReferenceLocker.template.h>
+#include <MemoryBlockReferenceTracker.template.h>
 #include <MemoryBlocks.h>
 #include <RegionUtilities.h>
+#include <Registrar.template.h>
 #include <SoundSystem.h>
 
 // application includes
@@ -130,13 +134,13 @@ typedef My_Point*	My_PointList;
 typedef void		(*My_NoArgReturnVoidProcPtr)();
 typedef SInt16		(*My_NoArgReturnIntProcPtr)();
 typedef char const*	(*My_NoArgReturnCharConstPtrProcPtr)();
-typedef void		(*My_IDArgReturnVoidProcPtr)(VectorInterpreter_ID);
-typedef SInt16		(*My_IDArgReturnIntProcPtr)(VectorInterpreter_ID);
-typedef SInt16		(*My_IDIntArgsReturnIntProcPtr)(VectorInterpreter_ID, SInt16);
-typedef void		(*My_IDIntArgsReturnVoidProcPtr)(VectorInterpreter_ID, SInt16);
-typedef SInt16		(*My_ID2IntArgsReturnIntProcPtr)(VectorInterpreter_ID, SInt16, SInt16);
-typedef void		(*My_ID2IntArgsReturnVoidProcPtr)(VectorInterpreter_ID, SInt16, SInt16);
-typedef SInt16		(*My_ID4IntArgsReturnIntProcPtr)(VectorInterpreter_ID, SInt16, SInt16, SInt16, SInt16);
+typedef void		(*My_IDArgReturnVoidProcPtr)(VectorInterpreter_Ref);
+typedef SInt16		(*My_IDArgReturnIntProcPtr)(VectorInterpreter_Ref);
+typedef SInt16		(*My_IDIntArgsReturnIntProcPtr)(VectorInterpreter_Ref, SInt16);
+typedef void		(*My_IDIntArgsReturnVoidProcPtr)(VectorInterpreter_Ref, SInt16);
+typedef SInt16		(*My_ID2IntArgsReturnIntProcPtr)(VectorInterpreter_Ref, SInt16, SInt16);
+typedef void		(*My_ID2IntArgsReturnVoidProcPtr)(VectorInterpreter_Ref, SInt16, SInt16);
+typedef SInt16		(*My_ID4IntArgsReturnIntProcPtr)(VectorInterpreter_Ref, SInt16, SInt16, SInt16, SInt16);
 
 struct My_VectorCallbacks
 {
@@ -169,21 +173,25 @@ Used to store drawing commands.
 */
 typedef std::deque< SInt16 >	My_VectorDB;
 
+typedef MemoryBlockReferenceTracker< VectorInterpreter_Ref >						My_VectorInterpreterReferenceTracker;
+typedef Registrar< VectorInterpreter_Ref, My_VectorInterpreterReferenceTracker >	My_VecIntRefRegistrar;
+
 /*!
 Stores information used to interpret vector graphics
 commands and ultimately render a picture.
 */
 struct My_VectorInterpreter
 {
-	My_VectorInterpreter	(VectorInterpreter_ID, VectorInterpreter_Target, VectorInterpreter_Mode);
+	My_VectorInterpreter	(VectorInterpreter_Mode);
 	
 	inline void
 	shrinkVectorDB	(My_VectorDB::size_type);
 	
-	VectorInterpreter_ID	selfRef;			// the ID given to this structure at construction time
-	VectorInterpreter_Mode	commandSet;			// how data is interpreted
-	Boolean					pageClears;			// true if PAGE clears the screen, false if it opens a new window
-	VectorCanvas_Ref		canvas;				// contains commands to create a picture or paint to a window; must be initialized last
+	My_VecIntRefRegistrar	refValidator;	// ensures this reference is recognized as a valid one
+	VectorInterpreter_Ref	selfRef;		// the ID given to this structure at construction time
+	VectorInterpreter_Mode	commandSet;		// how data is interpreted
+	Boolean					pageClears;		// true if PAGE clears the screen, false if it opens a new window
+	VectorCanvas_Ref		canvas;			// contains commands to create a picture or paint to a window; must be initialized last
 	char	mode,modesave;					/* current output mode */
 	char	loy,hiy,lox,hix,ex,ey;			/* current graphics coordinates */
 	char	nloy,nhiy,nlox,nhix,nex,ney;	/* new coordinates */
@@ -215,7 +223,9 @@ struct My_VectorInterpreter
 typedef My_VectorInterpreter*			My_VectorInterpreterPtr;
 typedef My_VectorInterpreter const*		My_VectorInterpreterConstPtr;
 
-typedef std::map< VectorInterpreter_ID, My_VectorInterpreterPtr >	My_InterpreterPtrByID;
+typedef MemoryBlockPtrLocker< VectorInterpreter_Ref, My_VectorInterpreter >			My_VectorInterpreterPtrLocker;
+typedef LockAcquireRelease< VectorInterpreter_Ref, My_VectorInterpreter >			My_VectorInterpreterAutoLocker;
+typedef MemoryBlockReferenceLocker< VectorInterpreter_Ref, My_VectorInterpreter >	My_VectorInterpreterReferenceLocker;
 
 } // anonymous namespace
 
@@ -226,7 +236,7 @@ void			clipvec						(My_VectorInterpreterPtr, short, short, short, short,
 											 VectorCanvas_PathTarget = kVectorCanvas_PathTargetPrimary);
 short			drawc						(My_VectorInterpreterPtr, short);
 short			fontnum						(My_VectorInterpreterPtr, UInt16);
-Boolean			isValidID					(VectorInterpreter_ID);
+Boolean			isValidID					(VectorInterpreter_Ref);
 short			joinup						(short, short, short);
 void			linefeed					(My_VectorInterpreterPtr);
 void			newcoord					(My_VectorInterpreterPtr);
@@ -497,9 +507,9 @@ char const*		gTEK4105Font[106] =
 	"2z4t4h4b4f4y4x4r"
 };
 
-My_InterpreterPtrByID	VGwin;
-
-VectorInterpreter_ID	gIDCounter = 0;
+My_VectorInterpreterPtrLocker&			gVectorInterpreterPtrLocks ()	{ static My_VectorInterpreterPtrLocker x; return x; }
+My_VectorInterpreterReferenceLocker&	gVectorInterpreterRefLocks ()	{ static My_VectorInterpreterReferenceLocker x; return x; }
+My_VectorInterpreterReferenceTracker&	gVectorInterpreterValidRefs ()	{ static My_VectorInterpreterReferenceTracker x; return x; }
 
 } // anonymous namespace
 
@@ -510,23 +520,33 @@ VectorInterpreter_ID	gIDCounter = 0;
 /*!
 Constructs a new interpreter object that will ultimately
 render in the specified way, respecting the given command set.
-Returns "kVectorInterpreter_InvalidID" on failure.
+Returns nullptr on failure.
 
-Release this object with VectorInterpreter_Dispose().
+Release this object with VectorInterpreter_Release().
 
 (3.1)
 */
-VectorInterpreter_ID
-VectorInterpreter_New	(VectorInterpreter_Target	inTarget,
-						 VectorInterpreter_Mode		inCommandSet)
+VectorInterpreter_Ref
+VectorInterpreter_New	(VectorInterpreter_Mode		inCommandSet)
 {
-	VectorInterpreter_ID		result = gIDCounter++;
+	VectorInterpreter_Ref	result = nullptr;
 	
 	
 	try
 	{
-		My_VectorInterpreterPtr		ptr = new My_VectorInterpreter(result, inTarget, inCommandSet);
+		result = REINTERPRET_CAST(new My_VectorInterpreter(inCommandSet), VectorInterpreter_Ref);
+	}
+	catch (std::bad_alloc)
+	{
+		result = nullptr;
+	}
+	
+	if (nullptr != result)
+	{
+		My_VectorInterpreterAutoLocker	ptr(gVectorInterpreterPtrLocks(), result);
 		
+		
+		VectorInterpreter_Retain(result);
 		
 		fontnum(ptr, 0);
 		storexy(ptr, 0, 3071);
@@ -538,34 +558,54 @@ VectorInterpreter_New	(VectorInterpreter_Target	inTarget,
 		VectorInterpreter_Zoom(result, 0, 0, kVectorInterpreter_MaxX - 1, kVectorInterpreter_MaxY - 1);
 	#endif
 	}
-	catch (std::bad_alloc)
-	{
-		result = kVectorInterpreter_InvalidID;
-	}
+	
 	return result;
 }// VectorInterpreter_New
 
 
 /*!
-Destroys a graphic created with VectorInterpreter_New(),
-and sets your copy of the ID to kVectorInterpreter_InvalidID.
+Adds a lock on the specified ID.  This indicates you are using
+the interpreter and canvas, so attempts by anyone else to delete
+the interpreter with VectorInterpreter_Release() will fail until
+you release your lock (and everyone else releases locks they may
+have).
 
-(2.6)
+(4.0)
 */
 void
-VectorInterpreter_Dispose	(VectorInterpreter_ID*		inoutGraphicIDPtr)
+VectorInterpreter_Retain	(VectorInterpreter_Ref		inRef)
 {
-	if (isValidID(*inoutGraphicIDPtr))
+	gVectorInterpreterRefLocks().acquireLock(inRef);
+}// Retain
+
+
+/*!
+Releases one lock on the specified interpreter created with
+VectorInterpreter_New() and deletes the interpreter *if* no
+other locks remain.  Your copy of the reference is set to
+nullptr.
+
+(4.0)
+*/
+void
+VectorInterpreter_Release	(VectorInterpreter_Ref*		inoutRefPtr)
+{
+	if (isValidID(*inoutRefPtr))
 	{
-		My_VectorInterpreterPtr		ptr = VGwin[*inoutGraphicIDPtr];
-		
-		
-		VectorCanvas_Release(&ptr->canvas);
-		delete ptr, ptr = nullptr;
-		VGwin.erase(*inoutGraphicIDPtr);
+		gVectorInterpreterRefLocks().releaseLock(*inoutRefPtr);
+		unless (gVectorInterpreterRefLocks().isLocked(*inoutRefPtr))
+		{
+			{
+				My_VectorInterpreterAutoLocker	ptr(gVectorInterpreterPtrLocks(), *inoutRefPtr);
+				
+				
+				VectorCanvas_Release(&ptr->canvas);
+				delete ptr;
+			}
+		}
 	}
-	*inoutGraphicIDPtr = kVectorInterpreter_InvalidID;
-}// Dispose
+	*inoutRefPtr = nullptr;
+}// Release
 
 
 /*!
@@ -575,11 +615,14 @@ The destination should be redrawn.
 (3.1)
 */
 void
-VectorInterpreter_CopyZoom	(VectorInterpreter_ID	inDestinationGraphicID,
-							 VectorInterpreter_ID	inSourceGraphicID)
+VectorInterpreter_CopyZoom	(VectorInterpreter_Ref	inDestinationGraphicID,
+							 VectorInterpreter_Ref	inSourceGraphicID)
 {
-	VectorInterpreter_Zoom(inDestinationGraphicID, VGwin[inSourceGraphicID]->winleft, VGwin[inSourceGraphicID]->winbot,
-							VGwin[inSourceGraphicID]->winright, VGwin[inSourceGraphicID]->wintop);
+	My_VectorInterpreterAutoLocker	srcPtr(gVectorInterpreterPtrLocks(), inSourceGraphicID);
+	
+	
+	VectorInterpreter_Zoom(inDestinationGraphicID, srcPtr->winleft, srcPtr->winbot,
+							srcPtr->winright, srcPtr->wintop);
 }// CopyZoom
 
 
@@ -597,7 +640,7 @@ The position (0, 0) represents the bottom-left corner, and
 (2.6)
 */
 SInt16
-VectorInterpreter_FillInPositionReport	(VectorInterpreter_ID	inGraphicID,
+VectorInterpreter_FillInPositionReport	(VectorInterpreter_Ref	inRef,
 										 UInt16					inX,
 										 UInt16					inY,
 										 char					inKeyPress,
@@ -606,11 +649,11 @@ VectorInterpreter_FillInPositionReport	(VectorInterpreter_ID	inGraphicID,
 	SInt16		result = -1;
 	
 	
-	if (isValidID(inGraphicID))
+	if (isValidID(inRef))
 	{
-		My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
-		UInt32						x2 = 0;
-		UInt32						y2 = 0;
+		My_VectorInterpreterAutoLocker	ptr(gVectorInterpreterPtrLocks(), inRef);
+		UInt32							x2 = 0;
+		UInt32							y2 = 0;
 		
 		
 		x2 = ((inX * ptr->winwide) / kVectorInterpreter_MaxX + ptr->winleft) >> 2;
@@ -635,23 +678,62 @@ and switches to alpha mode.
 (2.6)
 */
 void
-VectorInterpreter_PageCommand	(VectorInterpreter_ID	inGraphicID)
+VectorInterpreter_PageCommand	(VectorInterpreter_Ref	inRef)
 {
-	My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
+	My_VectorInterpreterAutoLocker	ptr(gVectorInterpreterPtrLocks(), inRef);
 	
 	
-	if (nullptr != ptr->canvas)
-	{
-		VectorCanvas_InvalidateView(ptr->canvas);
-		(VectorCanvas_Result)VectorCanvas_SetPenColor(ptr->canvas, 1);
-	}
 	VGclrstor(ptr);
 	ptr->mode = ALPHA;
 	ptr->state = DONE;
 	ptr->textcol = 0;
 	fontnum(ptr, 0);
 	storexy(ptr, 0, 3071);
+	if (nullptr != ptr->canvas)
+	{
+		VectorCanvas_ClearCaches(ptr->canvas);
+		(VectorCanvas_Result)VectorCanvas_SetPenColor(ptr->canvas, 1);
+	}
 }// PageCommand
+
+
+/*!
+This is the main entry point for rendering any vector graphics!
+
+Stores and renders the specified data, returning the number of
+bytes accepted before possible cancellation.  The data should
+use the command set specified by VectorInterpreter_ReturnMode().
+
+(3.1)
+*/
+size_t
+VectorInterpreter_ProcessData	(VectorInterpreter_Ref	inRef,
+								 UInt8 const*			inDataPtr,
+								 size_t					inDataSize)
+{
+	size_t		result = 0;
+	
+	
+	if (isValidID(inRef))
+	{
+		UInt8 const* const				kPastEnd = inDataPtr + inDataSize;
+		My_VectorInterpreterAutoLocker	ptr(gVectorInterpreterPtrLocks(), inRef);
+		UInt8 const*					charPtr = nullptr;
+		
+		
+		for (charPtr = inDataPtr;
+				((kPastEnd != charPtr) && (24/* CAN(CEL) character */ != *charPtr)); ++charPtr)
+		{
+			ptr->commandList.push_back(*charPtr);
+		#if 1
+			VGdraw(ptr, *charPtr);
+		#endif
+		}
+		VectorCanvas_InvalidateView(ptr->canvas);
+		result = charPtr - inDataPtr;
+	}
+	return result;
+}// ProcessData
 
 
 /*!
@@ -661,11 +743,11 @@ a redraw.
 (2.6)
 */
 void
-VectorInterpreter_Redraw	(VectorInterpreter_ID	inGraphicID,
-							 VectorInterpreter_ID	inDestinationGraphicID)
+VectorInterpreter_Redraw	(VectorInterpreter_Ref	inRef,
+							 VectorInterpreter_Ref	inDestinationGraphicID)
 {
-	My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
-	My_VectorInterpreterPtr		destPtr = VGwin[inDestinationGraphicID];
+	My_VectorInterpreterAutoLocker	ptr(gVectorInterpreterPtrLocks(), inRef);
+	My_VectorInterpreterAutoLocker	destPtr(gVectorInterpreterPtrLocks(), inDestinationGraphicID);
 	
 	
 	for (ptr->toCurrentCommand = ptr->commandList.begin();
@@ -684,9 +766,9 @@ renderer.
 (3.1)
 */
 SInt16
-VectorInterpreter_ReturnBackgroundColor		(VectorInterpreter_ID	inGraphicID)
+VectorInterpreter_ReturnBackgroundColor		(VectorInterpreter_Ref	inRef)
 {
-	My_VectorInterpreterConstPtr	ptr = VGwin[inGraphicID];
+	My_VectorInterpreterAutoLocker	ptr(gVectorInterpreterPtrLocks(), inRef);
 	SInt16							result = (kVectorInterpreter_ModeTEK4105 == ptr->commandSet)
 												? ptr->TEKBackground
 												: 0;
@@ -702,9 +784,9 @@ Returns the renderer for this interpreter.
 (3.1)
 */
 VectorCanvas_Ref
-VectorInterpreter_ReturnCanvas		(VectorInterpreter_ID	inGraphicID)
+VectorInterpreter_ReturnCanvas		(VectorInterpreter_Ref	inRef)
 {
-	My_VectorInterpreterConstPtr	ptr = VGwin[inGraphicID];
+	My_VectorInterpreterAutoLocker	ptr(gVectorInterpreterPtrLocks(), inRef);
 	VectorCanvas_Ref				result = ptr->canvas;
 	
 	
@@ -718,55 +800,14 @@ Returns the command set of the specified graphic.
 (3.1)
 */
 VectorInterpreter_Mode
-VectorInterpreter_ReturnMode	(VectorInterpreter_ID	inGraphicID)
+VectorInterpreter_ReturnMode	(VectorInterpreter_Ref	inRef)
 {
-	My_VectorInterpreterConstPtr	ptr = VGwin[inGraphicID];
+	My_VectorInterpreterAutoLocker	ptr(gVectorInterpreterPtrLocks(), inRef);
 	VectorInterpreter_Mode			result = ptr->commandSet;
 	
 	
 	return result;
 }// ReturnMode
-
-
-/*!
-This is the main entry point for rendering any vector graphics!
-
-Stores and renders the specified data, returning the number of
-bytes accepted before possible cancellation.  The data should
-use the command set specified by VectorInterpreter_ReturnMode().
-
-(3.1)
-*/
-size_t
-VectorInterpreter_ProcessData	(VectorInterpreter_ID	inGraphicID,
-								 UInt8 const*			inDataPtr,
-								 size_t					inDataSize)
-{
-	size_t		result = 0;
-	
-	
-	if (isValidID(inGraphicID))
-	{
-		UInt8 const* const			kPastEnd = inDataPtr + inDataSize;
-		My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
-		UInt8 const*				charPtr = nullptr;
-		
-		
-		for (charPtr = inDataPtr;
-				((kPastEnd != charPtr) && (24/* CAN(CEL) character */ != *charPtr)); ++charPtr)
-		{
-			ptr->commandList.push_back(*charPtr);
-		#if 1
-			VGdraw(ptr, *charPtr);
-		#endif
-		}
-	#if 0
-		VectorCanvas_InvalidateView(ptr->canvas);
-	#endif
-		result = charPtr - inDataPtr;
-	}
-	return result;
-}// ProcessData
 
 
 /*!
@@ -776,10 +817,10 @@ opens a new window.
 (3.1)
 */
 void
-VectorInterpreter_SetPageClears		(VectorInterpreter_ID	inGraphicID,
+VectorInterpreter_SetPageClears		(VectorInterpreter_Ref	inRef,
 									 Boolean				inTrueClearsFalseNewWindow)
 {
-	My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
+	My_VectorInterpreterAutoLocker	ptr(gVectorInterpreterPtrLocks(), inRef);
 	
 	
 	ptr->pageClears = inTrueClearsFalseNewWindow;
@@ -791,15 +832,15 @@ VectorInterpreter_SetPageClears		(VectorInterpreter_ID	inGraphicID,
  *	User should redraw after calling this.
  */
 void
-VectorInterpreter_Zoom	(VectorInterpreter_ID	inGraphicID,
+VectorInterpreter_Zoom	(VectorInterpreter_Ref	inRef,
 						 SInt16					inX0,
 						 SInt16					inY0,
 						 SInt16					inX1,
 						 SInt16					inY1)
 {
-	if (isValidID(inGraphicID))
+	if (isValidID(inRef))
 	{
-		My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
+		My_VectorInterpreterAutoLocker	ptr(gVectorInterpreterPtrLocks(), inRef);
 		
 		
 		ptr->winbot = inY0;
@@ -826,12 +867,11 @@ TEMPORARY:	This is horrible as a class, but it is leftover from
 (4.0)
 */
 My_VectorInterpreter::
-My_VectorInterpreter	(VectorInterpreter_ID		inID,
-						 VectorInterpreter_Target	inTarget,
-						 VectorInterpreter_Mode		inCommandSet)
+My_VectorInterpreter	(VectorInterpreter_Mode		inCommandSet)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-selfRef(inID),
+refValidator(REINTERPRET_CAST(this, VectorInterpreter_Ref), gVectorInterpreterValidRefs()),
+selfRef(REINTERPRET_CAST(this, VectorInterpreter_Ref)),
 commandSet(inCommandSet),
 pageClears(false),
 canvas(nullptr),
@@ -881,12 +921,9 @@ savstate(0),
 commandList(),
 toCurrentCommand(commandList.begin())
 {
-	VGwin[inID] = this;
 	// the canvas should be initialized last, because it will trigger
 	// rendering that depends on all the initializations above
-	this->canvas = VectorCanvas_New(inID, (kVectorInterpreter_TargetQuickDrawPicture == inTarget)
-											? kVectorCanvas_TargetQuickDrawPicture
-											: kVectorCanvas_TargetScreenPixels);
+	this->canvas = VectorCanvas_New(this->selfRef);
 }// My_VectorInterpreter default constructor
 
 
@@ -1151,9 +1188,9 @@ an existing interpreter.
 (3.1)
 */
 Boolean
-isValidID	(VectorInterpreter_ID	inID)
+isValidID	(VectorInterpreter_Ref	inRef)
 {
-	return (VGwin.end() != VGwin.find(inID));
+	return (gVectorInterpreterValidRefs().end() != gVectorInterpreterValidRefs().find(inRef));
 }// isValidID
 
 

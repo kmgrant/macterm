@@ -19,7 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
-    '20120506',
+    '20120514',
     '20120412',
     '20120327',
     '20120303',
@@ -443,7 +443,7 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
-    '20120506': [
+    '20120514': [
         'Vector graphics windows have been redone; lines are now rendered very smoothly.',
         'Vector graphics can now be printed.',
         'Vector graphics now include PDF versions when copied to the Clipboard, allowing other applications to use the drawing at any size without degradation.',

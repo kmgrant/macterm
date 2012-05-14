@@ -19,6 +19,7 @@
 		0A3C2C20140C73F100739966 /* CocoaAnimation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
 		0A47A08C14B3E33A00E39136 /* TerminalToolbar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */; };
+		0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */; };
 		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */; };
 		0A4FAF951525694700B8142A /* Popover.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4FAF941525694700B8142A /* Popover.mm */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.cp */; };
@@ -215,7 +216,7 @@
 		0A119C431522B545003A41B7 /* IconForFullScreenDisable.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForFullScreenDisable.icns; path = Application/Resources/IconForFullScreenDisable.icns; sourceTree = "<group>"; };
 		0A11F54B059FE55D00A565C3 /* IconForPrefPanelGeneral.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelGeneral.icns; path = Application/Resources/IconForPrefPanelGeneral.icns; sourceTree = "<group>"; };
 		0A11F54D059FE55D00A565C3 /* IconForPrefPanelMacros.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelMacros.icns; path = Application/Resources/IconForPrefPanelMacros.icns; sourceTree = "<group>"; };
-		0A1427340DA5D4270028510F /* VectorInterpreterID.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreterID.typedef.h; path = Application/Code/VectorInterpreterID.typedef.h; sourceTree = "<group>"; };
+		0A1427340DA5D4270028510F /* VectorInterpreterRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreterRef.typedef.h; path = Application/Code/VectorInterpreterRef.typedef.h; sourceTree = "<group>"; };
 		0A1A06860ABA6236002C95D7 /* PrintTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrintTerminal.h; path = Application/Code/PrintTerminal.h; sourceTree = "<group>"; };
 		0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrintTerminal.mm; path = Application/Code/PrintTerminal.mm; sourceTree = "<group>"; };
 		0A1BCD8905CA2B21005CF1E5 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/TerminalWindow.nib; sourceTree = "<group>"; };
@@ -391,7 +392,10 @@
 		0A46FE3D055432A400ACDF3A /* Workspace.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Workspace.cp; path = Application/Code/Workspace.cp; sourceTree = "<group>"; };
 		0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TerminalToolbar.mm; path = Application/Code/TerminalToolbar.mm; sourceTree = "<group>"; };
 		0A47A0AC14B3EBE000E39136 /* TerminalToolbar.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "TerminalToolbar.objc++.h"; path = "Application/Code/TerminalToolbar.objc++.h"; sourceTree = "<group>"; };
+		0A47E880155CD40400608A0A /* VectorWindowRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorWindowRef.typedef.h; path = Application/Code/VectorWindowRef.typedef.h; sourceTree = "<group>"; };
 		0A495E9014734EA9005A1D3A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/WindowTitleDialogCocoa.xib; sourceTree = "<group>"; };
+		0A4AC969155ED67E00FA6184 /* VectorWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorWindow.h; path = Application/Code/VectorWindow.h; sourceTree = "<group>"; };
+		0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = VectorWindow.mm; path = Application/Code/VectorWindow.mm; sourceTree = "<group>"; };
 		0A4C9D210FE9B1A0005EAE9D /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelWorkspaces.nib; sourceTree = "<group>"; };
 		0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelWorkspaces.cp; path = Application/Code/PrefPanelWorkspaces.cp; sourceTree = "<group>"; };
 		0A4C9D260FE9B986005EAE9D /* PrefPanelWorkspaces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelWorkspaces.h; path = Application/Code/PrefPanelWorkspaces.h; sourceTree = "<group>"; };
@@ -403,7 +407,7 @@
 		0A6315B912348AB4003890B8 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ClipboardCocoa.xib; sourceTree = "<group>"; };
 		0A64C5EA1059E423005B8A48 /* StreamCapture.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StreamCapture.cp; path = Application/Code/StreamCapture.cp; sourceTree = "<group>"; };
 		0A64C5EC1059E432005B8A48 /* StreamCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamCapture.h; path = Application/Code/StreamCapture.h; sourceTree = "<group>"; };
-		0A66B705154E04DC00B98072 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/VectorCanvasCocoa.xib; sourceTree = "<group>"; };
+		0A66B705154E04DC00B98072 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/VectorWindowCocoa.xib; sourceTree = "<group>"; };
 		0A66CA450887464200FD616C /* HIViewWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.h; path = Shared/Code/HIViewWrap.h; sourceTree = "<group>"; };
 		0A66CA4B0887467000FD616C /* HIViewWrap.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HIViewWrap.cp; path = Shared/Code/HIViewWrap.cp; sourceTree = "<group>"; };
 		0A66CA950887505200FD616C /* HIViewWrap.fwd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.fwd.h; path = Shared/Code/HIViewWrap.fwd.h; sourceTree = "<group>"; };
@@ -774,6 +778,7 @@
 				0A46FE38055432A400ACDF3A /* URL.cp */,
 				0A46FE21055432A400ACDF3A /* VectorCanvas.mm */,
 				0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */,
+				0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */,
 				0A46FE3B055432A400ACDF3A /* WindowInfo.cp */,
 				0A46FE3C055432A400ACDF3A /* WindowTitleDialog.mm */,
 				0A46FE3D055432A400ACDF3A /* Workspace.cp */,
@@ -842,7 +847,9 @@
 				0A4604540554376100ACDF3A /* URL.h */,
 				0A4604360554376100ACDF3A /* VectorCanvas.h */,
 				0A4604370554376100ACDF3A /* VectorInterpreter.h */,
-				0A1427340DA5D4270028510F /* VectorInterpreterID.typedef.h */,
+				0A1427340DA5D4270028510F /* VectorInterpreterRef.typedef.h */,
+				0A4AC969155ED67E00FA6184 /* VectorWindow.h */,
+				0A47E880155CD40400608A0A /* VectorWindowRef.typedef.h */,
 				0A4604570554376100ACDF3A /* VTKeys.h */,
 				0A4604580554376100ACDF3A /* WindowInfo.h */,
 				0A4604590554376100ACDF3A /* WindowTitleDialog.h */,
@@ -964,7 +971,7 @@
 				0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */,
 				0AAEFFBF111E77F100526983 /* ServerBrowserCocoa.xib */,
 				0ACFBF4612F13506008E4203 /* TerminalWindowCocoa.xib */,
-				0A66B704154E04DC00B98072 /* VectorCanvasCocoa.xib */,
+				0A66B704154E04DC00B98072 /* VectorWindowCocoa.xib */,
 				0A495E8F14734EA9005A1D3A /* WindowTitleDialogCocoa.xib */,
 				0ACDD9240ABD16C200040553 /* AlertMessages.nib */,
 				0A060B29078BA0D500A8BB55 /* ColorBox.nib */,
@@ -1429,6 +1436,7 @@
 				0AF94E491477857900099BF2 /* PopoverManager.mm in Sources */,
 				0A47A08C14B3E33A00E39136 /* TerminalToolbar.mm in Sources */,
 				0A4FAF951525694700B8142A /* Popover.mm in Sources */,
+				0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1515,12 +1523,12 @@
 			name = ClipboardCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0A66B704154E04DC00B98072 /* VectorCanvasCocoa.xib */ = {
+		0A66B704154E04DC00B98072 /* VectorWindowCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				0A66B705154E04DC00B98072 /* English */,
 			);
-			name = VectorCanvasCocoa.xib;
+			name = VectorWindowCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A670D3413E15C4A00CD2A1C /* AlertMessagesModalCocoa.xib */ = {

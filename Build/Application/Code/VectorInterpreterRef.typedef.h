@@ -1,4 +1,4 @@
-/*!	\file VectorInterpreterID.typedef.h
+/*!	\file VectorInterpreterRef.typedef.h
 	\brief Type definition header used to define a type that is
 	used too frequently to be declared in any module’s header.
 */
@@ -33,16 +33,12 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __VECTORINTERPRETERID__
-#define __VECTORINTERPRETERID__
+#ifndef __VECTORINTERPRETERREF__
+#define __VECTORINTERPRETERREF__
 
 #pragma mark Types
 
-typedef SInt16 VectorInterpreter_ID;
-enum
-{
-	kVectorInterpreter_InvalidID				= -1
-};
+typedef struct VectorInterpreter_OpaqueStruct*	VectorInterpreter_Ref;
 
 #endif
 

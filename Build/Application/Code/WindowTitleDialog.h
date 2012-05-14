@@ -48,7 +48,7 @@
 
 // application includes
 #include "SessionRef.typedef.h"
-#include "VectorCanvas.h"
+#include "VectorWindowRef.typedef.h"
 
 
 
@@ -173,7 +173,7 @@ WindowTitleDialog_Ref
 																							WindowTitleDialog_StandardCloseNotifyProc);
 
 WindowTitleDialog_Ref
-	WindowTitleDialog_NewForVectorCanvas		(VectorCanvas_Ref						inCanvas,
+	WindowTitleDialog_NewForVectorCanvas		(VectorWindow_Ref						inCanvasWindow,
 												 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr =
 																							WindowTitleDialog_StandardCloseNotifyProc);
 

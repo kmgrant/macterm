@@ -11,7 +11,7 @@
       <string key="NS.object.0">851</string>
     </object>
     <array class="NSMutableArray" key="IBDocument.EditedObjectIDs">
-      <integer value="1"/>
+      <integer value="2"/>
     </array>
     <array key="IBDocument.PluginDependencies">
       <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -33,14 +33,14 @@
       <object class="NSWindowTemplate" id="1047098468">
         <int key="NSWindowStyleMask">8339</int>
         <int key="NSWindowBacking">2</int>
-        <string key="NSWindowRect">{{191, 672}, {466, 240}}</string>
+        <string key="NSWindowRect">{{191, 672}, {466, 220}}</string>
         <int key="NSWTFlags">-469761024</int>
         <string key="NSWindowTitle">Debugging Options</string>
         <string key="NSWindowClass">NSPanel</string>
         <nil key="NSViewClass"/>
         <nil key="NSUserInterfaceItemIdentifier"/>
-        <string key="NSWindowContentMaxSize">{466, 240}</string>
-        <string key="NSWindowContentMinSize">{466, 240}</string>
+        <string key="NSWindowContentMaxSize">{466, 220}</string>
+        <string key="NSWindowContentMinSize">{466, 220}</string>
         <object class="NSView" key="NSWindowView" id="64225887">
           <reference key="NSNextResponder"/>
           <int key="NSvFlags">256</int>
@@ -48,7 +48,7 @@
             <object class="NSButton" id="301053687">
               <reference key="NSNextResponder" ref="64225887"/>
               <int key="NSvFlags">268</int>
-              <string key="NSFrame">{{184, 202}, {264, 18}}</string>
+              <string key="NSFrame">{{184, 182}, {264, 18}}</string>
               <reference key="NSSuperview" ref="64225887"/>
               <bool key="NSViewIsLayerTreeHost">YES</bool>
               <array key="NSViewContentFilters">
@@ -86,7 +86,7 @@
             <object class="NSButton" id="971188678">
               <reference key="NSNextResponder" ref="64225887"/>
               <int key="NSvFlags">268</int>
-              <string key="NSFrame">{{184, 182}, {264, 18}}</string>
+              <string key="NSFrame">{{184, 162}, {264, 18}}</string>
               <reference key="NSSuperview" ref="64225887"/>
               <bool key="NSViewIsLayerTreeHost">YES</bool>
               <array key="NSViewContentFilters">
@@ -115,7 +115,7 @@
             <object class="NSButton" id="426354929">
               <reference key="NSNextResponder" ref="64225887"/>
               <int key="NSvFlags">268</int>
-              <string key="NSFrame">{{184, 162}, {264, 18}}</string>
+              <string key="NSFrame">{{184, 142}, {264, 18}}</string>
               <reference key="NSSuperview" ref="64225887"/>
               <bool key="NSViewIsLayerTreeHost">YES</bool>
               <array key="NSViewContentFilters">
@@ -141,39 +141,10 @@
                 <int key="NSPeriodicInterval">25</int>
               </object>
             </object>
-            <object class="NSButton" id="937264163">
-              <reference key="NSNextResponder" ref="64225887"/>
-              <int key="NSvFlags">268</int>
-              <string key="NSFrame">{{184, 142}, {264, 18}}</string>
-              <reference key="NSSuperview" ref="64225887"/>
-              <bool key="NSViewIsLayerTreeHost">YES</bool>
-              <array key="NSViewContentFilters">
-                <object class="CIColorInvert">
-                  <bool key="CIEnabled">YES</bool>
-                </object>
-              </array>
-              <int key="NSViewLayerContentsRedrawPolicy">2</int>
-              <bool key="NSEnabled">YES</bool>
-              <object class="NSButtonCell" key="NSCell" id="645080470">
-                <int key="NSCellFlags">-2080244224</int>
-                <int key="NSCellFlags2">0</int>
-                <string key="NSContents">Cocoa-Based Vector Graphics Canvas</string>
-                <reference key="NSSupport" ref="569083415"/>
-                <reference key="NSControlView" ref="937264163"/>
-                <int key="NSButtonFlags">1211912703</int>
-                <int key="NSButtonFlags2">2</int>
-                <reference key="NSNormalImage" ref="157475183"/>
-                <reference key="NSAlternateImage" ref="188520896"/>
-                <string key="NSAlternateContents"/>
-                <string key="NSKeyEquivalent"/>
-                <int key="NSPeriodicDelay">200</int>
-                <int key="NSPeriodicInterval">25</int>
-              </object>
-            </object>
             <object class="NSTextField" id="174546653">
               <reference key="NSNextResponder" ref="64225887"/>
               <int key="NSvFlags">268</int>
-              <string key="NSFrame">{{17, 203}, {146, 17}}</string>
+              <string key="NSFrame">{{17, 183}, {146, 17}}</string>
               <reference key="NSSuperview" ref="64225887"/>
               <bool key="NSViewIsLayerTreeHost">YES</bool>
               <array key="NSViewContentFilters">
@@ -341,13 +312,13 @@
               </object>
             </object>
           </array>
-          <string key="NSFrameSize">{466, 240}</string>
+          <string key="NSFrameSize">{466, 220}</string>
           <reference key="NSSuperview"/>
           <int key="NSViewLayerContentsRedrawPolicy">2</int>
         </object>
         <string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
-        <string key="NSMinSize">{466, 259}</string>
-        <string key="NSMaxSize">{466, 259}</string>
+        <string key="NSMinSize">{466, 239}</string>
+        <string key="NSMaxSize">{466, 239}</string>
         <bool key="NSWindowIsRestorable">YES</bool>
       </object>
     </array>
@@ -433,22 +404,6 @@
           </object>
           <int key="connectionID">120</int>
         </object>
-        <object class="IBConnectionRecord">
-          <object class="IBBindingConnection" key="connection">
-            <string key="label">value: self.cocoaBasedVectorGraphics</string>
-            <reference key="source" ref="937264163"/>
-            <reference key="destination" ref="491703908"/>
-            <object class="NSNibBindingConnector" key="connector">
-              <reference key="NSSource" ref="937264163"/>
-              <reference key="NSDestination" ref="491703908"/>
-              <string key="NSLabel">value: self.cocoaBasedVectorGraphics</string>
-              <string key="NSBinding">value</string>
-              <string key="NSKeyPath">self.cocoaBasedVectorGraphics</string>
-              <int key="NSNibBindingConnectorVersion">2</int>
-            </object>
-          </object>
-          <int key="connectionID">124</int>
-        </object>
       </array>
       <object class="IBMutableOrderedSet" key="objectRecords">
         <array key="orderedObjects">
@@ -496,7 +451,6 @@
               <reference ref="964642497"/>
               <reference ref="260695050"/>
               <reference ref="575996668"/>
-              <reference ref="937264163"/>
               <reference ref="971188678"/>
               <reference ref="945860677"/>
             </array>
@@ -619,33 +573,20 @@
             <reference key="object" ref="983744257"/>
             <reference key="parent" ref="945860677"/>
           </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">121</int>
-            <reference key="object" ref="937264163"/>
-            <array class="NSMutableArray" key="children">
-              <reference ref="645080470"/>
-            </array>
-            <reference key="parent" ref="64225887"/>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">122</int>
-            <reference key="object" ref="645080470"/>
-            <reference key="parent" ref="937264163"/>
-          </object>
         </array>
       </object>
       <dictionary class="NSMutableDictionary" key="flattenedProperties">
         <string key="-3.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
         <boolean value="YES" key="-3.ImportedFromIB2"/>
-        <string key="1.IBEditorWindowLastContentRect">{{711, 713}, {466, 240}}</string>
+        <string key="1.IBEditorWindowLastContentRect">{{711, 733}, {466, 220}}</string>
         <string key="1.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-        <string key="1.IBWindowTemplateEditedContentRect">{{711, 713}, {466, 240}}</string>
+        <string key="1.IBWindowTemplateEditedContentRect">{{711, 733}, {466, 220}}</string>
         <boolean value="YES" key="1.ImportedFromIB2"/>
         <boolean value="YES" key="1.NSWindowTemplate.visibleAtLaunch"/>
         <boolean value="YES" key="1.windowTemplate.hasMaxSize"/>
         <boolean value="YES" key="1.windowTemplate.hasMinSize"/>
-        <string key="1.windowTemplate.maxSize">{466, 240}</string>
-        <string key="1.windowTemplate.minSize">{466, 240}</string>
+        <string key="1.windowTemplate.maxSize">{466, 220}</string>
+        <string key="1.windowTemplate.minSize">{466, 220}</string>
         <string key="112.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
         <object class="NSAffineTransform" key="112.IBViewBoundsToFrameTransform">
           <bytes key="NSTransformStruct">P4AAAL+AAABDOAAAwzAAAA</bytes>
@@ -660,15 +601,6 @@
           <bytes key="NSTransformStruct">P4AAAL+AAABDNAAAwigAAA</bytes>
         </object>
         <string key="118.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-        <string key="121.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-        <object class="NSAffineTransform" key="121.IBViewBoundsToFrameTransform">
-          <bytes key="NSTransformStruct">P4AAAL+AAABDMwAAwx8AAA</bytes>
-        </object>
-        <real value="0.0" key="121.IBViewIntegration.shadowBlurRadius"/>
-        <reference key="121.IBViewIntegration.shadowColor" ref="620740402"/>
-        <real value="0.0" key="121.IBViewIntegration.shadowOffsetHeight"/>
-        <real value="0.0" key="121.IBViewIntegration.shadowOffsetWidth"/>
-        <string key="122.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
         <string key="2.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
         <boolean value="YES" key="2.ImportedFromIB2"/>
         <string key="47.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>

@@ -56,7 +56,7 @@
 #import "ConstantsRegistry.h"
 #import "HelpSystem.h"
 #import "Session.h"
-#import "VectorCanvas.h"
+#import "VectorWindow.h"
 
 
 
@@ -69,7 +69,7 @@
 	Popover_Window*							containerWindow;	// holds the Rename dialog view
 	NSView*									managedView;		// the view that implements the majority of the interface
 	SessionRef								session;			// the session, if any, to which this applies
-	VectorCanvas_Ref						canvas;				// the canvas, if any, to which this applies
+	VectorWindow_Ref						canvasWindow;		// the canvas window controller, if any, to which this applies
 	NSWindow*								targetCocoaWindow;	// the window to be renamed, if Cocoa
 	HIWindowRef								targetCarbonWindow;	// the window to be renamed, if Carbon
 	PopoverManager_Ref						popoverMgr;			// manages common aspects of popover window behavior
@@ -97,7 +97,7 @@ session:(SessionRef)_;
 - (id)
 initForCocoaWindow:(NSWindow*)_
 notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_
-vectorGraphicsCanvas:(VectorCanvas_Ref)_;
+vectorGraphicsCanvas:(VectorWindow_Ref)_;
 
 - (void)
 display;
@@ -181,16 +181,16 @@ windows, but this is up to the canvas implementation).
 (3.1)
 */
 WindowTitleDialog_Ref
-WindowTitleDialog_NewForVectorCanvas	(VectorCanvas_Ref						inCanvas,
+WindowTitleDialog_NewForVectorCanvas	(VectorWindow_Ref						inCanvasWindow,
 										 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
 {
 	WindowTitleDialog_Ref	result = nullptr;
 	
 	
 	result = (WindowTitleDialog_Ref)[[WindowTitleDialog_Handler alloc]
-										initForCocoaWindow:VectorCanvas_ReturnNSWindow(inCanvas)
+										initForCocoaWindow:VectorWindow_ReturnNSWindow(inCanvasWindow)
 															notificationProc:inCloseNotifyProcPtr
-															vectorGraphicsCanvas:inCanvas];
+															vectorGraphicsCanvas:inCanvasWindow];
 	return result;
 }// NewForVectorCanvas
 
@@ -308,7 +308,7 @@ notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
 		self->containerWindow = nil;
 		self->managedView = nil;
 		self->session = nullptr;
-		self->canvas = nullptr;
+		self->canvasWindow = nullptr;
 		self->targetCocoaWindow = aCocoaWindow;
 		self->targetCarbonWindow = aCarbonWindow;
 		self->popoverMgr = nullptr;
@@ -369,12 +369,12 @@ windows.
 - (id)
 initForCocoaWindow:(NSWindow*)								aWindow
 notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
-vectorGraphicsCanvas:(VectorCanvas_Ref)						aCanvas
+vectorGraphicsCanvas:(VectorWindow_Ref)						aCanvasWindow
 {
 	self = [self initForCocoaWindow:aWindow orCarbonWindow:nullptr notificationProc:aProc];
 	if (nil != self)
 	{
-		self->canvas = aCanvas;
+		self->canvasWindow = aCanvasWindow;
 	}
 	return self;
 }// initForCocoaWindow:notificationProc:vectorGraphicsCanvas:
@@ -604,10 +604,10 @@ finalTitle:(NSString*)							newTitle
 			// set session window’s user-defined title
 			Session_SetWindowUserDefinedTitle(self->session, (CFStringRef)newTitle);
 		}
-		else if (nullptr != self->canvas)
+		else if (nullptr != self->canvasWindow)
 		{
 			// set vector graphics window’s user-defined title
-			VectorCanvas_SetTitle(self->canvas, (CFStringRef)newTitle);
+			VectorWindow_SetTitle(self->canvasWindow, (CFStringRef)newTitle);
 		}
 		else
 		{
@@ -664,13 +664,13 @@ returnInitialTitleTextForManagedView:(NSView*)		aManagedView
 			result = (NSString*)titleString;
 		}
 	}
-	else if (nullptr != self->canvas)
+	else if (nullptr != self->canvasWindow)
 	{
 		// find vector graphics window’s user-defined title
 		CFStringRef		titleString = nullptr;
 		
 		
-		VectorCanvas_CopyTitle(self->canvas, titleString);
+		VectorWindow_CopyTitle(self->canvasWindow, titleString);
 		if (nullptr != titleString)
 		{
 			result = (NSString*)titleString;

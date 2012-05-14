@@ -99,6 +99,8 @@ extern "C"
 #import "URL.h"
 #import "URLAccessAE.h"
 #import "VectorCanvas.h"
+#import "VectorInterpreter.h"
+#import "VectorWindow.h"
 #import "WindowTitleDialog.h"
 
 
@@ -1028,6 +1030,26 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandTEKPageCommand:
+			{
+				SessionRef		sessionForGraphic = frontSession;
+				
+				
+				// allow this command for either session terminal windows, or
+				// the graphics themselves (as long as the graphic can be
+				// traced to a session)
+				if (nullptr == sessionForGraphic)
+				{
+					sessionForGraphic = returnTEKSession();
+				}
+				
+				if (nullptr != sessionForGraphic)
+				{
+					// open a new window or clear the buffer of the current one
+					Session_TEKNewPage(sessionForGraphic);
+				}
+			}
+			break;
+		
 		case kCommandTEKPageClearsScreen:
 			{
 				SessionRef		sessionForGraphic = frontSession;
@@ -1038,44 +1060,14 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				// traced to a session)
 				if (nullptr == sessionForGraphic)
 				{
-					VectorCanvas_Ref	frontCanvas = VectorCanvas_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());
-					
-					
-					if (nullptr != frontCanvas) sessionForGraphic = VectorCanvas_ReturnListeningSession(frontCanvas);
+					sessionForGraphic = returnTEKSession();
 				}
 				
 				if (nullptr != sessionForGraphic)
 				{
-					if (kCommandTEKPageClearsScreen == inCommandID)
-					{
-						// toggle this setting
-						Session_TEKSetPageCommandOpensNewWindow
-						(sessionForGraphic, false == Session_TEKPageCommandOpensNewWindow(sessionForGraphic));
-					}
-					else
-					{
-						// open a new window or clear the buffer of the current one
-						if (!Session_TEKHasTargetGraphic(sessionForGraphic) ||
-							Session_TEKPageCommandOpensNewWindow(sessionForGraphic))
-						{
-							if (Session_TEKPageCommandOpensNewWindow(sessionForGraphic))
-							{
-								// leave current TEK mode, then re-enter to open a new window
-								Session_TEKDetachTargetGraphic(sessionForGraphic); // this removes the data target
-							}
-							
-							unless (Session_TEKHasTargetGraphic(sessionForGraphic))
-							{
-								// then there is no current TEK window for this screen - make one
-								// (this also makes it one of the session’s data targets)
-								unless (Session_TEKCreateTargetGraphic(sessionForGraphic))
-								{
-									// error - can’t create TEK window; get out of TEK mode
-									// UNIMPLEMENTED
-								}
-							}
-						}
-					}
+					// toggle this setting
+					Session_TEKSetPageCommandOpensNewWindow
+					(sessionForGraphic, false == Session_TEKPageCommandOpensNewWindow(sessionForGraphic));
 				}
 			}
 			break;
@@ -2463,7 +2455,7 @@ isCocoaWindowMoreImportantThanCarbon	(NSWindow*		inWindow)
 {
 	BOOL	result = (([inWindow level] != NSNormalWindowLevel) ||
 						[inWindow isKindOfClass:[Popover_Window class]] ||
-						[[inWindow windowController] isKindOfClass:[VectorCanvas_WindowController class]]);
+						[[inWindow windowController] isKindOfClass:[VectorWindow_Controller class]]);
 	
 	
 	return result;
@@ -2741,17 +2733,20 @@ returnTEKSession ()
 	
 	if (nullptr == result)
 	{
-		// if the active session is not a terminal, it may be a graphic
-		// which can be used to trace to its session
-		HIWindowRef		frontWindow = EventLoop_ReturnRealFrontWindow();
+		NSWindow*	window = [NSApp mainWindow];
 		
 		
-		if (nullptr != frontWindow)
+		if ([[window windowController] isKindOfClass:[VectorWindow_Controller class]])
 		{
-			VectorCanvas_Ref	canvasForWindow = VectorCanvas_ReturnFromWindow(frontWindow);
+			VectorWindow_Controller*	asCanvasWC = (VectorWindow_Controller*)[window windowController];
+			VectorCanvas_View*			canvasView = [asCanvasWC canvasView];
+			VectorCanvas_Ref			frontCanvas = VectorInterpreter_ReturnCanvas([canvasView interpreterRef]);
 			
 			
-			if (nullptr != canvasForWindow) result = VectorCanvas_ReturnListeningSession(canvasForWindow);
+			if (nullptr != frontCanvas)
+			{
+				result = VectorCanvas_ReturnListeningSession(frontCanvas);
+			}
 		}
 	}
 	return result;

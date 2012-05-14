@@ -246,7 +246,7 @@ English.lproj/MainMenuCocoa \
 English.lproj/PrintPreviewCocoa \
 English.lproj/ServerBrowserCocoa \
 English.lproj/TerminalWindowCocoa \
-English.lproj/VectorCanvasCocoa \
+English.lproj/VectorWindowCocoa \
 English.lproj/WindowTitleDialogCocoa
 APP_RESOURCES_BUNDLES_GENERATED := \
 $(foreach PREFIX,$(XIB_PREFIXES),$(PREFIX).nib)

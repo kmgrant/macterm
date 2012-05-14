@@ -45,6 +45,7 @@
 // standard-C++ includes
 #include <algorithm>
 #include <map>
+#include <set>
 #include <vector>
 
 // Unix includes
@@ -100,6 +101,7 @@
 #include "UIStrings.h"
 #include "VectorCanvas.h"
 #include "VectorInterpreter.h"
+#include "VectorWindow.h"
 #include "VTKeys.h"
 #include "WindowTitleDialog.h"
 
@@ -235,13 +237,15 @@ private:
 	CFStringRef			_altName;	// unlike the record name, this can be nullptr
 };
 
-typedef std::vector< TerminalScreenRef >	My_PrintJobList;
+typedef std::vector< TerminalScreenRef >		My_PrintJobList;
 
-typedef std::vector< SInt16 >				My_TEKGraphicList;
+typedef std::vector< VectorInterpreter_Ref >	My_TEKGraphicList;
 
-typedef std::vector< TerminalScreenRef >	My_TerminalScreenList;
+typedef std::vector< TerminalScreenRef >		My_TerminalScreenList;
 
 typedef std::map< HIViewRef, EventHandlerRef >	My_TextInputHandlerByView;
+
+typedef std::set< VectorWindow_Ref >			My_VectorWindowSet;
 
 /*!
 The data structure that is known as a "Session_Ref" to
@@ -284,6 +288,7 @@ struct My_Session
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this session data
 	ListenerModel_ListenerWrap	windowValidationListener;	// responds after a window is created, and just before it dies
 	ListenerModel_ListenerWrap	terminalWindowListener;		// responds when terminal window states change
+	ListenerModel_ListenerWrap	vectorWindowListener;		// responds when vector graphics window states change
 	ListenerModel_ListenerWrap	preferencesListener;		// responds when certain preference values are initialized or changed
 	EventLoopTimerUPP			autoActivateDragTimerUPP;	// procedure that is called when a drag hovers over an inactive window
 	EventLoopTimerRef			autoActivateDragTimer;		// short timer
@@ -300,7 +305,8 @@ struct My_Session
 	My_TerminalScreenList		targetTerminals;			// list of screen buffers to which incoming data is being copied
 	Boolean						vectorGraphicsPageOpensNewWindow;	// true if a TEK PAGE opens a new window instead of clearing the current one
 	VectorInterpreter_Mode		vectorGraphicsCommandSet;	// e.g. TEK 4014 or 4105
-	VectorInterpreter_ID		vectorGraphicsID;			// the ID of the current graphic, if any; see "VectorInterpreter.h"
+	My_VectorWindowSet			vectorGraphicsWindows;		// window controllers for open canvas windows, if any
+	VectorInterpreter_Ref		vectorGraphicsInterpreter;	// the ID of the current graphic, if any; see "VectorInterpreter.h"
 	size_t						readBufferSizeMaximum;		// maximum number of bytes that can be processed at once
 	size_t						readBufferSizeInUse;		// number of bytes of data currently in the read buffer
 	UInt8*						readBufferPtr;				// buffer space for processing data
@@ -416,6 +422,10 @@ void						terminalInsertLocalEchoString		(My_SessionPtr, UInt8 const*, size_t);
 void						terminalWindowChanged				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 void						terminationWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
+Boolean						vectorGraphicsCreateTarget			(My_SessionPtr);
+void						vectorGraphicsDetachTarget			(My_SessionPtr);
+void						vectorGraphicsWindowChanged			(ListenerModel_Ref, ListenerModel_Event,
+																 void*, void*);
 void						watchClearForSession				(My_SessionPtr);
 void						watchCloseNotifyProc				(AlertMessages_BoxRef, SInt16, void*);
 void						watchNotifyForSession				(My_SessionPtr, Session_Watch);
@@ -554,7 +564,7 @@ public:
 	}
 	
 	void
-	operator()	(SInt16		inTEKWindowID)
+	operator()	(VectorInterpreter_Ref		inTEKWindowID)
 	{
 		_result = VectorInterpreter_ProcessData(inTEKWindowID, _buffer, _bufferSize);
 	}
@@ -712,7 +722,7 @@ Session_AddDataTarget	(SessionRef				inRef,
 			My_TEKGraphicList::size_type	listSize = ptr->targetVectorGraphics.size();
 			
 			
-			ptr->targetVectorGraphics.push_back(*(REINTERPRET_CAST(inTargetData, SInt16 const*/* TEK graphics ID */)));
+			ptr->targetVectorGraphics.push_back(REINTERPRET_CAST(inTargetData, VectorInterpreter_Ref));
 			assert(ptr->targetVectorGraphics.size() == (1 + listSize));
 		}
 		break;
@@ -1422,12 +1432,11 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 				
 				// TEK info
 				{
-					Boolean		flag = false;
+					Boolean const	kFlag = (false == Session_TEKPageCommandOpensNewWindow(inRef));
 					
 					
-					flag = !Session_TEKPageCommandOpensNewWindow(inRef);
 					saveError = SessionDescription_SetBooleanData
-								(saveFileMemoryModel, kSessionDescription_BooleanTypeTEKPageClears, flag);
+								(saveFileMemoryModel, kSessionDescription_BooleanTypeTEKPageClears, kFlag);
 				}
 				
 				// Kerberos info: no longer supported
@@ -1847,7 +1856,7 @@ Session_RemoveDataTarget	(SessionRef				inRef,
 	
 	case kSession_DataTargetTektronixGraphicsCanvas:
 		ptr->targetVectorGraphics.erase(std::remove(ptr->targetVectorGraphics.begin(), ptr->targetVectorGraphics.end(),
-													*(REINTERPRET_CAST(inTargetData, SInt16*/* TEK graphic ID */))),
+													REINTERPRET_CAST(inTargetData, VectorInterpreter_Ref)),
 										ptr->targetVectorGraphics.end());
 		break;
 	
@@ -3341,122 +3350,36 @@ Session_StopMonitoring	(SessionRef					inRef,
 
 
 /*!
-Creates a new TEK graphics window and associates it with
-the specified session.  TEK writes will subsequently
-affect the new window.  Returns "true" only if the new
-window was successfully created (if not, any existing
-window remains the target).
+Sends a PAGE command to the current vector interpreter,
+if any.  This will either clear the display or open a
+new graphics window.
 
-(3.0)
-*/
-Boolean
-Session_TEKCreateTargetGraphic		(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	VectorInterpreter_ID	id = kVectorInterpreter_InvalidID;
-	Boolean					result = false;
-	
-	
-	id = VectorInterpreter_New(kVectorInterpreter_TargetScreenPixels, ptr->vectorGraphicsCommandSet);
-	if (kVectorInterpreter_InvalidID != id)
-	{
-		VectorInterpreter_SetPageClears(id, false == ptr->vectorGraphicsPageOpensNewWindow);
-		ptr->vectorGraphicsID = id;
-		VectorCanvas_SetListeningSession(VectorInterpreter_ReturnCanvas(id), inRef);
-		{
-			CFStringRef		windowTitleCFString = nullptr;
-			
-			
-			if (noErr == CopyWindowTitleAsCFString(returnActiveWindow(ptr), &windowTitleCFString))
-			{
-				VectorCanvas_SetTitle(VectorInterpreter_ReturnCanvas(id), windowTitleCFString);
-				CFRelease(windowTitleCFString), windowTitleCFString = nullptr;
-			}
-		}
-		Session_AddDataTarget(inRef, kSession_DataTargetTektronixGraphicsCanvas, &id);
-		TerminalWindow_Select(ptr->terminalWindow);
-		
-		// display a help tag over the cursor in an unobtrusive location
-		// that confirms for the user that a suspend has in fact occurred
-		{
-			My_HMHelpContentRecWrap&	tagData = createHelpTagForVectorGraphics();
-			HIRect						globalCursorBounds;
-			
-			
-			TerminalView_GetCursorGlobalBounds(TerminalWindow_ReturnViewWithFocus
-												(Session_ReturnActiveTerminalWindow(inRef)),
-												globalCursorBounds);
-			tagData.setFrame(globalCursorBounds);
-			(OSStatus)HMDisplayTag(tagData.ptr());
-		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-			// this call does not immediately hide the tag, but rather after a short delay
-			if (FlagManager_Test(kFlagOS10_4API))
-			{
-				(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
-			}
-		#endif
-		}
-		
-		result = true;
-	}
-	return result;
-}// TEKCreateTargetGraphic
-
-
-/*!
-Dissociates the current target graphic of the given session
-from the session.  TEK writes will therefore no longer affect
-this graphic.  If there is no target graphic, this routine
-does nothing.
-
-(3.0)
+(4.0)
 */
 void
-Session_TEKDetachTargetGraphic		(SessionRef		inRef)
+Session_TEKNewPage	(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	if (kVectorInterpreter_InvalidID != ptr->vectorGraphicsID)
+	if (nullptr == ptr->vectorGraphicsInterpreter)
 	{
-		Session_RemoveDataTarget(inRef, kSession_DataTargetTektronixGraphicsCanvas, &ptr->vectorGraphicsID);
-		ptr->vectorGraphicsID = kVectorInterpreter_InvalidID;
+		(Boolean)vectorGraphicsCreateTarget(ptr);
 	}
-}// TEKDetachTargetGraphic
-
-
-/*!
-Returns "true" only if there is currently a target
-TEK vector graphic for the specified session.
-
-(3.0)
-*/
-Boolean
-Session_TEKHasTargetGraphic		(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean					result = (kVectorInterpreter_InvalidID != ptr->vectorGraphicsID);
-	
-	
-	return result;
-}// TEKHasTargetGraphic
-
-
-/*!
-Returns "true" only if the specified session is
-set up to handle Tektronix vector graphics.
-
-(3.0)
-*/
-Boolean
-Session_TEKIsEnabled	(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean					result = (kVectorInterpreter_ModeDisabled != ptr->vectorGraphicsCommandSet);
-	
-	
-	return result;
-}// TEKIsEnabled
+	else
+	{
+		if (Session_TEKPageCommandOpensNewWindow(inRef))
+		{
+			// create a new display (automatically detaches any existing one)
+			(Boolean)vectorGraphicsCreateTarget(ptr);
+		}
+		else
+		{
+			// clear screen of existing display
+			VectorInterpreter_PageCommand(ptr->vectorGraphicsInterpreter);
+		}
+	}
+}// TEKNewPage
 
 
 /*!
@@ -3497,9 +3420,9 @@ Session_TEKSetPageCommandOpensNewWindow		(SessionRef		inRef,
 	
 	
 	ptr->vectorGraphicsPageOpensNewWindow = inNewWindow;
-	if (kVectorInterpreter_InvalidID != ptr->vectorGraphicsID)
+	if (nullptr != ptr->vectorGraphicsInterpreter)
 	{
-		VectorInterpreter_SetPageClears(ptr->vectorGraphicsID, false == inNewWindow);
+		VectorInterpreter_SetPageClears(ptr->vectorGraphicsInterpreter, false == inNewWindow);
 	}
 }// TEKSetPageCommandOpensNewWindow
 
@@ -5321,6 +5244,7 @@ changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorSessionChanges)),
 windowValidationListener(ListenerModel_NewStandardListener(windowValidationStateChanged), true/* is retained */),
 terminalWindowListener(nullptr), // set at window validation time
+vectorWindowListener(ListenerModel_NewStandardListener(vectorGraphicsWindowChanged, this/* context */), true/* is retained */),
 preferencesListener(ListenerModel_NewStandardListener(preferenceChanged, this/* context */), true/* is retained */),
 autoActivateDragTimerUPP(NewEventLoopTimerUPP(autoActivateWindow)),
 autoActivateDragTimer(nullptr), // installed only as needed
@@ -5337,7 +5261,8 @@ targetDumbTerminals(),
 targetTerminals(),
 vectorGraphicsPageOpensNewWindow(true),
 vectorGraphicsCommandSet(kVectorInterpreter_ModeTEK4014), // arbitrary, reset later
-vectorGraphicsID(kVectorInterpreter_InvalidID),
+vectorGraphicsWindows(),
+vectorGraphicsInterpreter(nullptr),
 readBufferSizeMaximum(4096), // arbitrary, for initialization
 readBufferSizeInUse(0),
 readBufferPtr(new UInt8[this->readBufferSizeMaximum]),
@@ -5475,9 +5400,16 @@ My_Session::
 	}
 	DisposeEventLoopTimerUPP(this->respawnSessionTimerUPP), this->respawnSessionTimerUPP = nullptr;
 	
-	if (kVectorInterpreter_InvalidID != this->vectorGraphicsID)
+	vectorGraphicsDetachTarget(this);
+	for (My_VectorWindowSet::const_iterator toWindow = this->vectorGraphicsWindows.begin();
+			toWindow != this->vectorGraphicsWindows.end(); ++toWindow)
 	{
-		VectorInterpreter_Dispose(&this->vectorGraphicsID);
+		VectorWindow_Ref	vectorWindowRef = *toWindow;
+		
+		
+		VectorWindow_StopMonitoring(vectorWindowRef, kVectorWindow_EventWillClose,
+									this->vectorWindowListener.returnRef());
+		VectorWindow_Release(&vectorWindowRef);
 	}
 	
 	// dispose contents
@@ -8346,6 +8278,147 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 	// dispose of the alert
 	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
 }// terminationWarningCloseNotifyProc
+
+
+/*!
+Creates a new TEK graphics window and associates it with
+the specified session.  TEK writes will subsequently
+affect the new window.  Returns "true" only if the new
+window was successfully created (if not, any existing
+window remains the target).
+
+(3.0)
+*/
+Boolean
+vectorGraphicsCreateTarget		(My_SessionPtr	inPtr)
+{
+	Boolean		result = false;
+	
+	
+	vectorGraphicsDetachTarget(inPtr);
+	inPtr->vectorGraphicsInterpreter = VectorInterpreter_New(inPtr->vectorGraphicsCommandSet);
+	if (nullptr != inPtr->vectorGraphicsInterpreter)
+	{
+		VectorWindow_Ref	newWindow = VectorWindow_New(inPtr->vectorGraphicsInterpreter);
+		
+		
+		inPtr->vectorGraphicsWindows.insert(newWindow);
+		VectorWindow_StartMonitoring(newWindow, kVectorWindow_EventWillClose,
+										inPtr->vectorWindowListener.returnRef());
+		VectorInterpreter_Release(&inPtr->vectorGraphicsInterpreter); // still retained by the window controller
+		inPtr->vectorGraphicsInterpreter = VectorWindow_ReturnInterpreter(newWindow);
+		
+		VectorInterpreter_SetPageClears(inPtr->vectorGraphicsInterpreter,
+										false == inPtr->vectorGraphicsPageOpensNewWindow);
+		VectorCanvas_SetListeningSession(VectorInterpreter_ReturnCanvas(inPtr->vectorGraphicsInterpreter),
+											inPtr->selfRef);
+		{
+			CFStringRef		windowTitleCFString = nullptr;
+			
+			
+			if (noErr == CopyWindowTitleAsCFString(returnActiveWindow(inPtr), &windowTitleCFString))
+			{
+				VectorWindow_SetTitle(newWindow, windowTitleCFString);
+				CFRelease(windowTitleCFString), windowTitleCFString = nullptr;
+			}
+		}
+		Session_AddDataTarget(inPtr->selfRef, kSession_DataTargetTektronixGraphicsCanvas,
+								inPtr->vectorGraphicsInterpreter);
+		
+		VectorWindow_Display(newWindow);
+		TerminalWindow_Select(inPtr->terminalWindow);
+		
+		// display a help tag over the cursor in an unobtrusive location
+		// that confirms for the user that a suspend has in fact occurred
+		{
+			My_HMHelpContentRecWrap&	tagData = createHelpTagForVectorGraphics();
+			HIRect						globalCursorBounds;
+			
+			
+			TerminalView_GetCursorGlobalBounds(TerminalWindow_ReturnViewWithFocus
+												(Session_ReturnActiveTerminalWindow(inPtr->selfRef)),
+												globalCursorBounds);
+			tagData.setFrame(globalCursorBounds);
+			(OSStatus)HMDisplayTag(tagData.ptr());
+		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+			// this call does not immediately hide the tag, but rather after a short delay
+			if (FlagManager_Test(kFlagOS10_4API))
+			{
+				(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
+			}
+		#endif
+		}
+		
+		result = true;
+	}
+	return result;
+}// vectorGraphicsCreateTarget
+
+
+/*!
+Dissociates the current target graphic of the given session
+from the session.  TEK writes will therefore no longer affect
+this graphic.  If there is no target graphic, this routine
+does nothing.
+
+(3.0)
+*/
+void
+vectorGraphicsDetachTarget	(My_SessionPtr	inPtr)
+{
+	if (nullptr != inPtr->vectorGraphicsInterpreter)
+	{
+		Session_RemoveDataTarget(inPtr->selfRef, kSession_DataTargetTektronixGraphicsCanvas,
+									inPtr->vectorGraphicsInterpreter);
+		inPtr->vectorGraphicsInterpreter = nullptr; // weak reference only, do not release
+	}
+}// vectorGraphicsDetachTarget
+
+
+/*!
+Invoked whenever a monitored vector graphics window’s state
+changes.
+
+(4.1)
+*/
+void
+vectorGraphicsWindowChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
+								 ListenerModel_Event	inVectorGraphicsWindowChange,
+								 void*					inEventContextPtr,
+								 void*					inListenerContextPtr)
+{
+	My_SessionPtr	ptr = REINTERPRET_CAST(inListenerContextPtr, My_SessionPtr);
+	
+	
+	switch (inVectorGraphicsWindowChange)
+	{
+	case kVectorWindow_EventWillClose:
+		{
+			VectorWindow_Ref				vectorWindowRef = REINTERPRET_CAST(inEventContextPtr, VectorWindow_Ref);
+			VectorInterpreter_Ref			windowInterpreter = VectorWindow_ReturnInterpreter(vectorWindowRef);
+			My_VectorWindowSet::iterator 	toWindow = ptr->vectorGraphicsWindows.find(vectorWindowRef);
+			
+			
+			if (ptr->vectorGraphicsWindows.end() != toWindow)
+			{
+				VectorWindow_StopMonitoring(*toWindow, kVectorWindow_EventWillClose,
+											ptr->vectorWindowListener.returnRef());
+				VectorWindow_Release(&vectorWindowRef);
+				ptr->vectorGraphicsWindows.erase(toWindow);
+				if (windowInterpreter == ptr->vectorGraphicsInterpreter)
+				{
+					// restore terminal control if the current graphic was closed
+					vectorGraphicsDetachTarget(ptr);
+				}
+			}
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// vectorGraphicsWindowChanged
 
 
 /*!

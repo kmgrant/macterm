@@ -44,7 +44,7 @@
 
 // application includes
 #include "VectorCanvas.h"
-#include "VectorInterpreterID.typedef.h"
+#include "VectorInterpreterRef.typedef.h"
 
 
 
@@ -71,18 +71,6 @@ enum VectorInterpreter_Mode
 	kVectorInterpreter_ModeTEK4105		= '4105'	//!< TEK 4105 command set
 };
 
-/*!
-An interpreter can apply vector graphics to more than one
-type of output format.  Currently, it is possible to target
-a window or a bitmap.
-*/
-typedef SInt16 VectorInterpreter_Target;
-enum
-{
-	kVectorInterpreter_TargetScreenPixels		= 0,
-	kVectorInterpreter_TargetQuickDrawPicture	= 1
-};
-
 
 
 #pragma mark Public Methods
@@ -90,12 +78,14 @@ enum
 //!\name Creating and Destroying Graphics
 //@{
 
-VectorInterpreter_ID
-	VectorInterpreter_New					(VectorInterpreter_Target	inTarget,
-											 VectorInterpreter_Mode		inCommandSet);
+VectorInterpreter_Ref
+	VectorInterpreter_New					(VectorInterpreter_Mode		inCommandSet);
 
 void
-	VectorInterpreter_Dispose				(VectorInterpreter_ID*		inoutGraphicIDPtr);
+	VectorInterpreter_Retain				(VectorInterpreter_Ref		inGraphicID);
+
+void
+	VectorInterpreter_Release				(VectorInterpreter_Ref*		inoutGraphicIDPtr);
 
 //@}
 
@@ -103,33 +93,33 @@ void
 //@{
 
 void
-	VectorInterpreter_CopyZoom				(VectorInterpreter_ID		inDestinationGraphicID,
-											 VectorInterpreter_ID		inSourceGraphicID);
+	VectorInterpreter_CopyZoom				(VectorInterpreter_Ref		inDestinationGraphicID,
+											 VectorInterpreter_Ref		inSourceGraphicID);
 
 void
-	VectorInterpreter_PageCommand			(VectorInterpreter_ID		inGraphicID);
+	VectorInterpreter_PageCommand			(VectorInterpreter_Ref		inGraphicID);
 
 size_t
-	VectorInterpreter_ProcessData			(VectorInterpreter_ID		inGraphicID,
+	VectorInterpreter_ProcessData			(VectorInterpreter_Ref		inGraphicID,
 											 UInt8 const*				inDataPtr,
 											 size_t						inDataSize);
 
 void
-	VectorInterpreter_Redraw				(VectorInterpreter_ID		inGraphicID,
-											 VectorInterpreter_ID		inDestinationGraphicID);
+	VectorInterpreter_Redraw				(VectorInterpreter_Ref		inGraphicID,
+											 VectorInterpreter_Ref		inDestinationGraphicID);
 
 SInt16
-	VectorInterpreter_ReturnBackgroundColor	(VectorInterpreter_ID		inGraphicID);
+	VectorInterpreter_ReturnBackgroundColor	(VectorInterpreter_Ref		inGraphicID);
 
 VectorCanvas_Ref
-	VectorInterpreter_ReturnCanvas			(VectorInterpreter_ID		inGraphicID);
+	VectorInterpreter_ReturnCanvas			(VectorInterpreter_Ref		inGraphicID);
 
 void
-	VectorInterpreter_SetPageClears			(VectorInterpreter_ID		inGraphicID,
+	VectorInterpreter_SetPageClears			(VectorInterpreter_Ref		inGraphicID,
 											 Boolean					inTrueClearsFalseNewWindow);
 
 void
-	VectorInterpreter_Zoom					(VectorInterpreter_ID		inGraphicID,
+	VectorInterpreter_Zoom					(VectorInterpreter_Ref		inGraphicID,
 											 SInt16						inX0,
 											 SInt16						inY0,
 											 SInt16						inX1,
@@ -141,14 +131,14 @@ void
 //@{
 
 SInt16
-	VectorInterpreter_FillInPositionReport	(VectorInterpreter_ID		inGraphicID,
+	VectorInterpreter_FillInPositionReport	(VectorInterpreter_Ref		inGraphicID,
 											 UInt16						inX,
 											 UInt16						inY,
 											 char						inKeyPress,
 											 char*						outPositionReportLength5);
 
 VectorInterpreter_Mode
-	VectorInterpreter_ReturnMode			(VectorInterpreter_ID		inGraphicID);
+	VectorInterpreter_ReturnMode			(VectorInterpreter_Ref		inGraphicID);
 
 //@}
 

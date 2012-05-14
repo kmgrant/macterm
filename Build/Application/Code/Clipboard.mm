@@ -954,25 +954,6 @@ Clipboard_GetData	(Clipboard_DataConstraint	inConstraint,
 
 
 /*!
-Copies the indicated drawing to the clipboard.
-
-(2.6)
-*/
-void
-Clipboard_GraphicsToScrap	(VectorInterpreter_ID		inGraphicID)
-{
-	PicHandle	picture = nullptr;
-	
-	
-	picture = VectorCanvas_ReturnNewQuickDrawPicture(inGraphicID);
-	pictureToScrap((Handle)picture);
-	KillPicture(picture);
-	
-	gClipboardLocalChanges()[Clipboard_ReturnPrimaryPasteboard()] = true;
-}// GraphicsToScrap
-
-
-/*!
 Returns a reference to the global pasteboard, creating that
 reference if necessary.
 

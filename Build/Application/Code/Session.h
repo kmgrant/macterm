@@ -163,11 +163,9 @@ The following algorithm is used:
 */
 enum Session_DataTarget
 {
-	kSession_DataTargetStandardTerminal = 1,						//!< data goes to a VT (data: TerminalScreenRef)
-	kSession_DataTargetTektronixGraphicsCanvas = 2,					//!< data goes to a TEK window  (data: SInt16*,
-																	//!  the TEK window ID)
-	kSession_DataTargetDumbTerminal = 3								//!< data goes to a DUMB terminal (data:
-																	//!  TerminalScreenRef)
+	kSession_DataTargetStandardTerminal = 1,			//!< data goes to a VT (data: TerminalScreenRef)
+	kSession_DataTargetTektronixGraphicsCanvas = 2,		//!< data goes to a TEK window  (data: VectorInterpreter_Ref)
+	kSession_DataTargetDumbTerminal = 3					//!< data goes to a DUMB terminal (data: TerminalScreenRef)
 };
 
 /*!
@@ -453,17 +451,8 @@ Session_Result
 //!\name Tektronix Vector Graphics Routines
 //@{
 
-Boolean
-	Session_TEKCreateTargetGraphic			(SessionRef							inRef);
-
 void
-	Session_TEKDetachTargetGraphic			(SessionRef							inRef);
-
-Boolean
-	Session_TEKHasTargetGraphic				(SessionRef							inRef);
-
-Boolean
-	Session_TEKIsEnabled					(SessionRef							inRef);
+	Session_TEKNewPage						(SessionRef							inRef);
 
 Boolean
 	Session_TEKPageCommandOpensNewWindow	(SessionRef							inRef);
