@@ -173,6 +173,10 @@ VectorCanvas_Result
 	VectorCanvas_ScrapPathReset			(VectorCanvas_Ref		inRef);
 
 VectorCanvas_Result
+	VectorCanvas_SetCanvasNSView		(VectorCanvas_Ref		inRef,
+										 VectorCanvas_View*		inNSViewBasedRenderer);
+
+VectorCanvas_Result
 	VectorCanvas_SetPenColor			(VectorCanvas_Ref		inRef,
 										 SInt16					inColor);
 

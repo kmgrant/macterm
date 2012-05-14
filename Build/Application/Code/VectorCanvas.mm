@@ -270,6 +270,7 @@ VectorCanvas_Release	(VectorCanvas_Ref*		inoutRefPtr)
 			My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), *inoutRefPtr);
 			
 			
+			[ptr->canvasView release], ptr->canvasView = nil;
 			[ptr->drawingPathElements release], ptr->drawingPathElements = nil;
 			[ptr->scrapPath release], ptr->scrapPath = nil;
 		}
@@ -544,6 +545,43 @@ VectorCanvas_ScrapPathReset		(VectorCanvas_Ref	inRef)
 	}
 	return result;
 }// ScrapPathReset
+
+
+/*!
+Assigns an NSView subclass to render this canvas.  This should
+part of the response to loading a NIB file.
+
+\retval kVectorCanvas_ResultOK
+if there are no errors
+
+\retval kVectorCanvas_ResultInvalidReference
+if the specified canvas is unrecognized
+
+\retval kVectorCanvas_ResultParameterError
+if the specified view is invalid
+
+(4.1)
+*/
+VectorCanvas_Result
+VectorCanvas_SetCanvasNSView	(VectorCanvas_Ref		inRef,
+								 VectorCanvas_View*		inNSViewBasedRenderer)
+{
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
+	VectorCanvas_Result			result = kVectorCanvas_ResultInvalidReference;
+	
+	
+	if (nil == inNSViewBasedRenderer)
+	{
+		result = kVectorCanvas_ResultParameterError;
+	}
+	else if (nullptr != ptr)
+	{
+		ptr->canvasView = inNSViewBasedRenderer;
+		result = kVectorCanvas_ResultOK;
+	}
+	
+	return result;
+}// SetCanvasNSView
 
 
 /*!
@@ -1030,6 +1068,10 @@ setInterpreterRef:(VectorInterpreter_Ref)	anInterpreter
 		}
 		if (nullptr != anInterpreter)
 		{
+			VectorCanvas_Ref	canvas = VectorInterpreter_ReturnCanvas(anInterpreter);
+			
+			
+			(VectorCanvas_Result)VectorCanvas_SetCanvasNSView(canvas, self);
 			VectorInterpreter_Retain(anInterpreter);
 		}
 		interpreterRef = anInterpreter;
