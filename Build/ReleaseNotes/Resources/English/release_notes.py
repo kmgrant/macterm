@@ -446,7 +446,8 @@ notes_by_version = {
     '20120514': [
         'Vector graphics windows have been redone; lines are now rendered very smoothly.',
         'Vector graphics can now be printed.',
-        'Vector graphics now include PDF versions when copied to the Clipboard, allowing other applications to use the drawing at any size without degradation.',
+        'Vector graphics now include PDF versions when copied to the Clipboard, allowing other applications to use drawings at any size without degradation.',
+        'Vector graphics windows now enable Format items in the View menu so the foreground and background colors of a drawing may be changed.  (The Default Format determines the initial colors, as before.)  There is currently no way to customize any other colors that a drawing uses.',
     ],
     '20120412': [
         'Fixed automatic positioning of pop-over windows so that windows are more likely to stay on the screen.',

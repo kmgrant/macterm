@@ -40,14 +40,15 @@
 // standard-C++ includes
 #import <vector>
 
+// Mac includes
+#import <Cocoa/Cocoa.h>
+
 // library includes
 #import <ColorUtilities.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlockReferenceLocker.template.h>
 #import <MemoryBlocks.h>
-
-// Mac includes
-#import <Cocoa/Cocoa.h>
+#import <SoundSystem.h>
 
 // application includes
 #import "AppResources.h"
@@ -1079,7 +1080,7 @@ setInterpreterRef:(VectorInterpreter_Ref)	anInterpreter
 }// setInterpreterRef
 
 
-#pragma mark New Methods
+#pragma mark Commands
 
 
 /*!
@@ -1115,6 +1116,108 @@ performCopy:(id)	sender
 }
 - (id)
 canPerformCopy:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	return [NSNumber numberWithBool:YES];
+}
+
+
+#pragma mark Commands
+
+
+/*!
+Uses the name of the given sender (expected to be a menu item) to
+find a Format set of Preferences from which to copy new font and
+color information.
+
+(4.0)
+*/
+- (IBAction)
+performFormatByFavoriteName:(id)	sender
+{
+	VectorCanvas_Ref	canvasRef = VectorInterpreter_ReturnCanvas([self interpreterRef]);
+	My_VectorCanvasPtr	canvasPtr = gVectorCanvasPtrLocks().acquireLock(canvasRef);
+	BOOL				isError = YES;
+	
+	
+	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+	{
+		// use the specified preferences
+		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
+		
+		
+		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, collectionName))
+		{
+			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+														(Quills::Prefs::FORMAT, collectionName), true/* is retained */);
+			
+			
+			if (namedSettings.exists())
+			{
+				// change font and/or colors of frontmost window according to the specified preferences
+				UInt16		count = copyColorPreferences(canvasPtr, namedSettings.returnRef(), true/* search defaults */);
+				
+				
+				isError = (0 == count);
+			}
+		}
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Sound_StandardAlert();
+	}
+	else
+	{
+		[canvasPtr->canvasView setNeedsDisplay:YES];
+	}
+}
+- (id)
+canPerformFormatByFavoriteName:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	return [NSNumber numberWithBool:YES];
+}
+
+
+/*!
+Copies new font and color information from the Default set.
+
+(4.0)
+*/
+- (IBAction)
+performFormatDefault:(id)	sender
+{
+#pragma unused(sender)
+	VectorCanvas_Ref		canvasRef = VectorInterpreter_ReturnCanvas([self interpreterRef]);
+	My_VectorCanvasPtr		canvasPtr = gVectorCanvasPtrLocks().acquireLock(canvasRef);
+	Preferences_ContextRef	defaultSettings = nullptr;
+	BOOL					isError = YES;
+	
+	
+	// reformat frontmost window using the Default preferences
+	if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::FORMAT))
+	{
+		UInt16		count = copyColorPreferences(canvasPtr, defaultSettings, true/* search for defaults */);
+		
+		
+		isError = (0 == count);
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Sound_StandardAlert();
+	}
+	else
+	{
+		[canvasPtr->canvasView setNeedsDisplay:YES];
+	}
+}
+- (id)
+canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
 	return [NSNumber numberWithBool:YES];
