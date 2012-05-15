@@ -44,7 +44,6 @@
 #include <MemoryBlocks.h>
 #include <RegionUtilities.h>
 #include <Registrar.template.h>
-#include <SoundSystem.h>
 
 // application includes
 #include "VectorCanvas.h"
@@ -2001,9 +2000,7 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 						drawc(vp,(short) c);
 					else
 					{
-						//UInt8		uc = c;
-						// TEMPORARY - FIX THIS
-						//Session_TerminalWrite(vp->theVS, &uc, 1);
+						drawc(vp,(short) c);
 						vp->shrinkVectorDB(1);
 					}
 					return;

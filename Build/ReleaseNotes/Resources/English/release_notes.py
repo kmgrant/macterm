@@ -444,6 +444,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20120514': [
+        'Fixed vector graphics windows that were not displaying text labels in certain situations.',
         'Vector graphics windows have been redone; lines are now rendered very smoothly.',
         'Vector graphics can now be printed.',
         'Vector graphics now include PDF versions when copied to the Clipboard, allowing other applications to use drawings at any size without degradation.',
