@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120516',
     '20120514',
     '20120412',
     '20120327',
@@ -443,6 +444,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120516': [
+        'Vector graphics now use a thinner line for drawing text in vector fonts.',
+        'Vector graphics now render lone pixels (not in lines) slightly differently.',
+    ],
     '20120514': [
         'Fixed vector graphics windows that were not displaying text labels in certain situations.',
         'Vector graphics windows have been redone; lines are now rendered very smoothly.',

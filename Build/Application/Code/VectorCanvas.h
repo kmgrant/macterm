@@ -63,6 +63,12 @@ VectorCanvas_Result const	kVectorCanvas_ResultOK(0);					//!< no error
 VectorCanvas_Result const	kVectorCanvas_ResultInvalidReference(1);	//!< given VectorCanvas_Ref is not valid
 VectorCanvas_Result const	kVectorCanvas_ResultParameterError(2);		//!< invalid input (e.g. a null pointer)
 
+enum VectorCanvas_PathPurpose
+{
+	kVectorCanvas_PathPurposeGraphics	= 0,	//!< this is producing a drawing, or an unknown entity
+	kVectorCanvas_PathPurposeText		= 1		//!< this is producing some kind of character in a font
+};
+
 enum VectorCanvas_PathTarget
 {
 	kVectorCanvas_PathTargetPrimary		= 0,	//!< the entire vector graphic will be modified
@@ -153,6 +159,7 @@ VectorCanvas_Result
 										 SInt16					inStartY,
 										 SInt16					inEndX,
 										 SInt16					inEndY,
+										 VectorCanvas_PathPurpose	inPurpose,
 										 VectorCanvas_PathTarget	inTarget = kVectorCanvas_PathTargetPrimary);
 
 void
@@ -178,7 +185,8 @@ VectorCanvas_Result
 
 VectorCanvas_Result
 	VectorCanvas_SetPenColor			(VectorCanvas_Ref		inRef,
-										 SInt16					inColor);
+										 SInt16					inColor,
+										 VectorCanvas_PathPurpose	inPurpose);
 
 //@}
 

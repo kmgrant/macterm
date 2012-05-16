@@ -184,6 +184,9 @@ struct My_VectorInterpreter
 	My_VectorInterpreter	(VectorInterpreter_Mode);
 	
 	inline void
+	drawLine	(SInt16, SInt16, SInt16, SInt16, VectorCanvas_PathPurpose, VectorCanvas_PathTarget = kVectorCanvas_PathTargetPrimary);
+	
+	inline void
 	shrinkVectorDB	(My_VectorDB::size_type);
 	
 	My_VecIntRefRegistrar	refValidator;	// ensures this reference is recognized as a valid one
@@ -231,8 +234,6 @@ typedef MemoryBlockReferenceLocker< VectorInterpreter_Ref, My_VectorInterpreter 
 #pragma mark Internal Method Prototypes
 namespace {
 
-void			clipvec						(My_VectorInterpreterPtr, short, short, short, short,
-											 VectorCanvas_PathTarget = kVectorCanvas_PathTargetPrimary);
 short			drawc						(My_VectorInterpreterPtr, short);
 short			fontnum						(My_VectorInterpreterPtr, UInt16);
 Boolean			isValidID					(VectorInterpreter_Ref);
@@ -550,7 +551,7 @@ VectorInterpreter_New	(VectorInterpreter_Mode		inCommandSet)
 		fontnum(ptr, 0);
 		storexy(ptr, 0, 3071);
 		
-		(VectorCanvas_Result)VectorCanvas_SetPenColor(ptr->canvas, 1);
+		(VectorCanvas_Result)VectorCanvas_SetPenColor(ptr->canvas, 1, kVectorCanvas_PathPurposeGraphics);
 	#if 1
 		VectorInterpreter_Zoom(result, 0, 0, 4095, 3119); // important!
 	#else
@@ -691,7 +692,7 @@ VectorInterpreter_PageCommand	(VectorInterpreter_Ref	inRef)
 	if (nullptr != ptr->canvas)
 	{
 		VectorCanvas_ClearCaches(ptr->canvas);
-		(VectorCanvas_Result)VectorCanvas_SetPenColor(ptr->canvas, 1);
+		(VectorCanvas_Result)VectorCanvas_SetPenColor(ptr->canvas, 1, kVectorCanvas_PathPurposeGraphics);
 	}
 }// PageCommand
 
@@ -927,6 +928,45 @@ toCurrentCommand(commandList.begin())
 
 
 /*!
+Adds the specified line to the underlying canvas’ current
+drawing, accounting for any current offset and scaling.
+
+The purpose and target have the same meanings as they do
+in VectorCanvas_DrawLine().
+
+(2.6)
+*/
+void
+My_VectorInterpreter::
+drawLine	(SInt16						inStartX,
+			 SInt16						inStartY,
+			 SInt16						inEndX,
+			 SInt16						inEndY,
+			 VectorCanvas_PathPurpose	inPurpose,
+			 VectorCanvas_PathTarget	inTarget)
+{
+	VectorCanvas_Result		drawingResult = VectorCanvas_DrawLine
+											(this->canvas,
+												STATIC_CAST(STATIC_CAST(inStartX - this->winleft, SInt32) * kVectorInterpreter_MaxX /
+															STATIC_CAST(this->winwide, SInt32),
+															SInt16),
+												STATIC_CAST(STATIC_CAST(inStartY - this->winbot, SInt32) * kVectorInterpreter_MaxY /
+															STATIC_CAST(this->wintall, SInt32),
+															SInt16),
+												STATIC_CAST(STATIC_CAST(inEndX - this->winleft, SInt32) * kVectorInterpreter_MaxX /
+															STATIC_CAST(this->winwide, SInt32),
+															SInt16),
+												STATIC_CAST(STATIC_CAST(inEndY - this->winbot, SInt32) * kVectorInterpreter_MaxY /
+															STATIC_CAST(this->wintall, SInt32),
+															SInt16),
+												inPurpose, inTarget);
+	
+	
+	assert(kVectorCanvas_ResultOK == drawingResult);
+}// drawLine
+
+
+/*!
 This is the recommended way to shrink the command vector,
 because it keeps the current command iterator in sync!!!
 
@@ -956,51 +996,6 @@ shrinkVectorDB	(My_VectorDB::size_type		inByHowMany)
 		}
 	}
 }// shrinkVectorDB
-
-
-/*
- *	Draw a vector in vw's window from x0,y0 to x1,y1.
- *	Zoom the vector to the current visible window,
- *	and clip it before drawing it.
- *	Uses Liang-Barsky algorithm from ACM Transactions on Graphics,
- *		Vol. 3, No. 1, January 1984, p. 7.
- *
- *  Note: since QuickDraw on the Mac already handles clipping, we
- *		  will not do any processing here.
- *  14may91dsw
- *
- */
-void
-clipvec		(My_VectorInterpreterPtr		vp,
-			 short		xa,
-			 short		ya,
-			 short		xb,
-			 short		yb,
-			 VectorCanvas_PathTarget	inTarget)
-{
-	short				t = 0,
-						b = 0,
-						l = 0,
-						r = 0;
-	long				hscale = 0L,
-						vscale = 0L;
-	
-	
-	hscale = kVectorInterpreter_MaxX / (long) vp->winwide;
-	vscale = kVectorInterpreter_MaxY / (long) vp->wintall;
-	
-	t = vp->wintop;
-	b = vp->winbot;
-	l = vp->winleft;
-	r = vp->winright;
-
-	(VectorCanvas_Result)VectorCanvas_DrawLine(vp->canvas,
-		(short) ((long)(xa - l) * kVectorInterpreter_MaxX / (long) vp->winwide),
-		(short) ((long)(ya- b) * kVectorInterpreter_MaxY / (long) vp->wintall),
-		(short) ((long)(xb - l) * kVectorInterpreter_MaxX / (long) vp->winwide),
-		(short) ((long)(yb- b) * kVectorInterpreter_MaxY / (long) vp->wintall),
-		inTarget);
-}// clipvec
 
 
 /*
@@ -1060,10 +1055,10 @@ drawc		(My_VectorInterpreterPtr	inPtr,
 		if (c > 126)
 		{
 			height = 1;
-			(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas,inPtr->pencolor);
+			(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas,inPtr->pencolor, kVectorCanvas_PathPurposeText);
 		}
 		else
-			(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas,inPtr->TEKIndex);
+			(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas,inPtr->TEKIndex, kVectorCanvas_PathPurposeText);
 		hmag = (height*8);
 		vmag = (height*8);
 		
@@ -1127,7 +1122,7 @@ drawc		(My_VectorInterpreterPtr	inPtr,
 		{
 		case 'r': case 't': case 'y': case 'f': case 'h':
 		case 'v': case 'b': case 'n':
-			clipvec (inPtr,strokex,strokey,x,y);
+			inPtr->drawLine(strokex, strokey, x, y, kVectorCanvas_PathPurposeText);
 			break;
 		}
 	
@@ -1143,7 +1138,9 @@ drawc		(My_VectorInterpreterPtr	inPtr,
 	}
 
 	if (kVectorInterpreter_ModeTEK4105 == inPtr->commandSet)
-		(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas,inPtr->pencolor);
+	{
+		(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas, inPtr->pencolor, kVectorCanvas_PathPurposeText);
+	}
 
 	inPtr->cury = savey;
 	inPtr->curx = savex;
@@ -1531,7 +1528,9 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 				break;
 			}
 			if (vp->mode == DRAW)
-				clipvec(vp,vp->curx,vp->cury,vp->curx,vp->cury);
+			{
+				vp->drawLine(vp->curx, vp->cury, vp->curx, vp->cury, kVectorCanvas_PathPurposeGraphics);
+			}
 			break;
 		case CMD0: /* *->CMD0: get 1st letter of cmd */
 			switch(c)
@@ -1732,8 +1731,8 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 						(VectorCanvas_Result)VectorCanvas_ScrapPathReset(vp->canvas);
 						while (vp->current)
 						{
-							clipvec(vp,vp->curx,vp->cury,
-									vp->current->x,vp->current->y, kVectorCanvas_PathTargetScrap);
+							vp->drawLine(vp->curx, vp->cury, vp->current->x, vp->current->y,
+											kVectorCanvas_PathPurposeGraphics, kVectorCanvas_PathTargetScrap);
 							temppoint = vp->current;
 							vp->curx = vp->current->x;
 							vp->cury = vp->current->y;
@@ -1865,7 +1864,7 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 			break;
 		case COLORINT:				/* set line index; have integer */
 			vp->pencolor = vp->intin;
-			(VectorCanvas_Result)VectorCanvas_SetPenColor(vp->canvas,vp->intin);
+			(VectorCanvas_Result)VectorCanvas_SetPenColor(vp->canvas, vp->intin, kVectorCanvas_PathPurposeGraphics);
 			vp->state = CANCEL;
 			goagain = true;			/* we ignored current char; now process it */
 			break;
@@ -2059,9 +2058,8 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 			}
 			else if ((vp->mode == DRAW) || (vp->mode == TEMPDRAW))
 			{
-				clipvec(vp,vp->curx,vp->cury,
-					joinup(vp->nhix,vp->nlox,vp->nex),
-					joinup(vp->nhiy,vp->nloy,vp->ney));
+				vp->drawLine(vp->curx, vp->cury, joinup(vp->nhix, vp->nlox, vp->nex), joinup(vp->nhiy, vp->nloy, vp->ney),
+								kVectorCanvas_PathPurposeGraphics);
 				newcoord(vp);
 				if (vp->mode == TEMPDRAW) vp->mode = vp->modesave;
 			}
@@ -2076,7 +2074,6 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 
 		if (vp->state == CANCEL) vp->state = DONE;
 	} while (goagain);
-	return;
 }
 
 } // anonymous namespace

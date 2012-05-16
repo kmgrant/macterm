@@ -75,6 +75,7 @@ HIViewID const	idMyCanvas		= { 'Cnvs', 0/* ID */ };
 UInt16 const	kMy_MaximumX = 4095;
 UInt16 const	kMy_MaximumY = 3139;	// TEMPORARY - figure out where the hell this value comes from
 Float32 const	kMy_DefaultStrokeWidth = 0.5;
+Float32 const	kMy_DefaultTextStrokeWidth = 0.25;
 
 enum
 {
@@ -107,11 +108,32 @@ array of elements of this type.
 @interface VectorCanvas_Path : NSObject
 {
 @public
-	NSBezierPath*		bezierPath;
-	CGPathDrawingMode	drawingMode;
-	SInt16				fillColorIndex;
-	SInt16				strokeColorIndex;
+	VectorCanvas_PathPurpose	purpose;
+	NSBezierPath*				bezierPath;
+	Float32						normalLineWidth;
+	CGPathDrawingMode			drawingMode;
+	SInt16						fillColorIndex;
+	SInt16						strokeColorIndex;
 }
+
+// initializers
+
+- (id)
+init;
+
+// designated initializer
+- (id)
+initWithPurpose:(VectorCanvas_PathPurpose)_;
+
+// accessors
+
+- (void)
+setPurpose:(VectorCanvas_PathPurpose)_;
+
+// new methods
+
+- (VectorCanvas_Path*)
+copyWithEmptyPathAndPurpose:(VectorCanvas_PathPurpose)_;
 
 @end
 
@@ -153,11 +175,12 @@ typedef MemoryBlockReferenceLocker< VectorCanvas_Ref, My_VectorCanvas >		My_Vect
 #pragma mark Internal Method Prototypes
 namespace {
 
-UInt16		copyColorPreferences	(My_VectorCanvasPtr, Preferences_ContextRef, Boolean = true);
-void		getPaletteColor			(My_VectorCanvasPtr, SInt16, CGDeviceColor&);
-void		handleMouseDown			(My_VectorCanvasPtr, Point);
-Boolean		inSplash				(Point, Point);
-void		setPaletteColor			(My_VectorCanvasPtr, SInt16, RGBColor const&);
+UInt16				copyColorPreferences	(My_VectorCanvasPtr, Preferences_ContextRef, Boolean = true);
+void				getPaletteColor			(My_VectorCanvasPtr, SInt16, CGDeviceColor&);
+void				handleMouseDown			(My_VectorCanvasPtr, Point);
+Boolean				inSplash				(Point, Point);
+VectorCanvas_Path*	pathElementWithPurpose	(My_VectorCanvasPtr, VectorCanvas_PathPurpose, Boolean = false);
+void				setPaletteColor			(My_VectorCanvasPtr, SInt16, RGBColor const&);
 
 } // anonymous namespace
 
@@ -315,9 +338,18 @@ VectorCanvas_ClearCaches	(VectorCanvas_Ref	inRef)
 Renders a straight line between two points expressed in
 canvas coordinates.
 
+If the specified line is being used to draw text, the exact
+appearance of the line may change in order to make the text
+look better (e.g. the line width may be narrower or the
+end cap style may change compared to normal graphics lines).
+If you do not know whether or not the purpose is to render
+text, use kVectorCanvas_PathPurposeGraphics for "inPurpose".
+
 You can choose to target the scrap path via the "inTarget"
 parameter, effectively drawing a line that is cached instead
-of being added immediately to the main drawing.
+of being added immediately to the main drawing.  Note that
+currently a purpose of "kVectorCanvas_PathPurposeText" is
+not supported when targeting the scrap path.
 
 \retval kVectorCanvas_ResultOK
 if there are no errors
@@ -333,6 +365,7 @@ VectorCanvas_DrawLine	(VectorCanvas_Ref			inRef,
 						 SInt16						inStartY,
 						 SInt16						inEndX,
 						 SInt16						inEndY,
+						 VectorCanvas_PathPurpose	inPurpose,
 						 VectorCanvas_PathTarget	inTarget)
 {
 	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
@@ -341,37 +374,54 @@ VectorCanvas_DrawLine	(VectorCanvas_Ref			inRef,
 	
 	if (nullptr != ptr)
 	{
-		SInt32		xl0 = (STATIC_CAST(inStartX, SInt32) * ptr->width) / kVectorInterpreter_MaxX;
-		SInt32		yl0 = STATIC_CAST(ptr->height, SInt32) -
+		Float32		x0 = (STATIC_CAST(inStartX, SInt32) * ptr->width) / kVectorInterpreter_MaxX;
+		Float32		y0 = STATIC_CAST(ptr->height, SInt32) -
 							((STATIC_CAST(inStartY, SInt32) * ptr->height) / kVectorInterpreter_MaxY);
-		SInt32		xl1 = (STATIC_CAST(inEndX, SInt32) * ptr->width) / kVectorInterpreter_MaxX;
-		SInt32		yl1 = STATIC_CAST(ptr->height, SInt32) -
+		Float32		x1 = (STATIC_CAST(inEndX, SInt32) * ptr->width) / kVectorInterpreter_MaxX;
+		Float32		y1 = STATIC_CAST(ptr->height, SInt32) -
 							((STATIC_CAST(inEndY, SInt32) * ptr->height) / kVectorInterpreter_MaxY);
+		Boolean		isSinglePoint = ((x0 == x1) && (y0 == y1));
 		
 		
 		if (kVectorCanvas_PathTargetScrap == inTarget)
 		{
 			// line is being added to a temporary scrap path, not the main drawing
 			assert(nil != ptr->scrapPath);
-			[ptr->scrapPath moveToPoint:NSMakePoint(xl0, yl0)];
-			[ptr->scrapPath lineToPoint:NSMakePoint(xl1, yl1)];
+			
+			// normally lone points are drawn with special line caps, but with a
+			// single path there is currently no real solution except to force the
+			// point to actually form a tiny line in an arbitrary direction
+			if (isSinglePoint)
+			{
+				x1 += 0.1;
+				y1 += 0.1;
+			}
+			
+			[ptr->scrapPath moveToPoint:NSMakePoint(x0, y0)];
+			[ptr->scrapPath lineToPoint:NSMakePoint(x1, y1)];
 		}
 		else
 		{
 			// line is being added to the main drawing
-			VectorCanvas_Path*	currentElement = nil;
+			VectorCanvas_Path*	currentElement = pathElementWithPurpose(ptr, inPurpose, isSinglePoint/* force create */);
 			
 			
-			assert(nil != ptr->drawingPathElements);
-			if ([ptr->drawingPathElements count] == 0)
+			// lone points are invisible unless the line cap is specifically set
+			// to make them visible
+			if (isSinglePoint)
 			{
-				[ptr->drawingPathElements addObject:[[VectorCanvas_Path alloc] init]];
+				[currentElement->bezierPath setLineCapStyle:NSRoundLineCapStyle];
+				
+				// force the next drawing element to have a separate path
+				// (cannot afford to have the single point made invisible
+				// by future changes to the line width)
+				(VectorCanvas_Path*)pathElementWithPurpose(ptr, inPurpose, true/* force create */);
 			}
-			currentElement = [ptr->drawingPathElements lastObject];
-			assert(nil != currentElement);
-			[currentElement->bezierPath moveToPoint:NSMakePoint(xl0, yl0)];
-			[currentElement->bezierPath lineToPoint:NSMakePoint(xl1, yl1)];
+			
+			[currentElement->bezierPath moveToPoint:NSMakePoint(x0, y0)];
+			[currentElement->bezierPath lineToPoint:NSMakePoint(x1, y1)];
 		}
+		result = kVectorCanvas_ResultOK;
 	}
 	
 	return result;
@@ -496,7 +546,7 @@ VectorCanvas_ScrapPathFill	(VectorCanvas_Ref	inRef,
 			[elementData->bezierPath appendBezierPath:ptr->scrapPath];
 			if (inFrameWidthOrZero > 0.001/* arbitrary */)
 			{
-				[elementData->bezierPath setLineWidth:(inFrameWidthOrZero * kMy_DefaultStrokeWidth)];
+				[elementData->bezierPath setLineWidth:(inFrameWidthOrZero * elementData->normalLineWidth)];
 			}
 			elementData->drawingMode = kCGPathFill;
 			elementData->fillColorIndex = inFillColor;
@@ -611,6 +661,10 @@ TEK defines colors as the following: 0 is white, 1 is
 black, 2 is red, 3 is green, 4 is blue, 5 is cyan, 6 is
 magenta, and 7 is yellow.
 
+If the specified purpose does not match the most recent
+one used for drawing then the color is applied to a new
+sub-path.
+
 \retval kVectorCanvas_ResultOK
 if there are no errors
 
@@ -623,8 +677,9 @@ if the specified color index is out of range
 (3.0)
 */
 VectorCanvas_Result
-VectorCanvas_SetPenColor	(VectorCanvas_Ref	inRef,
-							 SInt16				inColor)
+VectorCanvas_SetPenColor	(VectorCanvas_Ref			inRef,
+							 SInt16						inColor,
+							 VectorCanvas_PathPurpose	inPurpose)
 {
 	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
 	VectorCanvas_Result			result = kVectorCanvas_ResultInvalidReference;
@@ -638,21 +693,14 @@ VectorCanvas_SetPenColor	(VectorCanvas_Ref	inRef,
 	else if (nullptr != ptr)
 	{
 		// currently it is assumed that the color is being set in the main drawing
-		VectorCanvas_Path*	currentElement = nil;
+		VectorCanvas_Path*	currentElement = pathElementWithPurpose(ptr, inPurpose);
 		
 		
-		assert(nil != ptr->drawingPathElements);
-		if ([ptr->drawingPathElements count] == 0)
-		{
-			[ptr->drawingPathElements addObject:[[VectorCanvas_Path alloc] init]];
-		}
-		currentElement = [ptr->drawingPathElements lastObject];
-		assert(nil != currentElement);
 		if (currentElement->strokeColorIndex != inColor)
 		{
 			// to change the color, create a new entry (subsequent path
 			// changes will use this color until something changes again)
-			[ptr->drawingPathElements addObject:[[VectorCanvas_Path alloc] init]];
+			[ptr->drawingPathElements addObject:[[VectorCanvas_Path alloc] initWithPurpose:inPurpose]];
 			currentElement = [ptr->drawingPathElements lastObject];
 			assert(nil != currentElement);
 		}
@@ -955,6 +1003,53 @@ inSplash	(Point		inPoint1,
 
 
 /*!
+Returns a path element suitable for adding to the current
+drawing for the given reason.
+
+If the drawing is empty, an object is allocated.  If the
+last object in the drawing’s path element array has the
+given purpose already, it is returned; otherwise, an
+object with the given purpose is allocated and returned.
+
+You may also force an object to be allocated by setting
+the final parameter to true.
+
+(4.1)
+*/
+VectorCanvas_Path*
+pathElementWithPurpose	(My_VectorCanvasPtr			inPtr,
+						 VectorCanvas_PathPurpose	inPurpose,
+						 Boolean					inForceCreate)
+{
+	VectorCanvas_Path*	result = nil;
+	
+	
+	assert(nil != inPtr->drawingPathElements);
+	if (0 == [inPtr->drawingPathElements count])
+	{
+		// drawing was empty
+		[inPtr->drawingPathElements addObject:[[VectorCanvas_Path alloc] initWithPurpose:inPurpose]];
+	}
+	else
+	{
+		VectorCanvas_Path*	activePath = REINTERPRET_CAST([inPtr->drawingPathElements lastObject], VectorCanvas_Path*);
+		
+		
+		if ((inForceCreate) || (inPurpose != activePath->purpose))
+		{
+			// drawing was empty or it was currently creating something
+			// different; make a new path with the requested purpose
+			[inPtr->drawingPathElements addObject:[activePath copyWithEmptyPathAndPurpose:inPurpose]];
+		}
+	}
+	result = [inPtr->drawingPathElements lastObject];
+	assert(nil != result);
+	
+	return result;
+}// pathElementWithPurpose
+
+
+/*!
 Changes the RGB color for the specified TEK color index.
 
 (3.1)
@@ -974,18 +1069,36 @@ setPaletteColor		(My_VectorCanvasPtr		inPtr,
 
 
 /*!
-Designated initializer.
+No-argument initializer; invokes "initWithPurpose:" using
+"kVectorCanvas_PathPurposeGraphics".
 
 (4.1)
 */
 - (id)
 init
 {
+	self = [self initWithPurpose:kVectorCanvas_PathPurposeGraphics];
+	if (nil != self)
+	{
+	}
+	return self;
+}// init
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithPurpose:(VectorCanvas_PathPurpose)	aPurpose
+{
 	self = [super init];
 	if (nil != self)
 	{
-		self->bezierPath = [[NSBezierPath bezierPath] retain];
-		[self->bezierPath setLineWidth:kMy_DefaultStrokeWidth];
+		[self setPurpose:aPurpose]; // sets purpose and line width
+		self->bezierPath = [[NSBezierPath bezierPath] copy];
+		[self->bezierPath setLineWidth:self->normalLineWidth];
 		[self->bezierPath setLineCapStyle:NSRoundLineCapStyle];
 		[self->bezierPath setLineJoinStyle:NSBevelLineJoinStyle];
 		self->drawingMode = kCGPathStroke;
@@ -993,7 +1106,7 @@ init
 		self->strokeColorIndex = 0;
 	}
 	return self;
-}// init
+}// initWithPurpose:
 
 
 /*!
@@ -1007,6 +1120,51 @@ dealloc
 	[bezierPath release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setPurpose:(VectorCanvas_PathPurpose)	aPurpose
+{
+	// the line width is directly dependent on the purpose of the path
+	self->purpose = aPurpose;
+	self->normalLineWidth = ((kVectorCanvas_PathPurposeText == aPurpose) ? kMy_DefaultTextStrokeWidth : kMy_DefaultStrokeWidth);
+}// setPurpose:
+
+
+#pragma mark New Methods
+
+
+/*!
+Copies this object.
+
+(4.1)
+*/
+- (VectorCanvas_Path*)
+copyWithEmptyPathAndPurpose:(VectorCanvas_PathPurpose)	aPurpose
+{
+	VectorCanvas_Path*	result = [[[self class] alloc] init];
+	
+	
+	if (nil != result)
+	{
+		result->purpose = purpose;
+		result->normalLineWidth = normalLineWidth;
+		result->bezierPath = [[NSBezierPath bezierPath] copy];
+		result->drawingMode = drawingMode;
+		result->fillColorIndex = fillColorIndex;
+		result->strokeColorIndex = strokeColorIndex;
+		[result setPurpose:aPurpose];
+	}
+	return result;
+}// copyWithEmptyPathAndPurpose:
 
 
 @end // VectorCanvas_Path
@@ -1501,9 +1659,9 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 				}
 				
 				// make lines thicker when the drawing is bigger, up to a certain maximum thickness
-				[asElement->bezierPath setLineWidth:std::max(std::min((contentBounds.size.width / canvasPtr->width) * kMy_DefaultStrokeWidth,
-																		kMy_DefaultStrokeWidth * 2/* arbitrary maximum */),
-																kMy_DefaultStrokeWidth / 3 * 2/* arbitrary minimum */)];
+				[asElement->bezierPath setLineWidth:std::max(std::min((contentBounds.size.width / canvasPtr->width) * asElement->normalLineWidth,
+																		asElement->normalLineWidth * 2/* arbitrary maximum */),
+																asElement->normalLineWidth / 3 * 2/* arbitrary minimum */)];
 				
 				// add the new sub-path
 				switch (asElement->drawingMode)
