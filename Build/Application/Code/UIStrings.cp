@@ -814,6 +814,11 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 													CFSTR("kUIStrings_ContextualMenuFixCharacterTranslation"));
 		break;
 	
+	case kUIStrings_ContextualMenuFullScreenExit:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Exit Full Screen"), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuFullScreenExit"));
+		break;
+	
 	case kUIStrings_ContextualMenuHideThisWindow:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Hide This Window"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuHideThisWindow"));
@@ -839,8 +844,13 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 													CFSTR("kUIStrings_ContextualMenuPrintSelectedText"));
 		break;
 	
+	case kUIStrings_ContextualMenuPrintScreen:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Print Screen..."), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuPrintScreen"));
+		break;
+	
 	case kUIStrings_ContextualMenuRenameThisWindow:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Rename..."), CFSTR("ContextualMenus"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Rename This Window..."), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuRenameThisWindow"));
 		break;
 	

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120520',
     '20120516',
     '20120514',
     '20120412',
@@ -444,6 +445,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120520': [
+        'Fixed contextual menus in Full Screen mode to hide actions that should not be available.',
+        'Full Screen mode now includes "Exit Full Screen" as a contextual menu item.',
+        '"Print Screen..." is now also a contextual menu item.',
+    ],
     '20120516': [
         'Vector graphics now use a thinner line for drawing text in vector fonts.',
         'Vector graphics now render lone pixels (not in lines) slightly differently.',

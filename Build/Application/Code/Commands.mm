@@ -1855,7 +1855,7 @@ available to the user, taking into account the active window
 and any other relevant context.
 
 WARNING:	This currently only works for command IDs that
-			are used for contextual menu items.
+		are used for contextual menu items.
 
 DEPRECATED.  This is here for transitional purposes, as it
 is useful in some cases (particularly contextual menus) to
@@ -7064,6 +7064,11 @@ isCommandEnabled:(UInt32)	aCommandID
 	
 	switch (aCommandID)
 	{
+	case kCommandKioskModeDisable:
+		numericalBool = [self canPerformFullScreenOff:targetItem];
+		result = [numericalBool boolValue];
+		break;
+	
 	case kCommandChangeWindowTitle:
 		numericalBool = [self canPerformRename:targetItem];
 		result = [numericalBool boolValue];
@@ -7089,7 +7094,8 @@ isCommandEnabled:(UInt32)	aCommandID
 		break;
 	
 	case kCommandFormat:
-		result = YES;
+		numericalBool = [self canPerformFormatCustom:targetItem];
+		result = [numericalBool boolValue];
 		break;
 	
 	case kCommandHandleURL:
@@ -7098,7 +7104,8 @@ isCommandEnabled:(UInt32)	aCommandID
 		break;
 	
 	case kCommandHideFrontWindow:
-		result = YES;
+		numericalBool = [self canPerformHideWindow:targetItem];
+		result = [numericalBool boolValue];
 		break;
 	
 	case kCommandPaste:
@@ -7121,7 +7128,8 @@ isCommandEnabled:(UInt32)	aCommandID
 		break;
 	
 	case kCommandSetScreenSize:
-		result = YES;
+		numericalBool = [self canPerformScreenResizeCustom:targetItem];
+		result = [numericalBool boolValue];
 		break;
 	
 	case kCommandSpeakSelectedText:
@@ -7135,7 +7143,8 @@ isCommandEnabled:(UInt32)	aCommandID
 		break;
 	
 	case kCommandStackWindows:
-		result = YES;
+		numericalBool = [self canPerformArrangeInFront:targetItem];
+		result = [numericalBool boolValue];
 		break;
 	
 	case kCommandTerminalNewWorkspace:

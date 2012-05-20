@@ -707,6 +707,17 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		ContextSensitiveMenu_NewItemGroup(inMenu);
 		
 		ContextSensitiveMenu_InitItem(&itemInfo);
+		itemInfo.commandID = kCommandKioskModeDisable;
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
+		{
+			if (UIStrings_Copy(kUIStrings_ContextualMenuFullScreenExit, itemInfo.commandText).ok())
+			{
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Exit Full Screen”
+				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
+			}
+		}
+		
+		ContextSensitiveMenu_InitItem(&itemInfo);
 		itemInfo.commandID = kCommandHideFrontWindow;
 		if (Commands_IsCommandEnabled(itemInfo.commandID))
 		{
@@ -728,8 +739,30 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 			}
 		}
 		
+		ContextSensitiveMenu_InitItem(&itemInfo);
+		itemInfo.commandID = kCommandChangeWindowTitle;
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
+		{
+			if (UIStrings_Copy(kUIStrings_ContextualMenuRenameThisWindow, itemInfo.commandText).ok())
+			{
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Rename This Window…”
+				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
+			}
+		}
+		
 		// connection-related menu items
 		ContextSensitiveMenu_NewItemGroup(inMenu);
+		
+		ContextSensitiveMenu_InitItem(&itemInfo);
+		itemInfo.commandID = kCommandPrintScreen;
+		if (Commands_IsCommandEnabled(itemInfo.commandID))
+		{
+			if (UIStrings_Copy(kUIStrings_ContextualMenuPrintScreen, itemInfo.commandText).ok())
+			{
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Print Screen…”
+				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
+			}
+		}
 		
 		ContextSensitiveMenu_InitItem(&itemInfo);
 		itemInfo.commandID = kCommandSetScreenSize;
@@ -760,28 +793,6 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 			if (UIStrings_Copy(kUIStrings_ContextualMenuSpecialKeySequences, itemInfo.commandText).ok())
 			{
 				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Special Key Sequences…”
-				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
-			}
-		}
-		
-		ContextSensitiveMenu_InitItem(&itemInfo);
-		itemInfo.commandID = kCommandPrintScreen;
-		if (Commands_IsCommandEnabled(itemInfo.commandID))
-		{
-			if (Commands_CopyCommandName(itemInfo.commandID, kCommands_NameTypeDefault, itemInfo.commandText))
-			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Print Screen…”
-				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
-			}
-		}
-		
-		ContextSensitiveMenu_InitItem(&itemInfo);
-		itemInfo.commandID = kCommandChangeWindowTitle;
-		if (Commands_IsCommandEnabled(itemInfo.commandID))
-		{
-			if (UIStrings_Copy(kUIStrings_ContextualMenuRenameThisWindow, itemInfo.commandText).ok())
-			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Rename This Window…”
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 		}
