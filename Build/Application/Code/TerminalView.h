@@ -200,8 +200,9 @@ changes to an interface declared in a ".mm" file.
 @interface TerminalView_ContentView : NSControl
 {
 @private
-	BOOL	showDragHighlight;
-	void*	internalViewPtr;
+	BOOL			showDragHighlight;
+	unsigned int	modifierFlagsForCursor;
+	void*			internalViewPtr;
 }
 @end
 

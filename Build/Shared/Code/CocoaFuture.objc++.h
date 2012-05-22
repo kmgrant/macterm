@@ -113,6 +113,14 @@ setSegmentStyle:(int/*NSInteger*//*NSSegmentStyle*/)_;
 //			that take or return non-objects.
 
 
+@interface NSCursor (NSCursorExtensionsFromSnowLeopard)
+
++ (NSCursor*)
+contextualMenuCursor;
+
+@end
+
+
 @interface NSWindow (NSWindowExtensionsFromSnowLeopard)
 
 - (BOOL)

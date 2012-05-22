@@ -57,6 +57,7 @@
 #import <CGContextSaveRestore.h>
 #import <CocoaAnimation.h>
 #import <CocoaBasic.h>
+#import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
@@ -12744,6 +12745,7 @@ initWithFrame:(NSRect)		aFrame
 	if (nil != self)
 	{
 		self->showDragHighlight = NO;
+		self->modifierFlagsForCursor = 0;
 		self->internalViewPtr = nullptr;
 	}
 	return self;
@@ -13100,6 +13102,21 @@ drawRect:(NSRect)	rect
 
 
 /*!
+Keeps track of the state of modifier keys so that an internal
+cache can be updated (used to change the cursor shape).
+
+(4.1)
+*/
+- (void)
+flagsChanged:(NSEvent*)		anEvent
+{
+	[super flagsChanged:anEvent];
+	self->modifierFlagsForCursor = [anEvent modifierFlags];
+	[[self window] invalidateCursorRectsForView:self];
+}// flagsChanged:
+
+
+/*!
 Returns YES only if the view’s coordinate system uses
 a top-left origin.
 
@@ -13124,6 +13141,56 @@ isOpaque
 {
 	return NO;
 }// isOpaque
+
+
+/*!
+Invoked by NSView whenever it’s necessary to define the regions
+that change the mouse pointer’s shape.
+
+(4.1)
+*/
+- (void)
+resetCursorRects
+{
+	// the cursor varies based on the state of modifier keys
+	if (self->modifierFlagsForCursor & NSControlKeyMask)
+	{
+		// modifier key for contextual menu
+		if (FlagManager_Test(kFlagOS10_6API))
+		{
+			[self addCursorRect:[self bounds] cursor:[NSCursor contextualMenuCursor]];
+		}
+		else
+		{
+			// UNIMPLEMENTED on older Mac OS X versions for Cocoa (use Carbon?)
+			[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
+		}
+	}
+	else if ((self->modifierFlagsForCursor & NSCommandKeyMask) &&
+				(self->modifierFlagsForCursor & NSAlternateKeyMask))
+	{
+		// modifier key for moving the terminal cursor to the click location
+		// (in the Carbon version this was a plus-cursor, but Cocoa does not
+		// have that cursor shape)
+		[self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
+	}
+	else if (self->modifierFlagsForCursor & NSCommandKeyMask)
+	{
+		// modifier key for clicking a URL selection
+		[self addCursorRect:[self bounds] cursor:[NSCursor pointingHandCursor]];
+	}
+	else if (self->modifierFlagsForCursor & NSAlternateKeyMask)
+	{
+		// modifier key for rectangular text selections
+		[self addCursorRect:[self bounds] cursor:[NSCursor crosshairCursor]];
+	}
+	else
+	{
+		// normal cursor
+		[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
+	}
+	// INCOMPLETE; add support for any current text selection region
+}// resetCursorRects
 
 
 @end // TerminalView_ContentView
