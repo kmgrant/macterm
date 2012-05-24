@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120524',
     '20120520',
     '20120516',
     '20120514',
@@ -445,6 +446,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120524': [
+        '"Nudge Window to the Right" and similar commands now automatically align windows that are close to screen edges.',
+        '"Nudge Window to the Right" and similar commands now support multiple displays.  If a window is directly on a boundary between displays (e.g. because a previous nudge or mouse movement put it there) then a single nudge in the direction of an adjacent display moves the entire window to that display.',
+    ],
     '20120520': [
         'Fixed contextual menus in Full Screen mode to hide actions that should not be available.',
         'Full Screen mode now includes "Exit Full Screen" as a contextual menu item.',

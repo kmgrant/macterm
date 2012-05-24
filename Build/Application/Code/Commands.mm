@@ -2897,10 +2897,11 @@ sessionWindowStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					
 					if (MenuBar_GetMenuTitleRectangle(kMenuBar_MenuWindow, &windowMenuTitleBounds))
 					{
-						CGRect		asInvertedCGRect = CGRectMake(windowMenuTitleBounds.left,
-																	[windowScreen frame].size.height - windowMenuTitleBounds.bottom,
-																	windowMenuTitleBounds.right - windowMenuTitleBounds.left,
-																	windowMenuTitleBounds.bottom - windowMenuTitleBounds.top);
+						CGRect		asInvertedCGRect = CGRectMake
+														(windowMenuTitleBounds.left,
+															NSHeight([windowScreen frame]) - windowMenuTitleBounds.bottom,
+															windowMenuTitleBounds.right - windowMenuTitleBounds.left,
+															windowMenuTitleBounds.bottom - windowMenuTitleBounds.top);
 						
 						
 						// make the window zoom into the Window menu’s title area, for visual feedback
@@ -5992,6 +5993,374 @@ canPerformFormatTextSmaller:(id <NSValidatedUserInterfaceItem>)		anItem
 
 @implementation Commands_Executor (Commands_ModifyingWindows)
 
+/*!
+A helper method for the various commands that change the
+location of a window.
+
+This looks at the specified edge of a window on its screen
+and determines which OTHER screen (if any) is closest if
+the window were to move away from that line; it then
+returns the location and size of that other screen.
+
+The window’s current screen is only used if there are no
+other displays available.
+
+(4.1)
+*/
+- (NSRect)
+visibleFrameOfScreenNearEdge:(NSRectEdge)	anEdge
+ofWindow:(NSWindow*)						aWindow
+didFindOtherScreen:(BOOL*)					outIsOtherScreen
+{
+	NSRect const	kWindowFrame = [aWindow frame];
+	NSArray*		screenArray = [NSScreen screens];
+	NSScreen*		windowScreen = [aWindow screen];
+	NSRect			result = ((nil != aWindow) && (nil != windowScreen))
+								? [windowScreen visibleFrame]
+								: [[NSScreen mainScreen] visibleFrame];
+	
+	
+	if ((nil != screenArray) && ([screenArray count] > 0))
+	{
+		NSEnumerator*	forScreens = [screenArray objectEnumerator];
+		
+		
+		// look at the frames of each display and see which one is
+		// most logically “close” to the window in the given direction
+		while (NSScreen* currentScreen = [forScreens nextObject])
+		{
+			NSRect const	kScreenFrame = [currentScreen visibleFrame];
+			BOOL			copyRect = NO;
+			
+			
+			switch (anEdge)
+			{
+			case NSMinXEdge:
+				if (NSMaxX(kScreenFrame) <= NSMinX(kWindowFrame))
+				{
+					copyRect = YES;
+				}
+				break;
+			
+			case NSMaxXEdge:
+				if (NSMaxX(kWindowFrame) <= NSMinX(kScreenFrame))
+				{
+					copyRect = YES;
+				}
+				break;
+			
+			case NSMinYEdge:
+				if (NSMaxY(kScreenFrame) <= NSMinY(kWindowFrame))
+				{
+					copyRect = YES;
+				}
+				break;
+			
+			case NSMaxYEdge:
+				if (NSMaxY(kWindowFrame) <= NSMinY(kScreenFrame))
+				{
+					copyRect = YES;
+				}
+				break;
+			
+			default:
+				// ???
+				break;
+			}
+			
+			if (copyRect)
+			{
+				result = NSMakeRect(NSMinX(kScreenFrame), NSMinY(kScreenFrame),
+									NSWidth(kScreenFrame), NSHeight(kScreenFrame));
+				*outIsOtherScreen = YES;
+			}
+		}
+	}
+	
+	return result;
+}// visibleFrameOfScreenNearEdge:ofWindow:didFindOtherScreen:
+
+
+/*!
+A helper method for the various commands that change the
+location of a window.
+
+The window is offset in the specified way unless it hits
+a significant edge of the usable space (e.g. if it would
+go underneath the menu bar) in which case its location is
+adjusted to be right on the boundary.  If the window’s
+initial position is on such a boundary however then it is
+shifted to the nearest alternate display with animation.
+
+(4.1)
+*/
+- (void)
+moveWindow:(NSWindow*)		aWindow
+distance:(UInt16)			aPixelCount
+awayFromEdge:(NSRectEdge)	anEdge
+withAnimation:(BOOL)		isAnimated
+{
+	NSRect const	kScreenVisibleFrame = [[aWindow screen] visibleFrame];
+	NSRect			newFrame = [aWindow frame];
+	
+	
+	switch (anEdge)
+	{
+	case NSMinXEdge:
+		if (NSMinX(newFrame) == NSMinX(kScreenVisibleFrame))
+		{
+			// window is already exactly on the left edge; instead of shifting
+			// partially offscreen, move the window to the next screen (if any)
+			BOOL		isOtherScreen = NO;
+			NSRect		newScreenFrame = [self visibleFrameOfScreenNearEdge:anEdge ofWindow:aWindow
+																			didFindOtherScreen:&isOtherScreen];
+			
+			
+			if (isOtherScreen)
+			{
+				// move to right edge of nearest screen
+				newFrame.origin.x = (NSMaxX(newScreenFrame) - NSWidth(newFrame));
+				
+				// the screen sizes may not exactly match along the other axis
+				// so determine the proportion of the offset on the previous
+				// screen and apply that same proportion to the new screen
+				if (NSMaxY(kScreenVisibleFrame) == NSMaxY(newFrame))
+				{
+					newFrame.origin.y = (NSMaxY(newScreenFrame) - NSHeight(newFrame));
+				}
+				else if (NSMinY(kScreenVisibleFrame) == NSMinY(newFrame))
+				{
+					newFrame.origin.y = NSMinY(newScreenFrame);
+				}
+				else
+				{
+					newFrame.origin.y = NSMaxY(newScreenFrame) -
+										NSHeight(newScreenFrame) * ((NSMaxY(kScreenVisibleFrame) - NSMinY(newFrame)) /
+																	NSHeight(kScreenVisibleFrame));
+				}
+				
+				// prevent the title bar from being hidden in some corner cases
+				if (NSMaxY(newFrame) > NSMaxY(newScreenFrame))
+				{
+					newFrame.origin.y = (NSMaxY(newScreenFrame) - NSHeight(newFrame));
+				}
+				
+				// long-distance moves are always animated
+				isAnimated = YES;
+			}
+		}
+		else
+		{
+			// move left
+			newFrame.origin.x -= (aPixelCount + (STATIC_CAST(NSMinX(newFrame), UInt16) % aPixelCount));
+			
+			// prefer touching the edge exactly instead of having the window cut off
+			// (but if the window is already exactly on the boundary, let it move)
+			if (NSMinX(newFrame) < NSMinX(kScreenVisibleFrame))
+			{
+				newFrame.origin.x = NSMinX(kScreenVisibleFrame);
+			}
+		}
+		break;
+	
+	case NSMaxXEdge:
+		{
+			Float32 const	kScreenRightEdge = NSMaxX(kScreenVisibleFrame);
+			
+			
+			if (NSMaxX(newFrame) == kScreenRightEdge)
+			{
+				// window is already exactly on the right edge; instead of shifting
+				// partially offscreen, move the window to the next screen (if any)
+				BOOL		isOtherScreen = NO;
+				NSRect		newScreenFrame = [self visibleFrameOfScreenNearEdge:anEdge ofWindow:aWindow
+																				didFindOtherScreen:&isOtherScreen];
+				
+				
+				if (isOtherScreen)
+				{
+					// move to left edge of nearest screen
+					newFrame.origin.x = NSMinX(newScreenFrame);
+					
+					// the screen sizes may not exactly match along the other axis
+					// so determine the proportion of the offset on the previous
+					// screen and apply that same proportion to the new screen
+					if (NSMaxY(kScreenVisibleFrame) == NSMaxY(newFrame))
+					{
+						newFrame.origin.y = (NSMaxY(newScreenFrame) - NSHeight(newFrame));
+					}
+					else if (NSMinY(kScreenVisibleFrame) == NSMinY(newFrame))
+					{
+						newFrame.origin.y = NSMinY(newScreenFrame);
+					}
+					else
+					{
+						newFrame.origin.y = NSMaxY(newScreenFrame) -
+											NSHeight(newScreenFrame) * ((NSMaxY(kScreenVisibleFrame) - NSMinY(newFrame)) /
+																		NSHeight(kScreenVisibleFrame));
+					}
+					
+					// prevent the title bar from being hidden in some corner cases
+					if (NSMaxY(newFrame) > NSMaxY(newScreenFrame))
+					{
+						newFrame.origin.y = (NSMaxY(newScreenFrame) - NSHeight(newFrame));
+					}
+					
+					// long-distance moves are always animated
+					isAnimated = YES;
+				}
+			}
+			else
+			{
+				// move right
+				newFrame.origin.x += (aPixelCount + (STATIC_CAST(NSMinX(newFrame), UInt16) % aPixelCount));
+				
+				// prefer touching the edge exactly instead of having the window cut off
+				// (but if the window is already exactly on the boundary, let it move)
+				if (NSMaxX(newFrame) > kScreenRightEdge)
+				{
+					newFrame.origin.x = kScreenRightEdge - NSWidth(newFrame);
+				}
+			}
+		}
+		break;
+	
+	case NSMinYEdge:
+		if (NSMinY(newFrame) == NSMinY(kScreenVisibleFrame))
+		{
+			// window is already exactly on the bottom edge; instead of shifting
+			// partially offscreen, move the window to the next screen (if any)
+			BOOL		isOtherScreen = NO;
+			NSRect		newScreenFrame = [self visibleFrameOfScreenNearEdge:anEdge ofWindow:aWindow
+																			didFindOtherScreen:&isOtherScreen];
+			
+			
+			if (isOtherScreen)
+			{
+				// move to top edge of nearest screen
+				newFrame.origin.y = (NSMaxY(newScreenFrame) - NSHeight(newFrame));
+				
+				// the screen sizes may not exactly match along the other axis
+				// so determine the proportion of the offset on the previous
+				// screen and apply that same proportion to the new screen
+				if (NSMaxX(kScreenVisibleFrame) == NSMaxX(newFrame))
+				{
+					newFrame.origin.x = (NSMaxX(newScreenFrame) - NSWidth(newFrame));
+				}
+				else if (NSMinX(kScreenVisibleFrame) == NSMinX(newFrame))
+				{
+					newFrame.origin.x = NSMinX(newScreenFrame);
+				}
+				else
+				{
+					newFrame.origin.x = NSMaxX(newScreenFrame) -
+										NSWidth(newScreenFrame) * ((NSMaxX(kScreenVisibleFrame) - NSMinX(newFrame)) /
+																	NSWidth(kScreenVisibleFrame));
+				}
+				
+				// prevent the title bar from being hidden in some corner cases
+				if (NSMaxY(newFrame) > NSMaxY(newScreenFrame))
+				{
+					newFrame.origin.y = (NSMaxY(newScreenFrame) - NSHeight(newFrame));
+				}
+				
+				// long-distance moves are always animated
+				isAnimated = YES;
+			}
+		}
+		else
+		{
+			// move down
+			newFrame.origin.y -= (aPixelCount + (STATIC_CAST(NSMinY(newFrame), UInt16) % aPixelCount));
+			
+			// prefer touching the edge exactly instead of having the window cut off
+			// (but if the window is already exactly on the boundary, let it move)
+			if (NSMinY(newFrame) < NSMinY(kScreenVisibleFrame))
+			{
+				newFrame.origin.y = NSMinY(kScreenVisibleFrame);
+			}
+		}
+		break;
+	
+	case NSMaxYEdge:
+		{
+			Float32 const	kScreenTopEdge = NSMaxY(kScreenVisibleFrame);
+			
+			
+			if (NSMaxY(newFrame) == kScreenTopEdge)
+			{
+				// window is already exactly on the top edge; instead of shifting
+				// partially offscreen, move the window to the next screen (if any)
+				BOOL		isOtherScreen = NO;
+				NSRect		newScreenFrame = [self visibleFrameOfScreenNearEdge:anEdge ofWindow:aWindow
+																				didFindOtherScreen:&isOtherScreen];
+				
+				
+				if (isOtherScreen)
+				{
+					// move to bottom edge of nearest screen
+					newFrame.origin.y = NSMinY(newScreenFrame);
+					
+					// the screen sizes may not exactly match along the other axis
+					// so determine the proportion of the offset on the previous
+					// screen and apply that same proportion to the new screen
+					if (NSMaxX(kScreenVisibleFrame) == NSMaxX(newFrame))
+					{
+						newFrame.origin.x = (NSMaxX(newScreenFrame) - NSWidth(newFrame));
+					}
+					else if (NSMinX(kScreenVisibleFrame) == NSMinX(newFrame))
+					{
+						newFrame.origin.x = NSMinX(newScreenFrame);
+					}
+					else
+					{
+						newFrame.origin.x = NSMaxX(newScreenFrame) -
+											NSWidth(newScreenFrame) * ((NSMaxX(kScreenVisibleFrame) - NSMinX(newFrame)) /
+																		NSWidth(kScreenVisibleFrame));
+					}
+					
+					// prevent the title bar from being hidden in some corner cases
+					if (NSMaxY(newFrame) > NSMaxY(newScreenFrame))
+					{
+						newFrame.origin.y = (NSMaxY(newScreenFrame) - NSHeight(newFrame));
+					}
+					
+					// long-distance moves are always animated
+					isAnimated = YES;
+				}
+			}
+			else
+			{
+				// move up
+				newFrame.origin.y += (aPixelCount + (STATIC_CAST(NSMinY(newFrame), UInt16) % aPixelCount));
+				
+				// prefer touching the edge exactly instead of having the window cut off
+				// (but if the window is already exactly on the boundary, let it move)
+				if (NSMaxY(newFrame) > kScreenTopEdge)
+				{
+					newFrame.origin.y = kScreenTopEdge - NSHeight(newFrame);
+				}
+			}
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+	
+	if (isAnimated)
+	{
+		CocoaAnimation_TransitionWindowForMove(aWindow, CGRectMake(NSMinX(newFrame), NSMinY(newFrame),
+																	NSWidth(newFrame), NSHeight(newFrame)));
+		[aWindow setFrameOrigin:newFrame.origin];
+	}
+	else
+	{
+		[aWindow setFrameOrigin:newFrame.origin];
+	}
+}// moveWindow:distance:awayFromEdge:withAnimation:
+
 
 - (IBAction)
 performArrangeInFront:(id)	sender
@@ -6132,12 +6501,9 @@ performMoveWindowRight:(id)		sender
 	
 	if (nullptr != terminalWindow)
 	{
-		NSWindow*	window = TerminalWindow_ReturnNSWindow(terminalWindow);
-		NSPoint		location = [window frame].origin;
-		
-		
-		location.x += 10; // arbitrary, but should match "performMoveWindowLeft:" (TEMPORARY; make this a preference?)
-		[window setFrameOrigin:location];
+		[self moveWindow:TerminalWindow_ReturnNSWindow(terminalWindow)
+							distance:8/* arbitrary; should match performMoveWindowLeft: */
+							awayFromEdge:NSMaxXEdge withAnimation:NO];
 	}
 }
 - (id)
@@ -6170,12 +6536,9 @@ performMoveWindowLeft:(id)		sender
 	
 	if (nullptr != terminalWindow)
 	{
-		NSWindow*	window = TerminalWindow_ReturnNSWindow(terminalWindow);
-		NSPoint		location = [window frame].origin;
-		
-		
-		location.x -= 10; // arbitrary, but should match "performMoveWindowRight:" (TEMPORARY; make this a preference?)
-		[window setFrameOrigin:location];
+		[self moveWindow:TerminalWindow_ReturnNSWindow(terminalWindow)
+							distance:8/* arbitrary; should match performMoveWindowRight: */
+							awayFromEdge:NSMinXEdge withAnimation:NO];
 	}
 }
 - (id)
@@ -6208,13 +6571,9 @@ performMoveWindowDown:(id)		sender
 	
 	if (nullptr != terminalWindow)
 	{
-		NSWindow*	window = TerminalWindow_ReturnNSWindow(terminalWindow);
-		NSPoint		location = [window frame].origin;
-		
-		
-		// remember, Cocoa windows have origins in the bottom-left corner
-		location.y -= 10; // arbitrary, but should match "performMoveWindowUp:" (TEMPORARY; make this a preference?)
-		[window setFrameOrigin:location];
+		[self moveWindow:TerminalWindow_ReturnNSWindow(terminalWindow)
+							distance:8/* arbitrary; should match performMoveWindowUp: */
+							awayFromEdge:NSMinYEdge withAnimation:NO];
 	}
 }
 - (id)
@@ -6247,13 +6606,9 @@ performMoveWindowUp:(id)		sender
 	
 	if (nullptr != terminalWindow)
 	{
-		NSWindow*	window = TerminalWindow_ReturnNSWindow(terminalWindow);
-		NSPoint		location = [window frame].origin;
-		
-		
-		// remember, Cocoa windows have origins in the bottom-left corner
-		location.y += 10; // arbitrary, but should match "performMoveWindowDown:" (TEMPORARY; make this a preference?)
-		[window setFrameOrigin:location];
+		[self moveWindow:TerminalWindow_ReturnNSWindow(terminalWindow)
+							distance:8/* arbitrary; should match performMoveWindowDown: */
+							awayFromEdge:NSMaxYEdge withAnimation:NO];
 	}
 }
 - (id)
