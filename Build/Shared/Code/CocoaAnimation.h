@@ -53,6 +53,10 @@ void
 															 CGRect);
 
 void
+	CocoaAnimation_TransitionWindowForMove					(NSWindow*,
+															 CGRect);
+
+void
 	CocoaAnimation_TransitionWindowForRemove				(NSWindow*);
 
 void

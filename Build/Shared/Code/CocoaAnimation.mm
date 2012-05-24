@@ -153,7 +153,8 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 	// animate the change
 	{
 		float const		kAnimationDelay = 0.001;
-		NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds]) autorelease];
+		NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds])
+										autorelease];
 		NSRect			oldFrame = [inRelativeToWindow frame];
 		NSRect			newFrame = NSZeroRect;
 		NSRect			mainScreenFrame = [[NSScreen mainScreen] visibleFrame];
@@ -195,7 +196,8 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 		[imageWindow setLevel:[inTargetWindow level]];
 		[[[CocoaAnimation_WindowFrameAnimator alloc]
 			initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:inTargetWindow
-								fromFrame:oldFrame toFrame:newFrame totalDelay:0.05 delayDistribution:kMy_AnimationTimeDistributionLinear
+								fromFrame:oldFrame toFrame:newFrame totalDelay:0.05
+								delayDistribution:kMy_AnimationTimeDistributionLinear
 								effect:kMy_AnimationEffectFadeIn] autorelease];
 	}
 }// TransitionWindowForDuplicate
@@ -220,7 +222,8 @@ CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
 										 CGRect			inEndLocation)
 {
 	AutoPool	_;
-	NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds]) autorelease];
+	NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds])
+								autorelease];
 	NSRect		oldFrame = [imageWindow frame];
 	NSRect		newFrame = NSZeroRect;
 	
@@ -235,13 +238,67 @@ CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
 	[imageWindow setLevel:[inTargetWindow level]];
 	[[[CocoaAnimation_WindowFrameAnimator alloc]
 		initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-							fromFrame:oldFrame toFrame:newFrame totalDelay:0.04 delayDistribution:kMy_AnimationTimeDistributionEaseOut
+							fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
+							delayDistribution:kMy_AnimationTimeDistributionEaseOut
 							effect:kMy_AnimationEffectNone] autorelease];
 	
 	// hide the original window immediately; the animation on the
 	// image window can take however long it needs to complete
 	[inTargetWindow orderOut:nil];
 }// TransitionWindowForHide
+
+
+/*!
+Animates "inTargetWindow" to a new frame "inEndLocation"
+(which should be an NSRect for the frame expressed as a
+CGRect structure).
+
+The animation does not hide the window and it only moves the
+real window once (after a delay).  The animation makes it
+appear as if the window physically occupies intermediate
+positions however.
+
+(1.10)
+*/
+void
+CocoaAnimation_TransitionWindowForMove	(NSWindow*		inTargetWindow,
+										 CGRect			inEndLocation)
+{
+	AutoPool		_;
+	NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds])
+									autorelease];
+	NSRect			oldFrame = [imageWindow frame];
+	NSRect			newFrame = NSZeroRect;
+	
+	
+	newFrame.origin.x = inEndLocation.origin.x;
+	newFrame.origin.y = inEndLocation.origin.y;
+	newFrame.size.width = inEndLocation.size.width;
+	newFrame.size.height = inEndLocation.size.height;
+	
+	// animate!
+	[imageWindow orderFront:nil];
+	[imageWindow setLevel:[inTargetWindow level]];
+	[[[CocoaAnimation_WindowFrameAnimator alloc]
+		initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
+							fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
+							delayDistribution:kMy_AnimationTimeDistributionEaseOut
+							effect:kMy_AnimationEffectFadeIn] autorelease];
+	
+	// the original window moves after a short delay
+	{
+		NSArray*	frameCoordinates = [NSArray arrayWithObjects:
+											[NSNumber numberWithFloat:newFrame.origin.x],
+											[NSNumber numberWithFloat:newFrame.origin.y],
+											[NSNumber numberWithFloat:newFrame.size.width],
+											[NSNumber numberWithFloat:newFrame.size.height],
+											nil];
+		
+		
+		[inTargetWindow performSelector:@selector(setFrameWithArray:) withObject:frameCoordinates
+										afterDelay:0.4];
+	}
+}// TransitionWindowForMove
 
 
 /*!
@@ -264,7 +321,8 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow)
 	
 	if ([inTargetWindow isVisible])
 	{
-		NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds]) autorelease];
+		NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds])
+									autorelease];
 		NSRect		oldFrame = [imageWindow frame];
 		NSRect		newFrame = [imageWindow frame];
 		NSRect		screenFrame = [[inTargetWindow screen] frame];
@@ -281,7 +339,8 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow)
 		[imageWindow setLevel:[inTargetWindow level]];
 		[[[CocoaAnimation_WindowFrameAnimator alloc]
 			initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-								fromFrame:oldFrame toFrame:newFrame totalDelay:0.03 delayDistribution:kMy_AnimationTimeDistributionEaseOut
+								fromFrame:oldFrame toFrame:newFrame totalDelay:0.03
+								delayDistribution:kMy_AnimationTimeDistributionEaseOut
 								effect:kMy_AnimationEffectFadeOut] autorelease];
 		
 		// hide the original window immediately; the animation on the
@@ -311,7 +370,8 @@ CocoaAnimation_TransitionWindowSectionForOpen	(NSWindow*		inTargetWindow,
 	AutoPool	_;
 	NSWindow*	imageWindow = [createImageWindowFrom
 								(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
-															inStartLocation.size.width, inStartLocation.size.height)) autorelease];
+															inStartLocation.size.width, inStartLocation.size.height))
+								autorelease];
 	NSRect		oldFrame = [imageWindow frame];
 	NSRect		newFrame = oldFrame;
 	
@@ -330,7 +390,8 @@ CocoaAnimation_TransitionWindowSectionForOpen	(NSWindow*		inTargetWindow,
 	[imageWindow setLevel:[inTargetWindow level]];
 	[[[CocoaAnimation_WindowFrameAnimator alloc]
 		initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-							fromFrame:oldFrame toFrame:newFrame totalDelay:0.05 delayDistribution:kMy_AnimationTimeDistributionEaseOut
+							fromFrame:oldFrame toFrame:newFrame totalDelay:0.05
+							delayDistribution:kMy_AnimationTimeDistributionEaseOut
 							effect:kMy_AnimationEffectFadeOut] autorelease];
 }// TransitionWindowSectionForOpen
 
@@ -355,7 +416,8 @@ CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow
 	AutoPool	_;
 	NSWindow*	imageWindow = [createImageWindowFrom
 								(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
-															inStartLocation.size.width, inStartLocation.size.height)) autorelease];
+															inStartLocation.size.width, inStartLocation.size.height))
+								autorelease];
 	NSRect		oldFrame = [imageWindow frame];
 	NSRect		newFrame = oldFrame;
 	
@@ -381,7 +443,8 @@ CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow
 	[imageWindow setLevel:[inTargetWindow level]];
 	[[[CocoaAnimation_WindowFrameAnimator alloc]
 		initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-							fromFrame:oldFrame toFrame:newFrame totalDelay:0.08 delayDistribution:kMy_AnimationTimeDistributionLinear
+							fromFrame:oldFrame toFrame:newFrame totalDelay:0.08
+							delayDistribution:kMy_AnimationTimeDistributionLinear
 							effect:kMy_AnimationEffectFadeIn] autorelease];
 }// TransitionWindowSectionForSearchResult
 
