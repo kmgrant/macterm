@@ -448,6 +448,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20120526': [
+        'Session Info status icons are now more detailed, especially on ultra-high-resolution displays.',
         'Clipboard window minimum size has been reduced, allowing the window to take up less space.',
     ],
     '20120524': [
