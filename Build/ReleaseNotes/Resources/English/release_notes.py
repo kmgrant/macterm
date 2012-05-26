@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120526',
     '20120524',
     '20120520',
     '20120516',
@@ -446,6 +447,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120526': [
+        'Clipboard window minimum size has been reduced, allowing the window to take up less space.',
+    ],
     '20120524': [
         '"Nudge Window to the Right" and similar commands now automatically align windows that are close to screen edges.',
         '"Nudge Window to the Right" and similar commands now support multiple displays.  If a window is directly on a boundary between displays (e.g. because a previous nudge or mouse movement put it there) then a single nudge in the direction of an adjacent display moves the entire window to that display.',
