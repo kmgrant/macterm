@@ -367,7 +367,8 @@ struct My_TerminalView
 		
 		struct
 		{
-			NSFont*				object;			// font object representing the family, size and metrics (Cocoa terminals)
+			NSFont*				normalFont;		// font for most text; also represents current family, size and metrics (Cocoa terminals)
+			NSFont*				boldFont;		// alternate font for bold-weighted text (might match "normalFont" if no special font is found)
 			Boolean				isMonospaced;	// whether every character in the font is the same width (expected to be true)
 			Str255				familyName;		// font name (as might appear in a Font menu)
 			CFStringEncoding	encoding;		// encoding actually used by font, which may be different than what the terminal uses!
@@ -3996,7 +3997,8 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.ref = inScreenDataSource;
 	
 	// miscellaneous settings
-	this->text.font.object = nil; // set later
+	this->text.font.normalFont = nil; // set later
+	this->text.font.boldFont = nil; // set later
 	this->text.selection.range.first.first = 0;
 	this->text.selection.range.first.second = 0;
 	this->text.selection.range.second.first = 0;
@@ -4281,9 +4283,13 @@ My_TerminalView::
 	[this->contentNSView release];
 	[this->paddingNSView release];
 	[this->backgroundNSView release];
-	if (nil != this->text.font.object)
+	if (nil != this->text.font.normalFont)
 	{
-		[this->text.font.object release], this->text.font.object = nil;
+		[this->text.font.normalFont release], this->text.font.normalFont = nil;
+	}
+	if (nil != this->text.font.boldFont)
+	{
+		[this->text.font.boldFont release], this->text.font.boldFont = nil;
 	}
 	
 	// if the table is not the global one, a copy was allocated
@@ -5060,9 +5066,19 @@ dictionaryWithTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	
 	// set font attributes
-	if (nil != inTerminalViewPtr->text.font.object)
 	{
-		[result setObject:inTerminalViewPtr->text.font.object forKey:NSFontAttributeName];
+		NSFont*		sourceFont = inTerminalViewPtr->text.font.normalFont;
+		
+		
+		if (STYLE_BOLD(inAttributes) && (nil != inTerminalViewPtr->text.font.boldFont))
+		{
+			sourceFont = inTerminalViewPtr->text.font.boldFont;
+		}
+		
+		if (nil != sourceFont)
+		{
+			[result setObject:sourceFont forKey:NSFontAttributeName];
+		}
 	}
 	
 	// set color attributes
@@ -5529,7 +5545,14 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 		// remove the extra pixels inserted by default so that drawing
 		// begins precisely at the specified boundary origin
 		[container setLineFragmentPadding:0.0];
-		[container setContainerSize:NSMakeSize(inBoundaries.size.width, inBoundaries.size.height)];
+		
+		// arbitrarily leave room for one extra character in case the
+		// boundary is miscalculated for any reason; the renderer HIDES
+		// (through wrapping, presumably) any character that overruns
+		// the end of the boundary so it is better to show every character
+		// with a little crowding than to show nothing at all!
+		[container setContainerSize:NSMakeSize(inBoundaries.size.width + inTerminalViewPtr->text.font.widthPerCharacter,
+												inBoundaries.size.height)];
 		
 		[layoutMgr addTextContainer:container];
 		[layoutMgr setTypesetterBehavior:NSTypesetterBehavior_10_3]; // minimum supported OS version of the project
@@ -5541,11 +5564,22 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 		// routine must ONLY be called via a content-view "drawRect:" request)
 		{
 			NSRange		glyphRange = [layoutMgr glyphRangeForTextContainer:container];
+			NSPoint		drawingLocation = NSMakePoint(inBoundaries.origin.x, inBoundaries.origin.y);
 			
 			
 			[inTerminalViewPtr->contentNSView lockFocus];
-			[layoutMgr drawGlyphsForGlyphRange:glyphRange
-												atPoint:NSMakePoint(inBoundaries.origin.x, inBoundaries.origin.y)];
+			[layoutMgr drawGlyphsForGlyphRange:glyphRange atPoint:drawingLocation];
+			if (STYLE_BOLD(inAttributes) &&
+				(inTerminalViewPtr->text.font.boldFont == inTerminalViewPtr->text.font.normalFont))
+			{
+				// COMPLETE AND UTTER HACK: occasionally a font will have no bold version
+				// in the same family and Cocoa does not seem as capable as QuickDraw in
+				// terms of inventing a bold rendering for such fonts; as a work-around
+				// text is drawn TWICE (the second at a slight offset from the original)
+				drawingLocation.x += (1 + (inTerminalViewPtr->text.font.widthPerCharacter / 30)); // arbitrary
+				
+				[layoutMgr drawGlyphsForGlyphRange:glyphRange atPoint:drawingLocation];
+			}
 			[inTerminalViewPtr->contentNSView unlockFocus];
 		}
 		
@@ -11239,13 +11273,40 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 												true/* is retained */);
 		
 		
-		if (nil != inTerminalViewPtr->text.font.object)
+		// release any previous fonts
+		if (nil != inTerminalViewPtr->text.font.normalFont)
 		{
-			[inTerminalViewPtr->text.font.object release], inTerminalViewPtr->text.font.object = nil;
+			[inTerminalViewPtr->text.font.normalFont release], inTerminalViewPtr->text.font.normalFont = nil;
 		}
-		inTerminalViewPtr->text.font.object =
+		if (nil != inTerminalViewPtr->text.font.boldFont)
+		{
+			[inTerminalViewPtr->text.font.boldFont release], inTerminalViewPtr->text.font.boldFont = nil;
+		}
+		
+		// find a font for most text
+		inTerminalViewPtr->text.font.normalFont =
 			[NSFont fontWithName:(NSString*)fontNameCFString.returnCFStringRef() size:inFontSizeOrZero];
-		[inTerminalViewPtr->text.font.object retain];
+		[inTerminalViewPtr->text.font.normalFont retain];
+		
+		// find a font for boldface text
+		inTerminalViewPtr->text.font.boldFont =
+			[[NSFontManager sharedFontManager] fontWithFamily:[inTerminalViewPtr->text.font.normalFont familyName]
+																traits:(NSBoldFontMask | NSUnitalicFontMask)
+																weight:0/* as documented, ignored when bold */
+																size:inFontSizeOrZero];
+		if (nil == inTerminalViewPtr->text.font.boldFont)
+		{
+			// if no dedicated bold font is available, try a higher-weight version of the original
+			inTerminalViewPtr->text.font.boldFont =
+				[[NSFontManager sharedFontManager] fontWithFamily:[inTerminalViewPtr->text.font.normalFont familyName]
+																	traits:0 weight:9/* as documented, for bold */
+																	size:inFontSizeOrZero];
+		}
+		if (nil == inTerminalViewPtr->text.font.boldFont)
+		{
+			inTerminalViewPtr->text.font.boldFont = inTerminalViewPtr->text.font.normalFont;
+		}
+		[inTerminalViewPtr->text.font.boldFont retain];
 	}
 	
 	if (inFontFamilyNameOrNull != nullptr)
@@ -11670,7 +11731,7 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 {
 	if (inTerminalViewPtr->isCocoa)
 	{
-		NSFont* const	sourceFont = [inTerminalViewPtr->text.font.object screenFont];
+		NSFont* const	sourceFont = [inTerminalViewPtr->text.font.normalFont screenFont];
 		
 		
 		// TEMPORARY; eventually store floating-point values instead of casting
