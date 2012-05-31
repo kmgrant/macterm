@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120530',
     '20120526',
     '20120524',
     '20120520',
@@ -447,6 +448,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120530': [
+        'Fixed Preferences window Terminals pane Options tab to save settings properly.',
+    ],
     '20120526': [
         'Session Info status icons are now more detailed, especially on ultra-high-resolution displays.',
         'Clipboard window minimum size has been reduced, allowing the window to take up less space.',

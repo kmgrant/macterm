@@ -96,6 +96,11 @@ HIViewID const	idMyFieldScrollback				= { 'Sbak', 0/* ID */ };
 HIViewID const	idMyPopUpMenuScrollbackUnits	= { 'SbkU', 0/* ID */ };
 HIViewID const	idMyLabelScrollSpeedFast		= { 'LScF', 0/* ID */ };
 HIViewID const	idMyHelpTextTweaks				= { 'TwkH', 0/* ID */ };
+HIViewID const	idMyCheckBoxLineWrap			= { 'XWrL', 0/* ID */ };
+HIViewID const	idMyCheckBoxEightBit			= { 'X8Bt', 0/* ID */ };
+HIViewID const	idMyCheckBoxSaveOnClear			= { 'XClS', 0/* ID */ };
+HIViewID const	idMyCheckBoxNormalKeypadTopRow	= { 'XNKT', 0/* ID */ };
+HIViewID const	idMyCheckBoxLocalPageKeys		= { 'XLPg', 0/* ID */ };
 
 // The following cannot use any of Apple’s reserved IDs (0 to 1023).
 enum
@@ -195,6 +200,24 @@ struct My_TerminalsPanelOptionsUI
 	
 	void
 	readPreferences		(Preferences_ContextRef);
+	
+	static OSStatus
+	receiveViewHit		(EventHandlerCallRef, EventRef, void*);
+	
+	void
+	setEightBit		(Boolean);
+	
+	void
+	setLineWrap		(Boolean);
+	
+	void
+	setNormalKeypadTopRow	(Boolean);
+	
+	void
+	setPageKeysControlLocalTerminal		(Boolean);
+	
+	void
+	setSaveOnClear	(Boolean);
 
 protected:
 	HIViewWrap
@@ -203,7 +226,11 @@ protected:
 	static void
 	deltaSize	(HIViewRef, Float32, Float32, void*);
 	
+	Boolean
+	updateCheckBoxPreference	(HIViewRef);
+
 private:
+	CarbonEventHandlerWrap				_viewClickHandler;
 	CommonEventHandlers_HIViewResizer	_containerResizer;
 };
 typedef My_TerminalsPanelOptionsUI*		My_TerminalsPanelOptionsUIPtr;
@@ -445,6 +472,38 @@ PrefPanelTerminals_NewOptionsPane ()
 	}
 	return result;
 }// NewOptionsPane
+
+
+/*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelTerminals_NewOptionsPaneTagSet ()
+{
+	Preferences_TagSetRef			result = nullptr;
+	std::vector< Preferences_Tag >	tagList;
+	
+	
+	// IMPORTANT: this list should be in sync with everything in this file
+	// that reads option-pane preferences from the context of a data set
+	tagList.push_back(kPreferences_TagTerminalLineWrap);
+	tagList.push_back(kPreferences_TagDataReceiveDoNotStripHighBit);
+	tagList.push_back(kPreferences_TagTerminalClearSavesLines);
+	tagList.push_back(kPreferences_TagMapKeypadTopRowForVT220);
+	tagList.push_back(kPreferences_TagPageKeysControlLocalTerminal);
+	
+	result = Preferences_NewTagSet(tagList);
+	
+	return result;
+}// NewOptionsPaneTagSet
 
 
 /*!
@@ -1383,11 +1442,15 @@ idealWidth				(0.0),
 idealHeight				(0.0),
 mainView				(createContainerView(inPanel, inOwningWindow)
 							<< HIViewWrap_AssertExists),
+_viewClickHandler		(GetControlEventTarget(this->mainView), receiveViewHit,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
+							this/* user data */),
 _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
 							My_TerminalsPanelOptionsUI::deltaSize, this/* context */)
 {
 	assert(this->mainView.exists());
 	assert(_containerResizer.isInstalled());
+	assert(_viewClickHandler.isInstalled());
 }// My_TerminalsPanelOptionsUI 2-argument constructor
 
 
@@ -1407,6 +1470,8 @@ createContainerView		(Panel_Ref		inPanel,
 	Rect						dummy;
 	Rect						idealContainerBounds;
 	OSStatus					error = noErr;
+	size_t						actualSize = 0;
+	Boolean						flag = false;
 	
 	
 	// create the tab pane
@@ -1438,7 +1503,66 @@ createContainerView		(Panel_Ref		inPanel,
 	}
 	
 	// initialize values
-	// UNIMPLEMENTED
+	{
+		HIViewWrap		checkBox(idMyCheckBoxLineWrap, inOwningWindow);
+		
+		
+		assert(checkBox.exists());
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagTerminalLineWrap, sizeof(flag), &flag, &actualSize))
+		{
+			flag = false; // assume a value, if preference can’t be found
+		}
+		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
+	}
+	{
+		HIViewWrap		checkBox(idMyCheckBoxEightBit, inOwningWindow);
+		
+		
+		assert(checkBox.exists());
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagDataReceiveDoNotStripHighBit, sizeof(flag), &flag, &actualSize))
+		{
+			flag = false; // assume a value, if preference can’t be found
+		}
+		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
+	}
+	{
+		HIViewWrap		checkBox(idMyCheckBoxSaveOnClear, inOwningWindow);
+		
+		
+		assert(checkBox.exists());
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagTerminalClearSavesLines, sizeof(flag), &flag, &actualSize))
+		{
+			flag = false; // assume a value, if preference can’t be found
+		}
+		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
+	}
+	{
+		HIViewWrap		checkBox(idMyCheckBoxNormalKeypadTopRow, inOwningWindow);
+		
+		
+		assert(checkBox.exists());
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagMapKeypadTopRowForVT220, sizeof(flag), &flag, &actualSize))
+		{
+			flag = false; // assume a value, if preference can’t be found
+		}
+		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(false == flag));
+	}
+	{
+		HIViewWrap		checkBox(idMyCheckBoxLocalPageKeys, inOwningWindow);
+		
+		
+		assert(checkBox.exists());
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagPageKeysControlLocalTerminal, sizeof(flag), &flag, &actualSize))
+		{
+			flag = false; // assume a value, if preference can’t be found
+		}
+		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
+	}
 	
 	return result;
 }// My_TerminalsPanelOptionsUI::createContainerView
@@ -1601,9 +1725,289 @@ readPreferences		(Preferences_ContextRef		inSettings)
 {
 	if (nullptr != inSettings)
 	{
-		// UNIMPLEMENTED
+		// IMPORTANT: the tags read here should be in sync with those
+		// returned by PrefPanelTerminals_NewOptionsPaneTagSet()
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		size_t					actualSize = 0;
+		
+		
+		// set line wrap
+		{
+			Boolean		flag = false;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalLineWrap, sizeof(flag),
+														&flag, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setLineWrap(flag);
+			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "failed to read line wrap setting");
+			}
+		}
+		
+		// set eight bit mode
+		{
+			Boolean		flag = false;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagDataReceiveDoNotStripHighBit, sizeof(flag),
+														&flag, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setEightBit(flag);
+			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "failed to read 8-bit setting");
+			}
+		}
+		
+		// set keypad top row behavior
+		{
+			Boolean		flag = false;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagMapKeypadTopRowForVT220, sizeof(flag),
+														&flag, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setNormalKeypadTopRow(false == flag);
+			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "failed to read keypad top-row behavior setting");
+			}
+		}
+		
+		// set page key behavior
+		{
+			Boolean		flag = false;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagPageKeysControlLocalTerminal, sizeof(flag),
+														&flag, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setPageKeysControlLocalTerminal(flag);
+			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "failed to read page key behavior setting");
+			}
+		}
+		
+		// set clear-screen behavior
+		{
+			Boolean		flag = false;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalClearSavesLines, sizeof(flag),
+														&flag, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setSaveOnClear(flag);
+			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "failed to read save-on-clear setting");
+			}
+		}
 	}
 }// My_TerminalsPanelOptionsUI::readPreferences
+
+
+/*!
+Handles "kEventControlHit" of "kEventClassControl" for this
+preferences panel.  Responds by saving preferences associated
+with checkboxes.
+
+(4.1)
+*/
+OSStatus
+My_TerminalsPanelOptionsUI::
+receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+				 EventRef				inEvent,
+				 void*					inMyTerminalsPanelUIPtr)
+{
+	OSStatus						result = eventNotHandledErr;
+	My_TerminalsPanelOptionsUI*		interfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_TerminalsPanelOptionsUI*);
+	assert(nullptr != interfacePtr);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassControl);
+	assert(kEventKind == kEventControlHit);
+	{
+		HIViewRef	view = nullptr;
+		
+		
+		// determine the control in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
+		
+		// if the control was found, proceed
+		if (noErr == result)
+		{
+			ControlKind		controlKind;
+			OSStatus		error = GetControlKind(view, &controlKind);
+			
+			
+			result = eventNotHandledErr; // unless set otherwise
+			
+			if ((noErr == error) && (kControlKindSignatureApple == controlKind.signature) &&
+				((kControlKindCheckBox == controlKind.kind) || (kControlKindRadioButton == controlKind.kind)))
+			{
+				(Boolean)interfacePtr->updateCheckBoxPreference(view);
+			}
+		}
+	}
+	
+	return result;
+}// My_TerminalsPanelOptionsUI::receiveViewHit
+
+
+/*!
+Updates the 8-bit-mode checkbox.
+
+(4.1)
+*/
+void
+My_TerminalsPanelOptionsUI::
+setEightBit		(Boolean	inIsWrapping)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	
+	
+	SetControl32BitValue(HIViewWrap(idMyCheckBoxEightBit, kOwningWindow), BooleanToCheckBoxValue(inIsWrapping));
+}// My_TerminalsPanelOptionsUI::setEightBit
+
+
+/*!
+Updates the line-wrap checkbox.
+
+(4.1)
+*/
+void
+My_TerminalsPanelOptionsUI::
+setLineWrap		(Boolean	inIsWrapping)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	
+	
+	SetControl32BitValue(HIViewWrap(idMyCheckBoxLineWrap, kOwningWindow), BooleanToCheckBoxValue(inIsWrapping));
+}// My_TerminalsPanelOptionsUI::setLineWrap
+
+
+/*!
+Updates the normal-keypad-top-row checkbox.
+
+(4.1)
+*/
+void
+My_TerminalsPanelOptionsUI::
+setNormalKeypadTopRow	(Boolean	inIsWrapping)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	
+	
+	SetControl32BitValue(HIViewWrap(idMyCheckBoxNormalKeypadTopRow, kOwningWindow), BooleanToCheckBoxValue(inIsWrapping));
+}// My_TerminalsPanelOptionsUI::setNormalKeypadTopRow
+
+
+/*!
+Updates the page key checkbox.
+
+(4.1)
+*/
+void
+My_TerminalsPanelOptionsUI::
+setPageKeysControlLocalTerminal		(Boolean	inIsWrapping)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	
+	
+	SetControl32BitValue(HIViewWrap(idMyCheckBoxLocalPageKeys, kOwningWindow), BooleanToCheckBoxValue(inIsWrapping));
+}// My_TerminalsPanelOptionsUI::setPageKeysControlLocalTerminal
+
+
+/*!
+Updates the save-lines-on-clear checkbox.
+
+(4.1)
+*/
+void
+My_TerminalsPanelOptionsUI::
+setSaveOnClear	(Boolean	inIsWrapping)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	
+	
+	SetControl32BitValue(HIViewWrap(idMyCheckBoxSaveOnClear, kOwningWindow), BooleanToCheckBoxValue(inIsWrapping));
+}// My_TerminalsPanelOptionsUI::setSaveOnClear
+
+
+/*!
+Call this when a click in a checkbox or radio button has been
+detected AND the view has been toggled to its new value.
+
+The appropriate preference will have been updated in memory
+using Preferences_SetData().
+
+If the specified view is “known”, true is returned to indicate
+that the click was handled.  Otherwise, false is returned.
+
+(4.1)
+*/
+Boolean
+My_TerminalsPanelOptionsUI::
+updateCheckBoxPreference	(HIViewRef		inCheckBoxClicked)
+{
+	WindowRef const		kWindow = GetControlOwner(inCheckBoxClicked);
+	assert(IsValidWindowRef(kWindow));
+	HIViewIDWrap		viewID(HIViewWrap(inCheckBoxClicked).identifier());
+	Boolean				checkBoxFlagValue = (GetControl32BitValue(inCheckBoxClicked) == kControlCheckBoxCheckedValue);
+	Boolean		result = false;
+	
+	
+	if (HIViewIDWrap(idMyCheckBoxEightBit) == viewID)
+	{
+		Preferences_SetData(kPreferences_TagDataReceiveDoNotStripHighBit,
+							sizeof(checkBoxFlagValue), &checkBoxFlagValue);
+		result = true;
+	}
+	else if (HIViewIDWrap(idMyCheckBoxLineWrap) == viewID)
+	{
+		Preferences_SetData(kPreferences_TagTerminalLineWrap,
+							sizeof(checkBoxFlagValue), &checkBoxFlagValue);
+		result = true;
+	}
+	else if (HIViewIDWrap(idMyCheckBoxNormalKeypadTopRow) == viewID)
+	{
+		Boolean		invertedFlag = (false == checkBoxFlagValue);
+		
+		
+		Preferences_SetData(kPreferences_TagMapKeypadTopRowForVT220,
+							sizeof(invertedFlag), &invertedFlag);
+		result = true;
+	}
+	else if (HIViewIDWrap(idMyCheckBoxLocalPageKeys) == viewID)
+	{
+		Preferences_SetData(kPreferences_TagPageKeysControlLocalTerminal,
+							sizeof(checkBoxFlagValue), &checkBoxFlagValue);
+		result = true;
+	}
+	else if (HIViewIDWrap(idMyCheckBoxSaveOnClear) == viewID)
+	{
+		Preferences_SetData(kPreferences_TagTerminalClearSavesLines,
+							sizeof(checkBoxFlagValue), &checkBoxFlagValue);
+		result = true;
+	}
+	
+	return result;
+}// updateCheckBoxPreference
 
 
 /*!

@@ -52,6 +52,9 @@ Panel_Ref
 Panel_Ref
 	PrefPanelTerminals_NewOptionsPane		();
 
+Preferences_TagSetRef
+	PrefPanelTerminals_NewOptionsPaneTagSet	();
+
 Panel_Ref
 	PrefPanelTerminals_NewScreenPane		();
 
