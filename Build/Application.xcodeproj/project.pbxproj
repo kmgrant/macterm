@@ -56,7 +56,7 @@
 		0AC6BAFA0A8C0BA000AFF37A /* MemoryBlocks.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */; };
 		0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE1055432A400ACDF3A /* HelpSystem.cp */; };
 		0AC6BB000A8C0BA000AFF37A /* NetEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFE055432A400ACDF3A /* NetEvents.cp */; };
-		0AC6BB020A8C0BA000AFF37A /* PrefsWindow.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE08055432A400ACDF3A /* PrefsWindow.cp */; };
+		0AC6BB020A8C0BA000AFF37A /* PrefsWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE08055432A400ACDF3A /* PrefsWindow.mm */; };
 		0AC6BB030A8C0BA000AFF37A /* MacroManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A03DBC7063F6BA400C38B78 /* MacroManager.mm */; };
 		0AC6BB040A8C0BA000AFF37A /* SoundSystem.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE19055432A400ACDF3A /* SoundSystem.cp */; };
 		0AC6BB060A8C0BA000AFF37A /* Session.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE14055432A400ACDF3A /* Session.cp */; };
@@ -369,7 +369,7 @@
 		0A46FE03055432A400ACDF3A /* Preferences.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Preferences.cp; path = Application/Code/Preferences.cp; sourceTree = "<group>"; };
 		0A46FE05055432A400ACDF3A /* PrefPanelGeneral.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelGeneral.cp; path = Application/Code/PrefPanelGeneral.cp; sourceTree = "<group>"; };
 		0A46FE06055432A400ACDF3A /* PrefPanelMacros.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelMacros.cp; path = Application/Code/PrefPanelMacros.cp; sourceTree = "<group>"; };
-		0A46FE08055432A400ACDF3A /* PrefsWindow.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefsWindow.cp; path = Application/Code/PrefsWindow.cp; sourceTree = "<group>"; };
+		0A46FE08055432A400ACDF3A /* PrefsWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefsWindow.mm; path = Application/Code/PrefsWindow.mm; sourceTree = "<group>"; };
 		0A46FE0F055432A400ACDF3A /* RecordAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RecordAE.cp; path = Application/Code/RecordAE.cp; sourceTree = "<group>"; };
 		0A46FE12055432A400ACDF3A /* AppResources.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AppResources.cp; path = Application/Code/AppResources.cp; sourceTree = "<group>"; };
 		0A46FE14055432A400ACDF3A /* Session.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Session.cp; path = Application/Code/Session.cp; sourceTree = "<group>"; };
@@ -404,6 +404,7 @@
 		0A4FAF961525695400B8142A /* Popover.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Popover.objc++.h"; path = "Shared/Code/Popover.objc++.h"; sourceTree = "<group>"; };
 		0A54E40D0560B62F005B4592 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = Application/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0A54E40F0560B62F005B4592 /* IconForTerminal.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForTerminal.icns; path = Application/Resources/IconForTerminal.icns; sourceTree = "<group>"; };
+		0A5A6FCB1578783700EFCEAB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefsWindowCocoa.xib; sourceTree = "<group>"; };
 		0A6315B912348AB4003890B8 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ClipboardCocoa.xib; sourceTree = "<group>"; };
 		0A64C5EA1059E423005B8A48 /* StreamCapture.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StreamCapture.cp; path = Application/Code/StreamCapture.cp; sourceTree = "<group>"; };
 		0A64C5EC1059E432005B8A48 /* StreamCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamCapture.h; path = Application/Code/StreamCapture.h; sourceTree = "<group>"; };
@@ -968,6 +969,7 @@
 				0AB2273C12D2D3BB00D663BB /* KeypadFunctionKeysCocoa.xib */,
 				0AB2273E12D2D41300D663BB /* KeypadVT220KeysCocoa.xib */,
 				0A317CAC10A0C775002EDEFB /* MainMenuCocoa.xib */,
+				0A5A6FCA1578783700EFCEAB /* PrefsWindowCocoa.xib */,
 				0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */,
 				0AAEFFBF111E77F100526983 /* ServerBrowserCocoa.xib */,
 				0ACFBF4612F13506008E4203 /* TerminalWindowCocoa.xib */,
@@ -1070,7 +1072,7 @@
 				0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */,
 				0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */,
 				0A46FDDB055432A400ACDF3A /* PrefsContextDialog.cp */,
-				0A46FE08055432A400ACDF3A /* PrefsWindow.cp */,
+				0A46FE08055432A400ACDF3A /* PrefsWindow.mm */,
 			);
 			name = Preferences;
 			sourceTree = "<group>";
@@ -1350,7 +1352,7 @@
 				0AC6BAFA0A8C0BA000AFF37A /* MemoryBlocks.cp in Sources */,
 				0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.cp in Sources */,
 				0AC6BB000A8C0BA000AFF37A /* NetEvents.cp in Sources */,
-				0AC6BB020A8C0BA000AFF37A /* PrefsWindow.cp in Sources */,
+				0AC6BB020A8C0BA000AFF37A /* PrefsWindow.mm in Sources */,
 				0AC6BB030A8C0BA000AFF37A /* MacroManager.mm in Sources */,
 				0AC6BB040A8C0BA000AFF37A /* SoundSystem.cp in Sources */,
 				0AC6BB060A8C0BA000AFF37A /* Session.cp in Sources */,
@@ -1513,6 +1515,14 @@
 				0A4C9D210FE9B1A0005EAE9D /* English */,
 			);
 			name = PrefPanelWorkspaces.nib;
+			sourceTree = "<group>";
+		};
+		0A5A6FCA1578783700EFCEAB /* PrefsWindowCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A5A6FCB1578783700EFCEAB /* English */,
+			);
+			name = PrefsWindowCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A6315B812348AB4003890B8 /* ClipboardCocoa.xib */ = {

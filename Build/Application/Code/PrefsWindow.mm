@@ -1,4 +1,4 @@
-/*!	\file PrefsWindow.cp
+/*!	\file PrefsWindow.mm
 	\brief Implements the shell of the Preferences window.
 */
 /*###############################################################
@@ -30,61 +30,61 @@
 
 ###############################################################*/
 
-#include "PrefsWindow.h"
-#include <UniversalDefines.h>
+#import "PrefsWindow.h"
+#import <UniversalDefines.h>
 
 // standard-C++ includes
-#include <algorithm>
-#include <functional>
-#include <vector>
+#import <algorithm>
+#import <functional>
+#import <vector>
 
 // Mac includes
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <Carbon/Carbon.h>
+#import <CoreServices/CoreServices.h>
 
 // library includes
-#include <AlertMessages.h>
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <CFRetainRelease.h>
-#include <CFUtilities.h>
-#include <CocoaBasic.h>
-#include <CommonEventHandlers.h>
-#include <Console.h>
-#include <Cursors.h>
-#include <DialogAdjust.h>
-#include <Embedding.h>
-#include <FileSelectionDialogs.h>
-#include <HIViewWrap.h>
-#include <HIViewWrapManip.h>
-#include <IconManager.h>
-#include <Localization.h>
-#include <MemoryBlocks.h>
-#include <NIBLoader.h>
-#include <SoundSystem.h>
-#include <WindowInfo.h>
+#import <AlertMessages.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CFRetainRelease.h>
+#import <CFUtilities.h>
+#import <CocoaBasic.h>
+#import <CommonEventHandlers.h>
+#import <Console.h>
+#import <Cursors.h>
+#import <DialogAdjust.h>
+#import <Embedding.h>
+#import <FileSelectionDialogs.h>
+#import <HIViewWrap.h>
+#import <HIViewWrapManip.h>
+#import <IconManager.h>
+#import <Localization.h>
+#import <MemoryBlocks.h>
+#import <NIBLoader.h>
+#import <SoundSystem.h>
+#import <WindowInfo.h>
 
 // resource includes
-#include "SpacingConstants.r"
+#import "SpacingConstants.r"
 
 // application includes
-#include "AppResources.h"
-#include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
-#include "EventLoop.h"
-#include "HelpSystem.h"
-#include "Panel.h"
-#include "Preferences.h"
-#include "PrefPanelFormats.h"
-#include "PrefPanelGeneral.h"
-#include "PrefPanelKiosk.h"
-#include "PrefPanelMacros.h"
-#include "PrefPanelSessions.h"
-#include "PrefPanelTerminals.h"
-#include "PrefPanelTranslations.h"
-#include "PrefPanelWorkspaces.h"
-#include "UIStrings.h"
-#include "UIStrings_PrefsWindow.h"
+#import "AppResources.h"
+#import "ConstantsRegistry.h"
+#import "DialogUtilities.h"
+#import "EventLoop.h"
+#import "HelpSystem.h"
+#import "Panel.h"
+#import "Preferences.h"
+#import "PrefPanelFormats.h"
+#import "PrefPanelGeneral.h"
+#import "PrefPanelKiosk.h"
+#import "PrefPanelMacros.h"
+#import "PrefPanelSessions.h"
+#import "PrefPanelTerminals.h"
+#import "PrefPanelTranslations.h"
+#import "PrefPanelWorkspaces.h"
+#import "UIStrings.h"
+#import "UIStrings_PrefsWindow.h"
 
 
 
@@ -2473,5 +2473,159 @@ sizePanels	(HISize const&		inInitialSize)
 }// sizePanels
 
 } // anonymous namespace
+
+
+@implementation PrefsWindow_Controller
+
+
+static PrefsWindow_Controller*	gPrefsWindow_Controller = nil;
+
+
+/*!
+Returns the singleton.
+
+(4.1)
+*/
++ (id)
+sharedPrefsWindowController
+{
+	if (nil == gPrefsWindow_Controller)
+	{
+		gPrefsWindow_Controller = [[[self class] allocWithZone:NULL] init];
+	}
+	return gPrefsWindow_Controller;
+}// sharedPrefsWindowController
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	self = [super initWithWindowNibName:@"PrefsWindowCocoa"];
+	if (nil != self)
+	{
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+/*!
+Invoked when the help button is clicked.
+
+(4.1)
+*/
+- (IBAction)
+performContextSensitiveHelp:(id)	sender
+{
+#pragma unused(sender)
+	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// performContextSensitiveHelp:
+
+
+#pragma mark NSToolbarDelegate
+
+
+/*!
+Responds when the specified kind of toolbar item should be
+constructed for the given toolbar.
+
+(4.1)
+*/
+- (NSToolbarItem*)
+toolbar:(NSToolbar*)				toolbar
+itemForItemIdentifier:(NSString*)	itemIdentifier
+willBeInsertedIntoToolbar:(BOOL)	flag
+{
+#pragma unused(toolbar, flag)
+	NSToolbarItem*		result = nil;
+	
+	
+	// NOTE: no need to handle standard items here
+	// UNIMPLEMENTED - need to create items for each valid preferences panel
+	return result;
+}// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
+
+
+/*!
+Returns the identifiers for the kinds of items that can appear
+in the given toolbar.
+
+(4.1)
+*/
+- (NSArray*)
+toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
+{
+#pragma unused(toolbar)
+	return [NSArray arrayWithObjects:
+						nil];
+}// toolbarAllowedItemIdentifiers:
+
+
+/*!
+Returns the identifiers for the items that will appear in the
+given toolbar whenever the user has not customized it.  Since
+this toolbar is not customized, the result is the same as
+"toolbarAllowedItemIdentifiers:".
+
+(4.1)
+*/
+- (NSArray*)
+toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
+{
+	return [self toolbarAllowedItemIdentifiers:toolbar];
+}// toolbarDefaultItemIdentifiers:
+
+
+#pragma mark NSWindowController
+
+
+/*!
+Handles initialization that depends on user interface
+elements being properly set up.  (Everything else is just
+done in "init".)
+
+(4.1)
+*/
+- (void)
+windowDidLoad
+{
+	[super windowDidLoad];
+	
+	// create toolbar; has to be done programmatically, because
+	// IB only supports them in 10.5; which makes sense, you know,
+	// since toolbars have only been in the OS since 10.0, and
+	// hardly any applications would have found THOSE useful...
+	{
+		NSString*		toolbarID = @"PreferencesToolbar"; // do not ever change this; that would only break user preferences
+		NSToolbar*		windowToolbar = [[[NSToolbar alloc] initWithIdentifier:toolbarID] autorelease];
+		
+		
+		[windowToolbar setAllowsUserCustomization:NO];
+		[windowToolbar setAutosavesConfiguration:NO];
+		[windowToolbar setDisplayMode:NSToolbarDisplayModeIconAndLabel];
+		[windowToolbar setSizeMode:NSToolbarSizeModeRegular];
+		[windowToolbar setDelegate:self];
+		[[self window] setToolbar:windowToolbar];
+	}
+}// windowDidLoad
+
+
+@end // PrefsWindow_Controller
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

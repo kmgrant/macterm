@@ -41,6 +41,7 @@
 #import <SoundSystem.h>
 
 // application includes
+#import "PrefsWindow.h"
 #import "Session.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
@@ -73,6 +74,18 @@ DebugInterface_Display ()
 	[[DebugInterface_PanelController sharedDebugInterfacePanelController] showWindow:NSApp];
 	(OSStatus)SetUserFocusWindow(oldActiveWindow);
 }// Display
+
+
+/*!
+Shows the experimental new preferences window (Cocoa based).
+
+(4.1)
+*/
+void
+DebugInterface_DisplayTestPrefsWindow ()
+{
+	[[[PrefsWindow_Controller sharedPrefsWindowController] window] makeKeyAndOrderFront:nil];
+}// DisplayTestPrefsWindow
 
 
 /*!
@@ -211,6 +224,21 @@ dumpStateOfActiveTerminal:(id)	sender
 	Console_WriteLine("End of active terminal report.");
 	Console_WriteHorizontalRule();
 }// dumpStateOfActiveTerminal:
+
+
+/*!
+Displays the Cocoa-based preferences window that is constructed
+secretly at startup time.  It is incomplete, so it is only used
+for testing incremental additions to the Cocoa-based views.
+
+(4.1)
+*/
+- (IBAction)
+showTestPreferencesWindow:(id)	sender
+{
+#pragma unused(sender)
+	DebugInterface_DisplayTestPrefsWindow();
+}// showTestPreferencesWindow:
 
 
 /*!

@@ -65,6 +65,9 @@ sharedDebugInterfacePanelController;
 dumpStateOfActiveTerminal:(id)_;
 
 - (IBAction)
+showTestPreferencesWindow:(id)_;
+
+- (IBAction)
 showTestTerminalToolbar:(id)_;
 
 - (IBAction)
@@ -104,6 +107,9 @@ extern Boolean		gDebugInterface_LogsTerminalState;
 
 void
 	DebugInterface_Display					();
+
+void
+	DebugInterface_DisplayTestPrefsWindow	();
 
 void
 	DebugInterface_DisplayTestTerminal		();

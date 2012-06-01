@@ -35,6 +35,42 @@
 #ifndef __PREFSWINDOW__
 #define __PREFSWINDOW__
 
+// Mac includes
+#ifdef __OBJC__
+#	import <Cocoa/Cocoa.h>
+#endif
+
+
+
+#pragma mark Types
+
+#ifdef __OBJC__
+
+/*!
+Implements the Cocoa window that wraps the Cocoa version of
+the Preferences window that is under development.  See
+"PrefsWindowCocoa.xib".
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefsWindow_Controller : NSWindowController
+{
+}
+
++ (id)
+sharedPrefsWindowController;
+
+// actions
+
+- (IBAction)
+performContextSensitiveHelp:(id)_;
+
+@end
+
+#endif // __OBJC__
+
 
 
 #pragma mark Public Methods

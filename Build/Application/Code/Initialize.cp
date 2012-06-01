@@ -293,6 +293,17 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 			DebugInterface_DisplayTestTerminal();
 		}
 	}
+	
+	// if requested, automatically show the experimental new preferences window
+	{
+		char const*		varValue = getenv("MACTERM_AUTO_SHOW_COCOA_PREFS");
+		
+		
+		if ((nullptr != varValue) && (0 == strcmp(varValue, "1")))
+		{
+			DebugInterface_DisplayTestPrefsWindow();
+		}
+	}
 }// ApplicationStartup
 
 
