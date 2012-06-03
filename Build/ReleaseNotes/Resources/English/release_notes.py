@@ -450,6 +450,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20120602': [
+        "Fixed Custom New Session sheet so that the window starts with the size and color scheme of the Default Session's associated Terminal and Format.  Previously, the window size and colors were only corrected after the session began.",
         'Fixed Custom New Session sheet so that the window resizes immediately when a Terminal configuration is selected from the menu (instead of only resizing after the session starts).',
     ],
     '20120530': [

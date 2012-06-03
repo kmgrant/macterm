@@ -1522,6 +1522,11 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 		NewSessionDialog_Ref	dialog = NewSessionDialog_New(terminalWindow, sessionContext);
 		
 		
+		// synchronize the window’s initial appearance with its preferences
+		// (e.g. window size due to font and screen dimensions, and colors);
+		// note however that this will be reset anyway when the session begins
+		(Boolean)configureSessionTerminalWindow(terminalWindow, sessionContext);
+		
 		if (displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 		{
 			NewSessionDialog_Display(dialog); // automatically disposed when the user clicks a button
