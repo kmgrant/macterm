@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120602',
     '20120530',
     '20120526',
     '20120524',
@@ -448,6 +449,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120602': [
+        'Fixed Custom New Session sheet so that the window resizes immediately when a Terminal configuration is selected from the menu (instead of only resizing after the session starts).',
+    ],
     '20120530': [
         'Fixed Preferences window Terminals pane Options tab to save settings properly.',
     ],

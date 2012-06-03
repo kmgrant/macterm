@@ -371,14 +371,14 @@ void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_A
 void					scrollProc						(HIViewRef, HIViewPartCode);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 OSStatus				setCursorInWindow				(HIWindowRef, Point, UInt32);
-void					setScreenPreferences			(My_TerminalWindowPtr, Preferences_ContextRef);
-void					setStandardState				(My_TerminalWindowPtr, UInt16, UInt16, Boolean);
+void					setScreenPreferences			(My_TerminalWindowPtr, Preferences_ContextRef, Boolean = false);
+void					setStandardState				(My_TerminalWindowPtr, UInt16, UInt16, Boolean, Boolean = false);
 void					setViewFormatPreferences		(My_TerminalWindowPtr, Preferences_ContextRef);
 void					setViewSizeIndependentFromWindow(My_TerminalWindowPtr, Boolean);
 void					setViewTranslationPreferences	(My_TerminalWindowPtr, Preferences_ContextRef);
 void					setWarningOnWindowClose			(My_TerminalWindowPtr, Boolean);
 void					setWindowAndTabTitle			(My_TerminalWindowPtr, CFStringRef);
-void					setWindowToIdealSizeForDimensions	(My_TerminalWindowPtr, UInt16, UInt16);
+void					setWindowToIdealSizeForDimensions	(My_TerminalWindowPtr, UInt16, UInt16, Boolean = false);
 void					setWindowToIdealSizeForFont		(My_TerminalWindowPtr);
 void					sheetClosed						(GenericDialog_Ref, Boolean);
 Preferences_ContextRef	sheetContextBegin				(My_TerminalWindowPtr, Quills::Prefs::Class, My_SheetType);
@@ -4454,6 +4454,55 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					}
 					break;
 				
+				case kCommandTerminalDefault:
+					{
+						// reformat frontmost window using the Default preferences
+						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						Preferences_ContextRef			defaultSettings = nullptr;
+						
+						
+						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::TERMINAL))
+						{
+							setScreenPreferences(ptr, defaultSettings, true/* animate */);
+						}
+						
+						result = noErr;
+					}
+					break;
+				
+				case kCommandTerminalByFavoriteName:
+					// IMPORTANT: This implementation is for Carbon compatibility only, as the
+					// Session Preferences panel is still Carbon-based and has a menu that
+					// relies on this command handler.  The equivalent menu bar command does
+					// not use this, it has an associated Objective-C action method.
+					{
+						// reformat frontmost window using the specified preferences
+						if (received.attributes & kHICommandFromMenu)
+						{
+							My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+							CFStringRef						collectionName = nullptr;
+							
+							
+							if ((noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName)) &&
+								Preferences_IsContextNameInUse(Quills::Prefs::TERMINAL, collectionName))
+							{
+								Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+																			(Quills::Prefs::TERMINAL, collectionName),
+																			true/* is retained */);
+								
+								
+								if (namedSettings.exists())
+								{
+									setScreenPreferences(ptr, namedSettings.returnRef(), true/* animate */);
+								}
+								CFRelease(collectionName), collectionName = nullptr;
+							}
+						}
+						
+						result = noErr;
+					}
+					break;
+				
 				case kCommandTranslationTableDefault:
 					{
 						// change character set of frontmost window according to Default preferences
@@ -6838,7 +6887,8 @@ See also TerminalWindow_SetScreenDimensions().
 */
 void
 setScreenPreferences	(My_TerminalWindowPtr		inPtr,
-						 Preferences_ContextRef		inContext)
+						 Preferences_ContextRef		inContext,
+						 Boolean					inAnimateWindowChanges)
 {
 	TerminalScreenRef		activeScreen = getActiveScreen(inPtr);
 	
@@ -6868,7 +6918,7 @@ setScreenPreferences	(My_TerminalWindowPtr		inPtr,
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					Terminal_SetVisibleScreenDimensions(activeScreen, columns, rows);
-					setWindowToIdealSizeForDimensions(inPtr, columns, rows);
+					setWindowToIdealSizeForDimensions(inPtr, columns, rows, inAnimateWindowChanges);
 				}
 			}
 		}
@@ -6891,7 +6941,8 @@ void
 setStandardState	(My_TerminalWindowPtr	inPtr,
 					 UInt16					inScreenWidthInPixels,
 					 UInt16					inScreenHeightInPixels,
-					 Boolean				inResizeWindow)
+					 Boolean				inResizeWindow,
+					 Boolean				inAnimatedResize)
 {
 	SInt16		windowWidth = 0;
 	SInt16		windowHeight = 0;
@@ -6900,22 +6951,41 @@ setStandardState	(My_TerminalWindowPtr	inPtr,
 	getWindowSizeFromViewSize(inPtr, inScreenWidthInPixels, inScreenHeightInPixels, &windowWidth, &windowHeight);
 	(OSStatus)inPtr->windowResizeHandler.setWindowIdealSize(windowWidth, windowHeight);
 	{
-		Rect		bounds;
+		Rect		structureBounds;
+		Rect		contentBounds;
 		OSStatus	error = noErr;
 		
 		
-		error = GetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &bounds);
+		error = GetWindowBounds(returnCarbonWindow(inPtr), kWindowStructureRgn, &structureBounds);
 		assert_noerr(error);
+		error = GetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &contentBounds);
+		assert_noerr(error);
+		
 		// force the current size regardless (in reality, the event handlers
 		// will be consulted so that the window size is constrained); but
 		// resize at the same time, if that is applicable
 		if (inResizeWindow)
 		{
-			bounds.right = bounds.left + windowWidth;
-			bounds.bottom = bounds.top + windowHeight;
+			SInt16 const	kExtraWidth = ((structureBounds.right - structureBounds.left) -
+											(contentBounds.right - contentBounds.left));
+			SInt16 const	kExtraHeight = ((structureBounds.bottom - structureBounds.top) -
+											(contentBounds.bottom - contentBounds.top));
+			
+			
+			structureBounds.right = structureBounds.left + windowWidth + kExtraWidth;
+			structureBounds.bottom = structureBounds.top + windowHeight + kExtraHeight;
 		}
-		error = SetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &bounds);
-		assert_noerr(error);
+		if (inAnimatedResize)
+		{
+			error = TransitionWindow(returnCarbonWindow(inPtr), kWindowSlideTransitionEffect,
+										kWindowResizeTransitionAction, &structureBounds);
+			assert_noerr(error);
+		}
+		else
+		{
+			error = SetWindowBounds(returnCarbonWindow(inPtr), kWindowStructureRgn, &structureBounds);
+			assert_noerr(error);
+		}
 	}
 }// setStandardState
 
@@ -7096,7 +7166,8 @@ size.  Split-pane views are removed.
 void
 setWindowToIdealSizeForDimensions	(My_TerminalWindowPtr	inPtr,
 									 UInt16					inColumns,
-									 UInt16					inRows)
+									 UInt16					inRows,
+									 Boolean				inAnimateWindowChanges)
 {
 	if (false == inPtr->allViews.empty())
 	{
@@ -7107,7 +7178,7 @@ setWindowToIdealSizeForDimensions	(My_TerminalWindowPtr	inPtr,
 		
 		TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
 											inColumns, inRows, &screenWidth, &screenHeight);
-		setStandardState(inPtr, screenWidth, screenHeight, true/* resize window */);
+		setStandardState(inPtr, screenWidth, screenHeight, true/* resize window */, inAnimateWindowChanges);
 	}
 }// setWindowToIdealSizeForDimensions
 

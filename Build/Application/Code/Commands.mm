@@ -973,12 +973,17 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//case kHICommandCustomizeToolbar:
 		//	see EventLoop.mm
 		//	break;
-			
+		
+		//case kCommandTerminalDefault:
+		//case kCommandTerminalByFavoriteName:
+		//	see TerminalWindow.mm
+		//	break;
+		
 		case kCommandTerminalEmulatorSetup:
 			// UNIMPLEMENTED
 			Sound_StandardAlert();
 			break;
-			
+		
 		case kCommandBellEnabled:
 			if (isTerminal)
 			{
@@ -992,7 +997,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				Session_SetLocalEchoEnabled(frontSession, !Session_LocalEchoIsEnabled(frontSession));
 			}
 			break;
-			
+		
 		case kCommandWrapMode:
 			if (isTerminal)
 			{
