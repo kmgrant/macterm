@@ -243,6 +243,7 @@ English.lproj/KeypadFullScreenCocoa \
 English.lproj/KeypadFunctionKeysCocoa \
 English.lproj/KeypadVT220KeysCocoa \
 English.lproj/MainMenuCocoa \
+English.lproj/PrefPanelFullScreenCocoa \
 English.lproj/PrefsWindowCocoa \
 English.lproj/PrintPreviewCocoa \
 English.lproj/ServerBrowserCocoa \

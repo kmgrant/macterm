@@ -57,6 +57,10 @@ changes to an interface declared in a ".mm" file.
 */
 @interface PrefsWindow_Controller : NSWindowController
 {
+	IBOutlet NSView*		containerView;
+@private
+	NSMutableArray*			panelIDArray; // ordered array of "panelIdentifier" values
+	NSMutableDictionary*	panelsByID; // view managers (Panel_ViewManager subclasses) with their "panelIdentifier" values as keys
 }
 
 + (id)

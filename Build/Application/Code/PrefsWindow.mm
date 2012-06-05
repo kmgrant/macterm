@@ -1,5 +1,8 @@
 /*!	\file PrefsWindow.mm
 	\brief Implements the shell of the Preferences window.
+	
+	Note that this is in transition from Carbon to Cocoa,
+	and is not yet taking advantage of most of Cocoa.
 */
 /*###############################################################
 
@@ -76,8 +79,8 @@
 #import "Panel.h"
 #import "Preferences.h"
 #import "PrefPanelFormats.h"
+#import "PrefPanelFullScreen.h"
 #import "PrefPanelGeneral.h"
-#import "PrefPanelKiosk.h"
 #import "PrefPanelMacros.h"
 #import "PrefPanelSessions.h"
 #import "PrefPanelTerminals.h"
@@ -1362,7 +1365,7 @@ init ()
 		installPanel(PrefPanelTerminals_New());
 		installPanel(PrefPanelFormats_New());
 		installPanel(PrefPanelTranslations_New());
-		installPanel(PrefPanelKiosk_New());
+		installPanel(PrefPanelFullScreen_New());
 		
 		// footer callbacks
 		{
@@ -2508,6 +2511,8 @@ init
 	self = [super initWithWindowNibName:@"PrefsWindowCocoa"];
 	if (nil != self)
 	{
+		self->panelIDArray = [[NSMutableArray arrayWithCapacity:7/* arbitrary */] retain];
+		self->panelsByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
 	}
 	return self;
 }// init
@@ -2521,6 +2526,8 @@ Destructor.
 - (void)
 dealloc
 {
+	[self->panelIDArray release];
+	[self->panelsByID release];
 	[super dealloc];
 }// dealloc
 
@@ -2553,11 +2560,16 @@ itemForItemIdentifier:(NSString*)	itemIdentifier
 willBeInsertedIntoToolbar:(BOOL)	flag
 {
 #pragma unused(toolbar, flag)
-	NSToolbarItem*		result = nil;
+	NSToolbarItem*		result = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+	Panel_ViewManager*	itemPanel = [self->panelsByID objectForKey:itemIdentifier];
 	
 	
 	// NOTE: no need to handle standard items here
-	// UNIMPLEMENTED - need to create items for each valid preferences panel
+	assert(nil != itemPanel);
+	[result setLabel:[itemPanel panelName]];
+	[result setImage:[itemPanel panelIcon]];
+	[result setAction:[itemPanel panelDisplayAction]];
+	
 	return result;
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
 
@@ -2572,8 +2584,10 @@ in the given toolbar.
 toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 {
 #pragma unused(toolbar)
-	return [NSArray arrayWithObjects:
-						nil];
+	NSArray*	result = [[self->panelIDArray copy] autorelease];
+	
+	
+	return result;
 }// toolbarAllowedItemIdentifiers:
 
 
@@ -2606,6 +2620,84 @@ done in "init".)
 windowDidLoad
 {
 	[super windowDidLoad];
+	assert(nil != containerView);
+	
+	// create all panels
+	{
+		Panel_ViewManager*		newViewMgr = nil;
+		
+		
+		// “Full Screen” panel
+		newViewMgr = [[PrefPanelFullScreen_ViewManager alloc] init];
+		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
+		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
+		[newViewMgr release], newViewMgr = nil;
+		
+		// other panels TBD
+	}
+	
+	// update the user interface using the new panels
+	{
+		NSRect const	kOriginalContainerViewFrame = [self->containerView frame];
+		NSEnumerator*	eachObject = [self->panelIDArray objectEnumerator];
+		NSRect			newWindowFrame = [[self window] frame];
+		NSRect			containerViewFrame = kOriginalContainerViewFrame;
+		BOOL			firstView = NO;
+		
+		
+		// find the maximum width and height required by each panel
+		// (or use the original size of the preferences window,
+		// whichever is bigger)
+		while (NSString* panelIdentifier = [eachObject nextObject])
+		{
+			Panel_ViewManager*	viewMgr = [self->panelsByID objectForKey:panelIdentifier];
+			NSView*				panelContainer = [viewMgr managedView];
+			
+			
+			containerViewFrame.size.width = MAX(NSWidth([panelContainer frame]), NSWidth(containerViewFrame));
+			containerViewFrame.size.height = MAX(NSHeight([panelContainer frame]), NSHeight(containerViewFrame));
+		}
+		newWindowFrame.size.width += (NSWidth(containerViewFrame) - NSWidth(kOriginalContainerViewFrame));
+		newWindowFrame.size.height += (NSHeight(containerViewFrame) - NSHeight(kOriginalContainerViewFrame));
+		
+		// now auto-position the views
+		firstView = YES;
+		eachObject = [self->panelIDArray objectEnumerator];
+		while (NSString* panelIdentifier = [eachObject nextObject])
+		{
+			Panel_ViewManager*	viewMgr = [self->panelsByID objectForKey:panelIdentifier];
+			NSView*				panelContainer = [viewMgr managedView];
+			
+			
+			[self->containerView addSubview:panelContainer];
+			
+			// align all panels at the top of the window, and give
+			// all of them the same initial size
+			{
+				NSRect		newViewFrame = [panelContainer frame];
+				
+				
+				newViewFrame.origin.x = 0;
+				newViewFrame.origin.y = 0;
+				newViewFrame.size.width = NSWidth(containerViewFrame);
+				newViewFrame.size.height = NSHeight(containerViewFrame);
+				[panelContainer setFrame:newViewFrame];
+			}
+			
+			// hide all except the first panel
+			if (NO == firstView)
+			{
+				[panelContainer setHidden:YES];
+			}
+			else
+			{
+				firstView = NO;
+			}
+		}
+		
+		// make the window big enough for the panels
+		[[self window] setFrame:newWindowFrame display:NO];
+	}
 	
 	// create toolbar; has to be done programmatically, because
 	// IB only supports them in 10.5; which makes sense, you know,

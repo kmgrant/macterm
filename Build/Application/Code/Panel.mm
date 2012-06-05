@@ -1,6 +1,9 @@
-/*!	\file Panel.cp
+/*!	\file Panel.mm
 	\brief Abstract interface to allow panel-based windows
 	to be easily constructed.
+	
+	Note that this is in transition from Carbon to Cocoa,
+	and is not yet taking advantage of most of Cocoa.
 */
 /*###############################################################
 
@@ -31,26 +34,29 @@
 
 ###############################################################*/
 
-#include "Panel.h"
-#include <UniversalDefines.h>
+#import "Panel.h"
+#import <UniversalDefines.h>
 
 // Mac includes
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
+#import <CoreServices/CoreServices.h>
+#import <objc/objc-runtime.h>
 
 // library includes
-#include <CFRetainRelease.h>
-#include <Console.h>
-#include <FlagManager.h>
-#include <IconManager.h>
-#include <MemoryBlockPtrLocker.template.h>
-#include <MemoryBlocks.h>
+#import <CFRetainRelease.h>
+#import <CocoaExtensions.objc++.h>
+#import <Console.h>
+#import <FlagManager.h>
+#import <IconManager.h>
+#import <MemoryBlockPtrLocker.template.h>
+#import <MemoryBlocks.h>
 
 // resource includes
-#include "SpacingConstants.r"
+#import "SpacingConstants.r"
 
 // application includes
-#include "ConstantsRegistry.h"
+#import "ConstantsRegistry.h"
 
 
 
@@ -64,7 +70,6 @@ struct Panel
 		void*					auxiliaryDataPtr;	// arbitrary data
 		Panel_ChangeProcPtr		changedProc;		// called when anything changes in the panel
 		HIViewRef				container;			// the super-view of every panel view, if Carbon
-		NSView*					containerNSView;	// the super-view of every panel view, if Cocoa
 		CFRetainRelease			descriptor;			// an identifier that helps distinguish panels
 		
 		IconManagerIconRef		icon;
@@ -76,7 +81,6 @@ struct Panel
 	struct
 	{
 		HIWindowRef				owningWindow;		// the window associated with panel controls, if Carbon
-		NSWindow*				owningNSWindow;		// the window associated with panel controls, if Cocoa
 		HISize					preferredSize;		// user-specified dimensions of the panel
 	} utilizerWritable;
 	
@@ -136,11 +140,9 @@ Panel_New	(Panel_ChangeProcPtr	inProc)
 		ptr->customizerWritable.auxiliaryDataPtr = nullptr;
 		ptr->customizerWritable.changedProc = inProc;
 		ptr->customizerWritable.container = nullptr;
-		ptr->customizerWritable.containerNSView = nullptr;
 		ptr->customizerWritable.descriptor.setCFTypeRef(kPanel_InvalidKind);
 		ptr->customizerWritable.icon = IconManager_NewIcon();
 		ptr->utilizerWritable.owningWindow = nullptr;
-		ptr->utilizerWritable.owningNSWindow = nullptr;
 		ptr->utilizerWritable.preferredSize = CGSizeMake(0, 0);
 		ptr->selfRef = result;
 	}
@@ -221,40 +223,6 @@ Panel_CalculateTabFrame		(Float32	inPanelContainerWidth,
 	outTabFrameWidthHeight.width = inPanelContainerWidth - INTEGER_DOUBLED(HSP_TAB_AND_DIALOG);
 	outTabFrameWidthHeight.height = inPanelContainerHeight - INTEGER_DOUBLED(VSP_TAB_AND_DIALOG);
 }// CalculateTabFrame (4 arguments)
-
-
-/*!
-When an owning window needs to manipulate a panel,
-its code should invoke this routine.  The code
-responsible for customizing the specified panel
-should have already used the method
-Panel_SetContainerNSView() to set the super-view
-that embeds every other view in the panel.
-
-The owning window can then move the view provided
-by this routine, instantly relocating every view
-in the panel, or perform other operations, such
-as changing the visibility or active state of an
-entire panel.
-
-IMPORTANT:	If the panel is currently being used
-			in a Carbon window, the returned view
-			will be nullptr.
-
-(4.0)
-*/
-void
-Panel_GetContainerNSView	(Panel_Ref		inRef,
-							 NSView*&		outView)
-{
-	if (nullptr != inRef)
-	{
-		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
-		
-		
-		outView = ptr->customizerWritable.containerNSView;
-	}
-}// GetContainerNSView
 
 
 /*!
@@ -467,36 +435,6 @@ Panel_ReturnKind	(Panel_Ref	inRef)
 /*!
 Returns the window that a panel is in.  This
 property is set once, automatically, when a
-window fires the "kPanel_MessageCreateNSViews"
-message.
-
-IMPORTANT:	If the panel is currently being used
-			in a Carbon window, the returned
-			window will be nullptr.
-
-(4.0)
-*/
-NSWindow*
-Panel_ReturnOwningNSWindow	(Panel_Ref	inRef)
-{
-	NSWindow*	result = nullptr;
-	
-	
-	if (nullptr != inRef)
-	{
-		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
-		
-		
-		result = ptr->utilizerWritable.owningNSWindow;
-	}
-	
-	return result;
-}// ReturnOwningNSWindow
-
-
-/*!
-Returns the window that a panel is in.  This
-property is set once, automatically, when a
 window fires the "kPanel_MessageCreateViews"
 message.
 
@@ -553,9 +491,8 @@ Panel_ReturnShowCommandID	(Panel_Ref	inRef)
 
 
 /*!
-Sends the "kPanel_MessageCreateViews" to the
-specified panel’s handler, providing the handler
-the given window.
+Sends the "kPanel_MessageCreateViews" to the specified panel’s
+handler, providing the handler the given window.
 
 See "Panel.h" for more information on this event.
 
@@ -882,42 +819,9 @@ Panel_SetButtonIcon		(HIViewRef		inView,
 
 
 /*!
-Sets the Cocoa super-view that directly or indirectly
-embeds every view in the specified panel.
-
-A window that is Carbon-based should not call this;
-use Panel_SetContainerView() instead.
-
-A window that uses a Panel object generally requires
-custom panels to have a container view!  Without one,
-it is not possible for a window to include the views
-of a panel, much less manipulate them.  A window uses
-the method Panel_GetContainerNSView() to acquire the
-view that is specified here.
-
-(4.0)
-*/
-void
-Panel_SetContainerNSView	(Panel_Ref		inRef,
-							 NSView*		inView)
-{
-	if (nullptr != inRef)
-	{
-		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
-		
-		
-		ptr->customizerWritable.containerNSView = inView;
-	}
-}// SetContainerNSView
-
-
-/*!
 Sets the super-view (usually a user pane) that
 directly or indirectly embeds every view in the
 specified panel.
-
-A window that is Cocoa-based should not call this;
-use Panel_SetContainerNSView() instead.
 
 A window that uses a Panel object generally requires
 custom panels to have a container view!  Without one,
@@ -925,8 +829,6 @@ it is not possible for a window to include the views
 of a panel, much less manipulate them.  A window uses
 the method Panel_GetContainerView() to acquire the
 view that is specified here.
-
-See also Panel_SetContainerNSView().
 
 (3.0)
 */
@@ -1216,12 +1118,6 @@ panelChanged	(PanelPtr		inPtr,
 	if (nullptr != inPtr)
 	{
 		// automatically save this property, for convenience
-		if (inMessage == kPanel_MessageCreateNSViews)
-		{
-			inPtr->utilizerWritable.owningNSWindow = REINTERPRET_CAST(inDataPtr, NSWindow*);
-		}
-		
-		// automatically save this property, for convenience
 		if (inMessage == kPanel_MessageCreateViews)
 		{
 			inPtr->utilizerWritable.owningWindow = *(REINTERPRET_CAST(inDataPtr, HIWindowRef*));
@@ -1239,5 +1135,261 @@ panelChanged	(PanelPtr		inPtr,
 }// panelChanged
 
 } // anonymous namespace
+
+
+@implementation Panel_ViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithNibNamed:(NSString*)		aNibName
+delegate:(id< Panel_Delegate >)		aDelegate
+{
+	self = [super init];
+	if (nil != self)
+	{
+		delegate = aDelegate;
+		
+		// it is necessary to capture and release all top-level objects here
+		// so that "self" can actually be deallocated; otherwise, the implicit
+		// retain-count of 1 on each top-level object prevents deallocation
+		{
+			NSArray*	objects = nil;
+			NSNib*		loader = [[NSNib alloc] initWithNibNamed:aNibName bundle:nil];
+			
+			
+			if (NO == [loader instantiateNibWithOwner:self topLevelObjects:&objects])
+			{
+				[self dealloc], self = nil;
+			}
+			[loader release];
+			[objects makeObjectsPerformSelector:@selector(release)];
+		}
+	}
+	return self;
+}// initWithDelegate:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Instructs the view to save all changes and prepare to be torn down
+(e.g. in a modal sheet, when the user clicks OK).
+
+(4.1)
+*/
+- (IBAction)
+performCloseAndAccept:(id)	sender
+{
+#pragma unused(sender)
+	[self->delegate panelViewManager:self didFinishUsingContainerView:self->managedView userAccepted:YES];
+}// performCloseAndAccept:
+
+
+/*!
+Instructs the view to discard all changes and prepare to be torn
+down (e.g. in a modal sheet, when the user clicks Cancel).
+
+(4.1)
+*/
+- (IBAction)
+performCloseAndDiscard:(id)		sender
+{
+#pragma unused(sender)
+	[self->delegate panelViewManager:self didFinishUsingContainerView:self->managedView userAccepted:NO];
+}// performCloseAndDiscard:
+
+
+/*!
+Instructs the view to display context-sensitive help (e.g. when
+the user clicks the help button).
+
+(4.1)
+*/
+- (IBAction)
+performContextSensitiveHelp:(id)	sender
+{
+	[self->delegate panelViewManager:self didPerformContextSensitiveHelp:sender];
+}// performContextSensitiveHelp:
+
+
+#pragma mark Accessors
+
+
+/*!
+Returns the view that a window ought to focus first
+using NSWindow’s "makeFirstResponder:".
+
+(4.1)
+*/
+- (NSView*)
+logicalFirstResponder
+{
+	return self->logicalFirstResponder;
+}// logicalFirstResponder
+
+
+/*!
+Returns the view that contains the entire panel.
+
+(4.1)
+*/
+- (NSView*)
+managedView
+{
+	return self->managedView;
+}// managedView
+
+
+#pragma mark Overrides for Subclasses
+
+
+/*!
+Returns a selector that can be sent to the first responder
+in order to cause this panel to appear.  Aggregates (e.g.
+a window displaying panels in tabs) should interpret this
+message by bringing the appropriate panel to the front.
+
+(4.1)
+*/
+- (SEL)
+panelDisplayAction
+{
+	NSAssert(false, @"panelDisplayAction method must be implemented by Panel_ViewManager subclasses");
+	return nil;
+}// panelDisplayAction
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	NSAssert(false, @"panelIcon method must be implemented by Panel_ViewManager subclasses");
+	return nil;
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	NSAssert(false, @"panelIdentifier method must be implemented by Panel_ViewManager subclasses");
+	return nil;
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	NSAssert(false, @"panelName method must be implemented by Panel_ViewManager subclasses");
+	return @"";
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	NSAssert(false, @"panelResizeAxes method must be implemented by Panel_ViewManager subclasses");
+	return kPanel_ResizeConstraintBothAxes;
+}// panelResizeAxes
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark NSNibAwaking
+
+
+/*!
+Handles initialization that depends on user interface
+elements being properly set up.  (Everything else is just
+done in "init".)
+
+(4.1)
+*/
+- (void)
+awakeFromNib
+{
+	// NOTE: superclass does not implement "awakeFromNib", otherwise it should be called here
+	assert(nil != managedView);
+	assert(nil != logicalFirstResponder);
+	
+	[self->delegate panelViewManager:self didLoadContainerView:self->managedView];
+}// awakeFromNib
+
+
+@end // Panel_ViewManager
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

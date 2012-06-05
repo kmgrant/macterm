@@ -2,21 +2,10 @@
 	\brief Abstract interface to allow panel-based windows
 	to be easily constructed.
 	
-	Use the methods listed in this file to implement a panel’s
-	interface to its window, and then it can easily be used in
-	any window that supports this same interface to panels.
-	
-	Generally, your panel customizing code creates a panel as
-	a custom view, and assigns that view to a new Panel object.
-	This allows any window to incorporate a panel, provided
-	that the code for the window also implements this interface
-	completely.
-	
-	During the Carbon/Cocoa transition, panels might support
-	one or both types of window; the Panel_ReturnOwningWindow()
-	API returns nullptr if a panel has been instantiated in a
-	Cocoa window, and Panel_ReturnOwningNSWindow() returns
-	nullptr if the panel is in a Carbon window.
+	The C++ API is for Carbon legacy; Cocoa-based panels
+	should use a Cocoa-based NIB file to define a container
+	view and link it to a Panel_ViewManager subclass (the
+	file’s owner).
 */
 /*###############################################################
 
@@ -58,14 +47,10 @@
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
 #ifdef __OBJC__
-@class NSView;
-@class NSWindow;
-#else
-class NSView;
-class NSWindow;
+#	import <Cocoa/Cocoa.h>
 #endif
+#include <CoreServices/CoreServices.h>
 
 // application includes
 #include "Console.h"
@@ -77,6 +62,45 @@ class NSWindow;
 typedef CFStringRef Panel_Kind;
 CFStringRef const kPanel_InvalidKind = CFSTR("net.macterm.prefpanels.invalid");
 
+/*!
+An “edit type” describes how a panel behaves: is it
+implicitly used for a single data store or can it
+represent other data stores (e.g. in a master-detail
+view)?  Cocoa only.
+*/
+enum Panel_EditType
+{
+	kPanel_EditTypeNormal = 0,		//!< always overwrites a single data source
+	kPanel_EditTypeInspector = 1	//!< is expected to be able to change data sources at will, updating the UI
+};
+
+/*!
+Specifies which resize behavior is sensible for the panel.
+Useful in aggregates (like tab views) to decide how the
+overall window should behave.  Cocoa only.
+*/
+enum Panel_ResizeConstraint
+{
+	kPanel_ResizeConstraintBothAxes = 0,	//!< both horizontal and vertical resizes make sense
+	kPanel_ResizeConstraintNone = 1,		//!< the panel should not be resized
+	kPanel_ResizeConstraintHorizontal = 2,	//!< only left or right resizes are supported
+	kPanel_ResizeConstraintVertical = 3		//!< only top or bottom resizes are supported
+};
+
+/*!
+A state of visibility helps panels to decide what they
+should enable (e.g. sounds or animations, or auxiliary
+floating windows).  Cocoa only.
+*/
+enum Panel_Visibility
+{
+	kPanel_VisibilityDisplayed = 0,		//!< panel would normally be seen by the user (though its window may be hidden)
+	kPanel_VisibilityObscured = 1,		//!< panel would normally be seen by the user but it is not visible (e.g. window or application hidden);
+										//!  this state might be used to disable resource-intensive things that have no purpose when the panel
+										//!  cannot be seen by the user, such as animations
+	kPanel_VisibilityHidden = 2			//!< panel is explicitly set to an invisible state (e.g. tab view has another tab in front)
+};
+
 #pragma mark Types
 
 typedef struct Panel_OpaqueRef*		Panel_Ref;
@@ -87,10 +111,129 @@ struct Panel_DataSetTransition
 	void*	newDataSet;		// set to nullptr for a full reset with no new data (e.g. select nothing)
 };
 
+#ifdef __OBJC__
+
+@class Panel_ViewManager;
+
+@protocol Panel_Delegate
+
+// manager needs to know how the panel behaves; respond by filling in the "requestingEditType:" parameter
+- (void)
+panelViewManager:(Panel_ViewManager*)_
+requestingEditType:(Panel_EditType*)_;
+
+// view containing the panel has been loaded but no window has been created yet
+- (void)
+panelViewManager:(Panel_ViewManager*)_
+didLoadContainerView:(NSView*)_;
+
+// manager needs to know the size the panel would prefer to have; respond by filling in the "requestingIdealSize:" parameter
+- (void)
+panelViewManager:(Panel_ViewManager*)_
+requestingIdealSize:(NSSize*)_;
+
+// user has requested context-sensitive help; argument to "didPerformContextSensitiveHelp:" is the sender of the action
+- (void)
+panelViewManager:(Panel_ViewManager*)_
+didPerformContextSensitiveHelp:(id)_;
+
+// view will be redisplayed or obscured (e.g. in a tab view, because another tab is about to be displayed)
+- (void)
+panelViewManager:(Panel_ViewManager*)_
+containerView:(NSView*)_
+willChangeVisibility:(Panel_Visibility)_;
+
+// view has now been redisplayed or obscured (e.g. in a tab view, because another tab has been displayed)
+- (void)
+panelViewManager:(Panel_ViewManager*)_
+containerView:(NSView*)_
+didChangeVisibility:(Panel_Visibility)_;
+
+// data set to be represented by the view has changed; for inspector-style views this can happen more than once
+- (void)
+panelViewManager:(Panel_ViewManager*)_
+didChangeFromDataSet:(void*)_
+toDataSet:(void*)_;
+
+// sent when containing window, etc. will go away; save settings if accepted but no need to update the user interface because it will be destroyed
+- (void)
+panelViewManager:(Panel_ViewManager*)_
+didFinishUsingContainerView:(NSView*)_
+userAccepted:(BOOL)_;
+
+@end // Panel_Delegate
+
+
+/*!
+Loads a NIB file containing a single primary view bound
+to an owning object that subclasses Panel_ViewManager.
+
+The delegate specifies how the view is to be used in a
+larger context (e.g. a tab view in a window).
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface Panel_ViewManager : NSObject
+{
+	IBOutlet NSView*	managedView;
+	IBOutlet NSView*	logicalFirstResponder;
+@private
+	id< Panel_Delegate >	delegate;
+}
+
+// initializers
+
+// designated initializer
+- (id)
+initWithNibNamed:(NSString*)_
+delegate:(id< Panel_Delegate >)_;
+
+// accessors
+
+- (NSView*)
+logicalFirstResponder;
+
+- (NSView*)
+managedView;
+
+// actions
+
+- (IBAction)
+performCloseAndAccept:(id)_;
+
+- (IBAction)
+performCloseAndDiscard:(id)_;
+
+- (IBAction)
+performContextSensitiveHelp:(id)_;
+
+// overrides for subclasses (none of these is implemented in the base!)
+
+- (SEL)
+panelDisplayAction;
+
+- (NSImage*)
+panelIcon;
+
+- (NSString*)
+panelIdentifier;
+
+- (NSString*)
+panelName;
+
+- (Panel_ResizeConstraint)
+panelResizeAxes;
+
+@end
+
+#endif // __OBJC__
+
 #pragma mark Callbacks
 
 /*!
-Panel State Changed Notification Method
+Panel State Changed Notification Method (Carbon Only)
 
 This routine type is used to signal a panel when the
 dialog box that contains it has changed some aspect of
@@ -103,36 +246,21 @@ of panel is definitely able to work in the dialog.
 All dialogs must send the “one time” property changes
 in a logical order.
 
-NOTE:	Carbon Events and Cocoa have made the previous
-		interface somewhat redundant.  If there seems
-		to be something important missing here, look
-		for an equivalent Carbon Event (e.g. install
-		a kEventClassControl/kEventControlBoundsChanged
+NOTE:	Carbon Events have made the previous interface
+		somewhat redundant.  If there seems to be
+		something important missing here, look for an
+		equivalent Carbon Event (e.g. install a
+		kEventClassControl/kEventControlBoundsChanged
 		event on the panel’s container view to find out
-		when the panel size changes), or Cocoa method.
+		when the panel size changes).
 
 The possible messages are as follows:
-
-kPanel_MessageCreateNSViews
-	Cocoa-based windows must fire this property change
-	exactly once, immediately after the window is
-	created.  This allows panels to create their views
-	in the right window.  Older panels may not yet
-	support Cocoa, and will instead expect to receive
-	"kPanel_MessageCreateViews".
 
 kPanel_MessageCreateViews
 	Carbon-based windows must fire this property change
 	exactly once, immediately after the window is
 	created.  This allows panels to create their views
-	in the right window.  Panels that support only Cocoa
-	will expect to receive "kPanel_MessageCreateNSViews".
-	The implementation of a panel can choose to support
-	either Carbon or Cocoa, or both; Panel APIs such as
-	Panel_ReturnOwningWindow() and Panel_ReturnOwningNSWindow()
-	will always return nullptr for the target that does
-	not apply, allowing an implementation to determine
-	what kind of window a Panel_Ref is in.
+	in the right window.
 
 kPanel_MessageDestroyed
 	This property indicates that the panel is just about
@@ -236,7 +364,6 @@ kPanel_MessageNewVisibility
 typedef UInt32 Panel_Message;
 enum
 {
-	kPanel_MessageCreateNSViews = 'coco',				// data: -> NSWindow*, the owning Cocoa window
 	kPanel_MessageCreateViews = '1win',					// data: -> HIWindowRef*, the owning Carbon window
 	kPanel_MessageDestroyed = 'tobe',					// data: -> void*, the auxiliary data pointer
 	kPanel_MessageFocusFirst = 'focf',					// data: -> nullptr
@@ -315,10 +442,6 @@ OSStatus
 
 //!\name Methods for Dialogs
 //@{
-
-void
-	Panel_GetContainerNSView			(Panel_Ref					inRef,
-										 NSView*&					outView);
 
 void
 	Panel_GetContainerView				(Panel_Ref					inRef,
@@ -407,15 +530,8 @@ void*
 Panel_Kind
 	Panel_ReturnKind					(Panel_Ref					inRef);
 
-NSWindow*
-	Panel_ReturnOwningNSWindow			(Panel_Ref					inRef);
-
 HIWindowRef
 	Panel_ReturnOwningWindow			(Panel_Ref					inRef);
-
-void
-	Panel_SetContainerNSView			(Panel_Ref					inRef,
-										 NSView*					inView);
 
 void
 	Panel_SetContainerView				(Panel_Ref					inRef,

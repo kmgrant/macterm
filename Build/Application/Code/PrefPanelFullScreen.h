@@ -1,7 +1,7 @@
-/*!	\file PrefPanelKiosk.h
-	\brief Implements the Kiosk panel of Preferences.
+/*!	\file PrefPanelFullScreen.h
+	\brief Implements the Full Screen panel of Preferences.
 	
-	This panel lets the user configure full screen mode.
+	This panel lets the user configure Full Screen mode.
 */
 /*###############################################################
 
@@ -34,18 +34,72 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __PREFPANELKIOSK__
-#define __PREFPANELKIOSK__
+#ifndef __PREFPANELFULLSCREEN__
+#define __PREFPANELFULLSCREEN__
 
 // application includes
 #include "Panel.h"
 
 
 
+#pragma mark Types
+
+#ifdef __OBJC__
+
+/*!
+Loads a NIB file that defines this panel.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelFullScreen_ViewManager : Panel_ViewManager< Panel_Delegate >
+{
+}
+
+// accessors
+
+- (BOOL)
+isForceQuitEnabled;
+- (void)
+setForceQuitEnabled:(BOOL)_; // binding
+
+- (BOOL)
+isMenuBarShownOnDemand;
+- (void)
+setMenuBarShownOnDemand:(BOOL)_; // binding
+
+- (BOOL)
+isScrollBarVisible;
+- (void)
+setScrollBarVisible:(BOOL)_; // binding
+
+- (BOOL)
+isWindowFrameVisible;
+- (void)
+setWindowFrameVisible:(BOOL)_; // binding
+
+- (BOOL)
+offSwitchWindowEnabled;
+- (void)
+setOffSwitchWindowEnabled:(BOOL)_; // binding
+
+- (BOOL)
+superfluousEffectsEnabled;
+- (void)
+setSuperfluousEffectsEnabled:(BOOL)_; // binding
+
+@end
+
+#endif // __OBJC__
+
+
+
 #pragma mark Public Methods
 
+// CARBON LEGACY
 Panel_Ref
-	PrefPanelKiosk_New				();
+	PrefPanelFullScreen_New			();
 
 #endif
 

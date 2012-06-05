@@ -1,5 +1,8 @@
-/*!	\file PrefPanelKiosk.cp
-	\brief Implements the Kiosk panel of Preferences.
+/*!	\file PrefPanelFullScreen.mm
+	\brief Implements the Full Screen panel of Preferences.
+	
+	Note that this is in transition from Carbon to Cocoa,
+	and is not yet taking advantage of most of Cocoa.
 */
 /*###############################################################
 
@@ -30,39 +33,43 @@
 
 ###############################################################*/
 
-#include "PrefPanelKiosk.h"
-#include <UniversalDefines.h>
+#import "PrefPanelFullScreen.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <cstring>
+#import <cstring>
 
 // Mac includes
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
+#import <CoreServices/CoreServices.h>
+#import <objc/objc-runtime.h>
 
 // library includes
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <CommonEventHandlers.h>
-#include <Console.h>
-#include <DialogAdjust.h>
-#include <HIViewWrap.h>
-#include <HIViewWrapManip.h>
-#include <Localization.h>
-#include <MemoryBlocks.h>
-#include <NIBLoader.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CocoaExtensions.objc++.h>
+#import <CommonEventHandlers.h>
+#import <Console.h>
+#import <DialogAdjust.h>
+#import <HelpSystem.h>
+#import <HIViewWrap.h>
+#import <HIViewWrapManip.h>
+#import <Localization.h>
+#import <MemoryBlocks.h>
+#import <NIBLoader.h>
 
 // resource includes
-#include "SpacingConstants.r"
+#import "SpacingConstants.r"
 
 // application includes
-#include "AppResources.h"
-#include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
-#include "Panel.h"
-#include "Preferences.h"
-#include "UIStrings.h"
-#include "UIStrings_PrefsWindow.h"
+#import "AppResources.h"
+#import "ConstantsRegistry.h"
+#import "DialogUtilities.h"
+#import "Panel.h"
+#import "Preferences.h"
+#import "UIStrings.h"
+#import "UIStrings_PrefsWindow.h"
 
 
 
@@ -136,6 +143,18 @@ Boolean		updateCheckBoxPreference		(MyKioskPanelUIPtr, HIViewRef);
 
 } // anonymous namespace
 
+@interface PrefPanelFullScreen_ViewManager (PrefPanelFullScreen_ViewManagerInternal)
+
+- (BOOL)
+readFlagForPreferenceTag:(Preferences_Tag)_
+defaultValue:(BOOL)_;
+
+- (BOOL)
+writeFlag:(BOOL)_
+forPreferenceTag:(Preferences_Tag)_;
+
+@end // PrefPanelFullScreen_ViewManager (PrefPanelFullScreen_ViewManagerInternal)
+
 #pragma mark Variables
 namespace {
 
@@ -159,7 +178,7 @@ If any problems occur, nullptr is returned.
 (3.1)
 */
 Panel_Ref
-PrefPanelKiosk_New ()
+PrefPanelFullScreen_New ()
 {
 	Panel_Ref	result = Panel_New(panelChanged);
 	
@@ -630,5 +649,482 @@ updateCheckBoxPreference	(MyKioskPanelUIPtr		inInterfacePtr,
 }// updateCheckBoxPreference
 
 } // anonymous namespace
+
+
+@implementation PrefPanelFullScreen_ViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelFullScreenCocoa" delegate:self];
+	if (nil != self)
+	{
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isForceQuitEnabled
+{
+	return [self readFlagForPreferenceTag:kPreferences_TagKioskAllowsForceQuit defaultValue:NO];
+}
+- (void)
+setForceQuitEnabled:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskAllowsForceQuit];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save Force-Quit-in-full-screen preference");
+	}
+}// setForceQuitEnabled:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isMenuBarShownOnDemand
+{
+	return [self readFlagForPreferenceTag:kPreferences_TagKioskShowsMenuBar defaultValue:NO];
+}
+- (void)
+setMenuBarShownOnDemand:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsMenuBar];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save menu-bar-on-demand preference");
+	}
+}// setMenuBarShownOnDemand:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isScrollBarVisible
+{
+	return [self readFlagForPreferenceTag:kPreferences_TagKioskShowsScrollBar defaultValue:NO];
+}
+- (void)
+setScrollBarVisible:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsScrollBar];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save scroll-bar-in-full-screen preference");
+	}
+}// setScrollBarVisible:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isWindowFrameVisible
+{
+	return [self readFlagForPreferenceTag:kPreferences_TagKioskShowsWindowFrame defaultValue:NO];
+}
+- (void)
+setWindowFrameVisible:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsWindowFrame];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save window-frame-in-full-screen preference");
+	}
+}// setWindowFrameVisible:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+offSwitchWindowEnabled
+{
+	return [self readFlagForPreferenceTag:kPreferences_TagKioskShowsOffSwitch defaultValue:NO];
+}
+- (void)
+setOffSwitchWindowEnabled:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsOffSwitch];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save off-switch-window preference");
+	}
+}// setOffSwitchWindowEnabled:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+superfluousEffectsEnabled
+{
+	return [self readFlagForPreferenceTag:kPreferences_TagKioskUsesSuperfluousEffects defaultValue:NO];
+}
+- (void)
+setSuperfluousEffectsEnabled:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskUsesSuperfluousEffects];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save full-screen-effects-enabled preference");
+	}
+}// setSuperfluousEffectsEnabled:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeNormal;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = [[self managedView] frame].size;
+}
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	(HelpSystem_Result)HelpSystem_DisplayHelpWithoutContext();
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)		aViewManager
+containerView:(NSView*)						aContainerView
+willChangeVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aContainerView, aVisibility)
+}// panelViewManager:containerView:willChangeVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)		aViewManager
+containerView:(NSView*)						aContainerView
+didChangeVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aContainerView, aVisibility)
+}// panelViewManager:containerView:didChangeVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+Not applicable to this panel because it only sets global
+(Default) preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet, newDataSet)
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns a selector that can be sent to the first responder
+in order to cause this panel to appear.  Aggregates (e.g.
+a window displaying panels in tabs) should interpret this
+message by bringing the appropriate panel to the front.
+
+(4.1)
+*/
+- (SEL)
+panelDisplayAction
+{
+	return @selector(performDisplayPrefPanelFullScreen:);
+}// panelDisplayAction
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [NSImage imageNamed:@"IconForPrefPanelKiosk"];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.FullScreen";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Full Screen", @"PrefPanelFullScreen", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintHorizontal;
+}// panelResizeAxes
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+@end // PrefPanelFullScreen_ViewManager
+
+
+@implementation PrefPanelFullScreen_ViewManager (PrefPanelFullScreen_ViewManagerInternal)
+
+
+/*!
+Reads a true/false value from the Default preferences context.
+If the value is not found, the specified default is returned
+instead.
+
+IMPORTANT:	Only tags with values of type Boolean should be given!
+
+(4.1)
+*/
+- (BOOL)
+readFlagForPreferenceTag:(Preferences_Tag)	aTag
+defaultValue:(BOOL)							aDefault
+{
+	BOOL		result = aDefault;
+	Boolean		flagValue = false;
+	size_t		actualSize = 0;
+	
+	
+	if (kPreferences_ResultOK ==
+		Preferences_GetData(aTag, sizeof(flagValue), &flagValue, &actualSize))
+	{
+		result = (flagValue) ? YES : NO;
+	}
+	else
+	{
+		result = aDefault; // assume a default, if preference can’t be found
+	}
+	return result;
+}// readFlagForPreferenceTag:defaultValue:
+
+
+/*!
+Writes a true/false value to the Default preferences context and
+returns true only if this succeeds.
+
+IMPORTANT:	Only tags with values of type Boolean should be given!
+
+(4.1)
+*/
+- (BOOL)
+writeFlag:(BOOL)					aFlag
+forPreferenceTag:(Preferences_Tag)	aTag
+{
+	BOOL				result = NO;
+	Boolean				flagValue = (YES == aFlag) ? true : false;
+	Preferences_Result	prefsResult = Preferences_SetData(aTag, sizeof(flagValue), &flagValue);
+	
+	
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		result = YES;
+	}
+	return result;
+}// writeFlag:forPreferenceTag:
+
+
+@end // PrefPanelFullScreen_ViewManager (PrefPanelFullScreen_ViewManagerInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
