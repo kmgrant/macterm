@@ -181,6 +181,8 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSView*	logicalFirstResponder;
 @private
 	id< Panel_Delegate >	delegate;
+	SEL						panelDisplayAction;
+	id						panelDisplayTarget;
 }
 
 // initializers
@@ -198,6 +200,16 @@ logicalFirstResponder;
 - (NSView*)
 managedView;
 
+- (SEL)
+panelDisplayAction;
+- (void)
+setPanelDisplayAction:(SEL)_;
+
+- (id)
+panelDisplayTarget;
+- (void)
+setPanelDisplayTarget:(id)_;
+
 // actions
 
 - (IBAction)
@@ -210,9 +222,6 @@ performCloseAndDiscard:(id)_;
 performContextSensitiveHelp:(id)_;
 
 // overrides for subclasses (none of these is implemented in the base!)
-
-- (SEL)
-panelDisplayAction;
 
 - (NSImage*)
 panelIcon;

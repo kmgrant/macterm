@@ -176,6 +176,21 @@ void					sizePanels						(HISize const&);
 
 } // anonymous namespace
 
+@interface PrefsWindow_Controller (PrefsWindow_ControllerInternal)
+
+// new methods
+
+- (void)
+displayPanel:(Panel_ViewManager*)_
+withAnimation:(BOOL)_;
+
+// actions
+
+- (void)
+performDisplayPrefPanelFullScreen:(id)_;
+
+@end // PrefsWindow_Controller (PrefsWindow_ControllerInternal)
+
 #pragma mark Variables
 namespace {
 
@@ -2513,6 +2528,10 @@ init
 	{
 		self->panelIDArray = [[NSMutableArray arrayWithCapacity:7/* arbitrary */] retain];
 		self->panelsByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
+		self->windowSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
+		self->extraWindowSize = NSZeroSize; // set later
+		self->activePanel = nil;
+		self->fullScreenPanel = nil;
 	}
 	return self;
 }// init
@@ -2528,8 +2547,12 @@ dealloc
 {
 	[self->panelIDArray release];
 	[self->panelsByID release];
+	[self->windowSizesByID release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark Actions
 
 
 /*!
@@ -2541,7 +2564,7 @@ Invoked when the help button is clicked.
 performContextSensitiveHelp:(id)	sender
 {
 #pragma unused(sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	[self->activePanel performContextSensitiveHelp:sender];
 }// performContextSensitiveHelp:
 
 
@@ -2569,6 +2592,7 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	[result setLabel:[itemPanel panelName]];
 	[result setImage:[itemPanel panelIcon]];
 	[result setAction:[itemPanel panelDisplayAction]];
+	[result setTarget:[itemPanel panelDisplayTarget]];
 	
 	return result;
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
@@ -2606,6 +2630,19 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 }// toolbarDefaultItemIdentifiers:
 
 
+/*!
+Returns the identifiers for the items that may appear in a
+“selected” state (which is all of them).
+
+(4.1)
+*/
+- (NSArray*)
+toolbarSelectableItemIdentifiers:(NSToolbar*)	toolbar
+{
+	return [self toolbarAllowedItemIdentifiers:toolbar];
+}// toolbarSelectableItemIdentifiers:
+
+
 #pragma mark NSWindowController
 
 
@@ -2628,75 +2665,15 @@ windowDidLoad
 		
 		
 		// “Full Screen” panel
-		newViewMgr = [[PrefPanelFullScreen_ViewManager alloc] init];
+		self->fullScreenPanel = [[PrefPanelFullScreen_ViewManager alloc] init];
+		newViewMgr = self->fullScreenPanel;
+		[newViewMgr setPanelDisplayAction:@selector(performDisplayPrefPanelFullScreen:)];
+		[newViewMgr setPanelDisplayTarget:self];
 		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
 		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
 		[newViewMgr release], newViewMgr = nil;
 		
 		// other panels TBD
-	}
-	
-	// update the user interface using the new panels
-	{
-		NSRect const	kOriginalContainerViewFrame = [self->containerView frame];
-		NSEnumerator*	eachObject = [self->panelIDArray objectEnumerator];
-		NSRect			newWindowFrame = [[self window] frame];
-		NSRect			containerViewFrame = kOriginalContainerViewFrame;
-		BOOL			firstView = NO;
-		
-		
-		// find the maximum width and height required by each panel
-		// (or use the original size of the preferences window,
-		// whichever is bigger)
-		while (NSString* panelIdentifier = [eachObject nextObject])
-		{
-			Panel_ViewManager*	viewMgr = [self->panelsByID objectForKey:panelIdentifier];
-			NSView*				panelContainer = [viewMgr managedView];
-			
-			
-			containerViewFrame.size.width = MAX(NSWidth([panelContainer frame]), NSWidth(containerViewFrame));
-			containerViewFrame.size.height = MAX(NSHeight([panelContainer frame]), NSHeight(containerViewFrame));
-		}
-		newWindowFrame.size.width += (NSWidth(containerViewFrame) - NSWidth(kOriginalContainerViewFrame));
-		newWindowFrame.size.height += (NSHeight(containerViewFrame) - NSHeight(kOriginalContainerViewFrame));
-		
-		// now auto-position the views
-		firstView = YES;
-		eachObject = [self->panelIDArray objectEnumerator];
-		while (NSString* panelIdentifier = [eachObject nextObject])
-		{
-			Panel_ViewManager*	viewMgr = [self->panelsByID objectForKey:panelIdentifier];
-			NSView*				panelContainer = [viewMgr managedView];
-			
-			
-			[self->containerView addSubview:panelContainer];
-			
-			// align all panels at the top of the window, and give
-			// all of them the same initial size
-			{
-				NSRect		newViewFrame = [panelContainer frame];
-				
-				
-				newViewFrame.origin.x = 0;
-				newViewFrame.origin.y = 0;
-				newViewFrame.size.width = NSWidth(containerViewFrame);
-				newViewFrame.size.height = NSHeight(containerViewFrame);
-				[panelContainer setFrame:newViewFrame];
-			}
-			
-			// hide all except the first panel
-			if (NO == firstView)
-			{
-				[panelContainer setHidden:YES];
-			}
-			else
-			{
-				firstView = NO;
-			}
-		}
-		
-		// make the window big enough for the panels
-		[[self window] setFrame:newWindowFrame display:NO];
 	}
 	
 	// create toolbar; has to be done programmatically, because
@@ -2715,9 +2692,163 @@ windowDidLoad
 		[windowToolbar setDelegate:self];
 		[[self window] setToolbar:windowToolbar];
 	}
+	
+	// remember how much bigger the window is than the container view
+	{
+		NSRect	windowFrame = [[self window] frame];
+		NSRect	containerFrame = [self->containerView frame];
+		
+		
+		self->extraWindowSize = NSMakeSize(NSWidth(windowFrame) - NSWidth(containerFrame),
+											NSHeight(windowFrame) - NSHeight(containerFrame));
+	}
+	
+	// update the user interface using the new panels
+	{
+		NSEnumerator*	eachObject = [self->panelIDArray objectEnumerator];
+		BOOL			firstView = NO;
+		
+		
+		// add each panel as a subview and hide all except the first;
+		// give them all the initial size of the window (in reality
+		// they will be changed to a different size before display)
+		firstView = YES;
+		eachObject = [self->panelIDArray objectEnumerator];
+		while (NSString* panelIdentifier = [eachObject nextObject])
+		{
+			Panel_ViewManager*	viewMgr = [self->panelsByID objectForKey:panelIdentifier];
+			NSView*				panelContainer = [viewMgr managedView];
+			NSRect				panelFrame = [self->containerView frame];
+			
+			
+			[self->containerView addSubview:panelContainer];
+			panelFrame.origin.x = 0;
+			panelFrame.origin.y = 0;
+			[panelContainer setFrame:panelFrame];
+			[self->panelsByID setObject:viewMgr forKey:panelIdentifier];
+			
+			if (NO == firstView)
+			{
+				[panelContainer setHidden:YES];
+			}
+			else
+			{
+				[self displayPanel:viewMgr withAnimation:NO];
+				firstView = NO;
+			}
+		}
+	}
 }// windowDidLoad
 
 
 @end // PrefsWindow_Controller
+
+
+@implementation PrefsWindow_Controller (PrefsWindow_ControllerInternal)
+
+
+#pragma mark New Methods
+
+
+/*!
+If the specified panel is not the active panel, hides
+the active panel and then displays the given panel.
+
+The size of the window is synchronized with the new
+panel, and the previous window size is saved (each
+panel has a unique window size, allowing the user to
+choose the ideal layout for each one).
+
+(4.1)
+*/
+- (void)
+displayPanel:(Panel_ViewManager*)	aPanel
+withAnimation:(BOOL)				isAnimated
+{
+	if (aPanel != self->activePanel)
+	{
+		if (nil != self->activePanel)
+		{
+			// remember the window size that the user wanted for the previous panel
+			NSSize		containerSize = NSMakeSize([[self window] frame].size.width,
+													[[self window] frame].size.height);
+			NSArray*	sizeArray = [NSArray arrayWithObjects:
+												[NSNumber numberWithFloat:containerSize.width],
+												[NSNumber numberWithFloat:containerSize.height],
+												nil];
+			
+			
+			[self->windowSizesByID setObject:sizeArray forKey:[self->activePanel panelIdentifier]];
+			
+			// hide the old panel
+			[[self->activePanel managedView] setHidden:YES];
+		}
+		
+		// show the new panel
+		self->activePanel = aPanel;
+		[[[self window] toolbar] setSelectedItemIdentifier:[self->activePanel panelIdentifier]];
+		[[self->activePanel managedView] setHidden:NO];
+		[[self window] makeFirstResponder:[self->activePanel logicalFirstResponder]];
+		
+		// set the window to the size for the new panel (if none, use the
+		// size that was originally used for the panel in its NIB)
+		{
+			NSRect		newWindowFrame = [[self window] frame];
+			NSArray*	sizeArray = [self->windowSizesByID objectForKey:[aPanel panelIdentifier]];
+			
+			
+			if (nil == sizeArray)
+			{
+				NSSize	windowSize = NSMakeSize(NSWidth([[aPanel managedView] frame]) + self->extraWindowSize.width,
+												NSHeight([[aPanel managedView] frame]) + self->extraWindowSize.height);
+				
+				
+				// choose a frame size that uses the panel’s ideal size
+				sizeArray = [NSArray arrayWithObjects:
+										[NSNumber numberWithFloat:windowSize.width],
+										[NSNumber numberWithFloat:windowSize.height],
+										nil];
+				[self->windowSizesByID setObject:sizeArray forKey:[aPanel panelIdentifier]];
+			}
+			
+			// since the coordinate system anchors the window at the
+			// bottom-left corner and the intent is to keep the top-left
+			// corner constant, calculate an appropriate new origin when
+			// changing the size (don’t just change the size by itself)
+			{
+				assert(2 == [sizeArray count]);
+				Float32		newWidth = MAX([[sizeArray objectAtIndex:0] floatValue], [[self window] minSize].width);
+				Float32		newHeight = MAX([[sizeArray objectAtIndex:1] floatValue], [[self window] minSize].height);
+				
+				
+				newWindowFrame.origin.y += (NSHeight(newWindowFrame) - newHeight);
+				newWindowFrame.size.width = newWidth;
+				newWindowFrame.size.height = newHeight;
+			}
+			
+			// resize the window
+			[[self window] setFrame:newWindowFrame display:YES animate:isAnimated];
+		}
+	}
+}// displayPanel:withAnimation:
+
+
+#pragma mark Actions
+
+
+/*!
+Brings the “Full Screen” panel to the front.
+
+(4.1)
+*/
+- (void)
+performDisplayPrefPanelFullScreen:(id)	sender
+{
+#pragma unused(sender)
+	[self displayPanel:self->fullScreenPanel withAnimation:YES];
+}// performDisplayPrefPanelFullScreen:
+
+
+@end // PrefsWindow_Controller (PrefsWindow_ControllerInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

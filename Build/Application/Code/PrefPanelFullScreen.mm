@@ -878,7 +878,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpWithoutContext();
+	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -958,21 +958,6 @@ userAccepted:(BOOL)						isAccepted
 
 
 #pragma mark Panel_ViewManager
-
-
-/*!
-Returns a selector that can be sent to the first responder
-in order to cause this panel to appear.  Aggregates (e.g.
-a window displaying panels in tabs) should interpret this
-message by bringing the appropriate panel to the front.
-
-(4.1)
-*/
-- (SEL)
-panelDisplayAction
-{
-	return @selector(performDisplayPrefPanelFullScreen:);
-}// panelDisplayAction
 
 
 /*!

@@ -1153,6 +1153,8 @@ delegate:(id< Panel_Delegate >)		aDelegate
 	if (nil != self)
 	{
 		delegate = aDelegate;
+		panelDisplayAction = nil;
+		panelDisplayTarget = nil;
 		
 		// it is necessary to capture and release all top-level objects here
 		// so that "self" can actually be deallocated; otherwise, the implicit
@@ -1258,23 +1260,44 @@ managedView
 }// managedView
 
 
-#pragma mark Overrides for Subclasses
-
-
 /*!
-Returns a selector that can be sent to the first responder
-in order to cause this panel to appear.  Aggregates (e.g.
-a window displaying panels in tabs) should interpret this
-message by bringing the appropriate panel to the front.
+A selector that can be sent to the first responder in order to
+cause this panel to appear.  Aggregates (e.g. a window displaying
+panels in tabs) should interpret this message by bringing the
+appropriate panel to the front.
 
 (4.1)
 */
 - (SEL)
 panelDisplayAction
 {
-	NSAssert(false, @"panelDisplayAction method must be implemented by Panel_ViewManager subclasses");
-	return nil;
-}// panelDisplayAction
+	return self->panelDisplayAction;
+}
+- (void)
+setPanelDisplayAction:(SEL)		aSelector
+{
+	self->panelDisplayAction = aSelector;
+}// setPanelDisplayAction:
+
+
+/*!
+The object to which the "panelDisplayAction" is sent.
+
+(4.1)
+*/
+- (id)
+panelDisplayTarget
+{
+	return self->panelDisplayTarget;
+}
+- (void)
+setPanelDisplayTarget:(id)		anObject
+{
+	self->panelDisplayTarget = anObject;
+}// setPanelDisplayTarget:
+
+
+#pragma mark Overrides for Subclasses
 
 
 /*!

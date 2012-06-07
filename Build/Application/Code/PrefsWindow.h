@@ -40,6 +40,12 @@
 #	import <Cocoa/Cocoa.h>
 #endif
 
+// application includes
+#ifdef __OBJC__
+#	import "Panel.h"
+@class PrefPanelFullScreen_ViewManager;
+#endif
+
 
 
 #pragma mark Types
@@ -59,8 +65,12 @@ changes to an interface declared in a ".mm" file.
 {
 	IBOutlet NSView*		containerView;
 @private
-	NSMutableArray*			panelIDArray; // ordered array of "panelIdentifier" values
-	NSMutableDictionary*	panelsByID; // view managers (Panel_ViewManager subclasses) with their "panelIdentifier" values as keys
+	NSMutableArray*						panelIDArray; // ordered array of "panelIdentifier" values
+	NSMutableDictionary*				panelsByID; // view managers (Panel_ViewManager subclass) from "panelIdentifier" keys
+	NSMutableDictionary*				windowSizesByID; // NSArray* values (each with 2 NSNumber*) from "panelIdentifier" keys
+	NSSize								extraWindowSize; // stores window frame extra width and height (not belonging to a panel)
+	Panel_ViewManager*					activePanel;
+	PrefPanelFullScreen_ViewManager*	fullScreenPanel;
 }
 
 + (id)

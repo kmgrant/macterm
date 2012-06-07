@@ -41,14 +41,14 @@
       <object class="NSWindowTemplate" id="583842220">
         <int key="NSWindowStyleMask">15</int>
         <int key="NSWindowBacking">2</int>
-        <string key="NSWindowRect">{{304, 416}, {580, 510}}</string>
+        <string key="NSWindowRect">{{304, 416}, {500, 350}}</string>
         <int key="NSWTFlags">611844096</int>
         <string key="NSWindowTitle">Preferences: MacTerm</string>
         <string key="NSWindowClass">NSWindow</string>
         <nil key="NSViewClass"/>
         <nil key="NSUserInterfaceItemIdentifier"/>
         <string key="NSWindowContentMaxSize">{3.4028235e+38, 3.4028235e+38}</string>
-        <string key="NSWindowContentMinSize">{580, 510}</string>
+        <string key="NSWindowContentMinSize">{500, 350}</string>
         <object class="NSView" key="NSWindowView" id="406384019">
           <reference key="NSNextResponder"/>
           <int key="NSvFlags">256</int>
@@ -82,18 +82,18 @@
             </object>
             <object class="NSBox" id="239032832">
               <reference key="NSNextResponder" ref="406384019"/>
-              <int key="NSvFlags">18</int>
+              <int key="NSvFlags">274</int>
               <object class="NSMutableArray" key="NSSubviews">
                 <bool key="EncodedWithXMLCoder">YES</bool>
                 <object class="NSView" id="146786475">
                   <reference key="NSNextResponder" ref="239032832"/>
                   <int key="NSvFlags">274</int>
-                  <string key="NSFrameSize">{586, 484}</string>
+                  <string key="NSFrameSize">{506, 324}</string>
                   <reference key="NSSuperview" ref="239032832"/>
                   <string key="NSReuseIdentifierKey">_NS:21</string>
                 </object>
               </object>
-              <string key="NSFrame">{{-3, 28}, {586, 484}}</string>
+              <string key="NSFrame">{{-3, 28}, {506, 324}}</string>
               <reference key="NSSuperview" ref="406384019"/>
               <string key="NSReuseIdentifierKey">_NS:18</string>
               <string key="NSOffsets">{0, 0}</string>
@@ -127,11 +127,11 @@
               <bool key="NSTransparent">NO</bool>
             </object>
           </object>
-          <string key="NSFrameSize">{580, 510}</string>
+          <string key="NSFrameSize">{500, 350}</string>
           <reference key="NSSuperview"/>
         </object>
         <string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
-        <string key="NSMinSize">{580, 532}</string>
+        <string key="NSMinSize">{500, 372}</string>
         <string key="NSMaxSize">{3.4028235e+38, 3.4028235e+38}</string>
         <bool key="NSAutorecalculatesContentBorderThicknessMinY">NO</bool>
         <double key="NSContentBorderThicknessMinY">32</double>
@@ -261,12 +261,12 @@
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-          <string>{{391, 447}, {580, 510}}</string>
+          <string>{{391, 607}, {500, 350}}</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-          <string>{{391, 447}, {580, 510}}</string>
+          <string>{{391, 607}, {500, 350}}</string>
           <boolean value="NO"/>
           <boolean value="YES"/>
-          <string>{580, 510}</string>
+          <string>{500, 350}</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
         </object>
       </object>
