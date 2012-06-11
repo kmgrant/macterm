@@ -58,17 +58,6 @@ void
 
 //@}
 
-//!\name Translating Characters
-//@{
-
-OSStatus
-	TextTranslation_ConvertBufferToNewHandle	(UInt8*					inText,
-												 ByteCount				inLength,
-												 TECObjectRef			inConverter,
-												 Handle*				outNewHandleWithTranslatedText);
-
-//@}
-
 //!\name Utilities
 //@{
 

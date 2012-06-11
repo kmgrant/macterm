@@ -71,6 +71,7 @@ typedef std::vector< My_TextEncodingInfoPtr >	My_TextEncodingInfoList;
 #pragma mark Variables
 namespace {
 
+Boolean						gInitialized = false;
 TextEncodingBase			gPreferredEncodingBase = kCFStringEncodingMacRoman;
 My_TextEncodingInfoList&	gTextEncodingInfoList ()	{ static My_TextEncodingInfoList x; return x; }
 
@@ -80,7 +81,7 @@ My_TextEncodingInfoList&	gTextEncodingInfoList ()	{ static My_TextEncodingInfoLi
 namespace {
 
 void	clearCharacterSetList		();
-void	fillInCharacterSetList		();
+void	fillInCharacterSetList		(Boolean = false);
 bool	textEncodingInfoComparer	(My_TextEncodingInfoPtr, My_TextEncodingInfoPtr);
 
 } // anonymous namespace
@@ -88,32 +89,6 @@ bool	textEncodingInfoComparer	(My_TextEncodingInfoPtr, My_TextEncodingInfoPtr);
 
 
 #pragma mark Public Methods
-
-/*!
-Reads all available translation tables and appends
-their names to the given menu.  You must invoke
-this routine before any other routines from this
-module.
-
-(2.6)
-*/
-void
-TextTranslation_Init ()
-{
-	fillInCharacterSetList();
-}// Init
-
-
-/*!
-Call this method after you are finished with this
-module, to free resources.
-*/
-void
-TextTranslation_Done ()
-{
-	clearCharacterSetList();
-}// Done
-
 
 /*!
 Inserts items at the end of the specified menu
@@ -133,6 +108,9 @@ TextTranslation_AppendCharacterSetsToMenu	(MenuRef	inToWhichMenu,
 	My_TextEncodingInfoList::const_iterator		textEncodingInfoIterator;
 	MenuItemIndex								currentMenuItemIndex = CountMenuItems(inToWhichMenu);
 	
+	
+	// initialize the module if necessary
+	fillInCharacterSetList();
 	
 	for (textEncodingInfoIterator = gTextEncodingInfoList().begin();
 			textEncodingInfoIterator != gTextEncodingInfoList().end(); ++textEncodingInfoIterator)
@@ -173,6 +151,9 @@ TextTranslation_ContextReturnEncoding	(Preferences_ContextRef		inContext,
 	Preferences_Result	prefsResult = kPreferences_ResultOK;
 	size_t				actualSize = 0;
 	
+	
+	// initialize the module if necessary
+	fillInCharacterSetList();
 	
 	// first search for a name; prefer this as a way to express the
 	// desired character set, but fall back on a simple encoding ID
@@ -230,6 +211,9 @@ TextTranslation_ContextSetEncoding	(Preferences_ContextRef		inContext,
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	
 	
+	// initialize the module if necessary
+	fillInCharacterSetList();
+	
 	// set name; this is preferred by readers since it is easier to
 	// tell at a glance what the preference actually is
 	if (nullptr != selectedEncodingIANAName)
@@ -282,105 +266,6 @@ TextTranslation_ContextSetEncoding	(Preferences_ContextRef		inContext,
 	
 	return result;
 }// ContextSetEncoding
-
-
-/*!
-Persistently translates a buffer using the given
-text encoding converter (i.e. if the converter
-cannot translate all the text at once, this
-method keeps trying until it does).  Since the
-encoded text might be longer than the original
-(e.g. a single character requiring multiple bytes
-to represent using a different encoding), it
-cannot be translated in place - therefore, a new
-handle is returned containing the translated text.
-If there are memory problems, "memFullErr" is the
-result, and the output handle is invalid.
-
-(3.0)
-*/
-OSStatus
-TextTranslation_ConvertBufferToNewHandle	(UInt8*			inText,
-											 ByteCount		inLength,
-											 TECObjectRef	inConverter,
-											 Handle*		outNewHandleWithTranslatedText)
-{
-	OSStatus	result = noErr;
-	
-	
-	if ((inText != nullptr) && (outNewHandleWithTranslatedText != nullptr))
-	{
-		enum
-		{
-			kOutputBufferSize = 4096	// arbitrary
-		};
-		Ptr				outputBuffer = nullptr;
-		UInt8*			inputPtr = nullptr;
-		ByteCount		inputLength = 0,
-						actualInputLength = 0,
-						actualOutputLength = 0;
-		
-		
-		// create a handle that will ultimate contain all of the translated text
-		*outNewHandleWithTranslatedText = Memory_NewHandleInProperZone(kOutputBufferSize, kMemoryBlockLifetimeLong);
-		if (*outNewHandleWithTranslatedText == nullptr) result = memFullErr;
-		else
-		{
-			inputLength = inLength;
-			inputPtr = inText;
-			outputBuffer = Memory_NewPtr(kOutputBufferSize);
-			if (outputBuffer == nullptr) result = memFullErr;
-			else
-			{
-				Ptr			translatedBufferPtr = nullptr;
-				Boolean		stillConverting = true;
-				
-				
-				HLock(*outNewHandleWithTranslatedText);
-				translatedBufferPtr = *(*outNewHandleWithTranslatedText);
-				
-				// convert portions of the text until it is all converted
-				do
-				{
-					if (stillConverting)
-					{
-						// convert a chunk of text
-						result = TECConvertText(inConverter, inputPtr, inputLength, &actualInputLength,
-												(UInt8*)outputBuffer, kOutputBufferSize, &actualOutputLength);
-						if (result != kTECUsedFallbacksStatus) stillConverting = false;
-					}
-					else
-					{
-						// flush remaining text from converter’s internal buffers
-						result = TECFlushText(inConverter, (UInt8*)outputBuffer,
-												kOutputBufferSize, &actualOutputLength);
-					}
-					
-					if (result == noErr)
-					{
-						// append the newly-translated text to the final buffer; but first, make sure
-						// there is enough memory to resize the output buffer to accommodate the text
-						result = Memory_SetHandleSize(*outNewHandleWithTranslatedText,
-														GetHandleSize(*outNewHandleWithTranslatedText) +
-															actualOutputLength);
-						if (result == noErr)
-						{
-							BlockMoveData(outputBuffer, translatedBufferPtr, actualOutputLength);
-							translatedBufferPtr += actualOutputLength;
-						}
-					}
-					inputPtr += actualInputLength;
-					inputLength -= actualInputLength;
-				} while ((result == kTECUsedFallbacksStatus) || (result == kTECNeedFlushStatus));
-				
-				Memory_DisposePtr(&outputBuffer);
-				HUnlock(*outNewHandleWithTranslatedText);
-			}
-		}
-	}
-	
-	return result;
-}// ConvertBufferToNewHandle
 
 
 /*!
@@ -477,6 +362,9 @@ would add.
 UInt16
 TextTranslation_ReturnCharacterSetCount ()
 {
+	// initialize the module if necessary
+	fillInCharacterSetList();
+	
 	return gTextEncodingInfoList().size();
 }// ReturnCharacterSetCount
 
@@ -502,6 +390,9 @@ TextTranslation_ReturnCharacterSetIndex		(CFStringEncoding	inTextEncoding)
 	My_TextEncodingInfoPtr						dataPtr = nullptr;
 	My_TextEncodingInfoList::const_iterator		textEncodingInfoIterator;
 	
+	
+	// initialize the module if necessary
+	fillInCharacterSetList();
 	
 	// look for matching encoding information
 	for (i = 1, textEncodingInfoIterator = gTextEncodingInfoList().begin();
@@ -535,6 +426,9 @@ TextTranslation_ReturnIndexedCharacterSet	(UInt16		inOneBasedIndex)
 	My_TextEncodingInfoPtr	dataPtr = nullptr;
 	
 	
+	// initialize the module if necessary
+	fillInCharacterSetList();
+	
 	// look for matching encoding information
 	dataPtr = gTextEncodingInfoList()[inOneBasedIndex - 1];
 	if (dataPtr != nullptr) result = dataPtr->textEncoding;
@@ -567,6 +461,8 @@ clearCharacterSetList ()
 		dataPtr = *textEncodingInfoIterator;
 		if (nullptr != dataPtr) delete dataPtr;
 	}
+	
+	gInitialized = false;
 }// clearCharacterSetList
 
 
@@ -582,68 +478,73 @@ NOTE:	MacTerm should re-invoke this method
 (3.0)
 */
 void
-fillInCharacterSetList ()
+fillInCharacterSetList	(Boolean	inForce)
 {
-	CFStringEncoding			currentEncoding = GetApplicationTextEncoding();
-	TextEncodingBase			currentBase = kTextEncodingMacRoman;
-	My_TextEncodingInfoPtr		dataPtr = nullptr;
-	CFStringEncoding const*		availableEncodings = nullptr;
-	CFStringRef					encodingName = nullptr;
-	UInt32						loopTerminator = 0L;
-	
-	
-	gPreferredEncodingBase = GetTextEncodingBase(currentEncoding);
-	
-	// create one structure for each unique Text Encoding that is available
-	for (availableEncodings = CFStringGetListOfAvailableEncodings();
-			(nullptr != availableEncodings) && (kCFStringEncodingInvalidId != *availableEncodings);
-			++availableEncodings, ++loopTerminator)
+	if ((false == gInitialized) || (inForce))
 	{
-		// use the text encoding base to determine which menu items will have identical names
-		currentBase = GetTextEncodingBase(*availableEncodings);
+		CFStringEncoding			currentEncoding = GetApplicationTextEncoding();
+		TextEncodingBase			currentBase = kTextEncodingMacRoman;
+		My_TextEncodingInfoPtr		dataPtr = nullptr;
+		CFStringEncoding const*		availableEncodings = nullptr;
+		CFStringRef					encodingName = nullptr;
+		UInt32						loopTerminator = 0L;
 		
-		// find an appropriate name for the menu item
-		encodingName = CFStringGetNameOfEncoding(*availableEncodings);
-		if (nullptr == encodingName) Console_WriteValue("could not get the name of encoding", *availableEncodings);
-		else
+		
+		gPreferredEncodingBase = GetTextEncodingBase(currentEncoding);
+		
+		// create one structure for each unique Text Encoding that is available
+		for (availableEncodings = CFStringGetListOfAvailableEncodings();
+				(nullptr != availableEncodings) && (kCFStringEncodingInvalidId != *availableEncodings);
+				++availableEncodings, ++loopTerminator)
 		{
-			// add data to list
-			try
-			{
-				dataPtr = new My_TextEncodingInfo;
-			}
-			catch (std::bad_alloc)
-			{
-				dataPtr = nullptr;
-			}
+			// use the text encoding base to determine which menu items will have identical names
+			currentBase = GetTextEncodingBase(*availableEncodings);
 			
-			if (nullptr == dataPtr) Console_WriteLine("not enough memory to add encoding info!");
+			// find an appropriate name for the menu item
+			encodingName = CFStringGetNameOfEncoding(*availableEncodings);
+			if (nullptr == encodingName) Console_WriteValue("could not get the name of encoding", *availableEncodings);
 			else
 			{
-				dataPtr->base = currentBase;
-				dataPtr->menuItemEncoding = *availableEncodings;
-				dataPtr->textEncoding = *availableEncodings;
-				dataPtr->name.setCFTypeRef(encodingName);
-				//Console_WriteValueCFString("adding", encodingName);
+				// add data to list
+				try
 				{
-					My_TextEncodingInfoList::size_type const	kLength = gTextEncodingInfoList().size();
-					
-					
-					gTextEncodingInfoList().push_back(dataPtr);
-					assert(gTextEncodingInfoList().size() == (1 + kLength));
+					dataPtr = new My_TextEncodingInfo;
 				}
+				catch (std::bad_alloc)
+				{
+					dataPtr = nullptr;
+				}
+				
+				if (nullptr == dataPtr) Console_WriteLine("not enough memory to add encoding info!");
+				else
+				{
+					dataPtr->base = currentBase;
+					dataPtr->menuItemEncoding = *availableEncodings;
+					dataPtr->textEncoding = *availableEncodings;
+					dataPtr->name.setCFTypeRef(encodingName);
+					//Console_WriteValueCFString("adding", encodingName);
+					{
+						My_TextEncodingInfoList::size_type const	kLength = gTextEncodingInfoList().size();
+						
+						
+						gTextEncodingInfoList().push_back(dataPtr);
+						assert(gTextEncodingInfoList().size() == (1 + kLength));
+					}
+				}
+			}
+			
+			if (loopTerminator > 500/* arbitrary */)
+			{
+				Console_WriteLine("WARNING, forcing text encoding loop to terminate after too many iterations");
+				break;
 			}
 		}
 		
-		if (loopTerminator > 500/* arbitrary */)
-		{
-			Console_WriteLine("WARNING, forcing text encoding loop to terminate after too many iterations");
-			break;
-		}
+		// sort items by name and by encoding base
+		std::sort(gTextEncodingInfoList().begin(), gTextEncodingInfoList().end(), textEncodingInfoComparer);
+		
+		gInitialized = true;
 	}
-	
-	// sort items by name and by encoding base
-	std::sort(gTextEncodingInfoList().begin(), gTextEncodingInfoList().end(), textEncodingInfoComparer);
 }// fillInCharacterSetList
 
 

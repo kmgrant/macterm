@@ -81,7 +81,6 @@
 #include "TerminalBackground.h"
 #include "TerminalView.h"
 #include "Terminology.h"
-#include "TextTranslation.h"
 #include "UIStrings.h"
 
 
@@ -163,11 +162,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		SessionFactory_Init();
 	#if RUN_MODULE_TESTS
 		//SessionFactory_RunTests();
-	#endif
-		
-		TextTranslation_Init();
-	#if RUN_MODULE_TESTS
-		//TextTranslation_RunTests();
 	#endif
 		
 		Commands_Init();
@@ -348,7 +342,6 @@ Initialize_ApplicationShutDownRemainingComponents ()
 	TerminalBackground_Done();
 	Commands_Done();
 	SessionFactory_Done();
-	TextTranslation_Done();
 	Alert_Done();
 	Cursors_Done();
 	Undoables_Done();
