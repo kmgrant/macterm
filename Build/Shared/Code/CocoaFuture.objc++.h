@@ -63,6 +63,32 @@
 
 #pragma mark Types
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_4
+
+
+// Things that are implemented ONLY on Mac OS X 10.4 and beyond.
+// These declarations should match the latest SDK.
+//
+// WARNING:	You MUST use "respondsToSelector:" or an equivalent
+//			mechanism to guard against use of these methods on
+//			older OSes.  The advantage of importing this file
+//			is that you can directly invoke the target method
+//			(in an if-statement, say) without seeing compiler
+//			warnings.  Note that "performSelector:" is also an
+//			option, but that is much more cumbersome for APIs
+//			that take or return non-objects.
+
+
+@interface NSWindow (NSWindowExtensionsFromTiger)
+
+- (void)
+setShowsToolbarButton:(BOOL)_;
+
+@end
+
+#endif // MAC_OS_X_VERSION_10_4
+
+
 #if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5
 
 
