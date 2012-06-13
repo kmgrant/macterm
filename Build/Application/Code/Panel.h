@@ -122,7 +122,7 @@ struct Panel_DataSetTransition
 panelViewManager:(Panel_ViewManager*)_
 requestingEditType:(Panel_EditType*)_;
 
-// view containing the panel has been loaded but no window has been created yet
+// view containing the panel has been loaded but no window has been created yet (WARNING: subclasses that delegate to themselves will not be initialized yet)
 - (void)
 panelViewManager:(Panel_ViewManager*)_
 didLoadContainerView:(NSView*)_;
@@ -194,6 +194,9 @@ delegate:(id< Panel_Delegate >)_;
 
 // accessors
 
+- (id< Panel_Delegate >)
+delegate;
+
 - (NSView*)
 logicalFirstResponder;
 
@@ -209,6 +212,9 @@ setPanelDisplayAction:(SEL)_;
 panelDisplayTarget;
 - (void)
 setPanelDisplayTarget:(id)_;
+
+- (Panel_EditType)
+panelEditType;
 
 // actions
 

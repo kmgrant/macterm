@@ -1201,7 +1201,7 @@ Instructs the view to save all changes and prepare to be torn down
 performCloseAndAccept:(id)	sender
 {
 #pragma unused(sender)
-	[self->delegate panelViewManager:self didFinishUsingContainerView:self->managedView userAccepted:YES];
+	[[self delegate] panelViewManager:self didFinishUsingContainerView:self->managedView userAccepted:YES];
 }// performCloseAndAccept:
 
 
@@ -1215,7 +1215,7 @@ down (e.g. in a modal sheet, when the user clicks Cancel).
 performCloseAndDiscard:(id)		sender
 {
 #pragma unused(sender)
-	[self->delegate panelViewManager:self didFinishUsingContainerView:self->managedView userAccepted:NO];
+	[[self delegate] panelViewManager:self didFinishUsingContainerView:self->managedView userAccepted:NO];
 }// performCloseAndDiscard:
 
 
@@ -1228,11 +1228,24 @@ the user clicks the help button).
 - (IBAction)
 performContextSensitiveHelp:(id)	sender
 {
-	[self->delegate panelViewManager:self didPerformContextSensitiveHelp:sender];
+	[[self delegate] panelViewManager:self didPerformContextSensitiveHelp:sender];
 }// performContextSensitiveHelp:
 
 
 #pragma mark Accessors
+
+
+/*!
+Returns the object that receives messages defined in the
+Panel_Delegate protocol.
+
+(4.1)
+*/
+- (id< Panel_Delegate >)
+delegate
+{
+	return self->delegate;
+}// delegate
 
 
 /*!
@@ -1295,6 +1308,28 @@ setPanelDisplayTarget:(id)		anObject
 {
 	self->panelDisplayTarget = anObject;
 }// setPanelDisplayTarget:
+
+
+/*!
+Returns the type of editing that this panel does: either
+it edits a single data set, or it is able to continuously
+update itself as data sets are changed (see the delegate
+method "panelViewManager:didChangeFromDataSet:toDataSet:").
+
+This invokes "panelViewManager:requestingEditType:" on the
+delegate.
+
+(4.1)
+*/
+- (Panel_EditType)
+panelEditType
+{
+	Panel_EditType		result = kPanel_EditTypeNormal;
+	
+	
+	[[self delegate] panelViewManager:self requestingEditType:&result];
+	return result;
+}// panelEditType
 
 
 #pragma mark Overrides for Subclasses
@@ -1409,7 +1444,7 @@ awakeFromNib
 	assert(nil != managedView);
 	assert(nil != logicalFirstResponder);
 	
-	[self->delegate panelViewManager:self didLoadContainerView:self->managedView];
+	[[self delegate] panelViewManager:self didLoadContainerView:self->managedView];
 }// awakeFromNib
 
 
