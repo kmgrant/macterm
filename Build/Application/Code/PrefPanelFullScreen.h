@@ -39,6 +39,7 @@
 
 // application includes
 #include "Panel.h"
+#include "PrefsWindow.h"
 
 
 
@@ -53,7 +54,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelFullScreen_ViewManager : Panel_ViewManager< Panel_Delegate >
+@interface PrefPanelFullScreen_ViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
 {
 }
 

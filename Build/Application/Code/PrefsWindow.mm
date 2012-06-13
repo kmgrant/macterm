@@ -43,7 +43,9 @@
 
 // Mac includes
 #import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
 #import <CoreServices/CoreServices.h>
+#import <objc/objc-runtime.h>
 
 // library includes
 #import <AlertMessages.h>
@@ -52,6 +54,8 @@
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
 #import <CocoaBasic.h>
+#import <CocoaExtensions.objc++.h>
+#import <CocoaFuture.objc++.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
 #import <Cursors.h>
@@ -75,6 +79,7 @@
 #import "ConstantsRegistry.h"
 #import "DialogUtilities.h"
 #import "EventLoop.h"
+#import "FileUtilities.h"
 #import "HelpSystem.h"
 #import "Panel.h"
 #import "Preferences.h"
@@ -86,6 +91,7 @@
 #import "PrefPanelTerminals.h"
 #import "PrefPanelTranslations.h"
 #import "PrefPanelWorkspaces.h"
+#import "QuillsPrefs.h"
 #import "UIStrings.h"
 #import "UIStrings_PrefsWindow.h"
 
@@ -120,6 +126,12 @@ HIViewID const		idMyButtonMoveCollectionDown	= { 'MvDC', 0/* ID */ };
 HIViewID const		idMyButtonManipulateCollection	= { 'MnpC', 0/* ID */ };
 FourCharCode const	kMyDataBrowserPropertyIDSets	= 'Sets';
 
+/*!
+The data for "kMy_PrefsWindowSourceListDataType" should be an
+NSKeyedArchive of an NSIndexSet object (dragged row index).
+*/
+const NSString*		kMy_PrefsWindowSourceListDataType = @"net.macterm.MacTerm.prefswindow.sourcelistdata";
+
 } // anonymous namespace
 
 #pragma mark Types
@@ -140,6 +152,51 @@ typedef std::vector< HIToolbarItemRef >		CategoryToolbarItems;
 typedef std::map< UInt32, SInt16 >			IndexByCommandID;
 
 } // anonymous namespace
+
+/*!
+This class represents a particular preferences context
+in the source list.
+*/
+@interface PrefsWindow_Collection : NSObject
+{
+@private
+	Preferences_ContextRef		preferencesContext;
+	BOOL						isDefault;
+}
+
+// initializers
+
+- (id)
+initWithPreferencesContext:(Preferences_ContextRef)_
+asDefault:(BOOL)_;
+
+// accessors
+
+- (NSString*)
+boundName;
+- (void)
+setBoundName:(NSString*)_; // binding
+
+- (NSString*)
+description;
+- (void)
+setDescription:(NSString*)_; // binding
+
+- (BOOL)
+isEditable; // binding
+
+- (Preferences_ContextRef)
+preferencesContext;
+
+// NSObject
+
+- (unsigned int)
+hash;
+
+- (BOOL)
+isEqual:(id)_;
+
+@end // PrefsWindow_Collection
 
 #pragma mark Internal Method Prototypes
 namespace {
@@ -180,14 +237,39 @@ void					sizePanels						(HISize const&);
 
 // new methods
 
+- (Quills::Prefs::Class)
+currentPreferencesClass;
+
+- (Preferences_ContextRef)
+currentPreferencesContext;
+
+- (void)
+didEndExportPanel:(NSSavePanel*)_
+returnCode:(int)_
+contextInfo:(void*)_;
+
+- (void)
+didEndImportPanel:(NSOpenPanel*)_
+returnCode:(int)_
+contextInfo:(void*)_;
+
 - (void)
 displayPanel:(Panel_ViewManager*)_
 withAnimation:(BOOL)_;
+
+- (void)
+rebuildSourceList;
+
+- (void)
+updateUserInterfaceForSourceListTransition:(id)_;
 
 // actions
 
 - (void)
 performDisplayPrefPanelFullScreen:(id)_;
+
+- (void)
+performDisplayPrefPanelTranslations:(id)_;
 
 @end // PrefsWindow_Controller (PrefsWindow_ControllerInternal)
 
@@ -1769,9 +1851,10 @@ newPanelSelector	(Panel_Ref		inPanel)
 
 /*!
 Invoked whenever a monitored preference value is changed
-(see TerminalView_Init() to see which preferences are
-monitored).  This routine responds by ensuring that internal
-variables are up to date for the changed preference.
+(see init() to see which preferences are monitored).
+
+This routine responds by ensuring that the list of
+contexts displayed to the user is up-to-date.
 
 (3.0)
 */
@@ -2493,6 +2576,197 @@ sizePanels	(HISize const&		inInitialSize)
 } // anonymous namespace
 
 
+@implementation PrefsWindow_Collection
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesContext:(Preferences_ContextRef)		aContext
+asDefault:(BOOL)										aFlag
+{
+	self = [super init];
+	if (nil != self)
+	{
+		self->preferencesContext = aContext;
+		if (nullptr != self->preferencesContext)
+		{
+			Preferences_RetainContext(self->preferencesContext);
+		}
+		self->isDefault = aFlag;
+	}
+	return self;
+}// initWithPreferencesContext:asDefault:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	Preferences_ReleaseContext(&preferencesContext);
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+IMPORTANT:	The "boundName" key is ONLY required because older
+			versions of Mac OS X do not seem to work properly
+			when bound to the "description" accessor.  (Namely,
+			the OS seems to stubbornly use its own "description"
+			instead of invoking the right one.)  In the future
+			this might be removed and rebound to "description".
+
+(4.1)
+*/
+- (NSString*)
+boundName
+{
+	NSString*	result = @"?";
+	
+	
+	if (self->isDefault)
+	{
+		result = NSLocalizedStringFromTable(@"Default", @"PreferencesWindow", @"the name of the Default collection");
+	}
+	else if (false == Preferences_ContextIsValid(self->preferencesContext))
+	{
+		Console_Warning(Console_WriteValueAddress, "binding to source list has become invalid; preferences context", self->preferencesContext);
+	}
+	else
+	{
+		CFStringRef				nameCFString = nullptr;
+		Preferences_Result		prefsResult = Preferences_ContextGetName(self->preferencesContext, nameCFString);
+		
+		
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			result = (NSString*)nameCFString;
+		}
+	}
+	return result;
+}
+- (void)
+setBoundName:(NSString*)	aString
+{
+	if (self->isDefault)
+	{
+		// changing the name is illegal
+	}
+	else if (false == Preferences_ContextIsValid(self->preferencesContext))
+	{
+		Console_Warning(Console_WriteValueAddress, "binding to source list has become invalid; preferences context", self->preferencesContext);
+	}
+	else
+	{
+		Preferences_Result		prefsResult = Preferences_ContextRename(self->preferencesContext, (CFStringRef)aString);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteValueCFString, "failed to rename context, given name", (CFStringRef)aString);
+		}
+	}
+}// setBoundName:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isEditable
+{
+	return (NO == self->isDefault);
+}// isEditable
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+description
+{
+	return [self boundName];
+}
+- (void)
+setDescription:(NSString*)	aString
+{
+	[self setBoundName:aString];
+}// setDescription:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (Preferences_ContextRef)
+preferencesContext
+{
+	return preferencesContext;
+}// preferencesContext
+
+
+#pragma mark NSObject
+
+
+/*!
+Returns a hash code for this object (a value that should
+ideally change whenever a property significant to "isEqualTo:"
+is changed).
+
+(4.1)
+*/
+- (unsigned int)
+hash
+{
+	return ((unsigned int)self->preferencesContext);
+}// hash
+
+
+/*!
+Returns true if the given object is considered equivalent
+to this one (which is the case if its "preferencesContext"
+is the same).
+
+(4.1)
+*/
+- (BOOL)
+isEqual:(id)	anObject
+{
+	BOOL	result = NO;
+	
+	
+	if ([anObject isKindOfClass:[self class]])
+	{
+		PrefsWindow_Collection*		asCollection = (PrefsWindow_Collection*)anObject;
+		
+		
+		result = ([asCollection preferencesContext] == [self preferencesContext]);
+	}
+	return result;
+}// isEqual:
+
+
+@end // PrefsWindow_Collection
+
+
 @implementation PrefsWindow_Controller
 
 
@@ -2526,12 +2800,33 @@ init
 	self = [super initWithWindowNibName:@"PrefsWindowCocoa"];
 	if (nil != self)
 	{
+		self->currentPreferenceCollectionIndexes = [[NSIndexSet alloc] init];
+		self->currentPreferenceCollections = [[NSMutableArray alloc] init];
 		self->panelIDArray = [[NSMutableArray arrayWithCapacity:7/* arbitrary */] retain];
 		self->panelsByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
 		self->windowSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
 		self->extraWindowSize = NSZeroSize; // set later
+		self->isSourceListHidden = YES; // set later
 		self->activePanel = nil;
+		self->translationsPanel = nil;
 		self->fullScreenPanel = nil;
+		
+		// install a callback that finds out about changes to available preferences collections
+		{
+			Preferences_Result		error = kPreferences_ResultOK;
+			
+			
+			self->preferenceChangeListener = [[ListenerModel_StandardListener alloc]
+												initWithTarget:self
+																eventFiredSelector:@selector(model:preferenceChange:context:)];
+			
+			error = Preferences_StartMonitoring([self->preferenceChangeListener listenerRef], kPreferences_ChangeContextName,
+												false/* call immediately to get initial value */);
+			assert(kPreferences_ResultOK == error);
+			error = Preferences_StartMonitoring([self->preferenceChangeListener listenerRef], kPreferences_ChangeNumberOfContexts,
+												true/* call immediately to get initial value */);
+			assert(kPreferences_ResultOK == error);
+		}
 	}
 	return self;
 }// init
@@ -2545,14 +2840,149 @@ Destructor.
 - (void)
 dealloc
 {
-	[self->panelIDArray release];
-	[self->panelsByID release];
-	[self->windowSizesByID release];
+	(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
+													kPreferences_ChangeContextName);
+	(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
+													kPreferences_ChangeNumberOfContexts);
+	[preferenceChangeListener release];
+	[currentPreferenceCollectionIndexes release];
+	[currentPreferenceCollections release];
+	[panelIDArray release];
+	[panelsByID release];
+	[windowSizesByID release];
 	[super dealloc];
 }// dealloc
 
 
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSIndexSet*)
+currentPreferenceCollectionIndexes
+{
+	// TEMPORARY; should retrieve translation table that is saved in preferences
+	return [[currentPreferenceCollectionIndexes retain] autorelease];
+}
+- (void)
+setCurrentPreferenceCollectionIndexes:(NSIndexSet*)		indexes
+{
+	if (indexes != currentPreferenceCollectionIndexes)
+	{
+		UInt16						oldIndex = ([self->currentPreferenceCollectionIndexes count] > 0)
+												? [self->currentPreferenceCollectionIndexes firstIndex]
+												: 0;
+		UInt16						newIndex = ([indexes count] > 0)
+												? [indexes firstIndex]
+												: 0;
+		PrefsWindow_Collection*		oldCollection = (oldIndex < [currentPreferenceCollections count])
+													? [currentPreferenceCollections objectAtIndex:oldIndex]
+													: nil;
+		PrefsWindow_Collection*		newCollection = (newIndex < [currentPreferenceCollections count])
+													? [currentPreferenceCollections objectAtIndex:newIndex]
+													: nil;
+		Preferences_ContextRef		oldDataSet = (nil != oldCollection)
+													? [oldCollection preferencesContext]
+													: nullptr;
+		Preferences_ContextRef		newDataSet = (nil != newCollection)
+													? [newCollection preferencesContext]
+													: nullptr;
+		
+		
+		[currentPreferenceCollectionIndexes release];
+		currentPreferenceCollectionIndexes = [indexes retain];
+		
+		// notify the panel that a new data set has been selected
+		[[self->activePanel delegate] panelViewManager:self->activePanel
+														didChangeFromDataSet:oldDataSet toDataSet:newDataSet];
+	}
+}// setCurrentPreferenceCollectionIndexes:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSArray*)
+currentPreferenceCollections
+{
+	return [[currentPreferenceCollections retain] autorelease];
+}
+- (BOOL)
+autoNotifyOnChangeToCurrentPreferenceCollections
+{
+	return NO;
+}
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isSourceListHidden
+{
+	return isSourceListHidden;
+}// isSourceListHidden
+- (BOOL)
+isSourceListShowing
+{
+	return (NO == isSourceListHidden);
+}// isSourceListShowing
+- (void)
+setSourceListHidden:(BOOL)	aFlag
+{
+	// “cheat” by notifying of a change to the opposite property as well
+	// (Cocoa bindings will automatically send the notification for the
+	// non-inverted property derived from this method’s name)
+	[self willChangeValueForKey:@"sourceListShowing"];
+	
+	isSourceListHidden = aFlag;
+	
+	[self didChangeValueForKey:@"sourceListShowing"];
+}// setSourceListHidden:
+
+
 #pragma mark Actions
+
+
+/*!
+Adds a new preferences collection.  Also immediately enters
+editing mode on the new collection so that the user may
+change its name.
+
+(4.1)
+*/
+- (IBAction)
+performAddNewPreferenceCollection:(id)	sender
+{
+#pragma unused(sender)
+	// NOTE: notifications are sent when a context is created as a Favorite
+	// so the source list should automatically resynchronize
+	Preferences_ContextRef	newContext = Preferences_NewContextFromFavorites
+											([self currentPreferencesClass], nullptr/* auto-set name */);
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	
+	prefsResult = Preferences_ContextSave(newContext);
+	if (kPreferences_ResultOK != prefsResult)
+	{
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteValue, "failed to save newly-created context; error", prefsResult);
+	}
+	
+	// reset the selection to focus on the new item, and automatically
+	// assume the user wants to rename it
+	[self setCurrentPreferenceCollectionIndexes:[NSIndexSet indexSetWithIndex:
+															([self->currentPreferenceCollections count] - 1)]];
+	[self performRenamePreferenceCollection:nil];
+}// performAddNewPreferenceCollection:
 
 
 /*!
@@ -2566,6 +2996,489 @@ performContextSensitiveHelp:(id)	sender
 #pragma unused(sender)
 	[self->activePanel performContextSensitiveHelp:sender];
 }// performContextSensitiveHelp:
+
+
+/*!
+Adds a new preferences collection by making a copy of the
+one selected in the source list.  Also immediately enters
+editing mode on the new collection so that the user may
+change its name.
+
+(4.1)
+*/
+- (IBAction)
+performDuplicatePreferenceCollection:(id)	sender
+{
+#pragma unused(sender)
+	UInt16						selectedIndex = [self->sourceListTableView selectedRow];
+	PrefsWindow_Collection*		baseCollection = [self->currentPreferenceCollections objectAtIndex:selectedIndex];
+	Preferences_ContextRef		baseContext = [baseCollection preferencesContext];
+	
+	
+	if (false == Preferences_ContextIsValid(baseContext))
+	{
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteLine, "failed to clone context; current selection is invalid");
+	}
+	else
+	{
+		// NOTE: notifications are sent when a context is created as a Favorite
+		// so the source list should automatically resynchronize
+		Preferences_ContextRef	newContext = Preferences_NewCloneContext(baseContext, false/* detach */);
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_ContextSave(newContext);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteValue, "failed to save duplicated context; error", prefsResult);
+		}
+		
+		// reset the selection to focus on the new item, and automatically
+		// assume the user wants to rename it
+		[self setCurrentPreferenceCollectionIndexes:[NSIndexSet indexSetWithIndex:
+																([self->currentPreferenceCollections count] - 1)]];
+		[self performRenamePreferenceCollection:nil];
+	}
+}// performDuplicatePreferenceCollection:
+
+
+/*!
+Saves the contents of a preferences collection to a file.
+
+(4.1)
+*/
+- (IBAction)
+performExportPreferenceCollectionToFile:(id)	sender
+{
+#pragma unused(sender)
+	NSSavePanel*	savePanel = [NSSavePanel savePanel];
+	CFStringRef		saveFileCFString = nullptr;
+	CFStringRef		promptCFString = nullptr;
+	
+	
+	(UIStrings_Result)UIStrings_Copy(kUIStrings_FileDefaultExportPreferences, saveFileCFString);
+	(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptSavePrefs, promptCFString);
+	[savePanel setMessage:(NSString*)promptCFString];
+	
+	[savePanel beginSheetForDirectory:nil file:(NSString*)saveFileCFString
+										modalForWindow:[self window] modalDelegate:self
+										didEndSelector:@selector(didEndExportPanel:returnCode:contextInfo:)
+										contextInfo:nullptr];
+}// performExportPreferenceCollectionToFile:
+
+
+/*!
+Adds a new preferences collection by asking the user for a
+file from which to import settings.
+
+(4.1)
+*/
+- (IBAction)
+performImportPreferenceCollectionFromFile:(id)	sender
+{
+#pragma unused(sender)
+	NSOpenPanel*	openPanel = [NSOpenPanel openPanel];
+	NSArray*		allowedTypes = [NSArray arrayWithObjects:
+												@"com.apple.property-list",
+												@"plist"/* redundant, needed for older systems */,
+												@"xml",
+												nil];
+	CFStringRef		promptCFString = nullptr;
+	
+	
+	(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptOpenPrefs, promptCFString);
+	[openPanel setMessage:(NSString*)promptCFString];
+	
+	[openPanel beginSheetForDirectory:nil file:nil types:allowedTypes
+										modalForWindow:[self window] modalDelegate:self
+										didEndSelector:@selector(didEndImportPanel:returnCode:contextInfo:)
+										contextInfo:nullptr];
+}// performImportPreferenceCollectionFromFile:
+
+
+/*!
+Deletes the currently-selected preference collection from
+the source list (and saved user preferences).
+
+(4.1)
+*/
+- (IBAction)
+performRemovePreferenceCollection:(id)	sender
+{
+#pragma unused(sender)
+	UInt16		selectedIndex = [self->sourceListTableView selectedRow];
+	
+	
+	if (0 == selectedIndex)
+	{
+		// the Default collection; this should never be possible to remove
+		// (and should be prevented by other guards before this point, but
+		// just in case...)
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteLine, "attempt to delete the Default context");
+	}
+	else
+	{
+		PrefsWindow_Collection*		deadCollection = [self->currentPreferenceCollections objectAtIndex:selectedIndex];
+		Preferences_ContextRef		deadContext = [deadCollection preferencesContext];
+		
+		
+		if (false == Preferences_ContextIsValid(deadContext))
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "failed to delete context; current selection is invalid");
+		}
+		else
+		{
+			// NOTE: notifications are sent when a context is deleted from Favorites
+			// so the source list should automatically resynchronize
+			Preferences_Result		prefsResult = Preferences_ContextDeleteSaved(deadContext);
+			
+			
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Sound_StandardAlert();
+				Console_Warning(Console_WriteValue, "failed to delete currently-selected context; error", prefsResult);
+			}
+			
+			// reset the selection, as it will be invalidated when the target item is removed
+			[self setCurrentPreferenceCollectionIndexes:[NSIndexSet indexSetWithIndex:0]];
+		}
+	}
+}// performRemovePreferenceCollection:
+
+
+/*!
+Enters editing mode on the currently-selected preference
+collection in the source list.
+
+(4.1)
+*/
+- (IBAction)
+performRenamePreferenceCollection:(id)	sender
+{
+#pragma unused(sender)
+	UInt16		selectedIndex = [self->sourceListTableView selectedRow];
+	
+	
+	// do not allow the Default item to be edited (this is
+	// also ensured by the "isEditable" method on the objects
+	// in the array)
+	if (0 == selectedIndex)
+	{
+		Sound_StandardAlert();
+	}
+	else
+	{
+		[self->sourceListTableView editColumn:0 row:selectedIndex withEvent:nil select:NO];
+		[[self->sourceListTableView currentEditor] selectAll:nil];
+	}
+}// performRenamePreferenceCollection:
+
+
+/*!
+Responds to a “remove collection” segment click.
+
+(No other commands need to be handled because they are
+already bound to items in menus that the other segments
+display.)
+
+(4.1)
+*/
+- (IBAction)
+performSegmentedControlAction:(id)	sender
+{
+	if ([sender isKindOfClass:[NSSegmentedControl class]])
+	{
+		NSSegmentedControl*		segments = (NSSegmentedControl*)sender;
+		
+		
+		// IMPORTANT: this should agree with the button arrangement
+		// in the Preferences window’s NIB file...
+		if (0 == [segments selectedSegment])
+		{
+			// this is redundantly handled as the “quick click” action
+			// for the button; it is also in the segment’s pop-up menu
+			[self performAddNewPreferenceCollection:sender];
+		}
+		else if (1 == [segments selectedSegment])
+		{
+			[self performRemovePreferenceCollection:sender];
+		}
+	}
+	else
+	{
+		Console_Warning(Console_WriteLine, "received 'performSegmentedControlAction:' message from unexpected sender");
+	}
+}// performSegmentedControlAction:
+
+
+#pragma mark NSFontPanel
+
+
+/*!
+Since this window controller is in the responder chain, it
+may receive events from NSFontPanel that have not been
+handled anywhere else.  This responds by forwarding the
+message to the active panel if the active panel implements
+a "changeFont:" method.
+
+NOTE:	It is possible that one day panels will be set up
+		as responders themselves and placed directly in
+		the responder chain.  For now this is sufficient.
+
+(4.1)
+*/
+- (void)
+changeFont:(id)		sender
+{
+	if ([self->activePanel respondsToSelector:@selector(changeFont:)])
+	{
+		[self->activePanel changeFont:sender];
+	}
+}// changeFont:
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark NSTableDataSource
+
+
+/*!
+For drag-and-drop support; adds the data for the given rows
+to the specified pasteboard.
+
+NOTE:	This is defined for Mac OS X 10.3 support; it may be
+		removed in the future.  See also the preferred method
+		"tableView:writeRowIndexes:toPasteboard:".
+
+(4.1)
+*/
+- (BOOL)
+tableView:(NSTableView*)		aTableView
+writeRows:(NSArray*)			aRowArray
+toPasteboard:(NSPasteboard*)	aPasteboard
+{
+#pragma unused(aTableView)
+	NSEnumerator*		eachRowIndex = [aRowArray objectEnumerator];
+	BOOL				result = YES; // initially...
+	NSMutableIndexSet*	indexSet = [[NSMutableIndexSet alloc] init];
+	
+	
+	// drags are confined to the table, so it’s only necessary to copy row numbers;
+	// note that the Mac OS X 10.3 version gives arrays of NSNumber and the actual
+	// representation (in "tableView:writeRowIndexes:toPasteboard:") is NSIndexSet*
+	while (NSNumber* numberObject = [eachRowIndex nextObject])
+	{
+		if (0 == [numberObject intValue])
+		{
+			// the item at index zero is Default, which may not be moved
+			result = NO;
+			break;
+		}
+		[indexSet addIndex:[numberObject intValue]];
+	}
+	
+	if (result)
+	{
+		NSData*		copiedData = [NSKeyedArchiver archivedDataWithRootObject:indexSet];
+		
+		
+		[aPasteboard declareTypes:[NSArray arrayWithObject:kMy_PrefsWindowSourceListDataType] owner:self];
+		[aPasteboard setData:copiedData forType:kMy_PrefsWindowSourceListDataType];
+	}
+	
+	[indexSet release];
+	
+	return result;
+}// tableView:writeRows:toPasteboard:
+
+
+/*!
+For drag-and-drop support; adds the data for the given rows
+to the specified pasteboard.
+
+This is the version used by Mac OS X 10.4 and beyond; see
+also "tableView:writeRows:toPasteboard:".
+
+(4.1)
+*/
+- (BOOL)
+tableView:(NSTableView*)		aTableView
+writeRowIndexes:(NSIndexSet*)	aRowSet
+toPasteboard:(NSPasteboard*)	aPasteboard
+{
+#pragma unused(aTableView)
+	BOOL	result = NO;
+	
+	
+	// the item at index zero is Default, which may not be moved
+	if (NO == [aRowSet containsIndex:0])
+	{
+		// drags are confined to the table, so it’s only necessary to copy row numbers
+		NSData*		copiedData = [NSKeyedArchiver archivedDataWithRootObject:aRowSet];
+		
+		
+		[aPasteboard declareTypes:[NSArray arrayWithObject:kMy_PrefsWindowSourceListDataType] owner:self];
+		[aPasteboard setData:copiedData forType:kMy_PrefsWindowSourceListDataType];
+		result = YES;
+	}
+	return result;
+}// tableView:writeRowIndexes:toPasteboard:
+
+
+/*!
+For drag-and-drop support; validates a drag operation.
+
+(4.1)
+*/
+- (NSDragOperation)
+tableView:(NSTableView*)							aTableView
+validateDrop:(id< NSDraggingInfo >)					aDrop
+proposedRow:(int)									aTargetRow
+proposedDropOperation:(NSTableViewDropOperation)	anOperation
+{
+#pragma unused(aTableView, aDrop)
+	NSDragOperation		result = NSDragOperationMove;
+	
+	
+	switch (anOperation)
+	{
+	case NSTableViewDropOn:
+		// rows may only be inserted above, not dropped on top
+		result = NSDragOperationNone;
+		break;
+	
+	case NSTableViewDropAbove:
+		if (0 == aTargetRow)
+		{
+			// row zero always contains the Default item so nothing else may move there
+			result = NSDragOperationNone;
+		}
+		break;
+	
+	default:
+		// ???
+		result = NSDragOperationNone;
+		break;
+	}
+	
+	return result;
+}// tableView:validateDrop:proposedRow:proposedDropOperation:
+
+
+/*!
+For drag-and-drop support; moves the specified table row.
+
+(4.1)
+*/
+- (BOOL)
+tableView:(NSTableView*)					aTableView
+acceptDrop:(id< NSDraggingInfo >)			aDrop
+row:(int)									aTargetRow
+dropOperation:(NSTableViewDropOperation)	anOperation
+{
+#pragma unused(aTableView, aDrop)
+	BOOL	result = NO;
+	
+	
+	switch (anOperation)
+	{
+	case NSTableViewDropOn:
+		// rows may only be inserted above, not dropped on top
+		result = NO;
+		break;
+	
+	case NSTableViewDropAbove:
+		{
+			NSPasteboard*	pasteboard = [aDrop draggingPasteboard];
+			NSData*			rowIndexSetData = [pasteboard dataForType:kMy_PrefsWindowSourceListDataType];
+			NSIndexSet*		rowIndexes = [NSKeyedUnarchiver unarchiveObjectWithData:rowIndexSetData];
+			
+			
+			if (nil != rowIndexes)
+			{
+				int		draggedRow = [rowIndexes firstIndex];
+				
+				
+				if (draggedRow != aTargetRow)
+				{
+					PrefsWindow_Collection*		movingCollection = [self->currentPreferenceCollections objectAtIndex:draggedRow];
+					Preferences_Result			prefsResult = kPreferences_ResultOK;
+					
+					
+					if (aTargetRow >= STATIC_CAST([self->currentPreferenceCollections count], int))
+					{
+						// move to the end of the list (not a real target row)
+						PrefsWindow_Collection*		targetCollection = [self->currentPreferenceCollections lastObject];
+						
+						
+						// NOTE: notifications are sent when a context in Favorites is rearranged
+						// so the source list should automatically resynchronize
+						prefsResult = Preferences_ContextRepositionRelativeToContext
+										([movingCollection preferencesContext], [targetCollection preferencesContext],
+											false/* insert before */);
+					}
+					else
+					{
+						PrefsWindow_Collection*		targetCollection = [self->currentPreferenceCollections objectAtIndex:aTargetRow];
+						
+						
+						// NOTE: notifications are sent when a context in Favorites is rearranged
+						// so the source list should automatically resynchronize
+						prefsResult = Preferences_ContextRepositionRelativeToContext
+										([movingCollection preferencesContext], [targetCollection preferencesContext],
+											true/* insert before */);
+					}
+					
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Sound_StandardAlert();
+						Console_Warning(Console_WriteValue, "failed to reorder preferences contexts; error", prefsResult);
+					}
+					
+					result = YES;
+				}
+			}
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+	
+	return result;
+}// tableView:acceptDrop:row:dropOperation:
 
 
 #pragma mark NSToolbarDelegate
@@ -2658,11 +3571,31 @@ windowDidLoad
 {
 	[super windowDidLoad];
 	assert(nil != containerView);
+	assert(nil != sourceListContainer);
+	assert(nil != sourceListTableView);
+	assert(nil != sourceListSegmentedControl);
+	assert(nil != verticalDividerView);
+	assert(nil != horizontalDividerView);
+	
+	// programmatically remove the toolbar button
+	if ([[self window] respondsToSelector:@selector(setShowsToolbarButton:)])
+	{
+		[[self window] setShowsToolbarButton:NO];
+	}
 	
 	// create all panels
 	{
 		Panel_ViewManager*		newViewMgr = nil;
 		
+		
+		// “Translations” panel
+		self->translationsPanel = [[PrefPanelTranslations_ViewManager alloc] init];
+		newViewMgr = self->translationsPanel;
+		[newViewMgr setPanelDisplayAction:@selector(performDisplayPrefPanelTranslations:)];
+		[newViewMgr setPanelDisplayTarget:self];
+		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
+		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
+		[newViewMgr release], newViewMgr = nil;
 		
 		// “Full Screen” panel
 		self->fullScreenPanel = [[PrefPanelFullScreen_ViewManager alloc] init];
@@ -2727,6 +3660,28 @@ windowDidLoad
 			[panelContainer setFrame:panelFrame];
 			[self->panelsByID setObject:viewMgr forKey:panelIdentifier];
 			
+			// initialize the “remembered window size” for each panel
+			// (this changes whenever the user resizes the window)
+			{
+				NSArray*	sizeArray = nil;
+				NSSize		windowSize = NSMakeSize(NSWidth(panelFrame) + self->extraWindowSize.width,
+													NSHeight(panelFrame) + self->extraWindowSize.height);
+				
+				
+				// only inspector-style windows include space for a source list
+				if (kPanel_EditTypeInspector != [viewMgr panelEditType])
+				{
+					windowSize.width -= NSWidth([self->sourceListContainer frame]);
+				}
+				
+				// choose a frame size that uses the panel’s ideal size
+				sizeArray = [NSArray arrayWithObjects:
+										[NSNumber numberWithFloat:windowSize.width],
+										[NSNumber numberWithFloat:windowSize.height],
+										nil];
+				[self->windowSizesByID setObject:sizeArray forKey:panelIdentifier];
+			}
+			
 			if (NO == firstView)
 			{
 				[panelContainer setHidden:YES];
@@ -2736,6 +3691,37 @@ windowDidLoad
 				[self displayPanel:viewMgr withAnimation:NO];
 				firstView = NO;
 			}
+		}
+	}
+	
+	// enable drag-and-drop in the source list
+	[self->sourceListTableView registerForDraggedTypes:[NSArray arrayWithObjects:kMy_PrefsWindowSourceListDataType, nil]];
+	
+	// on Mac OS X versions prior to 10.5 there is no concept of
+	// “bottom chrome” so a horizontal line is included to produce
+	// a similar sort of divider; on later Mac OS X versions however
+	// this should be hidden so that the softer gray can show through
+	if (FlagManager_Test(kFlagOS10_5API))
+	{
+		[self->horizontalDividerView setHidden:YES];
+	}
+	
+	// the “source list” style is not respected prior to Mac OS X 10.5
+	// (and worse, it’s interpreted as a horrible background color);
+	// programmatically override the NIB setting on older OS versions
+	if (false == FlagManager_Test(kFlagOS10_5API))
+	{
+		// color should be fixed
+		[self->sourceListTableView setBackgroundColor:[NSColor whiteColor]];
+		
+		// the appearance and size of the segmented control is different
+		{
+			NSRect	frame = [self->sourceListSegmentedControl frame];
+			
+			
+			--(frame.origin.y);
+			++(frame.size.height);
+			[self->sourceListSegmentedControl setFrame:frame];
 		}
 	}
 }// windowDidLoad
@@ -2748,6 +3734,146 @@ windowDidLoad
 
 
 #pragma mark New Methods
+
+
+/*!
+Returns the class of preferences that are currently being
+edited.  This determines the contents of the source list,
+the type of context that is created when the user adds
+something new, etc.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+currentPreferencesClass
+{
+	Quills::Prefs::Class	result = [self->activePanel preferencesClass];
+	
+	
+	return result;
+}// currentPreferencesClass
+
+
+/*!
+Returns the context from which the user interface is
+currently displayed (and the context that is changed when
+the user modifies the interface).
+
+For panels that use the source list this will match the
+selection in the list.  For other panels it will be the
+default context for the preferences class of the active
+panel.
+
+(4.1)
+*/
+- (Preferences_ContextRef)
+currentPreferencesContext
+{
+	Preferences_ContextRef		result = nullptr;
+	
+	
+	if (kPanel_EditTypeInspector == [self->activePanel panelEditType])
+	{
+		UInt16						selectedIndex = [self->sourceListTableView selectedRow];
+		PrefsWindow_Collection*		selectedCollection = [self->currentPreferenceCollections objectAtIndex:selectedIndex];
+		
+		
+		result = [selectedCollection preferencesContext];
+	}
+	else
+	{
+		Preferences_Result	prefsResult = Preferences_GetDefaultContext(&result, [self currentPreferencesClass]);
+		
+		
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	assert(Preferences_ContextIsValid(result));
+	return result;
+}// currentPreferencesContext
+
+
+/*!
+A selector of the form required by NSSavePanel; it responds to
+an NSOKButton return code by saving the current preferences
+context to a file.
+
+(4.1)
+*/
+- (void)
+didEndExportPanel:(NSSavePanel*)	aPanel
+returnCode:(int)					aReturnCode
+contextInfo:(void*)					aContextPtr
+{
+#pragma unused(aContextPtr)
+	if (NSOKButton == aReturnCode)
+	{
+		// export the contents of the preferences context (the Preferences
+		// module automatically ignores settings that are not part of the
+		// right class, e.g. so that Default does not create a huge file)
+		CFURLRef			asURL = (CFURLRef)[aPanel URL];
+		Preferences_Result	writeResult = Preferences_ContextSaveAsXMLFileURL([self currentPreferencesContext], asURL);
+		
+		
+		if (kPreferences_ResultOK != writeResult)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteValueCFString, "unable to save file, URL",
+							(CFStringRef)[((NSURL*)asURL) absoluteString]);
+			Console_Warning(Console_WriteValue, "error", writeResult);
+		}
+	}
+}// didEndExportPanel:returnCode:contextInfo:
+
+
+/*!
+A selector of the form required by NSOpenPanel; it responds to
+an NSOKButton return code by opening the selected file(s).
+The files are opened via Apple Events because there are already
+event handlers defined that have the appropriate effect on
+Preferences.
+
+(4.1)
+*/
+- (void)
+didEndImportPanel:(NSOpenPanel*)	aPanel
+returnCode:(int)					aReturnCode
+contextInfo:(void*)					aContextPtr
+{
+#pragma unused(aContextPtr)
+	if (NSOKButton == aReturnCode)
+	{
+		// open the files via Apple Events
+		NSArray*		toOpen = [aPanel URLs];
+		NSEnumerator*	forURLs = [toOpen objectEnumerator];
+		
+		
+		while (NSURL* currentFileURL = [forURLs nextObject])
+		{
+			FSRef		fileRef;
+			OSStatus	error = noErr;
+			
+			
+			if (CFURLGetFSRef((CFURLRef)currentFileURL, &fileRef))
+			{
+				error = FileUtilities_OpenDocument(fileRef);
+			}
+			else
+			{
+				error = kURLInvalidURLError;
+			}
+			
+			if (noErr != error)
+			{
+				// TEMPORARY; should probably display a more user-friendly alert for this...
+				Sound_StandardAlert();
+				Console_Warning(Console_WriteValueCFString, "unable to open file, URL",
+								(CFStringRef)[currentFileURL absoluteString]);
+				Console_Warning(Console_WriteValue, "error", error);
+			}
+		}
+	}
+}// didEndImportPanel:returnCode:contextInfo:
 
 
 /*!
@@ -2767,6 +3893,10 @@ withAnimation:(BOOL)				isAnimated
 {
 	if (aPanel != self->activePanel)
 	{
+		BOOL	wasShowingSourceList = [self isSourceListShowing];
+		BOOL	willShowSourceList = wasShowingSourceList; // initially...
+		
+		
 		if (nil != self->activePanel)
 		{
 			// remember the window size that the user wanted for the previous panel
@@ -2781,56 +3911,247 @@ withAnimation:(BOOL)				isAnimated
 			[self->windowSizesByID setObject:sizeArray forKey:[self->activePanel panelIdentifier]];
 			
 			// hide the old panel
+			[[self->activePanel delegate] panelViewManager:self->activePanel
+															willChangePanelVisibility:kPanel_VisibilityHidden];
 			[[self->activePanel managedView] setHidden:YES];
+			[[self->activePanel delegate] panelViewManager:self->activePanel
+															didChangePanelVisibility:kPanel_VisibilityHidden];
 		}
 		
 		// show the new panel
+		[[self->activePanel delegate] panelViewManager:self->activePanel
+														willChangePanelVisibility:kPanel_VisibilityDisplayed];
 		self->activePanel = aPanel;
 		[[[self window] toolbar] setSelectedItemIdentifier:[self->activePanel panelIdentifier]];
 		[[self->activePanel managedView] setHidden:NO];
 		[[self window] makeFirstResponder:[self->activePanel logicalFirstResponder]];
+		[[self->activePanel delegate] panelViewManager:self->activePanel
+														didChangePanelVisibility:kPanel_VisibilityDisplayed];
+		willShowSourceList = (kPanel_EditTypeInspector == [self->activePanel panelEditType]);
+		
+		// increase the window minimum size to accommodate the source list
+		if (willShowSourceList != wasShowingSourceList)
+		{
+			NSSize		minSize = [[self window] contentMinSize];
+			
+			
+			if (wasShowingSourceList)
+			{
+				minSize.width -= [self->sourceListContainer frame].size.width;
+			}
+			else
+			{
+				minSize.width += [self->sourceListContainer frame].size.width;
+			}
+			[[self window] setContentMinSize:minSize];
+		}
+		
+		// if necessary display the source list of available preference collections
+		if (willShowSourceList != wasShowingSourceList)
+		{
+			// change the source list visibility
+			[self updateUserInterfaceForSourceListTransition:[NSNumber numberWithBool:willShowSourceList]];
+			[self setSourceListHidden:(NO == willShowSourceList)];
+		}
 		
 		// set the window to the size for the new panel (if none, use the
 		// size that was originally used for the panel in its NIB)
 		{
 			NSRect		newWindowFrame = [[self window] frame];
+			NSSize		originalSize = newWindowFrame.size;
+			NSSize		minSize = [[self window] minSize];
 			NSArray*	sizeArray = [self->windowSizesByID objectForKey:[aPanel panelIdentifier]];
 			
 			
-			if (nil == sizeArray)
+			assert(nil != sizeArray);
+			
+			// start with the restored size
 			{
-				NSSize	windowSize = NSMakeSize(NSWidth([[aPanel managedView] frame]) + self->extraWindowSize.width,
-												NSHeight([[aPanel managedView] frame]) + self->extraWindowSize.height);
+				assert(2 == [sizeArray count]);
+				Float32		newWidth = MAX([[sizeArray objectAtIndex:0] floatValue], minSize.width);
+				Float32		newHeight = MAX([[sizeArray objectAtIndex:1] floatValue], minSize.height);
 				
 				
-				// choose a frame size that uses the panel’s ideal size
-				sizeArray = [NSArray arrayWithObjects:
-										[NSNumber numberWithFloat:windowSize.width],
-										[NSNumber numberWithFloat:windowSize.height],
-										nil];
-				[self->windowSizesByID setObject:sizeArray forKey:[aPanel panelIdentifier]];
+				newWindowFrame.size.width = newWidth;
+				newWindowFrame.size.height = newHeight;
+			}
+			
+			// try to keep the window on screen; also constrain it to
+			// its minimum size
+			newWindowFrame = NSIntersectionRect(newWindowFrame, [[[self window] screen] frame]);
+			newWindowFrame.size.width = MAX(NSWidth(newWindowFrame), minSize.width);
+			if (NSHeight(newWindowFrame) < minSize.height)
+			{
+				newWindowFrame.size.height = minSize.height;
 			}
 			
 			// since the coordinate system anchors the window at the
 			// bottom-left corner and the intent is to keep the top-left
 			// corner constant, calculate an appropriate new origin when
 			// changing the size (don’t just change the size by itself)
-			{
-				assert(2 == [sizeArray count]);
-				Float32		newWidth = MAX([[sizeArray objectAtIndex:0] floatValue], [[self window] minSize].width);
-				Float32		newHeight = MAX([[sizeArray objectAtIndex:1] floatValue], [[self window] minSize].height);
-				
-				
-				newWindowFrame.origin.y += (NSHeight(newWindowFrame) - newHeight);
-				newWindowFrame.size.width = newWidth;
-				newWindowFrame.size.height = newHeight;
-			}
+			newWindowFrame.origin.y += (originalSize.height - NSHeight(newWindowFrame));
 			
 			// resize the window
 			[[self window] setFrame:newWindowFrame display:YES animate:isAnimated];
 		}
 	}
 }// displayPanel:withAnimation:
+
+
+/*!
+Called when a monitored preference is changed.  See the
+initializer for the set of events that is monitored.
+
+(4.1)
+*/
+- (void)
+model:(ListenerModel_Ref)				aModel
+preferenceChange:(ListenerModel_Event)	anEvent
+context:(void*)							aContext
+{
+#pragma unused(aModel, aContext)
+	switch (anEvent)
+	{
+	case kPreferences_ChangeContextName:
+		// a context has been renamed; refresh the list
+		[self rebuildSourceList];
+		break;
+	
+	case kPreferences_ChangeNumberOfContexts:
+		// contexts were added or removed; destroy and rebuild the list
+		[self rebuildSourceList];
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// model:preferenceChange:context:
+
+
+/*!
+Rebuilds the array that the source list is bound to, causing
+potentially a new list of preferences contexts to be displayed.
+The current panel’s preferences class is used to find an
+appropriate list of contexts.
+
+(4.1)
+*/
+- (void)
+rebuildSourceList
+{
+	std::vector< Preferences_ContextRef >	contextList;
+	NSIndexSet*								previousSelection = [self currentPreferenceCollectionIndexes];
+	id										selectedObject = nil;
+	
+	
+	if (nil == previousSelection)
+	{
+		previousSelection = [NSIndexSet indexSetWithIndex:0];
+	}
+	
+	if ([previousSelection firstIndex] < [self->currentPreferenceCollections count])
+	{
+		selectedObject = [self->currentPreferenceCollections objectAtIndex:[previousSelection firstIndex]];
+	}
+	
+	[self willChangeValueForKey:@"currentPreferenceCollections"];
+	
+	[self->currentPreferenceCollections removeAllObjects];
+	if (Preferences_GetContextsInClass([self currentPreferencesClass], contextList))
+	{
+		// the first item in the returned list is always the default
+		BOOL	haveAddedDefault = NO;
+		
+		
+		for (std::vector< Preferences_ContextRef >::const_iterator toContext = contextList.begin();
+				toContext != contextList.end(); ++toContext)
+		{
+			BOOL						isDefault = (NO == haveAddedDefault);
+			PrefsWindow_Collection*		newCollection = [[PrefsWindow_Collection alloc]
+															initWithPreferencesContext:(*toContext)
+																						asDefault:isDefault];
+			
+			
+			[self->currentPreferenceCollections addObject:newCollection];
+			[newCollection release], newCollection = nil;
+			haveAddedDefault = YES;
+		}
+	}
+	
+	[self didChangeValueForKey:@"currentPreferenceCollections"];
+	
+	// attempt to preserve the selection
+	{
+		unsigned int	newIndex = [self->currentPreferenceCollections indexOfObject:selectedObject];
+		
+		
+		if (NSNotFound != newIndex)
+		{
+			[self setCurrentPreferenceCollectionIndexes:[NSIndexSet indexSetWithIndex:newIndex]];
+		}
+	}
+}// rebuildSourceList
+
+
+/*!
+Performs user interface modifications appropriate for changing the
+visibility of the source list that shows preference collections.
+
+This is a separate method that accepts an object parameter so that
+it can be easily called from the main thread using the NSObject
+method "performSelectorOnMainThread:withObject:waitUntilDone:".
+See "setSourceListHidden:".
+
+NOTE:	Some interface changes (such as hiding or showing buttons)
+		are achieved with Cocoa bindings to the appropriate states,
+		so there are fewer adjustments here than you might expect.
+
+(4.1)
+*/
+- (void)
+updateUserInterfaceForSourceListTransition:(id)		anNSNumberBoolForNewVisibleState
+{
+	UInt16 const	kIndentationLevels = 5; // arbitrary
+	NSRect			newContainerFrame = [self->containerView frame];
+	NSRect			windowContentFrame = [[self window] contentRectForFrameRect:[[self window] frame]];
+	
+	
+	if ([anNSNumberBoolForNewVisibleState boolValue])
+	{
+		// “indent” the toolbar so that the items do not appear above the source list
+		for (UInt16 i = 0; i < kIndentationLevels; ++i)
+		{
+			[[[self window] toolbar] insertItemWithItemIdentifier:NSToolbarSpaceItemIdentifier atIndex:0];
+		}
+		
+		// move the panel next to the source list
+		newContainerFrame.origin.x = NSWidth([self->sourceListContainer frame]);
+		newContainerFrame.size.width = (NSWidth(windowContentFrame) - NSWidth([self->sourceListContainer frame]));
+		[self->containerView setFrame:newContainerFrame];
+		
+		// refresh the content (should not be needed, but this is a good place to do it;
+		// note that notifications trigger rebuilds whenever preferences actually change)
+		[self rebuildSourceList];
+	}
+	else
+	{
+		// remove the “indent” from the toolbar (IMPORTANT: repeat as many times as spaces were originally added, below)
+		if ([[[[self window] toolbar] items] count] > kIndentationLevels)
+		{
+			for (UInt16 i = 0; i < kIndentationLevels; ++i)
+			{
+				[[[self window] toolbar] removeItemAtIndex:0];
+			}
+		}
+		
+		// move the panel to the edge of the window; adjust the width to keep the
+		// layout bindings from over-padding the opposite side however
+		newContainerFrame.origin.x = 0;
+		newContainerFrame.size.width = NSWidth(windowContentFrame);
+		[self->containerView setFrame:newContainerFrame];
+	}
+}// updateUserInterfaceForSourceListTransition:
 
 
 #pragma mark Actions
@@ -2847,6 +4168,19 @@ performDisplayPrefPanelFullScreen:(id)	sender
 #pragma unused(sender)
 	[self displayPanel:self->fullScreenPanel withAnimation:YES];
 }// performDisplayPrefPanelFullScreen:
+
+
+/*!
+Brings the “Full Screen” panel to the front.
+
+(4.1)
+*/
+- (void)
+performDisplayPrefPanelTranslations:(id)	sender
+{
+#pragma unused(sender)
+	[self displayPanel:self->translationsPanel withAnimation:YES];
+}// performDisplayPrefPanelTranslations:
 
 
 @end // PrefsWindow_Controller (PrefsWindow_ControllerInternal)

@@ -17,7 +17,7 @@
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
 		0A377E630D38806B001F3573 /* open.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* open.py */; };
 		0A3C2C20140C73F100739966 /* CocoaAnimation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */; };
-		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
+		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */; };
 		0A47A08C14B3E33A00E39136 /* TerminalToolbar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */; };
 		0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */; };
 		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */; };
@@ -245,7 +245,7 @@
 		0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaAnimation.mm; path = Shared/Code/CocoaAnimation.mm; sourceTree = "<group>"; };
 		0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommonEventHandlers.cp; path = Application/Code/CommonEventHandlers.cp; sourceTree = "<group>"; };
 		0A3D04C10A4CEB4E00A79DDF /* CommonEventHandlers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommonEventHandlers.h; path = Application/Code/CommonEventHandlers.h; sourceTree = "<group>"; };
-		0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelTranslations.cp; path = Application/Code/PrefPanelTranslations.cp; sourceTree = "<group>"; };
+		0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelTranslations.mm; path = Application/Code/PrefPanelTranslations.mm; sourceTree = "<group>"; };
 		0A3E06F60B81767A00EDC16A /* PrefPanelTranslations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTranslations.h; path = Application/Code/PrefPanelTranslations.h; sourceTree = "<group>"; };
 		0A3E07400B817E9800EDC16A /* IconForPrefPanelTranslations.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelTranslations.icns; path = Application/Resources/IconForPrefPanelTranslations.icns; sourceTree = "<group>"; };
 		0A4123150ACE525B0067D333 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelFormats.nib; sourceTree = "<group>"; };
@@ -406,9 +406,13 @@
 		0A54E40D0560B62F005B4592 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = Application/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0A54E40F0560B62F005B4592 /* IconForTerminal.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForTerminal.icns; path = Application/Resources/IconForTerminal.icns; sourceTree = "<group>"; };
 		0A5A6FCB1578783700EFCEAB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefsWindowCocoa.xib; sourceTree = "<group>"; };
+		0A5C09C1158828C30097B598 /* IconForItemAddMenuSegment@2x.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "IconForItemAddMenuSegment@2x.icns"; path = "Application/Resources/IconForItemAddMenuSegment@2x.icns"; sourceTree = "<group>"; };
+		0A5CE9261582DF1D008CD243 /* IconForContextMenuSegment.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForContextMenuSegment.icns; path = Application/Resources/IconForContextMenuSegment.icns; sourceTree = "<group>"; };
+		0A5CE9411582ED7C008CD243 /* IconForItemAddMenuSegment.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAddMenuSegment.icns; path = Application/Resources/IconForItemAddMenuSegment.icns; sourceTree = "<group>"; };
 		0A6315B912348AB4003890B8 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ClipboardCocoa.xib; sourceTree = "<group>"; };
 		0A64C5EA1059E423005B8A48 /* StreamCapture.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StreamCapture.cp; path = Application/Code/StreamCapture.cp; sourceTree = "<group>"; };
 		0A64C5EC1059E432005B8A48 /* StreamCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamCapture.h; path = Application/Code/StreamCapture.h; sourceTree = "<group>"; };
+		0A65F2C315882AD100B9E338 /* IconForContextMenuSegment@2x.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "IconForContextMenuSegment@2x.icns"; path = "Application/Resources/IconForContextMenuSegment@2x.icns"; sourceTree = "<group>"; };
 		0A66B705154E04DC00B98072 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/VectorWindowCocoa.xib; sourceTree = "<group>"; };
 		0A66CA450887464200FD616C /* HIViewWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.h; path = Shared/Code/HIViewWrap.h; sourceTree = "<group>"; };
 		0A66CA4B0887467000FD616C /* HIViewWrap.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HIViewWrap.cp; path = Shared/Code/HIViewWrap.cp; sourceTree = "<group>"; };
@@ -432,6 +436,7 @@
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
 		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
 		0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForRestartSession.icns; path = Application/Resources/IconForRestartSession.icns; sourceTree = "<group>"; };
+		0A839C3415805125000F001E /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelTranslationsCocoa.xib; sourceTree = "<group>"; };
 		0A8450A60554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefsWindow.nib; sourceTree = "<group>"; };
 		0A8450AA0554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/TEKWindow.nib; sourceTree = "<group>"; };
 		0A8738310A5F5F59002CACA9 /* UIStrings_PrefsWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UIStrings_PrefsWindow.h; path = Application/Code/UIStrings_PrefsWindow.h; sourceTree = "<group>"; };
@@ -971,6 +976,7 @@
 				0AB2273E12D2D41300D663BB /* KeypadVT220KeysCocoa.xib */,
 				0A317CAC10A0C775002EDEFB /* MainMenuCocoa.xib */,
 				0A50591A157C64D300F257A1 /* PrefPanelFullScreenCocoa.xib */,
+				0A839C3315805125000F001E /* PrefPanelTranslationsCocoa.xib */,
 				0A5A6FCA1578783700EFCEAB /* PrefsWindowCocoa.xib */,
 				0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */,
 				0AAEFFBF111E77F100526983 /* ServerBrowserCocoa.xib */,
@@ -1018,11 +1024,15 @@
 				0AAB323314B2BC59002C6F33 /* IconForCaution.icns */,
 				0AC810AE1221ECA500687DB2 /* IconForCommand.icns */,
 				0AC838670ABF915B00BEF8B9 /* IconForContextMenu.icns */,
+				0A5CE9261582DF1D008CD243 /* IconForContextMenuSegment.icns */,
+				0A65F2C315882AD100B9E338 /* IconForContextMenuSegment@2x.icns */,
 				0AD7483013073E56003E368B /* IconForCustomize.icns */,
 				0AD7481C13072342003E368B /* IconForFullScreen.icns */,
 				0A119C431522B545003A41B7 /* IconForFullScreenDisable.icns */,
 				0AC7DDA90AC2579D00ED8C19 /* IconForHide.icns */,
 				0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */,
+				0A5CE9411582ED7C008CD243 /* IconForItemAddMenuSegment.icns */,
+				0A5C09C1158828C30097B598 /* IconForItemAddMenuSegment@2x.icns */,
 				0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */,
 				0ACBF0101449232F00D17678 /* IconForKillSession.icns */,
 				0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */,
@@ -1071,7 +1081,7 @@
 				0A46FE06055432A400ACDF3A /* PrefPanelMacros.cp */,
 				0ABC0D230A4503A3009D07FC /* PrefPanelSessions.cp */,
 				0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.cp */,
-				0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */,
+				0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */,
 				0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */,
 				0A46FDDB055432A400ACDF3A /* PrefsContextDialog.cp */,
 				0A46FE08055432A400ACDF3A /* PrefsWindow.mm */,
@@ -1418,7 +1428,7 @@
 				0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */,
 				0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */,
 				0ACA57D30AEADDE800B5F482 /* GenericDialog.cp in Sources */,
-				0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */,
+				0A3E06F30B81766900EDC16A /* PrefPanelTranslations.mm in Sources */,
 				0ACBC3570D5BBC6300FCF05F /* CocoaBasic.mm in Sources */,
 				0A2890DD0D68017D0017D99E /* GenericPanelTabs.cp in Sources */,
 				0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */,
@@ -1573,6 +1583,14 @@
 				0A7236F510841FAB00BB36C2 /* English */,
 			);
 			name = PrintPreviewCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A839C3315805125000F001E /* PrefPanelTranslationsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A839C3415805125000F001E /* English */,
+			);
+			name = PrefPanelTranslationsCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A8450A50554CB8E00CFF440 /* PrefsWindow.nib */ = {

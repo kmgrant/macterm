@@ -140,14 +140,12 @@ didPerformContextSensitiveHelp:(id)_;
 // view will be redisplayed or obscured (e.g. in a tab view, because another tab is about to be displayed)
 - (void)
 panelViewManager:(Panel_ViewManager*)_
-containerView:(NSView*)_
-willChangeVisibility:(Panel_Visibility)_;
+willChangePanelVisibility:(Panel_Visibility)_;
 
 // view has now been redisplayed or obscured (e.g. in a tab view, because another tab has been displayed)
 - (void)
 panelViewManager:(Panel_ViewManager*)_
-containerView:(NSView*)_
-didChangeVisibility:(Panel_Visibility)_;
+didChangePanelVisibility:(Panel_Visibility)_;
 
 // data set to be represented by the view has changed; for inspector-style views this can happen more than once
 - (void)

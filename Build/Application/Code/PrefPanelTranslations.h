@@ -42,11 +42,63 @@
 // application includes
 #include "Panel.h"
 #include "Preferences.h"
+#include "PrefsWindow.h"
+
+
+
+#pragma mark Types
+
+#ifdef __OBJC__
+
+/*!
+Loads a NIB file that defines this panel.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelTranslations_ViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+{
+	IBOutlet NSTableView*	translationTableView;
+@private
+	NSMutableArray*				translationTables;
+	Preferences_ContextRef		activeContext;
+}
+
+// accessors
+
+- (BOOL)
+backupFontEnabled;
+- (void)
+setBackupFontEnabled:(BOOL)_; // binding
+
+- (NSString*)
+backupFontFamilyName;
+- (void)
+setBackupFontFamilyName:(NSString*)_; // binding
+
+- (NSIndexSet*)
+translationTableIndexes;
+- (void)
+setTranslationTableIndexes:(NSIndexSet*)_; // binding
+
+- (NSArray*)
+translationTables; // binding
+
+// actions
+
+- (IBAction)
+performBackupFontSelection:(id)_;
+
+@end
+
+#endif // __OBJC__
 
 
 
 #pragma mark Public Methods
 
+// CARBON LEGACY
 Panel_Ref
 	PrefPanelTranslations_New			();
 

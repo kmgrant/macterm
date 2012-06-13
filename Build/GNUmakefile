@@ -179,11 +179,15 @@ IconForBundle.icns \
 IconForCaution.icns \
 IconForCommand.icns \
 IconForContextMenu.icns \
+IconForContextMenuSegment.icns \
+IconForContextMenuSegment@2x.icns \
 IconForCustomize.icns \
 IconForFullScreen.icns \
 IconForFullScreenDisable.icns \
 IconForHide.icns \
 IconForItemAdd.icns \
+IconForItemAddMenuSegment.icns \
+IconForItemAddMenuSegment@2x.icns \
 IconForItemRemove.icns \
 IconForKillSession.icns \
 IconForLEDOff.icns \
@@ -244,6 +248,7 @@ English.lproj/KeypadFunctionKeysCocoa \
 English.lproj/KeypadVT220KeysCocoa \
 English.lproj/MainMenuCocoa \
 English.lproj/PrefPanelFullScreenCocoa \
+English.lproj/PrefPanelTranslationsCocoa \
 English.lproj/PrefsWindowCocoa \
 English.lproj/PrintPreviewCocoa \
 English.lproj/ServerBrowserCocoa \

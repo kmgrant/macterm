@@ -823,6 +823,35 @@ setSuperfluousEffectsEnabled:(BOOL)	aFlag
 }// setSuperfluousEffectsEnabled:
 
 
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
 #pragma mark Panel_Delegate
 
 
@@ -888,12 +917,11 @@ Responds just before a change to the visible state of this panel.
 (4.1)
 */
 - (void)
-panelViewManager:(Panel_ViewManager*)		aViewManager
-containerView:(NSView*)						aContainerView
-willChangeVisibility:(Panel_Visibility)		aVisibility
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
 {
-#pragma unused(aViewManager, aContainerView, aVisibility)
-}// panelViewManager:containerView:willChangeVisibility:
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:willChangePanelVisibility:
 
 
 /*!
@@ -902,12 +930,11 @@ Responds just after a change to the visible state of this panel.
 (4.1)
 */
 - (void)
-panelViewManager:(Panel_ViewManager*)		aViewManager
-containerView:(NSView*)						aContainerView
-didChangeVisibility:(Panel_Visibility)		aVisibility
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
 {
-#pragma unused(aViewManager, aContainerView, aVisibility)
-}// panelViewManager:containerView:didChangeVisibility:
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
 
 
 /*!
@@ -1019,33 +1046,19 @@ panelResizeAxes
 }// panelResizeAxes
 
 
-#pragma mark NSKeyValueObservingCustomization
+#pragma mark PrefsWindow_PanelInterface
 
 
 /*!
-Returns true for keys that manually notify observers
-(through "willChangeValueForKey:", etc.).
+Returns the class of preferences edited by this panel.
 
 (4.1)
 */
-+ (BOOL)
-automaticallyNotifiesObserversForKey:(NSString*)	theKey
+- (Quills::Prefs::Class)
+preferencesClass
 {
-	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
-	
-	
-	if (NULL != class_getClassMethod([self class], flagSource))
-	{
-		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
-		result = [[self performSelector:flagSource] boolValue];
-	}
-	else
-	{
-		result = [super automaticallyNotifiesObserversForKey:theKey];
-	}
-	return result;
-}// automaticallyNotifiesObserversForKey:
+	return Quills::Prefs::GENERAL;
+}// preferencesClass
 
 
 @end // PrefPanelFullScreen_ViewManager

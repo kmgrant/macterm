@@ -1,5 +1,8 @@
 /*!	\file PrefPanelTranslations.cp
 	\brief Implements the Translations panel of Preferences.
+	
+	Note that this is in transition from Carbon to Cocoa,
+	and is not yet taking advantage of most of Cocoa.
 */
 /*###############################################################
 
@@ -30,42 +33,46 @@
 
 ###############################################################*/
 
-#include "PrefPanelTranslations.h"
-#include <UniversalDefines.h>
+#import "PrefPanelTranslations.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <cstring>
+#import <cstring>
 
 // Mac includes
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
+#import <CoreServices/CoreServices.h>
+#import <objc/objc-runtime.h>
 
 // library includes
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <CocoaBasic.h>
-#include <CommonEventHandlers.h>
-#include <Console.h>
-#include <DialogAdjust.h>
-#include <HIViewWrap.h>
-#include <HIViewWrapManip.h>
-#include <IconManager.h>
-#include <Localization.h>
-#include <MemoryBlocks.h>
-#include <NIBLoader.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CocoaBasic.h>
+#import <CocoaExtensions.objc++.h>
+#import <CommonEventHandlers.h>
+#import <Console.h>
+#import <DialogAdjust.h>
+#import <HIViewWrap.h>
+#import <HIViewWrapManip.h>
+#import <IconManager.h>
+#import <Localization.h>
+#import <MemoryBlocks.h>
+#import <NIBLoader.h>
 
 // resource includes
-#include "SpacingConstants.r"
+#import "SpacingConstants.r"
 
 // application includes
-#include "AppResources.h"
-#include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
-#include "Panel.h"
-#include "Preferences.h"
-#include "TextTranslation.h"
-#include "UIStrings.h"
-#include "UIStrings_PrefsWindow.h"
+#import "AppResources.h"
+#import "ConstantsRegistry.h"
+#import "DialogUtilities.h"
+#import "HelpSystem.h"
+#import "Panel.h"
+#import "Preferences.h"
+#import "TextTranslation.h"
+#import "UIStrings.h"
+#import "UIStrings_PrefsWindow.h"
 
 
 
@@ -172,6 +179,44 @@ typedef My_TranslationsPanelData*	My_TranslationsPanelDataPtr;
 
 } // anonymous namespace
 
+
+/*!
+Implements an object wrapper for translation tables, that allows
+them to be easily inserted into user interface elements without
+losing less user-friendly information about each encoding.
+*/
+@interface PrefPanelTranslations_TableInfo : NSObject
+{
+@private
+	CFStringEncoding	encodingType;
+	NSString*			description;
+}
+
+// initializers
+
+- (id)
+initWithEncodingType:(CFStringEncoding)_
+description:(NSString*)_;
+
+// accessors; see "Translation Tables" array controller in the NIB, for key names
+
+- (NSString*)
+boundName;
+- (void)
+setBoundName:(NSString*)_; // binding
+
+- (NSString*)
+description;
+- (void)
+setDescription:(NSString*)_;
+
+- (CFStringEncoding)
+encodingType;
+- (void)
+setEncodingType:(CFStringEncoding)_;
+
+@end // PrefPanelTranslations_TableInfo
+
 #pragma mark Internal Method Prototypes
 namespace {
 
@@ -188,6 +233,10 @@ OSStatus			receiveViewHit					(EventHandlerCallRef, EventRef, void*);
 void				setDataBrowserColumnWidths		(My_TranslationsPanelUIPtr);
 
 } // anonymous namespace
+
+@interface PrefPanelTranslations_ViewManager (PrefPanelTranslations_ViewManagerInternal)
+
+@end // PrefPanelTranslations_ViewManager (PrefPanelTranslations_ViewManagerInternal)
 
 #pragma mark Variables
 namespace {
@@ -1336,5 +1385,626 @@ setDataBrowserColumnWidths	(My_TranslationsPanelUIPtr		inInterfacePtr)
 }// setDataBrowserColumnWidths
 
 } // anonymous namespace
+
+
+@implementation PrefPanelTranslations_TableInfo
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithEncodingType:(CFStringEncoding)		anEncoding
+description:(NSString*)						aDescription
+{
+	self = [super init];
+	if (nil != self)
+	{
+		[self setEncodingType:anEncoding];
+		[self setDescription:aDescription];
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[description release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+IMPORTANT:	The "boundName" key is ONLY required because older
+			versions of Mac OS X do not seem to work properly
+			when bound to the "description" accessor.  (Namely,
+			the OS seems to stubbornly use its own "description"
+			instead of invoking the right one.)  In the future
+			this might be removed and rebound to "description".
+
+(4.1)
+*/
+- (NSString*)
+boundName
+{
+	return [[description retain] autorelease];
+}
+- (void)
+setBoundName:(NSString*)	aString
+{
+	if (description != aString)
+	{
+		[description release];
+		description = [aString copy];
+	}
+}// setBoundName:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSString*)
+description
+{
+	return [self boundName];
+}
+- (void)
+setDescription:(NSString*)		aString
+{
+	[self setBoundName:aString];
+}// setDescription:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (CFStringEncoding)
+encodingType
+{
+	return encodingType;
+}
+- (void)
+setEncodingType:(CFStringEncoding)		anEncoding
+{
+	encodingType = anEncoding;
+}// setEncodingType:
+
+
+@end // PrefPanelTranslations_TableInfo
+
+
+@implementation PrefPanelTranslations_ViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelTranslationsCocoa" delegate:self];
+	if (nil != self)
+	{
+		UInt16		characterSetCount = TextTranslation_ReturnCharacterSetCount();
+		
+		
+		self->translationTables = [[NSMutableArray alloc] initWithCapacity:characterSetCount];
+		self->activeContext = nullptr; // set later
+		
+		// build a table of available text encodings
+		[self willChangeValueForKey:@"translationTables"];
+		for (UInt16 i = 1; i <= characterSetCount; ++i)
+		{
+			CFStringEncoding	encodingID = TextTranslation_ReturnIndexedCharacterSet(i);
+			NSString*			encodingName = (NSString*)CFStringGetNameOfEncoding(encodingID);
+			
+			
+			[self->translationTables addObject:[[[PrefPanelTranslations_TableInfo alloc]
+													initWithEncodingType:encodingID description:encodingName]
+												autorelease]];
+		}
+		[self didChangeValueForKey:@"translationTables"];
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[translationTables release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+backupFontEnabled
+{
+	return (NO == [[self backupFontFamilyName] isEqualToString:@""]);
+}
+- (void)
+setBackupFontEnabled:(BOOL)		aFlag
+{
+	if ([self backupFontEnabled] != aFlag)
+	{
+		if (aFlag)
+		{
+			// the default is arbitrary (TEMPORARY; should probably read this from somewhere else)
+			NSString*	defaultFont = [[NSFont userFixedPitchFontOfSize:[NSFont systemFontSize]] familyName];
+			
+			
+			if (nil == defaultFont)
+			{
+				defaultFont = @"Monaco";
+			}
+			[self setBackupFontFamilyName:defaultFont];
+		}
+		else
+		{
+			[self setBackupFontFamilyName:@""];
+		}
+	}
+}// setBackupFontEnabled:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+backupFontFamilyName
+{
+	NSString*	result = @"";
+	
+	
+	if (Preferences_ContextIsValid(self->activeContext))
+	{
+		Str255				fontName; // TEMPORARY (convert to CFStringRef)
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self->activeContext, kPreferences_TagBackupFontName,
+																		sizeof(fontName), fontName, false/* search defaults too */);
+		
+		
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			CFStringRef		asCFString = CFStringCreateWithPascalString(kCFAllocatorDefault, fontName, kCFStringEncodingMacRoman);
+			
+			
+			result = ((NSString*)asCFString);
+			[result autorelease];
+		}
+	}
+	return result;
+}
+- (void)
+setBackupFontFamilyName:(NSString*)		aString
+{
+	if (Preferences_ContextIsValid(self->activeContext))
+	{
+		Str255		fontName; // TEMPORARY (convert to CFStringRef)
+		BOOL		saveOK = NO;
+		
+		
+		if (CFStringGetPascalString((CFStringRef)aString, fontName, sizeof(fontName), kCFStringEncodingMacRoman))
+		{
+			Preferences_Result	prefsResult = Preferences_ContextSetData(self->activeContext, kPreferences_TagBackupFontName,
+																			sizeof(fontName), fontName);
+			
+			
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				saveOK = YES;
+			}
+		}
+		
+		if (NO == saveOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to save backup font preference");
+		}
+	}
+}// setBackupFontFamilyName:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSIndexSet*)
+translationTableIndexes
+{
+	NSIndexSet*		result = [NSIndexSet indexSetWithIndex:0];
+	
+	
+	if (Preferences_ContextIsValid(self->activeContext))
+	{
+		CFStringEncoding	encodingID = TextTranslation_ContextReturnEncoding(self->activeContext, kCFStringEncodingInvalidId);
+		
+		
+		if (kCFStringEncodingInvalidId != encodingID)
+		{
+			UInt16		index = TextTranslation_ReturnCharacterSetIndex(encodingID);
+			
+			
+			if (0 == index)
+			{
+				// not found
+				Console_Warning(Console_WriteValue, "saved encoding is not available on the current system", encodingID);
+			}
+			else
+			{
+				// translate from one-based to zero-based
+				result = [NSIndexSet indexSetWithIndex:(index - 1)];
+			}
+		}
+	}
+	return result;
+}
+- (void)
+setTranslationTableIndexes:(NSIndexSet*)	indexes
+{
+	if (Preferences_ContextIsValid(self->activeContext))
+	{
+		BOOL	saveOK = NO;
+		
+		
+		[self willChangeValueForKey:@"translationTableIndexes"];
+		
+		if ([indexes count] > 0)
+		{
+			// translate from zero-based to one-based
+			UInt16		index = (1 + [indexes firstIndex]);
+			
+			
+			// update preferences
+			if (TextTranslation_ContextSetEncoding(self->activeContext, TextTranslation_ReturnIndexedCharacterSet(index),
+													false/* via copy */))
+			{
+				saveOK = YES;
+			}
+			
+			// scroll the list to reveal the current selection
+			[self->translationTableView scrollRowToVisible:[indexes firstIndex]];
+		}
+		
+		if (NO == saveOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to save translation table preference");
+		}
+		
+		[self didChangeValueForKey:@"translationTableIndexes"];
+	}
+}// setTranslationTableIndexes:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSArray*)
+translationTables
+{
+	return [[translationTables retain] autorelease];
+}
+
+
+#pragma mark Actions
+
+
+/*!
+Displays a font panel for editing the backup font.
+
+(4.1)
+*/
+- (IBAction)
+performBackupFontSelection:(id)		sender
+{
+	[[NSFontPanel sharedFontPanel] makeKeyAndOrderFront:sender];
+}// performBackupFontSelection:
+
+
+#pragma mark NSFontPanel
+
+
+/*!
+Displays a font panel for editing the backup font.
+
+(4.1)
+*/
+- (void)
+changeFont:(id)		sender
+{
+	NSFont*		oldFont = [NSFont fontWithName:[self backupFontFamilyName] size:[NSFont systemFontSize]];
+	NSFont*		newFont = [sender convertFont:oldFont];
+	
+	
+	[self setBackupFontFamilyName:[newFont familyName]];
+}// changeFont:
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeInspector;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+	assert(nil != translationTableView);
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = [[self managedView] frame].size;
+}
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet)
+	self->activeContext = REINTERPRET_CAST(newDataSet, Preferences_ContextRef);
+	
+	// invoke every accessor with itself, which has the effect of
+	// reading the current preference values (of the now-current
+	// new context) and then updating the display based on them
+	[self setBackupFontEnabled:[self backupFontEnabled]];
+	[self setBackupFontFamilyName:[self backupFontFamilyName]];
+	[self setTranslationTableIndexes:[self translationTableIndexes]];
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [NSImage imageNamed:@"IconForPrefPanelTranslations"];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.Translations";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Translations", @"PrefPanelTranslations", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintBothAxes;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::TRANSLATION;
+}// preferencesClass
+
+
+@end // PrefPanelTranslations_ViewManager
+
+
+@implementation PrefPanelTranslations_ViewManager (PrefPanelTranslations_ViewManagerInternal)
+
+
+@end // PrefPanelTranslations_ViewManager (PrefPanelTranslations_ViewManagerInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

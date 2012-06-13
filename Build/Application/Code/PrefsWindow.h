@@ -40,10 +40,19 @@
 #	import <Cocoa/Cocoa.h>
 #endif
 
+// library includes
+#ifdef __OBJC__
+@class ListenerModel_StandardListener;
+#else
+class ListenerModel_StandardListener;
+#endif
+
 // application includes
+#include "QuillsPrefs.h"
 #ifdef __OBJC__
 #	import "Panel.h"
 @class PrefPanelFullScreen_ViewManager;
+@class PrefPanelTranslations_ViewManager;
 #endif
 
 
@@ -51,6 +60,24 @@
 #pragma mark Types
 
 #ifdef __OBJC__
+
+/*!
+Panels that are destined for the Preferences window must implement
+the following methods as well, not just the Panel interface.
+*/
+@protocol PrefsWindow_PanelInterface
+
+// for convenience, if a panel implements this NSFontPanel message then
+// the window controller will forward the message to the panel if the
+// message reaches the PrefsWindow_Controller instance
+//- (void)
+//changeFont:(id)_;
+
+- (Quills::Prefs::Class)
+preferencesClass;
+
+@end // PrefsWindow_PanelInterface
+
 
 /*!
 Implements the Cocoa window that wraps the Cocoa version of
@@ -64,22 +91,70 @@ changes to an interface declared in a ".mm" file.
 @interface PrefsWindow_Controller : NSWindowController
 {
 	IBOutlet NSView*		containerView;
+	IBOutlet NSView*		sourceListContainer;
+	IBOutlet NSTableView*	sourceListTableView;
+	IBOutlet NSView*		sourceListSegmentedControl;
+	IBOutlet NSView*		verticalDividerView;
+	IBOutlet NSView*		horizontalDividerView;
 @private
+	NSIndexSet*							currentPreferenceCollectionIndexes;
+	NSMutableArray*						currentPreferenceCollections;
 	NSMutableArray*						panelIDArray; // ordered array of "panelIdentifier" values
 	NSMutableDictionary*				panelsByID; // view managers (Panel_ViewManager subclass) from "panelIdentifier" keys
 	NSMutableDictionary*				windowSizesByID; // NSArray* values (each with 2 NSNumber*) from "panelIdentifier" keys
 	NSSize								extraWindowSize; // stores window frame extra width and height (not belonging to a panel)
-	Panel_ViewManager*					activePanel;
+	BOOL								isSourceListHidden;
+	ListenerModel_StandardListener*		preferenceChangeListener;
+	Panel_ViewManager< PrefsWindow_PanelInterface >*	activePanel;
+	PrefPanelTranslations_ViewManager*	translationsPanel;
 	PrefPanelFullScreen_ViewManager*	fullScreenPanel;
 }
 
 + (id)
 sharedPrefsWindowController;
 
+// accessors
+
+- (NSIndexSet*)
+currentPreferenceCollectionIndexes;
+- (void)
+setCurrentPreferenceCollectionIndexes:(NSIndexSet*)_; // binding
+
+- (NSArray*)
+currentPreferenceCollections; // binding
+
+- (BOOL)
+isSourceListHidden; // binding
+- (BOOL)
+isSourceListShowing; // binding
+- (void)
+setSourceListHidden:(BOOL)_;
+
 // actions
 
 - (IBAction)
+performAddNewPreferenceCollection:(id)_;
+
+- (IBAction)
 performContextSensitiveHelp:(id)_;
+
+- (IBAction)
+performDuplicatePreferenceCollection:(id)_;
+
+- (IBAction)
+performExportPreferenceCollectionToFile:(id)_;
+
+- (IBAction)
+performImportPreferenceCollectionFromFile:(id)_;
+
+- (IBAction)
+performRemovePreferenceCollection:(id)_;
+
+- (IBAction)
+performRenamePreferenceCollection:(id)_;
+
+- (IBAction)
+performSegmentedControlAction:(id)_;
 
 @end
 
