@@ -46,6 +46,7 @@
 
 // application includes
 #include "PreferencesContextRef.typedef.h"
+#include "QuillsSWIG.h"
 
 
 
@@ -138,8 +139,8 @@ situation.\n\
 	{
 		$action
 	}
-    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
-	SWIG_CATCH_UNKNOWN
+	SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	QUILLS_CATCH_ALL
 }
 #endif
 	static void import_from_file	(std::string	pathname,

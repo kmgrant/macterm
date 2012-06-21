@@ -43,6 +43,7 @@
 
 // application includes
 #include "QuillsCallbacks.typedef.h"
+#include "QuillsSWIG.h"
 
 
 
@@ -76,8 +77,8 @@ IMPORTANT: This call blocks until the user asks to quit.\n\
 	{
 		$action
 	}
-    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
-	SWIG_CATCH_UNKNOWN
+	SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	QUILLS_CATCH_ALL
 }
 #endif
 	// only intended for direct use by the application delegate in Cocoa

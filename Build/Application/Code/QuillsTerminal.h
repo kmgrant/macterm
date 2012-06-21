@@ -44,6 +44,7 @@
 
 // application includes
 #include "QuillsCallbacks.typedef.h"
+#include "QuillsSWIG.h"
 #include "Terminal.h"
 
 
@@ -99,8 +100,8 @@ and MacTerm installs its own routine by default.\n\
 	{
 		$action
 	}
-    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
-	SWIG_CATCH_UNKNOWN
+	SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	QUILLS_CATCH_ALL
 }
 #endif
 	static std::pair<long, long> word_of_char_in_string		(std::string	text_utf8,

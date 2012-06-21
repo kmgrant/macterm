@@ -44,6 +44,7 @@
 
 // application includes
 #include "QuillsCallbacks.typedef.h"
+#include "QuillsSWIG.h"
 #include "SessionRef.typedef.h"
 
 
@@ -87,8 +88,8 @@ The character encoding is UTF-8.\n\
 	{
 		$action
 	}
-    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
-	SWIG_CATCH_UNKNOWN
+	SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	QUILLS_CATCH_ALL
 }
 #endif
 	std::string pseudo_terminal_device_name ();
@@ -108,8 +109,8 @@ The character encoding is UTF-8.\n\
 	{
 		$action
 	}
-    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
-	SWIG_CATCH_UNKNOWN
+	SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	QUILLS_CATCH_ALL
 }
 #endif
 	std::string resource_location_string ();
@@ -129,8 +130,8 @@ The character encoding is UTF-8.\n\
 	{
 		$action
 	}
-    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
-	SWIG_CATCH_UNKNOWN
+	SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	QUILLS_CATCH_ALL
 }
 #endif
 	std::string state_string ();
@@ -157,8 +158,8 @@ new sessions when they appear.\n\
 	{
 		$action
 	}
-    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
-	SWIG_CATCH_UNKNOWN
+	SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	QUILLS_CATCH_ALL
 }
 #endif
 	static void handle_file (std::string	pathname);
@@ -182,8 +183,8 @@ new sessions when they appear.\n\
 	{
 		$action
 	}
-    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
-	SWIG_CATCH_UNKNOWN
+	SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	QUILLS_CATCH_ALL
 }
 #endif
 	static void handle_url (std::string		url);
@@ -213,8 +214,8 @@ The character encoding of directory path strings is UTF-8.\n\
 	{
 		$action
 	}
-    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
-	SWIG_CATCH_UNKNOWN
+	SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	QUILLS_CATCH_ALL
 }
 #endif
 	static std::map< long, std::string > pids_cwds (const std::vector< long >&	pids);

@@ -44,6 +44,9 @@
 #include <string>
 #include <vector>
 
+// application includes
+#include "QuillsSWIG.h"
+
 
 
 #pragma mark Public Methods
