@@ -117,6 +117,11 @@ struct Panel_DataSetTransition
 
 @protocol Panel_Delegate
 
+// superclass minimally initialized, no NIB loaded yet; perform subclass initializations needed this early, e.g. so that NIB-provided bindings succeed
+- (void)
+panelViewManager:(Panel_ViewManager*)_
+initializeWithContext:(void*)_;
+
 // manager needs to know how the panel behaves; respond by filling in the "requestingEditType:" parameter
 - (void)
 panelViewManager:(Panel_ViewManager*)_
@@ -177,6 +182,7 @@ changes to an interface declared in a ".mm" file.
 {
 	IBOutlet NSView*	managedView;
 	IBOutlet NSView*	logicalFirstResponder;
+	IBOutlet NSView*	logicalLastResponder;
 @private
 	id< Panel_Delegate >	delegate;
 	SEL						panelDisplayAction;
@@ -188,7 +194,8 @@ changes to an interface declared in a ".mm" file.
 // designated initializer
 - (id)
 initWithNibNamed:(NSString*)_
-delegate:(id< Panel_Delegate >)_;
+delegate:(id< Panel_Delegate >)_
+context:(void*)_;
 
 // accessors
 
@@ -197,6 +204,9 @@ delegate;
 
 - (NSView*)
 logicalFirstResponder;
+
+- (NSView*)
+logicalLastResponder;
 
 - (NSView*)
 managedView;
@@ -240,6 +250,12 @@ panelName;
 panelResizeAxes;
 
 @end
+
+#else
+
+// this is mostly a useless declaration (as it is Objective-C only)
+// though it is helpful if other code refers to it only as a pointer
+class Panel_ViewManager;
 
 #endif // __OBJC__
 

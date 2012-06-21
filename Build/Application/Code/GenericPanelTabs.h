@@ -44,19 +44,60 @@
 #define __GENERICPANELTABS__
 
 // standard-C++ includes
+#include <map>
 #include <vector>
 
 // Mac includes
 #include <CoreFoundation/CoreFoundation.h>
+#ifdef __OBJC__
+@class NSView;
+#else
+class NSView;
+#endif
 
 // application includes
 #include "Panel.h"
+#include "PrefsWindow.h"
 
 
 
 #pragma mark Types
 
 typedef std::vector< Panel_Ref >		GenericPanelTabs_List;
+
+typedef std::map< NSView*, Panel_ViewManager* >		GenericPanelTabs_ViewManagerByView;
+
+#ifdef __OBJC__
+
+/*!
+Loads a NIB file that defines this panel.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface GenericPanelTabs_ViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+{
+	IBOutlet NSTabView*		tabView;
+@private
+	NSString*								identifier;
+	NSString*								localizedName;
+	NSImage*								localizedIcon;
+	NSArray*								viewManagerArray;
+	GenericPanelTabs_ViewManagerByView*		viewManagerByView;
+}
+
+// initializers
+
+- (id)
+initWithIdentifier:(NSString*)_
+localizedName:(NSString*)_
+localizedIcon:(NSImage*)_
+viewManagerArray:(NSArray*)_;
+
+@end
+
+#endif // __OBJC__
 
 
 

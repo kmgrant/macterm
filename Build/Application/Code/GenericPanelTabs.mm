@@ -1,5 +1,8 @@
-/*!	\file GenericPanelTabs.cp
+/*!	\file GenericPanelTabs.mm
 	\brief Implements a panel that can contain others.
+	
+	Note that this is in transition from Carbon to Cocoa,
+	and is not yet taking advantage of most of Cocoa.
 */
 /*###############################################################
 
@@ -30,23 +33,28 @@
 
 ###############################################################*/
 
-#include "GenericPanelTabs.h"
-#include <UniversalDefines.h>
+#import "GenericPanelTabs.h"
+#import <UniversalDefines.h>
 
 // standard-C++ includes
-#include <stdexcept>
-#include <vector>
+#import <map>
+#import <stdexcept>
+#import <utility>
+#import <vector>
 
 // Mac includes
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
+#import <CoreServices/CoreServices.h>
+#import <objc/objc-runtime.h>
 
 // library includes
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <CommonEventHandlers.h>
-#include <HIViewWrap.h>
-#include <HIViewWrapManip.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CocoaExtensions.objc++.h>
+#import <CommonEventHandlers.h>
+#import <HIViewWrap.h>
+#import <HIViewWrapManip.h>
 
 
 
@@ -809,5 +817,379 @@ showTabPane		(My_GenericPanelTabsUIPtr	inUIPtr,
 }// showTabPane
 
 } // anonymous namespace
+
+
+@implementation GenericPanelTabs_ViewManager
+
+
+/*!
+Designated initializer.
+
+The array must consist of view manager objects that are
+consistent with the usage of the tabs panel itself; for
+instance if you intend to put the tabs into the Preferences
+window then EVERY view manager in the array must support
+PrefsWindow_PanelInterface; otherwise they need only
+support Panel_Delegate.
+
+(4.1)
+*/
+- (id)
+initWithIdentifier:(NSString*)	anIdentifier
+localizedName:(NSString*)		aName
+localizedIcon:(NSImage*)		anImage
+viewManagerArray:(NSArray*)		anArray
+{
+	NSDictionary*	contextDictionary = [NSDictionary dictionaryWithObjectsAndKeys:
+															anIdentifier, @"identifier",
+															aName, @"localizedName",
+															anImage, @"localizedIcon",
+															anArray, @"viewManagerArray",
+															nil];
+	
+	
+	self = [super initWithNibNamed:@"GenericPanelTabsCocoa" delegate:self context:contextDictionary];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithIdentifier:localizedName:localizedIcon:viewManagerArray:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[identifier release];
+	[localizedName release];
+	[localizedIcon release];
+	[viewManagerArray release];
+	delete viewManagerByView;
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager)
+	// IMPORTANT: see the initializer for the construction of this dictionary and the names of keys that are used
+	NSDictionary*	asDictionary = (NSDictionary*)aContext;
+	NSString*		givenIdentifier = [asDictionary objectForKey:@"identifier"];
+	NSString*		givenName = [asDictionary objectForKey:@"localizedName"];
+	NSImage*		givenIcon = [asDictionary objectForKey:@"localizedIcon"];
+	NSArray*		givenViewManagers = [asDictionary objectForKey:@"viewManagerArray"];
+	NSEnumerator*	eachViewManager = [givenViewManagers objectEnumerator];
+	
+	
+	self->identifier = [givenIdentifier retain];
+	self->localizedName = [givenName retain];
+	self->localizedIcon = [givenIcon retain];
+	self->viewManagerArray = [givenViewManagers copy];
+	
+	// an NSView* object is not a valid key in an NSMutableDictionary
+	// but it will certainly work as a key in an STL map
+	self->viewManagerByView = new GenericPanelTabs_ViewManagerByView();
+	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	{
+		self->viewManagerByView->insert(std::make_pair([viewMgr managedView], viewMgr));
+	}
+	
+	// now forward initialization to all tabs
+	// UNIMPLEMENTED
+}// panelViewManagerInitialize:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	// consult all tabs
+	// UNIMPLEMENTED
+	*outEditType = kPanel_EditTypeNormal;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+	NSEnumerator*	eachViewManager = [self->viewManagerArray objectEnumerator];
+
+
+	assert(nil != tabView);
+	
+	// create tabs for every view that was provided
+	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	{
+		NSTabViewItem*	tabItem = [[NSTabViewItem alloc] initWithIdentifier:[viewMgr panelIdentifier]];
+		
+		
+		[tabItem setLabel:[viewMgr panelName]];
+		[tabItem setView:[viewMgr managedView]];
+		[tabItem setInitialFirstResponder:[viewMgr logicalFirstResponder]];
+		
+		[self->tabView addTabViewItem:tabItem];
+		[tabItem release];
+	}
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	NSRect			containerFrame = [[self managedView] frame];
+	NSRect			tabContentRect = [self->tabView contentRect];
+	NSEnumerator*	eachViewManager = [self->viewManagerArray objectEnumerator];
+	
+	
+	*outIdealSize = containerFrame.size;
+	
+	// find ideal size after considering all tabs
+	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	{
+		NSSize		panelIdealSize = *outIdealSize;
+		
+		
+		[[viewMgr delegate] panelViewManager:viewMgr requestingIdealSize:&panelIdealSize];
+		outIdealSize->width = MAX(panelIdealSize.width, outIdealSize->width);
+		outIdealSize->height = MAX(panelIdealSize.height, outIdealSize->height);
+	}
+	
+	// add in the additional space required by the tabs themselves
+	outIdealSize->width += (NSWidth(containerFrame) - NSWidth(tabContentRect));
+	outIdealSize->height += (NSHeight(containerFrame) - NSHeight(tabContentRect));
+	outIdealSize->height += 20; // TEMPORARY, UTTER HACK: it is not clear why some extra space is needed...
+}
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	// forward to active tab
+	// UNIMPLEMENTED
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+	// forward to active tab
+	// UNIMPLEMENTED
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+	// forward to active tab
+	// UNIMPLEMENTED
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+Not applicable to this panel because it only sets global
+(Default) preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet, newDataSet)
+	// forward to all tabs
+	// UNIMPLEMENTED
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView, isAccepted)
+	// forward to all tabs
+	// UNIMPLEMENTED
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [[self->localizedIcon retain] autorelease];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return [[self->identifier retain] autorelease];
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return [[self->localizedName retain] autorelease];
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	// consult all tabs and return the tightest constraint possible
+	// UNIMPLEMENTED
+	return kPanel_ResizeConstraintBothAxes;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	// consult all tabs to ensure that they all agree on this
+	// UNIMPLEMENTED
+	return Quills::Prefs::GENERAL;
+}// preferencesClass
+
+
+@end // GenericPanelTabs_ViewManager
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

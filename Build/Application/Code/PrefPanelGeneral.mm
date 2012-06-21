@@ -1,5 +1,8 @@
 /*!	\file PrefPanelGeneral.cp
 	\brief Implements the General panel of Preferences.
+	
+	Note that this is in transition from Carbon to Cocoa,
+	and is not yet taking advantage of most of Cocoa.
 */
 /*###############################################################
 
@@ -30,54 +33,58 @@
 
 ###############################################################*/
 
-#include "PrefPanelGeneral.h"
-#include <UniversalDefines.h>
+#import "PrefPanelGeneral.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <cstring>
+#import <cstring>
 
 // Unix includes
-#include <strings.h>
+#import <strings.h>
 
 // Mac includes
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
+#import <CoreServices/CoreServices.h>
+#import <objc/objc-runtime.h>
 
 // library includes
-#include <AlertMessages.h>
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <CFUtilities.h>
-#include <CocoaBasic.h>
-#include <ColorUtilities.h>
-#include <CommonEventHandlers.h>
-#include <Console.h>
-#include <DialogAdjust.h>
-#include <GrowlSupport.h>
-#include <HIViewWrap.h>
-#include <HIViewWrapManip.h>
-#include <Localization.h>
-#include <MemoryBlocks.h>
-#include <NIBLoader.h>
-#include <RegionUtilities.h>
-#include <SoundSystem.h>
+#import <AlertMessages.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CFUtilities.h>
+#import <CocoaBasic.h>
+#import <CocoaExtensions.objc++.h>
+#import <ColorUtilities.h>
+#import <CommonEventHandlers.h>
+#import <Console.h>
+#import <DialogAdjust.h>
+#import <GrowlSupport.h>
+#import <HelpSystem.h>
+#import <HIViewWrap.h>
+#import <HIViewWrapManip.h>
+#import <Localization.h>
+#import <MemoryBlocks.h>
+#import <NIBLoader.h>
+#import <RegionUtilities.h>
+#import <SoundSystem.h>
 
 // resource includes
-#include "SpacingConstants.r"
+#import "SpacingConstants.r"
 
 // application includes
-#include "AppResources.h"
-#include "Commands.h"
-#include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
-#include "Keypads.h"
-#include "Panel.h"
-#include "Preferences.h"
-#include "SessionFactory.h"
-#include "TerminalView.h"
-#include "TerminalWindow.h"
-#include "UIStrings.h"
-#include "UIStrings_PrefsWindow.h"
+#import "AppResources.h"
+#import "Commands.h"
+#import "ConstantsRegistry.h"
+#import "DialogUtilities.h"
+#import "Keypads.h"
+#import "Panel.h"
+#import "Preferences.h"
+#import "SessionFactory.h"
+#import "TerminalView.h"
+#import "TerminalWindow.h"
+#import "UIStrings.h"
+#import "UIStrings_PrefsWindow.h"
 
 
 
@@ -287,6 +294,10 @@ void			showTabPane										(My_GeneralPanelUIPtr, UInt16);
 Boolean			updateCheckBoxPreference						(My_GeneralPanelUIPtr, HIViewRef);
 
 } // anonymous namespace
+
+@interface PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
+
+@end // PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
 
 #pragma mark Variables
 namespace {
@@ -2188,5 +2199,577 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 }// updateCheckBoxPreference
 
 } // anonymous namespace
+
+
+@implementation PrefPanelGeneral_ViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	NSArray*	subViewManagers = [NSArray arrayWithObjects:
+												[[[PrefPanelGeneral_OptionsViewManager alloc] init] autorelease],
+												nil];
+	
+	
+	self = [super initWithIdentifier:@"net.macterm.prefpanels.General"
+										localizedName:NSLocalizedStringFromTable(@"General", @"PrefPanelGeneral",
+																					@"the name of this panel")
+										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelGeneral"]
+										viewManagerArray:subViewManagers];
+	if (nil != self)
+	{
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+@end // PrefPanelGeneral_ViewManager
+
+
+@implementation PrefPanelGeneral_OptionsViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelGeneralOptionsCocoa" delegate:self context:nullptr];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManagerInitialize:"
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[prefsMgr release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+noWindowCloseOnProcessExit
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagDontAutoClose defaultValue:NO];
+}
+- (void)
+setNoWindowCloseOnProcessExit:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagDontAutoClose];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save no-auto-close preference");
+	}
+}// setNoWindowCloseOnProcessExit:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+noAutomaticNewWindows
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagDontAutoNewOnApplicationReopen defaultValue:NO];
+}
+- (void)
+setNoAutomaticNewWindows:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagDontAutoNewOnApplicationReopen];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save no-auto-new preference");
+	}
+}// setNoAutomaticNewWindows:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+fadeInBackground
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagFadeBackgroundWindows defaultValue:NO];
+}
+- (void)
+setFadeInBackground:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagFadeBackgroundWindows];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save fade-in-background preference");
+	}
+}// setFadeInBackground:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+invertSelectedText
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagPureInverse defaultValue:NO];
+}
+- (void)
+setInvertSelectedText:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagPureInverse];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save invert-selected-text preference");
+	}
+}// setInvertSelectedText:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+automaticallyCopySelectedText
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagCopySelectedText defaultValue:NO];
+}
+- (void)
+setAutomaticallyCopySelectedText:(BOOL)		aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagCopySelectedText];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save auto-copy-selected-text preference");
+	}
+}// setAutomaticallyCopySelectedText:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+moveCursorToTextDropLocation
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagCursorMovesPriorToDrops defaultValue:NO];
+}
+- (void)
+setMoveCursorToTextDropLocation:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagCursorMovesPriorToDrops];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save move-cursor-to-drop-location preference");
+	}
+}// setMoveCursorToTextDropLocation:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+doNotDimBackgroundTerminalText
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagDontDimBackgroundScreens defaultValue:NO];
+}
+- (void)
+setDoNotDimBackgroundTerminalText:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagDontDimBackgroundScreens];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save do-not-dim preference");
+	}
+}// setDoNotDimBackgroundTerminalText:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+doNotWarnAboutMultiLinePaste
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagNoPasteWarning defaultValue:NO];
+}
+- (void)
+setDoNotWarnAboutMultiLinePaste:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagNoPasteWarning];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save do-not-warn-about-multi-line-paste preference");
+	}
+}// setDoNotWarnAboutMultiLinePaste:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+treatBackquoteLikeEscape
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagMapBackquote defaultValue:NO];
+}
+- (void)
+setTreatBackquoteLikeEscape:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagMapBackquote];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save backquote-is-escape preference");
+	}
+}// setTreatBackquoteLikeEscape:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+focusFollowsMouse
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagFocusFollowsMouse defaultValue:NO];
+}
+- (void)
+setFocusFollowsMouse:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagFocusFollowsMouse];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save focus-follows-mouse preference");
+	}
+}// setFocusFollowsMouse:
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeNormal;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = [[self managedView] frame].size;
+}
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+Not applicable to this panel because it only sets global
+(Default) preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet, newDataSet)
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return nil;
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.General.Options";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Options", @"PrefPanelGeneral", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintHorizontal;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::GENERAL;
+}// preferencesClass
+
+
+@end // PrefPanelGeneral_OptionsViewManager
+
+
+@implementation PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
+
+
+@end // PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

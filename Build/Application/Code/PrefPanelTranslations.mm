@@ -1501,28 +1501,10 @@ Designated initializer.
 - (id)
 init
 {
-	self = [super initWithNibNamed:@"PrefPanelTranslationsCocoa" delegate:self];
+	self = [super initWithNibNamed:@"PrefPanelTranslationsCocoa" delegate:self context:nullptr];
 	if (nil != self)
 	{
-		UInt16		characterSetCount = TextTranslation_ReturnCharacterSetCount();
-		
-		
-		self->translationTables = [[NSMutableArray alloc] initWithCapacity:characterSetCount];
-		self->activeContext = nullptr; // set later
-		
-		// build a table of available text encodings
-		[self willChangeValueForKey:@"translationTables"];
-		for (UInt16 i = 1; i <= characterSetCount; ++i)
-		{
-			CFStringEncoding	encodingID = TextTranslation_ReturnIndexedCharacterSet(i);
-			NSString*			encodingName = (NSString*)CFStringGetNameOfEncoding(encodingID);
-			
-			
-			[self->translationTables addObject:[[[PrefPanelTranslations_TableInfo alloc]
-													initWithEncodingType:encodingID description:encodingName]
-												autorelease]];
-		}
-		[self didChangeValueForKey:@"translationTables"];
+		// do not initialize here; most likely should use "panelViewManagerInitialize:"
 	}
 	return self;
 }// init
@@ -1785,6 +1767,40 @@ automaticallyNotifiesObserversForKey:(NSString*)	theKey
 
 
 #pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	UInt16		characterSetCount = TextTranslation_ReturnCharacterSetCount();
+	
+	
+	self->translationTables = [[NSMutableArray alloc] initWithCapacity:characterSetCount];
+	self->activeContext = nullptr; // set later
+	
+	// build a table of available text encodings
+	[self willChangeValueForKey:@"translationTables"];
+	for (UInt16 i = 1; i <= characterSetCount; ++i)
+	{
+		CFStringEncoding	encodingID = TextTranslation_ReturnIndexedCharacterSet(i);
+		NSString*			encodingName = (NSString*)CFStringGetNameOfEncoding(encodingID);
+		
+		
+		[self->translationTables addObject:[[[PrefPanelTranslations_TableInfo alloc]
+												initWithEncodingType:encodingID description:encodingName]
+											autorelease]];
+	}
+	[self didChangeValueForKey:@"translationTables"];
+}// panelViewManager:initializeWithContext:
 
 
 /*!

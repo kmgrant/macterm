@@ -2805,8 +2805,9 @@ init
 		self->panelIDArray = [[NSMutableArray arrayWithCapacity:7/* arbitrary */] retain];
 		self->panelsByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
 		self->windowSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
-		self->extraWindowSize = NSZeroSize; // set later
-		self->isSourceListHidden = YES; // set later
+		self->windowMinSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
+		self->extraWindowContentSize = NSZeroSize; // set later
+		self->isSourceListHidden = NO; // set later
 		self->activePanel = nil;
 		self->translationsPanel = nil;
 		self->fullScreenPanel = nil;
@@ -2850,6 +2851,7 @@ dealloc
 	[panelIDArray release];
 	[panelsByID release];
 	[windowSizesByID release];
+	[windowMinSizesByID release];
 	[super dealloc];
 }// dealloc
 
@@ -3570,12 +3572,16 @@ done in "init".)
 windowDidLoad
 {
 	[super windowDidLoad];
-	assert(nil != containerView);
+	assert(nil != windowFirstResponder);
+	assert(nil != windowLastResponder);
+	assert(nil != containerTabView);
 	assert(nil != sourceListContainer);
 	assert(nil != sourceListTableView);
 	assert(nil != sourceListSegmentedControl);
-	assert(nil != verticalDividerView);
 	assert(nil != horizontalDividerView);
+	
+	NSRect const	kOriginalContainerFrame = [self->containerTabView frame];
+	
 	
 	// programmatically remove the toolbar button
 	if ([[self window] respondsToSelector:@selector(setShowsToolbarButton:)])
@@ -3587,6 +3593,15 @@ windowDidLoad
 	{
 		Panel_ViewManager*		newViewMgr = nil;
 		
+		
+		// “General” panel
+		self->generalPanel = [[PrefPanelGeneral_ViewManager alloc] init];
+		newViewMgr = self->generalPanel;
+		[newViewMgr setPanelDisplayAction:@selector(performDisplayPrefPanelGeneral:)];
+		[newViewMgr setPanelDisplayTarget:self];
+		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
+		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
+		[newViewMgr release], newViewMgr = nil;
 		
 		// “Translations” panel
 		self->translationsPanel = [[PrefPanelTranslations_ViewManager alloc] init];
@@ -3626,35 +3641,46 @@ windowDidLoad
 		[[self window] setToolbar:windowToolbar];
 	}
 	
-	// remember how much bigger the window is than the container view
+	// “indent” the toolbar items slightly so they are further away
+	// from the window’s controls (such as the close button)
+	for (UInt16 i = 0; i < 2/* arbitrary */; ++i)
 	{
-		NSRect	windowFrame = [[self window] frame];
-		NSRect	containerFrame = [self->containerView frame];
+		[[[self window] toolbar] insertItemWithItemIdentifier:NSToolbarSpaceItemIdentifier atIndex:0];
+	}
+	
+	// remember how much bigger the window’s content is than the container view
+	{
+		NSRect	contentFrame = [[self window] contentRectForFrameRect:[[self window] frame]];
 		
 		
-		self->extraWindowSize = NSMakeSize(NSWidth(windowFrame) - NSWidth(containerFrame),
-											NSHeight(windowFrame) - NSHeight(containerFrame));
+		self->extraWindowContentSize = NSMakeSize(NSWidth(contentFrame) - NSWidth(kOriginalContainerFrame),
+													NSHeight(contentFrame) - NSHeight(kOriginalContainerFrame));
 	}
 	
 	// update the user interface using the new panels
 	{
 		NSEnumerator*	eachObject = [self->panelIDArray objectEnumerator];
-		BOOL			firstView = NO;
 		
 		
 		// add each panel as a subview and hide all except the first;
 		// give them all the initial size of the window (in reality
 		// they will be changed to a different size before display)
-		firstView = YES;
 		eachObject = [self->panelIDArray objectEnumerator];
 		while (NSString* panelIdentifier = [eachObject nextObject])
 		{
 			Panel_ViewManager*	viewMgr = [self->panelsByID objectForKey:panelIdentifier];
+			NSTabViewItem*		tabItem = [[NSTabViewItem alloc] initWithIdentifier:panelIdentifier];
 			NSView*				panelContainer = [viewMgr managedView];
-			NSRect				panelFrame = [self->containerView frame];
+			NSRect				panelFrame = kOriginalContainerFrame;
+			NSSize				panelIdealSize = panelFrame.size;
 			
 			
-			[self->containerView addSubview:panelContainer];
+			[[viewMgr delegate] panelViewManager:viewMgr requestingIdealSize:&panelIdealSize];
+			
+			// due to layout constraints, it is sufficient to make the
+			// panel container match the parent view frame (except with
+			// local origin); once the window is resized to its target
+			// frame, the panel will automatically resize again
 			panelFrame.origin.x = 0;
 			panelFrame.origin.y = 0;
 			[panelContainer setFrame:panelFrame];
@@ -3664,8 +3690,8 @@ windowDidLoad
 			// (this changes whenever the user resizes the window)
 			{
 				NSArray*	sizeArray = nil;
-				NSSize		windowSize = NSMakeSize(NSWidth(panelFrame) + self->extraWindowSize.width,
-													NSHeight(panelFrame) + self->extraWindowSize.height);
+				NSSize		windowSize = NSMakeSize(panelIdealSize.width + self->extraWindowContentSize.width,
+													panelIdealSize.height + self->extraWindowContentSize.height);
 				
 				
 				// only inspector-style windows include space for a source list
@@ -3680,17 +3706,18 @@ windowDidLoad
 										[NSNumber numberWithFloat:windowSize.height],
 										nil];
 				[self->windowSizesByID setObject:sizeArray forKey:panelIdentifier];
+				
+				// also require (for now, at least) that the window be
+				// no smaller than this initial size, whenever this
+				// particular panel is displayed
+				[self->windowMinSizesByID setObject:sizeArray forKey:panelIdentifier];
 			}
 			
-			if (NO == firstView)
-			{
-				[panelContainer setHidden:YES];
-			}
-			else
-			{
-				[self displayPanel:viewMgr withAnimation:NO];
-				firstView = NO;
-			}
+			[tabItem setView:panelContainer];
+			[tabItem setInitialFirstResponder:[viewMgr logicalFirstResponder]];
+			
+			[self->containerTabView addTabViewItem:tabItem];
+			[tabItem release];
 		}
 	}
 	
@@ -3724,6 +3751,11 @@ windowDidLoad
 			[self->sourceListSegmentedControl setFrame:frame];
 		}
 	}
+	
+	// show the first panel while simultaneously resizing the
+	// window to an appropriate frame and showing any auxiliary
+	// interface that the panel requests (such as a source list)
+	[self displayPanel:[self->panelsByID objectForKey:[self->panelIDArray objectAtIndex:0]] withAnimation:NO];
 }// windowDidLoad
 
 
@@ -3900,8 +3932,8 @@ withAnimation:(BOOL)				isAnimated
 		if (nil != self->activePanel)
 		{
 			// remember the window size that the user wanted for the previous panel
-			NSSize		containerSize = NSMakeSize([[self window] frame].size.width,
-													[[self window] frame].size.height);
+			NSRect		contentRect = [[self window] contentRectForFrameRect:[[self window] frame]];
+			NSSize		containerSize = NSMakeSize(NSWidth(contentRect), NSHeight(contentRect));
 			NSArray*	sizeArray = [NSArray arrayWithObjects:
 												[NSNumber numberWithFloat:containerSize.width],
 												[NSNumber numberWithFloat:containerSize.height],
@@ -3909,42 +3941,25 @@ withAnimation:(BOOL)				isAnimated
 			
 			
 			[self->windowSizesByID setObject:sizeArray forKey:[self->activePanel panelIdentifier]];
-			
-			// hide the old panel
-			[[self->activePanel delegate] panelViewManager:self->activePanel
-															willChangePanelVisibility:kPanel_VisibilityHidden];
-			[[self->activePanel managedView] setHidden:YES];
-			[[self->activePanel delegate] panelViewManager:self->activePanel
-															didChangePanelVisibility:kPanel_VisibilityHidden];
 		}
 		
 		// show the new panel
-		[[self->activePanel delegate] panelViewManager:self->activePanel
-														willChangePanelVisibility:kPanel_VisibilityDisplayed];
-		self->activePanel = aPanel;
-		[[[self window] toolbar] setSelectedItemIdentifier:[self->activePanel panelIdentifier]];
-		[[self->activePanel managedView] setHidden:NO];
-		[[self window] makeFirstResponder:[self->activePanel logicalFirstResponder]];
-		[[self->activePanel delegate] panelViewManager:self->activePanel
-														didChangePanelVisibility:kPanel_VisibilityDisplayed];
-		willShowSourceList = (kPanel_EditTypeInspector == [self->activePanel panelEditType]);
-		
-		// increase the window minimum size to accommodate the source list
-		if (willShowSourceList != wasShowingSourceList)
 		{
-			NSSize		minSize = [[self window] contentMinSize];
+			Panel_ViewManager*	oldPanel = self->activePanel;
+			Panel_ViewManager*	newPanel = aPanel;
 			
 			
-			if (wasShowingSourceList)
-			{
-				minSize.width -= [self->sourceListContainer frame].size.width;
-			}
-			else
-			{
-				minSize.width += [self->sourceListContainer frame].size.width;
-			}
-			[[self window] setContentMinSize:minSize];
+			[[oldPanel delegate] panelViewManager:oldPanel willChangePanelVisibility:kPanel_VisibilityHidden];
+			[[newPanel delegate] panelViewManager:newPanel willChangePanelVisibility:kPanel_VisibilityDisplayed];
+			self->activePanel = newPanel;
+			[[[self window] toolbar] setSelectedItemIdentifier:[newPanel panelIdentifier]];
+			[self->containerTabView selectTabViewItemWithIdentifier:[newPanel panelIdentifier]];
+			[[oldPanel delegate] panelViewManager:oldPanel didChangePanelVisibility:kPanel_VisibilityHidden];
+			[[newPanel delegate] panelViewManager:newPanel didChangePanelVisibility:kPanel_VisibilityDisplayed];
 		}
+		
+		// determine if the new panel needs a source list
+		willShowSourceList = (kPanel_EditTypeInspector == [self->activePanel panelEditType]);
 		
 		// if necessary display the source list of available preference collections
 		if (willShowSourceList != wasShowingSourceList)
@@ -3957,39 +3972,56 @@ withAnimation:(BOOL)				isAnimated
 		// set the window to the size for the new panel (if none, use the
 		// size that was originally used for the panel in its NIB)
 		{
-			NSRect		newWindowFrame = [[self window] frame];
-			NSSize		originalSize = newWindowFrame.size;
+			NSRect		originalFrame = [[self window] frame];
+			NSRect		newWindowFrame = NSZeroRect; // set later
+			NSRect		newContentRect = [[self window] contentRectForFrameRect:originalFrame]; // initially...
 			NSSize		minSize = [[self window] minSize];
 			NSArray*	sizeArray = [self->windowSizesByID objectForKey:[aPanel panelIdentifier]];
+			NSArray*	minSizeArray = [self->windowMinSizesByID objectForKey:[aPanel panelIdentifier]];
 			
 			
 			assert(nil != sizeArray);
+			assert(nil != minSizeArray);
+			
+			// constrain the window appropriately for the panel that is displayed
+			{
+				assert(2 == [minSizeArray count]);
+				Float32		newMinWidth = [[minSizeArray objectAtIndex:0] floatValue];
+				Float32		newMinHeight = [[minSizeArray objectAtIndex:1] floatValue];
+				
+				
+				minSize = NSMakeSize(newMinWidth, newMinHeight);
+				[[self window] setContentMinSize:minSize];
+			}
 			
 			// start with the restored size
-			{
-				assert(2 == [sizeArray count]);
-				Float32		newWidth = MAX([[sizeArray objectAtIndex:0] floatValue], minSize.width);
-				Float32		newHeight = MAX([[sizeArray objectAtIndex:1] floatValue], minSize.height);
-				
-				
-				newWindowFrame.size.width = newWidth;
-				newWindowFrame.size.height = newHeight;
-			}
+			assert(2 == [sizeArray count]);
+			newContentRect.size.width = MAX([[sizeArray objectAtIndex:0] floatValue], minSize.width);
+			newContentRect.size.height = MAX([[sizeArray objectAtIndex:1] floatValue], minSize.height);
 			
 			// try to keep the window on screen; also constrain it to
 			// its minimum size
-			newWindowFrame = NSIntersectionRect(newWindowFrame, [[[self window] screen] frame]);
-			newWindowFrame.size.width = MAX(NSWidth(newWindowFrame), minSize.width);
-			if (NSHeight(newWindowFrame) < minSize.height)
 			{
-				newWindowFrame.size.height = minSize.height;
+				NSRect	unconstrainedFrame = [[self window] frameRectForContentRect:newContentRect];
+				
+				
+				newWindowFrame = unconstrainedFrame;
+				
+				newWindowFrame = NSIntersectionRect(newWindowFrame, [[[self window] screen] frame]);
+				newWindowFrame.size.width = MAX(NSWidth(newWindowFrame), [[self window] minSize].width);
+				newWindowFrame.size.height = MAX(NSHeight(newWindowFrame), [[self window] minSize].height);
+				
+				// since the coordinate system anchors the window at the
+				// bottom-left corner and the intent is to keep the top-left
+				// corner constant, calculate an appropriate new origin when
+				// changing the size (don’t just change the size by itself);
+				// do not do this if the window was constrained because the
+				// origin and/or size will have changed for other reasons
+				if (unconstrainedFrame.origin.y == newWindowFrame.origin.y)
+				{
+					newWindowFrame.origin.y += (NSHeight(originalFrame) - NSHeight(newWindowFrame));
+				}
 			}
-			
-			// since the coordinate system anchors the window at the
-			// bottom-left corner and the intent is to keep the top-left
-			// corner constant, calculate an appropriate new origin when
-			// changing the size (don’t just change the size by itself)
-			newWindowFrame.origin.y += (originalSize.height - NSHeight(newWindowFrame));
 			
 			// resize the window
 			[[self window] setFrame:newWindowFrame display:YES animate:isAnimated];
@@ -4112,23 +4144,27 @@ NOTE:	Some interface changes (such as hiding or showing buttons)
 - (void)
 updateUserInterfaceForSourceListTransition:(id)		anNSNumberBoolForNewVisibleState
 {
+#if 0
 	UInt16 const	kIndentationLevels = 5; // arbitrary
-	NSRect			newContainerFrame = [self->containerView frame];
+#endif
+	NSRect			newContainerFrame = [self->containerTabView frame];
 	NSRect			windowContentFrame = [[self window] contentRectForFrameRect:[[self window] frame]];
 	
 	
 	if ([anNSNumberBoolForNewVisibleState boolValue])
 	{
+	#if 0
 		// “indent” the toolbar so that the items do not appear above the source list
 		for (UInt16 i = 0; i < kIndentationLevels; ++i)
 		{
 			[[[self window] toolbar] insertItemWithItemIdentifier:NSToolbarSpaceItemIdentifier atIndex:0];
 		}
+	#endif
 		
 		// move the panel next to the source list
 		newContainerFrame.origin.x = NSWidth([self->sourceListContainer frame]);
 		newContainerFrame.size.width = (NSWidth(windowContentFrame) - NSWidth([self->sourceListContainer frame]));
-		[self->containerView setFrame:newContainerFrame];
+		[self->containerTabView setFrame:newContainerFrame];
 		
 		// refresh the content (should not be needed, but this is a good place to do it;
 		// note that notifications trigger rebuilds whenever preferences actually change)
@@ -4136,6 +4172,7 @@ updateUserInterfaceForSourceListTransition:(id)		anNSNumberBoolForNewVisibleStat
 	}
 	else
 	{
+	#if 0
 		// remove the “indent” from the toolbar (IMPORTANT: repeat as many times as spaces were originally added, below)
 		if ([[[[self window] toolbar] items] count] > kIndentationLevels)
 		{
@@ -4144,12 +4181,13 @@ updateUserInterfaceForSourceListTransition:(id)		anNSNumberBoolForNewVisibleStat
 				[[[self window] toolbar] removeItemAtIndex:0];
 			}
 		}
+	#endif
 		
 		// move the panel to the edge of the window; adjust the width to keep the
 		// layout bindings from over-padding the opposite side however
 		newContainerFrame.origin.x = 0;
 		newContainerFrame.size.width = NSWidth(windowContentFrame);
-		[self->containerView setFrame:newContainerFrame];
+		[self->containerTabView setFrame:newContainerFrame];
 	}
 }// updateUserInterfaceForSourceListTransition:
 
@@ -4168,6 +4206,19 @@ performDisplayPrefPanelFullScreen:(id)	sender
 #pragma unused(sender)
 	[self displayPanel:self->fullScreenPanel withAnimation:YES];
 }// performDisplayPrefPanelFullScreen:
+
+
+/*!
+Brings the “General” panel to the front.
+
+(4.1)
+*/
+- (void)
+performDisplayPrefPanelGeneral:(id)		sender
+{
+#pragma unused(sender)
+	[self displayPanel:self->generalPanel withAnimation:YES];
+}// performDisplayPrefPanelGeneral:
 
 
 /*!

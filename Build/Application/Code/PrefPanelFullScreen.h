@@ -39,6 +39,7 @@
 
 // application includes
 #include "Panel.h"
+#include "PrefsContextManager.objc++.h"
 #include "PrefsWindow.h"
 
 
@@ -56,6 +57,8 @@ changes to an interface declared in a ".mm" file.
 */
 @interface PrefPanelFullScreen_ViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
 {
+@private
+	PrefsContextManager_Object*		prefsMgr;
 }
 
 // accessors

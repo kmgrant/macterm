@@ -52,6 +52,7 @@ class ListenerModel_StandardListener;
 #ifdef __OBJC__
 #	import "Panel.h"
 @class PrefPanelFullScreen_ViewManager;
+@class PrefPanelGeneral_ViewManager;
 @class PrefPanelTranslations_ViewManager;
 #endif
 
@@ -90,11 +91,12 @@ changes to an interface declared in a ".mm" file.
 */
 @interface PrefsWindow_Controller : NSWindowController
 {
-	IBOutlet NSView*		containerView;
+	IBOutlet NSView*		windowFirstResponder;
+	IBOutlet NSView*		windowLastResponder;
+	IBOutlet NSTabView*		containerTabView;
 	IBOutlet NSView*		sourceListContainer;
 	IBOutlet NSTableView*	sourceListTableView;
 	IBOutlet NSView*		sourceListSegmentedControl;
-	IBOutlet NSView*		verticalDividerView;
 	IBOutlet NSView*		horizontalDividerView;
 @private
 	NSIndexSet*							currentPreferenceCollectionIndexes;
@@ -102,10 +104,12 @@ changes to an interface declared in a ".mm" file.
 	NSMutableArray*						panelIDArray; // ordered array of "panelIdentifier" values
 	NSMutableDictionary*				panelsByID; // view managers (Panel_ViewManager subclass) from "panelIdentifier" keys
 	NSMutableDictionary*				windowSizesByID; // NSArray* values (each with 2 NSNumber*) from "panelIdentifier" keys
-	NSSize								extraWindowSize; // stores window frame extra width and height (not belonging to a panel)
+	NSMutableDictionary*				windowMinSizesByID; // NSArray* values (each with 2 NSNumber*) from "panelIdentifier" keys
+	NSSize								extraWindowContentSize; // stores extra content width and height (not belonging to a panel)
 	BOOL								isSourceListHidden;
 	ListenerModel_StandardListener*		preferenceChangeListener;
 	Panel_ViewManager< PrefsWindow_PanelInterface >*	activePanel;
+	PrefPanelGeneral_ViewManager*		generalPanel;
 	PrefPanelTranslations_ViewManager*	translationsPanel;
 	PrefPanelFullScreen_ViewManager*	fullScreenPanel;
 }

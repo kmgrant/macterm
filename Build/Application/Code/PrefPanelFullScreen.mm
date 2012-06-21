@@ -145,14 +145,6 @@ Boolean		updateCheckBoxPreference		(MyKioskPanelUIPtr, HIViewRef);
 
 @interface PrefPanelFullScreen_ViewManager (PrefPanelFullScreen_ViewManagerInternal)
 
-- (BOOL)
-readFlagForPreferenceTag:(Preferences_Tag)_
-defaultValue:(BOOL)_;
-
-- (BOOL)
-writeFlag:(BOOL)_
-forPreferenceTag:(Preferences_Tag)_;
-
 @end // PrefPanelFullScreen_ViewManager (PrefPanelFullScreen_ViewManagerInternal)
 
 #pragma mark Variables
@@ -662,9 +654,10 @@ Designated initializer.
 - (id)
 init
 {
-	self = [super initWithNibNamed:@"PrefPanelFullScreenCocoa" delegate:self];
+	self = [super initWithNibNamed:@"PrefPanelFullScreenCocoa" delegate:self context:nullptr];
 	if (nil != self)
 	{
+		// do not initialize here; most likely should use "panelViewManagerInitialize:"
 	}
 	return self;
 }// init
@@ -678,6 +671,7 @@ Destructor.
 - (void)
 dealloc
 {
+	[prefsMgr release];
 	[super dealloc];
 }// dealloc
 
@@ -693,12 +687,12 @@ Accessor.
 - (BOOL)
 isForceQuitEnabled
 {
-	return [self readFlagForPreferenceTag:kPreferences_TagKioskAllowsForceQuit defaultValue:NO];
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskAllowsForceQuit defaultValue:NO];
 }
 - (void)
 setForceQuitEnabled:(BOOL)	aFlag
 {
-	BOOL	writeOK = [self writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskAllowsForceQuit];
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskAllowsForceQuit];
 	
 	
 	if (NO == writeOK)
@@ -716,12 +710,12 @@ Accessor.
 - (BOOL)
 isMenuBarShownOnDemand
 {
-	return [self readFlagForPreferenceTag:kPreferences_TagKioskShowsMenuBar defaultValue:NO];
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsMenuBar defaultValue:NO];
 }
 - (void)
 setMenuBarShownOnDemand:(BOOL)	aFlag
 {
-	BOOL	writeOK = [self writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsMenuBar];
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsMenuBar];
 	
 	
 	if (NO == writeOK)
@@ -739,12 +733,12 @@ Accessor.
 - (BOOL)
 isScrollBarVisible
 {
-	return [self readFlagForPreferenceTag:kPreferences_TagKioskShowsScrollBar defaultValue:NO];
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsScrollBar defaultValue:NO];
 }
 - (void)
 setScrollBarVisible:(BOOL)	aFlag
 {
-	BOOL	writeOK = [self writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsScrollBar];
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsScrollBar];
 	
 	
 	if (NO == writeOK)
@@ -762,12 +756,12 @@ Accessor.
 - (BOOL)
 isWindowFrameVisible
 {
-	return [self readFlagForPreferenceTag:kPreferences_TagKioskShowsWindowFrame defaultValue:NO];
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsWindowFrame defaultValue:NO];
 }
 - (void)
 setWindowFrameVisible:(BOOL)	aFlag
 {
-	BOOL	writeOK = [self writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsWindowFrame];
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsWindowFrame];
 	
 	
 	if (NO == writeOK)
@@ -785,12 +779,12 @@ Accessor.
 - (BOOL)
 offSwitchWindowEnabled
 {
-	return [self readFlagForPreferenceTag:kPreferences_TagKioskShowsOffSwitch defaultValue:NO];
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsOffSwitch defaultValue:NO];
 }
 - (void)
 setOffSwitchWindowEnabled:(BOOL)	aFlag
 {
-	BOOL	writeOK = [self writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsOffSwitch];
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsOffSwitch];
 	
 	
 	if (NO == writeOK)
@@ -808,12 +802,12 @@ Accessor.
 - (BOOL)
 superfluousEffectsEnabled
 {
-	return [self readFlagForPreferenceTag:kPreferences_TagKioskUsesSuperfluousEffects defaultValue:NO];
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskUsesSuperfluousEffects defaultValue:NO];
 }
 - (void)
 setSuperfluousEffectsEnabled:(BOOL)	aFlag
 {
-	BOOL	writeOK = [self writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskUsesSuperfluousEffects];
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskUsesSuperfluousEffects];
 	
 	
 	if (NO == writeOK)
@@ -853,6 +847,22 @@ automaticallyNotifiesObserversForKey:(NSString*)	theKey
 
 
 #pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+}// panelViewManager:initializeWithContext:
 
 
 /*!
@@ -1065,62 +1075,6 @@ preferencesClass
 
 
 @implementation PrefPanelFullScreen_ViewManager (PrefPanelFullScreen_ViewManagerInternal)
-
-
-/*!
-Reads a true/false value from the Default preferences context.
-If the value is not found, the specified default is returned
-instead.
-
-IMPORTANT:	Only tags with values of type Boolean should be given!
-
-(4.1)
-*/
-- (BOOL)
-readFlagForPreferenceTag:(Preferences_Tag)	aTag
-defaultValue:(BOOL)							aDefault
-{
-	BOOL		result = aDefault;
-	Boolean		flagValue = false;
-	size_t		actualSize = 0;
-	
-	
-	if (kPreferences_ResultOK ==
-		Preferences_GetData(aTag, sizeof(flagValue), &flagValue, &actualSize))
-	{
-		result = (flagValue) ? YES : NO;
-	}
-	else
-	{
-		result = aDefault; // assume a default, if preference can’t be found
-	}
-	return result;
-}// readFlagForPreferenceTag:defaultValue:
-
-
-/*!
-Writes a true/false value to the Default preferences context and
-returns true only if this succeeds.
-
-IMPORTANT:	Only tags with values of type Boolean should be given!
-
-(4.1)
-*/
-- (BOOL)
-writeFlag:(BOOL)					aFlag
-forPreferenceTag:(Preferences_Tag)	aTag
-{
-	BOOL				result = NO;
-	Boolean				flagValue = (YES == aFlag) ? true : false;
-	Preferences_Result	prefsResult = Preferences_SetData(aTag, sizeof(flagValue), &flagValue);
-	
-	
-	if (kPreferences_ResultOK == prefsResult)
-	{
-		result = YES;
-	}
-	return result;
-}// writeFlag:forPreferenceTag:
 
 
 @end // PrefPanelFullScreen_ViewManager (PrefPanelFullScreen_ViewManagerInternal)

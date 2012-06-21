@@ -240,6 +240,7 @@ English.lproj/ClipboardCocoa \
 English.lproj/CommandLineCocoa \
 English.lproj/DebugInterfaceCocoa \
 English.lproj/FindDialogCocoa \
+English.lproj/GenericPanelTabsCocoa \
 English.lproj/InfoWindowCocoa \
 English.lproj/KeypadArrangeWindowCocoa \
 English.lproj/KeypadControlKeysCocoa \
@@ -248,6 +249,7 @@ English.lproj/KeypadFunctionKeysCocoa \
 English.lproj/KeypadVT220KeysCocoa \
 English.lproj/MainMenuCocoa \
 English.lproj/PrefPanelFullScreenCocoa \
+English.lproj/PrefPanelGeneralOptionsCocoa \
 English.lproj/PrefPanelTranslationsCocoa \
 English.lproj/PrefsWindowCocoa \
 English.lproj/PrintPreviewCocoa \

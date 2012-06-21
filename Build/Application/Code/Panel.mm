@@ -1148,6 +1148,7 @@ Designated initializer.
 - (id)
 initWithNibNamed:(NSString*)		aNibName
 delegate:(id< Panel_Delegate >)		aDelegate
+context:(void*)						aContext
 {
 	self = [super init];
 	if (nil != self)
@@ -1155,6 +1156,12 @@ delegate:(id< Panel_Delegate >)		aDelegate
 		delegate = aDelegate;
 		panelDisplayAction = nil;
 		panelDisplayTarget = nil;
+		
+		// since NIBs can construct lots of objects and bindings it is
+		// actually pretty important to have an early hook for subclasses
+		// (subclasses may need to initialize certain data in themselves
+		// to ensure that their bindings actually succeed)
+		[delegate panelViewManager:self initializeWithContext:aContext];
 		
 		// it is necessary to capture and release all top-level objects here
 		// so that "self" can actually be deallocated; otherwise, the implicit
@@ -1259,6 +1266,26 @@ logicalFirstResponder
 {
 	return self->logicalFirstResponder;
 }// logicalFirstResponder
+
+
+/*!
+Returns the last view of the panel that can receive focus
+for user input.
+
+When panels are instantiated in elaborate interfaces, this
+property is used to “connect” the chain of focused views
+seamlessly (e.g. so that the last focused view of the
+custom panel can Tab directly into the rest of the user
+interface, and vice-versa).  A customizing panel should
+call NSView’s "setNextKeyView:" appropriately.
+
+(4.1)
+*/
+- (NSView*)
+logicalLastResponder
+{
+	return self->logicalLastResponder;
+}// logicalLastResponder
 
 
 /*!
@@ -1443,6 +1470,7 @@ awakeFromNib
 	// NOTE: superclass does not implement "awakeFromNib", otherwise it should be called here
 	assert(nil != managedView);
 	assert(nil != logicalFirstResponder);
+	assert(nil != logicalLastResponder);
 	
 	[[self delegate] panelViewManager:self didLoadContainerView:self->managedView];
 }// awakeFromNib
