@@ -19,10 +19,14 @@
 	<key>CFBundleSignature</key>
 	<string>KGBR</string>
 	<key>CFBundleVersion</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>LSUIElement</key>
 	<string>1</string>
+	<key>NSMainNibFile</key>
+	<string>BugReporterCocoa</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
 </dict>
 </plist>

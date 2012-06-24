@@ -13,10 +13,10 @@
 		0A3C0113081208530088580A /* CFUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A3C0112081208530088580A /* CFUtilities.h */; };
 		0A3C025D08123ACD0088580A /* Releases.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C025C08123ACD0088580A /* Releases.cp */; };
 		0A3C026408123ADE0088580A /* Releases.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A3C026308123ADE0088580A /* Releases.h */; };
-		0AA742C906E45F2D00CBC7B5 /* BugReporter.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AA742C706E45F2D00CBC7B5 /* BugReporter.nib */; };
+		0A5C6C671597B1870094E3FD /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A5C6C661597B1870094E3FD /* Cocoa.framework */; };
+		0A5C6C7B1597B26E0094E3FD /* BugReporterCocoa.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A5C6C791597B26E0094E3FD /* BugReporterCocoa.xib */; };
 		0AA742CB06E45F5A00CBC7B5 /* IconForBundle.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */; };
-		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */; };
-		8D0C4E920486CD37000505A6 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 20286C33FDCF999611CA2CEA /* Carbon.framework */; };
+		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -45,12 +45,10 @@
 		0A3C0112081208530088580A /* CFUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFUtilities.h; path = Shared/Code/CFUtilities.h; sourceTree = "<group>"; };
 		0A3C025C08123ACD0088580A /* Releases.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Releases.cp; path = Shared/Code/Releases.cp; sourceTree = "<group>"; };
 		0A3C026308123ADE0088580A /* Releases.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Releases.h; path = Shared/Code/Releases.h; sourceTree = "<group>"; };
-		0AA742C806E45F2D00CBC7B5 /* BugReporter.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = BugReporter.nib; path = BugReporter/Resources/English.lproj/BugReporter.nib; sourceTree = "<group>"; };
+		0A5C6C661597B1870094E3FD /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		0A5C6C7A1597B26E0094E3FD /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = BugReporter/Resources/English.lproj/BugReporterCocoa.xib; sourceTree = "<group>"; };
 		0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = BugReporter/Resources/IconForBundle.icns; sourceTree = "<group>"; };
-		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MainEntryPoint.cp; path = BugReporter/Code/MainEntryPoint.cp; sourceTree = "<group>"; };
-		20286C33FDCF999611CA2CEA /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
-		4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
-		4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
+		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MainEntryPoint.mm; path = BugReporter/Code/MainEntryPoint.mm; sourceTree = "<group>"; };
 		8D0C4E970486CD37000505A6 /* BugReporter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BugReporter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -59,7 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8D0C4E920486CD37000505A6 /* Carbon.framework in Frameworks */,
+				0A5C6C671597B1870094E3FD /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -91,13 +89,11 @@
 			children = (
 				0A33CC5407FABADE00248DDF /* Shared */,
 				195DF8CFFE9D517E11CA2CBB /* Products */,
-				4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */,
-				20286C33FDCF999611CA2CEA /* Carbon.framework */,
-				4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */,
+				0A5C6C661597B1870094E3FD /* Cocoa.framework */,
 				0A33CC4D07FABA6500248DDF /* BugReporterPrefix.pch */,
-				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */,
+				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */,
 				0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */,
-				0AA742C706E45F2D00CBC7B5 /* BugReporter.nib */,
+				0A5C6C791597B26E0094E3FD /* BugReporterCocoa.xib */,
 			);
 			name = BugReporter;
 			sourceTree = "<group>";
@@ -169,8 +165,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0AA742C906E45F2D00CBC7B5 /* BugReporter.nib in Resources */,
 				0AA742CB06E45F5A00CBC7B5 /* IconForBundle.icns in Resources */,
+				0A5C6C7B1597B26E0094E3FD /* BugReporterCocoa.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -181,7 +177,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.cp in Sources */,
+				0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.mm in Sources */,
 				0A3C025D08123ACD0088580A /* Releases.cp in Sources */,
 				0A2EA0E108E0F28A00108992 /* CFUtilities.cp in Sources */,
 			);
@@ -190,13 +186,13 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		0AA742C706E45F2D00CBC7B5 /* BugReporter.nib */ = {
+		0A5C6C791597B26E0094E3FD /* BugReporterCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0AA742C806E45F2D00CBC7B5 /* BugReporter.nib */,
+				0A5C6C7A1597B26E0094E3FD /* English */,
 			);
-			name = BugReporter.nib;
-			sourceTree = SOURCE_ROOT;
+			name = BugReporterCocoa.xib;
+			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
 

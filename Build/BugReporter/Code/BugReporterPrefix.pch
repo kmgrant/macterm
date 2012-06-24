@@ -2,4 +2,7 @@
 // Prefix header for all source files of the project.
 //
 
-#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
+
+#include <UniversalDefines.h>
