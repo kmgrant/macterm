@@ -63,8 +63,7 @@ changes to an interface declared in a ".mm" file.
 
 
 /*!
-Loads a NIB file that defines a panel view with tabs
-and provides the sub-panels that the tabs contain.
+Loads a NIB file that defines the Options pane.
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
@@ -127,6 +126,100 @@ setTreatBackquoteLikeEscape:(BOOL)_; // binding
 focusFollowsMouse;
 - (void)
 setFocusFollowsMouse:(BOOL)_; // binding
+
+@end
+
+
+/*!
+Loads a NIB file that defines the Special pane.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelGeneral_SpecialViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+{
+@private
+	PrefsContextManager_Object*		prefsMgr;
+}
+
+// accessors
+
+- (BOOL)
+cursorFlashes;
+- (void)
+setCursorFlashes:(BOOL)_; // binding
+
+- (BOOL)
+cursorShapeIsBlock;
+- (void)
+setCursorShapeIsBlock:(BOOL)_; // binding
+
+- (BOOL)
+cursorShapeIsThickUnderline;
+- (void)
+setCursorShapeIsThickUnderline:(BOOL)_; // binding
+
+- (BOOL)
+cursorShapeIsThickVerticalBar;
+- (void)
+setCursorShapeIsThickVerticalBar:(BOOL)_; // binding
+
+- (BOOL)
+cursorShapeIsUnderline;
+- (void)
+setCursorShapeIsUnderline:(BOOL)_; // binding
+
+- (BOOL)
+cursorShapeIsVerticalBar;
+- (void)
+setCursorShapeIsVerticalBar:(BOOL)_; // binding
+
+- (BOOL)
+isNewCommandCustomNewSession;
+- (void)
+setNewCommandCustomNewSession:(BOOL)_; // binding
+
+- (BOOL)
+isNewCommandDefaultSessionFavorite;
+- (void)
+setNewCommandDefaultSessionFavorite:(BOOL)_; // binding
+
+- (BOOL)
+isNewCommandLogInShell;
+- (void)
+setNewCommandLogInShell:(BOOL)_; // binding
+
+- (BOOL)
+isNewCommandShell;
+- (void)
+setNewCommandShell:(BOOL)_; // binding
+
+- (BOOL)
+isWindowResizeEffectTerminalScreenSize;
+- (void)
+setWindowResizeEffectTerminalScreenSize:(BOOL)_; // binding
+
+- (BOOL)
+isWindowResizeEffectTextSize;
+- (void)
+setWindowResizeEffectTextSize:(BOOL)_; // binding
+
+- (NSString*)
+spacesPerTab;
+- (void)
+setSpacesPerTab:(NSString*)_; // binding
+
+// actions
+
+- (IBAction)
+performSetWindowStackingOrigin:(id)_;
+
+// validators
+
+- (BOOL)
+validateSpacesPerTab:(id*)_
+error:(NSError**)_;
 
 @end
 

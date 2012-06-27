@@ -250,6 +250,7 @@ English.lproj/KeypadVT220KeysCocoa \
 English.lproj/MainMenuCocoa \
 English.lproj/PrefPanelFullScreenCocoa \
 English.lproj/PrefPanelGeneralOptionsCocoa \
+English.lproj/PrefPanelGeneralSpecialCocoa \
 English.lproj/PrefPanelTranslationsCocoa \
 English.lproj/PrefsWindowCocoa \
 English.lproj/PrintPreviewCocoa \

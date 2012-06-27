@@ -410,6 +410,7 @@
 		0A5C09C1158828C30097B598 /* IconForItemAddMenuSegment@2x.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "IconForItemAddMenuSegment@2x.icns"; path = "Application/Resources/IconForItemAddMenuSegment@2x.icns"; sourceTree = "<group>"; };
 		0A5CE9261582DF1D008CD243 /* IconForContextMenuSegment.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForContextMenuSegment.icns; path = Application/Resources/IconForContextMenuSegment.icns; sourceTree = "<group>"; };
 		0A5CE9411582ED7C008CD243 /* IconForItemAddMenuSegment.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAddMenuSegment.icns; path = Application/Resources/IconForItemAddMenuSegment.icns; sourceTree = "<group>"; };
+		0A6000E915981886001CA6AA /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelGeneralSpecialCocoa.xib; sourceTree = "<group>"; };
 		0A6315B912348AB4003890B8 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ClipboardCocoa.xib; sourceTree = "<group>"; };
 		0A64C5EA1059E423005B8A48 /* StreamCapture.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StreamCapture.cp; path = Application/Code/StreamCapture.cp; sourceTree = "<group>"; };
 		0A64C5EC1059E432005B8A48 /* StreamCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamCapture.h; path = Application/Code/StreamCapture.h; sourceTree = "<group>"; };
@@ -985,6 +986,7 @@
 				0A317CAC10A0C775002EDEFB /* MainMenuCocoa.xib */,
 				0A50591A157C64D300F257A1 /* PrefPanelFullScreenCocoa.xib */,
 				0AD7D0B9158AE38B000C3264 /* PrefPanelGeneralOptionsCocoa.xib */,
+				0A6000E815981886001CA6AA /* PrefPanelGeneralSpecialCocoa.xib */,
 				0A839C3315805125000F001E /* PrefPanelTranslationsCocoa.xib */,
 				0A5A6FCA1578783700EFCEAB /* PrefsWindowCocoa.xib */,
 				0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */,
@@ -1555,6 +1557,14 @@
 				0A5A6FCB1578783700EFCEAB /* English */,
 			);
 			name = PrefsWindowCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A6000E815981886001CA6AA /* PrefPanelGeneralSpecialCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A6000E915981886001CA6AA /* English */,
+			);
+			name = PrefPanelGeneralSpecialCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A6315B812348AB4003890B8 /* ClipboardCocoa.xib */ = {
