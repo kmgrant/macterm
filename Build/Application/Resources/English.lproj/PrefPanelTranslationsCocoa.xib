@@ -113,7 +113,7 @@
               </object>
               <object class="NSButton" id="286015855">
                 <reference key="NSNextResponder" ref="204796810"/>
-                <int key="NSvFlags">292</int>
+                <int key="NSvFlags">290</int>
                 <string key="NSFrame">{{220, 96}, {282, 18}}</string>
                 <reference key="NSSuperview" ref="204796810"/>
                 <string key="NSReuseIdentifierKey">_NS:682</string>
