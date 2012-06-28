@@ -280,6 +280,59 @@ typedef My_GeneralPanelData*	My_GeneralPanelDataPtr;
 
 } // anonymous namespace
 
+
+/*!
+Implements an object wrapper for sound names, that allows them
+to be correctly bound into user interface elements.  (On older
+Mac OS X versions, raw strings do not bind properly.)
+*/
+@interface PrefPanelGeneral_SoundInfo : NSObject
+{
+@private
+	NSString*	description;
+	BOOL		isDefault;
+	BOOL		isOff;
+}
+
+// initializers
+
+- (id)
+initAsDefault;
+
+- (id)
+initAsOff;
+
+- (id)
+initWithDescription:(NSString*)_;
+
+// designated initializer
+- (id)
+initWithDescription:(NSString*)_
+isDefault:(BOOL)_
+isOff:(BOOL)_;
+
+// new methods
+
+- (void)
+playSound;
+
+- (NSString*)
+preferenceString;
+
+// accessors; see "Sound Names" array controller in the NIB, for key names
+
+- (NSString*)
+boundName;
+- (void)
+setBoundName:(NSString*)_; // binding
+
+- (NSString*)
+description;
+- (void)
+setDescription:(NSString*)_;
+
+@end // PrefPanelGeneral_SoundInfo
+
 #pragma mark Internal Method Prototypes
 namespace {
 
@@ -295,9 +348,33 @@ Boolean			updateCheckBoxPreference						(My_GeneralPanelUIPtr, HIViewRef);
 
 } // anonymous namespace
 
+
+@interface PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal)
+
+- (void)
+notifyDidChangeValueForBackgroundNotification;
+- (void)
+notifyWillChangeValueForBackgroundNotification;
+
+- (SInt16)
+readBackgroundNotificationTypeWithDefaultValue:(SInt16)_;
+
+- (NSString*)
+readBellSoundNameWithDefaultValue:(NSString*)_;
+
+- (BOOL)
+writeBackgroundNotificationType:(SInt16)_;
+
+- (BOOL)
+writeBellSoundName:(NSString*)_;
+
+@end // PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal)
+
+
 @interface PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
 
 @end // PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
+
 
 @interface PrefPanelGeneral_SpecialViewManager (PrefPanelGeneral_SpecialViewManagerInternal)
 
@@ -2252,6 +2329,7 @@ init
 	NSArray*	subViewManagers = [NSArray arrayWithObjects:
 												[[[PrefPanelGeneral_OptionsViewManager alloc] init] autorelease],
 												[[[PrefPanelGeneral_SpecialViewManager alloc] init] autorelease],
+												[[[PrefPanelGeneral_NotificationsViewManager alloc] init] autorelease],
 												nil];
 	
 	
@@ -2282,6 +2360,929 @@ dealloc
 @end // PrefPanelGeneral_ViewManager
 
 
+@implementation PrefPanelGeneral_SoundInfo
+
+
+/*!
+Creates an object representing the user’s system-wide
+default alert sound.
+
+(4.1)
+*/
+- (id)
+initAsDefault
+{
+	self = [self initWithDescription:nil isDefault:YES isOff:NO];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initAsDefault
+
+
+/*!
+Creates an object representing the sound-off state.
+
+(4.1)
+*/
+- (id)
+initAsOff
+{
+	self = [self initWithDescription:nil isDefault:NO isOff:YES];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initAsOff
+
+
+/*!
+Creates an object representing a particular sound name.
+
+(4.1)
+*/
+- (id)
+initWithDescription:(NSString*)		aDescription
+{
+	self = [self initWithDescription:aDescription isDefault:NO isOff:NO];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithDescription:
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithDescription:(NSString*)		aDescription
+isDefault:(BOOL)					aDefaultFlag
+isOff:(BOOL)						anOffFlag
+{
+	self = [super init];
+	if (nil != self)
+	{
+		self->isDefault = aDefaultFlag;
+		self->isOff = anOffFlag;
+		if (aDefaultFlag)
+		{
+			[self setDescription:NSLocalizedStringFromTable(@"Default", @"PrefPanelGeneral",
+															@"label for the default terminal bell sound")];
+		}
+		else if (anOffFlag)
+		{
+			[self setDescription:NSLocalizedStringFromTable(@"Off", @"PrefPanelGeneral",
+															@"label for turning off the terminal bell sound")];
+		}
+		else
+		{
+			[self setDescription:aDescription];
+		}
+	}
+	return self;
+}// initWithDescription:isDefault:isOff:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[description release];
+	[super dealloc];
+}// dealloc
+
+
+/*!
+Plays the sound (if any) that is represented by this object.
+
+(4.1)
+*/
+- (void)
+playSound
+{
+	if (self->isDefault)
+	{
+		NSBeep();
+	}
+	else if (self->isOff)
+	{
+		// do nothing
+	}
+	else
+	{
+		CocoaBasic_PlaySoundByName((CFStringRef)[self boundName]);
+	}
+}// playSound
+
+
+/*!
+Returns the string that should be used when storing this setting
+in user preferences.  This is usually the name of the sound, but
+for the Off and Default objects it is different.
+
+(4.0)
+*/
+- (NSString*)
+preferenceString
+{
+	if (self->isDefault)
+	{
+		return @"";
+	}
+	else if (self->isOff)
+	{
+		return @"off";
+	}
+	return [self boundName];
+}// preferenceString
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+IMPORTANT:	The "boundName" key is ONLY required because older
+			versions of Mac OS X do not seem to work properly
+			when bound to the "description" accessor.  (Namely,
+			the OS seems to stubbornly use its own "description"
+			instead of invoking the right one.)  In the future
+			this might be removed and rebound to "description".
+
+(4.1)
+*/
+- (NSString*)
+boundName
+{
+	return [[description retain] autorelease];
+}
+- (void)
+setBoundName:(NSString*)	aString
+{
+	if (description != aString)
+	{
+		[description release];
+		description = [aString copy];
+	}
+}// setBoundName:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSString*)
+description
+{
+	return [self boundName];
+}
+- (void)
+setDescription:(NSString*)		aString
+{
+	[self setBoundName:aString];
+}// setDescription:
+
+
+@end // PrefPanelGeneral_SoundInfo
+
+
+@implementation PrefPanelGeneral_NotificationsViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelGeneralNotificationsCocoa" delegate:self context:nullptr];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[prefsMgr release];
+	[soundNameIndexes release];
+	[soundNames release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+alwaysUseVisualBell
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagVisualBell defaultValue:NO];
+}
+- (void)
+setAlwaysUseVisualBell:(BOOL)		aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagVisualBell];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save visual-bell preference");
+	}
+}// setAlwaysUseVisualBell:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+backgroundBellsSendNotifications
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagNotifyOfBeeps defaultValue:NO];
+}
+- (void)
+setBackgroundBellsSendNotifications:(BOOL)		aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagNotifyOfBeeps];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save background-bell-notification preference");
+	}
+}// setBackgroundBellsSendNotifications:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isBackgroundNotificationNone
+{
+	return (kAlert_NotifyDoNothing == [self readBackgroundNotificationTypeWithDefaultValue:kAlert_NotifyDoNothing]);
+}
++ (id)
+autoNotifyOnChangeToBackgroundNotificationNone
+{
+	return [NSNumber numberWithBool:NO];
+}
+- (void)
+setBackgroundNotificationNone:(BOOL)	aFlag
+{
+	if ([self isBackgroundNotificationNone] != aFlag)
+	{
+		[self notifyWillChangeValueForBackgroundNotification];
+		
+		BOOL	writeOK = [self writeBackgroundNotificationType:kAlert_NotifyDoNothing];
+		
+		
+		if (NO == writeOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to save background-notification-none preference");
+		}
+		
+		[self notifyDidChangeValueForBackgroundNotification];
+	}
+}// setBackgroundNotificationNone:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isBackgroundNotificationChangeDockIcon
+{
+	return (kAlert_NotifyDisplayDiamondMark == [self readBackgroundNotificationTypeWithDefaultValue:kAlert_NotifyDoNothing]);
+}
++ (id)
+autoNotifyOnChangeToBackgroundNotificationChangeDockIcon
+{
+	return [NSNumber numberWithBool:NO];
+}
+- (void)
+setBackgroundNotificationChangeDockIcon:(BOOL)	aFlag
+{
+	if ([self isBackgroundNotificationChangeDockIcon] != aFlag)
+	{
+		[self notifyWillChangeValueForBackgroundNotification];
+		
+		BOOL	writeOK = [self writeBackgroundNotificationType:kAlert_NotifyDisplayDiamondMark];
+		
+		
+		if (NO == writeOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to save background-notification-change-Dock-icon preference");
+		}
+		
+		[self notifyDidChangeValueForBackgroundNotification];
+	}
+}// setBackgroundNotificationChangeDockIcon:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isBackgroundNotificationAnimateIcon
+{
+	return (kAlert_NotifyDisplayIconAndDiamondMark == [self readBackgroundNotificationTypeWithDefaultValue:kAlert_NotifyDoNothing]);
+}
++ (id)
+autoNotifyOnChangeToBackgroundNotificationAnimateIcon
+{
+	return [NSNumber numberWithBool:NO];
+}
+- (void)
+setBackgroundNotificationAnimateIcon:(BOOL)		aFlag
+{
+	if ([self isBackgroundNotificationAnimateIcon] != aFlag)
+	{
+		[self notifyWillChangeValueForBackgroundNotification];
+		
+		BOOL	writeOK = [self writeBackgroundNotificationType:kAlert_NotifyDisplayIconAndDiamondMark];
+		
+		
+		if (NO == writeOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to save background-notification-animate-icon preference");
+		}
+		
+		[self notifyDidChangeValueForBackgroundNotification];
+	}
+}// setBackgroundNotificationAnimateIcon:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isBackgroundNotificationDisplayMessage
+{
+	return (kAlert_NotifyAlsoDisplayAlert == [self readBackgroundNotificationTypeWithDefaultValue:kAlert_NotifyDoNothing]);
+}
++ (id)
+autoNotifyOnChangeToBackgroundNotificationDisplayMessage
+{
+	return [NSNumber numberWithBool:NO];
+}
+- (void)
+setBackgroundNotificationDisplayMessage:(BOOL)		aFlag
+{
+	if ([self isBackgroundNotificationDisplayMessage] != aFlag)
+	{
+		[self notifyWillChangeValueForBackgroundNotification];
+		
+		BOOL	writeOK = [self writeBackgroundNotificationType:kAlert_NotifyAlsoDisplayAlert];
+		
+		
+		if (NO == writeOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to save background-notification-display-message preference");
+		}
+		
+		[self notifyDidChangeValueForBackgroundNotification];
+	}
+}// setBackgroundNotificationDisplayMessage:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSArray*)
+soundNames
+{
+	return [[soundNames retain] autorelease];
+}
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSIndexSet*)
+soundNameIndexes
+{
+	return [[soundNameIndexes retain] autorelease];
+}
++ (id)
+autoNotifyOnChangeToSoundNameIndexes
+{
+	return [NSNumber numberWithBool:NO];
+}
+- (void)
+setSoundNameIndexes:(NSIndexSet*)	indexes
+{
+	unsigned int					newIndex = (nil != indexes)
+												? [indexes firstIndex]
+												: 0;
+	PrefPanelGeneral_SoundInfo*		info = ((NSNotFound != newIndex) && (newIndex < [[self soundNames] count]))
+											? [[self soundNames] objectAtIndex:newIndex]
+											: nil;
+	
+	
+	if (indexes != soundNameIndexes)
+	{
+		[self willChangeValueForKey:@"soundNameIndexes"];
+		
+		[soundNameIndexes release];
+		soundNameIndexes = [indexes retain];
+		
+		// save the new preference
+		{
+			BOOL		writeOK = NO;
+			NSString*	savedName = [info preferenceString];
+			
+			
+			if (nil != savedName)
+			{
+				writeOK = [self writeBellSoundName:savedName];
+				if (writeOK)
+				{
+					[info playSound];
+				}
+			}
+			
+			if (NO == writeOK)
+			{
+				Console_Warning(Console_WriteLine, "failed to save bell-sound preference");
+			}
+		}
+		
+		[self didChangeValueForKey:@"soundNameIndexes"];
+	}
+	else
+	{
+		// play the sound either way, even if the user chooses the same item again
+		[info playSound];
+	}
+}// setSoundNameIndexes:
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	
+	// set up the array of bell sounds
+	{
+		NSArray*		soundNamesOnly = (NSArray*)CocoaBasic_ReturnUserSoundNames();
+		NSString*		savedName = [self readBellSoundNameWithDefaultValue:@""];
+		NSEnumerator*	eachName = [soundNamesOnly objectEnumerator];
+		unsigned int	currentIndex = 0;
+		unsigned int	initialIndex = 0;
+		
+		
+		[self willChangeValueForKey:@"soundNames"];
+		self->soundNames = [[NSMutableArray alloc] initWithCapacity:[soundNamesOnly count]];
+		[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc] initAsOff] autorelease]];
+		if ([savedName isEqualToString:[[self->soundNames lastObject] preferenceString]])
+		{
+			initialIndex = currentIndex;
+		}
+		++currentIndex;
+		[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc] initAsDefault] autorelease]];
+		if ([savedName isEqualToString:[[self->soundNames lastObject] preferenceString]])
+		{
+			initialIndex = currentIndex;
+		}
+		++currentIndex;
+		while (NSString* soundName = [eachName nextObject])
+		{
+			[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc]
+												initWithDescription:soundName]
+											autorelease]];
+			if ([savedName isEqualToString:[[self->soundNames lastObject] preferenceString]])
+			{
+				initialIndex = currentIndex;
+			}
+			++currentIndex;
+		}
+		[self didChangeValueForKey:@"soundNames"];
+		
+		[self willChangeValueForKey:@"soundNameIndexes"];
+		self->soundNameIndexes = [[NSIndexSet indexSetWithIndex:initialIndex] retain];
+		[self didChangeValueForKey:@"soundNameIndexes"];
+	}
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeNormal;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = [[self managedView] frame].size;
+}
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+Not applicable to this panel because it only sets global
+(Default) preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet, newDataSet)
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return nil;
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.General.Notifications";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Notifications", @"PrefPanelGeneral", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintHorizontal;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::GENERAL;
+}// preferencesClass
+
+
+@end // PrefPanelGeneral_NotificationsViewManager
+
+
+@implementation PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal)
+
+
+/*!
+Send when changing any of the properties that affect the
+command-N key mapping (as they are related).
+
+(4.1)
+*/
+- (void)
+notifyDidChangeValueForBackgroundNotification
+{
+	// note: should occur in opposite order of corresponding "willChangeValueForKey:" invocations
+	[self didChangeValueForKey:@"backgroundNotificationNone"];
+	[self didChangeValueForKey:@"backgroundNotificationChangeDockIcon"];
+	[self didChangeValueForKey:@"backgroundNotificationAnimateIcon"];
+	[self didChangeValueForKey:@"backgroundNotificationDisplayMessage"];
+}
+- (void)
+notifyWillChangeValueForBackgroundNotification
+{
+	[self willChangeValueForKey:@"backgroundNotificationDisplayMessage"];
+	[self willChangeValueForKey:@"backgroundNotificationAnimateIcon"];
+	[self willChangeValueForKey:@"backgroundNotificationChangeDockIcon"];
+	[self willChangeValueForKey:@"backgroundNotificationNone"];
+}// notifyWillChangeValueForBackgroundNotification
+
+
+/*!
+Returns the current user preference for background notifications,
+or the specified default value if no preference exists.  The
+result will match a "kAlert_Notify..." constant.
+
+(4.1)
+*/
+- (SInt16)
+readBackgroundNotificationTypeWithDefaultValue:(SInt16)		aDefaultValue
+{
+	SInt16						result = aDefaultValue;
+	size_t						actualSize = 0;
+	Preferences_Result			prefsResult = Preferences_GetData(kPreferences_TagNotification,
+																	sizeof(result), &result, &actualSize);
+	
+	
+	if (kPreferences_ResultOK != prefsResult)
+	{
+		result = aDefaultValue; // assume default, if preference can’t be found
+	}
+	return result;
+}// readBackgroundNotificationTypeWithDefaultValue:
+
+
+/*!
+Returns the current user preference for the bell sound.
+
+This is the base name of a sound file, or an empty string
+(to indicate the system’s default alert sound is played)
+or the special string "off" to indicate no sound at all.
+
+(4.1)
+*/
+- (NSString*)
+readBellSoundNameWithDefaultValue:(NSString*)	aDefaultValue
+{
+	NSString*			result = nil;
+	CFStringRef			soundName = nullptr;
+	Preferences_Result	prefsResult = kPreferences_ResultOK;
+	size_t				actualSize = 0;
+	BOOL				releaseSoundName = YES;
+	
+	
+	// determine user’s preferred sound
+	prefsResult = Preferences_GetData(kPreferences_TagBellSound, sizeof(soundName),
+										&soundName, &actualSize);
+	if (kPreferences_ResultOK != prefsResult)
+	{
+		soundName = (CFStringRef)aDefaultValue;
+		releaseSoundName = NO;
+	}
+	
+	result = [[((NSString*)soundName) retain] autorelease];
+	if (releaseSoundName)
+	{
+		CFRelease(soundName), soundName = nullptr;
+	}
+	
+	return result;
+}// readBellSoundNameWithDefaultValue:
+
+
+/*!
+Writes a new user preference for background notifications and
+returns YES only if this succeeds.  The given value must match
+a "kAlert_Notify..." constant.
+
+(4.1)
+*/
+- (BOOL)
+writeBackgroundNotificationType:(SInt16)	aValue
+{
+	Preferences_Result	prefsResult = Preferences_SetData(kPreferences_TagNotification,
+															sizeof(aValue), &aValue);
+	
+	
+	return (kPreferences_ResultOK == prefsResult);
+}// writeBackgroundNotificationType:
+
+
+/*!
+Writes a new user preference for the bell sound.  For details
+on what the string can be, see the documentation for the
+"readBellSoundNameWithDefaultValue" method.
+
+(4.1)
+*/
+- (BOOL)
+writeBellSoundName:(NSString*)	aValue
+{
+	CFStringRef			asCFStringRef = (CFStringRef)aValue;
+	Preferences_Result	prefsResult = Preferences_SetData(kPreferences_TagBellSound,
+															sizeof(asCFStringRef), &asCFStringRef);
+	
+	
+	return (kPreferences_ResultOK == prefsResult);
+}// writeBellSoundName:
+
+
+@end // PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal)
+
+
 @implementation PrefPanelGeneral_OptionsViewManager
 
 
@@ -2296,7 +3297,7 @@ init
 	self = [super initWithNibNamed:@"PrefPanelGeneralOptionsCocoa" delegate:self context:nullptr];
 	if (nil != self)
 	{
-		// do not initialize here; most likely should use "panelViewManagerInitialize:"
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
 	}
 	return self;
 }// init
@@ -2825,7 +3826,7 @@ init
 	self = [super initWithNibNamed:@"PrefPanelGeneralSpecialCocoa" delegate:self context:nullptr];
 	if (nil != self)
 	{
-		// do not initialize here; most likely should use "panelViewManagerInitialize:"
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
 	}
 	return self;
 }// init

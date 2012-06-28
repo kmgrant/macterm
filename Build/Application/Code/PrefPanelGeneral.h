@@ -223,6 +223,64 @@ error:(NSError**)_;
 
 @end
 
+
+/*!
+Loads a NIB file that defines the Notifications pane.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelGeneral_NotificationsViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+{
+	NSMutableArray*		soundNames;
+@private
+	PrefsContextManager_Object*		prefsMgr;
+	NSIndexSet*						soundNameIndexes;
+}
+
+// accessors
+
+- (BOOL)
+alwaysUseVisualBell;
+- (void)
+setAlwaysUseVisualBell:(BOOL)_; // binding
+
+- (BOOL)
+backgroundBellsSendNotifications;
+- (void)
+setBackgroundBellsSendNotifications:(BOOL)_; // binding
+
+- (BOOL)
+isBackgroundNotificationNone;
+- (void)
+setBackgroundNotificationNone:(BOOL)_; // binding
+
+- (BOOL)
+isBackgroundNotificationChangeDockIcon;
+- (void)
+setBackgroundNotificationChangeDockIcon:(BOOL)_; // binding
+
+- (BOOL)
+isBackgroundNotificationAnimateIcon;
+- (void)
+setBackgroundNotificationAnimateIcon:(BOOL)_; // binding
+
+- (BOOL)
+isBackgroundNotificationDisplayMessage;
+- (void)
+setBackgroundNotificationDisplayMessage:(BOOL)_; // binding
+
+- (NSArray*)
+soundNames;
+
+- (NSIndexSet*)
+soundNameIndexes;
+- (void)
+setSoundNameIndexes:(NSIndexSet*)_; // binding
+
+@end
+
 #endif // __OBJC__
 
 

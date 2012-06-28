@@ -249,6 +249,7 @@ English.lproj/KeypadFunctionKeysCocoa \
 English.lproj/KeypadVT220KeysCocoa \
 English.lproj/MainMenuCocoa \
 English.lproj/PrefPanelFullScreenCocoa \
+English.lproj/PrefPanelGeneralNotificationsCocoa \
 English.lproj/PrefPanelGeneralOptionsCocoa \
 English.lproj/PrefPanelGeneralSpecialCocoa \
 English.lproj/PrefPanelTranslationsCocoa \
