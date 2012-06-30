@@ -66,6 +66,17 @@ endef
 all:
 	$(begin_target)
 	@echo "Building $(MODULES)"
+	@# since help content is aggressively cached, blow it all away
+	@# to ensure that the latest is seen by the system
+	$(RM) -R ~/Library/Caches/com.apple.help.*
+	$(RM) -R ~/Library/Caches/com.apple.helpindexer.*
+	$(RM) -R ~/Library/Caches/com.apple.helpviewer.*
+	$(RM) -R ~/Library/Preferences/com.apple.help.*
+	$(RM) -R ~/Library/Preferences/com.apple.helpindexer.*
+	$(RM) -R ~/Library/Preferences/com.apple.helpviewer.*
+	-killall helpd
+	defaults write com.apple.helpindexer IndexAnchors YES
+	@# now build a new help book and display it in a web browser
 	$(MAKE) build
 	$(call open_browser_to_page,$(strip $(DEST))/English/Help/index.html)
 	$(end_target)
