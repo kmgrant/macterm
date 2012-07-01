@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120701',
     '20120602',
     '20120530',
     '20120526',
@@ -449,6 +450,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120701': [
+        'Sandboxing (restriction of default application privileges) is now available for users of Mac OS X 10.5 and beyond.  It is currently experimental and off by default; it can only be enabled by setting an environment variable when running MacTerm.  The entire default set of privileges can be seen in the file "MacTerm.app/Contents/Resources/Application.sb".  Note that since sub-processes inherit sandbox restrictions, MacTerm may choose defaults that are too strict for the particular programs that you choose to run.  See the "MacTerm.app/Contents/MacOS/MacTerm" front-end script for more information on enabling and customizing the sandbox.',
+    ],
     '20120602': [
         "Fixed Custom New Session sheet so that the window starts with the size and color scheme of the Default Session's associated Terminal and Format.  Previously, the window size and colors were only corrected after the session began.",
         'Fixed Custom New Session sheet so that the window resizes immediately when a Terminal configuration is selected from the menu (instead of only resizing after the session starts).',

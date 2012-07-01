@@ -1,0 +1,180 @@
+;; MacTerm sandbox profile
+;; (see also /usr/share/sandbox/*)
+;;
+;; WARNING: Sandbox rules could be changed arbitrarily by Apple in future
+;; revisions to Mac OS X.  This feature is currently experimental.
+;;
+;; To enable sandboxing, look at how it's handled in MacTerm's front-end script
+;; (MacTerm.app/Contents/MacOS/MacTerm).
+;;
+;; If you intend to use the sandboxing feature and need to customize MacTerm's
+;; defaults (e.g. because you plan to run sub-processes with requirements that
+;; were not anticipated here), the recommended approach is to create your own
+;; profile and begin with:
+;;     (import "/Applications/MacTerm.app/Contents/Resources/Application.sb")
+;; ...or whatever path you used to install MacTerm.  This ensures that you can
+;; easily take advantage of any future refinements to the default profile.
+;;
+;; If you find a case that this sandbox should be handling (e.g. because it's
+;; something that is very generic and commonly useful) please let me know by
+;; E-mail and I will consider changing the default profile.
+;;
+;; Kevin Grant <kmg@mac.com>
+;; June 30, 2012
+
+(version 1)
+
+;; this is a whitelisting sandbox
+(deny default)
+
+;; run as admin "tail -f /var/log/system.log" to see denied privileges
+(debug deny)
+;;(trace "/tmp/MacTerm-sb-trace.log")
+
+;; access to all metadata (no way I'm going to enumerate every one!)
+(allow file-read-metadata (regex #".*"))
+(allow file-read-xattr (regex #".*"))
+(allow file* (regex #"/\.DS_Store$"))
+
+;; access to /private/var/folders (can't really predict specific uses)
+(allow file* (regex #"^/private/var/folders/.*"))
+
+;; access to core executables, libraries and services (some are required by
+;; the terminal itself, some are just likely to be needed by subprocesses)
+(allow mach-lookup (global-name-regex #"^com\.apple\..*"))
+(allow mach-lookup (global-name-regex #"^net\.macterm\..*"))
+(allow file-read*
+         (literal "/Library/Audio") ; e.g. triggered by playing sounds
+         (regex #"^/Library/Audio/.*")
+  (literal "/System/Library/Components") ; e.g. triggered by playing sounds
+  (regex #"^/System/Library/Components/.*")
+         (regex #"^/Library/Contextual( |%20)Menu( |%20)Items$") ; triggered by opening a contextual menu
+         (regex #"^/Library/Contextual( |%20)Menu( |%20)Items/.*")
+  (literal "/System/Library/CoreServices")
+  (regex #"^/System/Library/CoreServices/.*")
+  (literal "/System/Library/Extensions")
+  (regex #"^/System/Library/Extensions/.*")
+  (literal "/System/Library/Filesystems") ; e.g. triggered by open/save panel
+  (regex #"^/System/Library/Filesystems/.*")
+         (literal "/Library/Filesystems") ; e.g. triggered by open/save panel
+         (regex #"^/Library/Filesystems/.*")
+  (literal "/System/Library/Frameworks")
+  (regex #"^/System/Library/Frameworks/.*")
+  (literal "/System/Library/PrivateFrameworks")
+  (regex #"^/System/Library/PrivateFrameworks/.*")
+         (literal "/Library/Python")
+         (regex #"^/Library/Python/.*")
+  (literal "/System/Library/QuickLook") ; e.g. triggered by open/save panel
+  (regex #"^/System/Library/QuickLook/.*")
+         (literal "/Library/QuickLook") ; e.g. triggered by open/save panel
+         (regex #"^/Library/QuickLook/.*")
+  (literal "/System/Library/QuickTime") ; e.g. triggered by Clipboard display of images
+  (regex #"^/System/Library/QuickTime/.*")
+  (literal "/System/Library/Speech") ; e.g. triggered by requests to speak text
+  (regex #"^/System/Library/Speech/.*")
+         (literal "/Library/Speech") ; e.g. triggered by requests to speak text
+         (regex #"^/Library/Speech/.*")
+  (literal "/System/Library/Spelling") ; e.g. triggered by editing text
+  (regex #"^/System/Library/Spelling/.*")
+         (literal "/Library/Spelling") ; e.g. triggered by editing text
+         (regex #"^/Library/Spelling/.*")
+  (literal "/System/Library/Spotlight") ; e.g. triggered by open/save panel
+  (regex #"^/System/Library/Spotlight/.*")
+         (literal "/Library/Spotlight") ; e.g. triggered by open/save panel
+         (regex #"^/Library/Spotlight/.*")
+)
+(allow file-read* (literal "/Applications"))
+(allow file-read* (regex #"^/Applications/.*"))
+(allow file-read*
+  (literal "/usr")
+  (regex #"^/usr/.*")
+  (literal "/bin")
+  (regex #"^/bin/.*")
+  (literal "/lib")
+  (regex #"^/lib/.*")
+  (literal "/opt")
+  (regex #"^/opt/.*")
+  (literal "/sbin")
+  (regex #"^/sbin/.*")
+)
+
+;; access to disk roots
+(allow file-read* (literal "/"))
+(allow file-read* (literal "/Volumes"))
+(allow file-read* (regex #"^/Volumes/.*"))
+
+;; device access; note that since subprocesses inherit these restrictions it may
+;; be necessary to adjust based on what you plan to do (e.g. if you run a
+;; program that accesses the serial port, you will be denied by default unless
+;; this is changed) but it is recommended that you write your own profile with
+;; an import instead of changing this default list
+(allow file-read* (literal "/dev"))
+(allow file-ioctl (literal "/dev/null"))
+(allow file-read* (literal "/dev/null"))
+(allow file-write* (literal "/dev/null"))
+(allow file-ioctl (literal "/dev/dtracehelper"))
+(allow file-read* (literal "/dev/dtracehelper"))
+(allow file-write* (literal "/dev/dtracehelper"))
+(allow file-ioctl (literal "/dev/random"))
+(allow file-read* (literal "/dev/random"))
+(allow file-ioctl (literal "/dev/urandom"))
+(allow file-read* (literal "/dev/urandom"))
+(allow file* (regex "/dev/pty.*"))
+(allow file* (regex "/dev/tty.*"))
+
+;; network access (generally for subprocesses, but not entirely)
+(allow network*)
+(allow system-socket)
+
+;; access to password file (temporary; reason not determined yet)
+(allow file-read* (regex #"/private/etc/passwd"))
+
+;; interaction with Growl for notifications
+(allow appleevent-send (appleevent-destination "com.growl.growlhelperapp"))
+(allow distributed-notification-post)
+(allow file-read* (regex "Applications/Growl.app$"))
+(allow file-read* (regex "Applications/Growl.app/.*"))
+(allow file-read* (regex #"Library/PreferencePanes$"))
+(allow file-read* (regex #"Library/PreferencePanes/.*"))
+(allow mach-lookup (global-name-regex #"^GrowlApplicationBridge"))
+
+;; access to data in the sandbox or user home directory
+(allow authorization-right-obtain)
+(allow file* (regex #"Library/Caches$"))
+(allow file* (regex #"Library/Caches/.*"))
+(allow file-read*
+  (regex #"Library/ColorSync$")
+  (regex #"Library/ColorSync/.*")
+  (regex #"Library/Containers$")
+  (regex #"Library/Containers/.*")
+  (regex #"Library/Fonts$")
+  (regex #"Library/Fonts/.*")
+  (regex #"Library/Input Methods$")
+  (regex #"Library/Input Methods/.*")
+  (regex #"Library/Keyboard Layouts$")
+  (regex #"Library/Keyboard Layouts/.*")
+  (regex #"Library/Preferences$")
+  (regex #"Library/Preferences/.*")
+)
+(allow file* (regex #"Library/Preferences/\.GlobalPreferences\..*"))
+(allow file* (regex #"Library/Preferences/net\.macterm\..*"))
+(allow file* (regex #"Library/Saved( |%20)Application( |%20)State$"))
+(allow file* (regex #"Library/Saved( |%20)Application( |%20)State/.*"))
+(allow file-read* (regex #"Library/Sounds$"))
+(allow file-read* (regex #"Library/Sounds/.*"))
+
+;; ability to run other programs
+(allow process-fork)
+(allow process-exec)
+(allow iokit-open)
+(allow ipc-posix*)
+(allow ipc-sysv*)
+(allow signal)
+(allow sysctl-read)
+
+;; items enabled not so much because the terminal may need them but because
+;; common sub-processes (such as shells) will need them
+(allow file-read* (literal "/private"))
+(allow file-read* (regex #"^/private/"))
+(allow file-read* (literal "/Users"))
+(allow file-read* (regex #"^/Users/"))

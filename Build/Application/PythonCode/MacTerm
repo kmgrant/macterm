@@ -183,6 +183,28 @@ if __name__ == "__main__":
     main_script = os.path.join(macos_dir, "RunApplication.py")
     sys.argv.insert(1, main_script)
     
+    # if the system supports sandboxing, run the program in a sandbox
+    # (EXPERIMENTAL: eventually this might be enabled automatically by
+    # system type but for now it is only activated when the appropriate
+    # environment setting is made)
+    if False:
+        is_sandboxed = (mac_os_name not in ("Panther", "Tiger"))
+    else:
+        is_sandboxed = (("MACTERM_SANDBOXED" in os.environ) and (os.environ["MACTERM_SANDBOXED"] == "1"))
+    sandbox_profile_path = None
+    if is_sandboxed:
+        # WARNING: if you choose to override with a custom profile it is still
+        # recommended that you begin with an import of the default one; e.g.
+        #     (import "/Applications/MacTerm.app/Contents/Resources/Application.sb")
+        if ("MACTERM_SANDBOX_PROFILE" in os.environ):
+            sandbox_profile_path = os.environ["MACTERM_SANDBOX_PROFILE"]
+        else:
+            sandbox_profile_path = os.path.join(bundle_dir, 'Contents', 'Resources', 'Application.sb')
+        print "MacTerm: sandboxing has been enabled using restrictions from the profile '%s'" % sandbox_profile_path
+        sys.argv.insert(0, sandbox_profile_path)
+        sys.argv.insert(0, '-f')
+        sys.argv.insert(0, '/usr/bin/sandbox-exec')
+    
     # WARNING: the Finder will include arguments (e.g. -psn_0_10223617) that
     # will not be present in a normal shell run; ensure these arguments are
     # preserved so that runs from the Finder are successful
