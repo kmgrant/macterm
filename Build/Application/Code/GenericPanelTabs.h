@@ -80,6 +80,7 @@ changes to an interface declared in a ".mm" file.
 {
 	IBOutlet NSTabView*		tabView;
 @private
+	Panel_ViewManager*						activePanel;
 	NSString*								identifier;
 	NSString*								localizedName;
 	NSImage*								localizedIcon;

@@ -56,6 +56,10 @@
 #import <HIViewWrap.h>
 #import <HIViewWrapManip.h>
 
+// application includes
+#import "Panel.h"
+#import "PrefsWindow.h"
+
 
 
 #pragma mark Types
@@ -902,6 +906,35 @@ automaticallyNotifiesObserversForKey:(NSString*)	theKey
 }// automaticallyNotifiesObserversForKey:
 
 
+#pragma mark NSTabViewDelegate
+
+
+/*!
+Keeps track of the current tab so that certain messages can be
+forwarded to the appropriate panel.
+
+(4.1)
+*/
+- (void)
+tabView:(NSTabView*)					aTabView
+didSelectTabViewItem:(NSTabViewItem*)	anItem
+{
+#pragma unused(aTabView)
+	GenericPanelTabs_ViewManagerByView::const_iterator	toPair = self->viewManagerByView->find([anItem view]);
+	
+	
+	if (self->viewManagerByView->end() != toPair)
+	{
+		self->activePanel = toPair->second;
+	}
+	else
+	{
+		Console_Warning(Console_WriteLine, "tab view has selected item with no associated view manager");
+		self->activePanel = nil;
+	}
+}// tabView:didSelectTabViewItem:
+
+
 #pragma mark Panel_Delegate
 
 
@@ -926,6 +959,7 @@ initializeWithContext:(void*)			aContext
 	NSEnumerator*	eachViewManager = [givenViewManagers objectEnumerator];
 	
 	
+	self->activePanel = nil;
 	self->identifier = [givenIdentifier retain];
 	self->localizedName = [givenName retain];
 	self->localizedIcon = [givenIcon retain];
@@ -938,9 +972,6 @@ initializeWithContext:(void*)			aContext
 	{
 		self->viewManagerByView->insert(std::make_pair([viewMgr managedView], viewMgr));
 	}
-	
-	// now forward initialization to all tabs
-	// UNIMPLEMENTED
 }// panelViewManagerInitialize:
 
 
@@ -975,6 +1006,9 @@ didLoadContainerView:(NSView*)			aContainerView
 
 
 	assert(nil != tabView);
+	
+	// arrange to be notified of certain changes
+	[tabView setDelegate:self];
 	
 	// create tabs for every view that was provided
 	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
@@ -1036,9 +1070,9 @@ Responds to a request for contextual help in this panel.
 panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
-#pragma unused(aViewManager, sender)
+#pragma unused(aViewManager)
 	// forward to active tab
-	// UNIMPLEMENTED
+	[[self->activePanel delegate] panelViewManager:self->activePanel didPerformContextSensitiveHelp:sender];
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -1051,9 +1085,9 @@ Responds just before a change to the visible state of this panel.
 panelViewManager:(Panel_ViewManager*)			aViewManager
 willChangePanelVisibility:(Panel_Visibility)	aVisibility
 {
-#pragma unused(aViewManager, aVisibility)
+#pragma unused(aViewManager)
 	// forward to active tab
-	// UNIMPLEMENTED
+	[[self->activePanel delegate] panelViewManager:self->activePanel willChangePanelVisibility:aVisibility];
 }// panelViewManager:willChangePanelVisibility:
 
 
@@ -1068,7 +1102,7 @@ didChangePanelVisibility:(Panel_Visibility)		aVisibility
 {
 #pragma unused(aViewManager, aVisibility)
 	// forward to active tab
-	// UNIMPLEMENTED
+	[[self->activePanel delegate] panelViewManager:self->activePanel didChangePanelVisibility:aVisibility];
 }// panelViewManager:didChangePanelVisibility:
 
 
@@ -1076,8 +1110,7 @@ didChangePanelVisibility:(Panel_Visibility)		aVisibility
 Responds to a change of data sets by resetting the panel to
 display the new data set.
 
-Not applicable to this panel because it only sets global
-(Default) preferences.
+The message is forwarded to each tab’s panel in turn.
 
 (4.1)
 */
@@ -1088,13 +1121,21 @@ toDataSet:(void*)						newDataSet
 {
 #pragma unused(aViewManager, oldDataSet, newDataSet)
 	// forward to all tabs
-	// UNIMPLEMENTED
+	NSEnumerator*	eachViewManager = [self->viewManagerArray objectEnumerator];
+	
+	
+	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	{
+		[[viewMgr delegate] panelViewManager:viewMgr didChangeFromDataSet:oldDataSet toDataSet:newDataSet];
+	}
 }// panelViewManager:didChangeFromDataSet:toDataSet:
 
 
 /*!
 Last entry point before the user finishes making changes
-(or discarding them).  Responds by saving preferences.
+(or discarding them).
+
+The message is forwarded to each tab’s panel in turn.
 
 (4.1)
 */
@@ -1105,7 +1146,13 @@ userAccepted:(BOOL)						isAccepted
 {
 #pragma unused(aViewManager, aContainerView, isAccepted)
 	// forward to all tabs
-	// UNIMPLEMENTED
+	NSEnumerator*	eachViewManager = [self->viewManagerArray objectEnumerator];
+	
+	
+	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	{
+		[[viewMgr delegate] panelViewManager:viewMgr didFinishUsingContainerView:aContainerView userAccepted:isAccepted];
+	}
 }// panelViewManager:didFinishUsingContainerView:userAccepted:
 
 
@@ -1168,8 +1215,64 @@ IMPORTANT:	This is only a hint.  Panels must be prepared
 panelResizeAxes
 {
 	// consult all tabs and return the tightest constraint possible
-	// UNIMPLEMENTED
-	return kPanel_ResizeConstraintBothAxes;
+	Panel_ResizeConstraint	result = kPanel_ResizeConstraintBothAxes;
+	NSEnumerator*			eachViewManager = [self->viewManagerArray objectEnumerator];
+	
+	
+	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	{
+		Panel_ResizeConstraint	panelConstraint = [viewMgr panelResizeAxes];
+		
+		
+		switch (panelConstraint)
+		{
+		case kPanel_ResizeConstraintNone:
+			// completely restrictive; keep
+			result = panelConstraint;
+			break;
+		case kPanel_ResizeConstraintHorizontal:
+			// partially restrictive; merge
+			switch (result)
+			{
+			case kPanel_ResizeConstraintHorizontal:
+			case kPanel_ResizeConstraintNone:
+				// do not change
+				break;
+			case kPanel_ResizeConstraintVertical:
+				// more restrictive
+				result = kPanel_ResizeConstraintNone;
+				break;
+			case kPanel_ResizeConstraintBothAxes:
+			default:
+				result = panelConstraint;
+				break;
+			}
+			break;
+		case kPanel_ResizeConstraintVertical:
+			// partially restrictive; merge
+			switch (result)
+			{
+			case kPanel_ResizeConstraintVertical:
+			case kPanel_ResizeConstraintNone:
+				// do not change
+				break;
+			case kPanel_ResizeConstraintHorizontal:
+				// more restrictive
+				result = kPanel_ResizeConstraintNone;
+				break;
+			case kPanel_ResizeConstraintBothAxes:
+			default:
+				result = panelConstraint;
+				break;
+			}
+			break;
+		case kPanel_ResizeConstraintBothAxes:
+		default:
+			// not restrictive; ignore
+			break;
+		}
+	}
+	return result;
 }// panelResizeAxes
 
 
@@ -1179,14 +1282,30 @@ panelResizeAxes
 /*!
 Returns the class of preferences edited by this panel.
 
+IMPORTANT:	This interface is implemented for convenience but may
+			only be used if the delegates of each view manager
+			(each tab) support "PrefsWindow_PanelInterface".
+
 (4.1)
 */
 - (Quills::Prefs::Class)
 preferencesClass
 {
 	// consult all tabs to ensure that they all agree on this
-	// UNIMPLEMENTED
-	return Quills::Prefs::GENERAL;
+	Quills::Prefs::Class	result = Quills::Prefs::GENERAL;
+	NSEnumerator*			eachViewManager = [self->viewManagerArray objectEnumerator];
+	
+	
+	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	{
+		id									panelDelegate = [viewMgr delegate];
+		assert([[panelDelegate class] conformsToProtocol:@protocol(PrefsWindow_PanelInterface)]);
+		id< PrefsWindow_PanelInterface >	asPrefPanel = (id< PrefsWindow_PanelInterface >)panelDelegate;
+		
+		
+		result = [asPrefPanel preferencesClass];
+	}
+	return result;
 }// preferencesClass
 
 
