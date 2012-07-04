@@ -52,7 +52,7 @@ build_app:
 	@# throw away configuration file (no longer needed)
 	$(RM) "$(strip $(TMP_CONF))"
 	@# post-processing
-	$(xcustom_index)
+	$(custom_index_for_app)
 	@# note that postprocess depends on $(wildcard), which is resolved at
 	@# the time the makefile is parsed; a recursive "make" ensures the
 	@# wildcard is parsed only after Doxygen has actually created files!
@@ -73,7 +73,7 @@ build_py:
 	@# throw away configuration file (no longer needed)
 	$(RM) "$(strip $(TMP_CONF))"
 	@# post-processing
-	$(xcustom_index)
+	$(custom_index_for_py)
 	@# note that postprocess depends on $(wildcard), which is resolved at
 	@# the time the makefile is parsed; a recursive "make" ensures the
 	@# wildcard is parsed only after Doxygen has actually created files!
@@ -101,7 +101,8 @@ postprocess_py:
 
 .PHONY: index
 index:
-	$(custom_index)
+	$(custom_index_for_app)
+	$(custom_index_for_py)
 
 .PHONY: clean_app
 clean_app:
@@ -214,12 +215,21 @@ define copy_resources
 
 endef
 
-define custom_index
+define custom_index_for_app
 	@# replace Doxygen-generated index page with something a bit nicer
 	@echo "Creating custom index file by substituting template variables..."
-	cp "$(strip $(DOC_SRC))/index.html.in" "$(strip $(OUTPUT_DIR))/index.html"
+	cp "$(strip $(DOC_SRC))/index-app.html.in" "$(strip $(OUTPUT_DIR_APP))/index.html"
 	perl -pi -e "s|===VERSION===|$(MAJOR).$(MINOR).$(SUBMINOR)$(ABR), build $(BUILD)|" \
-			"$(strip $(OUTPUT_DIR))/index.html"
+			"$(strip $(OUTPUT_DIR_APP))/index.html"
+
+endef
+
+define custom_index_for_py
+	@# replace Doxygen-generated index page with something a bit nicer
+	@echo "Creating custom index file by substituting template variables..."
+	cp "$(strip $(DOC_SRC))/index-py.html.in" "$(strip $(OUTPUT_DIR_PY))/index.html"
+	perl -pi -e "s|===VERSION===|$(MAJOR).$(MINOR).$(SUBMINOR)$(ABR), build $(BUILD)|" \
+			"$(strip $(OUTPUT_DIR_PY))/index.html"
 
 endef
 

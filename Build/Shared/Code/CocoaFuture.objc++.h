@@ -1,4 +1,4 @@
-/*!	\file CocoaFuture.h
+/*!	\file CocoaFuture.objc++.h
 	\brief Declarations for certain constants and methods
 	available only on newer OSes, to aid compilations for
 	older OSes.

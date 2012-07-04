@@ -1,4 +1,4 @@
-/*!	\file PopoverManager.h
+/*!	\file PopoverManager.objc++.h
 	\brief Provides common support code that is generally
 	needed by any window that acts like a popover.
 	

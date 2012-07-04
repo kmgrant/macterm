@@ -1,4 +1,4 @@
-/*!	\file PrefsContextManager.h
+/*!	\file PrefsContextManager.objc++.h
 	\brief An Objective-C object for common preferences tasks.
 */
 /*###############################################################

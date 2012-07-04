@@ -1,28 +1,26 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
 <head>
 	<title>$title (MacTerm Developer Docs)</title>
-	<meta http-equiv="Content-type" content="text/html;charset=macintosh">
-	<meta http-equiv="Content-script-type" content="text/javascript">
+	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+	<meta http-equiv="Cache-Control" content="max-age=2592000">
 	<meta name="keywords" content="MacTerm,source,code,developer,documentation">
 	<meta name="description" content="Developer documentation for the MacTerm terminal emulator.">
 	
-	<link rel="author" href="mailto:kmg@mac.com">
-	<link rel="home" href="http://homepage.mac.com/kmg/">
+	<link rel="author" href="mailto:kmg%40mac%2Ecom">
+	<link rel="search" href="http://www.macterm.net/search/">
 	<link rel="index" href="files.html">
 	
 	<link rel="stylesheet" type="text/css" href="code.css" title="Default">
 	<link rel="stylesheet" type="text/css" href="tabs.css" title="Default">
 </head>
-
-<!-- the background color is specified for the benefit of browsers that do not support style sheets -->
-<body bgcolor="white">
+<body>
 
 <div class="navigation">
 	MacTerm.net
 	<ul>
-	<li><a href="http://macterm.net/" target="_top">Home</a></li>
-	<li><a href="http://macterm.net/developer/" target="_top">For Developers</a></li>
+	<li><a href="http://macterm.net/">Home</a></li>
+	<li><a href="http://macterm.net/developer/">For Developers</a></li>
 	</ul>
 </div>
 

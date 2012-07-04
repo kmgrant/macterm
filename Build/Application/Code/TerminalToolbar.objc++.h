@@ -1,4 +1,4 @@
-/*!	\file TerminalToolbar.h
+/*!	\file TerminalToolbar.objc++.h
 	\brief Items used in the toolbars of terminal windows.
 	
 	This module focuses on the Cocoa implementation even
