@@ -269,6 +269,9 @@ updateUserInterfaceForSourceListTransition:(id)_;
 performDisplayPrefPanelFullScreen:(id)_;
 
 - (void)
+performDisplayPrefPanelGeneral:(id)_;
+
+- (void)
 performDisplayPrefPanelTranslations:(id)_;
 
 @end // PrefsWindow_Controller (PrefsWindow_ControllerInternal)
