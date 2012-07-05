@@ -194,7 +194,7 @@ VectorWindow_CopyTitle	(VectorWindow_Ref	inWindow,
 		NSWindow*	owningWindow = [controller window];
 		
 		
-		outTitle = (CFStringRef)[[owningWindow title] copy];
+		outTitle = BRIDGE_CAST([[owningWindow title] copy], CFStringRef);
 	}
 }// CopyTitle
 

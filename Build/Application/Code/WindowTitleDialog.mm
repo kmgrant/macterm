@@ -661,7 +661,7 @@ returnInitialTitleTextForManagedView:(NSView*)		aManagedView
 		sessionResult = Session_GetWindowUserDefinedTitle(self->session, titleString);
 		if ((kSession_ResultOK == sessionResult) && (nullptr != titleString))
 		{
-			result = (NSString*)titleString;
+			result = BRIDGE_CAST(titleString, NSString*);
 		}
 	}
 	else if (nullptr != self->canvasWindow)
@@ -673,7 +673,7 @@ returnInitialTitleTextForManagedView:(NSView*)		aManagedView
 		VectorWindow_CopyTitle(self->canvasWindow, titleString);
 		if (nullptr != titleString)
 		{
-			result = (NSString*)titleString;
+			result = BRIDGE_CAST(titleString, NSString*);
 			[result autorelease];
 		}
 	}

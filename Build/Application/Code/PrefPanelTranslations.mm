@@ -1792,7 +1792,7 @@ initializeWithContext:(void*)			aContext
 	for (UInt16 i = 1; i <= characterSetCount; ++i)
 	{
 		CFStringEncoding	encodingID = TextTranslation_ReturnIndexedCharacterSet(i);
-		NSString*			encodingName = (NSString*)CFStringGetNameOfEncoding(encodingID);
+		NSString*			encodingName = BRIDGE_CAST(CFStringGetNameOfEncoding(encodingID), NSString*);
 		
 		
 		[self->translationTables addObject:[[[PrefPanelTranslations_TableInfo alloc]

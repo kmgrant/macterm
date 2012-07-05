@@ -1302,7 +1302,7 @@ performFormatByFavoriteName:(id)	sender
 	{
 		// use the specified preferences
 		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
+		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
 		
 		
 		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, collectionName))

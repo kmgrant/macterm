@@ -2655,7 +2655,7 @@ boundName
 		
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			result = (NSString*)nameCFString;
+			result = BRIDGE_CAST(nameCFString, NSString*);
 		}
 	}
 	return result;
@@ -3846,7 +3846,7 @@ contextInfo:(void*)					aContextPtr
 		// export the contents of the preferences context (the Preferences
 		// module automatically ignores settings that are not part of the
 		// right class, e.g. so that Default does not create a huge file)
-		CFURLRef			asURL = (CFURLRef)[aPanel URL];
+		CFURLRef			asURL = BRIDGE_CAST([aPanel URL], CFURLRef);
 		Preferences_Result	writeResult = Preferences_ContextSaveAsXMLFileURL([self currentPreferencesContext], asURL);
 		
 		

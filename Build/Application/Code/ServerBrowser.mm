@@ -2168,7 +2168,7 @@ notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 			}
 			else if (valueGetter == @selector(hostName))
 			{
-				CFStringRef		hostNameForEvent = (CFStringRef)[self hostName];
+				CFStringRef		hostNameForEvent = BRIDGE_CAST([self hostName], CFStringRef);
 				
 				
 				error = SetEventParameter(panelChangedEvent, kEventParamNetEvents_HostName,
@@ -2187,7 +2187,7 @@ notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 			}
 			else if (valueGetter == @selector(userID))
 			{
-				CFStringRef		userIDForEvent = (CFStringRef)[self userID];
+				CFStringRef		userIDForEvent = BRIDGE_CAST([self userID], CFStringRef);
 				
 				
 				error = SetEventParameter(panelChangedEvent, kEventParamNetEvents_UserID,

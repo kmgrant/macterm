@@ -977,7 +977,7 @@ mouseLocation:(NSPoint)			mouseLocation
 			
 			if (Session_GetStateString(rowData->session, stateCFString).ok())
 			{
-				result = (NSString*)stateCFString;
+				result = BRIDGE_CAST(stateCFString, NSString*);
 			}
 		}
 	}

@@ -2995,7 +2995,7 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 		else
 		{
 			// use the object for convenience
-			charNSString = (NSString*)charCFString;
+			charNSString = BRIDGE_CAST(charCFString, NSString*);
 		}
 	}
 	
@@ -4436,7 +4436,7 @@ performNewByFavoriteName:(id)	sender
 	{
 		// use the specified preferences
 		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
+		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
 		
 		
 		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::SESSION, collectionName))
@@ -4616,7 +4616,7 @@ performRestoreWorkspaceByFavoriteName:(id)	sender
 	{
 		// use the specified preferences
 		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
+		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
 		
 		
 		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::WORKSPACE, collectionName))
@@ -4914,7 +4914,7 @@ performMacroSwitchByFavoriteName:(id)	sender
 	{
 		// use the specified preferences
 		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
+		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
 		
 		
 		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::MACRO_SET, collectionName))
@@ -4952,7 +4952,7 @@ canPerformMacroSwitchByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 	if (nullptr != MacroManager_ReturnCurrentMacros())
 	{
 		CFStringRef		collectionName = nullptr;
-		CFStringRef		menuItemName = (CFStringRef)[asMenuItem title];
+		CFStringRef		menuItemName = BRIDGE_CAST([asMenuItem title], CFStringRef);
 		
 		
 		if (nil != menuItemName)
@@ -5377,7 +5377,7 @@ performTranslationSwitchByFavoriteName:(id)		sender
 	{
 		// use the specified preferences
 		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
+		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
 		
 		
 		if ((nullptr != session) && (nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, collectionName))
@@ -5821,7 +5821,7 @@ performFormatByFavoriteName:(id)	sender
 		{
 			// use the specified preferences
 			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-			CFStringRef		collectionName = (CFStringRef)[asMenuItem title];
+			CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
 			
 			
 			if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, collectionName))

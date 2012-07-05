@@ -416,7 +416,7 @@ initiateSearchFor:(NSString*)	queryString
 ignoringCase:(BOOL)				ignoreCase
 notFinal:(BOOL)					isNotFinal
 {
-	CFStringRef		searchQueryCFString = (CFStringRef)queryString;
+	CFStringRef		searchQueryCFString = BRIDGE_CAST(queryString, CFStringRef);
 	CFIndex			searchQueryLength = 0;
 	unsigned long	result = 0;
 	

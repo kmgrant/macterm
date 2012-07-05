@@ -296,7 +296,7 @@ rebuildAddressList:(id)		sender
 	{
 		for (My_AddressList::size_type i = 0; i < addressList.size(); ++i)
 		{
-			NSString*	addressString = (NSString*)addressList[i].returnCFStringRef();
+			NSString*	addressString = BRIDGE_CAST(addressList[i].returnCFStringRef(), NSString*);
 			
 			
 			[addressArray addObject:[[[AddressDialog_Address alloc] initWithDescription:addressString] autorelease]];

@@ -6018,7 +6018,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				// remember the old window title
 				{
-					CFStringRef		nameCFString = (CFStringRef)[ptr->window title];
+					CFStringRef		nameCFString = BRIDGE_CAST([ptr->window title], CFStringRef);
 					
 					
 					ptr->preResizeTitleString.setCFTypeRef(nameCFString);

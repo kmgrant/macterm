@@ -2903,7 +2903,7 @@ initializeWithContext:(void*)			aContext
 	
 	// set up the array of bell sounds
 	{
-		NSArray*		soundNamesOnly = (NSArray*)CocoaBasic_ReturnUserSoundNames();
+		NSArray*		soundNamesOnly = BRIDGE_CAST(CocoaBasic_ReturnUserSoundNames(), NSArray*);
 		NSString*		savedName = [self readBellSoundNameWithDefaultValue:@""];
 		NSEnumerator*	eachName = [soundNamesOnly objectEnumerator];
 		unsigned int	currentIndex = 0;
@@ -3229,7 +3229,7 @@ readBellSoundNameWithDefaultValue:(NSString*)	aDefaultValue
 										&soundName, &actualSize);
 	if (kPreferences_ResultOK != prefsResult)
 	{
-		soundName = (CFStringRef)aDefaultValue;
+		soundName = BRIDGE_CAST(aDefaultValue, CFStringRef);
 		releaseSoundName = NO;
 	}
 	
@@ -3271,7 +3271,7 @@ on what the string can be, see the documentation for the
 - (BOOL)
 writeBellSoundName:(NSString*)	aValue
 {
-	CFStringRef			asCFStringRef = (CFStringRef)aValue;
+	CFStringRef			asCFStringRef = BRIDGE_CAST(aValue, CFStringRef);
 	Preferences_Result	prefsResult = Preferences_SetData(kPreferences_TagBellSound,
 															sizeof(asCFStringRef), &asCFStringRef);
 	

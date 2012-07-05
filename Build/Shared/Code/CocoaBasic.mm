@@ -622,7 +622,7 @@ CocoaBasic_ReturnStringEncodingLocalizedName	(CFStringEncoding	inEncoding)
 	CFStringRef			result = nullptr;
 	
 	
-	result = (CFStringRef)[NSString localizedNameOfStringEncoding:translatedEncoding];
+	result = BRIDGE_CAST([NSString localizedNameOfStringEncoding:translatedEncoding], CFStringRef);
 	return result;
 }// ReturnStringEncodingLocalizedName
 

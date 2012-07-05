@@ -92,11 +92,13 @@ typedef char const*		ConstCStringPtr;
 //! useful “cast operators” that are completely unnecessary, but make code
 //! more self-documenting (they clarify the programmer’s intentions)
 #ifdef __cplusplus
+#define BRIDGE_CAST(ref, intendedType)			((intendedType)(ref))
 #define CONST_CAST(ref, intendedType)			const_cast< intendedType >(ref)
 #define VOLATILE_CAST(ref, intendedType)		const_cast< intendedType >(ref) // C++ says const_cast overrides volatile too
 #define REINTERPRET_CAST(ref, intendedType)		reinterpret_cast< intendedType >(ref)
 #define STATIC_CAST(ref, intendedType)			static_cast< intendedType >(ref)
 #else
+#define BRIDGE_CAST(ref, intendedType)			((intendedType)(ref))	//!< “I am exchanging NSFoo* and CFFooRef because they are DOCUMENTED as being toll-free bridged”
 #define CONST_CAST(ref, intendedType)			((intendedType)(ref))	//!< “I know I am turning a constant pointer into a non-constant one”
 #define VOLATILE_CAST(ref, intendedType)		((intendedType)(ref))	//!< “I know I am turning a volatile value into a non-volatile one”
 #define REINTERPRET_CAST(ref, intendedType)		((intendedType)(ref))	//!< “I want to look at data as something else” (e.g. integer to pointer)
