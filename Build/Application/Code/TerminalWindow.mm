@@ -1473,6 +1473,25 @@ TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 
 
 /*!
+Renames a terminal window’s minimized Dock tile, notifying
+listeners that the window title has changed.
+
+(3.0)
+*/
+void
+TerminalWindow_SetIconTitle		(TerminalWindowRef	inRef,
+								 CFStringRef		inName)
+{
+	AutoPool						_;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	
+	
+	[ptr->window setMiniwindowTitle:(NSString*)inName];
+	changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeIconTitle, ptr->selfRef/* context */);
+}// SetIconTitle
+
+
+/*!
 Set to "true" if you want to hide the specified window
 (as in the “Hide Front Window” command).  An obscured
 window is invisible to the user but technically
@@ -1555,25 +1574,6 @@ TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 		setWindowToIdealSizeForDimensions(ptr, inNewColumnCount, inNewRowCount);
 	}
 }// SetScreenDimensions
-
-
-/*!
-Renames a terminal window’s minimized Dock tile, notifying
-listeners that the window title has changed.
-
-(3.0)
-*/
-void
-TerminalWindow_SetIconTitle		(TerminalWindowRef	inRef,
-								 CFStringRef		inName)
-{
-	AutoPool						_;
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	
-	
-	[ptr->window setMiniwindowTitle:(NSString*)inName];
-	changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeIconTitle, ptr->selfRef/* context */);
-}// SetIconTitle
 
 
 /*!
@@ -1872,6 +1872,37 @@ TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
 
 
 /*!
+Set to "true" to show a terminal window, and "false" to hide it.
+
+This is a TEMPORARY API that should be used in any code that
+cannot use TerminalWindow_ReturnNSWindow() to manipulate the
+Cocoa window directly.  All calls to the Carbon ShowWindow() or
+HideWindow(), that had been using TerminalWindow_ReturnWindow(),
+should DEFINITELY change to call this routine, instead (which
+manipulates the Cocoa window internally).
+
+(4.0)
+*/
+void
+TerminalWindow_SetVisible	(TerminalWindowRef	inRef,
+							 Boolean			inIsVisible)
+{
+	AutoPool						_;
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	
+	
+	if (inIsVisible)
+	{
+		[ptr->window orderFront:nil];
+	}
+	else
+	{
+		[ptr->window orderOut:nil];
+	}
+}// SetVisible
+
+
+/*!
 Renames a terminal window, notifying listeners that the
 window title has changed.
 
@@ -1919,37 +1950,6 @@ TerminalWindow_SetWindowTitle	(TerminalWindowRef	inRef,
 	}
 	changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeWindowTitle, ptr->selfRef/* context */);
 }// SetWindowTitle
-
-
-/*!
-Set to "true" to show a terminal window, and "false" to hide it.
-
-This is a TEMPORARY API that should be used in any code that
-cannot use TerminalWindow_ReturnNSWindow() to manipulate the
-Cocoa window directly.  All calls to the Carbon ShowWindow() or
-HideWindow(), that had been using TerminalWindow_ReturnWindow(),
-should DEFINITELY change to call this routine, instead (which
-manipulates the Cocoa window internally).
-
-(4.0)
-*/
-void
-TerminalWindow_SetVisible	(TerminalWindowRef	inRef,
-							 Boolean			inIsVisible)
-{
-	AutoPool						_;
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	
-	
-	if (inIsVisible)
-	{
-		[ptr->window orderFront:nil];
-	}
-	else
-	{
-		[ptr->window orderOut:nil];
-	}
-}// SetVisible
 
 
 /*!
