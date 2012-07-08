@@ -1504,7 +1504,7 @@ init
 	self = [super initWithNibNamed:@"PrefPanelTranslationsCocoa" delegate:self context:nullptr];
 	if (nil != self)
 	{
-		// do not initialize here; most likely should use "panelViewManagerInitialize:"
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
 	}
 	return self;
 }// init
@@ -1722,7 +1722,8 @@ performBackupFontSelection:(id)		sender
 
 
 /*!
-Displays a font panel for editing the backup font.
+Updates the “backup font” preference based on the user’s
+selection in the system’s Fonts panel.
 
 (4.1)
 */
@@ -1843,7 +1844,7 @@ requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
 	*outIdealSize = [[self managedView] frame].size;
-}
+}// panelViewManager:requestingIdealSize:
 
 
 /*!

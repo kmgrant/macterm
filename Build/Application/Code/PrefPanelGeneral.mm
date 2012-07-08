@@ -2983,7 +2983,7 @@ requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
 	*outIdealSize = [[self managedView] frame].size;
-}
+}// panelViewManager:requestingIdealSize:
 
 
 /*!

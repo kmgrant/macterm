@@ -972,7 +972,7 @@ initializeWithContext:(void*)			aContext
 	{
 		self->viewManagerByView->insert(std::make_pair([viewMgr managedView], viewMgr));
 	}
-}// panelViewManagerInitialize:
+}// panelViewManager:initializeWithContext:
 
 
 /*!
@@ -986,8 +986,28 @@ requestingEditType:(Panel_EditType*)	outEditType
 {
 #pragma unused(aViewManager)
 	// consult all tabs
-	// UNIMPLEMENTED
+	Panel_ResizeConstraint	result = kPanel_ResizeConstraintBothAxes;
+	NSEnumerator*			eachViewManager = [self->viewManagerArray objectEnumerator];
+	
+	
 	*outEditType = kPanel_EditTypeNormal;
+	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	{
+		Panel_EditType		newEditType = kPanel_EditTypeNormal;
+		
+		
+		[[viewMgr delegate] panelViewManager:viewMgr requestingEditType:&newEditType];
+		switch (newEditType)
+		{
+		case kPanel_EditTypeNormal:
+			// ignore in case any panel requires inspector-mode
+			break;
+		case kPanel_EditTypeInspector:
+		default:
+			*outEditType = newEditType;
+			break;
+		}
+	}
 }// panelViewManager:requestingEditType:
 
 
@@ -1058,7 +1078,7 @@ requestingIdealSize:(NSSize*)			outIdealSize
 	outIdealSize->width += (NSWidth(containerFrame) - NSWidth(tabContentRect));
 	outIdealSize->height += (NSHeight(containerFrame) - NSHeight(tabContentRect));
 	outIdealSize->height += 20; // TEMPORARY, UTTER HACK: it is not clear why some extra space is needed...
-}
+}// panelViewManager:requestingIdealSize:
 
 
 /*!

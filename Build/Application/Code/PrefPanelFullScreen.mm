@@ -657,7 +657,7 @@ init
 	self = [super initWithNibNamed:@"PrefPanelFullScreenCocoa" delegate:self context:nullptr];
 	if (nil != self)
 	{
-		// do not initialize here; most likely should use "panelViewManagerInitialize:"
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
 	}
 	return self;
 }// init
@@ -904,7 +904,7 @@ requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
 	*outIdealSize = [[self managedView] frame].size;
-}
+}// panelViewManager:requestingIdealSize:
 
 
 /*!
