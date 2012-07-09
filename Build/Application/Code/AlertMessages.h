@@ -42,6 +42,8 @@
 #include <Carbon/Carbon.h>
 #ifdef __OBJC__
 #	import <Cocoa/Cocoa.h>
+#else
+class NSWindow;
 #endif
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
@@ -88,20 +90,10 @@ changes to an interface declared in a ".mm" file.
 	BOOL		hidesTertiaryButton;
 }
 
+// new methods
+
 - (void)
 adjustViews;
-
-- (IBAction)
-performPrimaryAction:(id)_;
-
-- (IBAction)
-performSecondaryAction:(id)_;
-
-- (IBAction)
-performTertiaryAction:(id)_;
-
-- (IBAction)
-performHelpAction:(id)_;
 
 - (void)
 setUpFonts;
@@ -162,6 +154,20 @@ setTertiaryButtonText:(NSString*)_; // binding
 titleText;
 - (void)
 setTitleText:(NSString*)_; // binding
+
+// actions
+
+- (IBAction)
+performPrimaryAction:(id)_;
+
+- (IBAction)
+performSecondaryAction:(id)_;
+
+- (IBAction)
+performTertiaryAction:(id)_;
+
+- (IBAction)
+performHelpAction:(id)_;
 
 @end
 
@@ -226,14 +232,11 @@ enum
 // dialog item indices
 enum
 {
-	kAlert_ItemButton1 = 1,
-	kAlert_ItemButton2 = 2,
-	kAlert_ItemDialogText = 3,
-	kAlert_ItemHelpText = 4,
-	kAlert_ItemButton3 = 5,
-	kAlert_ItemHelpButton = 6,
-	kAlert_ItemTitleText = 7,
-	kAlert_ItemBalloons = 8
+	kAlert_ItemButtonNone = 0,
+	kAlert_ItemButton1 = kAlertStdAlertOKButton,
+	kAlert_ItemButton2 = kAlertStdAlertCancelButton,
+	kAlert_ItemButton3 = kAlertStdAlertOtherButton,
+	kAlert_ItemHelpButton = kAlertStdAlertHelpButton
 };
 
 #pragma mark Callbacks
@@ -313,8 +316,14 @@ AlertMessages_BoxRef
 	Alert_NewModeless					(AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 										 void*								inCloseNotifyProcUserData);
 
+AlertMessages_BoxRef
+	Alert_NewWindowModal				(NSWindow*							inParentWindow,
+										 Boolean							inIsParentWindowCloseWarning,
+										 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+										 void*								inCloseNotifyProcUserData);
+
 InterfaceLibAlertRef
-	Alert_NewWindowModal				(WindowRef							inParentWindow,
+	Alert_NewWindowModal				(HIWindowRef						inParentWindow,
 										 Boolean							inIsParentWindowCloseWarning,
 										 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 										 void*								inCloseNotifyProcUserData);
@@ -346,10 +355,9 @@ Boolean
 
 // ONLY WORKS WITH ALERTS THAT ARE CURRENTLY DISPLAYED
 void
-	Alert_HitItem						(AlertMessages_BoxRef				inAlert,
-										 SInt16								inItemIndex);
+	Alert_Abort							(AlertMessages_BoxRef				inAlert);
 
-SInt16
+UInt16
 	Alert_ItemHit						(AlertMessages_BoxRef				inAlert);
 
 void
@@ -364,7 +372,7 @@ void
 
 void
 	Alert_SetButtonText					(AlertMessages_BoxRef		inAlert,
-										 SInt16						inWhichButton,
+										 UInt16						inWhichButton,
 										 CFStringRef				inNewText);
 
 void
@@ -373,7 +381,7 @@ void
 
 void
 	Alert_SetParamsFor					(AlertMessages_BoxRef		inAlert,
-										 SInt16						inAlertStyle);
+										 UInt16						inAlertStyle);
 
 void
 	Alert_SetTextCFStrings				(AlertMessages_BoxRef		inAlert,

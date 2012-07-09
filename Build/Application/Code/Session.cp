@@ -1110,7 +1110,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			// first Cancel the open sheet before displaying another one
 			if (nullptr != ptr->currentTerminationAlert)
 			{
-				Alert_HitItem(ptr->currentTerminationAlert, kAlertStdAlertCancelButton);
+				Alert_Abort(ptr->currentTerminationAlert);
 			}
 			
 			ptr->currentTerminationAlert = alertBox;
