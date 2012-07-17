@@ -3447,22 +3447,28 @@ dropOperation:(NSTableViewDropOperation)	anOperation
 						PrefsWindow_Collection*		targetCollection = [self->currentPreferenceCollections lastObject];
 						
 						
-						// NOTE: notifications are sent when a context in Favorites is rearranged
-						// so the source list should automatically resynchronize
-						prefsResult = Preferences_ContextRepositionRelativeToContext
-										([movingCollection preferencesContext], [targetCollection preferencesContext],
-											false/* insert before */);
+						if ([targetCollection preferencesContext] != [movingCollection preferencesContext])
+						{
+							// NOTE: notifications are sent when a context in Favorites is rearranged
+							// so the source list should automatically resynchronize
+							prefsResult = Preferences_ContextRepositionRelativeToContext
+											([movingCollection preferencesContext], [targetCollection preferencesContext],
+												false/* insert before */);
+						}
 					}
 					else
 					{
 						PrefsWindow_Collection*		targetCollection = [self->currentPreferenceCollections objectAtIndex:aTargetRow];
 						
 						
-						// NOTE: notifications are sent when a context in Favorites is rearranged
-						// so the source list should automatically resynchronize
-						prefsResult = Preferences_ContextRepositionRelativeToContext
-										([movingCollection preferencesContext], [targetCollection preferencesContext],
-											true/* insert before */);
+						if ([targetCollection preferencesContext] != [movingCollection preferencesContext])
+						{
+							// NOTE: notifications are sent when a context in Favorites is rearranged
+							// so the source list should automatically resynchronize
+							prefsResult = Preferences_ContextRepositionRelativeToContext
+											([movingCollection preferencesContext], [targetCollection preferencesContext],
+												true/* insert before */);
+						}
 					}
 					
 					if (kPreferences_ResultOK != prefsResult)
