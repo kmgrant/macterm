@@ -155,6 +155,84 @@ setCurrentContext:(Preferences_ContextRef)	aContext
 
 
 /*!
+Removes any value for the specified tag from the current context by
+calling Preferences_ContextDeleteData() and returns YES only if the
+deletion succeeds.  This change becomes permanent upon the next save.
+
+(4.1)
+*/
+- (BOOL)
+deleteDataForPreferenceTag:(Preferences_Tag)	aTag
+{
+	BOOL	result = NO;
+	
+	
+	if (Preferences_ContextIsValid(self->currentContext))
+	{
+		Preferences_Result	prefsResult = Preferences_ContextDeleteData(self->currentContext, aTag);
+		
+		
+		result = (kPreferences_ResultOK == prefsResult);
+	}
+	return result;
+}// deleteDataForPreferenceTag:
+
+
+/*!
+Reads the specified color data from the current preferences context.
+If the value is not found, the Default color value is returned instead.
+When the return value was read from the Default context (NOT simply if
+the value happens to match the Default value), "outIsDefault" is filled
+in with YES; otherwise it is NO.
+
+IMPORTANT:	Only tags with values of type RGBColor should be given!
+			The given NSColor is automatically converted internally.
+
+(4.1)
+*/
+- (NSColor*)
+readColorForPreferenceTag:(Preferences_Tag)		aTag
+isDefault:(BOOL*)								outIsDefault
+{
+	NSColor*	result = [NSColor blackColor];
+	
+	
+	if (Preferences_ContextIsValid(self->currentContext))
+	{
+		RGBColor			colorData;
+		size_t				actualSize = 0;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self->currentContext, aTag,
+																		sizeof(colorData), &colorData,
+																		true/* search defaults */, &actualSize, &isDefault);
+		
+		
+		if (nullptr != outIsDefault)
+		{
+			*outIsDefault = (true == isDefault);
+		}
+		
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			CGDeviceColor	colorDataFloat;
+			
+			
+			colorDataFloat.red = colorData.red;
+			colorDataFloat.red /= RGBCOLOR_INTENSITY_MAX;
+			colorDataFloat.green = colorData.green;
+			colorDataFloat.green /= RGBCOLOR_INTENSITY_MAX;
+			colorDataFloat.blue = colorData.blue;
+			colorDataFloat.blue /= RGBCOLOR_INTENSITY_MAX;
+			result = [NSColor colorWithCalibratedRed:colorDataFloat.red green:colorDataFloat.green
+														blue:colorDataFloat.blue alpha:1.0];
+		}
+	}
+	
+	return result;
+}// readColorForPreferenceTag:isDefault:
+
+
+/*!
 Reads a true/false value from the current preferences context.
 If the value is not found, the specified default is returned
 instead.
@@ -190,6 +268,59 @@ defaultValue:(BOOL)							aDefault
 	}
 	return result;
 }// readFlagForPreferenceTag:defaultValue:
+
+
+/*!
+Writes a new user preference for the specified color to the current
+preferences context and returns true only if this succeeds.
+
+IMPORTANT:	Only tags with values of type RGBColor should be given!
+			The given NSColor is automatically converted internally.
+
+(4.1)
+*/
+- (BOOL)
+writeColor:(NSColor*)				aValue
+forPreferenceTag:(Preferences_Tag)	aTag
+{
+	NSColor*	newColor = [aValue colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+	BOOL		result = NO;
+	
+	
+	if (nil == newColor)
+	{
+		// when given nothing and the context is non-Default, delete the setting;
+		// this will revert to either the Default value (in non-Default contexts)
+		// or the “factory default” value (in Default contexts)
+		result = [self deleteDataForPreferenceTag:aTag];
+	}
+	else
+	{
+		CGDeviceColor	newColorFloat;
+		float			ignoredAlpha = 0;
+		RGBColor		newColorRGB;
+		
+		
+		[newColor getRed:&newColorFloat.red green:&newColorFloat.green blue:&newColorFloat.blue alpha:&ignoredAlpha];
+		newColorFloat.red *= RGBCOLOR_INTENSITY_MAX;
+		newColorFloat.green *= RGBCOLOR_INTENSITY_MAX;
+		newColorFloat.blue *= RGBCOLOR_INTENSITY_MAX;
+		newColorRGB.red = STATIC_CAST(newColorFloat.red, unsigned short);
+		newColorRGB.green = STATIC_CAST(newColorFloat.green, unsigned short);
+		newColorRGB.blue = STATIC_CAST(newColorFloat.blue, unsigned short);
+		
+		if (Preferences_ContextIsValid(self->currentContext))
+		{
+			Preferences_Result	prefsResult = Preferences_ContextSetData(self->currentContext, aTag,
+																			sizeof(newColorRGB), &newColorRGB);
+			
+			
+			result = (kPreferences_ResultOK == prefsResult);
+		}
+	}
+	
+	return result;
+}// writeColor:forPreferenceTag:
 
 
 /*!

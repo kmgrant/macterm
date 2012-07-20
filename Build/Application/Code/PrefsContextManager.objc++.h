@@ -72,8 +72,19 @@ setCurrentContext:(Preferences_ContextRef)_;
 // new methods
 
 - (BOOL)
+deleteDataForPreferenceTag:(Preferences_Tag)_;
+
+- (NSColor*)
+readColorForPreferenceTag:(Preferences_Tag)_
+isDefault:(BOOL*)_;
+
+- (BOOL)
 readFlagForPreferenceTag:(Preferences_Tag)_
 defaultValue:(BOOL)_;
+
+- (BOOL)
+writeColor:(NSColor*)_
+forPreferenceTag:(Preferences_Tag)_;
 
 - (BOOL)
 writeFlag:(BOOL)_
