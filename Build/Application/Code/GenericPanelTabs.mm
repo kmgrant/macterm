@@ -986,8 +986,7 @@ requestingEditType:(Panel_EditType*)	outEditType
 {
 #pragma unused(aViewManager)
 	// consult all tabs
-	Panel_ResizeConstraint	result = kPanel_ResizeConstraintBothAxes;
-	NSEnumerator*			eachViewManager = [self->viewManagerArray objectEnumerator];
+	NSEnumerator*	eachViewManager = [self->viewManagerArray objectEnumerator];
 	
 	
 	*outEditType = kPanel_EditTypeNormal;
@@ -1077,7 +1076,6 @@ requestingIdealSize:(NSSize*)			outIdealSize
 	// add in the additional space required by the tabs themselves
 	outIdealSize->width += (NSWidth(containerFrame) - NSWidth(tabContentRect));
 	outIdealSize->height += (NSHeight(containerFrame) - NSHeight(tabContentRect));
-	outIdealSize->height += 20; // TEMPORARY, UTTER HACK: it is not clear why some extra space is needed...
 }// panelViewManager:requestingIdealSize:
 
 

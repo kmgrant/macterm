@@ -51,6 +51,7 @@ class ListenerModel_StandardListener;
 #include "QuillsPrefs.h"
 #ifdef __OBJC__
 #	import "Panel.h"
+@class PrefPanelFormats_ViewManager;
 @class PrefPanelFullScreen_ViewManager;
 @class PrefPanelGeneral_ViewManager;
 @class PrefPanelTranslations_ViewManager;
@@ -68,9 +69,13 @@ the following methods as well, not just the Panel interface.
 */
 @protocol PrefsWindow_PanelInterface
 
+// for convenience, if a panel implements this NSColorPanel message then
+// the window controller will forward the message to the panel
+//- (void)
+//changeColor:(id)_;
+
 // for convenience, if a panel implements this NSFontPanel message then
-// the window controller will forward the message to the panel if the
-// message reaches the PrefsWindow_Controller instance
+// the window controller will forward the message to the panel
 //- (void)
 //changeFont:(id)_;
 
@@ -109,6 +114,7 @@ changes to an interface declared in a ".mm" file.
 	BOOL								isSourceListHidden;
 	ListenerModel_StandardListener*		preferenceChangeListener;
 	Panel_ViewManager< PrefsWindow_PanelInterface >*	activePanel;
+	PrefPanelFormats_ViewManager*		formatsPanel;
 	PrefPanelGeneral_ViewManager*		generalPanel;
 	PrefPanelTranslations_ViewManager*	translationsPanel;
 	PrefPanelFullScreen_ViewManager*	fullScreenPanel;

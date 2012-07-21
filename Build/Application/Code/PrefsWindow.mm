@@ -266,6 +266,9 @@ updateUserInterfaceForSourceListTransition:(id)_;
 // actions
 
 - (void)
+performDisplayPrefPanelFormats:(id)_;
+
+- (void)
 performDisplayPrefPanelFullScreen:(id)_;
 
 - (void)
@@ -3220,6 +3223,32 @@ performSegmentedControlAction:(id)	sender
 }// performSegmentedControlAction:
 
 
+#pragma mark NSColorPanel
+
+
+/*!
+Since this window controller is in the responder chain, it
+may receive events from NSColorPanel that have not been
+handled anywhere else.  This responds by forwarding the
+message to the active panel if the active panel implements
+a "changeColor:" method.
+
+NOTE:	It is possible that one day panels will be set up
+		as responders themselves and placed directly in
+		the responder chain.  For now this is sufficient.
+
+(4.1)
+*/
+- (void)
+changeColor:(id)	sender
+{
+	if ([self->activePanel respondsToSelector:@selector(changeColor:)])
+	{
+		[self->activePanel changeColor:sender];
+	}
+}// changeColor:
+
+
 #pragma mark NSFontPanel
 
 
@@ -3612,6 +3641,15 @@ windowDidLoad
 		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
 		[newViewMgr release], newViewMgr = nil;
 		
+		// “Formats” panel
+		self->formatsPanel = [[PrefPanelFormats_ViewManager alloc] init];
+		newViewMgr = self->formatsPanel;
+		[newViewMgr setPanelDisplayAction:@selector(performDisplayPrefPanelFormats:)];
+		[newViewMgr setPanelDisplayTarget:self];
+		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
+		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
+		[newViewMgr release], newViewMgr = nil;
+		
 		// “Translations” panel
 		self->translationsPanel = [[PrefPanelTranslations_ViewManager alloc] init];
 		newViewMgr = self->translationsPanel;
@@ -3977,6 +4015,12 @@ withAnimation:(BOOL)				isAnimated
 			[self updateUserInterfaceForSourceListTransition:[NSNumber numberWithBool:willShowSourceList]];
 			[self setSourceListHidden:(NO == willShowSourceList)];
 		}
+		else
+		{
+			// source list is still needed, but it will have new content (note
+			// that this step is implied if the visibility changes above)
+			[self rebuildSourceList];
+		}
 		
 		// set the window to the size for the new panel (if none, use the
 		// size that was originally used for the panel in its NIB)
@@ -4202,6 +4246,19 @@ updateUserInterfaceForSourceListTransition:(id)		anNSNumberBoolForNewVisibleStat
 
 
 #pragma mark Actions
+
+
+/*!
+Brings the “Formats” panel to the front.
+
+(4.1)
+*/
+- (void)
+performDisplayPrefPanelFormats:(id)		sender
+{
+#pragma unused(sender)
+	[self displayPanel:self->formatsPanel withAnimation:YES];
+}// performDisplayPrefPanelFormats:
 
 
 /*!

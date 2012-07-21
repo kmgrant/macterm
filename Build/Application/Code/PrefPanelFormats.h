@@ -36,8 +36,141 @@
 #define __PREFPANELFORMATS__
 
 // application includes
+#include "GenericPanelTabs.h"
 #include "Panel.h"
 #include "Preferences.h"
+#include "PrefsContextManager.objc++.h"
+#include "PrefsWindow.h"
+
+
+
+#pragma mark Types
+
+#ifdef __OBJC__
+
+/*!
+Loads a NIB file that defines a panel view with tabs
+and provides the sub-panels that the tabs contain.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelFormats_ViewManager : GenericPanelTabs_ViewManager
+{
+}
+
+@end
+
+
+/*!
+Presents methods that greatly simplify bindings to
+color values and the various states of the user
+interface elements that control them.
+*/
+@interface PrefPanelFormats_StandardColorContent : NSObject
+{
+@private
+	PrefsContextManager_Object*		prefsMgr;
+	Preferences_Tag					preferencesTag;
+}
+
+// designated initializer
+- (id)
+initWithPreferencesTag:(Preferences_Tag)_
+contextManager:(PrefsContextManager_Object*)_;
+
+// accessors
+
+- (NSColor*)
+colorValue;
+- (void)
+setColorValue:(NSColor*)_; // binding
+
+- (BOOL)
+isInheritEnabled; // binding
+
+- (BOOL)
+isInherited;
+- (void)
+setInherited:(BOOL)_; // binding
+
+@end
+
+
+/*!
+Loads a NIB file that defines the Standard Colors pane.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelFormats_StandardColorsViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+{
+@private
+	PrefsContextManager_Object*		prefsMgr;
+	NSRect							idealFrame;
+	NSMutableDictionary*			byKey;
+}
+
+// accessors
+
+- (PrefPanelFormats_StandardColorContent*)
+blackBoldColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+blackNormalColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+redBoldColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+redNormalColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+greenBoldColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+greenNormalColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+yellowBoldColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+yellowNormalColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+blueBoldColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+blueNormalColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+magentaBoldColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+magentaNormalColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+cyanBoldColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+cyanNormalColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+whiteBoldColor; // binding
+
+- (PrefPanelFormats_StandardColorContent*)
+whiteNormalColor; // binding
+
+// actions
+
+- (IBAction)
+performResetStandardColors:(id)_;
+
+@end
+
+#endif // __OBJC__
 
 
 

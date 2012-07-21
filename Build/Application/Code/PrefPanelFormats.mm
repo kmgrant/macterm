@@ -1,5 +1,8 @@
-/*!	\file PrefPanelFormats.cp
+/*!	\file PrefPanelFormats.mm
 	\brief Implements the Formats panel of Preferences.
+	
+	Note that this is in transition from Carbon to Cocoa,
+	and is not yet taking advantage of most of Cocoa.
 */
 /*###############################################################
 
@@ -30,50 +33,54 @@
 
 ###############################################################*/
 
-#include "PrefPanelFormats.h"
-#include <UniversalDefines.h>
+#import "PrefPanelFormats.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <algorithm>
-#include <cstring>
-#include <utility>
+#import <algorithm>
+#import <cstring>
+#import <utility>
 
 // Unix includes
-#include <strings.h>
+#import <strings.h>
 
 // Mac includes
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
+#import <CoreServices/CoreServices.h>
+#import <objc/objc-runtime.h>
 
 // library includes
-#include <AlertMessages.h>
-#include <CarbonEventUtilities.template.h>
-#include <CarbonEventHandlerWrap.template.h>
-#include <ColorUtilities.h>
-#include <CommonEventHandlers.h>
-#include <Console.h>
-#include <DialogAdjust.h>
-#include <HIViewWrap.h>
-#include <HIViewWrapManip.h>
-#include <Localization.h>
-#include <MemoryBlocks.h>
-#include <NIBLoader.h>
-#include <RegionUtilities.h>
-#include <SoundSystem.h>
+#import <AlertMessages.h>
+#import <CarbonEventUtilities.template.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CocoaExtensions.objc++.h>
+#import <ColorUtilities.h>
+#import <CommonEventHandlers.h>
+#import <Console.h>
+#import <DialogAdjust.h>
+#import <HIViewWrap.h>
+#import <HIViewWrapManip.h>
+#import <Localization.h>
+#import <MemoryBlocks.h>
+#import <NIBLoader.h>
+#import <RegionUtilities.h>
+#import <SoundSystem.h>
 
 // application includes
-#include "AppResources.h"
-#include "ColorBox.h"
-#include "Commands.h"
-#include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
-#include "GenericPanelTabs.h"
-#include "Panel.h"
-#include "Preferences.h"
-#include "Terminal.h"
-#include "TerminalView.h"
-#include "UIStrings.h"
-#include "UIStrings_PrefsWindow.h"
+#import "AppResources.h"
+#import "ColorBox.h"
+#import "Commands.h"
+#import "ConstantsRegistry.h"
+#import "DialogUtilities.h"
+#import "GenericPanelTabs.h"
+#import "HelpSystem.h"
+#import "Panel.h"
+#import "Preferences.h"
+#import "Terminal.h"
+#import "TerminalView.h"
+#import "UIStrings.h"
+#import "UIStrings_PrefsWindow.h"
 
 
 
@@ -342,10 +349,31 @@ Boolean				isMonospacedFont				(Str255);
 OSStatus			receiveFontChange				(EventHandlerCallRef, EventRef, void*);
 OSStatus			receiveWindowFocusChange		(EventHandlerCallRef, EventRef, void*);
 void				resetANSIWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
+void				resetANSIWarningCloseNotifyProcCocoa	(AlertMessages_BoxRef, SInt16, void*);
 void				setColorBox						(Preferences_ContextRef, Preferences_Tag, HIViewRef, Boolean&);
 void				setInheritanceCheckBox			(HIViewWrap, SInt32, Boolean);
 
 } // anonymous namespace
+
+@interface PrefPanelFormats_StandardColorsViewManager (PrefPanelFormats_StandardColorsViewManagerInternal)
+
+- (int)
+buttonStateForBool1:(BOOL)_
+bool2:(BOOL)_;
+
+- (void)
+copyColorWithPreferenceTag:(Preferences_Tag)_
+fromContext:(Preferences_ContextRef)_
+forKey:(NSString*)_
+failureFlag:(BOOL*)_;
+
+- (NSArray*)
+primaryDisplayBindingKeys;
+
+- (BOOL)
+resetToFactoryDefaultColors;
+
+@end // PrefPanelFormats_StandardColorsViewManager (PrefPanelFormats_StandardColorsViewManagerInternal)
 
 
 
@@ -3036,6 +3064,43 @@ resetANSIWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 
 
 /*!
+The responder to a closed “reset ANSI colors?” alert.
+This routine resets the 16 displayed ANSI colors if
+the item hit is the OK button, otherwise it does not
+modify the displayed colors in any way.  The given
+alert is destroyed.
+
+(4.1)
+*/
+void
+resetANSIWarningCloseNotifyProcCocoa	(AlertMessages_BoxRef	inAlertThatClosed,
+										 SInt16					inItemHit,
+										 void*					inStandardColorsViewManagerPtr)
+{
+	PrefPanelFormats_StandardColorsViewManager*		viewMgr = REINTERPRET_CAST
+																(inStandardColorsViewManagerPtr,
+																	PrefPanelFormats_StandardColorsViewManager*);
+	
+	
+	// if user consented to color reset, then change all colors to defaults
+	if (kAlertStdAlertOKButton == inItemHit)
+	{
+		BOOL	resetOK = [viewMgr resetToFactoryDefaultColors];
+		
+		
+		if (NO == resetOK)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "failed to reset all the standard colors to default values!");
+		}
+	}
+	
+	// dispose of the alert
+	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
+}// resetANSIWarningCloseNotifyProcCocoa
+
+
+/*!
 Updates the specified color box with the value (if any)
 of the specified preference of type RGBColor.
 
@@ -3104,5 +3169,1037 @@ setInheritanceCheckBox		(HIViewWrap		inCheckBox,
 }// setInheritanceCheckBox
 
 } // anonymous namespace
+
+
+@implementation PrefPanelFormats_ViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	NSArray*	subViewManagers = [NSArray arrayWithObjects:
+												[[[PrefPanelFormats_StandardColorsViewManager alloc] init] autorelease],
+												nil];
+	
+	
+	self = [super initWithIdentifier:@"net.macterm.prefpanels.Formats"
+										localizedName:NSLocalizedStringFromTable(@"Formats", @"PrefPanelFormats",
+																					@"the name of this panel")
+										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelFormats"]
+										viewManagerArray:subViewManagers];
+	if (nil != self)
+	{
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+@end // PrefPanelFormats_ViewManager
+
+
+@implementation PrefPanelFormats_StandardColorContent
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	self = [super init];
+	if (nil != self)
+	{
+		self->prefsMgr = [aContextMgr retain];
+		self->preferencesTag = aTag;
+	}
+	return self;
+}// initWithPreferencesTag:contextManager:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[prefsMgr release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSColor*)
+colorValue
+{
+	BOOL		isDefault = NO;
+	NSColor*	result = [self->prefsMgr readColorForPreferenceTag:self->preferencesTag isDefault:&isDefault];
+	
+	
+	return result;
+}
+- (void)
+setColorValue:(NSColor*)	aColor
+{
+	[self willChangeValueForKey:@"inherited"];
+	[self willChangeValueForKey:@"inheritEnabled"];
+	
+	BOOL	saveOK = [self->prefsMgr writeColor:aColor forPreferenceTag:self->preferencesTag];
+	
+	
+	if (NO == saveOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save a color preference");
+	}
+	
+	[self didChangeValueForKey:@"inheritEnabled"];
+	[self didChangeValueForKey:@"inherited"];
+}// setColorValue:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInheritEnabled
+{
+	// if the current value comes from a default then the “enabled” state is NO
+	BOOL		isDefault = NO;
+	
+	
+	(NSColor*)[self->prefsMgr readColorForPreferenceTag:self->preferencesTag isDefault:&isDefault];
+	
+	return (NO == isDefault);
+}// isInheritEnabled
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL		result = NO;
+	
+	
+	(NSColor*)[self->prefsMgr readColorForPreferenceTag:self->preferencesTag isDefault:&result];
+	
+	return result;
+}
+- (void)
+setInherited:(BOOL)		aFlag
+{
+	[self willChangeValueForKey:@"inheritEnabled"];
+	if (aFlag)
+	{
+		// the “inherited” flag can be removed by deleting the value
+		[self setColorValue:nil];
+	}
+	else
+	{
+		// this particular request doesn’t make sense; it is implied by
+		// setting any new value for a color
+		Console_Warning(Console_WriteLine, "request to change “inherited” state to false, which is ignored");
+	}
+	[self didChangeValueForKey:@"inheritEnabled"];
+}// setInherited:
+
+
+@end // PrefPanelFormats_StandardColorContent
+
+
+@implementation PrefPanelFormats_StandardColorsViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelFormatStandardColorsCocoa" delegate:self context:nullptr];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[prefsMgr release];
+	[byKey release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+blackBoldColor
+{
+	return [self->byKey objectForKey:@"blackBoldColor"];
+}// blackBoldColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+blackNormalColor
+{
+	return [self->byKey objectForKey:@"blackNormalColor"];
+}// blackNormalColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+redBoldColor
+{
+	return [self->byKey objectForKey:@"redBoldColor"];
+}// redBoldColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+redNormalColor
+{
+	return [self->byKey objectForKey:@"redNormalColor"];
+}// redNormalColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+greenBoldColor
+{
+	return [self->byKey objectForKey:@"greenBoldColor"];
+}// greenBoldColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+greenNormalColor
+{
+	return [self->byKey objectForKey:@"greenNormalColor"];
+}// greenNormalColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+yellowBoldColor
+{
+	return [self->byKey objectForKey:@"yellowBoldColor"];
+}// yellowBoldColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+yellowNormalColor
+{
+	return [self->byKey objectForKey:@"yellowNormalColor"];
+}// yellowNormalColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+blueBoldColor
+{
+	return [self->byKey objectForKey:@"blueBoldColor"];
+}// blueBoldColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+blueNormalColor
+{
+	return [self->byKey objectForKey:@"blueNormalColor"];
+}// blueNormalColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+magentaBoldColor
+{
+	return [self->byKey objectForKey:@"magentaBoldColor"];
+}// magentaBoldColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+magentaNormalColor
+{
+	return [self->byKey objectForKey:@"magentaNormalColor"];
+}// magentaNormalColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+cyanBoldColor
+{
+	return [self->byKey objectForKey:@"cyanBoldColor"];
+}// cyanBoldColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+cyanNormalColor
+{
+	return [self->byKey objectForKey:@"cyanNormalColor"];
+}// cyanNormalColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+whiteBoldColor
+{
+	return [self->byKey objectForKey:@"whiteBoldColor"];
+}// whiteBoldColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_StandardColorContent*)
+whiteNormalColor
+{
+	return [self->byKey objectForKey:@"whiteNormalColor"];
+}// whiteNormalColor
+
+
+#pragma mark Actions
+
+
+/*!
+Displays a warning asking the user to confirm a reset
+of all 16 ANSI colors to their “factory defaults”, and
+performs the reset if the user allows it.
+
+(4.1)
+*/
+- (IBAction)
+performResetStandardColors:(id)		sender
+{
+#pragma unused(sender)
+	// check with the user first!
+	AlertMessages_BoxRef	box = nullptr;
+	UIStrings_Result		stringResult = kUIStrings_ResultOK;
+	CFStringRef				dialogTextCFString = nullptr;
+	CFStringRef				helpTextCFString = nullptr;
+	
+	
+	stringResult = UIStrings_Copy(kUIStrings_AlertWindowANSIColorsResetPrimaryText, dialogTextCFString);
+	assert(stringResult.ok());
+	stringResult = UIStrings_Copy(kUIStrings_AlertWindowGenericCannotUndoHelpText, helpTextCFString);
+	assert(stringResult.ok());
+	
+	box = Alert_NewWindowModal([[self managedView] window], false/* is window close alert */,
+								resetANSIWarningCloseNotifyProcCocoa, self/* user data */);
+	Alert_SetHelpButton(box, false);
+	Alert_SetParamsFor(box, kAlert_StyleOKCancel);
+	Alert_SetTextCFStrings(box, dialogTextCFString, helpTextCFString);
+	Alert_SetType(box, kAlertCautionAlert);
+	Alert_Display(box); // notifier disposes the alert when the sheet eventually closes
+}// performResetStandardColors:
+
+
+#pragma mark NSColorPanel
+
+
+/*!
+Responds to user selections in the system’s Colors panel.
+Due to Cocoa Bindings, no action is necessary; color changes
+simply trigger the apppropriate calls to color-setting
+methods.
+
+(4.1)
+*/
+- (void)
+changeColor:(id)	sender
+{
+#pragma unused(sender)
+	// no action is necessary due to Cocoa Bindings
+}// changeColor:
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->prefsMgr = [[PrefsContextManager_Object alloc] init];
+	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:16/* arbitrary; number of colors */];
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeInspector;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+	assert(nil != byKey);
+	assert(nil != prefsMgr);
+	
+	
+	// remember frame from XIB (it might be changed later)
+	self->idealFrame = [aContainerView frame];
+	
+	// note that all current values will change
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+	}
+	
+	// WARNING: Key names are depended upon by bindings in the XIB file.
+	[self setValue:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlack
+														contextManager:self->prefsMgr] autorelease]
+					forKeyPath:@"byKey.blackNormalColor"];
+	[self setValue:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlackBold
+														contextManager:self->prefsMgr] autorelease]
+					forKeyPath:@"byKey.blackBoldColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIRed
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"redNormalColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIRedBold
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"redBoldColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIGreen
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"greenNormalColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIGreenBold
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"greenBoldColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIYellow
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"yellowNormalColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIYellowBold
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"yellowBoldColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlue
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"blueNormalColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlueBold
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"blueBoldColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIMagenta
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"magentaNormalColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIMagentaBold
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"magentaBoldColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSICyan
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"cyanNormalColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSICyanBold
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"cyanBoldColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIWhite
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"whiteNormalColor"];
+	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorANSIWhiteBold
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"whiteBoldColor"];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = self->idealFrame.size;
+}// panelViewManager:requestingIdealSize:
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet)
+	// note that all current values will change
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+	}
+	
+	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [NSImage imageNamed:@"IconForPrefPanelFormats"];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.Formats";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Standard Colors", @"PrefPanelFormats", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintHorizontal;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::FORMAT;
+}// preferencesClass
+
+
+@end // PrefPanelFormats_StandardColorsViewManager
+
+
+@implementation PrefPanelFormats_StandardColorsViewManager (PrefPanelFormats_StandardColorsViewManagerInternal)
+
+
+/*!
+Return an NSButton state (on, off, or mixed) based on the
+combined value of two YES/NO flags.
+
+(4.1)
+*/
+- (int)
+buttonStateForBool1:(BOOL)	aFlag
+bool2:(BOOL)				anotherFlag
+{
+	int		result = NSOffState;
+	
+	
+	if ((aFlag) && (anotherFlag))
+	{
+		result = NSOnState;
+	}
+	else if ((aFlag) || (anotherFlag))
+	{
+		result = NSMixedState;
+	}
+	return result;
+}// buttonStateForBool1:bool2:
+
+
+/*!
+Copies a color from the specified source context to the
+current context.
+
+Since color properties are significant to key-value coding,
+the specified key name is used to automatically call
+"willChangeValueForKey:" before the change is made and
+"didChangeValueForKey:" after the change has been made.
+
+This is expected to be called repeatedly for various colors
+so "aFlagPtr" is used to note any failures if any occur (if
+there is no failure the value DOES NOT CHANGE).  This allows
+you to initialize a flag to NO, call this routine to copy
+various colors, and then check once at the end to see if
+any color failed to copy.
+
+(4.1)
+*/
+- (void)
+copyColorWithPreferenceTag:(Preferences_Tag)	aTag
+fromContext:(Preferences_ContextRef)			aSourceContext
+forKey:(NSString*)								aKeyName
+failureFlag:(BOOL*)								aFlagPtr
+{
+	Preferences_ContextRef	targetContext = [self->prefsMgr currentContext];
+	BOOL					failed = YES;
+	
+	
+	if (Preferences_ContextIsValid(targetContext))
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		[self willChangeValueForKey:aKeyName];
+		prefsResult = copyColor(aTag, aSourceContext, targetContext);
+		[self didChangeValueForKey:aKeyName];
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			failed = NO;
+		}
+	}
+	
+	// the flag is only set on failure; this allows a sequence of calls to
+	// occur where only a single check at the end is done to trap any issue
+	if (failed)
+	{
+		*aFlagPtr = YES;
+	}
+}// copyColorWithPreferenceTag:fromContext:forKey:failureFlag:
+
+
+/*!
+Returns the names of key-value coding keys that represent the
+primary bindings of this panel (those that directly correspond
+to saved preferences).
+
+(4.1)
+*/
+- (NSArray*)
+primaryDisplayBindingKeys
+{
+	return [NSArray arrayWithObjects:
+						@"blackNormalColor", @"blackBoldColor",
+						@"blackNormalColorInherited", @"blackBoldColorInherited",
+						@"blackNormalColorInheritEnabled", @"blackBoldColorInheritEnabled",
+						@"redNormalColor", @"redBoldColor",
+						@"greenNormalColor", @"greenBoldColor",
+						@"yellowNormalColor", @"yellowBoldColor",
+						@"blueNormalColor", @"blueBoldColor",
+						@"magentaNormalColor", @"magentaBoldColor",
+						@"cyanNormalColor", @"cyanBoldColor",
+						@"whiteNormalColor", @"whiteBoldColor",
+						nil];
+}// primaryDisplayBindingKeys
+
+
+/*!
+Using the “factory default” colors, replaces all of the standard
+ANSI color settings in the currently-selected preferences context.
+
+IMPORTANT:	This is a low-level routine that performs the reset
+			without warning.  It is called AFTER displaying a
+			confirmation alert to the user!
+
+(4.1)
+*/
+- (BOOL)
+resetToFactoryDefaultColors
+{
+	BOOL					result = NO;
+	Preferences_ContextRef	defaultFormat = nullptr;
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	
+	prefsResult = Preferences_GetFactoryDefaultsContext(&defaultFormat);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		Preferences_Tag		currentTag = '----';
+		NSString*			currentKey = @"";
+		BOOL				anyFailure = NO;
+		
+		
+		currentTag = kPreferences_TagTerminalColorANSIBlack;
+		currentKey = @"blackNormalColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSIBlackBold;
+		currentKey = @"blackBoldColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSIRed;
+		currentKey = @"redNormalColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSIRedBold;
+		currentKey = @"redBoldColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSIGreen;
+		currentKey = @"greenNormalColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSIGreenBold;
+		currentKey = @"greenBoldColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSIYellow;
+		currentKey = @"yellowNormalColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSIYellowBold;
+		currentKey = @"yellowBoldColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSIBlue;
+		currentKey = @"blueNormalColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSIBlueBold;
+		currentKey = @"blueBoldColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSIMagenta;
+		currentKey = @"magentaNormalColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSIMagentaBold;
+		currentKey = @"magentaBoldColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSICyan;
+		currentKey = @"cyanNormalColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSICyanBold;
+		currentKey = @"cyanBoldColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSIWhite;
+		currentKey = @"whiteNormalColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		currentTag = kPreferences_TagTerminalColorANSIWhiteBold;
+		currentKey = @"whiteBoldColor";
+		[self copyColorWithPreferenceTag:currentTag fromContext:defaultFormat forKey:currentKey failureFlag:&anyFailure];
+		
+		if (NO == anyFailure)
+		{
+			result = YES;
+		}
+	}
+	return result;
+}// resetToFactoryDefaultColors
+
+
+@end // PrefPanelFormats_StandardColorsViewManager (PrefPanelFormats_StandardColorsViewManagerInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

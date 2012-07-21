@@ -48,7 +48,7 @@
 		0AC6BAF00A8C0BA000AFF37A /* Undoables.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE36055432A400ACDF3A /* Undoables.cp */; };
 		0AC6BAF20A8C0BA000AFF37A /* BasicTypesAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDBA055432A400ACDF3A /* BasicTypesAE.cp */; };
 		0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE06055432A400ACDF3A /* PrefPanelMacros.cp */; };
-		0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0CFD0A450061009D07FC /* PrefPanelFormats.cp */; };
+		0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0CFD0A450061009D07FC /* PrefPanelFormats.mm */; };
 		0AC6BAF60A8C0BA000AFF37A /* TerminalBackground.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A984182083452E6002E1BCE /* TerminalBackground.cp */; };
 		0AC6BAF70A8C0BA000AFF37A /* EventLoop.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD5055432A400ACDF3A /* EventLoop.mm */; };
 		0AC6BAF80A8C0BA000AFF37A /* ContextSensitiveMenu.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.cp */; };
@@ -435,6 +435,7 @@
 		0A719D33055D95EE009B0A88 /* SpacingConstants.r */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.rez; name = SpacingConstants.r; path = Application/Resources/SpacingConstants.r; sourceTree = "<group>"; };
 		0A7236F510841FAB00BB36C2 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrintPreviewCocoa.xib; sourceTree = "<group>"; };
 		0A766E0A0FB54D8E00259E56 /* kvp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = kvp.py; path = Application/PythonCode/pymacterm/file/kvp.py; sourceTree = "<group>"; };
+		0A7A74ED15A90A0F00E14184 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelFormatStandardColorsCocoa.xib; sourceTree = "<group>"; };
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
 		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
 		0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForRestartSession.icns; path = Application/Resources/IconForRestartSession.icns; sourceTree = "<group>"; };
@@ -496,7 +497,7 @@
 		0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelSessions.icns; path = Application/Resources/IconForPrefPanelSessions.icns; sourceTree = "<group>"; };
 		0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelTerminals.icns; path = Application/Resources/IconForPrefPanelTerminals.icns; sourceTree = "<group>"; };
 		0ABC0CF80A44FFBD009D07FC /* IconForPrefPanelFormats.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelFormats.icns; path = Application/Resources/IconForPrefPanelFormats.icns; sourceTree = "<group>"; };
-		0ABC0CFD0A450061009D07FC /* PrefPanelFormats.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelFormats.cp; path = Application/Code/PrefPanelFormats.cp; sourceTree = "<group>"; };
+		0ABC0CFD0A450061009D07FC /* PrefPanelFormats.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelFormats.mm; path = Application/Code/PrefPanelFormats.mm; sourceTree = "<group>"; };
 		0ABC0CFF0A45007A009D07FC /* PrefPanelFormats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelFormats.h; path = Application/Code/PrefPanelFormats.h; sourceTree = "<group>"; };
 		0ABC0D230A4503A3009D07FC /* PrefPanelSessions.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelSessions.cp; path = Application/Code/PrefPanelSessions.cp; sourceTree = "<group>"; };
 		0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelTerminals.cp; path = Application/Code/PrefPanelTerminals.cp; sourceTree = "<group>"; };
@@ -985,6 +986,7 @@
 				0AB2273C12D2D3BB00D663BB /* KeypadFunctionKeysCocoa.xib */,
 				0AB2273E12D2D41300D663BB /* KeypadVT220KeysCocoa.xib */,
 				0A317CAC10A0C775002EDEFB /* MainMenuCocoa.xib */,
+				0A7A74EC15A90A0F00E14184 /* PrefPanelFormatStandardColorsCocoa.xib */,
 				0A50591A157C64D300F257A1 /* PrefPanelFullScreenCocoa.xib */,
 				0AF5AA2E159BD90E007E36DE /* PrefPanelGeneralNotificationsCocoa.xib */,
 				0AD7D0B9158AE38B000C3264 /* PrefPanelGeneralOptionsCocoa.xib */,
@@ -1088,7 +1090,7 @@
 			isa = PBXGroup;
 			children = (
 				0A46FE03055432A400ACDF3A /* Preferences.cp */,
-				0ABC0CFD0A450061009D07FC /* PrefPanelFormats.cp */,
+				0ABC0CFD0A450061009D07FC /* PrefPanelFormats.mm */,
 				0A46FE05055432A400ACDF3A /* PrefPanelGeneral.mm */,
 				0AF4B5460A1D61E400D187A3 /* PrefPanelFullScreen.mm */,
 				0A46FE06055432A400ACDF3A /* PrefPanelMacros.cp */,
@@ -1371,7 +1373,7 @@
 				0AC6BAF00A8C0BA000AFF37A /* Undoables.cp in Sources */,
 				0AC6BAF20A8C0BA000AFF37A /* BasicTypesAE.cp in Sources */,
 				0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.cp in Sources */,
-				0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.cp in Sources */,
+				0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.mm in Sources */,
 				0AC6BAF60A8C0BA000AFF37A /* TerminalBackground.cp in Sources */,
 				0AC6BAF70A8C0BA000AFF37A /* EventLoop.mm in Sources */,
 				0AC6BAF80A8C0BA000AFF37A /* ContextSensitiveMenu.cp in Sources */,
@@ -1607,6 +1609,14 @@
 				0A7236F510841FAB00BB36C2 /* English */,
 			);
 			name = PrintPreviewCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A7A74EC15A90A0F00E14184 /* PrefPanelFormatStandardColorsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A7A74ED15A90A0F00E14184 /* English */,
+			);
+			name = PrefPanelFormatStandardColorsCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A839C3315805125000F001E /* PrefPanelTranslationsCocoa.xib */ = {
