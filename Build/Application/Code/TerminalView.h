@@ -526,7 +526,7 @@ Boolean
 
 void
 	TerminalView_GetFontAndSize					(TerminalViewRef			inView,
-												 StringPtr					outFontFamilyNameOrNull,
+												 CFStringRef*				outFontFamilyNameOrNull,
 												 UInt16*					outFontSizeOrNull);
 
 Preferences_ContextRef
@@ -546,7 +546,7 @@ Boolean
 
 TerminalView_Result
 	TerminalView_SetFontAndSize					(TerminalViewRef			inView,
-												 ConstStringPtr				inFontFamilyNameOrNull,
+												 CFStringRef				inFontFamilyNameOrNull,
 												 UInt16						inFontSizeOrZero);
 
 //@}

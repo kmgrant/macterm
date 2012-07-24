@@ -149,7 +149,7 @@ public:
 	setEncoding		(CFStringEncoding, Boolean = true);
 	
 	void
-	setFontName		(ConstStringPtr);
+	setFontName		(CFStringRef);
 
 protected:
 	void
@@ -642,18 +642,23 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		
 		// set backup font
 		{
-			Str255		fontName;
+			CFStringRef		fontName = nullptr;
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagBackupFontName, sizeof(fontName),
-														fontName, true/* search defaults too */, &actualSize);
+														&fontName, true/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setFontName(fontName);
 			}
 			else
 			{
-				this->setFontName("\p");
+				this->setFontName(CFSTR(""));
+			}
+			
+			if (nullptr != fontName)
+			{
+				CFRelease(fontName), fontName = nullptr;
 			}
 		}
 	}
@@ -734,23 +739,15 @@ Updates the font name display based on the given setting.
 */
 void
 My_TranslationsPanelUI::
-setFontName		(ConstStringPtr		inFontName)
+setFontName		(CFStringRef	inFontName)
 {
 	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->_panel);
 	HIViewWrap			fontButton(idMyButtonBackupFontName, kOwningWindow);
 	
 	
-	SetControlTitle(fontButton, inFontName);
-	if (PLstrlen(inFontName) > 0)
+	SetControlTitleWithCFString(fontButton, inFontName);
+	if (CFStringGetLength(inFontName) > 0)
 	{
-		ControlFontStyleRec		fontStyle;
-		
-		
-		bzero(&fontStyle, sizeof(fontStyle));
-		fontStyle.flags = kControlUseFontMask;
-		fontStyle.font = FMGetFontFamilyFromName(inFontName);
-		SetControlFontStyle(fontButton, &fontStyle);
-		
 		this->setFontEnabled(true);
 	}
 	else
@@ -1166,8 +1163,12 @@ receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				if (noErr != error) result = eventNotHandledErr;
 				else
 				{
+					CFStringRef		fontNameCFString = CFStringCreateWithPascalString
+														(kCFAllocatorDefault, fontName, kCFStringEncodingMacRoman);
+					
+					
 					prefsResult = Preferences_ContextSetData(panelDataPtr->_dataModel, kPreferences_TagBackupFontName,
-																sizeof(fontName), fontName);
+																sizeof(fontNameCFString), &fontNameCFString);
 					if (kPreferences_ResultOK != prefsResult)
 					{
 						result = eventNotHandledErr;
@@ -1175,7 +1176,12 @@ receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					else
 					{
 						// success!
-						interfacePtr->setFontName(fontName);
+						interfacePtr->setFontName(fontNameCFString);
+					}
+					
+					if (nullptr != fontNameCFString)
+					{
+						CFRelease(fontNameCFString), fontNameCFString = nullptr;
 					}
 				}
 			}
@@ -1232,22 +1238,34 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// select the button that was hit, and transmit font information
 				{
 					FontSelectionQDStyle	fontInfo;
-					Str255					fontName;
+					CFStringRef				fontName = nullptr;
+					Boolean					releaseFontName = true;
 					size_t					actualSize = 0;
 					Preferences_Result		prefsResult = kPreferences_ResultOK;
 					
 					
 					prefsResult = Preferences_ContextGetData(panelDataPtr->_dataModel, kPreferences_TagBackupFontName,
-																sizeof(fontName), fontName, false/* search defaults too */, &actualSize);
+																sizeof(fontName), &fontName, false/* search defaults too */,
+																&actualSize);
 					if (kPreferences_ResultOK != prefsResult)
 					{
 						// not found; set an arbitrary default
-						PLstrcpy(fontName, "\pMonaco");
+						fontName = CFSTR("Monaco");
+						releaseFontName = false;
 					}
 					
 					bzero(&fontInfo, sizeof(fontInfo));
 					fontInfo.version = kFontSelectionQDStyleVersionZero;
-					fontInfo.instance.fontFamily = FMGetFontFamilyFromName(fontName);
+					{
+						Str255		fontNamePascalString;
+						
+						
+						if (CFStringGetPascalString(fontName, fontNamePascalString, sizeof(fontNamePascalString),
+													kCFStringEncodingMacRoman))
+						{
+							fontInfo.instance.fontFamily = FMGetFontFamilyFromName(fontNamePascalString);
+						}
+					}
 					fontInfo.instance.fontStyle = normal;
 					fontInfo.size = 12; // arbitrary; required by the panel but not used
 					fontInfo.hasColor = false;
@@ -1271,28 +1289,33 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							result = FPShowHideFontPanel();
 						}
 					}
+					
+					if ((releaseFontName) && (nullptr != fontName))
+					{
+						CFRelease(fontName), fontName = nullptr;
+					}
 				}
 				break;
 			
 			case kCommandUseBackupFont:
 				{
-					Str255					fontName;
+					CFStringRef				fontName = nullptr;
 					Preferences_Result		prefsResult = kPreferences_ResultOK;
 					
 					
 					if (kControlCheckBoxCheckedValue == GetControl32BitValue(buttonHit))
 					{
 						// arbitrary - TEMPORARY, should probably read this from somewhere
-						PLstrcpy(fontName, "\pMonaco");
+						fontName = CFSTR("Monaco");
 					}
 					else
 					{
-						PLstrcpy(fontName, "\p");
+						fontName = CFSTR("");
 					}
 					
 					// update preferences and the display
 					prefsResult = Preferences_ContextSetData(panelDataPtr->_dataModel, kPreferences_TagBackupFontName,
-																sizeof(fontName), fontName);
+																sizeof(fontName), &fontName);
 					panelDataPtr->_interfacePtr->setFontName(fontName);
 					
 					// completely handled
@@ -1574,17 +1597,14 @@ backupFontFamilyName
 	
 	if (Preferences_ContextIsValid(self->activeContext))
 	{
-		Str255				fontName; // TEMPORARY (convert to CFStringRef)
+		CFStringRef			fontName = nullptr;
 		Preferences_Result	prefsResult = Preferences_ContextGetData(self->activeContext, kPreferences_TagBackupFontName,
-																		sizeof(fontName), fontName, false/* search defaults too */);
+																		sizeof(fontName), &fontName, false/* search defaults too */);
 		
 		
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			CFStringRef		asCFString = CFStringCreateWithPascalString(kCFAllocatorDefault, fontName, kCFStringEncodingMacRoman);
-			
-			
-			result = ((NSString*)asCFString);
+			result = BRIDGE_CAST(fontName, NSString*);
 			[result autorelease];
 		}
 	}
@@ -1595,20 +1615,15 @@ setBackupFontFamilyName:(NSString*)		aString
 {
 	if (Preferences_ContextIsValid(self->activeContext))
 	{
-		Str255		fontName; // TEMPORARY (convert to CFStringRef)
-		BOOL		saveOK = NO;
+		CFStringRef			fontName = BRIDGE_CAST(aString, CFStringRef);
+		BOOL				saveOK = NO;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(self->activeContext, kPreferences_TagBackupFontName,
+																		sizeof(fontName), &fontName);
 		
 		
-		if (CFStringGetPascalString((CFStringRef)aString, fontName, sizeof(fontName), kCFStringEncodingMacRoman))
+		if (kPreferences_ResultOK == prefsResult)
 		{
-			Preferences_Result	prefsResult = Preferences_ContextSetData(self->activeContext, kPreferences_TagBackupFontName,
-																			sizeof(fontName), fontName);
-			
-			
-			if (kPreferences_ResultOK == prefsResult)
-			{
-				saveOK = YES;
-			}
+			saveOK = YES;
 		}
 		
 		if (NO == saveOK)

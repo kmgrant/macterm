@@ -395,17 +395,14 @@ windowDidLoad
 #if 0
 	// set the font; though this can look kind of odd
 	{
-		Str255		fontName;
+		CFStringRef		fontName = nullptr;
 		
 		
-		prefsResult = Preferences_GetData(kPreferences_TagFontName, sizeof(fontName), fontName);
+		prefsResult = Preferences_GetData(kPreferences_TagFontName, sizeof(fontName), &fontName);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			NSString*	fontNameString = [[NSString alloc] initWithBytes:(fontName + 1/* skip length byte */)
-											length:PLstrlen(fontName) encoding:NSMacOSRomanStringEncoding];
-			
-			
-			[commandLineField setFont:[NSFont fontWithName:fontNameString [[commandLineField font] pointSize]]];
+			[commandLineField setFont:[NSFont fontWithName:BRIDGE_CAST(fontName, NSString*)
+															size:[[commandLineField font] pointSize]]];
 		}
 	}
 #endif

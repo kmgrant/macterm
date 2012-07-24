@@ -525,7 +525,7 @@ void				setBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGDeviceColor con
 void				setBlinkingTimerActive				(My_TerminalViewPtr, Boolean);
 void				setCursorGhostVisibility			(My_TerminalViewPtr, Boolean);
 void				setCursorVisibility					(My_TerminalViewPtr, Boolean);
-void				setFontAndSize						(My_TerminalViewPtr, ConstStringPtr, UInt16, Float32 = 0, Boolean = true);
+void				setFontAndSize						(My_TerminalViewPtr, CFStringRef, UInt16, Float32 = 0, Boolean = true);
 SInt16				setPortScreenPort					(My_TerminalViewPtr);
 void				setScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor const*);
 void				setScreenCoreColor					(My_TerminalViewPtr, UInt16, CGDeviceColor const*);
@@ -1230,16 +1230,29 @@ are not interested in that value.
 */
 void
 TerminalView_GetFontAndSize		(TerminalViewRef	inView,
-								 StringPtr			outFontFamilyNameOrNull,
+								 CFStringRef*		outFontFamilyNameOrNull,
 								 UInt16*			outFontSizeOrNull)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	if (viewPtr != nullptr)
+	if (nullptr != viewPtr)
 	{
-		if (outFontFamilyNameOrNull != nullptr) PLstrcpy(outFontFamilyNameOrNull, viewPtr->text.font.familyName);
-		if (outFontSizeOrNull != nullptr) *outFontSizeOrNull = viewPtr->text.font.normalMetrics.size;
+		if (nullptr != outFontFamilyNameOrNull)
+		{
+			CFStringRef		newString = CFStringCreateWithPascalString(kCFAllocatorDefault,
+																		viewPtr->text.font.familyName,
+																		kCFStringEncodingMacRoman);
+			
+			
+			*outFontFamilyNameOrNull = newString;
+			[BRIDGE_CAST(newString, NSString*) autorelease];
+		}
+		
+		if (nullptr != outFontSizeOrNull)
+		{
+			*outFontSizeOrNull = viewPtr->text.font.normalMetrics.size;
+		}
 	}
 }// GetFontAndSize
 
@@ -3185,7 +3198,7 @@ if the display mode currently sets the size automatically
 */
 TerminalView_Result
 TerminalView_SetFontAndSize		(TerminalViewRef	inView,
-								 ConstStringPtr		inFontFamilyNameOrNull,
+								 CFStringRef		inFontFamilyNameOrNull,
 								 UInt16				inFontSizeOrZero)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
@@ -4867,17 +4880,15 @@ copyFontPreferences		(My_TerminalViewPtr			inTerminalViewPtr,
 						 Preferences_ContextRef		inSource,
 						 Boolean					inSearchDefaults)
 {
-	UInt16		result = 0;
-	Str255		fontName;
-	StringPtr	fontNamePtr = nullptr;
-	SInt16		fontSize = 0;
-	Float32		charWidthScale = 1.0;
+	UInt16			result = 0;
+	CFStringRef		fontName = nullptr;
+	SInt16			fontSize = 0;
+	Float32			charWidthScale = 1.0;
 	
 	
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, kPreferences_TagFontName,
-															sizeof(fontName), fontName, inSearchDefaults))
+															sizeof(fontName), &fontName, inSearchDefaults))
 	{
-		fontNamePtr = fontName;
 		++result;
 	}
 	
@@ -4901,7 +4912,7 @@ copyFontPreferences		(My_TerminalViewPtr			inTerminalViewPtr,
 	}
 	
 	// set font size to automatically fill in initial font metrics, etc.
-	setFontAndSize(inTerminalViewPtr, fontNamePtr, fontSize, charWidthScale);
+	setFontAndSize(inTerminalViewPtr, fontName, fontSize, charWidthScale);
 	
 	return result;
 }// copyFontPreferences
@@ -11259,20 +11270,13 @@ The screen is not redrawn.
 */
 void
 setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
-					 ConstStringPtr			inFontFamilyNameOrNull,
+					 CFStringRef			inFontFamilyNameOrNull,
 					 UInt16					inFontSizeOrZero,
 					 Float32				inCharacterWidthScalingOrZero,
 					 Boolean				inNotifyListeners)
 {
 	if (inTerminalViewPtr->isCocoa)
 	{
-		// TEMPORARY; should start storing font name as a CFStringRef
-		CFRetainRelease		fontNameCFString(CFStringCreateWithPascalString
-												(kCFAllocatorDefault, inFontFamilyNameOrNull,
-													kCFStringEncodingMacRoman),
-												true/* is retained */);
-		
-		
 		// release any previous fonts
 		if (nil != inTerminalViewPtr->text.font.normalFont)
 		{
@@ -11285,7 +11289,7 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		// find a font for most text
 		inTerminalViewPtr->text.font.normalFont =
-			[NSFont fontWithName:(NSString*)fontNameCFString.returnCFStringRef() size:inFontSizeOrZero];
+			[NSFont fontWithName:BRIDGE_CAST(inFontFamilyNameOrNull, NSString*) size:inFontSizeOrZero];
 		[inTerminalViewPtr->text.font.normalFont retain];
 		
 		// find a font for boldface text
@@ -11312,7 +11316,16 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 	if (inFontFamilyNameOrNull != nullptr)
 	{
 		// remember font selection
-		PLstrcpy(inTerminalViewPtr->text.font.familyName, inFontFamilyNameOrNull);
+		Boolean		getOK = CFStringGetPascalString(inFontFamilyNameOrNull,
+													inTerminalViewPtr->text.font.familyName,
+													sizeof(inTerminalViewPtr->text.font.familyName),
+													kCFStringEncodingMacRoman);
+		
+		
+		if (false == getOK)
+		{
+			Console_Warning(Console_WriteValueCFString, "failed to find Pascal string for font name", inFontFamilyNameOrNull);
+		}
 	}
 	
 	if (inFontSizeOrZero > 0)

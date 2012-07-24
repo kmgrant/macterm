@@ -268,7 +268,7 @@ struct My_FormatsPanelNormalUI
 	saveFieldPreferences	(Preferences_ContextRef);
 	
 	void
-	setFontName		(StringPtr, Boolean);
+	setFontName		(CFStringRef, Boolean);
 	
 	void
 	setFontSize		(SInt16, Boolean);
@@ -345,7 +345,7 @@ namespace {
 
 Preferences_Result	copyColor						(Preferences_Tag, Preferences_ContextRef, Preferences_ContextRef,
 													 Boolean = false, Boolean* = nullptr);
-Boolean				isMonospacedFont				(Str255);
+Boolean				isMonospacedFont				(CFStringRef);
 OSStatus			receiveFontChange				(EventHandlerCallRef, EventRef, void*);
 OSStatus			receiveWindowFocusChange		(EventHandlerCallRef, EventRef, void*);
 void				resetANSIWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
@@ -2080,7 +2080,7 @@ readPreferencesForFontName	(Preferences_ContextRef		inSettings,
 	if (nullptr != inSettings)
 	{
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
-		Str255				fontName;
+		CFStringRef			fontName = nullptr;
 		size_t				actualSize = 0;
 		Boolean				isDefault = false;
 		
@@ -2240,18 +2240,20 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
 																					My_FormatsPanelNormalDataPtr);
 					FontSelectionQDStyle			fontInfo;
-					Str255							fontName;
+					CFStringRef						fontName = nullptr;
+					Boolean							releaseFontName = true;
 					SInt16							fontSize = 0;
 					size_t							actualSize = 0;
 					Preferences_Result				prefsResult = kPreferences_ResultOK;
 					
 					
 					prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPreferences_TagFontName, sizeof(fontName),
-																fontName, false/* search defaults too */, &actualSize);
+																&fontName, false/* search defaults too */, &actualSize);
 					if (kPreferences_ResultOK != prefsResult)
 					{
 						// error...pick an arbitrary value
-						PLstrcpy(fontName, "\pMonaco");
+						fontName = CFSTR("Monaco");
+						releaseFontName = false;
 					}
 					prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPreferences_TagFontSize, sizeof(fontSize),
 																&fontSize, false/* search defaults too */, &actualSize);
@@ -2263,7 +2265,16 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					
 					bzero(&fontInfo, sizeof(fontInfo));
 					fontInfo.version = kFontSelectionQDStyleVersionZero;
-					fontInfo.instance.fontFamily = FMGetFontFamilyFromName(fontName);
+					{
+						Str255		fontNamePascalString;
+						
+						
+						if (CFStringGetPascalString(fontName, fontNamePascalString, sizeof(fontNamePascalString),
+													kCFStringEncodingMacRoman))
+						{
+							fontInfo.instance.fontFamily = FMGetFontFamilyFromName(fontNamePascalString);
+						}
+					}
 					fontInfo.instance.fontStyle = normal;
 					fontInfo.size = fontSize;
 					fontInfo.hasColor = false;
@@ -2286,6 +2297,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						{
 							result = FPShowHideFontPanel();
 						}
+					}
+					
+					if ((releaseFontName) && (nullptr != fontName))
+					{
+						CFRelease(fontName), fontName = nullptr;
 					}
 				}
 				break;
@@ -2480,13 +2496,13 @@ based on the given setting.
 */
 void
 My_FormatsPanelNormalUI::
-setFontName		(StringPtr		inFontName,
+setFontName		(CFStringRef	inFontName,
 				 Boolean		inIsDefault)
 {
 	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
 	
 	
-	SetControlTitle(HIViewWrap(idMyButtonFontName, kOwningWindow), inFontName);
+	SetControlTitleWithCFString(HIViewWrap(idMyButtonFontName, kOwningWindow), inFontName);
 	HIViewSetVisible(HIViewWrap(idMyStaticTextNonMonospacedWarning, kOwningWindow), false == isMonospacedFont(inFontName));
 	setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultFontName, kOwningWindow), BooleanToCheckBoxValue(inIsDefault));
 }// My_FormatsPanelNormalUI::setFontName
@@ -2773,20 +2789,26 @@ copyColor	(Preferences_Tag			inSourceTag,
 /*!
 Determines if a font is monospaced.
 
+DEPRECATED.  This will be removed when NSFont is used throughout.
+
 (2.6)
 */
 Boolean
-isMonospacedFont	(Str255		inFontName)
+isMonospacedFont	(CFStringRef	inFontName)
 {
 	Boolean		result = false;
 	Boolean		doRomanTest = false;
 	SInt32		numberOfScriptsEnabled = GetScriptManagerVariable(smEnabled);
+	Str255		fontNamePascalString;
 	
+	
+	(Boolean)CFStringGetPascalString(inFontName, fontNamePascalString, sizeof(fontNamePascalString),
+										kCFStringEncodingMacRoman);
 	
 	if (numberOfScriptsEnabled > 1)
 	{
 		ScriptCode		scriptNumber = smRoman;
-		FMFontFamily	fontID = FMGetFontFamilyFromName(inFontName);
+		FMFontFamily	fontID = FMGetFontFamilyFromName(fontNamePascalString);
 		
 		
 		scriptNumber = FontToScript(fontID);
@@ -2814,7 +2836,7 @@ isMonospacedFont	(Str255		inFontName)
 		
 	if (doRomanTest)
 	{
-		TextFontByName(inFontName);
+		TextFontByName(fontNamePascalString);
 		result = (CharWidth('W') == CharWidth('.'));
 	}
 	
@@ -2873,8 +2895,12 @@ receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				if (noErr != error) result = eventNotHandledErr;
 				else
 				{
+					CFStringRef		fontNameCFString = CFStringCreateWithPascalString
+														(kCFAllocatorDefault, fontName, kCFStringEncodingMacRoman);
+					
+					
 					prefsResult = Preferences_ContextSetData(panelDataPtr->dataModel, kPreferences_TagFontName,
-																sizeof(fontName), fontName);
+																sizeof(fontNameCFString), &fontNameCFString);
 					if (kPreferences_ResultOK != prefsResult)
 					{
 						result = eventNotHandledErr;
@@ -2882,7 +2908,12 @@ receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					else
 					{
 						// success!
-						normalDataPtr->setFontName(fontName, false/* is default */);
+						normalDataPtr->setFontName(fontNameCFString, false/* is default */);
+					}
+					
+					if (nullptr != fontNameCFString)
+					{
+						CFRelease(fontNameCFString), fontNameCFString = nullptr;
 					}
 				}
 			}

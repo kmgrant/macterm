@@ -276,7 +276,7 @@ struct UndoDataFontSizeChanges
 	Boolean					undoFontSize;		//!< is this Undo action going to reverse the font size changes?
 	Boolean					undoFont;			//!< is this Undo action going to reverse the font changes?
 	UInt16					fontSize;			//!< the old font size (ignored if "undoFontSize" is false)
-	Str255					fontName;			//!< the old font (ignored if "undoFont" is false)
+	CFRetainRelease			fontName;			//!< the old font (ignored if "undoFont" is false)
 };
 typedef UndoDataFontSizeChanges*		UndoDataFontSizeChangesPtr;
 
@@ -641,7 +641,7 @@ IMPORTANT:	This API is under evaluation.  It does
 */
 void
 TerminalWindow_GetFontAndSize	(TerminalWindowRef	inRef,
-								 StringPtr			outFontFamilyNameOrNull,
+								 CFStringRef*		outFontFamilyNameOrNull,
 								 UInt16*			outFontSizeOrNull)
 {
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
@@ -1444,7 +1444,7 @@ See also setViewFormatPreferences().
 */
 void
 TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
-								 ConstStringPtr			inFontFamilyNameOrNull,
+								 CFStringRef			inFontFamilyNameOrNull,
 								 UInt16					inFontSizeOrZero)
 {
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
@@ -3787,10 +3787,14 @@ installUndoFontSizeChanges	(TerminalWindowRef	inTerminalWindow,
 	else
 	{
 		// initialize context structure
+		CFStringRef		fontName = nullptr;
+		
+		
 		dataPtr->terminalWindow = inTerminalWindow;
 		dataPtr->undoFontSize = inUndoFontSize;
 		dataPtr->undoFont = inUndoFont;
-		TerminalWindow_GetFontAndSize(inTerminalWindow, dataPtr->fontName, &dataPtr->fontSize);
+		TerminalWindow_GetFontAndSize(inTerminalWindow, &fontName, &dataPtr->fontSize);
+		dataPtr->fontName = fontName;
 	}
 	{
 		CFStringRef		undoNameCFString = nullptr;
@@ -6346,21 +6350,21 @@ reverseFontChanges	(Undoables_ActionInstruction	inDoWhat,
 		case kUndoables_ActionInstructionUndo:
 		default:
 			{
-				UInt16		oldFontSize = 0;
-				Str255		oldFontName;
+				UInt16			oldFontSize = 0;
+				CFStringRef		oldFontName = nullptr;
 				
 				
 				// make this reversible by preserving the font information
-				TerminalWindow_GetFontAndSize(dataPtr->terminalWindow, oldFontName, &oldFontSize);
+				TerminalWindow_GetFontAndSize(dataPtr->terminalWindow, &oldFontName, &oldFontSize);
 				
 				// change the font and/or size of the window
 				TerminalWindow_SetFontAndSize(dataPtr->terminalWindow,
-												(dataPtr->undoFont) ? dataPtr->fontName : nullptr,
+												(dataPtr->undoFont) ? dataPtr->fontName.returnCFStringRef() : nullptr,
 												(dataPtr->undoFontSize) ? dataPtr->fontSize : 0);
 				
 				// save the font and size
 				dataPtr->fontSize = oldFontSize;
-				PLstrcpy(dataPtr->fontName, oldFontName);
+				dataPtr->fontName = oldFontName;
 			}
 			break;
 		}

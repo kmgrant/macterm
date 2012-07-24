@@ -188,7 +188,7 @@ void
 
 void
 	TerminalWindow_GetFontAndSize					(TerminalWindowRef			inRef,
-													 StringPtr					outFontFamilyNameOrNull,
+													 CFStringRef*				outFontFamilyNameOrNull,
 													 UInt16*					outFontSizeOrNull);
 
 void
@@ -264,7 +264,7 @@ void
 
 void
 	TerminalWindow_SetFontAndSize					(TerminalWindowRef			inRef,
-													 ConstStringPtr				inFontFamilyNameOrNull,
+													 CFStringRef				inFontFamilyNameOrNull,
 													 UInt16						inFontSizeOrZero);
 
 void

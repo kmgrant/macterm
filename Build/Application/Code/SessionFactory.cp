@@ -939,7 +939,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
 			{
 				if (kInvalidFontFamily != FMGetFontFamilyFromName(fontName))
 				{
-					TerminalWindow_SetFontAndSize(terminalWindow, fontName, 0/* font size, or 0 to ignore */);
+					TerminalWindow_SetFontAndSize(terminalWindow, fontCFString, 0/* font size, or 0 to ignore */);
 				}
 			}
 			CFRelease(fontCFString);

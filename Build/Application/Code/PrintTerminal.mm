@@ -310,22 +310,16 @@ terminal view.
 NSFont*
 returnNSFontForTerminalView		(TerminalViewRef	inView)
 {
-	NSFont*		result = nil;
-	Str255		fontName;
-	UInt16		fontSize = 0;
+	NSFont*			result = nil;
+	CFStringRef		fontName = nullptr;
+	UInt16			fontSize = 0;
 	
 	
 	// find font information from the Terminal View; yes, this
 	// is a painfully old way to specify fonts!
-	TerminalView_GetFontAndSize(inView, fontName, &fontSize);
-	{
-		CFRetainRelease		fontNameCFString(CFStringCreateWithPascalString(kCFAllocatorDefault,
-																			fontName, kCFStringEncodingMacRoman),
-												true/* is retained */);
-		
-		
-		result = [NSFont fontWithName:(NSString*)fontNameCFString.returnCFStringRef() size:fontSize];
-	}
+	TerminalView_GetFontAndSize(inView, &fontName, &fontSize);
+	result = [NSFont fontWithName:BRIDGE_CAST(fontName, NSString*) size:fontSize];
+	
 	return result;
 }// returnNSFontForTerminalView
 

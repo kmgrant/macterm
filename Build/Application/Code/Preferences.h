@@ -124,7 +124,7 @@ Tags for use with Quills::Prefs::FORMAT.
 enum
 {
 	kPreferences_TagFadeAlpha							= 'falp',	//!< data: "Float32"
-	kPreferences_TagFontName							= 'font',	//!< data: "Str255"
+	kPreferences_TagFontName							= 'font',	//!< data: "CFStringRef"
 	kPreferences_TagFontSize							= 'fsiz',	//!< data: "SInt16"
 	kPreferences_TagFontCharacterWidthMultiplier		= 'cwid',	//!< data: "Float32"
 	// NOTE: These match menu command IDs for convenience in color boxes.
@@ -294,7 +294,7 @@ Tags for use with Quills::Prefs::TRANSLATION.
 */
 enum
 {
-	kPreferences_TagBackupFontName						= 'bfnt',	//!< data: "Str255"
+	kPreferences_TagBackupFontName						= 'bfnt',	//!< data: "CFStringRef"
 	kPreferences_TagTextEncodingIANAName				= 'iana',	//!< data: "CFStringRef"
 	kPreferences_TagTextEncodingID						= 'encd'	//!< data: "CFStringEncoding"
 };

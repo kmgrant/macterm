@@ -896,7 +896,7 @@ Preferences_Init ()
 										CFSTR("terminal-capture-auto-start"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagBackupFontName,
 									CFSTR("terminal-backup-font-family"), typeCFStringRef,
-									sizeof(Str255), Quills::Prefs::TRANSLATION);
+									sizeof(CFStringRef), Quills::Prefs::TRANSLATION);
 	My_PreferenceDefinition::create(kPreferences_TagBellSound,
 									CFSTR("terminal-when-bell-sound-basename"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::GENERAL);
@@ -948,7 +948,7 @@ Preferences_Init ()
 									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagFontName,
 									CFSTR("terminal-font-family"), typeCFStringRef,
-									sizeof(Str255), Quills::Prefs::FORMAT);
+									sizeof(CFStringRef), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagFontSize,
 									CFSTR("terminal-font-size-points"), typeNetEvents_CFNumberRef,
 									sizeof(SInt16), Quills::Prefs::FORMAT);
@@ -6084,16 +6084,11 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							StringPtr const		data = REINTERPRET_CAST(outDataPtr, StringPtr);
+							CFStringRef* const	data = REINTERPRET_CAST(outDataPtr, CFStringRef*);
 							
 							
-							if (false == CFStringGetPascalString(valueCFString, data, inDataSize, kCFStringEncodingMacRoman))
-							{
-								// failed; make empty string
-								PLstrcpy(data, "\p");
-								result = kPreferences_ResultBadVersionDataNotAvailable;
-							}
-							CFRelease(valueCFString), valueCFString = nullptr;
+							*data = valueCFString;
+							// do not release because the string is returned
 						}
 					}
 					break;
@@ -7970,16 +7965,11 @@ getTranslationPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							StringPtr const		data = REINTERPRET_CAST(outDataPtr, StringPtr);
+							CFStringRef* const	data = REINTERPRET_CAST(outDataPtr, CFStringRef*);
 							
 							
-							if (false == CFStringGetPascalString(valueCFString, data, inDataSize, kCFStringEncodingMacRoman))
-							{
-								// failed; make empty string
-								PLstrcpy(data, "\p");
-								result = kPreferences_ResultBadVersionDataNotAvailable;
-							}
-							CFRelease(valueCFString), valueCFString = nullptr;
+							*data = valueCFString;
+							// do not release because the string is returned
 						}
 					}
 					break;
@@ -8635,18 +8625,11 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagFontName:
 				{
-					ConstStringPtr const	data = REINTERPRET_CAST(inDataPtr, ConstStringPtr);
-					CFStringRef				fontNameCFString = nullptr;
+					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
 					
 					
-					fontNameCFString = CFStringCreateWithPascalString(kCFAllocatorDefault, data, kCFStringEncodingMacRoman);
-					if (nullptr == fontNameCFString) result = kPreferences_ResultGenericFailure;
-					else
-					{
-						assert(typeCFStringRef == keyValueType);
-						inContextPtr->addString(inDataPreferenceTag, keyName, (data) ? fontNameCFString : CFSTR(""));
-						CFRelease(fontNameCFString), fontNameCFString = nullptr;
-					}
+					assert(typeCFStringRef == keyValueType);
+					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			
@@ -10080,18 +10063,11 @@ setTranslationPreference	(My_ContextInterfacePtr		inContextPtr,
 			{
 			case kPreferences_TagBackupFontName:
 				{
-					ConstStringPtr const	data = REINTERPRET_CAST(inDataPtr, ConstStringPtr);
-					CFStringRef				fontNameCFString = nullptr;
+					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
 					
 					
-					fontNameCFString = CFStringCreateWithPascalString(kCFAllocatorDefault, data, kCFStringEncodingMacRoman);
-					if (nullptr == fontNameCFString) result = kPreferences_ResultGenericFailure;
-					else
-					{
-						assert(typeCFStringRef == keyValueType);
-						inContextPtr->addString(inDataPreferenceTag, keyName, (data) ? fontNameCFString : CFSTR(""));
-						CFRelease(fontNameCFString), fontNameCFString = nullptr;
-					}
+					assert(typeCFStringRef == keyValueType);
+					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			

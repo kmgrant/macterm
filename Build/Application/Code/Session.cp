@@ -1343,18 +1343,14 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 				
 				// font info
 				{
-					Str255		fontName;
 					UInt16		fontSize = 0;
 					
 					
-					TerminalView_GetFontAndSize(view, fontName, &fontSize);
-					stringValue = CFStringCreateWithPascalString(kCFAllocatorDefault, fontName,
-																	GetApplicationTextEncoding());
+					TerminalView_GetFontAndSize(view, &stringValue, &fontSize);
 					if (stringValue != nullptr)
 					{
 						saveError = SessionDescription_SetStringData
 									(saveFileMemoryModel, kSessionDescription_StringTypeTerminalFont, stringValue);
-						CFRelease(stringValue), stringValue = nullptr;
 					}
 					saveError = SessionDescription_SetIntegerData
 								(saveFileMemoryModel, kSessionDescription_IntegerTypeTerminalFontSize, fontSize);

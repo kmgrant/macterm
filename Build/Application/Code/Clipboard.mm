@@ -1879,19 +1879,14 @@ the Clipboard window.
 returnNSFontForMonospacedTextOfSize:(unsigned int)	fontSize
 {
 	NSFont*				result = nil;
-	Str255				fontName;
+	CFStringRef			fontName = nullptr;
 	Preferences_Result	prefsResult = kPreferences_ResultOK;
 	
 	
-	prefsResult = Preferences_GetData(kPreferences_TagFontName, sizeof(fontName), fontName);
+	prefsResult = Preferences_GetData(kPreferences_TagFontName, sizeof(fontName), &fontName);
 	if (kPreferences_ResultOK == prefsResult)
 	{
-		CFRetainRelease		fontNameCFString(CFStringCreateWithPascalString(kCFAllocatorDefault,
-																			fontName, kCFStringEncodingMacRoman),
-												true/* is retained */);
-		
-		
-		result = [NSFont fontWithName:(NSString*)fontNameCFString.returnCFStringRef() size:fontSize];
+		result = [NSFont fontWithName:BRIDGE_CAST(fontName, NSString*) size:fontSize];
 	}
 	return result;
 }// returnNSFontForMonospacedTextOfSize:
