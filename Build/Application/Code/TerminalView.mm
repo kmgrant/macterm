@@ -13010,167 +13010,172 @@ something like a formatting sheet’s preview pane.)
 drawRect:(NSRect)	rect
 {
 	My_TerminalViewPtr		viewPtr = [self internalViewPtr];
-	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
-	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
-	NSRect					entireRect = [self bounds];
-	CGRect					clipBounds = CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
-	CGRect					contentBounds = CGRectMake(entireRect.origin.x, entireRect.origin.y, entireRect.size.width, entireRect.size.height);
 	
 	
 	[super drawRect:rect];
 	
-	// INCOMPLETE!
-	
-	// perform any necessary rendering for drags
+	if (nullptr != viewPtr)
 	{
-		if ([self showDragHighlight])
+		NSGraphicsContext*	contextMgr = [NSGraphicsContext currentContext];
+		CGContextRef		drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+		NSRect				entireRect = [self bounds];
+		CGRect				clipBounds = CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+		CGRect				contentBounds = CGRectMake(entireRect.origin.x, entireRect.origin.y, entireRect.size.width, entireRect.size.height);
+		
+		
+		// INCOMPLETE!
+		
+		// perform any necessary rendering for drags
 		{
-			DragAndDrop_ShowHighlightBackground(drawingContext, contentBounds);
-			// frame is drawn at the end, after any content
-		}
-		else
-		{
-			// hide is not necessary because the NSView model ensures the
-			// backdrop behind this view is painted as needed
-		}
-		
-		// tell text routines to draw in black if there is a drag highlight
-		viewPtr->screen.currentRenderDragColors = ([self showDragHighlight]) ? true : false;
-	}
-	
-	// draw text and graphics
-	{
-		// draw only the requested area; convert from pixels to screen cells
-		HIPoint const&		kTopLeftAnchor = clipBounds.origin;
-		HIPoint const		kBottomRightAnchor = CGPointMake(clipBounds.origin.y + clipBounds.size.height,
-																clipBounds.origin.x + clipBounds.size.width);
-		TerminalView_Cell	leftTopCell;
-		TerminalView_Cell	rightBottomCell;
-		Float32				deltaColumn = 0.0;
-		Float32				deltaRow = 0.0;
-		
-		
-		// figure out what cells to draw
-		(Boolean)findVirtualCellFromScreenPoint(viewPtr, kTopLeftAnchor, leftTopCell, deltaColumn, deltaRow);
-		(Boolean)findVirtualCellFromScreenPoint(viewPtr, kBottomRightAnchor, rightBottomCell, deltaColumn, deltaRow);
-		
-		// draw the text in the clipped area
-		(Boolean)drawSection(viewPtr, drawingContext, leftTopCell.first - viewPtr->screen.leftVisibleEdgeInColumns,
-								leftTopCell.second - viewPtr->screen.topVisibleEdgeInRows,
-								rightBottomCell.first + 1/* past-the-end */ - viewPtr->screen.leftVisibleEdgeInColumns,
-								rightBottomCell.second + 1/* past-the-end */ - viewPtr->screen.topVisibleEdgeInRows);
-	}
-	viewPtr->text.attributes = kInvalidTerminalTextAttributes; // forces attributes to reset themselves properly
-	
-	// if, after drawing all text, no text is actually blinking,
-	// then disable the animation timer (so unnecessary refreshes
-	// are not done); otherwise, install it
-	setBlinkingTimerActive(viewPtr, (viewPtr->isActive) && (cursorBlinks(viewPtr) ||
-															(viewPtr->screen.currentRenderBlinking)));
-	
-	// if inactive, render the text selection as an outline
-	// (if active, the call above to draw the text will also
-	// have drawn the active selection)
-	if ((false == viewPtr->isActive) && viewPtr->text.selection.exists)
-	{
-		HIShapeRef		selectionShape = getSelectedTextAsNewHIShape(viewPtr, 1.0/* inset */);
-		
-		
-		if (nullptr != selectionShape)
-		{
-			RGBColor		highlightColorRGB;
-			CGDeviceColor	highlightColorDevice;
-			OSStatus		error = noErr;
-			
-			
-			// TEMPORARY - account for QuickDraw/Quartz differences until conversion is complete
+			if ([self showDragHighlight])
 			{
-				HIMutableShapeRef		offsetCopy = HIShapeCreateMutableCopy(selectionShape);
-				
-				
-				if (nullptr != offsetCopy)
-				{
-					HIShapeOffset(offsetCopy, -1.0, -1.0);
-					
-					CFRelease(selectionShape), selectionShape = nullptr;
-					selectionShape = offsetCopy;
-				}
+				DragAndDrop_ShowHighlightBackground(drawingContext, contentBounds);
+				// frame is drawn at the end, after any content
+			}
+			else
+			{
+				// hide is not necessary because the NSView model ensures the
+				// backdrop behind this view is painted as needed
 			}
 			
-			// draw outline
-			CGContextSetLineWidth(drawingContext, 2.0); // make thick outline frame on Mac OS X
-			CGContextSetLineCap(drawingContext, kCGLineCapRound);
+			// tell text routines to draw in black if there is a drag highlight
+			viewPtr->screen.currentRenderDragColors = ([self showDragHighlight]) ? true : false;
+		}
+		
+		// draw text and graphics
+		{
+			// draw only the requested area; convert from pixels to screen cells
+			HIPoint const&		kTopLeftAnchor = clipBounds.origin;
+			HIPoint const		kBottomRightAnchor = CGPointMake(clipBounds.origin.y + clipBounds.size.height,
+																	clipBounds.origin.x + clipBounds.size.width);
+			TerminalView_Cell	leftTopCell;
+			TerminalView_Cell	rightBottomCell;
+			Float32				deltaColumn = 0.0;
+			Float32				deltaRow = 0.0;
+			
+			
+			// figure out what cells to draw
+			(Boolean)findVirtualCellFromScreenPoint(viewPtr, kTopLeftAnchor, leftTopCell, deltaColumn, deltaRow);
+			(Boolean)findVirtualCellFromScreenPoint(viewPtr, kBottomRightAnchor, rightBottomCell, deltaColumn, deltaRow);
+			
+			// draw the text in the clipped area
+			(Boolean)drawSection(viewPtr, drawingContext, leftTopCell.first - viewPtr->screen.leftVisibleEdgeInColumns,
+									leftTopCell.second - viewPtr->screen.topVisibleEdgeInRows,
+									rightBottomCell.first + 1/* past-the-end */ - viewPtr->screen.leftVisibleEdgeInColumns,
+									rightBottomCell.second + 1/* past-the-end */ - viewPtr->screen.topVisibleEdgeInRows);
+		}
+		viewPtr->text.attributes = kInvalidTerminalTextAttributes; // forces attributes to reset themselves properly
+		
+		// if, after drawing all text, no text is actually blinking,
+		// then disable the animation timer (so unnecessary refreshes
+		// are not done); otherwise, install it
+		setBlinkingTimerActive(viewPtr, (viewPtr->isActive) && (cursorBlinks(viewPtr) ||
+																(viewPtr->screen.currentRenderBlinking)));
+		
+		// if inactive, render the text selection as an outline
+		// (if active, the call above to draw the text will also
+		// have drawn the active selection)
+		if ((false == viewPtr->isActive) && viewPtr->text.selection.exists)
+		{
+			HIShapeRef		selectionShape = getSelectedTextAsNewHIShape(viewPtr, 1.0/* inset */);
+			
+			
+			if (nullptr != selectionShape)
+			{
+				RGBColor		highlightColorRGB;
+				CGDeviceColor	highlightColorDevice;
+				OSStatus		error = noErr;
+				
+				
+				// TEMPORARY - account for QuickDraw/Quartz differences until conversion is complete
+				{
+					HIMutableShapeRef		offsetCopy = HIShapeCreateMutableCopy(selectionShape);
+					
+					
+					if (nullptr != offsetCopy)
+					{
+						HIShapeOffset(offsetCopy, -1.0, -1.0);
+						
+						CFRelease(selectionShape), selectionShape = nullptr;
+						selectionShape = offsetCopy;
+					}
+				}
+				
+				// draw outline
+				CGContextSetLineWidth(drawingContext, 2.0); // make thick outline frame on Mac OS X
+				CGContextSetLineCap(drawingContext, kCGLineCapRound);
+				LMGetHiliteRGB(&highlightColorRGB);
+				highlightColorDevice = ColorUtilities_CGDeviceColorMake(highlightColorRGB);
+				CGContextSetRGBStrokeColor(drawingContext, highlightColorDevice.red, highlightColorDevice.green,
+											highlightColorDevice.blue, 1.0/* alpha */);
+				error = HIShapeReplacePathInCGContext(selectionShape, drawingContext);
+				assert_noerr(error);
+				CGContextStrokePath(drawingContext);
+				
+				// free allocated memory
+				CFRelease(selectionShape), selectionShape = nullptr;
+			}
+		}
+		
+		// perform any necessary rendering for drags
+		if ([self showDragHighlight])
+		{
+			DragAndDrop_ShowHighlightFrame(drawingContext, contentBounds);
+		}
+		
+		// render margin line, if requested
+		if (gPreferenceProxies.renderMarginAtColumn > 0)
+		{
+			Rect			dummyBounds;
+			RGBColor		highlightColorRGB;
+			CGDeviceColor	highlightColorDevice;
+			
+			
+			getRowSectionBounds(viewPtr, 0/* row; does not matter which */,
+								gPreferenceProxies.renderMarginAtColumn/* zero-based column number, but following column is desired */,
+								1/* character count - not important */, &dummyBounds);
+			CGContextSetLineWidth(drawingContext, 2.0);
+			CGContextSetLineCap(drawingContext, kCGLineCapButt);
 			LMGetHiliteRGB(&highlightColorRGB);
 			highlightColorDevice = ColorUtilities_CGDeviceColorMake(highlightColorRGB);
 			CGContextSetRGBStrokeColor(drawingContext, highlightColorDevice.red, highlightColorDevice.green,
 										highlightColorDevice.blue, 1.0/* alpha */);
-			error = HIShapeReplacePathInCGContext(selectionShape, drawingContext);
-			assert_noerr(error);
+			CGContextBeginPath(drawingContext);
+			CGContextMoveToPoint(drawingContext, dummyBounds.left, contentBounds.origin.y);
+			CGContextAddLineToPoint(drawingContext, dummyBounds.left, contentBounds.origin.y + contentBounds.size.height);
 			CGContextStrokePath(drawingContext);
-			
-			// free allocated memory
-			CFRelease(selectionShape), selectionShape = nullptr;
 		}
-	}
-	
-	// perform any necessary rendering for drags
-	if ([self showDragHighlight])
-	{
-		DragAndDrop_ShowHighlightFrame(drawingContext, contentBounds);
-	}
-	
-	// render margin line, if requested
-	if (gPreferenceProxies.renderMarginAtColumn > 0)
-	{
-		Rect			dummyBounds;
-		RGBColor		highlightColorRGB;
-		CGDeviceColor	highlightColorDevice;
 		
+		// draw cursor
+		if (kMyCursorStateVisible == viewPtr->screen.cursor.currentState)
+		{
+			CGContextSaveRestore		_(drawingContext);
+			TerminalTextAttributes		cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
+			CGRect						cursorFloatBounds = CGRectMake(viewPtr->screen.cursor.bounds.left,
+																		viewPtr->screen.cursor.bounds.top,
+																		viewPtr->screen.cursor.bounds.right -
+																			viewPtr->screen.cursor.bounds.left
+																			- 2/* TEMPORARY Quartz/QD conversion */,
+																		viewPtr->screen.cursor.bounds.bottom -
+																			viewPtr->screen.cursor.bounds.top
+																			- 2/* TEMPORARY Quartz/QD conversion */);
+			
+			
+			// flip colors and paint at the current blink alpha value
+			if (cursorAttributes & kTerminalTextAttributeInverseVideo) cursorAttributes &= ~kTerminalTextAttributeInverseVideo;
+			else cursorAttributes |= kTerminalTextAttributeInverseVideo;
+			useTerminalTextColors(viewPtr, drawingContext, cursorAttributes,
+									cursorBlinks(viewPtr)
+									? viewPtr->animation.cursor.blinkAlpha
+									: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
+			CGContextFillRect(drawingContext, cursorFloatBounds);
+		}
 		
-		getRowSectionBounds(viewPtr, 0/* row; does not matter which */,
-							gPreferenceProxies.renderMarginAtColumn/* zero-based column number, but following column is desired */,
-							1/* character count - not important */, &dummyBounds);
-		CGContextSetLineWidth(drawingContext, 2.0);
-		CGContextSetLineCap(drawingContext, kCGLineCapButt);
-		LMGetHiliteRGB(&highlightColorRGB);
-		highlightColorDevice = ColorUtilities_CGDeviceColorMake(highlightColorRGB);
-		CGContextSetRGBStrokeColor(drawingContext, highlightColorDevice.red, highlightColorDevice.green,
-									highlightColorDevice.blue, 1.0/* alpha */);
-		CGContextBeginPath(drawingContext);
-		CGContextMoveToPoint(drawingContext, dummyBounds.left, contentBounds.origin.y);
-		CGContextAddLineToPoint(drawingContext, dummyBounds.left, contentBounds.origin.y + contentBounds.size.height);
-		CGContextStrokePath(drawingContext);
-	}
-	
-	// draw cursor
-	if (kMyCursorStateVisible == viewPtr->screen.cursor.currentState)
-	{
-		CGContextSaveRestore		_(drawingContext);
-		TerminalTextAttributes		cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
-		CGRect						cursorFloatBounds = CGRectMake(viewPtr->screen.cursor.bounds.left,
-																	viewPtr->screen.cursor.bounds.top,
-																	viewPtr->screen.cursor.bounds.right -
-																		viewPtr->screen.cursor.bounds.left
-																		- 2/* TEMPORARY Quartz/QD conversion */,
-																	viewPtr->screen.cursor.bounds.bottom -
-																		viewPtr->screen.cursor.bounds.top
-																		- 2/* TEMPORARY Quartz/QD conversion */);
-		
-		
-		// flip colors and paint at the current blink alpha value
-		if (cursorAttributes & kTerminalTextAttributeInverseVideo) cursorAttributes &= ~kTerminalTextAttributeInverseVideo;
-		else cursorAttributes |= kTerminalTextAttributeInverseVideo;
-		useTerminalTextColors(viewPtr, drawingContext, cursorAttributes,
-								cursorBlinks(viewPtr)
-								? viewPtr->animation.cursor.blinkAlpha
-								: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
-		CGContextFillRect(drawingContext, cursorFloatBounds);
-	}
-	
-	if (kMyCursorStateVisible == viewPtr->screen.cursor.ghostState)
-	{
-		// render cursor ghost
-		// UNIMPLEMENTED
+		if (kMyCursorStateVisible == viewPtr->screen.cursor.ghostState)
+		{
+			// render cursor ghost
+			// UNIMPLEMENTED
+		}
 	}
 }// drawRect:
 
