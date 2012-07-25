@@ -877,6 +877,52 @@ dealloc
 }// dealloc
 
 
+#pragma mark NSColorPanel
+
+
+/*!
+Forwards this message to the active tab’s panel if the active
+tab’s panel implements a "changeColor:" method.
+
+NOTE:	It is possible that one day panels will be set up
+		as responders themselves and placed directly in
+		the responder chain.  For now this is sufficient.
+
+(4.1)
+*/
+- (void)
+changeColor:(id)	sender
+{
+	if ([self->activePanel respondsToSelector:@selector(changeColor:)])
+	{
+		[self->activePanel changeColor:sender];
+	}
+}// changeColor:
+
+
+#pragma mark NSFontPanel
+
+
+/*!
+Forwards this message to the active tab’s panel if the active
+tab’s panel implements a "changeFont:" method.
+
+NOTE:	It is possible that one day panels will be set up
+		as responders themselves and placed directly in
+		the responder chain.  For now this is sufficient.
+
+(4.1)
+*/
+- (void)
+changeFont:(id)		sender
+{
+	if ([self->activePanel respondsToSelector:@selector(changeFont:)])
+	{
+		[self->activePanel changeFont:sender];
+	}
+}// changeFont:
+
+
 #pragma mark NSKeyValueObservingCustomization
 
 
