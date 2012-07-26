@@ -100,6 +100,9 @@ $printf "#ifdef check\n#undef check\n#endif\n" >> ${cxx_tmp}
 # it a problem anyway!)
 $cat <<ENDFPHACK >> ${cxx_tmp}
 /* maps to _scalb$UNIX2003 on __ppc__ and _scalb elsewhere */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #if defined( __ppc__ )
 	#if defined( __GNUC__ ) && ! defined( __XLC__ ) && ( ! defined( __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) || __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__-0 >= 1040 )
 		extern double scalb ( double, double )  __asm("_scalb$UNIX2003" );
@@ -108,6 +111,9 @@ $cat <<ENDFPHACK >> ${cxx_tmp}
 	#endif
 #else
 	extern double scalb ( double, double );
+#endif
+#ifdef __cplusplus
+} // extern "C"
 #endif
 ENDFPHACK
 
