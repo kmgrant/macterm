@@ -355,11 +355,28 @@ void				setInheritanceCheckBox			(HIViewWrap, SInt32, Boolean);
 
 } // anonymous namespace
 
-@interface PrefPanelFormats_StandardColorsViewManager (PrefPanelFormats_StandardColorsViewManagerInternal)
+@interface PrefPanelFormats_GeneralViewManager (PrefPanelFormats_GeneralViewManagerInternal)
 
-- (int)
-buttonStateForBool1:(BOOL)_
-bool2:(BOOL)_;
+- (NSArray*)
+colorBindingKeys;
+
+- (NSArray*)
+primaryDisplayBindingKeys;
+
+- (NSArray*)
+sampleDisplayBindingKeyPaths;
+
+- (void)
+setSampleAreaFromDefaultPreferences;
+
+- (void)
+setSampleAreaFromPreferences:(Preferences_ContextRef)_
+restrictedTag1:(Preferences_Tag)_
+restrictedTag2:(Preferences_Tag)_;
+
+@end // PrefPanelFormats_GeneralViewManager (PrefPanelFormats_GeneralViewManagerInternal)
+
+@interface PrefPanelFormats_StandardColorsViewManager (PrefPanelFormats_StandardColorsViewManagerInternal)
 
 - (void)
 copyColorWithPreferenceTag:(Preferences_Tag)_
@@ -3205,6 +3222,8 @@ setInheritanceCheckBox		(HIViewWrap		inCheckBox,
 @implementation PrefPanelFormats_ViewManager
 
 
+- (NSRect) someMethod { NSRect r; return r; }
+
 /*!
 Designated initializer.
 
@@ -3214,6 +3233,7 @@ Designated initializer.
 init
 {
 	NSArray*	subViewManagers = [NSArray arrayWithObjects:
+												[[[PrefPanelFormats_GeneralViewManager alloc] init] autorelease],
 												[[[PrefPanelFormats_StandardColorsViewManager alloc] init] autorelease],
 												nil];
 	
@@ -3245,7 +3265,7 @@ dealloc
 @end // PrefPanelFormats_ViewManager
 
 
-@implementation PrefPanelFormats_StandardColorContent
+@implementation PrefPanelFormats_CharacterWidthContent
 
 
 /*!
@@ -3257,14 +3277,303 @@ Designated initializer.
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 {
-	self = [super init];
+	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
 	if (nil != self)
 	{
-		self->prefsMgr = [aContextMgr retain];
-		self->preferencesTag = aTag;
 	}
 	return self;
 }// initWithPreferencesTag:contextManager:
+
+
+#pragma mark New Methods
+
+
+/*!
+Returns the preference’s current value, and indicates whether or
+not that value was inherited from a parent context.
+
+(4.1)
+*/
+- (Float32)
+readValueSeeIfDefault:(BOOL*)	outIsDefault
+{
+	Float32					result = 1.0;
+	Boolean					isDefault = false;
+	Preferences_ContextRef	sourceContext = [[self prefsMgr] currentContext];
+	
+	
+	if (Preferences_ContextIsValid(sourceContext))
+	{
+		size_t				actualSize = 0;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+																		sizeof(result), &result,
+																		true/* search defaults */, &actualSize,
+																		&isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			result = 1.0; // assume a value if nothing is found
+		}
+	}
+	
+	if (nullptr != outIsDefault)
+	{
+		*outIsDefault = (YES == isDefault);
+	}
+	
+	return result;
+}// readValueSeeIfDefault:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSNumber*)
+numberValue
+{
+	BOOL		isDefault = NO;
+	NSNumber*	result = [NSNumber numberWithFloat:[self readValueSeeIfDefault:&isDefault]];
+	
+	
+	return result;
+}
+- (void)
+setNumberValue:(NSNumber*)		aNumber
+{
+	BOOL					saveOK = NO;
+	Preferences_ContextRef	targetContext = [[self prefsMgr] currentContext];
+	
+	
+	if (Preferences_ContextIsValid(targetContext))
+	{
+		[self willSetPreferenceValue];
+		
+		Float32				scaleFactor = [aNumber floatValue];
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+																		sizeof(scaleFactor), &scaleFactor);
+		
+		
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			saveOK = YES;
+		}
+		
+		[self didSetPreferenceValue];
+	}
+	
+	if (NO == saveOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save character width preference");
+	}
+}// setNumberValue:
+
+
+#pragma mark PrefsWindow_InheritedContent
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = NO;
+	
+	
+	(Float32)[self readValueSeeIfDefault:&result];
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self setNumberValue:nil];
+}// setNilPreferenceValue
+
+
+@end // PrefPanelFormats_CharacterWidthContent
+
+
+@implementation PrefPanelFormats_FontSizeContent
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithPreferencesTag:contextManager:
+
+
+#pragma mark New Methods
+
+
+/*!
+Returns the preference’s current value, and indicates whether or
+not that value was inherited from a parent context.
+
+(4.1)
+*/
+- (NSString*)
+readValueSeeIfDefault:(BOOL*)	outIsDefault
+{
+	NSString*				result = @"";
+	Boolean					isDefault = false;
+	Preferences_ContextRef	sourceContext = [[self prefsMgr] currentContext];
+	
+	
+	if (Preferences_ContextIsValid(sourceContext))
+	{
+		SInt16				fontSize = 0;
+		size_t				actualSize = 0;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+																		sizeof(fontSize), &fontSize,
+																		true/* search defaults */, &actualSize,
+																		&isDefault);
+		
+		
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			result = [[NSNumber numberWithInt:fontSize] stringValue];
+		}
+	}
+	
+	if (nullptr != outIsDefault)
+	{
+		*outIsDefault = (YES == isDefault);
+	}
+	
+	return result;
+}// readValueSeeIfDefault:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+stringValue
+{
+	BOOL		isDefault = NO;
+	NSString*	result = [self readValueSeeIfDefault:&isDefault];
+	
+	
+	return result;
+}
+- (void)
+setStringValue:(NSString*)	aString
+{
+	BOOL					saveOK = NO;
+	Preferences_ContextRef	targetContext = [[self prefsMgr] currentContext];
+	
+	
+	if (Preferences_ContextIsValid(targetContext))
+	{
+		[self willSetPreferenceValue];
+		
+		SInt16				fontSize = [aString intValue];
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+																		sizeof(fontSize), &fontSize);
+		
+		
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			saveOK = YES;
+		}
+		
+		[self didSetPreferenceValue];
+	}
+	
+	if (NO == saveOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save font size preference");
+	}
+}// setStringValue:
+
+
+#pragma mark PrefsWindow_InheritedContent
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = NO;
+	
+	
+	(NSString*)[self readValueSeeIfDefault:&result];
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self setStringValue:nil];
+}// setNilPreferenceValue
+
+
+@end // PrefPanelFormats_FontSizeContent
+
+
+@implementation PrefPanelFormats_GeneralViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelFormatGeneralCocoa" delegate:self context:nullptr];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// init
 
 
 /*!
@@ -3275,7 +3584,23 @@ Destructor.
 - (void)
 dealloc
 {
+	// unregister observers that were used to update the sample area
+	{
+		NSEnumerator*	eachKey = [[self sampleDisplayBindingKeyPaths] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self removeObserver:self forKeyPath:keyName];
+		}
+	}
+	
 	[prefsMgr release];
+	[byKey release];
+	if (nullptr != sampleScreenBuffer)
+	{
+		Terminal_DisposeScreen(sampleScreenBuffer);
+	}
 	[super dealloc];
 }// dealloc
 
@@ -3288,88 +3613,751 @@ Accessor.
 
 (4.1)
 */
-- (NSColor*)
-colorValue
+- (PrefsWindow_ColorContent*)
+normalBackgroundColor
 {
-	BOOL		isDefault = NO;
-	NSColor*	result = [self->prefsMgr readColorForPreferenceTag:self->preferencesTag isDefault:&isDefault];
-	
-	
-	return result;
-}
+	return [self->byKey objectForKey:@"normalBackgroundColor"];
+}// normalBackgroundColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefsWindow_ColorContent*)
+normalForegroundColor
+{
+	return [self->byKey objectForKey:@"normalForegroundColor"];
+}// normalForegroundColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefsWindow_ColorContent*)
+boldBackgroundColor
+{
+	return [self->byKey objectForKey:@"boldBackgroundColor"];
+}// boldBackgroundColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefsWindow_ColorContent*)
+boldForegroundColor
+{
+	return [self->byKey objectForKey:@"boldForegroundColor"];
+}// boldForegroundColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefsWindow_ColorContent*)
+blinkingBackgroundColor
+{
+	return [self->byKey objectForKey:@"blinkingBackgroundColor"];
+}// blinkingBackgroundColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefsWindow_ColorContent*)
+blinkingForegroundColor
+{
+	return [self->byKey objectForKey:@"blinkingForegroundColor"];
+}// blinkingForegroundColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefsWindow_ColorContent*)
+matteBackgroundColor
+{
+	return [self->byKey objectForKey:@"matteBackgroundColor"];
+}// matteBackgroundColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefsWindow_StringContent*)
+fontFamily
+{
+	return [self->byKey objectForKey:@"fontFamily"];
+}// fontFamily
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_FontSizeContent*)
+fontSize
+{
+	return [self->byKey objectForKey:@"fontSize"];
+}// fontSize
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelFormats_CharacterWidthContent*)
+characterWidth
+{
+	return [self->byKey objectForKey:@"characterWidth"];
+}// characterWidth
+
+
+#pragma mark Actions
+
+
+/*!
+Displays a font panel asking the user to set the font family
+and font size to use for general formatting.
+
+(4.1)
+*/
+- (IBAction)
+performFontSelection:(id)	sender
+{
+#pragma unused(sender)
+	[[NSFontPanel sharedFontPanel] makeKeyAndOrderFront:sender];
+}// performFontSelection:
+
+
+#pragma mark NSColorPanel
+
+
+/*!
+Responds to user selections in the system’s Colors panel.
+Due to Cocoa Bindings, no action is necessary; color changes
+simply trigger the apppropriate calls to color-setting
+methods.
+
+(4.1)
+*/
 - (void)
-setColorValue:(NSColor*)	aColor
+changeColor:(id)	sender
 {
-	[self willChangeValueForKey:@"inherited"];
-	[self willChangeValueForKey:@"inheritEnabled"];
+#pragma unused(sender)
+	// no action is necessary due to Cocoa Bindings
+}// changeColor:
+
+
+#pragma mark NSFontPanel
+
+
+/*!
+Updates the “font family” and “font size” preferences based on
+the user’s selection in the system’s Fonts panel.
+
+(4.1)
+*/
+- (void)
+changeFont:(id)	sender
+{
+	NSFont*		oldFont = [NSFont fontWithName:[[self fontFamily] stringValue] size:[[[self fontSize] stringValue] floatValue]];
+	NSFont*		newFont = [sender convertFont:oldFont];
 	
-	BOOL	saveOK = [self->prefsMgr writeColor:aColor forPreferenceTag:self->preferencesTag];
 	
-	
-	if (NO == saveOK)
+	[[self fontFamily] setStringValue:[newFont familyName]];
+	[[self fontSize] setStringValue:[[NSNumber numberWithFloat:[newFont pointSize]] stringValue]];
+}// changeFont:
+
+
+#pragma mark NSKeyValueObserving
+
+
+/*!
+Intercepts changes to bound values by updating the sample
+terminal view.
+
+(4.1)
+*/
+- (void)
+observeValueForKeyPath:(NSString*)	aKeyPath
+ofObject:(id)						anObject
+change:(NSDictionary*)				aChangeDictionary
+context:(void*)						aContext
+{
+#pragma unused(anObject, aContext)
+	if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
 	{
-		Console_Warning(Console_WriteLine, "failed to save a color preference");
+		// TEMPORARY; refresh the terminal view for any change, without restrictions
+		// (should fix to send only relevant preference tags, based on the key path)
+		[self setSampleAreaFromDefaultPreferences]; // since a context may not have everything, make sure the rest uses Default values
+		[self setSampleAreaFromPreferences:[self->prefsMgr currentContext]
+											restrictedTag1:'----' restrictedTag2:'----'];
 	}
-	
-	[self didChangeValueForKey:@"inheritEnabled"];
-	[self didChangeValueForKey:@"inherited"];
-}// setColorValue:
+}// observeValueForKeyPath:ofObject:change:context:
+
+
+#pragma mark NSKeyValueObservingCustomization
 
 
 /*!
-Accessor.
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
 
 (4.1)
 */
-- (BOOL)
-isInheritEnabled
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
-	// if the current value comes from a default then the “enabled” state is NO
-	BOOL		isDefault = NO;
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	(NSColor*)[self->prefsMgr readColorForPreferenceTag:self->preferencesTag isDefault:&isDefault];
-	
-	return (NO == isDefault);
-}// isInheritEnabled
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isInherited
-{
-	// if the current value comes from a default then the “inherited” state is YES
-	BOOL		result = NO;
-	
-	
-	(NSColor*)[self->prefsMgr readColorForPreferenceTag:self->preferencesTag isDefault:&result];
-	
-	return result;
-}
-- (void)
-setInherited:(BOOL)		aFlag
-{
-	[self willChangeValueForKey:@"inheritEnabled"];
-	if (aFlag)
+	if (NULL != class_getClassMethod([self class], flagSource))
 	{
-		// the “inherited” flag can be removed by deleting the value
-		[self setColorValue:nil];
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
 	}
 	else
 	{
-		// this particular request doesn’t make sense; it is implied by
-		// setting any new value for a color
-		Console_Warning(Console_WriteLine, "request to change “inherited” state to false, which is ignored");
+		result = [super automaticallyNotifiesObserversForKey:theKey];
 	}
-	[self didChangeValueForKey:@"inheritEnabled"];
-}// setInherited:
+	return result;
+}// automaticallyNotifiesObserversForKey:
 
 
-@end // PrefPanelFormats_StandardColorContent
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->prefsMgr = [[PrefsContextManager_Object alloc] init];
+	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:16/* arbitrary; number of colors */];
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeInspector;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+	assert(nil != byKey);
+	assert(nil != prefsMgr);
+	assert(nil != terminalSampleBackgroundView);
+	assert(nil != terminalSamplePaddingView);
+	assert(nil != terminalSampleContentView);
+	
+	
+	// remember frame from XIB (it might be changed later)
+	self->idealFrame = [aContainerView frame];
+	
+	{
+		Preferences_ContextWrap		terminalConfig(Preferences_NewContext
+													(Quills::Prefs::TERMINAL), true/* is retained */);
+		Preferences_ContextWrap		translationConfig(Preferences_NewContext
+														(Quills::Prefs::TRANSLATION), true/* is retained */);
+		Terminal_Result				bufferResult = Terminal_NewScreen(terminalConfig.returnRef(),
+																		translationConfig.returnRef(),
+																		&self->sampleScreenBuffer);
+		
+		
+		if (kTerminal_ResultOK != bufferResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to create sample terminal screen buffer, error", bufferResult);
+		}
+		else
+		{
+			self->sampleScreenView = TerminalView_NewNSViewBased(self->terminalSampleContentView,
+																	self->terminalSamplePaddingView,
+																	self->terminalSampleBackgroundView,
+																	sampleScreenBuffer, nullptr/* format */);
+			if (nullptr == self->sampleScreenView)
+			{
+				Console_WriteLine("failed to create sample terminal view");
+			}
+			else
+			{
+				// write some text in various styles to the screen (happens to be a
+				// copy of what the sample view does); this will help with testing
+				// the new Cocoa-based renderer as it is implemented
+				Terminal_EmulatorProcessCString(self->sampleScreenBuffer,
+												"\033[2J\033[H"); // clear screen, home cursor (assumes VT100)
+				Terminal_EmulatorProcessCString(self->sampleScreenBuffer,
+												"sel norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m");
+				// the range selected here should be as long as the length of the word “sel” above
+				TerminalView_SelectVirtualRange
+				(self->sampleScreenView, std::make_pair(std::make_pair(0, 0),
+														std::make_pair(3, 1)/* exclusive end */));
+			}
+		}
+	}
+	
+	// observe all properties that can affect the sample display area
+	{
+		NSEnumerator*	eachKey = [[self sampleDisplayBindingKeyPaths] objectEnumerator];
+		
+		
+		while (NSString* keyPath = [eachKey nextObject])
+		{
+			[self addObserver:self forKeyPath:keyPath options:0 context:nullptr];
+		}
+	}
+	
+	// note that all current values will change
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+	}
+	
+	// WARNING: Key names are depended upon by bindings in the XIB file.
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorNormalBackground
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"normalBackgroundColor"];
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorNormalForeground
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"normalForegroundColor"];
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorBoldBackground
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"boldBackgroundColor"];
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorBoldForeground
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"boldForegroundColor"];
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorBlinkingBackground
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"blinkingBackgroundColor"];
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorBlinkingForeground
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"blinkingForegroundColor"];
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorMatteBackground
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"matteBackgroundColor"];
+	[self->byKey setObject:[[[PrefsWindow_StringContent alloc]
+								initWithPreferencesTag:kPreferences_TagFontName
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"fontFamily"];
+	[self->byKey setObject:[[[PrefPanelFormats_FontSizeContent alloc]
+								initWithPreferencesTag:kPreferences_TagFontSize
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"fontSize"];
+	[self->byKey setObject:[[[PrefPanelFormats_CharacterWidthContent alloc]
+								initWithPreferencesTag:kPreferences_TagFontCharacterWidthMultiplier
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"characterWidth"];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = self->idealFrame.size;
+}// panelViewManager:requestingIdealSize:
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+	
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet)
+	// note that all current values will change
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+	}
+	
+	// now apply the specified settings
+	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [NSImage imageNamed:@"IconForPrefPanelFormats"];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.Formats.General";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"General", @"PrefPanelFormats", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintBothAxes;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::FORMAT;
+}// preferencesClass
+
+
+@end // PrefPanelFormats_GeneralViewManager
+
+
+@implementation PrefPanelFormats_GeneralViewManager (PrefPanelFormats_GeneralViewManagerInternal)
+
+
+/*!
+Returns the names of key-value coding keys that have color values.
+
+(4.1)
+*/
+- (NSArray*)
+colorBindingKeys
+{
+	return [NSArray arrayWithObjects:
+						@"normalBackgroundColor", @"normalForegroundColor",
+						@"boldBackgroundColor", @"boldForegroundColor",
+						@"blinkingBackgroundColor", @"blinkingForegroundColor",
+						@"matteBackgroundColor",
+						nil];
+}// colorBindingKeys
+
+
+/*!
+Returns the names of key-value coding keys that represent the
+primary bindings of this panel (those that directly correspond
+to saved preferences).
+
+(4.1)
+*/
+- (NSArray*)
+primaryDisplayBindingKeys
+{
+	NSMutableArray*		result = [NSMutableArray arrayWithArray:[self colorBindingKeys]];
+	
+	
+	[result addObject:@"fontFamily"];
+	[result addObject:@"fontSize"];
+	[result addObject:@"characterWidth"];
+	
+	return result;
+}// primaryDisplayBindingKeys
+
+
+/*!
+Returns the key paths of all settings that, if changed, would
+require the sample terminal to be refreshed.
+
+(4.1)
+*/
+- (NSArray*)
+sampleDisplayBindingKeyPaths
+{
+	NSMutableArray*		result = [NSMutableArray arrayWithCapacity:20/* arbitrary */];
+	NSEnumerator*		eachKey = nil;
+	
+	
+	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+	while (NSString* keyName = [eachKey nextObject])
+	{
+		[result addObject:[NSString stringWithFormat:@"%@.inherited", keyName]];
+		[result addObject:[NSString stringWithFormat:@"%@.inheritEnabled", keyName]];
+	}
+	
+	eachKey = [[self colorBindingKeys] objectEnumerator];
+	while (NSString* keyName = [eachKey nextObject])
+	{
+		[result addObject:[NSString stringWithFormat:@"%@.colorValue", keyName]];
+	}
+	
+	[result addObject:@"fontFamily.stringValue"];
+	[result addObject:@"fontSize.stringValue"];
+	[result addObject:@"characterWidth.floatValue"];
+	
+	return result;
+}// sampleDisplayBindingKeyPaths
+
+
+/*!
+Updates the sample terminal display using Default settings.
+This is occasionally necessary as a reset step prior to
+adding new settings, because a context does not have to
+define every value (the display should fall back on the
+defaults, instead of whatever setting happened to be in
+effect beforehand).
+
+(4.1)
+*/
+- (void)
+setSampleAreaFromDefaultPreferences
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	Preferences_ContextRef	defaultContext = nullptr;
+	
+	
+	prefsResult = Preferences_GetDefaultContext(&defaultContext, [self preferencesClass]);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		[self setSampleAreaFromPreferences:defaultContext restrictedTag1:'----' restrictedTag2:'----'];
+	}
+}// setSampleAreaFromDefaultPreferences
+
+
+/*!
+Updates the sample terminal display using the settings in the
+specified context.  All relevant settings are copied, unless
+one or more valid restriction tags are given; when restricted,
+only the settings indicated by the tags are used (and all other
+parts of the display are unchanged).
+
+(4.1)
+*/
+- (void)
+setSampleAreaFromPreferences:(Preferences_ContextRef)	inSettingsToCopy
+restrictedTag1:(Preferences_Tag)						inTagRestriction1
+restrictedTag2:(Preferences_Tag)						inTagRestriction2
+{
+	Preferences_TagSetRef				tagSet = nullptr;
+	std::vector< Preferences_Tag >		tags;
+	
+	
+	if ('----' != inTagRestriction1) tags.push_back(inTagRestriction1);
+	if ('----' != inTagRestriction2) tags.push_back(inTagRestriction2);
+	if (false == tags.empty())
+	{
+		tagSet = Preferences_NewTagSet(tags);
+		if (nullptr == tagSet)
+		{
+			Console_Warning(Console_WriteLine, "unable to create tag set, cannot update sample area");
+		}
+		else
+		{
+			Preferences_ContextCopy(inSettingsToCopy, TerminalView_ReturnFormatConfiguration(self->sampleScreenView),
+									tagSet);
+			Preferences_ReleaseTagSet(&tagSet);
+		}
+	}
+	else
+	{
+		Preferences_ContextCopy(inSettingsToCopy, TerminalView_ReturnFormatConfiguration(self->sampleScreenView));
+	}
+}// setSampleAreaFromPreferences:restrictedTag1:restrictedTag2:
+
+
+@end // PrefPanelFormats_GeneralViewManager (PrefPanelFormats_GeneralViewManagerInternal)
 
 
 @implementation PrefPanelFormats_StandardColorsViewManager
@@ -3414,7 +4402,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 blackBoldColor
 {
 	return [self->byKey objectForKey:@"blackBoldColor"];
@@ -3426,7 +4414,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 blackNormalColor
 {
 	return [self->byKey objectForKey:@"blackNormalColor"];
@@ -3438,7 +4426,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 redBoldColor
 {
 	return [self->byKey objectForKey:@"redBoldColor"];
@@ -3450,7 +4438,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 redNormalColor
 {
 	return [self->byKey objectForKey:@"redNormalColor"];
@@ -3462,7 +4450,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 greenBoldColor
 {
 	return [self->byKey objectForKey:@"greenBoldColor"];
@@ -3474,7 +4462,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 greenNormalColor
 {
 	return [self->byKey objectForKey:@"greenNormalColor"];
@@ -3486,7 +4474,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 yellowBoldColor
 {
 	return [self->byKey objectForKey:@"yellowBoldColor"];
@@ -3498,7 +4486,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 yellowNormalColor
 {
 	return [self->byKey objectForKey:@"yellowNormalColor"];
@@ -3510,7 +4498,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 blueBoldColor
 {
 	return [self->byKey objectForKey:@"blueBoldColor"];
@@ -3522,7 +4510,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 blueNormalColor
 {
 	return [self->byKey objectForKey:@"blueNormalColor"];
@@ -3534,7 +4522,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 magentaBoldColor
 {
 	return [self->byKey objectForKey:@"magentaBoldColor"];
@@ -3546,7 +4534,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 magentaNormalColor
 {
 	return [self->byKey objectForKey:@"magentaNormalColor"];
@@ -3558,7 +4546,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 cyanBoldColor
 {
 	return [self->byKey objectForKey:@"cyanBoldColor"];
@@ -3570,7 +4558,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 cyanNormalColor
 {
 	return [self->byKey objectForKey:@"cyanNormalColor"];
@@ -3582,7 +4570,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 whiteBoldColor
 {
 	return [self->byKey objectForKey:@"whiteBoldColor"];
@@ -3594,7 +4582,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 whiteNormalColor
 {
 	return [self->byKey objectForKey:@"whiteNormalColor"];
@@ -3749,67 +4737,67 @@ didLoadContainerView:(NSView*)			aContainerView
 	}
 	
 	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self setValue:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlack
 														contextManager:self->prefsMgr] autorelease]
-					forKeyPath:@"byKey.blackNormalColor"];
-	[self setValue:[[[PrefPanelFormats_StandardColorContent alloc]
+					forKey:@"blackNormalColor"];
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlackBold
 														contextManager:self->prefsMgr] autorelease]
-					forKeyPath:@"byKey.blackBoldColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+					forKey:@"blackBoldColor"];
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIRed
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"redNormalColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIRedBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"redBoldColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIGreen
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"greenNormalColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIGreenBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"greenBoldColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIYellow
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"yellowNormalColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIYellowBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"yellowBoldColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlue
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"blueNormalColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlueBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"blueBoldColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIMagenta
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"magentaNormalColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIMagentaBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"magentaBoldColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSICyan
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"cyanNormalColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSICyanBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"cyanBoldColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIWhite
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"whiteNormalColor"];
-	[self->byKey setObject:[[[PrefPanelFormats_StandardColorContent alloc]
+	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIWhiteBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"whiteBoldColor"];
@@ -3974,7 +4962,7 @@ used in toolbar items that represent panels).
 - (NSString*)
 panelIdentifier
 {
-	return @"net.macterm.prefpanels.Formats";
+	return @"net.macterm.prefpanels.Formats.StandardColors";
 }// panelIdentifier
 
 
@@ -4029,31 +5017,6 @@ preferencesClass
 
 
 @implementation PrefPanelFormats_StandardColorsViewManager (PrefPanelFormats_StandardColorsViewManagerInternal)
-
-
-/*!
-Return an NSButton state (on, off, or mixed) based on the
-combined value of two YES/NO flags.
-
-(4.1)
-*/
-- (int)
-buttonStateForBool1:(BOOL)	aFlag
-bool2:(BOOL)				anotherFlag
-{
-	int		result = NSOffState;
-	
-	
-	if ((aFlag) && (anotherFlag))
-	{
-		result = NSOnState;
-	}
-	else if ((aFlag) || (anotherFlag))
-	{
-		result = NSMixedState;
-	}
-	return result;
-}// buttonStateForBool1:bool2:
 
 
 /*!

@@ -41,6 +41,8 @@
 #include "Preferences.h"
 #include "PrefsContextManager.objc++.h"
 #include "PrefsWindow.h"
+#include "TerminalScreenRef.typedef.h"
+#include "TerminalViewRef.typedef.h"
 
 
 
@@ -64,15 +66,10 @@ changes to an interface declared in a ".mm" file.
 
 
 /*!
-Presents methods that greatly simplify bindings to
-color values and the various states of the user
-interface elements that control them.
+Manages bindings for a character-width preference.
 */
-@interface PrefPanelFormats_StandardColorContent : NSObject
+@interface PrefPanelFormats_CharacterWidthContent : PrefsWindow_InheritedContent
 {
-@private
-	PrefsContextManager_Object*		prefsMgr;
-	Preferences_Tag					preferencesTag;
 }
 
 // designated initializer
@@ -80,20 +77,104 @@ interface elements that control them.
 initWithPreferencesTag:(Preferences_Tag)_
 contextManager:(PrefsContextManager_Object*)_;
 
+// new methods
+
+- (Float32)
+readValueSeeIfDefault:(BOOL*)_;
+
 // accessors
 
-- (NSColor*)
-colorValue;
+- (NSNumber*)
+numberValue;
 - (void)
-setColorValue:(NSColor*)_; // binding
+setNumberValue:(NSNumber*)_; // binding
 
-- (BOOL)
-isInheritEnabled; // binding
+@end
 
-- (BOOL)
-isInherited;
+
+/*!
+Manages bindings for a font-size preference.
+*/
+@interface PrefPanelFormats_FontSizeContent : PrefsWindow_InheritedContent
+{
+}
+
+// designated initializer
+- (id)
+initWithPreferencesTag:(Preferences_Tag)_
+contextManager:(PrefsContextManager_Object*)_;
+
+// new methods
+
+- (NSString*)
+readValueSeeIfDefault:(BOOL*)_;
+
+// accessors
+
+- (NSString*)
+stringValue;
 - (void)
-setInherited:(BOOL)_; // binding
+setStringValue:(NSString*)_; // binding
+
+@end
+
+
+/*!
+Loads a NIB file that defines the General pane.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelFormats_GeneralViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+{
+	IBOutlet NSView*	terminalSampleBackgroundView;
+	IBOutlet NSView*	terminalSamplePaddingView;
+	IBOutlet NSView*	terminalSampleContentView;
+@private
+	PrefsContextManager_Object*		prefsMgr;
+	NSRect							idealFrame;
+	NSMutableDictionary*			byKey;
+	TerminalScreenRef				sampleScreenBuffer;
+	TerminalViewRef					sampleScreenView;
+}
+
+// accessors
+
+- (PrefsWindow_ColorContent*)
+normalBackgroundColor; // binding
+
+- (PrefsWindow_ColorContent*)
+normalForegroundColor; // binding
+
+- (PrefsWindow_ColorContent*)
+boldBackgroundColor; // binding
+
+- (PrefsWindow_ColorContent*)
+boldForegroundColor; // binding
+
+- (PrefsWindow_ColorContent*)
+blinkingBackgroundColor; // binding
+
+- (PrefsWindow_ColorContent*)
+blinkingForegroundColor; // binding
+
+- (PrefsWindow_ColorContent*)
+matteBackgroundColor; // binding
+
+- (PrefsWindow_StringContent*)
+fontFamily; // binding
+
+- (PrefPanelFormats_FontSizeContent*)
+fontSize; // binding
+
+- (PrefPanelFormats_CharacterWidthContent*)
+characterWidth; // binding
+
+// actions
+
+- (IBAction)
+performFontSelection:(id)_;
 
 @end
 
@@ -115,52 +196,52 @@ changes to an interface declared in a ".mm" file.
 
 // accessors
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 blackBoldColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 blackNormalColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 redBoldColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 redNormalColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 greenBoldColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 greenNormalColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 yellowBoldColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 yellowNormalColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 blueBoldColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 blueNormalColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 magentaBoldColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 magentaNormalColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 cyanBoldColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 cyanNormalColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 whiteBoldColor; // binding
 
-- (PrefPanelFormats_StandardColorContent*)
+- (PrefsWindow_ColorContent*)
 whiteNormalColor; // binding
 
 // actions

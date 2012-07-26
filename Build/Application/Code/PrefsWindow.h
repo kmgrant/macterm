@@ -51,6 +51,7 @@ class ListenerModel_StandardListener;
 #include "QuillsPrefs.h"
 #ifdef __OBJC__
 #	import "Panel.h"
+#	import "PrefsContextManager.objc++.h"
 @class PrefPanelFormats_ViewManager;
 @class PrefPanelFullScreen_ViewManager;
 @class PrefPanelGeneral_ViewManager;
@@ -83,6 +84,111 @@ the following methods as well, not just the Panel interface.
 preferencesClass;
 
 @end // PrefsWindow_PanelInterface
+
+
+/*!
+Presents methods that greatly simplify bindings to values and the
+various states of the user interface elements that control them.
+This class must have subclasses in order to be useful.
+
+Bind a checkbox’s value to the "inherited" path and its enabled
+state to the "inheritEnabled" path to implement a box that resets
+a preference to the parent context value (by deleting data).
+
+Bind an appropriate editor control (e.g. a color box) to an
+appropriate subclass-provided path for editing a particular kind
+of value (e.g. in this case, "colorValue" is a likely path).
+*/
+@interface PrefsWindow_InheritedContent : NSObject
+{
+@private
+	PrefsContextManager_Object*		prefsMgr;
+	Preferences_Tag					preferencesTag;
+}
+
+// designated initializer
+- (id)
+initWithPreferencesTag:(Preferences_Tag)_
+contextManager:(PrefsContextManager_Object*)_;
+
+// accessors
+
+- (void)
+setInherited:(BOOL)_; // binding (to subclasses, typically)
+
+- (BOOL)
+isInheritEnabled; // binding (to subclasses, typically)
+
+- (Preferences_Tag)
+preferencesTag;
+
+- (PrefsContextManager_Object*)
+prefsMgr;
+
+- (void)
+didSetPreferenceValue;
+- (void)
+willSetPreferenceValue;
+
+// overrides for subclasses (none of these is implemented in the base!)
+
+- (BOOL)
+isInherited; // subclasses MUST implement; binding (to subclasses, typically)
+
+- (void)
+setNilPreferenceValue; // subclasses MUST implement
+
+@end
+
+
+/*!
+Manages bindings for a single color preference.
+*/
+@interface PrefsWindow_ColorContent : PrefsWindow_InheritedContent
+{
+}
+
+// designated initializer
+- (id)
+initWithPreferencesTag:(Preferences_Tag)_
+contextManager:(PrefsContextManager_Object*)_;
+
+// accessors
+
+- (NSColor*)
+colorValue;
+- (void)
+setColorValue:(NSColor*)_; // binding
+
+@end
+
+
+/*!
+Manages bindings for any preference whose value is
+defined to be a pointer to a CFStringRef.
+*/
+@interface PrefsWindow_StringContent : PrefsWindow_InheritedContent
+{
+}
+
+// designated initializer
+- (id)
+initWithPreferencesTag:(Preferences_Tag)_
+contextManager:(PrefsContextManager_Object*)_;
+
+// new methods
+
+- (NSString*)
+readValueSeeIfDefault:(BOOL*)_;
+
+// accessors
+
+- (NSString*)
+stringValue;
+- (void)
+setStringValue:(NSString*)_; // binding
+
+@end
 
 
 /*!

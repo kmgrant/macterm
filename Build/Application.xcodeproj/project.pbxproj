@@ -209,6 +209,7 @@
 /* Begin PBXFileReference section */
 		0A03DBC7063F6BA400C38B78 /* MacroManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MacroManager.mm; path = Application/Code/MacroManager.mm; sourceTree = "<group>"; };
 		0A03DBC9063F6BCC00C38B78 /* MacroManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacroManager.h; path = Application/Code/MacroManager.h; sourceTree = "<group>"; };
+		0A05299C15BBA1B200D62259 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelFormatGeneralCocoa.xib; sourceTree = "<group>"; };
 		0A060B2A078BA0D500A8BB55 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/ColorBox.nib; sourceTree = "<group>"; };
 		0A06274A0FB3AF3C00EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/file/__init__.py; sourceTree = "<group>"; };
 		0A06274F0FB3AF4900EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/url/__init__.py; sourceTree = "<group>"; };
@@ -986,6 +987,7 @@
 				0AB2273C12D2D3BB00D663BB /* KeypadFunctionKeysCocoa.xib */,
 				0AB2273E12D2D41300D663BB /* KeypadVT220KeysCocoa.xib */,
 				0A317CAC10A0C775002EDEFB /* MainMenuCocoa.xib */,
+				0A05299B15BBA1B200D62259 /* PrefPanelFormatGeneralCocoa.xib */,
 				0A7A74EC15A90A0F00E14184 /* PrefPanelFormatStandardColorsCocoa.xib */,
 				0A50591A157C64D300F257A1 /* PrefPanelFullScreenCocoa.xib */,
 				0AF5AA2E159BD90E007E36DE /* PrefPanelGeneralNotificationsCocoa.xib */,
@@ -1475,6 +1477,14 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
+		0A05299B15BBA1B200D62259 /* PrefPanelFormatGeneralCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A05299C15BBA1B200D62259 /* English */,
+			);
+			name = PrefPanelFormatGeneralCocoa.xib;
+			sourceTree = "<group>";
+		};
 		0A060B29078BA0D500A8BB55 /* ColorBox.nib */ = {
 			isa = PBXVariantGroup;
 			children = (

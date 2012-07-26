@@ -4302,4 +4302,412 @@ performDisplayPrefPanelTranslations:(id)	sender
 
 @end // PrefsWindow_Controller (PrefsWindow_ControllerInternal)
 
+
+@implementation PrefsWindow_InheritedContent
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	self = [super init];
+	if (nil != self)
+	{
+		self->prefsMgr = [aContextMgr retain];
+		self->preferencesTag = aTag;
+	}
+	return self;
+}// initWithPreferencesTag:contextManager:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[prefsMgr release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Call within a subclass method that sets a new preference value
+so that related settings can synchronize.
+
+(4.1)
+*/
+- (void)
+didSetPreferenceValue
+{
+	[self didChangeValueForKey:@"inheritEnabled"];
+	[self didChangeValueForKey:@"inherited"];
+}
+- (void)
+willSetPreferenceValue
+{
+	[self willChangeValueForKey:@"inherited"];
+	[self willChangeValueForKey:@"inheritEnabled"];
+}// willSetPreferenceValue
+
+
+#pragma mark Overrides for Subclasses
+
+
+/*!
+Returns YES only if the current preference has been read from
+a parent context (in other words, it is NOT DEFINED in the
+current context).
+
+See also "setInherited:", which is implemented for you.
+*/
+- (BOOL)
+isInherited
+{
+	NSAssert(false, @"isInherited method must be implemented by PrefsWindow_InheritedContent subclasses");
+	return NO;
+}// isInherited
+
+
+/*!
+Delete the current value of the preference, allowing it to
+inherit from any parent context (such as the Default context
+or the factory defaults).  This is a side effect of invoking
+"setInherited:YES".
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	NSAssert(false, @"setNilPreferenceValue method must be implemented by PrefsWindow_InheritedContent subclasses");
+}// setNilPreferenceValue
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInheritEnabled
+{
+	return (NO == [self isInherited]);
+}// isInheritEnabled
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setInherited:(BOOL)		aFlag
+{
+	[self willChangeValueForKey:@"inheritEnabled"];
+	if (aFlag)
+	{
+		// the “inherited” flag can be removed by deleting the value
+		[self setNilPreferenceValue];
+	}
+	else
+	{
+		// this particular request doesn’t make sense; it is implied by
+		// setting any new value
+		Console_Warning(Console_WriteLine, "request to change “inherited” state to false, which is ignored");
+	}
+	[self didChangeValueForKey:@"inheritEnabled"];
+}// setInherited:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (Preferences_Tag)
+preferencesTag
+{
+	return preferencesTag;
+}// preferencesTag
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefsContextManager_Object*)
+prefsMgr
+{
+	return prefsMgr;
+}// prefsMgr
+
+
+@end // PrefsWindow_InheritedContent
+
+
+@implementation PrefsWindow_ColorContent
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithPreferencesTag:contextManager:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSColor*)
+colorValue
+{
+	BOOL		isDefault = NO;
+	NSColor*	result = [[self prefsMgr] readColorForPreferenceTag:[self preferencesTag] isDefault:&isDefault];
+	
+	
+	return result;
+}
+- (void)
+setColorValue:(NSColor*)	aColor
+{
+	[self willChangeValueForKey:@"inherited"];
+	[self willChangeValueForKey:@"inheritEnabled"];
+	
+	BOOL	saveOK = [[self prefsMgr] writeColor:aColor forPreferenceTag:[self preferencesTag]];
+	
+	
+	if (NO == saveOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save a color preference");
+	}
+	
+	[self didChangeValueForKey:@"inheritEnabled"];
+	[self didChangeValueForKey:@"inherited"];
+}// setColorValue:
+
+
+#pragma mark PrefsWindow_InheritedContent
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = NO;
+	
+	
+	(NSColor*)[[self prefsMgr] readColorForPreferenceTag:[self preferencesTag] isDefault:&result];
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self setColorValue:nil];
+}// setNilPreferenceValue
+
+
+@end // PrefsWindow_ColorContent
+
+
+@implementation PrefsWindow_StringContent
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithPreferencesTag:contextManager:
+
+
+#pragma mark New Methods
+
+
+/*!
+Returns the preference’s current value, and indicates whether or
+not that value was inherited from a parent context.
+
+(4.1)
+*/
+- (NSString*)
+readValueSeeIfDefault:(BOOL*)	outIsDefault
+{
+	NSString*				result = @"";
+	Boolean					isDefault = false;
+	Preferences_ContextRef	sourceContext = [[self prefsMgr] currentContext];
+	
+	
+	if (Preferences_ContextIsValid(sourceContext))
+	{
+		CFStringRef			fontName = nullptr;
+		size_t				actualSize = 0;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+																		sizeof(fontName), &fontName,
+																		true/* search defaults */, &actualSize,
+																		&isDefault);
+		
+		
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			result = BRIDGE_CAST(fontName, NSString*);
+			[result autorelease];
+		}
+	}
+	
+	if (nullptr != outIsDefault)
+	{
+		*outIsDefault = (YES == isDefault);
+	}
+	
+	return result;
+}// readValueSeeIfDefault:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+stringValue
+{
+	BOOL		isDefault = NO;
+	NSString*	result = [self readValueSeeIfDefault:&isDefault];
+	
+	
+	return result;
+}
+- (void)
+setStringValue:(NSString*)	aString
+{
+	BOOL					saveOK = NO;
+	Preferences_ContextRef	targetContext = [[self prefsMgr] currentContext];
+	
+	
+	if (Preferences_ContextIsValid(targetContext))
+	{
+		[self willSetPreferenceValue];
+		
+		CFStringRef			asCFString = BRIDGE_CAST(aString, CFStringRef);
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+																		sizeof(asCFString), &asCFString);
+		
+		
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			saveOK = YES;
+		}
+		
+		[self didSetPreferenceValue];
+	}
+	
+	if (NO == saveOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save string-value preference");
+	}
+}// setStringValue:
+
+
+#pragma mark PrefsWindow_InheritedContent
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = NO;
+	
+	
+	(NSString*)[self readValueSeeIfDefault:&result];
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self setStringValue:nil];
+}// setNilPreferenceValue
+
+
+@end // PrefsWindow_StringContent
+
 // BELOW IS REQUIRED NEWLINE TO END FILE
