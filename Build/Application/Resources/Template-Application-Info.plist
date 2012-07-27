@@ -21,7 +21,7 @@
 				<string>application/xml</string>
 			</array>
 			<key>CFBundleTypeName</key>
-			<string>a set of properties</string>
+			<string>MacTerm preferences</string>
 			<key>CFBundleTypeOSTypes</key>
 			<array>
 				<string>TEXT</string>
@@ -48,7 +48,7 @@
 				<string>text/plain</string>
 			</array>
 			<key>CFBundleTypeName</key>
-			<string>plain text mapped to keys</string>
+			<string>MacTerm legacy macro set</string>
 			<key>CFBundleTypeOSTypes</key>
 			<array>
 				<string>TEXT</string>
@@ -74,7 +74,7 @@
 				<string>text/plain</string>
 			</array>
 			<key>CFBundleTypeName</key>
-			<string>terminal command setup</string>
+			<string>MacTerm command setup</string>
 			<key>CFBundleTypeOSTypes</key>
 			<array>
 				<string>CONF</string>
@@ -91,28 +91,6 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
-				<string>workspace</string>
-			</array>
-			<key>CFBundleTypeIconFile</key>
-			<string>IconForWorkspace.icns</string>
-			<key>CFBundleTypeName</key>
-			<string>window arrangement</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>WSPC</string>
-			</array>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>LSTypeIsPackage</key>
-			<true/>
-			<key>LSItemContentTypes</key>
-			<array>
-				<string>net.macterm.workspace</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
 				<string>term</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
@@ -122,7 +100,7 @@
 				<string>text/plain</string>
 			</array>
 			<key>CFBundleTypeName</key>
-			<string>window arrangement in Terminal</string>
+			<string>Apple Terminal window setup</string>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 			<key>LSTypeIsPackage</key>
@@ -149,7 +127,7 @@
 				<string>text/plain</string>
 			</array>
 			<key>CFBundleTypeName</key>
-			<string>script</string>
+			<string>Script</string>
 			<key>CFBundleTypeRole</key>
 			<string>Shell</string>
 			<key>LSTypeIsPackage</key>
@@ -347,7 +325,7 @@
 				<string>public.plain-text</string>
 			</array>
 			<key>UTTypeDescription</key>
-			<string>plain text mapped to keys</string>
+			<string>MacTerm legacy macro set</string>
 			<key>UTTypeIconName</key>
 			<string>IconForMacroSet.icns</string>
 			<key>UTTypeIdentifier</key>
@@ -370,7 +348,7 @@
 				<string>public.plain-text</string>
 			</array>
 			<key>UTTypeDescription</key>
-			<string>terminal command setup</string>
+			<string>MacTerm command setup</string>
 			<key>UTTypeIconName</key>
 			<string>IconForSession.icns</string>
 			<key>UTTypeIdentifier</key>
@@ -382,29 +360,6 @@
 				<key>public.filename-extension</key>
 				<array>
 					<string>session</string>
-				</array>
-				<key>public.mime-type</key>
-				<string>text/plain</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>com.apple.package</string>
-			</array>
-			<key>UTTypeDescription</key>
-			<string>window arrangement</string>
-			<key>UTTypeIconName</key>
-			<string>IconForWorkspace.icns</string>
-			<key>UTTypeIdentifier</key>
-			<string>net.macterm.workspace</string>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>com.apple.ostype</key>
-				<string>WSPC</string>
-				<key>public.filename-extension</key>
-				<array>
-					<string>workspace</string>
 				</array>
 				<key>public.mime-type</key>
 				<string>text/plain</string>
