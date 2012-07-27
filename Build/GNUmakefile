@@ -72,7 +72,7 @@ endif
 
 # tools
 COPY=/bin/cp
-IBTOOL=/usr/bin/ibtool
+IBTOOL=$(DEVELOPER_DIR)/usr/bin/ibtool
 IBTOOL_COMPILE_XIB_OPTIONS=--errors --warnings --notices --output-format human-readable-text --flatten NO
 MKDIR_P=/usr/bin/install -d
 MOVE=/bin/mv
