@@ -53,6 +53,8 @@ Boolean
 void
 	GrowlSupport_Notify							(CFStringRef,
 												 CFStringRef = nullptr,
+												 CFStringRef = nullptr,
+												 CFStringRef = nullptr,
 												 CFStringRef = nullptr);
 
 //@}

@@ -59,6 +59,10 @@
 #define NSAppKitVersionNumber10_6 1038
 #endif
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED <= 1070 /* MAC_OS_X_VERSION_10_7 */
+#define NSAppKitVersionNumber10_7 1138
+#endif
+
 
 
 #pragma mark Types
@@ -208,5 +212,67 @@ setAnimationBehavior:(int/*NSInteger*//*NSWindowAnimationBehavior*/)_;
 
 
 #endif // MAC_OS_X_VERSION_10_7
+
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080 /* MAC_OS_X_VERSION_10_8 */
+
+// Things that are implemented ONLY on Mac OS X 10.8 and beyond.
+// These declarations should match the latest SDK.
+//
+// WARNING:	You MUST use "respondsToSelector:" or an equivalent
+//			mechanism to guard against use of these methods on
+//			older OSes.  The advantage of importing this file
+//			is that you can directly invoke the target method
+//			(in an if-statement, say) without seeing compiler
+//			warnings.  Note that "performSelector:" is also an
+//			option, but that is much more cumbersome for APIs
+//			that take or return non-objects.
+
+@class NSUserNotification;
+@class NSUserNotificationCenter;
+
+@protocol NSUserNotificationCenterDelegate < NSObject >
+
+// NOTE: Technically all methods are optional but older versions of
+// the Objective-C language do not have this concept.  To ensure
+// that the system sees an object “conforming” to the protocol it
+// is unfortunately necessary to implement ALL methods regardless.
+
+- (void)
+userNotificationCenter:(NSUserNotificationCenter*)_
+didDeliverNotification:(NSUserNotification*)_;
+
+- (void)
+userNotificationCenter:(NSUserNotificationCenter*)_
+didActivateNotification:(NSUserNotification*)_;
+
+- (BOOL)
+userNotificationCenter:(NSUserNotificationCenter*)_
+shouldPresentNotification:(NSUserNotification*)_;
+
+@end
+
+
+
+id// NSUserNotification*
+	CocoaFuture_AllocInitUserNotification		();
+
+id// NSUserNotificationCenter*
+	CocoaFuture_DefaultUserNotificationCenter	();
+
+#else
+
+// this functionality is available if compiling against a later OS version
+// but the routines are implemented anyway to ease porting efforts (this
+// also serves as documentation for those using the alternates above, as
+// it shows what the emulated versions are trying to achieve)
+
+id// NSUserNotification*
+	CocoaFuture_AllocInitUserNotification		()	{ return [[NSUserNotification alloc] init]; }
+
+id// NSUserNotificationCenter*
+	CocoaFuture_DefaultUserNotificationCenter	()	{ return [NSUserNotificationCenter defaultUserNotificationCenter]; }
+
+#endif // MAC_OS_X_VERSION_10_8
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

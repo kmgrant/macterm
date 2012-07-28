@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120727',
     '20120725',
     '20120701',
     '20120602',
@@ -451,6 +452,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120727': [
+        "Notifications are now sent BOTH through Growl (if installed) and through the Mac OS X 10.8 Notification Center.  Use either System Preferences or Growl's Preferences to turn off notifications from MacTerm in one of these services, otherwise you will see notifications appear in two different places.",
+    ],
     '20120725': [
         'Added Mountain Lion compatibility.',
     ],

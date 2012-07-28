@@ -34,6 +34,7 @@
 
 // library includes
 #import <AutoPool.objc++.h>
+#import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <Growl/Growl.h>
 
@@ -54,11 +55,33 @@ isReady;
 
 @end
 
+
+@interface GrowlSupport_MacUserNotificationDelegate : NSObject<NSUserNotificationCenterDelegate>
+{
+}
+
+// NSUserNotificationCenterDelegate
+
+- (void)
+userNotificationCenter:(NSUserNotificationCenter*)_
+didDeliverNotification:(NSUserNotification*)_;
+
+- (void)
+userNotificationCenter:(NSUserNotificationCenter*)_
+didActivateNotification:(NSUserNotification*)_;
+
+- (BOOL)
+userNotificationCenter:(NSUserNotificationCenter*)_
+shouldPresentNotification:(NSUserNotification*)_;
+
+@end
+
 #pragma mark Variables
 namespace {
 
 BOOL		gGrowlFrameworkIsLinked = NO;
 NSString*	gGrowlPrefsPaneGlobalPath = @"/Library/PreferencePanes/Growl.prefPane";
+id			gMountainLionUserNotificationCenter = nil;
 
 } // anonymous namespace
 
@@ -76,6 +99,22 @@ GrowlSupport_Init ()
 {
 	AutoPool	_;
 	
+	
+	// If supported by the current OS, forward notifications to the system’s
+	// Notification Center.  This requires a bit of trickery because the
+	// current code base is compiled to support older OS versions (and yet
+	// is able to detect and use newer OS features).
+	gMountainLionUserNotificationCenter = CocoaFuture_DefaultUserNotificationCenter();
+	if (nil != gMountainLionUserNotificationCenter)
+	{
+		if ([gMountainLionUserNotificationCenter respondsToSelector:@selector(setDelegate:)])
+		{
+			GrowlSupport_MacUserNotificationDelegate*	delegate = [[GrowlSupport_MacUserNotificationDelegate alloc] init];
+			
+			
+			[gMountainLionUserNotificationCenter performSelector:@selector(setDelegate:) withObject:delegate];
+		}
+	}
 	
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	// IMPORTANT: The framework is weak-linked so that the application will
@@ -102,8 +141,10 @@ GrowlSupport_Init ()
 
 /*!
 Returns true only if the Growl daemon is installed and
-running, indicating that it is okay to send Growl
-notifications.
+running (indicating that it is okay to send Growl
+notifications) or if the system is running Mac OS X 10.8
+or later (indicating that notifications could arrive in
+the system).
 
 (1.0)
 */
@@ -114,35 +155,98 @@ GrowlSupport_IsAvailable ()
 	Boolean		result = false;
 	
 	
-	result = ((YES == gGrowlFrameworkIsLinked) && (YES == [[GrowlSupport_Delegate sharedGrowlDelegate] isReady]));
+	result = (((YES == gGrowlFrameworkIsLinked) && (YES == [[GrowlSupport_Delegate sharedGrowlDelegate] isReady])) ||
+				(NSAppKitVersionNumber > NSAppKitVersionNumber10_7));
 	return result;
 }// IsAvailable
 
 
 /*!
-Posts the specified notification to Growl.  The name should match
+Posts the specified notification to Growl and (on Mac OS X 10.8 or
+later) the system’s User Notification Center.  The name should match
 one of the strings in "Growl Registration Ticket.growlRegDict".
 The title and description can be anything.  If the title is set
 to nullptr, it copies the notification name; if the description
 is set to nullptr, it is set to an empty string.
 
-Has no effect if Growl is not installed and available.
+The "inSubTitle" and "inSoundName" parameters can only be used with
+the system’s notification method (Mac OS X 10.8 and later).  Set
+the sound to nullptr if no sound should be played.
+
+Growl notifications have no effect if Growl is not installed and
+available.
+
+On Mac OS X 10.8 and beyond the user is not prevented from using
+Growl; the notification is sent to both Growl and the system.  It
+is assumed that the user will configure one of those two services
+to not display this application’s notifications.
 
 (1.0)
 */
 void
 GrowlSupport_Notify		(CFStringRef	inNotificationName,
 						 CFStringRef	inTitle,
-						 CFStringRef	inDescription)
+						 CFStringRef	inDescription,
+						 CFStringRef	inSubTitle,
+						 CFStringRef	inSoundName)
 {
 	AutoPool	_;
 	
 	
+	if (nullptr == inTitle)
+	{
+		inTitle = inNotificationName;
+	}
+	
+	if (nullptr == inDescription)
+	{
+		inDescription = CFSTR("");
+	}
+	
+	// NOTE: The “Cocoa Future” module can be called on any OS version but
+	// the methods will only be implemented on Mac OS X 10.8 and beyond.
+	// EVERY method call must check for a definition first!
+	if (nil != gMountainLionUserNotificationCenter)
+	{
+		id		newNote = CocoaFuture_AllocInitUserNotification();
+		
+		
+		if (nil != newNote)
+		{
+			// title
+			if ([newNote respondsToSelector:@selector(setTitle:)])
+			{
+				[newNote performSelector:@selector(setTitle:) withObject:BRIDGE_CAST(inTitle, NSString*)];
+			}
+			
+			// informative text
+			if ([newNote respondsToSelector:@selector(setInformativeText:)])
+			{
+				[newNote performSelector:@selector(setInformativeText:) withObject:BRIDGE_CAST(inDescription, NSString*)];
+			}
+			
+			// subtitle (if any)
+			if ([newNote respondsToSelector:@selector(setSubtitle:)] && (nullptr != inSubTitle))
+			{
+				[newNote performSelector:@selector(setSubtitle:) withObject:BRIDGE_CAST(inSubTitle, NSString*)];
+			}
+			
+			// sound (if any; API allows a "nil" value)
+			if ([newNote respondsToSelector:@selector(setSoundName:)])
+			{
+				[newNote performSelector:@selector(setSoundName:) withObject:BRIDGE_CAST(inSoundName, NSString*)];
+			}
+		}
+		
+		if ([gMountainLionUserNotificationCenter respondsToSelector:@selector(deliverNotification:)])
+		{
+			[gMountainLionUserNotificationCenter performSelector:@selector(deliverNotification:) withObject:newNote];
+		}
+	}
+	
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	if (GrowlSupport_IsAvailable())
 	{
-		if (nullptr == inTitle) inTitle = inNotificationName;
-		if (nullptr == inDescription) inDescription = CFSTR("");
 	#if 1
 		// normally an Objective-C call is enough, but see below
 		[GrowlApplicationBridge
@@ -180,6 +284,8 @@ GrowlSupport_Notify		(CFStringRef	inNotificationName,
 		[scriptObject release];
 	#endif
 	}
+#else
+#	pragma unused(inNotificationName, inTitle, inDescription)
 #endif
 }// Notify
 
@@ -298,12 +404,65 @@ application.
 - (void)
 growlIsReady
 {
-	// this might only be received upon restart of Growl, not at startup;
-	// but it is handled in case Growl is started after MacTerm starts
+	// this might only be received upon restart of Growl and not at startup, but
+	// it is handled in case Growl is started after the application launches
 	self->isReady = true;
 }// growlIsReady
 
 
 @end
+
+
+@implementation GrowlSupport_MacUserNotificationDelegate
+
+
+#pragma mark NSUserNotificationCenterDelegate
+
+
+/*!
+Not used.
+
+(4.1)
+*/
+- (void)
+userNotificationCenter:(NSUserNotificationCenter*)	aCenter
+didDeliverNotification:(NSUserNotification*)		aNotification
+{
+#pragma unused(aCenter, aNotification)
+}// userNotificationCenter:didDeliverNotification:
+
+
+/*!
+Not used.
+
+(4.1)
+*/
+- (void)
+userNotificationCenter:(NSUserNotificationCenter*)	aCenter
+didActivateNotification:(NSUserNotification*)		aNotification
+{
+#pragma unused(aCenter, aNotification)
+}// userNotificationCenter:didActivateNotification:
+
+
+/*!
+Returns YES for all notifications, as currently all
+notifications could be useful in the foreground and
+there is no facility set up yet to allow individual
+notifications to receive feedback (this has historically
+always been a “send and forget” style of API).
+
+(4.1)
+*/
+- (BOOL)
+userNotificationCenter:(NSUserNotificationCenter*)	aCenter
+shouldPresentNotification:(NSUserNotification*)		aNotification
+{
+#pragma unused(aCenter, aNotification)
+	return YES;
+}// userNotificationCenter:shouldPresentNotification:
+
+
+@end // GrowlSupport_MacUserNotificationDelegate
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

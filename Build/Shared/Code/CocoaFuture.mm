@@ -8,7 +8,7 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library 1.9
+	Simple Cocoa Wrappers Library 1.10
 	© 2008-2012 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -35,7 +35,101 @@
 
 // Mac includes
 #import <Cocoa/Cocoa.h>
+#import <objc/objc-runtime.h>
+
+// library includes
+#import <Console.h>
 
 
+
+#pragma mark Public Methods
+
+/*!
+On Mac OS X 10.8 and later, "[[NSUserNotification alloc] init]";
+on earlier Mac OS X versions, "nil".
+
+This work-around is necessary because older code bases will not
+be able to directly refer to the class (it doesn’t exist).
+
+(1.10)
+*/
+id
+CocoaFuture_AllocInitUserNotification ()
+{
+	id		result = nil;
+	id		targetClass = objc_getClass("NSUserNotification");
+	
+	
+	if (nil == targetClass)
+	{
+		//Console_Warning(Console_WriteLine, "cannot find NSUserNotification class");
+	}
+	else
+	{
+		SEL		allocSelector = @selector(alloc);
+		SEL		initSelector = @selector(init);
+		
+		
+		if ([targetClass respondsToSelector:allocSelector] &&
+			[targetClass instancesRespondToSelector:initSelector])
+		{
+			id		allocatedInstance = [targetClass performSelector:allocSelector];
+			
+			
+			if (nil != allocatedInstance)
+			{
+				result = [allocatedInstance performSelector:initSelector];
+			}
+		}
+		else
+		{
+			//Console_Warning(Console_WriteLine, "NSUserNotification found, but it does not implement 'alloc' and/or 'init'");
+		}
+	}
+	
+	return result;
+}// CocoaFuture_AllocInitUserNotification
+
+
+/*!
+On Mac OS X 10.8 and later, asks the Objective-C runtime for
+a handle to the NSUserNotificationCenter class and returns the
+result of the "defaultUserNotificationCenter" class method.
+Earlier Mac OS X versions will return "nil".
+
+This work-around is necessary because older code bases will
+not be able to directly refer to the class (as it doesn’t
+exist).
+
+(1.10)
+*/
+id
+CocoaFuture_DefaultUserNotificationCenter ()
+{
+	id		result = nil;
+	id		targetClass = objc_getClass("NSUserNotificationCenter");
+	
+	
+	if (nil == targetClass)
+	{
+		//Console_Warning(Console_WriteLine, "cannot find NSUserNotificationCenter class");
+	}
+	else
+	{
+		SEL		defaultUNCSelector = @selector(defaultUserNotificationCenter);
+		
+		
+		if ([targetClass respondsToSelector:defaultUNCSelector])
+		{
+			result = [targetClass performSelector:defaultUNCSelector];
+		}
+		else
+		{
+			//Console_Warning(Console_WriteLine, "NSUserNotificationCenter found, but it does not implement 'defaultUserNotificationCenter'");
+		}
+	}
+	
+	return result;
+}// CocoaFuture_DefaultUserNotificationCenter
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
