@@ -157,7 +157,7 @@ typedef std::map< UInt32, SInt16 >			IndexByCommandID;
 This class represents a particular preferences context
 in the source list.
 */
-@interface PrefsWindow_Collection : NSObject
+@interface PrefsWindow_Collection : NSObject< NSCopying >
 {
 @private
 	Preferences_ContextRef		preferencesContext;
@@ -187,6 +187,11 @@ isEditable; // binding
 
 - (Preferences_ContextRef)
 preferencesContext;
+
+// NSCopying
+
+- (id)
+copyWithZone:(NSZone*)_;
 
 // NSObject
 
@@ -2729,6 +2734,30 @@ preferencesContext
 }// preferencesContext
 
 
+#pragma mark NSCopying
+
+
+/*!
+Copies this instance by retaining the original context.
+
+(4.1)
+*/
+- (id)
+copyWithZone:(NSZone*)	aZone
+{
+	PrefsWindow_Collection*		result = [[[self class] allocWithZone:aZone] init];
+	
+	
+	if (nil != result)
+	{
+		result->preferencesContext = self->preferencesContext;
+		Preferences_RetainContext(result->preferencesContext);
+		result->isDefault = self->isDefault;
+	}
+	return result;
+}// copyWithZone
+
+
 #pragma mark NSObject
 
 
@@ -2847,6 +2876,7 @@ Destructor.
 - (void)
 dealloc
 {
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
 													kPreferences_ChangeContextName);
 	(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
@@ -3308,6 +3338,48 @@ automaticallyNotifiesObserversForKey:(NSString*)	theKey
 
 
 /*!
+Returns the number of rows in the source list.  This is not
+strictly necessary with bindings on later Mac OS X versions.
+This is however a “required” method in the original protocol
+so the table views will not work on older Mac OS X versions
+unless this method is implemented.
+
+(4.1)
+*/
+- (int)
+numberOfRowsInTableView:(NSTableView*)	aTableView
+{
+#pragma unused(aTableView)
+	int		result = [self->currentPreferenceCollections count];
+	
+	
+	return result;
+}// numberOfRowsInTableView:
+
+
+/*!
+Returns the object for the given source list row.  This is not
+strictly necessary with bindings on later Mac OS X versions.
+This is however a “required” method in the original protocol
+so the table views will not work on older Mac OS X versions
+unless this method is implemented.
+
+(4.1)
+*/
+- (id)
+tableView:(NSTableView*)					aTableView
+objectValueForTableColumn:(NSTableColumn*)	aTableColumn
+row:(int)									aRowIndex
+{
+#pragma unused(aTableView, aTableColumn)
+	id		result = [self->currentPreferenceCollections objectAtIndex:aRowIndex];
+	
+	
+	return result;
+}// tableView:objectValueForTableColumn:row:
+
+
+/*!
 For drag-and-drop support; adds the data for the given rows
 to the specified pasteboard.
 
@@ -3519,6 +3591,26 @@ dropOperation:(NSTableViewDropOperation)	anOperation
 	
 	return result;
 }// tableView:acceptDrop:row:dropOperation:
+
+
+#pragma mark NSTableViewDelegate
+
+
+/*!
+Informed when the selection in the source list changes.
+
+This is not strictly necessary with bindings, on later versions
+of Mac OS X.  On at least Panther however it appears that panels
+are not switched properly through bindings alone; a notification
+must be used as a backup.
+
+(4.1)
+*/
+- (void)
+tableViewSelectionDidChange:(NSNotification*)	aNotification
+{
+	[self setCurrentPreferenceCollectionIndexes:[self->sourceListTableView selectedRowIndexes]];
+}// tableViewSelectionDidChange:
 
 
 #pragma mark NSToolbarDelegate
@@ -3770,6 +3862,13 @@ windowDidLoad
 	
 	// enable drag-and-drop in the source list
 	[self->sourceListTableView registerForDraggedTypes:[NSArray arrayWithObjects:kMy_PrefsWindowSourceListDataType, nil]];
+	
+	// be notified of source list changes; not strictly necessary on
+	// newer OS versions (where bindings work perfectly) but it seems
+	// to be necessary for correct behavior on Panther at least
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(tableViewSelectionDidChange:)
+														name:NSTableViewSelectionDidChangeNotification
+														object:self->sourceListTableView];
 	
 	// on Mac OS X versions prior to 10.5 there is no concept of
 	// “bottom chrome” so a horizontal line is included to produce
