@@ -4266,7 +4266,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	// refreshes are requested on a fixed schedule because the API call
 	// may be expensive, and the system coalesces updates to within
 	// 60 frames (once per tick) anyway
-	if (false == this->isCocoa)
 	{
 		OSStatus	error = noErr;
 		
@@ -12114,16 +12113,25 @@ next opportunity.
 
 Use of this utility routine is recommended because there are
 nested views that combine to produce a terminal display, and
-they must often be updated as set.
+they must often be updated as a set.
 
 (4.0)
 */
 void
 updateDisplay	(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->backgroundHIView, true);
-	(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->paddingHIView, true);
-	(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->contentHIView, true);
+	if (inTerminalViewPtr->isCocoa)
+	{
+		[inTerminalViewPtr->backgroundNSView setNeedsDisplay:YES];
+		[inTerminalViewPtr->paddingNSView setNeedsDisplay:YES];
+		[inTerminalViewPtr->contentNSView setNeedsDisplay:YES];
+	}
+	else
+	{
+		(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->backgroundHIView, true);
+		(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->paddingHIView, true);
+		(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->contentHIView, true);
+	}
 }// updateDisplay
 
 
@@ -12167,25 +12175,48 @@ updateDisplayTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 	
 	if (false == EmptyRgn(ptr->screen.refreshRegion))
 	{
-		HIViewRef	currentView = ptr->contentHIView;
-		
-		
-		if (IsValidControlHandle(currentView))
+		if (ptr->isCocoa)
 		{
-			// no need to convert for first view, input region is assumed
-			// to already be in its coordinate system
-			(OSStatus)HIViewSetNeedsDisplayInRegion(currentView, ptr->screen.refreshRegion, true);
+			Rect	regionBounds;
+			NSRect	floatBounds;
+			
+			
+			// invalidate the same screen region in all views
+			// (requires translation into each view’s space)
+			GetRegionBounds(ptr->screen.refreshRegion, &regionBounds);
+			floatBounds = NSMakeRect(regionBounds.left, regionBounds.top,
+										regionBounds.right - regionBounds.left,
+										regionBounds.bottom - regionBounds.top);
+			[ptr->contentNSView setNeedsDisplayInRect:floatBounds];
+			
+			floatBounds = [ptr->paddingNSView convertRect:floatBounds fromView:ptr->contentNSView];
+			[ptr->paddingNSView setNeedsDisplayInRect:floatBounds];
+			
+			floatBounds = [ptr->backgroundNSView convertRect:floatBounds fromView:ptr->paddingNSView];
+			[ptr->backgroundNSView setNeedsDisplayInRect:floatBounds];
+		}
+		else
+		{
+			HIViewRef	currentView = ptr->contentHIView;
+			
+			
+			if (IsValidControlHandle(currentView))
 			{
-				My_RegionConverter	contentToPadding(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
-				
-				
-				(OSStatus)HIViewSetNeedsDisplayInRegion(contentToPadding.destination, ptr->screen.refreshRegion, true);
-				currentView = HIViewGetSuperview(currentView);
+				// no need to convert for first view, input region is assumed
+				// to already be in its coordinate system
+				(OSStatus)HIViewSetNeedsDisplayInRegion(currentView, ptr->screen.refreshRegion, true);
 				{
-					My_RegionConverter	paddingToBackground(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
+					My_RegionConverter	contentToPadding(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
 					
 					
-					(OSStatus)HIViewSetNeedsDisplayInRegion(paddingToBackground.destination, ptr->screen.refreshRegion, true);
+					(OSStatus)HIViewSetNeedsDisplayInRegion(contentToPadding.destination, ptr->screen.refreshRegion, true);
+					currentView = HIViewGetSuperview(currentView);
+					{
+						My_RegionConverter	paddingToBackground(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
+						
+						
+						(OSStatus)HIViewSetNeedsDisplayInRegion(paddingToBackground.destination, ptr->screen.refreshRegion, true);
+					}
 				}
 			}
 		}
