@@ -34,6 +34,38 @@
 
 #pragma mark Types
 
+@interface NSColor (CocoaExtensions_NSColor)
+
+// helpers for constructing color variations
+
+- (NSColor*)
+colorCloserToBlack;
+
+- (NSColor*)
+colorCloserToWhite;
+
+- (NSColor*)
+colorWithShading;
+
++ (BOOL)
+searchResultColorsForForeground:(NSColor**)_
+background:(NSColor**)_;
+
++ (BOOL)
+selectionColorsForForeground:(NSColor**)_
+background:(NSColor**)_;
+
+// TEMPORARY AND DEPRECATED; USE ONLY AS NEEDED
+- (void)
+setAsBackgroundInQDCurrentPort;
+
+// TEMPORARY AND DEPRECATED; USE ONLY AS NEEDED
+- (void)
+setAsForegroundInQDCurrentPort;
+
+@end
+
+
 @interface NSInvocation (CocoaExtensions_NSInvocation)
 
 // helpers for constructing from selectors on target objects

@@ -31,9 +31,281 @@
 // Mac includes
 #import <Cocoa/Cocoa.h>
 
+// library includes
+#import <ColorUtilities.h>
+
 
 
 #pragma mark Public Methods
+
+@implementation NSColor (CocoaExtensions_NSColor)
+
+
+/*!
+Returns a color that is similar to the current color but
+with an arbitrarily-darker shade.
+
+(1.10)
+*/
+- (NSColor*)
+colorCloserToBlack
+{
+	NSColor*	result = [self blendedColorWithFraction:0.5/* arbitrary */ ofColor:[NSColor blackColor]];
+	
+	
+	if (nil == result)
+	{
+		result = [[self retain] autorelease];
+	}
+	return result;
+}// colorCloserToBlack
+
+
+/*!
+Returns a color that is similar to the current color but
+with an arbitrarily-lighter shade.
+
+(1.10)
+*/
+- (NSColor*)
+colorCloserToWhite
+{
+	NSColor*	result = [self blendedColorWithFraction:0.5/* arbitrary */ ofColor:[NSColor whiteColor]];
+	
+	
+	if (nil == result)
+	{
+		result = [[self retain] autorelease];
+	}
+	return result;
+}// colorCloserToWhite
+
+
+/*!
+Returns a color that is a noticeably different shade; if the
+color is very dark, this will be like "colorCloserToWhite";
+otherwise it will be like "colorCloserToBlack".
+
+(1.10)
+*/
+- (NSColor*)
+colorWithShading
+{
+	NSColor*	asRGB = [self colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+	NSColor*	result = asRGB;
+	
+	
+	if (nil != asRGB)
+	{
+		Float32 const	kTolerance = 0.5; // color intensities can vary by this much and still be considered black or white
+		
+		
+		if ([asRGB brightnessComponent] < kTolerance)
+		{
+			// dark; make whiter
+			result = [self colorCloserToWhite];
+		}
+		else
+		{
+			// light; make blacker
+			result = [self colorCloserToBlack];
+		}
+	}
+	
+	if (nil == result)
+	{
+		result = [[self retain] autorelease];
+	}
+	
+	return result;
+}// colorWithShading
+
+
+/*!
+Provides “highlighted for search results” versions of the given
+foreground and background colors, overwriting the colors pointed to
+by each argument.  Returns true unless there was a problem changing
+one or both colors.
+
+(1.10)
+*/
++ (BOOL)
+searchResultColorsForForeground:(NSColor**)		inoutForegroundColor
+background:(NSColor**)							inoutBackgroundColor
+{
+	BOOL	result = YES;
+	
+	
+	if ((nullptr == inoutForegroundColor) || (nullptr == inoutBackgroundColor))
+	{
+		result = NO;
+	}
+	else
+	{
+		Float32 const	kTolerance = 0.5; // color intensities can vary by this much and still be considered black or white
+		NSColor*		foregroundRGB = [*inoutForegroundColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+		NSColor*		backgroundRGB = [*inoutBackgroundColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+		
+		
+		if ((nil != foregroundRGB) && (nil != backgroundRGB))
+		{
+			//NSColor*	searchHighlightColor = [NSColor yellowColor];
+			NSColor*	searchHighlightColor = [NSColor colorWithCalibratedRed:0.92 green:1.0 blue:0.0 alpha:1.0];
+			
+			
+			if (([foregroundRGB brightnessComponent] < kTolerance) &&
+				([backgroundRGB brightnessComponent] > (1.0 - kTolerance)))
+			{
+				// approximately monochromatic; in this case it’s safe to pick a
+				// target color because the appearance against black/white is known
+				*inoutForegroundColor = [NSColor blackColor];
+				*inoutBackgroundColor = searchHighlightColor;
+			}
+			else if ([backgroundRGB brightnessComponent] < kTolerance)
+			{
+				// very dark background; therefore, darkening the background will
+				// not make it clear where the result is; brighten it instead
+				*inoutForegroundColor = [foregroundRGB blendedColorWithFraction:0.9/* arbitrary */ ofColor:[NSColor whiteColor]];
+				*inoutBackgroundColor = [backgroundRGB blendedColorWithFraction:0.3/* arbitrary */ ofColor:[NSColor blackColor]];
+			}
+			else
+			{
+				// typical case; some combination of colors, just find darker
+				// colors to show results in this case
+				*inoutForegroundColor = [foregroundRGB blendedColorWithFraction:0.8/* arbitrary */ ofColor:[NSColor blackColor]];
+				*inoutBackgroundColor = [backgroundRGB blendedColorWithFraction:0.8/* arbitrary */ ofColor:searchHighlightColor];
+			}
+		}
+		else
+		{
+			// error; leave unchanged
+			result = NO;
+		}
+	}
+	
+	return result;
+}// searchResultColorsForForeground:background:
+
+
+/*!
+Provides “selected” versions of the given foreground and background
+colors, overwriting the colors pointed to by each argument.  Returns
+true unless there was a problem changing one or both colors.
+
+Since traditional selection schemes assume that white is the
+background color, this routine examines the background color and
+will only use the system-wide highlight color if the background is
+approximately white.  Otherwise, the actual colors are used to find
+an appropriate selection color (which will usually be slightly
+“darker” than the given colors, unless the colors are close to
+black).
+
+(1.10)
+*/
++ (BOOL)
+selectionColorsForForeground:(NSColor**)	inoutForegroundColor
+background:(NSColor**)						inoutBackgroundColor
+{
+	BOOL	result = YES;
+	
+	
+	if ((nullptr == inoutForegroundColor) || (nullptr == inoutBackgroundColor))
+	{
+		result = NO;
+	}
+	else
+	{
+		Float32 const	kTolerance = 0.5; // color intensities can vary by this much and still be considered black or white
+		NSColor*		foregroundRGB = [*inoutForegroundColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+		NSColor*		backgroundRGB = [*inoutBackgroundColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+		
+		
+		if ((nil != foregroundRGB) && (nil != backgroundRGB))
+		{
+			if (([foregroundRGB brightnessComponent] < kTolerance) &&
+				([backgroundRGB brightnessComponent] > (1.0 - kTolerance)))
+			{
+				// approximately monochromatic; this is what the highlight color
+				// is “traditionally” intended for, so it should look okay; use it
+				*inoutForegroundColor = foregroundRGB;
+				*inoutBackgroundColor = [NSColor selectedTextBackgroundColor];
+			}
+			else if ([backgroundRGB brightnessComponent] < kTolerance)
+			{
+				// very dark background; therefore, darkening the background will
+				// not make it clear where the selection is; brighten it instead
+				*inoutForegroundColor = [foregroundRGB blendedColorWithFraction:0.2/* arbitrary */ ofColor:[NSColor whiteColor]];
+				*inoutBackgroundColor = [backgroundRGB blendedColorWithFraction:0.33/* arbitrary */ ofColor:[NSColor whiteColor]];
+			}
+			else
+			{
+				// typical case; some combination of colors, just find darker
+				// colors to show highlighted text in this case
+				*inoutForegroundColor = [foregroundRGB blendedColorWithFraction:0.2/* arbitrary */ ofColor:[NSColor blackColor]];
+				*inoutBackgroundColor = [backgroundRGB blendedColorWithFraction:0.33/* arbitrary */ ofColor:[NSColor blackColor]];
+			}
+		}
+		else
+		{
+			// error; leave unchanged
+			result = NO;
+		}
+	}
+	
+	return result;
+}// selectionColorsForForeground:background:
+
+
+/*!
+TEMPORARY.  FOR TRANSITIONAL CODE ONLY.  DEPRECATED.
+
+Sets this NSColor value as the background RGB color
+of the current QuickDraw graphics port.
+
+(4.1)
+*/
+- (void)
+setAsBackgroundInQDCurrentPort
+{
+	CGDeviceColor	asDeviceColor; // not really a device color, just convenient for RGB floats
+	RGBColor		asQuickDrawRGB;
+	NSColor*		asRGB = [self colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+	
+	
+	asDeviceColor.red = [asRGB redComponent];
+	asDeviceColor.green = [asRGB greenComponent];
+	asDeviceColor.blue = [asRGB blueComponent];
+	asQuickDrawRGB = ColorUtilities_QuickDrawColorMake(asDeviceColor);
+	RGBBackColor(&asQuickDrawRGB);
+}// setAsBackgroundInQDCurrentPort
+
+
+/*!
+TEMPORARY.  FOR TRANSITIONAL CODE ONLY.  DEPRECATED.
+
+Sets this NSColor value as the foreground RGB color
+of the current QuickDraw graphics port.
+
+(4.1)
+*/
+- (void)
+setAsForegroundInQDCurrentPort
+{
+	CGDeviceColor	asDeviceColor; // not really a device color, just convenient for RGB floats
+	RGBColor		asQuickDrawRGB;
+	NSColor*		asRGB = [self colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+	
+	
+	asDeviceColor.red = [asRGB redComponent];
+	asDeviceColor.green = [asRGB greenComponent];
+	asDeviceColor.blue = [asRGB blueComponent];
+	asQuickDrawRGB = ColorUtilities_QuickDrawColorMake(asDeviceColor);
+	RGBForeColor(&asQuickDrawRGB);
+}// setAsForegroundInQDCurrentPort
+
+
+@end // NSColor (CocoaExtensions_NSColor)
+
 
 @implementation NSInvocation (CocoaExtensions_NSInvocation)
 
@@ -64,7 +336,7 @@ target:(id)						aTarget
 }// invocationWithSelector:target:
 
 
-@end // NSWindow (CocoaExtensions_NSInvocation)
+@end // NSInvocation (CocoaExtensions_NSInvocation)
 
 
 @implementation NSObject (CocoaExtensions_NSObject)

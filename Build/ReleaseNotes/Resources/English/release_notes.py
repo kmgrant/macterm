@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120802',
     '20120727',
     '20120725',
     '20120701',
@@ -452,6 +453,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120802': [
+        'Terminal view colors for selecting text, highlighting search results and "blinking" have all been adjusted to suit the current Format better.',
+        'Preferences window Formats pane sample area now also shows the highlighting style for search results.',
+    ],
     '20120727': [
         "Notifications are now sent BOTH through Growl (if installed) and through the Mac OS X 10.8 Notification Center.  Use either System Preferences or Growl's Preferences to turn off notifications from MacTerm in one of these services, otherwise you will see notifications appear in two different places.",
     ],

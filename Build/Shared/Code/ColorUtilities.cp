@@ -48,6 +48,8 @@
 Returns a CGDeviceColor equivalent to the given
 QuickDraw RGBColor values.
 
+DEPRECATED.  (Don’t rely on QuickDraw types.)
+
 (3.1)
 */
 CGDeviceColor
@@ -99,6 +101,8 @@ returns.
 
 If the user chooses a new color, true is returned;
 otherwise, false is returned.
+
+DEPRECATED.  Use NSColorPanel instead.
 
 (1.0)
 */
@@ -233,6 +237,9 @@ you are not interested in one of the colors.
 You might use this to show that a range of colored
 text is highlighted.
 
+DEPRECATED.  See "colorCloserToBlack:" (NSColor
+extension in Cocoa Extensions module).
+
 (1.3)
 */
 void
@@ -269,41 +276,6 @@ GetDarkerColors		(RGBColor*		outDarkerForegroundColorOrNull,
 
 
 /*!
-Does the equivalent of the old QuickDraw GetGray() routine, but
-for Core Graphics device colors.  Returns true only if the
-conversion is successful.
-
-NOTE:	The device parameter is currently ignored, and the main
-		display is used for calculations.
-
-WARNING:	The initial implementation is for porting only, and
-			will be less efficient because it converts data
-			structures heavily.
-
-(4.0)
-*/
-Boolean
-ColorUtilities_CGDeviceGetGray	(CGDirectDisplayID		UNUSED_ARGUMENT(inDevice),
-								 CGDeviceColor const*	inBackgroundPtr,
-								 CGDeviceColor*			inoutForegroundNewColorPtr)
-{
-	// TEMPORARY: although GetGray() works nicely, it is probably deprecated along with
-	// the rest of QuickDraw (and converting into RGBColor is a pain)...figure out what
-	// else can be done here to get good results
-	RGBColor	backgroundColor = ColorUtilities_QuickDrawColorMake(*inBackgroundPtr);
-	RGBColor	foregroundColor = ColorUtilities_QuickDrawColorMake(*inoutForegroundNewColorPtr);
-	Boolean		result = false;
-	
-	
-	result = GetGray(GetMainDevice()/* TEMPORARY; use inDevice parameter someday */,
-						&backgroundColor, &foregroundColor/* both input and output */);
-	*inoutForegroundNewColorPtr = ColorUtilities_CGDeviceColorMake(foregroundColor);
-	
-	return result;
-}// GetGray
-
-
-/*!
 Returns “lighter” versions of the current foreground
 and background colors of the current graphics port.
 You can pass nullptr in place of either parameter if
@@ -311,6 +283,9 @@ you are not interested in one of the colors.
 
 You might use this to represent the inactive state of
 something.
+
+DEPRECATED.  See "colorCloserToWhite:" (NSColor
+extension in Cocoa Extensions module).
 
 (1.3)
 */
@@ -360,6 +335,9 @@ wide highlight color if the background is approximately
 white.  Otherwise, the actual colors are used to find
 an appropriate selection color.
 
+DEPRECATED.  See "selectionColorsForForeground:background:"
+(NSColor extension in Cocoa Extensions module).
+
 (3.0)
 */
 void
@@ -399,21 +377,9 @@ GetSelectionColors	(RGBColor*		outLighterForegroundColorOrNull,
 
 
 /*!
-Tells QuickDraw to use the highlighting
-color instead of inversion for the next
-operation.
-
-(1.0)
-*/
-void
-ColorUtilities_HiliteMode ()
-{
-	LMSetHiliteMode(LMGetHiliteMode() & 0x7F);
-}// HiliteMode
-
-
-/*!
 Determines if the specified device uses Color QuickDraw.
+
+DEPRECATED.  (Don’t rely on QuickDraw types.)
 
 (1.0)
 */
@@ -434,6 +400,8 @@ color will obviously be limited by the number of color values
 supported by the RGBColor structure.
 
 IMPORTANT:	For help with porting only!!!
+
+DEPRECATED.  (Don’t rely on QuickDraw types.)
 
 (4.0)
 */
@@ -463,6 +431,8 @@ ColorUtilities_QuickDrawColorMake	(CGDeviceColor const&	inDeviceColor)
 /*!
 Determines the color depth of the specified port.
 
+DEPRECATED.  (Don’t rely on QuickDraw types.)
+
 (1.0)
 */
 SInt16
@@ -479,22 +449,9 @@ ColorUtilities_ReturnCurrentDepth	(CGrafPtr	inPort)
 
 
 /*!
-Calls BackPat() with an all-black pattern.
-
-(1.0)
-*/
-void
-ColorUtilities_SetBlackBackgroundPattern ()
-{
-	Pattern		blackPat = { { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF } };
-	
-	
-	BackPat(&blackPat);
-}// SetBlackBackgroundPattern
-
-
-/*!
 Calls PenPat() with an all-black pattern.
+
+DEPRECATED.  (Don’t use QuickDraw.)
 
 (1.0)
 */
@@ -509,22 +466,9 @@ ColorUtilities_SetBlackPenPattern ()
 
 
 /*!
-Calls BackPat() with a checkerboard pattern.
-
-(1.0)
-*/
-void
-ColorUtilities_SetGrayBackgroundPattern ()
-{
-	Pattern		grayPat = { { 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA } };
-	
-	
-	BackPat(&grayPat);
-}// SetGrayBackgroundPattern
-
-
-/*!
 Calls PenPat() with a checkerboard pattern.
+
+DEPRECATED.  (Don’t use QuickDraw.)
 
 (1.0)
 */
@@ -539,62 +483,7 @@ ColorUtilities_SetGrayPenPattern ()
 
 
 /*!
-Calls BackPat() with an all-white pattern.
-
-(1.0)
-*/
-void
-ColorUtilities_SetWhiteBackgroundPattern ()
-{
-	Pattern		whitePat = { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
-	
-	
-	BackPat(&whitePat);
-}// SetWhiteBackgroundPattern
-
-
-/*!
-Calls PenPat() with an all-white pattern.
-
-(1.0)
-*/
-void
-ColorUtilities_SetWhitePenPattern ()
-{
-	Pattern		whitePat = { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
-	
-	
-	PenPat(&whitePat);
-}// SetWhitePenPattern
-
-
-/*!
-Uses GetDarkerColors() to determine the
-“darkened” versions of the current foreground
-and background colors of the current graphics
-port, and makes the darkened versions the
-current foreground and background colors.
-
-Do not use this routine to represent a selected
-state; for that, call UseSelectionColors().
-
-(1.3)
-*/
-void
-UseDarkerColors ()
-{
-	RGBColor	foreground;
-	RGBColor	background;
-	
-	
-	GetDarkerColors(&foreground, &background);
-	RGBForeColor(&foreground);
-	RGBBackColor(&background);
-}// UseDarkerColors
-
-
-/*!
-Uses GetInactiveColors() to determine the “dimmed”
+Uses GetLighterColors() to determine the “dimmed”
 versions of the current foreground and background
 colors of the current graphics port, and makes the
 inactive versions the current foreground and
@@ -602,6 +491,8 @@ background colors.
 
 This routine might be used inside a drawing procedure
 for a custom control, to represent an inactive state.
+
+DEPRECATED.  (Don’t use QuickDraw.)
 
 (1.3)
 */
@@ -612,7 +503,7 @@ UseInactiveColors ()
 	RGBColor	background;
 	
 	
-	GetInactiveColors(&foreground, &background);
+	GetLighterColors(&foreground, &background);
 	RGBForeColor(&foreground);
 	RGBBackColor(&background);
 }// UseInactiveColors
@@ -626,7 +517,8 @@ This routine might be used inside a drawing
 procedure for a custom control, to represent
 a selected state.
 
-See ColorUtilities_UseInvertedColors().
+DEPRECATED.  Don’t use QuickDraw.  Manually swap
+foreground and background colors.
 
 (1.3)
 */
@@ -654,6 +546,9 @@ background colors.
 Do not use this routine to represent an inactive
 state; for that, call UseInactiveColors().
 
+DEPRECATED.  See "colorCloserToWhite:" (NSColor
+extension in Cocoa Extensions module).
+
 (1.3)
 */
 void
@@ -675,6 +570,9 @@ versions of the current foreground and background
 colors of the current graphics port, and makes the
 selected versions the current foreground and background
 colors.
+
+DEPRECATED.  See "selectionColorsForForeground:background:"
+(NSColor extension in Cocoa Extensions module).
 
 (1.3)
 */

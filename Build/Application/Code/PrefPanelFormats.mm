@@ -2722,9 +2722,11 @@ setUpSampleTerminalHIView	(TerminalViewRef	inTerminalView,
 		Terminal_EmulatorProcessCString(inTerminalScreen,
 										"\033[2J\033[H"); // clear screen, home cursor
 		Terminal_EmulatorProcessCString(inTerminalScreen,
-										"sel norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m"); // LOCALIZE THIS
+										"sel find norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m"); // LOCALIZE THIS
 		// the range selected here should be as long as the length of the word “sel” above
 		TerminalView_SelectVirtualRange(inTerminalView, std::make_pair(std::make_pair(0, 0), std::make_pair(3, 1)/* exclusive end */));
+		// the range selected here should be as long as the length of the word “find” above
+		TerminalView_FindVirtualRange(inTerminalView, std::make_pair(std::make_pair(4, 0), std::make_pair(8, 1)/* exclusive end */));
 	}
 	
 	return result;
@@ -3928,11 +3930,15 @@ didLoadContainerView:(NSView*)			aContainerView
 				Terminal_EmulatorProcessCString(self->sampleScreenBuffer,
 												"\033[2J\033[H"); // clear screen, home cursor (assumes VT100)
 				Terminal_EmulatorProcessCString(self->sampleScreenBuffer,
-												"sel norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m");
+												"sel find norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m");
 				// the range selected here should be as long as the length of the word “sel” above
 				TerminalView_SelectVirtualRange
 				(self->sampleScreenView, std::make_pair(std::make_pair(0, 0),
 														std::make_pair(3, 1)/* exclusive end */));
+				// the range selected here should be as long as the length of the word “find” above
+				TerminalView_FindVirtualRange
+				(self->sampleScreenView, std::make_pair(std::make_pair(4, 0),
+														std::make_pair(8, 1)/* exclusive end */));
 			}
 		}
 	}

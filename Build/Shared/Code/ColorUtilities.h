@@ -1,5 +1,8 @@
 /*!	\file ColorUtilities.h
 	\brief Various routines commonly needed for graphics.
+	Note that some of this behavior has now been made
+	obsolete by Cocoa’s core abilities and the NSColor
+	extensions added by the Cocoa Extensions module.
 */
 /*###############################################################
 
@@ -43,14 +46,11 @@
 //!\name Core Graphics Helpers
 //@{
 
+// DEPRECATED
 CGDeviceColor
 	ColorUtilities_CGDeviceColorMake			(RGBColor const&		inColor);
 
-Boolean
-	ColorUtilities_CGDeviceGetGray				(CGDirectDisplayID		inDevice,
-												 CGDeviceColor const*	inBackgroundPtr,
-												 CGDeviceColor*			inoutForegroundNewColorPtr);
-
+// DEPRECATED
 RGBColor
 	ColorUtilities_QuickDrawColorMake			(CGDeviceColor const&	inColor);
 
@@ -59,60 +59,47 @@ RGBColor
 //!\name Appearance 1.0 Helpers For Theme Brush System Calls
 //@{
 
+// DEPRECATED
 Boolean
 	ColorUtilities_IsColorDevice				(GDHandle				inDevice);
 
+// DEPRECATED
 SInt16
 	ColorUtilities_ReturnCurrentDepth			(CGrafPtr				inPort);
-
-//@}
-
-//!\name Highlighting
-//@{
-
-void
-	ColorUtilities_HiliteMode					();
 
 //@}
 
 //!\name Extremely Handy QuickDraw Port Color Manipulators
 //@{
 
-// RESULTS ARE BASED ON THE CURRENT FOREGROUND AND BACKGROUND COLORS
+// DEPRECATED
 void
 	GetDarkerColors								(RGBColor*				outDarkerForegroundColorOrNull,
 												 RGBColor*				outDarkerBackgroundColorOrNull);
 
-// RESULTS ARE BASED ON THE CURRENT FOREGROUND AND BACKGROUND COLORS
-#define GetInactiveColors	GetLighterColors
-
-// RESULTS ARE BASED ON THE CURRENT FOREGROUND AND BACKGROUND COLORS
+// DEPRECATED
 void
 	GetLighterColors							(RGBColor*				outLighterForegroundColorOrNull,
 												 RGBColor*				outLighterBackgroundColorOrNull);
 
-// RESULTS ARE BASED ON THE CURRENT FOREGROUND AND BACKGROUND COLORS
+// DEPRECATED
 void
 	GetSelectionColors							(RGBColor*				outSelectionForegroundColorOrNull,
 												 RGBColor*				outSelectionBackgroundColorOrNull);
 
-// RESULTS ARE BASED ON THE CURRENT FOREGROUND AND BACKGROUND COLORS
-void
-	UseDarkerColors								();
-
-// RESULTS ARE BASED ON THE CURRENT FOREGROUND AND BACKGROUND COLORS
+// DEPRECATED
 void
 	UseInactiveColors							();
 
-// RESULTS ARE BASED ON THE CURRENT FOREGROUND AND BACKGROUND COLORS
+// DEPRECATED
 void
 	UseInvertedColors							();
 
-// RESULTS ARE BASED ON THE CURRENT FOREGROUND AND BACKGROUND COLORS
+// DEPRECATED
 void
 	UseLighterColors							();
 
-// RESULTS ARE BASED ON THE CURRENT FOREGROUND AND BACKGROUND COLORS
+// DEPRECATED
 void
 	UseSelectionColors							();
 
@@ -121,29 +108,20 @@ void
 //!\name Changing the Pen or Background to a Standard Pattern
 //@{
 
-void
-	ColorUtilities_SetBlackBackgroundPattern	();
-
-void
-	ColorUtilities_SetGrayBackgroundPattern		();
-
-void
-	ColorUtilities_SetWhiteBackgroundPattern	();
-
+// DEPRECATED
 void
 	ColorUtilities_SetBlackPenPattern			();
 
+// DEPRECATED
 void
 	ColorUtilities_SetGrayPenPattern			();
-
-void
-	ColorUtilities_SetWhitePenPattern			();
 
 //@}
 
 //!\name Displaying Standard Get-Color Dialog Boxes
 //@{
 
+// DEPRECATED
 Boolean
 	ColorUtilities_ColorChooserDialogDisplay	(CFStringRef			inPrompt,
 												 RGBColor const*		inColor,
