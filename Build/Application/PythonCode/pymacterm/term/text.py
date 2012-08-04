@@ -52,13 +52,41 @@ def find_word(text_utf8, pos):
     >>> find_word("  well   spaced      words  ", 13)
     (9, 6)
     
+    >>> find_word('"quoted"', 2)
+    (1, 6)
+    
+    >>> find_word("'quoted'", 2)
+    (1, 6)
+    
+    >>> find_word("<quoted>", 2)
+    (1, 6)
+    
+    >>> find_word("{quoted}", 2)
+    (1, 6)
+    
+    >>> find_word("[quoted]", 2)
+    (1, 6)
+    
+    >>> find_word("(quoted)", 2)
+    (1, 6)
+    
+    >>> find_word("quoted)", 2)
+    (0, 6)
+    
+    >>> find_word("(quoted", 2)
+    (1, 6)
+    
+    >>> find_word("unquoted", 2)
+    (0, 8)
+    
     """
     result = [pos, 1]
     if pos < 0:
         raise ValueError("word-seeking callback expected nonnegative offset")
     try:
         ustr = unicode(text_utf8, "utf-8", "ignore")
-        if pos >= len(ustr):
+        len_ustr = len(ustr)
+        if pos >= len_ustr:
             raise ValueError("word-seeking callback expected offset to fall within range of characters")
         nonword_chars = str(string.whitespace)
         # an easy way to customize this is to add characters to
@@ -79,16 +107,119 @@ def find_word(text_utf8, pos):
             i = i - 1
         if i < 0:
             i = 0
-        while j < len(ustr):
+        while j < len_ustr:
             if (invert and ustr[j] not in nonword_chars) or \
                (not invert and ustr[j] in nonword_chars):
                 j = j - 1
                 break
             j = j + 1
-        if j >= len(ustr):
-            j = len(ustr) - 1
+        if j >= len_ustr:
+            j = len_ustr - 1
         result[0] = i
         result[1] = j - i + 1
+        # strip certain trailing punctuation marks to make word selections more sensible
+        if (result[1] > 0):
+            # WARNING: variable helpers are synchronized "as needed", not "always";
+            # be careful when adding new code to make sure the variables are
+            # actually up-to-date before depending on them
+            first = ustr[result[0]]
+            last = ustr[result[0] + result[1] - 1]
+            # strip basic punctuation off the end (this is repeated below)
+            if (last == ".") or (last == ",") or (last == ";") or (last == ":"):
+                result[1] = result[1] - 1
+                last = ustr[result[0] + result[1] - 1] # synchronize variable
+            if (result[1] > 1):
+                open_paren_count = 0
+                close_paren_count = 0
+                double_quote_count = 0
+                single_quote_count = 0
+                # study the word's characters; note that due to GNU's broken
+                # behavior of treating a backquote like an open-quote, this
+                # algorithm assumes that "`" is a type of single quotation mark
+                for i in range(result[0], result[0] + result[1]):
+                    if ustr[i] == '"': double_quote_count = double_quote_count + 1
+                    elif ustr[i] == "'" or ustr[i] == "`": single_quote_count = single_quote_count + 1
+                    elif ustr[i] == "(": open_paren_count = open_paren_count + 1
+                    elif ustr[i] == ")": close_paren_count = close_paren_count + 1
+                # strip trailing punctuation as long as the word doesn't contain
+                # balanced brackets (e.g. keep "xyz()" but change "xyz)" to "xyz")
+                tail_ok = False
+                while not tail_ok and result[1] > 0:
+                    if (last == ")"):
+                        if (close_paren_count > open_paren_count):
+                            close_paren_count = close_paren_count - 1
+                            result[1] = result[1] - 1
+                        else:
+                            tail_ok = True
+                    elif (last == '"'):
+                        if (double_quote_count % 2) != 0:
+                            double_quote_count = double_quote_count - 1
+                            result[1] = result[1] - 1
+                        else:
+                            tail_ok = True
+                    elif (last == "'" or last == "`"):
+                        if (single_quote_count % 2) != 0:
+                            single_quote_count = single_quote_count - 1
+                            result[1] = result[1] - 1
+                        else:
+                            tail_ok = True
+                    else:
+                        tail_ok = True
+                    last = ustr[result[0] + result[1] - 1] # synchronize variable
+                # strip leading punctuation as long as the word doesn't contain
+                # balanced brackets (e.g. keep "(xyz)" but change "(xyz" to "xyz")
+                head_ok = False
+                while not head_ok and result[1] > 0:
+                    if (first == "("):
+                        if (open_paren_count > close_paren_count):
+                            open_paren_count = open_paren_count - 1
+                            result[0] = result[0] + 1
+                            result[1] = result[1] - 1
+                        else:
+                            head_ok = True
+                    elif (first == '"'):
+                        if (double_quote_count % 2) != 0:
+                            double_quote_count = double_quote_count - 1
+                            result[0] = result[0] + 1
+                            result[1] = result[1] - 1
+                        else:
+                            head_ok = True
+                    elif (first == "'" or first == "`"):
+                        if (single_quote_count % 2) != 0:
+                            single_quote_count = single_quote_count - 1
+                            result[0] = result[0] + 1
+                            result[1] = result[1] - 1
+                        else:
+                            head_ok = True
+                    else:
+                        head_ok = True
+                    first = ustr[result[0]] # synchronize variable
+                    last = ustr[result[0] + result[1] - 1] # synchronize variable
+            # repeat this rule, as punctuation sometimes appears inside brackets
+            if (last == ".") or (last == ",") or (last == ";") or (last == ":"):
+                result[1] = result[1] - 1
+                last = ustr[result[0] + result[1] - 1] # synchronize variable
+        # strip any brackets that appear balanced at both ends
+        if (result[1] > 1):
+            first = ustr[result[0]]
+            last = ustr[result[0] + result[1] - 1]
+            end_caps_ok = False
+            while not end_caps_ok and result[1] > 0:
+                if (first == '"' and last == '"') or \
+                   (first == "'" and last == "'") or \
+                   (first == "`" and last == "`") or \
+                   (first == "`" and last == "'") or \
+                   (first == '<' and last == '>') or \
+                   (first == '(' and last == ')') or \
+                   (first == '[' and last == ']') or \
+                   (first == '{' and last == '}'):
+                    # strip brackets
+                    result[0] = result[0] + 1
+                    result[1] = result[1] - 2
+                    first = ustr[result[0]] # synchronize variable
+                    last = ustr[result[0] + result[1] - 1] # synchronize variable
+                else:
+                    end_caps_ok = True
     except Exception, e:
         print "warning, exception while trying to find words:", e
     return (result[0], result[1])

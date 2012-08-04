@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20120804',
     '20120802',
     '20120727',
     '20120725',
@@ -453,6 +454,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20120804': [
+        'Terminal view text double-clicks (to identify words) are now significantly smarter, particularly in the presence of punctuation marks and various kinds of imbalanced bracketing characters.',
+    ],
     '20120802': [
         'Terminal view colors for selecting text, highlighting search results and "blinking" have all been adjusted to suit the current Format better.',
         'Preferences window Formats pane sample area now also shows the highlighting style for search results.',
