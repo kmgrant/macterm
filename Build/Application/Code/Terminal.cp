@@ -748,6 +748,7 @@ struct My_ScreenBufferLine
 private:
 };
 typedef std::list< My_ScreenBufferLine >		My_ScreenBufferLineList;
+typedef std::list< My_ScreenBufferLine >		My_ScrollbackBufferLineList;
 typedef My_ScreenBufferLineList::size_type		My_ScreenRowIndex;
 
 /*!
@@ -810,31 +811,57 @@ IMPORTANT:	Since the scrollback size is cached, it is
 struct My_LineIterator
 {
 public:
-	My_LineIterator		(My_ScreenBufferLineList&			inScreenBuffer,
-						 My_ScreenBufferLineList&			inScrollbackBuffer,
-						 My_ScreenBufferLineList&			inInitialIteratorTarget,
+	enum BufferTarget
+	{
+		kBufferTargetScreen = 0,
+		kBufferTargetScrollback = 1
+	};
+	
+	enum ScreenBufferDesignator
+	{
+		kScreenBufferDesignator = 0
+	};
+	
+	// the "inDesignateScreen" is used only to provide a unique
+	// constructor signature in the event that the two buffers
+	// are set to exactly the same underlying container type
+	My_LineIterator		(Boolean							isHeapStorage,
+						 My_ScreenBufferLineList&			inScreenBuffer,
+						 My_ScrollbackBufferLineList&		inScrollbackBuffer,
 						 My_ScreenBufferLineList::iterator	inRowIterator,
-						 Boolean							isHeapStorage)
+						 ScreenBufferDesignator				UNUSED_ARGUMENT(inDesignateScreen))
 	:
 	screenBuffer(inScreenBuffer),
 	scrollbackBuffer(inScrollbackBuffer),
-	currentListPtr(&inInitialIteratorTarget),
-	rowIterator(inRowIterator),
+	screenRowIterator(inRowIterator),
+	scrollbackRowIterator(),
+	currentBufferType(kBufferTargetScreen),
 	heapAllocated(isHeapStorage)
 	{
-		assert((inInitialIteratorTarget == inScreenBuffer) || (inInitialIteratorTarget == inScrollbackBuffer));
 	}
 	
-	My_ScreenBufferLineList const&
-	currentBuffer ()
+	// this version constructs iterators starting in the scrollback
+	My_LineIterator		(Boolean								isHeapStorage,
+						 My_ScreenBufferLineList&				inScreenBuffer,
+						 My_ScrollbackBufferLineList&			inScrollbackBuffer,
+						 My_ScrollbackBufferLineList::iterator	inRowIterator)
+	:
+	screenBuffer(inScreenBuffer),
+	scrollbackBuffer(inScrollbackBuffer),
+	screenRowIterator(),
+	scrollbackRowIterator(inRowIterator),
+	currentBufferType(kBufferTargetScrollback),
+	heapAllocated(isHeapStorage)
 	{
-		return *currentListPtr;
 	}
 	
 	My_ScreenBufferLine&
 	currentLine ()
 	{
-		return *rowIterator; // crashes if isEnd(), which is expected (STL-like) behavior
+		// these dereferences will crash if past the end, which is expected (STL-like) behavior
+		return (currentBufferType == kBufferTargetScreen)
+				? *screenRowIterator
+				: *scrollbackRowIterator;
 	}
 	
 	//! Returns either the oldest scrollback line, or the topmost
@@ -845,7 +872,9 @@ public:
 		// the back of the scrollback is used because its first line is the one
 		// that is closest to the main screen, and the front (from the caller’s
 		// perspective) must be the oldest scrollback line
-		return (scrollbackBuffer.empty() || (currentBuffer() == screenBuffer)) ? screenBuffer.front() : scrollbackBuffer.back();
+		return (scrollbackBuffer.empty() || (currentBufferType == kBufferTargetScreen))
+				? screenBuffer.front()
+				: scrollbackBuffer.back();
 	}
 	
 	//! Increments the internal line pointer so that currentLine() now
@@ -863,22 +892,24 @@ public:
 		//			the main screen.  So, the scrollback buffer is
 		//			traversed backward to reach “next lines”.
 		isEnd = false;
-		if ((currentBuffer() == scrollbackBuffer) &&
-			(currentBuffer().empty() || (&currentBuffer().front() == &currentLine())))
+		if ((currentBufferType == kBufferTargetScrollback) &&
+			(scrollbackBuffer.empty() || (&scrollbackBuffer.front() == &currentLine())))
 		{
 			// change the iterator to look at the screen buffer instead
-			currentListPtr = &screenBuffer;
-			rowIterator = currentListPtr->begin();
+			currentBufferType = kBufferTargetScreen;
+			screenRowIterator = screenBuffer.begin();
 		}
 		else
 		{
-			if ((currentBuffer() == scrollbackBuffer) && (scrollbackBuffer.begin() != rowIterator))
+			if ((currentBufferType == kBufferTargetScrollback) &&
+				(scrollbackBuffer.begin() != scrollbackRowIterator))
 			{
-				--rowIterator; // scrollback is inverted
+				--scrollbackRowIterator; // scrollback is inverted
 			}
-			else if ((currentBuffer() == screenBuffer) && (&lastLine() != &*rowIterator))
+			else if ((currentBufferType == kBufferTargetScreen) &&
+						(&lastLine() != &*screenRowIterator))
 			{
-				++rowIterator;
+				++screenRowIterator;
 			}
 			else
 			{
@@ -903,22 +934,24 @@ public:
 		//			the main screen.  So, the scrollback buffer is
 		//			traversed forward to reach “previous lines”.
 		isEnd = false;
-		if ((currentBuffer() == screenBuffer) &&
-			(&currentBuffer().front() == &currentLine()))
+		if ((currentBufferType == kBufferTargetScreen) &&
+			(&screenBuffer.front() == &currentLine()))
 		{
 			// change the iterator to look at the scrollback buffer instead
-			currentListPtr = &scrollbackBuffer;
-			rowIterator = currentListPtr->begin();
+			currentBufferType = kBufferTargetScrollback;
+			scrollbackRowIterator = scrollbackBuffer.begin();
 		}
 		else
 		{
-			if ((currentBuffer() == screenBuffer) && (screenBuffer.begin() != rowIterator))
+			if ((currentBufferType == kBufferTargetScreen) &&
+				(screenBuffer.begin() != screenRowIterator))
 			{
-				--rowIterator;
+				--screenRowIterator;
 			}
-			else if ((currentBuffer() == scrollbackBuffer) && (&firstLine() != &*rowIterator))
+			else if ((currentBufferType == kBufferTargetScrollback) &&
+						(&firstLine() != &*scrollbackRowIterator))
 			{
-				++rowIterator; // scrollback is inverted
+				++scrollbackRowIterator; // scrollback is inverted
 			}
 			else
 			{
@@ -944,11 +977,12 @@ public:
 	}
 
 private:
-	My_ScreenBufferLineList&			screenBuffer;			//!< the other possible target for "currentListPtr"
-	My_ScreenBufferLineList&			scrollbackBuffer;		//!< one possible target for "currentListPtr"
-	My_ScreenBufferLineList*			currentListPtr;			//!< the list that this iterator is pointing into
-	My_ScreenBufferLineList::iterator	rowIterator;			//!< points into one of the buffer queues
-	Boolean								heapAllocated;			//!< an annoying extra use of memory for this flag...
+	My_ScreenBufferLineList&				screenBuffer;			//!< the other possible source for the current line
+	My_ScrollbackBufferLineList&			scrollbackBuffer;		//!< one possible source for the current line
+	My_ScreenBufferLineList::iterator		screenRowIterator;		//!< the current line when "kBufferTargetScreen"
+	My_ScrollbackBufferLineList::iterator	scrollbackRowIterator;	//!< the current line when "kBufferTargetScrollback"
+	BufferTarget							currentBufferType : 2;	//!< whether or not the screen is being targeted
+	Boolean									heapAllocated : 1;		//!< an annoying extra use of memory for this flag...
 };
 STATIC_ASSERT(sizeof(Terminal_LineStackStorage) == sizeof(My_LineIterator),
 				assert_My_LineIterator_size_equals_Terminal_LineRefStackStorage);
@@ -1224,10 +1258,10 @@ public:
 	ListenerModel_Ref					changeListenerModel;		//!< registry of listeners for various terminal events
 	ListenerModel_ListenerWrap			preferenceMonitor;			//!< listener for changes to preferences that affect a particular screen
 	
-	My_ScreenBufferLineList::size_type	scrollbackBufferCachedSize;	//!< linked list size is sometimes needed, but is VERY expensive to calculate;
+	My_ScrollbackBufferLineList::size_type	scrollbackBufferCachedSize;	//!< linked list size is sometimes needed, but is VERY expensive to calculate;
 																	//!  therefore, it is cached, and ALL code that changes "scrollbackBuffer" must
 																	//!  be aware of this cached size and update it accordingly!
-	My_ScreenBufferLineList				scrollbackBuffer;			//!< a double-ended queue containing all the scrollback text for the terminal;
+	My_ScrollbackBufferLineList			scrollbackBuffer;			//!< a double-ended queue containing all the scrollback text for the terminal;
 																	//!  IMPORTANT: the FRONT of this queue is the scrollback line CLOSEST to the
 																	//!  top (FRONT) of the screen buffer line queue; imagine both queues starting
 																	//!  at the home line and growing outwards from one another
@@ -2043,9 +2077,10 @@ Terminal_NewMainScreenLineIterator	(TerminalScreenRef				inRef,
 													My_ScreenBufferLineList::difference_type));
 			if (nullptr != inStackAllocationOrNull)
 			{
-				new (inStackAllocationOrNull) My_LineIterator(ptr->screenBuffer, ptr->scrollbackBuffer,
-																ptr->screenBuffer/* iterator target */,
-																startIterator, false/* heap allocated */);
+				new (inStackAllocationOrNull) My_LineIterator(false/* heap allocated */,
+																ptr->screenBuffer, ptr->scrollbackBuffer,
+																startIterator,
+																My_LineIterator::kScreenBufferDesignator);
 				result = REINTERPRET_CAST(inStackAllocationOrNull, Terminal_LineRef);
 			}
 			else
@@ -2053,9 +2088,10 @@ Terminal_NewMainScreenLineIterator	(TerminalScreenRef				inRef,
 				try
 				{
 					My_LineIteratorPtr		iteratorPtr = new My_LineIterator
-																(ptr->screenBuffer, ptr->scrollbackBuffer,
-																	ptr->screenBuffer/* iterator target */,
-																	startIterator, true/* heap allocated */);
+																(true/* heap allocated */,
+																	ptr->screenBuffer, ptr->scrollbackBuffer,
+																	startIterator,
+																	My_LineIterator::kScreenBufferDesignator);
 					
 					
 					if (nullptr != iteratorPtr)
@@ -2108,14 +2144,14 @@ Terminal_NewScrollbackLineIterator	(TerminalScreenRef				inRef,
 	
 	if ((nullptr != ptr) && (ptr->scrollbackBuffer.begin() != ptr->scrollbackBuffer.end()))
 	{
-		My_ScreenBufferLineList::iterator	startIterator = ptr->scrollbackBuffer.begin();
-		Boolean								validIterator = true;
+		My_ScrollbackBufferLineList::iterator	startIterator = ptr->scrollbackBuffer.begin();
+		Boolean									validIterator = true;
 		
 		
 		// ensure the specified row is in range; since the scrollback buffer is
 		// a linked list, it would be prohibitively expensive to ask for its size,
 		// so instead the iterator is incremented while watching for the end
-		for (My_ScreenBufferLineList::difference_type i = 0; i < inLineNumberZeroForNewest; ++i)
+		for (My_ScrollbackBufferLineList::difference_type i = 0; i < inLineNumberZeroForNewest; ++i)
 		{
 			++startIterator;
 			if (startIterator == ptr->scrollbackBuffer.end())
@@ -2129,9 +2165,9 @@ Terminal_NewScrollbackLineIterator	(TerminalScreenRef				inRef,
 		{
 			if (nullptr != inStackAllocationOrNull)
 			{
-				new (inStackAllocationOrNull) My_LineIterator(ptr->screenBuffer, ptr->scrollbackBuffer,
-																ptr->scrollbackBuffer/* iterator target */,
-																startIterator, false/* heap allocated */);
+				new (inStackAllocationOrNull) My_LineIterator(false/* heap allocated */,
+																ptr->screenBuffer, ptr->scrollbackBuffer,
+																startIterator);
 				result = REINTERPRET_CAST(inStackAllocationOrNull, Terminal_LineRef);
 			}
 			else
@@ -2139,9 +2175,9 @@ Terminal_NewScrollbackLineIterator	(TerminalScreenRef				inRef,
 				try
 				{
 					My_LineIteratorPtr		iteratorPtr = new My_LineIterator
-																(ptr->screenBuffer, ptr->scrollbackBuffer,
-																	ptr->scrollbackBuffer/* iterator target */,
-																	startIterator, true/* heap allocated */);
+																(true/* heap allocated */,
+																	ptr->screenBuffer, ptr->scrollbackBuffer,
+																	startIterator);
 					
 					
 					if (nullptr != iteratorPtr)
@@ -17224,7 +17260,7 @@ screenMoveLinesToScrollback		(My_ScreenBufferPtr						inDataPtr,
 				}
 				else
 				{
-					My_ScreenBufferLineList::iterator	oldestScrollbackLine;
+					My_ScrollbackBufferLineList::iterator	oldestScrollbackLine;
 					
 					
 					// make the oldest screen line the newest scrollback line
