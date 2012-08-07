@@ -105,6 +105,14 @@ typedef char const*		ConstCStringPtr;
 #define STATIC_CAST(ref, intendedType)			((intendedType)(ref))	//!< identical to a cast in the traditional sense (e.g. "char" to "int")
 #endif
 
+//! a static assertion fails at COMPILE TIME if the asserted
+//! condition is false; admittedly the "negative array size"
+//! error isn't all that clear but at least it fails with
+//! the right file and line; the name of the array is also a
+//! hint about which condition is false (in C++11 this macro
+//! will no longer be necessary)
+#define STATIC_ASSERT(cond,name) \
+	typedef int assert_##name[-1 + 2 * (cond)]
 
 
 /*###############################################################
