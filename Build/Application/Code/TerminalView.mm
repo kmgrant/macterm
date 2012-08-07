@@ -464,8 +464,9 @@ void				drawTerminalText					(My_TerminalViewPtr, CGContextRef, CGRect const&, R
 void				drawVTGraphicsGlyph					(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char, Boolean);
 void				eraseSection						(My_TerminalViewPtr, CGContextRef, SInt16, SInt16, CGRect&);
 void				eventNotifyForView					(My_TerminalViewConstPtr, TerminalView_Event, void*);
-Terminal_LineRef	findRowIterator						(My_TerminalViewPtr, UInt16);
-Terminal_LineRef	findRowIteratorRelativeTo			(My_TerminalViewPtr, UInt16, SInt16);
+Terminal_LineRef	findRowIterator						(My_TerminalViewPtr, UInt16, Terminal_LineStackStorage*);
+Terminal_LineRef	findRowIteratorRelativeTo			(My_TerminalViewPtr, UInt16, SInt16,
+														 Terminal_LineStackStorage*);
 Boolean				findVirtualCellFromLocalPoint		(My_TerminalViewPtr, Point, TerminalView_Cell&, SInt16&, SInt16&);
 Boolean				findVirtualCellFromScreenPoint		(My_TerminalViewPtr, HIPoint, TerminalView_Cell&, Float32&, Float32&);
 void				getBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGDeviceColor*);
@@ -5276,8 +5277,10 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 		// track the current line, so that drawTerminalScreenRunOp()
 		// can determine the correct drawing rectangle for the line
 		{
-			Terminal_LineRef	lineIterator = findRowIterator
-												(inTerminalViewPtr, inZeroBasedTopmostRowToDraw);
+			Terminal_LineStackStorage	lineIteratorData;
+			Terminal_LineRef			lineIterator = findRowIterator
+														(inTerminalViewPtr, inZeroBasedTopmostRowToDraw,
+															&lineIteratorData);
 			
 			
 			if (nullptr != lineIterator)
@@ -5298,7 +5301,8 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 				{
 					// TEMPORARY: extremely inefficient, but necessary for
 					// correct scrollback behavior at the moment
-					lineIterator = findRowIterator(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine);
+					lineIterator = findRowIterator(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine,
+													&lineIteratorData);
 					if (nullptr == lineIterator) break;
 					
 					iteratorResult = Terminal_ForEachLikeAttributeRunDo
@@ -6746,16 +6750,24 @@ currently topmost in the view, row index 0 refers to the
 50th scrollback line.  Returns nullptr if the index is out
 of range or there is any other problem creating the iterator.
 
+NOTE:	To avoid heap allocation, "inoutStackStorageOrNull"
+		can be used to pass the address of a stack variable.
+		Iterators allocated in this way do not strictly
+		speaking need to be released (as that operation
+		becomes a no-op) but it is still OK to do so.
+
 Calls findRowIteratorRelativeTo().
 
 (3.0)
 */
 Terminal_LineRef
-findRowIterator		(My_TerminalViewPtr		inTerminalViewPtr,
-					 UInt16					inZeroBasedRowIndex)
+findRowIterator		(My_TerminalViewPtr				inTerminalViewPtr,
+					 UInt16							inZeroBasedRowIndex,
+					 Terminal_LineStackStorage*		inoutStackStorageOrNull)
 {
 	Terminal_LineRef	result = findRowIteratorRelativeTo(inTerminalViewPtr, inZeroBasedRowIndex,
-															inTerminalViewPtr->screen.topVisibleEdgeInRows);
+															inTerminalViewPtr->screen.topVisibleEdgeInRows,
+															inoutStackStorageOrNull);
 	
 	
 	return result;
@@ -6782,16 +6794,23 @@ will be slow.  Ideally, one or more iterators are preserved
 someplace for fast conversion from the physical (row index)
 world.
 
-IMPORTANT:  Call releaseRowIterator() when finished with the
+NOTE:	To avoid heap allocation, "inoutStackStorageOrNull"
+		can be used to pass the address of a stack variable.
+		Iterators allocated in this way do not strictly
+		speaking need to be released (as that operation
+		becomes a no-op) but it is still OK to do so.
+
+IMPORTANT:	Call releaseRowIterator() when finished with the
 			given iterator, in case any resources were
 			allocated to create it in the first place.
 
 (4.0)
 */
 Terminal_LineRef
-findRowIteratorRelativeTo	(My_TerminalViewPtr		inTerminalViewPtr,
-							 UInt16					inZeroBasedRowIndex,
-							 SInt16					inOriginRow)
+findRowIteratorRelativeTo	(My_TerminalViewPtr				inTerminalViewPtr,
+							 UInt16							inZeroBasedRowIndex,
+							 SInt16							inOriginRow,
+							 Terminal_LineStackStorage*		inoutStackStorageOrNull)
 {
 	Terminal_LineRef	result = nullptr;
 	// normalize the requested row so that a scrollback line is negative,
@@ -7016,9 +7035,10 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 				 UInt16					inZeroBasedRowIndex,
 				 Rect*					outBoundsPtr)
 {
-	Terminal_LineRef	rowIterator = nullptr;
-	SInt16				sectionTopEdge = inZeroBasedRowIndex * inTerminalViewPtr->text.font.heightPerCharacter;
-	SInt16				topRow = 0;
+	Terminal_LineStackStorage	rowIteratorData;
+	Terminal_LineRef			rowIterator = nullptr;
+	SInt16						sectionTopEdge = inZeroBasedRowIndex * inTerminalViewPtr->text.font.heightPerCharacter;
+	SInt16						topRow = 0;
 	
 	
 	// start with the interior bounds, as this defines two of the edges
@@ -7047,7 +7067,7 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	// account for double-height rows
 	getVirtualVisibleRegion(inTerminalViewPtr, nullptr/* left */, &topRow, nullptr/* right */, nullptr/* bottom */);
-	rowIterator = findRowIterator(inTerminalViewPtr, topRow + inZeroBasedRowIndex);
+	rowIterator = findRowIterator(inTerminalViewPtr, topRow + inZeroBasedRowIndex, &rowIteratorData);
 	if (nullptr != rowIterator)
 	{
 		TerminalTextAttributes		globalAttributes = 0L;
@@ -7092,13 +7112,14 @@ SInt16
 getRowCharacterWidth	(My_TerminalViewPtr		inTerminalViewPtr,
 						 UInt16					inLineNumber)
 {
-	TerminalTextAttributes	globalAttributes = 0L;
-	Terminal_LineRef		rowIterator = nullptr;
-	SInt16					result = inTerminalViewPtr->text.font.widthPerCharacter;
+	TerminalTextAttributes		globalAttributes = 0L;
+	Terminal_LineStackStorage	rowIteratorData;
+	Terminal_LineRef			rowIterator = nullptr;
+	SInt16						result = inTerminalViewPtr->text.font.widthPerCharacter;
 	
 	
-	rowIterator = findRowIterator(inTerminalViewPtr, inLineNumber);
-	if (rowIterator != nullptr)
+	rowIterator = findRowIterator(inTerminalViewPtr, inLineNumber, &rowIteratorData);
+	if (nullptr != rowIterator)
 	{
 		(Terminal_Result)Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, rowIterator, &globalAttributes);
 		if (STYLE_IS_DOUBLE_ANY(globalAttributes)) result = INTEGER_DOUBLED(result);
@@ -7471,11 +7492,13 @@ getSelectedTextAsNewHandle	(My_TerminalViewPtr			inTerminalViewPtr,
 		result = Memory_NewHandle(kByteCount);
 		if (nullptr != result)
 		{
-			Terminal_Result			copyResult = kTerminal_ResultOK;
-			Terminal_LineRef		lineIterator = findRowIterator(inTerminalViewPtr, kSelectionStart.second);
-			Terminal_TextCopyFlags	flags = 0L;
-			char*					characters = nullptr;
-			SInt32					actualLength = 0L;
+			Terminal_Result				copyResult = kTerminal_ResultOK;
+			Terminal_LineStackStorage	lineIteratorData;
+			Terminal_LineRef			lineIterator = findRowIterator(inTerminalViewPtr, kSelectionStart.second,
+																		&lineIteratorData);
+			Terminal_TextCopyFlags		flags = 0L;
+			char*						characters = nullptr;
+			SInt32						actualLength = 0L;
 			
 			
 			HLock(result);
@@ -7978,7 +8001,9 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 		{
 			// double-click; invoke the registered Python word-finding callback
 			// to determine which text should be selected
-			Terminal_LineRef			lineIterator = findRowIteratorRelativeTo(inTerminalViewPtr, selectionStart.second, 0/* origin row */);
+			Terminal_LineStackStorage	lineIteratorData;
+			Terminal_LineRef			lineIterator = findRowIteratorRelativeTo(inTerminalViewPtr, selectionStart.second,
+																					0/* origin row */, &lineIteratorData);
 			UniChar const*				textStart = nullptr;
 			UniChar const*				textPastEnd = nullptr;
 			Terminal_TextCopyFlags		flags = 0L;
@@ -8287,9 +8312,10 @@ highlightVirtualRange	(My_TerminalViewPtr				inTerminalViewPtr,
 	
 	// modify selection attributes
 	{
-		Terminal_LineRef	lineIterator = findRowIteratorRelativeTo
-											(inTerminalViewPtr, orderedRange.first.second, 0/* origin row */);
-		UInt16 const		kNumberOfRows = orderedRange.second.second - orderedRange.first.second;
+		Terminal_LineStackStorage	lineIteratorData;
+		Terminal_LineRef			lineIterator = findRowIteratorRelativeTo(inTerminalViewPtr, orderedRange.first.second,
+																				0/* origin row */, &lineIteratorData);
+		UInt16 const				kNumberOfRows = orderedRange.second.second - orderedRange.first.second;
 		
 		
 		if (nullptr != lineIterator)
@@ -10836,10 +10862,12 @@ returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
 		
 		if (nullptr != resultMutable)
 		{
-			Terminal_LineRef	lineIterator = findRowIteratorRelativeTo(inTerminalViewPtr, 0,
-																			kSelectionStart.second);
-			Terminal_Result		iteratorAdvanceResult = kTerminal_ResultOK;
-			Terminal_Result		textGrabResult = kTerminal_ResultOK;
+			Terminal_LineStackStorage	lineIteratorData;
+			Terminal_LineRef			lineIterator = findRowIteratorRelativeTo(inTerminalViewPtr, 0,
+																					kSelectionStart.second,
+																					&lineIteratorData);
+			Terminal_Result				iteratorAdvanceResult = kTerminal_ResultOK;
+			Terminal_Result				textGrabResult = kTerminal_ResultOK;
 			
 			
 			// read every line of Unicode characters within this range;

@@ -813,12 +813,14 @@ public:
 	My_LineIterator		(My_ScreenBufferLineList&			inScreenBuffer,
 						 My_ScreenBufferLineList&			inScrollbackBuffer,
 						 My_ScreenBufferLineList&			inInitialIteratorTarget,
-						 My_ScreenBufferLineList::iterator	inRowIterator)
+						 My_ScreenBufferLineList::iterator	inRowIterator,
+						 Boolean							isHeapStorage)
 	:
 	screenBuffer(inScreenBuffer),
 	scrollbackBuffer(inScrollbackBuffer),
 	currentListPtr(&inInitialIteratorTarget),
-	rowIterator(inRowIterator)
+	rowIterator(inRowIterator),
+	heapAllocated(isHeapStorage)
 	{
 		assert((inInitialIteratorTarget == inScreenBuffer) || (inInitialIteratorTarget == inScrollbackBuffer));
 	}
@@ -926,6 +928,14 @@ public:
 		return currentLine();
 	}
 	
+	//! Returns false if the constructor claims to have initialized this
+	//! data in a block of memory that is on the stack.
+	Boolean
+	isHeapAllocated ()
+	{
+		return heapAllocated;
+	}
+	
 	//! Returns the bottommost main screen line.
 	My_ScreenBufferLine&
 	lastLine ()
@@ -938,7 +948,11 @@ private:
 	My_ScreenBufferLineList&			scrollbackBuffer;		//!< one possible target for "currentListPtr"
 	My_ScreenBufferLineList*			currentListPtr;			//!< the list that this iterator is pointing into
 	My_ScreenBufferLineList::iterator	rowIterator;			//!< points into one of the buffer queues
+	Boolean								heapAllocated;			//!< an annoying extra use of memory for this flag...
 };
+STATIC_ASSERT(sizeof(Terminal_LineStackStorage) == sizeof(My_LineIterator),
+				assert_My_LineIterator_size_equals_Terminal_LineRefStackStorage);
+
 typedef My_LineIterator*	My_LineIteratorPtr;
 
 /*!
@@ -2009,8 +2023,9 @@ IMPORTANT:	An iterator is completely invalid once the
 (3.0)
 */
 Terminal_LineRef
-Terminal_NewMainScreenLineIterator	(TerminalScreenRef		inRef,
-									 UInt16					inLineNumberZeroForTop)
+Terminal_NewMainScreenLineIterator	(TerminalScreenRef				inRef,
+									 UInt16							inLineNumberZeroForTop,
+									 Terminal_LineStackStorage*		inStackAllocationOrNull)
 {
 	Terminal_LineRef		result = nullptr;
 	My_ScreenBufferPtr		ptr = getVirtualScreenData(inRef);
@@ -2021,23 +2036,37 @@ Terminal_NewMainScreenLineIterator	(TerminalScreenRef		inRef,
 		// ensure the specified row is in range
 		if (inLineNumberZeroForTop < ptr->screenBuffer.size())
 		{
-			try
+			My_ScreenBufferLineList::iterator	startIterator = ptr->screenBuffer.begin();
+			
+			
+			std::advance(startIterator, STATIC_CAST(inLineNumberZeroForTop,
+													My_ScreenBufferLineList::difference_type));
+			if (nullptr != inStackAllocationOrNull)
 			{
-				My_ScreenBufferLineList::iterator	startIterator = ptr->screenBuffer.begin();
-				My_LineIteratorPtr					iteratorPtr = nullptr;
-				
-				
-				std::advance(startIterator, STATIC_CAST(inLineNumberZeroForTop, My_ScreenBufferLineList::difference_type));
-				iteratorPtr = new My_LineIterator(ptr->screenBuffer, ptr->scrollbackBuffer,
-													ptr->screenBuffer/* iterator target */, startIterator);
-				if (nullptr != iteratorPtr)
-				{
-					result = REINTERPRET_CAST(iteratorPtr, Terminal_LineRef);
-				}
+				new (inStackAllocationOrNull) My_LineIterator(ptr->screenBuffer, ptr->scrollbackBuffer,
+																ptr->screenBuffer/* iterator target */,
+																startIterator, false/* heap allocated */);
+				result = REINTERPRET_CAST(inStackAllocationOrNull, Terminal_LineRef);
 			}
-			catch (std::bad_alloc)
+			else
 			{
-				result = nullptr;
+				try
+				{
+					My_LineIteratorPtr		iteratorPtr = new My_LineIterator
+																(ptr->screenBuffer, ptr->scrollbackBuffer,
+																	ptr->screenBuffer/* iterator target */,
+																	startIterator, true/* heap allocated */);
+					
+					
+					if (nullptr != iteratorPtr)
+					{
+						result = REINTERPRET_CAST(iteratorPtr, Terminal_LineRef);
+					}
+				}
+				catch (std::bad_alloc)
+				{
+					result = nullptr;
+				}
 			}
 		}
 	}
@@ -2069,8 +2098,9 @@ IMPORTANT:	An iterator is completely invalid once the screen
 (3.0)
 */
 Terminal_LineRef
-Terminal_NewScrollbackLineIterator	(TerminalScreenRef	inRef,
-									 UInt16				inLineNumberZeroForNewest)
+Terminal_NewScrollbackLineIterator	(TerminalScreenRef				inRef,
+									 UInt16							inLineNumberZeroForNewest,
+									 Terminal_LineStackStorage*		inStackAllocationOrNull)
 {
 	Terminal_LineRef		result = nullptr;
 	My_ScreenBufferPtr		ptr = getVirtualScreenData(inRef);
@@ -2078,39 +2108,52 @@ Terminal_NewScrollbackLineIterator	(TerminalScreenRef	inRef,
 	
 	if ((nullptr != ptr) && (ptr->scrollbackBuffer.begin() != ptr->scrollbackBuffer.end()))
 	{
-		try
+		My_ScreenBufferLineList::iterator	startIterator = ptr->scrollbackBuffer.begin();
+		Boolean								validIterator = true;
+		
+		
+		// ensure the specified row is in range; since the scrollback buffer is
+		// a linked list, it would be prohibitively expensive to ask for its size,
+		// so instead the iterator is incremented while watching for the end
+		for (My_ScreenBufferLineList::difference_type i = 0; i < inLineNumberZeroForNewest; ++i)
 		{
-			My_ScreenBufferLineList::iterator	startIterator = ptr->scrollbackBuffer.begin();
-			My_LineIteratorPtr					iteratorPtr = nullptr;
-			Boolean								validIterator = true;
-			
-			
-			// ensure the specified row is in range; since the scrollback buffer is
-			// a linked list, it would be prohibitively expensive to ask for its size,
-			// so instead the iterator is incremented while watching for the end
-			for (My_ScreenBufferLineList::difference_type i = 0; i < inLineNumberZeroForNewest; ++i)
+			++startIterator;
+			if (startIterator == ptr->scrollbackBuffer.end())
 			{
-				++startIterator;
-				if (startIterator == ptr->scrollbackBuffer.end())
-				{
-					validIterator = false;
-					break;
-				}
-			}
-			
-			if (validIterator)
-			{
-				iteratorPtr = new My_LineIterator(ptr->screenBuffer, ptr->scrollbackBuffer,
-													ptr->scrollbackBuffer/* iterator target */, startIterator);
-				if (nullptr != iteratorPtr)
-				{
-					result = REINTERPRET_CAST(iteratorPtr, Terminal_LineRef);
-				}
+				validIterator = false;
+				break;
 			}
 		}
-		catch (std::bad_alloc)
+		
+		if (validIterator)
 		{
-			result = nullptr;
+			if (nullptr != inStackAllocationOrNull)
+			{
+				new (inStackAllocationOrNull) My_LineIterator(ptr->screenBuffer, ptr->scrollbackBuffer,
+																ptr->scrollbackBuffer/* iterator target */,
+																startIterator, false/* heap allocated */);
+				result = REINTERPRET_CAST(inStackAllocationOrNull, Terminal_LineRef);
+			}
+			else
+			{
+				try
+				{
+					My_LineIteratorPtr		iteratorPtr = new My_LineIterator
+																(ptr->screenBuffer, ptr->scrollbackBuffer,
+																	ptr->scrollbackBuffer/* iterator target */,
+																	startIterator, true/* heap allocated */);
+					
+					
+					if (nullptr != iteratorPtr)
+					{
+						result = REINTERPRET_CAST(iteratorPtr, Terminal_LineRef);
+					}
+				}
+				catch (std::bad_alloc)
+				{
+					result = nullptr;
+				}
+			}
 		}
 	}
 	return result;
@@ -2120,6 +2163,10 @@ Terminal_NewScrollbackLineIterator	(TerminalScreenRef	inRef,
 /*!
 Destroys an iterator created with Terminal_NewLineIterator(),
 and sets your copy of the reference to nullptr.
+
+Note that no actual memory is deallocated by this call if
+stack storage was used to construct the iterator, although
+your copy of the reference is still nullified.
 
 (3.0)
 */
@@ -2133,7 +2180,10 @@ Terminal_DisposeLineIterator	(Terminal_LineRef*		inoutRefPtr)
 		
 		if (nullptr != ptr)
 		{
-			delete ptr;
+			if (ptr->isHeapAllocated())
+			{
+				delete ptr;
+			}
 			*inoutRefPtr = nullptr;
 		}
 	}

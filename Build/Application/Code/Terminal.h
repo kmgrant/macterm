@@ -269,6 +269,21 @@ enum
 
 typedef struct Terminal_OpaqueLineIterator*		Terminal_LineRef;	//!< efficient access to an arbitrary screen line
 
+/*!
+An iterator may be allocated on the stack (instead of
+incurring an automatic heap allocation) by declaring
+a variable of this type and passing it to the usual
+methods that construct Terminal_LineRef types.
+*/
+struct Terminal_LineStackStorage
+{
+	void*	p1_;
+	void*	p2_;
+	void*	p3_;
+	void*	p4_;
+	UInt32	d1_;
+};
+
 #include "TerminalRangeDescription.typedef.h"
 
 struct Terminal_ScrollDescription
@@ -370,11 +385,13 @@ Terminal_Result
 
 Terminal_LineRef
 	Terminal_NewMainScreenLineIterator		(TerminalScreenRef			inScreen,
-											 UInt16						inLineNumberZeroForTop);
+											 UInt16						inLineNumberZeroForTop,
+											 Terminal_LineStackStorage*	inStackAllocationOrNull = nullptr);
 
 Terminal_LineRef
 	Terminal_NewScrollbackLineIterator		(TerminalScreenRef			inScreen,
-											 UInt16						inLineNumberZeroForNewest);
+											 UInt16						inLineNumberZeroForNewest,
+											 Terminal_LineStackStorage*	inStackAllocationOrNull = nullptr);
 
 void
 	Terminal_DisposeLineIterator			(Terminal_LineRef*			inoutIteratorPtr);
