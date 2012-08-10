@@ -64,14 +64,6 @@
 #pragma mark Constants
 namespace {
 
-/*!
-IMPORTANT
-
-The following values MUST agree with the view IDs in
-the NIB "TEKWindow.nib".
-*/
-HIViewID const	idMyCanvas		= { 'Cnvs', 0/* ID */ };
-
 UInt16 const	kMy_MaximumX = 4095;
 UInt16 const	kMy_MaximumY = 3139;	// TEMPORARY - figure out where the hell this value comes from
 Float32 const	kMy_DefaultStrokeWidth = 0.5;
