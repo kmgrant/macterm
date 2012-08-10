@@ -60,9 +60,6 @@
 #import <MemoryBlocks.h>
 #import <NIBLoader.h>
 
-// resource includes
-#import "SpacingConstants.r"
-
 // application includes
 #import "AppResources.h"
 #import "ConstantsRegistry.h"

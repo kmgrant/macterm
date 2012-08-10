@@ -47,9 +47,6 @@
 // application includes
 #import "AppResources.h"
 
-// resource includes
-#import "SpacingConstants.r"
-
 
 
 #pragma mark Constants
@@ -156,7 +153,7 @@ and located at the bottom-right corner of a modal
 window (or the bottom-left corner, if the locale
 is right-to-left).  Thus, buttons are moved away
 from their assumed corner, and spaced exactly 12
-pixels apart (as specified in "SpacingConstants.r").
+pixels apart (as specified in "Localization.h").
 The first button in the given array of item
 indices is expected to be the default button (if
 any), and buttons are positioned in the order

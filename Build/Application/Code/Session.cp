@@ -76,9 +76,6 @@
 #include <SoundSystem.h>
 #include <StringUtilities.h>
 
-// resource includes
-#include "SpacingConstants.r"
-
 // application includes
 #include "AppResources.h"
 #include "Clipboard.h"

@@ -67,9 +67,6 @@
 #include <NIBLoader.h>
 #include <SoundSystem.h>
 
-// resource includes
-#include "SpacingConstants.r"
-
 // application includes
 #include "AppResources.h"
 #include "Commands.h"

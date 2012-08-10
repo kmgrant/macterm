@@ -43,8 +43,6 @@
 #ifndef __LOCALIZATION__
 #define __LOCALIZATION__
 
-#ifndef REZ
-
 // Mac includes
 #include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
@@ -98,6 +96,38 @@ enum
 	kLocalizationRowLayoutFlagsSetVisibilityOnOverflow	= (1 << 4)	//!< ensures that all controls in the given set that fall
 																	//!  within the prescribed boundary are visible; all other
 																	//!  given controls are made invisible (useful for toolbars)
+};
+
+/*!
+The following constants are used as a rough approximation
+of the interface guidelines for cases where controls are
+arranged programmatically.
+*/
+enum
+{
+	// standard heights in pixels for buttons of various kinds
+	BUTTON_HT						= 20,
+	BUTTON_HT_SMALL					= 17,
+	CHECKBOX_HT						= 21,
+	RADIOBUTTON_HT					= CHECKBOX_HT,
+	TAB_HT_BIG						= 22,
+	
+	// amount of space required between a button’s title and its sides
+	MINIMUM_BUTTON_TITLE_CUSHION	= 20,
+	
+	// standard distances in pixels between buttons and their surroundings
+	HSP_BUTTONS						= 12,
+	HSP_BUTTON_AND_DIALOG			= 24,
+	VSP_BUTTON_AND_DIALOG			= 20,
+	VSP_BUTTON_SMALL_AND_DIALOG		= 14,
+	
+	// standard distances in pixels between a tab’s edges and its surroundings
+	HSP_TAB_AND_DIALOG				= 20,
+	VSP_TAB_AND_DIALOG				= 17,
+	
+	// standard distances in pixels between a tab’s inner pane and its edges
+	HSP_TABPANE_AND_TAB				= 20,
+	VSP_TABPANE_AND_TAB				= 10,
 };
 
 #pragma mark Types
@@ -245,8 +275,6 @@ void
 												 ControlRef					inControl2);
 
 //@}
-
-#endif /* ifndef REZ */
 
 #endif
 

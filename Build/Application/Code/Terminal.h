@@ -132,11 +132,9 @@ enum
 													//!  XTerm colors (context: Terminal_XTermColorDescriptionConstPtr)
 };
 
-#ifndef REZ
 typedef UInt32 Terminal_Emulator;
 typedef UInt32 Terminal_EmulatorType; // part of Terminal_Emulator
 typedef UInt32 Terminal_EmulatorVariant; // part of Terminal_Emulator
-#endif
 
 enum
 {

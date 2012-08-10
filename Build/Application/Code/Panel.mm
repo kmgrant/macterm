@@ -49,11 +49,9 @@
 #import <Console.h>
 #import <FlagManager.h>
 #import <IconManager.h>
+#import <Localization.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlocks.h>
-
-// resource includes
-#import "SpacingConstants.r"
 
 // application includes
 #import "ConstantsRegistry.h"

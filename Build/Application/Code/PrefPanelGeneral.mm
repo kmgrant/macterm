@@ -69,9 +69,6 @@
 #import <RegionUtilities.h>
 #import <SoundSystem.h>
 
-// resource includes
-#import "SpacingConstants.r"
-
 // application includes
 #import "AppResources.h"
 #import "Commands.h"

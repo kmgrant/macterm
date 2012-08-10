@@ -36,8 +36,6 @@
 #ifndef __UNIVERSALDEFINES__
 #define __UNIVERSALDEFINES__
 
-#if !REZ
-
 // standard-C includes
 #ifdef __cplusplus
 #	include <cassert>
@@ -193,8 +191,6 @@ inline double FLOAT64_EIGHTHED		(double a)				{ return (a / 8.0); }				//!< divi
 #define HIViewInstallEventHandler( target, handler, numTypes, list, userData, outHandlerRef ) \
        InstallEventHandler( HIObjectGetEventTarget( (HIObjectRef) (target) ), (handler), (numTypes), (list), (userData), (outHandlerRef) )
 #endif
-
-#endif /* REZ */
 
 #endif
 
