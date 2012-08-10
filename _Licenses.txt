@@ -1,6 +1,16 @@
 
                      MacTerm Source Licenses           2005-04-12
 
+The copyright holder of all recent versions of MacTerm and
+MacTelnet is Kevin M. Grant, as detailed in "About MacTerm".
+
+Note that each source code file clearly marks (at the top) the
+license that is applicable to the file.  Each file has only ONE
+applicable license even if the project allows multiple licenses.
+
+In general, library code in "Build/Shared" is more liberally
+licensed than the terminal's own code in "Build/Application".
+
 MAIN SOURCE CODE LICENSE
   MacTerm is free software; you may distribute it or modify it
   under the terms of the GNU General Public License, either
@@ -18,8 +28,10 @@ GENERIC CODE LICENSE
   A copy of the LPL license is in Licenses/.
 
 "MAAttachedWindow" LICENSE
-  The "MAAttachedWindow.m" and "MAAttachedWindow.h" files are
-  covered by Matt Gemmell's license agreement.
+  The "Build/Shared/Code/Popover.mm" and "Popover.objc++.h" files
+  (formerly "MAAttachedWindow.m" and "MAAttachedWindow.h" but
+  extensively modified) are so modified under the terms of the
+  license from Matt Gemmell.
 
   A copy of Matt Gemmell's license is in Licenses/.
 
