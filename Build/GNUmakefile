@@ -427,18 +427,19 @@ clean-py-framework:
 install-growl-framework:
 	$(call banner,$@)
 	@# keep in sync with the matching clean rule
+	@# (note: this rule has a check to avoid accidental rsyncing from '/')
 	@if [ ! -d "$(GROWL_SDK_ROOT)" ] ; then \
-		echo "(current working directory: '$(CURDIR)')" >&2 ; \
-		echo "first download the Growl SDK <http://growl.info/> and install in subdirectory '$(GROWL_SDK_ROOT)''" >&2 ; \
-		exit 1 ; \
+		echo "WARNING: Support for Growl is NOT being compiled in, due to a missing framework." >&2 ; \
+		echo "Current working directory: '$(CURDIR)';" >&2 ; \
+		echo "first download the Growl SDK <http://growl.info/> and install in subdirectory '$(GROWL_SDK_ROOT)'." >&2 ; \
+	else \
+		if [ "x$(SRC_GROWL_TOP)" = "x" ] ; then \
+			echo "SRC_GROWL_TOP variable unset" >&2 ; \
+			exit 1 ; \
+		fi ; \
+		$(MKDIR_P) $(dir $(DEST_GROWL_TOP)) ; \
+		$(RSYNC) --archive '$(SRC_GROWL_TOP)/' $(DEST_GROWL_TOP) ; \
 	fi
-	@# avoid rsyncing from /
-	@if [ "x$(SRC_GROWL_TOP)" = "x" ] ; then \
-		echo "SRC_GROWL_TOP variable unset" >&2 ; \
-		exit 1 ; \
-	fi
-	$(MKDIR_P) $(dir $(DEST_GROWL_TOP))
-	$(RSYNC) --archive '$(SRC_GROWL_TOP)/' $(DEST_GROWL_TOP)
 
 .PHONY: clean-growl-framework
 clean-growl-framework:
