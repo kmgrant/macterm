@@ -6825,12 +6825,14 @@ findRowIteratorRelativeTo	(My_TerminalViewPtr				inTerminalViewPtr,
 		// the normalized values are negative and use -1 to indicate the first
 		// line; so, this is converted by negating the negative and subtracting
 		// one so that a normalized -1 becomes 0, -2 becomes 1, etc.
-		result = Terminal_NewScrollbackLineIterator(inTerminalViewPtr->screen.ref, -kActualIndex - 1);
+		result = Terminal_NewScrollbackLineIterator(inTerminalViewPtr->screen.ref, -kActualIndex - 1,
+													inoutStackStorageOrNull);
 	}
 	else
 	{
 		// main screen lines are already zero-based and need no conversion
-		result = Terminal_NewMainScreenLineIterator(inTerminalViewPtr->screen.ref, kActualIndex);
+		result = Terminal_NewMainScreenLineIterator(inTerminalViewPtr->screen.ref, kActualIndex,
+													inoutStackStorageOrNull);
 	}
 	return result;
 }// findRowIteratorRelativeTo
