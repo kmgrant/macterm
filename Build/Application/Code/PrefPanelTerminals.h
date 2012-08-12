@@ -39,7 +39,10 @@
 #include "GenericPanelTabs.h"
 #include "Panel.h"
 #include "Preferences.h"
-#include "PrefsContextManager.objc++.h"
+#ifdef __OBJC__
+#	include "PreferenceValue.objc++.h"
+#	include "PrefsContextManager.objc++.h"
+#endif
 #include "PrefsWindow.h"
 
 
@@ -80,19 +83,19 @@ changes to an interface declared in a ".mm" file.
 
 // accessors
 
-- (PrefsWindow_FlagContent*)
+- (PreferenceValue_Flag*)
 wrapLines; // binding
 
-- (PrefsWindow_FlagContent*)
+- (PreferenceValue_Flag*)
 eightBit; // binding
 
-- (PrefsWindow_FlagContent*)
+- (PreferenceValue_Flag*)
 saveLinesOnClear; // binding
 
-- (PrefsWindow_FlagContent*)
+- (PreferenceValue_Flag*)
 normalKeypadTopRow; // binding
 
-- (PrefsWindow_FlagContent*)
+- (PreferenceValue_Flag*)
 localPageKeys; // binding
 
 @end

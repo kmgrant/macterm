@@ -39,7 +39,10 @@
 #include "GenericPanelTabs.h"
 #include "Panel.h"
 #include "Preferences.h"
-#include "PrefsContextManager.objc++.h"
+#ifdef __OBJC__
+#	include "PreferenceValue.objc++.h"
+#	include "PrefsContextManager.objc++.h"
+#endif
 #include "PrefsWindow.h"
 #include "TerminalScreenRef.typedef.h"
 #include "TerminalViewRef.typedef.h"
@@ -68,7 +71,7 @@ changes to an interface declared in a ".mm" file.
 /*!
 Manages bindings for a character-width preference.
 */
-@interface PrefPanelFormats_CharacterWidthContent : PrefsWindow_InheritedContent
+@interface PrefPanelFormats_CharacterWidthContent : PreferenceValue_Inherited
 {
 }
 
@@ -95,7 +98,7 @@ setNumberValue:(NSNumber*)_; // binding
 /*!
 Manages bindings for a font-size preference.
 */
-@interface PrefPanelFormats_FontSizeContent : PrefsWindow_InheritedContent
+@interface PrefPanelFormats_FontSizeContent : PreferenceValue_Inherited
 {
 }
 
@@ -141,28 +144,28 @@ changes to an interface declared in a ".mm" file.
 
 // accessors
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 normalBackgroundColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 normalForegroundColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 boldBackgroundColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 boldForegroundColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 blinkingBackgroundColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 blinkingForegroundColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 matteBackgroundColor; // binding
 
-- (PrefsWindow_StringContent*)
+- (PreferenceValue_String*)
 fontFamily; // binding
 
 - (PrefPanelFormats_FontSizeContent*)
@@ -196,52 +199,52 @@ changes to an interface declared in a ".mm" file.
 
 // accessors
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 blackBoldColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 blackNormalColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 redBoldColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 redNormalColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 greenBoldColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 greenNormalColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 yellowBoldColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 yellowNormalColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 blueBoldColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 blueNormalColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 magentaBoldColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 magentaNormalColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 cyanBoldColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 cyanNormalColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 whiteBoldColor; // binding
 
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 whiteNormalColor; // binding
 
 // actions

@@ -77,6 +77,7 @@
 #import "HelpSystem.h"
 #import "Panel.h"
 #import "Preferences.h"
+#import "PreferenceValue.objc++.h"
 #import "Terminal.h"
 #import "TerminalView.h"
 #import "UIStrings.h"
@@ -3376,7 +3377,7 @@ setNumberValue:(NSNumber*)		aNumber
 }// setNumberValue:
 
 
-#pragma mark PrefsWindow_InheritedContent
+#pragma mark PreferenceValue_Inherited
 
 
 /*!
@@ -3522,7 +3523,7 @@ setStringValue:(NSString*)	aString
 }// setStringValue:
 
 
-#pragma mark PrefsWindow_InheritedContent
+#pragma mark PreferenceValue_Inherited
 
 
 /*!
@@ -3615,7 +3616,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 normalBackgroundColor
 {
 	return [self->byKey objectForKey:@"normalBackgroundColor"];
@@ -3627,7 +3628,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 normalForegroundColor
 {
 	return [self->byKey objectForKey:@"normalForegroundColor"];
@@ -3639,7 +3640,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 boldBackgroundColor
 {
 	return [self->byKey objectForKey:@"boldBackgroundColor"];
@@ -3651,7 +3652,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 boldForegroundColor
 {
 	return [self->byKey objectForKey:@"boldForegroundColor"];
@@ -3663,7 +3664,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 blinkingBackgroundColor
 {
 	return [self->byKey objectForKey:@"blinkingBackgroundColor"];
@@ -3675,7 +3676,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 blinkingForegroundColor
 {
 	return [self->byKey objectForKey:@"blinkingForegroundColor"];
@@ -3687,7 +3688,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 matteBackgroundColor
 {
 	return [self->byKey objectForKey:@"matteBackgroundColor"];
@@ -3699,7 +3700,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_StringContent*)
+- (PreferenceValue_String*)
 fontFamily
 {
 	return [self->byKey objectForKey:@"fontFamily"];
@@ -3966,35 +3967,35 @@ didLoadContainerView:(NSView*)			aContainerView
 	}
 	
 	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorNormalBackground
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"normalBackgroundColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorNormalForeground
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"normalForegroundColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorBoldBackground
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"boldBackgroundColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorBoldForeground
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"boldForegroundColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorBlinkingBackground
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"blinkingBackgroundColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorBlinkingForeground
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"blinkingForegroundColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorMatteBackground
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"matteBackgroundColor"];
-	[self->byKey setObject:[[[PrefsWindow_StringContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_String alloc]
 								initWithPreferencesTag:kPreferences_TagFontName
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"fontFamily"];
@@ -4408,7 +4409,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 blackBoldColor
 {
 	return [self->byKey objectForKey:@"blackBoldColor"];
@@ -4420,7 +4421,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 blackNormalColor
 {
 	return [self->byKey objectForKey:@"blackNormalColor"];
@@ -4432,7 +4433,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 redBoldColor
 {
 	return [self->byKey objectForKey:@"redBoldColor"];
@@ -4444,7 +4445,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 redNormalColor
 {
 	return [self->byKey objectForKey:@"redNormalColor"];
@@ -4456,7 +4457,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 greenBoldColor
 {
 	return [self->byKey objectForKey:@"greenBoldColor"];
@@ -4468,7 +4469,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 greenNormalColor
 {
 	return [self->byKey objectForKey:@"greenNormalColor"];
@@ -4480,7 +4481,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 yellowBoldColor
 {
 	return [self->byKey objectForKey:@"yellowBoldColor"];
@@ -4492,7 +4493,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 yellowNormalColor
 {
 	return [self->byKey objectForKey:@"yellowNormalColor"];
@@ -4504,7 +4505,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 blueBoldColor
 {
 	return [self->byKey objectForKey:@"blueBoldColor"];
@@ -4516,7 +4517,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 blueNormalColor
 {
 	return [self->byKey objectForKey:@"blueNormalColor"];
@@ -4528,7 +4529,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 magentaBoldColor
 {
 	return [self->byKey objectForKey:@"magentaBoldColor"];
@@ -4540,7 +4541,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 magentaNormalColor
 {
 	return [self->byKey objectForKey:@"magentaNormalColor"];
@@ -4552,7 +4553,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 cyanBoldColor
 {
 	return [self->byKey objectForKey:@"cyanBoldColor"];
@@ -4564,7 +4565,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 cyanNormalColor
 {
 	return [self->byKey objectForKey:@"cyanNormalColor"];
@@ -4576,7 +4577,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 whiteBoldColor
 {
 	return [self->byKey objectForKey:@"whiteBoldColor"];
@@ -4588,7 +4589,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_ColorContent*)
+- (PreferenceValue_Color*)
 whiteNormalColor
 {
 	return [self->byKey objectForKey:@"whiteNormalColor"];
@@ -4743,67 +4744,67 @@ didLoadContainerView:(NSView*)			aContainerView
 	}
 	
 	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlack
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"blackNormalColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlackBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"blackBoldColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIRed
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"redNormalColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIRedBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"redBoldColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIGreen
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"greenNormalColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIGreenBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"greenBoldColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIYellow
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"yellowNormalColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIYellowBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"yellowBoldColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlue
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"blueNormalColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlueBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"blueBoldColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIMagenta
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"magentaNormalColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIMagentaBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"magentaBoldColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSICyan
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"cyanNormalColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSICyanBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"cyanBoldColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIWhite
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"whiteNormalColor"];
-	[self->byKey setObject:[[[PrefsWindow_ColorContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIWhiteBold
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"whiteBoldColor"];

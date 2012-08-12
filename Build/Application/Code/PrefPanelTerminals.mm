@@ -72,6 +72,7 @@
 #import "HelpSystem.h"
 #import "Panel.h"
 #import "Preferences.h"
+#import "PreferenceValue.objc++.h"
 #import "Terminal.h"
 #import "UIStrings.h"
 #import "UIStrings_PrefsWindow.h"
@@ -2997,7 +2998,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_FlagContent*)
+- (PreferenceValue_Flag*)
 wrapLines
 {
 	return [self->byKey objectForKey:@"wrapLines"];
@@ -3009,7 +3010,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_FlagContent*)
+- (PreferenceValue_Flag*)
 eightBit
 {
 	return [self->byKey objectForKey:@"eightBit"];
@@ -3021,7 +3022,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_FlagContent*)
+- (PreferenceValue_Flag*)
 saveLinesOnClear
 {
 	return [self->byKey objectForKey:@"saveLinesOnClear"];
@@ -3033,7 +3034,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_FlagContent*)
+- (PreferenceValue_Flag*)
 normalKeypadTopRow
 {
 	return [self->byKey objectForKey:@"normalKeypadTopRow"];
@@ -3045,7 +3046,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefsWindow_FlagContent*)
+- (PreferenceValue_Flag*)
 localPageKeys
 {
 	return [self->byKey objectForKey:@"localPageKeys"];
@@ -3144,24 +3145,24 @@ didLoadContainerView:(NSView*)			aContainerView
 	}
 	
 	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self->byKey setObject:[[[PrefsWindow_FlagContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalLineWrap
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"wrapLines"];
-	[self->byKey setObject:[[[PrefsWindow_FlagContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
 								initWithPreferencesTag:kPreferences_TagDataReceiveDoNotStripHighBit
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"eightBit"];
-	[self->byKey setObject:[[[PrefsWindow_FlagContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalClearSavesLines
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"saveLinesOnClear"];
-	[self->byKey setObject:[[[PrefsWindow_FlagContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
 								initWithPreferencesTag:kPreferences_TagMapKeypadTopRowForVT220
 														contextManager:self->prefsMgr
 														inverted:YES] autorelease]
 					forKey:@"normalKeypadTopRow"];
-	[self->byKey setObject:[[[PrefsWindow_FlagContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
 								initWithPreferencesTag:kPreferences_TagPageKeysControlLocalTerminal
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"localPageKeys"];
