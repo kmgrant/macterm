@@ -1,4 +1,4 @@
-/*!	\file PrefPanelGeneral.cp
+/*!	\file PrefPanelGeneral.mm
 	\brief Implements the General panel of Preferences.
 	
 	Note that this is in transition from Carbon to Cocoa,

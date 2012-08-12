@@ -1,4 +1,4 @@
-/*!	\file PrefPanelTranslations.cp
+/*!	\file PrefPanelTranslations.mm
 	\brief Implements the Translations panel of Preferences.
 	
 	Note that this is in transition from Carbon to Cocoa,
