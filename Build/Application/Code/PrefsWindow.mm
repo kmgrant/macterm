@@ -277,6 +277,9 @@ performDisplayPrefPanelFullScreen:(id)_;
 performDisplayPrefPanelGeneral:(id)_;
 
 - (void)
+performDisplayPrefPanelTerminals:(id)_;
+
+- (void)
 performDisplayPrefPanelTranslations:(id)_;
 
 @end // PrefsWindow_Controller (PrefsWindow_ControllerInternal)
@@ -3606,6 +3609,7 @@ must be used as a backup.
 - (void)
 tableViewSelectionDidChange:(NSNotification*)	aNotification
 {
+#pragma unused(aNotification)
 	[self setCurrentPreferenceCollectionIndexes:[self->sourceListTableView selectedRowIndexes]];
 }// tableViewSelectionDidChange:
 
@@ -3725,6 +3729,15 @@ windowDidLoad
 		self->generalPanel = [[PrefPanelGeneral_ViewManager alloc] init];
 		newViewMgr = self->generalPanel;
 		[newViewMgr setPanelDisplayAction:@selector(performDisplayPrefPanelGeneral:)];
+		[newViewMgr setPanelDisplayTarget:self];
+		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
+		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
+		[newViewMgr release], newViewMgr = nil;
+		
+		// “Terminals” panel
+		self->terminalsPanel = [[PrefPanelTerminals_ViewManager alloc] init];
+		newViewMgr = self->terminalsPanel;
+		[newViewMgr setPanelDisplayAction:@selector(performDisplayPrefPanelTerminals:)];
 		[newViewMgr setPanelDisplayTarget:self];
 		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
 		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
@@ -4384,6 +4397,19 @@ performDisplayPrefPanelGeneral:(id)		sender
 
 
 /*!
+Brings the “Terminals” panel to the front.
+
+(4.1)
+*/
+- (void)
+performDisplayPrefPanelTerminals:(id)	sender
+{
+#pragma unused(sender)
+	[self displayPanel:self->terminalsPanel withAnimation:YES];
+}// performDisplayPrefPanelTerminals:
+
+
+/*!
 Brings the “Full Screen” panel to the front.
 
 (4.1)
@@ -4608,8 +4634,7 @@ colorValue
 - (void)
 setColorValue:(NSColor*)	aColor
 {
-	[self willChangeValueForKey:@"inherited"];
-	[self willChangeValueForKey:@"inheritEnabled"];
+	[self willSetPreferenceValue];
 	
 	BOOL	saveOK = [[self prefsMgr] writeColor:aColor forPreferenceTag:[self preferencesTag]];
 	
@@ -4619,8 +4644,7 @@ setColorValue:(NSColor*)	aColor
 		Console_Warning(Console_WriteLine, "failed to save a color preference");
 	}
 	
-	[self didChangeValueForKey:@"inheritEnabled"];
-	[self didChangeValueForKey:@"inherited"];
+	[self didSetPreferenceValue];
 }// setColorValue:
 
 
@@ -4658,6 +4682,189 @@ setNilPreferenceValue
 
 
 @end // PrefsWindow_ColorContent
+
+
+@implementation PrefsWindow_FlagContent
+
+
+/*!
+Common initializer; assumes no inversion.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	return [self initWithPreferencesTag:aTag contextManager:aContextMgr inverted:NO];
+}// initWithPreferencesTag:contextManager:
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+inverted:(BOOL)									anInversionFlag
+{
+	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
+	if (nil != self)
+	{
+		self->inverted = anInversionFlag;
+	}
+	return self;
+}// initWithPreferencesTag:contextManager:inverted:
+
+
+#pragma mark New Methods
+
+
+/*!
+Returns the preference’s current value, and indicates whether or
+not that value was inherited from a parent context.
+
+(4.1)
+*/
+- (BOOL)
+readValueSeeIfDefault:(BOOL*)	outIsDefault
+{
+	BOOL					result = NO;
+	Boolean					isDefault = false;
+	Preferences_ContextRef	sourceContext = [[self prefsMgr] currentContext];
+	
+	
+	if (Preferences_ContextIsValid(sourceContext))
+	{
+		Boolean				flagValue = false;
+		size_t				actualSize = 0;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+																		sizeof(flagValue), &flagValue,
+																		true/* search defaults */, &actualSize,
+																		&isDefault);
+		
+		
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			if (self->inverted)
+			{
+				flagValue = (! flagValue);
+			}
+			result = (flagValue) ? YES : NO;
+		}
+	}
+	
+	if (nullptr != outIsDefault)
+	{
+		*outIsDefault = (YES == isDefault);
+	}
+	
+	return result;
+}// readValueSeeIfDefault:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSNumber*)
+numberValue
+{
+	BOOL		isDefault = NO;
+	NSNumber*	result = [NSNumber numberWithBool:[self readValueSeeIfDefault:&isDefault]];
+	
+	
+	return result;
+}
+- (void)
+setNumberValue:(NSNumber*)		aFlag
+{
+	[self willSetPreferenceValue];
+	
+	if (nil == aFlag)
+	{
+		// when given nothing and the context is non-Default, delete the setting;
+		// this will revert to either the Default value (in non-Default contexts)
+		// or the “factory default” value (in Default contexts)
+		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:[self preferencesTag]];
+		
+		
+		if (NO == deleteOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to remove flag-value preference");
+		}
+	}
+	else
+	{
+		BOOL					saveOK = NO;
+		Preferences_ContextRef	targetContext = [[self prefsMgr] currentContext];
+		
+		
+		if (Preferences_ContextIsValid(targetContext))
+		{
+			Boolean				asBoolean = (self->inverted)
+											? (NO == [aFlag boolValue])
+											: (YES == [aFlag boolValue]);
+			Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+																			sizeof(asBoolean), &asBoolean);
+			
+			
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				saveOK = YES;
+			}
+		}
+		
+		if (NO == saveOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to save flag-value preference");
+		}
+	}
+	
+	[self didSetPreferenceValue];
+}// setNumberValue:
+
+
+#pragma mark PrefsWindow_InheritedContent
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = NO;
+	
+	
+	(BOOL)[self readValueSeeIfDefault:&result];
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self setNumberValue:nil];
+}// setNilPreferenceValue
+
+
+@end // PrefsWindow_FlagContent
 
 
 @implementation PrefsWindow_StringContent
@@ -4699,17 +4906,17 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	
 	if (Preferences_ContextIsValid(sourceContext))
 	{
-		CFStringRef			fontName = nullptr;
+		CFStringRef			stringValue = nullptr;
 		size_t				actualSize = 0;
 		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
-																		sizeof(fontName), &fontName,
+																		sizeof(stringValue), &stringValue,
 																		true/* search defaults */, &actualSize,
 																		&isDefault);
 		
 		
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			result = BRIDGE_CAST(fontName, NSString*);
+			result = BRIDGE_CAST(stringValue, NSString*);
 			[result autorelease];
 		}
 	}

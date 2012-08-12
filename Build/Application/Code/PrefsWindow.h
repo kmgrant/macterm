@@ -55,6 +55,7 @@ class ListenerModel_StandardListener;
 @class PrefPanelFormats_ViewManager;
 @class PrefPanelFullScreen_ViewManager;
 @class PrefPanelGeneral_ViewManager;
+@class PrefPanelTerminals_ViewManager;
 @class PrefPanelTranslations_ViewManager;
 #endif
 
@@ -165,6 +166,40 @@ setColorValue:(NSColor*)_; // binding
 
 /*!
 Manages bindings for any preference whose value is
+defined to be Boolean.
+*/
+@interface PrefsWindow_FlagContent : PrefsWindow_InheritedContent
+{
+	BOOL	inverted;
+}
+
+- (id)
+initWithPreferencesTag:(Preferences_Tag)_
+contextManager:(PrefsContextManager_Object*)_;
+
+// designated initializer
+- (id)
+initWithPreferencesTag:(Preferences_Tag)_
+contextManager:(PrefsContextManager_Object*)_
+inverted:(BOOL)_;
+
+// new methods
+
+- (BOOL)
+readValueSeeIfDefault:(BOOL*)_;
+
+// accessors
+
+- (NSNumber*)
+numberValue;
+- (void)
+setNumberValue:(NSNumber*)_; // binding
+
+@end
+
+
+/*!
+Manages bindings for any preference whose value is
 defined to be a pointer to a CFStringRef.
 */
 @interface PrefsWindow_StringContent : PrefsWindow_InheritedContent
@@ -222,6 +257,7 @@ changes to an interface declared in a ".mm" file.
 	Panel_ViewManager< PrefsWindow_PanelInterface >*	activePanel;
 	PrefPanelFormats_ViewManager*		formatsPanel;
 	PrefPanelGeneral_ViewManager*		generalPanel;
+	PrefPanelTerminals_ViewManager*		terminalsPanel;
 	PrefPanelTranslations_ViewManager*	translationsPanel;
 	PrefPanelFullScreen_ViewManager*	fullScreenPanel;
 }

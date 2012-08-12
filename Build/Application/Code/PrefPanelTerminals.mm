@@ -1,5 +1,8 @@
-/*!	\file PrefPanelTerminals.cp
+/*!	\file PrefPanelTerminals.mm
 	\brief Implements the Terminals panel of Preferences.
+	
+	Note that this is in transition from Carbon to Cocoa,
+	and is not yet taking advantage of most of Cocoa.
 */
 /*###############################################################
 
@@ -30,45 +33,48 @@
 
 ###############################################################*/
 
-#include "PrefPanelTerminals.h"
-#include <UniversalDefines.h>
+#import "PrefPanelTerminals.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <cstring>
+#import <cstring>
 
 // Unix includes
-#include <strings.h>
+#import <strings.h>
 
 // Mac includes
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <Carbon/Carbon.h>
+#import <CoreServices/CoreServices.h>
+#import <objc/objc-runtime.h>
 
 // library includes
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <ColorUtilities.h>
-#include <CommonEventHandlers.h>
-#include <Console.h>
-#include <DialogAdjust.h>
-#include <HIViewWrap.h>
-#include <HIViewWrapManip.h>
-#include <Localization.h>
-#include <MemoryBlocks.h>
-#include <NIBLoader.h>
-#include <RegionUtilities.h>
-#include <SoundSystem.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CocoaExtensions.objc++.h>
+#import <ColorUtilities.h>
+#import <CommonEventHandlers.h>
+#import <Console.h>
+#import <DialogAdjust.h>
+#import <HIViewWrap.h>
+#import <HIViewWrapManip.h>
+#import <Localization.h>
+#import <MemoryBlocks.h>
+#import <NIBLoader.h>
+#import <RegionUtilities.h>
+#import <SoundSystem.h>
 
 // application includes
-#include "AppResources.h"
-#include "Commands.h"
-#include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
-#include "GenericPanelTabs.h"
-#include "Panel.h"
-#include "Preferences.h"
-#include "Terminal.h"
-#include "UIStrings.h"
-#include "UIStrings_PrefsWindow.h"
+#import "AppResources.h"
+#import "Commands.h"
+#import "ConstantsRegistry.h"
+#import "DialogUtilities.h"
+#import "GenericPanelTabs.h"
+#import "HelpSystem.h"
+#import "Panel.h"
+#import "Preferences.h"
+#import "Terminal.h"
+#import "UIStrings.h"
+#import "UIStrings_PrefsWindow.h"
 
 
 
@@ -345,6 +351,14 @@ OSStatus	accessDataBrowserItemData	(ControlRef, DataBrowserItemID, DataBrowserPr
 Boolean		compareDataBrowserItems		(ControlRef, DataBrowserItemID, DataBrowserItemID, DataBrowserPropertyID);
 
 } // anonymous namespace
+
+
+@interface PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal)
+
+- (NSArray*)
+primaryDisplayBindingKeys;
+
+@end // PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal)
 
 
 
@@ -2897,5 +2911,497 @@ compareDataBrowserItems		(HIViewRef					UNUSED_ARGUMENT(inDataBrowser),
 }// compareDataBrowserItems
 
 } // anonymous namespace
+
+
+@implementation PrefPanelTerminals_ViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	NSArray*	subViewManagers = [NSArray arrayWithObjects:
+												[[[PrefPanelTerminals_OptionsViewManager alloc] init] autorelease],
+												nil];
+	
+	
+	self = [super initWithIdentifier:@"net.macterm.prefpanels.Terminals"
+										localizedName:NSLocalizedStringFromTable(@"Terminals", @"PrefPanelTerminals",
+																					@"the name of this panel")
+										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelTerminals"]
+										viewManagerArray:subViewManagers];
+	if (nil != self)
+	{
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+@end // PrefPanelTerminals_ViewManager
+
+
+@implementation PrefPanelTerminals_OptionsViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelTerminalOptionsCocoa" delegate:self context:nullptr];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[prefsMgr release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefsWindow_FlagContent*)
+wrapLines
+{
+	return [self->byKey objectForKey:@"wrapLines"];
+}// wrapLines
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefsWindow_FlagContent*)
+eightBit
+{
+	return [self->byKey objectForKey:@"eightBit"];
+}// eightBit
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefsWindow_FlagContent*)
+saveLinesOnClear
+{
+	return [self->byKey objectForKey:@"saveLinesOnClear"];
+}// saveLinesOnClear
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefsWindow_FlagContent*)
+normalKeypadTopRow
+{
+	return [self->byKey objectForKey:@"normalKeypadTopRow"];
+}// normalKeypadTopRow
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefsWindow_FlagContent*)
+localPageKeys
+{
+	return [self->byKey objectForKey:@"localPageKeys"];
+}// localPageKeys
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:5/* arbitrary; number of settings */];
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeInspector;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+	assert(nil != byKey);
+	assert(nil != prefsMgr);
+	
+	// remember frame from XIB (it might be changed later)
+	self->idealFrame = [aContainerView frame];
+	
+	// note that all current values will change
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+	}
+	
+	// WARNING: Key names are depended upon by bindings in the XIB file.
+	[self->byKey setObject:[[[PrefsWindow_FlagContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalLineWrap
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"wrapLines"];
+	[self->byKey setObject:[[[PrefsWindow_FlagContent alloc]
+								initWithPreferencesTag:kPreferences_TagDataReceiveDoNotStripHighBit
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"eightBit"];
+	[self->byKey setObject:[[[PrefsWindow_FlagContent alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalClearSavesLines
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"saveLinesOnClear"];
+	[self->byKey setObject:[[[PrefsWindow_FlagContent alloc]
+								initWithPreferencesTag:kPreferences_TagMapKeypadTopRowForVT220
+														contextManager:self->prefsMgr
+														inverted:YES] autorelease]
+					forKey:@"normalKeypadTopRow"];
+	[self->byKey setObject:[[[PrefsWindow_FlagContent alloc]
+								initWithPreferencesTag:kPreferences_TagPageKeysControlLocalTerminal
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"localPageKeys"];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = self->idealFrame.size;
+}
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet)
+	// note that all current values will change
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+	}
+	
+	// now apply the specified settings
+	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [NSImage imageNamed:@"IconForPrefPanelTerminals"];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.Terminals.Options";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Options", @"PrefPanelTerminals", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintHorizontal;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::TERMINAL;
+}// preferencesClass
+
+
+@end // PrefPanelGeneral_OptionsViewManager
+
+
+@implementation PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal)
+
+
+/*!
+Returns the names of key-value coding keys that represent the
+primary bindings of this panel (those that directly correspond
+to saved preferences).
+
+(4.1)
+*/
+- (NSArray*)
+primaryDisplayBindingKeys
+{
+	return [NSArray arrayWithObjects:
+						@"wrapLines", @"eightBit",
+						@"saveLinesOnClear", @"normalKeypadTopRow",
+						@"localPageKeys",
+						nil];
+}// primaryDisplayBindingKeys
+
+
+@end // PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -36,8 +36,68 @@
 #define __PREFPANELTERMINALS__
 
 // application includes
+#include "GenericPanelTabs.h"
 #include "Panel.h"
 #include "Preferences.h"
+#include "PrefsContextManager.objc++.h"
+#include "PrefsWindow.h"
+
+
+
+#pragma mark Types
+
+#ifdef __OBJC__
+
+/*!
+Loads a NIB file that defines a panel view with tabs
+and provides the sub-panels that the tabs contain.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelTerminals_ViewManager : GenericPanelTabs_ViewManager
+{
+}
+
+@end
+
+
+/*!
+Loads a NIB file that defines the Options pane.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelTerminals_OptionsViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+{
+@private
+	PrefsContextManager_Object*		prefsMgr;
+	NSRect							idealFrame;
+	NSMutableDictionary*			byKey;
+}
+
+// accessors
+
+- (PrefsWindow_FlagContent*)
+wrapLines; // binding
+
+- (PrefsWindow_FlagContent*)
+eightBit; // binding
+
+- (PrefsWindow_FlagContent*)
+saveLinesOnClear; // binding
+
+- (PrefsWindow_FlagContent*)
+normalKeypadTopRow; // binding
+
+- (PrefsWindow_FlagContent*)
+localPageKeys; // binding
+
+@end
+
+#endif // __OBJC__
 
 
 
