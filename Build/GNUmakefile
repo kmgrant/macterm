@@ -533,7 +533,7 @@ $(DEST_APP_RESOURCES_TOP)/English.lproj/Help:
 	$(call banner,$@)
 	$(CURDIR)/HTMLHelpBuild.command
 	$(MKDIR_P) $(dir $@)
-	$(RSYNC) --archive $(CURDIR)/HTMLHelp/_Generated/English/Help/ $@
+	$(RSYNC) --archive $(CURDIR)/_Generated/Help_English/Help/ $@
 
 # Component: Bug Reporter
 

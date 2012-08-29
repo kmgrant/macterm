@@ -13,28 +13,28 @@
 # March 26, 2005
 
 DEST = $(CURDIR)/_Generated
-MAIN_SRC = $(CURDIR)/Resources/
+MAIN_SRC = $(CURDIR)/HTMLHelp/Resources/
 define MAIN_SRC_SUB
 $(strip $(MAIN_SRC))/$(strip $(1))
 endef
-SHARED_SRC = $(CURDIR)/../Shared/Resources
+SHARED_SRC = $(CURDIR)/Shared/Resources
 
 ALL_LANGUAGES = English
 MODULES := $(filter-out index,$(sort $(notdir $(subst .textile,,$(wildcard $(strip $(MAIN_SRC))/English/*.textile)))))
 
 # use these within "xyz-%" rules where the pattern is the language (e.g. English)
 define APP_HELP_LOCALIZED_ROOT
-$(strip $(DEST))/$*
+$(strip $(DEST))/Help_$*
 endef
 define APP_HELP_LOCALIZED
-$(strip $(DEST))/$*/Help
+$(strip $(DEST))/Help_$*/Help
 endef
 define APP_HELP_LOCALIZED_CONTENT
-$(strip $(DEST))/$*/Help/content
+$(strip $(DEST))/Help_$*/Help/content
 endef
 
 DOCTYPER=$(CURDIR)/Tools/PrintHTMLDocType.pl
-GENERATOR=$(CURDIR)/Tools/html_from_textile.py
+GENERATOR=$(CURDIR)/Tools/HTMLFromTextile.py
 KV_TO_HEAD=$(CURDIR)/Tools/KeyValueToHTMLHeadTags.pl
 KV_TO_PLIST=$(CURDIR)/Tools/KeyValueToExactMatchProperties.pl
 
@@ -77,8 +77,8 @@ all:
 	-killall helpd
 	defaults write com.apple.helpindexer IndexAnchors YES
 	@# now build a new help book and display it in a web browser
-	$(MAKE) build
-	$(call open_browser_to_page,$(strip $(DEST))/English/Help/index.html)
+	$(MAKE) -f $(MAKEFILE_LIST) build
+	$(call open_browser_to_page,$(strip $(DEST))/Help_English/Help/index.html)
 	$(end_target)
 
 .PHONY: clean
@@ -90,10 +90,10 @@ build: $(foreach L,$(ALL_LANGUAGES),build-$(L))
 build-%:
 	$(begin_target)
 	install -d "$(strip $(APP_HELP_LOCALIZED))"
-	$(MAKE) install-html-$*
-	$(MAKE) install-images-$*
-	$(MAKE) install-plist-$*
-	$(MAKE) install-stylesheets-$*
+	$(MAKE) -f $(MAKEFILE_LIST) install-html-$*
+	$(MAKE) -f $(MAKEFILE_LIST) install-images-$*
+	$(MAKE) -f $(MAKEFILE_LIST) install-plist-$*
+	$(MAKE) -f $(MAKEFILE_LIST) install-stylesheets-$*
 	perl -pi -e 's/LAST_UPDATED/$(shell date +"%A, %B %d, %Y, %H:%M %Z")/' \
 		"$(strip $(APP_HELP_LOCALIZED))/index.html"
 	$(end_target)
