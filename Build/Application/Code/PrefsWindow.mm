@@ -3912,7 +3912,34 @@ windowDidLoad
 	// window to an appropriate frame and showing any auxiliary
 	// interface that the panel requests (such as a source list)
 	[self displayPanel:[self->panelsByID objectForKey:[self->panelIDArray objectAtIndex:0]] withAnimation:NO];
+	
+	// find out when the window closes
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillClose:)
+														name:NSWindowWillCloseNotification object:[self window]];
 }// windowDidLoad
+
+
+#pragma mark NSWindowDelegate
+
+
+/*!
+Responds to a close of the preferences window by saving
+any changes.
+
+(4.1)
+*/
+- (void)
+windowWillClose:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	Preferences_Result	prefsResult = Preferences_Save();
+	
+	
+	if (kPreferences_ResultOK != prefsResult)
+	{
+		Console_Warning(Console_WriteValue, "failed to save preferences to disk, error", prefsResult);
+	}
+}// windowWillClose:
 
 
 @end // PrefsWindow_Controller
