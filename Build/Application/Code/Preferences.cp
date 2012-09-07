@@ -655,11 +655,14 @@ public:
 	My_TagSet	(My_ContextInterfacePtr);
 	My_TagSet	(std::vector< Preferences_Tag > const&);
 	
-	Preferences_TagSetRef	selfRef;	//!< convenient, redundant self-reference
-	CFRetainRelease			contextKeys;	//!< CFArrayRef; the keys for which preferences are defined
+	Preferences_TagSetRef	selfRef;		//!< convenient, redundant self-reference
+	CFRetainRelease			contextKeys;	//!< CFMutableArrayRef; the keys for which preferences are defined
 
 protected:
-	CFArrayRef
+	void
+	extendKeyListWithTags		(CFMutableArrayRef, std::vector< Preferences_Tag > const&);
+	
+	CFMutableArrayRef
 	returnNewKeyListForTags		(std::vector< Preferences_Tag > const&);
 };
 typedef My_TagSet const*	My_TagSetConstPtr;
@@ -1478,17 +1481,10 @@ IMPORTANT:	Any context originally read from preferences, such
 			force the clone to be anonymous and in memory only
 			by setting "inForceDetach" to true.
 
-WARNING:	Currently, cloning a Default context is naïve,
-			because it holds global application preferences.
-			The resulting copy technically contains all necessary
-			keys, but will also have many other irrelevant keys
-			that will never be used.  (A future implementation
-			should copy only the keys expected for the class of
-			the original context.)  It may be better to use a
-			few Preferences_ContextGetData() calls on your
-			desired source of defaults, and then manually call
-			Preferences_ContextSetData() on a new context to
-			extract only the keys you want.
+WARNING:		Although "inRestrictedSetOrNull" is optional, it is
+			strongly recommended because the source context
+			might contain a large number of irrelevant settings
+			(especially if it is a Default context).
 
 The special "kPreferences_ChangeContextBatchMode" event is
 triggered by cloning, INSTEAD OF causing notifications for each
@@ -1508,7 +1504,8 @@ See also Preferences_ContextCopy().
 */
 Preferences_ContextRef
 Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext,
-								 Boolean					inForceDetach)
+								 Boolean					inForceDetach,
+								 Preferences_TagSetRef		inRestrictedSetOrNull)
 {
 	My_ContextAutoLocker		basePtr(gMyContextPtrLocks(), inBaseContext);
 	Quills::Prefs::Class		baseClass = Quills::Prefs::GENERAL;
@@ -1541,30 +1538,13 @@ Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext,
 	
 	if (nullptr != result)
 	{
-		My_ContextAutoLocker	resultPtr(gMyContextPtrLocks(), result);
-		CFRetainRelease			sourceKeys(basePtr->returnKeyListCopy(), true/* is retained */);
-		CFArrayRef				sourceKeysCFArray = sourceKeys.returnCFArrayRef();
+		Preferences_Result	prefsResult = Preferences_ContextCopy(inBaseContext, result, inRestrictedSetOrNull);
 		
 		
-		if (nullptr != sourceKeysCFArray)
+		if (kPreferences_ResultOK != prefsResult)
 		{
-			CFIndex const	kNumberOfKeys = CFArrayGetCount(sourceKeysCFArray);
-			
-			
-			for (CFIndex i = 0; i < kNumberOfKeys; ++i)
-			{
-				CFStringRef const	kKeyCFStringRef = CFUtilities_StringCast
-														(CFArrayGetValueAtIndex(sourceKeysCFArray, i));
-				CFRetainRelease		keyValueCFType(basePtr->returnValueCopy(kKeyCFStringRef),
-													true/* is retained */);
-				
-				
-				resultPtr->addValue(0/* do not notify */, kKeyCFStringRef, keyValueCFType.returnCFTypeRef());
-			}
-			
-			// it is not easy to tell what the tags are of the changed keys, so send
-			// a single event informing listeners that many things changed at once
-			resultPtr->notifyListeners(kPreferences_ChangeContextBatchMode);
+			// failed to copy!
+			Preferences_ReleaseContext(&result);
 		}
 	}
 	return result;
@@ -5147,18 +5127,16 @@ contextKeys(returnNewKeyListForTags(inTags), true/* is retained */)
 
 
 /*!
-Creates an array containing Core Foundation Strings with
+Extends an array containing Core Foundation Strings to add
 the key names corresponding to the given preference tags.
 
-(4.0)
+(4.1)
 */
-CFArrayRef
+void
 My_TagSet::
-returnNewKeyListForTags		(std::vector< Preferences_Tag > const&		inTags)
+extendKeyListWithTags	(CFMutableArrayRef						inoutArray,
+						 std::vector< Preferences_Tag > const&	inTags)
 {
-	CFMutableArrayRef		result = CFArrayCreateMutable(kCFAllocatorDefault,
-															STATIC_CAST(inTags.size(), CFIndex)/* capacity */,
-															&kCFTypeArrayCallBacks);
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	CFStringRef				keyNameCFString = nullptr;
 	FourCharCode			keyValueType = '----';
@@ -5169,12 +5147,35 @@ returnNewKeyListForTags		(std::vector< Preferences_Tag > const&		inTags)
 	for (std::vector< Preferences_Tag >::const_iterator toTag = inTags.begin();
 			toTag != inTags.end(); ++toTag)
 	{
-		prefsResult = getPreferenceDataInfo(*toTag, keyNameCFString, keyValueType, nonDictionaryValueSize, prefsClass);
+		prefsResult = getPreferenceDataInfo(*toTag, keyNameCFString, keyValueType,
+											nonDictionaryValueSize, prefsClass);
 		assert(kPreferences_ResultOK == prefsResult);
 		if (nullptr != keyNameCFString)
 		{
-			CFArrayAppendValue(result, keyNameCFString);
+			CFArrayAppendValue(inoutArray, keyNameCFString);
 		}
+	}
+}// My_TagSet::extendKeyListWithTags
+
+
+/*!
+Creates an array containing Core Foundation Strings with
+the key names corresponding to the given preference tags.
+
+(4.0)
+*/
+CFMutableArrayRef
+My_TagSet::
+returnNewKeyListForTags		(std::vector< Preferences_Tag > const&		inTags)
+{
+	CFMutableArrayRef	result = CFArrayCreateMutable(kCFAllocatorDefault,
+														STATIC_CAST(inTags.size(), CFIndex)/* capacity */,
+														&kCFTypeArrayCallBacks);
+	
+	
+	if (nullptr != result)
+	{
+		extendKeyListWithTags(result, inTags);
 	}
 	return result;
 }// My_TagSet::returnNewKeyListForTags

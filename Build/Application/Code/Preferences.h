@@ -459,7 +459,8 @@ Preferences_ContextRef
 
 Preferences_ContextRef
 	Preferences_NewCloneContext				(Preferences_ContextRef				inBaseContext,
-											 Boolean							inForceDetach = false);
+											 Boolean							inForceDetach = false,
+											 Preferences_TagSetRef				inRestrictedSetOrNull = nullptr);
 
 // IMPLICITLY DONE WHEN A CONTEXT IS CREATED
 void
