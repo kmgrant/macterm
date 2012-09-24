@@ -23,10 +23,10 @@ import textile
 if len(sys.argv) < 2: raise KeyError('not enough arguments')
 
 file = open(sys.argv[1], 'r')
-if not file: raise 'unable to open', file
+if not file: raise Exception('unable to open %s', str(file))
 
 contents = file.read()
-if not contents: raise 'unable to read', file
+if not contents: raise Exception('unable to read %s', str(file))
 
 html = textile.textile(contents)
 print html

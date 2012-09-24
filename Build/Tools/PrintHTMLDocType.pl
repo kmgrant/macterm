@@ -6,7 +6,7 @@
 # <!DOCTYPE...> header.
 #
 # Valid keys are (add more as needed):
-# HTML3.2 HTML4.01 XHTML1.0-UTF-8
+# HTML3.2 HTML4.01 XHTML1.0-UTF-8 HTML5
 #
 # Kevin Grant (kmg@mac.com)
 # March 7, 2005
@@ -28,6 +28,10 @@ foreach (@ARGV)
 		my $encoding = lc($1);
 		print "<?xml version=\"1.0\" encoding=\"$encoding\"?>\n";
 		print "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n";
+	}
+	elsif ($_ eq 'HTML5')
+	{
+		print "<!DOCTYPE html>\n";
 	}
 	else
 	{
