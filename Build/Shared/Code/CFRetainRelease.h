@@ -30,7 +30,7 @@
 */
 /*###############################################################
 
-	Data Access Library 2.6
+	Data Access Library 2.7
 	© 1998-2012 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -104,7 +104,13 @@ public:
 	CFRetainRelease (CFMutableDictionaryRef, bool = false);
 	
 	inline
+	CFRetainRelease (CFMutableSetRef, bool = false);
+	
+	inline
 	CFRetainRelease (CFMutableStringRef, bool = false);
+	
+	inline
+	CFRetainRelease (CFSetRef, bool = false);
 	
 	inline
 	CFRetainRelease (CFStringRef, bool = false);
@@ -157,8 +163,14 @@ public:
 	inline CFMutableDictionaryRef
 	returnCFMutableDictionaryRef () const;
 	
+	inline CFMutableSetRef
+	returnCFMutableSetRef () const;
+	
 	inline CFMutableStringRef
 	returnCFMutableStringRef () const;
+	
+	inline CFSetRef
+	returnCFSetRef () const;
 	
 	inline CFStringRef
 	returnCFStringRef () const;
@@ -196,6 +208,7 @@ private:
 			CFArrayRef			array;
 			CFDictionaryRef		dictionary;
 			HIObjectRef			humanInterfaceObject;
+			CFSetRef			set;
 			CFStringRef			string;
 		} _constant;
 		
@@ -205,6 +218,7 @@ private:
 			CFMutableArrayRef		array;
 			CFBundleRef				bundle;
 			CFMutableDictionaryRef	dictionary;
+			CFMutableSetRef			set;
 			CFMutableStringRef		string;
 			PasteboardRef			pasteboard;
 		} _modifiable;
@@ -387,6 +401,40 @@ _isMutable(false)
 
 /*!
 Creates a new reference using the value of an
+existing one that is a Core Foundation Set type.
+In debug mode, an assertion failure will occur
+if the given reference is not a CFSetRef.
+
+CFRetain() is called on the reference unless
+"inIsAlreadyRetained" is true.  Regardless,
+CFRelease() is called at destruction or
+reassignment time.  This allows "inType" to
+come directly from a function call that creates
+a Core Foundation type.
+
+(2.7)
+*/
+CFRetainRelease::
+CFRetainRelease		(CFSetRef	inType,
+					 bool		inIsAlreadyRetained)
+:
+_isMutable(false)
+{
+	_typeAs._constant.set = inType;
+	assert(_typeAs._constant.set == inType);
+	if (nullptr != _typeAs._constant.set)
+	{
+		assert(CFGetTypeID(_typeAs._constant.set) == CFSetGetTypeID());
+		if (false == inIsAlreadyRetained)
+		{
+			CFRetain(_typeAs._constant.set);
+		}
+	}
+}// set type constructor
+
+
+/*!
+Creates a new reference using the value of an
 existing one that is a Core Foundation Mutable Array
 type.  In debug mode, an assertion failure will occur
 if the given reference is not a CFMutableArrayRef.
@@ -451,6 +499,40 @@ _isMutable(true)
 		}
 	}
 }// mutable dictionary type constructor
+
+
+/*!
+Creates a new reference using the value of an
+existing one that is a Core Foundation Mutable Set
+type.  In debug mode, an assertion failure will occur
+if the given reference is not a CFMutableSetRef.
+
+CFRetain() is called on the reference unless
+"inIsAlreadyRetained" is true.  Regardless,
+CFRelease() is called at destruction or
+reassignment time.  This allows "inType" to
+come directly from a function call that creates
+a Core Foundation type.
+
+(2.7)
+*/
+CFRetainRelease::
+CFRetainRelease		(CFMutableSetRef	inType,
+					 bool				inIsAlreadyRetained)
+:
+_isMutable(true)
+{
+	_typeAs._modifiable.set = inType;
+	assert(_typeAs._modifiable.set == inType);
+	if (nullptr != _typeAs._modifiable.set)
+	{
+		assert(CFGetTypeID(_typeAs._modifiable.set) == CFSetGetTypeID());
+		if (false == inIsAlreadyRetained)
+		{
+			CFRetain(_typeAs._modifiable.set);
+		}
+	}
+}// mutable set type constructor
 
 
 /*!
@@ -795,6 +877,25 @@ const
 
 /*!
 Convenience method to cast the internal reference
+into a CFMutableSetRef.  In debug mode, an
+assertion failure will occur if the reference is
+not really a CFMutableSetRef.
+
+(2.7)
+*/
+CFMutableSetRef
+CFRetainRelease::
+returnCFMutableSetRef ()
+const
+{
+	assert(_isMutable);
+	assert((nullptr == _typeAs._modifiable.set) || (CFGetTypeID(_typeAs._modifiable.set) == CFSetGetTypeID()));
+	return _typeAs._modifiable.set;
+}// returnCFMutableSetRef
+
+
+/*!
+Convenience method to cast the internal reference
 into a CFMutableStringRef.  In debug mode, an
 assertion failure will occur if the reference is
 not really a CFMutableStringRef.
@@ -810,6 +911,25 @@ const
 	assert((nullptr == _typeAs._modifiable.string) || (CFGetTypeID(_typeAs._modifiable.string) == CFStringGetTypeID()));
 	return _typeAs._modifiable.string;
 }// returnCFMutableStringRef
+
+
+/*!
+Convenience method to cast the internal reference
+into a CFSetRef.  In debug mode, an assertion
+failure will occur if the reference is not really
+a CFSetRef or CFMutableSetRef.
+
+(2.7)
+*/
+CFSetRef
+CFRetainRelease::
+returnCFSetRef ()
+const
+{
+	if (_isMutable) return returnCFMutableSetRef();
+	assert((nullptr == _typeAs._constant.set) || (CFGetTypeID(_typeAs._constant.set) == CFSetGetTypeID()));
+	return _typeAs._constant.set;
+}// returnCFSetRef
 
 
 /*!
