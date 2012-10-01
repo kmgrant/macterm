@@ -700,6 +700,15 @@ void
 
 //@}
 
+//!\name Tag Set Management
+//@{
+
+Preferences_Result
+	Preferences_TagSetMerge					(Preferences_TagSetRef				inoutTagSet,
+											 Preferences_TagSetRef				inSourceTagSet);
+
+//@}
+
 //!\name Receiving Notification of Changes
 //@{
 

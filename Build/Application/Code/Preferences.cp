@@ -658,10 +658,13 @@ public:
 	Preferences_TagSetRef	selfRef;		//!< convenient, redundant self-reference
 	CFRetainRelease			contextKeys;	//!< CFMutableArrayRef; the keys for which preferences are defined
 
-protected:
-	void
+	static void
+	extendKeyListWithKeyList	(CFMutableArrayRef, CFArrayRef);
+
+	static void
 	extendKeyListWithTags		(CFMutableArrayRef, std::vector< Preferences_Tag > const&);
-	
+
+protected:
 	CFMutableArrayRef
 	returnNewKeyListForTags		(std::vector< Preferences_Tag > const&);
 };
@@ -3726,6 +3729,37 @@ Preferences_StopMonitoring	(ListenerModel_ListenerRef	inListener,
 }// StopMonitoring
 
 
+/*!
+Adds the keys from the specified source tag set to the
+destination tag set.
+
+NOTE:	
+
+\retval kPreferences_ResultOK
+if no error occurs
+
+\retval kPreferences_ResultGenericFailure
+if the tag sets cannot be merged (perhaps because one is invalid)
+
+(4.1)
+*/
+Preferences_Result
+Preferences_TagSetMerge		(Preferences_TagSetRef	inoutTagSet,
+							 Preferences_TagSetRef	inSourceTagSet)
+{
+	Preferences_Result		result = kPreferences_ResultGenericFailure;
+	My_TagSetAutoLocker		sourcePtr(gMyTagSetPtrLocks(), inSourceTagSet);
+	My_TagSetAutoLocker		destinationPtr(gMyTagSetPtrLocks(), inoutTagSet);
+	
+	
+	My_TagSet::extendKeyListWithKeyList(destinationPtr->contextKeys.returnCFMutableArrayRef(),
+										sourcePtr->contextKeys.returnCFArrayRef());
+	result = kPreferences_ResultOK;
+	
+	return result;
+}// TagSetMerge
+
+
 #pragma mark Internal Methods
 namespace {
 
@@ -5124,6 +5158,21 @@ selfRef(REINTERPRET_CAST(this, Preferences_TagSetRef)),
 contextKeys(returnNewKeyListForTags(inTags), true/* is retained */)
 {
 }// My_TagSet 1-argument (vector) constructor
+
+
+/*!
+Extends an array containing Core Foundation Strings to include
+the given key names.
+
+(4.1)
+*/
+void
+My_TagSet::
+extendKeyListWithKeyList	(CFMutableArrayRef		inoutArray,
+						 	 CFArrayRef				inKeys)
+{
+	CFArrayAppendArray(inoutArray, inKeys, CFRangeMake(0, CFArrayGetCount(inKeys)));
+}// My_TagSet::extendKeyListWithKeyList
 
 
 /*!
