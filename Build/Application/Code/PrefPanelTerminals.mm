@@ -445,6 +445,41 @@ PrefPanelTerminals_NewEmulationPane ()
 
 
 /*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelTerminals_NewEmulationPaneTagSet ()
+{
+	Preferences_TagSetRef			result = nullptr;
+	std::vector< Preferences_Tag >	tagList;
+	
+	
+	// IMPORTANT: this list should be in sync with everything in this file
+	// that reads emulation-pane preferences from the context of a data set
+	tagList.push_back(kPreferences_TagTerminalEmulatorType);
+	tagList.push_back(kPreferences_TagTerminalAnswerBackMessage);
+	tagList.push_back(kPreferences_TagVT100FixLineWrappingBug);
+	tagList.push_back(kPreferences_TagXTerm256ColorsEnabled);
+	tagList.push_back(kPreferences_TagXTermBackgroundColorEraseEnabled);
+	tagList.push_back(kPreferences_TagXTermColorEnabled);
+	tagList.push_back(kPreferences_TagXTermGraphicsEnabled);
+	tagList.push_back(kPreferences_TagXTermWindowAlterationEnabled);
+	
+	result = Preferences_NewTagSet(tagList);
+	
+	return result;
+}// NewEmulationPaneTagSet
+
+
+/*!
 Creates only the Options pane, which allows the user to
 set various checkboxes.  Destroy it using Panel_Dispose().
 

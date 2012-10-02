@@ -107,22 +107,25 @@ localPageKeys; // binding
 #pragma mark Public Methods
 
 Panel_Ref
-	PrefPanelTerminals_New					();
+	PrefPanelTerminals_New						();
 
 Panel_Ref
-	PrefPanelTerminals_NewEmulationPane		();
-
-Panel_Ref
-	PrefPanelTerminals_NewOptionsPane		();
+	PrefPanelTerminals_NewEmulationPane			();
 
 Preferences_TagSetRef
-	PrefPanelTerminals_NewOptionsPaneTagSet	();
+	PrefPanelTerminals_NewEmulationPaneTagSet	();
 
 Panel_Ref
-	PrefPanelTerminals_NewScreenPane		();
+	PrefPanelTerminals_NewOptionsPane			();
 
 Preferences_TagSetRef
-	PrefPanelTerminals_NewScreenPaneTagSet	();
+	PrefPanelTerminals_NewOptionsPaneTagSet		();
+
+Panel_Ref
+	PrefPanelTerminals_NewScreenPane			();
+
+Preferences_TagSetRef
+	PrefPanelTerminals_NewScreenPaneTagSet		();
 
 #endif
 
