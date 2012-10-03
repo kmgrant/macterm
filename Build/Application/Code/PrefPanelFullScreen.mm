@@ -194,6 +194,39 @@ PrefPanelFullScreen_New ()
 }// New
 
 
+/*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelFullScreen_NewTagSet ()
+{
+	Preferences_TagSetRef			result = nullptr;
+	std::vector< Preferences_Tag >	tagList;
+	
+	
+	// IMPORTANT: this list should be in sync with everything in this file
+	// that reads preferences from the context of a data set
+	tagList.push_back(kPreferences_TagKioskShowsMenuBar);
+	tagList.push_back(kPreferences_TagKioskShowsScrollBar);
+	tagList.push_back(kPreferences_TagKioskShowsWindowFrame);
+	tagList.push_back(kPreferences_TagKioskAllowsForceQuit);
+	tagList.push_back(kPreferences_TagKioskUsesSuperfluousEffects);
+	tagList.push_back(kPreferences_TagKioskShowsOffSwitch);
+	
+	result = Preferences_NewTagSet(tagList);
+	
+	return result;
+}// NewTagSet
+
+
 #pragma mark Internal Methods
 namespace {
 

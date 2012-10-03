@@ -1712,6 +1712,36 @@ Preferences_NewContextFromFavorites		(Quills::Prefs::Class	inClass,
 
 
 /*!
+Creates an empty tag set that can be extended by multiple
+calls to Preferences_TagSetMerge().
+
+Although the set is initially empty, as a slight optimization
+you can suggest the size that it will ultimately require so
+that the first memory allocation is enough.
+
+(4.1)
+*/
+Preferences_TagSetRef
+Preferences_NewTagSet	(size_t		inSuggestedSize)
+{
+	Preferences_TagSetRef			result = nullptr;
+	std::vector< Preferences_Tag >	emptyList(inSuggestedSize);
+	
+	
+	try
+	{
+		result = REINTERPRET_CAST(new My_TagSet(emptyList), Preferences_TagSetRef);
+	}
+	catch (std::exception const&	inException)
+	{
+		Console_WriteLine(inException.what());
+		result = nullptr;
+	}
+	return result;
+}// NewTagSet (UInt16)
+
+
+/*!
 Creates an object representing the preferences tags that are
 currently defined in the specified context.
 

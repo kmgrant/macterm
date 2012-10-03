@@ -40,6 +40,7 @@
 
 // application includes
 #include "Panel.h"
+#include "Preferences.h"
 
 
 
@@ -47,6 +48,9 @@
 
 Panel_Ref
 	PrefPanelWorkspaces_New				();
+
+Preferences_TagSetRef
+	PrefPanelWorkspaces_NewTagSet		();
 
 #endif
 

@@ -475,6 +475,9 @@ void
 //@{
 
 Preferences_TagSetRef
+	Preferences_NewTagSet					(size_t								inSuggestedSize);
+
+Preferences_TagSetRef
 	Preferences_NewTagSet					(Preferences_ContextRef				inContext);
 
 Preferences_TagSetRef

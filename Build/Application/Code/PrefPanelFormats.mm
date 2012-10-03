@@ -484,6 +484,49 @@ PrefPanelFormats_NewANSIColorsPane ()
 
 
 /*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelFormats_NewANSIColorsTagSet ()
+{
+	Preferences_TagSetRef			result = nullptr;
+	std::vector< Preferences_Tag >	tagList;
+	
+	
+	// IMPORTANT: this list should be in sync with everything in this file
+	// that reads preferences from the context of a data set
+	tagList.push_back(kPreferences_TagTerminalColorANSIBlack);
+	tagList.push_back(kPreferences_TagTerminalColorANSIBlackBold);
+	tagList.push_back(kPreferences_TagTerminalColorANSIRed);
+	tagList.push_back(kPreferences_TagTerminalColorANSIRedBold);
+	tagList.push_back(kPreferences_TagTerminalColorANSIGreen);
+	tagList.push_back(kPreferences_TagTerminalColorANSIGreenBold);
+	tagList.push_back(kPreferences_TagTerminalColorANSIYellow);
+	tagList.push_back(kPreferences_TagTerminalColorANSIYellowBold);
+	tagList.push_back(kPreferences_TagTerminalColorANSIBlue);
+	tagList.push_back(kPreferences_TagTerminalColorANSIBlueBold);
+	tagList.push_back(kPreferences_TagTerminalColorANSIMagenta);
+	tagList.push_back(kPreferences_TagTerminalColorANSIMagentaBold);
+	tagList.push_back(kPreferences_TagTerminalColorANSICyan);
+	tagList.push_back(kPreferences_TagTerminalColorANSICyanBold);
+	tagList.push_back(kPreferences_TagTerminalColorANSIWhite);
+	tagList.push_back(kPreferences_TagTerminalColorANSIWhiteBold);
+	
+	result = Preferences_NewTagSet(tagList);
+	
+	return result;
+}// NewANSIColorsTagSet
+
+
+/*!
 Creates only the Normal colors pane, which allows the user
 to edit the font, font sizs, and basic terminal colors with
 a preview.  Destroy it using Panel_Dispose().
@@ -535,10 +578,10 @@ using this user interface.
 
 Call Preferences_ReleaseTagSet() when finished with the set.
 
-(4.0)
+(4.1)
 */
 Preferences_TagSetRef
-PrefPanelFormats_NewTagSet ()
+PrefPanelFormats_NewNormalTagSet ()
 {
 	Preferences_TagSetRef			result = nullptr;
 	std::vector< Preferences_Tag >	tagList;
@@ -556,24 +599,40 @@ PrefPanelFormats_NewTagSet ()
 	tagList.push_back(kPreferences_TagTerminalColorBlinkingForeground);
 	tagList.push_back(kPreferences_TagTerminalColorBlinkingBackground);
 	tagList.push_back(kPreferences_TagTerminalColorMatteBackground);
-	tagList.push_back(kPreferences_TagTerminalColorANSIBlack);
-	tagList.push_back(kPreferences_TagTerminalColorANSIBlackBold);
-	tagList.push_back(kPreferences_TagTerminalColorANSIRed);
-	tagList.push_back(kPreferences_TagTerminalColorANSIRedBold);
-	tagList.push_back(kPreferences_TagTerminalColorANSIGreen);
-	tagList.push_back(kPreferences_TagTerminalColorANSIGreenBold);
-	tagList.push_back(kPreferences_TagTerminalColorANSIYellow);
-	tagList.push_back(kPreferences_TagTerminalColorANSIYellowBold);
-	tagList.push_back(kPreferences_TagTerminalColorANSIBlue);
-	tagList.push_back(kPreferences_TagTerminalColorANSIBlueBold);
-	tagList.push_back(kPreferences_TagTerminalColorANSIMagenta);
-	tagList.push_back(kPreferences_TagTerminalColorANSIMagentaBold);
-	tagList.push_back(kPreferences_TagTerminalColorANSICyan);
-	tagList.push_back(kPreferences_TagTerminalColorANSICyanBold);
-	tagList.push_back(kPreferences_TagTerminalColorANSIWhite);
-	tagList.push_back(kPreferences_TagTerminalColorANSIWhiteBold);
 	
 	result = Preferences_NewTagSet(tagList);
+	
+	return result;
+}// NewNormalTagSet
+
+
+/*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.0)
+*/
+Preferences_TagSetRef
+PrefPanelFormats_NewTagSet ()
+{
+	Preferences_TagSetRef	result = Preferences_NewTagSet(30); // arbitrary initial capacity
+	Preferences_TagSetRef	normalTags = PrefPanelFormats_NewNormalTagSet();
+	Preferences_TagSetRef	standardColorTags = PrefPanelFormats_NewANSIColorsTagSet();
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	
+	prefsResult = Preferences_TagSetMerge(result, normalTags);
+	assert(kPreferences_ResultOK == prefsResult);
+	prefsResult = Preferences_TagSetMerge(result, standardColorTags);
+	assert(kPreferences_ResultOK == prefsResult);
+	
+	Preferences_ReleaseTagSet(&normalTags);
+	Preferences_ReleaseTagSet(&standardColorTags);
 	
 	return result;
 }// NewTagSet

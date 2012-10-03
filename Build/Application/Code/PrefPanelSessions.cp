@@ -526,6 +526,36 @@ PrefPanelSessions_NewDataFlowPane ()
 
 
 /*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelSessions_NewDataFlowPaneTagSet ()
+{
+	Preferences_TagSetRef			result = nullptr;
+	std::vector< Preferences_Tag >	tagList;
+	
+	
+	// IMPORTANT: this list should be in sync with everything in this file
+	// that reads screen-pane preferences from the context of a data set
+	tagList.push_back(kPreferences_TagLocalEchoEnabled);
+	tagList.push_back(kPreferences_TagPasteNewLineDelay);
+	tagList.push_back(kPreferences_TagScrollDelay);
+	
+	result = Preferences_NewTagSet(tagList);
+	
+	return result;
+}// NewDataFlowPaneTagSet
+
+
+/*!
 Creates only the Data Flow pane, which allows the user to
 set things like cache sizes.  Destroy it using Panel_Dispose().
 
@@ -565,6 +595,35 @@ PrefPanelSessions_NewGraphicsPane ()
 	}
 	return result;
 }// NewGraphicsPane
+
+
+/*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelSessions_NewGraphicsPaneTagSet ()
+{
+	Preferences_TagSetRef			result = nullptr;
+	std::vector< Preferences_Tag >	tagList;
+	
+	
+	// IMPORTANT: this list should be in sync with everything in this file
+	// that reads screen-pane preferences from the context of a data set
+	tagList.push_back(kPreferences_TagTektronixMode);
+	tagList.push_back(kPreferences_TagTektronixPAGEClearsScreen);
+	
+	result = Preferences_NewTagSet(tagList);
+	
+	return result;
+}// NewGraphicsPaneTagSet
 
 
 /*!
@@ -610,6 +669,40 @@ PrefPanelSessions_NewKeyboardPane ()
 
 
 /*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelSessions_NewKeyboardPaneTagSet ()
+{
+	Preferences_TagSetRef			result = nullptr;
+	std::vector< Preferences_Tag >	tagList;
+	
+	
+	// IMPORTANT: this list should be in sync with everything in this file
+	// that reads screen-pane preferences from the context of a data set
+	tagList.push_back(kPreferences_TagKeyInterruptProcess);
+	tagList.push_back(kPreferences_TagKeySuspendOutput);
+	tagList.push_back(kPreferences_TagKeyResumeOutput);
+	tagList.push_back(kPreferences_TagMapArrowsForEmacs);
+	tagList.push_back(kPreferences_TagEmacsMetaKey);
+	tagList.push_back(kPreferences_TagMapDeleteToBackspace);
+	tagList.push_back(kPreferences_TagNewLineMapping);
+	
+	result = Preferences_NewTagSet(tagList);
+	
+	return result;
+}// NewKeyboardPaneTagSet
+
+
+/*!
 Creates only the Data Flow pane, which allows the user to
 set things like cache sizes.  Destroy it using Panel_Dispose().
 
@@ -649,6 +742,81 @@ PrefPanelSessions_NewResourcePane ()
 	}
 	return result;
 }// NewResourcePane
+
+
+/*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelSessions_NewResourcePaneTagSet ()
+{
+	Preferences_TagSetRef			result = nullptr;
+	std::vector< Preferences_Tag >	tagList;
+	
+	
+	// IMPORTANT: this list should be in sync with everything in this file
+	// that reads screen-pane preferences from the context of a data set
+	tagList.push_back(kPreferences_TagCommandLine);
+	tagList.push_back(kPreferences_TagAssociatedTerminalFavorite);
+	tagList.push_back(kPreferences_TagAssociatedFormatFavorite);
+	tagList.push_back(kPreferences_TagAssociatedTranslationFavorite);
+	tagList.push_back(kPreferences_TagServerProtocol);
+	tagList.push_back(kPreferences_TagServerHost);
+	tagList.push_back(kPreferences_TagServerPort);
+	tagList.push_back(kPreferences_TagServerUserID);
+	
+	result = Preferences_NewTagSet(tagList);
+	
+	return result;
+}// NewResourcePaneTagSet
+
+
+/*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelSessions_NewTagSet ()
+{
+	Preferences_TagSetRef	result = Preferences_NewTagSet(40); // arbitrary initial capacity
+	Preferences_TagSetRef	resourceTags = PrefPanelSessions_NewResourcePaneTagSet();
+	Preferences_TagSetRef	dataFlowTags = PrefPanelSessions_NewDataFlowPaneTagSet();
+	Preferences_TagSetRef	keyboardTags = PrefPanelSessions_NewKeyboardPaneTagSet();
+	Preferences_TagSetRef	graphicsTags = PrefPanelSessions_NewGraphicsPaneTagSet();
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	
+	prefsResult = Preferences_TagSetMerge(result, resourceTags);
+	assert(kPreferences_ResultOK == prefsResult);
+	prefsResult = Preferences_TagSetMerge(result, dataFlowTags);
+	assert(kPreferences_ResultOK == prefsResult);
+	prefsResult = Preferences_TagSetMerge(result, keyboardTags);
+	assert(kPreferences_ResultOK == prefsResult);
+	prefsResult = Preferences_TagSetMerge(result, graphicsTags);
+	assert(kPreferences_ResultOK == prefsResult);
+	
+	Preferences_ReleaseTagSet(&resourceTags);
+	Preferences_ReleaseTagSet(&dataFlowTags);
+	Preferences_ReleaseTagSet(&keyboardTags);
+	Preferences_ReleaseTagSet(&graphicsTags);
+	
+	return result;
+}// NewTagSet
 
 
 #pragma mark Internal Methods

@@ -626,6 +626,42 @@ PrefPanelTerminals_NewScreenPaneTagSet ()
 }// NewScreenPaneTagSet
 
 
+/*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelTerminals_NewTagSet ()
+{
+	Preferences_TagSetRef	result = Preferences_NewTagSet(40); // arbitrary initial capacity
+	Preferences_TagSetRef	emulationTags = PrefPanelTerminals_NewEmulationPaneTagSet();
+	Preferences_TagSetRef	screenTags = PrefPanelTerminals_NewScreenPaneTagSet();
+	Preferences_TagSetRef	optionTags = PrefPanelTerminals_NewOptionsPaneTagSet();
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	
+	prefsResult = Preferences_TagSetMerge(result, emulationTags);
+	assert(kPreferences_ResultOK == prefsResult);
+	prefsResult = Preferences_TagSetMerge(result, screenTags);
+	assert(kPreferences_ResultOK == prefsResult);
+	prefsResult = Preferences_TagSetMerge(result, optionTags);
+	assert(kPreferences_ResultOK == prefsResult);
+	
+	Preferences_ReleaseTagSet(&emulationTags);
+	Preferences_ReleaseTagSet(&screenTags);
+	Preferences_ReleaseTagSet(&optionTags);
+	
+	return result;
+}// NewTagSet
+
+
 #pragma mark Internal Methods
 namespace {
 

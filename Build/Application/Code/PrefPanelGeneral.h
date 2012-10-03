@@ -38,6 +38,7 @@
 // application includes
 #include "GenericPanelTabs.h"
 #include "Panel.h"
+#include "Preferences.h"
 #include "PrefsContextManager.objc++.h"
 #include "PrefsWindow.h"
 
@@ -289,6 +290,18 @@ setSoundNameIndexes:(NSIndexSet*)_; // binding
 
 Panel_Ref
 	PrefPanelGeneral_New					();
+
+Preferences_TagSetRef
+	PrefPanelGeneral_NewNotificationsTagSet	();
+
+Preferences_TagSetRef
+	PrefPanelGeneral_NewOptionsTagSet		();
+
+Preferences_TagSetRef
+	PrefPanelGeneral_NewSpecialTagSet		();
+
+Preferences_TagSetRef
+	PrefPanelGeneral_NewTagSet				();
 
 #endif
 

@@ -37,25 +37,41 @@
 
 // application includes
 #include "Panel.h"
+#include "Preferences.h"
 
 
 
 #pragma mark Public Methods
 
 Panel_Ref
-	PrefPanelSessions_New					();
+	PrefPanelSessions_New						();
 
 Panel_Ref
-	PrefPanelSessions_NewDataFlowPane		();
+	PrefPanelSessions_NewDataFlowPane			();
+
+Preferences_TagSetRef
+	PrefPanelSessions_NewDataFlowPaneTagSet		();
 
 Panel_Ref
-	PrefPanelSessions_NewGraphicsPane		();
+	PrefPanelSessions_NewGraphicsPane			();
+
+Preferences_TagSetRef
+	PrefPanelSessions_NewGraphicsPaneTagSet		();
 
 Panel_Ref
-	PrefPanelSessions_NewKeyboardPane		();
+	PrefPanelSessions_NewKeyboardPane			();
+
+Preferences_TagSetRef
+	PrefPanelSessions_NewKeyboardPaneTagSet		();
 
 Panel_Ref
-	PrefPanelSessions_NewResourcePane		();
+	PrefPanelSessions_NewResourcePane			();
+
+Preferences_TagSetRef
+	PrefPanelSessions_NewResourcePaneTagSet		();
+
+Preferences_TagSetRef
+	PrefPanelSessions_NewTagSet					();
 
 #endif
 

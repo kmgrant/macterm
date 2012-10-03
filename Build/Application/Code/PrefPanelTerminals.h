@@ -127,6 +127,9 @@ Panel_Ref
 Preferences_TagSetRef
 	PrefPanelTerminals_NewScreenPaneTagSet		();
 
+Preferences_TagSetRef
+	PrefPanelTerminals_NewTagSet				();
+
 #endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -463,6 +463,143 @@ PrefPanelGeneral_New ()
 }// New
 
 
+/*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelGeneral_NewNotificationsTagSet ()
+{
+	Preferences_TagSetRef			result = nullptr;
+	std::vector< Preferences_Tag >	tagList;
+	
+	
+	// IMPORTANT: this list should be in sync with everything in this file
+	// that reads preferences from the context of a data set
+	tagList.push_back(kPreferences_TagVisualBell);
+	tagList.push_back(kPreferences_TagNotifyOfBeeps);
+	tagList.push_back(kPreferences_TagBellSound);
+	tagList.push_back(kPreferences_TagNotification);
+	
+	result = Preferences_NewTagSet(tagList);
+	
+	return result;
+}// NewNotificationsTagSet
+
+
+/*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelGeneral_NewOptionsTagSet ()
+{
+	Preferences_TagSetRef			result = nullptr;
+	std::vector< Preferences_Tag >	tagList;
+	
+	
+	// IMPORTANT: this list should be in sync with everything in this file
+	// that reads preferences from the context of a data set
+	tagList.push_back(kPreferences_TagDontAutoClose);
+	tagList.push_back(kPreferences_TagDontDimBackgroundScreens);
+	tagList.push_back(kPreferences_TagPureInverse);
+	tagList.push_back(kPreferences_TagCopySelectedText);
+	tagList.push_back(kPreferences_TagCursorMovesPriorToDrops);
+	tagList.push_back(kPreferences_TagNoPasteWarning);
+	tagList.push_back(kPreferences_TagMapBackquote);
+	tagList.push_back(kPreferences_TagDontAutoNewOnApplicationReopen);
+	tagList.push_back(kPreferences_TagFocusFollowsMouse);
+	tagList.push_back(kPreferences_TagFadeBackgroundWindows);
+	
+	result = Preferences_NewTagSet(tagList);
+	
+	return result;
+}// NewOptionsTagSet
+
+
+/*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelGeneral_NewSpecialTagSet ()
+{
+	Preferences_TagSetRef			result = nullptr;
+	std::vector< Preferences_Tag >	tagList;
+	
+	
+	// IMPORTANT: this list should be in sync with everything in this file
+	// that reads preferences from the context of a data set
+	tagList.push_back(kPreferences_TagTerminalCursorType);
+	tagList.push_back(kPreferences_TagCursorBlinks);
+	tagList.push_back(kPreferences_TagTerminalResizeAffectsFontSize);
+	tagList.push_back(kPreferences_TagCopyTableThreshold);
+	tagList.push_back(kPreferences_TagWindowStackingOrigin);
+	tagList.push_back(kPreferences_TagNewCommandShortcutEffect);
+	
+	result = Preferences_NewTagSet(tagList);
+	
+	return result;
+}// NewSpecialTagSet
+
+
+/*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using this user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(4.1)
+*/
+Preferences_TagSetRef
+PrefPanelGeneral_NewTagSet ()
+{
+	Preferences_TagSetRef	result = Preferences_NewTagSet(40); // arbitrary initial capacity
+	Preferences_TagSetRef	optionTags = PrefPanelGeneral_NewOptionsTagSet();
+	Preferences_TagSetRef	specialTags = PrefPanelGeneral_NewSpecialTagSet();
+	Preferences_TagSetRef	notificationTags = PrefPanelGeneral_NewNotificationsTagSet();
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	
+	prefsResult = Preferences_TagSetMerge(result, optionTags);
+	assert(kPreferences_ResultOK == prefsResult);
+	prefsResult = Preferences_TagSetMerge(result, specialTags);
+	assert(kPreferences_ResultOK == prefsResult);
+	prefsResult = Preferences_TagSetMerge(result, notificationTags);
+	assert(kPreferences_ResultOK == prefsResult);
+	
+	Preferences_ReleaseTagSet(&optionTags);
+	Preferences_ReleaseTagSet(&specialTags);
+	Preferences_ReleaseTagSet(&notificationTags);
+	
+	return result;
+}// NewTagSet
+
+
 #pragma mark Internal Methods
 namespace {
 

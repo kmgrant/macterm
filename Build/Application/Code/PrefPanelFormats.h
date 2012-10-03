@@ -266,8 +266,14 @@ Panel_Ref
 Panel_Ref
 	PrefPanelFormats_NewANSIColorsPane		();
 
+Preferences_TagSetRef
+	PrefPanelFormats_NewANSIColorsTagSet	();
+
 Panel_Ref
 	PrefPanelFormats_NewNormalPane			();
+
+Preferences_TagSetRef
+	PrefPanelFormats_NewNormalTagSet		();
 
 Preferences_TagSetRef
 	PrefPanelFormats_NewTagSet				();

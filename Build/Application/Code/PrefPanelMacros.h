@@ -46,6 +46,7 @@
 
 // application includes
 #include "Panel.h"
+#include "Preferences.h"
 
 
 
@@ -53,6 +54,9 @@
 
 Panel_Ref
 	PrefPanelMacros_New					();
+
+Preferences_TagSetRef
+	PrefPanelMacros_NewTagSet			();
 
 #endif
 

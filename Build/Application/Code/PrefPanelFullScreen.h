@@ -39,6 +39,7 @@
 
 // application includes
 #include "Panel.h"
+#include "Preferences.h"
 #include "PrefsContextManager.objc++.h"
 #include "PrefsWindow.h"
 
@@ -104,6 +105,9 @@ setSuperfluousEffectsEnabled:(BOOL)_; // binding
 // CARBON LEGACY
 Panel_Ref
 	PrefPanelFullScreen_New			();
+
+Preferences_TagSetRef
+	PrefPanelFullScreen_NewTagSet	();
 
 #endif
 
