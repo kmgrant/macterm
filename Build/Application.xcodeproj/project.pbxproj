@@ -245,6 +245,8 @@
 		0A35F5130DEDD9E300F16B03 /* CommandLine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CommandLine.mm; path = Application/Code/CommandLine.mm; sourceTree = "<group>"; };
 		0A36176A0DD286240081A445 /* Keypads.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Keypads.mm; path = Application/Code/Keypads.mm; sourceTree = "<group>"; };
 		0A377E610D38804B001F3573 /* open.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = open.py; path = Application/PythonCode/pymacterm/file/open.py; sourceTree = "<group>"; };
+		0A3A2A21161D151500D489F6 /* IconForSearch.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSearch.icns; path = Application/Resources/IconForSearch.icns; sourceTree = "<group>"; };
+		0A3A2A24161D168900D489F6 /* IconForSearchKey.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSearchKey.icns; path = Application/Resources/IconForSearchKey.icns; sourceTree = "<group>"; };
 		0A3C2C1A140C73E000739966 /* CocoaAnimation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaAnimation.h; path = Shared/Code/CocoaAnimation.h; sourceTree = "<group>"; };
 		0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaAnimation.mm; path = Shared/Code/CocoaAnimation.mm; sourceTree = "<group>"; };
 		0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommonEventHandlers.cp; path = Application/Code/CommonEventHandlers.cp; sourceTree = "<group>"; };
@@ -1069,6 +1071,8 @@
 				0AF84E8514A82F2A001F6C1D /* IconForPrefs.icns */,
 				0AD7483813074260003E368B /* IconForPrint.icns */,
 				0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */,
+				0A3A2A21161D151500D489F6 /* IconForSearch.icns */,
+				0A3A2A24161D168900D489F6 /* IconForSearchKey.icns */,
 				0AC838690ABF917000BEF8B9 /* IconForScrollLockOff.icns */,
 				0AC8386A0ABF917000BEF8B9 /* IconForScrollLockOn.icns */,
 				0AC810B01221ED2300687DB2 /* IconForSession.icns */,

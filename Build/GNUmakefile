@@ -208,6 +208,8 @@ IconForPrefPanelWorkspaces.icns \
 IconForPrefs.icns \
 IconForPrint.icns \
 IconForRestartSession.icns \
+IconForSearch.icns \
+IconForSearchKey.icns \
 IconForScrollLockOff.icns \
 IconForScrollLockOn.icns \
 IconForSession.icns \

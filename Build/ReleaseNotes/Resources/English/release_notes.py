@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20121003',
     '20120804',
     '20120802',
     '20120727',
@@ -454,6 +455,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20121003': [
+        'VT220 keypad window now has a more sensible icon (magnifying glass) for its Find button.',
+    ],
     '20120804': [
         'Terminal view text double-clicks (to identify words) are now significantly smarter, particularly in the presence of punctuation marks and various kinds of imbalanced bracketing characters.',
     ],
