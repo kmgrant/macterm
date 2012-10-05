@@ -35,6 +35,7 @@
 #import <AutoPool.objc++.h>
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
+#import <Console.h>
 
 
 
@@ -120,10 +121,17 @@ animationStep:(id)_;
 
 @end
 
-#pragma mark Internal Method prototypes
+#pragma mark Internal Method Prototypes
 namespace {
 
 NSWindow*	createImageWindowFrom	(NSWindow*, NSRect);
+
+} // anonymous namespace
+
+#pragma mark Variables
+namespace {
+
+SInt16		gAnimationsInProgress = 0;
 
 } // anonymous namespace
 
@@ -533,16 +541,23 @@ simplified:(BOOL)									isSimplified
 	self = [super init];
 	if (nil != self)
 	{
-		NSTimeInterval		baseDuration = (isSimplified)
+		BOOL				reduceFrameRate = (gAnimationsInProgress > 2/* arbitrary */)
+												? YES
+												: isSimplified;
+		NSTimeInterval		baseDuration = (reduceFrameRate)
 											? aDuration / 2.0
 											: aDuration;
 		
+		
+		// track animations globally as a crude way to estimate when too much
+		// is going on (in which case automatic simplifications are made)
+		++gAnimationsInProgress;
 		
 		self->borderlessWindow = [aBorderlessWindow retain];
 		self->actualWindow = [theActualWindow retain];
 		self->originalFrame = sourceRect;
 		self->targetFrame = targetRect;
-		self->frameCount = (isSimplified) ? 5 : 10;
+		self->frameCount = (reduceFrameRate) ? 5 : 10;
 		self->currentFrame = 0;
 		self->frameDelays = new NSTimeInterval[self->frameCount];
 		if ((kMy_AnimationEffectFadeIn == anEffect) ||
@@ -751,6 +766,13 @@ Destructor.
 - (void)
 dealloc
 {
+	--gAnimationsInProgress;
+	if (gAnimationsInProgress < 0)
+	{
+		Console_Warning(Console_WriteLine, "animation count incorrectly fell below zero");
+		gAnimationsInProgress = 0;
+	}
+	
 	// if the animation is released too soon, force the correct window location
 	[self->borderlessWindow release];
 	[self->actualWindow release];

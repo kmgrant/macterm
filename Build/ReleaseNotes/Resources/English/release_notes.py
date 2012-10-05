@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20121004',
     '20121003',
     '20120804',
     '20120802',
@@ -455,6 +456,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20121004': [
+        'Animations now perform better if several are running at the same time.',
+    ],
     '20121003': [
         'VT220 keypad window now has a more sensible icon (magnifying glass) for its Find button.',
     ],

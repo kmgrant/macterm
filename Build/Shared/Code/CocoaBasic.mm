@@ -62,7 +62,7 @@ changeColor:(id)_;
 
 typedef std::map< HIWindowRef, NSWindow* >		HIWindowRefToNSWindowMap;
 
-#pragma mark Internal Method prototypes
+#pragma mark Internal Method Prototypes
 namespace {
 
 NSString*	findFolder			(short, OSType);
