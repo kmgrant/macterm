@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20121014',
     '20121004',
     '20121003',
     '20120804',
@@ -456,6 +457,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20121014': [
+        'Fixed a possible crash when attempting to change screen formatting in various ways.',
+    ],
     '20121004': [
         'Animations now perform better if several are running at the same time.',
     ],

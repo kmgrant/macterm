@@ -5226,12 +5226,22 @@ extendKeyListWithTags	(CFMutableArrayRef						inoutArray,
 	for (std::vector< Preferences_Tag >::const_iterator toTag = inTags.begin();
 			toTag != inTags.end(); ++toTag)
 	{
-		prefsResult = getPreferenceDataInfo(*toTag, keyNameCFString, keyValueType,
-											nonDictionaryValueSize, prefsClass);
-		assert(kPreferences_ResultOK == prefsResult);
-		if (nullptr != keyNameCFString)
+		if (0 != *toTag)
 		{
-			CFArrayAppendValue(inoutArray, keyNameCFString);
+			prefsResult = getPreferenceDataInfo(*toTag, keyNameCFString, keyValueType,
+												nonDictionaryValueSize, prefsClass);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_Warning(Console_WriteValueFourChars, "failed to extend key list with tag", *toTag);
+				Console_Warning(Console_WriteValue, "preferences lookup error was", prefsResult);
+			}
+			else
+			{
+				if (nullptr != keyNameCFString)
+				{
+					CFArrayAppendValue(inoutArray, keyNameCFString);
+				}
+			}
 		}
 	}
 }// My_TagSet::extendKeyListWithTags
