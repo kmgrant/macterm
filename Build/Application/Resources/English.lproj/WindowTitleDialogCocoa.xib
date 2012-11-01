@@ -2,10 +2,10 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.10">
   <data>
     <int key="IBDocument.SystemTarget">1030</int>
-    <string key="IBDocument.SystemVersion">11C74</string>
+    <string key="IBDocument.SystemVersion">12C60</string>
     <string key="IBDocument.InterfaceBuilderVersion">851</string>
-    <string key="IBDocument.AppKitVersion">1138.23</string>
-    <string key="IBDocument.HIToolboxVersion">567.00</string>
+    <string key="IBDocument.AppKitVersion">1187.34</string>
+    <string key="IBDocument.HIToolboxVersion">625.00</string>
     <object class="NSMutableDictionary" key="IBDocument.PluginVersions">
       <string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
       <string key="NS.object.0">851</string>
@@ -46,69 +46,71 @@
               <object class="NSButton" id="329255584">
                 <reference key="NSNextResponder" ref="1012846204"/>
                 <int key="NSvFlags">265</int>
-                <string key="NSFrame">{{489, 5}, {50, 32}}</string>
+                <string key="NSFrame">{{632, 5}, {90, 32}}</string>
                 <reference key="NSSuperview" ref="1012846204"/>
-                <int key="NSViewLayerContentsRedrawPolicy">2</int>
                 <string key="NSReuseIdentifierKey">_NS:610</string>
                 <bool key="NSEnabled">YES</bool>
                 <object class="NSButtonCell" key="NSCell" id="591019324">
-                  <int key="NSCellFlags">-2080244224</int>
+                  <int key="NSCellFlags">-2080374784</int>
                   <int key="NSCellFlags2">134217728</int>
-                  <string key="NSContents">✖</string>
-                  <object class="NSFont" key="NSSupport" id="480510697">
-                    <string key="NSName">ZapfDingbatsITC</string>
+                  <string key="NSContents">Cancel</string>
+                  <object class="NSFont" key="NSSupport" id="626935215">
+                    <string key="NSName">LucidaGrande</string>
                     <double key="NSSize">13</double>
-                    <int key="NSfFlags">16</int>
+                    <int key="NSfFlags">1040</int>
                   </object>
                   <string key="NSCellIdentifier">_NS:610</string>
                   <reference key="NSControlView" ref="329255584"/>
-                  <int key="NSButtonFlags">-2038284033</int>
+                  <int key="NSButtonFlags">-2038284288</int>
                   <int key="NSButtonFlags2">1</int>
+                  <reference key="NSAlternateImage" ref="626935215"/>
                   <string key="NSAlternateContents"/>
                   <string type="base64-UTF8" key="NSKeyEquivalent">Gw</string>
                   <int key="NSPeriodicDelay">200</int>
                   <int key="NSPeriodicInterval">25</int>
                 </object>
+                <bool key="NSAllowsLogicalLayoutDirection">NO</bool>
               </object>
               <object class="NSButton" id="621446930">
                 <reference key="NSNextResponder" ref="1012846204"/>
                 <int key="NSvFlags">265</int>
-                <string key="NSFrame">{{539, 5}, {51, 32}}</string>
+                <string key="NSFrame">{{722, 5}, {90, 32}}</string>
                 <reference key="NSSuperview" ref="1012846204"/>
-                <int key="NSViewLayerContentsRedrawPolicy">2</int>
                 <string key="NSReuseIdentifierKey">_NS:610</string>
                 <bool key="NSEnabled">YES</bool>
                 <object class="NSButtonCell" key="NSCell" id="372404091">
-                  <int key="NSCellFlags">67239424</int>
+                  <int key="NSCellFlags">67108864</int>
                   <int key="NSCellFlags2">134217728</int>
-                  <string key="NSContents">✔</string>
-                  <reference key="NSSupport" ref="480510697"/>
+                  <string key="NSContents">Rename</string>
+                  <object class="NSFont" key="NSSupport" id="734783574">
+                    <string key="NSName">LucidaGrande</string>
+                    <double key="NSSize">13</double>
+                    <int key="NSfFlags">16</int>
+                  </object>
                   <string key="NSCellIdentifier">_NS:610</string>
                   <reference key="NSControlView" ref="621446930"/>
-                  <int key="NSButtonFlags">-2038284033</int>
+                  <int key="NSButtonFlags">-2038284288</int>
                   <int key="NSButtonFlags2">1</int>
+                  <reference key="NSAlternateImage" ref="734783574"/>
                   <string key="NSAlternateContents"/>
                   <string type="base64-UTF8" key="NSKeyEquivalent">DQ</string>
                   <int key="NSPeriodicDelay">200</int>
                   <int key="NSPeriodicInterval">25</int>
                 </object>
+                <bool key="NSAllowsLogicalLayoutDirection">NO</bool>
               </object>
               <object class="NSTextField" id="151691422">
                 <reference key="NSNextResponder" ref="1012846204"/>
                 <int key="NSvFlags">268</int>
-                <string key="NSFrame">{{113, 12}, {374, 22}}</string>
+                <string key="NSFrame">{{194, 12}, {431, 22}}</string>
                 <reference key="NSSuperview" ref="1012846204"/>
                 <string key="NSReuseIdentifierKey">_NS:817</string>
                 <bool key="NSEnabled">YES</bool>
                 <object class="NSTextFieldCell" key="NSCell" id="624228998">
-                  <int key="NSCellFlags">-1804468671</int>
+                  <int key="NSCellFlags">-1804599231</int>
                   <int key="NSCellFlags2">138413056</int>
                   <string key="NSContents"/>
-                  <object class="NSFont" key="NSSupport">
-                    <string key="NSName">LucidaGrande</string>
-                    <double key="NSSize">13</double>
-                    <int key="NSfFlags">1040</int>
-                  </object>
+                  <reference key="NSSupport" ref="626935215"/>
                   <string key="NSCellIdentifier">_NS:817</string>
                   <reference key="NSControlView" ref="151691422"/>
                   <bool key="NSDrawsBackground">YES</bool>
@@ -131,21 +133,20 @@
                     </object>
                   </object>
                 </object>
+                <bool key="NSAllowsLogicalLayoutDirection">NO</bool>
               </object>
             </object>
-            <string key="NSFrameSize">{600, 46}</string>
+            <string key="NSFrameSize">{819, 46}</string>
             <reference key="NSSuperview" ref="286230571"/>
-            <int key="NSViewLayerContentsRedrawPolicy">2</int>
             <string key="NSReuseIdentifierKey">_NS:21</string>
           </object>
         </object>
-        <string key="NSFrameSize">{600, 46}</string>
+        <string key="NSFrameSize">{819, 46}</string>
         <reference key="NSSuperview"/>
-        <int key="NSViewLayerContentsRedrawPolicy">2</int>
         <string key="NSReuseIdentifierKey">_NS:18</string>
         <string key="NSOffsets">{0, 0}</string>
         <object class="NSTextFieldCell" key="NSTitleCell">
-          <int key="NSCellFlags">67239424</int>
+          <int key="NSCellFlags">67108864</int>
           <int key="NSCellFlags2">0</int>
           <string key="NSContents"/>
           <object class="NSFont" key="NSSupport">
@@ -265,8 +266,8 @@
             <reference key="object" ref="286230571"/>
             <object class="NSMutableArray" key="children">
               <bool key="EncodedWithXMLCoder">YES</bool>
-              <reference ref="151691422"/>
               <reference ref="329255584"/>
+              <reference ref="151691422"/>
               <reference ref="621446930"/>
             </object>
             <reference key="parent" ref="550747931"/>
@@ -339,22 +340,22 @@
           <bool key="EncodedWithXMLCoder">YES</bool>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <integer value="1"/>
-          <string>{{189, 692}, {600, 46}}</string>
+          <string>{{213, 595}, {819, 46}}</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <object class="NSAffineTransform"/>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <object class="NSAffineTransform">
-            <bytes key="NSTransformStruct">P4AAAL+AAABDyIAAwhwAAA</bytes>
+            <bytes key="NSTransformStruct">P4AAAL+AAABEHcAAwgwAAA</bytes>
           </object>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <object class="NSAffineTransform">
-            <bytes key="NSTransformStruct">P4AAAL+AAABD4YAAwhwAAA</bytes>
+            <bytes key="NSTransformStruct">P4AAAL+AAABENIAAwgwAAA</bytes>
           </object>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
           <object class="NSAffineTransform">
-            <bytes key="NSTransformStruct">P4AAAL+AAABDEgAAwuYAAA</bytes>
+            <bytes key="NSTransformStruct">P4AAAL+AAABDSAAAwgAAAA</bytes>
           </object>
           <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
         </object>
@@ -476,13 +477,6 @@
       </object>
       <object class="NSMutableArray" key="referencedPartialClassDescriptionsV3.2+">
         <bool key="EncodedWithXMLCoder">YES</bool>
-        <object class="IBPartialClassDescription">
-          <string key="className">NSObject</string>
-          <object class="IBClassDescriptionSource" key="sourceIdentifier">
-            <string key="majorKey">IBFrameworkSource</string>
-            <string key="minorKey">Growl.framework/Headers/GrowlApplicationBridge.h</string>
-          </object>
-        </object>
         <object class="IBPartialClassDescription">
           <string key="className">NSObject</string>
           <object class="IBClassDescriptionSource" key="sourceIdentifier">

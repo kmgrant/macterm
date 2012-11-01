@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20121031',
     '20121014',
     '20121004',
     '20121003',
@@ -457,6 +458,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20121031': [
+        'Rename dialog now uses standard named buttons instead of the checkmark and "X" icon buttons.',
+        'Find dialog now uses standard named buttons instead of the checkmark and "X" icon buttons.',
+        'Find dialog status bar has a new appearance.',
+    ],
     '20121014': [
         'Fixed a possible crash when attempting to change screen formatting in various ways.',
     ],
