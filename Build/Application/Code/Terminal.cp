@@ -690,6 +690,33 @@ typedef My_CharacterSetInfo*			My_CharacterSetInfoPtr;
 typedef My_CharacterSetInfo const*		My_CharacterSetInfoConstPtr;
 
 /*!
+All the information required to represent the attributes
+of characters on a single line of a terminal buffer.
+
+This is a separate data structure because as an optimization
+the terminal may share information for lines that have the
+same fundamental attributes (especially if they are the
+default values and they never changed).  In other words,
+several lines may refer to a single My_AttributeInfo
+instance, even if the lines themselves are unique.
+*/
+struct My_AttributeInfo
+{
+	friend class My_ScreenBufferLine;
+	
+	My_AttributeInfo ();
+	
+	My_AttributeInfo (My_AttributeInfo const&);
+	
+	void
+	structureInitialize ();
+
+private:
+	TerminalTextAttributes		globalAttributes;   //!< attributes that apply to every character (e.g. double-sized text)
+	My_TextAttributesList		attributeVector;	//!< where character attributes exist
+};
+
+/*!
 Represents a single line of the screen buffer of a
 terminal, as well as attributes of its contents
 (special styles, colors, highlighting, double-sized
@@ -723,13 +750,11 @@ NOTE:	Traditionally NCSA Telnet has used bits to
 */
 struct My_ScreenBufferLine
 {
-	My_TextIterator				textVectorBegin;	//!< where characters exist
-	My_TextIterator				textVectorEnd;		//!< for convenience; past-the-end of this buffer
-	size_t						textVectorSize;		//!< for convenience; size of buffer
-	CFRetainRelease				textCFString;		//!< mutable string object for which "textVectorBegin" is the storage,
-													//!  so the buffer can be manipulated directly if desired
-	My_TextAttributesList		attributeVector;	//!< where character attributes exist
-	TerminalTextAttributes		globalAttributes;   //!< attributes that apply to every character (e.g. double-sized text)
+	My_TextIterator		textVectorBegin;	//!< where characters exist
+	My_TextIterator		textVectorEnd;		//!< for convenience; past-the-end of this buffer
+	size_t				textVectorSize;		//!< for convenience; size of buffer
+	CFRetainRelease		textCFString;		//!< mutable string object for which "textVectorBegin" is the storage,
+											//!  so the buffer can be manipulated directly if desired
 	
 	My_ScreenBufferLine ();
 	~My_ScreenBufferLine ();
@@ -742,10 +767,23 @@ struct My_ScreenBufferLine
 	bool
 	operator == (My_ScreenBufferLine const&  inLine) const;
 	
+	My_TextAttributesList const&
+	returnAttributeVector () const;
+	
+	TerminalTextAttributes
+	returnGlobalAttributes() const;
+	
+	My_TextAttributesList&
+	returnMutableAttributeVector ();
+	
+	TerminalTextAttributes&
+	returnMutableGlobalAttributes();
+	
 	void
 	structureInitialize ();
 
 private:
+	My_AttributeInfo	attributeInfo;
 };
 typedef std::list< My_ScreenBufferLine >		My_ScreenBufferLineList;
 typedef std::list< My_ScreenBufferLine >		My_ScrollbackBufferLineList;
@@ -3888,7 +3926,8 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 		// need to search line for style chunks
 		My_ScreenBufferLine&					currentLine = iteratorPtr->currentLine();
 		My_TextIterator							textIterator = nullptr;
-		My_TextAttributesList::const_iterator	attrIterator = currentLine.attributeVector.begin();
+		My_TextAttributesList const&			currentAttributeVector = currentLine.returnAttributeVector();
+		My_TextAttributesList::const_iterator	attrIterator = currentAttributeVector.begin();
 		TerminalTextAttributes					previousAttributes = 0;
 		TerminalTextAttributes					currentAttributes = 0;
 		SInt16									runStartCharacterIndex = 0;
@@ -3902,7 +3941,7 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 		InvokeScreenRunOperationProc(inDoWhat, inRef, currentLine.textVectorBegin/* starting point */,
 										currentLine.textVectorSize/* length */,
 										inStartRow, 0/* zero-based start column */,
-										currentLine.globalAttributes, inContextPtr);
+										currentLine.returnGlobalAttributes(), inContextPtr);
 	#endif
 		
 		// TEMPORARY - HIGHLY inefficient to search here, need to change this into a cache
@@ -3910,15 +3949,15 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 		//             style runs at some point in the future)
 		assert(nullptr != currentLine.textVectorBegin);
 		for (textIterator = currentLine.textVectorBegin,
-					attrIterator = currentLine.attributeVector.begin();
+					attrIterator = currentAttributeVector.begin();
 				(textIterator != currentLine.textVectorEnd) &&
-					(attrIterator != currentLine.attributeVector.end());
+					(attrIterator != currentAttributeVector.end());
 				++textIterator, ++attrIterator, ++characterIndex)
 		{
 			currentAttributes = *attrIterator;
 			if ((currentAttributes != previousAttributes) ||
 				(characterIndex == STATIC_CAST(currentLine.textVectorSize - 1, SInt16)) ||
-				(characterIndex == STATIC_CAST(currentLine.attributeVector.size() - 1, SInt16)))
+				(characterIndex == STATIC_CAST(currentAttributeVector.size() - 1, SInt16)))
 			{
 				styleRunLength = characterIndex - runStartCharacterIndex;
 				
@@ -3928,7 +3967,7 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 					TerminalTextAttributes		rangeAttributes = previousAttributes;
 					
 					
-					STYLE_ADD(rangeAttributes, currentLine.globalAttributes);
+					STYLE_ADD(rangeAttributes, currentLine.returnGlobalAttributes());
 					Terminal_InvokeScreenRunProc(inDoWhat, inRef, currentLine.textVectorBegin + runStartCharacterIndex/* starting point */,
 													styleRunLength/* length */, inStartRow,
 													runStartCharacterIndex/* zero-based start column */,
@@ -3949,7 +3988,7 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 			// found new style run; so handle the previous run
 			if (styleRunLength > 0)
 			{
-				TerminalTextAttributes		attributesForRemainder = currentLine.globalAttributes;
+				TerminalTextAttributes		attributesForRemainder = currentLine.returnGlobalAttributes();
 				
 				
 				// the “selected” attribute is special; it persists regardless
@@ -3992,7 +4031,7 @@ Terminal_GetLineGlobalAttributes	(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 	if ((iteratorPtr == nullptr) || (outAttributesPtr == nullptr)) result = kTerminal_ResultParameterError;
 	else
 	{
-		*outAttributesPtr = iteratorPtr->currentLine().globalAttributes;
+		*outAttributesPtr = iteratorPtr->currentLine().returnGlobalAttributes();
 	}
 	
 	return result;
@@ -7088,6 +7127,50 @@ returnXTermWindowAlteration		(Preferences_ContextRef		inTerminalConfig)
 
 
 /*!
+Initializes a structure that contains attribute data for
+a single line of a terminal buffer.
+
+(4.1)
+*/
+My_AttributeInfo::
+My_AttributeInfo ()
+:
+globalAttributes(kTerminalTextAttributesAllOff),
+attributeVector(kMy_NumberOfCharactersPerLineMaximum)
+{
+}// My_AttributeInfo constructor
+
+
+/*!
+Creates a new set of line attribute information by copying an
+existing one.
+
+(4.1)
+*/
+My_AttributeInfo::
+My_AttributeInfo	(My_AttributeInfo const&	inCopy)
+:
+globalAttributes(inCopy.globalAttributes),
+attributeVector(inCopy.attributeVector)
+{
+}// My_AttributeInfo copy constructor
+
+
+/*!
+Resets attributes to their initial state (removing all bits).
+
+(4.1)
+*/
+void
+My_AttributeInfo::
+structureInitialize ()
+{
+	std::fill(attributeVector.begin(), attributeVector.end(), kTerminalTextAttributesAllOff);
+	globalAttributes = kTerminalTextAttributesAllOff;
+}// My_AttributeInfo::structureInitialize
+
+
+/*!
 Creates a new screen buffer line.
 
 (3.1)
@@ -7102,8 +7185,7 @@ textCFString(CFStringCreateMutableWithExternalCharactersNoCopy
 				(kCFAllocatorDefault, textVectorBegin, kMy_NumberOfCharactersPerLineMaximum,
 					kMy_NumberOfCharactersPerLineMaximum/* capacity */, kCFAllocatorMalloc/* reallocator/deallocator */),
 				true/* is retained */),
-attributeVector(kMy_NumberOfCharactersPerLineMaximum),
-globalAttributes(kTerminalTextAttributesAllOff)
+attributeInfo()
 {
 	assert(textCFString.exists());
 	structureInitialize();
@@ -7126,8 +7208,7 @@ textCFString(CFStringCreateMutableWithExternalCharactersNoCopy
 				(kCFAllocatorDefault, textVectorBegin, kMy_NumberOfCharactersPerLineMaximum,
 					kMy_NumberOfCharactersPerLineMaximum/* capacity */, kCFAllocatorMalloc/* reallocator/deallocator */),
 				true/* is retained */),
-attributeVector(inCopy.attributeVector),
-globalAttributes(inCopy.globalAttributes)
+attributeInfo(inCopy.attributeInfo)
 {
 	assert(textCFString.exists());
 	
@@ -7161,8 +7242,7 @@ operator =	(My_ScreenBufferLine const&		inCopy)
 {
 	if (this != &inCopy)
 	{
-		this->attributeVector = inCopy.attributeVector;
-		this->globalAttributes = inCopy.globalAttributes;
+		this->attributeInfo = inCopy.attributeInfo;
 		
 		// since the CFMutableStringRef uses the internal buffer, overwriting
 		// the buffer contents will implicitly update the CFStringRef as well;
@@ -7190,6 +7270,87 @@ const
 
 
 /*!
+Returns the set of attributes that applies to the line.  This set
+is not guaranteed to be unique for all lines (as an optimization,
+common sets may be shared until they are modified).
+
+(4.1)
+*/
+My_TextAttributesList const&
+My_ScreenBufferLine::
+returnAttributeVector ()
+const
+{
+	// TEMPORARY; conditionally return shared vector for common cases
+	// such as “no attributes set”
+	return this->attributeInfo.attributeVector;
+}// My_ScreenBufferLine::returnAttributeVector
+
+
+/*!
+Returns the set of attributes that applies to the entire line by
+default.  This is for information only, and it is sometimes used
+to initialize the actual attribute vector.  It is a way to
+remember changes that should always apply to the line as a whole,
+such as a “double-size” mode.
+
+(4.1)
+*/
+TerminalTextAttributes
+My_ScreenBufferLine::
+returnGlobalAttributes ()
+const
+{
+	// TEMPORARY; conditionally return shared vector for common cases
+	// such as “no attributes set”
+	return this->attributeInfo.globalAttributes;
+}// My_ScreenBufferLine::returnGlobalAttributes
+
+
+/*!
+Returns the set of attributes that applies to the line, in a
+form that can be directly modified.  If the vector was previously
+shared, it becomes unique and memory is allocated (therefore, use
+this judiciously; ideally only when you are sure that the line
+requires unique attributes).  See also the read-only version,
+returnAttributeVector().
+
+NOTE:	Although technically this does not need a different name
+		(the "const" variation is sufficient), it has a separate
+		name so that it is easier to see when the mutable variant
+		is in use and when memory allocation may be occurring.
+
+(4.1)
+*/
+My_TextAttributesList&
+My_ScreenBufferLine::
+returnMutableAttributeVector ()
+{
+	// TEMPORARY; this will need to trigger memory allocation (to
+	// create something unique) once attribute vectors are shared
+	return this->attributeInfo.attributeVector;
+}// My_ScreenBufferLine::returnMutableAttributeVector
+
+
+/*!
+Use instead of returnGlobalAttributes() if it is necessary to
+change the global attribute values.  See also the method
+returnMutableAttributeVector(), for additional warnings about
+possible memory allocation side effects (as with that method,
+call this one judiciously; be sure that you actually need to
+change the attribute values).
+
+(4.1)
+*/
+TerminalTextAttributes&
+My_ScreenBufferLine::
+returnMutableGlobalAttributes ()
+{
+	return this->attributeInfo.globalAttributes;
+}// My_ScreenBufferLine::returnMutableGlobalAttributes
+
+
+/*!
 Resets a line to its initial state (clearing all text and
 removing attribute bits).
 
@@ -7200,8 +7361,7 @@ My_ScreenBufferLine::
 structureInitialize ()
 {
 	std::fill(textVectorBegin, textVectorEnd, ' ');
-	std::fill(attributeVector.begin(), attributeVector.end(), kTerminalTextAttributesAllOff);
-	globalAttributes = kTerminalTextAttributesAllOff;
+	this->attributeInfo.structureInitialize();
 }// My_ScreenBufferLine::structureInitialize
 
 
@@ -13878,7 +14038,7 @@ bufferEraseFromCursorColumn		(My_ScreenBufferPtr		inDataPtr,
 	fillDistance = std::min(fillDistance, STATIC_CAST(inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX, UInt16));
 	
 	// find the right line offset
-	attrIterator = cursorLineIterator->attributeVector.begin();
+	attrIterator = cursorLineIterator->returnMutableAttributeVector().begin();
 	std::advance(attrIterator, postWrapCursorX);
 	endAttrs = attrIterator;
 	std::advance(endAttrs, fillDistance);
@@ -13891,7 +14051,7 @@ bufferEraseFromCursorColumn		(My_ScreenBufferPtr		inDataPtr,
 	// being erased, "kMy_BufferChangesResetLineAttributes" does NOT apply
 	if (inChanges & kMy_BufferChangesResetCharacterAttributes)
 	{
-		std::fill(attrIterator, endAttrs, cursorLineIterator->globalAttributes);
+		std::fill(attrIterator, endAttrs, cursorLineIterator->returnGlobalAttributes());
 	}
 	if (inChanges & kMy_BufferChangesKeepBackgroundColor)
 	{
@@ -13973,9 +14133,9 @@ bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr,
 	locateCursorLine(inDataPtr, cursorLineIterator);
 	
 	// find the right line offset
-	attrIterator = cursorLineIterator->attributeVector.begin();
+	attrIterator = cursorLineIterator->returnMutableAttributeVector().begin();
 	std::advance(attrIterator, postWrapCursorX);
-	endAttrs = cursorLineIterator->attributeVector.end();
+	endAttrs = cursorLineIterator->returnMutableAttributeVector().end();
 	textIterator = cursorLineIterator->textVectorBegin;
 	std::advance(textIterator, postWrapCursorX);
 	endText = cursorLineIterator->textVectorEnd;
@@ -13984,7 +14144,7 @@ bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr,
 	// being erased, "kMy_BufferChangesResetLineAttributes" does NOT apply
 	if (inChanges & kMy_BufferChangesResetCharacterAttributes)
 	{
-		std::fill(attrIterator, endAttrs, cursorLineIterator->globalAttributes);
+		std::fill(attrIterator, endAttrs, cursorLineIterator->returnGlobalAttributes());
 	}
 	if (inChanges & kMy_BufferChangesKeepBackgroundColor)
 	{
@@ -14182,7 +14342,7 @@ bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr		inDataPtr,
 	fillDistance = 1 + postWrapCursorX;
 	
 	// find the right line offset
-	attrIterator = cursorLineIterator->attributeVector.begin();
+	attrIterator = cursorLineIterator->returnMutableAttributeVector().begin();
 	endAttrs = attrIterator;
 	std::advance(endAttrs, fillDistance);
 	textIterator = cursorLineIterator->textVectorBegin;
@@ -14193,7 +14353,7 @@ bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr		inDataPtr,
 	// being erased, "kMy_BufferChangesResetLineAttributes" does NOT apply
 	if (inChanges & kMy_BufferChangesResetCharacterAttributes)
 	{
-		std::fill(attrIterator, endAttrs, cursorLineIterator->globalAttributes);
+		std::fill(attrIterator, endAttrs, cursorLineIterator->returnGlobalAttributes());
 	}
 	if (inChanges & kMy_BufferChangesKeepBackgroundColor)
 	{
@@ -14261,22 +14421,22 @@ bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
 	
 	
 	// find the right line offset
-	attrIterator = inRow.attributeVector.begin();
-	endAttrs = inRow.attributeVector.end();
+	attrIterator = inRow.returnMutableAttributeVector().begin();
+	endAttrs = inRow.returnMutableAttributeVector().end();
 	textIterator = inRow.textVectorBegin;
 	endText = inRow.textVectorEnd;
 	
 	// 3.0 - line-global attributes are cleared only if clearing an entire line
-	inRow.globalAttributes = kTerminalTextAttributesAllOff;
+	inRow.returnMutableGlobalAttributes() = kTerminalTextAttributesAllOff;
 	
 	// change attributes if appropriate
 	if (inChanges & kMy_BufferChangesResetLineAttributes)
 	{
-		inRow.globalAttributes = kTerminalTextAttributesAllOff;
+		inRow.returnMutableGlobalAttributes() = kTerminalTextAttributesAllOff;
 	}
 	if (inChanges & kMy_BufferChangesResetCharacterAttributes)
 	{
-		std::fill(attrIterator, endAttrs, inRow.globalAttributes);
+		std::fill(attrIterator, endAttrs, inRow.returnGlobalAttributes());
 	}
 	if (inChanges & kMy_BufferChangesKeepBackgroundColor)
 	{
@@ -14389,7 +14549,7 @@ bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 	}
 	
 	// change attributes if necessary
-	copiedAttributes = toCursorLine->globalAttributes;
+	copiedAttributes = toCursorLine->returnGlobalAttributes();
 	if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
 	{
 		STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, copiedAttributes);
@@ -14397,8 +14557,8 @@ bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 	
 	// update attributes
 	{
-		My_TextAttributesList::iterator		pastVisibleEnd = toCursorLine->attributeVector.begin();
-		My_TextAttributesList::iterator		toCursorAttr = toCursorLine->attributeVector.begin();
+		My_TextAttributesList::iterator		pastVisibleEnd = toCursorLine->returnMutableAttributeVector().begin();
+		My_TextAttributesList::iterator		toCursorAttr = toCursorLine->returnMutableAttributeVector().begin();
 		My_TextAttributesList::iterator		toFirstRelocatedAttr;
 		My_TextAttributesList::iterator		pastLastPreservedAttr;
 		
@@ -14486,8 +14646,10 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 			My_ScreenBufferLine		lineTemplate = gEmptyScreenBufferLine();
 			
 			
-			lineTemplate.attributeVector = (*inInsertionLine).attributeVector;
-			lineTemplate.globalAttributes = (*inInsertionLine).globalAttributes;
+			std::copy((*inInsertionLine).returnAttributeVector().begin(),
+						(*inInsertionLine).returnAttributeVector().end(),
+						lineTemplate.returnMutableAttributeVector().begin());
+			lineTemplate.returnMutableGlobalAttributes() = (*inInsertionLine).returnGlobalAttributes();
 			inDataPtr->screenBuffer.insert(inInsertionLine, kMostLines, lineTemplate);
 		}
 		else if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
@@ -14497,8 +14659,8 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 			
 			
 			// the new lines have no attributes EXCEPT for a custom background color
-			for (tmpAttrIterator = lineTemplate.attributeVector.begin();
-					tmpAttrIterator != lineTemplate.attributeVector.end(); ++tmpAttrIterator)
+			for (tmpAttrIterator = lineTemplate.returnMutableAttributeVector().begin();
+					tmpAttrIterator != lineTemplate.returnMutableAttributeVector().end(); ++tmpAttrIterator)
 			{
 				STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, *tmpAttrIterator);
 			}
@@ -14551,10 +14713,10 @@ bufferLineFill	(My_ScreenBufferPtr			UNUSED_ARGUMENT(inDataPtr),
 				 Boolean					inUpdateLineGlobalAttributesAlso)
 {
 	std::fill(inRow.textVectorBegin, inRow.textVectorEnd, inFillCharacter);
-	std::fill(inRow.attributeVector.begin(), inRow.attributeVector.end(), inFillAttributes);
+	std::fill(inRow.returnMutableAttributeVector().begin(), inRow.returnMutableAttributeVector().end(), inFillAttributes);
 	if (inUpdateLineGlobalAttributesAlso)
 	{
-		inRow.globalAttributes = inFillAttributes;
+		inRow.returnMutableGlobalAttributes() = inFillAttributes;
 	}
 }// bufferLineFill
 
@@ -14597,10 +14759,10 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	}
 	
 	// change attributes if necessary
-	copiedAttributes = toCursorLine->globalAttributes;
+	copiedAttributes = toCursorLine->returnGlobalAttributes();
 	if (kMy_AttributeRuleCopyLast == inAttributeRule)
 	{
-		copiedAttributes = toCursorLine->attributeVector[inDataPtr->current.returnNumberOfColumnsPermitted() - 1];
+		copiedAttributes = toCursorLine->returnAttributeVector()[inDataPtr->current.returnNumberOfColumnsPermitted() - 1];
 	}
 	else if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
 	{
@@ -14609,8 +14771,8 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	
 	// update attributes
 	{
-		My_TextAttributesList::iterator		pastVisibleEnd = toCursorLine->attributeVector.begin();
-		My_TextAttributesList::iterator		toCursorAttr = toCursorLine->attributeVector.begin();
+		My_TextAttributesList::iterator		pastVisibleEnd = toCursorLine->returnMutableAttributeVector().begin();
+		My_TextAttributesList::iterator		toCursorAttr = toCursorLine->returnMutableAttributeVector().begin();
 		My_TextAttributesList::iterator		toFirstPreservedAttr;
 		My_TextAttributesList::iterator		pastLastRelocatedAttr;
 		
@@ -14717,8 +14879,10 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 			
 			
 			std::advance(toCopiedLine, -1);
-			lineTemplate.attributeVector = (*toCopiedLine).attributeVector;
-			lineTemplate.globalAttributes = (*toCopiedLine).globalAttributes;
+			std::copy((*toCopiedLine).returnAttributeVector().begin(),
+						(*toCopiedLine).returnAttributeVector().end(),
+						lineTemplate.returnMutableAttributeVector().begin());
+			lineTemplate.returnMutableGlobalAttributes() = (*toCopiedLine).returnGlobalAttributes();
 			inDataPtr->screenBuffer.insert(scrollingRegionEnd, kMostLines, lineTemplate);
 		}
 		else if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
@@ -14728,8 +14892,8 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 			
 			
 			// the new lines have no attributes EXCEPT for a custom background color
-			for (tmpAttrIterator = lineTemplate.attributeVector.begin();
-					tmpAttrIterator != lineTemplate.attributeVector.end(); ++tmpAttrIterator)
+			for (tmpAttrIterator = lineTemplate.returnMutableAttributeVector().begin();
+					tmpAttrIterator != lineTemplate.returnMutableAttributeVector().end(); ++tmpAttrIterator)
 			{
 				STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, *tmpAttrIterator);
 			}
@@ -14801,8 +14965,8 @@ changeLineGlobalAttributes	(My_ScreenBufferPtr			inDataPtr,
 	// now remember these changes so that the cursor can inherit them automatically;
 	// currently attributes for scrollback lines do not exist, but negative indices
 	// are allowed; to avoid array overflow, check for nonnegativity here
-	STYLE_REMOVE(inRow.globalAttributes, inClearTheseAttributes);
-	STYLE_ADD(inRow.globalAttributes, inSetTheseAttributes);
+	STYLE_REMOVE(inRow.returnMutableGlobalAttributes(), inClearTheseAttributes);
+	STYLE_ADD(inRow.returnMutableGlobalAttributes(), inSetTheseAttributes);
 }// changeLineGlobalAttributes
 
 
@@ -14828,8 +14992,8 @@ changeLineRangeAttributes	(My_ScreenBufferPtr			inDataPtr,
 	// update attributes for the specified columns of the given line
 	for (i = inZeroBasedStartColumn; i < pastTheEndColumn; ++i)
 	{
-		STYLE_REMOVE(inRow.attributeVector[i], inClearTheseAttributes);
-		STYLE_ADD(inRow.attributeVector[i], inSetTheseAttributes);
+		STYLE_REMOVE(inRow.returnMutableAttributeVector()[i], inClearTheseAttributes);
+		STYLE_ADD(inRow.returnMutableAttributeVector()[i], inSetTheseAttributes);
 	}
 	
 	// update current attributes too, if the cursor is in the given range
@@ -15084,7 +15248,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, thisCharacter,
 																									inDataPtr->current.drawingAttributes,
 																									temporaryAttributes);
-			cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = temporaryAttributes;
+			cursorLineIterator->returnMutableAttributeVector()[inDataPtr->current.cursorX] = temporaryAttributes;
 			
 			if (false == inDataPtr->wrapPending)
 			{
@@ -15375,7 +15539,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					}
 					cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *c, attrib,
 																											temporaryAttributes);
-					cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = temporaryAttributes;
+					cursorLineIterator->returnMutableAttributeVector()[inDataPtr->current.cursorX] = temporaryAttributes;
 					++c;
 					--ctr;
 					if (inDataPtr->current.cursorX < (inDataPtr->current.returnNumberOfColumnsPermitted() - 1))
@@ -16297,10 +16461,10 @@ eraseRightHalfOfLine	(My_ScreenBufferPtr		inDataPtr,
 	// clear from halfway point to end of line
 	textIterator = inRow.textVectorBegin;
 	std::advance(textIterator, midColumn);
-	attrIterator = inRow.attributeVector.begin();
+	attrIterator = inRow.returnMutableAttributeVector().begin();
 	std::advance(attrIterator, midColumn);
 	std::fill(textIterator, inRow.textVectorEnd, ' ');
-	std::fill(attrIterator, inRow.attributeVector.end(), inRow.globalAttributes);
+	std::fill(attrIterator, inRow.returnMutableAttributeVector().end(), inRow.returnGlobalAttributes());
 }// eraseRightHalfOfLine
 
 
@@ -16908,7 +17072,7 @@ moveCursorX		(My_ScreenBufferPtr		inDataPtr,
 			
 			
 			locateCursorLine(inDataPtr, cursorLineIterator);
-			inDataPtr->current.cursorAttributes = cursorLineIterator->attributeVector[inDataPtr->current.cursorX];
+			inDataPtr->current.cursorAttributes = cursorLineIterator->returnAttributeVector()[inDataPtr->current.cursorX];
 		}
 		
 		// reset wrap flag, now that the cursor is moving
@@ -16958,7 +17122,7 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 			// chance of having to save the top line into scrollback
 			inDataPtr->mayNeedToSaveToScrollback = false;
 		}
-		STYLE_REMOVE(inDataPtr->current.drawingAttributes, cursorLineIterator->globalAttributes);
+		STYLE_REMOVE(inDataPtr->current.drawingAttributes, cursorLineIterator->returnGlobalAttributes());
 		
 		// don’t allow the cursor to fall off the screen (in origin
 		// mode, it cannot fall outside the scrolling region)
@@ -16974,7 +17138,7 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 		// cursor has moved, so find the data for its new row
 		locateCursorLine(inDataPtr, cursorLineIterator);
 		
-		STYLE_ADD(inDataPtr->current.drawingAttributes, cursorLineIterator->globalAttributes);
+		STYLE_ADD(inDataPtr->current.drawingAttributes, cursorLineIterator->returnGlobalAttributes());
 		if ((0 == inDataPtr->current.cursorY) && (0 == inDataPtr->current.cursorX))
 		{
 			// if the cursor moves into the home position, flag this
@@ -16983,7 +17147,7 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 			inDataPtr->mayNeedToSaveToScrollback = true;
 		}
 		
-		inDataPtr->current.cursorAttributes = cursorLineIterator->attributeVector[inDataPtr->current.cursorX];
+		inDataPtr->current.cursorAttributes = cursorLineIterator->returnAttributeVector()[inDataPtr->current.cursorX];
 		
 		// reset wrap flag, now that the cursor is moving
 		inDataPtr->wrapPending = false;
