@@ -34,6 +34,29 @@
 
 
 
+#pragma mark Constants
+
+/*!
+Since there are differences between Growl and Mac OS X in
+terms of flexibility, this setting allows the sender of a
+notification to specify how it is intended to be seen by
+the user.  In certain situations a notification may
+intentionally NOT be sent to Mac OS X simply because it
+does not offer the user the same options as Growl to
+display the notification in a sensible way.
+*/
+enum GrowlSupport_NoteDisplay
+{
+	kGrowlSupport_NoteDisplayAlways = 0,		//!< should be sent to all systems; always appears
+	kGrowlSupport_NoteDisplayConfigurable = 1	//!< sent to Growl only, since only Growl offers the
+												//!  flexibility to display events in many different
+												//!  ways; use this for events that should not trigger
+												//!  an immediate display in all cases (as Mac OS X
+												//!  will always do)
+};
+
+
+
 #pragma mark Public Methods
 
 //!\name Growl Setup
@@ -51,7 +74,8 @@ Boolean
 //@{
 
 void
-	GrowlSupport_Notify							(CFStringRef,
+	GrowlSupport_Notify							(GrowlSupport_NoteDisplay,
+												 CFStringRef,
 												 CFStringRef = nullptr,
 												 CFStringRef = nullptr,
 												 CFStringRef = nullptr,

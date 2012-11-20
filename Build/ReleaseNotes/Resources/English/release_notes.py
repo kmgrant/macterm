@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20121119',
     '20121118',
     '20121031',
     '20121014',
@@ -459,6 +460,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20121119': [
+        'The "Session Ended" notification (for successful process exits) is no longer sent to Mac OS X because this event is frequent and it can be distracting when prominently displayed and logged by Notification Center.  Growl continues to receive all events because it is more flexible; for instance, not all events from an application must be displayed in exactly the same way so it is easier to find a useful way to display "Session Ended" with Growl.  Also note that "Session Failed" is a separate type of notification that continues to be sent to both Mac OS X and Growl.',
+    ],
     '20121118': [
         'Fixed a long delay in the creation of new terminal windows if scrollback buffer preferences had a large or "Unlimited" size.',
     ],

@@ -163,11 +163,14 @@ GrowlSupport_IsAvailable ()
 
 /*!
 Posts the specified notification to Growl and (on Mac OS X 10.8 or
-later) the system’s User Notification Center.  The name should match
-one of the strings in "Growl Registration Ticket.growlRegDict".
-The title and description can be anything.  If the title is set
-to nullptr, it copies the notification name; if the description
-is set to nullptr, it is set to an empty string.
+later) the system’s User Notification Center, if "inDisplay"
+indicates a type of notification that Mac OS X can handle well.
+This call has no effect on Mac OS X 10.3.
+
+The name should come from "Growl Registration Ticket.growlRegDict".
+The title and description can be anything.  If the title is set to
+nullptr, it copies the notification name; if the description is set
+to nullptr, it is set to an empty string.
 
 The "inSubTitle" and "inSoundName" parameters can only be used with
 the system’s notification method (Mac OS X 10.8 and later).  Set
@@ -176,19 +179,21 @@ the sound to nullptr if no sound should be played.
 Growl notifications have no effect if Growl is not installed and
 available.
 
-On Mac OS X 10.8 and beyond the user is not prevented from using
-Growl; the notification is sent to both Growl and the system.  It
-is assumed that the user will configure one of those two services
-to not display this application’s notifications.
+System notifications on Mac OS X 10.8 and later can occur even if
+Growl is installed; it is assumed that the user will disable the
+notifications for the mechanism that they would prefer not to use.
+Currently only "kGrowlSupport_NoteDisplayAlways" notes will be sent
+to Mac OS X.
 
 (1.0)
 */
 void
-GrowlSupport_Notify		(CFStringRef	inNotificationName,
-						 CFStringRef	inTitle,
-						 CFStringRef	inDescription,
-						 CFStringRef	inSubTitle,
-						 CFStringRef	inSoundName)
+GrowlSupport_Notify		(GrowlSupport_NoteDisplay	inDisplay,
+						 CFStringRef				inNotificationName,
+						 CFStringRef				inTitle,
+						 CFStringRef				inDescription,
+						 CFStringRef				inSubTitle,
+						 CFStringRef				inSoundName)
 {
 	AutoPool	_;
 	
@@ -206,7 +211,8 @@ GrowlSupport_Notify		(CFStringRef	inNotificationName,
 	// NOTE: The “Cocoa Future” module can be called on any OS version but
 	// the methods will only be implemented on Mac OS X 10.8 and beyond.
 	// EVERY method call must check for a definition first!
-	if (nil != gMountainLionUserNotificationCenter)
+	if ((nil != gMountainLionUserNotificationCenter) &&
+		(kGrowlSupport_NoteDisplayAlways == inDisplay))
 	{
 		id		newNote = CocoaFuture_AllocInitUserNotification();
 		

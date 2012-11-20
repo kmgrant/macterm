@@ -2340,15 +2340,16 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 		// only pay attention to reports for processes that were spawned by this module
 		if (gChildProcessIDs().end() != gChildProcessIDs().find(kProcessID))
 		{
-			CFStringRef			dialogTextTemplateCFString = nullptr;
-			CFStringRef			dialogTextCFString = nullptr;
-			CFStringRef			helpTextCFString = CFSTR(""); // not always used
-			CFStringRef			growlNotificationName = nullptr; // not released
-			CFStringRef			growlNotificationTitle = nullptr;
-			UIStrings_Result	stringResult = kUIStrings_ResultOK;
-			Boolean				canDisplayAlert = false;
-			Boolean				canNotifyGrowl = false;
-			Boolean				releaseHelpText = false;
+			CFStringRef					dialogTextTemplateCFString = nullptr;
+			CFStringRef					dialogTextCFString = nullptr;
+			CFStringRef					helpTextCFString = CFSTR(""); // not always used
+			CFStringRef					growlNotificationName = nullptr; // not released
+			CFStringRef					growlNotificationTitle = nullptr;
+			UIStrings_Result			stringResult = kUIStrings_ResultOK;
+			GrowlSupport_NoteDisplay	displayType = kGrowlSupport_NoteDisplayAlways;
+			Boolean						canDisplayAlert = false;
+			Boolean						canNotifyGrowl = false;
+			Boolean						releaseHelpText = false;
 			
 			
 			if (WIFEXITED(currentStatus))
@@ -2462,6 +2463,7 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 				{
 					// successful exit
 					canDisplayAlert = false;
+					displayType = kGrowlSupport_NoteDisplayConfigurable;
 					
 					growlNotificationName = CFSTR("Session ended"); // MUST match "Growl Registration Ticket.growlRegDict"
 					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessExitTitle, growlNotificationTitle);
@@ -2551,7 +2553,8 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 				if ((kDisplayGrowl) && (canNotifyGrowl))
 				{
 					// page Growl
-					GrowlSupport_Notify(growlNotificationName, growlNotificationTitle, dialogTextCFString/* description */);
+					GrowlSupport_Notify(displayType, growlNotificationName, growlNotificationTitle,
+										dialogTextCFString/* description */);
 				}
 				
 				if ((kDisplayNormal) && (canDisplayAlert))

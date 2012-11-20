@@ -250,7 +250,7 @@ Console_WriteScriptError	(CFStringRef		inTitle,
 		CFStringRef		growlNotificationName = CFSTR("Script error"); // MUST match "Growl Registration Ticket.growlRegDict"
 		
 		
-		GrowlSupport_Notify(growlNotificationName, inTitle, inDescription);
+		GrowlSupport_Notify(kGrowlSupport_NoteDisplayAlways, growlNotificationName, inTitle, inDescription);
 	}
 	else
 	{

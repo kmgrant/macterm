@@ -8545,7 +8545,8 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 				{
 					// page Growl and then clear immediately, instead of waiting
 					// for the user to respond
-					GrowlSupport_Notify(growlNotificationName, growlNotificationTitle,
+					GrowlSupport_Notify(kGrowlSupport_NoteDisplayAlways,
+										growlNotificationName, growlNotificationTitle,
 										dialogTextCFString/* description */);
 					watchClearForSession(inPtr);
 				}
