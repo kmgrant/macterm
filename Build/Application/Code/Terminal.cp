@@ -54,6 +54,13 @@
 // GNU compiler includes
 #include <ext/algorithm>
 
+// UNIX includes
+extern "C"
+{
+#	include <errno.h>
+#	include <pthread.h>
+}
+
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
@@ -1896,6 +1903,23 @@ public:
 	};
 };
 
+/*!
+Thread context passed to threadForTerminalSearch().
+*/
+struct My_SearchThreadContext
+{
+	My_ScreenBufferPtr							screenBufferPtr; // the terminal being searched
+	std::vector< Terminal_RangeDescription >*	matchesVectorPtr;
+	CFStringRef									queryCFString;
+	CFOptionFlags								searchFlags;
+	UInt16										threadNumber; // thread 0 searches the screen, thread N searches every Nth scrollback line
+	My_ScreenBufferLineList::const_iterator		rangeStart; // buffer offset (into screen if thread 0, otherwise scrollback)
+	SInt32										startRowIndex; // index of the line pointed to by "rangeStart"
+	UInt32										rowCount; // number of lines from buffer offset to search
+};
+typedef My_SearchThreadContext*			My_SearchThreadContextPtr;
+typedef My_SearchThreadContext const*	My_SearchThreadContextConstPtr;
+
 } // anonymous namespace
 
 #pragma mark Internal Method Prototypes
@@ -1986,6 +2010,7 @@ inline TerminalTextAttributes	styleOfVTParameter					(UInt8	inPs)
 void						tabStopClearAll							(My_ScreenBufferPtr);
 UInt16						tabStopGetDistanceFromCursor			(My_ScreenBufferConstPtr, Boolean);
 void						tabStopInitialize						(My_ScreenBufferPtr);
+void*						threadForTerminalSearch					(void*);
 UniChar						translateCharacter						(My_ScreenBufferPtr, UniChar, TerminalTextAttributes,
 																	 TerminalTextAttributes&);
 template < typename src_char_seq_const_iter, typename src_char_seq_size_t,
@@ -4671,6 +4696,10 @@ Searches the specified terminal screen buffer using the given
 query and flags as a guide, and returns zero or more matches.
 All matching ranges are returned.
 
+Multiple threads may be spawned to perform searches of the
+terminal buffer but they will all terminate before this routine
+returns.
+
 This is not guaranteed to be perfectly efficient; in particular,
 currently the internal implementation needs to copy data in order
 to pass it to the scanner.  In the future, if the internal
@@ -4698,99 +4727,229 @@ Terminal_Search		(TerminalScreenRef							inRef,
 					 std::vector< Terminal_RangeDescription >&	outMatches)
 {
 	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
+	pthread_mutex_t		matchVectorMutex;
 	Terminal_Result		result = kTerminal_ResultOK;
 	
 	
+	if (-1 == pthread_mutex_init(&matchVectorMutex, NULL/* attributes */))
+	{
+		Console_Warning(Console_WriteValue, "failed to create mutex for terminal search, errno", errno);
+		result = kTerminal_ResultNotEnoughMemory;
+	}
+	
 	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
 	else if (nullptr == inQuery) result = kTerminal_ResultParameterError;
-	else
+	else if (kTerminal_ResultOK == result)
 	{
-		typedef std::vector< My_ScreenBufferLineList* >		BufferList;
-		BufferList		buffersToSearch;
-		CFOptionFlags	searchFlags = 0;
-		UInt16			bufferIndex = 0;
+		typedef std::vector< Terminal_RangeDescription >	RangeDescriptionVector;
+		typedef std::vector< RangeDescriptionVector >		RangeDescriptionVectorList;
+		typedef std::vector< pthread_t >					ThreadVector;
+		CFOptionFlags				searchFlags = 0;
+		pthread_attr_t				threadAttributes;
+		pthread_t					threadList[] =
+									{
+										// size according to maximum number of scrollback-search threads
+										nullptr,
+										nullptr,
+										nullptr,
+										nullptr,
+										nullptr
+									};
+		size_t const				kMaxThreads = sizeof(threadList) / sizeof(pthread_t);
+		RangeDescriptionVector*		matchVectorsList[] =
+									{
+										// one per thread, same size as "threadList"
+										nullptr,
+										nullptr,
+										nullptr,
+										nullptr,
+										nullptr
+									};
+		int							threadResult = 0;
+		Boolean						threadOK = true;
 		
 		
 		// translate given flags to Core Foundation String search flags
 		if (0 == (inFlags & kTerminal_SearchFlagsCaseSensitive)) searchFlags |= kCFCompareCaseInsensitive;
 		if (inFlags & kTerminal_SearchFlagsSearchBackwards) searchFlags |= kCFCompareBackwards;
 		
-		// search the screen first, then the scrollback (backwards) if it exists
-		buffersToSearch.push_back(&dataPtr->screenBuffer);
-		buffersToSearch.push_back(&dataPtr->scrollbackBuffer);
-		for (BufferList::const_iterator toBuffer = buffersToSearch.begin();
-				toBuffer != buffersToSearch.end(); ++toBuffer, ++bufferIndex)
+		threadResult = pthread_attr_init(&threadAttributes);
+		if (-1 == threadResult)
 		{
-			Boolean const				kIsScreen = (0 == bufferIndex); // else scrollback
-			My_ScreenBufferLineList&	kBuffer = *(*toBuffer);
-			SInt32						rowIndex = 0; // reset per buffer
-			
-			
-			for (My_ScreenBufferLineList::const_iterator toLine = kBuffer.begin();
-					toLine != kBuffer.end(); ++toLine, ++rowIndex)
+			Console_Warning(Console_WriteValue, "failed to initialize thread attributes, errno", errno);
+			threadOK = false;
+		}
+		else
+		{
+			threadResult = pthread_attr_setdetachstate(&threadAttributes, PTHREAD_CREATE_JOINABLE);
+			if (-1 == threadResult)
 			{
-				// find ALL matches; NOTE that this technically will not find words
-				// that begin at the end of one line and continue at the start of
-				// the next, but that is a known limitation right now (TEMPORARY)
-				My_ScreenBufferLine const&	kLine = *toLine;
-				CFStringRef const			kCFStringToSearch = kLine.textCFString.returnCFStringRef();
-				CFRetainRelease				resultsArray(CFStringCreateArrayWithFindResults
-															(kCFAllocatorDefault, kCFStringToSearch, inQuery,
-																CFRangeMake(0, CFStringGetLength(kCFStringToSearch)),
-																searchFlags),
-															true/* already retained */);
-				
-				
-				if (resultsArray.exists())
+				Console_Warning(Console_WriteValue, "failed to mark thread as 'joinable', errno", errno);
+				threadOK = false;
+			}
+			threadResult = pthread_attr_setstacksize(&threadAttributes, 1024/* arbitrary but needs to suffice! */);
+			if (-1 == threadResult)
+			{
+				Console_Warning(Console_WriteValue, "failed to set thread stack size, errno", errno);
+				threadOK = false;
+			}
+		}
+		
+		// threads are spawned to perform search in parallel; the first thread
+		// searches the main screen, and all subsequent threads search every
+		// Nth line of the scrollback buffer (e.g. if there are 3 scrollback
+		// threads, the first searches scrollback line 0, 3, 6, ..., the 2nd
+		// searches line 1, 4, 7, and so on); in this way it is relatively
+		// easy to experiment with additional threads to see where the best
+		// performance lies, as the search results should always be OK
+		if (threadOK)
+		{
+			My_SearchThreadContextPtr	threadContextPtr = nullptr;
+			
+			
+			matchVectorsList[0] = new RangeDescriptionVector();
+			
+			threadContextPtr = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(sizeof(My_SearchThreadContext)),
+												My_SearchThreadContextPtr);
+			threadContextPtr->screenBufferPtr = dataPtr;
+			threadContextPtr->matchesVectorPtr = matchVectorsList[0];
+			threadContextPtr->queryCFString = inQuery;
+			threadContextPtr->searchFlags = searchFlags;
+			threadContextPtr->threadNumber = 0;
+			threadContextPtr->rangeStart = dataPtr->screenBuffer.begin();
+			threadContextPtr->startRowIndex = 0;
+			threadContextPtr->rowCount = dataPtr->screenBuffer.size();
+			
+			threadResult = pthread_create(&threadList[0], &threadAttributes,
+											threadForTerminalSearch, threadContextPtr);
+			if (-1 == threadResult)
+			{
+				Console_Warning(Console_WriteValue, "failed to create thread 0, errno", errno);
+				threadOK = false;
+			}
+		}
+		if (false == dataPtr->scrollbackBuffer.empty())
+		{
+			size_t const	kScrollbackSize = dataPtr->scrollbackBuffer.size();
+			UInt16			scrollbackThreadCount = 1;
+			
+			
+			// set arbitrary thread allocations based on how big the search space is
+			if (kScrollbackSize > 10000/* arbitrary */)
+			{
+				++scrollbackThreadCount;
+			}
+			if (kScrollbackSize > 30000/* arbitrary */)
+			{
+				++scrollbackThreadCount;
+			}
+			if (kScrollbackSize > 50000/* arbitrary */)
+			{
+				++scrollbackThreadCount;
+			}
+			
+			if (scrollbackThreadCount >= kMaxThreads)
+			{
+				scrollbackThreadCount = kMaxThreads - 1;
+			}
+			size_t		averageLinesPerThread = kScrollbackSize / scrollbackThreadCount;
+			for (UInt16 i = 1; i <= scrollbackThreadCount; ++i)
+			{
+				if (threadOK)
 				{
-					CFArrayRef const	kResultsArrayRef = resultsArray.returnCFArrayRef();
-					CFIndex const		kNumberOfMatches = CFArrayGetCount(kResultsArrayRef);
+					My_SearchThreadContextPtr	threadContextPtr = nullptr;
 					
 					
-					// return the range of text that was found
-					outMatches.reserve(outMatches.size() + kNumberOfMatches);
-					for (CFIndex i = 0; i < kNumberOfMatches; ++i)
+					matchVectorsList[i] = new RangeDescriptionVector();
+					
+					threadContextPtr = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(sizeof(My_SearchThreadContext)),
+														My_SearchThreadContextPtr);
+					threadContextPtr->screenBufferPtr = dataPtr;
+					threadContextPtr->matchesVectorPtr = matchVectorsList[i];
+					threadContextPtr->queryCFString = inQuery;
+					threadContextPtr->searchFlags = searchFlags;
+					threadContextPtr->threadNumber = i;
+					threadContextPtr->rangeStart = dataPtr->scrollbackBuffer.begin();
+					threadContextPtr->startRowIndex = (i - 1) * averageLinesPerThread;
+					if (i > 1)
 					{
-						CFRange const*				toRange = REINTERPRET_CAST(CFArrayGetValueAtIndex(kResultsArrayRef, i),
-																				CFRange const*);
-						SInt32						firstRow = rowIndex;
-						UInt16						firstColumn = 0;
-						UInt16						secondColumn = 0;
-						Terminal_RangeDescription	textRegion;
-						
-						
-						// translate all results ranges into external form; the
-						// caller understands rows and columns, etc. not offsets
-						// into a giant buffer
-						//getBufferOffsetCell(dataPtr, toRange->location, kEndOfLinePad, firstColumn, firstRow);
-						//getBufferOffsetCell(dataPtr, toRange->location + toRange->length, kEndOfLinePad, secondColumn, firstRow);
-						firstColumn = toRange->location;
-						secondColumn = toRange->location + toRange->length;
-						if (false == kIsScreen)
-						{
-							// translate scrollback into negative coordinates (zero-based)
-							firstRow = -firstRow - 1;
-						}
-						bzero(&textRegion, sizeof(textRegion));
-						textRegion.screen = inRef;
-						textRegion.firstRow = firstRow;
-						textRegion.firstColumn = firstColumn;
-						textRegion.columnCount = toRange->length;
-						textRegion.rowCount = 1;
-						outMatches.push_back(textRegion);
+						std::advance(threadContextPtr->rangeStart, threadContextPtr->startRowIndex);
+					}
+					threadContextPtr->rowCount = averageLinesPerThread;
+					if (scrollbackThreadCount == i)
+					{
+						// since the scrollback size is unlikely to divide perfectly between
+						// threads, the last thread picks up the slack
+						threadContextPtr->rowCount = dataPtr->scrollbackBuffer.size() - threadContextPtr->startRowIndex;
+					}
+					
+					threadResult = pthread_create(&threadList[i], &threadAttributes,
+													threadForTerminalSearch, threadContextPtr);
+					if (-1 == threadResult)
+					{
+						Console_Warning(Console_WriteValue, "failed to create thread, errno", errno);
+						threadOK = false;
 					}
 				}
-				else
+			}
+		}
+		
+		// wait for all threads to complete
+		for (UInt16 i = 0; i < kMaxThreads; ++i)
+		{
+			if (nullptr == threadList[i])
+			{
+				break;
+			}
+			(int)pthread_join(threadList[i], nullptr);
+		}
+		
+		// process search results
+		if (false == threadOK)
+		{
+			result = kTerminal_ResultNotEnoughMemory;
+		}
+		else
+		{
+			result = kTerminal_ResultOK;
+			
+			// since all threads had their own vectors to avoid locking delays,
+			// it is now necessary to combine each thread’s results into one list
+			// (in the future it might make sense to expose this fact to the
+			// caller just to avoid pointless copies; the caller will most likely
+			// just iterate over it all anyway)
+			size_t	totalSize = 0;
+			for (UInt16 i = 0; i < kMaxThreads; ++i)
+			{
+				if (nullptr == matchVectorsList[i])
 				{
-					// text was not found
-					//Console_WriteLine("string not found");
+					break;
 				}
+				totalSize += matchVectorsList[i]->size();
+			}
+			outMatches.reserve(totalSize);
+			for (UInt16 i = 0; i < kMaxThreads; ++i)
+			{
+				if (nullptr == matchVectorsList[i])
+				{
+					break;
+				}
+				outMatches.insert(outMatches.end(), matchVectorsList[i]->begin(), matchVectorsList[i]->end());
+			}
+		}
+		
+		// free space
+		for (UInt16 i = 0; i < kMaxThreads; ++i)
+		{
+			if (nullptr != matchVectorsList[i])
+			{
+				delete matchVectorsList[i], matchVectorsList[i] = nullptr;
 			}
 		}
 	}
 	
 	return result;
-}// SearchForPhrase
+}// Search
 
 
 /*!
@@ -18093,6 +18252,98 @@ tabStopInitialize	(My_ScreenBufferPtr		inDataPtr)
 	assert(!inDataPtr->tabSettings.empty());
 	inDataPtr->tabSettings.back() = kMy_TabSet; // also make last column a tab
 }// tabStopInitialize
+
+
+/*!
+A POSIX thread (which can be preempted) that handles
+dynamic search for a portion of a terminal buffer.
+
+WARNING:	As this is a preemptable thread, you MUST
+		NOT use thread-unsafe system calls here.
+		On the other hand, you can arrange for
+		events to be handled (e.g. with Carbon
+		Events).
+
+(4.1)
+*/
+void*
+threadForTerminalSearch		(void*	inSearchThreadContextPtr)
+{
+	My_SearchThreadContextPtr	contextPtr = REINTERPRET_CAST(inSearchThreadContextPtr, My_SearchThreadContextPtr);
+	Boolean const				kIsScreen = (0 == contextPtr->threadNumber); // else scrollback
+	SInt32 const				kPastEndRowIndex = (contextPtr->startRowIndex + contextPtr->rowCount);
+	SInt32						rowIndex = contextPtr->startRowIndex;
+	
+	
+	for (My_ScreenBufferLineList::const_iterator toLine = contextPtr->rangeStart;
+			rowIndex < kPastEndRowIndex; ++toLine, ++rowIndex)
+	{
+		// find ALL matches; NOTE that this technically will not find words
+		// that begin at the end of one line and continue at the start of
+		// the next, but that is a known limitation right now (TEMPORARY)
+		My_ScreenBufferLine const&	kLine = *toLine;
+		CFStringRef const			kCFStringToSearch = kLine.textCFString.returnCFStringRef();
+		CFRetainRelease				resultsArray(CFStringCreateArrayWithFindResults
+													(kCFAllocatorDefault, kCFStringToSearch, contextPtr->queryCFString,
+														CFRangeMake(0, CFStringGetLength(kCFStringToSearch)),
+														contextPtr->searchFlags),
+													true/* already retained */);
+		
+		
+		if (resultsArray.exists())
+		{
+			// return the range of text that was found
+			CFArrayRef const	kResultsArrayRef = resultsArray.returnCFArrayRef();
+			CFIndex const		kNumberOfMatches = CFArrayGetCount(kResultsArrayRef);
+			
+			
+			// extend the size of the results vector
+			contextPtr->matchesVectorPtr->reserve(contextPtr->matchesVectorPtr->size() + kNumberOfMatches);
+			
+			// figure out where all the matches are on the screen
+			for (CFIndex i = 0; i < kNumberOfMatches; ++i)
+			{
+				CFRange const*				toRange = REINTERPRET_CAST(CFArrayGetValueAtIndex(kResultsArrayRef, i),
+																		CFRange const*);
+				SInt32						firstRow = rowIndex;
+				UInt16						firstColumn = 0;
+				UInt16						secondColumn = 0;
+				Terminal_RangeDescription	textRegion;
+				
+				
+				// translate all results ranges into external form; the
+				// caller understands rows and columns, etc. not offsets
+				// into a giant buffer
+				//getBufferOffsetCell(dataPtr, toRange->location, kEndOfLinePad, firstColumn, firstRow);
+				//getBufferOffsetCell(dataPtr, toRange->location + toRange->length, kEndOfLinePad, secondColumn, firstRow);
+				firstColumn = toRange->location;
+				secondColumn = toRange->location + toRange->length;
+				if (false == kIsScreen)
+				{
+					// translate scrollback into negative coordinates (zero-based)
+					firstRow = -firstRow - 1;
+				}
+				bzero(&textRegion, sizeof(textRegion));
+				textRegion.screen = contextPtr->screenBufferPtr->selfRef;
+				textRegion.firstRow = firstRow;
+				textRegion.firstColumn = firstColumn;
+				textRegion.columnCount = toRange->length;
+				textRegion.rowCount = 1;
+				contextPtr->matchesVectorPtr->push_back(textRegion);
+			}
+		}
+		else
+		{
+			// text was not found
+			//Console_WriteLine("string not found");
+		}
+	}
+	
+	// since the thread is finished, dispose of dynamically-allocated memory
+	Memory_DisposePtrInterruptSafe(REINTERPRET_CAST(&contextPtr, void**));
+	
+	return nullptr;
+}// threadForTerminalSearch
 
 
 /*!
