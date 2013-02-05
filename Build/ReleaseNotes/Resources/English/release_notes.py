@@ -14,11 +14,13 @@ __date__ = "28 September 2006"
 # generated).  Also, the order of this list matters; the newest
 # release should be inserted at the beginning.
 version_lineage = [
+    '4.1.0',
     '4.0.0',
     '3.0.1',
 ]
 
 daily_build_lineage = [
+    '20130205',
     '20121129',
     '20121119',
     '20121118',
@@ -461,7 +463,13 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130205': [
+        'Version root has changed to 4.1; future builds will incorporate features intended for the upcoming 4.1 releease.',
+        'Due to continuing challenges presented by Apple development tools and a lack of suitable testing hardware, the decision has been made to DROP SUPPORT for PowerPC-based Macs and versions of Mac OS X prior to Snow Leopard (10.6).  In other words, from now on, MacTerm will only work on Intel-based Macs that run Snow Leopard (10.6), Lion (10.7), Mountain Lion (10.8), or any system beyond that.',
+        'By dropping support for older systems and architectures, MacTerm is considerably smaller...less than half the size of any previous version!  This build requires just 9.5 MB of disk space and it is also a faster download.',
+    ],
     '20121129': [
+        'This is the LAST VERSION TO SUPPORT MAC OS X VERSIONS 10.3 - 10.5.  Starting in 2013, only Snow Leopard (10.6), Lion (10.7) and Mountain Lion (10.8) and beyond will be supported.',
         'Terminal search is now much faster for average searches and less prone to blocking (beachball cursor).',
     ],
     '20121119': [
@@ -2219,7 +2227,12 @@ notes_by_version = {
         'Terminal window text selections do not work properly.  Please do not submit bugs on this.',
         'Terminal scrollback cannot be displayed.  Please do not submit bugs on this.',
     ],
+    '4.1.0': [
+        'Decision was made to require Mac OS X 10.6 minimum.',
+        'This version is incomplete; it incorporates changes starting from Daily Build 20130205.',
+    ],
     '4.0.0': [
+        'This release incorporates all changes up to Daily Build 20121129 and is the last to support Mac OS X 10.5 or earlier (and PowerPC Macs).',
         'Decision was made to require Mac OS X 10.3.9 minimum.',
         'IPv6 addresses can now be used anywhere hosts are normally used.',
         'Get IP Address command now returns IPv6 format if possible.',

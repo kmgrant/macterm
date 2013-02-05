@@ -3,115 +3,28 @@
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
   <array count="42" name="allObjects">
-    <object class="IBCarbonWindow" id="261">
-      <boolean name="receiveUpdates">FALSE</boolean>
-      <boolean name="hasCloseBox">FALSE</boolean>
-      <boolean name="hasCollapseBox">FALSE</boolean>
-      <boolean name="hasHorizontalZoom">FALSE</boolean>
-      <boolean name="isResizable">FALSE</boolean>
-      <boolean name="hasVerticalZoom">FALSE</boolean>
-      <boolean name="compositing">TRUE</boolean>
-      <boolean name="doesNotCycle">TRUE</boolean>
-      <boolean name="inWindowMenu">FALSE</boolean>
-      <int name="themeBrush">5</int>
-      <int name="windowPosition">4</int>
-      <int name="scalingMode">1048576</int>
-      <string name="title"></string>
-      <object name="rootControl" class="IBCarbonRootControl" id="262">
-        <string name="viewFrame">0 0 400 135 </string>
-        <array count="11" name="subviews">
-          <object class="IBCarbonIcon" id="265">
-            <ostype name="controlSignature">Note</ostype>
-            <int name="creator">0</int>
-            <string name="viewFrame">24 13 48 48 </string>
-            <string name="bounds">13 24 61 72 </string>
-          </object>
-          <object class="IBCarbonIcon" id="264">
-            <ostype name="controlSignature">Caut</ostype>
-            <int name="contentResID">2</int>
-            <int name="creator">0</int>
-            <string name="viewFrame">24 13 48 48 </string>
-            <string name="bounds">13 24 61 72 </string>
-          </object>
-          <object class="IBCarbonIcon" id="263">
-            <ostype name="controlSignature">Stop</ostype>
-            <int name="contentResID">0</int>
-            <int name="creator">0</int>
-            <string name="viewFrame">24 13 48 48 </string>
-            <string name="bounds">13 24 61 72 </string>
-          </object>
-          <object class="IBCarbonStaticText" id="268">
-            <ostype name="controlSignature">Titl</ostype>
-            <int name="fontStyle">104</int>
-            <string name="title">&lt;title&gt;</string>
-            <string name="foreColor">13107 13107 13107 </string>
-            <string name="viewFrame">88 20 301 16 </string>
-            <string name="bounds">20 88 36 389 </string>
-          </object>
-          <object class="IBCarbonStaticText" id="273">
-            <ostype name="controlSignature">Main</ostype>
-            <int name="fontStyle">1</int>
-            <string name="title">&lt;main message&gt;</string>
-            <string name="viewFrame">88 61 301 13 </string>
-            <string name="bounds">61 88 74 389 </string>
-          </object>
-          <object class="IBCarbonStaticText" id="272">
-            <ostype name="controlSignature">Smal</ostype>
-            <int name="fontStyle">1</int>
-            <string name="title">&lt;help message&gt;</string>
-            <string name="viewFrame">88 82 301 13 </string>
-            <string name="bounds">82 88 95 389 </string>
-          </object>
-          <object class="IBCarbonIcon" id="266">
-            <ostype name="controlSignature">AppI</ostype>
-            <int name="contentType">132</int>
-            <int name="contentResID">1097887817</int>
-            <int name="creator">1264940615</int>
-            <string name="viewFrame">56 45 16 16 </string>
-            <string name="bounds">45 56 61 72 </string>
-          </object>
-          <object class="IBCarbonButton" id="269">
-            <ostype name="controlSignature">Dflt</ostype>
-            <int name="controlSize">1</int>
-            <ostype name="command">ok  </ostype>
-            <int name="buttonType">1</int>
-            <string name="title">-</string>
-            <string name="viewFrame">345 103 30 20 </string>
-            <string name="bounds">103 345 123 375 </string>
-          </object>
-          <object class="IBCarbonButton" id="271">
-            <ostype name="controlSignature">Canc</ostype>
-            <int name="controlSize">1</int>
-            <ostype name="command">not!</ostype>
-            <int name="buttonType">2</int>
-            <string name="title">-</string>
-            <string name="viewFrame">305 103 30 20 </string>
-            <string name="bounds">103 305 123 335 </string>
-          </object>
-          <object class="IBCarbonButton" id="274">
-            <ostype name="controlSignature">Othr</ostype>
-            <int name="controlSize">1</int>
-            <ostype name="command">Othr</ostype>
-            <string name="title">-</string>
-            <string name="viewFrame">265 103 30 20 </string>
-            <string name="bounds">103 265 123 295 </string>
-          </object>
-          <object class="IBCarbonRoundButton" id="267">
-            <ostype name="controlSignature">Help</ostype>
-            <ostype name="command">?Ctx</ostype>
-            <string name="viewFrame">18 103 25 25 </string>
-            <string name="bounds">103 18 128 43 </string>
-            <int name="contentType">132</int>
-            <int name="iconCreator">1835098995</int>
-            <int name="iconType">1751477360</int>
-          </object>
-        </array>
-        <string name="bounds">0 0 135 400 </string>
-      </object>
-      <string name="windowRect">417 405 552 805 </string>
-      <string name="ScreenRectAtEncodeTime">4 0 1178 1920 </string>
+    <object class="IBCarbonStaticText" id="242">
+      <ostype name="controlSignature">Main</ostype>
+      <string name="title">&lt;main message&gt;</string>
+      <string name="viewFrame">104 71 314 16 </string>
+      <string name="bounds">71 104 87 418 </string>
     </object>
-    <reference idRef="268"/>
+    <object class="IBCarbonButton" id="271">
+      <ostype name="controlSignature">Canc</ostype>
+      <int name="controlSize">1</int>
+      <ostype name="command">not!</ostype>
+      <int name="buttonType">2</int>
+      <string name="title">-</string>
+      <string name="viewFrame">305 103 30 20 </string>
+      <string name="bounds">103 305 123 335 </string>
+    </object>
+    <object class="IBCarbonIcon" id="263">
+      <ostype name="controlSignature">Stop</ostype>
+      <int name="contentResID">0</int>
+      <int name="creator">0</int>
+      <string name="viewFrame">24 13 48 48 </string>
+      <string name="bounds">13 24 61 72 </string>
+    </object>
     <object class="IBCarbonIcon" id="255">
       <ostype name="controlSignature">Caut</ostype>
       <int name="contentResID">2</int>
@@ -119,11 +32,29 @@
       <string name="viewFrame">24 20 64 64 </string>
       <string name="bounds">20 24 84 88 </string>
     </object>
-    <object class="IBCarbonIcon" id="254">
-      <ostype name="controlSignature">Note</ostype>
-      <int name="creator">0</int>
-      <string name="viewFrame">24 20 64 64 </string>
-      <string name="bounds">20 24 84 88 </string>
+    <object class="IBCarbonStaticText" id="268">
+      <ostype name="controlSignature">Titl</ostype>
+      <int name="fontStyle">104</int>
+      <string name="title">&lt;title&gt;</string>
+      <string name="foreColor">13107 13107 13107 </string>
+      <string name="viewFrame">88 20 301 16 </string>
+      <string name="bounds">20 88 36 389 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="250">
+      <ostype name="controlSignature">Titl</ostype>
+      <int name="fontStyle">104</int>
+      <string name="title">&lt;title&gt;</string>
+      <string name="foreColor">13107 13107 13107 </string>
+      <string name="viewFrame">104 25 314 20 </string>
+      <string name="bounds">25 104 45 418 </string>
+    </object>
+    <object class="IBCarbonIcon" id="252">
+      <ostype name="controlSignature">AppI</ostype>
+      <int name="contentType">132</int>
+      <int name="contentResID">1097887817</int>
+      <int name="creator">1264940615</int>
+      <string name="viewFrame">56 52 32 32 </string>
+      <string name="bounds">52 56 84 88 </string>
     </object>
     <object class="IBCarbonWindow" id="244">
       <boolean name="receiveUpdates">FALSE</boolean>
@@ -155,20 +86,8 @@
             <string name="viewFrame">24 20 64 64 </string>
             <string name="bounds">20 24 84 88 </string>
           </object>
-          <object class="IBCarbonStaticText" id="250">
-            <ostype name="controlSignature">Titl</ostype>
-            <int name="fontStyle">104</int>
-            <string name="title">&lt;title&gt;</string>
-            <string name="foreColor">13107 13107 13107 </string>
-            <string name="viewFrame">104 25 314 20 </string>
-            <string name="bounds">25 104 45 418 </string>
-          </object>
-          <object class="IBCarbonStaticText" id="242">
-            <ostype name="controlSignature">Main</ostype>
-            <string name="title">&lt;main message&gt;</string>
-            <string name="viewFrame">104 71 314 16 </string>
-            <string name="bounds">71 104 87 418 </string>
-          </object>
+          <reference idRef="250"/>
+          <reference idRef="242"/>
           <object class="IBCarbonStaticText" id="243">
             <ostype name="controlSignature">Smal</ostype>
             <int name="fontStyle">1</int>
@@ -176,14 +95,7 @@
             <string name="viewFrame">104 95 314 13 </string>
             <string name="bounds">95 104 108 418 </string>
           </object>
-          <object class="IBCarbonIcon" id="252">
-            <ostype name="controlSignature">AppI</ostype>
-            <int name="contentType">132</int>
-            <int name="contentResID">1097887817</int>
-            <int name="creator">1264940615</int>
-            <string name="viewFrame">56 52 32 32 </string>
-            <string name="bounds">52 56 84 88 </string>
-          </object>
+          <reference idRef="252"/>
           <object class="IBCarbonButton" id="249">
             <ostype name="controlSignature">Dflt</ostype>
             <ostype name="command">ok  </ostype>
@@ -222,6 +134,30 @@
       <string name="windowRect">509 405 667 843 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
+    <reference idRef="246"/>
+    <object class="IBCarbonRoundButton" id="267">
+      <ostype name="controlSignature">Help</ostype>
+      <ostype name="command">?Ctx</ostype>
+      <string name="viewFrame">18 103 25 25 </string>
+      <string name="bounds">103 18 128 43 </string>
+      <int name="contentType">132</int>
+      <int name="iconCreator">1835098995</int>
+      <int name="iconType">1751477360</int>
+    </object>
+    <object class="IBCarbonStaticText" id="273">
+      <ostype name="controlSignature">Main</ostype>
+      <int name="fontStyle">1</int>
+      <string name="title">&lt;main message&gt;</string>
+      <string name="viewFrame">88 61 301 13 </string>
+      <string name="bounds">61 88 74 389 </string>
+    </object>
+    <object class="IBCarbonIcon" id="265">
+      <ostype name="controlSignature">Note</ostype>
+      <int name="creator">0</int>
+      <string name="viewFrame">24 13 48 48 </string>
+      <string name="bounds">13 24 61 72 </string>
+    </object>
+    <reference idRef="249"/>
     <object class="IBCarbonButton" id="184">
       <ostype name="controlSignature">Dflt</ostype>
       <ostype name="command">ok  </ostype>
@@ -230,21 +166,32 @@
       <string name="viewFrame">386 118 28 20 </string>
       <string name="bounds">118 386 138 414 </string>
     </object>
-    <reference idRef="265"/>
     <reference idRef="241"/>
-    <reference idRef="257"/>
-    <reference idRef="258"/>
-    <reference idRef="273"/>
-    <reference idRef="252"/>
+    <reference idRef="251"/>
     <reference idRef="247"/>
-    <object class="IBCarbonButton" id="185">
-      <ostype name="controlSignature">Canc</ostype>
-      <ostype name="command">not!</ostype>
-      <int name="buttonType">2</int>
-      <string name="title">-</string>
-      <string name="viewFrame">346 118 28 20 </string>
-      <string name="bounds">118 346 138 374 </string>
+    <reference idRef="257"/>
+    <object class="IBCarbonStaticText" id="272">
+      <ostype name="controlSignature">Smal</ostype>
+      <int name="fontStyle">1</int>
+      <string name="title">&lt;help message&gt;</string>
+      <string name="viewFrame">88 82 301 13 </string>
+      <string name="bounds">82 88 95 389 </string>
     </object>
+    <object class="IBCarbonButton" id="274">
+      <ostype name="controlSignature">Othr</ostype>
+      <int name="controlSize">1</int>
+      <ostype name="command">Othr</ostype>
+      <string name="title">-</string>
+      <string name="viewFrame">265 103 30 20 </string>
+      <string name="bounds">103 265 123 295 </string>
+    </object>
+    <object class="IBCarbonEditText" id="248">
+      <ostype name="controlSignature">Titl</ostype>
+      <boolean name="isUnicode">TRUE</boolean>
+      <string name="viewFrame">157 135342 140 0 </string>
+      <string name="bounds">4270 157 4270 297 </string>
+    </object>
+    <reference idRef="259"/>
     <object class="IBCarbonWindow" id="166">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="isResizable">FALSE</boolean>
@@ -256,7 +203,12 @@
       <object name="rootControl" class="IBCarbonRootControl" id="167">
         <string name="viewFrame">0 0 438 158 </string>
         <array count="11" name="subviews">
-          <reference idRef="254"/>
+          <object class="IBCarbonIcon" id="254">
+            <ostype name="controlSignature">Note</ostype>
+            <int name="creator">0</int>
+            <string name="viewFrame">24 20 64 64 </string>
+            <string name="bounds">20 24 84 88 </string>
+          </object>
           <reference idRef="255"/>
           <object class="IBCarbonIcon" id="256">
             <ostype name="controlSignature">Stop</ostype>
@@ -296,7 +248,14 @@
             <string name="bounds">52 56 84 88 </string>
           </object>
           <reference idRef="184"/>
-          <reference idRef="185"/>
+          <object class="IBCarbonButton" id="185">
+            <ostype name="controlSignature">Canc</ostype>
+            <ostype name="command">not!</ostype>
+            <int name="buttonType">2</int>
+            <string name="title">-</string>
+            <string name="viewFrame">346 118 28 20 </string>
+            <string name="bounds">118 346 138 374 </string>
+          </object>
           <object class="IBCarbonButton" id="236">
             <ostype name="controlSignature">Othr</ostype>
             <ostype name="command">Othr</ostype>
@@ -319,92 +278,133 @@
       <string name="windowRect">355 405 513 843 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <reference idRef="249"/>
-    <reference idRef="238"/>
-    <reference idRef="272"/>
-    <reference idRef="199"/>
-    <reference idRef="243"/>
-    <reference idRef="263"/>
-    <reference idRef="269"/>
-    <reference idRef="267"/>
-    <reference idRef="274"/>
     <object class="IBCarbonEditText" id="270">
       <ostype name="controlSignature">Titl</ostype>
       <boolean name="isUnicode">TRUE</boolean>
-      <string name="viewFrame">150 -135203 154 0 </string>
-      <string name="bounds">-4131 150 -4131 304 </string>
+      <string name="viewFrame">157 135338 140 0 </string>
+      <string name="bounds">4266 157 4266 297 </string>
     </object>
-    <reference idRef="250"/>
+    <object class="IBCarbonButton" id="269">
+      <ostype name="controlSignature">Dflt</ostype>
+      <int name="controlSize">1</int>
+      <ostype name="command">ok  </ostype>
+      <int name="buttonType">1</int>
+      <string name="title">-</string>
+      <string name="viewFrame">345 103 30 20 </string>
+      <string name="bounds">103 345 123 375 </string>
+    </object>
     <reference idRef="167"/>
-    <reference idRef="266"/>
-    <reference idRef="222"/>
     <object class="IBCarbonEditText" id="200">
       <ostype name="controlSignature">Titl</ostype>
       <boolean name="isUnicode">TRUE</boolean>
-      <string name="viewFrame">159 -135184 154 0 </string>
-      <string name="bounds">-4112 159 -4112 313 </string>
+      <string name="viewFrame">166 135342 140 0 </string>
+      <string name="bounds">4270 166 4270 306 </string>
     </object>
-    <reference idRef="262"/>
     <reference idRef="237"/>
-    <reference idRef="271"/>
-    <object class="IBCarbonEditText" id="248">
-      <ostype name="controlSignature">Titl</ostype>
-      <boolean name="isUnicode">TRUE</boolean>
-      <string name="viewFrame">150 -135184 154 0 </string>
-      <string name="bounds">-4112 150 -4112 304 </string>
-    </object>
     <reference idRef="256"/>
-    <reference idRef="242"/>
-    <reference idRef="246"/>
-    <reference idRef="264"/>
+    <reference idRef="222"/>
+    <object class="IBCarbonIcon" id="264">
+      <ostype name="controlSignature">Caut</ostype>
+      <int name="contentResID">2</int>
+      <int name="creator">0</int>
+      <string name="viewFrame">24 13 48 48 </string>
+      <string name="bounds">13 24 61 72 </string>
+    </object>
+    <object class="IBCarbonIcon" id="266">
+      <ostype name="controlSignature">AppI</ostype>
+      <int name="contentType">132</int>
+      <int name="contentResID">1097887817</int>
+      <int name="creator">1264940615</int>
+      <string name="viewFrame">56 45 16 16 </string>
+      <string name="bounds">45 56 61 72 </string>
+    </object>
+    <reference idRef="254"/>
+    <reference idRef="238"/>
+    <reference idRef="243"/>
+    <object class="IBCarbonRootControl" id="262">
+      <string name="viewFrame">0 0 400 135 </string>
+      <array count="11" name="subviews">
+        <reference idRef="265"/>
+        <reference idRef="264"/>
+        <reference idRef="263"/>
+        <reference idRef="268"/>
+        <reference idRef="273"/>
+        <reference idRef="272"/>
+        <reference idRef="266"/>
+        <reference idRef="269"/>
+        <reference idRef="271"/>
+        <reference idRef="274"/>
+        <reference idRef="267"/>
+      </array>
+      <string name="bounds">0 0 135 400 </string>
+    </object>
+    <reference idRef="185"/>
     <reference idRef="236"/>
+    <reference idRef="199"/>
+    <object class="IBCarbonWindow" id="261">
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="hasCloseBox">FALSE</boolean>
+      <boolean name="hasCollapseBox">FALSE</boolean>
+      <boolean name="hasHorizontalZoom">FALSE</boolean>
+      <boolean name="isResizable">FALSE</boolean>
+      <boolean name="hasVerticalZoom">FALSE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <boolean name="doesNotCycle">TRUE</boolean>
+      <boolean name="inWindowMenu">FALSE</boolean>
+      <int name="themeBrush">5</int>
+      <int name="windowPosition">4</int>
+      <int name="scalingMode">1048576</int>
+      <string name="title"></string>
+      <reference name="rootControl" idRef="262"/>
+      <string name="windowRect">417 405 552 805 </string>
+      <string name="ScreenRectAtEncodeTime">4 0 1178 1920 </string>
+    </object>
+    <reference idRef="258"/>
     <reference idRef="253"/>
-    <reference idRef="259"/>
-    <reference idRef="251"/>
   </array>
   <array count="42" name="allParents">
+    <reference idRef="246"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="167"/>
+    <reference idRef="262"/>
+    <reference idRef="246"/>
+    <reference idRef="246"/>
     <reference idRef="1"/>
-    <reference idRef="262"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="1"/>
-    <reference idRef="167"/>
-    <reference idRef="262"/>
-    <reference idRef="246"/>
-    <reference idRef="246"/>
-    <reference idRef="246"/>
-    <reference idRef="262"/>
-    <reference idRef="246"/>
-    <reference idRef="246"/>
-    <reference idRef="167"/>
-    <reference idRef="1"/>
-    <reference idRef="246"/>
-    <reference idRef="167"/>
-    <reference idRef="262"/>
-    <reference idRef="167"/>
-    <reference idRef="246"/>
-    <reference idRef="262"/>
-    <reference idRef="262"/>
-    <reference idRef="262"/>
-    <reference idRef="262"/>
-    <reference idRef="262"/>
-    <reference idRef="246"/>
-    <reference idRef="166"/>
-    <reference idRef="262"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="261"/>
-    <reference idRef="167"/>
-    <reference idRef="262"/>
-    <reference idRef="246"/>
-    <reference idRef="167"/>
-    <reference idRef="246"/>
     <reference idRef="244"/>
     <reference idRef="262"/>
-    <reference idRef="167"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="246"/>
     <reference idRef="167"/>
     <reference idRef="246"/>
     <reference idRef="246"/>
+    <reference idRef="246"/>
+    <reference idRef="246"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="246"/>
+    <reference idRef="246"/>
+    <reference idRef="1"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="166"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="246"/>
+    <reference idRef="261"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="1"/>
+    <reference idRef="246"/>
+    <reference idRef="167"/>
   </array>
   <dictionary count="4" name="nameTable">
     <string>Dialog</string>

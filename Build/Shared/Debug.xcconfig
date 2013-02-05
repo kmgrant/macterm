@@ -1,12 +1,11 @@
 #include "CustomPaths.xcconfig"
 
-ARCHS = ppc i386
-MACOSX_DEPLOYMENT_TARGET_i386 = 10.5
-MACOSX_DEPLOYMENT_TARGET_ppc = 10.5
+ARCHS = i386
+MACOSX_DEPLOYMENT_TARGET_i386 = 10.6
 FRAMEWORK_SEARCH_PATHS = "$(SDKROOT)/System/Library/Frameworks"
-SDKROOT = $(DEVELOPER_SDK_DIR)/MacOSX10.5.sdk
+SDKROOT = $(DEVELOPER_SDK_DIR)/MacOSX10.6.sdk
 
-// Growl is not available for Panther
+// Growl is not necessarily linked
 LDFLAGS_EXTRA_FRAMEWORKS = -weak_framework Growl
 
 // the version of SWIG required to work with the system Python

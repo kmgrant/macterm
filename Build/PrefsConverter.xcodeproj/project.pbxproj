@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 42;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -149,7 +149,7 @@
 		20286C28FDCF999611CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 0A578F0A09D88AAC007D1289 /* Build configuration list for PBXProject "PrefsConverter" */;
-			compatibilityVersion = "Xcode 2.4";
+			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -287,15 +287,11 @@
 		0A578F0B09D88AAC007D1289 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-				);
-				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
-				MACOSX_DEPLOYMENT_TARGET_ppc = 10.3;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				OBJROOT = _Generated;
-				SDKROOT = "$(DEVELOPER_DIR)/SDKs/MacOSX10.4u.sdk";
+				SDKROOT = macosx10.6;
 				SYMROOT = _Generated;
+				VALID_ARCHS = i386;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",

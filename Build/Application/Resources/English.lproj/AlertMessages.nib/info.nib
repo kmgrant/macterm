@@ -7,7 +7,7 @@
 	<key>IBLastKnownRelativeProjectPath</key>
 	<string>../..</string>
 	<key>IBOldestOS</key>
-	<integer>5</integer>
+	<integer>6</integer>
 	<key>IBOpenObjects</key>
 	<array>
 		<integer>167</integer>
@@ -15,7 +15,7 @@
 		<integer>262</integer>
 	</array>
 	<key>IBSystem Version</key>
-	<string>10J869</string>
+	<string>12C60</string>
 	<key>targetFramework</key>
 	<string>IBCarbonFramework</string>
 </dict>

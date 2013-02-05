@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 42;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -430,9 +430,7 @@
 		0A68811012F5378C005F418A /* GrowlSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrowlSupport.h; path = Shared/Code/GrowlSupport.h; sourceTree = "<group>"; };
 		0A68811112F537A1005F418A /* GrowlSupport.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GrowlSupport.mm; path = Shared/Code/GrowlSupport.mm; sourceTree = "<group>"; };
 		0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrapManip.h; path = Shared/Code/HIViewWrapManip.h; sourceTree = "<group>"; };
-		0A69E5200DDBAC4100DA7874 /* Panther.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Panther.xcconfig; path = Shared/Panther.xcconfig; sourceTree = "<group>"; };
-		0A69E5240DDBAC7E00DA7874 /* Tiger.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Tiger.xcconfig; path = Shared/Tiger.xcconfig; sourceTree = "<group>"; };
-		0A69E5250DDBACB100DA7874 /* Leopard.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Leopard.xcconfig; path = Shared/Leopard.xcconfig; sourceTree = "<group>"; };
+		0A69E5250DDBACB100DA7874 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
 		0A69E52D0DDBAD9A00DA7874 /* CustomPaths.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = CustomPaths.xcconfig; path = Shared/CustomPaths.xcconfig; sourceTree = "<group>"; };
 		0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacHelpUtilities.h; path = Shared/Code/MacHelpUtilities.h; sourceTree = "<group>"; };
 		0A6F285B0FB3E45B00B30E69 /* PreferencesContextRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PreferencesContextRef.typedef.h; path = Application/Code/PreferencesContextRef.typedef.h; sourceTree = "<group>"; };
@@ -880,9 +878,7 @@
 				0AFF136B0AF42045006CCA34 /* Required Frameworks */,
 				0A46FE73055433CA00ACDF3A /* Products */,
 				0A69E52D0DDBAD9A00DA7874 /* CustomPaths.xcconfig */,
-				0A69E5200DDBAC4100DA7874 /* Panther.xcconfig */,
-				0A69E5240DDBAC7E00DA7874 /* Tiger.xcconfig */,
-				0A69E5250DDBACB100DA7874 /* Leopard.xcconfig */,
+				0A69E5250DDBACB100DA7874 /* Debug.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1242,7 +1238,7 @@
 		0A46FDAC0554325700ACDF3A /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 0ACFA1800929BE6B005712A9 /* Build configuration list for PBXProject "Application" */;
-			compatibilityVersion = "Xcode 2.4";
+			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -1822,7 +1818,7 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		0A70B8A51079C1EB0013E76F /* ForTigerDebug */ = {
+		0A70B8A61079C1EB0013E76F /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -1850,77 +1846,18 @@
 				PREBINDING = NO;
 				PRODUCT_NAME = PythonInvoker;
 			};
-			name = ForTigerDebug;
+			name = ForDebugging;
 		};
-		0A70B8A61079C1EB0013E76F /* ForLeopardDebug */ = {
+		0AA249450D13342D00BCAF94 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
-				INSTALL_PATH = /usr/local/bin;
-				OTHER_CFLAGS = (
-					"-g",
-					"-fpascal-strings",
-					"-v",
-					"$(SWIG_PYTHON_INCLUDE)",
-					"-IApplication/Code",
-					"-IShared/Code",
-					"-IApplication/Resources",
-					"-IApplication/Resources/English.lproj",
-					"-I$(GROWL_SDK_ROOT)/Frameworks/Growl.framework/Headers",
-					"$(SDK_PATCH_INCLUDES)",
-				);
-				OTHER_LDFLAGS = (
-					"-framework",
-					Python,
-				);
-				PREBINDING = NO;
-				PRODUCT_NAME = PythonInvoker;
-			};
-			name = ForLeopardDebug;
-		};
-		0A70B8A71079C1EB0013E76F /* ForPantherDebug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
-				INSTALL_PATH = /usr/local/bin;
-				OTHER_CFLAGS = (
-					"-g",
-					"-fpascal-strings",
-					"-v",
-					"$(SWIG_PYTHON_INCLUDE)",
-					"-IApplication/Code",
-					"-IShared/Code",
-					"-IApplication/Resources",
-					"-IApplication/Resources/English.lproj",
-					"-I$(GROWL_SDK_ROOT)/Frameworks/Growl.framework/Headers",
-					"$(SDK_PATCH_INCLUDES)",
-				);
-				OTHER_LDFLAGS = (
-					"-framework",
-					Python,
-				);
-				PREBINDING = NO;
-				PRODUCT_NAME = PythonInvoker;
-			};
-			name = ForPantherDebug;
-		};
-		0A8110880D0A62BF00D5CDE2 /* ForPantherDebug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0A69E5200DDBAC4100DA7874 /* Panther.xcconfig */;
-			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				BUILD_VARIANTS = debug;
 				COPY_PHASE_STRIP = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
-				GCC_VERSION = 4.0;
+				GCC_VERSION = 4.2;
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
@@ -1937,6 +1874,7 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VALUE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET_i386 = 10.6;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
 					"-g",
@@ -1950,172 +1888,18 @@
 					"$(SDK_PATCH_INCLUDES)",
 				);
 				PREBINDING = NO;
+				SDKROOT = macosx10.6;
+				VALID_ARCHS = i386;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",
 				);
 			};
-			name = ForPantherDebug;
+			name = ForDebugging;
 		};
-		0A81108A0D0A62BF00D5CDE2 /* ForPantherDebug */ = {
+		0AA249460D13342D00BCAF94 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0A69E5200DDBAC4100DA7874 /* Panther.xcconfig */;
-			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-				);
-				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(GROWL_SDK_ROOT)/Framework/Legacy\"";
-				FRAMEWORK_VERSION = A;
-				GCC_MODEL_TUNING = "";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
-				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
-				OTHER_LDFLAGS = "$(LDFLAGS_EXTRA_FRAMEWORKS)";
-				PREBINDING = NO;
-				PRODUCT_NAME = Quills;
-			};
-			name = ForPantherDebug;
-		};
-		0A81108B0D0A62BF00D5CDE2 /* ForPantherDebug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = "Application/Resources/Template-PyMacTerm.framework-Info.plist";
-				PRODUCT_NAME = PyMacTerm;
-			};
-			name = ForPantherDebug;
-		};
-		0A983A9D0D11087A0054B4D2 /* ForTigerDebug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0A69E5240DDBAC7E00DA7874 /* Tiger.xcconfig */;
-			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = "";
-				DYLIB_CURRENT_VERSION = "";
-				EXECUTABLE_EXTENSION = so;
-				EXECUTABLE_PREFIX = _;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_WARN_SHADOW = NO;
-				GCC_WARN_UNUSED_PARAMETER = NO;
-				INSTALL_PATH = /usr/local/lib;
-				OTHER_CFLAGS = (
-					"-g",
-					"-fpascal-strings",
-					"-v",
-					"-IApplication/Code",
-					"-IShared/Code",
-					"-IApplication/Resources",
-					"-IApplication/Resources/English.lproj",
-					"$(SWIG_PYTHON_INCLUDE)",
-				);
-				OTHER_LDFLAGS = (
-					"-framework",
-					Python,
-					"-framework",
-					Quills,
-				);
-				PRODUCT_NAME = Quills;
-				WARNING_CFLAGS = "-Wall";
-			};
-			name = ForTigerDebug;
-		};
-		0A983A9E0D11087A0054B4D2 /* ForPantherDebug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0A69E5200DDBAC4100DA7874 /* Panther.xcconfig */;
-			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = "";
-				DYLIB_CURRENT_VERSION = "";
-				EXECUTABLE_EXTENSION = so;
-				EXECUTABLE_PREFIX = _;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_PREFIX_HEADER = "";
-				GCC_WARN_SHADOW = NO;
-				GCC_WARN_UNUSED_PARAMETER = NO;
-				INSTALL_PATH = /usr/local/lib;
-				MACH_O_TYPE = mh_bundle;
-				OTHER_CFLAGS = (
-					"-g",
-					"-fpascal-strings",
-					"-v",
-					"-IApplication/Code",
-					"-IShared/Code",
-					"-IApplication/Resources",
-					"-IApplication/Resources/English.lproj",
-					"$(SWIG_PYTHON_INCLUDE)",
-					"$(SDK_PATCH_INCLUDES)",
-				);
-				OTHER_LDFLAGS = (
-					"-framework",
-					Python,
-					"-framework",
-					Quills,
-				);
-				PRODUCT_NAME = Quills;
-				WARNING_CFLAGS = "-Wall";
-			};
-			name = ForPantherDebug;
-		};
-		0A9AF6510AF5A50500E7DF18 /* ForTigerDebug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = "Application/Resources/Template-PyMacTerm.framework-Info.plist";
-				PRODUCT_NAME = PyMacTerm;
-			};
-			name = ForTigerDebug;
-		};
-		0AA249450D13342D00BCAF94 /* ForLeopardDebug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Leopard.xcconfig */;
-			buildSettings = {
-				BUILD_VARIANTS = debug;
-				COPY_PHASE_STRIP = NO;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
-				GCC_VERSION = 4.0;
-				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
-				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
-				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
-				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
-				GCC_WARN_MISSING_PARENTHESES = YES;
-				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
-				GCC_WARN_SHADOW = YES;
-				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				GCC_WARN_UNKNOWN_PRAGMAS = YES;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_LABEL = YES;
-				GCC_WARN_UNUSED_PARAMETER = YES;
-				GCC_WARN_UNUSED_VALUE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
-				OTHER_CFLAGS = (
-					"-g",
-					"-fpascal-strings",
-					"-v",
-					"-IApplication/Code",
-					"-IShared/Code",
-					"-IApplication/Resources",
-					"-IApplication/Resources/English.lproj",
-					"-F$(GROWL_SDK_ROOT)/Framework/Legacy",
-					"$(SDK_PATCH_INCLUDES)",
-				);
-				PREBINDING = NO;
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wextra",
-				);
-			};
-			name = ForLeopardDebug;
-		};
-		0AA249460D13342D00BCAF94 /* ForLeopardDebug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Leopard.xcconfig */;
+			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Debug.xcconfig */;
 			buildSettings = {
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -2133,11 +1917,11 @@
 				PREBINDING = NO;
 				PRODUCT_NAME = Quills;
 			};
-			name = ForLeopardDebug;
+			name = ForDebugging;
 		};
-		0AA249470D13342D00BCAF94 /* ForLeopardDebug */ = {
+		0AA249470D13342D00BCAF94 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Leopard.xcconfig */;
+			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Debug.xcconfig */;
 			buildSettings = {
 				DYLIB_COMPATIBILITY_VERSION = "";
 				DYLIB_CURRENT_VERSION = "";
@@ -2173,104 +1957,23 @@
 				PRODUCT_NAME = Quills;
 				WARNING_CFLAGS = "-Wall";
 			};
-			name = ForLeopardDebug;
+			name = ForDebugging;
 		};
-		0AA249490D13342D00BCAF94 /* ForLeopardDebug */ = {
+		0AA249490D13342D00BCAF94 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = "Application/Resources/Template-PyMacTerm.framework-Info.plist";
 				PRODUCT_NAME = PyMacTerm;
 			};
-			name = ForLeopardDebug;
+			name = ForDebugging;
 		};
-		0AC6BAD50A8C0A8C00AFF37A /* ForTigerDebug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0A69E5240DDBAC7E00DA7874 /* Tiger.xcconfig */;
-			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-				);
-				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(GROWL_SDK_ROOT)/Framework/Legacy\"";
-				FRAMEWORK_VERSION = B;
-				GCC_MODEL_TUNING = "";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
-				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
-				OTHER_LDFLAGS = "$(LDFLAGS_EXTRA_FRAMEWORKS)";
-				PREBINDING = NO;
-				PRODUCT_NAME = Quills;
-			};
-			name = ForTigerDebug;
-		};
-		0ACFA1810929BE6B005712A9 /* ForTigerDebug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0A69E5240DDBAC7E00DA7874 /* Tiger.xcconfig */;
-			buildSettings = {
-				BUILD_VARIANTS = debug;
-				COPY_PHASE_STRIP = NO;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
-				GCC_VERSION = 4.0;
-				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
-				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
-				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
-				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
-				GCC_WARN_MISSING_PARENTHESES = YES;
-				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
-				GCC_WARN_SHADOW = YES;
-				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				GCC_WARN_UNKNOWN_PRAGMAS = YES;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_LABEL = YES;
-				GCC_WARN_UNUSED_PARAMETER = YES;
-				GCC_WARN_UNUSED_VALUE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
-				OTHER_CFLAGS = (
-					"-g",
-					"-fpascal-strings",
-					"-v",
-					"-IApplication/Code",
-					"-IShared/Code",
-					"-IApplication/Resources",
-					"-IApplication/Resources/English.lproj",
-					"-F$(GROWL_SDK_ROOT)/Framework/Legacy",
-					"$(SDK_PATCH_INCLUDES)",
-				);
-				PREBINDING = NO;
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wextra",
-				);
-			};
-			name = ForTigerDebug;
-		};
-		0AFB6A1F0E86FD27005C5A07 /* ForTigerDebug */ = {
+		0AFB6A200E86FD27005C5A07 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = MacTerm;
 			};
-			name = ForTigerDebug;
-		};
-		0AFB6A200E86FD27005C5A07 /* ForLeopardDebug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = MacTerm;
-			};
-			name = ForLeopardDebug;
-		};
-		0AFB6A210E86FD27005C5A07 /* ForPantherDebug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = MacTerm;
-			};
-			name = ForPantherDebug;
+			name = ForDebugging;
 		};
 /* End XCBuildConfiguration section */
 
@@ -2278,62 +1981,50 @@
 		0A70B8A81079C20D0013E76F /* Build configuration list for PBXNativeTarget "PythonInvoker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0A70B8A51079C1EB0013E76F /* ForTigerDebug */,
-				0A70B8A61079C1EB0013E76F /* ForLeopardDebug */,
-				0A70B8A71079C1EB0013E76F /* ForPantherDebug */,
+				0A70B8A61079C1EB0013E76F /* ForDebugging */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ForTigerDebug;
+			defaultConfigurationName = ForDebugging;
 		};
 		0A983AA20D1108A20054B4D2 /* Build configuration list for PBXNativeTarget "PythonWrapper" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0A983A9D0D11087A0054B4D2 /* ForTigerDebug */,
-				0AA249470D13342D00BCAF94 /* ForLeopardDebug */,
-				0A983A9E0D11087A0054B4D2 /* ForPantherDebug */,
+				0AA249470D13342D00BCAF94 /* ForDebugging */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ForTigerDebug;
+			defaultConfigurationName = ForDebugging;
 		};
 		0A9AF6500AF5A50500E7DF18 /* Build configuration list for PBXNativeTarget "PyMacTerm.framework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0A9AF6510AF5A50500E7DF18 /* ForTigerDebug */,
-				0AA249490D13342D00BCAF94 /* ForLeopardDebug */,
-				0A81108B0D0A62BF00D5CDE2 /* ForPantherDebug */,
+				0AA249490D13342D00BCAF94 /* ForDebugging */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ForTigerDebug;
+			defaultConfigurationName = ForDebugging;
 		};
 		0AC6BAD40A8C0A8C00AFF37A /* Build configuration list for PBXNativeTarget "Quills.framework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0AC6BAD50A8C0A8C00AFF37A /* ForTigerDebug */,
-				0AA249460D13342D00BCAF94 /* ForLeopardDebug */,
-				0A81108A0D0A62BF00D5CDE2 /* ForPantherDebug */,
+				0AA249460D13342D00BCAF94 /* ForDebugging */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ForTigerDebug;
+			defaultConfigurationName = ForDebugging;
 		};
 		0ACFA1800929BE6B005712A9 /* Build configuration list for PBXProject "Application" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0ACFA1810929BE6B005712A9 /* ForTigerDebug */,
-				0AA249450D13342D00BCAF94 /* ForLeopardDebug */,
-				0A8110880D0A62BF00D5CDE2 /* ForPantherDebug */,
+				0AA249450D13342D00BCAF94 /* ForDebugging */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ForTigerDebug;
+			defaultConfigurationName = ForDebugging;
 		};
 		0AFB6A240E86FD48005C5A07 /* Build configuration list for PBXLegacyTarget "Everything" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0AFB6A1F0E86FD27005C5A07 /* ForTigerDebug */,
-				0AFB6A200E86FD27005C5A07 /* ForLeopardDebug */,
-				0AFB6A210E86FD27005C5A07 /* ForPantherDebug */,
+				0AFB6A200E86FD27005C5A07 /* ForDebugging */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ForTigerDebug;
+			defaultConfigurationName = ForDebugging;
 		};
 /* End XCConfigurationList section */
 	};

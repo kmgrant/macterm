@@ -3,79 +3,6 @@
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
   <array count="14" name="allObjects">
-    <object class="IBCarbonRoundButton" id="190">
-      <ostype name="controlSignature">Help</ostype>
-      <ostype name="command">?Ctx</ostype>
-      <string name="viewFrame">20 62 21 18 </string>
-      <string name="bounds">62 20 80 41 </string>
-      <int name="contentType">132</int>
-      <int name="iconCreator">1835098995</int>
-      <int name="iconType">1751477360</int>
-    </object>
-    <object class="IBCarbonButton" id="195">
-      <ostype name="controlSignature">Okay</ostype>
-      <ostype name="command">ok  </ostype>
-      <int name="buttonType">1</int>
-      <string name="title">OK</string>
-      <string name="viewFrame">262 60 69 20 </string>
-      <string name="bounds">60 262 80 331 </string>
-    </object>
-    <object class="IBCarbonButton" id="200">
-      <ostype name="controlSignature">Othr</ostype>
-      <boolean name="hidden">TRUE</boolean>
-      <int name="iconPosition">0</int>
-      <string name="title">-</string>
-      <string name="viewFrame">99 60 70 20 </string>
-      <string name="bounds">60 99 80 169 </string>
-    </object>
-    <object class="IBCarbonButton" id="188">
-      <ostype name="controlSignature">Okay</ostype>
-      <ostype name="command">ok  </ostype>
-      <int name="buttonType">1</int>
-      <string name="title">OK</string>
-      <string name="viewFrame">262 60 69 20 </string>
-      <string name="bounds">60 262 80 331 </string>
-    </object>
-    <object class="IBCarbonRoundButton" id="197">
-      <ostype name="controlSignature">Help</ostype>
-      <ostype name="command">?Ctx</ostype>
-      <string name="viewFrame">20 62 21 18 </string>
-      <string name="bounds">62 20 80 41 </string>
-      <int name="contentType">132</int>
-      <int name="iconCreator">1835098995</int>
-      <int name="iconType">1751477360</int>
-    </object>
-    <object class="IBCarbonRootControl" id="193">
-      <string name="viewFrame">0 0 351 100 </string>
-      <array count="5" name="subviews">
-        <reference idRef="195"/>
-        <object class="IBCarbonButton" id="196">
-          <ostype name="controlSignature">Canc</ostype>
-          <ostype name="command">not!</ostype>
-          <int name="buttonType">2</int>
-          <string name="title">Cancel</string>
-          <string name="viewFrame">181 60 69 20 </string>
-          <string name="bounds">60 181 80 250 </string>
-        </object>
-        <reference idRef="197"/>
-        <object class="IBCarbonUserPane" id="194">
-          <ostype name="controlSignature">Panl</ostype>
-          <int name="featureBits">2</int>
-          <string name="viewFrame">0 0 351 48 </string>
-          <string name="bounds">0 0 48 351 </string>
-        </object>
-        <reference idRef="200"/>
-      </array>
-      <string name="bounds">0 0 100 351 </string>
-    </object>
-    <object class="IBCarbonButton" id="199">
-      <ostype name="controlSignature">Othr</ostype>
-      <boolean name="hidden">TRUE</boolean>
-      <int name="iconPosition">0</int>
-      <string name="title">-</string>
-      <string name="viewFrame">99 60 70 20 </string>
-      <string name="bounds">60 99 80 169 </string>
-    </object>
     <object class="IBCarbonWindow" id="192">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="liveResize">TRUE</boolean>
@@ -84,18 +11,110 @@
       <boolean name="inWindowMenu">FALSE</boolean>
       <int name="carbonWindowClass">11</int>
       <string name="title"></string>
-      <reference name="rootControl" idRef="193"/>
-      <string name="windowRect">222 106 322 457 </string>
-      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+      <object name="rootControl" class="IBCarbonRootControl" id="193">
+        <string name="viewFrame">0 0 351 100 </string>
+        <array count="5" name="subviews">
+          <object class="IBCarbonButton" id="195">
+            <ostype name="controlSignature">Okay</ostype>
+            <ostype name="command">ok  </ostype>
+            <int name="buttonType">1</int>
+            <string name="title">OK</string>
+            <string name="viewFrame">262 60 69 20 </string>
+            <string name="bounds">60 262 80 331 </string>
+          </object>
+          <object class="IBCarbonButton" id="196">
+            <ostype name="controlSignature">Canc</ostype>
+            <ostype name="command">not!</ostype>
+            <int name="buttonType">2</int>
+            <string name="title">Cancel</string>
+            <string name="viewFrame">181 60 69 20 </string>
+            <string name="bounds">60 181 80 250 </string>
+          </object>
+          <object class="IBCarbonRoundButton" id="197">
+            <ostype name="controlSignature">Help</ostype>
+            <ostype name="command">?Ctx</ostype>
+            <string name="viewFrame">18 59 25 25 </string>
+            <string name="bounds">59 18 84 43 </string>
+            <int name="contentType">132</int>
+            <int name="iconCreator">1835098995</int>
+            <int name="iconType">1751477360</int>
+          </object>
+          <object class="IBCarbonUserPane" id="194">
+            <ostype name="controlSignature">Panl</ostype>
+            <int name="featureBits">2</int>
+            <string name="viewFrame">0 0 351 48 </string>
+            <string name="bounds">0 0 48 351 </string>
+          </object>
+          <object class="IBCarbonButton" id="200">
+            <ostype name="controlSignature">Othr</ostype>
+            <boolean name="hidden">TRUE</boolean>
+            <int name="iconPosition">0</int>
+            <string name="title">-</string>
+            <string name="viewFrame">99 60 70 20 </string>
+            <string name="bounds">60 99 80 169 </string>
+          </object>
+        </array>
+        <string name="bounds">0 0 100 351 </string>
+      </object>
+      <string name="windowRect">254 169 354 520 </string>
+      <string name="ScreenRectAtEncodeTime">0 103 1178 1920 </string>
     </object>
-    <reference idRef="194"/>
-    <reference idRef="196"/>
+    <reference idRef="195"/>
+    <reference idRef="200"/>
+    <object class="IBCarbonButton" id="199">
+      <ostype name="controlSignature">Othr</ostype>
+      <boolean name="hidden">TRUE</boolean>
+      <int name="iconPosition">0</int>
+      <string name="title">-</string>
+      <string name="viewFrame">99 60 70 20 </string>
+      <string name="bounds">60 99 80 169 </string>
+    </object>
     <object class="IBCarbonUserPane" id="191">
       <ostype name="controlSignature">Panl</ostype>
       <int name="featureBits">2</int>
       <string name="viewFrame">0 0 351 48 </string>
       <string name="bounds">0 0 48 351 </string>
     </object>
+    <reference idRef="194"/>
+    <reference idRef="193"/>
+    <object class="IBCarbonButton" id="188">
+      <ostype name="controlSignature">Okay</ostype>
+      <ostype name="command">ok  </ostype>
+      <int name="buttonType">1</int>
+      <string name="title">OK</string>
+      <string name="viewFrame">262 60 69 20 </string>
+      <string name="bounds">60 262 80 331 </string>
+    </object>
+    <reference idRef="197"/>
+    <object class="IBCarbonRootControl" id="167">
+      <string name="viewFrame">0 0 351 100 </string>
+      <array count="5" name="subviews">
+        <reference idRef="188"/>
+        <object class="IBCarbonButton" id="189">
+          <ostype name="controlSignature">Canc</ostype>
+          <ostype name="command">not!</ostype>
+          <int name="buttonType">2</int>
+          <string name="title">Cancel</string>
+          <string name="viewFrame">181 60 69 20 </string>
+          <string name="bounds">60 181 80 250 </string>
+        </object>
+        <object class="IBCarbonRoundButton" id="190">
+          <ostype name="controlSignature">Help</ostype>
+          <ostype name="command">?Ctx</ostype>
+          <string name="viewFrame">18 59 25 25 </string>
+          <string name="bounds">59 18 84 43 </string>
+          <int name="contentType">132</int>
+          <int name="iconCreator">1835098995</int>
+          <int name="iconType">1751477360</int>
+        </object>
+        <reference idRef="191"/>
+        <reference idRef="199"/>
+      </array>
+      <string name="bounds">0 0 100 351 </string>
+    </object>
+    <reference idRef="190"/>
+    <reference idRef="189"/>
+    <reference idRef="196"/>
     <object class="IBCarbonWindow" id="166">
       <boolean name="hasHorizontalZoom">TRUE</boolean>
       <boolean name="hasVerticalZoom">TRUE</boolean>
@@ -108,45 +127,26 @@
       <boolean name="inWindowMenu">FALSE</boolean>
       <int name="carbonWindowClass">4</int>
       <string name="title"></string>
-      <object name="rootControl" class="IBCarbonRootControl" id="167">
-        <string name="viewFrame">0 0 351 100 </string>
-        <array count="5" name="subviews">
-          <reference idRef="188"/>
-          <object class="IBCarbonButton" id="189">
-            <ostype name="controlSignature">Canc</ostype>
-            <ostype name="command">not!</ostype>
-            <int name="buttonType">2</int>
-            <string name="title">Cancel</string>
-            <string name="viewFrame">181 60 69 20 </string>
-            <string name="bounds">60 181 80 250 </string>
-          </object>
-          <reference idRef="190"/>
-          <reference idRef="191"/>
-          <reference idRef="199"/>
-        </array>
-        <string name="bounds">0 0 100 351 </string>
-      </object>
-      <string name="windowRect">202 86 302 437 </string>
-      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+      <reference name="rootControl" idRef="167"/>
+      <string name="windowRect">246 176 346 527 </string>
+      <string name="ScreenRectAtEncodeTime">0 103 1178 1920 </string>
     </object>
-    <reference idRef="167"/>
-    <reference idRef="189"/>
   </array>
   <array count="14" name="allParents">
+    <reference idRef="1"/>
+    <reference idRef="193"/>
+    <reference idRef="193"/>
     <reference idRef="167"/>
-    <reference idRef="193"/>
-    <reference idRef="193"/>
     <reference idRef="167"/>
     <reference idRef="193"/>
     <reference idRef="192"/>
     <reference idRef="167"/>
-    <reference idRef="1"/>
     <reference idRef="193"/>
-    <reference idRef="193"/>
-    <reference idRef="167"/>
-    <reference idRef="1"/>
     <reference idRef="166"/>
     <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="193"/>
+    <reference idRef="1"/>
   </array>
   <dictionary count="3" name="nameTable">
     <string>Dialog</string>

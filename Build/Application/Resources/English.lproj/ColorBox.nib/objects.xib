@@ -1,17 +1,55 @@
 <?xml version="1.0" standalone="yes"?>
 <object class="NSIBObjectData">
-  <string name="targetFramework">IBCarbonFramework</string>
   <object name="rootObject" class="NSCustomObject" id="1">
-    <string name="customClass">NSApplication</string>
   </object>
   <array count="19" name="allObjects">
-    <object class="IBCarbonMenuItem" id="189">
+    <object class="IBCarbonMenuItem" id="194">
+      <string name="title">Dark Gray</string>
       <boolean name="updateSingleItem">TRUE</boolean>
-      <string name="title">Use Color Picker…</string>
     </object>
-    <object class="IBCarbonMenuItem" id="190">
+    <object class="IBCarbonMenuItem" id="199">
+      <string name="title">Red</string>
       <boolean name="updateSingleItem">TRUE</boolean>
-      <string name="title">Black</string>
+    </object>
+    <object class="IBCarbonMenuItem" id="198">
+      <string name="title">Maroon</string>
+      <boolean name="updateSingleItem">TRUE</boolean>
+    </object>
+    <object class="IBCarbonMenuItem" id="196">
+      <string name="title">White</string>
+      <boolean name="updateSingleItem">TRUE</boolean>
+    </object>
+    <object class="IBCarbonMenuItem" id="203">
+      <string name="title">Blue</string>
+      <boolean name="updateSingleItem">TRUE</boolean>
+    </object>
+    <object class="IBCarbonMenuItem" id="207">
+      <string name="title">Yellow</string>
+      <boolean name="updateSingleItem">TRUE</boolean>
+    </object>
+    <object class="IBCarbonMenuItem" id="189">
+      <string name="title">Use Color Picker…</string>
+      <boolean name="updateSingleItem">TRUE</boolean>
+    </object>
+    <object class="IBCarbonMenuItem" id="200">
+      <string name="title">Purple</string>
+      <boolean name="updateSingleItem">TRUE</boolean>
+    </object>
+    <object class="IBCarbonMenuItem" id="193">
+      <string name="title">Dark Green</string>
+      <boolean name="updateSingleItem">TRUE</boolean>
+    </object>
+    <object class="IBCarbonMenuItem" id="201">
+      <string name="title">Magenta</string>
+      <boolean name="updateSingleItem">TRUE</boolean>
+    </object>
+    <object class="IBCarbonMenuItem" id="204">
+      <string name="title">Cyan</string>
+      <boolean name="updateSingleItem">TRUE</boolean>
+    </object>
+    <object class="IBCarbonMenuItem" id="205">
+      <string name="title">Green</string>
+      <boolean name="updateSingleItem">TRUE</boolean>
     </object>
     <object class="IBCarbonMenu" id="191">
       <string name="title">Menu</string>
@@ -21,100 +59,60 @@
           <boolean name="separator">TRUE</boolean>
           <boolean name="updateSingleItem">TRUE</boolean>
         </object>
-        <reference idRef="190"/>
-        <object class="IBCarbonMenuItem" id="194">
+        <object class="IBCarbonMenuItem" id="190">
+          <string name="title">Black</string>
           <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">Dark Gray</string>
         </object>
+        <reference idRef="194"/>
         <object class="IBCarbonMenuItem" id="195">
-          <boolean name="updateSingleItem">TRUE</boolean>
           <string name="title">Silver</string>
-        </object>
-        <object class="IBCarbonMenuItem" id="196">
           <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">White</string>
         </object>
+        <reference idRef="196"/>
         <object class="IBCarbonMenuItem" id="197">
-          <boolean name="updateSingleItem">TRUE</boolean>
           <string name="title">Brown</string>
-        </object>
-        <object class="IBCarbonMenuItem" id="198">
           <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">Maroon</string>
         </object>
-        <object class="IBCarbonMenuItem" id="199">
-          <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">Red</string>
-        </object>
-        <object class="IBCarbonMenuItem" id="200">
-          <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">Purple</string>
-        </object>
-        <object class="IBCarbonMenuItem" id="201">
-          <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">Magenta</string>
-        </object>
+        <reference idRef="198"/>
+        <reference idRef="199"/>
+        <reference idRef="200"/>
+        <reference idRef="201"/>
         <object class="IBCarbonMenuItem" id="202">
-          <boolean name="updateSingleItem">TRUE</boolean>
           <string name="title">Dark Blue</string>
-        </object>
-        <object class="IBCarbonMenuItem" id="203">
           <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">Blue</string>
         </object>
-        <object class="IBCarbonMenuItem" id="193">
-          <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">Dark Green</string>
-        </object>
-        <object class="IBCarbonMenuItem" id="205">
-          <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">Green</string>
-        </object>
+        <reference idRef="203"/>
+        <reference idRef="193"/>
+        <reference idRef="205"/>
         <object class="IBCarbonMenuItem" id="206">
-          <boolean name="updateSingleItem">TRUE</boolean>
           <string name="title">Dark Cyan</string>
-        </object>
-        <object class="IBCarbonMenuItem" id="204">
           <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">Cyan</string>
         </object>
-        <object class="IBCarbonMenuItem" id="207">
-          <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">Yellow</string>
-        </object>
+        <reference idRef="204"/>
+        <reference idRef="207"/>
       </array>
     </object>
-    <reference idRef="192"/>
-    <reference idRef="193"/>
-    <reference idRef="194"/>
-    <reference idRef="195"/>
-    <reference idRef="196"/>
-    <reference idRef="197"/>
-    <reference idRef="198"/>
-    <reference idRef="199"/>
-    <reference idRef="200"/>
-    <reference idRef="201"/>
     <reference idRef="202"/>
-    <reference idRef="203"/>
-    <reference idRef="204"/>
-    <reference idRef="205"/>
+    <reference idRef="192"/>
+    <reference idRef="190"/>
     <reference idRef="206"/>
-    <reference idRef="207"/>
+    <reference idRef="195"/>
+    <reference idRef="197"/>
   </array>
   <array count="19" name="allParents">
     <reference idRef="191"/>
     <reference idRef="191"/>
+    <reference idRef="191"/>
+    <reference idRef="191"/>
+    <reference idRef="191"/>
+    <reference idRef="191"/>
+    <reference idRef="191"/>
+    <reference idRef="191"/>
+    <reference idRef="191"/>
+    <reference idRef="191"/>
+    <reference idRef="191"/>
+    <reference idRef="191"/>
     <reference idRef="1"/>
-    <reference idRef="191"/>
-    <reference idRef="191"/>
-    <reference idRef="191"/>
-    <reference idRef="191"/>
-    <reference idRef="191"/>
-    <reference idRef="191"/>
-    <reference idRef="191"/>
-    <reference idRef="191"/>
-    <reference idRef="191"/>
-    <reference idRef="191"/>
     <reference idRef="191"/>
     <reference idRef="191"/>
     <reference idRef="191"/>
@@ -122,45 +120,12 @@
     <reference idRef="191"/>
     <reference idRef="191"/>
   </array>
-  <dictionary count="19" name="nameTable">
-    <string>Files Owner</string>
+  <dictionary count="2" name="nameTable">
+    <string>File&apos;s Owner</string>
     <reference idRef="1"/>
-    <string>IBCarbonMenuItem</string>
-    <reference idRef="189"/>
-    <string>IBCarbonMenuItem1</string>
-    <reference idRef="190"/>
-    <string>IBCarbonMenuItem11</string>
-    <reference idRef="193"/>
-    <string>IBCarbonMenuItem111</string>
-    <reference idRef="200"/>
-    <string>IBCarbonMenuItem112</string>
-    <reference idRef="204"/>
-    <string>IBCarbonMenuItem1121</string>
-    <reference idRef="207"/>
-    <string>IBCarbonMenuItem113</string>
-    <reference idRef="205"/>
-    <string>IBCarbonMenuItem1131</string>
-    <reference idRef="206"/>
-    <string>IBCarbonMenuItem12</string>
-    <reference idRef="194"/>
-    <string>IBCarbonMenuItem121</string>
-    <reference idRef="195"/>
-    <string>IBCarbonMenuItem1211</string>
-    <reference idRef="196"/>
-    <string>IBCarbonMenuItem12111</string>
-    <reference idRef="199"/>
-    <string>IBCarbonMenuItem1212</string>
-    <reference idRef="197"/>
-    <string>IBCarbonMenuItem12121</string>
-    <reference idRef="203"/>
-    <string>IBCarbonMenuItem1213</string>
-    <reference idRef="202"/>
-    <string>IBCarbonMenuItem122</string>
-    <reference idRef="201"/>
-    <string>IBCarbonMenuItem13</string>
-    <reference idRef="198"/>
     <string>Menu</string>
     <reference idRef="191"/>
   </dictionary>
+  <string name="targetFramework">IBCarbonFramework</string>
   <unsigned_int name="nextObjectID">208</unsigned_int>
 </object>
