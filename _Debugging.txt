@@ -16,15 +16,15 @@ BACKGROUND
   in practice aside from making it slightly harder to find some
   of the familiar application entry points.
 
-INVOKING GDB ON LEOPARD
+INVOKING GDB
   See the script "Debug/ApplicationGDB.sh.command" for a utility
   script to invoke the GNU debugger, as well as comments that
   explain what to do.  In a nutshell, since Python is the front
   end, "gdb" must run against the Python interpreter and you must
   continue past the framework load breakpoint for MacTerm.
   
-  WARNING: On Leopard, do not allow the debug script to launch in
-  MacTerm!  (For example, open it in Terminal instead.)  It is
+  WARNING: Do not allow the debug script to launch in MacTerm!
+  (For example, open the script in Terminal instead.)  It is
   currently necessary for the script to to launch and then attach
   GDB, instead of launching the interpreter wrapper directly; if
   MacTerm is already open, the script can choose the wrong
@@ -44,8 +44,8 @@ THE CALL STACK
   In MallocDebug or another program that traces the call stack,
   follow start() -> Py_Main() -> PyRun_SimpleFileExFlags() and
   trace as shown below down to the event loop.  (Note that this
-  example is based Python 2.3 on Mac OS X 10.4; perhaps a future
-  version of Python will change the call stack a bit.)
+  example came from Python 2.3 on Mac OS X 10.4; a future
+  version of Python may change the call stack a bit.)
   
   Example:
   ...

@@ -22,7 +22,7 @@ ABOUT THE MACTERM PROJECT
   various infrastructure and the documentation utilities.
   
   Useful web resources:
-    http://macterm.net/ [legacy: http://www.mactelnet.com/]
+    http://www.macterm.net/ [legacy: http://www.mactelnet.com/]
     http://sourceforge.net/projects/mactelnet/
     http://www.swig.org/
     http://www.doxygen.org/
