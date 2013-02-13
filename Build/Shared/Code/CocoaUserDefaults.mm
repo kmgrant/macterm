@@ -107,12 +107,12 @@ CocoaUserDefaults_DeleteDomain	(CFStringRef	inName)
 				
 				if ((nil != filePath) && [[NSFileManager defaultManager] fileExistsAtPath:filePath])
 				{
-					[[NSFileManager defaultManager] removeFileAtPath:filePath handler:nil];
+					[[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
 				}
 				filePath = [filePath stringByAppendingPathExtension:@"lockfile"];
 				if ((nil != filePath) && [[NSFileManager defaultManager] fileExistsAtPath:filePath])
 				{
-					[[NSFileManager defaultManager] removeFileAtPath:filePath handler:nil];
+					[[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
 				}
 			}
 		}

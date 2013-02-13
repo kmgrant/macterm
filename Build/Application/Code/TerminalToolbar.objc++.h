@@ -7,7 +7,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -71,7 +71,7 @@ user unless "setSession:" has been called.  (This session can
 be changed as often as needed, e.g. to implement a floating
 toolbar.)
 */
-@interface TerminalToolbar_Delegate : NSObject
+@interface TerminalToolbar_Delegate : NSObject< NSToolbarDelegate >
 {
 @private
 	SessionRef		associatedSession;

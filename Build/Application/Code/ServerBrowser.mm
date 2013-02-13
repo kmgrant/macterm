@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -68,7 +68,7 @@ extern "C"
 
 #pragma mark Types
 
-@interface ServerBrowser_Handler : NSObject< PopoverManager_Delegate, ServerBrowser_ViewManagerChannel >
+@interface ServerBrowser_Handler : NSObject< NSWindowDelegate, PopoverManager_Delegate, ServerBrowser_ViewManagerChannel >
 {
 	ServerBrowser_Ref			selfRef;				// identical to address of structure, but typed as ref
 	ServerBrowser_ViewManager*	viewMgr;				// loads the server browser interface
@@ -142,7 +142,7 @@ by Bonjour, that allows them to be easily inserted into user
 interface elements without losing less user-friendly information
 about each service.
 */
-@interface ServerBrowser_NetService : NSObject // implements NSNetServiceDelegateMethods
+@interface ServerBrowser_NetService : NSObject< NSNetServiceDelegate >
 {
 @private
 	NSNetService*		netService;
