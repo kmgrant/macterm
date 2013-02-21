@@ -1926,11 +1926,12 @@ If any problems occur, nullptr is returned.
 Use the parameters to this routine to affect how the
 text is returned; for example, you can have the text
 returned inline, or delimited by carriage returns.
-The "inNumberOfSpacesToReplaceWithOneTabOrZero" value
-can be 0 to perform no substitution, or a positive
-integer to indicate how many consecutive spaces are
-to be replaced with a single tab before returning the
-text.
+The "inMaxSpacesToReplaceWithTabOrZero" value can be 0
+to perform no substitution, or a positive integer to
+indicate the longest range of consecutive spaces that
+should be replaced with a single tab before returning
+the text (all smaller ranges are also replaced by one
+tab).
 
 You must dispose of the returned handle yourself,
 using Memory_DisposeHandle().
@@ -1946,7 +1947,7 @@ IMPORTANT:	Use this kind of routine very judiciously.
 */
 Handle
 TerminalView_ReturnSelectedTextAsNewHandle	(TerminalViewRef			inView,
-											 UInt16						inNumberOfSpacesToReplaceWithOneTabOrZero,
+											 UInt16						inMaxSpacesToReplaceWithTabOrZero,
 											 TerminalView_TextFlags		inFlags)
 {
     My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
@@ -1955,7 +1956,7 @@ TerminalView_ReturnSelectedTextAsNewHandle	(TerminalViewRef			inView,
 	
 	if (nullptr != viewPtr)
 	{
-		result = getSelectedTextAsNewHandle(viewPtr, inNumberOfSpacesToReplaceWithOneTabOrZero, inFlags);
+		result = getSelectedTextAsNewHandle(viewPtr, inMaxSpacesToReplaceWithTabOrZero, inFlags);
 	}
 	return result;
 }// ReturnSelectedTextAsNewHandle
@@ -1989,11 +1990,12 @@ If any problems occur, nullptr is returned.
 Use the parameters to this routine to affect how the
 text is returned; for example, you can have the text
 returned inline, or delimited by carriage returns.
-The "inNumberOfSpacesToReplaceWithOneTabOrZero" value
-can be 0 to perform no substitution, or a positive
-integer to indicate how many consecutive spaces are
-to be replaced with a single tab before returning the
-text.
+The "inMaxSpacesToReplaceWithTabOrZero" value can be 0
+to perform no substitution, or a positive integer to
+indicate the longest range of consecutive spaces that
+should be replaced with a single tab before returning
+the text (all smaller ranges are also replaced by one
+tab).
 
 Use CFRelease() to dispose of the data when finished.
 
@@ -2008,7 +2010,7 @@ IMPORTANT:	Use this kind of routine very judiciously.
 */
 CFStringRef
 TerminalView_ReturnSelectedTextAsNewUnicode	(TerminalViewRef			inView,
-											 UInt16						inNumberOfSpacesToReplaceWithOneTabOrZero,
+											 UInt16						inMaxSpacesToReplaceWithTabOrZero,
 											 TerminalView_TextFlags		inFlags)
 {
     My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
@@ -2017,7 +2019,7 @@ TerminalView_ReturnSelectedTextAsNewUnicode	(TerminalViewRef			inView,
 	
 	if (nullptr != viewPtr)
 	{
-		result = returnSelectedTextAsNewUnicode(viewPtr, inNumberOfSpacesToReplaceWithOneTabOrZero, inFlags);
+		result = returnSelectedTextAsNewUnicode(viewPtr, inMaxSpacesToReplaceWithTabOrZero, inFlags);
 	}
 	return result;
 }// ReturnSelectedTextAsNewUnicode
@@ -7478,7 +7480,7 @@ DEPRECATED.  Use returnSelectedTextAsNewUnicode() instead.
 */
 Handle
 getSelectedTextAsNewHandle	(My_TerminalViewPtr			inTerminalViewPtr,
-							 UInt16						inNumberOfSpacesToReplaceWithOneTabOrZero,
+							 UInt16						inMaxSpacesToReplaceWithTabOrZero,
 							 TerminalView_TextFlags		inFlags)
 {
     Handle		result = nullptr;
@@ -7513,7 +7515,7 @@ getSelectedTextAsNewHandle	(My_TerminalViewPtr			inTerminalViewPtr,
 											kSelectionStart.first, kSelectionPastEnd.first - 1/* make inclusive range */,
 											characters, kByteCount, &actualLength,
 											(inFlags & kTerminalView_TextFlagInline) ? "" : "\015",
-											inNumberOfSpacesToReplaceWithOneTabOrZero, flags);
+											inMaxSpacesToReplaceWithTabOrZero, flags);
 			releaseRowIterator(inTerminalViewPtr, &lineIterator);
 			HUnlock(result);
 			
@@ -10841,13 +10843,11 @@ returnNumberOfCharacters	(My_TerminalViewPtr		inTerminalViewPtr)
 /*!
 Internal version of TerminalView_ReturnSelectedTextAsNewUnicode().
 
-IMPORTANT:	Tab substitution is currently not supported.
-
 (3.1)
 */
 CFStringRef
 returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
-								 UInt16						inNumberOfSpacesToReplaceWithOneTabOrZero,
+								 UInt16						inMaxSpacesToReplaceWithTabOrZero,
 								 TerminalView_TextFlags		inFlags)
 {
     CFStringRef		result = nullptr;
@@ -10952,6 +10952,51 @@ returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
 							copyLength = kSanityCheckCopyLimit;
 						}
 						CFStringAppendCharacters(resultMutable, textBegin, copyLength/* number of characters */);
+						
+						// perform spaces-to-tabs substitution; this could be done while
+						// appending text in the first place but instead it is done as a
+						// lazy post-processing step (also, no effort is made to perform
+						// particularly well...multiple linear searches are done to
+						// iteratively replace ranges of spaces)
+						if (inMaxSpacesToReplaceWithTabOrZero > 0)
+						{
+							CFRetainRelease		spacesString(CFStringCreateMutable
+																(kCFAllocatorDefault,
+																	inMaxSpacesToReplaceWithTabOrZero));
+							CFStringRef			singleSpaceString = CFSTR(" "); // LOCALIZE THIS?
+							CFStringRef			tabString = CFSTR("\011"); // LOCALIZE THIS?
+							
+							
+							// create a string to represent the required whitespace range
+							// (TEMPORARY: there is no reason to do this every time, it
+							// could be cached at the time the user preference changes;
+							// for now however the lazy approach is being taken)
+							for (UInt16 spaceIndex = 0; spaceIndex < inMaxSpacesToReplaceWithTabOrZero; ++spaceIndex)
+							{
+								CFStringAppend(spacesString.returnCFMutableStringRef(), singleSpaceString);
+							}
+							
+							// first replace all “long” series of spaces with single tabs, as per user preference
+							(CFIndex)CFStringFindAndReplace(resultMutable, spacesString.returnCFStringRef(), tabString,
+															CFRangeMake(0, CFStringGetLength(resultMutable)),
+															0/* comparison options */);
+							
+							// replace all smaller ranges of spaces with one tab as well
+							for (UInt16 maxSpaces = (inMaxSpacesToReplaceWithTabOrZero - 1); maxSpaces > 0; --maxSpaces)
+							{
+								// create a string representing the next-largest range of spaces...
+								CFStringReplaceAll(spacesString.returnCFMutableStringRef(), CFSTR(""));
+								for (UInt16 spaceIndex = 0; spaceIndex < maxSpaces; ++spaceIndex)
+								{
+									CFStringAppend(spacesString.returnCFMutableStringRef(), singleSpaceString);
+								}
+								
+								// ...and turn those spaces into a tab
+								(CFIndex)CFStringFindAndReplace(resultMutable, spacesString.returnCFStringRef(), tabString,
+																CFRangeMake(0, CFStringGetLength(resultMutable)),
+																0/* comparison options */);
+							}
+						}
 					}
 				}
 				

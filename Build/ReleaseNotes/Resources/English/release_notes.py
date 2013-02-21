@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130220',
     '20130205',
     '20121129',
     '20121119',
@@ -463,6 +464,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130220': [
+        'Fixed the "Copy with Tab Substitution" command, which was leaving spaces intact instead of inserting tabs.',
+    ],
     '20130205': [
         'Version root has changed to 4.1; future builds will incorporate features intended for the upcoming 4.1 releease.',
         'Due to continuing challenges presented by Apple development tools and a lack of suitable testing hardware, the decision has been made to DROP SUPPORT for PowerPC-based Macs and versions of Mac OS X prior to Snow Leopard (10.6).  In other words, from now on, MacTerm will only work on Intel-based Macs that run Snow Leopard (10.6), Lion (10.7), Mountain Lion (10.8), or any system beyond that.',
