@@ -7,7 +7,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -2597,11 +2597,9 @@ setFontSize		(SInt16		inFontSize,
 				 Boolean	inIsDefault)
 {
 	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
-	Str255				sizeString;
 	
 	
-	NumToString(inFontSize, sizeString);
-	SetControlTitle(HIViewWrap(idMyButtonFontSize, kOwningWindow), sizeString);
+	SetControlNumericalTitle(HIViewWrap(idMyButtonFontSize, kOwningWindow), inFontSize);
 	setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultFontSize, kOwningWindow), BooleanToCheckBoxValue(inIsDefault));
 }// My_FormatsPanelNormalUI::setFontSize
 

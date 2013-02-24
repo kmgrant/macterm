@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -104,17 +104,9 @@ Boolean
 													 Rect*							outMenuBarMenuTitleRect);
 
 void
-	MenuBar_GetUniqueMenuItemText					(MenuRef						inMenu,
-													 Str255							inoutItemText);
-
-void
 	MenuBar_GetUniqueMenuItemTextCFString			(MenuRef						inMenu,
 													 CFStringRef					inItemText,
 													 CFStringRef&					outUniqueItemText);
-
-Boolean
-	MenuBar_IsMenuItemUnique						(MenuRef						inMenu,
-													 ConstStringPtr					inItemText);
 
 Boolean
 	MenuBar_IsMenuItemUniqueCFString				(MenuRef						inMenu,

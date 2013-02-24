@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -125,40 +125,6 @@ MenuBar_GetMenuTitleRectangle	(MenuBar_Menu	inMenuBarMenuSpecifier,
 	}
 	return result;
 }// GetMenuTitleRectangle
-
-
-/*!
-To obtain a unique variation of the specified
-item text, guaranteeing that it will not be
-the identical text of any item in the specified
-menu, use this method.
-
-(3.0)
-*/
-void
-MenuBar_GetUniqueMenuItemText	(MenuRef	inMenu,
-								 Str255		inoutItemText)
-{
-	// only change the specified item text if it’s already “taken” by an item in the menu
-	while (!MenuBar_IsMenuItemUnique(inMenu, inoutItemText))
-	{
-		if ((inoutItemText[inoutItemText[0]] > '9') ||
-			(inoutItemText[inoutItemText[0]] < '0')) // add a number
-		{
-			inoutItemText[++inoutItemText[0]] = ' ';
-			inoutItemText[++inoutItemText[0]] = '1';
-		}
-		else if (inoutItemText[inoutItemText[0]] == '9') // add another digit
-		{
-			inoutItemText[inoutItemText[0]] = '-';
-			inoutItemText[++inoutItemText[0]] = '1';
-		}
-		else
-		{
-			++(inoutItemText[inoutItemText[0]]); // increment the number
-		}
-	}
-}// GetUniqueMenuItemText
 
 
 /*!
@@ -282,34 +248,6 @@ MenuBar_HandleMenuCommandByID	(UInt32		inCommandID)
 	result = Commands_ExecuteByID(inCommandID);
 	return result;
 }// HandleMenuCommandByID
-
-
-/*!
-To determine if a menu contains no item with
-text identical to the specified item text,
-use this method.
-
-(3.0)
-*/
-Boolean
-MenuBar_IsMenuItemUnique	(MenuRef			inMenu,
-							 ConstStringPtr		inItemText)
-{
-	Boolean		result = true;
-	UInt16		itemCount = CountMenuItems(inMenu),
-				i = 0;
-	Str255		itemString;
-	
-	
-	// look for an identical item
-	for (i = 1; ((result) && (i <= itemCount)); ++i)
-	{
-		GetMenuItemText(inMenu, i, itemString);
-		unless (PLstrcmp(itemString, inItemText)) result = false;
-	}
-	
-	return result;
-}// IsItemUnique
 
 
 /*!

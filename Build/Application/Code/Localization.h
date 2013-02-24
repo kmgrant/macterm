@@ -16,7 +16,7 @@
 /*###############################################################
 
 	Interface Library 2.6
-	© 1998-2012 by Kevin Grant
+	© 1998-2013 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -240,19 +240,6 @@ UInt16
 OSStatus
 	Localization_SetControlThemeFontInfo		(ControlRef					inControl,
 												 ThemeFontID				inThemeFontToUse);
-
-UInt16
-	Localization_SetUpSingleLineTextControl		(ControlRef					inControl,
-												 ConstStringPtr				inTextContents,
-												 Boolean					inMakeRoomForCheckBoxOrRadioButtonGlyph = false);
-
-UInt16
-	Localization_SetUpSingleLineTextControlMax	(ControlRef					inControl,
-												 ConstStringPtr				inTextContents,
-												 Boolean					inMakeRoomForCheckBoxOrRadioButtonGlyph,
-												 UInt16						inMaximumAllowedWidth,
-												 StringUtilitiesTruncationMethod	inTruncationMethod = kStringUtilities_TruncateAtEnd,
-												 Boolean					inSetControlFontInfo = true);
 
 UInt16
 	Localization_SetUpMultiLineTextControl		(ControlRef					inControl,

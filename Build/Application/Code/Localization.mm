@@ -5,7 +5,7 @@
 /*###############################################################
 
 	Interface Library 2.6
-	© 1998-2012 by Kevin Grant
+	© 1998-2013 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -398,24 +398,33 @@ UInt16
 Localization_AutoSizeButtonControl	(ControlRef		inControl,
 									 UInt16			inMinimumWidth)
 {
-	Str255		buttonString;
-	UInt16		result = inMinimumWidth;
+	CFStringRef		buttonCFString = nullptr;
+	UInt16			result = inMinimumWidth;
 	
 	
 	if (inControl != nullptr)
 	{
-		GetControlTitle(inControl, buttonString);
-		if (PLstrlen(buttonString) > 0)
+		if (noErr == CopyControlTitleAsCFString(inControl, &buttonCFString))
 		{
-			// The quick, dirty, and usually adequate way - this saves a LOT
-			// of fooling around with fonts (but maybe you would like to write
-			// a better algorithm that resets the graphics port, extracts the
-			// theme font information, does a little dance and calculates π to
-			// 26 digits before returning the ideal width of the button?).
-			result = INTEGER_DOUBLED(MINIMUM_BUTTON_TITLE_CUSHION) +
-						PLstrlen(buttonString) * kDialogTextMaxCharWidth;
+			CFIndex const	kStringLength = CFStringGetLength(buttonCFString);
+			
+			
+			if (kStringLength > 0)
+			{
+				// The quick, dirty, and usually adequate way - this saves a LOT
+				// of fooling around with fonts (but maybe you would like to write
+				// a better algorithm that resets the graphics port, extracts the
+				// theme font information, does a little dance and calculates π to
+				// 26 digits before returning the ideal width of the button?).
+				result = INTEGER_DOUBLED(MINIMUM_BUTTON_TITLE_CUSHION) +
+							kStringLength * kDialogTextMaxCharWidth;
+			}
+			CFRelease(buttonCFString), buttonCFString = nullptr;
 		}
-		if (result < inMinimumWidth) result = inMinimumWidth;
+		if (result < inMinimumWidth)
+		{
+			result = inMinimumWidth;
+		}
 		SizeControl(inControl, result, BUTTON_HT);
 	}
 	return result;
@@ -769,132 +778,6 @@ Localization_SetControlThemeFontInfo	(ControlRef		inControl,
 	}
 	return result;
 }// SetControlThemeFontInfo
-
-
-/*!
-Works like Localization_SetUpSingleLineTextControlMax(),
-except there is no limit on the width the resultant
-control can have (it remains one line, as wide as the
-text happens to be).
-
-The chosen width for the control, in pixels, is
-returned.
-
-(1.0)
-*/
-UInt16
-Localization_SetUpSingleLineTextControl		(ControlRef			inControl,
-											 ConstStringPtr		inTextContents,
-											 Boolean			inMakeRoomForCheckBoxOrRadioButtonGlyph)
-{
-	return Localization_SetUpSingleLineTextControlMax(inControl, inTextContents,
-														inMakeRoomForCheckBoxOrRadioButtonGlyph,
-														0/* means “no limits” */,
-														kStringUtilities_TruncateAtEnd);
-}// SetUpSingleLineTextControl
-
-
-/*!
-Automatically sets the contents, width and height
-of a text control (editable or static) to accommodate
-its theme font.  The width of the control is made
-sufficient to hold the specified text, within the
-specified width limit (pass 0 to have no width
-limits).  If the control text is too wide, it is
-automatically changed to include a trailing ellipsis
-(...) and truncated to fit.
-
-The chosen width for the control, in pixels, is
-returned.
-
-(1.0)
-*/
-UInt16
-Localization_SetUpSingleLineTextControlMax		(ControlRef							inControl,
-												 ConstStringPtr						inTextContents,
-												 Boolean							inIsCheckBoxOrRadioButton,
-												 UInt16								inMaximumAllowedWidth,
-												 StringUtilitiesTruncationMethod	inTruncationMethod,
-												 Boolean							inSetControlFontInfo)
-{
-	enum
-	{
-		kStringPaddingH = 8		// arbitrary horizontal extra space, in pixels, “just to be safe”
-	};
-	UInt16		result = 0;
-	SInt16		fontSize = 0;
-	Style		fontStyle = normal;
-	Str255		fontName;
-	UInt16		fontHeight = 0;
-	GrafPtr		oldPort = nullptr;
-	Str255		buffer;
-	
-	
-	PLstrcpy(buffer, inTextContents);
-	
-	GetPort(&oldPort);
-	SetPortWindowPort(GetControlOwner(inControl));
-	
-	// obtain a wealth of information about the requested theme font
-	{
-		ControlFontStyleRec		controlFontInfo;
-		OSStatus				error = noErr;
-		Size					actualSize = 0;
-		
-		
-		error = GetControlData(inControl, kControlNoPart, kControlFontStyleTag, sizeof(controlFontInfo),
-								&controlFontInfo, &actualSize);
-		if (error == noErr)
-		{
-			(OSStatus)getControlFontInfo(&controlFontInfo, buffer/* string to calculate width of */,
-											fontName, &fontSize, &fontStyle, &result/* string width */,
-											&fontHeight);
-		}
-	}
-	
-	if (inSetControlFontInfo)
-	{
-		// set the font characteristics to be the font derived above
-		(OSStatus)setControlFontInfo(inControl, fontName, fontSize, fontStyle);
-	}
-	
-	// size the control to be just wide enough for the text
-	result += kStringPaddingH; // add some (arbitrary) additional space to be sure
-	if (inMaximumAllowedWidth > 0)
-	{
-		// a maximum was given; be sure the text isn’t any longer
-		(Boolean)StringUtilities_PTruncate(buffer, inMaximumAllowedWidth, inTruncationMethod);
-	}
-	
-	// set the control size
-	{
-		SInt16		newControlWidth = result,
-					newControlHeight = fontHeight;
-		
-		
-		if (inIsCheckBoxOrRadioButton)
-		{
-			newControlWidth += 25/* arbitrary */;
-			newControlHeight = CHECKBOX_HT;
-		}
-		SizeControl(inControl, newControlWidth, newControlHeight);
-	}
-	
-	// set the control text to be the specified text
-	if (inIsCheckBoxOrRadioButton)
-	{
-		SetControlTitle(inControl, buffer);
-	}
-	else
-	{
-		(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlStaticTextTextTag,
-									PLstrlen(buffer) * sizeof(char), (Ptr)(buffer + 1));
-	}
-	
-	SetPort(oldPort);
-	
-	return result;
-}// SetUpSingleLineTextControlMax
 
 
 /*!

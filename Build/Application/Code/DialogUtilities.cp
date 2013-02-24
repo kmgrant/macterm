@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -1096,6 +1096,25 @@ SetControlNumericalText		(ControlRef		inControl,
 	NumToString(inNumber, string);
 	SetControlText(inControl, string);
 }// SetControlNumericalText
+
+
+/*!
+Equivalent to setting the title property of a control
+using a string that contains only an integer.
+
+(4.1)
+*/
+void
+SetControlNumericalTitle	(ControlRef		inControl,
+							 SInt32			inNumber)
+{
+	CFRetainRelease		stringObject(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */, CFSTR("%d"),
+																STATIC_CAST(inNumber, int)),
+										true/* is retained */);
+	
+	
+	SetControlTitleWithCFString(inControl, stringObject.returnCFStringRef());
+}// SetControlNumericalTitle
 
 
 /*!
