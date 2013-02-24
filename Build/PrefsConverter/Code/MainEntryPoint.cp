@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm Preferences Converter
-		© 2004-2012 by Kevin Grant.
+		© 2004-2013 by Kevin Grant.
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -118,19 +118,14 @@ Boolean				gFinished = false;			//!< used to control exit warnings to the user
 #pragma mark Internal Method Prototypes
 namespace {
 
-My_PrefsResult		actionLegacyUpdates			();
 My_PrefsResult		actionVersion3				();
 My_PrefsResult		actionVersion4				();
 My_PrefsResult		actionVersion5				();
 My_PrefsResult		actionVersion6				();
-OSStatus			addErrorToReply				(ConstStringPtr, OSStatus, AppleEventPtr);
+OSStatus			addErrorToReply				(OSStatus, AppleEventPtr);
 Boolean				convertRGBColorToCFArray	(RGBColor const*, CFArrayRef&);
 My_StringResult		copyFileOrFolderCFString	(My_FolderStringType, CFStringRef*);
-long				getDirectoryIDFromFSSpec	(FSSpec const*);
-OSStatus			getFolderFSSpec				(My_MacTelnetFolder, FSSpec*);
 Boolean				installRequiredHandlers		();
-OSStatus			loadPreferencesStructure	(void*, size_t, ResType, SInt16);
-OSStatus			makeLocalizedFSSpec			(SInt16, SInt32, My_FolderStringType, FSSpec*);
 OSErr				receiveApplicationOpen		(AppleEvent const*, AppleEvent*, SInt32);
 OSErr				receiveApplicationPrefs		(AppleEvent const*, AppleEvent*, SInt32);
 OSErr				receiveApplicationReopen	(AppleEvent const*, AppleEvent*, SInt32);
@@ -140,7 +135,6 @@ OSErr				receivePrintDocuments		(AppleEvent const*, AppleEvent*, SInt32);
 Boolean				setMacTelnetCoordPreference	(CFStringRef, SInt16, SInt16);
 void				setMacTelnetPreference		(CFStringRef, CFPropertyListRef);
 void				setMacTermPreference		(CFStringRef, CFPropertyListRef);
-void				transformFolderFSSpec		(FSSpec*);
 
 } // anonymous namespace
 
@@ -198,879 +192,6 @@ main	(int	argc,
 
 #pragma mark Internal Methods
 namespace {
-
-/*!
-Performs all necessary operations to bring data
-from the pre-XML era into the CFPreferences era.
-
-Searches for old an preferences file named
-"Telnet 3.0 Preferences", and renames it to
-"MacTelnet Preferences".
-
-INCOMPLETE
-- must read MacTelnet Preferences and import
-  resource data into XML
-- must delete unused folders
-
-IMPORTANT:	Even though the program is now MacTerm,
-			this legacy code MUST NOT change; the
-			update steps are handled sequentially,
-			pulling data from older domains and
-			versions into the modern domain (even
-			if intermediate steps continue to put
-			data into a legacy domain, the final
-			step imports everything into the modern
-			domain).
-
-(3.1)
-*/
-My_PrefsResult
-actionLegacyUpdates ()
-{
-	My_PrefsResult	result = kMy_PrefsResultOK;
-	FSSpec			parseFolder;
-	OSStatus		error = noErr;
-	
-	
-	error = getFolderFSSpec(kMy_MacTelnetFolderPreferences, &parseFolder);
-	if (noErr == error)
-	{
-		FSSpec		parseFile;
-		
-		
-		// rename any old preferences file
-		error = FSMakeFSSpec(parseFolder.vRefNum, parseFolder.parID, "\pTelnet 3.0 Preferences", &parseFile);
-		if (noErr == error)
-		{
-			FileInfo	info;
-			
-			
-			// MacTelnet will have name-locked this file, so remove that
-			// attribute before attempting to rename it
-			FSpGetFInfo(&parseFile, (FInfo*)&info);
-			info.finderFlags &= (~kNameLocked);
-			FSpSetFInfo(&parseFile, (FInfo*)&info);
-			
-			// attempt a rename
-			error = FSpRename(&parseFile, "\pMacTelnet Preferences");
-		}
-		else if (fnfErr == error)
-		{
-			// not there, no big deal
-		}
-		else
-		{
-			// some kind of problem referencing the file...
-			result = kMy_PrefsResultGenericFailure;
-		}
-		
-		// load any "MacTelnet Preferences" file
-		error = FSMakeFSSpec(parseFolder.vRefNum, parseFolder.parID, "\pMacTelnet Preferences", &parseFile);
-		if (noErr == error)
-		{
-			// open the preferences file and keep its reference number; note that
-			// FSpOpenResFile() changes the current resource file
-			SInt16		resFile = 0;
-			
-			
-			resFile = FSpOpenResFile(&parseFile, fsRdPerm);
-			if (resFile < 0)
-			{
-				error = ResError();
-			}
-			else
-			{
-				gOldPrefsFileRefNum = resFile;
-			}
-		}
-		
-		// if the file is actually open, read everything in it,
-		// save it in a new format and then Trash the old file
-		if (0 != gOldPrefsFileRefNum)
-		{
-			ApplicationPrefs	appPrefs;
-			Handle				handle = nullptr;
-			SInt16				i = 0;
-			SInt16				collectionCount = 0;
-			
-			
-			// read application preferences resource (there should be only one of these);
-			// the resource types and IDs here must match what was used in the original file;
-			// so no fancy constants, etc. are used here, these values simply must not change
-			UseResFile(gOldPrefsFileRefNum);
-			error = loadPreferencesStructure(&appPrefs, sizeof(appPrefs), 'APRF'/* type */, 128/* ID */);
-			if (noErr == error)
-			{
-				CFStringRef		prefsKey = nullptr;
-				
-				
-				//
-				// convert settings to their CFPreferences equivalents
-				//
-				
-				prefsKey = CFSTR("terminal-cursor-shape");
-				switch (appPrefs.cursorType)
-				{
-				case kTerminalCursorTypeUnderscore:
-					setMacTelnetPreference(prefsKey, CFSTR("underline"));
-					break;
-				
-				case kTerminalCursorTypeVerticalLine:
-					setMacTelnetPreference(prefsKey, CFSTR("vertical bar"));
-					break;
-				
-				case kTerminalCursorTypeThickUnderscore:
-					setMacTelnetPreference(prefsKey, CFSTR("thick underline"));
-					break;
-				
-				case kTerminalCursorTypeThickVerticalLine:
-					setMacTelnetPreference(prefsKey, CFSTR("thick vertical bar"));
-					break;
-				
-				case kTerminalCursorTypeBlock:
-				default:
-					setMacTelnetPreference(prefsKey, CFSTR("block"));
-					break;
-				}
-				
-				prefsKey = CFSTR("spaces-per-tab");
-				{
-					CFNumberRef		numberRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type,
-																&appPrefs.copyTableThreshold);
-					
-					
-					if (nullptr != numberRef)
-					{
-						setMacTelnetPreference(prefsKey, numberRef);
-						CFRelease(numberRef), numberRef = nullptr;
-					}
-				}
-				
-				prefsKey = CFSTR("terminal-capture-file-creator-code");
-				{
-					CFStringRef		stringRef = CFStringCreateWithBytes
-												(kCFAllocatorDefault,
-													REINTERPRET_CAST(&appPrefs.captureFileCreator, UInt8 const*),
-													sizeof(appPrefs.captureFileCreator),
-													kCFStringEncodingMacRoman, false/* is external representation */);
-					
-					
-					if (nullptr != stringRef)
-					{
-						setMacTelnetPreference(prefsKey, stringRef);
-						CFRelease(stringRef), stringRef = nullptr;
-					}
-				}
-				
-				prefsKey = CFSTR("no-auto-close");
-				setMacTelnetPreference(prefsKey, (appPrefs.windowsDontGoAway) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("terminal-when-bell-in-background");
-				setMacTelnetPreference(prefsKey, (appPrefs.backgroundNotification) ? CFSTR("notify") : CFSTR("ignore"));
-				
-				prefsKey = CFSTR("menu-key-equivalents");
-				setMacTelnetPreference(prefsKey, (appPrefs.menusHaveKeyEquivalents) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("key-map-backquote");
-				setMacTelnetPreference(prefsKey, (appPrefs.remapBackquoteToEscape) ? CFSTR("\\e") : CFSTR(""));
-				
-				prefsKey = CFSTR("terminal-cursor-blinking");
-				setMacTelnetPreference(prefsKey, (appPrefs.cursorBlinks) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("terminal-when-bell");
-				setMacTelnetPreference(prefsKey, (appPrefs.visualBell) ? CFSTR("visual") : CFSTR("audio"));
-				
-				prefsKey = CFSTR("window-terminal-toolbar-invisible");
-				setMacTelnetPreference(prefsKey, (appPrefs.headersInitiallyCollapsed) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("terminal-no-dim-on-deactivate");
-				setMacTelnetPreference(prefsKey, (appPrefs.dontDimBackgroundScreens) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("terminal-inverse-selections");
-				setMacTelnetPreference(prefsKey, (appPrefs.invertedTextHighlighting) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("terminal-auto-copy-on-select");
-				setMacTelnetPreference(prefsKey, (appPrefs.copySelectedText) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("terminal-cursor-auto-move-on-drop");
-				setMacTelnetPreference(prefsKey, (appPrefs.autoCursorMoveOnDrop) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("terminal-when-cursor-near-right-margin");
-				setMacTelnetPreference(prefsKey, (appPrefs.marginBell) ? CFSTR("bell") : CFSTR("ignore"));
-				
-				prefsKey = CFSTR("no-auto-new");
-				setMacTelnetPreference(prefsKey, (appPrefs.doNotInvokeNewOnApplicationReopen) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("window-clipboard-visible");
-				setMacTelnetPreference(prefsKey, (appPrefs.wasClipboardShowing) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("window-commandline-visible");
-				setMacTelnetPreference(prefsKey, (appPrefs.wasCommandLineShowing) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("window-controlkeys-visible");
-				setMacTelnetPreference(prefsKey, (appPrefs.wasControlKeypadShowing) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("window-functionkeys-visible");
-				setMacTelnetPreference(prefsKey, (appPrefs.wasFunctionKeypadShowing) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("window-macroeditor-visible");
-				setMacTelnetPreference(prefsKey, (appPrefs.wasMacroKeypadShowing) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("window-vt220keys-visible");
-				setMacTelnetPreference(prefsKey, (appPrefs.wasVT220KeypadShowing) ? kCFBooleanTrue : kCFBooleanFalse);
-				
-				prefsKey = CFSTR("menu-command-set-simplified");
-				setMacTelnetPreference(prefsKey, kCFBooleanFalse);
-				
-				prefsKey = CFSTR("when-alert-in-background");
-				switch (appPrefs.notificationPrefs)
-				{
-				case 0: // kAlert_NotifyDoNothing
-					setMacTelnetPreference(prefsKey, CFSTR("ignore"));
-					break;
-				
-				case 2: // kAlert_NotifyDisplayIconAndDiamondMark
-					setMacTelnetPreference(prefsKey, CFSTR("animate"));
-					break;
-				
-				case 3: // kAlert_NotifyAlsoDisplayAlert
-					setMacTelnetPreference(prefsKey, CFSTR("alert"));
-					break;
-				
-				case 1: // kAlert_NotifyDisplayDiamondMark
-				default:
-					setMacTelnetPreference(prefsKey, CFSTR("badge"));
-					break;
-				}
-				
-				prefsKey = CFSTR("window-terminal-position-pixels");
-				(Boolean)setMacTelnetCoordPreference(prefsKey, appPrefs.windowStackingOriginLeft,
-														appPrefs.windowStackingOriginTop);
-				
-				prefsKey = CFSTR("new-means");
-				switch (appPrefs.newCommandShortcutEffect)
-				{
-				default:
-					setMacTelnetPreference(prefsKey, CFSTR("dialog"));
-					break;
-				}
-			}
-			
-			// old window preference resources are now ignored, because they are not
-			// going to be translated into the Cocoa window layout format anyway
-			
-			//
-			// Now iterate over collections (Terminal, Sessions) and
-			// convert each one into a new preferences domain; newer
-			// versions of MacTelnet save the name of a collection in
-			// the main MacTelnet preferences file for two purposes:
-			// to support Unicode names, and to have a map between the
-			// name and its symbolic value (used to look up its
-			// preference domain).
-			//
-			
-			// read Terminals
-			UseResFile(gOldPrefsFileRefNum);
-			collectionCount = Count1Resources('TPRF');
-			if (collectionCount > 0)
-			{
-				// terminal data is now split into 2 types of collections;
-				// specifically, font, size and color are now in a format
-				// (the rest of the terminal data is as before)
-				CFMutableArrayRef	terminalsArray = nullptr;
-				CFMutableArrayRef	stylesArray = nullptr;
-				
-				
-				terminalsArray = CFArrayCreateMutable(kCFAllocatorDefault, collectionCount/* maximum length */,
-														&kCFTypeArrayCallBacks);
-				stylesArray = CFArrayCreateMutable(kCFAllocatorDefault, collectionCount/* maximum length */,
-													&kCFTypeArrayCallBacks);
-				for (i = 0; i < collectionCount; ++i)
-				{
-					UseResFile(gOldPrefsFileRefNum);
-					handle = Get1IndResource('TPRF', i + 1/* one-based index */);
-					error = ResError();
-					if (nullptr != handle)
-					{
-						TerminalPrefsPtr	dataPtr = REINTERPRET_CAST(*handle, TerminalPrefsPtr);
-						
-						
-						if (nullptr != dataPtr)
-						{
-							SInt16		resID = 0;
-							ResType		resType = '----';
-							Str255		resName;
-							
-							
-							GetResInfo(handle, &resID, &resType, resName);
-							error = ResError();
-							if (noErr == error)
-							{
-								CFKeyValueInterface*	terminalKeyValueMgrPtr = nullptr;
-								CFKeyValueInterface*	formatKeyValueMgrPtr = nullptr;
-								
-								
-								// if these are the Default preferences, store them directly in CFPreferences
-								if (0 == PLstrcmp(resName, "\pDefault"))
-								{
-									terminalKeyValueMgrPtr = new CFKeyValuePreferences(kMacTelnetApplicationID);
-									formatKeyValueMgrPtr = new CFKeyValuePreferences(kMacTelnetApplicationID);
-								}
-								else
-								{
-									// a non-default collection; create a favorite dictionary,
-									// and add a Unicode-friendly name to it
-									CFStringRef		resNameCFString = CFStringCreateWithPascalString
-																		(kCFAllocatorDefault, resName,
-																			kCFStringEncodingMacRoman);
-									
-									
-									if (nullptr != resNameCFString)
-									{
-										CFDataRef	resNameCFData = CFStringCreateExternalRepresentation
-																	(kCFAllocatorDefault, resNameCFString,
-																		kCFStringEncodingUnicode/* must match what MacTelnet uses */,
-																		'\?'/* loss byte */);
-										
-										
-										if (nullptr != resNameCFData)
-										{
-											CFMutableDictionaryRef		infoDictionary = nullptr;
-											
-											
-											// create entry for terminal data (minus fonts, now)
-											infoDictionary = CFDictionaryCreateMutable
-																(kCFAllocatorDefault, 0/* maximum capacity; 0 = infinite */,
-																	&kCFTypeDictionaryKeyCallBacks,
-																	&kCFTypeDictionaryValueCallBacks);
-											if (nullptr != infoDictionary)
-											{
-												// creating a wrapper automatically retains the original
-												// dictionary, so the local reference can be released
-												terminalKeyValueMgrPtr = new CFKeyValueDictionary(infoDictionary);
-												if (nullptr != terminalKeyValueMgrPtr)
-												{
-													// attach a Unicode friendly name (and a regular string, just
-													// in case the Unicode one is messed up); this automatically
-													// retains the data and string, so the local one can be released
-													terminalKeyValueMgrPtr->addData(CFSTR("name"), resNameCFData);
-													terminalKeyValueMgrPtr->addString(CFSTR("name-string"), resNameCFString);
-												}
-												
-												if (nullptr != terminalsArray)
-												{
-													CFArrayAppendValue(terminalsArray, infoDictionary);
-												}
-												else
-												{
-													// error, unable to include settings in favorites list!
-												}
-												
-												CFRelease(infoDictionary), infoDictionary = nullptr;
-											}
-											
-											// create entry for font and color data
-											infoDictionary = CFDictionaryCreateMutable
-																(kCFAllocatorDefault, 0/* maximum capacity; 0 = infinite */,
-																	&kCFTypeDictionaryKeyCallBacks,
-																	&kCFTypeDictionaryValueCallBacks);
-											if (nullptr != infoDictionary)
-											{
-												// creating a wrapper automatically retains the original
-												// dictionary, so the local reference can be released
-												formatKeyValueMgrPtr = new CFKeyValueDictionary(infoDictionary);
-												if (nullptr != formatKeyValueMgrPtr)
-												{
-													// attach a Unicode friendly name (and a regular string, just
-													// in case the Unicode one is messed up); this automatically
-													// retains the data and string, so the local one can be released
-													formatKeyValueMgrPtr->addData(CFSTR("name"), resNameCFData);
-													formatKeyValueMgrPtr->addString(CFSTR("name-string"), resNameCFString);
-												}
-												
-												if (nullptr != stylesArray)
-												{
-													CFArrayAppendValue(stylesArray, infoDictionary);
-												}
-												else
-												{
-													// error, unable to include settings in favorites list!
-												}
-												
-												CFRelease(infoDictionary), infoDictionary = nullptr;
-											}
-											
-											// no longer needed locally
-											CFRelease(resNameCFData), resNameCFData = nullptr;
-										}
-										
-										// no longer needed locally
-										CFRelease(resNameCFString), resNameCFString = nullptr;
-									}
-								}
-								
-								if (nullptr != terminalKeyValueMgrPtr)
-								{
-									//
-									// convert terminal data from the old structure;
-									// the polymorphism of the key value manager causes
-									// these settings to automatically go either directly
-									// into MacTelnet-domain Core Foundation preferences,
-									// or a sub-dictionary that is stored in favorites
-									//
-									
-									switch (dataPtr->emulation)
-									{
-									// these numbers must match values actually saved
-									// by older versions of MacTelnet
-									case 256:
-										terminalKeyValueMgrPtr->addString(CFSTR("terminal-emulator-type"), CFSTR("dumb"));
-										break;
-									
-									case 2:
-										terminalKeyValueMgrPtr->addString(CFSTR("terminal-emulator-type"), CFSTR("vt220"));
-										break;
-									
-									case 0:
-									default:
-										terminalKeyValueMgrPtr->addString(CFSTR("terminal-emulator-type"), CFSTR("vt100"));
-										break;
-									}
-									
-									terminalKeyValueMgrPtr->addInteger(CFSTR("terminal-screen-dimensions-columns"), dataPtr->columnCount);
-									terminalKeyValueMgrPtr->addInteger(CFSTR("terminal-screen-dimensions-rows"), dataPtr->rowCount);
-									terminalKeyValueMgrPtr->addInteger(CFSTR("terminal-scrollback-size-lines"), dataPtr->scrollbackBufferSize);
-									
-									terminalKeyValueMgrPtr->addFlag(CFSTR("terminal-scrollback-enabled"),
-																	(dataPtr->scrollbackBufferSize > 0));
-									terminalKeyValueMgrPtr->addFlag(CFSTR("terminal-emulator-xterm-enable-color"),
-																	(0 != dataPtr->usesANSIColors));
-									terminalKeyValueMgrPtr->addFlag(CFSTR("terminal-emulator-xterm-enable-graphics"),
-																	(0 != dataPtr->usesANSIColors/* currently graphics and color share a flag */));
-									terminalKeyValueMgrPtr->addFlag(CFSTR("terminal-emulator-xterm-enable-window-alteration-sequences"),
-																	(0 != dataPtr->usesXTermSequences));
-									terminalKeyValueMgrPtr->addFlag(CFSTR("terminal-line-wrap"),
-																	(0 != dataPtr->usesVTWrap));
-									terminalKeyValueMgrPtr->addFlag(CFSTR("terminal-clear-saves-lines"),
-																	(0 != dataPtr->usesVTWrap));
-									
-									switch (dataPtr->metaKey)
-									{
-									// these numbers must match values actually saved
-									// by older versions of MacTelnet
-									case 2:
-										terminalKeyValueMgrPtr->addString(CFSTR("key-map-emacs-meta"), CFSTR("option"));
-										break;
-									
-									case 1:
-										terminalKeyValueMgrPtr->addString(CFSTR("key-map-emacs-meta"), CFSTR("control+command"));
-										break;
-									
-									case 0:
-									default:
-										terminalKeyValueMgrPtr->addString(CFSTR("key-map-emacs-meta"), CFSTR(""));
-										break;
-									}
-									
-									terminalKeyValueMgrPtr->addString(CFSTR("command-key-emacs-move-down"),
-																		(0 != dataPtr->usesEmacsArrows)
-																		? CFSTR("down-arrow") : CFSTR(""));
-									terminalKeyValueMgrPtr->addString(CFSTR("command-key-emacs-move-left"),
-																		(0 != dataPtr->usesEmacsArrows)
-																		? CFSTR("left-arrow") : CFSTR(""));
-									terminalKeyValueMgrPtr->addString(CFSTR("command-key-emacs-move-right"),
-																		(0 != dataPtr->usesEmacsArrows)
-																		? CFSTR("right-arrow") : CFSTR(""));
-									terminalKeyValueMgrPtr->addString(CFSTR("command-key-emacs-move-up"),
-																		(0 != dataPtr->usesEmacsArrows)
-																		? CFSTR("up-arrow") : CFSTR(""));
-									
-									terminalKeyValueMgrPtr->addString(CFSTR("command-key-terminal-end"),
-																		(0 != dataPtr->mapsPageJumpKeys)
-																		? CFSTR("end") : CFSTR(""));
-									terminalKeyValueMgrPtr->addString(CFSTR("command-key-terminal-home"),
-																		(0 != dataPtr->mapsPageJumpKeys)
-																		? CFSTR("home") : CFSTR(""));
-									terminalKeyValueMgrPtr->addString(CFSTR("command-key-terminal-page-down"),
-																		(0 != dataPtr->mapsPageJumpKeys)
-																		? CFSTR("page-down") : CFSTR(""));
-									terminalKeyValueMgrPtr->addString(CFSTR("command-key-terminal-page-up"),
-																		(0 != dataPtr->mapsPageJumpKeys)
-																		? CFSTR("page-up") : CFSTR(""));
-									
-									terminalKeyValueMgrPtr->addFlag(CFSTR("data-receive-do-not-strip-high-bit"),
-																	(0 != dataPtr->usesEightBits));
-									terminalKeyValueMgrPtr->addFlag(CFSTR("terminal-clear-saves-lines"),
-																	(0 != dataPtr->savesOnClear));
-									
-									{
-										CFStringRef		answerBackCFString = CFStringCreateWithPascalString
-																				(kCFAllocatorDefault,
-																					dataPtr->answerBackMessage,
-																					kCFStringEncodingMacRoman);
-										
-										
-										if (nullptr != answerBackCFString)
-										{
-											terminalKeyValueMgrPtr->addString(CFSTR("terminal-emulator-answerback"),
-																				answerBackCFString);
-											CFRelease(answerBackCFString), answerBackCFString = nullptr;
-										}
-									}
-									
-									// NOT remapping the keypad top row means that these keys send VT220 sequences
-									// (for VT220 terminals)
-									terminalKeyValueMgrPtr->addString(CFSTR("command-key-vt220-pf1"),
-																		(0 == dataPtr->remapKeypad)
-																		? CFSTR("keypad-clear") : CFSTR(""));
-									terminalKeyValueMgrPtr->addString(CFSTR("command-key-vt220-pf2"),
-																		(0 == dataPtr->remapKeypad)
-																		? CFSTR("keypad-=") : CFSTR(""));
-									terminalKeyValueMgrPtr->addString(CFSTR("command-key-vt220-pf3"),
-																		(0 == dataPtr->remapKeypad)
-																		? CFSTR("keypad-/") : CFSTR(""));
-									terminalKeyValueMgrPtr->addString(CFSTR("command-key-vt220-pf4"),
-																		(0 == dataPtr->remapKeypad)
-																		? CFSTR("keypad-*") : CFSTR(""));
-								}
-								
-								if (nullptr != formatKeyValueMgrPtr)
-								{
-									//
-									// convert terminal data from the old structure;
-									// the polymorphism of the key value manager causes
-									// these settings to automatically go either directly
-									// into MacTelnet-domain Core Foundation preferences,
-									// or a sub-dictionary that is stored in favorites
-									//
-									
-									{
-										CFArrayRef		colorArray = nullptr;
-										
-										
-										if (convertRGBColorToCFArray(&dataPtr->foregroundNormalColor, colorArray))
-										{
-											formatKeyValueMgrPtr->addArray(CFSTR("terminal-color-normal-foreground-rgb"),
-																			colorArray);
-											CFRelease(colorArray), colorArray = nullptr;
-										}
-										if (convertRGBColorToCFArray(&dataPtr->backgroundNormalColor, colorArray))
-										{
-											formatKeyValueMgrPtr->addArray(CFSTR("terminal-color-normal-background-rgb"),
-																			colorArray);
-											CFRelease(colorArray), colorArray = nullptr;
-										}
-										if (convertRGBColorToCFArray(&dataPtr->foregroundBlinkingColor, colorArray))
-										{
-											formatKeyValueMgrPtr->addArray(CFSTR("terminal-color-blinking-foreground-rgb"),
-																			colorArray);
-											CFRelease(colorArray), colorArray = nullptr;
-										}
-										if (convertRGBColorToCFArray(&dataPtr->backgroundBlinkingColor, colorArray))
-										{
-											formatKeyValueMgrPtr->addArray(CFSTR("terminal-color-blinking-background-rgb"),
-																			colorArray);
-											CFRelease(colorArray), colorArray = nullptr;
-										}
-										if (convertRGBColorToCFArray(&dataPtr->foregroundBoldColor, colorArray))
-										{
-											formatKeyValueMgrPtr->addArray(CFSTR("terminal-color-bold-foreground-rgb"),
-																			colorArray);
-											CFRelease(colorArray), colorArray = nullptr;
-										}
-										if (convertRGBColorToCFArray(&dataPtr->backgroundBoldColor, colorArray))
-										{
-											formatKeyValueMgrPtr->addArray(CFSTR("terminal-color-bold-background-rgb"),
-																			colorArray);
-											CFRelease(colorArray), colorArray = nullptr;
-										}
-									}
-									
-									formatKeyValueMgrPtr->addInteger(CFSTR("terminal-font-size-points"), dataPtr->fontSize);
-									
-									{
-										CFStringRef		fontCFString = CFStringCreateWithPascalString
-																		(kCFAllocatorDefault,
-																			dataPtr->normalFont,
-																			kCFStringEncodingMacRoman);
-										
-										
-										if (nullptr != fontCFString)
-										{
-											formatKeyValueMgrPtr->addString(CFSTR("terminal-font-family"), fontCFString);
-											CFRelease(fontCFString), fontCFString = nullptr;
-										}
-									}
-								}
-								
-								if (nullptr != terminalKeyValueMgrPtr)
-								{
-									delete terminalKeyValueMgrPtr, terminalKeyValueMgrPtr = nullptr;
-								}
-								
-								if (nullptr != formatKeyValueMgrPtr)
-								{
-									delete formatKeyValueMgrPtr, formatKeyValueMgrPtr = nullptr;
-								}
-							}
-						}
-						
-						// old resource no longer needed
-						ReleaseResource(handle), handle = nullptr;
-					}
-				}
-				
-				if (nullptr != terminalsArray)
-				{
-					setMacTelnetPreference(CFSTR("favorite-terminals"), terminalsArray);
-					CFRelease(terminalsArray), terminalsArray = nullptr;
-				}
-				
-				if (nullptr != stylesArray)
-				{
-					setMacTelnetPreference(CFSTR("favorite-styles"), stylesArray);
-					CFRelease(stylesArray), stylesArray = nullptr;
-				}
-			}
-			
-			// read Sessions
-			UseResFile(gOldPrefsFileRefNum);
-			collectionCount = Count1Resources('SPRF');
-			if (collectionCount > 0)
-			{
-				CFMutableArrayRef	sessionsArray = nullptr;
-				
-				
-				sessionsArray = CFArrayCreateMutable(kCFAllocatorDefault, collectionCount/* maximum length */,
-														&kCFTypeArrayCallBacks);
-				for (i = 0; i < collectionCount; ++i)
-				{
-					UseResFile(gOldPrefsFileRefNum);
-					handle = Get1IndResource('SPRF', i + 1/* one-based index */);
-					error = ResError();
-					if (nullptr != handle)
-					{
-						SessionPrefsPtr		dataPtr = REINTERPRET_CAST(*handle, SessionPrefsPtr);
-						
-						
-						if (nullptr != dataPtr)
-						{
-							SInt16		resID = 0;
-							ResType		resType = '----';
-							Str255		resName;
-							
-							
-							GetResInfo(handle, &resID, &resType, resName);
-							error = ResError();
-							if (noErr == error)
-							{
-								CFKeyValueInterface*	sessionKeyValueMgrPtr = nullptr;
-								
-								
-								// if these are the Default preferences, store them directly in CFPreferences
-								if (0 == PLstrcmp(resName, "\pDefault"))
-								{
-									sessionKeyValueMgrPtr = new CFKeyValuePreferences(kMacTelnetApplicationID);
-								}
-								else
-								{
-									// a non-default collection; create a favorite dictionary,
-									// and add a Unicode-friendly name to it
-									CFStringRef		resNameCFString = CFStringCreateWithPascalString
-																		(kCFAllocatorDefault, resName,
-																			kCFStringEncodingMacRoman);
-									
-									
-									if (nullptr != resNameCFString)
-									{
-										CFDataRef	resNameCFData = CFStringCreateExternalRepresentation
-																	(kCFAllocatorDefault, resNameCFString,
-																		kCFStringEncodingUnicode/* must match what MacTelnet uses */,
-																		'\?'/* loss byte */);
-										
-										
-										if (nullptr != resNameCFData)
-										{
-											CFMutableDictionaryRef	infoDictionary = nullptr;
-											
-											
-											// create entry for session data
-											infoDictionary = CFDictionaryCreateMutable
-																(kCFAllocatorDefault, 0/* maximum capacity; 0 = infinite */,
-																	&kCFTypeDictionaryKeyCallBacks,
-																	&kCFTypeDictionaryValueCallBacks);
-											if (nullptr != infoDictionary)
-											{
-												// creating a wrapper automatically retains the original
-												// dictionary, so the local reference can be released
-												sessionKeyValueMgrPtr = new CFKeyValueDictionary(infoDictionary);
-												if (nullptr != sessionKeyValueMgrPtr)
-												{
-													// attach a Unicode friendly name (and a regular string, just
-													// in case the Unicode one is messed up); this automatically
-													// retains the data and string, so the local one can be released
-													sessionKeyValueMgrPtr->addData(CFSTR("name"), resNameCFData);
-													sessionKeyValueMgrPtr->addString(CFSTR("name-string"), resNameCFString);
-												}
-												
-												if (nullptr != sessionsArray)
-												{
-													CFArrayAppendValue(sessionsArray, infoDictionary);
-												}
-												else
-												{
-													// error, unable to include settings in favorites list!
-												}
-												
-												CFRelease(infoDictionary), infoDictionary = nullptr;
-											}
-											
-											// no longer needed locally
-											CFRelease(resNameCFData), resNameCFData = nullptr;
-										}
-										
-										// no longer needed locally
-										CFRelease(resNameCFString), resNameCFString = nullptr;
-									}
-								}
-								
-								if (nullptr != sessionKeyValueMgrPtr)
-								{
-									// this information was implied in older MacTelnet versions
-									sessionKeyValueMgrPtr->addString(CFSTR("server-protocol"), CFSTR("telnet"));
-									
-									sessionKeyValueMgrPtr->addInteger(CFSTR("server-port"), dataPtr->port);
-									
-									switch (dataPtr->modeForTEK)
-									{
-									// these numbers must match values actually saved
-									// by older versions of MacTelnet
-									case 1:
-										sessionKeyValueMgrPtr->addString(CFSTR("tek-mode"), CFSTR("4105"));
-										break;
-									
-									case 0:
-										sessionKeyValueMgrPtr->addString(CFSTR("tek-mode"), CFSTR("4014"));
-										break;
-									
-									case -1:
-									default:
-										sessionKeyValueMgrPtr->addString(CFSTR("tek-mode"), CFSTR("off"));
-										break;
-									}
-									
-									// dataPtr->pasteMethod is no longer supported
-									// dataPtr->pasteBlockSize is no longer supported
-									
-									sessionKeyValueMgrPtr->addString(CFSTR("key-map-new-line"),
-																		(0 != dataPtr->mapCR) ? CFSTR("\\015\\000") : CFSTR("\\015\\012"));
-									sessionKeyValueMgrPtr->addFlag(CFSTR("line-mode-enabled"), (0 != dataPtr->lineMode));
-									sessionKeyValueMgrPtr->addFlag(CFSTR("tek-page-clears-screen"), (0 != dataPtr->tekPageClears));
-									sessionKeyValueMgrPtr->addFlag(CFSTR("data-send-local-echo-half-duplex"), (0 != dataPtr->halfDuplex));
-									sessionKeyValueMgrPtr->addString(CFSTR("key-map-delete"),
-																		(0 != dataPtr->deleteMapping) ? CFSTR("delete") : CFSTR("backspace"));
-									
-									{
-										UniChar			charArray[2];
-										CFStringRef		charCFString = nullptr;
-										
-										
-										charArray[0] = '^';
-										
-										charArray[1] = dataPtr->interruptKey + '@'; // convert to visible character
-										charCFString = CFStringCreateWithCharacters
-														(kCFAllocatorDefault, charArray, sizeof(charArray) / sizeof(UniChar));
-										if (nullptr != charCFString)
-										{
-											sessionKeyValueMgrPtr->addString(CFSTR("command-key-interrupt-process"), charCFString);
-											CFRelease(charCFString), charCFString = nullptr;
-										}
-										charArray[1] = dataPtr->suspendKey + '@'; // convert to visible character
-										charCFString = CFStringCreateWithCharacters
-														(kCFAllocatorDefault, charArray, sizeof(charArray) / sizeof(UniChar));
-										if (nullptr != charCFString)
-										{
-											sessionKeyValueMgrPtr->addString(CFSTR("command-key-suspend-output"), charCFString);
-											CFRelease(charCFString), charCFString = nullptr;
-										}
-										charArray[1] = dataPtr->resumeKey + '@'; // convert to visible character
-										charCFString = CFStringCreateWithCharacters
-														(kCFAllocatorDefault, charArray, sizeof(charArray) / sizeof(UniChar));
-										if (nullptr != charCFString)
-										{
-											sessionKeyValueMgrPtr->addString(CFSTR("command-key-resume-output"), charCFString);
-											CFRelease(charCFString), charCFString = nullptr;
-										}
-									}
-									
-									{
-										CFStringRef		nameCFString = nullptr;
-										
-										
-										nameCFString = CFStringCreateWithPascalString
-														(kCFAllocatorDefault, dataPtr->terminalEmulationName,
-															kCFStringEncodingMacRoman);
-										if (nullptr != nameCFString)
-										{
-											sessionKeyValueMgrPtr->addString(CFSTR("terminal-favorite"), nameCFString);
-											CFRelease(nameCFString), nameCFString = nullptr;
-										}
-										
-										nameCFString = CFStringCreateWithPascalString
-														(kCFAllocatorDefault, dataPtr->translationTableName,
-															kCFStringEncodingMacRoman);
-										if (nullptr != nameCFString)
-										{
-											sessionKeyValueMgrPtr->addString(CFSTR("terminal-text-translation-table"), nameCFString);
-											CFRelease(nameCFString), nameCFString = nullptr;
-										}
-										
-										nameCFString = CFStringCreateWithPascalString
-														(kCFAllocatorDefault, dataPtr->hostName,
-															kCFStringEncodingMacRoman);
-										if (nullptr != nameCFString)
-										{
-											sessionKeyValueMgrPtr->addString(CFSTR("server-host"), nameCFString);
-											CFRelease(nameCFString), nameCFString = nullptr;
-										}
-									}
-									
-									sessionKeyValueMgrPtr->addFlag(CFSTR("data-send-local-echo-enabled"), (0 != dataPtr->halfDuplex));
-									
-									sessionKeyValueMgrPtr->addFlag(CFSTR("terminal-capture-auto-start"), (0 != dataPtr->autoCaptureToFile));
-									
-									sessionKeyValueMgrPtr->addInteger(CFSTR("data-receive-buffer-size-bytes"), dataPtr->netBlockSize);
-									
-									// !!! INCOMPLETE !!!
-								}
-								
-								if (nullptr != sessionKeyValueMgrPtr)
-								{
-									delete sessionKeyValueMgrPtr, sessionKeyValueMgrPtr = nullptr;
-								}
-							}
-						}
-						
-						// old resource no longer needed
-						ReleaseResource(handle), handle = nullptr;
-					}
-				}
-				
-				if (nullptr != sessionsArray)
-				{
-					setMacTelnetPreference(CFSTR("favorite-sessions"), sessionsArray);
-					CFRelease(sessionsArray), sessionsArray = nullptr;
-				}
-			}
-			
-			// save XML
-			unless (CFPreferencesAppSynchronize(kMacTelnetApplicationID)) result = kMy_PrefsResultGenericFailure;
-		}
-	}
-	
-	return result;
-}// actionLegacyUpdates
-
 
 /*!
 Upgrades from version 2 to version 3.  Some keys are
@@ -1305,9 +426,7 @@ actionVersion6 ()
 
 
 /*!
-Adds an error to the reply record; at least the
-error code is provided, and optionally you can
-accompany it with an equivalent message.
+Adds an error code to the reply record.
 
 You should use this to return error codes from
 ALL Apple Events; if you do, return "noErr" from
@@ -1317,8 +436,7 @@ a specific error code.
 (3.1)
 */
 OSStatus
-addErrorToReply		(ConstStringPtr		inErrorMessageOrNull,
-					 OSStatus			inError,
+addErrorToReply		(OSStatus			inError,
 					 AppleEventPtr		inoutReplyAppleEventPtr)
 {
 	OSStatus	result = noErr;
@@ -1333,14 +451,6 @@ addErrorToReply		(ConstStringPtr		inErrorMessageOrNull,
 		{
 			result = AEPutParamPtr(inoutReplyAppleEventPtr, keyErrorNumber, typeSInt16,
 									&inError, sizeof(inError));
-		}
-		
-		// if provided, also put the error message
-		if (nullptr != inErrorMessageOrNull)
-		{
-			result = AEPutParamPtr(inoutReplyAppleEventPtr, keyErrorString, typeChar,
-									inErrorMessageOrNull + 1/* skip length byte */,
-									STATIC_CAST(PLstrlen(inErrorMessageOrNull) * sizeof(UInt8), Size));
 		}
 	}
 	else
@@ -1501,102 +611,6 @@ copyFileOrFolderCFString	(My_FolderStringType	inWhichString,
 
 
 /*!
-This routine can be used to determine the directory
-ID of a directory described by a file system
-specification record.
-
-(3.1)
-*/
-long
-getDirectoryIDFromFSSpec	(FSSpec const*		inFSSpecPtr)
-{
-	StrFileName		name;
-	CInfoPBRec		thePB;
-	long			result = 0L;
-	
-	
-	PLstrcpy(name, inFSSpecPtr->name);
-	thePB.dirInfo.ioCompletion = 0L;
-	thePB.dirInfo.ioNamePtr = name;
-	thePB.dirInfo.ioVRefNum = inFSSpecPtr->vRefNum;
-	thePB.dirInfo.ioFDirIndex = 0;
-	thePB.dirInfo.ioDrDirID = inFSSpecPtr->parID;
-	
-	if (noErr == PBGetCatInfoSync(&thePB)) result = thePB.dirInfo.ioDrDirID;
-	
-	return result;
-}// getDirectoryIDFromFSSpec
-
-
-/*!
-Fills in a file system specification record with
-information for a particular folder.  If the folder
-doesn’t exist, it is created.
-
-The name information for the resultant file
-specification record is left blank, so that you may
-fill in any name you wish.  That way, you can either
-use FSMakeFSSpec() to obtain a file specification
-for a file contained in the requested folder, or you
-can leave the name blank, and FSMakeFSSpec() will
-fill in the name of the folder and adjust the parent
-directory ID appropriately.
-
-If no problems occur, "noErr" is returned.  If the
-given folder type is not recognized as one of the
-valid types, "invalidFolderTypeErr" is returned.
-
-(3.1)
-*/
-OSStatus
-getFolderFSSpec		(My_MacTelnetFolder		inFolderType,
-					 FSSpec*				outFolderFSSpecPtr)
-{
-	OSStatus		result = noErr;
-	
-	
-	if (nullptr == outFolderFSSpecPtr) result = memPCErr;
-	else
-	{
-		switch (inFolderType)
-		{
-		case kMy_MacTelnetFolderPreferences: // the “MacTelnet Preferences” folder inside the system “Preferences” folder
-			result = getFolderFSSpec(kMy_MacTelnetFolderMacPreferences, outFolderFSSpecPtr);
-			if (noErr == result)
-			{
-				long	unusedDirID = 0L;
-				
-				
-				result = makeLocalizedFSSpec(outFolderFSSpecPtr->vRefNum, outFolderFSSpecPtr->parID,
-												kUIStrings_FolderNameApplicationPreferences, outFolderFSSpecPtr);
-				
-				// if no MacTelnet Preferences folder exists in the current user’s Preferences folder, create it
-				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
-				
-				// now reconstruct the FSSpec so the “parent” directory is the directory itself, and the name is blank
-				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
-				transformFolderFSSpec(outFolderFSSpecPtr);
-			}
-			break;
-		
-		case kMy_MacTelnetFolderMacPreferences: // the Mac OS “Preferences” folder for the current user
-			result = FindFolder(kUserDomain, kPreferencesFolderType, kCreateFolder,
-								&(outFolderFSSpecPtr->vRefNum), &(outFolderFSSpecPtr->parID));
-			outFolderFSSpecPtr->name[0] = 0;
-			break;
-		
-		default:
-			// ???
-			result = invalidFolderTypeErr;
-			break;
-		}
-	}
-	
-	return result;
-}// getFolderFSSpec
-
-
-/*!
 This routine installs Apple Event handlers for
 the Required Suite, including the six standard
 Apple Events (open and print documents, open,
@@ -1639,110 +653,6 @@ installRequiredHandlers ()
 	
 	return result;
 }// installRequiredHandlers
-
-
-/*!
-Fills in a global structure from the current
-resource file.
-
-\retval noErr
-if the load succeeds
-
-\retval any Resource Manager error
-if the load fails
-
-(3.0)
-*/
-OSStatus
-loadPreferencesStructure	(void*		outStructurePtr,
-							 size_t		inStructureSize,
-							 ResType	inResourceType,
-							 SInt16		inResourceID)
-{
-	Handle		prefsResourceHandle = nullptr;
-	OSStatus	result = noErr;
-	
-	
-	prefsResourceHandle = Get1Resource(inResourceType, inResourceID);
-	result = ResError();
-	if (nullptr == prefsResourceHandle) result = resNotFound;
-	else if (noErr == result)
-	{
-		std::memcpy(outStructurePtr, *prefsResourceHandle, inStructureSize);
-		ReleaseResource(prefsResourceHandle);
-	}
-	
-	return result;
-}// loadPreferencesStructure
-
-
-/*!
-Locates the specified file or folder name and calls
-FSMakeFSSpec() with the given volume and directory
-ID information.  The result is an FSSpec with a
-Pascal string copy of the given file name string
-(unless FSMakeFSSpec() does any further munging).
-
-IMPORTANT: This routine is ironically unfriendly to
-           localization.  A future routine (probably
-           named makeLocalizedFSRef()) will be able
-		   to handle Unicode filenames.
-
-\retval noErr
-if the FSSpec is created successfully
-
-\retval paramErr
-if no file name with the given ID exists
-
-\retval kTECNoConversionPathErr
-if conversion is not possible (arbitrary return value,
-used even without Text Encoding Converter)
-
-\retval (other)
-if an OS error occurred (note that "fnfErr" is
-common and simply means that you are trying to
-create a specification for a nonexistent file; that
-may be what you are intending to do)
-
-(3.1)
-*/
-OSStatus
-makeLocalizedFSSpec		(SInt16					inVRefNum,
-						 SInt32					inDirID,
-						 My_FolderStringType	inWhichString,
-						 FSSpec*				outFSSpecPtr)
-{
-	CFStringRef			nameCFString = nullptr;
-	My_StringResult		stringResult = kMy_StringResultOK;
-	OSStatus			result = noErr;
-	
-	
-	stringResult = copyFileOrFolderCFString(inWhichString, &nameCFString);
-	
-	// if the string was obtained, call FSMakeFSSpec
-	if (kMy_StringResultOK == stringResult)
-	{
-		Str255		name;
-		
-		
-		if (CFStringGetPascalString(nameCFString, name, sizeof(name), kCFStringEncodingMacRoman/* presumed; but this always has been */))
-		{
-			// got Pascal string representation OK; so, attempt to create FSSpec!
-			result = FSMakeFSSpec(inVRefNum, inDirID, name, outFSSpecPtr);
-		}
-		else
-		{
-			// some kind of conversion error...
-			result = kTECNoConversionPathErr;
-		}
-	}
-	else
-	{
-		result = paramErr;
-	}
-	
-	return result;
-}// makeLocalizedFSSpec
 
 
 /*!
@@ -1872,11 +782,10 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		// reads it back).
 		if (diskVersion < 1)
 		{
-			// Since a “lack of version” is considered version 0, this
-			// converter must perform all upgrades required to move
-			// legacy NCSA Telnet or MacTelnet 3.0 preferences into the
-			// XML era.
-			actionResult = actionLegacyUpdates();
+			// These preferences are very old (resource forks from the
+			// MacTelnet program) and as of MacTerm 4.1 they are no
+			// longer auto-converted...they are just ignored.
+			actionResult = kMy_PrefsResultGenericFailure;
 		}
 		if (diskVersion < 2)
 		{
@@ -2067,7 +976,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		AEDisposeDesc(&quitEvent);
 	}
 	
-	(OSStatus)addErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	(OSStatus)addErrorToReply(error, outReplyAppleEventPtr);
 	return result;
 }// receiveApplicationOpen
 
@@ -2089,7 +998,7 @@ receiveApplicationReopen	(AppleEvent const*	inAppleEventPtr,
 	
 	error = noErr;
 	
-	(OSStatus)addErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	(OSStatus)addErrorToReply(error, outReplyAppleEventPtr);
 	return result;
 }// receiveApplicationReopen
 
@@ -2111,7 +1020,7 @@ receiveApplicationPrefs		(AppleEvent const*	inAppleEventPtr,
 	
 	error = noErr;
 	
-	(OSStatus)addErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	(OSStatus)addErrorToReply(error, outReplyAppleEventPtr);
 	return result;
 }// receiveApplicationPrefs
 
@@ -2168,7 +1077,7 @@ receiveApplicationQuit	(AppleEvent const*	inAppleEventPtr,
 		QuitApplicationEventLoop();
 	}
 	
-	(OSStatus)addErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	(OSStatus)addErrorToReply(error, outReplyAppleEventPtr);
 	return result;
 }// receiveApplicationQuit
 
@@ -2190,7 +1099,7 @@ receiveOpenDocuments	(AppleEvent const*	inAppleEventPtr,
 	
 	error = noErr;
 	
-	(OSStatus)addErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	(OSStatus)addErrorToReply(error, outReplyAppleEventPtr);
 	return result;
 }// receiveOpenDocuments
 
@@ -2212,7 +1121,7 @@ receivePrintDocuments	(AppleEvent const*	inAppleEventPtr,
 	
 	error = noErr;
 	
-	(OSStatus)addErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	(OSStatus)addErrorToReply(error, outReplyAppleEventPtr);
 	return result;
 }// receivePrintDocuments
 
@@ -2369,26 +1278,6 @@ setMacTermPreference	(CFStringRef		inKey,
 {
 	CFPreferencesSetAppValue(inKey, inValue, kMacTermApplicationID);
 }// setMacTermPreference
-
-
-/*!
-Transforms a folder specification so that the
-“file name” of the folder is empty, and the
-“parent ID” is the ID of the folder itself.
-This is very useful, since it then becomes
-easy to create file specifications for files
-*inside* the folder (and yet the folder
-specification itself remains a valid way to
-refer to the folder).
-
-(3.1)
-*/
-void
-transformFolderFSSpec		(FSSpec*	inoutFolderFSSpecPtr)
-{
-	inoutFolderFSSpecPtr->parID = getDirectoryIDFromFSSpec(inoutFolderFSSpecPtr);
-	PLstrcpy(inoutFolderFSSpecPtr->name, "\p");
-}// transformFolderFSSpec
 
 } // anonymous namespace
 
