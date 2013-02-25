@@ -7,7 +7,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -714,7 +714,6 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 	
 	
 	// unhighlight all, then highlight the new one; only possible on Tiger or later
-	if (FlagManager_Test(kFlagOS10_4API))
 	{
 		CategoryToolbarItems::const_iterator	toItem = gCategoryToolbarItems().begin();
 		CategoryToolbarItems::const_iterator	itemEnd = gCategoryToolbarItems().end();
@@ -724,10 +723,10 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 		for (; toItem != itemEnd; ++toItem)
 		{
 			(OSStatus)HIToolbarItemChangeAttributes(*toItem, 0/* attributes to set */,
-													FUTURE_SYMBOL(1 << 7, kHIToolbarItemSelected)/* attributes to clear */);
+													kHIToolbarItemSelected/* attributes to clear */);
 		}
 		(OSStatus)HIToolbarItemChangeAttributes(gCategoryToolbarItems()[inZeroBasedPanelNumber],
-												FUTURE_SYMBOL(1 << 7, kHIToolbarItemSelected)/* attributes to set */,
+												kHIToolbarItemSelected/* attributes to set */,
 												0/* attributes to clear */);
 	}
 	
@@ -1191,17 +1190,12 @@ init ()
 							kWindowInWindowMenuAttribute/* attributes to clear */);
 		}
 		
-	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-		if (FlagManager_Test(kFlagOS10_5API))
-		{
-			// although the API is available on 10.4, the Spaces-related flags
-			// will only work on Leopard
-			(OSStatus)HIWindowChangeAvailability
-						(gPreferencesWindow,
-							FUTURE_SYMBOL(1 << 9, kHIWindowMoveToActiveSpace)/* attributes to set */,
-							0/* attributes to clear */);
-		}
-	#endif
+		// although the API is available on 10.4, the Spaces-related flags
+		// will only work on Leopard
+		(OSStatus)HIWindowChangeAvailability
+					(gPreferencesWindow,
+						kHIWindowMoveToActiveSpace/* attributes to set */,
+						0/* attributes to clear */);
 		
 		{
 			HIViewRef	panelUserPane = (mainWindow.returnHIViewWithID(idMyUserPaneAnyPrefPanel) << HIViewWrap_AssertExists);
@@ -1830,10 +1824,9 @@ newPanelSelector	(Panel_Ref		inPanel)
 				OptionBits			itemOptions = kHIToolbarItemCantBeRemoved | kHIToolbarItemAnchoredLeft;
 				
 				
-				if ((0 == dataPtr->listIndex) &&
-					(FlagManager_Test(kFlagOS10_4API)))
+				if (0 == dataPtr->listIndex)
 				{
-					itemOptions |= FUTURE_SYMBOL(1 << 7, kHIToolbarItemSelected);
+					itemOptions |= kHIToolbarItemSelected;
 				}
 				if (noErr == HIToolbarItemCreate(Panel_ReturnKind(inPanel), itemOptions, &newItem))
 				{

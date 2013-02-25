@@ -249,8 +249,7 @@ Clipboard_AddCFStringToPasteboard	(CFStringRef		inStringToCopy,
 			else
 			{
 				result = PasteboardPutItemFlavor(target, (PasteboardItemID)inStringToCopy,
-													FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"),
-																	kUTTypeUTF16ExternalPlainText),
+													kUTTypeUTF16ExternalPlainText,
 													externalRepresentation, kPasteboardFlavorNoFlags);
 				CFRelease(externalRepresentation), externalRepresentation = nullptr;
 			}
@@ -276,8 +275,7 @@ Clipboard_AddCFStringToPasteboard	(CFStringRef		inStringToCopy,
 				else
 				{
 					OSStatus	error = PasteboardPutItemFlavor(target, (PasteboardItemID)inStringToCopy,
-																FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"),
-																				kUTTypeUTF8PlainText),
+																kUTTypeUTF8PlainText,
 																externalRepresentation, kPasteboardFlavorNoFlags);
 					
 					
@@ -303,8 +301,7 @@ Clipboard_AddCFStringToPasteboard	(CFStringRef		inStringToCopy,
 				else
 				{
 					OSStatus	error = PasteboardPutItemFlavor(target, (PasteboardItemID)inStringToCopy,
-																FUTURE_SYMBOL(CFSTR("public.plain-text"),
-																				kUTTypePlainText),
+																kUTTypePlainText,
 																externalRepresentation, kPasteboardFlavorNoFlags);
 					
 					
@@ -590,8 +587,7 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 			CFStringRef			thisDelimiter = nullptr; // contract is to never release this string
 			
 			
-			if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText), i/* which item */,
-									outUTI, itemID, kPasteboard))
+			if (Clipboard_Contains(kUTTypePlainText, i/* which item */, outUTI, itemID, kPasteboard))
 			{
 				CFDataRef	textData = nullptr;
 				
@@ -606,23 +602,20 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 					
 					
 					// try anything that works, as long as previous translations fail
-					if ((false == translationOK) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"),
-																							kUTTypeUTF16ExternalPlainText)))
+					if ((false == translationOK) && UTTypeConformsTo(outUTI, kUTTypeUTF16ExternalPlainText))
 					{
 						thisCFString = CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, textData,
 																				kCFStringEncodingUnicode);
 						translationOK = (nullptr != thisCFString);
 					}
-					if ((false == translationOK) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"),
-																							kUTTypeUTF16PlainText)))
+					if ((false == translationOK) && UTTypeConformsTo(outUTI, kUTTypeUTF16PlainText))
 					{
 						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
 																CFDataGetLength(textData), kCFStringEncodingUnicode,
 																false/* is external */);
 						translationOK = (nullptr != thisCFString);
 					}
-					if ((false == translationOK) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"),
-																							kUTTypeUTF8PlainText)))
+					if ((false == translationOK) && UTTypeConformsTo(outUTI, kUTTypeUTF8PlainText))
 					{
 						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
 																CFDataGetLength(textData), kCFStringEncodingUTF8,
@@ -636,8 +629,7 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 																false/* is external */);
 						translationOK = (nullptr != thisCFString);
 					}
-					if ((false == translationOK) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.plain-text"),
-																							kUTTypePlainText)))
+					if ((false == translationOK) && UTTypeConformsTo(outUTI, kUTTypePlainText))
 					{
 						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
 																CFDataGetLength(textData), kCFStringEncodingUTF8,
@@ -651,7 +643,7 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 						
 						// don’t give up just yet...attempt to translate this data into something presentable
 						thisCFString = nullptr;
-						error = TranslationCreate(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"), kUTTypeUTF16PlainText),
+						error = TranslationCreate(outUTI, kUTTypeUTF16PlainText,
 													kTranslationDataTranslation, &translationInfo);
 						if (noErr == error)
 						{
@@ -680,8 +672,7 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 					CFRelease(textData), textData = nullptr;
 				}
 			}
-			else if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.file-url"), kUTTypeFileURL), i/* which item */,
-										outUTI, itemID, kPasteboard))
+			else if (Clipboard_Contains(kUTTypeFileURL, i/* which item */, outUTI, itemID, kPasteboard))
 			{
 				CFDataRef	textData = nullptr;
 				
@@ -800,8 +791,7 @@ Clipboard_CreateCGImageFromPasteboard	(CGImageRef&		outImage,
 	Boolean					result = false;
 	
 	
-	if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.image"), kUTTypeImage), 0/* which item, or zero to check them all */,
-							outUTI, itemID, kPasteboard))
+	if (Clipboard_Contains(kUTTypeImage, 0/* which item, or zero to check them all */, outUTI, itemID, kPasteboard))
 	{
 		CFDataRef	imageData = nullptr;
 		
@@ -893,7 +883,7 @@ Clipboard_GetData	(Clipboard_DataConstraint	inConstraint,
 	assert(nullptr != inDataSourceOrNull);
 	
 	// NOTE: This returns only the first text format available.
-	isText = Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText), 0/* which item, or zero to check them all */,
+	isText = Clipboard_Contains(kUTTypePlainText, 0/* which item, or zero to check them all */,
 								actualTypeName, outConformingItemID, inDataSourceOrNull);
 	if (isText)
 	{
@@ -904,15 +894,11 @@ Clipboard_GetData	(Clipboard_DataConstraint	inConstraint,
 		//Console_WriteValueCFString("clipboard actually contains", actualTypeName);
 		if ((false == copyData) && (inConstraint & kClipboard_DataConstraintText8Bit))
 		{
-			if ((kCFCompareEqualTo == CFStringCompare
-										(actualTypeName, FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText),
-											0/* flags */)) ||
-				(kCFCompareEqualTo == CFStringCompare
-										(actualTypeName, FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"), kUTTypeUTF8PlainText),
-											0/* flags */)) ||
-				(kCFCompareEqualTo == CFStringCompare
-										(actualTypeName, CFSTR("com.apple.traditional-mac-plain-text"),
-											0/* flags */)))
+			if ((kCFCompareEqualTo == CFStringCompare(actualTypeName, kUTTypePlainText, 0/* flags */)) ||
+				(kCFCompareEqualTo == CFStringCompare(actualTypeName, kUTTypeUTF8PlainText, 0/* flags */)) ||
+				(kCFCompareEqualTo == CFStringCompare(actualTypeName,
+														CFSTR("com.apple.traditional-mac-plain-text"),
+														0/* flags */)))
 			{
 				// text that can be iterated over by byte (8-bit)
 				copyData = true;
@@ -920,9 +906,7 @@ Clipboard_GetData	(Clipboard_DataConstraint	inConstraint,
 		}
 		if ((false == copyData) && (inConstraint & kClipboard_DataConstraintText16BitNative))
 		{
-			if (kCFCompareEqualTo == CFStringCompare
-										(actualTypeName, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"), kUTTypeUTF16PlainText),
-											0/* flags */))
+			if (kCFCompareEqualTo == CFStringCompare(actualTypeName, kUTTypeUTF16PlainText, 0/* flags */))
 			{
 				// text that can be iterated over by word (16-bit) in native byte order
 				copyData = true;
@@ -1574,14 +1558,10 @@ initWithFrame:(NSRect)		aFrame
 		// the list of accepted drag text types should correspond with what
 		// Clipboard_CreateCFStringFromPasteboard() will actually support
 		[self registerForDraggedTypes:[NSArray arrayWithObjects:
-													(NSString*)FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"),
-																				kUTTypeUTF16ExternalPlainText),
-													(NSString*)FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"),
-																				kUTTypeUTF16PlainText),
-													(NSString*)FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"),
-																				kUTTypeUTF8PlainText),
-													(NSString*)FUTURE_SYMBOL(CFSTR("public.plain-text"),
-																				kUTTypePlainText),
+													(NSString*)kUTTypeUTF16ExternalPlainText,
+													(NSString*)kUTTypeUTF16PlainText,
+													(NSString*)kUTTypeUTF8PlainText,
+													(NSString*)kUTTypePlainText,
 													(NSString*)CFSTR("com.apple.traditional-mac-plain-text"),
 													nil]];
 	}

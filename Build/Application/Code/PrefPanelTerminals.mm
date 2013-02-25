@@ -7,7 +7,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -890,14 +890,9 @@ createContainerView		(Panel_Ref		inPanel,
 		assert_noerr(error);
 		
 		// set other nice things (most can be set in a NIB someday)
-	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-		if (FlagManager_Test(kFlagOS10_4API))
-		{
-			(OSStatus)DataBrowserChangeAttributes(emulationTweaksList,
-													FUTURE_SYMBOL(1 << 1, kDataBrowserAttributeListViewAlternatingRowColors)/* attributes to set */,
-													0/* attributes to clear */);
-		}
-	#endif
+		(OSStatus)DataBrowserChangeAttributes(emulationTweaksList,
+												kDataBrowserAttributeListViewAlternatingRowColors/* attributes to set */,
+												0/* attributes to clear */);
 		(OSStatus)SetDataBrowserListViewUsePlainBackground(emulationTweaksList, false);
 		(OSStatus)SetDataBrowserHasScrollBars(emulationTweaksList, false/* horizontal */, true/* vertical */);
 		

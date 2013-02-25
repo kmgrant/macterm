@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -1961,13 +1961,7 @@ init
 		self->segmentedControl = [[NSSegmentedControl alloc] initWithFrame:NSZeroRect];
 		[self->segmentedControl setTarget:self];
 		[self->segmentedControl setAction:@selector(performSegmentedControlAction:)];
-		if (FlagManager_Test(kFlagOS10_5API))
-		{
-			if ([self->segmentedControl respondsToSelector:@selector(setSegmentStyle:)])
-			{
-				[self->segmentedControl setSegmentStyle:FUTURE_SYMBOL(4, NSSegmentStyleTexturedSquare)];
-			}
-		}
+		[self->segmentedControl setSegmentStyle:NSSegmentStyleTexturedSquare];
 		
 		//[self setAction:@selector(performToolbarItemAction:)];
 		//[self setTarget:self];

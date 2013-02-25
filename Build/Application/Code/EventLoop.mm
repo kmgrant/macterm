@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -545,8 +545,8 @@ EventLoop_KeyIsActivatingCancelButton	(EventRef	inEvent)
 			{
 				// WARNING: technically, while the Escape key code is universal, the
 				// key code for “period“ is dependent on the keyboard layout; TEMPORARY
-				result = (((FUTURE_SYMBOL(0x35, kVK_Escape) == keyCode) && (0 == modifiers)) ||
-							((FUTURE_SYMBOL(0x2F, kVK_ANSI_Period) == keyCode) && (cmdKey == modifiers)));
+				result = (((kVK_Escape == keyCode) && (0 == modifiers)) ||
+							((kVK_ANSI_Period == keyCode) && (cmdKey == modifiers)));
 			}
 		}
 	}
@@ -595,8 +595,7 @@ EventLoop_KeyIsActivatingDefaultButton	(EventRef	inEvent)
 			{
 				// WARNING: technically, while the Return key code is universal, the
 				// key code for Enter is dependent on the keyboard layout; TEMPORARY
-				result = ((FUTURE_SYMBOL(0x24, kVK_Return) == keyCode) ||
-							(FUTURE_SYMBOL(0x4C, kVK_ANSI_KeypadEnter) == keyCode));
+				result = ((kVK_Return == keyCode) || (kVK_ANSI_KeypadEnter == keyCode));
 			}
 		}
 	}

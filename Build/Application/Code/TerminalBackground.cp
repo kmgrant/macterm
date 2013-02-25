@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -228,7 +228,7 @@ TerminalBackground_Init ()
 		
 		// the content view is not normally asked to draw, as an optimization;
 		// clear that flag so that the installed handler is actually invoked
-		error = HIViewChangeFeatures(contentView, 0/* attributes to set */, FUTURE_SYMBOL(1 << 27, kHIViewFeatureDoesNotDraw)/* attributes to clear */);
+		error = HIViewChangeFeatures(contentView, 0/* attributes to set */, kHIViewFeatureDoesNotDraw/* attributes to clear */);
 		assert_noerr(error);
 		
 		// tell the content view how to draw

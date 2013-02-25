@@ -6,7 +6,7 @@
 /*###############################################################
 
 	Interface Library 2.4
-	© 1998-2012 by Kevin Grant
+	© 1998-2013 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -363,10 +363,7 @@ Embedding_WindowUsesCompositingMode		(WindowRef		inWindow)
 	
 	if (noErr == GetWindowAttributes(inWindow, &windowAttributes))
 	{
-		// a raw attribute value is required as long as an older Mac OS X SDK
-		// is used that does not declare the named constant (which was added
-		// in Mac OS X 10.2)
-		result = (0 != (windowAttributes & FUTURE_SYMBOL(1L << 19, kWindowCompositingAttribute)));
+		result = (0 != (windowAttributes & kWindowCompositingAttribute));
 	}
 	
 	return result;
