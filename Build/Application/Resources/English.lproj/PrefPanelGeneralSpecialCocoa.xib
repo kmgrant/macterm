@@ -62,7 +62,7 @@
                     <string key="NSColorName">controlColor</string>
                     <object class="NSColor" key="NSColor">
                       <int key="NSColorSpace">3</int>
-                      <bytes key="NSWhite">MC42NjY2NjY2NjY3AA</bytes>
+                      <bytes key="NSWhite">MC42NjY2NjY2ODY1AA</bytes>
                     </object>
                   </object>
                   <object class="NSColor" key="NSTextColor" id="889686544">
@@ -1281,26 +1281,6 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
           <int key="connectionID">2001</int>
         </object>
         <object class="IBConnectionRecord">
-          <object class="IBBindingConnection" key="connection">
-            <string key="label">value: self.spacesPerTab</string>
-            <reference key="source" ref="857553783"/>
-            <reference key="destination" ref="17743444"/>
-            <object class="NSNibBindingConnector" key="connector">
-              <reference key="NSSource" ref="857553783"/>
-              <reference key="NSDestination" ref="17743444"/>
-              <string key="NSLabel">value: self.spacesPerTab</string>
-              <string key="NSBinding">value</string>
-              <string key="NSKeyPath">self.spacesPerTab</string>
-              <dictionary key="NSOptions">
-                <boolean value="YES" key="NSContinuouslyUpdatesValue"/>
-                <boolean value="YES" key="NSValidatesImmediately"/>
-              </dictionary>
-              <int key="NSNibBindingConnectorVersion">2</int>
-            </object>
-          </object>
-          <int key="connectionID">2030</int>
-        </object>
-        <object class="IBConnectionRecord">
           <object class="IBOutletConnection" key="connection">
             <string key="label">logicalLastResponder</string>
             <reference key="source" ref="17743444"/>
@@ -1532,6 +1512,26 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
           </object>
           <int key="connectionID">2086</int>
         </object>
+        <object class="IBConnectionRecord">
+          <object class="IBBindingConnection" key="connection">
+            <string key="label">value: self.spacesPerTab.numberStringValue</string>
+            <reference key="source" ref="857553783"/>
+            <reference key="destination" ref="17743444"/>
+            <object class="NSNibBindingConnector" key="connector">
+              <reference key="NSSource" ref="857553783"/>
+              <reference key="NSDestination" ref="17743444"/>
+              <string key="NSLabel">value: self.spacesPerTab.numberStringValue</string>
+              <string key="NSBinding">value</string>
+              <string key="NSKeyPath">self.spacesPerTab.numberStringValue</string>
+              <dictionary key="NSOptions">
+                <boolean value="YES" key="NSContinuouslyUpdatesValue"/>
+                <boolean value="YES" key="NSValidatesImmediately"/>
+              </dictionary>
+              <int key="NSNibBindingConnectorVersion">2</int>
+            </object>
+          </object>
+          <int key="connectionID">2088</int>
+        </object>
       </array>
       <object class="IBMutableOrderedSet" key="objectRecords">
         <array key="orderedObjects">
@@ -1572,10 +1572,10 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
               <reference ref="764012152"/>
               <reference ref="57157406"/>
               <reference ref="299886512"/>
-              <reference ref="857553783"/>
               <reference ref="599517486"/>
               <reference ref="344102352"/>
               <reference ref="388310962"/>
+              <reference ref="857553783"/>
             </array>
             <reference key="parent" ref="0"/>
             <string key="objectName">Managed View</string>
@@ -1872,6 +1872,9 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
         </object>
         <string key="2021.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
         <string key="2023.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+        <object class="NSAffineTransform" key="2023.IBViewBoundsToFrameTransform">
+          <bytes key="NSTransformStruct">P4AAAL+AAABDXwAAwwcAAA</bytes>
+        </object>
         <string key="2024.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
         <string key="2025.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
         <string key="2026.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -1886,7 +1889,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
       <nil key="activeLocalization"/>
       <dictionary class="NSMutableDictionary" key="localizations"/>
       <nil key="sourceID"/>
-      <int key="maxID">2086</int>
+      <int key="maxID">2088</int>
     </object>
     <object class="IBClassDescriber" key="IBDocument.Classes">
       <array class="NSMutableArray" key="referencedPartialClassDescriptions">

@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -39,7 +39,10 @@
 #include "GenericPanelTabs.h"
 #include "Panel.h"
 #include "Preferences.h"
-#include "PrefsContextManager.objc++.h"
+#ifdef __OBJC__
+#	include "PreferenceValue.objc++.h"
+#	include "PrefsContextManager.objc++.h"
+#endif
 #include "PrefsWindow.h"
 
 
@@ -142,6 +145,7 @@ changes to an interface declared in a ".mm" file.
 {
 @private
 	PrefsContextManager_Object*		prefsMgr;
+	NSMutableDictionary*			byKey;
 }
 
 // accessors
@@ -206,10 +210,8 @@ isWindowResizeEffectTextSize;
 - (void)
 setWindowResizeEffectTextSize:(BOOL)_; // binding
 
-- (NSString*)
-spacesPerTab;
-- (void)
-setSpacesPerTab:(NSString*)_; // binding
+- (PreferenceValue_Number*)
+spacesPerTab; // binding
 
 // actions
 

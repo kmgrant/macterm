@@ -7,7 +7,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -389,6 +389,9 @@ notifyWillChangeValueForNewCommand;
 notifyDidChangeValueForWindowResizeEffect;
 - (void)
 notifyWillChangeValueForWindowResizeEffect;
+
+- (NSArray*)
+primaryDisplayBindingKeys;
 
 - (TerminalView_CursorType)
 readCursorTypeWithDefaultValue:(TerminalView_CursorType)_;
@@ -3975,6 +3978,7 @@ Destructor.
 dealloc
 {
 	[prefsMgr release];
+	[byKey release];
 	[super dealloc];
 }// dealloc
 
@@ -4403,34 +4407,11 @@ Accessor.
 
 (4.1)
 */
-- (NSString*)
+- (PreferenceValue_Number*)
 spacesPerTab
 {
-	UInt16	value = [self readSpacesPerTabWithDefaultValue:4/* arbitrary */];
-	
-	
-	return [[NSNumber numberWithUnsignedInt:value] stringValue];
-}
-+ (id)
-autoNotifyOnChangeToSpacesPerTab
-{
-	return [NSNumber numberWithBool:NO];
-}
-- (void)
-setSpacesPerTab:(NSString*)		aString
-{
-	UInt16	newValue = 4; // arbitrary default
-	
-	
-	if (nil != aString)
-	{
-		newValue = [aString intValue];
-	}
-	
-	[self willChangeValueForKey:@"spacesPerTab"];
-	[self writeSpacesPerTab:newValue];
-	[self didChangeValueForKey:@"spacesPerTab"];
-}// setSpacesPerTab:
+	return [self->byKey objectForKey:@"spacesPerTab"];
+}// spacesPerTab
 
 
 #pragma mark Actions
@@ -4552,6 +4533,7 @@ initializeWithContext:(void*)			aContext
 {
 #pragma unused(aViewManager, aContext)
 	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:8/* arbitrary; number of expected settings */];
 }// panelViewManager:initializeWithContext:
 
 
@@ -4580,6 +4562,37 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
+	assert(nil != byKey);
+	assert(nil != prefsMgr);
+	
+	// note that all current values will change
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+	}
+	
+	// WARNING: Key names are depended upon by bindings in the XIB file.
+	[self->byKey setObject:[[[PreferenceValue_Number alloc]
+								initWithPreferencesTag:kPreferences_TagCopyTableThreshold
+														contextManager:self->prefsMgr
+														preferenceCType:kPreferenceValue_CTypeUInt16] autorelease]
+					forKey:@"spacesPerTab"];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
 }// panelViewManager:didLoadContainerView:
 
 
@@ -4838,6 +4851,22 @@ notifyWillChangeValueForWindowResizeEffect
 	[self willChangeValueForKey:@"windowResizeEffectTerminalScreenSize"];
 	[self willChangeValueForKey:@"windowResizeEffectTextSize"];
 }// notifyWillChangeValueForWindowResizeEffect
+
+
+/*!
+Returns the names of key-value coding keys that represent the
+primary bindings of this panel (those that directly correspond
+to saved preferences).
+
+(4.1)
+*/
+- (NSArray*)
+primaryDisplayBindingKeys
+{
+	return [NSArray arrayWithObjects:
+						@"spacesPerTab",
+						nil];
+}// primaryDisplayBindingKeys
 
 
 /*!

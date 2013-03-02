@@ -62,7 +62,7 @@
                     <string key="NSColorName">controlColor</string>
                     <object class="NSColor" key="NSColor">
                       <int key="NSColorSpace">3</int>
-                      <bytes key="NSWhite">MC42NjY2NjY2NjY3AA</bytes>
+                      <bytes key="NSWhite">MC42NjY2NjY2ODY1AA</bytes>
                     </object>
                   </object>
                   <object class="NSColor" key="NSTextColor" id="889686544">
@@ -1184,22 +1184,6 @@
         </object>
         <object class="IBConnectionRecord">
           <object class="IBBindingConnection" key="connection">
-            <string key="label">value: self.fontSize.stringValue</string>
-            <reference key="source" ref="124937851"/>
-            <reference key="destination" ref="17743444"/>
-            <object class="NSNibBindingConnector" key="connector">
-              <reference key="NSSource" ref="124937851"/>
-              <reference key="NSDestination" ref="17743444"/>
-              <string key="NSLabel">value: self.fontSize.stringValue</string>
-              <string key="NSBinding">value</string>
-              <string key="NSKeyPath">self.fontSize.stringValue</string>
-              <int key="NSNibBindingConnectorVersion">2</int>
-            </object>
-          </object>
-          <int key="connectionID">2385</int>
-        </object>
-        <object class="IBConnectionRecord">
-          <object class="IBBindingConnection" key="connection">
             <string key="label">value: self.boldForegroundColor.colorValue</string>
             <reference key="source" ref="824966999"/>
             <reference key="destination" ref="17743444"/>
@@ -1581,6 +1565,22 @@
             </object>
           </object>
           <int key="connectionID">2425</int>
+        </object>
+        <object class="IBConnectionRecord">
+          <object class="IBBindingConnection" key="connection">
+            <string key="label">value: self.fontSize.numberStringValue</string>
+            <reference key="source" ref="124937851"/>
+            <reference key="destination" ref="17743444"/>
+            <object class="NSNibBindingConnector" key="connector">
+              <reference key="NSSource" ref="124937851"/>
+              <reference key="NSDestination" ref="17743444"/>
+              <string key="NSLabel">value: self.fontSize.numberStringValue</string>
+              <string key="NSBinding">value</string>
+              <string key="NSKeyPath">self.fontSize.numberStringValue</string>
+              <int key="NSNibBindingConnectorVersion">2</int>
+            </object>
+          </object>
+          <int key="connectionID">2426</int>
         </object>
       </array>
       <object class="IBMutableOrderedSet" key="objectRecords">
@@ -2268,7 +2268,7 @@
       <nil key="activeLocalization"/>
       <dictionary class="NSMutableDictionary" key="localizations"/>
       <nil key="sourceID"/>
-      <int key="maxID">2425</int>
+      <int key="maxID">2426</int>
     </object>
     <object class="IBClassDescriber" key="IBDocument.Classes">
       <array class="NSMutableArray" key="referencedPartialClassDescriptions">

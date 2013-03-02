@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -43,6 +43,21 @@
 #import "PrefsContextManager.objc++.h"
 
 
+
+#pragma mark Constants
+
+/*!
+For legacy reasons, certain preferences have a variety of C
+storage types instead of using things like Foundation objects.
+*/
+enum PreferenceValue_CType
+{
+	kPreferenceValue_CTypeSInt16 = 0,	//!< preference requires SInt16 variable
+	kPreferenceValue_CTypeUInt16 = 1,	//!< preference requires UInt16 variable
+	kPreferenceValue_CTypeSInt32 = 2,	//!< preference requires SInt32 variable
+	kPreferenceValue_CTypeUInt32 = 3,	//!< preference requires UInt32 variable
+	kPreferenceValue_CTypeFloat32 = 4	//!< preference requires Float32 variable
+};
 
 #pragma mark Types
 
@@ -153,6 +168,43 @@ readValueSeeIfDefault:(BOOL*)_;
 numberValue;
 - (void)
 setNumberValue:(NSNumber*)_; // binding
+
+@end
+
+
+/*!
+Manages bindings for any preference whose value is
+defined to be a number (optionally integer-only and/or
+unsigned-only).
+*/
+@interface PreferenceValue_Number : PreferenceValue_Inherited
+{
+	PreferenceValue_CType	valueCType;
+}
+
+// designated initializer
+- (id)
+initWithPreferencesTag:(Preferences_Tag)_
+contextManager:(PrefsContextManager_Object*)_
+preferenceCType:(PreferenceValue_CType)_;
+
+// new methods
+
+- (NSNumber*)
+readValueSeeIfDefault:(BOOL*)_;
+
+// accessors
+
+- (NSString*)
+numberStringValue;
+- (void)
+setNumberStringValue:(NSString*)_; // binding
+
+// validators
+
+- (BOOL)
+validateNumberStringValue:(id*)_
+error:(NSError**)_;
 
 @end
 

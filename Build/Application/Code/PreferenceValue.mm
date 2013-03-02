@@ -10,7 +10,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -42,6 +42,9 @@
 // Mac includes
 #import <Cocoa/Cocoa.h>
 #import <objc/objc-runtime.h>
+
+// application includes
+#import "ConstantsRegistry.h"
 
 
 
@@ -487,6 +490,401 @@ setNilPreferenceValue
 
 
 @end // PreferenceValue_Flag
+
+
+@implementation PreferenceValue_Number
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+preferenceCType:(PreferenceValue_CType)			aCType
+{
+	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
+	if (nil != self)
+	{
+		self->valueCType = aCType;
+	}
+	return self;
+}// initWithPreferencesTag:contextManager:preferenceCType:
+
+
+#pragma mark New Methods
+
+
+/*!
+Returns the preference’s current value, and indicates whether or
+not that value was inherited from a parent context.
+
+(4.1)
+*/
+- (NSNumber*)
+readValueSeeIfDefault:(BOOL*)	outIsDefault
+{
+	NSNumber*				result = nil;
+	Boolean					isDefault = false;
+	Preferences_ContextRef	sourceContext = [[self prefsMgr] currentContext];
+	
+	
+	if (Preferences_ContextIsValid(sourceContext))
+	{
+		size_t				actualSize = 0;
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
+		
+		
+		switch (self->valueCType)
+		{
+		case kPreferenceValue_CTypeSInt16:
+			{
+				SInt16		intValue = 0;
+				
+				
+				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+															sizeof(intValue), &intValue, true/* search defaults */,
+															&actualSize, &isDefault);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					result = [NSNumber numberWithInt:intValue];
+				}
+			}
+			break;
+		
+		case kPreferenceValue_CTypeUInt16:
+			{
+				UInt16		intValue = 0;
+				
+				
+				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+															sizeof(intValue), &intValue, true/* search defaults */,
+															&actualSize, &isDefault);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					result = [NSNumber numberWithUnsignedInt:intValue];
+				}
+			}
+			break;
+		
+		case kPreferenceValue_CTypeSInt32:
+			{
+				SInt32		intValue = 0L;
+				
+				
+				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+															sizeof(intValue), &intValue, true/* search defaults */,
+															&actualSize, &isDefault);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					result = [NSNumber numberWithLong:intValue];
+				}
+			}
+			break;
+		
+		case kPreferenceValue_CTypeUInt32:
+			{
+				UInt32		intValue = 0L;
+				
+				
+				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+															sizeof(intValue), &intValue, true/* search defaults */,
+															&actualSize, &isDefault);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					result = [NSNumber numberWithUnsignedLong:intValue];
+				}
+			}
+			break;
+		
+		case kPreferenceValue_CTypeFloat32:
+			{
+				Float32		floatValue = 0.0;
+				
+				
+				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+															sizeof(floatValue), &floatValue, true/* search defaults */,
+															&actualSize, &isDefault);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					result = [NSNumber numberWithFloat:floatValue];
+				}
+			}
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
+	
+	if (nullptr != outIsDefault)
+	{
+		*outIsDefault = (YES == isDefault);
+	}
+	
+	return result;
+}// readValueSeeIfDefault:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+numberStringValue
+{
+	BOOL		isDefault = NO;
+	NSNumber*	asNumber = [self readValueSeeIfDefault:&isDefault];
+	NSString*	result = [asNumber stringValue];
+	
+	
+	return result;
+}
+- (void)
+setNumberStringValue:(NSString*)	aNumberString
+{
+	[self willSetPreferenceValue];
+	
+	if (nil == aNumberString)
+	{
+		// when given nothing and the context is non-Default, delete the setting;
+		// this will revert to either the Default value (in non-Default contexts)
+		// or the “factory default” value (in Default contexts)
+		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:[self preferencesTag]];
+		
+		
+		if (NO == deleteOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to remove numerical-value preference");
+		}
+	}
+	else
+	{
+		BOOL					saveOK = NO;
+		Preferences_ContextRef	targetContext = [[self prefsMgr] currentContext];
+		
+		
+		if (Preferences_ContextIsValid(targetContext))
+		{
+			Preferences_Result	prefsResult = kPreferences_ResultOK;
+			
+			
+			// NOTE: The validation method will scrub the string beforehand so
+			// requests for numerical values should not fail here.
+			switch (self->valueCType)
+			{
+			case kPreferenceValue_CTypeSInt16:
+				{
+					SInt16		intValue = [aNumberString intValue];
+					
+					
+					prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+																sizeof(intValue), &intValue);
+				}
+				break;
+			
+			case kPreferenceValue_CTypeUInt16:
+				{
+					UInt16		intValue = [aNumberString intValue];
+					
+					
+					prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+																sizeof(intValue), &intValue);
+				}
+				break;
+			
+			case kPreferenceValue_CTypeSInt32:
+				{
+					SInt32		intValue = [aNumberString intValue];
+					
+					
+					prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+																sizeof(intValue), &intValue);
+				}
+				break;
+			
+			case kPreferenceValue_CTypeUInt32:
+				{
+					UInt32		intValue = [aNumberString intValue];
+					
+					
+					prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+																sizeof(intValue), &intValue);
+				}
+				break;
+			
+			case kPreferenceValue_CTypeFloat32:
+				{
+					Float32		floatValue = [aNumberString floatValue];
+					
+					
+					prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+																sizeof(floatValue), &floatValue);
+				}
+				break;
+			
+			default:
+				// ???
+				break;
+			}
+			
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				saveOK = YES;
+			}
+		}
+		
+		if (NO == saveOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to save numerical-value preference");
+		}
+	}
+	
+	[self didSetPreferenceValue];
+}// setNumberStringValue:
+
+
+#pragma mark Validators
+
+
+/*!
+Validates a number entered by the user, returning an appropriate
+error (and a NO result) if the number is incorrect.
+
+(4.0)
+*/
+- (BOOL)
+validateNumberStringValue:(id*/* NSString* */)		ioValue
+error:(NSError**)								outError
+{
+	BOOL	result = NO;
+	
+	
+	if (nil == *ioValue)
+	{
+		result = YES;
+	}
+	else
+	{
+		// first strip whitespace
+		*ioValue = [[*ioValue stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] retain];
+		
+		// while an NSNumberFormatter is more typical for validation,
+		// the requirements for numbers are quite simple
+		NSScanner*	scanner = [NSScanner scannerWithString:*ioValue];
+		long long	integerValue = 0LL;
+		float		floatValue = 0.0;
+		BOOL		scanOK = NO;
+		
+		
+		if (kPreferenceValue_CTypeFloat32 == self->valueCType)
+		{
+			scanOK = ([scanner scanFloat:&floatValue] && [scanner isAtEnd]);
+		}
+		else
+		{
+			scanOK = ([scanner scanLongLong:&integerValue] && [scanner isAtEnd]);
+			if (scanOK)
+			{
+				if ((kPreferenceValue_CTypeUInt16 == self->valueCType) ||
+					(kPreferenceValue_CTypeUInt32 == self->valueCType))
+				{
+					scanOK = (integerValue >= 0);
+				}
+			}
+		}
+		
+		if (scanOK)
+		{
+			result = YES;
+		}
+		else
+		{
+			if (nil != outError) result = NO;
+			else result = YES; // cannot return NO when the error instance is undefined
+		}
+		
+		if (NO == result)
+		{
+			NSString*	errorMessage = nil;
+			
+			
+			switch (self->valueCType)
+			{
+			case kPreferenceValue_CTypeUInt16:
+			case kPreferenceValue_CTypeUInt32:
+				errorMessage = NSLocalizedStringFromTable(@"This value must be a nonnegative integer.",
+															@"PrefsWindow"/* table */,
+															@"message displayed for bad unsigned integer values");
+				break;
+			
+			case kPreferenceValue_CTypeFloat32:
+				errorMessage = NSLocalizedStringFromTable(@"This value must be a number (optionally with a fraction after a decimal point).",
+															@"PrefsWindow"/* table */,
+															@"message displayed for bad floating-point values");
+				break;
+			
+			case kPreferenceValue_CTypeSInt16:
+			case kPreferenceValue_CTypeSInt32:
+			default:
+				errorMessage = NSLocalizedStringFromTable(@"This value must be an integer (it may be negative).",
+															@"PrefsWindow"/* table */,
+															@"message displayed for bad signed integer values");
+				break;
+			}
+			
+			*outError = [NSError errorWithDomain:(NSString*)kConstantsRegistry_NSErrorDomainAppDefault
+							code:kConstantsRegistry_NSErrorBadNumber
+							userInfo:[[[NSDictionary alloc] initWithObjectsAndKeys:
+										errorMessage, NSLocalizedDescriptionKey,
+										nil] autorelease]];
+		}
+	}
+	return result;
+}// validateNumberStringValue:error:
+
+
+#pragma mark PreferenceValue_Inherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = NO;
+	
+	
+	(NSNumber*)[self readValueSeeIfDefault:&result];
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self setNumberStringValue:nil];
+}// setNilPreferenceValue
+
+
+@end // PreferenceValue_Number
 
 
 @implementation PreferenceValue_String

@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -96,33 +96,6 @@ setNumberValue:(NSNumber*)_; // binding
 
 
 /*!
-Manages bindings for a font-size preference.
-*/
-@interface PrefPanelFormats_FontSizeContent : PreferenceValue_Inherited
-{
-}
-
-// designated initializer
-- (id)
-initWithPreferencesTag:(Preferences_Tag)_
-contextManager:(PrefsContextManager_Object*)_;
-
-// new methods
-
-- (NSString*)
-readValueSeeIfDefault:(BOOL*)_;
-
-// accessors
-
-- (NSString*)
-stringValue;
-- (void)
-setStringValue:(NSString*)_; // binding
-
-@end
-
-
-/*!
 Loads a NIB file that defines the General pane.
 
 Note that this is only in the header for the sake of
@@ -168,7 +141,7 @@ matteBackgroundColor; // binding
 - (PreferenceValue_String*)
 fontFamily; // binding
 
-- (PrefPanelFormats_FontSizeContent*)
+- (PreferenceValue_Number*)
 fontSize; // binding
 
 - (PrefPanelFormats_CharacterWidthContent*)

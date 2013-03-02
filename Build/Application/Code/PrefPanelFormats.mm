@@ -3470,152 +3470,6 @@ setNilPreferenceValue
 @end // PrefPanelFormats_CharacterWidthContent
 
 
-@implementation PrefPanelFormats_FontSizeContent
-
-
-/*!
-Designated initializer.
-
-(4.1)
-*/
-- (id)
-initWithPreferencesTag:(Preferences_Tag)		aTag
-contextManager:(PrefsContextManager_Object*)	aContextMgr
-{
-	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
-	if (nil != self)
-	{
-	}
-	return self;
-}// initWithPreferencesTag:contextManager:
-
-
-#pragma mark New Methods
-
-
-/*!
-Returns the preference’s current value, and indicates whether or
-not that value was inherited from a parent context.
-
-(4.1)
-*/
-- (NSString*)
-readValueSeeIfDefault:(BOOL*)	outIsDefault
-{
-	NSString*				result = @"";
-	Boolean					isDefault = false;
-	Preferences_ContextRef	sourceContext = [[self prefsMgr] currentContext];
-	
-	
-	if (Preferences_ContextIsValid(sourceContext))
-	{
-		SInt16				fontSize = 0;
-		size_t				actualSize = 0;
-		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
-																		sizeof(fontSize), &fontSize,
-																		true/* search defaults */, &actualSize,
-																		&isDefault);
-		
-		
-		if (kPreferences_ResultOK == prefsResult)
-		{
-			result = [[NSNumber numberWithInt:fontSize] stringValue];
-		}
-	}
-	
-	if (nullptr != outIsDefault)
-	{
-		*outIsDefault = (YES == isDefault);
-	}
-	
-	return result;
-}// readValueSeeIfDefault:
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (NSString*)
-stringValue
-{
-	BOOL		isDefault = NO;
-	NSString*	result = [self readValueSeeIfDefault:&isDefault];
-	
-	
-	return result;
-}
-- (void)
-setStringValue:(NSString*)	aString
-{
-	BOOL					saveOK = NO;
-	Preferences_ContextRef	targetContext = [[self prefsMgr] currentContext];
-	
-	
-	if (Preferences_ContextIsValid(targetContext))
-	{
-		[self willSetPreferenceValue];
-		
-		SInt16				fontSize = [aString intValue];
-		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
-																		sizeof(fontSize), &fontSize);
-		
-		
-		if (kPreferences_ResultOK == prefsResult)
-		{
-			saveOK = YES;
-		}
-		
-		[self didSetPreferenceValue];
-	}
-	
-	if (NO == saveOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save font size preference");
-	}
-}// setStringValue:
-
-
-#pragma mark PreferenceValue_Inherited
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isInherited
-{
-	// if the current value comes from a default then the “inherited” state is YES
-	BOOL	result = NO;
-	
-	
-	(NSString*)[self readValueSeeIfDefault:&result];
-	
-	return result;
-}// isInherited
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (void)
-setNilPreferenceValue
-{
-	[self setStringValue:nil];
-}// setNilPreferenceValue
-
-
-@end // PrefPanelFormats_FontSizeContent
-
-
 @implementation PrefPanelFormats_GeneralViewManager
 
 
@@ -3769,7 +3623,7 @@ Accessor.
 
 (4.1)
 */
-- (PrefPanelFormats_FontSizeContent*)
+- (PreferenceValue_Number*)
 fontSize
 {
 	return [self->byKey objectForKey:@"fontSize"];
@@ -3836,12 +3690,13 @@ the user’s selection in the system’s Fonts panel.
 - (void)
 changeFont:(id)	sender
 {
-	NSFont*		oldFont = [NSFont fontWithName:[[self fontFamily] stringValue] size:[[[self fontSize] stringValue] floatValue]];
+	NSFont*		oldFont = [NSFont fontWithName:[[self fontFamily] stringValue]
+												size:[[[self fontSize] numberStringValue] floatValue]];
 	NSFont*		newFont = [sender convertFont:oldFont];
 	
 	
 	[[self fontFamily] setStringValue:[newFont familyName]];
-	[[self fontSize] setStringValue:[[NSNumber numberWithFloat:[newFont pointSize]] stringValue]];
+	[[self fontSize] setNumberStringValue:[[NSNumber numberWithFloat:[newFont pointSize]] stringValue]];
 }// changeFont:
 
 
@@ -4056,9 +3911,10 @@ didLoadContainerView:(NSView*)			aContainerView
 								initWithPreferencesTag:kPreferences_TagFontName
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"fontFamily"];
-	[self->byKey setObject:[[[PrefPanelFormats_FontSizeContent alloc]
+	[self->byKey setObject:[[[PreferenceValue_Number alloc]
 								initWithPreferencesTag:kPreferences_TagFontSize
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr
+														preferenceCType:kPreferenceValue_CTypeUInt16] autorelease]
 					forKey:@"fontSize"];
 	[self->byKey setObject:[[[PrefPanelFormats_CharacterWidthContent alloc]
 								initWithPreferencesTag:kPreferences_TagFontCharacterWidthMultiplier
