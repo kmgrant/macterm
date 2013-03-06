@@ -3406,31 +3406,47 @@ numberValue
 - (void)
 setNumberValue:(NSNumber*)		aNumber
 {
-	BOOL					saveOK = NO;
-	Preferences_ContextRef	targetContext = [[self prefsMgr] currentContext];
+	[self willSetPreferenceValue];
 	
-	
-	if (Preferences_ContextIsValid(targetContext))
+	if (nil == aNumber)
 	{
-		[self willSetPreferenceValue];
+		// when given nothing and the context is non-Default, delete the setting;
+		// this will revert to either the Default value (in non-Default contexts)
+		// or the “factory default” value (in Default contexts)
+		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:[self preferencesTag]];
 		
-		Float32				scaleFactor = [aNumber floatValue];
-		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
-																		sizeof(scaleFactor), &scaleFactor);
 		
-		
-		if (kPreferences_ResultOK == prefsResult)
+		if (NO == deleteOK)
 		{
-			saveOK = YES;
+			Console_Warning(Console_WriteLine, "failed to remove character width preference");
+		}
+	}
+	else
+	{
+		BOOL					saveOK = NO;
+		Preferences_ContextRef	targetContext = [[self prefsMgr] currentContext];
+		
+		
+		if (Preferences_ContextIsValid(targetContext))
+		{
+			Float32				scaleFactor = [aNumber floatValue];
+			Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+																			sizeof(scaleFactor), &scaleFactor);
+			
+			
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				saveOK = YES;
+			}
 		}
 		
-		[self didSetPreferenceValue];
+		if (NO == saveOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to save character width preference");
+		}
 	}
 	
-	if (NO == saveOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save character width preference");
-	}
+	[self didSetPreferenceValue];
 }// setNumberValue:
 
 
