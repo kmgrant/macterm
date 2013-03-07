@@ -17,7 +17,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -218,7 +218,8 @@ enum
 /*!
 How scrollback lines are allocated.
 */
-enum Terminal_ScrollbackType
+typedef UInt16 Terminal_ScrollbackType;
+enum
 {
 	kTerminal_ScrollbackTypeDisabled = 0,		//!< no lines are saved
 	kTerminal_ScrollbackTypeFixed = 1,			//!< a specific number of rows is read from the preferences

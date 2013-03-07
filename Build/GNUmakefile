@@ -227,6 +227,7 @@ English.lproj/PrefPanelGeneralNotificationsCocoa \
 English.lproj/PrefPanelGeneralOptionsCocoa \
 English.lproj/PrefPanelGeneralSpecialCocoa \
 English.lproj/PrefPanelTerminalOptionsCocoa \
+English.lproj/PrefPanelTerminalScreenCocoa \
 English.lproj/PrefPanelTranslationsCocoa \
 English.lproj/PrefsWindowCocoa \
 English.lproj/PrintPreviewCocoa \

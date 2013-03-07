@@ -1192,7 +1192,7 @@ Preferences_Init ()
 									sizeof(UInt32), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenScrollbackType,
 									CFSTR("terminal-scrollback-type"), typeCFStringRef,
-									sizeof(Terminal_ScrollbackType), Quills::Prefs::TERMINAL);
+									sizeof(UInt16), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalShowMarginAtColumn,
 									CFSTR("terminal-show-margin-at-column"), typeNetEvents_CFNumberRef,
 									sizeof(UInt16), Quills::Prefs::GENERAL);
@@ -7958,7 +7958,8 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							Terminal_ScrollbackType*	storedValuePtr = REINTERPRET_CAST(outDataPtr, Terminal_ScrollbackType*);
+							// values will be "Terminal_ScrollbackType"
+							UInt16*		storedValuePtr = REINTERPRET_CAST(outDataPtr, UInt16*);
 							
 							
 							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("off"), kCFCompareCaseInsensitive))
@@ -10068,7 +10069,8 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagTerminalScreenScrollbackType:
 				{
-					Terminal_ScrollbackType const		data = *(REINTERPRET_CAST(inDataPtr, Terminal_ScrollbackType const*));
+					// values will be "Terminal_ScrollbackType"
+					UInt16 const	data = *(REINTERPRET_CAST(inDataPtr, UInt16 const*));
 					
 					
 					assert(typeCFStringRef == keyValueType);

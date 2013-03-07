@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -97,6 +97,70 @@ normalKeypadTopRow; // binding
 
 - (PreferenceValue_Flag*)
 localPageKeys; // binding
+
+@end
+
+
+/*!
+Manages bindings for the scrollback preference.
+*/
+@interface PrefPanelTerminals_ScrollbackValue : PreferenceValue_Inherited
+{
+	NSArray*					behaviorArray;
+	PreferenceValue_Number*		behaviorObject;
+	PreferenceValue_Number*		rowsObject;
+}
+
+// designated initializer
+- (id)
+initWithContextManager:(PrefsContextManager_Object*)_;
+
+// accessors
+
+- (NSArray*)
+behaviorArray; // binding
+
+- (id)
+currentBehavior;
+- (void)
+setCurrentBehavior:(id)_; // binding
+
+- (NSString*)
+rowsNumberStringValue;
+- (void)
+setRowsNumberStringValue:(NSString*)_; // binding
+
+- (BOOL)
+rowsEnabled; // binding
+
+@end
+
+
+/*!
+Loads a NIB file that defines the Screen pane.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelTerminals_ScreenViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+{
+@private
+	PrefsContextManager_Object*		prefsMgr;
+	NSRect							idealFrame;
+	NSMutableDictionary*			byKey;
+}
+
+// accessors
+
+- (PreferenceValue_Number*)
+screenWidth; // binding
+
+- (PreferenceValue_Number*)
+screenHeight; // binding
+
+- (PrefPanelTerminals_ScrollbackValue*)
+scrollback; // binding
 
 @end
 
