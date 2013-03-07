@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -39,6 +39,11 @@
 #import "Preferences.h"
 
 
+
+#pragma mark Constants
+
+extern NSString*	kPrefsContextManager_ContextWillChangeNotification; // no userInfo is defined for this notification
+extern NSString*	kPrefsContextManager_ContextDidChangeNotification; // no userInfo is defined for this notification
 
 #pragma mark Types
 
