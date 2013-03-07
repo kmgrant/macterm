@@ -59,17 +59,15 @@ Designated initializer.
 (4.1)
 */
 - (id)
-initWithPreferencesTag:(Preferences_Tag)		aTag
-contextManager:(PrefsContextManager_Object*)	aContextMgr
+initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
 	self = [super init];
 	if (nil != self)
 	{
 		self->prefsMgr = [aContextMgr retain];
-		self->preferencesTag = aTag;
 	}
 	return self;
-}// initWithPreferencesTag:contextManager:
+}// initWithContextManager:
 
 
 /*!
@@ -185,18 +183,6 @@ Accessor.
 
 (4.1)
 */
-- (Preferences_Tag)
-preferencesTag
-{
-	return preferencesTag;
-}// preferencesTag
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
 - (PrefsContextManager_Object*)
 prefsMgr
 {
@@ -205,6 +191,45 @@ prefsMgr
 
 
 @end // PreferenceValue_Inherited
+
+
+@implementation PreferenceValue_InheritedSingleTag
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	self = [super initWithContextManager:aContextMgr];
+	if (nil != self)
+	{
+		self->preferencesTag = aTag;
+	}
+	return self;
+}// initWithPreferencesTag:contextManager:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (Preferences_Tag)
+preferencesTag
+{
+	return preferencesTag;
+}// preferencesTag
+
+
+@end // PreferenceValue_InheritedSingleTag
 
 
 @implementation PreferenceValue_Color

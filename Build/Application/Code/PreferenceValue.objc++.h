@@ -78,13 +78,11 @@ of value (e.g. in this case, "colorValue" is a likely path).
 {
 @private
 	PrefsContextManager_Object*		prefsMgr;
-	Preferences_Tag					preferencesTag;
 }
 
 // designated initializer
 - (id)
-initWithPreferencesTag:(Preferences_Tag)_
-contextManager:(PrefsContextManager_Object*)_;
+initWithContextManager:(PrefsContextManager_Object*)_;
 
 // accessors
 
@@ -93,9 +91,6 @@ setInherited:(BOOL)_; // binding (to subclasses, typically)
 
 - (BOOL)
 isInheritEnabled; // binding (to subclasses, typically)
-
-- (Preferences_Tag)
-preferencesTag;
 
 - (PrefsContextManager_Object*)
 prefsMgr;
@@ -117,9 +112,33 @@ setNilPreferenceValue; // subclasses MUST implement
 
 
 /*!
+Since the vast majority of bindings are to a single underlying
+preference tag, this variant of the object is available to make
+it easy to store and retrieve one tag value.
+*/
+@interface PreferenceValue_InheritedSingleTag : PreferenceValue_Inherited
+{
+@private
+	Preferences_Tag		preferencesTag;
+}
+
+// designated initializer
+- (id)
+initWithPreferencesTag:(Preferences_Tag)_
+contextManager:(PrefsContextManager_Object*)_;
+
+// accessors
+
+- (Preferences_Tag)
+preferencesTag;
+
+@end
+
+
+/*!
 Manages bindings for a single color preference.
 */
-@interface PreferenceValue_Color : PreferenceValue_Inherited
+@interface PreferenceValue_Color : PreferenceValue_InheritedSingleTag
 {
 }
 
@@ -142,7 +161,7 @@ setColorValue:(NSColor*)_; // binding
 Manages bindings for any preference whose value is
 defined to be Boolean.
 */
-@interface PreferenceValue_Flag : PreferenceValue_Inherited
+@interface PreferenceValue_Flag : PreferenceValue_InheritedSingleTag
 {
 	BOOL	inverted;
 }
@@ -177,7 +196,7 @@ Manages bindings for any preference whose value is
 defined to be a number (optionally integer-only and/or
 unsigned-only).
 */
-@interface PreferenceValue_Number : PreferenceValue_Inherited
+@interface PreferenceValue_Number : PreferenceValue_InheritedSingleTag
 {
 	PreferenceValue_CType	valueCType;
 }
@@ -213,7 +232,7 @@ error:(NSError**)_;
 Manages bindings for any preference whose value is
 defined to be a pointer to a CFStringRef.
 */
-@interface PreferenceValue_String : PreferenceValue_Inherited
+@interface PreferenceValue_String : PreferenceValue_InheritedSingleTag
 {
 }
 

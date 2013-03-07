@@ -71,7 +71,7 @@ changes to an interface declared in a ".mm" file.
 /*!
 Manages bindings for a character-width preference.
 */
-@interface PrefPanelFormats_CharacterWidthContent : PreferenceValue_Inherited
+@interface PrefPanelFormats_CharacterWidthContent : PreferenceValue_InheritedSingleTag
 {
 }
 

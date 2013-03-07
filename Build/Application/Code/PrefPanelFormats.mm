@@ -3450,7 +3450,7 @@ setNumberValue:(NSNumber*)		aNumber
 }// setNumberValue:
 
 
-#pragma mark PreferenceValue_Inherited
+#pragma mark PreferenceValue_InheritedSingleTag
 
 
 /*!
