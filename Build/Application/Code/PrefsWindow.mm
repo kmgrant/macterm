@@ -2927,6 +2927,9 @@ setCurrentPreferenceCollectionIndexes:(NSIndexSet*)		indexes
 		[currentPreferenceCollectionIndexes release];
 		currentPreferenceCollectionIndexes = [indexes retain];
 		
+		// write all the preference data in memory to disk
+		(Preferences_Result)Preferences_Save();
+		
 		// notify the panel that a new data set has been selected
 		[[self->activePanel delegate] panelViewManager:self->activePanel
 														didChangeFromDataSet:oldDataSet toDataSet:newDataSet];
@@ -2943,12 +2946,12 @@ Accessor.
 currentPreferenceCollections
 {
 	return [[currentPreferenceCollections retain] autorelease];
-}
+}// currentPreferenceCollections
 - (BOOL)
 autoNotifyOnChangeToCurrentPreferenceCollections
 {
 	return NO;
-}
+}// autoNotifyOnChangeToCurrentPreferenceCollections
 
 
 /*!
