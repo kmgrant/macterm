@@ -858,9 +858,9 @@ h5. None ("Dumb")
 A "dumb terminal" doesn't actually emulate anything, though it
  will make sure every character it receives is visible.  For
  example, the character with ASCII code 200 is printed as the
- string "<200>", and ASCII code 27 prints as "^[".  This is
- useful when communicating with certain kinds of servers, or
- when debugging commands.
+ string 200 in angle brackets, and ASCII code 27 prints as "^[".
+ This is useful when communicating with certain kinds of servers,
+ or when debugging commands.
 
 Advanced users should note that MacTerm's Python interface
  lets you customize the "pretty printing" of the dumb terminal.
