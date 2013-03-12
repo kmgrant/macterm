@@ -9,7 +9,7 @@ h1(pagetitle). Running Applications
 
 notextile. <div class="content">
 
-notextile. <a name="helpcreatingsessions"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <a id="helpcreatingsessions"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 h2(#servers). Remote Sessions: Connecting to Servers
 
@@ -59,7 +59,7 @@ Once a workspace is defined, go to the "New From Workspace:"
  any other Favorite from your Workspace Preferences), to create
  the sessions of a workspace.
 
-h2(#restart). Replicating Windows
+h2(#dupwin). Replicating Windows
 
 You can use File >> Duplicate Session to spawn a new window that
  is running the same command as the previous window.

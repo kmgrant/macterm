@@ -26,7 +26,11 @@
 my $xml = 0;
 if (@ARGV)
 {
-	($ARGV[0] =~ /^-xml$/) and $xml = 1;
+	if ($ARGV[0] =~ /^-xml$/)
+	{
+		shift @ARGV;
+		$xml = 1;
+	}
 }
 
 while (<>)

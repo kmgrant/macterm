@@ -9,7 +9,7 @@ h1(pagetitle). Preferences
 
 notextile. <div class="content">
 
-notextile. <a name="helpwithpreferences"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <a id="helpwithpreferences"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 p(#abstract). This page is arranged in the same categories as those in
  the MacTerm Preferences window.  To access any of the settings
@@ -189,7 +189,7 @@ h5(#nodim). Don't dim background terminal text
 To help emphasize the active terminal, MacTerm alters the color
  hues of background windows.  Use this option to quell recoloring.
 
-h5(#nodim). Don't warn about multi-line Paste
+h5(#nopastewarn). Don't warn about multi-line Paste
 
 Immediately dumps text into a terminal on Paste, instead of
  displaying a "Join" option when the text spans multiple lines.
@@ -248,7 +248,7 @@ Note that windows restored as part of a Workspace (File menu)
  will give precedence to any boundaries that might be saved with
  the Workspace.
 
-h4(#spacesfortab). Window Resize Effect
+h4(#resizeeffect). Window Resize Effect
 
 The Window Resize Effect determines how terminal windows are
  altered when resized explicitly with the mouse, or implicitly
@@ -1152,7 +1152,7 @@ bq. Preferences in this category allow inheritance;
  the settings that are not inherited.  In new windows,
  inherited settings will match Default settings.
 
-notextile. <a name="helpwithscreenformatting"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <a id="helpwithscreenformatting"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 Formats are collections of fonts, font sizes, colors, and more,
  that decide how your terminal windows look.  You can use the View

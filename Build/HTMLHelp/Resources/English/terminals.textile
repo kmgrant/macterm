@@ -9,7 +9,7 @@ h1(pagetitle). Terminals
 
 notextile. <div class="content">
 
-notextile. <a name="helpwithterminalsettings"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <a id="helpwithterminalsettings"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 h2(#select). Text Selections
 
@@ -47,9 +47,9 @@ See "the Preferences page":preferences.html for some options related to the
  appearance and behavior of text selections.  For instance, you
  can choose to have them automatically copied to the clipboard.
 
-h3(#arrange). Terminal Search
+h3(#termsearch). Terminal Search
 
-notextile. <a name="helpsearchingfortext"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <a id="helpsearchingfortext"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 The Edit >> Find... command allows *dynamic* search of the entire
  contents of a terminal (main screen and scrollback).  The dialog
@@ -98,7 +98,7 @@ See "the Preferences page":preferences.html for some options related to the
 
 h2(#commandline). Floating Command Line
 
-notextile. <a name="helpusingthefloatingcommandline"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <a id="helpusingthefloatingcommandline"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 Use Window >> Command Line to display a floating window for
  entering text locally.  Unlike typing directly into a terminal,
@@ -122,7 +122,7 @@ MacTerm provides many sophisticated ways to manage windows.
 
 h3(#dimensions). Screen Sizes
 
-notextile. <a name="helpsettingthescreensize"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <a id="helpsettingthescreensize"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 Some applications that run in terminals will either assume one of
  a few standard sizes, or have issues at certain (typically large)
@@ -183,7 +183,7 @@ When arranged, _all_ terminal windows return to a diagonal
  stagger pattern that matches their original opening positions.
  NOTE that this cannot be undone.
 
-h3(#arrange). Session-Induced Window Changes
+h3(#sessionwinch). Session-Induced Window Changes
 
 MacTerm respects some of XTerm's window sequences, so a terminal
  application may also affect a window.  Typically an application

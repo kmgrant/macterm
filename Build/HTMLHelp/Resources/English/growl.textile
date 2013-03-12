@@ -12,7 +12,7 @@ notextile. <div class="content">
 p(#abstract). MacTerm provides several different types of notifications that
  you can fully customize with the "Growl":http://www.growl.info/ infrastructure.
 
-h2(#notificationtypes). Customizing Notifications
+h2(#customizing). Customizing Notifications
 
 To view or customize MacTerm notifications, first install Growl
  on your computer (Mac OS X 10.4 or later), then open your

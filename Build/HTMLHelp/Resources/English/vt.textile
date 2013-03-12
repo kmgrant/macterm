@@ -9,9 +9,9 @@ h1(pagetitle). Terminal Emulator Specifics
 
 notextile. <div class="content">
 
-notextile. <a name="helpwithterminalsettings"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <a id="helpwithterminalsettings"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
-h2(#vt100). General
+h2(#general). General
 
 Each application running in a terminal must be told the type of
  emulator that is in use, so that appropriate requests are sent
