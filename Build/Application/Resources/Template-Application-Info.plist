@@ -143,9 +143,9 @@
 	<key>CFBundleGetInfoString</key>
 	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%%MY_ALPHA_BETA%, build %MY_BUILD_NUMBER%</string>
 	<key>CFBundleHelpBookFolder</key>
-	<string>Help</string>
+	<string>MacTerm.help</string>
 	<key>CFBundleHelpBookName</key>
-	<string>MacTerm Help</string>
+	<string>net.macterm.MacTerm.help</string>
 	<key>CFBundleIconFile</key>
 	<string>IconForBundle.icns</string>
 	<key>CFBundleIdentifier</key>

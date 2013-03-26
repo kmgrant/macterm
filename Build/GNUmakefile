@@ -190,7 +190,7 @@ IconForStackWindows.icns \
 IconForTerminal.icns \
 English.lproj/Credits.html
 APP_RESOURCES_BUNDLES := \
-English.lproj/Help \
+MacTerm.help \
 English.lproj/AlertMessages.nib \
 English.lproj/ColorBox.nib \
 English.lproj/GenericDialog.nib \
@@ -450,11 +450,14 @@ clean-app-dot-strings:
 
 # Component: Help
 
-$(DEST_APP_RESOURCES_TOP)/English.lproj/Help:
+$(CURDIR)/_Generated/MacTerm.help:
 	$(call banner,$@)
 	$(CURDIR)/HTMLHelpBuild.command
+
+$(DEST_APP_RESOURCES_TOP)/MacTerm.help: $(CURDIR)/_Generated/MacTerm.help
+	$(call banner,$@)
 	$(MKDIR_P) $(dir $@)
-	$(RSYNC) --archive $(CURDIR)/_Generated/Help_English/Help/ $@
+	$(RSYNC) --archive $(CURDIR)/_Generated/MacTerm.help/ $@
 
 # Component: Bug Reporter
 

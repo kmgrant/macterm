@@ -1,3 +1,5 @@
+notextile. <!-- NOTE: this file is installed one level higher so URLs generally refer to "content/" -->
+
 notextile. <div class="navigation">
 
 * MacTerm Help

@@ -12,6 +12,8 @@
 # Kevin Grant (kmg@mac.com)
 # March 26, 2005
 
+HIUTIL = /usr/bin/hiutil
+
 DEST = $(CURDIR)/_Generated
 MAIN_SRC = $(CURDIR)/HTMLHelp/Resources/
 define MAIN_SRC_SUB
@@ -22,15 +24,22 @@ SHARED_SRC = $(CURDIR)/Shared/Resources
 ALL_LANGUAGES = English
 MODULES := $(filter-out index,$(sort $(notdir $(subst .textile,,$(wildcard $(strip $(MAIN_SRC))/English/*.textile)))))
 
+APP_HELP_ROOT = $(strip $(DEST))/MacTerm.help
+APP_HELP_CONTENTS_ROOT = $(APP_HELP_ROOT)/Contents
+APP_HELP_RESOURCES_ROOT = $(APP_HELP_CONTENTS_ROOT)/Resources
+
 # use these within "xyz-%" rules where the pattern is the language (e.g. English)
 define APP_HELP_LOCALIZED_ROOT
-$(strip $(DEST))/Help_$*
+$(APP_HELP_RESOURCES_ROOT)/$*.lproj
 endef
 define APP_HELP_LOCALIZED
-$(strip $(DEST))/Help_$*/Help
+$(APP_HELP_LOCALIZED_ROOT)
 endef
 define APP_HELP_LOCALIZED_CONTENT
-$(strip $(DEST))/Help_$*/Help/content
+$(APP_HELP_LOCALIZED)/content
+endef
+define APP_HELP_LOCALIZED_SEARCH_INDEX
+$(APP_HELP_LOCALIZED)/search.helpindex
 endef
 
 DOCTYPER=$(CURDIR)/Tools/PrintHTMLDocType.pl
@@ -38,7 +47,7 @@ GENERATOR=$(CURDIR)/Tools/HTMLFromTextile.py
 KV_TO_HEAD=$(CURDIR)/Tools/KeyValueToHTMLHeadTags.pl
 KV_TO_PLIST=$(CURDIR)/Tools/KeyValueToExactMatchProperties.pl
 
-define SOURCE_CSS
+define SOURCE_CSS_LOCALIZED_CONTENT
 $(call MAIN_SRC_SUB,$(1))/default.css \
 $(call MAIN_SRC_SUB,$(1))/main.css
 endef
@@ -51,10 +60,13 @@ define SOURCE_INDEX_HTML
 $(foreach PREFIX,index,$(strip $(MAIN_SRC))/$(1)/$(strip $(PREFIX)).html)
 endef
 
+define SOURCE_IMG_SHARED
+$(MAIN_SRC)/HelpBookIcon.png
+endef
+
 # IMPORTANT: This list should agree with style sheets or
 #            meta tags that refer to image files.
-define SOURCE_IMG
-$(call MAIN_SRC_SUB,$(1))/HelpBookIcon.png \
+define SOURCE_IMG_LOCALIZED
 $(strip $(SHARED_SRC))/SubtleBorderTop.png
 endef
 
@@ -69,16 +81,17 @@ all:
 	@# since help content is aggressively cached, blow it all away
 	@# to ensure that the latest is seen by the system
 	$(RM) -R ~/Library/Caches/com.apple.help.*
+	$(RM) -R ~/Library/Caches/com.apple.helpd.*
 	$(RM) -R ~/Library/Caches/com.apple.helpindexer.*
 	$(RM) -R ~/Library/Caches/com.apple.helpviewer.*
 	$(RM) -R ~/Library/Preferences/com.apple.help.*
+	$(RM) -R ~/Library/Preferences/com.apple.helpd.*
 	$(RM) -R ~/Library/Preferences/com.apple.helpindexer.*
 	$(RM) -R ~/Library/Preferences/com.apple.helpviewer.*
 	-killall helpd
-	defaults write com.apple.helpindexer IndexAnchors YES
 	@# now build a new help book and display it in a web browser
 	$(MAKE) -f $(MAKEFILE_LIST) build
-	$(call open_browser_to_page,$(strip $(DEST))/Help_English/Help/index.html)
+	$(call open_browser_to_page,$(APP_HELP_RESOURCES_ROOT)/English.lproj/index.html)
 	$(end_target)
 
 .PHONY: clean
@@ -91,9 +104,11 @@ build-%:
 	$(begin_target)
 	install -d "$(strip $(APP_HELP_LOCALIZED))"
 	$(MAKE) -f $(MAKEFILE_LIST) install-html-$*
-	$(MAKE) -f $(MAKEFILE_LIST) install-images-$*
 	$(MAKE) -f $(MAKEFILE_LIST) install-plist-$*
+	$(MAKE) -f $(MAKEFILE_LIST) install-index-$*
+	$(MAKE) -f $(MAKEFILE_LIST) install-images-$*
 	$(MAKE) -f $(MAKEFILE_LIST) install-stylesheets-$*
+	$(MAKE) -f $(MAKEFILE_LIST) "$(strip $(APP_HELP_CONTENTS_ROOT))"/Info.plist
 	perl -pi -e 's/LAST_UPDATED/$(shell date +"%A, %B %d, %Y, %H:%M %Z")/' \
 		"$(strip $(APP_HELP_LOCALIZED))/index.html"
 	$(end_target)
@@ -111,10 +126,12 @@ clean-install-html-%:
 	$(RM) $(call SOURCE_INDEX_HTML,$*)
 
 install-images-%:
-	cp $(call SOURCE_IMG,$*) "$(strip $(APP_HELP_LOCALIZED_CONTENT))/"
+	cp $(SOURCE_IMG_SHARED) "$(strip $(APP_HELP_RESOURCES_ROOT))/"
+	cp $(SOURCE_IMG_LOCALIZED) "$(strip $(APP_HELP_LOCALIZED_CONTENT))/"
 
 clean-install-images-%:
-	$(RM) $(foreach IMG,$(notdir $(call SOURCE_IMG,$*)),"$(strip $(APP_HELP_LOCALIZED_CONTENT))/$(IMG)")
+	$(RM) $(foreach IMG,$(notdir $(SOURCE_IMG_SHARED)),"$(strip $(APP_HELP_RESOURCES_ROOT))/$(IMG)")
+	$(RM) $(foreach IMG,$(notdir $(SOURCE_IMG_LOCALIZED)),"$(strip $(APP_HELP_LOCALIZED_CONTENT))/$(IMG)")
 
 install-plist-%: $(call SOURCE_PLIST,%)
 	cp $(call SOURCE_PLIST,$*) "$(strip $(APP_HELP_LOCALIZED))/"
@@ -123,19 +140,24 @@ clean-install-plist-%:
 	$(RM) $(foreach PLIST,$(notdir $(call SOURCE_PLIST,$*)),"$(strip $(APP_HELP_LOCALIZED))/$(PLIST)")
 
 install-stylesheets-%:
-	cp $(call SOURCE_CSS,$*) "$(strip $(APP_HELP_LOCALIZED_CONTENT))/"
+	cp $(call SOURCE_CSS_LOCALIZED_CONTENT,$*) "$(strip $(APP_HELP_LOCALIZED_CONTENT))/"
 
 clean-install-stylesheets-%:
-	$(RM) $(foreach CSS,$(notdir $(call SOURCE_CSS,$*)),"$(strip $(APP_HELP_LOCALIZED_CONTENT))/$(CSS)")
+	$(RM) $(foreach CSS,$(notdir $(call SOURCE_CSS_LOCALIZED_CONTENT,$*)),"$(strip $(APP_HELP_LOCALIZED_CONTENT))/$(CSS)")
+
+install-index-%:
+	$(MAKE) -f $(MAKEFILE_LIST) $(APP_HELP_LOCALIZED_SEARCH_INDEX)
 
 clean-install-index-%:
-	$(RM) "$(strip $(APP_HELP_LOCALIZED))/Help.helpindex"
-	$(RM) "$(strip $(APP_HELP_LOCALIZED))/Help idx"
+	$(RM) "$(strip $(APP_HELP_LOCALIZED_SEARCH_INDEX))"
 
 clean-%: clean-install-images-% clean-install-stylesheets-% clean-install-plist-% clean-install-html-% clean-install-index-%
 	$(begin_target)
-	-rmdir "$(strip $(APP_HELP_LOCALIZED))"
+	-rm "$(strip $(APP_HELP_CONTENTS_ROOT))"/Info.plist
 	-rmdir "$(strip $(APP_HELP_LOCALIZED_ROOT))"
+	-rmdir "$(strip $(APP_HELP_RESOURCES_ROOT))"
+	-rmdir "$(strip $(APP_HELP_CONTENTS_ROOT))"
+	-rmdir "$(strip $(APP_HELP_ROOT))"
 	$(end_target)
 
 # "make" considers the HTML files intermediates normally,
@@ -144,10 +166,7 @@ clean-%: clean-install-images-% clean-install-stylesheets-% clean-install-plist-
 # original input files change)
 .SECONDARY: $(foreach L,$(ALL_LANGUAGES),$(call SOURCE_HTML,$(L)) $(call SOURCE_INDEX_HTML,$(L)))
 
-# the index page, oddly, should be formatted XHTML 1.0
-# and contain Apple's special keywords, even though they
-# expect HTML 4.01 (or HTML 3.2, for Panther) otherwise!
-%/index.html: %/index.kv %/index.textile
+%.lproj/index.html: %/index.kv %/index.textile
 	$(begin_target)
 	$(DOCTYPER) XHTML1.0-UTF-8 >| $@
 	echo "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>" >> $@
@@ -160,22 +179,35 @@ clean-%: clean-install-images-% clean-install-stylesheets-% clean-install-plist-
 
 %.html: $(strip $(MAIN_SRC))/base.kv %.kv %.textile
 	$(begin_target)
-	$(DOCTYPER) HTML4.01 >| $@
-	echo "<html><head>" >> $@
-	$(KV_TO_HEAD) $< >> $@
-	$(KV_TO_HEAD) $*.kv >> $@
+	$(DOCTYPER) XHTML1.0-UTF-8 >| $@
+	echo "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>" >> $@
+	@# Apple's tools will not parse the title tag correctly unless it
+	@# appears early in the file; therefore, a "title:" key must be
+	@# extracted and handled first even if it would otherwise have
+	@# been placed on a later line of the generated HTML file
+	grep title: $*.kv | $(KV_TO_HEAD) -xml >> $@
+	$(KV_TO_HEAD) -xml $< >> $@
+	grep -v title: $*.kv | $(KV_TO_HEAD) -xml >> $@
 	echo "</head><body>" >> $@
 	$(GENERATOR) $*.textile | sed 's/\>\>/\&gt;\&gt;/g' >> $@
 	echo "</body></html>" >> $@
 	echo >> $@
-	@# textile produces XHTML output, convert to HTML
-	perl -pi -e 's|<br />|<br>|g' $@
 	$(end_target)
 
-%/ExactMatch.plist: %/ExactMatch.kv
+$(MAIN_SRC)/%/ExactMatch.plist: $(MAIN_SRC)/%/ExactMatch.kv
 	$(begin_target)
 	$(KV_TO_PLIST) $< > $@
 	$(end_target)
+
+$(APP_HELP_CONTENTS_ROOT)/Info.plist: $(MAIN_SRC)/Template-Info.plist
+	cp $(MAIN_SRC)/Template-Info.plist $@
+	env BUILT_PRODUCTS_DIR="$(APP_HELP_CONTENTS_ROOT)" INFOPLIST_PATH=Info.plist \
+		$(CURDIR)/VersionInfo.sh $(CURDIR)/Tools/AutoDatePropertyList.sh
+
+%.lproj/search.helpindex: $(foreach L,$(ALL_LANGUAGES),$(call SOURCE_HTML,$(L)))
+	$(HIUTIL) --verbose --verbose --verbose -1 --create --anchors --exclude '\.css$$' --exclude '\.png$$' --file "$@" "$(dir $@)"
+	$(HIUTIL) --verbose -1 --list-anchors --file "$@"
+	$(HIUTIL) --verbose -1 --list-files --file "$@"
 
 define begin_target
 	@date "+      $(notdir $@): Started at %T."

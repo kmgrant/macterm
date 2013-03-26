@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130325',
     '20130220',
     '20130205',
     '20121129',
@@ -464,6 +465,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130325': [
+        'Fixed Help so that search results are returned properly (this also fixes the "?" buttons in MacTerm).',
+    ],
     '20130220': [
         'Fixed the "Copy with Tab Substitution" command, which was leaving spaces intact instead of inserting tabs.',
     ],
