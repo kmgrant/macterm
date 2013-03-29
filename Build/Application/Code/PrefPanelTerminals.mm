@@ -346,6 +346,40 @@ typedef My_TerminalsPanelScreenData*		My_TerminalsPanelScreenDataPtr;
 
 
 /*!
+Describes a type of base terminal emulator.
+*/
+@interface PrefPanelTerminals_EmulatorInfo : NSObject
+{
+	Terminal_Emulator	emulatorType;
+	NSString*			description;
+}
+
+// designated initializer
+- (id)
+initWithTerminalEmulatorType:(Terminal_Emulator)_
+description:(NSString*)_;
+
+// accessors
+
+- (NSString*)
+boundName;
+- (void)
+setBoundName:(NSString*)_;
+
+- (NSString*)
+description;
+- (void)
+setDescription:(NSString*)_;
+
+- (Terminal_Emulator)
+emulatorType;
+- (void)
+setEmulatorType:(Terminal_Emulator)_;
+
+@end
+
+
+/*!
 Describes a type of scrollback behavior.
 */
 @interface PrefPanelTerminals_ScrollbackTypeInfo : NSObject
@@ -386,6 +420,14 @@ OSStatus	accessDataBrowserItemData	(ControlRef, DataBrowserItemID, DataBrowserPr
 Boolean		compareDataBrowserItems		(ControlRef, DataBrowserItemID, DataBrowserItemID, DataBrowserPropertyID);
 
 } // anonymous namespace
+
+
+@interface PrefPanelTerminals_EmulationViewManager (PrefPanelTerminals_EmulationViewManagerInternal)
+
+- (NSArray*)
+primaryDisplayBindingKeys;
+
+@end // PrefPanelTerminals_EmulationViewManager (PrefPanelTerminals_EmulationViewManagerInternal)
 
 
 @interface PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal)
@@ -3035,6 +3077,7 @@ init
 {
 	NSArray*	subViewManagers = [NSArray arrayWithObjects:
 												[[[PrefPanelTerminals_OptionsViewManager alloc] init] autorelease],
+												[[[PrefPanelTerminals_EmulationViewManager alloc] init] autorelease],
 												[[[PrefPanelTerminals_ScreenViewManager alloc] init] autorelease],
 												nil];
 	
@@ -3064,6 +3107,969 @@ dealloc
 
 
 @end // PrefPanelTerminals_ViewManager
+
+
+@implementation PrefPanelTerminals_EmulatorInfo
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithTerminalEmulatorType:(Terminal_Emulator)	aType
+description:(NSString*)								aString
+{
+	self = [super init];
+	if (nil != self)
+	{
+		[self setEmulatorType:aType];
+		[self setDescription:aString];
+	}
+	return self;
+}// initWithTerminalEmulatorType:description:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[description release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+IMPORTANT:	The "boundName" key is ONLY required because older
+			versions of Mac OS X do not seem to work properly
+			when bound to the "description" accessor.  (Namely,
+			the OS seems to stubbornly use its own "description"
+			instead of invoking the right one.)  In the future
+			this might be removed and rebound to "description".
+
+(4.1)
+*/
+- (NSString*)
+boundName
+{
+	return [[description retain] autorelease];
+}
+- (void)
+setBoundName:(NSString*)	aString
+{
+	if (description != aString)
+	{
+		[description release];
+		description = [aString copy];
+	}
+}// setBoundName:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+description
+{
+	return [[description retain] autorelease];
+}
+- (void)
+setDescription:(NSString*)		aString
+{
+	if (description != aString)
+	{
+		[description release];
+		description = [aString copy];
+	}
+}// setDescription:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (Terminal_Emulator)
+emulatorType
+{
+	return emulatorType;
+}
+- (void)
+setEmulatorType:(Terminal_Emulator)		aType
+{
+	emulatorType = aType;
+}// setEmulatorType:
+
+
+@end // PrefPanelTerminals_EmulatorInfo
+
+
+@implementation PrefPanelTerminals_BaseEmulatorValue
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	self = [super initWithContextManager:aContextMgr];
+	if (nil != self)
+	{
+		self->emulatorArray = [[[NSArray alloc] initWithObjects:
+								[[[PrefPanelTerminals_EmulatorInfo alloc]
+									initWithTerminalEmulatorType:kTerminal_EmulatorDumb
+																	description:NSLocalizedStringFromTable
+																				(@"None (“Dumb”)", @"PrefPanelTerminals"/* table */,
+																					@"emulator disabled")]
+									autorelease],
+								[[[PrefPanelTerminals_EmulatorInfo alloc]
+									initWithTerminalEmulatorType:kTerminal_EmulatorVT100
+																	description:NSLocalizedStringFromTable
+																				(@"VT100", @"PrefPanelTerminals"/* table */,
+																					@"emulator of VT100 terminal device")]
+									autorelease],
+								[[[PrefPanelTerminals_EmulatorInfo alloc]
+									initWithTerminalEmulatorType:kTerminal_EmulatorVT102
+																	description:NSLocalizedStringFromTable
+																				(@"VT102", @"PrefPanelTerminals"/* table */,
+																					@"emulator of VT102 terminal device")]
+									autorelease],
+								[[[PrefPanelTerminals_EmulatorInfo alloc]
+									initWithTerminalEmulatorType:kTerminal_EmulatorVT220
+																	description:NSLocalizedStringFromTable
+																				(@"VT220", @"PrefPanelTerminals"/* table */,
+																					@"emulator of VT220 terminal device")]
+									autorelease],
+								[[[PrefPanelTerminals_EmulatorInfo alloc]
+									initWithTerminalEmulatorType:kTerminal_EmulatorXTerm256Color
+																	description:NSLocalizedStringFromTable
+																				(@"XTerm", @"PrefPanelTerminals"/* table */,
+																					@"emulator of XTerm terminal program")]
+									autorelease],
+								nil] autorelease];
+		self->emulatorObject = [[PreferenceValue_Number alloc]
+									initWithPreferencesTag:kPreferences_TagTerminalEmulatorType
+															contextManager:aContextMgr
+															preferenceCType:kPreferenceValue_CTypeUInt32];
+		
+		// monitor the preferences context manager so that observers
+		// of preferences in sub-objects can be told to expect changes
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextWillChange:)
+															name:kPrefsContextManager_ContextWillChangeNotification
+															object:aContextMgr];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextDidChange:)
+															name:kPrefsContextManager_ContextDidChangeNotification
+															object:aContextMgr];
+	}
+	return self;
+}// initWithContextManager:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[emulatorArray release];
+	[emulatorObject release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Responds to a change in preferences context by notifying
+observers that key values have changed (so that updates
+to the user interface occur).
+
+(4.1)
+*/
+- (void)
+prefsContextDidChange:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	// note: should be opposite order of "prefsContextWillChange:"
+	[self didChangeValueForKey:@"currentEmulator"];
+	[self didSetPreferenceValue];
+}// prefsContextDidChange:
+
+
+/*!
+Responds to a change in preferences context by notifying
+observers that key values have changed (so that updates
+to the user interface occur).
+
+(4.1)
+*/
+- (void)
+prefsContextWillChange:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	// note: should be opposite order of "prefsContextDidChange:"
+	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"currentEmulator"];
+}// prefsContextWillChange:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSArray*)
+emulatorArray
+{
+	return [[emulatorArray retain] autorelease];
+}// emulatorArray
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (id)
+currentEmulator
+{
+	Terminal_Emulator	currentType = STATIC_CAST([[self->emulatorObject numberStringValue] intValue],
+													Terminal_Emulator);
+	id					result = nil;
+	
+	
+	for (UInt16 i = 0; i < [[self emulatorArray] count]; ++i)
+	{
+		PrefPanelTerminals_EmulatorInfo*	asInfo = (PrefPanelTerminals_EmulatorInfo*)
+														[[self emulatorArray] objectAtIndex:i];
+		
+		
+		if (currentType == [asInfo emulatorType])
+		{
+			result = asInfo;
+			break;
+		}
+	}
+	return result;
+}
+- (void)
+setCurrentEmulator:(id)		selectedObject
+{
+	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"currentEmulator"];
+	
+	if (nil == selectedObject)
+	{
+		[self setNilPreferenceValue];
+	}
+	else
+	{
+		PrefPanelTerminals_EmulatorInfo*	asInfo = (PrefPanelTerminals_EmulatorInfo*)selectedObject;
+		
+		
+		[self->emulatorObject setNumberStringValue:
+								[[NSNumber numberWithInt:[asInfo emulatorType]] stringValue]];
+	}
+	
+	[self didChangeValueForKey:@"currentEmulator"];
+	[self didSetPreferenceValue];
+}// setCurrentEmulator:
+
+
+#pragma mark PreferenceValue_Inherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = [self->emulatorObject isInherited];
+	
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"currentEmulator"];
+	[self->emulatorObject setNilPreferenceValue];
+	[self didChangeValueForKey:@"currentEmulator"];
+	[self didSetPreferenceValue];
+}// setNilPreferenceValue
+
+
+@end // PrefPanelTerminals_BaseEmulatorValue
+
+
+@implementation PrefPanelTerminals_EmulationTweaksValue
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	self = [super initWithContextManager:aContextMgr];
+	if (nil != self)
+	{
+		NSMutableArray*		asMutableArray = [[[NSMutableArray alloc] init] autorelease];
+		id					valueObject = nil;
+		
+		
+		self->featureArray = [asMutableArray retain];
+		
+		// VT100 line-wrapping bug
+		valueObject = [[[PreferenceValue_Flag alloc]
+						initWithPreferencesTag:kPreferences_TagVT100FixLineWrappingBug
+												contextManager:aContextMgr]
+						autorelease];
+		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"VT100 Fix Line Wrapping Bug",
+																			@"PrefPanelTerminals"/* table */,
+																			@"description of terminal feature")
+													forKey:@"description"];
+		[asMutableArray addObject:valueObject];
+		
+		// XTerm 256-color support
+		valueObject = [[[PreferenceValue_Flag alloc]
+						initWithPreferencesTag:kPreferences_TagXTerm256ColorsEnabled
+												contextManager:aContextMgr]
+						autorelease];
+		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"XTerm 256 Colors",
+																			@"PrefPanelTerminals"/* table */,
+																			@"description of terminal feature")
+													forKey:@"description"];
+		[asMutableArray addObject:valueObject];
+		
+		// XTerm BCE
+		valueObject = [[[PreferenceValue_Flag alloc]
+						initWithPreferencesTag:kPreferences_TagXTermBackgroundColorEraseEnabled
+												contextManager:aContextMgr]
+						autorelease];
+		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"XTerm Background Color Erase",
+																			@"PrefPanelTerminals"/* table */,
+																			@"description of terminal feature")
+													forKey:@"description"];
+		[asMutableArray addObject:valueObject];
+		
+		// XTerm Color
+		valueObject = [[[PreferenceValue_Flag alloc]
+						initWithPreferencesTag:kPreferences_TagXTermColorEnabled
+												contextManager:aContextMgr]
+						autorelease];
+		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"XTerm Color",
+																			@"PrefPanelTerminals"/* table */,
+																			@"description of terminal feature")
+													forKey:@"description"];
+		[asMutableArray addObject:valueObject];
+		
+		// XTerm Graphics
+		valueObject = [[[PreferenceValue_Flag alloc]
+						initWithPreferencesTag:kPreferences_TagXTermGraphicsEnabled
+												contextManager:aContextMgr]
+						autorelease];
+		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"XTerm Graphics Characters",
+																			@"PrefPanelTerminals"/* table */,
+																			@"description of terminal feature")
+													forKey:@"description"];
+		[asMutableArray addObject:valueObject];
+		
+		// XTerm Window Alteration
+		valueObject = [[[PreferenceValue_Flag alloc]
+						initWithPreferencesTag:kPreferences_TagXTermWindowAlterationEnabled
+												contextManager:aContextMgr]
+						autorelease];
+		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"XTerm Window Alteration",
+																			@"PrefPanelTerminals"/* table */,
+																			@"description of terminal feature")
+													forKey:@"description"];
+		[asMutableArray addObject:valueObject];
+		
+		// monitor the preferences context manager so that observers
+		// of preferences in sub-objects can be told to expect changes
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextWillChange:)
+															name:kPrefsContextManager_ContextWillChangeNotification
+															object:aContextMgr];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextDidChange:)
+															name:kPrefsContextManager_ContextDidChangeNotification
+															object:aContextMgr];
+	}
+	return self;
+}// initWithContextManager:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[featureArray release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Responds to a change in preferences context by notifying
+observers that key values have changed (so that updates
+to the user interface occur).
+
+(4.1)
+*/
+- (void)
+prefsContextDidChange:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	// note: should be opposite order of "prefsContextWillChange:"
+	[self didSetPreferenceValue];
+}// prefsContextDidChange:
+
+
+/*!
+Responds to a change in preferences context by notifying
+observers that key values have changed (so that updates
+to the user interface occur).
+
+(4.1)
+*/
+- (void)
+prefsContextWillChange:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	// note: should be opposite order of "prefsContextDidChange:"
+	[self willSetPreferenceValue];
+}// prefsContextWillChange:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSArray*)
+featureArray
+{
+	return [[featureArray retain] autorelease];
+}// featureArray
+
+
+#pragma mark PreferenceValue_Inherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = YES; // initially...
+	
+	
+	for (UInt16 i = 0; i < [[self featureArray] count]; ++i)
+	{
+		PreferenceValue_Flag*	asValue = (PreferenceValue_Flag*)[[self featureArray] objectAtIndex:i];
+		
+		
+		if (NO == [asValue isInherited])
+		{
+			result = NO;
+			break;
+		}
+	}
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self willSetPreferenceValue];
+	for (UInt16 i = 0; i < [[self featureArray] count]; ++i)
+	{
+		PreferenceValue_Flag*	asValue = (PreferenceValue_Flag*)[[self featureArray] objectAtIndex:i];
+		
+		
+		[asValue setNilPreferenceValue];
+	}
+	[self didSetPreferenceValue];
+}// setNilPreferenceValue
+
+
+@end // PrefPanelTerminals_EmulationTweaksValue
+
+
+@implementation PrefPanelTerminals_EmulationViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelTerminalEmulationCocoa" delegate:self context:nullptr];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[prefsMgr release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelTerminals_BaseEmulatorValue*)
+baseEmulator
+{
+	return [self->byKey objectForKey:@"baseEmulator"];
+}// baseEmulator
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelTerminals_EmulationTweaksValue*)
+emulationTweaks
+{
+	return [self->byKey objectForKey:@"emulationTweaks"];
+}// emulationTweaks
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_String*)
+identity
+{
+	return [self->byKey objectForKey:@"identity"];
+}// identity
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:5/* arbitrary; number of settings */];
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeInspector;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+	assert(nil != tweaksTableView);
+	assert(nil != byKey);
+	assert(nil != prefsMgr);
+	
+	// do not show highlighting in this table
+	[tweaksTableView setSelectionHighlightStyle:NSTableViewSelectionHighlightStyleNone];
+	
+	// remember frame from XIB (it might be changed later)
+	self->idealFrame = [aContainerView frame];
+	
+	// note that all current values will change
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+	}
+	
+	// WARNING: Key names are depended upon by bindings in the XIB file.
+	[self->byKey setObject:[[[PrefPanelTerminals_BaseEmulatorValue alloc]
+								initWithContextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"baseEmulator"];
+	[self->byKey setObject:[[[PrefPanelTerminals_EmulationTweaksValue alloc]
+								initWithContextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"emulationTweaks"];
+	[self->byKey setObject:[[[PreferenceValue_String alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalAnswerBackMessage
+														contextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"identity"];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = self->idealFrame.size;
+}
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet)
+	// note that all current values will change
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+	}
+	
+	// now apply the specified settings
+	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [NSImage imageNamed:@"IconForPrefPanelTerminals"];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.Terminals.Emulation";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Emulation", @"PrefPanelTerminals", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintHorizontal;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::TERMINAL;
+}// preferencesClass
+
+
+@end // PrefPanelTerminals_EmulationViewManager
+
+
+@implementation PrefPanelTerminals_EmulationViewManager (PrefPanelTerminals_EmulationViewManagerInternal)
+
+
+/*!
+Returns the names of key-value coding keys that represent the
+primary bindings of this panel (those that directly correspond
+to saved preferences).
+
+(4.1)
+*/
+- (NSArray*)
+primaryDisplayBindingKeys
+{
+	return [NSArray arrayWithObjects:
+						@"baseEmulator", @"emulationTweaks",
+						@"identity",
+						nil];
+}// primaryDisplayBindingKeys
+
+
+@end // PrefPanelTerminals_EmulationViewManager (PrefPanelTerminals_EmulationViewManagerInternal)
 
 
 @implementation PrefPanelTerminals_OptionsViewManager
@@ -3488,7 +4494,7 @@ preferencesClass
 }// preferencesClass
 
 
-@end // PrefPanelGeneral_OptionsViewManager
+@end // PrefPanelTerminals_OptionsViewManager
 
 
 @implementation PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal)
@@ -3771,13 +4777,13 @@ currentBehavior
 	
 	for (UInt16 i = 0; i < [[self behaviorArray] count]; ++i)
 	{
-		PrefPanelTerminals_ScrollbackTypeInfo*	asTypeInfo = (PrefPanelTerminals_ScrollbackTypeInfo*)
-																[[self behaviorArray] objectAtIndex:i];
+		PrefPanelTerminals_ScrollbackTypeInfo*	asInfo = (PrefPanelTerminals_ScrollbackTypeInfo*)
+															[[self behaviorArray] objectAtIndex:i];
 		
 		
-		if (currentType == [asTypeInfo scrollbackType])
+		if (currentType == [asInfo scrollbackType])
 		{
-			result = asTypeInfo;
+			result = asInfo;
 			break;
 		}
 	}
@@ -3797,11 +4803,11 @@ setCurrentBehavior:(id)		selectedObject
 	}
 	else
 	{
-		PrefPanelTerminals_ScrollbackTypeInfo*	asTypeInfo = (PrefPanelTerminals_ScrollbackTypeInfo*)selectedObject;
+		PrefPanelTerminals_ScrollbackTypeInfo*	asInfo = (PrefPanelTerminals_ScrollbackTypeInfo*)selectedObject;
 		
 		
 		[self->behaviorObject setNumberStringValue:
-								[[NSNumber numberWithInt:[asTypeInfo scrollbackType]] stringValue]];
+								[[NSNumber numberWithInt:[asInfo scrollbackType]] stringValue]];
 	}
 	
 	[self didChangeValueForKey:@"rowsEnabled"];
@@ -4310,7 +5316,7 @@ preferencesClass
 }// preferencesClass
 
 
-@end // PrefPanelGeneral_ScreenViewManager
+@end // PrefPanelTerminals_ScreenViewManager
 
 
 @implementation PrefPanelTerminals_ScreenViewManager (PrefPanelTerminals_ScreenViewManagerInternal)

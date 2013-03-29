@@ -65,6 +65,7 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 	if (nil != self)
 	{
 		self->prefsMgr = [aContextMgr retain];
+		self->propertiesByKey = nil;
 	}
 	return self;
 }// initWithContextManager:
@@ -79,6 +80,7 @@ Destructor.
 dealloc
 {
 	[prefsMgr release];
+	[propertiesByKey release];
 	[super dealloc];
 }// dealloc
 
@@ -176,6 +178,22 @@ setInherited:(BOOL)		aFlag
 	}
 	[self didChangeValueForKey:@"inheritEnabled"];
 }// setInherited:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSMutableDictionary*)
+propertiesByKey
+{
+	if (nil == propertiesByKey)
+	{
+		self->propertiesByKey = [[NSMutableDictionary alloc] initWithCapacity:1]; // arbitrary initial size
+	}
+	return propertiesByKey;
+}// propertiesByKey
 
 
 /*!

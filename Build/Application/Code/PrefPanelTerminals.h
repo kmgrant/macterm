@@ -67,6 +67,82 @@ changes to an interface declared in a ".mm" file.
 
 
 /*!
+Manages bindings for the base emulator preference.
+*/
+@interface PrefPanelTerminals_BaseEmulatorValue : PreferenceValue_Inherited
+{
+	NSArray*					emulatorArray;
+	PreferenceValue_Number*		emulatorObject;
+}
+
+// designated initializer
+- (id)
+initWithContextManager:(PrefsContextManager_Object*)_;
+
+// accessors
+
+- (NSArray*)
+emulatorArray; // binding
+
+- (id)
+currentEmulator;
+- (void)
+setCurrentEmulator:(id)_; // binding
+
+@end
+
+
+/*!
+Manages bindings for the emulation tweaks preference.
+*/
+@interface PrefPanelTerminals_EmulationTweaksValue : PreferenceValue_Inherited
+{
+	NSArray*	featureArray; // array of Preference_Value* with "description" property
+}
+
+// designated initializer
+- (id)
+initWithContextManager:(PrefsContextManager_Object*)_;
+
+// accessors
+
+- (NSArray*)
+featureArray; // binding
+
+@end
+
+
+/*!
+Loads a NIB file that defines the Emulation pane.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelTerminals_EmulationViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+{
+	IBOutlet NSTableView*			tweaksTableView;
+@private
+	PrefsContextManager_Object*		prefsMgr;
+	NSRect							idealFrame;
+	NSMutableDictionary*			byKey;
+}
+
+// accessors
+
+- (PrefPanelTerminals_BaseEmulatorValue*)
+baseEmulator; // binding
+
+- (PrefPanelTerminals_EmulationTweaksValue*)
+emulationTweaks; // binding
+
+- (PreferenceValue_String*)
+identity; // binding
+
+@end
+
+
+/*!
 Loads a NIB file that defines the Options pane.
 
 Note that this is only in the header for the sake of

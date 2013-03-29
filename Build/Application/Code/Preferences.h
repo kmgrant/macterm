@@ -275,7 +275,7 @@ enum
 	kPreferences_TagPageKeysControlLocalTerminal		= 'pgtm',	//!< data: "Boolean"
 	kPreferences_TagTerminalAnswerBackMessage			= 'ansb',	//!< data: "CFStringRef"
 	kPreferences_TagTerminalClearSavesLines				= 'clsv',	//!< data: "Boolean"
-	kPreferences_TagTerminalEmulatorType				= 'emul',	//!< data: "Terminal_Emulator", a "kTerminal_Emulator…" constant
+	kPreferences_TagTerminalEmulatorType				= 'emul',	//!< data: "UInt32" (Terminal_Emulator)
 	kPreferences_TagTerminalLineWrap					= 'wrap',	//!< data: "Boolean"
 	kPreferences_TagTerminalScreenColumns				= 'scol',	//!< data: "UInt16"
 	kPreferences_TagTerminalScreenRows					= 'srow',	//!< data: "UInt16"

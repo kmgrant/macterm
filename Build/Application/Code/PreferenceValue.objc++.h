@@ -73,11 +73,20 @@ a preference to the parent context value (by deleting data).
 Bind an appropriate editor control (e.g. a color box) to an
 appropriate subclass-provided path for editing a particular kind
 of value (e.g. in this case, "colorValue" is a likely path).
+
+The "propertiesByKey" may be used to associate any data you want
+with a preference value.  (This is not allocated unless the
+method "propertiesByKey" is called.)  A common use of this data
+is an associated binding; for example, a text label near the
+control that displays a preference value could be bound to a
+string value in its dictionary that holds a human-readable and
+localized description of the setting.
 */
 @interface PreferenceValue_Inherited : NSObject
 {
 @private
 	PrefsContextManager_Object*		prefsMgr;
+	NSMutableDictionary*			propertiesByKey;
 }
 
 // designated initializer
@@ -94,6 +103,9 @@ isInheritEnabled; // binding (to subclasses, typically)
 
 - (PrefsContextManager_Object*)
 prefsMgr;
+
+- (NSMutableDictionary*)
+propertiesByKey;
 
 - (void)
 didSetPreferenceValue;

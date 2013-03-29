@@ -3282,8 +3282,6 @@ setInheritanceCheckBox		(HIViewWrap		inCheckBox,
 @implementation PrefPanelFormats_ViewManager
 
 
-- (NSRect) someMethod { NSRect r; return r; }
-
 /*!
 Designated initializer.
 
