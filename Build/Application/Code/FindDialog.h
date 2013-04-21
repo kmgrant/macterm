@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -51,9 +51,15 @@ typedef UInt16 FindDialog_Options;
 enum
 {
 	kFindDialog_OptionsAllOff				= 0,
-	kFindDialog_OptionsDefault				= kFindDialog_OptionsAllOff,
-	kFindDialog_OptionCaseSensitivity		= (1 << 0),
-	kFindDialog_OptionOldestLinesFirst		= (1 << 1)
+	kFindDialog_OptionCaseInsensitive		= (1 << 0),
+	kFindDialog_OptionAllOpenTerminals		= (1 << 1),
+	kFindDialog_OptionsDefault				= kFindDialog_OptionCaseInsensitive
+};
+
+enum FindDialog_SearchContext
+{
+	kFindDialog_SearchContextLocal			= 0,	//!< current window
+	kFindDialog_SearchContextGlobal			= 1		//!< all windows
 };
 
 #pragma mark Types
@@ -71,7 +77,12 @@ typedef struct FindDialog_OpaqueStruct*		FindDialog_Ref;
 findDialog:(FindDialog_ViewManager*)_
 didLoadManagedView:(NSView*)_;
 
-// perform the search yourself, then call the view manager’s "completeSearch:" when it finishes
+// remove search highlighting
+- (void)
+findDialog:(FindDialog_ViewManager*)_
+clearSearchHighlightingInContext:(FindDialog_SearchContext)_;
+
+// perform the search yourself, then call the view manager’s "updateUserInterfaceWithMatches:didSearch:"
 - (void)
 findDialog:(FindDialog_ViewManager*)_
 didSearchInManagedView:(NSView*)_
@@ -112,6 +123,7 @@ changes to an interface declared in a ".mm" file.
 	NSString*								searchText;
 	NSString*								statusText;
 	BOOL									caseInsensitiveSearch;
+	BOOL									multiTerminalSearch;
 	BOOL									searchProgressHidden;
 	BOOL									successfulSearch;
 }
@@ -125,14 +137,15 @@ initialOptions:(FindDialog_Options)_;
 
 // new methods
 
-- (void)
-completeSearch:(unsigned long)_;
-
 - (NSView*)
 logicalFirstResponder;
 
 - (NSSearchField*)
 searchField;
+
+- (void)
+updateUserInterfaceWithMatches:(unsigned long)_
+didSearch:(BOOL)_;
 
 // actions
 
@@ -154,6 +167,11 @@ performSearch:(id)_;
 isCaseInsensitiveSearch; // binding
 - (void)
 setCaseInsensitiveSearch:(BOOL)_;
+
+- (BOOL)
+isMultiTerminalSearch; // binding
+- (void)
+setMultiTerminalSearch:(BOOL)_;
 
 - (BOOL)
 isSearchProgressHidden; // binding

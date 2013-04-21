@@ -20,7 +20,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -50,6 +50,9 @@
 
 #ifndef __SESSIONFACTORY__
 #define __SESSIONFACTORY__
+
+// standard-C++ includes
+#include <vector>
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -116,6 +119,10 @@ enum
 	kSessionFactory_SessionFilterFlagAllSessions		= kSessionFactory_SessionFilterFlagRegularSessions |
 															kSessionFactory_SessionFilterFlagConsoleSessions
 };
+
+#pragma mark Types
+
+typedef std::vector< TerminalWindowRef >	SessionFactory_TerminalWindowList;
 
 #pragma mark Callbacks
 
@@ -289,6 +296,10 @@ void
 													 void*							inData1,
 													 SInt32							inData2,
 													 void*							inoutResultPtr);
+
+// FOR SPECIAL USES ONLY
+SessionFactory_TerminalWindowList const&
+	SessionFactory_ReturnTerminalWindowList			();
 
 //@}
 

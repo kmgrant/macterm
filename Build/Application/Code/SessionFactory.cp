@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -85,7 +85,6 @@
 namespace {
 
 typedef std::vector< SessionRef >						SessionList;
-typedef std::vector< TerminalWindowRef >				TerminalWindowList;
 typedef std::multimap< TerminalWindowRef, SessionRef >	TerminalWindowToSessionsMap;
 typedef std::vector< Workspace_Ref >					MyWorkspaceList;
 
@@ -105,7 +104,7 @@ Workspace_Ref			createWorkspace					();
 Boolean					displayTerminalWindow			(TerminalWindowRef, Preferences_ContextRef = nullptr, UInt16 = 0);
 void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionFilterFlags,
 														 SessionFactory_SessionOpProcPtr, void*, SInt32, void*);
-void					forEveryTerminalWindowInListDo	(TerminalWindowList const&,
+void					forEveryTerminalWindowInListDo	(SessionFactory_TerminalWindowList const&,
 														 SessionFactory_TerminalWindowOpProcPtr, void*, SInt32, void*);
 Boolean					newSessionFromCommand			(TerminalWindowRef, UInt32, Preferences_ContextRef, UInt16);
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
@@ -159,7 +158,7 @@ EventHandlerRef					gCarbonEventSessionProcessDataHandler = nullptr;
 EventHandlerRef					gCarbonEventSessionSetStateHandler = nullptr;
 EventHandlerRef					gCarbonEventWindowFocusHandler = nullptr;
 SessionList&					gSessionListSortedByCreationTime ()		{ static SessionList x; return x; }
-TerminalWindowList&				gTerminalWindowListSortedByCreationTime ()	{ static TerminalWindowList x; return x; }
+SessionFactory_TerminalWindowList&	gTerminalWindowListSortedByCreationTime ()	{ static SessionFactory_TerminalWindowList x; return x; }
 MyWorkspaceList&				gWorkspaceListSortedByCreationTime ()	{ static MyWorkspaceList x; return x; }
 TerminalWindowToSessionsMap&	gTerminalWindowToSessions()	{ static TerminalWindowToSessionsMap x; return x; }
 
@@ -1959,6 +1958,23 @@ SessionFactory_ReturnStateCount		(Session_State		inStateToCheckFor)
 
 
 /*!
+Returns the list of open terminal windows, in the order they
+were created.
+
+IMPORTANT:	The SessionFactory_ForEveryTerminalWindowDo() API
+			is more stable; this API could go away if the
+			mechanism for storing this list is changed.
+
+(4.1)
+*/
+SessionFactory_TerminalWindowList const&
+SessionFactory_ReturnTerminalWindowList ()
+{
+	return gTerminalWindowListSortedByCreationTime();
+}// ReturnTerminalWindowList
+
+
+/*!
 Returns the session of the specified terminal window.
 
 (4.0)
@@ -2764,14 +2780,14 @@ except it operates on the specific list given.
 (3.1)
 */
 void
-forEveryTerminalWindowInListDo	(TerminalWindowList const&					inList,
+forEveryTerminalWindowInListDo	(SessionFactory_TerminalWindowList const&	inList,
 								 SessionFactory_TerminalWindowOpProcPtr		inProcPtr,
 								 void*										inData1,
 								 SInt32										inData2,
 								 void*										inoutResultPtr)
 {
-	TerminalWindowList::const_iterator		terminalWindowIterator;
-	TerminalWindowRef						terminalWindow = nullptr;
+	SessionFactory_TerminalWindowList::const_iterator	terminalWindowIterator;
+	TerminalWindowRef									terminalWindow = nullptr;
 	
 	
 	// traverse the list
@@ -3496,7 +3512,7 @@ stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 	// the idea here is to shuffle the list so that the given
 	// window is at the end, and then all matching items are just
 	// erased off the end of the list
-	TerminalWindowList&		targetList = gTerminalWindowListSortedByCreationTime();
+	SessionFactory_TerminalWindowList&		targetList = gTerminalWindowListSortedByCreationTime();
 	targetList.erase(std::remove(targetList.begin(), targetList.end(), inTerminalWindow),
 						targetList.end());
 	assert(targetList.end() == std::find(targetList.begin(), targetList.end(), inTerminalWindow));

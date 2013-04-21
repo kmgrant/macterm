@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130421',
     '20130325',
     '20130220',
     '20130205',
@@ -465,6 +466,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130421': [
+        'Fixed Find dialog to avoid some misleading "not found" messages.',
+        'Find dialog now provides an option to search all open terminals at the same time.',
+        'Find dialog case-insensitivity checkbox replaced by an item in the new "gear" menu.',
+    ],
     '20130325': [
         'Fixed Help so that search results are returned properly (this also fixes the "?" buttons in MacTerm).',
     ],
