@@ -748,7 +748,7 @@ TerminalWindow_GetTabWidth	(TerminalWindowRef	inRef,
 	TerminalWindow_Result			result = kTerminalWindow_ResultOK;
 	
 	
-	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
+	if (false == TerminalWindow_IsValid(inRef))
 	{
 		result = kTerminalWindow_ResultInvalidReference;
 		Console_Warning(Console_WriteValueAddress, "attempt to TerminalWindow_GetTabWidth() with invalid reference", inRef);
@@ -807,7 +807,7 @@ TerminalWindow_GetTabWidthAvailable		(TerminalWindowRef	inRef,
 	TerminalWindow_Result			result = kTerminalWindow_ResultOK;
 	
 	
-	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
+	if (false == TerminalWindow_IsValid(inRef))
 	{
 		result = kTerminalWindow_ResultInvalidReference;
 		Console_Warning(Console_WriteValueAddress, "attempt to TerminalWindow_GetTabWidthAvailable() with invalid reference", inRef);
@@ -1024,6 +1024,29 @@ TerminalWindow_IsTab	(TerminalWindowRef	inRef)
 	result = ptr->tab.exists();
 	return result;
 }// IsTab
+
+
+/*!
+Returns "true" only if the specified terminal window has
+not been destroyed with TerminalWindow_Dispose(), and is
+not in the process of being destroyed.
+
+Most of the time, checking for a null reference is enough,
+and efficient; this check may be slower, but is important
+if you are handling something indirectly or asynchronously
+(where a terminal window could have been destroyed at any
+time).
+
+(4.1)
+*/
+Boolean
+TerminalWindow_IsValid	(TerminalWindowRef	inRef)
+{
+	Boolean		result = ((nullptr != inRef) && (gTerminalWindowValidRefs().find(inRef) != gTerminalWindowValidRefs().end()));
+	
+	
+	return result;
+}// IsValid
 
 
 /*!
@@ -1713,7 +1736,7 @@ TerminalWindow_SetTabPosition	(TerminalWindowRef	inRef,
 	TerminalWindow_Result			result = kTerminalWindow_ResultOK;
 	
 	
-	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
+	if (false == TerminalWindow_IsValid(inRef))
 	{
 		result = kTerminalWindow_ResultInvalidReference;
 		Console_Warning(Console_WriteValueAddress, "attempt to TerminalWindow_SetTabPosition() with invalid reference", inRef);
@@ -1769,7 +1792,7 @@ TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
 	TerminalWindow_Result			result = kTerminalWindow_ResultOK;
 	
 	
-	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
+	if (false == TerminalWindow_IsValid(inRef))
 	{
 		result = kTerminalWindow_ResultInvalidReference;
 		Console_Warning(Console_WriteValueAddress, "attempt to TerminalWindow_SetTabWidth() with invalid reference", inRef);
