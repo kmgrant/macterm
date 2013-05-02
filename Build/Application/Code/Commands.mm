@@ -2907,10 +2907,27 @@ sessionWindowStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 															NSHeight([windowScreen frame]) - windowMenuTitleBounds.bottom,
 															windowMenuTitleBounds.right - windowMenuTitleBounds.left,
 															windowMenuTitleBounds.bottom - windowMenuTitleBounds.top);
+						Boolean		noAnimations = false;
+						size_t		actualSize = 0;
 						
 						
-						// make the window zoom into the Window menu’s title area, for visual feedback
-						CocoaAnimation_TransitionWindowForHide(hiddenWindow, asInvertedCGRect);
+						// determine if animation should occur
+						unless (kPreferences_ResultOK ==
+								Preferences_GetData(kPreferences_TagNoAnimations,
+													sizeof(noAnimations), &noAnimations, &actualSize))
+						{
+							noAnimations = false; // assume a value, if preference can’t be found
+						}
+						
+						if (noAnimations)
+						{
+							[hiddenWindow orderOut:nil];
+						}
+						else
+						{
+							// make the window zoom into the Window menu’s title area, for visual feedback
+							CocoaAnimation_TransitionWindowForHide(hiddenWindow, asInvertedCGRect);
+						}
 					}
 				}
 			}

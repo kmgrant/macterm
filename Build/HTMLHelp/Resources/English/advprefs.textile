@@ -69,6 +69,8 @@ table(deftable).
 (defbottom). |\2(desc). The window title and toolbar are visible in Full Screen mode.|
 (deftop). |(key). @new-means@|(types). _string_: @default@, @dialog@, @log-in shell@ or @shell@|
 (defbottom). |\2(desc). The default command-N key equivalent creates this type of session.|
+(deftop). |(key). @no-animations@|(types). _true or false_|
+(defbottom). |\2(desc). Superfluous animations, such as window-shrinking, are not displayed.|
 (deftop). |(key). @no-auto-close@|(types). _true or false_|
 (defbottom). |\2(desc). The window stays open after the process exits for any reason.|
 (deftop). |(key). @no-auto-new@|(types). _true or false_|

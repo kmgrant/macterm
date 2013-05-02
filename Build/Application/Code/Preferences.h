@@ -188,7 +188,7 @@ enum
 	kPreferences_TagKioskUsesSuperfluousEffects			= 'kewl',	//!< data: "Boolean"
 	kPreferences_TagMapBackquote						= 'map`',	//!< data: "Boolean"
 	kPreferences_TagNewCommandShortcutEffect			= 'new?',	//!< data: "UInt32", a "kCommandNewSession…" constant
-	kPreferences_TagNoPasteWarning						= 'npwr',	//!< data: "Boolean"
+	kPreferences_TagNoAnimations						= 'nanm',	//!< data: "Boolean"
 	kPreferences_TagNoUpdateWarning						= 'nupd',	//!< data: "Boolean"
 	kPreferences_TagNotification						= 'noti',	//!< data: "SInt16", a "kAlert_Notify…" constant
 	kPreferences_TagNotifyOfBeeps						= 'bnot',	//!< data: "Boolean"
@@ -248,6 +248,7 @@ enum
 	kPreferences_TagLocalEchoEnabled					= 'echo',	//!< data: "Boolean"
 	kPreferences_TagMapDeleteToBackspace				= 'delb',	//!< data: "Boolean"
 	kPreferences_TagNewLineMapping						= 'newl',	//!< data: "Session_NewlineMode"
+	kPreferences_TagNoPasteWarning						= 'npwr',	//!< data: "Boolean"
 	kPreferences_TagPasteNewLineDelay					= 'pnld',	//!< data: "EventTime"; stored as milliseconds, but scaled to EventTime when used
 	kPreferences_TagScrollDelay							= 'scrd',	//!< data: "EventTime"; stored as milliseconds, but scaled to EventTime when used
 	kPreferences_TagServerHost							= 'host',	//!< data: "CFStringRef" (domain name or IP address)

@@ -2558,17 +2558,38 @@ My_TerminalWindow::
 	RemoveEventHandler(this->toolbarEventHandler), this->toolbarEventHandler = nullptr;
 	DisposeEventHandlerUPP(this->toolbarEventUPP), this->toolbarEventUPP = nullptr;
 	
-	// hide window and kill its controls to disable callbacks
+	// hide window
 	if (nil != this->window)
 	{
+		Boolean		noAnimations = false;
+		size_t		actualSize = 0;
+		
+		
 		gTerminalNSWindows().erase(this->window);
 		
-		// this will hide the window immediately and replace it with a window
-		// that looks exactly the same; that way, it is perfectly safe for
-		// the rest of the destructor to run (cleaning up other state) even
-		// if the animation finishes after the original window is destroyed
-		CocoaAnimation_TransitionWindowForRemove(this->window);
+		// determine if animation should occur
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNoAnimations,
+									sizeof(noAnimations), &noAnimations, &actualSize))
+		{
+			noAnimations = false; // assume a value, if preference can’t be found
+		}
 		
+		// hide the window
+		if (noAnimations)
+		{
+			[this->window orderOut:nil];
+		}
+		else
+		{
+			// this will hide the window immediately and replace it with a window
+			// that looks exactly the same; that way, it is perfectly safe for
+			// the rest of the destructor to run (cleaning up other state) even
+			// if the animation finishes after the original window is destroyed
+			CocoaAnimation_TransitionWindowForRemove(this->window);
+		}
+		
+		// kill controls to disable callbacks
 		KillControls(returnCarbonWindow(this));
 	}
 	

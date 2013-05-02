@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -552,8 +552,24 @@ didLoadManagedView:(NSView*)					aManagedView
 	self->managedView = aManagedView;
 	if (nil == self->containerWindow)
 	{
-		NSWindow*	asNSWindow = [self renamedCocoaWindow];
+		NSWindow*						asNSWindow = [self renamedCocoaWindow];
+		PopoverManager_AnimationType	animationType = kPopoverManager_AnimationTypeStandard;
+		Boolean							noAnimations = false;
+		size_t							actualSize = 0;
 		
+		
+		// determine if animation should occur
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNoAnimations,
+									sizeof(noAnimations), &noAnimations, &actualSize))
+		{
+			noAnimations = false; // assume a value, if preference can’t be found
+		}
+		
+		if (noAnimations)
+		{
+			animationType = kPopoverManager_AnimationTypeNone;
+		}
 		
 		self->containerWindow = [[Popover_Window alloc] initWithView:aManagedView
 																		attachedToPoint:NSZeroPoint/* see delegate */
@@ -563,14 +579,12 @@ didLoadManagedView:(NSView*)					aManagedView
 		if (nullptr != self->targetCarbonWindow)
 		{
 			self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
-													self/* delegate */, kPopoverManager_AnimationTypeStandard,
-													self->targetCarbonWindow);
+													self/* delegate */, animationType, self->targetCarbonWindow);
 		}
 		else
 		{
 			self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
-													self/* delegate */, kPopoverManager_AnimationTypeStandard,
-													self->targetCocoaWindow);
+													self/* delegate */, animationType, self->targetCocoaWindow);
 		}
 		PopoverManager_DisplayPopover(self->popoverMgr);
 	}

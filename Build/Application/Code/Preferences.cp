@@ -1048,6 +1048,8 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagNewCommandShortcutEffect,
 									CFSTR("new-means"), typeCFStringRef/* "shell", "dialog", "default" */,
 									sizeof(UInt32), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::createFlag(kPreferences_TagNoAnimations,
+										CFSTR("no-animations"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagNoPasteWarning,
 										CFSTR("data-send-paste-no-warning"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagNoUpdateWarning,
@@ -6498,6 +6500,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagKioskShowsScrollBar:
 				case kPreferences_TagKioskShowsWindowFrame:
 				case kPreferences_TagKioskUsesSuperfluousEffects:
+				case kPreferences_TagNoAnimations:
 				case kPreferences_TagNoUpdateWarning:
 					if (false == inContextPtr->exists(keyName))
 					{
@@ -9009,6 +9012,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagKioskShowsScrollBar:
 			case kPreferences_TagKioskShowsWindowFrame:
 			case kPreferences_TagKioskUsesSuperfluousEffects:
+			case kPreferences_TagNoAnimations:
 			case kPreferences_TagNoUpdateWarning:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
