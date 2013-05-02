@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -7089,22 +7089,22 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 								if (kCFCompareEqualTo == CFStringCompare(modifierNameCFString, CFSTR("command"),
 																			kCFCompareCaseInsensitive))
 								{
-									*data |= cmdKey;
+									*data |= kMacroManager_ModifierKeyMaskCommand;
 								}
 								else if (kCFCompareEqualTo == CFStringCompare(modifierNameCFString, CFSTR("control"),
 																				kCFCompareCaseInsensitive))
 								{
-									*data |= controlKey;
+									*data |= kMacroManager_ModifierKeyMaskControl;
 								}
 								else if (kCFCompareEqualTo == CFStringCompare(modifierNameCFString, CFSTR("option"),
 																				kCFCompareCaseInsensitive))
 								{
-									*data |= optionKey;
+									*data |= kMacroManager_ModifierKeyMaskOption;
 								}
 								else if (kCFCompareEqualTo == CFStringCompare(modifierNameCFString, CFSTR("shift"),
 																				kCFCompareCaseInsensitive))
 								{
-									*data |= shiftKey;
+									*data |= kMacroManager_ModifierKeyMaskShift;
 								}
 							}
 						}
@@ -9455,26 +9455,26 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagIndexedMacroKeyModifiers:
 				{
 					UInt32 const	data = *(REINTERPRET_CAST(inDataPtr, UInt32 const*));
-					CFStringRef		values[4/* arbitrary, WARNING this must be no smaller than the step count below! */];
+					CFStringRef		values[5/* arbitrary, WARNING this must be no smaller than the step count below! */];
 					size_t			keysAdded = 0;
 					
 					
-					if (data & cmdKey)
+					if (data & kMacroManager_ModifierKeyMaskCommand)
 					{
 						values[keysAdded] = CFSTR("command");
 						++keysAdded;
 					}
-					if (data & controlKey)
+					if (data & kMacroManager_ModifierKeyMaskControl)
 					{
 						values[keysAdded] = CFSTR("control");
 						++keysAdded;
 					}
-					if (data & optionKey)
+					if (data & kMacroManager_ModifierKeyMaskOption)
 					{
 						values[keysAdded] = CFSTR("option");
 						++keysAdded;
 					}
-					if (data & shiftKey)
+					if (data & kMacroManager_ModifierKeyMaskShift)
 					{
 						values[keysAdded] = CFSTR("shift");
 						++keysAdded;

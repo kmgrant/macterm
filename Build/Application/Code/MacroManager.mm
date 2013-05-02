@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -312,10 +312,10 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 		
 		// NOTE: if a command key has not been assigned to the item,
 		// setting its modifiers will have no visible effect
-		if (modifiers & cmdKey) abbreviatedModifiers |= NSCommandKeyMask;
-		if (modifiers & controlKey) abbreviatedModifiers |= NSControlKeyMask;
-		if (modifiers & optionKey) abbreviatedModifiers |= NSAlternateKeyMask;
-		if (modifiers & shiftKey) abbreviatedModifiers |= NSShiftKeyMask;
+		if (modifiers & kMacroManager_ModifierKeyMaskCommand) abbreviatedModifiers |= NSCommandKeyMask;
+		if (modifiers & kMacroManager_ModifierKeyMaskControl) abbreviatedModifiers |= NSControlKeyMask;
+		if (modifiers & kMacroManager_ModifierKeyMaskOption) abbreviatedModifiers |= NSAlternateKeyMask;
+		if (modifiers & kMacroManager_ModifierKeyMaskShift) abbreviatedModifiers |= NSShiftKeyMask;
 		[inMenuItem setKeyEquivalentModifierMask:abbreviatedModifiers];
 	}
 	else

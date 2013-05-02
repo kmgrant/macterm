@@ -222,7 +222,7 @@ enum
 	kPreferences_TagIndexedMacroAction					= 'mca\0',	//!< data: a "kMacroManager_Action…" constant
 	kPreferences_TagIndexedMacroContents				= 'mtx\0',	//!< data: "CFStringRef"
 	kPreferences_TagIndexedMacroKey						= 'mck\0',	//!< data: "MacroManager_KeyID"
-	kPreferences_TagIndexedMacroKeyModifiers			= 'mmo\0',	//!< data: "UInt32", 0 or a bitwise-OR with any of: cmdKey, shiftKey, controlKey, optionKey
+	kPreferences_TagIndexedMacroKeyModifiers			= 'mmo\0',	//!< data: "UInt32", 0 or a bitwise-OR with any MacroManager_ModifierKeyMask values
 	kPreferences_TagIndexedMacroName					= 'mna\0'	//!< data: "CFStringRef"
 };
 

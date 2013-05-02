@@ -24,7 +24,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -93,6 +93,18 @@ enum MacroManager_Action
 	kMacroManager_ActionHandleURL					= kCommandSetMacroActionOpenURL,			//!< macro content is a URL to be opened
 	kMacroManager_ActionNewWindowWithCommand		= kCommandSetMacroActionNewWindowCommand	//!< macro content is a Unix command line to be
 																								//!  executed in a new terminal window
+};
+
+/*!
+Modifier keys that are supported by macros.
+*/
+typedef UInt32 MacroManager_ModifierKeyMask;
+enum
+{
+	kMacroManager_ModifierKeyMaskCommand	= (1 << 0),		//!< command key (⌘)
+	kMacroManager_ModifierKeyMaskControl	= (1 << 1),		//!< control key (⌃)
+	kMacroManager_ModifierKeyMaskOption		= (1 << 2),		//!< option key (⌥)
+	kMacroManager_ModifierKeyMaskShift		= (1 << 3)		//!< shift key (⇧)
 };
 
 UInt16 const kMacroManager_MaximumMacroSetSize = 12;	//!< TEMPORARY: arbitrary upper limit on macro set length, for simplicity in other code

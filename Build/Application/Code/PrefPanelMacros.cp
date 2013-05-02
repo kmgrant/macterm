@@ -1449,22 +1449,23 @@ setDataBrowserColumnWidths ()
 Set the state of all user interface elements that represent
 the selected modifier keys of the current macro.
 
-The specified integer uses the same bit flags as events do.
+The specified integer uses "MacroManager_ModifierKeyMask"
+bit flags.
 
-(3.1)
+(4.1)
 */
 void
 My_MacrosPanelUI::
 setKeyModifiers		(UInt32		inModifiers)
 {
 	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierCommand, HIViewGetWindow(this->mainView)),
-							(inModifiers & cmdKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
+							(inModifiers & kMacroManager_ModifierKeyMaskCommand) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
 	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierControl, HIViewGetWindow(this->mainView)),
-							(inModifiers & controlKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
+							(inModifiers & kMacroManager_ModifierKeyMaskControl) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
 	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierOption, HIViewGetWindow(this->mainView)),
-							(inModifiers & optionKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
+							(inModifiers & kMacroManager_ModifierKeyMaskOption) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
 	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierShift, HIViewGetWindow(this->mainView)),
-							(inModifiers & shiftKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
+							(inModifiers & kMacroManager_ModifierKeyMaskShift) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
 }// My_MacrosPanelUI::setKeyModifiers
 
 
@@ -1979,23 +1980,47 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					switch (received.commandID)
 					{
 					case kCommandSetMacroKeyModifierCommand:
-						if (allModifiers & cmdKey) allModifiers &= ~cmdKey;
-						else allModifiers |= cmdKey;
+						if (allModifiers & kMacroManager_ModifierKeyMaskCommand)
+						{
+							allModifiers &= ~kMacroManager_ModifierKeyMaskCommand;
+						}
+						else
+						{
+							allModifiers |= kMacroManager_ModifierKeyMaskCommand;
+						}
 						break;
 					
 					case kCommandSetMacroKeyModifierControl:
-						if (allModifiers & controlKey) allModifiers &= ~controlKey;
-						else allModifiers |= controlKey;
+						if (allModifiers & kMacroManager_ModifierKeyMaskControl)
+						{
+							allModifiers &= ~kMacroManager_ModifierKeyMaskControl;
+						}
+						else
+						{
+							allModifiers |= kMacroManager_ModifierKeyMaskControl;
+						}
 						break;
 					
 					case kCommandSetMacroKeyModifierOption:
-						if (allModifiers & optionKey) allModifiers &= ~optionKey;
-						else allModifiers |= optionKey;
+						if (allModifiers & kMacroManager_ModifierKeyMaskOption)
+						{
+							allModifiers &= ~kMacroManager_ModifierKeyMaskOption;
+						}
+						else
+						{
+							allModifiers |= kMacroManager_ModifierKeyMaskOption;
+						}
 						break;
 					
 					case kCommandSetMacroKeyModifierShift:
-						if (allModifiers & shiftKey) allModifiers &= ~shiftKey;
-						else allModifiers |= shiftKey;
+						if (allModifiers & kMacroManager_ModifierKeyMaskShift)
+						{
+							allModifiers &= ~kMacroManager_ModifierKeyMaskShift;
+						}
+						else
+						{
+							allModifiers |= kMacroManager_ModifierKeyMaskShift;
+						}
 						break;
 					
 					default:
