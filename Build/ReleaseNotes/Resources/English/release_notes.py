@@ -468,7 +468,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20130501': [
-        'New low-level preference "no-animations" to disable superfluous animations (e.g. using "defaults write net.macterm.macterm no-animations -bool YES" from the command line, and restarting MacTerm).  Currently used to control animations for closing and hiding terminal windows, and the animations of pop-over displays.',
+        'New low-level preference "no-animations" to disable superfluous animations (e.g. using "defaults write net.macterm.MacTerm no-animations -bool YES" from the command line, and restarting MacTerm).  Currently used to control animations for closing and hiding terminal windows, and the animations of pop-over displays.',
     ],
     '20130421': [
         'Fixed Find dialog to avoid some misleading "not found" messages.',
