@@ -117,7 +117,7 @@ DEST_APP_RESOURCES_TOP := $(DEST_APP_TOP)/Resources
 DEST_BUGREPORTER_TOP := $(DEST_APP_RESOURCES_TOP)/BugReporter.app
 DEST_PREFSCONVERTER_TOP := $(DEST_APP_RESOURCES_TOP)/PrefsConverter.app
 DEST_PY_TOP := $(DEST_APP_FW_TOP)/PyMacTerm.framework
-DEST_PY_CODE_TOP := $(DEST_PY_TOP)/Versions/A/lib/python2.3/pymacterm
+DEST_PY_CODE_TOP := $(DEST_PY_TOP)/Versions/A/lib/python2.5/pymacterm
 DEST_QUILLS_TOP := $(DEST_APP_FW_TOP)/Quills.framework
 DEST_GROWL_TOP := $(DEST_APP_FW_TOP)/Growl.framework
 DEST_SWIG_TOP_LEOPARD := $(DEST_QUILLS_TOP)/Versions/B/lib/python2.5
@@ -426,8 +426,6 @@ clean-executables:
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm
 	$(RM) $(DEST_APP_MACOS_TOP)/RunApplication.py
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.x
-	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.3.5
-	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.3
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.5_wrap
 	-$(RMDIR) $(DEST_APP_MACOS_TOP)
 	$(XCB) clean -project Application.xcodeproj -target PythonInvoker -configuration ForDebugging

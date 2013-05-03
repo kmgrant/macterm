@@ -27,7 +27,7 @@ if __name__ == "__main__":
     
     # the PyMacTerm.framework code is not compiled, so its version
     # will depend only on whatever the current implementation is
-    pymacterm_pylib_ver = "2.3"
+    pymacterm_pylib_ver = "2.5"
     pymacterm_dir = os.path.join(frameworks_dir, "PyMacTerm.framework")
     pymacterm_versions_dir = os.path.join(pymacterm_dir, "Versions")
     pymacterm_current_version_dir = os.path.join(pymacterm_versions_dir, "Current")
@@ -43,31 +43,17 @@ if __name__ == "__main__":
     #
     # The interpreter MUST be invoked from a location physically inside the
     # bundle in order for the system to assign the correct bundle ID for such
-    # things as the application menu and preferences.  Prior to Leopard a
-    # symlink is sufficient.  As of Leopard a tiny executable is built to run
-    # the Python interpreter from C++ (e.g. "MacTerm_python2.5_wrap")
+    # things as the application menu and preferences.  A tiny executable runs
+    # the Python interpreter from C++ (e.g. "MacTerm_python2.5_wrap").
     #
-    # The Quills.framework code is the largest piece.  It is available both as a
-    # PowerPC-only binary (because Panther supports nothing else) and as a
-    # Universal binary (which Tiger and all later Mac OS X versions can use).
+    # The Quills.framework code is the largest piece.  It is available as a
+    # Universal binary.
     #
-    # Some versions of Mac OS X have unique versions of Python installed.  The
-    # SWIG-generated wrappers are therefore built once for each incompatible
-    # Python version: 2.3 (Panther), 2.3.5 (Tiger), 2.5 (Leopard, Snow Leopard,
-    # Lion, and Mountain Lion).  Since at least 4 OS versions have continued to
-    # support Python 2.5, this is now assumed to work by default: that is, any
-    # unknown future OS will attempt to use the Python 2.5 code.
-    #
-    # A bit of magic is used below to figure out which combination is needed:
-    #     OS               Binary        Python Version      Framework Version
-    #   ---------------  ------------  ------------------  ---------------------
-    #   Panther          PowerPC-only         2.3                    A
-    #   Tiger            Universal            2.3.5                  B
-    #   Leopard          Universal            2.5                    B
-    #   Snow Leopard     Universal            2.5                    B
-    #   Lion             Universal            2.5                    B
-    #   Mountain Lion    Universal            2.5                    B
-    #   (any other)      Universal           (2.5)                  (B)
+    # Now that the project requires Mac OS X 10.6 or later, Python 2.5 is known
+    # to be available on all supported Mac OS X versions so it is assumed by
+    # default.  (If a future Mac OS X version stops supporting Python 2.5, it
+    # will once again be necessary to have separate SWIG-generated wrappers for
+    # each incompatible Python version.)
     if mac_os_name == "Mountain Lion":
         py_interpreter = os.path.join(macos_dir, "MacTerm_python2.5_wrap")
         quills_fw_ver = "B"
@@ -80,18 +66,9 @@ if __name__ == "__main__":
         py_interpreter = os.path.join(macos_dir, "MacTerm_python2.5_wrap")
         quills_fw_ver = "B"
         quills_pylib_ver = "2.5" # 2.5 is still available in Snow Leopard
-    elif mac_os_name == "Leopard":
-        py_interpreter = os.path.join(macos_dir, "MacTerm_python2.5_wrap")
-        quills_fw_ver = "B"
-        quills_pylib_ver = "2.5"
-    elif mac_os_name == "Tiger":
-        py_interpreter = os.path.join(macos_dir, "MacTerm_python2.3.5")
-        quills_fw_ver = "B" # Tiger and Leopard use the same framework
-        quills_pylib_ver = "2.3.5"
-    elif mac_os_name == "Panther":
-        py_interpreter = os.path.join(macos_dir, "MacTerm_python2.3")
-        quills_fw_ver = "A"
-        quills_pylib_ver = "2.3"
+    elif ((mac_os_name == "Leopard") or (mac_os_name == "Tiger") or (mac_os_name == "Panther")):
+        print >>sys.stderr, "This MacTerm version requires at least Mac OS X 10.6 (Snow Leopard).  Visit 'http://www.macterm.net/' to download version 4.0.0 for use on older systems."
+        sys.exit(1)
     else: # must be new OS version (very old versions are rejected by the minimum-version setting in the bundle's Info.plist)
         print >>sys.stderr, "WARNING: Your OS version hasn't been tested with this MacTerm version.  Visit 'http://www.macterm.net/' to check for updates or report bugs."
         py_interpreter = os.path.join(macos_dir, "MacTerm_python2.5_wrap")
