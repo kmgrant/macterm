@@ -58,6 +58,11 @@
 //! e.g. int f (int arg) would be int f (int UNUSED_ARGUMENT(arg))
 #define UNUSED_ARGUMENT(arg)
 
+//! use to identify the types of unused return values
+//! e.g. UNUSED_RETURN(OSStatus)SomeSystemCall();
+#define UNUSED_RETURN(c_type)
+//#define UNUSED_RETURN(c_type) (c_type)
+
 
 
 /*###############################################################
