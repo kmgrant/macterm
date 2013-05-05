@@ -141,6 +141,9 @@
 /* Begin PBXProject section */
 		20286C28FDCF999611CA2CEA /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+			};
 			buildConfigurationList = 0A578EE209D88A71007D1289 /* Build configuration list for PBXProject "BugReporter" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -200,9 +203,12 @@
 		0A578EDF09D88A71007D1289 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -225,24 +231,30 @@
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "BugReporter/Resources/BugReporter-Info.plist";
 				INSTALL_PATH = "$(USER_APPS_DIR)";
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_CFLAGS = (
 					"-fpascal-strings",
 					"-v",
 					"-IHeaders",
 				);
 				PRODUCT_NAME = BugReporter;
-				REZ_SHOW_DEBUG_OUTPUT = YES;
+				PROVISIONING_PROFILE = "";
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				SDKROOT = macosx;
+				VALID_ARCHS = "i386 x86_64";
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
-				ZERO_LINK = NO;
 			};
 			name = ForDebugging;
 		};
 		0A578EE009D88A71007D1289 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = BugReporter/Code/BugReporterPrefix.pch;
@@ -264,15 +276,19 @@
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "BugReporter/Resources/BugReporter-Info.plist";
 				INSTALL_PATH = "$(USER_APPS_DIR)";
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_CFLAGS = (
 					"-fpascal-strings",
 					"-v",
 					"-IHeaders",
 				);
 				PRODUCT_NAME = BugReporter;
+				PROVISIONING_PROFILE = "";
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				SDKROOT = macosx;
+				VALID_ARCHS = "i386 x86_64";
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
-				ZERO_LINK = NO;
 			};
 			name = ForRelease;
 		};
@@ -281,7 +297,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				OBJROOT = _Generated;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx;
 				SYMROOT = _Generated;
 				VALID_ARCHS = i386;
 			};
@@ -290,15 +306,11 @@
 		0A578EE409D88A71007D1289 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-				);
-				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
-				MACOSX_DEPLOYMENT_TARGET_ppc = 10.3;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				OBJROOT = _Generated;
-				SDKROOT = "$(DEVELOPER_DIR)/SDKs/MacOSX10.4u.sdk";
+				SDKROOT = macosx;
 				SYMROOT = _Generated;
+				VALID_ARCHS = i386;
 			};
 			name = ForRelease;
 		};

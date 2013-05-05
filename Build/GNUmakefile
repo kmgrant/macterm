@@ -70,6 +70,10 @@ ifeq ($(strip $(shell /bin/test -d $(DEVELOPER_DIR) || echo "no")),no)
 DEVELOPER_DIR := /Applications/Xcode.app/Contents/Developer
 endif
 
+# Xcode 4.x is not yet used for all builds; its location
+# is currently established by Mac OS X's App Store
+XCODE_4_DEVELOPER_DIR := /Applications/Xcode.app/Contents/Developer
+
 # tools
 COPY=/bin/cp
 IBTOOL=$(DEVELOPER_DIR)/usr/bin/ibtool
@@ -81,6 +85,7 @@ RSYNC=/usr/bin/rsync
 SYMLINK_REPLACE=/bin/ln -snf
 XARGS=/usr/bin/xargs
 XCB=$(DEVELOPER_DIR)/usr/bin/xcodebuild $(XCODE_ENV)
+XCB4=$(XCODE_4_DEVELOPER_DIR)/usr/bin/xcodebuild $(XCODE_ENV)
 
 # set this to "no" if you want to disable Growl support for
 # notifications in MacTerm (not recommended unless you don't
@@ -464,7 +469,7 @@ $(DEST_APP_RESOURCES_TOP)/MacTerm.help: $(CURDIR)/_Generated/MacTerm.help
 install-bug-reporter:
 	$(call banner,$@)
 	@# keep in sync with the matching clean rule
-	$(XCB) -project BugReporter.xcodeproj
+	$(XCB4) -project BugReporter.xcodeproj
 	@# avoid rsyncing from /
 	@if [ "x$(SRC_BUGREPORTER_TOP)" = "x" ] ; then \
 		echo "SRC_BUGREPORTER_TOP variable unset" >&2 ; \
@@ -475,7 +480,7 @@ install-bug-reporter:
 
 .PHONY: clean-bug-reporter
 clean-bug-reporter:
-	$(XCB) clean -project BugReporter.xcodeproj
+	$(XCB4) clean -project BugReporter.xcodeproj
 	$(RM) -R $(DEST_BUGREPORTER_TOP)
 
 # Component: Preferences Converter

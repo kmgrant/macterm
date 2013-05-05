@@ -4,7 +4,7 @@
 /*###############################################################
 
 	Bug Reporter
-		© 2005-2012 by Kevin Grant.
+		© 2005-2013 by Kevin Grant.
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -99,13 +99,14 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 		
 		if (noErr == GetCurrentProcess(&currentProcess))
 		{
-			(OSStatus)SetFrontProcess(&currentProcess);
+			UNUSED_RETURN(OSStatus)SetFrontProcess(&currentProcess);
 		}
 	}
 	
 	// display an error to the user, with options
 	clickedButton = [[NSAlert alertWithMessageText:messageText defaultButton:button1 alternateButton:button2
-													otherButton:nil informativeTextWithFormat:helpText] runModal];
+													otherButton:nil informativeTextWithFormat:helpText, nil]
+						runModal];
 	switch (clickedButton)
 	{
 	case NSAlertAlternateReturn:
@@ -126,6 +127,7 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 											(CFBundleGetValueForInfoDictionaryKey(CFBundleGetMainBundle(),
 												CFSTR("BugReporterMailURLToOpen")));
 		CFBundleRef		buggyAppBundle = nullptr;
+		unsigned int	failureMode = 0;
 		BOOL			failedToSubmitReport = NO;
 		
 		
@@ -174,7 +176,11 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 		
 		// launch the bug report URL given in this application’s Info.plist
 		// (most likely a mail URL that creates a new E-mail message)
-		if (nullptr == theURLCFString) failedToSubmitReport = YES;
+		if (nullptr == theURLCFString)
+		{
+			failedToSubmitReport = YES;
+			failureMode = 1;
+		}
 		else
 		{
 			// The string is ASSUMED to be a mailto: URL that ends with a
@@ -188,7 +194,11 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 																theURLCFString);
 			
 			
-			if (nullptr == modifiedURLCFString) failedToSubmitReport = YES;
+			if (nullptr == modifiedURLCFString)
+			{
+				failedToSubmitReport = YES;
+				failureMode = 2;
+			}
 			else
 			{
 				// write an initial header to the console that describes the user’s runtime environment
@@ -207,28 +217,10 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 				// generate OS version information
 				// (again, this must be in URL-encoded format!)
 			#if BUG_REPORT_INCLUDES_OS_VERSION
-				{
-					char	s[255];
-					long	gestaltResult = 0L;
-					
-					
-					if (Gestalt(gestaltSystemVersion, &gestaltResult) != noErr)
-					{
-						CPP_STD::strcpy(s, "%20%20Could%20not%20find%20Mac%20OS%20version!%0D");
-					}
-					else
-					{
-						// NOTE: since std::snprintf() actually attributes special meaning to
-						// the percent (%) symbol, each "%" destined for a URL-encoding "%"
-						// must appear doubled in the format string; each "%" destined for
-						// substitution by std::snprintf() must NOT be doubled!!!
-						CPP_STD::snprintf(s, sizeof(s), "%%20%%20This%%20computer%%20is%%20running%%20Mac%%20OS%%20X%%20%d.%d.%d.%%0D",
-											Releases_ReturnMajorRevisionForVersion(gestaltResult),
-											Releases_ReturnMinorRevisionForVersion(gestaltResult),
-											Releases_ReturnSuperminorRevisionForVersion(gestaltResult));
-					}
-					CFStringAppendCString(modifiedURLCFString, s, kCFStringEncodingUTF8);
-				}
+				CFStringAppend(modifiedURLCFString, CFSTR("%20%20Mac%20OS%20X%20"));
+				CFStringAppend(modifiedURLCFString, (CFStringRef)[[[NSProcessInfo processInfo] operatingSystemVersionString]
+																	stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]);
+				CFStringAppend(modifiedURLCFString, CFSTR("%0D"));
 			#endif
 				
 				// generate application version information
@@ -249,7 +241,7 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 					}
 					else
 					{
-						CFStringAppend(modifiedURLCFString, CFSTR("%20%20Application%20version:%20"));
+						CFStringAppend(modifiedURLCFString, CFSTR("%20%20Application%20Version%20"));
 						CFStringAppend(modifiedURLCFString, appVersionCFString);
 						CFStringAppend(modifiedURLCFString, CFSTR("%0D"));
 					}
@@ -261,7 +253,11 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 					CFURLRef	bugReporterURL = CFURLCreateWithString(kCFAllocatorDefault, modifiedURLCFString, nullptr/* base */);
 					
 					
-					if (nullptr == bugReporterURL) failedToSubmitReport = YES;
+					if (nullptr == bugReporterURL)
+					{
+						failedToSubmitReport = YES;
+						failureMode = 3;
+					}
 					else
 					{
 						// launch mail program with a new message pointed to the bug address
@@ -273,13 +269,19 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 						if (noErr != error)
 						{
 							failedToSubmitReport = YES;
+							failureMode = 4;
 						}
 						CFRelease(bugReporterURL), bugReporterURL = nullptr;
 					}
 				}
 				CFRelease(modifiedURLCFString), modifiedURLCFString = nullptr;
 			}
-			CFRelease(theURLCFString), theURLCFString = nullptr;
+			//CFRelease(theURLCFString), theURLCFString = nullptr; // not released because CFBundleGetValueForInfoDictionaryKey() does not make a copy
+		}
+		
+		if (nullptr != buggyAppBundle)
+		{
+			CFRelease(buggyAppBundle), buggyAppBundle = nullptr;
 		}
 		
 		// if even this fails, the user can’t report bugs with this program!
@@ -293,8 +295,10 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 			helpText = NSLocalizedString
 						(@"Please visit the main web site to report this issue, instead.",
 							@"submission failure help message");
-			(int)[[NSAlert alertWithMessageText:messageText defaultButton:button1 alternateButton:nil
-															otherButton:nil informativeTextWithFormat:helpText] runModal];
+			NSLog(@"Failed to submit bug report in the normal fashion (internal failure mode: %d).", failureMode);
+			UNUSED_RETURN(int)[[NSAlert alertWithMessageText:messageText defaultButton:button1 alternateButton:nil
+																			otherButton:nil informativeTextWithFormat:helpText, nil]
+								runModal];
 		}
 	}
 	
