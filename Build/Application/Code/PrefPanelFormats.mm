@@ -3527,7 +3527,7 @@ dealloc
 	[byKey release];
 	if (nullptr != sampleScreenBuffer)
 	{
-		Terminal_DisposeScreen(sampleScreenBuffer);
+		Terminal_ReleaseScreen(&sampleScreenBuffer);
 	}
 	[super dealloc];
 }// dealloc

@@ -4012,6 +4012,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	
 	// retain the screen reference
 	this->screen.ref = inScreenDataSource;
+	Terminal_RetainScreen(this->screen.ref);
 	
 	// miscellaneous settings
 	this->text.font.normalFont = nil; // set later
@@ -4351,6 +4352,8 @@ My_TerminalView::
 	Memory_DisposeRegion(&this->screen.cursor.boundsAsRegion);
 	Memory_DisposeRegion(&this->screen.refreshRegion);
 	ListenerModel_Dispose(&this->changeListenerModel);
+	
+	Terminal_ReleaseScreen(&this->screen.ref);
 }// My_TerminalView destructor
 
 
@@ -8839,7 +8842,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 									&gPreferenceProxies.cursorType, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			gPreferenceProxies.cursorBlinks = kTerminalView_CursorTypeBlock; // assume a value, if preference can’t be found
+			gPreferenceProxies.cursorType = kTerminalView_CursorTypeBlock; // assume a value, if preference can’t be found
 		}
 		break;
 	
@@ -8918,10 +8921,17 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				// find the new cursor region
 				getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
-				setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
-				
-				// invalidate the new cursor region (in case it is bigger than the old one)
-				updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
+				if (kTerminal_ResultOK != getCursorLocationError)
+				{
+					Console_Warning(Console_WriteValue, "failed to update cursor; internal error", getCursorLocationError);
+				}
+				else
+				{
+					setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
+					
+					// invalidate the new cursor region (in case it is bigger than the old one)
+					updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
+				}
 			}
 			break;
 		

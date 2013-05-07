@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -73,6 +73,7 @@ extern "C"
 #include <Console.h>
 #include <Cursors.h>
 #include <FileSelectionDialogs.h>
+#include <MemoryBlockReferenceLocker.template.h>
 #include <MemoryBlocks.h>
 #include <RegionUtilities.h>
 #include <SoundSystem.h>
@@ -1484,6 +1485,8 @@ public:
 typedef My_ScreenBuffer*			My_ScreenBufferPtr;
 typedef My_ScreenBuffer const*		My_ScreenBufferConstPtr;
 
+typedef MemoryBlockReferenceLocker< TerminalScreenRef, My_ScreenBuffer >	My_ScreenReferenceLocker;
+
 /*!
 Manages state determination and transition for conditions
 that no emulator knows how to deal with.  Also used to
@@ -2027,6 +2030,7 @@ namespace {
 My_PrintableByUniChar&		gDumbTerminalRenderings ()	{ static My_PrintableByUniChar x; return x; }
 My_ScreenBufferLine&		gEmptyScreenBufferLine ()	{ static My_ScreenBufferLine x; return x; }
 My_AttributeInfo&			gEmptyLineAttributes ()		{ static My_AttributeInfo x; return x; }
+My_ScreenReferenceLocker&	gScreenRefLocks ()			{ static My_ScreenReferenceLocker x; return x; }
 
 } // anonymous namespace
 
@@ -2066,52 +2070,70 @@ Terminal_NewScreen	(Preferences_ContextRef		inTerminalConfig,
 	if (outScreenPtr == nullptr) result = kTerminal_ResultParameterError;
 	else
 	{
+		*outScreenPtr = nullptr;
+		
 		try
 		{
 			*outScreenPtr = REINTERPRET_CAST(new My_ScreenBuffer(inTerminalConfig, inTranslationConfig), TerminalScreenRef);
 		}
 		catch (std::bad_alloc)
 		{
+			result = kTerminal_ResultNotEnoughMemory;
 			*outScreenPtr = nullptr;
 		}
 		catch (Terminal_Result		inConstructionError)
 		{
 			result = inConstructionError;
+			*outScreenPtr = nullptr;
+		}
+		
+		if (*outScreenPtr != nullptr)
+		{
+			// successfully created; set initial retain-count to 1
+			Terminal_RetainScreen(*outScreenPtr);
 		}
 	}
+	
 	return result;
 }// NewScreen
 
 
 /*!
-Disposes of a screen previously created with
-Terminal_NewScreen().  On return, the specified
-screen ID is invalid.
+Adds a lock on the specified reference.  This indicates you
+are using the screen, so attempts by anyone else to delete
+the screen with Terminal_ReleaseScreen() will fail until you
+release your lock (and everyone else releases locks they
+may have).
 
-For legacy reasons, returns nonzero if there is
-an error while disposing of the screen.  In
-reality, this only happens if you pass in a
-nullptr reference.
-
-(2.6)
+(4.1)
 */
-SInt16
-Terminal_DisposeScreen	(TerminalScreenRef		inRef)
+void
+Terminal_RetainScreen	(TerminalScreenRef	inRef)
 {
-	SInt16		result = 0;
-	
-	
-	if (inRef == nullptr) result = -3/* legacy return value from NCSA Telnet; can probably ditch this eventually */;
-	else
+	gScreenRefLocks().acquireLock(inRef);
+}// RetainScreen
+
+
+/*!
+Releases one lock on the specified screen created with
+Terminal_NewScreen() and deletes the screen *if* no other
+locks remain.  Your copy of the reference is set to
+nullptr.
+
+(4.1)
+*/
+void
+Terminal_ReleaseScreen	(TerminalScreenRef*		inoutRefPtr)
+{
+	gScreenRefLocks().releaseLock(*inoutRefPtr);
+	unless (gScreenRefLocks().isLocked(*inoutRefPtr))
 	{
-		My_ScreenBufferPtr		ptr = getVirtualScreenData(inRef);
+		My_ScreenBufferPtr		ptr = getVirtualScreenData(*inoutRefPtr);
 		
 		
-		// dispose screen lines - UNIMPLEMENTED!!!
 		delete ptr;
 	}
-	return result;
-}// DisposeScreen
+}// ReleaseScreen
 
 
 /*!
@@ -6872,7 +6894,7 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 
 
 /*!
-Destructor.  See Terminal_DisposeScreen().
+Destructor.  See Terminal_ReleaseScreen().
 
 (3.1)
 */

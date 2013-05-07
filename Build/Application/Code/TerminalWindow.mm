@@ -2660,16 +2660,14 @@ My_TerminalWindow::
 	// necessarily throw out its buffer)
 	{
 		My_TerminalScreenList::const_iterator	screenIterator;
-		std::set< TerminalScreenRef >			visitedScreens; // NOTE: not needed if Terminal module adopts retain/release
 		
 		
 		for (screenIterator = this->allScreens.begin(); screenIterator != this->allScreens.end(); ++screenIterator)
 		{
-			if (visitedScreens.end() == visitedScreens.find(*screenIterator))
-			{
-				Terminal_DisposeScreen(*screenIterator);
-				visitedScreens.insert(*screenIterator);
-			}
+			TerminalScreenRef	screenRef = *screenIterator;
+			
+			
+			Terminal_ReleaseScreen(&screenRef);
 		}
 	}
 }// My_TerminalWindow destructor

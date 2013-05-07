@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130506',
     '20130501',
     '20130421',
     '20130325',
@@ -467,6 +468,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130506': [
+        'Fixed a possible crash when performing certain operations after terminal windows have closed.  For example, "cursor shape" and other terminal preferences trigger updates to terminal windows; these updates previously had a way to reach closed terminal windows by mistake.',
+        'Fixed a problem where the "Flash" setting of the cursor could accidentally be changed when modifying only the shape of the cursor.',
+    ],
     '20130501': [
         'New low-level preference "no-animations" to disable superfluous animations (e.g. using "defaults write net.macterm.MacTerm no-animations -bool YES" from the command line, and restarting MacTerm).  Currently used to control animations for closing and hiding terminal windows, and the animations of pop-over displays.',
     ],

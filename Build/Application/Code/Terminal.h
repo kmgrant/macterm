@@ -365,8 +365,11 @@ Terminal_Result
 											 Preferences_ContextRef		inTranslationConfig,
 											 TerminalScreenRef*			outScreenPtr);
 
-SInt16
-	Terminal_DisposeScreen					(TerminalScreenRef			inScreen);
+void
+	Terminal_RetainScreen					(TerminalScreenRef			inScreen);
+
+void
+	Terminal_ReleaseScreen					(TerminalScreenRef*			inoutScreenPtr);
 
 //@}
 
