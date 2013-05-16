@@ -7,7 +7,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -334,11 +334,11 @@ struct My_TerminalView
 			Boolean				inhibited;		// if true, the cursor can never be displayed regardless of its state
 		} cursor;
 		
-		SInt32			topVisibleEdgeInRows;		// 0 if scrolled to the main screen, negative if scrollback; do not change this
+TerminalView_RowIndex	topVisibleEdgeInRows;	// 0 if scrolled to the main screen, negative if scrollback; do not change this
 													//   value directly, use offsetTopVisibleEdge()
 		UInt16			leftVisibleEdgeInColumns;	// 0 if leftmost column is visible, positive if content is scrolled to the left;
 													//   do not change this value directly, use offsetLeftVisibleEdge()
-		SInt16			currentRenderedLine;		// only defined while drawing; the row that is currently being drawn
+TerminalView_RowIndex	currentRenderedLine;	// only defined while drawing; the row that is currently being drawn
 		Boolean			currentRenderBlinking;		// only defined while drawing; if true, at least one section is blinking
 		Boolean			currentRenderDragColors;	// only defined while drawing; if true, drag highlight text colors are used
 		Boolean			currentRenderNoBackground;	// only defined while drawing; if true, text is using the ordinary background color
@@ -357,8 +357,8 @@ struct My_TerminalView
 			// these settings should only ever be modified by recalculateCachedDimensions(),
 			// and that routine should be called when any dependent factor, such as font,
 			// is changed; see that routine’s documentation for more information
-			SInt16		viewWidthInPixels;		// size of window view (window could be smaller than the screen size);
-			SInt32		viewHeightInPixels;		//   always identical to the current dimensions of the content view
+			UInt16			viewWidthInPixels;		// size of window view (window could be smaller than the screen size);
+TerminalView_PixelHeight	viewHeightInPixels;		//   always identical to the current dimensions of the content view
 		} cache;
 	} screen;
 	
@@ -464,15 +464,15 @@ void				drawTerminalText					(My_TerminalViewPtr, CGContextRef, CGRect const&, R
 void				drawVTGraphicsGlyph					(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char, Boolean);
 void				eraseSection						(My_TerminalViewPtr, CGContextRef, SInt16, SInt16, CGRect&);
 void				eventNotifyForView					(My_TerminalViewConstPtr, TerminalView_Event, void*);
-Terminal_LineRef	findRowIterator						(My_TerminalViewPtr, UInt16, Terminal_LineStackStorage*);
-Terminal_LineRef	findRowIteratorRelativeTo			(My_TerminalViewPtr, UInt16, SInt16,
+Terminal_LineRef	findRowIterator						(My_TerminalViewPtr, TerminalView_RowIndex, Terminal_LineStackStorage*);
+Terminal_LineRef	findRowIteratorRelativeTo			(My_TerminalViewPtr, TerminalView_RowIndex, TerminalView_RowIndex,
 														 Terminal_LineStackStorage*);
 Boolean				findVirtualCellFromLocalPoint		(My_TerminalViewPtr, Point, TerminalView_Cell&, SInt16&, SInt16&);
 Boolean				findVirtualCellFromScreenPoint		(My_TerminalViewPtr, HIPoint, TerminalView_Cell&, Float32&, Float32&);
 void				getBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGDeviceColor*);
-void				getRowBounds						(My_TerminalViewPtr, UInt16, Rect*);
-SInt16				getRowCharacterWidth				(My_TerminalViewPtr, UInt16);
-void				getRowSectionBounds					(My_TerminalViewPtr, UInt16, UInt16, SInt16, Rect*);
+void				getRowBounds						(My_TerminalViewPtr, TerminalView_RowIndex, Rect*);
+SInt16				getRowCharacterWidth				(My_TerminalViewPtr, TerminalView_RowIndex);
+void				getRowSectionBounds					(My_TerminalViewPtr, TerminalView_RowIndex, UInt16, SInt16, Rect*);
 void				getScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor*);
 void				getScreenColorsForAttributes		(My_TerminalViewPtr, TerminalTextAttributes, CGDeviceColor*, CGDeviceColor*, Boolean*);
 Boolean				getScreenCoreColor					(My_TerminalViewPtr, UInt16, CGDeviceColor*);
@@ -488,14 +488,14 @@ HIShapeRef			getVirtualRangeAsNewHIShape			(My_TerminalViewPtr, TerminalView_Cel
 														 Float32, Boolean);
 RgnHandle			getVirtualRangeAsNewRegion			(My_TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Boolean);
 RgnHandle			getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Boolean);
-void				getVirtualVisibleRegion				(My_TerminalViewPtr, SInt16*, SInt16*, SInt16*, SInt16*);
+void				getVirtualVisibleRegion				(My_TerminalViewPtr, UInt16*, TerminalView_RowIndex*, UInt16*, TerminalView_RowIndex*);
 void				handleMultiClick					(My_TerminalViewPtr, UInt16);
 void				handleNewViewContainerBounds		(HIViewRef, Float32, Float32, void*);
 void				handlePendingUpdates				();
 void				highlightCurrentSelection			(My_TerminalViewPtr, Boolean, Boolean);
 void				highlightVirtualRange				(My_TerminalViewPtr, TerminalView_CellRange const&, TerminalTextAttributes,
 														 Boolean, Boolean);
-void				invalidateRowSection				(My_TerminalViewPtr, UInt16, UInt16, UInt16);
+void				invalidateRowSection				(My_TerminalViewPtr, TerminalView_RowIndex, UInt16, UInt16);
 Boolean				isMonospacedFont					(FMFontFamily);
 void				localToScreen						(My_TerminalViewPtr, SInt16*, SInt16*);
 Boolean				mainEventLoopEvent					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -1267,9 +1267,9 @@ Returns true only if successful.
 (3.1)
 */
 Boolean
-TerminalView_GetIdealSize	(TerminalViewRef	inView,
-							 SInt16&			outWidthInPixels,
-							 SInt16&			outHeightInPixels)
+TerminalView_GetIdealSize	(TerminalViewRef			inView,
+							 UInt16&					outWidthInPixels,
+							 TerminalView_PixelHeight&	outHeightInPixels)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	Boolean						result = false;
@@ -1284,13 +1284,13 @@ TerminalView_GetIdealSize	(TerminalViewRef	inView,
 						+ viewPtr->screen.paddingRightEmScale + viewPtr->screen.marginRightEmScale;
 		highPrecision *= viewPtr->text.font.widthPerCharacter;
 		highPrecision += viewPtr->screen.cache.viewWidthInPixels;
-		outWidthInPixels = STATIC_CAST(highPrecision, SInt16);
+		outWidthInPixels = STATIC_CAST(highPrecision, UInt16);
 		
 		highPrecision = viewPtr->screen.marginTopEmScale + viewPtr->screen.paddingTopEmScale
 						+ viewPtr->screen.paddingBottomEmScale + viewPtr->screen.marginBottomEmScale;
 		highPrecision *= viewPtr->text.font.widthPerCharacter; // yes, width, because this is an “em” scale factor
 		highPrecision += viewPtr->screen.cache.viewHeightInPixels;
-		outHeightInPixels = STATIC_CAST(highPrecision, SInt16);
+		outHeightInPixels = STATIC_CAST(highPrecision, TerminalView_PixelHeight);
 		
 		result = true;
 	}
@@ -1449,11 +1449,11 @@ TerminalView_GetTheoreticalViewSize().
 (3.0)
 */
 void
-TerminalView_GetTheoreticalScreenDimensions		(TerminalViewRef	inView,
-												 SInt16				inWidthInPixels,
-												 SInt16				inHeightInPixels,
-												 UInt16*			outColumnCount,
-												 UInt16*			outRowCount)
+TerminalView_GetTheoreticalScreenDimensions		(TerminalViewRef			inView,
+												 UInt16						inWidthInPixels,
+												 TerminalView_PixelHeight	inHeightInPixels,
+												 UInt16*					outColumnCount,
+												 TerminalView_RowIndex*		outRowCount)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	Float32						highPrecision = 0.0;
@@ -1488,11 +1488,11 @@ TerminalView_GetTheoreticalScreenDimensions().
 (3.0)
 */
 void
-TerminalView_GetTheoreticalViewSize		(TerminalViewRef	inView,
-										 UInt16				inColumnCount,
-										 UInt16				inRowCount,
-										 SInt16*			outWidthInPixels,
-										 SInt16*			outHeightInPixels)
+TerminalView_GetTheoreticalViewSize		(TerminalViewRef			inView,
+										 UInt16						inColumnCount,
+										 TerminalView_RowIndex		inRowCount,
+										 UInt16*					outWidthInPixels,
+										 TerminalView_PixelHeight*	outHeightInPixels)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	Float32						highPrecision = 0.0;
@@ -5249,9 +5249,9 @@ Boolean
 drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 				 CGContextRef			inDrawingContext,
 				 UInt16					UNUSED_ARGUMENT(inZeroBasedLeftmostColumnToDraw),
-				 UInt16					inZeroBasedTopmostRowToDraw,
+				 TerminalView_RowIndex	inZeroBasedTopmostRowToDraw,
 				 UInt16					UNUSED_ARGUMENT(inZeroBasedPastTheRightmostColumnToDraw),
-				 UInt16					inZeroBasedPastTheBottommostRowToDraw)
+				 TerminalView_RowIndex	inZeroBasedPastTheBottommostRowToDraw)
 {
 	Boolean		result = false;
 	
@@ -6767,7 +6767,7 @@ Calls findRowIteratorRelativeTo().
 */
 Terminal_LineRef
 findRowIterator		(My_TerminalViewPtr				inTerminalViewPtr,
-					 UInt16							inZeroBasedRowIndex,
+					 TerminalView_RowIndex			inZeroBasedRowIndex,
 					 Terminal_LineStackStorage*		inoutStackStorageOrNull)
 {
 	Terminal_LineRef	result = findRowIteratorRelativeTo(inTerminalViewPtr, inZeroBasedRowIndex,
@@ -6813,14 +6813,14 @@ IMPORTANT:	Call releaseRowIterator() when finished with the
 */
 Terminal_LineRef
 findRowIteratorRelativeTo	(My_TerminalViewPtr				inTerminalViewPtr,
-							 UInt16							inZeroBasedRowIndex,
-							 SInt16							inOriginRow,
+							 TerminalView_RowIndex			inZeroBasedRowIndex,
+							 TerminalView_RowIndex			inOriginRow,
 							 Terminal_LineStackStorage*		inoutStackStorageOrNull)
 {
-	Terminal_LineRef	result = nullptr;
+	Terminal_LineRef				result = nullptr;
 	// normalize the requested row so that a scrollback line is negative,
 	// and all main screen lines are numbered 0 or greater
-	SInt16 const		kActualIndex = inOriginRow + inZeroBasedRowIndex;
+	TerminalView_RowIndex const		kActualIndex = inOriginRow + inZeroBasedRowIndex;
 	
 	
 	// TEMPORARY: this is a lazy implementation and inefficient, but it works
@@ -6935,6 +6935,8 @@ findVirtualCellFromScreenPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 								 Float32&				outDeltaRow)
 {
 	Boolean		result = true;
+	SInt32		columnCalculation = 0.0;
+	SInt64		rowCalculation = 0.0;
 	
 	
 	outDeltaColumn = 0;
@@ -6942,8 +6944,8 @@ findVirtualCellFromScreenPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	// NOTE: This code starts in units of pixels for convenience,
 	// but must convert to units of columns and rows upon return.
-	outCell.first = inScreenLocalPixelPosition.x;
-	outCell.second = inScreenLocalPixelPosition.y;
+	columnCalculation = inScreenLocalPixelPosition.x;
+	rowCalculation = inScreenLocalPixelPosition.y;
 	
 	// adjust point to fit in local screen area
 	{
@@ -6955,53 +6957,56 @@ findVirtualCellFromScreenPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 		{
 			result = false;
 			outDeltaColumn = offsetH;
-			outCell.first = 0;
+			columnCalculation = 0;
 		}
 		else
 		{
-			outCell.first = STATIC_CAST(offsetH, UInt16);
+			columnCalculation = STATIC_CAST(offsetH, SInt16);
 		}
 		
 		if (offsetV < 0)
 		{
 			result = false;
 			outDeltaRow = offsetV;
-			outCell.second = 0;
+			rowCalculation = 0;
 		}
 		else
 		{
-			outCell.second = STATIC_CAST(offsetV, UInt16);
+			rowCalculation = STATIC_CAST(offsetV, SInt32);
 		}
 	}
 	
-	if (outCell.second > inTerminalViewPtr->screen.cache.viewHeightInPixels)
+	if (rowCalculation > inTerminalViewPtr->screen.cache.viewHeightInPixels)
 	{
 		result = false;
-		outDeltaRow = outCell.second - inTerminalViewPtr->screen.cache.viewHeightInPixels;
-		outCell.second = inTerminalViewPtr->screen.cache.viewHeightInPixels;
+		outDeltaRow = rowCalculation - inTerminalViewPtr->screen.cache.viewHeightInPixels;
+		rowCalculation = inTerminalViewPtr->screen.cache.viewHeightInPixels;
 	}
 	
 	// TEMPORARY: this needs to take into account double-height text
-	outCell.second /= inTerminalViewPtr->text.font.heightPerCharacter;
+	rowCalculation /= inTerminalViewPtr->text.font.heightPerCharacter;
 	outDeltaRow /= inTerminalViewPtr->text.font.heightPerCharacter;
 	
-	if (outCell.first > inTerminalViewPtr->screen.cache.viewWidthInPixels)
+	if (columnCalculation > inTerminalViewPtr->screen.cache.viewWidthInPixels)
 	{
 		result = false;
-		outDeltaColumn = outCell.first - inTerminalViewPtr->screen.cache.viewWidthInPixels;
-		outCell.first = inTerminalViewPtr->screen.cache.viewWidthInPixels;
+		outDeltaColumn = columnCalculation - inTerminalViewPtr->screen.cache.viewWidthInPixels;
+		columnCalculation = inTerminalViewPtr->screen.cache.viewWidthInPixels;
 	}
 	
 	{
-		SInt16 const	kWidthPerCharacter = getRowCharacterWidth(inTerminalViewPtr, outCell.second);
+		SInt16 const	kWidthPerCharacter = getRowCharacterWidth(inTerminalViewPtr, rowCalculation);
 		
 		
-		outCell.first /= kWidthPerCharacter;
+		columnCalculation /= kWidthPerCharacter;
 		outDeltaColumn /= kWidthPerCharacter;
 	}
 	
-	outCell.first += inTerminalViewPtr->screen.leftVisibleEdgeInColumns;
-	outCell.second += inTerminalViewPtr->screen.topVisibleEdgeInRows;
+	columnCalculation += inTerminalViewPtr->screen.leftVisibleEdgeInColumns;
+	rowCalculation += inTerminalViewPtr->screen.topVisibleEdgeInRows;
+	
+	outCell.first = columnCalculation;
+	outCell.second = rowCalculation;
 	
 	return result;
 }// findVirtualCellFromScreenPoint
@@ -7039,13 +7044,13 @@ use screenToLocalRect().
 */
 void
 getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
-				 UInt16					inZeroBasedRowIndex,
+				 TerminalView_RowIndex	inZeroBasedRowIndex,
 				 Rect*					outBoundsPtr)
 {
 	Terminal_LineStackStorage	rowIteratorData;
 	Terminal_LineRef			rowIterator = nullptr;
 	SInt16						sectionTopEdge = inZeroBasedRowIndex * inTerminalViewPtr->text.font.heightPerCharacter;
-	SInt16						topRow = 0;
+	TerminalView_RowIndex		topRow = 0;
 	
 	
 	// start with the interior bounds, as this defines two of the edges
@@ -7117,7 +7122,7 @@ the double-width attribute set.
 */
 SInt16
 getRowCharacterWidth	(My_TerminalViewPtr		inTerminalViewPtr,
-						 UInt16					inLineNumber)
+						 TerminalView_RowIndex	inLineNumber)
 {
 	TerminalTextAttributes		globalAttributes = 0L;
 	Terminal_LineStackStorage	rowIteratorData;
@@ -7155,7 +7160,7 @@ use screenToLocalRect().
 */
 void
 getRowSectionBounds		(My_TerminalViewPtr		inTerminalViewPtr,
-						 UInt16					inZeroBasedRowIndex,
+						 TerminalView_RowIndex	inZeroBasedRowIndex,
 						 UInt16					inZeroBasedStartingColumnNumber,
 						 SInt16					inCharacterCount,
 						 Rect*					outBoundsPtr)
@@ -7663,8 +7668,8 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	// normalize coordinates with respect to visible area of virtual screen
 	{
-		SInt16		top = 0;
-		SInt16		left = 0;
+		TerminalView_RowIndex	top = 0;
+		UInt16					left = 0;
 		
 		
 		getVirtualVisibleRegion(inTerminalViewPtr, &left, &top, nullptr/* right */, nullptr/* bottom */);
@@ -7846,8 +7851,8 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 		
 		// normalize coordinates with respect to visible area of virtual screen
 		{
-			SInt16		top = 0;
-			SInt16		left = 0;
+			TerminalView_RowIndex	top = 0;
+			UInt16					left = 0;
 			
 			
 			getVirtualVisibleRegion(inTerminalViewPtr, &left, &top, nullptr/* right */, nullptr/* bottom */);
@@ -7949,11 +7954,11 @@ the scrollback buffer; 0 is the topmost row of the
 (3.0)
 */
 void
-getVirtualVisibleRegion		(My_TerminalViewPtr		inTerminalViewPtr,
-							 SInt16*				outLeftColumnOrNull,
-							 SInt16*				outTopRowOrNull,
-							 SInt16*				outPastTheRightColumnOrNull,
-							 SInt16*				outPastTheBottomRowOrNull)
+getVirtualVisibleRegion		(My_TerminalViewPtr			inTerminalViewPtr,
+							 UInt16*					outLeftColumnOrNull,
+							 TerminalView_RowIndex*		outTopRowOrNull,
+							 UInt16*					outPastTheRightColumnOrNull,
+							 TerminalView_RowIndex*		outPastTheBottomRowOrNull)
 {
 	if (outLeftColumnOrNull != nullptr)
 	{
@@ -8173,8 +8178,8 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 		}
 		else if (false == viewPtr->screen.sizeNotMatchedWithView)
 		{
-			UInt16		columns = 0;
-			UInt16		rows = 0;
+			UInt16					columns = 0;
+			TerminalView_RowIndex	rows = 0;
 			
 			
 			// normal mode; resize the underlying terminal screen
@@ -8345,10 +8350,10 @@ highlightVirtualRange	(My_TerminalViewPtr				inTerminalViewPtr,
 	{
 		// perform a boundary check, since drawSection() doesn’t do one
 		{
-			SInt16		startColumn = 0;
-			SInt16		pastTheEndColumn = 0;
-			SInt16		startRow = 0;
-			SInt16		pastTheEndRow = 0;
+			UInt16					startColumn = 0;
+			UInt16					pastTheEndColumn = 0;
+			TerminalView_RowIndex	startRow = 0;
+			TerminalView_RowIndex	pastTheEndRow = 0;
 			
 			
 			getVirtualVisibleRegion(inTerminalViewPtr, &startColumn, &startRow, &pastTheEndColumn, &pastTheEndRow);
@@ -8419,7 +8424,7 @@ TerminalView_DrawRowSection().
 */
 void
 invalidateRowSection	(My_TerminalViewPtr		inTerminalViewPtr,
-						 UInt16					inLineNumber,
+						 TerminalView_RowIndex	inLineNumber,
 						 UInt16					inStartingColumnNumber,
 						 UInt16					inCharacterCount)
 {
@@ -8998,9 +9003,9 @@ cached settings ever be changed.
 void
 recalculateCachedDimensions		(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	//SInt32 const	kScrollbackLines = Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
-	SInt16 const	kVisibleWidth = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
-	SInt16 const	kVisibleLines = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
+	//UInt32 const	kScrollbackLines = Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
+	UInt16 const	kVisibleWidth = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
+	UInt16 const	kVisibleLines = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
 	
 	
 	inTerminalViewPtr->screen.cache.viewWidthInPixels = kVisibleWidth * inTerminalViewPtr->text.font.widthPerCharacter;
@@ -9730,10 +9735,10 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// draw text and graphics
 					#if 0
 						{
-							SInt16		startColumn = 0;
-							SInt16		pastTheEndColumn = 0;
-							SInt16		startRow = 0;
-							SInt16		pastTheEndRow = 0;
+							UInt16					startColumn = 0;
+							UInt16					pastTheEndColumn = 0;
+							TerminalView_RowIndex	startRow = 0;
+							TerminalView_RowIndex	pastTheEndRow = 0;
 							
 							
 							// draw EVERYTHING
@@ -10922,7 +10927,11 @@ returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
 																(2/* arbitrary */ == (kSelectionPastEnd.second - kSelectionStart.second))
 																	? 0/* flags */
 																	: kTerminal_TextFilterFlagsNoEndWhitespace);
-						assert(kTerminal_ResultOK == textGrabResult);
+						if (kTerminal_ResultOK != textGrabResult)
+						{
+							Console_Warning(Console_WriteValue, "first-line-anchored-at-end text copy failed, terminal error", textGrabResult);
+							break;
+						}
 					}
 					else if (i == (kSelectionPastEnd.second - 1))
 					{
@@ -10930,14 +10939,22 @@ returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
 						textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
 																0/* start column */, kSelectionPastEnd.first,
 																textBegin, textPastEnd, kTerminal_TextFilterFlagsNoEndWhitespace);
-						assert(kTerminal_ResultOK == textGrabResult);
+						if (kTerminal_ResultOK != textGrabResult)
+						{
+							Console_Warning(Console_WriteValue, "last-line-anchored-at-beginning text copy failed, terminal error", textGrabResult);
+							break;
+						}
 					}
 					else
 					{
 						// middle lines span the whole width
 						textGrabResult = Terminal_GetLine(inTerminalViewPtr->screen.ref, lineIterator,
 															textBegin, textPastEnd, kTerminal_TextFilterFlagsNoEndWhitespace);
-						assert(kTerminal_ResultOK == textGrabResult);
+						if (kTerminal_ResultOK != textGrabResult)
+						{
+							Console_Warning(Console_WriteValue, "middle-spanning-line text copy failed, terminal error", textGrabResult);
+							break;
+						}
 					}
 				}
 				

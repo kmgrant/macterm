@@ -392,7 +392,7 @@ Terminal_LineRef
 
 Terminal_LineRef
 	Terminal_NewScrollbackLineIterator		(TerminalScreenRef			inScreen,
-											 UInt16						inLineNumberZeroForNewest,
+											 UInt32						inLineNumberZeroForNewest,
 											 Terminal_LineStackStorage*	inStackAllocationOrNull = nullptr);
 
 void
@@ -469,7 +469,7 @@ Terminal_Result
 Terminal_Result
 	Terminal_ChangeRangeAttributes			(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inStartRow,
-											 UInt16						inNumberOfRowsToConsider,
+											 UInt32						inNumberOfRowsToConsider,
 											 UInt16						inZeroBasedStartColumn,
 											 UInt16						inZeroBasedPastTheEndColumn,
 											 Boolean					inConstrainToRectangle,
@@ -489,7 +489,7 @@ Terminal_Result
 Terminal_Result
 	Terminal_CopyRange						(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inStartRow,
-											 UInt16						inNumberOfRowsToConsider,
+											 UInt32						inNumberOfRowsToConsider,
 											 UInt16						inZeroBasedStartColumnOnFirstRow,
 											 UInt16						inZeroBasedEndColumnOnLastRow,
 											 char*						outBuffer,
@@ -502,7 +502,7 @@ Terminal_Result
 OSStatus
 	Terminal_CreateContentsAEDesc			(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inStartRow,
-											 UInt16						inNumberOfRowsToConsider,
+											 UInt32						inNumberOfRowsToConsider,
 											 AEDesc*					outDescPtr);
 
 void

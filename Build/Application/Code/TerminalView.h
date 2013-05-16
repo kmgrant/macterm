@@ -21,7 +21,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -166,7 +166,25 @@ enum
 
 #include "TerminalViewRef.typedef.h"
 
-typedef std::pair< UInt16, SInt32 >							TerminalView_Cell;		//!< order: column, row
+/*!
+Since a terminal view can have a potentially huge scrollback
+buffer, it is important to use the data type below (and not
+just some integer) to represent pixel measurements.  Right
+now the pixel height is the only measure that could become
+very large.
+*/
+typedef UInt32												TerminalView_PixelHeight;
+
+/*!
+Since a terminal view can have a potentially huge scrollback
+buffer, it is important to use the data type below (and not
+just some integer) to represent an index for a row.  Note
+that a row index is signed because negative values indicate
+scrollback rows and positive values indicate screen rows.
+*/
+typedef SInt32												TerminalView_RowIndex;
+
+typedef std::pair< UInt16, TerminalView_RowIndex >			TerminalView_Cell;		//!< order: column, row
 
 typedef std::pair< TerminalView_Cell, TerminalView_Cell >	TerminalView_CellRange;	//!< order: inclusive start, exclusive end
 
@@ -465,22 +483,22 @@ void
 
 Boolean
 	TerminalView_GetIdealSize					(TerminalViewRef			inView,
-												 SInt16&					outWidthInPixels,
-												 SInt16&					outHeightInPixels);
+												 UInt16&					outWidthInPixels,
+												 TerminalView_PixelHeight&	outHeightInPixels);
 
 void
 	TerminalView_GetTheoreticalScreenDimensions	(TerminalViewRef			inView,
-												 SInt16						inWidthInPixels,
-												 SInt16						inHeightInPixels,
+												 UInt16						inWidthInPixels,
+												 TerminalView_PixelHeight	inHeightInPixels,
 												 UInt16*					outColumnCount,
-												 UInt16*					outRowCount);
+												 TerminalView_RowIndex*		outRowCount);
 
 void
 	TerminalView_GetTheoreticalViewSize			(TerminalViewRef			inView,
 												 UInt16						inColumnCount,
-												 UInt16						inRowCount,
-												 SInt16*					outWidthInPixels,
-												 SInt16*					outHeightInPixels);
+												 TerminalView_RowIndex		inRowCount,
+												 UInt16*					outWidthInPixels,
+												 TerminalView_PixelHeight*	outHeightInPixels);
 
 //@}
 

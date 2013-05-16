@@ -2312,8 +2312,8 @@ installedActions()
 	assert(nullptr != newScreen);
 	if (nullptr != newScreen)
 	{
-		SInt16		screenWidth = 0;
-		SInt16		screenHeight = 0;
+		UInt16						screenWidth = 0;
+		TerminalView_PixelHeight	screenHeight = 0;
 		
 		
 		TerminalView_GetTheoreticalViewSize(getActiveView(this)/* TEMPORARY - must consider a list of views */,
@@ -7217,9 +7217,9 @@ setWindowToIdealSizeForDimensions	(My_TerminalWindowPtr	inPtr,
 {
 	if (false == inPtr->allViews.empty())
 	{
-		TerminalViewRef		activeView = getActiveView(inPtr);
-		SInt16				screenWidth = 0;
-		SInt16				screenHeight = 0;
+		TerminalViewRef				activeView = getActiveView(inPtr);
+		UInt16						screenWidth = 0;
+		TerminalView_PixelHeight	screenHeight = 0;
 		
 		
 		TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
@@ -7241,9 +7241,9 @@ setWindowToIdealSizeForFont		(My_TerminalWindowPtr	inPtr)
 {
 	if (false == inPtr->allViews.empty())
 	{
-		TerminalViewRef		activeView = getActiveView(inPtr);
-		SInt16				screenWidth = 0;
-		SInt16				screenHeight = 0;
+		TerminalViewRef				activeView = getActiveView(inPtr);
+		UInt16						screenWidth = 0;
+		TerminalView_PixelHeight	screenHeight = 0;
 		
 		
 		TerminalView_GetIdealSize(activeView/* TEMPORARY - must consider a list of views */,

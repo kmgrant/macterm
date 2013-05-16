@@ -651,13 +651,13 @@ leave the text alone.
 */
 typedef void (*My_ScreenLineOperationProcPtr)	(My_ScreenBuffer*		inScreen,
 												 CFMutableStringRef		inLineTextBuffer,
-												 UInt16					inZeroBasedRowNumberOrNegativeForScrollbackRow,
+												 UInt32					inZeroBasedRowNumberOrNegativeForScrollbackRow,
 												 void*					inContextPtr);
 inline void
 invokeScreenLineOperationProc	(My_ScreenLineOperationProcPtr	inUserRoutine,
 								 My_ScreenBuffer*				inScreen,
 								 CFMutableStringRef				inLineTextBuffer,
-								 UInt16							inZeroBasedRowNumberRelativeToStartOfIterationRange,
+								 UInt32							inZeroBasedRowNumberRelativeToStartOfIterationRange,
 								 void*							inContextPtr)
 {
 	(*inUserRoutine)(inScreen, inLineTextBuffer, inZeroBasedRowNumberRelativeToStartOfIterationRange, inContextPtr);
@@ -1068,7 +1068,6 @@ struct My_UTF8StateMachine
 		kStateUTF8ExpectingFour		= 'U84B',	//!< byte with high bits of "11110" received; three more continuation bytes (only) should follow
 		kStateUTF8ExpectingFive		= 'U85B',	//!< byte with high bits of "111110" received; four more continuation bytes (only) should follow
 		kStateUTF8ExpectingSix		= 'U86B',	//!< byte with high bits of "1111110" received; five more continuation bytes (only) should follow
-		
 	};
 	
 	My_ByteString	multiByteAccumulator;		//!< shows all bytes that comprise the most-recently-started UTF-8 code point
@@ -1928,9 +1927,8 @@ typedef My_SearchThreadContext const*	My_SearchThreadContextConstPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-void						addScreenLineLength						(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
-void						appendScreenLinePtrToList				(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
-void						appendScreenLineRawToCFString			(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
+void						addScreenLineLength						(My_ScreenBufferPtr, CFMutableStringRef, UInt32, void*);
+void						appendScreenLineRawToCFString			(My_ScreenBufferPtr, CFMutableStringRef, UInt32, void*);
 void						assertScrollingRegion					(My_ScreenBufferPtr);
 void						bufferEraseCursorLine					(My_ScreenBufferPtr, My_BufferChanges);
 void						bufferEraseFromCursorColumn				(My_ScreenBufferPtr, My_BufferChanges, UInt16);
@@ -2237,7 +2235,7 @@ IMPORTANT:	An iterator is completely invalid once the screen
 */
 Terminal_LineRef
 Terminal_NewScrollbackLineIterator	(TerminalScreenRef				inRef,
-									 UInt16							inLineNumberZeroForNewest,
+									 UInt32							inLineNumberZeroForNewest,
 									 Terminal_LineStackStorage*		inStackAllocationOrNull)
 {
 	Terminal_LineRef		result = nullptr;
@@ -2246,6 +2244,7 @@ Terminal_NewScrollbackLineIterator	(TerminalScreenRef				inRef,
 	
 	if ((nullptr != ptr) && (ptr->scrollbackBuffer.begin() != ptr->scrollbackBuffer.end()))
 	{
+		My_ScrollbackBufferLineList::difference_type const		kLineEnd = inLineNumberZeroForNewest;
 		My_ScrollbackBufferLineList::iterator	startIterator = ptr->scrollbackBuffer.begin();
 		Boolean									validIterator = true;
 		
@@ -2253,7 +2252,7 @@ Terminal_NewScrollbackLineIterator	(TerminalScreenRef				inRef,
 		// ensure the specified row is in range; since the scrollback buffer is
 		// a linked list, it would be prohibitively expensive to ask for its size,
 		// so instead the iterator is incremented while watching for the end
-		for (My_ScrollbackBufferLineList::difference_type i = 0; i < inLineNumberZeroForNewest; ++i)
+		for (My_ScrollbackBufferLineList::difference_type i = 0; i < kLineEnd; ++i)
 		{
 			++startIterator;
 			if (startIterator == ptr->scrollbackBuffer.end())
@@ -2467,9 +2466,6 @@ The anchor points are automatically “sorted”, so despite
 their names it does not matter which point really marks
 the start or end of the range.
 
-The row values may be negative, signifying that they
-apply to scrollback buffer rows.
-
 If "inConstrainToRectangle" is true, the range is
 considered to be exact so no columns outside the range
 are filled in (normally, all lines in between the start
@@ -2493,7 +2489,7 @@ if the specified row reference is invalid
 Terminal_Result
 Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 								 Terminal_LineRef			inStartRow,
-								 UInt16						inNumberOfRowsToConsider,
+								 UInt32						inNumberOfRowsToConsider,
 								 UInt16						inZeroBasedStartColumn,
 								 UInt16						inZeroBasedPastTheEndColumn,
 								 Boolean					inConstrainToRectangle,
@@ -2561,7 +2557,7 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 					// because it will end “early” at the end anchor
 					{
 						register SInt16		i = 0;
-						SInt16 const		kLineEnd = (inNumberOfRowsToConsider - 1);
+						SInt32 const		kLineEnd = (inNumberOfRowsToConsider - 1);
 						
 						
 						for (i = 0; i < kLineEnd; ++i, iteratorPtr->goToNextLine(isEnd))
@@ -2719,7 +2715,7 @@ of the text will be copied into the buffer
 Terminal_Result
 Terminal_CopyRange	(TerminalScreenRef			inScreen,
 					 Terminal_LineRef			inStartRow,
-					 UInt16						inNumberOfRowsToConsider,
+					 UInt32						inNumberOfRowsToConsider,
 					 UInt16						inZeroBasedStartColumnOnFirstRow,
 					 UInt16						inZeroBasedEndColumnOnLastRow,
 					 char*						outBuffer,
@@ -2923,7 +2919,7 @@ IMPORTANT:	Currently this performs text duplication, when in
 OSStatus
 Terminal_CreateContentsAEDesc	(TerminalScreenRef		inRef,
 								 Terminal_LineRef		inStartRow,
-								 UInt16					inNumberOfRowsToConsider,
+								 UInt32					inNumberOfRowsToConsider,
 								 AEDesc*				outDescPtr)
 {
 	OSStatus	result = noErr;
@@ -4581,7 +4577,7 @@ off the top of the screen.
 UInt32
 Terminal_ReturnInvisibleRowCount	(TerminalScreenRef		inRef)
 {
-	UInt16						result = 0;
+	UInt32						result = 0;
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
@@ -7217,7 +7213,7 @@ returnScrollbackRows	(Preferences_ContextRef		inTerminalConfig)
 		}
 		else if (kTerminal_ScrollbackTypeUnlimited == scrollbackType)
 		{
-			result = USHRT_MAX; // TEMPORARY
+			result = USHRT_MAX; // TEMPORARY (warning: every screen allocates this amount!)
 		}
 		else if (kTerminal_ScrollbackTypeDistributed == scrollbackType)
 		{
@@ -14251,7 +14247,7 @@ is always returned.
 void
 addScreenLineLength		(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
 						 CFMutableStringRef		inLineTextBuffer,
-						 UInt16					UNUSED_ARGUMENT(inOneBasedLineNumber),
+						 UInt32					UNUSED_ARGUMENT(inOneBasedLineNumber),
 						 void*					inoutLengthPtr)
 {
 	CFIndex*	sumPtr = REINTERPRET_CAST(inoutLengthPtr, CFIndex*);
@@ -14279,7 +14275,7 @@ content of the line in Unicode.
 void
 appendScreenLineRawToCFString	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
 								 CFMutableStringRef		inLineTextBuffer,
-								 UInt16					UNUSED_ARGUMENT(inOneBasedLineNumber),
+								 UInt32					UNUSED_ARGUMENT(inOneBasedLineNumber),
 								 void*					inoutCFMutableStringRef)
 {
 	CFMutableStringRef	mutableCFString = REINTERPRET_CAST(inoutCFMutableStringRef, CFMutableStringRef);
@@ -16365,10 +16361,10 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 						// of values was given (otherwise, the input data may be bogus)
 						if (inDataPtr->emulator.argLastIndex == 2)
 						{
-							SInt16		pixelWidth = inDataPtr->emulator.argList[1];
-							SInt16		pixelHeight = inDataPtr->emulator.argList[2];
-							UInt16		columns = 0;
-							UInt16		rows = 0;
+							SInt16					pixelWidth = inDataPtr->emulator.argList[1];
+							SInt16					pixelHeight = inDataPtr->emulator.argList[2];
+							UInt16					columns = 0;
+							TerminalView_RowIndex	rows = 0;
 							
 							
 							// first, constrain the values to something reasonable;
@@ -16849,7 +16845,7 @@ forEachLineDo	(TerminalScreenRef				inRef,
 	}
 	else
 	{
-		UInt16		lineNumber = 0;
+		UInt32		lineNumber = 0;
 		Boolean		isEnd = false;
 		
 		

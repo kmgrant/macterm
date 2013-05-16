@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130515',
     '20130506',
     '20130501',
     '20130421',
@@ -468,6 +469,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130515': [
+        'Fixed a serious problem where the oldest lines in very large scrollback buffers might not be displayed at all.',
+    ],
     '20130506': [
         'Fixed a possible crash when performing certain operations after terminal windows have closed.  For example, "cursor shape" and other terminal preferences trigger updates to terminal windows; these updates previously had a way to reach closed terminal windows by mistake.',
         'Fixed a problem where the "Flash" setting of the cursor could accidentally be changed when modifying only the shape of the cursor.',
