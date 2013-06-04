@@ -22,5 +22,9 @@
 	<true/>
 	<key>LSUIElement</key>
 	<string>1</string>
+	<key>NSMainNibFile</key>
+	<string>PrefsConverterCocoa</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
 </dict>
 </plist>

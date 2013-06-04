@@ -191,7 +191,7 @@ const
 		
 		if (nullptr != valueCFNumber)
 		{
-			(Boolean)CFNumberGetValue(valueCFNumber, kCFNumberFloat32Type, &result);
+			UNUSED_RETURN(Boolean)CFNumberGetValue(valueCFNumber, kCFNumberFloat32Type, &result);
 		}
 	}
 	return result;
@@ -235,7 +235,7 @@ const
 				
 				if (nullptr != valueCFNumber)
 				{
-					(Boolean)CFNumberGetValue(valueCFNumber, kCFNumberSInt32Type, &result);
+					UNUSED_RETURN(Boolean)CFNumberGetValue(valueCFNumber, kCFNumberSInt32Type, &result);
 				}
 			}
 			else if (CFStringGetTypeID() == CFGetTypeID(valueCFProperty))

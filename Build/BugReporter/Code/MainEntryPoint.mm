@@ -54,7 +54,7 @@
 - (void)
 applicationDidFinishLaunching:(NSNotification*)_;
 
-@end // BugReporterApplication
+@end // BugReporterAppDelegate
 
 
 

@@ -489,7 +489,7 @@ clean-bug-reporter:
 install-prefs-converter:
 	$(call banner,$@)
 	@# keep in sync with the matching clean rule
-	$(XCB) -project PrefsConverter.xcodeproj
+	$(XCB4) -project PrefsConverter.xcodeproj
 	@# avoid rsyncing from /
 	@if [ "x$(SRC_PREFSCONVERTER_TOP)" = "x" ] ; then \
 		echo "SRC_PREFSCONVERTER_TOP variable unset" >&2 ; \
@@ -500,7 +500,7 @@ install-prefs-converter:
 
 .PHONY: clean-prefs-converter
 clean-prefs-converter:
-	$(XCB) clean -project PrefsConverter.xcodeproj
+	$(XCB4) clean -project PrefsConverter.xcodeproj
 	$(RM) -R $(DEST_PREFSCONVERTER_TOP)
 
 # Component: Miscellaneous Resources (NIBs, Images, etc.)

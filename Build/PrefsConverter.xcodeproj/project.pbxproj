@@ -11,9 +11,9 @@
 		0A2D6B3C13B4368D00714A1D /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A2D6B3B13B4368D00714A1D /* Cocoa.framework */; };
 		0A33CC5F07FABB5200248DDF /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */; };
 		0A33CC6307FABB6F00248DDF /* CFDictionaryManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */; };
-		0AA163210825E7CE0071EA63 /* PrefsConverter.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AA1631F0825E7CE0071EA63 /* PrefsConverter.nib */; };
+		0A42D789175C3110001F487B /* PrefsConverterCocoa.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A42D787175C3110001F487B /* PrefsConverterCocoa.xib */; };
 		0AA742CB06E45F5A00CBC7B5 /* IconForBundle.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */; };
-		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */; };
+		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */; };
 		8D0C4E920486CD37000505A6 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 20286C33FDCF999611CA2CEA /* Carbon.framework */; };
 /* End PBXBuildFile section */
 
@@ -46,9 +46,9 @@
 		0A33CC5607FABAF800248DDF /* CFKeyValueInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFKeyValueInterface.h; path = Shared/Code/CFKeyValueInterface.h; sourceTree = "<group>"; };
 		0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFKeyValueInterface.cp; path = Shared/Code/CFKeyValueInterface.cp; sourceTree = "<group>"; };
 		0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFDictionaryManager.cp; path = Shared/Code/CFDictionaryManager.cp; sourceTree = "<group>"; };
-		0AA163200825E7CE0071EA63 /* PrefsConverter.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = PrefsConverter.nib; path = PrefsConverter/Resources/English.lproj/PrefsConverter.nib; sourceTree = "<group>"; };
+		0A42D788175C3110001F487B /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = PrefsConverter/Resources/English.lproj/PrefsConverterCocoa.xib; sourceTree = "<group>"; };
 		0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = PrefsConverter/Resources/IconForBundle.icns; sourceTree = "<group>"; };
-		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MainEntryPoint.cp; path = PrefsConverter/Code/MainEntryPoint.cp; sourceTree = "<group>"; };
+		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MainEntryPoint.mm; path = PrefsConverter/Code/MainEntryPoint.mm; sourceTree = "<group>"; };
 		0AF2E26D06EBA1D200A7C4A9 /* PreferencesData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PreferencesData.h; path = PrefsConverter/Code/PreferencesData.h; sourceTree = "<group>"; };
 		20286C33FDCF999611CA2CEA /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
@@ -100,11 +100,11 @@
 				20286C33FDCF999611CA2CEA /* Carbon.framework */,
 				0A2D6B3B13B4368D00714A1D /* Cocoa.framework */,
 				4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */,
-				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */,
+				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */,
 				0AF2E26D06EBA1D200A7C4A9 /* PreferencesData.h */,
 				0A33CC4D07FABA6500248DDF /* PrefsConverterPrefix.pch */,
 				0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */,
-				0AA1631F0825E7CE0071EA63 /* PrefsConverter.nib */,
+				0A42D787175C3110001F487B /* PrefsConverterCocoa.xib */,
 			);
 			name = PrefsConverter;
 			sourceTree = "<group>";
@@ -148,6 +148,9 @@
 /* Begin PBXProject section */
 		20286C28FDCF999611CA2CEA /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+			};
 			buildConfigurationList = 0A578F0A09D88AAC007D1289 /* Build configuration list for PBXProject "PrefsConverter" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -173,7 +176,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0AA742CB06E45F5A00CBC7B5 /* IconForBundle.icns in Resources */,
-				0AA163210825E7CE0071EA63 /* PrefsConverter.nib in Resources */,
+				0A42D789175C3110001F487B /* PrefsConverterCocoa.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -184,7 +187,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.cp in Sources */,
+				0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.mm in Sources */,
 				0A33CC5F07FABB5200248DDF /* CFKeyValueInterface.cp in Sources */,
 				0A33CC6307FABB6F00248DDF /* CFDictionaryManager.cp in Sources */,
 				0A2D6A7713B435F700714A1D /* CocoaUserDefaults.mm in Sources */,
@@ -194,13 +197,13 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		0AA1631F0825E7CE0071EA63 /* PrefsConverter.nib */ = {
+		0A42D787175C3110001F487B /* PrefsConverterCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0AA163200825E7CE0071EA63 /* PrefsConverter.nib */,
+				0A42D788175C3110001F487B /* English */,
 			);
-			name = PrefsConverter.nib;
-			sourceTree = SOURCE_ROOT;
+			name = PrefsConverterCocoa.xib;
+			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
 
@@ -208,9 +211,11 @@
 		0A578F0709D88AAC007D1289 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -233,24 +238,27 @@
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "PrefsConverter/Resources/PrefsConverter-Info.plist";
 				INSTALL_PATH = "$(USER_APPS_DIR)";
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_CFLAGS = (
 					"-fpascal-strings",
 					"-v",
 					"-IHeaders",
 				);
 				PRODUCT_NAME = PrefsConverter;
-				REZ_SHOW_DEBUG_OUTPUT = YES;
+				PROVISIONING_PROFILE = "";
+				RUN_CLANG_STATIC_ANALYZER = YES;
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
-				ZERO_LINK = NO;
 			};
 			name = ForDebugging;
 		};
 		0A578F0809D88AAC007D1289 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = PrefsConverter/Code/PrefsConverterPrefix.pch;
@@ -272,15 +280,17 @@
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "PrefsConverter/Resources/PrefsConverter-Info.plist";
 				INSTALL_PATH = "$(USER_APPS_DIR)";
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_CFLAGS = (
 					"-fpascal-strings",
 					"-v",
 					"-IHeaders",
 				);
 				PRODUCT_NAME = PrefsConverter;
+				PROVISIONING_PROFILE = "";
+				RUN_CLANG_STATIC_ANALYZER = YES;
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
-				ZERO_LINK = NO;
 			};
 			name = ForRelease;
 		};
@@ -289,7 +299,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				OBJROOT = _Generated;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx;
 				SYMROOT = _Generated;
 				VALID_ARCHS = i386;
 				WARNING_CFLAGS = (
@@ -302,15 +312,11 @@
 		0A578F0C09D88AAC007D1289 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-				);
-				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
-				MACOSX_DEPLOYMENT_TARGET_ppc = 10.3;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				OBJROOT = _Generated;
-				SDKROOT = "$(DEVELOPER_DIR)/SDKs/MacOSX10.4u.sdk";
+				SDKROOT = macosx;
 				SYMROOT = _Generated;
+				VALID_ARCHS = i386;
 			};
 			name = ForRelease;
 		};
