@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -82,6 +82,7 @@ changes to an interface declared in a ".mm" file.
 	NSFont*					previewFont;
 	NSPrintInfo*			pageSetup;
 	NSString*				paperInfo;
+	NSString*				fontSize;
 }
 
 - (id)
@@ -111,6 +112,11 @@ print:(id)_;
 paperInfo;
 - (void)
 setPaperInfo:(NSString*)_; // binding
+
+- (NSString*)
+fontSize;
+- (void)
+setFontSize:(NSString*)_; // binding
 
 @end
 

@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130605',
     '20130515',
     '20130506',
     '20130501',
@@ -469,6 +470,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130605': [
+        'The font size used to print may now be changed (though it defaults to the terminal font size, as before).',
+    ],
     '20130515': [
         'Fixed a serious problem where the oldest lines in very large scrollback buffers might not be displayed at all.',
     ],

@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -429,6 +429,7 @@ andLandscape:(BOOL)				landscapeMode
 		previewFont = [aFont retain];
 		pageSetup = [NSPrintInfo sharedPrintInfo];
 		paperInfo = [[NSString string] retain];
+		[self setFontSize:[[NSNumber numberWithFloat:[previewFont pointSize]] stringValue]];
 		
 		// initialize the page setup to some values that are saner
 		// for printing terminal text
@@ -461,6 +462,7 @@ dealloc
 	[previewText release];
 	[previewFont release];
 	[paperInfo release];
+	[fontSize release];
 	[super dealloc];
 } // dealloc
 
@@ -585,6 +587,33 @@ setPaperInfo:(NSString*)	aString
 		paperInfo = [aString retain];
 	}
 }// setPaperInfo:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSString*)
+fontSize
+{
+	return fontSize;
+}
+- (void)
+setFontSize:(NSString*)		aString
+{
+	if (aString != fontSize)
+	{
+		[fontSize release];
+		fontSize = [aString retain];
+		
+		if (nil != self->previewFont)
+		{
+			self->previewFont = [NSFont fontWithName:[self->previewFont fontName] size:[aString floatValue]];
+			[self->previewPane setFont:self->previewFont];
+		}
+	}
+}// setFontSize:
 
 
 #pragma mark NSWindowController
