@@ -126,6 +126,7 @@
 		0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */; };
 		0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */; };
 		0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */; };
+		0AD7B345176C3224004A1532 /* BoundName.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD7B344176C3224004A1532 /* BoundName.mm */; };
 		0AD7D0C3158AEBC9000C3264 /* PrefsContextManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD7D0C2158AEBC9000C3264 /* PrefsContextManager.mm */; };
 		0AD8B2D60DDA2CC100D5AA59 /* AddressDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */; };
 		0AE103B10F71D018003127C7 /* ServerBrowser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE103B00F71D018003127C7 /* ServerBrowser.mm */; };
@@ -546,6 +547,8 @@
 		0AD7481C13072342003E368B /* IconForFullScreen.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForFullScreen.icns; path = Application/Resources/IconForFullScreen.icns; sourceTree = "<group>"; };
 		0AD7483013073E56003E368B /* IconForCustomize.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForCustomize.icns; path = Application/Resources/IconForCustomize.icns; sourceTree = "<group>"; };
 		0AD7483813074260003E368B /* IconForPrint.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrint.icns; path = Application/Resources/IconForPrint.icns; sourceTree = "<group>"; };
+		0AD7B343176C3212004A1532 /* BoundName.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "BoundName.objc++.h"; path = "Shared/Code/BoundName.objc++.h"; sourceTree = "<group>"; };
+		0AD7B344176C3224004A1532 /* BoundName.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BoundName.mm; path = Shared/Code/BoundName.mm; sourceTree = "<group>"; };
 		0AD7CE34158AD31F000C3264 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/GenericPanelTabsCocoa.xib; sourceTree = "<group>"; };
 		0AD7D0BA158AE38B000C3264 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelGeneralOptionsCocoa.xib; sourceTree = "<group>"; };
 		0AD7D0C2158AEBC9000C3264 /* PrefsContextManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefsContextManager.mm; path = Application/Code/PrefsContextManager.mm; sourceTree = "<group>"; };
@@ -643,6 +646,7 @@
 		0A33CCEF07FABFBF00248DDF /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				0AD7B344176C3224004A1532 /* BoundName.mm */,
 				0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */,
 				0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */,
 				0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */,
@@ -675,6 +679,7 @@
 				0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */,
 				0A46FE36055432A400ACDF3A /* Undoables.cp */,
 				0AE852680D94613300B6834B /* AutoPool.objc++.h */,
+				0AD7B343176C3212004A1532 /* BoundName.objc++.h */,
 				0AFD1266087A0A3C00439BEA /* CarbonEventHandlerWrap.template.h */,
 				0A4603BE0554376100ACDF3A /* CarbonEventUtilities.template.h */,
 				0A9B31860D538E5B00C1616D /* CFDictionaryManager.h */,
@@ -1477,6 +1482,7 @@
 				0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */,
 				0AD7D0C3158AEBC9000C3264 /* PrefsContextManager.mm in Sources */,
 				0A46C56D15D864B700843BBC /* PreferenceValue.mm in Sources */,
+				0AD7B345176C3224004A1532 /* BoundName.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

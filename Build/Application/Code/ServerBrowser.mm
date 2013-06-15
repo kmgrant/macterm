@@ -47,6 +47,7 @@ extern "C"
 
 // library includes
 #import <AutoPool.objc++.h>
+#import <BoundName.objc++.h>
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
 #import <CocoaBasic.h>
@@ -184,31 +185,20 @@ allows them to be easily inserted into user interface elements
 without losing less user-friendly information about each
 protocol.
 */
-@interface ServerBrowser_Protocol : NSObject
+@interface ServerBrowser_Protocol : BoundName_Object
 {
 @private
 	Session_Protocol	protocolID;
-	NSString*			description;
 	NSString*			serviceType; // RFC 2782 / Bonjour, e.g. "_xyz._tcp."
 	unsigned short		defaultPort;
 }
 
 // accessors; see "Protocol Definitions" array controller in the NIB, for key names
 
-- (NSString*)
-boundName;
-- (void)
-setBoundName:(NSString*)_;
-
 - (unsigned short)
 defaultPort;
 - (void)
 setDefaultPort:(unsigned short)_;
-
-- (NSString*)
-description;
-- (void)
-setDescription:(NSString*)_;
 
 - (Session_Protocol)
 protocolID;
@@ -1011,11 +1001,10 @@ description:(NSString*)			aString
 serviceType:(NSString*)			anRFC2782Name
 defaultPort:(unsigned short)	aNumber
 {
-	self = [super init];
+	self = [super initWithBoundName:aString];
 	if (nil != self)
 	{
 		[self setProtocolID:anID];
-		[self setDescription:aString];
 		[self setServiceType:anRFC2782Name];
 		[self setDefaultPort:aNumber];
 	}
@@ -1024,34 +1013,6 @@ defaultPort:(unsigned short)	aNumber
 
 
 #pragma mark Accessors
-
-
-/*!
-Accessor.
-
-IMPORTANT:	The "boundName" key is ONLY required because older
-			versions of Mac OS X do not seem to work properly
-			when bound to the "description" accessor.  (Namely,
-			the OS seems to stubbornly use its own "description"
-			instead of invoking the right one.)  In the future
-			this might be removed and rebound to "description".
-
-(4.0)
-*/
-- (NSString*)
-boundName
-{
-	return [[description retain] autorelease];
-}
-- (void)
-setBoundName:(NSString*)	aString
-{
-	if (description != aString)
-	{
-		[description release];
-		description = [aString copy];
-	}
-}// setBoundName:
 
 
 /*!
@@ -1069,27 +1030,6 @@ setDefaultPort:(unsigned short)		aNumber
 {
 	defaultPort = aNumber;
 }// setDefaultPort:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-description
-{
-	return [[description retain] autorelease];
-}
-- (void)
-setDescription:(NSString*)		aString
-{
-	if (description != aString)
-	{
-		[description release];
-		description = [aString copy];
-	}
-}// setDescription:
 
 
 /*!

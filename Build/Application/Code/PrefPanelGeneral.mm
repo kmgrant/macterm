@@ -50,6 +50,7 @@
 
 // library includes
 #import <AlertMessages.h>
+#import <BoundName.objc++.h>
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
 #import <CFUtilities.h>
@@ -283,12 +284,11 @@ Implements an object wrapper for sound names, that allows them
 to be correctly bound into user interface elements.  (On older
 Mac OS X versions, raw strings do not bind properly.)
 */
-@interface PrefPanelGeneral_SoundInfo : NSObject
+@interface PrefPanelGeneral_SoundInfo : BoundName_Object
 {
 @private
-	NSString*	description;
-	BOOL		isDefault;
-	BOOL		isOff;
+	BOOL	isDefault;
+	BOOL	isOff;
 }
 
 // initializers
@@ -315,18 +315,6 @@ playSound;
 
 - (NSString*)
 preferenceString;
-
-// accessors; see "Sound Names" array controller in the NIB, for key names
-
-- (NSString*)
-boundName;
-- (void)
-setBoundName:(NSString*)_; // binding
-
-- (NSString*)
-description;
-- (void)
-setDescription:(NSString*)_;
 
 @end // PrefPanelGeneral_SoundInfo
 
@@ -2559,7 +2547,7 @@ initWithDescription:(NSString*)		aDescription
 isDefault:(BOOL)					aDefaultFlag
 isOff:(BOOL)						anOffFlag
 {
-	self = [super init];
+	self = [super initWithBoundName:aDescription];
 	if (nil != self)
 	{
 		self->isDefault = aDefaultFlag;
@@ -2591,7 +2579,6 @@ Destructor.
 - (void)
 dealloc
 {
-	[description release];
 	[super dealloc];
 }// dealloc
 
@@ -2639,54 +2626,6 @@ preferenceString
 	}
 	return [self boundName];
 }// preferenceString
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-IMPORTANT:	The "boundName" key is ONLY required because older
-			versions of Mac OS X do not seem to work properly
-			when bound to the "description" accessor.  (Namely,
-			the OS seems to stubbornly use its own "description"
-			instead of invoking the right one.)  In the future
-			this might be removed and rebound to "description".
-
-(4.1)
-*/
-- (NSString*)
-boundName
-{
-	return [[description retain] autorelease];
-}
-- (void)
-setBoundName:(NSString*)	aString
-{
-	if (description != aString)
-	{
-		[description release];
-		description = [aString copy];
-	}
-}// setBoundName:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-description
-{
-	return [self boundName];
-}
-- (void)
-setDescription:(NSString*)		aString
-{
-	[self setBoundName:aString];
-}// setDescription:
 
 
 @end // PrefPanelGeneral_SoundInfo

@@ -48,6 +48,7 @@
 #import <objc/objc-runtime.h>
 
 // library includes
+#import <BoundName.objc++.h>
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
 #import <CocoaExtensions.objc++.h>
@@ -348,10 +349,9 @@ typedef My_TerminalsPanelScreenData*		My_TerminalsPanelScreenDataPtr;
 /*!
 Describes a type of base terminal emulator.
 */
-@interface PrefPanelTerminals_EmulatorInfo : NSObject
+@interface PrefPanelTerminals_EmulatorInfo : BoundName_Object
 {
 	Terminal_Emulator	emulatorType;
-	NSString*			description;
 }
 
 // designated initializer
@@ -360,16 +360,6 @@ initWithTerminalEmulatorType:(Terminal_Emulator)_
 description:(NSString*)_;
 
 // accessors
-
-- (NSString*)
-boundName;
-- (void)
-setBoundName:(NSString*)_;
-
-- (NSString*)
-description;
-- (void)
-setDescription:(NSString*)_;
 
 - (Terminal_Emulator)
 emulatorType;
@@ -382,10 +372,9 @@ setEmulatorType:(Terminal_Emulator)_;
 /*!
 Describes a type of scrollback behavior.
 */
-@interface PrefPanelTerminals_ScrollbackTypeInfo : NSObject
+@interface PrefPanelTerminals_ScrollbackTypeInfo : BoundName_Object
 {
 	Terminal_ScrollbackType		scrollbackType;
-	NSString*					description;
 }
 
 // designated initializer
@@ -394,16 +383,6 @@ initWithTerminalScrollbackType:(Terminal_ScrollbackType)_
 description:(NSString*)_;
 
 // accessors
-
-- (NSString*)
-boundName;
-- (void)
-setBoundName:(NSString*)_;
-
-- (NSString*)
-description;
-- (void)
-setDescription:(NSString*)_;
 
 - (Terminal_ScrollbackType)
 scrollbackType;
@@ -3121,11 +3100,10 @@ Designated initializer.
 initWithTerminalEmulatorType:(Terminal_Emulator)	aType
 description:(NSString*)								aString
 {
-	self = [super init];
+	self = [super initWithBoundName:aString];
 	if (nil != self)
 	{
 		[self setEmulatorType:aType];
-		[self setDescription:aString];
 	}
 	return self;
 }// initWithTerminalEmulatorType:description:
@@ -3139,61 +3117,11 @@ Destructor.
 - (void)
 dealloc
 {
-	[description release];
 	[super dealloc];
 }// dealloc
 
 
 #pragma mark Accessors
-
-
-/*!
-Accessor.
-
-IMPORTANT:	The "boundName" key is ONLY required because older
-			versions of Mac OS X do not seem to work properly
-			when bound to the "description" accessor.  (Namely,
-			the OS seems to stubbornly use its own "description"
-			instead of invoking the right one.)  In the future
-			this might be removed and rebound to "description".
-
-(4.1)
-*/
-- (NSString*)
-boundName
-{
-	return [[description retain] autorelease];
-}
-- (void)
-setBoundName:(NSString*)	aString
-{
-	if (description != aString)
-	{
-		[description release];
-		description = [aString copy];
-	}
-}// setBoundName:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (NSString*)
-description
-{
-	return [[description retain] autorelease];
-}
-- (void)
-setDescription:(NSString*)		aString
-{
-	if (description != aString)
-	{
-		[description release];
-		description = [aString copy];
-	}
-}// setDescription:
 
 
 /*!
@@ -4533,11 +4461,10 @@ Designated initializer.
 initWithTerminalScrollbackType:(Terminal_ScrollbackType)	aType
 description:(NSString*)										aString
 {
-	self = [super init];
+	self = [super initWithBoundName:aString];
 	if (nil != self)
 	{
 		[self setScrollbackType:aType];
-		[self setDescription:aString];
 	}
 	return self;
 }// initWithTerminalScrollbackType:description:
@@ -4551,61 +4478,11 @@ Destructor.
 - (void)
 dealloc
 {
-	[description release];
 	[super dealloc];
 }// dealloc
 
 
 #pragma mark Accessors
-
-
-/*!
-Accessor.
-
-IMPORTANT:	The "boundName" key is ONLY required because older
-			versions of Mac OS X do not seem to work properly
-			when bound to the "description" accessor.  (Namely,
-			the OS seems to stubbornly use its own "description"
-			instead of invoking the right one.)  In the future
-			this might be removed and rebound to "description".
-
-(4.1)
-*/
-- (NSString*)
-boundName
-{
-	return [[description retain] autorelease];
-}
-- (void)
-setBoundName:(NSString*)	aString
-{
-	if (description != aString)
-	{
-		[description release];
-		description = [aString copy];
-	}
-}// setBoundName:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (NSString*)
-description
-{
-	return [[description retain] autorelease];
-}
-- (void)
-setDescription:(NSString*)		aString
-{
-	if (description != aString)
-	{
-		[description release];
-		description = [aString copy];
-	}
-}// setDescription:
 
 
 /*!

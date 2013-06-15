@@ -46,6 +46,7 @@
 #import <objc/objc-runtime.h>
 
 // library includes
+#import <BoundName.objc++.h>
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
 #import <CocoaBasic.h>
@@ -182,11 +183,10 @@ Implements an object wrapper for translation tables, that allows
 them to be easily inserted into user interface elements without
 losing less user-friendly information about each encoding.
 */
-@interface PrefPanelTranslations_TableInfo : NSObject
+@interface PrefPanelTranslations_TableInfo : BoundName_Object
 {
 @private
 	CFStringEncoding	encodingType;
-	NSString*			description;
 }
 
 // initializers
@@ -196,16 +196,6 @@ initWithEncodingType:(CFStringEncoding)_
 description:(NSString*)_;
 
 // accessors; see "Translation Tables" array controller in the NIB, for key names
-
-- (NSString*)
-boundName;
-- (void)
-setBoundName:(NSString*)_; // binding
-
-- (NSString*)
-description;
-- (void)
-setDescription:(NSString*)_;
 
 - (CFStringEncoding)
 encodingType;
@@ -1414,11 +1404,10 @@ Designated initializer.
 initWithEncodingType:(CFStringEncoding)		anEncoding
 description:(NSString*)						aDescription
 {
-	self = [super init];
+	self = [super initWithBoundName:aDescription];
 	if (nil != self)
 	{
 		[self setEncodingType:anEncoding];
-		[self setDescription:aDescription];
 	}
 	return self;
 }// init
@@ -1432,57 +1421,11 @@ Destructor.
 - (void)
 dealloc
 {
-	[description release];
 	[super dealloc];
 }// dealloc
 
 
 #pragma mark Accessors
-
-
-/*!
-Accessor.
-
-IMPORTANT:	The "boundName" key is ONLY required because older
-			versions of Mac OS X do not seem to work properly
-			when bound to the "description" accessor.  (Namely,
-			the OS seems to stubbornly use its own "description"
-			instead of invoking the right one.)  In the future
-			this might be removed and rebound to "description".
-
-(4.1)
-*/
-- (NSString*)
-boundName
-{
-	return [[description retain] autorelease];
-}
-- (void)
-setBoundName:(NSString*)	aString
-{
-	if (description != aString)
-	{
-		[description release];
-		description = [aString copy];
-	}
-}// setBoundName:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-description
-{
-	return [self boundName];
-}
-- (void)
-setDescription:(NSString*)		aString
-{
-	[self setBoundName:aString];
-}// setDescription:
 
 
 /*!
