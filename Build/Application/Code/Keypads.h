@@ -191,10 +191,10 @@ typeControlBackslash:(id)_;
 typeControlRightSquareBracket:(id)_;
 
 - (IBAction)
-typeControlTilde:(id)_;
+typeControlCaret:(id)_;
 
 - (IBAction)
-typeControlQuestionMark:(id)_;
+typeControlUnderscore:(id)_;
 
 @end
 

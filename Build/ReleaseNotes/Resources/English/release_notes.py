@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130618',
     '20130605',
     '20130515',
     '20130506',
@@ -470,6 +471,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130618': [
+        'Fixed the labels of the last two "Control Keys" palette buttons to use a caret (^) and an underscore (_), respectively.',
+    ],
     '20130605': [
         'The font size used to print may now be changed (though it defaults to the terminal font size, as before).',
     ],

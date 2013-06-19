@@ -297,8 +297,8 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandKeypadControlLeftSquareBracket	'CK^[' //!< ASCII 27 (ESC)
 #define kCommandKeypadControlBackslash			'CK^\\' //!< ASCII 28
 #define kCommandKeypadControlRightSquareBracket	'CK^]' //!< ASCII 29
-#define kCommandKeypadControlTilde				'CK^~' //!< ASCII 30
-#define kCommandKeypadControlQuestionMark		'CK^?' //!< ASCII 31
+#define kCommandKeypadControlCaret				'CK^^' //!< ASCII 30
+#define kCommandKeypadControlUnderscore			'CK^_' //!< ASCII 31
 #define kCommandKeypadFunction1					'VF1 '
 #define kCommandKeypadFunction2					'VF2 '
 #define kCommandKeypadFunction3					'VF3 '

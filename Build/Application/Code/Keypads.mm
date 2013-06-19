@@ -1179,12 +1179,12 @@ Sends the specified control character to the active session.
 (3.1)
 */
 - (IBAction)
-typeControlTilde:(id)	sender
+typeControlCaret:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1E];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlTilde, gControlKeysEventTarget);
-}// typeControlTilde:
+	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlCaret, gControlKeysEventTarget);
+}// typeControlCaret:
 
 
 /*!
@@ -1193,12 +1193,12 @@ Sends the specified control character to the active session.
 (3.1)
 */
 - (IBAction)
-typeControlQuestionMark:(id)	sender
+typeControlUnderscore:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1F];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlQuestionMark, gControlKeysEventTarget);
-}// typeControlQuestionMark:
+	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlUnderscore, gControlKeysEventTarget);
+}// typeControlUnderscore:
 
 
 #pragma mark NSWindowController

@@ -2267,11 +2267,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				insertedCFString = CFSTR("\\035");
 				break;
 			
-			case kCommandKeypadControlTilde:
+			case kCommandKeypadControlCaret:
 				insertedCFString = CFSTR("\\036");
 				break;
 			
-			case kCommandKeypadControlQuestionMark:
+			case kCommandKeypadControlUnderscore:
 				insertedCFString = CFSTR("\\037");
 				break;
 			

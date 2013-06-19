@@ -426,7 +426,7 @@ typedef My_SessionsPanelResourceData*		My_SessionsPanelResourceDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-My_CharacterToCFStringMap&	initCharacterToCFStringMap		();
+My_CharacterToCFStringMap&	initCharacterToCFStringMap				();
 void						makeAllBevelButtonsUseTheSystemFont		(HIWindowRef);
 void						preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 OSStatus					receiveFieldChangedInCommandLine		(EventHandlerCallRef, EventRef, void*);
@@ -2581,12 +2581,12 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				chosenChar = ']' - '@';
 				break;
 			
-			case kCommandKeypadControlTilde:
-				chosenChar = '~' - '@';
+			case kCommandKeypadControlCaret:
+				chosenChar = '^' - '@';
 				break;
 			
-			case kCommandKeypadControlQuestionMark:
-				chosenChar = '\?' - '@';
+			case kCommandKeypadControlUnderscore:
+				chosenChar = '_' - '@';
 				break;
 			
 			case kCommandEmacsArrowMapping:
@@ -4466,8 +4466,8 @@ initCharacterToCFStringMap ()
 		result['[' - '@'] = CFSTR("^[");
 		result['\\' - '@'] = CFSTR("^\\");
 		result[']' - '@'] = CFSTR("^]");
-		result['~' - '@'] = CFSTR("^~");
-		result['\?' - '@'] = CFSTR("^?");
+		result['^' - '@'] = CFSTR("^^");
+		result['_' - '@'] = CFSTR("^_");
 		assert(result.size() == 32/* number of entries above */);
 	}
 	
