@@ -42,6 +42,9 @@
 #import "Preferences.h"
 #import "PrefsContextManager.objc++.h"
 
+// library includes
+#import <BoundName.objc++.h>
+
 
 
 #pragma mark Constants
@@ -264,6 +267,72 @@ readValueSeeIfDefault:(BOOL*)_;
 stringValue;
 - (void)
 setStringValue:(NSString*)_; // binding
+
+@end
+
+
+/*!
+For use with PreferenceValue_Array.  Stores a description
+for a constant value, and the value itself.  When an
+array is bound to a user interface element such as a
+pop-up menu or a matrix, the (localized) description for
+the specified value is used to represent the value.
+*/
+@interface PreferenceValue_IntegerDescriptor : BoundName_Object
+{
+@private
+	UInt32		describedValue;
+}
+
+// designated initializer
+- (id)
+initWithIntegerValue:(UInt32)_
+description:(NSString*)_;
+
+// accessors
+
+- (UInt32)
+describedIntegerValue;
+- (void)
+setDescribedIntegerValue:(UInt32)_;
+
+@end
+
+
+/*!
+Manages bindings for a single preference that has a
+fixed array of possible values (with descriptions).
+This is very commonly bound to a pop-up menu or a
+matrix element.
+
+The descriptor array should contain objects of a
+type such as PreferenceValue_IntegerDescriptor, to
+specify which values are stored and how they are
+displayed to the user.
+*/
+@interface PreferenceValue_Array : PreferenceValue_Inherited
+{
+@private
+	NSArray*					valueDescriptorArray;
+	PreferenceValue_Number*		preferenceAccessObject;
+}
+
+// designated initializer
+- (id)
+initWithPreferencesTag:(Preferences_Tag)_
+contextManager:(PrefsContextManager_Object*)_
+preferenceCType:(PreferenceValue_CType)_
+valueDescriptorArray:(NSArray*)_;
+
+// accessors
+
+- (NSArray*)
+valueDescriptorArray; // binding
+
+- (id)
+currentValueDescriptor;
+- (void)
+setCurrentValueDescriptor:(id)_; // binding
 
 @end
 

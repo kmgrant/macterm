@@ -250,6 +250,256 @@ preferencesTag
 @end // PreferenceValue_InheritedSingleTag
 
 
+@implementation PreferenceValue_IntegerDescriptor
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithIntegerValue:(UInt32)	aValue
+description:(NSString*)			aString
+{
+	self = [super initWithBoundName:aString];
+	if (nil != self)
+	{
+		[self setDescribedIntegerValue:aValue];
+	}
+	return self;
+}// initWithIntegerValue:description:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (UInt32)
+describedIntegerValue
+{
+	return describedValue;
+}
+- (void)
+setDescribedIntegerValue:(UInt32)	aValue
+{
+	describedValue = aValue;
+}// setDescribedIntegerValue:
+
+
+@end // PreferenceValue_IntegerDescriptor
+
+
+@implementation PreferenceValue_Array
+
+
+/*!
+Designated initializer.
+
+This initializer is for arrays of values that are
+stored numerically.  In the future this class may
+support other types of enumerations, e.g. lists of
+fixed string values.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+preferenceCType:(PreferenceValue_CType)			aCType
+valueDescriptorArray:(NSArray*)					aDescriptorArray
+{
+	self = [super initWithContextManager:aContextMgr];
+	if (nil != self)
+	{
+		self->valueDescriptorArray = [aDescriptorArray copy];
+		self->preferenceAccessObject = [[PreferenceValue_Number alloc]
+										initWithPreferencesTag:aTag contextManager:aContextMgr preferenceCType:aCType];
+		
+		// monitor the preferences context manager so that observers
+		// of preferences in sub-objects can be told to expect changes
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextWillChange:)
+															name:kPrefsContextManager_ContextWillChangeNotification
+															object:aContextMgr];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextDidChange:)
+															name:kPrefsContextManager_ContextDidChangeNotification
+															object:aContextMgr];
+	}
+	return self;
+}// initWithPreferencesTag:contextManager:preferenceCType:valueDescriptorArray:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[valueDescriptorArray release];
+	[preferenceAccessObject release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Responds to a change in preferences context by notifying
+observers that key values have changed (so that updates
+to the user interface occur).
+
+(4.1)
+*/
+- (void)
+prefsContextDidChange:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	// note: should be opposite order of "prefsContextWillChange:"
+	[self didChangeValueForKey:@"currentValueDescriptor"];
+	[self didSetPreferenceValue];
+}// prefsContextDidChange:
+
+
+/*!
+Responds to a change in preferences context by notifying
+observers that key values have changed (so that updates
+to the user interface occur).
+
+(4.1)
+*/
+- (void)
+prefsContextWillChange:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	// note: should be opposite order of "prefsContextDidChange:"
+	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"currentValueDescriptor"];
+}// prefsContextWillChange:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSArray*)
+valueDescriptorArray
+{
+	return [[valueDescriptorArray retain] autorelease];
+}// valueDescriptorArray
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (id)
+currentValueDescriptor
+{
+	UInt32		currentValue = [[self->preferenceAccessObject numberStringValue] intValue];
+	id			result = nil;
+	
+	
+	for (UInt16 i = 0; i < [[self valueDescriptorArray] count]; ++i)
+	{
+		PreferenceValue_IntegerDescriptor*	asInfo = (PreferenceValue_IntegerDescriptor*)
+														[[self valueDescriptorArray] objectAtIndex:i];
+		
+		
+		if (currentValue == [asInfo describedIntegerValue])
+		{
+			result = asInfo;
+			break;
+		}
+	}
+	return result;
+}
+- (void)
+setCurrentValueDescriptor:(id)	selectedObject
+{
+	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"currentValueDescriptor"];
+	
+	if (nil == selectedObject)
+	{
+		[self setNilPreferenceValue];
+	}
+	else
+	{
+		PreferenceValue_IntegerDescriptor*	asInfo = (PreferenceValue_IntegerDescriptor*)selectedObject;
+		
+		
+		[self->preferenceAccessObject setNumberStringValue:
+										[[NSNumber numberWithInt:[asInfo describedIntegerValue]] stringValue]];
+	}
+	
+	[self didChangeValueForKey:@"currentValueDescriptor"];
+	[self didSetPreferenceValue];
+}// setCurrentValueDescriptor:
+
+
+#pragma mark PreferenceValue_Inherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = [self->preferenceAccessObject isInherited];
+	
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"currentValueDescriptor"];
+	[self->preferenceAccessObject setNilPreferenceValue];
+	[self didChangeValueForKey:@"currentValueDescriptor"];
+	[self didSetPreferenceValue];
+}// setNilPreferenceValue
+
+
+@end // PreferenceValue_Array
+
+
 @implementation PreferenceValue_Color
 
 
