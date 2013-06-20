@@ -54,7 +54,11 @@ if __name__ == "__main__":
     # default.  (If a future Mac OS X version stops supporting Python 2.5, it
     # will once again be necessary to have separate SWIG-generated wrappers for
     # each incompatible Python version.)
-    if mac_os_name == "Mountain Lion":
+    if mac_os_name == "Mavericks":
+        py_interpreter = os.path.join(macos_dir, "MacTerm_python2.5_wrap")
+        quills_fw_ver = "B"
+        quills_pylib_ver = "2.5" # 2.5 is still available in Mavericks
+    elif mac_os_name == "Mountain Lion":
         py_interpreter = os.path.join(macos_dir, "MacTerm_python2.5_wrap")
         quills_fw_ver = "B"
         quills_pylib_ver = "2.5" # 2.5 is still available in Mountain Lion
