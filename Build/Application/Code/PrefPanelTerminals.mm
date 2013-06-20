@@ -345,52 +345,6 @@ typedef My_TerminalsPanelScreenData*		My_TerminalsPanelScreenDataPtr;
 
 } // anonymous namespace
 
-
-/*!
-Describes a type of base terminal emulator.
-*/
-@interface PrefPanelTerminals_EmulatorInfo : BoundName_Object
-{
-	Terminal_Emulator	emulatorType;
-}
-
-// designated initializer
-- (id)
-initWithTerminalEmulatorType:(Terminal_Emulator)_
-description:(NSString*)_;
-
-// accessors
-
-- (Terminal_Emulator)
-emulatorType;
-- (void)
-setEmulatorType:(Terminal_Emulator)_;
-
-@end
-
-
-/*!
-Describes a type of scrollback behavior.
-*/
-@interface PrefPanelTerminals_ScrollbackTypeInfo : BoundName_Object
-{
-	Terminal_ScrollbackType		scrollbackType;
-}
-
-// designated initializer
-- (id)
-initWithTerminalScrollbackType:(Terminal_ScrollbackType)_
-description:(NSString*)_;
-
-// accessors
-
-- (Terminal_ScrollbackType)
-scrollbackType;
-- (void)
-setScrollbackType:(Terminal_ScrollbackType)_;
-
-@end
-
 #pragma mark Internal Method Prototypes
 namespace {
 
@@ -3088,62 +3042,6 @@ dealloc
 @end // PrefPanelTerminals_ViewManager
 
 
-@implementation PrefPanelTerminals_EmulatorInfo
-
-
-/*!
-Designated initializer.
-
-(4.1)
-*/
-- (id)
-initWithTerminalEmulatorType:(Terminal_Emulator)	aType
-description:(NSString*)								aString
-{
-	self = [super initWithBoundName:aString];
-	if (nil != self)
-	{
-		[self setEmulatorType:aType];
-	}
-	return self;
-}// initWithTerminalEmulatorType:description:
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (Terminal_Emulator)
-emulatorType
-{
-	return emulatorType;
-}
-- (void)
-setEmulatorType:(Terminal_Emulator)		aType
-{
-	emulatorType = aType;
-}// setEmulatorType:
-
-
-@end // PrefPanelTerminals_EmulatorInfo
-
-
 @implementation PrefPanelTerminals_BaseEmulatorValue
 
 
@@ -3155,54 +3053,46 @@ Designated initializer.
 - (id)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
-	self = [super initWithContextManager:aContextMgr];
+	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kTerminal_EmulatorDumb
+																description:NSLocalizedStringFromTable
+																			(@"None (“Dumb”)", @"PrefPanelTerminals"/* table */,
+																				@"emulator disabled")]
+										autorelease],
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kTerminal_EmulatorVT100
+																description:NSLocalizedStringFromTable
+																			(@"VT100", @"PrefPanelTerminals"/* table */,
+																				@"emulator of VT100 terminal device")]
+										autorelease],
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kTerminal_EmulatorVT102
+																description:NSLocalizedStringFromTable
+																			(@"VT102", @"PrefPanelTerminals"/* table */,
+																				@"emulator of VT102 terminal device")]
+										autorelease],
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kTerminal_EmulatorVT220
+																description:NSLocalizedStringFromTable
+																			(@"VT220", @"PrefPanelTerminals"/* table */,
+																				@"emulator of VT220 terminal device")]
+										autorelease],
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kTerminal_EmulatorXTerm256Color
+																description:NSLocalizedStringFromTable
+																			(@"XTerm", @"PrefPanelTerminals"/* table */,
+																				@"emulator of XTerm terminal program")]
+										autorelease],
+									nil] autorelease];
+	
+	
+	self = [super initWithPreferencesTag:kPreferences_TagTerminalEmulatorType
+											contextManager:aContextMgr
+											preferenceCType:kPreferenceValue_CTypeUInt32
+											valueDescriptorArray:descriptorArray];
 	if (nil != self)
 	{
-		self->emulatorArray = [[[NSArray alloc] initWithObjects:
-								[[[PrefPanelTerminals_EmulatorInfo alloc]
-									initWithTerminalEmulatorType:kTerminal_EmulatorDumb
-																	description:NSLocalizedStringFromTable
-																				(@"None (“Dumb”)", @"PrefPanelTerminals"/* table */,
-																					@"emulator disabled")]
-									autorelease],
-								[[[PrefPanelTerminals_EmulatorInfo alloc]
-									initWithTerminalEmulatorType:kTerminal_EmulatorVT100
-																	description:NSLocalizedStringFromTable
-																				(@"VT100", @"PrefPanelTerminals"/* table */,
-																					@"emulator of VT100 terminal device")]
-									autorelease],
-								[[[PrefPanelTerminals_EmulatorInfo alloc]
-									initWithTerminalEmulatorType:kTerminal_EmulatorVT102
-																	description:NSLocalizedStringFromTable
-																				(@"VT102", @"PrefPanelTerminals"/* table */,
-																					@"emulator of VT102 terminal device")]
-									autorelease],
-								[[[PrefPanelTerminals_EmulatorInfo alloc]
-									initWithTerminalEmulatorType:kTerminal_EmulatorVT220
-																	description:NSLocalizedStringFromTable
-																				(@"VT220", @"PrefPanelTerminals"/* table */,
-																					@"emulator of VT220 terminal device")]
-									autorelease],
-								[[[PrefPanelTerminals_EmulatorInfo alloc]
-									initWithTerminalEmulatorType:kTerminal_EmulatorXTerm256Color
-																	description:NSLocalizedStringFromTable
-																				(@"XTerm", @"PrefPanelTerminals"/* table */,
-																					@"emulator of XTerm terminal program")]
-									autorelease],
-								nil] autorelease];
-		self->emulatorObject = [[PreferenceValue_Number alloc]
-									initWithPreferencesTag:kPreferences_TagTerminalEmulatorType
-															contextManager:aContextMgr
-															preferenceCType:kPreferenceValue_CTypeUInt32];
-		
-		// monitor the preferences context manager so that observers
-		// of preferences in sub-objects can be told to expect changes
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextWillChange:)
-															name:kPrefsContextManager_ContextWillChangeNotification
-															object:aContextMgr];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextDidChange:)
-															name:kPrefsContextManager_ContextDidChangeNotification
-															object:aContextMgr];
 	}
 	return self;
 }// initWithContextManager:
@@ -3216,149 +3106,8 @@ Destructor.
 - (void)
 dealloc
 {
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	[emulatorArray release];
-	[emulatorObject release];
 	[super dealloc];
 }// dealloc
-
-
-#pragma mark New Methods
-
-
-/*!
-Responds to a change in preferences context by notifying
-observers that key values have changed (so that updates
-to the user interface occur).
-
-(4.1)
-*/
-- (void)
-prefsContextDidChange:(NSNotification*)		aNotification
-{
-#pragma unused(aNotification)
-	// note: should be opposite order of "prefsContextWillChange:"
-	[self didChangeValueForKey:@"currentEmulator"];
-	[self didSetPreferenceValue];
-}// prefsContextDidChange:
-
-
-/*!
-Responds to a change in preferences context by notifying
-observers that key values have changed (so that updates
-to the user interface occur).
-
-(4.1)
-*/
-- (void)
-prefsContextWillChange:(NSNotification*)	aNotification
-{
-#pragma unused(aNotification)
-	// note: should be opposite order of "prefsContextDidChange:"
-	[self willSetPreferenceValue];
-	[self willChangeValueForKey:@"currentEmulator"];
-}// prefsContextWillChange:
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (NSArray*)
-emulatorArray
-{
-	return [[emulatorArray retain] autorelease];
-}// emulatorArray
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (id)
-currentEmulator
-{
-	Terminal_Emulator	currentType = STATIC_CAST([[self->emulatorObject numberStringValue] intValue],
-													Terminal_Emulator);
-	id					result = nil;
-	
-	
-	for (UInt16 i = 0; i < [[self emulatorArray] count]; ++i)
-	{
-		PrefPanelTerminals_EmulatorInfo*	asInfo = (PrefPanelTerminals_EmulatorInfo*)
-														[[self emulatorArray] objectAtIndex:i];
-		
-		
-		if (currentType == [asInfo emulatorType])
-		{
-			result = asInfo;
-			break;
-		}
-	}
-	return result;
-}
-- (void)
-setCurrentEmulator:(id)		selectedObject
-{
-	[self willSetPreferenceValue];
-	[self willChangeValueForKey:@"currentEmulator"];
-	
-	if (nil == selectedObject)
-	{
-		[self setNilPreferenceValue];
-	}
-	else
-	{
-		PrefPanelTerminals_EmulatorInfo*	asInfo = (PrefPanelTerminals_EmulatorInfo*)selectedObject;
-		
-		
-		[self->emulatorObject setNumberStringValue:
-								[[NSNumber numberWithInt:[asInfo emulatorType]] stringValue]];
-	}
-	
-	[self didChangeValueForKey:@"currentEmulator"];
-	[self didSetPreferenceValue];
-}// setCurrentEmulator:
-
-
-#pragma mark PreferenceValue_Inherited
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isInherited
-{
-	// if the current value comes from a default then the “inherited” state is YES
-	BOOL	result = [self->emulatorObject isInherited];
-	
-	
-	return result;
-}// isInherited
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (void)
-setNilPreferenceValue
-{
-	[self willSetPreferenceValue];
-	[self willChangeValueForKey:@"currentEmulator"];
-	[self->emulatorObject setNilPreferenceValue];
-	[self didChangeValueForKey:@"currentEmulator"];
-	[self didSetPreferenceValue];
-}// setNilPreferenceValue
 
 
 @end // PrefPanelTerminals_BaseEmulatorValue
@@ -4449,62 +4198,6 @@ primaryDisplayBindingKeys
 @end // PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal)
 
 
-@implementation PrefPanelTerminals_ScrollbackTypeInfo
-
-
-/*!
-Designated initializer.
-
-(4.1)
-*/
-- (id)
-initWithTerminalScrollbackType:(Terminal_ScrollbackType)	aType
-description:(NSString*)										aString
-{
-	self = [super initWithBoundName:aString];
-	if (nil != self)
-	{
-		[self setScrollbackType:aType];
-	}
-	return self;
-}// initWithTerminalScrollbackType:description:
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (Terminal_ScrollbackType)
-scrollbackType
-{
-	return scrollbackType;
-}
-- (void)
-setScrollbackType:(Terminal_ScrollbackType)		aType
-{
-	scrollbackType = aType;
-}// setScrollbackType:
-
-
-@end // PrefPanelTerminals_ScrollbackTypeInfo
-
-
 @implementation PrefPanelTerminals_ScrollbackValue
 
 
@@ -4520,29 +4213,29 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 	if (nil != self)
 	{
 		self->behaviorArray = [[[NSArray alloc] initWithObjects:
-								[[[PrefPanelTerminals_ScrollbackTypeInfo alloc]
-									initWithTerminalScrollbackType:kTerminal_ScrollbackTypeDisabled
-																	description:NSLocalizedStringFromTable
-																				(@"Off", @"PrefPanelTerminals"/* table */,
-																					@"scrollback disabled")]
+								[[[PreferenceValue_IntegerDescriptor alloc]
+									initWithIntegerValue:kTerminal_ScrollbackTypeDisabled
+															description:NSLocalizedStringFromTable
+																		(@"Off", @"PrefPanelTerminals"/* table */,
+																			@"scrollback disabled")]
 									autorelease],
-								[[[PrefPanelTerminals_ScrollbackTypeInfo alloc]
-									initWithTerminalScrollbackType:kTerminal_ScrollbackTypeFixed
-																	description:NSLocalizedStringFromTable
-																				(@"Fixed Size", @"PrefPanelTerminals"/* table */,
-																					@"fixed-size scrollback")]
+								[[[PreferenceValue_IntegerDescriptor alloc]
+									initWithIntegerValue:kTerminal_ScrollbackTypeFixed
+															description:NSLocalizedStringFromTable
+																		(@"Fixed Size", @"PrefPanelTerminals"/* table */,
+																			@"fixed-size scrollback")]
 									autorelease],
-								[[[PrefPanelTerminals_ScrollbackTypeInfo alloc]
-									initWithTerminalScrollbackType:kTerminal_ScrollbackTypeUnlimited
-																	description:NSLocalizedStringFromTable
-																				(@"Unlimited", @"PrefPanelTerminals"/* table */,
-																					@"unlimited scrollback")]
+								[[[PreferenceValue_IntegerDescriptor alloc]
+									initWithIntegerValue:kTerminal_ScrollbackTypeUnlimited
+															description:NSLocalizedStringFromTable
+																		(@"Unlimited", @"PrefPanelTerminals"/* table */,
+																			@"unlimited scrollback")]
 									autorelease],
-								[[[PrefPanelTerminals_ScrollbackTypeInfo alloc]
-									initWithTerminalScrollbackType:kTerminal_ScrollbackTypeDistributed
-																	description:NSLocalizedStringFromTable
-																				(@"Distributed", @"PrefPanelTerminals"/* table */,
-																					@"distributed scrollback")]
+								[[[PreferenceValue_IntegerDescriptor alloc]
+									initWithIntegerValue:kTerminal_ScrollbackTypeDistributed
+															description:NSLocalizedStringFromTable
+																		(@"Distributed", @"PrefPanelTerminals"/* table */,
+																			@"distributed scrollback")]
 									autorelease],
 								nil] autorelease];
 		self->behaviorObject = [[PreferenceValue_Number alloc]
@@ -4647,18 +4340,17 @@ Accessor.
 - (id)
 currentBehavior
 {
-	Terminal_ScrollbackType		currentType = STATIC_CAST([[self->behaviorObject numberStringValue] intValue],
-															Terminal_ScrollbackType);
-	id							result = nil;
+	UInt32		currentType = [[self->behaviorObject numberStringValue] intValue];
+	id			result = nil;
 	
 	
 	for (UInt16 i = 0; i < [[self behaviorArray] count]; ++i)
 	{
-		PrefPanelTerminals_ScrollbackTypeInfo*	asInfo = (PrefPanelTerminals_ScrollbackTypeInfo*)
-															[[self behaviorArray] objectAtIndex:i];
+		PreferenceValue_IntegerDescriptor*	asInfo = (PreferenceValue_IntegerDescriptor*)
+														[[self behaviorArray] objectAtIndex:i];
 		
 		
-		if (currentType == [asInfo scrollbackType])
+		if (currentType == [asInfo describedIntegerValue])
 		{
 			result = asInfo;
 			break;
@@ -4680,11 +4372,11 @@ setCurrentBehavior:(id)		selectedObject
 	}
 	else
 	{
-		PrefPanelTerminals_ScrollbackTypeInfo*	asInfo = (PrefPanelTerminals_ScrollbackTypeInfo*)selectedObject;
+		PreferenceValue_IntegerDescriptor*	asInfo = (PreferenceValue_IntegerDescriptor*)selectedObject;
 		
 		
 		[self->behaviorObject setNumberStringValue:
-								[[NSNumber numberWithInt:[asInfo scrollbackType]] stringValue]];
+								[[NSNumber numberWithInt:[asInfo describedIntegerValue]] stringValue]];
 	}
 	
 	[self didChangeValueForKey:@"rowsEnabled"];

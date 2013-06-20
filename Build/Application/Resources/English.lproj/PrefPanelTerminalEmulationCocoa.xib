@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
   <data>
     <int key="IBDocument.SystemTarget">1060</int>
-    <string key="IBDocument.SystemVersion">12D78</string>
+    <string key="IBDocument.SystemVersion">12E55</string>
     <string key="IBDocument.InterfaceBuilderVersion">851</string>
-    <string key="IBDocument.AppKitVersion">1187.37</string>
+    <string key="IBDocument.AppKitVersion">1187.39</string>
     <string key="IBDocument.HIToolboxVersion">626.00</string>
     <object class="NSMutableDictionary" key="IBDocument.PluginVersions">
       <string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -769,23 +769,6 @@
           <int key="connectionID">2109</int>
         </object>
         <object class="IBConnectionRecord">
-          <object class="IBBindingConnection" key="connection">
-            <string key="label">selectedObject: self.baseEmulator.currentEmulator</string>
-            <reference key="source" ref="605586493"/>
-            <reference key="destination" ref="17743444"/>
-            <object class="NSNibBindingConnector" key="connector">
-              <reference key="NSSource" ref="605586493"/>
-              <reference key="NSDestination" ref="17743444"/>
-              <string key="NSLabel">selectedObject: self.baseEmulator.currentEmulator</string>
-              <string key="NSBinding">selectedObject</string>
-              <string key="NSKeyPath">self.baseEmulator.currentEmulator</string>
-              <reference key="NSPreviousConnector" ref="1059166619"/>
-              <int key="NSNibBindingConnectorVersion">2</int>
-            </object>
-          </object>
-          <int key="connectionID">2110</int>
-        </object>
-        <object class="IBConnectionRecord">
           <object class="IBOutletConnection" key="connection">
             <string key="label">logicalFirstResponder</string>
             <reference key="source" ref="17743444"/>
@@ -800,26 +783,6 @@
             <reference key="destination" ref="575758697"/>
           </object>
           <int key="connectionID">2115</int>
-        </object>
-        <object class="IBConnectionRecord">
-          <object class="IBBindingConnection" key="connection">
-            <string key="label">contentArray: self.baseEmulator.emulatorArray</string>
-            <reference key="source" ref="432516153"/>
-            <reference key="destination" ref="17743444"/>
-            <object class="NSNibBindingConnector" key="connector">
-              <reference key="NSSource" ref="432516153"/>
-              <reference key="NSDestination" ref="17743444"/>
-              <string key="NSLabel">contentArray: self.baseEmulator.emulatorArray</string>
-              <string key="NSBinding">contentArray</string>
-              <string key="NSKeyPath">self.baseEmulator.emulatorArray</string>
-              <object class="NSDictionary" key="NSOptions">
-                <string key="NS.key.0">NSConditionallySetsEditable</string>
-                <boolean value="NO" key="NS.object.0"/>
-              </object>
-              <int key="NSNibBindingConnectorVersion">2</int>
-            </object>
-          </object>
-          <int key="connectionID">2116</int>
         </object>
         <object class="IBConnectionRecord">
           <object class="IBBindingConnection" key="connection">
@@ -870,6 +833,43 @@
             <reference key="destination" ref="1027962878"/>
           </object>
           <int key="connectionID">2131</int>
+        </object>
+        <object class="IBConnectionRecord">
+          <object class="IBBindingConnection" key="connection">
+            <string key="label">selectedObject: self.baseEmulator.currentValueDescriptor</string>
+            <reference key="source" ref="605586493"/>
+            <reference key="destination" ref="17743444"/>
+            <object class="NSNibBindingConnector" key="connector">
+              <reference key="NSSource" ref="605586493"/>
+              <reference key="NSDestination" ref="17743444"/>
+              <string key="NSLabel">selectedObject: self.baseEmulator.currentValueDescriptor</string>
+              <string key="NSBinding">selectedObject</string>
+              <string key="NSKeyPath">self.baseEmulator.currentValueDescriptor</string>
+              <reference key="NSPreviousConnector" ref="1059166619"/>
+              <int key="NSNibBindingConnectorVersion">2</int>
+            </object>
+          </object>
+          <int key="connectionID">2132</int>
+        </object>
+        <object class="IBConnectionRecord">
+          <object class="IBBindingConnection" key="connection">
+            <string key="label">contentArray: self.baseEmulator.valueDescriptorArray</string>
+            <reference key="source" ref="432516153"/>
+            <reference key="destination" ref="17743444"/>
+            <object class="NSNibBindingConnector" key="connector">
+              <reference key="NSSource" ref="432516153"/>
+              <reference key="NSDestination" ref="17743444"/>
+              <string key="NSLabel">contentArray: self.baseEmulator.valueDescriptorArray</string>
+              <string key="NSBinding">contentArray</string>
+              <string key="NSKeyPath">self.baseEmulator.valueDescriptorArray</string>
+              <object class="NSDictionary" key="NSOptions">
+                <string key="NS.key.0">NSConditionallySetsEditable</string>
+                <boolean value="NO" key="NS.object.0"/>
+              </object>
+              <int key="NSNibBindingConnectorVersion">2</int>
+            </object>
+          </object>
+          <int key="connectionID">2133</int>
         </object>
       </array>
       <object class="IBMutableOrderedSet" key="objectRecords">
@@ -1206,7 +1206,7 @@
       <nil key="activeLocalization"/>
       <dictionary class="NSMutableDictionary" key="localizations"/>
       <nil key="sourceID"/>
-      <int key="maxID">2131</int>
+      <int key="maxID">2133</int>
     </object>
     <object class="IBClassDescriber" key="IBDocument.Classes">
       <array class="NSMutableArray" key="referencedPartialClassDescriptions">

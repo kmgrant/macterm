@@ -69,25 +69,11 @@ changes to an interface declared in a ".mm" file.
 /*!
 Manages bindings for the base emulator preference.
 */
-@interface PrefPanelTerminals_BaseEmulatorValue : PreferenceValue_Inherited
-{
-	NSArray*					emulatorArray;
-	PreferenceValue_Number*		emulatorObject;
-}
+@interface PrefPanelTerminals_BaseEmulatorValue : PreferenceValue_Array
 
 // designated initializer
 - (id)
 initWithContextManager:(PrefsContextManager_Object*)_;
-
-// accessors
-
-- (NSArray*)
-emulatorArray; // binding
-
-- (id)
-currentEmulator;
-- (void)
-setCurrentEmulator:(id)_; // binding
 
 @end
 
