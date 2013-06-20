@@ -76,7 +76,7 @@
 		0AC6BB160A8C0BA000AFF37A /* TerminalSpeaker.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE27055432A400ACDF3A /* TerminalSpeaker.cp */; };
 		0AC6BB190A8C0BA000AFF37A /* IconManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE6055432A400ACDF3A /* IconManager.cp */; };
 		0AC6BB1A0A8C0BA000AFF37A /* ColorUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */; };
-		0AC6BB1C0A8C0BA000AFF37A /* PrefPanelSessions.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0D230A4503A3009D07FC /* PrefPanelSessions.cp */; };
+		0AC6BB1C0A8C0BA000AFF37A /* PrefPanelSessions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0D230A4503A3009D07FC /* PrefPanelSessions.mm */; };
 		0AC6BB1E0A8C0BA000AFF37A /* VectorCanvas.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE21055432A400ACDF3A /* VectorCanvas.mm */; };
 		0AC6BB210A8C0BA000AFF37A /* PrefPanelGeneral.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE05055432A400ACDF3A /* PrefPanelGeneral.mm */; };
 		0AC6BB220A8C0BA000AFF37A /* ContextualMenuBuilder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC9055432A400ACDF3A /* ContextualMenuBuilder.cp */; };
@@ -503,7 +503,7 @@
 		0ABC0CF80A44FFBD009D07FC /* IconForPrefPanelFormats.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelFormats.icns; path = Application/Resources/IconForPrefPanelFormats.icns; sourceTree = "<group>"; };
 		0ABC0CFD0A450061009D07FC /* PrefPanelFormats.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelFormats.mm; path = Application/Code/PrefPanelFormats.mm; sourceTree = "<group>"; };
 		0ABC0CFF0A45007A009D07FC /* PrefPanelFormats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelFormats.h; path = Application/Code/PrefPanelFormats.h; sourceTree = "<group>"; };
-		0ABC0D230A4503A3009D07FC /* PrefPanelSessions.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelSessions.cp; path = Application/Code/PrefPanelSessions.cp; sourceTree = "<group>"; };
+		0ABC0D230A4503A3009D07FC /* PrefPanelSessions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelSessions.mm; path = Application/Code/PrefPanelSessions.mm; sourceTree = "<group>"; };
 		0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelTerminals.mm; path = Application/Code/PrefPanelTerminals.mm; sourceTree = "<group>"; };
 		0ABD01CF1068000A00BBB87A /* DebugInterface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DebugInterface.mm; path = Application/Code/DebugInterface.mm; sourceTree = "<group>"; };
 		0ABD01D11068002C00BBB87A /* DebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebugInterface.h; path = Application/Code/DebugInterface.h; sourceTree = "<group>"; };
@@ -564,6 +564,7 @@
 		0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaUserDefaults.mm; path = Shared/Code/CocoaUserDefaults.mm; sourceTree = "<group>"; };
 		0AE852740D9463B900B6834B /* CocoaUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaUserDefaults.h; path = Shared/Code/CocoaUserDefaults.h; sourceTree = "<group>"; };
 		0AEA45D80642041B00E701DA /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = English; path = Application/Resources/English.lproj/Dictionary.sdef; sourceTree = "<group>"; };
+		0AEBF395176409FB006068C7 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelSessionKeyboardCocoa.xib; sourceTree = "<group>"; };
 		0AF4B5450A1D61C700D187A3 /* PrefPanelFullScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelFullScreen.h; path = Application/Code/PrefPanelFullScreen.h; sourceTree = "<group>"; };
 		0AF4B5460A1D61E400D187A3 /* PrefPanelFullScreen.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelFullScreen.mm; path = Application/Code/PrefPanelFullScreen.mm; sourceTree = "<group>"; };
 		0AF4B5820A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelKiosk.icns; path = Application/Resources/IconForPrefPanelKiosk.icns; sourceTree = "<group>"; };
@@ -999,6 +1000,7 @@
 				0AF5AA2E159BD90E007E36DE /* PrefPanelGeneralNotificationsCocoa.xib */,
 				0AD7D0B9158AE38B000C3264 /* PrefPanelGeneralOptionsCocoa.xib */,
 				0A6000E815981886001CA6AA /* PrefPanelGeneralSpecialCocoa.xib */,
+				0AEBF394176409FB006068C7 /* PrefPanelSessionKeyboardCocoa.xib */,
 				0AF7636216F6C856008F90D9 /* PrefPanelTerminalEmulationCocoa.xib */,
 				0A32442015D74B0D001EBB98 /* PrefPanelTerminalOptionsCocoa.xib */,
 				0A0D315616E2F5440063914A /* PrefPanelTerminalScreenCocoa.xib */,
@@ -1105,7 +1107,7 @@
 				0A46FE05055432A400ACDF3A /* PrefPanelGeneral.mm */,
 				0AF4B5460A1D61E400D187A3 /* PrefPanelFullScreen.mm */,
 				0A46FE06055432A400ACDF3A /* PrefPanelMacros.cp */,
-				0ABC0D230A4503A3009D07FC /* PrefPanelSessions.cp */,
+				0ABC0D230A4503A3009D07FC /* PrefPanelSessions.mm */,
 				0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.mm */,
 				0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */,
 				0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */,
@@ -1412,7 +1414,7 @@
 				0AC6BB160A8C0BA000AFF37A /* TerminalSpeaker.cp in Sources */,
 				0AC6BB190A8C0BA000AFF37A /* IconManager.cp in Sources */,
 				0AC6BB1A0A8C0BA000AFF37A /* ColorUtilities.cp in Sources */,
-				0AC6BB1C0A8C0BA000AFF37A /* PrefPanelSessions.cp in Sources */,
+				0AC6BB1C0A8C0BA000AFF37A /* PrefPanelSessions.mm in Sources */,
 				0AC6BB1E0A8C0BA000AFF37A /* VectorCanvas.mm in Sources */,
 				0AC6BB210A8C0BA000AFF37A /* PrefPanelGeneral.mm in Sources */,
 				0AC6BB220A8C0BA000AFF37A /* ContextualMenuBuilder.cp in Sources */,
@@ -1823,6 +1825,14 @@
 				0AEA45D80642041B00E701DA /* English */,
 			);
 			name = Dictionary.sdef;
+			sourceTree = "<group>";
+		};
+		0AEBF394176409FB006068C7 /* PrefPanelSessionKeyboardCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AEBF395176409FB006068C7 /* English */,
+			);
+			name = PrefPanelSessionKeyboardCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0AF5AA2E159BD90E007E36DE /* PrefPanelGeneralNotificationsCocoa.xib */ = {

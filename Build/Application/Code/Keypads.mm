@@ -69,6 +69,8 @@ FourCharCode				gArrangeWindowDataTypeForWindowBinding = typeQDPoint;
 FourCharCode				gArrangeWindowDataTypeForScreenBinding = typeHIRect;
 Point						gArrangeWindowStackingOrigin = { 0, 0 };
 EventTargetRef				gControlKeysEventTarget = nullptr;	//!< temporary, for Carbon interaction
+id							gControlKeysResponder = nil;
+Boolean						gControlKeysMayAutoHide = false;
 Session_FunctionKeyLayout	gFunctionKeysLayout = kSession_FunctionKeyLayoutVT220;
 My_IntsByButton&			gAnimationStagesByButton ()		{ static My_IntsByButton x; return x; }
 Float32						gDeltasFontBlowUpAnimation[] =
@@ -263,6 +265,9 @@ which case the default behavior (using a session window)
 is restored and the palette is hidden if there is no user
 preference to keep it visible.
 
+Any Cocoa responder previously set by Keypads_SetResponder()
+is automatically cleared.
+
 IMPORTANT:	This is for Carbon compatibility and is not a
 			long-term solution.
 
@@ -275,9 +280,17 @@ Keypads_SetEventTarget	(Keypads_WindowType		inFromKeypad,
 	switch (inFromKeypad)
 	{
 	case kKeypads_WindowTypeControlKeys:
+		gControlKeysResponder = nil; // clear this because it will be ignored now anyway
 		gControlKeysEventTarget = inCurrentTarget;
-		// TEMPORARY: only hide if user preference is to keep invisible
 		Keypads_SetVisible(inFromKeypad, (nullptr != gControlKeysEventTarget));
+		if (nullptr == gControlKeysEventTarget)
+		{
+			gControlKeysMayAutoHide = false;
+		}
+		else
+		{
+			gControlKeysMayAutoHide = true;
+		}
 		break;
 	
 	case kKeypads_WindowTypeArrangeWindow:
@@ -291,7 +304,66 @@ Keypads_SetEventTarget	(Keypads_WindowType		inFromKeypad,
 
 
 /*!
+Arranges for button presses to send a message to the given
+object instead of causing characters to be typed into the
+active terminal session.  The given object must respond to
+a selector of this form:
+	controlKeypadSentCharacterCode:(NSNumber*)	asciiCode
+(Ordinarily this might be defined as a protocol but the
+header is currently included by regular C++ code.)
+
+If an object is provided, the keypad window is automatically
+displayed.  Currently, only the control keys palette type
+(kKeypads_WindowTypeControlKeys) is recognized.
+
+You can pass "nil" as the target to set no target, in which
+case the default behavior (using a session window) is
+restored and the palette is hidden if there is no user
+preference to keep it visible.
+
+Any Carbon target previously set by Keypads_SetEventTarget()
+is automatically cleared.
+
+(4.1)
+*/
+void
+Keypads_SetResponder	(Keypads_WindowType		inFromKeypad,
+						 NSObject*				inCurrentTarget)
+{
+	switch (inFromKeypad)
+	{
+	case kKeypads_WindowTypeControlKeys:
+		gControlKeysEventTarget = nullptr; // clear this because it will be ignored now anyway
+		gControlKeysResponder = inCurrentTarget;
+		Keypads_SetVisible(inFromKeypad, (nil != gControlKeysResponder));
+		if (nullptr == gControlKeysResponder)
+		{
+			gControlKeysMayAutoHide = false;
+		}
+		else
+		{
+			gControlKeysMayAutoHide = true;
+		}
+		break;
+	
+	case kKeypads_WindowTypeArrangeWindow:
+	case kKeypads_WindowTypeFullScreen:
+	case kKeypads_WindowTypeFunctionKeys:
+	case kKeypads_WindowTypeVT220Keys:
+	default:
+		break;
+	}
+}// SetResponder
+
+
+/*!
 Shows or hides the specified keypad panel.
+
+This call will clear the "gControlKeysMayAutoHide" flag.
+If the intent is to programmatically display a keypad
+in order to temporarily control another panel (such as
+a preferences pane), gControlKeysMayAutoHide should be
+set to true afterwards.
 
 (3.1)
 */
@@ -327,6 +399,7 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 		{
 			[[Keypads_ControlKeysPanelController sharedControlKeysPanelController] close];
 		}
+		gControlKeysMayAutoHide = false;
 		break;
 	
 	case kKeypads_WindowTypeFullScreen:
@@ -367,7 +440,10 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 		break;
 	}
 	
-	(OSStatus)SetUserFocusWindow(oldActiveWindow);
+	if (oldActiveWindow != GetUserFocusWindow())
+	{
+		(OSStatus)SetUserFocusWindow(oldActiveWindow);
+	}
 }// SetVisible
 
 
@@ -637,20 +713,41 @@ drawAttentionToButton:(NSButton*)	aButton
 
 
 /*!
-Finds the appropriate target session and sends the specified
-character, as if the user had typed that character.
+If Keypads_SetResponder() has been called with a non-nil
+value, the message "controlKeypadSentCharacterCode:" is
+sent to that view with the given value (as an NSNumber*).
+
+Otherwise, this finds the appropriate target session and
+sends the specified character, as if the user had typed
+that character.
 
 (3.1)
 */
 - (void)
 sendCharacter:(UInt8)	inCharacter
 {
-	SessionRef		currentSession = getCurrentSession();
-	
-	
-	if (nullptr != currentSession)
+	if (nil != gControlKeysResponder)
 	{
-		Session_UserInputKey(currentSession, inCharacter);
+		if ([gControlKeysResponder respondsToSelector:@selector(controlKeypadSentCharacterCode:)])
+		{
+			[gControlKeysResponder performSelector:@selector(controlKeypadSentCharacterCode:)
+													withObject:[NSNumber numberWithChar:inCharacter]];
+		}
+		else
+		{
+			NSLog(@"keypad responder does not respond to selector 'controlKeypadSentCharacterCode:': %@",
+					gControlKeysResponder);
+		}
+	}
+	else
+	{
+		SessionRef		currentSession = getCurrentSession();
+		
+		
+		if (nullptr != currentSession)
+		{
+			Session_UserInputKey(currentSession, inCharacter);
+		}
 	}
 }// sendCharacter:
 

@@ -247,7 +247,7 @@ enum
 	kPreferences_TagLineModeEnabled						= 'linm',	//!< data: "Boolean"
 	kPreferences_TagLocalEchoEnabled					= 'echo',	//!< data: "Boolean"
 	kPreferences_TagMapDeleteToBackspace				= 'delb',	//!< data: "Boolean"
-	kPreferences_TagNewLineMapping						= 'newl',	//!< data: "Session_NewlineMode"
+	kPreferences_TagNewLineMapping						= 'newl',	//!< data: "UInt16" (Session_NewlineMode)
 	kPreferences_TagNoPasteWarning						= 'npwr',	//!< data: "Boolean"
 	kPreferences_TagPasteNewLineDelay					= 'pnld',	//!< data: "EventTime"; stored as milliseconds, but scaled to EventTime when used
 	kPreferences_TagScrollDelay							= 'scrd',	//!< data: "EventTime"; stored as milliseconds, but scaled to EventTime when used
@@ -270,7 +270,7 @@ These should also have localized names in
 enum
 {
 	kPreferences_TagDataReceiveDoNotStripHighBit		= '8bit',	//!< data: "Boolean"
-	kPreferences_TagEmacsMetaKey						= 'meta',	//!< data: "Session_EmacsMetaKey"
+	kPreferences_TagEmacsMetaKey						= 'meta',	//!< data: "UInt16" (Session_EmacsMetaKey)
 	kPreferences_TagMapArrowsForEmacs					= 'mapE',	//!< data: "Boolean"
 	kPreferences_TagMapKeypadTopRowForVT220				= 'mapK',	//!< data: "Boolean"
 	kPreferences_TagPageKeysControlLocalTerminal		= 'pgtm',	//!< data: "Boolean"

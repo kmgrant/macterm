@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -40,6 +40,8 @@
 #include <Carbon/Carbon.h>
 #ifdef __OBJC__
 #	import <Cocoa/Cocoa.h>
+#else
+class NSObject;
 #endif
 
 // application includes
@@ -545,6 +547,10 @@ Boolean
 void
 	Keypads_SetEventTarget						(Keypads_WindowType			inKeypad,
 												 EventTargetRef				inTarget);
+
+void
+	Keypads_SetResponder						(Keypads_WindowType			inKeypad,
+												 NSObject*					inTarget);
 
 void
 	Keypads_SetVisible							(Keypads_WindowType			inKeypad,

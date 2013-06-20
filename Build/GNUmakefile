@@ -231,6 +231,7 @@ English.lproj/PrefPanelFullScreenCocoa \
 English.lproj/PrefPanelGeneralNotificationsCocoa \
 English.lproj/PrefPanelGeneralOptionsCocoa \
 English.lproj/PrefPanelGeneralSpecialCocoa \
+English.lproj/PrefPanelSessionKeyboardCocoa \
 English.lproj/PrefPanelTerminalEmulationCocoa \
 English.lproj/PrefPanelTerminalOptionsCocoa \
 English.lproj/PrefPanelTerminalScreenCocoa \

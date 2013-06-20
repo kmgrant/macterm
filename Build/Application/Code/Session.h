@@ -184,7 +184,8 @@ typedef enum Session_Echo	Session_Echo;
 Possible mappings to simulate a meta key on a Mac keyboard
 (useful for the Emacs text editor).
 */
-enum Session_EmacsMetaKey
+typedef UInt16 Session_EmacsMetaKey;
+enum
 {
 	kSession_EmacsMetaKeyOff = 0,				//!< no mapping
 	kSession_EmacsMetaKeyShiftOption = 1,		//!< by holding down shift and option keys, meta is simulated
@@ -226,7 +227,8 @@ enum Session_LineEnding
 /*!
 Which characters will be sent when a new-line is requested.
 */
-enum Session_NewlineMode
+typedef UInt16 Session_NewlineMode;
+enum
 {
 	kSession_NewlineModeMapCR		= 0,	//!< newline means “carriage return” only (Classic Mac OS systems)
 	kSession_NewlineModeMapCRLF		= 1,	//!< newline means “carriage return, line feed” (MS-DOS or Windows systems)

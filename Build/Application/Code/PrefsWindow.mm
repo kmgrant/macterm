@@ -277,6 +277,9 @@ performDisplayPrefPanelFullScreen:(id)_;
 performDisplayPrefPanelGeneral:(id)_;
 
 - (void)
+performDisplayPrefPanelSessions:(id)_;
+
+- (void)
 performDisplayPrefPanelTerminals:(id)_;
 
 - (void)
@@ -3730,6 +3733,15 @@ windowDidLoad
 		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
 		[newViewMgr release], newViewMgr = nil;
 		
+		// “Sessions” panel
+		self->sessionsPanel = [[PrefPanelSessions_ViewManager alloc] init];
+		newViewMgr = self->sessionsPanel;
+		[newViewMgr setPanelDisplayAction:@selector(performDisplayPrefPanelSessions:)];
+		[newViewMgr setPanelDisplayTarget:self];
+		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
+		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
+		[newViewMgr release], newViewMgr = nil;
+		
 		// “Terminals” panel
 		self->terminalsPanel = [[PrefPanelTerminals_ViewManager alloc] init];
 		newViewMgr = self->terminalsPanel;
@@ -4417,6 +4429,19 @@ performDisplayPrefPanelGeneral:(id)		sender
 #pragma unused(sender)
 	[self displayPanel:self->generalPanel withAnimation:YES];
 }// performDisplayPrefPanelGeneral:
+
+
+/*!
+Brings the “Sessions” panel to the front.
+
+(4.1)
+*/
+- (void)
+performDisplayPrefPanelSessions:(id)	sender
+{
+#pragma unused(sender)
+	[self displayPanel:self->sessionsPanel withAnimation:YES];
+}// performDisplayPrefPanelSessions:
 
 
 /*!

@@ -1,4 +1,4 @@
-/*!	\file PrefPanelSessions.cp
+/*!	\file PrefPanelSessions.mm
 	\brief Implements the Sessions panel of Preferences.
 */
 /*###############################################################
@@ -30,59 +30,75 @@
 
 ###############################################################*/
 
-#include "PrefPanelSessions.h"
-#include <UniversalDefines.h>
+#import "PrefPanelSessions.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <cstring>
-#include <map>
+#import <cstring>
+#import <map>
 
 // Unix includes
 extern "C"
 {
 #	include <netdb.h>
 }
-#include <strings.h>
+#import <strings.h>
 
 // Mac includes
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <Carbon/Carbon.h>
+#import <CoreServices/CoreServices.h>
+#import <objc/objc-runtime.h>
 
 // library includes
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <ColorUtilities.h>
-#include <CommonEventHandlers.h>
-#include <Console.h>
-#include <DialogAdjust.h>
-#include <HIViewWrap.h>
-#include <HIViewWrapManip.h>
-#include <Localization.h>
-#include <MemoryBlocks.h>
-#include <NIBLoader.h>
-#include <RegionUtilities.h>
-#include <SoundSystem.h>
+#import <BoundName.objc++.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CocoaExtensions.objc++.h>
+#import <ColorUtilities.h>
+#import <CommonEventHandlers.h>
+#import <Console.h>
+#import <DialogAdjust.h>
+#import <HIViewWrap.h>
+#import <HIViewWrapManip.h>
+#import <Localization.h>
+#import <MemoryBlocks.h>
+#import <NIBLoader.h>
+#import <RegionUtilities.h>
+#import <SoundSystem.h>
 
 // application includes
-#include "AppResources.h"
-#include "Commands.h"
-#include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
-#include "GenericPanelTabs.h"
-#include "Keypads.h"
-#include "NetEvents.h"
-#include "Panel.h"
-#include "Preferences.h"
-#include "ServerBrowser.h"
-#include "Session.h"
-#include "UIStrings.h"
-#include "UIStrings_PrefsWindow.h"
-#include "VectorInterpreter.h"
+#import "AppResources.h"
+#import "Commands.h"
+#import "ConstantsRegistry.h"
+#import "DialogUtilities.h"
+#import "GenericPanelTabs.h"
+#import "HelpSystem.h"
+#import "Keypads.h"
+#import "NetEvents.h"
+#import "Panel.h"
+#import "Preferences.h"
+#import "ServerBrowser.h"
+#import "Session.h"
+#import "UIStrings.h"
+#import "UIStrings_PrefsWindow.h"
+#import "VectorInterpreter.h"
 
 
 
 #pragma mark Constants
 namespace {
+
+/*!
+Used to distinguish different types of control-key
+mappings.
+*/
+enum My_KeyType
+{
+	kMy_KeyTypeNone = 0,		//!< none of the mappings
+	kMy_KeyTypeInterrupt = 1,	//!< “interrupt process” mapping
+	kMy_KeyTypeResume = 2,		//!< “resume output” mapping
+	kMy_KeyTypeSuspend = 3		//!< “suspend output” mapping
+};
 
 /*!
 IMPORTANT
@@ -434,11 +450,33 @@ OSStatus					receiveServerBrowserEvent				(EventHandlerCallRef, EventRef, void*)
 
 } // anonymous namespace
 
+
+@interface PrefPanelSessions_KeyboardViewManager (PrefPanelSessions_KeyboardViewManagerInternal)
+
+// accessors
+
+- (My_KeyType)
+editedKeyType;
+- (void)
+setEditedKeyType:(My_KeyType)_;
+
+// new methods
+
+- (NSArray*)
+primaryDisplayBindingKeys;
+
+- (void)
+resetGlobalState;
+
+@end // PrefPanelSessions_KeyboardViewManager (PrefPanelSessions_KeyboardViewManagerInternal)
+
+
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
 	My_CharacterToCFStringMap&		gCharacterToCFStringMap ()	{ return initCharacterToCFStringMap(); }
+	My_KeyType						gEditedKeyType = kMy_KeyTypeNone; // shared across all occurrences; see "setEditedKeyType:"
 }
 
 
@@ -4720,5 +4758,1171 @@ receiveServerBrowserEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 }// receiveServerBrowserEvent
 
 } // anonymous namespace
+
+
+@implementation PrefPanelSessions_ViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	NSArray*	subViewManagers = [NSArray arrayWithObjects:
+												[[[PrefPanelSessions_KeyboardViewManager alloc] init] autorelease],
+												nil];
+	
+	
+	self = [super initWithIdentifier:@"net.macterm.prefpanels.Sessions"
+										localizedName:NSLocalizedStringFromTable(@"Sessions", @"PrefPanelSessions",
+																					@"the name of this panel")
+										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelSessions"]
+										viewManagerArray:subViewManagers];
+	if (nil != self)
+	{
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+@end // PrefPanelSessions_ViewManager
+
+
+@implementation PrefPanelSessions_ControlKeyValue
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithPreferencesTag:contextManager:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Parses the given label to find the control key (in ASCII)
+that it refers to.
+
+(4.1)
+*/
+- (BOOL)
+parseControlKey:(NSString*)		aString
+controlKeyChar:(char*)			aCharPtr
+{
+	NSCharacterSet*		controlCharLetters = [NSCharacterSet characterSetWithCharactersInString:
+												@"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"];
+	NSScanner*			scanner = [NSScanner scannerWithString:aString];
+	NSString*			controlCharString = nil;
+	NSString*			targetLetterString = nil;
+	BOOL				scanOK = NO;
+	BOOL				result = NO;
+	
+	
+	// first strip whitespace
+	aString = [[aString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] retain];
+	
+	// looking for a string of the form, e.g. "⌃C"; anything else is unexpected
+	// (IMPORTANT: since caret "^" is a valid control character name it is VITAL
+	// that the Unicode control character SYMBOL be the first part of the string
+	// so that it is seen as something different!)
+	scanOK = ([scanner scanUpToCharactersFromSet:controlCharLetters intoString:&controlCharString] &&
+				[scanner scanCharactersFromSet:controlCharLetters intoString:&targetLetterString] &&
+				[scanner isAtEnd]);
+	if (scanOK)
+	{
+		if ([targetLetterString length] == 1)
+		{
+			unichar		asUnicode = ([targetLetterString characterAtIndex:0] - '@');
+			
+			
+			if (asUnicode < 32)
+			{
+				// must be in ASCII control-key range
+				*aCharPtr = STATIC_CAST(asUnicode, char);
+			}
+			else
+			{
+				scanOK = NO;
+			}
+		}
+		else
+		{
+			scanOK = NO;
+		}
+	}
+	
+	if (scanOK)
+	{
+		result = YES;
+	}
+	else
+	{
+		result = NO;
+	}
+	
+	return result;
+}// parseControlKey:controlKeyChar:
+
+
+/*!
+Returns the preference’s current value, and indicates whether or
+not that value was inherited from a parent context.
+
+(4.1)
+*/
+- (char)
+readValueSeeIfDefault:(BOOL*)	outIsDefault
+{
+	char					result = '\0';
+	Boolean					isDefault = false;
+	Preferences_ContextRef	sourceContext = [[self prefsMgr] currentContext];
+	
+	
+	if (Preferences_ContextIsValid(sourceContext))
+	{
+		size_t				actualSize = 0;
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+													sizeof(result), &result,
+													true/* search defaults */,
+													&actualSize, &isDefault);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to read control-key preference, error", prefsResult);
+			result = '\0';
+		}
+	}
+	
+	if (nullptr != outIsDefault)
+	{
+		*outIsDefault = (true == isDefault);
+	}
+	
+	return result;
+}// readValueSeeIfDefault:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+stringValue
+{
+	BOOL		isDefault = NO;
+	char		asChar = [self readValueSeeIfDefault:&isDefault];
+	NSString*	result = [NSString stringWithFormat:@"⌃%c", ('@' + asChar)/* convert to printable ASCII */];
+	
+	
+	return result;
+}
+- (void)
+setStringValue:(NSString*)	aControlKeyString
+{
+	[self willSetPreferenceValue];
+	
+	if (nil == aControlKeyString)
+	{
+		// when given nothing and the context is non-Default, delete the setting;
+		// this will revert to either the Default value (in non-Default contexts)
+		// or the “factory default” value (in Default contexts)
+		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:[self preferencesTag]];
+		
+		
+		if (NO == deleteOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to remove control-key preference");
+		}
+	}
+	else
+	{
+		BOOL					saveOK = NO;
+		Preferences_ContextRef	targetContext = [[self prefsMgr] currentContext];
+		
+		
+		if (Preferences_ContextIsValid(targetContext))
+		{
+			char	charValue = '\0';
+			
+			
+			// NOTE: The validation method will scrub the string beforehand.
+			// IMPORTANT: This is a bit weird...it essentially parses the
+			// given value to infer the setting that is actually being made.
+			// This was chosen over more “Cocoa-like” approaches such as an
+			// NSValueTransformer because the underlying value is not
+			// significantly different from a string and any transformed
+			// value would at least require a wrapping object.
+			if ([self parseControlKey:aControlKeyString controlKeyChar:&charValue])
+			{
+				Preferences_Result	prefsResult = kPreferences_ResultOK;
+				
+				
+				prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+															sizeof(charValue), &charValue);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					saveOK = YES;
+				}
+			}
+		}
+		
+		if (NO == saveOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to save control-key preference");
+		}
+	}
+	
+	[self didSetPreferenceValue];
+}// setStringValue:
+
+
+#pragma mark Validators
+
+
+/*!
+Validates a control key from a label, returning an appropriate
+error (and a NO result) if the value is incomprehensible.
+
+(4.1)
+*/
+- (BOOL)
+validateStringValue:(id*/* NSString* */)	ioValue
+error:(NSError**)						outError
+{
+	BOOL	result = NO;
+	
+	
+	if (nil == *ioValue)
+	{
+		result = YES;
+	}
+	else
+	{
+		char	asciiValue = '\0';
+		
+		
+		result = [self parseControlKey:(NSString*)*ioValue controlKeyChar:&asciiValue];
+		if (NO == result)
+		{
+			if (nullptr == outError)
+			{
+				// cannot return NO when the error instance is undefined
+				result = YES;
+			}
+			else
+			{
+				NSString*	errorMessage = nil;
+				
+				
+				errorMessage = NSLocalizedStringFromTable(@"This must be a control-key specification.",
+															@"PrefPanelSessions"/* table */,
+															@"message displayed for bad control-key values");
+				
+				*outError = [NSError errorWithDomain:(NSString*)kConstantsRegistry_NSErrorDomainAppDefault
+								code:kConstantsRegistry_NSErrorBadNumber
+								userInfo:[[[NSDictionary alloc] initWithObjectsAndKeys:
+											errorMessage, NSLocalizedDescriptionKey,
+											nil] autorelease]];
+			}
+		}
+	}
+	return result;
+}// validateStringValue:error:
+
+
+#pragma mark PreferenceValue_Inherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = NO;
+	
+	
+	(char)[self readValueSeeIfDefault:&result];
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self setStringValue:nil];
+}// setNilPreferenceValue
+
+
+@end // PrefPanelSessions_ControlKeyValue
+
+
+@implementation PrefPanelSessions_EmacsMetaValue
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kSession_EmacsMetaKeyOff
+																description:NSLocalizedStringFromTable
+																			(@"Off", @"PrefPanelSessions"/* table */,
+																				@"no meta key mapping")]
+										autorelease],
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kSession_EmacsMetaKeyOption
+																description:NSLocalizedStringFromTable
+																			(@"⌥", @"PrefPanelSessions"/* table */,
+																				@"hold down Option for meta")]
+										autorelease],
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kSession_EmacsMetaKeyShiftOption
+																description:NSLocalizedStringFromTable
+																			(@"⇧⌥", @"PrefPanelSessions"/* table */,
+																				@"hold down Shift + Option for meta")]
+										autorelease],
+									nil] autorelease];
+	
+	
+	self = [super initWithPreferencesTag:kPreferences_TagEmacsMetaKey
+											contextManager:aContextMgr
+											preferenceCType:kPreferenceValue_CTypeUInt16
+											valueDescriptorArray:descriptorArray];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithContextManager:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+@end // PrefPanelSessions_EmacsMetaValue
+
+
+@implementation PrefPanelSessions_NewLineValue
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kSession_NewlineModeMapLF
+																description:NSLocalizedStringFromTable
+																			(@"LF", @"PrefPanelSessions"/* table */,
+																				@"line-feed")]
+										autorelease],
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kSession_NewlineModeMapCR
+																description:NSLocalizedStringFromTable
+																			(@"CR", @"PrefPanelSessions"/* table */,
+																				@"carriage-return")]
+										autorelease],
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kSession_NewlineModeMapCRLF
+																description:NSLocalizedStringFromTable
+																			(@"CR LF", @"PrefPanelSessions"/* table */,
+																				@"carriage-return, line-feed")]
+										autorelease],
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kSession_NewlineModeMapCRNull
+																description:NSLocalizedStringFromTable
+																			(@"CR NULL", @"PrefPanelSessions"/* table */,
+																				@"carriage-return, null-character")]
+										autorelease],
+									nil] autorelease];
+	
+	
+	self = [super initWithPreferencesTag:kPreferences_TagNewLineMapping
+											contextManager:aContextMgr
+											preferenceCType:kPreferenceValue_CTypeUInt16
+											valueDescriptorArray:descriptorArray];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithContextManager:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+@end // PrefPanelSessions_NewLineValue
+
+
+@implementation PrefPanelSessions_KeyboardViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelSessionKeyboardCocoa" delegate:self context:nullptr];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[prefsMgr release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_Flag*)
+deleteKeySendsBackspace
+{
+	return [self->byKey objectForKey:@"deleteKeySendsBackspace"];
+}// deleteKeySendsBackspace
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_Flag*)
+emacsArrowKeys
+{
+	return [self->byKey objectForKey:@"emacsArrowKeys"];
+}// emacsArrowKeys
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isEditingKeyInterruptProcess
+{
+	return isEditingKeyInterruptProcess;
+}// isEditingKeyInterruptProcess
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isEditingKeyResume
+{
+	return isEditingKeyResume;
+}// isEditingKeyResume
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isEditingKeySuspend
+{
+	return isEditingKeySuspend;
+}// isEditingKeySuspend
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelSessions_ControlKeyValue*)
+keyInterruptProcess
+{
+	return [self->byKey objectForKey:@"keyInterruptProcess"];
+}// keyInterruptProcess
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelSessions_ControlKeyValue*)
+keyResume
+{
+	return [self->byKey objectForKey:@"keyResume"];
+}// keyResume
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelSessions_ControlKeyValue*)
+keySuspend
+{
+	return [self->byKey objectForKey:@"keySuspend"];
+}// keySuspend
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelSessions_EmacsMetaValue*)
+mappingForEmacsMeta
+{
+	return [self->byKey objectForKey:@"mappingForEmacsMeta"];
+}// mappingForEmacsMeta
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelSessions_NewLineValue*)
+mappingForNewLine
+{
+	return [self->byKey objectForKey:@"mappingForNewLine"];
+}// mappingForNewLine
+
+
+#pragma mark Actions
+
+
+/*!
+Displays or removes the Control Keys palette.  If the
+button is not selected, it is highlighted and any click
+in the Control Keys palette will update the preference
+value.  If the button is selected, it is reset to a
+normal state and control key clicks stop affecting the
+preference value.
+
+(4.1)
+*/
+- (IBAction)
+performChooseInterruptProcessKey:(id)	sender
+{
+#pragma unused(sender)
+	[self setEditedKeyType:kMy_KeyTypeInterrupt];
+	Keypads_SetResponder(kKeypads_WindowTypeControlKeys, self);
+}// performChooseInterruptProcessKey:
+
+
+/*!
+Displays or removes the Control Keys palette.  If the
+button is not selected, it is highlighted and any click
+in the Control Keys palette will update the preference
+value.  If the button is selected, it is reset to a
+normal state and control key clicks stop affecting the
+preference value.
+
+(4.1)
+*/
+- (IBAction)
+performChooseResumeKey:(id)		sender
+{
+#pragma unused(sender)
+	[self setEditedKeyType:kMy_KeyTypeResume];
+	Keypads_SetResponder(kKeypads_WindowTypeControlKeys, self);
+}// performChooseResumeKey:
+
+
+/*!
+Displays or removes the Control Keys palette.  If the
+button is not selected, it is highlighted and any click
+in the Control Keys palette will update the preference
+value.  If the button is selected, it is reset to a
+normal state and control key clicks stop affecting the
+preference value.
+
+(4.1)
+*/
+- (IBAction)
+performChooseSuspendKey:(id)	sender
+{
+#pragma unused(sender)
+	[self setEditedKeyType:kMy_KeyTypeSuspend];
+	Keypads_SetResponder(kKeypads_WindowTypeControlKeys, self);
+}// performChooseSuspendKey:
+
+
+#pragma mark Keypads_SetResponder() Interface
+
+
+/*!
+Received when the Control Keys keypad is used to select
+a control key while this class instance is the current
+keypad responder (as set by Keypads_SetResponder()).
+
+This handles the event by updating the currently-selected
+key mapping preference, if any is in effect.
+
+(4.1)
+*/
+- (void)
+controlKeypadSentCharacterCode:(NSNumber*)	asciiChar
+{
+	// convert to printable ASCII letter
+	char const		kPrintableASCII = ('@' + [asciiChar charValue]);
+	
+	
+	// NOTE: This odd-looking approach is useful because the
+	// Cocoa bindings can already convert control-character
+	// strings (from button titles) into preference settings.
+	// Setting a control-character-like string value will
+	// actually cause a new preference to be saved.
+	switch ([self editedKeyType])
+	{
+	case kMy_KeyTypeInterrupt:
+		[[self keyInterruptProcess] setStringValue:[NSString stringWithFormat:@"⌃%c", kPrintableASCII]];
+		break;
+	
+	case kMy_KeyTypeResume:
+		[[self keyResume] setStringValue:[NSString stringWithFormat:@"⌃%c", kPrintableASCII]];
+		break;
+	
+	case kMy_KeyTypeSuspend:
+		[[self keySuspend] setStringValue:[NSString stringWithFormat:@"⌃%c", kPrintableASCII]];
+		break;
+	
+	default:
+		// no effect
+		break;
+	}
+}// controlKeypadSentCharacterCode:
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:7/* arbitrary; number of settings */];
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeInspector;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+	assert(nil != byKey);
+	assert(nil != prefsMgr);
+	
+	// remember frame from XIB (it might be changed later)
+	self->idealFrame = [aContainerView frame];
+	
+	// note that all current values will change
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+	}
+	
+	// WARNING: Key names are depended upon by bindings in the XIB file.
+	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
+								initWithPreferencesTag:kPreferences_TagMapDeleteToBackspace
+														contextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"deleteKeySendsBackspace"];
+	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
+								initWithPreferencesTag:kPreferences_TagMapArrowsForEmacs
+														contextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"emacsArrowKeys"];
+	[self->byKey setObject:[[[PrefPanelSessions_ControlKeyValue alloc]
+								initWithPreferencesTag:kPreferences_TagKeyInterruptProcess
+														contextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"keyInterruptProcess"];
+	[self->byKey setObject:[[[PrefPanelSessions_ControlKeyValue alloc]
+								initWithPreferencesTag:kPreferences_TagKeyResumeOutput
+														contextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"keyResume"];
+	[self->byKey setObject:[[[PrefPanelSessions_ControlKeyValue alloc]
+								initWithPreferencesTag:kPreferences_TagKeySuspendOutput
+														contextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"keySuspend"];
+	[self->byKey setObject:[[[PrefPanelSessions_EmacsMetaValue alloc]
+								initWithContextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"mappingForEmacsMeta"];
+	[self->byKey setObject:[[[PrefPanelSessions_NewLineValue alloc]
+								initWithContextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"mappingForNewLine"];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = self->idealFrame.size;
+}
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager)
+	if (kPanel_VisibilityHidden == aVisibility)
+	{
+		[self resetGlobalState];
+	}
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet)
+	[self resetGlobalState];
+	
+	// note that all current values will change
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+	}
+	
+	// now apply the specified settings
+	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	[self resetGlobalState];
+	
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [NSImage imageNamed:@"IconForPrefPanelSessions"];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.Sessions.Keyboard";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Keyboard", @"PrefPanelSessions", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintHorizontal;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::SESSION;
+}// preferencesClass
+
+
+@end // PrefPanelSessions_KeyboardViewManager
+
+
+@implementation PrefPanelSessions_KeyboardViewManager (PrefPanelSessions_KeyboardViewManagerInternal)
+
+
+#pragma mark New Methods
+
+
+/*!
+Returns the names of key-value coding keys that represent the
+primary bindings of this panel (those that directly correspond
+to saved preferences).
+
+(4.1)
+*/
+- (NSArray*)
+primaryDisplayBindingKeys
+{
+	return [NSArray arrayWithObjects:
+						@"deleteKeySendsBackspace",
+						@"emacsArrowKeys", @"keyInterruptProcess",
+						@"keyResume", @"keySuspend",
+						@"mappingForEmacsMeta",
+						@"mappingForNewLine",
+						nil];
+}// primaryDisplayBindingKeys
+
+
+/*!
+Resets anything that is shared across all panels.  This
+action should be performed whenever the panel is not in
+use, e.g. when it is hidden or dismissed by the user.
+
+(4.1)
+*/
+- (void)
+resetGlobalState
+{
+	[self setEditedKeyType:kMy_KeyTypeNone];
+}// resetGlobalState
+
+
+#pragma mark Accessors
+
+
+/*!
+Flags the specified key type (if any) as “currently being
+edited”.  Through bindings, this will cause zero or more
+buttons to enter a highlighted or normal state.
+
+This also changes GLOBAL state.  See "resetGlobalState".
+
+(4.1)
+*/
+- (My_KeyType)
+editedKeyType
+{
+	return gEditedKeyType;
+}
+- (void)
+setEditedKeyType:(My_KeyType)	aType
+{
+	[self willChangeValueForKey:@"isEditingKeyInterruptProcess"];
+	[self willChangeValueForKey:@"isEditingKeyResume"];
+	[self willChangeValueForKey:@"isEditingKeySuspend"];
+	gEditedKeyType = aType;
+	self->isEditingKeyInterruptProcess = (aType == kMy_KeyTypeInterrupt);
+	self->isEditingKeyResume = (aType == kMy_KeyTypeResume);
+	self->isEditingKeySuspend = (aType == kMy_KeyTypeSuspend);
+	if (aType == kMy_KeyTypeNone)
+	{
+		Keypads_SetResponder(kKeypads_WindowTypeControlKeys, nil);
+	}
+	[self didChangeValueForKey:@"isEditingKeySuspend"];
+	[self didChangeValueForKey:@"isEditingKeyResume"];
+	[self didChangeValueForKey:@"isEditingKeyInterruptProcess"];
+}// setEditedKeyType:
+
+
+@end // PrefPanelSessions_KeyboardViewManager (PrefPanelSessions_KeyboardViewManagerInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

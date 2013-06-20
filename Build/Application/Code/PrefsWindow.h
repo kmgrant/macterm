@@ -55,6 +55,7 @@ class ListenerModel_StandardListener;
 @class PrefPanelFormats_ViewManager;
 @class PrefPanelFullScreen_ViewManager;
 @class PrefPanelGeneral_ViewManager;
+@class PrefPanelSessions_ViewManager;
 @class PrefPanelTerminals_ViewManager;
 @class PrefPanelTranslations_ViewManager;
 #endif
@@ -118,6 +119,7 @@ changes to an interface declared in a ".mm" file.
 	Panel_ViewManager< PrefsWindow_PanelInterface >*	activePanel;
 	PrefPanelFormats_ViewManager*		formatsPanel;
 	PrefPanelGeneral_ViewManager*		generalPanel;
+	PrefPanelSessions_ViewManager*		sessionsPanel;
 	PrefPanelTerminals_ViewManager*		terminalsPanel;
 	PrefPanelTranslations_ViewManager*	translationsPanel;
 	PrefPanelFullScreen_ViewManager*	fullScreenPanel;

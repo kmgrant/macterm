@@ -872,6 +872,11 @@ Preferences_Init ()
 	// IMPORTANT: The data types used here are documented in Preferences.h,
 	//            and relied upon in other methods.  They are also used in
 	//            the PrefsConverter.  Check for consistency!
+	// WARNING: The “preferences class” chosen for a setting should match
+	//          the type of panel that displays it to the user.  The
+	//          inheritance setting will only be correctly displayed in
+	//          the Default case if the default context for the setting’s
+	//          class matches the context currently being edited by a panel.
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("prefs-version"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("auto-save"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("favorite-formats"));
@@ -941,7 +946,7 @@ Preferences_Init ()
 										CFSTR("terminal-no-dim-on-deactivate"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagEmacsMetaKey,
 									CFSTR("key-map-emacs-meta"), typeCFStringRef,
-									sizeof(Session_EmacsMetaKey), Quills::Prefs::TERMINAL);
+									sizeof(UInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagFadeBackgroundWindows,
 										CFSTR("terminal-fade-in-background"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagFadeAlpha,
@@ -961,6 +966,8 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagFunctionKeyLayout,
 									CFSTR("key-map-function-keys"), typeCFStringRef,
 									sizeof(Session_FunctionKeyLayout), Quills::Prefs::SESSION);
+	My_PreferenceDefinition::createFlag(kPreferences_TagHeadersCollapsed,
+										CFSTR("window-terminal-toolbar-invisible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagIdleAfterInactivityInSeconds,
 									CFSTR("data-receive-idle-seconds"), typeNetEvents_CFNumberRef,
 									sizeof(UInt16), Quills::Prefs::SESSION);
@@ -1018,24 +1025,19 @@ Preferences_Init ()
 										CFSTR("kiosk-window-frame-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskUsesSuperfluousEffects,
 										CFSTR("kiosk-effects-enabled"), Quills::Prefs::GENERAL);
-	My_PreferenceDefinition::createFlag(kPreferences_TagHeadersCollapsed,
-										CFSTR("window-terminal-toolbar-invisible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagLineModeEnabled,
 										CFSTR("line-mode-enabled"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagLocalEchoEnabled,
 										CFSTR("data-send-local-echo-enabled"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagMapArrowsForEmacs,
 									CFSTR("command-key-emacs-move-down"), typeCFStringRef,
-									sizeof(Boolean), Quills::Prefs::TERMINAL);
+									sizeof(Boolean), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-emacs-move-up"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-emacs-move-left"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-emacs-move-right"));
 	My_PreferenceDefinition::create(kPreferences_TagMapBackquote,
 									CFSTR("key-map-backquote"), typeCFStringRef/* keystroke string, e.g. blank "" or escape "\e" */,
 									sizeof(Boolean), Quills::Prefs::GENERAL);
-	My_PreferenceDefinition::create(kPreferences_TagNewLineMapping,
-									CFSTR("key-map-new-line"), typeCFStringRef,
-									sizeof(Session_NewlineMode), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagMapDeleteToBackspace,
 									CFSTR("key-map-delete"), typeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::SESSION);
@@ -1048,6 +1050,9 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagNewCommandShortcutEffect,
 									CFSTR("new-means"), typeCFStringRef/* "shell", "dialog", "default" */,
 									sizeof(UInt32), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::create(kPreferences_TagNewLineMapping,
+									CFSTR("key-map-new-line"), typeCFStringRef,
+									sizeof(UInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagNoAnimations,
 										CFSTR("no-animations"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagNoPasteWarning,
@@ -2149,6 +2154,20 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 		Boolean					searchDefaults = inSearchDefaults;
 		
 		
+		// WARNING: This is slightly fragile because it assumes that
+		// the caller actually knows the correct class to use for the
+		// given tag, when looking up a context that stores defaults.
+		// Worse, since all defaults are implicitly stored in the
+		// same place, ANY default context can successfully be used
+		// to *read* a setting but the code below will only set the
+		// "isDefault" flag to the expected value if the *correct*
+		// default context (the one for the setting’s class) has been
+		// given.  It may be better for the following code to check
+		// all known default contexts and set "isDefault" to true if
+		// the given context matches ANY default context.  In the
+		// meantime, this is fine as long as callers (e.g. preference
+		// panels) are never displaying settings that are inconsistent
+		// with the class of other settings in the same panel.
 		if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultContext, dataClass))
 		{
 			isDefault = (inContext == defaultContext);
@@ -7455,6 +7474,66 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagEmacsMetaKey:
+					{
+						assert(typeCFStringRef == keyValueType);
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							// values will be "Session_EmacsMetaKey"
+							UInt16*		storedValuePtr = REINTERPRET_CAST(outDataPtr, UInt16*);
+							
+							
+							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR(""), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_EmacsMetaKeyOff;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("shift+option"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_EmacsMetaKeyShiftOption;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("option"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_EmacsMetaKeyOption;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("control+command"), kCFCompareCaseInsensitive))
+							{
+								// LEGACY VALUE; remap to require Shift and Option
+								*storedValuePtr = kSession_EmacsMetaKeyShiftOption;
+							}
+							else
+							{
+								result = kPreferences_ResultBadVersionDataNotAvailable;
+							}
+							CFRelease(valueCFString), valueCFString = nullptr;
+						}
+					}
+					break;
+				
+				case kPreferences_TagMapArrowsForEmacs:
+					{
+						assert(typeCFStringRef == keyValueType);
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							*(REINTERPRET_CAST(outDataPtr, Boolean*)) = (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("down-arrow"), kCFCompareCaseInsensitive)) ? true : false;
+							CFRelease(valueCFString), valueCFString = nullptr;
+						}
+					}
+					break;
+				
 				case kPreferences_TagMapDeleteToBackspace:
 					{
 						assert(typeCFStringRef == keyValueType);
@@ -7495,7 +7574,8 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							Session_NewlineMode*	storedValuePtr = REINTERPRET_CAST(outDataPtr, Session_NewlineMode*);
+							// values will be "Session_NewlineMode"
+							UInt16*		storedValuePtr = REINTERPRET_CAST(outDataPtr, UInt16*);
 							
 							
 							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("\\015"), kCFCompareCaseInsensitive))
@@ -7743,65 +7823,6 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					{
 						assert(typeNetEvents_CFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
-					}
-					break;
-				
-				case kPreferences_TagEmacsMetaKey:
-					{
-						assert(typeCFStringRef == keyValueType);
-						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
-						
-						
-						if (nullptr == valueCFString)
-						{
-							result = kPreferences_ResultBadVersionDataNotAvailable;
-						}
-						else
-						{
-							UInt16*		storedValuePtr = REINTERPRET_CAST(outDataPtr, UInt16*);
-							
-							
-							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR(""), kCFCompareCaseInsensitive))
-							{
-								*storedValuePtr = kSession_EmacsMetaKeyOff;
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("shift+option"), kCFCompareCaseInsensitive))
-							{
-								*storedValuePtr = kSession_EmacsMetaKeyShiftOption;
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("option"), kCFCompareCaseInsensitive))
-							{
-								*storedValuePtr = kSession_EmacsMetaKeyOption;
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("control+command"), kCFCompareCaseInsensitive))
-							{
-								// LEGACY VALUE; remap to require Shift and Option
-								*storedValuePtr = kSession_EmacsMetaKeyShiftOption;
-							}
-							else
-							{
-								result = kPreferences_ResultBadVersionDataNotAvailable;
-							}
-							CFRelease(valueCFString), valueCFString = nullptr;
-						}
-					}
-					break;
-				
-				case kPreferences_TagMapArrowsForEmacs:
-					{
-						assert(typeCFStringRef == keyValueType);
-						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
-						
-						
-						if (nullptr == valueCFString)
-						{
-							result = kPreferences_ResultBadVersionDataNotAvailable;
-						}
-						else
-						{
-							*(REINTERPRET_CAST(outDataPtr, Boolean*)) = (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("down-arrow"), kCFCompareCaseInsensitive)) ? true : false;
-							CFRelease(valueCFString), valueCFString = nullptr;
-						}
 					}
 					break;
 				
@@ -9753,6 +9774,48 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
+			case kPreferences_TagEmacsMetaKey:
+				{
+					// values will be "Session_EmacsMetaKey"
+					UInt16 const	data = *(REINTERPRET_CAST(inDataPtr, UInt16 const*));
+					
+					
+					assert(typeCFStringRef == keyValueType);
+					switch (data)
+					{
+					case kSession_EmacsMetaKeyOption:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("option"));
+						break;
+					
+					case kSession_EmacsMetaKeyShiftOption:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("shift+option"));
+						break;
+					
+					case kSession_EmacsMetaKeyOff:
+					default:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR(""));
+						break;
+					}
+				}
+				break;
+			
+			case kPreferences_TagMapArrowsForEmacs:
+				{
+					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
+					
+					
+					assert(typeCFStringRef == keyValueType);
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-down"),
+											(data) ? CFSTR("down-arrow") : CFSTR(""));
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-left"),
+											(data) ? CFSTR("left-arrow") : CFSTR(""));
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-right"),
+											(data) ? CFSTR("right-arrow") : CFSTR(""));
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-up"),
+											(data) ? CFSTR("up-arrow") : CFSTR(""));
+				}
+				break;
+			
 			case kPreferences_TagMapDeleteToBackspace:
 				{
 					Boolean const* const	data = REINTERPRET_CAST(inDataPtr, Boolean const*);
@@ -9765,7 +9828,8 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagNewLineMapping:
 				{
-					Session_NewlineMode const* const		data = REINTERPRET_CAST(inDataPtr, Session_NewlineMode const*);
+					// values will be "Session_NewlineMode"
+					UInt16 const* const		data = REINTERPRET_CAST(inDataPtr, UInt16 const*);
 					
 					
 					assert(typeCFStringRef == keyValueType);
@@ -9926,47 +9990,6 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
-				}
-				break;
-			
-			case kPreferences_TagEmacsMetaKey:
-				{
-					UInt16 const	data = *(REINTERPRET_CAST(inDataPtr, UInt16 const*));
-					
-					
-					assert(typeCFStringRef == keyValueType);
-					switch (data)
-					{
-					case kSession_EmacsMetaKeyOption:
-						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("option"));
-						break;
-					
-					case kSession_EmacsMetaKeyShiftOption:
-						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("shift+option"));
-						break;
-					
-					case kSession_EmacsMetaKeyOff:
-					default:
-						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR(""));
-						break;
-					}
-				}
-				break;
-			
-			case kPreferences_TagMapArrowsForEmacs:
-				{
-					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
-					
-					
-					assert(typeCFStringRef == keyValueType);
-					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-down"),
-											(data) ? CFSTR("down-arrow") : CFSTR(""));
-					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-left"),
-											(data) ? CFSTR("left-arrow") : CFSTR(""));
-					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-right"),
-											(data) ? CFSTR("right-arrow") : CFSTR(""));
-					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-up"),
-											(data) ? CFSTR("up-arrow") : CFSTR(""));
 				}
 				break;
 			
