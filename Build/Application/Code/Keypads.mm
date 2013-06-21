@@ -255,15 +255,103 @@ Keypads_IsVisible	(Keypads_WindowType		inKeypad)
 
 
 /*!
+If the current target is the given target, it is removed;
+otherwise, this call has no effect.  (Requiring you to
+specify the previous target prevents you from accidentally
+removing a target attachment that you are not aware of.)
+
+Once a target is removed, the default behavior (using a
+session window) is restored and the palette is hidden if
+it was only made visible originally by the target’s
+attachment.  If the user had the palette open when the
+original attachment was made, the palette remains visible.
+
+Note that the current target is also removed automatically
+if Keypads_SetEventTarget() is called to set a new one.
+
+(4.1)
+*/
+void
+Keypads_RemoveEventTarget	(Keypads_WindowType		inFromKeypad,
+							 EventTargetRef			inCurrentTarget)
+{
+	switch (inFromKeypad)
+	{
+	case kKeypads_WindowTypeControlKeys:
+		if (gControlKeysEventTarget == inCurrentTarget)
+		{
+			gControlKeysEventTarget = nullptr;
+			if (gControlKeysMayAutoHide)
+			{
+				Keypads_SetVisible(inFromKeypad, false);
+				gControlKeysMayAutoHide = false;
+			}
+		}
+		break;
+	
+	case kKeypads_WindowTypeArrangeWindow:
+	case kKeypads_WindowTypeFullScreen:
+	case kKeypads_WindowTypeFunctionKeys:
+	case kKeypads_WindowTypeVT220Keys:
+	default:
+		break;
+	}
+}// RemoveEventTarget
+
+
+/*!
+If the current responder is the given target, it is removed;
+otherwise, this call has no effect.  (Requiring you to
+specify the previous responder prevents you from accidentally
+removing a responder attachment that you are not aware of.)
+
+Once a responder is removed, the default behavior (using a
+session window) is restored and the palette is hidden if it
+was only made visible originally by the responder’s
+attachment.  If the user had the palette open when the
+original attachment was made, the palette remains visible.
+
+Note that the current responder is also removed automatically
+if Keypads_SetResponder() is called to set a new one.
+
+(4.1)
+*/
+void
+Keypads_RemoveResponder		(Keypads_WindowType		inFromKeypad,
+							 NSObject*				inCurrentTarget)
+{
+	switch (inFromKeypad)
+	{
+	case kKeypads_WindowTypeControlKeys:
+		if (gControlKeysResponder == inCurrentTarget)
+		{
+			gControlKeysResponder = nil;
+			if (gControlKeysMayAutoHide)
+			{
+				Keypads_SetVisible(inFromKeypad, false);
+				gControlKeysMayAutoHide = false;
+			}
+		}
+		break;
+	
+	case kKeypads_WindowTypeArrangeWindow:
+	case kKeypads_WindowTypeFullScreen:
+	case kKeypads_WindowTypeFunctionKeys:
+	case kKeypads_WindowTypeVT220Keys:
+	default:
+		break;
+	}
+}// RemoveResponder
+
+
+/*!
 Sets the current event target for button commands issued
 by the specified keypad, and automatically shows or hides
 the keypad window.  Currently, only the control keys palette
 (kKeypads_WindowTypeControlKeys) is recognized.
 
-You can pass "nullptr" as the target to set no target, in
-which case the default behavior (using a session window)
-is restored and the palette is hidden if there is no user
-preference to keep it visible.
+Passing a responder of "nullptr" has no effect.  To remove
+a responder, call Keypads_RemoveResponder().
 
 Any Cocoa responder previously set by Keypads_SetResponder()
 is automatically cleared.
@@ -277,28 +365,27 @@ void
 Keypads_SetEventTarget	(Keypads_WindowType		inFromKeypad,
 						 EventTargetRef			inCurrentTarget)
 {
-	switch (inFromKeypad)
+	if (nullptr != inCurrentTarget)
 	{
-	case kKeypads_WindowTypeControlKeys:
-		gControlKeysResponder = nil; // clear this because it will be ignored now anyway
-		gControlKeysEventTarget = inCurrentTarget;
-		Keypads_SetVisible(inFromKeypad, (nullptr != gControlKeysEventTarget));
-		if (nullptr == gControlKeysEventTarget)
+		switch (inFromKeypad)
 		{
-			gControlKeysMayAutoHide = false;
+		case kKeypads_WindowTypeControlKeys:
+			gControlKeysResponder = nil; // clear this because it will be ignored now anyway
+			gControlKeysEventTarget = inCurrentTarget;
+			if (false == Keypads_IsVisible(kKeypads_WindowTypeControlKeys))
+			{
+				Keypads_SetVisible(inFromKeypad, true);
+				gControlKeysMayAutoHide = true;
+			}
+			break;
+		
+		case kKeypads_WindowTypeArrangeWindow:
+		case kKeypads_WindowTypeFullScreen:
+		case kKeypads_WindowTypeFunctionKeys:
+		case kKeypads_WindowTypeVT220Keys:
+		default:
+			break;
 		}
-		else
-		{
-			gControlKeysMayAutoHide = true;
-		}
-		break;
-	
-	case kKeypads_WindowTypeArrangeWindow:
-	case kKeypads_WindowTypeFullScreen:
-	case kKeypads_WindowTypeFunctionKeys:
-	case kKeypads_WindowTypeVT220Keys:
-	default:
-		break;
 	}
 }// SetEventTarget
 
@@ -316,6 +403,9 @@ If an object is provided, the keypad window is automatically
 displayed.  Currently, only the control keys palette type
 (kKeypads_WindowTypeControlKeys) is recognized.
 
+Passing a responder of "nil" has no effect.  To remove a
+responder, call Keypads_RemoveResponder().
+
 You can pass "nil" as the target to set no target, in which
 case the default behavior (using a session window) is
 restored and the palette is hidden if there is no user
@@ -330,28 +420,27 @@ void
 Keypads_SetResponder	(Keypads_WindowType		inFromKeypad,
 						 NSObject*				inCurrentTarget)
 {
-	switch (inFromKeypad)
+	if (nil != inCurrentTarget)
 	{
-	case kKeypads_WindowTypeControlKeys:
-		gControlKeysEventTarget = nullptr; // clear this because it will be ignored now anyway
-		gControlKeysResponder = inCurrentTarget;
-		Keypads_SetVisible(inFromKeypad, (nil != gControlKeysResponder));
-		if (nullptr == gControlKeysResponder)
+		switch (inFromKeypad)
 		{
-			gControlKeysMayAutoHide = false;
+		case kKeypads_WindowTypeControlKeys:
+			gControlKeysEventTarget = nullptr; // clear this because it will be ignored now anyway
+			gControlKeysResponder = inCurrentTarget;
+			if (false == Keypads_IsVisible(kKeypads_WindowTypeControlKeys))
+			{
+				Keypads_SetVisible(inFromKeypad, true);
+				gControlKeysMayAutoHide = true;
+			}
+			break;
+		
+		case kKeypads_WindowTypeArrangeWindow:
+		case kKeypads_WindowTypeFullScreen:
+		case kKeypads_WindowTypeFunctionKeys:
+		case kKeypads_WindowTypeVT220Keys:
+		default:
+			break;
 		}
-		else
-		{
-			gControlKeysMayAutoHide = true;
-		}
-		break;
-	
-	case kKeypads_WindowTypeArrangeWindow:
-	case kKeypads_WindowTypeFullScreen:
-	case kKeypads_WindowTypeFunctionKeys:
-	case kKeypads_WindowTypeVT220Keys:
-	default:
-		break;
 	}
 }// SetResponder
 
@@ -713,9 +802,9 @@ drawAttentionToButton:(NSButton*)	aButton
 
 
 /*!
-If Keypads_SetResponder() has been called with a non-nil
-value, the message "controlKeypadSentCharacterCode:" is
-sent to that view with the given value (as an NSNumber*).
+If Keypads_SetResponder() has been called, the message
+"controlKeypadSentCharacterCode:" is sent to that view
+with the given value (as an NSNumber*).
 
 Otherwise, this finds the appropriate target session and
 sends the specified character, as if the user had typed

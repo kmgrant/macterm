@@ -131,7 +131,7 @@ kEventClassNetEvents_ServerBrowser / kEventNetEvents_ServerBrowserNewData
 Summary:
   Issued when the user changes anything in the browser popover.
   This is only sent to the current event target of the popover, as
-  set by ServerBrowser_SetEventTarget().
+  set by ServerBrowser_New().
 
 Discussion:
   The typical response to this event is to save the specified changes.

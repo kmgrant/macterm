@@ -545,6 +545,14 @@ Boolean
 	Keypads_IsVisible							(Keypads_WindowType			inKeypad);
 
 void
+	Keypads_RemoveEventTarget					(Keypads_WindowType			inKeypad,
+												 EventTargetRef				inTarget);
+
+void
+	Keypads_RemoveResponder						(Keypads_WindowType			inKeypad,
+												 NSObject*					inTarget);
+
+void
 	Keypads_SetEventTarget						(Keypads_WindowType			inKeypad,
 												 EventTargetRef				inTarget);
 

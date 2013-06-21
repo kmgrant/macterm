@@ -2126,7 +2126,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					if (kControlCheckBoxCheckedValue == GetControl32BitValue(buttonInsertControlKey))
 					{
 						// stop sending keypad control keys to the field
-						Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, nullptr);
+						Keypads_RemoveEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(window));
 						
 						// remove the selected state from the button
 						SetControl32BitValue(buttonInsertControlKey, kControlCheckBoxUncheckedValue);

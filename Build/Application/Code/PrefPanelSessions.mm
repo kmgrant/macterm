@@ -259,6 +259,9 @@ struct My_SessionsPanelKeyboardUI
 	static OSStatus
 	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 	
+	void
+	removeKeypadEventTargets ();
+	
 	OSStatus
 	setButtonFromKey	(HIViewRef, char);
 
@@ -2139,6 +2142,15 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageDestroyed: // request to dispose of private data structures
 		{
+			My_SessionsPanelKeyboardDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelKeyboardDataPtr);
+			My_SessionsPanelKeyboardUI*			interfacePtr = panelDataPtr->interfacePtr;
+			
+			
+			if (nullptr != interfacePtr)
+			{
+				interfacePtr->removeKeypadEventTargets();
+			}
 			delete (REINTERPRET_CAST(inDataPtr, My_SessionsPanelKeyboardDataPtr));
 		}
 		break;
@@ -2195,12 +2207,18 @@ panelChanged	(Panel_Ref		inPanel,
 		{
 			My_SessionsPanelKeyboardDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
 																				My_SessionsPanelKeyboardDataPtr);
+			My_SessionsPanelKeyboardUI*			interfacePtr = panelDataPtr->interfacePtr;
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
 			Preferences_Result					prefsResult = kPreferences_ResultOK;
 			Preferences_ContextRef				defaultContext = nullptr;
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
+			
+			if (nullptr != interfacePtr)
+			{
+				interfacePtr->removeKeypadEventTargets();
+			}
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
 			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
@@ -2213,10 +2231,19 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
 		{
-			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			My_SessionsPanelKeyboardDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelKeyboardDataPtr);
+			My_SessionsPanelKeyboardUI*			interfacePtr = panelDataPtr->interfacePtr;
+			Boolean								isNowVisible = *((Boolean*)inDataPtr);
 			
 			
-			// do nothing
+			if (false == isNowVisible)
+			{
+				if (nullptr != interfacePtr)
+				{
+					interfacePtr->removeKeypadEventTargets();
+				}
+			}
 		}
 		break;
 	
@@ -2775,6 +2802,39 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	return result;
 }// My_SessionsPanelKeyboardUI::receiveHICommand
+
+
+/*!
+Unregisters any associations between control-key buttons
+and the “Control Keys” palette.  This should be done
+whenever the user will no longer be using the palette
+for input.
+
+(4.1)
+*/
+void
+My_SessionsPanelKeyboardUI::
+removeKeypadEventTargets ()
+{
+	HIWindowRef		window = HIViewGetWindow(this->mainView);
+	
+	
+	if (nullptr != window)
+	{
+		HIViewWrap		buttonSetInterruptKey(idMyButtonChangeInterruptKey, window);
+		HIViewWrap		buttonSetSuspendKey(idMyButtonChangeSuspendKey, window);
+		HIViewWrap		buttonSetResumeKey(idMyButtonChangeResumeKey, window);
+		
+		
+		// not all of these will be set (and none of them may be set)
+		Keypads_RemoveEventTarget(kKeypads_WindowTypeControlKeys, HIViewGetEventTarget(buttonSetInterruptKey));
+		Keypads_RemoveEventTarget(kKeypads_WindowTypeControlKeys, HIViewGetEventTarget(buttonSetSuspendKey));
+		Keypads_RemoveEventTarget(kKeypads_WindowTypeControlKeys, HIViewGetEventTarget(buttonSetResumeKey));
+		SetControl32BitValue(buttonSetInterruptKey, kControlCheckBoxUncheckedValue);
+		SetControl32BitValue(buttonSetSuspendKey, kControlCheckBoxUncheckedValue);
+		SetControl32BitValue(buttonSetResumeKey, kControlCheckBoxUncheckedValue);
+	}
+}// My_SessionsPanelKeyboardUI::removeKeypadEventTargets
 
 
 /*!
@@ -5915,7 +5975,7 @@ setEditedKeyType:(My_KeyType)	aType
 	self->isEditingKeySuspend = (aType == kMy_KeyTypeSuspend);
 	if (aType == kMy_KeyTypeNone)
 	{
-		Keypads_SetResponder(kKeypads_WindowTypeControlKeys, nil);
+		Keypads_RemoveResponder(kKeypads_WindowTypeControlKeys, self);
 	}
 	[self didChangeValueForKey:@"isEditingKeySuspend"];
 	[self didChangeValueForKey:@"isEditingKeyResume"];

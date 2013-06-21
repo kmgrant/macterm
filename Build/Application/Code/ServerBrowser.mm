@@ -2054,8 +2054,8 @@ discoveredHost
 
 /*!
 If an event target has been set (and one should have been, with
-ServerBrowser_SetEventTarget()), sends an event to the target
-to notify the target of changes to the panel.
+ServerBrowser_New()), sends an event to the target to notify the
+target of changes to the panel.
 
 Call this whenever the user makes a change to a core setting in
 the panel.

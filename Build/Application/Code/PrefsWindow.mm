@@ -531,6 +531,8 @@ PrefsWindow_Remove ()
 			// if the user is editing a text field, this makes sure the changes “stick”
 			if (nullptr != focusControl) Panel_SendMessageFocusLost(gCurrentPanel, focusControl);
 		}
+		
+		Panel_SendMessageNewVisibility(gCurrentPanel, false);
 	}
 	
 	// write all the preference data in memory to disk
@@ -3947,6 +3949,12 @@ windowWillClose:(NSNotification*)	aNotification
 	{
 		Console_Warning(Console_WriteValue, "failed to save preferences to disk, error", prefsResult);
 	}
+	
+	// a window does not receive a “did close” message so there is
+	// no choice except to notify a panel of both “will” and ”did”
+	// messages at the same time
+	[[self->activePanel delegate] panelViewManager:self->activePanel willChangePanelVisibility:kPanel_VisibilityHidden];
+	[[self->activePanel delegate] panelViewManager:self->activePanel didChangePanelVisibility:kPanel_VisibilityHidden];
 }// windowWillClose:
 
 
