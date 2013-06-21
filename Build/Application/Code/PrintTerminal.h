@@ -118,6 +118,12 @@ fontSize;
 - (void)
 setFontSize:(NSString*)_; // binding
 
+- (NSString*)
+maximumSensibleFontSize; // binding
+
+- (NSString*)
+minimumSensibleFontSize; // binding
+
 @end
 
 #endif // __OBJC__

@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
   <data>
     <int key="IBDocument.SystemTarget">1060</int>
-    <string key="IBDocument.SystemVersion">12D78</string>
+    <string key="IBDocument.SystemVersion">12E55</string>
     <string key="IBDocument.InterfaceBuilderVersion">851</string>
-    <string key="IBDocument.AppKitVersion">1187.37</string>
+    <string key="IBDocument.AppKitVersion">1187.39</string>
     <string key="IBDocument.HIToolboxVersion">626.00</string>
     <object class="NSMutableDictionary" key="IBDocument.PluginVersions">
       <string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -386,6 +386,30 @@
               </object>
               <bool key="NSAllowsLogicalLayoutDirection">NO</bool>
             </object>
+            <object class="NSSlider" id="723470427">
+              <reference key="NSNextResponder" ref="1006"/>
+              <int key="NSvFlags">268</int>
+              <string key="NSFrame">{{271, 69}, {96, 21}}</string>
+              <reference key="NSSuperview" ref="1006"/>
+              <string key="NSReuseIdentifierKey">_NS:700</string>
+              <bool key="NSEnabled">YES</bool>
+              <object class="NSSliderCell" key="NSCell" id="491627794">
+                <int key="NSCellFlags">-2080112384</int>
+                <int key="NSCellFlags2">0</int>
+                <string key="NSContents"/>
+                <string key="NSCellIdentifier">_NS:700</string>
+                <reference key="NSControlView" ref="723470427"/>
+                <double key="NSMaxValue">100</double>
+                <double key="NSMinValue">0.0</double>
+                <double key="NSValue">50</double>
+                <double key="NSAltIncValue">0.0</double>
+                <int key="NSNumberOfTickMarks">0</int>
+                <int key="NSTickMarkPosition">1</int>
+                <bool key="NSAllowsTickMarkValuesOnly">NO</bool>
+                <bool key="NSVertical">NO</bool>
+              </object>
+              <bool key="NSAllowsLogicalLayoutDirection">NO</bool>
+            </object>
           </array>
           <string key="NSFrameSize">{550, 500}</string>
           <reference key="NSSuperview"/>
@@ -531,6 +555,56 @@
           </object>
           <int key="connectionID">62</int>
         </object>
+        <object class="IBConnectionRecord">
+          <object class="IBBindingConnection" key="connection">
+            <string key="label">maxValue: self.maximumSensibleFontSize</string>
+            <reference key="source" ref="723470427"/>
+            <reference key="destination" ref="1001"/>
+            <object class="NSNibBindingConnector" key="connector" id="436002885">
+              <reference key="NSSource" ref="723470427"/>
+              <reference key="NSDestination" ref="1001"/>
+              <string key="NSLabel">maxValue: self.maximumSensibleFontSize</string>
+              <string key="NSBinding">maxValue</string>
+              <string key="NSKeyPath">self.maximumSensibleFontSize</string>
+              <int key="NSNibBindingConnectorVersion">2</int>
+            </object>
+          </object>
+          <int key="connectionID">77</int>
+        </object>
+        <object class="IBConnectionRecord">
+          <object class="IBBindingConnection" key="connection">
+            <string key="label">minValue: self.minimumSensibleFontSize</string>
+            <reference key="source" ref="723470427"/>
+            <reference key="destination" ref="1001"/>
+            <object class="NSNibBindingConnector" key="connector" id="696210996">
+              <reference key="NSSource" ref="723470427"/>
+              <reference key="NSDestination" ref="1001"/>
+              <string key="NSLabel">minValue: self.minimumSensibleFontSize</string>
+              <string key="NSBinding">minValue</string>
+              <string key="NSKeyPath">self.minimumSensibleFontSize</string>
+              <reference key="NSPreviousConnector" ref="436002885"/>
+              <int key="NSNibBindingConnectorVersion">2</int>
+            </object>
+          </object>
+          <int key="connectionID">78</int>
+        </object>
+        <object class="IBConnectionRecord">
+          <object class="IBBindingConnection" key="connection">
+            <string key="label">value: self.fontSize</string>
+            <reference key="source" ref="723470427"/>
+            <reference key="destination" ref="1001"/>
+            <object class="NSNibBindingConnector" key="connector">
+              <reference key="NSSource" ref="723470427"/>
+              <reference key="NSDestination" ref="1001"/>
+              <string key="NSLabel">value: self.fontSize</string>
+              <string key="NSBinding">value</string>
+              <string key="NSKeyPath">self.fontSize</string>
+              <reference key="NSPreviousConnector" ref="696210996"/>
+              <int key="NSNibBindingConnectorVersion">2</int>
+            </object>
+          </object>
+          <int key="connectionID">79</int>
+        </object>
       </array>
       <object class="IBMutableOrderedSet" key="objectRecords">
         <array key="orderedObjects">
@@ -580,6 +654,7 @@
               <reference ref="589654595"/>
               <reference ref="820083328"/>
               <reference ref="176328200"/>
+              <reference ref="723470427"/>
             </array>
             <reference key="parent" ref="1005"/>
           </object>
@@ -725,6 +800,19 @@
             <reference key="object" ref="761683837"/>
             <reference key="parent" ref="820083328"/>
           </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">63</int>
+            <reference key="object" ref="723470427"/>
+            <array class="NSMutableArray" key="children">
+              <reference ref="491627794"/>
+            </array>
+            <reference key="parent" ref="1006"/>
+          </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">64</int>
+            <reference key="object" ref="491627794"/>
+            <reference key="parent" ref="723470427"/>
+          </object>
         </array>
       </object>
       <dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -774,6 +862,11 @@
           <bytes key="NSTransformStruct">P4AAAL+AAABDXgAAwrYAAA</bytes>
         </object>
         <string key="57.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+        <string key="63.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+        <object class="NSAffineTransform" key="63.IBViewBoundsToFrameTransform">
+          <bytes key="NSTransformStruct">P4AAAL+AAABDh4AAwrAAAA</bytes>
+        </object>
+        <string key="64.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
         <string key="7.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
         <object class="NSAffineTransform" key="7.IBViewBoundsToFrameTransform">
           <bytes key="NSTransformStruct">P4AAAL+AAABDvYAAwigAAA</bytes>
@@ -788,7 +881,7 @@
       <nil key="activeLocalization"/>
       <dictionary class="NSMutableDictionary" key="localizations"/>
       <nil key="sourceID"/>
-      <int key="maxID">62</int>
+      <int key="maxID">79</int>
     </object>
     <object class="IBClassDescriber" key="IBDocument.Classes">
       <array class="NSMutableArray" key="referencedPartialClassDescriptions">

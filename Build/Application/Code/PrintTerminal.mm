@@ -616,6 +616,30 @@ setFontSize:(NSString*)		aString
 }// setFontSize:
 
 
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSString*)
+maximumSensibleFontSize
+{
+	return [NSString stringWithFormat:@"%d", 48]; // arbitrary
+}// maximumSensibleFontSize
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSString*)
+minimumSensibleFontSize
+{
+	return [NSString stringWithFormat:@"%d", 8]; // arbitrary
+}// minimumSensibleFontSize
+
+
 #pragma mark NSWindowController
 
 
