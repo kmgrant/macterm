@@ -686,6 +686,86 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 					}
 					break;
 				
+				case kMacroManager_ActionSelectMatchingWindow:
+					{
+						SessionFactory_TerminalWindowList const&	windowList = SessionFactory_ReturnTerminalWindowList();
+						TerminalWindowRef							activeTerminalWindow = TerminalWindow_ReturnFromMainWindow();
+						
+						
+						if ((nullptr != activeTerminalWindow) && (windowList.size() > 1))
+						{
+							SessionFactory_TerminalWindowList::const_iterator	toWindow;
+							SessionFactory_TerminalWindowList::const_iterator	endWindows = windowList.end();
+							NSString*											actionNSString = BRIDGE_CAST(actionCFString, NSString*);
+							TerminalWindowRef									wrapAroundMatch = nullptr;
+							TerminalWindowRef									matchingWindow = nullptr;
+							Boolean												foundActive = false;
+							
+							
+							// start from the current window and search for another
+							// window in the list that has a matching title (while
+							// searching the window list for the current window,
+							// also find the first matching window from the front
+							// in case the search has to wrap around)
+							for (toWindow = windowList.begin(); toWindow != endWindows; ++toWindow)
+							{
+								if (*toWindow == activeTerminalWindow)
+								{
+									foundActive = true;
+								}
+								else
+								{
+									// see if this window’s title matches the query
+									NSWindow*	asWindow = TerminalWindow_ReturnNSWindow(*toWindow);
+									NSString*	windowTitle = [asWindow title];
+									
+									
+									if ([windowTitle rangeOfString:actionNSString options:NSCaseInsensitiveSearch].length > 0)
+									{
+										// the window’s title sufficiently matches the macro’s content string
+										if (foundActive)
+										{
+											// the active window was already found in the window list
+											// so this matching window is the next window to select
+											matchingWindow = *toWindow;
+											break;
+										}
+										else if (nullptr == wrapAroundMatch)
+										{
+											// the active window has not been found in the list iteration
+											// yet; although this window matches, it is only going to be
+											// the final target window if no other match can be found
+											// *beyond* the active window in the current list iteration
+											wrapAroundMatch = *toWindow;
+										}
+										else
+										{
+											// a wrap-around match has been found, do not overwrite it;
+											// continue searching for the active window however
+										}
+									}
+								}
+							}
+							
+							// if no match was found beyond the active window, use the wrap-around match
+							if ((nullptr == matchingWindow) && (nullptr != wrapAroundMatch))
+							{
+								matchingWindow = wrapAroundMatch;
+							}
+							
+							// if the macro succeeds, select the window; otherwise, emit an error tone
+							if (nullptr != matchingWindow)
+							{
+								TerminalWindow_Select(matchingWindow);
+							}
+							else
+							{
+								Sound_StandardAlert();
+							}
+						}
+					}
+					break;
+				
 				default:
 					// ???
 					break;

@@ -133,7 +133,7 @@ table(deftable).
 h3(#macros). Macro Collections
 
 table(deftable).
-(deftop). |(key). @macro-NN-action@, where NN is 01 to 12|(types). _string_: @text@, @verbatim@, @handle URL@, or @new window with command@|
+(deftop). |(key). @macro-NN-action@, where NN is 01 to 12|(types). _string_: @text@, @verbatim@, @handle URL@, @select matching window@ or @new window with command@|
 (defbottom). |\2(desc). How to interpret the content string.  If @text@, then escapes such as @\012@ are expanded; if @verbatim@, escapes are ignored.|
 (deftop). |(key). @macro-NN-contents-string@, where NN is 01 to 12|(types). _string_|
 (defbottom). |\2(desc). Text, whose meaning depends on the action: something to send (interpreted or verbatim), a URL to open, or a command line to run (without interpretation).|

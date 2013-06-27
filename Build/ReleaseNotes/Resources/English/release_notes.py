@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130626',
     '20130620',
     '20130618',
     '20130605',
@@ -472,6 +473,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130626': [
+        'Preferences window Macros pane now offers a new Action type: "Select Window by Title".  When this type of macro is used, it finds and selects the next terminal window whose title contains the text of the macro (word or phrase).  Since it always starts with the next window in the rotation, repeated invocations of the macro will cycle through all matching windows.',
+    ],
     '20130620': [
         'The font size recently added to print previews may now also be changed by a slider control.',
     ],

@@ -414,6 +414,18 @@ The Contents are interpreted as a URL and opened locally with
  whatever helper application is appropriate (such as your
  preferred web browser).
 
+h5. Select Window by Title
+
+The Contents are interpreted as a word or phrase to scan for in
+ the titles of open terminal windows.  The next window in the
+ rotation with a matching title is automatically brought to the
+ front.
+
+This mode is very good for moving between similar windows.  If
+ you have a pattern in the title that is only present in some of
+ your terminals, you can use your macro repeatedly to cycle
+ through all the matching windows.
+
 h5. New Window with Command
 
 The Contents are interpreted as a command line, split into

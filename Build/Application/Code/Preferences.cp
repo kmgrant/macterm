@@ -7025,6 +7025,10 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							{
 								*storedValuePtr = kMacroManager_ActionNewWindowWithCommand;
 							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("select matching window"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kMacroManager_ActionSelectMatchingWindow;
+							}
 							else
 							{
 								result = kPreferences_ResultBadVersionDataNotAvailable;
@@ -9404,6 +9408,10 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					case kMacroManager_ActionNewWindowWithCommand:
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("new window with command"));
+						break;
+					
+					case kMacroManager_ActionSelectMatchingWindow:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("select matching window"));
 						break;
 					
 					default:

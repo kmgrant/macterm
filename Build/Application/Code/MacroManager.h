@@ -91,8 +91,11 @@ enum MacroManager_Action
 	kMacroManager_ActionSendTextProcessingEscapes	= kCommandSetMacroActionEnterText,			//!< macro content is a string to send (perhaps
 																								//!  with metacharacters to be substituted)
 	kMacroManager_ActionHandleURL					= kCommandSetMacroActionOpenURL,			//!< macro content is a URL to be opened
-	kMacroManager_ActionNewWindowWithCommand		= kCommandSetMacroActionNewWindowCommand	//!< macro content is a Unix command line to be
+	kMacroManager_ActionNewWindowWithCommand		= kCommandSetMacroActionNewWindowCommand,	//!< macro content is a Unix command line to be
 																								//!  executed in a new terminal window
+	kMacroManager_ActionSelectMatchingWindow		= kCommandSetMacroActionSelectWindow		//!< macro content is a string to use as a search
+																								//!  key against the titles of open windows; the
+																								//!  next window with a matching title is activated
 };
 
 /*!

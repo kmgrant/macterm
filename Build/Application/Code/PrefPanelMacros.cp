@@ -2094,6 +2094,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			case kCommandSetMacroActionEnterTextVerbatim:
 			case kCommandSetMacroActionOpenURL:
 			case kCommandSetMacroActionNewWindowCommand:
+			case kCommandSetMacroActionSelectWindow:
 				{
 					My_MacrosPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
 																		My_MacrosPanelDataPtr);
