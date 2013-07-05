@@ -69,6 +69,7 @@ extern "C"
 #import <CGContextSaveRestore.h>
 #import <CocoaAnimation.h>
 #import <CocoaBasic.h>
+#import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
 #import <CommonEventHandlers.h>
@@ -114,8 +115,6 @@ extern "C"
 
 #pragma mark Constants
 namespace {
-
-SInt16 const	kMy_MaximumNumberOfArrangedWindows = 20; // TEMPORARY RESTRICTION
 
 /*!
 These are hacks.  But they make up for the fact that theme
@@ -210,6 +209,10 @@ struct My_TerminalWindow
 	HIWindowRef					resizeFloater;				// temporary window that appears during resizes
 	TerminalView_DisplayMode	preResizeViewDisplayMode;	// stored in case user invokes option key variation on resize
 	WindowInfo_Ref				windowInfo;					// window information object for the terminal window
+	CGDirectDisplayID			staggerDisplay;				// the display the window was on at the time "staggerIndex" was set;
+															//     if the user attempts to stack windows and the window is now on
+															//     a different display, "staggerIndex" is ignored and reset
+	UInt16						staggerIndex;				// index in list of staggered windows for "staggerDisplay"
 	
 	struct
 	{
@@ -218,9 +221,6 @@ struct My_TerminalWindow
 		HIViewRef		textScreenDimensions;   // defined only in the floater window that appears during resizes
 	} controls;
 	
-	SInt16						staggerPositionIndex;	// index into array of window stagger positions (after enough
-														// windows are open, stagger positions are re-used, so there
-														// can be more than one window with the same index)
 	Boolean						isObscured;				// is the window hidden, via a command in the Window menu?
 	Boolean						isDead;					// is the window title flagged to indicate a disconnected session?
 	Boolean						isLEDOn[4];				// true only if this terminal light is lit
@@ -315,8 +315,8 @@ typedef LockAcquireRelease< TerminalWindowRef, My_TerminalWindow >		My_TerminalW
 namespace {
 
 void					addContextualMenuItemsForTab	(MenuRef, HIObjectRef, AEDesc&);
-void					calculateWindowPosition			(My_TerminalWindowPtr, Rect*);
-void					calculateIndexedWindowPosition	(My_TerminalWindowPtr, SInt16, Point*);
+void					calculateIndexedWindowPosition	(My_TerminalWindowPtr, UInt16, UInt16, HIPoint*);
+void					calculateWindowPosition			(My_TerminalWindowPtr, UInt16*, UInt16*, HIRect*);
 void					changeNotifyForTerminalWindow	(My_TerminalWindowPtr, TerminalWindow_Change, void*);
 IconRef					createBellOffIcon				();
 IconRef					createBellOnIcon				();
@@ -333,7 +333,6 @@ IconRef					createRestartSessionIcon		();
 void					createViews						(My_TerminalWindowPtr);
 Boolean					createTabWindow					(My_TerminalWindowPtr);
 NSWindow*				createWindow					();
-void					ensureTopLeftCornersExists		();
 TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
 TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
 My_ScrollBarKind		getScrollBarKind				(My_TerminalWindowPtr, HIViewRef);
@@ -348,6 +347,7 @@ void					installTickHandler				(My_TerminalWindowPtr);
 void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
 void					installUndoFullScreenChanges	(TerminalWindowRef, TerminalView_DisplayMode, TerminalView_DisplayMode);
 void					installUndoScreenDimensionChanges	(TerminalWindowRef);
+bool					lessThanIfGreaterArea			(HIWindowRef, HIWindowRef);
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveScrollBarDraw			(EventHandlerCallRef, EventRef, void*);
@@ -365,6 +365,7 @@ UInt16					returnScrollBarHeight			(My_TerminalWindowPtr);
 UInt16					returnScrollBarWidth			(My_TerminalWindowPtr);
 UInt16					returnStatusBarHeight			(My_TerminalWindowPtr);
 UInt16					returnToolbarHeight				(My_TerminalWindowPtr);
+CGDirectDisplayID		returnWindowDisplay				(HIWindowRef);
 void					reverseFontChanges				(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					reverseFullScreenChanges		(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_ActionRef, void*);
@@ -383,7 +384,6 @@ void					setWindowToIdealSizeForFont		(My_TerminalWindowPtr);
 void					sheetClosed						(GenericDialog_Ref, Boolean);
 Preferences_ContextRef	sheetContextBegin				(My_TerminalWindowPtr, Quills::Prefs::Class, My_SheetType);
 void					sheetContextEnd					(My_TerminalWindowPtr);
-void					stackWindowTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
 void					terminalStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					terminalViewStateChanged		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					updateScrollBars				(My_TerminalWindowPtr);
@@ -396,8 +396,6 @@ namespace {
 My_TerminalWindowByNSWindow&	gTerminalNSWindows ()			{ static My_TerminalWindowByNSWindow x; return x; }
 My_RefTracker&					gTerminalWindowValidRefs ()		{ static My_RefTracker x; return x; }
 My_TerminalWindowPtrLocker&		gTerminalWindowPtrLocks ()		{ static My_TerminalWindowPtrLocker x; return x; }
-SInt16**					gTopLeftCorners = nullptr;
-SInt16						gNumberOfTransitioningWindows = 0;	// used only by TerminalWindow_StackWindows()
 IconRef&					gBellOffIcon ()					{ static IconRef x = createBellOffIcon(); return x; }
 IconRef&					gBellOnIcon ()					{ static IconRef x = createBellOnIcon(); return x; }
 IconRef&					gCustomizeToolbarIcon ()		{ static IconRef x = createCustomizeToolbarIcon(); return x; }
@@ -1977,18 +1975,157 @@ TerminalWindow_SetWindowTitle	(TerminalWindowRef	inRef,
 
 /*!
 Rearranges all terminal windows so that their top-left
-corners form an invisible, diagonal line.  On Mac OS X,
-the effect is also animated, showing each window sliding
-into its new position.
+corners form an invisible, diagonal line.  The effect
+is also animated, showing each window sliding into its
+new position.
+
+If there are several Spaces defined, this routine only
+operates on windows in the current Space.  If windows
+span multiple displays however, they will be arranged
+separately on each display.
 
 (3.0)
 */
 void
 TerminalWindow_StackWindows ()
 {
-	gNumberOfTransitioningWindows = 0;
-	SessionFactory_ForEveryTerminalWindowDo(stackWindowTerminalWindowOp, 0L/* data 1 - unused */, 0L/* data 2 - unused */,
-											nullptr/* pointer to result - unused */);
+	typedef std::vector< HIWindowRef >						My_WindowList;
+	typedef std::map< CGDirectDisplayID, My_WindowList >	My_WindowsByDisplay; // which windows are on which devices?
+	
+	NSArray*				currentSpaceWindowNumbers = [NSWindow windowNumbersWithOptions:0];
+	NSEnumerator*			eachWindowNumber = [currentSpaceWindowNumbers objectEnumerator];
+	NSNumber*				currentWindowNumber = nil;
+	NSWindow*				activeWindow = [NSApp mainWindow];
+	My_WindowsByDisplay		windowsByDisplay;
+	
+	
+	// first determine which windows are on each display
+	while (nil != (currentWindowNumber = [eachWindowNumber nextObject]))
+	{
+		NSInteger			windowNumber = [currentWindowNumber integerValue];
+		NSWindow*			window = [NSApp windowWithWindowNumber:windowNumber];
+		TerminalWindowRef	terminalWindow = [window terminalWindowRef];
+		
+		
+		if (nil != terminalWindow)
+		{
+			HIWindowRef const			kWindow = TerminalWindow_ReturnWindow(terminalWindow);
+			CGDirectDisplayID const		kDisplayID = returnWindowDisplay(kWindow);
+			My_WindowList&				windowsOnThisDisplay = windowsByDisplay[kDisplayID];
+			
+			
+			if (windowsOnThisDisplay.empty())
+			{
+				// the first time a display’s window list is seen, allocate
+				// an approximately-correct vector size up front (this value
+				// will only be exactly right on single-display systems)
+				windowsOnThisDisplay.reserve([currentSpaceWindowNumbers count]);
+			}
+			windowsOnThisDisplay.push_back(kWindow);
+		}
+		else
+		{
+			// not a terminal; ignore
+		}
+	}
+	
+	// sort windows by largest area arbitrarily to minimize the chance
+	// that a window will be completely hidden by the stacking of other
+	// windows on its display
+	My_WindowsByDisplay::iterator	toMutablePair;
+	My_WindowsByDisplay::iterator	endMutablePairs(windowsByDisplay.end());
+	for (toMutablePair = windowsByDisplay.begin(); toMutablePair != endMutablePairs;
+			++toMutablePair)
+	{
+		My_WindowList&	windowsOnThisDisplay = (*toMutablePair).second;
+		
+		
+		std::sort(windowsOnThisDisplay.begin(), windowsOnThisDisplay.end(), lessThanIfGreaterArea);
+	}
+	
+	// for each display, stack windows separately
+	My_WindowsByDisplay::const_iterator		toPair;
+	My_WindowsByDisplay::const_iterator		endPairs(windowsByDisplay.end());
+	for (toPair = windowsByDisplay.begin(); toPair != endPairs; ++toPair)
+	{
+		My_WindowList const&			windowsOnThisDisplay = (*toPair).second;
+		My_WindowList::const_iterator	toWindow;
+		My_WindowList::const_iterator	endWindows(windowsOnThisDisplay.end());
+		UInt16							staggerListIndexHint = 0;
+		UInt16							localWindowIndexHint = 0;
+		UInt16							transitioningWindowCount = 0;
+		
+		
+		for (toWindow = windowsOnThisDisplay.begin(); toWindow != endWindows;
+				++toWindow, ++localWindowIndexHint)
+		{
+			// arbitrary limit: only animate a few windows (asynchronously)
+			// per display, moving the rest into position immediately
+			HIWindowRef const				kHIWindow = *toWindow;
+			TerminalWindowRef const			kTerminalWindow = TerminalWindow_ReturnFromWindow(kHIWindow);
+			NSWindow* const					kNSWindow = TerminalWindow_ReturnNSWindow(kTerminalWindow);
+			Boolean const					kTooManyWindows = (transitioningWindowCount > 3/* arbitrary */);
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), kTerminalWindow);
+			HIRect							originalStructureBounds;
+			HIRect							structureBounds;
+			HIRect							screenBounds;
+			OSStatus						error = noErr;
+			
+			
+			++transitioningWindowCount;
+			
+			error = HIWindowGetBounds(kHIWindow, kWindowStructureRgn, kHICoordSpaceScreenPixel, &structureBounds);
+			assert_noerr(error);
+			error = HIWindowGetGreatestAreaDisplay(kHIWindow, kWindowStructureRgn, kHICoordSpaceScreenPixel,
+													nullptr/* display ID */, &screenBounds);
+			assert_noerr(error);
+			originalStructureBounds = structureBounds;
+			
+			// NOTE: on return, "structureBounds" is updated again
+			calculateWindowPosition(ptr, &staggerListIndexHint, &localWindowIndexHint, &structureBounds);
+			
+			// if a window’s current position places it entirely on-screen
+			// and its “stacked” location would put it partially off-screen,
+			// do not relocate the window (presumably it was better before!)
+			if ((false == CGRectContainsRect(screenBounds, originalStructureBounds)) ||
+				CGRectContainsRect(screenBounds, structureBounds))
+			{
+				// select each window as it is stacked so that keyboard cycling
+				// will be in sync with the new order of windows
+				[kNSWindow orderFront:nil];
+				
+				if (kTooManyWindows)
+				{
+					// move the window immediately without animation
+					error = HIWindowSetBounds(kHIWindow, kWindowStructureRgn, kHICoordSpaceScreenPixel,
+												&structureBounds);
+					assert_noerr(error);
+				}
+				else
+				{
+					// do a cool slide animation to move the window into place
+					TransitionWindowOptions		transitionOptions;
+					
+					
+					// transition asynchronously for minimum interruption to the user
+					bzero(&transitionOptions, sizeof(transitionOptions));
+					transitionOptions.version = 0;
+					if (noErr !=
+						TransitionWindowWithOptions(kHIWindow, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
+													&structureBounds, true/* asynchronous */, &transitionOptions))
+					{
+						// on error, just move the window
+						error = HIWindowSetBounds(kHIWindow, kWindowStructureRgn, kHICoordSpaceScreenPixel,
+													&structureBounds);
+						assert_noerr(error);
+					}
+				}
+			}
+		}
+	}
+	
+	// restore original Z-order of active window
+	[activeWindow makeKeyAndOrderFront:nil];
 }// StackWindows
 
 
@@ -2083,7 +2220,6 @@ preResizeViewDisplayMode(kTerminalView_DisplayModeNormal/* corrected below */),
 windowInfo(WindowInfo_New()),
 // controls initialized below
 // toolbar initialized below
-staggerPositionIndex(0),
 isObscured(false),
 isDead(false),
 viewSizeIndependent(false),
@@ -2322,17 +2458,41 @@ installedActions()
 		setStandardState(this, screenWidth, screenHeight, true/* resize window */);
 	}
 	
-	// stagger the window
+	// stagger the window (this is effective for newly-created windows
+	// that are alone; if a workspace is spawning them then the actual
+	// window location will be overridden by the workspace configuration)
 	unless (inNoStagger)
 	{
-		Rect		windowRect;
-		OSStatus	error = noErr;
+		HIWindowRef		frontWindow = EventLoop_ReturnRealFrontWindow();
+		HIRect			structureBounds;
+		UInt16			staggerListIndex = 0;
+		UInt16			localWindowIndex = 0;
+		OSStatus		error = noErr;
 		
 		
-		error = GetWindowBounds(returnCarbonWindow(this), kWindowContentRgn, &windowRect);
+		error = HIWindowGetBounds(returnCarbonWindow(this), kWindowStructureRgn, kHICoordSpaceScreenPixel,
+									&structureBounds);
 		assert_noerr(error);
-		calculateWindowPosition(this, &windowRect);
-		error = SetWindowBounds(returnCarbonWindow(this), kWindowContentRgn, &windowRect);
+		calculateWindowPosition(this, &staggerListIndex, &localWindowIndex, &structureBounds);
+		
+		// if the frontmost window already occupies the location for
+		// the new window, offset it slightly
+		if (nullptr != frontWindow)
+		{
+			HIRect		frontStructureBounds;
+			
+			
+			if ((noErr == HIWindowGetBounds(frontWindow, kWindowStructureRgn, kHICoordSpaceScreenPixel,
+											&frontStructureBounds)) &&
+				CGPointEqualToPoint(frontStructureBounds.origin, structureBounds.origin))
+			{
+				structureBounds.origin.x += 20; // per Aqua Human Interface Guidelines
+				structureBounds.origin.y += 20; // per Aqua Human Interface Guidelines
+			}
+		}
+		
+		error = HIWindowSetBounds(returnCarbonWindow(this), kWindowStructureRgn, kHICoordSpaceScreenPixel,
+									&structureBounds);
 		assert_noerr(error);
 	}
 	
@@ -2594,8 +2754,6 @@ My_TerminalWindow::
 	}
 	
 	// perform other clean-up
-	if (gTopLeftCorners != nullptr) --((*gTopLeftCorners)[this->staggerPositionIndex]); // one less window at this position
-	
 	DisposeControlActionUPP(this->scrollProcUPP), this->scrollProcUPP = nullptr;
 	
 	// unregister session callbacks
@@ -2709,31 +2867,34 @@ addContextualMenuItemsForTab	(MenuRef		inMenu,
 
 
 /*!
-When a window is staggered, it is given an onscreen
-index indicating what stagger position (relative to
-the first window’s location) it occupies.  To determine
-the global coordinates that the top-left corner of the
-specified window would occupy if it were in the
-specified position, use this method.
+Provides the global coordinates that the top-left corner
+of the specified window’s frame (structure) would occupy
+if it were in the requested stagger position.
 
-This routine now supports multiple monitors, although
-not as well as it should; ideally, there would be a
-list of stagger positions for each device, instead of
-one list that crosses all devices.  I believe the
-current implementation will cause positions to be
-skipped when adjacent windows in the list occupy
-different devices.
+The “stagger list index” is initially zero.  The very
+first window (at “local window index 0”) in list index 0
+will sit precisely at the user’s requested window
+stacking origin, if it’s on the window’s display.  As
+windows are stacked, adjust the “local window index” so
+that the next window is placed diagonally down and to
+the right of the previous one.  Once a window touches
+the bottom of the screen, increment “stagger list index”
+by one so that the next window will once again sit near
+the user’s preferred stacking origin.  Each stagger list
+is offset slightly to the right of the preceding one so
+that windows can never completely overlap.
 
-(3.0)
+(4.1)
 */
 void
 calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
-								 SInt16					inStaggerIndex,
-								 Point*					outPositionPtr)
+								 UInt16					inStaggerListIndex,
+								 UInt16					inLocalWindowIndex,
+								 HIPoint*				outPositionPtr)
 {
-	if ((inPtr != nullptr) && (outPositionPtr != nullptr))
+	if ((nullptr != inPtr) && (nullptr != outPositionPtr))
 	{
-		// calculate the stagger offset{
+		// calculate the stagger offset
 		Point		stackingOrigin;
 		Point		stagger;
 		Rect		screenRect;
@@ -2741,18 +2902,41 @@ calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 		
 		
 		// determine the user’s preferred stacking origin
-		unless (Preferences_GetData(kPreferences_TagWindowStackingOrigin, sizeof(stackingOrigin),
-									&stackingOrigin, &actualSize) == kPreferences_ResultOK)
+		// (TEMPORARY; ideally this preference can be per-display)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagWindowStackingOrigin, sizeof(stackingOrigin),
+									&stackingOrigin, &actualSize))
 		{
 			SetPt(&stackingOrigin, 40, 40); // assume a default, if preference can’t be found
+		}
+		
+		if (inStaggerListIndex > 0)
+		{
+			// when previous stagger stacks hit the bottom of the
+			// screen, arbitrarily shift new stacks over slightly
+			stackingOrigin.h += (inStaggerListIndex * 60); // arbitrary
 		}
 		
 		// the stagger amount on Mac OS X is set by the Aqua Human Interface Guidelines
 		SetPt(&stagger, 20, 20);
 		
 		RegionUtilities_GetPositioningBounds(returnCarbonWindow(inPtr), &screenRect);
-		outPositionPtr->v = stackingOrigin.v + stagger.v * (1 + inStaggerIndex);
-		outPositionPtr->h = stackingOrigin.h + stagger.h * (1 + inStaggerIndex);
+		if (PtInRect(stackingOrigin, &screenRect))
+		{
+			// window is on the display where the user set an origin preference
+			outPositionPtr->x = stackingOrigin.h + stagger.h * (1 + inLocalWindowIndex);
+			outPositionPtr->y = stackingOrigin.v + stagger.v * (1 + inLocalWindowIndex);
+		}
+		else
+		{
+			// window is on a different display; use the origin magnitude to
+			// determine a reasonable offset on the window’s actual display
+			// (TEMPORARY; ideally the preference itself is per-display)
+			stackingOrigin.h += screenRect.left;
+			stackingOrigin.v += screenRect.top;
+			outPositionPtr->x = stackingOrigin.h + stagger.h * (1 + inLocalWindowIndex);
+			outPositionPtr->y = stackingOrigin.v + stagger.v * (1 + inLocalWindowIndex);
+		}
 	}
 }// calculateIndexedWindowPosition
 
@@ -2760,71 +2944,73 @@ calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 /*!
 Calculates the stagger position of windows.
 
-(2.6)
+The index hints can be used to strongly suggest where
+a window should end up on the screen.  (Use this if
+the given window is part of an iteration over several
+windows, where its order in the list is important.)
+If no hints are provided, a window position is
+determined in some other way.
+
+On input, the rectangle must be the structure/frame
+of the window in screen-pixel coordinates.
+
+On output, a new frame rectangle is provided in
+screen-pixel coordinates.
+
+(4.1)
 */
 void
 calculateWindowPosition		(My_TerminalWindowPtr	inPtr,
-							 Rect*					outArrangement)
+							 UInt16*				inoutStaggerListIndexHintPtr,
+							 UInt16*				inoutLocalWindowIndexHintPtr,
+							 HIRect*				inoutArrangement)
 {
-	Rect			contentRegionBounds;
-	SInt16			currentCount = 0;
-	SInt16			wideCount = 0;
-	Boolean			done = false;
+	HIRect const	kStructureRegionBounds = *inoutArrangement;
+	Float32 const	kStructureWidth = kStructureRegionBounds.size.width;
+	Float32 const	kStructureHeight = kStructureRegionBounds.size.height;
+	Rect			screenRect;
+	HIPoint			structureTopLeftScrap = CGPointMake(0, 0);
+	Boolean			doneCalculation = false;
 	Boolean			tooFarRight = false;
 	Boolean			tooFarDown = false;
-	Boolean			tooBig = false;
-	OSStatus		error = noErr;
 	
 	
-	ensureTopLeftCornersExists();
-	inPtr->staggerPositionIndex = 0;
-	error = GetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &contentRegionBounds);
-	assert_noerr(error);
-	while ((!done) && (!tooBig))
+	RegionUtilities_GetPositioningBounds(returnCarbonWindow(inPtr), &screenRect);
+	
+	while ((false == doneCalculation) && (false == tooFarRight))
 	{
-		while (((*gTopLeftCorners)[inPtr->staggerPositionIndex] > currentCount) && // find an empty spot
-					(inPtr->staggerPositionIndex < kMy_MaximumNumberOfArrangedWindows - 1))
-		{
-			++inPtr->staggerPositionIndex;
-		}
+		calculateIndexedWindowPosition(inPtr, *inoutStaggerListIndexHintPtr, *inoutLocalWindowIndexHintPtr,
+										&structureTopLeftScrap);
+		inoutArrangement->origin.x = structureTopLeftScrap.x;
+		inoutArrangement->origin.y = structureTopLeftScrap.y;
+		inoutArrangement->size.width = kStructureWidth;
+		inoutArrangement->size.height = kStructureHeight;
 		
+		// see if the window position would start to nudge it off
+		// the bottom or right edge of its display
+		tooFarRight = ((inoutArrangement->origin.x + inoutArrangement->size.width) > screenRect.right);
+		tooFarDown = ((inoutArrangement->origin.y + inoutArrangement->size.height) > screenRect.bottom);
+		
+		if (tooFarDown)
 		{
-			Point		topLeft;
-			
-			
-			calculateIndexedWindowPosition(inPtr, inPtr->staggerPositionIndex, &topLeft);
-			outArrangement->top = topLeft.v;
-			outArrangement->left = topLeft.h;
-		}
-		if (tooFarRight) wideCount += currentCount - 1;
-		outArrangement->bottom = outArrangement->top + (contentRegionBounds.bottom - contentRegionBounds.top);
-		outArrangement->right = outArrangement->left + (contentRegionBounds.right - contentRegionBounds.left);
-		{
-			Rect	screenRect;
-			
-			
-			RegionUtilities_GetPositioningBounds(returnCarbonWindow(inPtr), &screenRect);
-			tooFarRight = ((outArrangement->left + contentRegionBounds.right - contentRegionBounds.left) > screenRect.right);
-			tooFarDown = ((outArrangement->top + contentRegionBounds.bottom - contentRegionBounds.top) > screenRect.bottom);
-		}
-		if (tooFarRight || tooFarDown)
-		{
-			// then the position is off the screen
-			if (inPtr->staggerPositionIndex == 0)
+			if (0 == *inoutLocalWindowIndexHintPtr)
 			{
-				tooBig = true; // the window is bigger than the screen size - quit now
+				// the window is already offscreen despite being at the
+				// stacking origin so there is nowhere else to go
+				doneCalculation = true;
 			}
 			else
 			{
-				++currentCount; // go through again, pick spot with the least number already at it
-				inPtr->staggerPositionIndex = 0;
+				// try shifting the top-left-corner origin over to see
+				// if there is still room for a new window stack
+				++(*inoutStaggerListIndexHintPtr);
+				*inoutLocalWindowIndexHintPtr = 0;
 			}
 		}
-		else done = true;
-	}	
-	unless (tooBig)
-	{
-		++((*gTopLeftCorners)[inPtr->staggerPositionIndex]); // add the window to the number at this spot
+		else
+		{
+			doneCalculation = true;
+		}
 	}
 }// calculateWindowPosition
 
@@ -3426,23 +3612,6 @@ createWindow ()
 
 
 /*!
-Allocates the "gTopLeftCorners" array if it does
-not already exist.
-
-(3.0)
-*/
-void
-ensureTopLeftCornersExists ()
-{
-	if (gTopLeftCorners == nullptr)
-	{
-		gTopLeftCorners = REINTERPRET_CAST(Memory_NewHandleInProperZone(kMy_MaximumNumberOfArrangedWindows * sizeof(SInt16),
-																		kMemoryBlockLifetimeLong), SInt16**);
-	}
-}// ensureTopLeftCornersExists
-
-
-/*!
 Returns the screen buffer used by the view most recently
 focused by the user.  Therefore, even if no view is
 currently focused, some valid screen buffer will be
@@ -3960,6 +4129,39 @@ installUndoScreenDimensionChanges	(TerminalWindowRef		inTerminalWindow)
 		ptr->installedActions.push_back(dataPtr->action);
 	}
 }// installUndoScreenDimensionChanges
+
+
+/*!
+A comparison routine that is compatible with std::sort();
+returns true if the first window is strictly less-than
+the second based on whether or not "inWindow1" covers a
+strictly larger pixel area.
+
+(4.1)
+*/
+bool
+lessThanIfGreaterArea	(HIWindowRef	inWindow1,
+						 HIWindowRef	inWindow2)
+{
+	bool	result = false;
+	Rect	structureBounds1;
+	Rect	structureBounds2;
+	
+	
+	if ((noErr == GetWindowBounds(inWindow1, kWindowStructureRgn, &structureBounds1)) &&
+		(noErr == GetWindowBounds(inWindow2, kWindowStructureRgn, &structureBounds2)))
+	{
+		UInt32 const	kArea1 = ((structureBounds1.right - structureBounds1.left) *
+									(structureBounds1.bottom - structureBounds1.top));
+		UInt32 const	kArea2 = ((structureBounds2.right - structureBounds2.left) *
+									(structureBounds2.bottom - structureBounds2.top));
+		
+		
+		result = (kArea1 > kArea2);
+	}
+	
+	return result;
+}// lessThanIfGreaterArea
 
 
 /*!
@@ -6357,6 +6559,23 @@ returnToolbarHeight		(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
 
 
 /*!
+Returns a display ID for the specified window.
+
+(4.1)
+*/
+CGDirectDisplayID
+returnWindowDisplay		(HIWindowRef	inWindow)
+{
+	CGDirectDisplayID	result = kCGNullDirectDisplay;
+	
+	
+	UNUSED_RETURN(Boolean)RegionUtilities_GetWindowDirectDisplayID(inWindow, result);
+	
+	return result;
+}// returnWindowDisplay
+
+
+/*!
 This routine, of standard UndoActionProcPtr form,
 can undo or redo changes to the font and/or font
 size of a terminal screen.
@@ -7419,118 +7638,6 @@ sheetContextEnd		(My_TerminalWindowPtr	inPtr)
 	}
 	inPtr->sheetType = kMy_SheetTypeNone;
 }// sheetContextEnd
-
-
-/*!
-This routine, of "SessionFactory_TerminalWindowOpProcPtr"
-form, arranges the specified window in one of the “free
-slots” for staggered terminal windows.
-
-(3.0)
-*/
-void
-stackWindowTerminalWindowOp		(TerminalWindowRef	inTerminalWindow,
-								 void*				UNUSED_ARGUMENT(inData1),
-								 SInt32				UNUSED_ARGUMENT(inData2),
-								 void*				UNUSED_ARGUMENT(inoutResultPtr))
-{
-	AutoPool						_;
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
-	
-	
-	if (nullptr != ptr)
-	{
-		GrafPtr		oldPort = nullptr;
-		Point		windowLocation;
-		WindowRef	window = nullptr;
-		
-		
-		++gNumberOfTransitioningWindows; // this is reset elsewhere
-		GetPort(&oldPort);
-		window = TerminalWindow_ReturnWindow(inTerminalWindow);
-		SetPortWindowPort(window);
-		
-		ensureTopLeftCornersExists();
-		--((*gTopLeftCorners)[ptr->staggerPositionIndex]); // one less window at this position
-		calculateIndexedWindowPosition(ptr, ptr->staggerPositionIndex, &windowLocation);
-		
-		// On Mac OS X, do a cool slide animation to move the window into place.
-		{
-			// arbitrary limit - do not animate many windows sequentially, that takes time
-			Boolean		tooManyWindows = (gNumberOfTransitioningWindows > 6);
-			
-			
-			if (FlagManager_Test(kFlagOS10_3API))
-			{
-				// on 10.3 and later, asynchronous transitions are used
-				// so relax the restriction on number of animating windows
-				// (in fact, the more that move, the cooler it looks!)
-				tooManyWindows = (gNumberOfTransitioningWindows > 12/* arbitrary */);
-			}
-			
-			if (tooManyWindows)
-			{
-				// move the window immediately without animation
-				MoveWindow(window, windowLocation.h, windowLocation.v, false/* activate */);
-			}
-			else
-			{
-				// move the window with animation
-				Rect		structureBounds;
-				Rect		contentBounds;
-				OSStatus	error = noErr;
-				
-				
-				// TransitionWindow() requires the structure region, but the “location” is
-				// that of the content region; so, it is necessary to figure out both what
-				// the new structure origin will be, and the dimensions of that region.
-				// This may fail if the window is not visible anymore.
-				error = GetWindowBounds(window, kWindowContentRgn, &contentBounds);
-				if (noErr == error)
-				{
-					error = GetWindowBounds(window, kWindowStructureRgn, &structureBounds);
-					assert_noerr(error);
-					SetRect(&structureBounds, windowLocation.h - (contentBounds.left - structureBounds.left),
-							windowLocation.v - (contentBounds.top - structureBounds.top),
-							windowLocation.h - (contentBounds.left - structureBounds.left) +
-								(structureBounds.right - structureBounds.left),
-							windowLocation.v - (contentBounds.top - structureBounds.top) +
-								(structureBounds.bottom - structureBounds.top));
-					if (FlagManager_Test(kFlagOS10_3API))
-					{
-						HIRect						floatBounds = CGRectMake(structureBounds.left, structureBounds.top,
-																				structureBounds.right - structureBounds.left,
-																				structureBounds.bottom - structureBounds.top);
-						TransitionWindowOptions		transitionOptions;
-						
-						
-						// transition asynchronously for minimum interruption to the user
-						bzero(&transitionOptions, sizeof(transitionOptions));
-						transitionOptions.version = 0;
-						if (TransitionWindowWithOptions(window, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
-														&floatBounds, true/* asynchronous */, &transitionOptions)
-							!= noErr)
-						{
-							// on error, just move the window
-							MoveWindow(window, windowLocation.h, windowLocation.v, false/* activate */);
-						}
-					}
-					else
-					{
-						// on 10.2 and earlier, no special options are available
-						if (TransitionWindow(window, kWindowSlideTransitionEffect, kWindowMoveTransitionAction, &structureBounds)
-							!= noErr)
-						{
-							// on error, just move the window
-							MoveWindow(window, windowLocation.h, windowLocation.v, false/* activate */);
-						}
-					}
-				}
-			}
-		}
-		SetPort(oldPort);
-	}
-}// stackWindowTerminalWindowOp
 
 
 /*!

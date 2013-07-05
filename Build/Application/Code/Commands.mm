@@ -38,6 +38,8 @@
 #import <climits>
 #import <cstdio>
 #import <cstring>
+#import <functional>
+#import <list>
 #import <sstream>
 #import <string>
 
@@ -182,6 +184,45 @@ typedef My_MenuItemInsertionInfo const*		My_MenuItemInsertionInfoConstPtr;
 
 } // anonymous namespace
 
+#pragma mark Functors
+namespace {
+
+/*!
+This is a functor that determines if the first screen is
+strictly less-than the second based on whether or not
+"inScreen1" is the screen containing the window with
+keyboard focus.  (If both are the main screen, the result
+is false.)
+
+Model of STL Binary Predicate.
+
+(4.1)
+*/
+#pragma mark lessThanIfMainScreen
+struct lessThanIfMainScreen:
+public std::binary_function< NSScreen*/* argument 1 */, NSScreen*/* argument 2 */, bool/* return */ >
+{
+	bool
+	operator()	(NSScreen*	inScreen1,
+				 NSScreen*	inScreen2)
+	const
+	{
+		bool	result = false;
+		
+		
+		if ([NSScreen mainScreen] == inScreen1)
+		{
+			if (inScreen2 != inScreen1)
+			{
+				result = true;
+			}
+		}
+		return result;
+	}
+};
+
+} // anonymous namespace
+
 #pragma mark Internal Method Prototypes
 namespace {
 
@@ -196,6 +237,7 @@ int					indexOfItemWithAction							(NSMenu*, SEL);
 Boolean				isAnyListenerForCommandExecution				(UInt32);
 BOOL				isCarbonWindow									(id);
 BOOL				isCocoaWindowMoreImportantThanCarbon			(NSWindow*);
+BOOL				isWindowVisible									(NSWindow*);
 void				moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef, void*, SInt32, void*);
 void				preferenceChanged								(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
@@ -1963,114 +2005,173 @@ and the frontmost window is a terminal, it is hidden (with
 the appropriate visual effects) before the next window is
 activated.
 
+This routine has been rewritten in version 4.1 to use a
+different algorithm for choosing a window and to be aware
+of new developments such as Spaces.
+
 (3.0)
 */
 void
 activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 						 Boolean	inHidePreviousWindow)
 {
-	HIWindowRef		frontWindow = EventLoop_ReturnRealFrontWindow();
+	typedef std::list< NSWindow* >										My_WindowList;
+	typedef std::map< NSScreen*, My_WindowList, lessThanIfMainScreen >	My_WindowsByScreen; // which windows are on which devices?
+	
+	My_WindowsByScreen		windowsByScreen; // main screen should be visited first
+	NSArray*				allWindows = [NSApp windows];
+	NSEnumerator*			eachWindow = [allWindows objectEnumerator];
+	NSWindow*				currentWindow = nil;
+	NSWindow*				nextWindow = nil;
+	NSWindow*				previousWindow = nil;
+	NSWindow*				firstValidWindow = nil;
+	NSWindow*				frontWindow = [NSApp mainWindow];
+	TerminalWindowRef		terminalWindow = nullptr;
+	BOOL					setNext = NO;
+	BOOL					doneSearch = NO;
 	
 	
-	if (nullptr != frontWindow)
+	// first determine which windows are on each screen so that
+	// all windows on one screen are visited before switching
+	// (TEMPORARY; in theory this could respond to notifications
+	// as windows are created/destroyed or as windows change
+	// screens, and otherwise not bother to recalculate the same
+	// window map each time)
+	while (nil != (currentWindow = [eachWindow nextObject]))
 	{
-		HIWindowRef		nextWindow = nullptr;
-		SessionRef		frontSession = SessionFactory_ReturnUserFocusSession();
+		NSScreen*		windowScreen = [currentWindow screen];
+		My_WindowList&	windowsOnThisScreen = windowsByScreen[windowScreen];
 		
 		
-		if (nullptr == frontSession)
+		if (inPreviousInsteadOfNext)
 		{
-			// not a session window; so, select the first or last session window
-			SessionFactory_Result	factoryError = SessionFactory_GetWindowWithZeroBasedIndex
-													((inPreviousInsteadOfNext) ? SessionFactory_ReturnCount() - 1 : 0,
-														kSessionFactory_ListInCreationOrder, &nextWindow);
-			
-			
-			if (kSessionFactory_ResultOK != factoryError)
-			{
-				Console_Warning(Console_WriteLine, "failed to find window with given index");
-			}
+			windowsOnThisScreen.push_front(currentWindow);
 		}
 		else
 		{
-			// is a session window; so, select the next or previous session window
-			UInt16					frontSessionIndex = 0;
-			SessionFactory_Result	factoryError = kSessionFactory_ResultOK;
+			windowsOnThisScreen.push_back(currentWindow);
+		}
+	}
+	
+	// now determine the next or previous window to visit
+	// (some of the work is done opportunistically, other
+	// work is only done when absolutely required)
+	My_WindowsByScreen::const_iterator	toPair;
+	My_WindowsByScreen::const_iterator	endPairs(windowsByScreen.end());
+	for (toPair = windowsByScreen.begin();
+			((NO == doneSearch) && (toPair != endPairs)); ++toPair)
+	{
+		My_WindowList::const_iterator	toWindow;
+		My_WindowList::const_iterator	endWindows(toPair->second.end());
+		for (toWindow = toPair->second.begin();
+				((NO == doneSearch) && (toWindow != endWindows)); ++toWindow)
+		{
+			// certain windows are skipped; "currentWindow" is only
+			// set when the current window is determined to be valid
+			currentWindow = nil;
 			
-			
-			factoryError = SessionFactory_GetZeroBasedIndexOfSession
-							(frontSession, kSessionFactory_ListInTabStackOrder, &frontSessionIndex);
-			if (kSessionFactory_ResultOK == factoryError)
+			if (FlagManager_Test(kFlagKioskMode))
 			{
-				UInt16		loopGuard = 0;
-				
-				
-				// skip certain windows in the rotation (see below)
-				while ((nullptr == nextWindow) && (loopGuard < 50/* arbitrary */))
+				// if Full Screen is active, only rotate between the
+				// full-screen terminal windows (this is determined
+				// simply by checking for a terminal window that has
+				// no shadow)
+				if ([*toWindow isOnActiveSpace] && (nullptr != [*toWindow terminalWindowRef]) &&
+					(NO == [*toWindow hasShadow]))
 				{
-					// adjust the session index to determine the new session;
-					// if modified past the bounds, wrap around
-					if (inPreviousInsteadOfNext)
+					currentWindow = *toWindow;
+				}
+			}
+			else
+			{
+				// if not Full Screen, rotate normally; invisible
+				// windows may only be chosen if they are terminals
+				// (hidden terminals are explicitly revealed during
+				// keyboard rotation); also, floating windows are
+				// explicitly ignored because they all have menu
+				// key equivalents that would give them focus
+				if ([*toWindow isOnActiveSpace] && [*toWindow canBecomeMainWindow] &&
+					(isWindowVisible(*toWindow) || (nullptr != [*toWindow terminalWindowRef])))
+				{
+					currentWindow = *toWindow;
+				}
+			}
+			
+			if (nil != currentWindow)
+			{
+				// only rotate between windows on the active Space
+				if (frontWindow == currentWindow)
+				{
+					setNext = YES;
+				}
+				else
+				{
+					if (nil == firstValidWindow)
 					{
-						if (frontSessionIndex == 0) frontSessionIndex = SessionFactory_ReturnCount() - 1;
-						else --frontSessionIndex;
+						firstValidWindow = currentWindow;
+					}
+					
+					if (setNext)
+					{
+						// no need to check any other windows
+						nextWindow = currentWindow;
+						doneSearch = YES;
 					}
 					else
 					{
-						if (++frontSessionIndex >= SessionFactory_ReturnCount()) frontSessionIndex = 0;
+						// overwrite this during the loop until the
+						// main (front) window is found
+						previousWindow = currentWindow;
 					}
-					
-					factoryError = SessionFactory_GetWindowWithZeroBasedIndex
-									(frontSessionIndex, kSessionFactory_ListInTabStackOrder, &nextWindow);
-					if (kSessionFactory_ResultOK != factoryError)
-					{
-						Console_Warning(Console_WriteLine, "failed to find window with given index");
-					}
-					
-					// if possible, detect and avoid windows that are on different Spaces
-					if (nullptr != nextWindow)
-					{
-						NSWindow*	cocoaWindow = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(nextWindow);
-						
-						
-						// note: "(BOOL)isOnActiveSpace" is only available in Mac OS X 10.6
-						if ((nil != cocoaWindow) && ([cocoaWindow respondsToSelector:@selector(isOnActiveSpace)]))
-						{
-							if (NO == [cocoaWindow isOnActiveSpace])
-							{
-								// skip this window
-								nextWindow = nullptr;
-							}
-						}
-					}
-					
-					++loopGuard;
 				}
 			}
 		}
-		
-		if (nullptr == nextWindow)
+	}
+	
+	if (nil == nextWindow)
+	{
+		// the front window must have been last in the list;
+		// rotate to the beginning of the window list
+		nextWindow = firstValidWindow;
+	}
+	
+	// now that another window has been chosen, activate it
+	// and see if any other actions need to be taken
+	if (nil == nextWindow)
+	{
+		// cannot figure out which window to activate
+		Sound_StandardAlert();
+	}
+	else
+	{
+		unless (isWindowVisible(nextWindow))
 		{
-			// cannot figure out which window to activate
-			Sound_StandardAlert();
+			// display the window and ensure it is not marked as hidden (in case it was)
+			terminalWindow = [nextWindow terminalWindowRef];
+			if (TerminalWindow_IsValid(terminalWindow))
+			{
+				TerminalWindow_SetObscured(terminalWindow, false);
+			}
+		}
+		
+		// just in case Mac OS X does special gymnastics for Carbon
+		// windows, use only Carbon APIs to activate Carbon windows
+		// (TEMPORARY)
+		if (isCarbonWindow(nextWindow))
+		{
+			EventLoop_SelectBehindDialogWindows(REINTERPRET_CAST([nextWindow windowRef], HIWindowRef));
 		}
 		else
 		{
-			unless (IsWindowVisible(nextWindow))
+			[nextWindow makeKeyAndOrderFront:nil];
+		}
+		
+		if (inHidePreviousWindow)
+		{
+			terminalWindow = [frontWindow terminalWindowRef];
+			if (TerminalWindow_IsValid(terminalWindow))
 			{
-				TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(nextWindow);
-				
-				
-				// display the window and ensure it is not marked as hidden (in case it was)
-				TerminalWindow_SetObscured(terminalWindow, false);
-			}
-			EventLoop_SelectBehindDialogWindows(nextWindow);
-			if (inHidePreviousWindow)
-			{
-				TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(frontWindow);
-				
-				
-				if (nullptr != terminalWindow) TerminalWindow_SetObscured(terminalWindow, true);
+				TerminalWindow_SetObscured(terminalWindow, true);
 			}
 		}
 	}
@@ -2465,6 +2566,31 @@ isCocoaWindowMoreImportantThanCarbon	(NSWindow*		inWindow)
 	
 	return result;
 }// isCocoaWindowMoreImportantThanCarbon
+
+
+/*!
+In certain situations it appears that the "isVisible"
+message can return YES for Cocoa windows that are
+really Carbon windows, when the window is not visible
+(and Carbon does not believe the window is visible).
+
+As a TEMPORARY measure (until the transition to Cocoa
+is complete), it may be necessary to use this routine
+on Cocoa windows that might be Carbon windows,
+instead of sending the "isVisible" message directly.
+
+(4.1)
+*/
+BOOL
+isWindowVisible		(NSWindow*		inWindow)
+{
+	BOOL	result = (isCarbonWindow(inWindow))
+						? IsWindowVisible(REINTERPRET_CAST([inWindow windowRef], HIWindowRef))
+						: [inWindow isVisible];
+	
+	
+	return result;
+}// isWindowVisible
 
 
 /*!
@@ -6992,11 +7118,11 @@ orderFrontNextWindow:(id)		sender
 - (id)
 canOrderFrontNextWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 {
-#pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
-	
-	
-	return [NSNumber numberWithBool:result];
+	// although other variants of this command are disallowed in
+	// Full Screen mode, a simple window cycle is OK because the
+	// rotation code is able to cycle only between Full Screen
+	// windows on the active Space (see activateAnotherWindow())
+	return validatorYes(anItem);
 }
 
 

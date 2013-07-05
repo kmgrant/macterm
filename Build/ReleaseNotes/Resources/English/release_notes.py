@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130704',
     '20130626',
     '20130620',
     '20130618',
@@ -473,6 +474,15 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130704': [
+        'Fixed "Arrange All Windows in Front" to follow the stagger preference and keep windows from going under the menu bar.',
+        'Fixed "Arrange All Windows in Front" to stack windows on their own displays, never forcing a window back to the main display.',
+        'Fixed "Arrange All Windows in Front" to be aware of Spaces (now stacking only occurs for windows on the active Space).',
+        'Fixed window cycling to be aware of Spaces (now cycling only occurs between windows on the active Space).',
+        '"Arrange All Windows in Front" now stacks windows by size, to keep small windows from being covered by larger ones.',
+        '"Arrange All Windows in Front" now skips any window that would be placed partially offscreen after stacking, if it is already completely visible.',
+        'Window cycling with commands like "Bring Next to Front" is now significantly more useful.  Windows such as Session Info, Preferences and the Clipboard are no longer skipped during cycling.  Floating windows such as keypads are skipped during cycling because they all have menu key equivalents to focus them directly.  In Full Screen mode, cycling is now automatically restricted to only visit Full Screen terminal windows.',
+    ],
     '20130626': [
         'Preferences window Macros pane now offers a new Action type: "Select Window by Title".  When this type of macro is used, it finds and selects the next terminal window whose title contains the text of the macro (word or phrase).  Since it always starts with the next window in the rotation, repeated invocations of the macro will cycle through all matching windows.',
     ],
