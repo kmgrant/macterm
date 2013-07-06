@@ -280,6 +280,7 @@ ListenerModel_ListenerRef	gSessionStateChangeEventListener = nullptr;
 ListenerModel_ListenerRef	gSessionWindowStateChangeEventListener = nullptr;
 UInt32						gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite;
 Boolean						gCurrentQuitCancelled = false;
+UInt16						gCurrentQuitInitialSessionCount = 0;
 ListenerModel_ListenerRef	gCurrentQuitWarningAnswerListener = nullptr;
 ListenerModel_Ref&			gCommandExecutionListenerModel	(Boolean	inDispose = false)
 {
@@ -786,7 +787,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				
 				if ((false == FlagManager_Test(kFlagKioskMode)) || (allowForceQuit))
 				{
-					Session_DisplayTerminationWarning(frontSession, false/* is modal */, true/* force keep window */, false/* restart */);
+					Session_DisplayTerminationWarning(frontSession, kSession_TerminationDialogOptionKeepWindow);
 				}
 				else
 				{
@@ -811,7 +812,8 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				
 				if ((false == FlagManager_Test(kFlagKioskMode)) || (allowForceQuit))
 				{
-					Session_DisplayTerminationWarning(frontSession, false/* is modal */, true/* force keep window */, true/* restart */);
+					Session_DisplayTerminationWarning(frontSession, kSession_TerminationDialogOptionKeepWindow |
+																	kSession_TerminationDialogOptionRestart);
 				}
 				else
 				{
@@ -2617,6 +2619,18 @@ moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef		inSession,
 		
 		if (nullptr != window)
 		{
+			Session_TerminationDialogOptions	dialogOptions = kSession_TerminationDialogOptionModal;
+			
+			
+			// when displaying a single Close alert over a single
+			// window, a standard opening animation is fine; it is
+			// now suppressed however if there will be a series
+			// of alert windows opened in a sequence
+			if (1 != gCurrentQuitInitialSessionCount)
+			{
+				dialogOptions |= kSession_TerminationDialogOptionNoAlertAnimation;
+			}
+			
 			// if the window was obscured, show it first
 			if (false == IsWindowVisible(window))
 			{
@@ -2630,7 +2644,7 @@ moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef		inSession,
 			(OSStatus)SetWindowAlpha(window, 1.0);
 			
 			Session_StartMonitoring(inSession, kSession_ChangeCloseWarningAnswered, gCurrentQuitWarningAnswerListener);
-			Session_DisplayTerminationWarning(inSession, true/* force modal window */);
+			Session_DisplayTerminationWarning(inSession, dialogOptions);
 			// there is a chance that displaying the alert will destroy
 			// the session, in which case the stop-monitoring call is
 			// invalid (but only in that case); TEMPORARY, not sure how
@@ -3992,6 +4006,8 @@ applicationShouldTerminate:(NSApplication*)		sender
 	
 	
 	gCurrentQuitCancelled = false;
+	
+	gCurrentQuitInitialSessionCount = SessionFactory_ReturnCount();
 	
 	// this callback changes the "gCurrentQuitCancelled" flag accordingly as session windows are visited
 	gCurrentQuitWarningAnswerListener = ListenerModel_NewStandardListener(receiveTerminationWarningAnswer);

@@ -7,7 +7,7 @@
 /*###############################################################
 
 	Interface Library 2.6
-	© 1998-2012 by Kevin Grant
+	© 1998-2013 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -718,6 +718,13 @@ two effects:
   Only at that point is it safe to dispose of the
   alert with Alert_Dispose().
 
+The "inAnimated" flag is currently only respected for
+application-modal alerts, and only means something on
+Mac OS X 10.7 and beyond (where the window can “pop”
+open).  If you suppress animation, the window is
+displayed immediately without the standard animation.
+This is not recommended except in special situations.
+
 If the program is in the background (as specified by
 a call to Alert_SetIsBackgrounded()), a notification
 is posted.  The alert is displayed immediately, but
@@ -742,7 +749,8 @@ initialized, "notInitErr" is returned.
 (1.0)
 */
 OSStatus
-Alert_Display	(AlertMessages_BoxRef	inAlert)
+Alert_Display	(AlertMessages_BoxRef	inAlert,
+				 Boolean				inAnimated)
 {
 	OSStatus	result = noErr;
 	
@@ -782,9 +790,19 @@ Alert_Display	(AlertMessages_BoxRef	inAlert)
 				NSWindow*	window = [alertPtr->targetWindowController window];
 				
 				
-				if (FlagManager_Test(kFlagOS10_7API) && [window respondsToSelector:@selector(setAnimationBehavior:)])
+				if (inAnimated)
 				{
-					[window setAnimationBehavior:FUTURE_SYMBOL(5, NSWindowAnimationBehaviorAlertPanel)];
+					if (FlagManager_Test(kFlagOS10_7API) && [window respondsToSelector:@selector(setAnimationBehavior:)])
+					{
+						[window setAnimationBehavior:FUTURE_SYMBOL(5, NSWindowAnimationBehaviorAlertPanel)];
+					}
+				}
+				else
+				{
+					if (FlagManager_Test(kFlagOS10_7API) && [window respondsToSelector:@selector(setAnimationBehavior:)])
+					{
+						[window setAnimationBehavior:FUTURE_SYMBOL(2, NSWindowAnimationBehaviorNone)];
+					}
 				}
 				[NSApp beginSheet:window modalForWindow:nil modalDelegate:nil didEndSelector:nil contextInfo:nil];
 				(int)[NSApp runModalForWindow:window];

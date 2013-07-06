@@ -14,7 +14,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -46,6 +46,11 @@
 #define __SESSION__
 
 // Mac includes
+#ifdef __OBJC__
+@class NSWindow;
+#else
+class NSWindow;
+#endif
 #include <CoreServices/CoreServices.h>
 
 // library includes
@@ -288,6 +293,19 @@ enum
 };
 
 /*!
+Options for Session_DisplayTerminationWarning().
+*/
+typedef UInt16 Session_TerminationDialogOptions;
+enum
+{
+	kSession_TerminationDialogOptionModal				= (1 << 0),	//!< use a modal dialog (and wait for user before returning from call) instead of a sheet
+	kSession_TerminationDialogOptionKeepWindow			= (1 << 1),	//!< do not close the terminal window if the session ends (for Kill or Restart modes)
+	kSession_TerminationDialogOptionRestart				= (1 << 2),	//!< if the user chooses to end the session, its command line is run again (same window)
+	kSession_TerminationDialogOptionNoAlertAnimation	= (1 << 3),	//!< suppress animation; currently only affects "kSession_TerminationDialogOptionModal"
+	kSession_TerminationDialogDefaultOptions			= 0
+};
+
+/*!
 A session can watch for one special event at a time, which (if
 monitored) is automatically handled with an appropriate user
 interface.  Watches are defined in a mutually exclusive way, so
@@ -392,9 +410,7 @@ void
 
 void
 	Session_DisplayTerminationWarning		(SessionRef							inRef,
-											 Boolean							inForceModalDialog = false,
-											 Boolean							inForceKeepWindow = false,
-											 Boolean							inRestart = false);
+											 Session_TerminationDialogOptions	inOptions = kSession_TerminationDialogDefaultOptions);
 
 void
 	Session_DisplayWindowRenameUI			(SessionRef							inRef);
@@ -587,9 +603,13 @@ Boolean
 Boolean
 	Session_NetworkIsSuspended				(SessionRef							inRef);
 
+NSWindow*
+	Session_ReturnActiveNSWindow			(SessionRef							inRef);
+
 TerminalWindowRef
 	Session_ReturnActiveTerminalWindow		(SessionRef							inRef);
 
+// DEPRECATED (USE Session_ReturnActiveNSWindow())
 HIWindowRef
 	Session_ReturnActiveWindow				(SessionRef							inRef);
 

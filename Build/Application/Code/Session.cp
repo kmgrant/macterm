@@ -7,7 +7,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -54,6 +54,7 @@
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
+class NSWindow; // TEMPORARY (currently a C++ file, not Objective-C++)
 #include <CoreServices/CoreServices.h>
 
 // library includes
@@ -62,6 +63,7 @@
 #include <CFRetainRelease.h>
 #include <CFUtilities.h>
 #include <CarbonEventUtilities.template.h>
+#include <CocoaAnimation.h>
 #include <CocoaBasic.h>
 #include <Console.h>
 #include <Cursors.h>
@@ -409,6 +411,7 @@ OSStatus					receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef, void*
 OSStatus					receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
 OSStatus					receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
 void						respawnSession						(EventLoopTimerRef, void*);
+NSWindow*					returnActiveNSWindow				(My_SessionPtr);
 HIWindowRef					returnActiveWindow					(My_SessionPtr);
 OSStatus					sessionDragDrop						(EventHandlerCallRef, EventRef, SessionRef,
 																 HIViewRef, DragRef);
@@ -982,25 +985,36 @@ Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 Displays a warning alert for terminating the given terminal
 window’s session, handling the user’s response automatically.
 
-If "inRestart" is false, a Close warning may be displayed;
-if it has been determined that the window was only recently
-opened, it may close immediately without displaying any
-warning to the user (as if the user had clicked Close in
-the alert).
+Note that if the window was only recently opened, the action
+(such as closing the window, restart or force-quit) will take
+effect immediately without even displaying a warning.
 
-Conversely, when "inRestart" is true, a Restart warning is
-displayed, and the window always remains intact; if the
-process is terminated, a new one with the same command line
-is started in the same window, using the function
-SessionFactory_RespawnSession() (so, the SessionRef remains
-valid but it actually manages a new process ID underneath).
+There are three basic kinds of messages that are possible
+(and they automatically have the expected effect on the
+session if the user clicks the action button):
 
-On Mac OS X, a sheet is used (unless "inForceModalDialog" is
-true), so this routine may return immediately without the user
-having responded to the warning; the session termination (or
-lack thereof) is handled automatically, asynchronously, in
-that case.  When no sheet is used, this routine is guaranteed
-to only return if the dialog has been dismissed.
+- “Force-Quit Processes” is enabled if you specify the:
+  "kSession_TerminationDialogOptionKeepWindow" option
+  without "kSession_TerminationDialogOptionRestart".
+
+- “Restart” is enabled if you specify both of these options:
+  "kSession_TerminationDialogOptionKeepWindow" and
+  "kSession_TerminationDialogOptionRestart".  This is
+  handled by SessionFactory_RespawnSession().
+
+- “Close” is the default if you do not specify options to
+  enable “Restart” or “Force-Quit Processes”.
+
+In addition to the above options for choosing the basic
+message type and action, there are additional options:
+
+- "kSession_TerminationDialogOptionModal" forces the message
+  to appear in an application-modal window (otherwise, it is
+  a window-modal sheet).  When application-modal, this
+  function will not return until an action has been taken
+  (either to proceed or to Cancel).  When window-modal, the
+  function returns immediately but the action could be taken
+  at any future time, handled asynchronously.
 
 Although the warning dialog is handled completely (e.g. session
 is automatically terminated if the user says so), you may still
@@ -1015,16 +1029,18 @@ closes.)
 (3.0)
 */
 void
-Session_DisplayTerminationWarning	(SessionRef		inRef,
-									 Boolean		inForceModalDialog,
-									 Boolean		inForceKeepWindow,
-									 Boolean		inRestart)
+Session_DisplayTerminationWarning	(SessionRef							inRef,
+									 Session_TerminationDialogOptions	inOptions)
 {
-	Boolean const				kIsRestartCommand = ((inRestart) && (inForceKeepWindow));
-	Boolean const				kIsKillCommand = ((false == inRestart) && (inForceKeepWindow));
+	Boolean const				kForceModal = (0 != (inOptions & kSession_TerminationDialogOptionModal));
+	Boolean const				kKeepWindow = (0 != (inOptions & kSession_TerminationDialogOptionKeepWindow));
+	Boolean const				kRestart = (0 != (inOptions & kSession_TerminationDialogOptionRestart));
+	Boolean const				kNoAlertAnimation = (0 != (inOptions & kSession_TerminationDialogOptionNoAlertAnimation));
+	Boolean const				kIsRestartCommand = ((kRestart) && (kKeepWindow));
+	Boolean const				kIsKillCommand = ((false == kRestart) && (kKeepWindow));
 	Boolean const				kIsCloseCommand = ((false == kIsRestartCommand) && (false == kIsKillCommand));
 	Boolean const				kWillRemoveTerminalWindow = kIsCloseCommand;
-	My_TerminateAlertInfoPtr	terminateAlertInfoPtr = new My_TerminateAlertInfo(inRef, (false == kWillRemoveTerminalWindow), inRestart);
+	My_TerminateAlertInfoPtr	terminateAlertInfoPtr = new My_TerminateAlertInfo(inRef, (false == kWillRemoveTerminalWindow), kRestart);
 	
 	
 	assert((kIsRestartCommand) || (kIsKillCommand) || (kIsCloseCommand));
@@ -1045,7 +1061,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 		OSStatus				error = noErr;
 		
 		
-		if (inForceModalDialog)
+		if (kForceModal)
 		{
 			alertBox = Alert_New();
 		}
@@ -1065,7 +1081,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			// but quell the animation if this window should be closed without
 			// warning (so-called active unstable) or if only one window is
 			// open that would cause an alert to be displayed
-			if ((inForceModalDialog) && (kWillRemoveTerminalWindow) &&
+			if ((kForceModal) && (kWillRemoveTerminalWindow) &&
 				(false == Session_StateIsActiveUnstable(inRef)) &&
 				((SessionFactory_ReturnCount() - SessionFactory_ReturnStateCount(kSession_StateActiveUnstable)) > 1))
 			{
@@ -1198,9 +1214,9 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 		// when the message appears
 		TerminalWindow_SetVisible(terminalWindow, true);
 		TerminalWindow_Select(terminalWindow);
-		if (inForceModalDialog)
+		if (kForceModal)
 		{
-			Alert_Display(alertBox);
+			Alert_Display(alertBox, (false == kNoAlertAnimation));
 			if ((kWillRemoveTerminalWindow) && (Alert_ItemHit(alertBox) == kAlertStdAlertCancelButton))
 			{
 				// in the event that the user cancelled and the window
@@ -1863,6 +1879,28 @@ Session_RemoveDataTarget	(SessionRef				inRef,
 
 
 /*!
+Returns the most recently active window associated
+with the specified session, or nil if it cannot be
+found.
+
+This follows the same logic, and therefore has the
+same caveats, as Session_ReturnActiveTerminalWindow().
+See documentation on that function for more.
+
+(4.1)
+*/
+NSWindow*
+Session_ReturnActiveNSWindow	(SessionRef		inRef)
+{
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	NSWindow*				result = returnActiveNSWindow(ptr);
+	
+	
+	return result;
+}// ReturnActiveNSWindow
+
+
+/*!
 Returns the most recently active Terminal Window
 associated with the specified session, or nullptr
 if it cannot be found.  A window will be returned
@@ -1905,9 +1943,7 @@ Returns the most recently active window associated
 with the specified session, or nullptr if it cannot
 be found.
 
-This follows the same logic, and therefore has the
-same caveats, as Session_ReturnActiveTerminalWindow().
-See documentation on that function for more.
+DEPRECATED; use Session_ReturnActiveNSWindow().
 
 (3.0)
 */
@@ -7825,7 +7861,29 @@ respawnSession	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 /*!
 Returns the window most recently used by this session.
 
-DEPRECATED.  There needs to be a Cocoa equivalent for this.
+(4.1)
+*/
+NSWindow*
+returnActiveNSWindow	(My_SessionPtr		inPtr)
+{
+	NSWindow*	result = nullptr; // should be "nil" (TEMPORARY; fix when file is converted to Objective-C)
+	
+	
+	if (Session_IsValid(inPtr->selfRef))
+	{
+		if (nullptr != inPtr->terminalWindow)
+		{
+			result = TerminalWindow_ReturnNSWindow(inPtr->terminalWindow);
+		}
+	}
+	return result;
+}// returnActiveNSWindow
+
+
+/*!
+Returns the window most recently used by this session.
+
+DEPRECATED.  Migrate to returnActiveNSWindow().
 
 (4.0)
 */

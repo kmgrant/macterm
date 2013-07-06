@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130705',
     '20130704',
     '20130626',
     '20130620',
@@ -474,6 +475,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130705': [
+        'If the "Review..." button is selected from the Quit alert, the resulting series of Close alerts will no longer be displayed with the standard alert-opening animation (since this adds too much of a delay to the sequence).',
+    ],
     '20130704': [
         'Fixed "Arrange All Windows in Front" to follow the stagger preference and keep windows from going under the menu bar.',
         'Fixed "Arrange All Windows in Front" to stack windows on their own displays, never forcing a window back to the main display.',
