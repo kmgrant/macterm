@@ -13025,6 +13025,8 @@ Render the specified part of the terminal background.
 - (void)
 drawRect:(NSRect)	rect
 {
+	// WARNING: Since "canDrawConcurrently" returns YES, this should
+	// not do anything that requires execution on the main thread.
 	My_TerminalViewPtr		viewPtr = [self internalViewPtr];
 	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
 	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
@@ -13049,6 +13051,21 @@ drawRect:(NSRect)	rect
 		CGContextFillRect(drawingContext, clipBounds);
 	}
 }// drawRect:
+
+
+/*!
+Returns YES to allow background views to render virtually
+at any time.
+
+(4.1)
+*/
+- (BOOL)
+canDrawConcurrently
+{
+	// NOTE: This "YES" is meaningless unless the containing NSWindow
+	// returns "YES" from its "allowsConcurrentViewDrawing" method.
+	return YES;
+}// canDrawConcurrently
 
 
 /*!
@@ -13493,44 +13510,57 @@ that change the mouse pointer’s shape.
 - (void)
 resetCursorRects
 {
-	// the cursor varies based on the state of modifier keys
-	if (self->modifierFlagsForCursor & NSControlKeyMask)
+	My_TerminalViewPtr		viewPtr = [self internalViewPtr];
+	
+	
+	if ((nullptr != viewPtr) && (viewPtr->text.selection.readOnly))
 	{
-		// modifier key for contextual menu
-		if (FlagManager_Test(kFlagOS10_6API))
-		{
-			[self addCursorRect:[self bounds] cursor:[NSCursor contextualMenuCursor]];
-		}
-		else
-		{
-			// UNIMPLEMENTED on older Mac OS X versions for Cocoa (use Carbon?)
-			[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
-		}
-	}
-	else if ((self->modifierFlagsForCursor & NSCommandKeyMask) &&
-				(self->modifierFlagsForCursor & NSAlternateKeyMask))
-	{
-		// modifier key for moving the terminal cursor to the click location
-		// (in the Carbon version this was a plus-cursor, but Cocoa does not
-		// have that cursor shape)
+		// the user cannot interact with the terminal view so it is
+		// inappropriate to display any special cursor shapes over it
 		[self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
-	}
-	else if (self->modifierFlagsForCursor & NSCommandKeyMask)
-	{
-		// modifier key for clicking a URL selection
-		[self addCursorRect:[self bounds] cursor:[NSCursor pointingHandCursor]];
-	}
-	else if (self->modifierFlagsForCursor & NSAlternateKeyMask)
-	{
-		// modifier key for rectangular text selections
-		[self addCursorRect:[self bounds] cursor:[NSCursor crosshairCursor]];
 	}
 	else
 	{
-		// normal cursor
-		[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
+		// the cursor varies based on the state of modifier keys
+		if (self->modifierFlagsForCursor & NSControlKeyMask)
+		{
+			// modifier key for contextual menu
+			if (FlagManager_Test(kFlagOS10_6API))
+			{
+				[self addCursorRect:[self bounds] cursor:[NSCursor contextualMenuCursor]];
+			}
+			else
+			{
+				// UNIMPLEMENTED on older Mac OS X versions for Cocoa (use Carbon?)
+				[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
+			}
+		}
+		else if ((self->modifierFlagsForCursor & NSCommandKeyMask) &&
+					(self->modifierFlagsForCursor & NSAlternateKeyMask))
+		{
+			// modifier key for moving the terminal cursor to the click location
+			// (in the Carbon version this was a plus-cursor, but Cocoa does not
+			// have that cursor shape)
+			[self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
+		}
+		else if (self->modifierFlagsForCursor & NSCommandKeyMask)
+		{
+			// modifier key for clicking a URL selection
+			[self addCursorRect:[self bounds] cursor:[NSCursor pointingHandCursor]];
+		}
+		else if (self->modifierFlagsForCursor & NSAlternateKeyMask)
+		{
+			// modifier key for rectangular text selections
+			[self addCursorRect:[self bounds] cursor:[NSCursor crosshairCursor]];
+		}
+		else
+		{
+			// normal cursor
+			[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
+		}
+		
+		// INCOMPLETE; add support for any current text selection region
 	}
-	// INCOMPLETE; add support for any current text selection region
 }// resetCursorRects
 
 

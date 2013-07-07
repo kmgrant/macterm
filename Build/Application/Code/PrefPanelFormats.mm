@@ -3851,6 +3851,18 @@ didLoadContainerView:(NSView*)			aContainerView
 			}
 			else
 			{
+				// force the view into normal display mode, because zooming will
+				// mess up the font size
+				(TerminalView_Result)TerminalView_SetDisplayMode(self->sampleScreenView, kTerminalView_DisplayModeNormal);
+				
+				// ignore changes to certain preferences for this sample view, since
+				// it is not meant to be an ordinary terminal view
+				(TerminalView_Result)TerminalView_IgnoreChangesToPreference(self->sampleScreenView, kPreferences_TagTerminalResizeAffectsFontSize);
+				
+				// ignore user interaction, because text selections are not meant
+				// to change
+				(TerminalView_Result)TerminalView_SetUserInteractionEnabled(self->sampleScreenView, false);
+				
 				// write some text in various styles to the screen (happens to be a
 				// copy of what the sample view does); this will help with testing
 				// the new Cocoa-based renderer as it is implemented

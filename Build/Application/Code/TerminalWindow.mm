@@ -8130,6 +8130,10 @@ windowDidLoad
 				}
 				else
 				{
+					// "canDrawConcurrently" is YES for terminal background views
+					// so enable concurrent view drawing at the window level
+					[[self window] setAllowsConcurrentViewDrawing:YES];
+					
 					// write some text in various styles to the screen (happens to be a
 					// copy of what the sample view does); this will help with testing
 					// the new Cocoa-based renderer as it is implemented
