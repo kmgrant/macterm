@@ -452,6 +452,7 @@ void				copyTranslationPreferences			(My_TerminalViewPtr, Preferences_ContextRef
 OSStatus			createWindowColorPalette			(My_TerminalViewPtr, Preferences_ContextRef, Boolean = true);
 Boolean				cursorBlinks						(My_TerminalViewPtr);
 TerminalView_CursorType	cursorType						(My_TerminalViewPtr);
+NSCursor*			customCursorIBeam					();
 void				delayMinimumTicks					(UInt16 = 8);
 NSDictionary*		dictionaryWithTerminalTextAttributes(My_TerminalViewPtr, TerminalTextAttributes, Float32 = 1.0);
 OSStatus			dragTextSelection					(My_TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
@@ -666,6 +667,21 @@ TerminalView_Init ()
 											true/* call immediately to get initial value */);
 		// TMP - should check for errors here!
 		//if (error != kPreferences_ResultOK) ...
+	}
+	
+	// on older Mac OS X systems, custom cursors do not seem
+	// to take effect in Carbon windows until a Cocoa window
+	// has been displayed; to work around this odd behavior,
+	// a useless Cocoa window is “displayed” at startup time
+	{
+		NSWindow*	invisibleWindow = [[NSWindow alloc] initWithContentRect:NSZeroRect styleMask:NSBorderlessWindowMask
+																			backing:NSBackingStoreRetained
+																			defer:NO];
+		
+		
+		[invisibleWindow orderBack:NSApp];
+		[invisibleWindow orderOut:NSApp];
+		[invisibleWindow release];
 	}
 	
 	gTerminalViewInitialized = true;
