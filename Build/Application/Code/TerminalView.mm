@@ -588,6 +588,7 @@ HIObjectClassRef			gTerminalTextViewHIObjectClassRef = nullptr;
 EventHandlerUPP				gMyTextViewConstructorUPP = nullptr;
 ListenerModel_ListenerRef	gMainEventLoopEventListener = nullptr;
 ListenerModel_ListenerRef	gPreferenceChangeEventListener = nullptr;
+NSCursor*					gCustomIBeamCursor = nil;
 struct My_PreferenceProxies	gPreferenceProxies;
 Boolean						gApplicationIsSuspended = false;
 Boolean						gTerminalViewInitialized = false;
@@ -5053,6 +5054,26 @@ cursorType		(My_TerminalViewPtr		UNUSED_ARGUMENT(inTerminalViewPtr))
 
 
 /*!
+Returns a custom version of the I-beam for use in
+terminal views.  The intent is to use a cursor that
+has a larger size and better contrast.
+
+(4.1)
+*/
+NSCursor*
+customCursorIBeam ()
+{
+	if (nil == gCustomIBeamCursor)
+	{
+		// IMPORTANT: specified hot-spot should be synchronized with the image data
+		gCustomIBeamCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorIBeam"]
+																hotSpot:NSMakePoint(15, 15)];
+	}
+	return gCustomIBeamCursor;
+}// customCursorIBeam
+
+
+/*!
 Delays the active thread by the specified amount
 (in 60ths of a second).
 
@@ -9470,7 +9491,18 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 						else
 						{
 							// normal - text selection cursor
-							(SInt16)Cursors_UseIBeam();
+							NSCursor*	cursorIBeam = customCursorIBeam();
+							
+							
+							if (nil == cursorIBeam)
+							{
+								// fall back to standard system cursor
+								[[NSCursor IBeamCursor] set];
+							}
+							else
+							{
+								[cursorIBeam set];
+							}
 						}
 					}
 					else
@@ -12108,7 +12140,18 @@ trackTextSelection	(My_TerminalViewPtr		inTerminalViewPtr,
 		}
 		else
 		{
-			Cursors_UseIBeam();
+			NSCursor*	cursorIBeam = customCursorIBeam();
+			
+			
+			if (nil == cursorIBeam)
+			{
+				// fall back to standard system cursor
+				[[NSCursor IBeamCursor] set];
+			}
+			else
+			{
+				[cursorIBeam set];
+			}
 		}
 		
 		SetPortWindowPort(HIViewGetWindow(inTerminalViewPtr->contentHIView));
@@ -13532,7 +13575,8 @@ resetCursorRects
 			else
 			{
 				// UNIMPLEMENTED on older Mac OS X versions for Cocoa (use Carbon?)
-				[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
+				//[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
+				[self addCursorRect:[self bounds] cursor:customCursorIBeam()];
 			}
 		}
 		else if ((self->modifierFlagsForCursor & NSCommandKeyMask) &&
@@ -13556,7 +13600,8 @@ resetCursorRects
 		else
 		{
 			// normal cursor
-			[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
+			//[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
+			[self addCursorRect:[self bounds] cursor:customCursorIBeam()];
 		}
 		
 		// INCOMPLETE; add support for any current text selection region

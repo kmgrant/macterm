@@ -217,6 +217,8 @@
 		0A06274F0FB3AF4900EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/url/__init__.py; sourceTree = "<group>"; };
 		0A08DD8B1405B4AA0005129F /* TranslucentMenuArrow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TranslucentMenuArrow.h; path = Application/Code/TranslucentMenuArrow.h; sourceTree = "<group>"; };
 		0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TranslucentMenuArrow.mm; path = Application/Code/TranslucentMenuArrow.mm; sourceTree = "<group>"; };
+		0A0ADD43178A5FB800E72DF4 /* CursorIBeam.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorIBeam.png; path = Application/Resources/CursorIBeam.png; sourceTree = "<group>"; };
+		0A0ADD44178A5FB800E72DF4 /* CursorIBeam@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorIBeam@2x.png"; path = "Application/Resources/CursorIBeam@2x.png"; sourceTree = "<group>"; };
 		0A0D315716E2F5440063914A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelTerminalScreenCocoa.xib; sourceTree = "<group>"; };
 		0A119C431522B545003A41B7 /* IconForFullScreenDisable.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForFullScreenDisable.icns; path = Application/Resources/IconForFullScreenDisable.icns; sourceTree = "<group>"; };
 		0A11F54B059FE55D00A565C3 /* IconForPrefPanelGeneral.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelGeneral.icns; path = Application/Resources/IconForPrefPanelGeneral.icns; sourceTree = "<group>"; };
@@ -1044,6 +1046,8 @@
 		0AFF137A0AF42067006CCA34 /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				0A0ADD43178A5FB800E72DF4 /* CursorIBeam.png */,
+				0A0ADD44178A5FB800E72DF4 /* CursorIBeam@2x.png */,
 				0AF995F20CC3C849000A11DC /* IconForBellOff.icns */,
 				0AF995F30CC3C849000A11DC /* IconForBellOn.icns */,
 				0A54E40D0560B62F005B4592 /* IconForBundle.icns */,
