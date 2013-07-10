@@ -488,6 +488,8 @@
 		0AAB323314B2BC59002C6F33 /* IconForCaution.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForCaution.icns; path = Application/Resources/IconForCaution.icns; sourceTree = "<group>"; };
 		0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalRangeDescription.typedef.h; path = Application/Code/TerminalRangeDescription.typedef.h; sourceTree = "<group>"; };
 		0AAEFFC0111E77F100526983 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ServerBrowserCocoa.xib; sourceTree = "<group>"; };
+		0AB00A4E178D079D00C1D94A /* CursorIBeamSmall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorIBeamSmall.png; path = Application/Resources/CursorIBeamSmall.png; sourceTree = "<group>"; };
+		0AB00A4F178D079D00C1D94A /* CursorIBeamSmall@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorIBeamSmall@2x.png"; path = "Application/Resources/CursorIBeamSmall@2x.png"; sourceTree = "<group>"; };
 		0AB0EF76110E99570099E055 /* Registrar.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Registrar.template.h; path = Shared/Code/Registrar.template.h; sourceTree = "<group>"; };
 		0AB2272F12D2D03F00D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/DebugInterfaceCocoa.xib; sourceTree = "<group>"; };
 		0AB2273112D2D1DC00D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/AddressDialogCocoa.xib; sourceTree = "<group>"; };
@@ -1048,6 +1050,8 @@
 			children = (
 				0A0ADD43178A5FB800E72DF4 /* CursorIBeam.png */,
 				0A0ADD44178A5FB800E72DF4 /* CursorIBeam@2x.png */,
+				0AB00A4E178D079D00C1D94A /* CursorIBeamSmall.png */,
+				0AB00A4F178D079D00C1D94A /* CursorIBeamSmall@2x.png */,
 				0AF995F20CC3C849000A11DC /* IconForBellOff.icns */,
 				0AF995F30CC3C849000A11DC /* IconForBellOn.icns */,
 				0A54E40D0560B62F005B4592 /* IconForBundle.icns */,

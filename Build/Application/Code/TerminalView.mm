@@ -97,6 +97,7 @@
 #pragma mark Constants
 namespace {
 
+UInt16 const	kMy_LargeIBeamMinimumFontSize = 16;						//!< mouse I-beam cursor is 32x32 only if the font is at least this size
 SInt16 const	kArbitraryVTGraphicsPseudoFontID = 74;					//!< should not match any real font; used to flag switch to VT graphics
 SInt16 const	kArbitraryDoubleWidthDoubleHeightPseudoFontSize = 1;	//!< should not match any real size; used to flag the *lower* half
 																		//!  of double-width, double-height text (upper half is marked by
@@ -452,7 +453,7 @@ void				copyTranslationPreferences			(My_TerminalViewPtr, Preferences_ContextRef
 OSStatus			createWindowColorPalette			(My_TerminalViewPtr, Preferences_ContextRef, Boolean = true);
 Boolean				cursorBlinks						(My_TerminalViewPtr);
 TerminalView_CursorType	cursorType						(My_TerminalViewPtr);
-NSCursor*			customCursorIBeam					();
+NSCursor*			customCursorIBeam					(Boolean = false);
 void				delayMinimumTicks					(UInt16 = 8);
 NSDictionary*		dictionaryWithTerminalTextAttributes(My_TerminalViewPtr, TerminalTextAttributes, Float32 = 1.0);
 OSStatus			dragTextSelection					(My_TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
@@ -498,6 +499,7 @@ void				highlightVirtualRange				(My_TerminalViewPtr, TerminalView_CellRange con
 														 Boolean, Boolean);
 void				invalidateRowSection				(My_TerminalViewPtr, TerminalView_RowIndex, UInt16, UInt16);
 Boolean				isMonospacedFont					(FMFontFamily);
+Boolean				isSmallIBeam						(My_TerminalViewPtr);
 void				localToScreen						(My_TerminalViewPtr, SInt16*, SInt16*);
 Boolean				mainEventLoopEvent					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
@@ -589,7 +591,6 @@ HIObjectClassRef			gTerminalTextViewHIObjectClassRef = nullptr;
 EventHandlerUPP				gMyTextViewConstructorUPP = nullptr;
 ListenerModel_ListenerRef	gMainEventLoopEventListener = nullptr;
 ListenerModel_ListenerRef	gPreferenceChangeEventListener = nullptr;
-NSCursor*					gCustomIBeamCursor = nil;
 struct My_PreferenceProxies	gPreferenceProxies;
 Boolean						gApplicationIsSuspended = false;
 Boolean						gTerminalViewInitialized = false;
@@ -5074,18 +5075,42 @@ Returns a custom version of the I-beam for use in
 terminal views.  The intent is to use a cursor that
 has a larger size and better contrast.
 
+If the font size is very small, setting "inSmall"
+to true is recommended so that a normal-size cursor
+can be returned.
+
 (4.1)
 */
 NSCursor*
-customCursorIBeam ()
+customCursorIBeam	(Boolean	inSmall)
 {
-	if (nil == gCustomIBeamCursor)
+	static NSCursor*	gCustomIBeamCursor = nil;
+	static NSCursor*	gCustomIBeamCursorSmall = nil;
+	NSCursor*			result = nil;
+	
+	
+	if (inSmall)
 	{
-		// IMPORTANT: specified hot-spot should be synchronized with the image data
-		gCustomIBeamCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorIBeam"]
-																hotSpot:NSMakePoint(15, 15)];
+		if (nil == gCustomIBeamCursorSmall)
+		{
+			// IMPORTANT: specified hot-spot should be synchronized with the image data
+			gCustomIBeamCursorSmall = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorIBeamSmall"]
+																		hotSpot:NSMakePoint(11, 11)];
+		}
+		result = gCustomIBeamCursorSmall;
 	}
-	return gCustomIBeamCursor;
+	else
+	{
+		if (nil == gCustomIBeamCursor)
+		{
+			// IMPORTANT: specified hot-spot should be synchronized with the image data
+			gCustomIBeamCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorIBeam"]
+																	hotSpot:NSMakePoint(15, 15)];
+		}
+		result = gCustomIBeamCursor;
+	}
+	
+	return result;
 }// customCursorIBeam
 
 
@@ -8536,6 +8561,30 @@ isMonospacedFont	(FMFontFamily	inFontID)
 
 
 /*!
+Returns true only if the specified terminal view
+should use a small-size I-beam mouse pointer.
+
+This is currently only true if the font size is
+below a certain value.
+
+(4.1)
+*/
+Boolean
+isSmallIBeam	(My_TerminalViewPtr		inTerminalViewPtr)
+{
+	Boolean		result = false;
+	
+	
+	if (nullptr != inTerminalViewPtr)
+	{
+		result = (inTerminalViewPtr->text.font.normalMetrics.size < kMy_LargeIBeamMinimumFontSize);
+	}
+	
+	return result;
+}// isSmallIBeam
+
+
+/*!
 Translates pixels in the coordinate system of a
 window so that they are relative to the origin of
 the screen.  In version 2.6, the program always
@@ -9507,7 +9556,8 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 						else
 						{
 							// normal - text selection cursor
-							NSCursor*	cursorIBeam = customCursorIBeam();
+							My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
+							NSCursor*					cursorIBeam = customCursorIBeam(isSmallIBeam(viewPtr));
 							
 							
 							if (nil == cursorIBeam)
@@ -12156,7 +12206,7 @@ trackTextSelection	(My_TerminalViewPtr		inTerminalViewPtr,
 		}
 		else
 		{
-			NSCursor*	cursorIBeam = customCursorIBeam();
+			NSCursor*	cursorIBeam = customCursorIBeam(isSmallIBeam(inTerminalViewPtr));
 			
 			
 			if (nil == cursorIBeam)
@@ -13592,7 +13642,7 @@ resetCursorRects
 			{
 				// UNIMPLEMENTED on older Mac OS X versions for Cocoa (use Carbon?)
 				//[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
-				[self addCursorRect:[self bounds] cursor:customCursorIBeam()];
+				[self addCursorRect:[self bounds] cursor:customCursorIBeam(isSmallIBeam(viewPtr))];
 			}
 		}
 		else if ((self->modifierFlagsForCursor & NSCommandKeyMask) &&
@@ -13617,7 +13667,7 @@ resetCursorRects
 		{
 			// normal cursor
 			//[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
-			[self addCursorRect:[self bounds] cursor:customCursorIBeam()];
+			[self addCursorRect:[self bounds] cursor:customCursorIBeam(isSmallIBeam(viewPtr))];
 		}
 		
 		// INCOMPLETE; add support for any current text selection region

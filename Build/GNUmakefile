@@ -147,6 +147,8 @@ APP_RESOURCES_FILES := \
 Application.sb \
 CursorIBeam.png \
 CursorIBeam@2x.png\
+CursorIBeamSmall.png \
+CursorIBeamSmall@2x.png \
 DefaultFormat1.plist \
 DefaultFormat2.plist \
 DefaultFormat3.plist \

@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130709',
     '20130707',
     '20130705',
     '20130704',
@@ -476,6 +477,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130709': [
+        'A smaller version of the new "I-beam" mouse pointer is now chosen for terminals that have small font sizes.',
+    ],
     '20130707': [
         'The "I-beam" mouse pointer shape has been completely redesigned for terminal windows.  The new I-beam is red (for high contrast on colored terminals) and it is twice the size of a normal mouse pointer.  The new I-beam also looks good on Retina displays.',
     ],
