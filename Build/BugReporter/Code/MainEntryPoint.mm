@@ -45,21 +45,24 @@
 
 #pragma mark Internal Method Prototypes
 
-@interface BugReporterAppDelegate : NSObject
-{
-}
+/*!
+The delegate for NSApplication.
+*/
+@interface BugReporterAppDelegate : NSObject //{
 
 // NSApplicationDelegate
+	- (void)
+	applicationDidFinishLaunching:(NSNotification*)_;
 
-- (void)
-applicationDidFinishLaunching:(NSNotification*)_;
-
-@end // BugReporterAppDelegate
+@end //}
 
 
 
 #pragma mark Public Methods
 
+/*!
+Main entry point.
+*/
 int
 main	(int			argc,
 		 const char*	argv[])

@@ -24,7 +24,7 @@
 /*###############################################################
 
 	Interface Library 2.7
-	© 1998-2012 by Kevin Grant
+	© 1998-2013 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -73,22 +73,26 @@ enum PopoverManager_AnimationType
 
 typedef struct PopoverManager_OpaqueStruct*		PopoverManager_Ref;
 
-@protocol PopoverManager_Delegate
+/*!
+Classes that are passed as delegates to PopoverManager_New()
+must conform to this protocol.
+*/
+@protocol PopoverManager_Delegate //{
 
-// return the proper position of the popover arrow tip (if any), relative
-// to its parent window; also called during window resizing
-- (NSPoint)
-idealAnchorPointForParentWindowFrame:(NSRect)_;
+	// return the proper position of the popover arrow tip (if any), relative
+	// to its parent window; also called during window resizing
+	- (NSPoint)
+	idealAnchorPointForParentWindowFrame:(NSRect)_;
 
-// return the desired popover arrow placement
-- (Popover_Properties)
-idealArrowPositionForParentWindowFrame:(NSRect)_;
+	// return the desired popover arrow placement
+	- (Popover_Properties)
+	idealArrowPositionForParentWindowFrame:(NSRect)_;
 
-// return the dimensions the popover should initially have
-- (NSSize)
-idealSize;
+	// return the dimensions the popover should initially have
+	- (NSSize)
+	idealSize;
 
-@end // PopoverManager_Delegate
+@end //}
 
 
 

@@ -128,7 +128,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface TerminalWindow_Controller : NSWindowController
+@interface TerminalWindow_Controller : NSWindowController //{
 {
 	IBOutlet TerminalView_ContentView*		testTerminalContentView;
 	IBOutlet TerminalView_BackgroundView*	testTerminalPaddingView; // should embed the content view
@@ -137,18 +137,20 @@ changes to an interface declared in a ".mm" file.
 	TerminalToolbar_Delegate*	toolbarDelegate;
 }
 
-+ (id)
-sharedTerminalWindowController; // TEMPORARY
+// class methods
+	+ (id)
+	sharedTerminalWindowController; // TEMPORARY
 
-@end
+@end //}
 
 
-@interface NSWindow (TerminalWindow_NSWindowExtensions)
+@interface NSWindow (TerminalWindow_NSWindowExtensions) //{
 
-- (TerminalWindowRef)
-terminalWindowRef;
+// new methods
+	- (TerminalWindowRef)
+	terminalWindowRef;
 
-@end
+@end //}
 
 #endif // __OBJC__
 

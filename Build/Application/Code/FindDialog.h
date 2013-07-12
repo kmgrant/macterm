@@ -73,37 +73,41 @@ typedef struct FindDialog_OpaqueStruct*		FindDialog_Ref;
 
 @class FindDialog_ViewManager;
 
-@protocol FindDialog_ViewManagerChannel
+/*!
+Classes that are delegates of FindDialog_ViewManager
+must conform to this protocol.
+*/
+@protocol FindDialog_ViewManagerChannel //{
 
-// use this opportunity to create and display a window to wrap the Find view
-- (void)
-findDialog:(FindDialog_ViewManager*)_
-didLoadManagedView:(NSView*)_;
+	// use this opportunity to create and display a window to wrap the Find view
+	- (void)
+	findDialog:(FindDialog_ViewManager*)_
+	didLoadManagedView:(NSView*)_;
 
-// remove search highlighting
-- (void)
-findDialog:(FindDialog_ViewManager*)_
-clearSearchHighlightingInContext:(FindDialog_SearchContext)_;
+	// remove search highlighting
+	- (void)
+	findDialog:(FindDialog_ViewManager*)_
+	clearSearchHighlightingInContext:(FindDialog_SearchContext)_;
 
-// perform the search yourself, then call the view manager’s "updateUserInterfaceWithMatches:didSearch:"
-- (void)
-findDialog:(FindDialog_ViewManager*)_
-didSearchInManagedView:(NSView*)_
-withQuery:(NSString*)_;
+	// perform the search yourself, then call the view manager’s "updateUserInterfaceWithMatches:didSearch:"
+	- (void)
+	findDialog:(FindDialog_ViewManager*)_
+	didSearchInManagedView:(NSView*)_
+	withQuery:(NSString*)_;
 
-// perform a search yourself, but no need to update the user interface since it should be destroyed
-- (void)
-findDialog:(FindDialog_ViewManager*)_
-didFinishUsingManagedView:(NSView*)_
-acceptingSearch:(BOOL)_
-finalOptions:(FindDialog_Options)_;
+	// perform a search yourself, but no need to update the user interface since it should be destroyed
+	- (void)
+	findDialog:(FindDialog_ViewManager*)_
+	didFinishUsingManagedView:(NSView*)_
+	acceptingSearch:(BOOL)_
+	finalOptions:(FindDialog_Options)_;
 
-// return an array of NSString* to use for previous searches
-- (NSMutableArray*)
-findDialog:(FindDialog_ViewManager*)_
-returnHistoryArrayForManagedView:(NSView*)_;
+	// return an array of NSString* to use for previous searches
+	- (NSMutableArray*)
+	findDialog:(FindDialog_ViewManager*)_
+	returnHistoryArrayForManagedView:(NSView*)_;
 
-@end // FindDialog_ViewManagerChannel
+@end //}
 
 
 /*!
@@ -113,7 +117,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface FindDialog_ViewManager : NSObject
+@interface FindDialog_ViewManager : NSObject //{
 {
 	IBOutlet NSImageView*		failureIcon;
 	IBOutlet NSTextField*		failureText;
@@ -132,71 +136,57 @@ changes to an interface declared in a ".mm" file.
 }
 
 // initializers
-
-- (id)
-initForTerminalWindow:(TerminalWindowRef)_
-responder:(id< FindDialog_ViewManagerChannel >)_
-initialOptions:(FindDialog_Options)_;
+	- (id)
+	initForTerminalWindow:(TerminalWindowRef)_
+	responder:(id< FindDialog_ViewManagerChannel >)_
+	initialOptions:(FindDialog_Options)_;
 
 // new methods
-
-- (NSView*)
-logicalFirstResponder;
-
-- (NSSearchField*)
-searchField;
-
-- (void)
-updateUserInterfaceWithMatches:(unsigned long)_
-didSearch:(BOOL)_;
+	- (NSView*)
+	logicalFirstResponder;
+	- (NSSearchField*)
+	searchField;
+	- (void)
+	updateUserInterfaceWithMatches:(unsigned long)_
+	didSearch:(BOOL)_;
 
 // actions
-
-- (IBAction)
-performContextSensitiveHelp:(id)_;
-
-- (IBAction)
-performCloseAndRevert:(id)_;
-
-- (IBAction)
-performCloseAndSearch:(id)_;
-
-- (IBAction)
-performSearch:(id)_;
+	- (IBAction)
+	performContextSensitiveHelp:(id)_;
+	- (IBAction)
+	performCloseAndRevert:(id)_;
+	- (IBAction)
+	performCloseAndSearch:(id)_;
+	- (IBAction)
+	performSearch:(id)_;
 
 // accessors
+	- (BOOL)
+	isCaseInsensitiveSearch; // binding
+	- (void)
+	setCaseInsensitiveSearch:(BOOL)_;
+	- (BOOL)
+	isMultiTerminalSearch; // binding
+	- (void)
+	setMultiTerminalSearch:(BOOL)_;
+	- (BOOL)
+	isSearchProgressHidden; // binding
+	- (void)
+	setSearchProgressHidden:(BOOL)_;
+	- (BOOL)
+	isSuccessfulSearch; // binding
+	- (void)
+	setSuccessfulSearch:(BOOL)_;
+	- (NSString*)
+	searchText; // binding
+	- (void)
+	setSearchText:(NSString*)_;
+	- (NSString*)
+	statusText; // binding
+	- (void)
+	setStatusText:(NSString*)_;
 
-- (BOOL)
-isCaseInsensitiveSearch; // binding
-- (void)
-setCaseInsensitiveSearch:(BOOL)_;
-
-- (BOOL)
-isMultiTerminalSearch; // binding
-- (void)
-setMultiTerminalSearch:(BOOL)_;
-
-- (BOOL)
-isSearchProgressHidden; // binding
-- (void)
-setSearchProgressHidden:(BOOL)_;
-
-- (BOOL)
-isSuccessfulSearch; // binding
-- (void)
-setSuccessfulSearch:(BOOL)_;
-
-- (NSString*)
-searchText; // binding
-- (void)
-setSearchText:(NSString*)_;
-
-- (NSString*)
-statusText; // binding
-- (void)
-setStatusText:(NSString*)_;
-
-@end
+@end //}
 
 #endif // __OBJC__
 

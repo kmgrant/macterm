@@ -178,35 +178,30 @@ OSStatus		standardAlert					(My_AlertMessagePtr, AlertType, CFStringRef, CFStrin
 
 } // anonymous namespace
 
-@interface AlertMessages_WindowController (AlertMessages_WindowControllerInternal)
+/*!
+The private class interface.
+*/
+@interface AlertMessages_WindowController (AlertMessages_WindowControllerInternal) //{
 
+	- (void)
+	abortAlert;
+	- (void)
+	deltaSizeWindow:(float)_;
+	- (void)
+	didFinishAlertWithButton:(unsigned int)_
+	fromEvent:(BOOL)_;
+	- (NSImage*)
+	imageForIconImageName:(NSString*)_;
+	- (void)
+	setDisplayedDialogText:(NSString*)_;
+	- (void)
+	setDisplayedHelpText:(NSString*)_;
+	- (void)
+	setStringProperty:(NSString**)_
+	withName:(NSString*)_
+	toValue:(NSString*)_;
 
-- (void)
-abortAlert;
-
-- (void)
-deltaSizeWindow:(float)_;
-
-- (void)
-didFinishAlertWithButton:(unsigned int)_
-fromEvent:(BOOL)_;
-
-- (NSImage*)
-imageForIconImageName:(NSString*)_;
-
-- (void)
-setDisplayedDialogText:(NSString*)_;
-
-- (void)
-setDisplayedHelpText:(NSString*)_;
-
-- (void)
-setStringProperty:(NSString**)_
-withName:(NSString*)_
-toValue:(NSString*)_;
-
-
-@end // AlertMessages_WindowController (AlertMessages_WindowControllerInternal)
+@end //}
 
 
 

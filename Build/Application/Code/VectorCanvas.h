@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -88,37 +88,33 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface VectorCanvas_View : NSControl
+@interface VectorCanvas_View : NSControl //{
 {
 @private
 	VectorInterpreter_Ref	interpreterRef;
 }
 
 // accessors
+	- (VectorInterpreter_Ref)
+	interpreterRef;
+	- (void)
+	setInterpreterRef:(VectorInterpreter_Ref)_;
 
-- (VectorInterpreter_Ref)
-interpreterRef;
-- (void)
-setInterpreterRef:(VectorInterpreter_Ref)_;
+// actions
+	- (id)
+	canPerformCopy:(id <NSValidatedUserInterfaceItem>)_;
+	- (IBAction)
+	performCopy:(id)_;
+	- (id)
+	canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)_;
+	- (IBAction)
+	performPrintScreen:(id)_;
+	- (id)
+	canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)_;
+	- (IBAction)
+	performPrintSelection:(id)_;
 
-// new methods
-
-- (id)
-canPerformCopy:(id <NSValidatedUserInterfaceItem>)_;
-- (IBAction)
-performCopy:(id)_;
-
-- (id)
-canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)_;
-- (IBAction)
-performPrintScreen:(id)_;
-
-- (id)
-canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)_;
-- (IBAction)
-performPrintSelection:(id)_;
-
-@end
+@end //}
 
 #else
 

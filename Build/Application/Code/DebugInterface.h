@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -54,43 +54,37 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface DebugInterface_PanelController : NSWindowController
-{
-}
+@interface DebugInterface_PanelController : NSWindowController //{
 
-+ (id)
-sharedDebugInterfacePanelController;
+// class methods
+	+ (id)
+	sharedDebugInterfacePanelController;
 
-- (IBAction)
-dumpStateOfActiveTerminal:(id)_;
-
-- (IBAction)
-showTestPreferencesWindow:(id)_;
-
-- (IBAction)
-showTestTerminalToolbar:(id)_;
-
-- (IBAction)
-showTestTerminalWindow:(id)_;
+// actions
+	- (IBAction)
+	dumpStateOfActiveTerminal:(id)_;
+	- (IBAction)
+	showTestPreferencesWindow:(id)_;
+	- (IBAction)
+	showTestTerminalToolbar:(id)_;
+	- (IBAction)
+	showTestTerminalWindow:(id)_;
 
 // accessors
+	- (BOOL)
+	logsTerminalInputChar;
+	- (void)
+	setLogsTerminalInputChar:(BOOL)_; // binding
+	- (BOOL)
+	logsTeletypewriterState;
+	- (void)
+	setLogsTeletypewriterState:(BOOL)_; // binding
+	- (BOOL)
+	logsTerminalState;
+	- (void)
+	setLogsTerminalState:(BOOL)_; // binding
 
-- (BOOL)
-logsTerminalInputChar;
-- (void)
-setLogsTerminalInputChar:(BOOL)_; // binding
-
-- (BOOL)
-logsTeletypewriterState;
-- (void)
-setLogsTeletypewriterState:(BOOL)_; // binding
-
-- (BOOL)
-logsTerminalState;
-- (void)
-setLogsTerminalState:(BOOL)_; // binding
-
-@end
+@end //}
 
 #endif // __OBJC__
 

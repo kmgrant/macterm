@@ -47,7 +47,7 @@
 
 #pragma mark Types
 
-@interface PopoverManager_Handler : NSObject
+@interface PopoverManager_Handler : NSObject //{
 {
 	PopoverManager_Ref				selfRef;				// identical to address of structure, but typed as ref
 	id< PopoverManager_Delegate >	delegate;				// used to determine dynamic popover information
@@ -60,58 +60,50 @@
 	CarbonEventHandlerWrap*			resizeHandlerPtr;		// embellishes Carbon Event for resizing window
 }
 
-+ (PopoverManager_Handler*)
-popoverHandlerFromRef:(PopoverManager_Ref)_;
+// class methods
+	+ (PopoverManager_Handler*)
+	popoverHandlerFromRef:(PopoverManager_Ref)_;
 
-// designated initializer
-- (id)
-initForCocoaWindow:(NSWindow*)_
-orCarbonWindow:(HIWindowRef)_
-popover:(Popover_Window*)_
-firstResponder:(NSView*)_
-animationType:(PopoverManager_AnimationType)_
-delegate:(id< PopoverManager_Delegate >)_;
+// initializers
+	- (id)
+	initForCocoaWindow:(NSWindow*)_
+	orCarbonWindow:(HIWindowRef)_
+	popover:(Popover_Window*)_
+	firstResponder:(NSView*)_
+	animationType:(PopoverManager_AnimationType)_
+	delegate:(id< PopoverManager_Delegate >)_;
 
-- (void)
-display;
+// new methods
+	- (void)
+	display;
+	- (NSPoint)
+	idealAnchorPointForParentWindowFrame:(NSRect)_;
+	- (Popover_Properties)
+	idealArrowPositionForParentWindowFrame:(NSRect)_;
+	- (void)
+	moveToIdealPosition;
+	- (void)
+	popOver;
+	- (void)
+	popUnder;
+	- (void)
+	removeWindow;
+	- (void)
+	removeWindowWithDelay;
+	- (void)
+	removeWindowWithDelay:(float)_;
+	- (void)
+	setToIdealSize;
 
-- (NSPoint)
-idealAnchorPointForParentWindowFrame:(NSRect)_;
+// accessors
+	- (NSSize)
+	idealSize;
+	- (BOOL)
+	isVisible;
+	- (NSWindow*)
+	parentCocoaWindow;
 
-- (Popover_Properties)
-idealArrowPositionForParentWindowFrame:(NSRect)_;
-
-- (NSSize)
-idealSize;
-
-- (BOOL)
-isVisible;
-
-- (void)
-moveToIdealPosition;
-
-- (NSWindow*)
-parentCocoaWindow;
-
-- (void)
-popOver;
-
-- (void)
-popUnder;
-
-- (void)
-removeWindow;
-
-- (void)
-removeWindowWithDelay;
-
-- (void)
-removeWindowWithDelay:(float)_;
-
-- (void)
-setToIdealSize;
-
-@end // PopoverManager_Handler
+@end //}
 
 #pragma mark Internal Method Prototypes
 namespace {

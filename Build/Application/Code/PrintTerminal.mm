@@ -62,7 +62,10 @@
 
 #pragma mark Types
 
-@interface PrintTerminal_Job : NSObject
+/*!
+Helper class for printing from a terminal view.
+*/
+@interface PrintTerminal_Job : NSObject //{
 {
 @public
 	NSString*	jobTitle;			//!< the title of the print job and preview window
@@ -71,19 +74,22 @@
 	BOOL		isLandscapeMode;	//!< if YES, page setup defaults to landscape mode
 }
 
-+ (PrintTerminal_Job*)
-jobFromRef:(PrintTerminal_JobRef)_;
+// class methods
+	+ (PrintTerminal_Job*)
+	jobFromRef:(PrintTerminal_JobRef)_;
 
-- (void)
-beginPreviewSheetModalForWindow:(NSWindow*)_;
+// new methods
+	- (void)
+	beginPreviewSheetModalForWindow:(NSWindow*)_;
 
-- (id)
-initWithString:(NSString*)_
-andFont:(NSFont*)_
-andTitle:(NSString*)_
-andLandscape:(BOOL)_;
+// initializers
+	- (id)
+	initWithString:(NSString*)_
+	andFont:(NSFont*)_
+	andTitle:(NSString*)_
+	andLandscape:(BOOL)_;
 
-@end
+@end //}
 
 #pragma mark Internal Methods
 namespace {

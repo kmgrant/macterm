@@ -61,7 +61,10 @@
 
 #pragma mark Types
 
-@interface WindowTitleDialog_Handler : NSObject< PopoverManager_Delegate, WindowTitleDialog_ViewManagerChannel >
+/*!
+Manages the rename-window user interface.
+*/
+@interface WindowTitleDialog_Handler : NSObject< PopoverManager_Delegate, WindowTitleDialog_ViewManagerChannel > //{
 {
 	WindowTitleDialog_Ref					selfRef;			// identical to address of structure, but typed as ref
 	WindowTitleDialog_ViewManager*			viewMgr;			// loads the Rename interface
@@ -75,66 +78,59 @@
 	WindowTitleDialog_CloseNotifyProcPtr	closeNotifyProc;	// routine to call when the dialog is dismissed
 }
 
-+ (WindowTitleDialog_Handler*)
-viewHandlerFromRef:(WindowTitleDialog_Ref)_;
+// class methods
+	+ (WindowTitleDialog_Handler*)
+	viewHandlerFromRef:(WindowTitleDialog_Ref)_;
 
-// designated initializer
-- (id)
-initForCocoaWindow:(NSWindow*)_
-orCarbonWindow:(HIWindowRef)_
-notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_;
+// initializers
+	- (id)
+	initForCocoaWindow:(NSWindow*)_
+	orCarbonWindow:(HIWindowRef)_
+	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_; // designated initializer
+	- (id)
+	initForCocoaWindow:(NSWindow*)_
+	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_;
+	- (id)
+	initForCarbonWindow:(HIWindowRef)_
+	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_
+	session:(SessionRef)_;
+	- (id)
+	initForCocoaWindow:(NSWindow*)_
+	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_
+	vectorGraphicsCanvas:(VectorWindow_Ref)_;
 
-- (id)
-initForCocoaWindow:(NSWindow*)_
-notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_;
+// new methods
+	- (void)
+	display;
+	- (void)
+	remove;
 
-- (id)
-initForCarbonWindow:(HIWindowRef)_
-notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_
-session:(SessionRef)_;
-
-- (id)
-initForCocoaWindow:(NSWindow*)_
-notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_
-vectorGraphicsCanvas:(VectorWindow_Ref)_;
-
-- (void)
-display;
-
-- (void)
-remove;
-
-- (NSWindow*)
-renamedCocoaWindow;
+// accessors
+	- (NSWindow*)
+	renamedCocoaWindow;
 
 // PopoverManager_Delegate
-
-- (NSPoint)
-idealAnchorPointForParentWindowFrame:(NSRect)_;
-
-- (Popover_Properties)
-idealArrowPositionForParentWindowFrame:(NSRect)_;
-
-- (NSSize)
-idealSize;
+	- (NSPoint)
+	idealAnchorPointForParentWindowFrame:(NSRect)_;
+	- (Popover_Properties)
+	idealArrowPositionForParentWindowFrame:(NSRect)_;
+	- (NSSize)
+	idealSize;
 
 // WindowTitleDialog_ViewManagerChannel
+	- (void)
+	titleDialog:(WindowTitleDialog_ViewManager*)_
+	didLoadManagedView:(NSView*)_;
+	- (void)
+	titleDialog:(WindowTitleDialog_ViewManager*)_
+	didFinishUsingManagedView:(NSView*)_
+	acceptingRename:(BOOL)_
+	finalTitle:(NSString*)_;
+	- (NSString*)
+	titleDialog:(WindowTitleDialog_ViewManager*)_
+	returnInitialTitleTextForManagedView:(NSView*)_;
 
-- (void)
-titleDialog:(WindowTitleDialog_ViewManager*)_
-didLoadManagedView:(NSView*)_;
-
-- (void)
-titleDialog:(WindowTitleDialog_ViewManager*)_
-didFinishUsingManagedView:(NSView*)_
-acceptingRename:(BOOL)_
-finalTitle:(NSString*)_;
-
-- (NSString*)
-titleDialog:(WindowTitleDialog_ViewManager*)_
-returnInitialTitleTextForManagedView:(NSView*)_;
-
-@end // WindowTitleDialog_Handler
+@end //}
 
 
 

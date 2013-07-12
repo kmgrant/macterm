@@ -58,11 +58,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelSessions_ViewManager : GenericPanelTabs_ViewManager
-{
-}
-
-@end
+@interface PrefPanelSessions_ViewManager : GenericPanelTabs_ViewManager @end
 
 
 /*!
@@ -71,45 +67,44 @@ The only valid preference tags are those that store
 raw control-key characters, such as
 "kPreferences_TagKeyInterruptProcess".
 */
-@interface PrefPanelSessions_ControlKeyValue : PreferenceValue_InheritedSingleTag
+@interface PrefPanelSessions_ControlKeyValue : PreferenceValue_InheritedSingleTag //{
 
-// designated initializer
-- (id)
-initWithPreferencesTag:(Preferences_Tag)_
-contextManager:(PrefsContextManager_Object*)_;
+// initializers
+	- (id)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_;
 
 // accessors
+	- (NSString*)
+	stringValue;
+	- (void)
+	setStringValue:(NSString*)_; // binding
 
-- (NSString*)
-stringValue;
-- (void)
-setStringValue:(NSString*)_; // binding
-
-@end
+@end //}
 
 
 /*!
 Manages bindings for the Emacs-meta-key mapping preference.
 */
-@interface PrefPanelSessions_EmacsMetaValue : PreferenceValue_Array
+@interface PrefPanelSessions_EmacsMetaValue : PreferenceValue_Array //{
 
-// designated initializer
-- (id)
-initWithContextManager:(PrefsContextManager_Object*)_;
+// initializers
+	- (id)
+	initWithContextManager:(PrefsContextManager_Object*)_;
 
-@end
+@end //}
 
 
 /*!
 Manages bindings for the new-line preference.
 */
-@interface PrefPanelSessions_NewLineValue : PreferenceValue_Array
+@interface PrefPanelSessions_NewLineValue : PreferenceValue_Array //{
 
-// designated initializer
-- (id)
-initWithContextManager:(PrefsContextManager_Object*)_;
+// initializers
+	- (id)
+	initWithContextManager:(PrefsContextManager_Object*)_;
 
-@end
+@end //}
 
 
 /*!
@@ -119,7 +114,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelSessions_KeyboardViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+@interface PrefPanelSessions_KeyboardViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface > //{
 {
 @private
 	PrefsContextManager_Object*		prefsMgr;
@@ -130,50 +125,39 @@ changes to an interface declared in a ".mm" file.
 	BOOL							isEditingKeySuspend;
 }
 
-// accessors
+// accessors: preference values
+	- (PreferenceValue_Flag*)
+	deleteKeySendsBackspace; // binding
+	- (PreferenceValue_Flag*)
+	emacsArrowKeys; // binding
+	- (PrefPanelSessions_ControlKeyValue*)
+	keyInterruptProcess; // binding
+	- (PrefPanelSessions_ControlKeyValue*)
+	keyResume; // binding
+	- (PrefPanelSessions_ControlKeyValue*)
+	keySuspend; // binding
+	- (PrefPanelSessions_EmacsMetaValue*)
+	mappingForEmacsMeta; // binding
+	- (PrefPanelSessions_NewLineValue*)
+	mappingForNewLine; // binding
 
-- (PreferenceValue_Flag*)
-deleteKeySendsBackspace; // binding
-
-- (PreferenceValue_Flag*)
-emacsArrowKeys; // binding
-
-- (BOOL)
-isEditingKeyInterruptProcess; // binding
-
-- (BOOL)
-isEditingKeyResume; // binding
-
-- (BOOL)
-isEditingKeySuspend; // binding
-
-- (PrefPanelSessions_ControlKeyValue*)
-keyInterruptProcess; // binding
-
-- (PrefPanelSessions_ControlKeyValue*)
-keyResume; // binding
-
-- (PrefPanelSessions_ControlKeyValue*)
-keySuspend; // binding
-
-- (PrefPanelSessions_EmacsMetaValue*)
-mappingForEmacsMeta; // binding
-
-- (PrefPanelSessions_NewLineValue*)
-mappingForNewLine; // binding
+// accessors: low-level user interface state
+	- (BOOL)
+	isEditingKeyInterruptProcess; // binding
+	- (BOOL)
+	isEditingKeyResume; // binding
+	- (BOOL)
+	isEditingKeySuspend; // binding
 
 // actions
+	- (IBAction)
+	performChooseInterruptProcessKey:(id)_; // binding
+	- (IBAction)
+	performChooseResumeKey:(id)_; // binding
+	- (IBAction)
+	performChooseSuspendKey:(id)_; // binding
 
-- (IBAction)
-performChooseInterruptProcessKey:(id)_; // binding
-
-- (IBAction)
-performChooseResumeKey:(id)_; // binding
-
-- (IBAction)
-performChooseSuspendKey:(id)_; // binding
-
-@end
+@end //}
 
 #endif // __OBJC__
 

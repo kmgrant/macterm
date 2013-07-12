@@ -71,240 +71,198 @@ user unless "setSession:" has been called.  (This session can
 be changed as often as needed, e.g. to implement a floating
 toolbar.)
 */
-@interface TerminalToolbar_Delegate : NSObject< NSToolbarDelegate >
+@interface TerminalToolbar_Delegate : NSObject< NSToolbarDelegate > //{
 {
 @private
 	SessionRef		associatedSession;
 	BOOL			allowExperimentalItems;
 }
 
-- (id)
-initForToolbar:(NSToolbar*)_
-experimentalItems:(BOOL)_;
+// initializers
+	- (id)
+	initForToolbar:(NSToolbar*)_
+	experimentalItems:(BOOL)_;
 
 // accessors
+	- (SessionRef)
+	session;
+	- (void)
+	setSession:(SessionRef)_;
 
-- (SessionRef)
-session;
-- (void)
-setSession:(SessionRef)_;
-
-@end // TerminalToolbar_Delegate
+@end //}
 
 
 /*!
 Extensions to NSToolbar that are valid whenever the "delegate"
 of the toolbar is of class TerminalToolbar_Delegate.
 */
-@interface NSToolbar (TerminalToolbar_NSToolbarExtensions)
+@interface NSToolbar (TerminalToolbar_NSToolbarExtensions) //{
 
-- (TerminalToolbar_Delegate*)
-terminalToolbarDelegate;
+// accessors
+	- (TerminalToolbar_Delegate*)
+	terminalToolbarDelegate;
+	- (SessionRef)
+	terminalToolbarSession;
 
-- (SessionRef)
-terminalToolbarSession;
-
-@end // NSToolbar (TerminalToolbar_NSToolbarExtensions)
+@end //}
 
 
 /*!
 Base class for items that need to monitor the session that is
 associated with their toolbar’s delegate.
 */
-@interface TerminalToolbar_SessionDependentItem : NSToolbarItem
-{
-}
+@interface TerminalToolbar_SessionDependentItem : NSToolbarItem //{
 
-- (id)
-initWithItemIdentifier:(NSString*)_;
+// initializers
+	- (id)
+	initWithItemIdentifier:(NSString*)_;
 
 // accessors
-
-- (SessionRef)
-session;
-
-- (TerminalScreenRef)
-terminalScreen;
-
-- (TerminalViewRef)
-terminalView;
-
-- (TerminalWindowRef)
-terminalWindow;
+	- (SessionRef)
+	session;
+	- (TerminalScreenRef)
+	terminalScreen;
+	- (TerminalViewRef)
+	terminalView;
+	- (TerminalWindowRef)
+	terminalWindow;
 
 // overrides for subclasses
+	- (void)
+	didChangeSession;
+	- (void)
+	willChangeSession;
 
-- (void)
-didChangeSession;
-
-- (void)
-willChangeSession;
-
-@end
+@end //}
 
 
 /*!
 Base class for items that display a particular LED.
 */
-@interface TerminalToolbar_LEDItem : TerminalToolbar_SessionDependentItem
+@interface TerminalToolbar_LEDItem : TerminalToolbar_SessionDependentItem //{
 {
 @private
 	ListenerModel_StandardListener*		screenChangeListener;
 	unsigned int						indexOfLED;
 }
 
-- (id)
-initWithItemIdentifier:(NSString*)_
-oneBasedIndexOfLED:(unsigned int)_;
+// initializers
+	- (id)
+	initWithItemIdentifier:(NSString*)_
+	oneBasedIndexOfLED:(unsigned int)_;
 
-@end
+@end //}
 
 
 /*!
 Toolbar item “Bell”.
 */
-@interface TerminalToolbar_ItemBell : TerminalToolbar_SessionDependentItem
+@interface TerminalToolbar_ItemBell : TerminalToolbar_SessionDependentItem //{
 {
 @private
 	ListenerModel_StandardListener*		screenChangeListener;
 }
-@end
+@end //}
 
 
 /*!
 Toolbar item “Customize”.
 */
-@interface TerminalToolbar_ItemCustomize : NSToolbarItem
-{
-}
-@end
+@interface TerminalToolbar_ItemCustomize : NSToolbarItem @end
 
 
 /*!
 Toolbar item “Force Quit”.
 */
-@interface TerminalToolbar_ItemForceQuit : TerminalToolbar_SessionDependentItem
+@interface TerminalToolbar_ItemForceQuit : TerminalToolbar_SessionDependentItem //{
 {
 @private
 	ListenerModel_StandardListener*		sessionChangeListener;
 }
-@end
+@end //}
 
 
 /*!
 Toolbar item “Full Screen”.
 */
-@interface TerminalToolbar_ItemFullScreen : TerminalToolbar_SessionDependentItem
-{
-}
-@end
+@interface TerminalToolbar_ItemFullScreen : TerminalToolbar_SessionDependentItem @end
 
 
 /*!
 Toolbar item “Hide”.
 */
-@interface TerminalToolbar_ItemHide : TerminalToolbar_SessionDependentItem
-{
-}
-@end
+@interface TerminalToolbar_ItemHide : TerminalToolbar_SessionDependentItem @end
 
 
 /*!
 Toolbar item “L1”.
 */
-@interface TerminalToolbar_ItemLED1 : TerminalToolbar_LEDItem
-{
-}
-@end
+@interface TerminalToolbar_ItemLED1 : TerminalToolbar_LEDItem @end
 
 
 /*!
 Toolbar item “L2”.
 */
-@interface TerminalToolbar_ItemLED2 : TerminalToolbar_LEDItem
-{
-}
-@end
+@interface TerminalToolbar_ItemLED2 : TerminalToolbar_LEDItem @end
 
 
 /*!
 Toolbar item “L3”.
 */
-@interface TerminalToolbar_ItemLED3 : TerminalToolbar_LEDItem
-{
-}
-@end
+@interface TerminalToolbar_ItemLED3 : TerminalToolbar_LEDItem @end
 
 
 /*!
 Toolbar item “L4”.
 */
-@interface TerminalToolbar_ItemLED4 : TerminalToolbar_LEDItem
-{
-}
-@end
+@interface TerminalToolbar_ItemLED4 : TerminalToolbar_LEDItem @end
 
 
 /*!
 Toolbar item “Default”.
 */
-@interface TerminalToolbar_ItemNewSessionDefaultFavorite : NSToolbarItem
-{
-}
-@end
+@interface TerminalToolbar_ItemNewSessionDefaultFavorite : NSToolbarItem @end
 
 
 /*!
 Toolbar item “Log-In Shell”.
 */
-@interface TerminalToolbar_ItemNewSessionLogInShell : NSToolbarItem
-{
-}
-@end
+@interface TerminalToolbar_ItemNewSessionLogInShell : NSToolbarItem @end
 
 
 /*!
 Toolbar item “Shell”.
 */
-@interface TerminalToolbar_ItemNewSessionShell : NSToolbarItem
-{
-}
-@end
+@interface TerminalToolbar_ItemNewSessionShell : NSToolbarItem @end
 
 
 /*!
 Toolbar item “Print”.
 */
-@interface TerminalToolbar_ItemPrint : TerminalToolbar_SessionDependentItem
-{
-}
-@end
+@interface TerminalToolbar_ItemPrint : TerminalToolbar_SessionDependentItem @end
 
 
 /*!
 Toolbar item “Arrange in Front”.
 */
-@interface TerminalToolbar_ItemStackWindows : NSToolbarItem
-{
-}
-@end
+@interface TerminalToolbar_ItemStackWindows : NSToolbarItem @end
 
 
 /*!
 Toolbar item “Suspend”.
 */
-@interface TerminalToolbar_ItemSuspend : TerminalToolbar_SessionDependentItem
+@interface TerminalToolbar_ItemSuspend : TerminalToolbar_SessionDependentItem //{
 {
 @private
 	ListenerModel_StandardListener*		sessionChangeListener;
 }
-@end
+@end //}
 
 
 /*!
 Toolbar item “Tabs”.
 */
-@interface TerminalToolbar_ItemTabs : NSToolbarItem
+@interface TerminalToolbar_ItemTabs : NSToolbarItem //{
 {
 @private
 	NSSegmentedControl*		segmentedControl;
@@ -312,36 +270,39 @@ Toolbar item “Tabs”.
 	SEL						action;
 }
 
-- (void)
-setTabTargets:(NSArray*)_
-andAction:(SEL)_;
+// new methods
+	- (void)
+	setTabTargets:(NSArray*)_
+	andAction:(SEL)_;
 
-@end
+@end //}
 
 
 /*!
 A sample object type that can be used to represent a tab in
 the object array of a TerminalToolbar_ItemTabs instance.
 */
-@interface TerminalToolbar_TabSource : NSObject
+@interface TerminalToolbar_TabSource : NSObject //{
 {
 @private
 	NSAttributedString*		description;
 }
 
-- (id)
-initWithDescription:(NSAttributedString*)_;
+// initializers
+	- (id)
+	initWithDescription:(NSAttributedString*)_;
 
-- (NSAttributedString*)
-attributedDescription;
+// actions
+	- (void)
+	performAction:(id)_;
 
-- (void)
-performAction:(id)_;
+// accessors
+	- (NSAttributedString*)
+	attributedDescription;
+	- (NSString*)
+	toolTip;
 
-- (NSString*)
-toolTip;
-
-@end // TerminalToolbar_TabSource
+@end //}
 
 
 /*!
@@ -361,25 +322,21 @@ can be observed on this toolbar object to find out when
 can be observed on this toolbar object to find out when
 "setVisible:" is used.
 */
-@interface TerminalToolbar_Object : NSToolbar
-{
-}
+@interface TerminalToolbar_Object : NSToolbar //{
 
-- (id)
-initWithIdentifier:(NSString*)_;
+// initializers
+	- (id)
+	initWithIdentifier:(NSString*)_;
 
-// toolbar overrides
+// NSToolbar
+	- (void)
+	setDisplayMode:(NSToolbarDisplayMode)_;
+	- (void)
+	setSizeMode:(NSToolbarSizeMode)_;
+	- (void)
+	setVisible:(BOOL)_;
 
-- (void)
-setDisplayMode:(NSToolbarDisplayMode)_;
-
-- (void)
-setSizeMode:(NSToolbarSizeMode)_;
-
-- (void)
-setVisible:(BOOL)_;
-
-@end
+@end //}
 
 
 /*!
@@ -393,7 +350,7 @@ to TerminalToolbar_Delegate (and therefore you can
 call the TerminalToolbar_NSToolbarExtensions category’s
 methods on this toolbar).
 */
-@interface TerminalToolbar_Window : NSPanel
+@interface TerminalToolbar_Window : NSPanel //{
 {
 @private
 	ListenerModel_StandardListener*		sessionFactoryChangeListener;
@@ -401,10 +358,11 @@ methods on this toolbar).
 	BOOL								isDisplayingSheet : 1;
 }
 
-- (id)
-initWithContentRect:(NSRect)_
-screen:(NSScreen*)_;
+// initializers
+	- (id)
+	initWithContentRect:(NSRect)_
+	screen:(NSScreen*)_;
 
-@end
+@end //}
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

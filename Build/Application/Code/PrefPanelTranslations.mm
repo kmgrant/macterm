@@ -183,26 +183,24 @@ Implements an object wrapper for translation tables, that allows
 them to be easily inserted into user interface elements without
 losing less user-friendly information about each encoding.
 */
-@interface PrefPanelTranslations_TableInfo : BoundName_Object
+@interface PrefPanelTranslations_TableInfo : BoundName_Object //{
 {
 @private
 	CFStringEncoding	encodingType;
 }
 
 // initializers
-
-- (id)
-initWithEncodingType:(CFStringEncoding)_
-description:(NSString*)_;
+	- (id)
+	initWithEncodingType:(CFStringEncoding)_
+	description:(NSString*)_;
 
 // accessors; see "Translation Tables" array controller in the NIB, for key names
+	- (CFStringEncoding)
+	encodingType;
+	- (void)
+	setEncodingType:(CFStringEncoding)_;
 
-- (CFStringEncoding)
-encodingType;
-- (void)
-setEncodingType:(CFStringEncoding)_;
-
-@end // PrefPanelTranslations_TableInfo
+@end //}
 
 #pragma mark Internal Method Prototypes
 namespace {
@@ -221,9 +219,10 @@ void				setDataBrowserColumnWidths		(My_TranslationsPanelUIPtr);
 
 } // anonymous namespace
 
-@interface PrefPanelTranslations_ViewManager (PrefPanelTranslations_ViewManagerInternal)
-
-@end // PrefPanelTranslations_ViewManager (PrefPanelTranslations_ViewManagerInternal)
+/*!
+The private class interface.
+*/
+@interface PrefPanelTranslations_ViewManager (PrefPanelTranslations_ViewManagerInternal) @end
 
 #pragma mark Variables
 namespace {

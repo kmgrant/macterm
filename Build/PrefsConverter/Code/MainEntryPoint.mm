@@ -108,16 +108,16 @@ Boolean		gFinished = false;			//!< used to control exit warnings to the user
 
 #pragma mark Internal Method Prototypes
 
-@interface PrefsConverterAppDelegate : NSObject
-{
-}
+/*!
+The delegate for NSApplication.
+*/
+@interface PrefsConverterAppDelegate : NSObject //{
 
 // NSApplicationDelegate
+	- (void)
+	applicationDidFinishLaunching:(NSNotification*)_;
 
-- (void)
-applicationDidFinishLaunching:(NSNotification*)_;
-
-@end // PrefsConverterAppDelegate
+@end //}
 
 namespace {
 
@@ -132,6 +132,9 @@ My_PrefsResult		actionVersion6	();
 
 #pragma mark Public Methods
 
+/*!
+Main entry point.
+*/
 int
 main	(int			argc,
 		 const char*	argv[])

@@ -65,17 +65,18 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface InfoWindow_Controller : NSWindowController< NSToolbarDelegate >
+@interface InfoWindow_Controller : NSWindowController< NSToolbarDelegate > //{
 {
 @public
 	IBOutlet NSTableView*	infoTable;
 	NSMutableArray*			dataArray;
 }
 
-+ (id)
-sharedInfoWindowController;
+// class methods
+	+ (id)
+	sharedInfoWindowController;
 
-@end
+@end //}
 
 #endif // __OBJC__
 

@@ -57,7 +57,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelTranslations_ViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+@interface PrefPanelTranslations_ViewManager : Panel_ViewManager< Panel_Delegate,
+																	PrefsWindow_PanelInterface > //{
 {
 	IBOutlet NSTableView*	translationTableView;
 @private
@@ -66,31 +67,26 @@ changes to an interface declared in a ".mm" file.
 }
 
 // accessors
-
-- (BOOL)
-backupFontEnabled;
-- (void)
-setBackupFontEnabled:(BOOL)_; // binding
-
-- (NSString*)
-backupFontFamilyName;
-- (void)
-setBackupFontFamilyName:(NSString*)_; // binding
-
-- (NSIndexSet*)
-translationTableIndexes;
-- (void)
-setTranslationTableIndexes:(NSIndexSet*)_; // binding
-
-- (NSArray*)
-translationTables; // binding
+	- (BOOL)
+	backupFontEnabled;
+	- (void)
+	setBackupFontEnabled:(BOOL)_; // binding
+	- (NSString*)
+	backupFontFamilyName;
+	- (void)
+	setBackupFontFamilyName:(NSString*)_; // binding
+	- (NSIndexSet*)
+	translationTableIndexes;
+	- (void)
+	setTranslationTableIndexes:(NSIndexSet*)_; // binding
+	- (NSArray*)
+	translationTables; // binding
 
 // actions
+	- (IBAction)
+	performBackupFontSelection:(id)_;
 
-- (IBAction)
-performBackupFontSelection:(id)_;
-
-@end
+@end //}
 
 #endif // __OBJC__
 

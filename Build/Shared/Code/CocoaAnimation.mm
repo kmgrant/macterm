@@ -76,7 +76,12 @@ enum My_AnimationTransition
 
 } // anonymous namespace
 
-@interface CocoaAnimation_WindowFrameAnimator : NSObject
+/*!
+A class for performing animations on windows that
+works on older Mac OS X versions (that is, before
+Core Animation was available).
+*/
+@interface CocoaAnimation_WindowFrameAnimator : NSObject //{
 {
 	NSWindow*			borderlessWindow;
 	NSWindow*			actualWindow;
@@ -94,32 +99,32 @@ enum My_AnimationTransition
 	float				frameDeltaSizeV;
 }
 
-// designated initializer
-- (id)
-initWithTransition:(My_AnimationTransition)_
-imageWindow:(NSWindow*)_
-finalWindow:(NSWindow*)_
-fromFrame:(NSRect)_
-toFrame:(NSRect)_
-totalDelay:(NSTimeInterval)_
-delayDistribution:(My_AnimationTimeDistribution)_
-effect:(My_AnimationEffect)_
-simplified:(BOOL)_;
+// initializers
+	- (id)
+	initWithTransition:(My_AnimationTransition)_
+	imageWindow:(NSWindow*)_
+	finalWindow:(NSWindow*)_
+	fromFrame:(NSRect)_
+	toFrame:(NSRect)_
+	totalDelay:(NSTimeInterval)_
+	delayDistribution:(My_AnimationTimeDistribution)_
+	effect:(My_AnimationEffect)_
+	simplified:(BOOL)_; // designated initializer
+	- (id)
+	initWithTransition:(My_AnimationTransition)_
+	imageWindow:(NSWindow*)_
+	finalWindow:(NSWindow*)_
+	fromFrame:(NSRect)_
+	toFrame:(NSRect)_
+	totalDelay:(NSTimeInterval)_
+	delayDistribution:(My_AnimationTimeDistribution)_
+	effect:(My_AnimationEffect)_;
 
-- (id)
-initWithTransition:(My_AnimationTransition)_
-imageWindow:(NSWindow*)_
-finalWindow:(NSWindow*)_
-fromFrame:(NSRect)_
-toFrame:(NSRect)_
-totalDelay:(NSTimeInterval)_
-delayDistribution:(My_AnimationTimeDistribution)_
-effect:(My_AnimationEffect)_;
+// new methods
+	- (void)
+	animationStep:(id)_;
 
-- (void)
-animationStep:(id)_;
-
-@end
+@end //}
 
 #pragma mark Internal Method Prototypes
 namespace {

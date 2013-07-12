@@ -59,43 +59,38 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelTerminals_ViewManager : GenericPanelTabs_ViewManager
-{
-}
-
-@end
+@interface PrefPanelTerminals_ViewManager : GenericPanelTabs_ViewManager @end
 
 
 /*!
 Manages bindings for the base emulator preference.
 */
-@interface PrefPanelTerminals_BaseEmulatorValue : PreferenceValue_Array
+@interface PrefPanelTerminals_BaseEmulatorValue : PreferenceValue_Array //{
 
-// designated initializer
-- (id)
-initWithContextManager:(PrefsContextManager_Object*)_;
+// initializers
+	- (id)
+	initWithContextManager:(PrefsContextManager_Object*)_;
 
-@end
+@end //}
 
 
 /*!
 Manages bindings for the emulation tweaks preference.
 */
-@interface PrefPanelTerminals_EmulationTweaksValue : PreferenceValue_Inherited
+@interface PrefPanelTerminals_EmulationTweaksValue : PreferenceValue_Inherited //{
 {
 	NSArray*	featureArray; // array of Preference_Value* with "description" property
 }
 
-// designated initializer
-- (id)
-initWithContextManager:(PrefsContextManager_Object*)_;
+// initializers
+	- (id)
+	initWithContextManager:(PrefsContextManager_Object*)_;
 
 // accessors
+	- (NSArray*)
+	featureArray; // binding
 
-- (NSArray*)
-featureArray; // binding
-
-@end
+@end //}
 
 
 /*!
@@ -105,7 +100,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelTerminals_EmulationViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+@interface PrefPanelTerminals_EmulationViewManager : Panel_ViewManager< Panel_Delegate,
+																		PrefsWindow_PanelInterface > //{
 {
 	IBOutlet NSTableView*			tweaksTableView;
 @private
@@ -115,17 +111,14 @@ changes to an interface declared in a ".mm" file.
 }
 
 // accessors
+	- (PrefPanelTerminals_BaseEmulatorValue*)
+	baseEmulator; // binding
+	- (PrefPanelTerminals_EmulationTweaksValue*)
+	emulationTweaks; // binding
+	- (PreferenceValue_String*)
+	identity; // binding
 
-- (PrefPanelTerminals_BaseEmulatorValue*)
-baseEmulator; // binding
-
-- (PrefPanelTerminals_EmulationTweaksValue*)
-emulationTweaks; // binding
-
-- (PreferenceValue_String*)
-identity; // binding
-
-@end
+@end //}
 
 
 /*!
@@ -135,7 +128,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelTerminals_OptionsViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+@interface PrefPanelTerminals_OptionsViewManager : Panel_ViewManager< Panel_Delegate,
+																		PrefsWindow_PanelInterface > //{
 {
 @private
 	PrefsContextManager_Object*		prefsMgr;
@@ -144,58 +138,49 @@ changes to an interface declared in a ".mm" file.
 }
 
 // accessors
+	- (PreferenceValue_Flag*)
+	wrapLines; // binding
+	- (PreferenceValue_Flag*)
+	eightBit; // binding
+	- (PreferenceValue_Flag*)
+	saveLinesOnClear; // binding
+	- (PreferenceValue_Flag*)
+	normalKeypadTopRow; // binding
+	- (PreferenceValue_Flag*)
+	localPageKeys; // binding
 
-- (PreferenceValue_Flag*)
-wrapLines; // binding
-
-- (PreferenceValue_Flag*)
-eightBit; // binding
-
-- (PreferenceValue_Flag*)
-saveLinesOnClear; // binding
-
-- (PreferenceValue_Flag*)
-normalKeypadTopRow; // binding
-
-- (PreferenceValue_Flag*)
-localPageKeys; // binding
-
-@end
+@end //}
 
 
 /*!
 Manages bindings for the scrollback preference.
 */
-@interface PrefPanelTerminals_ScrollbackValue : PreferenceValue_Inherited
+@interface PrefPanelTerminals_ScrollbackValue : PreferenceValue_Inherited //{
 {
 	NSArray*					behaviorArray;
 	PreferenceValue_Number*		behaviorObject;
 	PreferenceValue_Number*		rowsObject;
 }
 
-// designated initializer
-- (id)
-initWithContextManager:(PrefsContextManager_Object*)_;
+// initializers
+	- (id)
+	initWithContextManager:(PrefsContextManager_Object*)_;
 
 // accessors
+	- (NSArray*)
+	behaviorArray; // binding
+	- (id)
+	currentBehavior;
+	- (void)
+	setCurrentBehavior:(id)_; // binding
+	- (NSString*)
+	rowsNumberStringValue;
+	- (void)
+	setRowsNumberStringValue:(NSString*)_; // binding
+	- (BOOL)
+	rowsEnabled; // binding
 
-- (NSArray*)
-behaviorArray; // binding
-
-- (id)
-currentBehavior;
-- (void)
-setCurrentBehavior:(id)_; // binding
-
-- (NSString*)
-rowsNumberStringValue;
-- (void)
-setRowsNumberStringValue:(NSString*)_; // binding
-
-- (BOOL)
-rowsEnabled; // binding
-
-@end
+@end //}
 
 
 /*!
@@ -205,7 +190,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelTerminals_ScreenViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+@interface PrefPanelTerminals_ScreenViewManager : Panel_ViewManager< Panel_Delegate,
+																		PrefsWindow_PanelInterface > //{
 {
 @private
 	PrefsContextManager_Object*		prefsMgr;
@@ -214,17 +200,14 @@ changes to an interface declared in a ".mm" file.
 }
 
 // accessors
+	- (PreferenceValue_Number*)
+	screenWidth; // binding
+	- (PreferenceValue_Number*)
+	screenHeight; // binding
+	- (PrefPanelTerminals_ScrollbackValue*)
+	scrollback; // binding
 
-- (PreferenceValue_Number*)
-screenWidth; // binding
-
-- (PreferenceValue_Number*)
-screenHeight; // binding
-
-- (PrefPanelTerminals_ScrollbackValue*)
-scrollback; // binding
-
-@end
+@end //}
 
 #endif // __OBJC__
 

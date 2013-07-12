@@ -68,7 +68,10 @@
 
 #pragma mark Types
 
-@interface FindDialog_Handler : NSObject< FindDialog_ViewManagerChannel, PopoverManager_Delegate >
+/*!
+Manages the Find user interface.
+*/
+@interface FindDialog_Handler : NSObject< FindDialog_ViewManagerChannel, PopoverManager_Delegate > //{
 {
 	FindDialog_Ref					selfRef;			// identical to address of structure, but typed as ref
 	FindDialog_ViewManager*			viewMgr;			// loads the Find interface
@@ -81,79 +84,68 @@
 	FindDialog_Options				cachedOptions;		// options set when the user interface is closed
 }
 
-+ (FindDialog_Handler*)
-viewHandlerFromRef:(FindDialog_Ref)_;
+// class methods
+	+ (FindDialog_Handler*)
+	viewHandlerFromRef:(FindDialog_Ref)_;
 
-- (void)
-clearSearchHighlightingInContext:(FindDialog_SearchContext)_;
+// initializers
+	- (id)
+	initForTerminalWindow:(TerminalWindowRef)_
+	notificationProc:(FindDialog_CloseNotifyProcPtr)_
+	previousSearches:(NSMutableArray*)_
+	initialOptions:(FindDialog_Options)_;
 
-- (id)
-initForTerminalWindow:(TerminalWindowRef)_
-notificationProc:(FindDialog_CloseNotifyProcPtr)_
-previousSearches:(NSMutableArray*)_
-initialOptions:(FindDialog_Options)_;
-
-- (void)
-display;
-
-- (unsigned long)
-initiateSearchFor:(NSString*)_
-ignoringCase:(BOOL)_
-allTerminals:(BOOL)_
-notFinal:(BOOL)_
-didSearch:(BOOL*)_;
-
-- (void)
-remove;
-
-- (void)
-zoomToSearchResults;
+// new methods
+	- (void)
+	clearSearchHighlightingInContext:(FindDialog_SearchContext)_;
+	- (void)
+	display;
+	- (unsigned long)
+	initiateSearchFor:(NSString*)_
+	ignoringCase:(BOOL)_
+	allTerminals:(BOOL)_
+	notFinal:(BOOL)_
+	didSearch:(BOOL*)_;
+	- (void)
+	remove;
+	- (void)
+	zoomToSearchResults;
 
 // accessors
-
-- (FindDialog_Options)
-cachedOptions;
-
-- (TerminalWindowRef)
-terminalWindow;
+	- (FindDialog_Options)
+	cachedOptions;
+	- (TerminalWindowRef)
+	terminalWindow;
 
 // FindDialog_ViewManagerChannel
-
-- (void)
-findDialog:(FindDialog_ViewManager*)_
-didLoadManagedView:(NSView*)_;
-
-- (void)
-findDialog:(FindDialog_ViewManager*)_
-clearSearchHighlightingInContext:(FindDialog_SearchContext)_;
-
-- (void)
-findDialog:(FindDialog_ViewManager*)_
-didSearchInManagedView:(NSView*)_
-withQuery:(NSString*)_;
-
-- (void)
-findDialog:(FindDialog_ViewManager*)_
-didFinishUsingManagedView:(NSView*)_
-acceptingSearch:(BOOL)_
-finalOptions:(FindDialog_Options)_;
-
-- (NSMutableArray*)
-findDialog:(FindDialog_ViewManager*)_
-returnHistoryArrayForManagedView:(NSView*)_;
+	- (void)
+	findDialog:(FindDialog_ViewManager*)_
+	didLoadManagedView:(NSView*)_;
+	- (void)
+	findDialog:(FindDialog_ViewManager*)_
+	clearSearchHighlightingInContext:(FindDialog_SearchContext)_;
+	- (void)
+	findDialog:(FindDialog_ViewManager*)_
+	didSearchInManagedView:(NSView*)_
+	withQuery:(NSString*)_;
+	- (void)
+	findDialog:(FindDialog_ViewManager*)_
+	didFinishUsingManagedView:(NSView*)_
+	acceptingSearch:(BOOL)_
+	finalOptions:(FindDialog_Options)_;
+	- (NSMutableArray*)
+	findDialog:(FindDialog_ViewManager*)_
+	returnHistoryArrayForManagedView:(NSView*)_;
 
 // PopoverManager_Delegate
+	- (NSPoint)
+	idealAnchorPointForParentWindowFrame:(NSRect)_;
+	- (Popover_Properties)
+	idealArrowPositionForParentWindowFrame:(NSRect)_;
+	- (NSSize)
+	idealSize;
 
-- (NSPoint)
-idealAnchorPointForParentWindowFrame:(NSRect)_;
-
-- (Popover_Properties)
-idealArrowPositionForParentWindowFrame:(NSRect)_;
-
-- (NSSize)
-idealSize;
-
-@end // FindDialog_Handler
+@end //}
 
 
 namespace {

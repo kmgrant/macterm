@@ -140,9 +140,10 @@ Boolean		updateCheckBoxPreference		(MyKioskPanelUIPtr, HIViewRef);
 
 } // anonymous namespace
 
-@interface PrefPanelFullScreen_ViewManager (PrefPanelFullScreen_ViewManagerInternal)
-
-@end // PrefPanelFullScreen_ViewManager (PrefPanelFullScreen_ViewManagerInternal)
+/*!
+The private class interface.
+*/
+@interface PrefPanelFullScreen_ViewManager (PrefPanelFullScreen_ViewManagerInternal) @end
 
 #pragma mark Variables
 namespace {

@@ -4,7 +4,7 @@
 /*###############################################################
 
 	Simple Cocoa Wrappers Library 1.9
-	© 2008-2012 by Kevin Grant
+	© 2008-2013 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -53,12 +53,16 @@
 
 #pragma mark Types
 
-@interface CocoaBasic_NoticeColorPanelChange : NSResponder
+/*!
+Responds to user actions in the system-wide Color Panel.
+*/
+@interface CocoaBasic_NoticeColorPanelChange : NSResponder //{
 
-- (void)
-changeColor:(id)_;
+// NSColorPanelResponderMethod
+	- (void)
+	changeColor:(id)_;
 
-@end
+@end //}
 
 typedef std::map< HIWindowRef, NSWindow* >		HIWindowRefToNSWindowMap;
 

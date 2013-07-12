@@ -4,7 +4,7 @@
 /*###############################################################
 
 	Simple Cocoa Wrappers Library 1.9
-	© 2008-2012 by Kevin Grant
+	© 2008-2013 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -42,39 +42,43 @@
 
 #pragma mark Types
 
-@interface GrowlSupport_Delegate : NSObject<GrowlApplicationBridgeDelegate>
+/*!
+Interfaces with Growl for notifications, if it is installed.
+*/
+@interface GrowlSupport_Delegate : NSObject<GrowlApplicationBridgeDelegate> //{
 {
 	BOOL	isReady;
 }
 
-+ (id)
-sharedGrowlDelegate;
+// class methods
+	+ (id)
+	sharedGrowlDelegate;
 
-- (BOOL)
-isReady;
+// accessors
+	- (BOOL)
+	isReady;
 
-@end
+@end //}
 
 
-@interface GrowlSupport_MacUserNotificationDelegate : NSObject<NSUserNotificationCenterDelegate>
-{
-}
+/*!
+On Mac OS X 10.8 and beyond, interfaces with the Mac OS X
+user notification system.
+*/
+@interface GrowlSupport_MacUserNotificationDelegate : NSObject<NSUserNotificationCenterDelegate> //{
 
 // NSUserNotificationCenterDelegate
+	- (void)
+	userNotificationCenter:(NSUserNotificationCenter*)_
+	didDeliverNotification:(NSUserNotification*)_;
+	- (void)
+	userNotificationCenter:(NSUserNotificationCenter*)_
+	didActivateNotification:(NSUserNotification*)_;
+	- (BOOL)
+	userNotificationCenter:(NSUserNotificationCenter*)_
+	shouldPresentNotification:(NSUserNotification*)_;
 
-- (void)
-userNotificationCenter:(NSUserNotificationCenter*)_
-didDeliverNotification:(NSUserNotification*)_;
-
-- (void)
-userNotificationCenter:(NSUserNotificationCenter*)_
-didActivateNotification:(NSUserNotification*)_;
-
-- (BOOL)
-userNotificationCenter:(NSUserNotificationCenter*)_
-shouldPresentNotification:(NSUserNotification*)_;
-
-@end
+@end //}
 
 #pragma mark Variables
 namespace {

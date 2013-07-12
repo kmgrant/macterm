@@ -40,26 +40,25 @@ same meaning on any version of Mac OS X.  It is recommended
 that user interface elements use "boundName" for bindings
 instead of "description".
 */
-@interface BoundName_Object : NSObject
+@interface BoundName_Object : NSObject //{
 {
 	NSString*	boundNameString_;
 }
 
-- (id)
-initWithBoundName:(NSString*)_;
+// initializers
+	- (id)
+	initWithBoundName:(NSString*)_;
 
 // accessors
+	- (NSString*)
+	boundName;
+	- (void)
+	setBoundName:(NSString*)_;
+	- (NSString*)
+	description;
+	- (void)
+	setDescription:(NSString*)_;
 
-- (NSString*)
-boundName;
-- (void)
-setBoundName:(NSString*)_;
-
-- (NSString*)
-description;
-- (void)
-setDescription:(NSString*)_;
-
-@end
+@end //}
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

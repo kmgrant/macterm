@@ -73,7 +73,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrintTerminal_PreviewPanelController : NSWindowController
+@interface PrintTerminal_PreviewPanelController : NSWindowController //{
 {
 @private
 	IBOutlet NSTextView*	previewPane;
@@ -85,46 +85,42 @@ changes to an interface declared in a ".mm" file.
 	NSString*				fontSize;
 }
 
-- (id)
-initWithString:(NSString*)_
-andFont:(NSFont*)_
-andTitle:(NSString*)_
-andLandscape:(BOOL)_;
+// initializers
+	- (id)
+	initWithString:(NSString*)_
+	andFont:(NSFont*)_
+	andTitle:(NSString*)_
+	andLandscape:(BOOL)_;
 
-- (void)
-beginPreviewSheetModalForWindow:(NSWindow*)_;
-
-- (IBAction)
-cancel:(id)_;
-
-- (IBAction)
-help:(id)_;
-
-- (IBAction)
-pageSetup:(id)_;
-
-- (IBAction)
-print:(id)_;
+// new methods
+	- (void)
+	beginPreviewSheetModalForWindow:(NSWindow*)_;
 
 // accessors
+	- (NSString*)
+	fontSize;
+	- (void)
+	setFontSize:(NSString*)_; // binding
+	- (NSString*)
+	maximumSensibleFontSize; // binding
+	- (NSString*)
+	minimumSensibleFontSize; // binding
+	- (NSString*)
+	paperInfo;
+	- (void)
+	setPaperInfo:(NSString*)_; // binding
 
-- (NSString*)
-paperInfo;
-- (void)
-setPaperInfo:(NSString*)_; // binding
+// actions
+	- (IBAction)
+	cancel:(id)_;
+	- (IBAction)
+	help:(id)_;
+	- (IBAction)
+	pageSetup:(id)_;
+	- (IBAction)
+	print:(id)_;
 
-- (NSString*)
-fontSize;
-- (void)
-setFontSize:(NSString*)_; // binding
-
-- (NSString*)
-maximumSensibleFontSize; // binding
-
-- (NSString*)
-minimumSensibleFontSize; // binding
-
-@end
+@end //}
 
 #endif // __OBJC__
 

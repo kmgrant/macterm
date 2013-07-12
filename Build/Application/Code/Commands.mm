@@ -114,7 +114,7 @@ Calls Commands_ExecuteByIDUsingEvent() after a delay.
 This is a transitional object that will not really be needed
 once the application moves to Cocoa completely.
 */
-@interface Commands_DelayedCommand : NSObject
+@interface Commands_DelayedCommand : NSObject //{
 {
 @private
 	UInt32			commandID;
@@ -122,15 +122,17 @@ once the application moves to Cocoa completely.
 	Float32			executionDelay;
 }
 
-- (id)
-initWithCommand:(UInt32)_
-andEventTarget:(EventTargetRef)_
-andDelay:(Float32)_;
+// initializers
+	- (id)
+	initWithCommand:(UInt32)_
+	andEventTarget:(EventTargetRef)_
+	andDelay:(Float32)_;
 
-- (void)
-execute;
+// new methods
+	- (void)
+	execute;
 
-@end // Commands_DelayedCommand
+@end //}
 
 
 /*!
@@ -139,19 +141,17 @@ the Services menu.  Note that the names of messages in this
 class should match those published under NSServices (using the
 "NSMessage" key) in the generated Info.plist file.
 */
-@interface Commands_ServiceProviders : NSObject
-{
-}
+@interface Commands_ServiceProviders : NSObject //{
 
-- (void)
-openPathInShell:(NSPasteboard*)_
-userData:(NSString*)_
-error:(NSString**)_;
-
-- (void)
-openURL:(NSPasteboard*)_
-userData:(NSString*)_
-error:(NSString**)_;
+// registered Service providers
+	- (void)
+	openPathInShell:(NSPasteboard*)_
+	userData:(NSString*)_
+	error:(NSString**)_;
+	- (void)
+	openURL:(NSPasteboard*)_
+	userData:(NSString*)_
+	error:(NSString**)_;
 
 @end // Commands_ServiceProviders
 
@@ -160,16 +160,17 @@ error:(NSString**)_;
 This class exists so that it is easier to associate a SessionRef
 with an NSMenuItem, via setRepresentedObject:.
 */
-@interface Commands_SessionWrap : NSObject
+@interface Commands_SessionWrap : NSObject //{
 {
 @public
 	SessionRef		session;
 }
 
-- (id)
-initWithSession:(SessionRef)_;
+// initializers
+	- (id)
+	initWithSession:(SessionRef)_;
 
-@end // Commands_SessionWrap
+@end //}
 
 
 namespace {
@@ -7821,6 +7822,9 @@ dealloc
 {
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark Registered Service Providers
 
 
 /*!

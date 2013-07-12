@@ -95,7 +95,7 @@ data (points), so if a drawing is multi-colored or
 has lines of different widths it must consist of an
 array of elements of this type.
 */
-@interface VectorCanvas_Path : NSObject
+@interface VectorCanvas_Path : NSObject //{
 {
 @public
 	VectorCanvas_PathPurpose	purpose;
@@ -107,25 +107,20 @@ array of elements of this type.
 }
 
 // initializers
-
-- (id)
-init;
-
-// designated initializer
-- (id)
-initWithPurpose:(VectorCanvas_PathPurpose)_;
+	- (id)
+	init;
+	- (id)
+	initWithPurpose:(VectorCanvas_PathPurpose)_; // designated initializer
 
 // accessors
-
-- (void)
-setPurpose:(VectorCanvas_PathPurpose)_;
+	- (void)
+	setPurpose:(VectorCanvas_PathPurpose)_;
 
 // new methods
+	- (VectorCanvas_Path*)
+	copyWithEmptyPathAndPurpose:(VectorCanvas_PathPurpose)_;
 
-- (VectorCanvas_Path*)
-copyWithEmptyPathAndPurpose:(VectorCanvas_PathPurpose)_;
-
-@end
+@end //}
 
 
 namespace {
@@ -174,12 +169,15 @@ void				setPaletteColor			(My_VectorCanvasPtr, SInt16, RGBColor const&);
 
 } // anonymous namespace
 
-@interface VectorCanvas_View (VectorCanvas_ViewInternal)
+/*!
+The private class interface.
+*/
+@interface VectorCanvas_View (VectorCanvas_ViewInternal) //{
 
-- (void)
-renderDrawingInCurrentFocusWithRect:(NSRect)_;
+	- (void)
+	renderDrawingInCurrentFocusWithRect:(NSRect)_;
 
-@end // VectorCanvas_View (VectorCanvas_ViewInternal)
+@end //}
 
 #pragma mark Variables
 namespace {
@@ -1228,7 +1226,7 @@ setInterpreterRef:(VectorInterpreter_Ref)	anInterpreter
 }// setInterpreterRef
 
 
-#pragma mark Commands
+#pragma mark Actions
 
 
 /*!
@@ -1268,9 +1266,6 @@ canPerformCopy:(id <NSValidatedUserInterfaceItem>)		anItem
 #pragma unused(anItem)
 	return [NSNumber numberWithBool:YES];
 }
-
-
-#pragma mark Commands
 
 
 /*!

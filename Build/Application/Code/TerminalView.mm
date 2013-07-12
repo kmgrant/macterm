@@ -550,39 +550,47 @@ void				visualBell							(TerminalViewRef);
 
 } // anonymous namespace
 
-@interface TerminalView_BackgroundView (TerminalView_BackgroundViewPrivate)
+/*!
+The private class interface.
+*/
+@interface TerminalView_BackgroundView (TerminalView_BackgroundViewInternal) //{
 
-- (void)
-drawRect:(NSRect)	rect;
+// NSView
+	- (void)
+	drawRect:(NSRect)_;
 
-- (size_t)
-colorIndex; // a "kTerminalView_ColorIndex..." constant
-- (void)
-setColorIndex:(size_t)	aColorIndex;
+// accessors
+	- (size_t)
+	colorIndex; // a "kTerminalView_ColorIndex..." constant
+	- (void)
+	setColorIndex:(size_t)_;
+	- (My_TerminalViewPtr)
+	internalViewPtr;
+	- (void)
+	setInternalViewPtr:(My_TerminalViewPtr)_;
 
-- (My_TerminalViewPtr)
-internalViewPtr;
-- (void)
-setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr;
+@end //}
 
-@end
+/*!
+The private class interface.
+*/
+@interface TerminalView_ContentView (TerminalView_ContentViewInternal) //{
 
-@interface TerminalView_ContentView (TerminalView_ContentViewPrivate)
+// NSView
+	- (void)
+	drawRect:(NSRect)_;
 
-- (void)
-drawRect:(NSRect)	rect;
+// accessors
+	- (My_TerminalViewPtr)
+	internalViewPtr;
+	- (void)
+	setInternalViewPtr:(My_TerminalViewPtr)_;
+	- (BOOL)
+	showDragHighlight;
+	- (void)
+	setShowDragHighlight:(BOOL)_;
 
-- (My_TerminalViewPtr)
-internalViewPtr;
-- (void)
-setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr;
-
-- (BOOL)
-showDragHighlight;
-- (void)
-setShowDragHighlight:(BOOL)		flag;
-
-@end
+@end //}
 
 #pragma mark Variables
 namespace {
@@ -13086,6 +13094,42 @@ dealloc
 }// dealloc
 
 
+#pragma mark NSView
+
+
+/*!
+Returns YES to allow background views to render virtually
+at any time.
+
+(4.1)
+*/
+- (BOOL)
+canDrawConcurrently
+{
+	// NOTE: This "YES" is meaningless unless the containing NSWindow
+	// returns "YES" from its "allowsConcurrentViewDrawing" method.
+	return YES;
+}// canDrawConcurrently
+
+
+/*!
+Returns YES only if the view has no transparent parts.
+
+(4.0)
+*/
+- (BOOL)
+isOpaque
+{
+	return YES;
+}// isOpaque
+
+
+@end // TerminalView_BackgroundView
+
+
+@implementation TerminalView_BackgroundView (TerminalView_BackgroundViewInternal)
+
+
 #pragma mark Accessors
 
 
@@ -13162,34 +13206,7 @@ drawRect:(NSRect)	rect
 }// drawRect:
 
 
-/*!
-Returns YES to allow background views to render virtually
-at any time.
-
-(4.1)
-*/
-- (BOOL)
-canDrawConcurrently
-{
-	// NOTE: This "YES" is meaningless unless the containing NSWindow
-	// returns "YES" from its "allowsConcurrentViewDrawing" method.
-	return YES;
-}// canDrawConcurrently
-
-
-/*!
-Returns YES only if the view has no transparent parts.
-
-(4.0)
-*/
-- (BOOL)
-isOpaque
-{
-	return YES;
-}// isOpaque
-
-
-@end // TerminalView_BackgroundView
+@end // TerminalView_BackgroundView (TerminalView_BackgroundViewInternal)
 
 
 @implementation TerminalView_ContentView
@@ -13226,44 +13243,7 @@ dealloc
 }// dealloc
 
 
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (BOOL)
-showDragHighlight
-{
-	return showDragHighlight;
-}
-- (void)
-setShowDragHighlight:(BOOL)		flag
-{
-	showDragHighlight = flag;
-}// setShowDragHighlight:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (My_TerminalViewPtr)
-internalViewPtr
-{
-	return REINTERPRET_CAST(internalViewPtr, My_TerminalViewPtr);
-}
-- (void)
-setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
-{
-	internalViewPtr = aViewPtr;
-}// setInternalViewPtr:
-
-
-#pragma mark Commands
+#pragma mark Actions
 
 
 /*!
@@ -13367,6 +13347,24 @@ canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
 }
 
 
+#pragma mark NSResponder
+
+
+/*!
+Keeps track of the state of modifier keys so that an internal
+cache can be updated (used to change the cursor shape).
+
+(4.1)
+*/
+- (void)
+flagsChanged:(NSEvent*)		anEvent
+{
+	[super flagsChanged:anEvent];
+	self->modifierFlagsForCursor = [anEvent modifierFlags];
+	[[self window] invalidateCursorRectsForView:self];
+}// flagsChanged:
+
+
 #pragma mark NSView
 
 
@@ -13381,6 +13379,144 @@ acceptsFirstResponder
 {
 	return YES;
 }// acceptsFirstResponder
+
+
+/*!
+Returns YES only if the view’s coordinate system uses
+a top-left origin.
+
+(4.0)
+*/
+- (BOOL)
+isFlipped
+{
+	// since drawing code is originally from Carbon, keep the view
+	// flipped for the time being
+	return YES;
+}// isFlipped
+
+
+/*!
+Returns YES only if the view has no transparent parts.
+
+(4.0)
+*/
+- (BOOL)
+isOpaque
+{
+	return NO;
+}// isOpaque
+
+
+/*!
+Invoked by NSView whenever it’s necessary to define the regions
+that change the mouse pointer’s shape.
+
+(4.1)
+*/
+- (void)
+resetCursorRects
+{
+	My_TerminalViewPtr		viewPtr = [self internalViewPtr];
+	
+	
+	if ((nullptr != viewPtr) && (viewPtr->text.selection.readOnly))
+	{
+		// the user cannot interact with the terminal view so it is
+		// inappropriate to display any special cursor shapes over it
+		[self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
+	}
+	else
+	{
+		// the cursor varies based on the state of modifier keys
+		if (self->modifierFlagsForCursor & NSControlKeyMask)
+		{
+			// modifier key for contextual menu
+			if (FlagManager_Test(kFlagOS10_6API))
+			{
+				[self addCursorRect:[self bounds] cursor:[NSCursor contextualMenuCursor]];
+			}
+			else
+			{
+				// UNIMPLEMENTED on older Mac OS X versions for Cocoa (use Carbon?)
+				//[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
+				[self addCursorRect:[self bounds] cursor:customCursorIBeam(isSmallIBeam(viewPtr))];
+			}
+		}
+		else if ((self->modifierFlagsForCursor & NSCommandKeyMask) &&
+					(self->modifierFlagsForCursor & NSAlternateKeyMask))
+		{
+			// modifier key for moving the terminal cursor to the click location
+			// (in the Carbon version this was a plus-cursor, but Cocoa does not
+			// have that cursor shape)
+			[self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
+		}
+		else if (self->modifierFlagsForCursor & NSCommandKeyMask)
+		{
+			// modifier key for clicking a URL selection
+			[self addCursorRect:[self bounds] cursor:[NSCursor pointingHandCursor]];
+		}
+		else if (self->modifierFlagsForCursor & NSAlternateKeyMask)
+		{
+			// modifier key for rectangular text selections
+			[self addCursorRect:[self bounds] cursor:[NSCursor crosshairCursor]];
+		}
+		else
+		{
+			// normal cursor
+			//[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
+			[self addCursorRect:[self bounds] cursor:customCursorIBeam(isSmallIBeam(viewPtr))];
+		}
+		
+		// INCOMPLETE; add support for any current text selection region
+	}
+}// resetCursorRects
+
+
+@end // TerminalView_ContentView
+
+
+@implementation TerminalView_ContentView (TerminalView_ContentViewInternal)
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (BOOL)
+showDragHighlight
+{
+	return showDragHighlight;
+}
+- (void)
+setShowDragHighlight:(BOOL)		flag
+{
+	showDragHighlight = flag;
+}// setShowDragHighlight:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (My_TerminalViewPtr)
+internalViewPtr
+{
+	return REINTERPRET_CAST(internalViewPtr, My_TerminalViewPtr);
+}
+- (void)
+setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
+{
+	internalViewPtr = aViewPtr;
+}// setInternalViewPtr:
+
+
+#pragma mark NSView
 
 
 /*!
@@ -13568,113 +13704,6 @@ drawRect:(NSRect)	rect
 }// drawRect:
 
 
-/*!
-Keeps track of the state of modifier keys so that an internal
-cache can be updated (used to change the cursor shape).
-
-(4.1)
-*/
-- (void)
-flagsChanged:(NSEvent*)		anEvent
-{
-	[super flagsChanged:anEvent];
-	self->modifierFlagsForCursor = [anEvent modifierFlags];
-	[[self window] invalidateCursorRectsForView:self];
-}// flagsChanged:
-
-
-/*!
-Returns YES only if the view’s coordinate system uses
-a top-left origin.
-
-(4.0)
-*/
-- (BOOL)
-isFlipped
-{
-	// since drawing code is originally from Carbon, keep the view
-	// flipped for the time being
-	return YES;
-}// isFlipped
-
-
-/*!
-Returns YES only if the view has no transparent parts.
-
-(4.0)
-*/
-- (BOOL)
-isOpaque
-{
-	return NO;
-}// isOpaque
-
-
-/*!
-Invoked by NSView whenever it’s necessary to define the regions
-that change the mouse pointer’s shape.
-
-(4.1)
-*/
-- (void)
-resetCursorRects
-{
-	My_TerminalViewPtr		viewPtr = [self internalViewPtr];
-	
-	
-	if ((nullptr != viewPtr) && (viewPtr->text.selection.readOnly))
-	{
-		// the user cannot interact with the terminal view so it is
-		// inappropriate to display any special cursor shapes over it
-		[self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
-	}
-	else
-	{
-		// the cursor varies based on the state of modifier keys
-		if (self->modifierFlagsForCursor & NSControlKeyMask)
-		{
-			// modifier key for contextual menu
-			if (FlagManager_Test(kFlagOS10_6API))
-			{
-				[self addCursorRect:[self bounds] cursor:[NSCursor contextualMenuCursor]];
-			}
-			else
-			{
-				// UNIMPLEMENTED on older Mac OS X versions for Cocoa (use Carbon?)
-				//[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
-				[self addCursorRect:[self bounds] cursor:customCursorIBeam(isSmallIBeam(viewPtr))];
-			}
-		}
-		else if ((self->modifierFlagsForCursor & NSCommandKeyMask) &&
-					(self->modifierFlagsForCursor & NSAlternateKeyMask))
-		{
-			// modifier key for moving the terminal cursor to the click location
-			// (in the Carbon version this was a plus-cursor, but Cocoa does not
-			// have that cursor shape)
-			[self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
-		}
-		else if (self->modifierFlagsForCursor & NSCommandKeyMask)
-		{
-			// modifier key for clicking a URL selection
-			[self addCursorRect:[self bounds] cursor:[NSCursor pointingHandCursor]];
-		}
-		else if (self->modifierFlagsForCursor & NSAlternateKeyMask)
-		{
-			// modifier key for rectangular text selections
-			[self addCursorRect:[self bounds] cursor:[NSCursor crosshairCursor]];
-		}
-		else
-		{
-			// normal cursor
-			//[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
-			[self addCursorRect:[self bounds] cursor:customCursorIBeam(isSmallIBeam(viewPtr))];
-		}
-		
-		// INCOMPLETE; add support for any current text selection region
-	}
-}// resetCursorRects
-
-
-@end // TerminalView_ContentView
+@end // TerminalView_ContentView (TerminalView_ContentViewInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

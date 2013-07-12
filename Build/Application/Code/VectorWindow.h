@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -90,7 +90,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface VectorWindow_Controller : NSWindowController
+@interface VectorWindow_Controller : NSWindowController //{
 {
 	IBOutlet VectorCanvas_View*		canvasView;
 @private
@@ -100,25 +100,23 @@ changes to an interface declared in a ".mm" file.
 	WindowTitleDialog_Ref	renameDialog;
 }
 
-// designated initializer
-- (id)
-initWithInterpreter:(VectorInterpreter_Ref)_;
+// initializers
+	- (id)
+	initWithInterpreter:(VectorInterpreter_Ref)_;
 
-// new methods
-
-- (id)
-canPerformRename:(id <NSValidatedUserInterfaceItem>)_;
-- (IBAction)
-performRename:(id)_;
+// actions
+	- (id)
+	canPerformRename:(id <NSValidatedUserInterfaceItem>)_;
+	- (IBAction)
+	performRename:(id)_;
 
 // accessors
+	- (VectorCanvas_View*)
+	canvasView;
+	- (void)
+	setCanvasView:(VectorCanvas_View*)_;
 
-- (VectorCanvas_View*)
-canvasView;
-- (void)
-setCanvasView:(VectorCanvas_View*)_;
-
-@end
+@end //}
 
 #else
 

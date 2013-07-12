@@ -1,7 +1,8 @@
+/*!	\file InfoWindow.mm
+	\brief A window showing status for all sessions.
+*/
 /*###############################################################
 
-	InfoWindow.mm
-	
 	MacTerm
 		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
@@ -89,7 +90,7 @@ NSString*	kMyInfoColumnWindow			= @"Window";
 /*!
 This class holds information displayed in a row of the table.
 */
-@interface InfoWindow_SessionRow : NSObject
+@interface InfoWindow_SessionRow : NSObject //{
 {
 @public
 	SessionRef				session;
@@ -97,18 +98,19 @@ This class holds information displayed in a row of the table.
 	NSMutableDictionary*	dataByKey;
 }
 
-- (id)
-initWithSession:(SessionRef)_
-andActivationTime:(CFAbsoluteTime)_;
+// initializers
+	- (id)
+	initWithSession:(SessionRef)_
+	andActivationTime:(CFAbsoluteTime)_;
 
-- (id)
-objectForKey:(NSString*)_;
+// new methods
+	- (id)
+	objectForKey:(NSString*)_;
+	- (void)
+	setObject:(id)_
+	forKey:(NSString*)_;
 
-- (void)
-setObject:(id)_
-forKey:(NSString*)_;
-
-@end
+@end //}
 
 #pragma mark Variables
 namespace {
@@ -129,21 +131,24 @@ OSStatus	showHideInfoWindow			(ListenerModel_Ref, ListenerModel_Event, void*, vo
 
 } // anonymous namespace
 
-@interface InfoWindow_Controller (InfoWindow_ControllerInternal)
+/*!
+The private class interface.
+*/
+@interface InfoWindow_Controller (InfoWindow_ControllerInternal) //{
 
-- (void)
-didDoubleClickInView:(id)_;
+// new methods
+	- (InfoWindow_SessionRow*)
+	infoForRow:(int)_;
+	- (InfoWindow_SessionRow*)
+	infoForSession:(SessionRef)_;
+	- (void)
+	removeSession:(SessionRef)_;
 
-- (InfoWindow_SessionRow*)
-infoForRow:(int)_;
+// methods of the form required by "setDoubleAction:"
+	- (void)
+	didDoubleClickInView:(id)_;
 
-- (InfoWindow_SessionRow*)
-infoForSession:(SessionRef)_;
-
-- (void)
-removeSession:(SessionRef)_;
-
-@end // InfoWindow_Controller (InfoWindow_ControllerInternal)
+@end //}
 
 
 

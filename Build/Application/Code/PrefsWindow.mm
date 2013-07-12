@@ -154,7 +154,7 @@ typedef std::map< UInt32, SInt16 >			IndexByCommandID;
 This class represents a particular preferences context
 in the source list.
 */
-@interface PrefsWindow_Collection : NSObject< NSCopying >
+@interface PrefsWindow_Collection : NSObject< NSCopying > //{
 {
 @private
 	Preferences_ContextRef		preferencesContext;
@@ -162,43 +162,35 @@ in the source list.
 }
 
 // initializers
-
-- (id)
-initWithPreferencesContext:(Preferences_ContextRef)_
-asDefault:(BOOL)_;
+	- (id)
+	initWithPreferencesContext:(Preferences_ContextRef)_
+	asDefault:(BOOL)_;
 
 // accessors
-
-- (NSString*)
-boundName;
-- (void)
-setBoundName:(NSString*)_; // binding
-
-- (NSString*)
-description;
-- (void)
-setDescription:(NSString*)_; // binding
-
-- (BOOL)
-isEditable; // binding
-
-- (Preferences_ContextRef)
-preferencesContext;
+	- (NSString*)
+	boundName;
+	- (void)
+	setBoundName:(NSString*)_; // binding
+	- (NSString*)
+	description;
+	- (void)
+	setDescription:(NSString*)_; // binding
+	- (BOOL)
+	isEditable; // binding
+	- (Preferences_ContextRef)
+	preferencesContext;
 
 // NSCopying
-
-- (id)
-copyWithZone:(NSZone*)_;
+	- (id)
+	copyWithZone:(NSZone*)_;
 
 // NSObject
+	- (unsigned int)
+	hash;
+	- (BOOL)
+	isEqual:(id)_;
 
-- (unsigned int)
-hash;
-
-- (BOOL)
-isEqual:(id)_;
-
-@end // PrefsWindow_Collection
+@end //}
 
 #pragma mark Internal Method Prototypes
 namespace {
@@ -235,57 +227,53 @@ void					sizePanels						(HISize const&);
 
 } // anonymous namespace
 
-@interface PrefsWindow_Controller (PrefsWindow_ControllerInternal)
+/*!
+The private class interface.
+*/
+@interface PrefsWindow_Controller (PrefsWindow_ControllerInternal) //{
 
 // new methods
+	- (void)
+	displayPanel:(Panel_ViewManager*)_
+	withAnimation:(BOOL)_;
+	- (void)
+	rebuildSourceList;
+	- (void)
+	updateUserInterfaceForSourceListTransition:(id)_;
 
-- (Quills::Prefs::Class)
-currentPreferencesClass;
+// accessors
+	- (Quills::Prefs::Class)
+	currentPreferencesClass;
+	- (Preferences_ContextRef)
+	currentPreferencesContext;
 
-- (Preferences_ContextRef)
-currentPreferencesContext;
+// methods of the form required by NSSavePanel
+	- (void)
+	didEndExportPanel:(NSSavePanel*)_
+	returnCode:(int)_
+	contextInfo:(void*)_;
 
-- (void)
-didEndExportPanel:(NSSavePanel*)_
-returnCode:(int)_
-contextInfo:(void*)_;
-
-- (void)
-didEndImportPanel:(NSOpenPanel*)_
-returnCode:(int)_
-contextInfo:(void*)_;
-
-- (void)
-displayPanel:(Panel_ViewManager*)_
-withAnimation:(BOOL)_;
-
-- (void)
-rebuildSourceList;
-
-- (void)
-updateUserInterfaceForSourceListTransition:(id)_;
+// methods of the form required by NSOpenPanel
+	- (void)
+	didEndImportPanel:(NSOpenPanel*)_
+	returnCode:(int)_
+	contextInfo:(void*)_;
 
 // actions
+	- (void)
+	performDisplayPrefPanelFormats:(id)_;
+	- (void)
+	performDisplayPrefPanelFullScreen:(id)_;
+	- (void)
+	performDisplayPrefPanelGeneral:(id)_;
+	- (void)
+	performDisplayPrefPanelSessions:(id)_;
+	- (void)
+	performDisplayPrefPanelTerminals:(id)_;
+	- (void)
+	performDisplayPrefPanelTranslations:(id)_;
 
-- (void)
-performDisplayPrefPanelFormats:(id)_;
-
-- (void)
-performDisplayPrefPanelFullScreen:(id)_;
-
-- (void)
-performDisplayPrefPanelGeneral:(id)_;
-
-- (void)
-performDisplayPrefPanelSessions:(id)_;
-
-- (void)
-performDisplayPrefPanelTerminals:(id)_;
-
-- (void)
-performDisplayPrefPanelTranslations:(id)_;
-
-@end // PrefsWindow_Controller (PrefsWindow_ControllerInternal)
+@end //}
 
 #pragma mark Variables
 namespace {

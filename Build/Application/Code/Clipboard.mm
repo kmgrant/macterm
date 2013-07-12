@@ -1,9 +1,10 @@
+/*!	\file Clipboard.mm
+	\brief The clipboard window, and Copy and Paste management.
+*/
 /*###############################################################
 
-	Clipboard.mm
-	
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -1448,7 +1449,9 @@ updateClipboard		(PasteboardRef		inPasteboard)
 			{
 				// since the previous content may have been styled text, try
 				// to reset as much as possible (font, color, etc.)
-				[controller->clipboardTextContent setFont:[controller returnNSFontForMonospacedTextOfSize:14/* arbitrary */]];
+				[controller->clipboardTextContent setFont:
+													[Clipboard_WindowController
+														returnNSFontForMonospacedTextOfSize:14/* arbitrary */]];
 				[controller->clipboardTextContent setTextColor:[NSColor textColor]];
 			}
 		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
@@ -1853,7 +1856,7 @@ the Clipboard window.
 
 (4.0)
 */
-- (NSFont*)
++ (NSFont*)
 returnNSFontForMonospacedTextOfSize:(unsigned int)	fontSize
 {
 	NSFont*				result = nil;

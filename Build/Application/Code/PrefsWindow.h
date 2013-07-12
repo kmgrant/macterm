@@ -70,22 +70,23 @@ class ListenerModel_StandardListener;
 Panels that are destined for the Preferences window must implement
 the following methods as well, not just the Panel interface.
 */
-@protocol PrefsWindow_PanelInterface
+@protocol PrefsWindow_PanelInterface //{
 
-// for convenience, if a panel implements this NSColorPanel message then
-// the window controller will forward the message to the panel
-//- (void)
-//changeColor:(id)_;
+	// for convenience, if a panel implements this NSColorPanel message then
+	// the window controller will forward the message to the panel
+	//- (void)
+	//changeColor:(id)_;
 
-// for convenience, if a panel implements this NSFontPanel message then
-// the window controller will forward the message to the panel
-//- (void)
-//changeFont:(id)_;
+	// for convenience, if a panel implements this NSFontPanel message then
+	// the window controller will forward the message to the panel
+	//- (void)
+	//changeFont:(id)_;
 
-- (Quills::Prefs::Class)
-preferencesClass;
+	// return the category of settings edited by the panel
+	- (Quills::Prefs::Class)
+	preferencesClass;
 
-@end // PrefsWindow_PanelInterface
+@end //}
 
 
 /*!
@@ -97,7 +98,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefsWindow_Controller : NSWindowController< NSToolbarDelegate >
+@interface PrefsWindow_Controller : NSWindowController< NSToolbarDelegate > //{
 {
 	IBOutlet NSView*		windowFirstResponder;
 	IBOutlet NSView*		windowLastResponder;
@@ -125,53 +126,43 @@ changes to an interface declared in a ".mm" file.
 	PrefPanelFullScreen_ViewManager*	fullScreenPanel;
 }
 
-+ (id)
-sharedPrefsWindowController;
+// class methods
+	+ (id)
+	sharedPrefsWindowController;
 
 // accessors
-
-- (NSIndexSet*)
-currentPreferenceCollectionIndexes;
-- (void)
-setCurrentPreferenceCollectionIndexes:(NSIndexSet*)_; // binding
-
-- (NSArray*)
-currentPreferenceCollections; // binding
-
-- (BOOL)
-isSourceListHidden; // binding
-- (BOOL)
-isSourceListShowing; // binding
-- (void)
-setSourceListHidden:(BOOL)_;
+	- (NSIndexSet*)
+	currentPreferenceCollectionIndexes;
+	- (void)
+	setCurrentPreferenceCollectionIndexes:(NSIndexSet*)_; // binding
+	- (NSArray*)
+	currentPreferenceCollections; // binding
+	- (BOOL)
+	isSourceListHidden; // binding
+	- (BOOL)
+	isSourceListShowing; // binding
+	- (void)
+	setSourceListHidden:(BOOL)_;
 
 // actions
+	- (IBAction)
+	performAddNewPreferenceCollection:(id)_;
+	- (IBAction)
+	performContextSensitiveHelp:(id)_;
+	- (IBAction)
+	performDuplicatePreferenceCollection:(id)_;
+	- (IBAction)
+	performExportPreferenceCollectionToFile:(id)_;
+	- (IBAction)
+	performImportPreferenceCollectionFromFile:(id)_;
+	- (IBAction)
+	performRemovePreferenceCollection:(id)_;
+	- (IBAction)
+	performRenamePreferenceCollection:(id)_;
+	- (IBAction)
+	performSegmentedControlAction:(id)_;
 
-- (IBAction)
-performAddNewPreferenceCollection:(id)_;
-
-- (IBAction)
-performContextSensitiveHelp:(id)_;
-
-- (IBAction)
-performDuplicatePreferenceCollection:(id)_;
-
-- (IBAction)
-performExportPreferenceCollectionToFile:(id)_;
-
-- (IBAction)
-performImportPreferenceCollectionFromFile:(id)_;
-
-- (IBAction)
-performRemovePreferenceCollection:(id)_;
-
-- (IBAction)
-performRenamePreferenceCollection:(id)_;
-
-- (IBAction)
-performSegmentedControlAction:(id)_;
-
-@end
+@end //}
 
 #endif // __OBJC__
 

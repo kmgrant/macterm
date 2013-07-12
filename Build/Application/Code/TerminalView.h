@@ -200,13 +200,13 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface TerminalView_BackgroundView : NSView
+@interface TerminalView_BackgroundView : NSView //{
 {
 @private
 	size_t	colorIndex;
 	void*	internalViewPtr;
 }
-@end
+@end //}
 
 /*!
 Implements the main rendering part of the Terminal View.
@@ -215,14 +215,14 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface TerminalView_ContentView : NSControl
+@interface TerminalView_ContentView : NSControl //{
 {
 @private
 	BOOL			showDragHighlight;
 	unsigned int	modifierFlagsForCursor;
 	void*			internalViewPtr;
 }
-@end
+@end //}
 
 #else
 

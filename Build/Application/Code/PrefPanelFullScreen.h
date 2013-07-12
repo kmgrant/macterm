@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -56,45 +56,40 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelFullScreen_ViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+@interface PrefPanelFullScreen_ViewManager : Panel_ViewManager< Panel_Delegate,
+																PrefsWindow_PanelInterface > //{
 {
 @private
 	PrefsContextManager_Object*		prefsMgr;
 }
 
 // accessors
+	- (BOOL)
+	isForceQuitEnabled;
+	- (void)
+	setForceQuitEnabled:(BOOL)_; // binding
+	- (BOOL)
+	isMenuBarShownOnDemand;
+	- (void)
+	setMenuBarShownOnDemand:(BOOL)_; // binding
+	- (BOOL)
+	isScrollBarVisible;
+	- (void)
+	setScrollBarVisible:(BOOL)_; // binding
+	- (BOOL)
+	isWindowFrameVisible;
+	- (void)
+	setWindowFrameVisible:(BOOL)_; // binding
+	- (BOOL)
+	offSwitchWindowEnabled;
+	- (void)
+	setOffSwitchWindowEnabled:(BOOL)_; // binding
+	- (BOOL)
+	superfluousEffectsEnabled;
+	- (void)
+	setSuperfluousEffectsEnabled:(BOOL)_; // binding
 
-- (BOOL)
-isForceQuitEnabled;
-- (void)
-setForceQuitEnabled:(BOOL)_; // binding
-
-- (BOOL)
-isMenuBarShownOnDemand;
-- (void)
-setMenuBarShownOnDemand:(BOOL)_; // binding
-
-- (BOOL)
-isScrollBarVisible;
-- (void)
-setScrollBarVisible:(BOOL)_; // binding
-
-- (BOOL)
-isWindowFrameVisible;
-- (void)
-setWindowFrameVisible:(BOOL)_; // binding
-
-- (BOOL)
-offSwitchWindowEnabled;
-- (void)
-setOffSwitchWindowEnabled:(BOOL)_; // binding
-
-- (BOOL)
-superfluousEffectsEnabled;
-- (void)
-setSuperfluousEffectsEnabled:(BOOL)_; // binding
-
-@end
+@end //}
 
 #endif // __OBJC__
 

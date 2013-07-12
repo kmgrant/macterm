@@ -77,7 +77,7 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface GenericPanelTabs_ViewManager : Panel_ViewManager< NSTabViewDelegate, Panel_Delegate,
-																PrefsWindow_PanelInterface >
+																PrefsWindow_PanelInterface > //{
 {
 	IBOutlet NSTabView*		tabView;
 @private
@@ -90,14 +90,13 @@ changes to an interface declared in a ".mm" file.
 }
 
 // initializers
+	- (id)
+	initWithIdentifier:(NSString*)_
+	localizedName:(NSString*)_
+	localizedIcon:(NSImage*)_
+	viewManagerArray:(NSArray*)_;
 
-- (id)
-initWithIdentifier:(NSString*)_
-localizedName:(NSString*)_
-localizedIcon:(NSImage*)_
-viewManagerArray:(NSArray*)_;
-
-@end
+@end //}
 
 #endif // __OBJC__
 

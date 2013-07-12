@@ -60,26 +60,30 @@ typedef struct WindowTitleDialog_OpaqueStruct*		WindowTitleDialog_Ref;
 
 @class WindowTitleDialog_ViewManager;
 
-@protocol WindowTitleDialog_ViewManagerChannel
+/*!
+Classes that are delegates of WindowTitleDialog_ViewManager
+must conform to this protocol.
+*/
+@protocol WindowTitleDialog_ViewManagerChannel //{
 
-// use this opportunity to create and display a window to wrap the Rename view
-- (void)
-titleDialog:(WindowTitleDialog_ViewManager*)_
-didLoadManagedView:(NSView*)_;
+	// use this opportunity to create and display a window to wrap the Rename view
+	- (void)
+	titleDialog:(WindowTitleDialog_ViewManager*)_
+	didLoadManagedView:(NSView*)_;
 
-// perform the window rename yourself, but no need to update the user interface since it should be destroyed
-- (void)
-titleDialog:(WindowTitleDialog_ViewManager*)_
-didFinishUsingManagedView:(NSView*)_
-acceptingRename:(BOOL)_
-finalTitle:(NSString*)_;
+	// perform the window rename yourself, but no need to update the user interface since it should be destroyed
+	- (void)
+	titleDialog:(WindowTitleDialog_ViewManager*)_
+	didFinishUsingManagedView:(NSView*)_
+	acceptingRename:(BOOL)_
+	finalTitle:(NSString*)_;
 
-// return an NSString* to use for the initial title text field value
-- (NSString*)
-titleDialog:(WindowTitleDialog_ViewManager*)_
-returnInitialTitleTextForManagedView:(NSView*)_;
+	// return an NSString* to use for the initial title text field value
+	- (NSString*)
+	titleDialog:(WindowTitleDialog_ViewManager*)_
+	returnInitialTitleTextForManagedView:(NSView*)_;
 
-@end // WindowTitleDialog_ViewManagerChannel
+@end //}
 
 
 /*!
@@ -89,7 +93,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface WindowTitleDialog_ViewManager : NSObject
+@interface WindowTitleDialog_ViewManager : NSObject //{
 {
 	IBOutlet NSView*		managedView;
 	IBOutlet NSTextField*	titleField;
@@ -101,42 +105,34 @@ changes to an interface declared in a ".mm" file.
 }
 
 // initializers
-
-// designated initializer
-- (id)
-initForCocoaWindow:(NSWindow*)_
-orCarbonWindow:(HIWindowRef)_
-responder:(id< WindowTitleDialog_ViewManagerChannel >)_;
-
-- (id)
-initForCarbonWindow:(HIWindowRef)_
-responder:(id< WindowTitleDialog_ViewManagerChannel >)_;
-
-- (id)
-initForCocoaWindow:(NSWindow*)_
-responder:(id< WindowTitleDialog_ViewManagerChannel >)_;
+	- (id)
+	initForCocoaWindow:(NSWindow*)_
+	orCarbonWindow:(HIWindowRef)_
+	responder:(id< WindowTitleDialog_ViewManagerChannel >)_; // designated initializer
+	- (id)
+	initForCarbonWindow:(HIWindowRef)_
+	responder:(id< WindowTitleDialog_ViewManagerChannel >)_;
+	- (id)
+	initForCocoaWindow:(NSWindow*)_
+	responder:(id< WindowTitleDialog_ViewManagerChannel >)_;
 
 // new methods
-
-- (NSView*)
-logicalFirstResponder;
-
-// actions
-
-- (IBAction)
-performCloseAndRename:(id)_;
-
-- (IBAction)
-performCloseAndRevert:(id)_;
+	- (NSView*)
+	logicalFirstResponder;
 
 // accessors
+	- (NSString*)
+	titleText; // binding
+	- (void)
+	setTitleText:(NSString*)_;
 
-- (NSString*)
-titleText; // binding
-- (void)
-setTitleText:(NSString*)_;
+// actions
+	- (IBAction)
+	performCloseAndRename:(id)_;
+	- (IBAction)
+	performCloseAndRevert:(id)_;
 
-@end
+@end //}
 
 #endif // __OBJC__
 

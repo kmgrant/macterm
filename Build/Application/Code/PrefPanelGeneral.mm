@@ -284,7 +284,7 @@ Implements an object wrapper for sound names, that allows them
 to be correctly bound into user interface elements.  (On older
 Mac OS X versions, raw strings do not bind properly.)
 */
-@interface PrefPanelGeneral_SoundInfo : BoundName_Object
+@interface PrefPanelGeneral_SoundInfo : BoundName_Object //{
 {
 @private
 	BOOL	isDefault;
@@ -292,31 +292,24 @@ Mac OS X versions, raw strings do not bind properly.)
 }
 
 // initializers
-
-- (id)
-initAsDefault;
-
-- (id)
-initAsOff;
-
-- (id)
-initWithDescription:(NSString*)_;
-
-// designated initializer
-- (id)
-initWithDescription:(NSString*)_
-isDefault:(BOOL)_
-isOff:(BOOL)_;
+	- (id)
+	initAsDefault;
+	- (id)
+	initAsOff;
+	- (id)
+	initWithDescription:(NSString*)_;
+	- (id)
+	initWithDescription:(NSString*)_
+	isDefault:(BOOL)_
+	isOff:(BOOL)_; // designated initializer
 
 // new methods
+	- (void)
+	playSound;
+	- (NSString*)
+	preferenceString;
 
-- (void)
-playSound;
-
-- (NSString*)
-preferenceString;
-
-@end // PrefPanelGeneral_SoundInfo
+@end //}
 
 #pragma mark Internal Method Prototypes
 namespace {
@@ -334,72 +327,72 @@ Boolean			updateCheckBoxPreference						(My_GeneralPanelUIPtr, HIViewRef);
 } // anonymous namespace
 
 
-@interface PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal)
+/*!
+The private class interface.
+*/
+@interface PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal) //{
 
-- (void)
-notifyDidChangeValueForBackgroundNotification;
-- (void)
-notifyWillChangeValueForBackgroundNotification;
+// new methods
+	- (void)
+	notifyDidChangeValueForBackgroundNotification;
+	- (void)
+	notifyWillChangeValueForBackgroundNotification;
 
-- (SInt16)
-readBackgroundNotificationTypeWithDefaultValue:(SInt16)_;
+// preference setting accessors
+	- (SInt16)
+	readBackgroundNotificationTypeWithDefaultValue:(SInt16)_;
+	- (NSString*)
+	readBellSoundNameWithDefaultValue:(NSString*)_;
+	- (BOOL)
+	writeBackgroundNotificationType:(SInt16)_;
+	- (BOOL)
+	writeBellSoundName:(NSString*)_;
 
-- (NSString*)
-readBellSoundNameWithDefaultValue:(NSString*)_;
-
-- (BOOL)
-writeBackgroundNotificationType:(SInt16)_;
-
-- (BOOL)
-writeBellSoundName:(NSString*)_;
-
-@end // PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal)
-
-
-@interface PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
-
-@end // PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
+@end //}
 
 
-@interface PrefPanelGeneral_SpecialViewManager (PrefPanelGeneral_SpecialViewManagerInternal)
+/*!
+The private class interface.
+*/
+@interface PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal) @end
 
-- (void)
-notifyDidChangeValueForCursorShape;
-- (void)
-notifyWillChangeValueForCursorShape;
 
-- (void)
-notifyDidChangeValueForNewCommand;
-- (void)
-notifyWillChangeValueForNewCommand;
+/*!
+The private class interface.
+*/
+@interface PrefPanelGeneral_SpecialViewManager (PrefPanelGeneral_SpecialViewManagerInternal) //{
 
-- (void)
-notifyDidChangeValueForWindowResizeEffect;
-- (void)
-notifyWillChangeValueForWindowResizeEffect;
+// new methods
+	- (void)
+	notifyDidChangeValueForCursorShape;
+	- (void)
+	notifyWillChangeValueForCursorShape;
+	- (void)
+	notifyDidChangeValueForNewCommand;
+	- (void)
+	notifyWillChangeValueForNewCommand;
+	- (void)
+	notifyDidChangeValueForWindowResizeEffect;
+	- (void)
+	notifyWillChangeValueForWindowResizeEffect;
+	- (NSArray*)
+	primaryDisplayBindingKeys;
 
-- (NSArray*)
-primaryDisplayBindingKeys;
+// preference setting accessors
+	- (TerminalView_CursorType)
+	readCursorTypeWithDefaultValue:(TerminalView_CursorType)_;
+	- (UInt32)
+	readNewCommandShortcutEffectWithDefaultValue:(UInt32)_;
+	- (UInt16)
+	readSpacesPerTabWithDefaultValue:(UInt16)_;
+	- (BOOL)
+	writeCursorType:(TerminalView_CursorType)_;
+	- (BOOL)
+	writeNewCommandShortcutEffect:(UInt32)_;
+	- (BOOL)
+	writeSpacesPerTab:(UInt16)_;
 
-- (TerminalView_CursorType)
-readCursorTypeWithDefaultValue:(TerminalView_CursorType)_;
-
-- (UInt32)
-readNewCommandShortcutEffectWithDefaultValue:(UInt32)_;
-
-- (UInt16)
-readSpacesPerTabWithDefaultValue:(UInt16)_;
-
-- (BOOL)
-writeCursorType:(TerminalView_CursorType)_;
-
-- (BOOL)
-writeNewCommandShortcutEffect:(UInt32)_;
-
-- (BOOL)
-writeSpacesPerTab:(UInt16)_;
-
-@end // PrefPanelGeneral_SpecialViewManager (PrefPanelGeneral_SpecialViewManagerInternal)
+@end //}
 
 #pragma mark Variables
 namespace {

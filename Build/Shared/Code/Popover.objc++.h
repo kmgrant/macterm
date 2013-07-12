@@ -10,7 +10,7 @@
 
 	Popover Window 1.1 (based on MAAttachedWindow)
 	MAAttachedWindow © 2007 by Magic Aubergine
-	Popover Window © 2011-2012 by Kevin Grant
+	Popover Window © 2011-2013 by Kevin Grant
 	
 	Based on the MAAttachedWindow code created by Matt Gemmell
 	on September 27, 2007 and distributed under the terms in
@@ -112,7 +112,7 @@ the window change its appearance while it is on screen.  One
 exception to this is "setHasArrow:", which will simply update the
 frame appearance.
 */
-@interface Popover_Window : NSWindow
+@interface Popover_Window : NSWindow //{
 {
 @private
 	__weak NSWindow*		popoverParentWindow;
@@ -133,87 +133,74 @@ frame appearance.
 	Popover_Properties		windowPropertyFlags;
 }
 
-// designated initializer
-- (id)
-initWithView:(NSView*)_
-attachedToPoint:(NSPoint)_
-inWindow:(NSWindow*)_;
+// initializers
+	- (id)
+	initWithView:(NSView*)_
+	attachedToPoint:(NSPoint)_
+	inWindow:(NSWindow*)_;
 
 // window location
-
-- (void)
-setPoint:(NSPoint)_
-onSide:(Popover_Properties)_;
-
-- (void)
-setPointWithAutomaticPositioning:(NSPoint)_
-preferredSide:(Popover_Properties)_;
+	- (void)
+	setPoint:(NSPoint)_
+	onSide:(Popover_Properties)_;
+	- (void)
+	setPointWithAutomaticPositioning:(NSPoint)_
+	preferredSide:(Popover_Properties)_;
 
 // utilities
+	- (NSRect)
+	viewRectForFrameRect:(NSRect)_;
+	- (NSRect)
+	frameRectForViewRect:(NSRect)_;
 
-- (NSRect)
-viewRectForFrameRect:(NSRect)_;
+// accessors: colors
+	- (NSColor*)
+	borderOuterColor;
+	- (void)
+	setBorderOuterColor:(NSColor*)_;
+	- (NSColor*)
+	borderPrimaryColor;
+	- (void)
+	setBorderPrimaryColor:(NSColor*)_;
+	- (NSColor*)
+	popoverBackgroundColor;
+	- (void)
+	setPopoverBackgroundColor:(NSColor*)_;
 
-- (NSRect)
-frameRectForViewRect:(NSRect)_;
-
-// accessors
-
-- (float)
-arrowBaseWidth;
-- (void)
-setArrowBaseWidth:(float)_;
-
-- (float)
-arrowHeight;
-- (void)
-setArrowHeight:(float)_;
-
-- (NSColor*)
-borderOuterColor;
-- (void)
-setBorderOuterColor:(NSColor*)_;
-
-- (NSColor*)
-borderPrimaryColor;
-- (void)
-setBorderPrimaryColor:(NSColor*)_;
-
-- (float)
-borderWidth;
-- (void)
-setBorderWidth:(float)_;
-
-- (float)
-cornerRadius;
-- (void)
-setCornerRadius:(float)_;
-
-- (BOOL)
-hasRoundCornerBesideArrow;
-- (void)
-setHasRoundCornerBesideArrow:(BOOL)_;
-
-- (BOOL)
-hasArrow;
-- (void)
-setHasArrow:(BOOL)_;
-
-- (NSColor*)
-popoverBackgroundColor;
-- (void)
-setPopoverBackgroundColor:(NSColor*)_;
-
-- (float)
-viewMargin;
-- (void)
-setViewMargin:(float)_;
+// accessors: general
+	- (float)
+	arrowBaseWidth;
+	- (void)
+	setArrowBaseWidth:(float)_;
+	- (float)
+	arrowHeight;
+	- (void)
+	setArrowHeight:(float)_;
+	- (float)
+	borderWidth;
+	- (void)
+	setBorderWidth:(float)_;
+	- (float)
+	cornerRadius;
+	- (void)
+	setCornerRadius:(float)_;
+	- (BOOL)
+	hasRoundCornerBesideArrow;
+	- (void)
+	setHasRoundCornerBesideArrow:(BOOL)_;
+	- (BOOL)
+	hasArrow;
+	- (void)
+	setHasArrow:(BOOL)_;
+	- (float)
+	viewMargin;
+	- (void)
+	setViewMargin:(float)_;
 
 // NSWindow
+	- (void)
+	setBackgroundColor:(NSColor*)_; // DO NOT USE; RESERVED FOR RENDERING
 
-- (void)
-setBackgroundColor:(NSColor*)_; // DO NOT USE; RESERVED FOR RENDERING
-
-@end
+@end //}
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

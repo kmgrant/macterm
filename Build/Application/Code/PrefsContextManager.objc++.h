@@ -52,50 +52,41 @@ This class simplifies various Preferences tasks in an
 Objective-C environment (such as a preferences panel
 interface).
 */
-@interface PrefsContextManager_Object : NSObject
+@interface PrefsContextManager_Object : NSObject //{
 {
 @private
 	Preferences_ContextRef		currentContext;
 }
 
 // initializers
-
-- (id)
-init;
-
-// designated initializer
-- (id)
-initWithDefaultContextInClass:(Quills::Prefs::Class)_;
+	- (id)
+	init;
+	- (id)
+	initWithDefaultContextInClass:(Quills::Prefs::Class)_; // designated initializer
 
 // accessors
-
-- (Preferences_ContextRef)
-currentContext;
-- (void)
-setCurrentContext:(Preferences_ContextRef)_;
+	- (Preferences_ContextRef)
+	currentContext;
+	- (void)
+	setCurrentContext:(Preferences_ContextRef)_;
 
 // new methods
+	- (BOOL)
+	deleteDataForPreferenceTag:(Preferences_Tag)_;
+	- (NSColor*)
+	readColorForPreferenceTag:(Preferences_Tag)_
+	isDefault:(BOOL*)_;
+	- (BOOL)
+	readFlagForPreferenceTag:(Preferences_Tag)_
+	defaultValue:(BOOL)_;
+	- (BOOL)
+	writeColor:(NSColor*)_
+	forPreferenceTag:(Preferences_Tag)_;
+	- (BOOL)
+	writeFlag:(BOOL)_
+	forPreferenceTag:(Preferences_Tag)_;
 
-- (BOOL)
-deleteDataForPreferenceTag:(Preferences_Tag)_;
-
-- (NSColor*)
-readColorForPreferenceTag:(Preferences_Tag)_
-isDefault:(BOOL*)_;
-
-- (BOOL)
-readFlagForPreferenceTag:(Preferences_Tag)_
-defaultValue:(BOOL)_;
-
-- (BOOL)
-writeColor:(NSColor*)_
-forPreferenceTag:(Preferences_Tag)_;
-
-- (BOOL)
-writeFlag:(BOOL)_
-forPreferenceTag:(Preferences_Tag)_;
-
-@end
+@end //}
 
 #endif
 

@@ -67,37 +67,36 @@ typedef std::set< VectorWindow_Controller* >	My_VectorWindowRefTracker;
 
 #pragma mark Internal Method Prototypes
 
-@interface VectorWindow_Controller (VectorWindow_ControllerInternal)
+/*!
+The private class interface.
+*/
+@interface VectorWindow_Controller (VectorWindow_ControllerInternal) //{
 
-+ (VectorWindow_Controller*)
-windowControllerForWindowRef:(VectorWindow_Ref)_;
+// class methods
+	+ (VectorWindow_Controller*)
+	windowControllerForWindowRef:(VectorWindow_Ref)_;
 
 // new methods
-
-- (void)
-onEvent:(VectorWindow_Event)_
-notifyListener:(ListenerModel_ListenerRef)_;
-
-- (void)
-removeListener:(ListenerModel_ListenerRef)_
-forEvent:(VectorWindow_Event)_;
+	- (void)
+	onEvent:(VectorWindow_Event)_
+	notifyListener:(ListenerModel_ListenerRef)_;
+	- (void)
+	removeListener:(ListenerModel_ListenerRef)_
+	forEvent:(VectorWindow_Event)_;
 
 // accessors
-
-- (VectorWindow_Ref)
-canvasWindow;
-
-- (VectorInterpreter_Ref)
-interpreterRef;
-- (void)
-setInterpreterRef:(VectorInterpreter_Ref)_;
+	- (VectorWindow_Ref)
+	canvasWindow;
+	- (VectorInterpreter_Ref)
+	interpreterRef;
+	- (void)
+	setInterpreterRef:(VectorInterpreter_Ref)_;
 
 // notifications
+	- (void)
+	windowWillClose:(NSNotification*)_;
 
-- (void)
-windowWillClose:(NSNotification*)_;
-
-@end // VectorWindow_Controller (VectorWindow_ControllerInternal)
+@end //}
 
 #pragma mark Variables
 namespace {

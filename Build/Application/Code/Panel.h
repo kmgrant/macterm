@@ -115,56 +115,60 @@ struct Panel_DataSetTransition
 
 @class Panel_ViewManager;
 
-@protocol Panel_Delegate
+/*!
+Classes that are delegates of Panel_ViewManager must
+conform to this protocol.
+*/
+@protocol Panel_Delegate //{
 
-// superclass minimally initialized, no NIB loaded yet; perform subclass initializations needed this early, e.g. so that NIB-provided bindings succeed
-- (void)
-panelViewManager:(Panel_ViewManager*)_
-initializeWithContext:(void*)_;
+	// superclass minimally initialized, no NIB loaded yet; perform subclass initializations needed this early, e.g. so that NIB-provided bindings succeed
+	- (void)
+	panelViewManager:(Panel_ViewManager*)_
+	initializeWithContext:(void*)_;
 
-// manager needs to know how the panel behaves; respond by filling in the "requestingEditType:" parameter
-- (void)
-panelViewManager:(Panel_ViewManager*)_
-requestingEditType:(Panel_EditType*)_;
+	// manager needs to know how the panel behaves; respond by filling in the "requestingEditType:" parameter
+	- (void)
+	panelViewManager:(Panel_ViewManager*)_
+	requestingEditType:(Panel_EditType*)_;
 
-// view containing the panel has been loaded but no window has been created yet (WARNING: subclasses that delegate to themselves will not be initialized yet)
-- (void)
-panelViewManager:(Panel_ViewManager*)_
-didLoadContainerView:(NSView*)_;
+	// view containing the panel has been loaded but no window has been created yet (WARNING: subclasses that delegate to themselves will not be initialized yet)
+	- (void)
+	panelViewManager:(Panel_ViewManager*)_
+	didLoadContainerView:(NSView*)_;
 
-// manager needs to know the size the panel would prefer to have; respond by filling in the "requestingIdealSize:" parameter
-- (void)
-panelViewManager:(Panel_ViewManager*)_
-requestingIdealSize:(NSSize*)_;
+	// manager needs to know the size the panel would prefer to have; respond by filling in the "requestingIdealSize:" parameter
+	- (void)
+	panelViewManager:(Panel_ViewManager*)_
+	requestingIdealSize:(NSSize*)_;
 
-// user has requested context-sensitive help; argument to "didPerformContextSensitiveHelp:" is the sender of the action
-- (void)
-panelViewManager:(Panel_ViewManager*)_
-didPerformContextSensitiveHelp:(id)_;
+	// user has requested context-sensitive help; argument to "didPerformContextSensitiveHelp:" is the sender of the action
+	- (void)
+	panelViewManager:(Panel_ViewManager*)_
+	didPerformContextSensitiveHelp:(id)_;
 
-// view will be redisplayed or obscured (e.g. in a tab view, because another tab is about to be displayed)
-- (void)
-panelViewManager:(Panel_ViewManager*)_
-willChangePanelVisibility:(Panel_Visibility)_;
+	// view will be redisplayed or obscured (e.g. in a tab view, because another tab is about to be displayed)
+	- (void)
+	panelViewManager:(Panel_ViewManager*)_
+	willChangePanelVisibility:(Panel_Visibility)_;
 
-// view has now been redisplayed or obscured (e.g. in a tab view, because another tab has been displayed)
-- (void)
-panelViewManager:(Panel_ViewManager*)_
-didChangePanelVisibility:(Panel_Visibility)_;
+	// view has now been redisplayed or obscured (e.g. in a tab view, because another tab has been displayed)
+	- (void)
+	panelViewManager:(Panel_ViewManager*)_
+	didChangePanelVisibility:(Panel_Visibility)_;
 
-// data set to be represented by the view has changed; for inspector-style views this can happen more than once
-- (void)
-panelViewManager:(Panel_ViewManager*)_
-didChangeFromDataSet:(void*)_
-toDataSet:(void*)_;
+	// data set to be represented by the view has changed; for inspector-style views this can happen more than once
+	- (void)
+	panelViewManager:(Panel_ViewManager*)_
+	didChangeFromDataSet:(void*)_
+	toDataSet:(void*)_;
 
-// sent when containing window, etc. will go away; save settings if accepted but no need to update the user interface because it will be destroyed
-- (void)
-panelViewManager:(Panel_ViewManager*)_
-didFinishUsingContainerView:(NSView*)_
-userAccepted:(BOOL)_;
+	// sent when containing window, etc. will go away; save settings if accepted but no need to update the user interface because it will be destroyed
+	- (void)
+	panelViewManager:(Panel_ViewManager*)_
+	didFinishUsingContainerView:(NSView*)_
+	userAccepted:(BOOL)_;
 
-@end // Panel_Delegate
+@end //}
 
 
 /*!
@@ -178,7 +182,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface Panel_ViewManager : NSObject
+@interface Panel_ViewManager : NSObject //{
 {
 	IBOutlet NSView*	managedView;
 	IBOutlet NSView*	logicalFirstResponder;
@@ -190,66 +194,50 @@ changes to an interface declared in a ".mm" file.
 }
 
 // initializers
-
-// designated initializer
-- (id)
-initWithNibNamed:(NSString*)_
-delegate:(id< Panel_Delegate >)_
-context:(void*)_;
+	- (id)
+	initWithNibNamed:(NSString*)_
+	delegate:(id< Panel_Delegate >)_
+	context:(void*)_;
 
 // accessors
-
-- (id< Panel_Delegate >)
-delegate;
-
-- (NSView*)
-logicalFirstResponder;
-
-- (NSView*)
-logicalLastResponder;
-
-- (NSView*)
-managedView;
-
-- (SEL)
-panelDisplayAction;
-- (void)
-setPanelDisplayAction:(SEL)_;
-
-- (id)
-panelDisplayTarget;
-- (void)
-setPanelDisplayTarget:(id)_;
-
-- (Panel_EditType)
-panelEditType;
+	- (id< Panel_Delegate >)
+	delegate;
+	- (NSView*)
+	logicalFirstResponder;
+	- (NSView*)
+	logicalLastResponder;
+	- (NSView*)
+	managedView;
+	- (SEL)
+	panelDisplayAction;
+	- (void)
+	setPanelDisplayAction:(SEL)_;
+	- (id)
+	panelDisplayTarget;
+	- (void)
+	setPanelDisplayTarget:(id)_;
+	- (Panel_EditType)
+	panelEditType;
 
 // actions
-
-- (IBAction)
-performCloseAndAccept:(id)_;
-
-- (IBAction)
-performCloseAndDiscard:(id)_;
-
-- (IBAction)
-performContextSensitiveHelp:(id)_;
+	- (IBAction)
+	performCloseAndAccept:(id)_;
+	- (IBAction)
+	performCloseAndDiscard:(id)_;
+	- (IBAction)
+	performContextSensitiveHelp:(id)_;
 
 // overrides for subclasses (none of these is implemented in the base!)
+	- (NSImage*)
+	panelIcon;
+	- (NSString*)
+	panelIdentifier;
+	- (NSString*)
+	panelName;
+	- (Panel_ResizeConstraint)
+	panelResizeAxes;
 
-- (NSImage*)
-panelIcon;
-
-- (NSString*)
-panelIdentifier;
-
-- (NSString*)
-panelName;
-
-- (Panel_ResizeConstraint)
-panelResizeAxes;
-
-@end
+@end //}
 
 #else
 

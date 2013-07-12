@@ -5,7 +5,7 @@
 
 	Popover Window 1.1 (based on MAAttachedWindow)
 	MAAttachedWindow © 2007 by Magic Aubergine
-	Popover Window © 2011-2012 by Kevin Grant
+	Popover Window © 2011-2013 by Kevin Grant
 	
 	Based on the MAAttachedWindow code created by Matt Gemmell
 	on September 27, 2007 and distributed under the terms in
@@ -34,76 +34,70 @@
 
 #pragma mark Internal Method Prototypes
 
-@interface Popover_Window (Popover_WindowInternal)
+/*!
+The private class interface.
+*/
+@interface Popover_Window (Popover_WindowInternal) //{
 
-- (void)
-appendArrowToPath:(NSBezierPath*)_;
+// class methods: general
+	+ (float)
+	arrowInsetWithCornerRadius:(float)_
+	baseWidth:(float)_;
+	+ (Popover_Properties)
+	arrowPlacement:(Popover_Properties)_;
+	+ (Popover_Properties)
+	bestSideForViewOfSize:(NSSize)_
+	andMargin:(float)_
+	arrowHeight:(float)_
+	arrowInset:(float)_
+	at:(NSPoint)_
+	onParentWindow:(NSWindow*)_
+	preferredSide:(Popover_Properties)_;
+	+ (NSPoint)
+	idealFrameOriginForSize:(NSSize)_
+	arrowInset:(float)_
+	at:(NSPoint)_
+	side:(Popover_Properties)_;
+	+ (Popover_Properties)
+	windowPlacement:(Popover_Properties)_;
 
-- (float)
-arrowInset;
+// class methods: frame conversion
+	+ (NSRect)
+	frameRectForViewRect:(NSRect)_
+	viewMargin:(float)_
+	arrowHeight:(float)_
+	side:(Popover_Properties)_;
+	+ (NSRect)
+	viewRectForFrameRect:(NSRect)_
+	viewMargin:(float)_
+	arrowHeight:(float)_
+	side:(Popover_Properties)_;
 
-+ (float)
-arrowInsetWithCornerRadius:(float)_
-baseWidth:(float)_;
+// new methods
+	- (void)
+	appendArrowToPath:(NSBezierPath*)_;
+	- (void)
+	fixViewFrame;
+	- (NSPoint)
+	idealFrameOriginForPoint:(NSPoint)_;
+	- (void)
+	redisplay;
+	- (void)
+	updateBackground;
 
-+ (Popover_Properties)
-arrowPlacement:(Popover_Properties)_;
+// accessors
+	- (float)
+	arrowInset;
+	- (Popover_Properties)
+	arrowPlacement;
+	- (NSColor*)
+	backgroundColorPatternImage;
+	- (NSBezierPath*)
+	backgroundPath;
+	- (Popover_Properties)
+	windowPlacement;
 
-- (Popover_Properties)
-arrowPlacement;
-
-- (NSColor*)
-backgroundColorPatternImage;
-
-- (NSBezierPath*)
-backgroundPath;
-
-+ (Popover_Properties)
-bestSideForViewOfSize:(NSSize)_
-andMargin:(float)_
-arrowHeight:(float)_
-arrowInset:(float)_
-at:(NSPoint)_
-onParentWindow:(NSWindow*)_
-preferredSide:(Popover_Properties)_;
-
-- (void)
-fixViewFrame;
-
-+ (NSRect)
-frameRectForViewRect:(NSRect)_
-viewMargin:(float)_
-arrowHeight:(float)_
-side:(Popover_Properties)_;
-
-- (NSPoint)
-idealFrameOriginForPoint:(NSPoint)_;
-
-+ (NSPoint)
-idealFrameOriginForSize:(NSSize)_
-arrowInset:(float)_
-at:(NSPoint)_
-side:(Popover_Properties)_;
-
-- (void)
-redisplay;
-
-- (void)
-updateBackground;
-
-+ (NSRect)
-viewRectForFrameRect:(NSRect)_
-viewMargin:(float)_
-arrowHeight:(float)_
-side:(Popover_Properties)_;
-
-+ (Popover_Properties)
-windowPlacement:(Popover_Properties)_;
-
-- (Popover_Properties)
-windowPlacement;
-
-@end // Popover_Window (Popover_WindowInternal)
+@end //}
 
 
 #pragma mark Internal Methods

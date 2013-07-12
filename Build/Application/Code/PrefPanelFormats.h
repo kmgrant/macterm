@@ -61,38 +61,30 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelFormats_ViewManager : GenericPanelTabs_ViewManager
-{
-}
-
-@end
+@interface PrefPanelFormats_ViewManager : GenericPanelTabs_ViewManager @end
 
 
 /*!
 Manages bindings for a character-width preference.
 */
-@interface PrefPanelFormats_CharacterWidthContent : PreferenceValue_InheritedSingleTag
-{
-}
+@interface PrefPanelFormats_CharacterWidthContent : PreferenceValue_InheritedSingleTag //{
 
-// designated initializer
-- (id)
-initWithPreferencesTag:(Preferences_Tag)_
-contextManager:(PrefsContextManager_Object*)_;
+// initializers
+	- (id)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_;
 
 // new methods
-
-- (Float32)
-readValueSeeIfDefault:(BOOL*)_;
+	- (Float32)
+	readValueSeeIfDefault:(BOOL*)_;
 
 // accessors
+	- (NSNumber*)
+	numberValue;
+	- (void)
+	setNumberValue:(NSNumber*)_; // binding
 
-- (NSNumber*)
-numberValue;
-- (void)
-setNumberValue:(NSNumber*)_; // binding
-
-@end
+@end //}
 
 
 /*!
@@ -102,7 +94,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelFormats_GeneralViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+@interface PrefPanelFormats_GeneralViewManager : Panel_ViewManager< Panel_Delegate,
+																	PrefsWindow_PanelInterface > //{
 {
 	IBOutlet NSView*	terminalSampleBackgroundView;
 	IBOutlet NSView*	terminalSamplePaddingView;
@@ -116,43 +109,32 @@ changes to an interface declared in a ".mm" file.
 }
 
 // accessors
-
-- (PreferenceValue_Color*)
-normalBackgroundColor; // binding
-
-- (PreferenceValue_Color*)
-normalForegroundColor; // binding
-
-- (PreferenceValue_Color*)
-boldBackgroundColor; // binding
-
-- (PreferenceValue_Color*)
-boldForegroundColor; // binding
-
-- (PreferenceValue_Color*)
-blinkingBackgroundColor; // binding
-
-- (PreferenceValue_Color*)
-blinkingForegroundColor; // binding
-
-- (PreferenceValue_Color*)
-matteBackgroundColor; // binding
-
-- (PreferenceValue_String*)
-fontFamily; // binding
-
-- (PreferenceValue_Number*)
-fontSize; // binding
-
-- (PrefPanelFormats_CharacterWidthContent*)
-characterWidth; // binding
+	- (PreferenceValue_Color*)
+	normalBackgroundColor; // binding
+	- (PreferenceValue_Color*)
+	normalForegroundColor; // binding
+	- (PreferenceValue_Color*)
+	boldBackgroundColor; // binding
+	- (PreferenceValue_Color*)
+	boldForegroundColor; // binding
+	- (PreferenceValue_Color*)
+	blinkingBackgroundColor; // binding
+	- (PreferenceValue_Color*)
+	blinkingForegroundColor; // binding
+	- (PreferenceValue_Color*)
+	matteBackgroundColor; // binding
+	- (PreferenceValue_String*)
+	fontFamily; // binding
+	- (PreferenceValue_Number*)
+	fontSize; // binding
+	- (PrefPanelFormats_CharacterWidthContent*)
+	characterWidth; // binding
 
 // actions
+	- (IBAction)
+	performFontSelection:(id)_;
 
-- (IBAction)
-performFontSelection:(id)_;
-
-@end
+@end //}
 
 
 /*!
@@ -162,7 +144,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelFormats_StandardColorsViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+@interface PrefPanelFormats_StandardColorsViewManager : Panel_ViewManager< Panel_Delegate,
+																			PrefsWindow_PanelInterface > //{
 {
 @private
 	PrefsContextManager_Object*		prefsMgr;
@@ -171,61 +154,44 @@ changes to an interface declared in a ".mm" file.
 }
 
 // accessors
-
-- (PreferenceValue_Color*)
-blackBoldColor; // binding
-
-- (PreferenceValue_Color*)
-blackNormalColor; // binding
-
-- (PreferenceValue_Color*)
-redBoldColor; // binding
-
-- (PreferenceValue_Color*)
-redNormalColor; // binding
-
-- (PreferenceValue_Color*)
-greenBoldColor; // binding
-
-- (PreferenceValue_Color*)
-greenNormalColor; // binding
-
-- (PreferenceValue_Color*)
-yellowBoldColor; // binding
-
-- (PreferenceValue_Color*)
-yellowNormalColor; // binding
-
-- (PreferenceValue_Color*)
-blueBoldColor; // binding
-
-- (PreferenceValue_Color*)
-blueNormalColor; // binding
-
-- (PreferenceValue_Color*)
-magentaBoldColor; // binding
-
-- (PreferenceValue_Color*)
-magentaNormalColor; // binding
-
-- (PreferenceValue_Color*)
-cyanBoldColor; // binding
-
-- (PreferenceValue_Color*)
-cyanNormalColor; // binding
-
-- (PreferenceValue_Color*)
-whiteBoldColor; // binding
-
-- (PreferenceValue_Color*)
-whiteNormalColor; // binding
+	- (PreferenceValue_Color*)
+	blackBoldColor; // binding
+	- (PreferenceValue_Color*)
+	blackNormalColor; // binding
+	- (PreferenceValue_Color*)
+	redBoldColor; // binding
+	- (PreferenceValue_Color*)
+	redNormalColor; // binding
+	- (PreferenceValue_Color*)
+	greenBoldColor; // binding
+	- (PreferenceValue_Color*)
+	greenNormalColor; // binding
+	- (PreferenceValue_Color*)
+	yellowBoldColor; // binding
+	- (PreferenceValue_Color*)
+	yellowNormalColor; // binding
+	- (PreferenceValue_Color*)
+	blueBoldColor; // binding
+	- (PreferenceValue_Color*)
+	blueNormalColor; // binding
+	- (PreferenceValue_Color*)
+	magentaBoldColor; // binding
+	- (PreferenceValue_Color*)
+	magentaNormalColor; // binding
+	- (PreferenceValue_Color*)
+	cyanBoldColor; // binding
+	- (PreferenceValue_Color*)
+	cyanNormalColor; // binding
+	- (PreferenceValue_Color*)
+	whiteBoldColor; // binding
+	- (PreferenceValue_Color*)
+	whiteNormalColor; // binding
 
 // actions
+	- (IBAction)
+	performResetStandardColors:(id)_;
 
-- (IBAction)
-performResetStandardColors:(id)_;
-
-@end
+@end //}
 
 #endif // __OBJC__
 

@@ -454,24 +454,24 @@ OSStatus					receiveServerBrowserEvent				(EventHandlerCallRef, EventRef, void*)
 } // anonymous namespace
 
 
-@interface PrefPanelSessions_KeyboardViewManager (PrefPanelSessions_KeyboardViewManagerInternal)
-
-// accessors
-
-- (My_KeyType)
-editedKeyType;
-- (void)
-setEditedKeyType:(My_KeyType)_;
+/*!
+The private class interface.
+*/
+@interface PrefPanelSessions_KeyboardViewManager (PrefPanelSessions_KeyboardViewManagerInternal) //{
 
 // new methods
+	- (NSArray*)
+	primaryDisplayBindingKeys;
+	- (void)
+	resetGlobalState;
 
-- (NSArray*)
-primaryDisplayBindingKeys;
+// accessors
+	- (My_KeyType)
+	editedKeyType;
+	- (void)
+	setEditedKeyType:(My_KeyType)_;
 
-- (void)
-resetGlobalState;
-
-@end // PrefPanelSessions_KeyboardViewManager (PrefPanelSessions_KeyboardViewManagerInternal)
+@end //}
 
 
 #pragma mark Variables

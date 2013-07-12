@@ -59,11 +59,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelGeneral_ViewManager : GenericPanelTabs_ViewManager
-{
-}
-
-@end
+@interface PrefPanelGeneral_ViewManager : GenericPanelTabs_ViewManager @end
 
 
 /*!
@@ -73,65 +69,60 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelGeneral_OptionsViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+@interface PrefPanelGeneral_OptionsViewManager : Panel_ViewManager< Panel_Delegate,
+																	PrefsWindow_PanelInterface > //{
 {
 @private
 	PrefsContextManager_Object*		prefsMgr;
 }
 
-// accessors
+// accessors: terminal window settings
+	- (BOOL)
+	noWindowCloseOnProcessExit;
+	- (void)
+	setNoWindowCloseOnProcessExit:(BOOL)_; // binding
+	- (BOOL)
+	noAutomaticNewWindows;
+	- (void)
+	setNoAutomaticNewWindows:(BOOL)_; // binding
+	- (BOOL)
+	fadeInBackground;
+	- (void)
+	setFadeInBackground:(BOOL)_; // binding
 
-- (BOOL)
-noWindowCloseOnProcessExit;
-- (void)
-setNoWindowCloseOnProcessExit:(BOOL)_; // binding
+// accessors: text-related settings
+	- (BOOL)
+	invertSelectedText;
+	- (void)
+	setInvertSelectedText:(BOOL)_; // binding
+	- (BOOL)
+	automaticallyCopySelectedText;
+	- (void)
+	setAutomaticallyCopySelectedText:(BOOL)_; // binding
+	- (BOOL)
+	moveCursorToTextDropLocation;
+	- (void)
+	setMoveCursorToTextDropLocation:(BOOL)_; // binding
+	- (BOOL)
+	doNotDimBackgroundTerminalText;
+	- (void)
+	setDoNotDimBackgroundTerminalText:(BOOL)_; // binding
+	- (BOOL)
+	doNotWarnAboutMultiLinePaste;
+	- (void)
+	setDoNotWarnAboutMultiLinePaste:(BOOL)_; // binding
 
-- (BOOL)
-noAutomaticNewWindows;
-- (void)
-setNoAutomaticNewWindows:(BOOL)_; // binding
+// accessors: keyboard-related settings
+	- (BOOL)
+	treatBackquoteLikeEscape;
+	- (void)
+	setTreatBackquoteLikeEscape:(BOOL)_; // binding
+	- (BOOL)
+	focusFollowsMouse;
+	- (void)
+	setFocusFollowsMouse:(BOOL)_; // binding
 
-- (BOOL)
-fadeInBackground;
-- (void)
-setFadeInBackground:(BOOL)_; // binding
-
-- (BOOL)
-invertSelectedText;
-- (void)
-setInvertSelectedText:(BOOL)_; // binding
-
-- (BOOL)
-automaticallyCopySelectedText;
-- (void)
-setAutomaticallyCopySelectedText:(BOOL)_; // binding
-
-- (BOOL)
-moveCursorToTextDropLocation;
-- (void)
-setMoveCursorToTextDropLocation:(BOOL)_; // binding
-
-- (BOOL)
-doNotDimBackgroundTerminalText;
-- (void)
-setDoNotDimBackgroundTerminalText:(BOOL)_; // binding
-
-- (BOOL)
-doNotWarnAboutMultiLinePaste;
-- (void)
-setDoNotWarnAboutMultiLinePaste:(BOOL)_; // binding
-
-- (BOOL)
-treatBackquoteLikeEscape;
-- (void)
-setTreatBackquoteLikeEscape:(BOOL)_; // binding
-
-- (BOOL)
-focusFollowsMouse;
-- (void)
-setFocusFollowsMouse:(BOOL)_; // binding
-
-@end
+@end //}
 
 
 /*!
@@ -141,90 +132,78 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelGeneral_SpecialViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+@interface PrefPanelGeneral_SpecialViewManager : Panel_ViewManager< Panel_Delegate,
+																	PrefsWindow_PanelInterface > //{
 {
 @private
 	PrefsContextManager_Object*		prefsMgr;
 	NSMutableDictionary*			byKey;
 }
 
-// accessors
+// accessors: cursor settings
+	- (BOOL)
+	cursorFlashes;
+	- (void)
+	setCursorFlashes:(BOOL)_; // binding
+	- (BOOL)
+	cursorShapeIsBlock;
+	- (void)
+	setCursorShapeIsBlock:(BOOL)_; // binding
+	- (BOOL)
+	cursorShapeIsThickUnderline;
+	- (void)
+	setCursorShapeIsThickUnderline:(BOOL)_; // binding
+	- (BOOL)
+	cursorShapeIsThickVerticalBar;
+	- (void)
+	setCursorShapeIsThickVerticalBar:(BOOL)_; // binding
+	- (BOOL)
+	cursorShapeIsUnderline;
+	- (void)
+	setCursorShapeIsUnderline:(BOOL)_; // binding
+	- (BOOL)
+	cursorShapeIsVerticalBar;
+	- (void)
+	setCursorShapeIsVerticalBar:(BOOL)_; // binding
 
-- (BOOL)
-cursorFlashes;
-- (void)
-setCursorFlashes:(BOOL)_; // binding
-
-- (BOOL)
-cursorShapeIsBlock;
-- (void)
-setCursorShapeIsBlock:(BOOL)_; // binding
-
-- (BOOL)
-cursorShapeIsThickUnderline;
-- (void)
-setCursorShapeIsThickUnderline:(BOOL)_; // binding
-
-- (BOOL)
-cursorShapeIsThickVerticalBar;
-- (void)
-setCursorShapeIsThickVerticalBar:(BOOL)_; // binding
-
-- (BOOL)
-cursorShapeIsUnderline;
-- (void)
-setCursorShapeIsUnderline:(BOOL)_; // binding
-
-- (BOOL)
-cursorShapeIsVerticalBar;
-- (void)
-setCursorShapeIsVerticalBar:(BOOL)_; // binding
-
-- (BOOL)
-isNewCommandCustomNewSession;
-- (void)
-setNewCommandCustomNewSession:(BOOL)_; // binding
-
-- (BOOL)
-isNewCommandDefaultSessionFavorite;
-- (void)
-setNewCommandDefaultSessionFavorite:(BOOL)_; // binding
-
-- (BOOL)
-isNewCommandLogInShell;
-- (void)
-setNewCommandLogInShell:(BOOL)_; // binding
-
-- (BOOL)
-isNewCommandShell;
-- (void)
-setNewCommandShell:(BOOL)_; // binding
-
-- (BOOL)
-isWindowResizeEffectTerminalScreenSize;
-- (void)
-setWindowResizeEffectTerminalScreenSize:(BOOL)_; // binding
-
-- (BOOL)
-isWindowResizeEffectTextSize;
-- (void)
-setWindowResizeEffectTextSize:(BOOL)_; // binding
-
-- (PreferenceValue_Number*)
-spacesPerTab; // binding
+// accessors: other
+	- (BOOL)
+	isNewCommandCustomNewSession;
+	- (void)
+	setNewCommandCustomNewSession:(BOOL)_; // binding
+	- (BOOL)
+	isNewCommandDefaultSessionFavorite;
+	- (void)
+	setNewCommandDefaultSessionFavorite:(BOOL)_; // binding
+	- (BOOL)
+	isNewCommandLogInShell;
+	- (void)
+	setNewCommandLogInShell:(BOOL)_; // binding
+	- (BOOL)
+	isNewCommandShell;
+	- (void)
+	setNewCommandShell:(BOOL)_; // binding
+	- (BOOL)
+	isWindowResizeEffectTerminalScreenSize;
+	- (void)
+	setWindowResizeEffectTerminalScreenSize:(BOOL)_; // binding
+	- (BOOL)
+	isWindowResizeEffectTextSize;
+	- (void)
+	setWindowResizeEffectTextSize:(BOOL)_; // binding
+	- (PreferenceValue_Number*)
+	spacesPerTab; // binding
 
 // actions
-
-- (IBAction)
-performSetWindowStackingOrigin:(id)_;
+	- (IBAction)
+	performSetWindowStackingOrigin:(id)_;
 
 // validators
+	- (BOOL)
+	validateSpacesPerTab:(id*)_
+	error:(NSError**)_;
 
-- (BOOL)
-validateSpacesPerTab:(id*)_
-error:(NSError**)_;
-
-@end
+@end //}
 
 
 /*!
@@ -234,7 +213,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelGeneral_NotificationsViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface >
+@interface PrefPanelGeneral_NotificationsViewManager : Panel_ViewManager< Panel_Delegate,
+																			PrefsWindow_PanelInterface > //{
 {
 	NSMutableArray*		soundNames;
 @private
@@ -243,46 +223,38 @@ changes to an interface declared in a ".mm" file.
 }
 
 // accessors
+	- (BOOL)
+	alwaysUseVisualBell;
+	- (void)
+	setAlwaysUseVisualBell:(BOOL)_; // binding
+	- (BOOL)
+	backgroundBellsSendNotifications;
+	- (void)
+	setBackgroundBellsSendNotifications:(BOOL)_; // binding
+	- (BOOL)
+	isBackgroundNotificationNone;
+	- (void)
+	setBackgroundNotificationNone:(BOOL)_; // binding
+	- (BOOL)
+	isBackgroundNotificationChangeDockIcon;
+	- (void)
+	setBackgroundNotificationChangeDockIcon:(BOOL)_; // binding
+	- (BOOL)
+	isBackgroundNotificationAnimateIcon;
+	- (void)
+	setBackgroundNotificationAnimateIcon:(BOOL)_; // binding
+	- (BOOL)
+	isBackgroundNotificationDisplayMessage;
+	- (void)
+	setBackgroundNotificationDisplayMessage:(BOOL)_; // binding
+	- (NSArray*)
+	soundNames;
+	- (NSIndexSet*)
+	soundNameIndexes;
+	- (void)
+	setSoundNameIndexes:(NSIndexSet*)_; // binding
 
-- (BOOL)
-alwaysUseVisualBell;
-- (void)
-setAlwaysUseVisualBell:(BOOL)_; // binding
-
-- (BOOL)
-backgroundBellsSendNotifications;
-- (void)
-setBackgroundBellsSendNotifications:(BOOL)_; // binding
-
-- (BOOL)
-isBackgroundNotificationNone;
-- (void)
-setBackgroundNotificationNone:(BOOL)_; // binding
-
-- (BOOL)
-isBackgroundNotificationChangeDockIcon;
-- (void)
-setBackgroundNotificationChangeDockIcon:(BOOL)_; // binding
-
-- (BOOL)
-isBackgroundNotificationAnimateIcon;
-- (void)
-setBackgroundNotificationAnimateIcon:(BOOL)_; // binding
-
-- (BOOL)
-isBackgroundNotificationDisplayMessage;
-- (void)
-setBackgroundNotificationDisplayMessage:(BOOL)_; // binding
-
-- (NSArray*)
-soundNames;
-
-- (NSIndexSet*)
-soundNameIndexes;
-- (void)
-setSoundNameIndexes:(NSIndexSet*)_; // binding
-
-@end
+@end //}
 
 #endif // __OBJC__
 

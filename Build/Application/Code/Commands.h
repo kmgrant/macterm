@@ -529,448 +529,422 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface Commands_Executor : NSObject
-
-+ (id)
-sharedExecutor;
-
-@end
-
-@interface Commands_Executor (Commands_ApplicationCoreEvents)
-
-// implements NSApplicationDelegate and NSApplicationNotifications; see Commands.mm
-
-@end
-
-@interface Commands_Executor (Commands_Capturing)
-
-- (IBAction)
-performCaptureBegin:(id)_;
-
-- (IBAction)
-performCaptureEnd:(id)_;
-
-- (IBAction)
-performPrintScreen:(id)_;
-
-- (IBAction)
-performPrintSelection:(id)_;
-
-- (IBAction)
-performSaveSelection:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_Editing)
-
-- (IBAction)
-performUndo:(id)_;
-
-- (IBAction)
-performRedo:(id)_;
-
-- (IBAction)
-performCut:(id)_;
-
-- (IBAction)
-performCopy:(id)_;
-
-- (IBAction)
-performCopyWithTabSubstitution:(id)_;
-
-- (IBAction)
-performCopyAndPaste:(id)_;
-
-- (IBAction)
-performPaste:(id)_;
-
-- (IBAction)
-performDelete:(id)_;
-
-- (IBAction)
-performSelectAll:(id)_;
-
-- (IBAction)
-performSelectNothing:(id)_;
-
-- (IBAction)
-performSelectEntireScrollbackBuffer:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_OpeningSessions)
-
-- (IBAction)
-performNewDefault:(id)_;
-
-- (void)
-performNewByFavoriteName:(id)_;
-
-- (IBAction)
-performNewLogInShell:(id)_;
-
-- (IBAction)
-performNewShell:(id)_;
-
-- (IBAction)
-performNewCustom:(id)_;
-
-- (IBAction)
-performRestoreWorkspaceDefault:(id)_;
-
-- (void)
-performRestoreWorkspaceByFavoriteName:(id)_;
-
-- (IBAction)
-performKill:(id)_;
-
-- (IBAction)
-performRestart:(id)_;
-
-- (IBAction)
-performOpen:(id)_;
-
-- (IBAction)
-performDuplicate:(id)_;
-
-- (IBAction)
-performSaveAs:(id)_;
-
-- (void)
-receiveGetURLEvent:(NSAppleEventDescriptor*)_
-replyEvent:(NSAppleEventDescriptor*)_;
-
-@end
-
-@interface Commands_Executor (Commands_OpeningVectorGraphics)
-
-- (IBAction)
-performNewTEKPage:(id)_;
-
-- (IBAction)
-performPageClearToggle:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_OpeningWebPages)
-
-- (IBAction)
-performCheckForUpdates:(id)_;
-
-- (IBAction)
-performGoToMainWebSite:(id)_;
-
-- (IBAction)
-performOpenURL:(id)_;
-
-- (IBAction)
-performProvideFeedback:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_ManagingMacros)
-
-- (IBAction)
-performActionForMacro:(id)_;
-
-- (IBAction)
-performMacroSwitchNone:(id)_;
-
-- (IBAction)
-performMacroSwitchDefault:(id)_;
-
-- (void)
-performMacroSwitchByFavoriteName:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_ManagingTerminalEvents)
-
-- (IBAction)
-performBellToggle:(id)_;
-
-- (IBAction)
-performSetActivityHandlerNone:(id)_;
-
-- (IBAction)
-performSetActivityHandlerNotifyOnNext:(id)_;
-
-- (IBAction)
-performSetActivityHandlerNotifyOnIdle:(id)_;
-
-- (IBAction)
-performSetActivityHandlerSendKeepAliveOnIdle:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_ManagingTerminalKeyMappings)
-
-- (IBAction)
-performDeleteMapToBackspace:(id)_;
-
-- (IBAction)
-performDeleteMapToDelete:(id)_;
-
-- (IBAction)
-performEmacsCursorModeToggle:(id)_;
-
-- (IBAction)
-performLocalPageKeysToggle:(id)_;
-
-- (IBAction)
-performMappingCustom:(id)_;
-
-- (IBAction)
-performSetFunctionKeyLayoutRxvt:(id)_;
-
-- (IBAction)
-performSetFunctionKeyLayoutVT220:(id)_;
-
-- (IBAction)
-performSetFunctionKeyLayoutXTermX11:(id)_;
-
-- (IBAction)
-performSetFunctionKeyLayoutXTermXFree86:(id)_;
-
-- (IBAction)
-performTranslationSwitchDefault:(id)_;
-
-- (void)
-performTranslationSwitchByFavoriteName:(id)_;
-
-- (IBAction)
-performTranslationSwitchCustom:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_ManagingTerminalSettings)
-
-- (IBAction)
-performInterruptProcess:(id)_;
-
-- (IBAction)
-performJumpScrolling:(id)_;
-
-- (IBAction)
-performLineWrapToggle:(id)_;
-
-- (IBAction)
-performLocalEchoToggle:(id)_;
-
-- (IBAction)
-performReset:(id)_;
-
-- (IBAction)
-performSaveOnClearToggle:(id)_;
-
-- (IBAction)
-performScrollbackClear:(id)_;
-
-- (IBAction)
-performSpeechToggle:(id)_;
-
-- (IBAction)
-performSuspendToggle:(id)_;
-
-- (IBAction)
-performTerminalCustomSetup:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_ModifyingTerminalDimensions)
-
-- (IBAction)
-performScreenResizeCustom:(id)_;
-
-- (IBAction)
-performScreenResizeNarrower:(id)_;
-
-- (IBAction)
-performScreenResizeShorter:(id)_;
-
-- (IBAction)
-performScreenResizeStandard:(id)_;
-
-- (IBAction)
-performScreenResizeTall:(id)_;
-
-- (IBAction)
-performScreenResizeTaller:(id)_;
-
-- (IBAction)
-performScreenResizeWide:(id)_;
-
-- (IBAction)
-performScreenResizeWider:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_ModifyingTerminalText)
-
-- (IBAction)
-performFormatDefault:(id)_;
-
-- (void)
-performFormatByFavoriteName:(id)_;
-
-- (IBAction)
-performFormatCustom:(id)_;
-
-- (IBAction)
-performFormatTextBigger:(id)_;
-
-- (IBAction)
-performFormatTextMaximum:(id)_;
-
-- (IBAction)
-performFormatTextSmaller:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_ModifyingWindows)
-
-- (IBAction)
-performArrangeInFront:(id)_;
-
-- (IBAction)
-performHideWindow:(id)_;
-
-- (IBAction)
-performHideOtherWindows:(id)_;
-
-- (IBAction)
-performMaximize:(id)_;
-
-- (IBAction)
-performMoveToNewWorkspace:(id)_;
-
-- (IBAction)
-performMoveWindowRight:(id)_;
-
-- (IBAction)
-performMoveWindowLeft:(id)_;
-
-- (IBAction)
-performMoveWindowDown:(id)_;
-
-- (IBAction)
-performMoveWindowUp:(id)_;
-
-- (IBAction)
-performRename:(id)_;
-
-- (IBAction)
-performShowHiddenWindows:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_Searching)
-
-- (IBAction)
-performFind:(id)_;
-
-- (IBAction)
-performFindNext:(id)_;
-
-- (IBAction)
-performFindPrevious:(id)_;
-
-- (IBAction)
-performFindCursor:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_ShowingPanels)
-
-- (IBAction)
-orderFrontAbout:(id)_;
-
-- (IBAction)
-orderFrontClipboard:(id)_;
-
-- (IBAction)
-orderFrontCommandLine:(id)_;
-
-- (IBAction)
-orderFrontContextualHelp:(id)_;
-
-- (IBAction)
-orderFrontControlKeys:(id)_;
-
-- (IBAction)
-orderFrontDebuggingOptions:(id)_;
-
-- (IBAction)
-orderFrontIPAddresses:(id)_;
-
-- (IBAction)
-orderFrontPreferences:(id)_;
-
-- (IBAction)
-orderFrontSessionInfo:(id)_;
-
-- (IBAction)
-orderFrontVT220FunctionKeys:(id)_;
-
-- (IBAction)
-orderFrontVT220Keypad:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_SwitchingModes)
-
-- (IBAction)
-performFullScreenOn:(id)_;
-
-- (IBAction)
-performFullScreenOff:(id)_;
-
-@end
-
-@interface Commands_Executor (Commands_SwitchingWindows)
-
-- (IBAction)
-orderFrontNextWindow:(id)_;
-
-- (IBAction)
-orderFrontNextWindowHidingPrevious:(id)_;
-
-- (IBAction)
-orderFrontPreviousWindow:(id)_;
-
-- (void)
-orderFrontSpecificWindow:(id)_;
-
-@end
-
-// These methods exactly match those typically found on NSWindow
-// derivatives.  They exist here solely for the purpose of
-// transition away from Carbon; since the menu commands are
-// mapped to a (Cocoa) first responder, any Cocoa window (such
-// as a floating palette) will implicitly handle the commands
-// and never invoke these fallbacks.  These are only executed
-// for windows that have no such methods,
-@interface Commands_Executor (Commands_TransitionFromCarbon)
-
-- (IBAction)
-performCloseSetup:(id)_;
-
-- (IBAction)
-performMinimizeSetup:(id)_;
-
-- (IBAction)
-performZoomSetup:(id)_;
-
-- (IBAction)
-runToolbarCustomizationPaletteSetup:(id)_;
-
-- (IBAction)
-toggleToolbarShownSetup:(id)_;
-
-- (BOOL)
-isCommandEnabled:(UInt32)_;
-
-@end
+@interface Commands_Executor : NSObject //{
+
+// class methods
+	+ (id)
+	sharedExecutor;
+
+@end //}
+
+/*!
+Implements NSApplicationDelegate and NSApplicationNotifications;
+see Commands.mm.
+*/
+@interface Commands_Executor (Commands_ApplicationCoreEvents) @end
+
+/*!
+Actions related to capturing terminal data to a file.
+*/
+@interface Commands_Executor (Commands_Capturing) //{
+
+// actions
+	- (IBAction)
+	performCaptureBegin:(id)_;
+	- (IBAction)
+	performCaptureEnd:(id)_;
+	- (IBAction)
+	performPrintScreen:(id)_;
+	- (IBAction)
+	performPrintSelection:(id)_;
+	- (IBAction)
+	performSaveSelection:(id)_;
+
+@end //}
+
+/*!
+Actions typically associated with the Edit menu.
+*/
+@interface Commands_Executor (Commands_Editing) //{
+
+// actions
+	- (IBAction)
+	performUndo:(id)_;
+	- (IBAction)
+	performRedo:(id)_;
+	- (IBAction)
+	performCut:(id)_;
+	- (IBAction)
+	performCopy:(id)_;
+	- (IBAction)
+	performCopyWithTabSubstitution:(id)_;
+	- (IBAction)
+	performCopyAndPaste:(id)_;
+	- (IBAction)
+	performPaste:(id)_;
+	- (IBAction)
+	performDelete:(id)_;
+	- (IBAction)
+	performSelectAll:(id)_;
+	- (IBAction)
+	performSelectNothing:(id)_;
+	- (IBAction)
+	performSelectEntireScrollbackBuffer:(id)_;
+
+@end //}
+
+/*!
+Actions that create new terminal-based sessions.
+*/
+@interface Commands_Executor (Commands_OpeningSessions) //{
+
+// actions
+	- (IBAction)
+	performNewDefault:(id)_;
+	- (IBAction)
+	performNewByFavoriteName:(id)_;
+	- (IBAction)
+	performNewLogInShell:(id)_;
+	- (IBAction)
+	performNewShell:(id)_;
+	- (IBAction)
+	performNewCustom:(id)_;
+	- (IBAction)
+	performRestoreWorkspaceDefault:(id)_;
+	- (IBAction)
+	performRestoreWorkspaceByFavoriteName:(id)_;
+	- (IBAction)
+	performKill:(id)_;
+	- (IBAction)
+	performRestart:(id)_;
+	- (IBAction)
+	performOpen:(id)_;
+	- (IBAction)
+	performDuplicate:(id)_;
+	- (IBAction)
+	performSaveAs:(id)_;
+
+// methods of the form required by setEventHandler:andSelector:forEventClass:andEventID:
+	- (void)
+	receiveGetURLEvent:(NSAppleEventDescriptor*)_
+	replyEvent:(NSAppleEventDescriptor*)_;
+
+@end //}
+
+/*!
+Actions related to vector graphics windows.
+*/
+@interface Commands_Executor (Commands_OpeningVectorGraphics) //{
+
+// actions
+	- (IBAction)
+	performNewTEKPage:(id)_;
+	- (IBAction)
+	performPageClearToggle:(id)_;
+
+@end //}
+
+/*!
+Actions that cause Internet addresses to be accessed.
+*/
+@interface Commands_Executor (Commands_OpeningWebPages) //{
+
+// actions
+	- (IBAction)
+	performCheckForUpdates:(id)_;
+	- (IBAction)
+	performGoToMainWebSite:(id)_;
+	- (IBAction)
+	performOpenURL:(id)_;
+	- (IBAction)
+	performProvideFeedback:(id)_;
+
+@end //}
+
+/*!
+Actions related to macros.
+*/
+@interface Commands_Executor (Commands_ManagingMacros) //{
+
+// actions
+	- (IBAction)
+	performActionForMacro:(id)_;
+	- (IBAction)
+	performMacroSwitchNone:(id)_;
+	- (IBAction)
+	performMacroSwitchDefault:(id)_;
+	- (IBAction)
+	performMacroSwitchByFavoriteName:(id)_;
+
+@end //}
+
+/*!
+Actions to configure terminal event handlers.
+*/
+@interface Commands_Executor (Commands_ManagingTerminalEvents) //{
+
+// actions
+	- (IBAction)
+	performBellToggle:(id)_;
+	- (IBAction)
+	performSetActivityHandlerNone:(id)_;
+	- (IBAction)
+	performSetActivityHandlerNotifyOnNext:(id)_;
+	- (IBAction)
+	performSetActivityHandlerNotifyOnIdle:(id)_;
+	- (IBAction)
+	performSetActivityHandlerSendKeepAliveOnIdle:(id)_;
+
+@end //}
+
+/*!
+Actions affecting keyboard behavior in terminal windows.
+*/
+@interface Commands_Executor (Commands_ManagingTerminalKeyMappings) //{
+
+// actions
+	- (IBAction)
+	performDeleteMapToBackspace:(id)_;
+	- (IBAction)
+	performDeleteMapToDelete:(id)_;
+	- (IBAction)
+	performEmacsCursorModeToggle:(id)_;
+	- (IBAction)
+	performLocalPageKeysToggle:(id)_;
+	- (IBAction)
+	performMappingCustom:(id)_;
+	- (IBAction)
+	performSetFunctionKeyLayoutRxvt:(id)_;
+	- (IBAction)
+	performSetFunctionKeyLayoutVT220:(id)_;
+	- (IBAction)
+	performSetFunctionKeyLayoutXTermX11:(id)_;
+	- (IBAction)
+	performSetFunctionKeyLayoutXTermXFree86:(id)_;
+	- (IBAction)
+	performTranslationSwitchDefault:(id)_;
+	- (IBAction)
+	performTranslationSwitchByFavoriteName:(id)_;
+	- (IBAction)
+	performTranslationSwitchCustom:(id)_;
+
+@end //}
+
+/*!
+Actions to change various terminal behaviors.
+*/
+@interface Commands_Executor (Commands_ManagingTerminalSettings) //{
+
+// actions
+	- (IBAction)
+	performInterruptProcess:(id)_;
+	- (IBAction)
+	performJumpScrolling:(id)_;
+	- (IBAction)
+	performLineWrapToggle:(id)_;
+	- (IBAction)
+	performLocalEchoToggle:(id)_;
+	- (IBAction)
+	performReset:(id)_;
+	- (IBAction)
+	performSaveOnClearToggle:(id)_;
+	- (IBAction)
+	performScrollbackClear:(id)_;
+	- (IBAction)
+	performSpeechToggle:(id)_;
+	- (IBAction)
+	performSuspendToggle:(id)_;
+	- (IBAction)
+	performTerminalCustomSetup:(id)_;
+
+@end //}
+
+/*!
+Actions that change the number of rows and/or columns in terminal views.
+*/
+@interface Commands_Executor (Commands_ModifyingTerminalDimensions) //{
+
+// actions
+	- (IBAction)
+	performScreenResizeCustom:(id)_;
+	- (IBAction)
+	performScreenResizeNarrower:(id)_;
+	- (IBAction)
+	performScreenResizeShorter:(id)_;
+	- (IBAction)
+	performScreenResizeStandard:(id)_;
+	- (IBAction)
+	performScreenResizeTall:(id)_;
+	- (IBAction)
+	performScreenResizeTaller:(id)_;
+	- (IBAction)
+	performScreenResizeWide:(id)_;
+	- (IBAction)
+	performScreenResizeWider:(id)_;
+
+@end //}
+
+/*!
+Actions that affect fonts, colors and other format settings.
+*/
+@interface Commands_Executor (Commands_ModifyingTerminalText) //{
+
+// actions
+	- (IBAction)
+	performFormatDefault:(id)_;
+	- (IBAction)
+	performFormatByFavoriteName:(id)_;
+	- (IBAction)
+	performFormatCustom:(id)_;
+	- (IBAction)
+	performFormatTextBigger:(id)_;
+	- (IBAction)
+	performFormatTextMaximum:(id)_;
+	- (IBAction)
+	performFormatTextSmaller:(id)_;
+
+@end //}
+
+/*!
+Actions that affect a window’s properties, placement and size.
+*/
+@interface Commands_Executor (Commands_ModifyingWindows) //{
+
+// actions
+	- (IBAction)
+	performArrangeInFront:(id)_;
+	- (IBAction)
+	performHideWindow:(id)_;
+	- (IBAction)
+	performHideOtherWindows:(id)_;
+	- (IBAction)
+	performMaximize:(id)_;
+	- (IBAction)
+	performMoveToNewWorkspace:(id)_;
+	- (IBAction)
+	performMoveWindowRight:(id)_;
+	- (IBAction)
+	performMoveWindowLeft:(id)_;
+	- (IBAction)
+	performMoveWindowDown:(id)_;
+	- (IBAction)
+	performMoveWindowUp:(id)_;
+	- (IBAction)
+	performRename:(id)_;
+	- (IBAction)
+	performShowHiddenWindows:(id)_;
+
+@end //}
+
+/*!
+Actions that help the user to find things.
+*/
+@interface Commands_Executor (Commands_Searching) //{
+
+// actions
+	- (IBAction)
+	performFind:(id)_;
+	- (IBAction)
+	performFindNext:(id)_;
+	- (IBAction)
+	performFindPrevious:(id)_;
+	- (IBAction)
+	performFindCursor:(id)_;
+
+@end //}
+
+/*!
+Actions that display specific windows.
+*/
+@interface Commands_Executor (Commands_ShowingPanels) //{
+
+// actions
+	- (IBAction)
+	orderFrontAbout:(id)_;
+	- (IBAction)
+	orderFrontClipboard:(id)_;
+	- (IBAction)
+	orderFrontCommandLine:(id)_;
+	- (IBAction)
+	orderFrontContextualHelp:(id)_;
+	- (IBAction)
+	orderFrontControlKeys:(id)_;
+	- (IBAction)
+	orderFrontDebuggingOptions:(id)_;
+	- (IBAction)
+	orderFrontIPAddresses:(id)_;
+	- (IBAction)
+	orderFrontPreferences:(id)_;
+	- (IBAction)
+	orderFrontSessionInfo:(id)_;
+	- (IBAction)
+	orderFrontVT220FunctionKeys:(id)_;
+	- (IBAction)
+	orderFrontVT220Keypad:(id)_;
+
+@end //}
+
+/*!
+Actions to enter or exit Full Screen.
+*/
+@interface Commands_Executor (Commands_SwitchingModes) //{
+
+// actions
+	- (IBAction)
+	performFullScreenOn:(id)_;
+	- (IBAction)
+	performFullScreenOff:(id)_;
+
+@end //}
+
+/*!
+Actions to cycle through windows.
+*/
+@interface Commands_Executor (Commands_SwitchingWindows) //{
+
+// actions
+	- (IBAction)
+	orderFrontNextWindow:(id)_;
+	- (IBAction)
+	orderFrontNextWindowHidingPrevious:(id)_;
+	- (IBAction)
+	orderFrontPreviousWindow:(id)_;
+	- (IBAction)
+	orderFrontSpecificWindow:(id)_;
+
+@end //}
+
+/*!
+These methods are similar to those typically found on NSWindow
+derivatives.  They are TEMPORARY, used to transition away from
+Carbon.  After observing that Apple’s Cocoa wrappers for Carbon
+windows can do unexpected things with “standard” messages (e.g.
+when receiving "performClose:"), the choice was made to map the
+Cocoa menus to the variants below.  These methods detect when
+the action receiver would be a Carbon window, and then they
+send the request in the “Carbon way”.  If the action receiver
+would be a “real” Cocoa window, the standard action is sent up
+the responder chain in the usual way.
+*/
+@interface Commands_Executor (Commands_TransitionFromCarbon) //{
+
+// actions
+	- (IBAction)
+	performCloseSetup:(id)_;
+	- (IBAction)
+	performMinimizeSetup:(id)_;
+	- (IBAction)
+	performZoomSetup:(id)_;
+	- (IBAction)
+	runToolbarCustomizationPaletteSetup:(id)_;
+	- (IBAction)
+	toggleToolbarShownSetup:(id)_;
+
+// new methods
+	- (BOOL)
+	isCommandEnabled:(UInt32)_;
+
+@end //}
 
 #endif
 

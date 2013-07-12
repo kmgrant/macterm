@@ -71,22 +71,22 @@ Base class for palettes that interact with sessions.
 This is useful to encapsulate the complexity of
 locating a target session.
 */
-@interface Keypads_PanelController : NSWindowController
+@interface Keypads_PanelController : NSWindowController //{
 {
 	float	baseFontSize;
 }
 
-// designated initializer
-- (id)
-initWithWindowNibName:(NSString*)_;
+// initializers
+	- (id)
+	initWithWindowNibName:(NSString*)_;
 
-- (void)
-sendCharacter:(UInt8)_;
+// new methods
+	- (void)
+	sendCharacter:(UInt8)_;
+	- (void)
+	sendKey:(UInt8)_;
 
-- (void)
-sendKey:(UInt8)_;
-
-@end
+@end //}
 
 
 /*!
@@ -97,108 +97,79 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface Keypads_ControlKeysPanelController : Keypads_PanelController
+@interface Keypads_ControlKeysPanelController : Keypads_PanelController //{
 
-+ (id)
-sharedControlKeysPanelController;
+// class methods
+	+ (id)
+	sharedControlKeysPanelController;
 
-- (IBAction)
-typeNull:(id)_;
+// actions
+	- (IBAction)
+	typeNull:(id)_;
+	- (IBAction)
+	typeControlA:(id)_;
+	- (IBAction)
+	typeControlB:(id)_;
+	- (IBAction)
+	typeControlC:(id)_;
+	- (IBAction)
+	typeControlD:(id)_;
+	- (IBAction)
+	typeControlE:(id)_;
+	- (IBAction)
+	typeControlF:(id)_;
+	- (IBAction)
+	typeControlG:(id)_;
+	- (IBAction)
+	typeControlH:(id)_;
+	- (IBAction)
+	typeControlI:(id)_;
+	- (IBAction)
+	typeControlJ:(id)_;
+	- (IBAction)
+	typeControlK:(id)_;
+	- (IBAction)
+	typeControlL:(id)_;
+	- (IBAction)
+	typeControlM:(id)_;
+	- (IBAction)
+	typeControlN:(id)_;
+	- (IBAction)
+	typeControlO:(id)_;
+	- (IBAction)
+	typeControlP:(id)_;
+	- (IBAction)
+	typeControlQ:(id)_;
+	- (IBAction)
+	typeControlR:(id)_;
+	- (IBAction)
+	typeControlS:(id)_;
+	- (IBAction)
+	typeControlT:(id)_;
+	- (IBAction)
+	typeControlU:(id)_;
+	- (IBAction)
+	typeControlV:(id)_;
+	- (IBAction)
+	typeControlW:(id)_;
+	- (IBAction)
+	typeControlX:(id)_;
+	- (IBAction)
+	typeControlY:(id)_;
+	- (IBAction)
+	typeControlZ:(id)_;
+	- (IBAction)
+	typeControlLeftSquareBracket:(id)_;
+	- (IBAction)
+	typeControlBackslash:(id)_;
+	- (IBAction)
+	typeControlRightSquareBracket:(id)_;
+	- (IBAction)
+	typeControlCaret:(id)_;
+	- (IBAction)
+	typeControlUnderscore:(id)_;
 
-- (IBAction)
-typeControlA:(id)_;
-
-- (IBAction)
-typeControlB:(id)_;
-
-- (IBAction)
-typeControlC:(id)_;
-
-- (IBAction)
-typeControlD:(id)_;
-
-- (IBAction)
-typeControlE:(id)_;
-
-- (IBAction)
-typeControlF:(id)_;
-
-- (IBAction)
-typeControlG:(id)_;
-
-- (IBAction)
-typeControlH:(id)_;
-
-- (IBAction)
-typeControlI:(id)_;
-
-- (IBAction)
-typeControlJ:(id)_;
-
-- (IBAction)
-typeControlK:(id)_;
-
-- (IBAction)
-typeControlL:(id)_;
-
-- (IBAction)
-typeControlM:(id)_;
-
-- (IBAction)
-typeControlN:(id)_;
-
-- (IBAction)
-typeControlO:(id)_;
-
-- (IBAction)
-typeControlP:(id)_;
-
-- (IBAction)
-typeControlQ:(id)_;
-
-- (IBAction)
-typeControlR:(id)_;
-
-- (IBAction)
-typeControlS:(id)_;
-
-- (IBAction)
-typeControlT:(id)_;
-
-- (IBAction)
-typeControlU:(id)_;
-
-- (IBAction)
-typeControlV:(id)_;
-
-- (IBAction)
-typeControlW:(id)_;
-
-- (IBAction)
-typeControlX:(id)_;
-
-- (IBAction)
-typeControlY:(id)_;
-
-- (IBAction)
-typeControlZ:(id)_;
-
-- (IBAction)
-typeControlLeftSquareBracket:(id)_;
-
-- (IBAction)
-typeControlBackslash:(id)_;
-
-- (IBAction)
-typeControlRightSquareBracket:(id)_;
-
-- (IBAction)
-typeControlCaret:(id)_;
-
-- (IBAction)
-typeControlUnderscore:(id)_;
-
-@end
+@end //}
 
 
 /*!
@@ -209,7 +180,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface Keypads_FunctionKeysPanelController : Keypads_PanelController
+@interface Keypads_FunctionKeysPanelController : Keypads_PanelController //{
 {
 	IBOutlet NSPopUpButton*		layoutMenu;
 	IBOutlet NSButton*			functionKeyF1;		// may become “PF1” (VT100)
@@ -221,169 +192,121 @@ changes to an interface declared in a ".mm" file.
 	NSWindow*					menuChildWindow;
 }
 
-+ (id)
-sharedFunctionKeysPanelController;
+// class methods
+	+ (id)
+	sharedFunctionKeysPanelController;
 
-- (Session_FunctionKeyLayout)
-currentFunctionKeyLayout;
+// accessors
+	- (Session_FunctionKeyLayout)
+	currentFunctionKeyLayout;
 
-- (IBAction)
-performSetFunctionKeyLayoutRxvt:(id)_;
+// actions
+	- (IBAction)
+	performSetFunctionKeyLayoutRxvt:(id)_;
+	- (IBAction)
+	performSetFunctionKeyLayoutVT220:(id)_;
+	- (IBAction)
+	performSetFunctionKeyLayoutXTermX11:(id)_;
+	- (IBAction)
+	performSetFunctionKeyLayoutXTermXFree86:(id)_;
+	- (IBAction)
+	typeF1:(id)_;
+	- (IBAction)
+	typeF2:(id)_;
+	- (IBAction)
+	typeF3:(id)_;
+	- (IBAction)
+	typeF4:(id)_;
+	- (IBAction)
+	typeF5:(id)_;
+	- (IBAction)
+	typeF6:(id)_;
+	- (IBAction)
+	typeF7:(id)_;
+	- (IBAction)
+	typeF8:(id)_;
+	- (IBAction)
+	typeF9:(id)_;
+	- (IBAction)
+	typeF10:(id)_;
+	- (IBAction)
+	typeF11:(id)_;
+	- (IBAction)
+	typeF12:(id)_;
+	- (IBAction)
+	typeF13:(id)_;
+	- (IBAction)
+	typeF14:(id)_;
+	- (IBAction)
+	typeF15:(id)_;
+	- (IBAction)
+	typeF16:(id)_;
+	- (IBAction)
+	typeF17:(id)_;
+	- (IBAction)
+	typeF18:(id)_;
+	- (IBAction)
+	typeF19:(id)_;
+	- (IBAction)
+	typeF20:(id)_;
+	- (IBAction)
+	typeF21:(id)_;
+	- (IBAction)
+	typeF22:(id)_;
+	- (IBAction)
+	typeF23:(id)_;
+	- (IBAction)
+	typeF24:(id)_;
+	- (IBAction)
+	typeF25:(id)_;
+	- (IBAction)
+	typeF26:(id)_;
+	- (IBAction)
+	typeF27:(id)_;
+	- (IBAction)
+	typeF28:(id)_;
+	- (IBAction)
+	typeF29:(id)_;
+	- (IBAction)
+	typeF30:(id)_;
+	- (IBAction)
+	typeF31:(id)_;
+	- (IBAction)
+	typeF32:(id)_;
+	- (IBAction)
+	typeF33:(id)_;
+	- (IBAction)
+	typeF34:(id)_;
+	- (IBAction)
+	typeF35:(id)_;
+	- (IBAction)
+	typeF36:(id)_;
+	- (IBAction)
+	typeF37:(id)_;
+	- (IBAction)
+	typeF38:(id)_;
+	- (IBAction)
+	typeF39:(id)_;
+	- (IBAction)
+	typeF40:(id)_;
+	- (IBAction)
+	typeF41:(id)_;
+	- (IBAction)
+	typeF42:(id)_;
+	- (IBAction)
+	typeF43:(id)_;
+	- (IBAction)
+	typeF44:(id)_;
+	- (IBAction)
+	typeF45:(id)_;
+	- (IBAction)
+	typeF46:(id)_;
+	- (IBAction)
+	typeF47:(id)_;
+	- (IBAction)
+	typeF48:(id)_;
 
-- (IBAction)
-performSetFunctionKeyLayoutVT220:(id)_;
-
-- (IBAction)
-performSetFunctionKeyLayoutXTermX11:(id)_;
-
-- (IBAction)
-performSetFunctionKeyLayoutXTermXFree86:(id)_;
-
-- (IBAction)
-typeF1:(id)_;
-
-- (IBAction)
-typeF2:(id)_;
-
-- (IBAction)
-typeF3:(id)_;
-
-- (IBAction)
-typeF4:(id)_;
-
-- (IBAction)
-typeF5:(id)_;
-
-- (IBAction)
-typeF6:(id)_;
-
-- (IBAction)
-typeF7:(id)_;
-
-- (IBAction)
-typeF8:(id)_;
-
-- (IBAction)
-typeF9:(id)_;
-
-- (IBAction)
-typeF10:(id)_;
-
-- (IBAction)
-typeF11:(id)_;
-
-- (IBAction)
-typeF12:(id)_;
-
-- (IBAction)
-typeF13:(id)_;
-
-- (IBAction)
-typeF14:(id)_;
-
-- (IBAction)
-typeF15:(id)_;
-
-- (IBAction)
-typeF16:(id)_;
-
-- (IBAction)
-typeF17:(id)_;
-
-- (IBAction)
-typeF18:(id)_;
-
-- (IBAction)
-typeF19:(id)_;
-
-- (IBAction)
-typeF20:(id)_;
-
-- (IBAction)
-typeF21:(id)_;
-
-- (IBAction)
-typeF22:(id)_;
-
-- (IBAction)
-typeF23:(id)_;
-
-- (IBAction)
-typeF24:(id)_;
-
-- (IBAction)
-typeF25:(id)_;
-
-- (IBAction)
-typeF26:(id)_;
-
-- (IBAction)
-typeF27:(id)_;
-
-- (IBAction)
-typeF28:(id)_;
-
-- (IBAction)
-typeF29:(id)_;
-
-- (IBAction)
-typeF30:(id)_;
-
-- (IBAction)
-typeF31:(id)_;
-
-- (IBAction)
-typeF32:(id)_;
-
-- (IBAction)
-typeF33:(id)_;
-
-- (IBAction)
-typeF34:(id)_;
-
-- (IBAction)
-typeF35:(id)_;
-
-- (IBAction)
-typeF36:(id)_;
-
-- (IBAction)
-typeF37:(id)_;
-
-- (IBAction)
-typeF38:(id)_;
-
-- (IBAction)
-typeF39:(id)_;
-
-- (IBAction)
-typeF40:(id)_;
-
-- (IBAction)
-typeF41:(id)_;
-
-- (IBAction)
-typeF42:(id)_;
-
-- (IBAction)
-typeF43:(id)_;
-
-- (IBAction)
-typeF44:(id)_;
-
-- (IBAction)
-typeF45:(id)_;
-
-- (IBAction)
-typeF46:(id)_;
-
-- (IBAction)
-typeF47:(id)_;
-
-- (IBAction)
-typeF48:(id)_;
-
-@end
+@end //}
 
 
 /*!
@@ -394,96 +317,71 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface Keypads_VT220KeysPanelController : Keypads_PanelController
+@interface Keypads_VT220KeysPanelController : Keypads_PanelController //{
 
-+ (id)
-sharedVT220KeysPanelController;
+// class methods
+	+ (id)
+	sharedVT220KeysPanelController;
 
-- (IBAction)
-type0:(id)_;
+// actions
+	- (IBAction)
+	type0:(id)_;
+	- (IBAction)
+	type1:(id)_;
+	- (IBAction)
+	type2:(id)_;
+	- (IBAction)
+	type3:(id)_;
+	- (IBAction)
+	type4:(id)_;
+	- (IBAction)
+	type5:(id)_;
+	- (IBAction)
+	type6:(id)_;
+	- (IBAction)
+	type7:(id)_;
+	- (IBAction)
+	type8:(id)_;
+	- (IBAction)
+	type9:(id)_;
+	- (IBAction)
+	typeArrowDown:(id)_;
+	- (IBAction)
+	typeArrowLeft:(id)_;
+	- (IBAction)
+	typeArrowRight:(id)_;
+	- (IBAction)
+	typeArrowUp:(id)_;
+	- (IBAction)
+	typeComma:(id)_;
+	- (IBAction)
+	typeDecimalPoint:(id)_;
+	- (IBAction)
+	typeDelete:(id)_;
+	- (IBAction)
+	typeEnter:(id)_;
+	- (IBAction)
+	typeFind:(id)_;
+	- (IBAction)
+	typeHyphen:(id)_;
+	- (IBAction)
+	typeInsert:(id)_;
+	- (IBAction)
+	typePageDown:(id)_;
+	- (IBAction)
+	typePageUp:(id)_;
+	- (IBAction)
+	typePF1:(id)_;
+	- (IBAction)
+	typePF2:(id)_;
+	- (IBAction)
+	typePF3:(id)_;
+	- (IBAction)
+	typePF4:(id)_;
+	- (IBAction)
+	typeSelect:(id)_;
 
-- (IBAction)
-type1:(id)_;
-
-- (IBAction)
-type2:(id)_;
-
-- (IBAction)
-type3:(id)_;
-
-- (IBAction)
-type4:(id)_;
-
-- (IBAction)
-type5:(id)_;
-
-- (IBAction)
-type6:(id)_;
-
-- (IBAction)
-type7:(id)_;
-
-- (IBAction)
-type8:(id)_;
-
-- (IBAction)
-type9:(id)_;
-
-- (IBAction)
-typeArrowDown:(id)_;
-
-- (IBAction)
-typeArrowLeft:(id)_;
-
-- (IBAction)
-typeArrowRight:(id)_;
-
-- (IBAction)
-typeArrowUp:(id)_;
-
-- (IBAction)
-typeComma:(id)_;
-
-- (IBAction)
-typeDecimalPoint:(id)_;
-
-- (IBAction)
-typeDelete:(id)_;
-
-- (IBAction)
-typeEnter:(id)_;
-
-- (IBAction)
-typeFind:(id)_;
-
-- (IBAction)
-typeHyphen:(id)_;
-
-- (IBAction)
-typeInsert:(id)_;
-
-- (IBAction)
-typePageDown:(id)_;
-
-- (IBAction)
-typePageUp:(id)_;
-
-- (IBAction)
-typePF1:(id)_;
-
-- (IBAction)
-typePF2:(id)_;
-
-- (IBAction)
-typePF3:(id)_;
-
-- (IBAction)
-typePF4:(id)_;
-
-- (IBAction)
-typeSelect:(id)_;
-
-@end
+@end //}
 
 
 /*!
@@ -495,15 +393,17 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface Keypads_FullScreenPanelController : NSWindowController
+@interface Keypads_FullScreenPanelController : NSWindowController //{
 
-+ (id)
-sharedFullScreenPanelController;
+// class methods
+	+ (id)
+	sharedFullScreenPanelController;
 
-- (IBAction)
-disableFullScreen:(id)_;
+// actions
+	- (IBAction)
+	disableFullScreen:(id)_;
 
-@end
+@end //}
 
 
 /*!
@@ -514,19 +414,22 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface Keypads_ArrangeWindowPanelController : NSWindowController
+@interface Keypads_ArrangeWindowPanelController : NSWindowController //{
 
-+ (id)
-sharedArrangeWindowPanelController;
+// class methods
+	+ (id)
+	sharedArrangeWindowPanelController;
 
-- (IBAction)
-doneArranging:(id)_;
+// actions
+	- (IBAction)
+	doneArranging:(id)_;
 
-- (void)
-setOriginToX:(int)_
-andY:(int)_;
+// new methods
+	- (void)
+	setOriginToX:(int)_
+	andY:(int)_;
 
-@end
+@end //}
 
 #endif
 

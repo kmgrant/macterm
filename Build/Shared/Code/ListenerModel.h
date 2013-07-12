@@ -127,28 +127,28 @@ NOTE:	The underlying listener that is created uses an
 		context information, just make sure that your
 		target object can access the data that it needs.
 */
-@interface ListenerModel_StandardListener : NSObject
+@interface ListenerModel_StandardListener : NSObject //{
 {
 	ListenerModel_ListenerRef	listenerRef;
 	NSInvocation*				methodInvoker;
 }
 
-// designated initializer
-- (id)
-initWithTarget:(id)_
-eventFiredSelector:(SEL)_;
+// initializers
+	- (id)
+	initWithTarget:(id)_
+	eventFiredSelector:(SEL)_;
 
-// forwards an event to the selector on the target
-- (void)
-listenerModel:(ListenerModel_Ref)_
-firedEvent:(ListenerModel_Event)_
-context:(void*)_;
+// new methods
+	- (void)
+	listenerModel:(ListenerModel_Ref)_
+	firedEvent:(ListenerModel_Event)_
+	context:(void*)_; // forwards an event to the selector on the target
 
-// for compatibility with older APIs
-- (ListenerModel_ListenerRef)
-listenerRef;
+// accessors
+	- (ListenerModel_ListenerRef)
+	listenerRef; // for compatibility with older APIs
 
-@end // ListenerModel_StandardListener
+@end //}
 
 #endif // __OBJC__
 

@@ -18,7 +18,7 @@
 /*###############################################################
 
 	Simple Cocoa Wrappers Library 1.9
-	© 2008-2012 by Kevin Grant
+	© 2008-2013 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -83,12 +83,13 @@
 //			that take or return non-objects.
 
 
-@interface NSWindow (NSWindowExtensionsFromTiger)
+@interface NSWindow (NSWindowExtensionsFromTiger) //{
 
-- (void)
-setShowsToolbarButton:(BOOL)_;
+// accessors
+	- (void)
+	setShowsToolbarButton:(BOOL)_;
 
-@end
+@end //}
 
 #endif // MAC_OS_X_VERSION_10_4
 
@@ -109,20 +110,22 @@ setShowsToolbarButton:(BOOL)_;
 //			that take or return non-objects.
 
 
-@interface NSWindow (NSWindowExtensionsFromLeopard)
+@interface NSWindow (NSWindowExtensionsFromLeopard) //{
 
-- (void)
-setCollectionBehavior:(unsigned int)_;
+// accessors
+	- (void)
+	setCollectionBehavior:(unsigned int)_;
 
-@end
+@end //}
 
 
-@interface NSSegmentedControl (NSSegmentedControlExtensionsFromLeopard)
+@interface NSSegmentedControl (NSSegmentedControlExtensionsFromLeopard) //{
 
-- (void)
-setSegmentStyle:(int/*NSInteger*//*NSSegmentStyle*/)_;
+// accessors
+	- (void)
+	setSegmentStyle:(int/*NSInteger*//*NSSegmentStyle*/)_;
 
-@end
+@end //}
 
 
 #endif // MAC_OS_X_VERSION_10_5
@@ -143,20 +146,21 @@ setSegmentStyle:(int/*NSInteger*//*NSSegmentStyle*/)_;
 //			that take or return non-objects.
 
 
-@interface NSCursor (NSCursorExtensionsFromSnowLeopard)
+@interface NSCursor (NSCursorExtensionsFromSnowLeopard) //{
 
-+ (NSCursor*)
-contextualMenuCursor;
+// class methods
+	+ (NSCursor*)
+	contextualMenuCursor;
 
-@end
+@end //}
 
 
-@interface NSWindow (NSWindowExtensionsFromSnowLeopard)
+@interface NSWindow (NSWindowExtensionsFromSnowLeopard) //{
 
-- (BOOL)
-isOnActiveSpace;
+	- (BOOL)
+	isOnActiveSpace;
 
-@end
+@end //}
 
 
 #endif // MAC_OS_X_VERSION_10_6
@@ -184,31 +188,33 @@ enum
 typedef int/*NSInteger*/	NSScrollerStyle;
 
 
-@interface NSResponder (NSResponderExtensionsFromLion)
+@interface NSResponder (NSResponderExtensionsFromLion) //{
 
-- (void)
-invalidateRestorableState;
+	- (void)
+	invalidateRestorableState;
 
-@end
-
-
-@interface NSScroller (NSScrollerExtensionsFromLion)
-
-+ (NSScrollerStyle)
-preferredScrollerStyle;
-
-- (NSScrollerStyle)
-scrollerStyle;
-
-@end
+@end //}
 
 
-@interface NSWindow (NSWindowExtensionsFromLion)
+@interface NSScroller (NSScrollerExtensionsFromLion) //{
 
-- (void)
-setAnimationBehavior:(int/*NSInteger*//*NSWindowAnimationBehavior*/)_;
+// class methods
+	+ (NSScrollerStyle)
+	preferredScrollerStyle;
 
-@end
+// accessors
+	- (NSScrollerStyle)
+	scrollerStyle;
+
+@end //}
+
+
+@interface NSWindow (NSWindowExtensionsFromLion) //{
+
+	- (void)
+	setAnimationBehavior:(int/*NSInteger*//*NSWindowAnimationBehavior*/)_;
+
+@end //}
 
 
 #endif // MAC_OS_X_VERSION_10_7
@@ -231,26 +237,26 @@ setAnimationBehavior:(int/*NSInteger*//*NSWindowAnimationBehavior*/)_;
 @class NSUserNotification;
 @class NSUserNotificationCenter;
 
-@protocol NSUserNotificationCenterDelegate < NSObject >
+@protocol NSUserNotificationCenterDelegate < NSObject > //{
 
 // NOTE: Technically all methods are optional but older versions of
 // the Objective-C language do not have this concept.  To ensure
 // that the system sees an object “conforming” to the protocol it
 // is unfortunately necessary to implement ALL methods regardless.
 
-- (void)
-userNotificationCenter:(NSUserNotificationCenter*)_
-didDeliverNotification:(NSUserNotification*)_;
+	- (void)
+	userNotificationCenter:(NSUserNotificationCenter*)_
+	didDeliverNotification:(NSUserNotification*)_;
 
-- (void)
-userNotificationCenter:(NSUserNotificationCenter*)_
-didActivateNotification:(NSUserNotification*)_;
+	- (void)
+	userNotificationCenter:(NSUserNotificationCenter*)_
+	didActivateNotification:(NSUserNotification*)_;
 
-- (BOOL)
-userNotificationCenter:(NSUserNotificationCenter*)_
-shouldPresentNotification:(NSUserNotification*)_;
+	- (BOOL)
+	userNotificationCenter:(NSUserNotificationCenter*)_
+	shouldPresentNotification:(NSUserNotification*)_;
 
-@end
+@end //}
 
 
 

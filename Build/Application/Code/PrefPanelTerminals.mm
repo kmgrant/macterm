@@ -355,28 +355,37 @@ Boolean		compareDataBrowserItems		(ControlRef, DataBrowserItemID, DataBrowserIte
 } // anonymous namespace
 
 
-@interface PrefPanelTerminals_EmulationViewManager (PrefPanelTerminals_EmulationViewManagerInternal)
+/*!
+The private class interface.
+*/
+@interface PrefPanelTerminals_EmulationViewManager (PrefPanelTerminals_EmulationViewManagerInternal) //{
 
-- (NSArray*)
-primaryDisplayBindingKeys;
+	- (NSArray*)
+	primaryDisplayBindingKeys;
 
-@end // PrefPanelTerminals_EmulationViewManager (PrefPanelTerminals_EmulationViewManagerInternal)
-
-
-@interface PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal)
-
-- (NSArray*)
-primaryDisplayBindingKeys;
-
-@end // PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal)
+@end //}
 
 
-@interface PrefPanelTerminals_ScreenViewManager (PrefPanelTerminals_ScreenViewManagerInternal)
+/*!
+The private class interface.
+*/
+@interface PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal) //{
 
-- (NSArray*)
-primaryDisplayBindingKeys;
+	- (NSArray*)
+	primaryDisplayBindingKeys;
 
-@end // PrefPanelTerminals_ScreenViewManager (PrefPanelTerminals_ScreenViewManagerInternal)
+@end //}
+
+
+/*!
+The private class interface.
+*/
+@interface PrefPanelTerminals_ScreenViewManager (PrefPanelTerminals_ScreenViewManagerInternal) //{
+
+	- (NSArray*)
+	primaryDisplayBindingKeys;
+
+@end //}
 
 
 

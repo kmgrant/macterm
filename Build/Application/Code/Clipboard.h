@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -86,23 +86,23 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface Clipboard_ContentView : NSControl
+@interface Clipboard_ContentView : NSControl //{
 {
 @private
 	BOOL	showDragHighlight;
 }
 
-- (void)
-drawRect:(NSRect)_;
+// NSView
+	- (void)
+	drawRect:(NSRect)_;
 
 // accessors
+	- (BOOL)
+	showDragHighlight;
+	- (void)
+	setShowDragHighlight:(BOOL)_;
 
-- (BOOL)
-showDragHighlight;
-- (void)
-setShowDragHighlight:(BOOL)_;
-
-@end
+@end //}
 
 
 /*!
@@ -112,7 +112,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface Clipboard_WindowController : NSWindowController
+@interface Clipboard_WindowController : NSWindowController //{
 {
 @public
 	IBOutlet Clipboard_ContentView*		clipboardContent;
@@ -128,43 +128,38 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSTextField*				value2;
 }
 
-+ (id)
-sharedClipboardWindowController;
+// class methods
+	+ (NSFont*)
+	returnNSFontForMonospacedTextOfSize:(unsigned int)_;
+	+ (id)
+	sharedClipboardWindowController;
 
-- (NSFont*)
-returnNSFontForMonospacedTextOfSize:(unsigned int)_;
+// new methods
+	- (void)
+	setNeedsDisplay;
 
-- (void)
-setDataSize:(size_t)_;
+// accessors
+	- (void)
+	setDataSize:(size_t)_;
+	- (void)
+	setDataWidth:(size_t)_
+	andHeight:(size_t)_;
+	- (void)
+	setKindField:(NSString*)_;
+	- (void)
+	setLabel1:(NSString*)_
+	andValue:(NSString*)_;
+	- (void)
+	setLabel2:(NSString*)_
+	andValue:(NSString*)_;
+	- (void)
+	setShowImage:(BOOL)_;
+	- (void)
+	setShowText:(BOOL)_;
+	- (void)
+	setSizeField:(NSString*)_;
 
-- (void)
-setDataWidth:(size_t)_
-andHeight:(size_t)_;
-
-- (void)
-setNeedsDisplay;
-
-- (void)
-setKindField:(NSString*)_;
-
-- (void)
-setLabel1:(NSString*)_
-andValue:(NSString*)_;
-
-- (void)
-setLabel2:(NSString*)_
-andValue:(NSString*)_;
-
-- (void)
-setShowImage:(BOOL)_;
-
-- (void)
-setShowText:(BOOL)_;
-
-- (void)
-setSizeField:(NSString*)_;
-
-@end
+@end //}
 
 #endif // __OBJC__
 

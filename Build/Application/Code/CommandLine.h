@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -54,31 +54,33 @@
 Manages the history menu of the command line.  Attempting
 to use bindings and controllers for this purpose failed...
 */
-@interface CommandLine_HistoryDataSource : NSObject
+@interface CommandLine_HistoryDataSource : NSObject //{
 {
 	NSMutableArray*		_commandHistoryArray;
 }
 
-- (NSMutableArray*)
-historyArray;
+// accessors
+	- (NSMutableArray*)
+	historyArray;
 
-@end
+@end //}
 
 
 /*!
-A special customization of a combo box that makes it look more
-like a terminal window.  See "CommandLineCocoa.xib".
+A special customization of a combo box that makes it look
+more like a terminal window.  See "CommandLineCocoa.xib".
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface CommandLine_TerminalLikeComboBox : NSComboBox
+@interface CommandLine_TerminalLikeComboBox : NSComboBox //{
 
-- (void)
-textDidBeginEditing:(NSNotification*)_;
+// NSTextField
+	- (void)
+	textDidBeginEditing:(NSNotification*)_;
 
-@end
+@end //}
 
 
 /*!
@@ -89,25 +91,27 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface CommandLine_PanelController : NSWindowController
+@interface CommandLine_PanelController : NSWindowController //{
 {
 	NSMutableString*							commandLineText; // binding
 	IBOutlet CommandLine_TerminalLikeComboBox*	commandLineField;
 }
 
-+ (id)
-sharedCommandLinePanelController;
+// class methods
+	+ (id)
+	sharedCommandLinePanelController;
 
-- (IBAction)
-displayHelp:(id)_;
+// actions
+	- (IBAction)
+	displayHelp:(id)_;
+	- (IBAction)
+	sendText:(id)_;
 
-- (IBAction)
-sendText:(id)_;
+// accessors
+	- (NSColor*)
+	textColor;
 
-- (NSColor*)
-textColor;
-
-@end
+@end //}
 
 #endif // __OBJC__
 

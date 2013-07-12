@@ -5,7 +5,7 @@
 /*###############################################################
 
 	Simple Cocoa Wrappers Library 1.9
-	© 2008-2012 by Kevin Grant
+	© 2008-2013 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -34,69 +34,60 @@
 
 #pragma mark Types
 
-@interface NSColor (CocoaExtensions_NSColor)
+@interface NSColor (CocoaExtensions_NSColor) //{
+
+// class methods
+	+ (BOOL)
+	searchResultColorsForForeground:(NSColor**)_
+	background:(NSColor**)_;
+	+ (BOOL)
+	selectionColorsForForeground:(NSColor**)_
+	background:(NSColor**)_;
 
 // helpers for constructing color variations
-
-- (NSColor*)
-colorCloserToBlack;
-
-- (NSColor*)
-colorCloserToWhite;
-
-- (NSColor*)
-colorWithShading;
-
-+ (BOOL)
-searchResultColorsForForeground:(NSColor**)_
-background:(NSColor**)_;
-
-+ (BOOL)
-selectionColorsForForeground:(NSColor**)_
-background:(NSColor**)_;
+	- (NSColor*)
+	colorCloserToBlack;
+	- (NSColor*)
+	colorCloserToWhite;
+	- (NSColor*)
+	colorWithShading;
 
 // TEMPORARY AND DEPRECATED; USE ONLY AS NEEDED
-- (void)
-setAsBackgroundInQDCurrentPort;
+	- (void)
+	setAsBackgroundInQDCurrentPort;
+	- (void)
+	setAsForegroundInQDCurrentPort;
 
-// TEMPORARY AND DEPRECATED; USE ONLY AS NEEDED
-- (void)
-setAsForegroundInQDCurrentPort;
-
-@end
+@end //}
 
 
-@interface NSInvocation (CocoaExtensions_NSInvocation)
+@interface NSInvocation (CocoaExtensions_NSInvocation) //{
 
-// helpers for constructing from selectors on target objects
+// class methods: helpers for constructing from selectors on target objects
+	+ (NSInvocation*)
+	invocationWithSelector:(SEL)_
+	target:(id)_;
 
-+ (NSInvocation*)
-invocationWithSelector:(SEL)_
-target:(id)_;
-
-@end
-
-
-@interface NSObject (CocoaExtensions_NSObject)
-
-// helpers for key-value observing customization
-
-+ (NSString*)
-selectorNameForKeyChangeAutoNotifyFlag:(NSString*)_;
-
-+ (SEL)
-selectorToReturnKeyChangeAutoNotifyFlag:(SEL)_;
-
-@end
+@end //}
 
 
-@interface NSWindow (CocoaExtensions_NSWindow)
+@interface NSObject (CocoaExtensions_NSObject) //{
 
-// helpers for setting frames with a delay
+// class methods: helpers for key-value observing customization
+	+ (NSString*)
+	selectorNameForKeyChangeAutoNotifyFlag:(NSString*)_;
+	+ (SEL)
+	selectorToReturnKeyChangeAutoNotifyFlag:(SEL)_;
 
-- (void)
-setFrameWithArray:(id)_;
+@end //}
 
-@end
+
+@interface NSWindow (CocoaExtensions_NSWindow) //{
+
+// new methods: helpers for setting frames with a delay
+	- (void)
+	setFrameWithArray:(id)_;
+
+@end //}
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

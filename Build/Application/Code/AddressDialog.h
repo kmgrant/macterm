@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -50,17 +50,18 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface AddressDialog_AddressArrayController : NSArrayController
+@interface AddressDialog_AddressArrayController : NSArrayController //{
 {
 	IBOutlet NSTableView*	addressTableView;
 }
 
-- (BOOL)
-tableView:(NSTableView*)_
-writeRowsWithIndexes:(NSIndexSet*)_
-toPasteboard:(NSPasteboard*)_;
+// NSTableViewDataSource
+	- (BOOL)
+	tableView:(NSTableView*)_
+	writeRowsWithIndexes:(NSIndexSet*)_
+	toPasteboard:(NSPasteboard*)_;
 
-@end
+@end //}
 
 
 /*!
@@ -70,18 +71,20 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface AddressDialog_PanelController : NSWindowController
+@interface AddressDialog_PanelController : NSWindowController //{
 {
 	NSMutableArray*		addressArray; // binding
 }
 
-+ (id)
-sharedAddressPanelController;
+// class methods
+	+ (id)
+	sharedAddressPanelController;
 
-- (IBAction)
-rebuildAddressList:(id)_;
+// actions
+	- (IBAction)
+	rebuildAddressList:(id)_;
 
-@end
+@end //}
 
 #endif // __OBJC__
 

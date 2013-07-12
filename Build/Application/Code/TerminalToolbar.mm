@@ -99,97 +99,114 @@ OSStatus	receiveNewSystemUIMode		(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
-@interface TerminalToolbar_ItemBell (TerminalToolbar_ItemBellInternal)
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_ItemBell (TerminalToolbar_ItemBellInternal) //{
 
-- (void)
-model:(ListenerModel_Ref)_
-screenChange:(ListenerModel_Event)_
-context:(void*)_;
+// methods of the form required by ListenerModel_StandardListener
+	- (void)
+	model:(ListenerModel_Ref)_
+	screenChange:(ListenerModel_Event)_
+	context:(void*)_;
 
-- (void)
-setStateFromScreen:(TerminalScreenRef)_;
+// new methods
+	- (void)
+	setStateFromScreen:(TerminalScreenRef)_;
 
-@end // TerminalToolbar_ItemBell (TerminalToolbar_ItemBellInternal)
+@end //}
 
-@interface TerminalToolbar_ItemForceQuit (TerminalToolbar_ItemForceQuitInternal)
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_ItemForceQuit (TerminalToolbar_ItemForceQuitInternal) //{
 
-- (void)
-model:(ListenerModel_Ref)_
-sessionChange:(ListenerModel_Event)_
-context:(void*)_;
+// methods of the form required by ListenerModel_StandardListener
+	- (void)
+	model:(ListenerModel_Ref)_
+	sessionChange:(ListenerModel_Event)_
+	context:(void*)_;
 
-- (void)
-setStateFromSession:(SessionRef)_;
+// new methods
+	- (void)
+	setStateFromSession:(SessionRef)_;
 
-@end // TerminalToolbar_ItemForceQuit (TerminalToolbar_ItemForceQuitInternal)
+@end //}
 
-@interface TerminalToolbar_LEDItem (TerminalToolbar_LEDItemInternal)
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_LEDItem (TerminalToolbar_LEDItemInternal) //{
 
-- (void)
-model:(ListenerModel_Ref)_
-screenChange:(ListenerModel_Event)_
-context:(void*)_;
+// methods of the form required by ListenerModel_StandardListener
+	- (void)
+	model:(ListenerModel_Ref)_
+	screenChange:(ListenerModel_Event)_
+	context:(void*)_;
 
-- (void)
-setStateFromScreen:(TerminalScreenRef)_;
+// new methods
+	- (void)
+	setStateFromScreen:(TerminalScreenRef)_;
 
-@end // TerminalToolbar_LEDItem (TerminalToolbar_LEDItemInternal)
+@end //}
 
-@interface TerminalToolbar_ItemSuspend (TerminalToolbar_ItemSuspendInternal)
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_ItemSuspend (TerminalToolbar_ItemSuspendInternal) //{
 
-- (void)
-model:(ListenerModel_Ref)_
-sessionChange:(ListenerModel_Event)_
-context:(void*)_;
+// methods of the form required by ListenerModel_StandardListener
+	- (void)
+	model:(ListenerModel_Ref)_
+	sessionChange:(ListenerModel_Event)_
+	context:(void*)_;
 
-- (void)
-setStateFromSession:(SessionRef)_;
+// new methods
+	- (void)
+	setStateFromSession:(SessionRef)_;
 
-@end // TerminalToolbar_ItemSuspend (TerminalToolbar_ItemSuspendInternal)
+@end //}
 
-@interface TerminalToolbar_Window (TerminalToolbar_WindowInternal)
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_Window (TerminalToolbar_WindowInternal) //{
 
-- (void)
-model:(ListenerModel_Ref)_
-sessionFactoryChange:(ListenerModel_Event)_
-context:(void*)_;
+// class methods
+	+ (void)
+	refreshWindows;
 
-+ (void)
-refreshWindows;
+// methods of the form required by ListenerModel_StandardListener
+	- (void)
+	model:(ListenerModel_Ref)_
+	sessionFactoryChange:(ListenerModel_Event)_
+	context:(void*)_;
 
-- (void)
-setFrameBasedOnRect:(NSRect)_;
-
-- (void)
-setFrameWithPossibleAnimation;
+// new methods
+	- (void)
+	setFrameBasedOnRect:(NSRect)_;
+	- (void)
+	setFrameWithPossibleAnimation;
 
 // notifications
+	- (void)
+	applicationDidChangeScreenParameters:(NSNotification*)_;
+	- (void)
+	toolbarDidChangeDisplayMode:(NSNotification*)_;
+	- (void)
+	toolbarDidChangeSizeMode:(NSNotification*)_;
+	- (void)
+	toolbarDidChangeVisibility:(NSNotification*)_;
+	- (void)
+	windowDidBecomeKey:(NSNotification*)_;
+	- (void)
+	windowDidResignKey:(NSNotification*)_;
+	- (void)
+	windowWillBeginSheet:(NSNotification*)_;
+	- (void)
+	windowDidEndSheet:(NSNotification*)_;
 
-- (void)
-applicationDidChangeScreenParameters:(NSNotification*)_;
-
-- (void)
-toolbarDidChangeDisplayMode:(NSNotification*)_;
-
-- (void)
-toolbarDidChangeSizeMode:(NSNotification*)_;
-
-- (void)
-toolbarDidChangeVisibility:(NSNotification*)_;
-
-- (void)
-windowDidBecomeKey:(NSNotification*)_;
-
-- (void)
-windowDidResignKey:(NSNotification*)_;
-
-- (void)
-windowWillBeginSheet:(NSNotification*)_;
-
-- (void)
-windowDidEndSheet:(NSNotification*)_;
-
-@end // TerminalToolbar_Window (TerminalToolbar_WindowInternal)
+@end //}
 
 #pragma mark Variables
 namespace {

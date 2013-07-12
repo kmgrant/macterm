@@ -85,45 +85,40 @@ control that displays a preference value could be bound to a
 string value in its dictionary that holds a human-readable and
 localized description of the setting.
 */
-@interface PreferenceValue_Inherited : NSObject
+@interface PreferenceValue_Inherited : NSObject //{
 {
 @private
 	PrefsContextManager_Object*		prefsMgr;
 	NSMutableDictionary*			propertiesByKey;
 }
 
-// designated initializer
-- (id)
-initWithContextManager:(PrefsContextManager_Object*)_;
+// initializers
+	- (id)
+	initWithContextManager:(PrefsContextManager_Object*)_;
+
+// new methods
+	- (void)
+	didSetPreferenceValue;
+	- (void)
+	willSetPreferenceValue;
 
 // accessors
-
-- (void)
-setInherited:(BOOL)_; // binding (to subclasses, typically)
-
-- (BOOL)
-isInheritEnabled; // binding (to subclasses, typically)
-
-- (PrefsContextManager_Object*)
-prefsMgr;
-
-- (NSMutableDictionary*)
-propertiesByKey;
-
-- (void)
-didSetPreferenceValue;
-- (void)
-willSetPreferenceValue;
+	- (void)
+	setInherited:(BOOL)_; // binding (to subclasses, typically)
+	- (BOOL)
+	isInheritEnabled; // binding (to subclasses, typically)
+	- (PrefsContextManager_Object*)
+	prefsMgr;
+	- (NSMutableDictionary*)
+	propertiesByKey;
 
 // overrides for subclasses (none of these is implemented in the base!)
+	- (BOOL)
+	isInherited; // subclasses MUST implement; binding (to subclasses, typically)
+	- (void)
+	setNilPreferenceValue; // subclasses MUST implement
 
-- (BOOL)
-isInherited; // subclasses MUST implement; binding (to subclasses, typically)
-
-- (void)
-setNilPreferenceValue; // subclasses MUST implement
-
-@end
+@end //}
 
 
 /*!
@@ -131,79 +126,72 @@ Since the vast majority of bindings are to a single underlying
 preference tag, this variant of the object is available to make
 it easy to store and retrieve one tag value.
 */
-@interface PreferenceValue_InheritedSingleTag : PreferenceValue_Inherited
+@interface PreferenceValue_InheritedSingleTag : PreferenceValue_Inherited //{
 {
 @private
 	Preferences_Tag		preferencesTag;
 }
 
-// designated initializer
-- (id)
-initWithPreferencesTag:(Preferences_Tag)_
-contextManager:(PrefsContextManager_Object*)_;
+// initializers
+	- (id)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_;
 
 // accessors
+	- (Preferences_Tag)
+	preferencesTag;
 
-- (Preferences_Tag)
-preferencesTag;
-
-@end
+@end //}
 
 
 /*!
 Manages bindings for a single color preference.
 */
-@interface PreferenceValue_Color : PreferenceValue_InheritedSingleTag
-{
-}
+@interface PreferenceValue_Color : PreferenceValue_InheritedSingleTag //{
 
-// designated initializer
-- (id)
-initWithPreferencesTag:(Preferences_Tag)_
-contextManager:(PrefsContextManager_Object*)_;
+// initializers
+	- (id)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_;
 
 // accessors
+	- (NSColor*)
+	colorValue;
+	- (void)
+	setColorValue:(NSColor*)_; // binding
 
-- (NSColor*)
-colorValue;
-- (void)
-setColorValue:(NSColor*)_; // binding
-
-@end
+@end //}
 
 
 /*!
 Manages bindings for any preference whose value is
 defined to be Boolean.
 */
-@interface PreferenceValue_Flag : PreferenceValue_InheritedSingleTag
+@interface PreferenceValue_Flag : PreferenceValue_InheritedSingleTag //{
 {
 	BOOL	inverted;
 }
 
-- (id)
-initWithPreferencesTag:(Preferences_Tag)_
-contextManager:(PrefsContextManager_Object*)_;
-
-// designated initializer
-- (id)
-initWithPreferencesTag:(Preferences_Tag)_
-contextManager:(PrefsContextManager_Object*)_
-inverted:(BOOL)_;
+// initializers
+	- (id)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_;
+	- (id)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_
+	inverted:(BOOL)_; // designated initializer
 
 // new methods
-
-- (BOOL)
-readValueSeeIfDefault:(BOOL*)_;
+	- (BOOL)
+	readValueSeeIfDefault:(BOOL*)_;
 
 // accessors
+	- (NSNumber*)
+	numberValue;
+	- (void)
+	setNumberValue:(NSNumber*)_; // binding
 
-- (NSNumber*)
-numberValue;
-- (void)
-setNumberValue:(NSNumber*)_; // binding
-
-@end
+@end //}
 
 
 /*!
@@ -211,64 +199,57 @@ Manages bindings for any preference whose value is
 defined to be a number (optionally integer-only and/or
 unsigned-only).
 */
-@interface PreferenceValue_Number : PreferenceValue_InheritedSingleTag
+@interface PreferenceValue_Number : PreferenceValue_InheritedSingleTag //{
 {
 	PreferenceValue_CType	valueCType;
 }
 
-// designated initializer
-- (id)
-initWithPreferencesTag:(Preferences_Tag)_
-contextManager:(PrefsContextManager_Object*)_
-preferenceCType:(PreferenceValue_CType)_;
+// initializers
+	- (id)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_
+	preferenceCType:(PreferenceValue_CType)_;
 
 // new methods
-
-- (NSNumber*)
-readValueSeeIfDefault:(BOOL*)_;
+	- (NSNumber*)
+	readValueSeeIfDefault:(BOOL*)_;
 
 // accessors
-
-- (NSString*)
-numberStringValue;
-- (void)
-setNumberStringValue:(NSString*)_; // binding
+	- (NSString*)
+	numberStringValue;
+	- (void)
+	setNumberStringValue:(NSString*)_; // binding
 
 // validators
+	- (BOOL)
+	validateNumberStringValue:(id*)_
+	error:(NSError**)_;
 
-- (BOOL)
-validateNumberStringValue:(id*)_
-error:(NSError**)_;
-
-@end
+@end //}
 
 
 /*!
 Manages bindings for any preference whose value is
 defined to be a pointer to a CFStringRef.
 */
-@interface PreferenceValue_String : PreferenceValue_InheritedSingleTag
-{
-}
+@interface PreferenceValue_String : PreferenceValue_InheritedSingleTag //{
 
-// designated initializer
-- (id)
-initWithPreferencesTag:(Preferences_Tag)_
-contextManager:(PrefsContextManager_Object*)_;
+// initializers
+	- (id)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_;
 
 // new methods
-
-- (NSString*)
-readValueSeeIfDefault:(BOOL*)_;
+	- (NSString*)
+	readValueSeeIfDefault:(BOOL*)_;
 
 // accessors
+	- (NSString*)
+	stringValue;
+	- (void)
+	setStringValue:(NSString*)_; // binding
 
-- (NSString*)
-stringValue;
-- (void)
-setStringValue:(NSString*)_; // binding
-
-@end
+@end //}
 
 
 /*!
@@ -278,25 +259,24 @@ array is bound to a user interface element such as a
 pop-up menu or a matrix, the (localized) description for
 the specified value is used to represent the value.
 */
-@interface PreferenceValue_IntegerDescriptor : BoundName_Object
+@interface PreferenceValue_IntegerDescriptor : BoundName_Object //{
 {
 @private
 	UInt32		describedValue;
 }
 
-// designated initializer
-- (id)
-initWithIntegerValue:(UInt32)_
-description:(NSString*)_;
+// initializers
+	- (id)
+	initWithIntegerValue:(UInt32)_
+	description:(NSString*)_;
 
 // accessors
+	- (UInt32)
+	describedIntegerValue;
+	- (void)
+	setDescribedIntegerValue:(UInt32)_;
 
-- (UInt32)
-describedIntegerValue;
-- (void)
-setDescribedIntegerValue:(UInt32)_;
-
-@end
+@end //}
 
 
 /*!
@@ -310,31 +290,29 @@ type such as PreferenceValue_IntegerDescriptor, to
 specify which values are stored and how they are
 displayed to the user.
 */
-@interface PreferenceValue_Array : PreferenceValue_Inherited
+@interface PreferenceValue_Array : PreferenceValue_Inherited //{
 {
 @private
 	NSArray*					valueDescriptorArray;
 	PreferenceValue_Number*		preferenceAccessObject;
 }
 
-// designated initializer
-- (id)
-initWithPreferencesTag:(Preferences_Tag)_
-contextManager:(PrefsContextManager_Object*)_
-preferenceCType:(PreferenceValue_CType)_
-valueDescriptorArray:(NSArray*)_;
+// initializers
+	- (id)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_
+	preferenceCType:(PreferenceValue_CType)_
+	valueDescriptorArray:(NSArray*)_;
 
 // accessors
+	- (NSArray*)
+	valueDescriptorArray; // binding
+	- (id)
+	currentValueDescriptor;
+	- (void)
+	setCurrentValueDescriptor:(id)_; // binding
 
-- (NSArray*)
-valueDescriptorArray; // binding
-
-- (id)
-currentValueDescriptor;
-- (void)
-setCurrentValueDescriptor:(id)_; // binding
-
-@end
+@end //}
 
 #endif
 

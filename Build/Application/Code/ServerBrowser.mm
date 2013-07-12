@@ -69,7 +69,11 @@ extern "C"
 
 #pragma mark Types
 
-@interface ServerBrowser_Handler : NSObject< NSWindowDelegate, PopoverManager_Delegate, ServerBrowser_ViewManagerChannel >
+/*!
+Manages the Server Browser user interface.
+*/
+@interface ServerBrowser_Handler : NSObject< NSWindowDelegate, PopoverManager_Delegate,
+												ServerBrowser_ViewManagerChannel > //{
 {
 	ServerBrowser_Ref			selfRef;				// identical to address of structure, but typed as ref
 	ServerBrowser_ViewManager*	viewMgr;				// loads the server browser interface
@@ -85,56 +89,52 @@ extern "C"
 	PopoverManager_Ref			popoverMgr;				// manages common aspects of popover window behavior
 }
 
-+ (ServerBrowser_Handler*)
-viewHandlerFromRef:(ServerBrowser_Ref)_;
+// class methods
+	+ (ServerBrowser_Handler*)
+	viewHandlerFromRef:(ServerBrowser_Ref)_;
 
-- (id)
-initWithPosition:(CGPoint)_
-relativeToParentWindow:(HIWindowRef)_
-eventTarget:(EventTargetRef)_;
+// initializers
+	- (id)
+	initWithPosition:(CGPoint)_
+	relativeToParentWindow:(HIWindowRef)_
+	eventTarget:(EventTargetRef)_;
 
-- (void)
-configureWithProtocol:(Session_Protocol)_
-hostName:(NSString*)_
-portNumber:(unsigned int)_
-userID:(NSString*)_;
+// new methods
+	- (void)
+	configureWithProtocol:(Session_Protocol)_
+	hostName:(NSString*)_
+	portNumber:(unsigned int)_
+	userID:(NSString*)_;
+	- (void)
+	display;
+	- (void)
+	remove;
 
-- (void)
-display;
-
-- (void)
-remove;
-
-- (NSWindow*)
-parentCocoaWindow;
+// accessors
+	- (NSWindow*)
+	parentCocoaWindow;
 
 // PopoverManager_Delegate
-
-- (NSPoint)
-idealAnchorPointForParentWindowFrame:(NSRect)_;
-
-- (Popover_Properties)
-idealArrowPositionForParentWindowFrame:(NSRect)_;
-
-- (NSSize)
-idealSize;
+	- (NSPoint)
+	idealAnchorPointForParentWindowFrame:(NSRect)_;
+	- (Popover_Properties)
+	idealArrowPositionForParentWindowFrame:(NSRect)_;
+	- (NSSize)
+	idealSize;
 
 // ServerBrowser_ViewManagerChannel
+	- (void)
+	serverBrowser:(ServerBrowser_ViewManager*)_
+	didLoadManagedView:(NSView*)_;
+	- (void)
+	serverBrowser:(ServerBrowser_ViewManager*)_
+	didFinishUsingManagedView:(NSView*)_;
+	- (void)
+	serverBrowser:(ServerBrowser_ViewManager*)_
+	setManagedView:(NSView*)_
+	toScreenFrame:(NSRect)_;
 
-- (void)
-serverBrowser:(ServerBrowser_ViewManager*)_
-didLoadManagedView:(NSView*)_;
-
-- (void)
-serverBrowser:(ServerBrowser_ViewManager*)_
-didFinishUsingManagedView:(NSView*)_;
-
-- (void)
-serverBrowser:(ServerBrowser_ViewManager*)_
-setManagedView:(NSView*)_
-toScreenFrame:(NSRect)_;
-
-@end // ServerBrowser_Handler
+@end //}
 
 
 /*!
@@ -143,7 +143,7 @@ by Bonjour, that allows them to be easily inserted into user
 interface elements without losing less user-friendly information
 about each service.
 */
-@interface ServerBrowser_NetService : NSObject< NSNetServiceDelegate >
+@interface ServerBrowser_NetService : NSObject< NSNetServiceDelegate > //{
 {
 @private
 	NSNetService*		netService;
@@ -152,31 +152,26 @@ about each service.
 	unsigned short		bestResolvedPort;
 }
 
-- (id)
-initWithNetService:(NSNetService*)_
-addressFamily:(unsigned char)_;
+// initializers
+	- (id)
+	initWithNetService:(NSNetService*)_
+	addressFamily:(unsigned char)_;
 
 // accessors; see "Discovered Hosts" array controller in the NIB, for key names
+	- (NSString*)
+	bestResolvedAddress;
+	- (void)
+	setBestResolvedAddress:(NSString*)_;
+	- (unsigned short)
+	bestResolvedPort;
+	- (void)
+	setBestResolvedPort:(unsigned short)_;
+	- (NSString*)
+	description;
+	- (NSNetService*)
+	netService;
 
-- (NSString*)
-bestResolvedAddress;
-
-- (unsigned short)
-bestResolvedPort;
-
-- (NSString*)
-description;
-
-- (NSNetService*)
-netService;
-
-- (void)
-setBestResolvedAddress:(NSString*)_;
-
-- (void)
-setBestResolvedPort:(unsigned short)_;
-
-@end // ServerBrowser_NetService
+@end //}
 
 
 /*!
@@ -185,7 +180,7 @@ allows them to be easily inserted into user interface elements
 without losing less user-friendly information about each
 protocol.
 */
-@interface ServerBrowser_Protocol : BoundName_Object
+@interface ServerBrowser_Protocol : BoundName_Object //{
 {
 @private
 	Session_Protocol	protocolID;
@@ -194,31 +189,27 @@ protocol.
 }
 
 // accessors; see "Protocol Definitions" array controller in the NIB, for key names
-
-- (unsigned short)
-defaultPort;
-- (void)
-setDefaultPort:(unsigned short)_;
-
-- (Session_Protocol)
-protocolID;
-- (void)
-setProtocolID:(Session_Protocol)_;
-
-- (NSString*)
-serviceType;
-- (void)
-setServiceType:(NSString*)_;
+	- (unsigned short)
+	defaultPort;
+	- (void)
+	setDefaultPort:(unsigned short)_;
+	- (Session_Protocol)
+	protocolID;
+	- (void)
+	setProtocolID:(Session_Protocol)_;
+	- (NSString*)
+	serviceType;
+	- (void)
+	setServiceType:(NSString*)_;
 
 // initializers
+	- (id)
+	initWithID:(Session_Protocol)_
+	description:(NSString*)_
+	serviceType:(NSString*)_
+	defaultPort:(unsigned short)_;
 
-- (id)
-initWithID:(Session_Protocol)_
-description:(NSString*)_
-serviceType:(NSString*)_
-defaultPort:(unsigned short)_;
-
-@end // ServerBrowser_Protocol
+@end //}
 
 #pragma mark Internal Method Prototypes
 namespace {
@@ -228,24 +219,23 @@ OSStatus	receiveLookupComplete		(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
-@interface ServerBrowser_ViewManager (ServerBrowser_ViewManagerInternal)
+/*!
+The private class interface.
+*/
+@interface ServerBrowser_ViewManager (ServerBrowser_ViewManagerInternal) //{
 
-- (void)
-didDoubleClickDiscoveredHostWithSelection:(NSArray*)_;
+	- (void)
+	didDoubleClickDiscoveredHostWithSelection:(NSArray*)_;
+	- (ServerBrowser_NetService*)
+	discoveredHost;
+	- (void)
+	notifyOfChangeInValueReturnedBy:(SEL)_;
+	- (ServerBrowser_Protocol*)
+	protocol;
+	- (void)
+	serverBrowserWindowWillClose:(NSNotification*)_;
 
-- (ServerBrowser_NetService*)
-discoveredHost;
-
-- (void)
-notifyOfChangeInValueReturnedBy:(SEL)_;
-
-- (ServerBrowser_Protocol*)
-protocol;
-
-- (void)
-serverBrowserWindowWillClose:(NSNotification*)_;
-
-@end // ServerBrowser_ViewManager (ServerBrowser_ViewManagerInternal)
+@end //}
 
 
 

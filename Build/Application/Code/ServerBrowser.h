@@ -63,25 +63,29 @@ typedef struct ServerBrowser_OpaqueStruct*		ServerBrowser_Ref;
 
 @class ServerBrowser_ViewManager;
 
-@protocol ServerBrowser_ViewManagerChannel
+/*!
+Classes that are delegates of ServerBrowser_ViewManager
+must conform to this protocol.
+*/
+@protocol ServerBrowser_ViewManagerChannel //{
 
-// use this opportunity to create and display a window to wrap the view
-- (void)
-serverBrowser:(ServerBrowser_ViewManager*)_
-didLoadManagedView:(NSView*)_;
+	// use this opportunity to create and display a window to wrap the view
+	- (void)
+	serverBrowser:(ServerBrowser_ViewManager*)_
+	didLoadManagedView:(NSView*)_;
 
-// when the view is going away, perform any final updates
-- (void)
-serverBrowser:(ServerBrowser_ViewManager*)_
-didFinishUsingManagedView:(NSView*)_;
+	// when the view is going away, perform any final updates
+	- (void)
+	serverBrowser:(ServerBrowser_ViewManager*)_
+	didFinishUsingManagedView:(NSView*)_;
 
-// user interface has hidden or displayed something that requires the view size to change
-- (void)
-serverBrowser:(ServerBrowser_ViewManager*)_
-setManagedView:(NSView*)_
-toScreenFrame:(NSRect)_;
+	// user interface has hidden or displayed something that requires the view size to change
+	- (void)
+	serverBrowser:(ServerBrowser_ViewManager*)_
+	setManagedView:(NSView*)_
+	toScreenFrame:(NSRect)_;
 
-@end // ServerBrowser_ViewManagerChannel
+@end //}
 
 
 @class ServerBrowser_NetService;
@@ -100,7 +104,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface ServerBrowser_ViewManager : NSObject< NSNetServiceBrowserDelegate >
+@interface ServerBrowser_ViewManager : NSObject< NSNetServiceBrowserDelegate > //{
 {
 	NSMutableArray*			discoveredHosts; // binding
 	NSMutableArray*			recentHosts; // binding
@@ -130,115 +134,97 @@ changes to an interface declared in a ".mm" file.
 }
 
 // initializers
-
-- (id)
-initWithResponder:(id< ServerBrowser_ViewManagerChannel >)_
-eventTarget:(EventTargetRef)_;
+	- (id)
+	initWithResponder:(id< ServerBrowser_ViewManagerChannel >)_
+	eventTarget:(EventTargetRef)_;
 
 // new methods
+	- (NSView*)
+	logicalFirstResponder;
+	- (IBAction)
+	lookUpHostName:(id)_;
+	- (void)
+	rediscoverServices;
 
-- (NSView*)
-logicalFirstResponder;
+// accessors: array values
+	- (void)
+	insertObject:(ServerBrowser_NetService*)_
+	inDiscoveredHostsAtIndex:(unsigned long)_;
+	- (void)
+	removeObjectFromDiscoveredHostsAtIndex:(unsigned long)_;
+	- (NSIndexSet*)
+	discoveredHostIndexes;
+	- (void)
+	setDiscoveredHostIndexes:(NSIndexSet*)_; // binding
+	- (NSArray*)
+	protocolDefinitions;
+	- (NSIndexSet*)
+	protocolIndexes;
+	- (void)
+	setProtocolIndexByProtocol:(Session_Protocol)_;
+	- (void)
+	setProtocolIndexes:(NSIndexSet*)_; // binding
+	- (void)
+	insertObject:(NSString*)_
+	inRecentHostsAtIndex:(unsigned long)_;
+	- (void)
+	removeObjectFromRecentHostsAtIndex:(unsigned long)_;
 
-- (IBAction)
-lookUpHostName:(id)_;
+// accessors: general
+	- (Session_Protocol)
+	currentProtocolID;
+	- (NSString*)
+	errorMessage;
+	- (void)
+	setErrorMessage:(NSString*)_;
+	- (NSString*)
+	hostName;
+	- (void)
+	setHostName:(NSString*)_; // binding
+	- (NSString*)
+	portNumber;
+	- (void)
+	setPortNumber:(NSString*)_; // binding
+	- (id)
+	target;
+	- (void)
+	setTarget:(id)_;
+	- (NSString*)
+	userID;
+	- (void)
+	setUserID:(NSString*)_; // binding
 
-- (void)
-rediscoverServices;
-
-// accessors
-
-- (Session_Protocol)
-currentProtocolID;
-
-- (void)
-insertObject:(ServerBrowser_NetService*)_
-inDiscoveredHostsAtIndex:(unsigned long)_;
-- (void)
-removeObjectFromDiscoveredHostsAtIndex:(unsigned long)_;
-
-- (NSIndexSet*)
-discoveredHostIndexes;
-- (void)
-setDiscoveredHostIndexes:(NSIndexSet*)_; // binding
-
-- (NSString*)
-errorMessage;
-- (void)
-setErrorMessage:(NSString*)_;
-
-- (BOOL)
-hidesDiscoveredHosts;
-- (void)
-setHidesDiscoveredHosts:(BOOL)_;
-
-- (BOOL)
-hidesErrorMessage;
-- (void)
-setHidesErrorMessage:(BOOL)_;
-
-- (BOOL)
-hidesPortNumberError;
-- (void)
-setHidesPortNumberError:(BOOL)_; // binding
-
-- (BOOL)
-hidesProgress;
-- (void)
-setHidesProgress:(BOOL)_; // binding
-
-- (BOOL)
-hidesUserIDError;
-- (void)
-setHidesUserIDError:(BOOL)_; // binding
-
-- (NSString*)
-hostName;
-- (void)
-setHostName:(NSString*)_; // binding
-
-- (NSString*)
-portNumber;
-- (void)
-setPortNumber:(NSString*)_; // binding
-
-- (NSArray*)
-protocolDefinitions;
-
-- (NSIndexSet*)
-protocolIndexes;
-- (void)
-setProtocolIndexByProtocol:(Session_Protocol)_;
-- (void)
-setProtocolIndexes:(NSIndexSet*)_; // binding
-
-- (void)
-insertObject:(NSString*)_
-inRecentHostsAtIndex:(unsigned long)_;
-- (void)
-removeObjectFromRecentHostsAtIndex:(unsigned long)_;
-
-- (id)
-target;
-- (void)
-setTarget:(id)_;
-
-- (NSString*)
-userID;
-- (void)
-setUserID:(NSString*)_; // binding
+// accessors: low-level user interface state
+	- (BOOL)
+	hidesDiscoveredHosts;
+	- (void)
+	setHidesDiscoveredHosts:(BOOL)_;
+	- (BOOL)
+	hidesErrorMessage;
+	- (void)
+	setHidesErrorMessage:(BOOL)_;
+	- (BOOL)
+	hidesPortNumberError;
+	- (void)
+	setHidesPortNumberError:(BOOL)_; // binding
+	- (BOOL)
+	hidesProgress;
+	- (void)
+	setHidesProgress:(BOOL)_; // binding
+	- (BOOL)
+	hidesUserIDError;
+	- (void)
+	setHidesUserIDError:(BOOL)_; // binding
 
 // validators
+	- (BOOL)
+	validatePortNumber:(id*)_
+	error:(NSError**)_;
+	- (BOOL)
+	validateUserID:(id*)_
+	error:(NSError**)_;
 
-- (BOOL)
-validatePortNumber:(id*)_
-error:(NSError**)_;
-
-- (BOOL)
-validateUserID:(id*)_
-error:(NSError**)_;
-
-@end
+@end //}
 
 #endif
 

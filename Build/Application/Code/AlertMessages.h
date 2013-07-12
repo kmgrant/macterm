@@ -64,7 +64,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface AlertMessages_WindowController : NSWindowController
+@interface AlertMessages_WindowController : NSWindowController //{
 {
 @public
 	IBOutlet NSButton*		helpButtonUI;
@@ -91,85 +91,68 @@ changes to an interface declared in a ".mm" file.
 }
 
 // new methods
-
-- (void)
-adjustViews;
-
-- (void)
-setUpFonts;
+	- (void)
+	adjustViews;
+	- (void)
+	setUpFonts;
 
 // accessors
-
-- (void*)
-dataPtr;
-- (void)
-setDataPtr:(void*)_;
-
-- (NSString*)
-dialogText;
-- (void)
-setDialogText:(NSString*)_; // binding
-
-- (NSString*)
-helpText;
-- (void)
-setHelpText:(NSString*)_; // binding
-
-- (BOOL)
-hidesHelpButton;
-- (void)
-setHidesHelpButton:(BOOL)_; // binding
-
-- (BOOL)
-hidesSecondaryButton;
-- (void)
-setHidesSecondaryButton:(BOOL)_; // binding
-
-- (BOOL)
-hidesTertiaryButton;
-- (void)
-setHidesTertiaryButton:(BOOL)_; // binding
-
-- (NSString*)
-iconImageName;
-- (void)
-setIconImageName:(NSString*)_;
-
-- (NSString*)
-primaryButtonText;
-- (void)
-setPrimaryButtonText:(NSString*)_; // binding
-
-- (NSString*)
-secondaryButtonText;
-- (void)
-setSecondaryButtonText:(NSString*)_; // binding
-
-- (NSString*)
-tertiaryButtonText;
-- (void)
-setTertiaryButtonText:(NSString*)_; // binding
-
-- (NSString*)
-titleText;
-- (void)
-setTitleText:(NSString*)_; // binding
+	- (void*)
+	dataPtr;
+	- (void)
+	setDataPtr:(void*)_;
+	- (NSString*)
+	dialogText;
+	- (void)
+	setDialogText:(NSString*)_; // binding
+	- (NSString*)
+	helpText;
+	- (void)
+	setHelpText:(NSString*)_; // binding
+	- (BOOL)
+	hidesHelpButton;
+	- (void)
+	setHidesHelpButton:(BOOL)_; // binding
+	- (BOOL)
+	hidesSecondaryButton;
+	- (void)
+	setHidesSecondaryButton:(BOOL)_; // binding
+	- (BOOL)
+	hidesTertiaryButton;
+	- (void)
+	setHidesTertiaryButton:(BOOL)_; // binding
+	- (NSString*)
+	iconImageName;
+	- (void)
+	setIconImageName:(NSString*)_;
+	- (NSString*)
+	primaryButtonText;
+	- (void)
+	setPrimaryButtonText:(NSString*)_; // binding
+	- (NSString*)
+	secondaryButtonText;
+	- (void)
+	setSecondaryButtonText:(NSString*)_; // binding
+	- (NSString*)
+	tertiaryButtonText;
+	- (void)
+	setTertiaryButtonText:(NSString*)_; // binding
+	- (NSString*)
+	titleText;
+	- (void)
+	setTitleText:(NSString*)_; // binding
 
 // actions
+	- (IBAction)
+	performPrimaryAction:(id)_;
+	- (IBAction)
+	performSecondaryAction:(id)_;
+	- (IBAction)
+	performTertiaryAction:(id)_;
+	- (IBAction)
+	performHelpAction:(id)_;
 
-- (IBAction)
-performPrimaryAction:(id)_;
-
-- (IBAction)
-performSecondaryAction:(id)_;
-
-- (IBAction)
-performTertiaryAction:(id)_;
-
-- (IBAction)
-performHelpAction:(id)_;
-
-@end
+@end //}
 
 
 /*!
@@ -180,11 +163,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface AlertMessages_ModalWindowController : AlertMessages_WindowController
-{
-}
-
-@end
+@interface AlertMessages_ModalWindowController : AlertMessages_WindowController @end
 
 
 /*!
@@ -195,11 +174,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface AlertMessages_NotificationWindowController : AlertMessages_WindowController
-{
-}
-
-@end
+@interface AlertMessages_NotificationWindowController : AlertMessages_WindowController @end
 
 #endif // __OBJC__
 

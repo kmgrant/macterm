@@ -356,42 +356,42 @@ void				setInheritanceCheckBox			(HIViewWrap, SInt32, Boolean);
 
 } // anonymous namespace
 
-@interface PrefPanelFormats_GeneralViewManager (PrefPanelFormats_GeneralViewManagerInternal)
+/*!
+The private class interface.
+*/
+@interface PrefPanelFormats_GeneralViewManager (PrefPanelFormats_GeneralViewManagerInternal) //{
 
-- (NSArray*)
-colorBindingKeys;
+	- (NSArray*)
+	colorBindingKeys;
+	- (NSArray*)
+	primaryDisplayBindingKeys;
+	- (NSArray*)
+	sampleDisplayBindingKeyPaths;
+	- (void)
+	setSampleAreaFromDefaultPreferences;
+	- (void)
+	setSampleAreaFromPreferences:(Preferences_ContextRef)_
+	restrictedTag1:(Preferences_Tag)_
+	restrictedTag2:(Preferences_Tag)_;
 
-- (NSArray*)
-primaryDisplayBindingKeys;
+@end //}
 
-- (NSArray*)
-sampleDisplayBindingKeyPaths;
+/*!
+The private class interface.
+*/
+@interface PrefPanelFormats_StandardColorsViewManager (PrefPanelFormats_StandardColorsViewManagerInternal) //{
 
-- (void)
-setSampleAreaFromDefaultPreferences;
+	- (void)
+	copyColorWithPreferenceTag:(Preferences_Tag)_
+	fromContext:(Preferences_ContextRef)_
+	forKey:(NSString*)_
+	failureFlag:(BOOL*)_;
+	- (NSArray*)
+	primaryDisplayBindingKeys;
+	- (BOOL)
+	resetToFactoryDefaultColors;
 
-- (void)
-setSampleAreaFromPreferences:(Preferences_ContextRef)_
-restrictedTag1:(Preferences_Tag)_
-restrictedTag2:(Preferences_Tag)_;
-
-@end // PrefPanelFormats_GeneralViewManager (PrefPanelFormats_GeneralViewManagerInternal)
-
-@interface PrefPanelFormats_StandardColorsViewManager (PrefPanelFormats_StandardColorsViewManagerInternal)
-
-- (void)
-copyColorWithPreferenceTag:(Preferences_Tag)_
-fromContext:(Preferences_ContextRef)_
-forKey:(NSString*)_
-failureFlag:(BOOL*)_;
-
-- (NSArray*)
-primaryDisplayBindingKeys;
-
-- (BOOL)
-resetToFactoryDefaultColors;
-
-@end // PrefPanelFormats_StandardColorsViewManager (PrefPanelFormats_StandardColorsViewManagerInternal)
+@end //}
 
 
 
