@@ -452,6 +452,7 @@
 		0A87394D0A5F6DA0002CACA9 /* PrefPanelSessions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelSessions.h; path = Application/Code/PrefPanelSessions.h; sourceTree = "<group>"; };
 		0A87394E0A5F6DA4002CACA9 /* PrefPanelTerminals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTerminals.h; path = Application/Code/PrefPanelTerminals.h; sourceTree = "<group>"; };
 		0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForStackWindows.icns; path = Application/Resources/IconForStackWindows.icns; sourceTree = "<group>"; };
+		0A8D8B14178F8BC6004F694C /* TerminalWindowRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalWindowRef.typedef.h; path = Application/Code/TerminalWindowRef.typedef.h; sourceTree = "<group>"; };
 		0A90CD8C0DAD28F300B6E89E /* RandomWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RandomWrap.h; path = Shared/Code/RandomWrap.h; sourceTree = "<group>"; };
 		0A984182083452E6002E1BCE /* TerminalBackground.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalBackground.cp; path = Application/Code/TerminalBackground.cp; sourceTree = "<group>"; };
 		0A9841C7083457A4002E1BCE /* TerminalBackground.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalBackground.h; path = Application/Code/TerminalBackground.h; sourceTree = "<group>"; };
@@ -869,6 +870,7 @@
 				0A4604400554376100ACDF3A /* TerminalView.h */,
 				0A4604410554376100ACDF3A /* TerminalViewRef.typedef.h */,
 				0A4604420554376100ACDF3A /* TerminalWindow.h */,
+				0A8D8B14178F8BC6004F694C /* TerminalWindowRef.typedef.h */,
 				0A4604470554376100ACDF3A /* TextTranslation.h */,
 				0A08DD8B1405B4AA0005129F /* TranslucentMenuArrow.h */,
 				0A4603EF0554376100ACDF3A /* UIStrings.h */,

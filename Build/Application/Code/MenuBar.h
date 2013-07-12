@@ -48,37 +48,28 @@
 
 #pragma mark Constants
 
-typedef SInt16 MenuBar_Menu;
-enum
-{
-	// menu bar menu specifiers that are independent of Simplified User Interface mode
-	kMenuBar_MenuFile = 1,
-	kMenuBar_MenuEdit = 2,
-	kMenuBar_MenuView = 3,
-	kMenuBar_MenuTerminal = 4,
-	kMenuBar_MenuKeys = 5,
-	kMenuBar_MenuNetwork = 6,
-	kMenuBar_MenuWindow = 7
-};
-
-// main menus
+// Main Menus
+//
 // These MUST agree with "MainMenuCocoa.xib".  In the Carbon days,
 // these were menu IDs.  But for Cocoa, they are the "tag" values
 // on each of the menus in the main menu.  So you could ask NSApp
 // for "mainMenu", and then use "itemWithTag" with an ID below to
 // find an NSMenuItem for the title, whose "submenu" is the NSMenu
 // containing all of the items.
-#define	kMenuIDApplication			512
-#define	kMenuIDFile					513
-#define	kMenuIDEdit					514
-#define	kMenuIDView					515
-#define	kMenuIDTerminal				516
-#define	kMenuIDKeys					517
-#define	kMenuIDMacros				518
-#define	kMenuIDWindow				519
-#define		kMenuItemIDPrecedingWindowList		123
-#define	kMenuIDHelp					520
-#define	kMenuIDDebug				521
+enum
+{
+	kMenuBar_MenuIDApplication = 512,
+	kMenuBar_MenuIDFile = 513,
+	kMenuBar_MenuIDEdit = 514,
+	kMenuBar_MenuIDView = 515,
+	kMenuBar_MenuIDTerminal = 516,
+	kMenuBar_MenuIDKeys = 517,
+	kMenuBar_MenuIDMacros = 518,
+	kMenuBar_MenuIDWindow = 519,
+		kMenuBar_MenuItemIDPrecedingWindowList = 123,
+	kMenuBar_MenuIDHelp = 520,
+	kMenuBar_MenuIDDebug = 521
+};
 
 
 
@@ -100,7 +91,7 @@ Boolean
 //@{
 
 Boolean
-	MenuBar_GetMenuTitleRectangle					(MenuBar_Menu					inMenuBarMenuSpecifier,
+	MenuBar_GetMenuTitleRectangle					(MenuID							inMenuBarMenuSpecifier,
 													 Rect*							outMenuBarMenuTitleRect);
 
 void

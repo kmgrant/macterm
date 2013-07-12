@@ -76,8 +76,8 @@ If the specified menu has a global title rectangle,
 (3.0)
 */
 Boolean
-MenuBar_GetMenuTitleRectangle	(MenuBar_Menu	inMenuBarMenuSpecifier,
-								 Rect*			outMenuBarMenuTitleRect)
+MenuBar_GetMenuTitleRectangle	(MenuID		inMenuBarMenuSpecifier,
+								 Rect*		outMenuBarMenuTitleRect)
 {
 	Boolean		result = false;
 	
@@ -94,15 +94,13 @@ MenuBar_GetMenuTitleRectangle	(MenuBar_Menu	inMenuBarMenuSpecifier,
 		
 		switch (inMenuBarMenuSpecifier)
 		{
-		case kMenuBar_MenuWindow:
+		case kMenuBar_MenuIDWindow:
 			// approximate the rectangle of the Window menu (there’s gotta be a beautiful
 			// way to get this just right, but I’m not finding it now)
 			*outMenuBarMenuTitleRect = (**(GetMainDevice())).gdRect;
 			outMenuBarMenuTitleRect->bottom = GetMBarHeight();
 			outMenuBarMenuTitleRect->left += kWindowMenuTitleLeftEdgeApproximation;
 			outMenuBarMenuTitleRect->right = outMenuBarMenuTitleRect->left + kWindowMenuTitleWidthApproximation;
-			
-		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			{
 				// since the values are based on an unscaled screen, multiply accordingly
 				Float32		scaleFactor = HIGetScaleFactor();
@@ -113,8 +111,6 @@ MenuBar_GetMenuTitleRectangle	(MenuBar_Menu	inMenuBarMenuSpecifier,
 				outMenuBarMenuTitleRect->right = STATIC_CAST(outMenuBarMenuTitleRect->right, Float32) * scaleFactor;
 				outMenuBarMenuTitleRect->bottom = STATIC_CAST(outMenuBarMenuTitleRect->bottom, Float32) * scaleFactor;
 			}
-		#endif
-			
 			result = true;
 			break;
 		

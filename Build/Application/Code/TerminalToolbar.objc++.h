@@ -43,7 +43,7 @@
 #import "SessionRef.typedef.h"
 #import "TerminalScreenRef.typedef.h"
 #import "TerminalViewRef.typedef.h"
-#import "TerminalWindow.h"
+#import "TerminalWindowRef.typedef.h"
 
 
 

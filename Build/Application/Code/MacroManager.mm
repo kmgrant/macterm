@@ -920,7 +920,7 @@ returnMacrosMenu ()
 	assert(nil != NSApp);
 	NSMenu*			mainMenu = [NSApp mainMenu];
 	assert(nil != mainMenu);
-	NSMenuItem*		macrosMenuItem = [mainMenu itemWithTag:kMenuIDMacros];
+	NSMenuItem*		macrosMenuItem = [mainMenu itemWithTag:kMenuBar_MenuIDMacros];
 	assert(nil != macrosMenuItem);
 	NSMenu*			result = [macrosMenuItem submenu];
 	assert(nil != result);

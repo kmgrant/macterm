@@ -10,7 +10,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -49,12 +49,6 @@
 
 typedef OSStatus AppResources_Result;
 
-typedef FourCharCode AppResources_FileID;
-enum
-{
-	kAppResources_FileIDPreferences = 'TRFP'
-};
-
 
 
 #pragma mark Public Methods
@@ -69,15 +63,6 @@ Boolean
 	AppResources_GetArbitraryResourceFileFSRef							(CFStringRef					inName,
 																		 CFStringRef					inTypeOrNull,
 																		 FSRef&							outFSRef);
-
-AppResources_Result
-	AppResources_GetDockTileAttentionPicture							(PicHandle&						outPicture,
-																		 PicHandle&						outMask);
-
-AppResources_Result
-	AppResources_GetToolbarPoofPictures									(UInt16							inZeroBasedAnimationStageIndex,
-																		 PicHandle&						outFramePicture,
-																		 PicHandle&						outFrameMask);
 
 AppResources_Result
 	AppResources_LaunchCrashCatcher										();

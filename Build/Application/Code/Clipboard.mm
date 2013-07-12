@@ -70,8 +70,6 @@
 #import "Session.h"
 #import "TerminalView.h"
 #import "UIStrings.h"
-#import "VectorCanvas.h"
-#import "VectorInterpreter.h"
 
 
 

@@ -1,9 +1,6 @@
-/*!	\file NewSessionDialog.h
-	\brief Implements the New Session dialog box.
-	
-	On Mac OS X, this dialog box is physically attached to its
-	terminal window, using the new window-modal “sheet” dialog
-	type.
+/*!	\file TerminalWindowRef.typedef.h
+	\brief Type definition header used to define a type that is
+	used too frequently to be declared in any module’s header.
 */
 /*###############################################################
 
@@ -36,35 +33,12 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __NEWSESSIONDIALOG__
-#define __NEWSESSIONDIALOG__
-
-// Mac includes
-#include <CoreServices/CoreServices.h>
-
-// application includes
-#include "Preferences.h"
-#include "TerminalWindowRef.typedef.h"
-
-
+#ifndef __TERMINALWINDOWREF__
+#define __TERMINALWINDOWREF__
 
 #pragma mark Types
 
-typedef struct NewSessionDialog_OpaqueRef*		NewSessionDialog_Ref;
-
-
-
-#pragma mark Public Methods
-
-NewSessionDialog_Ref
-	NewSessionDialog_New						(TerminalWindowRef						inParentWindowOrNullForModalDialog,
-												 Preferences_ContextRef					inData);
-
-void
-	NewSessionDialog_Dispose					(NewSessionDialog_Ref*					inoutDialogPtr);
-
-void
-	NewSessionDialog_Display					(NewSessionDialog_Ref					inDialog);
+typedef struct OpaqueTerminalWindow*	TerminalWindowRef;	//!< the primary type of window
 
 #endif
 

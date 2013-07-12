@@ -34,6 +34,7 @@ my @skip_modules = qw
 	QuillsEvents
 	QuillsPrefs
 	QuillsSession
+	QuillsSWIG
 	QuillsTerminal
 	Terminology
 	UIStrings_PrefsWindow

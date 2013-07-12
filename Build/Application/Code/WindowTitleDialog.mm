@@ -54,7 +54,6 @@
 // application includes
 #import "Commands.h"
 #import "ConstantsRegistry.h"
-#import "HelpSystem.h"
 #import "Session.h"
 #import "VectorWindow.h"
 

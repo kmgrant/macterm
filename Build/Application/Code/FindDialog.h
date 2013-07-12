@@ -37,11 +37,14 @@
 #define __FINDDIALOG__
 
 // Mac includes
+#ifdef __OBJC__
+#	include <Cocoa/Cocoa.h>
+#endif
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 
 // application includes
-#include "TerminalWindow.h"
+#include "TerminalWindowRef.typedef.h"
 
 
 

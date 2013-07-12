@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -51,10 +51,8 @@
 #import <MemoryBlocks.h>
 
 // application includes
-#import "AppResources.h"
 #import "Console.h"
 #import "ConstantsRegistry.h"
-#import "Preferences.h"
 #import "VectorInterpreter.h"
 #import "WindowTitleDialog.h"
 

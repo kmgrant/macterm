@@ -112,7 +112,7 @@ Float32 const	kTerminalWindow_DefaultMetaTabWidth = 0.0;	//!< tells TerminalWind
 
 #pragma mark Types
 
-typedef struct OpaqueTerminalWindow*	TerminalWindowRef;
+#include "TerminalWindowRef.typedef.h"
 
 #ifdef __OBJC__
 

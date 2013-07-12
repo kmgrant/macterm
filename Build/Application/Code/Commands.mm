@@ -103,7 +103,6 @@ extern "C"
 #import "VectorCanvas.h"
 #import "VectorInterpreter.h"
 #import "VectorWindow.h"
-#import "WindowTitleDialog.h"
 
 
 
@@ -2808,7 +2807,7 @@ Window menu and the would-be first window item.
 int
 returnFirstWindowItemAnchor		(NSMenu*	inWindowMenu)
 {
-	int		result = [inWindowMenu indexOfItemWithTag:kMenuItemIDPrecedingWindowList];
+	int		result = [inWindowMenu indexOfItemWithTag:kMenuBar_MenuItemIDPrecedingWindowList];
 	assert(result >= 0); // make sure the tag is set correctly in the NIB
 	
 	
@@ -2821,7 +2820,7 @@ returnFirstWindowItemAnchor		(NSMenu*	inWindowMenu)
 
 /*!
 Returns the menu from the menu bar that corresponds to
-the given "kMenuID..." constant.
+the given "kMenuBar_MenuID..." constant.
 
 (4.0)
 */
@@ -2907,7 +2906,7 @@ specified session’s window.
 NSMenuItem*
 returnWindowMenuItemForSession		(SessionRef		inSession)
 {
-	NSMenu*			windowMenu = returnMenu(kMenuIDWindow);
+	NSMenu*			windowMenu = returnMenu(kMenuBar_MenuIDWindow);
 	int const		kItemCount = [windowMenu numberOfItems];
 	int const		kStartItem = returnFirstWindowItemAnchor(windowMenu);
 	int const		kPastEndItem = kStartItem + SessionFactory_ReturnCount();
@@ -2984,7 +2983,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			case kSession_StateActiveUnstable:
 			case kSession_StateImminentDisposal:
 				// a session is appearing or disappearing; rebuild the session items in the Window menu
-				setUpWindowMenu(returnMenu(kMenuIDWindow));
+				setUpWindowMenu(returnMenu(kMenuBar_MenuIDWindow));
 				break;
 			
 			case kSession_StateBrandNew:
@@ -3040,7 +3039,7 @@ sessionWindowStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					Rect	windowMenuTitleBounds;
 					
 					
-					if (MenuBar_GetMenuTitleRectangle(kMenuBar_MenuWindow, &windowMenuTitleBounds))
+					if (MenuBar_GetMenuTitleRectangle(kMenuBar_MenuIDWindow, &windowMenuTitleBounds))
 					{
 						CGRect		asInvertedCGRect = CGRectMake
 														(windowMenuTitleBounds.left,
@@ -3131,7 +3130,7 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 {
 	CFStringRef		charCFString = nullptr;
 	NSString*		charNSString = nil;
-	NSMenu*			targetMenu = returnMenu(kMenuIDFile);
+	NSMenu*			targetMenu = returnMenu(kMenuBar_MenuIDFile);
 	NSArray*		items = [targetMenu itemArray];
 	NSMenuItem*		defaultItem = nil;
 	NSMenuItem*		logInShellItem = nil;
@@ -3343,12 +3342,12 @@ this routine instead of directly calling any of those.
 void
 setUpDynamicMenus ()
 {
-	setUpSessionFavoritesMenu(returnMenu(kMenuIDFile));
-	setUpWorkspaceFavoritesMenu(returnMenu(kMenuIDFile));
-	setUpFormatFavoritesMenu(returnMenu(kMenuIDView));
-	setUpMacroSetsMenu(returnMenu(kMenuIDMacros));
-	setUpTranslationTablesMenu(returnMenu(kMenuIDKeys));
-	setUpWindowMenu(returnMenu(kMenuIDWindow));
+	setUpSessionFavoritesMenu(returnMenu(kMenuBar_MenuIDFile));
+	setUpWorkspaceFavoritesMenu(returnMenu(kMenuBar_MenuIDFile));
+	setUpFormatFavoritesMenu(returnMenu(kMenuBar_MenuIDView));
+	setUpMacroSetsMenu(returnMenu(kMenuBar_MenuIDMacros));
+	setUpTranslationTablesMenu(returnMenu(kMenuBar_MenuIDKeys));
+	setUpWindowMenu(returnMenu(kMenuBar_MenuIDWindow));
 }// setUpDynamicMenus
 
 
