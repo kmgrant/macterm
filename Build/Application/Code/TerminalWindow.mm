@@ -94,7 +94,6 @@ extern "C"
 // application includes
 #import "AppResources.h"
 #import "Commands.h"
-#import "ContextualMenuBuilder.h"
 #import "DialogUtilities.h"
 #import "EventLoop.h"
 #import "FindDialog.h"
@@ -314,7 +313,6 @@ typedef LockAcquireRelease< TerminalWindowRef, My_TerminalWindow >		My_TerminalW
 #pragma mark Internal Method Prototypes
 namespace {
 
-void					addContextualMenuItemsForTab	(MenuRef, HIObjectRef, AEDesc&);
 void					calculateIndexedWindowPosition	(My_TerminalWindowPtr, UInt16, UInt16, HIPoint*);
 void					calculateWindowPosition			(My_TerminalWindowPtr, UInt16*, UInt16*, HIRect*);
 void					changeNotifyForTerminalWindow	(My_TerminalWindowPtr, TerminalWindow_Change, void*);
@@ -351,7 +349,6 @@ bool					lessThanIfGreaterArea			(HIWindowRef, HIWindowRef);
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveScrollBarDraw			(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveTabContextualMenuClick	(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveTabDragDrop				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveToolbarEvent				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
@@ -2832,41 +2829,6 @@ My_TerminalWindow::
 
 
 /*!
-Adds items to the specified menu that are appropriate
-for the given terminal window tab’s main view, and
-fills in the given description of the content (for use
-by system contextual items).
-
-(4.0)
-*/
-void
-addContextualMenuItemsForTab	(MenuRef		inMenu,
-								 HIObjectRef	UNUSED_ARGUMENT(inView),
-								 AEDesc&		UNUSED_ARGUMENT(inoutContentsDesc))
-{
-	ContextSensitiveMenu_Item	itemInfo;
-	
-	
-	// set up states for all items used below
-	// UNIMPLEMENTED
-	
-	// window-related menu items
-	ContextSensitiveMenu_NewItemGroup(inMenu);
-	
-	ContextSensitiveMenu_InitItem(&itemInfo);
-	itemInfo.commandID = kCommandTerminalNewWorkspace;
-	if (Commands_IsCommandEnabled(itemInfo.commandID))
-	{
-		if (UIStrings_Copy(kUIStrings_ContextualMenuMoveToNewWorkspace, itemInfo.commandText).ok())
-		{
-			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Move to New Workspace”
-			CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
-		}
-	}
-}// addContextualMenuItemsForTab
-
-
-/*!
 Provides the global coordinates that the top-left corner
 of the specified window’s frame (structure) would occupy
 if it were in the requested stagger position.
@@ -3501,24 +3463,6 @@ createTabWindow		(My_TerminalWindowPtr	inPtr)
 			assert(nullptr != inPtr->tabDragHandlerPtr);
 			assert(inPtr->tabDragHandlerPtr->isInstalled());
 			error = SetControlDragTrackingEnabled(contentPane, true/* is drag enabled */);
-			assert_noerr(error);
-		}
-		
-		// install a contextual menu handler
-		{
-			HIViewRef	contentPane = nullptr;
-			
-			
-			error = HIViewFindByID(HIViewGetRoot(tabWindow), kHIViewWindowContentID, &contentPane);
-			assert_noerr(error);
-			inPtr->tabContextualMenuHandlerPtr = new CarbonEventHandlerWrap(CarbonEventUtilities_ReturnViewTarget(contentPane),
-																			receiveTabContextualMenuClick,
-																			CarbonEventSetInClass
-																			(CarbonEventClass(kEventClassControl),
-																				kEventControlContextualMenuClick),
-																			inPtr->selfRef/* handler data */);
-			assert(nullptr != inPtr->tabContextualMenuHandlerPtr);
-			assert(inPtr->tabContextualMenuHandlerPtr->isInstalled());
 			assert_noerr(error);
 		}
 	}
@@ -5274,52 +5218,6 @@ receiveScrollBarDraw	(EventHandlerCallRef	inHandlerCallRef,
 	}
 	return result;
 }// receiveScrollBarDraw
-
-
-/*!
-Handles "kEventControlContextualMenuClick" for a terminal
-window tab.
-
-Invoked by Mac OS X whenever the tab is right-clicked.
-
-(4.0)
-*/
-OSStatus
-receiveTabContextualMenuClick	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-								 EventRef				inEvent,
-								 void*					inTerminalWindowRef)
-{
-	AutoPool			_;
-	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	OSStatus			result = eventNotHandledErr;
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlContextualMenuClick);
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// determine the view in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		if (noErr == result)
-		{
-			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-			
-			
-			// make this the current focus, so that menu commands are sent to it!
-			SetUserFocusWindow(HIViewGetWindow(view));
-			(OSStatus)DialogUtilities_SetKeyboardFocus(view);
-			
-			// display a contextual menu
-			(OSStatus)ContextualMenuBuilder_DisplayMenuForView(view, inEvent, addContextualMenuItemsForTab);
-			result = noErr; // event is completely handled
-		}
-	}
-	return result;
-}// receiveTabContextualMenuClick
 
 
 /*!

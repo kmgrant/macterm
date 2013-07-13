@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130713',
     '20130709',
     '20130707',
     '20130705',
@@ -477,6 +478,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130713': [
+        'Contextual menus are now Cocoa-based and they display the key equivalents of any relevant commands.',
+    ],
     '20130709': [
         'A smaller version of the new "I-beam" mouse pointer is now chosen for terminals that have small font sizes.',
     ],

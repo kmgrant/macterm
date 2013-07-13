@@ -52,7 +52,7 @@
 		0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0CFD0A450061009D07FC /* PrefPanelFormats.mm */; };
 		0AC6BAF60A8C0BA000AFF37A /* TerminalBackground.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A984182083452E6002E1BCE /* TerminalBackground.cp */; };
 		0AC6BAF70A8C0BA000AFF37A /* EventLoop.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD5055432A400ACDF3A /* EventLoop.mm */; };
-		0AC6BAF80A8C0BA000AFF37A /* ContextSensitiveMenu.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.cp */; };
+		0AC6BAF80A8C0BA000AFF37A /* ContextSensitiveMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */; };
 		0AC6BAF90A8C0BA000AFF37A /* CFDictionaryManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */; };
 		0AC6BAFA0A8C0BA000AFF37A /* MemoryBlocks.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */; };
 		0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE1055432A400ACDF3A /* HelpSystem.cp */; };
@@ -79,7 +79,6 @@
 		0AC6BB1C0A8C0BA000AFF37A /* PrefPanelSessions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0D230A4503A3009D07FC /* PrefPanelSessions.mm */; };
 		0AC6BB1E0A8C0BA000AFF37A /* VectorCanvas.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE21055432A400ACDF3A /* VectorCanvas.mm */; };
 		0AC6BB210A8C0BA000AFF37A /* PrefPanelGeneral.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE05055432A400ACDF3A /* PrefPanelGeneral.mm */; };
-		0AC6BB220A8C0BA000AFF37A /* ContextualMenuBuilder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC9055432A400ACDF3A /* ContextualMenuBuilder.cp */; };
 		0AC6BB230A8C0BA000AFF37A /* UIStrings.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE3055432A400ACDF3A /* UIStrings.cp */; };
 		0AC6BB240A8C0BA000AFF37A /* FindDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD7055432A400ACDF3A /* FindDialog.mm */; };
 		0AC6BB260A8C0BA000AFF37A /* DialogUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */; };
@@ -273,7 +272,6 @@
 		0A4603CB0554376100ACDF3A /* Console.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Console.h; path = Shared/Code/Console.h; sourceTree = "<group>"; };
 		0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConstantsRegistry.h; path = Application/Code/ConstantsRegistry.h; sourceTree = "<group>"; };
 		0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ContextSensitiveMenu.h; path = Shared/Code/ContextSensitiveMenu.h; sourceTree = "<group>"; };
-		0A4603CF0554376100ACDF3A /* ContextualMenuBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ContextualMenuBuilder.h; path = Application/Code/ContextualMenuBuilder.h; sourceTree = "<group>"; };
 		0A4603D30554376100ACDF3A /* Cursors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Cursors.h; path = Shared/Code/Cursors.h; sourceTree = "<group>"; };
 		0A4603D50554376100ACDF3A /* DialogAdjust.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DialogAdjust.h; path = Shared/Code/DialogAdjust.h; sourceTree = "<group>"; };
 		0A4603D70554376100ACDF3A /* DialogTransitions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DialogTransitions.h; path = Application/Code/DialogTransitions.h; sourceTree = "<group>"; };
@@ -348,8 +346,7 @@
 		0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ColorUtilities.cp; path = Shared/Code/ColorUtilities.cp; sourceTree = "<group>"; };
 		0A46FDC3055432A400ACDF3A /* Commands.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Commands.mm; path = Application/Code/Commands.mm; sourceTree = "<group>"; };
 		0A46FDC6055432A400ACDF3A /* Console.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Console.cp; path = Shared/Code/Console.cp; sourceTree = "<group>"; };
-		0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ContextSensitiveMenu.cp; path = Shared/Code/ContextSensitiveMenu.cp; sourceTree = "<group>"; };
-		0A46FDC9055432A400ACDF3A /* ContextualMenuBuilder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ContextualMenuBuilder.cp; path = Application/Code/ContextualMenuBuilder.cp; sourceTree = "<group>"; };
+		0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ContextSensitiveMenu.mm; path = Shared/Code/ContextSensitiveMenu.mm; sourceTree = "<group>"; };
 		0A46FDCC055432A400ACDF3A /* Cursors.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Cursors.cp; path = Shared/Code/Cursors.cp; sourceTree = "<group>"; };
 		0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DialogAdjust.cp; path = Shared/Code/DialogAdjust.cp; sourceTree = "<group>"; };
 		0A46FDCF055432A400ACDF3A /* DialogTransitions.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DialogTransitions.cp; path = Application/Code/DialogTransitions.cp; sourceTree = "<group>"; };
@@ -665,7 +662,7 @@
 				0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */,
 				0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */,
 				0A46FDC6055432A400ACDF3A /* Console.cp */,
-				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.cp */,
+				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */,
 				0A46FDCC055432A400ACDF3A /* Cursors.cp */,
 				0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */,
 				0A46FDD3055432A400ACDF3A /* Embedding.cp */,
@@ -762,7 +759,6 @@
 				0A35F5130DEDD9E300F16B03 /* CommandLine.mm */,
 				0A46FDC3055432A400ACDF3A /* Commands.mm */,
 				0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */,
-				0A46FDC9055432A400ACDF3A /* ContextualMenuBuilder.cp */,
 				0ABD01CF1068000A00BBB87A /* DebugInterface.mm */,
 				0A46FDCF055432A400ACDF3A /* DialogTransitions.cp */,
 				0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */,
@@ -823,7 +819,6 @@
 				0A4603C70554376100ACDF3A /* Commands.h */,
 				0A3D04C10A4CEB4E00A79DDF /* CommonEventHandlers.h */,
 				0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */,
-				0A4603CF0554376100ACDF3A /* ContextualMenuBuilder.h */,
 				0A4603D30554376100ACDF3A /* Cursors.h */,
 				0ABD01D11068002C00BBB87A /* DebugInterface.h */,
 				0A4603D70554376100ACDF3A /* DialogTransitions.h */,
@@ -1400,7 +1395,7 @@
 				0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.mm in Sources */,
 				0AC6BAF60A8C0BA000AFF37A /* TerminalBackground.cp in Sources */,
 				0AC6BAF70A8C0BA000AFF37A /* EventLoop.mm in Sources */,
-				0AC6BAF80A8C0BA000AFF37A /* ContextSensitiveMenu.cp in Sources */,
+				0AC6BAF80A8C0BA000AFF37A /* ContextSensitiveMenu.mm in Sources */,
 				0AC6BAF90A8C0BA000AFF37A /* CFDictionaryManager.cp in Sources */,
 				0AC6BAFA0A8C0BA000AFF37A /* MemoryBlocks.cp in Sources */,
 				0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.cp in Sources */,
@@ -1427,7 +1422,6 @@
 				0AC6BB1C0A8C0BA000AFF37A /* PrefPanelSessions.mm in Sources */,
 				0AC6BB1E0A8C0BA000AFF37A /* VectorCanvas.mm in Sources */,
 				0AC6BB210A8C0BA000AFF37A /* PrefPanelGeneral.mm in Sources */,
-				0AC6BB220A8C0BA000AFF37A /* ContextualMenuBuilder.cp in Sources */,
 				0AC6BB230A8C0BA000AFF37A /* UIStrings.cp in Sources */,
 				0AC6BB240A8C0BA000AFF37A /* FindDialog.mm in Sources */,
 				0AC6BB260A8C0BA000AFF37A /* DialogUtilities.cp in Sources */,

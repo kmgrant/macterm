@@ -22,7 +22,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -59,6 +59,7 @@
 #else
 typedef void* SEL;
 class NSMenu;
+class NSMenuItem;
 #endif
 #include <CoreServices/CoreServices.h>
 
@@ -505,9 +506,7 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandToggleTerminalLED4				'LED4'		// terminal window toolbars
 #define kCommandTerminalNewWorkspace			'MTab'		// terminal window tab drawers
 
-// commands no longer used, may be deleted
-#define kCommandDisplayWindowContextualMenu		'CMnu'
-#define kCommandCloseWorkspace					'ClsA'
+// commands used only in contextual menus
 #define kCommandSpeakSelectedText				'SpkS'
 #define kCommandStopSpeaking					'SpkE'
 
@@ -934,6 +933,10 @@ the responder chain in the usual way.
 	- (IBAction)
 	performMinimizeSetup:(id)_;
 	- (IBAction)
+	performSpeakSelectedText:(id)_;
+	- (IBAction)
+	performStopSpeaking:(id)_;
+	- (IBAction)
 	performZoomSetup:(id)_;
 	- (IBAction)
 	runToolbarCustomizationPaletteSetup:(id)_;
@@ -941,8 +944,10 @@ the responder chain in the usual way.
 	toggleToolbarShownSetup:(id)_;
 
 // new methods
-	- (BOOL)
-	isCommandEnabled:(UInt32)_;
+	- (NSMenuItem*)
+	newMenuItemForCommand:(UInt32)_
+	itemTitle:(NSString*)_
+	ifEnabled:(BOOL)_;
 
 @end //}
 
@@ -979,10 +984,6 @@ void
 											 EventTargetRef				inTarget,
 											 Float32					inDelayInSeconds);
 
-// WARNING: CURRENTLY ONLY IMPLEMENTED FOR CONTEXTUAL MENU COMMAND IDS
-Boolean
-	Commands_IsCommandEnabled				(UInt32						inCommandID);
-
 //@}
 
 //!\name Retrieving Command Information
@@ -1014,6 +1015,12 @@ Commands_Result
 											 int						inAtItemIndex,
 											 int						inInitialIndent,
 											 SEL						inAction);
+
+// WARNING: CURRENTLY ONLY IMPLEMENTED FOR CONTEXTUAL MENU COMMAND IDS
+NSMenuItem*
+	Commands_NewMenuItemForCommand			(UInt32						inCommandID,
+											 CFStringRef				inPreferredTitle,
+											 Boolean					inMustBeEnabled = false);
 
 //@}
 

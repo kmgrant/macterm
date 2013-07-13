@@ -61,6 +61,7 @@
 #import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
 #import <CommonEventHandlers.h>
+#import <ContextSensitiveMenu.h>
 #import <Console.h>
 #import <Cursors.h>
 #import <FileSelectionDialogs.h>
@@ -77,7 +78,6 @@
 #import "Clipboard.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
-#import "ContextualMenuBuilder.h"
 #import "DialogUtilities.h"
 #import "DragAndDrop.h"
 #import "EventLoop.h"
@@ -505,6 +505,7 @@ Boolean				mainEventLoopEvent					(ListenerModel_Ref, ListenerModel_Event, void*
 void				navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
 void				offsetLeftVisibleEdge				(My_TerminalViewPtr, SInt16);
 void				offsetTopVisibleEdge				(My_TerminalViewPtr, SInt32);
+void				populateContextualMenu				(My_TerminalViewPtr, NSMenu*);
 void				preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				preferenceChangedForView			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				recalculateCachedDimensions			(My_TerminalViewPtr);
@@ -8887,6 +8888,276 @@ offsetTopVisibleEdge	(My_TerminalViewPtr		inTerminalViewPtr,
 
 
 /*!
+Adds menu items to the specified menu based on the
+current state of the given terminal view.
+
+To keep menus short, this routine builds two types of
+menus: one for text selections, and one if nothing is
+selected.  If text is selected, this routine assumes
+that the user will most likely not want any of the
+more-general items.  Otherwise, the general items are
+made available whenever they are applicable.
+
+(4.1)
+*/
+void
+populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
+						 NSMenu*				inoutMenu)
+{
+	NSMenuItem*		newItem = nil;
+	CFStringRef		commandText = nullptr;
+	UInt32			targetCommandID = 0;
+	
+	
+	ContextSensitiveMenu_Init();
+	
+	if (TerminalView_TextSelectionExists(inTerminalViewPtr->selfRef))
+	{
+		// URL commands
+		ContextSensitiveMenu_NewItemGroup();
+		
+		targetCommandID = kCommandHandleURL;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuOpenThisResource, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		// clipboard-related text selection commands
+		ContextSensitiveMenu_NewItemGroup();
+		
+		targetCommandID = kCommandCopy;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuCopyToClipboard, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		targetCommandID = kCommandCopyTable;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuCopyUsingTabsForSpaces, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		targetCommandID = kCommandSaveText;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuSaveSelectedText, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		// other text-selection-related commands
+		ContextSensitiveMenu_NewItemGroup();
+		
+		targetCommandID = kCommandPrint;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuPrintSelectedText, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		targetCommandID = kCommandSpeakSelectedText;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuSpeakSelectedText, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		targetCommandID = kCommandStopSpeaking;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuStopSpeaking, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+	}
+	else
+	{
+		// text-editing-related menu items
+		ContextSensitiveMenu_NewItemGroup();
+		
+		targetCommandID = kCommandPaste;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuPasteText, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		targetCommandID = kCommandFind;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuFindInThisWindow, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		// window arrangement menu items
+		ContextSensitiveMenu_NewItemGroup();
+		
+		targetCommandID = kCommandKioskModeDisable;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuFullScreenExit, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		targetCommandID = kCommandHideFrontWindow;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuHideThisWindow, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		targetCommandID = kCommandStackWindows;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuArrangeAllInFront, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		targetCommandID = kCommandChangeWindowTitle;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuRenameThisWindow, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		// terminal-related menu items
+		ContextSensitiveMenu_NewItemGroup();
+		
+		targetCommandID = kCommandPrintScreen;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuPrintScreen, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		targetCommandID = kCommandSetScreenSize;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuCustomScreenDimensions, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		targetCommandID = kCommandFormat;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuCustomFormat, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		targetCommandID = kCommandSetKeys;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuSpecialKeySequences, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		// speech-related items
+		ContextSensitiveMenu_NewItemGroup();
+		
+		// NOTE: this item is available whether or not there is a text selection,
+		// as long as speech is in progress
+		targetCommandID = kCommandStopSpeaking;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuStopSpeaking, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+	}
+}// populateContextualMenu
+
+
+/*!
 Invoked whenever a monitored preference value is changed
 (see TerminalView_Init() to see which preferences are
 monitored).  This routine responds by ensuring that internal
@@ -9686,19 +9957,20 @@ receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef	UNUSED_ARGUMENT(inH
 			if (view == ptr->contentHIView)
 			{
 				// display a contextual menu
-				EventRecord		fakeEvent;
-				UInt32			modifiers = 0;
+				NSMenu*		contextualMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+				NSPoint		globalLocation = [NSEvent mouseLocation];
+				BOOL		itemSelected = NO;
 				
 				
-				// attempt to get modifier states (ignore if not available)
-				(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
+				// set up the contextual menu
+				//[contextualMenu setAllowsContextMenuPlugIns:NO];
+				populateContextualMenu(ptr, contextualMenu);
 				
-				fakeEvent.what = mouseDown;
-				fakeEvent.message = 0;
-				fakeEvent.when = 0;
-				fakeEvent.modifiers = modifiers;
-				GetGlobalMouse(&fakeEvent.where);
-				(OSStatus)ContextualMenuBuilder_DisplayMenuForWindow(GetControlOwner(view), &fakeEvent, inContent);
+				// display the menu; note that this mechanism does not require
+				// either a positioning item or a view, effectively making the
+				// menu appear at the given global location
+				itemSelected = [contextualMenu popUpMenuPositioningItem:nil atLocation:globalLocation inView:nil];
+				
 				result = noErr; // event is completely handled
 			}
 			else

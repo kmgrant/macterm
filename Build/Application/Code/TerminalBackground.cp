@@ -54,7 +54,6 @@
 #include "AppResources.h"
 #include "Commands.h"
 #include "ConstantsRegistry.h"
-#include "ContextualMenuBuilder.h"
 #include "DialogUtilities.h"
 #include "NetEvents.h"
 #include "Preferences.h"
@@ -141,8 +140,6 @@ void				preferenceChangedForBackground			(ListenerModel_Ref, ListenerModel_Event
 															 void*, void*);
 OSStatus			receiveBackgroundActiveStateChange		(EventHandlerCallRef, EventRef,
 															 My_TerminalBackgroundPtr);
-OSStatus			receiveBackgroundContextualMenuSelect	(EventHandlerCallRef, EventRef,
-															 My_TerminalBackgroundPtr);
 OSStatus			receiveBackgroundDraw					(EventHandlerCallRef, EventRef,
 															 My_TerminalBackgroundPtr);
 OSStatus			receiveBackgroundFocus					(EventHandlerCallRef, EventRef,
@@ -195,7 +192,6 @@ TerminalBackground_Init ()
 									{ kEventClassControl, kEventControlDraw },
 									{ kEventClassControl, kEventControlActivate },
 									{ kEventClassControl, kEventControlDeactivate },
-									{ kEventClassControl, kEventControlContextualMenuClick },
 									{ kEventClassControl, kEventControlHitTest },
 									{ kEventClassControl, kEventControlTrack },
 									{ kEventClassControl, kEventControlGetPartRegion },
@@ -947,54 +943,6 @@ receiveBackgroundActiveStateChange	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandl
 
 
 /*!
-Handles "kEventControlContextualMenuClick" of "kEventClassControl"
-for terminal backgrounds.
-
-(3.1)
-*/
-OSStatus
-receiveBackgroundContextualMenuSelect	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
-										 EventRef					inEvent,
-										 My_TerminalBackgroundPtr	inMyTerminalBackgroundPtr)
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlContextualMenuClick);
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// determine the view in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		if (noErr == result)
-		{
-			if (view == inMyTerminalBackgroundPtr->view)
-			{
-				// make this the current focus, so that menu commands are sent to it!
-				SetUserFocusWindow(HIViewGetWindow(view));
-				(OSStatus)DialogUtilities_SetKeyboardFocus(view);
-				
-				// display a contextual menu
-				(OSStatus)ContextualMenuBuilder_DisplayMenuForView(view, inEvent);
-				result = noErr; // event is completely handled
-			}
-			else
-			{
-				// ???
-				result = eventNotHandledErr;
-			}
-		}
-	}
-	
-	return result;
-}// receiveBackgroundContextualMenuSelect
-
-
-/*!
 Handles "kEventControlDraw" of "kEventClassControl".
 
 Paints the background color of the specified view.
@@ -1515,15 +1463,6 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 		case kEventControlDeactivate:
 			//Console_WriteLine("HI OBJECT control activate or deactivate for terminal background");
 			result = receiveBackgroundActiveStateChange(inHandlerCallRef, inEvent, dataPtr);
-			break;
-		
-		case kEventControlContextualMenuClick:
-			//Console_WriteLine("HI OBJECT control contextual menu click for terminal background");
-			result = CallNextEventHandler(inHandlerCallRef, inEvent);
-			if ((noErr == result) || (eventNotHandledErr == result))
-			{
-				result = receiveBackgroundContextualMenuSelect(inHandlerCallRef, inEvent, dataPtr);
-			}
 			break;
 		
 		case kEventControlHitTest:

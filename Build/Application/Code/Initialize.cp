@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -68,7 +68,6 @@
 #include "Clipboard.h"
 #include "CommandLine.h"
 #include "Commands.h"
-#include "ContextualMenuBuilder.h"
 #include "DebugInterface.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
@@ -439,8 +438,6 @@ initApplicationCore ()
 			CFRelease(helpBookAppleTitle), helpBookAppleTitle = nullptr;
 		}
 	}
-	
-	ContextualMenuBuilder_SetMenuHelpType(kCMHelpItemRemoveHelp);
 	
 	// initialize cursors
 	Cursors_Init();

@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -77,7 +77,6 @@ extern "C"
 #import "AppResources.h"
 #import "Clipboard.h"
 #import "CommandLine.h"
-#import "ContextualMenuBuilder.h"
 #import "DebugInterface.h"
 #import "DialogUtilities.h"
 #import "EventLoop.h"
@@ -580,17 +579,6 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		case kCommands_NameTypeDefault:
 		default:
 			useMenuCommandName = true;
-			break;
-		}
-		break;
-	
-	case kCommandDisplayWindowContextualMenu:
-		switch (inNameType)
-		{
-		case kCommands_NameTypeDefault:
-		default:
-			// TEMPORARY - REVIEW THIS
-			result = false;
 			break;
 		}
 		break;
@@ -1411,23 +1399,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			HMSetHelpTagsDisplayed(false);
 			break;
 		
-		case kCommandDisplayWindowContextualMenu: // GOING AWAY
-			// display contextual menu for main focus area
-			if (frontTerminalWindow != nullptr)
-			{
-				WindowRef		window = TerminalWindow_ReturnWindow(frontTerminalWindow);
-				EventRecord		fakeEvent;
-				
-				
-				fakeEvent.what = mouseDown;
-				fakeEvent.message = 0;
-				fakeEvent.when = 0;
-				fakeEvent.modifiers = EventLoop_ReturnCurrentModifiers();
-				GetGlobalMouse(&fakeEvent.where);
-				(OSStatus)ContextualMenuBuilder_DisplayMenuForWindow(window, &fakeEvent, inContent);
-			}
-			break;
-		
 	#if 0
 		case kCommandToggleMacrosMenuVisibility:
 			{
@@ -1899,9 +1870,13 @@ Commands_InsertPrefNamesIntoMenu	(Quills::Prefs::Class	inClass,
 
 
 /*!
-Returns true only if the specified command ID is currently
-available to the user, taking into account the active window
-and any other relevant context.
+Allocates and initializes a new NSMenuItem instance that
+will handle the specified command correctly.  (You must
+"release" it yourself.)
+
+If "inMustBeEnabled" is true, the result is nil whenever
+the command is not available to the user.  (This is useful
+for omitting items from contextual menus.)
 
 WARNING:	This currently only works for command IDs that
 		are used for contextual menu items.
@@ -1912,22 +1887,24 @@ refer to items by ID.  However, menu items from now on will
 be primarily checked using Objective-C and Cocoa
 selectors.
 
-(4.0)
+(4.1)
 */
-Boolean
-Commands_IsCommandEnabled	(UInt32		inCommandID)
+NSMenuItem*
+Commands_NewMenuItemForCommand	(UInt32			inCommandID,
+								 CFStringRef	inPreferredTitle,
+								 Boolean		inMustBeEnabled)
 {
-	AutoPool				_;
 	Commands_Executor*		commandExecutor = (Commands_Executor*)[Commands_Executor sharedExecutor];
-	Boolean					result = false;
+	NSMenuItem*				result = nil;
 	
 	
 	assert(nil != commandExecutor);
 	
-	result = ([commandExecutor isCommandEnabled:inCommandID]) ? true : false;
+	result = [commandExecutor newMenuItemForCommand:inCommandID itemTitle:BRIDGE_CAST(inPreferredTitle, NSString*)
+													ifEnabled:inMustBeEnabled];
 	
 	return result;
-}// IsCommandEnabled
+}// NewMenuItemForCommand
 
 
 /*!
@@ -7377,6 +7354,40 @@ canPerformMinimizeSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 }
 
 
+- (IBAction)
+performSpeakSelectedText:(id)	sender
+{
+#pragma unused(sender)
+	Commands_ExecuteByIDUsingEvent(kCommandSpeakSelectedText, nullptr/* target */);
+}
+- (id)
+canPerformSpeakSelectedText:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = textSelectionExists();
+	
+	
+	return [NSNumber numberWithBool:result];
+}
+
+
+- (IBAction)
+performStopSpeaking:(id)	sender
+{
+#pragma unused(sender)
+	Commands_ExecuteByIDUsingEvent(kCommandStopSpeaking, nullptr/* target */);
+}
+- (id)
+canPerformStopSpeaking:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = CocoaBasic_SpeakingInProgress();
+	
+	
+	return [NSNumber numberWithBool:result];
+}
+
+
 // These are obviously Carbon-specific, and will disappear
 // once target windows are based exclusively on NSWindow.
 - (IBAction)
@@ -7569,106 +7580,289 @@ canToggleToolbarShownSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 
 
 /*!
-Internal version of Commands_IsCommandEnabled().
+Internal version of Commands_NewMenuItemForCommand().
 
-(4.0)
+(4.1)
 */
-- (BOOL)
-isCommandEnabled:(UInt32)	aCommandID
+- (NSMenuItem*)
+newMenuItemForCommand:(UInt32)	aCommandID
+itemTitle:(NSString*)			aTitle
+ifEnabled:(BOOL)				onlyIfEnabled
 {
-	NSMenuItem*		targetItem = nil; // currently, never defined for these checks
+	NSMenuItem*		result = nil;
+	NSMenuItem*		targetItem = nil; // currently, never defined for these checksd for these checks
 	NSNumber*		numericalBool = nil;
-	BOOL			result = false;
+	BOOL			isEnabled = true;
 	
 	
+	// NOTE: Some key equivalents are arbitrarily added below.
+	// They should match whatever is chosen for the same
+	// commands in top-level menus.  Also, lower-case letters
+	// appear as single capital letters in menus and capital
+	// letters implicitly add a shift-key modifier.
 	switch (aCommandID)
 	{
 	case kCommandKioskModeDisable:
-		numericalBool = [self canPerformFullScreenOff:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformFullScreenOff:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			// NOTE: the displayed main-menu key equivalent for this
+			// command is “option-Escape”; while that could be chosen
+			// here, in practice it’s pointless for a contextual menu
+			// because hitting the escape key will close the menu;
+			// instead, command-control-F is chosen (the key equivalent
+			// for “Enter Full Screen”, which just happens to work for
+			// exiting as well)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performFullScreenOff:)
+														keyEquivalent:@"f"];
+			[result setKeyEquivalentModifierMask:(NSControlKeyMask | NSCommandKeyMask)];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandChangeWindowTitle:
-		numericalBool = [self canPerformRename:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformRename:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performRename:)
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandCloseConnection:
-		numericalBool = [self canPerformCloseSetup:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformCloseSetup:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performCloseSetup:)
+														keyEquivalent:@"w"];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandCopy:
-		numericalBool = [self canPerformCopy:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformCopy:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performCopy:)
+														keyEquivalent:@"c"];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandCopyTable:
-		numericalBool = [self canPerformCopyWithTabSubstitution:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformCopyWithTabSubstitution:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performCopyWithTabSubstitution:)
+														keyEquivalent:@"C"];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandFind:
-		result = YES; // TEMPORARY
+		if (onlyIfEnabled)
+		{
+			isEnabled = YES; // TEMPORARY
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performFind:)
+														keyEquivalent:@"f"];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandFormat:
-		numericalBool = [self canPerformFormatCustom:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformFormatCustom:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performFormatCustom:)
+														keyEquivalent:@"t"];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandHandleURL:
-		numericalBool = [self canPerformOpenURL:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformOpenURL:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performOpenURL:)
+														keyEquivalent:@"u"];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandHideFrontWindow:
-		numericalBool = [self canPerformHideWindow:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformHideWindow:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performHideWindow:)
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandPaste:
-		numericalBool = [self canPerformPaste:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformPaste:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performPaste:)
+														keyEquivalent:@"v"];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandPrintScreen:
-		numericalBool = [self canPerformPrintScreen:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformPrintScreen:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			unichar		functionKeyChar = NSF13FunctionKey;
+			
+			
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performPrintScreen:)
+														keyEquivalent:[NSString stringWithCharacters:&functionKeyChar
+																										length:1]];
+			[result setKeyEquivalentModifierMask:0];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandSaveText:
-		numericalBool = [self canPerformSaveSelection:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformSaveSelection:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performSaveSelection:)
+														keyEquivalent:@"S"];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandSetKeys:
-		result = YES;
+		if (onlyIfEnabled)
+		{
+			isEnabled = YES;
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performMappingCustom:)
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandSetScreenSize:
-		numericalBool = [self canPerformScreenResizeCustom:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformScreenResizeCustom:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performScreenResizeCustom:)
+														keyEquivalent:@"k"];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandSpeakSelectedText:
-		// for now, reuse the handler for saving selections; they should be equivalent
-		numericalBool = [self canPerformSaveSelection:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			// for now, reuse the handler for saving selections; they should be equivalent
+			numericalBool = [self canPerformSaveSelection:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performSpeakSelectedText:)
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandStopSpeaking:
-		result = CocoaBasic_SpeakingInProgress() ? YES : NO;
+		if (onlyIfEnabled)
+		{
+			isEnabled = CocoaBasic_SpeakingInProgress() ? YES : NO;
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performStopSpeaking:)
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandStackWindows:
-		numericalBool = [self canPerformArrangeInFront:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformArrangeInFront:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performArrangeInFront:)
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	case kCommandTerminalNewWorkspace:
-		numericalBool = [self canPerformMoveToNewWorkspace:targetItem];
-		result = [numericalBool boolValue];
+		if (onlyIfEnabled)
+		{
+			numericalBool = [self canPerformMoveToNewWorkspace:targetItem];
+			isEnabled = [numericalBool boolValue];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performMoveToNewWorkspace:)
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
 		break;
 	
 	default:
@@ -7676,7 +7870,7 @@ isCommandEnabled:(UInt32)	aCommandID
 	}
 	
 	return result;
-}// isCommandEnabled:
+}// newMenuItemForCommand:itemTitle:ifEnabled:
 
 
 @end // Commands_Executor (Commands_TransitionFromCarbon)
