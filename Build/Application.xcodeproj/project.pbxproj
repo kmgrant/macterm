@@ -544,6 +544,7 @@
 		0AD0B37B0A9EB8BD002064BA /* QuillsEvents.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsEvents.h; path = Application/Code/QuillsEvents.h; sourceTree = "<group>"; };
 		0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsPrefs.cp; path = Application/Code/QuillsPrefs.cp; sourceTree = "<group>"; };
 		0AD0B3C20A9EBDFC002064BA /* QuillsPrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsPrefs.h; path = Application/Code/QuillsPrefs.h; sourceTree = "<group>"; };
+		0AD0B46D179244A400CDC4C8 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelSessionGraphicsCocoa.xib; sourceTree = "<group>"; };
 		0AD62711055DEB7000843EA9 /* ApplicationPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ApplicationPrefix.pch; path = Application/Code/ApplicationPrefix.pch; sourceTree = "<group>"; };
 		0AD638F91350172E00035D4E /* RetainRelease.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RetainRelease.template.h; path = Shared/Code/RetainRelease.template.h; sourceTree = "<group>"; };
 		0AD7481C13072342003E368B /* IconForFullScreen.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForFullScreen.icns; path = Application/Resources/IconForFullScreen.icns; sourceTree = "<group>"; };
@@ -1001,6 +1002,7 @@
 				0AF5AA2E159BD90E007E36DE /* PrefPanelGeneralNotificationsCocoa.xib */,
 				0AD7D0B9158AE38B000C3264 /* PrefPanelGeneralOptionsCocoa.xib */,
 				0A6000E815981886001CA6AA /* PrefPanelGeneralSpecialCocoa.xib */,
+				0AD0B46C179244A400CDC4C8 /* PrefPanelSessionGraphicsCocoa.xib */,
 				0AEBF394176409FB006068C7 /* PrefPanelSessionKeyboardCocoa.xib */,
 				0AF7636216F6C856008F90D9 /* PrefPanelTerminalEmulationCocoa.xib */,
 				0A32442015D74B0D001EBB98 /* PrefPanelTerminalOptionsCocoa.xib */,
@@ -1797,6 +1799,14 @@
 				0ACFBF4712F13506008E4203 /* English */,
 			);
 			name = TerminalWindowCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0AD0B46C179244A400CDC4C8 /* PrefPanelSessionGraphicsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AD0B46D179244A400CDC4C8 /* English */,
+			);
+			name = PrefPanelSessionGraphicsCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0AD7CE33158AD31F000C3264 /* GenericPanelTabsCocoa.xib */ = {

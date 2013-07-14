@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -64,11 +64,12 @@ enum
 The command set, which determines how input data streams
 are interpreted.
 */
-enum VectorInterpreter_Mode
+typedef UInt16 VectorInterpreter_Mode;
+enum
 {
-	kVectorInterpreter_ModeDisabled		= 'None',	//!< TEK 4014 command set
-	kVectorInterpreter_ModeTEK4014		= '4014',	//!< TEK 4014 command set
-	kVectorInterpreter_ModeTEK4105		= '4105'	//!< TEK 4105 command set
+	kVectorInterpreter_ModeDisabled		= 0,	//!< TEK 4014 command set
+	kVectorInterpreter_ModeTEK4014		= 4014,	//!< TEK 4014 command set
+	kVectorInterpreter_ModeTEK4105		= 4105	//!< TEK 4105 command set
 };
 
 

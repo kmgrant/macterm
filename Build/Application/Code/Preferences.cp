@@ -1095,7 +1095,7 @@ Preferences_Init ()
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagTektronixMode,
 									CFSTR("tek-mode"), typeCFStringRef,
-									sizeof(VectorInterpreter_Mode), Quills::Prefs::SESSION);
+									sizeof(UInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagTektronixPAGEClearsScreen,
 										CFSTR("tek-page-clears-screen"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalAnswerBackMessage,
@@ -7724,7 +7724,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							VectorInterpreter_Mode*		storedValuePtr = REINTERPRET_CAST(outDataPtr, VectorInterpreter_Mode*);
+							UInt16*		storedValuePtr = REINTERPRET_CAST(outDataPtr, UInt16*);
 							
 							
 							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("off"), kCFCompareCaseInsensitive))
@@ -9923,7 +9923,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagTektronixMode:
 				{
-					VectorInterpreter_Mode const* const		data = REINTERPRET_CAST(inDataPtr, VectorInterpreter_Mode const*);
+					UInt16 const* const		data = REINTERPRET_CAST(inDataPtr, UInt16 const*);
 					
 					
 					assert(typeCFStringRef == keyValueType);

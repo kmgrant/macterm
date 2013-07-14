@@ -457,6 +457,18 @@ OSStatus					receiveServerBrowserEvent				(EventHandlerCallRef, EventRef, void*)
 /*!
 The private class interface.
 */
+@interface PrefPanelSessions_GraphicsViewManager (PrefPanelSessions_GraphicsViewManagerInternal) //{
+
+// new methods
+	- (NSArray*)
+	primaryDisplayBindingKeys;
+
+@end //}
+
+
+/*!
+The private class interface.
+*/
 @interface PrefPanelSessions_KeyboardViewManager (PrefPanelSessions_KeyboardViewManagerInternal) //{
 
 // new methods
@@ -4833,6 +4845,7 @@ init
 {
 	NSArray*	subViewManagers = [NSArray arrayWithObjects:
 												[[[PrefPanelSessions_KeyboardViewManager alloc] init] autorelease],
+												[[[PrefPanelSessions_GraphicsViewManager alloc] init] autorelease],
 												nil];
 	
 	
@@ -4861,6 +4874,467 @@ dealloc
 
 
 @end // PrefPanelSessions_ViewManager
+
+
+@implementation PrefPanelSessions_GraphicsModeValue
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kVectorInterpreter_ModeDisabled
+																description:NSLocalizedStringFromTable
+																			(@"Disabled", @"PrefPanelSessions"/* table */,
+																				@"graphics-off")]
+										autorelease],
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kVectorInterpreter_ModeTEK4014
+																description:NSLocalizedStringFromTable
+																			(@"TEK 4014 (black and white)", @"PrefPanelSessions"/* table */,
+																				@"graphics-4014")]
+										autorelease],
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kVectorInterpreter_ModeTEK4105
+																description:NSLocalizedStringFromTable
+																			(@"TEK 4105 (color)", @"PrefPanelSessions"/* table */,
+																				@"graphics-4105")]
+										autorelease],
+									nil] autorelease];
+	
+	
+	self = [super initWithPreferencesTag:kPreferences_TagTektronixMode
+											contextManager:aContextMgr
+											preferenceCType:kPreferenceValue_CTypeUInt16
+											valueDescriptorArray:descriptorArray];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithContextManager:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+@end // PrefPanelSessions_GraphicsModeValue
+
+
+@implementation PrefPanelSessions_GraphicsViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelSessionGraphicsCocoa" delegate:self context:nullptr];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[prefsMgr release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelSessions_GraphicsModeValue*)
+graphicsMode
+{
+	return [self->byKey objectForKey:@"graphicsMode"];
+}// graphicsMode
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_Flag*)
+pageClearsScreen
+{
+	return [self->byKey objectForKey:@"pageClearsScreen"];
+}// pageClearsScreen
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:2/* arbitrary; number of settings */];
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeInspector;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+	assert(nil != byKey);
+	assert(nil != prefsMgr);
+	
+	// remember frame from XIB (it might be changed later)
+	self->idealFrame = [aContainerView frame];
+	
+	// note that all current values will change
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+	}
+	
+	// WARNING: Key names are depended upon by bindings in the XIB file.
+	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
+								initWithPreferencesTag:kPreferences_TagTektronixPAGEClearsScreen
+														contextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"pageClearsScreen"];
+	[self->byKey setObject:[[[PrefPanelSessions_GraphicsModeValue alloc]
+								initWithContextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"graphicsMode"];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = self->idealFrame.size;
+}
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet)
+	// note that all current values will change
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+	}
+	
+	// now apply the specified settings
+	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	{
+		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
+		
+		
+		while (NSString* keyName = [eachKey nextObject])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [NSImage imageNamed:@"IconForPrefPanelSessions"];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.Sessions.Graphics";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Graphics", @"PrefPanelSessions", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintHorizontal;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::SESSION;
+}// preferencesClass
+
+
+@end // PrefPanelSessions_GraphicsViewManager
+
+
+@implementation PrefPanelSessions_GraphicsViewManager (PrefPanelSessions_GraphicsViewManagerInternal)
+
+
+#pragma mark New Methods
+
+
+/*!
+Returns the names of key-value coding keys that represent the
+primary bindings of this panel (those that directly correspond
+to saved preferences).
+
+(4.1)
+*/
+- (NSArray*)
+primaryDisplayBindingKeys
+{
+	return [NSArray arrayWithObjects:
+						@"pageClearsScreen", @"graphicsMode",
+						nil];
+}// primaryDisplayBindingKeys
+
+
+@end // PrefPanelSessions_GraphicsViewManager (PrefPanelSessions_GraphicsViewManagerInternal)
 
 
 @implementation PrefPanelSessions_ControlKeyValue

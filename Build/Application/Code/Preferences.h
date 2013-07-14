@@ -255,7 +255,7 @@ enum
 	kPreferences_TagServerPort							= 'port',	//!< data: "SInt16"
 	kPreferences_TagServerProtocol						= 'prcl',	//!< data: "Session_Protocol"
 	kPreferences_TagServerUserID						= 'user',	//!< data: "CFStringRef"
-	kPreferences_TagTektronixMode						= 'tekm',	//!< data: a "kVectorInterpreter_Mode…" constant
+	kPreferences_TagTektronixMode						= 'tekm',	//!< data: "UInt16" (VectorInterpreter_Mode)
 	kPreferences_TagTektronixPAGEClearsScreen			= 'tkpc'	//!< data: "Boolean"
 };
 

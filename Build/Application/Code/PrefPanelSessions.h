@@ -114,7 +114,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelSessions_KeyboardViewManager : Panel_ViewManager< Panel_Delegate, PrefsWindow_PanelInterface > //{
+@interface PrefPanelSessions_KeyboardViewManager : Panel_ViewManager< Panel_Delegate,
+																		PrefsWindow_PanelInterface > //{
 {
 @private
 	PrefsContextManager_Object*		prefsMgr;
@@ -156,6 +157,43 @@ changes to an interface declared in a ".mm" file.
 	performChooseResumeKey:(id)_; // binding
 	- (IBAction)
 	performChooseSuspendKey:(id)_; // binding
+
+@end //}
+
+
+/*!
+Manages bindings for the TEK-mode preference.
+*/
+@interface PrefPanelSessions_GraphicsModeValue : PreferenceValue_Array //{
+
+// initializers
+	- (id)
+	initWithContextManager:(PrefsContextManager_Object*)_;
+
+@end //}
+
+
+/*!
+Loads a NIB file that defines the Graphics pane.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelSessions_GraphicsViewManager : Panel_ViewManager< Panel_Delegate,
+																		PrefsWindow_PanelInterface > //{
+{
+@private
+	PrefsContextManager_Object*		prefsMgr;
+	NSRect							idealFrame;
+	NSMutableDictionary*			byKey;
+}
+
+// accessors
+	- (PrefPanelSessions_GraphicsModeValue*)
+	graphicsMode; // binding
+	- (PreferenceValue_Flag*)
+	pageClearsScreen; // binding
 
 @end //}
 
