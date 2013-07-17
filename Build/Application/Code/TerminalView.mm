@@ -3887,9 +3887,20 @@ setColor	(UInt8		inIndex,
 			 UInt8		inGreen,
 			 UInt8		inBlue)
 {
-	colorLevels[inIndex][0] = inRed;
-	colorLevels[inIndex][1] = inGreen;
-	colorLevels[inIndex][2] = inBlue;
+	My_XTerm256Table::RGBLevelsByIndex::iterator	toColors = colorLevels.find(inIndex);
+	
+	
+	if (colorLevels.end() == colorLevels.find(inIndex))
+	{
+		Console_Warning(Console_WriteValue, "warning, attempt to set color in reserved range (base-16 or gray scale range)", inIndex);
+	}
+	else
+	{
+		assert(3 == toColors->second.size());
+		toColors->second[0] = inRed;
+		toColors->second[1] = inGreen;
+		toColors->second[2] = inBlue;
+	}
 }// My_XTerm256Table::setColor
 
 

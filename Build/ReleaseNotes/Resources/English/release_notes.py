@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130716',
     '20130713',
     '20130709',
     '20130707',
@@ -478,6 +479,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130716': [
+        'Fixed a possible crash if a terminal-based application attempted to modify certain colors in the 256-color palette.',
+    ],
     '20130713': [
         'Contextual menus are now Cocoa-based and they display the key equivalents of any relevant commands.',
     ],
