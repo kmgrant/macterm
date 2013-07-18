@@ -886,7 +886,6 @@ Preferences_Init ()
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("favorite-translations"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("favorite-workspaces"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("macro-order")); // for future use
-	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("terminal-capture-folder")); // for future use
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("terminal-when-cursor-near-right-margin")); // for future use
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("name")); // for creating default collections
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("name-string")); // for creating default collections
@@ -903,24 +902,25 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedTranslationFavorite,
 									CFSTR("translation-favorite"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
-	My_PreferenceDefinition::createFlag(kPreferences_TagAutoCaptureToFile,
-										CFSTR("terminal-capture-auto-start"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagBackupFontName,
 									CFSTR("terminal-backup-font-family"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::TRANSLATION);
 	My_PreferenceDefinition::create(kPreferences_TagBellSound,
 									CFSTR("terminal-when-bell-sound-basename"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::GENERAL);
-	My_PreferenceDefinition::create(kPreferences_TagCaptureFileAlias,
-									CFSTR("terminal-capture-file-alias-id"), typeNetEvents_CFDataRef,
+	My_PreferenceDefinition::createFlag(kPreferences_TagCaptureAutoStart,
+										CFSTR("terminal-capture-auto-start"), Quills::Prefs::SESSION);
+	My_PreferenceDefinition::create(kPreferences_TagCaptureFileDirectoryObject,
+									CFSTR("terminal-capture-directory-alias"), typeNetEvents_CFDataRef,
 									sizeof(FSRef), Quills::Prefs::SESSION);
-	My_PreferenceDefinition::create(kPreferences_TagCaptureFileCreator,
-									CFSTR("terminal-capture-file-creator-code"), typeCFStringRef,
-									sizeof(OSType), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::create(kPreferences_TagCaptureFileName,
+									CFSTR("terminal-capture-file-name-string"), typeCFStringRef,
+									sizeof(CFStringRef), Quills::Prefs::SESSION);
+	My_PreferenceDefinition::createFlag(kPreferences_TagCaptureFileNameAllowsSubstitutions,
+										CFSTR("terminal-capture-file-name-is-generated"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagCaptureFileLineEndings,
 									CFSTR("terminal-capture-file-line-endings"), typeCFStringRef,
 									sizeof(Session_LineEnding), Quills::Prefs::GENERAL);
-	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("terminal-capture-file-open-with-application"));
 	My_PreferenceDefinition::create(kPreferences_TagCommandLine,
 									CFSTR("command-line-token-strings"), typeCFArrayRef,
 									sizeof(CFArrayRef), Quills::Prefs::SESSION);
@@ -6404,36 +6404,6 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
-				case kPreferences_TagCaptureFileCreator:
-					assert(typeCFStringRef == keyValueType);
-					{
-						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
-						
-						
-						if (nullptr == valueCFString)
-						{
-							result = kPreferences_ResultBadVersionDataNotAvailable;
-						}
-						else
-						{
-							OSType*		outOSTypePtr = REINTERPRET_CAST(outDataPtr, OSType*);
-							CFIndex		usedBufferLength = 0;
-							
-							
-							if (4 != CFStringGetBytes(valueCFString, CFRangeMake(0, 4),
-														CFStringGetFastestEncoding(valueCFString),
-														'\0'/* loss byte */, false/* is external representation */,
-														REINTERPRET_CAST(outOSTypePtr, UInt8*),
-														sizeof(*outOSTypePtr), &usedBufferLength))
-							{
-								result = kPreferences_ResultBadVersionDataNotAvailable;
-							}
-							
-							CFRelease(valueCFString), valueCFString = nullptr;
-						}
-					}
-					break;
-				
 				case kPreferences_TagCaptureFileLineEndings:
 					assert(typeCFStringRef == keyValueType);
 					{
@@ -7296,6 +7266,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagAssociatedFormatFavorite:
 				case kPreferences_TagAssociatedTerminalFavorite:
 				case kPreferences_TagAssociatedTranslationFavorite:
+				case kPreferences_TagCaptureFileName:
 				case kPreferences_TagServerHost:
 				case kPreferences_TagServerUserID:
 					// all of these keys have Core Foundation string values
@@ -7319,7 +7290,8 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
-				case kPreferences_TagAutoCaptureToFile:
+				case kPreferences_TagCaptureAutoStart:
+				case kPreferences_TagCaptureFileNameAllowsSubstitutions:
 				case kPreferences_TagLineModeEnabled:
 				case kPreferences_TagLocalEchoEnabled:
 				case kPreferences_TagNoPasteWarning:
@@ -7336,7 +7308,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
-				case kPreferences_TagCaptureFileAlias:
+				case kPreferences_TagCaptureFileDirectoryObject:
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
 						CFRetainRelease		dataObject(inContextPtr->returnValueCopy(keyName));
@@ -8880,25 +8852,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
-			case kPreferences_TagCaptureFileCreator:
-				{
-					OSType const	data = *(REINTERPRET_CAST(inDataPtr, OSType const*));
-					CFStringRef		stringRef = CFStringCreateWithBytes
-												(kCFAllocatorDefault,
-													REINTERPRET_CAST(&data, UInt8 const*),
-													sizeof(data),
-													kCFStringEncodingMacRoman, false/* is external representation */);
-					
-					
-					if (nullptr != stringRef)
-					{
-						assert(typeCFStringRef == keyValueType);
-						setApplicationPreference(keyName, stringRef);
-						CFRelease(stringRef), stringRef = nullptr;
-					}
-				}
-				break;
-			
 			case kPreferences_TagCaptureFileLineEndings:
 				{
 					Session_LineEnding const	data = *(REINTERPRET_CAST(inDataPtr, Session_LineEnding const*));
@@ -9659,6 +9612,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagAssociatedFormatFavorite:
 			case kPreferences_TagAssociatedTerminalFavorite:
 			case kPreferences_TagAssociatedTranslationFavorite:
+			case kPreferences_TagCaptureFileName:
 			case kPreferences_TagServerHost:
 			case kPreferences_TagServerUserID:
 				// all of these keys have Core Foundation string values
@@ -9671,7 +9625,8 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
-			case kPreferences_TagAutoCaptureToFile:
+			case kPreferences_TagCaptureAutoStart:
+			case kPreferences_TagCaptureFileNameAllowsSubstitutions:
 			case kPreferences_TagLineModeEnabled:
 			case kPreferences_TagLocalEchoEnabled:
 			case kPreferences_TagNoPasteWarning:
@@ -9685,7 +9640,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
-			case kPreferences_TagCaptureFileAlias:
+			case kPreferences_TagCaptureFileDirectoryObject:
 				{
 					FSRef const* const	data = REINTERPRET_CAST(inDataPtr, FSRef const*);
 					CFRetainRelease		object(Preferences_NewAliasDataFromObject(*data));

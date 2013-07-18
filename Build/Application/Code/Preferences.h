@@ -168,7 +168,6 @@ Tags for use with Quills::Prefs::GENERAL.
 enum
 {
 	kPreferences_TagBellSound							= 'bsnd',	//!< data: "CFStringRef" ("off", or the basename of sound file in a Sounds library folder)
-	kPreferences_TagCaptureFileCreator					= 'cpfc',	//!< data: "OSType"
 	kPreferences_TagCaptureFileLineEndings				= 'cple',	//!< data: "Session_LineEnding"
 	kPreferences_TagCopySelectedText					= 'cpsl',	//!< data: "Boolean"
 	kPreferences_TagCopyTableThreshold					= 'ctth',	//!< data: "UInt16", the number of spaces per tab
@@ -234,8 +233,10 @@ enum
 	kPreferences_TagAssociatedFormatFavorite			= 'frmt',	//!< data: "CFStringRef" (a Quills::Prefs::FORMAT context name)
 	kPreferences_TagAssociatedTerminalFavorite			= 'term',	//!< data: "CFStringRef" (a Quills::Prefs::TERMINAL context name)
 	kPreferences_TagAssociatedTranslationFavorite		= 'xlat',	//!< data: "CFStringRef" (a Quills::Prefs::TRANSLATION context name)
-	kPreferences_TagAutoCaptureToFile					= 'capt',	//!< data: "Boolean"
-	kPreferences_TagCaptureFileAlias					= 'cfil',	//!< data: "FSRef"
+	kPreferences_TagCaptureAutoStart					= 'capt',	//!< data: "Boolean"
+	kPreferences_TagCaptureFileDirectoryObject			= 'cfdr',	//!< data: "FSRef"
+	kPreferences_TagCaptureFileName						= 'cfnm',	//!< data: "CFStringRef"
+	kPreferences_TagCaptureFileNameAllowsSubstitutions	= 'cfns',	//!< data: "Boolean"
 	kPreferences_TagCommandLine							= 'cmdl',	//!< data: "CFArrayRef" (of CFStrings)
 	kPreferences_TagDataReadBufferSize					= 'rdbf',	//!< data: "SInt16"
 	kPreferences_TagFunctionKeyLayout					= 'fkyl',	//!< data: "Session_FunctionKeyLayout"

@@ -49,7 +49,6 @@
 		0A42D788175C3110001F487B /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = PrefsConverter/Resources/English.lproj/PrefsConverterCocoa.xib; sourceTree = "<group>"; };
 		0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = PrefsConverter/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MainEntryPoint.mm; path = PrefsConverter/Code/MainEntryPoint.mm; sourceTree = "<group>"; };
-		0AF2E26D06EBA1D200A7C4A9 /* PreferencesData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PreferencesData.h; path = PrefsConverter/Code/PreferencesData.h; sourceTree = "<group>"; };
 		20286C33FDCF999611CA2CEA /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
 		4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
@@ -101,7 +100,6 @@
 				0A2D6B3B13B4368D00714A1D /* Cocoa.framework */,
 				4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */,
 				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */,
-				0AF2E26D06EBA1D200A7C4A9 /* PreferencesData.h */,
 				0A33CC4D07FABA6500248DDF /* PrefsConverterPrefix.pch */,
 				0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */,
 				0A42D787175C3110001F487B /* PrefsConverterCocoa.xib */,

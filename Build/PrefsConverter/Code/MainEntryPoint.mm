@@ -42,9 +42,6 @@
 #import <CFKeyValueInterface.h>
 #import <CocoaUserDefaults.h>
 
-// MacTerm Preferences Converter includes
-#import "PreferencesData.h"
-
 
 
 #pragma mark Constants
@@ -56,45 +53,10 @@ CFStringRef const	kMacTelnetApplicationID = CFSTR("com.mactelnet.MacTelnet");
 // the new bundle ID for MacTerm
 CFStringRef const	kMacTermApplicationID = CFSTR("net.macterm.MacTerm");
 
-typedef SInt16 My_MacTelnetFolder;
-enum
-{
-	// folders defined by MacTelnet
-	kMy_MacTelnetFolderPreferences = 4,			// the “MacTelnet Preferences” folder in the user’s Preferences folder
-	
-	// folders defined by the Mac OS
-	kMy_MacTelnetFolderMacPreferences = -1,		// the Preferences folder for the user currently logged in
-};
-
-/*!
-File or Folder Names String Table ("FileOrFolderNames.strings")
-
-The titles of special files or folders on disk; for example, used to
-find preferences or error logs.
-*/
-enum My_FolderStringType
-{
-	kUIStrings_FolderNameApplicationFavorites			= 'AFav',
-	kUIStrings_FolderNameApplicationFavoritesMacros		= 'AFFM',
-	kUIStrings_FolderNameApplicationFavoritesProxies	= 'AFPx',
-	kUIStrings_FolderNameApplicationFavoritesSessions	= 'AFSn',
-	kUIStrings_FolderNameApplicationFavoritesTerminals	= 'AFTm',
-	kUIStrings_FolderNameApplicationPreferences			= 'APrf',
-	kUIStrings_FolderNameApplicationScriptsMenuItems	= 'AScM',
-	kUIStrings_FolderNameApplicationStartupItems		= 'AStI'
-};
-
 enum My_PrefsResult
 {
 	kMy_PrefsResultOK				= 0,	//!< no error
 	kMy_PrefsResultGenericFailure	= 1		//!< some error
-};
-
-enum My_StringResult
-{
-	kMy_StringResultOK				= 0,	//!< no error
-	kMy_StringResultNoSuchString	= 1,	//!< tag is invalid for given string category
-	kMy_StringResultCannotGetString	= 2		//!< probably an OS error, the string cannot be retrieved
 };
 
 } // anonymous namespace
@@ -125,6 +87,7 @@ My_PrefsResult		actionVersion3	();
 My_PrefsResult		actionVersion4	();
 My_PrefsResult		actionVersion5	();
 My_PrefsResult		actionVersion6	();
+My_PrefsResult		actionVersion7	();
 
 } // anonymous namespace
 
@@ -148,7 +111,7 @@ namespace {
 
 /*!
 Upgrades from version 2 to version 3.  Some keys are
-now obsolete that were never available to users, so
+now obsolete that were never available to users so
 they are deleted.
 
 IMPORTANT:	Even though the program is now MacTerm,
@@ -181,7 +144,7 @@ actionVersion3 ()
 
 /*!
 Upgrades from version 3 to version 4.  Some keys are
-now obsolete, so they are deleted.
+now obsolete so they are deleted.
 
 IMPORTANT:	Even though the program is now MacTerm,
 			this legacy code MUST NOT change; the
@@ -224,7 +187,7 @@ actionVersion4 ()
 
 /*!
 Upgrades from version 4 to version 5.  Some keys are
-now obsolete, so they are deleted.
+now obsolete so they are deleted.
 
 IMPORTANT:	Even though the program is now MacTerm,
 			this legacy code MUST NOT change; the
@@ -377,6 +340,28 @@ actionVersion6 ()
 	return result;
 }// actionVersion6
 
+
+/*!
+Upgrades from version 6 to version 7.  Some keys are
+now obsolete so they are deleted.
+
+(4.1)
+*/
+My_PrefsResult
+actionVersion7 ()
+{
+	My_PrefsResult		result = kMy_PrefsResultOK;
+	
+	
+	// these settings are no longer used
+	CFPreferencesSetAppValue(CFSTR("terminal-capture-file-alias-id"), nullptr/* delete value */, kMacTermApplicationID);
+	CFPreferencesSetAppValue(CFSTR("terminal-capture-file-creator-code"), nullptr/* delete value */, kMacTermApplicationID);
+	CFPreferencesSetAppValue(CFSTR("terminal-capture-file-open-with-application"), nullptr/* delete value */, kMacTermApplicationID);
+	CFPreferencesSetAppValue(CFSTR("terminal-capture-folder"), nullptr/* delete value */, kMacTermApplicationID);
+	
+	return result;
+}// actionVersion7
+
 } // anonymous namespace
 
 
@@ -395,7 +380,7 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 	// "actionVersionX()" and add a call to it below, in a form
 	// similar to what has been done for previous versions.  Finally,
 	// note that the version should never be decremented.
-	SInt16 const	kCurrentPrefsVersion = 6;
+	SInt16 const	kCurrentPrefsVersion = 7;
 	CFIndex			diskVersion = 0;
 	Boolean			doConvert = false;
 	Boolean			conversionSuccessful = false;
@@ -531,6 +516,11 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 		{
 			// Version 6 migrated settings into a new domain.
 			actionResult = actionVersion6();
+		}
+		if (diskVersion < 7)
+		{
+			// Version 7 deleted some obsolete keys.
+			actionResult = actionVersion7();
 		}
 		// IMPORTANT: The maximum version considered here should be the
 		//            current value of "kCurrentPrefsVersion"!!!

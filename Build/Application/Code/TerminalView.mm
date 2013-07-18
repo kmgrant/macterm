@@ -8751,16 +8751,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 				FSRef	saveFile;
 				FSRef	temporaryFile;
 				OSType	captureFileCreator = 'ttxt';
-				size_t	actualSize = 0L;
 				
-				
-				// get the user’s Capture File Creator preference, if possible
-				unless (Preferences_GetData(kPreferences_TagCaptureFileCreator,
-											sizeof(captureFileCreator), &captureFileCreator, &actualSize) ==
-						kPreferences_ResultOK)
-				{
-					captureFileCreator = 'ttxt'; // default to SimpleText if a preference can’t be found
-				}
 				
 				// create a temporary file for “safe” saving, in addition to the user’s requested file
 				error = FileSelectionDialogs_CreateOrFindUserSaveFile

@@ -54,7 +54,7 @@ export MY_BUILD_NUMBER
 #            (and a new version) ONLY applies if you are doing something that
 #            is incompatible; for example, if you need to delete old settings,
 #            or you need to change the meaning of an existing key name.
-MY_PREFS_VERSION=6
+MY_PREFS_VERSION=7
 export MY_PREFS_VERSION
 
 if [ "x$1" = "x" ] ; then

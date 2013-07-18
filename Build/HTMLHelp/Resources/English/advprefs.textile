@@ -208,7 +208,13 @@ table(deftable).
 (deftop). |(key). @tek-page-clears-screen@|(types). _true or false_|
 (defbottom). |\2(desc). A PAGE command in TEK data causes the active graphics window to be erased instead of opening a new active window.|
 (deftop). |(key). @terminal-capture-auto-start@|(types). _true or false_|
-(defbottom). |\2(desc). File captures begin automatically when the session starts.|
+(defbottom). |\2(desc). File captures begin automatically when the session starts, using the file name given by @terminal-capture-file-name-string@ and the directory given by @terminal-capture-directory-alias@.|
+(deftop). |(key). @terminal-capture-directory-alias@|(types). _data_: alias information|
+(defbottom). |\2(desc). Automatically-captured file is saved to this location.  The data is a system "alias record" that contains enough information to resolve the directory location later even if (say) the user has since renamed it.  See @terminal-capture-auto-start@.|
+(deftop). |(key). @terminal-capture-file-name-is-generated@|(types). _true or false_|
+(defbottom). |\2(desc). The name string of @terminal-capture-file-name-string@ is allowed to contain special sequences that are replaced at save time with current information (such as the date or time).|
+(deftop). |(key). @terminal-capture-file-name-string@|(types). _string_: file name (literal or with substitutions)|
+(defbottom). |\2(desc). Automatically-captured file uses this name; if @terminal-capture-file-name-is-generated@ is set, the name can contain special sequences.  See @terminal-capture-auto-start@.|
 (deftop). |(key). @terminal-favorite@|(types). _string_|
 (defbottom). |\2(desc). This Terminal collection is used by default when the session starts.|
 (deftop). |(key). @terminal-scroll-delay-milliseconds@|(types). _integer_|
