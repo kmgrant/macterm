@@ -488,6 +488,7 @@ notes_by_version = {
         'Macros of type "Enter Text with Substitutions" now recognize "\\j" as a joined expansion of the currently-selected text in the terminal (where new-lines are stripped, to form one line).',
         'Macros of type "Enter Text with Substitutions" now recognize "\\q" as a joined and quoted expansion of the currently-selected text in the terminal (where new-lines are stripped and rudimentary quoting is performed, such as inserting a backslash before a space).',
         'Macros of type "Enter Text with Substitutions" now recognize "\\b" as a short-cut for backspace ("\\010").',
+        'Contextual menus will now automatically display any named macro with an Action of "Enter Text with Substitutions" if it uses any of the new text-selection sequences above ("\\s", "\\j" or "\\q") and there is currently text selected in the terminal window.',
     ],
     '20130719': [
         'The "crosshairs" mouse pointer that is displayed for rectangular text selections in terminal windows now has a design that is similar to the new I-beam.',

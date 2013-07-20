@@ -81,6 +81,7 @@
 #import "DialogUtilities.h"
 #import "DragAndDrop.h"
 #import "EventLoop.h"
+#import "MacroManager.h"
 #import "NetEvents.h"
 #import "Preferences.h"
 #import "QuillsTerminal.h"
@@ -8995,6 +8996,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
+		
+		// user macros
+		MacroManager_AddContextualMenuGroup(inoutMenu); // implicitly calls ContextSensitiveMenu_NewItemGroup() again
 		
 		// other text-selection-related commands
 		ContextSensitiveMenu_NewItemGroup();

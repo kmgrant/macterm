@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -817,6 +817,11 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 	case kUIStrings_ContextualMenuFullScreenExit:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Exit Full Screen"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuFullScreenExit"));
+		break;
+	
+	case kUIStrings_ContextualMenuGroupTitleMacros:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Macros Using Selected Text:"), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuGroupTitleMacros"));
 		break;
 	
 	case kUIStrings_ContextualMenuHideThisWindow:

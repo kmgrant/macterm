@@ -58,8 +58,10 @@
 // Mac includes
 #include <CoreServices/CoreServices.h>
 #ifdef __OBJC__
+@class NSMenu;
 @class NSMenuItem;
 #else
+class NSMenu;
 class NSMenuItem;
 #endif
 
@@ -156,6 +158,20 @@ MacroManager_Result
 
 //@}
 
+//!\name Updating Menus
+//@{
+
+void
+	MacroManager_AddContextualMenuGroup	(NSMenu*					inoutContextualMenu,
+										 Preferences_ContextRef		inMacroSetOrNullForActiveSet = nullptr);
+
+void
+	MacroManager_UpdateMenuItem			(NSMenuItem*				inMenuItem,
+										 UInt16						inOneBasedMacroIndex,
+										 Preferences_ContextRef		inMacroSetOrNullForActiveSet = nullptr);
+
+//@}
+
 //!\name Utilities
 //@{
 
@@ -195,11 +211,6 @@ inline MacroManager_KeyID
 		result |= flagBit;
 		return result;
 	}
-
-void
-	MacroManager_UpdateMenuItem			(NSMenuItem*				inMenuItem,
-										 UInt16						inOneBasedMacroIndex,
-										 Preferences_ContextRef		inMacroSetOrNullForActiveSet = nullptr);
 
 //@}
 

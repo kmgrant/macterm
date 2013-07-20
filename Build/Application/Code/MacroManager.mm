@@ -52,6 +52,7 @@
 #import <CarbonEventUtilities.template.h>
 #import <CocoaBasic.h>
 #import <Console.h>
+#import <ContextSensitiveMenu.h>
 #import <FileSelectionDialogs.h>
 #import <MemoryBlocks.h>
 #import <SoundSystem.h>
@@ -67,7 +68,9 @@
 #import "SessionFactory.h"
 #import "Terminal.h"
 #import "TerminalView.h"
+#import "TerminalWindow.h"
 #import "URL.h"
+#import "UIStrings.h"
 
 
 
@@ -94,6 +97,111 @@ Preferences_ContextRef&		gCurrentMacroSet ()		{ static Preferences_ContextRef x 
 
 
 #pragma mark Public Methods
+
+/*!
+Calls ContextSensitiveMenu_NewItemGroup() with a group
+title and conditionally adds as many macro items as
+possible to the given contextual menu.  The source
+macros come from the specified macro set (if none is
+given, the active set is used as a source).
+
+Currently the only possible context is a terminal view
+with a text selection.  If text is selected, the only
+macros that appear are macros of type “Enter Text with
+Substitutions” that contain at least one sequence that
+depends on the current selection (\j, \q or \s).
+
+WARNING:	This assumes that ContextSensitiveMenu_Init()
+		has been called to start adding items to a
+		menu, and it assumes that it is OK to start a
+		new group of items (which will end any existing
+		group).
+
+*/
+void
+MacroManager_AddContextualMenuGroup		(NSMenu*					inoutContextualMenu,
+										 Preferences_ContextRef		inMacroSetOrNullForActiveSet)
+{
+	SessionRef			activeSession = SessionFactory_ReturnUserFocusSession();
+	TerminalWindowRef	activeTerminalWindow = (Session_IsValid(activeSession))
+												? Session_ReturnActiveTerminalWindow(activeSession)
+												: nullptr;
+	TerminalViewRef		activeTerminalView = TerminalWindow_IsValid(activeTerminalWindow)
+												? TerminalWindow_ReturnViewWithFocus(activeTerminalWindow)
+												: nullptr;
+	
+	
+	if ((nullptr != activeTerminalView) && TerminalView_TextSelectionExists(activeTerminalView))
+	{
+		Preferences_ContextRef	prefsContext = (nullptr == inMacroSetOrNullForActiveSet)
+												? gCurrentMacroSet()
+												: inMacroSetOrNullForActiveSet;
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		size_t					actualSize = 0;
+		MacroManager_Action		actionType = kMacroManager_ActionSendTextVerbatim;
+		CFStringRef				contentsCFString = nullptr;
+		CFStringRef				nameCFString = nullptr;
+		CFStringRef				groupTitleCFString = nullptr;
+		NSMenuItem*				newItem = nil;
+		SEL						macroInvokerSelector = @selector(performActionForMacro:); // see Commands.pm
+		id						targetForSelector = [Commands_Executor sharedExecutor]; // TEMPORARY during Carbon transition; see Commands.h
+		
+		
+		UNUSED_RETURN(UIStrings_Result)UIStrings_Copy(kUIStrings_ContextualMenuGroupTitleMacros, groupTitleCFString);
+		
+		ContextSensitiveMenu_NewItemGroup(groupTitleCFString);
+		
+		// see which macros are applicable
+		for (UInt16 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+		{
+			// retrieve action
+			prefsResult = Preferences_ContextGetData
+							(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i),
+								sizeof(actionType), &actionType, false/* search defaults too */, &actualSize);
+			if ((kPreferences_ResultOK == prefsResult) && (kMacroManager_ActionSendTextProcessingEscapes == actionType))
+			{
+				// retrieve contents
+				prefsResult = Preferences_ContextGetData
+								(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, i),
+									sizeof(contentsCFString), &contentsCFString, false/* search defaults too */, &actualSize);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					NSString*	contentsNSString = BRIDGE_CAST(contentsCFString, NSString*);
+					
+					
+					// if the macro performs substitutions and it contains any of the
+					// sequences that deal with text selections then the macro should
+					// be inserted into the contextual menu
+					if (([contentsNSString rangeOfString:@"\\j"].length > 0) ||
+						([contentsNSString rangeOfString:@"\\q"].length > 0) ||
+						([contentsNSString rangeOfString:@"\\s"].length > 0))
+					{
+						// retrieve name
+						prefsResult = Preferences_ContextGetData
+										(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, i),
+											sizeof(nameCFString), &nameCFString, false/* search defaults too */, &actualSize);
+						if (kPreferences_ResultOK == prefsResult)
+						{
+							newItem = [[NSMenuItem alloc] initWithTitle:BRIDGE_CAST(nameCFString, NSString*)
+																		action:macroInvokerSelector
+																		keyEquivalent:@""];
+							[newItem setTarget:targetForSelector];
+							[newItem setTag:i]; // IMPORTANT: selector relies on this to know which macro is being requested!!!
+							ContextSensitiveMenu_AddItem(inoutContextualMenu, newItem);
+							[newItem release];
+						}
+					}
+				}
+			}
+		}
+		
+		if (nullptr != groupTitleCFString)
+		{
+			CFRelease(groupTitleCFString), groupTitleCFString = nullptr;
+		}
+	}
+}// MacroManager_AddContextualMenuGroup
+
 
 /*!
 Returns the macro set most recently made current with a
@@ -957,7 +1065,6 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 void*					UNUSED_ARGUMENT(inListenerContextPtr))
 {
 	//Preferences_ChangeContext*	contextPtr = REINTERPRET_CAST(inEventContextPtr, Preferences_ChangeContext*);
-	size_t						actualSize = 0L;
 	
 	
 	switch (inPreferenceTagThatChanged)
