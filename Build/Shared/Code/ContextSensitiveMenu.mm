@@ -32,12 +32,16 @@
 // Mac includes
 #import <Cocoa/Cocoa.h>
 
+// library includes
+#import <CFRetainRelease.h>
+
 
 
 #pragma mark Variables
 namespace {
 
-UInt16	gAddedGroupItemCount = 0;
+UInt16				gAddedGroupItemCount = 0;
+CFRetainRelease		gGroupTitle;
 
 } // anonymous namespace
 
@@ -66,6 +70,9 @@ If ContextSensitiveMenu_NewItemGroup() has been
 called and no dividing-line has yet been inserted
 for the group, a separator is inserted first.
 
+The item is automatically changed to indented form
+if it is in a group that has a title.
+
 (2.0)
 */
 void
@@ -74,8 +81,38 @@ ContextSensitiveMenu_AddItem	(NSMenu*		inToWhichMenu,
 {
 	if ((0 == gAddedGroupItemCount) && ([inToWhichMenu numberOfItems] > 0))
 	{
+		// only insert a separator if there is something above it
 		[inToWhichMenu addItem:[NSMenuItem separatorItem]];
 	}
+	
+	if ((0 == gAddedGroupItemCount) && gGroupTitle.exists())
+	{
+		// regardless of whether or not a separator was added, a
+		// titled group always inserts its title item first; the
+		// group-title item should have the same appearance as
+		// other “title items” (small, bold and disabled), which
+		// is accomplished by using an attributed string
+		NSString*				titleString = BRIDGE_CAST(gGroupTitle.returnCFStringRef(), NSString*);
+		NSDictionary*			fontDict = [NSDictionary dictionaryWithObject:[NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]]
+																				forKey:NSFontAttributeName];
+		NSMenuItem*				groupItem = [[[NSMenuItem alloc] initWithTitle:titleString action:nil keyEquivalent:@""]
+												autorelease];
+		NSAttributedString*		attributedTitle = [[[NSAttributedString alloc] initWithString:titleString attributes:fontDict]
+													autorelease];
+		
+		
+		[groupItem setAttributedTitle:attributedTitle];
+		[inToWhichMenu addItem:groupItem];
+	}
+	
+	if (gGroupTitle.exists())
+	{
+		// items belonging to a group with a title are all
+		// indented underneath the title
+		[inItem setIndentationLevel:1];
+	}
+	
+	// finally, add the item itself!
 	[inToWhichMenu addItem:inItem];
 	++gAddedGroupItemCount;
 }// AddItem
@@ -87,12 +124,28 @@ as belonging to a new group of related items.  The first
 item to be added will be preceded by a separator item.
 If no items are added, no separator is ever inserted.
 
+If "inTitleOrNull" is not nullptr, a “title style” menu
+item is automatically inserted immediately after the
+separator, if and only if the separator is ever inserted.
+Note that when using a title in this way, application
+style guidelines suggest that the title should end with
+a colon (:) and all of the items in the group should be
+indented.
+
 (2.0)
 */
 void
-ContextSensitiveMenu_NewItemGroup ()
+ContextSensitiveMenu_NewItemGroup	(CFStringRef	inTitleOrNull)
 {
 	gAddedGroupItemCount = 0;
+	if (nullptr == inTitleOrNull)
+	{
+		gGroupTitle.clear();
+	}
+	else
+	{
+		gGroupTitle.setCFTypeRef(inTitleOrNull);
+	}
 }// NewItemGroup
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

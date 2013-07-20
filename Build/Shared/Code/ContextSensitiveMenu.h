@@ -63,7 +63,7 @@ void
 
 // USE THIS METHOD EVERY TIME A DIVIDING LINE *MAY* BE NECESSARY (AVOIDS ADDING MORE THAN ONE DIVIDER)
 void
-	ContextSensitiveMenu_NewItemGroup			();
+	ContextSensitiveMenu_NewItemGroup			(CFStringRef		inTitleOrNull = nullptr);
 
 //@}
 
