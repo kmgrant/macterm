@@ -28,6 +28,16 @@ PREREQUISITES
   SWIG is recommended (the 2.x series was tested recently).  See
   "Build/Shared/CustomPaths.xcconfig" for a variable that sets
   the install path (/opt/swig-<version>/bin/swig by default).
+
+  Note that the build system only uses artwork from a component's
+  Resources directory (such as "Build/Application/Resources").
+  If you decide to modify any of the source artwork files located
+  in directories like "Build/Application/Artwork", you will need
+  to manually perform PNG exports, run Icon Composer or otherwise
+  generate the required file format in the appropriate Resources
+  directory before your changes will be visible in MacTerm.
+  Files of type ".xcf" were created using Seashore; those of type
+  ".pxm" were created using Pixelmator.
   
   When building source code documentation only, you will need
   Doxygen (http://www.doxygen.org/), and Dot (part of GraphViz,
