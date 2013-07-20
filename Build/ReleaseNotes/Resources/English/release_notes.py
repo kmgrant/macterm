@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130719',
     '20130716',
     '20130713',
     '20130709',
@@ -479,6 +480,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130719': [
+        'The "crosshairs" mouse pointer that is displayed for rectangular text selections in terminal windows now has a design that is similar to the new I-beam.',
+    ],
     '20130716': [
         'Fixed a possible crash if a terminal-based application attempted to modify certain colors in the 256-color palette.',
     ],

@@ -145,6 +145,8 @@ $(wildcard $(SRC_APP_CODE_TOP)/Quills*)
 # need different commands for recursive trees
 APP_RESOURCES_FILES := \
 Application.sb \
+CursorCrosshairs.png \
+CursorCrosshairs@2x.png \
 CursorIBeam.png \
 CursorIBeam@2x.png\
 CursorIBeamSmall.png \

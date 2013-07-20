@@ -453,6 +453,7 @@ void				copyTranslationPreferences			(My_TerminalViewPtr, Preferences_ContextRef
 OSStatus			createWindowColorPalette			(My_TerminalViewPtr, Preferences_ContextRef, Boolean = true);
 Boolean				cursorBlinks						(My_TerminalViewPtr);
 TerminalView_CursorType	cursorType						(My_TerminalViewPtr);
+NSCursor*			customCursorCrosshairs				();
 NSCursor*			customCursorIBeam					(Boolean = false);
 void				delayMinimumTicks					(UInt16 = 8);
 NSDictionary*		dictionaryWithTerminalTextAttributes(My_TerminalViewPtr, TerminalTextAttributes, Float32 = 1.0);
@@ -5088,6 +5089,32 @@ cursorType		(My_TerminalViewPtr		UNUSED_ARGUMENT(inTerminalViewPtr))
 {
 	return gPreferenceProxies.cursorType;
 }// cursorType
+
+
+/*!
+Returns a custom version of the crosshairs for use in
+terminal views.  The intent is to use a cursor that
+has a larger size and better contrast.
+
+(4.1)
+*/
+NSCursor*
+customCursorCrosshairs ()
+{
+	static NSCursor*	gCustomCrosshairsCursor = nil;
+	NSCursor*			result = nil;
+	
+	
+	if (nil == gCustomCrosshairsCursor)
+	{
+		// IMPORTANT: specified hot-spot should be synchronized with the image data
+		gCustomCrosshairsCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorCrosshairs"]
+																	hotSpot:NSMakePoint(15, 15)];
+	}
+	result = gCustomCrosshairsCursor;
+	
+	return result;
+}// customCursorCrosshairs
 
 
 /*!
@@ -9832,7 +9859,18 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 						else if (eventModifiers & optionKey)
 						{
 							// if clicked, the text selection would be rectangular
-							(SInt16)Cursors_UseCrosshairs();
+							NSCursor*	cursorCrosshairs = customCursorCrosshairs();
+							
+							
+							if (nil == cursorCrosshairs)
+							{
+								// fall back to standard system cursor
+								[[NSCursor crosshairCursor] set];
+							}
+							else
+							{
+								[cursorCrosshairs set];
+							}
 						}
 						else
 						{
@@ -12484,7 +12522,18 @@ trackTextSelection	(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		if (inTerminalViewPtr->text.selection.isRectangular)
 		{
-			Cursors_UseCrosshairs();
+			NSCursor*	cursorCrosshairs = customCursorCrosshairs();
+			
+			
+			if (nil == cursorCrosshairs)
+			{
+				// fall back to standard system cursor
+				[[NSCursor crosshairCursor] set];
+			}
+			else
+			{
+				[cursorCrosshairs set];
+			}
 		}
 		else
 		{
@@ -13733,7 +13782,7 @@ resetCursorRects
 		else if (self->modifierFlagsForCursor & NSAlternateKeyMask)
 		{
 			// modifier key for rectangular text selections
-			[self addCursorRect:[self bounds] cursor:[NSCursor crosshairCursor]];
+			[self addCursorRect:[self bounds] cursor:customCursorCrosshairs()];
 		}
 		else
 		{
