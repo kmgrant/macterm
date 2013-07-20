@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130720',
     '20130719',
     '20130716',
     '20130713',
@@ -480,6 +481,13 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130720': [
+        'Fixed the "\\n" substitution sequence in macros to be interpreted as "the new-line mapping specified for the session"; in other words, it could send: CR, CR-LF, CR-NULL or LF, depending on the current setting.  Note that if you wish to explicitly request a line-feed you can use "\\012" in a macro, and if you wish to explicitly request a carriage-return you can use either "\\r" or "\\015".',
+        'Macros of type "Enter Text with Substitutions" now recognize "\\s" as a verbatim expansion of the currently-selected text in the terminal (including any new-lines).',
+        'Macros of type "Enter Text with Substitutions" now recognize "\\j" as a joined expansion of the currently-selected text in the terminal (where new-lines are stripped, to form one line).',
+        'Macros of type "Enter Text with Substitutions" now recognize "\\q" as a joined and quoted expansion of the currently-selected text in the terminal (where new-lines are stripped and rudimentary quoting is performed, such as inserting a backslash before a space).',
+        'Macros of type "Enter Text with Substitutions" now recognize "\\b" as a short-cut for backspace ("\\010").',
+    ],
     '20130719': [
         'The "crosshairs" mouse pointer that is displayed for rectangular text selections in terminal windows now has a design that is similar to the new I-beam.',
     ],

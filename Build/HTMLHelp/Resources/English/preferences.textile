@@ -445,9 +445,9 @@ The Contents will be typed into the active terminal view as if
 
 h5. Enter Text with Substitutions
 
-The Contents will be typed into the active terminal view as if
- the keyboard was used; however, any special sequences will
- first be substituted with their current values.
+The Contents will be scrubbed for any special sequences (as
+ defined below) and replaced with the indicated values; only
+ the modified version is typed into the active terminal view.
 
 This mode is very useful if your macro contains things like
  escape sequences or other "invisible" characters (which is
@@ -471,13 +471,17 @@ The possible substitutions are:
 table(deftable).
 (def). |_<(key). Code|_<(desc). Meaning|
 (def). |<(key). @\\@|(desc)<. backslash (@\@)|
-(def). |<(key). @\t@|(desc)<. horizontal tab|
-(def). |<(key). @\r@|(desc)<. carriage return|
-(def). |<(key). @\n@|(desc)<. line feed|
-(def). |<(key). @\e@|(desc)<. escape (@^[@)|
 (def). |<(key). @\0nn@|(desc)<. arbitrary ASCII in octal[1]; e.g. @\004@ is @^D@|
 (def). |<(key). @\1nn@|(desc)<. arbitrary ASCII in octal[1]; e.g. @\177@ is delete|
+(def). |<(key). @\b@|(desc)<. backspace (equivalent to @\010@)|
+(def). |<(key). @\e@|(desc)<. escape (@^[@; equivalent to @\033@)|
 (def). |<(key). @\i@|(desc)<. dynamically substitute an IP address[2] of the computer|
+(def). |<(key). @\j@|(desc)<. dynamically substitute the terminal's current text selection, stripping all new-lines (to join into one line)|
+(def). |<(key). @\n@|(desc)<. new-line sequence for current session: either CR, CR-LF, CR-NULL or LF|
+(def). |<(key). @\q@|(desc)<. dynamically substitute the terminal's current text selection, stripping all new-lines and quoting (inserting backslashes before every space or tab)|
+(def). |<(key). @\r@|(desc)<. carriage return (@^M@; equivalent to @\015@)|
+(def). |<(key). @\s@|(desc)<. dynamically substitute the terminal's current text selection, verbatim (even keeping new-lines)|
+(def). |<(key). @\t@|(desc)<. horizontal tab|
 (def). |<(key). @\#@|(desc)<. dynamically substitute the number of terminal lines|
 (def). |<(key). @\"@|(desc)<. quote; allowed for legacy reasons, but no longer needs escaping|
 
@@ -487,9 +491,9 @@ fn1. To see the octal versions of all ASCII characters,
  "Insert Control Key Character..." can be used to help insert the
  right code for a variety of keys.
 
-fn2. Currently, there is no way to choose which IP address is actually
- sent with "\i".  But you can use Window >> Show IP Addresses to
- see all the IP addresses that your computer has, and drag the
+fn2. Currently there is no way to choose which IP address is actually
+ sent with "\i".  You can use Window >> Show IP Addresses to
+ see all the IP addresses that your computer has and drag the
  desired one into a terminal window.
 
 h2(#workspaces). Workspaces

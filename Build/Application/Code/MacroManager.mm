@@ -66,6 +66,7 @@
 #import "Session.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
+#import "TerminalView.h"
 #import "URL.h"
 
 
@@ -362,6 +363,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		size_t					actualSize = 0;
 		CFStringRef				actionCFString = nullptr;
+		Session_EventKeys		sessionEventKeys = Session_ReturnEventKeys(session);
 		MacroManager_Action		actionPerformed = kMacroManager_ActionSendTextProcessingEscapes;
 		
 		
@@ -568,6 +570,12 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 										++i; // skip special sequence character
 										break;
 									
+									case 'b':
+										// backspace; equivalent to \010
+										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\010"));
+										++i; // skip special sequence character
+										break;
+									
 									case 'e':
 										// escape; equivalent to \033
 										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\033"));
@@ -594,15 +602,108 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 										++i; // skip special sequence character
 										break;
 									
+									case 'j':
+									case 'q':
+									case 's':
+										// currently-selected text, optionally joined together as a single line and with quoting
+										{
+											TerminalWindowRef const		kTerminalWindow = Session_ReturnActiveTerminalWindow(session);
+											
+											
+											if (TerminalWindow_IsValid(kTerminalWindow))
+											{
+												TerminalViewRef const	kTerminalView = TerminalWindow_ReturnViewWithFocus(kTerminalWindow);
+												
+												
+												if (nullptr != kTerminalView)
+												{
+													CFStringRef			selectedText = TerminalView_ReturnSelectedTextAsNewUnicode
+																						(kTerminalView, 0/* spaces to replace with tabs */,
+																							(('s' == nextChar)
+																								? 0
+																								: kTerminalView_TextFlagInline));
+													
+													
+													if (nullptr != selectedText)
+													{
+														CFRetainRelease		workArea;
+														
+														
+														if ('q' == nextChar)
+														{
+															// copy the string and insert escapes at certain locations to perform quoting
+															workArea.setCFMutableStringRef
+																		(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* max. length or zero */,
+																									selectedText),
+																			true/* is retained */);
+															if (workArea.exists())
+															{
+																CFRange const	kWholeString = CFRangeMake
+																								(0, CFStringGetLength
+																									(workArea.returnCFStringRef()));
+																
+																
+																selectedText = workArea.returnCFStringRef();
+																
+																// escape spaces and tabs
+																UNUSED_RETURN(CFIndex)CFStringFindAndReplace
+																						(workArea.returnCFMutableStringRef(),
+																							CFSTR(" "), CFSTR("\\ "), kWholeString,
+																							0/* flags */);
+																UNUSED_RETURN(CFIndex)CFStringFindAndReplace
+																						(workArea.returnCFMutableStringRef(),
+																							CFSTR("\t"), CFSTR("\\\t"), kWholeString,
+																							0/* flags */);
+																
+																// TEMPORARY; no other escapes are performed (might add more in
+																// the future, or make this extensible somehow)
+															}
+														}
+														
+														// add the appropriate text to the macro expansion
+														if (nullptr != selectedText)
+														{
+															CFStringAppend(finalCFString.returnCFMutableStringRef(), selectedText);
+														}
+													}
+												}
+											}
+										}
+										++i; // skip special sequence character
+										break;
+									
 									case 'n':
 										// new-line
-										// TEMPORARY - should send the sanctioned new-line sequence for the session
-										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\n"));
+										// send the sanctioned new-line sequence for the session
+										switch (sessionEventKeys.newline)
+										{
+										case kSession_NewlineModeMapCR:
+											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\015"));
+											break;
+										
+										case kSession_NewlineModeMapCRLF:
+											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\015\012"));
+											break;
+										
+										case kSession_NewlineModeMapCRNull:
+											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\015\000"));
+											break;
+										
+										case kSession_NewlineModeMapLF:
+											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\012"));
+											break;
+										
+										default:
+											Console_Warning(Console_WriteValue,
+															"macro new-line sequence does not handle mode", sessionEventKeys.newline);
+											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\n"));
+											break;
+										}
 										++i; // skip special sequence character
 										break;
 									
 									case 'r':
-										// carriage return without line feed
+										// carriage return without line feed; equivalent to \015
 										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\r"));
 										++i; // skip special sequence character
 										break;
