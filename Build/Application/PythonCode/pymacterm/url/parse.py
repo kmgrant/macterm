@@ -314,19 +314,13 @@ def x_man_page(url):
     (scheme, netloc, path, params, query, fragment) = \
         urlparse.urlparse(url, 'x-man-page', allow_pound_notation)
     if 'x-man-page' != scheme: raise ValueError("not an x-man-page URL")
-    path = _slash_free_path(path).rstrip()
-    elements = path.split('/')
     # pull the command name and optional section number out of the URL path
-    section = None
-    cmd = None
-    if len(elements) == 2:
-        section = elements[0]
-        cmd = elements[1]
-    elif len(elements) == 1:
-        cmd = elements[0]
+    if len(path) > 0:
+        section = netloc
+        cmd = _slash_free_path(path)
     else:
-        print "MacTerm: unsupported form of x-man-page URL"
-        pass
+        section = None
+        cmd = netloc
     result['section'] = section
     result['cmd'] = cmd
     return result
