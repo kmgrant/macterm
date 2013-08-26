@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20130825',
     '20130720',
     '20130719',
     '20130716',
@@ -481,6 +482,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20130825': [
+        'Fixed a possible hang when, for instance, pasting text containing high-plane UTF-8 sequences.',
+    ],
     '20130720': [
         'Fixed recent issue where "x-man-page" URLs would not open correctly.',
         'Fixed the "\\n" substitution sequence in macros to be interpreted as "the new-line mapping specified for the session"; in other words, it could send: CR, CR-LF, CR-NULL or LF, depending on the current setting.  Note that if you wish to explicitly request a line-feed you can use "\\012" in a macro, and if you wish to explicitly request a carriage-return you can use either "\\r" or "\\015".',

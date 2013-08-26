@@ -2397,30 +2397,49 @@ Session_SendDataCFString	(SessionRef		inRef,
 	for (targetRange.location = inFirstCharacter; targetRange.location < kLength; )
 	{
 		CFIndex		bytesForChar = 0;
+		CFIndex		numberOfCharactersConverted = 0;
+		
+		
+		// initially look for a single character
+		targetRange.length = 1;
+		
 		// IMPORTANT: Although CFStringGetBytes() ought to accept a zero-length buffer,
 		// it appears that actually giving that function a length of zero makes it
 		// return a nonzero number of “bytes used”.  Not only would that violate the
 		// assertion that follows, but it calls into question just what the heck might
 		// have happened to the buffer and its surrounding memory!  A preemptive check
 		// is done to avoid this problem.
-		CFIndex		numberOfCharactersConverted = (0 == sizeRemaining)
-													? 0
-													: CFStringGetBytes(inString, targetRange, ptr->writeEncoding,
-																		0/* loss byte, or 0 for no lossy conversion */,
-																		false/* is external representation */,
-																		currentPtr, sizeRemaining, &bytesForChar);
-		
+		if (sizeRemaining > 0)
+		{
+			numberOfCharactersConverted = CFStringGetBytes(inString, targetRange, ptr->writeEncoding,
+															0/* loss byte, or 0 for no lossy conversion */,
+															false/* is external representation */,
+															currentPtr, sizeRemaining, &bytesForChar);
+			if (0 == numberOfCharactersConverted)
+			{
+				// not all values can be represented as a single character;
+				// if a single-character conversion is not possible, try to
+				// request more than one character at a time
+				targetRange.length = 2;
+				numberOfCharactersConverted = CFStringGetBytes(inString, targetRange, ptr->writeEncoding,
+																0/* loss byte, or 0 for no lossy conversion */,
+																false/* is external representation */,
+																currentPtr, sizeRemaining, &bytesForChar);
+			}
+		}
 		
 		if (numberOfCharactersConverted > 0)
 		{
 			assert(sizeRemaining >= STATIC_CAST(bytesForChar, size_t));
 			sizeRemaining -= bytesForChar;
 			currentPtr += bytesForChar;
-			++result;
-			++(targetRange.location);
+			result += targetRange.length;
+			targetRange.location += targetRange.length;
 		}
 		
-		if ((sizeRemaining < 4/* arbitrary */) || (targetRange.location >= kLength))
+		if ((0 == numberOfCharactersConverted) ||
+			(sizeRemaining < 4/* arbitrary */) ||
+			(targetRange.location >= kLength))
 		{
 			// send what has been accumulated, and then reset the pointer
 			size_t		bytesLeft = sizeof(byteArray) - sizeRemaining;
@@ -2440,6 +2459,13 @@ Session_SendDataCFString	(SessionRef		inRef,
 			}
 			currentPtr = byteArray;
 			sizeRemaining = sizeof(byteArray);
+		}
+		
+		// if the most recent conversion attempt failed, it will
+		// only fail again if the loop is allowed to continue
+		if (0 == numberOfCharactersConverted)
+		{
+			break;
 		}
 	}
 	return result;
@@ -3672,7 +3698,7 @@ Session_UserInputCFString	(SessionRef		inRef,
 		
 		
 		offset += charactersSent;
-		if (++loopGuard > 100/* arbitrary */)
+		if (++loopGuard > 4/* arbitrary */)
 		{
 			Console_Warning(Console_WriteValueCFString, "aborting transmission of string after too many failed attempts", inStringBuffer);
 			break;
