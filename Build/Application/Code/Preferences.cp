@@ -1155,7 +1155,7 @@ Preferences_Init ()
 									sizeof(TerminalView_CursorType), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalEmulatorType,
 									CFSTR("terminal-emulator-type"), typeCFStringRef,
-									sizeof(Terminal_Emulator), Quills::Prefs::TERMINAL);
+									sizeof(Emulation_FullType), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalImageNormalBackground,
 									CFSTR("terminal-image-normal-background-url"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::FORMAT);
@@ -7871,7 +7871,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							Terminal_Emulator*	storedValuePtr = REINTERPRET_CAST(outDataPtr, Terminal_Emulator*);
+							Emulation_FullType*		storedValuePtr = REINTERPRET_CAST(outDataPtr, Emulation_FullType*);
 							
 							
 							*storedValuePtr = Terminal_EmulatorReturnForName(valueCFString);
@@ -10011,9 +10011,9 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 				break;
 			
 			case kPreferences_TagTerminalEmulatorType:
-				if (inDataSize >= sizeof(Terminal_Emulator))
+				if (inDataSize >= sizeof(Emulation_FullType))
 				{
-					Terminal_Emulator const		data = *(REINTERPRET_CAST(inDataPtr, Terminal_Emulator const*));
+					Emulation_FullType const	data = *(REINTERPRET_CAST(inDataPtr, Emulation_FullType const*));
 					CFRetainRelease				nameCFString = Terminal_EmulatorReturnDefaultName(data);
 					
 					

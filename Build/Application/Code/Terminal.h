@@ -1,5 +1,5 @@
 /*!	\file Terminal.h
-	\brief Terminal screen buffer and emulators.
+	\brief Terminal screen buffer.
 	
 	MacTerm splits terminals into two primary concepts.  The
 	first is the Screen, which this file implements, consisting
@@ -55,6 +55,7 @@
 #include "ListenerModel.h"
 
 // application includes
+#include "Emulation.h"
 #include "Preferences.h"
 #include "SessionRef.typedef.h"
 #include "TerminalSpeaker.h"
@@ -130,66 +131,6 @@ enum
 													//!  (context: TerminalScreenRef)
 	kTerminal_ChangeXTermColor			= 'XTCl'	//!< a new value has been set for some color in the table of 256
 													//!  XTerm colors (context: Terminal_XTermColorDescriptionConstPtr)
-};
-
-typedef UInt32 Terminal_Emulator;
-typedef UInt32 Terminal_EmulatorType; // part of Terminal_Emulator
-typedef UInt32 Terminal_EmulatorVariant; // part of Terminal_Emulator
-
-enum
-{
-	// These masks chop up the 16-bit emulator type into two parts,
-	// the terminal type and the variant of it; this allows up to 256
-	// terminal types, and 256 variants (for example, VT is a type,
-	// and VT100 and VT220 are variants of the VT terminal type).
-	//
-	// Standardizing on this approach will make it *much* easier to
-	// implement future terminal types - for example, many variants
-	// of terminals share identical features, so you can check if
-	// ANY variant of a particular terminal is in use just by
-	// isolating the upper byte.  For convenience, two macros below
-	// are included to isolate the upper or lower byte for you.
-	// Use them!!!
-	kTerminal_EmulatorTypeByteShift		= 8,
-	kTerminal_EmulatorTypeMask			= (0x000000FF << kTerminal_EmulatorTypeByteShift),
-	kTerminal_EmulatorVariantByteShift	= 0,
-	kTerminal_EmulatorVariantMask		= (0x000000FF << kTerminal_EmulatorVariantByteShift)
-};
-enum
-{
-	// use these constants only when you need to determine the terminal emulator family
-	// (and if you add support for new terminal types, add constants to this list in
-	// the same way as shown below)
-	kTerminal_EmulatorTypeVT = ((0 << kTerminal_EmulatorTypeByteShift) & kTerminal_EmulatorTypeMask),
-		kTerminal_EmulatorVariantVT100 = ((0x00 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
-		kTerminal_EmulatorVariantVT102 = ((0x01 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
-		kTerminal_EmulatorVariantVT220 = ((0x02 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
-		kTerminal_EmulatorVariantVT320 = ((0x03 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
-		kTerminal_EmulatorVariantVT420 = ((0x04 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
-	kTerminal_EmulatorTypeXTerm = ((1 << kTerminal_EmulatorTypeByteShift) & kTerminal_EmulatorTypeMask),
-		kTerminal_EmulatorVariantXTermOriginal = ((0x00 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
-		kTerminal_EmulatorVariantXTermColor = ((0x01 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
-		kTerminal_EmulatorVariantXTerm256Color = ((0x02 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
-	kTerminal_EmulatorTypeDumb = ((2 << kTerminal_EmulatorTypeByteShift) & kTerminal_EmulatorTypeMask),
-		kTerminal_EmulatorVariantDumb1 = ((0x00 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
-	kTerminal_EmulatorTypeANSI = ((3 << kTerminal_EmulatorTypeByteShift) & kTerminal_EmulatorTypeMask),
-		kTerminal_EmulatorVariantANSIBBS = ((0x00 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
-		kTerminal_EmulatorVariantANSISCO = ((0x01 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask)
-};
-enum
-{
-	// refer to a terminal type using these simpler constants
-	kTerminal_EmulatorANSIBBS = kTerminal_EmulatorTypeANSI | kTerminal_EmulatorVariantANSIBBS,				// PC (“ANSI”) terminals
-	kTerminal_EmulatorANSISCO = kTerminal_EmulatorTypeANSI | kTerminal_EmulatorVariantANSISCO,
-	kTerminal_EmulatorVT100 = kTerminal_EmulatorTypeVT | kTerminal_EmulatorVariantVT100,					// VT terminals
-	kTerminal_EmulatorVT102 = kTerminal_EmulatorTypeVT | kTerminal_EmulatorVariantVT102,
-	kTerminal_EmulatorVT220 = kTerminal_EmulatorTypeVT | kTerminal_EmulatorVariantVT220,
-	kTerminal_EmulatorVT320	= kTerminal_EmulatorTypeVT | kTerminal_EmulatorVariantVT320,
-	kTerminal_EmulatorVT420 = kTerminal_EmulatorTypeVT | kTerminal_EmulatorVariantVT420,
-	kTerminal_EmulatorXTermOriginal = kTerminal_EmulatorTypeXTerm | kTerminal_EmulatorVariantXTermOriginal,	// xterm terminals
-	kTerminal_EmulatorXTermColor = kTerminal_EmulatorTypeXTerm | kTerminal_EmulatorVariantXTermColor,
-	kTerminal_EmulatorXTerm256Color = kTerminal_EmulatorTypeXTerm | kTerminal_EmulatorVariantXTerm256Color,
-	kTerminal_EmulatorDumb = kTerminal_EmulatorTypeDumb | kTerminal_EmulatorVariantDumb1					// “dumb” terminals
 };
 
 /*!
@@ -559,7 +500,7 @@ TerminalTextAttributes
 Terminal_Result
 	Terminal_EmulatorDeriveFromCString		(TerminalScreenRef			inScreen,
 											 char const*				inCString,
-											 Terminal_Emulator&			outApparentEmulator);
+											 Emulation_FullType&		outApparentEmulator);
 
 // DEPRECATED
 Boolean
@@ -570,9 +511,9 @@ Boolean
 	Terminal_EmulatorIsVT220				(TerminalScreenRef			inScreen);
 
 CFStringRef
-	Terminal_EmulatorReturnDefaultName		(Terminal_Emulator			inEmulator);
+	Terminal_EmulatorReturnDefaultName		(Emulation_FullType			inEmulator);
 
-Terminal_Emulator
+Emulation_FullType
 	Terminal_EmulatorReturnForName			(CFStringRef				inName);
 
 CFStringRef
@@ -580,7 +521,7 @@ CFStringRef
 
 Terminal_Result
 	Terminal_EmulatorSet					(TerminalScreenRef			inScreen,
-											 Terminal_Emulator			inEmulator);
+											 Emulation_FullType			inEmulator);
 
 Boolean
 	Terminal_LEDIsOn						(TerminalScreenRef			inScreen,

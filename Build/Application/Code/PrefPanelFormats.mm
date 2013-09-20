@@ -73,6 +73,7 @@
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "DialogUtilities.h"
+#import "Emulation.h"
 #import "GenericPanelTabs.h"
 #import "HelpSystem.h"
 #import "Panel.h"
@@ -1791,7 +1792,7 @@ const
 	if (terminalConfig.exists())
 	{
 		// set up the terminal
-		Terminal_Emulator const		kTerminalType = kTerminal_EmulatorVT100;
+		Emulation_FullType const	kTerminalType = kEmulation_FullTypeVT100;
 		UInt16 const				kRowCount = 3;
 		UInt32 const				kScrollbackSize = 0;
 		Boolean const				kForceSave = false;

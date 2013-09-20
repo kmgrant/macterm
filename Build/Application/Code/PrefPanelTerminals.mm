@@ -69,6 +69,7 @@
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "DialogUtilities.h"
+#import "Emulation.h"
 #import "GenericPanelTabs.h"
 #import "HelpSystem.h"
 #import "Panel.h"
@@ -166,10 +167,10 @@ struct My_TerminalsPanelEmulationUI
 	setAnswerBack	(CFStringRef);
 	
 	void
-	setAnswerBackFromEmulator	(Terminal_Emulator);
+	setAnswerBackFromEmulator	(Emulation_FullType);
 	
 	void
-	setEmulator		(Terminal_Emulator, Boolean = true);
+	setEmulator		(Emulation_FullType, Boolean = true);
 
 protected:
 	HIViewWrap
@@ -1132,7 +1133,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		
 		// set emulation type
 		{
-			Terminal_Emulator		emulatorType = kTerminal_EmulatorVT100;
+			Emulation_FullType		emulatorType = kEmulation_FullTypeVT100;
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalEmulatorType, sizeof(emulatorType),
@@ -1251,7 +1252,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			case kCommandSetEmulatorVT220:
 			case kCommandSetEmulatorXTermOriginal:
 				{
-					Terminal_Emulator					newEmulator = kTerminal_EmulatorDumb;
+					Emulation_FullType					newEmulator = kEmulation_FullTypeDumb;
 					My_TerminalsPanelEmulationDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(emulationInterfacePtr->panel),
 																					My_TerminalsPanelEmulationDataPtr);
 					Preferences_Result					prefsResult = kPreferences_ResultOK;
@@ -1260,23 +1261,23 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					switch (received.commandID)
 					{
 					case kCommandSetEmulatorNone:
-						newEmulator = kTerminal_EmulatorDumb;
+						newEmulator = kEmulation_FullTypeDumb;
 						break;
 					
 					case kCommandSetEmulatorVT100:
-						newEmulator = kTerminal_EmulatorVT100;
+						newEmulator = kEmulation_FullTypeVT100;
 						break;
 					
 					case kCommandSetEmulatorVT102:
-						newEmulator = kTerminal_EmulatorVT102;
+						newEmulator = kEmulation_FullTypeVT102;
 						break;
 					
 					case kCommandSetEmulatorVT220:
-						newEmulator = kTerminal_EmulatorVT220;
+						newEmulator = kEmulation_FullTypeVT220;
 						break;
 					
 					case kCommandSetEmulatorXTermOriginal:
-						newEmulator = kTerminal_EmulatorXTerm256Color;
+						newEmulator = kEmulation_FullTypeXTerm256Color;
 						{
 							// assume that by default the user will want all XTerm-related tweaks
 							// enabled when using XTerm as the base type (they can still be disabled
@@ -1404,7 +1405,7 @@ type of emulator.
 */
 void
 My_TerminalsPanelEmulationUI::
-setAnswerBackFromEmulator		(Terminal_Emulator		inEmulator)
+setAnswerBackFromEmulator		(Emulation_FullType		inEmulator)
 {
 	CFStringRef const	kAnswerBackMessage = Terminal_EmulatorReturnDefaultName(inEmulator);
 	
@@ -1460,7 +1461,7 @@ for the answer-back message.
 */
 void
 My_TerminalsPanelEmulationUI::
-setEmulator		(Terminal_Emulator		inEmulator,
+setEmulator		(Emulation_FullType		inEmulator,
 				 Boolean				inSynchronizeAnswerBackMessage)
 {
 	HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
@@ -1468,33 +1469,33 @@ setEmulator		(Terminal_Emulator		inEmulator,
 	
 	switch (inEmulator)
 	{
-	case kTerminal_EmulatorVT102:
+	case kEmulation_FullTypeVT102:
 		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
 														kCommandSetEmulatorVT102);
 		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	
-	case kTerminal_EmulatorVT220:
+	case kEmulation_FullTypeVT220:
 		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
 														kCommandSetEmulatorVT220);
 		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	
-	case kTerminal_EmulatorXTermOriginal:
-	case kTerminal_EmulatorXTermColor:
-	case kTerminal_EmulatorXTerm256Color:
+	case kEmulation_FullTypeXTermOriginal:
+	case kEmulation_FullTypeXTermColor:
+	case kEmulation_FullTypeXTerm256Color:
 		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
 														kCommandSetEmulatorXTermOriginal);
 		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	
-	case kTerminal_EmulatorDumb:
+	case kEmulation_FullTypeDumb:
 		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
 														kCommandSetEmulatorNone);
 		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	
-	case kTerminal_EmulatorVT100:
+	case kEmulation_FullTypeVT100:
 	default:
 		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
 														kCommandSetEmulatorVT100);
@@ -3064,31 +3065,31 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
 	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kTerminal_EmulatorDumb
+										initWithIntegerValue:kEmulation_FullTypeDumb
 																description:NSLocalizedStringFromTable
 																			(@"None (“Dumb”)", @"PrefPanelTerminals"/* table */,
 																				@"emulator disabled")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kTerminal_EmulatorVT100
+										initWithIntegerValue:kEmulation_FullTypeVT100
 																description:NSLocalizedStringFromTable
 																			(@"VT100", @"PrefPanelTerminals"/* table */,
 																				@"emulator of VT100 terminal device")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kTerminal_EmulatorVT102
+										initWithIntegerValue:kEmulation_FullTypeVT102
 																description:NSLocalizedStringFromTable
 																			(@"VT102", @"PrefPanelTerminals"/* table */,
 																				@"emulator of VT102 terminal device")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kTerminal_EmulatorVT220
+										initWithIntegerValue:kEmulation_FullTypeVT220
 																description:NSLocalizedStringFromTable
 																			(@"VT220", @"PrefPanelTerminals"/* table */,
 																				@"emulator of VT220 terminal device")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kTerminal_EmulatorXTerm256Color
+										initWithIntegerValue:kEmulation_FullTypeXTerm256Color
 																description:NSLocalizedStringFromTable
 																			(@"XTerm", @"PrefPanelTerminals"/* table */,
 																				@"emulator of XTerm terminal program")]

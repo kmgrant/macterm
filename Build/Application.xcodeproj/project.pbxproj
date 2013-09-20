@@ -122,6 +122,7 @@
 		0ACA57D30AEADDE800B5F482 /* GenericDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ACA57D20AEADDE700B5F482 /* GenericDialog.cp */; };
 		0ACBC3570D5BBC6300FCF05F /* CocoaBasic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */; };
 		0ACBC4280D5BBCC700FCF05F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */; };
+		0ACF35C617EBCC1500178DE2 /* Emulation.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ACF35C517EBCC1500178DE2 /* Emulation.cp */; };
 		0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */; };
 		0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */; };
 		0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */; };
@@ -537,6 +538,8 @@
 		0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FileSelectionDialogs.h; path = Shared/Code/FileSelectionDialogs.h; sourceTree = "<group>"; };
 		0ACDD9250ABD16C200040553 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AlertMessages.nib; sourceTree = "<group>"; };
 		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c.preprocessed; name = Quills.i; path = Application/Code/Quills.i; sourceTree = "<group>"; };
+		0ACF35C517EBCC1500178DE2 /* Emulation.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Emulation.cp; path = Application/Code/Emulation.cp; sourceTree = "<group>"; };
+		0ACF35C717EBCC1C00178DE2 /* Emulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Emulation.h; path = Application/Code/Emulation.h; sourceTree = "<group>"; };
 		0ACFBF4712F13506008E4203 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/TerminalWindowCocoa.xib; sourceTree = "<group>"; };
 		0AD0B09D0A9EAAA3002064BA /* QuillsBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsBase.h; path = Application/Code/QuillsBase.h; sourceTree = "<group>"; };
 		0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsBase.cp; path = Application/Code/QuillsBase.cp; sourceTree = "<group>"; };
@@ -765,6 +768,7 @@
 				0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */,
 				0A46FDD1055432A400ACDF3A /* DNR.cp */,
 				0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */,
+				0ACF35C517EBCC1500178DE2 /* Emulation.cp */,
 				0A46FDD5055432A400ACDF3A /* EventLoop.mm */,
 				0A46FDD6055432A400ACDF3A /* FileUtilities.cp */,
 				0A46FDD7055432A400ACDF3A /* FindDialog.mm */,
@@ -826,6 +830,7 @@
 				0A4603D80554376100ACDF3A /* DialogUtilities.h */,
 				0A4603D90554376100ACDF3A /* DNR.h */,
 				0A4603DA0554376100ACDF3A /* DragAndDrop.h */,
+				0ACF35C717EBCC1C00178DE2 /* Emulation.h */,
 				0A4603E00554376100ACDF3A /* EventLoop.h */,
 				0A4603E10554376100ACDF3A /* FileUtilities.h */,
 				0A4603E20554376100ACDF3A /* FindDialog.h */,
@@ -1491,6 +1496,7 @@
 				0AD7D0C3158AEBC9000C3264 /* PrefsContextManager.mm in Sources */,
 				0A46C56D15D864B700843BBC /* PreferenceValue.mm in Sources */,
 				0AD7B345176C3224004A1532 /* BoundName.mm in Sources */,
+				0ACF35C617EBCC1500178DE2 /* Emulation.cp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -82,6 +82,7 @@ extern "C"
 #include "Commands.h"
 #include "DebugInterface.h"
 #include "DialogUtilities.h"
+#include "Emulation.h"
 #include "EventLoop.h"
 #include "FileUtilities.h"
 #include "Preferences.h"
@@ -1164,10 +1165,10 @@ public:
 	typedef std::vector< Callbacks >	VariantChain;
 	typedef std::vector< SInt16 >		ParameterList;
 	
-	My_Emulator		(Terminal_Emulator, CFStringRef, CFStringEncoding);
+	My_Emulator		(Emulation_FullType, CFStringRef, CFStringEncoding);
 	
 	Boolean
-	changeTo	(Terminal_Emulator);
+	changeTo	(Emulation_FullType);
 	
 	void
 	clearEscapeSequenceParameters ();
@@ -1208,7 +1209,7 @@ public:
 	Boolean
 	supportsVariant		(VariantFlags);
 	
-	Terminal_Emulator					primaryType;			//!< VT100, VT220, etc.
+	Emulation_FullType					primaryType;			//!< VT100, VT220, etc.
 	Boolean								isUTF8Encoding;			//!< the emulator is using the UTF-8 encoding, and should ignore any specific sequences
 																//!  that would change character sets in other ways (such as those defined for a VT220); in
 																//!  addition, the data stream is decoded as UTF-8 BEFORE it is searched for any control
@@ -1240,16 +1241,16 @@ public:
 
 protected:
 	My_EmulatorEchoDataProcPtr
-	returnDataWriter	(Terminal_Emulator);
+	returnDataWriter	(Emulation_FullType);
 	
 	My_EmulatorResetProcPtr
-	returnResetHandler		(Terminal_Emulator);
+	returnResetHandler		(Emulation_FullType);
 	
 	My_EmulatorStateDeterminantProcPtr
-	returnStateDeterminant		(Terminal_Emulator);
+	returnStateDeterminant		(Emulation_FullType);
 	
 	My_EmulatorStateTransitionProcPtr
-	returnStateTransitionHandler	(Terminal_Emulator);
+	returnStateTransitionHandler	(Emulation_FullType);
 
 private:
 	Boolean								eightBitReceiver;		//!< if true, equivalent 8-bit codes should be recognized by the emulator’s state determinant
@@ -1277,7 +1278,7 @@ public:
 	CFStringRef
 	returnAnswerBackMessage		(Preferences_ContextRef);
 	
-	Terminal_Emulator
+	Emulation_FullType
 	returnEmulator		(Preferences_ContextRef);
 	
 	Boolean
@@ -1992,8 +1993,8 @@ void						moveCursorX								(My_ScreenBufferPtr, SInt16);
 void						moveCursorY								(My_ScreenBufferPtr, My_ScreenRowIndex);
 void						resetTerminal							(My_ScreenBufferPtr, Boolean = false);
 SessionRef					returnListeningSession					(My_ScreenBufferPtr);
-Terminal_EmulatorType		returnTerminalType						(Terminal_Emulator);
-Terminal_EmulatorVariant	returnTerminalVariant					(Terminal_Emulator);
+Emulation_BaseType			returnTerminalType						(Emulation_FullType);
+Emulation_Variant			returnTerminalVariant					(Emulation_FullType);
 Boolean						screenCopyLinesToScrollback				(My_ScreenBufferPtr);
 Boolean						screenInsertNewLines					(My_ScreenBufferPtr, My_ScreenBufferLineList::size_type);
 Boolean						screenMoveLinesToScrollback				(My_ScreenBufferPtr, My_ScreenBufferLineList::size_type);
@@ -3156,13 +3157,13 @@ if the given terminal screen reference is invalid
 Terminal_Result
 Terminal_EmulatorDeriveFromCString	(TerminalScreenRef		inRef,
 									 char const*			inCString,
-									 Terminal_Emulator&		outApparentEmulator)
+									 Emulation_FullType&	outApparentEmulator)
 {
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	Terminal_Result			result = kTerminal_ResultOK;
 	
 	
-	outApparentEmulator = kTerminal_EmulatorVT100;
+	outApparentEmulator = kEmulation_FullTypeVT100;
 	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
 	else
 	{
@@ -3195,7 +3196,7 @@ Terminal_EmulatorIsVT100	(TerminalScreenRef		inRef)
 	
 	if (nullptr != dataPtr)
 	{
-		result = (dataPtr->emulator.primaryType == kTerminal_EmulatorVT100);
+		result = (dataPtr->emulator.primaryType == kEmulation_FullTypeVT100);
 	}
 	return result;
 }// EmulatorIsVT100
@@ -3223,7 +3224,7 @@ Terminal_EmulatorIsVT220	(TerminalScreenRef		inRef)
 	
 	if (nullptr != dataPtr)
 	{
-		result = (dataPtr->emulator.primaryType == kTerminal_EmulatorVT220);
+		result = (dataPtr->emulator.primaryType == kEmulation_FullTypeVT220);
 	}
 	return result;
 }// EmulatorIsVT220
@@ -3657,7 +3658,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 Returns the default name for the given emulation type,
 suitable for use in a TERM environment variable or
 answer-back message.  For example, "vt100" is the name
-of kTerminal_EmulatorVT100.
+of kEmulation_FullTypeVT100.
 
 The string is not retained, so do not release it.
 
@@ -3668,7 +3669,7 @@ returns whatever a screen is using.
 (3.1)
 */
 CFStringRef
-Terminal_EmulatorReturnDefaultName		(Terminal_Emulator	inEmulationType)
+Terminal_EmulatorReturnDefaultName		(Emulation_FullType		inEmulationType)
 {
 	CFStringRef		result = nullptr;
 	
@@ -3676,47 +3677,47 @@ Terminal_EmulatorReturnDefaultName		(Terminal_Emulator	inEmulationType)
 	// IMPORTANT: This should be the inverse of Terminal_EmulatorReturnForName().
 	switch (inEmulationType)
 	{
-	case kTerminal_EmulatorANSIBBS:
+	case kEmulation_FullTypeANSIBBS:
 		result = CFSTR("ansi-bbs");
 		break;
 	
-	case kTerminal_EmulatorANSISCO:
+	case kEmulation_FullTypeANSISCO:
 		result = CFSTR("ansi-sco");
 		break;
 	
-	case kTerminal_EmulatorDumb:
+	case kEmulation_FullTypeDumb:
 		result = CFSTR("dumb");
 		break;
 	
-	case kTerminal_EmulatorVT100:
+	case kEmulation_FullTypeVT100:
 		result = CFSTR("vt100");
 		break;
 	
-	case kTerminal_EmulatorVT102:
+	case kEmulation_FullTypeVT102:
 		result = CFSTR("vt102");
 		break;
 	
-	case kTerminal_EmulatorVT220:
+	case kEmulation_FullTypeVT220:
 		result = CFSTR("vt220");
 		break;
 	
-	case kTerminal_EmulatorVT320:
+	case kEmulation_FullTypeVT320:
 		result = CFSTR("vt320");
 		break;
 	
-	case kTerminal_EmulatorVT420:
+	case kEmulation_FullTypeVT420:
 		result = CFSTR("vt420");
 		break;
 	
-	case kTerminal_EmulatorXTermColor:
+	case kEmulation_FullTypeXTermColor:
 		result = CFSTR("xterm-color");
 		break;
 	
-	case kTerminal_EmulatorXTerm256Color:
+	case kEmulation_FullTypeXTerm256Color:
 		result = CFSTR("xterm-256color");
 		break;
 	
-	case kTerminal_EmulatorXTermOriginal:
+	case kEmulation_FullTypeXTermOriginal:
 		result = CFSTR("xterm");
 		break;
 	
@@ -3734,62 +3735,62 @@ Terminal_EmulatorReturnDefaultName		(Terminal_Emulator	inEmulationType)
 /*!
 Returns the emulation type for the given name, if any
 (otherwise, chooses a reasonable value).  For example,
-"vt100" corresponds to kTerminal_EmulatorVT100.
+"vt100" corresponds to kEmulation_FullTypeVT100.
 
 See also EmulatorReturnDefaultName().
 
 (3.1)
 */
-Terminal_Emulator
+Emulation_FullType
 Terminal_EmulatorReturnForName		(CFStringRef	inName)
 {
-	Terminal_Emulator	result = kTerminal_EmulatorVT100;
+	Emulation_FullType	result = kEmulation_FullTypeVT100;
 	
 	
 	// IMPORTANT: This should be the inverse of EmulatorReturnDefaultName().
 	if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("ansi-bbs"), kCFCompareCaseInsensitive | kCFCompareBackwards))
 	{
-		result = kTerminal_EmulatorANSIBBS;
+		result = kEmulation_FullTypeANSIBBS;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("ansi-sco"), kCFCompareCaseInsensitive | kCFCompareBackwards))
 	{
-		result = kTerminal_EmulatorANSISCO;
+		result = kEmulation_FullTypeANSISCO;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("dumb"), kCFCompareCaseInsensitive | kCFCompareBackwards))
 	{
-		result = kTerminal_EmulatorDumb;
+		result = kEmulation_FullTypeDumb;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("vt100"), kCFCompareCaseInsensitive | kCFCompareBackwards))
 	{
-		result = kTerminal_EmulatorVT100;
+		result = kEmulation_FullTypeVT100;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("vt102"), kCFCompareCaseInsensitive | kCFCompareBackwards))
 	{
-		result = kTerminal_EmulatorVT102;
+		result = kEmulation_FullTypeVT102;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("vt220"), kCFCompareCaseInsensitive | kCFCompareBackwards))
 	{
-		result = kTerminal_EmulatorVT220;
+		result = kEmulation_FullTypeVT220;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("vt320"), kCFCompareCaseInsensitive | kCFCompareBackwards))
 	{
-		result = kTerminal_EmulatorVT320;
+		result = kEmulation_FullTypeVT320;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("vt420"), kCFCompareCaseInsensitive | kCFCompareBackwards))
 	{
-		result = kTerminal_EmulatorVT420;
+		result = kEmulation_FullTypeVT420;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("xterm"), kCFCompareCaseInsensitive | kCFCompareBackwards))
 	{
-		result = kTerminal_EmulatorXTermOriginal;
+		result = kEmulation_FullTypeXTermOriginal;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("xterm-color"), kCFCompareCaseInsensitive | kCFCompareBackwards))
 	{
-		result = kTerminal_EmulatorXTermColor;
+		result = kEmulation_FullTypeXTermColor;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("xterm-256color"), kCFCompareCaseInsensitive | kCFCompareBackwards))
 	{
-		result = kTerminal_EmulatorXTerm256Color;
+		result = kEmulation_FullTypeXTerm256Color;
 	}
 	else
 	{
@@ -3847,8 +3848,8 @@ if the specified screen reference is invalid
 (3.0)
 */
 Terminal_Result
-Terminal_EmulatorSet	(TerminalScreenRef	inRef,
-						 Terminal_Emulator	inEmulationType)
+Terminal_EmulatorSet	(TerminalScreenRef		inRef,
+						 Emulation_FullType		inEmulationType)
 {
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	Terminal_Result			result = kTerminal_ResultOK;
@@ -4997,7 +4998,7 @@ Terminal_SetBellEnabled		(TerminalScreenRef	inRef,
 
 /*!
 Sets the string that will be printed by a dumb terminal
-(kTerminal_EmulatorDumb) when the specified character is
+(kEmulation_FullTypeDumb) when the specified character is
 to be displayed.  The description must be in UTF-8 encoding.
 
 Normally, any character that is considered “printable”
@@ -6079,7 +6080,7 @@ Initializes a My_Emulator class instance.  See also reset().
 (3.1)
 */
 My_Emulator::
-My_Emulator		(Terminal_Emulator		inPrimaryEmulation,
+My_Emulator		(Emulation_FullType		inPrimaryEmulation,
 				 CFStringRef			inAnswerBack,
 				 CFStringEncoding		inInputTextEncoding)
 :
@@ -6124,7 +6125,7 @@ Returns true only if successful.
 */
 Boolean
 My_Emulator::
-changeTo	(Terminal_Emulator		inPrimaryEmulation)
+changeTo	(Emulation_FullType		inPrimaryEmulation)
 {
 	My_EmulatorEchoDataProcPtr const			kNewDataWriter = returnDataWriter(inPrimaryEmulation);
 	My_EmulatorStateDeterminantProcPtr const	kNewDeterminant = returnStateDeterminant(inPrimaryEmulation);
@@ -6301,27 +6302,27 @@ for the specified terminal type.
 */
 My_EmulatorEchoDataProcPtr
 My_Emulator::
-returnDataWriter	(Terminal_Emulator		inPrimaryEmulation)
+returnDataWriter	(Emulation_FullType		inPrimaryEmulation)
 {
 	My_EmulatorEchoDataProcPtr		result = nullptr;
 	
 	
 	switch (inPrimaryEmulation)
 	{
-	case kTerminal_EmulatorDumb:
+	case kEmulation_FullTypeDumb:
 		result = My_DumbTerminal::echoData;
 		break;
 	
-	case kTerminal_EmulatorVT100:
-	case kTerminal_EmulatorXTermOriginal:
-	case kTerminal_EmulatorXTermColor:
-	case kTerminal_EmulatorXTerm256Color:
-	case kTerminal_EmulatorANSIBBS:
-	case kTerminal_EmulatorANSISCO:
-	case kTerminal_EmulatorVT102:
-	case kTerminal_EmulatorVT220:
-	case kTerminal_EmulatorVT320:
-	case kTerminal_EmulatorVT420:
+	case kEmulation_FullTypeVT100:
+	case kEmulation_FullTypeXTermOriginal:
+	case kEmulation_FullTypeXTermColor:
+	case kEmulation_FullTypeXTerm256Color:
+	case kEmulation_FullTypeANSIBBS:
+	case kEmulation_FullTypeANSISCO:
+	case kEmulation_FullTypeVT102:
+	case kEmulation_FullTypeVT220:
+	case kEmulation_FullTypeVT320:
+	case kEmulation_FullTypeVT420:
 	default:
 		// Echoing data with correct translation, etc. is not trivial and
 		// it is not recommended that most emulators try to do this any
@@ -6404,34 +6405,34 @@ specified terminal type.
 */
 My_EmulatorResetProcPtr
 My_Emulator::
-returnResetHandler		(Terminal_Emulator		inPrimaryEmulation)
+returnResetHandler		(Emulation_FullType		inPrimaryEmulation)
 {
 	My_EmulatorResetProcPtr		result = nullptr;
 	
 	
 	switch (inPrimaryEmulation)
 	{
-	case kTerminal_EmulatorVT100:
-	case kTerminal_EmulatorVT102:
-	case kTerminal_EmulatorANSIBBS: // TEMPORARY
-	case kTerminal_EmulatorANSISCO: // TEMPORARY
+	case kEmulation_FullTypeVT100:
+	case kEmulation_FullTypeVT102:
+	case kEmulation_FullTypeANSIBBS: // TEMPORARY
+	case kEmulation_FullTypeANSISCO: // TEMPORARY
 		result = My_VT100::hardSoftReset;
 		break;
 	
-	case kTerminal_EmulatorVT220:
-	case kTerminal_EmulatorVT320: // TEMPORARY
-	case kTerminal_EmulatorVT420: // TEMPORARY
+	case kEmulation_FullTypeVT220:
+	case kEmulation_FullTypeVT320: // TEMPORARY
+	case kEmulation_FullTypeVT420: // TEMPORARY
 		result = My_VT220::hardSoftReset;
 		break;
 	
-	case kTerminal_EmulatorXTermOriginal: // TEMPORARY
-	case kTerminal_EmulatorXTermColor: // TEMPORARY
-	case kTerminal_EmulatorXTerm256Color: // TEMPORARY
+	case kEmulation_FullTypeXTermOriginal: // TEMPORARY
+	case kEmulation_FullTypeXTermColor: // TEMPORARY
+	case kEmulation_FullTypeXTerm256Color: // TEMPORARY
 		// no XTerm-specific reset yet
 		result = My_VT220::hardSoftReset;
 		break;
 	
-	case kTerminal_EmulatorDumb:
+	case kEmulation_FullTypeDumb:
 	default:
 		// ???
 		result = My_DefaultEmulator::hardSoftReset;
@@ -6449,36 +6450,36 @@ for the specified terminal type.
 */
 My_EmulatorStateDeterminantProcPtr
 My_Emulator::
-returnStateDeterminant		(Terminal_Emulator		inPrimaryEmulation)
+returnStateDeterminant		(Emulation_FullType		inPrimaryEmulation)
 {
 	My_EmulatorStateDeterminantProcPtr		result = nullptr;
 	
 	
 	switch (inPrimaryEmulation)
 	{
-	case kTerminal_EmulatorVT100:
-	case kTerminal_EmulatorANSIBBS: // TEMPORARY
-	case kTerminal_EmulatorANSISCO: // TEMPORARY
+	case kEmulation_FullTypeVT100:
+	case kEmulation_FullTypeANSIBBS: // TEMPORARY
+	case kEmulation_FullTypeANSISCO: // TEMPORARY
 		result = My_VT100::stateDeterminant;
 		break;
 	
-	case kTerminal_EmulatorVT102:
+	case kEmulation_FullTypeVT102:
 		result = My_VT102::stateDeterminant;
 		break;
 	
-	case kTerminal_EmulatorVT220:
-	case kTerminal_EmulatorVT320: // TEMPORARY
-	case kTerminal_EmulatorVT420: // TEMPORARY
+	case kEmulation_FullTypeVT220:
+	case kEmulation_FullTypeVT320: // TEMPORARY
+	case kEmulation_FullTypeVT420: // TEMPORARY
 		result = My_VT220::stateDeterminant;
 		break;
 	
-	case kTerminal_EmulatorXTermOriginal:
-	case kTerminal_EmulatorXTermColor:
-	case kTerminal_EmulatorXTerm256Color:
+	case kEmulation_FullTypeXTermOriginal:
+	case kEmulation_FullTypeXTermColor:
+	case kEmulation_FullTypeXTerm256Color:
 		result = My_XTerm::stateDeterminant;
 		break;
 	
-	case kTerminal_EmulatorDumb:
+	case kEmulation_FullTypeDumb:
 		result = My_DumbTerminal::stateDeterminant;
 		break;
 	
@@ -6499,36 +6500,36 @@ for the specified terminal type.
 */
 My_EmulatorStateTransitionProcPtr
 My_Emulator::
-returnStateTransitionHandler	(Terminal_Emulator		inPrimaryEmulation)
+returnStateTransitionHandler	(Emulation_FullType		inPrimaryEmulation)
 {
 	My_EmulatorStateTransitionProcPtr		result = nullptr;
 	
 	
 	switch (inPrimaryEmulation)
 	{
-	case kTerminal_EmulatorVT100:
-	case kTerminal_EmulatorANSIBBS: // TEMPORARY
-	case kTerminal_EmulatorANSISCO: // TEMPORARY
+	case kEmulation_FullTypeVT100:
+	case kEmulation_FullTypeANSIBBS: // TEMPORARY
+	case kEmulation_FullTypeANSISCO: // TEMPORARY
 		result = My_VT100::stateTransition;
 		break;
 	
-	case kTerminal_EmulatorVT102:
+	case kEmulation_FullTypeVT102:
 		result = My_VT102::stateTransition;
 		break;
 	
-	case kTerminal_EmulatorVT220:
-	case kTerminal_EmulatorVT320: // TEMPORARY
-	case kTerminal_EmulatorVT420: // TEMPORARY
+	case kEmulation_FullTypeVT220:
+	case kEmulation_FullTypeVT320: // TEMPORARY
+	case kEmulation_FullTypeVT420: // TEMPORARY
 		result = My_VT220::stateTransition;
 		break;
 	
-	case kTerminal_EmulatorXTermOriginal:
-	case kTerminal_EmulatorXTermColor:
-	case kTerminal_EmulatorXTerm256Color:
+	case kEmulation_FullTypeXTermOriginal:
+	case kEmulation_FullTypeXTermColor:
+	case kEmulation_FullTypeXTerm256Color:
 		result = My_XTerm::stateTransition;
 		break;
 	
-	case kTerminal_EmulatorDumb:
+	case kEmulation_FullTypeDumb:
 		result = My_DumbTerminal::stateTransition;
 		break;
 	
@@ -7085,17 +7086,17 @@ type if none was found.
 
 (3.1)
 */
-Terminal_Emulator
+Emulation_FullType
 My_ScreenBuffer::
 returnEmulator	(Preferences_ContextRef		inTerminalConfig)
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	Terminal_Emulator		result = kTerminal_EmulatorVT100;
+	Emulation_FullType		result = kEmulation_FullTypeVT100;
 	
 	
 	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalEmulatorType,
 												sizeof(result), &result);
-	if (kPreferences_ResultOK != prefsResult) result = kTerminal_EmulatorVT100;
+	if (kPreferences_ResultOK != prefsResult) result = kEmulation_FullTypeVT100;
 	
 	return result;
 }// returnEmulator
@@ -15769,7 +15770,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			(ctr > 0) &&
 			(*c & 0x80) &&
 			(*c < 0xA0) &&
-			(inDataPtr->emulator.primaryType == kTerminal_EmulatorVT220)) // VT220 eightbit starts here
+			(inDataPtr->emulator.primaryType == kEmulation_FullTypeVT220)) // VT220 eightbit starts here
 		{											
 			switch (*c)								
 			{									
@@ -15833,7 +15834,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			while ((escflg == 0) &&
 					(ctr > 0) &&
 					(*c >= 32) &&
-					!((*c & 0x80) && (*c < 0xA0) && (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT220)))
+					!((*c & 0x80) && (*c < 0xA0) && (inDataPtr->emulator.primaryType == kEmulation_FullTypeVT220)))
 			{
 				// print lines of text one at a time
 				attrib = inDataPtr->current.drawingAttributes; /* current writing attribute */
@@ -15863,7 +15864,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				while ((ctr > 0) &&
 						(*c >= 32) &&
 						(!wrapped) &&
-						!((*c & 0x80) && (*c < 0xA0) && (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT220)))
+						!((*c & 0x80) && (*c < 0xA0) && (inDataPtr->emulator.primaryType == kEmulation_FullTypeVT220)))
 				{
 					// write characters on a single line
 					if (inDataPtr->modeInsertNotReplace)
@@ -16497,8 +16498,8 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				goto ShortCut;
 			
 			case 'c':
-				if (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT220) My_VT220::primaryDeviceAttributes(inDataPtr);
-				else if (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT100) My_VT100::deviceAttributes(inDataPtr);
+				if (inDataPtr->emulator.primaryType == kEmulation_FullTypeVT220) My_VT220::primaryDeviceAttributes(inDataPtr);
+				else if (inDataPtr->emulator.primaryType == kEmulation_FullTypeVT100) My_VT100::deviceAttributes(inDataPtr);
 				goto ShortCut;
 			
 			case 'n':
@@ -17574,10 +17575,10 @@ you may not care which specific VT terminal
 
 (3.0)
 */
-inline Terminal_EmulatorType
-returnTerminalType		(Terminal_Emulator	inEmulator)
+inline Emulation_BaseType
+returnTerminalType		(Emulation_FullType		inEmulator)
 {
-	return ((inEmulator & kTerminal_EmulatorTypeMask) >> kTerminal_EmulatorTypeByteShift);
+	return ((inEmulator & kEmulation_BaseTypeMask) >> kEmulation_BaseTypeByteShift);
 }// returnTerminalType
 
 
@@ -17591,10 +17592,10 @@ a VT100 or VT220.
 
 (3.0)
 */
-inline Terminal_EmulatorVariant
-returnTerminalVariant		(Terminal_Emulator	inEmulator)
+inline Emulation_Variant
+returnTerminalVariant	(Emulation_FullType		inEmulator)
 {
-	return ((inEmulator & kTerminal_EmulatorVariantMask) >> kTerminal_EmulatorVariantByteShift);
+	return ((inEmulator & kEmulation_VariantMask) >> kEmulation_VariantByteShift);
 }// returnTerminalVariant
 
 
