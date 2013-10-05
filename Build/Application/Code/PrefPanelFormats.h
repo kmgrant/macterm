@@ -122,6 +122,10 @@ changes to an interface declared in a ".mm" file.
 	- (PreferenceValue_Color*)
 	blinkingForegroundColor; // binding
 	- (PreferenceValue_Color*)
+	cursorBackgroundColor; // binding
+	- (PreferenceValue_Flag*)
+	autoSetCursorColor; // binding
+	- (PreferenceValue_Color*)
 	matteBackgroundColor; // binding
 	- (PreferenceValue_String*)
 	fontFamily; // binding

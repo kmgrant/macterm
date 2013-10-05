@@ -50,6 +50,12 @@
 		<real>0.64007020000000003</real>
 		<real>1</real>
 	</array>
+	<key>terminal-color-cursor-background-rgb</key>
+	<array>
+		<real>0</real>
+		<real>1</real>
+		<real>1</real>
+	</array>
 	<key>terminal-color-matte-background-rgb</key>
 	<array>
 		<real>0.36012820000000001</real>

@@ -329,6 +329,10 @@ table(deftable).
 (defbottom). |\2(desc). Color for rendering almost all text.|
 (deftop). |(key). @terminal-color-normal-foreground-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
 (defbottom). |\2(desc). Color for rendering almost all text.|
+(deftop). |(key). @terminal-color-cursor-auto@|(types). _true or false_|
+(defbottom). |\2(desc). Color for rendering the cursor is automatically derived from its surroundings.  If set to true, overrides any color setting.|
+(deftop). |(key). @terminal-color-cursor-background-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |\2(desc). Color for rendering the cursor.  See also @terminal-color-cursor-auto@.|
 (deftop). |(key). @terminal-color-matte-background-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
 (defbottom). |\2(desc). Color for rendering the border.|
 (deftop). |(key). @terminal-fade-alpha@|(types). _float_|

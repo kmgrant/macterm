@@ -62,6 +62,12 @@
 		<real>0.13571369999999999</real>
 		<real>0.12951860000000001</real>
 	</array>
+	<key>terminal-color-cursor-background-rgb</key>
+	<array>
+		<real>0</real>
+		<real>0.5</real>
+		<real>1</real>
+	</array>
 	<key>terminal-color-matte-background-rgb</key>
 	<array>
 		<real>0.63347830000000005</real>

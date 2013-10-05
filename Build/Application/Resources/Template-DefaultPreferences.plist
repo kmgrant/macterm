@@ -402,6 +402,14 @@
 		<real>0</real>
 		<real>0</real>
 	</array>
+	<key>terminal-color-cursor-auto</key>
+	<true/>
+	<key>terminal-color-cursor-background-rgb</key>
+	<array>
+		<real>0.0</real>
+		<real>0.0</real>
+		<real>0.0</real>
+	</array>
 	<key>terminal-color-matte-background-rgb</key>
 	<array>
 		<real>1.0</real>

@@ -141,7 +141,7 @@ terms of the existing blink timer.
 Float32 const		kTerminalView_BlinkAlphaDelta = 1.0 / STATIC_CAST(kMy_BlinkingColorCount, Float32);
 
 /*!
-Indices into the "customColors" array of the main structure.
+Indices into the "coreColors" array of the main structure.
 Valid indices range from 0 to 256, and depending on the terminal
 configuration the upper limit may CHANGE (typically to 16 colors,
 or none at all!).  Check the array size before using it!!!
@@ -200,6 +200,24 @@ enum My_SelectionMode
 	kMy_SelectionModeChangeBeginning	= 1,	//!< keyboard actions morph the beginning anchor only
 	kMy_SelectionModeChangeEnd			= 2		//!< keyboard actions morph the end anchor only
 };
+
+// used for smooth animations of text and the cursor
+Float32 const	kAlphaByPhase[kMy_BlinkingColorCount] =
+				{
+					// changing alpha values, used for cursor rendering;
+					// arbitrary (progression is roughly quadratic to
+					// make one end of the animation loop more gradual)
+					0.11, 0.11, 0.11, 0.11, 0.39,
+					0.4725, 0.56, 0.6525, 0.75, 0.8525
+				};
+Float32 const	kBlendingByPhase[kMy_BlinkingColorCount] =
+				{
+					// percentage of foreground blended with background;
+					// arbitrary (progression is roughly quadratic to
+					// make one end of the animation loop more gradual)
+					0.11, 0.1725, 0.24, 0.3125, 0.39,
+					0.4725, 0.56, 0.6525, 0.75, 0.8525
+				};
 
 } // anonymous namespace
 
@@ -297,7 +315,6 @@ struct My_TerminalView
 		struct
 		{
 			Float32					blinkAlpha;	// between 1.0 (opaque) and 0.0 (transparent), cursor flashing stage
-			Float32					blinkAlphaDelta;	// +/-kTerminalView_BlinkAlphaDelta, current direction of change
 		} cursor;
 	} animation;
 	
@@ -334,6 +351,7 @@ struct My_TerminalView
 			MyCursorState		currentState;	// whether the cursor is visible
 			MyCursorState		ghostState;		// whether the cursor ghost is visible
 			Boolean				inhibited;		// if true, the cursor can never be displayed regardless of its state
+			Boolean				isCustomColor;	// if true, the cursor color is set by the user instead of being inherited from the screen
 		} cursor;
 		
 TerminalView_RowIndex	topVisibleEdgeInRows;	// 0 if scrolled to the main screen, negative if scrollback; do not change this
@@ -548,7 +566,7 @@ void				updateDisplay						(My_TerminalViewPtr);
 void				updateDisplayInRegion				(My_TerminalViewPtr, RgnHandle);
 void				updateDisplayTimer					(EventLoopTimerRef, void*);
 void				useTerminalTextAttributes			(My_TerminalViewPtr, CGContextRef, TerminalTextAttributes);
-void				useTerminalTextColors				(My_TerminalViewPtr, CGContextRef, TerminalTextAttributes, Float32 = 1.0);
+void				useTerminalTextColors				(My_TerminalViewPtr, CGContextRef, TerminalTextAttributes, Boolean, Float32 = 1.0);
 void				visualBell							(TerminalViewRef);
 
 } // anonymous namespace
@@ -1917,6 +1935,16 @@ TerminalView_ReturnFormatConfiguration		(TerminalViewRef	inView)
 		
 		prefsResult = Preferences_ContextSetData(result, kPreferences_TagFontSize,
 													sizeof(fontSize), &fontSize);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	// cursor auto-color flag is also set programmatically
+	{
+		Boolean		isAutoSet = (false == viewPtr->screen.cursor.isCustomColor);
+		
+		
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagAutoSetCursorColor,
+													sizeof(isAutoSet), &isAutoSet);
 		assert(kPreferences_ResultOK == prefsResult);
 	}
 	
@@ -4077,6 +4105,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.cursor.ghostState = kMyCursorStateInvisible;
 	this->screen.cursor.boundsAsRegion = Memory_NewRegion();
 	this->screen.cursor.inhibited = false;
+	this->screen.cursor.isCustomColor = false;
 	this->screen.currentRenderContext = nullptr;
 	this->text.toCurrentSearchResult = this->text.searchResults.end();
 	
@@ -4235,7 +4264,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		this->animation.rendering.stageDelta = +1;
 		this->animation.rendering.region = Memory_NewRegion();
 		this->animation.cursor.blinkAlpha = 1.0;
-		this->animation.cursor.blinkAlphaDelta = -kTerminalView_BlinkAlphaDelta;
 	}
 	
 	if (false == this->isCocoa)
@@ -4456,17 +4484,7 @@ animateBlinkingItems	(EventLoopTimerRef		inTimer,
 		//
 		
 		// adjust the alpha setting to be used for cursor-drawing
-		ptr->animation.cursor.blinkAlpha += ptr->animation.cursor.blinkAlphaDelta;
-		if (ptr->animation.cursor.blinkAlpha < 0.0)
-		{
-			ptr->animation.cursor.blinkAlphaDelta = +kTerminalView_BlinkAlphaDelta;
-			ptr->animation.cursor.blinkAlpha = 0.0;
-		}
-		else if (ptr->animation.cursor.blinkAlpha >= 1.0)
-		{
-			ptr->animation.cursor.blinkAlphaDelta = -kTerminalView_BlinkAlphaDelta;
-			ptr->animation.cursor.blinkAlpha = 1.0;
-		}
+		ptr->animation.cursor.blinkAlpha = kAlphaByPhase[ptr->animation.rendering.stage];
 		
 		// invalidate the cursor
 		updateDisplayInRegion(ptr, ptr->screen.cursor.boundsAsRegion);
@@ -4616,6 +4634,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 {
 	TerminalView_ColorIndex		currentColorID = 0;
 	UInt16						currentIndex = 0;
+	Preferences_Result			prefsResult = kPreferences_ResultOK;
 	Preferences_Tag				currentPrefsTag = '----';
 	RGBColor					colorValue;
 	UInt16						result = 0;
@@ -4695,6 +4714,35 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 		
 		setScreenBaseColor(inTerminalViewPtr, currentColorID, &asDeviceColor);
 		++result;
+	}
+	
+	currentColorID = kTerminalView_ColorIndexCursorBackground;
+	currentPrefsTag = kPreferences_TagTerminalColorCursorBackground;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
+		
+		
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &asDeviceColor);
+		++result;
+	}
+	
+	// when reading the cursor color, also copy in the “auto-set color” flag
+	{
+		Boolean		isAutoSet = false;
+		
+		
+		prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagAutoSetCursorColor,
+													sizeof(isAutoSet), &isAutoSet, inSearchForDefaults);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			inTerminalViewPtr->screen.cursor.isCustomColor = (false == isAutoSet);
+		}
+		else
+		{
+			inTerminalViewPtr->screen.cursor.isCustomColor = false;
+		}
 	}
 	
 	currentColorID = kTerminalView_ColorIndexMatteBackground;
@@ -5594,7 +5642,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 	// set up context foreground and background colors appropriately
 	// for the specified terminal attributes; this takes into account
 	// things like bold and highlighted text, etc.
-	useTerminalTextColors(viewPtr, viewPtr->screen.currentRenderContext, inAttributes, 1.0/* alpha */);
+	useTerminalTextColors(viewPtr, viewPtr->screen.currentRenderContext, inAttributes, false/* is cursor */, 1.0/* alpha */);
 	
 	// erase and redraw the current rendering line, but only the
 	// specified range (starting column and character count)
@@ -10322,6 +10370,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (cursorAttributes & kTerminalTextAttributeInverseVideo) cursorAttributes &= ~kTerminalTextAttributeInverseVideo;
 						else cursorAttributes |= kTerminalTextAttributeInverseVideo;
 						useTerminalTextColors(viewPtr, drawingContext, cursorAttributes,
+												true/* is cursor */,
 												cursorBlinks(viewPtr)
 												? viewPtr->animation.cursor.blinkAlpha
 												: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
@@ -10545,7 +10594,6 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 				// take the opportunity to reset the cursor state, so it is fully visible as
 				// keys are being pressed; also reset the stage so that the timing is right
 				viewPtr->animation.cursor.blinkAlpha = 1.0;
-				viewPtr->animation.cursor.blinkAlphaDelta = -kTerminalView_BlinkAlphaDelta;
 				viewPtr->animation.rendering.stage = 0;
 				
 				// ignore Caps Lock and extra keys for the sake of the comparisons below...
@@ -12088,14 +12136,6 @@ setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 	if ((inColorEntryNumber == kTerminalView_ColorIndexBlinkingText) ||
 		(inColorEntryNumber == kTerminalView_ColorIndexBlinkingBackground))
 	{
-		Float32 const		kBlendingByPhase[kMy_BlinkingColorCount] =
-							{
-								// percentage of foreground blended with background;
-								// arbitrary (progression is roughly quadratic to
-								// make one end of the animation loop more gradual)
-								0.11, 0.1725, 0.24, 0.3125, 0.39,
-								0.4725, 0.56, 0.6525, 0.75, 0.8525
-							};
 		CGDirectDisplayID	device = CGMainDisplayID();
 		CGDeviceColor		colorValue;
 		
@@ -12854,6 +12894,7 @@ void
 useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 						 CGContextRef				inDrawingContext,
 						 TerminalTextAttributes		inAttributes,
+						 Boolean					inIsCursor,
 						 Float32					inDesiredAlpha)
 {
 	if (inTerminalViewPtr->isCocoa)
@@ -12985,7 +13026,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			colorRGB.green = 0;
 			colorRGB.blue = 0;
 			RGBForeColor(&colorRGB);
-			CGContextSetRGBStrokeColor(inDrawingContext, 0/* red */, 0/* green */, 0/* blue */, inDesiredAlpha);
+			CGContextSetRGBStrokeColor(inDrawingContext, 0/* red */, 0/* green */, 0/* blue */, 1.0/* alpha */);
 			
 			// ...and allow background (which will be the drag highlight) to show through
 			inTerminalViewPtr->screen.currentRenderNoBackground = true;
@@ -13144,14 +13185,36 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			// port for now, and simply “steal” the colors for the CG context
 			{
 				CGDeviceColor	floatRGB;
+				Boolean			useScreenBackColor = true;
 				
 				
 				GetForeColor(&colorRGB);
 				floatRGB = ColorUtilities_CGDeviceColorMake(colorRGB);
 				CGContextSetRGBStrokeColor(inDrawingContext, floatRGB.red, floatRGB.green, floatRGB.blue, inDesiredAlpha);
 				
-				GetBackColor(&colorRGB);
-				floatRGB = ColorUtilities_CGDeviceColorMake(colorRGB);
+				if (inIsCursor)
+				{
+					if (inTerminalViewPtr->screen.cursor.isCustomColor)
+					{
+						// read the user’s preferred cursor color
+						getScreenCustomColor(inTerminalViewPtr, kTerminalView_ColorIndexCursorBackground, &floatRGB);
+						useScreenBackColor = false;
+					}
+					else
+					{
+						// base the cursor color on the screen (the cursor-drawing
+						// code uses inverse video so the current background is
+						// actually a foreground color)
+						useScreenBackColor = true;
+					}
+				}
+				
+				if (useScreenBackColor)
+				{
+					GetBackColor(&colorRGB);
+					floatRGB = ColorUtilities_CGDeviceColorMake(colorRGB);
+				}
+				
 				CGContextSetRGBFillColor(inDrawingContext, floatRGB.red, floatRGB.green, floatRGB.blue, inDesiredAlpha);
 			}
 		}
@@ -14016,6 +14079,7 @@ drawRect:(NSRect)	rect
 			if (cursorAttributes & kTerminalTextAttributeInverseVideo) cursorAttributes &= ~kTerminalTextAttributeInverseVideo;
 			else cursorAttributes |= kTerminalTextAttributeInverseVideo;
 			useTerminalTextColors(viewPtr, drawingContext, cursorAttributes,
+									true/* is cursor */,
 									cursorBlinks(viewPtr)
 									? viewPtr->animation.cursor.blinkAlpha
 									: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);

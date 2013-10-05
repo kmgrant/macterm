@@ -102,7 +102,8 @@ enum
 	kTerminalView_ColorIndexBlinkingBackground		= 3,
 	kTerminalView_ColorIndexBoldText				= 4,
 	kTerminalView_ColorIndexBoldBackground			= 5,
-	kTerminalView_ColorIndexMatteBackground			= 6,
+	kTerminalView_ColorIndexCursorBackground		= 6,
+	kTerminalView_ColorIndexMatteBackground			= 7,
 	
 	// useful constants
 	kTerminalView_ColorIndexFirstValid				= kTerminalView_ColorIndexNormalText,

@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20131005',
     '20130825',
     '20130720',
     '20130719',
@@ -482,6 +483,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20131005': [
+        'Preferences window Formats pane has been extended to allow a custom color for the terminal cursor, as well as a checkbox to keep the current "automatic" color setting.',
+        'Terminal view cursor, if set to blink, is now visible for longer periods of time and the animation is smoother.',
+    ],
     '20130825': [
         'Fixed a possible hang when, for instance, pasting text containing high-plane UTF-8 sequences.',
     ],

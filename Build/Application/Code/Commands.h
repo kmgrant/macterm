@@ -243,6 +243,7 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandHideHelpTags					'HTag'
 
 // color box
+#define kCommandColorCursorBackground			'Curs'
 #define kCommandColorMatteBackground			'Mtte'
 #define kCommandColorBlinkingForeground			'BlTx'
 #define kCommandColorBlinkingBackground			'BlBk'
@@ -389,6 +390,7 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandDisplayPrefPanelTerminalsScreen	'SPTS'		// “Preferences“ window
 #define kCommandDisplayPrefPanelTranslations	'SPrX'		// “Preferences“ window
 #define kCommandDisplayPrefPanelWorkspaces		'SPrW'		// “Preferences“ window
+#define kCommandAutoSetCursorColor				'AuCr'		// multiple interfaces
 #define kCommandRestoreToDefault				'MkDf'		// multiple interfaces
 #define kCommandPrefCursorBlock					'CrBl'		// “Preferences” window
 #define kCommandPrefCursorUnderline				'CrUn'		// “Preferences” window

@@ -117,6 +117,10 @@ HIViewID const	idMyBevelButtonBlinkingBackground	= { 'BlBk', 0/* ID */ };
 HIViewID const	idMyCheckBoxDefaultMatteColors		= { 'XDMC', 0/* ID */ };
 HIViewID const	idMyBevelButtonMatteForeground		= { 'MtTx', 0/* ID */ };
 HIViewID const	idMyBevelButtonMatteBackground		= { 'MtBk', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultCursorColors		= { 'XDCC', 0/* ID */ };
+HIViewID const	idMyBevelButtonCursorForeground		= { 'CrTx', 0/* ID */ };
+HIViewID const	idMyBevelButtonCursorBackground		= { 'CrBk', 0/* ID */ };
+HIViewID const	idMyCheckBoxAutoSetCursorColor		= { 'XACr', 0/* ID */ };
 HIViewID const	idMyUserPaneSampleTerminalView		= { 'Smpl', 0/* ID */ };
 HIViewID const	idMyHelpTextSampleTerminalView		= { 'HSmp', 0/* ID */ };
 HIViewID const	idMyCheckBoxDefaultANSIBlackColors	= { 'XDAB', 0/* ID */ };
@@ -249,6 +253,9 @@ struct My_FormatsPanelNormalUI
 	readPreferencesForBoldColors	(Preferences_ContextRef, Boolean = true);
 	
 	void
+	readPreferencesForCursorColors	(Preferences_ContextRef, Boolean = true);
+	
+	void
 	readPreferencesForFontCharacterWidth	(Preferences_ContextRef, Boolean = true);
 	
 	void
@@ -268,6 +275,9 @@ struct My_FormatsPanelNormalUI
 	
 	void
 	saveFieldPreferences	(Preferences_ContextRef);
+	
+	void
+	setAutoCursorColor	(Boolean, Boolean);
 	
 	void
 	setFontName		(CFStringRef, Boolean);
@@ -599,6 +609,8 @@ PrefPanelFormats_NewNormalTagSet ()
 	tagList.push_back(kPreferences_TagTerminalColorBoldBackground);
 	tagList.push_back(kPreferences_TagTerminalColorBlinkingForeground);
 	tagList.push_back(kPreferences_TagTerminalColorBlinkingBackground);
+	tagList.push_back(kPreferences_TagTerminalColorCursorBackground);
+	tagList.push_back(kPreferences_TagAutoSetCursorColor);
 	tagList.push_back(kPreferences_TagTerminalColorMatteBackground);
 	
 	result = Preferences_NewTagSet(tagList);
@@ -1574,7 +1586,8 @@ _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH 
 	assert(_windowFocusHandler.isInstalled());
 	assert(_containerResizer.isInstalled());
 	
-	// this button is not used
+	// these buttons are not used
+	DeactivateControl(HIViewWrap(idMyBevelButtonCursorForeground, inOwningWindow));
 	DeactivateControl(HIViewWrap(idMyBevelButtonMatteForeground, inOwningWindow));
 }// My_FormatsPanelNormalUI 1-argument constructor
 
@@ -1638,6 +1651,11 @@ colorBoxChangeNotify	(HIViewRef			inColorBoxThatChanged,
 			case kPreferences_TagTerminalColorBlinkingBackground:
 				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultBlinkingColors, kOwningWindow),
 														kControlCheckBoxMixedValue);
+				break;
+			
+			case kPreferences_TagTerminalColorCursorBackground:
+				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultCursorColors, kOwningWindow),
+														kControlCheckBoxUncheckedValue);
 				break;
 			
 			case kPreferences_TagTerminalColorMatteBackground:
@@ -1715,6 +1733,7 @@ createContainerView		(Panel_Ref		inPanel,
 								idMyBevelButtonNormalText, idMyBevelButtonNormalBackground,
 								idMyBevelButtonBoldText, idMyBevelButtonBoldBackground,
 								idMyBevelButtonBlinkingText, idMyBevelButtonBlinkingBackground,
+								idMyBevelButtonCursorBackground,
 								idMyBevelButtonMatteBackground
 							};
 		
@@ -2037,6 +2056,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		this->readPreferencesForNormalColors(inSettings, false/* update sample area */);
 		this->readPreferencesForBoldColors(inSettings, false/* update sample area */);
 		this->readPreferencesForBlinkingColors(inSettings, false/* update sample area */);
+		this->readPreferencesForCursorColors(inSettings, false/* update sample area */);
 		this->readPreferencesForMatteColors(inSettings, false/* update sample area */);
 		
 		// update the sample area
@@ -2109,6 +2129,58 @@ readPreferencesForBoldColors	(Preferences_ContextRef		inSettings,
 		}
 	}
 }// My_FormatsPanelNormalUI::readPreferencesForBoldColors
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.1)
+*/
+void
+My_FormatsPanelNormalUI::
+readPreferencesForCursorColors	(Preferences_ContextRef		inSettings,
+								 Boolean					inUpdateSample)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
+		size_t				actualSize = 0;
+		Boolean				isAutoSet = false;
+		Boolean				isDefault = false;
+		Boolean				isDefaultAutoCursor = false;
+		
+		
+		// set cursor color
+		setColorBox(inSettings, kPreferences_TagTerminalColorCursorBackground,
+					HIViewWrap(idMyBevelButtonCursorBackground, kOwningWindow), isDefault);
+		
+		// set “Automatic” check box
+		prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagAutoSetCursorColor,
+													sizeof(isAutoSet), &isAutoSet, true/* search defaults too */,
+													&actualSize, &isDefaultAutoCursor);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			this->setAutoCursorColor(isAutoSet, isDefaultAutoCursor);
+		}
+		else
+		{
+			Console_WriteValue("unable to read auto-cursor-color preference, error", prefsResult);
+			this->setAutoCursorColor(false, false/* is default */);
+		}
+		
+		// set inheritance
+		setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultCursorColors, kOwningWindow),
+								BooleansToCheckBoxValue(isDefault, isDefaultAutoCursor));
+		
+		// update the sample terminal view
+		if (inUpdateSample)
+		{
+			this->setSampleArea(inSettings, kPreferences_TagTerminalColorCursorBackground,
+								kPreferences_TagAutoSetCursorColor);
+		}
+	}
+}// My_FormatsPanelNormalUI::readPreferencesForCursorColors
 
 
 /*!
@@ -2384,6 +2456,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				}
 				break;
 			
+			case kCommandColorCursorBackground:
 			case kCommandColorMatteBackground:
 			case kCommandColorBlinkingForeground:
 			case kCommandColorBlinkingBackground:
@@ -2395,6 +2468,39 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// and then (if the user accepts a new color) update open windows
 				ColorBox_UserSetColor(buttonHit);
 				result = noErr; // event is handled
+				break;
+			
+			case kCommandAutoSetCursorColor:
+				assert(received.attributes & kHICommandFromControl);
+				{
+					HIViewRef const					kCheckBox = received.source.control;
+					Boolean const					kIsSet = (kControlCheckBoxCheckedValue == GetControl32BitValue(kCheckBox));
+					My_FormatsPanelNormalDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																				My_FormatsPanelNormalDataPtr);
+					Preferences_ContextRef			targetContext = dataPtr->dataModel;
+					Preferences_ContextRef			defaultContext = nullptr;
+					Preferences_Result				prefsResult = kPreferences_ResultOK;
+					
+					
+					{
+						Quills::Prefs::Class const	kPrefsClass = Preferences_ContextReturnClass(targetContext);
+						
+						
+						prefsResult = Preferences_GetDefaultContext(&defaultContext, kPrefsClass);
+						assert(kPreferences_ResultOK == prefsResult);
+					}
+					
+					interfacePtr->setAutoCursorColor(kIsSet, (defaultContext == targetContext));
+					prefsResult = Preferences_ContextSetData(targetContext, kPreferences_TagAutoSetCursorColor,
+																sizeof(kIsSet), &kIsSet);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_Warning(Console_WriteLine, "failed to set auto-cursor-color flag");
+					}
+					
+					// update sample terminal
+					interfacePtr->setSampleArea(targetContext, kPreferences_TagAutoSetCursorColor);
+				}
 				break;
 			
 			case kCommandRestoreToDefault:
@@ -2493,6 +2599,14 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							interfacePtr->readPreferencesForBlinkingColors(defaultContext);
 							break;
 						
+						case kPreferences_TagTerminalColorCursorBackground:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorCursorBackground);
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagAutoSetCursorColor);
+							interfacePtr->readPreferencesForCursorColors(defaultContext);
+							break;
+						
 						case kPreferences_TagTerminalColorMatteBackground:
 							(Preferences_Result)Preferences_ContextDeleteData
 												(targetContext, defaultPreferencesTag);
@@ -2564,6 +2678,33 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 		}
 	}
 }// My_FormatsPanelNormalUI::saveFieldPreferences
+
+
+/*!
+Updates the “automatic” cursor color display and its
+Default checkbox, based on the given setting.
+
+(4.1)
+*/
+void
+My_FormatsPanelNormalUI::
+setAutoCursorColor	(Boolean	inIsAutoSet,
+					 Boolean	inIsDefault)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	
+	
+	SetControl32BitValue(HIViewWrap(idMyCheckBoxAutoSetCursorColor, kOwningWindow), BooleanToCheckBoxValue(inIsAutoSet));
+	if (inIsAutoSet)
+	{
+		DeactivateControl(HIViewWrap(idMyBevelButtonCursorBackground, kOwningWindow));
+	}
+	else
+	{
+		ActivateControl(HIViewWrap(idMyBevelButtonCursorBackground, kOwningWindow));
+	}
+	setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultCursorColors, kOwningWindow), BooleanToCheckBoxValue(inIsDefault));
+}// My_FormatsPanelNormalUI::setAutoCursorColor
 
 
 /*!
@@ -3614,6 +3755,30 @@ Accessor.
 
 (4.1)
 */
+- (PreferenceValue_Flag*)
+autoSetCursorColor
+{
+	return [self->byKey objectForKey:@"autoSetCursorColor"];
+}// autoSetCursorColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_Color*)
+cursorBackgroundColor
+{
+	return [self->byKey objectForKey:@"cursorBackgroundColor"];
+}// cursorBackgroundColor
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
 - (PreferenceValue_Color*)
 matteBackgroundColor
 {
@@ -3931,6 +4096,14 @@ didLoadContainerView:(NSView*)			aContainerView
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"blinkingForegroundColor"];
 	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+								initWithPreferencesTag:kPreferences_TagTerminalColorCursorBackground
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"cursorBackgroundColor"];
+	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
+								initWithPreferencesTag:kPreferences_TagAutoSetCursorColor
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"autoSetCursorColor"];
+	[self->byKey setObject:[[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorMatteBackground
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"matteBackgroundColor"];
@@ -4179,6 +4352,7 @@ colorBindingKeys
 						@"boldBackgroundColor", @"boldForegroundColor",
 						@"blinkingBackgroundColor", @"blinkingForegroundColor",
 						@"matteBackgroundColor",
+						@"cursorBackgroundColor",
 						nil];
 }// colorBindingKeys
 
@@ -4199,6 +4373,7 @@ primaryDisplayBindingKeys
 	[result addObject:@"fontFamily"];
 	[result addObject:@"fontSize"];
 	[result addObject:@"characterWidth"];
+	[result addObject:@"autoSetCursorColor"];
 	
 	return result;
 }// primaryDisplayBindingKeys
@@ -4233,6 +4408,7 @@ sampleDisplayBindingKeyPaths
 	[result addObject:@"fontFamily.stringValue"];
 	[result addObject:@"fontSize.stringValue"];
 	[result addObject:@"characterWidth.floatValue"];
+	[result addObject:@"autoSetCursorColor.numberValue"];
 	
 	return result;
 }// sampleDisplayBindingKeyPaths

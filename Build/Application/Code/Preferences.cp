@@ -1143,6 +1143,10 @@ Preferences_Init ()
 											CFSTR("terminal-color-bold-foreground-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorBoldBackground,
 											CFSTR("terminal-color-bold-background-rgb"), Quills::Prefs::FORMAT);
+	My_PreferenceDefinition::createFlag(kPreferences_TagAutoSetCursorColor,
+										CFSTR("terminal-color-cursor-auto"), Quills::Prefs::FORMAT);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorCursorBackground,
+											CFSTR("terminal-color-cursor-background-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorMatteBackground,
 											CFSTR("terminal-color-matte-background-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorNormalForeground,
@@ -6162,6 +6166,18 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 			{
 				switch (inDataPreferenceTag)
 				{
+				case kPreferences_TagAutoSetCursorColor:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
+					{
+						assert(typeNetEvents_CFBooleanRef == keyValueType);
+						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
+					}
+					break;
+				
 				case kPreferences_TagFontCharacterWidthMultiplier:
 					if (false == inContextPtr->exists(keyName))
 					{
@@ -6225,6 +6241,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagTerminalColorCursorBackground:
 				case kPreferences_TagTerminalColorMatteBackground:
 				case kPreferences_TagTerminalColorBlinkingForeground:
 				case kPreferences_TagTerminalColorBlinkingBackground:
@@ -8704,6 +8721,16 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 		{
 			switch (inDataPreferenceTag)
 			{
+			case kPreferences_TagAutoSetCursorColor:
+				{
+					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
+					
+					
+					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
+				}
+				break;
+			
 			case kPreferences_TagFontCharacterWidthMultiplier:
 				{
 					Float32 const* const	data = REINTERPRET_CAST(inDataPtr, Float32 const*);
@@ -8734,6 +8761,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
+			case kPreferences_TagTerminalColorCursorBackground:
 			case kPreferences_TagTerminalColorMatteBackground:
 			case kPreferences_TagTerminalColorBlinkingForeground:
 			case kPreferences_TagTerminalColorBlinkingBackground:
