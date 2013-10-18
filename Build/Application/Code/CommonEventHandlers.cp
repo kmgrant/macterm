@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -62,23 +62,7 @@
 
 
 #pragma mark Types
-
-/*!
-This structure is used for CommonEventHandlers_HIViewResizer::install().
-*/
-class CommonEventHandlers_HIViewResizerImpl
-{
-public:
-	CommonEventHandlers_HIViewResizerImpl	(HIViewRef									inForWhichView,
-											 CommonEventHandlers_ChangedBoundsEdges		inEdgesOfInterest,
-											 CommonEventHandlers_HIViewResizeProcPtr	inResizeProc,
-											 void*										inContext);
-	
-	CommonEventHandlers_ChangedBoundsEdges		edgesOfInterest;		//!< flags indicating which boundary edges trigger callbacks
-	CommonEventHandlers_HIViewResizeProcPtr		procPtr;				//!< notified if the monitored control’s size is changed
-	void*										context;				//!< context to pass to the resize handler
-	CarbonEventHandlerWrap						resizeEventHandler;		//!< what the system invokes when resize events occur
-};
+namespace {
 
 /*!
 This structure is used for CommonEventHandlers_InstallNumericalFieldArrowsHandler().
@@ -101,6 +85,31 @@ struct My_PopUpMenuArrowsHandler
 	EventHandlerUPP		controlHitEventHandlerUPP;	//!< reference retained so handler can be disposed later
 };
 typedef struct My_PopUpMenuArrowsHandler*		My_PopUpMenuArrowsHandlerPtr;
+
+typedef MemoryBlockPtrLocker< CommonEventHandlers_NumericalFieldArrowsRef, My_NumericalFieldArrowsHandler >	My_NumericalFieldArrowsHandlerPtrLocker;
+typedef LockAcquireRelease< CommonEventHandlers_NumericalFieldArrowsRef, My_NumericalFieldArrowsHandler >	My_NumericalFieldArrowsHandlerAutoLocker;
+
+typedef MemoryBlockPtrLocker< CommonEventHandlers_PopUpMenuArrowsRef, My_PopUpMenuArrowsHandler >	My_PopUpMenuArrowsHandlerPtrLocker;
+typedef LockAcquireRelease< CommonEventHandlers_PopUpMenuArrowsRef, My_PopUpMenuArrowsHandler >		My_PopUpMenuArrowsHandlerAutoLocker;
+
+} // anonymous namespace
+
+/*!
+This structure is used for CommonEventHandlers_HIViewResizer::install().
+*/
+class CommonEventHandlers_HIViewResizerImpl
+{
+public:
+	CommonEventHandlers_HIViewResizerImpl	(HIViewRef									inForWhichView,
+											 CommonEventHandlers_ChangedBoundsEdges		inEdgesOfInterest,
+											 CommonEventHandlers_HIViewResizeProcPtr	inResizeProc,
+											 void*										inContext);
+	
+	CommonEventHandlers_ChangedBoundsEdges		edgesOfInterest;		//!< flags indicating which boundary edges trigger callbacks
+	CommonEventHandlers_HIViewResizeProcPtr		procPtr;				//!< notified if the monitored control’s size is changed
+	void*										context;				//!< context to pass to the resize handler
+	CarbonEventHandlerWrap						resizeEventHandler;		//!< what the system invokes when resize events occur
+};
 
 /*!
 This structure is used for CommonEventHandlers_WindowResizer::install().
@@ -127,27 +136,23 @@ public:
 	CarbonEventHandlerWrap						resizeEventHandler;		//!< what the system invokes when resize events occur
 };
 
-typedef MemoryBlockPtrLocker< CommonEventHandlers_NumericalFieldArrowsRef, My_NumericalFieldArrowsHandler >	My_NumericalFieldArrowsHandlerPtrLocker;
-typedef LockAcquireRelease< CommonEventHandlers_NumericalFieldArrowsRef, My_NumericalFieldArrowsHandler >	My_NumericalFieldArrowsHandlerAutoLocker;
-
-typedef MemoryBlockPtrLocker< CommonEventHandlers_PopUpMenuArrowsRef, My_PopUpMenuArrowsHandler >	My_PopUpMenuArrowsHandlerPtrLocker;
-typedef LockAcquireRelease< CommonEventHandlers_PopUpMenuArrowsRef, My_PopUpMenuArrowsHandler >		My_PopUpMenuArrowsHandlerAutoLocker;
-
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	My_NumericalFieldArrowsHandlerPtrLocker&	gMyNumericalFieldArrowsHandlerPtrLocks ()	{ static My_NumericalFieldArrowsHandlerPtrLocker x; return x; }
-	My_PopUpMenuArrowsHandlerPtrLocker&		gMyPopUpMenuArrowsHandlerPtrLocks ()	{ static My_PopUpMenuArrowsHandlerPtrLocker x; return x; }
-}
+My_NumericalFieldArrowsHandlerPtrLocker&	gMyNumericalFieldArrowsHandlerPtrLocks ()	{ static My_NumericalFieldArrowsHandlerPtrLocker x; return x; }
+My_PopUpMenuArrowsHandlerPtrLocker&			gMyPopUpMenuArrowsHandlerPtrLocks ()	{ static My_PopUpMenuArrowsHandlerPtrLocker x; return x; }
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static OSStatus		receiveArrowHitForNumericalField	(EventHandlerCallRef, EventRef, void*);
-static OSStatus		receiveArrowHitForPopUpMenu			(EventHandlerCallRef, EventRef, void*);
-static OSStatus		receiveHIViewResizeOrSizeQuery		(EventHandlerCallRef, EventRef, void*);
-static OSStatus		receiveWindowResizeOrSizeQuery		(EventHandlerCallRef, EventRef, void*);
+OSStatus	receiveArrowHitForNumericalField	(EventHandlerCallRef, EventRef, void*);
+OSStatus	receiveArrowHitForPopUpMenu			(EventHandlerCallRef, EventRef, void*);
+OSStatus	receiveHIViewResizeOrSizeQuery		(EventHandlerCallRef, EventRef, void*);
+OSStatus	receiveWindowResizeOrSizeQuery		(EventHandlerCallRef, EventRef, void*);
 
+} // anonymous namespace
 
 
 #pragma mark Public Methods
@@ -733,6 +738,7 @@ CommonEventHandlers_RemovePopUpMenuArrows	(CommonEventHandlers_PopUpMenuArrowsRe
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Handles "kEventControlHit" of "kEventClassControl" for
@@ -741,7 +747,7 @@ current selection in the menu button.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveArrowHitForNumericalField	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									 EventRef				inEvent,
 									 void*					inNumericalFieldArrowsHandlerRef)
@@ -818,7 +824,7 @@ current selection in the menu button.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveArrowHitForPopUpMenu		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					inPopUpMenuArrowsHandlerRef)
@@ -888,7 +894,7 @@ Invokes the control resize callback provided at install time.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 receiveHIViewResizeOrSizeQuery	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					inResizeHandlerRef)
@@ -994,7 +1000,7 @@ window, or returns the requested dimensions.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 receiveWindowResizeOrSizeQuery	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					inResizeHandlerRef)
@@ -1135,5 +1141,7 @@ receiveWindowResizeOrSizeQuery	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCal
 	}
 	return result;
 }// receiveWindowResizeOrSizeQuery
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

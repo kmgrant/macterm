@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -117,6 +117,7 @@
 #define kWindowCloseActionKey			CFSTR("WindowCloseAction")				// 10.2, 10.3
 
 #pragma mark Types
+namespace {
 
 struct My_TerminalFile
 {
@@ -128,28 +129,33 @@ typedef My_TerminalFile*		My_TerminalFilePtr;
 typedef MemoryBlockPtrLocker< TerminalFileRef, My_TerminalFile >	My_TerminalFilePtrLocker;
 typedef LockAcquireRelease< TerminalFileRef, My_TerminalFile >		My_TerminalFileAutoLocker;
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	My_TerminalFilePtrLocker&	gTerminalFilePtrLocks ()	{ static My_TerminalFilePtrLocker x; return x; }
-}
+#pragma mark Variables
+namespace {
+
+My_TerminalFilePtrLocker&	gTerminalFilePtrLocks ()	{ static My_TerminalFilePtrLocker x; return x; }
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static TerminalFile_Result	getBooleanValue			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_Result	getColorArrayValues		(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_Result	getDictionaryValue		(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_Result	getFloat32Value			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_Result	getFloat64Value			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_Result	getSInt16Value			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_Result	getSInt32Value			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_Result	getStringArrayValues	(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_Result	getStringValue			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_Result	getUInt16Value			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_Result	getUInt32Value			(CFDictionaryRef, CFStringRef, void*);
-static CFStringRef			rgbCopyDescription		(void const*);
-static Boolean				rgbEqual				(void const*, void const*);
+TerminalFile_Result		getBooleanValue			(CFDictionaryRef, CFStringRef, void*);
+TerminalFile_Result		getColorArrayValues		(CFDictionaryRef, CFStringRef, void*);
+TerminalFile_Result		getDictionaryValue		(CFDictionaryRef, CFStringRef, void*);
+TerminalFile_Result		getFloat32Value			(CFDictionaryRef, CFStringRef, void*);
+TerminalFile_Result		getFloat64Value			(CFDictionaryRef, CFStringRef, void*);
+TerminalFile_Result		getSInt16Value			(CFDictionaryRef, CFStringRef, void*);
+TerminalFile_Result		getSInt32Value			(CFDictionaryRef, CFStringRef, void*);
+TerminalFile_Result		getStringArrayValues	(CFDictionaryRef, CFStringRef, void*);
+TerminalFile_Result		getStringValue			(CFDictionaryRef, CFStringRef, void*);
+TerminalFile_Result		getUInt16Value			(CFDictionaryRef, CFStringRef, void*);
+TerminalFile_Result		getUInt32Value			(CFDictionaryRef, CFStringRef, void*);
+CFStringRef				rgbCopyDescription		(void const*);
+Boolean					rgbEqual				(void const*, void const*);
+
+} // anonymous namespace
 
 
 
@@ -696,6 +702,7 @@ TerminalFile_ReturnVersion		(TerminalFileRef	inTermFile)
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Returns the value of the specified boolean key.  Results are 
@@ -707,7 +714,7 @@ The "outValue" is expected to really be of type "Boolean*".
 
 (3.0)
 */
-static TerminalFile_Result
+TerminalFile_Result
 getBooleanValue		(CFDictionaryRef	inDictionary,
 					 CFStringRef		inKey,
 					 void*				outValue)
@@ -771,7 +778,7 @@ The "outValue" is expected to really be of type "CFArrayRef*".
 
 (3.0)
 */
-static TerminalFile_Result
+TerminalFile_Result
 getColorArrayValues		(CFDictionaryRef	inDictionary,
 						 CFStringRef		inKey,
 						 void*				outValues)
@@ -899,7 +906,7 @@ The "outValue" is expected to really be of type "CFDictionaryRef*".
 
 (3.0)
 */
-static TerminalFile_Result
+TerminalFile_Result
 getDictionaryValue	(CFDictionaryRef	inDictionary,
 					 CFStringRef		inKey,
 					 void*				outValue)
@@ -938,7 +945,7 @@ The "outValue" is expected to really be of type "Float32*".
 
 (3.0)
 */
-static TerminalFile_Result
+TerminalFile_Result
 getFloat32Value		(CFDictionaryRef	inDictionary,
 					 CFStringRef		inKey,
 					 void*				outValue)
@@ -993,7 +1000,7 @@ The "outValue" is expected to really be of type "Float64*".
 
 (3.0)
 */
-static TerminalFile_Result
+TerminalFile_Result
 getFloat64Value		(CFDictionaryRef	inDictionary,
 					 CFStringRef		inKey,
 					 void*				outValue)
@@ -1048,7 +1055,7 @@ The "outValue" is expected to really be of type "SInt16*".
 
 (3.0)
 */
-static TerminalFile_Result
+TerminalFile_Result
 getSInt16Value	(CFDictionaryRef	inDictionary,
 				 CFStringRef		inKey,
 				 void*				outValue)
@@ -1103,7 +1110,7 @@ The "outValue" is expected to really be of type "SInt32*".
 
 (3.0)
 */
-static TerminalFile_Result
+TerminalFile_Result
 getSInt32Value	(CFDictionaryRef	inDictionary,
 				 CFStringRef		inKey,
 				 void*				outValue)
@@ -1159,7 +1166,7 @@ The "outValue" is expected to really be of type "CFArrayRef*".
 
 (3.0)
 */
-static TerminalFile_Result
+TerminalFile_Result
 getStringArrayValues	(CFDictionaryRef	inDictionary,
 						 CFStringRef		inKey, 
 						 void*				outValues)
@@ -1198,7 +1205,7 @@ The "outValue" is expected to really be of type "CFStringRef*".
 
 (3.0)
 */
-static TerminalFile_Result
+TerminalFile_Result
 getStringValue	(CFDictionaryRef	inDictionary,
 				 CFStringRef		inKey,
 				 void*				outValue)
@@ -1237,7 +1244,7 @@ The "outValue" is expected to really be of type "UInt16*".
 
 (3.0)
 */
-static TerminalFile_Result
+TerminalFile_Result
 getUInt16Value	(CFDictionaryRef	inDictionary,
 				 CFStringRef		inKey,
 				 void*				outValue)
@@ -1294,7 +1301,7 @@ The "outValue" is expected to really be of type "UInt32*".
 
 (3.0)
 */
-static TerminalFile_Result
+TerminalFile_Result
 getUInt32Value	(CFDictionaryRef	inDictionary,
 				 CFStringRef		inKey,
 				 void*				outValue)
@@ -1348,7 +1355,7 @@ format {R, G, B}.
 
 (3.0)
 */
-static CFStringRef
+CFStringRef
 rgbCopyDescription	(void const*	inValue)
 {
 	CFStringRef			result = nullptr;
@@ -1367,7 +1374,7 @@ Checks to see if two RGBColors are equal.
 
 (3.0)
 */
-static Boolean
+Boolean
 rgbEqual	(void const*	inColor1Ptr,
 			 void const*	inColor2Ptr)
 {
@@ -1391,5 +1398,7 @@ rgbEqual	(void const*	inColor1Ptr,
 	
 	return result;
 }// rgbEqual
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
