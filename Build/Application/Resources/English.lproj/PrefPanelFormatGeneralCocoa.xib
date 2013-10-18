@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
   <data>
     <int key="IBDocument.SystemTarget">1060</int>
-    <string key="IBDocument.SystemVersion">12F37</string>
+    <string key="IBDocument.SystemVersion">12F45</string>
     <string key="IBDocument.InterfaceBuilderVersion">851</string>
-    <string key="IBDocument.AppKitVersion">1187.39</string>
+    <string key="IBDocument.AppKitVersion">1187.40</string>
     <string key="IBDocument.HIToolboxVersion">626.00</string>
     <object class="NSMutableDictionary" key="IBDocument.PluginVersions">
       <string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -1668,14 +1668,6 @@
           <int key="connectionID">2422</int>
         </object>
         <object class="IBConnectionRecord">
-          <object class="IBOutletConnection" key="connection">
-            <string key="label">logicalLastResponder</string>
-            <reference key="source" ref="17743444"/>
-            <reference key="destination" ref="296346202"/>
-          </object>
-          <int key="connectionID">2423</int>
-        </object>
-        <object class="IBConnectionRecord">
           <object class="IBBindingConnection" key="connection">
             <string key="label">value: self.characterWidth.numberValue</string>
             <reference key="source" ref="980221885"/>
@@ -1894,6 +1886,14 @@
             </object>
           </object>
           <int key="connectionID">2471</int>
+        </object>
+        <object class="IBConnectionRecord">
+          <object class="IBOutletConnection" key="connection">
+            <string key="label">logicalLastResponder</string>
+            <reference key="source" ref="17743444"/>
+            <reference key="destination" ref="113802046"/>
+          </object>
+          <int key="connectionID">2472</int>
         </object>
       </array>
       <object class="IBMutableOrderedSet" key="objectRecords">
@@ -2696,7 +2696,7 @@
       <nil key="activeLocalization"/>
       <dictionary class="NSMutableDictionary" key="localizations"/>
       <nil key="sourceID"/>
-      <int key="maxID">2471</int>
+      <int key="maxID">2472</int>
     </object>
     <object class="IBClassDescriber" key="IBDocument.Classes">
       <array class="NSMutableArray" key="referencedPartialClassDescriptions">

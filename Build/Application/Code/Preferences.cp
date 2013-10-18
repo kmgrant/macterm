@@ -7327,7 +7327,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagCaptureFileDirectoryObject:
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
+						assert(typeNetEvents_CFDataRef == keyValueType);
 						CFRetainRelease		dataObject(inContextPtr->returnValueCopy(keyName));
 						FSRef* const		data = REINTERPRET_CAST(outDataPtr, FSRef*);
 						

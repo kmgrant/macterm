@@ -62,6 +62,72 @@ changes to an interface declared in a ".mm" file.
 
 
 /*!
+Manages bindings for the capture-file preferences.
+*/
+@interface PrefPanelSessions_CaptureFileValue : PreferenceValue_Inherited //{
+{
+@private
+	PreferenceValue_Flag*				enabledObject;
+	PreferenceValue_Flag*				allowSubsObject;
+	PreferenceValue_String*				fileNameObject;
+	PreferenceValue_FileSystemObject*	directoryPathObject;
+}
+
+// initializers
+	- (id)
+	initWithContextManager:(PrefsContextManager_Object*)_;
+
+// accessors
+	- (BOOL)
+	isEnabled;
+	- (void)
+	setEnabled:(BOOL)_; // binding
+	- (BOOL)
+	allowSubstitutions;
+	- (void)
+	setAllowSubstitutions:(BOOL)_; // binding
+	- (NSURL*)
+	directoryPathURLValue;
+	- (void)
+	setDirectoryPathURLValue:(NSURL*)_; // binding
+	- (NSString*)
+	fileNameStringValue;
+	- (void)
+	setFileNameStringValue:(NSString*)_; // binding
+
+@end //}
+
+
+/*!
+Loads a NIB file that defines the Data Flow pane.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelSessions_DataFlowViewManager : Panel_ViewManager< Panel_Delegate,
+																		PrefsWindow_PanelInterface > //{
+{
+@private
+	PrefsContextManager_Object*		prefsMgr;
+	NSRect							idealFrame;
+	NSMutableDictionary*			byKey;
+}
+
+// accessors
+	- (PreferenceValue_Flag*)
+	localEcho; // binding
+	- (PreferenceValue_Number*)
+	lineInsertionDelay; // binding
+	- (PreferenceValue_Number*)
+	scrollingDelay; // binding
+	- (PrefPanelSessions_CaptureFileValue*)
+	captureToFile; // binding
+
+@end //}
+
+
+/*!
 Manages bindings for the control-key preferences.
 The only valid preference tags are those that store
 raw control-key characters, such as

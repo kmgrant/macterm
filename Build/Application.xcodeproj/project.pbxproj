@@ -535,6 +535,7 @@
 		0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaBasic.h; path = Shared/Code/CocoaBasic.h; sourceTree = "<group>"; };
 		0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		0ACBF0101449232F00D17678 /* IconForKillSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKillSession.icns; path = Application/Resources/IconForKillSession.icns; sourceTree = "<group>"; };
+		0ACCB21E17934CB1001C3B75 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelSessionDataFlowCocoa.xib; sourceTree = "<group>"; };
 		0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FileSelectionDialogs.h; path = Shared/Code/FileSelectionDialogs.h; sourceTree = "<group>"; };
 		0ACDD9250ABD16C200040553 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AlertMessages.nib; sourceTree = "<group>"; };
 		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c.preprocessed; name = Quills.i; path = Application/Code/Quills.i; sourceTree = "<group>"; };
@@ -1007,6 +1008,7 @@
 				0AF5AA2E159BD90E007E36DE /* PrefPanelGeneralNotificationsCocoa.xib */,
 				0AD7D0B9158AE38B000C3264 /* PrefPanelGeneralOptionsCocoa.xib */,
 				0A6000E815981886001CA6AA /* PrefPanelGeneralSpecialCocoa.xib */,
+				0ACCB21D17934CB1001C3B75 /* PrefPanelSessionDataFlowCocoa.xib */,
 				0AD0B46C179244A400CDC4C8 /* PrefPanelSessionGraphicsCocoa.xib */,
 				0AEBF394176409FB006068C7 /* PrefPanelSessionKeyboardCocoa.xib */,
 				0AF7636216F6C856008F90D9 /* PrefPanelTerminalEmulationCocoa.xib */,
@@ -1789,6 +1791,14 @@
 				0ACA57C50AEADC5C00B5F482 /* English */,
 			);
 			name = GenericDialog.nib;
+			sourceTree = "<group>";
+		};
+		0ACCB21D17934CB1001C3B75 /* PrefPanelSessionDataFlowCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0ACCB21E17934CB1001C3B75 /* English */,
+			);
+			name = PrefPanelSessionDataFlowCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0ACDD9240ABD16C200040553 /* AlertMessages.nib */ = {

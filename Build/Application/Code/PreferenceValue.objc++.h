@@ -59,7 +59,8 @@ enum PreferenceValue_CType
 	kPreferenceValue_CTypeUInt16 = 1,	//!< preference requires UInt16 variable
 	kPreferenceValue_CTypeSInt32 = 2,	//!< preference requires SInt32 variable
 	kPreferenceValue_CTypeUInt32 = 3,	//!< preference requires UInt32 variable
-	kPreferenceValue_CTypeFloat32 = 4	//!< preference requires Float32 variable
+	kPreferenceValue_CTypeFloat32 = 4,	//!< preference requires Float32 variable (float)
+	kPreferenceValue_CTypeFloat64 = 5	//!< preference requires Float64 variable (double)
 };
 
 #pragma mark Types
@@ -165,11 +166,44 @@ Manages bindings for a single color preference.
 
 /*!
 Manages bindings for any preference whose value is
+defined to be a pointer to an FSRef.  The value is
+exposed to user interfaces only as a string.
+*/
+@interface PreferenceValue_FileSystemObject : PreferenceValue_InheritedSingleTag //{
+{
+	BOOL	isDirectory;
+}
+
+// initializers
+	- (id)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_
+	isDirectory:(BOOL)_;
+
+// new methods
+	- (NSString*)
+	readValueSeeIfDefault:(BOOL*)_;
+
+// accessors
+	- (NSString*)
+	stringValue;
+	- (void)
+	setStringValue:(NSString*)_; // binding
+	- (NSURL*)
+	URLValue;
+	- (void)
+	setURLValue:(NSURL*)_; // binding
+
+@end //}
+
+
+/*!
+Manages bindings for any preference whose value is
 defined to be Boolean.
 */
 @interface PreferenceValue_Flag : PreferenceValue_InheritedSingleTag //{
 {
-	BOOL	inverted;
+	BOOL		inverted;
 }
 
 // initializers
@@ -198,9 +232,17 @@ defined to be Boolean.
 Manages bindings for any preference whose value is
 defined to be a number (optionally integer-only and/or
 unsigned-only).
+
+If a number has a floating-point value, a scale exponent
+may be set to use a different scale for the bound value
+versus the stored value.  For example, you can use this
+to store a value in units of seconds but display it as
+milliseconds.
 */
 @interface PreferenceValue_Number : PreferenceValue_InheritedSingleTag //{
 {
+	NSInteger				scaleExponent; // e.g. set to "-3" to scale by 10^-3 (or 1/1000)
+	BOOL					scaleWithRounding; // scaled value displayed as nearest integer
 	PreferenceValue_CType	valueCType;
 }
 
@@ -214,7 +256,18 @@ unsigned-only).
 	- (NSNumber*)
 	readValueSeeIfDefault:(BOOL*)_;
 
-// accessors
+// accessors: configuration
+	- (NSInteger)
+	scaleExponent;
+	- (void)
+	setScaleExponent:(NSInteger)_
+	rounded:(BOOL)_;
+
+// accessors: bindings
+	- (NSNumber*)
+	numberValue;
+	- (void)
+	setNumberValue:(NSNumber*)_; // binding
 	- (NSString*)
 	numberStringValue;
 	- (void)

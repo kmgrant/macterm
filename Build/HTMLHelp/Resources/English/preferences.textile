@@ -695,7 +695,7 @@ MacTerm automatically splits these insertions into lines, and
  between each inserted line.  You can set the delay to zero for
  immediate insertion.
 
-h4. Scrolling Speed
+h4. Scrolling Delay
 
 An artificial delay imposed on the emulator's data processing
  loop, to slow down the terminal.  This may help readability
@@ -708,14 +708,23 @@ Note that there is also Terminal >> Suspend (Scroll Lock) and
 
 h4. Capture to File
 
-You can choose to automatically capture this session to a
- specific file when it starts.  Note also that this can be done
- from a menu, File >> Begin Capture to File.
+You can choose to automatically log this session to a specific
+ file when it starts.  Note also that this can be done from a
+ menu, File >> Begin Capture to File.
 
-Currently, MacTerm does not have sophisticated ways to handle
- automatic file captures.  It would be nice, for instance, if
- successive sessions could use new files in a target folder and
- not overwrite the same file.
+If a file with the name you choose already exists, it will be
+ *automatically overwritten* by future runs of the same session.
+ You can enable the "Generated name" option to have a slightly
+ different file name chosen each time, based on the presence of
+ special sequences:
+
+* The @\D@ sequence is replaced by the current date, using the international standard YYYY-MM-DD format (for example, if the date were October 17, 2013 then the sequence would be replaced with "2013-10-17").
+
+* The @\T@ sequence is replaced by the current time, using the HH:MM:SS format and the 24-hour clock (for example, if it were 44 seconds after 3:30 in the afternoon then the sequence would be replaced with "15:30:44").
+
+* The @\\@ sequence (double backslash) allows you to insert a single backslash into a generated file's name.
+
+All possible backslashed sequences are reserved for future use.
 
 h3(#sessioncontrolkeys). Keyboard
 
