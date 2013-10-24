@@ -131,7 +131,7 @@ ColorUtilities_ColorChooserDialogDisplay	(CFStringRef			inPrompt,
 										kCFStringEncodingMacRoman))
 	{
 		// failed; so, do not use a prompt
-		PLstrcpy(promptPascalString, "\p");
+		promptPascalString[0] = '\0';
 	}
 	
 	// figure out the highest version of the Color Picker API that is available
@@ -254,11 +254,11 @@ GetDarkerColors		(RGBColor*		outDarkerForegroundColorOrNull,
 		// set up foreground color
 		black.red = black.green = black.blue = 0;
 		GetForeColor(outDarkerForegroundColorOrNull);
-		(Boolean)GetGray(GetMainDevice(), &black, outDarkerForegroundColorOrNull);
+		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &black, outDarkerForegroundColorOrNull);
 		black = *outDarkerForegroundColorOrNull;
 		GetForeColor(outDarkerForegroundColorOrNull);
-		(Boolean)GetGray(GetMainDevice(), &black, outDarkerForegroundColorOrNull);
-		(Boolean)GetGray(GetMainDevice(), &black, outDarkerForegroundColorOrNull);
+		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &black, outDarkerForegroundColorOrNull);
+		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &black, outDarkerForegroundColorOrNull);
 	}
 	
 	if (outDarkerBackgroundColorOrNull != nullptr)
@@ -266,11 +266,11 @@ GetDarkerColors		(RGBColor*		outDarkerForegroundColorOrNull,
 		// set up background color
 		black.red = black.green = black.blue = 0;
 		GetBackColor(outDarkerBackgroundColorOrNull);
-		(Boolean)GetGray(GetMainDevice(), &black, outDarkerBackgroundColorOrNull);
+		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &black, outDarkerBackgroundColorOrNull);
 		black = *outDarkerBackgroundColorOrNull;
 		GetBackColor(outDarkerBackgroundColorOrNull);
-		(Boolean)GetGray(GetMainDevice(), &black, outDarkerBackgroundColorOrNull);
-		(Boolean)GetGray(GetMainDevice(), &black, outDarkerBackgroundColorOrNull);
+		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &black, outDarkerBackgroundColorOrNull);
+		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &black, outDarkerBackgroundColorOrNull);
 	}
 }// GetDarkerColors
 
@@ -301,11 +301,11 @@ GetLighterColors	(RGBColor*		outLighterForegroundColorOrNull,
 		// set up foreground color
 		white.red = white.green = white.blue = RGBCOLOR_INTENSITY_MAX;
 		GetForeColor(outLighterForegroundColorOrNull);
-		(Boolean)GetGray(GetMainDevice(), &white, outLighterForegroundColorOrNull);
+		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &white, outLighterForegroundColorOrNull);
 		white = *outLighterForegroundColorOrNull;
 		GetForeColor(outLighterForegroundColorOrNull);
-		(Boolean)GetGray(GetMainDevice(), &white, outLighterForegroundColorOrNull);
-		(Boolean)GetGray(GetMainDevice(), &white, outLighterForegroundColorOrNull);
+		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &white, outLighterForegroundColorOrNull);
+		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &white, outLighterForegroundColorOrNull);
 	}
 	
 	if (outLighterBackgroundColorOrNull != nullptr)
@@ -313,11 +313,11 @@ GetLighterColors	(RGBColor*		outLighterForegroundColorOrNull,
 		// set up background color
 		white.red = white.green = white.blue = RGBCOLOR_INTENSITY_MAX;
 		GetBackColor(outLighterBackgroundColorOrNull);
-		(Boolean)GetGray(GetMainDevice(), &white, outLighterBackgroundColorOrNull);
+		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &white, outLighterBackgroundColorOrNull);
 		white = *outLighterBackgroundColorOrNull;
 		GetBackColor(outLighterBackgroundColorOrNull);
-		(Boolean)GetGray(GetMainDevice(), &white, outLighterBackgroundColorOrNull);
-		(Boolean)GetGray(GetMainDevice(), &white, outLighterBackgroundColorOrNull);
+		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &white, outLighterBackgroundColorOrNull);
+		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &white, outLighterBackgroundColorOrNull);
 	}
 }// GetLighterColors
 

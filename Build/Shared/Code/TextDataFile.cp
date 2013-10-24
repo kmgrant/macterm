@@ -448,31 +448,6 @@ TextDataFile_AddNameValueNumber		(TextDataFile_Ref				inRef,
 
 
 /*!
-Specifies a name-value pair that has a Pascal string
-value.  In the text file, this will appear on a single
-line in some format, such as "name = value".
-
-If the name was successfully assigned a value, "true"
-is returned; otherwise, "false" is returned.
-
-(1.0)
-*/
-Boolean
-TextDataFile_AddNameValuePString	(TextDataFile_Ref				inRef,
-									 char const*					inClassNameOrNull,
-									 char const*					inPropertyName,
-									 ConstStringPtr					inValue,
-									 TextDataFile_ValueBrackets		inBrackets)
-{
-	char	buffer[255];
-	
-	
-	StringUtilities_PToC(inValue, buffer);
-	return TextDataFile_AddNameValue(inRef, inClassNameOrNull, inPropertyName, buffer, inBrackets);
-}// AddNameValuePString
-
-
-/*!
 Specifies a name-value pair that has a QuickDraw
 rectangle value.  In the text file, this will
 appear on a single line in some format, such as
@@ -742,14 +717,8 @@ TextDataFile_StringToFlag	(char const*	inStringPtr,
 	
 	if ((outValuePtr != nullptr) && (inStringPtr != nullptr))
 	{
-		char	buffer[32];
-		
-		
 		// currently a little bit simplistic, but...
-		CPP_STD::strncpy(buffer, inStringPtr, sizeof(buffer));
-		StringUtilities_CToPInPlace(buffer);
-		if (EqualString(REINTERPRET_CAST(buffer, StringPtr), "\pyes", false/* case sensitive */,
-						true/* diacritical sensitive */))
+		if (0 == CPP_STD::strncasecmp(inStringPtr, "yes", CPP_STD::strlen(inStringPtr)))
 		{
 			*outValuePtr = true;
 		}
@@ -780,16 +749,8 @@ TextDataFile_StringToNumber		(char const*	inStringPtr,
 	
 	if ((outValuePtr != nullptr) && (inStringPtr != nullptr))
 	{
-		char	buffer[32]; // this buffer has to fit the sign and digits of any number up to LONG_MAX
-		
-		
-		if (CPP_STD::strlen(inStringPtr) < sizeof(buffer))
-		{
-			CPP_STD::strncpy(buffer, inStringPtr, sizeof(buffer));
-			StringUtilities_CToPInPlace(buffer);
-			StringToNum(REINTERPRET_CAST(buffer, StringPtr), outValuePtr);
-			result = true;
-		}
+		*outValuePtr = CPP_STD::atoi(inStringPtr);
+		result = true;
 	}
 	return result;
 }// StringToNumber

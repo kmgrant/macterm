@@ -572,12 +572,12 @@ createContainerView		(Panel_Ref		inPanel,
 		assert_noerr(error);
 		
 		// set other nice things (most can be set in a NIB someday)
-		(OSStatus)DataBrowserChangeAttributes(windowsList,
-												kDataBrowserAttributeListViewAlternatingRowColors/* attributes to set */,
-												0/* attributes to clear */);
-		(OSStatus)SetDataBrowserListViewUsePlainBackground(windowsList, false);
-		(OSStatus)SetDataBrowserTableViewHiliteStyle(windowsList, kDataBrowserTableViewFillHilite);
-		(OSStatus)SetDataBrowserHasScrollBars(windowsList, false/* horizontal */, true/* vertical */);
+		UNUSED_RETURN(OSStatus)DataBrowserChangeAttributes(windowsList,
+															kDataBrowserAttributeListViewAlternatingRowColors/* attributes to set */,
+															0/* attributes to clear */);
+		UNUSED_RETURN(OSStatus)SetDataBrowserListViewUsePlainBackground(windowsList, false);
+		UNUSED_RETURN(OSStatus)SetDataBrowserTableViewHiliteStyle(windowsList, kDataBrowserTableViewFillHilite);
+		UNUSED_RETURN(OSStatus)SetDataBrowserHasScrollBars(windowsList, false/* horizontal */, true/* vertical */);
 		error = SetDataBrowserSelectionFlags(windowsList, kDataBrowserSelectOnlyOne | kDataBrowserNeverEmptySelectionSet);
 		assert_noerr(error);
 		{
@@ -727,7 +727,7 @@ panelChanged	(Panel_Ref		inPanel,
 				
 				
 				assert(dataBrowser.exists());
-				(OSStatus)SetDataBrowserSelectedItems(dataBrowser, 1/* number of items */, &kFirstItem, kDataBrowserItemsAssign);
+				UNUSED_RETURN(OSStatus)SetDataBrowserSelectedItems(dataBrowser, 1/* number of items */, &kFirstItem, kDataBrowserItemsAssign);
 			}
 			
 			// update the current data model accordingly
@@ -914,16 +914,16 @@ rebuildFavoritesMenu	(HIViewID const&		inMenuButtonID,
 		// erase previous items
 		if (0 != inoutItemCountTracker)
 		{
-			(OSStatus)DeleteMenuItems(favoritesMenu, defaultIndex + 1/* first item */, inoutItemCountTracker);
+			UNUSED_RETURN(OSStatus)DeleteMenuItems(favoritesMenu, defaultIndex + 1/* first item */, inoutItemCountTracker);
 		}
 		otherItemCount = CountMenuItems(favoritesMenu);
 		
 		// add the names of all terminal configurations to the menu;
 		// update global count of items added at that location
 		inoutItemCountTracker = 0;
-		(Preferences_Result)Preferences_InsertContextNamesInMenu(inCollectionsToUse, favoritesMenu,
-																	defaultIndex, 0/* indentation level */,
-																	inEachNewItemCommandID, inoutItemCountTracker);
+		UNUSED_RETURN(Preferences_Result)Preferences_InsertContextNamesInMenu(inCollectionsToUse, favoritesMenu,
+																				defaultIndex, 0/* indentation level */,
+																				inEachNewItemCommandID, inoutItemCountTracker);
 		SetControl32BitMaximum(popUpMenuView, otherItemCount + inoutItemCountTracker);
 		
 		// TEMPORARY: verify that this final step is necessary...
@@ -1183,10 +1183,10 @@ refreshDisplay ()
 	assert(windowsListContainer.exists());
 	
 	
-	(OSStatus)UpdateDataBrowserItems(windowsListContainer, kDataBrowserNoItem/* parent item */,
-										0/* number of IDs */, nullptr/* IDs */,
-										kDataBrowserItemNoProperty/* pre-sort property */,
-										kMyDataBrowserPropertyIDWindowName);
+	UNUSED_RETURN(OSStatus)UpdateDataBrowserItems(windowsListContainer, kDataBrowserNoItem/* parent item */,
+													0/* number of IDs */, nullptr/* IDs */,
+													kDataBrowserItemNoProperty/* pre-sort property */,
+													kMyDataBrowserPropertyIDWindowName);
 }// My_WorkspacesPanelUI::refreshDisplay
 
 
@@ -1291,7 +1291,7 @@ setAssociatedSessionByType	(UInt32		inNewSessionCommandIDOrZero)
 	{
 		Console_Warning(Console_WriteLine, "specified built-in session type not found in menu; reverting to None");
 		menuCommandID = kCommandSetWorkspaceSessionNone;
-		(OSStatus)DialogUtilities_SetPopUpItemByCommand(popUpMenuButton, menuCommandID);
+		UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(popUpMenuButton, menuCommandID);
 	}
 	
 	// the None case effectively disables all other window-specific
@@ -1323,7 +1323,7 @@ setDataBrowserColumnWidths ()
 	assert(windowsListContainer.exists());
 	
 	
-	(Rect*)GetControlBounds(windowsListContainer, &containerRect);
+	UNUSED_RETURN(Rect*)GetControlBounds(windowsListContainer, &containerRect);
 	
 	// set column widths proportionately
 	{
@@ -1334,14 +1334,14 @@ setDataBrowserColumnWidths ()
 		// leave number column fixed-size
 		{
 			integerWidth = 42; // arbitrary
-			(OSStatus)SetDataBrowserTableViewNamedColumnWidth
-						(windowsListContainer, kMyDataBrowserPropertyIDWindowNumber, integerWidth);
+			UNUSED_RETURN(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+									(windowsListContainer, kMyDataBrowserPropertyIDWindowNumber, integerWidth);
 			availableWidth -= integerWidth;
 		}
 		
 		// give all remaining space to the title
-		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
-					(windowsListContainer, kMyDataBrowserPropertyIDWindowName, availableWidth);
+		UNUSED_RETURN(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+								(windowsListContainer, kMyDataBrowserPropertyIDWindowName, availableWidth);
 	}
 }// My_WorkspacesPanelUI::setDataBrowserColumnWidths
 
@@ -1421,7 +1421,7 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 				CFStringRef		numberCFString = CFStringCreateWithFormat(kCFAllocatorDefault,
 																			nullptr/* options dictionary */,
 																			CFSTR("%d")/* LOCALIZE THIS? */,
-																			numericalValue);
+																			(int)numericalValue);
 				
 				
 				if (nullptr == numberCFString) result = memFullErr;

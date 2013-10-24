@@ -57,14 +57,13 @@
 #include <vector>
 
 // Mac includes
-#include <Carbon/Carbon.h>
 #ifdef __OBJC__
-@class NSView;
-@class NSWindow;
+#include <AppKit/AppKit.h>
 #else
 class NSView;
 class NSWindow;
 #endif
+#include <Carbon/Carbon.h>
 
 // library includes
 #include "ListenerModel.h"

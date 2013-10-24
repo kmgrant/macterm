@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20131024',
     '20131005',
     '20130825',
     '20130720',
@@ -483,7 +484,13 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20131024': [
+        'Fixed possible crashes in certain rare instances of the following actions: searching for text, changing the font size, and changing the screen dimensions.',
+        'Fixed environment of first shell window to not contain any variables related to MacTerm or its Python interpreter.',
+        'Rebuilt for Mac OS X 10.9 "Mavericks".  Since 10.9 is a free upgrade from Apple for users of Mac OS X 10.6 "Snow Leopard" and beyond (the previous minimum supported by MacTerm), MacTerm now supports only Mac OS X version 10.9.  (Note that MacTerm may happen to work on older OS versions for awhile but it is not officially supported.  Future versions may stop working on these older OSes without warning.)',
+    ],
     '20131005': [
+        'This is the LAST VERSION TO SUPPORT MAC OS X VERSIONS 10.6 - 10.8, because Apple is making Mac OS X 10.9 "Mavericks" a free upgrade for users of these older OS versions.  Please download "Mavericks" for free from the App Store.',
         'Preferences window Formats pane has been extended to allow a custom color for the terminal cursor, as well as a checkbox to keep the current "automatic" color setting.',
         'Terminal view cursor, if set to blink, is now visible for longer periods of time and the animation is smoother.',
     ],

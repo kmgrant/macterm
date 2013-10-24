@@ -233,7 +233,7 @@ Cursors_Idle ()
 		if (((currentTicks - gCountAtLastUpdate) > 8) && (gAppearanceCursorInEffect))
 		{
 			// then it's time to update the cursor
-			(OSStatus)SetAnimatedThemeCursor(Cursors_ReturnCurrent(), ++gCursorStageCount);
+			UNUSED_RETURN(OSStatus)SetAnimatedThemeCursor(Cursors_ReturnCurrent(), ++gCursorStageCount);
 			gCountAtLastUpdate = TickCount();
 		}
 	}

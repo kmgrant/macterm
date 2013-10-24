@@ -77,7 +77,7 @@ AddressDialog_Display ()
 	
 	
 	[[AddressDialog_PanelController sharedAddressPanelController] showWindow:NSApp];
-	(OSStatus)SetUserFocusWindow(oldActiveWindow);
+	UNUSED_RETURN(OSStatus)SetUserFocusWindow(oldActiveWindow);
 }// Display
 
 

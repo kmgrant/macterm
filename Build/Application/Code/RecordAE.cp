@@ -133,7 +133,7 @@ RecordAE_Init ()
 		if ((error == noErr) && (countOfRecordingProcesses > 0))
 		{
 			// send a fake recording-begun event
-			(OSStatus)startRecording();
+			UNUSED_RETURN(OSStatus)startRecording();
 		}
 	}
 	
@@ -158,7 +158,7 @@ RecordAE_Done ()
 	if (gRecordingCount)
 	{
 		// somehow the recording stuff is still active; explicitly force it to quit
-		(OSStatus)stopRecording();
+		UNUSED_RETURN(OSStatus)stopRecording();
 	}
 	
 	AEDisposeDesc(&gSelfAddress);

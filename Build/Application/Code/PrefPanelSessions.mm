@@ -2396,7 +2396,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 					commandID = kCommandSetMetaNone;
 					break;
 				}
-				(OSStatus)DialogUtilities_SetSegmentByCommand(segmentedView, commandID);
+				UNUSED_RETURN(OSStatus)DialogUtilities_SetSegmentByCommand(segmentedView, commandID);
 			}
 		}
 		
@@ -2413,10 +2413,10 @@ readPreferences		(Preferences_ContextRef		inSettings)
 				HIViewWrap		segmentedView(idMySegmentsDeleteKeyMapping, window);
 				
 				
-				(OSStatus)DialogUtilities_SetSegmentByCommand(segmentedView,
-																(deleteUsesBackspace)
-																? kCommandDeletePressSendsBackspace
-																: kCommandDeletePressSendsDelete);
+				UNUSED_RETURN(OSStatus)DialogUtilities_SetSegmentByCommand(segmentedView,
+																			(deleteUsesBackspace)
+																			? kCommandDeletePressSendsBackspace
+																			: kCommandDeletePressSendsDelete);
 			}
 		}
 		
@@ -2454,7 +2454,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 					break;
 				}
 				
-				(OSStatus)DialogUtilities_SetPopUpItemByCommand(popUpMenu, commandID);
+				UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(popUpMenu, commandID);
 			}
 		}
 	}
@@ -3468,16 +3468,16 @@ rebuildFavoritesMenu	(HIViewID const&		inMenuButtonID,
 		// erase previous items
 		if (0 != inoutItemCountTracker)
 		{
-			(OSStatus)DeleteMenuItems(favoritesMenu, defaultIndex + 1/* first item */, inoutItemCountTracker);
+			UNUSED_RETURN(OSStatus)DeleteMenuItems(favoritesMenu, defaultIndex + 1/* first item */, inoutItemCountTracker);
 		}
 		otherItemCount = CountMenuItems(favoritesMenu);
 		
 		// add the names of all terminal configurations to the menu;
 		// update global count of items added at that location
 		inoutItemCountTracker = 0;
-		(Preferences_Result)Preferences_InsertContextNamesInMenu(inCollectionsToUse, favoritesMenu,
-																	defaultIndex, 0/* indentation level */,
-																	inEachNewItemCommandID, inoutItemCountTracker);
+		UNUSED_RETURN(Preferences_Result)Preferences_InsertContextNamesInMenu(inCollectionsToUse, favoritesMenu,
+																				defaultIndex, 0/* indentation level */,
+																				inEachNewItemCommandID, inoutItemCountTracker);
 		SetControl32BitMaximum(popUpMenuView, otherItemCount + inoutItemCountTracker);
 		
 		// TEMPORARY: verify that this final step is necessary...
@@ -3589,7 +3589,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					
 					
 					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					UNUSED_RETURN(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
 					
 					// delete the “associated Format” preference, which will cause
 					// a fallback to the default when it is later queried
@@ -3606,7 +3606,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					
 					
 					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					UNUSED_RETURN(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
 					
 					// determine the name of the selected item
 					if (received.attributes & kHICommandFromMenu)
@@ -3650,7 +3650,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					
 					
 					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					UNUSED_RETURN(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
 					
 					// delete the “associated Terminal” preference, which will cause
 					// a fallback to the default when it is later queried
@@ -3667,7 +3667,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					
 					
 					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					UNUSED_RETURN(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
 					
 					// determine the name of the selected item
 					if (received.attributes & kHICommandFromMenu)
@@ -3711,7 +3711,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					
 					
 					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					UNUSED_RETURN(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
 					
 					// delete the “associated Translation” preference, which will cause
 					// a fallback to the default when it is later queried
@@ -3728,7 +3728,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					
 					
 					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					UNUSED_RETURN(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
 					
 					// determine the name of the selected item
 					if (received.attributes & kHICommandFromMenu)
@@ -3771,7 +3771,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					HIWindowRef		window = HIViewGetWindow(resourceInterfacePtr->mainView);
 					
 					
-					(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyFieldCommandLine, window));
+					UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyFieldCommandLine, window));
 					result = noErr;
 				}
 				break;
@@ -3847,7 +3847,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					
 					
 					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					UNUSED_RETURN(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
 					
 					if (kPreferences_ResultOK == prefsResult)
 					{
@@ -3877,7 +3877,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					
 					
 					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					UNUSED_RETURN(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
 					
 					// determine the name of the selected item
 					if (received.attributes & kHICommandFromMenu)
@@ -4111,9 +4111,9 @@ serverBrowserDisplay	(Session_Protocol	inProtocol,
 		
 		
 		Panel_GetContainerView(this->panel, panelView);
-		(OSStatus)HIViewGetBounds(panelView, &panelBounds);
+		UNUSED_RETURN(OSStatus)HIViewGetBounds(panelView, &panelBounds);
 		
-		(OSStatus)HIViewConvertRect(&panelBounds, panelView, nullptr/* make window-relative */);
+		UNUSED_RETURN(OSStatus)HIViewConvertRect(&panelBounds, panelView, nullptr/* make window-relative */);
 		
 		// IMPORTANT: the event target given here should be the same one
 		// used to register event handlers in the constructor!
@@ -4362,7 +4362,7 @@ updateCommandLine	(Session_Protocol	inProtocol,
 		inHostName = nullptr;
 	}
 	
-	PLstrcpy(portString, "\p");
+	portString[0] = '\0';
 	if (0 != inPortNumber) NumToString(STATIC_CAST(inPortNumber, SInt32), portString);
 	
 	if ((nullptr != newCommandLineCFString) && (nullptr != inHostName))
@@ -4522,7 +4522,7 @@ updateCommandLine	(Session_Protocol	inProtocol,
 			else
 			{
 				SetControlTextWithCFString(this->_fieldCommandLine, newCommandLineCFString);
-				(OSStatus)HIViewSetNeedsDisplay(this->_fieldCommandLine, true);
+				UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(this->_fieldCommandLine, true);
 				result = true;
 			}
 		}
@@ -4534,7 +4534,7 @@ updateCommandLine	(Session_Protocol	inProtocol,
 	if (false == result)
 	{
 		SetControlTextWithCFString(this->_fieldCommandLine, CFSTR(""));
-		(OSStatus)HIViewSetNeedsDisplay(this->_fieldCommandLine, true);
+		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(this->_fieldCommandLine, true);
 	}
 	
 	return result;
@@ -5385,7 +5385,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -5847,7 +5847,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -6337,7 +6337,7 @@ isInherited
 	BOOL	result = NO;
 	
 	
-	(char)[self readValueSeeIfDefault:&result];
+	UNUSED_RETURN(char)[self readValueSeeIfDefault:&result];
 	
 	return result;
 }// isInherited
@@ -6907,7 +6907,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 

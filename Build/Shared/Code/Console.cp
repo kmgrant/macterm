@@ -267,33 +267,6 @@ Console_WriteScriptError	(CFStringRef		inTitle,
 
 
 /*!
-Writes a line to the console that includes the time
-and date.
-
-(1.0)
-*/
-void
-Console_WriteTimeStamp	(char const*	inLabel)
-{
-	char			dateString[64];
-	char			timeString[40];
-	unsigned long	date = 0L;
-	
-	
-	GetDateTime(&date);
-	DateString(date, longDate, REINTERPRET_CAST(dateString, StringPtr), nullptr/* intlHandle */);
-	StringUtilities_PToCInPlace(REINTERPRET_CAST(dateString, StringPtr));
-	TimeString(date, true/* want seconds */, REINTERPRET_CAST(timeString, StringPtr), nullptr/* intlHandle */);
-	StringUtilities_PToCInPlace(REINTERPRET_CAST(timeString, StringPtr));
-	CPP_STD::strcat(dateString, " at ");
-	CPP_STD::strcat(dateString, timeString);
-	CPP_STD::strcat(dateString, ":");
-	Console_WriteLine(dateString);
-	Console_WriteLine(inLabel);
-}// WriteTimeStamp
-
-
-/*!
 Writes a standard unit test report to the console,
 with the given information included.  If the failure
 count is zero, the output format may be completely
@@ -573,37 +546,6 @@ Console_WriteValuePair	(char const*	inLabel,
 	std::string		sString = s.str();
 	Console_WriteLine(sString.c_str());
 }// WriteValuePair
-
-
-/*!
-Writes the value of a Pascal string variable.  A
-string of the form "label = “value”" is written
-to the console (with a new-line).
-
-(1.0)
-*/
-void
-Console_WriteValuePString	(char const*		inLabel,
-							 ConstStringPtr		inValue)
-{
-	std::ostringstream	s;
-	
-	
-	s << inLabel << " = \"";
-	if (nullptr != inValue)
-	{
-		char	buffer[256];
-		StringUtilities_PToC(inValue, buffer);
-		s << buffer;
-	}
-	else
-	{
-		s << "<null>";
-	}
-	s << "\"";
-	std::string		sString = s.str();
-	Console_WriteLine(sString.c_str());
-}// WriteValuePString
 
 
 /*!

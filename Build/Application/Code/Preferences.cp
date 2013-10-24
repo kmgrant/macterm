@@ -3472,7 +3472,7 @@ Preferences_InsertContextNamesInMenu	(Quills::Prefs::Class	inClass,
 				if (noErr == error)
 				{
 					++outHowManyItemsAdded;
-					(OSStatus)SetMenuItemIndent(inoutMenuRef, inAfterItemIndex + outHowManyItemsAdded, inInitialIndent);
+					UNUSED_RETURN(OSStatus)SetMenuItemIndent(inoutMenuRef, inAfterItemIndex + outHowManyItemsAdded, inInitialIndent);
 				}
 			}
 		}
@@ -4524,7 +4524,7 @@ createDomainName	(Quills::Prefs::Class	inClass,
 				if (nullptr == possibleName) throw std::bad_alloc();
 				CFStringAppend(possibleName, returnClassDomainNamePrefix(inClass));
 				CFStringAppendCString(possibleName, ".", kCFStringEncodingUTF8);
-				CFStringAppendFormat(possibleName, nullptr/* options */, CFSTR("%d"), possibleSuffix);
+				CFStringAppendFormat(possibleName, nullptr/* options */, CFSTR("%d"), (int)possibleSuffix);
 				result = possibleName;
 				
 				nameInUse = false; // initially...
@@ -4586,7 +4586,7 @@ destroy ()
 	
 	
 	// delete this domain from the application list of domains for the class
-	(Preferences_Result)copyClassDomainCFArray(this->returnClass(), favoritesListCFArray);
+	UNUSED_RETURN(Preferences_Result)copyClassDomainCFArray(this->returnClass(), favoritesListCFArray);
 	if (nullptr != favoritesListCFArray)
 	{
 		CFIndex		indexForName = findDomainIndexInArray(favoritesListCFArray, kDomainName);
@@ -8349,7 +8349,7 @@ mergeInDefaultPreferences ()
 		if (noErr == result)
 		{
 			// save the preferences...
-			(Boolean)CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
+			UNUSED_RETURN(Boolean)CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
 		}
 	}
 	
@@ -8604,12 +8604,12 @@ readPreferencesDictionaryInContext	(My_ContextInterfacePtr		inContextPtr,
 		if (kCFCompareEqualTo == CFStringCompare(kKey, CFSTR("name"), 0/* options */))
 		{
 			useKey = false;
-			(Boolean)CFDictionaryGetValueIfPresent(inPreferenceDictionary, CFSTR("name"), &nameDataValue);
+			UNUSED_RETURN(Boolean)CFDictionaryGetValueIfPresent(inPreferenceDictionary, CFSTR("name"), &nameDataValue);
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(kKey, CFSTR("name-string"), 0/* options */))
 		{
 			useKey = false;
-			(Boolean)CFDictionaryGetValueIfPresent(inPreferenceDictionary, CFSTR("name-string"), &nameStringValue);
+			UNUSED_RETURN(Boolean)CFDictionaryGetValueIfPresent(inPreferenceDictionary, CFSTR("name-string"), &nameStringValue);
 		}
 		
 		if ((useKey) && (inMerge))

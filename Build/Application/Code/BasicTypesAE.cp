@@ -340,14 +340,14 @@ BasicTypesAE_CreateUInt32PairDesc	(UInt32		inInteger1,
 		if (noErr == result)
 		{
 			result = AEPutDesc(outDescListPtr, 1/* index */, &integerDesc);
-			(OSStatus)AEDisposeDesc(&integerDesc);
+			UNUSED_RETURN(OSStatus)AEDisposeDesc(&integerDesc);
 			if (noErr == result)
 			{
 				result = AECreateDesc(typeUInt32, &inInteger2, sizeof(inInteger2), &integerDesc);
 				if (noErr == result)
 				{
 					result = AEPutDesc(outDescListPtr, 2/* index */, &integerDesc);
-					(OSStatus)AEDisposeDesc(&integerDesc);
+					UNUSED_RETURN(OSStatus)AEDisposeDesc(&integerDesc);
 				}
 			}
 		}

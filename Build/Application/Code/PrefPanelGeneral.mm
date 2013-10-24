@@ -1511,32 +1511,32 @@ const
 		}
 		
 		// IMPORTANT: this must agree with what the NIB does
-		(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 1/* segment */, 0/* value */);
-		(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 2/* segment */, 0/* value */);
-		(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 3/* segment */, 0/* value */);
-		(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 4/* segment */, 0/* value */);
-		(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 5/* segment */, 0/* value */);
+		UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 1/* segment */, 0/* value */);
+		UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 2/* segment */, 0/* value */);
+		UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 3/* segment */, 0/* value */);
+		UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 4/* segment */, 0/* value */);
+		UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 5/* segment */, 0/* value */);
 		switch (terminalCursorType)
 		{
 		case kTerminalView_CursorTypeVerticalLine:
-			(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 2/* segment */, 1/* value */);
+			UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 2/* segment */, 1/* value */);
 			break;
 		
 		case kTerminalView_CursorTypeUnderscore:
-			(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 3/* segment */, 1/* value */);
+			UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 3/* segment */, 1/* value */);
 			break;
 		
 		case kTerminalView_CursorTypeThickVerticalLine:
-			(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 4/* segment */, 1/* value */);
+			UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 4/* segment */, 1/* value */);
 			break;
 		
 		case kTerminalView_CursorTypeThickUnderscore:
-			(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 5/* segment */, 1/* value */);
+			UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 5/* segment */, 1/* value */);
 			break;
 		
 		case kTerminalView_CursorTypeBlock:
 		default:
-			(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 1/* segment */, 1/* value */);
+			UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 1/* segment */, 1/* value */);
 			break;
 		}
 	}
@@ -1919,35 +1919,35 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					
 					
 					// IMPORTANT: this must agree with what the NIB does
-					(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 1/* segment */, 0/* value */);
-					(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 2/* segment */, 0/* value */);
-					(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 3/* segment */, 0/* value */);
-					(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 4/* segment */, 0/* value */);
-					(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 5/* segment */, 0/* value */);
+					UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 1/* segment */, 0/* value */);
+					UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 2/* segment */, 0/* value */);
+					UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 3/* segment */, 0/* value */);
+					UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 4/* segment */, 0/* value */);
+					UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 5/* segment */, 0/* value */);
 					if (kCommandPrefCursorBlock == received.commandID)
 					{
 						cursorType = kTerminalView_CursorTypeBlock;
-						(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 1/* segment */, 1/* value */);
+						UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 1/* segment */, 1/* value */);
 					}
 					if (kCommandPrefCursorVerticalBar == received.commandID)
 					{
 						cursorType = kTerminalView_CursorTypeVerticalLine;
-						(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 2/* segment */, 1/* value */);
+						UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 2/* segment */, 1/* value */);
 					}
 					if (kCommandPrefCursorUnderline == received.commandID)
 					{
 						cursorType = kTerminalView_CursorTypeUnderscore;
-						(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 3/* segment */, 1/* value */);
+						UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 3/* segment */, 1/* value */);
 					}
 					if (kCommandPrefCursorThickVerticalBar == received.commandID)
 					{
 						cursorType = kTerminalView_CursorTypeThickVerticalLine;
-						(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 4/* segment */, 1/* value */);
+						UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 4/* segment */, 1/* value */);
 					}
 					if (kCommandPrefCursorThickUnderline == received.commandID)
 					{
 						cursorType = kTerminalView_CursorTypeThickUnderscore;
-						(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 5/* segment */, 1/* value */);
+						UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 5/* segment */, 1/* value */);
 					}
 					Preferences_SetData(kPreferences_TagTerminalCursorType, sizeof(cursorType), &cursorType);
 				}
@@ -2073,7 +2073,7 @@ receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				if ((noErr == error) && (kControlKindSignatureApple == controlKind.signature) &&
 					((kControlKindCheckBox == controlKind.kind) || (kControlKindRadioButton == controlKind.kind)))
 				{
-					(Boolean)updateCheckBoxPreference(interfacePtr, view);
+					UNUSED_RETURN(Boolean)updateCheckBoxPreference(interfacePtr, view);
 				}
 			}
 		}
@@ -3065,7 +3065,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -3718,7 +3718,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -4552,7 +4552,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 

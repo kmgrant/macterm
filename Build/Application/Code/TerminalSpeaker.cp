@@ -355,7 +355,7 @@ selfRef(REINTERPRET_CAST(this, TerminalSpeaker_Ref))
 {
 	// ask to be notified of terminal bells
 	Terminal_StartMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler.returnRef());
-	(Preferences_Result)Preferences_StartMonitoring(this->preferencesHandler.returnRef(), kPreferences_TagBellSound, true/* notify of initial value */);
+	UNUSED_RETURN(Preferences_Result)Preferences_StartMonitoring(this->preferencesHandler.returnRef(), kPreferences_TagBellSound, true/* notify of initial value */);
 }// My_TerminalSpeaker one-argument constructor
 
 
@@ -369,7 +369,7 @@ My_TerminalSpeaker::
 ~My_TerminalSpeaker ()
 {
 	Terminal_StopMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler.returnRef());
-	(Preferences_Result)Preferences_StopMonitoring(this->preferencesHandler.returnRef(), kPreferences_TagBellSound);
+	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring(this->preferencesHandler.returnRef(), kPreferences_TagBellSound);
 }// My_TerminalSpeaker destructor
 
 

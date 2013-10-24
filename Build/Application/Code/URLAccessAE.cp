@@ -90,7 +90,7 @@ URLAccessAE_HandleUniformResourceLocator		(AppleEvent const*	inAppleEventPtr,
 	
 	Console_BeginFunction();
 	
-	(OSStatus)AppleEventUtilities_InitAEDesc(&directObject);
+	UNUSED_RETURN(OSStatus)AppleEventUtilities_InitAEDesc(&directObject);
 	
 	Console_WriteLine("AppleScript: “handle URL” event");
 	
@@ -107,7 +107,7 @@ URLAccessAE_HandleUniformResourceLocator		(AppleEvent const*	inAppleEventPtr,
 	
 	Console_WriteValue("result", error);
 	Console_EndFunction();
-	(OSStatus)AppleEventUtilities_AddErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	UNUSED_RETURN(OSStatus)AppleEventUtilities_AddErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
 	return result;
 }// HandleUniformResourceLocator
 
@@ -132,7 +132,7 @@ handleURL	(AEDesc const*		inFromWhichObject,
 	OSStatus	result = noErr;
 	
 	
-	(OSStatus)AppleEventUtilities_InitAEDesc(&tokenDescriptor);
+	UNUSED_RETURN(OSStatus)AppleEventUtilities_InitAEDesc(&tokenDescriptor);
 	
 	result = AppleEventUtilities_DuplicateOrResolveObject(inFromWhichObject, &tokenDescriptor);
 	if (result == noErr)
@@ -149,8 +149,8 @@ handleURL	(AEDesc const*		inFromWhichObject,
 					long		itemIndex = 0L;
 					
 					
-					(OSStatus)AppleEventUtilities_InitAEDesc(&listItemDescriptor);
-					(OSStatus)AppleEventUtilities_InitAEDesc(&resultDescriptor);
+					UNUSED_RETURN(OSStatus)AppleEventUtilities_InitAEDesc(&listItemDescriptor);
+					UNUSED_RETURN(OSStatus)AppleEventUtilities_InitAEDesc(&resultDescriptor);
 					
 					result = AECountItems(&tokenDescriptor, &itemIndex);
 					for (; itemIndex > 0; --itemIndex)

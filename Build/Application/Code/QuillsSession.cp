@@ -328,7 +328,7 @@ Session::handle_file	(std::string	inPathname)
 				{
 					// TEMPORARY: could (should?) throw exceptions, translated by SWIG
 					// into scripting language exceptions, if an error occurs here
-					(OSStatus)URL_ParseCFString(urlCFString);
+					UNUSED_RETURN(OSStatus)URL_ParseCFString(urlCFString);
 					CFRelease(urlCFString), urlCFString = nullptr;
 				}
 			}
@@ -382,7 +382,7 @@ Session::handle_url		(std::string	inURL)
 			{
 				// TEMPORARY: could (should?) throw exceptions, translated by SWIG
 				// into scripting language exceptions, if an error occurs here
-				(OSStatus)URL_ParseCFString(urlCFString);
+				UNUSED_RETURN(OSStatus)URL_ParseCFString(urlCFString);
 				CFRelease(urlCFString), urlCFString = nullptr;
 			}
 		}

@@ -515,7 +515,7 @@ const
 		}
 		
 		// hide the heading; it is not useful
-		(OSStatus)SetDataBrowserListViewHeaderBtnHeight(baseTableList, 0);
+		UNUSED_RETURN(OSStatus)SetDataBrowserListViewHeaderBtnHeight(baseTableList, 0);
 		
 		// insert as many rows as there are translation tables
 		{
@@ -536,13 +536,13 @@ const
 		assert_noerr(error);
 		
 		// set other nice things (most can be set in a NIB someday)
-		(OSStatus)DataBrowserChangeAttributes(baseTableList,
-												kDataBrowserAttributeListViewAlternatingRowColors/* attributes to set */,
-												0/* attributes to clear */);
-		(OSStatus)SetDataBrowserListViewUsePlainBackground(baseTableList, false);
-		(OSStatus)SetDataBrowserTableViewHiliteStyle(baseTableList, kDataBrowserTableViewFillHilite);
-		(OSStatus)SetDataBrowserHasScrollBars(baseTableList, false/* horizontal */, true/* vertical */);
-		(OSStatus)SetDataBrowserSelectionFlags(baseTableList, kDataBrowserSelectOnlyOne | kDataBrowserNeverEmptySelectionSet);
+		UNUSED_RETURN(OSStatus)DataBrowserChangeAttributes(baseTableList,
+															kDataBrowserAttributeListViewAlternatingRowColors/* attributes to set */,
+															0/* attributes to clear */);
+		UNUSED_RETURN(OSStatus)SetDataBrowserListViewUsePlainBackground(baseTableList, false);
+		UNUSED_RETURN(OSStatus)SetDataBrowserTableViewHiliteStyle(baseTableList, kDataBrowserTableViewFillHilite);
+		UNUSED_RETURN(OSStatus)SetDataBrowserHasScrollBars(baseTableList, false/* horizontal */, true/* vertical */);
+		UNUSED_RETURN(OSStatus)SetDataBrowserSelectionFlags(baseTableList, kDataBrowserSelectOnlyOne | kDataBrowserNeverEmptySelectionSet);
 		
 		// attach panel to data browser
 		error = SetControlProperty(baseTableList, AppResources_ReturnCreatorCode(),
@@ -1252,15 +1252,16 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					fontInfo.hasColor = false;
 					// apparently this API can return paramErr even though it
 					// successfully sets the desired font information...
-					(OSStatus)SetFontInfoForSelection(kFontSelectionQDType, 1/* number of styles */, &fontInfo,
-													// NOTE: This API is misdeclared in older headers, the last argument is supposed to
-													// be an event target.  It is bastardized into HIObjectRef form for older compiles.
-													#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-														GetControlEventTarget(buttonHit)
-													#else
-														REINTERPRET_CAST(buttonHit, HIObjectRef)
-													#endif
-													);
+					UNUSED_RETURN(OSStatus)SetFontInfoForSelection
+											(kFontSelectionQDType, 1/* number of styles */, &fontInfo,
+												// NOTE: This API is misdeclared in older headers, the last argument is supposed to
+												// be an event target.  It is bastardized into HIObjectRef form for older compiles.
+											#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+												GetControlEventTarget(buttonHit)
+											#else
+												REINTERPRET_CAST(buttonHit, HIObjectRef)
+											#endif
+											);
 					if (1)
 					{
 						// show the font panel, even if it could not be initialized properly
@@ -1371,7 +1372,7 @@ setDataBrowserColumnWidths	(My_TranslationsPanelUIPtr		inInterfacePtr)
 	assert(baseTableListContainer.exists());
 	
 	
-	(Rect*)GetControlBounds(baseTableListContainer, &containerRect);
+	UNUSED_RETURN(Rect*)GetControlBounds(baseTableListContainer, &containerRect);
 	
 	// set column widths proportionately
 	{
@@ -1382,9 +1383,9 @@ setDataBrowserColumnWidths	(My_TranslationsPanelUIPtr		inInterfacePtr)
 		
 		// give all remaining space to the base table column
 		calculatedWidth = kAvailableWidth - totalWidthSoFar;
-		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
-					(baseTableListContainer, kMy_DataBrowserPropertyIDBaseCharacterSet,
-						STATIC_CAST(calculatedWidth, UInt16));
+		UNUSED_RETURN(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+								(baseTableListContainer, kMy_DataBrowserPropertyIDBaseCharacterSet,
+									STATIC_CAST(calculatedWidth, UInt16));
 	}
 }// setDataBrowserColumnWidths
 
@@ -1806,7 +1807,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 

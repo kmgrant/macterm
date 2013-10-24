@@ -531,7 +531,7 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 	
 	if (oldActiveWindow != GetUserFocusWindow())
 	{
-		(OSStatus)SetUserFocusWindow(oldActiveWindow);
+		UNUSED_RETURN(OSStatus)SetUserFocusWindow(oldActiveWindow);
 	}
 }// SetVisible
 
@@ -1457,7 +1457,7 @@ disableFullScreen:(id)	sender
 	// event to the user focus could “miss” a terminal window and hit
 	// the application target (where no command handler for full-screen
 	// is installed); so, first find an appropriate window to focus
-	(OSStatus)SetUserFocusWindow(GetFrontWindowOfClass(kDocumentWindowClass, true/* must be visible */));
+	UNUSED_RETURN(OSStatus)SetUserFocusWindow(GetFrontWindowOfClass(kDocumentWindowClass, true/* must be visible */));
 	
 	Commands_ExecuteByIDUsingEvent(kCommandKioskModeDisable, gControlKeysEventTarget);
 }// disableFullScreen:
@@ -1505,7 +1505,7 @@ sharedFunctionKeysPanelController
 		
 		// force the window to load because its settings are needed
 		// elsewhere in the user interface (e.g. menu items)
-		(NSWindow*)[gKeypads_FunctionKeysPanelController window];
+		UNUSED_RETURN(NSWindow*)[gKeypads_FunctionKeysPanelController window];
 	}
 	return gKeypads_FunctionKeysPanelController;
 }// sharedFunctionKeysPanelController

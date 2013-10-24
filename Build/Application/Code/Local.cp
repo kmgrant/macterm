@@ -700,7 +700,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				
 				if (CFStringGetCString(answerBackCFString, answerBackCString, kAnswerBackSize, kCFStringEncodingASCII))
 				{
-					(int)setenv("TERM", answerBackCString, true/* overwrite */);
+					UNUSED_RETURN(int)setenv("TERM", answerBackCString, true/* overwrite */);
 				}
 				delete [] answerBackCString;
 			}
@@ -725,7 +725,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				
 				if (CFStringGetCString(valueCFString, valueCString, kStringSize, kCFStringEncodingASCII))
 				{
-					(int)setenv("TERM_PROGRAM", valueCString, true/* overwrite */);
+					UNUSED_RETURN(int)setenv("TERM_PROGRAM", valueCString, true/* overwrite */);
 				}
 				delete [] valueCString;
 			}
@@ -739,7 +739,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				
 				if (CFStringGetCString(valueCFString, valueCString, kStringSize, kCFStringEncodingASCII))
 				{
-					(int)setenv("TERM_PROGRAM_VERSION", valueCString, true/* overwrite */);
+					UNUSED_RETURN(int)setenv("TERM_PROGRAM_VERSION", valueCString, true/* overwrite */);
 				}
 				delete [] valueCString;
 			}
@@ -806,7 +806,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				// error; technically the return value is -1 on error, but really it’s
 				// a problem if any return value is received, so never exit with a 0
 				// in this situation!
-				(int)execvp(argvCopy[0], argvCopy); // should not return
+				UNUSED_RETURN(int)execvp(argvCopy[0], argvCopy); // should not return
 				
 				// almost no chance this line will be run, but if it does, just kill the child process
 				Console_WriteLine("aborting, failed to exec()");
@@ -1895,7 +1895,7 @@ putTTYInOriginalModeAtExit ()
 {
 	if (gTerminalToRestore >= 0)
 	{
-		(Local_Result)putTTYInOriginalMode(gTerminalToRestore);
+		UNUSED_RETURN(Local_Result)putTTYInOriginalMode(gTerminalToRestore);
 	}
 }// putTTYInOriginalModeAtExit
 
@@ -2271,9 +2271,9 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 					// ignore the following error because the dispatching queue
 					// is not critical for this particular event to succeed (and
 					// in fact any replies would be ignored)
-					(OSStatus)SetEventParameter(setStateEvent, kEventParamNetEvents_DispatcherQueue,
-												typeNetEvents_EventQueueRef, sizeof(contextPtr->eventQueue),
-												&contextPtr->eventQueue);
+					UNUSED_RETURN(OSStatus)SetEventParameter(setStateEvent, kEventParamNetEvents_DispatcherQueue,
+																typeNetEvents_EventQueueRef, sizeof(contextPtr->eventQueue),
+																&contextPtr->eventQueue);
 					
 					// finally, send the message to the main event loop
 					error = PostEventToQueue(GetMainEventQueue(), setStateEvent, kEventPriorityStandard);

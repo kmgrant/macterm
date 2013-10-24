@@ -1139,7 +1139,7 @@ TerminalView_FlashSelection		(TerminalViewRef	inView)
 		// for better performance on Mac OS X, lock the bits of a port
 		// before performing a series of QuickDraw operations in it
 		GetGWorld(&currentPort, &currentDevice);
-		(OSStatus)LockPortBits(currentPort);
+		UNUSED_RETURN(OSStatus)LockPortBits(currentPort);
 		
 		for (i = 0; i < 2; ++i)
 		{
@@ -1157,7 +1157,7 @@ TerminalView_FlashSelection		(TerminalViewRef	inView)
 		}
 		
 		// undo the lock done earlier in this block
-		(OSStatus)UnlockPortBits(currentPort);
+		UNUSED_RETURN(OSStatus)UnlockPortBits(currentPort);
 	}
 }// FlashSelection
 
@@ -1188,7 +1188,7 @@ TerminalView_FocusForUser	(TerminalViewRef	inView)
 	}
 	else
 	{
-		(OSStatus)DialogUtilities_SetKeyboardFocus(TerminalView_ReturnUserFocusHIView(inView));
+		UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(TerminalView_ReturnUserFocusHIView(inView));
 	}
 }// FocusForUser
 
@@ -1708,7 +1708,7 @@ TerminalView_PtInSelection	(TerminalViewRef	inView,
 		SInt16				deltaRow = 0;
 		
 		
-		(Boolean)findVirtualCellFromLocalPoint(viewPtr, inLocalPoint, newColumnRow, deltaColumn, deltaRow);
+		UNUSED_RETURN(Boolean)findVirtualCellFromLocalPoint(viewPtr, inLocalPoint, newColumnRow, deltaColumn, deltaRow);
 		
 		// test row range, which must be satisfied regardless of the selection style
 		result = ((newColumnRow.second >= viewPtr->text.selection.range.first.second) &&
@@ -2441,16 +2441,16 @@ TerminalView_ScrollPageTowardBottomEdge		(TerminalViewRef	inView)
 		UInt16 const	kVisibleRowCount = Terminal_ReturnRowCount(viewPtr->screen.ref);
 		
 		
-		(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, kVisibleRowCount - 3 * INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, kVisibleRowCount - 3 * INTEGER_QUARTERED(kVisibleRowCount));
 	}
 	return result;
 }// ScrollPageTowardBottomEdge
@@ -2482,16 +2482,16 @@ TerminalView_ScrollPageTowardLeftEdge		(TerminalViewRef	inView)
 		UInt16 const	kVisibleColumnCount = Terminal_ReturnColumnCount(viewPtr->screen.ref);
 		
 		
-		(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, kVisibleColumnCount - 3 * INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, kVisibleColumnCount - 3 * INTEGER_QUARTERED(kVisibleColumnCount));
 	}
 	return result;
 }// ScrollPageTowardLeftEdge
@@ -2523,16 +2523,16 @@ TerminalView_ScrollPageTowardRightEdge		(TerminalViewRef	inView)
 		UInt16 const	kVisibleColumnCount = Terminal_ReturnColumnCount(viewPtr->screen.ref);
 		
 		
-		(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, kVisibleColumnCount - 3 * INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, kVisibleColumnCount - 3 * INTEGER_QUARTERED(kVisibleColumnCount));
 	}
 	return result;
 }// ScrollPageTowardRightEdge
@@ -2564,16 +2564,16 @@ TerminalView_ScrollPageTowardTopEdge		(TerminalViewRef	inView)
 		UInt16 const	kVisibleRowCount = Terminal_ReturnRowCount(viewPtr->screen.ref);
 		
 		
-		(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, kVisibleRowCount - 3 * INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, kVisibleRowCount - 3 * INTEGER_QUARTERED(kVisibleRowCount));
 	}
 	return result;
 }// ScrollPageTowardTopEdge
@@ -3158,9 +3158,9 @@ TerminalView_SetDragHighlight	(HIViewRef		inView,
 	// set a property so that the view drawing routine understands
 	// when it should include a drag highlight
 	// TEMPORARY: this error is ignored, perhaps this function should return an error
-	(OSStatus)SetControlProperty(inView, AppResources_ReturnCreatorCode(),
-									kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
-									sizeof(showHighlight), &showHighlight);
+	UNUSED_RETURN(OSStatus)SetControlProperty(inView, AppResources_ReturnCreatorCode(),
+												kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
+												sizeof(showHighlight), &showHighlight);
 	
 	// change the cursor, for additional visual feedback
 	if (showHighlight)
@@ -3173,7 +3173,7 @@ TerminalView_SetDragHighlight	(HIViewRef		inView,
 	}
 	
 	// redraw the view
-	(OSStatus)HIViewSetNeedsDisplay(inView, true);
+	UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inView, true);
 }// SetDragHighlight
 
 
@@ -3192,7 +3192,7 @@ TerminalView_SetDrawingEnabled	(TerminalViewRef	inView,
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	(OSStatus)HIViewSetDrawingEnabled(viewPtr->contentHIView, inIsDrawingEnabled);
+	UNUSED_RETURN(OSStatus)HIViewSetDrawingEnabled(viewPtr->contentHIView, inIsDrawingEnabled);
 }// SetDrawingEnabled
 
 
@@ -3589,7 +3589,7 @@ TerminalView_ZoomOpenFromSelection		(TerminalViewRef	inView)
 			// since the region is currently defined in content-local coordinates,
 			// the “height” of the “view” containing the selection is actually
 			// going to be the entire content view and not just the screen part
-			(OSStatus)HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, screenWindow), &selectionViewBounds);
+			UNUSED_RETURN(OSStatus)HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, screenWindow), &selectionViewBounds);
 			
 			// translate the selection area into Cocoa coordinates that are
 			// relative to the content view of the window
@@ -3644,7 +3644,7 @@ TerminalView_ZoomToCursor	(TerminalViewRef	inView)
 		// since the region is currently defined in content-local coordinates,
 		// the “height” of the “view” containing the selection is actually
 		// going to be the entire content view and not just the screen part
-		(OSStatus)HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, screenWindow), &cursorViewBounds);
+		UNUSED_RETURN(OSStatus)HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, screenWindow), &cursorViewBounds);
 		
 		// translate the selection area into Cocoa coordinates that are
 		// relative to the content view of the window
@@ -3700,7 +3700,7 @@ TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
 			// since the region is currently defined in content-local coordinates,
 			// the “height” of the “view” containing the selection is actually
 			// going to be the entire content view and not just the screen part
-			(OSStatus)HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, screenWindow), &selectionViewBounds);
+			UNUSED_RETURN(OSStatus)HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, screenWindow), &selectionViewBounds);
 			
 			// translate the selection area into Cocoa coordinates that are
 			// relative to the content view of the window
@@ -3754,14 +3754,14 @@ TerminalView_ZoomToSelection	(TerminalViewRef	inView)
 			GetRegionBounds(selectionRegion, &selectionBounds);
 			
 			// find global rectangle of the screen area
-			(OSStatus)HIViewGetBounds(viewPtr->contentHIView, &screenContentFloatBounds);
+			UNUSED_RETURN(OSStatus)HIViewGetBounds(viewPtr->contentHIView, &screenContentFloatBounds);
 			SetRect(&screenContentBounds, 0, 0, STATIC_CAST(screenContentFloatBounds.size.width, SInt16),
 					STATIC_CAST(screenContentFloatBounds.size.height, SInt16));
 			screenToLocalRect(viewPtr, &screenContentBounds);
 			QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), &screenContentBounds);
 			
 			// animate!
-			(OSStatus)ZoomRects(&screenContentBounds, &selectionBounds, 20/* steps, arbitrary */, kZoomDecelerate);
+			UNUSED_RETURN(OSStatus)ZoomRects(&screenContentBounds, &selectionBounds, 20/* steps, arbitrary */, kZoomDecelerate);
 			
 			Memory_DisposeRegion(&selectionRegion);
 		}
@@ -4402,10 +4402,10 @@ My_TerminalView::
 	Preferences_StopMonitoring(this->screen.preferenceMonitor.returnRef(), kPreferences_TagDontDimBackgroundScreens);
 	Preferences_StopMonitoring(this->screen.preferenceMonitor.returnRef(), kPreferences_TagTerminalCursorType);
 	Preferences_StopMonitoring(this->screen.preferenceMonitor.returnRef(), kPreferences_TagTerminalResizeAffectsFontSize);
-	(Preferences_Result)Preferences_ContextStopMonitoring(this->encodingConfig.returnRef(), this->screen.preferenceMonitor.returnRef(),
-															kPreferences_ChangeContextBatchMode);
-	(Preferences_Result)Preferences_ContextStopMonitoring(this->formatConfig.returnRef(), this->screen.preferenceMonitor.returnRef(),
-															kPreferences_ChangeContextBatchMode);
+	UNUSED_RETURN(Preferences_Result)Preferences_ContextStopMonitoring(this->encodingConfig.returnRef(), this->screen.preferenceMonitor.returnRef(),
+																		kPreferences_ChangeContextBatchMode);
+	UNUSED_RETURN(Preferences_Result)Preferences_ContextStopMonitoring(this->formatConfig.returnRef(), this->screen.preferenceMonitor.returnRef(),
+																		kPreferences_ChangeContextBatchMode);
 	
 	// remove timers
 	RemoveEventLoopTimer(this->animation.timer.ref), this->animation.timer.ref = nullptr;
@@ -4452,7 +4452,7 @@ animateBlinkingItems	(EventLoopTimerRef		inTimer,
 		
 		
 		// for simplicity, keep the cursor and text blinks in sync
-		(OSStatus)SetEventLoopTimerNextFireTime(inTimer, ptr->animation.rendering.delays[ptr->animation.rendering.stage]);
+		UNUSED_RETURN(OSStatus)SetEventLoopTimerNextFireTime(inTimer, ptr->animation.rendering.delays[ptr->animation.rendering.stage]);
 		
 		//
 		// blinking text
@@ -5093,16 +5093,16 @@ createWindowColorPalette	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	// set up window’s colors; note that this will set the non-ANSI colors,
 	// the blinking colors, and the ANSI colors
-	(UInt16)copyColorPreferences(inTerminalViewPtr, inFormat, inSearchForDefaults);
+	UNUSED_RETURN(UInt16)copyColorPreferences(inTerminalViewPtr, inFormat, inSearchForDefaults);
 	
 	// install a timer to modify blinking text color entries periodically
 	assert(nullptr != inTerminalViewPtr->selfRef);
 	inTerminalViewPtr->animation.timer.upp = NewEventLoopTimerUPP(animateBlinkingItems);
-	(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(), kEventDurationForever/* time before first fire */,
-									kEventDurationForever/* time between fires - set later */,
-									inTerminalViewPtr->animation.timer.upp,
-									inTerminalViewPtr->selfRef/* user data */,
-									&inTerminalViewPtr->animation.timer.ref);
+	UNUSED_RETURN(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(), kEventDurationForever/* time before first fire */,
+													kEventDurationForever/* time between fires - set later */,
+													inTerminalViewPtr->animation.timer.upp,
+													inTerminalViewPtr->selfRef/* user data */,
+													&inTerminalViewPtr->animation.timer.ref);
 	inTerminalViewPtr->animation.timer.isActive = false;
 	
 	return result;
@@ -5430,7 +5430,7 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 			// before performing a series of QuickDraw operations in it,
 			// and make the intended drawing area part of the dirty region
 			GetGWorld(&currentPort, &currentDevice);
-			(OSStatus)LockPortBits(currentPort);
+			UNUSED_RETURN(OSStatus)LockPortBits(currentPort);
 		}
 		
 		// find contiguous blocks of text on each line in the given
@@ -5549,7 +5549,7 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 		if (false == inTerminalViewPtr->isCocoa)
 		{
 			// undo the lock done earlier in this block
-			(OSStatus)UnlockPortBits(currentPort);
+			UNUSED_RETURN(OSStatus)UnlockPortBits(currentPort);
 		}
 	}
 	return result;
@@ -5863,7 +5863,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 				
 				
 				GetGWorld(&currentPort, &currentDevice);
-				(OSStatus)QDAddRectToDirtyRegion(currentPort, &inOldQuickDrawBoundaries);
+				UNUSED_RETURN(OSStatus)QDAddRectToDirtyRegion(currentPort, &inOldQuickDrawBoundaries);
 			}
 			
 			// set up the specified graphics context (and current QuickDraw port, for
@@ -7291,7 +7291,7 @@ getRowCharacterWidth	(My_TerminalViewPtr		inTerminalViewPtr,
 	rowIterator = findRowIterator(inTerminalViewPtr, inLineNumber, &rowIteratorData);
 	if (nullptr != rowIterator)
 	{
-		(Terminal_Result)Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, rowIterator, &globalAttributes);
+		UNUSED_RETURN(Terminal_Result)Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, rowIterator, &globalAttributes);
 		if (STYLE_IS_DOUBLE_ANY(globalAttributes)) result = INTEGER_DOUBLED(result);
 		releaseRowIterator(inTerminalViewPtr, &rowIterator);
 	}
@@ -7691,7 +7691,7 @@ getSelectedTextAsNewHandle	(My_TerminalViewPtr			inTerminalViewPtr,
 			if ((copyResult == kTerminal_ResultOK) ||
 				(copyResult == kTerminal_ResultNotEnoughMemory))
 			{
-				(OSStatus)Memory_SetHandleSize(result, actualLength * sizeof(char));
+				UNUSED_RETURN(OSStatus)Memory_SetHandleSize(result, actualLength * sizeof(char));
 			}
 			else
 			{
@@ -8490,16 +8490,16 @@ highlightVirtualRange	(My_TerminalViewPtr				inTerminalViewPtr,
 		
 		if (nullptr != lineIterator)
 		{
-			(Terminal_Result)Terminal_ChangeRangeAttributes
-								(inTerminalViewPtr->screen.ref, lineIterator, kNumberOfRows,
-									orderedRange.first.first, orderedRange.second.first,
-									inTerminalViewPtr->text.selection.isRectangular,
-									(inIsHighlighted)
-										? inHighlightingStyle
-										: STATIC_CAST(kNoTerminalTextAttributes, TerminalTextAttributes)/* attributes to set */,
-									(inIsHighlighted)
-										? STATIC_CAST(kNoTerminalTextAttributes, TerminalTextAttributes)
-										: inHighlightingStyle/* attributes to clear */);
+			UNUSED_RETURN(Terminal_Result)Terminal_ChangeRangeAttributes
+											(inTerminalViewPtr->screen.ref, lineIterator, kNumberOfRows,
+												orderedRange.first.first, orderedRange.second.first,
+												inTerminalViewPtr->text.selection.isRectangular,
+												(inIsHighlighted)
+												? inHighlightingStyle
+												: STATIC_CAST(kNoTerminalTextAttributes, TerminalTextAttributes)/* attributes to set */,
+												(inIsHighlighted)
+												? STATIC_CAST(kNoTerminalTextAttributes, TerminalTextAttributes)
+												: inHighlightingStyle/* attributes to clear */);
 			releaseRowIterator(inTerminalViewPtr, &lineIterator);
 		}
 	}
@@ -8876,7 +8876,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 							error = FSExchangeObjects(&temporaryFile, &saveFile);
 							if (noErr == error)
 							{
-								(OSStatus)FSDeleteObject(&temporaryFile);
+								UNUSED_RETURN(OSStatus)FSDeleteObject(&temporaryFile);
 							}
 							
 							result = true;
@@ -9399,9 +9399,9 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				{
 					resizeAffectsFont = false; // assume a value, if preference can’t be found
 				}
-				(TerminalView_Result)TerminalView_SetDisplayMode(view, (resizeAffectsFont)
-																		? kTerminalView_DisplayModeZoom
-																		: kTerminalView_DisplayModeNormal);
+				UNUSED_RETURN(TerminalView_Result)TerminalView_SetDisplayMode(view, (resizeAffectsFont)
+																					? kTerminalView_DisplayModeZoom
+																					: kTerminalView_DisplayModeNormal);
 			}
 			break;
 		
@@ -9416,8 +9416,8 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				}
 				else
 				{
-					(UInt16)copyColorPreferences(viewPtr, prefsContext, true/* search for defaults */);
-					(UInt16)copyFontPreferences(viewPtr, prefsContext, true/* search for defaults */);
+					UNUSED_RETURN(UInt16)copyColorPreferences(viewPtr, prefsContext, true/* search for defaults */);
+					UNUSED_RETURN(UInt16)copyFontPreferences(viewPtr, prefsContext, true/* search for defaults */);
 				}
 				updateDisplay(viewPtr);
 			}
@@ -9884,12 +9884,12 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 					if (eventModifiers & cmdKey)
 					{
 						// if clicked, a highlighted URL would be opened
-						(SInt16)Cursors_UseHandPoint();
+						UNUSED_RETURN(SInt16)Cursors_UseHandPoint();
 					}
 					else
 					{
 						// text is draggable
-						(SInt16)Cursors_UseHandOpen();
+						UNUSED_RETURN(SInt16)Cursors_UseHandOpen();
 					}
 				}
 				else
@@ -9901,12 +9901,12 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 						if (eventModifiers & controlKey)
 						{
 							// if clicked, there would be a contextual menu
-							(SInt16)Cursors_UseArrowContextualMenu();
+							UNUSED_RETURN(SInt16)Cursors_UseArrowContextualMenu();
 						}
 						else if ((eventModifiers & optionKey) && (eventModifiers & cmdKey))
 						{
 							// if clicked, the terminal cursor will move to the mouse location
-							(SInt16)Cursors_UsePlus();
+							UNUSED_RETURN(SInt16)Cursors_UsePlus();
 						}
 						else if (eventModifiers & optionKey)
 						{
@@ -9944,7 +9944,7 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 					}
 					else
 					{
-						(SInt16)Cursors_UseArrow();
+						UNUSED_RETURN(SInt16)Cursors_UseArrow();
 					}
 				}
 			}
@@ -10244,14 +10244,14 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							
 							// figure out what cells to draw
-							(Boolean)findVirtualCellFromScreenPoint(viewPtr, kTopLeftAnchor, leftTopCell, deltaColumn, deltaRow);
-							(Boolean)findVirtualCellFromScreenPoint(viewPtr, kBottomRightAnchor, rightBottomCell, deltaColumn, deltaRow);
+							UNUSED_RETURN(Boolean)findVirtualCellFromScreenPoint(viewPtr, kTopLeftAnchor, leftTopCell, deltaColumn, deltaRow);
+							UNUSED_RETURN(Boolean)findVirtualCellFromScreenPoint(viewPtr, kBottomRightAnchor, rightBottomCell, deltaColumn, deltaRow);
 							
 							// draw the text in the clipped area
-							(Boolean)drawSection(viewPtr, drawingContext, leftTopCell.first - viewPtr->screen.leftVisibleEdgeInColumns,
-													leftTopCell.second - viewPtr->screen.topVisibleEdgeInRows,
-													rightBottomCell.first + 1/* past-the-end */ - viewPtr->screen.leftVisibleEdgeInColumns,
-													rightBottomCell.second + 1/* past-the-end */ - viewPtr->screen.topVisibleEdgeInRows);
+							UNUSED_RETURN(Boolean)drawSection(viewPtr, drawingContext, leftTopCell.first - viewPtr->screen.leftVisibleEdgeInColumns,
+																leftTopCell.second - viewPtr->screen.topVisibleEdgeInRows,
+																rightBottomCell.first + 1/* past-the-end */ - viewPtr->screen.leftVisibleEdgeInColumns,
+																rightBottomCell.second + 1/* past-the-end */ - viewPtr->screen.topVisibleEdgeInRows);
 						}
 					#endif
 						viewPtr->text.attributes = kInvalidTerminalTextAttributes; // forces attributes to reset themselves properly
@@ -11104,7 +11104,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 										SetPortWindowPort(GetControlOwner(view));
 										LocalToGlobal(&event.where);
 										event.modifiers = currentModifiers;
-										(OSStatus)dragTextSelection(viewPtr, dragRgn, &event, &dragged);
+										UNUSED_RETURN(OSStatus)dragTextSelection(viewPtr, dragRgn, &event, &dragged);
 										cannotBeDoubleClick = true;
 									}
 									else if (0 == (currentModifiers & shiftKey))
@@ -11172,9 +11172,9 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 							TerminalView_SelectNothing(viewPtr->selfRef);
 							
 							// select an entire word
-							(Boolean)findVirtualCellFromLocalPoint(viewPtr, localMouse,
-																	viewPtr->text.selection.range.first,
-																	deltaColumn, deltaRow);
+							UNUSED_RETURN(Boolean)findVirtualCellFromLocalPoint(viewPtr, localMouse,
+																				viewPtr->text.selection.range.first,
+																				deltaColumn, deltaRow);
 							viewPtr->text.selection.range.second = viewPtr->text.selection.range.first;
 							handleMultiClick(viewPtr, 2/* click count */);
 						}
@@ -11208,9 +11208,9 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 							TerminalView_SelectNothing(viewPtr->selfRef);
 							
 							// select an entire word
-							(Boolean)findVirtualCellFromLocalPoint(viewPtr, localMouse,
-																	viewPtr->text.selection.range.first,
-																	deltaColumn, deltaRow);
+							UNUSED_RETURN(Boolean)findVirtualCellFromLocalPoint(viewPtr, localMouse,
+																				viewPtr->text.selection.range.first,
+																				deltaColumn, deltaRow);
 							viewPtr->text.selection.range.second = viewPtr->text.selection.range.first;
 							handleMultiClick(viewPtr, 2/* click count */);
 						}
@@ -11239,9 +11239,9 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 								TerminalView_SelectNothing(viewPtr->selfRef);
 								
 								// select an entire line
-								(Boolean)findVirtualCellFromLocalPoint(viewPtr, localMouse,
-																		viewPtr->text.selection.range.first,
-																		deltaColumn, deltaRow);
+								UNUSED_RETURN(Boolean)findVirtualCellFromLocalPoint(viewPtr, localMouse,
+																					viewPtr->text.selection.range.first,
+																					deltaColumn, deltaRow);
 								viewPtr->text.selection.range.second = viewPtr->text.selection.range.first;
 								handleMultiClick(viewPtr, 3/* click count */);
 							}
@@ -11474,9 +11474,9 @@ returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
 							}
 							
 							// first replace all “long” series of spaces with single tabs, as per user preference
-							(CFIndex)CFStringFindAndReplace(resultMutable, spacesString.returnCFStringRef(), tabString,
-															CFRangeMake(0, CFStringGetLength(resultMutable)),
-															0/* comparison options */);
+							UNUSED_RETURN(CFIndex)CFStringFindAndReplace(resultMutable, spacesString.returnCFStringRef(), tabString,
+																			CFRangeMake(0, CFStringGetLength(resultMutable)),
+																			0/* comparison options */);
 							
 							// replace all smaller ranges of spaces with one tab as well
 							for (UInt16 maxSpaces = (inMaxSpacesToReplaceWithTabOrZero - 1); maxSpaces > 0; --maxSpaces)
@@ -11489,9 +11489,9 @@ returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
 								}
 								
 								// ...and turn those spaces into a tab
-								(CFIndex)CFStringFindAndReplace(resultMutable, spacesString.returnCFStringRef(), tabString,
-																CFRangeMake(0, CFStringGetLength(resultMutable)),
-																0/* comparison options */);
+								UNUSED_RETURN(CFIndex)CFStringFindAndReplace(resultMutable, spacesString.returnCFStringRef(), tabString,
+																				CFRangeMake(0, CFStringGetLength(resultMutable)),
+																				0/* comparison options */);
 							}
 						}
 					}
@@ -11748,11 +11748,11 @@ setAlphaTerminalWindowOp	(TerminalWindowRef	inTerminalWindow,
 	
 	if (nullptr != kTabWindow)
 	{
-		(OSStatus)SetWindowAlpha(kTabWindow, *kAlphaPtr);
+		UNUSED_RETURN(OSStatus)SetWindowAlpha(kTabWindow, *kAlphaPtr);
 	}
 	if (nullptr != kWindow)
 	{
-		(OSStatus)SetWindowAlpha(kWindow, *kAlphaPtr);
+		UNUSED_RETURN(OSStatus)SetWindowAlpha(kWindow, *kAlphaPtr);
 	}
 }// setAlphaTerminalWindowOp
 
@@ -11792,11 +11792,11 @@ setBlinkingTimerActive	(My_TerminalViewPtr		inTerminalViewPtr,
 	{
 		if (inIsActive)
 		{
-			(OSStatus)SetEventLoopTimerNextFireTime(inTerminalViewPtr->animation.timer.ref, kEventDurationNoWait);
+			UNUSED_RETURN(OSStatus)SetEventLoopTimerNextFireTime(inTerminalViewPtr->animation.timer.ref, kEventDurationNoWait);
 		}
 		else
 		{
-			(OSStatus)SetEventLoopTimerNextFireTime(inTerminalViewPtr->animation.timer.ref, kEventDurationForever);
+			UNUSED_RETURN(OSStatus)SetEventLoopTimerNextFireTime(inTerminalViewPtr->animation.timer.ref, kEventDurationForever);
 		}
 		inTerminalViewPtr->animation.timer.isActive = inIsActive;
 	}
@@ -11966,8 +11966,7 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		if (noErr != error)
 		{
-			Console_Warning(Console_WriteValuePString, "unable to determine encoding used by font",
-							inTerminalViewPtr->text.font.familyName);
+			Console_Warning(Console_WriteLine, "unable to determine encoding used by active font");
 		}
 		inTerminalViewPtr->text.font.encoding = encoding; // TextEncoding is compatible with CFStringEncoding
 	}
@@ -12327,7 +12326,7 @@ setUpCursorGhost	(My_TerminalViewPtr		inTerminalViewPtr,
 		SInt16				deltaRow = 0;
 		
 		
-		(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, inLocalMouse, newColumnRow, deltaColumn, deltaRow);
+		UNUSED_RETURN(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, inLocalMouse, newColumnRow, deltaColumn, deltaRow);
 		// cursor is visible - put it where it’s supposed to be
 		setUpCursorBounds(inTerminalViewPtr, newColumnRow.first, newColumnRow.second, &inTerminalViewPtr->screen.cursor.ghostBounds,
 							nullptr/* region */);
@@ -12604,8 +12603,8 @@ trackTextSelection	(My_TerminalViewPtr		inTerminalViewPtr,
 		do
 		{
 			// find new mouse location, scroll if necessary
-			(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, *outNewLocalMousePtr, cellUnderMouse, deltaColumn, deltaRow);
-			(TerminalView_Result)TerminalView_ScrollAround(inTerminalViewPtr->selfRef, deltaColumn, deltaRow);
+			UNUSED_RETURN(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, *outNewLocalMousePtr, cellUnderMouse, deltaColumn, deltaRow);
+			UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollAround(inTerminalViewPtr->selfRef, deltaColumn, deltaRow);
 			
 			// if the mouse moves (or the shift key is down), update the selection
 			unless (RegionUtilities_NearPoints(*outNewLocalMousePtr, previousLocalMouse) && (false == extendSelection))
@@ -12772,9 +12771,9 @@ updateDisplay	(My_TerminalViewPtr		inTerminalViewPtr)
 	}
 	else
 	{
-		(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->backgroundHIView, true);
-		(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->paddingHIView, true);
-		(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->contentHIView, true);
+		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->backgroundHIView, true);
+		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->paddingHIView, true);
+		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->contentHIView, true);
 	}
 }// updateDisplay
 
@@ -12848,18 +12847,18 @@ updateDisplayTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 			{
 				// no need to convert for first view, input region is assumed
 				// to already be in its coordinate system
-				(OSStatus)HIViewSetNeedsDisplayInRegion(currentView, ptr->screen.refreshRegion, true);
+				UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplayInRegion(currentView, ptr->screen.refreshRegion, true);
 				{
 					My_RegionConverter	contentToPadding(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
 					
 					
-					(OSStatus)HIViewSetNeedsDisplayInRegion(contentToPadding.destination, ptr->screen.refreshRegion, true);
+					UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplayInRegion(contentToPadding.destination, ptr->screen.refreshRegion, true);
 					currentView = HIViewGetSuperview(currentView);
 					{
 						My_RegionConverter	paddingToBackground(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
 						
 						
-						(OSStatus)HIViewSetNeedsDisplayInRegion(paddingToBackground.destination, ptr->screen.refreshRegion, true);
+						UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplayInRegion(paddingToBackground.destination, ptr->screen.refreshRegion, true);
 					}
 				}
 			}
@@ -13969,14 +13968,14 @@ drawRect:(NSRect)	rect
 			
 			
 			// figure out what cells to draw
-			(Boolean)findVirtualCellFromScreenPoint(viewPtr, kTopLeftAnchor, leftTopCell, deltaColumn, deltaRow);
-			(Boolean)findVirtualCellFromScreenPoint(viewPtr, kBottomRightAnchor, rightBottomCell, deltaColumn, deltaRow);
+			UNUSED_RETURN(Boolean)findVirtualCellFromScreenPoint(viewPtr, kTopLeftAnchor, leftTopCell, deltaColumn, deltaRow);
+			UNUSED_RETURN(Boolean)findVirtualCellFromScreenPoint(viewPtr, kBottomRightAnchor, rightBottomCell, deltaColumn, deltaRow);
 			
 			// draw the text in the clipped area
-			(Boolean)drawSection(viewPtr, drawingContext, leftTopCell.first - viewPtr->screen.leftVisibleEdgeInColumns,
-									leftTopCell.second - viewPtr->screen.topVisibleEdgeInRows,
-									rightBottomCell.first + 1/* past-the-end */ - viewPtr->screen.leftVisibleEdgeInColumns,
-									rightBottomCell.second + 1/* past-the-end */ - viewPtr->screen.topVisibleEdgeInRows);
+			UNUSED_RETURN(Boolean)drawSection(viewPtr, drawingContext, leftTopCell.first - viewPtr->screen.leftVisibleEdgeInColumns,
+												leftTopCell.second - viewPtr->screen.topVisibleEdgeInRows,
+												rightBottomCell.first + 1/* past-the-end */ - viewPtr->screen.leftVisibleEdgeInColumns,
+												rightBottomCell.second + 1/* past-the-end */ - viewPtr->screen.topVisibleEdgeInRows);
 		}
 		viewPtr->text.attributes = kInvalidTerminalTextAttributes; // forces attributes to reset themselves properly
 		

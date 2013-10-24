@@ -251,7 +251,7 @@ GenericDialog_AddButton		(GenericDialog_Ref		inDialog,
 	assert_noerr(error);
 	error = SetControlCommandID(ptr->buttonOther, inButtonCommandID);
 	assert_noerr(error);
-	(UInt16)Localization_AutoSizeButtonControl(ptr->buttonOther, 0/* minimum width */);
+	UNUSED_RETURN(UInt16)Localization_AutoSizeButtonControl(ptr->buttonOther, 0/* minimum width */);
 	error = HIViewSetVisible(ptr->buttonOther, true);
 	assert_noerr(error);
 	
@@ -302,7 +302,7 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog)
 			// handle events
 			ShowWindow(ptr->dialogWindow);
 			EventLoop_SelectOverRealFrontWindow(ptr->dialogWindow);
-			(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
+			UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
 			Panel_SendMessageFocusFirst(ptr->hostedPanel);
 			error = RunAppModalLoopForWindow(ptr->dialogWindow);
 			assert_noerr(error);
@@ -310,7 +310,7 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog)
 		else
 		{
 			ShowSheetWindow(ptr->dialogWindow, ptr->parentWindow);
-			(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
+			UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
 			Panel_SendMessageFocusFirst(ptr->hostedPanel);
 			CocoaBasic_MakeKeyWindowCarbonUserFocusWindow();
 			// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
@@ -400,7 +400,7 @@ GenericDialog_SetCommandButtonTitle		(GenericDialog_Ref		inDialog,
 	
 	if (kHICommandOK == inCommandID)
 	{
-		(OSStatus)SetControlTitleWithCFString(ptr->buttonOK, inButtonTitle);
+		UNUSED_RETURN(OSStatus)SetControlTitleWithCFString(ptr->buttonOK, inButtonTitle);
 	}
 	ptr->autoArrangeButtons();
 }// SetCommandButtonTitle
@@ -556,11 +556,11 @@ userDataPtr						(nullptr)
 		
 		if (kPanel_ResponseGrowBoxOpaque == Panel_SendMessageGetGrowBoxLook(this->hostedPanel))
 		{
-			(OSStatus)HIGrowBoxViewSetTransparent(growBox, false);
+			UNUSED_RETURN(OSStatus)HIGrowBoxViewSetTransparent(growBox, false);
 		}
 		else
 		{
-			(OSStatus)HIGrowBoxViewSetTransparent(growBox, true);
+			UNUSED_RETURN(OSStatus)HIGrowBoxViewSetTransparent(growBox, true);
 		}
 	}
 	
@@ -584,8 +584,8 @@ userDataPtr						(nullptr)
 		// hide the grow box completely if it is not useful to resize the panel
 		if (kPanel_ResponseResizeNotNeeded == resizeRequirements)
 		{
-			(OSStatus)ChangeWindowAttributes(this->dialogWindow, 0/* attributes to set */,
-												kWindowResizableAttribute/* attributes to clear */);
+			UNUSED_RETURN(OSStatus)ChangeWindowAttributes(this->dialogWindow, 0/* attributes to set */,
+															kWindowResizableAttribute/* attributes to clear */);
 		}
 		
 		// install a callback that responds as a window is resized
@@ -633,10 +633,10 @@ userDataPtr						(nullptr)
 		HIWindowRef const	kAnchorWindow = GetUserFocusWindow();
 		
 		
-		(OSStatus)RepositionWindow(this->dialogWindow, kAnchorWindow,
-									(nullptr == kAnchorWindow)
-										? kWindowCenterOnMainScreen
-										: kWindowCenterOnParentWindowScreen);
+		UNUSED_RETURN(OSStatus)RepositionWindow(this->dialogWindow, kAnchorWindow,
+												(nullptr == kAnchorWindow)
+												? kWindowCenterOnMainScreen
+												: kWindowCenterOnParentWindowScreen);
 	}
 	
 	// now notify the panel of its data
@@ -712,7 +712,7 @@ handleItemHit	(My_GenericDialogPtr	inPtr,
 		Panel_SendMessageNewVisibility(inPtr->hostedPanel, false/* visible */);
 		if (inPtr->isModal)
 		{
-			(OSStatus)QuitAppModalLoopForWindow(inPtr->dialogWindow);
+			UNUSED_RETURN(OSStatus)QuitAppModalLoopForWindow(inPtr->dialogWindow);
 			HideWindow(inPtr->dialogWindow);
 		}
 		else
@@ -741,7 +741,7 @@ handleItemHit	(My_GenericDialogPtr	inPtr,
 		Panel_SendMessageNewVisibility(inPtr->hostedPanel, false/* visible */);
 		if (inPtr->isModal)
 		{
-			(OSStatus)QuitAppModalLoopForWindow(inPtr->dialogWindow);
+			UNUSED_RETURN(OSStatus)QuitAppModalLoopForWindow(inPtr->dialogWindow);
 			HideWindow(inPtr->dialogWindow);
 		}
 		else

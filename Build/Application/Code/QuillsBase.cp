@@ -300,7 +300,7 @@ updateNoticeCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 			
 			
 			// if the user chooses to ignore this warning, automatically avoid future warnings
-			(Preferences_Result)Preferences_SetData(kPreferences_TagNoUpdateWarning, sizeof(kFlag), &kFlag);
+			UNUSED_RETURN(Preferences_Result)Preferences_SetData(kPreferences_TagNoUpdateWarning, sizeof(kFlag), &kFlag);
 		}
 		break;
 	

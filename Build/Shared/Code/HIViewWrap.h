@@ -289,7 +289,7 @@ const
 	HIViewID	result = { '----', 0 };
 	
 	
-	(OSStatus)GetControlID(this->operator HIViewRef(), &result);
+	UNUSED_RETURN(OSStatus)GetControlID(this->operator HIViewRef(), &result);
 	return result;
 }// identifier
 

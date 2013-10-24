@@ -387,18 +387,8 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 	My_PrefsResult	actionResult = kMy_PrefsResultOK;
 	
 	
-	// bring this process to the front; there appears to be no
-	// Cocoa-only way to do this on earlier Mac OS X versions
-	// so for now use older APIs...
-	{
-		ProcessSerialNumber		currentProcess;
-		
-		
-		if (noErr == GetCurrentProcess(&currentProcess))
-		{
-			UNUSED_RETURN(OSStatus)SetFrontProcess(&currentProcess);
-		}
-	}
+	// bring this process to the front
+	[NSApp activateIgnoringOtherApps:YES];
 	
 	// figure out what version of preferences is on disk; it is also
 	// possible “no version” is there, indicating a need for legacy updates

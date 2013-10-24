@@ -4,7 +4,7 @@
 /*###############################################################
 	
 	Data Access Library 2.6
-	� 1998-2012 by Kevin Grant
+	© 1998-2013 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -39,47 +39,13 @@
 
 
 
-#pragma mark Constants
-
-typedef UInt16 StringUtilitiesTruncationMethod;
-enum
-{
-	kStringUtilities_TruncateAtEnd = 0,
-	kStringUtilities_TruncateAtMiddle = 1,
-	kStringUtilities_TruncateAtBeginning = 2
-};
-
-
-
 #pragma mark Public Methods
 
 //!\name String Tokenizing
 //@{
 
 CFArrayRef
-	StringUtilities_CFNewStringsWithLines		(CFStringRef			inString);
-
-//@}
-
-//!\name String Manipulation Utilities
-//@{
-
-void
-	StringUtilities_PClipHead					(StringPtr								inoutString,
-												 UInt16									inHowManyCharacters);
-
-void
-	StringUtilities_PClipTail					(StringPtr								inoutString,
-												 UInt16									inHowManyCharacters);
-
-void
-	StringUtilities_PInsert						(StringPtr								outDestinationString,
-												 ConstStringPtr							inSourceString);
-
-Boolean
-	StringUtilities_PTruncate					(StringPtr								inoutString,
-												 UInt32									inAcceptableMaximumWidth,
-												 StringUtilitiesTruncationMethod		inTruncationMethod);
+	StringUtilities_CFNewStringsWithLines		(CFStringRef		inString);
 
 //@}
 
@@ -87,22 +53,8 @@ Boolean
 //@{
 
 void
-	StringUtilities_CFToUTF8					(CFStringRef							inString,
-												 std::string&							outBuffer);
-
-void
-	StringUtilities_CToP						(char const*							inString,
-												 Str255									outBuffer);
-
-StringPtr
-	StringUtilities_CToPInPlace					(char									inoutString[]);
-
-void
-	StringUtilities_PToC						(ConstStringPtr							inString,
-												 char									outBuffer[]);
-
-char*
-	StringUtilities_PToCInPlace					(StringPtr								inoutString);
+	StringUtilities_CFToUTF8					(CFStringRef		inString,
+												 std::string&		outBuffer);
 
 //@}
 

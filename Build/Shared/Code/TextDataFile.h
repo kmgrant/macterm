@@ -193,13 +193,6 @@ Boolean
 											 TextDataFile_ValueBrackets		inBrackets = kTextDataFile_ValueBracketsNone);
 
 Boolean
-	TextDataFile_AddNameValuePString		(TextDataFile_Ref				inRef,
-											 char const*					inClassNameOrNull,
-											 char const*					inPropertyName,
-											 ConstStringPtr					inValue,
-											 TextDataFile_ValueBrackets		inBrackets = kTextDataFile_ValueBracketsDoubleQuotes);
-
-Boolean
 	TextDataFile_AddNameValueRectangle		(TextDataFile_Ref				inRef,
 											 char const*					inClassNameOrNull,
 											 char const*					inPropertyName,

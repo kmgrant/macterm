@@ -601,7 +601,7 @@ isInherited
 	BOOL	result = NO;
 	
 	
-	(NSColor*)[[self prefsMgr] readColorForPreferenceTag:[self preferencesTag] isDefault:&result];
+	UNUSED_RETURN(NSColor*)[[self prefsMgr] readColorForPreferenceTag:[self preferencesTag] isDefault:&result];
 	
 	return result;
 }// isInherited
@@ -819,7 +819,7 @@ isInherited
 	BOOL	result = NO;
 	
 	
-	(NSString*)[self readValueSeeIfDefault:&result];
+	UNUSED_RETURN(NSString*)[self readValueSeeIfDefault:&result];
 	
 	return result;
 }// isInherited
@@ -1002,7 +1002,7 @@ isInherited
 	BOOL	result = NO;
 	
 	
-	(BOOL)[self readValueSeeIfDefault:&result];
+	UNUSED_RETURN(BOOL)[self readValueSeeIfDefault:&result];
 	
 	return result;
 }// isInherited
@@ -1509,7 +1509,7 @@ isInherited
 	BOOL	result = NO;
 	
 	
-	(NSNumber*)[self readValueSeeIfDefault:&result];
+	UNUSED_RETURN(NSNumber*)[self readValueSeeIfDefault:&result];
 	
 	return result;
 }// isInherited
@@ -1672,7 +1672,7 @@ isInherited
 	BOOL	result = NO;
 	
 	
-	(NSString*)[self readValueSeeIfDefault:&result];
+	UNUSED_RETURN(NSString*)[self readValueSeeIfDefault:&result];
 	
 	return result;
 }// isInherited

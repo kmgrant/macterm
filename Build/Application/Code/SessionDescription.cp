@@ -722,9 +722,9 @@ SessionDescription_Load ()
 	CFStringRef			titleCFString = nullptr;
 	
 	
-	(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptOpenSession, promptCFString);
-	(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogTitleOpenSession, titleCFString);
-	(Boolean)CocoaBasic_FileOpenPanelDisplay(promptCFString, titleCFString, fileTypes.returnCFArrayRef());
+	UNUSED_RETURN(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptOpenSession, promptCFString);
+	UNUSED_RETURN(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogTitleOpenSession, titleCFString);
+	UNUSED_RETURN(Boolean)CocoaBasic_FileOpenPanelDisplay(promptCFString, titleCFString, fileTypes.returnCFArrayRef());
 }// Load
 
 
@@ -767,8 +767,8 @@ SessionDescription_ReadFromFile		(FSRef const&	inFile)
 			Preferences_ContextRef	workspaceContext = nullptr;
 			
 			
-			(SessionRef)SessionFactory_NewSessionFromDescription(terminalWindow, sessionFile, workspaceContext,
-																	0/* window index */);
+			UNUSED_RETURN(SessionRef)SessionFactory_NewSessionFromDescription(terminalWindow, sessionFile, workspaceContext,
+																				0/* window index */);
 		}
 		SessionDescription_Release(&sessionFile);
 		FSCloseFork(fileRefNum), fileRefNum = -1;

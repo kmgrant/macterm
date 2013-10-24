@@ -269,7 +269,7 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		
 		if (GetCurrentProcess(&psn) == noErr)
 		{
-			(OSStatus)SetFrontProcess(&psn);
+			UNUSED_RETURN(OSStatus)SetFrontProcess(&psn);
 		}
 	}
 	
@@ -369,7 +369,7 @@ Initialize_SetVersionFlags ()
 	UInt8   minorRev = 0;
 	
 	
-	(OSStatus)Gestalt(gestaltSystemVersion, &gestaltResult);
+	UNUSED_RETURN(OSStatus)Gestalt(gestaltSystemVersion, &gestaltResult);
 	majorRev = Releases_ReturnMajorRevisionForVersion(gestaltResult);
 	minorRev = Releases_ReturnMinorRevisionForVersion(gestaltResult);
 	
@@ -514,7 +514,7 @@ initMacOSToolbox ()
 	
 	// install recording handlers
 	// UNIMPLEMENTED - if recording setup fails, notify the user
-	(RecordAE_Result)RecordAE_Init();
+	UNUSED_RETURN(RecordAE_Result)RecordAE_Init();
 }// initMacOSToolbox
 
 } // anonymous namespace

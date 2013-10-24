@@ -103,8 +103,8 @@ Embedding_BuildCGImageFromPictureAndMask	(PicHandle		inPicture,
 		Rect		maskFrame;
 		
 		
-		(Rect*)QDGetPictureBounds(inPicture, &pictureFrame);
-		(Rect*)QDGetPictureBounds(inMask, &maskFrame);
+		UNUSED_RETURN(Rect*)QDGetPictureBounds(inPicture, &pictureFrame);
+		UNUSED_RETURN(Rect*)QDGetPictureBounds(inMask, &maskFrame);
 		
 		// create offscreen graphics worlds in which to draw the image and its mask
 		result = NewGWorld(&imageGraphicsWorld, 32/* bits per pixel */, &pictureFrame, nullptr/* color table */, nullptr/* device */,
@@ -214,8 +214,8 @@ Embedding_OffscreenControlOperationInMode	(WindowRef						inForWhichWindow,
 		}
 		if (noErr == result)
 		{
-			(Boolean)Embedding_InvokeOffscreenOpProc(inWhatToDo, view, 8/* default depth */, 0/* default device flags */,
-														GetMainDevice(), inData1, inData2);
+			UNUSED_RETURN(Boolean)Embedding_InvokeOffscreenOpProc(inWhatToDo, view, 8/* default depth */, 0/* default device flags */,
+																	GetMainDevice(), inData1, inData2);
 		}
 	}
 	else
@@ -281,14 +281,14 @@ Embedding_OffscreenControlOperationInMode	(WindowRef						inForWhichWindow,
 				if (data.result != noErr)
 				{
 					// offscreen dump failed somehow - just invoke the routine manually, with “good guesses” of unknown parameters
-					(OSStatus)SetUpControlBackground(control, ColorUtilities_ReturnCurrentDepth(GetWindowPort(inForWhichWindow)),
-														IsPortColor(GetWindowPort(inForWhichWindow)));
+					UNUSED_RETURN(OSStatus)SetUpControlBackground(control, ColorUtilities_ReturnCurrentDepth(GetWindowPort(inForWhichWindow)),
+																	IsPortColor(GetWindowPort(inForWhichWindow)));
 					EraseRect(&controlBounds);
 					if (inWhatToDo != nullptr)
 					{
 						// desperation: invoke the routine to draw the control anyway, providing reasonable default values
-						(Boolean)Embedding_InvokeOffscreenOpProc(inWhatToDo, control, 8/* default depth */, 0/* default device flags */,
-																	GetMainDevice(), inData1, inData2);
+						UNUSED_RETURN(Boolean)Embedding_InvokeOffscreenOpProc(inWhatToDo, control, 8/* default depth */, 0/* default device flags */,
+																				GetMainDevice(), inData1, inData2);
 					}
 					DrawOneControl(control);
 				}
@@ -421,14 +421,14 @@ offscreenDumpDeviceLoop		(short		inColorDepth,
 			// perform the offscreen control operation, and then do the blitter as quickly and easily as possible
 			if (LockPixels(pixels))
 			{
-				(OSStatus)SetUpControlBackground(dataPtr->control, inColorDepth, ColorUtilities_IsColorDevice(inTargetDevice));
+				UNUSED_RETURN(OSStatus)SetUpControlBackground(dataPtr->control, inColorDepth, ColorUtilities_IsColorDevice(inTargetDevice));
 				EraseRect(&drawingRect);
 				
 				// change the controls as specified by the user-defined routine
 				if (dataPtr->proc != nullptr)
 				{
-					(Boolean)Embedding_InvokeOffscreenOpProc(dataPtr->proc, dataPtr->control, inColorDepth, inDeviceFlags,
-																inTargetDevice, dataPtr->data1, dataPtr->data2);
+					UNUSED_RETURN(Boolean)Embedding_InvokeOffscreenOpProc(dataPtr->proc, dataPtr->control, inColorDepth, inDeviceFlags,
+																			inTargetDevice, dataPtr->data1, dataPtr->data2);
 				}
 				
 				// now dump the offscreen world to the onscreen window in the most efficient way possible

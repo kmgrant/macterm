@@ -326,8 +326,8 @@ DialogAdjust_EndAdjustment		(SInt32		inDialogDeltaSizeX,
 		
 		
 		assert(error == noErr);
-		(Boolean)adjustControlsOperation(root/* use root */, 0/* unused depth */, 0/* unused device flags */,
-											nullptr/* unused target device */, (SInt32)&delta/* data 1 */, 0L/* unused data 2 */);
+		UNUSED_RETURN(Boolean)adjustControlsOperation(root/* use root */, 0/* unused depth */, 0/* unused device flags */,
+														nullptr/* unused target device */, (SInt32)&delta/* data 1 */, 0L/* unused data 2 */);
 	}
 	else
 	{
@@ -460,7 +460,7 @@ adjustControlsOperation		(ControlRef		inSpecificControlOrRoot,
 					// perform the operation...
 					if (adjustingDialogItems)
 					{
-						(OSStatus)GetDialogItemAsControl(GetDialogFromWindow(window), dataPtr->adjusted.itemIndex, &control);
+						UNUSED_RETURN(OSStatus)GetDialogItemAsControl(GetDialogFromWindow(window), dataPtr->adjusted.itemIndex, &control);
 					}
 					else
 					{

@@ -843,13 +843,13 @@ Session_CopyStateIconRef	(SessionRef		inRef,
 		{
 		case kSession_StateAttributeNotification:
 			// TEMPORARY: a notification-specific icon (a bell?) may be better here
-			(OSStatus)GetIconRef(kOnSystemDisk, kSystemIconsCreator,
-									kAlertCautionIcon, &outCopiedIcon);
+			UNUSED_RETURN(OSStatus)GetIconRef(kOnSystemDisk, kSystemIconsCreator,
+												kAlertCautionIcon, &outCopiedIcon);
 			break;
 		
 		case kSession_StateAttributeOpenDialog:
-			(OSStatus)GetIconRef(kOnSystemDisk, kSystemIconsCreator,
-									kAlertCautionIcon, &outCopiedIcon);
+			UNUSED_RETURN(OSStatus)GetIconRef(kOnSystemDisk, kSystemIconsCreator,
+												kAlertCautionIcon, &outCopiedIcon);
 			break;
 		
 		default:
@@ -1226,7 +1226,7 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 				Rect	currentStructureBounds;
 				
 				
-				(OSStatus)GetWindowBounds(window, kWindowStructureRgn, &currentStructureBounds);
+				UNUSED_RETURN(OSStatus)GetWindowBounds(window, kWindowStructureRgn, &currentStructureBounds);
 				if (EqualRect(&currentStructureBounds, &centeredStructureBounds))
 				{
 					HIRect						floatBounds = CGRectMake(originalStructureBounds.left, originalStructureBounds.top,
@@ -1237,8 +1237,8 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 					
 					bzero(&transitionOptions, sizeof(transitionOptions));
 					transitionOptions.version = 0;
-					(OSStatus)TransitionWindowWithOptions(window, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
-															&floatBounds, true/* asynchronous */, &transitionOptions);
+					UNUSED_RETURN(OSStatus)TransitionWindowWithOptions(window, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
+																		&floatBounds, true/* asynchronous */, &transitionOptions);
 				}
 			}
 			terminationWarningCloseNotifyProc(alertBox, Alert_ItemHit(alertBox), terminateAlertInfoPtr/* user data */);
@@ -2565,7 +2565,7 @@ Session_SendNewline		(SessionRef		inRef,
 		Session_SendData(inRef, "\012", 1);
 		break;
 	}
-	(SInt16)Session_SendFlush(inRef);
+	UNUSED_RETURN(SInt16)Session_SendFlush(inRef);
 }// SendNewline
 
 
@@ -2675,12 +2675,12 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 												(Session_ReturnActiveTerminalWindow(inRef)),
 												globalCursorBounds);
 			tagData.setFrame(globalCursorBounds);
-			(OSStatus)HMDisplayTag(tagData.ptr());
+			UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
 		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			// this call does not immediately hide the tag, but rather after a short delay
 			if (FlagManager_Test(kFlagOS10_4API))
 			{
-				(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
+				UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
 			}
 		#endif
 		}
@@ -2706,7 +2706,7 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 	else
 	{
 		// hide the help tag displayed by the Suspend
-		(OSStatus)HMHideTag();
+		UNUSED_RETURN(OSStatus)HMHideTag();
 		
 		// resume
 		if (nullptr != ptr->mainProcess)
@@ -3419,14 +3419,14 @@ Session_TEKNewPage	(SessionRef		inRef)
 	
 	if (nullptr == ptr->vectorGraphicsInterpreter)
 	{
-		(Boolean)vectorGraphicsCreateTarget(ptr);
+		UNUSED_RETURN(Boolean)vectorGraphicsCreateTarget(ptr);
 	}
 	else
 	{
 		if (Session_TEKPageCommandOpensNewWindow(inRef))
 		{
 			// create a new display (automatically detaches any existing one)
-			(Boolean)vectorGraphicsCreateTarget(ptr);
+			UNUSED_RETURN(Boolean)vectorGraphicsCreateTarget(ptr);
 		}
 		else
 		{
@@ -3734,12 +3734,12 @@ Session_UserInputInterruptProcess	(SessionRef		inRef)
 											(Session_ReturnActiveTerminalWindow(inRef)),
 											globalCursorBounds);
 		tagData.setFrame(globalCursorBounds);
-		(OSStatus)HMDisplayTag(tagData.ptr());
+		UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
 	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 		// this call does not immediately hide the tag, but rather after a short delay
 		if (FlagManager_Test(kFlagOS10_4API))
 		{
-			(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
+			UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
 		}
 	#endif
 	}
@@ -4745,7 +4745,7 @@ Session_UserInputFunctionKey	(SessionRef					inRef,
 			for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
 					toScreen != ptr->targetTerminals.end(); ++toScreen)
 			{
-				(Terminal_Result)Terminal_UserInputVTFunctionKey(*toScreen, keyCode);
+				UNUSED_RETURN(Terminal_Result)Terminal_UserInputVTFunctionKey(*toScreen, keyCode);
 			}
 		}
 	}
@@ -5009,7 +5009,7 @@ Session_UserInputKey	(SessionRef		inRef,
 				{
 					// write the appropriate sequence to the terminal’s listening session
 					// (which will be this session)
-					(Terminal_Result)Terminal_UserInputVTKey(*toScreen, inKeyOrASCII);
+					UNUSED_RETURN(Terminal_Result)Terminal_UserInputVTKey(*toScreen, inKeyOrASCII);
 				}
 			}
 		}
@@ -5361,10 +5361,10 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 	
 	// install a one-shot timer to tell interested parties when this session
 	// has been opened for 15 seconds
-	(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
-									kEventDurationSecond * kSession_LifetimeMinimumForNoWarningClose,
-									kEventDurationForever/* time between fires - this timer does not repeat */,
-									this->longLifeTimerUPP, this->selfRef/* user data */, &this->longLifeTimer);
+	UNUSED_RETURN(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
+													kEventDurationSecond * kSession_LifetimeMinimumForNoWarningClose,
+													kEventDurationForever/* time between fires - this timer does not repeat */,
+													this->longLifeTimerUPP, this->selfRef/* user data */, &this->longLifeTimer);
 	
 	// create a callback for preferences, then listen for certain preferences
 	// (this will also initialize the preferences cache values)
@@ -5424,10 +5424,10 @@ My_Session::
 	closeTerminalWindow(this);
 	
 	// clean up
-	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration.returnRef(), this->preferencesListener.returnRef(),
-															kPreferences_ChangeContextBatchMode);
-	(Preferences_Result)Preferences_ContextStopMonitoring(this->translationConfiguration.returnRef(), this->preferencesListener.returnRef(),
-															kPreferences_ChangeContextBatchMode);
+	UNUSED_RETURN(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration.returnRef(), this->preferencesListener.returnRef(),
+																		kPreferences_ChangeContextBatchMode);
+	UNUSED_RETURN(Preferences_Result)Preferences_ContextStopMonitoring(this->translationConfiguration.returnRef(), this->preferencesListener.returnRef(),
+																		kPreferences_ChangeContextBatchMode);
 	Preferences_StopMonitoring(this->preferencesListener.returnRef(), kPreferences_TagCursorBlinks);
 	Preferences_StopMonitoring(this->preferencesListener.returnRef(), kPreferences_TagMapBackquote);
 	
@@ -6814,7 +6814,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 					
 					// delete the temporary file; this is ignored for file captures,
 					// since capture files themselves are considered highly volatile
-					(OSStatus)FSDeleteObject(&temporaryFile);
+					UNUSED_RETURN(OSStatus)FSDeleteObject(&temporaryFile);
 					
 					// now write to the file
 					error = FSCreateFork(&saveFile, 0/* name length */, nullptr/* name */);
@@ -6847,7 +6847,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 							// The capture file is opened for writing at this point, but it is not necessary to
 							// close the file in the Session module because of the argument, below, that
 							// transfers responsibility for closing the file to the Terminal module.
-							(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
+							UNUSED_RETURN(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
 							// TEMPORARY - this command is not capable of handling multiple screens per window
 							Terminal_FileCaptureBegin(ptr->targetTerminals.front(), fileRefNum, true/* auto-close */);
 							
@@ -6959,7 +6959,7 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 							SessionDescription_Result	saveError = kSessionDescription_ResultOK;
 							
 							
-							(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
+							UNUSED_RETURN(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
 							saveError = SessionDescription_Save(saveFileMemoryModel, fileRefNum);
 							FSCloseFork(fileRefNum), fileRefNum = -1;
 							if (saveError == kSessionDescription_ResultOK)
@@ -6972,7 +6972,7 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 									error = FSOpenFork(&saveFile, 0/* fork name length */, nullptr/* fork name */, fsWrPerm, &fileRefNum);
 									if (error == noErr)
 									{
-										(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
+										UNUSED_RETURN(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
 										saveError = SessionDescription_Save(saveFileMemoryModel, fileRefNum);
 										FSCloseFork(fileRefNum), fileRefNum = -1;
 									}
@@ -6987,7 +6987,7 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 							// that did not successfully write, or it will contain whatever the
 							// user’s original file had (and the new file will be successfully
 							// in the user’s selected location, instead of temporary space)
-							(OSStatus)FSDeleteObject(&temporaryFile);
+							UNUSED_RETURN(OSStatus)FSDeleteObject(&temporaryFile);
 						}
 						
 						// clean up
@@ -7247,8 +7247,8 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				// the session’s “normal” configuration, containing settings that
 				// apply DIRECTLY to the session (not acting as a proxy for
 				// anything else)
-				(UInt16)copyEventKeyPreferences(ptr, prefsContext, false/* search for defaults */);
-				(UInt16)copyVectorGraphicsPreferences(ptr, prefsContext, false/* search for defaults */);
+				UNUSED_RETURN(UInt16)copyEventKeyPreferences(ptr, prefsContext, false/* search for defaults */);
+				UNUSED_RETURN(UInt16)copyVectorGraphicsPreferences(ptr, prefsContext, false/* search for defaults */);
 			}
 		}
 		else
@@ -7384,11 +7384,12 @@ receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 						// if the window is inactive, start a hover timer to auto-activate the window
 						if ((acceptDrag) && (false == TerminalWindow_IsFocused(ptr->terminalWindow)))
 						{
-							(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
-															kEventDurationSecond/* arbitrary */,
-															kEventDurationForever/* time between fires - this timer does not repeat */,
-															ptr->autoActivateDragTimerUPP, ptr->selfRef/* user data */,
-															&ptr->autoActivateDragTimer);
+							UNUSED_RETURN(OSStatus)InstallEventLoopTimer
+													(GetCurrentEventLoop(),
+														kEventDurationSecond/* arbitrary */,
+														kEventDurationForever/* time between fires - this timer does not repeat */,
+														ptr->autoActivateDragTimerUPP, ptr->selfRef/* user data */,
+														&ptr->autoActivateDragTimer);
 						}
 						
 						// finally, update the event!
@@ -7406,7 +7407,7 @@ receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 					TerminalView_SetDragHighlight(view, dragRef, false/* is highlighted */);
 					if (nullptr != ptr->autoActivateDragTimer)
 					{
-						(OSStatus)RemoveEventLoopTimer(ptr->autoActivateDragTimer), ptr->autoActivateDragTimer = nullptr;
+						UNUSED_RETURN(OSStatus)RemoveEventLoopTimer(ptr->autoActivateDragTimer), ptr->autoActivateDragTimer = nullptr;
 					}
 					result = noErr;
 					break;
@@ -7416,7 +7417,7 @@ receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 					result = sessionDragDrop(inHandlerCallRef, inEvent, session, view, dragRef);
 					if (nullptr != ptr->autoActivateDragTimer)
 					{
-						(OSStatus)RemoveEventLoopTimer(ptr->autoActivateDragTimer), ptr->autoActivateDragTimer = nullptr;
+						UNUSED_RETURN(OSStatus)RemoveEventLoopTimer(ptr->autoActivateDragTimer), ptr->autoActivateDragTimer = nullptr;
 					}
 					break;
 				
@@ -8093,12 +8094,12 @@ terminalHoverLocalEchoString	(My_SessionPtr		inPtr,
 										(Session_ReturnActiveTerminalWindow(inPtr->selfRef)),
 										globalCursorBounds);
 	tagData.setFrame(globalCursorBounds);
-	(OSStatus)HMDisplayTag(tagData.ptr());
+	UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	// this call does not immediately hide the tag, but rather after a short delay
 	if (FlagManager_Test(kFlagOS10_4API))
 	{
-		(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
+		UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
 	}
 #endif
 }// terminalHoverLocalEchoString
@@ -8281,8 +8282,8 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 						Boolean		toolbarHidden = (false == IsWindowToolbarVisible(returnActiveWindow(sessionPtr)));
 						
 						
-						(Preferences_Result)Preferences_SetData(kPreferences_TagHeadersCollapsed,
-																sizeof(toolbarHidden), &toolbarHidden);
+						UNUSED_RETURN(Preferences_Result)Preferences_SetData(kPreferences_TagHeadersCollapsed,
+																				sizeof(toolbarHidden), &toolbarHidden);
 					}
 					
 					// flag to destroy the session; this cannot occur within this block,
@@ -8326,10 +8327,11 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 					// install a one-shot timer to rerun the command line after a short delay
 					// (certain processes, such as shells, do not respawn correctly if the
 					// respawn is attempted immediately after the previous process exits)
-					(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
-													200 * kEventDurationMillisecond/* delay before start; heuristic */,
-													kEventDurationForever/* time between fires - this timer does not repeat */,
-													ptr->respawnSessionTimerUPP, dataPtr->sessionBeingTerminated, &ptr->respawnSessionTimer);
+					UNUSED_RETURN(OSStatus)InstallEventLoopTimer
+											(GetCurrentEventLoop(),
+												200 * kEventDurationMillisecond/* delay before start; heuristic */,
+												kEventDurationForever/* time between fires - this timer does not repeat */,
+												ptr->respawnSessionTimerUPP, dataPtr->sessionBeingTerminated, &ptr->respawnSessionTimer);
 				}
 			}
 		}
@@ -8407,12 +8409,12 @@ vectorGraphicsCreateTarget		(My_SessionPtr	inPtr)
 												(Session_ReturnActiveTerminalWindow(inPtr->selfRef)),
 												globalCursorBounds);
 			tagData.setFrame(globalCursorBounds);
-			(OSStatus)HMDisplayTag(tagData.ptr());
+			UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
 		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			// this call does not immediately hide the tag, but rather after a short delay
 			if (FlagManager_Test(kFlagOS10_4API))
 			{
-				(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
+				UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
 			}
 		#endif
 		}

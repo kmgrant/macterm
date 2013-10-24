@@ -683,23 +683,23 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			// whether it would work long-term.  Opening a web page is simple, is
 			// pretty fast, is something the user can bookmark in other ways and
 			// is easy to maintain, so that is the final solution.
-			(Boolean)URL_OpenInternetLocation(kURL_InternetLocationApplicationUpdatesPage);
+			UNUSED_RETURN(Boolean)URL_OpenInternetLocation(kURL_InternetLocationApplicationUpdatesPage);
 			break;
 		
 		case kCommandURLHomePage:
-			(Boolean)URL_OpenInternetLocation(kURL_InternetLocationApplicationHomePage);
+			UNUSED_RETURN(Boolean)URL_OpenInternetLocation(kURL_InternetLocationApplicationHomePage);
 			break;
 		
 		case kCommandURLAuthorMail:
-			(Boolean)URL_OpenInternetLocation(kURL_InternetLocationApplicationSupportEMail);
+			UNUSED_RETURN(Boolean)URL_OpenInternetLocation(kURL_InternetLocationApplicationSupportEMail);
 			break;
 		
 		case kCommandURLSourceLicense:
-			(Boolean)URL_OpenInternetLocation(kURL_InternetLocationSourceCodeLicense);
+			UNUSED_RETURN(Boolean)URL_OpenInternetLocation(kURL_InternetLocationSourceCodeLicense);
 			break;
 		
 		case kCommandURLProjectStatus:
-			(Boolean)URL_OpenInternetLocation(kURL_InternetLocationSourceForgeProject);
+			UNUSED_RETURN(Boolean)URL_OpenInternetLocation(kURL_InternetLocationSourceForgeProject);
 			break;
 		
 		//case kCommandNewSessionLoginShell:
@@ -842,8 +842,8 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 					
 					if (nullptr != printJob)
 					{
-						(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
-												(printJob, TerminalWindow_ReturnWindow(frontTerminalWindow));
+						UNUSED_RETURN(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
+															(printJob, TerminalWindow_ReturnWindow(frontTerminalWindow));
 						PrintTerminal_ReleaseJob(&printJob);
 					}
 					CFRelease(jobTitle), jobTitle = nullptr;
@@ -1313,7 +1313,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				
 				if (GetCurrentProcess(&psn) == noErr)
 				{
-					(OSStatus)SetFrontProcess(&psn);
+					UNUSED_RETURN(OSStatus)SetFrontProcess(&psn);
 				}
 				
 				// arrange windows in a diagonal pattern
@@ -1629,7 +1629,7 @@ Commands_HandleCreateToolbarItem	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 									{
 										result = HIToolbarItemSetIconRef(itemRef, iconRef);
 										assert_noerr(result);
-										(OSStatus)ReleaseIconRef(iconRef), iconRef = nullptr;
+										UNUSED_RETURN(OSStatus)ReleaseIconRef(iconRef), iconRef = nullptr;
 									}
 									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
 									assert_noerr(result);
@@ -1671,7 +1671,7 @@ Commands_HandleCreateToolbarItem	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 										{
 											result = HIToolbarItemSetIconRef(itemRef, iconRef);
 											assert_noerr(result);
-											(OSStatus)ReleaseIconRef(iconRef), iconRef = nullptr;
+											UNUSED_RETURN(OSStatus)ReleaseIconRef(iconRef), iconRef = nullptr;
 										}
 									}
 									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
@@ -1717,11 +1717,11 @@ Commands_HandleCreateToolbarItem	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 											{
 												result = HIToolbarItemSetIconRef(itemRef, finalIconRef);
 												assert_noerr(result);
-												(OSStatus)ReleaseIconRef(finalIconRef), finalIconRef = nullptr;
+												UNUSED_RETURN(OSStatus)ReleaseIconRef(finalIconRef), finalIconRef = nullptr;
 											}
-											(OSStatus)ReleaseIconRef(badgeIconRef), badgeIconRef = nullptr;
+											UNUSED_RETURN(OSStatus)ReleaseIconRef(badgeIconRef), badgeIconRef = nullptr;
 										}
-										(OSStatus)ReleaseIconRef(baseIconRef), baseIconRef = nullptr;
+										UNUSED_RETURN(OSStatus)ReleaseIconRef(baseIconRef), baseIconRef = nullptr;
 									}
 									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
 									assert_noerr(result);
@@ -1763,7 +1763,7 @@ Commands_HandleCreateToolbarItem	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 										{
 											result = HIToolbarItemSetIconRef(itemRef, iconRef);
 											assert_noerr(result);
-											(OSStatus)ReleaseIconRef(iconRef), iconRef = nullptr;
+											UNUSED_RETURN(OSStatus)ReleaseIconRef(iconRef), iconRef = nullptr;
 										}
 									}
 									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
@@ -2412,7 +2412,7 @@ handleQuit	(BOOL	inAsk)
 		//										1/* 0 = opaque, 1 = translucent */, nullptr/* result */);
 		
 		// prevent tabs from shifting during this process
-		(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(false);
+		UNUSED_RETURN(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(false);
 		
 		// iterate over each session in a MODAL fashion, highlighting a window
 		// and either displaying an alert or discarding the window if it has only
@@ -2423,7 +2423,7 @@ handleQuit	(BOOL	inAsk)
 										true/* is a final iteration: use a copy of the list? */);
 		
 		// prevent tabs from shifting during this process
-		(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(true);
+		UNUSED_RETURN(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(true);
 		
 		// make sure all windows become opaque again
 		//SessionFactory_ForEveryTerminalWindowDo(setTerminalWindowTranslucency, nullptr/* data 1 */,
@@ -2516,7 +2516,7 @@ isCarbonWindow	(id		inObject)
 		result = [[inObject class] isSubclassOfClass:[NSCarbonWindow class]];
 		if (result && ([[inObject class] isSubclassOfClass:[NSWindow class]]))
 		{
-			(Boolean)CocoaBasic_RegisterCocoaCarbonWindow((NSWindow*)inObject);
+			UNUSED_RETURN(Boolean)CocoaBasic_RegisterCocoaCarbonWindow((NSWindow*)inObject);
 		}
 	}
 	return result;
@@ -2618,7 +2618,7 @@ moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef		inSession,
 			}
 			
 			// all windows became translucent; make sure the alert one is opaque
-			(OSStatus)SetWindowAlpha(window, 1.0);
+			UNUSED_RETURN(OSStatus)SetWindowAlpha(window, 1.0);
 			
 			Session_StartMonitoring(inSession, kSession_ChangeCloseWarningAnswered, gCurrentQuitWarningAnswerListener);
 			Session_DisplayTerminationWarning(inSession, dialogOptions);
@@ -3301,11 +3301,11 @@ setTerminalWindowTranslucency	(TerminalWindowRef		inTerminalWindow,
 {
 	if (0 == inZeroIfOpaqueOneForPartialTransparency)
 	{
-		(OSStatus)SetWindowAlpha(TerminalWindow_ReturnWindow(inTerminalWindow), 1.0);
+		UNUSED_RETURN(OSStatus)SetWindowAlpha(TerminalWindow_ReturnWindow(inTerminalWindow), 1.0);
 	}
 	else
 	{
-		(OSStatus)SetWindowAlpha(TerminalWindow_ReturnWindow(inTerminalWindow), 0.65/* arbitrary */);
+		UNUSED_RETURN(OSStatus)SetWindowAlpha(TerminalWindow_ReturnWindow(inTerminalWindow), 0.65/* arbitrary */);
 	}
 }// setTerminalWindowTranslucency
 

@@ -39,6 +39,22 @@ import pymacterm.url.open
 import pymacterm.utilities
 
 if __name__ == "__main__":
+    # undo environment settings made by the "MacTerm" script, so as not
+    # to pollute the user environment too much
+    for removed_var in (
+        # this list should basically correspond to any uses of
+        # "os.environ" in the "MacTerm" front-end script
+        'DYLD_FRAMEWORK_PATH',
+        'DYLD_LIBRARY_PATH',
+        'INITIAL_APP_BUNDLE_DIR',
+        'PYTHONEXECUTABLE',
+        'PYTHONPATH',
+        'VERSIONER_PYTHON_PREFER_32_BIT',
+        'VERSIONER_PYTHON_VERSION',
+    ):
+        if removed_var in os.environ:
+            del os.environ[removed_var]
+    
     # Define default symbols for ALL possible user customizations.  This
     # may also be a useful reference for customizers, because it shows a
     # valid (if uninteresting) implementation of each function, including
@@ -171,19 +187,6 @@ if __name__ == "__main__":
     
     # load all required MacTerm modules
     Base.all_init(initial_workspace=initial_workspace())
-    
-    # undo environment settings made by the "MacTerm" script, so as not
-    # to pollute the user environment too much
-    for removed_var in (
-        # this list should basically correspond to any uses of
-        # "os.environ" in the "MacTerm" front-end script
-        'DYLD_FRAMEWORK_PATH',
-        'DYLD_LIBRARY_PATH',
-        'INITIAL_APP_BUNDLE_DIR',
-        'PYTHONEXECUTABLE',
-        'PYTHONPATH',
-    ):
-        if removed_var in os.environ: del os.environ[removed_var]
     
     # banner
     print "MacTerm: Base initialization complete.  This is version %s." % Base.version()

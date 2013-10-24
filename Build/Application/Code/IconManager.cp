@@ -587,7 +587,7 @@ IconManager_SetMenuTitleIcon	(MenuRef				inMenu,
 		// Make the menu’s title iconic.
 		if (IconManager_IsIconServices(inRef))
 		{
-			(OSStatus)SetMenuTitleIcon(inMenu, kMenuIconRefType, ptr->data.OSX);
+			UNUSED_RETURN(OSStatus)SetMenuTitleIcon(inMenu, kMenuIconRefType, ptr->data.OSX);
 		}
 		else if (IconManager_IsOldColorIcon(inRef))
 		{
@@ -596,7 +596,7 @@ IconManager_SetMenuTitleIcon	(MenuRef				inMenu,
 		}
 		else
 		{
-			(OSStatus)SetMenuTitleIcon(inMenu, kMenuIconSuiteType, ptr->data.OS8);
+			UNUSED_RETURN(OSStatus)SetMenuTitleIcon(inMenu, kMenuIconSuiteType, ptr->data.OS8);
 		}
 		refReleaseLock(inRef, &ptr);
 	}
@@ -699,7 +699,7 @@ releaseIcons	(IconManagerIconPtr		inPtr)
 		{
 			if (inPtr->data.OS8 != nullptr)
 			{
-				(OSStatus)DisposeIconSuite(inPtr->data.OS8, true/* dispose data too */);
+				UNUSED_RETURN(OSStatus)DisposeIconSuite(inPtr->data.OS8, true/* dispose data too */);
 				inPtr->data.OS8 = nullptr;
 			}
 		}
@@ -707,7 +707,7 @@ releaseIcons	(IconManagerIconPtr		inPtr)
 		{
 			if (inPtr->data.OSX != nullptr)
 			{
-				(OSStatus)ReleaseIconRef(inPtr->data.OSX);
+				UNUSED_RETURN(OSStatus)ReleaseIconRef(inPtr->data.OSX);
 				inPtr->data.OSX = nullptr;
 			}
 		}

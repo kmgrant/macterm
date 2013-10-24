@@ -403,7 +403,7 @@ VectorCanvas_DrawLine	(VectorCanvas_Ref			inRef,
 				// force the next drawing element to have a separate path
 				// (cannot afford to have the single point made invisible
 				// by future changes to the line width)
-				(VectorCanvas_Path*)pathElementWithPurpose(ptr, inPurpose, true/* force create */);
+				UNUSED_RETURN(VectorCanvas_Path*)pathElementWithPurpose(ptr, inPurpose, true/* force create */);
 			}
 			
 			[currentElement->bezierPath moveToPoint:NSMakePoint(x0, y0)];

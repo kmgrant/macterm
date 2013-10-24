@@ -72,7 +72,7 @@ DebugInterface_Display ()
 	
 	
 	[[DebugInterface_PanelController sharedDebugInterfacePanelController] showWindow:NSApp];
-	(OSStatus)SetUserFocusWindow(oldActiveWindow);
+	UNUSED_RETURN(OSStatus)SetUserFocusWindow(oldActiveWindow);
 }// Display
 
 

@@ -774,8 +774,8 @@ finalOptions:(FindDialog_Options)		options
 		BOOL	didSearch = NO;
 		
 		
-		(unsigned long)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:multiTerminal
-												notFinal:NO didSearch:&didSearch];
+		UNUSED_RETURN(unsigned long)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:multiTerminal
+															notFinal:NO didSearch:&didSearch];
 		
 		// show the user where the text is; delay this slightly to avoid
 		// animation interference caused by the closing of the popover
@@ -790,8 +790,8 @@ finalOptions:(FindDialog_Options)		options
 			
 			
 			searchText = (NSString*)[self->historyArray objectAtIndex:0];
-			(unsigned long)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:NO
-													notFinal:NO didSearch:&didSearch];
+			UNUSED_RETURN(unsigned long)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:NO
+																notFinal:NO didSearch:&didSearch];
 		}
 		else
 		{
@@ -985,7 +985,7 @@ Responds to a click in the help button.
 performContextSensitiveHelp:(id)	sender
 {
 #pragma unused(sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhraseFind);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhraseFind);
 }// performContextSensitiveHelp:
 
 

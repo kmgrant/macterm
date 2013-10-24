@@ -165,7 +165,7 @@ _window(inWindow)
 HelpSystem_WindowKeyPhraseSetter::
 ~HelpSystem_WindowKeyPhraseSetter ()
 {
-	(HelpSystem_Result)HelpSystem_SetWindowKeyPhrase(_window, kHelpSystem_KeyPhraseDefault);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_SetWindowKeyPhrase(_window, kHelpSystem_KeyPhraseDefault);
 }
 
 

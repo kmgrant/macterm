@@ -207,14 +207,14 @@ RegionUtilities_GetWindowDeviceGrayRect		(WindowRef	inWindow,
 		
 		
 		// obtain global structure rectangle of the window
-		(OSStatus)GetWindowBounds(inWindow, kWindowStructureRgn, &windowRect);
+		UNUSED_RETURN(OSStatus)GetWindowBounds(inWindow, kWindowStructureRgn, &windowRect);
 		
 		// check for monitors in use - find the one containing the largest chunk of the window
 		for (device = GetDeviceList(); (device != nullptr); device = GetNextDevice(device))
 		{
 			if (TestDeviceAttribute(device, screenDevice) && TestDeviceAttribute(device, screenActive))
 			{
-				(Boolean)SectRect(&(**device).gdRect, &windowRect, &areaRect);
+				UNUSED_RETURN(Boolean)SectRect(&(**device).gdRect, &windowRect, &areaRect);
 				
 				area = (SInt32)(areaRect.bottom - areaRect.top) * (areaRect.right - areaRect.left);
 				if (area > areaMax)
@@ -327,8 +327,8 @@ RegionUtilities_GetWindowMaximumBounds	(WindowRef	inWindow,
 	
 	
 	// determine these so that the thickness of all edges of the window frame can be determined
-	(OSStatus)GetWindowBounds(inWindow, kWindowContentRgn, &contentRegionBounds);
-	(OSStatus)GetWindowBounds(inWindow, kWindowStructureRgn, &structureRegionBounds);
+	UNUSED_RETURN(OSStatus)GetWindowBounds(inWindow, kWindowContentRgn, &contentRegionBounds);
+	UNUSED_RETURN(OSStatus)GetWindowBounds(inWindow, kWindowStructureRgn, &structureRegionBounds);
 	
 	// figure out the largest bounding box the window’s structure region can have
 	RegionUtilities_GetPositioningBounds(inWindow, &maximumScreenBounds);
@@ -428,9 +428,9 @@ RegionUtilities_RedrawControlOnNextUpdate	(ControlRef		inControl)
 	Rect	bounds;
 	
 	
-	(Rect*)GetControlBounds(inControl, &bounds);
+	UNUSED_RETURN(Rect*)GetControlBounds(inControl, &bounds);
 	InsetRect(&bounds, -3, -3);
-	(OSStatus)InvalWindowRect(GetControlOwner(inControl), &bounds);
+	UNUSED_RETURN(OSStatus)InvalWindowRect(GetControlOwner(inControl), &bounds);
 }// RedrawControlOnNextUpdate
 
 
@@ -447,8 +447,8 @@ RegionUtilities_RedrawWindowOnNextUpdate	(WindowRef		inWindow)
 	Rect	windowPortRect;
 	
 	
-	(Rect*)GetPortBounds(GetWindowPort(inWindow), &windowPortRect);
-	(OSStatus)InvalWindowRect(inWindow, &windowPortRect);
+	UNUSED_RETURN(Rect*)GetPortBounds(GetWindowPort(inWindow), &windowPortRect);
+	UNUSED_RETURN(OSStatus)InvalWindowRect(inWindow, &windowPortRect);
 }// RedrawWindowOnNextUpdate
 
 
@@ -464,8 +464,8 @@ RegionUtilities_SetControlUpToDate	(ControlRef		inControl)
 	Rect	bounds;
 	
 	
-	(Rect*)GetControlBounds(inControl, &bounds);
-	(OSStatus)ValidWindowRect(GetControlOwner(inControl), &bounds);
+	UNUSED_RETURN(Rect*)GetControlBounds(inControl, &bounds);
+	UNUSED_RETURN(OSStatus)ValidWindowRect(GetControlOwner(inControl), &bounds);
 }// SetControlUpToDate
 
 
@@ -482,8 +482,8 @@ RegionUtilities_SetWindowUpToDate	(WindowRef	inWindow)
 	Rect	windowPortRect;
 	
 	
-	(Rect*)GetPortBounds(GetWindowPort(inWindow), &windowPortRect);
-	(OSStatus)ValidWindowRect(inWindow, &windowPortRect);
+	UNUSED_RETURN(Rect*)GetPortBounds(GetWindowPort(inWindow), &windowPortRect);
+	UNUSED_RETURN(OSStatus)ValidWindowRect(inWindow, &windowPortRect);
 }// SetWindowUpToDate
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

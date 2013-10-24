@@ -3,7 +3,7 @@
 # This is like "ApplicationGDB.sh.command", except it tries to find
 # a currently-running Python process and attach to it.
 
-PATH=/Developer/usr/bin:$PATH
+PATH=/Applications/Xcode.app/Contents/Developer/usr/bin:$PATH
 export PATH
 
 cd `dirname $0`

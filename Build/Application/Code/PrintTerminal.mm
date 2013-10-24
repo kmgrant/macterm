@@ -499,7 +499,7 @@ beginPreviewSheetModalForWindow:(NSWindow*)		aWindow
 	[NSApp beginSheet:sheet modalForWindow:nil
 							modalDelegate:nil didEndSelector:nil
 							contextInfo:nil];
-	(long)[NSApp runModalForWindow:[self window]];
+	UNUSED_RETURN(long)[NSApp runModalForWindow:[self window]];
 	[NSApp endSheet:sheet];
 	[sheet orderOut:self];
 }// beginPreviewSheetModalForWindow:
@@ -528,7 +528,7 @@ help:(id)	sender
 {
 #pragma unused(sender)
 	// TEMPORARY - add contextual help
-	(HelpSystem_Result)HelpSystem_DisplayHelpWithoutContext();
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpWithoutContext();
 }// help:
 
 

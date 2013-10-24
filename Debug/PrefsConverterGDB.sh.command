@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PATH=/Developer/usr/bin:$PATH
+PATH=/Applications/Xcode.app/Contents/Developer/usr/bin:$PATH
 export PATH
 
 cd `dirname $0`

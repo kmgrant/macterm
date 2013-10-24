@@ -569,12 +569,12 @@ createContainerView		(Panel_Ref		inPanel,
 		assert_noerr(error);
 		
 		// set other nice things (most can be set in a NIB someday)
-		(OSStatus)DataBrowserChangeAttributes(macrosList,
-												kDataBrowserAttributeListViewAlternatingRowColors/* attributes to set */,
-												0/* attributes to clear */);
-		(OSStatus)SetDataBrowserListViewUsePlainBackground(macrosList, false);
-		(OSStatus)SetDataBrowserTableViewHiliteStyle(macrosList, kDataBrowserTableViewFillHilite);
-		(OSStatus)SetDataBrowserHasScrollBars(macrosList, false/* horizontal */, true/* vertical */);
+		UNUSED_RETURN(OSStatus)DataBrowserChangeAttributes(macrosList,
+															kDataBrowserAttributeListViewAlternatingRowColors/* attributes to set */,
+															0/* attributes to clear */);
+		UNUSED_RETURN(OSStatus)SetDataBrowserListViewUsePlainBackground(macrosList, false);
+		UNUSED_RETURN(OSStatus)SetDataBrowserTableViewHiliteStyle(macrosList, kDataBrowserTableViewFillHilite);
+		UNUSED_RETURN(OSStatus)SetDataBrowserHasScrollBars(macrosList, false/* horizontal */, true/* vertical */);
 		error = SetDataBrowserSelectionFlags(macrosList, kDataBrowserSelectOnlyOne | kDataBrowserNeverEmptySelectionSet);
 		assert_noerr(error);
 		{
@@ -585,7 +585,7 @@ createContainerView		(Panel_Ref		inPanel,
 			if (noErr == error)
 			{
 				flags |= kDataBrowserPropertyIsMutable;
-				(OSStatus)SetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDMacroName, flags);
+				UNUSED_RETURN(OSStatus)SetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDMacroName, flags);
 			}
 		}
 		
@@ -1052,7 +1052,7 @@ panelChanged	(Panel_Ref		inPanel,
 				
 				
 				assert(dataBrowser.exists());
-				(OSStatus)SetDataBrowserSelectedItems(dataBrowser, 1/* number of items */, &kFirstItem, kDataBrowserItemsAssign);
+				UNUSED_RETURN(OSStatus)SetDataBrowserSelectedItems(dataBrowser, 1/* number of items */, &kFirstItem, kDataBrowserItemsAssign);
 			}
 			
 			// update the current data model accordingly
@@ -1240,10 +1240,10 @@ resetDisplay ()
 	
 	
 	// reset the list
-	(OSStatus)UpdateDataBrowserItems(macrosListContainer, kDataBrowserNoItem/* parent item */,
-										0/* number of IDs */, nullptr/* IDs */,
-										kDataBrowserItemNoProperty/* pre-sort property */,
-										kMyDataBrowserPropertyIDMacroName);
+	UNUSED_RETURN(OSStatus)UpdateDataBrowserItems(macrosListContainer, kDataBrowserNoItem/* parent item */,
+													0/* number of IDs */, nullptr/* IDs */,
+													kDataBrowserItemNoProperty/* pre-sort property */,
+													kMyDataBrowserPropertyIDMacroName);
 	
 	// reset the selected macro’s items
 	{
@@ -1395,14 +1395,14 @@ setAction		(UInt32		inSetMacroActionCommandID)
 	
 	
 	viewWrap = HIViewWrap(idMyPopUpMenuMacroAction, kOwningWindow);
-	(OSStatus)DialogUtilities_SetPopUpItemByCommand(viewWrap, inSetMacroActionCommandID);
+	UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(viewWrap, inSetMacroActionCommandID);
 	if (inSetMacroActionCommandID != kCommandSetMacroActionEnterText)
 	{
-		(OSStatus)DeactivateControl(HIViewWrap(idMyButtonInsertControlKey, kOwningWindow));
+		UNUSED_RETURN(OSStatus)DeactivateControl(HIViewWrap(idMyButtonInsertControlKey, kOwningWindow));
 	}
 	else
 	{
-		(OSStatus)ActivateControl(HIViewWrap(idMyButtonInsertControlKey, kOwningWindow));
+		UNUSED_RETURN(OSStatus)ActivateControl(HIViewWrap(idMyButtonInsertControlKey, kOwningWindow));
 	}
 }// My_MacrosPanelUI::setAction
 
@@ -1422,7 +1422,7 @@ setDataBrowserColumnWidths ()
 	assert(macrosListContainer.exists());
 	
 	
-	(Rect*)GetControlBounds(macrosListContainer, &containerRect);
+	UNUSED_RETURN(Rect*)GetControlBounds(macrosListContainer, &containerRect);
 	
 	// set column widths proportionately
 	{
@@ -1433,14 +1433,14 @@ setDataBrowserColumnWidths ()
 		// leave number column fixed-size
 		{
 			integerWidth = 42; // arbitrary
-			(OSStatus)SetDataBrowserTableViewNamedColumnWidth
-						(macrosListContainer, kMyDataBrowserPropertyIDMacroNumber, integerWidth);
+			UNUSED_RETURN(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+									(macrosListContainer, kMyDataBrowserPropertyIDMacroNumber, integerWidth);
 			availableWidth -= integerWidth;
 		}
 		
 		// give all remaining space to the title
-		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
-					(macrosListContainer, kMyDataBrowserPropertyIDMacroName, availableWidth);
+		UNUSED_RETURN(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+								(macrosListContainer, kMyDataBrowserPropertyIDMacroName, availableWidth);
 	}
 }// My_MacrosPanelUI::setDataBrowserColumnWidths
 
@@ -1486,7 +1486,7 @@ setKeyType		(UInt32		inKeyCommandID)
 	
 	
 	viewWrap = HIViewWrap(idMyPopUpMenuMacroKeyType, kOwningWindow);
-	(OSStatus)DialogUtilities_SetPopUpItemByCommand(viewWrap, inKeyCommandID);
+	UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(viewWrap, inKeyCommandID);
 	this->keyType = inKeyCommandID;
 	if (kCommandSetMacroKeyTypeOrdinaryChar == inKeyCommandID)
 	{
@@ -1632,7 +1632,7 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 				CFStringRef		numberCFString = CFStringCreateWithFormat(kCFAllocatorDefault,
 																			nullptr/* options dictionary */,
 																			CFSTR("%d")/* LOCALIZE THIS? */,
-																			numericalValue);
+																			(int)numericalValue);
 				
 				
 				if (nullptr == numberCFString) result = memFullErr;
@@ -2084,7 +2084,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					interfacePtr->setKeyType(received.commandID);
 					
 					// save preferences
-					(Boolean)interfacePtr->saveKeyTypeAndCharacterPreferences(dataPtr->dataModel, dataPtr->currentIndex);
+					UNUSED_RETURN(Boolean)interfacePtr->saveKeyTypeAndCharacterPreferences(dataPtr->dataModel, dataPtr->currentIndex);
 					
 					result = noErr;
 				}
@@ -2139,7 +2139,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						// try to avoid confusing the user by removing all focus in this window
 						// (to emphasize that the focus is in the palette)
-						(OSStatus)ClearKeyboardFocus(window);
+						UNUSED_RETURN(OSStatus)ClearKeyboardFocus(window);
 						
 						// give the button a selected state
 						SetControl32BitValue(buttonInsertControlKey, kControlCheckBoxCheckedValue);
@@ -2301,7 +2301,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						// try to avoid confusing the user by removing all focus in this window
 						// (to emphasize that the focus is in the palette)
-						(OSStatus)ClearKeyboardFocus(window);
+						UNUSED_RETURN(OSStatus)ClearKeyboardFocus(window);
 					}
 				}
 			}

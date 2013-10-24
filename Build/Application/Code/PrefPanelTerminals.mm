@@ -917,11 +917,11 @@ createContainerView		(Panel_Ref		inPanel,
 		assert_noerr(error);
 		
 		// set other nice things (most can be set in a NIB someday)
-		(OSStatus)DataBrowserChangeAttributes(emulationTweaksList,
-												kDataBrowserAttributeListViewAlternatingRowColors/* attributes to set */,
-												0/* attributes to clear */);
-		(OSStatus)SetDataBrowserListViewUsePlainBackground(emulationTweaksList, false);
-		(OSStatus)SetDataBrowserHasScrollBars(emulationTweaksList, false/* horizontal */, true/* vertical */);
+		UNUSED_RETURN(OSStatus)DataBrowserChangeAttributes(emulationTweaksList,
+															kDataBrowserAttributeListViewAlternatingRowColors/* attributes to set */,
+															0/* attributes to clear */);
+		UNUSED_RETURN(OSStatus)SetDataBrowserListViewUsePlainBackground(emulationTweaksList, false);
+		UNUSED_RETURN(OSStatus)SetDataBrowserHasScrollBars(emulationTweaksList, false/* horizontal */, true/* vertical */);
 		
 		// attach panel to data browser
 		error = SetControlProperty(emulationTweaksList, AppResources_ReturnCreatorCode(),
@@ -1164,10 +1164,10 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			HIViewWrap					dataBrowser(idMyDataBrowserHacks, HIViewGetWindow(this->mainView));
 			
 			
-			(OSStatus)UpdateDataBrowserItems(dataBrowser, kDataBrowserNoItem/* parent */,
-												sizeof(kUpdatedItems) / sizeof(DataBrowserItemID), &kUpdatedItems,
-												kDataBrowserItemNoProperty/* pre-sort property */,
-												kMy_DataBrowserPropertyIDTweakIsEnabled/* updated property */);
+			UNUSED_RETURN(OSStatus)UpdateDataBrowserItems(dataBrowser, kDataBrowserNoItem/* parent */,
+															sizeof(kUpdatedItems) / sizeof(DataBrowserItemID), &kUpdatedItems,
+															kDataBrowserItemNoProperty/* pre-sort property */,
+															kMy_DataBrowserPropertyIDTweakIsEnabled/* updated property */);
 		}
 	}
 }// My_TerminalsPanelEmulationUI::readPreferences
@@ -1285,16 +1285,16 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							Boolean		flagValue = true;
 							
 							
-							(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTerm256ColorsEnabled,
-																			sizeof(flagValue), &flagValue);
-							(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermBackgroundColorEraseEnabled,
-																			sizeof(flagValue), &flagValue);
-							(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermColorEnabled,
-																			sizeof(flagValue), &flagValue);
-							(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermGraphicsEnabled,
-																			sizeof(flagValue), &flagValue);
-							(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermWindowAlterationEnabled,
-																			sizeof(flagValue), &flagValue);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTerm256ColorsEnabled,
+																						sizeof(flagValue), &flagValue);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermBackgroundColorEraseEnabled,
+																						sizeof(flagValue), &flagValue);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermColorEnabled,
+																						sizeof(flagValue), &flagValue);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermGraphicsEnabled,
+																						sizeof(flagValue), &flagValue);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermWindowAlterationEnabled,
+																						sizeof(flagValue), &flagValue);
 							emulationInterfacePtr->readPreferences(dataPtr->dataModel);
 						}
 						break;
@@ -1428,7 +1428,7 @@ setEmulationTweaksDataBrowserColumnWidths ()
 	Rect		containerRect;
 	
 	
-	(Rect*)GetControlBounds(dataBrowser, &containerRect);
+	UNUSED_RETURN(Rect*)GetControlBounds(dataBrowser, &containerRect);
 	
 	// set column widths proportionately
 	{
@@ -1437,15 +1437,15 @@ setEmulationTweaksDataBrowserColumnWidths ()
 		
 		
 		// subtract the fixed-size checkbox column from the total width
-		(OSStatus)GetDataBrowserTableViewNamedColumnWidth
-					(dataBrowser, kMy_DataBrowserPropertyIDTweakIsEnabled, &integerWidth);
+		UNUSED_RETURN(OSStatus)GetDataBrowserTableViewNamedColumnWidth
+								(dataBrowser, kMy_DataBrowserPropertyIDTweakIsEnabled, &integerWidth);
 		availableWidth -= integerWidth;
 		
 		// set other column to use remaining space
 		{
 			integerWidth = availableWidth;
-			(OSStatus)SetDataBrowserTableViewNamedColumnWidth
-						(dataBrowser, kMy_DataBrowserPropertyIDTweakName, integerWidth);
+			UNUSED_RETURN(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+									(dataBrowser, kMy_DataBrowserPropertyIDTweakName, integerWidth);
 			//availableWidth -= integerWidth;
 		}
 	}
@@ -1470,35 +1470,35 @@ setEmulator		(Emulation_FullType		inEmulator,
 	switch (inEmulator)
 	{
 	case kEmulation_FullTypeVT102:
-		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
-														kCommandSetEmulatorVT102);
+		UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
+																		kCommandSetEmulatorVT102);
 		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	
 	case kEmulation_FullTypeVT220:
-		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
-														kCommandSetEmulatorVT220);
+		UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
+																		kCommandSetEmulatorVT220);
 		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	
 	case kEmulation_FullTypeXTermOriginal:
 	case kEmulation_FullTypeXTermColor:
 	case kEmulation_FullTypeXTerm256Color:
-		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
-														kCommandSetEmulatorXTermOriginal);
+		UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
+																		kCommandSetEmulatorXTermOriginal);
 		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	
 	case kEmulation_FullTypeDumb:
-		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
-														kCommandSetEmulatorNone);
+		UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
+																		kCommandSetEmulatorNone);
 		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	
 	case kEmulation_FullTypeVT100:
 	default:
-		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
-														kCommandSetEmulatorVT100);
+		UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
+																		kCommandSetEmulatorVT100);
 		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	}
@@ -1965,7 +1965,7 @@ receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			if ((noErr == error) && (kControlKindSignatureApple == controlKind.signature) &&
 				((kControlKindCheckBox == controlKind.kind) || (kControlKindRadioButton == controlKind.kind)))
 			{
-				(Boolean)interfacePtr->updateCheckBoxPreference(view);
+				UNUSED_RETURN(Boolean)interfacePtr->updateCheckBoxPreference(view);
 			}
 		}
 	}
@@ -2606,9 +2606,9 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			case kCommandSetScrollbackUnitsRows:
 				// INCOMPLETE
-				(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackUnits,
-																			Panel_ReturnOwningWindow(screenInterfacePtr->panel)),
-																received.commandID);
+				UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackUnits,
+																				Panel_ReturnOwningWindow(screenInterfacePtr->panel)),
+																				received.commandID);
 				result = noErr; // event is handled
 				break;
 			
@@ -2616,9 +2616,9 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// UNIMPLEMENTED
 				Sound_StandardAlert();
 			#if 0
-				(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackUnits,
-																			Panel_ReturnOwningWindow(screenInterfacePtr->panel)),
-																received.commandID);
+				UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackUnits,
+																				Panel_ReturnOwningWindow(screenInterfacePtr->panel)),
+																				received.commandID);
 			#endif
 				result = noErr; // event is handled
 				break;
@@ -2791,8 +2791,8 @@ setScrollbackRows	(UInt32		inDimension)
 	this->setScrollbackType(kTerminal_ScrollbackTypeFixed);
 	
 	SetControlNumericalText(HIViewWrap(idMyFieldScrollback, kOwningWindow), inDimension);
-	(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackUnits, kOwningWindow),
-													kCommandSetScrollbackUnitsRows);
+	UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackUnits, kOwningWindow),
+																	kCommandSetScrollbackUnitsRows);
 }// My_TerminalsPanelScreenUI::setScrollbackRows
 
 
@@ -2811,27 +2811,27 @@ setScrollbackType	(Terminal_ScrollbackType	inAllocationRule)
 	switch (inAllocationRule)
 	{
 	case kTerminal_ScrollbackTypeDisabled:
-		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackType, kOwningWindow),
-														kCommandSetScrollbackTypeDisabled);
+		UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackType, kOwningWindow),
+																		kCommandSetScrollbackTypeDisabled);
 		this->setScrollbackCustomizationEnabled(false);
 		break;
 	
 	case kTerminal_ScrollbackTypeUnlimited:
-		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackType, kOwningWindow),
-														kCommandSetScrollbackTypeUnlimited);
+		UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackType, kOwningWindow),
+																		kCommandSetScrollbackTypeUnlimited);
 		this->setScrollbackCustomizationEnabled(false);
 		break;
 	
 	case kTerminal_ScrollbackTypeDistributed:
-		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackType, kOwningWindow),
-														kCommandSetScrollbackTypeDistributed);
+		UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackType, kOwningWindow),
+																		kCommandSetScrollbackTypeDistributed);
 		this->setScrollbackCustomizationEnabled(false);
 		break;
 	
 	case kTerminal_ScrollbackTypeFixed:
 	default:
-		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackType, kOwningWindow),
-														kCommandSetScrollbackTypeFixed);
+		UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackType, kOwningWindow),
+																		kCommandSetScrollbackTypeFixed);
 		this->setScrollbackCustomizationEnabled(true);
 		break;
 	}
@@ -3558,7 +3558,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -4006,7 +4006,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -4720,7 +4720,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 

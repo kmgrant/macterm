@@ -125,7 +125,7 @@ Localization_AdjustHelpButtonControl	(ControlRef		inControl)
 	
 	
 	SetRect(&windowRect, 0, 0, 0, 0);
-	(OSStatus)GetWindowBounds(GetControlOwner(inControl), kWindowContentRgn, &windowRect);
+	UNUSED_RETURN(OSStatus)GetWindowBounds(GetControlOwner(inControl), kWindowContentRgn, &windowRect);
 	GetControlBounds(inControl, &controlRect);
 	
 	// now move the button
@@ -181,7 +181,7 @@ Localization_ArrangeButtonArray		(ControlRef const*	inButtons,
 	SetRect(&windowRect, 0, 0, 0, 0);
 	if (inButtonCount > 0)
 	{
-		(OSStatus)GetWindowBounds(GetControlOwner(inButtons[0]), kWindowContentRgn, &windowRect);
+		UNUSED_RETURN(OSStatus)GetWindowBounds(GetControlOwner(inButtons[0]), kWindowContentRgn, &windowRect);
 	}
 	
 	// resize every button
@@ -208,7 +208,7 @@ Localization_ArrangeButtonArray		(ControlRef const*	inButtons,
 			HIRect		floatBounds;
 			
 			
-			(OSStatus)HIViewGetBounds(inButtons[0], &floatBounds);
+			UNUSED_RETURN(OSStatus)HIViewGetBounds(inButtons[0], &floatBounds);
 			if (floatBounds.size.height < BUTTON_HT)
 			{
 				isSmall = true;
@@ -824,9 +824,9 @@ Localization_SetUpMultiLineTextControl	(ControlRef			inControl,
 								&controlFontInfo, &actualSize);
 		if (error == noErr)
 		{
-			(OSStatus)getControlFontInfo(&controlFontInfo, "\pA"/* string to calculate width of */,
-											fontName, &fontSize, &fontStyle, &charWidth/* string width */,
-											&fontHeight);
+			UNUSED_RETURN(OSStatus)getControlFontInfo(&controlFontInfo, "\pA"/* string to calculate width of */,
+														fontName, &fontSize, &fontStyle, &charWidth/* string width */,
+														&fontHeight);
 		}
 	}
 	
@@ -928,8 +928,8 @@ Localization_SetUpMultiLineTextControl	(ControlRef			inControl,
 	}
 	
 	// set the control text to be the specified text
-	(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlStaticTextTextTag,
-								textContentsLength * sizeof(char), (Ptr)(inTextContents + 1));
+	UNUSED_RETURN(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlStaticTextTextTag,
+											textContentsLength * sizeof(char), (Ptr)(inTextContents + 1));
 	
 	SetPort(oldPort);
 	
@@ -1059,7 +1059,7 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 													: smScriptAppFond);
 		
 		
-		(OSStatus)FMGetFontFamilyName(fontID, outFontName);
+		UNUSED_RETURN(OSStatus)FMGetFontFamilyName(fontID, outFontName);
 		*outFontSizePtr = (inThemeFontToUse == kThemeSystemFont) ? 12 : 10;
 		*outFontStylePtr = (inThemeFontToUse == kThemeSmallEmphasizedSystemFont) ? bold : normal;
 	}
@@ -1330,8 +1330,8 @@ setControlFontInfo	(ControlRef			inControl,
 	
 	bzero(&styleRecord, sizeof(styleRecord));
 	styleRecord.flags = 0;
-	(OSStatus)GetControlData(inControl, kControlEditTextPart, kControlFontStyleTag,
-								sizeof(styleRecord), &styleRecord, &actualSize);
+	UNUSED_RETURN(OSStatus)GetControlData(inControl, kControlEditTextPart, kControlFontStyleTag,
+											sizeof(styleRecord), &styleRecord, &actualSize);
 	styleRecord.flags |= kControlUseFontMask | kControlUseFaceMask | kControlUseSizeMask;
 	fontID = FMGetFontFamilyFromName(inFontName);
 	if (kInvalidFontFamily != fontID)

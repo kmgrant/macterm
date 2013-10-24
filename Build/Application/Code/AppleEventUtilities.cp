@@ -133,13 +133,13 @@ AppleEventUtilities_AddResultToReply	(AEDesc*	inResultAppleEventPtr,
 			switch (inResultAppleEventPtr->descriptorType)
 			{
 				case typeSInt16: // error code
-					(OSStatus)AEPutParamDesc(inoutReplyAppleEventPtr, keyErrorNumber,
-												inResultAppleEventPtr);
+					UNUSED_RETURN(OSStatus)AEPutParamDesc(inoutReplyAppleEventPtr, keyErrorNumber,
+															inResultAppleEventPtr);
 					break;
 				
 				case typeChar: // error message
-					(OSStatus)AEPutParamDesc(inoutReplyAppleEventPtr, keyErrorString,
-												inResultAppleEventPtr);
+					UNUSED_RETURN(OSStatus)AEPutParamDesc(inoutReplyAppleEventPtr, keyErrorString,
+															inResultAppleEventPtr);
 					break;
 				
 				default:
@@ -355,14 +355,14 @@ AppleEventUtilities_ObjectExists	(AppleEvent const*	inAppleEventPtr,
 	OSErr		result = noErr;
 	
 	
-	(OSStatus)AppleEventUtilities_InitAEDesc(&directObject);
-	(OSStatus)AppleEventUtilities_InitAEDesc(&directToken);
-	(OSStatus)AppleEventUtilities_InitAEDesc(&replyDesc);
+	UNUSED_RETURN(OSStatus)AppleEventUtilities_InitAEDesc(&directObject);
+	UNUSED_RETURN(OSStatus)AppleEventUtilities_InitAEDesc(&directToken);
+	UNUSED_RETURN(OSStatus)AppleEventUtilities_InitAEDesc(&replyDesc);
 	
 	Console_BeginFunction();
 	Console_WriteLine("AppleScript: “exists” event");
 	
-	(OSStatus)AEGetParamDesc(inAppleEventPtr, keyDirectObject, typeWildCard, &directObject);
+	UNUSED_RETURN(OSStatus)AEGetParamDesc(inAppleEventPtr, keyDirectObject, typeWildCard, &directObject);
 	result = AppleEventUtilities_RequiredParametersError(inAppleEventPtr);
 	if (result == noErr)
 	{

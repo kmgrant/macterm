@@ -256,7 +256,7 @@ public:
 							// reset the tab flag; this has the effect of opening the drawer
 							// if it is not already open (TEMPORARY - should this be done in
 							// a more direct way?)
-							(OSStatus)TerminalWindow_SetTabAppearance(terminalWindow, true);
+							UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(terminalWindow, true);
 						}
 					}
 				}
@@ -1524,7 +1524,7 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 		// synchronize the window’s initial appearance with its preferences
 		// (e.g. window size due to font and screen dimensions, and colors);
 		// note however that this will be reset anyway when the session begins
-		(Boolean)configureSessionTerminalWindow(terminalWindow, sessionContext);
+		UNUSED_RETURN(Boolean)configureSessionTerminalWindow(terminalWindow, sessionContext);
 		
 		if (displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 		{
@@ -1875,7 +1875,7 @@ SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalW
 	// seems to be key to avoiding graphical glitches.  As long as
 	// the tab drawer is hidden when the window changes groups, and
 	// redisplayed afterwards, drawers remain in the proper position.
-	(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, false);
+	UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, false);
 	
 	assert(nullptr != newWorkspace);
 	assert(workspaceList.end() != std::find(workspaceList.begin(), workspaceList.end(), newWorkspace));
@@ -1909,7 +1909,7 @@ SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalW
 	
 	// now add it to the new workspace
 	Workspace_AddWindow(newWorkspace, window);
-	(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
+	UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
 	fixTerminalWindowTabPositionsInWorkspace()(newWorkspace);
 }// MoveTerminalWindowToNewWorkspace
 
@@ -2709,7 +2709,7 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 			// drawer, which refuses to associate itself with an invisible window!
 			Workspace_AddWindow(targetWorkspace, window);
 			TerminalWindow_SetVisible(inTerminalWindow, true);
-			(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
+			UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
 			if (gAutoRearrangeTabs)
 			{
 				(fixTerminalWindowTabPositionsInWorkspace)std::for_each(targetList.begin(), targetList.end(),

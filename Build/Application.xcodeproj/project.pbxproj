@@ -240,7 +240,7 @@
 		0A32442115D74B0D001EBB98 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelTerminalOptionsCocoa.xib; sourceTree = "<group>"; };
 		0A33CCF607FAC04200248DDF /* ListenerModel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ListenerModel.mm; path = Shared/Code/ListenerModel.mm; sourceTree = "<group>"; };
 		0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MemoryBlocks.cp; path = Shared/Code/MemoryBlocks.cp; sourceTree = "<group>"; };
-		0A33CCFC07FAC06200248DDF /* StringUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StringUtilities.cp; path = Shared/Code/StringUtilities.cp; sourceTree = "<group>"; };
+		0A33CCFC07FAC06200248DDF /* StringUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StringUtilities.cp; path = Shared/Code/StringUtilities.cp; sourceTree = "<group>"; };
 		0A33CD0007FAC07A00248DDF /* FlagManager.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FlagManager.cp; path = Shared/Code/FlagManager.cp; sourceTree = "<group>"; };
 		0A33CD0307FAC08800248DDF /* Releases.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Releases.cp; path = Shared/Code/Releases.cp; sourceTree = "<group>"; };
 		0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFKeyValueInterface.cp; path = Shared/Code/CFKeyValueInterface.cp; sourceTree = "<group>"; };
@@ -1262,6 +1262,9 @@
 /* Begin PBXProject section */
 		0A46FDAC0554325700ACDF3A /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0500;
+			};
 			buildConfigurationList = 0ACFA1800929BE6B005712A9 /* Build configuration list for PBXProject "Application" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -1892,7 +1895,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
-				INSTALL_PATH = /usr/local/bin;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				OTHER_CFLAGS = (
 					"-g",
 					"-fpascal-strings",
@@ -1905,10 +1908,7 @@
 					"-I$(GROWL_SDK_ROOT)/Frameworks/Growl.framework/Headers",
 					"$(SDK_PATCH_INCLUDES)",
 				);
-				OTHER_LDFLAGS = (
-					"-framework",
-					Python,
-				);
+				OTHER_LDFLAGS = "$(MACTERM_PYTHON_LIB_FILE)";
 				PREBINDING = NO;
 				PRODUCT_NAME = PythonInvoker;
 			};
@@ -1923,7 +1923,7 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
-				GCC_VERSION = 4.2;
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
@@ -1940,7 +1940,6 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VALUE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET_i386 = 10.6;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
 					"-g",
@@ -1967,6 +1966,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Debug.xcconfig */;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1978,6 +1978,7 @@
 				GCC_MODEL_TUNING = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
 				OTHER_LDFLAGS = "$(LDFLAGS_EXTRA_FRAMEWORKS)";
 				PREBINDING = NO;
@@ -2001,9 +2002,9 @@
 				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(BUILD_ROOT)/ForTigerDebug\"";
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_SHADOW = NO;
 				GCC_WARN_UNUSED_PARAMETER = NO;
-				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
 					"-g",
 					"-fpascal-strings",
@@ -2015,12 +2016,12 @@
 					"$(SWIG_PYTHON_INCLUDE)",
 				);
 				OTHER_LDFLAGS = (
-					"-framework",
-					Python,
+					"$(MACTERM_PYTHON_LIB_FILE)",
 					"-framework",
 					Quills,
 				);
 				PRODUCT_NAME = Quills;
+				SDKROOT = macosx10.6;
 				WARNING_CFLAGS = "-Wall";
 			};
 			name = ForDebugging;
@@ -2028,7 +2029,9 @@
 		0AA249490D13342D00BCAF94 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_VERSION = A;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = "Application/Resources/Template-PyMacTerm.framework-Info.plist";
 				PRODUCT_NAME = PyMacTerm;
 			};
@@ -2037,6 +2040,7 @@
 		0AFB6A200E86FD27005C5A07 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				PRODUCT_NAME = MacTerm;
 			};
 			name = ForDebugging;

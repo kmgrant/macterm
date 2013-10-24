@@ -1415,66 +1415,66 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						switch (defaultPreferencesTag)
 						{
 						case kPreferences_TagTerminalColorANSIBlack:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIBlack);
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIBlackBold);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIBlack);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIBlackBold);
 							interfacePtr->readPreferencesForBlack(defaultContext);
 							break;
 						
 						case kPreferences_TagTerminalColorANSIRed:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIRed);
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIRedBold);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIRed);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIRedBold);
 							interfacePtr->readPreferencesForRed(defaultContext);
 							break;
 						
 						case kPreferences_TagTerminalColorANSIGreen:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIGreen);
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIGreenBold);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIGreen);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIGreenBold);
 							interfacePtr->readPreferencesForGreen(defaultContext);
 							break;
 						
 						case kPreferences_TagTerminalColorANSIYellow:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIYellow);
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIYellowBold);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIYellow);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIYellowBold);
 							interfacePtr->readPreferencesForYellow(defaultContext);
 							break;
 						
 						case kPreferences_TagTerminalColorANSIBlue:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIBlue);
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIBlueBold);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIBlue);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIBlueBold);
 							interfacePtr->readPreferencesForBlue(defaultContext);
 							break;
 						
 						case kPreferences_TagTerminalColorANSIMagenta:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIMagenta);
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIMagentaBold);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIMagenta);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIMagentaBold);
 							interfacePtr->readPreferencesForMagenta(defaultContext);
 							break;
 						
 						case kPreferences_TagTerminalColorANSICyan:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSICyan);
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSICyanBold);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSICyan);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSICyanBold);
 							interfacePtr->readPreferencesForCyan(defaultContext);
 							break;
 						
 						case kPreferences_TagTerminalColorANSIWhite:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIWhite);
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorANSIWhiteBold);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIWhite);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorANSIWhiteBold);
 							interfacePtr->readPreferencesForWhite(defaultContext);
 							break;
 						
@@ -2430,15 +2430,16 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					fontInfo.hasColor = false;
 					// apparently this API can return paramErr even though it
 					// successfully sets the desired font information...
-					(OSStatus)SetFontInfoForSelection(kFontSelectionQDType, 1/* number of styles */, &fontInfo,
-													// NOTE: This API is misdeclared in older headers, the last argument is supposed to
-													// be an event target.  It is bastardized into HIObjectRef form for older compiles.
-													#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-														GetControlEventTarget(buttonHit)
-													#else
-														REINTERPRET_CAST(buttonHit, HIObjectRef)
-													#endif
-													);
+					UNUSED_RETURN(OSStatus)SetFontInfoForSelection
+											(kFontSelectionQDType, 1/* number of styles */, &fontInfo,
+												// NOTE: This API is misdeclared in older headers, the last argument is supposed to
+												// be an event target.  It is bastardized into HIObjectRef form for older compiles.
+												#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+													GetControlEventTarget(buttonHit)
+												#else
+													REINTERPRET_CAST(buttonHit, HIObjectRef)
+												#endif
+												);
 					if (1)
 					{
 						SetControl32BitValue(HIViewWrap(idMyButtonFontName, HIViewGetWindow(buttonHit)), kControlCheckBoxCheckedValue);
@@ -2558,58 +2559,58 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						switch (defaultPreferencesTag)
 						{
 						case kPreferences_TagFontName:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, defaultPreferencesTag);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, defaultPreferencesTag);
 							interfacePtr->readPreferencesForFontName(defaultContext);
 							break;
 						
 						case kPreferences_TagFontSize:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, defaultPreferencesTag);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, defaultPreferencesTag);
 							interfacePtr->readPreferencesForFontSize(defaultContext);
 							break;
 						
 						case kPreferences_TagFontCharacterWidthMultiplier:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, defaultPreferencesTag);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, defaultPreferencesTag);
 							interfacePtr->readPreferencesForFontCharacterWidth(defaultContext);
 							break;
 						
 						case kPreferences_TagTerminalColorNormalForeground:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorNormalForeground);
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorNormalBackground);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorNormalForeground);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorNormalBackground);
 							interfacePtr->readPreferencesForNormalColors(defaultContext);
 							break;
 						
 						case kPreferences_TagTerminalColorBoldForeground:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorBoldForeground);
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorBoldBackground);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorBoldForeground);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorBoldBackground);
 							interfacePtr->readPreferencesForBoldColors(defaultContext);
 							break;
 						
 						case kPreferences_TagTerminalColorBlinkingForeground:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorBlinkingForeground);
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorBlinkingBackground);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorBlinkingForeground);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorBlinkingBackground);
 							interfacePtr->readPreferencesForBlinkingColors(defaultContext);
 							break;
 						
 						case kPreferences_TagTerminalColorCursorBackground:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagTerminalColorCursorBackground);
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, kPreferences_TagAutoSetCursorColor);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagTerminalColorCursorBackground);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, kPreferences_TagAutoSetCursorColor);
 							interfacePtr->readPreferencesForCursorColors(defaultContext);
 							break;
 						
 						case kPreferences_TagTerminalColorMatteBackground:
-							(Preferences_Result)Preferences_ContextDeleteData
-												(targetContext, defaultPreferencesTag);
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextDeleteData
+																(targetContext, defaultPreferencesTag);
 							interfacePtr->readPreferencesForMatteColors(defaultContext);
 							break;
 						
@@ -2904,15 +2905,15 @@ setUpSampleTerminalHIView	(TerminalViewRef	inTerminalView,
 	
 	// force the view into normal display mode, because zooming will
 	// mess up the font size
-	(TerminalView_Result)TerminalView_SetDisplayMode(inTerminalView, kTerminalView_DisplayModeNormal);
+	UNUSED_RETURN(TerminalView_Result)TerminalView_SetDisplayMode(inTerminalView, kTerminalView_DisplayModeNormal);
 	
 	// ignore changes to certain preferences for this sample view, since
 	// it is not meant to be an ordinary terminal view
-	(TerminalView_Result)TerminalView_IgnoreChangesToPreference(inTerminalView, kPreferences_TagTerminalResizeAffectsFontSize);
+	UNUSED_RETURN(TerminalView_Result)TerminalView_IgnoreChangesToPreference(inTerminalView, kPreferences_TagTerminalResizeAffectsFontSize);
 	
 	// ignore user interaction, because text selections are not meant
 	// to change
-	(TerminalView_Result)TerminalView_SetUserInteractionEnabled(inTerminalView, false);
+	UNUSED_RETURN(TerminalView_Result)TerminalView_SetUserInteractionEnabled(inTerminalView, false);
 	
 	// write some sample text to the view; NOTE that because of initial
 	// size constraints, there may not be enough room to write more than
@@ -3021,8 +3022,8 @@ isMonospacedFont	(CFStringRef	inFontName)
 	Str255		fontNamePascalString;
 	
 	
-	(Boolean)CFStringGetPascalString(inFontName, fontNamePascalString, sizeof(fontNamePascalString),
-										kCFStringEncodingMacRoman);
+	UNUSED_RETURN(Boolean)CFStringGetPascalString(inFontName, fontNamePascalString, sizeof(fontNamePascalString),
+													kCFStringEncodingMacRoman);
 	
 	if (numberOfScriptsEnabled > 1)
 	{
@@ -3183,7 +3184,7 @@ receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					error = GetSheetWindowParent(window, &parentWindow);
 					if (noErr == error)
 					{
-						(OSStatus)HIViewRender(HIViewGetRoot(parentWindow));
+						UNUSED_RETURN(OSStatus)HIViewRender(HIViewGetRoot(parentWindow));
 					}
 				}
 				
@@ -3193,9 +3194,9 @@ receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				if (noErr == error)
 				{
 					++bounds.right;
-					(OSStatus)SetWindowBounds(window, kWindowContentRgn, &bounds);
+					UNUSED_RETURN(OSStatus)SetWindowBounds(window, kWindowContentRgn, &bounds);
 					--bounds.right;
-					(OSStatus)SetWindowBounds(window, kWindowContentRgn, &bounds);
+					UNUSED_RETURN(OSStatus)SetWindowBounds(window, kWindowContentRgn, &bounds);
 				}
 			}
 		}
@@ -3605,7 +3606,7 @@ isInherited
 	BOOL	result = NO;
 	
 	
-	(Float32)[self readValueSeeIfDefault:&result];
+	UNUSED_RETURN(Float32)[self readValueSeeIfDefault:&result];
 	
 	return result;
 }// isInherited
@@ -4010,7 +4011,7 @@ didLoadContainerView:(NSView*)			aContainerView
 			self->sampleScreenView = TerminalView_NewNSViewBased(self->terminalSampleContentView,
 																	self->terminalSamplePaddingView,
 																	self->terminalSampleBackgroundView,
-																	sampleScreenBuffer, nullptr/* format */);
+																	self->sampleScreenBuffer, nullptr/* format */);
 			if (nullptr == self->sampleScreenView)
 			{
 				Console_WriteLine("failed to create sample terminal view");
@@ -4019,15 +4020,15 @@ didLoadContainerView:(NSView*)			aContainerView
 			{
 				// force the view into normal display mode, because zooming will
 				// mess up the font size
-				(TerminalView_Result)TerminalView_SetDisplayMode(self->sampleScreenView, kTerminalView_DisplayModeNormal);
+				UNUSED_RETURN(TerminalView_Result)TerminalView_SetDisplayMode(self->sampleScreenView, kTerminalView_DisplayModeNormal);
 				
 				// ignore changes to certain preferences for this sample view, since
 				// it is not meant to be an ordinary terminal view
-				(TerminalView_Result)TerminalView_IgnoreChangesToPreference(self->sampleScreenView, kPreferences_TagTerminalResizeAffectsFontSize);
+				UNUSED_RETURN(TerminalView_Result)TerminalView_IgnoreChangesToPreference(self->sampleScreenView, kPreferences_TagTerminalResizeAffectsFontSize);
 				
 				// ignore user interaction, because text selections are not meant
 				// to change
-				(TerminalView_Result)TerminalView_SetUserInteractionEnabled(self->sampleScreenView, false);
+				UNUSED_RETURN(TerminalView_Result)TerminalView_SetUserInteractionEnabled(self->sampleScreenView, false);
 				
 				// write some text in various styles to the screen (happens to be a
 				// copy of what the sample view does); this will help with testing
@@ -4158,7 +4159,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -4962,7 +4963,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 

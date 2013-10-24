@@ -221,8 +221,8 @@ InfoWindow_Done	()
 		
 		
 		windowIsVisible = InfoWindow_IsVisible();
-		(Preferences_Result)Preferences_SetData(kPreferences_TagWasSessionInfoShowing,
-												sizeof(Boolean), &windowIsVisible);
+		UNUSED_RETURN(Preferences_Result)Preferences_SetData(kPreferences_TagWasSessionInfoShowing,
+																sizeof(Boolean), &windowIsVisible);
 	}
 	
 	Commands_StopHandlingExecution(kCommandShowConnectionStatus, gInfoWindowDisplayEventListener);

@@ -611,12 +611,12 @@ finalTitle:(NSString*)							newTitle
 		if (nullptr != self->session)
 		{
 			// set session window’s user-defined title
-			Session_SetWindowUserDefinedTitle(self->session, (CFStringRef)newTitle);
+			Session_SetWindowUserDefinedTitle(self->session, BRIDGE_CAST(newTitle, CFStringRef));
 		}
 		else if (nullptr != self->canvasWindow)
 		{
 			// set vector graphics window’s user-defined title
-			VectorWindow_SetTitle(self->canvasWindow, (CFStringRef)newTitle);
+			VectorWindow_SetTitle(self->canvasWindow, BRIDGE_CAST(newTitle, CFStringRef));
 		}
 		else
 		{
@@ -627,7 +627,7 @@ finalTitle:(NSString*)							newTitle
 			}
 			if (nullptr != self->targetCarbonWindow)
 			{
-				(OSStatus)SetWindowTitleWithCFString(self->targetCarbonWindow, (CFStringRef)newTitle);
+				UNUSED_RETURN(OSStatus)SetWindowTitleWithCFString(self->targetCarbonWindow, BRIDGE_CAST(newTitle, CFStringRef));
 			}
 		}
 	}

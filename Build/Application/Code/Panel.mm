@@ -164,8 +164,8 @@ Panel_Dispose	(Panel_Ref*		inoutRefPtr)
 			PanelAutoLocker		ptr(gPanelPtrLocks(), *inoutRefPtr);
 			
 			
-			(SInt32)panelChanged(ptr, kPanel_MessageDestroyed,
-									Panel_ReturnImplementation(*inoutRefPtr));
+			UNUSED_RETURN(SInt32)panelChanged(ptr, kPanel_MessageDestroyed,
+												Panel_ReturnImplementation(*inoutRefPtr));
 			IconManager_DisposeIcon(&ptr->customizerWritable.icon);
 		}
 		
@@ -505,7 +505,7 @@ Panel_SendMessageCreateViews	(Panel_Ref		inRef,
 		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
 		
 		
-		(SInt32)panelChanged(ptr, kPanel_MessageCreateViews, &inOwningWindow);
+		UNUSED_RETURN(SInt32)panelChanged(ptr, kPanel_MessageCreateViews, &inOwningWindow);
 	}
 }// SendMessageCreateViews
 
@@ -526,7 +526,7 @@ Panel_SendMessageFocusFirst		(Panel_Ref		inRef)
 		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
 		
 		
-		(SInt32)panelChanged(ptr, kPanel_MessageFocusFirst, nullptr/* context */);
+		UNUSED_RETURN(SInt32)panelChanged(ptr, kPanel_MessageFocusFirst, nullptr/* context */);
 	}
 }// SendMessageFocusFirst
 
@@ -549,7 +549,7 @@ Panel_SendMessageFocusGained	(Panel_Ref		inRef,
 		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
 		
 		
-		(SInt32)panelChanged(ptr, kPanel_MessageFocusGained, &inViewGainingKeyboardFocus);
+		UNUSED_RETURN(SInt32)panelChanged(ptr, kPanel_MessageFocusGained, &inViewGainingKeyboardFocus);
 	}
 }// SendMessageFocusGained
 
@@ -572,7 +572,7 @@ Panel_SendMessageFocusLost	(Panel_Ref		inRef,
 		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
 		
 		
-		(SInt32)panelChanged(ptr, kPanel_MessageFocusLost, &inViewLosingKeyboardFocus);
+		UNUSED_RETURN(SInt32)panelChanged(ptr, kPanel_MessageFocusLost, &inViewLosingKeyboardFocus);
 	}
 }// SendMessageFocusLost
 
@@ -734,7 +734,7 @@ Panel_SendMessageNewAppearanceTheme		(Panel_Ref	inRef)
 		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
 		
 		
-		(SInt32)panelChanged(ptr, kPanel_MessageNewAppearanceTheme, nullptr/* message data */);
+		UNUSED_RETURN(SInt32)panelChanged(ptr, kPanel_MessageNewAppearanceTheme, nullptr/* message data */);
 	}
 }// SendMessageNewAppearanceTheme
 
@@ -761,7 +761,7 @@ Panel_SendMessageNewDataSet		(Panel_Ref							inRef,
 		Panel_DataSetTransition		mutableCopy = inNewDataSet;
 		
 		
-		(SInt32)panelChanged(ptr, kPanel_MessageNewDataSet, &mutableCopy);
+		UNUSED_RETURN(SInt32)panelChanged(ptr, kPanel_MessageNewDataSet, &mutableCopy);
 	}
 }// SendMessageNewDataSet
 
@@ -784,7 +784,7 @@ Panel_SendMessageNewVisibility	(Panel_Ref	inRef,
 		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
 		
 		
-		(SInt32)panelChanged(ptr, kPanel_MessageNewVisibility, &inIsNowVisible);
+		UNUSED_RETURN(SInt32)panelChanged(ptr, kPanel_MessageNewVisibility, &inIsNowVisible);
 	}
 }// SendMessageNewVisibility
 
@@ -889,10 +889,10 @@ Panel_SetIconRef	(Panel_Ref	inRef,
 		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
 		
 		
-		(OSStatus)IconManager_MakeIconRef(ptr->customizerWritable.icon,
-											inIconServicesVolumeNumber,
-											inIconServicesCreator,
-											inIconServicesDescription);
+		UNUSED_RETURN(OSStatus)IconManager_MakeIconRef(ptr->customizerWritable.icon,
+														inIconServicesVolumeNumber,
+														inIconServicesCreator,
+														inIconServicesDescription);
 	}
 }// SetIconRef
 
@@ -916,10 +916,10 @@ Panel_SetIconRefFromBundleFile	(Panel_Ref		inRef,
 		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
 		
 		
-		(OSStatus)IconManager_MakeIconRefFromBundleFile(ptr->customizerWritable.icon,
-														inFileNameWithoutExtension,
-														inIconServicesCreator,
-														inIconServicesDescription);
+		UNUSED_RETURN(OSStatus)IconManager_MakeIconRefFromBundleFile(ptr->customizerWritable.icon,
+																		inFileNameWithoutExtension,
+																		inIconServicesCreator,
+																		inIconServicesDescription);
 	}
 }// SetIconRefFromBundleFile
 

@@ -269,7 +269,7 @@ Workspace_RemoveWindow	(Workspace_Ref	inWorkspace,
 	
 	
 	// put the window back into the normal group of document windows
-	(OSStatus)SetWindowGroup(inWindowToRemove, GetWindowGroupOfClass(kDocumentWindowClass));
+	UNUSED_RETURN(OSStatus)SetWindowGroup(inWindowToRemove, GetWindowGroupOfClass(kDocumentWindowClass));
 	
 	ptr->contents.erase(std::remove(ptr->contents.begin(), ptr->contents.end(), inWindowToRemove),
 						ptr->contents.end());
@@ -453,7 +453,7 @@ My_Workspace::
 {
 	if (nullptr != windowGroup)
 	{
-		(OSStatus)ReleaseWindowGroup(this->windowGroup), this->windowGroup = nullptr;
+		UNUSED_RETURN(OSStatus)ReleaseWindowGroup(this->windowGroup), this->windowGroup = nullptr;
 	}
 }// My_Workspace default constructor
 

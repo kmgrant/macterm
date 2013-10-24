@@ -711,7 +711,7 @@ instance, even if the lines themselves are unique.
 */
 struct My_AttributeInfo
 {
-	friend class My_ScreenBufferLine;
+	friend struct My_ScreenBufferLine;
 	
 	My_AttributeInfo ();
 	
@@ -1993,8 +1993,6 @@ void						moveCursorX								(My_ScreenBufferPtr, SInt16);
 void						moveCursorY								(My_ScreenBufferPtr, My_ScreenRowIndex);
 void						resetTerminal							(My_ScreenBufferPtr, Boolean = false);
 SessionRef					returnListeningSession					(My_ScreenBufferPtr);
-Emulation_BaseType			returnTerminalType						(Emulation_FullType);
-Emulation_Variant			returnTerminalVariant					(Emulation_FullType);
 Boolean						screenCopyLinesToScrollback				(My_ScreenBufferPtr);
 Boolean						screenInsertNewLines					(My_ScreenBufferPtr, My_ScreenBufferLineList::size_type);
 Boolean						screenMoveLinesToScrollback				(My_ScreenBufferPtr, My_ScreenBufferLineList::size_type);
@@ -2656,9 +2654,9 @@ Terminal_CopyLineRange	(TerminalScreenRef		inScreen,
 			
 			textStartIter = iteratorPtr->currentLine().textVectorBegin;
 			std::advance(textStartIter, inZeroBasedStartColumn);
-			(char*)whitespaceSensitiveCopy(textStartIter, copyLength, outBuffer, copyLength,
-											&copyLength/* returned actual length */,
-											STATIC_CAST(inNumberOfSpacesPerTabOrZeroForNoSubstitution, SInt32));
+			UNUSED_RETURN(char*)whitespaceSensitiveCopy(textStartIter, copyLength, outBuffer, copyLength,
+														&copyLength/* returned actual length */,
+														STATIC_CAST(inNumberOfSpacesPerTabOrZeroForNoSubstitution, SInt32));
 			if (outActualLengthPtrOrNull != nullptr) *outActualLengthPtrOrNull = copyLength;
 		}
 	}
@@ -4828,8 +4826,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 			
 			matchVectorsList[0] = new RangeDescriptionVector();
 			
-			threadContextPtr = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(sizeof(My_SearchThreadContext)),
-												My_SearchThreadContextPtr);
+			threadContextPtr = new My_SearchThreadContext; // contains C++ classes, must use "new"
 			threadContextPtr->screenBufferPtr = dataPtr;
 			threadContextPtr->matchesVectorPtr = matchVectorsList[0];
 			threadContextPtr->queryCFString = inQuery;
@@ -4881,8 +4878,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 					
 					matchVectorsList[i] = new RangeDescriptionVector();
 					
-					threadContextPtr = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(sizeof(My_SearchThreadContext)),
-														My_SearchThreadContextPtr);
+					threadContextPtr = new My_SearchThreadContext; // contains C++ classes, must use "new"
 					threadContextPtr->screenBufferPtr = dataPtr;
 					threadContextPtr->matchesVectorPtr = matchVectorsList[i];
 					threadContextPtr->queryCFString = inQuery;
@@ -4920,7 +4916,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 			{
 				break;
 			}
-			(int)pthread_join(threadList[i], nullptr);
+			UNUSED_RETURN(int)pthread_join(threadList[i], nullptr);
 		}
 		
 		// process search results
@@ -5194,7 +5190,7 @@ Terminal_SetVisibleScreenDimensions		(TerminalScreenRef	inRef,
 	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
 	else
 	{
-		(Terminal_Result)setVisibleColumnCount(dataPtr, inNewNumberOfCharactersWide);
+		UNUSED_RETURN(Terminal_Result)setVisibleColumnCount(dataPtr, inNewNumberOfCharactersWide);
 		result = setVisibleRowCount(dataPtr, inNewNumberOfLinesHigh);
 		
 		changeNotifyForTerminal(dataPtr, kTerminal_ChangeScreenSize, dataPtr->selfRef/* context */);
@@ -6911,8 +6907,8 @@ My_ScreenBuffer::
 	this->printingModes = 0; // clear so that printingEnd() will clean up
 	printingEnd();
 	StreamCapture_Release(&this->captureStream);
-	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration.returnRef(), this->preferenceMonitor.returnRef(),
-															kPreferences_ChangeContextBatchMode);
+	UNUSED_RETURN(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration.returnRef(), this->preferenceMonitor.returnRef(),
+																		kPreferences_ChangeContextBatchMode);
 	TerminalSpeaker_Dispose(&this->speaker);
 	ListenerModel_Dispose(&this->changeListenerModel);
 }// My_ScreenBuffer destructor
@@ -7012,8 +7008,8 @@ printingEnd		(Boolean	inSendRemainderToPrinter)
 					
 					if (nullptr != printJob)
 					{
-						(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
-												(printJob, TerminalWindow_ReturnWindow(terminalWindow));
+						UNUSED_RETURN(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
+															(printJob, TerminalWindow_ReturnWindow(terminalWindow));
 						PrintTerminal_ReleaseJob(&printJob);
 					}
 					CFRelease(jobTitle), jobTitle = nullptr;
@@ -7021,7 +7017,7 @@ printingEnd		(Boolean	inSendRemainderToPrinter)
 			}
 		}
 		
-		(OSStatus)FSDeleteObject(&this->printingFile);
+		UNUSED_RETURN(OSStatus)FSDeleteObject(&this->printingFile);
 	}
 }// printingEnd
 
@@ -7050,7 +7046,7 @@ printingReset ()
 		// create a new, empty file that is open for write
 		openedFile = FileUtilities_OpenTemporaryFile(this->printingFile);
 		this->printingStream = StreamCapture_New(kSession_LineEndingLF);
-		(Boolean)StreamCapture_Begin(this->printingStream, openedFile);
+		UNUSED_RETURN(Boolean)StreamCapture_Begin(this->printingStream, openedFile);
 		// TEMPORARY - if this fails, need to report to the user somehow
 	}
 }// printingReset
@@ -9640,7 +9636,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			case kStateUTF8Off:
 				if ((false == inDataPtr->emulator.lockUTF8) && (nullptr != translationConfig))
 				{
-					(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingASCII/* arbitrary */, true/* copy only */);
+					UNUSED_RETURN(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingASCII/* arbitrary */, true/* copy only */);
 					inDataPtr->emulator.disableShifts = false;
 				}
 				break;
@@ -9648,7 +9644,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			case kStateUTF8OnUnspecifiedImpl:
 				if (nullptr != translationConfig)
 				{
-					(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingUTF8, true/* copy only */);
+					UNUSED_RETURN(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingUTF8, true/* copy only */);
 					inDataPtr->emulator.disableShifts = true;
 				}
 				break;
@@ -9656,7 +9652,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			case kStateToUTF8Level1:
 				if (nullptr != translationConfig)
 				{
-					(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingUTF8, true/* copy only */);
+					UNUSED_RETURN(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingUTF8, true/* copy only */);
 					inDataPtr->emulator.disableShifts = true;
 				}
 				inDataPtr->emulator.lockUTF8 = true;
@@ -9666,7 +9662,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			case kStateToUTF8Level2:
 				if (nullptr != translationConfig)
 				{
-					(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingUTF8, true/* copy only */);
+					UNUSED_RETURN(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingUTF8, true/* copy only */);
 					inDataPtr->emulator.disableShifts = true;
 				}
 				inDataPtr->emulator.lockUTF8 = true;
@@ -9676,7 +9672,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			case kStateToUTF8Level3:
 				if (nullptr != translationConfig)
 				{
-					(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingUTF8, true/* copy only */);
+					UNUSED_RETURN(Boolean)TextTranslation_ContextSetEncoding(translationConfig, kCFStringEncodingUTF8, true/* copy only */);
 					inDataPtr->emulator.disableShifts = true;
 				}
 				inDataPtr->emulator.lockUTF8 = true;
@@ -10161,9 +10157,9 @@ modeSetReset	(My_ScreenBufferPtr		inDataPtr,
 				case 3:
 					// DECCOLM (80/132 column switch)
 					{
-						(Boolean)Commands_ExecuteByIDUsingEvent((inIsModeEnabled)
-																? kCommandLargeScreen
-																: kCommandSmallScreen);
+						UNUSED_RETURN(Boolean)Commands_ExecuteByIDUsingEvent((inIsModeEnabled)
+																				? kCommandLargeScreen
+																				: kCommandSmallScreen);
 					}
 					break;
 				
@@ -17564,42 +17560,6 @@ returnListeningSession	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
-Utility to extract a generic terminal type
-from a more specific terminal emulation type.
-For example, the VT family of terminals may
-share many common emulation behaviors, so in
-some cases you may only care that you are
-currently using *some* kind of VT terminal,
-you may not care which specific VT terminal
-(e.g. VT220 versus VT100).
-
-(3.0)
-*/
-inline Emulation_BaseType
-returnTerminalType		(Emulation_FullType		inEmulator)
-{
-	return ((inEmulator & kEmulation_BaseTypeMask) >> kEmulation_BaseTypeByteShift);
-}// returnTerminalType
-
-
-/*!
-Utility to extract a generic terminal variant
-from a more specific terminal emulation type.
-For example, if you extracted the terminal type
-and found you have a VT terminal, this routine
-could tell you if the terminal is specifically
-a VT100 or VT220.
-
-(3.0)
-*/
-inline Emulation_Variant
-returnTerminalVariant	(Emulation_FullType		inEmulator)
-{
-	return ((inEmulator & kEmulation_VariantMask) >> kEmulation_VariantByteShift);
-}// returnTerminalVariant
-
-
-/*!
 Appends the visible screen to the scrollback buffer, usually in
 preparation for then blanking the visible screen area.
 
@@ -17867,7 +17827,7 @@ screenScroll	(My_ScreenBufferPtr		inDataPtr,
 				(inDataPtr->customScrollingRegion == inDataPtr->visibleBoundary.rows))
 			{
 				// scrolling region is entire screen, and lines are being saved off the top
-				(Boolean)screenMoveLinesToScrollback(inDataPtr, inLineCount);
+				UNUSED_RETURN(Boolean)screenMoveLinesToScrollback(inDataPtr, inLineCount);
 				
 				// displaying right from top of scrollback buffer; topmost line being shown
 				// has in fact vanished; update the display to show this

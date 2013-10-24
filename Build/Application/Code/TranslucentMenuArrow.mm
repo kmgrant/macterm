@@ -206,7 +206,7 @@ drawRect:(NSRect)	aRect
 		arrowBounds.origin.x += (contentBounds.size.width - arrowBounds.size.width) / 2.0;
 		arrowBounds.origin.y += (contentBounds.size.height - arrowBounds.size.height) / 2.0;
 		
-		(OSStatus)HIThemeDrawPopupArrow(&arrowBounds, &info, drawingContext, kHIThemeOrientationInverted);
+		UNUSED_RETURN(OSStatus)HIThemeDrawPopupArrow(&arrowBounds, &info, drawingContext, kHIThemeOrientationInverted);
 	}
 }// drawRect:
 

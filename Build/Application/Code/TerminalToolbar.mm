@@ -2044,7 +2044,7 @@ performMenuAction:(id)		sender
 			
 			if (kIndex < [self->targets count])
 			{
-				(id)[[self->targets objectAtIndex:kIndex] performSelector:self->action withObject:self];
+				UNUSED_RETURN(id)[[self->targets objectAtIndex:kIndex] performSelector:self->action withObject:self];
 			}
 		}
 	}
@@ -2070,7 +2070,7 @@ performSegmentedControlAction:(id)		sender
 			
 			if (kIndex < [self->targets count])
 			{
-				(id)[[self->targets objectAtIndex:kIndex] performSelector:self->action withObject:self];
+				UNUSED_RETURN(id)[[self->targets objectAtIndex:kIndex] performSelector:self->action withObject:self];
 			}
 		}
 	}

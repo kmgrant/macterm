@@ -298,14 +298,14 @@ TerminalBackground_CreateHIView		(HIViewRef&		outHIViewRef,
 	if (noErr == result)
 	{
 		// set the matte flag
-		(OSStatus)SetEventParameter(initializationEvent, kEventParamTerminalBackground_IsMatte,
-									typeBoolean, sizeof(inIsMatte), &inIsMatte);
+		UNUSED_RETURN(OSStatus)SetEventParameter(initializationEvent, kEventParamTerminalBackground_IsMatte,
+													typeBoolean, sizeof(inIsMatte), &inIsMatte);
 		
 		// set the image flag
 		if (nullptr != inImageURLOrNull)
 		{
-			(OSStatus)SetEventParameter(initializationEvent, kEventParamTerminalBackground_ImageURL,
-										typeCFStringRef, sizeof(inImageURLOrNull), &inImageURLOrNull);
+			UNUSED_RETURN(OSStatus)SetEventParameter(initializationEvent, kEventParamTerminalBackground_ImageURL,
+														typeCFStringRef, sizeof(inImageURLOrNull), &inImageURLOrNull);
 		}
 		
 		// set the parent window
@@ -775,7 +775,7 @@ acquireFocusOverlay		(HIViewRef		inView,
 				contentFrame.origin.x + contentFrame.size.width,
 				contentFrame.origin.y + contentFrame.size.height);
 		InsetRect(&contentBounds, -2, -2); // make room for focus ring
-		(Rect*)QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(inView)), &contentBounds);
+		UNUSED_RETURN(Rect*)QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(inView)), &contentBounds);
 		
 		error = SetWindowBounds(kOverlayWindow, kWindowContentRgn, &contentBounds);
 		if (noErr == error)
@@ -889,7 +889,7 @@ preferenceChangedForBackground	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel
 			}
 			
 			// redraw the background
-			(OSStatus)HIViewSetNeedsDisplay(dataPtr->view, true);
+			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(dataPtr->view, true);
 		}
 		break;
 	
@@ -1055,7 +1055,7 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				if (nullptr != dataPtr->image)
 				{
-					(OSStatus)HIViewDrawCGImage(drawingContext, &floatBounds, dataPtr->image);
+					UNUSED_RETURN(OSStatus)HIViewDrawCGImage(drawingContext, &floatBounds, dataPtr->image);
 				}
 			}
 			
@@ -1102,7 +1102,7 @@ receiveBackgroundFocus	(EventHandlerCallRef		inHandlerCallRef,
 				HIViewPartCode		focusPart = kControlNoPart;
 				
 				
-				(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+				UNUSED_RETURN(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
 				
 				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, focusPart);
 				if (noErr == result)
@@ -1789,7 +1789,7 @@ receiveFocusOverlayContentDraw	(EventHandlerCallRef	inHandlerCallRef,
 				// the theme focus rectangle is drawn outside the boundaries,
 				// so inset from the view edge to make sure it is visible
 				floatBounds = CGRectInset(floatBounds, 4, 4);
-				(OSStatus)HIThemeDrawFocusRect(&floatBounds, true/* is focused */, drawingContext, kHIThemeOrientationNormal);
+				UNUSED_RETURN(OSStatus)HIThemeDrawFocusRect(&floatBounds, true/* is focused */, drawingContext, kHIThemeOrientationNormal);
 			}
 		}
 	}

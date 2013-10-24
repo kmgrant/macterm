@@ -45,7 +45,7 @@
 #endif
 #include "PrefsWindow.h"
 #include "TerminalScreenRef.typedef.h"
-#include "TerminalViewRef.typedef.h"
+#include "TerminalView.h"
 
 
 
@@ -97,9 +97,9 @@ changes to an interface declared in a ".mm" file.
 @interface PrefPanelFormats_GeneralViewManager : Panel_ViewManager< Panel_Delegate,
 																	PrefsWindow_PanelInterface > //{
 {
-	IBOutlet NSView*	terminalSampleBackgroundView;
-	IBOutlet NSView*	terminalSamplePaddingView;
-	IBOutlet NSView*	terminalSampleContentView;
+	IBOutlet TerminalView_ContentView*		terminalSampleContentView;
+	IBOutlet TerminalView_BackgroundView*	terminalSamplePaddingView;
+	IBOutlet TerminalView_BackgroundView*	terminalSampleBackgroundView;
 @private
 	PrefsContextManager_Object*		prefsMgr;
 	NSRect							idealFrame;

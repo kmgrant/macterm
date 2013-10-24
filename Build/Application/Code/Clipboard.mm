@@ -193,8 +193,8 @@ Clipboard_Done ()
 		
 		
 		windowIsVisible = Clipboard_WindowIsVisible();
-		(Preferences_Result)Preferences_SetData(kPreferences_TagWasClipboardShowing,
-												sizeof(Boolean), &windowIsVisible);
+		UNUSED_RETURN(Preferences_Result)Preferences_SetData(kPreferences_TagWasClipboardShowing,
+																sizeof(Boolean), &windowIsVisible);
 	}
 	
 	RemoveEventLoopTimer(gClipboardUpdatesTimer), gClipboardUpdatesTimer = nullptr;
@@ -402,7 +402,7 @@ Clipboard_Contains	(CFStringRef			inUTI,
 	assert(nullptr != inDataSourceOrNull);
 	
 	// the data could be out of date if another application changed it...resync
-	(PasteboardSyncFlags)PasteboardSynchronize(inDataSourceOrNull);
+	UNUSED_RETURN(PasteboardSyncFlags)PasteboardSynchronize(inDataSourceOrNull);
 	
 	error = PasteboardGetItemCount(inDataSourceOrNull, &totalItems);
 	assert_noerr(error);
@@ -569,7 +569,7 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 	outUTI = nullptr; // initially...
 	
 	// the data could be out of date if another application changed it...resync
-	(PasteboardSyncFlags)PasteboardSynchronize(kPasteboard);
+	UNUSED_RETURN(PasteboardSyncFlags)PasteboardSynchronize(kPasteboard);
 	
 	error = PasteboardGetItemCount(inPasteboardOrNull, &totalItems);
 	if (totalItems > 0)
@@ -727,9 +727,9 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 										// escape any characters that will screw up a typical Unix shell;
 										// TEMPORARY, INCOMPLETE - only escapes spaces, there might be
 										// other characters that are important to handle here
-										(CFIndex)CFStringFindAndReplace(kMutableCFString, CFSTR(" "), CFSTR("\\ "),
-																		CFRangeMake(0, CFStringGetLength(kMutableCFString)),
-																		0/* comparison flags */);
+										UNUSED_RETURN(CFIndex)CFStringFindAndReplace(kMutableCFString, CFSTR(" "), CFSTR("\\ "),
+																						CFRangeMake(0, CFStringGetLength(kMutableCFString)),
+																						0/* comparison flags */);
 										thisCFString = kMutableCFString;
 									}
 								}
@@ -1073,7 +1073,7 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 	{
 		if (CFStringGetLength(textToCopy) > 0)
 		{
-			(OSStatus)Clipboard_AddCFStringToPasteboard(textToCopy, inDataTargetOrNull);
+			UNUSED_RETURN(OSStatus)Clipboard_AddCFStringToPasteboard(textToCopy, inDataTargetOrNull);
 		}
 		CFRelease(textToCopy), textToCopy = nullptr;
 	}
@@ -1368,16 +1368,16 @@ pictureToScrap	(Handle		inPictureData)
 	
 	
 	HLock((Handle)inPictureData);
-	(OSStatus)ClearCurrentScrap();
+	UNUSED_RETURN(OSStatus)ClearCurrentScrap();
 	{
 		ScrapRef	currentScrap = nullptr;
 		
 		
 		if (GetCurrentScrap(&currentScrap) == noErr)
 		{
-			(OSStatus)PutScrapFlavor(currentScrap, kScrapFlavorTypePicture,
-										kScrapFlavorMaskNone, GetHandleSize(inPictureData),
-										*inPictureData);
+			UNUSED_RETURN(OSStatus)PutScrapFlavor(currentScrap, kScrapFlavorTypePicture,
+													kScrapFlavorMaskNone, GetHandleSize(inPictureData),
+													*inPictureData);
 		}
 	}
 	HSetState(inPictureData, hState);
@@ -1394,16 +1394,16 @@ DEPRECATED, use Clipboard_AddCFStringToPasteboard().
 void
 textToScrap		(Handle		inTextHandle)
 {
-	(OSStatus)ClearCurrentScrap();
+	UNUSED_RETURN(OSStatus)ClearCurrentScrap();
 	{
 		ScrapRef	currentScrap = nullptr;
 		
 		
 		if (GetCurrentScrap(&currentScrap) == noErr)
 		{
-			(OSStatus)PutScrapFlavor(currentScrap, kScrapFlavorTypeText,
-										kScrapFlavorMaskNone, GetHandleSize(inTextHandle),
-										*inTextHandle);
+			UNUSED_RETURN(OSStatus)PutScrapFlavor(currentScrap, kScrapFlavorTypeText,
+													kScrapFlavorMaskNone, GetHandleSize(inTextHandle),
+													*inTextHandle);
 		}
 	}
 }// textToScrap

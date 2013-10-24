@@ -233,7 +233,7 @@ DialogUtilities_DisposeDuplicateControl		(ControlRef		inDuplicatedControl)
 	
 	
 	// find out what it is, and create a duplicate that matches
-	(OSStatus)GetControlKind(inDuplicatedControl, &controlInfo);
+	UNUSED_RETURN(OSStatus)GetControlKind(inDuplicatedControl, &controlInfo);
 	if (kControlKindSignatureApple == controlInfo.signature)
 	{
 		// undo the allocation steps done for each type of control
@@ -322,13 +322,13 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 			result = HIImageViewCreate(nullptr, &outNewControl);
 			if (noErr == result)
 			{
-				(OSStatus)HIImageViewSetOpaque(outNewControl, HIImageViewIsOpaque(inTemplateControl));
-				(OSStatus)HIImageViewSetAlpha(outNewControl, HIImageViewGetAlpha(inTemplateControl));
-				(OSStatus)HIImageViewSetScaleToFit(outNewControl, HIImageViewGetScaleToFit(inTemplateControl));
+				UNUSED_RETURN(OSStatus)HIImageViewSetOpaque(outNewControl, HIImageViewIsOpaque(inTemplateControl));
+				UNUSED_RETURN(OSStatus)HIImageViewSetAlpha(outNewControl, HIImageViewGetAlpha(inTemplateControl));
+				UNUSED_RETURN(OSStatus)HIImageViewSetScaleToFit(outNewControl, HIImageViewGetScaleToFit(inTemplateControl));
 				
-				(OSStatus)HIViewSetFrame(outNewControl, &templateFrame);
+				UNUSED_RETURN(OSStatus)HIViewSetFrame(outNewControl, &templateFrame);
 				
-				(OSStatus)HIViewSetVisible(outNewControl, true);
+				UNUSED_RETURN(OSStatus)HIViewSetVisible(outNewControl, true);
 			}
 		}
 		
@@ -356,11 +356,11 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 							
 							// TEMPORARY - duplicating buttons with menus is not yet supported
 							// ignore result because the data may not be present in the original
-							(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlIconContentTag,
+							UNUSED_RETURN(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlIconContentTag,
 														sizeof(bevelThickness), &bevelThickness, &actualSize);
 							bzero(&contentInfo, sizeof(contentInfo));
 							// ignore result because the data may not be present in the original
-							(OSStatus)GetBevelButtonContentInfo(inTemplateControl, &contentInfo);
+							UNUSED_RETURN(OSStatus)GetBevelButtonContentInfo(inTemplateControl, &contentInfo);
 							
 							result = CreateBevelButtonControl(inDestinationWindow, &templateBounds, titleCFString,
 																bevelThickness, buttonBehavior, &contentInfo,
@@ -372,8 +372,8 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 							if (noErr == GetControlData(inTemplateControl, kControlEntireControl, kControlBevelButtonTextAlignTag,
 														sizeof(textAlignment), &textAlignment, &actualSize))
 							{
-								(OSStatus)SetControlData(outNewControl, kControlEntireControl, kControlBevelButtonTextAlignTag,
-															sizeof(textAlignment), &textAlignment);
+								UNUSED_RETURN(OSStatus)SetControlData(outNewControl, kControlEntireControl, kControlBevelButtonTextAlignTag,
+																		sizeof(textAlignment), &textAlignment);
 							}
 							
 							// copy font style
@@ -385,8 +385,8 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 								if (noErr == GetControlData(inTemplateControl, kControlEntireControl, kControlFontStyleTag,
 															sizeof(styleInfo), &styleInfo, &actualSize))
 								{
-									(OSStatus)SetControlData(outNewControl, kControlEntireControl, kControlFontStyleTag,
-																sizeof(styleInfo), &styleInfo);
+									UNUSED_RETURN(OSStatus)SetControlData(outNewControl, kControlEntireControl, kControlFontStyleTag,
+																			sizeof(styleInfo), &styleInfo);
 								}
 							}
 							
@@ -394,8 +394,8 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 							if (noErr == GetControlData(inTemplateControl, kControlEntireControl, kControlBevelButtonKindTag,
 														sizeof(buttonKind), &buttonKind, &actualSize))
 							{
-								(OSStatus)SetControlData(outNewControl, kControlEntireControl, kControlBevelButtonKindTag,
-															sizeof(buttonKind), &buttonKind);
+								UNUSED_RETURN(OSStatus)SetControlData(outNewControl, kControlEntireControl, kControlBevelButtonKindTag,
+																		sizeof(buttonKind), &buttonKind);
 							}
 						}
 					}
@@ -468,8 +468,8 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 							
 							bzero(&styleInfo, sizeof(styleInfo));
 							// ignore result because the data may not be present in the original
-							(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlFontStyleTag,
-														sizeof(styleInfo), &styleInfo, &actualSize);
+							UNUSED_RETURN(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlFontStyleTag,
+																	sizeof(styleInfo), &styleInfo, &actualSize);
 							result = CreateEditUnicodeTextControl(inDestinationWindow, &templateBounds, textCFString,
 																	false/* is password */, &styleInfo, &outNewControl);
 						}
@@ -489,8 +489,8 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 						
 						bzero(&contentInfo, sizeof(contentInfo));
 						// ignore result because the data may not be present in the original
-						(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlIconContentTag,
-													sizeof(contentInfo), &contentInfo, &actualSize);
+						UNUSED_RETURN(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlIconContentTag,
+																sizeof(contentInfo), &contentInfo, &actualSize);
 						result = CreateIconControl(inDestinationWindow, &templateBounds, &contentInfo,
 													true/* tracking; assumed to never be necessary */, &outNewControl);
 					}
@@ -503,8 +503,8 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 						
 						
 						// ignore result because the data may not be present in the original
-						(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlLittleArrowsIncrementValueTag,
-													sizeof(incrementValue), &incrementValue, &actualSize);
+						UNUSED_RETURN(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlLittleArrowsIncrementValueTag,
+																sizeof(incrementValue), &incrementValue, &actualSize);
 						result = CreateLittleArrowsControl(inDestinationWindow, &templateBounds,
 															GetControl32BitValue(inTemplateControl),
 															GetControl32BitMinimum(inTemplateControl),
@@ -569,7 +569,7 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 										Boolean				segmentEnabled = true;
 										
 										
-										(OSStatus)HISegmentedViewSetSegmentCount(outNewControl, segmentCount);
+										UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentCount(outNewControl, segmentCount);
 										for (UInt32 i = 1; i <= segmentCount; ++i)
 										{
 											error = HISegmentedViewSetSegmentBehavior(outNewControl, i, segmentBehavior);
@@ -601,7 +601,7 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 											error = HISegmentedViewSetSegmentEnabled(outNewControl, i, segmentEnabled);
 											assert_noerr(error);
 										}
-										(OSStatus)HIViewSetVisible(outNewControl, true);
+										UNUSED_RETURN(OSStatus)HIViewSetVisible(outNewControl, true);
 									}
 								}
 								else
@@ -667,12 +667,12 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 						
 						
 						// ignore result because the data may not be present in the original
-						(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlRoundButtonSizeTag,
-													sizeof(roundButtonSize), &roundButtonSize, &actualSize);
+						UNUSED_RETURN(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlRoundButtonSizeTag,
+																sizeof(roundButtonSize), &roundButtonSize, &actualSize);
 						bzero(&contentInfo, sizeof(contentInfo));
 						// ignore result because the data may not be present in the original
-						(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlRoundButtonContentTag,
-													sizeof(contentInfo), &contentInfo, &actualSize);
+						UNUSED_RETURN(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlRoundButtonContentTag,
+																sizeof(contentInfo), &contentInfo, &actualSize);
 						
 						result = CreateRoundButtonControl(inDestinationWindow, &templateBounds, roundButtonSize,
 															&contentInfo, &outNewControl);
@@ -692,9 +692,9 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 						
 						// use a property to read tick marks, if available (since there is no
 						// API for reading this automatically)
-						(OSStatus)GetControlProperty(inTemplateControl, AppResources_ReturnCreatorCode(),
-														'Tick', sizeof(numberOfTickMarks), nullptr/* actual size */,
-														&numberOfTickMarks);
+						UNUSED_RETURN(OSStatus)GetControlProperty(inTemplateControl, AppResources_ReturnCreatorCode(),
+																	'Tick', sizeof(numberOfTickMarks), nullptr/* actual size */,
+																	&numberOfTickMarks);
 						
 						// NOTE: There are no control data tags for sliders, so it is difficult
 						// to faithfully replicate them!!!
@@ -731,8 +731,8 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 							
 							bzero(&styleInfo, sizeof(styleInfo));
 							// ignore result because the data may not be present in the original
-							(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlFontStyleTag,
-														sizeof(styleInfo), &styleInfo, &actualSize);
+							UNUSED_RETURN(OSStatus)GetControlData(inTemplateControl, kControlEntireControl, kControlFontStyleTag,
+																	sizeof(styleInfo), &styleInfo, &actualSize);
 							result = CreateStaticTextControl(inDestinationWindow, &templateBounds,
 																textCFString, &styleInfo, &outNewControl);
 						}
@@ -774,35 +774,35 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 							Boolean				segmentEnabled = false;
 							
 							
-							(OSStatus)HISegmentedViewSetSegmentCount(outNewControl, segmentCount);
+							UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentCount(outNewControl, segmentCount);
 							for (UInt32 i = 1; i <= segmentCount; ++i)
 							{
 								segmentBehavior = HISegmentedViewGetSegmentBehavior(inTemplateControl, i);
-								(OSStatus)HISegmentedViewSetSegmentBehavior(outNewControl, i, segmentBehavior);
+								UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentBehavior(outNewControl, i, segmentBehavior);
 								
 								segmentAttributes = HISegmentedViewGetSegmentAttributes(inTemplateControl, i);
-								(OSStatus)HISegmentedViewChangeSegmentAttributes(outNewControl, i, segmentAttributes/* set */,
-																					0L/* clear */);
+								UNUSED_RETURN(OSStatus)HISegmentedViewChangeSegmentAttributes(outNewControl, i, segmentAttributes/* set */,
+																								0L/* clear */);
 								
 								segmentValue = HISegmentedViewGetSegmentValue(inTemplateControl, i);
-								(OSStatus)HISegmentedViewSetSegmentValue(outNewControl, i, segmentValue);
+								UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentValue(outNewControl, i, segmentValue);
 								
 								segmentCommand = HISegmentedViewGetSegmentCommand(inTemplateControl, i);
-								(OSStatus)HISegmentedViewSetSegmentCommand(outNewControl, i, segmentCommand);
+								UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentCommand(outNewControl, i, segmentCommand);
 								
 								if (noErr == HISegmentedViewCopySegmentLabel(inTemplateControl, i, &segmentLabelCFString))
 								{
-									(OSStatus)HISegmentedViewSetSegmentLabel(outNewControl, i, segmentLabelCFString);
+									UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentLabel(outNewControl, i, segmentLabelCFString);
 									CFRelease(segmentLabelCFString), segmentLabelCFString = nullptr;
 								}
 								
 								segmentWidth = HISegmentedViewGetSegmentContentWidth(inTemplateControl, i, &segmentWidthAutoCalculated);
-								(OSStatus)HISegmentedViewSetSegmentContentWidth(outNewControl, i, segmentWidthAutoCalculated, segmentWidth);
+								UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentContentWidth(outNewControl, i, segmentWidthAutoCalculated, segmentWidth);
 								
 								segmentEnabled = HISegmentedViewIsSegmentEnabled(inTemplateControl, i);
-								(OSStatus)HISegmentedViewSetSegmentEnabled(outNewControl, i, segmentEnabled);
+								UNUSED_RETURN(OSStatus)HISegmentedViewSetSegmentEnabled(outNewControl, i, segmentEnabled);
 							}
-							(OSStatus)HIViewSetVisible(outNewControl, true);
+							UNUSED_RETURN(OSStatus)HIViewSetVisible(outNewControl, true);
 						}
 					}
 					break;
@@ -878,8 +878,8 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 											sizeof(controlSize), &controlSize, &actualSize))
 				{
 					// not all views support size, apparently, so ignore this result
-					(OSStatus)SetControlData(outNewControl, kControlEntireControl, kControlSizeTag,
-												sizeof(controlSize), &controlSize);
+					UNUSED_RETURN(OSStatus)SetControlData(outNewControl, kControlEntireControl, kControlSizeTag,
+															sizeof(controlSize), &controlSize);
 				}
 			}
 		}
@@ -935,7 +935,7 @@ GetControlOSTypeText	(ControlRef		inControl,
 		Str15	typeString;
 		
 		
-		PLstrcpy(typeString, "\p");
+		typeString[0] = '\0';
 		GetControlText(inControl, typeString);
 		typeString[0] = 4;
 		BlockMoveData(&typeString[1], outTypePtr, sizeof(OSType));
@@ -959,8 +959,8 @@ GetControlText	(ControlRef			inControl,
 		
 		
 		// obtain the data in the generic buffer
-		(OSStatus)GetControlData(inControl, kControlEditTextPart, kControlEditTextTextTag,
-									255 * sizeof(UInt8), (Ptr)(1 + outText), &actualSize);
+		UNUSED_RETURN(OSStatus)GetControlData(inControl, kControlEditTextPart, kControlEditTextTextTag,
+												255 * sizeof(UInt8), (Ptr)(1 + outText), &actualSize);
 		((Ptr)(outText))[0] = (char)actualSize; // mush in the length byte
 	}
 }// GetControlText
@@ -980,8 +980,8 @@ GetControlTextAsCFString	(ControlRef		inControl,
 	
 	
 	outCFString = nullptr; // in case of error
-	(OSStatus)GetControlData(inControl, kControlEditTextPart, kControlEditTextCFStringTag,
-								sizeof(outCFString), &outCFString, &actualSize);
+	UNUSED_RETURN(OSStatus)GetControlData(inControl, kControlEditTextPart, kControlEditTextCFStringTag,
+											sizeof(outCFString), &outCFString, &actualSize);
 }// GetControlTextAsCFString
 
 
@@ -1134,12 +1134,11 @@ SetControlOSTypeText	(ControlRef		inControl,
 	Str15		typeString;
 	
 	
-	PLstrcpy(typeString, "\p");
 	typeString[0] = 4;
 	BlockMoveData(&inType, &typeString[1], sizeof(OSType));
-	(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlEditTextTextTag,
-								PLstrlen(typeString) * sizeof(UInt8),
-								typeString + 1/* length byte is skipped */);
+	UNUSED_RETURN(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlEditTextTextTag,
+											PLstrlen(typeString) * sizeof(UInt8),
+											typeString + 1/* length byte is skipped */);
 }// SetControlOSTypeText
 
 
@@ -1164,8 +1163,8 @@ SetControlText		(ControlRef			inControl,
 	BlockMoveData(inText + 1, stringBuffer, GetPtrSize(stringBuffer)); // buffer has no length byte
 	
 	// set the control text to be the copy that was just created
-	(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlEditTextTextTag,
-								GetPtrSize(stringBuffer), stringBuffer);
+	UNUSED_RETURN(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlEditTextTextTag,
+											GetPtrSize(stringBuffer), stringBuffer);
 	
 	// destroy the copy
 	Memory_DisposePtr(&stringBuffer);
@@ -1193,8 +1192,8 @@ SetControlTextWithCFString		(ControlRef		inControl,
 	if (inText != nullptr)
 	{
 		// set the control text
-		(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlEditTextCFStringTag,
-									sizeof(inText), &inText);
+		UNUSED_RETURN(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlEditTextCFStringTag,
+												sizeof(inText), &inText);
 	}
 	else
 	{
@@ -1202,8 +1201,8 @@ SetControlTextWithCFString		(ControlRef		inControl,
 		
 		
 		// set the control text to an empty string
-		(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlEditTextCFStringTag,
-									sizeof(emptyString), &emptyString);
+		UNUSED_RETURN(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlEditTextCFStringTag,
+												sizeof(emptyString), &emptyString);
 	}
 }// SetControlTextWithCFString
 

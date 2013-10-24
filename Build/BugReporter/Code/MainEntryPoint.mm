@@ -93,18 +93,8 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 	BOOL		sendMail = NO;
 	
 	
-	// bring this process to the front; there appears to be no
-	// Cocoa-only way to do this on earlier Mac OS X versions
-	// so for now use older APIs...
-	{
-		ProcessSerialNumber		currentProcess;
-		
-		
-		if (noErr == GetCurrentProcess(&currentProcess))
-		{
-			UNUSED_RETURN(OSStatus)SetFrontProcess(&currentProcess);
-		}
-	}
+	// bring this process to the front
+	[NSApp activateIgnoringOtherApps:YES];
 	
 	// display an error to the user, with options
 	clickedButton = [[NSAlert alertWithMessageText:messageText defaultButton:button1 alternateButton:button2

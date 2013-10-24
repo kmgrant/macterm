@@ -331,7 +331,7 @@ GrowlSupport_PreferencesPaneDisplay ()
 	
 	if (GrowlSupport_PreferencesPaneCanDisplay())
 	{
-		(BOOL)[[NSWorkspace sharedWorkspace] openFile:gGrowlPrefsPaneGlobalPath];
+		UNUSED_RETURN(BOOL)[[NSWorkspace sharedWorkspace] openFile:gGrowlPrefsPaneGlobalPath];
 	}
 }// PreferencesPaneDisplay
 

@@ -557,7 +557,7 @@ Alert_SetNotificationPreferences().
 void
 Alert_BackgroundNotification ()
 {
-	(OSStatus)backgroundNotification();
+	UNUSED_RETURN(OSStatus)backgroundNotification();
 }// BackgroundNotification
 
 
@@ -621,13 +621,13 @@ Alert_DebugSendCStringToSelf	(char const*		inSendWhat,
 		
 		currentProcessID.highLongOfPSN = 0;
 		currentProcessID.lowLongOfPSN = kCurrentProcess; // don’t use GetCurrentProcess()!
-		(OSStatus)AECreateDesc(typeProcessSerialNumber,
-								&currentProcessID, sizeof(ProcessSerialNumber), &currentProcessAddress);
-		(OSStatus)AECreateAppleEvent(inEventClass, inEventID, &currentProcessAddress, kAutoGenerateReturnID, kAnyTransactionID, &consoleWriteEvent);
-		(OSStatus)AEPutParamPtr(&consoleWriteEvent, keyDirectObject, cString, inSendWhat,
-								STATIC_CAST(CPP_STD::strlen(inSendWhat) * sizeof(char), Size));
-		(OSStatus)AESend(&consoleWriteEvent, &reply, kAENoReply | kAENeverInteract | kAEDontRecord,
-						kAENormalPriority, kAEDefaultTimeout, nullptr, nullptr);
+		UNUSED_RETURN(OSStatus)AECreateDesc(typeProcessSerialNumber,
+											&currentProcessID, sizeof(ProcessSerialNumber), &currentProcessAddress);
+		UNUSED_RETURN(OSStatus)AECreateAppleEvent(inEventClass, inEventID, &currentProcessAddress, kAutoGenerateReturnID, kAnyTransactionID, &consoleWriteEvent);
+		UNUSED_RETURN(OSStatus)AEPutParamPtr(&consoleWriteEvent, keyDirectObject, cString, inSendWhat,
+												STATIC_CAST(CPP_STD::strlen(inSendWhat) * sizeof(char), Size));
+		UNUSED_RETURN(OSStatus)AESend(&consoleWriteEvent, &reply, kAENoReply | kAENeverInteract | kAEDontRecord,
+										kAENormalPriority, kAEDefaultTimeout, nullptr, nullptr);
 		AEDisposeDesc(&consoleWriteEvent);
 	}
 }// DebugSendCStringToSelf
@@ -666,13 +666,13 @@ Alert_DebugSendStringToSelf		(ConstStringPtr		inSendWhat,
 		
 		currentProcessID.highLongOfPSN = 0;
 		currentProcessID.lowLongOfPSN = kCurrentProcess; // don’t use GetCurrentProcess()!
-		(OSStatus)AECreateDesc(typeProcessSerialNumber,
-								&currentProcessID, sizeof(ProcessSerialNumber), &currentProcessAddress);
-		(OSStatus)AECreateAppleEvent(inEventClass, inEventID, &currentProcessAddress, kAutoGenerateReturnID, kAnyTransactionID, &consoleWriteEvent);
-		(OSStatus)AEPutParamPtr(&consoleWriteEvent, keyDirectObject, cString, inSendWhat + 1,
-								STATIC_CAST(PLstrlen(inSendWhat) * sizeof(UInt8), Size));
-		(OSStatus)AESend(&consoleWriteEvent, &reply, kAENoReply | kAENeverInteract | kAEDontRecord,
-						kAENormalPriority, kAEDefaultTimeout, nullptr, nullptr);
+		UNUSED_RETURN(OSStatus)AECreateDesc(typeProcessSerialNumber,
+											&currentProcessID, sizeof(ProcessSerialNumber), &currentProcessAddress);
+		UNUSED_RETURN(OSStatus)AECreateAppleEvent(inEventClass, inEventID, &currentProcessAddress, kAutoGenerateReturnID, kAnyTransactionID, &consoleWriteEvent);
+		UNUSED_RETURN(OSStatus)AEPutParamPtr(&consoleWriteEvent, keyDirectObject, cString, inSendWhat + 1,
+												STATIC_CAST(PLstrlen(inSendWhat) * sizeof(UInt8), Size));
+		UNUSED_RETURN(OSStatus)AESend(&consoleWriteEvent, &reply, kAENoReply | kAENeverInteract | kAEDontRecord,
+										kAENormalPriority, kAEDefaultTimeout, nullptr, nullptr);
 		AEDisposeDesc(&consoleWriteEvent);
 	}
 }// DebugSendStringToSelf
@@ -800,7 +800,7 @@ Alert_Display	(AlertMessages_BoxRef	inAlert,
 					}
 				}
 				[NSApp beginSheet:window modalForWindow:nil modalDelegate:nil didEndSelector:nil contextInfo:nil];
-				(int)[NSApp runModalForWindow:window];
+				UNUSED_RETURN(int)[NSApp runModalForWindow:window];
 				[NSApp endSheet:window];
 				Alert_ServiceNotification(); // just in case it wasn’t removed properly
 				[window orderOut:NSApp];
@@ -1040,7 +1040,7 @@ Alert_ServiceNotification ()
 	if (nullptr != gNotificationPtr)
 	{
 		RestoreApplicationDockTileImage(); // remove any caution icon badge
-		(OSStatus)NMRemove(gNotificationPtr);
+		UNUSED_RETURN(OSStatus)NMRemove(gNotificationPtr);
 		if (nullptr != gNotificationPtr->nmIcon)
 		{
 			ReleaseResource(gNotificationPtr->nmIcon), gNotificationPtr->nmIcon = nullptr;
@@ -2181,7 +2181,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 										STATIC_CAST(totalExpanseV +
 													INTEGER_DOUBLED(VSP_BUTTON_AND_DIALOG) + BUTTON_HT,
 											SInt16);
-				(OSStatus)SetWindowBounds(ptr->dialogWindow, kWindowContentRgn, &windowBounds);
+				UNUSED_RETURN(OSStatus)SetWindowBounds(ptr->dialogWindow, kWindowContentRgn, &windowBounds);
 			}
 			
 			// arrange icons and main text areas
@@ -2290,8 +2290,14 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 		// the keyboard, so focusing the next button makes it equally easy
 		// for the user to choose that option with a key)
 		{
-			if (isButton2) (OSStatus)DialogUtilities_SetKeyboardFocus(ptr->buttonCancel);
-			else if (isButton3) (OSStatus)DialogUtilities_SetKeyboardFocus(ptr->buttonOther);
+			if (isButton2)
+			{
+				UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(ptr->buttonCancel);
+			}
+			else if (isButton3)
+			{
+				UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(ptr->buttonOther);
+			}
 		}
 		
 		unless ((ptr->isSheet) || (ptr->isCompletelyModeless))
@@ -2537,7 +2543,7 @@ adjustViews
 #if 0
 	[tertiaryButtonUI sizeToFit];
 #else
-	(UInt16)Localization_AutoSizeNSButton(tertiaryButtonUI);
+	UNUSED_RETURN(UInt16)Localization_AutoSizeNSButton(tertiaryButtonUI);
 #endif
 	
 	// hide the title text if there is none, and reclaim the space
@@ -2591,19 +2597,19 @@ adjustViews
 	// focus a non-default button if possible
 	if (NO == [secondaryButtonUI isHidden])
 	{
-		(BOOL)[[self window] makeFirstResponder:secondaryButtonUI];
+		UNUSED_RETURN(BOOL)[[self window] makeFirstResponder:secondaryButtonUI];
 	}
 	else if (NO == [tertiaryButtonUI isHidden])
 	{
-		(BOOL)[[self window] makeFirstResponder:tertiaryButtonUI];
+		UNUSED_RETURN(BOOL)[[self window] makeFirstResponder:tertiaryButtonUI];
 	}
 	else if (NO == [helpButtonUI isHidden])
 	{
-		(BOOL)[[self window] makeFirstResponder:helpButtonUI];
+		UNUSED_RETURN(BOOL)[[self window] makeFirstResponder:helpButtonUI];
 	}
 	else
 	{
-		(BOOL)[[self window] makeFirstResponder:primaryButtonUI];
+		UNUSED_RETURN(BOOL)[[self window] makeFirstResponder:primaryButtonUI];
 	}
 	// INCOMPLETE
 }// adjustViews
@@ -3033,7 +3039,6 @@ alerts are assumed to do all their cleanup synchronously.
 didFinishAlertWithButton:(unsigned int)		aButton
 fromEvent:(BOOL)							anEventSource
 {
-#pragma unused(sender)
 	My_AlertMessage*	alertPtr = (My_AlertMessage*)[self dataPtr];
 	
 	

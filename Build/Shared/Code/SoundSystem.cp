@@ -218,7 +218,7 @@ Sound_PlayAsyncStereo	(OSType			inResourceType,
 			else
 			{
 				// there was a problem grabbing the resource, so free up the acquired sound channel
-				(OSStatus)SndDisposeChannel(channelPtr, false/* make quiet */);
+				UNUSED_RETURN(OSStatus)SndDisposeChannel(channelPtr, false/* make quiet */);
 				ptr->resourceHandle = nullptr;
 			}
 			refReleaseLock(ref, &ptr);
@@ -263,7 +263,7 @@ Sound_PlaySyncStereo	(OSType		inResourceType,
 			result = SndPlay(channelPtr, (SndListHandle)soundHandle, false/* asynchronous */);
 			Memory_DisposeHandle(&soundHandle);
 		}
-		(OSStatus)SndDisposeChannel(channelPtr, false/* make quiet */);
+		UNUSED_RETURN(OSStatus)SndDisposeChannel(channelPtr, false/* make quiet */);
 	}
 	
 	return result;
@@ -304,7 +304,7 @@ disposeSoundInfoRef	(SoundInfoRef*	inoutRefPtr)
 		
 		
 		// destroy the associated sound channel, freeing it for use by anything else in the system that needs it
-		(OSStatus)SndDisposeChannel(ptr->channelPtr, true/* make quiet */), ptr->channelPtr = nullptr;
+		UNUSED_RETURN(OSStatus)SndDisposeChannel(ptr->channelPtr, true/* make quiet */), ptr->channelPtr = nullptr;
 		
 		// the resource was detached, so do not ReleaseResource() here
 		// WARNING: there seems to be a random potential for a crash here, I have no idea why!

@@ -89,7 +89,7 @@ void
 DialogTransitions_Close		(WindowRef	inWindow)
 {
 	dialogClose(inWindow, false/* is sheet */, false/* no animation */);
-	(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowHideTransitionAction, nullptr);
+	UNUSED_RETURN(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowHideTransitionAction, nullptr);
 }// Close
 
 
@@ -141,7 +141,7 @@ DialogTransitions_CloseLowerRight	(WindowRef	inWindow)
 		
 		RegionUtilities_GetWindowDeviceGrayRect(inWindow, &screenRect);
 		SetRect(&lowerRight, screenRect.right, screenRect.bottom, screenRect.right, screenRect.bottom);
-		(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowHideTransitionAction, &lowerRight);
+		UNUSED_RETURN(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowHideTransitionAction, &lowerRight);
 	}
 }// CloseLowerRight
 
@@ -245,7 +245,7 @@ DialogTransitions_CloseToRectangle	(WindowRef		inWindow,
 				SetPort(oldPort);
 			}
 			
-			(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowHideTransitionAction, &bounds);
+			UNUSED_RETURN(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowHideTransitionAction, &bounds);
 		}
 	}
 }// CloseToRectangle
@@ -276,8 +276,8 @@ DialogTransitions_CloseToWindowRegion	(WindowRef			inWindow,
 		Rect	bounds;
 		
 		
-		(OSStatus)GetWindowBounds(inParentWindow, inToWhere, &bounds);
-		(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowHideTransitionAction, &bounds);
+		UNUSED_RETURN(OSStatus)GetWindowBounds(inParentWindow, inToWhere, &bounds);
+		UNUSED_RETURN(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowHideTransitionAction, &bounds);
 	}
 }// CloseToWindowRegion
 
@@ -305,7 +305,7 @@ DialogTransitions_CloseUpperLeft	(WindowRef		inWindow)
 		
 		
 		SetRect(&upperLeft, 0, 0, 0, 0);
-		(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowHideTransitionAction, &upperLeft);
+		UNUSED_RETURN(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowHideTransitionAction, &upperLeft);
 	}
 }// CloseUpperLeft
 
@@ -330,7 +330,7 @@ void
 DialogTransitions_Display		(WindowRef		inWindow)
 {
 	dialogDisplayPreparation(inWindow, false/* is sheet */);
-	(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowShowTransitionAction, nullptr);
+	UNUSED_RETURN(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowShowTransitionAction, nullptr);
 	dialogDisplayEnsureVisibility(inWindow);
 }// Display
 
@@ -395,7 +395,7 @@ DialogTransitions_DisplayFromRectangle	(WindowRef		inWindow,
 				SetPort(oldPort);
 			}
 			
-			(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowShowTransitionAction, &bounds);
+			UNUSED_RETURN(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowShowTransitionAction, &bounds);
 		}
 		dialogDisplayEnsureVisibility(inWindow);
 	}
@@ -427,8 +427,8 @@ DialogTransitions_DisplayFromWindowRegion	(WindowRef			inWindow,
 		Rect	bounds;
 		
 		
-		(OSStatus)GetWindowBounds(inParentWindow, inFromWhere, &bounds);
-		(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowShowTransitionAction, &bounds);
+		UNUSED_RETURN(OSStatus)GetWindowBounds(inParentWindow, inFromWhere, &bounds);
+		UNUSED_RETURN(OSStatus)TransitionWindow(inWindow, kWindowZoomTransitionEffect, kWindowShowTransitionAction, &bounds);
 	}
 	dialogDisplayEnsureVisibility(inWindow);
 }// DisplayFromWindowRegion
@@ -462,10 +462,10 @@ DialogTransitions_DisplaySheet	(WindowRef		inWindow,
 		unless (FlagManager_Test(kFlagOS10_2API))
 		{
 			// 10.1 and earlier support an Appearance brush for this
-			(OSStatus)SetThemeWindowBackground(inWindow, kThemeBrushSheetBackgroundTransparent, false/* update */);
+			UNUSED_RETURN(OSStatus)SetThemeWindowBackground(inWindow, kThemeBrushSheetBackgroundTransparent, false/* update */);
 		}
 	}
-	(OSStatus)ShowSheetWindow(inWindow, inParentWindow);
+	UNUSED_RETURN(OSStatus)ShowSheetWindow(inWindow, inParentWindow);
 #endif
 	dialogDisplayEnsureVisibility(inWindow);
 }// DisplaySheet
@@ -508,7 +508,7 @@ DialogTransitions_DisplaySheetFromRectangle		(WindowRef		inWindow,
 			}
 			
 			#if 1
-			(OSStatus)TransitionWindowAndParent(inWindow, inParentWindow, kWindowSheetTransitionEffect, kWindowShowTransitionAction, &bounds);
+			UNUSED_RETURN(OSStatus)TransitionWindowAndParent(inWindow, inParentWindow, kWindowSheetTransitionEffect, kWindowShowTransitionAction, &bounds);
 			#endif
 		}
 		dialogDisplayEnsureVisibility(inWindow);
@@ -539,14 +539,20 @@ dialogClose		(HIWindowRef	inWindow,
 			(GetWindowKind(parentWindow) != kDialogWindowKind))
 		{
 			// restore close and zoom boxes - assume ANY window displaying a sheet has both of these boxes
-			(OSStatus)ChangeWindowAttributes(parentWindow,
-												kWindowCloseBoxAttribute | kWindowFullZoomAttribute/* set attributes */,
-												0L/* clear attributes */);
+			UNUSED_RETURN(OSStatus)ChangeWindowAttributes(parentWindow,
+															kWindowCloseBoxAttribute | kWindowFullZoomAttribute/* set attributes */,
+															0L/* clear attributes */);
 		}
 		
 		// close the dialog
-		if (inNoAnimation) HideWindow(inWindow);
-		else (OSStatus)HideSheetWindow(inWindow);
+		if (inNoAnimation)
+		{
+			HideWindow(inWindow);
+		}
+		else
+		{
+			UNUSED_RETURN(OSStatus)HideSheetWindow(inWindow);
+		}
 	}
 	else
 	{
@@ -591,8 +597,8 @@ dialogDisplayPreparation	(HIWindowRef	UNUSED_ARGUMENT(inWindow),
 	{
 		// remove close and zoom boxes (which disables the boxes, standard parent window behavior for sheets);
 		// this is not required for sheets displayed from NIBs, but required for ones created from dialog resources
-		(OSStatus)ChangeWindowAttributes(EventLoop_ReturnRealFrontWindow(), 0L/* set attributes */,
-											kWindowCloseBoxAttribute | kWindowFullZoomAttribute/* clear attributes */);
+		UNUSED_RETURN(OSStatus)ChangeWindowAttributes(EventLoop_ReturnRealFrontWindow(), 0L/* set attributes */,
+														kWindowCloseBoxAttribute | kWindowFullZoomAttribute/* clear attributes */);
 	}
 }// dialogDisplayPreparation
 

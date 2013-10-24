@@ -2282,7 +2282,7 @@ installedActions()
 		Boolean		chooseRandom = false;
 		
 		
-		(Preferences_Result)Preferences_GetData(kPreferences_TagRandomTerminalFormats, sizeof(chooseRandom), &chooseRandom);
+		UNUSED_RETURN(Preferences_Result)Preferences_GetData(kPreferences_TagRandomTerminalFormats, sizeof(chooseRandom), &chooseRandom);
 		if (chooseRandom)
 		{
 			std::vector< Preferences_ContextRef >	contextList;
@@ -2432,8 +2432,8 @@ installedActions()
 		}
 		unless (usingSavedToolbar)
 		{
-			(OSStatus)HIToolbarSetDisplayMode(this->toolbar, kHIToolbarDisplayModeIconAndLabel);
-			(OSStatus)HIToolbarSetDisplaySize(this->toolbar, kHIToolbarDisplaySizeSmall);
+			UNUSED_RETURN(OSStatus)HIToolbarSetDisplayMode(this->toolbar, kHIToolbarDisplayModeIconAndLabel);
+			UNUSED_RETURN(OSStatus)HIToolbarSetDisplaySize(this->toolbar, kHIToolbarDisplaySizeSmall);
 		}
 		
 		// the toolbar is NOT used yet and NOT released yet, until it is installed (below)
@@ -2629,7 +2629,7 @@ installedActions()
 	CFRelease(this->toolbar); // once set in the window, the toolbar is retained, so release the creation lock
 	
 	// enable drag tracking so that certain default toolbar behaviors work
-	(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(returnCarbonWindow(this), true/* enabled */);
+	UNUSED_RETURN(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(returnCarbonWindow(this), true/* enabled */);
 	
 	// finish by applying any desired attributes to the screen
 	{
@@ -3519,7 +3519,7 @@ createViews		(My_TerminalWindowPtr	inPtr)
 	error = HIViewAddSubview(contentView, inPtr->controls.scrollBarH);
 	assert_noerr(error);
 	// horizontal scrolling is not supported for now...
-	(OSStatus)HIViewSetVisible(inPtr->controls.scrollBarH, false);
+	UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->controls.scrollBarH, false);
 }// createViews
 
 
@@ -3549,7 +3549,7 @@ createWindow ()
 		
 		// override this default; technically terminal windows
 		// are immediately closeable for the first 15 seconds
-		(OSStatus)SetWindowModified(window, false);
+		UNUSED_RETURN(OSStatus)SetWindowModified(window, false);
 	}
 	return result;
 }// createWindow
@@ -3934,8 +3934,8 @@ installUndoFontSizeChanges	(TerminalWindowRef	inTerminalWindow,
 							 Boolean			inUndoFontSize)
 {
 	OSStatus					error = noErr;
-	UndoDataFontSizeChangesPtr	dataPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(UndoDataFontSizeChanges)),
-															UndoDataFontSizeChangesPtr); // disposed in the action method
+	UndoDataFontSizeChangesPtr	dataPtr = new UndoDataFontSizeChanges;	// must be allocated by "new" because it contains C++ classes;
+																		// disposed in the action method
 	
 	
 	if (dataPtr == nullptr) error = memFullErr;
@@ -3989,8 +3989,7 @@ installUndoFullScreenChanges	(TerminalWindowRef			inTerminalWindow,
 								 TerminalView_DisplayMode	inFullScreenMode)
 {
 	OSStatus						error = noErr;
-	UndoDataFullScreenChangesPtr	dataPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(UndoDataFullScreenChanges)),
-																UndoDataFullScreenChangesPtr); // disposed in the action method
+	UndoDataFullScreenChangesPtr	dataPtr = new UndoDataFullScreenChanges; // disposed in the action method
 	CFStringRef						undoCFString = nullptr;
 	UIStrings_Result				stringResult = UIStrings_Copy(kUIStrings_UndoFullScreen, undoCFString);
 	
@@ -4040,8 +4039,7 @@ void
 installUndoScreenDimensionChanges	(TerminalWindowRef		inTerminalWindow)
 {
 	OSStatus							error = noErr;
-	UndoDataScreenDimensionChangesPtr	dataPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(UndoDataFontSizeChanges)),
-																	UndoDataScreenDimensionChangesPtr); // disposed in the action method
+	UndoDataScreenDimensionChangesPtr	dataPtr = new UndoDataScreenDimensionChanges;	// disposed in the action method
 	
 	
 	if (dataPtr == nullptr) error = memFullErr;
@@ -4383,13 +4381,13 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									// hide the scroll bar, if requested
 									unless (showScrollBar)
 									{
-										(OSStatus)HIViewSetVisible(ptr->controls.scrollBarV, false);
+										UNUSED_RETURN(OSStatus)HIViewSetVisible(ptr->controls.scrollBarV, false);
 									}
 									
 									// always hide the size box
-									(OSStatus)ChangeWindowAttributes(returnCarbonWindow(ptr), 0/* attributes to set */,
-																		kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
-																			kWindowResizableAttribute/* attributes to clear */);
+									UNUSED_RETURN(OSStatus)ChangeWindowAttributes(returnCarbonWindow(ptr), 0/* attributes to set */,
+																					kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
+																					kWindowResizableAttribute/* attributes to clear */);
 									
 									// remove any shadow so that “neighboring” full-screen windows
 									// on other displays do not appear to have shadows over them
@@ -4413,7 +4411,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								}
 								
 								setViewSizeIndependentFromWindow(ptr, true);
-								(OSStatus)SetWindowBounds(targetWindow, kWindowContentRgn, &maxBounds);
+								UNUSED_RETURN(OSStatus)SetWindowBounds(targetWindow, kWindowContentRgn, &maxBounds);
 								setViewSizeIndependentFromWindow(ptr, false);
 								
 								TerminalView_SetDisplayMode(ptr->allViews.front(), kOldMode);
@@ -5094,7 +5092,7 @@ receiveScrollBarDraw	(EventHandlerCallRef	inHandlerCallRef,
 	
 	// first use the system implementation to draw the scroll bar,
 	// because this drawing should appear “on top”
-	(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+	UNUSED_RETURN(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
 	
 	// get the target view
 	result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
@@ -5160,7 +5158,7 @@ receiveScrollBarDraw	(EventHandlerCallRef	inHandlerCallRef,
 						// into account the location of arrows).  Therefore, a series of hacks
 						// is used instead, to approximate where the arrows will be, in order
 						// to avoid drawing on top of any arrows.
-						(OSStatus)GetThemeScrollBarThumbStyle(&arrowLocations);
+						UNUSED_RETURN(OSStatus)GetThemeScrollBarThumbStyle(&arrowLocations);
 						trackBounds.size.height -= 2 * kMy_ScrollBarThumbEndCapSize;
 						trackBounds.origin.y += kMy_ScrollBarThumbEndCapSize;
 						if (kThemeScrollBarArrowsSingle == arrowLocations)
@@ -5913,7 +5911,7 @@ receiveWindowCursorChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 		Point		globalMouse;
 		
 		
-		(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
+		UNUSED_RETURN(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
 		GetMouse(&globalMouse);
 		result = setCursorInWindow(GetUserFocusWindow(), globalMouse, modifiers);
 	}
@@ -6146,8 +6144,8 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					if (error != noErr) ptr->controls.textScreenDimensions = nullptr;
 					
 					// change font to something a little clearer
-					(OSStatus)Localization_SetControlThemeFontInfo(ptr->controls.textScreenDimensions,
-																	kThemeAlertHeaderFont);
+					UNUSED_RETURN(OSStatus)Localization_SetControlThemeFontInfo(ptr->controls.textScreenDimensions,
+																				kThemeAlertHeaderFont);
 					
 					if (showWindow)
 					{
@@ -6502,7 +6500,10 @@ reverseFontChanges	(Undoables_ActionInstruction	inDoWhat,
 		case kUndoables_ActionInstructionDispose:
 			// release memory previously allocated when this action was installed
 			Undoables_DisposeAction(&inApplicableAction);
-			if (dataPtr != nullptr) Memory_DisposePtr(REINTERPRET_CAST(&dataPtr, Ptr*));
+			if (nullptr != dataPtr)
+			{
+				delete dataPtr, dataPtr = nullptr;
+			}
 			break;
 		
 		case kUndoables_ActionInstructionRedo:
@@ -6556,7 +6557,10 @@ reverseFullScreenChanges	(Undoables_ActionInstruction	inDoWhat,
 		case kUndoables_ActionInstructionDispose:
 			// release memory previously allocated when this action was installed
 			Undoables_DisposeAction(&inApplicableAction);
-			if (dataPtr != nullptr) Memory_DisposePtr(REINTERPRET_CAST(&dataPtr, Ptr*));
+			if (nullptr != dataPtr)
+			{
+				delete dataPtr, dataPtr = nullptr;
+			}
 			break;
 		
 		case kUndoables_ActionInstructionUndo:
@@ -6567,12 +6571,16 @@ reverseFullScreenChanges	(Undoables_ActionInstruction	inDoWhat,
 				
 				
 				// restore the size box
-				(OSStatus)ChangeWindowAttributes(returnCarbonWindow(ptr),
-													kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
-														kWindowResizableAttribute/* attributes to set */,
-													0/* attributes to clear */);
+				UNUSED_RETURN(OSStatus)ChangeWindowAttributes
+										(returnCarbonWindow(ptr),
+											kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
+											kWindowResizableAttribute/* attributes to set */,
+											0/* attributes to clear */);
 				
-				if (nullptr != ptr) (OSStatus)HIViewSetVisible(ptr->controls.scrollBarV, true);
+				if (nullptr != ptr)
+				{
+					UNUSED_RETURN(OSStatus)HIViewSetVisible(ptr->controls.scrollBarV, true);
+				}
 				
 				// some mode changes do not require font size restoration; and, the boundaries
 				// may need to change before or after the display mode is restored, due to the
@@ -6630,7 +6638,10 @@ reverseScreenDimensionChanges	(Undoables_ActionInstruction	inDoWhat,
 		case kUndoables_ActionInstructionDispose:
 			// release memory previously allocated when this action was installed
 			Undoables_DisposeAction(&inApplicableAction);
-			if (dataPtr != nullptr) Memory_DisposePtr(REINTERPRET_CAST(&dataPtr, Ptr*));
+			if (nullptr != dataPtr)
+			{
+				delete dataPtr, dataPtr = nullptr;
+			}
 			break;
 		
 		case kUndoables_ActionInstructionRedo:
@@ -6702,24 +6713,24 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 			switch (inPartCode)
 			{
 			case kControlUpButtonPart: // “up arrow” on a horizontal scroll bar means “left arrow”
-				(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(view, 1/* number of columns to scroll */);
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(view, 1/* number of columns to scroll */);
 				break;
 			
 			case kControlDownButtonPart: // “down arrow” on a horizontal scroll bar means “right arrow”
-				(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, 1/* number of columns to scroll */);
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, 1/* number of columns to scroll */);
 				break;
 			
 			case kControlPageUpPart:
-				(TerminalView_Result)TerminalView_ScrollPageTowardRightEdge(view);
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollPageTowardRightEdge(view);
 				break;
 			
 			case kControlPageDownPart:
-				(TerminalView_Result)TerminalView_ScrollPageTowardLeftEdge(view);
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollPageTowardLeftEdge(view);
 				break;
 			
 			case kControlIndicatorPart:
-				(TerminalView_Result)TerminalView_ScrollTo(view, GetControl32BitValue(ptr->controls.scrollBarV),
-															GetControl32BitValue(ptr->controls.scrollBarH));
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollTo(view, GetControl32BitValue(ptr->controls.scrollBarV),
+																		GetControl32BitValue(ptr->controls.scrollBarH));
 				break;
 			
 			default:
@@ -6732,23 +6743,23 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 			switch (inPartCode)
 			{
 			case kControlUpButtonPart:
-				(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(view, 1/* number of rows to scroll */);
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(view, 1/* number of rows to scroll */);
 				break;
 			
 			case kControlDownButtonPart:
-				(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(view, 1/* number of rows to scroll */);
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(view, 1/* number of rows to scroll */);
 				break;
 			
 			case kControlPageUpPart:
-				(TerminalView_Result)TerminalView_ScrollPageTowardBottomEdge(view);
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollPageTowardBottomEdge(view);
 				break;
 			
 			case kControlPageDownPart:
-				(TerminalView_Result)TerminalView_ScrollPageTowardTopEdge(view);
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollPageTowardTopEdge(view);
 				break;
 			
 			case kControlIndicatorPart:
-				(TerminalView_Result)TerminalView_ScrollTo(view, GetControl32BitValue(ptr->controls.scrollBarV));
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollTo(view, GetControl32BitValue(ptr->controls.scrollBarV));
 				break;
 			
 			default:
@@ -6834,7 +6845,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						{
 							error = HIToolbarItemSetLabel(itemRef, nameCFString);
 							assert_noerr(error);
-							(OSStatus)HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */, nullptr/* long text */);
+							UNUSED_RETURN(OSStatus)HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */, nullptr/* long text */);
 							CFRelease(nameCFString), nameCFString = nullptr;
 						}
 						error = HIToolbarItemSetIconRef(itemRef, gKillSessionIcon());
@@ -6851,7 +6862,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					
 					for (viewIterator = ptr->allViews.begin(); viewIterator != ptr->allViews.end(); ++viewIterator)
 					{
-						(TerminalView_Result)TerminalView_SetCursorRenderingEnabled(*viewIterator, true);
+						UNUSED_RETURN(TerminalView_Result)TerminalView_SetCursorRenderingEnabled(*viewIterator, true);
 					}
 				}
 				// add or remove window adornments as appropriate; once a session has died
@@ -6877,7 +6888,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						{
 							error = HIToolbarItemSetLabel(itemRef, nameCFString);
 							assert_noerr(error);
-							(OSStatus)HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */, nullptr/* long text */);
+							UNUSED_RETURN(OSStatus)HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */, nullptr/* long text */);
 							CFRelease(nameCFString), nameCFString = nullptr;
 						}
 						error = HIToolbarItemSetIconRef(itemRef, gRestartSessionIcon());
@@ -6893,7 +6904,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						
 						for (viewIterator = ptr->allViews.begin(); viewIterator != ptr->allViews.end(); ++viewIterator)
 						{
-							(TerminalView_Result)TerminalView_SetCursorRenderingEnabled(*viewIterator, false);
+							UNUSED_RETURN(TerminalView_Result)TerminalView_SetCursorRenderingEnabled(*viewIterator, false);
 						}
 					}
 				}
@@ -6924,11 +6935,11 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				{
 					if (currentAttributes & kSession_StateAttributeSuspendNetwork)
 					{
-						(OSStatus)HIToolbarItemSetIconRef(ptr->toolbarItemScrollLock.returnHIObjectRef(), gScrollLockOffIcon());
+						UNUSED_RETURN(OSStatus)HIToolbarItemSetIconRef(ptr->toolbarItemScrollLock.returnHIObjectRef(), gScrollLockOffIcon());
 					}
 					else
 					{
-						(OSStatus)HIToolbarItemSetIconRef(ptr->toolbarItemScrollLock.returnHIObjectRef(), gScrollLockOnIcon());
+						UNUSED_RETURN(OSStatus)HIToolbarItemSetIconRef(ptr->toolbarItemScrollLock.returnHIObjectRef(), gScrollLockOnIcon());
 					}
 				}
 			}
@@ -7001,7 +7012,7 @@ setCursorInWindow	(HIWindowRef	inWindow,
 		if ((noErr != result) || (nullptr == viewUnderMouse))
 		{
 			// nothing underneath the mouse, or some problem; restore the arrow and claim all is well
-			(SInt16)Cursors_UseArrow();
+			UNUSED_RETURN(SInt16)Cursors_UseArrow();
 			result = noErr;
 		}
 		else
@@ -7019,14 +7030,14 @@ setCursorInWindow	(HIWindowRef	inWindow,
 				if (noErr != result)
 				{
 					// some problem; restore the arrow and claim all is well
-					(SInt16)Cursors_UseArrow();
+					UNUSED_RETURN(SInt16)Cursors_UseArrow();
 					result = noErr;
 				}						
 			}
 			else
 			{
 				// unknown control type - restore arrow
-				(SInt16)Cursors_UseArrow();
+				UNUSED_RETURN(SInt16)Cursors_UseArrow();
 				result = noErr;
 			}
 		}
@@ -7112,7 +7123,7 @@ setStandardState	(My_TerminalWindowPtr	inPtr,
 	
 	
 	getWindowSizeFromViewSize(inPtr, inScreenWidthInPixels, inScreenHeightInPixels, &windowWidth, &windowHeight);
-	(OSStatus)inPtr->windowResizeHandler.setWindowIdealSize(windowWidth, windowHeight);
+	UNUSED_RETURN(OSStatus)inPtr->windowResizeHandler.setWindowIdealSize(windowWidth, windowHeight);
 	{
 		Rect		structureBounds;
 		Rect		contentBounds;
@@ -7271,7 +7282,7 @@ setWarningOnWindowClose		(My_TerminalWindowPtr	inPtr,
 		// attach or remove an adornment in the window that shows
 		// that attempting to close it will display a warning;
 		// on Mac OS X, a dot appears in the middle of the close box
-		(OSStatus)SetWindowModified(returnCarbonWindow(inPtr), inCloseBoxHasDot);
+		UNUSED_RETURN(OSStatus)SetWindowModified(returnCarbonWindow(inPtr), inCloseBoxHasDot);
 	}
 }// setWarningOnWindowClose
 
@@ -7735,7 +7746,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				{
 					// TEMPORARY - Cocoa wrapper window does not seem to recognize setMiniwindowTitle:,
 					// so the Carbon call is also used in the meantime
-					(OSStatus)SetWindowAlternateTitle(returnCarbonWindow(ptr), titleCFString);
+					UNUSED_RETURN(OSStatus)SetWindowAlternateTitle(returnCarbonWindow(ptr), titleCFString);
 					
 					[ptr->window setMiniwindowTitle:(NSString*)titleCFString];
 					
@@ -7807,8 +7818,8 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			
 			updateScrollBars(ptr);
-			(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarH, true);
-			(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarV, true);
+			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarH, true);
+			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarV, true);
 		}
 		break;
 	
@@ -7828,8 +7839,8 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				ptr->scrollTickHandler.remove();
 				assert(false == ptr->scrollTickHandler.isInstalled());
 			}
-			(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarH, true);
-			(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarV, true);
+			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarH, true);
+			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarV, true);
 		}
 		break;
 	
@@ -7891,7 +7902,7 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 			Float64		barScale = 0;
 			
 			
-			(OSStatus)HIViewGetBounds(scrollBarView, &scrollBarBounds);
+			UNUSED_RETURN(OSStatus)HIViewGetBounds(scrollBarView, &scrollBarBounds);
 			
 			// adjust the numerator to require a larger minimum size for the thumb
 			barScale = kMy_ScrollBarThumbMinimumSize / (scrollBarBounds.size.height - 2 * kMy_ScrollBarArrowHeight);
@@ -7903,8 +7914,8 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 			SetControlViewSize(scrollBarView, proposedViewSize);
 		}
 		
-		(OSStatus)HIViewSetNeedsDisplay(inPtr->controls.scrollBarV, true);
-		(OSStatus)HIViewSetNeedsDisplay(inPtr->controls.scrollBarH, true);
+		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->controls.scrollBarV, true);
+		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->controls.scrollBarH, true);
 	}
 }// updateScrollBars
 

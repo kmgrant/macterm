@@ -783,8 +783,8 @@ receiveArrowHitForNumericalField	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 			
 			// try to find the increment value associated with the arrows view;
 			// ignore any errors, this is not that important
-			(OSStatus)GetControlData(control, kControlEntireControl, kControlLittleArrowsIncrementValueTag,
-										sizeof(kIncrementDecrement), &kIncrementDecrement, nullptr/* actual size */);
+			UNUSED_RETURN(OSStatus)GetControlData(control, kControlEntireControl, kControlLittleArrowsIncrementValueTag,
+													sizeof(kIncrementDecrement), &kIncrementDecrement, nullptr/* actual size */);
 			
 			switch (partCode)
 			{

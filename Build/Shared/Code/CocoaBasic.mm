@@ -602,7 +602,7 @@ CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow		(HIWindowRef	inCarbonWindow)
 			
 			if (nil != [result windowRef])
 			{
-				(Boolean)CocoaBasic_RegisterCocoaCarbonWindow(result);
+				UNUSED_RETURN(Boolean)CocoaBasic_RegisterCocoaCarbonWindow(result);
 			}
 		}
 	}
@@ -933,7 +933,7 @@ changeColor:(id)	sender
 			error = GetSheetWindowParent(window, &parentWindow);
 			if (noErr == error)
 			{
-				(OSStatus)HIViewRender(HIViewGetRoot(parentWindow));
+				UNUSED_RETURN(OSStatus)HIViewRender(HIViewGetRoot(parentWindow));
 			}
 		}
 		
@@ -943,9 +943,9 @@ changeColor:(id)	sender
 		if (noErr == error)
 		{
 			++bounds.right;
-			(OSStatus)SetWindowBounds(window, kWindowContentRgn, &bounds);
+			UNUSED_RETURN(OSStatus)SetWindowBounds(window, kWindowContentRgn, &bounds);
 			--bounds.right;
-			(OSStatus)SetWindowBounds(window, kWindowContentRgn, &bounds);
+			UNUSED_RETURN(OSStatus)SetWindowBounds(window, kWindowContentRgn, &bounds);
 		}
 	}
 }/// changeColor:

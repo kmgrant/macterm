@@ -224,7 +224,7 @@ FileUtilities_OpenTemporaryFile		(FSRef&		outTemporaryFile)
 				else
 				{
 					// success!
-					(OSStatus)FSSetForkSize(result, fsFromStart, 0);
+					UNUSED_RETURN(OSStatus)FSSetForkSize(result, fsFromStart, 0);
 				}
 			}
 		}

@@ -168,9 +168,7 @@ My_GlobalEventTargetRef				gGlobalEventTarget = nullptr;
 SInt16								gHaveInstalledNotification = 0;
 UInt32								gTicksWaitNextEvent = 0L;
 NMRec*								gBeepNotificationPtr = nullptr;
-My_ViewEventTargetHandleLocker&		gViewEventTargetHandleLocks ()		{ static My_ViewEventTargetHandleLocker x; return x; }
 My_GlobalEventTargetHandleLocker&	gGlobalEventTargetHandleLocks ()	{ static My_GlobalEventTargetHandleLocker x; return x; }
-My_WindowEventTargetPtrLocker&		gWindowEventTargetPtrLocks ()		{ static My_WindowEventTargetPtrLocker x; return x; }
 CarbonEventHandlerWrap				gCarbonEventHICommandHandler(GetApplicationEventTarget(),
 																	receiveHICommand,
 																	CarbonEventSetInClass
@@ -537,8 +535,8 @@ EventLoop_KeyIsActivatingCancelButton	(EventRef	inEvent)
 			UInt32		keyCode = '\0';
 			
 			
-			(OSStatus)CarbonEventUtilities_GetEventParameter(originalKeyPressEvent, kEventParamKeyModifiers,
-																typeUInt32, modifiers);
+			UNUSED_RETURN(OSStatus)CarbonEventUtilities_GetEventParameter(originalKeyPressEvent, kEventParamKeyModifiers,
+																			typeUInt32, modifiers);
 			error = CarbonEventUtilities_GetEventParameter
 					(originalKeyPressEvent, kEventParamKeyCode, typeUInt32, keyCode);
 			if (noErr == error)
@@ -587,8 +585,8 @@ EventLoop_KeyIsActivatingDefaultButton	(EventRef	inEvent)
 			UInt32		keyCode = '\0';
 			
 			
-			(OSStatus)CarbonEventUtilities_GetEventParameter(originalKeyPressEvent, kEventParamKeyModifiers,
-																typeUInt32, modifiers);
+			UNUSED_RETURN(OSStatus)CarbonEventUtilities_GetEventParameter(originalKeyPressEvent, kEventParamKeyModifiers,
+																			typeUInt32, modifiers);
 			error = CarbonEventUtilities_GetEventParameter
 					(originalKeyPressEvent, kEventParamKeyCode, typeUInt32, keyCode);
 			if ((noErr == error) && (0 == modifiers))

@@ -591,7 +591,7 @@ receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				if ((noErr == error) && (kControlKindSignatureApple == controlKind.signature) &&
 					(kControlKindCheckBox == controlKind.kind))
 				{
-					(Boolean)updateCheckBoxPreference(interfacePtr, view);
+					UNUSED_RETURN(Boolean)updateCheckBoxPreference(interfacePtr, view);
 				}
 			}
 		}
@@ -948,7 +948,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 

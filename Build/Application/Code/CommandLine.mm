@@ -328,7 +328,7 @@ Responds to a click in the help button.
 displayHelp:(id)	sender
 {
 #pragma unused(sender)
-	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhraseCommandLine);
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhraseCommandLine);
 }// displayHelp:
 
 

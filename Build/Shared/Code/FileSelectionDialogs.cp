@@ -183,7 +183,7 @@ FileSelectionDialogs_CreateOrFindUserSaveFile	(NavReplyRecord const&	inReply,
 																	true/* is retained */);
 						
 						
-						(Boolean)CocoaBasic_SetFileTypeCreator(absolutePathCFString.returnCFStringRef(), inNewFileType, inNewFileCreator);
+						UNUSED_RETURN(Boolean)CocoaBasic_SetFileTypeCreator(absolutePathCFString.returnCFStringRef(), inNewFileType, inNewFileCreator);
 						CFRelease(absolutePathURL), absolutePathURL = nullptr;
 					}
 				}

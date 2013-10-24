@@ -715,7 +715,7 @@ panelChanged	(Panel_Ref			inPanel,
 			for (GenericPanelTabs_List::iterator toPanel = dataPtr->tabPanels.begin();
 					toPanel != dataPtr->tabPanels.end(); ++toPanel)
 			{
-				(SInt32)Panel_PropagateMessage(*toPanel, inMessage, inDataPtr);
+				UNUSED_RETURN(SInt32)Panel_PropagateMessage(*toPanel, inMessage, inDataPtr);
 			}
 		}
 		break;

@@ -127,7 +127,7 @@ FourCharCode const	kMyDataBrowserPropertyIDSets	= 'Sets';
 The data for "kMy_PrefsWindowSourceListDataType" should be an
 NSKeyedArchive of an NSIndexSet object (dragged row index).
 */
-const NSString*		kMy_PrefsWindowSourceListDataType = @"net.macterm.MacTerm.prefswindow.sourcelistdata";
+NSString*	kMy_PrefsWindowSourceListDataType = @"net.macterm.MacTerm.prefswindow.sourcelistdata";
 
 } // anonymous namespace
 
@@ -234,7 +234,7 @@ The private class interface.
 
 // new methods
 	- (void)
-	displayPanel:(Panel_ViewManager*)_
+	displayPanel:(Panel_ViewManager< PrefsWindow_PanelInterface >*)_
 	withAnimation:(BOOL)_;
 	- (void)
 	rebuildSourceList;
@@ -469,7 +469,7 @@ PrefsWindow_Done ()
 			// release each item
 			if (nullptr != *toolbarItemIterator) CFRelease(*toolbarItemIterator);
 		}
-		(OSStatus)SetDrawerParent(gDrawerWindow, nullptr/* parent */);
+		UNUSED_RETURN(OSStatus)SetDrawerParent(gDrawerWindow, nullptr/* parent */);
 		DisposeWindow(gDrawerWindow), gDrawerWindow = nullptr;
 		DisposeWindow(gPreferencesWindow), gPreferencesWindow = nullptr; // automatically destroys all controls
 		WindowInfo_Dispose(gPreferencesWindowInfo);
@@ -524,7 +524,7 @@ PrefsWindow_Remove ()
 	}
 	
 	// write all the preference data in memory to disk
-	(Preferences_Result)Preferences_Save();
+	UNUSED_RETURN(Preferences_Result)Preferences_Save();
 	
 	if (nullptr != gPreferencesWindow)
 	{
@@ -715,12 +715,12 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 		assert(false == gCategoryToolbarItems().empty());
 		for (; toItem != itemEnd; ++toItem)
 		{
-			(OSStatus)HIToolbarItemChangeAttributes(*toItem, 0/* attributes to set */,
-													kHIToolbarItemSelected/* attributes to clear */);
+			UNUSED_RETURN(OSStatus)HIToolbarItemChangeAttributes(*toItem, 0/* attributes to set */,
+																	kHIToolbarItemSelected/* attributes to clear */);
 		}
-		(OSStatus)HIToolbarItemChangeAttributes(gCategoryToolbarItems()[inZeroBasedPanelNumber],
-												kHIToolbarItemSelected/* attributes to set */,
-												0/* attributes to clear */);
+		UNUSED_RETURN(OSStatus)HIToolbarItemChangeAttributes(gCategoryToolbarItems()[inZeroBasedPanelNumber],
+																kHIToolbarItemSelected/* attributes to set */,
+																0/* attributes to clear */);
 	}
 	
 	// get the selected item’s data (which ought to always be defined)
@@ -857,16 +857,16 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 				
 				// modify the data displayed in the list drawer, and select Default
 				rebuildList();
-				(OSStatus)selectCollection();
+				UNUSED_RETURN(OSStatus)selectCollection();
 				
 				// if the panel is an inspector type, show the collections drawer
 				if (kPanel_ResponseEditTypeInspector == Panel_SendMessageGetEditType(newPanelDataPtr->panel))
 				{
-					(OSStatus)OpenDrawer(gDrawerWindow, kWindowEdgeDefault, true/* asynchronously */);
+					UNUSED_RETURN(OSStatus)OpenDrawer(gDrawerWindow, kWindowEdgeDefault, true/* asynchronously */);
 				}
 				else
 				{
-					(OSStatus)CloseDrawer(gDrawerWindow, true/* asynchronously */);
+					UNUSED_RETURN(OSStatus)CloseDrawer(gDrawerWindow, true/* asynchronously */);
 				}
 				
 				// grow box appearance
@@ -877,17 +877,17 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 				#if 1
 					// since a footer is now present, panels are no longer abutted to the bottom
 					// of the window, so their grow box preferences are irrelevant
-					(OSStatus)HIGrowBoxViewSetTransparent(growBox, true);
+					UNUSED_RETURN(OSStatus)HIGrowBoxViewSetTransparent(growBox, true);
 				#else
 					// make the grow box transparent by default, which looks better most of the time;
 					// however, give the panel the option to change this appearance
 					if (kPanel_ResponseGrowBoxOpaque == Panel_SendMessageGetGrowBoxLook(newPanelDataPtr->panel))
 					{
-						(OSStatus)HIGrowBoxViewSetTransparent(growBox, false);
+						UNUSED_RETURN(OSStatus)HIGrowBoxViewSetTransparent(growBox, false);
 					}
 					else
 					{
-						(OSStatus)HIGrowBoxViewSetTransparent(growBox, true);
+						UNUSED_RETURN(OSStatus)HIGrowBoxViewSetTransparent(growBox, true);
 					}
 				#endif
 				}
@@ -906,7 +906,7 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 		
 		// swap panels
 		Embedding_OffscreenSwapOverlappingControls(gPreferencesWindow, nowInvisibleContainer, nowVisibleContainer);
-		(OSStatus)HIViewSetVisible(nowVisibleContainer, true/* visible */);
+		UNUSED_RETURN(OSStatus)HIViewSetVisible(nowVisibleContainer, true/* visible */);
 	}
 }// choosePanel
 
@@ -966,14 +966,14 @@ void
 displayCollectionRenameUI	(DataBrowserItemID		inItemToRename)
 {
 	// focus the drawer
-	(OSStatus)SetUserFocusWindow(gDrawerWindow);
+	UNUSED_RETURN(OSStatus)SetUserFocusWindow(gDrawerWindow);
 	
 	// focus the data browser itself
-	(OSStatus)DialogUtilities_SetKeyboardFocus(gDataBrowserForCollections);
+	UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(gDataBrowserForCollections);
 	
 	// open the new item for editing
-	(OSStatus)SetDataBrowserEditItem(gDataBrowserForCollections, inItemToRename,
-										kMyDataBrowserPropertyIDSets);
+	UNUSED_RETURN(OSStatus)SetDataBrowserEditItem(gDataBrowserForCollections, inItemToRename,
+													kMyDataBrowserPropertyIDSets);
 }// displayCollectionRenameUI
 
 
@@ -1167,7 +1167,7 @@ init ()
 	drawerWindow << NIBLoader_AssertWindowExists;
 	gPreferencesWindow = mainWindow;
 	gDrawerWindow = drawerWindow;
-	(OSStatus)SetDrawerParent(drawerWindow, mainWindow);
+	UNUSED_RETURN(OSStatus)SetDrawerParent(drawerWindow, mainWindow);
 	
 	if (nullptr != gPreferencesWindow)
 	{
@@ -1177,18 +1177,18 @@ init ()
 		// some attributes that are unset in the NIB are not recognized on 10.3
 		if (false == FlagManager_Test(kFlagOS10_4API))
 		{
-			(OSStatus)ChangeWindowAttributes
-						(gPreferencesWindow,
-							0/* attributes to set */,
-							kWindowInWindowMenuAttribute/* attributes to clear */);
+			UNUSED_RETURN(OSStatus)ChangeWindowAttributes
+									(gPreferencesWindow,
+										0/* attributes to set */,
+										kWindowInWindowMenuAttribute/* attributes to clear */);
 		}
 		
 		// although the API is available on 10.4, the Spaces-related flags
 		// will only work on Leopard
-		(OSStatus)HIWindowChangeAvailability
-					(gPreferencesWindow,
-						kHIWindowMoveToActiveSpace/* attributes to set */,
-						0/* attributes to clear */);
+		UNUSED_RETURN(OSStatus)HIWindowChangeAvailability
+								(gPreferencesWindow,
+									kHIWindowMoveToActiveSpace/* attributes to set */,
+									0/* attributes to clear */);
 		
 		{
 			HIViewRef	panelUserPane = (mainWindow.returnHIViewWithID(idMyUserPaneAnyPrefPanel) << HIViewWrap_AssertExists);
@@ -1222,7 +1222,7 @@ init ()
 		}
 		
 		// enable window drag tracking, so the data browser column moves and toolbar item drags work
-		(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(gPreferencesWindow, true);
+		UNUSED_RETURN(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(gPreferencesWindow, true);
 		
 		// set up the WindowInfo stuff
 		gPreferencesWindowInfo = WindowInfo_New();
@@ -1289,7 +1289,7 @@ init ()
 					if (noErr == IconManager_SetButtonIcon(gCollectionAddMenuButton, buttonIcon))
 					{
 						// once the icon is set successfully, the equivalent text title can be removed
-						(OSStatus)SetControlTitleWithCFString(gCollectionAddMenuButton, CFSTR(""));
+						UNUSED_RETURN(OSStatus)SetControlTitleWithCFString(gCollectionAddMenuButton, CFSTR(""));
 					}
 				}
 				IconManager_DisposeIcon(&buttonIcon);
@@ -1306,7 +1306,7 @@ init ()
 					if (noErr == IconManager_SetButtonIcon(gCollectionRemoveButton, buttonIcon))
 					{
 						// once the icon is set successfully, the equivalent text title can be removed
-						(OSStatus)SetControlTitleWithCFString(gCollectionRemoveButton, CFSTR(""));
+						UNUSED_RETURN(OSStatus)SetControlTitleWithCFString(gCollectionRemoveButton, CFSTR(""));
 					}
 				}
 				IconManager_DisposeIcon(&buttonIcon);
@@ -1323,7 +1323,7 @@ init ()
 					if (noErr == IconManager_SetButtonIcon(gCollectionManipulateMenuButton, buttonIcon))
 					{
 						// once the icon is set successfully, the equivalent text title can be removed
-						(OSStatus)SetControlTitleWithCFString(gCollectionManipulateMenuButton, CFSTR(""));
+						UNUSED_RETURN(OSStatus)SetControlTitleWithCFString(gCollectionManipulateMenuButton, CFSTR(""));
 					}
 				}
 				IconManager_DisposeIcon(&buttonIcon);
@@ -1446,8 +1446,8 @@ init ()
 				}
 			#endif
 				
-				(OSStatus)SetWindowToolbar(gPreferencesWindow, categoryIcons);
-				(OSStatus)ShowHideWindowToolbar(gPreferencesWindow, true/* show */, false/* animate */);
+				UNUSED_RETURN(OSStatus)SetWindowToolbar(gPreferencesWindow, categoryIcons);
+				UNUSED_RETURN(OSStatus)ShowHideWindowToolbar(gPreferencesWindow, true/* show */, false/* animate */);
 				CFRelease(categoryIcons);
 			}
 		}
@@ -1770,7 +1770,7 @@ navigationExportPrefsDialogEvent	(NavEventCallbackMessage	inMessage,
 	case kNavCBTerminate:
 		// clean up
 		NavDialogDispose(inParameters->context);
-		(OSStatus)ChangeWindowAttributes
+		UNUSED_RETURN(OSStatus)ChangeWindowAttributes
 		(gPreferencesWindow,
 			kWindowCollapseBoxAttribute/* attributes to set */,
 			0/* attributes to clear */);
@@ -1830,15 +1830,15 @@ newPanelSelector	(Panel_Ref		inPanel)
 					CFRetain(newItem), gCategoryToolbarItems().push_back(newItem);
 					
 					// set the icon, label and tooltip
-					(OSStatus)Panel_SetToolbarItemIconAndLabel(newItem, inPanel);
+					UNUSED_RETURN(OSStatus)Panel_SetToolbarItemIconAndLabel(newItem, inPanel);
 					Panel_GetDescription(inPanel, descriptionCFString);
 					if (nullptr != descriptionCFString)
 					{
-						(OSStatus)HIToolbarItemSetHelpText(newItem, descriptionCFString, nullptr/* long version */);
+						UNUSED_RETURN(OSStatus)HIToolbarItemSetHelpText(newItem, descriptionCFString, nullptr/* long version */);
 					}
 					
 					// add the item to the toolbar
-					(OSStatus)HIToolbarAppendItem(categoryIcons, newItem);
+					UNUSED_RETURN(OSStatus)HIToolbarAppendItem(categoryIcons, newItem);
 				}
 			}
 		}
@@ -1905,9 +1905,9 @@ rebuildList ()
 	if (Preferences_GetContextsInClass(kCurrentPreferencesClass, contextList))
 	{
 		// start by destroying all items in the list
-		(OSStatus)RemoveDataBrowserItems(gDataBrowserForCollections, kDataBrowserNoItem/* parent item */,
-											0/* size of array */, nullptr/* items array; nullptr = destroy all */,
-											kDataBrowserItemNoProperty/* pre-sort property */);
+		UNUSED_RETURN(OSStatus)RemoveDataBrowserItems(gDataBrowserForCollections, kDataBrowserNoItem/* parent item */,
+														0/* size of array */, nullptr/* items array; nullptr = destroy all */,
+														kDataBrowserItemNoProperty/* pre-sort property */);
 		
 		// now acquire contexts for all available names in this class,
 		// and add data browser items for each of them
@@ -1917,9 +1917,9 @@ rebuildList ()
 			DataBrowserItemID	ids[] = { REINTERPRET_CAST(*toContextRef, DataBrowserItemID) };
 			
 			
-			(OSStatus)AddDataBrowserItems(gDataBrowserForCollections, kDataBrowserNoItem/* parent item */,
-											sizeof(ids) / sizeof(DataBrowserItemID), ids,
-											kDataBrowserItemNoProperty/* pre-sort property */);
+			UNUSED_RETURN(OSStatus)AddDataBrowserItems(gDataBrowserForCollections, kDataBrowserNoItem/* parent item */,
+														sizeof(ids) / sizeof(DataBrowserItemID), ids,
+														kDataBrowserItemNoProperty/* pre-sort property */);
 		}
 		
 		// ensure something is always selected
@@ -2138,7 +2138,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									result = noErr;
 									
 									// select something else...
-									(OSStatus)selectCollection();
+									UNUSED_RETURN(OSStatus)selectCollection();
 								}
 							}
 						}
@@ -2200,7 +2200,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptOpenPrefs, promptCFString);
 						(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogTitleOpenPrefs, titleCFString);
-						(Boolean)CocoaBasic_FileOpenPanelDisplay(promptCFString, titleCFString, fileTypes.returnCFArrayRef());
+						UNUSED_RETURN(Boolean)CocoaBasic_FileOpenPanelDisplay(promptCFString, titleCFString, fileTypes.returnCFArrayRef());
 						
 						result = noErr;
 					}
@@ -2220,10 +2220,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// restored the Navigation Services sheet is gone; also, all future export
 						// commands start failing because Navigation Services sheets do not open);
 						// minimization is restored in navigationExportPrefsDialogEvent()
-						(OSStatus)ChangeWindowAttributes
-						(gPreferencesWindow,
-							0/* attributes to set */,
-							kWindowCollapseBoxAttribute/* attributes to clear */);
+						UNUSED_RETURN(OSStatus)ChangeWindowAttributes
+												(gPreferencesWindow,
+													0/* attributes to set */,
+													kWindowCollapseBoxAttribute/* attributes to clear */);
 						
 						if (0 == selectedID) isError = true;
 						else
@@ -2405,10 +2405,10 @@ in the application, for example).
 void
 refreshDisplay ()
 {
-	(OSStatus)UpdateDataBrowserItems(gDataBrowserForCollections, kDataBrowserNoItem/* parent item */,
-										0/* number of IDs */, nullptr/* IDs */,
-										kDataBrowserItemNoProperty/* pre-sort property */,
-										kMyDataBrowserPropertyIDSets);
+	UNUSED_RETURN(OSStatus)UpdateDataBrowserItems(gDataBrowserForCollections, kDataBrowserNoItem/* parent item */,
+													0/* number of IDs */, nullptr/* IDs */,
+													kDataBrowserItemNoProperty/* pre-sort property */,
+													kMyDataBrowserPropertyIDSets);
 }// refreshDisplay
 
 
@@ -2420,7 +2420,7 @@ Removes any editable text area in the collections list.
 void
 removeCollectionRenameUI ()
 {
-	(OSStatus)SetDataBrowserEditItem(gDataBrowserForCollections, kDataBrowserNoItem, kDataBrowserItemNoProperty);
+	UNUSED_RETURN(OSStatus)SetDataBrowserEditItem(gDataBrowserForCollections, kDataBrowserNoItem, kDataBrowserItemNoProperty);
 }// removeCollectionRenameUI
 
 
@@ -2863,10 +2863,10 @@ Destructor.
 dealloc
 {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
-													kPreferences_ChangeContextName);
-	(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
-													kPreferences_ChangeNumberOfContexts);
+	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
+																kPreferences_ChangeContextName);
+	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
+																kPreferences_ChangeNumberOfContexts);
 	[preferenceChangeListener release];
 	[currentPreferenceCollectionIndexes release];
 	[currentPreferenceCollections release];
@@ -2921,7 +2921,7 @@ setCurrentPreferenceCollectionIndexes:(NSIndexSet*)		indexes
 		currentPreferenceCollectionIndexes = [indexes retain];
 		
 		// write all the preference data in memory to disk
-		(Preferences_Result)Preferences_Save();
+		UNUSED_RETURN(Preferences_Result)Preferences_Save();
 		
 		// notify the panel that a new data set has been selected
 		[[self->activePanel delegate] panelViewManager:self->activePanel
@@ -4107,8 +4107,8 @@ choose the ideal layout for each one).
 (4.1)
 */
 - (void)
-displayPanel:(Panel_ViewManager*)	aPanel
-withAnimation:(BOOL)				isAnimated
+displayPanel:(Panel_ViewManager< PrefsWindow_PanelInterface >*)		aPanel
+withAnimation:(BOOL)												isAnimated
 {
 	if (aPanel != self->activePanel)
 	{
@@ -4132,8 +4132,8 @@ withAnimation:(BOOL)				isAnimated
 		
 		// show the new panel
 		{
-			Panel_ViewManager*	oldPanel = self->activePanel;
-			Panel_ViewManager*	newPanel = aPanel;
+			Panel_ViewManager< PrefsWindow_PanelInterface >*	oldPanel = self->activePanel;
+			Panel_ViewManager< PrefsWindow_PanelInterface >*	newPanel = aPanel;
 			
 			
 			[[oldPanel delegate] panelViewManager:oldPanel willChangePanelVisibility:kPanel_VisibilityHidden];

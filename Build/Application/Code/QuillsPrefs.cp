@@ -276,7 +276,7 @@ Prefs::import_from_file		(std::string	inPathname,
 							default:
 								break;
 							}
-							(Boolean)Commands_ExecuteByIDUsingEvent(showCommand);
+							UNUSED_RETURN(Boolean)Commands_ExecuteByIDUsingEvent(showCommand);
 						}
 					}
 				}

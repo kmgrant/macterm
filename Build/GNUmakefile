@@ -17,6 +17,8 @@
 # Kevin Grant (kmg@mac.com)
 # December 14, 2007
 
+SHELL = /bin/bash
+
 # IMPORTANT: The first rule in the file is chosen when "make" is
 # run by itself.  Xcode runs "make" for external targets.
 .PHONY: first
@@ -62,17 +64,10 @@ XCODE_ENV := \
 	OBJROOT=$(OBJROOT)
 
 # DEVELOPER_DIR should be set by Xcode's build environment;
-# if not, or the directory does not exist, use /Developer
-ifeq ($(strip $(shell /bin/test -d $(DEVELOPER_DIR) || echo "no")),no)
-DEVELOPER_DIR := /Developer
-endif
+# if not, or the directory does not exist, use Xcode's root
 ifeq ($(strip $(shell /bin/test -d $(DEVELOPER_DIR) || echo "no")),no)
 DEVELOPER_DIR := /Applications/Xcode.app/Contents/Developer
 endif
-
-# Xcode 4.x is not yet used for all builds; its location
-# is currently established by Mac OS X's App Store
-XCODE_4_DEVELOPER_DIR := /Applications/Xcode.app/Contents/Developer
 
 # tools
 COPY=/bin/cp
@@ -85,7 +80,6 @@ RSYNC=/usr/bin/rsync
 SYMLINK_REPLACE=/bin/ln -snf
 XARGS=/usr/bin/xargs
 XCB=$(DEVELOPER_DIR)/usr/bin/xcodebuild $(XCODE_ENV)
-XCB4=$(XCODE_4_DEVELOPER_DIR)/usr/bin/xcodebuild $(XCODE_ENV)
 
 # set this to "no" if you want to disable Growl support for
 # notifications in MacTerm (not recommended unless you don't
@@ -321,7 +315,7 @@ clean-swig-wrappers:
 	$(XCB) clean -project Application.xcodeproj -target PythonWrapper -configuration ForDebugging
 	$(RM) $(SYMROOT)/ForDebugging/quills.py
 	echo '$(LEOPARD_SWIG_WRAPPERS) $(LEOPARD_SWIG_WRAPPERS_EXTRA)' | $(XARGS) $(RM)
-	-$(RMDIR) $(DEST_SWIG_TOP_LEOPARD)
+	-$(RMDIR) $(DEST_SWIG_TOP_LEOPARD) 2>/dev/null
 	@echo
 
 # Component: PyMacTerm.framework
@@ -411,7 +405,7 @@ clean-frameworks: \
 $(CLEAN_GROWL) \
 clean-quills-framework \
 clean-py-framework
-	-$(RMDIR) $(DEST_APP_FW_TOP)
+	-$(RMDIR) $(DEST_APP_FW_TOP) 2>/dev/null
 
 #
 # MacOS subdirectory
@@ -441,7 +435,7 @@ clean-executables:
 	$(RM) $(DEST_APP_MACOS_TOP)/RunApplication.py
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.x
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.5_wrap
-	-$(RMDIR) $(DEST_APP_MACOS_TOP)
+	-$(RMDIR) $(DEST_APP_MACOS_TOP) 2>/dev/null
 	$(XCB) clean -project Application.xcodeproj -target PythonInvoker -configuration ForDebugging
 
 #
@@ -478,7 +472,7 @@ $(DEST_APP_RESOURCES_TOP)/MacTerm.help: $(CURDIR)/_Generated/MacTerm.help
 install-bug-reporter:
 	$(call banner,$@)
 	@# keep in sync with the matching clean rule
-	$(XCB4) -project BugReporter.xcodeproj
+	$(XCB) -project BugReporter.xcodeproj
 	@# avoid rsyncing from /
 	@if [ "x$(SRC_BUGREPORTER_TOP)" = "x" ] ; then \
 		echo "SRC_BUGREPORTER_TOP variable unset" >&2 ; \
@@ -489,7 +483,7 @@ install-bug-reporter:
 
 .PHONY: clean-bug-reporter
 clean-bug-reporter:
-	$(XCB4) clean -project BugReporter.xcodeproj
+	$(XCB) clean -project BugReporter.xcodeproj
 	$(RM) -R $(DEST_BUGREPORTER_TOP)
 
 # Component: Preferences Converter
@@ -498,7 +492,7 @@ clean-bug-reporter:
 install-prefs-converter:
 	$(call banner,$@)
 	@# keep in sync with the matching clean rule
-	$(XCB4) -project PrefsConverter.xcodeproj
+	$(XCB) -project PrefsConverter.xcodeproj
 	@# avoid rsyncing from /
 	@if [ "x$(SRC_PREFSCONVERTER_TOP)" = "x" ] ; then \
 		echo "SRC_PREFSCONVERTER_TOP variable unset" >&2 ; \
@@ -509,7 +503,7 @@ install-prefs-converter:
 
 .PHONY: clean-prefs-converter
 clean-prefs-converter:
-	$(XCB4) clean -project PrefsConverter.xcodeproj
+	$(XCB) clean -project PrefsConverter.xcodeproj
 	$(RM) -R $(DEST_PREFSCONVERTER_TOP)
 
 # Component: Miscellaneous Resources (NIBs, Images, etc.)
@@ -542,8 +536,8 @@ clean-resources:
 	$(MAKE) clean-prefs-converter
 	$(MAKE) clean-bug-reporter
 	$(MAKE) clean-app-dot-strings
-	-$(RMDIR) $(DEST_APP_RESOURCES_TOP)/English.lproj
-	-$(RMDIR) $(DEST_APP_RESOURCES_TOP)
+	-$(RMDIR) $(DEST_APP_RESOURCES_TOP)/English.lproj 2>/dev/null
+	-$(RMDIR) $(DEST_APP_RESOURCES_TOP) 2>/dev/null
 
 #
 # DefaultPreferences.plist file
@@ -630,11 +624,11 @@ clean:
 	$(RM) $(DEST_APP_TOP)/PkgInfo
 	$(RM) $(DEST_APP_TOP)/Info.plist
 	$(RM) $(DEST_APP_RESOURCES_TOP)/DefaultPreferences.plist
-	-$(RMDIR) $(SRC_PREFSCONVERTER_BUILD_TOP)
-	-$(RMDIR) $(SRC_BUGREPORTER_BUILD_TOP)
-	-$(RMDIR) $(SYMROOT)/ForDebugging
-	-$(RMDIR) $(DEST_APP_TOP)
-	-$(RMDIR) $(dir $(DEST_APP_TOP))
+	-$(RMDIR) $(SRC_PREFSCONVERTER_BUILD_TOP) 2>/dev/null
+	-$(RMDIR) $(SRC_BUGREPORTER_BUILD_TOP) 2>/dev/null
+	-$(RMDIR) $(SYMROOT)/ForDebugging 2>/dev/null
+	-$(RMDIR) $(DEST_APP_TOP) 2>/dev/null
+	-$(RMDIR) $(dir $(DEST_APP_TOP)) 2>/dev/null
 	@echo
 	@echo "NOTE: Useful Xcode intermediate files in '$(SYMROOT)'"
 	@echo "(such as code indices) have not been removed."
