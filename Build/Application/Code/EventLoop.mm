@@ -51,6 +51,7 @@
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
 #import <CocoaBasic.h>
+#import <CocoaExtensions.objc++.h>
 #import <Console.h>
 #import <Cursors.h>
 #import <Embedding.h>
@@ -428,40 +429,49 @@ clicks, etc. simply by being used repeatedly.  It
 can also detect “one and a half clicks” because it
 does not wait for a subsequent mouse-up.
 
+DEPRECATED.  This may be necessary to detect certain
+mouse behavior in raw event environments during
+Carbon porting but it would generally NOT be this
+difficult in a pure Cocoa event scheme.
+
 (3.0)
 */
 Boolean
-EventLoop_IsNextDoubleClick		(Point*		outGlobalMouseLocationPtr)
+EventLoop_IsNextDoubleClick		(HIWindowRef	inWindow,
+								 Point&			outGlobalMouseLocation)
 {
-	UInt32 const	kDoubleTimeInTicks = GetDblTime();
-	Boolean			result = false;
+	Boolean		result = false;
+	NSEvent*	nextClick = [NSApp nextEventMatchingMask:NSLeftMouseDownMask
+															untilDate:[NSDate dateWithTimeIntervalSinceNow:[NSEvent doubleClickInterval]]
+															inMode:NSEventTrackingRunLoopMode dequeue:YES];
 	
 	
+	// NOTE: this used to be accomplished with Carbon event-handling
+	// code but as of Mac OS X 10.9 the event loop seems unable to
+	// reliably return the next click event; thus, Cocoa is used
+	// (and this is a horrible coordinate-translation hack; it
+	// reproduces the required behavior for now but it also just
+	// underscores how critical it is that everything finally be
+	// moved natively to Cocoa)
+	if (nil != nextClick)
 	{
-		EventTypeSpec const		whenMouseButtonDown[] =
-								{
-									{ kEventClassMouse, kEventMouseDown }
-								};
-		EventRef				mouseDownEvent = nullptr;
-		OSStatus				error = noErr;
+		NSWindow*	eventWindow = [nextClick window];
 		
 		
-		error = ReceiveNextEvent(GetEventTypeCount(whenMouseButtonDown), whenMouseButtonDown,
-									TicksToEventTime(kDoubleTimeInTicks)/* timeout */, true/* pull event from queue */,
-									&mouseDownEvent);
-		if (error == noErr)
+		if (eventWindow == CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inWindow))
 		{
-			HIPoint		mouseDownLocation;
+			NSPoint		clickLocation = [nextClick locationInWindow];
 			
 			
-			// retrieve mouse location from event
-			error = CarbonEventUtilities_GetEventParameter(mouseDownEvent, kEventParamMouseLocation, typeHIPoint,
-															mouseDownLocation);
-			SetPt(outGlobalMouseLocationPtr, STATIC_CAST(mouseDownLocation.x, SInt16),
-					STATIC_CAST(mouseDownLocation.y, SInt16));
+			clickLocation = [eventWindow convertBaseToScreen:clickLocation];
+			clickLocation.y = [[eventWindow screen] frame].size.height;
+			outGlobalMouseLocation.h = STATIC_CAST(clickLocation.x, SInt16);
+			outGlobalMouseLocation.v = STATIC_CAST(clickLocation.y, SInt16);
+			clickLocation = [eventWindow localToGlobalRelativeToTopForPoint:[nextClick locationInWindow]];
+			outGlobalMouseLocation.h = STATIC_CAST(clickLocation.x, SInt16);
+			outGlobalMouseLocation.v = STATIC_CAST(clickLocation.y, SInt16);
+			result = ([nextClick clickCount] > 1);
 		}
-		result = ((error == noErr) && (!IsShowContextualMenuEvent(mouseDownEvent)));
-		ReleaseEvent(mouseDownEvent); // necessary because “pull event from queue” flag set in ReceiveNextEvent() call above
 	}
 	
 	return result;

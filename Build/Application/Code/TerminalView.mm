@@ -11190,7 +11190,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 						
 						
 						// see if a double-click occurs
-						foundAnotherClick = EventLoop_IsNextDoubleClick(&localMouse/* mouse in global coordinates */);
+						foundAnotherClick = EventLoop_IsNextDoubleClick(HIViewGetWindow(view), localMouse/* mouse in global coordinates */);
 						if (foundAnotherClick)
 						{
 							SetPortWindowPort(GetControlOwner(view));
@@ -11221,7 +11221,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 						if (foundAnotherClick)
 						{
 							// look for a triple-click
-							foundAnotherClick = EventLoop_IsNextDoubleClick(&localMouse);
+							foundAnotherClick = EventLoop_IsNextDoubleClick(HIViewGetWindow(view), localMouse/* mouse in global coordinates */);
 							if (foundAnotherClick)
 							{
 								SetPortWindowPort(GetControlOwner(view));

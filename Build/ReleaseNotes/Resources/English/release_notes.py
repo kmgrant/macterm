@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20131027',
     '20131024',
     '20131005',
     '20130825',
@@ -484,6 +485,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20131027': [
+        'Fixed a problem with the recognition of double-clicks and triple-clicks in terminal windows on Mac OS X 10.9.',
+    ],
     '20131024': [
         'Fixed possible crashes in certain rare instances of the following actions: searching for text, changing the font size, and changing the screen dimensions.',
         'Fixed environment of first shell window to not contain any variables related to MacTerm or its Python interpreter.',

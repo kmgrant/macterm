@@ -409,6 +409,37 @@ selectorToReturnKeyChangeAutoNotifyFlag:(SEL)	anAccessor
 
 
 /*!
+Translates coordinates from the local coordinate system of
+the window into the screen coordinate system, while “flipping”
+to make the coordinates relative to the top of the screen.
+
+This is not recommended.  It is useful when translating code
+that is still based in the QuickDraw and Carbon environments.
+
+(1.9)
+*/
+- (NSPoint)
+localToGlobalRelativeToTopForPoint:(NSPoint)	aLocalPoint
+{
+	NSPoint		result = aLocalPoint;
+	NSPoint		windowGlobalPosition = [self frame].origin;
+	
+	
+	// flip local Y
+	result.y = (self.frame.size.height - result.y);
+	
+	// flip global Y
+	windowGlobalPosition.y = ([self screen].frame.size.height - self.frame.origin.y - self.frame.size.height);
+	
+	// offset final coordinates based on flipped global
+	result.x += windowGlobalPosition.x;
+	result.y += windowGlobalPosition.y;
+	
+	return result;
+}// localToGlobalRelativeToTopForPoint
+
+
+/*!
 Given an NSArray with 4 floating-point numbers in the order
 X, Y, width and height, calls "setFrame:display:" on the
 window (with a display of YES).

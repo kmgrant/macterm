@@ -151,7 +151,8 @@ void
 
 // DEPRECATED
 Boolean
-	EventLoop_IsNextDoubleClick					(Point*								outGlobalMouseLocationPtr);
+	EventLoop_IsNextDoubleClick					(HIWindowRef						inEventWindow,
+												 Point&								outGlobalMouseLocation);
 
 //@}
 

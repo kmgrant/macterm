@@ -84,6 +84,10 @@
 
 @interface NSWindow (CocoaExtensions_NSWindow) //{
 
+// new methods: coordinate translation
+	- (NSPoint)
+	localToGlobalRelativeToTopForPoint:(NSPoint)_;
+
 // new methods: helpers for setting frames with a delay
 	- (void)
 	setFrameWithArray:(id)_;
