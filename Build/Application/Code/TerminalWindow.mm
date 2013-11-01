@@ -1990,14 +1990,12 @@ TerminalWindow_StackWindows ()
 	typedef std::map< CGDirectDisplayID, My_WindowList >	My_WindowsByDisplay; // which windows are on which devices?
 	
 	NSArray*				currentSpaceWindowNumbers = [NSWindow windowNumbersWithOptions:0];
-	NSEnumerator*			eachWindowNumber = [currentSpaceWindowNumbers objectEnumerator];
-	NSNumber*				currentWindowNumber = nil;
 	NSWindow*				activeWindow = [NSApp mainWindow];
 	My_WindowsByDisplay		windowsByDisplay;
 	
 	
 	// first determine which windows are on each display
-	while (nil != (currentWindowNumber = [eachWindowNumber nextObject]))
+	for (NSNumber* currentWindowNumber in currentSpaceWindowNumbers)
 	{
 		NSInteger			windowNumber = [currentWindowNumber integerValue];
 		NSWindow*			window = [NSApp windowWithWindowNumber:windowNumber];

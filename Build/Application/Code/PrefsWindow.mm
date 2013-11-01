@@ -3384,7 +3384,6 @@ writeRows:(NSArray*)			aRowArray
 toPasteboard:(NSPasteboard*)	aPasteboard
 {
 #pragma unused(aTableView)
-	NSEnumerator*		eachRowIndex = [aRowArray objectEnumerator];
 	BOOL				result = YES; // initially...
 	NSMutableIndexSet*	indexSet = [[NSMutableIndexSet alloc] init];
 	
@@ -3392,7 +3391,7 @@ toPasteboard:(NSPasteboard*)	aPasteboard
 	// drags are confined to the table, so it’s only necessary to copy row numbers;
 	// note that the Mac OS X 10.3 version gives arrays of NSNumber and the actual
 	// representation (in "tableView:writeRowIndexes:toPasteboard:") is NSIndexSet*
-	while (NSNumber* numberObject = [eachRowIndex nextObject])
+	for (NSNumber* numberObject in aRowArray)
 	{
 		if (0 == [numberObject intValue])
 		{
@@ -3804,68 +3803,61 @@ windowDidLoad
 													NSHeight(contentFrame) - NSHeight(kOriginalContainerFrame));
 	}
 	
-	// update the user interface using the new panels
+	// add each panel as a subview and hide all except the first;
+	// give them all the initial size of the window (in reality
+	// they will be changed to a different size before display)
+	for (NSString* panelIdentifier in self->panelIDArray)
 	{
-		NSEnumerator*	eachObject = [self->panelIDArray objectEnumerator];
+		Panel_ViewManager*	viewMgr = [self->panelsByID objectForKey:panelIdentifier];
+		NSTabViewItem*		tabItem = [[NSTabViewItem alloc] initWithIdentifier:panelIdentifier];
+		NSView*				panelContainer = [viewMgr managedView];
+		NSRect				panelFrame = kOriginalContainerFrame;
+		NSSize				panelIdealSize = panelFrame.size;
 		
 		
-		// add each panel as a subview and hide all except the first;
-		// give them all the initial size of the window (in reality
-		// they will be changed to a different size before display)
-		eachObject = [self->panelIDArray objectEnumerator];
-		while (NSString* panelIdentifier = [eachObject nextObject])
+		[[viewMgr delegate] panelViewManager:viewMgr requestingIdealSize:&panelIdealSize];
+		
+		// due to layout constraints, it is sufficient to make the
+		// panel container match the parent view frame (except with
+		// local origin); once the window is resized to its target
+		// frame, the panel will automatically resize again
+		panelFrame.origin.x = 0;
+		panelFrame.origin.y = 0;
+		[panelContainer setFrame:panelFrame];
+		[self->panelsByID setObject:viewMgr forKey:panelIdentifier];
+		
+		// initialize the “remembered window size” for each panel
+		// (this changes whenever the user resizes the window)
 		{
-			Panel_ViewManager*	viewMgr = [self->panelsByID objectForKey:panelIdentifier];
-			NSTabViewItem*		tabItem = [[NSTabViewItem alloc] initWithIdentifier:panelIdentifier];
-			NSView*				panelContainer = [viewMgr managedView];
-			NSRect				panelFrame = kOriginalContainerFrame;
-			NSSize				panelIdealSize = panelFrame.size;
+			NSArray*	sizeArray = nil;
+			NSSize		windowSize = NSMakeSize(panelIdealSize.width + self->extraWindowContentSize.width,
+												panelIdealSize.height + self->extraWindowContentSize.height);
 			
 			
-			[[viewMgr delegate] panelViewManager:viewMgr requestingIdealSize:&panelIdealSize];
-			
-			// due to layout constraints, it is sufficient to make the
-			// panel container match the parent view frame (except with
-			// local origin); once the window is resized to its target
-			// frame, the panel will automatically resize again
-			panelFrame.origin.x = 0;
-			panelFrame.origin.y = 0;
-			[panelContainer setFrame:panelFrame];
-			[self->panelsByID setObject:viewMgr forKey:panelIdentifier];
-			
-			// initialize the “remembered window size” for each panel
-			// (this changes whenever the user resizes the window)
+			// only inspector-style windows include space for a source list
+			if (kPanel_EditTypeInspector != [viewMgr panelEditType])
 			{
-				NSArray*	sizeArray = nil;
-				NSSize		windowSize = NSMakeSize(panelIdealSize.width + self->extraWindowContentSize.width,
-													panelIdealSize.height + self->extraWindowContentSize.height);
-				
-				
-				// only inspector-style windows include space for a source list
-				if (kPanel_EditTypeInspector != [viewMgr panelEditType])
-				{
-					windowSize.width -= NSWidth([self->sourceListContainer frame]);
-				}
-				
-				// choose a frame size that uses the panel’s ideal size
-				sizeArray = [NSArray arrayWithObjects:
-										[NSNumber numberWithFloat:windowSize.width],
-										[NSNumber numberWithFloat:windowSize.height],
-										nil];
-				[self->windowSizesByID setObject:sizeArray forKey:panelIdentifier];
-				
-				// also require (for now, at least) that the window be
-				// no smaller than this initial size, whenever this
-				// particular panel is displayed
-				[self->windowMinSizesByID setObject:sizeArray forKey:panelIdentifier];
+				windowSize.width -= NSWidth([self->sourceListContainer frame]);
 			}
 			
-			[tabItem setView:panelContainer];
-			[tabItem setInitialFirstResponder:[viewMgr logicalFirstResponder]];
+			// choose a frame size that uses the panel’s ideal size
+			sizeArray = [NSArray arrayWithObjects:
+									[NSNumber numberWithFloat:windowSize.width],
+									[NSNumber numberWithFloat:windowSize.height],
+									nil];
+			[self->windowSizesByID setObject:sizeArray forKey:panelIdentifier];
 			
-			[self->containerTabView addTabViewItem:tabItem];
-			[tabItem release];
+			// also require (for now, at least) that the window be
+			// no smaller than this initial size, whenever this
+			// particular panel is displayed
+			[self->windowMinSizesByID setObject:sizeArray forKey:panelIdentifier];
 		}
+		
+		[tabItem setView:panelContainer];
+		[tabItem setInitialFirstResponder:[viewMgr logicalFirstResponder]];
+		
+		[self->containerTabView addTabViewItem:tabItem];
+		[tabItem release];
 	}
 	
 	// enable drag-and-drop in the source list
@@ -4063,17 +4055,13 @@ contextInfo:(void*)					aContextPtr
 	if (NSOKButton == aReturnCode)
 	{
 		// open the files via Apple Events
-		NSArray*		toOpen = [aPanel URLs];
-		NSEnumerator*	forURLs = [toOpen objectEnumerator];
-		
-		
-		while (NSURL* currentFileURL = [forURLs nextObject])
+		for (NSURL* currentFileURL in [aPanel URLs])
 		{
 			FSRef		fileRef;
 			OSStatus	error = noErr;
 			
 			
-			if (CFURLGetFSRef((CFURLRef)currentFileURL, &fileRef))
+			if (CFURLGetFSRef(BRIDGE_CAST(currentFileURL, CFURLRef), &fileRef))
 			{
 				error = FileUtilities_OpenDocument(fileRef);
 			}
@@ -4087,7 +4075,7 @@ contextInfo:(void*)					aContextPtr
 				// TEMPORARY; should probably display a more user-friendly alert for this...
 				Sound_StandardAlert();
 				Console_Warning(Console_WriteValueCFString, "unable to open file, URL",
-								(CFStringRef)[currentFileURL absoluteString]);
+								BRIDGE_CAST([currentFileURL absoluteString], CFStringRef));
 				Console_Warning(Console_WriteValue, "error", error);
 			}
 		}
@@ -4152,7 +4140,7 @@ withAnimation:(BOOL)												isAnimated
 		if (willShowSourceList != wasShowingSourceList)
 		{
 			// change the source list visibility
-			[self updateUserInterfaceForSourceListTransition:[NSNumber numberWithBool:willShowSourceList]];
+			[self updateUserInterfaceForSourceListTransition:((willShowSourceList) ? @(YES) : @(NO))];
 			[self setSourceListHidden:(NO == willShowSourceList)];
 		}
 		else

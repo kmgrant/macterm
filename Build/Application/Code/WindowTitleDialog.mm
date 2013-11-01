@@ -898,7 +898,7 @@ titleText
 + (id)
 autoNotifyOnChangeTosetTitleText
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setTitleText:(NSString*)	aString

@@ -168,7 +168,6 @@ namespace {
 
 OSStatus		backgroundNotification			();
 void			badgeApplicationDockTile		();
-id				flagNo							();
 void			handleItemHitCarbon				(My_AlertMessagePtr, DialogItemIndex);
 void			newButtonString					(CFRetainRelease&, UIStrings_ButtonCFString);
 void			prepareForDisplay				(My_AlertMessagePtr);
@@ -1639,22 +1638,6 @@ badgeApplicationDockTile ()
 
 
 /*!
-Returns an object representing a false value, useful in many
-simple flag methods.  The given item is not used.
-
-(4.0)
-*/
-id
-flagNo ()
-{
-	BOOL	result = NO;
-	
-	
-	return [NSNumber numberWithBool:result];
-}// flagNo
-
-
-/*!
 Responds to clicks in Carbon-based alert boxes.
 
 DEPRECATED.  Use Cocoa.
@@ -2667,7 +2650,7 @@ dialogText
 + (id)
 autoNotifyOnChangeToDialogText
 {
-	return flagNo();
+	return @(NO);
 }
 - (void)
 setDialogText:(NSString*)	aString
@@ -2690,7 +2673,7 @@ helpText
 + (id)
 autoNotifyOnChangeToHelpText
 {
-	return flagNo();
+	return @(NO);
 }
 - (void)
 setHelpText:(NSString*)		aString
@@ -2768,7 +2751,7 @@ iconImageName
 + (id)
 autoNotifyOnChangeToIconImageName
 {
-	return flagNo();
+	return @(NO);
 }
 - (void)
 setIconImageName:(NSString*)	aString
@@ -2791,7 +2774,7 @@ primaryButtonText
 + (id)
 autoNotifyOnChangeToPrimaryButtonText
 {
-	return flagNo();
+	return @(NO);
 }
 - (void)
 setPrimaryButtonText:(NSString*)	aString
@@ -2813,7 +2796,7 @@ secondaryButtonText
 + (id)
 autoNotifyOnChangeToSecondaryButtonText
 {
-	return flagNo();
+	return @(NO);
 }
 - (void)
 setSecondaryButtonText:(NSString*)	aString
@@ -2836,7 +2819,7 @@ tertiaryButtonText
 + (id)
 autoNotifyOnChangeToTertiaryButtonText
 {
-	return flagNo();
+	return @(NO);
 }
 - (void)
 setTertiaryButtonText:(NSString*)	aString
@@ -2859,7 +2842,7 @@ titleText
 + (id)
 autoNotifyOnChangeToTitleText
 {
-	return flagNo();
+	return @(NO);
 }
 - (void)
 setTitleText:(NSString*)	aString

@@ -267,7 +267,6 @@ void				setUpWorkspaceFavoritesMenu						(NSMenu*);
 void				setWindowMenuItemMarkForSession					(SessionRef, NSMenuItem* = nil);
 void				showWindowTerminalWindowOp						(TerminalWindowRef, void*, SInt32, void*);
 BOOL				textSelectionExists								();
-id					validatorYes									(id <NSValidatedUserInterfaceItem>);
 
 } // anonymous namespace
 
@@ -1999,7 +1998,6 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 	
 	My_WindowsByScreen		windowsByScreen; // main screen should be visited first
 	NSArray*				allWindows = [NSApp windows];
-	NSEnumerator*			eachWindow = [allWindows objectEnumerator];
 	NSWindow*				currentWindow = nil;
 	NSWindow*				nextWindow = nil;
 	NSWindow*				previousWindow = nil;
@@ -2016,7 +2014,7 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 	// as windows are created/destroyed or as windows change
 	// screens, and otherwise not bother to recalculate the same
 	// window map each time)
-	while (nil != (currentWindow = [eachWindow nextObject]))
+	for (currentWindow in allWindows)
 	{
 		NSScreen*		windowScreen = [currentWindow screen];
 		My_WindowList&	windowsOnThisScreen = windowsByScreen[windowScreen];
@@ -2459,12 +2457,10 @@ int
 indexOfItemWithAction	(NSMenu*	inMenu,
 						 SEL		inSelector)
 {
-	NSArray*		items = [inMenu itemArray];
-	NSEnumerator*	toMenuItem = [items objectEnumerator];
-	int				result = -1;
+	int		result = -1;
 	
 	
-	while (NSMenuItem* item = [toMenuItem nextObject])
+	for (NSMenuItem* item in [inMenu itemArray])
 	{
 		if (inSelector == [item action])
 		{
@@ -3135,28 +3131,23 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 	
 	// find the commands in the menu that create sessions; these will
 	// have their key equivalents set according to user preferences
+	for (NSMenuItem* item in items)
 	{
-		NSEnumerator*	toMenuItem = [items objectEnumerator];
-		
-		
-		while (NSMenuItem* item = [toMenuItem nextObject])
+		if (@selector(performNewDefault:) == [item action])
 		{
-			if (@selector(performNewDefault:) == [item action])
-			{
-				defaultItem = item;
-			}
-			else if (@selector(performNewLogInShell:) == [item action])
-			{
-				logInShellItem = item;
-			}
-			else if (@selector(performNewShell:) == [item action])
-			{
-				shellItem = item;
-			}
-			else if (@selector(performNewCustom:) == [item action])
-			{
-				dialogItem = item;
-			}
+			defaultItem = item;
+		}
+		else if (@selector(performNewLogInShell:) == [item action])
+		{
+			logInShellItem = item;
+		}
+		else if (@selector(performNewShell:) == [item action])
+		{
+			shellItem = item;
+		}
+		else if (@selector(performNewCustom:) == [item action])
+		{
+			dialogItem = item;
 		}
 	}
 	
@@ -3713,22 +3704,6 @@ textSelectionExists ()
 	return result;
 }// textSelectionExists
 
-
-/*!
-Returns an object representing a true value, useful in many
-simple validators.  The given item is not used.
-
-(4.0)
-*/
-id
-validatorYes	(id <NSValidatedUserInterfaceItem>		UNUSED_ARGUMENT(inItem))
-{
-	BOOL	result = YES;
-	
-	
-	return [NSNumber numberWithBool:result];
-}// validatorYes
-
 } // anonymous namespace
 
 
@@ -3858,11 +3833,10 @@ dragged to the Dock icon).
 application:(NSApplication*)	sender
 openFiles:(NSArray*)			filenames
 {
-	NSEnumerator*	toPath = [filenames objectEnumerator];
-	BOOL			success = YES;
+	BOOL	success = YES;
 	
 	
-	while (NSString* path = [toPath nextObject])
+	for (NSString* path in filenames)
 	{
 		// Cocoa overzealously pulls paths from the command line and
 		// translates them into open-document requests.  The problem is,
@@ -4605,11 +4579,12 @@ performNewByFavoriteName:(id)	sender
 - (id)
 canPerformNewByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 {
+#pragma unused(anItem)
 	if (FlagManager_Test(kFlagKioskMode))
 	{
-		return [NSNumber numberWithBool:NO];
+		return @(NO);
 	}
-	return validatorYes(anItem);
+	return @(YES);
 }
 
 
@@ -4622,11 +4597,12 @@ performNewCustom:(id)		sender
 - (id)
 canPerformNewCustom:(id <NSValidatedUserInterfaceItem>)		anItem
 {
+#pragma unused(anItem)
 	if (FlagManager_Test(kFlagKioskMode))
 	{
-		return [NSNumber numberWithBool:NO];
+		return @(NO);
 	}
-	return validatorYes(anItem);
+	return @(YES);
 }
 
 
@@ -4639,11 +4615,12 @@ performNewDefault:(id)		sender
 - (id)
 canPerformNewDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 {
+#pragma unused(anItem)
 	if (FlagManager_Test(kFlagKioskMode))
 	{
-		return [NSNumber numberWithBool:NO];
+		return @(NO);
 	}
-	return validatorYes(anItem);
+	return @(YES);
 }
 
 
@@ -4656,11 +4633,12 @@ performNewLogInShell:(id)	sender
 - (id)
 canPerformNewLogInShell:(id <NSValidatedUserInterfaceItem>)		anItem
 {
+#pragma unused(anItem)
 	if (FlagManager_Test(kFlagKioskMode))
 	{
-		return [NSNumber numberWithBool:NO];
+		return @(NO);
 	}
-	return validatorYes(anItem);
+	return @(YES);
 }
 
 
@@ -4673,11 +4651,12 @@ performNewShell:(id)	sender
 - (id)
 canPerformNewShell:(id <NSValidatedUserInterfaceItem>)		anItem
 {
+#pragma unused(anItem)
 	if (FlagManager_Test(kFlagKioskMode))
 	{
-		return [NSNumber numberWithBool:NO];
+		return @(NO);
 	}
-	return validatorYes(anItem);
+	return @(YES);
 }
 
 
@@ -4734,11 +4713,12 @@ performRestoreWorkspaceDefault:(id)		sender
 - (id)
 canPerformRestoreWorkspaceDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 {
+#pragma unused(anItem)
 	if (FlagManager_Test(kFlagKioskMode))
 	{
-		return [NSNumber numberWithBool:NO];
+		return @(NO);
 	}
-	return validatorYes(anItem);
+	return @(YES);
 }
 
 
@@ -4781,11 +4761,12 @@ performRestoreWorkspaceByFavoriteName:(id)	sender
 - (id)
 canPerformRestoreWorkspaceByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 {
+#pragma unused(anItem)
 	if (FlagManager_Test(kFlagKioskMode))
 	{
-		return [NSNumber numberWithBool:NO];
+		return @(NO);
 	}
-	return validatorYes(anItem);
+	return @(YES);
 }
 
 
@@ -4798,11 +4779,12 @@ performOpen:(id)	sender
 - (id)
 canPerformOpen:(id <NSValidatedUserInterfaceItem>)		anItem
 {
+#pragma unused(anItem)
 	if (FlagManager_Test(kFlagKioskMode))
 	{
-		return [NSNumber numberWithBool:NO];
+		return @(NO);
 	}
-	return validatorYes(anItem);
+	return @(YES);
 }
 
 
@@ -4860,7 +4842,7 @@ canPerformNewTEKPage:(id <NSValidatedUserInterfaceItem>)	anItem
 	
 	if (FlagManager_Test(kFlagKioskMode))
 	{
-		return [NSNumber numberWithBool:NO];
+		return @(NO);
 	}
 	return [NSNumber numberWithBool:result];
 }
@@ -4906,7 +4888,8 @@ performCheckForUpdates:(id)		sender
 - (id)
 canPerformCheckForUpdates:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	return validatorYes(anItem);
+#pragma unused(anItem)
+	return @(YES);
 }
 
 
@@ -4919,7 +4902,8 @@ performGoToMainWebSite:(id)		sender
 - (id)
 canPerformGoToMainWebSite:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	return validatorYes(anItem);
+#pragma unused(anItem)
+	return @(YES);
 }
 
 
@@ -4974,7 +4958,8 @@ performProvideFeedback:(id)		sender
 - (id)
 canPerformProvideFeedback:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	return validatorYes(anItem);
+#pragma unused(anItem)
+	return @(YES);
 }
 
 
@@ -5443,7 +5428,7 @@ canPerformSetFunctionKeyLayoutRxvt:(id <NSValidatedUserInterfaceItem>)	anItem
 	
 	setItemCheckMark(anItem, isChecked);
 	
-	return validatorYes(anItem);
+	return @(YES);
 }
 
 
@@ -5461,7 +5446,7 @@ canPerformSetFunctionKeyLayoutVT220:(id <NSValidatedUserInterfaceItem>)	anItem
 	
 	setItemCheckMark(anItem, isChecked);
 	
-	return validatorYes(anItem);
+	return @(YES);
 }
 
 
@@ -5479,7 +5464,7 @@ canPerformSetFunctionKeyLayoutXTermX11:(id <NSValidatedUserInterfaceItem>)	anIte
 	
 	setItemCheckMark(anItem, isChecked);
 	
-	return validatorYes(anItem);
+	return @(YES);
 }
 
 
@@ -5497,7 +5482,7 @@ canPerformSetFunctionKeyLayoutXTermXFree86:(id <NSValidatedUserInterfaceItem>)	a
 	
 	setItemCheckMark(anItem, isChecked);
 	
-	return validatorYes(anItem);
+	return @(YES);
 }
 
 
@@ -6163,12 +6148,9 @@ didFindOtherScreen:(BOOL*)					outIsOtherScreen
 	
 	if ((nil != screenArray) && ([screenArray count] > 0))
 	{
-		NSEnumerator*	forScreens = [screenArray objectEnumerator];
-		
-		
 		// look at the frames of each display and see which one is
 		// most logically “close” to the window in the given direction
-		while (NSScreen* currentScreen = [forScreens nextObject])
+		for (NSScreen* currentScreen in screenArray)
 		{
 			NSRect const	kScreenFrame = [currentScreen visibleFrame];
 			BOOL			copyRect = NO;
@@ -6892,7 +6874,8 @@ orderFrontAbout:(id)	sender
 - (id)
 canOrderFrontAbout:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	return validatorYes(anItem);
+#pragma unused(anItem)
+	return @(YES);
 }
 
 
@@ -6905,7 +6888,8 @@ orderFrontClipboard:(id)	sender
 - (id)
 canOrderFrontClipboard:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	return validatorYes(anItem);
+#pragma unused(anItem)
+	return @(YES);
 }
 
 
@@ -6918,7 +6902,8 @@ orderFrontCommandLine:(id)	sender
 - (id)
 canOrderFrontCommandLine:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	return validatorYes(anItem);
+#pragma unused(anItem)
+	return @(YES);
 }
 
 
@@ -6965,7 +6950,8 @@ orderFrontControlKeys:(id)	sender
 - (id)
 canOrderFrontControlKeys:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	return validatorYes(anItem);
+#pragma unused(anItem)
+	return @(YES);
 }
 
 
@@ -6978,7 +6964,8 @@ orderFrontDebuggingOptions:(id)	sender
 - (id)
 canOrderFrontDebuggingOptions:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	return validatorYes(anItem);
+#pragma unused(anItem)
+	return @(YES);
 }
 
 
@@ -6991,7 +6978,8 @@ orderFrontIPAddresses:(id)	sender
 - (id)
 canOrderFrontIPAddresses:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	return validatorYes(anItem);
+#pragma unused(anItem)
+	return @(YES);
 }
 
 
@@ -7048,7 +7036,8 @@ orderFrontVT220FunctionKeys:(id)	sender
 - (id)
 canOrderFrontVT220FunctionKeys:(id <NSValidatedUserInterfaceItem>)		anItem
 {
-	return validatorYes(anItem);
+#pragma unused(anItem)
+	return @(YES);
 }
 
 
@@ -7061,7 +7050,8 @@ orderFrontVT220Keypad:(id)	sender
 - (id)
 canOrderFrontVT220Keypad:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	return validatorYes(anItem);
+#pragma unused(anItem)
+	return @(YES);
 }
 
 
@@ -7111,11 +7101,12 @@ orderFrontNextWindow:(id)		sender
 - (id)
 canOrderFrontNextWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 {
+#pragma unused(anItem)
 	// although other variants of this command are disallowed in
 	// Full Screen mode, a simple window cycle is OK because the
 	// rotation code is able to cycle only between Full Screen
 	// windows on the active Space (see activateAnotherWindow())
-	return validatorYes(anItem);
+	return @(YES);
 }
 
 

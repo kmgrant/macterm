@@ -2114,7 +2114,6 @@ andAction:(SEL)				aSelector
 	[self->segmentedControl setSegmentCount:[self->targets count]];
 	[self->segmentedControl setSelectedSegment:0];
 	{
-		NSEnumerator*	toObject = [self->targets objectEnumerator];
 		NSMenu*			menuRep = [[[NSMenu alloc] init] autorelease];
 		NSMenuItem*		menuItem = [[[NSMenuItem alloc] initWithTitle:@"" action:self->action keyEquivalent:@""] autorelease];
 		unsigned int	i = 0;
@@ -2124,7 +2123,7 @@ andAction:(SEL)				aSelector
 		// actions can be handled consistently by the caller; those
 		// methods reroute invocations by menu item or segmented control,
 		// and present the same sender (this NSToolbarItem) instead
-		while (id object = [toObject nextObject])
+		for (id object in self->targets)
 		{
 			NSMenuItem*		newItem = [[[NSMenuItem alloc] initWithTitle:[[object attributedDescription] string]
 																			action:@selector(performMenuAction:) keyEquivalent:@""]

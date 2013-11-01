@@ -922,13 +922,12 @@ one or more IP addresses.
 - (void)
 netServiceDidResolveAddress:(NSNetService*)		resolvingService
 {
-	NSEnumerator*	toAddressData = [[resolvingService addresses] objectEnumerator];
 	NSString*		resolvedHost = nil;
 	unsigned int	resolvedPort = 0;
 	
 	
 	//Console_WriteLine("service did resolve"); // debug
-	while (NSData* addressData = [toAddressData nextObject])
+	for (NSData* addressData in [resolvingService addresses])
 	{
 		struct sockaddr_in*		dataPtr = (struct sockaddr_in*)[addressData bytes];
 		
@@ -1533,7 +1532,7 @@ hostName
 + (id)
 autoNotifyOnChangeToHostName
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setHostName:(NSString*)		aString
@@ -1590,7 +1589,7 @@ portNumber
 + (id)
 autoNotifyOnChangeToPortNumber
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setPortNumber:(NSString*)	aString
@@ -1642,11 +1641,10 @@ protocolIndexes
 - (void)
 setProtocolIndexByProtocol:(Session_Protocol)	aProtocol
 {
-	NSEnumerator*	toProtocolDesc = [[self protocolDefinitions] objectEnumerator];
 	unsigned int	i = 0;
 	
 	
-	while (ServerBrowser_Protocol* thisProtocol = [toProtocolDesc nextObject])
+	for (ServerBrowser_Protocol* thisProtocol in [self protocolDefinitions])
 	{
 		if (aProtocol == [thisProtocol protocolID])
 		{
@@ -1659,7 +1657,7 @@ setProtocolIndexByProtocol:(Session_Protocol)	aProtocol
 + (id)
 autoNotifyOnChangeToProtocolIndexes
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setProtocolIndexes:(NSIndexSet*)	indexes
@@ -1700,7 +1698,7 @@ target
 + (id)
 autoNotifyOnChangeToTarget
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setTarget:(id)		anObject
@@ -1730,7 +1728,7 @@ userID
 + (id)
 autoNotifyOnChangeToUserID
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setUserID:(NSString*)	aString

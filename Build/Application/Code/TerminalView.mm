@@ -12628,8 +12628,7 @@ trackTextSelection	(My_TerminalViewPtr		inTerminalViewPtr,
 					if (inTerminalViewPtr->text.selection.isRectangular)
 					{
 						// rectangular selection
-						TerminalView_Cell		originalSecond = inTerminalViewPtr->text.selection.range.second;
-						CGRect					r1;
+						CGRect		r1;
 						
 						
 						if (extendSelection)
@@ -13688,10 +13687,7 @@ performFormatByFavoriteName:(id)	sender
 canPerformFormatByFavoriteName:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = YES;
-	
-	
-	return [NSNumber numberWithBool:result];
+	return @(YES);
 }
 
 
@@ -13729,10 +13725,7 @@ performFormatDefault:(id)	sender
 canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = YES;
-	
-	
-	return [NSNumber numberWithBool:result];
+	return @(YES);
 }
 
 

@@ -58,10 +58,7 @@ CFRetainRelease&	gApplicationBundle ()	{ static CFRetainRelease x; return x; }
 #pragma mark Internal Method Prototypes
 namespace {
 
-OSStatus	createImageFromBundleFile	(CFStringRef, CGImageRef&);
-OSStatus	createPictureFromFile		(SInt16, PicHandle&);
 OSStatus	launchResourceApplication	(CFStringRef);
-OSStatus	openPictureWithName			(UIStrings_FileOrFolderCFString, SInt16*);
 
 } // anonymous namespace
 
@@ -256,73 +253,6 @@ AppResources_ReturnCreatorCode ()
 namespace {
 
 /*!
-Creates a new CGImage from a PNG image file in the
-application bundle.
-
-(3.1)
-*/
-OSStatus
-createImageFromBundleFile	(CFStringRef	inPictureFileBasename,
-							 CGImageRef&	outPicture)
-{
-	OSStatus			result = resNotFound;
-	CFRetainRelease		pictureURL(CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), inPictureFileBasename,
-															CFSTR("png")/* type */, nullptr/* subpath */), true/* is retained */);
-	
-	
-	if (pictureURL.exists())
-	{
-		CGDataProviderRef	pictureReader = CGDataProviderCreateWithURL(REINTERPRET_CAST(pictureURL.returnCFTypeRef(), CFURLRef));
-		
-		
-		if (nullptr != pictureReader)
-		{
-			outPicture = CGImageCreateWithPNGDataProvider(pictureReader, nullptr/* decode */, false/* interpolate */,
-															kCGRenderingIntentDefault);
-			CFRelease(pictureReader), pictureReader = nullptr;
-			result = noErr;
-		}
-	}
-	return result;
-}// createImageFromBundleFile
-
-
-/*!
-Creates a new QuickDraw picture from a picture
-file, and returns a handle to the picture data
-(which can then be used with DrawPicture(), etc.).
-Requires QuickTime.
-
-Uses QuickDraw to open a new picture, so no picture
-can be in the process of being drawn when this
-routine is invoked.
-
-(3.0)
-*/
-OSStatus
-createPictureFromFile	(SInt16			inFileReferenceNumber,
-						 PicHandle&		outPicture)
-{
-	OSStatus			result = noErr;
-	Rect				pictureBounds;
-	OpenCPicParams		params;
-	
-	
-	result = GetPictureFileHeader(inFileReferenceNumber, &pictureBounds, &params);
-	if (result == noErr)
-	{
-		outPicture = OpenCPicture(&params);
-		if (outPicture != nullptr)
-		{
-			result = DrawPictureFile(inFileReferenceNumber, &pictureBounds, nullptr/* progress info */);
-			ClosePicture();
-		}
-	}
-	return result;
-}// createPictureFromFile
-
-
-/*!
 Attempts to open an application in this application’s
 bundle that has the specified name.
 
@@ -425,49 +355,6 @@ launchResourceApplication	(CFStringRef	inName)
 	Console_WriteValue("launch result", result);
 	return result;
 }// launchResourceApplication
-
-
-/*!
-Attempts to open a picture file with the specified
-name, searching the application bundle.
-
-(3.0)
-*/
-OSStatus
-openPictureWithName		(UIStrings_FileOrFolderCFString		inName,
-						 SInt16*							outFileReferenceNumber)
-{
-	OSStatus		result = noErr;
-	CFStringRef		nameCFString = nullptr;
-	
-	
-	if (UIStrings_Copy(inName, nameCFString).ok())
-	{
-		CFURLRef	resourceURL = nullptr;
-		
-		
-		resourceURL = CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), nameCFString,
-												nullptr/* type string */, nullptr/* subdirectory path */);
-		if (resourceURL != nullptr)
-		{
-			FSRef	resourceFSRef;
-			
-			
-			if (CFURLGetFSRef(resourceURL, &resourceFSRef))
-			{
-				result = FSOpenFork(&resourceFSRef, 0/* fork name length */, nullptr/* fork name */,
-									fsCurPerm, outFileReferenceNumber);
-			}
-			CFRelease(resourceURL);
-		}
-		CFRelease(nameCFString);
-	}
-	else
-	{
-		result = resNotFound;
-	}
-	return result;
-}// openPictureWithName
 
 } // anonymous namespace
 

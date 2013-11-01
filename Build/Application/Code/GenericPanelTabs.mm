@@ -1002,7 +1002,6 @@ initializeWithContext:(void*)			aContext
 	NSString*		givenName = [asDictionary objectForKey:@"localizedName"];
 	NSImage*		givenIcon = [asDictionary objectForKey:@"localizedIcon"];
 	NSArray*		givenViewManagers = [asDictionary objectForKey:@"viewManagerArray"];
-	NSEnumerator*	eachViewManager = [givenViewManagers objectEnumerator];
 	
 	
 	self->activePanel = nil;
@@ -1014,7 +1013,7 @@ initializeWithContext:(void*)			aContext
 	// an NSView* object is not a valid key in an NSMutableDictionary
 	// but it will certainly work as a key in an STL map
 	self->viewManagerByView = new GenericPanelTabs_ViewManagerByView();
-	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	for (Panel_ViewManager* viewMgr in givenViewManagers)
 	{
 		self->viewManagerByView->insert(std::make_pair([viewMgr managedView], viewMgr));
 	}
@@ -1032,11 +1031,8 @@ requestingEditType:(Panel_EditType*)	outEditType
 {
 #pragma unused(aViewManager)
 	// consult all tabs
-	NSEnumerator*	eachViewManager = [self->viewManagerArray objectEnumerator];
-	
-	
 	*outEditType = kPanel_EditTypeNormal;
-	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
 	{
 		Panel_EditType		newEditType = kPanel_EditTypeNormal;
 		
@@ -1067,16 +1063,13 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
-	NSEnumerator*	eachViewManager = [self->viewManagerArray objectEnumerator];
-
-
 	assert(nil != tabView);
 	
 	// arrange to be notified of certain changes
 	[tabView setDelegate:self];
 	
 	// create tabs for every view that was provided
-	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
 	{
 		NSTabViewItem*	tabItem = [[NSTabViewItem alloc] initWithIdentifier:[viewMgr panelIdentifier]];
 		
@@ -1103,13 +1096,12 @@ requestingIdealSize:(NSSize*)			outIdealSize
 #pragma unused(aViewManager)
 	NSRect			containerFrame = [[self managedView] frame];
 	NSRect			tabContentRect = [self->tabView contentRect];
-	NSEnumerator*	eachViewManager = [self->viewManagerArray objectEnumerator];
 	
 	
 	*outIdealSize = containerFrame.size;
 	
 	// find ideal size after considering all tabs
-	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
 	{
 		NSSize		panelIdealSize = *outIdealSize;
 		
@@ -1185,10 +1177,7 @@ toDataSet:(void*)						newDataSet
 {
 #pragma unused(aViewManager, oldDataSet, newDataSet)
 	// forward to all tabs
-	NSEnumerator*	eachViewManager = [self->viewManagerArray objectEnumerator];
-	
-	
-	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
 	{
 		[[viewMgr delegate] panelViewManager:viewMgr didChangeFromDataSet:oldDataSet toDataSet:newDataSet];
 	}
@@ -1210,10 +1199,7 @@ userAccepted:(BOOL)						isAccepted
 {
 #pragma unused(aViewManager, aContainerView, isAccepted)
 	// forward to all tabs
-	NSEnumerator*	eachViewManager = [self->viewManagerArray objectEnumerator];
-	
-	
-	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
 	{
 		[[viewMgr delegate] panelViewManager:viewMgr didFinishUsingContainerView:aContainerView userAccepted:isAccepted];
 	}
@@ -1280,10 +1266,9 @@ panelResizeAxes
 {
 	// consult all tabs and return the tightest constraint possible
 	Panel_ResizeConstraint	result = kPanel_ResizeConstraintBothAxes;
-	NSEnumerator*			eachViewManager = [self->viewManagerArray objectEnumerator];
 	
 	
-	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
 	{
 		Panel_ResizeConstraint	panelConstraint = [viewMgr panelResizeAxes];
 		
@@ -1357,10 +1342,9 @@ preferencesClass
 {
 	// consult all tabs to ensure that they all agree on this
 	Quills::Prefs::Class	result = Quills::Prefs::GENERAL;
-	NSEnumerator*			eachViewManager = [self->viewManagerArray objectEnumerator];
 	
 	
-	while (Panel_ViewManager* viewMgr = [eachViewManager nextObject])
+	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
 	{
 		id									panelDelegate = [viewMgr delegate];
 		assert([[panelDelegate class] conformsToProtocol:@protocol(PrefsWindow_PanelInterface)]);

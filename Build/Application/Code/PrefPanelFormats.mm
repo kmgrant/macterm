@@ -3656,14 +3656,9 @@ Destructor.
 dealloc
 {
 	// unregister observers that were used to update the sample area
+	for (NSString* keyName in [self sampleDisplayBindingKeyPaths])
 	{
-		NSEnumerator*	eachKey = [[self sampleDisplayBindingKeyPaths] objectEnumerator];
-		
-		
-		while (NSString* keyName = [eachKey nextObject])
-		{
-			[self removeObserver:self forKeyPath:keyName];
-		}
+		[self removeObserver:self forKeyPath:keyName];
 	}
 	
 	[prefsMgr release];
@@ -4050,25 +4045,15 @@ didLoadContainerView:(NSView*)			aContainerView
 	}
 	
 	// observe all properties that can affect the sample display area
+	for (NSString* keyPath in [self sampleDisplayBindingKeyPaths])
 	{
-		NSEnumerator*	eachKey = [[self sampleDisplayBindingKeyPaths] objectEnumerator];
-		
-		
-		while (NSString* keyPath = [eachKey nextObject])
-		{
-			[self addObserver:self forKeyPath:keyPath options:0 context:nullptr];
-		}
+		[self addObserver:self forKeyPath:keyPath options:0 context:nullptr];
 	}
 	
 	// note that all current values will change
+	for (NSString* keyName in [self primaryDisplayBindingKeys])
 	{
-		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
-		
-		
-		while (NSString* keyName = [eachKey nextObject])
-		{
-			[self willChangeValueForKey:keyName];
-		}
+		[self willChangeValueForKey:keyName];
 	}
 	
 	// WARNING: Key names are depended upon by bindings in the XIB file.
@@ -4123,14 +4108,9 @@ didLoadContainerView:(NSView*)			aContainerView
 					forKey:@"characterWidth"];
 	
 	// note that all values have changed (causes the display to be refreshed)
+	for (NSString* keyName in [self primaryDisplayBindingKeys])
 	{
-		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
-		
-		
-		while (NSString* keyName = [eachKey nextObject])
-		{
-			[self didChangeValueForKey:keyName];
-		}
+		[self didChangeValueForKey:keyName];
 	}
 }// panelViewManager:didLoadContainerView:
 
@@ -4202,28 +4182,18 @@ toDataSet:(void*)						newDataSet
 {
 #pragma unused(aViewManager, oldDataSet)
 	// note that all current values will change
+	for (NSString* keyName in [self primaryDisplayBindingKeys])
 	{
-		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
-		
-		
-		while (NSString* keyName = [eachKey nextObject])
-		{
-			[self willChangeValueForKey:keyName];
-		}
+		[self willChangeValueForKey:keyName];
 	}
 	
 	// now apply the specified settings
 	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
 	
 	// note that all values have changed (causes the display to be refreshed)
+	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
 	{
-		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
-		
-		
-		while (NSString* keyName = [eachKey nextObject])
-		{
-			[self didChangeValueForKey:keyName];
-		}
+		[self didChangeValueForKey:keyName];
 	}
 }// panelViewManager:didChangeFromDataSet:toDataSet:
 
@@ -4390,18 +4360,15 @@ require the sample terminal to be refreshed.
 sampleDisplayBindingKeyPaths
 {
 	NSMutableArray*		result = [NSMutableArray arrayWithCapacity:20/* arbitrary */];
-	NSEnumerator*		eachKey = nil;
 	
 	
-	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
-	while (NSString* keyName = [eachKey nextObject])
+	for (NSString* keyName in [self primaryDisplayBindingKeys])
 	{
 		[result addObject:[NSString stringWithFormat:@"%@.inherited", keyName]];
 		[result addObject:[NSString stringWithFormat:@"%@.inheritEnabled", keyName]];
 	}
 	
-	eachKey = [[self colorBindingKeys] objectEnumerator];
-	while (NSString* keyName = [eachKey nextObject])
+	for (NSString* keyName in [self colorBindingKeys])
 	{
 		[result addObject:[NSString stringWithFormat:@"%@.colorValue", keyName]];
 	}
@@ -4850,14 +4817,9 @@ didLoadContainerView:(NSView*)			aContainerView
 	self->idealFrame = [aContainerView frame];
 	
 	// note that all current values will change
+	for (NSString* keyName in [self primaryDisplayBindingKeys])
 	{
-		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
-		
-		
-		while (NSString* keyName = [eachKey nextObject])
-		{
-			[self willChangeValueForKey:keyName];
-		}
+		[self willChangeValueForKey:keyName];
 	}
 	
 	// WARNING: Key names are depended upon by bindings in the XIB file.
@@ -4927,14 +4889,9 @@ didLoadContainerView:(NSView*)			aContainerView
 					forKey:@"whiteBoldColor"];
 	
 	// note that all values have changed (causes the display to be refreshed)
+	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
 	{
-		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
-		
-		
-		while (NSString* keyName = [eachKey nextObject])
-		{
-			[self didChangeValueForKey:keyName];
-		}
+		[self didChangeValueForKey:keyName];
 	}
 }// panelViewManager:didLoadContainerView:
 
@@ -5006,27 +4963,17 @@ toDataSet:(void*)						newDataSet
 {
 #pragma unused(aViewManager, oldDataSet)
 	// note that all current values will change
+	for (NSString* keyName in [self primaryDisplayBindingKeys])
 	{
-		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
-		
-		
-		while (NSString* keyName = [eachKey nextObject])
-		{
-			[self willChangeValueForKey:keyName];
-		}
+		[self willChangeValueForKey:keyName];
 	}
 	
 	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
 	
 	// note that all values have changed (causes the display to be refreshed)
+	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
 	{
-		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
-		
-		
-		while (NSString* keyName = [eachKey nextObject])
-		{
-			[self didChangeValueForKey:keyName];
-		}
+		[self didChangeValueForKey:keyName];
 	}
 }// panelViewManager:didChangeFromDataSet:toDataSet:
 

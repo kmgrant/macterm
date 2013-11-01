@@ -382,8 +382,8 @@ The signature of the validator is expected to be:
 + (id) autoNotifyOnChangeToFooBar;
 Due to limitations in performSelector:, the result is not a
 BOOL, but rather an object of type NSNumber, whose "boolValue"
-method is called.  Validators are encouraged to use the method
-[NSNumber numberWithBool:] when returning their results.
+method is called.  Validators can return @(YES) or @(NO) for
+compile-time constant cases.
 
 See selectorNameForKeyChangeAutoNotifyFlag: and
 automaticallyNotifiesObserversForKey:.
@@ -460,32 +460,27 @@ This is useful for calls that require an object, such as
 - (void)
 setFrameWithArray:(id)		anArray
 {
-	NSRect			newFrame = [self frame];
-	NSEnumerator*	eachObject = [anArray objectEnumerator];
-	id				currentObject = nil;
-	size_t			i = 0;
+	NSRect		newFrame = [self frame];
+	size_t		i = 0;
 	
 	
-	while (nil != (currentObject = [eachObject nextObject]))
+	for (NSNumber* numberObject in anArray)
 	{
-		NSNumber*	asNumber = (NSNumber*)currentObject;
-		
-		
 		if (0 == i)
 		{
-			newFrame.origin.x = [asNumber floatValue];
+			newFrame.origin.x = [numberObject floatValue];
 		}
 		else if (1 == i)
 		{
-			newFrame.origin.y = [asNumber floatValue];
+			newFrame.origin.y = [numberObject floatValue];
 		}
 		else if (2 == i)
 		{
-			newFrame.size.width = [asNumber floatValue];
+			newFrame.size.width = [numberObject floatValue];
 		}
 		else if (3 == i)
 		{
-			newFrame.size.height = [asNumber floatValue];
+			newFrame.size.height = [numberObject floatValue];
 		}
 		++i;
 	}

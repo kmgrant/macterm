@@ -53,15 +53,6 @@
 
 
 
-#pragma mark Internal Method Prototypes
-namespace {
-
-MenuItemIndex	getMenuAndMenuItemIndexByCommandID		(UInt32, MenuRef*);
-
-} // anonymous namespace
-
-
-
 #pragma mark Public Methods
 
 /*!
@@ -372,51 +363,5 @@ MenuBar_ReturnUniqueMenuID ()
 	
 	return gMenuIDUniquifier++;
 }// ReturnUniqueMenuID
-
-
-#pragma mark Internal Methods
-namespace {
-
-/*!
-Returns the main menu and item index for an item based only on
-its command ID.  If the specified command cannot be matched with
-an item index, 0 is returned.  If the specified command cannot
-be matched with a menu, nullptr is returned via the specified menu
-handle pointer.
-
-IMPORTANT:	There are several utility functions in this file that
-			automatically use the power of this routine to get
-			and set various attributes of menu items (such as
-			item text, item enabled state and checkmarks).  If
-			you think this method is useful, be sure to first
-			check if there is not an even more useful version that
-			directly performs a command-ID-based function that you
-			need.
-
-(3.0)
-*/
-MenuItemIndex
-getMenuAndMenuItemIndexByCommandID	(UInt32		inCommandID,
-									 MenuRef*	outMenu)
-{
-	MenuItemIndex	result = 0;
-	OSStatus		error = noErr;
-	
-	
-	// These searches start from the root menu; it may be possible to
-	// write a faster scan (no speed test has been done) by making
-	// the code more dependent on known commands IDs, but this
-	// approach has definite maintainability advantages.
-	if (nullptr != outMenu)
-	{
-		error = GetIndMenuItemWithCommandID(nullptr/* starting point */, inCommandID,
-											1/* which matching item to return */,
-											outMenu/* matching menu */,
-											&result/* matching index, or nullptr */);
-	}
-	return result;
-}// getMenuAndMenuItemIndexByCommandID
-
-} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

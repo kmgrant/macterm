@@ -446,7 +446,7 @@ performRename:(id)	sender
 canPerformRename:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	return [NSNumber numberWithBool:YES];
+	return @(YES);
 }
 
 

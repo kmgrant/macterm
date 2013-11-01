@@ -1264,7 +1264,7 @@ performCopy:(id)	sender
 canPerformCopy:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	return [NSNumber numberWithBool:YES];
+	return @(YES);
 }
 
 
@@ -1321,7 +1321,7 @@ performFormatByFavoriteName:(id)	sender
 canPerformFormatByFavoriteName:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	return [NSNumber numberWithBool:YES];
+	return @(YES);
 }
 
 
@@ -1363,7 +1363,7 @@ performFormatDefault:(id)	sender
 canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	return [NSNumber numberWithBool:YES];
+	return @(YES);
 }
 
 
@@ -1403,7 +1403,7 @@ performPrintScreen:(id)		sender
 canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	return [NSNumber numberWithBool:YES];
+	return @(YES);
 }
 
 
@@ -1426,7 +1426,7 @@ performPrintSelection:(id)	sender
 canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	return [NSNumber numberWithBool:YES];
+	return @(YES);
 }
 
 
@@ -1576,8 +1576,6 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 		// stored drawing commands and replicating them
 		if (nil != canvasPtr->drawingPathElements)
 		{
-			NSEnumerator*	eachObject = [canvasPtr->drawingPathElements objectEnumerator];
-			id				currentObject = nil;
 			CGDeviceColor	scratchColor;
 			SInt16			currentFillColorIndex = 0;
 			SInt16			currentStrokeColorIndex = 0;
@@ -1598,18 +1596,13 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 			
 			// render each piece of the drawing; for a drawing that always uses the
 			// same colors and line sizes, etc. this loop will only iterate once
-			while (nil != (currentObject = [eachObject nextObject]))
+			for (VectorCanvas_Path* pathElement in canvasPtr->drawingPathElements)
 			{
-				VectorCanvas_Path*	asElement = (VectorCanvas_Path*)currentObject;
-				
-				
-				assert([currentObject isKindOfClass:[VectorCanvas_Path class]]);
-				
 				// update graphics context state if it should change
-				if (asElement->fillColorIndex != currentFillColorIndex)
+				if (pathElement->fillColorIndex != currentFillColorIndex)
 				{
-					assert((asElement->fillColorIndex >= 0) && (asElement->fillColorIndex < kMy_MaxColors));
-					if ((nil != printOp) && (kMy_ColorIndexBackground == asElement->fillColorIndex))
+					assert((pathElement->fillColorIndex >= 0) && (pathElement->fillColorIndex < kMy_MaxColors));
+					if ((nil != printOp) && (kMy_ColorIndexBackground == pathElement->fillColorIndex))
 					{
 						// when printing, do not allow the background color to print
 						// (because it might be reformatted, e.g. white-on-black);
@@ -1618,16 +1611,16 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 					}
 					else
 					{
-						getPaletteColor(canvasPtr, asElement->fillColorIndex, scratchColor);
+						getPaletteColor(canvasPtr, pathElement->fillColorIndex, scratchColor);
 						CGContextSetRGBFillColor(drawingContext, scratchColor.red, scratchColor.green,
 													scratchColor.blue, 1.0/* alpha */);
 					}
-					currentFillColorIndex = asElement->fillColorIndex;
+					currentFillColorIndex = pathElement->fillColorIndex;
 				}
-				if (asElement->strokeColorIndex != currentStrokeColorIndex)
+				if (pathElement->strokeColorIndex != currentStrokeColorIndex)
 				{
-					assert((asElement->strokeColorIndex >= 0) && (asElement->strokeColorIndex < kMy_MaxColors));
-					if ((nil != printOp) && (kMy_ColorIndexForeground == asElement->strokeColorIndex))
+					assert((pathElement->strokeColorIndex >= 0) && (pathElement->strokeColorIndex < kMy_MaxColors));
+					if ((nil != printOp) && (kMy_ColorIndexForeground == pathElement->strokeColorIndex))
 					{
 						// when printing, do not allow the foreground color to print
 						// (because it might be reformatted, e.g. white-on-black);
@@ -1636,28 +1629,28 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 					}
 					else
 					{
-						getPaletteColor(canvasPtr, asElement->strokeColorIndex, scratchColor);
+						getPaletteColor(canvasPtr, pathElement->strokeColorIndex, scratchColor);
 						CGContextSetRGBStrokeColor(drawingContext, scratchColor.red, scratchColor.green,
 													scratchColor.blue, 1.0/* alpha */);
 					}
-					currentStrokeColorIndex = asElement->strokeColorIndex;
+					currentStrokeColorIndex = pathElement->strokeColorIndex;
 				}
 				
 				// make lines thicker when the drawing is bigger, up to a certain maximum thickness
-				[asElement->bezierPath setLineWidth:std::max(std::min((contentBounds.size.width / canvasPtr->width) * asElement->normalLineWidth,
-																		asElement->normalLineWidth * 2/* arbitrary maximum */),
-																asElement->normalLineWidth / 3 * 2/* arbitrary minimum */)];
+				[pathElement->bezierPath setLineWidth:std::max(std::min((contentBounds.size.width / canvasPtr->width) * pathElement->normalLineWidth,
+																		pathElement->normalLineWidth * 2/* arbitrary maximum */),
+																pathElement->normalLineWidth / 3 * 2/* arbitrary minimum */)];
 				
 				// add the new sub-path
-				switch (asElement->drawingMode)
+				switch (pathElement->drawingMode)
 				{
 				case kCGPathFill:
-					[asElement->bezierPath fill];
+					[pathElement->bezierPath fill];
 					break;
 				
 				case kCGPathStroke:
 				default:
-					[asElement->bezierPath stroke];
+					[pathElement->bezierPath stroke];
 					break;
 				}
 			}

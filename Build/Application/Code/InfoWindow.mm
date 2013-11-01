@@ -1240,19 +1240,13 @@ table.
 infoForSession:(SessionRef)		aSession
 {
 	InfoWindow_SessionRow*	result = nil;
-	NSEnumerator*			eachObject = [self->dataArray objectEnumerator];
-	id						currentObject = nil;
 	
 	
-	while ((currentObject = [eachObject nextObject]))
+	for (InfoWindow_SessionRow* sessionRowObject in self->dataArray)
 	{
-		assert([currentObject isKindOfClass:[InfoWindow_SessionRow class]]);
-		InfoWindow_SessionRow*	asSessionRow = (InfoWindow_SessionRow*)currentObject;
-		
-		
-		if (aSession == asSessionRow->session)
+		if (aSession == sessionRowObject->session)
 		{
-			result = asSessionRow;
+			result = sessionRowObject;
 			break;
 		}
 	}
@@ -1269,23 +1263,18 @@ table, and removes it.
 - (void)
 removeSession:(SessionRef)		aSession
 {
-	NSEnumerator*	eachObject = [self->dataArray objectEnumerator];
-	id				currentObject = nil;
-	int				deletedIndex = -1;
-	int				i = 0;
+	int		deletedIndex = -1;
+	int		i = 0;
 	
 	
-	for (; ((currentObject = [eachObject nextObject])); ++i)
+	for (InfoWindow_SessionRow* sessionRowObject in self->dataArray)
 	{
-		assert([currentObject isKindOfClass:[InfoWindow_SessionRow class]]);
-		InfoWindow_SessionRow*	asSessionRow = (InfoWindow_SessionRow*)currentObject;
-		
-		
-		if (aSession == asSessionRow->session)
+		if (aSession == sessionRowObject->session)
 		{
 			deletedIndex = i;
 			break;
 		}
+		++i;
 	}
 	if (deletedIndex >= 0)
 	{

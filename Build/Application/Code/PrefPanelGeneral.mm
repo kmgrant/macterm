@@ -2974,7 +2974,6 @@ initializeWithContext:(void*)			aContext
 	{
 		NSArray*		soundNamesOnly = BRIDGE_CAST(CocoaBasic_ReturnUserSoundNames(), NSArray*);
 		NSString*		savedName = [self readBellSoundNameWithDefaultValue:@""];
-		NSEnumerator*	eachName = [soundNamesOnly objectEnumerator];
 		unsigned int	currentIndex = 0;
 		unsigned int	initialIndex = 0;
 		
@@ -2993,7 +2992,7 @@ initializeWithContext:(void*)			aContext
 			initialIndex = currentIndex;
 		}
 		++currentIndex;
-		while (NSString* soundName = [eachName nextObject])
+		for (NSString* soundName in soundNamesOnly)
 		{
 			[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc]
 												initWithDescription:soundName]
@@ -4498,14 +4497,9 @@ didLoadContainerView:(NSView*)			aContainerView
 	assert(nil != prefsMgr);
 	
 	// note that all current values will change
+	for (NSString* keyName in [self primaryDisplayBindingKeys])
 	{
-		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] objectEnumerator];
-		
-		
-		while (NSString* keyName = [eachKey nextObject])
-		{
-			[self willChangeValueForKey:keyName];
-		}
+		[self willChangeValueForKey:keyName];
 	}
 	
 	// WARNING: Key names are depended upon by bindings in the XIB file.
@@ -4516,14 +4510,9 @@ didLoadContainerView:(NSView*)			aContainerView
 					forKey:@"spacesPerTab"];
 	
 	// note that all values have changed (causes the display to be refreshed)
+	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
 	{
-		NSEnumerator*	eachKey = [[self primaryDisplayBindingKeys] reverseObjectEnumerator];
-		
-		
-		while (NSString* keyName = [eachKey nextObject])
-		{
-			[self didChangeValueForKey:keyName];
-		}
+		[self didChangeValueForKey:keyName];
 	}
 }// panelViewManager:didLoadContainerView:
 

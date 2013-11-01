@@ -281,34 +281,28 @@ CocoaBasic_FileOpenPanelDisplay		(CFStringRef	inMessage,
 	
 	if (nullptr != inMessage)
 	{
-		[thePanel setMessage:(NSString*)inMessage];
+		[thePanel setMessage:BRIDGE_CAST(inMessage, NSString*)];
 	}
 	if (nullptr != inWindowTitle)
 	{
-		[thePanel setTitle:(NSString*)inWindowTitle];
+		[thePanel setTitle:BRIDGE_CAST(inWindowTitle, NSString*)];
 	}
 	[thePanel setCanChooseDirectories:NO];
 	[thePanel setCanChooseFiles:YES];
 	[thePanel setAllowsOtherFileTypes:YES];
 	[thePanel setAllowsMultipleSelection:YES];
 	[thePanel setResolvesAliases:YES];
-	buttonHit = [thePanel runModalForTypes:(NSArray*)inAllowedFileTypes];
+	buttonHit = [thePanel runModalForTypes:BRIDGE_CAST(inAllowedFileTypes, NSArray*)];
 	result = (NSOKButton == buttonHit);
 	if (result)
 	{
-		NSArray*		toOpen = [thePanel URLs];
-		NSEnumerator*	forURLs = [toOpen objectEnumerator];
-		id				currentFile = nil;
-		
-		
-		while (nil != (currentFile = [forURLs nextObject]))
+		for (NSURL* currentFileURL in [thePanel URLs])
 		{
-			NSURL*		currentFileURL = (NSURL*)currentFile;
 			FSRef		fileRef;
 			OSStatus	error = noErr;
 			
 			
-			if (CFURLGetFSRef((CFURLRef)currentFileURL, &fileRef))
+			if (CFURLGetFSRef(BRIDGE_CAST(currentFileURL, CFURLRef), &fileRef))
 			{
 				error = FileUtilities_OpenDocument(fileRef);
 			}
@@ -320,7 +314,7 @@ CocoaBasic_FileOpenPanelDisplay		(CFStringRef	inMessage,
 			if (noErr != error)
 			{
 				Sound_StandardAlert();
-				Console_WriteValueCFString("unable to open file", (CFStringRef)[currentFileURL absoluteString]);
+				Console_WriteValueCFString("unable to open file", BRIDGE_CAST([currentFileURL absoluteString], CFStringRef));
 				Console_WriteValue("error", error);
 			}
 		}
@@ -650,21 +644,17 @@ CocoaBasic_ReturnUserSoundNames ()
 												nil];
 	NSArray* const			kSupportedFileTypes = [NSSound soundUnfilteredFileTypes];
 	NSFileManager* const	kFileManager = [NSFileManager defaultManager];
-	NSEnumerator*			toSearchPath = [kSearchPaths objectEnumerator];
 	BOOL					isDirectory = NO;
 	NSMutableArray*			result = [NSMutableArray array];
 	
 	
-	while (NSString* soundDirectory = [toSearchPath nextObject])
+	for (NSString* soundDirectory in kSearchPaths)
 	{
 		if ([kFileManager fileExistsAtPath:soundDirectory isDirectory:&isDirectory])
 		{
 			if (isDirectory)
 			{
-				NSEnumerator*	toFile = [[kFileManager directoryContentsAtPath:soundDirectory] objectEnumerator];
-				
-				
-				while (NSString* soundFile = [toFile nextObject])
+				for (NSString* soundFile in [kFileManager directoryContentsAtPath:soundDirectory])
 				{
 					if ([kSupportedFileTypes containsObject:[soundFile pathExtension]])
 					{

@@ -744,11 +744,8 @@ finalOptions:(FindDialog_Options)		options
 	
 	self->cachedOptions = options;
 	{
-		NSEnumerator*	toString = [[[aViewMgr searchField] recentSearches] objectEnumerator];
-		
-		
 		[self->historyArray removeAllObjects];
-		while (id object = [toString nextObject])
+		for (id object in [[aViewMgr searchField] recentSearches])
 		{
 			if ([object isKindOfClass:[NSString class]])
 			{
@@ -1280,7 +1277,7 @@ searchText
 + (id)
 autoNotifyOnChangeToSearchText
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setSearchText:(NSString*)	aString
@@ -1302,7 +1299,7 @@ statusText
 + (id)
 autoNotifyOnChangeToStatusText
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setStatusText:(NSString*)	aString
