@@ -5036,7 +5036,7 @@ copySelectedTextIfUserPreference	(My_TerminalViewPtr		inTerminalViewPtr)
 			copySelectedText = false; // assume text isn’t automatically copied, if preference can’t be found
 		}
 		
-		if (copySelectedText) Clipboard_TextToScrap(inTerminalViewPtr->selfRef, kClipboard_CopyMethodTable);
+		if (copySelectedText) Clipboard_TextToScrap(inTerminalViewPtr->selfRef, kClipboard_CopyMethodStandard);
 	}
 }// copySelectedTextIfUserPreference
 

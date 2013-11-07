@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20131106',
     '20131027',
     '20131024',
     '20131005',
@@ -485,6 +486,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20131106': [
+        'Fixed "Automatically Copy selected text" preference to perform a normal Copy and not an implicit "Copy with Tab Substitution".  The presence of tabs was particularly surprising when selecting a line and pasting it at a shell prompt because the tabs had no obvious effect and the pasted line lost all of its whitespace.',
+    ],
     '20131027': [
         'Fixed a problem with the recognition of double-clicks and triple-clicks in terminal windows on Mac OS X 10.9.',
     ],
