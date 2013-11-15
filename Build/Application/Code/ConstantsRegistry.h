@@ -391,8 +391,9 @@ enum
 	kFlagOS10_5API					= (kFlagManager_FirstValidFlag + 8),	//!< is Mac OS 10.5 or later in use?
 	kFlagOS10_6API					= (kFlagManager_FirstValidFlag + 9),	//!< is Mac OS 10.6 or later in use?
 	kFlagOS10_7API					= (kFlagManager_FirstValidFlag + 10),	//!< is Mac OS 10.7 or later in use?
-	kFlagOS10_8API					= (kFlagManager_FirstValidFlag + 11),	//!< is Mac OS 10.7 or later in use?
-	kFlagSuspended					= (kFlagManager_FirstValidFlag + 12),	//!< is this application’s process in the background?
+	kFlagOS10_8API					= (kFlagManager_FirstValidFlag + 11),	//!< is Mac OS 10.8 or later in use?
+	kFlagOS10_9API					= (kFlagManager_FirstValidFlag + 12),	//!< is Mac OS 10.9 or later in use?
+	kFlagSuspended					= (kFlagManager_FirstValidFlag + 13),	//!< is this application’s process in the background?
 	kFlagUserOverrideAutoNew		= (kFlagManager_FirstValidFlag + 14)	//!< skip auto-new-window on application launch?
 };
 

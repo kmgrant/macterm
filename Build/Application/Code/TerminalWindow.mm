@@ -3494,7 +3494,7 @@ createViews		(My_TerminalWindowPtr	inPtr)
 	inPtr->scrollProcUPP = NewControlActionUPP(scrollProc); // this is disposed via TerminalWindow_Dispose()
 	
 	// create a vertical scroll bar; the resize event handler initializes its size correctly
-	SetRect(&rect, 0, 0, 0, 0);
+	bzero(&rect, sizeof(rect));
 	error = CreateScrollBarControl(returnCarbonWindow(inPtr), &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
 									true/* live tracking */, inPtr->scrollProcUPP, &inPtr->controls.scrollBarV);
 	assert_noerr(error);
@@ -3506,7 +3506,7 @@ createViews		(My_TerminalWindowPtr	inPtr)
 	assert_noerr(error);
 	
 	// create a horizontal scroll bar; the resize event handler initializes its size correctly
-	SetRect(&rect, 0, 0, 0, 0);
+	bzero(&rect, sizeof(rect));
 	error = CreateScrollBarControl(returnCarbonWindow(inPtr), &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
 									true/* live tracking */, inPtr->scrollProcUPP, &inPtr->controls.scrollBarH);
 	assert_noerr(error);

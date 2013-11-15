@@ -669,7 +669,7 @@ const
 		Rect	containerBounds;
 		
 		
-		SetRect(&containerBounds, 0, 0, 0, 0);
+		bzero(&containerBounds, sizeof(containerBounds));
 		error = CreateUserPaneControl(inOwningWindow, &containerBounds, kControlSupportsEmbedding, &result);
 		assert_noerr(error);
 		Panel_SetContainerView(inPanel, result);
@@ -763,7 +763,7 @@ const
 									tabInfo[kMy_TabIndexGeneralSpecial - 1].name);
 	stringResult = UIStrings_Copy(kUIStrings_PrefPanelGeneralNotificationTabName,
 									tabInfo[kMy_TabIndexGeneralNotification - 1].name);
-	SetRect(&containerBounds, 0, 0, 0, 0);
+	bzero(&containerBounds, sizeof(containerBounds));
 	error = CreateTabsControl(inOwningWindow, &containerBounds, kControlTabSizeLarge, kControlTabDirectionNorth,
 								sizeof(tabInfo) / sizeof(ControlTabEntry)/* number of tabs */, tabInfo,
 								&result);
@@ -927,7 +927,7 @@ const
 	
 	
 	// create the tab pane
-	SetRect(&dummy, 0, 0, 0, 0);
+	bzero(&dummy, sizeof(dummy));
 	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
 	assert_noerr(error);
 	
@@ -1175,7 +1175,7 @@ const
 	
 	
 	// create the tab pane
-	SetRect(&dummy, 0, 0, 0, 0);
+	bzero(&dummy, sizeof(dummy));
 	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
 	assert_noerr(error);
 	
@@ -1477,7 +1477,7 @@ const
 	
 	
 	// create the tab pane
-	SetRect(&dummy, 0, 0, 0, 0);
+	bzero(&dummy, sizeof(dummy));
 	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
 	assert_noerr(error);
 	

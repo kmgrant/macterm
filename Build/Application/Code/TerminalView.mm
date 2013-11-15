@@ -392,7 +392,6 @@ TerminalView_PixelHeight	viewHeightInPixels;		//   always identical to the curre
 			NSFont*				boldFont;		// alternate font for bold-weighted text (might match "normalFont" if no special font is found)
 			Boolean				isMonospaced;	// whether every character in the font is the same width (expected to be true)
 			Str255				familyName;		// font name (as might appear in a Font menu)
-			CFStringEncoding	encoding;		// encoding actually used by font, which may be different than what the terminal uses!
 			struct Metrics
 			{
 				SInt16		ascent;			// number of pixels highest character extends above the base line
@@ -10924,7 +10923,7 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 					// the text area is designed to draw on top of a background widget,
 					// so in general it is not really considered opaque anywhere (this
 					// could be changed for certain cases, however)
-					SetRect(&partBounds, 0, 0, 0, 0);
+					bzero(&partBounds, sizeof(partBounds));
 					break;
 				
 				case kTerminalView_ContentPartCursor:
@@ -10937,7 +10936,7 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 				
 				case kTerminalView_ContentPartVoid:
 				default:
-					SetRect(&partBounds, 0, 0, 0, 0);
+					bzero(&partBounds, sizeof(partBounds));
 					break;
 				}
 				
@@ -11956,19 +11955,6 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 	if (inCharacterWidthScalingOrZero > 0)
 	{
 		inTerminalViewPtr->text.font.scaleWidthPerCharacter = inCharacterWidthScalingOrZero;
-	}
-	
-	// determine the encoding supported by the font
-	{
-		TextEncoding	encoding = kTextEncodingMacRoman;
-		OSStatus		error = Localization_GetFontTextEncoding(inTerminalViewPtr->text.font.familyName, &encoding);
-		
-		
-		if (noErr != error)
-		{
-			Console_Warning(Console_WriteLine, "unable to determine encoding used by active font");
-		}
-		inTerminalViewPtr->text.font.encoding = encoding; // TextEncoding is compatible with CFStringEncoding
 	}
 	
 	// set the font metrics (including double size)

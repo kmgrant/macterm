@@ -40,7 +40,6 @@
 		0AC6BAE20A8C0BA000AFF37A /* InternetPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */; };
 		0AC6BAE30A8C0BA000AFF37A /* MenuBar.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFB055432A400ACDF3A /* MenuBar.cp */; };
 		0AC6BAE50A8C0BA000AFF37A /* WindowTitleDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE3C055432A400ACDF3A /* WindowTitleDialog.mm */; };
-		0AC6BAE60A8C0BA000AFF37A /* DialogTransitions.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDCF055432A400ACDF3A /* DialogTransitions.cp */; };
 		0AC6BAE70A8C0BA000AFF37A /* SessionFactory.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE17055432A400ACDF3A /* SessionFactory.cp */; };
 		0AC6BAE80A8C0BA000AFF37A /* ColorBox.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC0055432A400ACDF3A /* ColorBox.cp */; };
 		0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */; };
@@ -275,7 +274,6 @@
 		0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ContextSensitiveMenu.h; path = Shared/Code/ContextSensitiveMenu.h; sourceTree = "<group>"; };
 		0A4603D30554376100ACDF3A /* Cursors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Cursors.h; path = Shared/Code/Cursors.h; sourceTree = "<group>"; };
 		0A4603D50554376100ACDF3A /* DialogAdjust.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DialogAdjust.h; path = Shared/Code/DialogAdjust.h; sourceTree = "<group>"; };
-		0A4603D70554376100ACDF3A /* DialogTransitions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DialogTransitions.h; path = Application/Code/DialogTransitions.h; sourceTree = "<group>"; };
 		0A4603D80554376100ACDF3A /* DialogUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DialogUtilities.h; path = Application/Code/DialogUtilities.h; sourceTree = "<group>"; };
 		0A4603D90554376100ACDF3A /* DNR.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DNR.h; path = Application/Code/DNR.h; sourceTree = "<group>"; };
 		0A4603DA0554376100ACDF3A /* DragAndDrop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DragAndDrop.h; path = Application/Code/DragAndDrop.h; sourceTree = "<group>"; };
@@ -350,7 +348,6 @@
 		0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ContextSensitiveMenu.mm; path = Shared/Code/ContextSensitiveMenu.mm; sourceTree = "<group>"; };
 		0A46FDCC055432A400ACDF3A /* Cursors.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Cursors.cp; path = Shared/Code/Cursors.cp; sourceTree = "<group>"; };
 		0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DialogAdjust.cp; path = Shared/Code/DialogAdjust.cp; sourceTree = "<group>"; };
-		0A46FDCF055432A400ACDF3A /* DialogTransitions.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DialogTransitions.cp; path = Application/Code/DialogTransitions.cp; sourceTree = "<group>"; };
 		0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DialogUtilities.cp; path = Application/Code/DialogUtilities.cp; sourceTree = "<group>"; };
 		0A46FDD1055432A400ACDF3A /* DNR.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DNR.cp; path = Application/Code/DNR.cp; sourceTree = "<group>"; };
 		0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DragAndDrop.cp; path = Application/Code/DragAndDrop.cp; sourceTree = "<group>"; };
@@ -765,7 +762,6 @@
 				0A46FDC3055432A400ACDF3A /* Commands.mm */,
 				0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */,
 				0ABD01CF1068000A00BBB87A /* DebugInterface.mm */,
-				0A46FDCF055432A400ACDF3A /* DialogTransitions.cp */,
 				0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */,
 				0A46FDD1055432A400ACDF3A /* DNR.cp */,
 				0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */,
@@ -827,7 +823,6 @@
 				0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */,
 				0A4603D30554376100ACDF3A /* Cursors.h */,
 				0ABD01D11068002C00BBB87A /* DebugInterface.h */,
-				0A4603D70554376100ACDF3A /* DialogTransitions.h */,
 				0A4603D80554376100ACDF3A /* DialogUtilities.h */,
 				0A4603D90554376100ACDF3A /* DNR.h */,
 				0A4603DA0554376100ACDF3A /* DragAndDrop.h */,
@@ -1395,7 +1390,6 @@
 				0AC6BAE20A8C0BA000AFF37A /* InternetPrefs.cp in Sources */,
 				0AC6BAE30A8C0BA000AFF37A /* MenuBar.cp in Sources */,
 				0AC6BAE50A8C0BA000AFF37A /* WindowTitleDialog.mm in Sources */,
-				0AC6BAE60A8C0BA000AFF37A /* DialogTransitions.cp in Sources */,
 				0AC6BAE70A8C0BA000AFF37A /* SessionFactory.cp in Sources */,
 				0AC6BAE80A8C0BA000AFF37A /* ColorBox.cp in Sources */,
 				0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */,

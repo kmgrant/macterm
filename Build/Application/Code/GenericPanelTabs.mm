@@ -283,7 +283,7 @@ createContainerView		(Panel_Ref		inPanel,
 		Rect	containerBounds;
 		
 		
-		SetRect(&containerBounds, 0, 0, 0, 0);
+		bzero(&containerBounds, sizeof(containerBounds));
 		error = CreateUserPaneControl(inOwningWindow, &containerBounds, kControlSupportsEmbedding, &result);
 		assert_noerr(error);
 		Panel_SetContainerView(inPanel, result);
@@ -396,7 +396,7 @@ createTabsView	(HIWindowRef	inOwningWindow)
 		tabInfo[i].enabled = true;
 		Panel_GetName(this->tabPanePtrList[i]->panelRef, tabInfo[i].name);
 	}
-	SetRect(&containerBounds, 0, 0, 0, 0);
+	bzero(&containerBounds, sizeof(containerBounds));
 	error = CreateTabsControl(inOwningWindow, &containerBounds, kControlTabSizeLarge, kControlTabDirectionNorth,
 								sizeof(tabInfo) / sizeof(ControlTabEntry)/* number of tabs */, tabInfo,
 								&result);

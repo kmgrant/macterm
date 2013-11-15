@@ -375,14 +375,15 @@ Initialize_SetVersionFlags ()
 	
 	// any advanced APIs available?
 	FlagManager_Set(kFlagOS10_0API, true); // this source tree is Mac OS X only
-	FlagManager_Set(kFlagOS10_1API, (((majorRev == 0x0A) && (minorRev >= 0x01)) || (majorRev > 0x0A)));
-	FlagManager_Set(kFlagOS10_2API, (((majorRev == 0x0A) && (minorRev >= 0x02)) || (majorRev > 0x0A)));
-	FlagManager_Set(kFlagOS10_3API, (((majorRev == 0x0A) && (minorRev >= 0x03)) || (majorRev > 0x0A)));
-	FlagManager_Set(kFlagOS10_4API, (((majorRev == 0x0A) && (minorRev >= 0x04)) || (majorRev > 0x0A)));
-	FlagManager_Set(kFlagOS10_5API, (((majorRev == 0x0A) && (minorRev >= 0x05)) || (majorRev > 0x0A)));
-	FlagManager_Set(kFlagOS10_6API, (((majorRev == 0x0A) && (minorRev >= 0x06)) || (majorRev > 0x0A)));
+	FlagManager_Set(kFlagOS10_1API, true); // this source tree has a minimum SDK
+	FlagManager_Set(kFlagOS10_2API, true); // this source tree has a minimum SDK
+	FlagManager_Set(kFlagOS10_3API, true); // this source tree has a minimum SDK
+	FlagManager_Set(kFlagOS10_4API, true); // this source tree has a minimum SDK
+	FlagManager_Set(kFlagOS10_5API, true); // this source tree has a minimum SDK
+	FlagManager_Set(kFlagOS10_6API, true); // this source tree has a minimum SDK
 	FlagManager_Set(kFlagOS10_7API, (((majorRev == 0x0A) && (minorRev >= 0x07)) || (majorRev > 0x0A)));
 	FlagManager_Set(kFlagOS10_8API, (((majorRev == 0x0A) && (minorRev >= 0x08)) || (majorRev > 0x0A)));
+	FlagManager_Set(kFlagOS10_9API, (((majorRev == 0x0A) && (minorRev >= 0x09)) || (majorRev > 0x0A)));
 }// SetVersionFlags
 
 
@@ -415,11 +416,6 @@ initApplicationCore ()
 		{
 			// then the text reads from the right side of a page to the left (the opposite of North America)
 			flags |= kLocalization_InitFlagReadTextRightToLeft;
-		}
-		if (false/* I can’t think of an appropriate Script Manager variable for determining this */)
-		{
-			// then the text reads from the bottom of a page to the top (the opposite of North America)
-			flags |= kLocalization_InitFlagReadTextBottomToTop;
 		}
 		
 		Localization_Init(flags);

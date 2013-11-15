@@ -977,7 +977,7 @@ createContainerView		(Panel_Ref		inPanel,
 	
 	
 	// create the tab pane
-	SetRect(&dummy, 0, 0, 0, 0);
+	bzero(&dummy, sizeof(dummy));
 	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
 	assert_noerr(error);
 	Panel_SetContainerView(inPanel, result);
@@ -1625,7 +1625,7 @@ createContainerView		(Panel_Ref		inPanel,
 	
 	
 	// create the tab pane
-	SetRect(&dummy, 0, 0, 0, 0);
+	bzero(&dummy, sizeof(dummy));
 	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
 	assert_noerr(error);
 	Panel_SetContainerView(inPanel, result);
@@ -2065,7 +2065,7 @@ createContainerView		(Panel_Ref		inPanel,
 	
 	
 	// create the tab pane
-	SetRect(&dummy, 0, 0, 0, 0);
+	bzero(&dummy, sizeof(dummy));
 	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
 	assert_noerr(error);
 	Panel_SetContainerView(inPanel, result);
@@ -3012,7 +3012,7 @@ createContainerView		(Panel_Ref		inPanel,
 	
 	
 	// create the tab pane
-	SetRect(&dummy, 0, 0, 0, 0);
+	bzero(&dummy, sizeof(dummy));
 	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
 	assert_noerr(error);
 	Panel_SetContainerView(inPanel, result);

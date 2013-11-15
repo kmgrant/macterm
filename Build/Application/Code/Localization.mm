@@ -70,15 +70,12 @@ namespace {
 
 CFRetainRelease		gApplicationNameCFString;
 Boolean				gLeftToRight = true;		// text reads left-to-right?
-Boolean				gTopToBottom = true;		// text reads top-to-bottom?
 
 } // anonymous namespace
 
 #pragma mark Internal Method Prototypes
 namespace {
 
-OSStatus	getControlFontInfo	(ControlFontStyleRec const*, ConstStringPtr, Str255, SInt16*, Style*,
-								 UInt16*, UInt16*);
 OSStatus	getThemeFontInfo	(ThemeFontID, ConstStringPtr, Str255, SInt16*, Style*, UInt16*, UInt16*);
 OSStatus	setControlFontInfo	(ControlRef, ConstStringPtr, SInt16, Style);
 
@@ -105,7 +102,6 @@ Localization_Init	(UInt32		inFlags)
 	gApplicationNameCFString = CFBundleGetValueForInfoDictionaryKey
 								(AppResources_ReturnBundleForInfo(), CFSTR("CFBundleName"));
 	gLeftToRight = !(inFlags & kLocalization_InitFlagReadTextRightToLeft);
-	gTopToBottom = !(inFlags & kLocalization_InitFlagReadTextBottomToTop);
 }// Init
 
 
@@ -124,7 +120,7 @@ Localization_AdjustHelpButtonControl	(ControlRef		inControl)
 	Rect	controlRect;
 	
 	
-	SetRect(&windowRect, 0, 0, 0, 0);
+	bzero(&windowRect, sizeof(windowRect));
 	UNUSED_RETURN(OSStatus)GetWindowBounds(GetControlOwner(inControl), kWindowContentRgn, &windowRect);
 	GetControlBounds(inControl, &controlRect);
 	
@@ -178,7 +174,7 @@ Localization_ArrangeButtonArray		(ControlRef const*	inButtons,
 	Rect				windowRect;
 	
 	
-	SetRect(&windowRect, 0, 0, 0, 0);
+	bzero(&windowRect, sizeof(windowRect));
 	if (inButtonCount > 0)
 	{
 		UNUSED_RETURN(OSStatus)GetWindowBounds(GetControlOwner(inButtons[0]), kWindowContentRgn, &windowRect);
@@ -236,153 +232,6 @@ Localization_ArrangeButtonArray		(ControlRef const*	inButtons,
 		}
 	}
 }// ArrangeButtonArray
-
-
-/*!
-Moves a set of controls so that they fit inside
-the given rectangle in a grid layout, each ideally
-separated by the given amount of space in pixels.
-On output, the actual bounding rectangle of the
-grid is returned (almost always, the actual
-boundaries will be smaller).  Returns "true" as
-long as the specified set of controls fits into
-the boundaries according to the given spacings.
-
-The spacings are signed because you may want them
-to be negative (implies scrunched controls).  In
-certain cases, especially if you MUST collect a
-large number of controls in a space that is not
-strictly large enough, this routine can still be
-used to lay out controls that are overlapping.
-
-Items are arranged using a “cursor” mechanism;
-that is, a cursor remains on a row as long as the
-row’s total width (for controls, spacings) is not
-beyond the constraint rectangle.  The height of a
-row is the height of the “tallest” control in that
-row.  When the cursor is asked to move horizontally
-beyond the boundaries, it moves to a new grid row
-(downward in top-to-bottom locales, upward in
-bottom-to-top locales).
-
-For best-looking results, provide controls that all
-have the same height in pixels.  Currently, there
-is no way to say that an unusually-shaped control
-should span multiple grid rows or columns.
-
-(1.0)
-*/
-Boolean
-Localization_ArrangeControlsInRows		(Rect*							inoutBoundsPtr,
-										 ControlRef*					inControlList,
-										 UInt16							inControlListLength,
-										 SInt16							inSpacingH,
-										 SInt16							inSpacingV,
-										 LocalizationRowLayoutFlags		inFlags)
-{
-	Boolean const	kArrangeControlsLeftToRight = (inFlags & kLocalizationRowLayoutFlagsReverseSystemDirectionH)
-													? !Localization_IsLeftToRight()
-													: Localization_IsLeftToRight();
-	Boolean const	kArrangeControlsTopToBottom = (inFlags & kLocalizationRowLayoutFlagsReverseSystemDirectionV)
-													? !Localization_IsTopToBottom()
-													: Localization_IsTopToBottom();
-	UInt16 const	kLayoutWidth = (inoutBoundsPtr->right - inoutBoundsPtr->left);
-	UInt16 const	kCursorHReset = (kArrangeControlsLeftToRight) ? inoutBoundsPtr->left : inoutBoundsPtr->right;
-	UInt16			cursorH = kCursorHReset;
-	UInt16			cursorV = (kArrangeControlsTopToBottom) ? inoutBoundsPtr->top : inoutBoundsPtr->bottom;
-	UInt16			currentRowWidthInPixels = 0,
-					currentControlWidthInPixels = 0;
-	UInt16			currentRowHeight = 0;
-	Rect			controlBounds;
-	Boolean			result = true;
-	
-	
-	// arrange all controls
-	for (UInt16 i = 0; i < inControlListLength; ++i)
-	{
-		// find width of current control
-		GetControlBounds(inControlList[i], &controlBounds);
-		currentControlWidthInPixels = (controlBounds.right - controlBounds.left);
-		
-		// if the control width is actually larger than the boundaries,
-		// this is the one case where the layout may horizontally expand
-		if (currentControlWidthInPixels > kLayoutWidth)
-		{
-			// set final horizontal boundary, depending on which
-			// direction the layout would likely need to expand
-			if (kArrangeControlsLeftToRight)
-			{
-				inoutBoundsPtr->right = inoutBoundsPtr->left + currentControlWidthInPixels + inSpacingH;
-			}
-			else
-			{
-				inoutBoundsPtr->left = inoutBoundsPtr->right - currentControlWidthInPixels - inSpacingH;
-			}
-		}
-		
-		// set up other variables for the current control
-		currentRowWidthInPixels += currentControlWidthInPixels;
-		if (currentRowWidthInPixels > kLayoutWidth)
-		{
-			// no room, make a new row (resetting variables)
-			cursorH = kCursorHReset;
-			if (kArrangeControlsTopToBottom) cursorV += (currentRowHeight + inSpacingV);
-			else cursorV -= (currentRowHeight + inSpacingV);
-			currentRowWidthInPixels = (currentControlWidthInPixels + inSpacingH);
-			currentRowHeight = 0;
-		}
-		else
-		{
-			// still room, add in control spacing value
-			currentRowWidthInPixels += inSpacingH;
-		}
-		currentRowHeight = INTEGER_MAXIMUM(currentRowHeight, controlBounds.bottom - controlBounds.top);
-		
-		// now arrange the control at the cursor location, but note
-		// that the location is always the top-left corner, which
-		// will not always be the cursor location (locale-dependent)
-		if (kArrangeControlsLeftToRight)
-		{
-			if (kArrangeControlsTopToBottom) MoveControl(inControlList[i], cursorH, cursorV);
-			else MoveControl(inControlList[i], cursorH, cursorV - currentRowHeight);
-		}
-		else
-		{
-			if (kArrangeControlsTopToBottom) MoveControl(inControlList[i], cursorH - currentControlWidthInPixels, cursorV);
-			else MoveControl(inControlList[i], cursorH - currentControlWidthInPixels,
-								cursorV - currentRowHeight);
-		}
-		
-		// if requested, automatically hide controls outside the boundary and show all others
-		if (inFlags & kLocalizationRowLayoutFlagsSetVisibilityOnOverflow)
-		{
-			Rect	unionRect;
-			
-			
-			GetControlBounds(inControlList[i], &controlBounds);
-			UnionRect(&controlBounds, inoutBoundsPtr, &unionRect);
-			if (EqualRect(inoutBoundsPtr, &unionRect))
-			{
-				SetControlVisibility(inControlList[i], true/* visible */, true/* draw */);
-			}
-			else
-			{
-				SetControlVisibility(inControlList[i], false/* visible */, false/* draw */);
-			}
-		}
-		
-		// move the cursor
-		if (kArrangeControlsLeftToRight) cursorH += (currentControlWidthInPixels + inSpacingH);
-		else cursorH -= (currentControlWidthInPixels + inSpacingH);
-	}
-	
-	// set final vertical boundary, depending on which edge the
-	// cursor may actually cross
-	if (kArrangeControlsTopToBottom) inoutBoundsPtr->bottom = cursorV;
-	else inoutBoundsPtr->top = cursorV;
-	
-	return result;
-}// ArrangeControlsInRows
 
 
 /*!
@@ -499,82 +348,6 @@ Localization_GetCurrentApplicationNameAsCFString	(CFStringRef*		outProcessDispla
 
 
 /*!
-Returns the text encoding base for the specified
-font.  This can be used to create a new text
-encoding converter.
-
-(3.0)
-*/
-OSStatus
-Localization_GetFontTextEncoding	(ConstStringPtr		inFontName,
-									 TextEncoding*		outTextEncoding)
-{
-	OSStatus	result = noErr;
-	
-	
-	if (outTextEncoding == nullptr) result = memPCErr;
-	else
-	{
-		//LangCode		textLanguageID = GetScriptVariable(smSystemScript, smScriptLang);
-		SInt16			fontID = 0;
-		ScriptCode		scriptCode = smRoman;
-		TextEncoding	encoding = kTextEncodingMacRoman;
-		
-		
-		GetFNum(inFontName, &fontID);
-		scriptCode = FontToScript(fontID);
-		
-		// The Mac OS uses a giant map to determine the proper encoding for
-		// “special cases” (such as Icelandic) that use the Roman script;
-		// in these cases, the script code alone isn’t enough to choose the
-		// right encoding, so the system localization itself is used!  To
-		// get this behavior, the language and region must be “don’t care”.
-		result = UpgradeScriptInfoToTextEncoding(scriptCode, kTextLanguageDontCare, kTextRegionDontCare,
-													inFontName, &encoding);
-	}
-	
-	return result;
-}// GetFontTextEncoding
-
-
-/*!
-Arranges the specified control so that its bisector
-is aligned with the bisector of its parent, resulting
-in the left half of the control being to the left of
-the bisector (and the right half to the right of it).
-
-(1.0)
-*/
-void
-Localization_HorizontallyCenterControlWithinContainer	(ControlRef		inControlToCenterHorizontally,
-														 ControlRef		inContainerOrNullToUseHierarchyParent)
-{
-	ControlRef	container = inContainerOrNullToUseHierarchyParent;
-	Rect		controlBounds;
-	Rect		containerBounds;
-	
-	
-	if (container == nullptr)
-	{
-		if (GetSuperControl(inControlToCenterHorizontally, &inContainerOrNullToUseHierarchyParent) != noErr)
-		{
-			container = nullptr;
-		}
-	}
-	
-	if (container != nullptr)
-	{
-		GetControlBounds(inControlToCenterHorizontally, &controlBounds);
-		GetControlBounds(container, &containerBounds);
-		MoveControl(inControlToCenterHorizontally,
-					containerBounds.left + INTEGER_HALVED((containerBounds.right - containerBounds.left) -
-															(controlBounds.right - controlBounds.left)),
-					controlBounds.top);
-	}
-}// HorizontallyCenterControlWithinContainer
-
-
-/*!
 Conditionally rearranges two controls horizontally
 so that the left and right edges of the smallest
 rectangle bounding both controls remains the same
@@ -632,23 +405,6 @@ Localization_IsLeftToRight ()
 
 
 /*!
-Determines if the Localization module was
-initialized such that text reads top to
-bottom (such as in North America).
-
-(1.0)
-*/
-Boolean
-Localization_IsTopToBottom ()
-{
-	Boolean		result = gTopToBottom;
-	
-	
-	return result;
-}// IsTopToBottom
-
-
-/*!
 Saves the current font, font size, font style,
 and text mode of the current graphics port.
 
@@ -691,63 +447,6 @@ Localization_RestorePortFontState	(GrafPortFontState const*	inState)
 
 
 /*!
-Determines the height required to fit a single
-line of text in the specified theme font.  If
-no API exists (i.e. earlier than Appearance 1.1)
-to calculate the font exactly, the font constant
-is used to determine the correct value for a
-“reasonable font” (if you ask for the system
-font, you get a 12-point system font height, for
-most others you get 10-point Geneva, etc.).
-
-(1.0)
-*/
-UInt16
-Localization_ReturnSingleLineTextHeight		(ThemeFontID	inThemeFontToUse)
-{
-	UInt16		result = 0;
-	SInt16		fontSize = 0;
-	Style		fontStyle = normal;
-	Str255		fontName;
-	
-	
-	if (getThemeFontInfo(inThemeFontToUse, nullptr/* string to calculate width of - unused */,
-							fontName, &fontSize, &fontStyle, nullptr/* string width - unused */,
-							&result/* font height */) != noErr) result = 0;
-	return result;
-}// ReturnSingleLineTextHeight
-
-
-/*!
-Determines the width required to fit the given
-line of text in the specified theme font.  If
-no API exists (i.e. earlier than Appearance 1.1)
-to calculate the font exactly, the font constant
-is used to determine the correct value for a
-“reasonable font” (if you ask for the system
-font, you get a 12-point system font height, for
-most others you get 10-point Geneva, etc.).
-
-(1.0)
-*/
-UInt16
-Localization_ReturnSingleLineTextWidth	(ConstStringPtr		inString,
-										 ThemeFontID		inThemeFontToUse)
-{
-	UInt16		result = 0;
-	SInt16		fontSize = 0;
-	Style		fontStyle = normal;
-	Str255		fontName;
-	
-	
-	if (getThemeFontInfo(inThemeFontToUse, inString/* string to calculate width of */,
-							fontName, &fontSize, &fontStyle, &result/* string width */,
-							nullptr/* font height - unused */) != noErr) result = 0;
-	return result;
-}// ReturnSingleLineTextWidth
-
-
-/*!
 Sets the specified control’s font, font size,
 and font style to match the indicated theme
 font.  If no API is available to determine
@@ -778,215 +477,6 @@ Localization_SetControlThemeFontInfo	(ControlRef		inControl,
 	}
 	return result;
 }// SetControlThemeFontInfo
-
-
-/*!
-Automatically sets the contents and height of a
-text control (editable or static) to accommodate
-its font, style and size info.  The width of the
-control is not changed.
-
-The chosen height for the control, in pixels, is
-returned.
-
-(1.0)
-*/
-UInt16
-Localization_SetUpMultiLineTextControl	(ControlRef			inControl,
-										 ConstStringPtr		inTextContents)
-{
-	UInt16			result = 0;
-	UInt16			textExpanseH = 0;
-	UInt16 const	textContentsLength = PLstrlen(inTextContents);
-	SInt16			fontSize = 0;
-	Style			fontStyle = normal;
-	Str255			fontName;
-	UInt16			fontHeight = 0;
-	UInt16			charWidth = 0;
-	GrafPtr			oldPort = nullptr;
-	
-	
-	GetPort(&oldPort);
-	SetPortWindowPort(GetControlOwner(inControl));
-	
-	// obtain a wealth of information about the requested theme font
-	// (in the “quick and dirty” calculation, approximate character
-	// widths are used with a small margin for error; if no such
-	// short-cut is taken, the error is less but the calculation is
-	// significantly slower)
-	{
-		ControlFontStyleRec		controlFontInfo;
-		OSStatus				error = noErr;
-		Size					actualSize = 0;
-		
-		
-		error = GetControlData(inControl, kControlNoPart, kControlFontStyleTag, sizeof(controlFontInfo),
-								&controlFontInfo, &actualSize);
-		if (error == noErr)
-		{
-			UNUSED_RETURN(OSStatus)getControlFontInfo(&controlFontInfo, "\pA"/* string to calculate width of */,
-														fontName, &fontSize, &fontStyle, &charWidth/* string width */,
-														&fontHeight);
-		}
-	}
-	
-	// size the control to be just high enough for the text
-	{
-		GrafPortFontState	fontState;
-		Rect				controlRect;
-		SInt16				fontID = 0;
-		
-		
-		// save port settings
-		Localization_PreservePortFontState(&fontState);
-		
-		// set port font so CharWidth() can be used
-		fontID = FMGetFontFamilyFromName(fontName);
-		TextFont(fontID);
-		TextSize(fontSize);
-		TextFace(fontStyle);
-		
-		GetControlBounds(inControl, &controlRect);
-		textExpanseH = controlRect.right - controlRect.left;
-		#define CHEAP_TEXT_HEIGHT_CALCULATION 0
-		#if CHEAP_TEXT_HEIGHT_CALCULATION
-		// this is “pretty good” for most cases, but there is a chance that
-		// exceptional text will make this height calculation inadequate
-		result = (textContentsLength * charWidth / textExpanseH + 1) * fontHeight;
-		#else
-		// this will cover more exceptional cases, but for the average case
-		// it might be overkill because it traverses the entire string and
-		// usually yields the same result as the short-cut calculation above
-		{
-			UInt8 const*	ptr = inTextContents + 1; // skip length byte
-			SInt16			length = 0, // count of characters
-							lineWidth = 0;  // pixel width of characters so far on one line
-			Boolean			lastCharacter = false,
-							newLine = false;
-			
-			
-			lastCharacter = false;
-			for (result = 0; (!lastCharacter); result += fontHeight)
-			{
-				lineWidth = 0;
-				newLine = false;
-				while ((!lastCharacter) && (!newLine))
-				{
-					UInt8	c = '\0';
-					
-					
-					c = ptr[0];
-					ptr++;
-					length++;
-					if (c == '\n')
-					{
-						newLine = true;
-					}
-					else
-					{
-						lineWidth += CharWidth(c);
-						if (lineWidth >= textExpanseH)
-						{
-							// end-of-line reached implicitly (i.e. no '\n'); check to see
-							// if it’s the end of the word, too; if not, back up, because
-							// the Mac OS will wrap the remaining characters to the next line
-							if (length < textContentsLength)
-							{
-								while (CPP_STD::isalnum((char)ptr[0]) && (length > 0))
-								{
-									ptr--;
-									length--;
-								}
-							}
-							newLine = true;
-						}
-					}
-					if (length >= textContentsLength) lastCharacter = true;
-				}
-			}
-		}
-		#endif
-		
-		// make room for blank lines, if the text contains new-line characters
-		{
-			UInt16				extraBlanks = 0;
-			register UInt16		i = 0;
-			
-			
-			for (i = 1; i <= textContentsLength; i++)
-			{
-				if (inTextContents[i] == '\n') extraBlanks++;
-			}
-			result += (extraBlanks * fontHeight);
-		}
-		
-		// set the control’s height to match...
-		SizeControl(inControl, textExpanseH, result);
-		
-		// restore port settings
-		Localization_RestorePortFontState(&fontState);
-	}
-	
-	// set the control text to be the specified text
-	UNUSED_RETURN(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlStaticTextTextTag,
-											textContentsLength * sizeof(char), (Ptr)(inTextContents + 1));
-	
-	SetPort(oldPort);
-	
-	return result;
-}// SetUpMultiLineTextControl
-
-
-/*!
-Determines which of the two given controls is highest,
-and changes the height of the other control to match.
-The controls’ widths and positions are unchanged.
-
-(1.1)
-*/
-void
-Localization_SizeControlsMaximumHeight	(ControlRef		inControl1,
-										 ControlRef		inControl2)
-{
-	Rect	control1Rect,
-			control2Rect;
-	
-	
-	GetControlBounds(inControl1, &control1Rect);
-	GetControlBounds(inControl2, &control2Rect);
-	SizeControl(inControl1, control1Rect.right - control1Rect.left,
-				INTEGER_MAXIMUM(control1Rect.bottom - control1Rect.top,
-								control2Rect.bottom - control2Rect.top));
-	SizeControl(inControl2, control2Rect.right - control2Rect.left,
-				INTEGER_MAXIMUM(control1Rect.bottom - control1Rect.top,
-								control2Rect.bottom - control2Rect.top));
-}// SizeControlsMaximumHeight
-
-
-/*!
-Determines which of the two given controls is widest,
-and changes the width of the other control to match.
-The controls’ heights and positions are unchanged.
-
-(1.1)
-*/
-void
-Localization_SizeControlsMaximumWidth	(ControlRef		inControl1,
-										 ControlRef		inControl2)
-{
-	Rect	control1Rect,
-			control2Rect;
-	
-	
-	GetControlBounds(inControl1, &control1Rect);
-	GetControlBounds(inControl2, &control2Rect);
-	SizeControl(inControl1, INTEGER_MAXIMUM(control1Rect.right - control1Rect.left,
-											control2Rect.right - control2Rect.left),
-				control1Rect.bottom - control1Rect.top);
-	SizeControl(inControl2, INTEGER_MAXIMUM(control1Rect.right - control1Rect.left,
-											control2Rect.right - control2Rect.left),
-				control2Rect.bottom - control2Rect.top);
-}// SizeControlsMaximumWidth
 
 
 /*!
@@ -1104,154 +594,8 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 }// UseThemeFont
 
 
-/*!
-Arranges the specified control so that its bisector
-is aligned with the bisector of its parent, resulting
-in the top half of the control being above the bisector
-(and the bottom half below it).
-
-(1.0)
-*/
-void
-Localization_VerticallyCenterControlWithinContainer		(ControlRef		inControlToCenterVertically,
-														 ControlRef		inContainerOrNullToUseHierarchyParent)
-{
-	ControlRef	container = inContainerOrNullToUseHierarchyParent;
-	Rect		controlBounds,
-				containerBounds;
-	
-	
-	if (container == nullptr)
-	{
-		if (GetSuperControl(inControlToCenterVertically, &inContainerOrNullToUseHierarchyParent) != noErr)
-		{
-			container = nullptr;
-		}
-	}
-	
-	if (container != nullptr)
-	{
-		GetControlBounds(inControlToCenterVertically, &controlBounds);
-		GetControlBounds(container, &containerBounds);
-		MoveControl(inControlToCenterVertically, controlBounds.left,
-					containerBounds.top + INTEGER_HALVED((containerBounds.bottom - containerBounds.top) -
-														(controlBounds.bottom - controlBounds.top)));
-	}
-}// VerticallyCenterControlWithinContainer
-
-
-/*!
-Conditionally rearranges two controls vertically
-so that the top and bottom edges of the smallest
-rectangle bounding both controls remains the
-same after they trade places.
-
-This method assumes that you have laid out controls
-in the top-to-bottom arrangement by default, so IF
-YOU ARE in top-to-bottom localization, calling this
-routine has no effect.  The first control is
-assumed to be the topmost one, and the second is
-assumed to be the bottommost one of the two.
-
-(1.0)
-*/
-void
-Localization_VerticallyPlaceControls	(ControlRef		inControl1,
-										 ControlRef		inControl2)
-{
-	unless (Localization_IsTopToBottom())
-	{
-		Rect	controlRect,
-				combinedRect;
-		
-		
-		// find a rectangle whose vertical expanse is exactly large enough to touch the edges of both controls
-		GetControlBounds(inControl1, &combinedRect);
-		GetControlBounds(inControl2, &controlRect);
-		if (combinedRect.bottom < controlRect.bottom) combinedRect.bottom = controlRect.bottom;
-		if (combinedRect.top > controlRect.top) combinedRect.top = controlRect.top;
-		
-		// switch the controls inside the smallest space that they both occupy
-		GetControlBounds(inControl1, &controlRect);
-		MoveControl(inControl1, controlRect.left, (combinedRect.bottom - (controlRect.bottom - controlRect.top)));
-		GetControlBounds(inControl2, &controlRect);
-		MoveControl(inControl2, controlRect.left, combinedRect.top);
-	}
-}// VerticallyPlaceControls
-
-
 #pragma mark Internal Methods
 namespace {
-
-/*!
-Provides a wealth of information about the
-font in the given control font style record.
-
-The font name, size, and style of the indicated
-theme font are returned.  The string width
-parameter is optional (if you provide a string
-and string width storage, the width of that
-string in pixels is returned).  The font height
-parameter is also optional.
-
-Since there is a "flags" field in the record
-that allows entries to be omitted, this routine
-checks the flags and substitutes values as best
-it can if anything is undefined.  In general,
-provide a complete record as input to get the
-results you desire.
-
-(1.0)
-*/
-OSStatus
-getControlFontInfo	(ControlFontStyleRec const*	inFontStyleRecPtr,
-					 ConstStringPtr				inStringOrNull,
-					 Str255						outFontName,
-					 SInt16*					outFontSizePtr,
-					 Style*						outFontStylePtr,
-					 UInt16*					outStringWidthPtr,
-					 UInt16*					outFontHeightPtr)
-{
-	GrafPortFontState	fontState;
-	OSStatus			result = noErr;
-	
-	
-	// save port settings
-	Localization_PreservePortFontState(&fontState);
-	
-	// set the font, and get additional metrics information if possible
-	if ((inFontStyleRecPtr->flags & kControlUseFontMask) &&
-		(inFontStyleRecPtr->flags & kControlUseFaceMask) &&
-		(inFontStyleRecPtr->flags & kControlUseSizeMask))
-	{
-		TextFont(inFontStyleRecPtr->font);
-		TextFace(inFontStyleRecPtr->style);
-		TextSize(inFontStyleRecPtr->size);
-	}
-	else
-	{
-		Localization_UseThemeFont(kThemeSystemFont, outFontName, outFontSizePtr, outFontStylePtr);
-	}
-	
-	if ((outStringWidthPtr != nullptr) && (inStringOrNull != nullptr))
-	{
-		*outStringWidthPtr = StringWidth(inStringOrNull);
-	}
-	if (outFontHeightPtr != nullptr)
-	{
-		FontInfo		theInfo;
-		
-		
-		GetFontInfo(&theInfo);
-		*outFontHeightPtr = theInfo.ascent + theInfo.descent + INTEGER_DOUBLED(theInfo.leading);
-	}
-	
-	// restore port settings
-	Localization_RestorePortFontState(&fontState);
-	
-	return result;
-}// getControlFontInfo
-
 
 /*!
 Provides a wealth of information about

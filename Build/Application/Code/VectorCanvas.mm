@@ -871,7 +871,7 @@ handleMouseDown		(My_VectorCanvasPtr		inPtr,
 		ColorUtilities_SetGrayPenPattern();
 		PenMode(patXor);
 		
-		SetRect(&rect, 0, 0, 0, 0);
+		bzero(&rect, sizeof(rect));
 		do
 		{
 			unless (inSplash(current, anchor))

@@ -454,7 +454,7 @@ const
 		Rect	containerBounds;
 		
 		
-		SetRect(&containerBounds, 0, 0, 0, 0);
+		bzero(&containerBounds, sizeof(containerBounds));
 		error = CreateUserPaneControl(inOwningWindow, &containerBounds, kControlSupportsEmbedding, &result);
 		assert_noerr(error);
 		Panel_SetContainerView(inPanel, result);

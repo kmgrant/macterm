@@ -3010,37 +3010,32 @@ sessionWindowStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				if (nil != hiddenWindow)
 				{
-					Rect	windowMenuTitleBounds;
+					// there is no apparent way to programmatically determine exactly where
+					// a menu title will be so this is a glorious hack to approximate it...
+					CGFloat		menuBarHeight = [[NSApp mainMenu] menuBarHeight];
+					CGRect		windowMenuTitleInvertedCGRect = CGRectMake([windowScreen frame].origin.x + 456/* arbitrary */,
+																			[windowScreen frame].origin.y + NSHeight([windowScreen frame]) - menuBarHeight,
+																			72/* arbitrary width */, menuBarHeight);
+					Boolean		noAnimations = false;
+					size_t		actualSize = 0;
 					
 					
-					if (MenuBar_GetMenuTitleRectangle(kMenuBar_MenuIDWindow, &windowMenuTitleBounds))
+					// determine if animation should occur
+					unless (kPreferences_ResultOK ==
+							Preferences_GetData(kPreferences_TagNoAnimations,
+												sizeof(noAnimations), &noAnimations, &actualSize))
 					{
-						CGRect		asInvertedCGRect = CGRectMake
-														(windowMenuTitleBounds.left,
-															NSHeight([windowScreen frame]) - windowMenuTitleBounds.bottom,
-															windowMenuTitleBounds.right - windowMenuTitleBounds.left,
-															windowMenuTitleBounds.bottom - windowMenuTitleBounds.top);
-						Boolean		noAnimations = false;
-						size_t		actualSize = 0;
-						
-						
-						// determine if animation should occur
-						unless (kPreferences_ResultOK ==
-								Preferences_GetData(kPreferences_TagNoAnimations,
-													sizeof(noAnimations), &noAnimations, &actualSize))
-						{
-							noAnimations = false; // assume a value, if preference can’t be found
-						}
-						
-						if (noAnimations)
-						{
-							[hiddenWindow orderOut:nil];
-						}
-						else
-						{
-							// make the window zoom into the Window menu’s title area, for visual feedback
-							CocoaAnimation_TransitionWindowForHide(hiddenWindow, asInvertedCGRect);
-						}
+						noAnimations = false; // assume a value, if preference can’t be found
+					}
+					
+					if (noAnimations)
+					{
+						[hiddenWindow orderOut:nil];
+					}
+					else
+					{
+						// make the window zoom into the Window menu’s title area, for visual feedback
+						CocoaAnimation_TransitionWindowForHide(hiddenWindow, windowMenuTitleInvertedCGRect);
 					}
 				}
 			}

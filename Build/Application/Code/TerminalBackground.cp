@@ -1620,7 +1620,7 @@ receiveBackgroundRegionRequest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCa
 				
 				case kTerminalBackground_ContentPartVoid:
 				default:
-					SetRect(&partBounds, 0, 0, 0, 0);
+					bzero(&partBounds, sizeof(partBounds));
 					break;
 				}
 				

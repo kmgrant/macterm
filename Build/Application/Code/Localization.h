@@ -66,36 +66,7 @@ Flags to configure text reading direction initially.
 typedef UInt32 Localization_InitFlags;
 enum
 {
-	kLocalization_InitFlagReadTextRightToLeft	= (1 << 0),		//!< is text read right to left, or left to right?
-	kLocalization_InitFlagReadTextBottomToTop	= (1 << 1)		//!< is text read bottom to top, or top to bottom?
-};
-
-/*!
-Flags that control Localization_ArrangeControlsInRows().
-*/
-typedef UInt32 LocalizationRowLayoutFlags;
-enum
-{
-	kLocalizationRowLayoutFlagsReverseSystemDirectionH	= (1 << 0),	//!< produces a right-to-left layout on a left-to-right system,
-																	//!  and vice-versa
-	kLocalizationRowLayoutFlagsReverseSystemDirectionV	= (1 << 1),	//!< produces a bottom-to-top layout on a top-to-bottom system,
-																	//!  and vice-versa
-	kLocalizationRowLayoutFlagsCenterRowCursor			= (1 << 2),	//!< UNIMPLEMENTED --
-																	//!  how to align the contents of a row; the default is to
-																	//!  arrange starting at the left edge of the boundary in
-																	//!  left-to-right locales, or the right edge in right-to-left
-																	//!  locales, but if this flag is set then row items are always
-																	//!  inserted from the center, such that the row’s contents are
-																	//!  collectively centered horizontally
-	kLocalizationRowLayoutFlagsCenterRowItemAlignment	= (1 << 3),	//!< UNIMPLEMENTED --
-																	//!  how to vertically-align the controls in a row; the default
-																	//!  is to align all row items’ top edges in top-to-bottom
-																	//!  locales or bottom edges in bottom-to-top locales, but if
-																	//!  this flag is set then items in the same row are arranged
-																	//!  so their vertical bisectors are the same
-	kLocalizationRowLayoutFlagsSetVisibilityOnOverflow	= (1 << 4)	//!< ensures that all controls in the given set that fall
-																	//!  within the prescribed boundary are visible; all other
-																	//!  given controls are made invisible (useful for toolbars)
+	kLocalization_InitFlagReadTextRightToLeft	= (1 << 0)		//!< is text read right to left, or left to right?
 };
 
 /*!
@@ -161,9 +132,6 @@ void
 Boolean
 	Localization_IsLeftToRight					();
 
-Boolean
-	Localization_IsTopToBottom					();
-
 //@}
 
 //!\name Miscellaneous
@@ -171,10 +139,6 @@ Boolean
 
 void
 	Localization_GetCurrentApplicationNameAsCFString	(CFStringRef*		outProcessDisplayNamePtr);
-
-OSStatus
-	Localization_GetFontTextEncoding			(ConstStringPtr				inFontName,
-												 TextEncoding*				outTextEncoding);
 
 //@}
 
@@ -205,14 +169,6 @@ void
 	Localization_ArrangeButtonArray				(ControlRef const*			inButtons,
 												 UInt16						inButtonCount);
 
-Boolean
-	Localization_ArrangeControlsInRows			(Rect*						inoutBoundsPtr,
-												 ControlRef*				inControlList,
-												 UInt16						inControlListLength,
-												 SInt16						inSpacingH,
-												 SInt16						inSpacingV,
-												 LocalizationRowLayoutFlags	inFlags = 0);
-
 UInt16
 	Localization_AutoSizeButtonControl			(ControlRef					inControl,
 												 UInt16						inMinimumWidth = 86);
@@ -223,43 +179,12 @@ UInt16
 												 Boolean					inResize = true);
 
 void
-	Localization_HorizontallyCenterControlWithinContainer	(ControlRef		inControlToCenterHorizontally,
-												 ControlRef					inContainerOrNullToUseHierarchyParent = nullptr);
-
-void
 	Localization_HorizontallyPlaceControls		(ControlRef					inControl1,
 												 ControlRef					inControl2);
-
-UInt16
-	Localization_ReturnSingleLineTextHeight		(ThemeFontID				inThemeFontToUse);
-
-UInt16
-	Localization_ReturnSingleLineTextWidth		(ConstStringPtr				inString,
-												 ThemeFontID				inThemeFontToUse);
 
 OSStatus
 	Localization_SetControlThemeFontInfo		(ControlRef					inControl,
 												 ThemeFontID				inThemeFontToUse);
-
-UInt16
-	Localization_SetUpMultiLineTextControl		(ControlRef					inControl,
-												 ConstStringPtr				inTextContents);
-
-void
-	Localization_SizeControlsMaximumHeight		(ControlRef					inControl1,
-												 ControlRef					inControl2);
-
-void
-	Localization_SizeControlsMaximumWidth		(ControlRef					inControl1,
-												 ControlRef					inControl2);
-
-void
-	Localization_VerticallyCenterControlWithinContainer		(ControlRef		inControlToCenterVertically,
-												 ControlRef					inContainerOrNullToUseHierarchyParent = nullptr);
-
-void
-	Localization_VerticallyPlaceControls		(ControlRef					inControl1,
-												 ControlRef					inControl2);
 
 //@}
 

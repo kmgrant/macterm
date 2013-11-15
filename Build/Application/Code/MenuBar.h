@@ -90,22 +90,6 @@ Boolean
 //!\name Utilities
 //@{
 
-Boolean
-	MenuBar_GetMenuTitleRectangle					(MenuID							inMenuBarMenuSpecifier,
-													 Rect*							outMenuBarMenuTitleRect);
-
-void
-	MenuBar_GetUniqueMenuItemTextCFString			(MenuRef						inMenu,
-													 CFStringRef					inItemText,
-													 CFStringRef&					outUniqueItemText);
-
-Boolean
-	MenuBar_IsMenuItemUniqueCFString				(MenuRef						inMenu,
-													 CFStringRef					inItemText);
-
-MenuRef
-	MenuBar_NewMenuWithArbitraryID					();
-
 MenuItemIndex
 	MenuBar_ReturnMenuItemIndexByItemText			(MenuRef						inMenu,
 													 CFStringRef					inItemText);
