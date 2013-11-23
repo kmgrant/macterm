@@ -75,7 +75,6 @@ extern "C"
 #import <CommonEventHandlers.h>
 #import <Console.h>
 #import <ContextSensitiveMenu.h>
-#import <Cursors.h>
 #import <Embedding.h>
 #import <HIViewWrap.h>
 #import <HIViewWrapManip.h>
@@ -2320,17 +2319,6 @@ installedActions()
 	// set up the Help System
 	HelpSystem_SetWindowKeyPhrase(returnCarbonWindow(this), kHelpSystem_KeyPhraseTerminals);
 	
-#if 0
-	// on 10.4, use the special unified toolbar appearance
-	if (FlagManager_Test(kFlagOS10_4API))
-	{
-		(OSStatus)ChangeWindowAttributes
-					(this->window,
-						kWindowUnifiedTitleAndToolbarAttribute/* attributes to set */,
-						0/* attributes to clear */);
-	}
-#endif
-	
 	// install a callback that responds as a window is resized
 	this->windowResizeHandler.install(returnCarbonWindow(this), handleNewSize, this->selfRef/* user data */,
 										250/* arbitrary minimum width */,
@@ -3452,7 +3440,7 @@ createTabWindow		(My_TerminalWindowPtr	inPtr)
 			
 			error = HIViewFindByID(HIViewGetRoot(tabWindow), kHIViewWindowContentID, &contentPane);
 			assert_noerr(error);
-			inPtr->tabDragHandlerPtr = new CarbonEventHandlerWrap(CarbonEventUtilities_ReturnViewTarget(contentPane),
+			inPtr->tabDragHandlerPtr = new CarbonEventHandlerWrap(HIViewGetEventTarget(contentPane),
 																	receiveTabDragDrop,
 																	CarbonEventSetInClass
 																	(CarbonEventClass(kEventClassControl),
@@ -3911,7 +3899,7 @@ installTickHandler	(My_TerminalWindowPtr	inPtr)
 {
 	inPtr->scrollTickHandler.remove();
 	assert(false == inPtr->scrollTickHandler.isInstalled());
-	inPtr->scrollTickHandler.install(GetControlEventTarget(inPtr->controls.scrollBarV), receiveScrollBarDraw,
+	inPtr->scrollTickHandler.install(HIViewGetEventTarget(inPtr->controls.scrollBarV), receiveScrollBarDraw,
 										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
 										inPtr->selfRef/* user data */);
 	assert(inPtr->scrollTickHandler.isInstalled());
@@ -6098,7 +6086,6 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		if (result == noErr)
 		{
 			Boolean							useSheet = false;
-			Boolean							showWindow = FlagManager_Test(kFlagOS10_3API);
 			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 			
 			
@@ -6145,16 +6132,13 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					UNUSED_RETURN(OSStatus)Localization_SetControlThemeFontInfo(ptr->controls.textScreenDimensions,
 																				kThemeAlertHeaderFont);
 					
-					if (showWindow)
+					if (useSheet)
 					{
-						if (useSheet)
-						{
-							ShowSheetWindow(ptr->resizeFloater, returnCarbonWindow(ptr));
-						}
-						else
-						{
-							ShowWindow(ptr->resizeFloater);
-						}
+						ShowSheetWindow(ptr->resizeFloater, returnCarbonWindow(ptr));
+					}
+					else
+					{
+						ShowWindow(ptr->resizeFloater);
 					}
 				}
 				
@@ -7010,7 +6994,7 @@ setCursorInWindow	(HIWindowRef	inWindow,
 		if ((noErr != result) || (nullptr == viewUnderMouse))
 		{
 			// nothing underneath the mouse, or some problem; restore the arrow and claim all is well
-			UNUSED_RETURN(SInt16)Cursors_UseArrow();
+			[[NSCursor arrowCursor] set];
 			result = noErr;
 		}
 		else
@@ -7028,14 +7012,14 @@ setCursorInWindow	(HIWindowRef	inWindow,
 				if (noErr != result)
 				{
 					// some problem; restore the arrow and claim all is well
-					UNUSED_RETURN(SInt16)Cursors_UseArrow();
+					[[NSCursor arrowCursor] set];
 					result = noErr;
 				}						
 			}
 			else
 			{
 				// unknown control type - restore arrow
-				UNUSED_RETURN(SInt16)Cursors_UseArrow();
+				[[NSCursor arrowCursor] set];
 				result = noErr;
 			}
 		}

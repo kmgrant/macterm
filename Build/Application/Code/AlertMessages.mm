@@ -46,7 +46,6 @@
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
-#import <Cursors.h>
 #import <Embedding.h>
 #import <HIViewWrap.h>
 #import <IconManager.h>
@@ -756,7 +755,7 @@ Alert_Display	(AlertMessages_BoxRef	inAlert,
 		
 		
 		result = backgroundNotification();
-		Cursors_UseArrow();
+		[[NSCursor arrowCursor] set];
 		if (nil != alertPtr->targetWindowController)
 		{
 			// Cocoa implementation

@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -155,9 +155,7 @@ ColorBox_AttachToBevelButton	(HIViewRef			inoutBevelButton,
 										kConstantsRegistry_ControlPropertyTypeColorBoxData,
 										sizeof(dataPtr), &dataPtr);
 			
-		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			// set accessibility relationships, if possible
-			if (FlagManager_Test(kFlagOS10_4API))
 			{
 				CFStringRef		accessibilityDescCFString = nullptr;
 				
@@ -174,7 +172,6 @@ ColorBox_AttachToBevelButton	(HIViewRef			inoutBevelButton,
 					CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 				}
 			}
-		#endif
 		}
 	}
 	catch (std::bad_alloc)

@@ -120,9 +120,7 @@ init
 	self = [super init];
 	// drag and drop support
 	[addressTableView registerForDraggedTypes:[NSArray arrayWithObjects:NSStringPboardType, nil]];
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	[addressTableView setDraggingSourceOperationMask:NSDragOperationCopy forLocal:NO];
-#endif
 	return self;
 }// init
 

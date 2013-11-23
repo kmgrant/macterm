@@ -3493,49 +3493,43 @@ windows and their states.
 void
 setUpWindowMenu		(NSMenu*	inMenu)
 {
-	// on older versions of Mac OS X, it seems that Cocoa stubbornly
-	// dumps items into the Window menu automatically, which creates
-	// redundancy; so, enable this feature only on newer OS versions
-	if (FlagManager_Test(kFlagOS10_6API))
+	int const					kFirstWindowItemIndex = returnFirstWindowItemAnchor(inMenu);
+	int const					kDividerIndex = kFirstWindowItemIndex - 1;
+	int							deletedItemIndex = -1;
+	int							numberOfWindowMenuItemsAdded = 0;
+	My_MenuItemInsertionInfo	insertWhere;
+	
+	
+	// set up callback data
+	bzero(&insertWhere, sizeof(insertWhere));
+	insertWhere.menu = inMenu;
+	insertWhere.atItemIndex = kDividerIndex; // because, the divider is not present at insertion time
+	
+	// erase previous items
+	while (-1 != (deletedItemIndex = indexOfItemWithAction(inMenu, @selector(orderFrontSpecificWindow:))))
 	{
-		int const					kFirstWindowItemIndex = returnFirstWindowItemAnchor(inMenu);
-		int const					kDividerIndex = kFirstWindowItemIndex - 1;
-		int							deletedItemIndex = -1;
-		int							numberOfWindowMenuItemsAdded = 0;
-		My_MenuItemInsertionInfo	insertWhere;
-		
-		
-		// set up callback data
-		bzero(&insertWhere, sizeof(insertWhere));
-		insertWhere.menu = inMenu;
-		insertWhere.atItemIndex = kDividerIndex; // because, the divider is not present at insertion time
-		
-		// erase previous items
-		while (-1 != (deletedItemIndex = indexOfItemWithAction(inMenu, @selector(orderFrontSpecificWindow:))))
+		[inMenu removeItemAtIndex:deletedItemIndex];
+	}
+	if (kDividerIndex < [inMenu numberOfItems])
+	{
+		if ([[inMenu itemAtIndex:kDividerIndex] isSeparatorItem])
 		{
-			[inMenu removeItemAtIndex:deletedItemIndex];
+			[inMenu removeItemAtIndex:kDividerIndex];
 		}
-		if (kDividerIndex < [inMenu numberOfItems])
-		{
-			if ([[inMenu itemAtIndex:kDividerIndex] isSeparatorItem])
-			{
-				[inMenu removeItemAtIndex:kDividerIndex];
-			}
-		}
-		
-		// add the names of all open session windows to the menu
-		SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions &
-											~kSessionFactory_SessionFilterFlagConsoleSessions,
-										addWindowMenuItemSessionOp,
-										&insertWhere/* data 1: menu info */, 0L/* data 2: undefined */,
-										&numberOfWindowMenuItemsAdded/* result: int*, number of items added */);
-		
-		// if any were added, include a dividing line (note also that this
-		// item must be erased above)
-		if (numberOfWindowMenuItemsAdded > 0)
-		{
-			[inMenu insertItem:[NSMenuItem separatorItem] atIndex:kDividerIndex];
-		}
+	}
+	
+	// add the names of all open session windows to the menu
+	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions &
+										~kSessionFactory_SessionFilterFlagConsoleSessions,
+									addWindowMenuItemSessionOp,
+									&insertWhere/* data 1: menu info */, 0L/* data 2: undefined */,
+									&numberOfWindowMenuItemsAdded/* result: int*, number of items added */);
+	
+	// if any were added, include a dividing line (note also that this
+	// item must be erased above)
+	if (numberOfWindowMenuItemsAdded > 0)
+	{
+		[inMenu insertItem:[NSMenuItem separatorItem] atIndex:kDividerIndex];
 	}
 }// setUpWindowMenu
 

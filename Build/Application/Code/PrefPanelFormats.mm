@@ -1570,7 +1570,7 @@ mainView				(createContainerView(inPanel, inOwningWindow)
 _buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */),
-_fontPanelHandler		(GetControlEventTarget(HIViewWrap(idMyButtonFontName, inOwningWindow)), receiveFontChange,
+_fontPanelHandler		(HIViewGetEventTarget(HIViewWrap(idMyButtonFontName, inOwningWindow)), receiveFontChange,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassFont), kEventFontPanelClosed, kEventFontSelection),
 							this/* user data */),
 _windowFocusHandler		(GetWindowEventTarget(inOwningWindow), receiveWindowFocusChange,
@@ -2431,15 +2431,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					// apparently this API can return paramErr even though it
 					// successfully sets the desired font information...
 					UNUSED_RETURN(OSStatus)SetFontInfoForSelection
-											(kFontSelectionQDType, 1/* number of styles */, &fontInfo,
-												// NOTE: This API is misdeclared in older headers, the last argument is supposed to
-												// be an event target.  It is bastardized into HIObjectRef form for older compiles.
-												#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-													GetControlEventTarget(buttonHit)
-												#else
-													REINTERPRET_CAST(buttonHit, HIObjectRef)
-												#endif
-												);
+											(kFontSelectionQDType, 1/* number of styles */, &fontInfo, HIViewGetEventTarget(buttonHit));
 					if (1)
 					{
 						SetControl32BitValue(HIViewWrap(idMyButtonFontName, HIViewGetWindow(buttonHit)), kControlCheckBoxCheckedValue);

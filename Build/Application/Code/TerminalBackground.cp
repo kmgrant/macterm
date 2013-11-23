@@ -228,7 +228,7 @@ TerminalBackground_Init ()
 		assert_noerr(error);
 		
 		// tell the content view how to draw
-		gTerminalViewFocusOverlayDrawingHandler.install(GetControlEventTarget(contentView),
+		gTerminalViewFocusOverlayDrawingHandler.install(HIViewGetEventTarget(contentView),
 														receiveFocusOverlayContentDraw,
 														CarbonEventSetInClass
 															(CarbonEventClass(kEventClassControl), kEventControlDraw),
@@ -368,12 +368,12 @@ imageObject					(),
 image						(nullptr),
 isMatte						(true),
 dontDimBackgroundScreens	(false), // reset by callback
-boundsChangingHandler		(GetControlEventTarget(inSuperclassViewInstance),
+boundsChangingHandler		(HIViewGetEventTarget(inSuperclassViewInstance),
 								receiveViewBoundsChanged,
 								CarbonEventSetInClass
 									(CarbonEventClass(kEventClassControl), kEventControlBoundsChanged),
 								this/* user data */),
-windowChangedHandler		(GetControlEventTarget(inSuperclassViewInstance),
+windowChangedHandler		(HIViewGetEventTarget(inSuperclassViewInstance),
 								receiveViewWindowChanged,
 								CarbonEventSetInClass
 									(CarbonEventClass(kEventClassControl), kEventControlOwningWindowChanged),
@@ -432,7 +432,6 @@ void
 My_TerminalBackground::
 setImageFromURLString	(CFStringRef	inURLCFString)
 {
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	CFRetainRelease		imageURLObject(CFURLCreateWithString
 										(kCFAllocatorDefault, inURLCFString, nullptr/* base URL */), true/* is retained */);
 	CFURLRef			imageURL = CFUtilities_URLCast(imageURLObject.returnCFTypeRef());
@@ -441,18 +440,6 @@ setImageFromURLString	(CFStringRef	inURLCFString)
 	
 	
 	this->imageObject = CGImageSourceCreateImageAtIndex(imageData, 0/* index */, nullptr/* options */);
-#else
-	CFRetainRelease		imageURLObject(CFURLCreateWithString
-										(kCFAllocatorDefault, inURLCFString, nullptr/* base URL */), true/* is retained */);
-	CFURLRef			imageURL = CFUtilities_URLCast(imageURLObject.returnCFTypeRef());
-	CFRetainRelease		imageDataObject(CGDataProviderCreateWithURL(imageURL), true/* is retained */);
-	CGDataProviderRef	imageData = (CGDataProviderRef)imageDataObject.returnCFTypeRef();
-	
-	
-	this->imageObject = CGImageCreateWithJPEGDataProvider(imageData, nullptr/* decode array */,
-															false/* interpolate */,
-															kCGRenderingIntentDefault);
-#endif
 	
 	// for convenience, pre-cast the retained reference and store it
 	this->image = (CGImageRef)this->imageObject.returnCFTypeRef();
@@ -1310,14 +1297,10 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 				if (noErr == result)
 				{
 					// each attribute mentioned here should be handled below
-				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 					CFArrayAppendValue(listOfNames, kAXDescriptionAttribute);
-				#endif
 					CFArrayAppendValue(listOfNames, kAXRoleAttribute);
 					CFArrayAppendValue(listOfNames, kAXRoleDescriptionAttribute);
-				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 					CFArrayAppendValue(listOfNames, kAXTopLevelUIElementAttribute);
-				#endif
 					CFArrayAppendValue(listOfNames, kAXWindowAttribute);
 					CFArrayAppendValue(listOfNames, kAXParentAttribute);
 					CFArrayAppendValue(listOfNames, kAXEnabledAttribute);
@@ -1337,13 +1320,9 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 																typeCFStringRef, requestedAttribute);
 				if (noErr == result)
 				{
-				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 					// for the purposes of accessibility, identify a Terminal Background as
 					// having the same role as a standard matte
 					CFStringRef		roleCFString = kAXMatteRole;
-				#else
-					CFStringRef		roleCFString = kAXImageRole;
-				#endif
 					Boolean			isSettable = false;
 					
 					
@@ -1364,29 +1343,18 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 						isSettable = false;
 						if (kEventAccessibleGetNamedAttribute == kEventKind)
 						{
-						#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-							if (FlagManager_Test(kFlagOS10_4API))
+							CFStringRef		roleDescCFString = HICopyAccessibilityRoleDescription
+																(roleCFString, nullptr/* sub-role */);
+							
+							
+							if (nullptr != roleDescCFString)
 							{
-								CFStringRef		roleDescCFString = HICopyAccessibilityRoleDescription
-																	(roleCFString, nullptr/* sub-role */);
-								
-								
-								if (nullptr != roleDescCFString)
-								{
-									result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
-																sizeof(roleDescCFString), &roleDescCFString);
-									CFRelease(roleDescCFString), roleDescCFString = nullptr;
-								}
-							}
-							else
-						#endif
-							{
-								// no API available prior to 10.4 to find this value, so be lazy and return nothing
-								result = eventNotHandledErr;
+								result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
+															sizeof(roleDescCFString), &roleDescCFString);
+								CFRelease(roleDescCFString), roleDescCFString = nullptr;
 							}
 						}
 					}
-				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXDescriptionAttribute, kCFCompareBackwards))
 					{
 						isSettable = false;
@@ -1409,7 +1377,6 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 							}
 						}
 					}
-				#endif
 					else
 					{
 						// Many attributes are already supported by the default handler:

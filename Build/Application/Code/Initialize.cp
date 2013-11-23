@@ -55,7 +55,6 @@
 #include <CocoaBasic.h>
 #include <ColorUtilities.h>
 #include <Console.h>
-#include <Cursors.h>
 #include <Localization.h>
 #include <MacHelpUtilities.h>
 #include <MemoryBlockPtrLocker.template.h>
@@ -152,9 +151,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	// is called, i.e. call Foo_Init() and then Foo_RunTests().
 	ListenerModel_RunTests();
 #endif
-	
-	// set wait cursor
-	Cursors_UseWatch();
 	
 	// do everything else
 	{
@@ -261,21 +257,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	// now set a flag indicating that initialization succeeded
 	FlagManager_Set(kFlagInitializationComplete, true);
 	
-	// fix an apparent Panther bug where the application is not activated when launched
-	if (FlagManager_Test(kFlagOS10_3API))
-	{
-		ProcessSerialNumber		psn;
-		
-		
-		if (GetCurrentProcess(&psn) == noErr)
-		{
-			UNUSED_RETURN(OSStatus)SetFrontProcess(&psn);
-		}
-	}
-	
-	// set default cursor
-	Cursors_UseArrow();
-	
 	// if requested, automatically show the experimental new terminal window
 	{
 		char const*		varValue = getenv("MACTERM_AUTO_SHOW_COCOA_TERM");
@@ -342,14 +323,13 @@ Initialize_ApplicationShutDownRemainingComponents ()
 	Commands_Done();
 	SessionFactory_Done();
 	Alert_Done();
-	Cursors_Done();
 	Undoables_Done();
 }// ApplicationShutDownRemainingComponents
 
 
 /*!
 This function is not normally invoked directly.  It is only
-needed when depending on OS version flags like "kFlagOS10_5API"
+needed when depending on OS version flags like "kFlagOS10_9API"
 in code that is called at an unknown time or that might be
 called very early in the startup process.  In those situations,
 call Initialize_SetVersionFlags() as a guard to ensure that the
@@ -374,16 +354,11 @@ Initialize_SetVersionFlags ()
 	minorRev = Releases_ReturnMinorRevisionForVersion(gestaltResult);
 	
 	// any advanced APIs available?
-	FlagManager_Set(kFlagOS10_0API, true); // this source tree is Mac OS X only
-	FlagManager_Set(kFlagOS10_1API, true); // this source tree has a minimum SDK
-	FlagManager_Set(kFlagOS10_2API, true); // this source tree has a minimum SDK
-	FlagManager_Set(kFlagOS10_3API, true); // this source tree has a minimum SDK
-	FlagManager_Set(kFlagOS10_4API, true); // this source tree has a minimum SDK
-	FlagManager_Set(kFlagOS10_5API, true); // this source tree has a minimum SDK
 	FlagManager_Set(kFlagOS10_6API, true); // this source tree has a minimum SDK
 	FlagManager_Set(kFlagOS10_7API, (((majorRev == 0x0A) && (minorRev >= 0x07)) || (majorRev > 0x0A)));
 	FlagManager_Set(kFlagOS10_8API, (((majorRev == 0x0A) && (minorRev >= 0x08)) || (majorRev > 0x0A)));
 	FlagManager_Set(kFlagOS10_9API, (((majorRev == 0x0A) && (minorRev >= 0x09)) || (majorRev > 0x0A)));
+	FlagManager_Set(kFlagOS10_10API, (((majorRev == 0x0A) && (minorRev >= 0x0A)) || (majorRev > 0x0A)));
 }// SetVersionFlags
 
 
@@ -435,9 +410,6 @@ initApplicationCore ()
 		}
 	}
 	
-	// initialize cursors
-	Cursors_Init();
-	
 	// set up notification info
 	{
 		Str255		notificationMessage;
@@ -487,7 +459,7 @@ initMacOSToolbox ()
 	// Launch Services seems to recommend this, so do it
 	LSInit(kLSInitializeDefaults);
 	
-	// see "kFlagOS10_5API", etc.
+	// see "kFlagOS10_9API", etc.
 	Initialize_SetVersionFlags();
 	
 	InitCursor();

@@ -51,7 +51,6 @@
 #import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
 #import <Console.h>
-#import <Cursors.h>
 #import <FlagManager.h>
 #import <ListenerModel.h>
 #import <Localization.h>
@@ -1141,13 +1140,7 @@ copyTypeDescription		(CFStringRef	inUTI)
 	CFStringRef		result = nullptr;
 	
 	
-	// for reasons which aren’t yet understood, it is very easy for
-	// Panther to hang at some point after UTTypeCopyDescription()
-	// is called (but before returning to application code); for
-	// now, this is avoided by simply do nothing at all on 10.3.x
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	result = UTTypeCopyDescription(inUTI);
-#endif
 	if (nullptr == result)
 	{
 		if (nullptr != inUTI)
@@ -1454,13 +1447,7 @@ updateClipboard		(PasteboardRef		inPasteboard)
 														returnNSFontForMonospacedTextOfSize:14/* arbitrary */]];
 				[controller->clipboardTextContent setTextColor:[NSColor textColor]];
 			}
-		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			[controller->clipboardTextContent paste:NSApp];
-		#else
-			// on Panther, pasting does not seem to work; so, just do a
-			// raw text dump (not as pretty, but better than nothing)
-			[controller->clipboardTextContent setString:(NSString*)textToRender];
-		#endif
 			[controller->clipboardTextContent setEditable:NO];
 			[controller setShowImage:NO];
 			[controller setShowText:YES];

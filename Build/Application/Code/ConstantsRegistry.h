@@ -383,16 +383,11 @@ enum
 	kFlagAppleScriptRecording		= (kFlagManager_FirstValidFlag + 0),	//!< is the user recording events into a script?
 	kFlagInitializationComplete		= (kFlagManager_FirstValidFlag + 1),	//!< has the application completely finished launching?
 	kFlagKioskMode					= (kFlagManager_FirstValidFlag + 2),	//!< is the application in Full Screen mode?
-	kFlagOS10_0API					= (kFlagManager_FirstValidFlag + 3),	//!< is Mac OS 10.0 or later in use?
-	kFlagOS10_1API					= (kFlagManager_FirstValidFlag + 4),	//!< is Mac OS 10.1 or later in use?
-	kFlagOS10_2API					= (kFlagManager_FirstValidFlag + 5),	//!< is Mac OS 10.2 or later in use?
-	kFlagOS10_3API					= (kFlagManager_FirstValidFlag + 6),	//!< is Mac OS 10.3 or later in use?
-	kFlagOS10_4API					= (kFlagManager_FirstValidFlag + 7),	//!< is Mac OS 10.4 or later in use?
-	kFlagOS10_5API					= (kFlagManager_FirstValidFlag + 8),	//!< is Mac OS 10.5 or later in use?
-	kFlagOS10_6API					= (kFlagManager_FirstValidFlag + 9),	//!< is Mac OS 10.6 or later in use?
-	kFlagOS10_7API					= (kFlagManager_FirstValidFlag + 10),	//!< is Mac OS 10.7 or later in use?
-	kFlagOS10_8API					= (kFlagManager_FirstValidFlag + 11),	//!< is Mac OS 10.8 or later in use?
-	kFlagOS10_9API					= (kFlagManager_FirstValidFlag + 12),	//!< is Mac OS 10.9 or later in use?
+	kFlagOS10_6API					= (kFlagManager_FirstValidFlag + 6),	//!< is Mac OS 10.6 or later in use?
+	kFlagOS10_7API					= (kFlagManager_FirstValidFlag + 7),	//!< is Mac OS 10.7 or later in use?
+	kFlagOS10_8API					= (kFlagManager_FirstValidFlag + 8),	//!< is Mac OS 10.8 or later in use?
+	kFlagOS10_9API					= (kFlagManager_FirstValidFlag + 9),	//!< is Mac OS 10.9 or later in use?
+	kFlagOS10_10API					= (kFlagManager_FirstValidFlag + 10),	//!< is Mac OS 10.10 or later in use?
 	kFlagSuspended					= (kFlagManager_FirstValidFlag + 13),	//!< is this application’s process in the background?
 	kFlagUserOverrideAutoNew		= (kFlagManager_FirstValidFlag + 14)	//!< skip auto-new-window on application launch?
 };

@@ -50,7 +50,6 @@
 #include <CarbonEventUtilities.template.h>
 #include <ColorUtilities.h>
 #include <Console.h>
-#include <Cursors.h>
 #include <Embedding.h>
 #include <FileSelectionDialogs.h>
 #include <HIViewWrap.h>
@@ -154,7 +153,6 @@ DialogUtilities_CreateControlsBasedOnWindowNIB	(CFStringRef					inNIBFileBasenam
 				HIViewRef		templateView = HIViewGetLastSubview(contentView);
 				
 				
-			#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 				{
 					CFIndex const	kControlCount = HIViewCountSubviews(contentView);
 					
@@ -162,7 +160,6 @@ DialogUtilities_CreateControlsBasedOnWindowNIB	(CFStringRef					inNIBFileBasenam
 					// first set the vector size appropriately
 					inoutControlArray.resize(inoutControlArray.size() + kControlCount);
 				}
-			#endif
 				
 				// find all the views in the window, and use their characteristics
 				// to create duplicate views; this is done “backwards” (last to
@@ -1338,47 +1335,31 @@ Call this routine on the Help button control of every window.
 This routine checks to see if all necessary components for
 contextual help are available (disabling the button if help
 is not available), and changes the icon of the button to be a
-high-quality icon if possible.  On pre-Panther systems, it
-also enforces the size of the help button so that the icon is
-properly centered, as 10.3-created NIB files shrink the size
-of the help button slightly.  Finally, on Tiger and beyond, an
-appropriate accessibility description is given to the button.
+high-quality icon if possible.  An appropriate accessibility
+description is given to the button.
 
 (3.1)
 */
 HIViewWrap&
 DialogUtilities_SetUpHelpButton		(HIViewWrap&	inoutView)
 {
-	unless (FlagManager_Test(kFlagOS10_3API))
+	// set accessibility title
+	CFStringRef		accessibilityDescCFString = nullptr;
+	
+	
+	if (UIStrings_Copy(kUIStrings_ButtonHelpAccessibilityDesc, accessibilityDescCFString).ok())
 	{
-		// on Panther, Interface Builder will create a nice
-		// “purple help button”, but it is sized badly for
-		// older Mac OS X systems; so on these older systems
-		// this routine fixes the button size so the icon is
-		// nicely centered
-		SizeControl(inoutView, 20, 20);
-	}
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-	if (FlagManager_Test(kFlagOS10_4API))
-	{
-		// set accessibility title
-		CFStringRef		accessibilityDescCFString = nullptr;
+		HIViewRef const		kViewRef = inoutView;
+		HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(kViewRef, HIObjectRef);
+		OSStatus			error = noErr;
 		
 		
-		if (UIStrings_Copy(kUIStrings_ButtonHelpAccessibilityDesc, accessibilityDescCFString).ok())
-		{
-			HIViewRef const		kViewRef = inoutView;
-			HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(kViewRef, HIObjectRef);
-			OSStatus			error = noErr;
-			
-			
-			error = HIObjectSetAuxiliaryAccessibilityAttribute
-					(kViewObjectRef, 0/* sub-component identifier */,
-						kAXDescriptionAttribute, accessibilityDescCFString);
-			CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
-		}
+		error = HIObjectSetAuxiliaryAccessibilityAttribute
+				(kViewObjectRef, 0/* sub-component identifier */,
+					kAXDescriptionAttribute, accessibilityDescCFString);
+		CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 	}
-#endif
+	
 	return inoutView;
 }// SetUpHelpButton
 

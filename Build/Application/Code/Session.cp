@@ -66,7 +66,6 @@ class NSWindow; // TEMPORARY (currently a C++ file, not Objective-C++)
 #include <CocoaAnimation.h>
 #include <CocoaBasic.h>
 #include <Console.h>
-#include <Cursors.h>
 #include <FileSelectionDialogs.h>
 #include <GrowlSupport.h>
 #include <ListenerModel.h>
@@ -404,9 +403,7 @@ void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 size_t						processMoreData						(My_SessionPtr);
 OSStatus					receiveTerminalViewDragDrop			(EventHandlerCallRef, EventRef, void*);
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 OSStatus					receiveTerminalViewEntered			(EventHandlerCallRef, EventRef, void*);
-#endif
 OSStatus					receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef, void*);
 OSStatus					receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
 OSStatus					receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
@@ -2676,13 +2673,8 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 												globalCursorBounds);
 			tagData.setFrame(globalCursorBounds);
 			UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
-		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			// this call does not immediately hide the tag, but rather after a short delay
-			if (FlagManager_Test(kFlagOS10_4API))
-			{
-				UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
-			}
-		#endif
+			UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
 		}
 		
 		// suspend
@@ -3735,13 +3727,8 @@ Session_UserInputInterruptProcess	(SessionRef		inRef)
 											globalCursorBounds);
 		tagData.setFrame(globalCursorBounds);
 		UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
-	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 		// this call does not immediately hide the tag, but rather after a short delay
-		if (FlagManager_Test(kFlagOS10_4API))
-		{
-			UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
-		}
-	#endif
+		UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
 	}
 	
 	// send character to Unix process
@@ -7433,7 +7420,6 @@ receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 }// receiveTerminalViewDragDrop
 
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 /*!
 Handles "kEventControlTrackingAreaEntered" of "kEventClassControl"
 for a terminal view.
@@ -7549,7 +7535,6 @@ receiveTerminalViewEntered		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 	
 	return result;
 }// receiveTerminalViewEntered
-#endif
 
 
 /*!
@@ -8095,13 +8080,8 @@ terminalHoverLocalEchoString	(My_SessionPtr		inPtr,
 										globalCursorBounds);
 	tagData.setFrame(globalCursorBounds);
 	UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	// this call does not immediately hide the tag, but rather after a short delay
-	if (FlagManager_Test(kFlagOS10_4API))
-	{
-		UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
-	}
-#endif
+	UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
 }// terminalHoverLocalEchoString
 
 
@@ -8410,13 +8390,8 @@ vectorGraphicsCreateTarget		(My_SessionPtr	inPtr)
 												globalCursorBounds);
 			tagData.setFrame(globalCursorBounds);
 			UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
-		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			// this call does not immediately hide the tag, but rather after a short delay
-			if (FlagManager_Test(kFlagOS10_4API))
-			{
-				UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
-			}
-		#endif
+			UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
 		}
 		
 		result = true;
@@ -8863,10 +8838,8 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					
 					ptr->terminalViewDragDropUPP = NewEventHandlerUPP(receiveTerminalViewDragDrop);
 					assert(nullptr != ptr->terminalViewDragDropUPP);
-				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 					ptr->terminalViewEnteredUPP = NewEventHandlerUPP(receiveTerminalViewEntered);
 					assert(nullptr != ptr->terminalViewEnteredUPP);
-				#endif
 					ptr->terminalViewTextInputUPP = NewEventHandlerUPP(receiveTerminalViewTextInput);
 					assert(nullptr != ptr->terminalViewTextInputUPP);
 					TerminalWindow_GetViews(ptr->terminalWindow, viewCount, viewArray, &viewCount/* actual length */);
@@ -8882,12 +8855,10 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 													{
 														{ kEventClassTextInput, kEventTextInputUnicodeForKeyEvent }
 													};
-						#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 							EventTypeSpec const		whenTerminalViewEntered[] =
 													{
 														{ kEventClassControl, kEventControlTrackingAreaEntered }
 													};
-						#endif
 							EventTypeSpec const		whenTerminalViewDragDrop[] =
 													{
 														{ kEventClassControl, kEventControlDragEnter },
@@ -8904,7 +8875,6 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 																&ptr->terminalViewTextInputHandlers[userFocusView]);
 							assert_noerr(error);
 							
-						#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 							// if possible, allow focus-follows-mouse
 							error = HIViewInstallEventHandler(dragFocusView, ptr->terminalViewEnteredUPP,
 																GetEventTypeCount(whenTerminalViewEntered),
@@ -8919,7 +8889,6 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 																&ignoredRef);
 								assert_noerr(error);
 							}
-						#endif
 							
 							// ensure drags to this view are seen
 							error = HIViewInstallEventHandler(dragFocusView, ptr->terminalViewDragDropUPP,
@@ -8978,9 +8947,7 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						dragFocusView = TerminalView_ReturnDragFocusHIView(viewArray[i]);
 						RemoveEventHandler(ptr->terminalViewTextInputHandlers[userFocusView]);
 						RemoveEventHandler(ptr->terminalViewDragDropHandlers[dragFocusView]);
-					#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 						RemoveEventHandler(ptr->terminalViewEnteredHandlers[dragFocusView]);
-					#endif
 					}
 					DisposeEventHandlerUPP(ptr->terminalViewDragDropUPP), ptr->terminalViewDragDropUPP = nullptr;
 					DisposeEventHandlerUPP(ptr->terminalViewEnteredUPP), ptr->terminalViewEnteredUPP = nullptr;

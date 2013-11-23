@@ -392,10 +392,10 @@ _mainView				(createContainerView(inPanel, inOwningWindow)
 _buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */),
-_fontPanelHandler		(GetControlEventTarget(HIViewWrap(idMyButtonBackupFontName, inOwningWindow)), receiveFontChange,
+_fontPanelHandler		(HIViewGetEventTarget(HIViewWrap(idMyButtonBackupFontName, inOwningWindow)), receiveFontChange,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassFont), kEventFontPanelClosed, kEventFontSelection),
 							this/* user data */),
-_viewClickHandler		(CarbonEventUtilities_ReturnViewTarget(this->_mainView), receiveViewHit,
+_viewClickHandler		(HIViewGetEventTarget(this->_mainView), receiveViewHit,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
 							this/* user data */),
 _containerResizer		(_mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
@@ -1253,15 +1253,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					// apparently this API can return paramErr even though it
 					// successfully sets the desired font information...
 					UNUSED_RETURN(OSStatus)SetFontInfoForSelection
-											(kFontSelectionQDType, 1/* number of styles */, &fontInfo,
-												// NOTE: This API is misdeclared in older headers, the last argument is supposed to
-												// be an event target.  It is bastardized into HIObjectRef form for older compiles.
-											#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-												GetControlEventTarget(buttonHit)
-											#else
-												REINTERPRET_CAST(buttonHit, HIObjectRef)
-											#endif
-											);
+											(kFontSelectionQDType, 1/* number of styles */, &fontInfo, HIViewGetEventTarget(buttonHit));
 					if (1)
 					{
 						// show the font panel, even if it could not be initialized properly

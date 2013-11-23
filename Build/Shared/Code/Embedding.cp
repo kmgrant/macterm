@@ -40,7 +40,6 @@
 // library includes
 #include <AlertMessages.h>
 #include <ColorUtilities.h>
-#include <Cursors.h>
 #include <MemoryBlocks.h>
 
 

@@ -5,7 +5,7 @@
 /*###############################################################
 
 	Interface Library 2.4
-	© 1998-2012 by Kevin Grant
+	© 1998-2013 by Kevin Grant
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -41,7 +41,6 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
-#include <Cursors.h>
 #include <Embedding.h>
 #include <HIViewWrap.h>
 #include <MemoryBlocks.h>
@@ -530,8 +529,6 @@ adjustControlsOperation		(ControlRef		inSpecificControlOrRoot,
 		
 		// restore the visible state of the root
 		//(OSStatus)SetControlVisibility(inSpecificControlOrRoot, true/* visibility */, true/* draw */);
-		
-		Cursors_UseArrow();
 	}
 	else result = false;
 	

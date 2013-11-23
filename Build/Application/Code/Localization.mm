@@ -527,19 +527,6 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 								outFontName, outFontSizePtr, outFontStylePtr);
 	}
 	
-	error = noErr;
-	//unless (FlagManager_Test(kFlagOS10_2API))
-	{
-		if (inThemeFontToUse == kThemeToolbarFont)
-		{
-			// the toolbar font is not available on Mac OS X 10.1 and earlier,
-			// but it can be approximated by resizing the small system font
-			error = GetThemeFont(kThemeSmallSystemFont, GetScriptManagerVariable(smSysScript)/* script code */,
-									outFontName, outFontSizePtr, outFontStylePtr);
-			error = noErr;
-		}
-	}
-	
 	// without the appropriate Appearance Manager APIs, use the Script Manager
 	if ((!haveAppearance1_1) || (error != noErr))
 	{

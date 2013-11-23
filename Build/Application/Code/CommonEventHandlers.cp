@@ -243,7 +243,7 @@ CommonEventHandlers_HIViewResizerImpl	(HIViewRef									inForWhichView,
 edgesOfInterest(inEdgesOfInterest),
 procPtr(inResizeProc),
 context(inContext),
-resizeEventHandler(GetControlEventTarget(inForWhichView), receiveHIViewResizeOrSizeQuery,
+resizeEventHandler(HIViewGetEventTarget(inForWhichView), receiveHIViewResizeOrSizeQuery,
 					CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlBoundsChanged),
 					this/* user data */)
 {
@@ -544,9 +544,7 @@ CommonEventHandlers_InstallNumericalFieldArrows		(ControlRef										inForWhich
 													&ptr->controlHitEventHandlerRef/* event handler reference */);
 			}
 			
-		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			// set accessibility relationships, if possible
-			if (FlagManager_Test(kFlagOS10_4API))
 			{
 				CFStringRef		accessibilityDescCFString = nullptr;
 				
@@ -563,7 +561,6 @@ CommonEventHandlers_InstallNumericalFieldArrows		(ControlRef										inForWhich
 					CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 				}
 			}
-		#endif
 		}
 	}
 	return result;
@@ -633,9 +630,7 @@ CommonEventHandlers_InstallPopUpMenuArrows	(ControlRef									inForWhichArrows,
 													&ptr->controlHitEventHandlerRef/* event handler reference */);
 			}
 			
-		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			// set accessibility relationships, if possible
-			if (FlagManager_Test(kFlagOS10_4API))
 			{
 				CFStringRef		accessibilityDescCFString = nullptr;
 				
@@ -652,7 +647,6 @@ CommonEventHandlers_InstallPopUpMenuArrows	(ControlRef									inForWhichArrows,
 					CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 				}
 			}
-		#endif
 		}
 	}
 	return result;

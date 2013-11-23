@@ -52,7 +52,6 @@
 #include <CarbonEventUtilities.template.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
-#include <Cursors.h>
 #include <DialogAdjust.h>
 #include <Embedding.h>
 #include <HIViewWrap.h>
@@ -431,10 +430,10 @@ keyType						(0),
 _menuCommandsHandler		(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 								this/* user data */),
-_fieldKeyCharInputHandler	(GetControlEventTarget(HIViewWrap(idMyFieldMacroKeyCharacter, inOwningWindow)), receiveFieldChanged,
+_fieldKeyCharInputHandler	(HIViewGetEventTarget(HIViewWrap(idMyFieldMacroKeyCharacter, inOwningWindow)), receiveFieldChanged,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 								this/* user data */),
-_fieldContentsInputHandler	(GetControlEventTarget(HIViewWrap(idMyFieldMacroText, inOwningWindow)), receiveFieldChanged,
+_fieldContentsInputHandler	(HIViewGetEventTarget(HIViewWrap(idMyFieldMacroText, inOwningWindow)), receiveFieldChanged,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 								this/* user data */),
 _containerResizer			(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
@@ -1910,7 +1909,7 @@ monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 	case kDataBrowserEditStopped:
 		// it seems to be possible for the I-beam to persist at times
 		// unless the cursor is explicitly reset here
-		Cursors_UseArrow();
+		//[[NSCursor arrowCursor] set];
 		break;
 	
 	default:

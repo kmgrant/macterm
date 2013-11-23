@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -241,11 +241,7 @@ allCurrentIPAddressesAndAliases		(struct hostent*&	outHost,
 									 int				inSocketAddressFamily)
 {
 	bool	result = false;
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	char	hostName[_POSIX_HOST_NAME_MAX];
-#else
-	char	hostName[255];
-#endif
 	int		getHostResult = gethostname(hostName, sizeof(hostName) - 1);
 	
 	

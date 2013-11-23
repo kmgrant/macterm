@@ -63,7 +63,6 @@
 #import <CommonEventHandlers.h>
 #import <ContextSensitiveMenu.h>
 #import <Console.h>
-#import <Cursors.h>
 #import <FileSelectionDialogs.h>
 #import <HIViewWrap.h>
 #import <ListenerModel.h>
@@ -3164,11 +3163,11 @@ TerminalView_SetDragHighlight	(HIViewRef		inView,
 	// change the cursor, for additional visual feedback
 	if (showHighlight)
 	{
-		Cursors_UseArrowCopy();
+		[[NSCursor dragCopyCursor] set];
 	}
 	else
 	{
-		Cursors_UseArrow();
+		[[NSCursor arrowCursor] set];
 	}
 	
 	// redraw the view
@@ -4275,7 +4274,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		assert(this->containerResizeHandler.isInstalled());
 		
 		// install a handler for contextual menu clicks
-		this->contextualMenuHandler.install(GetControlEventTarget(this->contentHIView),
+		this->contextualMenuHandler.install(HIViewGetEventTarget(this->contentHIView),
 											receiveTerminalViewContextualMenuSelect,
 											CarbonEventSetInClass(CarbonEventClass(kEventClassControl),
 																	kEventControlContextualMenuClick),
@@ -4283,7 +4282,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		assert(this->contextualMenuHandler.isInstalled());
 		
 		// set up keyboard text selection on the focus view
-		this->rawKeyDownHandler.install(GetControlEventTarget(this->focusHIView),
+		this->rawKeyDownHandler.install(HIViewGetEventTarget(this->focusHIView),
 											receiveTerminalViewRawKeyDown,
 											CarbonEventSetInClass(CarbonEventClass(kEventClassKeyboard),
 																	kEventRawKeyDown, kEventRawKeyRepeat),
@@ -5365,16 +5364,18 @@ dragTextSelection	(My_TerminalViewPtr		inTerminalViewPtr,
 		result = NewDragWithPasteboard(dragPasteboard, &dragRef);
 		if (noErr == result)
 		{
-			SInt16		oldCursor = Cursors_UseArrow();
+			NSCursor*	oldCursor = [NSCursor currentCursor];
 			
 			
+			[[NSCursor arrowCursor] set];
 			result = TrackDrag(dragRef, inoutEventPtr, inoutGlobalDragOutlineRegion);
-			Cursors_Use(oldCursor);
+			[oldCursor set];
 		}
 	}
 	DisposeDrag(dragRef), dragRef = nullptr;
 	
-	Cursors_UseArrow();
+	[[NSCursor arrowCursor] set];
+	
 	return result;
 }// dragTextSelection
 
@@ -9631,15 +9632,11 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 				if (noErr == result)
 				{
 					// each attribute mentioned here should be handled below
-				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 					CFArrayAppendValue(listOfNames, kAXDescriptionAttribute);
-				#endif
 					CFArrayAppendValue(listOfNames, kAXRoleAttribute);
 					CFArrayAppendValue(listOfNames, kAXRoleDescriptionAttribute);
 					CFArrayAppendValue(listOfNames, kAXNumberOfCharactersAttribute);
-				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 					CFArrayAppendValue(listOfNames, kAXTopLevelUIElementAttribute);
-				#endif
 					CFArrayAppendValue(listOfNames, kAXWindowAttribute);
 					CFArrayAppendValue(listOfNames, kAXParentAttribute);
 					CFArrayAppendValue(listOfNames, kAXEnabledAttribute);
@@ -9682,25 +9679,15 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 						isSettable = false;
 						if (kEventAccessibleGetNamedAttribute == kEventKind)
 						{
-						#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-							if (FlagManager_Test(kFlagOS10_4API))
+							CFStringRef		roleDescCFString = HICopyAccessibilityRoleDescription
+																(roleCFString, nullptr/* sub-role */);
+							
+							
+							if (nullptr != roleDescCFString)
 							{
-								CFStringRef		roleDescCFString = HICopyAccessibilityRoleDescription
-																	(roleCFString, nullptr/* sub-role */);
-								
-								
-								if (nullptr != roleDescCFString)
-								{
-									result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
-																sizeof(roleDescCFString), &roleDescCFString);
-									CFRelease(roleDescCFString), roleDescCFString = nullptr;
-								}
-							}
-							else
-						#endif
-							{
-								// no API available prior to 10.4 to find this value, so be lazy and return nothing
-								result = eventNotHandledErr;
+								result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
+															sizeof(roleDescCFString), &roleDescCFString);
+								CFRelease(roleDescCFString), roleDescCFString = nullptr;
 							}
 						}
 					}
@@ -9724,7 +9711,6 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 							}
 						}
 					}
-				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXDescriptionAttribute, kCFCompareBackwards))
 					{
 						isSettable = false;
@@ -9747,7 +9733,6 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 							}
 						}
 					}
-				#endif
 					else
 					{
 						// Many attributes are already supported by the default handler:
@@ -9883,12 +9868,12 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 					if (eventModifiers & cmdKey)
 					{
 						// if clicked, a highlighted URL would be opened
-						UNUSED_RETURN(SInt16)Cursors_UseHandPoint();
+						[[NSCursor pointingHandCursor] set];
 					}
 					else
 					{
 						// text is draggable
-						UNUSED_RETURN(SInt16)Cursors_UseHandOpen();
+						[[NSCursor openHandCursor] set];
 					}
 				}
 				else
@@ -9900,12 +9885,12 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 						if (eventModifiers & controlKey)
 						{
 							// if clicked, there would be a contextual menu
-							UNUSED_RETURN(SInt16)Cursors_UseArrowContextualMenu();
+							[[NSCursor contextualMenuCursor] set];
 						}
 						else if ((eventModifiers & optionKey) && (eventModifiers & cmdKey))
 						{
 							// if clicked, the terminal cursor will move to the mouse location
-							UNUSED_RETURN(SInt16)Cursors_UsePlus();
+							UNUSED_RETURN(OSStatus)SetThemeCursor(kThemePlusCursor);
 						}
 						else if (eventModifiers & optionKey)
 						{
@@ -9943,7 +9928,7 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 					}
 					else
 					{
-						UNUSED_RETURN(SInt16)Cursors_UseArrow();
+						[[NSCursor arrowCursor] set];
 					}
 				}
 			}
@@ -13800,16 +13785,7 @@ resetCursorRects
 		if (self->modifierFlagsForCursor & NSControlKeyMask)
 		{
 			// modifier key for contextual menu
-			if (FlagManager_Test(kFlagOS10_6API))
-			{
-				[self addCursorRect:[self bounds] cursor:[NSCursor contextualMenuCursor]];
-			}
-			else
-			{
-				// UNIMPLEMENTED on older Mac OS X versions for Cocoa (use Carbon?)
-				//[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
-				[self addCursorRect:[self bounds] cursor:customCursorIBeam(isSmallIBeam(viewPtr))];
-			}
+			[self addCursorRect:[self bounds] cursor:[NSCursor contextualMenuCursor]];
 		}
 		else if ((self->modifierFlagsForCursor & NSCommandKeyMask) &&
 					(self->modifierFlagsForCursor & NSAlternateKeyMask))

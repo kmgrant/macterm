@@ -98,7 +98,6 @@
 		0AC6BB3F0A8C0BA100AFF37A /* Console.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC6055432A400ACDF3A /* Console.cp */; };
 		0AC6BB400A8C0BA100AFF37A /* AppleEventUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */; };
 		0AC6BB410A8C0BA100AFF37A /* PrefPanelFullScreen.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AF4B5460A1D61E400D187A3 /* PrefPanelFullScreen.mm */; };
-		0AC6BB420A8C0BA100AFF37A /* Cursors.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDCC055432A400ACDF3A /* Cursors.cp */; };
 		0AC6BB440A8C0BA100AFF37A /* URL.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE38055432A400ACDF3A /* URL.cp */; };
 		0AC6BB450A8C0BA100AFF37A /* FileSelectionDialogs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFD055432A400ACDF3A /* FileSelectionDialogs.cp */; };
 		0AC6BB470A8C0BA100AFF37A /* WindowInfo.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE3B055432A400ACDF3A /* WindowInfo.cp */; };
@@ -272,7 +271,6 @@
 		0A4603CB0554376100ACDF3A /* Console.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Console.h; path = Shared/Code/Console.h; sourceTree = "<group>"; };
 		0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConstantsRegistry.h; path = Application/Code/ConstantsRegistry.h; sourceTree = "<group>"; };
 		0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ContextSensitiveMenu.h; path = Shared/Code/ContextSensitiveMenu.h; sourceTree = "<group>"; };
-		0A4603D30554376100ACDF3A /* Cursors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Cursors.h; path = Shared/Code/Cursors.h; sourceTree = "<group>"; };
 		0A4603D50554376100ACDF3A /* DialogAdjust.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DialogAdjust.h; path = Shared/Code/DialogAdjust.h; sourceTree = "<group>"; };
 		0A4603D80554376100ACDF3A /* DialogUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DialogUtilities.h; path = Application/Code/DialogUtilities.h; sourceTree = "<group>"; };
 		0A4603D90554376100ACDF3A /* DNR.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DNR.h; path = Application/Code/DNR.h; sourceTree = "<group>"; };
@@ -346,7 +344,6 @@
 		0A46FDC3055432A400ACDF3A /* Commands.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Commands.mm; path = Application/Code/Commands.mm; sourceTree = "<group>"; };
 		0A46FDC6055432A400ACDF3A /* Console.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Console.cp; path = Shared/Code/Console.cp; sourceTree = "<group>"; };
 		0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ContextSensitiveMenu.mm; path = Shared/Code/ContextSensitiveMenu.mm; sourceTree = "<group>"; };
-		0A46FDCC055432A400ACDF3A /* Cursors.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Cursors.cp; path = Shared/Code/Cursors.cp; sourceTree = "<group>"; };
 		0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DialogAdjust.cp; path = Shared/Code/DialogAdjust.cp; sourceTree = "<group>"; };
 		0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DialogUtilities.cp; path = Application/Code/DialogUtilities.cp; sourceTree = "<group>"; };
 		0A46FDD1055432A400ACDF3A /* DNR.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DNR.cp; path = Application/Code/DNR.cp; sourceTree = "<group>"; };
@@ -458,7 +455,6 @@
 		0A9B31840D538E4D00C1616D /* Undoables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Undoables.h; path = Shared/Code/Undoables.h; sourceTree = "<group>"; };
 		0A9B31860D538E5B00C1616D /* CFDictionaryManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFDictionaryManager.h; path = Shared/Code/CFDictionaryManager.h; sourceTree = "<group>"; };
 		0A9B31880D538E6300C1616D /* CFKeyValueInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFKeyValueInterface.h; path = Shared/Code/CFKeyValueInterface.h; sourceTree = "<group>"; };
-		0A9B318A0D538E6F00C1616D /* Cursors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Cursors.h; path = Shared/Code/Cursors.h; sourceTree = "<group>"; };
 		0A9B318C0D538E8600C1616D /* FlagManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FlagManager.h; path = Shared/Code/FlagManager.h; sourceTree = "<group>"; };
 		0A9B318E0D538EAB00C1616D /* ListenerModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ListenerModel.h; path = Shared/Code/ListenerModel.h; sourceTree = "<group>"; };
 		0A9B31920D538EE400C1616D /* MemoryBlocks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlocks.h; path = Shared/Code/MemoryBlocks.h; sourceTree = "<group>"; };
@@ -665,7 +661,6 @@
 				0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */,
 				0A46FDC6055432A400ACDF3A /* Console.cp */,
 				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */,
-				0A46FDCC055432A400ACDF3A /* Cursors.cp */,
 				0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */,
 				0A46FDD3055432A400ACDF3A /* Embedding.cp */,
 				0A46FDFD055432A400ACDF3A /* FileSelectionDialogs.cp */,
@@ -700,7 +695,6 @@
 				0A4603C50554376100ACDF3A /* ColorUtilities.h */,
 				0A4603CB0554376100ACDF3A /* Console.h */,
 				0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */,
-				0A9B318A0D538E6F00C1616D /* Cursors.h */,
 				0A4603D50554376100ACDF3A /* DialogAdjust.h */,
 				0A4603DB0554376100ACDF3A /* Embedding.h */,
 				0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */,
@@ -821,7 +815,6 @@
 				0A4603C70554376100ACDF3A /* Commands.h */,
 				0A3D04C10A4CEB4E00A79DDF /* CommonEventHandlers.h */,
 				0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */,
-				0A4603D30554376100ACDF3A /* Cursors.h */,
 				0ABD01D11068002C00BBB87A /* DebugInterface.h */,
 				0A4603D80554376100ACDF3A /* DialogUtilities.h */,
 				0A4603D90554376100ACDF3A /* DNR.h */,
@@ -1448,7 +1441,6 @@
 				0AC6BB3F0A8C0BA100AFF37A /* Console.cp in Sources */,
 				0AC6BB400A8C0BA100AFF37A /* AppleEventUtilities.cp in Sources */,
 				0AC6BB410A8C0BA100AFF37A /* PrefPanelFullScreen.mm in Sources */,
-				0AC6BB420A8C0BA100AFF37A /* Cursors.cp in Sources */,
 				0AC6BB440A8C0BA100AFF37A /* URL.cp in Sources */,
 				0AC6BB450A8C0BA100AFF37A /* FileSelectionDialogs.cp in Sources */,
 				0AC6BB470A8C0BA100AFF37A /* WindowInfo.cp in Sources */,

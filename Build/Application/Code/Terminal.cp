@@ -71,7 +71,6 @@ extern "C"
 #include <CFRetainRelease.h>
 #include <CFUtilities.h>
 #include <Console.h>
-#include <Cursors.h>
 #include <FileSelectionDialogs.h>
 #include <MemoryBlockReferenceLocker.template.h>
 #include <MemoryBlocks.h>

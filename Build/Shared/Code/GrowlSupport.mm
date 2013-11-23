@@ -120,7 +120,6 @@ GrowlSupport_Init ()
 		}
 	}
 	
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	// IMPORTANT: The framework is weak-linked so that the application will
 	// always launch on older Mac OS X versions; check for a defined symbol
 	// before attempting to call ANYTHING in Growl.  Other code in this file
@@ -139,7 +138,6 @@ GrowlSupport_Init ()
 	{
 		[GrowlApplicationBridge setGrowlDelegate:[GrowlSupport_Delegate sharedGrowlDelegate]];
 	}
-#endif
 }// Init
 
 
@@ -254,7 +252,6 @@ GrowlSupport_Notify		(GrowlSupport_NoteDisplay	inDisplay,
 		}
 	}
 	
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	if (GrowlSupport_IsAvailable())
 	{
 	#if 1
@@ -294,9 +291,6 @@ GrowlSupport_Notify		(GrowlSupport_NoteDisplay	inDisplay,
 		[scriptObject release];
 	#endif
 	}
-#else
-#	pragma unused(inNotificationName, inTitle, inDescription)
-#endif
 }// Notify
 
 
@@ -369,11 +363,7 @@ Designated initializer.
 init
 {
 	self = [super init];
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	self->isReady = [GrowlApplicationBridge isGrowlRunning];
-#else
-	self->isReady = NO;
-#endif
 	return self;
 }// init
 

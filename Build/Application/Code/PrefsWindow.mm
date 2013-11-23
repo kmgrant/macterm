@@ -58,7 +58,6 @@
 #import <CocoaFuture.objc++.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
-#import <Cursors.h>
 #import <DialogAdjust.h>
 #import <Embedding.h>
 #import <FileSelectionDialogs.h>
@@ -1134,7 +1133,7 @@ handleNewMainWindowSize	(WindowRef		inWindow,
 							false/* is delta */);
 	std::for_each(gPanelList().begin(), gPanelList().end(), resizer);
 	
-	Cursors_UseArrow();
+	[[NSCursor arrowCursor] set];
 }// handleNewMainWindowSize
 
 
@@ -1173,15 +1172,6 @@ init ()
 	{
 		Rect		panelBounds;
 		
-		
-		// some attributes that are unset in the NIB are not recognized on 10.3
-		if (false == FlagManager_Test(kFlagOS10_4API))
-		{
-			UNUSED_RETURN(OSStatus)ChangeWindowAttributes
-									(gPreferencesWindow,
-										0/* attributes to set */,
-										kWindowInWindowMenuAttribute/* attributes to clear */);
-		}
 		
 		// although the API is available on 10.4, the Spaces-related flags
 		// will only work on Leopard
@@ -1330,9 +1320,7 @@ init ()
 			}
 		}
 		
-	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 		// set accessibility relationships, if possible
-		if (FlagManager_Test(kFlagOS10_4API))
 		{
 			CFStringRef		accessibilityDescCFString = nullptr;
 			
@@ -1378,7 +1366,6 @@ init ()
 				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 			}
 		}
-	#endif
 		
 		//
 		// create base controls
@@ -1473,13 +1460,13 @@ init ()
 															handleNewFooterSize, nullptr/* context */);
 			
 			// install a callback to refresh the footer when its state changes
-			gPrefsFooterActiveStateHandler.install(GetControlEventTarget(footerView), receiveFooterActiveStateChange,
+			gPrefsFooterActiveStateHandler.install(HIViewGetEventTarget(footerView), receiveFooterActiveStateChange,
 													CarbonEventSetInClass(CarbonEventClass(kEventClassControl),
 																			kEventControlActivate, kEventControlDeactivate),
 													nullptr/* user data */);
 			
 			// install a callback to render the footer background
-			gPrefsFooterDrawHandler.install(GetControlEventTarget(footerView), receiveFooterDraw,
+			gPrefsFooterDrawHandler.install(HIViewGetEventTarget(footerView), receiveFooterDraw,
 											CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
 											nullptr/* user data */);
 		}
@@ -1525,17 +1512,11 @@ init ()
 		
 		// set the initial offset of the drawer
 		{
-			float		leadingOffset = 52/* arbitrary; the current height of a standard toolbar */;
+			float		leadingOffset = 51/* arbitrary; the current height of a standard toolbar */;
 			float		trailingOffset = kWindowOffsetUnchanged;
 			OSStatus	error = noErr;
 			
 			
-			if (FlagManager_Test(kFlagOS10_5API))
-			{
-				// on Leopard, the aesthetically-pleasing spot for the drawer
-				// is slightly higher
-				--leadingOffset;
-			}
 			error = SetDrawerOffsets(gDrawerWindow, leadingOffset, trailingOffset);
 		}
 		
@@ -1679,7 +1660,7 @@ monitorDataBrowserItems		(ControlRef						inDataBrowser,
 	case kDataBrowserEditStopped:
 		// it seems to be possible for the I-beam to persist at times
 		// unless the cursor is explicitly reset here
-		Cursors_UseArrow();
+		[[NSCursor arrowCursor] set];
 		break;
 	
 	default:
@@ -2023,15 +2004,12 @@ receiveFooterDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				floatBounds.origin.y += 2;
 				floatBounds.size.height -= 2;
 				
-				// reserve this darker colored background for Leopard
-				if (FlagManager_Test(kFlagOS10_5API))
-				{
-					bzero(&backgroundInfo, sizeof(backgroundInfo));
-					backgroundInfo.version = 0;
-					backgroundInfo.state = IsControlActive(footerView) ? kThemeStateActive : kThemeStateInactive;
-					backgroundInfo.kind = kThemeBackgroundMetal;
-					error = HIThemeDrawBackground(&floatBounds, &backgroundInfo, drawingContext, kHIThemeOrientationNormal);
-				}
+				// set dark background
+				bzero(&backgroundInfo, sizeof(backgroundInfo));
+				backgroundInfo.version = 0;
+				backgroundInfo.state = IsControlActive(footerView) ? kThemeStateActive : kThemeStateInactive;
+				backgroundInfo.kind = kThemeBackgroundMetal;
+				error = HIThemeDrawBackground(&floatBounds, &backgroundInfo, drawingContext, kHIThemeOrientationNormal);
 			}
 		}
 	}
@@ -3874,29 +3852,7 @@ windowDidLoad
 	// “bottom chrome” so a horizontal line is included to produce
 	// a similar sort of divider; on later Mac OS X versions however
 	// this should be hidden so that the softer gray can show through
-	if (FlagManager_Test(kFlagOS10_5API))
-	{
-		[self->horizontalDividerView setHidden:YES];
-	}
-	
-	// the “source list” style is not respected prior to Mac OS X 10.5
-	// (and worse, it’s interpreted as a horrible background color);
-	// programmatically override the NIB setting on older OS versions
-	if (false == FlagManager_Test(kFlagOS10_5API))
-	{
-		// color should be fixed
-		[self->sourceListTableView setBackgroundColor:[NSColor whiteColor]];
-		
-		// the appearance and size of the segmented control is different
-		{
-			NSRect	frame = [self->sourceListSegmentedControl frame];
-			
-			
-			--(frame.origin.y);
-			++(frame.size.height);
-			[self->sourceListSegmentedControl setFrame:frame];
-		}
-	}
+	[self->horizontalDividerView setHidden:YES];
 	
 	// show the first panel while simultaneously resizing the
 	// window to an appropriate frame and showing any auxiliary

@@ -7,7 +7,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -260,7 +260,7 @@ mainView			(createContainerView(inPanel, inOwningWindow)
 						<< HIViewWrap_AssertExists),
 containerResizer	(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
 						deltaSizePanelContainerHIView, this/* context */),
-viewClickHandler	(GetControlEventTarget(this->mainView), receiveViewHit,
+viewClickHandler	(HIViewGetEventTarget(this->mainView), receiveViewHit,
 						CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
 						this/* user data */)
 {

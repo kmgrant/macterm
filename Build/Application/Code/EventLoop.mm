@@ -53,7 +53,6 @@
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
-#import <Cursors.h>
 #import <Embedding.h>
 #import <GrowlSupport.h>
 #import <HIViewWrap.h>
@@ -153,9 +152,7 @@ void					eventNotifyGlobal				(EventLoop_GlobalEvent, void*);
 My_GlobalEventTargetRef	newGlobalEventTarget			();
 OSStatus				receiveApplicationSwitch		(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 OSStatus				receiveSheetOpening				(EventHandlerCallRef, EventRef, void*);
-#endif
 OSStatus				receiveWindowActivated			(EventHandlerCallRef, EventRef, void*);
 OSStatus				updateModifiers					(EventHandlerCallRef, EventRef, void*);
 
@@ -258,7 +255,6 @@ EventLoop_Init ()
 	// set the sleep time (3.0 - don’t use preferences value, it’s not user-specifiable anymore)
 	gTicksWaitNextEvent = 60; // make this larger to increase likelihood of high-frequency timers firing on time
 	
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	// install a callback that detects toolbar sheets
 	{
 		EventTypeSpec const		whenToolbarSheetOpens[] =
@@ -275,7 +271,6 @@ EventLoop_Init ()
 												&gCarbonEventSheetOpeningHandler/* event handler reference */);
 		// don’t check for errors, it’s not critical if this handler is installed
 	}
-#endif
 	
 	// create listener models to handle event notifications
 	gGlobalEventTarget = newGlobalEventTarget();
@@ -974,7 +969,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 }// receiveHICommand
 
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 /*!
 Handles "kEventWindowSheetOpening" of "kEventClassWindow".
 
@@ -1015,8 +1009,8 @@ receiveSheetOpening		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			//	HIToolbox.framework/Versions/A/Resources/English.lproj/Toolbar.nib)
 			// to hack in a more Cocoa-like look-and-feel; this is obviously
 			// completely cosmetic, so any errors are ignored, etc.; this hack works
-			// on 10.4-10.7, but do NOT assume it does on 10.8 or 10.3 (for now)
-			if (FlagManager_Test(kFlagOS10_4API) && (false == FlagManager_Test(kFlagOS10_8API)) &&
+			// on 10.4-10.7, but do NOT assume it does past 10.9 (for now)
+			if (FlagManager_Test(kFlagOS10_6API) && (false == FlagManager_Test(kFlagOS10_10API)) &&
 				(noErr == CopyWindowTitleAsCFString(sheetWindow, &sheetTitleCFString)))
 			{
 				// attempt to identify the customization sheet using its title
@@ -1101,7 +1095,6 @@ receiveSheetOpening		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	return result;
 }// receiveSheetOpening
-#endif
 
 
 /*!
@@ -1123,7 +1116,7 @@ receiveWindowActivated	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	assert(kEventClass == kEventClassWindow);
 	assert(kEventKind == kEventWindowActivated);
 	
-	Cursors_UseArrow();
+	[[NSCursor arrowCursor] set];
 	
 	// IMPORTANT: Do not interfere with this event.
 	result = eventNotHandledErr;

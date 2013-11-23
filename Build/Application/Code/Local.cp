@@ -1138,30 +1138,25 @@ Boolean
 Local_TerminalSetUTF8Encoding	(Local_TerminalID	inPseudoTerminalID,
 								 Boolean			inIsUTF8)
 {
-	struct termios	terminalInfo;
 	Boolean			result = false;
+	struct termios	terminalInfo;
+	int				tcStatus = tcgetattr(inPseudoTerminalID, &terminalInfo);
 	
 	
-	if (FlagManager_Test(kFlagOS10_6API))
+	if (0 == tcStatus)
 	{
-		int		tcStatus = tcgetattr(inPseudoTerminalID, &terminalInfo);
-		
-		
+		if (inIsUTF8)
+		{
+			terminalInfo.c_iflag |= IUTF8;
+		}
+		else
+		{
+			terminalInfo.c_iflag &= ~(IUTF8);
+		}
+		tcStatus = tcsetattr(inPseudoTerminalID, TCSANOW/* when to apply changes */, &terminalInfo);
 		if (0 == tcStatus)
 		{
-			if (inIsUTF8)
-			{
-				terminalInfo.c_iflag |= IUTF8;
-			}
-			else
-			{
-				terminalInfo.c_iflag &= ~(IUTF8);
-			}
-			tcStatus = tcsetattr(inPseudoTerminalID, TCSANOW/* when to apply changes */, &terminalInfo);
-			if (0 == tcStatus)
-			{
-				result = true;
-			}
+			result = true;
 		}
 	}
 	return result;

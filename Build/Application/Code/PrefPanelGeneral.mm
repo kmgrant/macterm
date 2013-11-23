@@ -635,7 +635,7 @@ mainView			(createContainerView(inPanel, inOwningWindow)
 containerResizer	(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
 								kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
 						deltaSizePanelContainerHIView, this/* context */),
-viewClickHandler	(GetControlEventTarget(this->tabView), receiveViewHit,
+viewClickHandler	(HIViewGetEventTarget(this->tabView), receiveViewHit,
 						CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
 						this/* user data */)
 {
@@ -882,29 +882,23 @@ void
 My_GeneralTabNotification::
 assignAccessibilityRelationships ()
 {
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-	// set accessibility relationships, if possible
-	if (FlagManager_Test(kFlagOS10_4API))
+	OSStatus	error = noErr;
+	
+	
+	// associate the terminal bell menu with its label, and vice-versa
+	error = HIObjectSetAuxiliaryAccessibilityAttribute
+			(this->popupMenuBell.returnHIObjectRef(), 0/* sub-component identifier */,
+				kAXTitleUIElementAttribute, this->labelBell.acquireAccessibilityObject());
 	{
-		OSStatus	error = noErr;
+		void const*			values[] = { this->popupMenuBell.acquireAccessibilityObject() };
+		CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
+															&kCFTypeArrayCallBacks), true/* is retained */);
 		
 		
-		// associate the terminal bell menu with its label, and vice-versa
 		error = HIObjectSetAuxiliaryAccessibilityAttribute
-				(this->popupMenuBell.returnHIObjectRef(), 0/* sub-component identifier */,
-					kAXTitleUIElementAttribute, this->labelBell.acquireAccessibilityObject());
-		{
-			void const*			values[] = { this->popupMenuBell.acquireAccessibilityObject() };
-			CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
-																&kCFTypeArrayCallBacks), true/* is retained */);
-			
-			
-			error = HIObjectSetAuxiliaryAccessibilityAttribute
-					(this->labelBell.returnHIObjectRef(), 0/* sub-component identifier */,
-						kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
-		}
+				(this->labelBell.returnHIObjectRef(), 0/* sub-component identifier */,
+					kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
 	}
-#endif
 }// My_GeneralTabNotification::assignAccessibilityRelationships
 
 
@@ -1370,7 +1364,7 @@ HIViewWrap							(createPaneView(inOwningWindow)
 buttonCommandsHandler				(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 										CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 										nullptr/* user data */),
-fieldSpacesPerTabInputHandler		(GetControlEventTarget(HIViewWrap(idMyFieldCopyUsingSpacesForTabs, inOwningWindow)), receiveFieldChanged,
+fieldSpacesPerTabInputHandler		(HIViewGetEventTarget(HIViewWrap(idMyFieldCopyUsingSpacesForTabs, inOwningWindow)), receiveFieldChanged,
 										CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 										inOwningUI/* user data */),
 containerResizer					(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
@@ -1409,51 +1403,45 @@ void
 My_GeneralTabSpecial::
 assignAccessibilityRelationships ()
 {
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-	// set accessibility relationships, if possible
-	if (FlagManager_Test(kFlagOS10_4API))
+	OSStatus	error = noErr;
+	
+	
+	// associate the cursor buttons with their label, and vice-versa
+	error = HIObjectSetAuxiliaryAccessibilityAttribute
+			(this->checkBoxCursorFlashing.returnHIObjectRef(), 0/* sub-component identifier */,
+				kAXTitleUIElementAttribute, this->labelCursor.acquireAccessibilityObject());
 	{
-		OSStatus	error = noErr;
+		void const*			values[] = { this->checkBoxCursorFlashing.acquireAccessibilityObject() };
+		CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
+															&kCFTypeArrayCallBacks), true/* is retained */);
 		
 		
-		// associate the cursor buttons with their label, and vice-versa
 		error = HIObjectSetAuxiliaryAccessibilityAttribute
-				(this->checkBoxCursorFlashing.returnHIObjectRef(), 0/* sub-component identifier */,
-					kAXTitleUIElementAttribute, this->labelCursor.acquireAccessibilityObject());
-		{
-			void const*			values[] = { this->checkBoxCursorFlashing.acquireAccessibilityObject() };
-			CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
-																&kCFTypeArrayCallBacks), true/* is retained */);
-			
-			
-			error = HIObjectSetAuxiliaryAccessibilityAttribute
-					(this->labelCursor.returnHIObjectRef(), 0/* sub-component identifier */,
-						kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
-		}
-		
-		// associate the window resize effect buttons with their label, and vice-versa
-		error = HIObjectSetAuxiliaryAccessibilityAttribute
-				(this->radioButtonResizeAffectsScreenSize.returnHIObjectRef(), 0/* sub-component identifier */,
-					kAXTitleUIElementAttribute, this->labelWindowResizeEffect.acquireAccessibilityObject());
-		error = HIObjectSetAuxiliaryAccessibilityAttribute
-				(this->radioButtonResizeAffectsFontSize.returnHIObjectRef(), 0/* sub-component identifier */,
-					kAXTitleUIElementAttribute, this->labelWindowResizeEffect.acquireAccessibilityObject());
-		{
-			void const*			values[] =
-								{
-									this->radioButtonResizeAffectsScreenSize.acquireAccessibilityObject(),
-									this->radioButtonResizeAffectsFontSize.acquireAccessibilityObject()
-								};
-			CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
-																&kCFTypeArrayCallBacks), true/* is retained */);
-			
-			
-			error = HIObjectSetAuxiliaryAccessibilityAttribute
-					(this->labelWindowResizeEffect.returnHIObjectRef(), 0/* sub-component identifier */,
-						kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
-		}
+				(this->labelCursor.returnHIObjectRef(), 0/* sub-component identifier */,
+					kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
 	}
-#endif
+	
+	// associate the window resize effect buttons with their label, and vice-versa
+	error = HIObjectSetAuxiliaryAccessibilityAttribute
+			(this->radioButtonResizeAffectsScreenSize.returnHIObjectRef(), 0/* sub-component identifier */,
+				kAXTitleUIElementAttribute, this->labelWindowResizeEffect.acquireAccessibilityObject());
+	error = HIObjectSetAuxiliaryAccessibilityAttribute
+			(this->radioButtonResizeAffectsFontSize.returnHIObjectRef(), 0/* sub-component identifier */,
+				kAXTitleUIElementAttribute, this->labelWindowResizeEffect.acquireAccessibilityObject());
+	{
+		void const*			values[] =
+							{
+								this->radioButtonResizeAffectsScreenSize.acquireAccessibilityObject(),
+								this->radioButtonResizeAffectsFontSize.acquireAccessibilityObject()
+							};
+		CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
+															&kCFTypeArrayCallBacks), true/* is retained */);
+		
+		
+		error = HIObjectSetAuxiliaryAccessibilityAttribute
+				(this->labelWindowResizeEffect.returnHIObjectRef(), 0/* sub-component identifier */,
+					kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
+	}
 }// My_GeneralTabSpecial::assignAccessibilityRelationships
 
 

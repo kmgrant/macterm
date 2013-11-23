@@ -54,7 +54,6 @@
 #include <CFUtilities.h>
 #include <CocoaAnimation.h>
 #include <Console.h>
-#include <Cursors.h>
 #include <MemoryBlocks.h>
 #include <RegionUtilities.h>
 #include <SoundSystem.h>

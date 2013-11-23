@@ -52,7 +52,6 @@
 #include <CarbonEventUtilities.template.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
-#include <Cursors.h>
 #include <DialogAdjust.h>
 #include <Embedding.h>
 #include <HIViewWrap.h>
@@ -1678,7 +1677,7 @@ monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 	case kDataBrowserEditStopped:
 		// it seems to be possible for the I-beam to persist at times
 		// unless the cursor is explicitly reset here
-		Cursors_UseArrow();
+		//[[NSCursor arrowCursor] set];
 		break;
 	
 	default:

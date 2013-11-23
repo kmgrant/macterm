@@ -15,7 +15,7 @@
 /*###############################################################
 
 	Data Access Library 2.6
-	© 1998-2012 by Kevin Grant
+	© 1998-2013 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -166,12 +166,8 @@ inline bool __Console_AssertHelper (char const* t, char const* file, unsigned lo
 }
 inline bool __Console_AssertNoErrHelper (OSStatus e, char const* t, char const* file, unsigned long line)
 {
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	char const*		desc = GetMacOSStatusCommentString(e);
 	UNUSED_RETURN(int)printf("MacTerm: ASSERTION FAILURE: OSStatus value was %ld (%s) for \"%s\" [%s:%lu]\n", e, desc, t, file, line);
-#else
-	UNUSED_RETURN(int)printf("MacTerm: ASSERTION FAILURE: OSStatus value was %ld for \"%s\" [%s:%lu]\n", e, t, file, line);
-#endif
 	__Console_CrashTraceably();
 	return false;
 }

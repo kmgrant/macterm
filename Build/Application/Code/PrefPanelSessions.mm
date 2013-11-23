@@ -932,10 +932,10 @@ mainView				(createContainerView(inPanel, inOwningWindow)
 							<< HIViewWrap_AssertExists),
 _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
 							My_SessionsPanelDataFlowUI::deltaSize, this/* context */),
-_fieldLineDelayInputHandler(GetControlEventTarget(HIViewWrap(idMyFieldLineInsertionDelay, inOwningWindow)), receiveFieldChanged,
+_fieldLineDelayInputHandler(HIViewGetEventTarget(HIViewWrap(idMyFieldLineInsertionDelay, inOwningWindow)), receiveFieldChanged,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 								this/* user data */),
-_localEchoCommandHandler(GetControlEventTarget(HIViewWrap(idMyCheckBoxLocalEcho, inOwningWindow)), receiveHICommand,
+_localEchoCommandHandler(HIViewGetEventTarget(HIViewWrap(idMyCheckBoxLocalEcho, inOwningWindow)), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */)
 {
@@ -2019,25 +2019,25 @@ mainView				(createContainerView(inPanel, inOwningWindow)
 							<< HIViewWrap_AssertExists),
 _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
 							My_SessionsPanelKeyboardUI::deltaSize, this/* context */),
-_button1CommandHandler	(GetControlEventTarget(HIViewWrap(idMyButtonChangeInterruptKey, inOwningWindow)), receiveHICommand,
+_button1CommandHandler	(HIViewGetEventTarget(HIViewWrap(idMyButtonChangeInterruptKey, inOwningWindow)), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */),
-_button2CommandHandler	(GetControlEventTarget(HIViewWrap(idMyButtonChangeSuspendKey, inOwningWindow)), receiveHICommand,
+_button2CommandHandler	(HIViewGetEventTarget(HIViewWrap(idMyButtonChangeSuspendKey, inOwningWindow)), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */),
-_button3CommandHandler	(GetControlEventTarget(HIViewWrap(idMyButtonChangeResumeKey, inOwningWindow)), receiveHICommand,
+_button3CommandHandler	(HIViewGetEventTarget(HIViewWrap(idMyButtonChangeResumeKey, inOwningWindow)), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */),
-_emacsArrowsCommandHandler(GetControlEventTarget(HIViewWrap(idMyCheckBoxMapArrowsForEmacs, inOwningWindow)), receiveHICommand,
+_emacsArrowsCommandHandler(HIViewGetEventTarget(HIViewWrap(idMyCheckBoxMapArrowsForEmacs, inOwningWindow)), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */),
-_emacsMetaCommandHandler(GetControlEventTarget(HIViewWrap(idMySegmentsEmacsMetaKey, inOwningWindow)), receiveHICommand,
+_emacsMetaCommandHandler(HIViewGetEventTarget(HIViewWrap(idMySegmentsEmacsMetaKey, inOwningWindow)), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */),
-_deleteMapCommandHandler(GetControlEventTarget(HIViewWrap(idMySegmentsDeleteKeyMapping, inOwningWindow)), receiveHICommand,
+_deleteMapCommandHandler(HIViewGetEventTarget(HIViewWrap(idMySegmentsDeleteKeyMapping, inOwningWindow)), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */),
-_newLineMapCommandHandler(GetControlEventTarget(HIViewWrap(idMyPopUpMenuNewLineMapping, inOwningWindow)), receiveHICommand,
+_newLineMapCommandHandler(HIViewGetEventTarget(HIViewWrap(idMyPopUpMenuNewLineMapping, inOwningWindow)), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */)
 {
@@ -2518,15 +2518,15 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					switch (received.commandID)
 					{
 					case kCommandEditInterruptKey:
-						Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetControlEventTarget(buttonSetInterruptKey));
+						Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, HIViewGetEventTarget(buttonSetInterruptKey));
 						break;
 					
 					case kCommandEditSuspendKey:
-						Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetControlEventTarget(buttonSetSuspendKey));
+						Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, HIViewGetEventTarget(buttonSetSuspendKey));
 						break;
 					
 					case kCommandEditResumeKey:
-						Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetControlEventTarget(buttonSetResumeKey));
+						Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, HIViewGetEventTarget(buttonSetResumeKey));
 						break;
 					
 					default:
@@ -2949,7 +2949,7 @@ _containerResizer				(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparation
 _buttonCommandsHandler			(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 									this/* user data */),
-_whenCommandLineChangedHandler	(GetControlEventTarget(this->_fieldCommandLine), receiveFieldChangedInCommandLine,
+_whenCommandLineChangedHandler	(HIViewGetEventTarget(this->_fieldCommandLine), receiveFieldChangedInCommandLine,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 									this/* user data */),
 _whenServerPanelChangedHandler	(GetWindowEventTarget(inOwningWindow)/* see serverBrowserDisplay() for target dependency */,

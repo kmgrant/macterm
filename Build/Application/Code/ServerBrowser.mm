@@ -802,11 +802,7 @@ addressFamily:(unsigned char)		aSocketAddrFamily
 		bestResolvedPort = 0;
 		netService = [aNetService retain];
 		[netService setDelegate:self];
-	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 		[netService resolveWithTimeout:5.0];
-	#else
-		[netService resolve];
-	#endif
 	}
 	return self;
 }// initWithNetService:addressFamily:
