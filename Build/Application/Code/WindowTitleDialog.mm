@@ -66,16 +66,16 @@ Manages the rename-window user interface.
 */
 @interface WindowTitleDialog_Handler : NSObject< PopoverManager_Delegate, WindowTitleDialog_ViewManagerChannel > //{
 {
-	WindowTitleDialog_Ref					selfRef;			// identical to address of structure, but typed as ref
-	WindowTitleDialog_ViewManager*			viewMgr;			// loads the Rename interface
-	Popover_Window*							containerWindow;	// holds the Rename dialog view
-	NSView*									managedView;		// the view that implements the majority of the interface
-	SessionRef								session;			// the session, if any, to which this applies
-	VectorWindow_Ref						canvasWindow;		// the canvas window controller, if any, to which this applies
-	NSWindow*								targetCocoaWindow;	// the window to be renamed, if Cocoa
-	HIWindowRef								targetCarbonWindow;	// the window to be renamed, if Carbon
-	PopoverManager_Ref						popoverMgr;			// manages common aspects of popover window behavior
-	WindowTitleDialog_CloseNotifyProcPtr	closeNotifyProc;	// routine to call when the dialog is dismissed
+	WindowTitleDialog_Ref					_selfRef;				// identical to address of structure, but typed as ref
+	WindowTitleDialog_ViewManager*			_viewMgr;				// loads the Rename interface
+	Popover_Window*							_containerWindow;		// holds the Rename dialog view
+	NSView*									_managedView;			// the view that implements the majority of the interface
+	SessionRef								_session;				// the session, if any, to which this applies
+	VectorWindow_Ref						_canvasWindow;			// the canvas window controller, if any, to which this applies
+	NSWindow*								_targetCocoaWindow;		// the window to be renamed, if Cocoa
+	HIWindowRef								_targetCarbonWindow;	// the window to be renamed, if Carbon
+	PopoverManager_Ref						_popoverMgr;			// manages common aspects of popover window behavior
+	WindowTitleDialog_CloseNotifyProcPtr	_closeNotifyProc;		// routine to call when the dialog is dismissed
 }
 
 // class methods
@@ -276,7 +276,7 @@ Converts from the opaque reference type to the internal type.
 + (WindowTitleDialog_Handler*)
 viewHandlerFromRef:(WindowTitleDialog_Ref)		aRef
 {
-	return (WindowTitleDialog_Handler*)aRef;
+	return REINTERPRET_CAST(aRef, WindowTitleDialog_Handler*);
 }// viewHandlerFromRef
 
 
@@ -298,16 +298,16 @@ notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
 	self = [super init];
 	if (nil != self)
 	{
-		self->selfRef = (WindowTitleDialog_Ref)self;
-		self->viewMgr = nil;
-		self->containerWindow = nil;
-		self->managedView = nil;
-		self->session = nullptr;
-		self->canvasWindow = nullptr;
-		self->targetCocoaWindow = aCocoaWindow;
-		self->targetCarbonWindow = aCarbonWindow;
-		self->popoverMgr = nullptr;
-		self->closeNotifyProc = aProc;
+		_selfRef = REINTERPRET_CAST(self, WindowTitleDialog_Ref);
+		_viewMgr = nil;
+		_containerWindow = nil;
+		_managedView = nil;
+		_session = nullptr;
+		_canvasWindow = nullptr;
+		_targetCocoaWindow = aCocoaWindow;
+		_targetCarbonWindow = aCarbonWindow;
+		_popoverMgr = nullptr;
+		_closeNotifyProc = aProc;
 	}
 	return self;
 }// initForCocoaWindow:orCarbonWindow:notificationProc:
@@ -349,7 +349,7 @@ session:(SessionRef)										aSession
 	self = [self initForCocoaWindow:nil orCarbonWindow:aWindow notificationProc:aProc];
 	if (nil != self)
 	{
-		self->session = aSession;
+		_session = aSession;
 	}
 	return self;
 }// initForCarbonWindow:notificationProc:session:
@@ -369,7 +369,7 @@ vectorGraphicsCanvas:(VectorWindow_Ref)						aCanvasWindow
 	self = [self initForCocoaWindow:aWindow orCarbonWindow:nullptr notificationProc:aProc];
 	if (nil != self)
 	{
-		self->canvasWindow = aCanvasWindow;
+		_canvasWindow = aCanvasWindow;
 	}
 	return self;
 }// initForCocoaWindow:notificationProc:vectorGraphicsCanvas:
@@ -383,11 +383,11 @@ Destructor.
 - (void)
 dealloc
 {
-	[containerWindow release];
-	[viewMgr release];
-	if (nullptr != popoverMgr)
+	[_containerWindow release];
+	[_viewMgr release];
+	if (nullptr != _popoverMgr)
 	{
-		PopoverManager_Dispose(&popoverMgr);
+		PopoverManager_Dispose(&_popoverMgr);
 	}
 	[super dealloc];
 }// dealloc
@@ -402,25 +402,25 @@ it calls "titleDialog:didLoadManagedView:".
 - (void)
 display
 {
-	if (nil == self->viewMgr)
+	if (nil == _viewMgr)
 	{
 		// no focus is done the first time because this is
 		// eventually done in "titleDialog:didLoadManagedView:"
-		if (nullptr != self->targetCarbonWindow)
+		if (nullptr != _targetCarbonWindow)
 		{
-			self->viewMgr = [[WindowTitleDialog_ViewManager alloc]
-								initForCarbonWindow:self->targetCarbonWindow responder:self];
+			_viewMgr = [[WindowTitleDialog_ViewManager alloc]
+						initForCarbonWindow:_targetCarbonWindow responder:self];
 		}
 		else
 		{
-			self->viewMgr = [[WindowTitleDialog_ViewManager alloc]
-								initForCocoaWindow:self->targetCocoaWindow responder:self];
+			_viewMgr = [[WindowTitleDialog_ViewManager alloc]
+						initForCocoaWindow:_targetCocoaWindow responder:self];
 		}
 	}
 	else
 	{
 		// window is already loaded, just activate it
-		PopoverManager_DisplayPopover(self->popoverMgr);
+		PopoverManager_DisplayPopover(_popoverMgr);
 	}
 }// display
 
@@ -434,9 +434,9 @@ using the "display" method.
 - (void)
 remove
 {
-	if (nil != self->popoverMgr)
+	if (nil != _popoverMgr)
 	{
-		PopoverManager_RemovePopover(self->popoverMgr);
+		PopoverManager_RemovePopover(_popoverMgr);
 	}
 }// remove
 
@@ -450,12 +450,12 @@ window, even if that is a Carbon window.
 - (NSWindow*)
 renamedCocoaWindow
 {
-	NSWindow*	result = self->targetCocoaWindow;
+	NSWindow*	result = _targetCocoaWindow;
 	
 	
-	if ((nil == result) && (nullptr != self->targetCarbonWindow))
+	if ((nil == result) && (nullptr != _targetCarbonWindow))
 	{
-		result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(self->targetCarbonWindow);
+		result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(_targetCarbonWindow);
 	}
 	
 	return result;
@@ -478,7 +478,7 @@ idealAnchorPointForParentWindowFrame:(NSRect)	parentFrame
 {
 	NSWindow*	parentWindow = [self renamedCocoaWindow];
 	NSRect		screenFrame = [[parentWindow screen] visibleFrame];
-	NSRect		managedViewFrame = [self->managedView frame];
+	NSRect		managedViewFrame = [_managedView frame];
 	NSPoint		result = NSMakePoint(parentFrame.size.width / 2.0, parentFrame.size.height - 12/* arbitrary */);
 	
 	
@@ -519,7 +519,7 @@ Returns the initial size for the popover.
 - (NSSize)
 idealSize
 {
-	NSRect		frameRect = [self->containerWindow frameRectForViewRect:[self->managedView frame]];
+	NSRect		frameRect = [_containerWindow frameRectForViewRect:[_managedView frame]];
 	NSSize		result = frameRect.size;
 	
 	
@@ -544,8 +544,8 @@ only created during the first invocation.
 titleDialog:(WindowTitleDialog_ViewManager*)	aViewMgr
 didLoadManagedView:(NSView*)					aManagedView
 {
-	self->managedView = aManagedView;
-	if (nil == self->containerWindow)
+	_managedView = aManagedView;
+	if (nil == _containerWindow)
 	{
 		NSWindow*						asNSWindow = [self renamedCocoaWindow];
 		PopoverManager_AnimationType	animationType = kPopoverManager_AnimationTypeStandard;
@@ -566,22 +566,22 @@ didLoadManagedView:(NSView*)					aManagedView
 			animationType = kPopoverManager_AnimationTypeNone;
 		}
 		
-		self->containerWindow = [[Popover_Window alloc] initWithView:aManagedView
-																		attachedToPoint:NSZeroPoint/* see delegate */
-																		inWindow:asNSWindow];
-		[self->containerWindow setReleasedWhenClosed:NO];
-		CocoaBasic_ApplyStandardStyleToPopover(self->containerWindow, true/* has arrow */);
-		if (nullptr != self->targetCarbonWindow)
+		_containerWindow = [[Popover_Window alloc] initWithView:aManagedView
+																attachedToPoint:NSZeroPoint/* see delegate */
+																inWindow:asNSWindow];
+		[_containerWindow setReleasedWhenClosed:NO];
+		CocoaBasic_ApplyStandardStyleToPopover(_containerWindow, true/* has arrow */);
+		if (nullptr != _targetCarbonWindow)
 		{
-			self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
-													self/* delegate */, animationType, self->targetCarbonWindow);
+			_popoverMgr = PopoverManager_New(_containerWindow, [aViewMgr logicalFirstResponder],
+												self/* delegate */, animationType, _targetCarbonWindow);
 		}
 		else
 		{
-			self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
-													self/* delegate */, animationType, self->targetCocoaWindow);
+			_popoverMgr = PopoverManager_New(_containerWindow, [aViewMgr logicalFirstResponder],
+												self/* delegate */, animationType, _targetCocoaWindow);
 		}
-		PopoverManager_DisplayPopover(self->popoverMgr);
+		PopoverManager_DisplayPopover(_popoverMgr);
 	}
 }// titleDialog:didLoadManagedView:
 
@@ -608,26 +608,26 @@ finalTitle:(NSString*)							newTitle
 	// prepare to rename the window
 	if (acceptedRename)
 	{
-		if (nullptr != self->session)
+		if (nullptr != _session)
 		{
 			// set session window’s user-defined title
-			Session_SetWindowUserDefinedTitle(self->session, BRIDGE_CAST(newTitle, CFStringRef));
+			Session_SetWindowUserDefinedTitle(_session, BRIDGE_CAST(newTitle, CFStringRef));
 		}
-		else if (nullptr != self->canvasWindow)
+		else if (nullptr != _canvasWindow)
 		{
 			// set vector graphics window’s user-defined title
-			VectorWindow_SetTitle(self->canvasWindow, BRIDGE_CAST(newTitle, CFStringRef));
+			VectorWindow_SetTitle(_canvasWindow, BRIDGE_CAST(newTitle, CFStringRef));
 		}
 		else
 		{
 			// set raw title
-			if (nullptr != self->targetCocoaWindow)
+			if (nullptr != _targetCocoaWindow)
 			{
-				[self->targetCocoaWindow setTitle:newTitle];
+				[_targetCocoaWindow setTitle:newTitle];
 			}
-			if (nullptr != self->targetCarbonWindow)
+			if (nullptr != _targetCarbonWindow)
 			{
-				UNUSED_RETURN(OSStatus)SetWindowTitleWithCFString(self->targetCarbonWindow, BRIDGE_CAST(newTitle, CFStringRef));
+				UNUSED_RETURN(OSStatus)SetWindowTitleWithCFString(_targetCarbonWindow, BRIDGE_CAST(newTitle, CFStringRef));
 			}
 		}
 	}
@@ -637,10 +637,9 @@ finalTitle:(NSString*)							newTitle
 	}
 	
 	// notify of close
-	if (nullptr != self->closeNotifyProc)
+	if (nullptr != _closeNotifyProc)
 	{
-		WindowTitleDialog_InvokeCloseNotifyProc(self->closeNotifyProc, self->selfRef,
-												(acceptedRename) ? true : false);
+		WindowTitleDialog_InvokeCloseNotifyProc(_closeNotifyProc, _selfRef, (acceptedRename) ? true : false);
 	}
 }// titleDialog:didFinishUsingManagedView:acceptingRename:finalTitle:
 
@@ -659,7 +658,7 @@ returnInitialTitleTextForManagedView:(NSView*)		aManagedView
 	NSString*	result = nil;
 	
 	
-	if (nullptr != self->session)
+	if (nullptr != _session)
 	{
 		// find session window’s user-defined title
 		CFStringRef		titleString = nullptr;
@@ -667,19 +666,19 @@ returnInitialTitleTextForManagedView:(NSView*)		aManagedView
 		
 		
 		// note that the string is not copied here
-		sessionResult = Session_GetWindowUserDefinedTitle(self->session, titleString);
+		sessionResult = Session_GetWindowUserDefinedTitle(_session, titleString);
 		if ((kSession_ResultOK == sessionResult) && (nullptr != titleString))
 		{
 			result = BRIDGE_CAST(titleString, NSString*);
 		}
 	}
-	else if (nullptr != self->canvasWindow)
+	else if (nullptr != _canvasWindow)
 	{
 		// find vector graphics window’s user-defined title
 		CFStringRef		titleString = nullptr;
 		
 		
-		VectorWindow_CopyTitle(self->canvasWindow, titleString);
+		VectorWindow_CopyTitle(_canvasWindow, titleString);
 		if (nullptr != titleString)
 		{
 			result = BRIDGE_CAST(titleString, NSString*);
@@ -701,6 +700,9 @@ returnInitialTitleTextForManagedView:(NSView*)		aManagedView
 @implementation WindowTitleDialog_ViewManager
 
 
+@synthesize titleText = _titleText;
+
+
 /*!
 Designated initializer.
 
@@ -714,10 +716,10 @@ responder:(id< WindowTitleDialog_ViewManagerChannel >)	aResponder
 	self = [super init];
 	if (nil != self)
 	{
-		responder = aResponder;
-		parentCarbonWindow = aCarbonWindow;
-		parentCocoaWindow = aCocoaWindow;
-		titleText = [@"" retain];
+		_responder = aResponder;
+		_parentCarbonWindow = aCarbonWindow;
+		_parentCocoaWindow = aCocoaWindow;
+		_titleText = [@"" retain];
 		
 		// it is necessary to capture and release all top-level objects here
 		// so that "self" can actually be deallocated; otherwise, the implicit
@@ -782,7 +784,7 @@ Destructor.
 - (void)
 dealloc
 {
-	[titleText release];
+	[_titleText release];
 	[super dealloc];
 }// dealloc
 
@@ -824,13 +826,13 @@ performCloseAndRename:(id)	sender
 	
 	// now the binding should have the correct value...
 	{
-		NSString*	newTitleText = (nil == self->titleText)
+		NSString*	newTitleText = (nil == _titleText)
 									? @""
-									: [NSString stringWithString:self->titleText];
+									: [NSString stringWithString:_titleText];
 		
 		
-		[self->responder titleDialog:self didFinishUsingManagedView:self->managedView
-											acceptingRename:YES finalTitle:newTitleText];
+		[_responder titleDialog:self didFinishUsingManagedView:self->managedView
+										acceptingRename:YES finalTitle:newTitleText];
 	}
 }// performCloseAndRename:
 
@@ -848,63 +850,9 @@ IMPORTANT:	It is appropriate at this time for the
 performCloseAndRevert:(id)	sender
 {
 #pragma unused(sender)
-	[self->responder titleDialog:self didFinishUsingManagedView:self->managedView
-										acceptingRename:NO finalTitle:nil];
+	[_responder titleDialog:self didFinishUsingManagedView:self->managedView
+									acceptingRename:NO finalTitle:nil];
 }// performCloseAndRevert:
-
-
-/*!
-A helper to make string-setters less cumbersome to write.
-
-(4.0)
-*/
-- (void)
-setStringProperty:(NSString**)		propertyPtr
-withName:(NSString*)				propertyName
-toValue:(NSString*)					aString
-{
-	if (aString != *propertyPtr)
-	{
-		[self willChangeValueForKey:propertyName];
-		
-		if (nil == aString)
-		{
-			*propertyPtr = [@"" retain];
-		}
-		else
-		{
-			[*propertyPtr autorelease];
-			*propertyPtr = [aString copy];
-		}
-		
-		[self didChangeValueForKey:propertyName];
-	}
-}// setStringProperty:withName:toValue:
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-titleText
-{
-	return [[titleText copy] autorelease];
-}
-+ (id)
-autoNotifyOnChangeTosetTitleText
-{
-	return @(NO);
-}
-- (void)
-setTitleText:(NSString*)	aString
-{
-	[self setStringProperty:&titleText withName:@"titleText" toValue:aString];
-}// setTitleText:
 
 
 #pragma mark NSKeyValueObservingCustomization
@@ -953,8 +901,8 @@ awakeFromNib
 	assert(nil != managedView);
 	assert(nil != titleField);
 	
-	[self->responder titleDialog:self didLoadManagedView:self->managedView];
-	[self setTitleText:[self->responder titleDialog:self returnInitialTitleTextForManagedView:self->managedView]];
+	[_responder titleDialog:self didLoadManagedView:self->managedView];
+	self.titleText = [_responder titleDialog:self returnInitialTitleTextForManagedView:self->managedView];
 }// awakeFromNib
 
 

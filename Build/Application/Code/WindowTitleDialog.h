@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTerm
-		© 1998-2012 by Kevin Grant.
+		© 1998-2013 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -98,10 +98,10 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSView*		managedView;
 	IBOutlet NSTextField*	titleField;
 @private
-	id< WindowTitleDialog_ViewManagerChannel >	responder;
-	NSWindow*									parentCocoaWindow;
-	HIWindowRef									parentCarbonWindow;
-	NSString*									titleText;
+	id< WindowTitleDialog_ViewManagerChannel >	_responder;
+	NSWindow*									_parentCocoaWindow;
+	HIWindowRef									_parentCarbonWindow;
+	NSString*									_titleText;
 }
 
 // initializers
@@ -121,10 +121,8 @@ changes to an interface declared in a ".mm" file.
 	logicalFirstResponder;
 
 // accessors
-	- (NSString*)
+	@property (strong) NSString*
 	titleText; // binding
-	- (void)
-	setTitleText:(NSString*)_;
 
 // actions
 	- (IBAction)
