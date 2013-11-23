@@ -75,18 +75,18 @@ Manages the Server Browser user interface.
 @interface ServerBrowser_Handler : NSObject< NSWindowDelegate, PopoverManager_Delegate,
 												ServerBrowser_ViewManagerChannel > //{
 {
-	ServerBrowser_Ref			selfRef;				// identical to address of structure, but typed as ref
-	ServerBrowser_ViewManager*	viewMgr;				// loads the server browser interface
-	Popover_Window*				containerWindow;		// holds the main view
-	NSView*						managedView;			// the view that implements the majority of the interface
-	HIWindowRef					parentWindow;			// the Carbon window that the point is relative to
-	CGPoint						parentRelativeArrowTip;	// the point relative to the parent window where the popover arrow appears
-	EventTargetRef				eventTarget;			// temporary; allows external Carbon interfaces to respond to events
-	Session_Protocol			initialProtocol;		// used to initialize the view when it loads
-	NSString*					initialHostName;		// used to initialize the view when it loads
-	unsigned int				initialPortNumber;		// used to initialize the view when it loads
-	NSString*					initialUserID;			// used to initialize the view when it loads
-	PopoverManager_Ref			popoverMgr;				// manages common aspects of popover window behavior
+	ServerBrowser_Ref			_selfRef;					// identical to address of structure, but typed as ref
+	ServerBrowser_ViewManager*	_viewMgr;					// loads the server browser interface
+	Popover_Window*				_containerWindow;			// holds the main view
+	NSView*						_managedView;				// the view that implements the majority of the interface
+	HIWindowRef					_parentCarbonWindow;		// the Carbon window that the point is relative to
+	CGPoint						_parentRelativeArrowTip;	// the point relative to the parent window where the popover arrow appears
+	EventTargetRef				_eventTarget;				// temporary; allows external Carbon interfaces to respond to events
+	Session_Protocol			_initialProtocol;			// used to initialize the view when it loads
+	NSString*					_initialHostName;			// used to initialize the view when it loads
+	unsigned int				_initialPortNumber;			// used to initialize the view when it loads
+	NSString*					_initialUserID;				// used to initialize the view when it loads
+	PopoverManager_Ref			_popoverMgr;				// manages common aspects of popover window behavior
 }
 
 // class methods
@@ -111,6 +111,8 @@ Manages the Server Browser user interface.
 	remove;
 
 // accessors
+	@property (assign, readonly) HIWindowRef
+	parentCarbonWindow;
 	- (NSWindow*)
 	parentCocoaWindow;
 
@@ -146,29 +148,25 @@ about each service.
 @interface ServerBrowser_NetService : NSObject< NSNetServiceDelegate > //{
 {
 @private
-	NSNetService*		netService;
-	unsigned char		addressFamily; // AF_INET or AF_INET6
-	NSString*			bestResolvedAddress;
-	unsigned short		bestResolvedPort;
+	NSNetService*		_netService;
+	unsigned char		_addressFamily; // AF_INET or AF_INET6
+	NSString*			_bestResolvedAddress;
+	unsigned short		_bestResolvedPort;
 }
 
-// initializers
+// initializersbestResolvedPort
 	- (id)
 	initWithNetService:(NSNetService*)_
 	addressFamily:(unsigned char)_;
 
 // accessors; see "Discovered Hosts" array controller in the NIB, for key names
-	- (NSString*)
+	@property (strong) NSString*
 	bestResolvedAddress;
-	- (void)
-	setBestResolvedAddress:(NSString*)_;
-	- (unsigned short)
+	@property (assign) unsigned short
 	bestResolvedPort;
-	- (void)
-	setBestResolvedPort:(unsigned short)_;
 	- (NSString*)
 	description;
-	- (NSNetService*)
+	@property (strong, readonly) NSNetService*
 	netService;
 
 @end //}
@@ -183,24 +181,18 @@ protocol.
 @interface ServerBrowser_Protocol : BoundName_Object //{
 {
 @private
-	Session_Protocol	protocolID;
-	NSString*			serviceType; // RFC 2782 / Bonjour, e.g. "_xyz._tcp."
-	unsigned short		defaultPort;
+	Session_Protocol	_protocolID;
+	NSString*			_serviceType; // RFC 2782 / Bonjour, e.g. "_xyz._tcp."
+	unsigned short		_defaultPort;
 }
 
 // accessors; see "Protocol Definitions" array controller in the NIB, for key names
-	- (unsigned short)
+	@property (assign) unsigned short
 	defaultPort;
-	- (void)
-	setDefaultPort:(unsigned short)_;
-	- (Session_Protocol)
+	@property (assign) Session_Protocol
 	protocolID;
-	- (void)
-	setProtocolID:(Session_Protocol)_;
-	- (NSString*)
+	@property (copy) NSString*
 	serviceType;
-	- (void)
-	setServiceType:(NSString*)_;
 
 // initializers
 	- (id)
@@ -432,7 +424,7 @@ receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				if (nullptr != addressCFString)
 				{
-					[serverBrowser setHostName:(NSString*)addressCFString];
+					serverBrowser.hostName = BRIDGE_CAST(addressCFString, NSString*);
 					CFRelease(addressCFString), addressCFString = nullptr;
 					result = noErr;
 				}
@@ -442,7 +434,7 @@ receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	
 	// hide progress indicator
-	[serverBrowser setHidesProgress:YES];
+	serverBrowser.hidesProgress = YES;
 	
 	return result;
 }// receiveLookupComplete
@@ -453,6 +445,9 @@ receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 @implementation ServerBrowser_Handler
 
 
+@synthesize parentCarbonWindow = _parentCarbonWindow;
+
+
 /*!
 Converts from the opaque reference type to the internal type.
 
@@ -461,7 +456,7 @@ Converts from the opaque reference type to the internal type.
 + (ServerBrowser_Handler*)
 viewHandlerFromRef:(ServerBrowser_Ref)		aRef
 {
-	return (ServerBrowser_Handler*)aRef;
+	return REINTERPRET_CAST(aRef, ServerBrowser_Handler*);
 }// viewHandlerFromRef
 
 
@@ -478,18 +473,18 @@ eventTarget:(EventTargetRef)			aTarget
 	self = [super init];
 	if (nil != self)
 	{
-		self->selfRef = (ServerBrowser_Ref)self;
-		self->viewMgr = nil;
-		self->containerWindow = nil;
-		self->managedView = nil;
-		self->parentWindow = aWindow;
-		self->parentRelativeArrowTip = aPoint;
-		self->eventTarget = aTarget;
-		self->initialProtocol = kSession_ProtocolSSH1;
-		self->initialHostName = [@"" retain];
-		self->initialPortNumber = 22;
-		self->initialUserID = [@"" retain];
-		self->popoverMgr = nullptr;
+		_selfRef = REINTERPRET_CAST(self, ServerBrowser_Ref);
+		_viewMgr = nil;
+		_containerWindow = nil;
+		_managedView = nil;
+		_parentCarbonWindow = aWindow;
+		_parentRelativeArrowTip = aPoint;
+		_eventTarget = aTarget;
+		_initialProtocol = kSession_ProtocolSSH1;
+		_initialHostName = [@"" retain];
+		_initialPortNumber = 22;
+		_initialUserID = [@"" retain];
+		_popoverMgr = nullptr;
 	}
 	return self;
 }// initWithPosition:relativeToParentWindow:eventTarget:
@@ -503,13 +498,13 @@ Destructor.
 - (void)
 dealloc
 {
-	[managedView release];
-	[viewMgr release];
-	[initialHostName release];
-	[initialUserID release];
-	if (nullptr != popoverMgr)
+	[_managedView release];
+	[_viewMgr release];
+	[_initialHostName release];
+	[_initialUserID release];
+	if (nullptr != _popoverMgr)
 	{
-		PopoverManager_Dispose(&popoverMgr);
+		PopoverManager_Dispose(&_popoverMgr);
 	}
 	[super dealloc];
 }// dealloc
@@ -527,10 +522,10 @@ hostName:(NSString*)						aHostName
 portNumber:(unsigned int)					aPortNumber
 userID:(NSString*)							aUserID
 {
-	self->initialProtocol = aProtocol;
-	self->initialHostName = [aHostName retain];
-	self->initialPortNumber = aPortNumber;
-	self->initialUserID = [aUserID retain];
+	_initialProtocol = aProtocol;
+	_initialHostName = [aHostName retain];
+	_initialPortNumber = aPortNumber;
+	_initialUserID = [aUserID retain];
 }// configureWithProtocol:hostName:portNumber:userID:
 
 
@@ -543,22 +538,21 @@ is ready, it calls "serverBrowser:didLoadManagedView:".
 - (void)
 display
 {
-	if (nil == self->viewMgr)
+	if (nil == _viewMgr)
 	{
 		// no focus is done the first time because this is
 		// eventually done in "serverBrowser:didLoadManagedView:"
-		self->viewMgr = [[ServerBrowser_ViewManager alloc]
-							initWithResponder:self eventTarget:self->eventTarget];
+		_viewMgr = [[ServerBrowser_ViewManager alloc] initWithResponder:self eventTarget:_eventTarget];
 	}
 	else
 	{
 		// window is already loaded, just activate it (but also initialize
 		// again, to mimic initialization performed in the “create new” case)
-		[self->viewMgr setProtocolIndexByProtocol:self->initialProtocol];
-		[self->viewMgr setHostName:self->initialHostName];
-		[self->viewMgr setPortNumber:[NSString stringWithFormat:@"%d", self->initialPortNumber]];
-		[self->viewMgr setUserID:self->initialUserID];
-		PopoverManager_DisplayPopover(self->popoverMgr);
+		[_viewMgr setProtocolIndexByProtocol:_initialProtocol];
+		[_viewMgr setHostName:_initialHostName];
+		[_viewMgr setPortNumber:[NSString stringWithFormat:@"%d", _initialPortNumber]];
+		[_viewMgr setUserID:_initialUserID];
+		PopoverManager_DisplayPopover(_popoverMgr);
 	}
 }// display
 
@@ -572,26 +566,11 @@ using the "display" method.
 - (void)
 remove
 {
-	if (nil != self->popoverMgr)
+	if (nil != _popoverMgr)
 	{
-		PopoverManager_RemovePopover(self->popoverMgr);
+		PopoverManager_RemovePopover(_popoverMgr);
 	}
 }// remove
-
-
-/*!
-Returns the parent window of the target view.
-
-(4.0)
-*/
-- (HIWindowRef)
-parentCarbonWindow
-{
-	HIWindowRef		result = self->parentWindow;
-	
-	
-	return result;
-}// parentCarbonWindow
 
 
 /*!
@@ -603,7 +582,7 @@ of the target view, even if that is a Carbon window.
 - (NSWindow*)
 parentCocoaWindow
 {
-	NSWindow*	result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow([self parentCarbonWindow]);
+	NSWindow*	result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(self.parentCarbonWindow);
 	
 	
 	return result;
@@ -626,7 +605,7 @@ usingRect:(NSRect)				rect
 {
 #pragma unused(window, sheet)
 	NSRect	result = rect;
-	NSRect	someFrame = [self->containerWindow frameRectForViewRect:NSZeroRect];
+	NSRect	someFrame = [_containerWindow frameRectForViewRect:NSZeroRect];
 	
 	
 	// move an arbitrary distance away from the top edge
@@ -661,7 +640,7 @@ popover itself depends on the arrow placement chosen by
 idealAnchorPointForParentWindowFrame:(NSRect)	parentFrame
 {
 #pragma unused(parentFrame)
-	NSPoint		result = NSMakePoint(parentRelativeArrowTip.x, parentFrame.size.height - parentRelativeArrowTip.y);
+	NSPoint		result = NSMakePoint(_parentRelativeArrowTip.x, parentFrame.size.height - _parentRelativeArrowTip.y);
 	
 	
 	return result;
@@ -692,7 +671,7 @@ Returns the initial size for the popover.
 - (NSSize)
 idealSize
 {
-	NSRect		frameRect = [self->containerWindow frameRectForViewRect:[self->managedView frame]];
+	NSRect		frameRect = [_containerWindow frameRectForViewRect:[_managedView frame]];
 	NSSize		result = frameRect.size;
 	
 	
@@ -717,26 +696,26 @@ only created during the first invocation.
 serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
 didLoadManagedView:(NSView*)				aManagedView
 {
-	self->managedView = aManagedView;
-	[self->managedView retain];
+	_managedView = aManagedView;
+	[_managedView retain];
 	
-	[aBrowser setProtocolIndexByProtocol:self->initialProtocol];
-	[aBrowser setHostName:self->initialHostName];
-	[aBrowser setPortNumber:[NSString stringWithFormat:@"%d", self->initialPortNumber]];
-	[aBrowser setUserID:self->initialUserID];
+	[aBrowser setProtocolIndexByProtocol:_initialProtocol];
+	aBrowser.hostName = _initialHostName;
+	aBrowser.portNumber = [NSString stringWithFormat:@"%d", _initialPortNumber];
+	aBrowser.userID = _initialUserID;
 	
-	if (nil == self->containerWindow)
+	if (nil == _containerWindow)
 	{
-		self->containerWindow = [[Popover_Window alloc] initWithView:aManagedView
-																		attachedToPoint:NSZeroPoint/* see delegate */
-																		inWindow:[self parentCocoaWindow]];
-		[self->containerWindow setDelegate:self];
-		[self->containerWindow setReleasedWhenClosed:NO];
-		CocoaBasic_ApplyStandardStyleToPopover(self->containerWindow, true/* has arrow */);
-		self->popoverMgr = PopoverManager_New(self->containerWindow, [aBrowser logicalFirstResponder],
-												self/* delegate */, kPopoverManager_AnimationTypeMinimal,
-												[self parentCarbonWindow]);
-		PopoverManager_DisplayPopover(self->popoverMgr);
+		_containerWindow = [[Popover_Window alloc] initWithView:aManagedView
+																attachedToPoint:NSZeroPoint/* see delegate */
+																inWindow:[self parentCocoaWindow]];
+		[_containerWindow setDelegate:self];
+		[_containerWindow setReleasedWhenClosed:NO];
+		CocoaBasic_ApplyStandardStyleToPopover(_containerWindow, true/* has arrow */);
+		_popoverMgr = PopoverManager_New(_containerWindow, [aBrowser logicalFirstResponder],
+											self/* delegate */, kPopoverManager_AnimationTypeMinimal,
+											self.parentCarbonWindow);
+		PopoverManager_DisplayPopover(_popoverMgr);
 	}
 }// serverBrowser:didLoadManagedView:
 
@@ -753,7 +732,7 @@ serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
 didFinishUsingManagedView:(NSView*)			aManagedView
 {
 #pragma unused(aBrowser, aManagedView)
-	notifyOfClosedPopover(self->eventTarget);
+	notifyOfClosedPopover(_eventTarget);
 }// serverBrowser:didFinishUsingManagedView:
 
 
@@ -771,11 +750,11 @@ setManagedView:(NSView*)					aManagedView
 toScreenFrame:(NSRect)						aRect
 {
 #pragma unused(aBrowser, aManagedView)
-	NSRect	windowFrame = [self->containerWindow frameRectForViewRect:aRect];
+	NSRect	windowFrame = [_containerWindow frameRectForViewRect:aRect];
 	
 	
-	[self->containerWindow setFrame:windowFrame display:YES animate:YES];
-	PopoverManager_UseIdealLocationAfterDelay(self->popoverMgr, 0.1/* arbitrary delay */);
+	[_containerWindow setFrame:windowFrame display:YES animate:YES];
+	PopoverManager_UseIdealLocationAfterDelay(_popoverMgr, 0.1/* arbitrary delay */);
 }// serverBrowser:setManagedView:toScreenFrame:
 
 
@@ -783,6 +762,11 @@ toScreenFrame:(NSRect)						aRect
 
 
 @implementation ServerBrowser_NetService
+
+
+@synthesize bestResolvedAddress = _bestResolvedAddress;
+@synthesize bestResolvedPort = _bestResolvedPort;
+@synthesize netService = _netService;
 
 
 /*!
@@ -797,12 +781,12 @@ addressFamily:(unsigned char)		aSocketAddrFamily
 	self = [super init];
 	if (nil != self)
 	{
-		addressFamily = aSocketAddrFamily;
-		bestResolvedAddress = [[NSString string] retain];
-		bestResolvedPort = 0;
-		netService = [aNetService retain];
-		[netService setDelegate:self];
-		[netService resolveWithTimeout:5.0];
+		_addressFamily = aSocketAddrFamily;
+		_bestResolvedAddress = [[NSString string] retain];
+		_bestResolvedPort = 0;
+		_netService = [aNetService retain];
+		_netService.delegate = self;
+		[_netService resolveWithTimeout:5.0];
 	}
 	return self;
 }// initWithNetService:addressFamily:
@@ -816,52 +800,13 @@ Destructor.
 - (void)
 dealloc
 {
-	[netService release];
-	[bestResolvedAddress release];
+	[_netService release];
+	[_bestResolvedAddress release];
 	[super dealloc];
 }// dealloc
 
 
 #pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-bestResolvedAddress
-{
-	return [[bestResolvedAddress retain] autorelease];
-}
-- (void)
-setBestResolvedAddress:(NSString*)		aString
-{
-	if (aString != bestResolvedAddress)
-	{
-		[bestResolvedAddress release];
-		bestResolvedAddress = [aString retain];
-	}
-}// setBestResolvedAddress:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (unsigned short)
-bestResolvedPort
-{
-	return bestResolvedPort;
-}
-- (void)
-setBestResolvedPort:(unsigned short)	aNumber
-{
-	bestResolvedPort = aNumber;
-}// setBestResolvedPort:
-
 
 /*!
 Accessor.
@@ -871,19 +816,7 @@ Accessor.
 - (NSString*)
 description
 {
-	return [[self netService] name];
-}
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSNetService*)
-netService
-{
-	return netService;
+	return [self.netService name];
 }
 
 
@@ -929,9 +862,9 @@ netServiceDidResolveAddress:(NSNetService*)		resolvingService
 		
 		
 		//Console_WriteValue("found address of family", dataPtr->sin_family); // debug
-		if (addressFamily == dataPtr->sin_family)
+		if (_addressFamily == dataPtr->sin_family)
 		{
-			switch (addressFamily)
+			switch (_addressFamily)
 			{
 			case AF_INET:
 			case AF_INET6:
@@ -940,7 +873,7 @@ netServiceDidResolveAddress:(NSNetService*)		resolvingService
 					char					buffer[512];
 					
 					
-					if (inet_ntop(addressFamily, &inetDataPtr->sin_addr, buffer, sizeof(buffer)))
+					if (inet_ntop(_addressFamily, &inetDataPtr->sin_addr, buffer, sizeof(buffer)))
 					{
 						buffer[sizeof(buffer) - 1] = '\0'; // ensure termination in case of overrun
 						resolvedHost = [NSString stringWithCString:buffer];
@@ -975,6 +908,11 @@ netServiceDidResolveAddress:(NSNetService*)		resolvingService
 @implementation ServerBrowser_Protocol
 
 
+@synthesize defaultPort = _defaultPort;
+@synthesize protocolID = _protocolID;
+@synthesize serviceType = _serviceType;
+
+
 /*!
 Designated initializer.
 
@@ -989,76 +927,37 @@ defaultPort:(unsigned short)	aNumber
 	self = [super initWithBoundName:aString];
 	if (nil != self)
 	{
-		[self setProtocolID:anID];
-		[self setServiceType:anRFC2782Name];
-		[self setDefaultPort:aNumber];
+		_protocolID = anID;
+		_serviceType = [anRFC2782Name copy];
+		_defaultPort = aNumber;
 	}
 	return self;
 }// initWithID:description:serviceType:defaultPort:
 
 
-#pragma mark Accessors
-
-
 /*!
-Accessor.
+Destructor.
 
-(4.0)
+(4.1)
 */
-- (unsigned short)
-defaultPort
-{
-	return defaultPort;
-}
 - (void)
-setDefaultPort:(unsigned short)		aNumber
+dealloc
 {
-	defaultPort = aNumber;
-}// setDefaultPort:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (Session_Protocol)
-protocolID
-{
-	return protocolID;
-}
-- (void)
-setProtocolID:(Session_Protocol)	anID
-{
-	protocolID = anID;
-}// setProtocolID:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-serviceType
-{
-	return [[serviceType retain] autorelease];
-}
-- (void)
-setServiceType:(NSString*)		aString
-{
-	if (serviceType != aString)
-	{
-		[serviceType release];
-		serviceType = [aString copy];
-	}
-}// setServiceType:
+	[_serviceType release];
+	[super dealloc];
+}// dealloc
 
 
 @end // ServerBrowser_Protocol
 
 
 @implementation ServerBrowser_ViewManager
+
+
+@synthesize errorMessage = _errorMessage;
+@synthesize hidesErrorMessage = _hidesErrorMessage;
+@synthesize hidesProgress = _hidesProgress;
+@synthesize protocolDefinitions = _protocolDefinitions;
 
 
 /*!
@@ -1073,10 +972,22 @@ eventTarget:(EventTargetRef)								aTarget
 	self = [super init];
 	if (nil != self)
 	{
-		discoveredHosts = [[NSMutableArray alloc] init];
-		recentHosts = [[NSMutableArray alloc] init];
+		discoveredHostsContainer = nil;
+		discoveredHostsTableView = nil;
+		managedView = nil;
+		nextResponderWhenHidingDiscoveredHosts = nil;
+		
+		_responder = aResponder;
+		_eventTarget = aTarget;
+		_lookupHandlerPtr = nullptr;
+		_browser = [[NSNetServiceBrowser alloc] init];
+		[_browser setDelegate:self];
+		_discoveredHostIndexes = [[NSIndexSet alloc] init];
+		_protocolIndexes = [[NSIndexSet alloc] init];
+		_discoveredHosts = [[NSMutableArray alloc] init];
+		_recentHosts = [[NSMutableArray alloc] init];
 		// TEMPORARY - it should be possible to externally define these (probably via Python)
-		protocolDefinitions = [[[NSArray alloc] initWithObjects:
+		_protocolDefinitions = [[NSArray alloc] initWithObjects:
 								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSSH1
 									description:NSLocalizedStringFromTable(@"SSH Version 1", @"ServerBrowser"/* table */, @"ssh-1")
 									serviceType:@"_ssh._tcp."
@@ -1097,28 +1008,16 @@ eventTarget:(EventTargetRef)								aTarget
 									description:NSLocalizedStringFromTable(@"SFTP", @"ServerBrowser"/* table */, @"sftp")
 									serviceType:@"_ssh._tcp."
 									defaultPort:22] autorelease],
-								nil] autorelease];
-		discoveredHostsContainer = nil;
-		discoveredHostsTableView = nil;
-		managedView = nil;
-		nextResponderWhenHidingDiscoveredHosts = nil;
-		
-		responder = aResponder;
-		eventTarget = aTarget;
-		lookupHandlerPtr = nullptr;
-		browser = [[NSNetServiceBrowser alloc] init];
-		[browser setDelegate:self];
-		discoveredHostIndexes = [[NSIndexSet alloc] init];
-		hidesDiscoveredHosts = YES;
-		hidesErrorMessage = YES;
-		hidesPortNumberError = YES;
-		hidesProgress = YES;
-		hidesUserIDError = YES;
-		protocolIndexes = [[NSIndexSet alloc] init];
-		hostName = [[[NSString alloc] initWithString:@""] autorelease];
-		portNumber = [[[NSString alloc] initWithString:@""] autorelease];
-		userID = [[[NSString alloc] initWithString:@""] autorelease];
-		errorMessage = [[NSString string] retain];
+								nil];
+		_errorMessage = [[NSString string] retain];
+		_hostName = [[[NSString alloc] initWithString:@""] autorelease];
+		_portNumber = [[[NSString alloc] initWithString:@""] autorelease];
+		_userID = [[[NSString alloc] initWithString:@""] autorelease];
+		_hidesDiscoveredHosts = YES;
+		_hidesErrorMessage = YES;
+		_hidesPortNumberError = YES;
+		_hidesProgress = YES;
+		_hidesUserIDError = YES;
 		
 		// it is necessary to capture and release all top-level objects here
 		// so that "self" can actually be deallocated; otherwise, the implicit
@@ -1149,15 +1048,21 @@ Destructor.
 dealloc
 {
 	// See the initializer and "awakeFromNib" for initializations to clean up here.
-	delete lookupHandlerPtr, lookupHandlerPtr = nullptr;
-	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
-	[discoveredHosts release];
-	[recentHosts release];
-	[protocolDefinitions release];
-	[browser release];
-	[discoveredHostIndexes release];
-	[protocolIndexes release];
-	[errorMessage release];
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	
+	delete _lookupHandlerPtr, _lookupHandlerPtr = nullptr;
+	
+	[_userID release];
+	[_portNumber release];
+	[_hostName release];
+	[_errorMessage release];
+	[_protocolDefinitions release];
+	[_recentHosts release];
+	[_discoveredHosts release];
+	[_protocolIndexes release];
+	[_discoveredHostIndexes release];
+	[_browser release];
+	
 	[super dealloc];
 }// dealloc
 
@@ -1191,7 +1096,7 @@ lookUpHostName:(id)		sender
 	Boolean		lookupStartedOK = false;
 	
 	
-	if ([[self hostName] length] <= 0)
+	if ([self.hostName length] <= 0)
 	{
 		// there has to be some text entered there; let the user
 		// know that a blank is unacceptable
@@ -1203,18 +1108,18 @@ lookUpHostName:(id)		sender
 		
 		
 		// install lookup handler if none exists
-		if (nullptr == self->lookupHandlerPtr)
+		if (nullptr == _lookupHandlerPtr)
 		{
-			self->lookupHandlerPtr = new CarbonEventHandlerWrap(GetApplicationEventTarget(), receiveLookupComplete,
-																CarbonEventSetInClass
-																(CarbonEventClass(kEventClassNetEvents_DNS),
-																	kEventNetEvents_HostLookupComplete),
-																self/* user data */);
+			_lookupHandlerPtr = new CarbonEventHandlerWrap(GetApplicationEventTarget(), receiveLookupComplete,
+															CarbonEventSetInClass
+															(CarbonEventClass(kEventClassNetEvents_DNS),
+																kEventNetEvents_HostLookupComplete),
+															self/* user data */);
 		}
 		
 		// begin lookup of the domain name
-		[self setHidesProgress:NO];
-		if (CFStringGetCString((CFStringRef)[self hostName], hostNameBuffer, sizeof(hostNameBuffer), kCFStringEncodingASCII))
+		self.hidesProgress = NO;
+		if (CFStringGetCString(BRIDGE_CAST(self.hostName, CFStringRef), hostNameBuffer, sizeof(hostNameBuffer), kCFStringEncodingASCII))
 		{
 			DNR_Result		lookupAttemptResult = kDNR_ResultOK;
 			
@@ -1224,7 +1129,7 @@ lookUpHostName:(id)		sender
 			if (false == lookupAttemptResult.ok())
 			{
 				// could not even initiate, so restore UI
-				[self setHidesProgress:YES];
+				self.hidesProgress = YES;
 			}
 			else
 			{
@@ -1250,7 +1155,7 @@ rediscoverServices
 	
 	// first destroy the old list
 	int		loopGuard = 0;
-	while (([discoveredHosts count] > 0) && (loopGuard < 50/* arbitrary */))
+	while (([_discoveredHosts count] > 0) && (loopGuard < 50/* arbitrary */))
 	{
 		[self removeObjectFromDiscoveredHostsAtIndex:0];
 		++loopGuard;
@@ -1258,7 +1163,7 @@ rediscoverServices
 	
 	// now search for new services, which will eventually repopulate the list;
 	// only do this when the drawer is visible, though
-	if (NO == [self hidesDiscoveredHosts])
+	if (NO == self.hidesDiscoveredHosts)
 	{
 		if (nil == theProtocol)
 		{
@@ -1266,16 +1171,141 @@ rediscoverServices
 		}
 		else
 		{
-			//Console_WriteValueCFString("initiated search for services of type", (CFStringRef)[theProtocol serviceType]); // debug
-			[browser stop];
+			//Console_WriteValueCFString("initiated search for services of type", BRIDGE_CAST([theProtocol serviceType], CFStringRef)); // debug
+			[_browser stop];
 			// TEMPORARY - determine if one needs to wait for the browser to stop, before starting a new search...
-			[browser searchForServicesOfType:[theProtocol serviceType] inDomain:@""/* empty string implies local search */];
+			[_browser searchForServicesOfType:[theProtocol serviceType] inDomain:@""/* empty string implies local search */];
 		}
 	}
 }// rediscoverServices
 
 
-#pragma mark Accessors
+#pragma mark Accessors: Array Values
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (void)
+insertObject:(ServerBrowser_NetService*)	service
+inDiscoveredHostsAtIndex:(unsigned long)	index
+{
+	[_discoveredHosts insertObject:service atIndex:index];
+}
+- (void)
+removeObjectFromDiscoveredHostsAtIndex:(unsigned long)		index
+{
+	[_discoveredHosts removeObjectAtIndex:index];
+}// removeObjectFromDiscoveredHostsAtIndex:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSIndexSet*)
+discoveredHostIndexes
+{
+	return [[_discoveredHostIndexes retain] autorelease];
+}
+- (void)
+setDiscoveredHostIndexes:(NSIndexSet*)		indexes
+{
+	ServerBrowser_NetService*		theDiscoveredHost = nil;
+	
+	
+	[_discoveredHostIndexes release];
+	_discoveredHostIndexes = [indexes retain];
+	
+	theDiscoveredHost = [self discoveredHost];
+	if (nil != theDiscoveredHost)
+	{
+		// auto-set the host and port to match this service
+		self.hostName = theDiscoveredHost.bestResolvedAddress;
+		self.portNumber = [[NSNumber numberWithUnsignedShort:theDiscoveredHost.bestResolvedPort] stringValue];
+	}
+}// setDiscoveredHostIndexes:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSIndexSet*)
+protocolIndexes
+{
+	return [[_protocolIndexes retain] autorelease];
+}
+- (void)
+setProtocolIndexByProtocol:(Session_Protocol)	aProtocol
+{
+	unsigned int	i = 0;
+	
+	
+	for (ServerBrowser_Protocol* thisProtocol in self.protocolDefinitions)
+	{
+		if (aProtocol == [thisProtocol protocolID])
+		{
+			self.protocolIndexes = [NSIndexSet indexSetWithIndex:i];
+			break;
+		}
+		++i;
+	}
+}
++ (id)
+autoNotifyOnChangeToProtocolIndexes
+{
+	return @(NO);
+}
+- (void)
+setProtocolIndexes:(NSIndexSet*)	indexes
+{
+	if (indexes != _protocolIndexes)
+	{
+		[self willChangeValueForKey:@"protocolIndexes"];
+		
+		[_protocolIndexes release];
+		_protocolIndexes = [indexes retain];
+		
+		[self didChangeValueForKey:@"protocolIndexes"];
+		// TEMPORARY; while Carbon is supported, send a Carbon event as well
+		[self notifyOfChangeInValueReturnedBy:@selector(protocolIndexes)];
+		
+		ServerBrowser_Protocol*		theProtocol = [self protocol];
+		if (nil != theProtocol)
+		{
+			// auto-set the port number to match the default for this protocol
+			self.portNumber = [[NSNumber numberWithUnsignedShort:[theProtocol defaultPort]] stringValue];
+			// rediscover services appropriate for this selection
+			[self rediscoverServices];
+		}
+	}
+}// setProtocolIndexes:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (void)
+insertObject:(NSString*)				name
+inRecentHostsAtIndex:(unsigned long)	index
+{
+	[_recentHosts insertObject:name atIndex:index];
+}
+- (void)
+removeObjectFromRecentHostsAtIndex:(unsigned long)		index
+{
+	[_recentHosts removeObjectAtIndex:index];
+}// removeObjectFromRecentHostsAtIndex:
+
+
+#pragma mark Accessors: General
 
 /*!
 Accessor.
@@ -1299,46 +1329,38 @@ Accessor.
 
 (4.0)
 */
-- (void)
-insertObject:(ServerBrowser_NetService*)	service
-inDiscoveredHostsAtIndex:(unsigned long)	index
+- (NSString*)
+hostName
 {
-	[discoveredHosts insertObject:service atIndex:index];
+	return [[_hostName copy] autorelease];
+}
++ (id)
+autoNotifyOnChangeToHostName
+{
+	return @(NO);
 }
 - (void)
-removeObjectFromDiscoveredHostsAtIndex:(unsigned long)		index
+setHostName:(NSString*)		aString
 {
-	[discoveredHosts removeObjectAtIndex:index];
-}// removeObjectFromDiscoveredHostsAtIndex:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSIndexSet*)
-discoveredHostIndexes
-{
-	return [[discoveredHostIndexes retain] autorelease];
-}
-- (void)
-setDiscoveredHostIndexes:(NSIndexSet*)		indexes
-{
-	ServerBrowser_NetService*		theDiscoveredHost = nil;
-	
-	
-	[discoveredHostIndexes release];
-	discoveredHostIndexes = [indexes retain];
-	
-	theDiscoveredHost = [self discoveredHost];
-	if (nil != theDiscoveredHost)
+	if (aString != _hostName)
 	{
-		// auto-set the host and port to match this service
-		[self setHostName:[theDiscoveredHost bestResolvedAddress]];
-		[self setPortNumber:[[NSNumber numberWithUnsignedShort:[theDiscoveredHost bestResolvedPort]] stringValue]];
+		[self willChangeValueForKey:@"hostName"];
+		
+		if (nil == aString)
+		{
+			_hostName = [@"" retain];
+		}
+		else
+		{
+			[_hostName autorelease];
+			_hostName = [aString copy];
+		}
+		
+		[self didChangeValueForKey:@"hostName"];
+		// TEMPORARY; while Carbon is supported, send a Carbon event as well
+		[self notifyOfChangeInValueReturnedBy:@selector(hostName)];
 	}
-}// setDiscoveredHostIndexes:
+}// setHostName:
 
 
 /*!
@@ -1347,19 +1369,111 @@ Accessor.
 (4.0)
 */
 - (NSString*)
-errorMessage
+portNumber
 {
-	return errorMessage;
+	return [[_portNumber copy] autorelease];
+}
++ (id)
+autoNotifyOnChangeToPortNumber
+{
+	return @(NO);
 }
 - (void)
-setErrorMessage:(NSString*)		aString
+setPortNumber:(NSString*)	aString
 {
-	if (aString != errorMessage)
+	if (aString != _portNumber)
 	{
-		[errorMessage release];
-		errorMessage = [aString retain];
+		[self willChangeValueForKey:@"portNumber"];
+		
+		if (nil == aString)
+		{
+			_portNumber = [@"" retain];
+		}
+		else
+		{
+			[_portNumber autorelease];
+			_portNumber = [aString copy];
+		}
+		self.hidesPortNumberError = YES;
+		
+		[self didChangeValueForKey:@"portNumber"];
+		// TEMPORARY; while Carbon is supported, send a Carbon event as well
+		[self notifyOfChangeInValueReturnedBy:@selector(portNumber)];
 	}
-}// setErrorMessage:
+}// setPortNumber:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (id)
+target
+{
+	return _target;
+}
++ (id)
+autoNotifyOnChangeToTarget
+{
+	return @(NO);
+}
+- (void)
+setTarget:(id)		anObject
+{
+	if (anObject != _target)
+	{
+		[self willChangeValueForKey:@"target"];
+		
+		[_target release];
+		_target = [anObject retain];
+		
+		[self didChangeValueForKey:@"target"];
+	}
+}// setTarget:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSString*)
+userID
+{
+	return [[_userID copy] autorelease];
+}
++ (id)
+autoNotifyOnChangeToUserID
+{
+	return @(NO);
+}
+- (void)
+setUserID:(NSString*)	aString
+{
+	if (aString != _userID)
+	{
+		[self willChangeValueForKey:@"userID"];
+		
+		if (nil == aString)
+		{
+			_userID = [@"" retain];
+		}
+		else
+		{
+			[_userID autorelease];
+			_userID = [aString copy];
+		}
+		self.hidesUserIDError = YES;
+		
+		[self didChangeValueForKey:@"userID"];
+		// TEMPORARY; while Carbon is supported, send a Carbon event as well
+		[self notifyOfChangeInValueReturnedBy:@selector(userID)];
+	}
+}// setUserID:
+
+
+#pragma mark Accessors: Low-Level User Interface State
 
 
 /*!
@@ -1370,7 +1484,7 @@ Accessor.
 - (BOOL)
 hidesDiscoveredHosts
 {
-	return hidesDiscoveredHosts;
+	return _hidesDiscoveredHosts;
 }
 - (void)
 setHidesDiscoveredHosts:(BOOL)		flag
@@ -1380,14 +1494,14 @@ setHidesDiscoveredHosts:(BOOL)		flag
 	NSRect			convertedFrame = [self->managedView frame];
 	
 	
-	hidesDiscoveredHosts = flag;
+	_hidesDiscoveredHosts = flag;
 	if (flag)
 	{
 		Float32 const	kPersistentHeight = 200; // IMPORTANT: must agree with NIB layout!!!
 		Float32			deltaHeight = (kPersistentHeight - kOldFrame.size.height);
 		
 		
-		[browser stop];
+		[_browser stop];
 		
 		newFrame.size.height += deltaHeight;
 		convertedFrame.size.height += deltaHeight;
@@ -1430,14 +1544,14 @@ setHidesDiscoveredHosts:(BOOL)		flag
 	
 	if (flag)
 	{
-		[self->responder serverBrowser:self setManagedView:self->managedView toScreenFrame:convertedFrame];
+		[_responder serverBrowser:self setManagedView:self->managedView toScreenFrame:convertedFrame];
 		[self->managedView setFrame:newFrame];
 		[self->discoveredHostsContainer setHidden:flag];
 	}
 	else
 	{
 		[self->discoveredHostsContainer setHidden:flag];
-		[self->responder serverBrowser:self setManagedView:self->managedView toScreenFrame:convertedFrame];
+		[_responder serverBrowser:self setManagedView:self->managedView toScreenFrame:convertedFrame];
 		[self->managedView setFrame:newFrame];
 	}
 }// setHidesDiscoveredHosts:
@@ -1449,52 +1563,16 @@ Accessor.
 (4.0)
 */
 - (BOOL)
-hidesErrorMessage
-{
-	return hidesErrorMessage;
-}
-- (void)
-setHidesErrorMessage:(BOOL)		flag
-{
-	// note, it is better to call a more specific routine,
-	// such as setHidesPortNumberError:
-	hidesErrorMessage = flag;
-}// setHidesErrorMessage:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (BOOL)
 hidesPortNumberError
 {
-	return hidesPortNumberError;
+	return _hidesPortNumberError;
 }
 - (void)
 setHidesPortNumberError:(BOOL)		flag
 {
-	hidesPortNumberError = flag;
-	[self setHidesErrorMessage:flag];
+	_hidesPortNumberError = flag;
+	self.hidesErrorMessage = flag;
 }// setHidesPortNumberError:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (BOOL)
-hidesProgress
-{
-	return hidesProgress;
-}
-- (void)
-setHidesProgress:(BOOL)		flag
-{
-	hidesProgress = flag;
-}// setHidesProgress:
 
 
 /*!
@@ -1505,250 +1583,14 @@ Accessor.
 - (BOOL)
 hidesUserIDError
 {
-	return hidesUserIDError;
+	return _hidesUserIDError;
 }
 - (void)
 setHidesUserIDError:(BOOL)		flag
 {
-	hidesUserIDError = flag;
-	[self setHidesErrorMessage:flag];
+	_hidesUserIDError = flag;
+	self.hidesErrorMessage = flag;
 }// setHidesUserIDError:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-hostName
-{
-	return [[hostName copy] autorelease];
-}
-+ (id)
-autoNotifyOnChangeToHostName
-{
-	return @(NO);
-}
-- (void)
-setHostName:(NSString*)		aString
-{
-	if (aString != hostName)
-	{
-		[self willChangeValueForKey:@"hostName"];
-		
-		if (nil == aString)
-		{
-			hostName = [@"" retain];
-		}
-		else
-		{
-			[hostName autorelease];
-			hostName = [aString copy];
-		}
-		
-		[self didChangeValueForKey:@"hostName"];
-		// TEMPORARY; while Carbon is supported, send a Carbon event as well
-		[self notifyOfChangeInValueReturnedBy:@selector(hostName)];
-	}
-}// setHostName:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (void)
-insertObject:(NSString*)				name
-inRecentHostsAtIndex:(unsigned long)	index
-{
-	[recentHosts insertObject:name atIndex:index];
-}
-- (void)
-removeObjectFromRecentHostsAtIndex:(unsigned long)		index
-{
-	[recentHosts removeObjectAtIndex:index];
-}// removeObjectFromRecentHostsAtIndex:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-portNumber
-{
-	return [[portNumber copy] autorelease];
-}
-+ (id)
-autoNotifyOnChangeToPortNumber
-{
-	return @(NO);
-}
-- (void)
-setPortNumber:(NSString*)	aString
-{
-	if (aString != portNumber)
-	{
-		[self willChangeValueForKey:@"portNumber"];
-		
-		if (nil == aString)
-		{
-			portNumber = [@"" retain];
-		}
-		else
-		{
-			[portNumber autorelease];
-			portNumber = [aString copy];
-		}
-		[self setHidesPortNumberError:YES];
-		
-		[self didChangeValueForKey:@"portNumber"];
-		// TEMPORARY; while Carbon is supported, send a Carbon event as well
-		[self notifyOfChangeInValueReturnedBy:@selector(portNumber)];
-	}
-}// setPortNumber:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSArray*)
-protocolDefinitions
-{
-	return [[protocolDefinitions retain] autorelease];
-}
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSIndexSet*)
-protocolIndexes
-{
-	return [[protocolIndexes retain] autorelease];
-}
-- (void)
-setProtocolIndexByProtocol:(Session_Protocol)	aProtocol
-{
-	unsigned int	i = 0;
-	
-	
-	for (ServerBrowser_Protocol* thisProtocol in [self protocolDefinitions])
-	{
-		if (aProtocol == [thisProtocol protocolID])
-		{
-			[self setProtocolIndexes:[NSIndexSet indexSetWithIndex:i]];
-			break;
-		}
-		++i;
-	}
-}
-+ (id)
-autoNotifyOnChangeToProtocolIndexes
-{
-	return @(NO);
-}
-- (void)
-setProtocolIndexes:(NSIndexSet*)	indexes
-{
-	if (indexes != protocolIndexes)
-	{
-		[self willChangeValueForKey:@"protocolIndexes"];
-		
-		[protocolIndexes release];
-		protocolIndexes = [indexes retain];
-		
-		[self didChangeValueForKey:@"protocolIndexes"];
-		// TEMPORARY; while Carbon is supported, send a Carbon event as well
-		[self notifyOfChangeInValueReturnedBy:@selector(protocolIndexes)];
-		
-		ServerBrowser_Protocol*		theProtocol = [self protocol];
-		if (nil != theProtocol)
-		{
-			// auto-set the port number to match the default for this protocol
-			[self setPortNumber:[[NSNumber numberWithUnsignedShort:[theProtocol defaultPort]] stringValue]];
-			// rediscover services appropriate for this selection
-			[self rediscoverServices];
-		}
-	}
-}// setProtocolIndexes:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (id)
-target
-{
-	return target;
-}
-+ (id)
-autoNotifyOnChangeToTarget
-{
-	return @(NO);
-}
-- (void)
-setTarget:(id)		anObject
-{
-	if (anObject != target)
-	{
-		[self willChangeValueForKey:@"target"];
-		
-		[target release];
-		target = [anObject retain];
-		
-		[self didChangeValueForKey:@"target"];
-	}
-}// setTarget:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-userID
-{
-	return [[userID copy] autorelease];
-}
-+ (id)
-autoNotifyOnChangeToUserID
-{
-	return @(NO);
-}
-- (void)
-setUserID:(NSString*)	aString
-{
-	if (aString != userID)
-	{
-		[self willChangeValueForKey:@"userID"];
-		
-		if (nil == aString)
-		{
-			userID = [@"" retain];
-		}
-		else
-		{
-			[userID autorelease];
-			userID = [aString copy];
-		}
-		[self setHidesUserIDError:YES];
-		
-		[self didChangeValueForKey:@"userID"];
-		// TEMPORARY; while Carbon is supported, send a Carbon event as well
-		[self notifyOfChangeInValueReturnedBy:@selector(userID)];
-	}
-}// setUserID:
 
 
 #pragma mark Validators
@@ -1801,8 +1643,8 @@ error:(NSError**)						outError
 										(@"The port must be a number from 0 to 65535.", @"ServerBrowser"/* table */,
 											@"message displayed for bad port numbers"), NSLocalizedDescriptionKey,
 										nil] autorelease]];
-			[self setErrorMessage:[[*outError userInfo] objectForKey:NSLocalizedDescriptionKey]];
-			[self setHidesPortNumberError:NO];
+			self.errorMessage = [[*outError userInfo] objectForKey:NSLocalizedDescriptionKey];
+			self.hidesPortNumberError = NO;
 		}
 	}
 	return result;
@@ -1859,8 +1701,8 @@ error:(NSError**)					outError
 											@"ServerBrowser"/* table */, @"message displayed for bad user IDs"),
 										NSLocalizedDescriptionKey,
 										nil] autorelease]];
-			[self setErrorMessage:[[*outError userInfo] objectForKey:NSLocalizedDescriptionKey]];
-			[self setHidesUserIDError:NO];
+			self.errorMessage = [[*outError userInfo] objectForKey:NSLocalizedDescriptionKey];
+			self.hidesUserIDError = NO;
 		}
 	}
 	return result;
@@ -1912,7 +1754,7 @@ moreComing:(BOOL)							moreComing
 #pragma unused(aNetServiceBrowser)
 #pragma unused(moreComing)
 	[self insertObject:[[[ServerBrowser_NetService alloc] initWithNetService:aNetService addressFamily:AF_INET] autorelease]
-			inDiscoveredHostsAtIndex:[discoveredHosts count]];
+			inDiscoveredHostsAtIndex:[_discoveredHosts count]];
 	//NSLog(@"%@", [self mutableArrayValueForKey:@"discoveredHosts"]); // debug
 }// netServiceBrowser:didFindService:moreComing:
 
@@ -1977,8 +1819,8 @@ awakeFromNib
 	assert(nil != managedView);
 	assert(nil != nextResponderWhenHidingDiscoveredHosts);
 	
-	[self setHidesDiscoveredHosts:YES];
-	[self->responder serverBrowser:self didLoadManagedView:self->managedView];
+	self.hidesDiscoveredHosts = YES;
+	[_responder serverBrowser:self didLoadManagedView:self->managedView];
 	
 	// find out when the window will close, so that the button that opened the window can return to normal
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(serverBrowserWindowWillClose:)
@@ -2012,7 +1854,7 @@ do further processing.
 didDoubleClickDiscoveredHostWithSelection:(NSArray*)	objects
 {
 #pragma unused(objects)
-	[self setHidesDiscoveredHosts:YES];
+	self.hidesDiscoveredHosts = YES;
 }// didDoubleClickDiscoveredHostWithSelection:
 
 
@@ -2025,12 +1867,12 @@ Accessor.
 discoveredHost
 {
 	ServerBrowser_NetService*	result = nil;
-	unsigned int				selectedIndex = [[self discoveredHostIndexes] firstIndex];
+	unsigned int				selectedIndex = [self.discoveredHostIndexes firstIndex];
 	
 	
 	if (NSNotFound != selectedIndex)
 	{
-		result = [discoveredHosts objectAtIndex:selectedIndex];
+		result = [_discoveredHosts objectAtIndex:selectedIndex];
 	}
 	return result;
 }// discoveredHost
@@ -2060,7 +1902,7 @@ appropriate type.
 - (void)
 notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 {
-	if (nullptr != self->eventTarget)
+	if (nullptr != _eventTarget)
 	{
 		EventRef	panelChangedEvent = nullptr;
 		OSStatus	error = noErr;
@@ -2092,7 +1934,7 @@ notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 			}
 			else if (valueGetter == @selector(hostName))
 			{
-				CFStringRef		hostNameForEvent = BRIDGE_CAST([self hostName], CFStringRef);
+				CFStringRef		hostNameForEvent = BRIDGE_CAST(self.hostName, CFStringRef);
 				
 				
 				error = SetEventParameter(panelChangedEvent, kEventParamNetEvents_HostName,
@@ -2101,7 +1943,7 @@ notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 			}
 			else if (valueGetter == @selector(portNumber))
 			{
-				NSString*		portNumberString = [self portNumber];
+				NSString*		portNumberString = self.portNumber;
 				UInt32			portNumberForEvent = STATIC_CAST([portNumberString intValue], UInt32);
 				
 				
@@ -2111,7 +1953,7 @@ notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 			}
 			else if (valueGetter == @selector(userID))
 			{
-				CFStringRef		userIDForEvent = BRIDGE_CAST([self userID], CFStringRef);
+				CFStringRef		userIDForEvent = BRIDGE_CAST(self.userID, CFStringRef);
 				
 				
 				error = SetEventParameter(panelChangedEvent, kEventParamNetEvents_UserID,
@@ -2127,8 +1969,7 @@ notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 			if (doPost)
 			{
 				// finally, send the message to the target
-				error = SendEventToEventTargetWithOptions(panelChangedEvent, self->eventTarget,
-															kEventTargetDontPropagate);
+				error = SendEventToEventTargetWithOptions(panelChangedEvent, _eventTarget, kEventTargetDontPropagate);
 			}
 		}
 		
@@ -2150,12 +1991,12 @@ Accessor.
 protocol
 {
 	ServerBrowser_Protocol*		result = nil;
-	unsigned int				selectedIndex = [[self protocolIndexes] firstIndex];
+	unsigned int				selectedIndex = [self.protocolIndexes firstIndex];
 	
 	
 	if (NSNotFound != selectedIndex)
 	{
-		result = [[self protocolDefinitions] objectAtIndex:selectedIndex];
+		result = [self.protocolDefinitions objectAtIndex:selectedIndex];
 	}
 	return result;
 }// protocol
@@ -2177,17 +2018,17 @@ serverBrowserWindowWillClose:(NSNotification*)	notification
 {
 #pragma unused(notification)
 	// interrupt any Bonjour scans in progress
-	[browser stop];
+	[_browser stop];
 	
 	// remember the selected host as a recent item
-	[self insertObject:[[hostName copy] autorelease] inRecentHostsAtIndex:0];
-	if ([recentHosts count] > 4/* arbitrary */)
+	[self insertObject:[[_hostName copy] autorelease] inRecentHostsAtIndex:0];
+	if ([_recentHosts count] > 4/* arbitrary */)
 	{
-		[self removeObjectFromRecentHostsAtIndex:([recentHosts count] - 1)];
+		[self removeObjectFromRecentHostsAtIndex:([_recentHosts count] - 1)];
 	}
 	
 	// notify the handler
-	[self->responder serverBrowser:self didFinishUsingManagedView:self->managedView];
+	[_responder serverBrowser:self didFinishUsingManagedView:self->managedView];
 }// serverBrowserWindowWillClose:
 
 

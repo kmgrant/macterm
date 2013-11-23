@@ -106,31 +106,31 @@ changes to an interface declared in a ".mm" file.
 */
 @interface ServerBrowser_ViewManager : NSObject< NSNetServiceBrowserDelegate > //{
 {
-	NSMutableArray*			discoveredHosts; // binding
-	NSMutableArray*			recentHosts; // binding
-	NSArray*				protocolDefinitions; // binding
 	IBOutlet NSView*		discoveredHostsContainer;
 	IBOutlet NSTableView*	discoveredHostsTableView;
 	IBOutlet NSView*		managedView;
 	IBOutlet NSView*		logicalFirstResponder;
 	IBOutlet NSResponder*	nextResponderWhenHidingDiscoveredHosts;
 @private
-	id< ServerBrowser_ViewManagerChannel >	responder;
-	EventTargetRef							eventTarget;
-	CarbonEventHandlerWrap*					lookupHandlerPtr;
-	NSNetServiceBrowser*					browser;
-	NSIndexSet*								discoveredHostIndexes;
-	BOOL									hidesDiscoveredHosts;
-	BOOL									hidesErrorMessage;
-	BOOL									hidesPortNumberError;
-	BOOL									hidesProgress;
-	BOOL									hidesUserIDError;
-	NSIndexSet*								protocolIndexes;
-	NSString*								hostName;
-	NSString*								portNumber;
-	id										target;
-	NSString*								userID;
-	NSString*								errorMessage;
+	id< ServerBrowser_ViewManagerChannel >	_responder;
+	EventTargetRef							_eventTarget;
+	CarbonEventHandlerWrap*					_lookupHandlerPtr;
+	NSNetServiceBrowser*					_browser;
+	NSIndexSet*								_discoveredHostIndexes;
+	NSIndexSet*								_protocolIndexes;
+	NSMutableArray*							_discoveredHosts; // binding
+	NSMutableArray*							_recentHosts; // binding
+	NSArray*								_protocolDefinitions; // binding
+	NSString*								_errorMessage;
+	NSString*								_hostName;
+	NSString*								_portNumber;
+	NSString*								_userID;
+	id										_target;
+	BOOL									_hidesDiscoveredHosts;
+	BOOL									_hidesErrorMessage;
+	BOOL									_hidesPortNumberError;
+	BOOL									_hidesProgress;
+	BOOL									_hidesUserIDError;
 }
 
 // initializers
@@ -152,18 +152,14 @@ changes to an interface declared in a ".mm" file.
 	inDiscoveredHostsAtIndex:(unsigned long)_;
 	- (void)
 	removeObjectFromDiscoveredHostsAtIndex:(unsigned long)_;
-	- (NSIndexSet*)
-	discoveredHostIndexes;
-	- (void)
-	setDiscoveredHostIndexes:(NSIndexSet*)_; // binding
-	- (NSArray*)
+	@property (retain) NSIndexSet*
+	discoveredHostIndexes; // binding
+	@property (retain, readonly) NSArray*
 	protocolDefinitions;
-	- (NSIndexSet*)
-	protocolIndexes;
+	@property (retain) NSIndexSet*
+	protocolIndexes; // binding
 	- (void)
 	setProtocolIndexByProtocol:(Session_Protocol)_;
-	- (void)
-	setProtocolIndexes:(NSIndexSet*)_; // binding
 	- (void)
 	insertObject:(NSString*)_
 	inRecentHostsAtIndex:(unsigned long)_;
@@ -173,48 +169,28 @@ changes to an interface declared in a ".mm" file.
 // accessors: general
 	- (Session_Protocol)
 	currentProtocolID;
-	- (NSString*)
+	@property (retain) NSString*
 	errorMessage;
-	- (void)
-	setErrorMessage:(NSString*)_;
-	- (NSString*)
-	hostName;
-	- (void)
-	setHostName:(NSString*)_; // binding
-	- (NSString*)
-	portNumber;
-	- (void)
-	setPortNumber:(NSString*)_; // binding
-	- (id)
+	@property (copy) NSString*
+	hostName; // binding
+	@property (copy) NSString*
+	portNumber; // binding
+	@property (retain) id
 	target;
-	- (void)
-	setTarget:(id)_;
-	- (NSString*)
-	userID;
-	- (void)
-	setUserID:(NSString*)_; // binding
+	@property (copy) NSString*
+	userID; // binding
 
 // accessors: low-level user interface state
-	- (BOOL)
+	@property (assign) BOOL
 	hidesDiscoveredHosts;
-	- (void)
-	setHidesDiscoveredHosts:(BOOL)_;
-	- (BOOL)
-	hidesErrorMessage;
-	- (void)
-	setHidesErrorMessage:(BOOL)_;
-	- (BOOL)
-	hidesPortNumberError;
-	- (void)
-	setHidesPortNumberError:(BOOL)_; // binding
-	- (BOOL)
-	hidesProgress;
-	- (void)
-	setHidesProgress:(BOOL)_; // binding
-	- (BOOL)
-	hidesUserIDError;
-	- (void)
-	setHidesUserIDError:(BOOL)_; // binding
+	@property (assign) BOOL
+	hidesErrorMessage; // it is better to set a specific property such as "hidesPortNumberError"
+	@property (assign) BOOL
+	hidesPortNumberError; // binding
+	@property (assign) BOOL
+	hidesProgress; // binding
+	@property (assign) BOOL
+	hidesUserIDError; // binding
 
 // validators
 	- (BOOL)
