@@ -5,7 +5,7 @@ LDFLAGS_EXTRA_FRAMEWORKS = -weak_framework Growl
 
 // the version of SWIG required to work with the system Python
 // (see also SWIG_PREFIX)
-SWIG_VERSION = 2.0.9
+SWIG_VERSION = 2.0.11
 
 // where SWIG should look for Python headers on this system
 SWIG_PYTHON_INCLUDE = -I$(SDKROOT)/System/Library/Frameworks/Python.framework/Versions/2.5/Headers

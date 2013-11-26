@@ -6,16 +6,14 @@
 # (Download SWIG from "http://www.swig.org/".)
 #
 # Run this instead of "./configure" from your untarred
-# "swig-<x.x>" build directory.  Then run "make",
-# "make check" and "make install" to install SWIG.
-# (Mac OS X comes with an older version of SWIG in
-# /usr/bin, but that version has not been tested;
-# maybe it works, maybe not.)
+# "swig-<x.x>" build directory.  Then run "make" and "make check"
+# (with the same $PATH set during configuration); if successful,
+# install with "sudo make install" as an administrator.
 #
-# Note the choice of /opt/pcre below as the location
-# of PCRE; you could probably use "--without-pcre" if
-# you don't have it installed, because MacTerm does
-# not currently rely on PCRE support in SWIG.
+# Note the choice of /opt below as the location of dependencies.
+# If you don't have these installed, try to disable them using
+# options like "--without-boost" and "--without-pcre" (though
+# this configuration has not been tested).
 #
 # Kevin Grant (kmg@mac.com)
 # July 29, 2006
@@ -23,7 +21,7 @@
 # IMPORTANT: MacTerm's build system assumes /opt/swig
 # regardless of what you may customize here.  See the
 # Xcode configuration files for a SWIG_PREFIX variable.
-swigversion=2.0.9
+swigversion=2.0.11
 prefix_with_ver=/opt/swig-${swigversion}
 prefix_no_ver=/opt/swig
 
@@ -34,13 +32,16 @@ ln -snf ${prefix_with_ver} ${prefix_no_ver}
 # enable only Python
 ./configure \
 --prefix=${prefix_with_ver} \
+--with-boost=/opt/boost \
 --with-pcre-prefix=/opt/pcre \
 --disable-ccache \
 --with-python \
 --without-allegrocl \
+--without-android \
 --without-chicken \
 --without-clisp \
 --without-csharp \
+--without-d \
 --without-gcj \
 --without-go \
 --without-guile \

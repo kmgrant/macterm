@@ -25,6 +25,16 @@ allowing you to directly access core functionality from scripts!"
 #endif
 %}
 
+// forward-declare the generated initializer routine from SWIG to
+// suppress an annoying compiler warning
+%{
+#if PY_VERSION_HEX >= 0x03000000
+extern "C" PyObject* PyInit__quills(void);
+#else
+extern "C" void init_quills(void);
+#endif
+%}
+
 // instantiate template types relied upon by Quills
 %template(_float_list) std::vector< double >;
 %template(_long_list) std::vector< long >;
@@ -339,6 +349,9 @@ CallPythonStringReturnVoid	(void*	inPythonFunctionObject,
 // enable callbacks that take a single string argument and return a string
 #ifdef SWIGPYTHON
 %{
+// disable for now since nothing technically requires this yet
+// (suppresses a warning); re-enable when it is needed later
+#if 0
 static std::string
 CallPythonStringReturnString	(void*	inPythonFunctionObject,
 								 char*	inoutString)
@@ -372,6 +385,7 @@ CallPythonStringReturnString	(void*	inPythonFunctionObject,
 	
 	return result;
 }
+#endif
 %}
 #endif
 
@@ -454,10 +468,6 @@ CallPythonVoidReturnVoid	(void*	inPythonFunctionObject)
 // NOTE: Quills headers are the only MacTerm headers designed to
 // interact with SWIG.  They also define the entire Python API for
 // MacTerm in an organized way.  Try not to include other headers here.
-
-// WARNING: Currently, PythonWrapper/GNUmakefile assumes the list of
-// dependencies below.  If you add more includes, you should ensure the
-// makefile will realize they are dependencies of the wrapper build.
 
 %{
 #include <QuillsBase.h>
