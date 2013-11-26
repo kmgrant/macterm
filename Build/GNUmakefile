@@ -240,6 +240,7 @@ English.lproj/PrefPanelTerminalScreenCocoa \
 English.lproj/PrefPanelTranslationsCocoa \
 English.lproj/PrefsWindowCocoa \
 English.lproj/PrintPreviewCocoa \
+English.lproj/ResizeInfoCocoa \
 English.lproj/ServerBrowserCocoa \
 English.lproj/TerminalWindowCocoa \
 English.lproj/VectorWindowCocoa \

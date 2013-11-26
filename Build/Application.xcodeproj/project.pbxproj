@@ -578,6 +578,7 @@
 		0AF5AA2F159BD90E007E36DE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelGeneralNotificationsCocoa.xib; sourceTree = "<group>"; };
 		0AF7636316F6C856008F90D9 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelTerminalEmulationCocoa.xib; sourceTree = "<group>"; };
 		0AF84E8514A82F2A001F6C1D /* IconForPrefs.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefs.icns; path = Application/Resources/IconForPrefs.icns; sourceTree = "<group>"; };
+		0AF91B1D18445F15004A7588 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ResizeInfoCocoa.xib; sourceTree = "<group>"; };
 		0AF931851592E0E6008A41C6 /* QuillsSWIG.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsSWIG.h; path = Application/Code/QuillsSWIG.h; sourceTree = "<group>"; };
 		0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PopoverManager.objc++.h"; path = "Shared/Code/PopoverManager.objc++.h"; sourceTree = "<group>"; };
 		0AF94E481477857900099BF2 /* PopoverManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopoverManager.mm; path = Shared/Code/PopoverManager.mm; sourceTree = "<group>"; };
@@ -1005,6 +1006,7 @@
 				0A839C3315805125000F001E /* PrefPanelTranslationsCocoa.xib */,
 				0A5A6FCA1578783700EFCEAB /* PrefsWindowCocoa.xib */,
 				0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */,
+				0AF91B1C18445F15004A7588 /* ResizeInfoCocoa.xib */,
 				0AAEFFBF111E77F100526983 /* ServerBrowserCocoa.xib */,
 				0ACFBF4612F13506008E4203 /* TerminalWindowCocoa.xib */,
 				0A66B704154E04DC00B98072 /* VectorWindowCocoa.xib */,
@@ -1868,6 +1870,14 @@
 				0AF7636316F6C856008F90D9 /* English */,
 			);
 			name = PrefPanelTerminalEmulationCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0AF91B1C18445F15004A7588 /* ResizeInfoCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AF91B1D18445F15004A7588 /* English */,
+			);
+			name = ResizeInfoCocoa.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

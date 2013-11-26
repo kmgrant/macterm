@@ -1,385 +1,66 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
-  <data>
-    <int key="IBDocument.SystemTarget">1060</int>
-    <string key="IBDocument.SystemVersion">12C60</string>
-    <string key="IBDocument.InterfaceBuilderVersion">851</string>
-    <string key="IBDocument.AppKitVersion">1187.34</string>
-    <string key="IBDocument.HIToolboxVersion">625.00</string>
-    <object class="NSMutableDictionary" key="IBDocument.PluginVersions">
-      <string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-      <string key="NS.object.0">851</string>
-    </object>
-    <array class="NSMutableArray" key="IBDocument.EditedObjectIDs"/>
-    <array key="IBDocument.PluginDependencies">
-      <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-    </array>
-    <dictionary class="NSMutableDictionary" key="IBDocument.Metadata"/>
-    <array class="NSMutableArray" key="IBDocument.RootObjects" id="1000">
-      <object class="NSCustomObject" id="1001">
-        <string key="NSClassName">TerminalWindow_Controller</string>
-      </object>
-      <object class="NSCustomObject" id="1003">
-        <string key="NSClassName">FirstResponder</string>
-      </object>
-      <object class="NSCustomObject" id="1004">
-        <string key="NSClassName">NSApplication</string>
-      </object>
-      <object class="NSWindowTemplate" id="583842220">
-        <int key="NSWindowStyleMask">15</int>
-        <int key="NSWindowBacking">2</int>
-        <string key="NSWindowRect">{{352, 529}, {731, 495}}</string>
-        <int key="NSWTFlags">611844096</int>
-        <string key="NSWindowTitle">Test of Cocoa Terminal Window</string>
-        <string key="NSWindowClass">NSWindow</string>
-        <nil key="NSViewClass"/>
-        <nil key="NSUserInterfaceItemIdentifier"/>
-        <string key="NSWindowContentMaxSize">{1.7976931348623157e+308, 1.7976931348623157e+308}</string>
-        <string key="NSWindowContentMinSize">{150, 100}</string>
-        <object class="NSView" key="NSWindowView" id="406384019">
-          <nil key="NSNextResponder"/>
-          <int key="NSvFlags">256</int>
-          <array class="NSMutableArray" key="NSSubviews">
-            <object class="NSScrollView" id="1007019904">
-              <reference key="NSNextResponder" ref="406384019"/>
-              <int key="NSvFlags">274</int>
-              <array class="NSMutableArray" key="NSSubviews">
-                <object class="NSClipView" id="344751945">
-                  <reference key="NSNextResponder" ref="1007019904"/>
-                  <int key="NSvFlags">2304</int>
-                  <array class="NSMutableArray" key="NSSubviews">
-                    <object class="NSCustomView" id="900749321">
-                      <reference key="NSNextResponder" ref="344751945"/>
-                      <int key="NSvFlags">274</int>
-                      <array class="NSMutableArray" key="NSSubviews">
-                        <object class="NSCustomView" id="406940096">
-                          <reference key="NSNextResponder" ref="900749321"/>
-                          <int key="NSvFlags">274</int>
-                          <array class="NSMutableArray" key="NSSubviews">
-                            <object class="NSCustomView" id="59468473">
-                              <reference key="NSNextResponder" ref="406940096"/>
-                              <int key="NSvFlags">274</int>
-                              <string key="NSFrame">{{7, 7}, {692, 472}}</string>
-                              <reference key="NSSuperview" ref="406940096"/>
-                              <string key="NSClassName">TerminalView_ContentView</string>
-                            </object>
-                          </array>
-                          <string key="NSFrame">{{5, 5}, {706, 486}}</string>
-                          <reference key="NSSuperview" ref="900749321"/>
-                          <string key="NSClassName">TerminalView_BackgroundView</string>
-                        </object>
-                      </array>
-                      <string key="NSFrameSize">{716, 496}</string>
-                      <reference key="NSSuperview" ref="344751945"/>
-                      <string key="NSClassName">TerminalView_BackgroundView</string>
-                    </object>
-                  </array>
-                  <string key="NSFrame">{{1, 1}, {716, 496}}</string>
-                  <reference key="NSSuperview" ref="1007019904"/>
-                  <reference key="NSNextKeyView" ref="900749321"/>
-                  <reference key="NSDocView" ref="900749321"/>
-                  <object class="NSColor" key="NSBGColor">
-                    <int key="NSColorSpace">6</int>
-                    <string key="NSCatalogName">System</string>
-                    <string key="NSColorName">controlColor</string>
-                    <object class="NSColor" key="NSColor">
-                      <int key="NSColorSpace">3</int>
-                      <bytes key="NSWhite">MC42NjY2NjY2NjY3AA</bytes>
-                    </object>
-                  </object>
-                  <int key="NScvFlags">4</int>
-                </object>
-                <object class="NSScroller" id="403131711">
-                  <reference key="NSNextResponder" ref="1007019904"/>
-                  <int key="NSvFlags">256</int>
-                  <string key="NSFrame">{{717, 1}, {15, 480}}</string>
-                  <reference key="NSSuperview" ref="1007019904"/>
-                  <bool key="NSAllowsLogicalLayoutDirection">NO</bool>
-                  <reference key="NSTarget" ref="1007019904"/>
-                  <string key="NSAction">_doScroller:</string>
-                  <double key="NSCurValue">0.99798387289047241</double>
-                  <double key="NSPercent">0.9860835075378418</double>
-                </object>
-                <object class="NSScroller" id="336072824">
-                  <reference key="NSNextResponder" ref="1007019904"/>
-                  <int key="NSvFlags">-2147483392</int>
-                  <string key="NSFrame">{{-100, -100}, {716, 15}}</string>
-                  <reference key="NSSuperview" ref="1007019904"/>
-                  <bool key="NSAllowsLogicalLayoutDirection">NO</bool>
-                  <int key="NSsFlags">1</int>
-                  <reference key="NSTarget" ref="1007019904"/>
-                  <string key="NSAction">_doScroller:</string>
-                  <double key="NSPercent">0.50602412223815918</double>
-                </object>
-              </array>
-              <string key="NSFrame">{{-1, -2}, {733, 498}}</string>
-              <reference key="NSSuperview" ref="406384019"/>
-              <reference key="NSNextKeyView" ref="344751945"/>
-              <int key="NSsFlags">133138</int>
-              <reference key="NSVScroller" ref="403131711"/>
-              <reference key="NSHScroller" ref="336072824"/>
-              <reference key="NSContentView" ref="344751945"/>
-              <double key="NSMinMagnification">0.25</double>
-              <double key="NSMaxMagnification">4</double>
-              <double key="NSMagnification">1</double>
-            </object>
-          </array>
-          <string key="NSFrameSize">{731, 495}</string>
-        </object>
-        <string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
-        <string key="NSMinSize">{150, 122}</string>
-        <string key="NSMaxSize">{1.7976931348623157e+308, 1.7976931348623157e+308}</string>
-        <bool key="NSWindowIsRestorable">YES</bool>
-      </object>
-    </array>
-    <object class="IBObjectContainer" key="IBDocument.Objects">
-      <array class="NSMutableArray" key="connectionRecords">
-        <object class="IBConnectionRecord">
-          <object class="IBOutletConnection" key="connection">
-            <string key="label">testTerminalBackgroundView</string>
-            <reference key="source" ref="1001"/>
-            <reference key="destination" ref="900749321"/>
-          </object>
-          <int key="connectionID">11</int>
-        </object>
-        <object class="IBConnectionRecord">
-          <object class="IBOutletConnection" key="connection">
-            <string key="label">testTerminalContentView</string>
-            <reference key="source" ref="1001"/>
-            <reference key="destination" ref="59468473"/>
-          </object>
-          <int key="connectionID">12</int>
-        </object>
-        <object class="IBConnectionRecord">
-          <object class="IBOutletConnection" key="connection">
-            <string key="label">testTerminalPaddingView</string>
-            <reference key="source" ref="1001"/>
-            <reference key="destination" ref="406940096"/>
-          </object>
-          <int key="connectionID">13</int>
-        </object>
-        <object class="IBConnectionRecord">
-          <object class="IBOutletConnection" key="connection">
-            <string key="label">window</string>
-            <reference key="source" ref="1001"/>
-            <reference key="destination" ref="583842220"/>
-          </object>
-          <int key="connectionID">14</int>
-        </object>
-      </array>
-      <object class="IBMutableOrderedSet" key="objectRecords">
-        <array key="orderedObjects">
-          <object class="IBObjectRecord">
-            <int key="objectID">0</int>
-            <array key="object" id="0"/>
-            <reference key="children" ref="1000"/>
-            <nil key="parent"/>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">-2</int>
-            <reference key="object" ref="1001"/>
-            <reference key="parent" ref="0"/>
-            <string key="objectName">File's Owner</string>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">-1</int>
-            <reference key="object" ref="1003"/>
-            <reference key="parent" ref="0"/>
-            <string key="objectName">First Responder</string>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">-3</int>
-            <reference key="object" ref="1004"/>
-            <reference key="parent" ref="0"/>
-            <string key="objectName">Application</string>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">3</int>
-            <reference key="object" ref="583842220"/>
-            <array class="NSMutableArray" key="children">
-              <reference ref="406384019"/>
-            </array>
-            <reference key="parent" ref="0"/>
-            <string key="objectName">Test Cocoa Terminal Window</string>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">4</int>
-            <reference key="object" ref="406384019"/>
-            <array class="NSMutableArray" key="children">
-              <reference ref="1007019904"/>
-            </array>
-            <reference key="parent" ref="583842220"/>
-            <string key="objectName">Window Content View</string>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">5</int>
-            <reference key="object" ref="1007019904"/>
-            <array class="NSMutableArray" key="children">
-              <reference ref="900749321"/>
-              <reference ref="336072824"/>
-              <reference ref="403131711"/>
-            </array>
-            <reference key="parent" ref="406384019"/>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">6</int>
-            <reference key="object" ref="900749321"/>
-            <array class="NSMutableArray" key="children">
-              <reference ref="406940096"/>
-            </array>
-            <reference key="parent" ref="1007019904"/>
-            <string key="objectName">Background View</string>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">7</int>
-            <reference key="object" ref="336072824"/>
-            <reference key="parent" ref="1007019904"/>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">8</int>
-            <reference key="object" ref="403131711"/>
-            <reference key="parent" ref="1007019904"/>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">9</int>
-            <reference key="object" ref="406940096"/>
-            <array class="NSMutableArray" key="children">
-              <reference ref="59468473"/>
-            </array>
-            <reference key="parent" ref="900749321"/>
-            <string key="objectName">Padding View</string>
-          </object>
-          <object class="IBObjectRecord">
-            <int key="objectID">10</int>
-            <reference key="object" ref="59468473"/>
-            <reference key="parent" ref="406940096"/>
-            <string key="objectName">Content View</string>
-          </object>
-        </array>
-      </object>
-      <dictionary class="NSMutableDictionary" key="flattenedProperties">
-        <string key="-1.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-        <string key="-2.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-        <string key="-3.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-        <string key="10.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-        <object class="NSAffineTransform" key="10.IBViewBoundsToFrameTransform">
-          <bytes key="NSTransformStruct">AUIgAABC/AAAA</bytes>
-        </object>
-        <string key="3.IBEditorWindowLastContentRect">{{352, 529}, {731, 495}}</string>
-        <string key="3.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-        <string key="3.IBWindowTemplateEditedContentRect">{{352, 529}, {731, 495}}</string>
-        <boolean value="NO" key="3.NSWindowTemplate.visibleAtLaunch"/>
-        <boolean value="YES" key="3.windowTemplate.hasMinSize"/>
-        <string key="3.windowTemplate.minSize">{150, 100}</string>
-        <string key="4.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-        <object class="NSAffineTransform" key="5.IBViewBoundsToFrameTransform">
-          <bytes key="NSTransformStruct">P4AAAL+AAABA4AAAw/oAAA</bytes>
-        </object>
-        <string key="6.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-        <object class="NSAffineTransform" key="6.IBViewBoundsToFrameTransform">
-          <bytes key="NSTransformStruct">AULWAABCQAAAA</bytes>
-        </object>
-        <object class="NSAffineTransform" key="9.IBViewBoundsToFrameTransform">
-          <bytes key="NSTransformStruct">AUCgAABCtAAAA</bytes>
-        </object>
-      </dictionary>
-      <dictionary class="NSMutableDictionary" key="unlocalizedProperties"/>
-      <nil key="activeLocalization"/>
-      <dictionary class="NSMutableDictionary" key="localizations"/>
-      <nil key="sourceID"/>
-      <int key="maxID">14</int>
-    </object>
-    <object class="IBClassDescriber" key="IBDocument.Classes">
-      <array class="NSMutableArray" key="referencedPartialClassDescriptions">
-        <object class="IBPartialClassDescription">
-          <string key="className">NSObject</string>
-          <object class="IBClassDescriptionSource" key="sourceIdentifier" id="698366277">
-            <string key="majorKey">IBProjectSource</string>
-            <string key="minorKey">Shared/Code/CocoaExtensions.objc++.h</string>
-          </object>
-        </object>
-        <object class="IBPartialClassDescription">
-          <string key="className">NSResponder</string>
-          <object class="IBClassDescriptionSource" key="sourceIdentifier" id="404016749">
-            <string key="majorKey">IBProjectSource</string>
-            <string key="minorKey">Shared/Code/CocoaFuture.objc++.h</string>
-          </object>
-        </object>
-        <object class="IBPartialClassDescription">
-          <string key="className">NSScroller</string>
-          <reference key="sourceIdentifier" ref="404016749"/>
-        </object>
-        <object class="IBPartialClassDescription">
-          <string key="className">NSWindow</string>
-          <object class="IBClassDescriptionSource" key="sourceIdentifier" id="167382489">
-            <string key="majorKey">IBProjectSource</string>
-            <string key="minorKey">Application/Code/TerminalWindow.h</string>
-          </object>
-        </object>
-        <object class="IBPartialClassDescription">
-          <string key="className">NSWindow</string>
-          <reference key="sourceIdentifier" ref="698366277"/>
-        </object>
-        <object class="IBPartialClassDescription">
-          <string key="className">NSWindow</string>
-          <reference key="sourceIdentifier" ref="404016749"/>
-        </object>
-        <object class="IBPartialClassDescription">
-          <string key="className">TerminalView_BackgroundView</string>
-          <string key="superclassName">NSView</string>
-          <object class="IBClassDescriptionSource" key="sourceIdentifier" id="128659242">
-            <string key="majorKey">IBProjectSource</string>
-            <string key="minorKey">Application/Code/TerminalView.h</string>
-          </object>
-        </object>
-        <object class="IBPartialClassDescription">
-          <string key="className">TerminalView_ContentView</string>
-          <string key="superclassName">NSControl</string>
-          <reference key="sourceIdentifier" ref="128659242"/>
-        </object>
-        <object class="IBPartialClassDescription">
-          <string key="className">TerminalWindow_Controller</string>
-          <string key="superclassName">NSWindowController</string>
-          <dictionary class="NSMutableDictionary" key="outlets">
-            <string key="testTerminalBackgroundView">TerminalView_BackgroundView</string>
-            <string key="testTerminalContentView">TerminalView_ContentView</string>
-            <string key="testTerminalPaddingView">TerminalView_BackgroundView</string>
-          </dictionary>
-          <dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-            <object class="IBToOneOutletInfo" key="testTerminalBackgroundView">
-              <string key="name">testTerminalBackgroundView</string>
-              <string key="candidateClassName">TerminalView_BackgroundView</string>
-            </object>
-            <object class="IBToOneOutletInfo" key="testTerminalContentView">
-              <string key="name">testTerminalContentView</string>
-              <string key="candidateClassName">TerminalView_ContentView</string>
-            </object>
-            <object class="IBToOneOutletInfo" key="testTerminalPaddingView">
-              <string key="name">testTerminalPaddingView</string>
-              <string key="candidateClassName">TerminalView_BackgroundView</string>
-            </object>
-          </dictionary>
-          <reference key="sourceIdentifier" ref="167382489"/>
-        </object>
-      </array>
-      <array class="NSMutableArray" key="referencedPartialClassDescriptionsV3.2+">
-        <object class="IBPartialClassDescription">
-          <string key="className">NSObject</string>
-          <object class="IBClassDescriptionSource" key="sourceIdentifier">
-            <string key="majorKey">IBFrameworkSource</string>
-            <string key="minorKey">PrintCore.framework/Headers/PDEPluginInterface.h</string>
-          </object>
-        </object>
-      </array>
-    </object>
-    <int key="IBDocument.localizationMode">0</int>
-    <string key="IBDocument.TargetRuntimeIdentifier">IBCocoaFramework</string>
-    <object class="NSMutableDictionary" key="IBDocument.PluginDeclaredDependencies">
-      <string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin.macosx</string>
-      <integer value="1060" key="NS.object.0"/>
-    </object>
-    <bool key="IBDocument.PluginDeclaredDependenciesTrackSystemTargetVersion">YES</bool>
-    <string key="IBDocument.LastKnownRelativeProjectPath">../..</string>
-    <int key="IBDocument.defaultPropertyAccessControl">3</int>
-  </data>
-</archive>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13A603" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+    <dependencies>
+        <deployment version="1060" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="TerminalWindow_Controller">
+            <connections>
+                <outlet property="testTerminalBackgroundView" destination="6" id="11"/>
+                <outlet property="testTerminalContentView" destination="10" id="12"/>
+                <outlet property="testTerminalPaddingView" destination="9" id="13"/>
+                <outlet property="window" destination="3" id="14"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application"/>
+        <window title="Test of Cocoa Terminal Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" visibleAtLaunch="NO" animationBehavior="default" id="3" userLabel="Test Cocoa Terminal Window">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="352" y="529" width="731" height="495"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
+            <value key="minSize" type="size" width="150" height="100"/>
+            <view key="contentView" id="4" userLabel="Window Content View">
+                <rect key="frame" x="0.0" y="0.0" width="731" height="495"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="5">
+                        <rect key="frame" x="-1" y="-2" width="733" height="498"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <clipView key="contentView" id="Khe-P8-GcJ">
+                            <rect key="frame" x="1" y="1" width="716" height="496"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <subviews>
+                                <customView id="6" userLabel="Background View" customClass="TerminalView_BackgroundView">
+                                    <rect key="frame" x="0.0" y="0.0" width="716" height="496"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <customView id="9" userLabel="Padding View" customClass="TerminalView_BackgroundView">
+                                            <rect key="frame" x="5" y="5" width="706" height="486"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            <subviews>
+                                                <customView id="10" userLabel="Content View" customClass="TerminalView_ContentView">
+                                                    <rect key="frame" x="7" y="7" width="692" height="472"/>
+                                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                </customView>
+                                            </subviews>
+                                        </customView>
+                                    </subviews>
+                                </customView>
+                            </subviews>
+                        </clipView>
+                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="7">
+                            <rect key="frame" x="-100" y="-100" width="716" height="15"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </scroller>
+                        <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="0.99798387289047241" horizontal="NO" id="8">
+                            <rect key="frame" x="717" y="1" width="15" height="496"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </scroller>
+                    </scrollView>
+                </subviews>
+            </view>
+        </window>
+    </objects>
+</document>

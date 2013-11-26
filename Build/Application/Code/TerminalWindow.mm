@@ -204,7 +204,6 @@ struct My_TerminalWindow
 	CFRetainRelease				toolbarItemLED3;			// if present, LED #3 status item
 	CFRetainRelease				toolbarItemLED4;			// if present, LED #4 status item
 	CFRetainRelease				toolbarItemScrollLock;		// if present, scroll lock status item
-	HIWindowRef					resizeFloater;				// temporary window that appears during resizes
 	TerminalView_DisplayMode	preResizeViewDisplayMode;	// stored in case user invokes option key variation on resize
 	WindowInfo_Ref				windowInfo;					// window information object for the terminal window
 	CGDirectDisplayID			staggerDisplay;				// the display the window was on at the time "staggerIndex" was set;
@@ -216,7 +215,6 @@ struct My_TerminalWindow
 	{
 		HIViewRef		scrollBarH;				// scroll bar used to specify which range of columns is visible
 		HIViewRef		scrollBarV;				// scroll bar used to specify which range of rows is visible
-		HIViewRef		textScreenDimensions;   // defined only in the floater window that appears during resizes
 	} controls;
 	
 	Boolean						isObscured;				// is the window hidden, via a command in the Window menu?
@@ -2209,7 +2207,6 @@ toolbarItemLED2(),
 toolbarItemLED3(),
 toolbarItemLED4(),
 toolbarItemScrollLock(),
-resizeFloater(nullptr),
 preResizeViewDisplayMode(kTerminalView_DisplayModeNormal/* corrected below */),
 windowInfo(WindowInfo_New()),
 // controls initialized below
@@ -6113,34 +6110,11 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 														? kTerminalView_DisplayModeZoom
 														: kTerminalView_DisplayModeNormal);
 					}
-				}	
-				
-				// load the NIB containing this dialog (automatically finds the right localization)
-				ptr->resizeFloater = NIBWindow(AppResources_ReturnBundleForNIBs(), CFSTR("TerminalWindow"),
-												useSheet ? CFSTR("DimensionsSheet") : CFSTR("DimensionsFloater"))
-										<< NIBLoader_AssertWindowExists;
-				
-				if (nullptr != ptr->resizeFloater)
-				{
-					OSStatus	error = noErr;
-					
-					
-					error = GetControlByID(ptr->resizeFloater, &idMyTextScreenDimensions, &ptr->controls.textScreenDimensions);
-					if (error != noErr) ptr->controls.textScreenDimensions = nullptr;
-					
-					// change font to something a little clearer
-					UNUSED_RETURN(OSStatus)Localization_SetControlThemeFontInfo(ptr->controls.textScreenDimensions,
-																				kThemeAlertHeaderFont);
-					
-					if (useSheet)
-					{
-						ShowSheetWindow(ptr->resizeFloater, returnCarbonWindow(ptr));
-					}
-					else
-					{
-						ShowWindow(ptr->resizeFloater);
-					}
 				}
+				
+				// display resize info in a floating window
+				[[[TerminalWindow_ResizeInfoController sharedTerminalWindowResizeInfoController] window] center];
+				[[TerminalWindow_ResizeInfoController sharedTerminalWindowResizeInfoController] showWindow:NSApp];
 				
 				// remember the old window title
 				{
@@ -6205,11 +6179,11 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							// TerminalWindow_SetWindowTitle() routine, because
 							// it is a “secret” and temporary change to the title
 							// that will be undone when resizing completes
-							[ptr->window setTitle:(NSString*)newTitle];
+							[ptr->window setTitle:BRIDGE_CAST(newTitle, NSString*)];
 						}
 						
 						// update the floater
-						SetControlTextWithCFString(ptr->controls.textScreenDimensions, newTitle);
+						[TerminalWindow_ResizeInfoController sharedTerminalWindowResizeInfoController].resizeInfoText = BRIDGE_CAST(newTitle, NSString*);
 						
 						CFRelease(newTitle), newTitle = nullptr;
 					}
@@ -6217,15 +6191,6 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			}
 			else if (kEventKind == kEventWindowResizeCompleted)
 			{
-				if (useSheet)
-				{
-					HideSheetWindow(ptr->resizeFloater);
-				}
-				else
-				{
-					HideWindow(ptr->resizeFloater);
-				}
-				
 				// in case the reverse resize mode was enabled by the resize click, restore the original resize mode
 				{
 					TerminalViewRef		focusedView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
@@ -6238,8 +6203,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				}
 				
 				// dispose of the floater
-				DisposeWindow(ptr->resizeFloater), ptr->resizeFloater = nullptr;
-				ptr->controls.textScreenDimensions = nullptr; // implicitly destroyed with the window
+				[[TerminalWindow_ResizeInfoController sharedTerminalWindowResizeInfoController] close];
 				
 				// restore the window title
 				if (ptr->preResizeTitleString.exists())
@@ -8049,6 +8013,47 @@ windowDidLoad
 
 
 @end // TerminalWindow_Controller
+
+
+@implementation TerminalWindow_ResizeInfoController
+
+
+static TerminalWindow_ResizeInfoController*		gTerminalWindow_ResizeInfoController = nil;
+
+
+@synthesize resizeInfoText = _resizeInfoText;
+
+
+/*!
+Returns the singleton.
+
+(4.1)
+*/
++ (TerminalWindow_ResizeInfoController*)
+sharedTerminalWindowResizeInfoController
+{
+	if (nil == gTerminalWindow_ResizeInfoController)
+	{
+		gTerminalWindow_ResizeInfoController = [[[self class] allocWithZone:NULL] init];
+	}
+	return gTerminalWindow_ResizeInfoController;
+}// sharedTerminalWindowResizeInfoController
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	self = [super initWithWindowNibName:@"ResizeInfoCocoa"];
+	return self;
+}// init
+
+
+@end // TerminalWindow_ResizeInfoController
 
 
 @implementation NSWindow (TerminalWindow_NSWindowExtensions)

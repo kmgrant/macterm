@@ -119,6 +119,32 @@ Float32 const	kTerminalWindow_DefaultMetaTabWidth = 0.0;	//!< tells TerminalWind
 @class TerminalView_BackgroundView;
 @class TerminalView_ContentView;
 
+
+/*!
+Implements the floating window that appears during
+window resizes.  See "ResizeInfoCocoa.xib".
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface TerminalWindow_ResizeInfoController : NSWindowController //{
+{
+@private
+	NSString*	_resizeInfoText;
+}
+
+// class methods
+	+ (TerminalWindow_ResizeInfoController*)
+	sharedTerminalWindowResizeInfoController;
+
+// accessors
+	@property (strong) NSString*
+	resizeInfoText; // binding
+
+@end //}
+
+
 /*!
 Implements the temporary Cocoa window that wraps the
 Cocoa version of the Terminal View that is under
