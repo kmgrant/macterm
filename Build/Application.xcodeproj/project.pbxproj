@@ -1885,25 +1885,25 @@
 /* Begin XCBuildConfiguration section */
 		0A70B8A61079C1EB0013E76F /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				OTHER_CFLAGS = (
 					"-g",
 					"-fpascal-strings",
 					"-v",
-					"$(SWIG_PYTHON_INCLUDE)",
+					"$(PYTHON_INCLUDES)",
 					"-IApplication/Code",
 					"-IShared/Code",
 					"-IApplication/Resources",
 					"-IApplication/Resources/English.lproj",
-					"-I$(GROWL_SDK_ROOT)/Frameworks/Growl.framework/Headers",
+					"-F$(GROWL_SDK_ROOT)/Framework/Legacy",
 					"$(SDK_PATCH_INCLUDES)",
 				);
-				OTHER_LDFLAGS = "$(MACTERM_PYTHON_LIB_FILE)";
+				OTHER_LDFLAGS = "$(PYTHON_LDFLAGS)";
 				PRODUCT_NAME = PythonInvoker;
 			};
 			name = ForDebugging;
@@ -1917,7 +1917,6 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
-				GCC_VERSION = "";
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
@@ -1971,9 +1970,11 @@
 				FRAMEWORK_VERSION = B;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
-				OTHER_LDFLAGS = "$(LDFLAGS_EXTRA_FRAMEWORKS)";
+				OTHER_LDFLAGS = (
+					"$(PYTHON_LDFLAGS)",
+					"$(LDFLAGS_EXTRA_FRAMEWORKS)",
+				);
 				PRODUCT_NAME = Quills;
 			};
 			name = ForDebugging;
@@ -1992,26 +1993,15 @@
 				);
 				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SDKROOT)/System/Library/Frameworks\"";
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_SHADOW = NO;
 				GCC_WARN_UNUSED_PARAMETER = NO;
-				OTHER_CFLAGS = (
-					"-g",
-					"-fpascal-strings",
-					"-v",
-					"-IApplication/Code",
-					"-IShared/Code",
-					"-IApplication/Resources",
-					"-IApplication/Resources/English.lproj",
-					"$(SWIG_PYTHON_INCLUDE)",
-				);
+				OTHER_CFLAGS = "$(PYTHON_INCLUDES)";
 				OTHER_LDFLAGS = (
-					"$(MACTERM_PYTHON_LIB_FILE)",
+					"$(PYTHON_LDFLAGS)",
 					"-framework",
 					Quills,
 				);
 				PRODUCT_NAME = Quills;
-				SDKROOT = macosx10.6;
 				WARNING_CFLAGS = "-Wall";
 			};
 			name = ForDebugging;
@@ -2021,7 +2011,6 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_VERSION = A;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = "Application/Resources/Template-PyMacTerm.framework-Info.plist";
 				PRODUCT_NAME = PyMacTerm;
 			};
@@ -2030,7 +2019,6 @@
 		0AFB6A200E86FD27005C5A07 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				PRODUCT_NAME = MacTerm;
 			};
 			name = ForDebugging;

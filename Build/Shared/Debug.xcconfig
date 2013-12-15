@@ -7,8 +7,12 @@ LDFLAGS_EXTRA_FRAMEWORKS = -weak_framework Growl
 // (see also SWIG_PREFIX)
 SWIG_VERSION = 2.0.11
 
-// where SWIG should look for Python headers on this system
-SWIG_PYTHON_INCLUDE = -I$(SDKROOT)/System/Library/Frameworks/Python.framework/Versions/2.5/Headers
+// set to the project Python version; as of 10.9 this is not in the SDK root
+PYTHON_FRAMEWORK_ROOT = /System/Library/Frameworks/Python.framework/Versions/2.5
 
-// full framework path is required because 32-bit version only exists here
-MACTERM_PYTHON_LIB_FILE = $(SDKROOT)/System/Library/Frameworks/Python.framework/Versions/2.5/Python
+// the following should be the result of "$(PYTHON_FRAMEWORK_ROOT)/bin/python-config --includes":
+PYTHON_INCLUDES = -I/System/Library/Frameworks/Python.framework/Versions/2.5/include/python2.5
+
+// the following should be the result of "$(PYTHON_FRAMEWORK_ROOT)/bin/python-config --ldflags":
+PYTHON_LDFLAGS = -L/System/Library/Frameworks/Python.framework/Versions/2.5/lib/python2.5/config -ldl -lpython2.5
+
