@@ -568,7 +568,16 @@ typedef My_ContextFavorite const*	My_ContextFavoriteConstPtr;
 typedef My_ContextFavorite*			My_ContextFavoritePtr;
 
 /*!
-Keeps track of all named contexts in memory.
+Keeps track of all named contexts in memory.  Named contexts
+directly correspond to data on disk (unlike, say, temporary
+contexts that exist only in memory).  For access to variables
+of this type, use getListOfContexts() or (in extremely rare
+cases) getMutableListOfContexts	().
+
+While these lists should probably contain smarter pointers,
+there are only two APIs that will manage the contents of the
+lists: Preferences_NewContextFromFavorites() and
+Preferences_ContextDeleteFromFavorites().
 */
 typedef std::vector< My_ContextFavoritePtr >	My_FavoriteContextList;
 
@@ -701,9 +710,10 @@ Preferences_Result		getFormatPreference						(My_ContextInterfaceConstPtr, Prefe
 																 size_t, void*, size_t*);
 Preferences_Result		getGeneralPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
-Boolean					getListOfContexts						(Quills::Prefs::Class, My_FavoriteContextList*&);
+Boolean					getListOfContexts						(Quills::Prefs::Class, My_FavoriteContextList const*&);
 Preferences_Result		getMacroPreference						(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
+Boolean					getMutableListOfContexts				(Quills::Prefs::Class, My_FavoriteContextList*&);
 Boolean					getNamedContext							(Quills::Prefs::Class, CFStringRef,
 																 My_ContextFavoritePtr&);
 Preferences_Result		getPreferenceDataInfo					(Preferences_Tag, CFStringRef&,
@@ -1612,23 +1622,22 @@ Preferences_NewContext	(Quills::Prefs::Class	inClass)
 
 
 /*!
-Creates a new preferences context according to the given
-specifications, or returns an existing one that matches.
-The reference is automatically retained, but you need to
-invoke Preferences_ReleaseContext() when finished.
+Returns a reference to the context for the given named set
+of preferences, or "nullptr" if any problems occur.  If no
+matching data is saved already, the resulting context will
+refer to NEW data; call Preferences_IsContextNameInUse() to
+have control over this data creation.
 
-If you only want to create contexts with names that match
-those on disk, call Preferences_IsContextNameInUse() to
-ensure that your proposed name is going to match.
+Contexts from Favorites focus on one named dictionary in a
+particular class (to the user, this is a collection).  These
+changes are mirrored to disk in the system’s standard ways.
 
-The domain name should be "nullptr" unless this is being
-called as part of the initialization loop (as that is the
-only time it is not possible to automatically determine
-the proper domain).  Only the Preferences module should
-set the domain.
-
-If any problems occur, nullptr is returned; otherwise,
-a reference to the new context is returned.
+The reference is automatically retained but you need to call
+Preferences_ReleaseContext() when finished.  Note that the
+reference is internally held as long as the corresponding
+data exists on disk so “releasing” your reference does not
+endanger the saved data (to actually destroy the saved data,
+see Preferences_ContextDeleteFromFavorites()).
 
 If you need a standalone copy based on an existing user
 collection, first use this routine to acquire the collection
@@ -1637,16 +1646,18 @@ in mind that Preferences_NewCloneContext() allows two kinds
 of copies: in-memory only (temporary), or named copies that
 are synchronized to disk.
 
-Contexts are used in order to make changes to settings
-(and save changes) within the constraints of a single
-named dictionary of a particular class.  To the user,
-this is a collection such as a Session Favorite.
+NOTE:	In most cases, provide only the class and context
+		name.  The domain name (last parameter) should be
+		"nullptr" unless it’s internal initialization code.
 
-IMPORTANT:	Contexts can be renamed.  Make sure you
-			are not relying on names for long periods
-			of time, otherwise your name may be out
-			of date and any attempt to access its
-			context will end up creating a new blank.
+IMPORTANT:	Contexts can be renamed so do not hold onto
+			the name indefinitely.  (Unfortunately, some
+			preference values have historically done this;
+			they store only a name and therefore “forget”
+			what they’re referring to if the user renames
+			the target collection.)  Callbacks can be used
+			to detect renames, at which point references
+			can be updated.
 
 (3.1)
 */
@@ -1687,13 +1698,18 @@ Preferences_NewContextFromFavorites		(Quills::Prefs::Class	inClass,
 				My_FavoriteContextList*		listPtr = nullptr;
 				
 				
-				if (getListOfContexts(inClass, listPtr))
+				if (getMutableListOfContexts(inClass, listPtr))
 				{
 					My_ContextFavoritePtr	newDictionary = new My_ContextFavorite
 																(inClass, inNameOrNullToAutoGenerateUniqueName,
 																	inDomainNameIfInitializingOrNull);
 					
 					
+					// the act of placing a context in this list establishes a special
+					// type of extra reference that Preferences_ReleaseContext() will
+					// honor, and Preferences_ContextDeleteFromFavorites() is the only
+					// expected mechanism for deleting items from the list later (in
+					// response to a user request!)
 					contextPtr = newDictionary;
 					listPtr->push_back(newDictionary);
 					assert(true == getNamedContext(inClass, inNameOrNullToAutoGenerateUniqueName, contextPtr));
@@ -1840,10 +1856,16 @@ Preferences_DisposeAlias	(AliasHandle*		inoutAliasPtr)
 
 
 /*!
-Releases one lock on the specified context created with
-Preferences_NewContextFromFavorites() or similar routines,
-and deletes the context *if* no other locks remain.  Your
-copy of the reference is set to nullptr.
+Releases one lock on the specified context and deletes the context
+*if* no other locks remain.  Your copy of the reference is set to
+nullptr either way.
+
+Note that a context created by Preferences_NewContextFromFavorites()
+will have an implicit extra reference that can only be removed by a
+call to Preferences_ContextDeleteFromFavorites(), and doing so will
+delete the ON DISK version of the data.  (This includes contexts
+duplicated by Preferences_NewCloneContext(), if that routine was not
+told to detach the duplicate from disk.)
 
 (3.1)
 */
@@ -1855,18 +1877,50 @@ Preferences_ReleaseContext	(Preferences_ContextRef*	inoutRefPtr)
 		gMyContextRefLocks().releaseLock(*inoutRefPtr);
 		unless (gMyContextRefLocks().isLocked(*inoutRefPtr))
 		{
-			My_ContextInterfacePtr		ptr = REINTERPRET_CAST(*inoutRefPtr, My_ContextInterfacePtr);
-			My_FavoriteContextList*		listPtr = nullptr;
+			// the context has no external locks; in most situations this
+			// is sufficient to delete the data but for preferences contexts
+			// it is also necessary to ensure that no attachment to on-disk
+			// data remains
+			My_ContextInterfacePtr			ptr = REINTERPRET_CAST(*inoutRefPtr, My_ContextInterfacePtr);
+			My_FavoriteContextList const*	listPtr = nullptr;
+			Boolean							shouldDelete = false;
 			
 			
 			if (getListOfContexts(ptr->returnClass(), listPtr))
 			{
-				// delete occurrences of the released context in its context list
-				listPtr->erase(std::remove(listPtr->begin(), listPtr->end(), ptr),
-								listPtr->end());
-				assert(listPtr->end() == std::find(listPtr->begin(), listPtr->end(), ptr));
+				// only allow the in-memory version to be destroyed if there
+				// is no reference to the context in the Favorites list
+				if (listPtr->end() == std::find(listPtr->begin(), listPtr->end(), ptr))
+				{
+					shouldDelete = true;
+				}
+				else
+				{
+					// if the intent is to destroy preferences, the routine
+					// Preferences_ContextDeleteFromFavorites() must be called
+					// prior to releasing the in-memory context for the last time
+				#if 0
+					// note that this warning should only be enabled for debugging;
+					// it is a valid warning in most situations but it is INCORRECT
+					// to warn in any code that is intentionally creating a new
+					// set of preferences on disk (such code would retain and
+					// release a context, and leave behind data that should not be
+					// automatically destroyed)
+					Console_Warning(Console_WriteLine, "synchronized-context release aborted because data on disk has not been explicitly destroyed by the user");
+				#endif
+				}
 			}
-			delete ptr;
+			else
+			{
+				shouldDelete = true;
+			}
+			
+			if (shouldDelete)
+			{
+				// context reference has no locks and the data is not
+				// being synchronized on disk
+				delete ptr;
+			}
 		}
 		*inoutRefPtr = nullptr;
 	}
@@ -2044,9 +2098,23 @@ Preferences_ContextDeleteData	(Preferences_ContextRef		inContext,
 
 
 /*!
-Deletes the specified context from in-memory structures;
-this will become permanent the next time application
-preferences are synchronized.
+Removes the implicit extra reference to context data that is
+created by using Preferences_NewContextFromFavorites(), and
+deletes the on-disk version of the preference data.  (This
+will become permanent the next time the system is asked to
+synchronize user preferences.)
+
+WARNING:	Since this has the side effect of destroying data on
+		disk, it is not a “normal” clean-up operation; it
+		should only be called when explicitly requested by
+		the user.  Currently, this is only possible when the
+		minus-sign button in the Preferences window is used.
+
+A preferences context should not be used after its data is
+destroyed, otherwise the data may be recreated on disk (in a
+domain that has since been forgotten by the application).  If
+you want a copy that isn’t synchronized, first use the
+Preferences_NewCloneContext() API with appropriate options.
 
 \retval kPreferences_ResultOK
 if the persistent store is successfully deleted
@@ -2054,13 +2122,13 @@ if the persistent store is successfully deleted
 \retval kPreferences_ResultInvalidContextReference
 if the specified context does not exist
 
-\retval kPreferences_ResultOneOrMoreNamesNotAvailable
-if an unexpected error occurred while searching for names
+\retval kPreferences_ResultGenericFailure
+if the specified context is not synchronized with Favorites
 
-(3.0)
+(4.1)
 */
 Preferences_Result
-Preferences_ContextDeleteSaved	(Preferences_ContextRef		inContext)
+Preferences_ContextDeleteFromFavorites	(Preferences_ContextRef		inContext)
 {
 	Preferences_Result		result = kPreferences_ResultOK;
 	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
@@ -2069,22 +2137,40 @@ Preferences_ContextDeleteSaved	(Preferences_ContextRef		inContext)
 	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
 	else
 	{
+		// attempt to destroy the context (this should always work for any
+		// context that represents a user Favorite; it will never work for
+		// a temporary in-memory-only context, a Default context or other
+		// type of context)
 		result = ptr->destroy();
-		if (kPreferences_ResultOK == result)
+		if (kPreferences_ResultOK != result)
 		{
-			// now do a release without a retain, which will allow this
-			// context to disappear from the internal list (see also
-			// Preferences_ContextSave(), which should have done a retain
-			// without a release in the first place)
-			Preferences_ContextRef		deletedContext = inContext;
+			Console_Warning(Console_WriteValue, "attempt to destroy data failed, error", result);
+		}
+		else
+		{
+			My_FavoriteContextList*		listPtr = nullptr;
 			
 			
-			Preferences_ReleaseContext(&deletedContext);
+			// explicitly remove the reference to this data from the internal list
+			// of synchronized contexts so the last Preferences_ReleaseContext()
+			// call is able to free the context’s memory
+			if (getMutableListOfContexts(ptr->returnClass(), listPtr))
+			{
+				My_ContextInterfacePtr		asPtrValue = &(*ptr); // STL requires more exact type match
+				
+				
+				listPtr->erase(std::remove(listPtr->begin(), listPtr->end(), asPtrValue),
+								listPtr->end());
+				assert(listPtr->end() == std::find(listPtr->begin(), listPtr->end(), asPtrValue));
+			}
+			
+			// notify listeners (e.g. this is how the Preferences window’s list
+			// of contexts will be refreshed)
 			changeNotify(kPreferences_ChangeNumberOfContexts);
 		}
 	}
 	return result;
-}// ContextDeleteSaved
+}// ContextDeleteFromFavorites
 
 
 /*!
@@ -2533,7 +2619,10 @@ Preferences_ContextRepositionRelativeToContext	(Preferences_ContextRef		inContex
 		My_FavoriteContextList*		listPtr = nullptr;
 		
 		
-		if (false == getListOfContexts(derivedPtr->returnClass(), listPtr)) result = kPreferences_ResultGenericFailure;
+		if (false == getMutableListOfContexts(derivedPtr->returnClass(), listPtr))
+		{
+			result = kPreferences_ResultGenericFailure;
+		}
 		else
 		{
 			My_FavoriteContextList::iterator		toMovedContextPtr = std::find_if
@@ -2607,19 +2696,19 @@ Preferences_ContextRepositionRelativeToSelf		(Preferences_ContextRef		inContext,
 	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
 	else if (0 != inDelta)
 	{
-		My_ContextFavoritePtr		derivedPtr = STATIC_CAST(&*ptr, My_ContextFavoritePtr);
-		My_FavoriteContextList*		listPtr = nullptr;
+		My_ContextFavoritePtr			derivedPtr = STATIC_CAST(&*ptr, My_ContextFavoritePtr);
+		My_FavoriteContextList const*	listPtr = nullptr;
 		
 		
 		if (false == getListOfContexts(derivedPtr->returnClass(), listPtr)) result = kPreferences_ResultGenericFailure;
 		else
 		{
 			// find the position of the specified context in the list
-			My_FavoriteContextList::iterator	toContextPtr = std::find_if
-																(listPtr->begin(), listPtr->end(),
-																	std::bind2nd
-																	(std::equal_to< My_ContextFavoritePtr >(),
-																		derivedPtr));
+			My_FavoriteContextList::const_iterator	toContextPtr = std::find_if
+																	(listPtr->begin(), listPtr->end(),
+																		std::bind2nd
+																		(std::equal_to< My_ContextFavoritePtr >(),
+																			derivedPtr));
 			
 			
 			if (listPtr->end() == toContextPtr) result = kPreferences_ResultInvalidContextReference;
@@ -2695,14 +2784,6 @@ Preferences_ContextSave		(Preferences_ContextRef		inContext)
 	else
 	{
 		result = ptr->save();
-		if (kPreferences_ResultOK == result)
-		{
-			// now do a retain without a release, which will prevent this
-			// context from disappearing from the internal list (see also
-			// Preferences_ContextDeleteSaved(), which should undo this by
-			// doing a release without a retain)
-			Preferences_RetainContext(inContext);
-		}
 	}
 	return result;
 }// ContextSave
@@ -3074,8 +3155,8 @@ Preferences_Result
 Preferences_CreateContextNameArray	(Quills::Prefs::Class	inClass,
 									 CFArrayRef&			outNewArrayOfNewCFStrings)
 {
-	Preferences_Result			result = kPreferences_ResultGenericFailure;
-	My_FavoriteContextList*		listPtr = nullptr;
+	Preferences_Result				result = kPreferences_ResultGenericFailure;
+	My_FavoriteContextList const*	listPtr = nullptr;
 	
 	
 	if (false == getListOfContexts(inClass, listPtr)) result = kPreferences_ResultOneOrMoreNamesNotAvailable;
@@ -3141,8 +3222,8 @@ Preferences_CreateUniqueContextName		(Quills::Prefs::Class	inClass,
 										 CFStringRef&			outNewName,
 										 CFStringRef			inBaseNameOrNull)
 {
-	Preferences_Result			result = kPreferences_ResultGenericFailure;
-	My_FavoriteContextList*		listPtr = nullptr;
+	Preferences_Result				result = kPreferences_ResultGenericFailure;
+	My_FavoriteContextList const*	listPtr = nullptr;
 	
 	
 	if (getListOfContexts(inClass, listPtr))
@@ -3251,7 +3332,7 @@ Preferences_GetContextsInClass	(Quills::Prefs::Class						inClass,
 	prefsResult = Preferences_GetDefaultContext(&defaultContext, inClass);
 	if (kPreferences_ResultOK == prefsResult)
 	{
-		My_FavoriteContextList*		listPtr = nullptr;
+		My_FavoriteContextList const*	listPtr = nullptr;
 		
 		
 		outContextsList.push_back(defaultContext);
@@ -3500,8 +3581,8 @@ Boolean
 Preferences_IsContextNameInUse		(Quills::Prefs::Class	inClass,
 									 CFStringRef			inProposedName)
 {
-	Boolean						result = false;
-	My_FavoriteContextList*		listPtr = nullptr;
+	Boolean							result = false;
+	My_FavoriteContextList const*	listPtr = nullptr;
 	
 	
 	if (getListOfContexts(inClass, listPtr))
@@ -4506,7 +4587,7 @@ createDomainName	(Quills::Prefs::Class	inClass,
 	else
 	{
 		// does not exist; find a unique domain
-		My_FavoriteContextList*		favoritesListPtr = nullptr;
+		My_FavoriteContextList const*	favoritesListPtr = nullptr;
 		
 		
 		if (getListOfContexts(inClass, favoritesListPtr))
@@ -5880,7 +5961,11 @@ createAllPreferencesContextsFromDisk ()
 				Preferences_ContextRef	newContext = Preferences_NewContextFromFavorites(*toClass, kFavoriteName, kDomainName);
 				
 				
-				assert(nullptr != newContext);
+				if (nullptr == newContext)
+				{
+					Console_Warning(Console_WriteValueCFString, "sister domain could not be loaded; core application preferences refer to missing domain", kDomainName);
+					Console_Warning(Console_WriteValueCFString, "user-specified name for missing domain", kFavoriteName);
+				}
 			}
 			CFRelease(namesInClass), namesInClass = nullptr;
 		}
@@ -6875,60 +6960,21 @@ Retrieves the list that stores any in-memory settings for the
 specified class (only works for classes that can be collections).
 Returns true unless this fails.
 
-IMPORTANT:	This list will only contain contexts created with
-			Preferences_NewContextFromFavorites() that have
-			not been destroyed by Preferences_ReleaseContext().
-			There is no guarantee that this list will have
-			every on-disk collection for the given class.  But,
-			see Preferences_CreateContextNameArray().
+See also getMutableListOfContexts() and
+Preferences_CreateContextNameArray().
 
 (3.1)
 */
 Boolean
-getListOfContexts	(Quills::Prefs::Class			inClass,
-					 My_FavoriteContextList*&		outListPtr)
+getListOfContexts	(Quills::Prefs::Class				inClass,
+					 My_FavoriteContextList const*&		outListPtr)
 {
-	Boolean		result = true;
+	// reuse the implementation of the method that returns a mutable pointer
+	My_FavoriteContextList*		mutablePtr = nullptr;
+	Boolean						result = getMutableListOfContexts(inClass, mutablePtr);
 	
 	
-	outListPtr = nullptr;
-	switch (inClass)
-	{
-	case Quills::Prefs::_RESTORE_AT_LAUNCH:
-		outListPtr = &gAutoSaveNamedContexts();
-		break;
-	
-	case Quills::Prefs::FORMAT:
-		outListPtr = &gFormatNamedContexts();
-		break;
-	
-	case Quills::Prefs::MACRO_SET:
-		outListPtr = &gMacroSetNamedContexts();
-		break;
-	
-	case Quills::Prefs::SESSION:
-		outListPtr = &gSessionNamedContexts();
-		break;
-	
-	case Quills::Prefs::TERMINAL:
-		outListPtr = &gTerminalNamedContexts();
-		break;
-	
-	case Quills::Prefs::TRANSLATION:
-		outListPtr = &gTranslationNamedContexts();
-		break;
-	
-	case Quills::Prefs::WORKSPACE:
-		outListPtr = &gWorkspaceNamedContexts();
-		break;
-	
-	case Quills::Prefs::GENERAL:
-	default:
-		// ???
-		result = false;
-		break;
-	}
-	
+	outListPtr = mutablePtr;
 	return result;
 }// getListOfContexts
 
@@ -7138,6 +7184,70 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 
 
 /*!
+Retrieves a modifiable version of the list that stores any in-memory
+settings for the specified class (only works for classes that can be
+collections).  Returns true unless this fails.
+
+IMPORTANT:	Unless you have a reason to modify the list, prefer
+			the read-only accessor "getListOfContexts()".  The
+			presence of a pointer in this list has implications on
+			its external reference’s release behavior.  You should
+			rely on Preferences_ContextDeleteFromFavorites() and
+			Preferences_ContextRepositionRelativeToContext() for
+			list changes.
+
+(4.1)
+*/
+Boolean
+getMutableListOfContexts	(Quills::Prefs::Class			inClass,
+							 My_FavoriteContextList*&		outListPtr)
+{
+	Boolean		result = true;
+	
+	
+	outListPtr = nullptr;
+	switch (inClass)
+	{
+	case Quills::Prefs::_RESTORE_AT_LAUNCH:
+		outListPtr = &gAutoSaveNamedContexts();
+		break;
+	
+	case Quills::Prefs::FORMAT:
+		outListPtr = &gFormatNamedContexts();
+		break;
+	
+	case Quills::Prefs::MACRO_SET:
+		outListPtr = &gMacroSetNamedContexts();
+		break;
+	
+	case Quills::Prefs::SESSION:
+		outListPtr = &gSessionNamedContexts();
+		break;
+	
+	case Quills::Prefs::TERMINAL:
+		outListPtr = &gTerminalNamedContexts();
+		break;
+	
+	case Quills::Prefs::TRANSLATION:
+		outListPtr = &gTranslationNamedContexts();
+		break;
+	
+	case Quills::Prefs::WORKSPACE:
+		outListPtr = &gWorkspaceNamedContexts();
+		break;
+	
+	case Quills::Prefs::GENERAL:
+	default:
+		// ???
+		result = false;
+		break;
+	}
+	
+	return result;
+}// getMutableListOfContexts
+
+
+/*!
 Retrieves the context with the given name that stores
 settings for the specified class.  Returns true unless
 this fails.
@@ -7159,7 +7269,7 @@ getNamedContext		(Quills::Prefs::Class		inClass,
 	outContextPtr = nullptr;
 	if ((nullptr != inName) && (CFStringGetLength(inName) > 0))
 	{
-		My_FavoriteContextList*		listPtr = nullptr;
+		My_FavoriteContextList const*	listPtr = nullptr;
 		
 		
 		if (getListOfContexts(inClass, listPtr))

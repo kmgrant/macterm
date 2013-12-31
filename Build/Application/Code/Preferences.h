@@ -564,7 +564,7 @@ Preferences_Result
 											 Preferences_Tag					inDataPreferenceTag);
 
 Preferences_Result
-	Preferences_ContextDeleteSaved			(Preferences_ContextRef				inContext);
+	Preferences_ContextDeleteFromFavorites	(Preferences_ContextRef				inContext);
 
 Preferences_Result
 	Preferences_ContextGetData				(Preferences_ContextRef				inStartingContext,

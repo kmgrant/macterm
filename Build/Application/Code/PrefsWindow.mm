@@ -2108,7 +2108,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								// global will be corrected later when a new selection is made
 								if (deletedContext == gCurrentDataSet) gCurrentDataSet = nullptr;
 								
-								prefsResult = Preferences_ContextDeleteSaved(deletedContext);
+								prefsResult = Preferences_ContextDeleteFromFavorites(deletedContext), deletedContext = nullptr;
 								if (kPreferences_ResultOK != prefsResult) isError = true;
 								else
 								{
@@ -3137,11 +3137,12 @@ performRemovePreferenceCollection:(id)	sender
 		}
 		else
 		{
+			Preferences_Result		prefsResult = kPreferences_ResultOK;
+			
+			
 			// NOTE: notifications are sent when a context is deleted from Favorites
 			// so the source list should automatically resynchronize
-			Preferences_Result		prefsResult = Preferences_ContextDeleteSaved(deadContext);
-			
-			
+			prefsResult = Preferences_ContextDeleteFromFavorites(deadContext), deadCollection = nil, deadContext = nullptr;
 			if (kPreferences_ResultOK != prefsResult)
 			{
 				Sound_StandardAlert();

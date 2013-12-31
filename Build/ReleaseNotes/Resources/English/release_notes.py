@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20131230',
     '20131125',
     '20131106',
     '20131027',
@@ -487,6 +488,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20131230': [
+        'Fixed Preferences window "-" button to always delete collections immediately.  Previously, in certain circumstances a collection could only be deleted if the "-" button was clicked several times.',
+    ],
     '20131125': [
         'Terminal window resize information is now displayed in a nicer-looking Cocoa window that has the black "heads-up display" style.',
     ],
