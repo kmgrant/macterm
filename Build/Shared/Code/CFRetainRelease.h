@@ -30,8 +30,8 @@
 */
 /*###############################################################
 
-	Data Access Library 2.7
-	© 1998-2012 by Kevin Grant
+	Data Access Library
+	© 1998-2014 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License

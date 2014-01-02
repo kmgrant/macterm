@@ -4,7 +4,7 @@
 /*###############################################################
 
 	Bug Reporter
-		© 2005-2013 by Kevin Grant.
+		© 2005-2014 by Kevin Grant.
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License

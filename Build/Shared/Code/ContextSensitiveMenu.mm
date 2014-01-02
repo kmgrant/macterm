@@ -3,8 +3,8 @@
 */
 /*###############################################################
 
-	Contexts Library 2.0
-	© 1998-2013 by Kevin Grant
+	Contexts Library
+	© 1998-2014 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
