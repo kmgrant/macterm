@@ -486,17 +486,23 @@ createImageWindowFrom	(NSWindow*		inWindow,
 {
 	NSWindow*	result = nil;
 	NSView*		originalContentView = [inWindow contentView];
-	NSRect		zeroOriginBounds = inContentViewSection;
+	NSRect		newFrame = [inWindow frame];
 	
 	
-	zeroOriginBounds.origin = NSZeroPoint;
+	// set up the window to cover its original content exactly
+	newFrame.origin.x += inContentViewSection.origin.x;
+	newFrame.origin.y += inContentViewSection.origin.y;
+	newFrame.size = inContentViewSection.size;
+	
+	// now construct a fake window to display the same thing
+	result = [[NSWindow alloc] initWithContentRect:newFrame styleMask:NSBorderlessWindowMask
+													backing:NSBackingStoreBuffered defer:NO];
 	
 	// capture the image of the original window
 	{
+		NSView*				contentView = STATIC_CAST(result.contentView, NSView*);
 		NSBitmapImageRep*	imageRep = nil;
 		NSImage*			windowImage = [[[NSImage alloc] init] autorelease];
-		NSImageView*		imageView = [[[NSImageView alloc] initWithFrame:zeroOriginBounds] autorelease];
-		NSRect				newFrame = [inWindow frame];
 		
 		
 		// capture the contents of the original window
@@ -504,18 +510,26 @@ createImageWindowFrom	(NSWindow*		inWindow,
 		imageRep = [[[NSBitmapImageRep alloc] initWithFocusedViewRect:inContentViewSection] autorelease];
 		[originalContentView unlockFocus];
 		[windowImage addRepresentation:imageRep];
-		[imageView setImageScaling:NSScaleToFit];
-		[imageView setImage:windowImage];
 		
-		// set up the window to cover its original content exactly
-		newFrame.origin.x += inContentViewSection.origin.x;
-		newFrame.origin.y += inContentViewSection.origin.y;
-		newFrame.size = inContentViewSection.size;
-		
-		// now construct a fake window to display the same thing
-		result = [[NSWindow alloc] initWithContentRect:newFrame styleMask:NSBorderlessWindowMask
-														backing:NSBackingStoreBuffered defer:NO];
-		[result setContentView:imageView];
+		// with Core Animation and Mac OS X 10.6 and beyond, the NSImage
+		// can be directly set as the contents of a layer-backed view
+		[contentView setWantsLayer:YES];
+		if (nil != contentView.layer)
+		{
+			contentView.layer.contents = windowImage;
+		}
+		else
+		{
+			// prior to Core Animation, an image view is required
+			NSRect			zeroOriginBounds = NSMakeRect(0, 0, NSWidth(inContentViewSection), NSHeight(inContentViewSection));
+			NSImageView*	imageView = [[[NSImageView alloc] initWithFrame:zeroOriginBounds] autorelease];
+			
+			
+			Console_Warning(Console_WriteLine, "expected to find a valid Core Animation layer; falling back to image view");
+			[imageView setImageScaling:NSScaleToFit];
+			[imageView setImage:windowImage];
+			[result setContentView:imageView];
+		}
 	}
 	
 	return result;

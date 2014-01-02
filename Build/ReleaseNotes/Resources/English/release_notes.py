@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20140101',
     '20131230',
     '20131125',
     '20131106',
@@ -488,6 +489,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20140101': [
+        'Minor animation optimizations.',
+    ],
     '20131230': [
         'Fixed Preferences window "-" button to always delete collections immediately.  Previously, in certain circumstances a collection could only be deleted if the "-" button was clicked several times.',
     ],
