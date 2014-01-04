@@ -33,6 +33,7 @@
 		0AB3B2670F0C1B92000559AB /* __init__.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0AB3B2640F0C1B69000559AB /* __init__.py */; };
 		0ABAA71B13491D06006B1EF6 /* CocoaFuture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */; };
 		0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABD01CF1068000A00BBB87A /* DebugInterface.mm */; };
+		0AC69F161877A697004E6019 /* UTF8Decoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC69F151877A697004E6019 /* UTF8Decoder.cp */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
 		0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */; };
@@ -505,6 +506,8 @@
 		0ABD01D11068002C00BBB87A /* DebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebugInterface.h; path = Application/Code/DebugInterface.h; sourceTree = "<group>"; };
 		0AC1FAF30D1992D600ED3102 /* _Quills.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = _Quills.so; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC5687512CFC73800BAA7F0 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = English; path = Application/Resources/English.lproj/Credits.html; sourceTree = "<group>"; };
+		0AC69F151877A697004E6019 /* UTF8Decoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UTF8Decoder.cp; path = Application/Code/UTF8Decoder.cp; sourceTree = "<group>"; };
+		0AC69F171877A733004E6019 /* UTF8Decoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UTF8Decoder.h; path = Application/Code/UTF8Decoder.h; sourceTree = "<group>"; };
 		0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsTerminal.cp; path = Application/Code/QuillsTerminal.cp; sourceTree = "<group>"; };
 		0AC6A4E40AC4D24400FF6FC6 /* QuillsTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsTerminal.h; path = Application/Code/QuillsTerminal.h; sourceTree = "<group>"; };
 		0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsSession.cp; path = Application/Code/QuillsSession.cp; sourceTree = "<group>"; };
@@ -799,6 +802,7 @@
 				0A46FE2D055432A400ACDF3A /* TextTranslation.cp */,
 				0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */,
 				0A46FDE3055432A400ACDF3A /* UIStrings.cp */,
+				0AC69F151877A697004E6019 /* UTF8Decoder.cp */,
 				0A46FE38055432A400ACDF3A /* URL.cp */,
 				0A46FE21055432A400ACDF3A /* VectorCanvas.mm */,
 				0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */,
@@ -868,6 +872,7 @@
 				0A8738310A5F5F59002CACA9 /* UIStrings_PrefsWindow.h */,
 				0A4604510554376100ACDF3A /* Undoables.h */,
 				0A4604540554376100ACDF3A /* URL.h */,
+				0AC69F171877A733004E6019 /* UTF8Decoder.h */,
 				0A4604360554376100ACDF3A /* VectorCanvas.h */,
 				0A4604370554376100ACDF3A /* VectorInterpreter.h */,
 				0A1427340DA5D4270028510F /* VectorInterpreterRef.typedef.h */,
@@ -1425,6 +1430,7 @@
 				0AC6BB210A8C0BA000AFF37A /* PrefPanelGeneral.mm in Sources */,
 				0AC6BB230A8C0BA000AFF37A /* UIStrings.cp in Sources */,
 				0AC6BB240A8C0BA000AFF37A /* FindDialog.mm in Sources */,
+				0AC69F161877A697004E6019 /* UTF8Decoder.cp in Sources */,
 				0AC6BB260A8C0BA000AFF37A /* DialogUtilities.cp in Sources */,
 				0AC6BB290A8C0BA000AFF37A /* Commands.mm in Sources */,
 				0AC6BB2B0A8C0BA000AFF37A /* RegionUtilities.cp in Sources */,

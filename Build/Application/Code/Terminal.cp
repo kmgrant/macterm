@@ -92,18 +92,13 @@ extern "C"
 #include "TerminalView.h"
 #include "TextTranslation.h"
 #include "UIStrings.h"
+#include "UTF8Decoder.h"
 #include "VTKeys.h"
 
 
 
 #pragma mark Constants
 namespace {
-
-/*!
-This value is returned by certain routines to indicate that a
-valid Unicode value was not found.
-*/
-UnicodeScalarValue const	kMy_InvalidUnicodeCodePoint = 0xFFFF;
 
 /*!
 Valid terminal emulator parameter values (as stored by the class
@@ -1052,79 +1047,6 @@ STATIC_ASSERT(sizeof(Terminal_LineStackStorage) == sizeof(My_LineIterator),
 typedef My_LineIterator*	My_LineIteratorPtr;
 
 /*!
-Represents the state of a UTF-8 code point that is in the
-process of being decoded from a series of bytes.
-*/
-struct My_UTF8StateMachine
-{
-	enum State
-	{
-		kStateInitial				= 'init',	//!< the very first state, no bytes have yet been seen
-		kStateUTF8IllegalSequence	= 'U8XX',	//!< single illegal byte was seen (0xC0, 0xC1, or a value of 0xF5 or greater), or illegal sequence;
-												//!  in this case, the "multiByteAccumulator" contains a valid sequence for an error character
-		kStateUTF8ValidSequence		= 'U8OK',	//!< the "multiByteAccumulator" contains a valid sequence of 0-6 bytes in UTF-8 encoding
-		kStateUTF8ExpectingTwo		= 'U82B',	//!< byte with high bits of "110" received; one more continuation byte (only) should follow
-		kStateUTF8ExpectingThree	= 'U83B',	//!< byte with high bits of "1110" received; two more continuation bytes (only) should follow
-		kStateUTF8ExpectingFour		= 'U84B',	//!< byte with high bits of "11110" received; three more continuation bytes (only) should follow
-		kStateUTF8ExpectingFive		= 'U85B',	//!< byte with high bits of "111110" received; four more continuation bytes (only) should follow
-		kStateUTF8ExpectingSix		= 'U86B',	//!< byte with high bits of "1111110" received; five more continuation bytes (only) should follow
-	};
-	
-	My_ByteString	multiByteAccumulator;		//!< shows all bytes that comprise the most-recently-started UTF-8 code point
-	
-	My_UTF8StateMachine ();
-	
-	//! Returns true if the current sequence is incomplete.
-	Boolean
-	incompleteSequence ();
-	
-	//! Transitions to a new state based on the current state and the given byte.
-	void
-	nextState	(UInt8, UInt32&);
-	
-	//! Returns the state machine to its initial state and clears the accumulator.
-	void
-	reset ()
-	{
-		currentState = kStateInitial;
-		multiByteAccumulator.clear();
-	}
-	
-	//! Returns the state the machine is in.
-	State
-	returnState ()
-	{
-		return currentState;
-	}
-	
-	template < typename push_backable_container >
-	static void
-	appendErrorCharacter	(push_backable_container&);		//!< insert one or more bytes in UTF-8 encoding to represent an error character
-	
-	template < typename indexable_container >
-	static UnicodeScalarValue
-	byteSequenceTotalValue		(indexable_container const&, size_t,	//!< find Unicode value by extracting bits from a sequence of bytes
-								 size_t, size_t* = nullptr);
-	
-	static Boolean	isContinuationByte	(UInt8);	//!< true only for a valid byte that cannot be the first in its sequence
-	static Boolean	isFirstOfTwo		(UInt8);	//!< true only for a byte that must be followed by exactly one continuation byte to complete its sequence
-	static Boolean	isFirstOfThree		(UInt8);	//!< true only for a byte that must be followed by exactly 2 continuation bytes to complete its sequence
-	static Boolean	isFirstOfFour		(UInt8);	//!< true only for a byte that must be followed by exactly 3 continuation bytes to complete its sequence
-	static Boolean	isFirstOfFive		(UInt8);	//!< true only for a byte that must be followed by exactly 4 continuation bytes to complete its sequence
-	static Boolean	isFirstOfSix		(UInt8);	//!< true only for a byte that must be followed by exactly 5 continuation bytes to complete its sequence
-	static Boolean	isIllegalByte		(UInt8);	//!< true for byte values that will never be valid in any situation in UTF-8
-	static Boolean	isSingleByteGlyph	(UInt8);	//!< true only for a byte that is itself a complete sequence (normal ASCII)
-	static Boolean	isStartingByte		(UInt8);	//!< if false, implies that this is a continuation byte
-
-protected:
-	Boolean
-	isOverLong ();
-
-private:
-	State		currentState;		//!< determines which additional bytes are valid
-};
-
-/*!
 Represents the state of a terminal emulator, such as any
 parameters collected and any pending operations.
 */
@@ -1225,7 +1147,7 @@ public:
 	My_ParserState						currentState;			//!< state the terminal input parser is in now
 	My_ParserState						stringAccumulatorState;	//!< state that was in effect when the "stringAccumulator" was recently cleared
 	std::string							stringAccumulator;		//!< used to gather characters for such things as XTerm window changes
-	My_UTF8StateMachine					multiByteDecoder;		//!< as individual bytes are processed, this tracks complete or invalid sequences
+	UTF8Decoder_StateMachine			multiByteDecoder;		//!< as individual bytes are processed, this tracks complete or invalid sequences
 	UInt16								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
 	SInt16								argLastIndex;			//!< zero-based last parameter position in the "values" array
 	ParameterList						argList;				//!< all values provided for the current escape sequence
@@ -3349,10 +3271,10 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 					// possibly be printed here; but the normal case hopefully is zero!
 					for (UInt32 j = 0; j < errorCount; ++j)
 					{
-						My_UTF8StateMachine::appendErrorCharacter(dataPtr->bytesToEcho);
+						UTF8Decoder_StateMachine::appendErrorCharacter(dataPtr->bytesToEcho);
 					}
 					
-					if (My_UTF8StateMachine::kStateUTF8ValidSequence != dataPtr->emulator.multiByteDecoder.returnState())
+					if (UTF8Decoder_StateMachine::kStateUTF8ValidSequence != dataPtr->emulator.multiByteDecoder.returnState())
 					{
 						// sequence is incomplete; only allow emulators to process complete code points
 						skipEmulators = true;
@@ -3515,7 +3437,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 								// so only capture bytes for echo when a sequence is complete; also,
 								// it is not necessary to offset "i" or "ptr" in this mode because
 								// the current byte was already skipped by the initial decoding
-								if (My_UTF8StateMachine::kStateUTF8ValidSequence == dataPtr->emulator.multiByteDecoder.returnState())
+								if (UTF8Decoder_StateMachine::kStateUTF8ValidSequence == dataPtr->emulator.multiByteDecoder.returnState())
 								{
 									if (false == dataPtr->emulator.multiByteDecoder.multiByteAccumulator.empty())
 									{
@@ -6235,8 +6157,8 @@ having to know anything about UTF-8!  It allows emulators to
 handle things like 8-bit control sequences without caring how
 that sequence might have been originally encoded.
 
-The value "kMy_InvalidUnicodeCodePoint" is returned if there
-is no apparent value available in the buffer.
+The value "kUTF8Decoder_InvalidUnicodeCodePoint" is returned
+if there is no apparent value available in the buffer.
 
 (4.0)
 */
@@ -6251,15 +6173,15 @@ recentCodePoint ()
 	{
 		if (this->multiByteDecoder.incompleteSequence())
 		{
-			result = kMy_InvalidUnicodeCodePoint;
+			result = kUTF8Decoder_InvalidUnicodeCodePoint;
 		}
 		else
 		{
 			size_t		bytesUsed = 0;
 			
 			
-			result = My_UTF8StateMachine::byteSequenceTotalValue(this->multiByteDecoder.multiByteAccumulator, 0/* offset */,
-																	this->multiByteDecoder.multiByteAccumulator.size(), &bytesUsed);
+			result = UTF8Decoder_StateMachine::byteSequenceTotalValue(this->multiByteDecoder.multiByteAccumulator, 0/* offset */,
+																		this->multiByteDecoder.multiByteAccumulator.size(), &bytesUsed);
 		}
 	}
 	return result;
@@ -7692,607 +7614,6 @@ structureInitialize ()
 	std::fill(textVectorBegin, textVectorEnd, ' ');
 	clearAttributes();
 }// My_ScreenBufferLine::structureInitialize
-
-
-/*!
-Constructor.
-
-(4.0)
-*/
-My_UTF8StateMachine::
-My_UTF8StateMachine ()
-:
-multiByteAccumulator(),
-currentState(kStateInitial)
-{
-	this->reset();
-}// My_UTF8StateMachine default constructor
-
-
-/*!
-Appends a valid sequence of bytes to the specified string, that
-represent the “invalid character” code point.
-
-(4.0)
-*/
-template < typename push_backable_container >
-inline void
-My_UTF8StateMachine::
-appendErrorCharacter	(push_backable_container&	inoutContainer)
-{
-#if 0
-	// insert an error character, which arbitrarily will match the one used
-	// by VT terminals, a checkered box (Unicode 0x2593 but encoded as UTF-8)
-	inoutContainer.push_back(0xE2);
-	inoutContainer.push_back(0x96);
-	inoutContainer.push_back(0x93);
-#else
-	// another option is the replacement character (Unicode 0xFFFD but encoded
-	// as UTF-8)
-	inoutContainer.push_back(0xEF);
-	inoutContainer.push_back(0xBF);
-	inoutContainer.push_back(0xBD);
-#endif
-}// My_UTF8StateMachine::appendErrorCharacter
-
-
-/*!
-Returns the complete value represented by the specified range
-of bytes in a UTF-8-encoded container.
-
-The count is relative to the offset, and should be at least as
-large as the number of continuation bytes implied by the byte
-at the offset point.  Any unused bytes at the end are ignored,
-as the value will represent bytes referenced by the encoding;
-but if you set "outBytesUsedOrNull" to a non-nullptr value, you
-can find out how many bytes were required to determine the
-value.  (This is useful if you want to pass in an entire buffer
-of a set size, and just want to pull the first complete value
-off the front.)
-
-The value "kMy_InvalidUnicodeCodePoint" is returned by default,
-e.g. if the specified byte sequence does not actually decode
-properly into the implied number of bytes.
-
-(4.0)
-*/
-template < typename indexable_container >
-inline UnicodeScalarValue
-My_UTF8StateMachine::
-byteSequenceTotalValue	(indexable_container const&		inBytes,
-						 size_t							inOffset,
-						 size_t							inByteCount,
-						 size_t*						outBytesUsedOrNull)
-{
-	UnicodeScalarValue		result = kMy_InvalidUnicodeCodePoint;
-	
-	
-	if (nullptr != outBytesUsedOrNull)
-	{
-		*outBytesUsedOrNull = 0;
-	}
-	
-	if ((inByteCount >= 1) && isSingleByteGlyph(inBytes[inOffset]))
-	{
-		result = inBytes[inOffset];
-		if (nullptr != outBytesUsedOrNull)
-		{
-			*outBytesUsedOrNull = 1;
-		}
-	}
-	else if ((inByteCount >= 2) && isFirstOfTwo(inBytes[inOffset]) &&
-				isContinuationByte(inBytes[inOffset + 1]))
-	{
-		result = (((inBytes[inOffset] & 0x1F) << 6) +
-					((inBytes[inOffset + 1] & 0x3F) << 0));
-		if (nullptr != outBytesUsedOrNull)
-		{
-			*outBytesUsedOrNull = 2;
-		}
-	}
-	else if ((inByteCount >= 3) && isFirstOfThree(inBytes[inOffset]) &&
-				isContinuationByte(inBytes[inOffset + 1]) &&
-				isContinuationByte(inBytes[inOffset + 2]))
-	{
-		result = (((inBytes[inOffset] & 0x0F) << 12) +
-					((inBytes[inOffset + 1] & 0x3F) << 6) +
-					((inBytes[inOffset + 2] & 0x3F) << 0));
-		if (nullptr != outBytesUsedOrNull)
-		{
-			*outBytesUsedOrNull = 3;
-		}
-	}
-	else if ((inByteCount >= 4) && isFirstOfFour(inBytes[inOffset]) &&
-				isContinuationByte(inBytes[inOffset + 1]) &&
-				isContinuationByte(inBytes[inOffset + 2]) &&
-				isContinuationByte(inBytes[inOffset + 3]))
-	{
-		result = (((inBytes[inOffset] & 0x07) << 18) +
-					((inBytes[inOffset + 1] & 0x3F) << 12) +
-					((inBytes[inOffset + 2] & 0x3F) << 6) +
-					((inBytes[inOffset + 3] & 0x3F) << 0));
-		if (nullptr != outBytesUsedOrNull)
-		{
-			*outBytesUsedOrNull = 4;
-		}
-	}
-	else if ((inByteCount >= 5) && isFirstOfFive(inBytes[inOffset]) &&
-				isContinuationByte(inBytes[inOffset + 1]) &&
-				isContinuationByte(inBytes[inOffset + 2]) &&
-				isContinuationByte(inBytes[inOffset + 3]) &&
-				isContinuationByte(inBytes[inOffset + 4]))
-	{
-		result = (((inBytes[inOffset] & 0x03) << 24) +
-					((inBytes[inOffset + 1] & 0x3F) << 18) +
-					((inBytes[inOffset + 2] & 0x3F) << 12) +
-					((inBytes[inOffset + 3] & 0x3F) << 6) +
-					((inBytes[inOffset + 4] & 0x3F) << 0));
-		if (nullptr != outBytesUsedOrNull)
-		{
-			*outBytesUsedOrNull = 5;
-		}
-	}
-	else if ((inByteCount >= 6) && isFirstOfSix(inBytes[inOffset]) &&
-				isContinuationByte(inBytes[inOffset + 1]) &&
-				isContinuationByte(inBytes[inOffset + 2]) &&
-				isContinuationByte(inBytes[inOffset + 3]) &&
-				isContinuationByte(inBytes[inOffset + 4]) &&
-				isContinuationByte(inBytes[inOffset + 5]))
-	{
-		result = (((inBytes[inOffset] & 0x01) << 30) +
-					((inBytes[inOffset + 1] & 0x3F) << 24) +
-					((inBytes[inOffset + 2] & 0x3F) << 18) +
-					((inBytes[inOffset + 3] & 0x3F) << 12) +
-					((inBytes[inOffset + 4] & 0x3F) << 6) +
-					((inBytes[inOffset + 5] & 0x3F) << 0));
-		if (nullptr != outBytesUsedOrNull)
-		{
-			*outBytesUsedOrNull = 6;
-		}
-	}
-	return result;
-}// My_UTF8StateMachine::byteSequenceTotalValue
-
-
-/*!
-Returns true only if the current sequence of bytes is
-incomplete.
-
-(4.0)
-*/
-Boolean
-My_UTF8StateMachine::
-incompleteSequence ()
-{
-	Boolean		result = ((false == this->multiByteAccumulator.empty()) &&
-							(kStateInitial != this->currentState) &&
-							(kStateUTF8ValidSequence != this->currentState));
-	
-	
-	return result;
-}// My_UTF8StateMachine::incompleteSequence
-
-
-/*!
-Returns true only for bytes that are intended to follow a
-“first byte” (satisfying isFirstOfTwo(), isFirstOfThree(),
-etc.).
-
-(4.0)
-*/
-inline Boolean
-My_UTF8StateMachine::
-isContinuationByte	(UInt8		inByte)
-{
-	return (0x80 == (inByte & 0xC0));
-}// My_UTF8StateMachine::isContinuationByte
-
-
-/*!
-Returns true only for bytes that indicate the start of a
-sequence of exactly two bytes.
-
-(4.0)
-*/
-inline Boolean
-My_UTF8StateMachine::
-isFirstOfTwo	(UInt8		inByte)
-{
-	return (0xC0 == (inByte & 0xE0));
-}// My_UTF8StateMachine::isFirstOfTwo
-
-
-/*!
-Returns true only for bytes that indicate the start of a
-sequence of exactly 3 bytes.
-
-(4.0)
-*/
-inline Boolean
-My_UTF8StateMachine::
-isFirstOfThree	(UInt8		inByte)
-{
-	return (0xE0 == (inByte & 0xF0));
-}// My_UTF8StateMachine::isFirstOfThree
-
-
-/*!
-Returns true only for bytes that indicate the start of a
-sequence of exactly 4 bytes.
-
-(4.0)
-*/
-inline Boolean
-My_UTF8StateMachine::
-isFirstOfFour	(UInt8		inByte)
-{
-	return (0xF0 == (inByte & 0xF8));
-}// My_UTF8StateMachine::isFirstOfFour
-
-
-/*!
-Returns true only for bytes that indicate the start of a
-sequence of exactly 5 bytes.
-
-Not to be confused with Third of Five or Seven of Nine.
-
-(4.0)
-*/
-inline Boolean
-My_UTF8StateMachine::
-isFirstOfFive	(UInt8		inByte)
-{
-	return (0xF8 == (inByte & 0xFC));
-}// My_UTF8StateMachine::isFirstOfFive
-
-
-/*!
-Returns true only for bytes that indicate the start of a
-sequence of exactly 6 bytes.
-
-(4.0)
-*/
-inline Boolean
-My_UTF8StateMachine::
-isFirstOfSix	(UInt8		inByte)
-{
-	return (0xFC == (inByte & 0xFE));
-}// My_UTF8StateMachine::isFirstOfSix
-
-
-/*!
-Returns true only for bytes that cannot ever be considered
-valid UTF-8, no matter what the context.
-
-Note that this does not reject bytes that could be used to
-begin over-long encodings (such as 0xC0).  Those problems
-are detected later so that they can be represented as a
-single error character.
-
-(4.0)
-*/
-inline Boolean
-My_UTF8StateMachine::
-isIllegalByte	(UInt8		inByte)
-{
-	return ((0xFE == inByte) || (0xFF == inByte));
-}// My_UTF8StateMachine::isIllegalByte
-
-
-/*!
-Returns true if the currently-formed sequence of bytes in
-"multiByteAccumulator" is over-long; that is, there is a way
-to encode the same point with fewer bytes than were actually
-used.  These kinds of sequences are illegal in UTF-8.
-
-(4.0)
-*/
-Boolean
-My_UTF8StateMachine::
-isOverLong ()
-{
-	My_ByteString const&	kBuffer = this->multiByteAccumulator;
-	size_t const			kPastEnd = this->multiByteAccumulator.size();
-	size_t const			kSequenceLength = this->multiByteAccumulator.size();
-	Boolean					result = false;
-	
-	
-	if (kSequenceLength <= kPastEnd)
-	{
-		size_t const	kStartIndex = kPastEnd - kSequenceLength;
-		
-		
-		if ((0xC0 == kBuffer[kStartIndex]) ||
-			(0xC1 == kBuffer[kStartIndex]))
-		{
-			// always means the sequence is over-long
-			result = true;
-		}
-		else if (kSequenceLength > 5)
-		{
-			if ((0xFC == kBuffer[kStartIndex]) &&
-				(byteSequenceTotalValue(kBuffer, kStartIndex, 6) <= 0x03FFFFFF))
-			{
-				// a sequence that starts with 0xFC cannot decode to a value
-				// in the 5-byte range (0x03FFFFFF) unless it is over-long
-				result = true;
-			}
-		}
-		else if (kSequenceLength > 4)
-		{
-			if ((0xF8 == kBuffer[kStartIndex]) &&
-				(byteSequenceTotalValue(kBuffer, kStartIndex, 5) <= 0x001FFFFF))
-			{
-				// a sequence that starts with 0xF8 cannot decode to a value
-				// in the 4-byte range (0x001FFFFF) unless it is over-long
-				result = true;
-			}
-		}
-		else if (kSequenceLength > 3)
-		{
-			if ((0xF0 == kBuffer[kStartIndex]) &&
-				(byteSequenceTotalValue(kBuffer, kStartIndex, 4) <= 0xFFFF))
-			{
-				// a sequence that starts with 0xF0 cannot decode to a value
-				// in the 3-byte range (0xFFFF) unless it is over-long
-				result = true;
-			}
-		}
-		else if (kSequenceLength > 2)
-		{
-			if ((0xE0 == kBuffer[kStartIndex]) &&
-				(byteSequenceTotalValue(kBuffer, kStartIndex, 3) <= 0x07FF))
-			{
-				// a sequence that starts with 0xE0 cannot decode to a value
-				// in the 2-byte range (0x07FF) unless it is over-long
-				result = true;
-			}
-		}
-	}
-	return result;
-}// My_UTF8StateMachine::isOverLong
-
-
-/*!
-Returns true only for bytes that are sufficient to describe
-entire UTF-8 code points by themselves (i.e. normal ASCII).
-
-(4.0)
-*/
-inline Boolean
-My_UTF8StateMachine::
-isSingleByteGlyph	(UInt8		inByte)
-{
-	return (inByte <= 0x7F);
-}// My_UTF8StateMachine::isSingleByteGlyph
-
-
-/*!
-Returns true only for bytes that must form the first (or
-perhaps only) byte of a code point in the UTF-8 encoding.
-
-(4.0)
-*/
-inline Boolean
-My_UTF8StateMachine::
-isStartingByte	(UInt8		inByte)
-{
-#if 1
-	// this should be logically equivalent to checking everything else
-	return (false == isContinuationByte(inByte));
-#else
-	// this is the paranoid form that should never be necessary given
-	// the actual definition of the bits in the encoding
-	return (isSingleByteGlyph(inByte) || isFirstOfTwo(inByte) || isFirstOfThree(inByte) ||
-			isFirstOfFour(inByte) || isFirstOfFive(inByte) || isFirstOfSix(inByte));
-#endif
-}// My_UTF8StateMachine::isStartingByte
-
-
-/*!
-Uses the current multi-byte decoder state and the given byte
-to transition to the next decoder state.  For example, if the
-decoder is currently expecting 3 continuation bytes and has
-received 2 already, a continuation byte in "inNextByte" will
-complete the sequence.
-
-If the given byte indicates an error condition, "outErrorCount"
-is greater than 0.  Note that this does NOT mean the given byte
-is itself bad; errors may occur for instance if the PREVIOUS
-sequence was not completed because the given byte is the start
-of a new sequence (possibly indicating that the previous one
-did not encounter enough bytes to be completed).  The caller
-should arrange to send an error character to the user once for
-EACH counted error, and prior to doing anything else as a
-result of the current byte.
-
-(4.0)
-*/
-void
-My_UTF8StateMachine::
-nextState	(UInt8		inNextByte,
-			 UInt32&	outErrorCount)
-{
-	// for debugging
-	//Console_WriteValue("UTF-8 original state", this->currentState);
-	//Console_WriteValue("UTF-8 byte", inNextByte);
-	
-	outErrorCount = 0; // initially...
-	
-	// automatically handle the starting bytes and continuation bytes of
-	// multi-byte sequences; the current decoder state is used as a guide
-	if (isSingleByteGlyph(inNextByte))
-	{
-		if (this->incompleteSequence())
-		{
-			++outErrorCount;
-			this->reset();
-		}
-		this->multiByteAccumulator.push_back(inNextByte); // should not strictly be necessary to copy this
-		this->currentState = kStateUTF8ValidSequence;
-	}
-	else if (isIllegalByte(inNextByte))
-	{
-		// a byte value that is never allowed in a valid UTF-8 sequence;
-		// note that this must be checked relatively early because other
-		// checks that follow examine just a few bits that could well be
-		// set for byte values in the illegal range
-		if (this->incompleteSequence())
-		{
-			++outErrorCount;
-			this->reset();
-		}
-		++outErrorCount; // yes, in this case 2 errors in a row are possible
-		this->reset();
-		this->currentState = kStateUTF8IllegalSequence;
-	}
-	else if (isFirstOfTwo(inNextByte))
-	{
-		// first byte in a sequence of 2
-		if (this->incompleteSequence())
-		{
-			++outErrorCount;
-			this->reset();
-		}
-		this->multiByteAccumulator.push_back(inNextByte);
-		this->currentState = kStateUTF8ExpectingTwo;
-	}
-	else if (isFirstOfThree(inNextByte))
-	{
-		// first byte in a sequence of 3
-		if (this->incompleteSequence())
-		{
-			++outErrorCount;
-			this->reset();
-		}
-		this->multiByteAccumulator.push_back(inNextByte);
-		this->currentState = kStateUTF8ExpectingThree;
-	}
-	else if (isFirstOfFour(inNextByte))
-	{
-		// first byte in a sequence of 4
-		if (this->incompleteSequence())
-		{
-			++outErrorCount;
-			this->reset();
-		}
-		this->multiByteAccumulator.push_back(inNextByte);
-		this->currentState = kStateUTF8ExpectingFour;
-	}
-	else if (isFirstOfFive(inNextByte))
-	{
-		// first byte in a sequence of 5
-		if (this->incompleteSequence())
-		{
-			++outErrorCount;
-			this->reset();
-		}
-		this->multiByteAccumulator.push_back(inNextByte);
-		this->currentState = kStateUTF8ExpectingFive;
-	}
-	else if (isFirstOfSix(inNextByte))
-	{
-		// first byte in a sequence of 6
-		if (this->incompleteSequence())
-		{
-			++outErrorCount;
-			this->reset();
-		}
-		this->multiByteAccumulator.push_back(inNextByte);
-		this->currentState = kStateUTF8ExpectingSix;
-	}
-	else if (isContinuationByte(inNextByte))
-	{
-		// continuation byte, possibly the final byte; the next state
-		// becomes the illegal state if there are now too many bytes,
-		// otherwise it flags a complete code point
-		Boolean		isIllegal = false;
-		size_t		endSize = 0;
-		
-		
-		this->multiByteAccumulator.push_back(inNextByte);
-		
-		switch (this->currentState)
-		{
-		case kStateUTF8ExpectingTwo:
-			endSize = 2;
-			break;
-		
-		case kStateUTF8ExpectingThree:
-			endSize = 3;
-			break;
-		
-		case kStateUTF8ExpectingFour:
-			endSize = 4;
-			break;
-		
-		case kStateUTF8ExpectingFive:
-			endSize = 5;
-			break;
-		
-		case kStateUTF8ExpectingSix:
-			endSize = 6;
-			break;
-		
-		default:
-			// ???
-			isIllegal = true;
-			break;
-		}
-		
-		// a multi-byte sequence is illegal if it has too many continuation
-		// bytes or it is “over-long” (e.g. by starting with 0xC0, or in
-		// some cases by starting with 0xE0 or 0xF0)
-		if ((false == isIllegal) && (0 != endSize))
-		{
-			isIllegal = ((this->multiByteAccumulator.size() > endSize) || this->isOverLong());
-		}
-		
-		if (isIllegal)
-		{
-			// previous sequence is now over-long
-			//Console_WriteValue("sequence is now over-long, byte count", this->multiByteAccumulator.size());
-			++outErrorCount;
-			this->reset();
-		}
-		else if (endSize == this->multiByteAccumulator.size())
-		{
-			// this is the normal case, the sequence is complete...but even here, if
-			// the composed code point is invalid (such as part of a surrogate pair
-			// belonging to a different Unicode encoding) it is an error anyway!
-			UnicodeScalarValue const	kCodePoint = byteSequenceTotalValue(this->multiByteAccumulator, 0/* start index */,
-																			this->multiByteAccumulator.size());
-			
-			
-			if ((kCodePoint >= 0x10FFFF)/* high range of illegal UTF-8 values */ ||
-				((kCodePoint >= 0xD800) && (kCodePoint <= 0xDFFF))/* surrogate halves used by UTF-16 */)
-			{
-				// a technically valid sequence of UTF-8 bytes, but it resolves to an illegal code point
-				this->currentState = kStateUTF8IllegalSequence;
-				++outErrorCount;
-				this->reset();
-			}
-			else
-			{
-				// the common case, hopefully...this multi-byte sequence is completely valid!
-				//Console_WriteValue("complete sequence, bytes", this->multiByteAccumulator.size());
-				this->currentState = kStateUTF8ValidSequence;
-			}
-		}
-		else
-		{
-			// no error yet; the sequence is not finished yet
-			//Console_WriteValue("incomplete sequence, bytes so far", this->multiByteAccumulator.size());
-		}
-	}
-	else
-	{
-		// ???
-	}
-	
-	// for debugging
-	//Console_WriteValue("                      UTF-8 next state", this->currentState);
-}// My_UTF8StateMachine::nextState
 
 
 /*!
@@ -14098,7 +13419,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		{
 			if (inDataPtr->emulator.isUTF8Encoding)
 			{
-				if (My_UTF8StateMachine::kStateUTF8ValidSequence == inDataPtr->emulator.multiByteDecoder.returnState())
+				if (UTF8Decoder_StateMachine::kStateUTF8ValidSequence == inDataPtr->emulator.multiByteDecoder.returnState())
 				{
 					std::copy(inDataPtr->emulator.multiByteDecoder.multiByteAccumulator.begin(),
 								inDataPtr->emulator.multiByteDecoder.multiByteAccumulator.end(),
