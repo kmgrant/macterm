@@ -235,17 +235,9 @@
 				GCC_WARN_UNUSED_VALUE = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "PrefsConverter/Resources/PrefsConverter-Info.plist";
-				INSTALL_PATH = "$(USER_APPS_DIR)";
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
-				OTHER_CFLAGS = (
-					"-fpascal-strings",
-					"-v",
-					"-IHeaders",
-				);
 				PRODUCT_NAME = PrefsConverter;
 				PROVISIONING_PROFILE = "";
 				RUN_CLANG_STATIC_ANALYZER = YES;
-				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 			};
 			name = ForDebugging;
@@ -277,17 +269,9 @@
 				GCC_WARN_UNUSED_VALUE = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "PrefsConverter/Resources/PrefsConverter-Info.plist";
-				INSTALL_PATH = "$(USER_APPS_DIR)";
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
-				OTHER_CFLAGS = (
-					"-fpascal-strings",
-					"-v",
-					"-IHeaders",
-				);
 				PRODUCT_NAME = PrefsConverter;
 				PROVISIONING_PROFILE = "";
 				RUN_CLANG_STATIC_ANALYZER = YES;
-				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 			};
 			name = ForRelease;
@@ -295,11 +279,9 @@
 		0A578F0B09D88AAC007D1289 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				OBJROOT = _Generated;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.9;
 				SYMROOT = _Generated;
-				VALID_ARCHS = i386;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",
@@ -310,11 +292,9 @@
 		0A578F0C09D88AAC007D1289 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				OBJROOT = _Generated;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.9;
 				SYMROOT = _Generated;
-				VALID_ARCHS = i386;
 			};
 			name = ForRelease;
 		};

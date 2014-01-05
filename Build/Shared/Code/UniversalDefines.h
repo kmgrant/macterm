@@ -45,9 +45,6 @@
 #	include <limits.h>
 #endif
 
-#define __CF_USE_FRAMEWORK_INCLUDES__
-#include <Carbon/Carbon.h>
-
 
 
 /*###############################################################
@@ -68,10 +65,6 @@
 /*###############################################################
 	“C IMPROVED”
 ###############################################################*/
-
-//! C string type, defined as a NULL-terminated character array
-typedef char*			CStringPtr;
-typedef char const*		ConstCStringPtr;
 
 //! in C++0x, there will be a "nullptr" keyword...start using it now!
 #define nullptr 0L
@@ -187,14 +180,6 @@ inline double FLOAT64_EIGHTHED		(double a)				{ return (a / 8.0); }				//!< divi
 #	define FLOAT64_HALVED(a)		((a) / 2.0)
 #	define FLOAT64_QUARTERED(a)		((a) / 4.0)
 #	define FLOAT64_EIGHTHED(a)		((a) / 8.0)
-#endif
-
-// HIObjectGetEventTarget() is defined back to 10.2, but the 10.3 headers
-// do not declare HIViewInstallEventHandler(); to minimize the need to
-// use 10.4 headers when 10.3 headers should do, define this macro here
-#ifndef HIViewInstallEventHandler
-#define HIViewInstallEventHandler( target, handler, numTypes, list, userData, outHandlerRef ) \
-       InstallEventHandler( HIObjectGetEventTarget( (HIObjectRef) (target) ), (handler), (numTypes), (list), (userData), (outHandlerRef) )
 #endif
 
 #endif

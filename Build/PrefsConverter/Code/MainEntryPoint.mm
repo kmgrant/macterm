@@ -370,6 +370,8 @@ actionVersion7 ()
 - (void)
 applicationDidFinishLaunching:(NSNotification*)		aNotification
 {
+#pragma unused(aNotification)
+
 	// The current preferences version MUST match the value that is
 	// emitted by "VersionInfo.sh" (the golden value that is mirrored
 	// to other generated files in the bundle), because only that

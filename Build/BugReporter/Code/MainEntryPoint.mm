@@ -81,6 +81,8 @@ main	(int			argc,
 - (void)
 applicationDidFinishLaunching:(NSNotification*)		aNotification
 {
+#pragma unused(aNotification)
+
 	NSString*	button1 = NSLocalizedString(@"Compose E-Mail", @"button label");
 	NSString*	button2 = NSLocalizedString(@"Quit Without Reporting", @"button label");
 	NSString*	messageText = NSLocalizedString
