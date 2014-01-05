@@ -762,6 +762,7 @@ Boolean					unitTest003_Begin						();
 namespace {
 
 ListenerModel_Ref			gPreferenceEventListenerModel = nullptr;
+Boolean						gInitializing = false;
 Boolean						gInitialized = false;
 My_ContextPtrLocker&		gMyContextPtrLocks ()	{ static My_ContextPtrLocker x; return x; }
 My_ContextReferenceLocker&	gMyContextRefLocks ()	{ static My_ContextReferenceLocker x; return x; }
@@ -868,6 +869,9 @@ Preferences_Init ()
 {
 	Preferences_Result		result = kPreferences_ResultOK;
 	
+	
+	// set a flag to detect the state of incomplete initialization
+	gInitializing = true;
 	
 	// IMPORTANT: The Python front-end will perform a preemptive check of
 	//            the "prefs-version" key and automatically run a program
@@ -1280,6 +1284,7 @@ Preferences_Init ()
 		
 		// success!
 		gInitialized = true;
+		gInitializing = false;
 	}
 	
 	// if keypads were open at last Quit, construct them now;
@@ -1549,7 +1554,6 @@ Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext,
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
 		
 		
-		// INCOMPLETE: Base the new name on the name of the original.
 		// scan the list of all contexts for the given class and find a unique name
 		prefsResult = Preferences_CreateUniqueContextName(baseClass, nameCFString/* new name */,
 															basePtr->returnName()/* base name */);
@@ -1672,7 +1676,9 @@ Preferences_NewContextFromFavorites		(Quills::Prefs::Class	inClass,
 	// the name may be explicitly nullptr, but otherwise it must not be empty
 	if ((nullptr == inNameOrNullToAutoGenerateUniqueName) || (CFStringGetLength(inNameOrNullToAutoGenerateUniqueName) > 0))
 	{
-		Boolean		releaseName = false;
+		CFStringRef		contextName = inNameOrNullToAutoGenerateUniqueName;
+		Boolean			releaseName = false;
+		Boolean			badInput = false;
 		
 		
 		// when nullptr is given, scan the list of all contexts for the
@@ -1683,57 +1689,71 @@ Preferences_NewContextFromFavorites		(Quills::Prefs::Class	inClass,
 			
 			
 			prefsResult = Preferences_CreateUniqueContextName
-							(inClass, inNameOrNullToAutoGenerateUniqueName/* new name */);
-			assert(kPreferences_ResultOK == prefsResult);
-			releaseName = true;
+							(inClass, contextName/* new name */);
+			if (kPreferences_ResultUnknownTagOrClass == prefsResult)
+			{
+				// caller has provided a class that does not support
+				// named collections!
+				Console_Warning(Console_WriteValue, "Preferences_NewContextFromFavorites() cannot be called with class", STATIC_CAST(inClass, SInt32));
+				badInput = true;
+			}
+			else
+			{
+				assert(kPreferences_ResultOK == prefsResult);
+				releaseName = true;
+			}
 		}
 		
-		try
+		if (false == badInput)
 		{
-			My_ContextFavoritePtr	contextPtr = nullptr;
-			
-			
-			if (false == getNamedContext(inClass, inNameOrNullToAutoGenerateUniqueName, contextPtr))
+			try
 			{
-				My_FavoriteContextList*		listPtr = nullptr;
+				My_ContextFavoritePtr	contextPtr = nullptr;
 				
 				
-				if (getMutableListOfContexts(inClass, listPtr))
+				if (false == getNamedContext(inClass, contextName, contextPtr))
 				{
-					My_ContextFavoritePtr	newDictionary = new My_ContextFavorite
-																(inClass, inNameOrNullToAutoGenerateUniqueName,
-																	inDomainNameIfInitializingOrNull);
+					My_FavoriteContextList*		listPtr = nullptr;
 					
 					
-					// the act of placing a context in this list establishes a special
-					// type of extra reference that Preferences_ReleaseContext() will
-					// honor, and Preferences_ContextDeleteFromFavorites() is the only
-					// expected mechanism for deleting items from the list later (in
-					// response to a user request!)
-					contextPtr = newDictionary;
-					listPtr->push_back(newDictionary);
-					assert(true == getNamedContext(inClass, inNameOrNullToAutoGenerateUniqueName, contextPtr));
-					changeNotify(kPreferences_ChangeNumberOfContexts);
+					if (getMutableListOfContexts(inClass, listPtr))
+					{
+						My_ContextFavoritePtr	newDictionary = new My_ContextFavorite
+																	(inClass, contextName,
+																		inDomainNameIfInitializingOrNull);
+						
+						
+						// the act of placing a context in this list establishes a special
+						// type of extra reference that Preferences_ReleaseContext() will
+						// honor, and Preferences_ContextDeleteFromFavorites() is the only
+						// expected mechanism for deleting items from the list later (in
+						// response to a user request!)
+						contextPtr = newDictionary;
+						listPtr->push_back(newDictionary);
+						assert(true == getNamedContext(inClass, contextName, contextPtr));
+						changeNotify(kPreferences_ChangeNumberOfContexts);
+					}
+				}
+				
+				if (nullptr != contextPtr)
+				{
+					result = REINTERPRET_CAST(contextPtr, Preferences_ContextRef);
+					Preferences_RetainContext(result);
 				}
 			}
-			
-			if (nullptr != contextPtr)
+			catch (std::exception const&	inException)
 			{
-				result = REINTERPRET_CAST(contextPtr, Preferences_ContextRef);
-				Preferences_RetainContext(result);
+				Console_WriteLine(inException.what());
+				result = nullptr;
 			}
-		}
-		catch (std::exception const&	inException)
-		{
-			Console_WriteLine(inException.what());
-			result = nullptr;
 		}
 		
 		if (releaseName)
 		{
-			CFRelease(inNameOrNullToAutoGenerateUniqueName), inNameOrNullToAutoGenerateUniqueName = nullptr;
+			CFRelease(contextName), contextName = nullptr;
 		}
 	}
+	
 	return result;
 }// NewContextFromFavorites
 
@@ -3226,7 +3246,11 @@ Preferences_CreateUniqueContextName		(Quills::Prefs::Class	inClass,
 	My_FavoriteContextList const*	listPtr = nullptr;
 	
 	
-	if (getListOfContexts(inClass, listPtr))
+	if (false == getListOfContexts(inClass, listPtr))
+	{
+		result = kPreferences_ResultUnknownTagOrClass;
+	}
+	else
 	{
 		CFIndex const			kMaxTries = 100; // arbitrary
 		CFStringRef const		kBaseName = (nullptr == inBaseNameOrNull)
@@ -5381,15 +5405,29 @@ Ensures that the Preferences module has been
 properly initialized.  If Preferences_Init()
 needs to be called, it is called.
 
+If this is called at a point during module
+initialization (meaning it has begun but it
+has not completed), the result will be
+"kPreferences_ResultNotInitialized".
+
 (3.0)
 */
 Preferences_Result
 assertInitialized ()
 {
-	Preferences_Result		result = kPreferences_ResultOK; // kPreferences_ResultNotInitialized?
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
-	unless (gInitialized) Preferences_Init();
+	if (gInitializing)
+	{
+		// this is in the call tree of Preferences_Init() itself!
+		result = kPreferences_ResultNotInitialized;
+	}
+	else if (false == gInitialized)
+	{
+		Preferences_Init();
+	}
+	
 	return result;
 }// assertInitialized
 
