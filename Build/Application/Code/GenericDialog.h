@@ -39,6 +39,11 @@
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
+#ifdef __OBJC__
+@class NSWindow;
+#else
+class NSWindow;
+#endif
 
 // application includes
 #include "HelpSystem.h"
@@ -86,6 +91,14 @@ GenericDialog_InvokeCloseNotifyProc		(GenericDialog_CloseNotifyProcPtr	inUserRou
 #pragma mark Public Methods
 
 GenericDialog_Ref
+	GenericDialog_New							(NSWindow*							inParentWindowOrNullForModalDialog,
+												 Panel_Ref							inHostedPanel,
+												 void*								inDataSetPtr,
+												 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+												 HelpSystem_KeyPhrase				inHelpButtonAction = kHelpSystem_KeyPhraseDefault);
+
+// DEPRECATED; USE GenericDialog_New() WITH AN NSWindow*
+GenericDialog_Ref
 	GenericDialog_New							(HIWindowRef						inParentWindowOrNullForModalDialog,
 												 Panel_Ref							inHostedPanel,
 												 void*								inDataSetPtr,
@@ -109,6 +122,10 @@ Panel_Ref
 void*
 	GenericDialog_ReturnImplementation			(GenericDialog_Ref					inDialog);
 
+NSWindow*
+	GenericDialog_ReturnParentNSWindow			(GenericDialog_Ref					inDialog);
+
+// DEPRECATED; USE GenericDialog_ReturnParentNSWindow()
 HIWindowRef
 	GenericDialog_ReturnParentWindow			(GenericDialog_Ref					inDialog);
 

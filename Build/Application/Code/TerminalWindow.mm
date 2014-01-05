@@ -7340,8 +7340,7 @@ void
 sheetClosed		(GenericDialog_Ref		inDialogThatClosed,
 				 Boolean				inOKButtonPressed)
 {
-	TerminalWindowRef				ref = TerminalWindow_ReturnFromWindow
-											(GenericDialog_ReturnParentWindow(inDialogThatClosed));
+	TerminalWindowRef				ref = [GenericDialog_ReturnParentNSWindow(inDialogThatClosed) terminalWindowRef];
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), ref);
 	
 	

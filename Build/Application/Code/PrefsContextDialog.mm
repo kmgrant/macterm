@@ -1,7 +1,10 @@
-/*!	\file PrefsContextDialog.cp
+/*!	\file PrefsContextDialog.mm
 	\brief Implements a dialog that can host any panel capable
 	of editing settings in a "Preferences_ContextRef" (namely,
 	those normally used in the Preferences window).
+	
+	Note that this module is in transition and is not yet a
+	Cocoa-only user interface.
 */
 /*###############################################################
 
@@ -32,24 +35,25 @@
 
 ###############################################################*/
 
-#include "PrefsContextDialog.h"
-#include <UniversalDefines.h>
+#import "PrefsContextDialog.h"
+#import <UniversalDefines.h>
 
 // Mac includes
-#include <CoreServices/CoreServices.h>
+#import <Cocoa/Cocoa.h>
+#import <CoreServices/CoreServices.h>
 
 // library includes
-#include <AlertMessages.h>
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <MemoryBlockPtrLocker.template.h>
-#include <SoundSystem.h>
+#import <AlertMessages.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <MemoryBlockPtrLocker.template.h>
+#import <SoundSystem.h>
 
 // application includes
-#include "GenericDialog.h"
-#include "Panel.h"
-#include "UIStrings.h"
-#include "UIStrings_PrefsWindow.h"
+#import "GenericDialog.h"
+#import "Panel.h"
+#import "UIStrings.h"
+#import "UIStrings_PrefsWindow.h"
 
 
 
@@ -58,8 +62,8 @@ namespace {
 
 struct My_PrefsContextDialog
 {
-	My_PrefsContextDialog	(HIWindowRef, Panel_Ref, Preferences_ContextRef, PrefsContextDialog_DisplayOptions,
-							 GenericDialog_CloseNotifyProcPtr);
+	My_PrefsContextDialog	(NSWindow*, HIWindowRef, Panel_Ref, Preferences_ContextRef,
+							 PrefsContextDialog_DisplayOptions, GenericDialog_CloseNotifyProcPtr);
 	
 	~My_PrefsContextDialog	();
 	
@@ -114,6 +118,50 @@ temporary settings!
 See PrefsContextDialog_Display() for more information on actions
 that occur when the dialog is closed.
 
+(4.1)
+*/
+PrefsContextDialog_Ref
+PrefsContextDialog_New	(NSWindow*							inParentWindowOrNullForModalDialog,
+						 Panel_Ref							inHostedPanel,
+						 Preferences_ContextRef				inoutData,
+						 PrefsContextDialog_DisplayOptions	inOptions,
+						 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
+{
+	PrefsContextDialog_Ref	result = nullptr;
+	
+	
+	try
+	{
+		result = REINTERPRET_CAST(new My_PrefsContextDialog(inParentWindowOrNullForModalDialog, nullptr/* HIWindowRef */, inHostedPanel,
+															inoutData, inOptions, inCloseNotifyProcPtr), PrefsContextDialog_Ref);
+	}
+	catch (std::bad_alloc)
+	{
+		result = nullptr;
+	}
+	return result;
+}// New
+
+
+/*!
+Creates a new window-modal sheet to host the specified panel.
+
+Unlike Generic Dialog, this module has specific knowledge of
+how to deal with panels that edit standard Preferences Contexts:
+namely, if the user commits changes to the dialog, all keys
+from the temporary context are automatically copied into the
+original source (and otherwise, they are discarded).
+
+You can therefore pass in any panel that might otherwise work
+in the Preferences window, and use it as a sheet to edit some
+temporary settings!
+
+See PrefsContextDialog_Display() for more information on actions
+that occur when the dialog is closed.
+
+DEPRECATED.  Use the version of this method that accepts
+an NSWindow*.
+
 (4.0)
 */
 PrefsContextDialog_Ref
@@ -128,7 +176,7 @@ PrefsContextDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
 	
 	try
 	{
-		result = REINTERPRET_CAST(new My_PrefsContextDialog(inParentWindowOrNullForModalDialog, inHostedPanel,
+		result = REINTERPRET_CAST(new My_PrefsContextDialog(nullptr/* NSWindow* */, inParentWindowOrNullForModalDialog, inHostedPanel,
 															inoutData, inOptions, inCloseNotifyProcPtr), PrefsContextDialog_Ref);
 	}
 	catch (std::bad_alloc)
@@ -215,7 +263,8 @@ Constructor.  See PrefsContextDialog_New().
 (4.0)
 */
 My_PrefsContextDialog::
-My_PrefsContextDialog	(HIWindowRef						inParentWindowOrNullForModalDialog,
+My_PrefsContextDialog	(NSWindow*							inParentWindowAsNSWindowOrNull,
+						 HIWindowRef						inParentWindowOrNullForModalDialog,
 						 Panel_Ref							inHostedPanel,
 						 Preferences_ContextRef				inoutData,
 						 PrefsContextDialog_DisplayOptions	inOptions,
@@ -227,15 +276,26 @@ wasDisplayed		(false),
 originalDataModel	(inoutData),
 originalKeys		(Preferences_NewTagSet(inoutData)),
 temporaryDataModel	(Preferences_NewCloneContext(inoutData, true/* must detach */), true/* is retained */),
-genericDialog		(GenericDialog_New(inParentWindowOrNullForModalDialog, inHostedPanel,
-										temporaryDataModel.returnRef(), handleDialogClose,
-										Panel_SendMessageGetHelpKeyPhrase(inHostedPanel))),
+genericDialog		((nullptr == inParentWindowAsNSWindowOrNull)
+						? GenericDialog_New(inParentWindowOrNullForModalDialog, inHostedPanel,
+											temporaryDataModel.returnRef(), handleDialogClose,
+											Panel_SendMessageGetHelpKeyPhrase(inHostedPanel))
+						: GenericDialog_New(inParentWindowAsNSWindowOrNull, inHostedPanel,
+											temporaryDataModel.returnRef(), handleDialogClose,
+											Panel_SendMessageGetHelpKeyPhrase(inHostedPanel))),
 closeNotifyProc		(inCloseNotifyProcPtr),
-commandHandler		(GetWindowEventTarget(Panel_ReturnOwningWindow(GenericDialog_ReturnHostedPanel(genericDialog))),
-						receiveHICommand,
-						CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
-						this/* user data */)
+commandHandler		()
 {
+	if (nullptr == inParentWindowAsNSWindowOrNull)
+	{
+		// legacy mode: use Carbon windows and Carbon event handlers
+		commandHandler.install(GetWindowEventTarget(Panel_ReturnOwningWindow(GenericDialog_ReturnHostedPanel(genericDialog))),
+								receiveHICommand,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+								this/* user data */);
+		assert(commandHandler.isInstalled());
+	}
+	
 	if (0 == (inOptions & kPrefsContextDialog_DisplayOptionNoAddToPrefsButton))
 	{
 		// add a button for copying the context to user defaults

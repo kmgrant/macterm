@@ -1,7 +1,10 @@
-/*!	\file GenericDialog.cp
+/*!	\file GenericDialog.mm
 	\brief Allows a user interface that is both a panel
 	and a dialog to be displayed as a modal dialog or
 	sheet.
+	
+	Note that this module is in transition and is not yet a
+	Cocoa-only user interface.
 */
 /*###############################################################
 
@@ -32,49 +35,50 @@
 
 ###############################################################*/
 
-#include "GenericDialog.h"
-#include <UniversalDefines.h>
+#import "GenericDialog.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <climits>
-#include <cstdlib>
-#include <cstring>
+#import <climits>
+#import <cstdlib>
+#import <cstring>
 
 // standard-C++ includes
-#include <map>
-#include <utility>
+#import <map>
+#import <utility>
 
 // Mac includes
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
+#import <CoreServices/CoreServices.h>
 
 // library includes
-#include <AlertMessages.h>
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <CFRetainRelease.h>
-#include <CFUtilities.h>
-#include <CocoaBasic.h>
-#include <CommonEventHandlers.h>
-#include <Console.h>
-#include <DialogAdjust.h>
-#include <HIViewWrap.h>
-#include <HIViewWrapManip.h>
-#include <Localization.h>
-#include <MemoryBlockPtrLocker.template.h>
-#include <MemoryBlocks.h>
-#include <NIBLoader.h>
-#include <SoundSystem.h>
+#import <AlertMessages.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CFRetainRelease.h>
+#import <CFUtilities.h>
+#import <CocoaBasic.h>
+#import <CommonEventHandlers.h>
+#import <Console.h>
+#import <DialogAdjust.h>
+#import <HIViewWrap.h>
+#import <HIViewWrapManip.h>
+#import <Localization.h>
+#import <MemoryBlockPtrLocker.template.h>
+#import <MemoryBlocks.h>
+#import <NIBLoader.h>
+#import <SoundSystem.h>
 
 // application includes
-#include "AppResources.h"
-#include "Commands.h"
-#include "DialogUtilities.h"
-#include "EventLoop.h"
-#include "HelpSystem.h"
-#include "Session.h"
-#include "Terminology.h"
-#include "UIStrings.h"
+#import "AppResources.h"
+#import "Commands.h"
+#import "DialogUtilities.h"
+#import "EventLoop.h"
+#import "HelpSystem.h"
+#import "Session.h"
+#import "Terminology.h"
+#import "UIStrings.h"
 
 
 
@@ -102,11 +106,8 @@ typedef std::map< UInt32, GenericDialog_DialogEffect >		My_DialogEffectsByComman
 
 struct My_GenericDialog
 {
-	My_GenericDialog	(HIWindowRef,
-						 Panel_Ref,
-						 void*,
-						 GenericDialog_CloseNotifyProcPtr,
-						 HelpSystem_KeyPhrase);
+	My_GenericDialog	(NSWindow*, Panel_Ref, void*,
+						 GenericDialog_CloseNotifyProcPtr, HelpSystem_KeyPhrase);
 	
 	~My_GenericDialog	();
 	
@@ -115,7 +116,7 @@ struct My_GenericDialog
 	
 	// IMPORTANT: DATA MEMBER ORDER HAS A CRITICAL EFFECT ON CONSTRUCTOR CODE EXECUTION ORDER.  DO NOT CHANGE!!!
 	GenericDialog_Ref						selfRef;						//!< identical to address of structure, but typed as ref
-	HIWindowRef								parentWindow;					//!< the terminal window for which this dialog applies
+	NSWindow*								parentWindow;					//!< the terminal window for which this dialog applies
 	Boolean									isModal;						//!< if false, the dialog is a sheet
 	Panel_Ref								hostedPanel;					//!< the panel implementing the primary user interface
 	void*									dataSetPtr;						//!< data that is given to the panel; represents what is being edited
@@ -173,6 +174,46 @@ If "inParentWindowOrNullForModalDialog" is nullptr, the
 window is automatically made application-modal; otherwise,
 it is a sheet.
 
+(4.1)
+*/
+GenericDialog_Ref
+GenericDialog_New	(NSWindow*							inParentWindowOrNullForModalDialog,
+					 Panel_Ref							inHostedPanel,
+					 void*								inDataSetPtr,
+					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+					 HelpSystem_KeyPhrase				inHelpButtonAction)
+{
+	GenericDialog_Ref	result = nullptr;
+	
+	
+	try
+	{
+		result = REINTERPRET_CAST(new My_GenericDialog(inParentWindowOrNullForModalDialog, inHostedPanel,
+									inDataSetPtr, inCloseNotifyProcPtr, inHelpButtonAction), GenericDialog_Ref);
+	}
+	catch (std::bad_alloc)
+	{
+		result = nullptr;
+	}
+	return result;
+}// New
+
+
+/*!
+This method is used to create a dialog box.  It creates
+the dialog box invisibly, and sets up dialog views.
+
+The format of "inDataSetPtr" is entirely defined by the
+type of panel that the dialog is hosting.  The data is
+passed to the panel with Panel_SendMessageNewDataSet().
+
+If "inParentWindowOrNullForModalDialog" is nullptr, the
+window is automatically made application-modal; otherwise,
+it is a sheet.
+
+DEPRECATED.  Use the version of this method that accepts
+an NSWindow*.
+
 (3.1)
 */
 GenericDialog_Ref
@@ -187,8 +228,9 @@ GenericDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
 	
 	try
 	{
-		result = REINTERPRET_CAST(new My_GenericDialog(inParentWindowOrNullForModalDialog, inHostedPanel,
-									inDataSetPtr, inCloseNotifyProcPtr, inHelpButtonAction), GenericDialog_Ref);
+		result = REINTERPRET_CAST(new My_GenericDialog(CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNullForModalDialog),
+														inHostedPanel, inDataSetPtr, inCloseNotifyProcPtr, inHelpButtonAction),
+									GenericDialog_Ref);
 	}
 	catch (std::bad_alloc)
 	{
@@ -308,7 +350,7 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog)
 		}
 		else
 		{
-			ShowSheetWindow(ptr->dialogWindow, ptr->parentWindow);
+			ShowSheetWindow(ptr->dialogWindow, REINTERPRET_CAST([ptr->parentWindow windowRef], HIWindowRef));
 			UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
 			Panel_SendMessageFocusFirst(ptr->hostedPanel);
 			CocoaBasic_MakeKeyWindowCarbonUserFocusWindow();
@@ -360,6 +402,27 @@ GenericDialog_ReturnImplementation	(GenericDialog_Ref	inDialog)
 Returns a reference to the terminal window being
 customized by a particular dialog.
 
+(4.1)
+*/
+NSWindow*
+GenericDialog_ReturnParentNSWindow	(GenericDialog_Ref	inDialog)
+{
+	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+	NSWindow*					result = nil;
+	
+	
+	if (nullptr != ptr) result = ptr->parentWindow;
+	
+	return result;
+}// ReturnParentNSWindow
+
+
+/*!
+Returns a reference to the terminal window being
+customized by a particular dialog.
+
+DEPRECATED.  Use GenericDialog_ReturnParentNSWindow().
+
 (3.1)
 */
 HIWindowRef
@@ -369,7 +432,7 @@ GenericDialog_ReturnParentWindow	(GenericDialog_Ref	inDialog)
 	HIWindowRef					result = nullptr;
 	
 	
-	if (nullptr != ptr) result = ptr->parentWindow;
+	if (nullptr != ptr) result = REINTERPRET_CAST([ptr->parentWindow windowRef], HIWindowRef);
 	
 	return result;
 }// ReturnParentWindow
@@ -477,7 +540,7 @@ forces good object design.
 (3.1)
 */
 My_GenericDialog::
-My_GenericDialog	(HIWindowRef						inParentWindowOrNullForModalDialog,
+My_GenericDialog	(NSWindow*							inParentNSWindowOrNull,
 					 Panel_Ref							inHostedPanel,
 					 void*								inDataSetPtr,
 					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
@@ -485,8 +548,8 @@ My_GenericDialog	(HIWindowRef						inParentWindowOrNullForModalDialog,
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 selfRef							(REINTERPRET_CAST(this, GenericDialog_Ref)),
-parentWindow					(inParentWindowOrNullForModalDialog),
-isModal							(nullptr == inParentWindowOrNullForModalDialog),
+parentWindow					(inParentNSWindowOrNull),
+isModal							(nil == inParentNSWindowOrNull),
 hostedPanel						(inHostedPanel),
 dataSetPtr						(inDataSetPtr),
 panelIdealSize					(CGSizeMake(0, 0)), // set later

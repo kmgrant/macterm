@@ -44,6 +44,11 @@
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
+#ifdef __OBJC__
+@class NSWindow;
+#else
+class NSWindow;
+#endif
 
 // application includes
 #include "GenericDialog.h"
@@ -71,6 +76,14 @@ typedef struct PrefsContextDialog_OpaqueStruct*		PrefsContextDialog_Ref;
 
 #pragma mark Public Methods
 
+PrefsContextDialog_Ref
+	PrefsContextDialog_New					(NSWindow*							inParentWindowOrNullForModalDialog,
+											 Panel_Ref							inHostedPanel,
+											 Preferences_ContextRef				inoutData,
+											 PrefsContextDialog_DisplayOptions	inOptions = kPrefsContextDialog_DisplayOptionsDefault,
+											 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr = nullptr);
+
+// DEPRECATED; USE PrefsContextDialog_New() WITH AN NSWindow*
 PrefsContextDialog_Ref
 	PrefsContextDialog_New					(HIWindowRef						inParentWindowOrNullForModalDialog,
 											 Panel_Ref							inHostedPanel,
