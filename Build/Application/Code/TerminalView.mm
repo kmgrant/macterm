@@ -8496,9 +8496,9 @@ highlightVirtualRange	(My_TerminalViewPtr				inTerminalViewPtr,
 												inTerminalViewPtr->text.selection.isRectangular,
 												(inIsHighlighted)
 												? inHighlightingStyle
-												: STATIC_CAST(kNoTerminalTextAttributes, TerminalTextAttributes)/* attributes to set */,
+												: kTerminalTextAttributesAllOff/* attributes to set */,
 												(inIsHighlighted)
-												? STATIC_CAST(kNoTerminalTextAttributes, TerminalTextAttributes)
+												? kTerminalTextAttributesAllOff
 												: inHighlightingStyle/* attributes to clear */);
 			releaseRowIterator(inTerminalViewPtr, &lineIterator);
 		}

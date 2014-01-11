@@ -13,6 +13,7 @@
 		0A1A068A0ABA6241002C95D7 /* PrintTerminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */; };
 		0A2890DD0D68017D0017D99E /* GenericPanelTabs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.mm */; };
 		0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */; };
+		0A2DC1B11881BEFE005A3979 /* TerminalLine.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */; };
 		0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A35F5130DEDD9E300F16B03 /* CommandLine.mm */; };
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
 		0A377E630D38806B001F3573 /* open.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* open.py */; };
@@ -235,6 +236,8 @@
 		0A2A06020DF4B8F900DF8C98 /* Growl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Growl.framework; path = GrowlSDK/Frameworks/Growl.framework; sourceTree = SOURCE_ROOT; };
 		0A2A35D313AD2EFF007A1E35 /* CocoaExtensions.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "CocoaExtensions.objc++.h"; path = "Shared/Code/CocoaExtensions.objc++.h"; sourceTree = "<group>"; };
 		0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaExtensions.mm; path = Shared/Code/CocoaExtensions.mm; sourceTree = "<group>"; };
+		0A2DC1AF1881BEF5005A3979 /* TerminalLine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TerminalLine.h; path = Application/Code/TerminalLine.h; sourceTree = "<group>"; };
+		0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalLine.cp; path = Application/Code/TerminalLine.cp; sourceTree = "<group>"; };
 		0A317CAD10A0C775002EDEFB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/MainMenuCocoa.xib; sourceTree = "<group>"; };
 		0A32442115D74B0D001EBB98 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelTerminalOptionsCocoa.xib; sourceTree = "<group>"; };
 		0A33CCF607FAC04200248DDF /* ListenerModel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ListenerModel.mm; path = Shared/Code/ListenerModel.mm; sourceTree = "<group>"; };
@@ -795,6 +798,7 @@
 				0A46FE25055432A400ACDF3A /* Terminal.cp */,
 				0A984182083452E6002E1BCE /* TerminalBackground.cp */,
 				0A46FE26055432A400ACDF3A /* TerminalFile.cp */,
+				0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */,
 				0A46FE27055432A400ACDF3A /* TerminalSpeaker.cp */,
 				0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */,
 				0A46FE28055432A400ACDF3A /* TerminalView.mm */,
@@ -857,6 +861,7 @@
 				0A46043B0554376100ACDF3A /* Terminal.h */,
 				0A9841C7083457A4002E1BCE /* TerminalBackground.h */,
 				0A46043C0554376100ACDF3A /* TerminalFile.h */,
+				0A2DC1AF1881BEF5005A3979 /* TerminalLine.h */,
 				0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */,
 				0A46043D0554376100ACDF3A /* TerminalScreenRef.typedef.h */,
 				0A46043E0554376100ACDF3A /* TerminalSpeaker.h */,
@@ -1409,6 +1414,7 @@
 				0AC6BB020A8C0BA000AFF37A /* PrefsWindow.mm in Sources */,
 				0AC6BB030A8C0BA000AFF37A /* MacroManager.mm in Sources */,
 				0AC6BB040A8C0BA000AFF37A /* SoundSystem.cp in Sources */,
+				0A2DC1B11881BEFE005A3979 /* TerminalLine.cp in Sources */,
 				0AC6BB060A8C0BA000AFF37A /* Session.cp in Sources */,
 				0AC6BB070A8C0BA000AFF37A /* HIViewWrap.cp in Sources */,
 				0AC6BB080A8C0BA000AFF37A /* TerminalWindow.mm in Sources */,

@@ -139,7 +139,7 @@ as opposed to the “bold” bit).
 typedef UInt32 TerminalTextAttributes;
 enum
 {
-	kNoTerminalTextAttributes				= 0L,					//!< indicates that all attributes are “off”
+	kTerminalTextAttributesAllOff			= 0L,					//!< indicates that all attributes are “off”
 	kInvalidTerminalTextAttributes			= 0xFFFFFFFF,			//!< indicates the attribute bits are undefined
 	kAllStyleOrColorTerminalTextAttributes	= 0xFFFF03FF,			//!< specify ALL bits that control font style or color
 	kTerminalTextAttributeInverseVideo		= 0x00000040,			//!< are foreground and background colors flipped?

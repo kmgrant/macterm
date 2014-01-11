@@ -1,5 +1,5 @@
 /*!	\file Terminal.cp
-	\brief Terminal screen buffer and emulators.
+	\brief Terminal emulators.
 */
 /*###############################################################
 
@@ -88,6 +88,7 @@ extern "C"
 #include "PrintTerminal.h"
 #include "Session.h"
 #include "StreamCapture.h"
+#include "TerminalLine.h"
 #include "TerminalSpeaker.h"
 #include "TerminalView.h"
 #include "TextTranslation.h"
@@ -378,16 +379,10 @@ enum
 };
 
 UInt16 const					kNumberOfScrollbackRowsToAllocateAtOnce = 100;
-TerminalTextAttributes const	kTerminalTextAttributesAllOff = 0L;
 
 char const		kMy_TabSet		= 'x';	//!< in "tabSettings" field of terminal structure, characters with this value mark tab stops
 char const		kMy_TabClear	= ' ';	//!< in "tabSettings" field of terminal structure, all characters not marking tab stops have this value
 UInt8 const		kMy_TabStop		= 8;	//!< number of characters between normal tab stops
-
-enum
-{
-	kMy_NumberOfCharactersPerLineMaximum = 256	//!< maximum number of columns allowed; must be a multiple of "kMy_TabStop"
-};
 
 enum My_AttributeRule
 {
@@ -663,13 +658,17 @@ invokeScreenLineOperationProc	(My_ScreenLineOperationProcPtr	inUserRoutine,
 #pragma mark Types
 namespace {
 
+typedef TerminalLine_Object		My_ScreenBufferLine;
+
+typedef std::list< My_ScreenBufferLine >		My_ScreenBufferLineList;
+typedef std::list< My_ScreenBufferLine >		My_ScrollbackBufferLineList;
+typedef My_ScreenBufferLineList::size_type		My_ScreenRowIndex;
+
 typedef std::basic_string< UInt8 >				My_ByteString;
 
-typedef UniChar*								My_TextIterator;
 typedef std::map< UniChar, CFRetainRelease >	My_PrintableByUniChar;
 
 typedef std::vector< char >						My_TabStopList;
-typedef std::vector< TerminalTextAttributes >   My_TextAttributesList;
 
 /*!
 All the information associated with either the G0 or G1
@@ -691,122 +690,6 @@ public:
 };
 typedef My_CharacterSetInfo*			My_CharacterSetInfoPtr;
 typedef My_CharacterSetInfo const*		My_CharacterSetInfoConstPtr;
-
-/*!
-All the information required to represent the attributes
-of characters on a single line of a terminal buffer.
-
-This is a separate data structure because as an optimization
-the terminal may share information for lines that have the
-same fundamental attributes (especially if they are the
-default values and they never changed).  In other words,
-several lines may refer to a single My_AttributeInfo
-instance, even if the lines themselves are unique.
-*/
-struct My_AttributeInfo
-{
-	friend struct My_ScreenBufferLine;
-	
-	My_AttributeInfo ();
-	
-	My_AttributeInfo (My_AttributeInfo const&);
-
-private:
-	TerminalTextAttributes		globalAttributes;   //!< attributes that apply to every character (e.g. double-sized text)
-	My_TextAttributesList		attributeVector;	//!< where character attributes exist
-};
-
-/*!
-Represents a single line of the screen buffer of a
-terminal, as well as attributes of its contents
-(special styles, colors, highlighting, double-sized
-text, etc.).  Since text and attributes are allocated
-many lines at a time, a given line may or may not
-point to the start of an allocated block, so flags
-are also present to indicate which pointers should be
-used to dispose memory blocks later.
-
-The line list is an std::list (as opposed to some other
-standard container like a vector or deque) because it
-requires quick access to the start, end and middle, and
-it requires iterators that remain valid after lines are
-mucked with.  It also makes use of the splice() method
-which is specific to a linked list.
-
-NOTE:	Traditionally NCSA Telnet has used bits to
-		represent the style of every single terminal
-		cell.  This is memory-inefficient (albeit
-		convenient at times), and also worsens linearly
-		as the size of the screen increases.  It may be
-		nice to implement a “style run”-based approach
-		that sets attributes for ranges of text (which
-		is pretty much how they’re defined anyway, when
-		VT sequences arrive).  That would greatly
-		reduce the number of attribute words in memory!
-		The first part of this is implemented, in the
-		sense that Terminal Views only see terminal data
-		in terms of style runs (see the new routine
-		Terminal_ForEachLikeAttributeRunDo()).
-*/
-struct My_ScreenBufferLine
-{
-	My_TextIterator		textVectorBegin;	//!< where characters exist
-	My_TextIterator		textVectorEnd;		//!< for convenience; past-the-end of this buffer
-	size_t				textVectorSize;		//!< for convenience; size of buffer
-	CFRetainRelease		textCFString;		//!< mutable string object for which "textVectorBegin" is the storage,
-											//!  so the buffer can be manipulated directly if desired
-	
-	My_ScreenBufferLine ();
-	~My_ScreenBufferLine ();
-	
-	My_ScreenBufferLine (My_ScreenBufferLine const&);
-	
-	My_ScreenBufferLine&
-	operator = (My_ScreenBufferLine const&);
-	
-	bool
-	operator == (My_ScreenBufferLine const&  inLine) const;
-	
-	My_TextAttributesList const&
-	returnAttributeVector () const;
-	
-	TerminalTextAttributes
-	returnGlobalAttributes () const;
-	
-	My_TextAttributesList&
-	returnMutableAttributeVector ();
-	
-	TerminalTextAttributes&
-	returnMutableGlobalAttributes ();
-	
-	void
-	structureInitialize ();
-
-private:
-	My_AttributeInfo*	attributeInfo;
-	
-	void
-	clearAttributes();
-	
-	void
-	copyAttributes (My_AttributeInfo const*);
-	
-	void
-	createAttributes (My_AttributeInfo const*);
-	
-	bool
-	isSharedAttributeSource (My_AttributeInfo const*,
-							 My_AttributeInfo** = nullptr) const;
-	
-	My_AttributeInfo const&
-	returnAttributeInfo () const;
-	
-	My_AttributeInfo&
-	returnMutableAttributeInfo ();
-};
-typedef std::list< My_ScreenBufferLine >		My_ScreenBufferLineList;
-typedef std::list< My_ScreenBufferLine >		My_ScrollbackBufferLineList;
-typedef My_ScreenBufferLineList::size_type		My_ScreenRowIndex;
 
 /*!
 A pair of rows that define the start and end rows,
@@ -1356,8 +1239,8 @@ public:
 		CurrentLineCache	(struct My_ScreenBuffer const&		inParent)
 		:
 		parent(inParent),
-		cursorAttributes(kNoTerminalTextAttributes),
-		drawingAttributes(kNoTerminalTextAttributes),
+		cursorAttributes(kTerminalTextAttributesAllOff),
+		drawingAttributes(kTerminalTextAttributesAllOff),
 		cursorX(0),
 		cursorY(0),
 		characterSetInfoPtr(nullptr)
@@ -1941,10 +1824,9 @@ dest_char_seq_iter			whitespaceSensitiveCopy					(src_char_seq_const_iter, src_c
 #pragma mark Variables
 namespace {
 
-My_PrintableByUniChar&		gDumbTerminalRenderings ()	{ static My_PrintableByUniChar x; return x; }
-My_ScreenBufferLine&		gEmptyScreenBufferLine ()	{ static My_ScreenBufferLine x; return x; }
-My_AttributeInfo&			gEmptyLineAttributes ()		{ static My_AttributeInfo x; return x; }
-My_ScreenReferenceLocker&	gScreenRefLocks ()			{ static My_ScreenReferenceLocker x; return x; }
+My_PrintableByUniChar&			gDumbTerminalRenderings ()	{ static My_PrintableByUniChar x; return x; }
+My_ScreenBufferLine&			gEmptyScreenBufferLine ()	{ static My_ScreenBufferLine x; return x; }
+My_ScreenReferenceLocker&		gScreenRefLocks ()			{ static My_ScreenReferenceLocker x; return x; }
 
 } // anonymous namespace
 
@@ -2565,8 +2447,8 @@ Terminal_CopyLineRange	(TerminalScreenRef		inScreen,
 		}
 		else
 		{
-			My_TextIterator		textStartIter = nullptr;
-			SInt32				copyLength = INTEGER_MINIMUM(inBufferLength, endColumn - inZeroBasedStartColumn + 1);
+			TerminalLine_TextIterator	textStartIter = nullptr;
+			SInt32						copyLength = INTEGER_MINIMUM(inBufferLength, endColumn - inZeroBasedStartColumn + 1);
 			
 			
 			textStartIter = iteratorPtr->currentLine().textVectorBegin;
@@ -2724,7 +2606,7 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 				// copy another line into the output buffer, replacing
 				// spaces with tabs as needed, omitting trailing whitespace
 				{
-					My_TextIterator		textStartIter = nullptr;
+					TerminalLine_TextIterator	textStartIter = nullptr;
 					
 					
 					textStartIter = iteratorPtr->currentLine().textVectorBegin;
@@ -3900,15 +3782,15 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 	else
 	{
 		// need to search line for style chunks
-		My_ScreenBufferLine&					currentLine = iteratorPtr->currentLine();
-		My_TextIterator							textIterator = nullptr;
-		My_TextAttributesList const&			currentAttributeVector = currentLine.returnAttributeVector();
-		My_TextAttributesList::const_iterator	attrIterator = currentAttributeVector.begin();
-		TerminalTextAttributes					previousAttributes = 0;
-		TerminalTextAttributes					currentAttributes = 0;
-		SInt16									runStartCharacterIndex = 0;
-		SInt16									characterIndex = 0;
-		size_t									styleRunLength = 0;
+		My_ScreenBufferLine&								currentLine = iteratorPtr->currentLine();
+		TerminalLine_TextIterator							textIterator = nullptr;
+		TerminalLine_TextAttributesList const&				currentAttributeVector = currentLine.returnAttributeVector();
+		TerminalLine_TextAttributesList::const_iterator		attrIterator = currentAttributeVector.begin();
+		TerminalTextAttributes								previousAttributes = 0;
+		TerminalTextAttributes								currentAttributes = 0;
+		SInt16												runStartCharacterIndex = 0;
+		SInt16												characterIndex = 0;
+		size_t												styleRunLength = 0;
 		
 		
 	#if 0
@@ -4396,7 +4278,7 @@ dialog box, for example).
 UInt16
 Terminal_ReturnAllocatedColumnCount ()
 {
-	return kMy_NumberOfCharactersPerLineMaximum;
+	return kTerminalLine_MaximumCharacterCount;
 }// ReturnAllocatedColumnCount
 
 
@@ -6734,9 +6616,9 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	setScrollbackSize(this, returnScrollbackRows(inTerminalConfig));
 	this->text.scrollback.enabled = (this->text.scrollback.enabled && returnForceSave(inTerminalConfig));
 	this->text.visibleScreen.numberOfColumnsPermitted = returnScreenColumns(inTerminalConfig);
-	this->current.cursorAttributes = kNoTerminalTextAttributes;
-	this->current.drawingAttributes = kNoTerminalTextAttributes;
-	this->current.latentAttributes = kNoTerminalTextAttributes;
+	this->current.cursorAttributes = kTerminalTextAttributesAllOff;
+	this->current.drawingAttributes = kTerminalTextAttributesAllOff;
+	this->current.latentAttributes = kTerminalTextAttributesAllOff;
 	this->previous.drawingAttributes = kInvalidTerminalTextAttributes; // initially no saved attribute
 	
 	// speech setup
@@ -7232,384 +7114,6 @@ returnXTermWindowAlteration		(Preferences_ContextRef		inTerminalConfig)
 	
 	return result;
 }// returnXTermWindowAlteration
-
-
-/*!
-Initializes a structure that contains attribute data for
-a single line of a terminal buffer.
-
-(4.1)
-*/
-My_AttributeInfo::
-My_AttributeInfo ()
-:
-globalAttributes(kTerminalTextAttributesAllOff),
-attributeVector(kMy_NumberOfCharactersPerLineMaximum)
-{
-}// My_AttributeInfo constructor
-
-
-/*!
-Creates a new set of line attribute information by copying an
-existing one.
-
-(4.1)
-*/
-My_AttributeInfo::
-My_AttributeInfo	(My_AttributeInfo const&	inCopy)
-:
-globalAttributes(inCopy.globalAttributes),
-attributeVector(inCopy.attributeVector)
-{
-}// My_AttributeInfo copy constructor
-
-
-/*!
-Creates a new screen buffer line.
-
-(3.1)
-*/
-My_ScreenBufferLine::
-My_ScreenBufferLine ()
-:
-textVectorBegin(REINTERPRET_CAST(std::malloc(kMy_NumberOfCharactersPerLineMaximum * sizeof(UniChar)), UniChar*)),
-textVectorEnd(textVectorBegin + kMy_NumberOfCharactersPerLineMaximum),
-textVectorSize(textVectorEnd - textVectorBegin),
-textCFString(CFStringCreateMutableWithExternalCharactersNoCopy
-				(kCFAllocatorDefault, textVectorBegin, kMy_NumberOfCharactersPerLineMaximum,
-					kMy_NumberOfCharactersPerLineMaximum/* capacity */, kCFAllocatorMalloc/* reallocator/deallocator */),
-				true/* is retained */),
-attributeInfo(nullptr)
-{
-	assert(textCFString.exists());
-	clearAttributes();
-	structureInitialize();
-}// My_ScreenBufferLine constructor
-
-
-/*!
-Creates a new screen buffer line by copying an
-existing one.
-
-(3.1)
-*/
-My_ScreenBufferLine::
-My_ScreenBufferLine	(My_ScreenBufferLine const&		inCopy)
-:
-textVectorBegin(REINTERPRET_CAST(std::malloc(kMy_NumberOfCharactersPerLineMaximum * sizeof(UniChar)), UniChar*)),
-textVectorEnd(textVectorBegin + kMy_NumberOfCharactersPerLineMaximum),
-textVectorSize(textVectorEnd - textVectorBegin),
-textCFString(CFStringCreateMutableWithExternalCharactersNoCopy
-				(kCFAllocatorDefault, textVectorBegin, kMy_NumberOfCharactersPerLineMaximum,
-					kMy_NumberOfCharactersPerLineMaximum/* capacity */, kCFAllocatorMalloc/* reallocator/deallocator */),
-				true/* is retained */),
-attributeInfo(nullptr)
-{
-	assert(textCFString.exists());
-	this->copyAttributes(inCopy.attributeInfo);
-	// it is important for the local CFMutableStringRef to have its own
-	// internal buffer, which is why it was allocated separately and
-	// is being copied directly below
-	std::copy(inCopy.textVectorBegin, inCopy.textVectorEnd, this->textVectorBegin);
-}// My_ScreenBufferLine copy constructor
-
-
-/*!
-Disposes of a screen buffer line.
-
-(3.1)
-*/
-My_ScreenBufferLine::
-~My_ScreenBufferLine ()
-{
-	this->clearAttributes();
-}// My_ScreenBufferLine destructor
-
-
-/*!
-Reinitializes a screen buffer line from a
-different one.
-
-(3.1)
-*/
-My_ScreenBufferLine&
-My_ScreenBufferLine::
-operator =	(My_ScreenBufferLine const&		inCopy)
-{
-	if (this != &inCopy)
-	{
-		this->clearAttributes();
-		this->copyAttributes(inCopy.attributeInfo);
-		
-		// since the CFMutableStringRef uses the internal buffer, overwriting
-		// the buffer contents will implicitly update the CFStringRef as well;
-		// also, since the lines are all the same size, there is no need to
-		// copy the start/end and size information
-		std::copy(inCopy.textVectorBegin, inCopy.textVectorEnd, this->textVectorBegin);
-	}
-	return *this;
-}// My_ScreenBufferLine::operator =
-
-
-/*!
-Returns true only if the specified line is considered
-equal to this line.
-
-(3.1)
-*/
-bool
-My_ScreenBufferLine::
-operator == (My_ScreenBufferLine const&  inLine)
-const
-{
-	return (&inLine == this);
-}// My_ScreenBufferLine::operator ==
-
-
-/*!
-Removes all attributes, possibly freeing allocated memory and
-returning to a shared reference for attribute data.
-
-(4.1)
-*/
-void
-My_ScreenBufferLine::
-clearAttributes ()
-{
-	if (&gEmptyLineAttributes() != this->attributeInfo)
-	{
-		delete this->attributeInfo, this->attributeInfo = nullptr;
-	}
-	
-	// note: this applies both to initial values and to values
-	// that become nullptr above after being deallocated
-	if (nullptr == this->attributeInfo)
-	{
-		this->attributeInfo = &gEmptyLineAttributes();
-	}
-}// My_ScreenBufferLine::clearAttributes
-
-
-/*!
-Unlike createAttributes(), this will check the address of the
-source and perform a shallow copy of any known shared sets
-(otherwise, it calls createAttributes() and makes a deep copy).
-
-WARNING:	This overwrites the current attribute allocation without
-		checking the previous value.  In cases where the previous
-		value might have been allocated, call clearAttributes()
-		first (which will conditionally deallocate if the data
-		was not shared).
-
-(4.1)
-*/
-void
-My_ScreenBufferLine::
-copyAttributes	(My_AttributeInfo const*	inSourceOrNull)
-{
-	My_AttributeInfo*	mutablePtr = nullptr;
-	
-	
-	if (isSharedAttributeSource(inSourceOrNull, &mutablePtr))
-	{
-		// source is shared; continue to share in the copy
-		this->attributeInfo = mutablePtr;
-	}
-	else
-	{
-		// source is unknown; make a unique copy
-		createAttributes(inSourceOrNull);
-	}
-}// My_ScreenBufferLine::copyAttributes
-
-
-/*!
-Allocates memory for new, unique attribute data, preventing the
-use of any references to shared attribute data.  This should only
-be done when a line definitely requires unique attributes.
-
-If "inSourceOrNull" is not nullptr, the new attributes copy the
-given source of existing attributes.
-
-WARNING:	This overwrites the current attribute allocation without
-		checking the previous value.  In cases where the previous
-		value might have been allocated, call clearAttributes()
-		first (which will conditionally deallocate if the data
-		was not shared).
-
-(4.1)
-*/
-void
-My_ScreenBufferLine::
-createAttributes	(My_AttributeInfo const*	inSourceOrNull)
-{
-	this->attributeInfo = (nullptr == inSourceOrNull)
-							? new My_AttributeInfo()
-							: new My_AttributeInfo(*inSourceOrNull);
-}// My_ScreenBufferLine::createAttributes
-
-
-/*!
-Returns true if the specified line attribute storage matches any
-known shared source of attributes (such as the set of attributes
-that describe lines with no attributes at all).  This determines
-if returnMutableAttributeVector() will need to do any allocation.
-
-If a source is shared, its non-"const" version is returned so
-that it may be assigned.  This DOES NOT MEAN IT CAN BE CHANGED!!!
-The new pointer is just useful to aid variable updates in certain
-situations.
-
-(4.1)
-*/
-bool
-My_ScreenBufferLine::
-isSharedAttributeSource		(My_AttributeInfo const*	inSource,
-							 My_AttributeInfo**			outNonConstVersion)
-const
-{
-	bool	result = false;
-	
-	
-	if (&gEmptyLineAttributes() == inSource)
-	{
-		if (nullptr != outNonConstVersion)
-		{
-			*outNonConstVersion = &gEmptyLineAttributes();
-		}
-		result = true;
-	}
-	return result;
-}// My_ScreenBufferLine::isSharedAttributeSource
-
-
-/*!
-Returns the character-by-character and line-global attributes that
-apply to this screen buffer line.  The data is not guaranteed to be
-unique for all lines (as an optimization, common data may be shared
-until something is modified).
-
-(4.1)
-*/
-My_AttributeInfo const&
-My_ScreenBufferLine::
-returnAttributeInfo ()
-const
-{
-	return *(this->attributeInfo);
-}// My_ScreenBufferLine::returnAttributeInfo
-
-
-/*!
-Returns the set of attributes that applies to the line.  This set
-is not guaranteed to be unique for all lines (as an optimization,
-common sets may be shared until they are modified).
-
-(4.1)
-*/
-My_TextAttributesList const&
-My_ScreenBufferLine::
-returnAttributeVector ()
-const
-{
-	return this->returnAttributeInfo().attributeVector;
-}// My_ScreenBufferLine::returnAttributeVector
-
-
-/*!
-Returns the set of attributes that applies to the entire line by
-default.  This is for information only, and it is sometimes used
-to initialize the actual attribute vector.  It is a way to
-remember changes that should always apply to the line as a whole,
-such as a “double-size” mode.
-
-(4.1)
-*/
-TerminalTextAttributes
-My_ScreenBufferLine::
-returnGlobalAttributes ()
-const
-{
-	return this->returnAttributeInfo().globalAttributes;
-}// My_ScreenBufferLine::returnGlobalAttributes
-
-
-/*!
-Returns the character-by-character and line-global attributes that
-apply to this screen buffer line, in a form that can be directly
-modified.  If the data was previously shared, it becomes unique and
-memory is allocated (therefore, use this judiciously; ideally only
-when you are sure that the line requires unique attributes).  See
-also the read-only version, returnAttributeInfo().
-
-(4.1)
-*/
-My_AttributeInfo&
-My_ScreenBufferLine::
-returnMutableAttributeInfo ()
-{
-	if (this->isSharedAttributeSource(this->attributeInfo))
-	{
-		this->createAttributes(this->attributeInfo);
-	}
-	return *(this->attributeInfo);
-}// My_ScreenBufferLine::returnMutableAttributeInfo
-
-
-/*!
-Returns the set of attributes that applies to the line, in a form
-that can be directly modified.  This has the same potential side
-effects as returnMutableAttributeInfo().
-
-See also the read-only version, returnAttributeVector(), and the
-line-global version, returnMutableGlobalAttributes().
-
-NOTE:	Although technically this does not need a different name
-		(the "const" variation is sufficient), it has a separate
-		name so that it is easier to see when the mutable variant
-		is in use and when memory allocation may be occurring.
-
-(4.1)
-*/
-My_TextAttributesList&
-My_ScreenBufferLine::
-returnMutableAttributeVector ()
-{
-	return this->returnMutableAttributeInfo().attributeVector;
-}// My_ScreenBufferLine::returnMutableAttributeVector
-
-
-/*!
-Use instead of returnGlobalAttributes() if it is necessary to
-change the global attribute values.  This has the same potential side
-effects as returnMutableAttributeInfo().
-
-See also the read-only version, returnGlobalAttributes(), and the
-character-by-character version, returnMutableAttributeVector().
-
-(4.1)
-*/
-TerminalTextAttributes&
-My_ScreenBufferLine::
-returnMutableGlobalAttributes ()
-{
-	return this->returnMutableAttributeInfo().globalAttributes;
-}// My_ScreenBufferLine::returnMutableGlobalAttributes
-
-
-/*!
-Resets a line to its initial state (clearing all text and
-removing attribute bits).
-
-(3.1)
-*/
-void
-My_ScreenBufferLine::
-structureInitialize ()
-{
-	std::fill(textVectorBegin, textVectorEnd, ' ');
-	clearAttributes();
-}// My_ScreenBufferLine::structureInitialize
 
 
 /*!
@@ -13665,14 +13169,14 @@ bufferEraseFromCursorColumn		(My_ScreenBufferPtr		inDataPtr,
 								 My_BufferChanges		inChanges,
 								 UInt16					inCharacterCount)
 {
-	My_TextIterator						textIterator = nullptr;
-	My_TextIterator						endText = nullptr;
-	My_TextAttributesList::iterator		attrIterator;
-	My_TextAttributesList::iterator		endAttrs;
-	My_ScreenBufferLineList::iterator	cursorLineIterator;
-	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
-	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
-	UInt16								fillDistance = inCharacterCount;
+	TerminalLine_TextIterator						textIterator = nullptr;
+	TerminalLine_TextIterator						endText = nullptr;
+	TerminalLine_TextAttributesList::iterator		attrIterator;
+	TerminalLine_TextAttributesList::iterator		endAttrs;
+	My_ScreenBufferLineList::iterator				cursorLineIterator;
+	SInt16											postWrapCursorX = inDataPtr->current.cursorX;
+	My_ScreenRowIndex								postWrapCursorY = inDataPtr->current.cursorY;
+	UInt16											fillDistance = inCharacterCount;
 	
 	
 	// figure out where the cursor is, but first force it to
@@ -13701,7 +13205,7 @@ bufferEraseFromCursorColumn		(My_ScreenBufferPtr		inDataPtr,
 	}
 	if (inChanges & kMy_BufferChangesKeepBackgroundColor)
 	{
-		My_TextAttributesList::iterator		tmpAttrIterator;
+		TerminalLine_TextAttributesList::iterator		tmpAttrIterator;
 		
 		
 		for (tmpAttrIterator = attrIterator; tmpAttrIterator != endAttrs; ++tmpAttrIterator)
@@ -13754,13 +13258,13 @@ void
 bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr,
 										 My_BufferChanges		inChanges)
 {
-	My_TextIterator						textIterator = nullptr;
-	My_TextIterator						endText = nullptr;
-	My_TextAttributesList::iterator		attrIterator;
-	My_TextAttributesList::iterator		endAttrs;
-	My_ScreenBufferLineList::iterator	cursorLineIterator;
-	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
-	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
+	TerminalLine_TextIterator						textIterator = nullptr;
+	TerminalLine_TextIterator						endText = nullptr;
+	TerminalLine_TextAttributesList::iterator		attrIterator;
+	TerminalLine_TextAttributesList::iterator		endAttrs;
+	My_ScreenBufferLineList::iterator				cursorLineIterator;
+	SInt16											postWrapCursorX = inDataPtr->current.cursorX;
+	My_ScreenRowIndex								postWrapCursorY = inDataPtr->current.cursorY;
 	
 	
 	// if the cursor is positioned so as to trigger an erase
@@ -13794,7 +13298,7 @@ bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr,
 	}
 	if (inChanges & kMy_BufferChangesKeepBackgroundColor)
 	{
-		My_TextAttributesList::iterator		tmpAttrIterator;
+		TerminalLine_TextAttributesList::iterator		tmpAttrIterator;
 		
 		
 		for (tmpAttrIterator = attrIterator; tmpAttrIterator != endAttrs; ++tmpAttrIterator)
@@ -13971,14 +13475,14 @@ void
 bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr		inDataPtr,
 										 My_BufferChanges		inChanges)
 {
-	My_TextIterator						textIterator = nullptr;
-	My_TextIterator						endText = nullptr;
-	My_TextAttributesList::iterator		attrIterator;
-	My_TextAttributesList::iterator		endAttrs;
-	My_ScreenBufferLineList::iterator	cursorLineIterator;
-	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
-	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
-	UInt16								fillDistance = 0;
+	TerminalLine_TextIterator						textIterator = nullptr;
+	TerminalLine_TextIterator						endText = nullptr;
+	TerminalLine_TextAttributesList::iterator		attrIterator;
+	TerminalLine_TextAttributesList::iterator		endAttrs;
+	My_ScreenBufferLineList::iterator				cursorLineIterator;
+	SInt16											postWrapCursorX = inDataPtr->current.cursorX;
+	My_ScreenRowIndex								postWrapCursorY = inDataPtr->current.cursorY;
+	UInt16											fillDistance = 0;
 	
 	
 	// figure out where the cursor is, but first force it to
@@ -14003,7 +13507,7 @@ bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr		inDataPtr,
 	}
 	if (inChanges & kMy_BufferChangesKeepBackgroundColor)
 	{
-		My_TextAttributesList::iterator		tmpAttrIterator;
+		TerminalLine_TextAttributesList::iterator		tmpAttrIterator;
 		
 		
 		for (tmpAttrIterator = attrIterator; tmpAttrIterator != endAttrs; ++tmpAttrIterator)
@@ -14060,10 +13564,10 @@ bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
 								 My_BufferChanges		inChanges,
 								 My_ScreenBufferLine&	inRow)
 {
-	My_TextIterator						textIterator = nullptr;
-	My_TextIterator						endText = nullptr;
-	My_TextAttributesList::iterator		attrIterator;
-	My_TextAttributesList::iterator		endAttrs;
+	TerminalLine_TextIterator						textIterator = nullptr;
+	TerminalLine_TextIterator						endText = nullptr;
+	TerminalLine_TextAttributesList::iterator		attrIterator;
+	TerminalLine_TextAttributesList::iterator		endAttrs;
 	
 	
 	// find the right line offset
@@ -14086,7 +13590,7 @@ bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
 	}
 	if (inChanges & kMy_BufferChangesKeepBackgroundColor)
 	{
-		My_TextAttributesList::iterator		tmpAttrIterator;
+		TerminalLine_TextAttributesList::iterator		tmpAttrIterator;
 		
 		
 		for (tmpAttrIterator = attrIterator; tmpAttrIterator != endAttrs; ++tmpAttrIterator)
@@ -14180,7 +13684,7 @@ bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
 	My_ScreenBufferLineList::iterator	toCursorLine;
-	TerminalTextAttributes				copiedAttributes = kNoTerminalTextAttributes;
+	TerminalTextAttributes				copiedAttributes = kTerminalTextAttributesAllOff;
 	
 	
 	// wrap cursor
@@ -14203,10 +13707,10 @@ bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 	
 	// update attributes
 	{
-		My_TextAttributesList::iterator		pastVisibleEnd = toCursorLine->returnMutableAttributeVector().begin();
-		My_TextAttributesList::iterator		toCursorAttr = toCursorLine->returnMutableAttributeVector().begin();
-		My_TextAttributesList::iterator		toFirstRelocatedAttr;
-		My_TextAttributesList::iterator		pastLastPreservedAttr;
+		TerminalLine_TextAttributesList::iterator		pastVisibleEnd = toCursorLine->returnMutableAttributeVector().begin();
+		TerminalLine_TextAttributesList::iterator		toCursorAttr = toCursorLine->returnMutableAttributeVector().begin();
+		TerminalLine_TextAttributesList::iterator		toFirstRelocatedAttr;
+		TerminalLine_TextAttributesList::iterator		pastLastPreservedAttr;
 		
 		
 		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
@@ -14224,10 +13728,10 @@ bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 	
 	// update text
 	{
-		My_TextIterator		pastVisibleEnd = toCursorLine->textVectorBegin;
-		My_TextIterator		toCursorChar = toCursorLine->textVectorBegin;
-		My_TextIterator		toFirstRelocatedChar;
-		My_TextIterator		pastLastPreservedChar;
+		TerminalLine_TextIterator		pastVisibleEnd = toCursorLine->textVectorBegin;
+		TerminalLine_TextIterator		toCursorChar = toCursorLine->textVectorBegin;
+		TerminalLine_TextIterator		toFirstRelocatedChar;
+		TerminalLine_TextIterator		pastLastPreservedChar;
 		
 		
 		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
@@ -14300,8 +13804,8 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 		}
 		else if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
 		{
-			My_ScreenBufferLine					lineTemplate = gEmptyScreenBufferLine();
-			My_TextAttributesList::iterator		tmpAttrIterator;
+			My_ScreenBufferLine							lineTemplate = gEmptyScreenBufferLine();
+			TerminalLine_TextAttributesList::iterator	tmpAttrIterator;
 			
 			
 			// the new lines have no attributes EXCEPT for a custom background color
@@ -14390,7 +13894,7 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
 	My_ScreenBufferLineList::iterator	toCursorLine;
-	TerminalTextAttributes				copiedAttributes = kNoTerminalTextAttributes;
+	TerminalTextAttributes				copiedAttributes = kTerminalTextAttributesAllOff;
 	
 	
 	// wrap cursor
@@ -14417,10 +13921,10 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	
 	// update attributes
 	{
-		My_TextAttributesList::iterator		pastVisibleEnd = toCursorLine->returnMutableAttributeVector().begin();
-		My_TextAttributesList::iterator		toCursorAttr = toCursorLine->returnMutableAttributeVector().begin();
-		My_TextAttributesList::iterator		toFirstPreservedAttr;
-		My_TextAttributesList::iterator		pastLastRelocatedAttr;
+		TerminalLine_TextAttributesList::iterator	pastVisibleEnd = toCursorLine->returnMutableAttributeVector().begin();
+		TerminalLine_TextAttributesList::iterator	toCursorAttr = toCursorLine->returnMutableAttributeVector().begin();
+		TerminalLine_TextAttributesList::iterator	toFirstPreservedAttr;
+		TerminalLine_TextAttributesList::iterator	pastLastRelocatedAttr;
 		
 		
 		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
@@ -14438,10 +13942,10 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	
 	// update text
 	{
-		My_TextIterator		pastVisibleEnd = toCursorLine->textVectorBegin;
-		My_TextIterator		toCursorChar = toCursorLine->textVectorBegin;
-		My_TextIterator		toFirstPreservedChar;
-		My_TextIterator		pastLastRelocatedChar;
+		TerminalLine_TextIterator	pastVisibleEnd = toCursorLine->textVectorBegin;
+		TerminalLine_TextIterator	toCursorChar = toCursorLine->textVectorBegin;
+		TerminalLine_TextIterator	toFirstPreservedChar;
+		TerminalLine_TextIterator	pastLastRelocatedChar;
 		
 		
 		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
@@ -14533,8 +14037,8 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 		}
 		else if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
 		{
-			My_ScreenBufferLine					lineTemplate = gEmptyScreenBufferLine();
-			My_TextAttributesList::iterator		tmpAttrIterator;
+			My_ScreenBufferLine							lineTemplate = gEmptyScreenBufferLine();
+			TerminalLine_TextAttributesList::iterator	tmpAttrIterator;
 			
 			
 			// the new lines have no attributes EXCEPT for a custom background color
@@ -15128,7 +14632,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 		
 		{
 			UniChar*							startPtr = nullptr;
-			My_TextIterator						startIterator = nullptr;
+			TerminalLine_TextIterator			startIterator = nullptr;
 			TerminalTextAttributes				attrib = 0;
 			TerminalTextAttributes				temporaryAttributes = 0;
 			register SInt16						preWriteCursorX = 0;
@@ -16099,9 +15603,9 @@ void
 eraseRightHalfOfLine	(My_ScreenBufferPtr		inDataPtr,
 						 My_ScreenBufferLine&	inRow)
 {
-	SInt16								midColumn = INTEGER_HALVED(inDataPtr->text.visibleScreen.numberOfColumnsPermitted);
-	My_TextIterator						textIterator = nullptr;
-	My_TextAttributesList::iterator		attrIterator;
+	SInt16										midColumn = INTEGER_HALVED(inDataPtr->text.visibleScreen.numberOfColumnsPermitted);
+	TerminalLine_TextIterator					textIterator = nullptr;
+	TerminalLine_TextAttributesList::iterator	attrIterator;
 	
 	
 	// clear from halfway point to end of line
@@ -16833,8 +16337,8 @@ resetTerminal   (My_ScreenBufferPtr		inDataPtr,
 	inDataPtr->modeOriginRedefined = false; // also requires cursor homing (below), according to manual
 	inDataPtr->originRegionPtr = &inDataPtr->visibleBoundary.rows;
 	inDataPtr->previous.drawingAttributes = kInvalidTerminalTextAttributes;
-	inDataPtr->current.drawingAttributes = kNoTerminalTextAttributes;
-	inDataPtr->current.latentAttributes = kNoTerminalTextAttributes;
+	inDataPtr->current.drawingAttributes = kTerminalTextAttributesAllOff;
+	inDataPtr->current.latentAttributes = kTerminalTextAttributesAllOff;
 	inDataPtr->modeInsertNotReplace = false;
 	inDataPtr->modeNewLineOption = false;
 	inDataPtr->emulator.isUTF8Encoding = (kCFStringEncodingUTF8 == inDataPtr->emulator.inputTextEncoding);
@@ -17321,11 +16825,11 @@ setVisibleColumnCount	(My_ScreenBufferPtr		inPtr,
 			moveCursorX(inPtr, inNewNumberOfCharactersWide - 1);
 		}
 		
-		if (inNewNumberOfCharactersWide > kMy_NumberOfCharactersPerLineMaximum)
+		if (inNewNumberOfCharactersWide > Terminal_ReturnAllocatedColumnCount())
 		{
 			// flag an error, but set a reasonable value anyway
 			result = kTerminal_ResultParameterError;
-			inNewNumberOfCharactersWide = kMy_NumberOfCharactersPerLineMaximum;
+			inNewNumberOfCharactersWide = Terminal_ReturnAllocatedColumnCount();
 		}
 		inPtr->text.visibleScreen.numberOfColumnsPermitted = inNewNumberOfCharactersWide;
 	}
@@ -17532,17 +17036,20 @@ void
 tabStopInitialize	(My_ScreenBufferPtr		inDataPtr)
 {
 	My_TabStopList::iterator	tabStopIterator;
+	My_TabStopList::size_type	i = 0;
 	
 	
-	tabStopClearAll(inDataPtr);
-	
-	// IMPORTANT: This works only because the list is initialized to be a multiple
-	//            of the tab stop distance.  If this were not true, std::advance()
-	//            would jump the iterator to an invalid value, causing this to crash.
 	for (tabStopIterator = inDataPtr->tabSettings.begin(); tabStopIterator != inDataPtr->tabSettings.end();
-			std::advance(tabStopIterator, STATIC_CAST(kMy_TabStop, My_TabStopList::difference_type)/* tab distance */))
+			++tabStopIterator, ++i)
 	{
-		*tabStopIterator = kMy_TabSet;
+		if (0 == (i % kMy_TabStop))
+		{
+			*tabStopIterator = kMy_TabSet;
+		}
+		else
+		{
+			*tabStopIterator = kMy_TabClear;
+		}
 	}
 	assert(!inDataPtr->tabSettings.empty());
 	inDataPtr->tabSettings.back() = kMy_TabSet; // also make last column a tab
