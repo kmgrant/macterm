@@ -663,7 +663,7 @@ invokeScreenLineOperationProc	(My_ScreenLineOperationProcPtr	inUserRoutine,
 #pragma mark Types
 namespace {
 
-typedef std::basic_string<UInt8>				My_ByteString;
+typedef std::basic_string< UInt8 >				My_ByteString;
 
 typedef UniChar*								My_TextIterator;
 typedef std::map< UniChar, CFRetainRelease >	My_PrintableByUniChar;
@@ -1251,11 +1251,7 @@ public:
 	My_ScreenBufferLineList				screenBuffer;				//!< a double-ended queue containing all the visible text for the terminal;
 																	//!  insertion or deletion from either end is fast, other operations are slow;
 																	//!  NOTE you should ONLY modify this using screen...() routines!
-	My_ByteString						bytesToEcho;				//!< captures contiguous blocks of text to be translated and echoed; this is used for
-																	//!  encodings that are translated at echo time, but NOT for UTF-8!
-	CFRetainRelease						stringToEcho;				//!< when capturing bytes, this is not strictly needed but is used to stored the
-																	//!  translated string just before echoing; when in UTF-8 mode, this IS the buffer
-																	//!  for accumulating characters, as incoming bytes are translated beforehand
+	My_ByteString						bytesToEcho;				//!< captures contiguous blocks of text to be translated and echoed
 	
 	// Error Counts
 	//
