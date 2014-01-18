@@ -3142,7 +3142,7 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
-	return nil;
+	return [NSImage imageNamed:@"IconForPrefPanelGeneral"];
 }// panelIcon
 
 
@@ -3795,7 +3795,7 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
-	return nil;
+	return [NSImage imageNamed:@"IconForPrefPanelGeneral"];
 }// panelIcon
 
 
@@ -4619,7 +4619,7 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
-	return nil;
+	return [NSImage imageNamed:@"IconForPrefPanelGeneral"];
 }// panelIcon
 
 
