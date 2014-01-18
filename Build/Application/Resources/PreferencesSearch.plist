@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+
+<!--
+	PreferencesSearch.plist
+	
+	MacTerm
+	© 1998-2014 by Kevin Grant
+	
+	This file is used to implement the search field in the Preferences window.
+	As such, the keyword strings can be localized (an attempt is made to find a
+	translation from "PreferencesSearch.strings" in the usual bundle search
+	paths).  Nothing else in this file should be localized.
+	
+	The search phrases in this file are case-insensitive and in English.  There
+	don't tend to be a lot of variations on words because a future version may
+	attempt to do "fuzzy" matching by itself (e.g. considering synonyms and
+	alternate spellings).
+	
+	Data in this file is keyed by internal panel identifier.  These identifiers
+	can be seen in panel source code by looking for "panelIdentifier" methods,
+	and they are strings like "net.macterm.prefpanels.Formats.General".  An
+	identifier will refer to either a specific tab or a whole top-level panel.
+	
+	Panel identifiers map to arrays.  Currently arrays must contain only strings,
+	listing all phrases that can cause the identified panel to be included in
+	search results.
+	
+	Phrases are not necessarily scanned in order.  For ease of maintenance the
+	phrases are listed alphabetically for each panel and the definitions for all
+	of a category's tabs are all together.
+-->
+
+<plist version="1.0">
+<dict>
+	<key>net.macterm.prefpanels.Formats.General</key>
+	<array>
+		<string>blink</string>
+		<string>bold</string>
+		<string>border</string>
+		<string>character</string>
+		<string>color</string>
+		<string>cursor</string>
+		<string>flash</string>
+		<string>font</string>
+		<string>format</string>
+		<string>general</string>
+		<string>matte</string>
+		<string>pulse</string>
+		<string>select</string>
+		<string>size</string>
+		<string>width</string>
+	</array>
+	<key>net.macterm.prefpanels.Formats.StandardColors</key>
+	<array>
+		<string>ansi</string>
+		<string>black</string>
+		<string>blue</string>
+		<string>bold</string>
+		<string>color</string>
+		<string>cyan</string>
+		<string>emphasized</string>
+		<string>format</string>
+		<string>green</string>
+		<string>magenta</string>
+		<string>purple</string>
+		<string>red</string>
+		<string>standard</string>
+		<string>white</string>
+		<string>yellow</string>
+	</array>
+	<key>net.macterm.prefpanels.FullScreen</key>
+	<array>
+		<string>display</string>
+		<string>force quit</string>
+		<string>full screen</string>
+		<string>kiosk</string>
+		<string>menu</string>
+		<string>screen</string>
+		<string>scroll</string>
+		<string>space</string>
+		<string>whole</string>
+		<string>window</string>
+	</array>
+	<key>net.macterm.prefpanels.General.Options</key>
+	<array>
+		<string>automatic</string>
+		<string>close</string>
+		<string>copy</string>
+		<string>cursor</string>
+		<string>dim</string>
+		<string>escape</string>
+		<string>fade</string>
+		<string>focus</string>
+		<string>general</string>
+		<string>invert</string>
+		<string>mouse</string>
+		<string>new window</string>
+		<string>option</string>
+		<string>paste</string>
+		<string>process exit</string>
+		<string>select</string>
+		<string>terminal</string>
+	</array>
+	<key>net.macterm.prefpanels.General.Special</key>
+	<array>
+		<string>blink</string>
+		<string>copy</string>
+		<string>cursor</string>
+		<string>flash</string>
+		<string>font</string>
+		<string>general</string>
+		<string>key</string>
+		<string>resize</string>
+		<string>session</string>
+		<string>shell</string>
+		<string>size</string>
+		<string>special</string>
+		<string>stack</string>
+		<string>substitution</string>
+		<string>tab</string>
+		<string>text</string>
+		<string>window</string>
+	</array>
+	<key>net.macterm.prefpanels.General.Notifications</key>
+	<array>
+		<string>alert</string>
+		<string>background</string>
+		<string>bell</string>
+		<string>dock</string>
+		<string>general</string>
+		<string>growl</string>
+		<string>notification</string>
+		<string>sound</string>
+		<string>visual</string>
+	</array>
+	<key>net.macterm.prefpanels.Macros</key>
+	<array>
+		<string>alt</string>
+		<string>arrow</string>
+		<string>character</string>
+		<string>command</string>
+		<string>control</string>
+		<string>enter</string>
+		<string>escape</string>
+		<string>f1</string>
+		<string>f2</string>
+		<string>f3</string>
+		<string>f4</string>
+		<string>f5</string>
+		<string>f6</string>
+		<string>f7</string>
+		<string>f8</string>
+		<string>f9</string>
+		<string>f10</string>
+		<string>f11</string>
+		<string>f12</string>
+		<string>f13</string>
+		<string>f14</string>
+		<string>f15</string>
+		<string>f16</string>
+		<string>function</string>
+		<string>key</string>
+		<string>keystroke</string>
+		<string>line</string>
+		<string>macro</string>
+		<string>modifier</string>
+		<string>new</string>
+		<string>newline</string>
+		<string>option</string>
+		<string>page</string>
+		<string>return</string>
+		<string>select</string>
+		<string>send</string>
+		<string>sequence</string>
+		<string>shift</string>
+		<string>string</string>
+		<string>substitution</string>
+		<string>text</string>
+		<string>title</string>
+		<string>url</string>
+		<string>verbatim</string>
+		<string>window</string>
+	</array>
+	<key>net.macterm.prefpanels.Sessions.Resource</key>
+	<array>
+		<string>address</string>
+		<string>bonjour</string>
+		<string>command</string>
+		<string>connection</string>
+		<string>customize</string>
+		<string>format</string>
+		<string>ftp</string>
+		<string>host</string>
+		<string>ip</string>
+		<string>line</string>
+		<string>location</string>
+		<string>number</string>
+		<string>port</string>
+		<string>remote</string>
+		<string>rendez-vous</string>
+		<string>rendezvous</string>
+		<string>resource</string>
+		<string>server</string>
+		<string>session</string>
+		<string>sftp</string>
+		<string>shell</string>
+		<string>ssh</string>
+		<string>telnet</string>
+		<string>terminal</string>
+		<string>translation</string>
+		<string>url</string>
+		<string>user</string>
+	</array>
+	<key>net.macterm.prefpanels.Sessions.DataFlow</key>
+	<array>
+		<string>capture</string>
+		<string>data flow</string>
+		<string>date</string>
+		<string>delay</string>
+		<string>duplication</string>
+		<string>echo</string>
+		<string>file</string>
+		<string>insert</string>
+		<string>line</string>
+		<string>local</string>
+		<string>paste</string>
+		<string>scroll</string>
+		<string>session</string>
+		<string>time</string>
+	</array>
+	<key>net.macterm.prefpanels.Sessions.Keyboard</key>
+	<array>
+		<string>arrow</string>
+		<string>backspace</string>
+		<string>control</string>
+		<string>cr</string>
+		<string>cursor</string>
+		<string>delete</string>
+		<string>emacs</string>
+		<string>enter</string>
+		<string>interrupt</string>
+		<string>key</string>
+		<string>keyboard</string>
+		<string>lf</string>
+		<string>line</string>
+		<string>lock</string>
+		<string>map</string>
+		<string>meta</string>
+		<string>new</string>
+		<string>newline</string>
+		<string>null</string>
+		<string>process</string>
+		<string>resume</string>
+		<string>return</string>
+		<string>scroll</string>
+		<string>session</string>
+		<string>suspend</string>
+		<string>xoff</string>
+		<string>xon</string>
+	</array>
+	<key>net.macterm.prefpanels.Sessions.Graphics</key>
+	<array>
+		<string>4014</string>
+		<string>4105</string>
+		<string>clear</string>
+		<string>color</string>
+		<string>graphic</string>
+		<string>off</string>
+		<string>page</string>
+		<string>session</string>
+		<string>tek</string>
+		<string>tektronix</string>
+		<string>vector</string>
+	</array>
+	<key>net.macterm.prefpanels.Terminals.Options</key>
+	<array>
+		<string>8-bit</string>
+		<string>bit</string>
+		<string>byte</string>
+		<string>clear</string>
+		<string>eight</string>
+		<string>key</string>
+		<string>keypad</string>
+		<string>option</string>
+		<string>page</string>
+		<string>save</string>
+		<string>screen</string>
+		<string>strip</string>
+		<string>terminal</string>
+		<string>truncate</string>
+		<string>wrap</string>
+	</array>
+	<key>net.macterm.prefpanels.Terminals.Emulation</key>
+	<array>
+		<string>256</string>
+		<string>answerback</string>
+		<string>background</string>
+		<string>bce</string>
+		<string>color</string>
+		<string>dumb</string>
+		<string>emulation</string>
+		<string>emulator</string>
+		<string>erase</string>
+		<string>graphics</string>
+		<string>identify</string>
+		<string>off</string>
+		<string>print</string>
+		<string>terminal</string>
+		<string>vt100</string>
+		<string>vt102</string>
+		<string>vt220</string>
+		<string>window</string>
+		<string>wrap</string>
+		<string>xterm</string>
+	</array>
+	<key>net.macterm.prefpanels.Terminals.Screen</key>
+	<array>
+		<string>character</string>
+		<string>column</string>
+		<string>display</string>
+		<string>height</string>
+		<string>line</string>
+		<string>row</string>
+		<string>screen</string>
+		<string>scroll</string>
+		<string>scrollback</string>
+		<string>size</string>
+		<string>terminal</string>
+		<string>width</string>
+	</array>
+	<key>net.macterm.prefpanels.Translations</key>
+	<array>
+		<string>backup</string>
+		<string>character</string>
+		<string>encoding</string>
+		<string>format</string>
+		<string>font</string>
+		<string>glyph</string>
+		<string>international</string>
+		<string>language</string>
+		<string>terminal</string>
+		<string>text</string>
+		<string>translation</string>
+		<string>unicode</string>
+		<string>utf</string>
+		<string>utf8</string>
+		<string>utf-8</string>
+	</array>
+	<key>net.macterm.prefpanels.Workspaces</key>
+	<array>
+		<string>full screen</string>
+		<string>location</string>
+		<string>position</string>
+		<string>screen</string>
+		<string>session</string>
+		<string>shell</string>
+		<string>tab</string>
+		<string>window</string>
+		<string>workspace</string>
+	</array>
+</dict>
+</plist>

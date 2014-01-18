@@ -199,6 +199,7 @@ OSStatus				accessDataBrowserItemData		(HIViewRef, DataBrowserItemID, DataBrowse
 void					chooseContext					(Preferences_ContextRef);
 void					choosePanel						(UInt16);
 Boolean					createCollection				(CFStringRef = nullptr);
+CFDictionaryRef			createSearchDictionary			();
 void					displayCollectionRenameUI		(DataBrowserItemID);
 Boolean					duplicateCollection				(Preferences_ContextRef);
 void					findBestPanelSize				(HISize const&, HISize&);
@@ -231,9 +232,24 @@ The private class interface.
 */
 @interface PrefsWindow_Controller (PrefsWindow_ControllerInternal) //{
 
+// class methods
+	+ (void)
+	popUpResultsForQuery:(NSString*)_
+	inSearchField:(NSSearchField*)_;
+	+ (BOOL)
+	queryString:(NSString*)_
+	matchesTargetPhrase:(NSString*)_;
+	+ (BOOL)
+	queryString:(NSString*)_
+	withWordArray:(NSArray*)_
+	matchesTargetPhrase:(NSString*)_;
+
 // new methods
 	- (void)
 	displayPanel:(Panel_ViewManager< PrefsWindow_PanelInterface >*)_
+	withAnimation:(BOOL)_;
+	- (void)
+	displayPanelOrTabWithIdentifier:(NSString*)_
 	withAnimation:(BOOL)_;
 	- (void)
 	rebuildSourceList;
@@ -257,20 +273,6 @@ The private class interface.
 	didEndImportPanel:(NSOpenPanel*)_
 	returnCode:(int)_
 	contextInfo:(void*)_;
-
-// actions
-	- (void)
-	performDisplayPrefPanelFormats:(id)_;
-	- (void)
-	performDisplayPrefPanelFullScreen:(id)_;
-	- (void)
-	performDisplayPrefPanelGeneral:(id)_;
-	- (void)
-	performDisplayPrefPanelSessions:(id)_;
-	- (void)
-	performDisplayPrefPanelTerminals:(id)_;
-	- (void)
-	performDisplayPrefPanelTranslations:(id)_;
 
 @end //}
 
@@ -308,6 +310,7 @@ SInt16									gPanelChoiceListLastRowIndex = -1;
 MyPanelDataList&						gPanelList ()	{ static MyPanelDataList x; return x; }
 CategoryToolbarItems&					gCategoryToolbarItems ()	{ static CategoryToolbarItems x; return x; }
 IndexByCommandID&						gIndicesByCommandID ()		{ static IndexByCommandID x; return x; }
+NSDictionary*							gSearchDataDictionary ()	{ static CFDictionaryRef x = createSearchDictionary(); return BRIDGE_CAST(x, NSDictionary*); }
 Preferences_ContextRef					gCurrentDataSet = nullptr;
 Float32									gBottomMargin = 0;
 
@@ -953,6 +956,71 @@ createCollection	(CFStringRef	inNameOrNull)
 	
 	return result;
 }// createCollection
+
+
+/*!
+Creates and returns a Core Foundation dictionary that can be used
+to match search keywords to parts of the Preferences window (as
+defined in the application bundle’s "PreferencesSearch.plist").
+
+Returns nullptr if unsuccessful for any reason.
+
+(4.1)
+*/
+CFDictionaryRef
+createSearchDictionary ()
+{
+	CFDictionaryRef		result = nullptr;
+	CFURLRef			fileURL = nullptr;
+	
+	
+	fileURL = CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), CFSTR("PreferencesSearch"),
+										CFSTR("plist")/* type string */, nullptr/* subdirectory path */);
+	if (nullptr != fileURL)
+	{
+		CFDataRef   fileData = nullptr;
+		SInt32		errorCode = 0;
+		
+		
+		unless (CFURLCreateDataAndPropertiesFromResource(kCFAllocatorDefault, fileURL, &fileData, 
+															nullptr/* properties */, nullptr/* desired properties */, &errorCode))
+		{
+			// Not all data was successfully retrieved, but let the caller determine if anything
+			// important is missing.
+			// NOTE: Technically, the error code returned in "errorCode" is not an OSStatus.
+			//       If negative, it is an Apple error, and if positive it is scheme-specific.
+			Console_WriteValue("error reading raw data of 'PreferencesSearch.plist'", (SInt32)errorCode);
+		}
+		
+		{
+			CFPropertyListRef   	propertyList = nullptr;
+			CFPropertyListFormat	actualFormat = kCFPropertyListXMLFormat_v1_0;
+			CFErrorRef				errorObject = nullptr;
+			
+			
+			propertyList = CFPropertyListCreateWithData(kCFAllocatorDefault, fileData, kCFPropertyListImmutable, &actualFormat, &errorObject);
+			if (nullptr != errorObject)
+			{
+				CFRetainRelease		searchErrorCFString(CFErrorCopyDescription(errorObject), true/* is retained */);
+				
+				
+				Console_WriteValueCFString("failed to create dictionary from 'PreferencesSearch.plist', error", searchErrorCFString.returnCFStringRef());
+				Console_WriteValue("actual format of file is type", (SInt32)actualFormat);
+				CFRelease(errorObject), errorObject = nullptr;
+			}
+			else
+			{
+				// the file actually contains a dictionary
+				result = CFUtilities_DictionaryCast(propertyList);
+			}
+		}
+		
+		// finally, release the file data
+		CFRelease(fileData), fileData = nullptr;
+	}
+	
+	return result;
+}// createSearchDictionary
 
 
 /*!
@@ -2551,6 +2619,7 @@ sizePanels	(HISize const&		inInitialSize)
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation PrefsWindow_Collection
 
 
@@ -2766,10 +2835,14 @@ isEqual:(id)	anObject
 @end // PrefsWindow_Collection
 
 
+#pragma mark -
 @implementation PrefsWindow_Controller
 
 
 static PrefsWindow_Controller*	gPrefsWindow_Controller = nil;
+
+
+@synthesize searchText = _searchText;
 
 
 /*!
@@ -2808,8 +2881,6 @@ init
 		self->extraWindowContentSize = NSZeroSize; // set later
 		self->isSourceListHidden = NO; // set later
 		self->activePanel = nil;
-		self->translationsPanel = nil;
-		self->fullScreenPanel = nil;
 		
 		// install a callback that finds out about changes to available preferences collections
 		{
@@ -2902,7 +2973,7 @@ setCurrentPreferenceCollectionIndexes:(NSIndexSet*)		indexes
 		UNUSED_RETURN(Preferences_Result)Preferences_Save();
 		
 		// notify the panel that a new data set has been selected
-		[[self->activePanel delegate] panelViewManager:self->activePanel
+		[self->activePanel.delegate panelViewManager:self->activePanel
 														didChangeFromDataSet:oldDataSet toDataSet:newDataSet];
 	}
 }// setCurrentPreferenceCollectionIndexes:
@@ -3185,6 +3256,28 @@ performRenamePreferenceCollection:(id)	sender
 
 
 /*!
+Responds to the user typing in the search field.
+
+(4.1)
+*/
+- (IBAction)
+performSearch:(id)		sender
+{
+	if ([sender isKindOfClass:[NSSearchField class]])
+	{
+		NSSearchField*		searchField = REINTERPRET_CAST(sender, NSSearchField*);
+		
+		
+		[PrefsWindow_Controller popUpResultsForQuery:self.searchText inSearchField:searchField];
+	}
+	else
+	{
+		Console_Warning(Console_WriteLine, "received 'performSearch:' message from unexpected sender");
+	}
+}// performSearch:
+
+
+/*!
 Responds to a “remove collection” segment click.
 
 (No other commands need to be handled because they are
@@ -3198,7 +3291,7 @@ performSegmentedControlAction:(id)	sender
 {
 	if ([sender isKindOfClass:[NSSegmentedControl class]])
 	{
-		NSSegmentedControl*		segments = (NSSegmentedControl*)sender;
+		NSSegmentedControl*		segments = REINTERPRET_CAST(sender, NSSegmentedControl*);
 		
 		
 		// IMPORTANT: this should agree with the button arrangement
@@ -3604,8 +3697,8 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	assert(nil != itemPanel);
 	[result setLabel:[itemPanel panelName]];
 	[result setImage:[itemPanel panelIcon]];
-	[result setAction:[itemPanel panelDisplayAction]];
-	[result setTarget:[itemPanel panelDisplayTarget]];
+	[result setAction:itemPanel.panelDisplayAction];
+	[result setTarget:itemPanel.panelDisplayTarget];
 	
 	return result;
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
@@ -3692,61 +3785,33 @@ windowDidLoad
 		Panel_ViewManager*		newViewMgr = nil;
 		
 		
-		// “General” panel
-		self->generalPanel = [[PrefPanelGeneral_ViewManager alloc] init];
-		newViewMgr = self->generalPanel;
-		[newViewMgr setPanelDisplayAction:@selector(performDisplayPrefPanelGeneral:)];
-		[newViewMgr setPanelDisplayTarget:self];
-		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
-		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
-		[newViewMgr release], newViewMgr = nil;
-		
-		// “Sessions” panel
-		self->sessionsPanel = [[PrefPanelSessions_ViewManager alloc] init];
-		newViewMgr = self->sessionsPanel;
-		[newViewMgr setPanelDisplayAction:@selector(performDisplayPrefPanelSessions:)];
-		[newViewMgr setPanelDisplayTarget:self];
-		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
-		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
-		[newViewMgr release], newViewMgr = nil;
-		
-		// “Terminals” panel
-		self->terminalsPanel = [[PrefPanelTerminals_ViewManager alloc] init];
-		newViewMgr = self->terminalsPanel;
-		[newViewMgr setPanelDisplayAction:@selector(performDisplayPrefPanelTerminals:)];
-		[newViewMgr setPanelDisplayTarget:self];
-		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
-		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
-		[newViewMgr release], newViewMgr = nil;
-		
-		// “Formats” panel
-		self->formatsPanel = [[PrefPanelFormats_ViewManager alloc] init];
-		newViewMgr = self->formatsPanel;
-		[newViewMgr setPanelDisplayAction:@selector(performDisplayPrefPanelFormats:)];
-		[newViewMgr setPanelDisplayTarget:self];
-		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
-		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
-		[newViewMgr release], newViewMgr = nil;
-		
-		// “Translations” panel
-		self->translationsPanel = [[PrefPanelTranslations_ViewManager alloc] init];
-		newViewMgr = self->translationsPanel;
-		[newViewMgr setPanelDisplayAction:@selector(performDisplayPrefPanelTranslations:)];
-		[newViewMgr setPanelDisplayTarget:self];
-		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
-		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
-		[newViewMgr release], newViewMgr = nil;
-		
-		// “Full Screen” panel
-		self->fullScreenPanel = [[PrefPanelFullScreen_ViewManager alloc] init];
-		newViewMgr = self->fullScreenPanel;
-		[newViewMgr setPanelDisplayAction:@selector(performDisplayPrefPanelFullScreen:)];
-		[newViewMgr setPanelDisplayTarget:self];
-		[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
-		[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]];
-		[newViewMgr release], newViewMgr = nil;
-		
-		// other panels TBD
+		for (Class viewMgrClass in
+				@[
+					[PrefPanelGeneral_ViewManager class],
+					[PrefPanelSessions_ViewManager class],
+					[PrefPanelTerminals_ViewManager class],
+					[PrefPanelFormats_ViewManager class],
+					[PrefPanelTranslations_ViewManager class],
+					[PrefPanelFullScreen_ViewManager class]
+					// other panels TBD
+				])
+		{
+			newViewMgr = [[viewMgrClass alloc] init];
+			[self->panelIDArray addObject:[newViewMgr panelIdentifier]];
+			[self->panelsByID setObject:newViewMgr forKey:[newViewMgr panelIdentifier]]; // retains allocated object
+			newViewMgr.panelDisplayAction = @selector(performDisplaySelfThroughParent:);
+			newViewMgr.panelDisplayTarget = newViewMgr;
+			newViewMgr.panelParent = self;
+			if ([newViewMgr conformsToProtocol:@protocol(Panel_Parent)])
+			{
+				for (Panel_ViewManager* childViewMgr in [REINTERPRET_CAST(newViewMgr, id< Panel_Parent >) panelParentEnumerateChildViewManagers])
+				{
+					childViewMgr.panelDisplayAction = @selector(performDisplaySelfThroughParent:);
+					childViewMgr.panelDisplayTarget = childViewMgr;
+				}
+			}
+			[newViewMgr release], newViewMgr = nil;
+		}
 	}
 	
 	// create toolbar; has to be done programmatically, because
@@ -3794,7 +3859,7 @@ windowDidLoad
 		NSSize				panelIdealSize = panelFrame.size;
 		
 		
-		[[viewMgr delegate] panelViewManager:viewMgr requestingIdealSize:&panelIdealSize];
+		[viewMgr.delegate panelViewManager:viewMgr requestingIdealSize:&panelIdealSize];
 		
 		// due to layout constraints, it is sufficient to make the
 		// panel container match the parent view frame (except with
@@ -3890,15 +3955,271 @@ windowWillClose:(NSNotification*)	aNotification
 	// a window does not receive a “did close” message so there is
 	// no choice except to notify a panel of both “will” and ”did”
 	// messages at the same time
-	[[self->activePanel delegate] panelViewManager:self->activePanel willChangePanelVisibility:kPanel_VisibilityHidden];
-	[[self->activePanel delegate] panelViewManager:self->activePanel didChangePanelVisibility:kPanel_VisibilityHidden];
+	[self->activePanel.delegate panelViewManager:self->activePanel willChangePanelVisibility:kPanel_VisibilityHidden];
+	[self->activePanel.delegate panelViewManager:self->activePanel didChangePanelVisibility:kPanel_VisibilityHidden];
 }// windowWillClose:
+
+
+#pragma mark Panel_Parent
+
+
+/*!
+Switches to the specified panel.
+
+(4.1)
+*/
+- (void)
+panelParentDisplayChildWithIdentifier:(NSString*)	anIdentifier
+withAnimation:(BOOL)								isAnimated
+{
+	[self displayPanelOrTabWithIdentifier:anIdentifier withAnimation:isAnimated];
+}// panelParentDisplayChildWithIdentifier:withAnimation:
+
+
+/*!
+Returns the primary panels displayed in this window.
+
+(4.1)
+*/
+- (NSEnumerator*)
+panelParentEnumerateChildViewManagers
+{
+	// TEMPORARY; this is not an ordered list (it should be)
+	return [self->panelsByID objectEnumerator];
+}// panelParentEnumerateChildViewManagers
 
 
 @end // PrefsWindow_Controller
 
 
+#pragma mark -
 @implementation PrefsWindow_Controller (PrefsWindow_ControllerInternal)
+
+
+#pragma mark Class Methods
+
+
+/*!
+Tries to match the given phrase against the search data for
+preferences panels and shows the user which panels (and
+possibly tabs) are relevant.
+
+To cancel the search, pass an empty or "nil" string.
+
+(4.1)
+*/
++ (void)
+popUpResultsForQuery:(NSString*)	aQueryString
+inSearchField:(NSSearchField*)		aSearchField
+{
+	NSUInteger const			kSetCapacity = 25; // IMPORTANT: set to value greater than number of defined panels and tabs!
+	NSMutableSet*				matchingPanelIDs = [[NSMutableSet alloc] initWithCapacity:kSetCapacity];
+	NSMutableArray*				orderedMatchingPanels = [NSMutableArray arrayWithCapacity:kSetCapacity];
+	NSDictionary*				searchData = gSearchDataDictionary();
+	NSArray*					queryStringWords = [aQueryString componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]; // LOCALIZE THIS
+	PrefsWindow_Controller*		controller = [self sharedPrefsWindowController];
+	
+	
+	// TEMPORARY; do the lazy thing and iterate over the data in
+	// the exact form it is stored in the bundle dictionary; the
+	// data is ordered in the way most convenient for writing so
+	// it’s not optimal for searching; if performance proves to
+	// be bad, the data could be indexed in memory but for now
+	// it is probably fine this way
+	for (NSString* candidatePanelIdentifier in searchData)
+	{
+		id		candidatePanelData = [searchData objectForKey:candidatePanelIdentifier];
+		
+		
+		if (NO == [candidatePanelData respondsToSelector:@selector(objectAtIndex:)])
+		{
+			Console_Warning(Console_WriteValueCFString, "panel search data should map to an array, for key",
+							BRIDGE_CAST(candidatePanelIdentifier, CFStringRef));
+		}
+		else
+		{
+			NSArray*	searchPhraseArray = REINTERPRET_CAST(candidatePanelData, NSArray*);
+			
+			
+			for (id object in searchPhraseArray)
+			{
+				// currently, every object in the array must be a string
+				if (NO == [object respondsToSelector:@selector(characterAtIndex:)])
+				{
+					Console_Warning(Console_WriteValueCFString, "array in panel search data should contain only string values, for key",
+									BRIDGE_CAST(candidatePanelIdentifier, CFStringRef));
+				}
+				else
+				{
+					// TEMPORARY; looking up localized strings on every query is
+					// wasteful; since the search data ought to be reverse-indexed
+					// anyway, a better solution is to reverse-index the data and
+					// simultaneously capture all localized phrases
+					NSString*			asKeyPhrase = REINTERPRET_CAST(object, NSString*);
+					CFRetainRelease		localizedKeyPhrase(CFBundleCopyLocalizedString(AppResources_ReturnApplicationBundle(),
+																						BRIDGE_CAST(asKeyPhrase, CFStringRef), nullptr/* default value */,
+																						CFSTR("PreferencesSearch")/* base name of ".strings" file */),
+															true/* is retained */);
+					
+					
+					if (localizedKeyPhrase.exists())
+					{
+						asKeyPhrase = BRIDGE_CAST(localizedKeyPhrase.returnCFStringRef(), NSString*);
+					}
+					
+					if ([self queryString:aQueryString withWordArray:queryStringWords matchesTargetPhrase:asKeyPhrase])
+					{
+						[matchingPanelIDs addObject:candidatePanelIdentifier];
+					}
+				}
+			}
+		}
+	}
+	
+	// find the panel objects that correspond to the matching IDs;
+	// display each panel only once, and iterate over panels in
+	// the order they appear in the window so that results are
+	// nicely sorted (this assumes that tabs also iterate in the
+	// order that tabs are displayed; see "GenericPanelTabs.mm")
+	for (NSString* mainPanelIdentifier in controller->panelIDArray)
+	{
+		Panel_ViewManager*		mainPanel = [controller->panelsByID objectForKey:mainPanelIdentifier];
+		
+		
+		if ([matchingPanelIDs containsObject:mainPanelIdentifier])
+		{
+			// match applies to an entire category
+			[orderedMatchingPanels addObject:mainPanel];
+		}
+		else
+		{
+			// target panel is not a whole category; search for any
+			// tabs that were included in the matched set
+			if ([mainPanel conformsToProtocol:@protocol(Panel_Parent)])
+			{
+				id< Panel_Parent >	asParent = REINTERPRET_CAST(mainPanel, id< Panel_Parent >);
+				
+				
+				for (Panel_ViewManager* subPanel in [asParent panelParentEnumerateChildViewManagers])
+				{
+					if ([matchingPanelIDs containsObject:[subPanel panelIdentifier]])
+					{
+						[orderedMatchingPanels addObject:subPanel];
+					}
+				}
+			}
+		}
+	}
+	[matchingPanelIDs release];
+	
+	// display a menu with search results
+	{
+		static NSMenu*		popUpResultsMenu = nil;
+		
+		
+		if (nil != popUpResultsMenu)
+		{
+			// clear current menu
+			[popUpResultsMenu removeAllItems];
+		}
+		else
+		{
+			// create new menu
+			popUpResultsMenu = [[NSMenu alloc] initWithTitle:@""];
+		}
+		
+		// pop up a menu of results whose commands will display the matching panels
+		for (Panel_ViewManager* panelObject in orderedMatchingPanels)
+		{
+			NSImage*				panelIcon = [[panelObject panelIcon] copy];
+			NSString*				panelName = [panelObject panelName];
+			NSString*				displayItemName = (nil != panelName)
+														? panelName
+														: @"";
+			NSMenuItem*				panelDisplayItem = [[NSMenuItem alloc] initWithTitle:displayItemName
+																							action:panelObject.panelDisplayAction
+																							keyEquivalent:@""];
+			
+			
+			panelIcon.size = NSMakeSize(24, 24); // shrink default image, which is too large
+			[panelDisplayItem setImage:panelIcon];
+			[panelDisplayItem setTarget:panelObject.panelDisplayTarget]; // action is set in initializer above
+			[popUpResultsMenu addItem:panelDisplayItem];
+			[panelDisplayItem release];
+		}
+		
+		if ([orderedMatchingPanels count] > 0)
+		{
+			NSPoint		menuLocation = NSMakePoint(4/* arbitrary */, NSHeight([aSearchField bounds]) + 4/* arbitrary */);
+			
+			
+			[popUpResultsMenu popUpMenuPositioningItem:nil/* menu item */ atLocation:menuLocation inView:aSearchField];
+		}
+	}
+}// popUpResultsForQuery:inSearchField:
+
+
+/*!
+Returns YES if the specified strings match according to
+the rules of searching preferences.
+
+(4.1)
+*/
++ (BOOL)
+queryString:(NSString*)				aQueryString
+matchesTargetPhrase:(NSString*)		aSetPhrase
+{
+	NSRange		lowestCommonRange = NSMakeRange(0, MIN([aSetPhrase length], [aQueryString length]));
+	BOOL		result = NO;
+	
+	
+	// for now, search against the beginning of phrases; could later
+	// add more intelligence such as introducing synonyms,
+	// misspellings and other “fuzzy” logic
+	if (NSOrderedSame == [aSetPhrase compare:aQueryString options:(NSCaseInsensitiveSearch | NSDiacriticInsensitiveSearch)
+												range:lowestCommonRange])
+	{
+		result = YES;
+	}
+	
+	return result;
+}// queryString:matchesTargetPhrase:
+
+
+/*!
+Returns YES if the specified strings match according to
+the rules of searching preferences.  The given array of
+words should be consistent with the query string but
+split into tokens (e.g. on whitespace).
+
+(4.1)
+*/
++ (BOOL)
+queryString:(NSString*)				aQueryString
+withWordArray:(NSArray*)			anArrayOfWordsInQueryString
+matchesTargetPhrase:(NSString*)		aSetPhrase
+{
+	BOOL	result = [self queryString:aQueryString matchesTargetPhrase:aSetPhrase];
+	
+	
+	if (NO == result)
+	{
+		// if the phrase doesn’t exactly match, try to
+		// match individual words from the query string
+		// (in the future, might want to return a “rank”
+		// to indicate how closely the result matched)
+		for (NSString* word in anArrayOfWordsInQueryString)
+		{
+			if ([self queryString:word matchesTargetPhrase:aSetPhrase])
+			{
+				result = YES;
+				break;
+			}
+		}
+	}
+	
+	return result;
+}// queryString:withWordArray:matchesTargetPhrase:
 
 
 #pragma mark New Methods
@@ -4081,13 +4402,13 @@ withAnimation:(BOOL)												isAnimated
 			Panel_ViewManager< PrefsWindow_PanelInterface >*	newPanel = aPanel;
 			
 			
-			[[oldPanel delegate] panelViewManager:oldPanel willChangePanelVisibility:kPanel_VisibilityHidden];
-			[[newPanel delegate] panelViewManager:newPanel willChangePanelVisibility:kPanel_VisibilityDisplayed];
+			[oldPanel.delegate panelViewManager:oldPanel willChangePanelVisibility:kPanel_VisibilityHidden];
+			[newPanel.delegate panelViewManager:newPanel willChangePanelVisibility:kPanel_VisibilityDisplayed];
 			self->activePanel = newPanel;
 			[[[self window] toolbar] setSelectedItemIdentifier:[newPanel panelIdentifier]];
 			[self->containerTabView selectTabViewItemWithIdentifier:[newPanel panelIdentifier]];
-			[[oldPanel delegate] panelViewManager:oldPanel didChangePanelVisibility:kPanel_VisibilityHidden];
-			[[newPanel delegate] panelViewManager:newPanel didChangePanelVisibility:kPanel_VisibilityDisplayed];
+			[oldPanel.delegate panelViewManager:oldPanel didChangePanelVisibility:kPanel_VisibilityHidden];
+			[newPanel.delegate panelViewManager:newPanel didChangePanelVisibility:kPanel_VisibilityDisplayed];
 		}
 		
 		// determine if the new panel needs a source list
@@ -4166,6 +4487,75 @@ withAnimation:(BOOL)												isAnimated
 		}
 	}
 }// displayPanel:withAnimation:
+
+
+/*!
+If the specified identifier exactly matches that of a
+top category panel, this method behaves the same as
+"displayPanel:withAnimation:".
+
+If however the given identifier can only be resolved
+by the child panels of the main categories, this
+method will first display the parent panel (with or
+without animation, as indicated) and then issue a
+request to switch to the appropriate tab.  In this
+way, you can pinpoint a specific part of the window.
+
+(4.1)
+*/
+- (void)
+displayPanelOrTabWithIdentifier:(NSString*)		anIdentifier
+withAnimation:(BOOL)							isAnimated
+{
+	Panel_ViewManager< Panel_Parent, PrefsWindow_PanelInterface >*	mainPanel = nil;
+	Panel_ViewManager< Panel_Parent, PrefsWindow_PanelInterface >*	candidateMainPanel = nil;
+	Panel_ViewManager*												childPanel = nil;
+	Panel_ViewManager*												candidateChildPanel = nil;
+	
+	
+	// given the way panels are currently indexed, it is
+	// necessary to search main categories and then
+	// search panel children (there is no direct map)
+	for (NSString* panelIdentifier in self->panelIDArray)
+	{
+		if ([panelIdentifier isEqualToString:anIdentifier])
+		{
+			mainPanel = [self->panelsByID objectForKey:anIdentifier];
+			break;
+		}
+	}
+	
+	if (nil == mainPanel)
+	{
+		// requested identifier does not exactly match a top-level
+		// category; search for a child panel that matches
+		for (candidateMainPanel in [self->panelsByID objectEnumerator])
+		{
+			for (candidateChildPanel in [candidateMainPanel panelParentEnumerateChildViewManagers])
+			{
+				NSString*	childIdentifier = [candidateChildPanel panelIdentifier];
+				
+				
+				if ([childIdentifier isEqualToString:anIdentifier])
+				{
+					mainPanel = candidateMainPanel;
+					childPanel = candidateChildPanel;
+					break;
+				}
+			}
+		}
+	}
+	
+	if (nil != mainPanel)
+	{
+		[self displayPanel:mainPanel withAnimation:isAnimated];
+	}
+	
+	if (nil != childPanel)
+	{
+		[childPanel performDisplaySelfThroughParent:nil];
+	}
+}// displayPanelOrTabWithIdentifier:withAnimation:
 
 
 /*!
@@ -4328,87 +4718,6 @@ updateUserInterfaceForSourceListTransition:(id)		anNSNumberBoolForNewVisibleStat
 		[self->containerTabView setFrame:newContainerFrame];
 	}
 }// updateUserInterfaceForSourceListTransition:
-
-
-#pragma mark Actions
-
-
-/*!
-Brings the “Formats” panel to the front.
-
-(4.1)
-*/
-- (void)
-performDisplayPrefPanelFormats:(id)		sender
-{
-#pragma unused(sender)
-	[self displayPanel:self->formatsPanel withAnimation:YES];
-}// performDisplayPrefPanelFormats:
-
-
-/*!
-Brings the “Full Screen” panel to the front.
-
-(4.1)
-*/
-- (void)
-performDisplayPrefPanelFullScreen:(id)	sender
-{
-#pragma unused(sender)
-	[self displayPanel:self->fullScreenPanel withAnimation:YES];
-}// performDisplayPrefPanelFullScreen:
-
-
-/*!
-Brings the “General” panel to the front.
-
-(4.1)
-*/
-- (void)
-performDisplayPrefPanelGeneral:(id)		sender
-{
-#pragma unused(sender)
-	[self displayPanel:self->generalPanel withAnimation:YES];
-}// performDisplayPrefPanelGeneral:
-
-
-/*!
-Brings the “Sessions” panel to the front.
-
-(4.1)
-*/
-- (void)
-performDisplayPrefPanelSessions:(id)	sender
-{
-#pragma unused(sender)
-	[self displayPanel:self->sessionsPanel withAnimation:YES];
-}// performDisplayPrefPanelSessions:
-
-
-/*!
-Brings the “Terminals” panel to the front.
-
-(4.1)
-*/
-- (void)
-performDisplayPrefPanelTerminals:(id)	sender
-{
-#pragma unused(sender)
-	[self displayPanel:self->terminalsPanel withAnimation:YES];
-}// performDisplayPrefPanelTerminals:
-
-
-/*!
-Brings the “Full Screen” panel to the front.
-
-(4.1)
-*/
-- (void)
-performDisplayPrefPanelTranslations:(id)	sender
-{
-#pragma unused(sender)
-	[self displayPanel:self->translationsPanel withAnimation:YES];
-}// performDisplayPrefPanelTranslations:
 
 
 @end // PrefsWindow_Controller (PrefsWindow_ControllerInternal)

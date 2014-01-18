@@ -70,7 +70,7 @@ class ListenerModel_StandardListener;
 Panels that are destined for the Preferences window must implement
 the following methods as well, not just the Panel interface.
 */
-@protocol PrefsWindow_PanelInterface //{
+@protocol PrefsWindow_PanelInterface < NSObject > //{
 
 	// for convenience, if a panel implements this NSColorPanel message then
 	// the window controller will forward the message to the panel
@@ -98,7 +98,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefsWindow_Controller : NSWindowController< NSToolbarDelegate > //{
+@interface PrefsWindow_Controller : NSWindowController< NSToolbarDelegate,
+														Panel_Parent > //{
 {
 	IBOutlet NSView*		windowFirstResponder;
 	IBOutlet NSView*		windowLastResponder;
@@ -114,16 +115,11 @@ changes to an interface declared in a ".mm" file.
 	NSMutableDictionary*				panelsByID; // view managers (Panel_ViewManager subclass) from "panelIdentifier" keys
 	NSMutableDictionary*				windowSizesByID; // NSArray* values (each with 2 NSNumber*) from "panelIdentifier" keys
 	NSMutableDictionary*				windowMinSizesByID; // NSArray* values (each with 2 NSNumber*) from "panelIdentifier" keys
+	NSString*							_searchText;
 	NSSize								extraWindowContentSize; // stores extra content width and height (not belonging to a panel)
 	BOOL								isSourceListHidden;
 	ListenerModel_StandardListener*		preferenceChangeListener;
 	Panel_ViewManager< PrefsWindow_PanelInterface >*	activePanel;
-	PrefPanelFormats_ViewManager*		formatsPanel;
-	PrefPanelGeneral_ViewManager*		generalPanel;
-	PrefPanelSessions_ViewManager*		sessionsPanel;
-	PrefPanelTerminals_ViewManager*		terminalsPanel;
-	PrefPanelTranslations_ViewManager*	translationsPanel;
-	PrefPanelFullScreen_ViewManager*	fullScreenPanel;
 }
 
 // class methods
@@ -141,6 +137,8 @@ changes to an interface declared in a ".mm" file.
 	isSourceListHidden; // binding
 	- (BOOL)
 	isSourceListShowing; // binding
+	@property (copy) NSString*
+	searchText; // binding
 	- (void)
 	setSourceListHidden:(BOOL)_;
 
@@ -159,6 +157,8 @@ changes to an interface declared in a ".mm" file.
 	performRemovePreferenceCollection:(id)_;
 	- (IBAction)
 	performRenamePreferenceCollection:(id)_;
+	- (IBAction)
+	performSearch:(id)_;
 	- (IBAction)
 	performSegmentedControlAction:(id)_;
 

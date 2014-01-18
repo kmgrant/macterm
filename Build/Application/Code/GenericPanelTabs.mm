@@ -823,6 +823,7 @@ showTabPane		(My_GenericPanelTabsUIPtr	inUIPtr,
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation GenericPanelTabs_ViewManager
 
 
@@ -855,6 +856,10 @@ viewManagerArray:(NSArray*)		anArray
 	self = [super initWithNibNamed:@"GenericPanelTabsCocoa" delegate:self context:contextDictionary];
 	if (nil != self)
 	{
+		for (Panel_ViewManager* viewManager in self->viewManagerArray)
+		{
+			viewManager.panelParent = self;
+		}
 	}
 	return self;
 }// initWithIdentifier:localizedName:localizedIcon:viewManagerArray:
@@ -868,6 +873,10 @@ Destructor.
 - (void)
 dealloc
 {
+	for (Panel_ViewManager* viewManager in self->viewManagerArray)
+	{
+		viewManager.panelParent = nil;
+	}
 	[identifier release];
 	[localizedName release];
 	[localizedIcon release];
@@ -1037,7 +1046,7 @@ requestingEditType:(Panel_EditType*)	outEditType
 		Panel_EditType		newEditType = kPanel_EditTypeNormal;
 		
 		
-		[[viewMgr delegate] panelViewManager:viewMgr requestingEditType:&newEditType];
+		[viewMgr.delegate panelViewManager:viewMgr requestingEditType:&newEditType];
 		switch (newEditType)
 		{
 		case kPanel_EditTypeNormal:
@@ -1106,7 +1115,7 @@ requestingIdealSize:(NSSize*)			outIdealSize
 		NSSize		panelIdealSize = *outIdealSize;
 		
 		
-		[[viewMgr delegate] panelViewManager:viewMgr requestingIdealSize:&panelIdealSize];
+		[viewMgr.delegate panelViewManager:viewMgr requestingIdealSize:&panelIdealSize];
 		outIdealSize->width = MAX(panelIdealSize.width, outIdealSize->width);
 		outIdealSize->height = MAX(panelIdealSize.height, outIdealSize->height);
 	}
@@ -1128,7 +1137,7 @@ didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager)
 	// forward to active tab
-	[[self->activePanel delegate] panelViewManager:self->activePanel didPerformContextSensitiveHelp:sender];
+	[self->activePanel.delegate panelViewManager:self->activePanel didPerformContextSensitiveHelp:sender];
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -1143,7 +1152,7 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 {
 #pragma unused(aViewManager)
 	// forward to active tab
-	[[self->activePanel delegate] panelViewManager:self->activePanel willChangePanelVisibility:aVisibility];
+	[self->activePanel.delegate panelViewManager:self->activePanel willChangePanelVisibility:aVisibility];
 }// panelViewManager:willChangePanelVisibility:
 
 
@@ -1158,7 +1167,7 @@ didChangePanelVisibility:(Panel_Visibility)		aVisibility
 {
 #pragma unused(aViewManager, aVisibility)
 	// forward to active tab
-	[[self->activePanel delegate] panelViewManager:self->activePanel didChangePanelVisibility:aVisibility];
+	[self->activePanel.delegate panelViewManager:self->activePanel didChangePanelVisibility:aVisibility];
 }// panelViewManager:didChangePanelVisibility:
 
 
@@ -1179,7 +1188,7 @@ toDataSet:(void*)						newDataSet
 	// forward to all tabs
 	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
 	{
-		[[viewMgr delegate] panelViewManager:viewMgr didChangeFromDataSet:oldDataSet toDataSet:newDataSet];
+		[viewMgr.delegate panelViewManager:viewMgr didChangeFromDataSet:oldDataSet toDataSet:newDataSet];
 	}
 }// panelViewManager:didChangeFromDataSet:toDataSet:
 
@@ -1201,9 +1210,54 @@ userAccepted:(BOOL)						isAccepted
 	// forward to all tabs
 	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
 	{
-		[[viewMgr delegate] panelViewManager:viewMgr didFinishUsingContainerView:aContainerView userAccepted:isAccepted];
+		[viewMgr.delegate panelViewManager:viewMgr didFinishUsingContainerView:aContainerView userAccepted:isAccepted];
 	}
 }// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_Parent
+
+
+/*!
+Selects the tab with the given panel identifier, or does
+nothing if the identifier does not match any tab.
+
+Currently the animation flag has no effect.
+
+(4.1)
+*/
+- (void)
+panelParentDisplayChildWithIdentifier:(NSString*)	anIdentifier
+withAnimation:(BOOL)								isAnimated
+{
+#pragma unused(isAnimated)
+	// when the tab view items are created their tab view item
+	// identifiers are made the same as their panel identifiers
+	// so it is possible to simply ask the tab view to select
+	// a tab with the given identifier (this will fail however
+	// if the identifier does not match any tab)
+	@try
+	{
+		[self->tabView selectTabViewItemWithIdentifier:anIdentifier];
+	}
+	@catch (NSException*	anException)
+	{
+		Console_Warning(Console_WriteValueCFString, "tab view was unable to display child panel with identifier", BRIDGE_CAST(anIdentifier, CFStringRef));
+	}
+}// panelParentDisplayChildWithIdentifier:withAnimation:
+
+
+/*!
+Returns an enumerator over the Panel_ViewManager* objects
+for the tabs in this view.
+
+(4.1)
+*/
+- (NSEnumerator*)
+panelParentEnumerateChildViewManagers
+{
+	return [self->viewManagerArray objectEnumerator];
+}// panelParentEnumerateChildViewManagers
 
 
 #pragma mark Panel_ViewManager
@@ -1346,7 +1400,7 @@ preferencesClass
 	
 	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
 	{
-		id									panelDelegate = [viewMgr delegate];
+		id									panelDelegate = viewMgr.delegate;
 		assert([[panelDelegate class] conformsToProtocol:@protocol(PrefsWindow_PanelInterface)]);
 		id< PrefsWindow_PanelInterface >	asPrefPanel = (id< PrefsWindow_PanelInterface >)panelDelegate;
 		

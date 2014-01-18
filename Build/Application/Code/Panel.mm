@@ -1138,6 +1138,12 @@ panelChanged	(PanelPtr		inPtr,
 @implementation Panel_ViewManager
 
 
+@synthesize delegate = _delegate;
+@synthesize panelDisplayAction = _panelDisplayAction;
+@synthesize panelDisplayTarget = _panelDisplayTarget;
+@synthesize panelParent = _panelParent;
+
+
 /*!
 Designated initializer.
 
@@ -1151,15 +1157,16 @@ context:(void*)						aContext
 	self = [super init];
 	if (nil != self)
 	{
-		delegate = aDelegate;
-		panelDisplayAction = nil;
-		panelDisplayTarget = nil;
+		_delegate = aDelegate;
+		_panelDisplayAction = nil;
+		_panelDisplayTarget = nil;
+		_panelParent = nil;
 		
 		// since NIBs can construct lots of objects and bindings it is
 		// actually pretty important to have an early hook for subclasses
 		// (subclasses may need to initialize certain data in themselves
 		// to ensure that their bindings actually succeed)
-		[delegate panelViewManager:self initializeWithContext:aContext];
+		[self.delegate panelViewManager:self initializeWithContext:aContext];
 		
 		// it is necessary to capture and release all top-level objects here
 		// so that "self" can actually be deallocated; otherwise, the implicit
@@ -1206,7 +1213,7 @@ Instructs the view to save all changes and prepare to be torn down
 performCloseAndAccept:(id)	sender
 {
 #pragma unused(sender)
-	[[self delegate] panelViewManager:self didFinishUsingContainerView:self->managedView userAccepted:YES];
+	[self.delegate panelViewManager:self didFinishUsingContainerView:self->managedView userAccepted:YES];
 }// performCloseAndAccept:
 
 
@@ -1220,7 +1227,7 @@ down (e.g. in a modal sheet, when the user clicks Cancel).
 performCloseAndDiscard:(id)		sender
 {
 #pragma unused(sender)
-	[[self delegate] panelViewManager:self didFinishUsingContainerView:self->managedView userAccepted:NO];
+	[self.delegate panelViewManager:self didFinishUsingContainerView:self->managedView userAccepted:NO];
 }// performCloseAndDiscard:
 
 
@@ -1233,24 +1240,50 @@ the user clicks the help button).
 - (IBAction)
 performContextSensitiveHelp:(id)	sender
 {
-	[[self delegate] panelViewManager:self didPerformContextSensitiveHelp:sender];
+	[self.delegate panelViewManager:self didPerformContextSensitiveHelp:sender];
 }// performContextSensitiveHelp:
 
 
-#pragma mark Accessors
-
-
 /*!
-Returns the object that receives messages defined in the
-Panel_Delegate protocol.
+Ensures that this panel is displayed, or does nothing if no
+parent has been assigned.
+
+The parent’s chain is first displayed by invoking the method
+"performDisplaySelfThroughParent:" on the parent.  Then,
+using this panel’s "panelIdentifier" as an argument, the
+parent’s "panelParentDisplayChildWithIdentifier:withAnimation:"
+is used to request that this panel be revealed.
+
+For child panels it can be useful to set this selector as the
+"panelDisplayAction" property, with the panel itself as the
+"panelDisplayTarget".
 
 (4.1)
 */
-- (id< Panel_Delegate >)
-delegate
+- (IBAction)
+performDisplaySelfThroughParent:(id)	sender
 {
-	return self->delegate;
-}// delegate
+#pragma unused(sender)
+	if (nil != self.panelParent)
+	{
+		// not all parents are necessarily panels but if they are,
+		// invoke the method all the way up the chain
+		if ([self.panelParent respondsToSelector:@selector(performDisplaySelfThroughParent:)])
+		{
+			[REINTERPRET_CAST(self.panelParent, id) performDisplaySelfThroughParent:nil];
+		}
+		
+		[self.panelParent panelParentDisplayChildWithIdentifier:[self panelIdentifier] withAnimation:YES];
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueCFString, "invocation of 'performDisplaySelfThroughParent:' on orphan panel with identifier",
+						BRIDGE_CAST([self panelIdentifier], CFStringRef));
+	}
+}// performDisplaySelfThroughParent:
+
+
+#pragma mark Accessors
 
 
 /*!
@@ -1299,43 +1332,6 @@ managedView
 
 
 /*!
-A selector that can be sent to the first responder in order to
-cause this panel to appear.  Aggregates (e.g. a window displaying
-panels in tabs) should interpret this message by bringing the
-appropriate panel to the front.
-
-(4.1)
-*/
-- (SEL)
-panelDisplayAction
-{
-	return self->panelDisplayAction;
-}
-- (void)
-setPanelDisplayAction:(SEL)		aSelector
-{
-	self->panelDisplayAction = aSelector;
-}// setPanelDisplayAction:
-
-
-/*!
-The object to which the "panelDisplayAction" is sent.
-
-(4.1)
-*/
-- (id)
-panelDisplayTarget
-{
-	return self->panelDisplayTarget;
-}
-- (void)
-setPanelDisplayTarget:(id)		anObject
-{
-	self->panelDisplayTarget = anObject;
-}// setPanelDisplayTarget:
-
-
-/*!
 Returns the type of editing that this panel does: either
 it edits a single data set, or it is able to continuously
 update itself as data sets are changed (see the delegate
@@ -1352,7 +1348,7 @@ panelEditType
 	Panel_EditType		result = kPanel_EditTypeNormal;
 	
 	
-	[[self delegate] panelViewManager:self requestingEditType:&result];
+	[self.delegate panelViewManager:self requestingEditType:&result];
 	return result;
 }// panelEditType
 
@@ -1364,6 +1360,8 @@ panelEditType
 Returns the localized icon image that should represent
 this panel in user interface elements (e.g. it might be
 used in a toolbar item).
+
+This must be implemented by all subclasses.
 
 (4.1)
 */
@@ -1378,6 +1376,8 @@ panelIcon
 /*!
 Returns a unique identifier for the panel (e.g. it may be
 used in toolbar items that represent panels).
+
+This must be implemented by all subclasses.
 
 (4.1)
 */
@@ -1394,6 +1394,8 @@ Returns the localized name that should be displayed as
 a label for this panel in user interface elements (e.g.
 it might be the name of a tab or toolbar icon).
 
+This must be implemented by all subclasses.
+
 (4.1)
 */
 - (NSString*)
@@ -1409,6 +1411,8 @@ Returns information on which directions are most useful for
 resizing the panel.  For instance a window container may
 disallow vertical resizing if no panel in the window has
 any reason to resize vertically.
+
+This must be implemented by all subclasses.
 
 IMPORTANT:	This is only a hint.  Panels must be prepared
 			to resize in both directions.
@@ -1470,7 +1474,7 @@ awakeFromNib
 	assert(nil != logicalFirstResponder);
 	assert(nil != logicalLastResponder);
 	
-	[[self delegate] panelViewManager:self didLoadContainerView:self->managedView];
+	[self.delegate panelViewManager:self didLoadContainerView:self->managedView];
 }// awakeFromNib
 
 

@@ -193,6 +193,7 @@ IconForSessionStatusActive.icns \
 IconForSessionStatusDead.icns \
 IconForStackWindows.icns \
 IconForTerminal.icns \
+PreferencesSearch.plist \
 English.lproj/Credits.html
 APP_RESOURCES_BUNDLES := \
 MacTerm.help \
@@ -451,6 +452,7 @@ install-app-dot-strings: $(SRC_APP_CODE_TOP)/UIStrings.cp
 	@# keep in sync with the matching clean rule
 	$(MKDIR_P) $(DEST_APP_RESOURCES_TOP)/English.lproj
 	/usr/bin/genstrings $(SRC_APP_CODE_TOP)/UIStrings.cp -o $(DEST_APP_RESOURCES_TOP)/English.lproj
+	$(COPY) $(SRC_APP_RESOURCES_TOP)/English.lproj/PreferencesSearch.strings $(DEST_APP_RESOURCES_TOP)/English.lproj
 
 .PHONY: clean-app-dot-strings
 clean-app-dot-strings:
@@ -622,8 +624,8 @@ clean:
 	$(MAKE) clean-resources
 	$(MAKE) clean-executables
 	$(MAKE) clean-frameworks
-	$(RM) $(DEST_APP_TOP)/PkgInfo
 	$(RM) $(DEST_APP_TOP)/Info.plist
+	$(RM) $(DEST_APP_TOP)/PkgInfo
 	$(RM) $(DEST_APP_RESOURCES_TOP)/DefaultPreferences.plist
 	-$(RMDIR) $(SRC_PREFSCONVERTER_BUILD_TOP) 2>/dev/null
 	-$(RMDIR) $(SRC_BUGREPORTER_BUILD_TOP) 2>/dev/null

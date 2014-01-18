@@ -119,7 +119,9 @@ struct Panel_DataSetTransition
 Classes that are delegates of Panel_ViewManager must
 conform to this protocol.
 */
-@protocol Panel_Delegate //{
+@protocol Panel_Delegate < NSObject > //{
+
+@required
 
 	// superclass minimally initialized, no NIB loaded yet; perform subclass initializations needed this early, e.g. so that NIB-provided bindings succeed
 	- (void)
@@ -170,6 +172,25 @@ conform to this protocol.
 
 @end //}
 
+/*!
+Classes that conform to this protocol are responsible for
+managing multiple child panels.
+*/
+@protocol Panel_Parent < NSObject > //{
+
+@required
+
+	// sent when a particular child (e.g. a tab in a tab view) should become visible and focused
+	- (void)
+	panelParentDisplayChildWithIdentifier:(NSString*)_
+	withAnimation:(BOOL)_;
+
+	// respond with an ordered enumeration of all Panel_ViewManager* values managed by the parent
+	- (NSEnumerator*)
+	panelParentEnumerateChildViewManagers;
+
+@end //}
+
 
 /*!
 Loads a NIB file containing a single primary view bound
@@ -188,9 +209,10 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSView*	logicalFirstResponder;
 	IBOutlet NSView*	logicalLastResponder;
 @private
-	id< Panel_Delegate >	delegate;
-	SEL						panelDisplayAction;
-	id						panelDisplayTarget;
+	id< Panel_Delegate >	_delegate;
+	SEL						_panelDisplayAction;
+	id						_panelDisplayTarget;
+	id< Panel_Parent >		_panelParent;
 }
 
 // initializers
@@ -200,7 +222,7 @@ changes to an interface declared in a ".mm" file.
 	context:(void*)_;
 
 // accessors
-	- (id< Panel_Delegate >)
+	@property (assign) id< Panel_Delegate >
 	delegate;
 	- (NSView*)
 	logicalFirstResponder;
@@ -208,16 +230,14 @@ changes to an interface declared in a ".mm" file.
 	logicalLastResponder;
 	- (NSView*)
 	managedView;
-	- (SEL)
+	@property (assign) SEL
 	panelDisplayAction;
-	- (void)
-	setPanelDisplayAction:(SEL)_;
-	- (id)
+	@property (assign) id
 	panelDisplayTarget;
-	- (void)
-	setPanelDisplayTarget:(id)_;
-	- (Panel_EditType)
+	@property (readonly) Panel_EditType
 	panelEditType;
+	@property (assign) id< Panel_Parent >
+	panelParent; // should be set by parents when adding or removing children
 
 // actions
 	- (IBAction)
@@ -226,16 +246,18 @@ changes to an interface declared in a ".mm" file.
 	performCloseAndDiscard:(id)_;
 	- (IBAction)
 	performContextSensitiveHelp:(id)_;
+	- (IBAction)
+	performDisplaySelfThroughParent:(id)_;
 
-// overrides for subclasses (none of these is implemented in the base!)
+// overrides for subclasses
 	- (NSImage*)
-	panelIcon;
+	panelIcon; // required (not implemented in base)
 	- (NSString*)
-	panelIdentifier;
+	panelIdentifier; // required (not implemented in base)
 	- (NSString*)
-	panelName;
+	panelName; // required (not implemented in base)
 	- (Panel_ResizeConstraint)
-	panelResizeAxes;
+	panelResizeAxes; // required (not implemented in base)
 
 @end //}
 

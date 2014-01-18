@@ -30,7 +30,7 @@
                 <binding destination="-2" name="contentArray" keyPath="self.currentPreferenceCollections" id="104"/>
             </connections>
         </arrayController>
-        <window title="Preferences: MacTerm" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" visibleAtLaunch="NO" animationBehavior="default" id="3" userLabel="Cocoa Preferences Window">
+        <window title="Preferences: MacTerm" allowsToolTipsWhenApplicationIsInactive="NO" oneShot="NO" visibleAtLaunch="NO" animationBehavior="default" id="3" userLabel="Cocoa Preferences Window">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="304" y="418" width="600" height="348"/>
@@ -50,7 +50,6 @@
                         <connections>
                             <action selector="performContextSensitiveHelp:" target="-2" id="45"/>
                             <binding destination="-2" name="hidden" keyPath="self.sourceListShowing" id="51"/>
-                            <outlet property="nextKeyView" destination="149" id="154"/>
                         </connections>
                     </button>
                     <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="122">
@@ -63,7 +62,6 @@
                         <connections>
                             <action selector="performContextSensitiveHelp:" target="-2" id="125"/>
                             <binding destination="-2" name="hidden" keyPath="self.sourceListHidden" id="127"/>
-                            <outlet property="nextKeyView" destination="43" id="147"/>
                         </connections>
                     </button>
                     <scrollView focusRingType="none" borderType="none" autohidesScrollers="YES" horizontalLineScroll="22" horizontalPageScroll="10" verticalLineScroll="22" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="24">
@@ -122,7 +120,6 @@
                         </scroller>
                         <connections>
                             <binding destination="-2" name="hidden" keyPath="self.sourceListHidden" id="56"/>
-                            <outlet property="nextKeyView" destination="57" id="146"/>
                         </connections>
                     </scrollView>
                     <box autoresizesSubviews="NO" horizontalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="37">
@@ -142,6 +139,7 @@
                             <font key="font" metaFont="system"/>
                             <segments>
                                 <segment toolTip="Create a Collection of this type." image="IconForItemAddMenuSegment" imageScaling="none" width="31">
+                                    <nil key="label"/>
                                     <menu key="menu" id="59">
                                         <items>
                                             <menuItem title="New Collection" id="60">
@@ -159,8 +157,11 @@
                                         </items>
                                     </menu>
                                 </segment>
-                                <segment toolTip="Delete a Collection." image="IconForItemRemove" imageScaling="none" width="31" tag="1"/>
+                                <segment toolTip="Delete a Collection." image="IconForItemRemove" imageScaling="none" width="31" tag="1">
+                                    <nil key="label"/>
+                                </segment>
                                 <segment toolTip="More commands applicable to Collections." image="IconForContextMenuSegment" imageScaling="none" width="31">
+                                    <nil key="label"/>
                                     <menu key="menu" id="63">
                                         <items>
                                             <menuItem title="Duplicate Collection" id="64">
@@ -189,7 +190,6 @@
                         <connections>
                             <action selector="performSegmentedControlAction:" target="-2" id="73"/>
                             <binding destination="-2" name="hidden" keyPath="self.sourceListHidden" id="75"/>
-                            <outlet property="nextKeyView" destination="122" id="136"/>
                         </connections>
                     </segmentedControl>
                     <box autoresizesSubviews="NO" verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="76">
@@ -204,10 +204,20 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems/>
-                        <connections>
-                            <outlet property="nextKeyView" destination="24" id="155"/>
-                        </connections>
                     </tabView>
+                    <searchField verticalHuggingPriority="750" id="vkn-sq-ZCZ">
+                        <rect key="frame" x="388" y="5" width="180" height="22"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Search for Preferences" usesSingleLineMode="YES" bezelStyle="round" sendsWholeSearchString="YES" id="twk-95-Uqr">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </searchFieldCell>
+                        <connections>
+                            <action selector="performSearch:" target="-2" id="ar9-gX-GtF"/>
+                            <binding destination="-2" name="value" keyPath="self.searchText" id="IGX-C2-yuF"/>
+                        </connections>
+                    </searchField>
                 </subviews>
             </view>
             <contentBorderThickness minY="32"/>

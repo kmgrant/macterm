@@ -17,6 +17,7 @@ p(#abstract). This page is arranged in the same categories as those in
  the MacTerm menu.  See also the "low-level settings":advprefs.html page.
 
 * "About Grouped Preferences":#collections
+* "About Preferences Search":#search
 * "General":#general
 * "Macros":#macros
 * "Workspaces":#workspaces
@@ -128,6 +129,30 @@ Exported settings are a good way to share among users of MacTerm.
  For instance, if you are the administrator of a school you might
  want to export some settings and make them available to students
  so that everyone's computer can be configured fairly easily.
+
+h2(#search). About Preferences Search
+
+At the bottom of the Preferences window is a search field that
+ can help you find certain settings.
+
+To search, enter key words in the field and press Return.  If
+ any matches are found, a menu pops up displaying the icon of the
+ main category, followed by either the name of the main category
+ or the name of one of the tabs from that panel.
+
+You don't have to be exact; MacTerm will search for any key word
+ that starts with what you type (allowing, for instance, the
+ word "graph" to mean "graphics" or the word "com" to mean
+ "command").  The search recognizes some synonyms, too.  Of
+ course, the more precise you are, the better chance you have of
+ seeing focused search results.
+
+While the menu is open the usual navigation keys will work, such
+ as: arrows to move up or down, letters to jump to items, Return
+ to select something and Esc to dismiss the menu.
+
+If you press Esc while typing in the search field, it will be
+ cleared.
 
 h2(#general). General
 

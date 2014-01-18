@@ -450,6 +450,7 @@
 		0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForStackWindows.icns; path = Application/Resources/IconForStackWindows.icns; sourceTree = "<group>"; };
 		0A8D8B14178F8BC6004F694C /* TerminalWindowRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalWindowRef.typedef.h; path = Application/Code/TerminalWindowRef.typedef.h; sourceTree = "<group>"; };
 		0A90CD8C0DAD28F300B6E89E /* RandomWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RandomWrap.h; path = Shared/Code/RandomWrap.h; sourceTree = "<group>"; };
+		0A95C6C61888DCB800DFEB97 /* PreferencesSearch.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = PreferencesSearch.plist; path = Application/Resources/PreferencesSearch.plist; sourceTree = "<group>"; };
 		0A984182083452E6002E1BCE /* TerminalBackground.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalBackground.cp; path = Application/Code/TerminalBackground.cp; sourceTree = "<group>"; };
 		0A9841C7083457A4002E1BCE /* TerminalBackground.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalBackground.h; path = Application/Code/TerminalBackground.h; sourceTree = "<group>"; };
 		0A9AF64E0AF5A50500E7DF18 /* PyMacTerm.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PyMacTerm.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -560,6 +561,7 @@
 		0AD7D0C2158AEBC9000C3264 /* PrefsContextManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefsContextManager.mm; path = Application/Code/PrefsContextManager.mm; sourceTree = "<group>"; };
 		0AD7D0C4158AEBD9000C3264 /* PrefsContextManager.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PrefsContextManager.objc++.h"; path = "Application/Code/PrefsContextManager.objc++.h"; sourceTree = "<group>"; };
 		0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AddressDialog.mm; path = Application/Code/AddressDialog.mm; sourceTree = "<group>"; };
+		0ADA30D5188AF9FB00B313FC /* English */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = English; path = Application/Resources/English.lproj/PreferencesSearch.strings; sourceTree = "<group>"; };
 		0ADB0D3305A7FBD90054A4E9 /* Template-DefaultPreferences.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-DefaultPreferences.plist"; path = "Application/Resources/Template-DefaultPreferences.plist"; sourceTree = "<group>"; };
 		0ADF9D1313A565920098675F /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/AlertMessagesModelessCocoa.xib; sourceTree = "<group>"; };
 		0AE103AE0F71D003003127C7 /* ServerBrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ServerBrowser.h; path = Application/Code/ServerBrowser.h; sourceTree = "<group>"; };
@@ -747,6 +749,8 @@
 				0AA66E3713160F0700B234C4 /* DefaultFormat2.plist */,
 				0AA66E3E131611EF00B234C4 /* DefaultFormat3.plist */,
 				0A21A1CD131766EA0012240D /* DefaultFormat4.plist */,
+				0A95C6C61888DCB800DFEB97 /* PreferencesSearch.plist */,
+				0ADA30D4188AF9FB00B313FC /* PreferencesSearch.strings */,
 				0AA42A290F0C95B80057B393 /* Template-Application-Info.plist */,
 				0ADB0D3305A7FBD90054A4E9 /* Template-DefaultPreferences.plist */,
 				0AA42A2A0F0C95BD0057B393 /* Template-PyMacTerm.framework-Info.plist */,
@@ -1842,6 +1846,14 @@
 				0AD7D0BA158AE38B000C3264 /* English */,
 			);
 			name = PrefPanelGeneralOptionsCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0ADA30D4188AF9FB00B313FC /* PreferencesSearch.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0ADA30D5188AF9FB00B313FC /* English */,
+			);
+			name = PreferencesSearch.strings;
 			sourceTree = "<group>";
 		};
 		0ADF9D1213A565920098675F /* AlertMessagesModelessCocoa.xib */ = {

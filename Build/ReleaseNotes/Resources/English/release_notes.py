@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20140118',
     '20140101',
     '20131230',
     '20131125',
@@ -489,6 +490,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20140118': [
+        'Preferences window (unreleased Cocoa version, not enabled by default yet) now contains a search field that helps you to find panels and tabs by matching settings against key words.',
+    ],
     '20140101': [
         'Minor animation optimizations.',
     ],
