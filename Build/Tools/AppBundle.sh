@@ -39,7 +39,7 @@ fi
 
 project_dir=${top_dir}/${target_project}
 if [ "x${TARGET_BUILD_DIR}" = "x" ] ; then
-    build_dir=${project_dir}/ForTigerDebug
+    build_dir=${top_dir}
     echo "$0: no build in progress, using default build area: $build_dir" > /dev/stderr
 else
     build_dir=${TARGET_BUILD_DIR}
