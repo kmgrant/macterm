@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20140311',
     '20140118',
     '20140101',
     '20131230',
@@ -490,6 +491,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20140311': [
+        'Fixed Preferences window Formats pane (and similar sheet) so that changes to the system Fonts panel will take effect even if the panel is displayed by using the font size button.  Previously, although both the font and size buttons would cause the system Fonts panel to appear, the Fonts panel would only function correctly if the font button was used to display the panel.',
+    ],
     '20140118': [
         'Preferences window (unreleased Cocoa version, not enabled by default yet) now contains a search field that helps you to find panels and tabs by matching settings against key words.',
     ],

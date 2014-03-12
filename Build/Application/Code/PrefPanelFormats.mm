@@ -2391,6 +2391,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																					My_FormatsPanelNormalDataPtr);
 					FontSelectionQDStyle			fontInfo;
 					CFStringRef						fontName = nullptr;
+					HIViewWrap						fontButton(idMyButtonFontName, HIViewGetWindow(buttonHit));
+					HIViewWrap						sizeButton(idMyButtonFontSize, HIViewGetWindow(buttonHit));
 					Boolean							releaseFontName = true;
 					SInt16							fontSize = 0;
 					size_t							actualSize = 0;
@@ -2429,13 +2431,17 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					fontInfo.size = fontSize;
 					fontInfo.hasColor = false;
 					// apparently this API can return paramErr even though it
-					// successfully sets the desired font information...
+					// successfully sets the desired font information...also,
+					// there is some undocumented dependency on the event target
+					// that is chosen (i.e. it CANNOT be the “size” button, it
+					// MUST be the “font” button, possibly because the panel
+					// consults the button’s title in some way)
 					UNUSED_RETURN(OSStatus)SetFontInfoForSelection
-											(kFontSelectionQDType, 1/* number of styles */, &fontInfo, HIViewGetEventTarget(buttonHit));
+											(kFontSelectionQDType, 1/* number of styles */, &fontInfo, HIViewGetEventTarget(fontButton));
 					if (1)
 					{
-						SetControl32BitValue(HIViewWrap(idMyButtonFontName, HIViewGetWindow(buttonHit)), kControlCheckBoxCheckedValue);
-						SetControl32BitValue(HIViewWrap(idMyButtonFontSize, HIViewGetWindow(buttonHit)), kControlCheckBoxCheckedValue);
+						SetControl32BitValue(fontButton, kControlCheckBoxCheckedValue);
+						SetControl32BitValue(sizeButton, kControlCheckBoxCheckedValue);
 						if (false == FPIsFontPanelVisible())
 						{
 							result = FPShowHideFontPanel();
