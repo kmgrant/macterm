@@ -83,7 +83,7 @@ if __name__ == "__main__":
     quills_versions_dir = os.path.join(quills_dir, "Versions")
     quills_proper_version_dir = os.path.join(quills_versions_dir, quills_fw_ver)
     quills_pylib_dir = os.path.join(quills_proper_version_dir, "lib", "python" + quills_pylib_ver)
-
+    
     # if the user's preferences are out of date, convert as needed
     convert_preferences = True
     if convert_preferences:
@@ -197,6 +197,17 @@ if __name__ == "__main__":
         sys.argv.insert(0, sandbox_profile_path)
         sys.argv.insert(0, '-f')
         sys.argv.insert(0, '/usr/bin/sandbox-exec')
+    
+    # if requested, run in the debugger
+    run_in_debugger = (("MACTERM_DEBUG" in os.environ) and (os.environ["MACTERM_DEBUG"] == "1"))
+    if run_in_debugger:
+        if ("MACTERM_LLDB" in os.environ):
+            debugger_path = os.environ["MACTERM_LLDB"]
+        else:
+            debugger_path = "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb"
+        print "MacTerm: lldb has been enabled"
+        sys.argv.insert(0, '--')
+        sys.argv.insert(0, debugger_path)
     
     # WARNING: the Finder will include arguments (e.g. -psn_0_10223617) that
     # will not be present in a normal shell run; ensure these arguments are

@@ -16,24 +16,33 @@ BACKGROUND
   in practice aside from making it slightly harder to find some
   of the familiar application entry points.
 
-INVOKING GDB
-  See the script "Debug/ApplicationGDB.sh.command" for a utility
-  script to invoke the GNU debugger, as well as comments that
-  explain what to do.  In a nutshell, since Python is the front
-  end, "gdb" must run against the Python interpreter and you must
-  continue past the framework load breakpoint for MacTerm.
+INVOKING LLDB
+  There are scripts in the "Debug" directory that provide simple
+  launchers for the most common debugging needs.  They have
+  ".command" extensions so that they may be run from the Finder.
   
-  WARNING: Do not allow the debug script to launch in MacTerm!
-  (For example, open the script in Terminal instead.)  It is
-  currently necessary for the script to to launch and then attach
-  GDB, instead of launching the interpreter wrapper directly; if
-  MacTerm is already open, the script can choose the wrong
-  interpreter and create an unkillable process.
+  Although sub-programs such as PrefsConverter are regular
+  compiled executables, the MacTerm application is implemented as
+  a library that is loaded into a Python interpreter.  To debug
+  MacTerm, the debugger must run against the Python interpreter.
+  Environment variables must be set to find dependent libraries.
+  The easiest way to keep all of this straight is to take
+  advantage of the debugging mode in the "MacTerm" executable...
   
-  If you don't want gdb, but do want a console, you can manually
-  run the main "MacOS/MacTerm" script from a shell.  This can
-  also be invoked from the Finder if you "Show Package Contents"
-  on the bundle and make an alias to the script inside.
+  First, set the environment variable "MACTERM_DEBUG" to 1.  This
+  flag tells the "MacTerm" script to add "lldb --" to the front
+  of its command line.
+  
+  Second, if you want to specify where "lldb" comes from (instead
+  of using the $PATH), set the location with the environment
+  variable "MACTERM_LLDB".
+  
+  Now run MacTerm from the command line, e.g.
+      % Build/MacTerm.app/Contents/MacOS/MacTerm
+  
+  Notice that "Debug/ApplicationLLDB.sh.command" does all of the
+  above and it also uses the default Xcode installation to find
+  the "lldb" executable.
 
 THE CALL STACK
   The Python interpreter has multiple threads and a moderately
