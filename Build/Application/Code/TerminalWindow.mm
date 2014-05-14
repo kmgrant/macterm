@@ -151,15 +151,6 @@ enum My_SheetType
 IMPORTANT
 
 The following values MUST agree with the control IDs in the
-"DimensionsFloater" and "DimensionsSheet" NIB from the
-package "TerminalWindow.nib".
-*/
-HIViewID const	idMyTextScreenDimensions	= { 'Dims', 0/* ID */ };
-
-/*!
-IMPORTANT
-
-The following values MUST agree with the control IDs in the
 "Tab" NIB from the package "TerminalWindow.nib".
 */
 HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
@@ -465,6 +456,10 @@ TerminalWindow_Dispose   (TerminalWindowRef*	inoutRefPtr)
 	{
 		Console_Warning(Console_WriteLine, "attempt to dispose of locked terminal window");
 	}
+	else if (false == TerminalWindow_IsValid(*inoutRefPtr))
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to dispose of invalid terminal window", *inoutRefPtr);
+	}
 	else
 	{
 		// clean up
@@ -490,16 +485,21 @@ void
 TerminalWindow_CopyWindowTitle	(TerminalWindowRef	inRef,
 								 CFStringRef&		outName)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	outName = nullptr;
 	
-	
-	if (ptr->baseTitleString.exists())
+	if (TerminalWindow_IsValid(inRef))
 	{
-		outName = CFStringCreateCopy(kCFAllocatorDefault, ptr->baseTitleString.returnCFStringRef());
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		if (ptr->baseTitleString.exists())
+		{
+			outName = CFStringCreateCopy(kCFAllocatorDefault, ptr->baseTitleString.returnCFStringRef());
+		}
 	}
 	else
 	{
-		outName = nullptr;
+		Console_Warning(Console_WriteValueAddress, "attempt to copy title of invalid terminal window", inRef);
 	}
 }// CopyWindowTitle
 
@@ -515,18 +515,25 @@ the user having finished searching.
 void
 TerminalWindow_DisplayTextSearchDialog	(TerminalWindowRef		inRef)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	
-	
-	if (nullptr == ptr->searchDialog)
+	if (TerminalWindow_IsValid(inRef))
 	{
-		ptr->searchDialog = FindDialog_New(inRef, handleFindDialogClose,
-											ptr->recentSearchStrings.returnCFMutableArrayRef(),
-											ptr->recentSearchOptions);
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		if (nullptr == ptr->searchDialog)
+		{
+			ptr->searchDialog = FindDialog_New(inRef, handleFindDialogClose,
+												ptr->recentSearchStrings.returnCFMutableArrayRef(),
+												ptr->recentSearchOptions);
+		}
+		
+		// display a text search dialog (automatically closed when the user clicks a button)
+		FindDialog_Display(ptr->searchDialog);
 	}
-	
-	// display a text search dialog (automatically closed when the user clicks a button)
-	FindDialog_Display(ptr->searchDialog);
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to display text search dialog on invalid terminal window", inRef);
+	}
 }// DisplayTextSearchDialog
 
 
@@ -540,18 +547,26 @@ Boolean
 TerminalWindow_EventInside	(TerminalWindowRef	inRef,
 							 EventRef			inMouseEvent)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	HIViewRef						hitView = nullptr;
-	OSStatus						error = noErr;
-	Boolean							result = false;
+	Boolean		result = false;
 	
 	
-	error = HIViewGetViewForMouseEvent(HIViewGetRoot(returnCarbonWindow(ptr)), inMouseEvent, &hitView);
-	if (noErr == error)
+	if (TerminalWindow_IsValid(inRef))
 	{
-		result = true;
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		HIViewRef						hitView = nullptr;
+		OSStatus						error = noErr;
+		
+		
+		error = HIViewGetViewForMouseEvent(HIViewGetRoot(returnCarbonWindow(ptr)), inMouseEvent, &hitView);
+		if (noErr == error)
+		{
+			result = true;
+		}
 	}
-	
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to test event in invalid terminal window", inRef);
+	}
 	return result;
 }// EventInside
 
@@ -609,11 +624,17 @@ manipulates the Cocoa window internally).
 void
 TerminalWindow_Focus	(TerminalWindowRef	inRef)
 {
-	AutoPool						_;
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	
-	
-	[ptr->window makeKeyWindow];
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		[ptr->window makeKeyWindow];
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to focus invalid terminal window", inRef);
+	}
 }// Focus
 
 
@@ -970,12 +991,20 @@ manipulates the Cocoa window internally).
 Boolean
 TerminalWindow_IsFocused	(TerminalWindowRef	inRef)
 {
-	AutoPool						_;
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	Boolean							result = false;
+	Boolean		result = false;
 	
 	
-	result = (YES == [ptr->window isKeyWindow]);
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		result = (YES == [ptr->window isKeyWindow]);
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to check “is focused” property of invalid terminal window", inRef);
+	}
 	return result;
 }// IsFocused
 
@@ -991,11 +1020,20 @@ the “Hide Front Window” command.
 Boolean
 TerminalWindow_IsObscured	(TerminalWindowRef	inRef)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	Boolean							result = false;
+	Boolean		result = false;
 	
 	
-	result = ptr->isObscured;
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		result = ptr->isObscured;
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to check “obscured” property of invalid terminal window", inRef);
+	}
 	return result;
 }// IsObscured
 
@@ -1009,11 +1047,20 @@ appearance, as set with TerminalWindow_SetTabAppearance().
 Boolean
 TerminalWindow_IsTab	(TerminalWindowRef	inRef)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	Boolean							result = false;
+	Boolean		result = false;
 	
 	
-	result = ptr->tab.exists();
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		result = ptr->tab.exists();
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to check “is tab” property of invalid terminal window", inRef);
+	}
 	return result;
 }// IsTab
 
@@ -1197,11 +1244,20 @@ IMPORTANT:	If an API exists to manipulate a terminal window,
 NSWindow*
 TerminalWindow_ReturnNSWindow	(TerminalWindowRef	inRef)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	NSWindow*						result = nil;
+	NSWindow*	result = nil;
 	
 	
-	result = ptr->window;
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		result = ptr->window;
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to find Cocoa window of invalid terminal window", inRef);
+	}
 	return result;
 }// ReturnNSWindow
 
@@ -1224,11 +1280,20 @@ ensure correct behavior in the future.
 UInt16
 TerminalWindow_ReturnScreenCount	(TerminalWindowRef		inRef)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	UInt16							result = 0;
+	UInt16		result = 0;
 	
 	
-	result = ptr->allScreens.size();
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		result = ptr->allScreens.size();
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to count screens of invalid terminal window", inRef);
+	}
 	return result;
 }// ReturnScreenCount
 
@@ -1250,11 +1315,20 @@ WARNING:	MacTerm is going to change in the future to
 TerminalScreenRef
 TerminalWindow_ReturnScreenWithFocus	(TerminalWindowRef	inRef)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalScreenRef				result = nullptr;
+	TerminalScreenRef	result = nullptr;
 	
 	
-	result = getActiveScreen(ptr);
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		result = getActiveScreen(ptr);
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to find focused screen of invalid terminal window", inRef);
+	}
 	return result;
 }// ReturnScreenWithFocus
 
@@ -1272,12 +1346,23 @@ IMPORTANT:	This is not for general use.  It is an accessor
 HIWindowRef
 TerminalWindow_ReturnTabWindow		(TerminalWindowRef	inRef)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	HIWindowRef						result = (ptr->tab.exists())
-												? REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef)
-												: nullptr;
+	HIWindowRef		result = nullptr;
 	
 	
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		if (ptr->tab.exists())
+		{
+			result = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
+		}
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to find tab window of invalid terminal window", inRef);
+	}
 	return result;
 }// ReturnTabWindow
 
@@ -1303,11 +1388,20 @@ of "kTerminalWindow_ViewGroupEverything".
 UInt16
 TerminalWindow_ReturnViewCount		(TerminalWindowRef		inRef)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	UInt16							result = 0;
+	UInt16		result = 0;
 	
 	
-	result = ptr->allViews.size();
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		result = ptr->allViews.size();
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to count views of invalid terminal window", inRef);
+	}
 	return result;
 }// ReturnViewCount
 
@@ -1324,26 +1418,35 @@ UInt16
 TerminalWindow_ReturnViewCountInGroup	(TerminalWindowRef			inRef,
 										 TerminalWindow_ViewGroup	inGroup)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	UInt16							result = 0;
+	UInt16		result = 0;
 	
 	
-	switch (inGroup)
+	if (TerminalWindow_IsValid(inRef))
 	{
-	case kTerminalWindow_ViewGroupEverything:
-		result = ptr->allViews.size();
-		assert(result == TerminalWindow_ReturnViewCount(inRef));
-		break;
-	
-	case kTerminalWindow_ViewGroupActive:
-		// currently, only one tab per window so the result is the same
-		result = ptr->allViews.size();
-		assert(result == TerminalWindow_ReturnViewCount(inRef));
-		break;
-	
-	default:
-		// ???
-		break;
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		switch (inGroup)
+		{
+		case kTerminalWindow_ViewGroupEverything:
+			result = ptr->allViews.size();
+			assert(result == TerminalWindow_ReturnViewCount(inRef));
+			break;
+		
+		case kTerminalWindow_ViewGroupActive:
+			// currently, only one tab per window so the result is the same
+			result = ptr->allViews.size();
+			assert(result == TerminalWindow_ReturnViewCount(inRef));
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to count views in group of invalid terminal window", inRef);
 	}
 	return result;
 }// ReturnViewCountInGroup
@@ -1366,11 +1469,20 @@ WARNING:	MacTerm is going to change in the future to
 TerminalViewRef
 TerminalWindow_ReturnViewWithFocus		(TerminalWindowRef	inRef)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalViewRef					result = nullptr;
+	TerminalViewRef		result = nullptr;
 	
 	
-	result = getActiveView(ptr);
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		result = getActiveView(ptr);
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to find focused view of invalid terminal window", inRef);
+	}
 	return result;
 }// ReturnViewWithFocus
 
@@ -1390,14 +1502,23 @@ IMPORTANT:	If an API exists to manipulate a terminal
 
 (3.0)
 */
-WindowRef
+HIWindowRef
 TerminalWindow_ReturnWindow		(TerminalWindowRef	inRef)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	WindowRef						result = nullptr;
+	HIWindowRef		result = nullptr;
 	
 	
-	result = returnCarbonWindow(ptr);
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		result = returnCarbonWindow(ptr);
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to find Carbon window of invalid terminal window", inRef);
+	}
 	return result;
 }// ReturnWindow
 
@@ -1422,14 +1543,20 @@ void
 TerminalWindow_Select	(TerminalWindowRef	inRef,
 						 Boolean			inFocus)
 {
-	AutoPool						_;
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	
-	
-	[ptr->window orderFront:nil];
-	if (inFocus)
+	if (TerminalWindow_IsValid(inRef))
 	{
-		TerminalWindow_Focus(inRef);
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		[ptr->window orderFront:nil];
+		if (inFocus)
+		{
+			TerminalWindow_Focus(inRef);
+		}
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to select invalid terminal window", inRef);
 	}
 }// Select
 
@@ -1902,17 +2029,23 @@ void
 TerminalWindow_SetVisible	(TerminalWindowRef	inRef,
 							 Boolean			inIsVisible)
 {
-	AutoPool						_;
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	
-	
-	if (inIsVisible)
+	if (TerminalWindow_IsValid(inRef))
 	{
-		[ptr->window orderFront:nil];
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		if (inIsVisible)
+		{
+			[ptr->window orderFront:nil];
+		}
+		else
+		{
+			[ptr->window orderOut:nil];
+		}
 	}
 	else
 	{
-		[ptr->window orderOut:nil];
+		Console_Warning(Console_WriteValueAddress, "attempt to display invalid terminal window", inRef);
 	}
 }// SetVisible
 
@@ -2138,12 +2271,19 @@ TerminalWindow_StartMonitoring	(TerminalWindowRef			inRef,
 								 TerminalWindow_Change		inForWhatChange,
 								 ListenerModel_ListenerRef	inListener)
 {
-	OSStatus						error = noErr;
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	
-	
-	// add a listener to the specified target’s listener model for the given setting change
-	error = ListenerModel_AddListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
+	if (TerminalWindow_IsValid(inRef))
+	{
+		OSStatus						error = noErr;
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		// add a listener to the specified target’s listener model for the given setting change
+		error = ListenerModel_AddListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueFourChars, "attempt to start monitoring invalid terminal window, event", inForWhatChange);
+	}
 }// StartMonitoring
 
 
@@ -2165,11 +2305,18 @@ TerminalWindow_StopMonitoring	(TerminalWindowRef			inRef,
 								 TerminalWindow_Change		inForWhatChange,
 								 ListenerModel_ListenerRef	inListener)
 {
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	
-	
-	// add a listener to the specified target’s listener model for the given setting change
-	ListenerModel_RemoveListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		// add a listener to the specified target’s listener model for the given setting change
+		ListenerModel_RemoveListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueFourChars, "attempt to stop monitoring invalid terminal window, event", inForWhatChange);
+	}
 }// StopMonitoring
 
 

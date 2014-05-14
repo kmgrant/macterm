@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20140514',
     '20140311',
     '20140118',
     '20140101',
@@ -491,6 +492,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20140514': [
+        'Fixed possible crashes in terminal window implementation that were most likely to be encountered when switching applications.',
+    ],
     '20140311': [
         'Fixed Preferences window Formats pane (and similar sheet) so that changes to the system Fonts panel will take effect even if the panel is displayed by using the font size button.  Previously, although both the font and size buttons would cause the system Fonts panel to appear, the Fonts panel would only function correctly if the font button was used to display the panel.',
         'The "I-beam" mouse pointer for terminal windows now contains a small middle bar to match the system version and make it slightly easier to find the mouse click location.',
