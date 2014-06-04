@@ -116,10 +116,10 @@ DEST_APP_RESOURCES_TOP := $(DEST_APP_TOP)/Resources
 DEST_BUGREPORTER_TOP := $(DEST_APP_RESOURCES_TOP)/BugReporter.app
 DEST_PREFSCONVERTER_TOP := $(DEST_APP_RESOURCES_TOP)/PrefsConverter.app
 DEST_PY_TOP := $(DEST_APP_FW_TOP)/PyMacTerm.framework
-DEST_PY_CODE_TOP := $(DEST_PY_TOP)/Versions/A/lib/python2.5/pymacterm
+DEST_PY_CODE_TOP := $(DEST_PY_TOP)/Versions/A/lib/python2.6/pymacterm
 DEST_QUILLS_TOP := $(DEST_APP_FW_TOP)/Quills.framework
 DEST_GROWL_TOP := $(DEST_APP_FW_TOP)/Growl.framework
-DEST_SWIG_TOP_LEOPARD := $(DEST_QUILLS_TOP)/Versions/B/lib/python2.5
+DEST_SWIG_TOP_LEOPARD := $(DEST_QUILLS_TOP)/Versions/B/lib/python2.6
 
 SWIG_WRAPPERS := _quills.so quills.py
 # .pyc files can be created by Python when code runs...not important
@@ -429,14 +429,14 @@ $(DEST_APP_MACOS_TOP)/RunApplication.py
 	$(MKDIR_P) $(DEST_APP_MACOS_TOP)
 	$(SYMLINK_REPLACE) /usr/bin/python $(DEST_APP_MACOS_TOP)/MacTerm_python2.x
 	$(XCB) -project Application.xcodeproj -target PythonInvoker -configuration ForDebugging
-	$(COPY) $(SRC_PYINVOKER_TOP_LEOPARD)/PythonInvoker_debug $(DEST_APP_MACOS_TOP)/MacTerm_python2.5_wrap
+	$(COPY) $(SRC_PYINVOKER_TOP_LEOPARD)/PythonInvoker_debug $(DEST_APP_MACOS_TOP)/MacTerm_python2.6_wrap
 
 .PHONY: clean-executables
 clean-executables:
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm
 	$(RM) $(DEST_APP_MACOS_TOP)/RunApplication.py
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.x
-	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.5_wrap
+	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.6_wrap
 	-$(RMDIR) $(DEST_APP_MACOS_TOP) 2>/dev/null
 	$(XCB) clean -project Application.xcodeproj -target PythonInvoker -configuration ForDebugging
 

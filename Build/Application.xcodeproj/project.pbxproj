@@ -159,7 +159,7 @@
 		0A0627530FB3AFA700EBC8BB /* pymacterm-file */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.5/pymacterm/file/";
+			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.6/pymacterm/file";
 			dstSubfolderSpec = 0;
 			files = (
 				0A06274B0FB3AF3C00EBC8BB /* __init__.py in pymacterm-file */,
@@ -172,7 +172,7 @@
 		0A0627580FB3AFF200EBC8BB /* pymacterm-url */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.5/pymacterm/url/";
+			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.6/pymacterm/url";
 			dstSubfolderSpec = 0;
 			files = (
 				0A0627500FB3AF4900EBC8BB /* __init__.py in pymacterm-url */,
@@ -185,7 +185,7 @@
 		0A9AF6810AF5A81100E7DF18 /* pymacterm */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.5/pymacterm/";
+			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.6/pymacterm";
 			dstSubfolderSpec = 0;
 			files = (
 				0AB3B2670F0C1B92000559AB /* __init__.py in pymacterm */,
@@ -197,7 +197,7 @@
 		0A9D796812A2340A0006CECA /* pymacterm-term */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.5/pymacterm/term/";
+			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.6/pymacterm/term";
 			dstSubfolderSpec = 0;
 			files = (
 				0A9D796F12A234650006CECA /* __init__.py in pymacterm-term */,
