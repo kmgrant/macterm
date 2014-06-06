@@ -105,8 +105,7 @@ SRC_PREFSCONVERTER_BUILD_TOP := $(SYMROOT)/ForDebugging
 SRC_PREFSCONVERTER_TOP := $(SRC_PREFSCONVERTER_BUILD_TOP)/PrefsConverter.app
 SRC_PY_TOP := $(SYMROOT)/$(PY_CONFIG)/PyMacTerm.framework
 SRC_PYINVOKER_TOP_LEOPARD := $(SYMROOT)/ForDebugging
-# note, prior to Growl 1.3.x the subdirectory was just "Frameworks" and not "Framework/Legacy"
-SRC_GROWL_TOP := $(GROWL_SDK_ROOT)/Framework/Legacy/Growl.framework
+SRC_GROWL_TOP := $(GROWL_SDK_ROOT)/Framework/Growl.framework
 SRC_QUILLS_TOP := $(SYMROOT)/ForDebugging/Quills.framework
 
 DEST_APP_TOP := $(CURDIR)/MacTerm.app/Contents

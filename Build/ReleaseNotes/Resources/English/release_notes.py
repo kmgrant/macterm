@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20140606',
     '20140514',
     '20140311',
     '20140118',
@@ -492,6 +493,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20140606': [
+        'Fixed a possible hang at launch time by adopting a newer version of the Growl framework.',
+    ],
     '20140514': [
         'Fixed possible crashes in terminal window implementation that were most likely to be encountered when switching applications.',
     ],
