@@ -80,8 +80,9 @@ Manages the Find user interface.
 	TerminalWindowRef				terminalWindow;		// the terminal window for which this dialog applies
 	PopoverManager_Ref				popoverMgr;			// manages common aspects of popover window behavior
 	FindDialog_CloseNotifyProcPtr	closeNotifyProc;	// routine to call when the dialog is dismissed
-	NSMutableArray*					historyArray;		// a list of previous search strings, held only by weak reference
 	FindDialog_Options				cachedOptions;		// options set when the user interface is closed
+@private
+	NSMutableArray*					_historyArray;
 }
 
 // class methods
@@ -114,6 +115,8 @@ Manages the Find user interface.
 // accessors
 	- (FindDialog_Options)
 	cachedOptions;
+	@property (strong) NSMutableArray*
+	historyArray;
 	- (TerminalWindowRef)
 	terminalWindow;
 
@@ -133,9 +136,6 @@ Manages the Find user interface.
 	didFinishUsingManagedView:(NSView*)_
 	acceptingSearch:(BOOL)_
 	finalOptions:(FindDialog_Options)_;
-	- (NSMutableArray*)
-	findDialog:(FindDialog_ViewManager*)_
-	returnHistoryArrayForManagedView:(NSView*)_;
 
 // PopoverManager_Delegate
 	- (NSPoint)
@@ -311,6 +311,9 @@ FindDialog_StandardCloseNotifyProc		(FindDialog_Ref		UNUSED_ARGUMENT(inDialogTha
 @implementation FindDialog_Handler
 
 
+@synthesize historyArray = _historyArray;
+
+
 /*!
 Converts from the opaque reference type to the internal type.
 
@@ -349,7 +352,7 @@ initialOptions:(FindDialog_Options)					options
 		self->popoverMgr = nullptr;
 		self->closeNotifyProc = aProc;
 		assert(nil != aStringArray);
-		self->historyArray = aStringArray;
+		self->_historyArray = [aStringArray retain];
 		self->cachedOptions = options;
 	}
 	return self;
@@ -364,6 +367,7 @@ Destructor.
 - (void)
 dealloc
 {
+	[_historyArray release];
 	[containerWindow release];
 	[viewMgr release];
 	if (nullptr != popoverMgr)
@@ -671,6 +675,7 @@ didLoadManagedView:(NSView*)			aManagedView
 																		attachedToPoint:NSZeroPoint/* see delegate */
 																		inWindow:parentWindow];
 		[self->containerWindow setReleasedWhenClosed:NO];
+		
 		CocoaBasic_ApplyStandardStyleToPopover(self->containerWindow, false/* has arrow */);
 		self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
 												self/* delegate */, kPopoverManager_AnimationTypeNone,
@@ -710,8 +715,8 @@ withQuery:(NSString*)					searchText
 #pragma unused(aManagedView)
 	BOOL			didSearch = NO;
 	unsigned long	matchCount = [self initiateSearchFor:searchText
-															ignoringCase:[aViewMgr isCaseInsensitiveSearch]
-															allTerminals:[aViewMgr isMultiTerminalSearch]
+															ignoringCase:aViewMgr.caseInsensitiveSearch
+															allTerminals:aViewMgr.multiTerminalSearch
 															notFinal:YES didSearch:&didSearch];
 	
 	
@@ -738,28 +743,19 @@ finalOptions:(FindDialog_Options)		options
 {
 #pragma unused(aViewMgr, aManagedView)
 	NSString*	searchText = [aViewMgr searchText];
-	BOOL		caseInsensitive = [aViewMgr isCaseInsensitiveSearch];
-	BOOL		multiTerminal = [aViewMgr isMultiTerminalSearch];
+	BOOL		caseInsensitive = aViewMgr.caseInsensitiveSearch;
+	BOOL		multiTerminal = aViewMgr.multiTerminalSearch;
 	
 	
 	self->cachedOptions = options;
+	
+	// make search history persistent for the window
+	NSMutableArray*		recentSearchesArray = self.historyArray;
+	if (nil != searchText)
 	{
-		[self->historyArray removeAllObjects];
-		for (id object in [[aViewMgr searchField] recentSearches])
-		{
-			if ([object isKindOfClass:[NSString class]])
-			{
-				[self->historyArray addObject:object];
-			}
-			else if (nil == object)
-			{
-				NSLog(@"new history array contains an invalid (nil) object");
-			}
-			else
-			{
-				NSLog(@"attempt to insert non-string object into history array: %@", object);
-			}
-		}
+		[recentSearchesArray removeObject:searchText]; // remove any older copy of this search phrase
+		[recentSearchesArray insertObject:searchText atIndex:0];
+		[[aViewMgr searchField] setRecentSearches:[recentSearchesArray copy]];
 	}
 	
 	// hide the popover
@@ -781,12 +777,12 @@ finalOptions:(FindDialog_Options)		options
 	else
 	{
 		// user cancelled; try to return to the previous search
-		if ((nil != self->historyArray) && ([self->historyArray count] > 0))
+		if ((nil != recentSearchesArray) && ([recentSearchesArray count] > 0))
 		{
 			BOOL	didSearch = NO;
 			
 			
-			searchText = (NSString*)[self->historyArray objectAtIndex:0];
+			searchText = STATIC_CAST([recentSearchesArray objectAtIndex:0], NSString*);
 			UNUSED_RETURN(unsigned long)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:NO
 																notFinal:NO didSearch:&didSearch];
 		}
@@ -805,27 +801,6 @@ finalOptions:(FindDialog_Options)		options
 		FindDialog_InvokeCloseNotifyProc(self->closeNotifyProc, self->selfRef);
 	}
 }// findDialog:didFinishUsingManagedView:acceptingSearch:finalOptions:
-
-
-/*!
-Called to determine the array in which to store strings
-for previous searches.  This is used constantly, and its
-value also initializes the user interface.  If the user
-cancels a new search, the last history string (if any)
-is used to restore the last search.
-
-(4.0)
-*/
-- (NSMutableArray*)
-findDialog:(FindDialog_ViewManager*)		aViewMgr
-returnHistoryArrayForManagedView:(NSView*)	aManagedView
-{
-#pragma unused(aViewMgr, aManagedView)
-	NSMutableArray*		result = self->historyArray;
-	
-	
-	return result;
-}// findDialog:returnHistoryArrayForManagedView:
 
 
 #pragma mark PopoverManager_Delegate
@@ -897,7 +872,35 @@ idealSize
 @end // FindDialog_Handler
 
 
+@implementation FindDialog_SearchField
+
+
+#pragma mark NSNibAwaking
+
+
+/*!
+Checks IBOutlet bindings.
+
+(4.1)
+*/
+- (void)
+awakeFromNib
+{
+	assert(nil != self.delegate); // in this case the delegate is pretty important
+	assert(nil != viewManager);
+}// awakeFromNib
+
+
+@end // FindDialog_SearchField
+
+
 @implementation FindDialog_ViewManager
+
+
+@synthesize searchProgressHidden = _searchProgressHidden;
+@synthesize searchText = _searchText;
+@synthesize statusText = _statusText;
+@synthesize successfulSearch = _successfulSearch;
 
 
 /*!
@@ -915,13 +918,12 @@ initialOptions:(FindDialog_Options)					options
 	{
 		responder = aResponder;
 		terminalWindow = aTerminalWindow;
-		searchHistory = nil;
-		caseInsensitiveSearch = (0 != (options & kFindDialog_OptionCaseInsensitive));
-		multiTerminalSearch = (0 != (options & kFindDialog_OptionAllOpenTerminals));
-		searchProgressHidden = YES;
-		successfulSearch = YES;
-		searchText = [@"" retain];
-		statusText = [@"" retain];
+		_caseInsensitiveSearch = (0 != (options & kFindDialog_OptionCaseInsensitive));
+		_multiTerminalSearch = (0 != (options & kFindDialog_OptionAllOpenTerminals));
+		_searchProgressHidden = YES;
+		_successfulSearch = YES;
+		_searchText = [@"" retain];
+		_statusText = [@"" retain];
 		
 		// it is necessary to capture and release all top-level objects here
 		// so that "self" can actually be deallocated; otherwise, the implicit
@@ -951,8 +953,8 @@ Destructor.
 - (void)
 dealloc
 {
-	[searchText release];
-	[statusText release];
+	[_searchText release];
+	[_statusText release];
 	[super dealloc];
 }// dealloc
 
@@ -1003,7 +1005,7 @@ performCloseAndRevert:(id)	sender
 	FindDialog_Options		options = kFindDialog_OptionsAllOff;
 	
 	
-	if ([self isCaseInsensitiveSearch])
+	if (self.caseInsensitiveSearch)
 	{
 		options |= kFindDialog_OptionCaseInsensitive;
 	}
@@ -1027,13 +1029,13 @@ IMPORTANT:	It is appropriate at this time for the
 performCloseAndSearch:(id)	sender
 {
 #pragma unused(sender)
-	NSString*				queryText = (nil == self->searchText)
+	NSString*				queryText = (nil == _searchText)
 										? @""
-										: [NSString stringWithString:self->searchText];
+										: [NSString stringWithString:_searchText];
 	FindDialog_Options		options = kFindDialog_OptionsAllOff;
 	
 	
-	if ([self isCaseInsensitiveSearch])
+	if (self.caseInsensitiveSearch)
 	{
 		options |= kFindDialog_OptionCaseInsensitive;
 	}
@@ -1053,13 +1055,13 @@ in the field.  See also "performCloseAndSearch:".
 performSearch:(id)	sender
 {
 #pragma unused(sender)
-	NSString*	queryText = (nil == self->searchText)
+	NSString*	queryText = (nil == _searchText)
 							? @""
-							: [NSString stringWithString:self->searchText];
+							: [NSString stringWithString:_searchText];
 	
 	
-	[self setStatusText:@""];
-	[self setSearchProgressHidden:NO];
+	self.statusText = @"";
+	self.searchProgressHidden = NO;
 	[self->responder findDialog:self didSearchInManagedView:self->managedView withQuery:queryText];
 }// performSearch:
 
@@ -1075,35 +1077,6 @@ searchField
 {
 	return searchField;
 }// searchField
-
-
-/*!
-A helper to make string-setters less cumbersome to write.
-
-(4.0)
-*/
-- (void)
-setStringProperty:(NSString**)		propertyPtr
-withName:(NSString*)				propertyName
-toValue:(NSString*)					aString
-{
-	if (aString != *propertyPtr)
-	{
-		[self willChangeValueForKey:propertyName];
-		
-		if (nil == aString)
-		{
-			*propertyPtr = [@"" retain];
-		}
-		else
-		{
-			[*propertyPtr autorelease];
-			*propertyPtr = [aString copy];
-		}
-		
-		[self didChangeValueForKey:propertyName];
-	}
-}// setStringProperty:withName:toValue:
 
 
 /*!
@@ -1162,9 +1135,9 @@ didSearch:(BOOL)								didSearch
 	}
 	
 	// update settings; due to bindings, the user interface will automatically be updated
-	[self setStatusText:(NSString*)statusCFString];
-	[self setSearchProgressHidden:YES];
-	[self setSuccessfulSearch:((matchCount > 0) || ([[self searchText] length] <= 1))];
+	self.statusText = BRIDGE_CAST(statusCFString, NSString*);
+	self.searchProgressHidden = YES;
+	self.successfulSearch = ((matchCount > 0) || ([_searchText length] <= 1));
 	
 	if ((nullptr != statusCFString) && (releaseStatusString))
 	{
@@ -1182,16 +1155,16 @@ Accessor.
 (4.0)
 */
 - (BOOL)
-isCaseInsensitiveSearch
+caseInsensitiveSearch
 {
-	return caseInsensitiveSearch;
+	return _caseInsensitiveSearch;
 }
 - (void)
 setCaseInsensitiveSearch:(BOOL)		isCaseInsensitive
 {
-	if (caseInsensitiveSearch != isCaseInsensitive)
+	if (_caseInsensitiveSearch != isCaseInsensitive)
 	{
-		caseInsensitiveSearch = isCaseInsensitive;
+		_caseInsensitiveSearch = isCaseInsensitive;
 		[self performSearch:NSApp];
 	}
 }// setCaseInsensitiveSearch:
@@ -1203,22 +1176,22 @@ Accessor.
 (4.0)
 */
 - (BOOL)
-isMultiTerminalSearch
+multiTerminalSearch
 {
-	return multiTerminalSearch;
+	return _multiTerminalSearch;
 }
 - (void)
 setMultiTerminalSearch:(BOOL)	isMultiTerminal
 {
-	if (multiTerminalSearch != isMultiTerminal)
+	if (_multiTerminalSearch != isMultiTerminal)
 	{
-		multiTerminalSearch = isMultiTerminal;
+		_multiTerminalSearch = isMultiTerminal;
 		
 		// if the setting is being turned off, erase the
 		// search highlighting from other windows (this will
 		// not happen automatically once the search flag is
 		// restricted to a single window)
-		if (NO == multiTerminalSearch)
+		if (NO == _multiTerminalSearch)
 		{
 			[self->responder findDialog:self clearSearchHighlightingInContext:kFindDialog_SearchContextGlobal];
 		}
@@ -1228,84 +1201,6 @@ setMultiTerminalSearch:(BOOL)	isMultiTerminal
 		[self performSearch:NSApp];
 	}
 }// setMultiTerminalSearch:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (BOOL)
-isSearchProgressHidden
-{
-	return searchProgressHidden;
-}
-- (void)
-setSearchProgressHidden:(BOOL)		isHidden
-{
-	searchProgressHidden = isHidden;
-}// setSearchProgressHidden:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (BOOL)
-isSuccessfulSearch
-{
-	return successfulSearch;
-}
-- (void)
-setSuccessfulSearch:(BOOL)		isSuccessful
-{
-	successfulSearch = isSuccessful;
-}// setSuccessfulSearch:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-searchText
-{
-	return [[searchText copy] autorelease];
-}
-+ (id)
-autoNotifyOnChangeToSearchText
-{
-	return @(NO);
-}
-- (void)
-setSearchText:(NSString*)	aString
-{
-	[self setStringProperty:&searchText withName:@"searchText" toValue:aString];
-}// setSearchText:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-statusText
-{
-	return [[statusText copy] autorelease];
-}
-+ (id)
-autoNotifyOnChangeToStatusText
-{
-	return @(NO);
-}
-- (void)
-setStatusText:(NSString*)	aString
-{
-	[self setStringProperty:&statusText withName:@"statusText" toValue:aString];
-}// setStatusText:
 
 
 #pragma mark NSKeyValueObservingCustomization
@@ -1351,16 +1246,51 @@ done in "init".)
 awakeFromNib
 {
 	// NOTE: superclass does not implement "awakeFromNib", otherwise it should be called here
-	assert(nil != failureIcon);
-	assert(nil != failureText);
 	assert(nil != managedView);
 	assert(nil != searchField);
 	
 	[self->responder findDialog:self didLoadManagedView:self->managedView];
-	
-	self->searchHistory = [self->responder findDialog:self returnHistoryArrayForManagedView:self->managedView];
-	[self->searchField setRecentSearches:self->searchHistory];
 }// awakeFromNib
+
+
+#pragma mark NSTextFieldDelegate
+
+
+/*!
+Responds to cancellation by closing the panel and responds to
+(say) a Return by closing the panel but preserving the current
+search term and search options.  Ignores other key events.
+
+(4.1)
+*/
+- (BOOL)
+control:(NSControl*)		aControl
+textView:(NSTextView*)		aTextView
+doCommandBySelector:(SEL)	aSelector
+{
+	BOOL	result = NO;
+	
+	
+	// this delegate is not designed to manage other fields...
+	assert(self->searchField == aControl);
+	
+	if (@selector(cancelOperation:) == aSelector)
+	{
+		// only cancel if the field is empty
+		if (0 == [[aTextView string] length])
+		{
+			[self performCloseAndRevert:self];
+			result = YES;
+		}
+	}
+	else if (@selector(insertNewline:) == aSelector)
+	{
+		[self performCloseAndSearch:self];
+		result = YES;
+	}
+	
+	return result;
+}// control:textView:doCommandBySelector:
 
 
 @end // FindDialog_ViewManager

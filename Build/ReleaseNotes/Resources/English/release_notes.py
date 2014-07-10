@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20140709',
     '20140606',
     '20140514',
     '20140311',
@@ -493,6 +494,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20140709': [
+        'Find dialog now has a simpler design that directly shows its scope and case-insensitivity options.',
+    ],
     '20140606': [
         'Fixed a possible hang at launch time by adopting a newer version of the Growl framework.',
     ],

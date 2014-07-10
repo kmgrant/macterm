@@ -1,5 +1,5 @@
 /*!	\file FindDialog.h
-	\brief A sheet used to perform searches in the scrollback
+	\brief Used to perform searches in the scrollback
 	buffers of terminal windows.
 */
 /*###############################################################
@@ -102,11 +102,6 @@ must conform to this protocol.
 	acceptingSearch:(BOOL)_
 	finalOptions:(FindDialog_Options)_;
 
-	// return an array of NSString* to use for previous searches
-	- (NSMutableArray*)
-	findDialog:(FindDialog_ViewManager*)_
-	returnHistoryArrayForManagedView:(NSView*)_;
-
 @end //}
 
 
@@ -117,22 +112,19 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface FindDialog_ViewManager : NSObject //{
+@interface FindDialog_ViewManager : NSObject< NSTextFieldDelegate > //{
 {
-	IBOutlet NSImageView*		failureIcon;
-	IBOutlet NSTextField*		failureText;
 	IBOutlet NSView*			managedView;
 	IBOutlet NSSearchField*		searchField;
 @private
 	id< FindDialog_ViewManagerChannel >		responder;
 	TerminalWindowRef						terminalWindow;
-	NSMutableArray*							searchHistory;
-	NSString*								searchText;
-	NSString*								statusText;
-	BOOL									caseInsensitiveSearch;
-	BOOL									multiTerminalSearch;
-	BOOL									searchProgressHidden;
-	BOOL									successfulSearch;
+	NSString*								_searchText;
+	NSString*								_statusText;
+	BOOL									_caseInsensitiveSearch;
+	BOOL									_multiTerminalSearch;
+	BOOL									_searchProgressHidden;
+	BOOL									_successfulSearch;
 }
 
 // initializers
@@ -161,31 +153,29 @@ changes to an interface declared in a ".mm" file.
 	performSearch:(id)_;
 
 // accessors
-	- (BOOL)
-	isCaseInsensitiveSearch; // binding
-	- (void)
-	setCaseInsensitiveSearch:(BOOL)_;
-	- (BOOL)
-	isMultiTerminalSearch; // binding
-	- (void)
-	setMultiTerminalSearch:(BOOL)_;
-	- (BOOL)
-	isSearchProgressHidden; // binding
-	- (void)
-	setSearchProgressHidden:(BOOL)_;
-	- (BOOL)
-	isSuccessfulSearch; // binding
-	- (void)
-	setSuccessfulSearch:(BOOL)_;
-	- (NSString*)
+	@property (assign) BOOL
+	caseInsensitiveSearch; // binding
+	@property (assign) BOOL
+	multiTerminalSearch; // binding
+	@property (assign) BOOL
+	searchProgressHidden; // binding
+	@property (assign) BOOL
+	successfulSearch; // binding
+	@property (strong) NSString*
 	searchText; // binding
-	- (void)
-	setSearchText:(NSString*)_;
-	- (NSString*)
+	@property (strong) NSString*
 	statusText; // binding
-	- (void)
-	setStatusText:(NSString*)_;
 
+@end //}
+
+
+/*!
+Allows field actions to affect the search panel state.
+*/
+@interface FindDialog_SearchField : NSSearchField //{
+{
+	IBOutlet FindDialog_ViewManager*	viewManager;
+}
 @end //}
 
 #endif // __OBJC__
