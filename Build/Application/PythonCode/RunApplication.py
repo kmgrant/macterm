@@ -60,7 +60,7 @@ if __name__ == "__main__":
     # valid (if uninteresting) implementation of each function, including
     # any parameters or return values.
     def app_will_finish():
-        Base.all_done()
+        pass
     def initial_workspace():
         return ""
     # User-Defined Customizations Module "customize_macterm"
@@ -71,12 +71,9 @@ if __name__ == "__main__":
     # because you can affect the behavior of this startup code without actually
     # editing the file (MacTerm upgrades will also be smoother).
     #
-    # Although the path usually contains many directories, the following choices
+    # Although the path usually contains many directories, the following choice
     # will probably work best:
-    #     Mac OS X 10.5.x and 10.6.x
-    #         /Library/Python/2.5/site-packages/customize_macterm.py
-    #     Mac OS X 10.3.9 and 10.4.x
-    #         /Library/Python/2.3/site-packages/customize_macterm.py
+    #     /Library/Python/2.x/site-packages/customize_macterm.py
     # NOTE: The path includes the interpreter version, which changes across OS
     #       upgrades.  It is also possible that the new Python version won't
     #       like your code.  Expect to relocate and possibly update your code

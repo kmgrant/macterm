@@ -7,10 +7,6 @@ mac_os_name -- return a name like Panther, Tiger, Leopard, etc.
 slash_free_path -- remove all leading and trailing slashes
 sort_dict -- for testing, return deterministic "dict" description
 
-For convenience, 'used_subprocess_module' can be consulted to
-see if the interpreter is new enough to support that module (or
-if the deprecated 'popen2' must be used).
-
 """
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '30 December 2006'
@@ -18,58 +14,35 @@ __version__ = '4.0.0'
 
 import sys
 
-used_subprocess_module = False
-if sys.hexversion > 0x020400F0:
-    used_subprocess_module = True
-
-def command_data(cmdline_tuple, force_popen2=False, allow_nonzero_exit=False):
+def command_data(cmdline_tuple, allow_nonzero_exit=False):
     """command_data(tuple) -> string
     
-    Runs a program (using either the popen2 or subprocess
-    modules, depending on the Python interpreter's version)
-    and returns its standard output as a string without
-    any editing.  If there is ANY problem running the
-    program, the result will be None unless the keyword
-    argument "allow_nonzero_exit" is set to True.
+    Runs a program and returns its standard output as a
+    string without any editing.  If there is ANY problem
+    running the program, the result will be None unless
+    the keyword argument "allow_nonzero_exit" is True.
     
     >>> command_data(('/this/does/not/exist'))
-    
-    >>> command_data(('/this/does/not/exist'), force_popen2=True)
     
     >>> command_data(('/bin/echo', 'hello, world!'))
     'hello, world!\\n'
     
-    >>> command_data(('/bin/echo', 'hello, world!'), force_popen2=True)
-    'hello, world!\\n'
-    
     >>> command_data(('/usr/bin/perl', '-e', 'print "hello\\n"; exit 1'), allow_nonzero_exit=False)
-    
-    >>> command_data(('/usr/bin/perl', '-e', 'print "hello\\n"; exit 1'), allow_nonzero_exit=False, force_popen2=True)
     
     >>> command_data(('/usr/bin/perl', '-e', 'print "hello\\n"; exit 1'), allow_nonzero_exit=True)
     'hello\\n'
     
-    >>> command_data(('/usr/bin/perl', '-e', 'print "hello\\n"; exit 1'), allow_nonzero_exit=True, force_popen2=True)
-    'hello\\n'
-    
     """
     result = None
-    if used_subprocess_module and not force_popen2:
-        import subprocess
-        try:
-            cmd_run = subprocess.Popen(cmdline_tuple, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
-            (cmd_stdout, cmd_stderr) = cmd_run.communicate()
-            if (cmd_run.returncode == 0) or allow_nonzero_exit:
-                result = str(cmd_stdout)
-        except Exception, e:
-            #print "exception in subprocess.Popen of %r:" % cmdline_tuple, e
-            pass
-    else:
-        import popen2
-        cmd_run = popen2.Popen4(cmdline_tuple)
-        cmd_status = cmd_run.wait()
-        if (cmd_status == 0) or allow_nonzero_exit:
-            result = ''.join(cmd_run.fromchild.readlines()) # newlines are already present
+    import subprocess
+    try:
+        cmd_run = subprocess.Popen(cmdline_tuple, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+        (cmd_stdout, cmd_stderr) = cmd_run.communicate()
+        if (cmd_run.returncode == 0) or allow_nonzero_exit:
+            result = str(cmd_stdout)
+    except Exception, e:
+        #print "exception in subprocess.Popen of %r:" % cmdline_tuple, e
+        pass
     return result
 
 def mac_os_name():
@@ -83,7 +56,7 @@ def mac_os_name():
     standard way, because (for instance) platform.mac_version()
     fails with the Panther version of Python.
     
-    >>> mac_os_name() in ['Mavericks', 'Mountain Lion', 'Lion', 'Snow Leopard', 'Leopard', 'Tiger', 'Panther']
+    >>> mac_os_name() in ['Yosemite', 'Mavericks', 'Mountain Lion', 'Lion', 'Snow Leopard', 'Leopard', 'Tiger', 'Panther']
     True
     
     """
@@ -98,6 +71,7 @@ def mac_os_name():
     if darwin_version.startswith('11.'): result = "Lion"
     if darwin_version.startswith('12.'): result = "Mountain Lion"
     if darwin_version.startswith('13.'): result = "Mavericks"
+    if darwin_version.startswith('14.'): result = "Yosemite"
     return result
 
 def slash_free_path(path):

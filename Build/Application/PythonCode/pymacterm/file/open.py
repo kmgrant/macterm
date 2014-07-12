@@ -42,8 +42,7 @@ def macros(pathname):
     is doing both.
     
     """
-    mfile = open(pathname, 'rU')
-    try:
+    with file(pathname, 'rU') as mfile:
         parser = pymacterm.file.kvp.Parser(file_object=mfile)
         defs = parser.results()
         macro_set = quills.Prefs(quills.Prefs.MACRO_SET)
@@ -56,8 +55,6 @@ def macros(pathname):
             if first_part != "f" and first_part != "F": number += 1
             macro_set.define_macro(number, name="Macro %i" % number, contents=data)
         quills.Prefs.set_current_macros(macro_set)
-    finally:
-        mfile.close()
 
 def prefs(pathname):
     """prefs(pathname) -> None
@@ -95,8 +92,7 @@ def session(pathname):
     that could exist in a ".session" file.
     
     """
-    sfile = open(pathname, 'rU')
-    try:
+    with file(pathname, 'rU') as file:
         parser = pymacterm.file.kvp.Parser(file_object=sfile)
         defs = parser.results()
         if 'command' in defs:
@@ -104,8 +100,6 @@ def session(pathname):
             session = quills.Session(args)
         else:
             raise KeyError('no "command" was found in the file')
-    finally:
-        sfile.close()
 
 def _test():
     import doctest

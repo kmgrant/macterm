@@ -115,13 +115,8 @@ if __name__ == "__main__":
                     # run, so everything will be fine.)
                     require_restart = True
                     os.environ['CONVERTER_ASK_USER_TO_RESTART'] = '1'
-                if pymacterm.utilities.used_subprocess_module:
-                    import subprocess
-                    code = subprocess.call(conv_path, shell=False)
-                else:
-                    import popen2
-                    cmd_run = popen2.Popen4((conv_path))
-                    code = cmd_run.wait()
+                import subprocess
+                code = subprocess.call(conv_path, shell=False)
                 if code != 0:
                     print "MacTerm: preferences converter exited with nonzero status", code
                 if require_restart:
