@@ -235,6 +235,7 @@ enum
 	kPreferences_TagAssociatedFormatFavorite			= 'frmt',	//!< data: "CFStringRef" (a Quills::Prefs::FORMAT context name)
 	kPreferences_TagAssociatedTerminalFavorite			= 'term',	//!< data: "CFStringRef" (a Quills::Prefs::TERMINAL context name)
 	kPreferences_TagAssociatedTranslationFavorite		= 'xlat',	//!< data: "CFStringRef" (a Quills::Prefs::TRANSLATION context name)
+	kPreferences_TagBackgroundNewDataHandler			= 'ndhn',	//!< data: "UInt16" (Session_Watch; kSession_WatchForPassiveData or kSession_WatchNothing)
 	kPreferences_TagCaptureAutoStart					= 'capt',	//!< data: "Boolean"
 	kPreferences_TagCaptureFileDirectoryObject			= 'cfdr',	//!< data: "FSRef"
 	kPreferences_TagCaptureFileName						= 'cfnm',	//!< data: "CFStringRef"
@@ -242,6 +243,7 @@ enum
 	kPreferences_TagCommandLine							= 'cmdl',	//!< data: "CFArrayRef" (of CFStrings)
 	kPreferences_TagDataReadBufferSize					= 'rdbf',	//!< data: "SInt16"
 	kPreferences_TagFunctionKeyLayout					= 'fkyl',	//!< data: "Session_FunctionKeyLayout"
+	kPreferences_TagIdleAfterInactivityHandler			= 'ihdl',	//!< data: "UInt16" (Session_Watch; excluding kSession_WatchForPassiveData)
 	kPreferences_TagIdleAfterInactivityInSeconds		= 'idle',	//!< data: "UInt16"
 	kPreferences_TagKeepAlivePeriodInMinutes			= 'kfqm',	//!< data: "UInt16"
 	kPreferences_TagKeyInterruptProcess					= 'kint',	//!< data: "char" (actual non-printable ASCII control character)

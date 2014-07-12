@@ -5363,6 +5363,38 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 										kPreferences_ChangeContextBatchMode);
 	Preferences_ContextStartMonitoring(this->translationConfiguration.returnRef(), this->preferencesListener.returnRef(),
 										kPreferences_ChangeContextBatchMode);
+	
+	// if a user preference is set to immediately handle data events
+	// then start a watch automatically
+	{
+		Session_Watch		backgroundDataWatch = kSession_WatchNothing;
+		Session_Watch		idleWatch = kSession_WatchNothing;
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_ContextGetData(inConfigurationOrNull, kPreferences_TagBackgroundNewDataHandler,
+													sizeof(backgroundDataWatch), &backgroundDataWatch,
+													true/* search for defaults */);
+		if ((kPreferences_ResultOK == prefsResult) && (kSession_WatchNothing != backgroundDataWatch))
+		{
+			Session_SetWatch(this->selfRef, backgroundDataWatch);
+		}
+		prefsResult = Preferences_ContextGetData(inConfigurationOrNull, kPreferences_TagIdleAfterInactivityHandler,
+													sizeof(idleWatch), &idleWatch,
+													true/* search for defaults */);
+		if ((kPreferences_ResultOK == prefsResult) && (kSession_WatchNothing != idleWatch))
+		{
+			Session_SetWatch(this->selfRef, idleWatch);
+		}
+		
+		if ((kSession_WatchNothing != backgroundDataWatch) && (kSession_WatchNothing != idleWatch))
+		{
+			// TEMPORARY; probably the session should allow the user to
+			// watch for both inactivity and activity but for now there
+			// is only one watch that can be set at a time
+			Console_Warning(Console_WriteLine, "both background data and idle activity handlers were set; currently the idle handler takes precedence");
+		}
+	}
 }// My_Session default constructor
 
 

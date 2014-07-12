@@ -179,6 +179,10 @@ table(deftable).
 (defbottom). |\2(desc). Fewer than this many bytes remain cached before being processed by the terminal.|
 (deftop). |(key). @data-receive-idle-seconds@|(types). _integer_|
 (defbottom). |\2(desc). Sessions set to notify on idle, do so after a few seconds of inactivity, according to this value.|
+(deftop). |(key). @data-receive-when-idle@|(types). _string_: @notify@ or @keep-alive@ or _empty_|
+(defbottom). |\2(desc). Sessions respond to a period of inactivity in the specified way.|
+(deftop). |(key). @data-receive-when-in-background@|(types). _string_: @notify@ or _empty_|
+(defbottom). |\2(desc). Background sessions respond to new activity in the specified way.|
 (deftop). |(key). @data-send-keepalive-period-minutes@|(types). _integer_|
 (defbottom). |\2(desc). Sessions set to send a keep-alive character on idle, do so every few minutes, according to this value.|
 (deftop). |(key). @data-send-local-echo-enabled@|(types). _true or false_|

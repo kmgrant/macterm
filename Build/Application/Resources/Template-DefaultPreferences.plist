@@ -69,6 +69,10 @@
 	<true/>
 	<key>data-receive-idle-seconds</key>
 	<integer>30</integer>
+	<key>data-receive-when-idle</key>
+	<string></string>
+	<key>data-receive-when-in-background</key>
+	<string></string>
 	<key>data-send-keepalive-period-minutes</key>
 	<integer>10</integer>
 	<key>data-send-local-echo-enabled</key>

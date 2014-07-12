@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20140711',
     '20140709',
     '20140606',
     '20140514',
@@ -494,6 +495,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20140711': [
+        'New low-level session preferences "data-receive-when-idle" and "data-receive-when-in-background" can be used to automatically enable one of the event handlers in the Terminal menu at the time a session begins (that is, the items "Notify on Next Activity", "Notify on Inactivity (After Delay)" and "Send Keep-Alive on Inactivity").  See the Help page "low-level settings" for details on these preferences and the string values that they may have.  A future version of MacTerm may integrate these into the Sessions preferences panel.',
+    ],
     '20140709': [
         'Find dialog now has a simpler design that directly shows its scope and case-insensitivity options.',
     ],

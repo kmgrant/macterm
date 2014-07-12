@@ -916,6 +916,9 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedTranslationFavorite,
 									CFSTR("translation-favorite"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
+	My_PreferenceDefinition::create(kPreferences_TagBackgroundNewDataHandler,
+									CFSTR("data-receive-when-in-background"), typeCFStringRef,
+									sizeof(Session_Watch), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagBackupFontName,
 									CFSTR("terminal-backup-font-family"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::TRANSLATION);
@@ -982,6 +985,9 @@ Preferences_Init ()
 									sizeof(Session_FunctionKeyLayout), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagHeadersCollapsed,
 										CFSTR("window-terminal-toolbar-invisible"), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::create(kPreferences_TagIdleAfterInactivityHandler,
+									CFSTR("data-receive-when-idle"), typeCFStringRef,
+									sizeof(Session_Watch), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagIdleAfterInactivityInSeconds,
 									CFSTR("data-receive-idle-seconds"), typeNetEvents_CFNumberRef,
 									sizeof(UInt16), Quills::Prefs::SESSION);
@@ -7455,6 +7461,34 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagBackgroundNewDataHandler:
+					{
+						assert(typeCFStringRef == keyValueType);
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							Session_Watch*		storedValuePtr = REINTERPRET_CAST(outDataPtr, Session_Watch*);
+							
+							
+							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("notify"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_WatchForPassiveData;
+							}
+							else
+							{
+								*storedValuePtr = kSession_WatchNothing;
+							}
+							CFRelease(valueCFString), valueCFString = nullptr;
+						}
+					}
+					break;
+				
 				case kPreferences_TagCaptureAutoStart:
 				case kPreferences_TagCaptureFileNameAllowsSubstitutions:
 				case kPreferences_TagLineModeEnabled:
@@ -7556,6 +7590,38 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							else
 							{
 								*storedValuePtr = kSession_FunctionKeyLayoutVT220;
+							}
+							CFRelease(valueCFString), valueCFString = nullptr;
+						}
+					}
+					break;
+				
+				case kPreferences_TagIdleAfterInactivityHandler:
+					{
+						assert(typeCFStringRef == keyValueType);
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							Session_Watch*		storedValuePtr = REINTERPRET_CAST(outDataPtr, Session_Watch*);
+							
+							
+							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("notify"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_WatchForInactivity;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("keep-alive"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_WatchForKeepAlive;
+							}
+							else
+							{
+								*storedValuePtr = kSession_WatchNothing;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
@@ -9801,6 +9867,33 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
+			case kPreferences_TagBackgroundNewDataHandler:
+				{
+					Session_Watch const* const		data = REINTERPRET_CAST(inDataPtr, Session_Watch const*);
+					
+					
+					assert(typeCFStringRef == keyValueType);
+					switch (*data)
+					{
+					case kSession_WatchForPassiveData:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("notify"));
+						break;
+					
+					case kSession_WatchForInactivity:
+					case kSession_WatchForKeepAlive:
+						// TEMPORARY; may want a new enumeration type
+						assert(false && "incorrect preference value for background new-data handler");
+						break;
+					
+					case kSession_WatchNothing:
+					default:
+						// ???
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR(""));
+						break;
+					}
+				}
+				break;
+			
 			case kPreferences_TagCaptureAutoStart:
 			case kPreferences_TagCaptureFileNameAllowsSubstitutions:
 			case kPreferences_TagLineModeEnabled:
@@ -9876,6 +9969,36 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					default:
 						// ???
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("vt220"));
+						break;
+					}
+				}
+				break;
+			
+			case kPreferences_TagIdleAfterInactivityHandler:
+				{
+					Session_Watch const* const		data = REINTERPRET_CAST(inDataPtr, Session_Watch const*);
+					
+					
+					assert(typeCFStringRef == keyValueType);
+					switch (*data)
+					{
+					case kSession_WatchForInactivity:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("notify"));
+						break;
+					
+					case kSession_WatchForKeepAlive:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("keep-alive"));
+						break;
+					
+					case kSession_WatchForPassiveData:
+						// TEMPORARY; may want a new enumeration type
+						assert(false && "incorrect preference value for inactivity handler");
+						break;
+					
+					case kSession_WatchNothing:
+					default:
+						// ???
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR(""));
 						break;
 					}
 				}
