@@ -4,6 +4,10 @@
 # (in all required configurations) and copying the resulting
 # components into place.
 #
+# In addition, the rule "make official" (not automatic) should
+# be used at release time to sign the bundle that is going to be
+# made available for general use.
+#
 # If you want to use an Xcode from a custom location, you can
 # either open the project file from that Xcode, or set the path
 # on the command line ("make DEVELOPER_DIR=...").  When run from
@@ -17,6 +21,7 @@
 # Kevin Grant (kmg@mac.com)
 # December 14, 2007
 
+MAKEFILE_DIR := $(dir $(firstword $(MAKEFILE_LIST)))
 SHELL = /bin/bash
 
 # IMPORTANT: The first rule in the file is chosen when "make" is
@@ -27,6 +32,7 @@ first: bundle
 .PHONY: help
 help:
 	@echo "Usage: make [USE_GROWL=no]"
+	@echo "       make official BUNDLE=/path/to/MacTerm.app
 	@echo "       make clean"
 	@echo
 	@echo "You can also request specific component rules;"
@@ -53,7 +59,7 @@ help:
 #	SYMROOT
 #	OBJROOT
 #	GROWL_SDK_ROOT (if using Growl)
-include $(CURDIR)/Shared/CustomPaths.xcconfig
+include $(MAKEFILE_DIR)/Shared/CustomPaths.xcconfig
 
 # temporary files (subdirectories created)
 #SYMROOT=<defined in Xcode config>
@@ -69,7 +75,13 @@ ifeq ($(strip $(shell /bin/test -d $(DEVELOPER_DIR) || echo "no")),no)
 DEVELOPER_DIR := /Applications/Xcode.app/Contents/Developer
 endif
 
+# for code signing purposes, set this to an Apple-provided
+# "Developer ID Application" item in your Keychain
+DEVELOPER_ID_APP := Developer ID Application: Kevin Grant
+
 # tools
+CHMOD=/bin/chmod
+CODE_SIGN=/usr/bin/codesign
 COPY=/bin/cp
 IBTOOL=$(DEVELOPER_DIR)/usr/bin/ibtool
 IBTOOL_COMPILE_XIB_OPTIONS=--errors --warnings --notices --output-format human-readable-text --flatten NO
@@ -77,6 +89,7 @@ MKDIR_P=/usr/bin/install -d
 MOVE=/bin/mv
 RMDIR=/bin/rmdir
 RSYNC=/usr/bin/rsync
+SPCTL=/usr/sbin/spctl
 SYMLINK_REPLACE=/bin/ln -snf
 XARGS=/usr/bin/xargs
 XCB=$(DEVELOPER_DIR)/usr/bin/xcodebuild $(XCODE_ENV)
@@ -92,9 +105,9 @@ USE_GROWL=yes
 # (and decide the output directory from which to copy)
 PY_CONFIG := ForDebugging
 
-SRC_APP_PROJ_TOP := $(CURDIR)/Application
-SRC_BUGREPORTER_PROJ_TOP := $(CURDIR)/BugReporter
-SRC_PREFSCONVERTER_PROJ_TOP := $(CURDIR)/PrefsConverter
+SRC_APP_PROJ_TOP := $(MAKEFILE_DIR)/Application
+SRC_BUGREPORTER_PROJ_TOP := $(MAKEFILE_DIR)/BugReporter
+SRC_PREFSCONVERTER_PROJ_TOP := $(MAKEFILE_DIR)/PrefsConverter
 
 SRC_APP_CODE_TOP := $(SRC_APP_PROJ_TOP)/Code
 SRC_APP_PYCODE_TOP := $(SRC_APP_PROJ_TOP)/PythonCode
@@ -108,7 +121,7 @@ SRC_PYINVOKER_TOP_LEOPARD := $(SYMROOT)/ForDebugging
 SRC_GROWL_TOP := $(GROWL_SDK_ROOT)/Framework/Growl.framework
 SRC_QUILLS_TOP := $(SYMROOT)/ForDebugging/Quills.framework
 
-DEST_APP_TOP := $(CURDIR)/MacTerm.app/Contents
+DEST_APP_TOP := $(MAKEFILE_DIR)/MacTerm.app/Contents
 DEST_APP_FW_TOP := $(DEST_APP_TOP)/Frameworks
 DEST_APP_MACOS_TOP := $(DEST_APP_TOP)/MacOS
 DEST_APP_RESOURCES_TOP := $(DEST_APP_TOP)/Resources
@@ -334,12 +347,12 @@ install-py-framework:
 	$(MKDIR_P) $(dir $(DEST_PY_TOP))
 	$(RSYNC) --archive $(SRC_PY_TOP)/ $(DEST_PY_TOP)
 	echo "# automatically-generated Python file with basic version data" > $(DEST_PY_CODE_TOP)/versions.py
-	$(CURDIR)/VersionInfo.sh perl -e 'print "major_version = $$ENV{MY_MAJOR_NUMBER}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
-	$(CURDIR)/VersionInfo.sh perl -e 'print "minor_version = $$ENV{MY_MINOR_NUMBER}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
-	$(CURDIR)/VersionInfo.sh perl -e 'print "subminor_version = $$ENV{MY_SUBMINOR_NUMBER}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
-	$(CURDIR)/VersionInfo.sh perl -e 'print "alpha_beta = @{[ chr(39) ]}$$ENV{MY_ALPHA_BETA}@{[ chr(39) ]}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
-	$(CURDIR)/VersionInfo.sh perl -e 'print "build_number = $$ENV{MY_BUILD_NUMBER}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
-	$(CURDIR)/VersionInfo.sh perl -e 'print "prefs_version = $$ENV{MY_PREFS_VERSION}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
+	$(MAKEFILE_DIR)/VersionInfo.sh perl -e 'print "major_version = $$ENV{MY_MAJOR_NUMBER}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
+	$(MAKEFILE_DIR)/VersionInfo.sh perl -e 'print "minor_version = $$ENV{MY_MINOR_NUMBER}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
+	$(MAKEFILE_DIR)/VersionInfo.sh perl -e 'print "subminor_version = $$ENV{MY_SUBMINOR_NUMBER}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
+	$(MAKEFILE_DIR)/VersionInfo.sh perl -e 'print "alpha_beta = @{[ chr(39) ]}$$ENV{MY_ALPHA_BETA}@{[ chr(39) ]}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
+	$(MAKEFILE_DIR)/VersionInfo.sh perl -e 'print "build_number = $$ENV{MY_BUILD_NUMBER}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
+	$(MAKEFILE_DIR)/VersionInfo.sh perl -e 'print "prefs_version = $$ENV{MY_PREFS_VERSION}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
 	@# validate generated code...
 	python $(DEST_PY_CODE_TOP)/versions.py
 
@@ -363,7 +376,7 @@ install-growl-framework:
 	@# (note: this rule has a check to avoid accidental rsyncing from '/')
 	@if [ ! -d "$(GROWL_SDK_ROOT)" ] ; then \
 		echo "WARNING: Support for Growl is NOT being compiled in, due to a missing framework." >&2 ; \
-		echo "Current working directory: '$(CURDIR)';" >&2 ; \
+		echo "Current working directory: '$(MAKEFILE_DIR)';" >&2 ; \
 		echo "first download the Growl SDK <http://growl.info/> and install in subdirectory '$(GROWL_SDK_ROOT)'." >&2 ; \
 	else \
 		if [ "x$(SRC_GROWL_TOP)" = "x" ] ; then \
@@ -459,14 +472,14 @@ clean-app-dot-strings:
 
 # Component: Help
 
-$(CURDIR)/_Generated/MacTerm.help:
+$(MAKEFILE_DIR)/_Generated/MacTerm.help:
 	$(call banner,$@)
-	$(CURDIR)/HTMLHelpBuild.command
+	$(MAKEFILE_DIR)/HTMLHelpBuild.command
 
-$(DEST_APP_RESOURCES_TOP)/MacTerm.help: $(CURDIR)/_Generated/MacTerm.help
+$(DEST_APP_RESOURCES_TOP)/MacTerm.help: $(MAKEFILE_DIR)/_Generated/MacTerm.help
 	$(call banner,$@)
 	$(MKDIR_P) $(dir $@)
-	$(RSYNC) --archive $(CURDIR)/_Generated/MacTerm.help/ $@
+	$(RSYNC) --archive $(MAKEFILE_DIR)/_Generated/MacTerm.help/ $@
 
 # Component: Bug Reporter
 
@@ -550,7 +563,7 @@ $(DEST_APP_RESOURCES_TOP)/DefaultPreferences.plist: FORCE
 	@# this is always regenerated because it changes often and is a tiny file
 	$(COPY) $(SRC_APP_RESOURCES_TOP)/Template-DefaultPreferences.plist $@
 	env BUILT_PRODUCTS_DIR="$(DEST_APP_RESOURCES_TOP)" INFOPLIST_PATH=DefaultPreferences.plist \
-		$(CURDIR)/VersionInfo.sh $(CURDIR)/Tools/AutoDatePropertyList.sh
+		$(MAKEFILE_DIR)/VersionInfo.sh $(MAKEFILE_DIR)/Tools/AutoDatePropertyList.sh
 
 #
 # Info.plist file
@@ -561,7 +574,7 @@ $(DEST_APP_TOP)/Info.plist: FORCE
 	@# this is always regenerated because it changes daily and is a tiny file
 	$(COPY) $(SRC_APP_RESOURCES_TOP)/Template-Application-Info.plist $@
 	env BUILT_PRODUCTS_DIR="$(DEST_APP_TOP)" INFOPLIST_PATH=Info.plist \
-		$(CURDIR)/VersionInfo.sh $(CURDIR)/Tools/AutoDatePropertyList.sh
+		$(MAKEFILE_DIR)/VersionInfo.sh $(MAKEFILE_DIR)/Tools/AutoDatePropertyList.sh
 
 #
 # PkgInfo file
@@ -601,6 +614,16 @@ define banner
 
 endef
 
+# sign a file with a "Developer ID Application" and verify the result
+define sign_with_dev_id_app
+	$(call banner,code sign $(1))
+	$(CODE_SIGN) --deep --force --sign "$(DEVELOPER_ID_APP)" $(1)
+	$(CODE_SIGN) --display --verbose=4 $(1)
+	$(SPCTL) --assess --verbose=4 --raw $(1)
+	$(SPCTL) --assess --verbose=4 $(1)
+	
+endef
+
 #
 # Primary Rules
 #
@@ -636,5 +659,21 @@ clean:
 	@echo "(such as code indices) have not been removed."
 	@echo
 	@echo "Clean complete."
+
+.PHONY: official
+official:
+	@if [ "x$(BUNDLE)" = "x" ] ; then \
+		echo "BUNDLE=/path/to/MacTerm.app must be set" >&2 ; \
+		exit 1; \
+	fi
+	@# The existing signature for Growl.framework causes problems
+	@# when signing the bundle and I could find no work-around
+	@# except to delete that signature and then sign everything
+	@# (including the copy of Growl.framework being used) under
+	@# the same developer identity.
+	$(CHMOD) +w $(BUNDLE)/Contents/Frameworks/Growl.framework/Versions/Current/
+	$(CHMOD) -R +w $(BUNDLE)/Contents/Frameworks/Growl.framework/Versions/Current/_CodeSignature
+	$(RM) -R $(BUNDLE)/Contents/Frameworks/Growl.framework/Versions/Current/_CodeSignature
+	$(call sign_with_dev_id_app, $(BUNDLE))
 
 FORCE:
