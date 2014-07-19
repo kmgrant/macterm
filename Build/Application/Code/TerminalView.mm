@@ -570,23 +570,39 @@ void				visualBell							(TerminalViewRef);
 } // anonymous namespace
 
 /*!
+Private properties.
+*/
+@interface TerminalView_BackgroundView () //{
+
+// accessors
+	@property (assign) size_t
+	colorIndex; // a "kTerminalView_ColorIndex..." constant
+	@property (assign) My_TerminalViewPtr
+	internalViewPtr; // weak
+
+@end //}
+
+/*!
 The private class interface.
 */
 @interface TerminalView_BackgroundView (TerminalView_BackgroundViewInternal) //{
 
-// NSView
-	- (void)
-	drawRect:(NSRect)_;
+// (contains NSView overrides)
+
+@end //}
+
+/*!
+Private properties.
+*/
+@interface TerminalView_ContentView () //{
 
 // accessors
-	- (size_t)
-	colorIndex; // a "kTerminalView_ColorIndex..." constant
-	- (void)
-	setColorIndex:(size_t)_;
-	- (My_TerminalViewPtr)
-	internalViewPtr;
-	- (void)
-	setInternalViewPtr:(My_TerminalViewPtr)_;
+	@property (assign) My_TerminalViewPtr
+	internalViewPtr; // weak
+	@property (assign) NSUInteger
+	modifierFlagsForCursor;
+	@property (assign) BOOL
+	showDragHighlight;
 
 @end //}
 
@@ -595,19 +611,9 @@ The private class interface.
 */
 @interface TerminalView_ContentView (TerminalView_ContentViewInternal) //{
 
-// NSView
-	- (void)
-	drawRect:(NSRect)_;
+// (contains NSControl overrides)
 
-// accessors
-	- (My_TerminalViewPtr)
-	internalViewPtr;
-	- (void)
-	setInternalViewPtr:(My_TerminalViewPtr)_;
-	- (BOOL)
-	showDragHighlight;
-	- (void)
-	setShowDragHighlight:(BOOL)_;
+// (contains NSView overrides)
 
 @end //}
 
@@ -4166,16 +4172,16 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		// NOTE: in the Cocoa implementation, all views are passed in to the routine that
 		// constructs the Terminal View, so views do not need to be created here; but,
 		// it is necessary to associate the Terminal View object with them
-		[this->contentNSView setInternalViewPtr:this];
-		[this->paddingNSView setInternalViewPtr:this];
-		[this->backgroundNSView setInternalViewPtr:this];
+		this->contentNSView.internalViewPtr = this;
+		this->paddingNSView.internalViewPtr = this;
+		this->backgroundNSView.internalViewPtr = this;
 		
 		// NOTE: initializing the padding and background view colors is not really necessary
 		// (by the time the views are displayed, they will have been updated in the same way
 		// that they are whenever the user changes preferences later); however, it is
 		// important to tell the views which color index to use
-		[this->paddingNSView setColorIndex:kMyBasicColorIndexNormalBackground];
-		[this->backgroundNSView setColorIndex:kMyBasicColorIndexMatteBackground];
+		this->paddingNSView.colorIndex = kMyBasicColorIndexNormalBackground;
+		this->backgroundNSView.colorIndex = kMyBasicColorIndexMatteBackground;
 		
 		// specify the view to use for focus and basic input
 		this->focusNSView = this->backgroundNSView;
@@ -5272,7 +5278,31 @@ dictionaryWithTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 			
 			unless (usingDragHighlightColors)
 			{
-				if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
+				if (STYLE_SEARCH_RESULT(inAttributes))
+				{
+					// use selection colors
+					NSColor*	searchResultTextColor = [NSColor colorWithCalibratedRed:foregroundColor.red
+																						green:foregroundColor.green
+																						blue:foregroundColor.blue
+																						alpha:1.0];
+					NSColor*	searchResultBackgroundColor = [NSColor colorWithCalibratedRed:backgroundColor.red
+																								green:backgroundColor.green
+																								blue:backgroundColor.blue
+																								alpha:1.0];
+					
+					
+					if (NO == [NSColor searchResultColorsForForeground:&searchResultTextColor
+																		background:&searchResultBackgroundColor])
+					{
+						actualForegroundColor = [NSColor colorWithDeviceRed:foregroundColor.red green:foregroundColor.green
+																		blue:foregroundColor.blue alpha:inAlpha];
+					}
+					else
+					{
+						actualForegroundColor = searchResultTextColor;
+					}
+				}
+				else if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
 				{
 					if (gPreferenceProxies.invertSelections)
 					{
@@ -5329,7 +5359,6 @@ dictionaryWithTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 		
 		// UNIMPLEMENTED: highlighted-text (possibly inverted) colors
 		// UNIMPLEMENTED: dimmed-screen colors
-		// UNIMPLEMENTED: search-result colors
 		// UNIMPLEMENTED: “concealed” style colors
 	}
 	
@@ -5708,12 +5737,7 @@ If the cursor falls anywhere in the given area and is in a
 visible state, it is drawn automatically.
 
 WARNING:	For Cocoa-based drawing this routine CANNOT be called
-		outside of the content view’s "drawRect:" request.
-		Also, the given context CANNOT be different than the
-		one that is in effect during "drawRect:" because the
-		context may not always be used directly; for instance
-		drawing may occur by locking focus on the content view
-		directly.
+		outside of the content view’s normal layer drawing code.
 
 Although this function will set up text attributes such as
 font, color, graphics line width, etc., it will NOT set colors.
@@ -5781,19 +5805,20 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 												inBoundaries.size.height)];
 		
 		[layoutMgr addTextContainer:container];
-		[layoutMgr setTypesetterBehavior:NSTypesetterBehavior_10_3]; // minimum supported OS version of the project
+		[layoutMgr setTypesetterBehavior:NSTypesetterLatestBehavior];
 		
 		[textStorage addLayoutManager:layoutMgr];
 		
-		// draw the text; this does NOT use the given context but instead
-		// directly locks focus on the content view (one reason why this
-		// routine must ONLY be called via a content-view "drawRect:" request)
+		// draw the text
 		{
-			NSRange		glyphRange = [layoutMgr glyphRangeForTextContainer:container];
-			NSPoint		drawingLocation = NSMakePoint(inBoundaries.origin.x, inBoundaries.origin.y);
+			NSRange				glyphRange = [layoutMgr glyphRangeForTextContainer:container];
+			NSPoint				drawingLocation = NSMakePoint(inBoundaries.origin.x, inBoundaries.origin.y);
+			NSGraphicsContext*	givenContext = [NSGraphicsContext graphicsContextWithGraphicsPort:inDrawingContext
+																									flipped:YES];
+			NSGraphicsContext*	oldContext = [NSGraphicsContext currentContext];
 			
 			
-			[inTerminalViewPtr->contentNSView lockFocus];
+			[NSGraphicsContext setCurrentContext:givenContext];
 			[layoutMgr drawGlyphsForGlyphRange:glyphRange atPoint:drawingLocation];
 			if (STYLE_BOLD(inAttributes) &&
 				(inTerminalViewPtr->text.font.boldFont == inTerminalViewPtr->text.font.normalFont))
@@ -5806,7 +5831,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 				
 				[layoutMgr drawGlyphsForGlyphRange:glyphRange atPoint:drawingLocation];
 			}
-			[inTerminalViewPtr->contentNSView unlockFocus];
+			[NSGraphicsContext setCurrentContext:oldContext];
 		}
 		
 		[container release], container = nil;
@@ -12954,10 +12979,41 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			// give search results a special appearance
 			if (STYLE_SEARCH_RESULT(inAttributes))
 			{
-				inTerminalViewPtr->screen.currentRenderNoBackground = false;
+				// use selection colors
+				NSColor*	searchResultTextColor = [NSColor colorWithCalibratedRed:foregroundColor.red
+																					green:foregroundColor.green
+																					blue:foregroundColor.blue
+																					alpha:1.0];
+				NSColor*	searchResultBackgroundColor = [NSColor colorWithCalibratedRed:backgroundColor.red
+																							green:backgroundColor.green
+																							blue:backgroundColor.blue
+																							alpha:1.0];
 				
-				// use selection colors - UNIMPLEMENTED
-				// use lighter colors - UNIMPLEMENTED
+				
+				if (NO == [NSColor searchResultColorsForForeground:&searchResultTextColor
+																	background:&searchResultBackgroundColor])
+				{
+					// bail; force the default color even if it won’t look as good
+					searchResultBackgroundColor = [[NSColor selectedTextBackgroundColor] colorWithShading];
+				}
+				
+				if (false == inTerminalViewPtr->text.selection.inhibited)
+				{
+					// adjust the colors if text is selected
+					if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
+					{
+						searchResultBackgroundColor = [searchResultBackgroundColor colorWithShading];
+					}
+				}
+				
+				searchResultBackgroundColor = [searchResultBackgroundColor
+												colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+				CGContextSetRGBFillColor(inDrawingContext, [searchResultBackgroundColor redComponent],
+											[searchResultBackgroundColor greenComponent],
+											[searchResultBackgroundColor blueComponent],
+											[searchResultBackgroundColor alphaComponent]);
+				
+				inTerminalViewPtr->screen.currentRenderNoBackground = false;
 			}
 			
 			// finally, check the foreground and background colors; do not allow
@@ -13423,6 +13479,9 @@ visualBell	(TerminalViewRef	inView)
 @implementation TerminalView_BackgroundView
 
 
+@synthesize colorIndex = _colorIndex;
+
+
 /*!
 Designated initializer.
 
@@ -13434,8 +13493,10 @@ initWithFrame:(NSRect)		aFrame
 	self = [super initWithFrame:aFrame];
 	if (nil != self)
 	{
-		self->colorIndex = kMyBasicColorIndexNormalBackground;
-		self->internalViewPtr = nullptr;
+		self->_colorIndex = kMyBasicColorIndexNormalBackground;
+		self->_internalViewPtr = nullptr;
+		
+		self.wantsLayer = YES;
 	}
 	return self;
 }// initWithFrame:
@@ -13453,8 +13514,33 @@ dealloc
 }// dealloc
 
 
-#pragma mark NSView
+#pragma mark Accessors
 
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (My_TerminalViewPtr)
+internalViewPtr
+{
+	return REINTERPRET_CAST(_internalViewPtr, My_TerminalViewPtr);
+}
+- (void)
+setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
+{
+	_internalViewPtr = aViewPtr;
+}// setInternalViewPtr:
+
+
+@end // TerminalView_BackgroundView
+
+
+@implementation TerminalView_BackgroundView (TerminalView_BackgroundViewInternal)
+
+
+#pragma mark NSView
 
 /*!
 Returns YES to allow background views to render virtually
@@ -13472,84 +13558,27 @@ canDrawConcurrently
 
 
 /*!
-Returns YES only if the view has no transparent parts.
-
-(4.0)
-*/
-- (BOOL)
-isOpaque
-{
-	return YES;
-}// isOpaque
-
-
-@end // TerminalView_BackgroundView
-
-
-@implementation TerminalView_BackgroundView (TerminalView_BackgroundViewInternal)
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (size_t)
-colorIndex
-{
-	return colorIndex;
-}
-- (void)
-setColorIndex:(size_t)		aColorIndex
-{
-	colorIndex = aColorIndex;
-}// setColorIndex:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (My_TerminalViewPtr)
-internalViewPtr
-{
-	return REINTERPRET_CAST(internalViewPtr, My_TerminalViewPtr);
-}
-- (void)
-setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
-{
-	internalViewPtr = aViewPtr;
-}// setInternalViewPtr:
-
-
-#pragma mark NSView
-
-
-/*!
 Render the specified part of the terminal background.
 
 (4.0)
 */
 - (void)
-drawRect:(NSRect)	rect
+drawRect:(NSRect)	aRect
 {
 	// WARNING: Since "canDrawConcurrently" returns YES, this should
 	// not do anything that requires execution on the main thread.
-	My_TerminalViewPtr		viewPtr = [self internalViewPtr];
+	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
 	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
 	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
-	CGRect					clipBounds = CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+	CGRect					clipBounds = CGContextGetClipBoundingBox(drawingContext);
 	
 	
-	[super drawRect:rect];
-	
+	// NOTE: For porting purposes the colored background is simply drawn.
+	// Another option would be to update the layer’s background color
+	// directly whenever the view color changes.
 	if (nullptr != viewPtr)
 	{
-		CGDeviceColor const&	asFloats = viewPtr->text.colors[[self colorIndex]];
+		CGDeviceColor const&	asFloats = viewPtr->text.colors[self.colorIndex];
 		
 		
 		// draw background
@@ -13561,14 +13590,31 @@ drawRect:(NSRect)	rect
 		// no associated view yet; draw a dummy background
 		CGContextSetRGBFillColor(drawingContext, 1.0/* red */, 1.0/* green */, 1.0/* blue */, 1.0/* alpha */);
 		CGContextFillRect(drawingContext, clipBounds);
+		
 	}
 }// drawRect:
+
+
+/*!
+Returns YES only if the view has no transparent parts.
+
+(4.0)
+*/
+- (BOOL)
+isOpaque
+{
+	return YES;
+}// isOpaque
 
 
 @end // TerminalView_BackgroundView (TerminalView_BackgroundViewInternal)
 
 
 @implementation TerminalView_ContentView
+
+
+@synthesize modifierFlagsForCursor = _modifierFlagsForCursor;
+@synthesize showDragHighlight = _showDragHighlight;
 
 
 /*!
@@ -13582,9 +13628,11 @@ initWithFrame:(NSRect)		aFrame
 	self = [super initWithFrame:aFrame];
 	if (nil != self)
 	{
-		self->showDragHighlight = NO;
-		self->modifierFlagsForCursor = 0;
-		self->internalViewPtr = nullptr;
+		self->_showDragHighlight = NO;
+		self->_modifierFlagsForCursor = 0;
+		self->_internalViewPtr = nullptr;
+		
+		self.wantsLayer = YES;
 	}
 	return self;
 }// initWithFrame:
@@ -13600,6 +13648,26 @@ dealloc
 {
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (My_TerminalViewPtr)
+internalViewPtr
+{
+	return REINTERPRET_CAST(_internalViewPtr, My_TerminalViewPtr);
+}
+- (void)
+setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
+{
+	_internalViewPtr = aViewPtr;
+}// setInternalViewPtr:
 
 
 #pragma mark Actions
@@ -13618,7 +13686,7 @@ WARNING:	For the transition period, this can only be called
 - (IBAction)
 performFormatByFavoriteName:(id)	sender
 {
-	TerminalViewRef		currentView = [self internalViewPtr]->selfRef;
+	TerminalViewRef		currentView = self.internalViewPtr->selfRef;
 	BOOL				isError = YES;
 	
 	
@@ -13674,7 +13742,7 @@ WARNING:	For the transition period, this can only be called
 performFormatDefault:(id)	sender
 {
 #pragma unused(sender)
-	TerminalViewRef			currentView = [self internalViewPtr]->selfRef;
+	TerminalViewRef			currentView = self.internalViewPtr->selfRef;
 	Preferences_ContextRef	currentSettings = TerminalView_ReturnFormatConfiguration(currentView);
 	Preferences_ContextRef	defaultSettings = nullptr;
 	BOOL					isError = YES;
@@ -13713,9 +13781,15 @@ cache can be updated (used to change the cursor shape).
 flagsChanged:(NSEvent*)		anEvent
 {
 	[super flagsChanged:anEvent];
-	self->modifierFlagsForCursor = [anEvent modifierFlags];
+	self.modifierFlagsForCursor = [anEvent modifierFlags];
 	[[self window] invalidateCursorRectsForView:self];
 }// flagsChanged:
+
+
+@end // TerminalView_ContentView
+
+
+@implementation TerminalView_ContentView (TerminalView_ContentViewInternal)
 
 
 #pragma mark NSView
@@ -13735,135 +13809,6 @@ acceptsFirstResponder
 
 
 /*!
-Returns YES only if the view’s coordinate system uses
-a top-left origin.
-
-(4.0)
-*/
-- (BOOL)
-isFlipped
-{
-	// since drawing code is originally from Carbon, keep the view
-	// flipped for the time being
-	return YES;
-}// isFlipped
-
-
-/*!
-Returns YES only if the view has no transparent parts.
-
-(4.0)
-*/
-- (BOOL)
-isOpaque
-{
-	return NO;
-}// isOpaque
-
-
-/*!
-Invoked by NSView whenever it’s necessary to define the regions
-that change the mouse pointer’s shape.
-
-(4.1)
-*/
-- (void)
-resetCursorRects
-{
-	My_TerminalViewPtr		viewPtr = [self internalViewPtr];
-	
-	
-	if ((nullptr != viewPtr) && (viewPtr->text.selection.readOnly))
-	{
-		// the user cannot interact with the terminal view so it is
-		// inappropriate to display any special cursor shapes over it
-		[self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
-	}
-	else
-	{
-		// the cursor varies based on the state of modifier keys
-		if (self->modifierFlagsForCursor & NSControlKeyMask)
-		{
-			// modifier key for contextual menu
-			[self addCursorRect:[self bounds] cursor:[NSCursor contextualMenuCursor]];
-		}
-		else if ((self->modifierFlagsForCursor & NSCommandKeyMask) &&
-					(self->modifierFlagsForCursor & NSAlternateKeyMask))
-		{
-			// modifier key for moving the terminal cursor to the click location
-			// (in the Carbon version this was a plus-cursor, but Cocoa does not
-			// have that cursor shape)
-			[self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
-		}
-		else if (self->modifierFlagsForCursor & NSCommandKeyMask)
-		{
-			// modifier key for clicking a URL selection
-			[self addCursorRect:[self bounds] cursor:[NSCursor pointingHandCursor]];
-		}
-		else if (self->modifierFlagsForCursor & NSAlternateKeyMask)
-		{
-			// modifier key for rectangular text selections
-			[self addCursorRect:[self bounds] cursor:customCursorCrosshairs()];
-		}
-		else
-		{
-			// normal cursor
-			//[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
-			[self addCursorRect:[self bounds] cursor:customCursorIBeam(isSmallIBeam(viewPtr))];
-		}
-		
-		// INCOMPLETE; add support for any current text selection region
-	}
-}// resetCursorRects
-
-
-@end // TerminalView_ContentView
-
-
-@implementation TerminalView_ContentView (TerminalView_ContentViewInternal)
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (BOOL)
-showDragHighlight
-{
-	return showDragHighlight;
-}
-- (void)
-setShowDragHighlight:(BOOL)		flag
-{
-	showDragHighlight = flag;
-}// setShowDragHighlight:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (My_TerminalViewPtr)
-internalViewPtr
-{
-	return REINTERPRET_CAST(internalViewPtr, My_TerminalViewPtr);
-}
-- (void)
-setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
-{
-	internalViewPtr = aViewPtr;
-}// setInternalViewPtr:
-
-
-#pragma mark NSView
-
-
-/*!
 Render the specified part of the terminal screen.
 
 INCOMPLETE.  This is going to be the test bed for transitioning
@@ -13875,27 +13820,27 @@ something like a formatting sheet’s preview pane.)
 (4.0)
 */
 - (void)
-drawRect:(NSRect)	rect
+drawRect:(NSRect)	aRect
 {
-	My_TerminalViewPtr		viewPtr = [self internalViewPtr];
+	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
 	
-	
-	[super drawRect:rect];
 	
 	if (nullptr != viewPtr)
 	{
 		NSGraphicsContext*	contextMgr = [NSGraphicsContext currentContext];
 		CGContextRef		drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
-		NSRect				entireRect = [self bounds];
-		CGRect				clipBounds = CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
-		CGRect				contentBounds = CGRectMake(entireRect.origin.x, entireRect.origin.y, entireRect.size.width, entireRect.size.height);
+		CGRect				entireRect = NSRectToCGRect([self bounds]);
+		CGRect				clipBounds = CGContextGetClipBoundingBox(drawingContext);
+		CGRect				contentBounds = CGRectMake(CGRectGetMinX(entireRect), CGRectGetMinY(entireRect),
+														CGRectGetWidth(entireRect),
+														CGRectGetHeight(entireRect));
 		
 		
 		// INCOMPLETE!
 		
 		// perform any necessary rendering for drags
 		{
-			if ([self showDragHighlight])
+			if (self.showDragHighlight)
 			{
 				DragAndDrop_ShowHighlightBackground(drawingContext, contentBounds);
 				// frame is drawn at the end, after any content
@@ -13907,7 +13852,7 @@ drawRect:(NSRect)	rect
 			}
 			
 			// tell text routines to draw in black if there is a drag highlight
-			viewPtr->screen.currentRenderDragColors = ([self showDragHighlight]) ? true : false;
+			viewPtr->screen.currentRenderDragColors = (self.showDragHighlight) ? true : false;
 		}
 		
 		// draw text and graphics
@@ -13986,7 +13931,7 @@ drawRect:(NSRect)	rect
 		}
 		
 		// perform any necessary rendering for drags
-		if ([self showDragHighlight])
+		if (self.showDragHighlight)
 		{
 			DragAndDrop_ShowHighlightFrame(drawingContext, contentBounds);
 		}
@@ -14047,6 +13992,89 @@ drawRect:(NSRect)	rect
 		}
 	}
 }// drawRect:
+
+
+/*!
+Returns YES only if the view’s coordinate system uses
+a top-left origin.
+
+(4.0)
+*/
+- (BOOL)
+isFlipped
+{
+	// since drawing code is originally from Carbon, keep the view
+	// flipped for the time being
+	return YES;
+}// isFlipped
+
+
+/*!
+Returns YES only if the view has no transparent parts.
+
+(4.0)
+*/
+- (BOOL)
+isOpaque
+{
+	return NO;
+}// isOpaque
+
+
+/*!
+Invoked by NSView whenever it’s necessary to define the regions
+that change the mouse pointer’s shape.
+
+(4.1)
+*/
+- (void)
+resetCursorRects
+{
+	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
+	
+	
+	if ((nullptr != viewPtr) && (viewPtr->text.selection.readOnly))
+	{
+		// the user cannot interact with the terminal view so it is
+		// inappropriate to display any special cursor shapes over it
+		[self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
+	}
+	else
+	{
+		// the cursor varies based on the state of modifier keys
+		if (self.modifierFlagsForCursor & NSControlKeyMask)
+		{
+			// modifier key for contextual menu
+			[self addCursorRect:[self bounds] cursor:[NSCursor contextualMenuCursor]];
+		}
+		else if ((self.modifierFlagsForCursor & NSCommandKeyMask) &&
+					(self.modifierFlagsForCursor & NSAlternateKeyMask))
+		{
+			// modifier key for moving the terminal cursor to the click location
+			// (in the Carbon version this was a plus-cursor, but Cocoa does not
+			// have that cursor shape)
+			[self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
+		}
+		else if (self.modifierFlagsForCursor & NSCommandKeyMask)
+		{
+			// modifier key for clicking a URL selection
+			[self addCursorRect:[self bounds] cursor:[NSCursor pointingHandCursor]];
+		}
+		else if (self.modifierFlagsForCursor & NSAlternateKeyMask)
+		{
+			// modifier key for rectangular text selections
+			[self addCursorRect:[self bounds] cursor:customCursorCrosshairs()];
+		}
+		else
+		{
+			// normal cursor
+			//[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
+			[self addCursorRect:[self bounds] cursor:customCursorIBeam(isSmallIBeam(viewPtr))];
+		}
+		
+		// INCOMPLETE; add support for any current text selection region
+	}
+}// resetCursorRects
 
 
 @end // TerminalView_ContentView (TerminalView_ContentViewInternal)

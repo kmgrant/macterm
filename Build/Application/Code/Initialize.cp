@@ -278,6 +278,18 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 			DebugInterface_DisplayTestPrefsWindow();
 		}
 	}
+	
+	// when debugging, make sure the application activates after it starts up
+	if (Local_StandardInputIsATerminal())
+	{
+		ProcessSerialNumber		psn;
+		
+		
+		if (GetCurrentProcess(&psn) == noErr)
+		{
+			UNUSED_RETURN(OSStatus)SetFrontProcess(&psn);
+		}
+	}
 }// ApplicationStartup
 
 

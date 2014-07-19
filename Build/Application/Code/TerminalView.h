@@ -203,8 +203,8 @@ changes to an interface declared in a ".mm" file.
 @interface TerminalView_BackgroundView : NSView //{
 {
 @private
-	size_t	colorIndex;
-	void*	internalViewPtr;
+	size_t	_colorIndex;
+	void*	_internalViewPtr;
 }
 @end //}
 
@@ -218,9 +218,9 @@ changes to an interface declared in a ".mm" file.
 @interface TerminalView_ContentView : NSControl //{
 {
 @private
-	BOOL			showDragHighlight;
-	unsigned int	modifierFlagsForCursor;
-	void*			internalViewPtr;
+	BOOL		_showDragHighlight;
+	NSUInteger	_modifierFlagsForCursor;
+	void*		_internalViewPtr;
 }
 @end //}
 
