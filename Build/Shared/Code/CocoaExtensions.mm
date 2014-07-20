@@ -257,6 +257,23 @@ background:(NSColor**)						inoutBackgroundColor
 
 
 /*!
+Sets this NSColor value as the background RGB color
+of the specified Core Graphics context.
+
+(4.1)
+*/
+- (void)
+setAsBackgroundInCGContext:(CGContextRef)	aDrawingContext
+{
+	NSColor*		asRGB = [self colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+	
+	
+	CGContextSetRGBFillColor(aDrawingContext, [asRGB redComponent], [asRGB greenComponent],
+								[asRGB blueComponent], [asRGB alphaComponent]);
+}// setAsBackgroundInCGContext:
+
+
+/*!
 TEMPORARY.  FOR TRANSITIONAL CODE ONLY.  DEPRECATED.
 
 Sets this NSColor value as the background RGB color
@@ -278,6 +295,23 @@ setAsBackgroundInQDCurrentPort
 	asQuickDrawRGB = ColorUtilities_QuickDrawColorMake(asDeviceColor);
 	RGBBackColor(&asQuickDrawRGB);
 }// setAsBackgroundInQDCurrentPort
+
+
+/*!
+Sets this NSColor value as the foreground RGB color
+of the specified Core Graphics context.
+
+(4.1)
+*/
+- (void)
+setAsForegroundInCGContext:(CGContextRef)	aDrawingContext
+{
+	NSColor*		asRGB = [self colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+	
+	
+	CGContextSetRGBStrokeColor(aDrawingContext, [asRGB redComponent], [asRGB greenComponent],
+								[asRGB blueComponent], [asRGB alphaComponent]);
+}// setAsForegroundInCGContext:
 
 
 /*!

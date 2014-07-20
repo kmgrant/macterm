@@ -52,6 +52,12 @@
 	- (NSColor*)
 	colorWithShading;
 
+// setting the colors of a graphics context
+	- (void)
+	setAsBackgroundInCGContext:(CGContextRef)_;
+	- (void)
+	setAsForegroundInCGContext:(CGContextRef)_;
+
 // TEMPORARY AND DEPRECATED; USE ONLY AS NEEDED
 	- (void)
 	setAsBackgroundInQDCurrentPort;

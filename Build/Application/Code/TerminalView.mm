@@ -5262,104 +5262,98 @@ dictionaryWithTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	// set color attributes
 	{
-		CGDeviceColor	backgroundColor;
-		CGDeviceColor	foregroundColor;
-		Boolean			usingDragHighlightColors = (inTerminalViewPtr->screen.currentRenderDragColors);
+		NSColor*	foregroundNSColor = (inTerminalViewPtr->screen.currentRenderDragColors)
+										? [NSColor blackColor] // default for drags is black
+										: nil;
 		
 		
-		// find the correct colors in the color table
-		getScreenColorsForAttributes(inTerminalViewPtr, inAttributes, &foregroundColor, &backgroundColor,
-										&inTerminalViewPtr->screen.currentRenderNoBackground);
-		
-		// set foreground color
+		if (nil == foregroundNSColor)
 		{
-			NSColor*	actualForegroundColor = [NSColor blackColor]; // default for drags is black
+			CGDeviceColor	backgroundDeviceColor;
+			CGDeviceColor	foregroundDeviceColor;
 			
 			
-			unless (usingDragHighlightColors)
+			// find the correct colors in the color table
+			getScreenColorsForAttributes(inTerminalViewPtr, inAttributes,
+											&foregroundDeviceColor, &backgroundDeviceColor,
+											&inTerminalViewPtr->screen.currentRenderNoBackground);
+			foregroundNSColor = [NSColor colorWithCalibratedRed:foregroundDeviceColor.red
+																green:foregroundDeviceColor.green
+																blue:foregroundDeviceColor.blue
+																alpha:1.0];
+			NSColor*	backgroundNSColor = [NSColor colorWithCalibratedRed:backgroundDeviceColor.red
+																			green:backgroundDeviceColor.green
+																			blue:backgroundDeviceColor.blue
+																			alpha:1.0];
+			
+			
+			if (STYLE_SEARCH_RESULT(inAttributes))
 			{
-				if (STYLE_SEARCH_RESULT(inAttributes))
+				// use selection colors
+				NSColor*	searchResultTextColor = [[foregroundNSColor copy] autorelease];
+				NSColor*	searchResultBackgroundColor = [[backgroundNSColor copy] autorelease];
+				
+				
+				if (NO == [NSColor searchResultColorsForForeground:&searchResultTextColor
+																	background:&searchResultBackgroundColor])
 				{
-					// use selection colors
-					NSColor*	searchResultTextColor = [NSColor colorWithCalibratedRed:foregroundColor.red
-																						green:foregroundColor.green
-																						blue:foregroundColor.blue
-																						alpha:1.0];
-					NSColor*	searchResultBackgroundColor = [NSColor colorWithCalibratedRed:backgroundColor.red
-																								green:backgroundColor.green
-																								blue:backgroundColor.blue
-																								alpha:1.0];
-					
-					
-					if (NO == [NSColor searchResultColorsForForeground:&searchResultTextColor
-																		background:&searchResultBackgroundColor])
-					{
-						actualForegroundColor = [NSColor colorWithDeviceRed:foregroundColor.red green:foregroundColor.green
-																		blue:foregroundColor.blue alpha:inAlpha];
-					}
-					else
-					{
-						actualForegroundColor = searchResultTextColor;
-					}
-				}
-				else if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
-				{
-					if (gPreferenceProxies.invertSelections)
-					{
-						// invert the text (foreground from background)
-						actualForegroundColor = [NSColor colorWithDeviceRed:backgroundColor.red green:backgroundColor.green
-																			blue:backgroundColor.blue alpha:inAlpha];
-					}
-					else
-					{
-						// alter the color (usually to make it look darker)
-						NSColor*	selectionTextColor = [NSColor colorWithCalibratedRed:foregroundColor.red
-																							green:foregroundColor.green
-																							blue:foregroundColor.blue
-																							alpha:1.0];
-						NSColor*	selectionBackgroundColor = [NSColor colorWithCalibratedRed:backgroundColor.red
-																								green:backgroundColor.green
-																								blue:backgroundColor.blue
-																								alpha:1.0];
-						
-						
-						if (NO == [NSColor selectionColorsForForeground:&selectionTextColor
-																		background:&selectionBackgroundColor])
-						{
-							// bail; force the default color even if it won’t look as good
-							selectionTextColor = [NSColor blackColor];
-						}
-						actualForegroundColor = [selectionTextColor
-													colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
-					}
+					foregroundNSColor = [[foregroundNSColor copy] autorelease];
 				}
 				else
 				{
-					actualForegroundColor = [NSColor colorWithDeviceRed:foregroundColor.red green:foregroundColor.green
-																		blue:foregroundColor.blue alpha:inAlpha];
-				}
-				
-				//
-				// modify the base text color based on other state
-				//
-				
-				// adjust for inactive views (dimmer text)
-				if (false == inTerminalViewPtr->isActive)
-				{
-					// make the text color lighter, unless it is selected
-					if (false == STYLE_SELECTED(inAttributes))
-					{
-						actualForegroundColor = [actualForegroundColor blendedColorWithFraction:0.5/* arbitrary */
-																								ofColor:[NSColor whiteColor]];
-					}
+					foregroundNSColor = searchResultTextColor;
 				}
 			}
-			[result setObject:actualForegroundColor forKey:NSForegroundColorAttributeName];
+			else if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
+			{
+				if (gPreferenceProxies.invertSelections)
+				{
+					// invert the text (foreground from background)
+					foregroundNSColor = backgroundNSColor;
+				}
+				else
+				{
+					// alter the color (usually to make it look darker)
+					NSColor*	selectionTextColor = [[foregroundNSColor copy] autorelease];
+					NSColor*	selectionBackgroundColor = [[backgroundNSColor copy] autorelease];
+					
+					
+					if (NO == [NSColor selectionColorsForForeground:&selectionTextColor
+																	background:&selectionBackgroundColor])
+					{
+						// bail; force the default color even if it won’t look as good
+						selectionTextColor = [NSColor blackColor];
+					}
+					foregroundNSColor = [selectionTextColor
+											colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+				}
+			}
+			else
+			{
+				// use default value (set above)
+			}
+			
+			//
+			// modify the base text color based on other state
+			//
+			
+			// adjust for inactive views (dimmer text)
+			if (false == inTerminalViewPtr->isActive)
+			{
+				// make the text color lighter, unless it is selected
+				if (false == STYLE_SELECTED(inAttributes))
+				{
+					foregroundNSColor = [foregroundNSColor blendedColorWithFraction:0.5/* arbitrary */
+																					ofColor:[NSColor whiteColor]];
+				}
+			}
 		}
 		
 		// UNIMPLEMENTED: highlighted-text (possibly inverted) colors
 		// UNIMPLEMENTED: dimmed-screen colors
 		// UNIMPLEMENTED: “concealed” style colors
+		
+		[result setObject:foregroundNSColor forKey:NSForegroundColorAttributeName];
 	}
 	
 	return result;
@@ -12894,21 +12888,30 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (inTerminalViewPtr->isCocoa)
 	{
 		// Cocoa and Quartz setup
-		CGDeviceColor	backgroundColor;
-		CGDeviceColor	foregroundColor; // not used except for reference when inverting
-		Boolean			usingDragHighlightColors = (inTerminalViewPtr->screen.currentRenderDragColors);
+		CGDeviceColor	backgroundDeviceColor;
+		CGDeviceColor	foregroundDeviceColor; // not used except for reference when inverting
 		
 		
 		// find the correct colors in the color table
-		getScreenColorsForAttributes(inTerminalViewPtr, inAttributes, &foregroundColor, &backgroundColor,
+		getScreenColorsForAttributes(inTerminalViewPtr, inAttributes,
+										&foregroundDeviceColor, &backgroundDeviceColor,
 										&inTerminalViewPtr->screen.currentRenderNoBackground);
 		
 		// set up background color; note that in drag highlighting mode,
 		// the background color is preset by the highlight renderer
-		if (false == usingDragHighlightColors)
+		if (false == inTerminalViewPtr->screen.currentRenderDragColors)
 		{
-			CGContextSetRGBFillColor(inDrawingContext, backgroundColor.red, backgroundColor.green,
-										backgroundColor.blue, 1.0/* alpha */);
+			NSColor*	foregroundNSColor = [NSColor colorWithCalibratedRed:foregroundDeviceColor.red
+																			green:foregroundDeviceColor.green
+																			blue:foregroundDeviceColor.blue
+																			alpha:1.0];
+			NSColor*	backgroundNSColor = [NSColor colorWithCalibratedRed:backgroundDeviceColor.red
+																			green:backgroundDeviceColor.green
+																			blue:backgroundDeviceColor.blue
+																			alpha:1.0];
+			
+			
+			[backgroundNSColor setAsBackgroundInCGContext:inDrawingContext];
 			
 			if (false == inTerminalViewPtr->text.selection.inhibited)
 			{
@@ -12922,20 +12925,13 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 					if (gPreferenceProxies.invertSelections)
 					{
 						// use inverted colors (foreground is set elsewhere)
-						CGContextSetRGBFillColor(inDrawingContext, foregroundColor.red, foregroundColor.green,
-													foregroundColor.blue, 1.0/* alpha */);
+						[foregroundNSColor setAsBackgroundInCGContext:inDrawingContext];
 					}
 					else
 					{
 						// use selection colors
-						NSColor*	selectionTextColor = [NSColor colorWithCalibratedRed:foregroundColor.red
-																							green:foregroundColor.green
-																							blue:foregroundColor.blue
-																							alpha:1.0];
-						NSColor*	selectionBackgroundColor = [NSColor colorWithCalibratedRed:backgroundColor.red
-																								green:backgroundColor.green
-																								blue:backgroundColor.blue
-																								alpha:1.0];
+						NSColor*	selectionTextColor = [[foregroundNSColor copy] autorelease];
+						NSColor*	selectionBackgroundColor = [[backgroundNSColor copy] autorelease];
 						
 						
 						if (NO == [NSColor selectionColorsForForeground:&selectionTextColor
@@ -12946,12 +12942,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 						}
 						
 						// convert to RGB and then update the context
-						selectionBackgroundColor = [selectionBackgroundColor
-													colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
-						CGContextSetRGBFillColor(inDrawingContext, [selectionBackgroundColor redComponent],
-													[selectionBackgroundColor greenComponent],
-													[selectionBackgroundColor blueComponent],
-													[selectionBackgroundColor alphaComponent]);
+						[selectionBackgroundColor setAsBackgroundInCGContext:inDrawingContext];
 					}
 				}
 			}
@@ -12965,14 +12956,17 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 				inTerminalViewPtr->screen.currentRenderNoBackground = false;
 				
 				// dim screen
-				// use inactive colors - UNIMPLEMENTED
+				foregroundNSColor = [foregroundNSColor colorCloserToWhite];
+				backgroundNSColor = [backgroundNSColor colorCloserToWhite];
 				
 				// for text that is not selected, do an “iPhotoesque” selection where
 				// the selection appears darker than its surrounding text; this also
 				// causes the selection to look dark (appropriate because it is draggable)
 				unless ((!inTerminalViewPtr->text.selection.exists) || (gPreferenceProxies.invertSelections))
 				{
-					// use lighter colors - UNIMPLEMENTED
+					// use even lighter colors (more than the dimmed color above)
+					foregroundNSColor = [foregroundNSColor colorCloserToWhite];
+					backgroundNSColor = [backgroundNSColor colorCloserToWhite];
 				}
 			}
 			
@@ -12980,14 +12974,8 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			if (STYLE_SEARCH_RESULT(inAttributes))
 			{
 				// use selection colors
-				NSColor*	searchResultTextColor = [NSColor colorWithCalibratedRed:foregroundColor.red
-																					green:foregroundColor.green
-																					blue:foregroundColor.blue
-																					alpha:1.0];
-				NSColor*	searchResultBackgroundColor = [NSColor colorWithCalibratedRed:backgroundColor.red
-																							green:backgroundColor.green
-																							blue:backgroundColor.blue
-																							alpha:1.0];
+				NSColor*	searchResultTextColor = [[foregroundNSColor copy] autorelease];
+				NSColor*	searchResultBackgroundColor = [[backgroundNSColor copy] autorelease];
 				
 				
 				if (NO == [NSColor searchResultColorsForForeground:&searchResultTextColor
@@ -13008,10 +12996,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 				
 				searchResultBackgroundColor = [searchResultBackgroundColor
 												colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
-				CGContextSetRGBFillColor(inDrawingContext, [searchResultBackgroundColor redComponent],
-											[searchResultBackgroundColor greenComponent],
-											[searchResultBackgroundColor blueComponent],
-											[searchResultBackgroundColor alphaComponent]);
+				[searchResultBackgroundColor setAsBackgroundInCGContext:inDrawingContext];
 				
 				inTerminalViewPtr->screen.currentRenderNoBackground = false;
 			}
