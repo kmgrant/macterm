@@ -1948,12 +1948,16 @@ parseFile	(SInt16				inFileReferenceNumber,
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("answerback");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
+					CFRetainRelease		valueCFString(CFStringCreateWithCString
+														(kCFAllocatorDefault,
+															valueList.at(keyNameToKeyValueArrayIndexIterator->second),
+															kCFStringEncodingMacRoman),
+														true/* is retained */);
+					
+					
 					sessionFileError = SessionDescription_SetStringData
 										(inoutDataPtr->selfRef, kSessionDescription_StringTypeAnswerBack,
-											CFStringCreateWithCString
-											(kCFAllocatorDefault,
-												valueList.at(keyNameToKeyValueArrayIndexIterator->second),
-												kCFStringEncodingMacRoman),
+											valueCFString.returnCFStringRef(),
 											true/* validate before storing */);
 				}
 				
@@ -2001,12 +2005,16 @@ parseFile	(SInt16				inFileReferenceNumber,
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("toolbar");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
+					CFRetainRelease		valueCFString(CFStringCreateWithCString
+														(kCFAllocatorDefault,
+															valueList.at(keyNameToKeyValueArrayIndexIterator->second),
+															kCFStringEncodingMacRoman),
+														true/* is retained */);
+					
+					
 					sessionFileError = SessionDescription_SetStringData
 										(inoutDataPtr->selfRef, kSessionDescription_StringTypeToolbarInfo,
-											CFStringCreateWithCString
-											(kCFAllocatorDefault,
-												valueList.at(keyNameToKeyValueArrayIndexIterator->second),
-												kCFStringEncodingMacRoman),
+											valueCFString.returnCFStringRef(),
 											true/* validate before storing */);
 				}
 				
@@ -2014,12 +2022,16 @@ parseFile	(SInt16				inFileReferenceNumber,
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("macros");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
+					CFRetainRelease		valueCFString(CFStringCreateWithCString
+														(kCFAllocatorDefault,
+															valueList.at(keyNameToKeyValueArrayIndexIterator->second),
+															kCFStringEncodingMacRoman),
+														true/* is retained */);
+					
+					
 					sessionFileError = SessionDescription_SetStringData
 										(inoutDataPtr->selfRef, kSessionDescription_StringTypeMacroSet,
-											CFStringCreateWithCString
-											(kCFAllocatorDefault,
-												valueList.at(keyNameToKeyValueArrayIndexIterator->second),
-												kCFStringEncodingMacRoman),
+											valueCFString.returnCFStringRef(),
 											true/* validate before storing */);
 				}
 				

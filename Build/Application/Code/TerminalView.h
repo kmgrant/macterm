@@ -339,9 +339,9 @@ Handle
 												 TerminalView_TextFlags			inFlags);
 
 CFStringRef
-	TerminalView_ReturnSelectedTextAsNewUnicode	(TerminalViewRef				inView,
-												 UInt16							inNumberOfSpacesToReplaceWithOneTabOrZero,
-												 TerminalView_TextFlags			inFlags);
+	TerminalView_ReturnSelectedTextCopyAsUnicode	(TerminalViewRef				inView,
+													 UInt16							inNumberOfSpacesToReplaceWithOneTabOrZero,
+													 TerminalView_TextFlags			inFlags);
 
 RgnHandle
 	TerminalView_ReturnSelectedTextAsNewRegion	(TerminalViewRef				inView);

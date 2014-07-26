@@ -1037,7 +1037,7 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 						 Clipboard_CopyMethod	inHowToCopy,
 						 PasteboardRef			inDataTargetOrNull)
 {
-	CFStringRef		textToCopy = nullptr;			// where to store the characters
+	CFStringRef		textToCopy = nullptr;	// where to store the characters
 	short			tableThreshold = 0;		// zero for normal, nonzero for copy table mode
 	
 	
@@ -1065,7 +1065,7 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 		TerminalView_TextFlags	flags = (inHowToCopy & kClipboard_CopyMethodInline) ? kTerminalView_TextFlagInline : 0;
 		
 		
-		textToCopy = TerminalView_ReturnSelectedTextAsNewUnicode(inView, tableThreshold, flags);
+		textToCopy = TerminalView_ReturnSelectedTextCopyAsUnicode(inView, tableThreshold, flags);
 	}
 	
 	if (nullptr != textToCopy)
@@ -1942,6 +1942,10 @@ setDataSize:(size_t)	dataSize
 			Console_WriteLine("unable to create clipboard data size string from format");
 			finalCFString = CFSTR("");
 		}
+		else
+		{
+			releaseFinalCFString = true;
+		}
 		
 		if (releaseAboutCFString)
 		{
@@ -1955,7 +1959,7 @@ setDataSize:(size_t)	dataSize
 	}
 	
 	// update the window header text
-	[self setSizeField:(NSString*)finalCFString];
+	[self setSizeField:BRIDGE_CAST(finalCFString, NSString*)];
 	
 	if (releaseFinalCFString)
 	{

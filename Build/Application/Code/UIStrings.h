@@ -504,6 +504,28 @@ OSStatus
 										 UIStrings_FileOrFolderCFString					inWhichString,
 										 FSRef&											outFSRef);
 
+/*!
+Invokes any UIStrings_Copy() method above but returns nullptr
+for any error (otherwise returning a new string).
+
+(4.1)
+*/
+template < typename string_enum >
+CFStringRef
+	UIStrings_ReturnCopy				(string_enum									inWhichString)
+	{
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
+		CFStringRef			result = nullptr;
+		
+		
+		stringResult = UIStrings_Copy(inWhichString, result);
+		if (false == stringResult.ok())
+		{
+			result = nullptr;
+		}
+		return result;
+	}
+
 //@}
 
 #endif

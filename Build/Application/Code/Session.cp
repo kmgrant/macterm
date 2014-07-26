@@ -1417,7 +1417,10 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 					Session_TerminalCopyAnswerBackMessage(inRef, stringValue);
 					saveError = SessionDescription_SetStringData
 								(saveFileMemoryModel, kSessionDescription_StringTypeAnswerBack, stringValue);
-					CFRelease(stringValue), stringValue = nullptr;
+					if (nullptr != stringValue)
+					{
+						CFRelease(stringValue), stringValue = nullptr;
+					}
 				}
 				
 				// keyboard mapping info

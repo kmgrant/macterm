@@ -118,7 +118,7 @@ void
 URL_HandleForScreenView		(TerminalScreenRef	UNUSED_ARGUMENT(inScreen),
 							 TerminalViewRef	inView)
 {
-	CFRetainRelease		urlObject(TerminalView_ReturnSelectedTextAsNewUnicode
+	CFRetainRelease		urlObject(TerminalView_ReturnSelectedTextCopyAsUnicode
 									(inView, 0, kTerminalView_TextFlagInline));
 	Boolean				openFailed = true;
 	

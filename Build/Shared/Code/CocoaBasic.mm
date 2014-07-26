@@ -636,12 +636,11 @@ user.
 CFArrayRef
 CocoaBasic_ReturnUserSoundNames ()
 {
-	AutoPool				_;
-	NSArray* const			kSearchPaths = [NSArray arrayWithObjects:
+	NSArray* const			kSearchPaths = @[
 												findFolder(kUserDomain, kSystemSoundsFolderType),
 												findFolder(kLocalDomain, kSystemSoundsFolderType),
 												findFolder(kSystemDomain, kSystemSoundsFolderType),
-												nil];
+											];
 	NSArray* const			kSupportedFileTypes = [NSSound soundUnfilteredFileTypes];
 	NSFileManager* const	kFileManager = [NSFileManager defaultManager];
 	BOOL					isDirectory = NO;
@@ -665,8 +664,7 @@ CocoaBasic_ReturnUserSoundNames ()
 		}
 	}
 	
-	[result retain];
-	return REINTERPRET_CAST(result, CFArrayRef);
+	return BRIDGE_CAST(result, CFArrayRef);
 }// ReturnUserSoundNames
 
 
@@ -848,13 +846,14 @@ into a path as required by Cocoa routines.
 NSString*
 returnPathForFSRef	(FSRef const&	inFileOrFolder)
 {
-	NSString*	result = nil;
-	CFURLRef	urlRef = CFURLCreateFromFSRef(kCFAllocatorDefault, &inFileOrFolder);
+	NSString*			result = nil;
+	CFRetainRelease		urlRef(CFURLCreateFromFSRef(kCFAllocatorDefault, &inFileOrFolder),
+								true/* is retained */);
 	
 	
-	if (nil != urlRef)
+	if (urlRef.exists())
 	{
-		NSURL*		urlObject = (NSURL*)urlRef;
+		NSURL*		urlObject = BRIDGE_CAST(urlRef.returnCFTypeRef(), NSURL*);
 		
 		
 		result = [urlObject path];

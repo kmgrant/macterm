@@ -1380,7 +1380,7 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		}
 	}
 	
-	if (false == inSetValue)
+	if ((false == inSetValue) && (nullptr != panelDataPtr))
 	{
 		switch (inPropertyID)
 		{

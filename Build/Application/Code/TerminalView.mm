@@ -539,7 +539,7 @@ OSStatus			receiveTerminalViewTrack			(EventHandlerCallRef, EventRef, TerminalVi
 void				receiveVideoModeChange				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				releaseRowIterator					(My_TerminalViewPtr, Terminal_LineRef*);
 SInt64				returnNumberOfCharacters			(My_TerminalViewPtr);
-CFStringRef			returnSelectedTextAsNewUnicode		(My_TerminalViewPtr, UInt16, TerminalView_TextFlags);
+CFStringRef			returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr, UInt16, TerminalView_TextFlags);
 void				screenBufferChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				screenCursorChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				screenToLocal						(My_TerminalViewPtr, SInt16*, SInt16*);
@@ -1449,7 +1449,7 @@ TerminalView_GetSelectedTextAsAudio		(TerminalViewRef	inView)
 	
 	if (viewPtr != nullptr)
 	{
-		CFRetainRelease		spokenText(returnSelectedTextAsNewUnicode(viewPtr, 0/* space info */, kTerminalView_TextFlagInline),
+		CFRetainRelease		spokenText(returnSelectedTextCopyAsUnicode(viewPtr, 0/* space info */, kTerminalView_TextFlagInline),
 										true/* is retained */);
 		
 		
@@ -1976,7 +1976,8 @@ TerminalView_ReturnNSWindow		(TerminalViewRef	inView)
 
 
 /*!
-DEPRECATED.  Use TerminalView_ReturnSelectedTextAsNewUnicode()
+DEPRECATED.
+Use TerminalView_ReturnSelectedTextCopyAsUnicode()
 instead.
 
 Returns the contents of the current selection for
@@ -2070,9 +2071,9 @@ IMPORTANT:	Use this kind of routine very judiciously.
 (3.1)
 */
 CFStringRef
-TerminalView_ReturnSelectedTextAsNewUnicode	(TerminalViewRef			inView,
-											 UInt16						inMaxSpacesToReplaceWithTabOrZero,
-											 TerminalView_TextFlags		inFlags)
+TerminalView_ReturnSelectedTextCopyAsUnicode	(TerminalViewRef			inView,
+												 UInt16						inMaxSpacesToReplaceWithTabOrZero,
+												 TerminalView_TextFlags		inFlags)
 {
     My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	CFStringRef					result = nullptr;
@@ -2080,10 +2081,10 @@ TerminalView_ReturnSelectedTextAsNewUnicode	(TerminalViewRef			inView,
 	
 	if (nullptr != viewPtr)
 	{
-		result = returnSelectedTextAsNewUnicode(viewPtr, inMaxSpacesToReplaceWithTabOrZero, inFlags);
+		result = returnSelectedTextCopyAsUnicode(viewPtr, inMaxSpacesToReplaceWithTabOrZero, inFlags);
 	}
 	return result;
-}// ReturnSelectedTextAsNewUnicode
+}// ReturnSelectedTextCopyAsUnicode
 
 
 /*!
@@ -7659,7 +7660,7 @@ getScreenOriginFloat	(My_TerminalViewPtr		inTerminalViewPtr,
 /*!
 Internal version of TerminalView_ReturnSelectedTextAsNewHandle().
 
-DEPRECATED.  Use returnSelectedTextAsNewUnicode() instead.
+DEPRECATED.  Use returnSelectedTextCopyAsUnicode() instead.
 
 (3.0)
 */
@@ -11329,14 +11330,14 @@ returnNumberOfCharacters	(My_TerminalViewPtr		inTerminalViewPtr)
 
 
 /*!
-Internal version of TerminalView_ReturnSelectedTextAsNewUnicode().
+Internal version of TerminalView_ReturnSelectedTextCopyAsUnicode().
 
 (3.1)
 */
 CFStringRef
-returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
-								 UInt16						inMaxSpacesToReplaceWithTabOrZero,
-								 TerminalView_TextFlags		inFlags)
+returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr			inTerminalViewPtr,
+									 UInt16						inMaxSpacesToReplaceWithTabOrZero,
+									 TerminalView_TextFlags		inFlags)
 {
     CFStringRef		result = nullptr;
 	
@@ -11441,7 +11442,8 @@ returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
 						Console_Warning(Console_WriteValue, "internal error, copy range ended up negative; proposed size", copyLength);
 						copyLength = 0;
 					}
-					else if (copyLength > 0)
+					
+					if (copyLength > 0)
 					{
 						ptrdiff_t const		kSanityCheckCopyLimit = 256; // arbitrary, but matches maximum line buffer size
 						
@@ -11529,7 +11531,7 @@ returnSelectedTextAsNewUnicode	(My_TerminalViewPtr			inTerminalViewPtr,
 	}
 	
 	return result;
-}// returnSelectedTextAsNewUnicode
+}// returnSelectedTextCopyAsUnicode
 
 
 /*!

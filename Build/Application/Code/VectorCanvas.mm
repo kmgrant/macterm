@@ -688,7 +688,7 @@ VectorCanvas_SetPenColor	(VectorCanvas_Ref			inRef,
 		{
 			// to change the color, create a new entry (subsequent path
 			// changes will use this color until something changes again)
-			[ptr->drawingPathElements addObject:[[VectorCanvas_Path alloc] initWithPurpose:inPurpose]];
+			[ptr->drawingPathElements addObject:[[[VectorCanvas_Path alloc] initWithPurpose:inPurpose] autorelease]];
 			currentElement = [ptr->drawingPathElements lastObject];
 			assert(nil != currentElement);
 		}
@@ -1016,7 +1016,7 @@ pathElementWithPurpose	(My_VectorCanvasPtr			inPtr,
 	if (0 == [inPtr->drawingPathElements count])
 	{
 		// drawing was empty
-		[inPtr->drawingPathElements addObject:[[VectorCanvas_Path alloc] initWithPurpose:inPurpose]];
+		[inPtr->drawingPathElements addObject:[[[VectorCanvas_Path alloc] initWithPurpose:inPurpose] autorelease]];
 	}
 	else
 	{
@@ -1027,7 +1027,7 @@ pathElementWithPurpose	(My_VectorCanvasPtr			inPtr,
 		{
 			// drawing was empty or it was currently creating something
 			// different; make a new path with the requested purpose
-			[inPtr->drawingPathElements addObject:[activePath copyWithEmptyPathAndPurpose:inPurpose]];
+			[inPtr->drawingPathElements addObject:[[activePath copyWithEmptyPathAndPurpose:inPurpose] autorelease]];
 		}
 	}
 	result = [inPtr->drawingPathElements lastObject];
@@ -1378,7 +1378,7 @@ printing menu command.)
 performPrintScreen:(id)		sender
 {
 #pragma unused(sender)
-	NSPrintInfo*	printInfo = [[NSPrintInfo sharedPrintInfo] copy];
+	NSPrintInfo*	printInfo = [[[NSPrintInfo sharedPrintInfo] copy] autorelease];
 	
 	
 	// initial settings are basically arbitrary; attempting to make everything look nice

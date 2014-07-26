@@ -520,10 +520,11 @@ TextDataFile_AddNameValueRGBColor	(TextDataFile_Ref				inRef,
 
 
 /*!
-Returns the value associated with the specified name.
+Returns the next name-value pair in the given file.
 If the value could be read, "true" is returned and
 the specified string will be filled in; otherwise,
-"false" is returned.
+"false" is returned (either way, a name string is
+returned).
 
 If "inStripBrackets" is "true", the value string will
 have its end caps removed automatically - see the
@@ -560,22 +561,27 @@ TextDataFile_GetNextNameValue	(TextDataFile_Ref	inRef,
 			char*	namePtr = getNameValue(buffer, &valuePtr); // on output, "buffer" is modified
 			
 			
-			// check for brackets
-			if (inStripBrackets)
-			{
-				char*	strippedStringPtr = nullptr;
-				
-				
-				if (TextDataFile_StringStripEndBrackets(valuePtr, &strippedStringPtr))
-				{
-					valuePtr = strippedStringPtr;
-				}
-			}
-			
-			// copy the name and value
+			// copy the name
 			CPP_STD::strncpy(outNamePtr, namePtr, inNameLength - 1);
-			CPP_STD::strncpy(outValuePtr, valuePtr, inValueLength - 1);
-			result = true;
+			
+			if (nullptr != valuePtr)
+			{
+				// check for brackets
+				if (inStripBrackets)
+				{
+					char*	strippedStringPtr = nullptr;
+					
+					
+					if (TextDataFile_StringStripEndBrackets(valuePtr, &strippedStringPtr))
+					{
+						valuePtr = strippedStringPtr;
+					}
+				}
+				
+				// copy the value
+				CPP_STD::strncpy(outValuePtr, valuePtr, inValueLength - 1);
+				result = true;
+			}
 		}
 	}
 	return result;
@@ -634,10 +640,10 @@ TextDataFile_StringStripEndBrackets		(char*		inoutStringPtr,
 										 char**		outClippedStringPtr)
 {
 	Boolean		result = false;
-	SInt16		stringLength = CPP_STD::strlen(inoutStringPtr);
+	SInt16		stringLength = ((nullptr == inoutStringPtr) ? 0 : CPP_STD::strlen(inoutStringPtr));
 	
 	
-	if ((inoutStringPtr != nullptr) && (stringLength >= 2))
+	if (stringLength >= 2)
 	{
 		switch (inoutStringPtr[0])
 		{
@@ -892,19 +898,23 @@ getNameValue	(char*		inoutLine,
 	*ptr++ = '\0';
 	
 	// if there is anything left of the string, continue
-	if ((outValuePtrOrNull != nullptr) && (ptr < (startPtr + originalLength)))
+	if (nullptr != outValuePtrOrNull)
 	{
-		// skip whitespace before equal-sign
-		while (CPP_STD::isspace(*ptr)) ++ptr;
-		
-		// skip equal-sign in value
-		if (*ptr == '=') ++ptr;
-		
-		// skip whitespace after equal-sign
-		while (CPP_STD::isspace(*ptr)) ++ptr;
-		
-		// set value to the remainder
-		*outValuePtrOrNull = ptr;
+		*outValuePtrOrNull = nullptr;
+		if (ptr < (startPtr + originalLength))
+		{
+			// skip whitespace before equal-sign
+			while (CPP_STD::isspace(*ptr)) ++ptr;
+			
+			// skip equal-sign in value
+			if (*ptr == '=') ++ptr;
+			
+			// skip whitespace after equal-sign
+			while (CPP_STD::isspace(*ptr)) ++ptr;
+			
+			// set value to the remainder
+			*outValuePtrOrNull = ptr;
+		}
 	}
 	
 	return result;

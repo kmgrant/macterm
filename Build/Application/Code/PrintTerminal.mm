@@ -116,16 +116,17 @@ PrintTerminal_NewJobFromFile	(CFURLRef			inFile,
 								 Boolean			inDefaultToLandscape)
 {
 	AutoPool				_;
-	CFRetainRelease			selectedText(TerminalView_ReturnSelectedTextAsNewUnicode
+	CFRetainRelease			selectedText(TerminalView_ReturnSelectedTextCopyAsUnicode
 											(inView, 0/* space/tab conversion, or zero */, 0/* flags */),
 											true/* is retained */);
 	PrintTerminal_JobRef	result = nullptr;
 	
 	
-	result = REINTERPRET_CAST([[PrintTerminal_Job alloc] initWithString:[NSString stringWithContentsOfURL:(NSURL*)inFile]
-															andFont:returnNSFontForTerminalView(inView)
-															andTitle:(NSString*)inJobName
-															andLandscape:((inDefaultToLandscape) ? YES : NO)], PrintTerminal_JobRef);
+	result = REINTERPRET_CAST([[PrintTerminal_Job alloc] initWithString:[NSString stringWithContentsOfURL:BRIDGE_CAST(inFile, NSURL*)]
+																		andFont:returnNSFontForTerminalView(inView)
+																		andTitle:BRIDGE_CAST(inJobName, NSString*)
+																		andLandscape:((inDefaultToLandscape) ? YES : NO)],
+								PrintTerminal_JobRef);
 	return result;
 }// NewJobFromFile
 
@@ -143,16 +144,17 @@ PrintTerminal_NewJobFromSelectedText	(TerminalViewRef	inView,
 										 Boolean			inDefaultToLandscape)
 {
 	AutoPool				_;
-	CFRetainRelease			selectedText(TerminalView_ReturnSelectedTextAsNewUnicode
+	CFRetainRelease			selectedText(TerminalView_ReturnSelectedTextCopyAsUnicode
 											(inView, 0/* space/tab conversion, or zero */, 0/* flags */),
 											true/* is retained */);
 	PrintTerminal_JobRef	result = nullptr;
 	
 	
-	result = REINTERPRET_CAST([[PrintTerminal_Job alloc] initWithString:(NSString*)selectedText.returnCFStringRef()
-															andFont:returnNSFontForTerminalView(inView)
-															andTitle:(NSString*)inJobName
-															andLandscape:((inDefaultToLandscape) ? YES : NO)], PrintTerminal_JobRef);
+	result = REINTERPRET_CAST([[PrintTerminal_Job alloc] initWithString:BRIDGE_CAST(selectedText.returnCFStringRef(), NSString*)
+																		andFont:returnNSFontForTerminalView(inView)
+																		andTitle:BRIDGE_CAST(inJobName, NSString*)
+																		andLandscape:((inDefaultToLandscape) ? YES : NO)],
+								PrintTerminal_JobRef);
 	return result;
 }// NewJobFromSelectedText
 

@@ -912,7 +912,7 @@ monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 	Panel_Ref						owningPanel = nullptr;
 	UInt32							actualSize = 0;
 	OSStatus						getPropertyError = noErr;
-	Boolean							proceed = true;
+	Boolean							proceed = false;
 	
 	
 	getPropertyError = GetControlProperty(inDataBrowser, AppResources_ReturnCreatorCode(),

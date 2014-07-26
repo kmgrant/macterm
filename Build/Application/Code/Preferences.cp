@@ -691,7 +691,6 @@ namespace {
 Preferences_Result		assertInitialized						();
 void					changeNotify							(Preferences_Change, Preferences_ContextRef = nullptr,
 																 Boolean = false);
-CFStringRef				chooseUserSpecifiedName					(CFDataRef, CFStringRef);
 Preferences_Result		contextGetData							(My_ContextInterfacePtr, Quills::Prefs::Class, Preferences_Tag,
 																 size_t, void*, size_t*);
 Boolean					convertCFArrayToHIRect					(CFArrayRef, HIRect&);
@@ -699,11 +698,12 @@ Boolean					convertCFArrayToRGBColor				(CFArrayRef, RGBColor*);
 Boolean					convertHIRectToCFArray					(HIRect const&, CFArrayRef&);
 Boolean					convertRGBColorToCFArray				(RGBColor const*, CFArrayRef&);
 Preferences_Result		copyClassDomainCFArray					(Quills::Prefs::Class, CFArrayRef&);
+CFStringRef				copyDomainUserSpecifiedName				(CFStringRef);
+CFStringRef				copyUserSpecifiedName					(CFDataRef, CFStringRef);
 Preferences_Result		createAllPreferencesContextsFromDisk	();
 CFDictionaryRef			createDefaultPrefDictionary				();
 CFStringRef				createKeyAtIndex						(CFStringRef, UInt32);
 CFIndex					findDomainIndexInArray					(CFArrayRef, CFStringRef);
-CFStringRef				findDomainUserSpecifiedName				(CFStringRef);
 Boolean					getDefaultContext						(Quills::Prefs::Class, My_ContextInterfacePtr&);
 Boolean					getFactoryDefaultsContext				(My_ContextInterfacePtr&);
 Preferences_Result		getFormatPreference						(My_ContextInterfaceConstPtr, Preferences_Tag,
@@ -4422,7 +4422,10 @@ unitTest ()
 	
 	result &= My_ContextInterface::unitTest(testObjectPtr);
 	
-	CFRelease(keyListCFArray), keyListCFArray = nullptr;
+	if (nullptr != keyListCFArray)
+	{
+		CFRelease(keyListCFArray), keyListCFArray = nullptr;
+	}
 	delete testObjectPtr, testObjectPtr = nullptr;
 	
 	return result;
@@ -4561,7 +4564,10 @@ unitTest ()
 	
 	result &= My_ContextInterface::unitTest(testObjectPtr);
 	
-	CFRelease(keyListCFArray), keyListCFArray = nullptr;
+	if (nullptr != keyListCFArray)
+	{
+		CFRelease(keyListCFArray), keyListCFArray = nullptr;
+	}
 	delete testObjectPtr, testObjectPtr = nullptr;
 	
 	return result;
@@ -5461,43 +5467,6 @@ changeNotify	(Preferences_Change			inWhatChanged,
 
 
 /*!
-A name for a context may be stored in two ways, and not
-necessarily both: as a "name" key of Core Foundation Data
-type (external representation of Unicode) and as a
-"name-string" key of Core Foundation String type.  Pass
-one or both of those values (nullptr is acceptable) and
-a string is constructed appropriately.
-
-(4.0)
-*/
-CFStringRef
-chooseUserSpecifiedName		(CFDataRef		inNameExternalUnicodeDataValue,
-							 CFStringRef	inNameStringValue)
-{
-	CFStringRef		result = nullptr;
-	
-	
-	if (nullptr != inNameExternalUnicodeDataValue)
-	{
-		// Unicode string was found
-		result = CFStringCreateFromExternalRepresentation
-					(kCFAllocatorDefault, inNameExternalUnicodeDataValue, kCFStringEncodingUnicode);
-	}
-	else if (nullptr != inNameStringValue)
-	{
-		// raw string was found
-		result = CFStringCreateCopy(kCFAllocatorDefault, inNameStringValue);
-	}
-	else
-	{
-		result = CFSTR("");
-		CFRetain(result);
-	}
-	return result;
-}// chooseUserSpecifiedName
-
-
-/*!
 Internal version of Preferences_ContextGetData().
 
 (3.1)
@@ -5884,6 +5853,72 @@ copyClassDomainCFArray	(Quills::Prefs::Class	inClass,
 
 
 /*!
+Reads preferences in the given domain and attempts to
+find a key that indicates the user’s preferred name
+for this set of preferences.  The result could be
+nullptr; if not, you must call CFRelease() on it.
+
+(3.1)
+*/
+CFStringRef
+copyDomainUserSpecifiedName		(CFStringRef	inDomainName)
+{
+	CFStringRef			result = nullptr;
+	CFRetainRelease		dataObject(CFPreferencesCopyAppValue(CFSTR("name"), inDomainName),
+									true/* is retained */);
+	CFRetainRelease		stringObject(CFPreferencesCopyAppValue(CFSTR("name-string"), inDomainName),
+										true/* is retained */);
+	
+	
+	// in order to support many languages, the "name" field is stored as
+	// Unicode data (string external representation); however, if that
+	// is not available, purely for convenience a "name-string" alternate
+	// is supported, holding a raw string
+	result = copyUserSpecifiedName(CFUtilities_DataCast(dataObject.returnCFTypeRef()),
+									stringObject.returnCFStringRef());
+	
+	return result;
+}// copyDomainUserSpecifiedName
+
+
+/*!
+A name for a context may be stored in two ways, and not
+necessarily both: as a "name" key of Core Foundation Data
+type (external representation of Unicode) and as a
+"name-string" key of Core Foundation String type.  Pass
+one or both of those values (nullptr is acceptable) and
+a string is constructed appropriately.
+
+(4.0)
+*/
+CFStringRef
+copyUserSpecifiedName		(CFDataRef		inNameExternalUnicodeDataValue,
+							 CFStringRef	inNameStringValue)
+{
+	CFStringRef		result = nullptr;
+	
+	
+	if (nullptr != inNameExternalUnicodeDataValue)
+	{
+		// Unicode string was found
+		result = CFStringCreateFromExternalRepresentation
+					(kCFAllocatorDefault, inNameExternalUnicodeDataValue, kCFStringEncodingUnicode);
+	}
+	else if (nullptr != inNameStringValue)
+	{
+		// raw string was found
+		result = CFStringCreateCopy(kCFAllocatorDefault, inNameStringValue);
+	}
+	else
+	{
+		result = CFSTR("");
+		CFRetain(result);
+	}
+	return result;
+}// copyUserSpecifiedName
+
+
+/*!
 Reads the preferences on disk and creates lists of
 preferences contexts for every collection that is found.
 This way, user interface elements (for instance) can
@@ -6001,14 +6036,14 @@ createAllPreferencesContextsFromDisk ()
 				// for verifying that it was created successfully)
 				CFStringRef const		kDomainName = CFUtilities_StringCast(CFArrayGetValueAtIndex
 																				(namesInClass, i));
-				CFStringRef const		kFavoriteName = findDomainUserSpecifiedName(kDomainName);
-				Preferences_ContextRef	newContext = Preferences_NewContextFromFavorites(*toClass, kFavoriteName, kDomainName);
+				CFRetainRelease			favoriteNameCFString(copyDomainUserSpecifiedName(kDomainName), true/* is retained */);
+				Preferences_ContextRef	newContext = Preferences_NewContextFromFavorites(*toClass, favoriteNameCFString.returnCFStringRef(), kDomainName);
 				
 				
 				if (nullptr == newContext)
 				{
 					Console_Warning(Console_WriteValueCFString, "sister domain could not be loaded; core application preferences refer to missing domain", kDomainName);
-					Console_Warning(Console_WriteValueCFString, "user-specified name for missing domain", kFavoriteName);
+					Console_Warning(Console_WriteValueCFString, "user-specified name for missing domain", favoriteNameCFString.returnCFStringRef());
 				}
 			}
 			CFRelease(namesInClass), namesInClass = nullptr;
@@ -6032,13 +6067,14 @@ CFDictionaryRef
 createDefaultPrefDictionary ()
 {
 	CFDictionaryRef		result = nullptr;
-	CFURLRef			fileURL = nullptr;
+	CFRetainRelease		urlObject(CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), CFSTR("DefaultPreferences"),
+															CFSTR("plist")/* type string */, nullptr/* subdirectory path */),
+									true/* is retained */);
 	
 	
-	fileURL = CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), CFSTR("DefaultPreferences"),
-										CFSTR("plist")/* type string */, nullptr/* subdirectory path */);
-	if (nullptr != fileURL)
+	if (urlObject.exists())
 	{
+		CFURLRef	fileURL = STATIC_CAST(urlObject.returnCFTypeRef(), CFURLRef);
 		CFDataRef   fileData = nullptr;
 		SInt32		errorCode = 0;
 		
@@ -6052,6 +6088,7 @@ createDefaultPrefDictionary ()
 			//       If negative, it is an Apple error, and if positive it is scheme-specific.
 		}
 		
+		if (nullptr != fileData)
 		{
 			CFPropertyListRef   propertyList = nullptr;
 			CFStringRef			errorString = nullptr;
@@ -6059,20 +6096,21 @@ createDefaultPrefDictionary ()
 			
 			propertyList = CFPropertyListCreateFromXMLData(kCFAllocatorDefault, fileData,
 															kCFPropertyListImmutable, &errorString);
+			if (nullptr != propertyList)
+			{
+				// the XML file actually contains a dictionary
+				result = CFUtilities_DictionaryCast(propertyList);
+			}
+			
 			if (nullptr != errorString)
 			{
 				// could report/return error here...
 				CFRelease(errorString), errorString = nullptr;
 			}
-			else
-			{
-				// the XML file actually contains a dictionary
-				result = CFUtilities_DictionaryCast(propertyList);
-			}
+			
+			// finally, release the file data
+			CFRelease(fileData), fileData = nullptr;
 		}
-		
-		// finally, release the file data
-		CFRelease(fileData), fileData = nullptr;
 	}
 	
 	return result;
@@ -6132,35 +6170,6 @@ findDomainIndexInArray	(CFArrayRef		inArray,
 	}
 	return result;
 }// findDomainIndexInArray
-
-
-/*!
-Reads preferences in the given domain and attempts to
-find a key that indicates the user’s preferred name
-for this set of preferences.  The result could be
-nullptr; if not, you must call CFRelease() on it.
-
-(3.1)
-*/
-CFStringRef
-findDomainUserSpecifiedName		(CFStringRef	inDomainName)
-{
-	CFStringRef			result = nullptr;
-	CFRetainRelease		dataObject(CFPreferencesCopyAppValue(CFSTR("name"), inDomainName),
-									true/* is retained */);
-	CFRetainRelease		stringObject(CFPreferencesCopyAppValue(CFSTR("name-string"), inDomainName),
-										true/* is retained */);
-	
-	
-	// in order to support many languages, the "name" field is stored as
-	// Unicode data (string external representation); however, if that
-	// is not available, purely for convenience a "name-string" alternate
-	// is supported, holding a raw string
-	result = chooseUserSpecifiedName(CFUtilities_DataCast(dataObject.returnCFTypeRef()),
-										stringObject.returnCFStringRef());
-	
-	return result;
-}// findDomainUserSpecifiedName
 
 
 /*!
@@ -8879,8 +8888,8 @@ readPreferencesDictionaryInContext	(My_ContextInterfacePtr		inContextPtr,
 	// check for an established name for the context
 	if ((nullptr != outInferredNameOrNull) && ((nullptr != nameDataValue) || (nullptr != nameStringValue)))
 	{
-		*outInferredNameOrNull = chooseUserSpecifiedName(CFUtilities_DataCast(nameDataValue),
-															CFUtilities_StringCast(nameStringValue));
+		*outInferredNameOrNull = copyUserSpecifiedName(CFUtilities_DataCast(nameDataValue),
+														CFUtilities_StringCast(nameStringValue));
 	}
 	
 	// check for the dominant class of these settings
@@ -9753,11 +9762,11 @@ setApplicationPreference	(CFStringRef		inKey,
 #if 1
 	{
 		// for debugging
-		CFStringRef		descriptionCFString = CFCopyDescription(inValue);
-		char const*		keyString = nullptr;
-		char const*		descriptionString = nullptr;
-		Boolean			disposeKeyString = false;
-		Boolean			disposeDescriptionString = false;
+		CFRetainRelease		descriptionObject(CFCopyDescription(inValue), true/* is retained */);
+		char const*			keyString = nullptr;
+		char const*			descriptionString = nullptr;
+		Boolean				disposeKeyString = false;
+		Boolean				disposeDescriptionString = false;
 		
 		
 		keyString = CFStringGetCStringPtr(inKey, CFStringGetFastestEncoding(inKey));
@@ -9781,12 +9790,15 @@ setApplicationPreference	(CFStringRef		inKey,
 			}
 		}
 		
-		if (nullptr == descriptionCFString)
+		if (false == descriptionObject.exists())
 		{
 			descriptionString = "(no value description available)";
 		}
 		else
 		{
+			CFStringRef		descriptionCFString = descriptionObject.returnCFStringRef();
+			
+			
 			descriptionString = CFStringGetCStringPtr
 								(descriptionCFString, CFStringGetFastestEncoding(descriptionCFString));
 			if (nullptr == descriptionString)

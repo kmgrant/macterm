@@ -725,7 +725,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 												
 												if (nullptr != kTerminalView)
 												{
-													CFStringRef			selectedText = TerminalView_ReturnSelectedTextAsNewUnicode
+													CFStringRef			selectedText = TerminalView_ReturnSelectedTextCopyAsUnicode
 																						(kTerminalView, 0/* spaces to replace with tabs */,
 																							(('s' == nextChar)
 																								? 0

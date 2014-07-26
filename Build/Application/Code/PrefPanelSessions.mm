@@ -1166,23 +1166,43 @@ panelChanged	(Panel_Ref		inPanel,
 		{
 			My_SessionsPanelDataFlowDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
 																				My_SessionsPanelDataFlowDataPtr);
+			My_SessionsPanelDataFlowUI*			interfacePtr = panelDataPtr->interfacePtr;
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
-			Preferences_Result					prefsResult = kPreferences_ResultOK;
-			Preferences_ContextRef				defaultContext = nullptr;
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
 			if (nullptr != oldContext)
 			{
-				panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+				if (nullptr != interfacePtr)
+				{
+					interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+				}
+				
 				Preferences_ContextSave(oldContext);
 			}
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
-			assert(kPreferences_ResultOK == prefsResult);
-			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
+			
+			if (nullptr != interfacePtr)
+			{
+				Preferences_Result			prefsResult = kPreferences_ResultOK;
+				Preferences_ContextRef		defaultContext = nullptr;
+				
+				
+				prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
+				assert(kPreferences_ResultOK == prefsResult);
+				
+				if (newContext != defaultContext)
+				{
+					interfacePtr->readPreferences(defaultContext); // reset to known state first
+				}
+			}
+			
 			panelDataPtr->dataModel = newContext;
-			panelDataPtr->interfacePtr->readPreferences(newContext);
+			
+			if (nullptr != interfacePtr)
+			{
+				interfacePtr->readPreferences(newContext);
+			}
 		}
 		break;
 	
@@ -1770,19 +1790,38 @@ panelChanged	(Panel_Ref		inPanel,
 		{
 			My_SessionsPanelGraphicsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
 																				My_SessionsPanelGraphicsDataPtr);
+			My_SessionsPanelGraphicsUI*			interfacePtr = panelDataPtr->interfacePtr;
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
-			Preferences_Result					prefsResult = kPreferences_ResultOK;
-			Preferences_ContextRef				defaultContext = nullptr;
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
-			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
-			assert(kPreferences_ResultOK == prefsResult);
-			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
+			if (nullptr != oldContext)
+			{
+				Preferences_ContextSave(oldContext);
+			}
+			
+			if (nullptr != interfacePtr)
+			{
+				Preferences_Result			prefsResult = kPreferences_ResultOK;
+				Preferences_ContextRef		defaultContext = nullptr;
+				
+				
+				prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
+				assert(kPreferences_ResultOK == prefsResult);
+				
+				if (newContext != defaultContext)
+				{
+					interfacePtr->readPreferences(defaultContext); // reset to known state first
+				}
+			}
+			
 			panelDataPtr->dataModel = newContext;
-			panelDataPtr->interfacePtr->readPreferences(newContext);
+			
+			if (nullptr != interfacePtr)
+			{
+				interfacePtr->readPreferences(newContext);
+			}
 		}
 		break;
 	
@@ -2233,8 +2272,6 @@ panelChanged	(Panel_Ref		inPanel,
 																				My_SessionsPanelKeyboardDataPtr);
 			My_SessionsPanelKeyboardUI*			interfacePtr = panelDataPtr->interfacePtr;
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
-			Preferences_Result					prefsResult = kPreferences_ResultOK;
-			Preferences_ContextRef				defaultContext = nullptr;
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
@@ -2245,11 +2282,27 @@ panelChanged	(Panel_Ref		inPanel,
 			}
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
-			assert(kPreferences_ResultOK == prefsResult);
-			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
+			
+			if (nullptr != interfacePtr)
+			{
+				Preferences_Result			prefsResult = kPreferences_ResultOK;
+				Preferences_ContextRef		defaultContext = nullptr;
+				
+				
+				prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
+				assert(kPreferences_ResultOK == prefsResult);
+				if (newContext != defaultContext)
+				{
+					interfacePtr->readPreferences(defaultContext); // reset to known state first
+				}
+			}
+			
 			panelDataPtr->dataModel = newContext;
-			panelDataPtr->interfacePtr->readPreferences(newContext);
+			
+			if (nullptr != interfacePtr)
+			{
+				interfacePtr->readPreferences(newContext);
+			}
 		}
 		break;
 	
@@ -3182,25 +3235,48 @@ panelChanged	(Panel_Ref		inPanel,
 		{
 			My_SessionsPanelResourceDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
 																				My_SessionsPanelResourceDataPtr);
+			My_SessionsPanelResourceUI*			interfacePtr = panelDataPtr->interfacePtr;
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
-			Preferences_Result					prefsResult = kPreferences_ResultOK;
-			Preferences_ContextRef				defaultContext = nullptr;
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
-			panelDataPtr->interfacePtr->serverBrowserRemove();
+			if (nullptr != interfacePtr)
+			{
+				interfacePtr->serverBrowserRemove();
+			}
 			
 			if (nullptr != oldContext)
 			{
-				panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+				if (nullptr != interfacePtr)
+				{
+					interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+				}
+				
 				Preferences_ContextSave(oldContext);
 			}
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
-			assert(kPreferences_ResultOK == prefsResult);
-			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
+			
+			if (nullptr != interfacePtr)
+			{
+				Preferences_Result			prefsResult = kPreferences_ResultOK;
+				Preferences_ContextRef		defaultContext = nullptr;
+				
+				
+				prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
+				assert(kPreferences_ResultOK == prefsResult);
+				
+				if (newContext != defaultContext)
+				{
+					interfacePtr->readPreferences(defaultContext); // reset to known state first
+				}
+			}
+			
 			panelDataPtr->dataModel = newContext;
-			panelDataPtr->interfacePtr->readPreferences(newContext);
+			
+			if (nullptr != interfacePtr)
+			{
+				interfacePtr->readPreferences(newContext);
+			}
 		}
 		break;
 	
@@ -3862,9 +3938,6 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 						Sound_StandardAlert();
 					}
 					
-					// pass this handler through to the window
-					result = eventNotHandledErr;
-					
 					result = noErr;
 				}
 				break;
@@ -4350,8 +4423,9 @@ updateCommandLine	(Session_Protocol	inProtocol,
 					 UInt16				inPortNumber,
 					 CFStringRef		inUserID)
 {
-	CFMutableStringRef		newCommandLineCFString = CFStringCreateMutable(kCFAllocatorDefault,
-																			0/* length, or 0 for unlimited */);
+	CFRetainRelease			newCommandLineObject(CFStringCreateMutable(kCFAllocatorDefault,
+																		0/* length, or 0 for unlimited */),
+													true/* is retained */);
 	Str31					portString;
 	Boolean					result = false;
 	
@@ -4365,8 +4439,9 @@ updateCommandLine	(Session_Protocol	inProtocol,
 	portString[0] = '\0';
 	if (0 != inPortNumber) NumToString(STATIC_CAST(inPortNumber, SInt32), portString);
 	
-	if ((nullptr != newCommandLineCFString) && (nullptr != inHostName))
+	if (newCommandLineObject.exists() && (nullptr != inHostName))
 	{
+		CFMutableStringRef	newCommandLineCFString = newCommandLineObject.returnCFMutableStringRef(); // for convenience in loop
 		CFRetainRelease		portNumberCFString(CFStringCreateWithPascalStringNoCopy
 												(kCFAllocatorDefault, portString, kCFStringEncodingASCII, kCFAllocatorNull),
 												true/* is retained */);
@@ -6065,7 +6140,7 @@ controlKeyChar:(char*)			aCharPtr
 	
 	
 	// first strip whitespace
-	aString = [[aString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] retain];
+	aString = [aString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 	
 	// looking for a string of the form, e.g. "⌃C"; anything else is unexpected
 	// (IMPORTANT: since caret "^" is a valid control character name it is VITAL

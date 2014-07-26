@@ -278,17 +278,30 @@ Session::handle_file	(std::string	inPathname)
 			OSStatus			error = noErr;
 			
 			
+			bzero(&fileInfo, sizeof(fileInfo));
 			error = FSPathMakeRef(REINTERPRET_CAST(inPathname.c_str(), UInt8 const*), &fileRef, nullptr/* is a directory */);
-			if (noErr == error)
+			if (noErr != error)
+			{
+				Console_Warning(Console_WriteValue, "unable to make path reference for given file, error", error);
+			}
+			else
 			{
 				error = LSCopyItemInfoForRef(&fileRef, kLSRequestTypeCreator, &fileInfo);
-				if (noErr == error)
+				if (noErr != error)
+				{
+					Console_Warning(Console_WriteValue, "unable to copy Launch Services item information for given file, error", error);
+				}
+				else
 				{
 					HFSUniStr255	nameBuffer;
 					
 					
 					error = FSGetCatalogInfo(&fileRef, kFSCatInfoNone, nullptr/* catalog info */,
 												&nameBuffer, nullptr/* spec record */, nullptr/* parent directory */);
+					if (noErr != error)
+					{
+						Console_Warning(Console_WriteValue, "unable to copy catalog information for given file, error", error);
+					}
 				}
 			}
 			

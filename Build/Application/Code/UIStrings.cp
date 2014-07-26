@@ -2296,25 +2296,22 @@ UIStrings_CreateFileOrDirectory		(FSRef const&						inParentRef,
 									 FSCatalogInfoBitmap				inWhichInfo,
 									 FSCatalogInfo const*				inInfoOrNull)
 {
-	CFStringRef			nameCFString = nullptr;
-	UIStrings_Result	stringResult = kUIStrings_ResultOK;
+	CFRetainRelease		nameCFString(UIStrings_ReturnCopy(inWhichString), true/* is retained */);
 	OSStatus			result = noErr;
 	
 	
-	stringResult = UIStrings_Copy(inWhichString, nameCFString);
-	
 	// if the string was obtained, find the file
-	if (stringResult.ok())
+	if (nameCFString.exists())
 	{
-		UniCharCount const	kBufferSize = CFStringGetLength(nameCFString);
+		UniCharCount const	kBufferSize = CFStringGetLength(nameCFString.returnCFStringRef());
 		UniChar*			buffer = new UniChar[kBufferSize];
 		
 		
-		CFStringGetCharacters(nameCFString, CFRangeMake(0, kBufferSize), buffer);
+		CFStringGetCharacters(nameCFString.returnCFStringRef(), CFRangeMake(0, kBufferSize), buffer);
 		
 		// does it already exist?
 		result = FSMakeFSRefUnicode(&inParentRef, kBufferSize, buffer,
-									CFStringGetSmallestEncoding(nameCFString), &outFSRef);
+									CFStringGetSmallestEncoding(nameCFString.returnCFStringRef()), &outFSRef);
 		if (noErr != result)
 		{
 			if (nullptr != outNewDirIDOrNullForFile)
@@ -2333,7 +2330,6 @@ UIStrings_CreateFileOrDirectory		(FSRef const&						inParentRef,
 		}
 		
 		delete [] buffer, buffer = nullptr;
-		CFRelease(nameCFString), nameCFString = nullptr;
 	}
 	else
 	{
@@ -2369,26 +2365,22 @@ UIStrings_MakeFSRef		(FSRef const&						inParentRef,
 						 UIStrings_FileOrFolderCFString		inWhichString,
 						 FSRef&								outFSRef)
 {
-	CFStringRef			nameCFString = nullptr;
-	UIStrings_Result	stringResult = kUIStrings_ResultOK;
+	CFRetainRelease		nameCFString(UIStrings_ReturnCopy(inWhichString), true/* is retained */);
 	OSStatus			result = noErr;
 	
 	
-	stringResult = UIStrings_Copy(inWhichString, nameCFString);
-	
 	// if the string was obtained, find the file
-	if (stringResult.ok())
+	if (nameCFString.exists())
 	{
-		UniCharCount const	kBufferSize = CFStringGetLength(nameCFString);
+		UniCharCount const	kBufferSize = CFStringGetLength(nameCFString.returnCFStringRef());
 		UniChar*			buffer = new UniChar[kBufferSize];
 		
 		
-		CFStringGetCharacters(nameCFString, CFRangeMake(0, kBufferSize), buffer);
+		CFStringGetCharacters(nameCFString.returnCFStringRef(), CFRangeMake(0, kBufferSize), buffer);
 		result = FSMakeFSRefUnicode(&inParentRef, kBufferSize, buffer,
-									CFStringGetSmallestEncoding(nameCFString), &outFSRef);
+									CFStringGetSmallestEncoding(nameCFString.returnCFStringRef()), &outFSRef);
 		
 		delete [] buffer, buffer = nullptr;
-		CFRelease(nameCFString), nameCFString = nullptr;
 	}
 	else
 	{

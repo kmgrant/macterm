@@ -971,13 +971,14 @@ CFDictionaryRef
 createSearchDictionary ()
 {
 	CFDictionaryRef		result = nullptr;
-	CFURLRef			fileURL = nullptr;
+	CFRetainRelease		fileCFURLObject(CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), CFSTR("PreferencesSearch"),
+																CFSTR("plist")/* type string */, nullptr/* subdirectory path */),
+										true/* is retained */);
 	
 	
-	fileURL = CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), CFSTR("PreferencesSearch"),
-										CFSTR("plist")/* type string */, nullptr/* subdirectory path */);
-	if (nullptr != fileURL)
+	if (fileCFURLObject.exists())
 	{
+		CFURLRef	fileURL = REINTERPRET_CAST(fileCFURLObject.returnCFTypeRef(), CFURLRef);
 		CFDataRef   fileData = nullptr;
 		SInt32		errorCode = 0;
 		
@@ -4145,6 +4146,7 @@ inSearchField:(NSSearchField*)		aSearchField
 			[panelDisplayItem setImage:panelIcon];
 			[panelDisplayItem setTarget:panelObject.panelDisplayTarget]; // action is set in initializer above
 			[popUpResultsMenu addItem:panelDisplayItem];
+			[panelIcon release];
 			[panelDisplayItem release];
 		}
 		

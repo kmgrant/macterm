@@ -3977,8 +3977,8 @@ bundle must also advertise the methods of each Service.
 - (void)
 applicationDidFinishLaunching:(NSNotification*)	aNotification
 {
-	NSApplication*				application = (NSApplication*)[aNotification object];
-	Commands_ServiceProviders*	providers = [[Commands_ServiceProviders alloc] init];
+	NSApplication*				application = STATIC_CAST([aNotification object], NSApplication*);
+	Commands_ServiceProviders*	providers = [[[Commands_ServiceProviders alloc] init] autorelease];
 	
 	
 	// note: it is not clear if the system retains the given object, so
@@ -4913,7 +4913,7 @@ canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
 	{
 		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-		CFRetainRelease		selectedText(TerminalView_ReturnSelectedTextAsNewUnicode
+		CFRetainRelease		selectedText(TerminalView_ReturnSelectedTextCopyAsUnicode
 											(view, 0/* Copy with Tab Substitution info */,
 												kTerminalView_TextFlagInline));
 		

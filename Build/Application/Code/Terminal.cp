@@ -4113,8 +4113,9 @@ Terminal_LEDSetState	(TerminalScreenRef	inRef,
 			// ???
 			break;
 		}
+		
+		changeNotifyForTerminal(dataPtr, kTerminal_ChangeNewLEDState, dataPtr->selfRef/* context */);
 	}
-	changeNotifyForTerminal(dataPtr, kTerminal_ChangeNewLEDState, dataPtr->selfRef/* context */);
 }// LEDSetState
 
 
@@ -12947,27 +12948,27 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		case kStateSWT:
 			if (inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTermAlterWindow))
 			{
-				CFStringRef		titleString = CFStringCreateWithCString(kCFAllocatorDefault,
-																		inDataPtr->emulator.stringAccumulator.c_str(),
-																		inDataPtr->emulator.inputTextEncoding);
+				CFRetainRelease		titleCFString(CFStringCreateWithCString(kCFAllocatorDefault,
+																			inDataPtr->emulator.stringAccumulator.c_str(),
+																			inDataPtr->emulator.inputTextEncoding),
+													true/* is retained */);
 				
 				
-				if (nullptr != titleString)
+				if (titleCFString.exists())
 				{
 					if ((kStateSWIT == inDataPtr->emulator.stringAccumulatorState) ||
 						(kStateSWT == inDataPtr->emulator.stringAccumulatorState))
 					{
-						inDataPtr->windowTitleCFString.setCFTypeRef(titleString);
+						inDataPtr->windowTitleCFString = titleCFString;
 						changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowFrameTitle, inDataPtr->selfRef/* context */);
 					}
 					if ((kStateSWIT == inDataPtr->emulator.stringAccumulatorState) ||
 						(kStateSIT == inDataPtr->emulator.stringAccumulatorState))
 					{
-						inDataPtr->iconTitleCFString.setCFTypeRef(titleString);
+						inDataPtr->iconTitleCFString = titleCFString;
 						changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowIconTitle, inDataPtr->selfRef/* context */);
 					}
 				}
-				CFRelease(titleString), titleString = nullptr;
 			}
 			else
 			{
