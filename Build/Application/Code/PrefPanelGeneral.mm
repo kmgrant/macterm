@@ -976,7 +976,6 @@ const
 		// (INCOMPLETE: should reinitialize this if it changes on disk)
 		{
 			CFArrayRef const	kSoundsListRef = CocoaBasic_ReturnUserSoundNames();
-			CFRetainRelease		kSoundsList(kSoundsListRef, true/* is retained */);
 			HIViewWrap			soundsPopUpMenuButton(idMyPopUpMenuBellType, inOwningWindow);
 			MenuRef				soundsMenu = GetControlPopupMenuRef(soundsPopUpMenuButton);
 			MenuItemIndex		insertBelowIndex = 0;

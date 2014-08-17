@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20140817',
     '20140712',
     '20140711',
     '20140709',
@@ -496,6 +497,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20140817': [
+        'Fixed a possible crash when opening the Preferences window.',
+    ],
     '20140712': [
         'Fixed a developer-ID issue that could prevent MacTerm from opening by default on some Macs.',
     ],
