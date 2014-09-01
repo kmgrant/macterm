@@ -157,6 +157,10 @@ CursorIBeam.png \
 CursorIBeam@2x.png\
 CursorIBeamSmall.png \
 CursorIBeamSmall@2x.png \
+CursorMoveCursor.png \
+CursorMoveCursor@2x.png \
+CursorMoveCursorSmall.png \
+CursorMoveCursorSmall@2x.png \
 DefaultFormat1.plist \
 DefaultFormat2.plist \
 DefaultFormat3.plist \

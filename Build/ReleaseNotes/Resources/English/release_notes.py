@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20140901',
     '20140817',
     '20140712',
     '20140711',
@@ -497,6 +498,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20140901': [
+        'The "move terminal cursor" mouse pointer shape has been completely redesigned for terminal windows.  (This cursor appears when holding down the command and option keys.)  The new pointer displays a cursor rectangle with triangle arrows on all sides, and it has a more detailed appearance on Retina displays.',
+    ],
     '20140817': [
         'Fixed a possible crash when opening the Preferences window.',
     ],

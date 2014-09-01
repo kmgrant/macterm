@@ -465,6 +465,7 @@ Boolean				cursorBlinks						(My_TerminalViewPtr);
 TerminalView_CursorType	cursorType						(My_TerminalViewPtr);
 NSCursor*			customCursorCrosshairs				();
 NSCursor*			customCursorIBeam					(Boolean = false);
+NSCursor*			customCursorMoveTerminalCursor		(Boolean = false);
 void				delayMinimumTicks					(UInt16 = 8);
 NSDictionary*		dictionaryWithTerminalTextAttributes(My_TerminalViewPtr, TerminalTextAttributes, Float32 = 1.0);
 OSStatus			dragTextSelection					(My_TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
@@ -5253,6 +5254,49 @@ customCursorIBeam	(Boolean	inSmall)
 
 
 /*!
+Returns a custom cursor to indicate that the terminal
+cursor will move to the clicked location.
+
+If the font size is very small, setting "inSmall" to
+true is recommended so that a normal-size cursor can
+be returned.
+
+(4.1)
+*/
+NSCursor*
+customCursorMoveTerminalCursor	(Boolean	inSmall)
+{
+	static NSCursor*	gCustomMoveCursor = nil;
+	static NSCursor*	gCustomMoveCursorSmall = nil;
+	NSCursor*			result = nil;
+	
+	
+	if (inSmall)
+	{
+		if (nil == gCustomMoveCursorSmall)
+		{
+			// IMPORTANT: specified hot-spot should be synchronized with the image data
+			gCustomMoveCursorSmall = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorMoveCursorSmall"]
+																		hotSpot:NSMakePoint(11, 11)];
+		}
+		result = gCustomMoveCursorSmall;
+	}
+	else
+	{
+		if (nil == gCustomMoveCursor)
+		{
+			// IMPORTANT: specified hot-spot should be synchronized with the image data
+			gCustomMoveCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorMoveCursor"]
+																	hotSpot:NSMakePoint(15, 15)];
+		}
+		result = gCustomMoveCursor;
+	}
+	
+	return result;
+}// customCursorMoveTerminalCursor
+
+
+/*!
 Delays the active thread by the specified amount
 (in 60ths of a second).
 
@@ -9956,7 +10000,19 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 						else if ((eventModifiers & optionKey) && (eventModifiers & cmdKey))
 						{
 							// if clicked, the terminal cursor will move to the mouse location
-							UNUSED_RETURN(OSStatus)SetThemeCursor(kThemePlusCursor);
+							My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
+							NSCursor*					cursorMove = customCursorMoveTerminalCursor(isSmallIBeam(viewPtr));
+							
+							
+							if (nil == cursorMove)
+							{
+								// fall back to some standard system cursor
+								[[NSCursor arrowCursor] set];
+							}
+							else
+							{
+								[cursorMove set];
+							}
 						}
 						else if (eventModifiers & optionKey)
 						{
@@ -14001,9 +14057,7 @@ resetCursorRects
 					(self.modifierFlagsForCursor & NSAlternateKeyMask))
 		{
 			// modifier key for moving the terminal cursor to the click location
-			// (in the Carbon version this was a plus-cursor, but Cocoa does not
-			// have that cursor shape)
-			[self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
+			[self addCursorRect:[self bounds] cursor:customCursorMoveTerminalCursor(isSmallIBeam(viewPtr))];
 		}
 		else if (self.modifierFlagsForCursor & NSCommandKeyMask)
 		{

@@ -219,6 +219,12 @@
 		0A0ADD43178A5FB800E72DF4 /* CursorIBeam.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorIBeam.png; path = Application/Resources/CursorIBeam.png; sourceTree = "<group>"; };
 		0A0ADD44178A5FB800E72DF4 /* CursorIBeam@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorIBeam@2x.png"; path = "Application/Resources/CursorIBeam@2x.png"; sourceTree = "<group>"; };
 		0A0D315716E2F5440063914A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelTerminalScreenCocoa.xib; sourceTree = "<group>"; };
+		0A0D372719B43370005500DE /* CursorMoveCursor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorMoveCursor.png; path = Application/Resources/CursorMoveCursor.png; sourceTree = "<group>"; };
+		0A0D372819B43370005500DE /* CursorMoveCursor@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorMoveCursor@2x.png"; path = "Application/Resources/CursorMoveCursor@2x.png"; sourceTree = "<group>"; };
+		0A0D372919B43370005500DE /* CursorMoveCursorSmall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorMoveCursorSmall.png; path = Application/Resources/CursorMoveCursorSmall.png; sourceTree = "<group>"; };
+		0A0D372A19B43370005500DE /* CursorMoveCursorSmall@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorMoveCursorSmall@2x.png"; path = "Application/Resources/CursorMoveCursorSmall@2x.png"; sourceTree = "<group>"; };
+		0A0D372B19B4338C005500DE /* CursorCrosshairs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorCrosshairs.png; path = Application/Resources/CursorCrosshairs.png; sourceTree = "<group>"; };
+		0A0D372C19B4338C005500DE /* CursorCrosshairs@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorCrosshairs@2x.png"; path = "Application/Resources/CursorCrosshairs@2x.png"; sourceTree = "<group>"; };
 		0A119C431522B545003A41B7 /* IconForFullScreenDisable.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForFullScreenDisable.icns; path = Application/Resources/IconForFullScreenDisable.icns; sourceTree = "<group>"; };
 		0A11F54B059FE55D00A565C3 /* IconForPrefPanelGeneral.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelGeneral.icns; path = Application/Resources/IconForPrefPanelGeneral.icns; sourceTree = "<group>"; };
 		0A11F54D059FE55D00A565C3 /* IconForPrefPanelMacros.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelMacros.icns; path = Application/Resources/IconForPrefPanelMacros.icns; sourceTree = "<group>"; };
@@ -1053,10 +1059,16 @@
 		0AFF137A0AF42067006CCA34 /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				0A0D372B19B4338C005500DE /* CursorCrosshairs.png */,
+				0A0D372C19B4338C005500DE /* CursorCrosshairs@2x.png */,
 				0A0ADD43178A5FB800E72DF4 /* CursorIBeam.png */,
 				0A0ADD44178A5FB800E72DF4 /* CursorIBeam@2x.png */,
 				0AB00A4E178D079D00C1D94A /* CursorIBeamSmall.png */,
 				0AB00A4F178D079D00C1D94A /* CursorIBeamSmall@2x.png */,
+				0A0D372719B43370005500DE /* CursorMoveCursor.png */,
+				0A0D372819B43370005500DE /* CursorMoveCursor@2x.png */,
+				0A0D372919B43370005500DE /* CursorMoveCursorSmall.png */,
+				0A0D372A19B43370005500DE /* CursorMoveCursorSmall@2x.png */,
 				0AF995F20CC3C849000A11DC /* IconForBellOff.icns */,
 				0AF995F30CC3C849000A11DC /* IconForBellOn.icns */,
 				0A54E40D0560B62F005B4592 /* IconForBundle.icns */,
