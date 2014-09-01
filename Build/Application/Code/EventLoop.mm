@@ -269,7 +269,11 @@ EventLoop_Init ()
 												GetEventTypeCount(whenToolbarSheetOpens),
 												whenToolbarSheetOpens, nullptr/* user data */,
 												&gCarbonEventSheetOpeningHandler/* event handler reference */);
-		// don’t check for errors, it’s not critical if this handler is installed
+		if (noErr != error)
+		{
+			// it’s not critical if this handler is installed
+			Console_Warning(Console_WriteValue, "failed to install event loop sheet-opening handler, error", error);
+		}
 	}
 	
 	// create listener models to handle event notifications
@@ -919,14 +923,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// IMPORTANT: This could imply ANY form of menu selection, whether from
 				//            the menu bar, from a contextual menu, or from a pop-up menu!
 				{
-					UInt32		modifiers = 0;
-					OSStatus	error = noErr;
-					
-					
-					// determine state of modifier keys when command was chosen
-					error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32,
-																	modifiers);
-					
 					if (received.commandID != 0)
 					{
 						Boolean		commandOK = false;

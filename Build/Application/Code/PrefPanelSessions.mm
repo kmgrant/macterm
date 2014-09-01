@@ -109,8 +109,6 @@ the NIBs from the package "PrefPanelSessions.nib".
 In addition, they MUST be unique across all panels.
 */
 HIViewID const	idMyFieldCommandLine			= { 'CmdL', 0/* ID */ };
-HIViewID const	idMyButtonShellCommand			= { 'CmSh', 0/* ID */ };
-HIViewID const	idMyButtonLogInShellCommand		= { 'CmLS', 0/* ID */ };
 HIViewID const	idMyPopUpMenuCopySessionCommand	= { 'CpSs', 0/* ID */ };
 HIViewID const	idMyButtonConnectToServer		= { 'CtoS', 0/* ID */ };
 HIViewID const	idMySeparatorCommandRegion		= { 'ConH', 0/* ID */ };
@@ -1686,15 +1684,11 @@ Resizes the views in this panel.
 */
 void
 My_SessionsPanelGraphicsUI::
-deltaSize	(HIViewRef		inContainer,
+deltaSize	(HIViewRef		UNUSED_ARGUMENT(inContainer),
 			 Float32		UNUSED_ARGUMENT(inDeltaX),
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
 			 void*			UNUSED_ARGUMENT(inContext))
 {
-	HIWindowRef const		kPanelWindow = HIViewGetWindow(inContainer);
-	//My_SessionsPanelGraphicsUI*	dataPtr = REINTERPRET_CAST(inContext, My_SessionsPanelGraphicsUI*);
-	
-	
 	// UNIMPLEMENTED
 }// My_SessionsPanelGraphicsUI::deltaSize
 
@@ -6132,7 +6126,7 @@ controlKeyChar:(char*)			aCharPtr
 {
 	NSCharacterSet*		controlCharLetters = [NSCharacterSet characterSetWithCharactersInString:
 												@"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"];
-	NSScanner*			scanner = [NSScanner scannerWithString:aString];
+	NSScanner*			scanner = nil; // created below
 	NSString*			controlCharString = nil;
 	NSString*			targetLetterString = nil;
 	BOOL				scanOK = NO;
@@ -6141,6 +6135,8 @@ controlKeyChar:(char*)			aCharPtr
 	
 	// first strip whitespace
 	aString = [aString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	
+	scanner = [NSScanner scannerWithString:aString];
 	
 	// looking for a string of the form, e.g. "⌃C"; anything else is unexpected
 	// (IMPORTANT: since caret "^" is a valid control character name it is VITAL

@@ -85,7 +85,6 @@ the NIBs from the package "PrefPanels.nib".
 
 In addition, they MUST be unique across all panels.
 */
-HIViewID const	idMyLabelBaseTranslationTable			= { 'LBTT', 0/* ID */ };
 HIViewID const	idMyLabelBaseTranslationTableSelection	= { 'SBTT', 0/* ID */ };
 HIViewID const	idMyDataBrowserBaseTranslationTable		= { 'Tran', 0/* ID */ };
 HIViewID const	idMyLabelOptions						= { 'LOpt', 0/* ID */ };
@@ -678,12 +677,12 @@ setEncoding		(CFStringEncoding	inEncoding,
 		// spammed as if dozens of items were selected in turn, so a flag is set to
 		// prevent that callback from doing anything during this phase (sigh...)
 		this->_disableMonitorRoutine = true;
-		error = SetDataBrowserSelectedItems(kDataBrowser, 0/* number of items */, nullptr, kDataBrowserItemsAssign);
+		UNUSED_RETURN(OSStatus)SetDataBrowserSelectedItems(kDataBrowser, 0/* number of items */, nullptr, kDataBrowserItemsAssign);
 		this->_disableMonitorRoutine = false;
-		error = SetDataBrowserSelectedItems(kDataBrowser, 1/* number of items */, itemList, kDataBrowserItemsAssign);
-		error = RevealDataBrowserItem(kDataBrowser, itemList[0]/* item to reveal */,
-										kMy_DataBrowserPropertyIDBaseCharacterSet,
-										kDataBrowserRevealAndCenterInView);
+		UNUSED_RETURN(OSStatus)SetDataBrowserSelectedItems(kDataBrowser, 1/* number of items */, itemList, kDataBrowserItemsAssign);
+		UNUSED_RETURN(OSStatus)RevealDataBrowserItem(kDataBrowser, itemList[0]/* item to reveal */,
+														kMy_DataBrowserPropertyIDBaseCharacterSet,
+														kDataBrowserRevealAndCenterInView);
 	}
 }// My_TranslationsPanelUI::setEncoding
 
@@ -1290,6 +1289,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					// update preferences and the display
 					prefsResult = Preferences_ContextSetData(panelDataPtr->_dataModel, kPreferences_TagBackupFontName,
 																sizeof(fontName), &fontName);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_Warning(Console_WriteValue, "failed to set backup font preference, error", prefsResult);
+					}
 					panelDataPtr->_interfacePtr->setFontName(fontName);
 					
 					// completely handled

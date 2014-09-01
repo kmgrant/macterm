@@ -698,10 +698,10 @@ Boolean					convertCFArrayToRGBColor				(CFArrayRef, RGBColor*);
 Boolean					convertHIRectToCFArray					(HIRect const&, CFArrayRef&);
 Boolean					convertRGBColorToCFArray				(RGBColor const*, CFArrayRef&);
 Preferences_Result		copyClassDomainCFArray					(Quills::Prefs::Class, CFArrayRef&);
+CFDictionaryRef			copyDefaultPrefDictionary				();
 CFStringRef				copyDomainUserSpecifiedName				(CFStringRef);
 CFStringRef				copyUserSpecifiedName					(CFDataRef, CFStringRef);
 Preferences_Result		createAllPreferencesContextsFromDisk	();
-CFDictionaryRef			createDefaultPrefDictionary				();
 CFStringRef				createKeyAtIndex						(CFStringRef, UInt32);
 CFIndex					findDomainIndexInArray					(CFArrayRef, CFStringRef);
 Boolean					getDefaultContext						(Quills::Prefs::Class, My_ContextInterfacePtr&);
@@ -767,7 +767,7 @@ Boolean						gInitialized = false;
 My_ContextPtrLocker&		gMyContextPtrLocks ()	{ static My_ContextPtrLocker x; return x; }
 My_ContextReferenceLocker&	gMyContextRefLocks ()	{ static My_ContextReferenceLocker x; return x; }
 My_ContextReferenceTracker&	gMyContextValidRefs ()	{ static My_ContextReferenceTracker x; return x; }
-My_ContextInterface&		gFactoryDefaultsContext ()	{ static My_ContextCFDictionary x(Quills::Prefs::_FACTORY_DEFAULTS, createDefaultPrefDictionary()); return x; }
+My_ContextInterface&		gFactoryDefaultsContext ()	{ static My_ContextCFDictionary x(Quills::Prefs::_FACTORY_DEFAULTS, copyDefaultPrefDictionary()); return x; }
 My_ContextInterface&		gGeneralDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::GENERAL); return x; }
 My_ContextInterface&		gAutoSaveDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::_RESTORE_AT_LAUNCH); return x; }
 My_FavoriteContextList&		gAutoSaveNamedContexts ()	{ static My_FavoriteContextList x; return x; }
@@ -3611,22 +3611,26 @@ Boolean
 Preferences_IsContextNameInUse		(Quills::Prefs::Class	inClass,
 									 CFStringRef			inProposedName)
 {
-	Boolean							result = false;
-	My_FavoriteContextList const*	listPtr = nullptr;
+	Boolean		result = false;
 	
 	
-	if (getListOfContexts(inClass, listPtr))
+	if (nullptr != inProposedName)
 	{
-		My_FavoriteContextList::const_iterator		toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
-																				contextNameEqualTo(inProposedName));
+		My_FavoriteContextList const*	listPtr = nullptr;
 		
 		
-		if (listPtr->end() != toContextPtr)
+		if (getListOfContexts(inClass, listPtr))
 		{
-			result = true;
+			My_FavoriteContextList::const_iterator		toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
+																					contextNameEqualTo(inProposedName));
+			
+			
+			if (listPtr->end() != toContextPtr)
+			{
+				result = true;
+			}
 		}
 	}
-	
 	return result;
 }// IsContextNameInUse
 
@@ -5853,6 +5857,69 @@ copyClassDomainCFArray	(Quills::Prefs::Class	inClass,
 
 
 /*!
+Creates and returns a Core Foundation dictionary
+that can be used to look up default preference keys
+(as defined in "DefaultPreferences.plist").
+
+Returns nullptr if unsuccessful for any reason.
+
+(3.0)
+*/
+CFDictionaryRef
+copyDefaultPrefDictionary ()
+{
+	CFDictionaryRef		result = nullptr;
+	CFRetainRelease		urlObject(CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), CFSTR("DefaultPreferences"),
+															CFSTR("plist")/* type string */, nullptr/* subdirectory path */),
+									true/* is retained */);
+	
+	
+	if (urlObject.exists())
+	{
+		CFURLRef	fileURL = STATIC_CAST(urlObject.returnCFTypeRef(), CFURLRef);
+		CFDataRef   fileData = nullptr;
+		SInt32		errorCode = 0;
+		
+		
+		unless (CFURLCreateDataAndPropertiesFromResource(kCFAllocatorDefault, fileURL, &fileData, 
+															nullptr/* properties */, nullptr/* desired properties */, &errorCode))
+		{
+			// Not all data was successfully retrieved, but let the caller determine if anything
+			// important is missing.
+			// NOTE: Technically, the error code returned in "errorCode" is not an OSStatus.
+			//       If negative, it is an Apple error, and if positive it is scheme-specific.
+		}
+		
+		if (nullptr != fileData)
+		{
+			CFPropertyListRef   propertyList = nullptr;
+			CFStringRef			errorString = nullptr;
+			
+			
+			propertyList = CFPropertyListCreateFromXMLData(kCFAllocatorDefault, fileData,
+															kCFPropertyListImmutable, &errorString);
+			if (nullptr != propertyList)
+			{
+				// the XML file actually contains a dictionary
+				result = CFUtilities_DictionaryCast(propertyList);
+			}
+			
+			if (nullptr != errorString)
+			{
+				// could report/return error here...
+				CFRelease(errorString), errorString = nullptr;
+			}
+			
+			// finally, release the file data
+			CFRelease(fileData), fileData = nullptr;
+		}
+	}
+	
+	return result;
+}// copyDefaultPrefDictionary
+
+
+/*!
 Reads preferences in the given domain and attempts to
 find a key that indicates the user’s preferred name
 for this set of preferences.  The result could be
@@ -6052,69 +6119,6 @@ createAllPreferencesContextsFromDisk ()
 	
 	return result;
 }// createAllPreferencesContextsFromDisk
-
-
-/*!
-Creates and returns a Core Foundation dictionary
-that can be used to look up default preference keys
-(as defined in "DefaultPreferences.plist").
-
-Returns nullptr if unsuccessful for any reason.
-
-(3.0)
-*/
-CFDictionaryRef
-createDefaultPrefDictionary ()
-{
-	CFDictionaryRef		result = nullptr;
-	CFRetainRelease		urlObject(CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), CFSTR("DefaultPreferences"),
-															CFSTR("plist")/* type string */, nullptr/* subdirectory path */),
-									true/* is retained */);
-	
-	
-	if (urlObject.exists())
-	{
-		CFURLRef	fileURL = STATIC_CAST(urlObject.returnCFTypeRef(), CFURLRef);
-		CFDataRef   fileData = nullptr;
-		SInt32		errorCode = 0;
-		
-		
-		unless (CFURLCreateDataAndPropertiesFromResource(kCFAllocatorDefault, fileURL, &fileData, 
-															nullptr/* properties */, nullptr/* desired properties */, &errorCode))
-		{
-			// Not all data was successfully retrieved, but let the caller determine if anything
-			// important is missing.
-			// NOTE: Technically, the error code returned in "errorCode" is not an OSStatus.
-			//       If negative, it is an Apple error, and if positive it is scheme-specific.
-		}
-		
-		if (nullptr != fileData)
-		{
-			CFPropertyListRef   propertyList = nullptr;
-			CFStringRef			errorString = nullptr;
-			
-			
-			propertyList = CFPropertyListCreateFromXMLData(kCFAllocatorDefault, fileData,
-															kCFPropertyListImmutable, &errorString);
-			if (nullptr != propertyList)
-			{
-				// the XML file actually contains a dictionary
-				result = CFUtilities_DictionaryCast(propertyList);
-			}
-			
-			if (nullptr != errorString)
-			{
-				// could report/return error here...
-				CFRelease(errorString), errorString = nullptr;
-			}
-			
-			// finally, release the file data
-			CFRelease(fileData), fileData = nullptr;
-		}
-	}
-	
-	return result;
-}// createDefaultPrefDictionary
 
 
 /*!
@@ -8553,12 +8557,12 @@ if some component could not be set up properly
 OSStatus
 mergeInDefaultPreferences ()
 {
-	CFDictionaryRef		defaultPrefDictionary = createDefaultPrefDictionary();
+	CFRetainRelease		defaultPrefDictionary(copyDefaultPrefDictionary(), true/* is retained */);
 	OSStatus			result = noErr;
 	
 	
 	// copy bundle's DefaultPreferences.plist
-	if (nullptr == defaultPrefDictionary) result = resNotFound;
+	if (false == defaultPrefDictionary.exists()) result = resNotFound;
 	else
 	{
 		// read the default preferences dictionary; for settings
@@ -8566,8 +8570,7 @@ mergeInDefaultPreferences ()
 		// to register (in memory only) the appropriate updates;
 		// other values are written to the specified handles,
 		// where the data must be extracted for saving elsewhere
-		result = readPreferencesDictionary(defaultPrefDictionary, true/* merge */);
-		CFRelease(defaultPrefDictionary), defaultPrefDictionary = nullptr;
+		result = readPreferencesDictionary(defaultPrefDictionary.returnCFDictionaryRef(), true/* merge */);
 		
 		if (noErr == result)
 		{

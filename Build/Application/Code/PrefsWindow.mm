@@ -1402,6 +1402,10 @@ init ()
 				error = HIObjectSetAuxiliaryAccessibilityAttribute
 						(gCollectionAddMenuButton.returnHIObjectRef(), 0/* sub-component identifier */,
 							kAXDescriptionAttribute, accessibilityDescCFString);
+				if (noErr != error)
+				{
+					Console_Warning(Console_WriteValue, "failed to set accessibility description of button in Preferences window, error", error);
+				}
 				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 			}
 			if (UIStrings_Copy(kUIStrings_ButtonRemoveAccessibilityDesc, accessibilityDescCFString).ok())
@@ -1412,6 +1416,10 @@ init ()
 				error = HIObjectSetAuxiliaryAccessibilityAttribute
 						(gCollectionRemoveButton.returnHIObjectRef(), 0/* sub-component identifier */,
 							kAXDescriptionAttribute, accessibilityDescCFString);
+				if (noErr != error)
+				{
+					Console_Warning(Console_WriteValue, "failed to set accessibility description of button in Preferences window, error", error);
+				}
 				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 			}
 			if (UIStrings_Copy(kUIStrings_ButtonMoveUpAccessibilityDesc, accessibilityDescCFString).ok())
@@ -1422,6 +1430,10 @@ init ()
 				error = HIObjectSetAuxiliaryAccessibilityAttribute
 						(gCollectionMoveUpButton.returnHIObjectRef(), 0/* sub-component identifier */,
 							kAXDescriptionAttribute, accessibilityDescCFString);
+				if (noErr != error)
+				{
+					Console_Warning(Console_WriteValue, "failed to set accessibility description of button in Preferences window, error", error);
+				}
 				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 			}
 			if (UIStrings_Copy(kUIStrings_ButtonMoveDownAccessibilityDesc, accessibilityDescCFString).ok())
@@ -1432,6 +1444,10 @@ init ()
 				error = HIObjectSetAuxiliaryAccessibilityAttribute
 						(gCollectionMoveDownButton.returnHIObjectRef(), 0/* sub-component identifier */,
 							kAXDescriptionAttribute, accessibilityDescCFString);
+				if (noErr != error)
+				{
+					Console_Warning(Console_WriteValue, "failed to set accessibility description of button in Preferences window, error", error);
+				}
 				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 			}
 		}
@@ -1587,6 +1603,10 @@ init ()
 			
 			
 			error = SetDrawerOffsets(gDrawerWindow, leadingOffset, trailingOffset);
+			if (noErr != error)
+			{
+				Console_Warning(Console_WriteValue, "failed to set drawer offsets in Preferences window, error", error);
+			}
 		}
 		
 		// install a callback that disposes of the window properly when it should be closed
@@ -1814,6 +1834,10 @@ navigationExportPrefsDialogEvent	(NavEventCallbackMessage	inMessage,
 			}
 			Alert_ReportOSStatus(error);
 			error = FileSelectionDialogs_CompleteSave(&reply);
+			if (noErr != error)
+			{
+				Console_Warning(Console_WriteValue, "failed to complete save for Preferences window export, error", error);
+			}
 		}
 		break;
 	
@@ -2079,6 +2103,10 @@ receiveFooterDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				backgroundInfo.state = IsControlActive(footerView) ? kThemeStateActive : kThemeStateInactive;
 				backgroundInfo.kind = kThemeBackgroundMetal;
 				error = HIThemeDrawBackground(&floatBounds, &backgroundInfo, drawingContext, kHIThemeOrientationNormal);
+				if (noErr != error)
+				{
+					Console_Warning(Console_WriteValue, "failed to draw footer of Preferences window, error", error);
+				}
 			}
 		}
 	}
@@ -2301,6 +2329,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								// display the dialog; it is a sheet, so this will return immediately
 								// and the dialog will close whenever the user is actually done with it
 								error = NavDialogRun(navigationServicesDialog);
+								if (noErr != error)
+								{
+									Console_Warning(Console_WriteValue, "failed to display save panel for Preferences window export, error", error);
+								}
 							}
 						}
 						
@@ -4381,7 +4413,7 @@ withAnimation:(BOOL)												isAnimated
 	if (aPanel != self->activePanel)
 	{
 		BOOL	wasShowingSourceList = [self isSourceListShowing];
-		BOOL	willShowSourceList = wasShowingSourceList; // initially...
+		BOOL	willShowSourceList = (kPanel_EditTypeInspector == [aPanel panelEditType]); // initially...
 		
 		
 		if (nil != self->activePanel)
@@ -4412,9 +4444,6 @@ withAnimation:(BOOL)												isAnimated
 			[oldPanel.delegate panelViewManager:oldPanel didChangePanelVisibility:kPanel_VisibilityHidden];
 			[newPanel.delegate panelViewManager:newPanel didChangePanelVisibility:kPanel_VisibilityDisplayed];
 		}
-		
-		// determine if the new panel needs a source list
-		willShowSourceList = (kPanel_EditTypeInspector == [self->activePanel panelEditType]);
 		
 		// if necessary display the source list of available preference collections
 		if (willShowSourceList != wasShowingSourceList)

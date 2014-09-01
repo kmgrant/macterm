@@ -243,32 +243,14 @@ with any of the standard QuickDraw routines that
 manipulate regions.  Use Memory_DisposeRegion()
 to destroy this region when you’re done.
 
-There are certain conditions under which it may be
-impossible to detect failed region allocations:
-specifically, if QDError() returns "noErr" and
-memory conditions are extremely low, a region may
-in fact be garbage but not “seem like it”.  This
-routine performs a sanity check on new regions to
-make sure there really is enough space in the grow
-zone to accommodate the region that QuickDraw
-claims to have created, and returns nullptr if an
-otherwise-“valid” region is accidentally allocated.
-
 (1.0)
 */
 RgnHandle
 Memory_NewRegion ()
 {
-	RgnHandle		result = nullptr;
-	Size			growSize = 0;
-	Size			freeSize = 0;
+	RgnHandle		result = NewRgn();
 	
 	
-	freeSize = MaxMem(&growSize); // CARBON NOTE: Calls to MaxMem() are almost certainly not needed on Mac OS X.
-	if (noErr == MemError())
-	{
-		result = NewRgn();
-	}
 	return result;
 }// NewRegion
 

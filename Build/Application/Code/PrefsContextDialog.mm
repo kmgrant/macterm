@@ -390,6 +390,10 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 			{
 				prefsResult = Preferences_ContextCopy(dataPtr->temporaryDataModel.returnRef(),
 														dataPtr->originalDataModel.returnRef(), currentKeys);
+				if (kPreferences_ResultOK != prefsResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to copy dialog preferences into original data store, error", prefsResult);
+				}
 				Preferences_ReleaseTagSet(&currentKeys);
 			}
 		}

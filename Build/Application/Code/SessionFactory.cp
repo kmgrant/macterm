@@ -71,7 +71,6 @@
 #include "QuillsBase.h"
 #include "SessionDescription.h"
 #include "Terminal.h"
-#include "TerminalFile.h"
 #include "TerminalView.h"
 #include "Terminology.h"
 #include "TextTranslation.h"
@@ -1077,93 +1076,6 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
 	
 	return result;
 }// NewSessionFromDescription
-
-
-/*!
-Creates a terminal window (or uses the specified
-window, if non-nullptr) and attempts to run the
-specified ".term" file - just like the Apple Terminal
-would.
-
-If unsuccessful, nullptr is returned and an alert
-message may be displayed to the user; otherwise, the
-session reference for the new local process is
-returned.
-
-(3.1)
-*/
-SessionRef
-SessionFactory_NewSessionFromTerminalFile	(TerminalWindowRef			inTerminalWindow,
-											 char const*				inAppleDotTermFilePath,
-											 Preferences_ContextRef		inWorkspaceOrNull,
-											 UInt16						inWindowIndexInWorkspaceOrZero)
-{
-	SessionRef			result = nullptr;
-	TerminalWindowRef	terminalWindow = inTerminalWindow;
-	
-	
-	assert(nullptr != terminalWindow);
-	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
-	{
-		Console_WriteLine("unexpected problem displaying terminal window!!!");
-	}
-	else
-	{
-		Boolean		displayOK = false;
-		
-		
-		result = Session_New();
-		if (nullptr != result)
-		{
-			// create POSIX equivalent path to file
-			CFStringRef		pathCFString = CFStringCreateWithCString
-											(kCFAllocatorDefault, inAppleDotTermFilePath,
-												kCFStringEncodingMacRoman);
-			
-			
-			if (nullptr != pathCFString)
-			{
-				// create URL pointing to file
-				CFURLRef	url = CFURLCreateWithFileSystemPath
-									(kCFAllocatorDefault, pathCFString,
-										kCFURLPOSIXPathStyle, false/* is directory */);
-				
-				
-				if (nullptr != url)
-				{
-					TerminalFileRef		termFile = nullptr;
-					OSStatus			error = noErr;
-					
-					
-					// parse file
-					error = TerminalFile_NewFromFile(url, &termFile);
-					if (noErr == error)
-					{
-						// UNIMPLEMENTED - read session data (e.g. command) from file reference and open session
-						if (0)
-						{
-							// success!
-							displayOK = true;
-							startTrackingSession(result, terminalWindow);
-						}
-					}
-					
-					CFRelease(url), url = nullptr;
-				}
-				CFRelease(pathCFString), pathCFString = nullptr;
-			}
-			
-			unless (displayOK)
-			{
-				// TEMPORARY - NEED to display some kind of user alert here
-				Sound_StandardAlert();
-				Session_Dispose(&result);
-			}
-		}
-	}
-	
-	return result;
-}// NewSessionFromTerminalFile
 
 
 /*!

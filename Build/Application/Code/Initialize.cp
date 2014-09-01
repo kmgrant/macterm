@@ -424,7 +424,6 @@ initApplicationCore ()
 	
 	// set up notification info
 	{
-		Str255		notificationMessage;
 		UInt16		notificationPreferences = kAlert_NotifyDisplayDiamondMark;
 		size_t		actualSize = 0L;
 		
@@ -439,8 +438,7 @@ initApplicationCore ()
 		// the Interface Library Alert module is responsible for handling Notification Manager stuff...
 		Alert_SetNotificationPreferences(notificationPreferences);
 		// TEMPORARY: This needs a new localized string.  LOCALIZE THIS.
-		//GetIndString(notificationMessage, rStringsNoteAlerts, siNotificationAlert);
-		//Alert_SetNotificationMessage(notificationMessage);
+		//Alert_SetNotificationMessage(...);
 	}
 	
 #if RUN_MODULE_TESTS

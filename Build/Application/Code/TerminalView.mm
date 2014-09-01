@@ -133,13 +133,6 @@ second) to appear.
 UInt16 const		kMy_PageScrollDelayTicks	= 2;
 
 /*!
-This delta value is used to shift the alpha used for
-cursor rendering, and for simplicity it is defined in
-terms of the existing blink timer.
-*/
-Float32 const		kTerminalView_BlinkAlphaDelta = 1.0 / STATIC_CAST(kMy_BlinkingColorCount, Float32);
-
-/*!
 Indices into the "coreColors" array of the main structure.
 Valid indices range from 0 to 256, and depending on the terminal
 configuration the upper limit may CHANGE (typically to 16 colors,
@@ -475,7 +468,8 @@ NSCursor*			customCursorIBeam					(Boolean = false);
 void				delayMinimumTicks					(UInt16 = 8);
 NSDictionary*		dictionaryWithTerminalTextAttributes(My_TerminalViewPtr, TerminalTextAttributes, Float32 = 1.0);
 OSStatus			dragTextSelection					(My_TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
-Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, UInt16, UInt16, UInt16);
+Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, TerminalView_RowIndex,
+														 UInt16, TerminalView_RowIndex);
 void				drawSymbolFontLetter				(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char, Boolean);
 void				drawTerminalScreenRunOp				(TerminalScreenRef, UniChar const*, UInt16, Terminal_LineRef,
 														 UInt16, TerminalTextAttributes, void*);
@@ -547,7 +541,6 @@ void				screenToLocalRect					(My_TerminalViewPtr, Rect*);
 void				setAlphaTerminalWindowOp			(TerminalWindowRef, void*, SInt32, void*);
 void				setBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGDeviceColor const*);
 void				setBlinkingTimerActive				(My_TerminalViewPtr, Boolean);
-void				setCursorGhostVisibility			(My_TerminalViewPtr, Boolean);
 void				setCursorVisibility					(My_TerminalViewPtr, Boolean);
 void				setFontAndSize						(My_TerminalViewPtr, CFStringRef, UInt16, Float32 = 0, Boolean = true);
 SInt16				setPortScreenPort					(My_TerminalViewPtr);
@@ -556,7 +549,6 @@ void				setScreenCoreColor					(My_TerminalViewPtr, UInt16, CGDeviceColor const*
 void				setScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor const*);
 void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, Rect*, RgnHandle,
 														 TerminalView_CursorType = kTerminalView_CursorTypeCurrentPreferenceValue);
-void				setUpCursorGhost					(My_TerminalViewPtr, Point);
 void				setUpScreenFontMetrics				(My_TerminalViewPtr);
 void				sortAnchors							(TerminalView_Cell&, TerminalView_Cell&, Boolean);
 void				trackTextSelection					(My_TerminalViewPtr, Point, EventModifiers, Point*, UInt32*);
@@ -5240,7 +5232,7 @@ that contains the specified terminal text attributes.
 NSDictionary*
 dictionaryWithTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 										 TerminalTextAttributes		inAttributes,
-										 Float32					inAlpha)
+										 Float32					UNUSED_ARGUMENT(inAlpha))
 {
 	NSMutableDictionary*	result = [NSMutableDictionary dictionaryWithCapacity:4/* arbitrary initial size */];
 	
@@ -10385,10 +10377,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					if (kMyCursorStateVisible == viewPtr->screen.cursor.ghostState)
 					{
 						// draw the cursor at its ghost location (with ghost appearance)
-						Rect	viewRelativeCursorBounds = viewPtr->screen.cursor.ghostBounds/* view-relative */;
-						
-						
-						//InvertRect(&viewRelativeCursorBounds);
+						// UNIMPLEMENTED
 					}
 				}
 			}
@@ -11810,41 +11799,6 @@ setBlinkingTimerActive	(My_TerminalViewPtr		inTerminalViewPtr,
 
 
 /*!
-Hides or shows the cursor “ghost” in the specified
-screen.  The ghost cursor is stale (it doesn’t flash),
-it is used for indicating the possible new location of
-the actual terminal cursor during drags.
-
-(3.0)
-*/
-void
-setCursorGhostVisibility	(My_TerminalViewPtr		inTerminalViewPtr,
-							 Boolean				inIsVisible)
-{
-	MyCursorState	newGhostCursorState = (inIsVisible) ? kMyCursorStateVisible : kMyCursorStateInvisible;
-	Boolean			renderCursor = (inTerminalViewPtr->screen.cursor.ghostState != newGhostCursorState);
-	
-	
-	// cursor flashing is done within a thread; after a window closes,
-	// the flashing ought to stop, but to make sure of that the window
-	// must be valid (otherwise drawing occurs in the desktop!)
-	renderCursor = (renderCursor && IsValidWindowRef(HIViewGetWindow(inTerminalViewPtr->contentHIView)));
-	
-	// change state
-	inTerminalViewPtr->screen.cursor.ghostState = newGhostCursorState;
-	
-	// redraw the cursor if necessary
-	if (renderCursor)
-	{
-		// TEMPORARY: highlighting one part does not seem to work right now, so
-		// invalidate the WHOLE view (expensive?) to ensure the cursor redraws
-		updateDisplay(inTerminalViewPtr);
-		//HiliteControl(inTerminalViewPtr->contentHIView, kTerminalView_ContentPartCursorGhost);
-	}
-}// setCursorGhostVisibility
-
-
-/*!
 Hides or shows the cursor of the specified screen.
 
 This has no effect if TerminalView_SetCursorRenderingEnabled()
@@ -12282,54 +12236,6 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 		RectRgn(inoutBoundsRegionOrNull, outBoundsPtr);
 	}
 }// setUpCursorBounds
-
-
-/*!
-Specifies the top-left corner of the ghost cursor in
-coordinates local to the WINDOW.  The coordinates are
-automatically converted to screen coordinates based on
-wherever the terminal view happens to be.
-
-The ghost cursor is used during drags to indicate where
-the cursor would go, but is not indicative of the
-cursor’s actual position.
-
-NOTE:	This routine currently anchors the cursor at the
-		edges of the screen, when in fact the better
-		behavior is to hide the cursor if it is not in
-		the screen area.
-
-(3.0)
-*/
-void
-setUpCursorGhost	(My_TerminalViewPtr		inTerminalViewPtr,
-					 Point					inLocalMouse)
-{
-	Rect	screenBounds;
-	
-	
-	GetControlBounds(inTerminalViewPtr->contentHIView, &screenBounds);
-	
-	// do not show the ghost if the point is not inside the screen area
-	if (PtInRect(inLocalMouse, &screenBounds))
-	{
-		TerminalView_Cell	newColumnRow;
-		SInt16				deltaColumn = 0;
-		SInt16				deltaRow = 0;
-		
-		
-		UNUSED_RETURN(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, inLocalMouse, newColumnRow, deltaColumn, deltaRow);
-		// cursor is visible - put it where it’s supposed to be
-		setUpCursorBounds(inTerminalViewPtr, newColumnRow.first, newColumnRow.second, &inTerminalViewPtr->screen.cursor.ghostBounds,
-							nullptr/* region */);
-	}
-	else
-	{
-		// cursor is outside the screen - do not show any cursor in the visible screen area
-		setUpCursorBounds(inTerminalViewPtr, -100/* arbitrary */, -100/* arbitrary */, &inTerminalViewPtr->screen.cursor.ghostBounds,
-							nullptr/* region */);
-	}
-}// setUpCursorGhost
 
 
 /*!
@@ -13552,6 +13458,7 @@ Render the specified part of the terminal background.
 - (void)
 drawRect:(NSRect)	aRect
 {
+#pragma unused(aRect)
 	// WARNING: Since "canDrawConcurrently" returns YES, this should
 	// not do anything that requires execution on the main thread.
 	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
@@ -13809,6 +13716,7 @@ something like a formatting sheet’s preview pane.)
 - (void)
 drawRect:(NSRect)	aRect
 {
+#pragma unused(aRect)
 	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
 	
 	

@@ -341,7 +341,6 @@ OSStatus				receiveTabDragDrop				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveToolbarEvent				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowDragCompleted		(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveWindowGetClickActivation	(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
 HIWindowRef				returnCarbonWindow				(My_TerminalWindowPtr);
 UInt16					returnGrowBoxHeight				(My_TerminalWindowPtr);
@@ -1990,6 +1989,10 @@ TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
 			// counterproductive, because it would force the parent window
 			// to remain relatively wide (or high, for left/right tabs)
 			error = SetDrawerOffsets(tabWindow, leadingOffset, kWindowOffsetUnchanged);
+			if (noErr != error)
+			{
+				Console_Warning(Console_WriteValue, "failed to set drawer offsets for terminal window, error", error);
+			}
 			
 			// force a “resize” to cause the tab position to update immediately
 			// (TEMPORARY: is there a better way to do this?)
@@ -2279,6 +2282,11 @@ TerminalWindow_StartMonitoring	(TerminalWindowRef			inRef,
 		
 		// add a listener to the specified target’s listener model for the given setting change
 		error = ListenerModel_AddListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
+		if (noErr != error)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to start monitoring terminal window change", inForWhatChange);
+			Console_Warning(Console_WriteValue, "monitor installation error", error);
+		}
 	}
 	else
 	{
@@ -2661,26 +2669,6 @@ installedActions()
 											&this->commandHandler/* event handler reference */);
 		assert_noerr(error);
 	}
-	
-	// install a callback that tells the Window Manager the proper behavior for clicks in background terminal windows
-#if 0
-	// this behavior is disabled temporarily under the hybrid environment with a Cocoa
-	// runtime; it will be restored when terminals become full-fledged Cocoa windows
-	{
-		EventTypeSpec const		whenWindowClickActivationRequired[] =
-								{
-									{ kEventClassWindow, kEventWindowGetClickActivation }
-								};
-		OSStatus				error = noErr;
-		
-		
-		this->windowClickActivationUPP = NewEventHandlerUPP(receiveWindowGetClickActivation);
-		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowClickActivationUPP, GetEventTypeCount(whenWindowClickActivationRequired),
-											whenWindowClickActivationRequired, this->selfRef/* user data */,
-											&this->windowClickActivationHandler/* event handler reference */);
-		assert_noerr(error);
-	}
-#endif
 	
 	// install a callback that attempts to fix tab locations after a window is moved far enough below the menu bar
 	{
@@ -3948,8 +3936,7 @@ handleNewSize	(WindowRef	inWindow,
 		viewBounds.origin.y = contentBounds.size.height - returnScrollBarHeight(ptr);
 		viewBounds.size.width = contentBounds.size.width - returnGrowBoxWidth(ptr);
 		viewBounds.size.height = returnScrollBarHeight(ptr);
-		error = HIViewSetFrame(ptr->controls.scrollBarH, &viewBounds);
-		//assert_noerr(error); // ignore this error since the scroll bar is not used
+		UNUSED_RETURN(OSStatus)HIViewSetFrame(ptr->controls.scrollBarH, &viewBounds); // ignore error since scroll bar is unused
 		
 		// change the screen sizes to match the user’s window size as well as possible,
 		// notifying listeners of the change (to trigger actions such as sending messages
@@ -5079,7 +5066,11 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			// determine modifier keys pressed during scroll
 			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
-			result = noErr; // ignore modifier key parameter if absent
+			if (noErr != result)
+			{
+				// ignore modifier key parameter if absent
+				modifiers = 0;
+			}
 			
 			// determine how far the mouse wheel was scrolled
 			// and in which direction; negative means up/left,
@@ -5541,7 +5532,6 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (noErr != result)
 						{
 							itemData = nullptr;
-							result = noErr;
 						}
 						
 						// create the specified item, if its identifier is recognized
@@ -6099,6 +6089,10 @@ receiveWindowDragCompleted	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef
 					if (noErr == error)
 					{
 						error = OpenDrawer(tabWindow, kWindowEdgeDefault, true/* asynchronously */);
+						if (noErr != error)
+						{
+							Console_Warning(Console_WriteValue, "failed to open drawer during drag to terminal window, error", error);
+						}
 					}
 				}
 			}
@@ -6107,93 +6101,6 @@ receiveWindowDragCompleted	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef
 	
 	return result;
 }// receiveWindowDragCompleted
-
-
-/*!
-Handles "kEventWindowGetClickActivation" of "kEventClassWindow"
-for a terminal window.
-
-(3.1)
-*/
-OSStatus
-receiveWindowGetClickActivation		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-									 EventRef				inEvent,
-									 void*					inTerminalWindowRef)
-{
-	OSStatus			result = eventNotHandledErr;
-	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert(kEventKind == kEventWindowGetClickActivation);
-	{
-		WindowRef	window = nullptr;
-		
-		
-		// determine the window in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-		
-		// if the window was found, proceed
-		if (result == noErr)
-		{
-			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-			HIViewRef						control = nullptr;
-			UInt32							actualSize = 0L;
-			EventParamType					actualType = typeNull;
-			
-			
-			// only clicks in controls matter for this
-			result = eventNotHandledErr;
-			if (noErr == GetEventParameter(inEvent, kEventParamControlRef, typeControlRef, &actualType,
-											sizeof(control), &actualSize, &control))
-			{
-				// find clicks in terminal regions
-				My_TerminalViewList::const_iterator		viewIterator;
-				
-				
-				for (viewIterator = ptr->allViews.begin(); viewIterator != ptr->allViews.end(); ++viewIterator)
-				{
-					if (TerminalView_ReturnDragFocusHIView(*viewIterator) == control)
-					{
-						// clicks in terminals may work from the background
-						ClickActivationResult	clickInfo = kActivateAndIgnoreClick;
-						Point					eventMouse;
-						
-						
-						if (noErr == GetEventParameter(inEvent, kEventParamMouseLocation, typeQDPoint, &actualType,
-														sizeof(eventMouse), &actualSize, &eventMouse))
-						{
-							// preferably only allow click-through when a background selection is touched
-							if (WaitMouseMoved(eventMouse))
-							{
-								// allow pending drags only
-								CGrafPtr	oldPort = nullptr;
-								GDHandle	oldDevice = nullptr;
-								
-								
-								GetGWorld(&oldPort, &oldDevice);
-								SetPortWindowPort(TerminalView_ReturnWindow(*viewIterator));
-								GlobalToLocal(&eventMouse);
-								if (TerminalView_PtInSelection(*viewIterator, eventMouse))
-								{
-									clickInfo = kActivateAndHandleClick;
-								}
-								SetGWorld(oldPort, oldDevice);
-							}
-						}
-						result = SetEventParameter(inEvent, kEventParamClickActivation,
-													typeClickActivationResult, sizeof(clickInfo), &clickInfo);
-						break;
-					}
-				}
-			}
-		}
-	}
-	
-	return result;
-}// receiveWindowGetClickActivation
 
 
 /*!
@@ -6787,19 +6694,12 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 	if (nullptr != terminalWindow)
 	{
 		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-		TerminalScreenRef				screen = nullptr;
 		TerminalViewRef					view = nullptr;
 		My_ScrollBarKind				kind = kMy_InvalidScrollBarKind;
-		SInt16							visibleColumnCount = 0;
-		SInt16							visibleRowCount = 0;
 		
 		
-		screen = getScrollBarScreen(ptr, inScrollBarClicked); // 3.0
 		view = getScrollBarView(ptr, inScrollBarClicked); // 3.0
 		kind = getScrollBarKind(ptr, inScrollBarClicked); // 3.0
-		
-		visibleColumnCount = Terminal_ReturnColumnCount(screen);
-		visibleRowCount = Terminal_ReturnRowCount(screen);
 		
 		if (kMy_ScrollBarKindHorizontal == kind)
 		{
@@ -7115,7 +7015,8 @@ setCursorInWindow	(HIWindowRef	inWindow,
 			
 			
 			result = GetControlKind(viewUnderMouse, &controlKind);
-			if ((AppResources_ReturnCreatorCode() == controlKind.signature) &&
+			if ((noErr == result) &&
+				(AppResources_ReturnCreatorCode() == controlKind.signature) &&
 				(kConstantsRegistry_ControlKindTerminalView == controlKind.kind))
 			{
 				// set the cursor appropriately in whatever control is under the mouse
@@ -7167,6 +7068,11 @@ setScreenPreferences	(My_TerminalWindowPtr		inPtr,
 		
 		
 		prefsResult = Preferences_ContextCopy(inContext, Terminal_ReturnConfiguration(activeScreen), tagSet);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to overwrite terminal screen configuration, error", prefsResult);
+		}
+		
 		Preferences_ReleaseTagSet(&tagSet);
 		
 		// IMPORTANT: this window adjustment should match TerminalWindow_SetScreenDimensions()
@@ -7284,6 +7190,10 @@ setViewFormatPreferences	(My_TerminalWindowPtr		inPtr,
 		viewResult = TerminalView_SetDisplayMode(activeView, kTerminalView_DisplayModeNormal);
 		assert(kTerminalView_ResultOK == viewResult);
 		prefsResult = Preferences_ContextCopy(inContext, TerminalView_ReturnFormatConfiguration(activeView), tagSet);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to copy terminal screen Format configuration, error", prefsResult);
+		}
 		viewResult = TerminalView_SetDisplayMode(activeView, oldMode);
 		assert(kTerminalView_ResultOK == viewResult);
 		
@@ -7346,6 +7256,10 @@ setViewTranslationPreferences	(My_TerminalWindowPtr		inPtr,
 		
 		// TEMPORARY; should iterate over other views if there is ever more than one
 		prefsResult = Preferences_ContextCopy(inContext, TerminalView_ReturnTranslationConfiguration(activeView), tagSet);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to copy terminal screen Translation configuration, error", prefsResult);
+		}
 		
 		Preferences_ReleaseTagSet(&tagSet);
 	}

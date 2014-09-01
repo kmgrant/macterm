@@ -2272,6 +2272,10 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 					
 					// finally, send the message to the main event loop
 					error = PostEventToQueue(GetMainEventQueue(), setStateEvent, kEventPriorityStandard);
+					if (noErr != error)
+					{
+						Console_Warning(Console_WriteValue, "failed to post session set-state event to main queue, error", error);
+					}
 				}
 			}
 		}

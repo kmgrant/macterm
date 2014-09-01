@@ -100,7 +100,6 @@ HIViewID const	idMyFieldRows					= { 'Rows', 0/* ID */ };
 HIViewID const	idMyPopUpMenuScrollbackType		= { 'SbkT', 0/* ID */ };
 HIViewID const	idMyFieldScrollback				= { 'Sbak', 0/* ID */ };
 HIViewID const	idMyPopUpMenuScrollbackUnits	= { 'SbkU', 0/* ID */ };
-HIViewID const	idMyLabelScrollSpeedFast		= { 'LScF', 0/* ID */ };
 HIViewID const	idMyHelpTextTweaks				= { 'TwkH', 0/* ID */ };
 HIViewID const	idMyCheckBoxLineWrap			= { 'XWrL', 0/* ID */ };
 HIViewID const	idMyCheckBoxEightBit			= { 'X8Bt', 0/* ID */ };
@@ -1680,17 +1679,11 @@ Resizes the views in this tab.
 */
 void
 My_TerminalsPanelOptionsUI::
-deltaSize	(HIViewRef		inContainer,
-			 Float32		inDeltaX,
+deltaSize	(HIViewRef		UNUSED_ARGUMENT(inContainer),
+			 Float32		UNUSED_ARGUMENT(inDeltaX),
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
 			 void*			UNUSED_ARGUMENT(inContext))
 {
-	HIWindowRef const			kPanelWindow = HIViewGetWindow(inContainer);
-	//My_TerminalsPanelOptionsUI*	dataPtr = REINTERPRET_CAST(inContext, My_TerminalsPanelOptionsUI*);
-	
-	HIViewWrap					viewWrap;
-	
-	
 	// UNIMPLEMENTED
 }// My_TerminalsPanelOptionsUI::deltaSize
 
@@ -2241,17 +2234,11 @@ Resizes the views in this tab.
 */
 void
 My_TerminalsPanelScreenUI::
-deltaSize	(HIViewRef		inContainer,
-			 Float32		inDeltaX,
+deltaSize	(HIViewRef		UNUSED_ARGUMENT(inContainer),
+			 Float32		UNUSED_ARGUMENT(inDeltaX),
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
 			 void*			UNUSED_ARGUMENT(inContext))
 {
-	HIWindowRef const			kPanelWindow = HIViewGetWindow(inContainer);
-	//My_TerminalsPanelScreenUI*	dataPtr = REINTERPRET_CAST(inContext, My_TerminalsPanelScreenUI*);
-	
-	HIViewWrap					viewWrap;
-	
-	
 	// INCOMPLETE
 }// My_TerminalsPanelScreenUI::deltaSize
 

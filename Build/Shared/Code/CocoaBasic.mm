@@ -914,6 +914,11 @@ changeColor:(id)	sender
 		
 		// for sheets, the PARENT window can sometimes be erased too...sigh
 		error = GetWindowClass(window, &windowClass);
+		if (noErr != error)
+		{
+			Console_Warning(Console_WriteValue, "failed to find color panel’s window class", error);
+			windowClass = kDocumentWindowClass;
+		}
 		if (kSheetWindowClass == windowClass)
 		{
 			HIWindowRef		parentWindow;

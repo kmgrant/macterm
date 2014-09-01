@@ -272,6 +272,11 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 			session = SessionFactory_NewSessionArbitraryCommand
 						(dataPtr->terminalWindow, argumentListCFArray, dataPtr->temporaryDataModel.returnRef(),
 							true/* reconfigure terminal */, nullptr/* workspace context */, 0/* window index */);
+			if (nullptr == session)
+			{
+				Console_Warning(Console_WriteLine, "failed to create new session");
+				Sound_StandardAlert();
+			}
 			CFRelease(argumentListCFArray), argumentListCFArray = nullptr;
 		}
 	}

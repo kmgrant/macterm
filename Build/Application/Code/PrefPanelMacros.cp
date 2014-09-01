@@ -79,9 +79,6 @@
 #pragma mark Constants
 namespace {
 
-UInt16 const	kMy_MaxMacroActionColumnWidthInPixels = 120; // arbitrary
-UInt16 const	kMy_MaxMacroKeyColumnWidthInPixels = 100; // arbitrary
-
 // The following cannot use any of Apple’s reserved IDs (0 to 1023).
 enum
 {
@@ -1747,21 +1744,20 @@ compareDataBrowserItems		(HIViewRef					inDataBrowser,
 			
 			if (nullptr != panelDataPtr)
 			{
-				SInt32				macroIndex1 = STATIC_CAST(inItemOne, SInt32);
-				SInt32				macroIndex2 = STATIC_CAST(inItemTwo, SInt32);
-				Preferences_Result	prefsResult = kPreferences_ResultOK;
-				size_t				actualSize = 0;
+				SInt32		macroIndex1 = STATIC_CAST(inItemOne, SInt32);
+				SInt32		macroIndex2 = STATIC_CAST(inItemTwo, SInt32);
+				size_t		actualSize = 0;
 				
 				
 				// ignore results, the strings are checked below
-				prefsResult = Preferences_ContextGetData
-								(panelDataPtr->dataModel,
-									Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex1),
-									sizeof(string1), &string1, false/* search defaults too */, &actualSize);
-				prefsResult = Preferences_ContextGetData
-								(panelDataPtr->dataModel,
-									Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex2),
-									sizeof(string2), &string2, false/* search defaults too */, &actualSize);
+				UNUSED_RETURN(Preferences_Result)Preferences_ContextGetData
+													(panelDataPtr->dataModel,
+														Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex1),
+														sizeof(string1), &string1, false/* search defaults too */, &actualSize);
+				UNUSED_RETURN(Preferences_Result)Preferences_ContextGetData
+													(panelDataPtr->dataModel,
+														Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex2),
+														sizeof(string2), &string2, false/* search defaults too */, &actualSize);
 			}
 			
 			// check for nullptr, because CFStringCompare() will not deal with it

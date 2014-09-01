@@ -90,7 +90,6 @@
 		0AC6BB320A8C0BA000AFF37A /* InfoWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE7055432A400ACDF3A /* InfoWindow.mm */; };
 		0AC6BB330A8C0BA000AFF37A /* Releases.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0307FAC08800248DDF /* Releases.cp */; };
 		0AC6BB340A8C0BA000AFF37A /* StringUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCFC07FAC06200248DDF /* StringUtilities.cp */; };
-		0AC6BB350A8C0BA100AFF37A /* TerminalFile.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE26055432A400ACDF3A /* TerminalFile.cp */; };
 		0AC6BB360A8C0BA100AFF37A /* Workspace.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE3D055432A400ACDF3A /* Workspace.cp */; };
 		0AC6BB370A8C0BA100AFF37A /* NIBLoader.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AFD12B5087A147D00439BEA /* NIBLoader.cp */; };
 		0AC6BB3A0A8C0BA100AFF37A /* Initialize.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE8055432A400ACDF3A /* Initialize.cp */; };
@@ -314,7 +313,6 @@
 		0A4604360554376100ACDF3A /* VectorCanvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorCanvas.h; path = Application/Code/VectorCanvas.h; sourceTree = "<group>"; };
 		0A4604370554376100ACDF3A /* VectorInterpreter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreter.h; path = Application/Code/VectorInterpreter.h; sourceTree = "<group>"; };
 		0A46043B0554376100ACDF3A /* Terminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Terminal.h; path = Application/Code/Terminal.h; sourceTree = "<group>"; };
-		0A46043C0554376100ACDF3A /* TerminalFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalFile.h; path = Application/Code/TerminalFile.h; sourceTree = "<group>"; };
 		0A46043D0554376100ACDF3A /* TerminalScreenRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalScreenRef.typedef.h; path = Application/Code/TerminalScreenRef.typedef.h; sourceTree = "<group>"; };
 		0A46043E0554376100ACDF3A /* TerminalSpeaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalSpeaker.h; path = Application/Code/TerminalSpeaker.h; sourceTree = "<group>"; };
 		0A46043F0554376100ACDF3A /* TerminalTextAttributes.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalTextAttributes.typedef.h; path = Application/Code/TerminalTextAttributes.typedef.h; sourceTree = "<group>"; };
@@ -387,7 +385,6 @@
 		0A46FE21055432A400ACDF3A /* VectorCanvas.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = VectorCanvas.mm; path = Application/Code/VectorCanvas.mm; sourceTree = "<group>"; };
 		0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = VectorInterpreter.cp; path = Application/Code/VectorInterpreter.cp; sourceTree = "<group>"; };
 		0A46FE25055432A400ACDF3A /* Terminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Terminal.cp; path = Application/Code/Terminal.cp; sourceTree = "<group>"; };
-		0A46FE26055432A400ACDF3A /* TerminalFile.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalFile.cp; path = Application/Code/TerminalFile.cp; sourceTree = "<group>"; };
 		0A46FE27055432A400ACDF3A /* TerminalSpeaker.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalSpeaker.cp; path = Application/Code/TerminalSpeaker.cp; sourceTree = "<group>"; };
 		0A46FE28055432A400ACDF3A /* TerminalView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TerminalView.mm; path = Application/Code/TerminalView.mm; sourceTree = "<group>"; };
 		0A46FE29055432A400ACDF3A /* TerminalWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TerminalWindow.mm; path = Application/Code/TerminalWindow.mm; sourceTree = "<group>"; };
@@ -801,7 +798,6 @@
 				0A64C5EA1059E423005B8A48 /* StreamCapture.cp */,
 				0A46FE25055432A400ACDF3A /* Terminal.cp */,
 				0A984182083452E6002E1BCE /* TerminalBackground.cp */,
-				0A46FE26055432A400ACDF3A /* TerminalFile.cp */,
 				0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */,
 				0A46FE27055432A400ACDF3A /* TerminalSpeaker.cp */,
 				0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */,
@@ -864,7 +860,6 @@
 				0A64C5EC1059E432005B8A48 /* StreamCapture.h */,
 				0A46043B0554376100ACDF3A /* Terminal.h */,
 				0A9841C7083457A4002E1BCE /* TerminalBackground.h */,
-				0A46043C0554376100ACDF3A /* TerminalFile.h */,
 				0A2DC1AF1881BEF5005A3979 /* TerminalLine.h */,
 				0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */,
 				0A46043D0554376100ACDF3A /* TerminalScreenRef.typedef.h */,
@@ -1449,7 +1444,6 @@
 				0AC6BB320A8C0BA000AFF37A /* InfoWindow.mm in Sources */,
 				0AC6BB330A8C0BA000AFF37A /* Releases.cp in Sources */,
 				0AC6BB340A8C0BA000AFF37A /* StringUtilities.cp in Sources */,
-				0AC6BB350A8C0BA100AFF37A /* TerminalFile.cp in Sources */,
 				0AC6BB360A8C0BA100AFF37A /* Workspace.cp in Sources */,
 				0AC6BB370A8C0BA100AFF37A /* NIBLoader.cp in Sources */,
 				0AC6BB3A0A8C0BA100AFF37A /* Initialize.cp in Sources */,

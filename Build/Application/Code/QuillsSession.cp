@@ -318,16 +318,6 @@ Session::handle_file	(std::string	inPathname)
 			{
 				// UNIMPLEMENTED - import macros from text
 			}
-			else if (extensionName == "term")
-			{
-				// it appears to be a Terminal XML property list file; parse it
-				TerminalWindowRef		terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
-				Preferences_ContextRef	workspaceContext = nullptr;
-				
-				
-				SessionFactory_NewSessionFromTerminalFile(terminalWindow, inPathname.c_str(), workspaceContext,
-															0/* window index */);
-			}
 			else
 			{
 				// no Python handler is installed for this file; use the default handler

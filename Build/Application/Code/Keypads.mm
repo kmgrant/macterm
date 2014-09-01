@@ -656,6 +656,10 @@ doneArranging:(id)	sender
 				prefValue.size.height = screenFrame.size.height;
 				prefsResult = Preferences_ContextSetData(gArrangeWindowBindingContext, gArrangeWindowScreenBinding,
 															sizeof(prefValue), &prefValue);
+				if (kPreferences_ResultOK != prefsResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to set preference associated with arrange-window panel, error", prefsResult);
+				}
 			}
 			else
 			{

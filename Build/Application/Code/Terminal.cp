@@ -378,8 +378,6 @@ enum
 	kMy_ParserStateSeenESCBackslash				= 'ESB/',	//!< generic state used to define emulator-specific states, below
 };
 
-UInt16 const					kNumberOfScrollbackRowsToAllocateAtOnce = 100;
-
 char const		kMy_TabSet		= 'x';	//!< in "tabSettings" field of terminal structure, characters with this value mark tab stops
 char const		kMy_TabClear	= ' ';	//!< in "tabSettings" field of terminal structure, all characters not marking tab stops have this value
 UInt8 const		kMy_TabStop		= 8;	//!< number of characters between normal tab stops
@@ -6773,7 +6771,6 @@ printingEnd		(Boolean	inSendRemainderToPrinter)
 {
 	if ((nullptr != this->printingStream) && (0 == this->printingModes))
 	{
-		FSCloseFork(StreamCapture_ReturnReferenceNumber(this->printingStream));
 		StreamCapture_End(this->printingStream);
 		StreamCapture_Release(&this->printingStream);
 		
@@ -9670,9 +9667,12 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		}
 	#endif
 		{
-			UInt8 const		kReturnChar = 0x0D;
+			UInt8 const		kReturnChar = '\015';
 			
 			
+			// the implementation is such that sending any new-line-like character
+			// (return, whatever) will translate to the actual new-line sequence
+			// defined for the stream
 			StreamCapture_WriteUTF8Data(inDataPtr->captureStream, &kReturnChar, 1);
 		}
 		break;
@@ -10987,13 +10987,13 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		moveCursorDownOrScroll(inDataPtr);
 		if (0 != inDataPtr->printingModes)
 		{
-			UInt8 const		kReturn = '\015';
+			UInt8 const		kReturnChar = '\015';
 			
 			
 			// the implementation is such that sending any new-line-like character
 			// (return, whatever) will translate to the actual new-line sequence
 			// defined for the stream
-			StreamCapture_WriteUTF8Data(inDataPtr->printingStream, &kReturn, sizeof(kReturn));
+			StreamCapture_WriteUTF8Data(inDataPtr->printingStream, &kReturnChar, 1);
 		}
 		break;
 	

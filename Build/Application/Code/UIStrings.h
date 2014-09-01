@@ -413,17 +413,6 @@ enum UIStrings_UndoCFString
 	kUIStrings_UndoFullScreen					= 'UndZ'
 };
 
-/*!
-Generic description of a class of strings.  This is not
-normally used, because you can just refer to specific
-strings above; however, UIStrings_CopyRandom() uses it
-to return any string out of a table.
-*/
-enum UIStrings_StringClass
-{
-	//kUIStrings_StringClassXYZ						= 'CXYZ'
-};
-
 
 
 #pragma mark Public Methods
@@ -483,10 +472,6 @@ UIStrings_Result
 
 UIStrings_Result
 	UIStrings_Copy						(UIStrings_UndoCFString							inWhichString,
-										 CFStringRef&									outString);
-
-UIStrings_Result
-	UIStrings_CopyRandom				(UIStrings_StringClass							inWhichStringClass,
 										 CFStringRef&									outString);
 
 // CALLS FSCreateFileUnicode() or FSCreateDirectoryUnicode()

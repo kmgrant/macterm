@@ -3281,27 +3281,97 @@ resetANSIWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 															(Panel_ReturnImplementation(interfacePtr->panel),
 																My_FormatsPanelANSIColorsDataPtr);
 			Preferences_ContextRef				targetContext = dataPtr->dataModel;
+			UInt16								errorCount = 0;
 			
 			
 			// do not use Preferences_ContextCopy(), because the “factory defaults”
 			// context contains more than just colors; copyColor() is called to
 			// ensure that only color preferences are changed
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIBlack, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIBlackBold, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIRed, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIRedBold, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIGreen, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIGreenBold, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIYellow, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIYellowBold, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIBlue, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIBlueBold, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIMagenta, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIMagentaBold, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSICyan, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSICyanBold, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIWhite, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
 			prefsResult = copyColor(kPreferences_TagTerminalColorANSIWhiteBold, defaultFormat, targetContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				++errorCount;
+			}
+			
+			if (0 != errorCount)
+			{
+				Console_Warning(Console_WriteLine, "at least one ANSI color preference could not be reset properly");
+			}
 			
 			interfacePtr->readPreferences(defaultFormat);
 		}
@@ -3889,7 +3959,7 @@ ofObject:(id)						anObject
 change:(NSDictionary*)				aChangeDictionary
 context:(void*)						aContext
 {
-#pragma unused(anObject, aContext)
+#pragma unused(aKeyPath, anObject, aContext)
 	if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
 	{
 		// TEMPORARY; refresh the terminal view for any change, without restrictions

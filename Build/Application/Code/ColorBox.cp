@@ -169,6 +169,10 @@ ColorBox_AttachToBevelButton	(HIViewRef			inoutBevelButton,
 					error = HIObjectSetAuxiliaryAccessibilityAttribute
 							(kViewObjectRef, 0/* sub-component identifier */,
 								kAXDescriptionAttribute, accessibilityDescCFString);
+					if (noErr != error)
+					{
+						Console_Warning(Console_WriteValue, "failed to set accessibility description of bevel button, error", error);
+					}
 					CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 				}
 			}

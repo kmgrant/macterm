@@ -61,7 +61,7 @@ FileSelectionDialogs_CompleteSave	(NavReplyRecord*	inoutReplyPtr)
 	{
 		result = NavCompleteSave(inoutReplyPtr, kNavTranslateInPlace);
 	}
-	result = NavDisposeReply(inoutReplyPtr);
+	UNUSED_RETURN(OSStatus)NavDisposeReply(inoutReplyPtr);
 	
 	return result;
 }// CompleteSave

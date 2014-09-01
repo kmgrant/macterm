@@ -290,16 +290,16 @@ MacroManager_SetCurrentMacros	(Preferences_ContextRef		inMacroSetOrNullForNone)
 			// remove monitors from the context that is about to be non-current
 			for (UInt16 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
 			{
-				prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i));
-				prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, i));
-				prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, i));
-				prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, i));
-				prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
-																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, i));
+				UNUSED_RETURN(Preferences_Result)Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																					Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i));
+				UNUSED_RETURN(Preferences_Result)Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																					Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, i));
+				UNUSED_RETURN(Preferences_Result)Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																					Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, i));
+				UNUSED_RETURN(Preferences_Result)Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																					Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, i));
+				UNUSED_RETURN(Preferences_Result)Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																					Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, i));
 			}
 			
 			Preferences_ReleaseContext(&(gCurrentMacroSet()));

@@ -75,25 +75,25 @@ MenuBar_HandleMenuCommand	(MenuRef			inMenu,
 							 MenuItemIndex		inMenuItemIndex)
 {
 	UInt32		commandID = 0L;
-	UInt16		menuID = GetMenuID(inMenu);
 	OSStatus	error = noErr;
 	Boolean		result = true;
 	
 	
 	error = GetMenuItemCommandID(inMenu, inMenuItemIndex, &commandID);
-	
-	switch (menuID)
+	if (noErr != error)
 	{
-	default:
-		// In the vast majority of cases, PREFER to use
-		// command IDs exclusively.  Hopefully, all other
-		// cases will be eliminated in future releases.
+		result = false;
+	}
+	else
+	{
 		result = MenuBar_HandleMenuCommandByID(commandID);
-		break;
 	}
 	
 	// if a menu item wasn’t handled, make this an obvious bug by leaving the menu title highlighted
-	if (result) HiliteMenu(0);
+	if (result)
+	{
+		HiliteMenu(0);
+	}
 	
 	return result;
 }// HandleMenuCommand

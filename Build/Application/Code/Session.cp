@@ -384,7 +384,6 @@ UInt16						copyEventKeyPreferences				(My_SessionPtr, Preferences_ContextRef, B
 UInt16						copyVectorGraphicsPreferences		(My_SessionPtr, Preferences_ContextRef, Boolean);
 My_HMHelpContentRecWrap&	createHelpTagForInterrupt			();
 My_HMHelpContentRecWrap&	createHelpTagForLocalEcho			();
-My_HMHelpContentRecWrap&	createHelpTagForResume				();
 My_HMHelpContentRecWrap&	createHelpTagForSuspend				();
 My_HMHelpContentRecWrap&	createHelpTagForVectorGraphics		();
 IconRef						createSessionStateActiveIcon		();
@@ -902,6 +901,10 @@ Session_DisplayFileCaptureSaveDialog	(SessionRef		inRef)
 		// display the dialog; it is a sheet, so this will return immediately
 		// and the dialog will close whenever the user is actually done with it
 		error = NavDialogRun(navigationServicesDialog);
+		if (noErr != error)
+		{
+			Console_Warning(Console_WriteValue, "failed to display save panel for file capture, error", error);
+		}
 	}
 }// DisplayFileCaptureSaveDialog
 
@@ -938,10 +941,18 @@ Session_DisplaySaveDialog	(SessionRef		inRef)
 									AppResources_ReturnCreatorCode(),
 									NewNavEventUPP(navigationSaveDialogEvent),
 									inRef/* client data */, &navigationServicesDialog);
+	if (noErr != error)
+	{
+		Console_Warning(Console_WriteValue, "failed to create save panel for session, error", error);
+	}
 	
 	// display the dialog; it is a sheet, so this will return immediately
 	// and the dialog will close whenever the user is actually done with it
 	error = NavDialogRun(navigationServicesDialog);
+	if (noErr != error)
+	{
+		Console_Warning(Console_WriteValue, "failed to display save panel for session, error", error);
+	}
 }// DisplaySaveDialog
 
 
@@ -1104,6 +1115,10 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 				}
 				error = TransitionWindow(window, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
 											&centeredStructureBounds);
+				if (noErr != error)
+				{
+					Console_Warning(Console_WriteValue, "failed to transition window for termination warning, error", error);
+				}
 			}
 		}
 		
@@ -1324,6 +1339,10 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 				{
 					saveError = SessionDescription_SetStringData
 								(saveFileMemoryModel, kSessionDescription_StringTypeWindowName, stringValue);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save window title, error", saveError);
+					}
 					CFRelease(stringValue), stringValue = nullptr;
 				}
 				
@@ -1334,6 +1353,10 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 				{
 					saveError = SessionDescription_SetStringData
 									(saveFileMemoryModel, kSessionDescription_StringTypeCommandLine, stringValue);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save command line, error", saveError);
+					}
 					CFRelease(stringValue), stringValue = nullptr;
 				}
 				
@@ -1348,6 +1371,10 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 					{
 						saveError = SessionDescription_SetStringData
 										(saveFileMemoryModel, kSessionDescription_StringTypeMacroSet, stringValue);
+						if (kSessionDescription_ResultOK != saveError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save macro set name, error", saveError);
+						}
 					}
 				}
 				
@@ -1361,9 +1388,17 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 					{
 						saveError = SessionDescription_SetStringData
 									(saveFileMemoryModel, kSessionDescription_StringTypeTerminalFont, stringValue);
+						if (kSessionDescription_ResultOK != saveError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save font name, error", saveError);
+						}
 					}
 					saveError = SessionDescription_SetIntegerData
 								(saveFileMemoryModel, kSessionDescription_IntegerTypeTerminalFontSize, fontSize);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save font size, error", saveError);
+					}
 				}
 				
 				// color info
@@ -1371,26 +1406,50 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 					TerminalView_GetColor(view, kTerminalView_ColorIndexNormalText, &colorValue);
 					saveError = SessionDescription_SetRGBColorData
 								(saveFileMemoryModel, kSessionDescription_RGBColorTypeTextNormal, colorValue);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save normal text color, error", saveError);
+					}
 					
 					TerminalView_GetColor(view, kTerminalView_ColorIndexNormalBackground, &colorValue);
 					saveError = SessionDescription_SetRGBColorData
 								(saveFileMemoryModel, kSessionDescription_RGBColorTypeBackgroundNormal, colorValue);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save normal background color, error", saveError);
+					}
 					
 					TerminalView_GetColor(view, kTerminalView_ColorIndexBoldText, &colorValue);
 					saveError = SessionDescription_SetRGBColorData
 								(saveFileMemoryModel, kSessionDescription_RGBColorTypeTextBold, colorValue);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save bold text color, error", saveError);
+					}
 					
 					TerminalView_GetColor(view, kTerminalView_ColorIndexBoldBackground, &colorValue);
 					saveError = SessionDescription_SetRGBColorData
 								(saveFileMemoryModel, kSessionDescription_RGBColorTypeBackgroundBold, colorValue);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save bold background color, error", saveError);
+					}
 					
 					TerminalView_GetColor(view, kTerminalView_ColorIndexBlinkingText, &colorValue);
 					saveError = SessionDescription_SetRGBColorData
 								(saveFileMemoryModel, kSessionDescription_RGBColorTypeTextBlinking, colorValue);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save blinking text color, error", saveError);
+					}
 					
 					TerminalView_GetColor(view, kTerminalView_ColorIndexBlinkingBackground, &colorValue);
 					saveError = SessionDescription_SetRGBColorData
 								(saveFileMemoryModel, kSessionDescription_RGBColorTypeBackgroundBlinking, colorValue);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save blinking background color, error", saveError);
+					}
 				}
 				
 				// terminal screen metrics
@@ -1406,10 +1465,22 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 					
 					saveError = SessionDescription_SetIntegerData
 								(saveFileMemoryModel, kSessionDescription_IntegerTypeTerminalVisibleColumnCount, columns);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save column count, error", saveError);
+					}
 					saveError = SessionDescription_SetIntegerData
 								(saveFileMemoryModel, kSessionDescription_IntegerTypeTerminalVisibleLineCount, rows);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save row count, error", saveError);
+					}
 					saveError = SessionDescription_SetIntegerData
 								(saveFileMemoryModel, kSessionDescription_IntegerTypeScrollbackBufferLineCount, scrollback);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save scrollback row count, error", saveError);
+					}
 				}
 				
 				// terminal type
@@ -1417,6 +1488,10 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 					Session_TerminalCopyAnswerBackMessage(inRef, stringValue);
 					saveError = SessionDescription_SetStringData
 								(saveFileMemoryModel, kSessionDescription_StringTypeAnswerBack, stringValue);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save terminal type, error", saveError);
+					}
 					if (nullptr != stringValue)
 					{
 						CFRelease(stringValue), stringValue = nullptr;
@@ -1431,12 +1506,24 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 					flag = ptr->eventKeys.newline;
 					saveError = SessionDescription_SetBooleanData
 								(saveFileMemoryModel, kSessionDescription_BooleanTypeRemapCR, flag);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save new-line mapping, error", saveError);
+					}
 					flag = !ptr->eventKeys.pageKeysLocalControl;
 					saveError = SessionDescription_SetBooleanData
 								(saveFileMemoryModel, kSessionDescription_BooleanTypePageKeysDoNotControlTerminal, flag);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save page key setting, error", saveError);
+					}
 					flag = false; // TEMPORARY
 					saveError = SessionDescription_SetBooleanData
 								(saveFileMemoryModel, kSessionDescription_BooleanTypeRemapKeypadTopRow, flag);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save keypad top row setting, error", saveError);
+					}
 				}
 				
 				// TEK info
@@ -1446,6 +1533,10 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 					
 					saveError = SessionDescription_SetBooleanData
 								(saveFileMemoryModel, kSessionDescription_BooleanTypeTEKPageClears, kFlag);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save TEK page clear setting, error", saveError);
+					}
 				}
 				
 				// Kerberos info: no longer supported
@@ -1457,6 +1548,10 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 					stringValue = CFSTR("icon+text");
 					saveError = SessionDescription_SetStringData
 								(saveFileMemoryModel, kSessionDescription_StringTypeToolbarInfo, stringValue);
+					if (kSessionDescription_ResultOK != saveError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save toolbar state, error", saveError);
+					}
 				}
 			}
 		}
@@ -3202,6 +3297,11 @@ Session_StartMonitoring		(SessionRef					inRef,
 		
 		// add a listener to the specified target’s listener model for the given setting change
 		error = ListenerModel_AddListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
+		if (noErr != error)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to start monitoring for change", inForWhatChange);
+			Console_Warning(Console_WriteValue, "monitor installation error", error);
+		}
 	}
 }// StartMonitoring
 
@@ -5802,42 +5902,6 @@ createHelpTagForLocalEcho ()
 /*!
 Returns (creating if necessary) the global help tag record
 for a help tag that confirms for the user that output for
-the active terminal screen has been restarted.
-
-If the title of the tag has not been set already, it is
-initialized.
-
-Normally, this tag should be displayed at the terminal
-cursor location, so prior to using the result you should
-call its setFrame() method.
-
-(3.1)
-*/
-My_HMHelpContentRecWrap&
-createHelpTagForResume ()
-{
-	static My_HMHelpContentRecWrap		gTag;
-	
-	
-	if (nullptr == gTag.mainName())
-	{
-		CFStringRef		tagCFString = nullptr;
-		
-		
-		if (UIStrings_Copy(kUIStrings_TerminalResumeOutput, tagCFString).ok())
-		{
-			gTag.rename(tagCFString, nullptr/* alternate name */);
-			// you CANNOT release this string because you do not know when the system is done with the tag
-		}
-	}
-	
-	return gTag;
-}// createHelpTagForResume
-
-
-/*!
-Returns (creating if necessary) the global help tag record
-for a help tag that confirms for the user that output for
 the active terminal screen has been stopped.
 
 If the title of the tag has not been set already, it is
@@ -6909,6 +6973,10 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 			}
 			Alert_ReportOSStatus(error);
 			error = FileSelectionDialogs_CompleteSave(&reply);
+			if (noErr != error)
+			{
+				Console_Warning(Console_WriteValue, "failed to complete save for file capture, error", error);
+			}
 		}
 		break;
 	
@@ -6996,6 +7064,10 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 									{
 										UNUSED_RETURN(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
 										saveError = SessionDescription_Save(saveFileMemoryModel, fileRefNum);
+										if (kSessionDescription_ResultOK != saveError)
+										{
+											Console_Warning(Console_WriteValue, "failed to save session, error", saveError);
+										}
 										FSCloseFork(fileRefNum), fileRefNum = -1;
 									}
 								}
@@ -7023,6 +7095,10 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 			}
 			Alert_ReportOSStatus(error);
 			error = FileSelectionDialogs_CompleteSave(&reply);
+			if (noErr != error)
+			{
+				Console_Warning(Console_WriteValue, "failed to complete save for session", error);
+			}
 		}
 		break;
 	
@@ -7519,6 +7595,11 @@ receiveTerminalViewEntered		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 					
 					
 					error = GetWindowModality(oldWindow, &oldWindowModality, &oldParentWindow);
+					if (noErr != error)
+					{
+						// odd...ignore error and move forward
+						oldWindowModality = kWindowModalityNone;
+					}
 					if (newWindow != oldParentWindow)
 					{
 						// only allow focus switching if the active window is a terminal

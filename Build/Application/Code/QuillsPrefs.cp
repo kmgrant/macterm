@@ -194,23 +194,25 @@ Prefs::import_from_file		(std::string	inPathname,
 				throw std::invalid_argument("failed to merge XML for preferences into context");
 			}
 			
-			// empty strings are converted to nonexistent strings so that
-			// a name will be automatically generated later
-			if ((nullptr != inferredName) && (0 == CFStringGetLength(inferredName)))
+			if (nullptr != inferredName)
 			{
-				CFRelease(inferredName), inferredName = nullptr;
-			}
-			
-			if (Preferences_IsContextNameInUse(inferredClass, inferredName))
-			{
-				if (inAllowRename)
+				// empty strings are converted to nonexistent strings so that
+				// a name will be automatically generated later
+				if (0 == CFStringGetLength(inferredName))
 				{
-					// throw away the name, have one generated automatically
 					CFRelease(inferredName), inferredName = nullptr;
 				}
-				else
+				else if (Preferences_IsContextNameInUse(inferredClass, inferredName))
 				{
-					throw std::invalid_argument("existing collection is already using the same name");
+					if (inAllowRename)
+					{
+						// throw away the name, have one generated automatically
+						CFRelease(inferredName), inferredName = nullptr;
+					}
+					else
+					{
+						throw std::invalid_argument("existing collection is already using the same name");
+					}
 				}
 			}
 			

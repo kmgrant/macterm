@@ -229,12 +229,6 @@ SessionRef
 													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
 
 SessionRef
-	SessionFactory_NewSessionFromTerminalFile		(TerminalWindowRef				inTerminalWindow,
-													 char const*					inAppleDotTermFilePath,
-													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
-													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
-
-SessionRef
 	SessionFactory_NewSessionLoginShell				(TerminalWindowRef				inTerminalWindow,
 													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
 													 UInt16							inWindowIndexInWorkspaceOrZero = 0);

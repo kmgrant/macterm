@@ -256,7 +256,6 @@ void				sessionWindowStateChanged						(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
 void				setItemCheckMark								(id <NSValidatedUserInterfaceItem>, BOOL);
 void				setNewCommand									(UInt32);
-void				setTerminalWindowTranslucency					(TerminalWindowRef, void*, SInt32, void*);
 void				setUpDynamicMenus								();
 void				setUpFormatFavoritesMenu						(NSMenu*);
 void				setUpMacroSetsMenu								(NSMenu*);
@@ -397,7 +396,6 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 							 CFStringRef&		outName)
 {
 	Boolean		result = false;
-	Boolean		useMenuCommandName = false;
 	
 	
 	switch (inCommandID)
@@ -406,13 +404,14 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		switch (inNameType)
 		{
 		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemFullScreen, outName).ok()) result = true;
-			else useMenuCommandName = true;
+			if (UIStrings_Copy(kUIStrings_ToolbarItemFullScreen, outName).ok())
+			{
+				result = true;
+			}
 			break;
 		
 		case kCommands_NameTypeDefault:
 		default:
-			useMenuCommandName = true;
 			break;
 		}
 		break;
@@ -421,13 +420,14 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		switch (inNameType)
 		{
 		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemNewSessionDefault, outName).ok()) result = true;
-			else useMenuCommandName = true;
+			if (UIStrings_Copy(kUIStrings_ToolbarItemNewSessionDefault, outName).ok())
+			{
+				result = true;
+			}
 			break;
 		
 		case kCommands_NameTypeDefault:
 		default:
-			useMenuCommandName = true;
 			break;
 		}
 		break;
@@ -436,13 +436,14 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		switch (inNameType)
 		{
 		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemNewSessionLoginShell, outName).ok()) result = true;
-			else useMenuCommandName = true;
+			if (UIStrings_Copy(kUIStrings_ToolbarItemNewSessionLoginShell, outName).ok())
+			{
+				result = true;
+			}
 			break;
 		
 		case kCommands_NameTypeDefault:
 		default:
-			useMenuCommandName = true;
 			break;
 		}
 		break;
@@ -451,13 +452,14 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		switch (inNameType)
 		{
 		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemNewSessionShell, outName).ok()) result = true;
-			else useMenuCommandName = true;
+			if (UIStrings_Copy(kUIStrings_ToolbarItemNewSessionShell, outName).ok())
+			{
+				result = true;
+			}
 			break;
 		
 		case kCommands_NameTypeDefault:
 		default:
-			useMenuCommandName = true;
 			break;
 		}
 		break;
@@ -466,13 +468,14 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		switch (inNameType)
 		{
 		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemPrint, outName).ok()) result = true;
-			else useMenuCommandName = true;
+			if (UIStrings_Copy(kUIStrings_ToolbarItemPrint, outName).ok())
+			{
+				result = true;
+			}
 			break;
 		
 		case kCommands_NameTypeDefault:
 		default:
-			useMenuCommandName = true;
 			break;
 		}
 		break;
@@ -481,13 +484,14 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		switch (inNameType)
 		{
 		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemKillSession, outName).ok()) result = true;
-			else useMenuCommandName = true;
+			if (UIStrings_Copy(kUIStrings_ToolbarItemKillSession, outName).ok())
+			{
+				result = true;
+			}
 			break;
 		
 		case kCommands_NameTypeDefault:
 		default:
-			useMenuCommandName = true;
 			break;
 		}
 		break;
@@ -496,13 +500,14 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		switch (inNameType)
 		{
 		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemRestartSession, outName).ok()) result = true;
-			else useMenuCommandName = true;
+			if (UIStrings_Copy(kUIStrings_ToolbarItemRestartSession, outName).ok())
+			{
+				result = true;
+			}
 			break;
 		
 		case kCommands_NameTypeDefault:
 		default:
-			useMenuCommandName = true;
 			break;
 		}
 		break;
@@ -511,13 +516,14 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		switch (inNameType)
 		{
 		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemCustomizeToolbar, outName).ok()) result = true;
-			else useMenuCommandName = true;
+			if (UIStrings_Copy(kUIStrings_ToolbarItemCustomizeToolbar, outName).ok())
+			{
+				result = true;
+			}
 			break;
 		
 		case kCommands_NameTypeDefault:
 		default:
-			useMenuCommandName = true;
 			break;
 		}
 		break;
@@ -526,13 +532,14 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		switch (inNameType)
 		{
 		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemSuspendNetwork, outName).ok()) result = true;
-			else useMenuCommandName = true;
+			if (UIStrings_Copy(kUIStrings_ToolbarItemSuspendNetwork, outName).ok())
+			{
+				result = true;
+			}
 			break;
 		
 		case kCommands_NameTypeDefault:
 		default:
-			useMenuCommandName = true;
 			break;
 		}
 		break;
@@ -541,13 +548,14 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		switch (inNameType)
 		{
 		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemBell, outName).ok()) result = true;
-			else useMenuCommandName = true;
+			if (UIStrings_Copy(kUIStrings_ToolbarItemBell, outName).ok())
+			{
+				result = true;
+			}
 			break;
 		
 		case kCommands_NameTypeDefault:
 		default:
-			useMenuCommandName = true;
 			break;
 		}
 		break;
@@ -556,13 +564,14 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		switch (inNameType)
 		{
 		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemHideFrontWindow, outName).ok()) result = true;
-			else useMenuCommandName = true;
+			if (UIStrings_Copy(kUIStrings_ToolbarItemHideFrontWindow, outName).ok())
+			{
+				result = true;
+			}
 			break;
 		
 		case kCommands_NameTypeDefault:
 		default:
-			useMenuCommandName = true;
 			break;
 		}
 		break;
@@ -571,20 +580,19 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 		switch (inNameType)
 		{
 		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemArrangeAllInFront, outName).ok()) result = true;
-			else useMenuCommandName = true;
+			if (UIStrings_Copy(kUIStrings_ToolbarItemArrangeAllInFront, outName).ok())
+			{
+				result = true;
+			}
 			break;
 		
 		case kCommands_NameTypeDefault:
 		default:
-			useMenuCommandName = true;
 			break;
 		}
 		break;
 	
 	default:
-		// attempt to derive the name from a matching menu command
-		useMenuCommandName = true;
 		break;
 	}
 	
@@ -2000,7 +2008,6 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 	NSArray*				allWindows = [NSApp windows];
 	NSWindow*				currentWindow = nil;
 	NSWindow*				nextWindow = nil;
-	NSWindow*				previousWindow = nil;
 	NSWindow*				firstValidWindow = nil;
 	NSWindow*				frontWindow = [NSApp mainWindow];
 	TerminalWindowRef		terminalWindow = nullptr;
@@ -2093,12 +2100,6 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 						// no need to check any other windows
 						nextWindow = currentWindow;
 						doneSearch = YES;
-					}
-					else
-					{
-						// overwrite this during the loop until the
-						// main (front) window is found
-						previousWindow = currentWindow;
 					}
 				}
 			}
@@ -2405,10 +2406,6 @@ handleQuit	(BOOL	inAsk)
 		
 		result = YES;
 		
-		// a cool effect, but probably too CPU intensive for most...
-		//SessionFactory_ForEveryTerminalWindowDo(setTerminalWindowTranslucency, nullptr/* data 1 */,
-		//										1/* 0 = opaque, 1 = translucent */, nullptr/* result */);
-		
 		// prevent tabs from shifting during this process
 		UNUSED_RETURN(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(false);
 		
@@ -2423,9 +2420,6 @@ handleQuit	(BOOL	inAsk)
 		// prevent tabs from shifting during this process
 		UNUSED_RETURN(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(true);
 		
-		// make sure all windows become opaque again
-		//SessionFactory_ForEveryTerminalWindowDo(setTerminalWindowTranslucency, nullptr/* data 1 */,
-		//										0/* 0 = opaque, 1 = translucent */, nullptr/* result */);
 		if (cancelQuit)
 		{
 			result = NO;
@@ -3269,31 +3263,6 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 		CFRelease(charCFString), charCFString = nullptr;
 	}
 }// setNewCommand
-
-
-/*!
-A "SessionFactory_TerminalWindowOpProcPtr" that makes a
-terminal window partially transparent or fully opaque
-depending on the value of "inData2".  The other arguments
-are unused and reserved.
-
-(4.0)
-*/
-void
-setTerminalWindowTranslucency	(TerminalWindowRef		inTerminalWindow,
-								 void*					UNUSED_ARGUMENT(inData1),
-								 SInt32					inZeroIfOpaqueOneForPartialTransparency,
-								 void*					UNUSED_ARGUMENT(inoutResultPtr))
-{
-	if (0 == inZeroIfOpaqueOneForPartialTransparency)
-	{
-		UNUSED_RETURN(OSStatus)SetWindowAlpha(TerminalWindow_ReturnWindow(inTerminalWindow), 1.0);
-	}
-	else
-	{
-		UNUSED_RETURN(OSStatus)SetWindowAlpha(TerminalWindow_ReturnWindow(inTerminalWindow), 0.65/* arbitrary */);
-	}
-}// setTerminalWindowTranslucency
 
 
 /*!

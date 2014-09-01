@@ -97,32 +97,12 @@ struct My_TerminalBackground
 	void
 	setImageFromURLString	(CFStringRef);
 	
-	static OSStatus
-	receiveViewBoundsChanged	(EventHandlerCallRef, EventRef, void*);
-	
-	static OSStatus
-	receiveViewWindowChanged	(EventHandlerCallRef, EventRef, void*);
-	
-	static OSStatus
-	receiveWindowActivationChanged	(EventHandlerCallRef, EventRef, void*);
-	
-	static OSStatus
-	receiveWindowBoundsChanged	(EventHandlerCallRef, EventRef, void*);
-	
-	static OSStatus
-	receiveWindowMinimizationChanged	(EventHandlerCallRef, EventRef, void*);
-	
 	HIViewRef					view;
 	HIViewPartCode				currentContentFocus;		//!< used in the content view focus handler to determine where (if anywhere) a ring goes
 	CFRetainRelease				imageObject;				//!< actually represents an auto-retained/released CGImageRef for the background image
 	CGImageRef					image;						//!< a convenient cast of the reference retained by "imageObject"; KEEP IN SYNC!
 	Boolean						isMatte;					//!< if true, the view is considered completely opaque
 	Boolean						dontDimBackgroundScreens;	//!< a cache of the preferences value, updated by the callback
-	CarbonEventHandlerWrap		boundsChangingHandler;		//!< detects changes to the view size, to update any associated focus overlay
-	CarbonEventHandlerWrap		windowChangedHandler;		//!< detects when the view has finally been embedded in a window
-	CarbonEventHandlerWrap		windowActivationHandler;	//!< detects when the window is activated or deactivated, to hide/show the overlay
-	CarbonEventHandlerWrap		windowMinimizationHandler;	//!< detects when the window is collapsed or expanded, to hide/show the overlay
-	CarbonEventHandlerWrap		windowMovementHandler;		//!< detects changes to the window position, and updates any associated focus overlay
 	ListenerModel_ListenerWrap	preferenceMonitor;			//!< detects changes to important preference settings
 };
 typedef My_TerminalBackground*			My_TerminalBackgroundPtr;
@@ -133,9 +113,6 @@ typedef My_TerminalBackground const*	My_TerminalBackgroundConstPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-void				acquireFocusOverlay						(HIViewRef, Boolean);
-HIWindowRef			createFocusOverlayWindow				();
-Boolean				isKeyboardFocus							(HIViewRef);
 void				preferenceChangedForBackground			(ListenerModel_Ref, ListenerModel_Event,
 															 void*, void*);
 OSStatus			receiveBackgroundActiveStateChange		(EventHandlerCallRef, EventRef,
@@ -151,19 +128,15 @@ OSStatus			receiveBackgroundRegionRequest			(EventHandlerCallRef, EventRef,
 															 My_TerminalBackgroundPtr);
 OSStatus			receiveBackgroundTrack					(EventHandlerCallRef, EventRef,
 															 My_TerminalBackgroundPtr);
-OSStatus			receiveFocusOverlayContentDraw			(EventHandlerCallRef, EventRef, void*);
-void				setFocusOverlayVisible					(Boolean);
 
 } // anonymous namespace
 
 #pragma mark Variables
 namespace {
 
-HIObjectClassRef			gMyBackgroundViewHIObjectClassRef = nullptr;
-EventHandlerUPP				gMyBackgroundViewConstructorUPP = nullptr;
-Boolean						gTerminalBackgroundInitialized = false;
-HIWindowRef					gTerminalViewFocusOverlayWindow ()	{ static HIWindowRef x = createFocusOverlayWindow(); return x; }
-CarbonEventHandlerWrap		gTerminalViewFocusOverlayDrawingHandler;
+HIObjectClassRef	gMyBackgroundViewHIObjectClassRef = nullptr;
+EventHandlerUPP		gMyBackgroundViewConstructorUPP = nullptr;
+Boolean				gTerminalBackgroundInitialized = false;
 
 } // anonymous namespace
 
@@ -212,28 +185,6 @@ TerminalBackground_Init ()
 											GetEventTypeCount(whenHIObjectEventOccurs), whenHIObjectEventOccurs,
 											nullptr/* constructor data */, &gMyBackgroundViewHIObjectClassRef);
 		assert_noerr(error);
-	}
-	
-	// create the handlers that maintain the focus overlay window
-	{
-		HIViewWrap		contentView(kHIViewWindowContentID, gTerminalViewFocusOverlayWindow());
-		OSStatus		error = noErr;
-		
-		
-		assert(contentView.exists());
-		
-		// the content view is not normally asked to draw, as an optimization;
-		// clear that flag so that the installed handler is actually invoked
-		error = HIViewChangeFeatures(contentView, 0/* attributes to set */, kHIViewFeatureDoesNotDraw/* attributes to clear */);
-		assert_noerr(error);
-		
-		// tell the content view how to draw
-		gTerminalViewFocusOverlayDrawingHandler.install(HIViewGetEventTarget(contentView),
-														receiveFocusOverlayContentDraw,
-														CarbonEventSetInClass
-															(CarbonEventClass(kEventClassControl), kEventControlDraw),
-														nullptr/* user data */);
-		assert(gTerminalViewFocusOverlayDrawingHandler.isInstalled());
 	}
 	
 	gTerminalBackgroundInitialized = true;
@@ -368,19 +319,6 @@ imageObject					(),
 image						(nullptr),
 isMatte						(true),
 dontDimBackgroundScreens	(false), // reset by callback
-boundsChangingHandler		(HIViewGetEventTarget(inSuperclassViewInstance),
-								receiveViewBoundsChanged,
-								CarbonEventSetInClass
-									(CarbonEventClass(kEventClassControl), kEventControlBoundsChanged),
-								this/* user data */),
-windowChangedHandler		(HIViewGetEventTarget(inSuperclassViewInstance),
-								receiveViewWindowChanged,
-								CarbonEventSetInClass
-									(CarbonEventClass(kEventClassControl), kEventControlOwningWindowChanged),
-								this/* user data */),
-windowActivationHandler		(), // set up later, in the window-changed handler
-windowMinimizationHandler	(), // set up later, in the window-changed handler
-windowMovementHandler		(), // set up later, in the window-changed handler
 preferenceMonitor			(ListenerModel_NewStandardListener(preferenceChangedForBackground, this/* context */), true/* is retained */)
 {
 	OSStatus		error = noErr;
@@ -395,9 +333,6 @@ preferenceMonitor			(ListenerModel_NewStandardListener(preferenceChangedForBackg
 								sizeof(initialColor), &initialColor);
 	assert_noerr(error);
 	
-	assert(boundsChangingHandler.isInstalled());
-	assert(windowChangedHandler.isInstalled());
-	
 	// set up a callback to receive preference change notifications
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
@@ -405,6 +340,10 @@ preferenceMonitor			(ListenerModel_NewStandardListener(preferenceChangedForBackg
 		
 		prefsResult = Preferences_StartMonitoring(this->preferenceMonitor.returnRef(), kPreferences_TagDontDimBackgroundScreens,
 													true/* call immediately to get initial value */);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "terminal background failed to monitor dimming setting, error", prefsResult);
+		}
 	}
 }// My_TerminalBackground 1-argument constructor
 
@@ -444,403 +383,6 @@ setImageFromURLString	(CFStringRef	inURLCFString)
 	// for convenience, pre-cast the retained reference and store it
 	this->image = (CGImageRef)this->imageObject.returnCFTypeRef();
 }// My_TerminalBackground::setImageFromURLString
-
-
-/*!
-Embellishes "kEventControlBoundsChanged" of "kEventClassControl".
-
-Invoked by Mac OS X whenever the size and/or position of a
-terminal background is changed.  Responds by synchronizing any
-focus overlay.
-
-(4.0)
-*/
-OSStatus
-My_TerminalBackground::
-receiveViewBoundsChanged	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef				inEvent,
-							 void*					UNUSED_ARGUMENT(inMyTerminalBackgroundPtr))
-{
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
-	//My_TerminalBackgroundPtr	dataPtr = REINTERPRET_CAST(inMyTerminalBackgroundPtr, My_TerminalBackgroundPtr);
-	OSStatus					result = eventNotHandledErr;
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlBoundsChanged);
-	
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// get the target view
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		if (noErr == result)
-		{
-			if (isKeyboardFocus(view))
-			{
-				// this will have the side effect of resynchronizing the focus ring size
-				acquireFocusOverlay(view, true);
-			}
-		}
-	}
-	
-	// do not completely handle this event
-	result = eventNotHandledErr;
-	
-	return result;
-}// receiveViewBoundsChanged
-
-
-/*!
-Embellishes "kEventControlOwningWindowChanged" of "kEventClassControl".
-
-Invoked by Mac OS X whenever the window of a terminal background
-is changed.  Responds by setting up a window event handler.
-
-(4.0)
-*/
-OSStatus
-My_TerminalBackground::
-receiveViewWindowChanged	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef				inEvent,
-							 void*					inMyTerminalBackgroundPtr)
-{
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
-	My_TerminalBackgroundPtr	dataPtr = REINTERPRET_CAST(inMyTerminalBackgroundPtr, My_TerminalBackgroundPtr);
-	OSStatus					result = eventNotHandledErr;
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlOwningWindowChanged);
-	
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// get the target view
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		if (noErr == result)
-		{
-			HIWindowRef		window = nullptr;
-			
-			
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlCurrentOwningWindow,
-															typeWindowRef, window);
-			if (noErr == result)
-			{
-				if (nullptr != window)
-				{
-					assert(window == HIViewGetWindow(view));
-					dataPtr->windowActivationHandler.install(GetWindowEventTarget(window),
-																receiveWindowActivationChanged,
-																CarbonEventSetInClass
-																	(CarbonEventClass(kEventClassWindow), kEventWindowActivated,
-																											kEventWindowDeactivated),
-																dataPtr/* user data */);
-					assert(dataPtr->windowActivationHandler.isInstalled());
-					dataPtr->windowMinimizationHandler.install(GetWindowEventTarget(window),
-																receiveWindowMinimizationChanged,
-																CarbonEventSetInClass
-																	(CarbonEventClass(kEventClassWindow), kEventWindowCollapsing,
-																											kEventWindowExpanded),
-																dataPtr/* user data */);
-					assert(dataPtr->windowMinimizationHandler.isInstalled());
-					dataPtr->windowMovementHandler.install(GetWindowEventTarget(window),
-															receiveWindowBoundsChanged,
-															CarbonEventSetInClass
-																(CarbonEventClass(kEventClassWindow), kEventWindowBoundsChanged),
-															dataPtr/* user data */);
-					assert(dataPtr->windowMovementHandler.isInstalled());
-				}
-			}
-		}
-		
-		// do not completely handle this event
-		result = eventNotHandledErr;
-	}
-	return result;
-}// receiveViewWindowChanged
-
-
-/*!
-Embellishes "kEventWindowActivated" and "kEventWindowDeactivated"
-of "kEventClassWindow".
-
-Invoked by Mac OS X whenever the terminal background’s window is
-selected or deselected.  Responds by synchronizing any focus
-overlay.
-
-(4.0)
-*/
-OSStatus
-My_TerminalBackground::
-receiveWindowActivationChanged	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-								 EventRef				inEvent,
-								 void*					inMyTerminalBackgroundPtr)
-{
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
-	My_TerminalBackgroundPtr	dataPtr = REINTERPRET_CAST(inMyTerminalBackgroundPtr, My_TerminalBackgroundPtr);
-	OSStatus					result = eventNotHandledErr;
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert((kEventKind == kEventWindowActivated) || (kEventKind == kEventWindowDeactivated));
-	
-	{
-		HIWindowRef		window = nullptr;
-		
-		
-		// get the target window
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-		if (noErr == result)
-		{
-			HIViewRef const		kTargetView = dataPtr->view;
-			
-			
-			if ((HIViewGetWindow(kTargetView) == window) && isKeyboardFocus(kTargetView))
-			{
-				acquireFocusOverlay(kTargetView, (kEventKind == kEventWindowActivated));
-			}
-		}
-	}
-	
-	// do not completely handle this event
-	result = eventNotHandledErr;
-	
-	return result;
-}// receiveWindowActivationChanged
-
-
-/*!
-Embellishes "kEventWindowBoundsChanged" of "kEventClassWindow".
-
-Invoked by Mac OS X whenever the size and/or position of a
-terminal background’s window is changed.  Responds by
-synchronizing any focus overlay.
-
-(4.0)
-*/
-OSStatus
-My_TerminalBackground::
-receiveWindowBoundsChanged	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef				inEvent,
-							 void*					inMyTerminalBackgroundPtr)
-{
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
-	My_TerminalBackgroundPtr	dataPtr = REINTERPRET_CAST(inMyTerminalBackgroundPtr, My_TerminalBackgroundPtr);
-	OSStatus					result = eventNotHandledErr;
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert(kEventKind == kEventWindowBoundsChanged);
-	
-	{
-		HIWindowRef		window = nullptr;
-		
-		
-		// get the target window
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-		if (noErr == result)
-		{
-			UInt32		attributes = 0L;
-			
-			
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamAttributes, typeUInt32, attributes);
-			if (noErr == result)
-			{
-				// the window size is not monitored because there is a separate
-				// handler that responds to any view size changes
-				if (attributes & kWindowBoundsChangeOriginChanged)
-				{
-					HIViewRef const		kTargetView = dataPtr->view;
-					
-					
-					if ((HIViewGetWindow(kTargetView) == window) && isKeyboardFocus(kTargetView))
-					{
-						acquireFocusOverlay(kTargetView, true);
-					}
-				}
-			}
-		}
-	}
-	
-	// do not completely handle this event
-	result = eventNotHandledErr;
-	
-	return result;
-}// receiveWindowBoundsChanged
-
-
-/*!
-Embellishes "kEventWindowCollapsing" and "kEventWindowExpanded"
-of "kEventClassWindow".
-
-Invoked by Mac OS X whenever the terminal background’s window is
-selected or deselected.  Responds by synchronizing any focus
-overlay.
-
-(4.0)
-*/
-OSStatus
-My_TerminalBackground::
-receiveWindowMinimizationChanged	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-									 EventRef				inEvent,
-									 void*					inMyTerminalBackgroundPtr)
-{
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
-	My_TerminalBackgroundPtr	dataPtr = REINTERPRET_CAST(inMyTerminalBackgroundPtr, My_TerminalBackgroundPtr);
-	OSStatus					result = eventNotHandledErr;
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert((kEventKind == kEventWindowCollapsing) || (kEventKind == kEventWindowExpanded));
-	
-	{
-		HIWindowRef		window = nullptr;
-		
-		
-		// get the target window
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-		if (noErr == result)
-		{
-			HIViewRef const		kTargetView = dataPtr->view;
-			
-			
-			if ((HIViewGetWindow(kTargetView) == window) && isKeyboardFocus(kTargetView))
-			{
-				acquireFocusOverlay(kTargetView, (kEventKind == kEventWindowExpanded));
-			}
-		}
-	}
-	
-	// do not completely handle this event
-	result = eventNotHandledErr;
-	
-	return result;
-}// receiveWindowMinimizationChanged
-
-
-/*!
-Invoke this routine in response to acquiring or losing focus
-in a view.  This moves and resizes the focus overlay window
-appropriately to give the illusion of a focus ring around the
-terminal area.
-
-(4.0)
-*/
-void
-acquireFocusOverlay		(HIViewRef		inView,
-						 Boolean		inAcquire)
-{
-	HIWindowRef const	kOverlayWindow = gTerminalViewFocusOverlayWindow();
-	
-	
-	setFocusOverlayVisible(false);
-	if (inAcquire)
-	{
-		HIViewWrap	windowContentView(kHIViewWindowContentID, HIViewGetWindow(inView));
-		HIRect		contentFrame;
-		Rect		contentBounds;
-		OSStatus	error = noErr;
-		
-		
-		// convert into the coordinate system of the content view, which is
-		// the same as legacy QuickDraw local coordinates; then, find the
-		// equivalent global coordinates for the view’s focus rectangle
-		assert(windowContentView.exists());
-		error = HIViewGetFrame(inView, &contentFrame);
-		assert_noerr(error);
-		error = HIViewConvertRect(&contentFrame, HIViewGetSuperview(inView), windowContentView);
-		assert_noerr(error);
-		SetRect(&contentBounds, contentFrame.origin.x, contentFrame.origin.y,
-				contentFrame.origin.x + contentFrame.size.width,
-				contentFrame.origin.y + contentFrame.size.height);
-		InsetRect(&contentBounds, -2, -2); // make room for focus ring
-		UNUSED_RETURN(Rect*)QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(inView)), &contentBounds);
-		
-		error = SetWindowBounds(kOverlayWindow, kWindowContentRgn, &contentBounds);
-		if (noErr == error)
-		{
-			error = HIViewSetNeedsDisplay(HIViewWrap(kHIViewWindowContentID, kOverlayWindow), true);
-			assert_noerr(error);
-			setFocusOverlayVisible(true);
-		}
-		else
-		{
-			// boundaries might be illegal (e.g. excessive-shrunk view),
-			// so just bail and hide focus completely
-			setFocusOverlayVisible(false);
-		}
-	}
-}// acquireFocusOverlay
-
-
-/*!
-Creates an overlay-class window that is used to render a focus
-ring for the active terminal view.  (See the global accessor
-function for this window.)
-
-This window’s size and position should be automatically
-synchronized with the size of the focused terminal view, and
-hidden if no terminal is focused.
-
-The overlay approach allows the focus ring to appear “around”
-the terminal, even when such a focus ring would go outside
-the boundaries of the window.  This has a cleaner appearance
-than an interior ring does.
-
-(4.0)
-*/
-HIWindowRef
-createFocusOverlayWindow ()
-{
-	HIWindowRef		result = nullptr;
-	WindowGroupRef	windowGroup = nullptr;
-	OSStatus		error = noErr;
-	
-	
-	// load the NIB containing the overlay
-	result = NIBWindow(AppResources_ReturnBundleForNIBs(),
-						CFSTR("TerminalWindow"), CFSTR("FocusOverlay")) << NIBLoader_AssertWindowExists;
-	assert(nullptr != result);
-	
-	// move this overlay to the toolbar window group, so that
-	// the focus ring is not displayed above menus or the Dock
-	windowGroup = GetWindowGroupOfClass(kToolbarWindowClass);
-	if (nullptr != windowGroup)
-	{
-		error = SetWindowGroup(result, windowGroup);
-	}
-	
-	return result;
-}// createFocusOverlayWindow
-
-
-/*!
-Returns true only if the specified view is the current keyboard
-focus in its window.
-
-(4.0)
-*/
-Boolean
-isKeyboardFocus		(HIViewRef		inView)
-{
-	Boolean		result = false;
-	HIViewRef	currentFocus = nullptr;
-	
-	
-	if (noErr == GetKeyboardFocus(HIViewGetWindow(inView), &currentFocus))
-	{
-		result = (currentFocus == inView);
-	}
-	return result;
-}// isKeyboardFocus
 
 
 /*!
@@ -1151,10 +693,6 @@ receiveBackgroundFocus	(EventHandlerCallRef		inHandlerCallRef,
 					{
 						// update focus flag
 						inMyTerminalBackgroundPtr->currentContentFocus = newFocusPart;
-						
-						// move and/or resize the overview window for this view
-						acquireFocusOverlay(inMyTerminalBackgroundPtr->view,
-											(kTerminalBackground_ContentPartText == newFocusPart));
 					}
 				}
 			}
@@ -1699,101 +1237,6 @@ receiveBackgroundTrack	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	return result;
 }// receiveBackgroundTrack
-
-
-/*!
-Handles "kEventControlDraw" of "kEventClassControl".
-
-Invoked by Mac OS X whenever the focus of a terminal view
-needs to be rendered.
-
-(4.0)
-*/
-OSStatus
-receiveFocusOverlayContentDraw	(EventHandlerCallRef	inHandlerCallRef,
-								 EventRef				inEvent,
-								 void*					UNUSED_ARGUMENT(inContext))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlDraw);
-	
-	result = CallNextEventHandler(inHandlerCallRef, inEvent);
-	if (noErr == result)
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// get the target view
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		if (noErr == result)
-		{
-			CGContextRef	drawingContext = nullptr;
-			
-			
-			// determine the context to draw in with Core Graphics
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamCGContextRef, typeCGContextRef,
-															drawingContext);
-			assert_noerr(result);
-			if (nullptr != drawingContext)
-			{
-				HIRect		floatBounds;
-				OSStatus	error = noErr;
-				
-				
-				// determine boundaries of the content view being drawn;
-				// ensure view-local coordinates
-				error = HIViewGetBounds(view, &floatBounds);
-				assert_noerr(error);
-				
-				// erase background to transparent
-				CGContextClearRect(drawingContext, floatBounds);
-				
-				// the theme focus rectangle is drawn outside the boundaries,
-				// so inset from the view edge to make sure it is visible
-				floatBounds = CGRectInset(floatBounds, 4, 4);
-				UNUSED_RETURN(OSStatus)HIThemeDrawFocusRect(&floatBounds, true/* is focused */, drawingContext, kHIThemeOrientationNormal);
-			}
-		}
-	}
-	return result;
-}// receiveFocusOverlayContentDraw
-
-
-/*!
-Makes the focus ring overlay appear to be visible or invisible.
-
-(4.0)
-*/
-void
-setFocusOverlayVisible	(Boolean	inVisible)
-{
-#if 1
-	// the overlay window effect seems to be particularly taxing in a Cocoa
-	// hybrid environment, where the window manager creates extra windows
-	// (and extra redrawing); this effect is being disabled for now, and
-	// may return once a full Cocoa transition is complete
-	// TEMPORARY
-	HideWindow(gTerminalViewFocusOverlayWindow());
-#else
-	HIWindowRef const	kOverlayWindow = gTerminalViewFocusOverlayWindow();
-	
-	
-	if (inVisible)
-	{
-		ShowWindow(kOverlayWindow);
-	}
-	else
-	{
-		//HideWindow(kOverlayWindow); // if this is done, the window never reappears, for an unknown reason
-		MoveWindow(kOverlayWindow, -8000, -8000, false/* activate */); // arbitrary offsets
-	}
-#endif
-}// setFocusOverlayVisible
 
 } // anonymous namespace
 

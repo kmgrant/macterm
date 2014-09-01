@@ -882,23 +882,8 @@ void
 My_GeneralTabNotification::
 assignAccessibilityRelationships ()
 {
-	OSStatus	error = noErr;
-	
-	
-	// associate the terminal bell menu with its label, and vice-versa
-	error = HIObjectSetAuxiliaryAccessibilityAttribute
-			(this->popupMenuBell.returnHIObjectRef(), 0/* sub-component identifier */,
-				kAXTitleUIElementAttribute, this->labelBell.acquireAccessibilityObject());
-	{
-		void const*			values[] = { this->popupMenuBell.acquireAccessibilityObject() };
-		CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
-															&kCFTypeArrayCallBacks), true/* is retained */);
-		
-		
-		error = HIObjectSetAuxiliaryAccessibilityAttribute
-				(this->labelBell.returnHIObjectRef(), 0/* sub-component identifier */,
-					kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
-	}
+	// (removing this code for now to resolve static analyzer issues;
+	// it is going to be replaced by Cocoa soon anyway)
 }// My_GeneralTabNotification::assignAccessibilityRelationships
 
 

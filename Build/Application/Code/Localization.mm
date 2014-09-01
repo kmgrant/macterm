@@ -41,6 +41,7 @@
 // library includes
 #import <AutoPool.objc++.h>
 #import <CFRetainRelease.h>
+#import <Console.h>
 #import <MemoryBlocks.h>
 #import <Releases.h>
 
@@ -553,7 +554,10 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 			// the specified font does not exist; use the system font but make it bigger
 			error = GetThemeFont(kThemeSystemFont, GetScriptManagerVariable(smSysScript)/* script code */,
 									outFontName, outFontSizePtr, outFontStylePtr);
-			error = noErr;
+			if (noErr != error)
+			{
+				Console_Warning(Console_WriteValue, "failed to obtain specified theme font, error", error);
+			}
 			*outFontSizePtr = 16;
 			*outFontStylePtr = bold;
 		}

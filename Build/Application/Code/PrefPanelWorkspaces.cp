@@ -588,6 +588,10 @@ createContainerView		(Panel_Ref		inPanel,
 			{
 				flags |= kDataBrowserPropertyIsMutable;
 				error = SetDataBrowserPropertyFlags(windowsList, kMyDataBrowserPropertyIDWindowName, flags);
+				if (noErr != error)
+				{
+					Console_Warning(Console_WriteValue, "failed to add mutability flag to the Workspaces panel’s data browser (names may not be editable), error", error);
+				}
 			}
 		}
 		
@@ -1380,107 +1384,110 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		}
 	}
 	
-	if ((false == inSetValue) && (nullptr != panelDataPtr))
+	if (nullptr != panelDataPtr)
 	{
-		switch (inPropertyID)
+		if (false == inSetValue)
 		{
-		case kDataBrowserItemIsEditableProperty:
-			result = SetDataBrowserItemDataBooleanValue(inItemData, true/* is editable */);
-			break;
-		
-		case kMyDataBrowserPropertyIDWindowName:
-			// return the text string for the window name
+			switch (inPropertyID)
 			{
-				Preferences_Index	windowIndex = STATIC_CAST(inItemID, Preferences_Index);
-				CFStringRef			nameCFString = nullptr;
-				Preferences_Result	prefsResult = kPreferences_ResultOK;
-				size_t				actualSize = 0;
-				
-				
-				prefsResult = Preferences_ContextGetData
-								(panelDataPtr->dataModel,
-									Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex),
-									sizeof(nameCFString), &nameCFString, false/* search defaults too */, &actualSize);
-				if (kPreferences_ResultOK == prefsResult)
+			case kDataBrowserItemIsEditableProperty:
+				result = SetDataBrowserItemDataBooleanValue(inItemData, true/* is editable */);
+				break;
+			
+			case kMyDataBrowserPropertyIDWindowName:
+				// return the text string for the window name
 				{
-					result = SetDataBrowserItemDataText(inItemData, nameCFString);
-					CFRelease(nameCFString), nameCFString = nullptr;
-				}
-				else
-				{
-					result = SetDataBrowserItemDataText(inItemData, CFSTR(""));
-				}
-			}
-			break;
-		
-		case kMyDataBrowserPropertyIDWindowNumber:
-			// return the window number as a string
-			{
-				SInt32			numericalValue = STATIC_CAST(inItemID, SInt32);
-				CFStringRef		numberCFString = CFStringCreateWithFormat(kCFAllocatorDefault,
-																			nullptr/* options dictionary */,
-																			CFSTR("%d")/* LOCALIZE THIS? */,
-																			(int)numericalValue);
-				
-				
-				if (nullptr == numberCFString) result = memFullErr;
-				else
-				{
-					result = SetDataBrowserItemDataText(inItemData, numberCFString);
-					CFRelease(numberCFString), numberCFString = nullptr;
-				}
-			}
-			break;
-		
-		default:
-			// ???
-			result = errDataBrowserPropertyNotSupported;
-			break;
-		}
-	}
-	else
-	{
-		switch (inPropertyID)
-		{
-		case kMyDataBrowserPropertyIDWindowName:
-			// user has changed the window name; update the window in memory
-			{
-				CFStringRef		newName = nullptr;
-				
-				
-				result = GetDataBrowserItemDataText(inItemData, &newName);
-				if (noErr == result)
-				{
-					// fix window name
 					Preferences_Index	windowIndex = STATIC_CAST(inItemID, Preferences_Index);
+					CFStringRef			nameCFString = nullptr;
 					Preferences_Result	prefsResult = kPreferences_ResultOK;
+					size_t				actualSize = 0;
 					
 					
-					prefsResult = Preferences_ContextSetData
+					prefsResult = Preferences_ContextGetData
 									(panelDataPtr->dataModel,
 										Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex),
-										sizeof(newName), &newName);
+										sizeof(nameCFString), &nameCFString, false/* search defaults too */, &actualSize);
 					if (kPreferences_ResultOK == prefsResult)
 					{
-						result = noErr;
+						result = SetDataBrowserItemDataText(inItemData, nameCFString);
+						CFRelease(nameCFString), nameCFString = nullptr;
 					}
 					else
 					{
-						result = errDataBrowserItemNotFound;
+						result = SetDataBrowserItemDataText(inItemData, CFSTR(""));
 					}
 				}
+				break;
+			
+			case kMyDataBrowserPropertyIDWindowNumber:
+				// return the window number as a string
+				{
+					SInt32			numericalValue = STATIC_CAST(inItemID, SInt32);
+					CFStringRef		numberCFString = CFStringCreateWithFormat(kCFAllocatorDefault,
+																				nullptr/* options dictionary */,
+																				CFSTR("%d")/* LOCALIZE THIS? */,
+																				(int)numericalValue);
+					
+					
+					if (nullptr == numberCFString) result = memFullErr;
+					else
+					{
+						result = SetDataBrowserItemDataText(inItemData, numberCFString);
+						CFRelease(numberCFString), numberCFString = nullptr;
+					}
+				}
+				break;
+			
+			default:
+				// ???
+				result = errDataBrowserPropertyNotSupported;
+				break;
 			}
-			break;
-		
-		case kMyDataBrowserPropertyIDWindowNumber:
-			// read-only
-			result = paramErr;
-			break;
-		
-		default:
-			// ???
-			result = errDataBrowserPropertyNotSupported;
-			break;
+		}
+		else
+		{
+			switch (inPropertyID)
+			{
+			case kMyDataBrowserPropertyIDWindowName:
+				// user has changed the window name; update the window in memory
+				{
+					CFStringRef		newName = nullptr;
+					
+					
+					result = GetDataBrowserItemDataText(inItemData, &newName);
+					if (noErr == result)
+					{
+						// fix window name
+						Preferences_Index	windowIndex = STATIC_CAST(inItemID, Preferences_Index);
+						Preferences_Result	prefsResult = kPreferences_ResultOK;
+						
+						
+						prefsResult = Preferences_ContextSetData
+										(panelDataPtr->dataModel,
+											Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex),
+											sizeof(newName), &newName);
+						if (kPreferences_ResultOK == prefsResult)
+						{
+							result = noErr;
+						}
+						else
+						{
+							result = errDataBrowserItemNotFound;
+						}
+					}
+				}
+				break;
+			
+			case kMyDataBrowserPropertyIDWindowNumber:
+				// read-only
+				result = paramErr;
+				break;
+			
+			default:
+				// ???
+				result = errDataBrowserPropertyNotSupported;
+				break;
+			}
 		}
 	}
 	
@@ -1531,21 +1538,21 @@ compareDataBrowserItems		(HIViewRef					inDataBrowser,
 			
 			if (nullptr != panelDataPtr)
 			{
-				SInt32				windowIndex1 = STATIC_CAST(inItemOne, SInt32);
-				SInt32				windowIndex2 = STATIC_CAST(inItemTwo, SInt32);
-				Preferences_Result	prefsResult = kPreferences_ResultOK;
-				size_t				actualSize = 0;
+				SInt32		windowIndex1 = STATIC_CAST(inItemOne, SInt32);
+				SInt32		windowIndex2 = STATIC_CAST(inItemTwo, SInt32);
+				size_t		actualSize = 0;
 				
 				
 				// ignore results, the strings are checked below
-				prefsResult = Preferences_ContextGetData
-								(panelDataPtr->dataModel,
-									Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex1),
-									sizeof(string1), &string1, false/* search defaults too */, &actualSize);
-				prefsResult = Preferences_ContextGetData
-								(panelDataPtr->dataModel,
-									Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex2),
-									sizeof(string2), &string2, false/* search defaults too */, &actualSize);
+				UNUSED_RETURN(Preferences_Result)Preferences_ContextGetData
+													(panelDataPtr->dataModel,
+														Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex1),
+														sizeof(string1), &string1, false/* search defaults too */, &actualSize);
+				
+				UNUSED_RETURN(Preferences_Result)Preferences_ContextGetData
+													(panelDataPtr->dataModel,
+														Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex2),
+														sizeof(string2), &string2, false/* search defaults too */, &actualSize);
 			}
 			
 			// check for nullptr, because CFStringCompare() will not deal with it

@@ -375,6 +375,10 @@ notifyOfClosedPopover	(EventTargetRef		inOldTarget)
 	else
 	{
 		error = SendEventToEventTargetWithOptions(panelClosedEvent, inOldTarget, kEventTargetDontPropagate);
+		if (noErr != error)
+		{
+			Console_Warning(Console_WriteValue, "failed to send server-browser-closed event to target, error", error);
+		}
 	}
 	
 	// dispose of event
@@ -1093,9 +1097,6 @@ field, and replaces it with an IP address.
 lookUpHostName:(id)		sender
 {
 #pragma unused(sender)
-	Boolean		lookupStartedOK = false;
-	
-	
 	if ([self.hostName length] <= 0)
 	{
 		// there has to be some text entered there; let the user
@@ -1130,11 +1131,6 @@ lookUpHostName:(id)		sender
 			{
 				// could not even initiate, so restore UI
 				self.hidesProgress = YES;
-			}
-			else
-			{
-				// okay so far...
-				lookupStartedOK = true;
 			}
 		}
 	}
@@ -1970,6 +1966,10 @@ notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 			{
 				// finally, send the message to the target
 				error = SendEventToEventTargetWithOptions(panelChangedEvent, _eventTarget, kEventTargetDontPropagate);
+				if (noErr != error)
+				{
+					Console_Warning(Console_WriteValue, "failed to send Server Browser setting-change event to Carbon target, error", error);
+				}
 			}
 		}
 		

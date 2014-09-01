@@ -36,6 +36,9 @@
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
+// library includes
+#include <Console.h>
+
 // application includes
 #include "AppResources.h"
 
@@ -66,6 +69,10 @@ InternetPrefs_Init ()
 	
 	
 	error = ICStart(&gInternetConfigInstance, AppResources_ReturnCreatorCode());
+	if (noErr != error)
+	{
+		Console_Warning(Console_WriteValue, "unable to initialize InternetPrefs module, error", error);
+	}
 	
 	folderSpec[0].vRefNum = -1; // -1 = search for system preferences
 	folderSpec[0].dirID = 2;

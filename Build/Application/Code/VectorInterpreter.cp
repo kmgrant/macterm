@@ -54,8 +54,6 @@
 #pragma mark Constants
 namespace {
 
-UInt16 const	kMy_NumberOfSupportedTargets = 2;	//!< e.g. screen, bitmap, ...
-
 /* temporary states */
 #define HIY			0	/* waiting for various pieces of coordinates */
 #define EXTRA		1

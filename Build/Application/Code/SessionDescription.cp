@@ -155,7 +155,7 @@ My_SessionFileReferenceLocker&	gSessionFileRefLocks ()	{ static My_SessionFileRe
 #pragma mark Internal Method Prototypes
 namespace {
 
-OSStatus	overwriteFile		(SInt16, My_SessionFileConstPtr);
+Boolean		overwriteFile		(SInt16, My_SessionFileConstPtr);
 Boolean		parseFile			(SInt16, My_SessionFilePtr);
 
 } // anonymous namespace
@@ -784,8 +784,8 @@ File to disk, effectively saving any changes made.  The
 specified open file obviously needs to be open with
 write permissions.
 
-Returns "kSessionDescription_ResultOK" only if
-the entire file was written successfully.
+Returns "kSessionDescription_ResultOK" only if the entire
+file was written successfully.
 
 (3.0)
 */
@@ -794,12 +794,14 @@ SessionDescription_Save		(SessionDescription_Ref		inRef,
 							 SInt16						inFileReferenceNumber)
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
-	OSStatus					error = noErr;
 	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
 	
 	
-	error = overwriteFile(inFileReferenceNumber, ptr);
-	if (error != noErr) result = kSessionDescription_ResultFileError;
+	if (false == overwriteFile(inFileReferenceNumber, ptr))
+	{
+		result = kSessionDescription_ResultFileError;
+	}
+	
 	return result;
 }// Save
 
@@ -902,7 +904,7 @@ SessionDescription_Result
 SessionDescription_SetIntegerData	(SessionDescription_Ref				inRef,
 									 SessionDescription_IntegerType		inType,
 									 SInt32								inNumber,
-									 Boolean							inValidateBeforeStoring)
+									 Boolean							UNUSED_ARGUMENT(inValidateBeforeStoring))
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
 	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
@@ -1063,7 +1065,7 @@ SessionDescription_Result
 SessionDescription_SetStringData	(SessionDescription_Ref			inRef,
 									 SessionDescription_StringType	inType,
 									 CFStringRef					inString,
-									 Boolean						inValidateBeforeStoring)
+									 Boolean						UNUSED_ARGUMENT(inValidateBeforeStoring))
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
 	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
@@ -1132,26 +1134,29 @@ file (opened with write permission), replacing
 any existing content.  You must close the file
 yourself (because you opened it).
 
-Returns "noErr" only if the file was written
-completely.
+Returns true only if the file was written completely.
+
+DEPRECATED.  This should be replaced with Python code
+or replaced by the export format for Preferences.
 
 (3.0)
 */
-OSStatus
+Boolean
 overwriteFile	(SInt16						inFileReferenceNumber,
 				 My_SessionFileConstPtr		inoutDataPtr)
 {
 	TextDataFile_Ref	writer = TextDataFile_New(inFileReferenceNumber);
-	OSStatus			result = noErr;
+	Boolean				result = false;
 	
 	
-	if (writer == nullptr) result = memFullErr;
-	else
+	if (nullptr != writer)
 	{
 		Boolean		makeCompatibleWithNCSATelnet = false; // whether to constrain to 23 specific keys
 		Boolean		success = false;
 		//int			requiredSize = 0;
 		
+		
+		result = true; // initially...
 		
 		// IMPORTANT:
 		//
@@ -1187,12 +1192,22 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 			
 			
 			success = TextDataFile_AddNameValueFlag(writer, nullptr/* class */, "commandkeys", flag);
+			if (false == success)
+			{
+				Console_Warning(Console_WriteLine, "failed to store command keys flag");
+				result = false;
+			}
 	  	}
 		
 		if (inoutDataPtr->windowName != nullptr)
 		{
 			success = TextDataFile_AddNameValueCFString(writer, nullptr/* class */, "name",
 														inoutDataPtr->windowName);
+			if (false == success)
+			{
+				Console_Warning(Console_WriteLine, "failed to store window name");
+				result = false;
+			}
 	  	}
 		
 		if (inoutDataPtr->fileType == kSessionDescription_ContentTypeCommand)
@@ -1201,6 +1216,11 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 			{
 				success = TextDataFile_AddNameValueCFString(writer, nullptr/* class */, "command",
 															inoutDataPtr->variable.local.command);
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store command line");
+					result = false;
+				}
 	  		}
 		}
 		else
@@ -1212,6 +1232,11 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 		{
 			success = TextDataFile_AddNameValueNumber(writer, nullptr/* class */, "scrollback",
 														*(inoutDataPtr->invisibleLineCountPtr));
+			if (false == success)
+			{
+				Console_Warning(Console_WriteLine, "failed to store scrollback value");
+				result = false;
+			}
 		}
 		
 		//nameValuePairToFile("erase", (connectionDataPtr->bsdel) ? "delete" : "backspace", fn);
@@ -1230,18 +1255,33 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 			bounds.right = bounds.left; // temporary
 			bounds.bottom = bounds.top; // temporary
 			success = TextDataFile_AddNameValueRectangle(writer, nullptr/* class */, "size", &bounds);
+			if (false == success)
+			{
+				Console_Warning(Console_WriteLine, "failed to store window position");
+				result = false;
+			}
 		}
 		
 		if (inoutDataPtr->visibleColumnCountPtr != nullptr)
 		{
 			success = TextDataFile_AddNameValueNumber(writer, nullptr/* class */, "vtwidth",
 														*(inoutDataPtr->visibleColumnCountPtr));
+			if (false == success)
+			{
+				Console_Warning(Console_WriteLine, "failed to store number of columns");
+				result = false;
+			}
 		}
 
 		if (inoutDataPtr->isTEKPageInSameWindowPtr != nullptr)
 		{
 			success = TextDataFile_AddNameValueFlag(writer, nullptr/* class */, "tekclear",
 													*(inoutDataPtr->isTEKPageInSameWindowPtr));
+			if (false == success)
+			{
+				Console_Warning(Console_WriteLine, "failed to store TEK page clear setting");
+				result = false;
+			}
 		}
 		
 		// save colors; order is important for compatibility with NCSA Telnet sets
@@ -1250,24 +1290,44 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 			{
 				success = TextDataFile_AddNameValueRGBColor(writer, nullptr/* class */, "rgb0",
 															inoutDataPtr->colorTextNormalPtr);
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store normal text color");
+					result = false;
+				}
 			}
 			
 			if (inoutDataPtr->colorBackgroundNormalPtr != nullptr)
 			{
 				success = TextDataFile_AddNameValueRGBColor(writer, nullptr/* class */, "rgb1",
 															inoutDataPtr->colorBackgroundNormalPtr);
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store normal background color");
+					result = false;
+				}
 			}
 			
 			if (inoutDataPtr->colorTextBlinkingPtr != nullptr)
 			{
 				success = TextDataFile_AddNameValueRGBColor(writer, nullptr/* class */, "rgb2",
 															inoutDataPtr->colorTextBlinkingPtr);
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store blinking text color");
+					result = false;
+				}
 			}
 			
 			if (inoutDataPtr->colorBackgroundBlinkingPtr != nullptr)
 			{
 				success = TextDataFile_AddNameValueRGBColor(writer, nullptr/* class */, "rgb3",
 															inoutDataPtr->colorBackgroundBlinkingPtr);
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store blinking background color");
+					result = false;
+				}
 			}
 		}
 		
@@ -1275,18 +1335,33 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 		{
 			success = TextDataFile_AddNameValueCFString(writer, nullptr/* class */, "font",
 														inoutDataPtr->terminalFont);
+			if (false == success)
+			{
+				Console_Warning(Console_WriteLine, "failed to store font name");
+				result = false;
+			}
 	  	}
 		
 		if (inoutDataPtr->fontSizePtr != nullptr)
 		{
 			success = TextDataFile_AddNameValueNumber(writer, nullptr/* class */, "fsize",
 														*(inoutDataPtr->fontSizePtr));
+			if (false == success)
+			{
+				Console_Warning(Console_WriteLine, "failed to store font size");
+				result = false;
+			}
 		}
 		
 		if (inoutDataPtr->visibleLineCountPtr != nullptr)
 		{
 			success = TextDataFile_AddNameValueNumber(writer, nullptr/* class */, "nlines",
 														*(inoutDataPtr->visibleLineCountPtr));
+			if (false == success)
+			{
+				Console_Warning(Console_WriteLine, "failed to store row count");
+				result = false;
+			}
 		}
 		
 		//requiredSize = snprintf(temp2, sizeof(temp2), "%d", connectionDataPtr->controlKey.suspend);
@@ -1300,6 +1375,11 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 		{
 			success = TextDataFile_AddNameValueFlag(writer, nullptr/* class */, "crmap",
 													*(inoutDataPtr->isBerkeleyCRPtr));
+			if (false == success)
+			{
+				Console_Warning(Console_WriteLine, "failed to store new-line mapping");
+				result = false;
+			}
 		}
 		
 		//requiredSize = snprintf(temp2, sizeof(temp2), "%d", connectionDataPtr->TEK.mode);
@@ -1309,6 +1389,11 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 		{
 			success = TextDataFile_AddNameValueCFString(writer, nullptr/* class */, "answerback",
 														inoutDataPtr->answerBack);
+			if (false == success)
+			{
+				Console_Warning(Console_WriteLine, "failed to store terminal type");
+				result = false;
+			}
 	  	}
 		
 		// these flags are new to version 2.7 and beyond
@@ -1318,57 +1403,103 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 			{
 				success = TextDataFile_AddNameValueRGBColor(writer, nullptr/* class */, "rgb4",
 															inoutDataPtr->colorTextBoldPtr);
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store bold text color");
+					result = false;
+				}
 			}
 			if (inoutDataPtr->colorBackgroundBoldPtr != nullptr)
 			{
 				success = TextDataFile_AddNameValueRGBColor(writer, nullptr/* class */, "rgb5",
 															inoutDataPtr->colorBackgroundBoldPtr);
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store bold background color");
+					result = false;
+				}
 			}
 			
 			if (inoutDataPtr->isAuthenticationEnabledPtr != nullptr)
 			{
 				success = TextDataFile_AddNameValueFlag(writer, nullptr/* class */, "authenticate",
 														*(inoutDataPtr->isAuthenticationEnabledPtr));
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store authentication setting");
+					result = false;
+				}
 			}
 			
 			if (inoutDataPtr->isEncryptionEnabledPtr != nullptr)
 			{
 				success = TextDataFile_AddNameValueFlag(writer, nullptr/* class */, "encrypt",
 														*(inoutDataPtr->isEncryptionEnabledPtr));
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store encryption setting");
+					result = false;
+				}
 			}
 			
 			if (inoutDataPtr->isPageUpPageDownRemappingPtr != nullptr)
 			{
 				success = TextDataFile_AddNameValueFlag(writer, nullptr/* class */, "pageup",
 														*(inoutDataPtr->isPageUpPageDownRemappingPtr));
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store page keys setting");
+					result = false;
+				}
 			}
 			
 			if (inoutDataPtr->isKeypadMappingToPFKeysPtr != nullptr)
 			{
 				success = TextDataFile_AddNameValueFlag(writer, nullptr/* class */, "keypad",
 														*(inoutDataPtr->isKeypadMappingToPFKeysPtr));
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store keypad top row setting");
+					result = false;
+				}
 			}
 			
 			if (inoutDataPtr->isFTPPtr != nullptr)
 			{
 				success = TextDataFile_AddNameValueFlag(writer, nullptr/* class */, "ftp", *(inoutDataPtr->isFTPPtr));
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store FTP setting");
+					result = false;
+				}
 			}
 			
 			if (inoutDataPtr->toolbarInfo != nullptr)
 			{
 				success = TextDataFile_AddNameValueCFString(writer, nullptr/* class */, "toolbar",
 															inoutDataPtr->toolbarInfo);
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store toolbar state");
+					result = false;
+				}
 			}
 			
 			if (inoutDataPtr->currentMacrosName != nullptr)
 			{
 				success = TextDataFile_AddNameValueCFString(writer, nullptr/* class */, "macros",
 															inoutDataPtr->currentMacrosName);
+				if (false == success)
+				{
+					Console_Warning(Console_WriteLine, "failed to store macro set name");
+					result = false;
+				}
 			}
 		}
 		
 		TextDataFile_Dispose(&writer);
 	}
+	
 	return result;
 }// overwriteFile
 
@@ -1488,6 +1619,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 										(kCFAllocatorDefault, valueList.at(hashTable.find("name")->second),
 											kCFStringEncodingMacRoman),
 										true/* validate before storing */);
+				if (kSessionDescription_ResultOK != sessionFileError)
+				{
+					Console_Warning(Console_WriteValue, "failed to save window name, error", sessionFileError);
+				}
 				
 				// this file should describe a local session
 				inoutDataPtr->fileType = kSessionDescription_ContentTypeCommand;
@@ -1505,6 +1640,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 												valueList.at(keyNameToKeyValueArrayIndexIterator->second),
 												kCFStringEncodingMacRoman),
 											true/* validate before storing */);
+					if (kSessionDescription_ResultOK != sessionFileError)
+					{
+						Console_Warning(Console_WriteValue, "failed to save command line, error", sessionFileError);
+					}
 				}
 				
 				// set window size and position, if given
@@ -1535,6 +1674,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_IntegerTypeScrollbackBufferLineCount,
 												lineCount, true/* validate before storing */);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save scrollback row count, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -1635,6 +1778,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_IntegerTypeTerminalVisibleColumnCount,
 												columnCount, true/* validate before storing */);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save column count, error", sessionFileError);
+						}
 					}
 				}
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("vtwidth");
@@ -1650,6 +1797,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_IntegerTypeTerminalVisibleColumnCount,
 												columnCount, true/* validate before storing */);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save column count, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -1667,6 +1818,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_IntegerTypeTerminalVisibleLineCount,
 												lineCount, true/* validate before storing */);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save row count, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -1684,6 +1839,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_BooleanTypeTEKPageClears,
 												pageClearsScreen);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save TEK page clear setting, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -1701,6 +1860,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_RGBColorTypeTextNormal,
 												normalTextColor);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save normal text color, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -1718,6 +1881,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_RGBColorTypeBackgroundNormal,
 												normalBackgroundColor);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save background text color, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -1735,6 +1902,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_RGBColorTypeTextBlinking,
 												blinkingTextColor);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save blinking text color, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -1752,6 +1923,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_RGBColorTypeBackgroundBlinking,
 												blinkingBackgroundColor);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save blinking background color, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -1769,6 +1944,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_RGBColorTypeTextBold,
 												boldTextColor);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save bold text color, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -1786,6 +1965,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_RGBColorTypeBackgroundBold,
 												boldBackgroundColor);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save bold background color, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -1800,6 +1983,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 												valueList.at(keyNameToKeyValueArrayIndexIterator->second),
 												kCFStringEncodingMacRoman),
 											true/* validate before storing */);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save font name, error", sessionFileError);
+						}
 				}
 				
 				// set font size
@@ -1816,6 +2003,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_IntegerTypeTerminalFontSize,
 												fontSize, true/* validate before storing */);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save font size, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -1875,6 +2066,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_BooleanTypeRemapCR,
 												remapCR);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save new-line mapping, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -1959,6 +2154,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 										(inoutDataPtr->selfRef, kSessionDescription_StringTypeAnswerBack,
 											valueCFString.returnCFStringRef(),
 											true/* validate before storing */);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save terminal type, error", sessionFileError);
+						}
 				}
 				
 				// set Kerberos authentication flag
@@ -1981,6 +2180,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_BooleanTypePageKeysDoNotControlTerminal,
 												mapsPageJumpKeys);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save page key setting, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -1998,6 +2201,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 											(inoutDataPtr->selfRef,
 												kSessionDescription_BooleanTypeRemapKeypadTopRow,
 												remapKeypad);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save keypad top row setting, error", sessionFileError);
+						}
 					}
 				}
 				
@@ -2016,6 +2223,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 										(inoutDataPtr->selfRef, kSessionDescription_StringTypeToolbarInfo,
 											valueCFString.returnCFStringRef(),
 											true/* validate before storing */);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save toolbar state, error", sessionFileError);
+						}
 				}
 				
 				// set macro set
@@ -2033,6 +2244,10 @@ parseFile	(SInt16				inFileReferenceNumber,
 										(inoutDataPtr->selfRef, kSessionDescription_StringTypeMacroSet,
 											valueCFString.returnCFStringRef(),
 											true/* validate before storing */);
+						if (kSessionDescription_ResultOK != sessionFileError)
+						{
+							Console_Warning(Console_WriteValue, "failed to save macro set name, error", sessionFileError);
+						}
 				}
 				
 				// all other keys are ignored; one possible course of action

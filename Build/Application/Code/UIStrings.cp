@@ -2213,65 +2213,6 @@ UIStrings_Copy	(UIStrings_UndoCFString		inWhichString,
 
 
 /*!
-Locates the specified string table and returns a random
-entry from it as a Core Foundation string.  Since a copy
-is made, you must call CFRelease() on the returned string
-when you are finished with it.
-
-\retval kUIStrings_ResultOK
-if the string is copied successfully
-
-\retval kUIStrings_ResultNoSuchString
-if the given class is invalid
-
-\retval kUIStrings_ResultCannotGetString
-if an OS error occurred
-
-(3.0)
-*/
-UIStrings_Result
-UIStrings_CopyRandom	(UIStrings_StringClass		inWhichStringClass,
-						 CFStringRef&				outString)
-{
-	UIStrings_Result	result = kUIStrings_ResultOK;
-	
-	
-	// IMPORTANT: The external utility program "genstrings" is not smart enough to
-	//            figure out the proper string table name if you do not inline it.
-	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
-	//            automatically generate localizable ".strings" files.
-	switch (inWhichStringClass)
-	{
-	//case kUIStrings_StringClassXYZ:
-		//{
-			//std::vector< UInt16 >	numberList(10/* number of available strings below */);
-			//RandomWrap				generator;
-			
-			
-			//__gnu_cxx::iota(numberList.begin(), numberList.end(), 0/* starting value */);
-			//std::random_shuffle(numberList.begin(), numberList.end(), generator);
-			//switch (numberList[0])
-			//{
-			//case 0:
-			//default:
-			//	outString = CFCopyLocalizedStringFromTable(CFSTR("whatever the string is"),
-			//												CFSTR("StringTableName"), CFSTR("comment"));
-			//	break;
-			//}
-		//}
-		//break;
-	
-	default:
-		// ???
-		result = kUIStrings_ResultNoSuchString;
-		break;
-	}
-	return result;
-}// CopyRandom
-
-
-/*!
 Locates the specified file or folder name and calls
 FSMakeFSRefUnicode() with the given parent directory.  The
 result is an FSRef with a copy of the given file name string.

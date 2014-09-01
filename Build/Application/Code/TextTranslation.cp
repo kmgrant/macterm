@@ -80,7 +80,6 @@ My_TextEncodingInfoList&	gTextEncodingInfoList ()	{ static My_TextEncodingInfoLi
 #pragma mark Internal Method Prototypes
 namespace {
 
-void	clearCharacterSetList		();
 void	fillInCharacterSetList		(Boolean = false);
 bool	textEncodingInfoComparer	(My_TextEncodingInfoPtr, My_TextEncodingInfoPtr);
 
@@ -439,32 +438,6 @@ TextTranslation_ReturnIndexedCharacterSet	(UInt16		inOneBasedIndex)
 
 #pragma mark Internal Methods
 namespace {
-
-/*!
-Deletes all of the character set information
-structures in the global list.  Useful prior to
-rebuilding the list, or deleting it permanently.
-
-(3.0)
-*/
-void
-clearCharacterSetList ()
-{
-	My_TextEncodingInfoPtr				dataPtr = nullptr;
-	My_TextEncodingInfoList::iterator	textEncodingInfoIterator;
-	
-	
-	// destroy all encoding information structures in the global list
-	for (textEncodingInfoIterator = gTextEncodingInfoList().begin();
-			textEncodingInfoIterator != gTextEncodingInfoList().end(); ++textEncodingInfoIterator)
-	{
-		dataPtr = *textEncodingInfoIterator;
-		if (nullptr != dataPtr) delete dataPtr;
-	}
-	
-	gInitialized = false;
-}// clearCharacterSetList
-
 
 /*!
 Constructs the internal menu of available text
