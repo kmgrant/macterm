@@ -3664,6 +3664,10 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					// delete the “associated Format” preference, which will cause
 					// a fallback to the default when it is later queried
 					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel, kPreferences_TagAssociatedFormatFavorite);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_Warning(Console_WriteValue, "failed to remove associated-format preference, error", prefsResult);
+					}
 					
 					// pass this handler through to the window, which will update the font and colors!
 					result = eventNotHandledErr;
@@ -3725,6 +3729,10 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					// delete the “associated Terminal” preference, which will cause
 					// a fallback to the default when it is later queried
 					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel, kPreferences_TagAssociatedTerminalFavorite);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_Warning(Console_WriteValue, "failed to remove associated-terminal preference, error", prefsResult);
+					}
 					
 					// pass this handler through to the window
 					result = eventNotHandledErr;
@@ -3786,6 +3794,10 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					// delete the “associated Translation” preference, which will cause
 					// a fallback to the default when it is later queried
 					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel, kPreferences_TagAssociatedTranslationFavorite);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_Warning(Console_WriteValue, "failed to remove associated-translation preference, error", prefsResult);
+					}
 					
 					// pass this handler through to the window
 					result = eventNotHandledErr;

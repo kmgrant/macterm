@@ -62,37 +62,6 @@
 
 
 #pragma mark Types
-namespace {
-
-/*!
-This structure is used for CommonEventHandlers_InstallNumericalFieldArrowsHandler().
-*/
-struct My_NumericalFieldArrowsHandler
-{
-	ControlRef			field;						//!< the editable text control whose value is changed by the arrows
-	EventHandlerRef		controlHitEventHandlerRef;	//!< reference retained so handler can be removed later
-	EventHandlerUPP		controlHitEventHandlerUPP;	//!< reference retained so handler can be disposed later
-};
-typedef struct My_NumericalFieldArrowsHandler*		My_NumericalFieldArrowsHandlerPtr;
-
-/*!
-This structure is used for CommonEventHandlers_InstallPopUpMenuArrowsHandler().
-*/
-struct My_PopUpMenuArrowsHandler
-{
-	ControlRef			popUpMenu;					//!< the pop-up menu control whose value is changed by the arrows
-	EventHandlerRef		controlHitEventHandlerRef;	//!< reference retained so handler can be removed later
-	EventHandlerUPP		controlHitEventHandlerUPP;	//!< reference retained so handler can be disposed later
-};
-typedef struct My_PopUpMenuArrowsHandler*		My_PopUpMenuArrowsHandlerPtr;
-
-typedef MemoryBlockPtrLocker< CommonEventHandlers_NumericalFieldArrowsRef, My_NumericalFieldArrowsHandler >	My_NumericalFieldArrowsHandlerPtrLocker;
-typedef LockAcquireRelease< CommonEventHandlers_NumericalFieldArrowsRef, My_NumericalFieldArrowsHandler >	My_NumericalFieldArrowsHandlerAutoLocker;
-
-typedef MemoryBlockPtrLocker< CommonEventHandlers_PopUpMenuArrowsRef, My_PopUpMenuArrowsHandler >	My_PopUpMenuArrowsHandlerPtrLocker;
-typedef LockAcquireRelease< CommonEventHandlers_PopUpMenuArrowsRef, My_PopUpMenuArrowsHandler >		My_PopUpMenuArrowsHandlerAutoLocker;
-
-} // anonymous namespace
 
 /*!
 This structure is used for CommonEventHandlers_HIViewResizer::install().
@@ -136,19 +105,9 @@ public:
 	CarbonEventHandlerWrap						resizeEventHandler;		//!< what the system invokes when resize events occur
 };
 
-#pragma mark Variables
-namespace {
-
-My_NumericalFieldArrowsHandlerPtrLocker&	gMyNumericalFieldArrowsHandlerPtrLocks ()	{ static My_NumericalFieldArrowsHandlerPtrLocker x; return x; }
-My_PopUpMenuArrowsHandlerPtrLocker&			gMyPopUpMenuArrowsHandlerPtrLocks ()	{ static My_PopUpMenuArrowsHandlerPtrLocker x; return x; }
-
-} // anonymous namespace
-
 #pragma mark Internal Method Prototypes
 namespace {
 
-OSStatus	receiveArrowHitForNumericalField	(EventHandlerCallRef, EventRef, void*);
-OSStatus	receiveArrowHitForPopUpMenu			(EventHandlerCallRef, EventRef, void*);
 OSStatus	receiveHIViewResizeOrSizeQuery		(EventHandlerCallRef, EventRef, void*);
 OSStatus	receiveWindowResizeOrSizeQuery		(EventHandlerCallRef, EventRef, void*);
 
@@ -480,407 +439,8 @@ resizeEventHandler(GetWindowEventTarget(inForWhichWindow), receiveWindowResizeOr
 }// 7-argument constructor
 
 
-/*!
-Installs a Carbon Event handler for a “little arrows”
-control that causes the current value of the given text
-field to change.  The text equivalent of the numerical
-value of the arrows is put into the field.
-
-Also sets up accessibility relationships, where possible,
-to indicate that the arrows control relates to the field.
-
-Dispose of the handler later by passing the returned
-reference into CommonEventHandlers_RemoveNumericalFieldArrows().
-
-\retval noErr
-if the handler was installed successfully
-
-\retval memPCErr
-if the given pointer to storage is nullptr
-
-\retval memFullErr
-if there is not enough memory to create a handler
-
-\retval (other)
-if the handler could not be installed
-
-(3.1)
-*/
-OSStatus
-CommonEventHandlers_InstallNumericalFieldArrows		(ControlRef										inForWhichArrows,
-													 ControlRef										inForWhichField,
-													 CommonEventHandlers_NumericalFieldArrowsRef*	outHandlerPtr)
-{
-	OSStatus	result = noErr;
-	
-	
-	if (nullptr == outHandlerPtr) result = memPCErr;
-	else
-	{
-		*outHandlerPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(My_NumericalFieldArrowsHandler)), CommonEventHandlers_NumericalFieldArrowsRef);
-		if (nullptr == *outHandlerPtr) result = memFullErr;
-		else
-		{
-			My_NumericalFieldArrowsHandlerAutoLocker	ptr(gMyNumericalFieldArrowsHandlerPtrLocks(), *outHandlerPtr);
-			
-			
-			// initialize the handler structure so appropriate information
-			// is available to the otherwise-generic callback routine
-			ptr->field = inForWhichField;
-			ptr->controlHitEventHandlerRef = nullptr; // set below
-			ptr->controlHitEventHandlerUPP = NewEventHandlerUPP(receiveArrowHitForNumericalField);
-			
-			// install a callback that responds when the arrows are used
-			{
-				EventTypeSpec const		whenControlHit[] =
-										{
-											{ kEventClassControl, kEventControlHit }
-										};
-				
-				
-				result = HIViewInstallEventHandler(inForWhichArrows, ptr->controlHitEventHandlerUPP,
-													GetEventTypeCount(whenControlHit),
-													whenControlHit, *outHandlerPtr/* user data */,
-													&ptr->controlHitEventHandlerRef/* event handler reference */);
-			}
-			
-			// set accessibility relationships, if possible
-			{
-				CFStringRef		accessibilityDescCFString = nullptr;
-				
-				
-				if (UIStrings_Copy(kUIStrings_ButtonEditTextArrowsAccessibilityDesc, accessibilityDescCFString).ok())
-				{
-					HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(inForWhichArrows, HIObjectRef);
-					OSStatus			error = noErr;
-					
-					
-					error = HIObjectSetAuxiliaryAccessibilityAttribute
-							(kViewObjectRef, 0/* sub-component identifier */,
-								kAXDescriptionAttribute, accessibilityDescCFString);
-					CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
-				}
-			}
-		}
-	}
-	return result;
-}// InstallNumericalFieldArrows
-
-
-/*!
-Installs a Carbon Event handler for a “little arrows”
-control that causes the current value of the given pop-up
-menu control to change.
-
-Also sets up accessibility relationships, where possible,
-to indicate that the arrows control relates to the menu.
-
-Dispose of the handler later by passing the returned
-reference into CommonEventHandlers_RemovePopUpMenuArrows().
-
-\retval noErr
-if the handler was installed successfully
-
-\retval memPCErr
-if the given pointer to storage is nullptr
-
-\retval memFullErr
-if there is not enough memory to create a handler
-
-\retval (other)
-if the handler could not be installed
-
-(3.0)
-*/
-OSStatus
-CommonEventHandlers_InstallPopUpMenuArrows	(ControlRef									inForWhichArrows,
-											 ControlRef									inForWhichPopUpMenu,
-											 CommonEventHandlers_PopUpMenuArrowsRef*	outHandlerPtr)
-{
-	OSStatus	result = noErr;
-	
-	
-	if (nullptr == outHandlerPtr) result = memPCErr;
-	else
-	{
-		*outHandlerPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(My_PopUpMenuArrowsHandler)), CommonEventHandlers_PopUpMenuArrowsRef);
-		if (nullptr == *outHandlerPtr) result = memFullErr;
-		else
-		{
-			My_PopUpMenuArrowsHandlerAutoLocker		ptr(gMyPopUpMenuArrowsHandlerPtrLocks(), *outHandlerPtr);
-			
-			
-			// initialize the handler structure so appropriate information
-			// is available to the otherwise-generic callback routine
-			ptr->popUpMenu = inForWhichPopUpMenu;
-			ptr->controlHitEventHandlerRef = nullptr; // set below
-			ptr->controlHitEventHandlerUPP = NewEventHandlerUPP(receiveArrowHitForPopUpMenu);
-			
-			// install a callback that responds when the arrows are used
-			{
-				EventTypeSpec const		whenControlHit[] =
-										{
-											{ kEventClassControl, kEventControlHit }
-										};
-				
-				
-				result = HIViewInstallEventHandler(inForWhichArrows, ptr->controlHitEventHandlerUPP,
-													GetEventTypeCount(whenControlHit),
-													whenControlHit, *outHandlerPtr/* user data */,
-													&ptr->controlHitEventHandlerRef/* event handler reference */);
-			}
-			
-			// set accessibility relationships, if possible
-			{
-				CFStringRef		accessibilityDescCFString = nullptr;
-				
-				
-				if (UIStrings_Copy(kUIStrings_ButtonPopUpMenuArrowsAccessibilityDesc, accessibilityDescCFString).ok())
-				{
-					HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(inForWhichArrows, HIObjectRef);
-					OSStatus			error = noErr;
-					
-					
-					error = HIObjectSetAuxiliaryAccessibilityAttribute
-							(kViewObjectRef, 0/* sub-component identifier */,
-								kAXDescriptionAttribute, accessibilityDescCFString);
-					CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
-				}
-			}
-		}
-	}
-	return result;
-}// InstallPopUpMenuArrows
-
-
-/*!
-Removes a Carbon Event handler for control-hit events
-that was previously added using the
-CommonEventHandlers_InstallNumericalFieldArrows() routine.
-
-\retval noErr
-if the handler was removed successfully
-
-\retval memPCErr
-if the given pointer is invalid
-
-\retval (other)
-if the handler could not be removed successfully
-
-(3.1)
-*/
-OSStatus
-CommonEventHandlers_RemoveNumericalFieldArrows	(CommonEventHandlers_NumericalFieldArrowsRef*	inoutHandlerToDisposePtr)
-{
-	OSStatus	result = noErr;
-	
-	
-	if (nullptr == inoutHandlerToDisposePtr) result = memPCErr;
-	else
-	{
-		{
-			My_NumericalFieldArrowsHandlerAutoLocker	ptr(gMyNumericalFieldArrowsHandlerPtrLocks(), *inoutHandlerToDisposePtr);
-			
-			
-			result = RemoveEventHandler(ptr->controlHitEventHandlerRef);
-			DisposeEventHandlerUPP(ptr->controlHitEventHandlerUPP);
-		}
-		Memory_DisposePtr(REINTERPRET_CAST(inoutHandlerToDisposePtr, Ptr*));
-	}
-	
-	return result;
-}// RemoveNumericalFieldArrows
-
-
-/*!
-Removes a Carbon Event handler for control-hit events
-that was previously added using the
-CommonEventHandlers_InstallPopUpMenuArrows() routine.
-
-\retval noErr
-if the handler was removed successfully
-
-\retval memPCErr
-if the given pointer is invalid
-
-\retval (other)
-if the handler could not be removed successfully
-
-(3.0)
-*/
-OSStatus
-CommonEventHandlers_RemovePopUpMenuArrows	(CommonEventHandlers_PopUpMenuArrowsRef*	inoutHandlerToDisposePtr)
-{
-	OSStatus	result = noErr;
-	
-	
-	if (nullptr == inoutHandlerToDisposePtr) result = memPCErr;
-	else
-	{
-		{
-			My_PopUpMenuArrowsHandlerAutoLocker		ptr(gMyPopUpMenuArrowsHandlerPtrLocks(), *inoutHandlerToDisposePtr);
-			
-			
-			result = RemoveEventHandler(ptr->controlHitEventHandlerRef);
-			DisposeEventHandlerUPP(ptr->controlHitEventHandlerUPP);
-		}
-		Memory_DisposePtr(REINTERPRET_CAST(inoutHandlerToDisposePtr, Ptr*));
-	}
-	
-	return result;
-}// RemovePopUpMenuArrows
-
-
 #pragma mark Internal Methods
 namespace {
-
-/*!
-Handles "kEventControlHit" of "kEventClassControl" for
-the terminal menu’s arrows.  Responds by updating the
-current selection in the menu button.
-
-(3.1)
-*/
-OSStatus
-receiveArrowHitForNumericalField	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-									 EventRef				inEvent,
-									 void*					inNumericalFieldArrowsHandlerRef)
-{
-	OSStatus										result = eventNotHandledErr;
-	CommonEventHandlers_NumericalFieldArrowsRef		ref = REINTERPRET_CAST(inNumericalFieldArrowsHandlerRef, CommonEventHandlers_NumericalFieldArrowsRef);
-	My_NumericalFieldArrowsHandlerAutoLocker		ptr(gMyNumericalFieldArrowsHandlerPtrLocks(), ref);
-	UInt32 const									kEventClass = GetEventClass(inEvent);
-	UInt32 const									kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlHit);
-	{
-		ControlRef		control = nullptr;
-		
-		
-		// determine the control in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, control);
-		
-		// if the command information was found, proceed
-		if (noErr == result)
-		{
-			ControlPartCode		partCode = kControlNoPart;
-			SInt32				currentFieldValue = 0;
-			SInt32				kIncrementDecrement = 1;
-			
-			
-			GetControlNumericalText(ptr->field, &currentFieldValue);
-			
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, partCode);
-			if (noErr != result) partCode = kControlUpButtonPart;
-			
-			// try to find the increment value associated with the arrows view;
-			// ignore any errors, this is not that important
-			UNUSED_RETURN(OSStatus)GetControlData(control, kControlEntireControl, kControlLittleArrowsIncrementValueTag,
-													sizeof(kIncrementDecrement), &kIncrementDecrement, nullptr/* actual size */);
-			
-			switch (partCode)
-			{
-			case kControlDownButtonPart:
-				if (GetControl32BitMinimum(control) >= currentFieldValue)
-				{
-					SetControlNumericalText(ptr->field, GetControl32BitMaximum(control));
-				}
-				else
-				{
-					SetControlNumericalText(ptr->field, currentFieldValue - kIncrementDecrement);
-				}
-				break;
-			
-			case kControlUpButtonPart:
-			default:
-				if (GetControl32BitMaximum(control) <= currentFieldValue)
-				{
-					SetControlNumericalText(ptr->field, GetControl32BitMinimum(control));
-				}
-				else
-				{
-					SetControlNumericalText(ptr->field, currentFieldValue + kIncrementDecrement);
-				}
-				break;
-			}
-		}
-	}
-	return result;
-}// receiveArrowHitForNumericalField
-
-
-/*!
-Handles "kEventControlHit" of "kEventClassControl" for
-the terminal menu’s arrows.  Responds by updating the
-current selection in the menu button.
-
-(3.1)
-*/
-OSStatus
-receiveArrowHitForPopUpMenu		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-								 EventRef				inEvent,
-								 void*					inPopUpMenuArrowsHandlerRef)
-{
-	OSStatus									result = eventNotHandledErr;
-	CommonEventHandlers_PopUpMenuArrowsRef		ref = REINTERPRET_CAST(inPopUpMenuArrowsHandlerRef, CommonEventHandlers_PopUpMenuArrowsRef);
-	My_PopUpMenuArrowsHandlerAutoLocker			ptr(gMyPopUpMenuArrowsHandlerPtrLocks(), ref);
-	UInt32 const								kEventClass = GetEventClass(inEvent);
-	UInt32 const								kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlHit);
-	{
-		ControlRef		control = nullptr;
-		
-		
-		// determine the control in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, control);
-		
-		// if the command information was found, proceed
-		if (noErr == result)
-		{
-			ControlPartCode		partCode = kControlNoPart;
-			SInt32 const		kCurrentMenuValue = GetControl32BitValue(ptr->popUpMenu);
-			SInt32 const		kIncrement = 1;
-			SInt32 const		kDecrement = 1;
-			
-			
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, partCode);
-			if (noErr != result) partCode = kControlUpButtonPart;
-			
-			switch (partCode)
-			{
-			case kControlDownButtonPart:
-				if (GetControl32BitMaximum(ptr->popUpMenu) == kCurrentMenuValue)
-				{
-					SetControl32BitValue(ptr->popUpMenu, GetControl32BitMinimum(ptr->popUpMenu));
-				}
-				else
-				{
-					SetControl32BitValue(ptr->popUpMenu, kCurrentMenuValue + kIncrement);
-				}
-				break;
-			
-			case kControlUpButtonPart:
-			default:
-				if (GetControl32BitMinimum(ptr->popUpMenu) == kCurrentMenuValue)
-				{
-					SetControl32BitValue(ptr->popUpMenu, GetControl32BitMaximum(ptr->popUpMenu));
-				}
-				else
-				{
-					SetControl32BitValue(ptr->popUpMenu, kCurrentMenuValue - kDecrement);
-				}
-				break;
-			}
-		}
-	}
-	return result;
-}// receiveArrowHitForPopUpMenu
-
 
 /*!
 Handles "kEventControlBoundsChanged" of "kEventClassControl".
@@ -1114,15 +674,22 @@ receiveWindowResizeOrSizeQuery	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCal
 					}
 					
 					// return the value
+					if (noErr == result)
 					{
 						EventParamName const	kParameterName = kEventParamDimensions;
 						void*					parameterValueAddress = &dimensions;
 						UInt32 const			kActualSize = sizeof(dimensions);
 						EventParamType const	kActualType = typeQDPoint;
+						OSStatus				error = noErr;
 						
 						
-						result = SetEventParameter(inEvent, kParameterName, kActualType, kActualSize,
+						error = SetEventParameter(inEvent, kParameterName, kActualType, kActualSize,
 													parameterValueAddress);
+						if (noErr != error)
+						{
+							Console_Warning(Console_WriteValue, "failed to set window size parameter for window query, error", error);
+							result = eventNotHandledErr;
+						}
 					}
 				}
 				break;

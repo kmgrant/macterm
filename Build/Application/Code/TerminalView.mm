@@ -678,21 +678,39 @@ TerminalView_Init ()
 	// set up a callback to receive preference change notifications
 	gPreferenceChangeEventListener = ListenerModel_NewStandardListener(preferenceChanged);
 	{
-		Preferences_Result		error = kPreferences_ResultOK;
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
-		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagCursorBlinks,
-											true/* call immediately to get initial value */);
-		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagNotifyOfBeeps,
-											true/* call immediately to get initial value */);
-		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagPureInverse,
-											true/* call immediately to get initial value */);
-		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagTerminalCursorType,
-											true/* call immediately to get initial value */);
-		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagTerminalShowMarginAtColumn,
-											true/* call immediately to get initial value */);
-		// TMP - should check for errors here!
-		//if (error != kPreferences_ResultOK) ...
+		prefsResult = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagCursorBlinks,
+													true/* call immediately to get initial value */);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to set up global monitor for cursor-blink setting, error", prefsResult);
+		}
+		prefsResult = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagNotifyOfBeeps,
+													true/* call immediately to get initial value */);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to set up global monitor for notify-on-bell setting, error", prefsResult);
+		}
+		prefsResult = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagPureInverse,
+													true/* call immediately to get initial value */);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to set up global monitor for invert-selected-text setting, error", prefsResult);
+		}
+		prefsResult = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagTerminalCursorType,
+													true/* call immediately to get initial value */);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to set up global monitor for cursor-shape setting, error", prefsResult);
+		}
+		prefsResult = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagTerminalShowMarginAtColumn,
+													true/* call immediately to get initial value */);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to set up global monitor for show-margin-line setting, error", prefsResult);
+		}
 	}
 	
 	// on older Mac OS X systems, custom cursors do not seem
@@ -975,19 +993,21 @@ TerminalView_DisplaySaveSelectedTextUI	(TerminalViewRef	inView)
 		
 		
 		error = NavGetDefaultDialogCreationOptions(&dialogOptions);
-		if (noErr == error)
+		if (noErr != error)
 		{
-			// this call sets most of the options up front (parent window, etc.)
-			dialogOptions.optionFlags |= kNavDontAddTranslateItems;
-			Localization_GetCurrentApplicationNameAsCFString(&dialogOptions.clientName);
-			dialogOptions.preferenceKey = kPreferences_NavPrefKeyGenericSaveFile;
-			dialogOptions.parentWindow = HIViewGetWindow(viewPtr->contentHIView);
-			
-			// now set things specific to this instance
-			(UIStrings_Result)UIStrings_Copy(kUIStrings_FileDefaultCaptureFile, dialogOptions.saveFileName);
-			(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptCaptureToFile, dialogOptions.message);
-			dialogOptions.modality = kWindowModalityWindowModal;
+			bzero(&dialogOptions, sizeof(dialogOptions));
 		}
+		// this call sets most of the options up front (parent window, etc.)
+		dialogOptions.optionFlags |= kNavDontAddTranslateItems;
+		Localization_GetCurrentApplicationNameAsCFString(&dialogOptions.clientName);
+		dialogOptions.preferenceKey = kPreferences_NavPrefKeyGenericSaveFile;
+		dialogOptions.parentWindow = HIViewGetWindow(viewPtr->contentHIView);
+		
+		// now set things specific to this instance
+		(UIStrings_Result)UIStrings_Copy(kUIStrings_FileDefaultCaptureFile, dialogOptions.saveFileName);
+		(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptCaptureToFile, dialogOptions.message);
+		dialogOptions.modality = kWindowModalityWindowModal;
+		
 		error = NavCreatePutFileDialog(&dialogOptions, 'TEXT'/* type */, 'ttxt'/* creator (TextEdit) */,
 										NewNavEventUPP(navigationFileCaptureDialogEvent), inView/* client data */,
 										&navigationServicesDialog);
@@ -997,6 +1017,7 @@ TerminalView_DisplaySaveSelectedTextUI	(TerminalViewRef	inView)
 			// display the dialog; it is a sheet, so this will return immediately
 			// and the dialog will close whenever the user is actually done with it
 			error = NavDialogRun(navigationServicesDialog);
+			Alert_ReportOSStatus(error);
 		}
 	}
 }// DisplaySaveSelectedTextUI
@@ -1456,6 +1477,10 @@ TerminalView_GetSelectedTextAsAudio		(TerminalViewRef	inView)
 				
 				
 				speakerResult = TerminalSpeaker_SynthesizeSpeechFromCFString(speaker, spokenText.returnCFStringRef());
+				if (kTerminalSpeaker_ResultOK != speakerResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to synthesize speech, error", speakerResult);
+				}
 			}
 		}
 	}
@@ -4323,14 +4348,34 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		
 		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor.returnRef(), kPreferences_TagDontDimBackgroundScreens,
 													true/* call immediately to get initial value */);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to set up monitor for no-terminal-dim setting, error", prefsResult);
+		}
 		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor.returnRef(), kPreferences_TagTerminalCursorType,
 													false/* call immediately to get initial value */);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to set up monitor for cursor-shape setting, error", prefsResult);
+		}
 		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor.returnRef(), kPreferences_TagTerminalResizeAffectsFontSize,
 													false/* call immediately to get initial value */);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to set up monitor for resize-effect setting, error", prefsResult);
+		}
 		prefsResult = Preferences_ContextStartMonitoring(this->encodingConfig.returnRef(), this->screen.preferenceMonitor.returnRef(),
 															kPreferences_ChangeContextBatchMode);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to set up monitor for batch-mode changes to translation preferences of terminal view, error", prefsResult);
+		}
 		prefsResult = Preferences_ContextStartMonitoring(this->formatConfig.returnRef(), this->screen.preferenceMonitor.returnRef(),
 															kPreferences_ChangeContextBatchMode);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to set up monitor for batch-mode changes to format preferences of terminal view, error", prefsResult);
+		}
 	}
 	
 	// refreshes are requested on a fixed schedule because the API call
@@ -5545,6 +5590,10 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 															&sourceRect/* source rectangle */,
 															&destRect/* destination rectangle */,
 															srcCopy/* drawing mode */, nullptr/* mask */);
+									if (noErr != error)
+									{
+										Console_Warning(Console_WriteValue, "failed to stretch double-wide text image, error", error);
+									}
 									DisposeHandle(REINTERPRET_CAST(image, Handle)), image = nullptr;
 								}
 								
@@ -7105,20 +7154,17 @@ findVirtualCellFromScreenPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 								 Float32&				outDeltaRow)
 {
 	Boolean		result = true;
-	SInt32		columnCalculation = 0.0;
-	SInt64		rowCalculation = 0.0;
+	SInt32		columnCalculation = 0;
+	SInt64		rowCalculation = 0;
 	
 	
 	outDeltaColumn = 0;
 	outDeltaRow = 0;
 	
-	// NOTE: This code starts in units of pixels for convenience,
-	// but must convert to units of columns and rows upon return.
-	columnCalculation = inScreenLocalPixelPosition.x;
-	rowCalculation = inScreenLocalPixelPosition.y;
-	
 	// adjust point to fit in local screen area
 	{
+		// NOTE: This code starts in units of pixels for convenience,
+		// but must convert to units of columns and rows upon return.
 		Float32		offsetH = inScreenLocalPixelPosition.x;
 		Float32		offsetV = inScreenLocalPixelPosition.y;
 		
@@ -7643,6 +7689,7 @@ getScreenOriginFloat	(My_TerminalViewPtr		inTerminalViewPtr,
 		error = HIViewGetFrame(inTerminalViewPtr->contentHIView, &contentFrame);
 		assert_noerr(error);
 		error = HIViewConvertRect(&contentFrame, HIViewGetSuperview(inTerminalViewPtr->contentHIView), windowContentView);
+		assert_noerr(error);
 		outScreenPositionX = contentFrame.origin.x;
 		outScreenPositionY = contentFrame.origin.y;
 	}
@@ -8395,7 +8442,14 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 		
 		
 		getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
-		setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
+		if (kTerminal_ResultOK != getCursorLocationError)
+		{
+			Console_Warning(Console_WriteValue, "failed to update cursor after view resize; internal error", getCursorLocationError);
+		}
+		else
+		{
+			setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
+		}
 	}
 }// handleNewViewContainerBounds
 
@@ -8413,14 +8467,13 @@ void
 handlePendingUpdates ()
 {
 	EventRecord		updateEvent;
-	Boolean			isEvent = false;
 	
 	
 	// simply *checking* for events triggers approprate flushing to the
 	// display; so would WaitNextEvent(), but this is nice because it
 	// does not pull any events from the queue (after all, this routine
 	// couldn’t handle the events if they were pulled)
-	isEvent = EventAvail(updateMask, &updateEvent);
+	UNUSED_RETURN(Boolean)EventAvail(updateMask, &updateEvent);
 }// handlePendingUpdates
 
 
@@ -8847,7 +8900,6 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 				if (error == noErr)
 				{
 					Handle		textHandle = nullptr;
-					Boolean		result = false;
 					
 					
 					textHandle = TerminalView_ReturnSelectedTextAsNewHandle(view, 0/* spaces equal to one tab, or zero for no substitution */,
@@ -8882,7 +8934,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 								byteCountToWrite = total; // prepare for next loop
 							}
 							
-							error = FSCloseFork(fileRefNum), fileRefNum = -1;
+							UNUSED_RETURN(OSStatus)FSCloseFork(fileRefNum), fileRefNum = -1;
 							
 							// finally, “swap” the new file into the right place on disk
 							error = FSExchangeObjects(&temporaryFile, &saveFile);
@@ -8890,14 +8942,16 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 							{
 								UNUSED_RETURN(OSStatus)FSDeleteObject(&temporaryFile);
 							}
-							
-							result = true;
 						}
 					}
 				}
 			}
 			Alert_ReportOSStatus(error);
 			error = FileSelectionDialogs_CompleteSave(&reply);
+			if (noErr != error)
+			{
+				Console_Warning(Console_WriteValue, "failed to complete save for file capture, error", error);
+			}
 		}
 		break;
 	
@@ -9386,7 +9440,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
 				if (kTerminal_ResultOK != getCursorLocationError)
 				{
-					Console_Warning(Console_WriteValue, "failed to update cursor; internal error", getCursorLocationError);
+					Console_Warning(Console_WriteValue, "failed to update cursor after preference change; internal error", getCursorLocationError);
 				}
 				else
 				{
@@ -10047,7 +10101,6 @@ receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef	UNUSED_ARGUMENT(inH
 				// display a contextual menu
 				NSMenu*		contextualMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
 				NSPoint		globalLocation = [NSEvent mouseLocation];
-				BOOL		itemSelected = NO;
 				
 				
 				// set up the contextual menu
@@ -10057,7 +10110,7 @@ receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef	UNUSED_ARGUMENT(inH
 				// display the menu; note that this mechanism does not require
 				// either a positioning item or a view, effectively making the
 				// menu appear at the given global location
-				itemSelected = [contextualMenu popUpMenuPositioningItem:nil atLocation:globalLocation inView:nil];
+				UNUSED_RETURN(BOOL)[contextualMenu popUpMenuPositioningItem:nil atLocation:globalLocation inView:nil];
 				
 				result = noErr; // event is completely handled
 			}
@@ -10114,8 +10167,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			GetGWorld(&oldPort, &oldDevice);
 			
 			// determine which part (if any) to draw; if none, draw everything
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, partCode);
-			result = noErr; // ignore part code parameter if absent
+			UNUSED_RETURN(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, partCode);
 			
 			// determine the port to draw in; if none, the current port
 			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamGrafPort, typeGrafPtr, drawingPort);
@@ -10123,7 +10175,6 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			{
 				// use current port
 				drawingPort = oldPort;
-				result = noErr;
 			}
 			
 			// determine the context to draw in with Core Graphics
@@ -11245,8 +11296,8 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 					
 					// update the key modifiers parameter with the latest key modifier states
 					currentModifiers = EventLoop_ReturnCurrentModifiers();
-					result = SetEventParameter(inEvent, kEventParamKeyModifiers,
-												typeUInt32, sizeof(currentModifiers), &currentModifiers);
+					UNUSED_RETURN(OSStatus)SetEventParameter(inEvent, kEventParamKeyModifiers,
+																typeUInt32, sizeof(currentModifiers), &currentModifiers);
 					
 					// find the part the mouse is in, and update the event to include this part
 					// (it so happens the hit test handler is compatible with these requirements)
@@ -11646,9 +11697,16 @@ screenCursorChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			
 			getCursorLocationError = Terminal_CursorGetLocation(screen, &cursorX, &cursorY);
-			//Console_WriteValuePair("notification passed new location", cursorX, cursorY);
-			setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
-			updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
+			if (kTerminal_ResultOK != getCursorLocationError)
+			{
+				Console_Warning(Console_WriteValue, "failed to update cursor after change in cursor location or state; internal error", getCursorLocationError);
+			}
+			else
+			{
+				//Console_WriteValuePair("notification passed new location", cursorX, cursorY);
+				setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
+				updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
+			}
 		}
 	}
 }// screenCursorChanged
@@ -11944,8 +12002,15 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		
 		getCursorLocationError = Terminal_CursorGetLocation(inTerminalViewPtr->screen.ref, &cursorX, &cursorY);
-		setUpCursorBounds(inTerminalViewPtr, cursorX, cursorY, &inTerminalViewPtr->screen.cursor.bounds,
-							inTerminalViewPtr->screen.cursor.boundsAsRegion);
+		if (kTerminal_ResultOK != getCursorLocationError)
+		{
+			Console_Warning(Console_WriteValue, "failed to adjust cursor location for new font and size, error", getCursorLocationError);
+		}
+		else
+		{
+			setUpCursorBounds(inTerminalViewPtr, cursorX, cursorY, &inTerminalViewPtr->screen.cursor.bounds,
+								inTerminalViewPtr->screen.cursor.boundsAsRegion);
+		}
 	}
 	
 	// resize window to preserve its dimensions in character cell units
@@ -12081,18 +12146,8 @@ setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 	if ((inColorEntryNumber == kTerminalView_ColorIndexBlinkingText) ||
 		(inColorEntryNumber == kTerminalView_ColorIndexBlinkingBackground))
 	{
-		CGDirectDisplayID	device = CGMainDisplayID();
 		CGDeviceColor		colorValue;
 		
-		
-		// figure out which display has most control over screen content
-		// NOTE: This check should be done separately, probably whenever a
-		//       terminal window is moved.
-		if (false == RegionUtilities_GetWindowDirectDisplayID(HIViewGetWindow(inTerminalViewPtr->contentHIView), device))
-		{
-			// if this can’t be found, just assume the main monitor
-			device = CGMainDisplayID();
-		}
 		
 		// create enough intermediate colors to make a reasonably
 		// smooth “pulsing” effect as text blinks; the last color

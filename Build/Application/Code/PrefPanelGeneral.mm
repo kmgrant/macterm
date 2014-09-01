@@ -1387,45 +1387,8 @@ void
 My_GeneralTabSpecial::
 assignAccessibilityRelationships ()
 {
-	OSStatus	error = noErr;
-	
-	
-	// associate the cursor buttons with their label, and vice-versa
-	error = HIObjectSetAuxiliaryAccessibilityAttribute
-			(this->checkBoxCursorFlashing.returnHIObjectRef(), 0/* sub-component identifier */,
-				kAXTitleUIElementAttribute, this->labelCursor.acquireAccessibilityObject());
-	{
-		void const*			values[] = { this->checkBoxCursorFlashing.acquireAccessibilityObject() };
-		CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
-															&kCFTypeArrayCallBacks), true/* is retained */);
-		
-		
-		error = HIObjectSetAuxiliaryAccessibilityAttribute
-				(this->labelCursor.returnHIObjectRef(), 0/* sub-component identifier */,
-					kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
-	}
-	
-	// associate the window resize effect buttons with their label, and vice-versa
-	error = HIObjectSetAuxiliaryAccessibilityAttribute
-			(this->radioButtonResizeAffectsScreenSize.returnHIObjectRef(), 0/* sub-component identifier */,
-				kAXTitleUIElementAttribute, this->labelWindowResizeEffect.acquireAccessibilityObject());
-	error = HIObjectSetAuxiliaryAccessibilityAttribute
-			(this->radioButtonResizeAffectsFontSize.returnHIObjectRef(), 0/* sub-component identifier */,
-				kAXTitleUIElementAttribute, this->labelWindowResizeEffect.acquireAccessibilityObject());
-	{
-		void const*			values[] =
-							{
-								this->radioButtonResizeAffectsScreenSize.acquireAccessibilityObject(),
-								this->radioButtonResizeAffectsFontSize.acquireAccessibilityObject()
-							};
-		CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
-															&kCFTypeArrayCallBacks), true/* is retained */);
-		
-		
-		error = HIObjectSetAuxiliaryAccessibilityAttribute
-				(this->labelWindowResizeEffect.returnHIObjectRef(), 0/* sub-component identifier */,
-					kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
-	}
+	// (removing this code for now to resolve static analyzer issues;
+	// it is going to be replaced by Cocoa soon anyway)
 }// My_GeneralTabSpecial::assignAccessibilityRelationships
 
 

@@ -1595,13 +1595,8 @@ Commands_HandleCreateToolbarItem	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 						
 						
 						// NOTE: configuration data is not always present
-						result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamToolbarItemConfigData,
-																		typeCFTypeRef, itemData);
-						if (noErr != result)
-						{
-							itemData = nullptr;
-							result = noErr;
-						}
+						UNUSED_RETURN(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamToolbarItemConfigData,
+																						typeCFTypeRef, itemData);
 						
 						// create the specified item, if its identifier is recognized
 						{
@@ -7508,7 +7503,7 @@ canToggleToolbarShownSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 		if (nullptr != userFocusWindow)
 		{
 			HIToolbarRef	toolbar = nullptr;
-			BOOL			useShowText = YES;
+			//BOOL			useShowText = YES;
 			
 			
 			if ((noErr == GetWindowToolbar(userFocusWindow, &toolbar)) && (nullptr != toolbar))
@@ -7516,7 +7511,7 @@ canToggleToolbarShownSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 				result = YES;
 				if (IsWindowToolbarVisible(userFocusWindow))
 				{
-					useShowText = NO;
+					//useShowText = NO;
 				}
 			}
 			

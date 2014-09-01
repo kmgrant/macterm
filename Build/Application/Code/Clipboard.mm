@@ -99,16 +99,14 @@ typedef std::map< PasteboardRef, My_Type >		My_TypeByPasteboard;
 #pragma mark Internal Method Prototypes
 namespace {
 
-void			clipboardUpdatesTimer					(EventLoopTimerRef, void*);
-CFStringRef		copyTypeDescription						(CFStringRef);
-OSStatus		createCGImageFromComponentConnection	(GraphicsImportComponent, CGImageRef&);
-OSStatus		createCGImageFromData					(CFDataRef, CGImageRef&);
-void			disposeImporterImageBuffer				(void*, void const*, size_t);
-Boolean			isImageType								(CFStringRef);
-Boolean			isTextType								(CFStringRef);
-void			pictureToScrap							(Handle);
-void			textToScrap								(Handle);
-void			updateClipboard							(PasteboardRef);
+void			clipboardUpdatesTimer		(EventLoopTimerRef, void*);
+CFStringRef		copyTypeDescription			(CFStringRef);
+CGImageRef		createCGImageFromData		(CFDataRef);
+Boolean			isImageType					(CFStringRef);
+Boolean			isTextType					(CFStringRef);
+void			pictureToScrap				(Handle);
+void			textToScrap					(Handle);
+void			updateClipboard				(PasteboardRef);
 
 } // anonymous namespace
 
@@ -149,6 +147,10 @@ Clipboard_Init ()
 										kEventDurationSecond * 3.0/* seconds between fires */,
 										gClipboardUpdatesTimerUPP, nullptr/* user data - not used */,
 										&gClipboardUpdatesTimer);
+		if (noErr != error)
+		{
+			Console_Warning(Console_WriteValue, "failed to set up timer for detecting Clipboard changes, error", error);
+		}
 	}
 	
 	// if the window was open at last Quit, construct it right away;
@@ -571,6 +573,10 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 	UNUSED_RETURN(PasteboardSyncFlags)PasteboardSynchronize(kPasteboard);
 	
 	error = PasteboardGetItemCount(inPasteboardOrNull, &totalItems);
+	if (noErr != error)
+	{
+		totalItems = 0;
+	}
 	if (totalItems > 0)
 	{
 		// assemble the text representations of all items into one string
@@ -797,8 +803,8 @@ Clipboard_CreateCGImageFromPasteboard	(CGImageRef&		outImage,
 		error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &imageData);
 		if (noErr == error)
 		{
-			error = createCGImageFromData(imageData, outImage);
-			result = (noErr == error);
+			outImage = createCGImageFromData(imageData);
+			result = (nullptr != outImage);
 			CFRelease(imageData), imageData = nullptr;
 		}
 	}
@@ -1165,137 +1171,26 @@ copyTypeDescription		(CFStringRef	inUTI)
 
 
 /*!
-For an open connection to a graphics importer, creates
-a CGImage out of the data.
-
-(3.1)
-*/
-OSStatus
-createCGImageFromComponentConnection	(GraphicsImportComponent	inImporter,
-										 CGImageRef&				outImage)
-{
-	OSStatus	result = noErr;
-	Rect		imageBounds;
-	
-	
-	result = GraphicsImportGetNaturalBounds(inImporter, &imageBounds);
-	if (noErr == result)
-	{
-		size_t const	kWidth = imageBounds.right - imageBounds.left;
-		size_t const	kHeight = imageBounds.bottom - imageBounds.top;
-		size_t const	kBitsPerComponent = 8;
-		size_t const	kBytesPerPixel = 4;
-		size_t const	kBitsPerPixel = kBitsPerComponent * kBytesPerPixel;
-		size_t const	kRowBytes = kWidth * kBytesPerPixel;
-		size_t const	kImageSize = kHeight * kRowBytes;
-		Ptr				dataPtr = Memory_NewPtr(kImageSize);
-		
-		
-		if (nullptr == dataPtr) result = memFullErr;
-		else
-		{
-			GWorldPtr	gWorld = nullptr;
-			QDErr		quickDrawError = 0;
-			
-			
-			quickDrawError = NewGWorldFromPtr(&gWorld, kBitsPerPixel, &imageBounds, nullptr/* color table */,
-												nullptr/* device */, 0/* flags */, dataPtr, kRowBytes);
-			if (nullptr == gWorld) result = memFullErr;
-			else
-			{
-				result = GraphicsImportSetGWorld(inImporter, gWorld, GetGWorldDevice(gWorld));
-				
-				
-				if (noErr == result)
-				{
-					result = GraphicsImportDraw(inImporter);
-					if (noErr == result)
-					{
-						CGDataProviderRef	provider = CGDataProviderCreateWithData(nullptr/* info */, dataPtr, kImageSize,
-																					disposeImporterImageBuffer);
-						
-						
-						if (nullptr == provider) result = memFullErr;
-						else
-						{
-							CGColorSpaceRef		colorspace = CGColorSpaceCreateDeviceRGB();
-							
-							
-							if (nullptr == colorspace) result = memFullErr;
-							else
-							{
-								outImage = CGImageCreate(kWidth, kHeight, kBitsPerComponent, kBitsPerPixel, kRowBytes,
-															colorspace, kCGImageAlphaFirst, provider, nullptr/* decode */,
-															false/* interpolate */, kCGRenderingIntentDefault);
-								if (nullptr == outImage) result = memFullErr;
-								else
-								{
-									// success!
-									result = noErr;
-								}
-								CFRelease(colorspace), colorspace = nullptr;
-							}
-							CFRelease(provider), provider = nullptr;
-						}
-					}
-				}
-				DisposeGWorld(gWorld), gWorld = nullptr;
-			}
-		}
-	}
-	return result;
-}// createCGImageFromComponentConnection
-
-
-/*!
-Uses QuickTime to import image data that was presumably
+Uses Cocoa to import image data that was presumably
 supplied by a pasteboard.
 
-(3.1)
+(4.1)
 */
-OSStatus
-createCGImageFromData	(CFDataRef		inData,
-						 CGImageRef&	outImage)
+CGImageRef
+createCGImageFromData	(CFDataRef		inData)
 {
-	OSStatus	result = noErr;
-	Handle		pointerDataHandle = Memory_NewHandle(sizeof(PointerDataRefRecord));
+	NSBitmapImageRep*	imageRep = [NSBitmapImageRep imageRepWithData:BRIDGE_CAST(inData, NSData*)];
+	CGImageRef			result = nullptr;
 	
 	
-    if (nullptr == pointerDataHandle) result = memFullErr;
-	else
+	if (nil != imageRep)
 	{
-		PointerDataRef				pointerDataRef = REINTERPRET_CAST(pointerDataHandle, PointerDataRef);
-		GraphicsImportComponent		importer = nullptr;
-		
-		
-		(**pointerDataRef).data = CONST_CAST(CFDataGetBytePtr(inData), UInt8*);
-		(**pointerDataRef).dataLength = CFDataGetLength(inData);
-		
-		result = GetGraphicsImporterForDataRef(pointerDataHandle, PointerDataHandlerSubType, &importer);
-		if (noErr == result)
-		{
-			result = createCGImageFromComponentConnection(importer, outImage);
-			CloseComponent(importer);
-		}
-		Memory_DisposeHandle(&pointerDataHandle), pointerDataRef = nullptr;
+		result = [imageRep CGImage];
+		CFRetain(result);
 	}
+	
 	return result;
 }// createCGImageFromData
-
-
-/*!
-Reverses the allocation done by
-createCGImageFromComponentConnection().
-
-(3.1)
-*/
-void
-disposeImporterImageBuffer	(void*			UNUSED_ARGUMENT(inInfo),
-							 void const*	inData,
-							 size_t			UNUSED_ARGUMENT(inSize))
-{
-	DisposePtr(REINTERPRET_CAST(CONST_CAST(inData, void*), Ptr));
-}// disposeImporterImageBuffer
 
 
 /*!

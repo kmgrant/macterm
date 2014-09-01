@@ -153,6 +153,11 @@ handleURL	(AEDesc const*		inFromWhichObject,
 					UNUSED_RETURN(OSStatus)AppleEventUtilities_InitAEDesc(&resultDescriptor);
 					
 					result = AECountItems(&tokenDescriptor, &itemIndex);
+					if (noErr != result)
+					{
+						Console_Warning(Console_WriteValue, "failed to count items in given Apple Event list, error", result);
+						itemIndex = 0;
+					}
 					for (; itemIndex > 0; --itemIndex)
 					{
 						result = AEGetNthDesc(&tokenDescriptor, itemIndex, typeWildCard,
@@ -166,7 +171,10 @@ handleURL	(AEDesc const*		inFromWhichObject,
 						if (listItemDescriptor.dataHandle != nullptr) AEDisposeDesc(&listItemDescriptor);
 						if (resultDescriptor.dataHandle != nullptr) AEDisposeDesc(&resultDescriptor);
 					}
-					result = AEDuplicateDesc(&tokenDescriptor, outResult);
+					if (noErr == result)
+					{
+						result = AEDuplicateDesc(&tokenDescriptor, outResult);
+					}
 				}
 				break;
 			

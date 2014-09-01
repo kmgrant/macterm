@@ -170,8 +170,16 @@ RegionUtilities_GetPositioningBounds	(HIWindowRef	inWindow,
 														nullptr/* screen size */);
 		
 		
-		if (noErr != error) windowDevice = GetMainDevice();
+		if (noErr != error)
+		{
+			windowDevice = GetMainDevice();
+		}
 		error = GetAvailableWindowPositioningBounds(windowDevice, outRectPtr);
+		if (noErr != error)
+		{
+			Console_Warning(Console_WriteValue, "failed to find window positioning bounds, error", error);
+			SetRect(outRectPtr, 0, 0, 0, 0);
+		}
 	}
 }// GetPositioningBounds
 

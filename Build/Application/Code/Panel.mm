@@ -1174,13 +1174,15 @@ context:(void*)						aContext
 		{
 			NSArray*	objects = nil;
 			NSNib*		loader = [[NSNib alloc] initWithNibNamed:aNibName bundle:nil];
+			BOOL		loadOK = [loader instantiateNibWithOwner:self topLevelObjects:&objects];
 			
 			
-			if (NO == [loader instantiateNibWithOwner:self topLevelObjects:&objects])
-			{
-				[self dealloc], self = nil;
-			}
 			[loader release];
+			if (NO == loadOK)
+			{
+				[self release];
+				return nil;
+			}
 			[objects makeObjectsPerformSelector:@selector(release)];
 		}
 	}

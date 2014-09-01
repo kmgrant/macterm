@@ -239,25 +239,6 @@ private:
 
 
 
-#pragma mark Public Methods
-
-OSStatus
-	CommonEventHandlers_InstallNumericalFieldArrows	(ControlRef										inForWhichArrows,
-													 ControlRef										inForWhichField,
-													 CommonEventHandlers_NumericalFieldArrowsRef*	outHandlerPtr);
-
-OSStatus
-	CommonEventHandlers_InstallPopUpMenuArrows		(ControlRef									inForWhichArrows,
-													 ControlRef									inForWhichPopUpMenu,
-													 CommonEventHandlers_PopUpMenuArrowsRef*	outHandlerPtr);
-
-OSStatus
-	CommonEventHandlers_RemoveNumericalFieldArrows	(CommonEventHandlers_NumericalFieldArrowsRef*	inoutHandlerToDisposePtr);
-
-OSStatus
-	CommonEventHandlers_RemovePopUpMenuArrows		(CommonEventHandlers_PopUpMenuArrowsRef*		inoutHandlerToDisposePtr);
-
-
 #pragma mark Inline Methods
 
 /*!

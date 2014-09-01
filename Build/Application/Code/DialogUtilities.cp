@@ -1357,6 +1357,10 @@ DialogUtilities_SetUpHelpButton		(HIViewWrap&	inoutView)
 		error = HIObjectSetAuxiliaryAccessibilityAttribute
 				(kViewObjectRef, 0/* sub-component identifier */,
 					kAXDescriptionAttribute, accessibilityDescCFString);
+		if (noErr != error)
+		{
+			Console_Warning(Console_WriteValue, "failed to set accessibility description for help button, error", error);
+		}
 		CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 	}
 	

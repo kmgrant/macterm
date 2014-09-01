@@ -2673,15 +2673,18 @@ Preferences_ContextRepositionRelativeToContext	(Preferences_ContextRef		inContex
 				toRefContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
 												std::bind2nd(std::equal_to< My_ContextFavoritePtr >(), derivedReferencePtr));
 				assert(listPtr->end() != toRefContextPtr);
-				if (false == inInsertBefore) std::advance(toRefContextPtr, +1);
+				if (false == inInsertBefore)
+				{
+					std::advance(toRefContextPtr, +1);
+				}
 				listPtr->insert(toRefContextPtr, derivedPtr);
+				
+				// now change the saved version of the list
+				result = derivedPtr->shift(derivedReferencePtr, inInsertBefore);
+				
+				changeNotify(kPreferences_ChangeNumberOfContexts);
 			}
 		}
-		
-		// now change the saved version of the list
-		result = derivedPtr->shift(derivedReferencePtr, inInsertBefore);
-		
-		changeNotify(kPreferences_ChangeNumberOfContexts);
 	}
 	return result;
 }// ContextRepositionRelativeToContext
@@ -3803,6 +3806,7 @@ Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagFocusFollowsMouse:
 	case kPreferences_TagMapBackquote:
 	case kPreferences_TagNewCommandShortcutEffect:
+	case kPreferences_TagNotifyOfBeeps:
 	case kPreferences_TagPureInverse:
 	case kPreferences_TagScrollDelay:
 	case kPreferences_TagTerminalCursorType:
@@ -4315,15 +4319,11 @@ CFMutableDictionaryRef
 My_ContextCFDictionary::
 createDictionary ()
 {
-	Preferences_Result			error = kPreferences_ResultOK;
-	CFMutableDictionaryRef		result = nullptr;
+	CFMutableDictionaryRef		result = CFDictionaryCreateMutable
+											(kCFAllocatorDefault, 0/* capacity */,
+												&kCFTypeDictionaryKeyCallBacks,
+												&kCFTypeDictionaryValueCallBacks);
 	
-	
-	result = CFDictionaryCreateMutable(kCFAllocatorDefault, 0/* capacity */,
-										&kCFTypeDictionaryKeyCallBacks,
-										&kCFTypeDictionaryValueCallBacks);
-	if (nullptr == result) error = kPreferences_ResultGenericFailure;
-	else error = kPreferences_ResultOK;
 	
 	return result;
 }// My_ContextCFDictionary::createDictionary
@@ -9331,6 +9331,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeCFStringRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? CFSTR("notify") : CFSTR("ignore"));
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -10151,6 +10152,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFNumberRef == keyValueType);
 					inContextPtr->addInteger(inDataPreferenceTag, keyName, STATIC_CAST(junk, SInt16));
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			

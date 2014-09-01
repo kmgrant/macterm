@@ -46,6 +46,7 @@ extern "C"
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <Console.h>
 #include <MemoryBlocks.h>
 
 // application includes
@@ -325,6 +326,10 @@ threadForDNS	(void*		inDNSThreadContextPtr)
 			{
 				// finally, send the message to the main event loop
 				error = PostEventToQueue(GetMainEventQueue(), lookupCompleteEvent, kEventPriorityStandard);
+				if (noErr != error)
+				{
+					Console_Warning(Console_WriteValue, "failed to post lookup-complete event to queue, error", error);
+				}
 			}
 		}
 		

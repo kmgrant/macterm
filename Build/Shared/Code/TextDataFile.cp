@@ -274,6 +274,8 @@ TextDataFile_AddNameValue	(TextDataFile_Ref				inRef,
 				
 				if (error == noErr)
 				{
+					result = true; // initially...
+					
 					// write an open bracket, if one is needed
 					switch (inBrackets)
 					{
@@ -284,6 +286,10 @@ TextDataFile_AddNameValue	(TextDataFile_Ref				inRef,
 							
 							count = 1;
 							error = FSWrite(ptr->file.refNum, &count, bracket);
+							if (noErr != error)
+							{
+								result = false;
+							}
 						}
 						break;
 					
@@ -294,6 +300,10 @@ TextDataFile_AddNameValue	(TextDataFile_Ref				inRef,
 							
 							count = 1;
 							error = FSWrite(ptr->file.refNum, &count, bracket);
+							if (noErr != error)
+							{
+								result = false;
+							}
 						}
 						break;
 					
@@ -305,6 +315,10 @@ TextDataFile_AddNameValue	(TextDataFile_Ref				inRef,
 					// write value string
 					count = CPP_STD::strlen((char*)inValue);
 					error = FSWrite(ptr->file.refNum, &count, inValue);
+					if (noErr != error)
+					{
+						result = false;
+					}
 					
 					// write a close bracket, if one is needed
 					switch (inBrackets)
@@ -316,6 +330,10 @@ TextDataFile_AddNameValue	(TextDataFile_Ref				inRef,
 							
 							count = 1;
 							error = FSWrite(ptr->file.refNum, &count, bracket);
+							if (noErr != error)
+							{
+								result = false;
+							}
 						}
 						break;
 					
@@ -326,6 +344,10 @@ TextDataFile_AddNameValue	(TextDataFile_Ref				inRef,
 							
 							count = 1;
 							error = FSWrite(ptr->file.refNum, &count, bracket);
+							if (noErr != error)
+							{
+								result = false;
+							}
 						}
 						break;
 					
@@ -334,17 +356,16 @@ TextDataFile_AddNameValue	(TextDataFile_Ref				inRef,
 						break;
 					}
 					
-					if (error == noErr)
+					if (result)
 					{
 						// write newline
 						count = 1;
 						error = FSWrite(ptr->file.refNum, &count,
 										(ptr->lineEndings == kTextDataFile_LineEndingStyleUNIX)
 										? "\012" : "\015");
-						
-						if (error == noErr)
+						if (noErr != error)
 						{
-							result = true;
+							result = false;
 						}
 					}
 				}

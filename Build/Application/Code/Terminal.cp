@@ -5091,6 +5091,11 @@ Terminal_StartMonitoring	(TerminalScreenRef			inRef,
 		
 		// add a listener to the specified target’s listener model for the given setting change
 		error = ListenerModel_AddListenerForEvent(dataPtr->changeListenerModel, inForWhatChange, inListener);
+		if (noErr != error)
+		{
+			Console_Warning(Console_WriteValue, "failed to set up monitor for terminal setting, error", error);
+			Console_Warning(Console_WriteValueFourChars, "terminal setting that failed to install", inForWhatChange);
+		}
 	}
 }// StartMonitoring
 
@@ -6680,6 +6685,10 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 		
 		prefsResult = Preferences_ContextStartMonitoring(this->configuration.returnRef(), this->preferenceMonitor.returnRef(),
 															kPreferences_ChangeContextBatchMode);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "screen buffer failed to set up monitor for batch-mode changes to configuration, error", prefsResult);
+		}
 	}
 }// My_ScreenBuffer 1-argument constructor
 
@@ -6936,6 +6945,10 @@ returnLineEndings ()
 	// TEMPORARY - perhaps this routine should take a specific preferences context
 	prefsResult = Preferences_GetData(kPreferences_TagCaptureFileLineEndings,
 										sizeof(result), &result);
+	if (kPreferences_ResultOK != prefsResult)
+	{
+		Console_Warning(Console_WriteValue, "screen buffer failed to read capture file line endings from preferences, error", prefsResult);
+	}
 	return result;
 }// returnLineEndings
 
@@ -6957,6 +6970,10 @@ returnScreenColumns		(Preferences_ContextRef		inTerminalConfig)
 	
 	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenColumns,
 												sizeof(result), &result);
+	if (kPreferences_ResultOK != prefsResult)
+	{
+		Console_Warning(Console_WriteValue, "screen buffer failed to read column count from preferences, error", prefsResult);
+	}
 	return result;
 }// returnScreenColumns
 
@@ -6977,7 +6994,11 @@ returnScreenRows	(Preferences_ContextRef		inTerminalConfig)
 	
 	
 	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenRows,
-												sizeof(result), &result);
+												sizeof(result), &result);if (kPreferences_ResultOK != prefsResult)
+	if (kPreferences_ResultOK != prefsResult)
+	{
+		Console_Warning(Console_WriteValue, "screen buffer failed to read row count from preferences, error", prefsResult);
+	}
 	return result;
 }// returnScreenRows
 
@@ -7019,6 +7040,10 @@ returnScrollbackRows	(Preferences_ContextRef		inTerminalConfig)
 	{
 		prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenScrollbackRows,
 													sizeof(result), &result);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "screen buffer failed to read scrollback row count from preferences, error", prefsResult);
+		}
 	}
 	
 	return result;
@@ -17110,7 +17135,6 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 																		CFRange const*);
 				SInt32						firstRow = rowIndex;
 				UInt16						firstColumn = 0;
-				UInt16						secondColumn = 0;
 				Terminal_RangeDescription	textRegion;
 				
 				
@@ -17120,7 +17144,6 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 				//getBufferOffsetCell(dataPtr, toRange->location, kEndOfLinePad, firstColumn, firstRow);
 				//getBufferOffsetCell(dataPtr, toRange->location + toRange->length, kEndOfLinePad, secondColumn, firstRow);
 				firstColumn = toRange->location;
-				secondColumn = toRange->location + toRange->length;
 				if (false == kIsScreen)
 				{
 					// translate scrollback into negative coordinates (zero-based)
