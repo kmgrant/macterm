@@ -903,12 +903,10 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 						
 						if ((nullptr != activeTerminalWindow) && (windowList.size() > 1))
 						{
-							SessionFactory_TerminalWindowList::const_iterator	toWindow;
-							SessionFactory_TerminalWindowList::const_iterator	endWindows = windowList.end();
-							NSString*											actionNSString = BRIDGE_CAST(actionCFString, NSString*);
-							TerminalWindowRef									wrapAroundMatch = nullptr;
-							TerminalWindowRef									matchingWindow = nullptr;
-							Boolean												foundActive = false;
+							NSString*			actionNSString = BRIDGE_CAST(actionCFString, NSString*);
+							TerminalWindowRef	wrapAroundMatch = nullptr;
+							TerminalWindowRef	matchingWindow = nullptr;
+							Boolean				foundActive = false;
 							
 							
 							// start from the current window and search for another
@@ -916,16 +914,16 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 							// searching the window list for the current window,
 							// also find the first matching window from the front
 							// in case the search has to wrap around)
-							for (toWindow = windowList.begin(); toWindow != endWindows; ++toWindow)
+							for (auto iterTerminalWindow : windowList)
 							{
-								if (*toWindow == activeTerminalWindow)
+								if (iterTerminalWindow == activeTerminalWindow)
 								{
 									foundActive = true;
 								}
 								else
 								{
 									// see if this window’s title matches the query
-									NSWindow*	asWindow = TerminalWindow_ReturnNSWindow(*toWindow);
+									NSWindow*	asWindow = TerminalWindow_ReturnNSWindow(iterTerminalWindow);
 									NSString*	windowTitle = [asWindow title];
 									
 									
@@ -936,7 +934,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 										{
 											// the active window was already found in the window list
 											// so this matching window is the next window to select
-											matchingWindow = *toWindow;
+											matchingWindow = iterTerminalWindow;
 											break;
 										}
 										else if (nullptr == wrapAroundMatch)
@@ -945,7 +943,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 											// yet; although this window matches, it is only going to be
 											// the final target window if no other match can be found
 											// *beyond* the active window in the current list iteration
-											wrapAroundMatch = *toWindow;
+											wrapAroundMatch = iterTerminalWindow;
 										}
 										else
 										{

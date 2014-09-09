@@ -219,10 +219,9 @@ Tears down a My_GenericPanelTabsData structure.
 My_GenericPanelTabsData::
 ~My_GenericPanelTabsData ()
 {
-	for (GenericPanelTabs_List::iterator toPanel = this->tabPanels.begin();
-			toPanel != this->tabPanels.end(); ++toPanel)
+	for (auto panelRef : this->tabPanels)
 	{
-		Panel_Dispose(&*toPanel);
+		Panel_Dispose(&panelRef);
 	}
 }// My_GenericPanelTabsData destructor
 
@@ -358,10 +357,9 @@ const
 	My_TabPanelViewPtrList		result;
 	
 	
-	for (GenericPanelTabs_List::const_iterator toPanel = inTabPanels.begin();
-			toPanel != inTabPanels.end(); ++toPanel)
+	for (auto tabPanel : inTabPanels)
 	{
-		result.push_back(new My_TabPanelView(inOwningWindow, *toPanel));
+		result.push_back(new My_TabPanelView(inOwningWindow, tabPanel));
 	}
 	return result;
 }// My_GenericPanelTabsUI::createTabPanes
@@ -377,10 +375,9 @@ HIViewWrap
 My_GenericPanelTabsUI::
 createTabsView	(HIWindowRef	inOwningWindow)
 {
-	for (My_TabPanelViewPtrList::const_iterator toViewPtr = this->tabPanePtrList.begin();
-			toViewPtr != this->tabPanePtrList.end(); ++toViewPtr)
+	for (auto viewPtr : this->tabPanePtrList)
 	{
-		assert((*toViewPtr)->exists());
+		assert(viewPtr->exists());
 	}
 	
 	HIViewRef			result = nullptr;
@@ -451,10 +448,9 @@ createTabsView	(HIWindowRef	inOwningWindow)
 													this->maximumTabPaneWidth, this->maximumTabPaneHeight);
 			
 			
-			for (My_TabPanelViewPtrList::const_iterator toViewPtr = this->tabPanePtrList.begin();
-					toViewPtr != this->tabPanePtrList.end(); ++toViewPtr)
+			for (auto viewPtr : this->tabPanePtrList)
 			{
-				error = HIViewSetFrame(*(*toViewPtr), &containerFrame);
+				error = HIViewSetFrame(*viewPtr, &containerFrame);
 				assert_noerr(error);
 			}
 		}
@@ -475,10 +471,9 @@ createTabsView	(HIWindowRef	inOwningWindow)
 		// also offset the embedded panes; if embedding is done too
 		// soon, then the panes have to know too much about where
 		// they will physically reside within the window content area
-		for (My_TabPanelViewPtrList::const_iterator toViewPtr = this->tabPanePtrList.begin();
-				toViewPtr != this->tabPanePtrList.end(); ++toViewPtr)
+		for (auto viewPtr : this->tabPanePtrList)
 		{
-			error = HIViewAddSubview(result, *(*toViewPtr));
+			error = HIViewAddSubview(result, *viewPtr);
 			assert_noerr(error);
 		}
 	}
@@ -602,10 +597,9 @@ deltaSizePanelContainerHIView	(HIViewRef		UNUSED_ARGUMENT(inView),
 		interfacePtr->tabView << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
 		
 		Panel_Resizer	resizer(inDeltaX, inDeltaY, true/* is delta */);
-		for (My_TabPanelViewPtrList::iterator toViewPtr = interfacePtr->tabPanePtrList.begin();
-				toViewPtr != interfacePtr->tabPanePtrList.end(); ++toViewPtr)
+		for (auto viewPtr : interfacePtr->tabPanePtrList)
 		{
-			resizer((*toViewPtr)->panelRef);
+			resizer(viewPtr->panelRef);
 		}
 	}
 }// deltaSizePanelContainerHIView
@@ -712,10 +706,9 @@ panelChanged	(Panel_Ref			inPanel,
 																		My_GenericPanelTabsDataPtr);
 			
 			
-			for (GenericPanelTabs_List::iterator toPanel = dataPtr->tabPanels.begin();
-					toPanel != dataPtr->tabPanels.end(); ++toPanel)
+			for (auto panelRef : dataPtr->tabPanels)
 			{
-				UNUSED_RETURN(SInt32)Panel_PropagateMessage(*toPanel, inMessage, inDataPtr);
+				UNUSED_RETURN(SInt32)Panel_PropagateMessage(panelRef, inMessage, inDataPtr);
 			}
 		}
 		break;
@@ -791,20 +784,20 @@ showTabPane		(My_GenericPanelTabsUIPtr	inUIPtr,
 			UInt16		i = 1;
 			
 			
-			for (My_TabPanelViewPtrList::iterator toViewPtr = inUIPtr->tabPanePtrList.begin();
-					toViewPtr != inUIPtr->tabPanePtrList.end(); ++toViewPtr, ++i)
+			for (auto viewPtr : inUIPtr->tabPanePtrList)
 			{
 				if (inTabIndex != i)
 				{
-					Boolean const	kWasVisible = HIViewIsVisible(*(*toViewPtr));
+					Boolean const	kWasVisible = HIViewIsVisible(*viewPtr);
 					
 					
-					assert_noerr(HIViewSetVisible(*(*toViewPtr), false/* visible */));
+					assert_noerr(HIViewSetVisible(*viewPtr, false/* visible */));
 					if (kWasVisible)
 					{
-						Panel_SendMessageNewVisibility((*toViewPtr)->panelRef, false/* visible */);
+						Panel_SendMessageNewVisibility(viewPtr->panelRef, false/* visible */);
 					}
 				}
+				++i;
 			}
 		}
 	}
@@ -975,7 +968,7 @@ tabView:(NSTabView*)					aTabView
 didSelectTabViewItem:(NSTabViewItem*)	anItem
 {
 #pragma unused(aTabView)
-	GenericPanelTabs_ViewManagerByView::const_iterator	toPair = self->viewManagerByView->find([anItem view]);
+	auto	toPair = self->viewManagerByView->find([anItem view]);
 	
 	
 	if (self->viewManagerByView->end() != toPair)

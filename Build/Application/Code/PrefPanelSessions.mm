@@ -57,7 +57,6 @@ extern "C"
 #import <ColorUtilities.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
-#import <DialogAdjust.h>
 #import <HIViewWrap.h>
 #import <HIViewWrapManip.h>
 #import <Localization.h>

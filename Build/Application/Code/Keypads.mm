@@ -747,7 +747,7 @@ IMPORTANT:	Subclasses should set "self->baseFontSize" as
 - (void)
 deltaSizeFontOfButton:(NSButton*)	aButton
 {
-	My_IntsByButton::iterator	toPair = gAnimationStagesByButton().find(aButton);
+	auto	toPair = gAnimationStagesByButton().find(aButton);
 	
 	
 	if (gAnimationStagesByButton().end() != toPair)

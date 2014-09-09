@@ -731,16 +731,15 @@ Boolean
 ListenerModel_IsAnyListenerForEvent		(ListenerModel_Ref		inForWhichModel,
 										 ListenerModel_Event	inEventThatOccurred)
 {
-	ListenerModelAutoLocker							ptr(gListenerModelPtrLocks(), inForWhichModel);
-	My_EventToListenerListPtrMap::const_iterator	toEventToListenerListPtr;
-	Boolean											result = false;
+	ListenerModelAutoLocker		ptr(gListenerModelPtrLocks(), inForWhichModel);
+	auto						toEventToListenerListPtr = ptr->eventListeners.find(inEventThatOccurred);
+	Boolean						result = false;
 	
 	
-	toEventToListenerListPtr = ptr->eventListeners.find(inEventThatOccurred);
 	if (ptr->eventListeners.end() != toEventToListenerListPtr)
 	{
 		// are any listeners in this list?
-		result = !(toEventToListenerListPtr->second->empty());
+		result = (false == toEventToListenerListPtr->second->empty());
 	}
 	return result;
 }// IsAnyListenerForEvent
@@ -821,82 +820,91 @@ ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref		inForWhichModel,
 	}
 	else
 	{
-		My_EventToListenerListPtrMap::const_iterator	toEventToListenerListPtr;
-		
-		
 		switch (ptr->callbackType)
 		{
 		case kListenerModelCallbackTypeStandard:
-			toEventToListenerListPtr = ptr->eventListeners.find(inEventThatOccurred);
-			if (ptr->eventListeners.end() != toEventToListenerListPtr)
 			{
-				standardListenerInvoker		perListenerFunction(inForWhichModel, inEventThatOccurred,
-																inEventContextPtr);
+				auto	toEventToListenerListPtr = ptr->eventListeners.find(inEventThatOccurred);
 				
 				
-				// invoke each Standard listener in turn
-				perListenerFunction = std::for_each(toEventToListenerListPtr->second->begin(),
-													toEventToListenerListPtr->second->end(), perListenerFunction);
-				
-				if (perListenerFunction.anyInvalidListeners())
+				if (ptr->eventListeners.end() != toEventToListenerListPtr)
 				{
-					result = kListenerModel_ResultInvalidListenerReference;
+					standardListenerInvoker		perListenerFunction(inForWhichModel, inEventThatOccurred,
+																	inEventContextPtr);
+					
+					
+					// invoke each Standard listener in turn
+					perListenerFunction = std::for_each(toEventToListenerListPtr->second->begin(),
+														toEventToListenerListPtr->second->end(), perListenerFunction);
+					
+					if (perListenerFunction.anyInvalidListeners())
+					{
+						result = kListenerModel_ResultInvalidListenerReference;
+					}
 				}
 			}
 			break;
 		
 		case kListenerModelCallbackTypeBoolean:
-			toEventToListenerListPtr = ptr->eventListeners.find(inEventThatOccurred);
-			if (ptr->eventListeners.end() != toEventToListenerListPtr)
 			{
-				// invoke each Boolean listener and stop as soon as one returns true;
-				// the fact that the callback invoker is modeled as a Predicate allows
-				// the STL find_if() algorithm to be exploited to do the right thing here
-				My_ListenerList::const_iterator		toListener;
-				Boolean								someListenerReturnedTrue = false;
-				booleanListenerInvoker				perListenerFunction(inForWhichModel, inEventThatOccurred,
-																		inEventContextPtr);
+				auto	toEventToListenerListPtr = ptr->eventListeners.find(inEventThatOccurred);
 				
 				
-				toListener = std::find_if(toEventToListenerListPtr->second->begin(),
-											toEventToListenerListPtr->second->end(), perListenerFunction);
-				someListenerReturnedTrue = (toEventToListenerListPtr->second->end() != toListener);
-				if (nullptr != outReturnValuePtrOrNull)
+				if (ptr->eventListeners.end() != toEventToListenerListPtr)
 				{
-					*(REINTERPRET_CAST(outReturnValuePtrOrNull, Boolean*)) = someListenerReturnedTrue;
-				}
-				
-				if (perListenerFunction.anyInvalidListeners())
-				{
-					result = kListenerModel_ResultInvalidListenerReference;
+					// invoke each Boolean listener and stop as soon as one returns true;
+					// the fact that the callback invoker is modeled as a Predicate allows
+					// the STL find_if() algorithm to be exploited to do the right thing here
+					booleanListenerInvoker		perListenerFunction(inForWhichModel, inEventThatOccurred,
+																			inEventContextPtr);
+					auto						toListener = std::find_if(toEventToListenerListPtr->second->begin(),
+																			toEventToListenerListPtr->second->end(),
+																			perListenerFunction);
+					Boolean						someListenerReturnedTrue = false;
+					
+					
+					someListenerReturnedTrue = (toEventToListenerListPtr->second->end() != toListener);
+					if (nullptr != outReturnValuePtrOrNull)
+					{
+						*(REINTERPRET_CAST(outReturnValuePtrOrNull, Boolean*)) = someListenerReturnedTrue;
+					}
+					
+					if (perListenerFunction.anyInvalidListeners())
+					{
+						result = kListenerModel_ResultInvalidListenerReference;
+					}
 				}
 			}
 			break;
 		
 		case kListenerModelCallbackTypeOSStatus:
-			toEventToListenerListPtr = ptr->eventListeners.find(inEventThatOccurred);
-			if (ptr->eventListeners.end() != toEventToListenerListPtr)
 			{
-				// invoke each OSStatus listener and continue while "eventNotHandledErr" is
-				// returned; the fact that the callback invoker is modeled as a Predicate allows
-				// the STL find_if() algorithm to be exploited to do the right thing here
-				My_ListenerList::const_iterator		toListener;
-				osStatusListenerInvoker				perListenerFunction(inForWhichModel, inEventThatOccurred,
-																		inEventContextPtr);
-				Boolean								someListenerReturnedNonEventNotHandledErr = false;
+				auto	toEventToListenerListPtr = ptr->eventListeners.find(inEventThatOccurred);
 				
 				
-				toListener = std::find_if(toEventToListenerListPtr->second->begin(),
-											toEventToListenerListPtr->second->end(), perListenerFunction);
-				someListenerReturnedNonEventNotHandledErr = (toEventToListenerListPtr->second->end() != toListener);
-				if (nullptr != outReturnValuePtrOrNull)
+				if (ptr->eventListeners.end() != toEventToListenerListPtr)
 				{
-					*(REINTERPRET_CAST(outReturnValuePtrOrNull, Boolean*)) = someListenerReturnedNonEventNotHandledErr;
-				}
-				
-				if (perListenerFunction.anyInvalidListeners())
-				{
-					result = kListenerModel_ResultInvalidListenerReference;
+					// invoke each OSStatus listener and continue while "eventNotHandledErr" is
+					// returned; the fact that the callback invoker is modeled as a Predicate allows
+					// the STL find_if() algorithm to be exploited to do the right thing here
+					osStatusListenerInvoker		perListenerFunction(inForWhichModel, inEventThatOccurred,
+																	inEventContextPtr);
+					auto						toListener = std::find_if(toEventToListenerListPtr->second->begin(),
+																			toEventToListenerListPtr->second->end(),
+																			perListenerFunction);
+					Boolean						someListenerReturnedNonEventNotHandledErr = false;
+					
+					
+					someListenerReturnedNonEventNotHandledErr = (toEventToListenerListPtr->second->end() != toListener);
+					if (nullptr != outReturnValuePtrOrNull)
+					{
+						*(REINTERPRET_CAST(outReturnValuePtrOrNull, Boolean*)) = someListenerReturnedNonEventNotHandledErr;
+					}
+					
+					if (perListenerFunction.anyInvalidListeners())
+					{
+						result = kListenerModel_ResultInvalidListenerReference;
+					}
 				}
 			}
 			break;
@@ -957,8 +965,7 @@ ListenerModel_RemoveListenerForEvent	(ListenerModel_Ref			inFromWhichModel,
 	}
 	else
 	{
-		My_EventToListenerListPtrMap::const_iterator	toEventToListenerListPtr =
-															ptr->eventListeners.find(inForWhichEvent);
+		auto	toEventToListenerListPtr = ptr->eventListeners.find(inForWhichEvent);
 		
 		
 		if (ptr->eventListeners.end() != toEventToListenerListPtr)

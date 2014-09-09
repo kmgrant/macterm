@@ -406,12 +406,11 @@ clearSearchHighlightingInContext:(FindDialog_SearchContext)		aContext
 		SessionFactory_TerminalWindowList const&	searchedWindows = SessionFactory_ReturnTerminalWindowList();
 		
 		
-		for (SessionFactory_TerminalWindowList::const_iterator toTerminalWindow = searchedWindows.begin();
-				toTerminalWindow != searchedWindows.end(); ++toTerminalWindow)
+		for (auto terminalWindowRef : searchedWindows)
 		{
-			if (TerminalWindow_IsValid(*toTerminalWindow))
+			if (TerminalWindow_IsValid(terminalWindowRef))
 			{
-				TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(*toTerminalWindow);
+				TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindowRef);
 				
 				
 				// remove highlighting from any previous searches
@@ -536,11 +535,10 @@ didSearch:(BOOL*)				outDidSearch
 		// remove highlighting from any previous searches
 		[self clearSearchHighlightingInContext:searchContext];
 		
-		for (SessionFactory_TerminalWindowList::const_iterator toTerminalWindow = searchedWindows->begin();
-				toTerminalWindow != searchedWindows->end(); ++toTerminalWindow)
+		for (auto terminalWindowRef : *searchedWindows)
 		{
-			TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(*toTerminalWindow);
-			TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(*toTerminalWindow);
+			TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(terminalWindowRef);
+			TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(terminalWindowRef);
 			My_TerminalRangeList	searchResults;
 			Terminal_SearchFlags	flags = 0;
 			Terminal_Result			searchStatus = kTerminal_ResultOK;
@@ -565,15 +563,14 @@ didSearch:(BOOL*)				outDidSearch
 						result += STATIC_CAST(searchResults.size(), unsigned long);
 						
 						// highlight search results
-						for (std::vector< Terminal_RangeDescription >::const_iterator toResultRange = searchResults.begin();
-								toResultRange != searchResults.end(); ++toResultRange)
+						for (auto rangeDesc : searchResults)
 						{
 							TerminalView_CellRange		highlightRange;
 							TerminalView_Result			viewResult = kTerminalView_ResultOK;
 							
 							
 							// translate this result range into cell anchors for highlighting
-							viewResult = TerminalView_TranslateTerminalScreenRange(view, *toResultRange, highlightRange);
+							viewResult = TerminalView_TranslateTerminalScreenRange(view, rangeDesc, highlightRange);
 							if (kTerminalView_ResultOK == viewResult)
 							{
 								TerminalView_FindVirtualRange(view, highlightRange);

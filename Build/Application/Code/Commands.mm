@@ -2035,15 +2035,13 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 	// now determine the next or previous window to visit
 	// (some of the work is done opportunistically, other
 	// work is only done when absolutely required)
-	My_WindowsByScreen::const_iterator	toPair;
-	My_WindowsByScreen::const_iterator	endPairs(windowsByScreen.end());
-	for (toPair = windowsByScreen.begin();
-			((NO == doneSearch) && (toPair != endPairs)); ++toPair)
+	auto	toPair = windowsByScreen.begin();
+	auto	endPairs = windowsByScreen.end();
+	for (; ((NO == doneSearch) && (toPair != endPairs)); ++toPair)
 	{
-		My_WindowList::const_iterator	toWindow;
-		My_WindowList::const_iterator	endWindows(toPair->second.end());
-		for (toWindow = toPair->second.begin();
-				((NO == doneSearch) && (toWindow != endWindows)); ++toWindow)
+		auto	toWindow = toPair->second.begin();
+		auto	endWindows = toPair->second.end();
+		for (; ((NO == doneSearch) && (toWindow != endWindows)); ++toWindow)
 		{
 			// certain windows are skipped; "currentWindow" is only
 			// set when the current window is determined to be valid

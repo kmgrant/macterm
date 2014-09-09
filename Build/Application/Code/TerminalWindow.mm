@@ -322,7 +322,6 @@ NSWindow*				createWindow					();
 TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
 TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
 My_ScrollBarKind		getScrollBarKind				(My_TerminalWindowPtr, HIViewRef);
-TerminalScreenRef		getScrollBarScreen				(My_TerminalWindowPtr, HIViewRef);
 TerminalViewRef			getScrollBarView				(My_TerminalWindowPtr, HIViewRef);
 void					getViewSizeFromWindowSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
 void					getWindowSizeFromViewSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
@@ -692,9 +691,8 @@ TerminalWindow_GetScreens	(TerminalWindowRef		inRef,
 {
 	if (outScreenArray != nullptr)
 	{
-		My_TerminalWindowAutoLocker				ptr(gTerminalWindowPtrLocks(), inRef);
-		My_TerminalScreenList::const_iterator	screenIterator;
-		My_TerminalScreenList::const_iterator	maxIterator = ptr->allScreens.begin();
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		auto							maxIterator = ptr->allScreens.begin();
 		
 		
 		// based on the available space given by the caller,
@@ -702,7 +700,7 @@ TerminalWindow_GetScreens	(TerminalWindowRef		inRef,
 		std::advance(maxIterator, INTEGER_MINIMUM(inArrayLength, ptr->allScreens.size()));
 		
 		// copy all possible screen buffer references
-		for (screenIterator = ptr->allScreens.begin(); screenIterator != maxIterator; ++screenIterator)
+		for (auto screenIterator = ptr->allScreens.begin(); screenIterator != maxIterator; ++screenIterator)
 		{
 			*outScreenArray++ = *screenIterator;
 		}
@@ -887,9 +885,8 @@ TerminalWindow_GetViews		(TerminalWindowRef	inRef,
 {
 	if (outViewArray != nullptr)
 	{
-		My_TerminalWindowAutoLocker				ptr(gTerminalWindowPtrLocks(), inRef);
-		My_TerminalViewList::const_iterator		viewIterator;
-		My_TerminalViewList::const_iterator		maxIterator = ptr->allViews.begin();
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		auto							maxIterator = ptr->allViews.begin();
 		
 		
 		// based on the available space given by the caller,
@@ -897,7 +894,7 @@ TerminalWindow_GetViews		(TerminalWindowRef	inRef,
 		std::advance(maxIterator, INTEGER_MINIMUM(inArrayLength, ptr->allViews.size()));
 		
 		// copy all possible view references
-		for (viewIterator = ptr->allViews.begin(); viewIterator != maxIterator; ++viewIterator)
+		for (auto viewIterator = ptr->allViews.begin(); viewIterator != maxIterator; ++viewIterator)
 		{
 			*outViewArray++ = *viewIterator;
 		}
@@ -945,9 +942,8 @@ TerminalWindow_GetViewsInGroup	(TerminalWindowRef			inRef,
 	case kTerminalWindow_ViewGroupActive:
 		if (outViewArray != nullptr)
 		{
-			My_TerminalWindowAutoLocker				ptr(gTerminalWindowPtrLocks(), inRef);
-			My_TerminalViewList::const_iterator		viewIterator;
-			My_TerminalViewList::const_iterator		maxIterator = ptr->allViews.begin();
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+			auto							maxIterator = ptr->allViews.begin();
 			
 			
 			// based on the available space given by the caller,
@@ -955,7 +951,7 @@ TerminalWindow_GetViewsInGroup	(TerminalWindowRef			inRef,
 			std::advance(maxIterator, INTEGER_MINIMUM(inArrayLength, ptr->allViews.size()));
 			
 			// copy all possible view references
-			for (viewIterator = ptr->allViews.begin(); viewIterator != maxIterator; ++viewIterator)
+			for (auto viewIterator = ptr->allViews.begin(); viewIterator != maxIterator; ++viewIterator)
 			{
 				*outViewArray++ = *viewIterator;
 			}
@@ -2160,32 +2156,26 @@ TerminalWindow_StackWindows ()
 	// sort windows by largest area arbitrarily to minimize the chance
 	// that a window will be completely hidden by the stacking of other
 	// windows on its display
-	My_WindowsByDisplay::iterator	toMutablePair;
-	My_WindowsByDisplay::iterator	endMutablePairs(windowsByDisplay.end());
-	for (toMutablePair = windowsByDisplay.begin(); toMutablePair != endMutablePairs;
-			++toMutablePair)
+	for (auto& displayWindowPair : windowsByDisplay)
 	{
-		My_WindowList&	windowsOnThisDisplay = (*toMutablePair).second;
+		My_WindowList&	windowsOnThisDisplay = displayWindowPair.second;
 		
 		
 		std::sort(windowsOnThisDisplay.begin(), windowsOnThisDisplay.end(), lessThanIfGreaterArea);
 	}
 	
 	// for each display, stack windows separately
-	My_WindowsByDisplay::const_iterator		toPair;
-	My_WindowsByDisplay::const_iterator		endPairs(windowsByDisplay.end());
-	for (toPair = windowsByDisplay.begin(); toPair != endPairs; ++toPair)
+	for (auto displayWindowPair : windowsByDisplay)
 	{
-		My_WindowList const&			windowsOnThisDisplay = (*toPair).second;
-		My_WindowList::const_iterator	toWindow;
-		My_WindowList::const_iterator	endWindows(windowsOnThisDisplay.end());
-		UInt16							staggerListIndexHint = 0;
-		UInt16							localWindowIndexHint = 0;
-		UInt16							transitioningWindowCount = 0;
+		My_WindowList const&	windowsOnThisDisplay = displayWindowPair.second;
+		auto					toWindow = windowsOnThisDisplay.begin();
+		auto					endWindows = windowsOnThisDisplay.end();
+		UInt16					staggerListIndexHint = 0;
+		UInt16					localWindowIndexHint = 0;
+		UInt16					transitioningWindowCount = 0;
 		
 		
-		for (toWindow = windowsOnThisDisplay.begin(); toWindow != endWindows;
-				++toWindow, ++localWindowIndexHint)
+		for (; toWindow != endWindows; ++toWindow, ++localWindowIndexHint)
 		{
 			// arbitrary limit: only animate a few windows (asynchronously)
 			// per display, moving the rest into position immediately
@@ -2785,15 +2775,9 @@ My_TerminalWindow::
 	
 	// now that the window is going away, destroy any Undo commands
 	// that could be applied to this window
+	for (auto actionRef : this->installedActions)
 	{
-		My_UndoableActionList::const_iterator	actionIter;
-		
-		
-		for (actionIter = this->installedActions.begin();
-				actionIter != this->installedActions.end(); ++actionIter)
-		{
-			Undoables_RemoveAction(*actionIter);
-		}
+		Undoables_RemoveAction(actionRef);
 	}
 	
 	// show a hidden window just before it is destroyed (most importantly, notifying callbacks)
@@ -2882,34 +2866,22 @@ My_TerminalWindow::
 	// may be to allow multiple windows to use the same buffer; if
 	// that were the case, killing one window should not necessarily
 	// throw out its buffer)
+	for (auto screenRef : this->allScreens)
 	{
-		My_TerminalScreenList::const_iterator	screenIterator;
-		
-		
-		for (screenIterator = this->allScreens.begin(); screenIterator != this->allScreens.end(); ++screenIterator)
-		{
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener.returnRef());
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeExcessiveErrors, this->terminalStateChangeEventListener.returnRef());
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener.returnRef());
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener.returnRef());
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener.returnRef());
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener.returnRef());
-			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowMinimization, this->terminalStateChangeEventListener.returnRef());
-		}
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener.returnRef());
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeExcessiveErrors, this->terminalStateChangeEventListener.returnRef());
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener.returnRef());
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener.returnRef());
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener.returnRef());
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener.returnRef());
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeWindowMinimization, this->terminalStateChangeEventListener.returnRef());
 	}
 	
 	// destroy all terminal views
+	for (auto viewRef : this->allViews)
 	{
-		My_TerminalViewList::const_iterator		viewIterator;
-		TerminalViewRef							view = nullptr;
-		
-		
-		for (viewIterator = this->allViews.begin(); viewIterator != this->allViews.end(); ++viewIterator)
-		{
-			view = *viewIterator;
-			TerminalView_StopMonitoring(view, kTerminalView_EventScrolling, this->terminalViewEventListener.returnRef());
-			TerminalView_StopMonitoring(view, kTerminalView_EventSearchResultsExistence, this->terminalViewEventListener.returnRef());
-		}
+		TerminalView_StopMonitoring(viewRef, kTerminalView_EventScrolling, this->terminalViewEventListener.returnRef());
+		TerminalView_StopMonitoring(viewRef, kTerminalView_EventSearchResultsExistence, this->terminalViewEventListener.returnRef());
 	}
 	
 	// throw away information about terminal window change listeners
@@ -2931,17 +2903,9 @@ My_TerminalWindow::
 	// a future feature may be to allow multiple windows to use the same
 	// buffer; if that were the case, killing one window should not
 	// necessarily throw out its buffer)
+	for (auto screenRef : this->allScreens)
 	{
-		My_TerminalScreenList::const_iterator	screenIterator;
-		
-		
-		for (screenIterator = this->allScreens.begin(); screenIterator != this->allScreens.end(); ++screenIterator)
-		{
-			TerminalScreenRef	screenRef = *screenIterator;
-			
-			
-			Terminal_ReleaseScreen(&screenRef);
-		}
+		Terminal_ReleaseScreen(&screenRef);
 	}
 }// My_TerminalWindow destructor
 
@@ -3731,21 +3695,6 @@ getScrollBarKind	(My_TerminalWindowPtr	inPtr,
 	if (inScrollBarControl == inPtr->controls.scrollBarV) result = kMy_ScrollBarKindVertical;
 	return result;
 }// getScrollBarKind
-
-
-/*!
-Returns the screen buffer that the given scroll bar
-controls, or nullptr if none.
-
-(3.0)
-*/
-TerminalScreenRef
-getScrollBarScreen	(My_TerminalWindowPtr	inPtr,
-					 HIViewRef				UNUSED_ARGUMENT(inScrollBarControl))
-{
-	assert(!inPtr->allScreens.empty());
-	return inPtr->allScreens.front(); // one day, if more than one view per window exists, this logic will be more complex
-}// getScrollBarScreen
 
 
 /*!
@@ -5317,12 +5266,11 @@ receiveScrollBarDraw	(EventHandlerCallRef	inHandlerCallRef,
 							// it is probably better to detect changes in the search results,
 							// cache the line locations, and then render as often as required
 							CGContextBeginPath(drawingContext);
-							for (TerminalView_CellRangeList::const_iterator toRange = searchResults.begin();
-									toRange != searchResults.end(); ++toRange)
+							for (auto cellRange : searchResults)
 							{
 								// negative means “in scrollback” and positive means “main screen”, so
 								// translate into a single space
-								topRelativeRow = toRange->first.second + kNumberOfScrollbackLines;
+								topRelativeRow = cellRange.first.second + kNumberOfScrollbackLines;
 								
 								y = kY1 + topRelativeRow * (kHeight / STATIC_CAST(kNumberOfLines, Float32));
 								CGContextMoveToPoint(drawingContext, kX1, y);
@@ -6850,12 +6798,9 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				if (Session_StateIsActiveUnstable(session) || Session_StateIsActiveStable(session))
 				{
 					// the cursor should be allowed to render once again, if it was inhibited
-					My_TerminalViewList::const_iterator		viewIterator;
-					
-					
-					for (viewIterator = ptr->allViews.begin(); viewIterator != ptr->allViews.end(); ++viewIterator)
+					for (auto viewRef : ptr->allViews)
 					{
-						UNUSED_RETURN(TerminalView_Result)TerminalView_SetCursorRenderingEnabled(*viewIterator, true);
+						UNUSED_RETURN(TerminalView_Result)TerminalView_SetCursorRenderingEnabled(viewRef, true);
 					}
 				}
 				// add or remove window adornments as appropriate; once a session has died
@@ -6891,14 +6836,9 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					}
 					
 					// the cursor should not be displayed for inactive sessions
+					for (auto viewRef : ptr->allViews)
 					{
-						My_TerminalViewList::const_iterator		viewIterator;
-						
-						
-						for (viewIterator = ptr->allViews.begin(); viewIterator != ptr->allViews.end(); ++viewIterator)
-						{
-							UNUSED_RETURN(TerminalView_Result)TerminalView_SetCursorRenderingEnabled(*viewIterator, false);
-						}
+						UNUSED_RETURN(TerminalView_Result)TerminalView_SetCursorRenderingEnabled(viewRef, false);
 					}
 				}
 				else
@@ -8128,8 +8068,8 @@ or nullptr if there is none.
 - (TerminalWindowRef)
 terminalWindowRef
 {
-	My_TerminalWindowByNSWindow::const_iterator		toPair = gTerminalNSWindows().find(self);
-	TerminalWindowRef								result = nullptr;
+	auto				toPair = gTerminalNSWindows().find(self);
+	TerminalWindowRef	result = nullptr;
 	
 	
 	if (gTerminalNSWindows().end() != toPair)

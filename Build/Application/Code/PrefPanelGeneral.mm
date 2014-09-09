@@ -59,7 +59,6 @@
 #import <ColorUtilities.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
-#import <DialogAdjust.h>
 #import <GrowlSupport.h>
 #import <HelpSystem.h>
 #import <HIViewWrap.h>

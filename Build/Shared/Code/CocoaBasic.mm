@@ -577,7 +577,7 @@ CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow		(HIWindowRef	inCarbonWindow)
 	
 	if (nullptr != inCarbonWindow)
 	{
-		HIWindowRefToNSWindowMap::const_iterator	toPair = gCocoaCarbonWindows().find(inCarbonWindow);
+		auto	toPair = gCocoaCarbonWindows().find(inCarbonWindow);
 		
 		
 		if (toPair != gCocoaCarbonWindows().end())

@@ -58,7 +58,6 @@
 #import <CocoaFuture.objc++.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
-#import <DialogAdjust.h>
 #import <Embedding.h>
 #import <FileSelectionDialogs.h>
 #import <HIViewWrap.h>
@@ -440,10 +439,6 @@ PrefsWindow_Done ()
 	
 	if (nullptr != gPreferencesWindow)
 	{
-		MyPanelDataList::iterator		panelDataIterator;
-		CategoryToolbarItems::iterator	toolbarItemIterator;
-		
-		
 		// clean up the Help System
 		HelpSystem_SetWindowKeyPhrase(gPreferencesWindow, kHelpSystem_KeyPhraseDefault);
 		
@@ -455,21 +450,22 @@ PrefsWindow_Done ()
 		// disable event callbacks and destroy the window
 		RemoveEventHandler(gPreferencesWindowClosingHandler), gPreferencesWindowClosingHandler = nullptr;
 		DisposeEventHandlerUPP(gPreferencesWindowClosingUPP), gPreferencesWindowClosingUPP = nullptr;
-		for (panelDataIterator = gPanelList().begin(); panelDataIterator != gPanelList().end(); ++panelDataIterator)
+		for (auto dataPtr : gPanelList())
 		{
 			// dispose each panel
-			MyPanelDataPtr		dataPtr = *panelDataIterator;
 			if (nullptr != dataPtr)
 			{
 				Panel_Dispose(&dataPtr->panel);
 				delete dataPtr, dataPtr = nullptr;
 			}
 		}
-		for (toolbarItemIterator = gCategoryToolbarItems().begin();
-				toolbarItemIterator != gCategoryToolbarItems().end(); ++toolbarItemIterator)
+		for (auto itemRef : gCategoryToolbarItems())
 		{
 			// release each item
-			if (nullptr != *toolbarItemIterator) CFRelease(*toolbarItemIterator);
+			if (nullptr != itemRef)
+			{
+				CFRelease(itemRef);
+			}
 		}
 		UNUSED_RETURN(OSStatus)SetDrawerParent(gDrawerWindow, nullptr/* parent */);
 		DisposeWindow(gDrawerWindow), gDrawerWindow = nullptr;
@@ -710,14 +706,10 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 	
 	// unhighlight all, then highlight the new one; only possible on Tiger or later
 	{
-		CategoryToolbarItems::const_iterator	toItem = gCategoryToolbarItems().begin();
-		CategoryToolbarItems::const_iterator	itemEnd = gCategoryToolbarItems().end();
-		
-		
 		assert(false == gCategoryToolbarItems().empty());
-		for (; toItem != itemEnd; ++toItem)
+		for (auto itemRef : gCategoryToolbarItems())
 		{
-			UNUSED_RETURN(OSStatus)HIToolbarItemChangeAttributes(*toItem, 0/* attributes to set */,
+			UNUSED_RETURN(OSStatus)HIToolbarItemChangeAttributes(itemRef, 0/* attributes to set */,
 																	kHIToolbarItemSelected/* attributes to clear */);
 		}
 		UNUSED_RETURN(OSStatus)HIToolbarItemChangeAttributes(gCategoryToolbarItems()[inZeroBasedPanelNumber],
@@ -1971,9 +1963,8 @@ in this way.
 void
 rebuildList ()
 {
-	Quills::Prefs::Class const	kCurrentPreferencesClass = returnCurrentPreferencesClass();
-	typedef std::vector< Preferences_ContextRef >	ContextsList;
-	ContextsList				contextList;
+	Quills::Prefs::Class const				kCurrentPreferencesClass = returnCurrentPreferencesClass();
+	std::vector< Preferences_ContextRef >	contextList;
 	
 	
 	if (Preferences_GetContextsInClass(kCurrentPreferencesClass, contextList))
@@ -1985,10 +1976,9 @@ rebuildList ()
 		
 		// now acquire contexts for all available names in this class,
 		// and add data browser items for each of them
-		for (ContextsList::const_iterator toContextRef = contextList.begin();
-				toContextRef != contextList.end(); ++toContextRef)
+		for (auto prefsContextRef : contextList)
 		{
-			DataBrowserItemID	ids[] = { REINTERPRET_CAST(*toContextRef, DataBrowserItemID) };
+			DataBrowserItemID	ids[] = { REINTERPRET_CAST(prefsContextRef, DataBrowserItemID) };
 			
 			
 			UNUSED_RETURN(OSStatus)AddDataBrowserItems(gDataBrowserForCollections, kDataBrowserNoItem/* parent item */,
@@ -4655,12 +4645,11 @@ rebuildSourceList
 		BOOL	haveAddedDefault = NO;
 		
 		
-		for (std::vector< Preferences_ContextRef >::const_iterator toContext = contextList.begin();
-				toContext != contextList.end(); ++toContext)
+		for (auto prefsContextRef : contextList)
 		{
 			BOOL						isDefault = (NO == haveAddedDefault);
 			PrefsWindow_Collection*		newCollection = [[PrefsWindow_Collection alloc]
-															initWithPreferencesContext:(*toContext)
+															initWithPreferencesContext:prefsContextRef
 																						asDefault:isDefault];
 			
 			

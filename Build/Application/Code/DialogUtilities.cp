@@ -202,12 +202,9 @@ place; that extra data is freed here.
 void
 DialogUtilities_DisposeControlsBasedOnWindowNIB		(std::vector< ControlRef > const&		inControlArray)
 {
-	std::vector< ControlRef >::const_iterator	controlIter;
-	
-	
-	for (controlIter = inControlArray.begin(); controlIter != inControlArray.end(); ++controlIter)
+	for (auto viewRef : inControlArray)
 	{
-		DialogUtilities_DisposeDuplicateControl(*controlIter);
+		DialogUtilities_DisposeDuplicateControl(viewRef);
 	}
 }// DisposeControlsBasedOnWindowNIB
 

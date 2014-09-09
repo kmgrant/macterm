@@ -2872,10 +2872,9 @@ Session_SetSpeechEnabled	(SessionRef		inRef,
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
-			toScreen != ptr->targetTerminals.end(); ++toScreen)
+	for (auto screenRef : ptr->targetTerminals)
 	{
-		Terminal_SetSpeechEnabled(*toScreen, inIsEnabled);
+		Terminal_SetSpeechEnabled(screenRef, inIsEnabled);
 	}
 }// SetSpeechEnabled
 
@@ -3201,10 +3200,9 @@ Session_SpeechIsEnabled		(SessionRef		inRef)
 	Boolean					result = false;
 	
 	
-	for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
-			toScreen != ptr->targetTerminals.end(); ++toScreen)
+	for (auto screenRef : ptr->targetTerminals)
 	{
-		if (Terminal_SpeechIsEnabled(*toScreen)) result = true;
+		if (Terminal_SpeechIsEnabled(screenRef)) result = true;
 	}
 	
 	return result;
@@ -3231,10 +3229,9 @@ Session_SpeechPause		(SessionRef		inRef)
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
-			toScreen != ptr->targetTerminals.end(); ++toScreen)
+	for (auto screenRef : ptr->targetTerminals)
 	{
-		Terminal_SpeechPause(*toScreen);
+		Terminal_SpeechPause(screenRef);
 	}
 }// SpeechPause
 
@@ -3250,10 +3247,9 @@ Session_SpeechResume	(SessionRef		inRef)
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
-			toScreen != ptr->targetTerminals.end(); ++toScreen)
+	for (auto screenRef : ptr->targetTerminals)
 	{
-		Terminal_SpeechResume(*toScreen);
+		Terminal_SpeechResume(screenRef);
 	}
 }// SpeechResume
 
@@ -3659,10 +3655,9 @@ Session_TerminalWriteCString	(SessionRef		inRef,
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
-			toScreen != ptr->targetTerminals.end(); ++toScreen)
+	for (auto screenRef : ptr->targetTerminals)
 	{
-		Terminal_EmulatorProcessCString(*toScreen, inCString);
+		Terminal_EmulatorProcessCString(screenRef, inCString);
 	}
 }// TerminalWriteCString
 
@@ -4832,10 +4827,9 @@ Session_UserInputFunctionKey	(SessionRef					inRef,
 		{
 			// allow the terminal to send the key back to the listening session
 			// (ultimately this same exact session) 
-			for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
-					toScreen != ptr->targetTerminals.end(); ++toScreen)
+			for (auto screenRef : ptr->targetTerminals)
 			{
-				UNUSED_RETURN(Terminal_Result)Terminal_UserInputVTFunctionKey(*toScreen, keyCode);
+				UNUSED_RETURN(Terminal_Result)Terminal_UserInputVTFunctionKey(screenRef, keyCode);
 			}
 		}
 	}
@@ -5094,12 +5088,11 @@ Session_UserInputKey	(SessionRef		inRef,
 				// allow the terminal to perform the appropriate action for the key,
 				// given its current mode (for instance, a VT100 might be in VT52
 				// mode, which would send different data than ANSI mode)
-				for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
-						toScreen != ptr->targetTerminals.end(); ++toScreen)
+				for (auto screenRef : ptr->targetTerminals)
 				{
 					// write the appropriate sequence to the terminal’s listening session
 					// (which will be this session)
-					UNUSED_RETURN(Terminal_Result)Terminal_UserInputVTKey(*toScreen, inKeyOrASCII);
+					UNUSED_RETURN(Terminal_Result)Terminal_UserInputVTKey(screenRef, inKeyOrASCII);
 				}
 			}
 		}
@@ -5530,11 +5523,13 @@ My_Session::
 	
 	if (Session_StateIsActive(this->selfRef))
 	{
-		for (My_TerminalScreenList::iterator toScreen = this->targetTerminals.begin();
-				toScreen != this->targetTerminals.end(); ++toScreen)
+		for (auto screenRef : this->targetTerminals)
 		{
 			// active session; terminate associated tasks
-			if (Terminal_FileCaptureInProgress(*toScreen)) Terminal_FileCaptureEnd(*toScreen);
+			if (Terminal_FileCaptureInProgress(screenRef))
+			{
+				Terminal_FileCaptureEnd(screenRef);
+			}
 		}
 	}
 	
@@ -5578,12 +5573,8 @@ My_Session::
 	DisposeEventLoopTimerUPP(this->respawnSessionTimerUPP), this->respawnSessionTimerUPP = nullptr;
 	
 	vectorGraphicsDetachTarget(this);
-	for (My_VectorWindowSet::const_iterator toWindow = this->vectorGraphicsWindows.begin();
-			toWindow != this->vectorGraphicsWindows.end(); ++toWindow)
+	for (auto vectorWindowRef : this->vectorGraphicsWindows)
 	{
-		VectorWindow_Ref	vectorWindowRef = *toWindow;
-		
-		
 		VectorWindow_StopMonitoring(vectorWindowRef, kVectorWindow_EventWillClose,
 									this->vectorWindowListener.returnRef());
 		VectorWindow_Release(&vectorWindowRef);
@@ -8555,9 +8546,9 @@ vectorGraphicsWindowChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	{
 	case kVectorWindow_EventWillClose:
 		{
-			VectorWindow_Ref				vectorWindowRef = REINTERPRET_CAST(inEventContextPtr, VectorWindow_Ref);
-			VectorInterpreter_Ref			windowInterpreter = VectorWindow_ReturnInterpreter(vectorWindowRef);
-			My_VectorWindowSet::iterator 	toWindow = ptr->vectorGraphicsWindows.find(vectorWindowRef);
+			VectorWindow_Ref		vectorWindowRef = REINTERPRET_CAST(inEventContextPtr, VectorWindow_Ref);
+			VectorInterpreter_Ref	windowInterpreter = VectorWindow_ReturnInterpreter(vectorWindowRef);
+			auto					toWindow = ptr->vectorGraphicsWindows.find(vectorWindowRef);
 			
 			
 			if (ptr->vectorGraphicsWindows.end() != toWindow)

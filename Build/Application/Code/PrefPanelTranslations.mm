@@ -53,7 +53,6 @@
 #import <CocoaExtensions.objc++.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
-#import <DialogAdjust.h>
 #import <HIViewWrap.h>
 #import <HIViewWrapManip.h>
 #import <IconManager.h>
@@ -668,7 +667,6 @@ setEncoding		(CFStringEncoding	inEncoding,
 		HIViewRef const		kDataBrowser = HIViewWrap(idMyDataBrowserBaseTranslationTable, kOwningWindow);
 		UInt16 const		kEncodingIndex = TextTranslation_ReturnCharacterSetIndex(inEncoding);
 		DataBrowserItemID	itemList[] = { STATIC_CAST(kEncodingIndex, DataBrowserItemID) };
-		OSStatus			error = noErr;
 		
 		
 		// there is a very stupid data browser bug where “assign” doesn’t seem to mean

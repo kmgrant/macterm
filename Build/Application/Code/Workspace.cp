@@ -359,17 +359,19 @@ Workspace_ReturnZeroBasedIndexOfWindow	(Workspace_Ref	inWorkspace,
 	
 	if (nullptr != ptr)
 	{
-		My_WorkspaceWindowList::const_iterator	toWindowRetainer;
-		UInt16									i = 0;
-		Boolean									windowFound = false;
+		auto		toWindowRetainer = ptr->contents.begin();
+		auto		endWindowRetainers = ptr->contents.end();
+		UInt16		i = 0;
+		Boolean		windowFound = false;
 		
 		
-		for (toWindowRetainer = ptr->contents.begin();
-				((false == windowFound) && (toWindowRetainer != ptr->contents.end()));
+		for (; ((false == windowFound) && (toWindowRetainer != endWindowRetainers));
 				++toWindowRetainer, ++i)
 		{
 			HIWindowRef const	kWindow = REINTERPRET_CAST(toWindowRetainer->returnHIObjectRef(),
 															HIWindowRef);
+			
+			
 			if (kWindow == inWindowToFind)
 			{
 				result = i;

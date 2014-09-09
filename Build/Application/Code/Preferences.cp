@@ -2651,16 +2651,10 @@ Preferences_ContextRepositionRelativeToContext	(Preferences_ContextRef		inContex
 		}
 		else
 		{
-			My_FavoriteContextList::iterator		toMovedContextPtr = std::find_if
-																		(listPtr->begin(), listPtr->end(),
-																			std::bind2nd
-																			(std::equal_to< My_ContextFavoritePtr >(),
-																				derivedPtr));
-			My_FavoriteContextList::iterator		toRefContextPtr = std::find_if
-																		(listPtr->begin(), listPtr->end(),
-																			std::bind2nd
-																			(std::equal_to< My_ContextFavoritePtr >(),
-																				derivedReferencePtr));
+			auto	toMovedContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
+														std::bind2nd(std::equal_to< My_ContextFavoritePtr >(), derivedPtr));
+			auto	toRefContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
+													std::bind2nd(std::equal_to< My_ContextFavoritePtr >(), derivedReferencePtr));
 			
 			
 			if ((listPtr->end() == toMovedContextPtr) || (listPtr->end() == toRefContextPtr))
@@ -2733,11 +2727,8 @@ Preferences_ContextRepositionRelativeToSelf		(Preferences_ContextRef		inContext,
 		else
 		{
 			// find the position of the specified context in the list
-			My_FavoriteContextList::const_iterator	toContextPtr = std::find_if
-																	(listPtr->begin(), listPtr->end(),
-																		std::bind2nd
-																		(std::equal_to< My_ContextFavoritePtr >(),
-																			derivedPtr));
+			auto	toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
+												std::bind2nd(std::equal_to< My_ContextFavoritePtr >(), derivedPtr));
 			
 			
 			if (listPtr->end() == toContextPtr) result = kPreferences_ResultInvalidContextReference;
@@ -3197,7 +3188,7 @@ Preferences_CreateContextNameArray	(Quills::Prefs::Class	inClass,
 		
 		if (nullptr != newArray)
 		{
-			My_FavoriteContextList::const_iterator		toContextPtr = listPtr->begin();
+			auto	toContextPtr = listPtr->begin();
 			
 			
 			result = kPreferences_ResultOK; // initially...
@@ -3374,7 +3365,7 @@ Preferences_GetContextsInClass	(Quills::Prefs::Class						inClass,
 		
 		if (getListOfContexts(inClass, listPtr))
 		{
-			My_FavoriteContextList::const_iterator		toContextPtr = listPtr->begin();
+			auto	toContextPtr = listPtr->begin();
 			
 			
 			for (; toContextPtr != listPtr->end(); ++toContextPtr)
@@ -3624,8 +3615,7 @@ Preferences_IsContextNameInUse		(Quills::Prefs::Class	inClass,
 		
 		if (getListOfContexts(inClass, listPtr))
 		{
-			My_FavoriteContextList::const_iterator		toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
-																					contextNameEqualTo(inProposedName));
+			auto	toContextPtr = std::find_if(listPtr->begin(), listPtr->end(), contextNameEqualTo(inProposedName));
 			
 			
 			if (listPtr->end() != toContextPtr)
@@ -3660,19 +3650,15 @@ Preferences_PurgeAutosaveContexts ()
 	ContextPtrSet			destroyedPtrs; // used only to compare addresses, never to dereference them
 	
 	
-	for (My_FavoriteContextList::iterator toPtr = gAutoSaveNamedContexts().begin();
-			toPtr != gAutoSaveNamedContexts().end(); ++toPtr)
+	for (auto contextPtr : gAutoSaveNamedContexts())
 	{
 		// don’t delete anything twice!
-		if (destroyedPtrs.end() == destroyedPtrs.find(*toPtr))
+		if (destroyedPtrs.end() == destroyedPtrs.find(contextPtr))
 		{
-			My_ContextFavoritePtr	ptr = *toPtr;
-			
-			
-			if (nullptr != ptr)
+			if (nullptr != contextPtr)
 			{
-				destroyedPtrs.insert(ptr);
-				ptr->destroy();
+				destroyedPtrs.insert(contextPtr);
+				contextPtr->destroy();
 			}
 		}
 	}
@@ -3680,13 +3666,12 @@ Preferences_PurgeAutosaveContexts ()
 	// it is only safe to release the contexts while iterating over
 	// a different container, because Preferences_ReleaseContext()
 	// will directly erase elements from the original list above
-	for (ContextPtrSet::const_iterator toPtr = destroyedPtrs.begin();
-			toPtr != destroyedPtrs.end(); ++toPtr)
+	for (auto prefContextPtr : destroyedPtrs)
 	{
 		// a copy must be made, since releasing the context will
 		// overwrite the location of the reference (which originates
 		// inside the memory block that might be deallocated here)
-		Preferences_ContextRef		ref = (*toPtr)->selfRef;
+		Preferences_ContextRef		ref = prefContextPtr->selfRef;
 		
 		
 		Preferences_ReleaseContext(&ref);
@@ -4649,10 +4634,9 @@ createDomainName	(Quills::Prefs::Class	inClass,
 				result = possibleName;
 				
 				nameInUse = false; // initially...
-				for (My_FavoriteContextList::const_iterator toContext = favoritesListPtr->begin();
-						toContext != favoritesListPtr->end(); ++toContext)
+				for (auto prefContextPtr : *favoritesListPtr)
 				{
-					CFStringRef const	kThisDomain = (*toContext)->_domainName.returnCFStringRef();
+					CFStringRef const	kThisDomain = prefContextPtr->_domainName.returnCFStringRef();
 					
 					
 					if (kCFCompareEqualTo == CFStringCompare(kThisDomain, possibleName, kCFCompareBackwards))
@@ -5180,8 +5164,8 @@ My_PreferenceDefinition*
 My_PreferenceDefinition::
 findByKeyName	(CFStringRef	inKeyName)
 {
-	My_PreferenceDefinition*					result = nullptr;
-	DefinitionPtrByKeyName::const_iterator		toDefPtr = _definitionsByKeyName.find(inKeyName);
+	My_PreferenceDefinition*	result = nullptr;
+	auto						toDefPtr = _definitionsByKeyName.find(inKeyName);
 	
 	
 	//Console_WriteValueCFString("find preference by key name", inKeyName); // debug
@@ -5204,8 +5188,8 @@ My_PreferenceDefinition*
 My_PreferenceDefinition::
 findByTag	(Preferences_Tag	inTag)
 {
-	My_PreferenceDefinition*				result = nullptr;
-	DefinitionPtrByTag::const_iterator		toDefPtr = _definitionsByTag.find(inTag);
+	My_PreferenceDefinition*	result = nullptr;
+	auto						toDefPtr = _definitionsByTag.find(inTag);
 	
 	
 	if (toDefPtr != _definitionsByTag.end())
@@ -5228,8 +5212,8 @@ Boolean
 My_PreferenceDefinition::
 isValidKeyName	(CFStringRef	inKeyName)
 {
-	DefinitionPtrByKeyName::const_iterator		toDefPtr = _definitionsByKeyName.find(inKeyName);
-	Boolean										result = false;
+	auto		toDefPtr = _definitionsByKeyName.find(inKeyName);
+	Boolean		result = false;
 	
 	
 	if (toDefPtr != _definitionsByKeyName.end())
@@ -5238,7 +5222,7 @@ isValidKeyName	(CFStringRef	inKeyName)
 	}
 	else
 	{
-		KeyNameSet::const_iterator		toKey = _indirectKeyNames.find(inKeyName);
+		auto	toKey = _indirectKeyNames.find(inKeyName);
 		
 		
 		if (toKey != _indirectKeyNames.end())
@@ -5272,7 +5256,7 @@ void
 My_PreferenceDefinition::
 registerIndirectKeyName		(CFStringRef	inKeyName)
 {
-	KeyNameSet::const_iterator		toKey = _indirectKeyNames.find(inKeyName);
+	auto	toKey = _indirectKeyNames.find(inKeyName);
 	
 	
 	if (toKey == _indirectKeyNames.end())
@@ -5369,16 +5353,15 @@ extendKeyListWithTags	(CFMutableArrayRef						inoutArray,
 	Quills::Prefs::Class	prefsClass = Quills::Prefs::GENERAL;
 	
 	
-	for (std::vector< Preferences_Tag >::const_iterator toTag = inTags.begin();
-			toTag != inTags.end(); ++toTag)
+	for (auto prefsTag : inTags)
 	{
-		if (0 != *toTag)
+		if (0 != prefsTag)
 		{
-			prefsResult = getPreferenceDataInfo(*toTag, keyNameCFString, keyValueType,
+			prefsResult = getPreferenceDataInfo(prefsTag, keyNameCFString, keyValueType,
 												nonDictionaryValueSize, prefsClass);
 			if (kPreferences_ResultOK != prefsResult)
 			{
-				Console_Warning(Console_WriteValueFourChars, "failed to extend key list with tag", *toTag);
+				Console_Warning(Console_WriteValueFourChars, "failed to extend key list with tag", prefsTag);
 				Console_Warning(Console_WriteValue, "preferences lookup error was", prefsResult);
 			}
 			else
@@ -6018,16 +6001,15 @@ createAllPreferencesContextsFromDisk ()
 	allClassesSupportingCollections.push_back(Quills::Prefs::FORMAT);
 	allClassesSupportingCollections.push_back(Quills::Prefs::MACRO_SET);
 	allClassesSupportingCollections.push_back(Quills::Prefs::TRANSLATION);
-	for (PrefClassList::const_iterator toClass = allClassesSupportingCollections.begin();
-			toClass != allClassesSupportingCollections.end(); ++toClass)
+	for (auto prefsClass : allClassesSupportingCollections)
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		CFArrayRef				namesInClass = nullptr;
 		
 		
-		prefsResult = copyClassDomainCFArray(*toClass, namesInClass);
+		prefsResult = copyClassDomainCFArray(prefsClass, namesInClass);
 		if ((nullptr != namesInClass) && (0 == CFArrayGetCount(namesInClass)) &&
-			(Quills::Prefs::FORMAT == *toClass))
+			(Quills::Prefs::FORMAT == prefsClass))
 		{
 			// the Format type is a special case; if there are no user-custom
 			// collections yet, then copy in all the default color schemes
@@ -6087,7 +6069,7 @@ createAllPreferencesContextsFromDisk ()
 			}
 			
 			// now that the set of Formats has been changed, reinitialize the array
-			prefsResult = copyClassDomainCFArray(*toClass, namesInClass);
+			prefsResult = copyClassDomainCFArray(prefsClass, namesInClass);
 		}
 		
 		// create contexts for every domain that was found for this class
@@ -6104,7 +6086,7 @@ createAllPreferencesContextsFromDisk ()
 				CFStringRef const		kDomainName = CFUtilities_StringCast(CFArrayGetValueAtIndex
 																				(namesInClass, i));
 				CFRetainRelease			favoriteNameCFString(copyDomainUserSpecifiedName(kDomainName), true/* is retained */);
-				Preferences_ContextRef	newContext = Preferences_NewContextFromFavorites(*toClass, favoriteNameCFString.returnCFStringRef(), kDomainName);
+				Preferences_ContextRef	newContext = Preferences_NewContextFromFavorites(prefsClass, favoriteNameCFString.returnCFStringRef(), kDomainName);
 				
 				
 				if (nullptr == newContext)
@@ -7331,8 +7313,7 @@ getNamedContext		(Quills::Prefs::Class		inClass,
 		
 		if (getListOfContexts(inClass, listPtr))
 		{
-			My_FavoriteContextList::const_iterator		toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
-																					contextNameEqualTo(inName));
+			auto	toContextPtr = std::find_if(listPtr->begin(), listPtr->end(), contextNameEqualTo(inName));
 			
 			
 			if (listPtr->end() != toContextPtr)
@@ -8902,13 +8883,12 @@ readPreferencesDictionaryInContext	(My_ContextInterfacePtr		inContextPtr,
 		
 		
 		*outInferredClassOrNull = Quills::Prefs::GENERAL;
-		for (CountByClass::const_iterator toPair = classPopularity.begin();
-				toPair != classPopularity.end(); ++toPair)
+		for (auto classCountPair : classPopularity)
 		{
-			if (toPair->second > highestPopularity)
+			if (classCountPair.second > highestPopularity)
 			{
-				*outInferredClassOrNull = toPair->first;
-				highestPopularity = toPair->second;
+				*outInferredClassOrNull = classCountPair.first;
+				highestPopularity = classCountPair.second;
 			}
 		}
 	}

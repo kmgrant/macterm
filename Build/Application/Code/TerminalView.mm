@@ -1053,10 +1053,9 @@ TerminalView_FindNothing	(TerminalViewRef	inView)
 		Boolean const	kWasCleared = viewPtr->text.searchResults.empty();
 		
 		
-		for (TerminalView_CellRangeList::const_iterator toRange = viewPtr->text.searchResults.begin();
-				toRange != viewPtr->text.searchResults.end(); ++toRange)
+		for (auto cellRange : viewPtr->text.searchResults)
 		{
-			highlightVirtualRange(viewPtr, *toRange, kTerminalTextAttributeSearchResult,
+			highlightVirtualRange(viewPtr, cellRange, kTerminalTextAttributeSearchResult,
 									false/* is highlighted */, true/* redraw */);
 		}
 		viewPtr->text.searchResults.clear();

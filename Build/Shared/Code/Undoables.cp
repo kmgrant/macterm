@@ -443,10 +443,9 @@ you can re-use it by calling Undoables_AddAction().
 void
 Undoables_RemoveAction	(Undoables_ActionRef	inActionToRemove)
 {
-	MyUndoStack::iterator		stackIterator;
+	auto	stackIterator = std::find(gUndoStack().begin(), gUndoStack().end(), inActionToRemove);
 	
 	
-	stackIterator = std::find(gUndoStack().begin(), gUndoStack().end(), inActionToRemove);
 	if (stackIterator == gUndoStack().end())
 	{
 		// not found in Undo stack; try the Redo stack

@@ -213,11 +213,10 @@ HelpSystem_Result
 HelpSystem_SetWindowKeyPhrase	(WindowRef				inWindow,
 								 HelpSystem_KeyPhrase	inKeyPhrase)
 {
-	HelpSystem_Result				result = kHelpSystem_ResultOK;
-	WindowToKeyPhraseMap::iterator	windowToKeyPhraseIterator;
+	HelpSystem_Result	result = kHelpSystem_ResultOK;
+	auto				windowToKeyPhraseIterator = gWindowToKeyPhraseMap().find(inWindow);
 	
 	
-	windowToKeyPhraseIterator = gWindowToKeyPhraseMap().find(inWindow);
 	if (inKeyPhrase == kHelpSystem_KeyPhraseDefault)
 	{
 		if (windowToKeyPhraseIterator != gWindowToKeyPhraseMap().end())
@@ -397,8 +396,7 @@ getCurrentContextKeyPhrase ()
 	if (frontWindow != nullptr)
 	{
 		// see if the frontmost window has a context associated with it
-		WindowToKeyPhraseMap::const_iterator	windowToKeyPhraseIterator =
-												gWindowToKeyPhraseMap().find(frontWindow);
+		auto	windowToKeyPhraseIterator = gWindowToKeyPhraseMap().find(frontWindow);
 		
 		
 		if (windowToKeyPhraseIterator != gWindowToKeyPhraseMap().end())

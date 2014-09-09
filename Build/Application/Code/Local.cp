@@ -1240,16 +1240,14 @@ Local_UpdateCurrentDirectoryCache ()
 	// make a copy of the internal map; the global map intentionally has NO VALUES
 	// and is used as a convenient way to store keys, but the copy will have the
 	// values filled in with whatever directories were found
-	My_ProcessByID::const_iterator	toProcessByID;
 	std::vector< long >				processIDs;
 	StringByLong					pathsByProcess;
 	
 	
 	// find the Unix process IDs for every known child process
-	for (toProcessByID = gProcessesByID().begin();
-			toProcessByID != gProcessesByID().end(); ++toProcessByID)
+	for (auto idProcessRefPair : gProcessesByID())
 	{
-		processIDs.push_back(toProcessByID->first);
+		processIDs.push_back(idProcessRefPair.first);
 	}
 	
 	// in a SINGLE query, find ALL requested process’ directories
@@ -1263,10 +1261,11 @@ Local_UpdateCurrentDirectoryCache ()
 	}
 	
 	// now update all cached strings with the results
-	for (StringByLong::const_iterator toLongStrPair = pathsByProcess.begin();
-			toLongStrPair != pathsByProcess.end(); ++toLongStrPair)
+	for (auto longStrPair : pathsByProcess)
 	{
-		toProcessByID = gProcessesByID().find(STATIC_CAST(toLongStrPair->first, pid_t));
+		auto	toProcessByID = gProcessesByID().find(STATIC_CAST(longStrPair.first, pid_t));
+		
+		
 		if (gProcessesByID().end() != toProcessByID)
 		{
 			Local_ProcessRef		ref = toProcessByID->second;
@@ -1275,7 +1274,7 @@ Local_UpdateCurrentDirectoryCache ()
 			
 			if (nullptr != ptr)
 			{
-				ptr->_recentDirectory.setCFTypeRef(CFStringCreateWithCString(kCFAllocatorDefault, toLongStrPair->second.c_str(),
+				ptr->_recentDirectory.setCFTypeRef(CFStringCreateWithCString(kCFAllocatorDefault, longStrPair.second.c_str(),
 																				kCFStringEncodingUTF8), true/* is retained */);
 			}
 		}
@@ -2495,7 +2494,7 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 				case SIGTSTP:
 				case SIGCONT:
 					{
-						My_ProcessByID::const_iterator		toProcess = gProcessesByID().find(kProcessID);
+						auto	toProcess = gProcessesByID().find(kProcessID);
 						
 						
 						if (gProcessesByID().end() != toProcess)

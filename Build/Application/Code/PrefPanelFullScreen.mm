@@ -51,7 +51,6 @@
 #import <CocoaExtensions.objc++.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
-#import <DialogAdjust.h>
 #import <HelpSystem.h>
 #import <HIViewWrap.h>
 #import <HIViewWrapManip.h>

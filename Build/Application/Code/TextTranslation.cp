@@ -103,19 +103,15 @@ void
 TextTranslation_AppendCharacterSetsToMenu	(MenuRef	inToWhichMenu,
 											 UInt16		inIndentationLevel)
 {
-	My_TextEncodingInfoPtr						dataPtr = nullptr;
-	My_TextEncodingInfoList::const_iterator		textEncodingInfoIterator;
-	MenuItemIndex								currentMenuItemIndex = CountMenuItems(inToWhichMenu);
+	MenuItemIndex		currentMenuItemIndex = CountMenuItems(inToWhichMenu);
 	
 	
 	// initialize the module if necessary
 	fillInCharacterSetList();
 	
-	for (textEncodingInfoIterator = gTextEncodingInfoList().begin();
-			textEncodingInfoIterator != gTextEncodingInfoList().end(); ++textEncodingInfoIterator)
+	for (auto dataPtr : gTextEncodingInfoList())
 	{
-		dataPtr = *textEncodingInfoIterator;
-		if (dataPtr != nullptr)
+		if (nullptr != dataPtr)
 		{
 			AppendMenuItemTextWithCFString(inToWhichMenu, dataPtr->name.returnCFStringRef(),
 											kMenuItemAttrIgnoreMeta/* attributes */, 0L/* command ID */,
@@ -384,21 +380,23 @@ If the index can’t be found, 0 is returned.
 UInt16
 TextTranslation_ReturnCharacterSetIndex		(CFStringEncoding	inTextEncoding)
 {
-	UInt16										result = 0;
-	SInt16										i = 1;
-	My_TextEncodingInfoPtr						dataPtr = nullptr;
-	My_TextEncodingInfoList::const_iterator		textEncodingInfoIterator;
+	UInt16		result = 0;
+	SInt16		i = 1;
 	
 	
 	// initialize the module if necessary
 	fillInCharacterSetList();
 	
 	// look for matching encoding information
-	for (i = 1, textEncodingInfoIterator = gTextEncodingInfoList().begin();
-			textEncodingInfoIterator != gTextEncodingInfoList().end(); ++textEncodingInfoIterator, ++i)
+	// TEMPORARY: O(n), may want to change implementation
+	for (auto dataPtr : gTextEncodingInfoList())
 	{
-		dataPtr = *textEncodingInfoIterator;
-		if ((dataPtr != nullptr) && (dataPtr->textEncoding == inTextEncoding)) result = i;
+		if ((nullptr != dataPtr) && (dataPtr->textEncoding == inTextEncoding))
+		{
+			result = i;
+			break;
+		}
+		++i;
 	}
 	return result;
 }// ReturnCharacterSetIndex

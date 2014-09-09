@@ -1966,7 +1966,7 @@ Terminal_NewMainScreenLineIterator	(TerminalScreenRef				inRef,
 		// ensure the specified row is in range
 		if (inLineNumberZeroForTop < ptr->screenBuffer.size())
 		{
-			My_ScreenBufferLineList::iterator	startIterator = ptr->screenBuffer.begin();
+			auto	startIterator = ptr->screenBuffer.begin();
 			
 			
 			std::advance(startIterator, STATIC_CAST(inLineNumberZeroForTop,
@@ -2041,8 +2041,8 @@ Terminal_NewScrollbackLineIterator	(TerminalScreenRef				inRef,
 	if ((nullptr != ptr) && (ptr->scrollbackBuffer.begin() != ptr->scrollbackBuffer.end()))
 	{
 		My_ScrollbackBufferLineList::difference_type const		kLineEnd = inLineNumberZeroForNewest;
-		My_ScrollbackBufferLineList::iterator	startIterator = ptr->scrollbackBuffer.begin();
-		Boolean									validIterator = true;
+		auto		startIterator = ptr->scrollbackBuffer.begin();
+		Boolean		validIterator = true;
 		
 		
 		// ensure the specified row is in range; since the scrollback buffer is
@@ -3186,12 +3186,15 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 					// find a new state, which may or may not interrupt the state that is
 					// currently forming
 					isHandled = false;
-					for (My_Emulator::VariantChain::const_iterator toCallbacks = dataPtr->emulator.preCallbackSet.begin();
-							((false == isHandled) && (toCallbacks != dataPtr->emulator.preCallbackSet.end())); ++toCallbacks)
+					for (auto callbackInfo : dataPtr->emulator.preCallbackSet)
 					{
 						countRead = invokeEmulatorStateDeterminantProc
-									(toCallbacks->stateDeterminant, &dataPtr->emulator,
+									(callbackInfo.stateDeterminant, &dataPtr->emulator,
 										states, isInterrupt, isHandled);
+						if (isHandled)
+						{
+							break;
+						}
 					}
 					unless (isHandled)
 					{
@@ -3369,11 +3372,14 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 					
 					// perform whatever action is appropriate to enter this state
 					isHandled = false;
-					for (My_Emulator::VariantChain::const_iterator toCallbacks = dataPtr->emulator.preCallbackSet.begin();
-							((false == isHandled) && (toCallbacks != dataPtr->emulator.preCallbackSet.end())); ++toCallbacks)
+					for (auto callbackInfo : dataPtr->emulator.preCallbackSet)
 					{
 						countRead = invokeEmulatorStateTransitionProc
-									(toCallbacks->transitionHandler, dataPtr, states, isHandled);
+									(callbackInfo.transitionHandler, dataPtr, states, isHandled);
+						if (isHandled)
+						{
+							break;
+						}
 					}
 					unless (isHandled)
 					{
@@ -3783,7 +3789,7 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 		My_ScreenBufferLine&								currentLine = iteratorPtr->currentLine();
 		TerminalLine_TextIterator							textIterator = nullptr;
 		TerminalLine_TextAttributesList const&				currentAttributeVector = currentLine.returnAttributeVector();
-		TerminalLine_TextAttributesList::const_iterator		attrIterator = currentAttributeVector.begin();
+		auto												attrIterator = currentAttributeVector.begin();
 		TerminalTextAttributes								previousAttributes = 0;
 		TerminalTextAttributes								currentAttributes = 0;
 		SInt16												runStartCharacterIndex = 0;
@@ -8560,14 +8566,9 @@ alignmentDisplay	(My_ScreenBufferPtr		inDataPtr)
 	// also will reset all attributes and this may not be part of the
 	// VT100 specification (but it seems reasonable to get rid of any
 	// special colors or oversized text when doing screen alignment)
+	for (auto lineInfo : inDataPtr->screenBuffer)
 	{
-		My_ScreenBufferLineList::iterator	lineIterator;
-		
-		
-		for (lineIterator = inDataPtr->screenBuffer.begin(); lineIterator != inDataPtr->screenBuffer.end(); ++lineIterator)
-		{
-			bufferLineFill(inDataPtr, *lineIterator, 'E', kTerminalTextAttributesAllOff, true/* change line global attributes to match */);
-		}
+		bufferLineFill(inDataPtr, lineInfo, 'E', kTerminalTextAttributesAllOff, true/* change line global attributes to match */);
 	}
 	
 	// update the display - UNIMPLEMENTED
@@ -13663,14 +13664,9 @@ bufferEraseVisibleScreen	(My_ScreenBufferPtr		inDataPtr,
 	}
 	
 	// clear buffer
+	for (auto lineInfo : inDataPtr->screenBuffer)
 	{
-		My_ScreenBufferLineList::iterator	lineIterator;
-		
-		
-		for (lineIterator = inDataPtr->screenBuffer.begin(); lineIterator != inDataPtr->screenBuffer.end(); ++lineIterator)
-		{
-			bufferEraseLineWithoutUpdate(inDataPtr, inChanges, *lineIterator);
-		}
+		bufferEraseLineWithoutUpdate(inDataPtr, inChanges, lineInfo);
 	}
 	
 	// add the entire visible buffer to the text-change region;
@@ -13830,15 +13826,13 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 		}
 		else if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
 		{
-			My_ScreenBufferLine							lineTemplate = gEmptyScreenBufferLine();
-			TerminalLine_TextAttributesList::iterator	tmpAttrIterator;
+			My_ScreenBufferLine		lineTemplate = gEmptyScreenBufferLine();
 			
 			
 			// the new lines have no attributes EXCEPT for a custom background color
-			for (tmpAttrIterator = lineTemplate.returnMutableAttributeVector().begin();
-					tmpAttrIterator != lineTemplate.returnMutableAttributeVector().end(); ++tmpAttrIterator)
+			for (auto attributeFlags : lineTemplate.returnMutableAttributeVector())
 			{
-				STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, *tmpAttrIterator);
+				STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, attributeFlags);
 			}
 			inDataPtr->screenBuffer.insert(inInsertionLine, kMostLines, lineTemplate);
 		}
@@ -14063,15 +14057,13 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 		}
 		else if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
 		{
-			My_ScreenBufferLine							lineTemplate = gEmptyScreenBufferLine();
-			TerminalLine_TextAttributesList::iterator	tmpAttrIterator;
+			My_ScreenBufferLine		lineTemplate = gEmptyScreenBufferLine();
 			
 			
 			// the new lines have no attributes EXCEPT for a custom background color
-			for (tmpAttrIterator = lineTemplate.returnMutableAttributeVector().begin();
-					tmpAttrIterator != lineTemplate.returnMutableAttributeVector().end(); ++tmpAttrIterator)
+			for (auto attributeFlags : lineTemplate.returnMutableAttributeVector())
 			{
-				STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, *tmpAttrIterator);
+				STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, attributeFlags);
 			}
 			inDataPtr->screenBuffer.insert(scrollingRegionEnd, kMostLines, lineTemplate);
 		}
@@ -16994,12 +16986,9 @@ which sets tabs to reasonable default values.
 void
 tabStopClearAll		(My_ScreenBufferPtr		inDataPtr)
 {
-	My_TabStopList::iterator	tabStopIterator;
-	
-	
-	for (tabStopIterator = inDataPtr->tabSettings.begin(); tabStopIterator != inDataPtr->tabSettings.end(); ++tabStopIterator)
+	for (auto& tabStopChar : inDataPtr->tabSettings)
 	{
-		*tabStopIterator = kMy_TabClear;
+		tabStopChar = kMy_TabClear;
 	}
 }// tabStopClearAll
 
@@ -17061,21 +17050,20 @@ last column).
 void
 tabStopInitialize	(My_ScreenBufferPtr		inDataPtr)
 {
-	My_TabStopList::iterator	tabStopIterator;
 	My_TabStopList::size_type	i = 0;
 	
 	
-	for (tabStopIterator = inDataPtr->tabSettings.begin(); tabStopIterator != inDataPtr->tabSettings.end();
-			++tabStopIterator, ++i)
+	for (auto& tabStopChar : inDataPtr->tabSettings)
 	{
 		if (0 == (i % kMy_TabStop))
 		{
-			*tabStopIterator = kMy_TabSet;
+			tabStopChar = kMy_TabSet;
 		}
 		else
 		{
-			*tabStopIterator = kMy_TabClear;
+			tabStopChar = kMy_TabClear;
 		}
+		++i;
 	}
 	assert(!inDataPtr->tabSettings.empty());
 	inDataPtr->tabSettings.back() = kMy_TabSet; // also make last column a tab
@@ -17103,8 +17091,7 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 	SInt32						rowIndex = contextPtr->startRowIndex;
 	
 	
-	for (My_ScreenBufferLineList::const_iterator toLine = contextPtr->rangeStart;
-			rowIndex < kPastEndRowIndex; ++toLine, ++rowIndex)
+	for (auto toLine = contextPtr->rangeStart; rowIndex < kPastEndRowIndex; ++toLine, ++rowIndex)
 	{
 		// find ALL matches; NOTE that this technically will not find words
 		// that begin at the end of one line and continue at the start of

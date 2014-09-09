@@ -58,7 +58,6 @@
 #import <ColorUtilities.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
-#import <DialogAdjust.h>
 #import <HIViewWrap.h>
 #import <HIViewWrapManip.h>
 #import <Localization.h>
@@ -1766,7 +1765,7 @@ createContainerView		(Panel_Ref		inPanel,
 	
 	// find items of interest
 	{
-		std::vector< HIViewRef >::const_iterator	toView = viewList.end();
+		auto	toView = viewList.end();
 		
 		
 		// find the boundaries of the sample area; then throw it away

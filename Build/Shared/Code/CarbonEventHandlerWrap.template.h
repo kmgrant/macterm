@@ -398,16 +398,16 @@ install		(EventTargetRef					inTarget,
 			
 			if (nullptr != eventTypeSpecs)
 			{
-				OSStatus										error = noErr;
-				size_t											i = 0;
-				typename event_type_container::const_iterator	pairIter;
+				OSStatus	error = noErr;
+				size_t		i = 0;
 				
 				
 				// copy data from the given STL container into the C array
-				for (pairIter = inEvents.begin(); pairIter != inEvents.end(); ++pairIter)
+				//for (pairIter = inEvents.begin(); pairIter != inEvents.end(); ++pairIter)
+				for (auto specPair : inEvents)
 				{
-					eventTypeSpecs[i].eventClass = pairIter->first;
-					eventTypeSpecs[i].eventKind = pairIter->second;
+					eventTypeSpecs[i].eventClass = specPair.first;
+					eventTypeSpecs[i].eventKind = specPair.second;
 					++i;
 				}
 				

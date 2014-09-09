@@ -1,4 +1,4 @@
-/*!	\file SoundSystem.h
+/*!	\file SoundSystem.mm
 	\brief Simplified interfaces for sound.
 */
 /*###############################################################
@@ -11,12 +11,12 @@
 	as published by the Free Software Foundation; either version
 	2.1 of the License, or (at your option) any later version.
 	
-	This program is distributed in the hope that it will be
+    This program is distributed in the hope that it will be
 	useful, but WITHOUT ANY WARRANTY; without even the implied
 	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 	PURPOSE.  See the GNU Lesser Public License for details.
-	
-	You should have received a copy of the GNU Lesser Public
+
+    You should have received a copy of the GNU Lesser Public
 	License along with this library; if not, write to:
 	
 		Free Software Foundation, Inc.
@@ -26,23 +26,26 @@
 
 ###############################################################*/
 
-#include <UniversalDefines.h>
+#import <SoundSystem.h>
+#import <UniversalDefines.h>
 
-#ifndef __SOUNDSYSTEM__
-#define __SOUNDSYSTEM__
+// Mac includes
+#import <AppKit/AppKit.h>
 
 
 
 #pragma mark Public Methods
 
-//!\name Asynchronous Sound
-//@{
+/*!
+Plays a standard alert sound, using the most advanced
+sound API available.
 
+(3.0)
+*/
 void
-	Sound_StandardAlert				();
-
-//@}
-
-#endif
+Sound_StandardAlert ()
+{
+	NSBeep();
+}// StandardAlert
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

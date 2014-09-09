@@ -1590,9 +1590,8 @@ SessionFactory_GetWindowWithZeroBasedIndex		(UInt16					inZeroBasedSessionIndex,
 		
 		case kSessionFactory_ListInTabStackOrder:
 			{
-				MyWorkspaceList&					workspaceList = gWorkspaceListSortedByCreationTime();
-				MyWorkspaceList::const_iterator		toWorkspace;
-				UInt16								currentIndex = inZeroBasedSessionIndex;
+				MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
+				UInt16				currentIndex = inZeroBasedSessionIndex;
 				
 				
 				// the index basically acts as if all workspaces were laid
@@ -1601,10 +1600,9 @@ SessionFactory_GetWindowWithZeroBasedIndex		(UInt16					inZeroBasedSessionIndex,
 				// no match among tabbed windows, there could still be windows
 				// that are not tabbed that match
 				*outWindowPtr = nullptr;
-				for (toWorkspace = workspaceList.begin();
-						toWorkspace != workspaceList.end(); ++toWorkspace)
+				for (auto workspaceRef : workspaceList)
 				{
-					UInt16 const	kWindowCount = Workspace_ReturnWindowCount(*toWorkspace);
+					UInt16 const	kWindowCount = Workspace_ReturnWindowCount(workspaceRef);
 					
 					
 					if (currentIndex >= kWindowCount)
@@ -1613,7 +1611,7 @@ SessionFactory_GetWindowWithZeroBasedIndex		(UInt16					inZeroBasedSessionIndex,
 					}
 					else
 					{
-						*outWindowPtr = Workspace_ReturnWindowWithZeroBasedIndex(*toWorkspace, currentIndex);
+						*outWindowPtr = Workspace_ReturnWindowWithZeroBasedIndex(workspaceRef, currentIndex);
 						break;
 					}
 				}
@@ -1677,17 +1675,14 @@ SessionFactory_GetZeroBasedIndexOfSession	(SessionRef				inOfWhichSession,
 			// return the order in which the specified session was created,
 			// relative to all other sessions currently in existence
 			{
-				SessionList::const_iterator		sessionIterator;
-				SessionRef						session = nullptr;
-				
-				
 				// look for the given session in the list
 				*outIndexPtr = 0;
-				for (sessionIterator = gSessionListSortedByCreationTime().begin();
-						sessionIterator != gSessionListSortedByCreationTime().end(); ++sessionIterator)
+				for (auto sessionRef : gSessionListSortedByCreationTime())
 				{
-					session = *sessionIterator;
-					if (session == inOfWhichSession) break;
+					if (sessionRef == inOfWhichSession)
+					{
+						break;
+					}
 					++(*outIndexPtr);
 				}
 				
@@ -1701,21 +1696,18 @@ SessionFactory_GetZeroBasedIndexOfSession	(SessionRef				inOfWhichSession,
 		
 		case kSessionFactory_ListInTabStackOrder:
 			{
-				TerminalWindowRef					terminalWindow = Session_ReturnActiveTerminalWindow
-																		(inOfWhichSession);
-				HIWindowRef							window = TerminalWindow_ReturnWindow(terminalWindow);
-				MyWorkspaceList&					workspaceList = gWorkspaceListSortedByCreationTime();
-				MyWorkspaceList::const_iterator		toWorkspace;
-				Boolean								foundWindow = false;
+				TerminalWindowRef	terminalWindow = Session_ReturnActiveTerminalWindow(inOfWhichSession);
+				HIWindowRef			window = TerminalWindow_ReturnWindow(terminalWindow);
+				MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
+				Boolean				foundWindow = false;
 				
 				
 				// look for the given session in available workspaces;
 				// it is also possible that the window will not be tabbed
 				*outIndexPtr = 0;
-				for (toWorkspace = workspaceList.begin();
-						toWorkspace != workspaceList.end(); ++toWorkspace)
+				for (auto workspaceRef : workspaceList)
 				{
-					UInt16		windowIndex = Workspace_ReturnZeroBasedIndexOfWindow(*toWorkspace, window);
+					UInt16		windowIndex = Workspace_ReturnZeroBasedIndexOfWindow(workspaceRef, window);
 					
 					
 					if (kWorkspace_WindowIndexInfinity != windowIndex)
@@ -1726,21 +1718,15 @@ SessionFactory_GetZeroBasedIndexOfSession	(SessionRef				inOfWhichSession,
 					}
 					else
 					{
-						(*outIndexPtr) += Workspace_ReturnWindowCount(*toWorkspace);
+						(*outIndexPtr) += Workspace_ReturnWindowCount(workspaceRef);
 					}
 				}
 				if (false == foundWindow)
 				{
-					SessionList::const_iterator		sessionIterator;
-					SessionRef						session = nullptr;
-					
-					
 					// look for the given session in the list
-					for (sessionIterator = gSessionListSortedByCreationTime().begin();
-							sessionIterator != gSessionListSortedByCreationTime().end(); ++sessionIterator)
+					for (auto sessionRef : gSessionListSortedByCreationTime())
 					{
-						session = *sessionIterator;
-						if (session == inOfWhichSession)
+						if (sessionRef == inOfWhichSession)
 						{
 							foundWindow = true;
 							break;
@@ -1853,15 +1839,16 @@ NOTE:	This operation is currently linear in the
 UInt16
 SessionFactory_ReturnStateCount		(Session_State		inStateToCheckFor)
 {
-	SessionList::const_iterator		sessionIterator;
-	UInt16							result = 0;
+	UInt16		result = 0;
 	
 	
 	// traverse the list
-	for (sessionIterator = gSessionListSortedByCreationTime().begin();
-			sessionIterator != gSessionListSortedByCreationTime().end(); ++sessionIterator)
+	for (auto sessionRef :gSessionListSortedByCreationTime())
 	{
-		if ((nullptr != *sessionIterator) && (Session_ReturnState(*sessionIterator) == inStateToCheckFor)) ++result;
+		if ((nullptr != sessionRef) && (Session_ReturnState(sessionRef) == inStateToCheckFor))
+		{
+			++result;
+		}
 	}
 	
 	return result;
@@ -1898,13 +1885,12 @@ SessionFactory_ReturnTerminalWindowSession		(TerminalWindowRef		inTerminalWindow
 	
 	if (nullptr != inTerminalWindow)
 	{
-		TerminalWindowToSessionsMap::const_iterator		terminalWindowToSessionIterator =
-															gTerminalWindowToSessions().find(inTerminalWindow);
+		auto	toTerminalWindowSessionPair = gTerminalWindowToSessions().find(inTerminalWindow);
 		
 		
-		if (gTerminalWindowToSessions().end() != terminalWindowToSessionIterator)
+		if (gTerminalWindowToSessions().end() != toTerminalWindowSessionPair)
 		{
-			result = terminalWindowToSessionIterator->second;
+			result = toTerminalWindowSessionPair->second;
 		}
 	}
 	
@@ -2659,19 +2645,15 @@ forEachSessionInListDo		(SessionList const&					inList,
 							 SInt32								inData2,
 							 void*								inoutResultPtr)
 {
-	SessionList::const_iterator		sessionIterator;
-	SessionRef						session = nullptr;
-	Boolean							doInvoke = false;
-	
-	
 	// traverse the list
-	for (sessionIterator = inList.begin(); sessionIterator != inList.end(); ++sessionIterator)
+	for (auto sessionRef : inList)
 	{
-		session = *sessionIterator;
-		doInvoke = true;
+		Boolean		doInvoke = true;
+		
+		
 		if (0 == (inFilterFlags & kSessionFactory_SessionFilterFlagConsoleSessions))
 		{
-			HIWindowRef		sessionWindow = Session_ReturnActiveWindow(session);
+			HIWindowRef		sessionWindow = Session_ReturnActiveWindow(sessionRef);
 			
 			
 			if ((nullptr != sessionWindow) && (WIN_CONSOLE == GetWindowKind(sessionWindow)))
@@ -2679,7 +2661,11 @@ forEachSessionInListDo		(SessionList const&					inList,
 				doInvoke = false;
 			}
 		}
-		if (doInvoke) SessionFactory_InvokeSessionOpProc(inProcPtr, session, inData1, inData2, inoutResultPtr);
+		
+		if (doInvoke)
+		{
+			SessionFactory_InvokeSessionOpProc(inProcPtr, sessionRef, inData1, inData2, inoutResultPtr);
+		}
 	}
 }// forEachSessionInListDo
 
@@ -2697,15 +2683,10 @@ forEveryTerminalWindowInListDo	(SessionFactory_TerminalWindowList const&	inList,
 								 SInt32										inData2,
 								 void*										inoutResultPtr)
 {
-	SessionFactory_TerminalWindowList::const_iterator	terminalWindowIterator;
-	TerminalWindowRef									terminalWindow = nullptr;
-	
-	
 	// traverse the list
-	for (terminalWindowIterator = inList.begin(); terminalWindowIterator != inList.end(); ++terminalWindowIterator)
+	for (auto terminalWindowRef : inList)
 	{
-		terminalWindow = *terminalWindowIterator;
-		SessionFactory_InvokeTerminalWindowOpProc(inProcPtr, terminalWindow, inData1, inData2, inoutResultPtr);
+		SessionFactory_InvokeTerminalWindowOpProc(inProcPtr, terminalWindowRef, inData1, inData2, inoutResultPtr);
 	}
 }// forEveryTerminalWindowInListDo
 
@@ -3083,10 +3064,10 @@ returnActiveWorkspace ()
 		
 		if (nullptr != activeSession)
 		{
-			HIWindowRef const					kActiveWindow = Session_ReturnActiveWindow(activeSession);
-			MyWorkspaceList&					targetList = gWorkspaceListSortedByCreationTime();
-			MyWorkspaceList::const_iterator		toWorkspace = std::find_if(targetList.begin(), targetList.end(),
-																			workspaceContainsWindow(kActiveWindow));
+			HIWindowRef const	kActiveWindow = Session_ReturnActiveWindow(activeSession);
+			MyWorkspaceList&	targetList = gWorkspaceListSortedByCreationTime();
+			auto				toWorkspace = std::find_if(targetList.begin(), targetList.end(),
+															workspaceContainsWindow(kActiveWindow));
 			
 			
 			if (targetList.end() != toWorkspace)
@@ -3374,9 +3355,11 @@ stopTrackingSession		(SessionRef		inSession)
 			// determine if the session of this terminal window is in use
 			// by any other sessions; if not, stop tracking the terminal
 			// window as well!
-			SessionList&			targetList = gSessionListSortedByCreationTime();
-			SessionList::iterator	sessionIterator = std::find_if(targetList.begin(), targetList.end(),
-																	sessionUsesTerminalWindow(terminalWindow));
+			SessionList&	targetList = gSessionListSortedByCreationTime();
+			auto			sessionIterator = std::find_if(targetList.begin(), targetList.end(),
+															sessionUsesTerminalWindow(terminalWindow));
+			
+			
 			if (targetList.end() == sessionIterator)
 			{
 				stopTrackingTerminalWindow(terminalWindow);

@@ -198,8 +198,8 @@ UInt16
 MemoryBlockLocker< structure_reference_type, structure_type >::
 decrementLockCount	(structure_reference_type	inReference)
 {
-	UInt16								result = 0;
-	typename CountMapType::iterator		toCount = _mapObject.find(inReference);
+	UInt16		result = 0;
+	auto		toCount = _mapObject.find(inReference);
 	
 	
 	if (_mapObject.end() != toCount)
@@ -221,8 +221,8 @@ UInt16
 MemoryBlockLocker< structure_reference_type, structure_type >::
 incrementLockCount	(structure_reference_type	inReference)
 {
-	UInt16								result = 0;
-	typename CountMapType::iterator		toCount = _mapObject.find(inReference);
+	UInt16		result = 0;
+	auto		toCount = _mapObject.find(inReference);
 	
 	
 	// add the item if it is not present
@@ -259,8 +259,8 @@ MemoryBlockLocker< structure_reference_type, structure_type >::
 returnLockCount		(structure_reference_type	inReference)
 const
 {
-	UInt16									result = 0;
-	typename CountMapType::const_iterator	toCount = _mapObject.find(inReference);
+	UInt16		result = 0;
+	auto		toCount = _mapObject.find(inReference);
 	
 	
 	if (_mapObject.end() != toCount)
