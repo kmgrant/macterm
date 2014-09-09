@@ -8566,7 +8566,7 @@ alignmentDisplay	(My_ScreenBufferPtr		inDataPtr)
 	// also will reset all attributes and this may not be part of the
 	// VT100 specification (but it seems reasonable to get rid of any
 	// special colors or oversized text when doing screen alignment)
-	for (auto lineInfo : inDataPtr->screenBuffer)
+	for (auto& lineInfo : inDataPtr->screenBuffer)
 	{
 		bufferLineFill(inDataPtr, lineInfo, 'E', kTerminalTextAttributesAllOff, true/* change line global attributes to match */);
 	}
@@ -13664,7 +13664,7 @@ bufferEraseVisibleScreen	(My_ScreenBufferPtr		inDataPtr,
 	}
 	
 	// clear buffer
-	for (auto lineInfo : inDataPtr->screenBuffer)
+	for (auto& lineInfo : inDataPtr->screenBuffer)
 	{
 		bufferEraseLineWithoutUpdate(inDataPtr, inChanges, lineInfo);
 	}
@@ -13830,7 +13830,7 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 			
 			
 			// the new lines have no attributes EXCEPT for a custom background color
-			for (auto attributeFlags : lineTemplate.returnMutableAttributeVector())
+			for (auto& attributeFlags : lineTemplate.returnMutableAttributeVector())
 			{
 				STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, attributeFlags);
 			}
@@ -14061,7 +14061,7 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 			
 			
 			// the new lines have no attributes EXCEPT for a custom background color
-			for (auto attributeFlags : lineTemplate.returnMutableAttributeVector())
+			for (auto& attributeFlags : lineTemplate.returnMutableAttributeVector())
 			{
 				STYLE_COPY_BACKGROUND(inDataPtr->current.latentAttributes, attributeFlags);
 			}
