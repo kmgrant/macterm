@@ -439,6 +439,8 @@
 		0A7236F510841FAB00BB36C2 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrintPreviewCocoa.xib; sourceTree = "<group>"; };
 		0A766E0A0FB54D8E00259E56 /* kvp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = kvp.py; path = Application/PythonCode/pymacterm/file/kvp.py; sourceTree = "<group>"; };
 		0A7A74ED15A90A0F00E14184 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelFormatStandardColorsCocoa.xib; sourceTree = "<group>"; };
+		0A7B831E19D66751000A4240 /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
+		0A7B831F19D66761000A4240 /* All.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = All.xcconfig; path = Shared/All.xcconfig; sourceTree = "<group>"; };
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
 		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
 		0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForRestartSession.icns; path = Application/Resources/IconForRestartSession.icns; sourceTree = "<group>"; };
@@ -892,8 +894,10 @@
 				0AFF112F0AF4202B006CCA34 /* NIBs */,
 				0AFF136B0AF42045006CCA34 /* Required Frameworks */,
 				0A46FE73055433CA00ACDF3A /* Products */,
+				0A7B831F19D66761000A4240 /* All.xcconfig */,
 				0A69E52D0DDBAD9A00DA7874 /* CustomPaths.xcconfig */,
 				0A69E5250DDBACB100DA7874 /* Debug.xcconfig */,
+				0A7B831E19D66751000A4240 /* Production.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1357,7 +1361,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Python will look for \"_Quills.so\" when \"import Quills\" is used,\n# so the file cannot be named _Quills_debug.so (as Xcode makes it)\n\nif [ -r \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" ] ; then\n    cp \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills.so\"\nfi\n\n# although the .so is automatically placed in the output directory, Xcode\n# does not normally consider the generated .py file to be important; so\n# this must be manually copied from the derived sources area\n\ncp \"${DERIVED_SOURCES_DIR}/Quills.py\" \"${BUILT_PRODUCTS_DIR}/\"";
+			shellScript = "# Python will look for \"_Quills.so\" when \"import Quills\" is used,\n# so the file cannot be named _Quills_debug.so (as Xcode makes it)\n\n#if [ -r \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" ] ; then\n#    cp \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills.so\"\n#fi\n\n# although the .so is automatically placed in the output directory, Xcode\n# does not normally consider the generated .py file to be important; so\n# this must be manually copied from the derived sources area\n\ncp \"${DERIVED_SOURCES_DIR}/Quills.py\" \"${BUILT_PRODUCTS_DIR}/\"";
 		};
 		0AFB11AA0AE9EECB005EAF90 /* Hack In Debug Symlinks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1371,7 +1375,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\n# referenced environment variables are set by Xcode\n\n# since the linker seems to prefer finding \"Foobar\" instead of \"Foobar_debug\"\n# in a [.framework]/Versions/A/ subdirectory, this hacks in a link to the\n# debug version so that *only* a debug version actually has to be built\n\nln -snf ${EXECUTABLE_NAME}_debug \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/${EXECUTABLE_NAME}\"\n\n# this gets weirder...the script that sets up library paths for Python ends\n# up using the top-level link [.framework]/Foobar, but in debugging mode *it*\n# looks for \"Foobar_debug\" (the opposite behavior of the other case above);\n# so at the top level, this script also hacks in a link to the non-debug name\n\nln -snf Versions/${FRAMEWORK_VERSION}/${EXECUTABLE_NAME} \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/${EXECUTABLE_NAME}\"\nln -snf ${EXECUTABLE_NAME} \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/${EXECUTABLE_NAME}_debug\"";
+			shellScript = "\n# referenced environment variables are set by Xcode\n\n# since the linker seems to prefer finding \"Foobar\" instead of \"Foobar_debug\"\n# in a [.framework]/Versions/A/ subdirectory, this hacks in a link to the\n# debug version so that *only* a debug version actually has to be built\n\n#ln -snf ${EXECUTABLE_NAME}_debug \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/${EXECUTABLE_NAME}\"\n\n# this gets weirder...the script that sets up library paths for Python ends\n# up using the top-level link [.framework]/Foobar, but in debugging mode *it*\n# looks for \"Foobar_debug\" (the opposite behavior of the other case above);\n# so at the top level, this script also hacks in a link to the non-debug name\n\n#ln -snf Versions/${FRAMEWORK_VERSION}/${EXECUTABLE_NAME} \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/${EXECUTABLE_NAME}\"\n#ln -snf ${EXECUTABLE_NAME} \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/${EXECUTABLE_NAME}_debug\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1932,12 +1936,150 @@
 			};
 			name = ForDebugging;
 		};
+		0A7B832019D668FC000A4240 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A7B831E19D66751000A4240 /* Production.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
+				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
+				GCC_WARN_MISSING_PARENTHESES = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNKNOWN_PRAGMAS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_LABEL = YES;
+				GCC_WARN_UNUSED_PARAMETER = YES;
+				GCC_WARN_UNUSED_VALUE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
+				OTHER_CFLAGS = (
+					"-g",
+					"-fpascal-strings",
+					"-v",
+					"-IApplication/Code",
+					"-IShared/Code",
+					"-IApplication/Resources",
+					"-IApplication/Resources/English.lproj",
+					"-F$(GROWL_SDK_ROOT)/Framework/Legacy",
+					"$(SDK_PATCH_INCLUDES)",
+				);
+				PREBINDING = NO;
+				SDKROOT = macosx10.6;
+				VALID_ARCHS = i386;
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wextra",
+				);
+			};
+			name = ForRelease;
+		};
+		0A7B832119D668FC000A4240 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = MacTerm;
+			};
+			name = ForRelease;
+		};
+		0A7B832219D668FC000A4240 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A7B831E19D66751000A4240 /* Production.xcconfig */;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(GROWL_SDK_ROOT)/Framework/Legacy\"";
+				FRAMEWORK_VERSION = B;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
+				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
+				OTHER_LDFLAGS = (
+					"$(PYTHON_LDFLAGS)",
+					"$(LDFLAGS_EXTRA_FRAMEWORKS)",
+				);
+				PRODUCT_NAME = Quills;
+			};
+			name = ForRelease;
+		};
+		0A7B832319D668FC000A4240 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A7B831E19D66751000A4240 /* Production.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "";
+				OTHER_CFLAGS = (
+					"-g",
+					"-fpascal-strings",
+					"-v",
+					"$(PYTHON_INCLUDES)",
+					"-IApplication/Code",
+					"-IShared/Code",
+					"-IApplication/Resources",
+					"-IApplication/Resources/English.lproj",
+					"-F$(GROWL_SDK_ROOT)/Framework/Legacy",
+					"$(SDK_PATCH_INCLUDES)",
+				);
+				OTHER_LDFLAGS = "$(PYTHON_LDFLAGS)";
+				PRODUCT_NAME = PythonInvoker;
+			};
+			name = ForRelease;
+		};
+		0A7B832419D668FC000A4240 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A7B831E19D66751000A4240 /* Production.xcconfig */;
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_EXTENSION = so;
+				EXECUTABLE_PREFIX = _;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SDKROOT)/System/Library/Frameworks\"";
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_WARN_SHADOW = NO;
+				GCC_WARN_UNUSED_PARAMETER = NO;
+				OTHER_CFLAGS = "$(PYTHON_INCLUDES)";
+				OTHER_LDFLAGS = (
+					"$(PYTHON_LDFLAGS)",
+					"-framework",
+					Quills,
+				);
+				PRODUCT_NAME = Quills;
+				WARNING_CFLAGS = "-Wall";
+			};
+			name = ForRelease;
+		};
+		0A7B832519D668FC000A4240 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = "Application/Resources/Template-PyMacTerm.framework-Info.plist";
+				PRODUCT_NAME = PyMacTerm;
+			};
+			name = ForRelease;
+		};
 		0AA249450D13342D00BCAF94 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Debug.xcconfig */;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				BUILD_VARIANTS = debug;
 				COPY_PHASE_STRIP = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
@@ -2054,6 +2196,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0A70B8A61079C1EB0013E76F /* ForDebugging */,
+				0A7B832319D668FC000A4240 /* ForRelease */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = ForDebugging;
@@ -2062,6 +2205,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0AA249470D13342D00BCAF94 /* ForDebugging */,
+				0A7B832419D668FC000A4240 /* ForRelease */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = ForDebugging;
@@ -2070,6 +2214,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0AA249490D13342D00BCAF94 /* ForDebugging */,
+				0A7B832519D668FC000A4240 /* ForRelease */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = ForDebugging;
@@ -2078,6 +2223,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0AA249460D13342D00BCAF94 /* ForDebugging */,
+				0A7B832219D668FC000A4240 /* ForRelease */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = ForDebugging;
@@ -2086,6 +2232,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0AA249450D13342D00BCAF94 /* ForDebugging */,
+				0A7B832019D668FC000A4240 /* ForRelease */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = ForDebugging;
@@ -2094,6 +2241,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0AFB6A200E86FD27005C5A07 /* ForDebugging */,
+				0A7B832119D668FC000A4240 /* ForRelease */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = ForDebugging;

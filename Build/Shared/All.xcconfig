@@ -1,0 +1,18 @@
+#include "CustomPaths.xcconfig"
+
+// Growl is not necessarily linked
+LDFLAGS_EXTRA_FRAMEWORKS = -weak_framework Growl
+
+// the version of SWIG required to work with the system Python
+// (see also SWIG_PREFIX)
+SWIG_VERSION = 2.0.11
+
+// set to the project Python version; as of 10.9 this is not in the SDK root
+PYTHON_FRAMEWORK_ROOT = /System/Library/Frameworks/Python.framework/Versions/2.6
+
+// the following should be the result of "$(PYTHON_FRAMEWORK_ROOT)/bin/python-config --includes":
+PYTHON_INCLUDES = -I/System/Library/Frameworks/Python.framework/Versions/2.6/include/python2.6
+
+// the following should be the result of "$(PYTHON_FRAMEWORK_ROOT)/bin/python-config --ldflags":
+PYTHON_LDFLAGS = -L/System/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/config -ldl -lpython2.6
+
