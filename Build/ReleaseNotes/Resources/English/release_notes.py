@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20140929',
     '20140909',
     '20140901',
     '20140817',
@@ -499,6 +500,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20140929': [
+        'Service "Open Folder in MacTerm" is now more intelligent: if you have selected a file or bundle icon in the Finder, the new shell will target the parent directory of the file instead of failing entirely.',
+    ],
     '20140909': [
         'Full Screen icons have been redesigned.',
     ],

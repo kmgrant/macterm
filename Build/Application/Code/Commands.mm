@@ -8049,11 +8049,50 @@ error:(NSString**)					error
 		SessionRef			newSession = nullptr;
 		
 		
+		// if the path points to an existing file, assume that the user
+		// actually wants to open a shell to its parent directory
+		{
+			BOOL				isDirectory = NO;
+			NSFileManager*		fileManager = [NSFileManager defaultManager];
+			
+			
+			if ([fileManager fileExistsAtPath:pathString isDirectory:&isDirectory])
+			{
+				if (NO == isDirectory)
+				{
+					// a file; open the shell at the parent directory instead
+					pathString = [pathString stringByDeletingLastPathComponent];
+				}
+				else
+				{
+					// it is a directory; on Mac OS X however, directories can
+					// appear to be files (e.g. bundles); see if the directory
+					// is really a bundle and if it is, treat it like a file
+					// (namely, still look for the parent); otherwise, keep the
+					// original directory path as-is
+					NSWorkspace*	workspace = [NSWorkspace sharedWorkspace];
+					
+					
+					if ([workspace isFilePackageAtPath:pathString])
+					{
+						// a bundle; open the shell at the parent directory instead
+						pathString = [pathString stringByDeletingLastPathComponent];
+					}
+				}
+			}
+			else
+			{
+				errorString = NSLocalizedStringFromTable(@"Specified path no longer exists.", @"Services"/* table */,
+															@"error message for nonexistent paths given to the open-at-path Service provider");
+				pathString = nil;
+			}
+		}
+		
 		// create a shell
 		if (nullptr != terminalWindow)
 		{
 			newSession = SessionFactory_NewSessionDefaultShell(terminalWindow, nullptr/* workspace */, 0/* window index in workspace */,
-																(CFStringRef)pathString/* current working directory */);
+																BRIDGE_CAST(pathString, CFStringRef)/* current working directory */);
 		}
 		if (nullptr == newSession)
 		{
@@ -8064,7 +8103,7 @@ error:(NSString**)					error
 		{
 			// successfully created; initialize the window title to the starting path
 			// to remind the user of the location that was set
-			Session_SetWindowUserDefinedTitle(newSession, (CFStringRef)pathString);
+			Session_SetWindowUserDefinedTitle(newSession, BRIDGE_CAST(pathString, CFStringRef));
 		}
 	}
 	
