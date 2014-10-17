@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20141017',
     '20141013',
     '20140929',
     '20140909',
@@ -501,6 +502,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20141017': [
+        'Minor artwork updates to look at home on Mac OS X Yosemite.',
+    ],
     '20141013': [
         'Fixed bugs in Service "Open Folder in MacTerm", added some flexibility and reduced the probability that a reference would incur a delay from the system.',
     ],
