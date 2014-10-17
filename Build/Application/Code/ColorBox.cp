@@ -338,55 +338,9 @@ ColorBox_GetColor() to determine the displayed color.
 void
 ColorBox_UserSetColor	(HIViewRef		inView)
 {
-#if 1
 	// ah, nice, simple and sane on recent Mac OS X versions...
 	CocoaBasic_ColorPanelSetTargetView(inView);
 	CocoaBasic_ColorPanelDisplay();
-#else
-	// here is a modal dialog implementation if the color panel
-	// proves to be too flaky; so far, the Cocoa panel seems to
-	// be working correctly...
-	OSStatus			error = noErr;
-	MyColorBoxDataPtr	dataPtr = nullptr;
-	UInt32				actualSize = 0;
-	
-	
-	error = GetControlProperty(inView, AppResources_ReturnCreatorCode(),
-								kConstantsRegistry_ControlPropertyTypeColorBoxData,
-								sizeof(dataPtr), &actualSize, &dataPtr);
-	assert_noerr(error);
-	assert(sizeof(dataPtr) == actualSize);
-	{
-		UIStrings_Result		stringResult = kUIStrings_ResultOK;
-		CFStringRef				askColorCFString = nullptr;
-		PickerMenuItemInfo		editMenuInfo;
-		Boolean					releaseAskColorCFString = true;
-		
-		
-		stringResult = UIStrings_Copy(kUIStrings_SystemDialogPromptPickColor, askColorCFString);
-		unless (stringResult.ok())
-		{
-			// cannot find prompt, but this is not a serious problem
-			askColorCFString = CFSTR("");
-			releaseAskColorCFString = false;
-		}
-		
-		bzero(&editMenuInfo, sizeof(editMenuInfo));
-		
-		if (ColorUtilities_ColorChooserDialogDisplay
-			(askColorCFString, &dataPtr->displayedColor/* input */, &dataPtr->displayedColor/* output */,
-				true/* is modal */, NewUserEventUPP(EventLoop_HandleColorPickerUpdate),
-				&editMenuInfo))
-		{
-			(OSStatus)HIViewSetNeedsDisplay(inView, true);
-		}
-		
-		if (releaseAskColorCFString)
-		{
-			CFRelease(askColorCFString), askColorCFString = nullptr;
-		}
-	}
-#endif
 }// UserSetColor
 
 

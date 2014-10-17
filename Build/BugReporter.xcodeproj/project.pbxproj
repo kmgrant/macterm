@@ -11,8 +11,6 @@
 		0A33CC4E07FABA6500248DDF /* BugReporterPrefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC4D07FABA6500248DDF /* BugReporterPrefix.pch */; };
 		0A33CC5707FABAF800248DDF /* UniversalDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC5507FABAF800248DDF /* UniversalDefines.h */; };
 		0A3C0113081208530088580A /* CFUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A3C0112081208530088580A /* CFUtilities.h */; };
-		0A3C025D08123ACD0088580A /* Releases.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C025C08123ACD0088580A /* Releases.cp */; };
-		0A3C026408123ADE0088580A /* Releases.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A3C026308123ADE0088580A /* Releases.h */; };
 		0A5C6C671597B1870094E3FD /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A5C6C661597B1870094E3FD /* Cocoa.framework */; };
 		0A5C6C7B1597B26E0094E3FD /* BugReporterCocoa.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A5C6C791597B26E0094E3FD /* BugReporterCocoa.xib */; };
 		0AA742CB06E45F5A00CBC7B5 /* IconForBundle.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */; };
@@ -43,8 +41,6 @@
 		0A33CC4D07FABA6500248DDF /* BugReporterPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BugReporterPrefix.pch; path = BugReporter/Code/BugReporterPrefix.pch; sourceTree = "<group>"; };
 		0A33CC5507FABAF800248DDF /* UniversalDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UniversalDefines.h; path = Shared/Code/UniversalDefines.h; sourceTree = "<group>"; };
 		0A3C0112081208530088580A /* CFUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFUtilities.h; path = Shared/Code/CFUtilities.h; sourceTree = "<group>"; };
-		0A3C025C08123ACD0088580A /* Releases.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Releases.cp; path = Shared/Code/Releases.cp; sourceTree = "<group>"; };
-		0A3C026308123ADE0088580A /* Releases.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Releases.h; path = Shared/Code/Releases.h; sourceTree = "<group>"; };
 		0A5C6C661597B1870094E3FD /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		0A5C6C7A1597B26E0094E3FD /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = BugReporter/Resources/English.lproj/BugReporterCocoa.xib; sourceTree = "<group>"; };
 		0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = BugReporter/Resources/IconForBundle.icns; sourceTree = "<group>"; };
@@ -69,8 +65,6 @@
 			children = (
 				0A2EA0E008E0F28A00108992 /* CFUtilities.cp */,
 				0A3C0112081208530088580A /* CFUtilities.h */,
-				0A3C025C08123ACD0088580A /* Releases.cp */,
-				0A3C026308123ADE0088580A /* Releases.h */,
 				0A33CC5507FABAF800248DDF /* UniversalDefines.h */,
 			);
 			name = Shared;
@@ -108,7 +102,6 @@
 				0A33CC4E07FABA6500248DDF /* BugReporterPrefix.pch in Headers */,
 				0A33CC5707FABAF800248DDF /* UniversalDefines.h in Headers */,
 				0A3C0113081208530088580A /* CFUtilities.h in Headers */,
-				0A3C026408123ADE0088580A /* Releases.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -181,7 +174,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.mm in Sources */,
-				0A3C025D08123ACD0088580A /* Releases.cp in Sources */,
 				0A2EA0E108E0F28A00108992 /* CFUtilities.cp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

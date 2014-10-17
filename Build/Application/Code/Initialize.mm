@@ -1,4 +1,4 @@
-/*!	\file Initialize.cp
+/*!	\file Initialize.mm
 	\brief Setup and teardown for all modules that
 	require it (and cannot do it just-in-time).
 */
@@ -31,55 +31,54 @@
 
 ###############################################################*/
 
-#include "Initialize.h"
-#include <UniversalDefines.h>
+#import "Initialize.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#import <cstdio>
+#import <cstdlib>
+#import <cstring>
 
 // standard-C++ includes
-#include <map>
-#include <sstream>
-#include <string>
+#import <map>
+#import <sstream>
+#import <string>
 
 // Mac includes
-#include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreServices/CoreServices.h>
+#import <ApplicationServices/ApplicationServices.h>
+#import <Carbon/Carbon.h>
+#import <CoreFoundation/CoreFoundation.h>
+#import <CoreServices/CoreServices.h>
 
 // library includes
-#include <AlertMessages.h>
-#include <CocoaBasic.h>
-#include <ColorUtilities.h>
-#include <Console.h>
-#include <Localization.h>
-#include <MacHelpUtilities.h>
-#include <MemoryBlockPtrLocker.template.h>
-#include <MemoryBlocks.h>
-#include <Releases.h>
-#include <Undoables.h>
+#import <AlertMessages.h>
+#import <CocoaBasic.h>
+#import <ColorUtilities.h>
+#import <Console.h>
+#import <Localization.h>
+#import <MacHelpUtilities.h>
+#import <MemoryBlockPtrLocker.template.h>
+#import <MemoryBlocks.h>
+#import <Undoables.h>
 
 // application includes
-#include "AppResources.h"
-#include "Clipboard.h"
-#include "CommandLine.h"
-#include "Commands.h"
-#include "DebugInterface.h"
-#include "DialogUtilities.h"
-#include "EventLoop.h"
-#include "InfoWindow.h"
-#include "InternetPrefs.h"
-#include "Preferences.h"
-#include "PrefsWindow.h"
-#include "RecordAE.h"
-#include "SessionFactory.h"
-#include "TerminalBackground.h"
-#include "TerminalView.h"
-#include "Terminology.h"
-#include "UIStrings.h"
+#import "AppResources.h"
+#import "Clipboard.h"
+#import "CommandLine.h"
+#import "Commands.h"
+#import "DebugInterface.h"
+#import "DialogUtilities.h"
+#import "EventLoop.h"
+#import "InfoWindow.h"
+#import "InternetPrefs.h"
+#import "Preferences.h"
+#import "PrefsWindow.h"
+#import "RecordAE.h"
+#import "SessionFactory.h"
+#import "TerminalBackground.h"
+#import "TerminalView.h"
+#import "Terminology.h"
+#import "UIStrings.h"
 
 
 
@@ -204,29 +203,11 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	#ifndef NDEBUG
 		// write an initial header to the console that describes the user’s runtime environment
 		{
-			std::ostringstream	messageBuffer;
-			long				gestaltResult = 0L;
+			NSProcessInfo*		processInfo = [NSProcessInfo processInfo];
+			NSString*			versionString = [processInfo operatingSystemVersionString];
 			
 			
-			// useful values
-			if (Gestalt(gestaltSystemVersion, &gestaltResult) != noErr)
-			{
-				messageBuffer << "Could not find Mac OS version!";
-			}
-			else
-			{
-				messageBuffer
-				<< "This computer is running Mac OS X "
-				<< STATIC_CAST(Releases_ReturnMajorRevisionForVersion(gestaltResult), unsigned int)
-				<< "."
-				<< STATIC_CAST(Releases_ReturnMinorRevisionForVersion(gestaltResult), unsigned int)
-				<< "."
-				<< STATIC_CAST(Releases_ReturnSuperminorRevisionForVersion(gestaltResult), unsigned int)
-				<< "."
-				;
-			}
-			std::string		messageString = messageBuffer.str();
-			Console_WriteLine(messageString.c_str());
+			Console_WriteValueCFString("System information", BRIDGE_CAST(versionString, CFStringRef));
 		}
 	#endif
 		
@@ -339,41 +320,6 @@ Initialize_ApplicationShutDownRemainingComponents ()
 }// ApplicationShutDownRemainingComponents
 
 
-/*!
-This function is not normally invoked directly.  It is only
-needed when depending on OS version flags like "kFlagOS10_9API"
-in code that is called at an unknown time or that might be
-called very early in the startup process.  In those situations,
-call Initialize_SetVersionFlags() as a guard to ensure that the
-right API flags are actually defined before you use them.
-
-In the vast majority of cases, initialization has already
-occurred and you can simply test version flags normally without
-explicitly invoking this routine first.
-
-(4.0)
-*/
-void
-Initialize_SetVersionFlags ()
-{
-	long	gestaltResult = 0L;
-	UInt8   majorRev = 0;
-	UInt8   minorRev = 0;
-	
-	
-	UNUSED_RETURN(OSStatus)Gestalt(gestaltSystemVersion, &gestaltResult);
-	majorRev = Releases_ReturnMajorRevisionForVersion(gestaltResult);
-	minorRev = Releases_ReturnMinorRevisionForVersion(gestaltResult);
-	
-	// any advanced APIs available?
-	FlagManager_Set(kFlagOS10_6API, true); // this source tree has a minimum SDK
-	FlagManager_Set(kFlagOS10_7API, (((majorRev == 0x0A) && (minorRev >= 0x07)) || (majorRev > 0x0A)));
-	FlagManager_Set(kFlagOS10_8API, (((majorRev == 0x0A) && (minorRev >= 0x08)) || (majorRev > 0x0A)));
-	FlagManager_Set(kFlagOS10_9API, (((majorRev == 0x0A) && (minorRev >= 0x09)) || (majorRev > 0x0A)));
-	FlagManager_Set(kFlagOS10_10API, (((majorRev == 0x0A) && (minorRev >= 0x0A)) || (majorRev > 0x0A)));
-}// SetVersionFlags
-
-
 #pragma mark Internal Methods
 namespace {
 
@@ -468,9 +414,6 @@ initMacOSToolbox ()
 {
 	// Launch Services seems to recommend this, so do it
 	LSInit(kLSInitializeDefaults);
-	
-	// see "kFlagOS10_9API", etc.
-	Initialize_SetVersionFlags();
 	
 	InitCursor();
 	

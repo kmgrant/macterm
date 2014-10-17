@@ -43,7 +43,6 @@
 #import <CFRetainRelease.h>
 #import <Console.h>
 #import <MemoryBlocks.h>
-#import <Releases.h>
 
 // application includes
 #import "AppResources.h"
@@ -500,36 +499,15 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 							 SInt16*		outFontSizePtr,
 							 Style*			outFontStylePtr)
 {
-	OSStatus		error = noErr;
-	Boolean			haveAppearance1_1 = false;
+	OSStatus	error = noErr;
 	
 	
-	// Appearance 1.1 or later?
-	{
-		long		appv = 0L;
-		
-		
-		error = Gestalt(gestaltAppearanceVersion, &appv);
-		if (error == noErr)
-		{
-			UInt8		majorRev = Releases_ReturnMajorRevisionForVersion(appv);
-			UInt8		minorRev = Releases_ReturnMinorRevisionForVersion(appv);
-			
-			
-			haveAppearance1_1 = (((majorRev == 0x01) && (minorRev >= 0x01)) || (majorRev > 0x01));
-		}
-	}
-	
-	error = noErr;
-	if (haveAppearance1_1)
-	{
-		error = GetThemeFont((inThemeFontToUse != USHRT_MAX) ? inThemeFontToUse : STATIC_CAST(kThemeSystemFont, ThemeFontID),
-								GetScriptManagerVariable(smSysScript)/* script code */,
-								outFontName, outFontSizePtr, outFontStylePtr);
-	}
+	error = GetThemeFont((inThemeFontToUse != USHRT_MAX) ? inThemeFontToUse : STATIC_CAST(kThemeSystemFont, ThemeFontID),
+							GetScriptManagerVariable(smSysScript)/* script code */,
+							outFontName, outFontSizePtr, outFontStylePtr);
 	
 	// without the appropriate Appearance Manager APIs, use the Script Manager
-	if ((!haveAppearance1_1) || (error != noErr))
+	if (error != noErr)
 	{
 		FMFontFamily	fontID = GetScriptVariable(GetScriptManagerVariable(smSysScript),
 													((inThemeFontToUse == kThemeSystemFont) || (inThemeFontToUse == USHRT_MAX))

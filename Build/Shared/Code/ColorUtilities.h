@@ -118,20 +118,6 @@ void
 
 //@}
 
-//!\name Displaying Standard Get-Color Dialog Boxes
-//@{
-
-// DEPRECATED
-Boolean
-	ColorUtilities_ColorChooserDialogDisplay	(CFStringRef			inPrompt,
-												 RGBColor const*		inColor,
-												 RGBColor*				outColor,
-												 Boolean				inIsModal,
-												 UserEventUPP			inUserEventProc,
-												 PickerMenuItemInfo*	inEditMenuInfo);
-
-//@}
-
 #endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

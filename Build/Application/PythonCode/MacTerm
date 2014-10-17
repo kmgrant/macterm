@@ -57,7 +57,7 @@ if __name__ == "__main__":
     default_quills_fw_ver = "B"
     default_quills_pylib_ver = "2.6"
     default_wrapper = "MacTerm_python%s_wrap" % default_quills_pylib_ver
-    if mac_os_name == "Mavericks":
+    if mac_os_name == "Mavericks" or mac_os_name == "Yosemite":
         py_interpreter = os.path.join(macos_dir, default_wrapper)
         quills_fw_ver = default_quills_fw_ver
         quills_pylib_ver = default_quills_pylib_ver

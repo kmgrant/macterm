@@ -52,9 +52,6 @@ void
 void
 	Initialize_ApplicationShutDownRemainingComponents		();
 
-void
-	Initialize_SetVersionFlags								();
-
 //@}
 
 #endif // __INITIALIZE__

@@ -1004,10 +1004,8 @@ receiveSheetOpening		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			// (/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/
 			//	HIToolbox.framework/Versions/A/Resources/English.lproj/Toolbar.nib)
 			// to hack in a more Cocoa-like look-and-feel; this is obviously
-			// completely cosmetic, so any errors are ignored, etc.; this hack works
-			// on 10.4-10.7, but do NOT assume it does past 10.9 (for now)
-			if (FlagManager_Test(kFlagOS10_6API) && (false == FlagManager_Test(kFlagOS10_10API)) &&
-				(noErr == CopyWindowTitleAsCFString(sheetWindow, &sheetTitleCFString)))
+			// completely cosmetic, so any errors are ignored, etc.
+			if (noErr == CopyWindowTitleAsCFString(sheetWindow, &sheetTitleCFString))
 			{
 				// attempt to identify the customization sheet using its title
 				if (kCFCompareEqualTo == CFStringCompare(sheetTitleCFString, CFSTR("Configure Toolbar")/* from NIB */,

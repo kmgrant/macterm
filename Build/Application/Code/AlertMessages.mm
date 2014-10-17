@@ -785,14 +785,14 @@ Alert_Display	(AlertMessages_BoxRef	inAlert,
 				
 				if (inAnimated)
 				{
-					if (FlagManager_Test(kFlagOS10_7API) && [window respondsToSelector:@selector(setAnimationBehavior:)])
+					if ([window respondsToSelector:@selector(setAnimationBehavior:)])
 					{
 						[window setAnimationBehavior:FUTURE_SYMBOL(5, NSWindowAnimationBehaviorAlertPanel)];
 					}
 				}
 				else
 				{
-					if (FlagManager_Test(kFlagOS10_7API) && [window respondsToSelector:@selector(setAnimationBehavior:)])
+					if ([window respondsToSelector:@selector(setAnimationBehavior:)])
 					{
 						[window setAnimationBehavior:FUTURE_SYMBOL(2, NSWindowAnimationBehaviorNone)];
 					}

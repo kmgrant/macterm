@@ -37,7 +37,6 @@
 #include <Embedding.h>
 #include <MemoryBlockHandleLocker.template.h>
 #include <MemoryBlocks.h>
-#include <Releases.h>
 #include <SoundSystem.h>
 
 // Mac includes

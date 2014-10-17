@@ -499,7 +499,7 @@ windowDidLoad
 	
 	[canvasView setInterpreterRef:[self interpreterRef]];
 	
-	if (FlagManager_Test(kFlagOS10_7API) && [[self window] respondsToSelector:@selector(setAnimationBehavior:)])
+	if ([[self window] respondsToSelector:@selector(setAnimationBehavior:)])
 	{
 		[[self window] setAnimationBehavior:FUTURE_SYMBOL(3, NSWindowAnimationBehaviorDocumentWindow)];
 	}
