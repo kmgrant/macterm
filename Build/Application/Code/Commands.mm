@@ -7980,60 +7980,106 @@ IMPORTANT:	It MUST be advertised in the application bundle’s
 - (void)
 openPathInShell:(NSPasteboard*)		aPasteboard
 userData:(NSString*)				userData
-error:(NSString**)					error
+error:(NSString**)					outError // NOTE: really is NSString**, not NSError** (unlike most system methods)
 {
 #pragma unused(userData)
-	// NOTE: later versions of Mac OS X change pasteboard APIs significantly; this will eventually change
-	NSString*	pathString = [aPasteboard stringForType:NSStringPboardType];
+	NSString*	pathString = nil;
 	NSString*	errorString = nil;
+	NSArray*	classOrder = @[
+								// although NSURL may be a more “logical” class to consider first, resolving
+								// an existing NSURL* creates the risk of a HUGE delay if, apparently, it
+								// involves any sandbox transitions (conversely, it appears to be “free” if
+								// the pasteboard string is used to locally construct an NSURL*); therefore,
+								// strings are tested first to give the best chance of a good user experience
+								NSString.class,
+								NSURL.class,
+							];
+	NSArray*	possibleMatches = [aPasteboard readObjectsForClasses:classOrder
+																		options:@{
+																					NSPasteboardURLReadingFileURLsOnlyKey: @(YES),
+																				}];
 	
 	
-	if (nil == pathString)
+	// although only one value should typically exist, look
+	// at each (stop as soon as a valid path string is found)
+	for (id pathObject in possibleMatches)
 	{
-		pathString = [aPasteboard stringForType:NSURLPboardType];
-	}
-	if (nil == pathString)
-	{
-		pathString = [aPasteboard stringForType:NSFilenamesPboardType];
-	}
-	
-	// for a completely incomprehensible reason, it seems that the system converts
-	// simple text selections containing pathnames into multiple-line text strings
-	// where one line is the path and another line is a file URL; so instead of
-	// just opening the damned path, it is necessary to first look for this
-	// bastardized version of the string and strip out whatever was appended...
-	{
-		NSArray*	components = [pathString componentsSeparatedByString:@"\015"/* carriage return */];
-		
-		
-		if ((nil != components) && ([components count] > 1))
+		if (nil == pathObject)
 		{
-			pathString = (NSString*)[components objectAtIndex:0];
+			// should not happen; skip
+			Console_Warning(Console_WriteLine, "open-path-in-shell service received nil object");
+		}
+		else if ([pathObject isKindOfClass:NSURL.class])
+		{
+			NSURL*		asURL = STATIC_CAST(pathObject, NSURL*);
+			
+			
+			// strip off the file scheme component and pull out the path
+			if ((nil != asURL) && [asURL isFileURL])
+			{
+				// in case the URL has Apple’s weird file-reference format,
+				// first try to convert it into a form whose path is more
+				// likely to be usable
+				asURL = [asURL filePathURL];
+				
+				pathString = asURL.path;
+			}
+		}
+		else if ([pathObject isKindOfClass:NSString.class])
+		{
+			pathString = STATIC_CAST(pathObject, NSString*);
+			
+			// ignore leading and trailing whitespace
+			pathString = [pathString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+			
+			// in the off chance that a string in URL form has somehow made it
+			// through the filter, strip off the scheme and use the rest
+			{
+				NSURL*		testURL = nil;
+				
+				
+				// construct a URL from the string (assume that Apple will
+				// resolve any “file reference” form of string automatically
+				// and do not use the "filePathURL" method in this case)
+				testURL = [NSURL URLWithString:pathString];
+				
+				if ((nil != testURL) && [testURL isFileURL])
+				{
+					pathString = testURL.path;
+				}
+			}
+			
+			// past NSPasteboard methods could sometimes return multiple items
+			// as a single newline-separated string; not sure if this is still
+			// a possibility when asking for path names but it can’t hurt; look
+			// for line endings and split them out when present
+			{
+				NSArray*	components = [pathString componentsSeparatedByString:@"\015"/* carriage return */];
+				
+				
+				if ((nil != components) && (components.count > 1))
+				{
+					pathString = STATIC_CAST([components objectAtIndex:0], NSString*);
+				}
+				else
+				{
+					components = [pathString componentsSeparatedByString:@"\012"/* line feed */];
+					if ((nil != components) && (components.count > 1))
+					{
+						pathString = STATIC_CAST([components objectAtIndex:0], NSString*);
+					}
+				}
+			}
 		}
 		else
 		{
-			components = [pathString componentsSeparatedByString:@"\012"/* line feed */];
-			if ((nil != components) && ([components count] > 1))
-			{
-				pathString = (NSString*)[components objectAtIndex:0];
-			}
+			// should not see any other type of data; skip
+			Console_Warning(Console_WriteValueCFString, "open-path-in-shell service received unexpected object, class", BRIDGE_CAST(NSStringFromClass([pathObject class]), CFStringRef));
 		}
-	}
-	
-	if (nil != pathString)
-	{
-		NSURL*		testURL = nil;
 		
-		
-		// ignore leading and trailing whitespace
-		pathString = [pathString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-		
-		// in the off chance that a file URL was given, just strip off the
-		// file scheme component and implicitly pull out the path
-		testURL = [NSURL URLWithString:pathString];
-		if ((nil != testURL) && (nil != [testURL path]) && ([[testURL scheme] isEqualToString:@"file"]))
+		if ((nil != pathString) && (NO == [pathString isEqualToString:@""]))
 		{
-			pathString = [testURL path];
+			break;
 		}
 	}
 	
@@ -8044,49 +8090,60 @@ error:(NSString**)					error
 	}
 	else
 	{
+		// if the path points to an existing file, assume that the user
+		// actually wants to open a shell to its parent directory
+		BOOL				isDirectory = NO;
+		NSFileManager*		fileManager = [NSFileManager defaultManager];
+		
+		
+		if ([fileManager fileExistsAtPath:pathString isDirectory:&isDirectory])
+		{
+			if (NO == isDirectory)
+			{
+				// a file; open the shell at the parent directory instead
+				pathString = [pathString stringByDeletingLastPathComponent];
+			}
+			else
+			{
+				// it is a directory; on Mac OS X however, directories can
+				// appear to be files (e.g. bundles); see if the directory
+				// is really a bundle and if it is, treat it like a file
+				// (namely, still look for the parent); otherwise, keep the
+				// original directory path as-is
+				NSWorkspace*	workspace = [NSWorkspace sharedWorkspace];
+				
+				
+				if ([workspace isFilePackageAtPath:pathString])
+				{
+					// a bundle; open the shell at the parent directory instead
+					pathString = [pathString stringByDeletingLastPathComponent];
+				}
+			}
+		}
+		
+		if ((nil == pathString) || [pathString isEqualToString:@""])
+		{
+			errorString = NSLocalizedStringFromTable(@"Specified path no longer exists.", @"Services"/* table */,
+														@"error message for nonexistent paths given to the open-at-path Service provider");
+		}
+	}
+	
+	if (nil == pathString)
+	{
+		// at this point all errors should have been set above
+		if (nil == errorString)
+		{
+			errorString = NSLocalizedStringFromTable(@"Specified path cannot be handled for an unknown reason.", @"Services"/* table */,
+														@"error message for generic failures in the open-at-path Service provider");
+			Console_Warning(Console_WriteLine, "open-path-in-shell service did not correctly account for a nil path string");
+		}
+	}
+	else
+	{
 		// open log-in shell and change to the specified directory
 		TerminalWindowRef	terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
 		SessionRef			newSession = nullptr;
 		
-		
-		// if the path points to an existing file, assume that the user
-		// actually wants to open a shell to its parent directory
-		{
-			BOOL				isDirectory = NO;
-			NSFileManager*		fileManager = [NSFileManager defaultManager];
-			
-			
-			if ([fileManager fileExistsAtPath:pathString isDirectory:&isDirectory])
-			{
-				if (NO == isDirectory)
-				{
-					// a file; open the shell at the parent directory instead
-					pathString = [pathString stringByDeletingLastPathComponent];
-				}
-				else
-				{
-					// it is a directory; on Mac OS X however, directories can
-					// appear to be files (e.g. bundles); see if the directory
-					// is really a bundle and if it is, treat it like a file
-					// (namely, still look for the parent); otherwise, keep the
-					// original directory path as-is
-					NSWorkspace*	workspace = [NSWorkspace sharedWorkspace];
-					
-					
-					if ([workspace isFilePackageAtPath:pathString])
-					{
-						// a bundle; open the shell at the parent directory instead
-						pathString = [pathString stringByDeletingLastPathComponent];
-					}
-				}
-			}
-			else
-			{
-				errorString = NSLocalizedStringFromTable(@"Specified path no longer exists.", @"Services"/* table */,
-															@"error message for nonexistent paths given to the open-at-path Service provider");
-				pathString = nil;
-			}
-		}
 		
 		// create a shell
 		if (nullptr != terminalWindow)
@@ -8112,12 +8169,12 @@ error:(NSString**)					error
 		AlertMessages_BoxRef	box = Alert_New();
 		
 		
-		*error = errorString;
+		*outError = errorString;
 		Alert_SetParamsFor(box, kAlert_StyleOK);
 		Alert_SetType(box, kAlertNoteAlert);
-		Alert_SetTextCFStrings(box, (CFStringRef)*error, ([pathString length] > 100/* arbitrary */)
-															? (CFStringRef)[pathString substringToIndex:99]
-															: (CFStringRef)pathString/* help text */);
+		Alert_SetTextCFStrings(box, BRIDGE_CAST(*outError, CFStringRef), (pathString.length > 100/* arbitrary */)
+																			? BRIDGE_CAST([pathString substringToIndex:99], CFStringRef)
+																			: BRIDGE_CAST(pathString, CFStringRef)/* help text */);
 		Alert_Display(box);
 	}
 }// openPathInShell:userData:error:
@@ -8136,7 +8193,7 @@ IMPORTANT:	It MUST be advertised in the application bundle’s
 - (void)
 openURL:(NSPasteboard*)		aPasteboard
 userData:(NSString*)		userData
-error:(NSString**)			error
+error:(NSString**)			outError // NOTE: really is NSString**, not NSError** (unlike most system methods)
 {
 #pragma unused(userData)
 	// NOTE: later versions of Mac OS X change pasteboard APIs significantly; this will eventually change
@@ -8163,7 +8220,15 @@ error:(NSString**)			error
 		theURLString = [theURLString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 		
 		testURL = [NSURL URLWithString:theURLString];
-		if ((nil == testURL) || (nil == [testURL scheme]))
+		if ((nil != testURL) && [testURL isFileURL])
+		{
+			// in case the URL has Apple’s weird file-reference format,
+			// first try to convert it into a form whose path is more
+			// likely to be usable
+			testURL = [testURL filePathURL];
+		}
+		
+		if ((nil == testURL) || (nil == testURL.scheme))
 		{
 			errorString = NSLocalizedStringFromTable(@"Unable to find an actual URL in the given selection.", @"Services"/* table */,
 														@"error message for non-URLs given to the open-URL Service provider");
@@ -8187,7 +8252,7 @@ error:(NSString**)			error
 														true/* is retained */); // LOCALIZE THIS?
 				
 				
-				Console_WriteScriptError((CFStringRef)titleText, messageCFString.returnCFStringRef());
+				Console_WriteScriptError(BRIDGE_CAST(titleText, CFStringRef), messageCFString.returnCFStringRef());
 				errorString = NSLocalizedStringFromTable(@"Unable to do anything with the given resource.", @"Services"/* table */,
 															@"error message when an exception is raised within the open-URL Service provider");
 			}
@@ -8199,12 +8264,12 @@ error:(NSString**)			error
 		AlertMessages_BoxRef	box = Alert_New();
 		
 		
-		*error = errorString;
+		*outError = errorString;
 		Alert_SetParamsFor(box, kAlert_StyleOK);
 		Alert_SetType(box, kAlertNoteAlert);
-		Alert_SetTextCFStrings(box, (CFStringRef)*error, ([theURLString length] > 100/* arbitrary */)
-															? (CFStringRef)[theURLString substringToIndex:99]
-															: (CFStringRef)theURLString/* help text */);
+		Alert_SetTextCFStrings(box, BRIDGE_CAST(*outError, CFStringRef), (theURLString.length > 100/* arbitrary */)
+																			? BRIDGE_CAST([theURLString substringToIndex:99], CFStringRef)
+																			: BRIDGE_CAST(theURLString, CFStringRef)/* help text */);
 		Alert_Display(box);
 	}
 }// openURL:userData:error:
