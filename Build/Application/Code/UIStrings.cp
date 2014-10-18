@@ -156,7 +156,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 	
 	case kUIStrings_AlertWindowKillSessionHelpText:
 	case kUIStrings_AlertWindowRestartSessionHelpText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("You will lose any unsaved changes in running programs, but the window will stay open and its text will be preserved."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("You will lose any unsaved changes in running programs but the window will stay open and text will be preserved."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowKillSessionHelpText or kUIStrings_AlertWindowRestartSessionHelpText"));
 		break;
 	
