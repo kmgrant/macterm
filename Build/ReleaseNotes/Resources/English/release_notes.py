@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20141024',
     '20141017',
     '20141013',
     '20140929',
@@ -502,6 +503,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20141024': [
+        'Minor font updates in a few areas to look at home on Mac OS X Yosemite.',
+    ],
     '20141017': [
         'Minor artwork updates to look at home on Mac OS X Yosemite.',
     ],

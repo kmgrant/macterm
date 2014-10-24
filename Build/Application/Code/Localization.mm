@@ -520,6 +520,49 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 		*outFontStylePtr = (inThemeFontToUse == kThemeSmallEmphasizedSystemFont) ? bold : normal;
 	}
 	
+	// special case short-term: theme fonts were apparently not updated by
+	// Apple for Yosemite so force the Yosemite appearance (the affected
+	// user interface elements should convert to Cocoa eventually anyway!)
+	if (inThemeFontToUse == kThemeSystemFont)
+	{
+		Str255		specialFontName;
+		
+		
+		PLstrcpy(specialFontName, "\pHelvetica Neue");
+		if (kInvalidFontFamily != FMGetFontFamilyFromName(specialFontName))
+		{
+			PLstrcpy(outFontName, specialFontName);
+			*outFontSizePtr = 14;
+			*outFontStylePtr = normal;
+		}
+	}
+	else if (inThemeFontToUse == kThemeAlertHeaderFont)
+	{
+		Str255		specialFontName;
+		
+		
+		PLstrcpy(specialFontName, "\pHelvetica Neue");
+		if (kInvalidFontFamily != FMGetFontFamilyFromName(specialFontName))
+		{
+			PLstrcpy(outFontName, specialFontName);
+			*outFontSizePtr = 13;
+			*outFontStylePtr = bold;
+		}
+	}
+	else if (inThemeFontToUse == kThemeSmallSystemFont)
+	{
+		Str255		specialFontName;
+		
+		
+		PLstrcpy(specialFontName, "\pHelvetica Neue");
+		if (kInvalidFontFamily != FMGetFontFamilyFromName(specialFontName))
+		{
+			PLstrcpy(outFontName, specialFontName);
+			*outFontSizePtr = 11;
+			*outFontStylePtr = normal;
+		}
+	}
+	
 	// special case for Aqua-like dialogs with “huge” title text
 	if (inThemeFontToUse == USHRT_MAX)
 	{

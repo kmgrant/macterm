@@ -790,6 +790,9 @@ _containerResizer			(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH
 	assert(this->mainView.exists());
 	assert(_menuCommandsHandler.isInstalled());
 	assert(_containerResizer.isInstalled());
+	
+	// hack in Yosemite edit-text font for now (will later transition to Cocoa)
+	Localization_SetControlThemeFontInfo(HIViewWrap(idMyFieldAnswerBackMessage, inOwningWindow), kThemeSystemFont);
 }// My_TerminalsPanelEmulationUI 2-argument constructor
 
 
@@ -2170,6 +2173,11 @@ _containerResizer			(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH
 	assert(_fieldRowsInputHandler.isInstalled());
 	assert(_fieldScrollbackInputHandler.isInstalled());
 	assert(_containerResizer.isInstalled());
+	
+	// hack in Yosemite edit-text font for now (will later transition to Cocoa)
+	Localization_SetControlThemeFontInfo(HIViewWrap(idMyFieldColumns, inOwningWindow), kThemeSystemFont);
+	Localization_SetControlThemeFontInfo(HIViewWrap(idMyFieldRows, inOwningWindow), kThemeSystemFont);
+	Localization_SetControlThemeFontInfo(HIViewWrap(idMyFieldScrollback, inOwningWindow), kThemeSystemFont);
 }// My_TerminalsPanelScreenUI 2-argument constructor
 
 

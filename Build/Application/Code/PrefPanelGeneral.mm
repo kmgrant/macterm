@@ -1367,6 +1367,9 @@ radioButtonResizeAffectsFontSize	(idMyRadioButtonResizeAffectsFontSize, HIViewGe
 	assert(radioButtonResizeAffectsScreenSize.exists());
 	assert(radioButtonResizeAffectsFontSize.exists());
 	assignAccessibilityRelationships();
+	
+	// hack in Yosemite edit-text font for now (will later transition to Cocoa)
+	Localization_SetControlThemeFontInfo(HIViewWrap(idMyFieldCopyUsingSpacesForTabs, inOwningWindow), kThemeSystemFont);
 }// My_GeneralTabSpecial 2-argument constructor
 
 

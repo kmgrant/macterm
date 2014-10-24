@@ -441,6 +441,10 @@ _containerResizer			(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH
 	assert(_containerResizer.isInstalled());
 	
 	this->setDataBrowserColumnWidths();
+	
+	// hack in Yosemite edit-text font for now (will later transition to Cocoa)
+	Localization_SetControlThemeFontInfo(HIViewWrap(idMyFieldMacroKeyCharacter, inOwningWindow), kThemeSystemFont);
+	Localization_SetControlThemeFontInfo(HIViewWrap(idMyFieldMacroText, inOwningWindow), kThemeSystemFont);
 }// My_MacrosPanelUI 2-argument constructor
 
 

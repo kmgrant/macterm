@@ -940,6 +940,9 @@ _localEchoCommandHandler(HIViewGetEventTarget(HIViewWrap(idMyCheckBoxLocalEcho, 
 	assert(_containerResizer.isInstalled());
 	assert(_fieldLineDelayInputHandler.isInstalled());
 	assert(_localEchoCommandHandler.isInstalled());
+	
+	// hack in Yosemite edit-text font for now (will later transition to Cocoa)
+	Localization_SetControlThemeFontInfo(HIViewWrap(idMyFieldLineInsertionDelay, inOwningWindow), kThemeSystemFont);
 }// My_SessionsPanelDataFlowUI 2-argument constructor
 
 
@@ -3019,6 +3022,9 @@ _whenFavoritesChangedHandler	(ListenerModel_NewStandardListener(preferenceChange
 					(this->_whenFavoritesChangedHandler.returnRef(), kPreferences_ChangeContextName,
 						true/* notify of initial value */);
 	assert(kPreferences_ResultOK == prefsResult);
+	
+	// hack in Yosemite edit-text font for now (will later transition to Cocoa)
+	Localization_SetControlThemeFontInfo(_fieldCommandLine, kThemeSystemFont);
 }// My_SessionsPanelResourceUI 2-argument constructor
 
 
