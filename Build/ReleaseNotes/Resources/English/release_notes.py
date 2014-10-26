@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20141026',
     '20141024',
     '20141017',
     '20141013',
@@ -503,6 +504,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20141026': [
+        'Fixed possible crash in Preferences window Sessions pane Resource tab (and Custom New Session sheet) when using the "Remote Shell..." feature.',
+    ],
     '20141024': [
         'Minor font updates in a few areas to look at home on Mac OS X Yosemite.',
     ],

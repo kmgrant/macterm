@@ -4437,7 +4437,9 @@ updateCommandLine	(Session_Protocol	inProtocol,
 	CFRetainRelease			newCommandLineObject(CFStringCreateMutable(kCFAllocatorDefault,
 																		0/* length, or 0 for unlimited */),
 													true/* is retained */);
-	Str31					portString;
+	NSString*				portString = (0 == inPortNumber)
+											? nil
+											: [[NSNumber numberWithUnsignedInt:inPortNumber] stringValue];
 	Boolean					result = false;
 	
 	
@@ -4447,15 +4449,9 @@ updateCommandLine	(Session_Protocol	inProtocol,
 		inHostName = nullptr;
 	}
 	
-	portString[0] = '\0';
-	if (0 != inPortNumber) NumToString(STATIC_CAST(inPortNumber, SInt32), portString);
-	
 	if (newCommandLineObject.exists() && (nullptr != inHostName))
 	{
 		CFMutableStringRef	newCommandLineCFString = newCommandLineObject.returnCFMutableStringRef(); // for convenience in loop
-		CFRetainRelease		portNumberCFString(CFStringCreateWithPascalStringNoCopy
-												(kCFAllocatorDefault, portString, kCFStringEncodingASCII, kCFAllocatorNull),
-												true/* is retained */);
 		Boolean				standardLoginOptionAppend = false;
 		Boolean				standardHostNameAppend = false;
 		Boolean				standardPortAppend = false;
@@ -4467,10 +4463,6 @@ updateCommandLine	(Session_Protocol	inProtocol,
 		//       from all field values first, since otherwise the user
 		//       could enter a non-empty but blank value that would become
 		//       a broken command line.
-		if ((false == portNumberCFString.exists()) || (0 == CFStringGetLength(portNumberCFString.returnCFStringRef())))
-		{
-			portNumberCFString.clear();
-		}
 		if ((nullptr != inUserID) && (0 == CFStringGetLength(inUserID)))
 		{
 			inUserID = nullptr;
@@ -4514,11 +4506,11 @@ updateCommandLine	(Session_Protocol	inProtocol,
 				CFStringAppend(newCommandLineCFString, inHostName);
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
 			}
-			if (portNumberCFString.exists())
+			if (nil != portString)
 			{
 				// sftp uses "-oPort=port" to specify the port number
 				CFStringAppend(newCommandLineCFString, CFSTR(" -oPort="));
-				CFStringAppend(newCommandLineCFString, portNumberCFString.returnCFStringRef());
+				CFStringAppend(newCommandLineCFString, BRIDGE_CAST(portString, CFStringRef));
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
 			}
 			break;
@@ -4536,11 +4528,11 @@ updateCommandLine	(Session_Protocol	inProtocol,
 				// -1: protocol version 1
 				CFStringAppend(newCommandLineCFString, CFSTR(" -1 "));
 			}
-			if (portNumberCFString.exists())
+			if (nil != portString)
 			{
 				// ssh uses "-p port" to specify the port number
 				CFStringAppend(newCommandLineCFString, CFSTR(" -p "));
-				CFStringAppend(newCommandLineCFString, portNumberCFString.returnCFStringRef());
+				CFStringAppend(newCommandLineCFString, BRIDGE_CAST(portString, CFStringRef));
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
 			}
 			standardIPv6Append = true; // ssh supports a "-6" argument if the host is exactly in IP version 6 format
@@ -4590,13 +4582,13 @@ updateCommandLine	(Session_Protocol	inProtocol,
 				CFStringAppend(newCommandLineCFString, inHostName);
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
 			}
-			if ((standardPortAppend) && (portNumberCFString.exists()))
+			if ((standardPortAppend) && (nil != portString))
 			{
 				// standard form is a Unix command accepting a standalone argument
 				// that is the port number on the server to connect to, AFTER the
 				// standalone host name option
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
-				CFStringAppend(newCommandLineCFString, portNumberCFString.returnCFStringRef());
+				CFStringAppend(newCommandLineCFString, BRIDGE_CAST(portString, CFStringRef));
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
 			}
 			
