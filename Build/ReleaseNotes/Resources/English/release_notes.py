@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20141029',
     '20141028',
     '20141026',
     '20141024',
@@ -505,6 +506,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20141029': [
+        "Fixed system Full Screen mode to explicitly ignore Apple's standard Escape key mapping (that way, applications such as text editors that give special meaning to Escape will continue to behave as expected instead of causing Full Screen to end).",
+    ],
     '20141028': [
         'Terminal windows now support the system-wide Full Screen mode by default.  In this mode, terminals each become available separately in Mission Control and they can be selected using standard swipe gestures.',
         'Preferences window Full Screen pane now has an option to use the original Full Screen behavior instead of the OS X system-wide Full Screen mode.  Each scheme has its advantages.  The custom mode is faster and it has options that cannot be applied to the system default (such as the setting to always show the menu bar).  The OS X approach is slower due to animation but it allows all windows to become Full Screen in Mission Control and it allows terminals to be selected using normal swipe gestures.  Generally, desktop users will probably prefer the original scheme and laptop users will probably prefer the system-wide scheme.',

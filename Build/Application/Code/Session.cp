@@ -7740,6 +7740,13 @@ receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 				{
 					result = noErr; // event is completely handled
 				}
+				
+				// filter out Escape key presses, they are likely to matter more to terminals
+				// (in particular, ignore this as a way to Exit Full Screen)
+				if (characterCodes[0] == 0x1B)
+				{
+					result = noErr; // event is completely handled
+				}
 			}
 		}
 		
