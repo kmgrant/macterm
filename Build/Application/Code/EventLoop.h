@@ -66,14 +66,14 @@ enum
 
 /*!
 Events that MacTerm allows other modules to “listen” for, via EventLoop_StartMonitoring().
-All control and window event types are also valid global events, so that you can monitor all
-controls or all windows for a certain kind of event.
 */
 typedef FourCharCode EventLoop_GlobalEvent;
 enum
 {
-	kEventLoop_GlobalEventSuspendResume					= 'Swch'	//!< the current process is either about to become the active
+	kEventLoop_GlobalEventSuspendResume					= 'Swch',	//!< the current process is either about to become the active
 																	//!  process, or about to become inactive (context: nullptr)
+	kEventLoop_GlobalEventFullScreenDidBegin			= 'FSDB',	//!< a terminal has entered Full Screen (context: TerminalWindowRef)
+	kEventLoop_GlobalEventFullScreenWillEnd				= 'FSWE'	//!< a terminal is about to exit Full Screen (context: TerminalWindowRef)
 };
 
 
@@ -111,6 +111,10 @@ EventLoop_Result
 EventLoop_Result
 	EventLoop_StopMonitoring					(EventLoop_GlobalEvent				inForWhatEvent,
 												 ListenerModel_ListenerRef			inListener);
+
+void
+	EventLoop_SendFullScreenWindowEvent			(EventLoop_GlobalEvent				inEvent,
+												 void*								inEventContext);
 
 //@}
 

@@ -1003,8 +1003,29 @@ Responds when the toolbar item is used.
 performToolbarItemAction:(id)	sender
 {
 #pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandFullScreenModal);
+	// TEMPORARY; only doing it this way during Carbon/Cocoa transition (instead of using first responder)
+	[[Commands_Executor sharedExecutor] toggleFullScreen:NSApp];
 }// performToolbarItemAction:
+
+
+#pragma mark NSToolbarItem
+
+
+/*!
+Returns YES only if the item should be enabled.
+
+(4.1)
+*/
+- (BOOL)
+validateToolbarItem:(NSToolbarItem*)	anItem
+{
+#pragma unused(anItem)
+	// TEMPORARY; only doing it this way during Carbon/Cocoa transition (instead of using first responder)
+	BOOL	result = [[Commands_Executor sharedExecutor] validateAction:@selector(toggleFullScreen:) sender:NSApp];
+	
+	
+	return result;
+}// validateToolbarItem:
 
 
 @end // TerminalToolbar_ItemFullScreen

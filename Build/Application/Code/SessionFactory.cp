@@ -1226,7 +1226,8 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 	// every session that is found
 	for (UInt16 i = 1; i <= kPreferences_MaximumWorkspaceSize; ++i)
 	{
-		CFStringRef		associatedSessionName = nullptr;
+		CFStringRef			associatedSessionName = nullptr;
+		TerminalWindowRef	terminalWindow = nullptr;
 		
 		
 		prefsResult = Preferences_ContextGetData(inWorkspaceContext,
@@ -1253,12 +1254,11 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 				}
 				else
 				{
-					TerminalWindowRef	terminalWindow = createTerminalWindow();
-					SessionRef			session = SessionFactory_NewSessionUserFavorite(terminalWindow,
-																						namedSettings.returnRef(),
-																						inWorkspaceContext, i);
+					terminalWindow = createTerminalWindow();
 					
-					
+					SessionRef		session = SessionFactory_NewSessionUserFavorite(terminalWindow,
+																					namedSettings.returnRef(),
+																					inWorkspaceContext, i);
 					if (nullptr == session)
 					{
 						result = false;
@@ -1279,11 +1279,10 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 														false/* search defaults too */, &actualSize);
 			if ((kPreferences_ResultOK == prefsResult) && (0 != associatedSessionType))
 			{
-				TerminalWindowRef	terminalWindow = createTerminalWindow();
-				Boolean				launchOK = newSessionFromCommand
-												(terminalWindow, associatedSessionType, inWorkspaceContext, i);
+				terminalWindow = createTerminalWindow();
 				
-				
+				Boolean		launchOK = newSessionFromCommand
+										(terminalWindow, associatedSessionType, inWorkspaceContext, i);
 				if (false == launchOK)
 				{
 					result = false;
@@ -1294,11 +1293,18 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 				// this window is disabled; ignore
 			}
 		}
-	}
-	
-	if (enterFullScreen)
-	{
-		Commands_ExecuteByIDUsingEventAfterDelay(kCommandFullScreenModal, nullptr/* target */, 0.5/* delay */);
+		
+		if (result)
+		{
+			if ((enterFullScreen) && (nullptr != terminalWindow))
+			{
+				HIWindowRef			window = TerminalWindow_ReturnWindow(terminalWindow);
+				EventTargetRef		windowTarget = GetWindowEventTarget(window);
+				
+				
+				Commands_ExecuteByIDUsingEventAfterDelay(kCommandFullScreenToggle, windowTarget, 0.5/* delay */);
+			}
+		}
 	}
 	
 	return result;
@@ -3130,11 +3136,20 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			switch (Session_ReturnState(session))
 			{
 			case kSession_StateImminentDisposal:
-				// final state; delete the session from all internal lists and maps that have it
-				stopTrackingSession(session);
-				// end kiosk mode no matter what terminal is disconnecting
-				// TEMPORARY: fix this...why does it seem sometimes this event does not happen?!?
-				Commands_ExecuteByIDUsingEvent(kCommandKioskModeDisable);
+				{
+					TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(session);
+					
+					
+					// final state; delete the session from all internal lists and maps that have it
+					stopTrackingSession(session);
+					
+					// end kiosk mode no matter what terminal is disconnecting
+					// TEMPORARY: fix this...why does it seem sometimes this event does not happen?!?
+					if ((nullptr != terminalWindow) && TerminalWindow_IsFullScreen(terminalWindow))
+					{
+						Commands_ExecuteByIDUsingEvent(kCommandFullScreenToggle);
+					}
+				}
 				break;
 			
 			case kSession_StateBrandNew:

@@ -108,6 +108,20 @@ extern "C"
 #pragma mark Types
 
 /*!
+Internal routines.
+*/
+@interface Commands_Executor (Commands_ExecutorInternal) //{
+
+// new methods
+	+ (NSString*)
+	selectorNameForValidateActionName:(NSString*)_;
+	+ (SEL)
+	selectorToValidateAction:(SEL)_;
+
+@end //}
+
+
+/*!
 Calls Commands_ExecuteByIDUsingEvent() after a delay.
 
 This is a transitional object that will not really be needed
@@ -400,7 +414,7 @@ Commands_CopyCommandName	(UInt32				inCommandID,
 	
 	switch (inCommandID)
 	{
-	case kCommandFullScreenModal:
+	case kCommandFullScreenToggle:
 		switch (inNameType)
 		{
 		case kCommands_NameTypeShort:
@@ -780,7 +794,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 					allowForceQuit = true; // assume a value if the preference cannot be found
 				}
 				
-				if ((false == FlagManager_Test(kFlagKioskMode)) || (allowForceQuit))
+				if ((false == TerminalWindow_IsFullScreen(frontTerminalWindow)) || (allowForceQuit))
 				{
 					Session_DisplayTerminationWarning(frontSession, kSession_TerminationDialogOptionKeepWindow);
 				}
@@ -805,7 +819,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 					allowForceQuit = true; // assume a value if the preference cannot be found
 				}
 				
-				if ((false == FlagManager_Test(kFlagKioskMode)) || (allowForceQuit))
+				if ((false == TerminalWindow_IsFullScreen(frontTerminalWindow)) || (allowForceQuit))
 				{
 					Session_DisplayTerminationWarning(frontSession, kSession_TerminationDialogOptionKeepWindow |
 																	kSession_TerminationDialogOptionRestart);
@@ -1002,8 +1016,8 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	see TerminalWindow.mm
 		//	break;
 		
-		//case kCommandFullScreen:
-		//case kCommandFullScreenModal:
+		//case kCommandFullScreenToggle:
+		//case kCommandZoomMaximumSize:
 		//	see TerminalWindow.mm
 		//	break;
 		
@@ -1307,10 +1321,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			SessionFactory_ForEveryTerminalWindowDo(showWindowTerminalWindowOp, 0L/* data 1 - unused */,
 													0L/* data 2 - unused */, nullptr/* pointer to result - unused */);
 			break;
-		
-		//case kCommandKioskModeDisable:
-		//	see TerminalWindow.mm
-		//	break;
 		
 		case kCommandStackWindows:
 			{
@@ -2047,14 +2057,12 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 			// set when the current window is determined to be valid
 			currentWindow = nil;
 			
-			if (FlagManager_Test(kFlagKioskMode))
+			if (TerminalWindow_MainWindowIsFullScreenTerminal())
 			{
 				// if Full Screen is active, only rotate between the
-				// full-screen terminal windows (this is determined
-				// simply by checking for a terminal window that has
-				// no shadow)
+				// full-screen terminal windows
 				if ([*toWindow isOnActiveSpace] && (nullptr != [*toWindow terminalWindowRef]) &&
-					(NO == [*toWindow hasShadow]))
+					TerminalWindow_IsFullScreen([*toWindow terminalWindowRef]))
 				{
 					currentWindow = *toWindow;
 				}
@@ -2523,7 +2531,8 @@ isCocoaWindowMoreImportantThanCarbon	(NSWindow*		inWindow)
 {
 	BOOL	result = (([inWindow level] != NSNormalWindowLevel) ||
 						[inWindow isKindOfClass:[Popover_Window class]] ||
-						[[inWindow windowController] isKindOfClass:[VectorWindow_Controller class]]);
+						[[inWindow windowController] isKindOfClass:[VectorWindow_Controller class]] ||
+						[[inWindow windowController] isKindOfClass:[TerminalWindow_Controller class]]);
 	
 	
 	return result;
@@ -3716,12 +3725,15 @@ executeWithoutDelay
 Commands_Executor*		gCommands_Executor = nil;
 
 
+@synthesize fullScreenCommandName = _fullScreenCommandName;
+
+
 /*!
 Returns the singleton.
 
 (4.0)
 */
-+ (id)
++ (instancetype)
 sharedExecutor
 {
 	if (nil == gCommands_Executor)
@@ -3743,6 +3755,18 @@ init
 {
 	self = [super init];
 	
+	// initialize dynamic menu item titles
+	{
+		CFStringRef		titleCFString = nullptr;
+		
+		
+		if (UIStrings_Copy(kUIStrings_ContextualMenuFullScreenEnter, titleCFString).ok())
+		{
+			self.fullScreenCommandName = BRIDGE_CAST(titleCFString, NSString*);
+			CFRelease(titleCFString), titleCFString = nullptr;
+		}
+	}
+	
 	// this approach allows the singleton to be constructed from
 	// anywhere, even an object in a NIB
 	if (nil == gCommands_Executor)
@@ -3752,6 +3776,136 @@ init
 	
 	return self;
 }// init
+
+
+#pragma mark New Methods: General
+
+
+/*!
+Determines whether or not an action (such as a menu command)
+should be available to the user, when no other validation
+scheme is defined.
+
+This is a last resort and it should use rules that are
+overwhelmingly likely to apply to most menu commands.
+Currently the only default rule is the assumption that a
+command is usable only when there is a user focus session
+window (in other words, by default, if no terminal windows
+are active with running processes, commands are assumed to
+be unavailable).
+
+(4.1)
+*/
+- (BOOL)
+defaultValidationForAction:(SEL)	aSelector
+sender:(id)							anObject
+{
+#pragma unused(aSelector, anObject)
+	// It is actually much more common for a command to apply to a
+	// terminal window, than to apply at all times.  Therefore, the
+	// default behavior is to allow a command only if there is a
+	// terminal window active.  Any command that should always be
+	// available will need to define its own validation method,
+	// and any command that has no other requirements (aside from a
+	// terminal) does not need a validator at all.
+	BOOL	result = (nullptr != SessionFactory_ReturnUserFocusSession());
+	
+	
+	// by default, assume actions cannot be used in Full Screen mode
+	// (most of them would have side effects that could mess up a
+	// Full Screen view, e.g. by changing the window size)
+	if ((result) && TerminalWindow_MainWindowIsFullScreenTerminal())
+	{
+		result = NO;
+	}
+	return result;
+}// defaultValidationForAction:sender:
+
+
+/*!
+If there is a validation selector in the responder chain for the
+given action selector (see "selectorToValidateAction:"), calls
+that validator and returns its YES or NO value.  If no validator
+exists, this call performs reasonable default validation actions:
+it tries to find a validation selector on the Commands_Executor
+class itself first, with the same name that it sought in the
+responder chain; barring that, it returns the result of
+"defaultValidationForAction:sender:".
+
+NOTE:	Menu items with actions and validators in this class
+		are handled implicitly.  This routine must only be
+		called explicitly when the convention is not followed,
+		such as in toolbar item classes whose action methods
+		have generic names that do not match their actions in
+		the menu bar.  As one example, if your toolbar item
+		generic action is "performToolbarItemAction:" and the
+		item is meant to invoke "toggleFullScreen:", the
+		"validateUserInterfaceItem:" implementation for the
+		item could call "[[Command_Executor sharedExecutor]
+		validateAction:@selector(toggleFullScreen:)]" to
+		determine its YES or NO value implicitly through the
+		validation method "canToggleFullScreen:".
+
+(4.1)
+*/
+- (BOOL)
+validateAction:(SEL)	aSelector
+sender:(id)				anObject
+{
+	SEL		validator = [[self class] selectorToValidateAction:aSelector];
+	BOOL	result = YES;
+	
+	
+	if (nil != validator)
+	{
+		id		target = [NSApp targetForAction:validator to:nil from:anObject];
+		
+		
+		if (nil != target)
+		{
+			// See selectorToValidateAction: for more information on the form of the selector.
+			result = [[target performSelector:validator withObject:anObject] boolValue];
+		}
+		else if ([self respondsToSelector:validator])
+		{
+			// See selectorToValidateAction: for more information on the form of the selector.
+			result = [[self performSelector:validator withObject:anObject] boolValue];
+		}
+		else
+		{
+			// It is actually much more common for a command to apply to a
+			// terminal window, than to apply at all times.  Therefore, the
+			// default behavior is to allow a command only if there is a
+			// terminal window active.  Any command that should always be
+			// available will need to define its own validation method,
+			// and any command that has no other requirements (aside from a
+			// terminal) does not need a validator at all.
+			result = [self defaultValidationForAction:aSelector sender:anObject];
+		}
+	}
+	return result;
+}// validateAction:sender:
+
+
+#pragma mark NSUserInterfaceValidations
+
+
+/*!
+The standard Cocoa interface for validating things like menu
+commands.  This method is present here because it must be in
+the same class as the methods that perform actions; if the
+action methods move, their validation code must move as well.
+
+Returns true only if the specified item should be available
+to the user.
+
+(4.0)
+*/
+- (BOOL)
+validateUserInterfaceItem:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
+{
+	return [self validateAction:[anItem action] sender:anItem];
+}// validateUserInterfaceItem:
 
 
 // IMPORTANT: These methods are initially trivial, calling into the
@@ -4370,7 +4524,7 @@ canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
 	
 	
 	Undoables_GetRedoCommandInfo(redoCommandName, &isEnabled);
-	if (false == FlagManager_Test(kFlagKioskMode))
+	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
 		
@@ -4449,7 +4603,7 @@ canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
 	
 	
 	Undoables_GetUndoCommandInfo(undoCommandName, &isEnabled);
-	if (false == FlagManager_Test(kFlagKioskMode))
+	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
 		
@@ -4473,17 +4627,6 @@ performDuplicate:(id)		sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandNewDuplicateSession, nullptr/* target */);
-}
-- (id)
-canPerformDuplicate:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
 }
 
 
@@ -4531,7 +4674,7 @@ performNewByFavoriteName:(id)	sender
 canPerformNewByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	if (FlagManager_Test(kFlagKioskMode))
+	if (TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		return @(NO);
 	}
@@ -4549,7 +4692,7 @@ performNewCustom:(id)		sender
 canPerformNewCustom:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	if (FlagManager_Test(kFlagKioskMode))
+	if (TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		return @(NO);
 	}
@@ -4567,7 +4710,7 @@ performNewDefault:(id)		sender
 canPerformNewDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	if (FlagManager_Test(kFlagKioskMode))
+	if (TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		return @(NO);
 	}
@@ -4585,7 +4728,7 @@ performNewLogInShell:(id)	sender
 canPerformNewLogInShell:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	if (FlagManager_Test(kFlagKioskMode))
+	if (TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		return @(NO);
 	}
@@ -4603,7 +4746,7 @@ performNewShell:(id)	sender
 canPerformNewShell:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	if (FlagManager_Test(kFlagKioskMode))
+	if (TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		return @(NO);
 	}
@@ -4665,7 +4808,7 @@ performRestoreWorkspaceDefault:(id)		sender
 canPerformRestoreWorkspaceDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	if (FlagManager_Test(kFlagKioskMode))
+	if (TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		return @(NO);
 	}
@@ -4713,7 +4856,7 @@ performRestoreWorkspaceByFavoriteName:(id)	sender
 canPerformRestoreWorkspaceByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	if (FlagManager_Test(kFlagKioskMode))
+	if (TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		return @(NO);
 	}
@@ -4731,7 +4874,7 @@ performOpen:(id)	sender
 canPerformOpen:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	if (FlagManager_Test(kFlagKioskMode))
+	if (TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		return @(NO);
 	}
@@ -4744,6 +4887,16 @@ performSaveAs:(id)		sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandSaveSession, nullptr/* target */);
+}
+- (id)
+canPerformSaveAs:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	if (nullptr != SessionFactory_ReturnUserRecentSession())
+	{
+		return @(YES);
+	}
+	return @(NO);
 }
 
 
@@ -4791,7 +4944,7 @@ canPerformNewTEKPage:(id <NSValidatedUserInterfaceItem>)	anItem
 	BOOL			result = (nullptr != currentSession);
 	
 	
-	if (FlagManager_Test(kFlagKioskMode))
+	if (TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		return @(NO);
 	}
@@ -4868,7 +5021,7 @@ performOpenURL:(id)		sender
 canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) && textSelectionExists());
+	BOOL	result = ((false == TerminalWindow_MainWindowIsFullScreenTerminal()) && textSelectionExists());
 	
 	
 	if (result)
@@ -5697,17 +5850,6 @@ performScreenResizeCustom:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandSetScreenSize, nullptr/* target */);
 }
-- (id)
-canPerformScreenResizeCustom:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
-}
 
 
 - (IBAction)
@@ -5715,17 +5857,6 @@ performScreenResizeNarrower:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandNarrowerScreen, nullptr/* target */);
-}
-- (id)
-canPerformScreenResizeNarrower:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5735,17 +5866,6 @@ performScreenResizeShorter:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandShorterScreen, nullptr/* target */);
 }
-- (id)
-canPerformScreenResizeShorter:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
-}
 
 
 - (IBAction)
@@ -5753,17 +5873,6 @@ performScreenResizeStandard:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandSmallScreen, nullptr/* target */);
-}
-- (id)
-canPerformScreenResizeStandard:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5773,17 +5882,6 @@ performScreenResizeTall:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandTallScreen, nullptr/* target */);
 }
-- (id)
-canPerformScreenResizeTall:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
-}
 
 
 - (IBAction)
@@ -5791,17 +5889,6 @@ performScreenResizeTaller:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandTallerScreen, nullptr/* target */);
-}
-- (id)
-canPerformScreenResizeTaller:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5811,17 +5898,6 @@ performScreenResizeWide:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandLargeScreen, nullptr/* target */);
 }
-- (id)
-canPerformScreenResizeWide:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
-}
 
 
 - (IBAction)
@@ -5829,17 +5905,6 @@ performScreenResizeWider:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandWiderScreen, nullptr/* target */);
-}
-- (id)
-canPerformScreenResizeWider:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5923,17 +5988,6 @@ performFormatByFavoriteName:(id)	sender
 		}
 	}
 }
-- (id)
-canPerformFormatByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
-}
 
 
 - (IBAction)
@@ -5941,17 +5995,6 @@ performFormatCustom:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandFormat, nullptr/* target */);
-}
-- (id)
-canPerformFormatCustom:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
 }
 
 
@@ -5995,17 +6038,6 @@ performFormatDefault:(id)	sender
 		Commands_ExecuteByIDUsingEvent(kCommandFormatDefault, nullptr/* target */);
 	}
 }
-- (id)
-canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
-}
 
 
 - (IBAction)
@@ -6014,35 +6046,13 @@ performFormatTextBigger:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandBiggerText, nullptr/* target */);
 }
-- (id)
-canPerformFormatTextBigger:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
-}
 
 
 - (IBAction)
 performFormatTextMaximum:(id)	sender
 {
 #pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandFullScreen, nullptr/* target */);
-}
-- (id)
-canPerformFormatTextMaximum:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
+	Commands_ExecuteByIDUsingEvent(kCommandZoomMaximumSize, nullptr/* target */);
 }
 
 
@@ -6051,17 +6061,6 @@ performFormatTextSmaller:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandSmallerText, nullptr/* target */);
-}
-- (id)
-canPerformFormatTextSmaller:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
 }
 
 
@@ -6442,15 +6441,6 @@ performArrangeInFront:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandStackWindows, nullptr/* target */);
 }
-- (id)
-canPerformArrangeInFront:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
-	
-	
-	return [NSNumber numberWithBool:result];
-}
 
 
 - (IBAction)
@@ -6459,18 +6449,6 @@ performHideOtherWindows:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandHideOtherWindows, nullptr/* target */);
 }
-- (id)
-canPerformHideOtherWindows:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	// INCOMPLETE, should really be disabled if all other terminal windows are hidden
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 1)));
-	
-	
-	return [NSNumber numberWithBool:result];
-}
 
 
 - (IBAction)
@@ -6478,17 +6456,6 @@ performHideWindow:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandHideFrontWindow, nullptr/* target */);
-}
-- (id)
-canPerformHideWindow:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == FlagManager_Test(kFlagKioskMode)) &&
-						((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-											(SessionFactory_ReturnCount() > 0)));
-	
-	
-	return [NSNumber numberWithBool:result];
 }
 
 
@@ -6508,7 +6475,7 @@ canPerformMaximize:(id <NSValidatedUserInterfaceItem>)		anItem
 	id		target = [NSApp targetForAction:@selector(performMaximize:)];
 	
 	
-	if (false == FlagManager_Test(kFlagKioskMode))
+	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		if (isCarbonWindow(target))
 		{
@@ -6549,20 +6516,16 @@ performMoveToNewWorkspace:(id)	sender
 canPerformMoveToNewWorkspace:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = NO;
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	
 	
-	if (false == FlagManager_Test(kFlagKioskMode))
+	if ((nullptr != terminalWindow) &&
+		(false == TerminalWindow_IsFullScreen(terminalWindow)) &&
+		TerminalWindow_IsTab(terminalWindow))
 	{
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-		
-		
-		if (nullptr != terminalWindow)
-		{
-			result = TerminalWindow_IsTab(terminalWindow) ? YES : NO;
-		}
+		return @(YES);
 	}
-	return [NSNumber numberWithBool:result];
+	return @(NO);
 }
 
 
@@ -6580,25 +6543,6 @@ performMoveWindowRight:(id)		sender
 							awayFromEdge:NSMaxXEdge withAnimation:NO];
 	}
 }
-- (id)
-canPerformMoveWindowRight:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = NO;
-	
-	
-	if (false == FlagManager_Test(kFlagKioskMode))
-	{
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-		
-		
-		if (nullptr != terminalWindow)
-		{
-			result = YES;
-		}
-	}
-	return [NSNumber numberWithBool:result];
-}
 
 
 - (IBAction)
@@ -6614,25 +6558,6 @@ performMoveWindowLeft:(id)		sender
 							distance:8/* arbitrary; should match performMoveWindowRight: */
 							awayFromEdge:NSMinXEdge withAnimation:NO];
 	}
-}
-- (id)
-canPerformMoveWindowLeft:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = NO;
-	
-	
-	if (false == FlagManager_Test(kFlagKioskMode))
-	{
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-		
-		
-		if (nullptr != terminalWindow)
-		{
-			result = YES;
-		}
-	}
-	return [NSNumber numberWithBool:result];
 }
 
 
@@ -6650,25 +6575,6 @@ performMoveWindowDown:(id)		sender
 							awayFromEdge:NSMinYEdge withAnimation:NO];
 	}
 }
-- (id)
-canPerformMoveWindowDown:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = NO;
-	
-	
-	if (false == FlagManager_Test(kFlagKioskMode))
-	{
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-		
-		
-		if (nullptr != terminalWindow)
-		{
-			result = YES;
-		}
-	}
-	return [NSNumber numberWithBool:result];
-}
 
 
 - (IBAction)
@@ -6684,25 +6590,6 @@ performMoveWindowUp:(id)		sender
 							distance:8/* arbitrary; should match performMoveWindowDown: */
 							awayFromEdge:NSMaxYEdge withAnimation:NO];
 	}
-}
-- (id)
-canPerformMoveWindowUp:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = NO;
-	
-	
-	if (false == FlagManager_Test(kFlagKioskMode))
-	{
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-		
-		
-		if (nullptr != terminalWindow)
-		{
-			result = YES;
-		}
-	}
-	return [NSNumber numberWithBool:result];
 }
 
 
@@ -6746,9 +6633,20 @@ performShowHiddenWindows:(id)	sender
 canPerformShowHiddenWindows:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	// INCOMPLETE, should really be disabled if no windows are actually hidden
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	SessionFactory_TerminalWindowList const&			windowList = SessionFactory_ReturnTerminalWindowList();
+	SessionFactory_TerminalWindowList::const_iterator	toWindow = windowList.begin();
+	SessionFactory_TerminalWindowList::const_iterator	pastEndWindows = windowList.end();
+	BOOL												result = NO;
 	
+	
+	for (; toWindow != pastEndWindows; ++toWindow)
+	{
+		if (TerminalWindow_IsObscured(*toWindow))
+		{
+			result = YES;
+			break;
+		}
+	}
 	
 	return [NSNumber numberWithBool:result];
 }
@@ -6766,6 +6664,16 @@ performFind:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandFind, nullptr/* target */);
 }
+- (id)
+canPerformFind:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	BOOL				result = (nullptr != terminalWindow);
+	
+	
+	return [NSNumber numberWithBool:result];
+}
 
 
 - (IBAction)
@@ -6773,6 +6681,16 @@ performFindCursor:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandFindCursor, nullptr/* target */);
+}
+- (id)
+canPerformFindCursor:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	BOOL				result = (nullptr != terminalWindow);
+	
+	
+	return [NSNumber numberWithBool:result];
 }
 
 
@@ -6971,10 +6889,11 @@ orderFrontSessionInfo:(id)	sender
 canOrderFrontSessionInfo:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
-	
-	
-	return [NSNumber numberWithBool:result];
+	if (TerminalWindow_MainWindowIsFullScreenTerminal())
+	{
+		return @(NO);
+	}
+	return @(YES);
 }
 
 
@@ -7013,27 +6932,75 @@ canOrderFrontVT220Keypad:(id <NSValidatedUserInterfaceItem>)	anItem
 
 
 - (IBAction)
-performFullScreenOff:(id)	sender
+toggleFullScreen:(id)	sender
 {
 #pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandKioskModeDisable, nullptr/* target */);
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp mainWindow]))
+	{
+		// assume that abnormal Cocoa windows should handle this directly
+		implementedByCocoa = [[[NSApp mainWindow] firstResponder] tryToPerform:@selector(toggleFullScreen:) with:sender];
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		// assume this is potentially a Carbon window that should (for now) take a different approach;
+		// longer-term this will go away and the responder chain will be used everywhere
+		Commands_ExecuteByIDUsingEvent(kCommandFullScreenToggle, nullptr/* target */);
+	}
 }
 - (id)
-canPerformFullScreenOff:(id <NSValidatedUserInterfaceItem>)		anItem
+canToggleFullScreen:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (FlagManager_Test(kFlagKioskMode) ? YES : NO);
+	// TEMPORARY: should not be necessary to check window controller for
+	// the test Cocoa terminal but until the Terminal Window module
+	// returns objects for such windows it will be necessary
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	BOOL				isCocoaTerminal = [[[NSApp mainWindow] windowController] isKindOfClass:[TerminalWindow_Controller class]];
+	BOOL				result = ((nullptr != terminalWindow) || (isCocoaTerminal));
 	
+	
+	// update “Enter / Exit Full Screen” item name; note that
+	// Cocoa bindings cannot be used here because the title
+	// binding is read-only (the change to the string would
+	// not change the menu item); instead, the item title has
+	// to be updated explicitly
+	{
+		BOOL			isCurrentlyFullScreen = (isCocoaTerminal)
+												? (0 != ([[NSApp mainWindow] styleMask] & FUTURE_SYMBOL(1 << 14, NSFullScreenWindowMask)))
+												: TerminalWindow_IsFullScreen(terminalWindow);
+		CFStringRef		titleCFString = nullptr;
+		
+		
+		if (UIStrings_Copy((isCurrentlyFullScreen)
+							? kUIStrings_ContextualMenuFullScreenExit
+							: kUIStrings_ContextualMenuFullScreenEnter, titleCFString).ok())
+		{
+			self.fullScreenCommandName = BRIDGE_CAST(titleCFString, NSString*);
+			CFRelease(titleCFString), titleCFString = nullptr;
+		}
+		
+		if ([anItem isKindOfClass:NSMenuItem.class])
+		{
+			STATIC_CAST(anItem, NSMenuItem*).title = self.fullScreenCommandName;
+		}
+		else if ([anItem isKindOfClass:NSToolbarItem.class])
+		{
+			// toolbar item titles do not change but the help that
+			// appears can be updated to indicate the state change
+			STATIC_CAST(anItem, NSToolbarItem*).toolTip = self.fullScreenCommandName;
+		}
+		else
+		{
+			Console_Warning(Console_WriteValueCFString, "unable to update Full Screen title of user interface object with unknown class",
+							BRIDGE_CAST(NSStringFromClass(anItem.class), CFStringRef));
+		}
+	}
 	
 	return [NSNumber numberWithBool:result];
-}
-
-
-- (IBAction)
-performFullScreenOn:(id)	sender
-{
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandFullScreenModal, nullptr/* target */);
 }
 
 
@@ -7057,7 +7024,10 @@ canOrderFrontNextWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 	// Full Screen mode, a simple window cycle is OK because the
 	// rotation code is able to cycle only between Full Screen
 	// windows on the active Space (see activateAnotherWindow())
-	return @(YES);
+	BOOL	result = (nil != [NSApp mainWindow]);
+	
+	
+	return [NSNumber numberWithBool:result];
 }
 
 
@@ -7071,9 +7041,13 @@ orderFrontNextWindowHidingPrevious:(id)		sender
 canOrderFrontNextWindowHidingPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = (nil != [NSApp mainWindow]);
 	
 	
+	if ((result) && TerminalWindow_MainWindowIsFullScreenTerminal())
+	{
+		result = NO;
+	}
 	return [NSNumber numberWithBool:result];
 }
 
@@ -7088,9 +7062,13 @@ orderFrontPreviousWindow:(id)		sender
 canOrderFrontPreviousWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = (nil != [NSApp mainWindow]);
 	
 	
+	if ((result) && TerminalWindow_MainWindowIsFullScreenTerminal())
+	{
+		result = NO;
+	}
 	return [NSNumber numberWithBool:result];
 }
 
@@ -7134,7 +7112,7 @@ orderFrontSpecificWindow:(id)		sender
 - (id)
 canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 {
-	BOOL	result = (false == FlagManager_Test(kFlagKioskMode));
+	BOOL	result = (false == TerminalWindow_MainWindowIsFullScreenTerminal());
 	
 	
 	if (result)
@@ -7262,7 +7240,7 @@ canPerformMinimizeSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = NO;
 	
 	
-	if (false == FlagManager_Test(kFlagKioskMode))
+	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		id		target = [NSApp targetForAction:@selector(performMiniaturize:)];
 		
@@ -7357,7 +7335,7 @@ canPerformZoomSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = NO;
 	
 	
-	if (false == FlagManager_Test(kFlagKioskMode))
+	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		id		target = [NSApp targetForAction:@selector(performZoom:)];
 		
@@ -7428,7 +7406,7 @@ canRunToolbarCustomizationPaletteSetup:(id <NSValidatedUserInterfaceItem>)		anIt
 	BOOL	result = NO;
 	
 	
-	if (false == FlagManager_Test(kFlagKioskMode))
+	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		if (isCarbonWindow([NSApp mainWindow]))
 		{
@@ -7493,7 +7471,7 @@ canToggleToolbarShownSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = NO;
 	
 	
-	if (false == FlagManager_Test(kFlagKioskMode))
+	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
 	{
 		HIWindowRef		userFocusWindow = GetUserFocusWindow();
 		
@@ -7532,8 +7510,7 @@ itemTitle:(NSString*)			aTitle
 ifEnabled:(BOOL)				onlyIfEnabled
 {
 	NSMenuItem*		result = nil;
-	NSMenuItem*		targetItem = nil; // currently, never defined for these checksd for these checks
-	NSNumber*		numericalBool = nil;
+	SEL				theSelector = nil;
 	BOOL			isEnabled = true;
 	
 	
@@ -7544,22 +7521,15 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	// letters implicitly add a shift-key modifier.
 	switch (aCommandID)
 	{
-	case kCommandKioskModeDisable:
+	case kCommandFullScreenToggle:
+		theSelector = @selector(toggleFullScreen:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformFullScreenOff:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			// NOTE: the displayed main-menu key equivalent for this
-			// command is “option-Escape”; while that could be chosen
-			// here, in practice it’s pointless for a contextual menu
-			// because hitting the escape key will close the menu;
-			// instead, command-control-F is chosen (the key equivalent
-			// for “Enter Full Screen”, which just happens to work for
-			// exiting as well)
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performFullScreenOff:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@"f"];
 			[result setKeyEquivalentModifierMask:(NSControlKeyMask | NSCommandKeyMask)];
 			[result setTarget:self]; // TEMPORARY
@@ -7567,142 +7537,143 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		break;
 	
 	case kCommandChangeWindowTitle:
+		theSelector = @selector(performRename:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformRename:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performRename:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@""];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandCloseConnection:
+		theSelector = @selector(performCloseSetup:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformCloseSetup:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performCloseSetup:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@"w"];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandCopy:
+		theSelector = @selector(performCopy:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformCopy:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performCopy:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@"c"];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandCopyTable:
+		theSelector = @selector(performCopyWithTabSubstitution:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformCopyWithTabSubstitution:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performCopyWithTabSubstitution:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@"C"];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandFind:
+		theSelector = @selector(performFind:);
 		if (onlyIfEnabled)
 		{
-			isEnabled = YES; // TEMPORARY
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performFind:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@"f"];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandFormat:
+		theSelector = @selector(performFormatCustom:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformFormatCustom:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performFormatCustom:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@"t"];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandHandleURL:
+		theSelector = @selector(performOpenURL:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformOpenURL:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performOpenURL:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@"u"];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandHideFrontWindow:
+		theSelector = @selector(performHideWindow:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformHideWindow:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performHideWindow:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@""];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandPaste:
+		theSelector = @selector(performPaste:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformPaste:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performPaste:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@"v"];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandPrintScreen:
+		theSelector = @selector(performPrintScreen:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformPrintScreen:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
 			unichar		functionKeyChar = NSF13FunctionKey;
 			
 			
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performPrintScreen:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:[NSString stringWithCharacters:&functionKeyChar
 																										length:1]];
 			[result setKeyEquivalentModifierMask:0];
@@ -7711,97 +7682,98 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		break;
 	
 	case kCommandSaveText:
+		theSelector = @selector(performSaveSelection:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformSaveSelection:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performSaveSelection:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@"S"];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandSetKeys:
+		theSelector = @selector(performMappingCustom:);
 		if (onlyIfEnabled)
 		{
-			isEnabled = YES;
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performMappingCustom:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@""];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandSetScreenSize:
+		theSelector = @selector(performScreenResizeCustom:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformScreenResizeCustom:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performScreenResizeCustom:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@"k"];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandSpeakSelectedText:
+		theSelector = @selector(performSpeakSelectedText:);
 		if (onlyIfEnabled)
 		{
-			// for now, reuse the handler for saving selections; they should be equivalent
-			numericalBool = [self canPerformSaveSelection:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performSpeakSelectedText:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@""];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandStopSpeaking:
+		theSelector = @selector(performStopSpeaking:);
 		if (onlyIfEnabled)
 		{
 			isEnabled = CocoaBasic_SpeakingInProgress() ? YES : NO;
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performStopSpeaking:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@""];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandStackWindows:
+		theSelector = @selector(performArrangeInFront:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformArrangeInFront:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performArrangeInFront:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@""];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
 	
 	case kCommandTerminalNewWorkspace:
+		theSelector = @selector(performMoveToNewWorkspace:);
 		if (onlyIfEnabled)
 		{
-			numericalBool = [self canPerformMoveToNewWorkspace:targetItem];
-			isEnabled = [numericalBool boolValue];
+			isEnabled = [self validateAction:theSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:@selector(performMoveToNewWorkspace:)
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@""];
 			[result setTarget:self]; // TEMPORARY
 		}
@@ -7816,117 +7788,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 
 
 @end // Commands_Executor (Commands_TransitionFromCarbon)
-
-
-@implementation Commands_Executor (Commands_Validation)
-
-
-/*!
-Given a selector name, such as performFooBar:, returns the
-conventional name for a selector to do validation for that
-action; in this case, canPerformFooBar:.
-
-The idea is to avoid constantly modifying the validation
-code, and to simply allow any conventionally-named method
-to act as the validator for an action of a certain name.
-See validateUserInterfaceItem:.
-
-(4.0)
-*/
-+ (NSString*)
-selectorNameForValidateActionName:(NSString*)	anActionSelectorName
-{
-	NSString*			result = nil;
-	NSMutableString*	nameOfAction = [[[NSMutableString alloc] initWithString:anActionSelectorName]
-										autorelease];
-	NSString*			actionFirstChar = [nameOfAction substringToIndex:1];
-	
-	
-	[nameOfAction replaceCharactersInRange:NSMakeRange(0, 1/* length */)
-											withString:[actionFirstChar uppercaseString]];
-	result = [@"can" stringByAppendingString:nameOfAction];
-	return result;
-}// selectorNameForValidateActionName:
-
-
-/*!
-Given a selector, such as @selector(performFooBar:), returns
-the conventional selector for a method that would validate it;
-in this case, @selector(canPerformFooBar:).
-
-The signature of the validator is expected to be:
-- (id) canPerformFooBar:(id <NSValidatedUserInterfaceItem>);
-Due to limitations in performSelector:, the result is not a
-BOOL, but rather an object of type NSNumber, whose "boolValue"
-method is called.  Validators are encouraged to use the method
-[NSNumber numberWithBool:] when returning their results.
-
-See selectorNameForValidateActionName: and
-validateUserInterfaceItem:.
-
-(4.0)
-*/
-+ (SEL)
-selectorToValidateAction:(SEL)	anAction
-{
-	SEL		result = NSSelectorFromString([[self class] selectorNameForValidateActionName:NSStringFromSelector(anAction)]);
-	
-	
-	return result;
-}// selectorToValidateAction:
-
-
-/*!
-The standard Cocoa interface for validating things like menu
-commands.  This method is present here because it must be in
-the same class as the methods that perform actions; if the
-action methods move, their validation code must move as well.
-
-Returns true only if the specified item should be available
-to the user.
-
-(4.0)
-*/
-- (BOOL)
-validateUserInterfaceItem:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
-{
-	SEL		itemAction = [anItem action];
-	SEL		validator = [[self class] selectorToValidateAction:itemAction];
-	BOOL	result = YES;
-	
-	
-	if (nil != validator)
-	{
-		id		target = [NSApp targetForAction:validator to:nil from:anItem];
-		
-		
-		if (nil != target)
-		{
-			// See selectorToValidateAction: for more information on the form of the selector.
-			result = [[target performSelector:validator withObject:anItem] boolValue];
-		}
-		else if ([self respondsToSelector:validator])
-		{
-			// See selectorToValidateAction: for more information on the form of the selector.
-			result = [[self performSelector:validator withObject:anItem] boolValue];
-		}
-		else
-		{
-			// It is actually much more common for a command to apply to a
-			// terminal window, than to apply at all times.  Therefore, the
-			// default behavior is to allow a command only if there is a
-			// terminal window active.  Any command that should always be
-			// available will need to define its own validation method,
-			// and any command that has no other requirements (aside from a
-			// terminal) does not need a validator at all.
-			result = (nullptr != SessionFactory_ReturnUserFocusSession());
-		}
-	}
-	return result;
-}// validateUserInterfaceItem:
-
-
-@end // Commands_Executor (Commands_Validation)
 
 
 @implementation Commands_ServiceProviders
@@ -8313,5 +8174,74 @@ dealloc
 
 
 @end // Commands_SessionWrap
+
+
+@implementation Commands_Executor (Commands_ExecutorInternal)
+
+
+#pragma mark New Methods
+
+
+/*!
+Given a selector name, such as performFooBar:, returns the
+conventional name for a selector to do validation for that
+action; in this case, canPerformFooBar:.
+
+The idea is to avoid constantly modifying the validation
+code, and to simply allow any conventionally-named method
+to act as the validator for an action of a certain name.
+See validateUserInterfaceItem:.
+
+(4.0)
+*/
++ (NSString*)
+selectorNameForValidateActionName:(NSString*)	anActionSelectorName
+{
+	NSString*	result = nil;
+	
+	
+	if (nil != anActionSelectorName)
+	{
+		NSMutableString*	nameOfAction = [[[NSMutableString alloc] initWithString:anActionSelectorName]
+											autorelease];
+		NSString*			actionFirstChar = [nameOfAction substringToIndex:1];
+		
+		
+		[nameOfAction replaceCharactersInRange:NSMakeRange(0, 1/* length */)
+												withString:[actionFirstChar uppercaseString]];
+		result = [@"can" stringByAppendingString:nameOfAction];
+	}
+	return result;
+}// selectorNameForValidateActionName:
+
+
+/*!
+Given a selector, such as @selector(performFooBar:), returns
+the conventional selector for a method that would validate it;
+in this case, @selector(canPerformFooBar:).
+
+The signature of the validator is expected to be:
+- (id) canPerformFooBar:(id <NSValidatedUserInterfaceItem>);
+Due to limitations in performSelector:, the result is not a
+BOOL, but rather an object of type NSNumber, whose "boolValue"
+method is called.  Validators are encouraged to use the method
+[NSNumber numberWithBool:] when returning their results.
+
+See selectorNameForValidateActionName: and
+validateUserInterfaceItem:.
+
+(4.0)
+*/
++ (SEL)
+selectorToValidateAction:(SEL)	anAction
+{
+	SEL		result = NSSelectorFromString([[self class] selectorNameForValidateActionName:NSStringFromSelector(anAction)]);
+	
+	
+	return result;
+}// selectorToValidateAction:
+
+
+@end // Commands_Executor (Commands_ExecutorInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

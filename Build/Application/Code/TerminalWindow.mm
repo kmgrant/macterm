@@ -115,6 +115,15 @@ extern "C"
 namespace {
 
 /*!
+Named flags, for clarity in the methods that use them.
+*/
+enum My_FullScreenState : UInt8
+{
+	kMy_FullScreenStateCompleted	= true,
+	kMy_FullScreenStateInProgress	= false
+};
+
+/*!
 These are hacks.  But they make up for the fact that theme
 APIs do not really work very well at all, and it is
 necessary in a few places to figure out how much space is
@@ -208,6 +217,16 @@ struct My_TerminalWindow
 		HIViewRef		scrollBarV;				// scroll bar used to specify which range of rows is visible
 	} controls;
 	
+	struct
+	{
+		Boolean						isOn;		// temporary flag to track full-screen mode (under Cocoa this will be easier to determine from the window)
+		Boolean						isUsingOS;	// temporary flag; tracks windows that are currently Full Screen in system style so they can transition back in the same style
+		UInt16						oldFontSize;		// font size prior to full-screen
+		Rect						oldContentBounds;	// old window boundaries, content area
+		TerminalView_DisplayMode	oldMode;			// previous terminal resize effect
+		TerminalView_DisplayMode	newMode;			// full-screen terminal resize effect
+	} fullScreen;
+	
 	Boolean						isObscured;				// is the window hidden, via a command in the Window menu?
 	Boolean						isDead;					// is the window title flagged to indicate a disconnected session?
 	Boolean						isLEDOn[4];				// true only if this terminal light is lit
@@ -232,6 +251,8 @@ struct My_TerminalWindow
 	EventHandlerRef				windowCursorChangeHandler;				// invoked whenever the mouse cursor might change in a terminal window
 	EventHandlerUPP				windowDragCompletedUPP;					// wrapper for window move completion callback
 	EventHandlerRef				windowDragCompletedHandler;				// invoked whenever a terminal window has finished being moved by the user
+	EventHandlerUPP				windowFullScreenUPP;					// wrapper for window full-screen callback
+	EventHandlerRef				windowFullScreenHandler;				// invoked whenever a full-screen window event occurs for a terminal window
 	EventHandlerUPP				windowResizeEmbellishUPP;				// wrapper for window resize callback
 	EventHandlerRef				windowResizeEmbellishHandler;			// invoked whenever a terminal window is resized
 	EventHandlerUPP				growBoxClickUPP;						// wrapper for grow box click callback
@@ -266,20 +287,6 @@ struct UndoDataFontSizeChanges
 	CFRetainRelease			fontName;			//!< the old font (ignored if "undoFont" is false)
 };
 typedef UndoDataFontSizeChanges*		UndoDataFontSizeChangesPtr;
-
-/*!
-Context data for the context ID "kUndoableContextIdentifierTerminalFullScreenChanges".
-*/
-struct UndoDataFullScreenChanges
-{
-	Undoables_ActionRef			action;				//!< used to manage the Undo command
-	TerminalWindowRef			terminalWindow;		//!< which window was reformatted
-	TerminalView_DisplayMode	oldMode;			//!< previous terminal resize effect
-	TerminalView_DisplayMode	newMode;			//!< full-screen terminal resize effect
-	UInt16						oldFontSize;		//!< font size prior to full-screen
-	Rect						oldContentBounds;	//!< old window boundaries, content area
-};
-typedef UndoDataFullScreenChanges*		UndoDataFullScreenChangesPtr;
 
 /*!
 Context data for the context ID "kUndoableContextIdentifierTerminalDimensionChanges".
@@ -330,7 +337,6 @@ void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
 void					handleNewSize					(WindowRef, Float32, Float32, void*);
 void					installTickHandler				(My_TerminalWindowPtr);
 void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
-void					installUndoFullScreenChanges	(TerminalWindowRef, TerminalView_DisplayMode, TerminalView_DisplayMode);
 void					installUndoScreenDimensionChanges	(TerminalWindowRef);
 bool					lessThanIfGreaterArea			(HIWindowRef, HIWindowRef);
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
@@ -340,6 +346,7 @@ OSStatus				receiveTabDragDrop				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveToolbarEvent				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowDragCompleted		(EventHandlerCallRef, EventRef, void*);
+OSStatus				receiveWindowFullScreenChange	(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
 HIWindowRef				returnCarbonWindow				(My_TerminalWindowPtr);
 UInt16					returnGrowBoxHeight				(My_TerminalWindowPtr);
@@ -350,13 +357,16 @@ UInt16					returnStatusBarHeight			(My_TerminalWindowPtr);
 UInt16					returnToolbarHeight				(My_TerminalWindowPtr);
 CGDirectDisplayID		returnWindowDisplay				(HIWindowRef);
 void					reverseFontChanges				(Undoables_ActionInstruction, Undoables_ActionRef, void*);
-void					reverseFullScreenChanges		(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					scrollProc						(HIViewRef, HIViewPartCode);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void					setCarbonWindowFullScreenIcon	(HIWindowRef, Boolean);
+void					setCocoaWindowFullScreenIcon	(NSWindow*, Boolean);
 OSStatus				setCursorInWindow				(HIWindowRef, Point, UInt32);
 void					setScreenPreferences			(My_TerminalWindowPtr, Preferences_ContextRef, Boolean = false);
 void					setStandardState				(My_TerminalWindowPtr, UInt16, UInt16, Boolean, Boolean = false);
+void					setTerminalWindowFullScreen		(My_TerminalWindowPtr, Boolean, Boolean);
+void					setUpForFullScreenModal			(My_TerminalWindowPtr, Boolean, Boolean, My_FullScreenState);
 void					setViewFormatPreferences		(My_TerminalWindowPtr, Preferences_ContextRef);
 void					setViewSizeIndependentFromWindow(My_TerminalWindowPtr, Boolean);
 void					setViewTranslationPreferences	(My_TerminalWindowPtr, Preferences_ContextRef);
@@ -376,7 +386,8 @@ void					updateScrollBars				(My_TerminalWindowPtr);
 #pragma mark Variables
 namespace {
 
-My_TerminalWindowByNSWindow&	gTerminalNSWindows ()			{ static My_TerminalWindowByNSWindow x; return x; }
+My_TerminalWindowByNSWindow&	gCarbonTerminalNSWindows ()		{ static My_TerminalWindowByNSWindow x; return x; }
+My_TerminalWindowByNSWindow&	gCocoaTerminalNSWindows ()		{ static My_TerminalWindowByNSWindow x; return x; }
 My_RefTracker&					gTerminalWindowValidRefs ()		{ static My_RefTracker x; return x; }
 My_TerminalWindowPtrLocker&		gTerminalWindowPtrLocks ()		{ static My_TerminalWindowPtrLocker x; return x; }
 IconRef&					gBellOffIcon ()					{ static IconRef x = createBellOffIcon(); return x; }
@@ -1005,6 +1016,71 @@ TerminalWindow_IsFocused	(TerminalWindowRef	inRef)
 
 
 /*!
+Returns "true" only if the specified terminal window is currently
+taking over its entire display in a special mode.  If true, this
+does not guarantee that there are no other windows in a full-screen
+mode.
+
+(4.1)
+*/
+Boolean
+TerminalWindow_IsFullScreen		(TerminalWindowRef	inRef)
+{
+	Boolean		result = false;
+	
+	
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		result = ptr->fullScreen.isOn;
+	}
+	return result;
+}// IsFullScreen
+
+
+/*!
+Returns "true" if any terminal window is full-screen.  If the
+user has enabled the OS full-screen mechanism, some windows
+could be full-screen without preventing access to the rest of
+the application; thus, “mode” in this context does not
+necessarily mean the application can do nothing else.
+
+See also TerminalWindow_IsFullScreen(), which checks to see if
+a particular window is full-screen.
+
+(4.1)
+*/
+Boolean
+TerminalWindow_IsFullScreenMode ()
+{
+	SessionFactory_TerminalWindowList const&			terminalWindowList = SessionFactory_ReturnTerminalWindowList();
+	SessionFactory_TerminalWindowList::const_iterator	toWindow = terminalWindowList.begin();
+	SessionFactory_TerminalWindowList::const_iterator	pastEndWindows = terminalWindowList.end();
+	Boolean												result = false;
+	
+	
+	// NOTE: although this could be implemented with a simple
+	// counter, that is vulnerable to unexpected problems (e.g.
+	// a window somehow closing where the close notification
+	// is missed and the counter is out of date); this is a
+	// small-N linear search that can be changed later if
+	// necessary
+	for (; toWindow != pastEndWindows; ++toWindow)
+	{
+		if (TerminalWindow_IsFullScreen(*toWindow))
+		{
+			result = true;
+			break;
+		}
+	}
+	
+	return result;
+}// IsFullScreenMode
+
+
+/*!
 Returns "true" only if the specified window is obscured,
 meaning it is invisible to the user but technically
 considered a visible window.  This is the state used by
@@ -1081,6 +1157,21 @@ TerminalWindow_IsValid	(TerminalWindowRef	inRef)
 	
 	return result;
 }// IsValid
+
+
+/*!
+For convenience, looks at the main window and sees if it is a
+terminal window that is in full-screen mode.  You can also
+call TerminalWindow_IsFullScreen() directly on an existing
+reference to a terminal window.
+
+(4.1)
+*/
+Boolean
+TerminalWindow_MainWindowIsFullScreenTerminal ()
+{
+	return TerminalWindow_IsFullScreen(TerminalWindow_ReturnFromMainWindow());
+}// MainWindowIsFullScreenTerminal
 
 
 /*!
@@ -1607,6 +1698,35 @@ TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 		setWindowToIdealSizeForFont(ptr);
 	}
 }// SetFontAndSize
+
+
+/*!
+Temporary, controlled by the Session in response to changes
+in user preferences.  Updates all Carbon and Cocoa windows
+appropriately to let the user enter or exit Full Screen with
+the standard mechanism.  This should not be called except as
+a side effect of preferences changes.
+
+(4.1)
+*/
+void
+TerminalWindow_SetFullScreenIconsEnabled	(Boolean	inAllTerminalWindowsHaveFullScreenIcons)
+{
+	My_TerminalWindowByNSWindow::const_iterator		toPair;
+	My_TerminalWindowByNSWindow::const_iterator		endPairs(gCarbonTerminalNSWindows().end());
+	
+	
+	for (toPair = gCarbonTerminalNSWindows().begin(); toPair != endPairs; ++toPair)
+	{
+		setCarbonWindowFullScreenIcon(REINTERPRET_CAST([toPair->first windowRef], HIWindowRef), inAllTerminalWindowsHaveFullScreenIcons);
+	}
+	
+	endPairs = gCocoaTerminalNSWindows().end();
+	for (toPair = gCocoaTerminalNSWindows().begin(); toPair != endPairs; ++toPair)
+	{
+		setCocoaWindowFullScreenIcon(toPair->first, inAllTerminalWindowsHaveFullScreenIcons);
+	}
+}// SetFullScreenIconsEnabled
 
 
 /*!
@@ -2379,6 +2499,10 @@ windowClickActivationUPP(nullptr),
 windowClickActivationHandler(nullptr),
 windowCursorChangeUPP(nullptr),
 windowCursorChangeHandler(nullptr),
+windowDragCompletedUPP(nullptr),
+windowDragCompletedHandler(nullptr),
+windowFullScreenUPP(nullptr),
+windowFullScreenHandler(nullptr),
 windowResizeEmbellishUPP(nullptr),
 windowResizeEmbellishHandler(nullptr),
 growBoxClickUPP(nullptr),
@@ -2400,6 +2524,10 @@ installedActions()
 	TerminalViewRef			newView = nullptr;
 	Preferences_Result		preferencesResult = kPreferences_ResultOK;
 	
+	
+	// for completeness, zero-out this structure (though it is set up
+	// each time full-screen mode changes)
+	bzero(&this->fullScreen, sizeof(this->fullScreen));
 	
 	// get defaults if no contexts provided; if these cannot be found
 	// for some reason, that’s fine because defaults are set in case
@@ -2453,7 +2581,7 @@ installedActions()
 	// because this is relied upon by other code to find the
 	// terminal window data attached to the Mac OS window
 	assert(this->window != nil);
-	gTerminalNSWindows()[this->window] = this->selfRef;
+	gCarbonTerminalNSWindows()[this->window] = this->selfRef;
 	WindowInfo_SetWindowDescriptor(this->windowInfo, kConstantsRegistry_WindowDescriptorAnyTerminal);
 	WindowInfo_SetAuxiliaryDataPtr(this->windowInfo, this->selfRef); // the auxiliary data is the "TerminalWindowRef"
 	WindowInfo_SetForWindow(returnCarbonWindow(this), this->windowInfo);
@@ -2627,6 +2755,7 @@ installedActions()
 	SessionFactory_StartMonitoringSessions(kSession_ChangeSelected, this->sessionStateChangeEventListener.returnRef());
 	SessionFactory_StartMonitoringSessions(kSession_ChangeState, this->sessionStateChangeEventListener.returnRef());
 	SessionFactory_StartMonitoringSessions(kSession_ChangeStateAttributes, this->sessionStateChangeEventListener.returnRef());
+	SessionFactory_StartMonitoringSessions(kSession_ChangeWindowInvalid, this->sessionStateChangeEventListener.returnRef());
 	SessionFactory_StartMonitoringSessions(kSession_ChangeWindowTitle, this->sessionStateChangeEventListener.returnRef());
 	this->terminalStateChangeEventListener.setRef(ListenerModel_NewStandardListener
 													(terminalStateChanged, this->selfRef/* context */),
@@ -2690,6 +2819,25 @@ installedActions()
 		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowCursorChangeUPP, GetEventTypeCount(whenCursorChangeRequired),
 											whenCursorChangeRequired, this->selfRef/* user data */,
 											&this->windowCursorChangeHandler/* event handler reference */);
+		assert_noerr(error);
+	}
+	
+	// install a callback that responds to full-screen events for a terminal window
+	{
+		EventTypeSpec const		whenWindowFullScreenChanges[] =
+								{
+									{ kEventClassWindow, FUTURE_SYMBOL(241, kEventWindowFullScreenEnterStarted) },
+									{ kEventClassWindow, FUTURE_SYMBOL(242, kEventWindowFullScreenEnterCompleted) },
+									{ kEventClassWindow, FUTURE_SYMBOL(243, kEventWindowFullScreenExitStarted) },
+									{ kEventClassWindow, FUTURE_SYMBOL(244, kEventWindowFullScreenExitCompleted) }
+								};
+		OSStatus				error = noErr;
+		
+		
+		this->windowFullScreenUPP = NewEventHandlerUPP(receiveWindowFullScreenChange);
+		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowFullScreenUPP, GetEventTypeCount(whenWindowFullScreenChanges),
+											whenWindowFullScreenChanges, this->selfRef/* user data */,
+											&this->windowFullScreenHandler/* event handler reference */);
 		assert_noerr(error);
 	}
 	
@@ -2805,6 +2953,10 @@ My_TerminalWindow::
 	RemoveEventHandler(this->windowDragCompletedHandler), this->windowDragCompletedHandler = nullptr;
 	DisposeEventHandlerUPP(this->windowDragCompletedUPP), this->windowDragCompletedUPP = nullptr;
 	
+	// disable window full-screen callback
+	RemoveEventHandler(this->windowFullScreenHandler), this->windowFullScreenHandler = nullptr;
+	DisposeEventHandlerUPP(this->windowFullScreenUPP), this->windowFullScreenUPP = nullptr;
+	
 	// disable window resize callback
 	RemoveEventHandler(this->windowResizeEmbellishHandler), this->windowResizeEmbellishHandler = nullptr;
 	DisposeEventHandlerUPP(this->windowResizeEmbellishUPP), this->windowResizeEmbellishUPP = nullptr;
@@ -2824,7 +2976,7 @@ My_TerminalWindow::
 		size_t		actualSize = 0;
 		
 		
-		gTerminalNSWindows().erase(this->window);
+		gCarbonTerminalNSWindows().erase(this->window);
 		
 		// determine if animation should occur
 		unless (kPreferences_ResultOK ==
@@ -2859,6 +3011,7 @@ My_TerminalWindow::
 	SessionFactory_StopMonitoringSessions(kSession_ChangeSelected, this->sessionStateChangeEventListener.returnRef());
 	SessionFactory_StopMonitoringSessions(kSession_ChangeState, this->sessionStateChangeEventListener.returnRef());
 	SessionFactory_StopMonitoringSessions(kSession_ChangeStateAttributes, this->sessionStateChangeEventListener.returnRef());
+	SessionFactory_StopMonitoringSessions(kSession_ChangeWindowInvalid, this->sessionStateChangeEventListener.returnRef());
 	SessionFactory_StopMonitoringSessions(kSession_ChangeWindowTitle, this->sessionStateChangeEventListener.returnRef());
 	
 	// unregister screen buffer callbacks and destroy all buffers
@@ -3620,6 +3773,8 @@ createWindow ()
 	AutoPool		_;
 	NSWindow*		result = nil;
 	HIWindowRef		window = nullptr;
+	Boolean			useCustomFullScreenMode = false;
+	size_t			actualSize = 0;
 	
 	
 	// load the NIB containing this window (automatically finds the right localization)
@@ -3632,6 +3787,18 @@ createWindow ()
 		// override this default; technically terminal windows
 		// are immediately closeable for the first 15 seconds
 		UNUSED_RETURN(OSStatus)SetWindowModified(window, false);
+		
+		if (kPreferences_ResultOK !=
+			Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
+								&useCustomFullScreenMode, &actualSize))
+		{
+			useCustomFullScreenMode = false; // assume a default if preference can’t be found
+		}
+		
+		if (false == useCustomFullScreenMode)
+		{
+			setCarbonWindowFullScreenIcon(window, true);
+		}
 	}
 	return result;
 }// createWindow
@@ -4042,59 +4209,6 @@ installUndoFontSizeChanges	(TerminalWindowRef	inTerminalWindow,
 
 
 /*!
-Installs an Undo procedure that will revert
-the font size and window location of the
-specified screen to its current font size
-and window location when the user chooses Undo.
-
-(3.1)
-*/
-void
-installUndoFullScreenChanges	(TerminalWindowRef			inTerminalWindow,
-								 TerminalView_DisplayMode	inPreFullScreenMode,
-								 TerminalView_DisplayMode	inFullScreenMode)
-{
-	OSStatus						error = noErr;
-	UndoDataFullScreenChangesPtr	dataPtr = new UndoDataFullScreenChanges; // disposed in the action method
-	CFStringRef						undoCFString = nullptr;
-	UIStrings_Result				stringResult = UIStrings_Copy(kUIStrings_UndoFullScreen, undoCFString);
-	
-	
-	if (nullptr == dataPtr) error = memFullErr;
-	else
-	{
-		// initialize context structure
-		Rect	windowBounds;
-		
-		
-		dataPtr->terminalWindow = inTerminalWindow;
-		dataPtr->oldMode = inPreFullScreenMode;
-		dataPtr->newMode = inFullScreenMode;
-		TerminalWindow_GetFontAndSize(inTerminalWindow, nullptr/* font name */, &dataPtr->oldFontSize);
-		GetWindowBounds(TerminalWindow_ReturnWindow(inTerminalWindow), kWindowContentRgn, &windowBounds);
-		dataPtr->oldContentBounds = windowBounds;
-	}
-	dataPtr->action = Undoables_NewAction(undoCFString/* undo name */, nullptr/* redo name; this is not redoable */,
-											reverseFullScreenChanges, kUndoableContextIdentifierTerminalFullScreenChanges,
-											dataPtr);
-	Undoables_AddAction(dataPtr->action);
-	if (noErr != error) Console_Warning(Console_WriteValue, "could not make font size and/or location change undoable, error", error);
-	else
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
-		
-		
-		ptr->installedActions.push_back(dataPtr->action);
-	}
-	
-	if (nullptr != undoCFString)
-	{
-		CFRelease(undoCFString), undoCFString = nullptr;
-	}
-}// installUndoFullScreenChanges
-
-
-/*!
 Installs an Undo procedure that will revert the
 dimensions of the of the specified screen to its
 current dimensions when the user chooses Undo.
@@ -4260,249 +4374,44 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					}
 					break;
 				
-				case kCommandFullScreen:
-				case kCommandFullScreenModal:
-				case kCommandKioskModeDisable:
+				case kCommandFullScreenToggle:
 					{
-						static UInt16	gNumberOfDisplaysUsed = 0;
-						Boolean			turnOnFullScreen = ((kCommandKioskModeDisable != received.commandID) &&
-															(false == FlagManager_Test(kFlagKioskMode)));
-						Boolean			modalFullScreen = (kCommandFullScreenModal == received.commandID);
+						// transition active window into or out of full-screen mode
+						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						// NOTE: while it would be more consistent to require the Control key,
+						// this isn't really possible (it would cause problems when trying to
+						// Control-click the Full Screen toolbar icon, and it would cause the
+						// default Control-command-F key equivalent to always trigger a swap);
+						// so a Full Screen preference swap requires Option, even though the
+						// equivalent behavior during a window resize requires the Control key
+						Boolean const					kSwapModes = EventLoop_IsOptionKeyDown();
 						
 						
-						// enable kiosk mode only if it is not enabled already
-						if (turnOnFullScreen)
-						{
-							HIWindowRef			activeWindow = EventLoop_ReturnRealFrontWindow();
-							HIWindowRef			alternateDisplayWindow = nullptr;
-							Boolean				allowForceQuit = true;
-							Boolean				showMenuBar = true;
-							Boolean				showOffSwitch = true;
-							Boolean				showScrollBar = true;
-							Boolean				showWindowFrame = true;
-							Boolean				useEffects = true;
-							SystemUIOptions		optionsForFullScreen = 0;
-							
-							
-							// read relevant user preferences
-							{
-								size_t		actualSize = 0;
-								
-								
-								if (kPreferences_ResultOK !=
-									Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
-														&allowForceQuit, &actualSize))
-								{
-									allowForceQuit = true; // assume a value if the preference cannot be found
-								}
-								unless (allowForceQuit) optionsForFullScreen |= kUIOptionDisableForceQuit;
-								
-								if (kPreferences_ResultOK !=
-									Preferences_GetData(kPreferences_TagKioskShowsMenuBar, sizeof(showMenuBar),
-														&showMenuBar, &actualSize))
-								{
-									showMenuBar = false; // assume a value if the preference cannot be found
-								}
-								if (showMenuBar) optionsForFullScreen |= kUIOptionAutoShowMenuBar;
-								
-								if (kPreferences_ResultOK !=
-									Preferences_GetData(kPreferences_TagKioskShowsOffSwitch, sizeof(showOffSwitch),
-														&showOffSwitch, &actualSize))
-								{
-									showOffSwitch = true; // assume a value if the preference cannot be found
-								}
-								
-								if (kPreferences_ResultOK !=
-									Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(showScrollBar),
-														&showScrollBar, &actualSize))
-								{
-									showScrollBar = true; // assume a value if the preference cannot be found
-								}
-								
-								if (kPreferences_ResultOK !=
-									Preferences_GetData(kPreferences_TagKioskShowsWindowFrame, sizeof(showWindowFrame),
-														&showWindowFrame, &actualSize))
-								{
-									showWindowFrame = true; // assume a value if the preference cannot be found
-								}
-								
-								if (kPreferences_ResultOK !=
-									Preferences_GetData(kPreferences_TagKioskUsesSuperfluousEffects, sizeof(useEffects),
-														&useEffects, &actualSize))
-								{
-									useEffects = true; // assume a value if the preference cannot be found
-								}
-							}
-							
-							if (modalFullScreen)
-							{
-								CGDirectDisplayID	activeWindowDisplay = kCGNullDirectDisplay;
-								
-								
-								alternateDisplayWindow = activeWindow; // initially...
-								if (RegionUtilities_GetWindowDirectDisplayID(activeWindow, activeWindowDisplay))
-								{
-									TerminalWindowRef	alternateTerminalWindow = nullptr;
-									CGDirectDisplayID	alternateWindowDisplay = kCGNullDirectDisplay;
-									Boolean				validAlternative = false;
-									
-									
-									// in full screen mode with multiple displays, try to detect a
-									// good window to maximize on each display
-									do
-									{
-										validAlternative = false; // initially...
-										
-										// the most recently activated window seems like a good place to start
-										alternateDisplayWindow = GetNextWindow(alternateDisplayWindow);
-										alternateTerminalWindow = TerminalWindow_ReturnFromWindow(alternateDisplayWindow);
-										if (nullptr != alternateTerminalWindow)
-										{
-											// find the monitor that contains most of the window, and also make
-											// sure that it isn’t “the same” desktop (mirrored) as the one that
-											// already contains the active window
-											if (RegionUtilities_GetWindowDirectDisplayID(alternateDisplayWindow,
-																							alternateWindowDisplay))
-											{
-												CGDirectDisplayID	mirrorSource = CGDisplayMirrorsDisplay(alternateWindowDisplay);
-												
-												
-												if ((kCGNullDirectDisplay == mirrorSource) &&
-													(activeWindowDisplay != alternateWindowDisplay))
-												{
-													// good; this window is primarily covering a different display,
-													// so it is a candidate for zooming to its display
-													validAlternative = true;
-												}
-											}
-										}
-									} while ((false == validAlternative) &&
-												(nullptr != alternateDisplayWindow) &&
-												(activeWindow != alternateDisplayWindow));
-									
-									if (false == validAlternative)
-									{
-										alternateDisplayWindow = nullptr;
-									}
-								}
-								
-								// lock down the system (hide menu bar, etc.) for kiosk;
-								// do this early, so that below when the window positioning
-								// boundaries are sought, they reflect the proper hidden
-								// state of the Dock, etc. if normal content should be hidden
-								if (noErr != SetSystemUIMode(kUIModeAllHidden, optionsForFullScreen/* options */))
-								{
-									// apparently failed...
-									Sound_StandardAlert();
-								}
-								
-								// show “off switch” if user has requested it
-								if (showOffSwitch)
-								{
-									Keypads_SetVisible(kKeypads_WindowTypeFullScreen, true);
-									SelectWindow(activeWindow); // return focus to the terminal window
-									CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
-								}
-								
-								// finally, set a global flag indicating the mode is in effect
-								FlagManager_Set(kFlagKioskMode, true);
-							}
-							
-							// terminal views are mostly capable of handling text zoom or row/column resize
-							// on their own, as a side effect of changing dimensions in the right mode; so
-							// it is just a matter of setting the window size, and then setting up an
-							// appropriate Undo command (which is used to turn off Full Screen later)
-							gNumberOfDisplaysUsed = 0;
-							for (HIWindowRef targetWindow = activeWindow; targetWindow != nullptr; ++gNumberOfDisplaysUsed)
-							{
-								TerminalWindowRef				targetTerminalWindow = TerminalWindow_ReturnFromWindow(targetWindow);
-								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), targetTerminalWindow);
-								TerminalView_DisplayMode const	kOldMode = TerminalView_ReturnDisplayMode(ptr->allViews.front());
-								Rect							maxBounds;
-								
-								
-								// resize the window and fill its monitor
-								if (modalFullScreen)
-								{
-									// NOTE: while it would be more consistent to require the Control key,
-									// this isn't really possible (it would cause problems when trying to
-									// Control-click the Full Screen toolbar icon, and it would cause the
-									// default Control-command-F key equivalent to always trigger a swap);
-									// so a Full Screen preference swap requires Option, even though the
-									// equivalent behavior during a window resize requires the Control key
-									Boolean const					kSwapModes = EventLoop_IsOptionKeyDown();
-									TerminalView_DisplayMode const	kNewMode = (false == kSwapModes)
-																				? kOldMode
-																				: (kTerminalView_DisplayModeZoom == kOldMode)
-																					? kTerminalView_DisplayModeNormal
-																					: kTerminalView_DisplayModeZoom;
-									
-									
-									installUndoFullScreenChanges(targetTerminalWindow, kOldMode, kNewMode);
-									if (kSwapModes)
-									{
-										TerminalView_SetDisplayMode(ptr->allViews.front(), kNewMode);
-									}
-									
-									// hide the scroll bar, if requested
-									unless (showScrollBar)
-									{
-										UNUSED_RETURN(OSStatus)HIViewSetVisible(ptr->controls.scrollBarV, false);
-									}
-									
-									// always hide the size box
-									UNUSED_RETURN(OSStatus)ChangeWindowAttributes(returnCarbonWindow(ptr), 0/* attributes to set */,
-																					kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
-																					kWindowResizableAttribute/* attributes to clear */);
-									
-									// remove any shadow so that “neighboring” full-screen windows
-									// on other displays do not appear to have shadows over them
-									[TerminalWindow_ReturnNSWindow(targetTerminalWindow) setHasShadow:NO];
-								}
-								else
-								{
-									installUndoFontSizeChanges(targetTerminalWindow, false/* undo font */, true/* undo font size */);
-									TerminalView_SetDisplayMode(ptr->allViews.front(), kTerminalView_DisplayModeZoom);
-								}
-								
-								if ((showWindowFrame) || (kCommandFullScreen == received.commandID))
-								{
-									RegionUtilities_GetWindowMaximumBounds(targetWindow, &maxBounds,
-																			nullptr/* previous bounds */, true/* no insets */);
-								}
-								else
-								{
-									// entire screen is available, so use it
-									RegionUtilities_GetWindowDeviceGrayRect(targetWindow, &maxBounds);
-								}
-								
-								setViewSizeIndependentFromWindow(ptr, true);
-								UNUSED_RETURN(OSStatus)SetWindowBounds(targetWindow, kWindowContentRgn, &maxBounds);
-								setViewSizeIndependentFromWindow(ptr, false);
-								
-								TerminalView_SetDisplayMode(ptr->allViews.front(), kOldMode);
-								
-								// switch to next display; TEMPORARY, only supports up to 2 displays
-								if (activeWindow == targetWindow) targetWindow = alternateDisplayWindow;
-								else targetWindow = nullptr;
-							}
-						}
-						else
-						{
-							// undo all changes to affected terminal windows; since these
-							// changes were added to the Undo stack it should only be
-							// necessary to invoke Undo once for each window transformed
-							for (UInt16 i = 0; i < gNumberOfDisplaysUsed; ++i)
-							{
-								Commands_ExecuteByID(kCommandUndo);
-							}
-							
-							// now explicitly disable settings that apply to Full Screen
-							// mode as a whole (and not to each window)
-							FlagManager_Set(kFlagKioskMode, false);
-							Keypads_SetVisible(kKeypads_WindowTypeFullScreen, false);
-							assert_noerr(SetSystemUIMode(kUIModeNormal, 0/* options */));
-						}
+						setTerminalWindowFullScreen(ptr, false == TerminalWindow_IsFullScreen(terminalWindow), kSwapModes);
+						
+						result = noErr;
+					}
+					break;
+				
+				case kCommandZoomMaximumSize:
+					{
+						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						Rect							maxBounds;
+						TerminalView_DisplayMode const	kOldMode = TerminalView_ReturnDisplayMode(ptr->allViews.front());
+						
+						
+						// zoom the window to the largest possible size; this can be
+						// done by choosing the largest possible window frame and
+						// temporarily pretending that the view should zoom its text
+						RegionUtilities_GetWindowMaximumBounds(returnCarbonWindow(ptr), &maxBounds,
+																nullptr/* previous bounds */, true/* no insets */);
+						installUndoFontSizeChanges(ptr->selfRef, false/* undo font */, true/* undo font size */);
+						TerminalView_SetDisplayMode(ptr->allViews.front(), kTerminalView_DisplayModeZoom);
+						setViewSizeIndependentFromWindow(ptr, true);
+						UNUSED_RETURN(OSStatus)SetWindowBounds(returnCarbonWindow(ptr), kWindowContentRgn, &maxBounds);
+						setViewSizeIndependentFromWindow(ptr, false);
+						TerminalView_SetDisplayMode(ptr->allViews.front(), kOldMode);
+						
 						result = noErr;
 					}
 					break;
@@ -5041,13 +4950,14 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				if (TerminalWindow_ExistsFor(targetWindow))
 				{
 					TerminalWindowRef		terminalWindow = TerminalWindow_ReturnFromWindow(targetWindow);
+					Boolean					isFullScreenWindow = TerminalWindow_IsFullScreen(terminalWindow);
 					
 					
 					if (nullptr == terminalWindow) result = eventNotHandledErr;
 					else if (modifiers & controlKey)
 					{
 						// like Firefox, use control-scroll-wheel to affect font size
-						if (false == FlagManager_Test(kFlagKioskMode))
+						if (false == isFullScreenWindow)
 						{
 							Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandBiggerText : kCommandSmallerText);
 						}
@@ -5059,7 +4969,7 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (kEventMouseWheelAxisX == axis)
 						{
 							// adjust screen width
-							if (false == FlagManager_Test(kFlagKioskMode))
+							if (false == isFullScreenWindow)
 							{
 								Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandNarrowerScreen : kCommandWiderScreen);
 							}
@@ -5070,7 +4980,7 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							if (modifiers & cmdKey)
 							{
 								// adjust screen width
-								if (false == FlagManager_Test(kFlagKioskMode))
+								if (false == isFullScreenWindow)
 								{
 									Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandWiderScreen : kCommandNarrowerScreen);
 								}
@@ -5078,7 +4988,7 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							}
 							else
 							{
-								if (false == FlagManager_Test(kFlagKioskMode))
+								if (false == isFullScreenWindow)
 								{
 									Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandTallerScreen : kCommandShorterScreen);
 								}
@@ -5095,7 +5005,7 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						size_t		actualSize = 0;
 						
 						
-						if (FlagManager_Test(kFlagKioskMode))
+						if (TerminalWindow_IsFullScreen(terminalWindow))
 						{
 							if (kPreferences_ResultOK !=
 								Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(allowScrolling),
@@ -5689,7 +5599,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																kHIToolbarItemNoAttributes, &itemRef);
 								if (noErr == result)
 								{
-									UInt32 const	kMyCommandID = kCommandFullScreenModal;
+									UInt32 const	kMyCommandID = kCommandFullScreenToggle;
 									CFStringRef		nameCFString = nullptr;
 									
 									
@@ -6052,6 +5962,83 @@ receiveWindowDragCompleted	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef
 
 
 /*!
+Handles "kEventWindowFullScreenEnterStarted", "kEventWindowFullScreenEnterCompleted",
+"kEventWindowFullScreenExitStarted" and "kEventWindowFullScreenExitCompleted" of
+"kEventClassWindow" for a terminal window.
+
+(4.1)
+*/
+OSStatus
+receiveWindowFullScreenChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+								 EventRef				inEvent,
+								 void*					inTerminalWindowRef)
+{
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
+	UInt32 const		enterStarted = FUTURE_SYMBOL(241, kEventWindowFullScreenEnterStarted);
+	UInt32 const		enterCompleted = FUTURE_SYMBOL(242, kEventWindowFullScreenEnterCompleted);
+	UInt32 const		exitStarted = FUTURE_SYMBOL(243, kEventWindowFullScreenExitStarted);
+	UInt32 const		exitCompletedOrFailed = FUTURE_SYMBOL(244, kEventWindowFullScreenExitCompleted);
+	UInt32				keyModifiers = 0;
+	HIWindowRef			window = nullptr;
+	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
+	OSStatus			result = eventNotHandledErr;
+	
+	
+	assert(kEventClass == kEventClassWindow);
+	assert((kEventKind == enterStarted) ||
+			(kEventKind == enterCompleted) ||
+			(kEventKind == exitStarted) ||
+			(kEventKind == exitCompletedOrFailed));
+	
+	// determine which special keys are down
+	if (noErr != CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, keyModifiers))
+	{
+		// hack...
+		if (EventLoop_IsOptionKeyDown())
+		{
+			keyModifiers |= optionKey;
+		}
+	}
+	
+	// all event types have a window as a direct object
+	result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
+	if (noErr == result)
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+		Boolean const					kSwapModes = (0 != (keyModifiers & optionKey)); // MUST be consistent with other modifier-key checks for this flag
+		
+		
+		switch (kEventKind)
+		{
+		case enterStarted:
+			setUpForFullScreenModal(ptr, true, kSwapModes, kMy_FullScreenStateInProgress);
+			break;
+		
+		case enterCompleted:
+			setUpForFullScreenModal(ptr, true, kSwapModes, kMy_FullScreenStateCompleted);
+			break;
+		
+		case exitStarted:
+			setUpForFullScreenModal(ptr, false, kSwapModes, kMy_FullScreenStateInProgress);
+			break;
+		
+		case exitCompletedOrFailed:
+			setUpForFullScreenModal(ptr, false, kSwapModes, kMy_FullScreenStateCompleted);
+			break;
+		
+		default:
+			// ???
+			result = eventNotHandledErr;
+			break;
+		}
+	}
+	
+	return result;
+}// receiveWindowFullScreenChange
+
+
+/*!
 Embellishes "kEventWindowResizeStarted", "kEventWindowBoundsChanging",
 and "kEventWindowResizeCompleted" of "kEventClassWindow" for a
 terminal window.
@@ -6344,7 +6331,7 @@ is set to 0.
 (3.0)
 */
 UInt16
-returnScrollBarWidth	(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
+returnScrollBarWidth	(My_TerminalWindowPtr	inPtr)
 {
 	UInt16		result = 0;
 	Boolean		showScrollBar = true;
@@ -6358,7 +6345,7 @@ returnScrollBarWidth	(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
 		showScrollBar = true; // assume a value if the preference cannot be found
 	}
 	
-	if ((false == FlagManager_Test(kFlagKioskMode)) || (showScrollBar))
+	if ((false == TerminalWindow_IsFullScreen(inPtr->selfRef)) || (showScrollBar))
 	{
 		SInt32		data = 0L;
 		OSStatus	error = noErr;
@@ -6478,88 +6465,6 @@ reverseFontChanges	(Undoables_ActionInstruction	inDoWhat,
 		}
 	}
 }// reverseFontChanges
-
-
-/*!
-This routine, of standard UndoActionProcPtr form,
-can undo or redo changes to the font size and
-location of a terminal screen (made by going into
-Full Screen mode).
-
-(3.0)
-*/
-void
-reverseFullScreenChanges	(Undoables_ActionInstruction	inDoWhat,
-							 Undoables_ActionRef			inApplicableAction,
-							 void*							inContextPtr)
-{
-	// this routine only recognizes one kind of context - be absolutely sure that’s what was given!
-	assert(Undoables_ReturnActionID(inApplicableAction) == kUndoableContextIdentifierTerminalFullScreenChanges);
-	
-	{
-		UndoDataFullScreenChangesPtr	dataPtr = REINTERPRET_CAST(inContextPtr, UndoDataFullScreenChangesPtr);
-		
-		
-		switch (inDoWhat)
-		{
-		case kUndoables_ActionInstructionDispose:
-			// release memory previously allocated when this action was installed
-			Undoables_DisposeAction(&inApplicableAction);
-			if (nullptr != dataPtr)
-			{
-				delete dataPtr, dataPtr = nullptr;
-			}
-			break;
-		
-		case kUndoables_ActionInstructionUndo:
-			// restore the window to its normal state (so as not to occupy the
-			// whole screen or hide any terminal window user interface elements)
-			{
-				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), dataPtr->terminalWindow);
-				
-				
-				// restore the size box
-				UNUSED_RETURN(OSStatus)ChangeWindowAttributes
-										(returnCarbonWindow(ptr),
-											kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
-											kWindowResizableAttribute/* attributes to set */,
-											0/* attributes to clear */);
-				
-				if (nullptr != ptr)
-				{
-					UNUSED_RETURN(OSStatus)HIViewSetVisible(ptr->controls.scrollBarV, true);
-				}
-				
-				// some mode changes do not require font size restoration; and, the boundaries
-				// may need to change before or after the display mode is restored, due to the
-				// side effects of window resizes in each mode
-				TerminalView_SetDisplayMode(ptr->allViews.front(), dataPtr->newMode);
-				if ((dataPtr->oldMode != dataPtr->newMode) && (kTerminalView_DisplayModeNormal == dataPtr->oldMode))
-				{
-					TerminalWindow_SetFontAndSize(dataPtr->terminalWindow, nullptr/* font name */, dataPtr->oldFontSize);
-				}
-				if ((dataPtr->oldMode != dataPtr->newMode) && (kTerminalView_DisplayModeNormal != dataPtr->newMode))
-				{
-					TerminalView_SetDisplayMode(ptr->allViews.front(), dataPtr->oldMode);
-				}
-				setViewSizeIndependentFromWindow(ptr, true);
-				SetWindowBounds(TerminalWindow_ReturnWindow(dataPtr->terminalWindow), kWindowContentRgn, &dataPtr->oldContentBounds);
-				[TerminalWindow_ReturnNSWindow(dataPtr->terminalWindow) setHasShadow:YES];
-				setViewSizeIndependentFromWindow(ptr, false);
-				if ((dataPtr->oldMode != dataPtr->newMode) && (kTerminalView_DisplayModeNormal == dataPtr->newMode))
-				{
-					TerminalView_SetDisplayMode(ptr->allViews.front(), dataPtr->oldMode);
-				}
-			}
-			break;
-		
-		case kUndoables_ActionInstructionRedo:
-		default:
-			// ???
-			break;
-		}
-	}
-}// reverseFullScreenChanges
 
 
 /*!
@@ -6859,21 +6764,33 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			// but the response is specific to one, so check first
 			if (Session_ReturnActiveTerminalWindow(session) == terminalWindow)
 			{
-				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-				Session_StateAttributes			currentAttributes = Session_ReturnStateAttributes(session);
+				CFStringRef		titleCFString = nullptr;
 				
 				
-				// the scroll lock toolbar item, if visible, should have its icon changed
-				if (ptr->toolbarItemScrollLock.exists())
+				if (kSession_ResultOK == Session_GetWindowUserDefinedTitle(session, titleCFString))
 				{
-					if (currentAttributes & kSession_StateAttributeSuspendNetwork)
-					{
-						UNUSED_RETURN(OSStatus)HIToolbarItemSetIconRef(ptr->toolbarItemScrollLock.returnHIObjectRef(), gScrollLockOffIcon());
-					}
-					else
-					{
-						UNUSED_RETURN(OSStatus)HIToolbarItemSetIconRef(ptr->toolbarItemScrollLock.returnHIObjectRef(), gScrollLockOnIcon());
-					}
+					TerminalWindow_SetWindowTitle(terminalWindow, titleCFString);
+				}
+			}
+		}
+		break;
+	
+	case kSession_ChangeWindowInvalid:
+		// if a window is still Full Screen, kick it into normal mode
+		{
+			SessionRef		session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
+			
+			
+			// this handler is invoked for changes to ANY session,
+			// but the response is specific to one, so check first
+			if (Session_ReturnActiveTerminalWindow(session) == terminalWindow)
+			{
+				if (TerminalWindow_IsFullScreen(terminalWindow))
+				{
+					My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+					
+					
+					setTerminalWindowFullScreen(ptr, false/* full screen */, false/* swap view mode */);
 				}
 			}
 		}
@@ -6905,6 +6822,54 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// sessionStateChanged
+
+
+/*!
+Adds or removes a Full Screen icon from the specified window.
+Not for normal use, called as a side effect of changes to
+user preferences.
+
+(4.1)
+*/
+void
+setCarbonWindowFullScreenIcon	(HIWindowRef	inWindow,
+								 Boolean		inHasFullScreenIcon)
+{
+	int		windowBits[] = { FUTURE_SYMBOL(45, kHIWindowBitFullScreenPrimary), 0 }; // must be zero-terminated
+	int		noBits[] = { 0 }; // must be zero-terminated
+	
+	
+	if (inHasFullScreenIcon)
+	{
+		assert_noerr(HIWindowChangeAttributes(inWindow, windowBits/* bits to set */, noBits/* bits to clear */));
+	}
+	else
+	{
+		assert_noerr(HIWindowChangeAttributes(inWindow, noBits/* bits to set */, windowBits/* bits to clear */));
+	}
+}// setCarbonWindowFullScreenIcon
+
+
+/*!
+Adds or removes a Full Screen icon from the specified window.
+Not for normal use, called as a side effect of changes to
+user preferences.
+
+(4.1)
+*/
+void
+setCocoaWindowFullScreenIcon	(NSWindow*	inWindow,
+								 Boolean	inHasFullScreenIcon)
+{
+	if (inHasFullScreenIcon)
+	{
+		[inWindow setCollectionBehavior:([inWindow collectionBehavior] | FUTURE_SYMBOL(1 << 7, NSWindowCollectionBehaviorFullScreenPrimary))];
+	}
+	else
+	{
+		[inWindow setCollectionBehavior:([inWindow collectionBehavior] & ~(FUTURE_SYMBOL(1 << 7, NSWindowCollectionBehaviorFullScreenPrimary)))];
+	}
+}// setCocoaWindowFullScreenIcon
 
 
 /*!
@@ -7101,6 +7066,388 @@ setStandardState	(My_TerminalWindowPtr	inPtr,
 		}
 	}
 }// setStandardState
+
+
+/*!
+Specifies whether or not the given terminal window takes over
+its entire display.  This is also used to zoom a window to its
+largest possible size without entering a modal state.
+
+If "inIsModal" is not set, “full screen” is simply a request
+to zoom the window to fit the screen as well as possible (or
+return it to its original size) without changing system-wide
+state such as the Dock and menu bar.
+
+Otherwise, the window is zoomed to fill the screen and it
+enters a special mode (e.g. the menu bar may be hidden and
+various commands may become unavailable).  The exact behavior
+depends on the user preference for using the full-screen mode
+of the OS:
+
+- If the new full-screen mode (introduced in Lion) is used,
+  the window zooms to Full Screen with animation and the menu
+  bar is hidden but remains accessible.  User preferences to
+  disable Force Quit, show the title bar or permanently hide
+  the menu bar are ignored because the system does not
+  support them in this mode.
+
+- If the original full-screen mode is in effect, the window
+  zooms to Full Screen without animation and the user has
+  more control over what is disabled (e.g. many more menu
+  commands can be inactive and the entire window frame can
+  remain visible if desired).  On the other hand, the mode
+  is more permanent: it does not allow any number of other
+  windows to also become Full Screen as their own Spaces.
+
+(4.1)
+*/
+void
+setTerminalWindowFullScreen		(My_TerminalWindowPtr	inPtr,
+								 Boolean				inIsFullScreen,
+								 Boolean				inSwapViewMode)
+{
+	Boolean		useCustomFullScreenMode = false; // if not set, implies modal mode
+	size_t		actualSize = 0;
+	
+	
+	if (false == inIsFullScreen)
+	{
+		// if the window is already Full Screen, it must be returned
+		// in the way that it started (the user may have changed the
+		// preference in the meantime)
+		useCustomFullScreenMode = (false == inPtr->fullScreen.isUsingOS);
+	}
+	else
+	{
+		if (kPreferences_ResultOK !=
+			Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
+								&useCustomFullScreenMode, &actualSize))
+		{
+			useCustomFullScreenMode = false; // assume a value if the preference cannot be found
+		}
+	}
+	
+	// enable kiosk mode only if it is not enabled already
+	if (inIsFullScreen)
+	{
+		if (useCustomFullScreenMode)
+		{
+			// old-style Full Screen
+			Rect		maxBounds;
+			Boolean		showWindowFrame = true;
+			
+			
+			// prepare to enter full-screen mode
+			setUpForFullScreenModal(inPtr, true, inSwapViewMode, kMy_FullScreenStateInProgress);
+			
+			// read relevant user preferences
+			if (kPreferences_ResultOK !=
+				Preferences_GetData(kPreferences_TagKioskShowsWindowFrame, sizeof(showWindowFrame),
+									&showWindowFrame, &actualSize))
+			{
+				showWindowFrame = true; // assume a value if the preference cannot be found
+			}
+			
+			if (showWindowFrame)
+			{
+				RegionUtilities_GetWindowMaximumBounds(returnCarbonWindow(inPtr), &maxBounds,
+														nullptr/* previous bounds */, true/* no insets */);
+			}
+			else
+			{
+				// entire screen is available, so use it
+				RegionUtilities_GetWindowDeviceGrayRect(returnCarbonWindow(inPtr), &maxBounds);
+			}
+			
+			UNUSED_RETURN(OSStatus)SetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &maxBounds);
+			
+			// finish initiation of full-screen mode
+			setUpForFullScreenModal(inPtr, true, inSwapViewMode, kMy_FullScreenStateCompleted);
+		}
+		else
+		{
+			// new-style Full Screen (take over display); first select the
+			// target window to make sure the command is handled properly
+			// (NOTE: Carbon event handlers respond to key transitions,
+			// effectively performing the same calls as the old-style
+			// version above)
+			TerminalWindow_Select(inPtr->selfRef);
+			Commands_ExecuteByIDUsingEvent(FUTURE_SYMBOL('fsm ', kHICommandToggleFullScreen));
+		}
+	}
+	else
+	{
+		if (useCustomFullScreenMode)
+		{
+			// prepare to return to normal mode
+			setUpForFullScreenModal(inPtr, false, inSwapViewMode, kMy_FullScreenStateInProgress);
+			
+			// old-style Full Screen; restore window frame
+			UNUSED_RETURN(OSStatus)SetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &inPtr->fullScreen.oldContentBounds);
+			
+			// finish return to normal mode
+			setUpForFullScreenModal(inPtr, false, inSwapViewMode, kMy_FullScreenStateCompleted);
+		}
+		else
+		{
+			// new-style Full Screen (take over display); first select the
+			// target window to make sure the command is handled properly
+			// (NOTE: Carbon event handlers respond to key transitions,
+			// effectively performing the same calls as the old-style
+			// version above)
+			TerminalWindow_Select(inPtr->selfRef);
+			Commands_ExecuteByIDUsingEvent(FUTURE_SYMBOL('fsm ', kHICommandToggleFullScreen),
+											GetWindowEventTarget(returnCarbonWindow(inPtr)));
+		}
+	}
+}// setTerminalWindowFullScreen
+
+
+/*!
+This routine handles any side effects that should occur when a
+window is entering or exiting full-screen mode.
+
+Currently this handles things like hiding or showing the scroll
+bar when the user preference for “no scroll bar” is set.
+
+This must be a separate function from any code that makes a
+window actually enter or exit full-screen (such as when handling
+a command) because the system-provided Full Screen mode can be
+triggered indirectly.
+
+(4.1)
+*/
+void
+setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
+							 Boolean				inWillBeFullScreen,
+							 Boolean				inSwapViewMode,
+							 My_FullScreenState		inState)
+{
+	SystemUIOptions		optionsForFullScreen = 0;
+	Boolean				useCustomFullScreenMode = true;
+	Boolean				showOffSwitch = true;
+	Boolean				showScrollBar = true;
+	Boolean				allowForceQuit = true;
+	Boolean				showMenuBar = true;
+	Boolean				showWindowFrame = true;
+	size_t				actualSize = 0;
+	
+	
+	if (false == inWillBeFullScreen)
+	{
+		// if the window is already Full Screen, it must be returned
+		// in the way that it started (the user may have changed the
+		// preference in the meantime)
+		useCustomFullScreenMode = (false == inPtr->fullScreen.isUsingOS);
+	}
+	else
+	{
+		if (kPreferences_ResultOK !=
+			Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
+								&useCustomFullScreenMode, &actualSize))
+		{
+			useCustomFullScreenMode = false; // assume a value if the preference cannot be found
+		}
+	}
+	
+	if (kPreferences_ResultOK !=
+		Preferences_GetData(kPreferences_TagKioskShowsOffSwitch, sizeof(showOffSwitch),
+							&showOffSwitch, &actualSize))
+	{
+		showOffSwitch = true; // assume a value if the preference cannot be found
+	}
+	
+	if (kPreferences_ResultOK !=
+		Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(showScrollBar),
+							&showScrollBar, &actualSize))
+	{
+		showScrollBar = true; // assume a value if the preference cannot be found
+	}
+	
+	if (kPreferences_ResultOK !=
+		Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
+							&allowForceQuit, &actualSize))
+	{
+		allowForceQuit = true; // assume a value if the preference cannot be found
+	}
+	unless (allowForceQuit) optionsForFullScreen |= kUIOptionDisableForceQuit;
+	
+	if (kPreferences_ResultOK !=
+		Preferences_GetData(kPreferences_TagKioskShowsMenuBar, sizeof(showMenuBar),
+							&showMenuBar, &actualSize))
+	{
+		showMenuBar = false; // assume a value if the preference cannot be found
+	}
+	if (showMenuBar) optionsForFullScreen |= kUIOptionAutoShowMenuBar;
+	
+	if (kPreferences_ResultOK !=
+		Preferences_GetData(kPreferences_TagKioskShowsWindowFrame, sizeof(showWindowFrame),
+							&showWindowFrame, &actualSize))
+	{
+		showWindowFrame = true; // assume a value if the preference cannot be found
+	}
+	
+	// if the system’s own Full Screen method is in use, fix
+	// certain settings (they have no effect anyway)
+	if (false == useCustomFullScreenMode)
+	{
+		allowForceQuit = true;
+		showMenuBar = true;
+		showWindowFrame = false;
+	}
+	
+	if (inWillBeFullScreen)
+	{
+		// prepare to turn on Full Screen; “completed” means “everything
+		// that happens AFTER the window frame is made full-screen”, whereas
+		// the pre-completed setup all happens BEFORE the frame is changed;
+		// everything here should be the opposite of the off-state code below
+		if (kMy_FullScreenStateCompleted == inState)
+		{
+			// hide or disable the close box, zoom box and size box
+			UNUSED_RETURN(OSStatus)ChangeWindowAttributes(returnCarbonWindow(inPtr), 0/* attributes to set */,
+															kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
+															kWindowResizableAttribute/* attributes to clear */);
+			
+			if (useCustomFullScreenMode)
+			{
+				// remove any shadow so that “neighboring” full-screen windows
+				// on other displays do not appear to have shadows over them
+				[inPtr->window setHasShadow:NO];
+			}
+			
+			// show “off switch” if user has requested it
+			if (showOffSwitch)
+			{
+				Keypads_SetVisible(kKeypads_WindowTypeFullScreen, true);
+				SelectWindow(returnCarbonWindow(inPtr)); // return focus to the terminal window
+				CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
+			}
+			
+			// set flags last because the window is not in a complete
+			// full-screen state until every change is in effect
+			inPtr->fullScreen.isOn = true;
+			inPtr->fullScreen.isUsingOS = (false == useCustomFullScreenMode);
+		}
+		else
+		{
+			TerminalView_DisplayMode const	kOldMode = TerminalView_ReturnDisplayMode(inPtr->allViews.front());
+			
+			
+			// initialize the structure to a known state
+			bzero(&inPtr->fullScreen, sizeof(inPtr->fullScreen));
+			
+			if (useCustomFullScreenMode)
+			{
+				if (false == TerminalWindow_IsFullScreenMode())
+				{
+					// no windows are full-screen yet so turn on the system-wide
+					// mode (hiding the menu bar and Dock, etc.); do this early
+					// so that the usable screen space is up-to-date when the
+					// window tries to figure out how much space it can use
+					assert_noerr(SetSystemUIMode(kUIModeAllHidden, optionsForFullScreen));
+				}
+			}
+			
+			unless (showScrollBar)
+			{
+				UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->controls.scrollBarV, false);
+			}
+			
+			// configure the view to allow a font size change instead of
+			// a dimension change, when appropriate; also store enough
+			// information to reverse all changes later (IMPORTANT: this
+			// changes the user’s preferred behavior for the window and
+			// it must be undone when Full Screen ends)
+			TerminalWindow_GetFontAndSize(inPtr->selfRef, nullptr/* font name */, &inPtr->fullScreen.oldFontSize);
+			UNUSED_RETURN(OSStatus)GetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &inPtr->fullScreen.oldContentBounds);
+			inPtr->fullScreen.oldMode = kOldMode;
+			inPtr->fullScreen.newMode = (false == inSwapViewMode)
+										? kOldMode
+										: (kTerminalView_DisplayModeZoom == kOldMode)
+											? kTerminalView_DisplayModeNormal
+											: kTerminalView_DisplayModeZoom;
+			if (inPtr->fullScreen.newMode != inPtr->fullScreen.oldMode)
+			{
+				TerminalView_SetDisplayMode(inPtr->allViews.front(), inPtr->fullScreen.newMode);
+				setViewSizeIndependentFromWindow(inPtr, true);
+			}
+		}
+	}
+	else
+	{
+		// prepare to turn off Full Screen; “completed” means “everything
+		// that happens AFTER the window frame is changed back”, whereas
+		// the pre-completed setup all happens BEFORE the frame is changed;
+		// everything here should be the opposite of the code above
+		if (kMy_FullScreenStateCompleted == inState)
+		{
+			// restore the close box, zoom box and size box
+			UNUSED_RETURN(OSStatus)ChangeWindowAttributes(returnCarbonWindow(inPtr),
+															kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
+															kWindowResizableAttribute/* attributes to set */,
+															0/* attributes to clear */);
+			
+			// the scroll bar may or may not have been hidden but
+			// just show it anyway; that way, if preferences were
+			// crossed or some other condition changed, the
+			// window cannot end up with a missing scroll bar
+			UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->controls.scrollBarV, true);
+			
+			if (inPtr->fullScreen.newMode != inPtr->fullScreen.oldMode)
+			{
+				// window is set to normally zoom text but was temporarily
+				// changing dimensions; wait until now (after frame has
+				// been restored) to reverse the display mode setting so
+				// that the text zoom is not affected by the frame change
+				if (kTerminalView_DisplayModeZoom == inPtr->fullScreen.oldMode)
+				{
+					TerminalView_SetDisplayMode(inPtr->allViews.front(), inPtr->fullScreen.oldMode);
+					setViewSizeIndependentFromWindow(inPtr, false);
+				}
+			}
+		}
+		else
+		{
+			// clear flags immediately because the window is not in a
+			// complete full-screen state once it has started to change back
+			inPtr->fullScreen.isOn = false;
+			inPtr->fullScreen.isUsingOS = false;
+			
+			if (useCustomFullScreenMode)
+			{
+				if (false == TerminalWindow_IsFullScreenMode())
+				{
+					// no windows remain that are full-screen; turn off the
+					// system-wide mode (restoring the menu bar and Dock, etc.)
+					assert_noerr(SetSystemUIMode(kUIModeNormal, 0/* options */));
+				}
+			}
+			
+			// restore the shadow
+			[inPtr->window setHasShadow:YES];
+			
+			// now explicitly disable settings that apply to Full Screen
+			// mode as a whole (and not to each window)
+			Keypads_SetVisible(kKeypads_WindowTypeFullScreen, false);
+			
+			if (inPtr->fullScreen.newMode != inPtr->fullScreen.oldMode)
+			{
+				// window is set to normally change dimensions but was temporarily
+				// zooming its font; reverse the display mode setting and font
+				// before the frame changes back so that a normal window resize
+				// will automatically set the correct original dimensions
+				if (kTerminalView_DisplayModeNormal == inPtr->fullScreen.oldMode)
+				{
+					// normal mode (window size reflects screen dimensions)
+					TerminalView_SetDisplayMode(inPtr->allViews.front(), inPtr->fullScreen.oldMode);
+					TerminalWindow_SetFontAndSize(inPtr->selfRef, nullptr/* font name */, inPtr->fullScreen.oldFontSize);
+					setViewSizeIndependentFromWindow(inPtr, false);
+				}
+			}
+		}
+	}
+}// setUpForFullScreenModal
 
 
 /*!
@@ -7942,6 +8289,27 @@ windowDidLoad
 	Preferences_ContextWrap		translationConfig(Preferences_NewContext(Quills::Prefs::TRANSLATION), true/* is retained */);
 	
 	
+	gCocoaTerminalNSWindows()[[self window]] = nullptr; // TEMPORARY; no object yet but the keys of the map serve as a list of Cocoa windows
+	
+	// determine if a Full Screen icon should appear on the window frame
+	{
+		Boolean		useCustomFullScreenMode = false;
+		size_t		actualSize = 0;
+		
+		
+		if (kPreferences_ResultOK !=
+			Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
+								&useCustomFullScreenMode, &actualSize))
+		{
+			useCustomFullScreenMode = false; // assume a default if preference can’t be found
+		}
+		
+		if (false == useCustomFullScreenMode)
+		{
+			setCocoaWindowFullScreenIcon([self window], true);
+		}
+	}
+	
 	@try
 	{
 		// create toolbar; has to be done programmatically, because
@@ -8068,13 +8436,21 @@ or nullptr if there is none.
 - (TerminalWindowRef)
 terminalWindowRef
 {
-	auto				toPair = gTerminalNSWindows().find(self);
+	auto				toPair = gCarbonTerminalNSWindows().find(self);
 	TerminalWindowRef	result = nullptr;
 	
 	
-	if (gTerminalNSWindows().end() != toPair)
+	if (gCarbonTerminalNSWindows().end() != toPair)
 	{
 		result = toPair->second;
+	}
+	else
+	{
+		toPair = gCocoaTerminalNSWindows().find(self);
+		if (gCocoaTerminalNSWindows().end() != toPair)
+		{
+			result = toPair->second;
+		}
 	}
 	return result;
 }// terminalWindowRef

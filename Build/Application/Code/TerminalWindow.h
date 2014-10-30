@@ -252,7 +252,16 @@ Boolean
 	TerminalWindow_IsFocused						(TerminalWindowRef			inRef);
 
 Boolean
+	TerminalWindow_IsFullScreen						(TerminalWindowRef			inRef);
+
+Boolean
+	TerminalWindow_IsFullScreenMode					();
+
+Boolean
 	TerminalWindow_IsObscured						(TerminalWindowRef			inRef);
+
+Boolean
+	TerminalWindow_MainWindowIsFullScreenTerminal	();
 
 Boolean
 	TerminalWindow_ReconfigureViewsInGroup			(TerminalWindowRef			inRef,
@@ -284,7 +293,7 @@ UInt16
 TerminalViewRef
 	TerminalWindow_ReturnViewWithFocus				(TerminalWindowRef			inRef);
 
-WindowRef
+HIWindowRef
 	TerminalWindow_ReturnWindow						(TerminalWindowRef			inRef);
 
 // TEMPORARY, FOR COCOA TRANSITION
@@ -338,6 +347,9 @@ TerminalWindow_Result
 
 Boolean
 	TerminalWindow_IsTab							(TerminalWindowRef			inRef);
+
+void
+	TerminalWindow_SetFullScreenIconsEnabled		(Boolean					inAllTerminalWindowsHaveFullScreenIcons);
 
 OSStatus
 	TerminalWindow_SetTabAppearance					(TerminalWindowRef			inRef,

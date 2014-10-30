@@ -55,18 +55,18 @@ h3(#general). General
 table(deftable).
 (deftop). |(key). @key-map-backquote@|(types). _string_: @\e@ or _empty_|
 (defbottom). |\2(desc). Using this key sends a backquote character to the session.|
-(deftop). |(key). @kiosk-effects-enabled@|(types). _true or false_|
-(defbottom). |\2(desc). Full-screen terminals are altered to look more like real terminal screens.|
 (deftop). |(key). @kiosk-force-quit-enabled@|(types). _true or false_|
-(defbottom). |\2(desc). The "Force Quit" system command is available in Full Screen mode.|
+(defbottom). |\2(desc). The "Force Quit" system command is available in Full Screen mode.  Always true unless using @kiosk-no-system-full-screen-mode@.|
 (deftop). |(key). @kiosk-menu-bar-visible@|(types). _true or false_|
-(defbottom). |\2(desc). The menu bar can be reached in Full Screen mode by moving the mouse to the top of the screen.|
+(defbottom). |\2(desc). The menu bar can be reached in Full Screen mode by moving the mouse to the top of the screen.  Always true unless using @kiosk-no-system-full-screen-mode@.|
+(deftop). |(key). @kiosk-no-system-full-screen-mode@|(types). _true or false_|
+(defbottom). |\2(desc). Full-screen terminals do not use the contemporary OS X animated mode.|
 (deftop). |(key). @kiosk-off-switch-visible@|(types). _true or false_|
 (defbottom). |\2(desc). A floating window is visible to turn off Full Screen mode.|
 (deftop). |(key). @kiosk-scroll-bar-visible@|(types). _true or false_|
 (defbottom). |\2(desc). The scroll bar (and therefore scrollback history) is available in Full Screen mode.|
 (deftop). |(key). @kiosk-window-frame-visible@|(types). _true or false_|
-(defbottom). |\2(desc). The window title and toolbar are visible in Full Screen mode.|
+(defbottom). |\2(desc). The window title and toolbar are visible in Full Screen mode.  Always true for the toolbar unless using @kiosk-no-system-full-screen-mode@.|
 (deftop). |(key). @new-means@|(types). _string_: @default@, @dialog@, @log-in shell@ or @shell@|
 (defbottom). |\2(desc). The default command-N key equivalent creates this type of session.|
 (deftop). |(key). @no-animations@|(types). _true or false_|

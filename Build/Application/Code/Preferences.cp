@@ -1035,6 +1035,8 @@ Preferences_Init ()
 									sizeof(char), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskAllowsForceQuit,
 										CFSTR("kiosk-force-quit-enabled"), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::createFlag(kPreferences_TagKioskNoSystemFullScreenMode,
+										CFSTR("kiosk-no-system-full-screen-mode"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsMenuBar,
 										CFSTR("kiosk-menu-bar-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsOffSwitch,
@@ -1043,8 +1045,6 @@ Preferences_Init ()
 										CFSTR("kiosk-scroll-bar-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsWindowFrame,
 										CFSTR("kiosk-window-frame-visible"), Quills::Prefs::GENERAL);
-	My_PreferenceDefinition::createFlag(kPreferences_TagKioskUsesSuperfluousEffects,
-										CFSTR("kiosk-effects-enabled"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagLineModeEnabled,
 										CFSTR("line-mode-enabled"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagLocalEchoEnabled,
@@ -3789,6 +3789,7 @@ Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagCursorBlinks:
 	case kPreferences_TagDontDimBackgroundScreens:
 	case kPreferences_TagFocusFollowsMouse:
+	case kPreferences_TagKioskNoSystemFullScreenMode:
 	case kPreferences_TagMapBackquote:
 	case kPreferences_TagNewCommandShortcutEffect:
 	case kPreferences_TagNotifyOfBeeps:
@@ -3862,6 +3863,7 @@ Preferences_StopMonitoring	(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagCursorBlinks:
 	case kPreferences_TagDontDimBackgroundScreens:
 	case kPreferences_TagFocusFollowsMouse:
+	case kPreferences_TagKioskNoSystemFullScreenMode:
 	case kPreferences_TagMapBackquote:
 	case kPreferences_TagNewCommandShortcutEffect:
 	case kPreferences_TagPureInverse:
@@ -6629,7 +6631,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagKioskShowsOffSwitch:
 				case kPreferences_TagKioskShowsScrollBar:
 				case kPreferences_TagKioskShowsWindowFrame:
-				case kPreferences_TagKioskUsesSuperfluousEffects:
+				case kPreferences_TagKioskNoSystemFullScreenMode:
 				case kPreferences_TagNoAnimations:
 				case kPreferences_TagNoUpdateWarning:
 					if (false == inContextPtr->exists(keyName))
@@ -9223,7 +9225,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagKioskShowsOffSwitch:
 			case kPreferences_TagKioskShowsScrollBar:
 			case kPreferences_TagKioskShowsWindowFrame:
-			case kPreferences_TagKioskUsesSuperfluousEffects:
 			case kPreferences_TagNoAnimations:
 			case kPreferences_TagNoUpdateWarning:
 				{
@@ -9232,6 +9233,17 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+				}
+				break;
+			
+			case kPreferences_TagKioskNoSystemFullScreenMode:
+				{
+					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
+					
+					
+					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			

@@ -73,6 +73,14 @@ changes to an interface declared in a ".mm" file.
 	- (void)
 	setMenuBarShownOnDemand:(BOOL)_; // binding
 	- (BOOL)
+	nonSystemMechanismEnabled;
+	- (void)
+	setNonSystemMechanismEnabled:(BOOL)_; // binding
+	- (BOOL)
+	offSwitchWindowEnabled;
+	- (void)
+	setOffSwitchWindowEnabled:(BOOL)_; // binding
+	- (BOOL)
 	isScrollBarVisible;
 	- (void)
 	setScrollBarVisible:(BOOL)_; // binding
@@ -80,14 +88,6 @@ changes to an interface declared in a ".mm" file.
 	isWindowFrameVisible;
 	- (void)
 	setWindowFrameVisible:(BOOL)_; // binding
-	- (BOOL)
-	offSwitchWindowEnabled;
-	- (void)
-	setOffSwitchWindowEnabled:(BOOL)_; // binding
-	- (BOOL)
-	superfluousEffectsEnabled;
-	- (void)
-	setSuperfluousEffectsEnabled:(BOOL)_; // binding
 
 @end //}
 

@@ -101,11 +101,11 @@
 	<string></string>
 	<key>key-map-new-line</key>
 	<string>\012</string>
-	<key>kiosk-effects-enabled</key>
-	<true/>
 	<key>kiosk-force-quit-enabled</key>
 	<true/>
 	<key>kiosk-menu-bar-visible</key>
+	<false/>
+	<key>kiosk-no-system-full-screen-mode</key>
 	<false/>
 	<key>kiosk-off-switch-visible</key>
 	<true/>

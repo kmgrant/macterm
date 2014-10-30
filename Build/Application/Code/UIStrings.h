@@ -239,6 +239,7 @@ enum UIStrings_ContextualMenuCFString
 	kUIStrings_ContextualMenuCustomScreenDimensions		= 'ScnS',
 	kUIStrings_ContextualMenuFindInThisWindow			= 'Find',
 	kUIStrings_ContextualMenuFixCharacterTranslation	= 'FixT',
+	kUIStrings_ContextualMenuFullScreenEnter			= 'EnFS',
 	kUIStrings_ContextualMenuFullScreenExit				= 'ExFS',
 	kUIStrings_ContextualMenuHideThisWindow				= 'Hide',
 	kUIStrings_ContextualMenuMoveToNewWorkspace			= 'MTab',

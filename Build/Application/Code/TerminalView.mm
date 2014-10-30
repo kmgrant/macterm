@@ -9228,16 +9228,25 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		// window arrangement menu items
 		ContextSensitiveMenu_NewItemGroup();
 		
-		targetCommandID = kCommandKioskModeDisable;
-		if (UIStrings_Copy(kUIStrings_ContextualMenuFullScreenExit, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
-			if (nil != newItem)
+			HIWindowRef			screenWindow = TerminalView_ReturnWindow(inTerminalViewPtr->selfRef);
+			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
+			
+			
+			if (TerminalWindow_IsFullScreen(terminalWindow))
 			{
-				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
+				targetCommandID = kCommandFullScreenToggle;
+				if (UIStrings_Copy(kUIStrings_ContextualMenuFullScreenExit, commandText).ok())
+				{
+					newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+					if (nil != newItem)
+					{
+						ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+						[newItem release], newItem = nil;
+					}
+					CFRelease(commandText), commandText = nullptr;
+				}
 			}
-			CFRelease(commandText), commandText = nullptr;
 		}
 		
 		targetCommandID = kCommandHideFrontWindow;

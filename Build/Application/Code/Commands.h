@@ -115,8 +115,7 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 // WARNING: These are referenced by value in the MainMenus.nib and
 //          MenuForDockIcon.nib files!
 #define kCommandAboutThisApplication			kHICommandAbout
-#define kCommandFullScreenModal					'Kios'
-#define kCommandKioskModeDisable				'KskQ'		// also used in Kiosk Mode off-switch floater
+#define kCommandFullScreenToggle				'Kios'
 #define kCommandCheckForUpdates					'ChUp'
 #define kCommandURLHomePage						'.com'
 #define kCommandURLAuthorMail					'Mail'
@@ -173,7 +172,7 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandLargeScreen						'Wide'
 #define kCommandSetScreenSize					'SSiz'
 #define kCommandBiggerText						'FSzB'
-#define kCommandFullScreen						'Full'
+#define kCommandZoomMaximumSize					'ZmMx'
 #define kCommandSmallerText						'FSzS'
 #define kCommandFormatDefault					'FmtD'
 #define kCommandFormatByFavoriteName			'FFav'
@@ -530,11 +529,27 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface Commands_Executor : NSObject //{
+@interface Commands_Executor : NSObject< NSUserInterfaceValidations > //{
+{
+@private
+	NSString*	_fullScreenCommandName;
+}
 
 // class methods
-	+ (id)
+	+ (instancetype)
 	sharedExecutor;
+
+// accessors
+	@property (strong) NSString*
+	fullScreenCommandName;
+
+// new methods: explicit validation (rarely needed)
+	- (BOOL)
+	defaultValidationForAction:(SEL)_
+	sender:(id)_;
+	- (BOOL)
+	validateAction:(SEL)_
+	sender:(id)_;
 
 @end //}
 
@@ -892,9 +907,7 @@ Actions to enter or exit Full Screen.
 
 // actions
 	- (IBAction)
-	performFullScreenOn:(id)_;
-	- (IBAction)
-	performFullScreenOff:(id)_;
+	toggleFullScreen:(id)_;
 
 @end //}
 

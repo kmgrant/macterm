@@ -76,44 +76,8 @@
 
 
 
-#pragma mark Constants
-namespace {
-
-/*!
-Information stored in the view event info collection.
-*/
-typedef SInt32 My_ViewEventInfoType;
-enum
-{
-	kMy_ViewEventInfoTypeEventTargetRef			= 'cetg'		// data: My_ViewEventTargetRef
-};
-
-/*!
-Information stored in the window event info collection.
-*/
-typedef SInt32 My_WindowEventInfoType;
-enum
-{
-	kMy_WindowEventInfoTypeEventTargetRef		= 'wetg'		// data: My_WindowEventTargetRef
-};
-
-} // anonymous namespace
-
 #pragma mark Types
 namespace {
-
-struct My_ViewEventTarget
-{
-	HIViewRef			control;
-	ListenerModel_Ref	listenerModel;
-};
-typedef My_ViewEventTarget*						My_ViewEventTargetPtr;
-typedef My_ViewEventTarget const*				My_ViewEventTargetConstPtr;
-typedef My_ViewEventTarget**					My_ViewEventTargetHandle;
-typedef struct My_OpaqueViewEventTarget**		My_ViewEventTargetRef;
-
-typedef MemoryBlockHandleLocker< My_ViewEventTargetRef, My_ViewEventTarget >	My_ViewEventTargetHandleLocker;
-typedef LockAcquireRelease< My_ViewEventTargetRef, My_ViewEventTarget >			My_ViewEventTargetAutoLocker;
 
 struct My_GlobalEventTarget
 {
@@ -126,21 +90,6 @@ typedef struct OpaqueMy_GlobalEventTarget**	My_GlobalEventTargetRef;
 
 typedef MemoryBlockHandleLocker< My_GlobalEventTargetRef, My_GlobalEventTarget >	My_GlobalEventTargetHandleLocker;
 typedef LockAcquireRelease< My_GlobalEventTargetRef, My_GlobalEventTarget >			My_GlobalEventTargetAutoLocker;
-
-struct My_WindowEventTarget
-{
-	HIWindowRef				window;
-	ListenerModel_Ref		listenerModel;
-	HIViewRef				defaultButton;
-	HIViewRef				cancelButton;
-};
-typedef My_WindowEventTarget*				My_WindowEventTargetPtr;
-typedef My_WindowEventTarget const*			My_WindowEventTargetConstPtr;
-typedef My_WindowEventTarget**				My_WindowEventTargetHandle;
-typedef struct My_OpaqueWindowEventTarget**	My_WindowEventTargetRef;
-
-typedef MemoryBlockPtrLocker< My_WindowEventTargetRef, My_WindowEventTarget >	My_WindowEventTargetPtrLocker;
-typedef LockAcquireRelease< My_WindowEventTargetRef, My_WindowEventTarget >		My_WindowEventTargetAutoLocker;
 
 } // anonymous namespace
 
@@ -356,9 +305,9 @@ EventLoop_HandleZoomEvent	(HIWindowRef	inWindow)
 	
 	error = CreateEvent(kCFAllocatorDefault, kEventClassWindow, kEventWindowZoom,
 						GetCurrentEventTime(), kEventAttributeNone, &zoomEvent);
-	assert(error == noErr);
+	assert_noerr(error);
 	error = SetEventParameter(zoomEvent, kEventParamDirectObject, typeWindowRef, sizeof(inWindow), &inWindow);
-	assert(error == noErr);
+	assert_noerr(error);
 	SendEventToWindow(zoomEvent, inWindow);
 }// HandleZoomEvent
 
@@ -695,6 +644,26 @@ EventLoop_SelectOverRealFrontWindow		(HIWindowRef	inWindow)
 
 
 /*!
+Manually flags that a window has been made Full Screen.  This is
+necessary short-term to deal with several possible differences
+in the way a window might become Full Screen (e.g. it could use
+the original scheme or the new scheme introduced with Lion, and
+it could be a Carbon or Cocoa window).
+
+The context parameter must be consistent with the documentation
+in the header file for each event.
+
+(4.1)
+*/
+void
+EventLoop_SendFullScreenWindowEvent		(EventLoop_GlobalEvent		inEvent,
+										 void*						inEventContext)
+{
+	eventNotifyGlobal(inEvent, inEventContext);
+}// SendFullScreenWindowEvent
+
+
+/*!
 Arranges for a callback to be invoked whenever a global
 event occurs (such as an application switch).
 
@@ -913,7 +882,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
 		
 		// if the command information was found, proceed
-		if (result == noErr)
+		if (noErr == result)
 		{
 			switch (kEventKind)
 			{
@@ -1147,7 +1116,7 @@ updateModifiers		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, gCarbonEventModifiers);
 		
 		// if the modifier key information was found, proceed
-		if (result == noErr)
+		if (noErr == result)
 		{
 			if (FlagManager_Test(kFlagSuspended)) result = eventNotHandledErr;
 		}

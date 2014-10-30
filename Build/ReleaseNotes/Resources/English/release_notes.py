@@ -20,6 +20,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20141028',
     '20141026',
     '20141024',
     '20141017',
@@ -504,6 +505,13 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20141028': [
+        'Terminal windows now support the system-wide Full Screen mode by default.  In this mode, terminals each become available separately in Mission Control and they can be selected using standard swipe gestures.',
+        'Preferences window Full Screen pane now has an option to use the original Full Screen behavior instead of the OS X system-wide Full Screen mode.  Each scheme has its advantages.  The custom mode is faster and it has options that cannot be applied to the system default (such as the setting to always show the menu bar).  The OS X approach is slower due to animation but it allows all windows to become Full Screen in Mission Control and it allows terminals to be selected using normal swipe gestures.  Generally, desktop users will probably prefer the original scheme and laptop users will probably prefer the system-wide scheme.',
+        'Preferences window Full Screen pane no longer offers a "Superfluous graphical effects" mode because this was never implemented and the space has been used for the new setting above.',
+        'The "Enter Full Screen" command is now window-specific (moved to the View menu) so this command will no longer change windows on multiple displays at the same time.  Its key equivalent has also changed to the standard control-command-F sequence.',
+        'Preferences window Workspaces pane "Automatically enter Full Screen" setting is now applied to each window in the Workspace (up to 10).  This means that when the Workspace is spawned, every window in the Workspace will go Full Screen in Mission Control (if OS X default mode is selected).',
+    ],
     '20141026': [
         'Fixed possible crash in Preferences window Sessions pane Resource tab (and Custom New Session sheet) when using the "Remote Shell..." feature.',
     ],

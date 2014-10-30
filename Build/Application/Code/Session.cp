@@ -5453,6 +5453,8 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 	// (this will also initialize the preferences cache values)
 	Preferences_StartMonitoring(this->preferencesListener.returnRef(), kPreferences_TagCursorBlinks,
 								true/* call immediately to initialize */);
+	Preferences_StartMonitoring(this->preferencesListener.returnRef(), kPreferences_TagKioskNoSystemFullScreenMode,
+								true/* call immediately to initialize */);
 	Preferences_StartMonitoring(this->preferencesListener.returnRef(), kPreferences_TagMapBackquote,
 								true/* call immediately to initialize */);
 	Preferences_ContextStartMonitoring(this->configuration.returnRef(), this->preferencesListener.returnRef(),
@@ -5546,6 +5548,7 @@ My_Session::
 	UNUSED_RETURN(Preferences_Result)Preferences_ContextStopMonitoring(this->translationConfiguration.returnRef(), this->preferencesListener.returnRef(),
 																		kPreferences_ChangeContextBatchMode);
 	Preferences_StopMonitoring(this->preferencesListener.returnRef(), kPreferences_TagCursorBlinks);
+	Preferences_StopMonitoring(this->preferencesListener.returnRef(), kPreferences_TagKioskNoSystemFullScreenMode);
 	Preferences_StopMonitoring(this->preferencesListener.returnRef(), kPreferences_TagMapBackquote);
 	
 	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener.returnRef());
@@ -7270,21 +7273,38 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	{
 	case kPreferences_TagCursorBlinks:
 		// update cache with current preference value
-		unless (Preferences_GetData(kPreferences_TagCursorBlinks,
-										sizeof(ptr->preferencesCache.cursorFlashes),
-										&ptr->preferencesCache.cursorFlashes, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagCursorBlinks,
+									sizeof(ptr->preferencesCache.cursorFlashes),
+									&ptr->preferencesCache.cursorFlashes, &actualSize))
 		{
 			ptr->preferencesCache.cursorFlashes = true; // assume a value, if preference can’t be found
 		}
 		break;
 	
+	case kPreferences_TagKioskNoSystemFullScreenMode:
+		// update all terminal windows to show or hide a system Full Screen icon
+		{
+			Boolean		useCustomMethod = false;
+			
+			
+			unless (kPreferences_ResultOK ==
+					Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode,
+										sizeof(useCustomMethod), &useCustomMethod, &actualSize))
+			{
+				useCustomMethod = false; // assume a value, if preference can’t be found
+			}
+			
+			TerminalWindow_SetFullScreenIconsEnabled(false == useCustomMethod);
+		}
+		break;
+	
 	case kPreferences_TagMapBackquote:
 		// update cache with current preference value
-		unless (Preferences_GetData(kPreferences_TagMapBackquote,
-										sizeof(ptr->preferencesCache.remapBackquoteToEscape),
-										&ptr->preferencesCache.remapBackquoteToEscape, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagMapBackquote,
+									sizeof(ptr->preferencesCache.remapBackquoteToEscape),
+									&ptr->preferencesCache.remapBackquoteToEscape, &actualSize))
 		{
 			ptr->preferencesCache.remapBackquoteToEscape = false; // assume a value, if preference can’t be found
 		}

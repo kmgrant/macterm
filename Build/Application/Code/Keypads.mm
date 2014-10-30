@@ -1457,13 +1457,7 @@ Turns off Full Screen mode.
 disableFullScreen:(id)	sender
 {
 #pragma unused(sender)
-	// since the floating window may be focused, an attempt to send an
-	// event to the user focus could “miss” a terminal window and hit
-	// the application target (where no command handler for full-screen
-	// is installed); so, first find an appropriate window to focus
-	UNUSED_RETURN(OSStatus)SetUserFocusWindow(GetFrontWindowOfClass(kDocumentWindowClass, true/* must be visible */));
-	
-	Commands_ExecuteByIDUsingEvent(kCommandKioskModeDisable, gControlKeysEventTarget);
+	Commands_ExecuteByIDUsingEvent(kCommandFullScreenToggle);
 }// disableFullScreen:
 
 

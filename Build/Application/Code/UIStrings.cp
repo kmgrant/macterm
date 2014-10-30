@@ -814,6 +814,11 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 													CFSTR("kUIStrings_ContextualMenuFixCharacterTranslation"));
 		break;
 	
+	case kUIStrings_ContextualMenuFullScreenEnter:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Enter Full Screen"), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuFullScreenEnter"));
+		break;
+	
 	case kUIStrings_ContextualMenuFullScreenExit:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Exit Full Screen"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuFullScreenExit"));

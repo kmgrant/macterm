@@ -114,6 +114,8 @@ typedef int/*NSInteger*/	NSScrollerStyle;
 
 	- (void)
 	setAnimationBehavior:(int/*NSInteger*//*NSWindowAnimationBehavior*/)_;
+	- (void)
+	toggleFullScreen:(id)_;
 
 @end //}
 

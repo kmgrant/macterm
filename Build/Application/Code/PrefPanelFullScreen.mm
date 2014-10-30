@@ -84,8 +84,8 @@ static HIViewID const	idMyCheckBoxShowMenuBar					= { 'XKSM', 0/* ID */ };
 static HIViewID const	idMyCheckBoxShowScrollBar				= { 'XKSS', 0/* ID */ };
 static HIViewID const	idMyCheckBoxShowWindowFrame				= { 'XKWF', 0/* ID */ };
 static HIViewID const	idMyCheckBoxAllowForceQuit				= { 'XKFQ', 0/* ID */ };
-static HIViewID const	idMyCheckBoxSuperfluousEffects			= { 'XKFX', 0/* ID */ };
-static HIViewID const	idMyHelpTextSuperfluousEffects			= { 'HTSG', 0/* ID */ };
+static HIViewID const	idMyCheckBoxSystemFullScreenStyle		= { 'XKFX', 0/* ID */ };
+static HIViewID const	idMyHelpTextSystemFullScreenStyle		= { 'HTSG', 0/* ID */ };
 static HIViewID const	idMyCheckBoxShowOffSwitchWindow			= { 'XKFW', 0/* ID */ };
 static HIViewID const	idMyHelpTextDisableKiosk				= { 'HTDK', 0/* ID */ };
 
@@ -218,7 +218,7 @@ PrefPanelFullScreen_NewTagSet ()
 	tagList.push_back(kPreferences_TagKioskShowsScrollBar);
 	tagList.push_back(kPreferences_TagKioskShowsWindowFrame);
 	tagList.push_back(kPreferences_TagKioskAllowsForceQuit);
-	tagList.push_back(kPreferences_TagKioskUsesSuperfluousEffects);
+	tagList.push_back(kPreferences_TagKioskNoSystemFullScreenMode);
 	tagList.push_back(kPreferences_TagKioskShowsOffSwitch);
 	
 	result = Preferences_NewTagSet(tagList);
@@ -372,16 +372,21 @@ const
 		SetControl32BitValue(HIViewWrap(idMyCheckBoxAllowForceQuit, inOwningWindow), BooleanToCheckBoxValue(allowForceQuit));
 	}
 	{
-		Boolean		superfluousEffects = false;
+		Boolean		noSystemFullScreenStyle = false;
 		
 		
 		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagKioskUsesSuperfluousEffects, sizeof(superfluousEffects),
-									&superfluousEffects, &actualSize))
+				Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(noSystemFullScreenStyle),
+									&noSystemFullScreenStyle, &actualSize))
 		{
-			superfluousEffects = false; // assume a default, if preference can’t be found
+			noSystemFullScreenStyle = false; // assume a default, if preference can’t be found
 		}
-		SetControl32BitValue(HIViewWrap(idMyCheckBoxSuperfluousEffects, inOwningWindow), BooleanToCheckBoxValue(superfluousEffects));
+		SetControl32BitValue(HIViewWrap(idMyCheckBoxSystemFullScreenStyle, inOwningWindow), BooleanToCheckBoxValue(noSystemFullScreenStyle));
+		
+		// disable or enable other check boxes accordingly
+		UNUSED_RETURN(OSStatus)HIViewSetEnabled(HIViewWrap(idMyCheckBoxShowMenuBar, inOwningWindow), noSystemFullScreenStyle);
+		UNUSED_RETURN(OSStatus)HIViewSetEnabled(HIViewWrap(idMyCheckBoxShowWindowFrame, inOwningWindow), noSystemFullScreenStyle);
+		UNUSED_RETURN(OSStatus)HIViewSetEnabled(HIViewWrap(idMyCheckBoxAllowForceQuit, inOwningWindow), noSystemFullScreenStyle);
 	}
 	{
 		Boolean		showOffSwitch = false;
@@ -417,7 +422,7 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 	HIViewWrap			viewWrap;
 	
 	
-	viewWrap.setCFTypeRef(HIViewWrap(idMyHelpTextSuperfluousEffects, kPanelWindow));
+	viewWrap.setCFTypeRef(HIViewWrap(idMyHelpTextSystemFullScreenStyle, kPanelWindow));
 	viewWrap
 		<< HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */)
 		;
@@ -590,6 +595,11 @@ receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				if ((noErr == error) && (kControlKindSignatureApple == controlKind.signature) &&
 					(kControlKindCheckBox == controlKind.kind))
 				{
+					// NOTE: the Carbon implementation has not been updated to
+					// disable certain preferences when the OS X Full Screen
+					// mode is enabled, since this would take a lot of code
+					// and the Cocoa version (which does disable checkboxes
+					// properly) should be replacing the Carbon one soon...
 					UNUSED_RETURN(Boolean)updateCheckBoxPreference(interfacePtr, view);
 				}
 			}
@@ -653,11 +663,16 @@ updateCheckBoxPreference	(MyKioskPanelUIPtr		inInterfacePtr,
 								sizeof(checkBoxFlagValue), &checkBoxFlagValue);
 			result = true;
 		}
-		else if (HIViewIDWrap(idMyCheckBoxSuperfluousEffects) == viewID)
+		else if (HIViewIDWrap(idMyCheckBoxSystemFullScreenStyle) == viewID)
 		{
-			Preferences_SetData(kPreferences_TagKioskUsesSuperfluousEffects,
+			Preferences_SetData(kPreferences_TagKioskNoSystemFullScreenMode,
 								sizeof(checkBoxFlagValue), &checkBoxFlagValue);
 			result = true;
+			
+			// disable or enable other check boxes accordingly
+			UNUSED_RETURN(OSStatus)HIViewSetEnabled(HIViewWrap(idMyCheckBoxShowMenuBar, kWindow), checkBoxFlagValue);
+			UNUSED_RETURN(OSStatus)HIViewSetEnabled(HIViewWrap(idMyCheckBoxShowWindowFrame, kWindow), checkBoxFlagValue);
+			UNUSED_RETURN(OSStatus)HIViewSetEnabled(HIViewWrap(idMyCheckBoxAllowForceQuit, kWindow), checkBoxFlagValue);
 		}
 		else if (HIViewIDWrap(idMyCheckBoxShowOffSwitchWindow) == viewID)
 		{
@@ -761,6 +776,52 @@ Accessor.
 (4.1)
 */
 - (BOOL)
+nonSystemMechanismEnabled
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskNoSystemFullScreenMode defaultValue:NO];
+}
+- (void)
+setNonSystemMechanismEnabled:(BOOL)		aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskNoSystemFullScreenMode];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save full-screen mode preference");
+	}
+}// setNonSystemMechanismEnabled:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+offSwitchWindowEnabled
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsOffSwitch defaultValue:NO];
+}
+- (void)
+setOffSwitchWindowEnabled:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsOffSwitch];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save off-switch-window preference");
+	}
+}// setOffSwitchWindowEnabled:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
 isScrollBarVisible
 {
 	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsScrollBar defaultValue:NO];
@@ -799,52 +860,6 @@ setWindowFrameVisible:(BOOL)	aFlag
 		Console_Warning(Console_WriteLine, "failed to save window-frame-in-full-screen preference");
 	}
 }// setWindowFrameVisible:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-offSwitchWindowEnabled
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsOffSwitch defaultValue:NO];
-}
-- (void)
-setOffSwitchWindowEnabled:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsOffSwitch];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save off-switch-window preference");
-	}
-}// setOffSwitchWindowEnabled:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-superfluousEffectsEnabled
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskUsesSuperfluousEffects defaultValue:NO];
-}
-- (void)
-setSuperfluousEffectsEnabled:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskUsesSuperfluousEffects];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save full-screen-effects-enabled preference");
-	}
-}// setSuperfluousEffectsEnabled:
 
 
 #pragma mark NSKeyValueObservingCustomization

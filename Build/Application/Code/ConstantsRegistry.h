@@ -382,7 +382,6 @@ enum
 	// necessary to use multiples of 16 or 32 flags, for example.
 	kFlagAppleScriptRecording		= (kFlagManager_FirstValidFlag + 0),	//!< is the user recording events into a script?
 	kFlagInitializationComplete		= (kFlagManager_FirstValidFlag + 1),	//!< has the application completely finished launching?
-	kFlagKioskMode					= (kFlagManager_FirstValidFlag + 2),	//!< is the application in Full Screen mode?
 	kFlagSuspended					= (kFlagManager_FirstValidFlag + 13),	//!< is this application’s process in the background?
 	kFlagUserOverrideAutoNew		= (kFlagManager_FirstValidFlag + 14)	//!< skip auto-new-window on application launch?
 };
