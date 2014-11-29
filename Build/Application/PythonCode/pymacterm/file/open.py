@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
+
 """Routines to open various types of files.
 
 macros -- set current macro set according to a ".macros" key-value-pair file
@@ -8,6 +9,9 @@ script -- run any executable file as a Session
 session -- start a Session according to a ".session" key-value-pair file
 
 """
+from __future__ import division
+from __future__ import print_function
+
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '1 January 2008'
 __version__ = '4.0.0'
@@ -42,7 +46,7 @@ def macros(pathname):
     is doing both.
     
     """
-    with file(pathname, 'rU') as mfile:
+    with open(pathname, 'rU') as mfile:
         parser = pymacterm.file.kvp.Parser(file_object=mfile)
         defs = parser.results()
         macro_set = quills.Prefs(quills.Prefs.MACRO_SET)
@@ -92,7 +96,7 @@ def session(pathname):
     that could exist in a ".session" file.
     
     """
-    with file(pathname, 'rU') as file:
+    with open(pathname, 'rU') as file:
         parser = pymacterm.file.kvp.Parser(file_object=sfile)
         defs = parser.results()
         if 'command' in defs:

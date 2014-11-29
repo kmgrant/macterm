@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
+
 """Utility routines that are highly generic.
 
 command_data -- run a program and return its standard output
@@ -8,6 +9,9 @@ slash_free_path -- remove all leading and trailing slashes
 sort_dict -- for testing, return deterministic "dict" description
 
 """
+from __future__ import division
+from __future__ import print_function
+
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '30 December 2006'
 __version__ = '4.0.0'
@@ -40,8 +44,8 @@ def command_data(cmdline_tuple, allow_nonzero_exit=False):
         (cmd_stdout, cmd_stderr) = cmd_run.communicate()
         if (cmd_run.returncode == 0) or allow_nonzero_exit:
             result = str(cmd_stdout)
-    except Exception, e:
-        #print "exception in subprocess.Popen of %r:" % cmdline_tuple, e
+    except Exception as e:
+        #print("exception in subprocess.Popen of %r:" % cmdline_tuple, e)
         pass
     return result
 

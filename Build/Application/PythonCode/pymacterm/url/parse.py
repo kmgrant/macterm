@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
+
 """Routines to distill various kinds of URLs into components.
 
 Every function returns a dictionary with one or more of the
@@ -24,6 +25,9 @@ telnet -- handle URLs of the form "telnet://user@host:port"
 x_man_page -- handle URLs of the form "x-man-page://section/cmd"
 
 """
+from __future__ import division
+from __future__ import print_function
+
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '24 August 2006'
 __version__ = '4.0.0'
@@ -57,7 +61,7 @@ def _host_port(netloc):
     host = None
     port = None
     if len(elements) > 2 or len(elements) == 0:
-        print "MacTerm: unexpected number of host:port elements in URL"
+        print("MacTerm: unexpected number of host:port elements in URL")
     else:
         host = elements[0]
         if len(host) == 0: host = None
@@ -105,7 +109,7 @@ def _user_host_port(netloc):
     host = None
     port = None
     if len(elements) > 2 or len(elements) == 0:
-        print "MacTerm: unexpected number of @ elements in URL"
+        print("MacTerm: unexpected number of @ elements in URL")
     else:
         if len(elements) == 2:
             user = elements[0]
@@ -132,8 +136,8 @@ def file(url):
     
     >>> try:
     ...    file('telnet://userid@yourserver.com:12345')
-    ... except ValueError, e:
-    ...    print e
+    ... except ValueError as e:
+    ...    print(e)
     not a file URL
     
     """
@@ -162,8 +166,8 @@ def ftp(url):
     
     >>> try:
     ...    ftp('telnet://userid@yourserver.com:12345')
-    ... except ValueError, e:
-    ...    print e
+    ... except ValueError as e:
+    ...    print(e)
     not an ftp URL
     
     """
@@ -201,8 +205,8 @@ def sftp(url):
     
     >>> try:
     ...    sftp('ftp://userid@yourserver.com:12345')
-    ... except ValueError, e:
-    ...    print e
+    ... except ValueError as e:
+    ...    print(e)
     not an sftp URL
     
     """
@@ -240,8 +244,8 @@ def ssh(url):
     
     >>> try:
     ...    ssh('telnet://userid@yourserver.com:12345')
-    ... except ValueError, e:
-    ...    print e
+    ... except ValueError as e:
+    ...    print(e)
     not an ssh URL
     
     """
@@ -272,8 +276,8 @@ def telnet(url):
     
     >>> try:
     ...    telnet('ftp://userid@yourserver.com:12345')
-    ... except ValueError, e:
-    ...    print e
+    ... except ValueError as e:
+    ...    print(e)
     not a telnet URL
     
     """
@@ -304,8 +308,8 @@ def x_man_page(url):
     
     >>> try:
     ...    x_man_page('ftp://userid@yourserver.com:12345')
-    ... except ValueError, e:
-    ...    print e
+    ... except ValueError as e:
+    ...    print(e)
     not an x-man-page URL
     
     """

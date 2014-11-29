@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
+
 """Maintains the Check for Updates web pages.
 
 Automatically generates all updates web pages (one per released version) based
@@ -9,6 +10,9 @@ A version web page contains release notes for all intermediate versions, so that
 a user can easily see *everything* that's changed since.
 
 """
+from __future__ import division
+from __future__ import print_function
+
 __author__ = "Kevin Grant <kmg@mac.com>"
 __date__ = "28 September 2006"
 
@@ -49,7 +53,7 @@ def write_subst(ofh, line, variables):
     
     """
     printed_line = subst_line(line, variables)
-    print >>ofh, printed_line, # <- trailing ',' quells extra newline
+    print(printed_line, file=ofh, end="")
 
 def write_one_section_line(ofh, line, section, sub_vars, recent_versions):
     """write_one_section_line(ofh, line, section, sub_vars, recent_versions)
@@ -220,7 +224,7 @@ def generate_html(ofh, template_lines, subst_kv, **kwargs):
                                 sub_vars['year_order'] = []
                             sub_vars['year_order'].append(year)
                         sub_vars['versions_by_year'][year].append(version)
-                    except ValueError, e:
+                    except ValueError as e:
                         # this is raised for regular versions, e.g. '4.0.0' (ignore)
                         pass
                 write_section_lines()
@@ -268,7 +272,6 @@ def generate_html(ofh, template_lines, subst_kv, **kwargs):
                 if 'version_notes' in sub_vars:
                     for release_note in sub_vars['version_notes']:
                         sub_vars['release_note'] = http_link_regex.sub(r'<a href="\1">\1</a>', release_note)
-                        sub_vars['release_note'] = trac_link_regex.sub(r'(<a href="http://sourceforge.net/apps/trac/mactelnet/ticket/\1">Trac #\1</a>)', release_note)
                         write_section_lines()
             else:
                 write_section_lines()
@@ -342,9 +345,8 @@ if __name__ == '__main__':
     
     # read index page's template lines
     current_input = template_index_path
-    index_in = file(current_input)
-    index_lines = index_in.readlines()
-    index_in.close()
+    with open(current_input) as index_in:
+        index_lines = index_in.readlines()
 
     # compile all regular expressions once
     begin_section_regex = re.compile(r'BEGIN:([^ ]+) ')
@@ -352,38 +354,32 @@ if __name__ == '__main__':
     begin_loop_regex = re.compile(r'BEGIN-LOOP:([^ ]+) ')
     end_loop_regex =     re.compile(r'END-LOOP:([^ ]+) ')
     http_link_regex = re.compile(r'<(http://[^>]*)>')
-    trac_link_regex = re.compile(r'\(Trac #(\d+)\)')
     
     # write an index file based on actual versions
-    index_out = file(path.join(dest_dir, "index.html"), 'w')
-    variables = {}
-    generate_html(index_out, index_lines, variables, recent_versions=version_lineage)
-    index_out.close()
+    with open(path.join(dest_dir, "index.html"), 'w') as index_out:
+        variables = {}
+        generate_html(index_out, index_lines, variables, recent_versions=version_lineage)
     
     # read version page's template lines
     current_input = template_version_path
-    version_in = file(current_input)
-    version_lines = version_in.readlines()
-    version_in.close()
+    with open(current_input) as version_in:
+        version_lines = version_in.readlines()
     
     # write one file per release
     for i, version in enumerate(lineage):
-        version_out = file(path.join(dest_dir, "%s.html" % version), 'w')
-        variables = {'current_version': version, 'version': version}
-        generate_html(version_out, version_lines, variables, recent_versions=lineage[:i])
-        version_out.close()
+        with open(path.join(dest_dir, "%s.html" % version), 'w') as version_out:
+            variables = {'current_version': version, 'version': version}
+            generate_html(version_out, version_lines, variables, recent_versions=lineage[:i])
     
     # read daily build page's template lines
     current_input = template_daily_path
-    daily_in = file(current_input)
-    daily_lines = daily_in.readlines()
-    daily_in.close()
+    with open(current_input) as daily_in:
+        daily_lines = daily_in.readlines()
     
     # write a file for the daily build
     full_lineage = daily_build_lineage[:]
     full_lineage.extend(lineage)
-    daily_out = file(path.join(dest_dir, "daily.html"), 'w')
-    variables = {'current_version': daily_build_lineage[0]}
-    generate_html(daily_out, daily_lines, variables, recent_versions=full_lineage)
-    daily_out.close()
+    with open(path.join(dest_dir, "daily.html"), 'w') as daily_out:
+        variables = {'current_version': daily_build_lineage[0]}
+        generate_html(daily_out, daily_lines, variables, recent_versions=full_lineage)
 

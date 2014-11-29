@@ -1,10 +1,14 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
+
 """Notes on changes in each MacTerm release.
 
 Import this module to access its variables, or run it as a script to see the
 sorted, formatted release notes as text (see to_rst()).
 """
+from __future__ import division
+from __future__ import print_function
+
 __author__ = "Kevin Grant <kmg@mac.com>"
 __date__ = "28 September 2006"
 
@@ -2572,7 +2576,7 @@ if __name__ == '__main__':
     format = sys.argv[1]
     if len(sys.argv) > 2: lineage = sys.argv[2:]
     else: lineage = version_lineage
-    if format == "plain_text": print to_plain_text(lineage)
-    elif format == "rst": print "\n".join(to_rst(lineage))
-    else: print "\n".join(to_basic_html(lineage))
+    if format == "plain_text": print(to_plain_text(lineage))
+    elif format == "rst": print("\n".join(to_rst(lineage)))
+    else: print("\n".join(to_basic_html(lineage)))
 

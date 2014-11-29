@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
+
 """Parse key-value-pair file formats such as ".session".
 
 A key-value-pair file uses a single, all-lowercase, alphanumeric key name on
@@ -14,6 +15,9 @@ parser does not care what the keys are, or what order they are in.
 Parser -- class to translate key-value-pair syntax into Python data
 
 """
+from __future__ import division
+from __future__ import print_function
+
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '13 April 2009'
 __version__ = '4.0.0'
@@ -34,11 +38,11 @@ class Parser (file):
         
         (Below are REAL testcases run by doctest!)
         
-        >>> print Parser._parse_any_value('3')
+        >>> print(Parser._parse_any_value('3'))
         3
-        >>> print Parser._parse_any_value('some words')
+        >>> print(Parser._parse_any_value('some words'))
         some words
-        >>> print '|%s|' % str(Parser._parse_any_value('   "  six seven  "\\n'))
+        >>> print('|%s|' % str(Parser._parse_any_value('   "  six seven  "\\n')))
         |  six seven  |
         
         """
@@ -46,7 +50,7 @@ class Parser (file):
         result = result.strip("\"\'")
         try:
             result = int(result)
-        except ValueError, e:
+        except ValueError as e:
             pass
         return result
     _parse_any_value = staticmethod(_parse_any_value)
@@ -60,15 +64,15 @@ class Parser (file):
         
         (Below are REAL testcases run by doctest!)
         
-        >>> print Parser._parse_list_value('3')
+        >>> print(Parser._parse_list_value('3'))
         (3,)
-        >>> print Parser._parse_list_value('some words')
+        >>> print(Parser._parse_list_value('some words'))
         ('some words',)
-        >>> print Parser._parse_list_value('this,  is a list  , of stuff')
+        >>> print(Parser._parse_list_value('this,  is a list  , of stuff'))
         ('this', 'is a list', 'of stuff')
-        >>> print Parser._parse_list_value('"this","  is a list  "," of stuff"')
+        >>> print(Parser._parse_list_value('"this","  is a list  "," of stuff"'))
         ('this', '  is a list  ', ' of stuff')
-        >>> print Parser._parse_list_value('{1, 2, 3, 4}')
+        >>> print(Parser._parse_list_value('{1, 2, 3, 4}'))
         (1, 2, 3, 4)
         
         """
@@ -108,21 +112,21 @@ class Parser (file):
         >>> d = p.results()
         >>> k = d.keys()[:]
         >>> k.sort()
-        >>> print k
+        >>> print(k)
         ['a', 'b', 'c', 'xyz']
-        >>> print d['a']
+        >>> print(d['a'])
         1
-        >>> print d['b']
+        >>> print(d['b'])
         2
-        >>> print d['c']
+        >>> print(d['c'])
         (1, 2, 3)
-        >>> print d['xyz']
+        >>> print(d['xyz'])
         ('one', 'two', 'three')
         
         >>> try:
         ...        p = Parser(lines=['this is garbage input'])
-        ... except SyntaxError, e:
-        ...        print str(e)
+        ... except SyntaxError as e:
+        ...        print(str(e))
         session file line 1: need more than 1 value to unpack
         
         """
@@ -142,7 +146,7 @@ class Parser (file):
                 if len(value) > 0:
                     if value[0] == '{':
                         value = Parser._parse_list_value(value)
-            except ValueError, e:
+            except ValueError as e:
                 raise SyntaxError("session file line %d: %s" % (i, str(e)))
             self._definitions[key] = value
             i = i + 1

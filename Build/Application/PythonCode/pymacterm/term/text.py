@@ -1,11 +1,15 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
+
 """Routines to handle text in terminal screen buffers.
 
 find_word -- scan around a starting point to find the range of the word
 get_dumb_rendering -- string to describe a Unicode character in a dumb terminal
 
 """
+from __future__ import division
+from __future__ import print_function
+
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '28 November 2010'
 __version__ = '4.0.0'
@@ -220,8 +224,8 @@ def find_word(text_utf8, pos):
                     last = ustr[result[0] + result[1] - 1] # synchronize variable
                 else:
                     end_caps_ok = True
-    except Exception, e:
-        print "warning, exception while trying to find words:", e
+    except Exception as e:
+        print("warning, exception while trying to find words:", e)
     return (result[0], result[1])
 
 def get_dumb_rendering(ord_unicode_16):

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
+
 """This is where the bulk of MacTerm is initialized, but it's best to run it
 indirectly by using the "./MacTerm" script (which sets all the library paths).
 
@@ -16,29 +17,32 @@ This exposure to Python simplifies debugging, and gives you extensibility and
 configuration options that most applications lack!  This file shows just a few
 examples of what you can do...look for more information at MacTerm.net.
 """
+from __future__ import division
+from __future__ import print_function
+
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '24 August 2006'
 __version__ = '4.0.0'
 
-import os
-import string
-import datetime
-
-try:
-    from quills import Base, Events, Prefs, Session, Terminal
-except ImportError, err:
-    import sys
-    print >>sys.stderr, "Unable to import Quills."
-    if "DYLD_LIBRARY_PATH" in os.environ:
-        print >>sys.stderr, "Shared library path:", os.environ["DYLD_LIBRARY_PATH"]
-    print >>sys.stderr, "Python path:", sys.path
-    raise err
-import pymacterm.file.open
-import pymacterm.term.text
-import pymacterm.url.open
-import pymacterm.utilities
-
 if __name__ == "__main__":
+    import os
+    import string
+    import datetime
+    
+    try:
+        from quills import Base, Events, Prefs, Session, Terminal
+    except ImportError as err:
+        import sys
+        print("Unable to import Quills.", file=sys.stderr)
+        if "DYLD_LIBRARY_PATH" in os.environ:
+            print("Shared library path:", os.environ["DYLD_LIBRARY_PATH"], file=sys.stderr)
+        print("Python path:", sys.path, file=sys.stderr)
+        raise err
+    import pymacterm.file.open
+    import pymacterm.term.text
+    import pymacterm.url.open
+    import pymacterm.utilities
+    
     # undo environment settings made by the "MacTerm" script, so as not
     # to pollute the user environment too much
     for removed_var in (
@@ -104,7 +108,7 @@ if __name__ == "__main__":
     #
     # EXAMPLE
     #     def app_will_finish():
-    #         print "this is the 2nd half of my script"
+    #         print("this is the 2nd half of my script")
     #
     # --------------------------------------------------------------------------
     # initial_workspace() -> string
@@ -125,38 +129,38 @@ if __name__ == "__main__":
     #         ws = ""
     #         from socket import gethostname
     #         host = str(gethostname())
-    #         print "MacTerm: Current machine hostname is '%s'." % host
+    #         print("MacTerm: Current machine hostname is '%s'." % host)
     #         if host.endswith("mycompany.com"):
     #             ws = "Company Servers" # or whatever you used
     #         return ws
     #
     # --------------------------------------------------------------------------
     if "MACTERM_SKIP_CUSTOM_LIBS" in os.environ:
-        print "MacTerm: ignoring any 'customize_macterm' module (environment setting)"
+        print("MacTerm: ignoring any 'customize_macterm' module (environment setting)")
     else:
         try:
             # try to import using the obsolete name, and emit a console warning if it exists
             import customize_mactelnet
-            print "MacTerm: warning, 'customize_mactelnet' legacy module will be ignored; rename it to 'customize_macterm'"
-        except ImportError, err:
+            print("MacTerm: warning, 'customize_mactelnet' legacy module will be ignored; rename it to 'customize_macterm'")
+        except ImportError as err:
             pass
         try:
             import customize_macterm
             user_syms = dir(customize_macterm)
             if '__file__' in user_syms:
-                print "MacTerm: imported 'customize_macterm' module from", customize_macterm.__file__ # could be a list
+                print("MacTerm: imported 'customize_macterm' module from", customize_macterm.__file__) # could be a list
             else:
-                print "MacTerm: imported 'customize_macterm' module"
+                print("MacTerm: imported 'customize_macterm' module")
             # look for valid user overrides (EVERYTHING used here should be
             # documented above and initialized at the beginning)
-            print "MacTerm: module contains:", user_syms
+            print("MacTerm: module contains:", user_syms)
             if 'app_will_finish' in user_syms:
-                print "MacTerm: employing user customization 'app_will_finish'"
+                print("MacTerm: employing user customization 'app_will_finish'")
                 app_will_finish = customize_macterm.app_will_finish
             if 'initial_workspace' in user_syms:
-                print "MacTerm: employing user customization 'initial_workspace'"
+                print("MacTerm: employing user customization 'initial_workspace'")
                 initial_workspace = customize_macterm.initial_workspace
-        except ImportError, err:
+        except ImportError as err:
             # assume the module was never created, and ignore (nothing is
             # printed as an error in this case because the overwhelming
             # majority of users are not expected to ever create this module)
@@ -180,13 +184,13 @@ if __name__ == "__main__":
     
     # preamble
     now = datetime.datetime.now()
-    print "MacTerm: %s" % now.strftime("%A, %B %d, %Y, %I:%M %p")
+    print("MacTerm: %s" % now.strftime("%A, %B %d, %Y, %I:%M %p"))
     
     # load all required MacTerm modules
     Base.all_init(initial_workspace=initial_workspace())
     
     # banner
-    print "MacTerm: Base initialization complete.  This is version %s." % Base.version()
+    print("MacTerm: Base initialization complete.  This is version %s." % Base.version())
     
     # if the current version is very old, warn the user
     try:
@@ -222,8 +226,8 @@ if __name__ == "__main__":
                     old = (diff > months_for_old)
                 if old:
                     Base._version_warning()
-    except Exception, e:
-        print "exception in version check", e
+    except Exception as e:
+        print("exception in version check", e)
     
     # optionally invoke some unit tests
     do_testing = ("MACTERM_RUN_TESTS" in os.environ)
@@ -250,7 +254,7 @@ if __name__ == "__main__":
     Session.on_fileopen_call(pymacterm.file.open.script, 'tool')
     Session.on_fileopen_call(pymacterm.file.open.prefs, 'xml')
     Session.on_fileopen_call(pymacterm.file.open.script, 'zsh')
-
+    
     # arrange to have "lsof" invoked for one or more process IDs
     # whenever MacTerm needs to find their current working directories;
     # returns a map from process ID integers to directory path strings
@@ -289,25 +293,25 @@ if __name__ == "__main__":
     
     try:
         Terminal.on_seekword_call(pymacterm.term.text.find_word)
-    except Exception, e:
-        print "warning, exception while trying to register word finder for double clicks:", e
+    except Exception as e:
+        print("warning, exception while trying to register word finder for double clicks:", e)
     
     for i in range(0, 256):
         try:
             Terminal.set_dumb_string_for_char(i, pymacterm.term.text.get_dumb_rendering(i))
-        except Exception, e:
-            print "warning, exception while setting character code %i:" % i, e
+        except Exception as e:
+            print("warning, exception while setting character code %i:" % i, e)
             pass
     
     # banner
-    print "MacTerm: Full initialization complete."
+    print("MacTerm: Full initialization complete.")
     
     # (if desired, insert code at this point to interact with MacTerm)
     
     # if you want to find out when new sessions are created, you can
     # define a Python function and simply register it...
     #def my_py_func():
-    #    print "\n\nI was called by MacTerm!\n\n"
+    #    print("\n\nI was called by MacTerm!\n\n")
     #Session.on_new_call(my_py_func)
     
     # the following line would run a command every time you start up...

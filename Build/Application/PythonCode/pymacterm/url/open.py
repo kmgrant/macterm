@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
+
 """Routines to open MacTerm sessions using information in URLs.
 
 Below, example URLs fully specify all parts, although each type
@@ -15,6 +16,9 @@ telnet -- handle URLs of the form "telnet://user@host:port"
 x_man_page -- handle URLs of the form "x-man-page://section/cmd"
 
 """
+from __future__ import division
+from __future__ import print_function
+
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '24 August 2006'
 __version__ = '4.0.0'
@@ -45,8 +49,8 @@ def file(url):
     
     >>> try:
     ...        file('not a file url!')
-    ... except ValueError, e:
-    ...        print e
+    ... except ValueError as e:
+    ...        print(e)
     not a file URL
     
     """
@@ -90,8 +94,8 @@ def ftp(url):
     
     >>> try:
     ...        ftp('not an ftp url!')
-    ... except ValueError, e:
-    ...        print e
+    ... except ValueError as e:
+    ...        print(e)
     unsupported form of ftp URL
     
     """
@@ -127,8 +131,8 @@ def rlogin(url):
     
     >>> try:
     ...        rlogin('not an rlogin url!')
-    ... except ValueError, e:
-    ...        print e
+    ... except ValueError as e:
+    ...        print(e)
     unsupported form of telnet URL
     
     """
@@ -160,8 +164,8 @@ def sftp(url):
     
     >>> try:
     ...        sftp('not an sftp url!')
-    ... except ValueError, e:
-    ...        print e
+    ... except ValueError as e:
+    ...        print(e)
     not an sftp URL
     
     """
@@ -204,8 +208,8 @@ def ssh(url):
     
     >>> try:
     ...        ssh('not an ssh url!')
-    ... except ValueError, e:
-    ...        print e
+    ... except ValueError as e:
+    ...        print(e)
     not an ssh URL
     
     """
@@ -241,8 +245,8 @@ def telnet(url):
     
     >>> try:
     ...        telnet('not a telnet url!')
-    ... except ValueError, e:
-    ...        print e
+    ... except ValueError as e:
+    ...        print(e)
     unsupported form of telnet URL
     
     """
@@ -293,7 +297,7 @@ def _test():
     result = None
     try:
         result = doctest.testmod(pymacterm.url.open)
-    except Exception, e:
+    except Exception as e:
         import sys
-        print >>sys.stderr, "unexpected exception caught: %s" % str(e)
+        print("unexpected exception caught: %s" % str(e), file=sys.stderr)
     return result

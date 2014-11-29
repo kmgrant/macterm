@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
+
 """The main entry point to MacTerm.
 
 This file's name must match the value of CFBundleExecutableName in "Info.plist".
@@ -11,6 +12,9 @@ such as /Library/Frameworks; but it's nice to have all the files together, and
 definitely nice when users don't need an installer or administrator privileges.
 
 """
+from __future__ import division
+from __future__ import print_function
+
 __author__ = "Kevin Grant <kmg@mac.com>"
 __date__ = "2 September 2006"
 
@@ -62,10 +66,10 @@ if __name__ == "__main__":
         quills_fw_ver = default_quills_fw_ver
         quills_pylib_ver = default_quills_pylib_ver
     elif (mac_os_name in ("Mountain Lion", "Lion", "Snow Leopard", "Leopard", "Tiger", "Panther")):
-        print >>sys.stderr, "This MacTerm version requires at least Mac OS X 10.9 (Mavericks).  Visit 'http://www.macterm.net/' to download version 4.0.0 for use on older systems."
+        print("This MacTerm version requires at least Mac OS X 10.9 (Mavericks).  Visit 'http://www.macterm.net/' to download version 4.0.0 for use on older systems.", file=sys.stderr)
         sys.exit(1)
     else: # must be new OS version (very old versions are rejected by the minimum-version setting in the bundle's Info.plist)
-        print >>sys.stderr, "WARNING: Your OS version hasn't been tested with this MacTerm version.  Visit 'http://www.macterm.net/' to check for updates or report bugs."
+        print("WARNING: Your OS version hasn't been tested with this MacTerm version.  Visit 'http://www.macterm.net/' to check for updates or report bugs.", file=sys.stderr)
         py_interpreter = os.path.join(macos_dir, default_wrapper)
         quills_fw_ver = default_quills_fw_ver
         quills_pylib_ver = default_quills_pylib_ver
@@ -96,13 +100,13 @@ if __name__ == "__main__":
             try:
                 lines = all_output.split('\n')
                 user_prefs_version = int(lines[0])
-            except Exception, e:
-                print "exception when trying to find integer from prefs-version", e
-        print "MacTerm: latest preferences are version", latest_prefs_version, "and user preferences are version", user_prefs_version
+            except Exception as e:
+                print("exception when trying to find integer from prefs-version", e)
+        print("MacTerm: latest preferences are version", latest_prefs_version, "and user preferences are version", user_prefs_version)
         try:
             if (latest_prefs_version > user_prefs_version) and (user_prefs_version > 0):
                 conv_path = os.path.join(bundle_dir, 'Contents', 'Resources', 'PrefsConverter.app', 'Contents', 'MacOS', 'PrefsConverter')
-                print "MacTerm: launching Preferences Converter application (%s)..." % conv_path
+                print("MacTerm: launching Preferences Converter application (%s)..." % conv_path)
                 require_restart = False
                 if mac_os_name in ("Panther", "Tiger", "Leopard"):
                     # While not apparently a problem at least on Snow Leopard, on Panther there is
@@ -118,11 +122,11 @@ if __name__ == "__main__":
                 import subprocess
                 code = subprocess.call(conv_path, shell=False)
                 if code != 0:
-                    print "MacTerm: preferences converter exited with nonzero status", code
+                    print("MacTerm: preferences converter exited with nonzero status", code)
                 if require_restart:
                     sys.exit(0)
-        except Exception, e:
-            print "exception when trying to launch preferences converter", e
+        except Exception as e:
+            print("exception when trying to launch preferences converter", e)
     
     # put the initial bundle location in the environment, for convenience
     # when initializing other components
@@ -179,7 +183,7 @@ if __name__ == "__main__":
             sandbox_profile_path = os.environ["MACTERM_SANDBOX_PROFILE"]
         else:
             sandbox_profile_path = os.path.join(bundle_dir, 'Contents', 'Resources', 'Application.sb')
-        print "MacTerm: sandboxing has been enabled using restrictions from the profile '%s'" % sandbox_profile_path
+        print("MacTerm: sandboxing has been enabled using restrictions from the profile '%s'" % sandbox_profile_path)
         sys.argv.insert(0, sandbox_profile_path)
         sys.argv.insert(0, '-f')
         sys.argv.insert(0, '/usr/bin/sandbox-exec')
@@ -191,7 +195,7 @@ if __name__ == "__main__":
             debugger_path = os.environ["MACTERM_LLDB"]
         else:
             debugger_path = "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb"
-        print "MacTerm: lldb has been enabled"
+        print("MacTerm: lldb has been enabled")
         sys.argv.insert(0, '--')
         sys.argv.insert(0, debugger_path)
     
@@ -210,6 +214,6 @@ if __name__ == "__main__":
     # execfile(), say.
     try:
         os.execve(sys.argv[0], sys.argv, os.environ)
-    except Exception, e:
-        print >>sys.stderr, "Exception raised while attempting to run", sys.argv[0], sys.argv, ":", e.message
+    except Exception as e:
+        print("Exception raised while attempting to run", sys.argv[0], sys.argv, ":", e.message, file=sys.stderr)
     sys.exit(1)
