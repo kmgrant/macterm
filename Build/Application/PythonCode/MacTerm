@@ -18,31 +18,41 @@ from __future__ import print_function
 __author__ = "Kevin Grant <kmg@mac.com>"
 __date__ = "2 September 2006"
 
+import subprocess
 import sys
 import os
+import os.path
+from os.path import join as path_join
+
+def warn(*args, **kwargs):
+    """Shorthand for printing to sys.stderr.
+    """
+    print(*args, file=sys.stderr, **kwargs)
 
 if __name__ == "__main__":
     # find the "MacOS" folder
-    macos_dir = os.path.dirname(os.path.normpath(sys.argv[0]))
-    contents_dir = os.path.join(macos_dir, "..")
-    bundle_dir = os.path.join(contents_dir, "..")
-    frameworks_dir = os.path.join(contents_dir, "Frameworks")
-    resources_dir = os.path.join(contents_dir, "Resources")
-    
+    MACOS_DIR = os.path.dirname(os.path.normpath(sys.argv[0]))
+    CONTENTS_DIR = path_join(MACOS_DIR, "..")
+    BUNDLE_DIR = path_join(CONTENTS_DIR, "..")
+    FRAMEWORKS_DIR = path_join(CONTENTS_DIR, "Frameworks")
+    #RESOURCES_DIR = path_join(CONTENTS_DIR, "Resources")
+
     # the PyMacTerm.framework code is not compiled, so its version
     # will depend only on whatever the current implementation is
-    pymacterm_pylib_ver = "2.6"
-    pymacterm_dir = os.path.join(frameworks_dir, "PyMacTerm.framework")
-    pymacterm_versions_dir = os.path.join(pymacterm_dir, "Versions")
-    pymacterm_current_version_dir = os.path.join(pymacterm_versions_dir, "Current")
-    pymacterm_pylib_dir = os.path.join(pymacterm_current_version_dir, "lib", "python" + pymacterm_pylib_ver)
-    
+    PYMACTERM_PYLIB_VER = "2.6"
+    PYMACTERM_DIR = path_join(FRAMEWORKS_DIR, "PyMacTerm.framework")
+    PYMACTERM_VERSIONS_DIR = path_join(PYMACTERM_DIR, "Versions")
+    PYMACTERM_CURRENT_DIR = path_join(PYMACTERM_VERSIONS_DIR, "Current")
+    PYMACTERM_PYLIB_DIR = path_join(PYMACTERM_CURRENT_DIR,
+                                    "lib", "python" + PYMACTERM_PYLIB_VER)
+
     # now import utility modules
-    sys.path.insert(0, pymacterm_pylib_dir)
+    sys.path.insert(0, PYMACTERM_PYLIB_DIR)
     import pymacterm.utilities
     import pymacterm.versions
-    mac_os_name = pymacterm.utilities.mac_os_name()
-    
+    LATEST_PREFS_VERSION = pymacterm.versions.prefs_version
+    MAC_OS_NAME = pymacterm.utilities.mac_os_name()
+
     # Notes on the platform-dependent setup below:
     #
     # The interpreter MUST be invoked from a location physically inside the
@@ -58,155 +68,160 @@ if __name__ == "__main__":
     # default.  (If a future Mac OS X version stops supporting Python 2.6, it
     # will once again be necessary to have separate SWIG-generated wrappers for
     # each incompatible Python version.)
-    default_quills_fw_ver = "B"
-    default_quills_pylib_ver = "2.6"
-    default_wrapper = "MacTerm_python%s_wrap" % default_quills_pylib_ver
-    if mac_os_name == "Mavericks" or mac_os_name == "Yosemite":
-        py_interpreter = os.path.join(macos_dir, default_wrapper)
-        quills_fw_ver = default_quills_fw_ver
-        quills_pylib_ver = default_quills_pylib_ver
-    elif (mac_os_name in ("Mountain Lion", "Lion", "Snow Leopard", "Leopard", "Tiger", "Panther")):
-        print("This MacTerm version requires at least Mac OS X 10.9 (Mavericks).  Visit 'http://www.macterm.net/' to download version 4.0.0 for use on older systems.", file=sys.stderr)
+    DEFAULT_QUILLS_FW_VER = "B"
+    DEFAULT_QUILLS_PYLIB_VER = "2.6"
+    DEFAULT_WRAPPER = "MacTerm_python%s_wrap" % DEFAULT_QUILLS_PYLIB_VER
+    if MAC_OS_NAME == "Mavericks" or MAC_OS_NAME == "Yosemite":
+        PY_INTERPRETER = path_join(MACOS_DIR, DEFAULT_WRAPPER)
+        QUILLS_FW_VER = DEFAULT_QUILLS_FW_VER
+        QUILLS_PYLIB_VER = DEFAULT_QUILLS_PYLIB_VER
+    elif MAC_OS_NAME in ("Mountain Lion", "Lion", "Snow Leopard",
+                         "Leopard", "Tiger", "Panther"):
+        warn("This MacTerm version requires at least Mac OS X 10.9 ",
+             "(Mavericks).  Visit 'http://www.macterm.net/' to download",
+             "version 4.0.0 for use on older systems.")
         sys.exit(1)
-    else: # must be new OS version (very old versions are rejected by the minimum-version setting in the bundle's Info.plist)
-        print("WARNING: Your OS version hasn't been tested with this MacTerm version.  Visit 'http://www.macterm.net/' to check for updates or report bugs.", file=sys.stderr)
-        py_interpreter = os.path.join(macos_dir, default_wrapper)
-        quills_fw_ver = default_quills_fw_ver
-        quills_pylib_ver = default_quills_pylib_ver
-    os.environ["PYTHONEXECUTABLE"] = py_interpreter
-    quills_dir = os.path.join(frameworks_dir, "Quills.framework")
-    quills_versions_dir = os.path.join(quills_dir, "Versions")
-    quills_proper_version_dir = os.path.join(quills_versions_dir, quills_fw_ver)
-    quills_pylib_dir = os.path.join(quills_proper_version_dir, "lib", "python" + quills_pylib_ver)
-    
+    else:
+        # must be new OS version (very old versions are rejected by the
+        # minimum-version setting in the bundle's Info.plist)
+        warn("WARNING: Your OS version hasn't been tested with this",
+             "MacTerm version.  Visit 'http://www.macterm.net/' to check",
+             "for updates or report bugs.")
+        PY_INTERPRETER = path_join(MACOS_DIR, DEFAULT_WRAPPER)
+        QUILLS_FW_VER = DEFAULT_QUILLS_FW_VER
+        QUILLS_PYLIB_VER = DEFAULT_QUILLS_PYLIB_VER
+    os.environ["PYTHONEXECUTABLE"] = PY_INTERPRETER
+    QUILLS_DIR = path_join(FRAMEWORKS_DIR, "Quills.framework")
+    QUILLS_VERSIONS_DIR = path_join(QUILLS_DIR, "Versions")
+    QUILLS_PROPER_VERSION_DIR = path_join(QUILLS_VERSIONS_DIR, QUILLS_FW_VER)
+    QUILLS_PYLIB_DIR = path_join(QUILLS_PROPER_VERSION_DIR,
+                                 "lib", "python" + QUILLS_PYLIB_VER)
+
     # if the user's preferences are out of date, convert as needed
-    convert_preferences = True
-    if convert_preferences:
+    CONVERT_PREFERENCES = True
+    if CONVERT_PREFERENCES:
         # check the current bundle's preferences, and look for the version;
         # if it is out of date (with respect to the current version) then
         # automatically invoke the Preferences Converter before going any
         # further; this must be done before initialization so that the
         # updated preferences are read and not the out-of-date settings
-        def_cmds = (('/usr/bin/defaults', 'read', 'net.macterm.MacTerm', 'prefs-version'),
-                    ('/usr/bin/defaults', 'read', 'com.mactelnet.MacTelnet', 'prefs-version'))
-        all_output = None
-        for def_cmd in def_cmds:
-            all_output = pymacterm.utilities.command_data(def_cmd)
-            if all_output is not None:
+        DEF_CMDS = (('/usr/bin/defaults', 'read',
+                     'net.macterm.MacTerm', 'prefs-version'),
+                    ('/usr/bin/defaults', 'read',
+                     'com.mactelnet.MacTelnet', 'prefs-version'))
+        ALL_OUTPUT = None
+        for def_cmd in DEF_CMDS:
+            ALL_OUTPUT = pymacterm.utilities.command_data(def_cmd)
+            if ALL_OUTPUT is not None:
                 break
-        user_prefs_version = 0
-        latest_prefs_version = pymacterm.versions.prefs_version
-        if all_output is not None:
+        USER_PREFS_VERSION = 0
+        if ALL_OUTPUT is not None:
             try:
-                lines = all_output.split('\n')
-                user_prefs_version = int(lines[0])
-            except Exception as e:
-                print("exception when trying to find integer from prefs-version", e)
-        print("MacTerm: latest preferences are version", latest_prefs_version, "and user preferences are version", user_prefs_version)
-        try:
-            if (latest_prefs_version > user_prefs_version) and (user_prefs_version > 0):
-                conv_path = os.path.join(bundle_dir, 'Contents', 'Resources', 'PrefsConverter.app', 'Contents', 'MacOS', 'PrefsConverter')
-                print("MacTerm: launching Preferences Converter application (%s)..." % conv_path)
-                require_restart = False
-                if mac_os_name in ("Panther", "Tiger", "Leopard"):
-                    # While not apparently a problem at least on Snow Leopard, on Panther there is
-                    # a problem if multiple applications are launched: a RegisterProcess failure,
-                    # error -2805.  This error occurs only if the converter application launches,
-                    # and only in C++ at the point where the main application begins initialization.
-                    # Unfortunately, all attempts at finding a work-around have failed, so for now
-                    # an alert is displayed after preferences conversion asking the user to simply
-                    # re-launch the application again.  (On the next launch the converter will not
-                    # run, so everything will be fine.)
-                    require_restart = True
-                    os.environ['CONVERTER_ASK_USER_TO_RESTART'] = '1'
-                import subprocess
-                code = subprocess.call(conv_path, shell=False)
-                if code != 0:
-                    print("MacTerm: preferences converter exited with nonzero status", code)
-                if require_restart:
-                    sys.exit(0)
-        except Exception as e:
-            print("exception when trying to launch preferences converter", e)
-    
+                LINES = ALL_OUTPUT.split('\n')
+                USER_PREFS_VERSION = int(LINES[0])
+            except ValueError as _:
+                print("exception when trying to find integer",
+                      "from prefs-version", _)
+        print("MacTerm: latest preferences are version", LATEST_PREFS_VERSION,
+              "and user preferences are version", USER_PREFS_VERSION)
+        if (LATEST_PREFS_VERSION > USER_PREFS_VERSION) and \
+           (USER_PREFS_VERSION > 0):
+            CONV_PATH = path_join(BUNDLE_DIR, 'Contents', 'Resources',
+                                  'PrefsConverter.app', 'Contents',
+                                  'MacOS', 'PrefsConverter')
+            print("MacTerm: launching Preferences Converter application",
+                  "(%s)..." % CONV_PATH)
+            EXIT_STATUS = subprocess.call(CONV_PATH, shell=False)
+            if EXIT_STATUS != 0:
+                print("MacTerm: preferences converter exited with",
+                      "nonzero status", EXIT_STATUS)
+
     # put the initial bundle location in the environment, for convenience
     # when initializing other components
-    os.environ["INITIAL_APP_BUNDLE_DIR"] = bundle_dir
-    
+    os.environ["INITIAL_APP_BUNDLE_DIR"] = BUNDLE_DIR
+
     # specify where dependent Python and C++ libraries will reside
-    pypath_append = ""
+    PYPATH_APPEND = ""
     if "PYTHONPATH" in os.environ:
-        pypath_append = ":" + os.environ["PYTHONPATH"]
-    os.environ["PYTHONPATH"] = quills_pylib_dir + ":" + pymacterm_pylib_dir + pypath_append
-    os.environ["DYLD_LIBRARY_PATH"] = quills_proper_version_dir
-    
+        PYPATH_APPEND = ":" + os.environ["PYTHONPATH"]
+    os.environ["PYTHONPATH"] = QUILLS_PYLIB_DIR + ":" + PYMACTERM_PYLIB_DIR + \
+                               PYPATH_APPEND
+    os.environ["DYLD_LIBRARY_PATH"] = QUILLS_PROPER_VERSION_DIR
+
     # the following is NOT required for MacTerm to run, however it is
     # useful for such things as conveniently running "pydoc" on Quills;
     # attempts to load Quills will call dependent frameworks (currently,
     # Growl.framework), and without a path these loads would fail
-    os.environ["DYLD_FRAMEWORK_PATH"] = frameworks_dir
-    
+    os.environ["DYLD_FRAMEWORK_PATH"] = FRAMEWORKS_DIR
+
     # DEBUGGING ONLY: if you want to do memory debugging, you can substitute
     # the allocator library as follows (do NOT do this on a whim, guard
     # allocation makes the program MUCH, MUCH slower!)
     #os.environ["DYLD_INSERT_LIBRARIES"] = "/usr/lib/libgmalloc.dylib"
-    
+
     # DEBUGGING ONLY: here is an easy way to enable the debugging versions of
     # all loaded frameworks (including system libraries), but DO NOTE this
     # is only likely to work in a boxed OS version (e.g. definitely works in
     # 10.4.0, may break in 10.4.1 as Apple does not update debug libraries)
     #os.environ["DYLD_IMAGE_SUFFIX"] = "_debug"
-    
+
     # the value of sys.argv[0] is replaced before passing arguments on,
     # because it originally referred to this script
-    sys.argv[0] = py_interpreter
-    
+    sys.argv[0] = PY_INTERPRETER
+
     # locate the "real" main entry point script, the one depending on C++
     # libraries (hence the environment setup above); ensure it is passed as
     # the main argument to the interpreter
-    main_script = os.path.join(macos_dir, "RunApplication.py")
-    sys.argv.insert(1, main_script)
-    
+    MAIN_SCRIPT = path_join(MACOS_DIR, "RunApplication.py")
+    sys.argv.insert(1, MAIN_SCRIPT)
+
     # if the system supports sandboxing, run the program in a sandbox
     # (EXPERIMENTAL: eventually this might be enabled automatically by
     # system type but for now it is only activated when the appropriate
     # environment setting is made)
     if False:
-        is_sandboxed = (mac_os_name not in ("Panther", "Tiger"))
+        IS_SANDBOXED = (MAC_OS_NAME not in ("Panther", "Tiger"))
     else:
-        is_sandboxed = (("MACTERM_SANDBOXED" in os.environ) and (os.environ["MACTERM_SANDBOXED"] == "1"))
-    sandbox_profile_path = None
-    if is_sandboxed:
+        IS_SANDBOXED = (("MACTERM_SANDBOXED" in os.environ) and
+                        (os.environ["MACTERM_SANDBOXED"] == "1"))
+    SANDBOX_PROFILE_PATH = None
+    if IS_SANDBOXED:
         # WARNING: if you choose to override with a custom profile it is still
         # recommended that you begin with an import of the default one; e.g.
-        #     (import "/Applications/MacTerm.app/Contents/Resources/Application.sb")
-        if ("MACTERM_SANDBOX_PROFILE" in os.environ):
-            sandbox_profile_path = os.environ["MACTERM_SANDBOX_PROFILE"]
+        # (import "/Applications/MacTerm.app/Contents/Resources/Application.sb")
+        if "MACTERM_SANDBOX_PROFILE" in os.environ:
+            SANDBOX_PROFILE_PATH = os.environ["MACTERM_SANDBOX_PROFILE"]
         else:
-            sandbox_profile_path = os.path.join(bundle_dir, 'Contents', 'Resources', 'Application.sb')
-        print("MacTerm: sandboxing has been enabled using restrictions from the profile '%s'" % sandbox_profile_path)
-        sys.argv.insert(0, sandbox_profile_path)
+            SANDBOX_PROFILE_PATH = path_join(BUNDLE_DIR, 'Contents',
+                                             'Resources', 'Application.sb')
+        print("MacTerm: sandboxing has been enabled using restrictions from",
+              "the profile '%s'" % SANDBOX_PROFILE_PATH)
+        sys.argv.insert(0, SANDBOX_PROFILE_PATH)
         sys.argv.insert(0, '-f')
         sys.argv.insert(0, '/usr/bin/sandbox-exec')
-    
+
     # if requested, run in the debugger
-    run_in_debugger = (("MACTERM_DEBUG" in os.environ) and (os.environ["MACTERM_DEBUG"] == "1"))
-    if run_in_debugger:
-        if ("MACTERM_LLDB" in os.environ):
-            debugger_path = os.environ["MACTERM_LLDB"]
+    RUN_IN_DEBUGGER = (("MACTERM_DEBUG" in os.environ) and
+                       (os.environ["MACTERM_DEBUG"] == "1"))
+    if RUN_IN_DEBUGGER:
+        if "MACTERM_LLDB" in os.environ:
+            DEBUGGER_PATH = os.environ["MACTERM_LLDB"]
         else:
-            debugger_path = "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb"
+            DEBUGGER_PATH = path_join("/", "Applications", "Xcode.app",
+                                      "Contents", "Developer",
+                                      "usr", "bin", "lldb")
         print("MacTerm: lldb has been enabled")
         sys.argv.insert(0, '--')
-        sys.argv.insert(0, debugger_path)
-    
+        sys.argv.insert(0, DEBUGGER_PATH)
+
     # WARNING: the Finder will include arguments (e.g. -psn_0_10223617) that
     # will not be present in a normal shell run; ensure these arguments are
     # preserved so that runs from the Finder are successful
-    
+
     # if it is ever necessary to pass arguments to the 2nd Python script,
     # you could do so here
     #sys.argv.append('--whatever-option')
-    
+
     # Since the main loop loads compiled Python modules, the environment of
     # the interpreter itself must know where those C++ libraries are.  It is
     # therefore necessary to re-exec an interpreter (with the environment
@@ -214,6 +229,7 @@ if __name__ == "__main__":
     # execfile(), say.
     try:
         os.execve(sys.argv[0], sys.argv, os.environ)
-    except Exception as e:
-        print("Exception raised while attempting to run", sys.argv[0], sys.argv, ":", e.message, file=sys.stderr)
+    except OSError as _:
+        warn("Exception raised while attempting to run",
+             sys.argv[0], sys.argv, ":", _.message)
     sys.exit(1)
