@@ -35,24 +35,24 @@ from pymacterm.url.parse import \
 
 def file(url):
     """file(url) -> None
-    
+
     Asynchronously open a session with "emacs" in file browser
     mode, looking at the resource from a given "file://" URL.
-    
+
     Raises an exception for some failures.  Note, however, that
     as an asynchronous process spawn, other types of failures
     could occur later that are not trapped at call time.
-    
+
     (Below are REAL testcases run by doctest!)
-    
+
     >>> file('file:///System/Library')
-    
+
     >>> try:
     ...        file('not a file url!')
     ... except ValueError as e:
     ...        print(e)
     not a file URL
-    
+
     """
     url_info = _parse_file(url)
     path = url_info.get('path', None)
@@ -67,37 +67,38 @@ def file(url):
             if path is None or len(path) == 0:
                 from os import getenv as _getenv
                 path = _getenv('HOME')
-                if path is None: path = '/'
+                if path is None:
+                    path = '/'
         # emacs is a good choice because it has a command line
         # option to set a start location, it is an excellent file
         # browser and it can remain running to perform other tasks
         args = ['/usr/bin/emacs', "--file=%s" % path]
-        session = quills.Session(args)
+        ignored_session = quills.Session(args)
     else:
         raise ValueError("unsupported form of file URL")
 
 def ftp(url):
     """ftp(url) -> None
-    
+
     Asynchronously open a session with the '/usr/bin/ftp'
     command based on the given "ftp://" URL.
-    
+
     Raises an exception for some failures.  Note, however, that
     as an asynchronous process spawn, other types of failures
     could occur later that are not trapped at call time.
-    
+
     (Below are REAL testcases run by doctest!)
-    
+
     >>> ftp('ftp://yourserver.com')
-    
+
     >>> ftp('ftp://userid@yourserver.com:12345')
-    
+
     >>> try:
     ...        ftp('not an ftp url!')
     ... except ValueError as e:
     ...        print(e)
     unsupported form of ftp URL
-    
+
     """
     url_info = _parse_ftp(url)
     host = url_info.get('host', None)
@@ -106,68 +107,70 @@ def ftp(url):
     if host is not None:
         args = ['/usr/bin/ftp']
         # ftp uses "user@host" form
-        if user is not None: host = "%s@%s" % (user, host)
+        if user is not None:
+            host = "%s@%s" % (user, host)
         args.append(host)
-        if port is not None: args.append(str(port)) # standalone port
-        session = quills.Session(args)
+        if port is not None:
+            args.append(str(port)) # standalone port
+        ignored_session = quills.Session(args)
     else:
         raise ValueError("unsupported form of ftp URL")
 
 def rlogin(url):
     """rlogin(url) -> None
-    
+
     Considered an alias for telnet(); converts an "rlogin://..."
     URL into a "telnet://..." URL.
-    
+
     Raises an exception for some failures.  Note, however, that
     as an asynchronous process spawn, other types of failures
     could occur later that are not trapped at call time.
-    
+
     (Below are REAL testcases run by doctest!)
-    
+
     >>> rlogin('rlogin://yourserver.com')
-    
+
     >>> rlogin('rlogin://userid@yourserver.com:12345')
-    
+
     >>> try:
     ...        rlogin('not an rlogin url!')
     ... except ValueError as e:
     ...        print(e)
     unsupported form of telnet URL
-    
+
     """
     url = url.replace('rlogin:', 'telnet:', 1)
     return telnet(url)
 
 def sftp(url):
     """sftp(url) -> None
-    
+
     Asynchronously open a session with the '/usr/bin/sftp'
     command based on the given "sftp://" URL.
-    
+
     Raises an exception for some failures.  Note, however, that
     as an asynchronous process spawn, other types of failures
     could occur later that are not trapped at call time.
-    
+
     WARNING: The specification for this URL type is not complete.
     This implementation does not yet provide support for all
     possible bits of information suggested in the proposals to
     date.  It probably needs to be updated when this becomes a
     standard.  (Aren't you glad it's in Python so it's easy to
     fix when that day comes?  I am!!!)
-    
+
     (Below are REAL testcases run by doctest!)
-    
+
     >>> sftp('sftp://yourserver.com')
-    
+
     >>> sftp('sftp://userid@yourserver.com:12345')
-    
+
     >>> try:
     ...        sftp('not an sftp url!')
     ... except ValueError as e:
     ...        print(e)
     not an sftp URL
-    
+
     """
     url_info = _parse_sftp(url)
     host = url_info.get('host', None)
@@ -175,43 +178,45 @@ def sftp(url):
     port = url_info.get('port', None)
     if host is not None:
         args = ['/usr/bin/sftp']
-        if port is not None: args.append('-oPort=%s' % str(port))
+        if port is not None:
+            args.append('-oPort=%s' % str(port))
         # sftp uses "user@host" form
-        if user is not None: host = "%s@%s" % (user, host)
+        if user is not None:
+            host = "%s@%s" % (user, host)
         args.append(host)
-        session = quills.Session(args)
+        ignored_session = quills.Session(args)
     else:
         raise ValueError("unsupported form of sftp URL")
 
 def ssh(url):
     """ssh(url) -> None
-    
+
     Asynchronously open a session with the '/usr/bin/ssh' command
     based on the given "ssh://" URL.
-    
+
     Raises an exception for some failures.  Note, however, that
     as an asynchronous process spawn, other types of failures
     could occur later that are not trapped at call time.
-    
+
     WARNING: The specification for this URL type is not complete.
     This implementation does not yet provide support for all
     possible bits of information suggested in the proposals to
     date.  It probably needs to be updated when this becomes a
     standard.  (Aren't you glad it's in Python so it's easy to
     fix when that day comes?  I am!!!)
-    
+
     (Below are REAL testcases run by doctest!)
-    
+
     >>> ssh('ssh://yourserver.com')
-    
+
     >>> ssh('ssh://userid@yourserver.com:12345')
-    
+
     >>> try:
     ...        ssh('not an ssh url!')
     ... except ValueError as e:
     ...        print(e)
     not an ssh URL
-    
+
     """
     url_info = _parse_ssh(url)
     host = url_info.get('host', None)
@@ -220,35 +225,37 @@ def ssh(url):
     if host is not None:
         args = ['/usr/bin/ssh']
         args.append('-2') # SSH protocol version 2 by default
-        if user is not None: args.extend(['-l', user])
-        if port is not None: args.extend(['-p', str(port)])
+        if user is not None:
+            args.extend(['-l', user])
+        if port is not None:
+            args.extend(['-p', str(port)])
         args.append(host)
-        session = quills.Session(args)
+        ignored_session = quills.Session(args)
     else:
         raise ValueError("unsupported form of ssh URL")
 
 def telnet(url):
     """telnet(url) -> None
-    
+
     Asynchronously open a session with the '/usr/bin/telnet'
     command based on the given "telnet://" URL.
-    
+
     Raises an exception for some failures.  Note, however, that
     as an asynchronous process spawn, other types of failures
     could occur later that are not trapped at call time.
-    
+
     (Below are REAL testcases run by doctest!)
-    
+
     >>> telnet('telnet://yourserver.com')
-    
+
     >>> telnet('telnet://userid@yourserver.com:12345')
-    
+
     >>> try:
     ...        telnet('not a telnet url!')
     ... except ValueError as e:
     ...        print(e)
     unsupported form of telnet URL
-    
+
     """
     url_info = _parse_telnet(url)
     host = url_info.get('host', None)
@@ -256,48 +263,52 @@ def telnet(url):
     port = url_info.get('port', None)
     if host is not None:
         args = ['/usr/bin/telnet', '-K']
-        if user is not None: args.extend(['-l', user])
+        if user is not None:
+            args.extend(['-l', user])
         args.append(host)
-        if port is not None: args.append(str(port)) # standalone port
-        session = quills.Session(args)
+        if port is not None:
+            args.append(str(port)) # standalone port
+        ignored_session = quills.Session(args)
     else:
         raise ValueError("unsupported form of telnet URL")
 
 def x_man_page(url):
     """x_man_page(url) -> None
-    
+
     Asynchronously open a session with the '/usr/bin/man' command
     based on the given "x-man-page://" URL.
-    
+
     Raises an exception for some failures.  Note, however, that
     as an asynchronous process spawn, other types of failures
     could occur later that are not trapped at call time.
-    
+
     (Below are REAL testcases run by doctest!)
-    
+
     >>> x_man_page('x-man-page://ls')
-    
+
     >>> x_man_page('x-man-page://3/printf')
-    
+
     """
     url_info = _parse_x_man_page(url)
     cmd = url_info.get('cmd', None)
     section = url_info.get('section', None)
     # pull the command name and optional section number out of the URL path
     if section is not None:
-        session = quills.Session(['/usr/bin/man', section, cmd])
+        ignored_session = quills.Session(['/usr/bin/man', section, cmd])
     elif cmd is not None:
-        session = quills.Session(['/usr/bin/man', cmd])
+        ignored_session = quills.Session(['/usr/bin/man', cmd])
     else:
         raise ValueError("unsupported form of x-man-page URL")
 
 def _test():
+    """Runs all of this module's "doctest" test cases.
+    """
     import doctest
     import pymacterm.url.open
     result = None
     try:
         result = doctest.testmod(pymacterm.url.open)
-    except Exception as e:
+    except Exception as _:
         import sys
-        print("unexpected exception caught: %s" % str(e), file=sys.stderr)
+        print("unexpected exception caught: %s" % str(_), file=sys.stderr)
     return result

@@ -14,7 +14,6 @@ __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '28 November 2010'
 __version__ = '4.0.0'
 
-import sys
 import string
 
 # note: Quills is a compiled module, library path must be set properly
@@ -22,67 +21,67 @@ import quills
 
 def find_word(text_utf8, pos):
     """find_word(text_utf8, pos) -> (pos, count)
-    
+
     Return a pair of integers as a tuple, where the first
     is a zero-based CHARACTER offset into the given string,
     and the second is a CHARACTER count from that offset.
     This range identifies a word that is found by scanning
     forwards and backwards from the given starting CHARACTER
     in the given string of BYTES.  Don't use byte offsets!
-    
+
     This is designed to be compatible with the callback
     format required by quills.Terminal.on_seekword_call().
-    
+
     (Below are REAL testcases run by doctest!)
-    
+
     >>> find_word("this is a sentence", 0)
     (0, 4)
-    
+
     >>> find_word("this is a sentence", 1)
     (0, 4)
-    
+
     >>> find_word("this is a sentence", 3)
     (0, 4)
-    
+
     >>> find_word("this is a sentence", 4)
     (4, 1)
-    
+
     >>> find_word("this is a sentence", 5)
     (5, 2)
-    
+
     >>> find_word("  well   spaced      words  ", 17)
     (15, 6)
-    
+
     >>> find_word("  well   spaced      words  ", 13)
     (9, 6)
-    
+
     >>> find_word('"quoted"', 2)
     (1, 6)
-    
+
     >>> find_word("'quoted'", 2)
     (1, 6)
-    
+
     >>> find_word("<quoted>", 2)
     (1, 6)
-    
+
     >>> find_word("{quoted}", 2)
     (1, 6)
-    
+
     >>> find_word("[quoted]", 2)
     (1, 6)
-    
+
     >>> find_word("(quoted)", 2)
     (1, 6)
-    
+
     >>> find_word("quoted)", 2)
     (0, 6)
-    
+
     >>> find_word("(quoted", 2)
     (1, 6)
-    
+
     >>> find_word("unquoted", 2)
     (0, 8)
-    
+
     """
     result = [pos, 1]
     if pos < 0:
@@ -91,7 +90,8 @@ def find_word(text_utf8, pos):
         ustr = unicode(text_utf8, "utf-8", "ignore")
         len_ustr = len(ustr)
         if pos >= len_ustr:
-            raise ValueError("word-seeking callback expected offset to fall within range of characters")
+            raise ValueError("word-seeking callback expected offset to",
+                             "fall within range of characters")
         nonword_chars = str(string.whitespace)
         # an easy way to customize this is to add characters to
         # the string variable "nonword_chars", e.g. the following
@@ -99,7 +99,8 @@ def find_word(text_utf8, pos):
         #     nonword_chars = nonword_chars + '.'
         invert = False
         if ustr[pos] in nonword_chars:
-            # special case; when starting on non-word characters, look for all non-word characters
+            # special case; when starting on non-word characters, look for all
+            # non-word characters
             invert = True
         i = pos
         j = pos
@@ -121,18 +122,19 @@ def find_word(text_utf8, pos):
             j = len_ustr - 1
         result[0] = i
         result[1] = j - i + 1
-        # strip certain trailing punctuation marks to make word selections more sensible
-        if (result[1] > 0):
-            # WARNING: variable helpers are synchronized "as needed", not "always";
-            # be careful when adding new code to make sure the variables are
-            # actually up-to-date before depending on them
+        # strip certain trailing punctuation marks to make word selections more
+        # sensible
+        if result[1] > 0:
+            # WARNING: variable helpers are synchronized "as needed", not
+            # "always"; be careful when adding new code to make sure the
+            # variables are actually up-to-date before depending on them
             first = ustr[result[0]]
             last = ustr[result[0] + result[1] - 1]
             # strip basic punctuation off the end (this is repeated below)
             if (last == ".") or (last == ",") or (last == ";") or (last == ":"):
                 result[1] = result[1] - 1
                 last = ustr[result[0] + result[1] - 1] # synchronize variable
-            if (result[1] > 1):
+            if result[1] > 1:
                 open_paren_count = 0
                 close_paren_count = 0
                 double_quote_count = 0
@@ -141,27 +143,32 @@ def find_word(text_utf8, pos):
                 # behavior of treating a backquote like an open-quote, this
                 # algorithm assumes that "`" is a type of single quotation mark
                 for i in range(result[0], result[0] + result[1]):
-                    if ustr[i] == '"': double_quote_count = double_quote_count + 1
-                    elif ustr[i] == "'" or ustr[i] == "`": single_quote_count = single_quote_count + 1
-                    elif ustr[i] == "(": open_paren_count = open_paren_count + 1
-                    elif ustr[i] == ")": close_paren_count = close_paren_count + 1
-                # strip trailing punctuation as long as the word doesn't contain
-                # balanced brackets (e.g. keep "xyz()" but change "xyz)" to "xyz")
+                    if ustr[i] == '"':
+                        double_quote_count = double_quote_count + 1
+                    elif ustr[i] == "'" or ustr[i] == "`":
+                        single_quote_count = single_quote_count + 1
+                    elif ustr[i] == "(":
+                        open_paren_count = open_paren_count + 1
+                    elif ustr[i] == ")":
+                        close_paren_count = close_paren_count + 1
+                # strip trailing punctuation as long as the word doesn't
+                # contain balanced brackets (e.g. keep "xyz()" but change
+                # "xyz)" to "xyz")
                 tail_ok = False
                 while not tail_ok and result[1] > 0:
-                    if (last == ")"):
-                        if (close_paren_count > open_paren_count):
+                    if last == ")":
+                        if close_paren_count > open_paren_count:
                             close_paren_count = close_paren_count - 1
                             result[1] = result[1] - 1
                         else:
                             tail_ok = True
-                    elif (last == '"'):
+                    elif last == '"':
                         if (double_quote_count % 2) != 0:
                             double_quote_count = double_quote_count - 1
                             result[1] = result[1] - 1
                         else:
                             tail_ok = True
-                    elif (last == "'" or last == "`"):
+                    elif last == "'" or last == "`":
                         if (single_quote_count % 2) != 0:
                             single_quote_count = single_quote_count - 1
                             result[1] = result[1] - 1
@@ -169,26 +176,26 @@ def find_word(text_utf8, pos):
                             tail_ok = True
                     else:
                         tail_ok = True
-                    last = ustr[result[0] + result[1] - 1] # synchronize variable
+                    last = ustr[result[0] + result[1] - 1] # sync. variable
                 # strip leading punctuation as long as the word doesn't contain
-                # balanced brackets (e.g. keep "(xyz)" but change "(xyz" to "xyz")
+                # balanced brackets (e.g. keep "(xyz)", change "(xyz" to "xyz")
                 head_ok = False
                 while not head_ok and result[1] > 0:
-                    if (first == "("):
-                        if (open_paren_count > close_paren_count):
+                    if first == "(":
+                        if open_paren_count > close_paren_count:
                             open_paren_count = open_paren_count - 1
                             result[0] = result[0] + 1
                             result[1] = result[1] - 1
                         else:
                             head_ok = True
-                    elif (first == '"'):
+                    elif first == '"':
                         if (double_quote_count % 2) != 0:
                             double_quote_count = double_quote_count - 1
                             result[0] = result[0] + 1
                             result[1] = result[1] - 1
                         else:
                             head_ok = True
-                    elif (first == "'" or first == "`"):
+                    elif first == "'" or first == "`":
                         if (single_quote_count % 2) != 0:
                             single_quote_count = single_quote_count - 1
                             result[0] = result[0] + 1
@@ -198,13 +205,13 @@ def find_word(text_utf8, pos):
                     else:
                         head_ok = True
                     first = ustr[result[0]] # synchronize variable
-                    last = ustr[result[0] + result[1] - 1] # synchronize variable
+                    last = ustr[result[0] + result[1] - 1] # sync. variable
             # repeat this rule, as punctuation sometimes appears inside brackets
             if (last == ".") or (last == ",") or (last == ";") or (last == ":"):
                 result[1] = result[1] - 1
                 last = ustr[result[0] + result[1] - 1] # synchronize variable
         # strip any brackets that appear balanced at both ends
-        if (result[1] > 1):
+        if result[1] > 1:
             first = ustr[result[0]]
             last = ustr[result[0] + result[1] - 1]
             end_caps_ok = False
@@ -221,52 +228,58 @@ def find_word(text_utf8, pos):
                     result[0] = result[0] + 1
                     result[1] = result[1] - 2
                     first = ustr[result[0]] # synchronize variable
-                    last = ustr[result[0] + result[1] - 1] # synchronize variable
+                    last = ustr[result[0] + result[1] - 1] # sync. variable
                 else:
                     end_caps_ok = True
-    except Exception as e:
-        print("warning, exception while trying to find words:", e)
+    except Exception as _:
+        print("warning, exception while trying to find words:", _)
     return (result[0], result[1])
 
 def get_dumb_rendering(ord_unicode_16):
     """get_dumb_rendering(char_utf16) -> text_utf8
-    
+
     Return the string that dumb terminals should use to
     render the specified character.  The idea is for EVERY
     character to have a visible representation, whereas
     with normal terminals many invisible characters have
     special meaning.
-    
+
     (Below are REAL testcases run by doctest!)
-    
+
     >>> get_dumb_rendering(0)
     '^@'
-    
+
     >>> get_dumb_rendering(13)
     '^M'
-    
+
     >>> get_dumb_rendering(27)
     '<ESC>'
-    
+
     >>> get_dumb_rendering(97)
     'a'
-    
+
     """
     result = '<?>' # must use UTF-8 encoding
     if ord_unicode_16 < 128:
         as_ascii = ord_unicode_16
-        if as_ascii == 27: result = '<ESC>'
+        if as_ascii == 27:
+            result = '<ESC>'
         # a "proper" control symbol is preferred, but MacTerm cannot render
         # higher Unicode characters just yet...
-        #elif as_ascii < ord(' '): result = '⌃%c' % chr(ord('@') + as_ascii)
-        elif as_ascii < ord(' '): result = '^%c' % chr(ord('@') + as_ascii)
-        elif (chr(as_ascii) in string.printable): result = chr(as_ascii)
+        #elif as_ascii < ord(' '):
+        #    result = '⌃%c' % chr(ord('@') + as_ascii)
+        elif as_ascii < ord(' '):
+            result = '^%c' % chr(ord('@') + as_ascii)
+        elif chr(as_ascii) in string.printable:
+            result = chr(as_ascii)
         else: result = '<%i>' % as_ascii
     else:
         result = '<u%i>' % ord_unicode_16
     return result
 
 def _test():
+    """Runs all of this module's "doctest" test cases.
+    """
     import doctest
     import pymacterm.term.text
     return doctest.testmod(pymacterm.term.text)

@@ -16,15 +16,13 @@ __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '1 January 2008'
 __version__ = '4.0.0'
 
-import sys
-
 import pymacterm.file.kvp
 # note: Quills is a compiled module, library path must be set properly
 import quills
 
 def macros(pathname):
     """macros(pathname) -> None
-    
+
     Load macros from the given ".macros" file, by parsing the
     file and assuming that the first up to 12 keys have values
     representing strings to be sent.  (This is a limitation of
@@ -34,17 +32,17 @@ def macros(pathname):
     Raise KeyError if the file is successfully parsed but it has
     no keys that apparently represent macros (macro key names
     should look like "f1", "f2", ... or "m0", "m1", ...).
-    
+
     WARNING: This routine is incomplete, as the Quills API has
     not advanced far enough to make use of all of the settings
     that could exist in a ".macros" file.
-    
+
     TEMPORARY: This should probably be separated into a
     routine that converts macros files into Quills.Prefs
     objects, and a routine that is a file-open handler that
     actually enables those macro preferences.  Right now, this
     is doing both.
-    
+
     """
     with open(pathname, 'rU') as mfile:
         parser = pymacterm.file.kvp.Parser(file_object=mfile)
@@ -56,33 +54,35 @@ def macros(pathname):
             second_part = key.replace(first_part, "")
             number = int(second_part)
             # need a one-based index, files normally start with 0 (except F1...)
-            if first_part != "f" and first_part != "F": number += 1
-            macro_set.define_macro(number, name="Macro %i" % number, contents=data)
+            if first_part != "f" and first_part != "F":
+                number += 1
+            macro_set.define_macro(number, name="Macro %i" % number,
+                                   contents=data)
         quills.Prefs.set_current_macros(macro_set)
 
 def prefs(pathname):
     """prefs(pathname) -> None
-    
+
     Synchronously import preferences from the given XML file
     and automatically generate a unique name if necessary.
     Raise an exception on failure.
-    
+
     """
     quills.Prefs.import_from_file(pathname, allow_rename=True)
 
 def script(pathname):
     """script(pathname) -> None
-    
+
     Asynchronously open a session from the given script file, by
     running the script!  Raise an exception on failure.
-    
+
     """
     args = [pathname]
-    session = quills.Session(args)
+    ignored_session = quills.Session(args)
 
 def session(pathname):
     """session(pathname) -> None
-    
+
     Asynchronously open a session from the given ".session" file,
     by parsing the file for command information, and trying to
     use other information from the file to configure the session
@@ -90,22 +90,24 @@ def session(pathname):
     Raise SyntaxError if the file is not formatted properly.
     Raise KeyError if the file is successfully parsed but it has
     no command information.
-    
+
     WARNING: This routine is incomplete, as the Quills API has
     not advanced far enough to make use of all of the settings
     that could exist in a ".session" file.
-    
+
     """
-    with open(pathname, 'rU') as file:
-        parser = pymacterm.file.kvp.Parser(file_object=sfile)
+    with open(pathname, 'rU') as ifh:
+        parser = pymacterm.file.kvp.Parser(file_object=ifh)
         defs = parser.results()
         if 'command' in defs:
             args = defs['command'].split()
-            session = quills.Session(args)
+            ignored_session = quills.Session(args)
         else:
             raise KeyError('no "command" was found in the file')
 
 def _test():
+    """Runs all of this module's "doctest" test cases.
+    """
     import doctest
     import pymacterm.file.open
     return doctest.testmod(pymacterm.file.open)
