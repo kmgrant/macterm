@@ -28,21 +28,22 @@ if __name__ == "__main__":
     import os
     import string
     import datetime
-    
+
     try:
         from quills import Base, Events, Prefs, Session, Terminal
     except ImportError as err:
         import sys
         print("Unable to import Quills.", file=sys.stderr)
         if "DYLD_LIBRARY_PATH" in os.environ:
-            print("Shared library path:", os.environ["DYLD_LIBRARY_PATH"], file=sys.stderr)
+            print("Shared library path:", os.environ["DYLD_LIBRARY_PATH"],
+                  file=sys.stderr)
         print("Python path:", sys.path, file=sys.stderr)
         raise err
     import pymacterm.file.open
     import pymacterm.term.text
     import pymacterm.url.open
-    import pymacterm.utilities
-    
+    from pymacterm.utilities import command_data as command_data
+
     # undo environment settings made by the "MacTerm" script, so as not
     # to pollute the user environment too much
     for removed_var in (
@@ -58,14 +59,18 @@ if __name__ == "__main__":
     ):
         if removed_var in os.environ:
             del os.environ[removed_var]
-    
+
     # Define default symbols for ALL possible user customizations.  This
     # may also be a useful reference for customizers, because it shows a
     # valid (if uninteresting) implementation of each function, including
     # any parameters or return values.
     def app_will_finish():
+        """Default symbol for user customization (does nothing).
+        """
         pass
     def initial_workspace():
+        """Default symbol for user customization (does nothing).
+        """
         return ""
     # User-Defined Customizations Module "customize_macterm"
     #
@@ -136,105 +141,111 @@ if __name__ == "__main__":
     #
     # --------------------------------------------------------------------------
     if "MACTERM_SKIP_CUSTOM_LIBS" in os.environ:
-        print("MacTerm: ignoring any 'customize_macterm' module (environment setting)")
+        print("MacTerm: ignoring any 'customize_macterm' module",
+              "(environment setting)")
     else:
         try:
-            # try to import using the obsolete name, and emit a console warning if it exists
+            # try to import using the obsolete name, and emit a console warning
+            # if it exists
             import customize_mactelnet
-            print("MacTerm: warning, 'customize_mactelnet' legacy module will be ignored; rename it to 'customize_macterm'")
+            print("MacTerm: warning, 'customize_mactelnet' legacy module",
+                  "will be ignored; rename it to 'customize_macterm'")
         except ImportError as err:
             pass
         try:
             import customize_macterm
-            user_syms = dir(customize_macterm)
-            if '__file__' in user_syms:
-                print("MacTerm: imported 'customize_macterm' module from", customize_macterm.__file__) # could be a list
+            USER_SYMS = dir(customize_macterm)
+            if '__file__' in USER_SYMS:
+                print("MacTerm: imported 'customize_macterm' module from",
+                      customize_macterm.__file__) # could be a list
             else:
                 print("MacTerm: imported 'customize_macterm' module")
             # look for valid user overrides (EVERYTHING used here should be
             # documented above and initialized at the beginning)
-            print("MacTerm: module contains:", user_syms)
-            if 'app_will_finish' in user_syms:
+            print("MacTerm: module contains:", USER_SYMS)
+            if 'app_will_finish' in USER_SYMS:
                 print("MacTerm: employing user customization 'app_will_finish'")
                 app_will_finish = customize_macterm.app_will_finish
-            if 'initial_workspace' in user_syms:
-                print("MacTerm: employing user customization 'initial_workspace'")
+            if 'initial_workspace' in USER_SYMS:
+                print("MacTerm: employing user customization",
+                      "'initial_workspace'")
                 initial_workspace = customize_macterm.initial_workspace
         except ImportError as err:
             # assume the module was never created, and ignore (nothing is
             # printed as an error in this case because the overwhelming
             # majority of users are not expected to ever create this module)
             pass
-    
+
     # if you intend to use your own GUI elements with "wx", you need to
     # import and construct the application object at this point (that is,
     # before Quills is initialized); this allows your callbacks to pop up
     # simple interfaces, such as wx.MessageDialog(), within MacTerm!
     #import wx
     #app = wx.PySimpleApp()
-    
+
     # below are examples of things you might want to enable for debugging...
-    
+
     # memory allocation changes - see "man malloc" for more options here
     #os.environ['MallocGuardEdges'] = '1'
     #os.environ['MallocScribble'] = '1'
-    
+
     # debugging of Carbon Events
     #os.environ['EventDebug'] = '1'
-    
+
     # preamble
-    now = datetime.datetime.now()
-    print("MacTerm: %s" % now.strftime("%A, %B %d, %Y, %I:%M %p"))
-    
+    NOW_DT = datetime.datetime.now()
+    print("MacTerm: %s" % NOW_DT.strftime("%A, %B %d, %Y, %I:%M %p"))
+
     # load all required MacTerm modules
     Base.all_init(initial_workspace=initial_workspace())
-    
+
     # banner
-    print("MacTerm: Base initialization complete.  This is version %s." % Base.version())
-    
+    print("MacTerm: Base initialization complete.  This is version %s." %
+          Base.version())
+
     # if the current version is very old, warn the user
     try:
-        parts = str(Base.version()).split(".")
-        if len(parts) > 4:
-            build = parts[4] # formatted as 8 digits and YYYYMMDD, e.g. 20110610
-            latest_yyyymmdd = now.strftime("%Y%m%d") # also 8 digits and YYYYMMDD
-            if (len(latest_yyyymmdd) == 8) and (len(build) == 8):
-                year_now = int(latest_yyyymmdd[0:4])
-                year_build = int(build[0:4])
-                old = False
+        PARTS = str(Base.version()).split(".")
+        if len(PARTS) > 4:
+            BUILD_NUMBER = PARTS[4] # 8 digits and YYYYMMDD, e.g. 20110610
+            LATEST_YYYYMMDD = NOW_DT.strftime("%Y%m%d") # 8 digits and YYYYMMDD
+            if (len(LATEST_YYYYMMDD) == 8) and (len(BUILD_NUMBER) == 8):
+                YEAR_NOW = int(LATEST_YYYYMMDD[0:4])
+                YEAR_BUILD = int(BUILD_NUMBER[0:4])
+                OUT_OF_DATE = False
                 # arbitrary; releases more than this many months old
                 # are considered out-of-date
-                months_for_old = 2
-                if 1 == (year_now - year_build):
+                MONTHS_FOR_OLD = 2
+                if 1 == (YEAR_NOW - YEAR_BUILD):
                     # when the years are different but it's just the
                     # previous year, the releases might still be close
                     # (e.g. December versus January); so check months,
                     # subtracting 12 from the older one so that it is
                     # always considered less
-                    month_now = int(latest_yyyymmdd[4:6])
-                    month_build = int(build[4:6]) - 12
-                    diff = int(month_now) - int(month_build)
-                    old = (diff > months_for_old)
-                elif (year_now - year_build) > 1:
+                    MONTH_NOW = int(LATEST_YYYYMMDD[4:6])
+                    MONTH_BUILD = int(BUILD_NUMBER[4:6]) - 12
+                    MONTH_DIFF = int(MONTH_NOW) - int(MONTH_BUILD)
+                    OUT_OF_DATE = (MONTH_DIFF > MONTHS_FOR_OLD)
+                elif (YEAR_NOW - YEAR_BUILD) > 1:
                     # over a year, definitely old
-                    old = True
+                    OUT_OF_DATE = True
                 else:
                     # builds are same year, do a diff of months
-                    month_now = int(latest_yyyymmdd[4:6])
-                    month_build = int(build[4:6])
-                    diff = int(month_now) - int(month_build)
-                    old = (diff > months_for_old)
-                if old:
+                    MONTH_NOW = int(LATEST_YYYYMMDD[4:6])
+                    MONTH_BUILD = int(BUILD_NUMBER[4:6])
+                    MONTH_DIFF = int(MONTH_NOW) - int(MONTH_BUILD)
+                    OUT_OF_DATE = (MONTH_DIFF > MONTHS_FOR_OLD)
+                if OUT_OF_DATE:
                     Base._version_warning()
-    except Exception as e:
-        print("exception in version check", e)
-    
+    except Exception as _:
+        print("exception in version check", _)
+
     # optionally invoke some unit tests
-    do_testing = ("MACTERM_RUN_TESTS" in os.environ)
-    if do_testing:
+    DO_TESTING = ("MACTERM_RUN_TESTS" in os.environ)
+    if DO_TESTING:
         import pymacterm
         pymacterm.run_all_tests()
-    
+
     # register MacTerm features that are actually implemented in Python!
     Session.on_urlopen_call(pymacterm.url.open.file, 'file')
     Session.on_urlopen_call(pymacterm.url.open.ftp, 'ftp')
@@ -254,22 +265,26 @@ if __name__ == "__main__":
     Session.on_fileopen_call(pymacterm.file.open.script, 'tool')
     Session.on_fileopen_call(pymacterm.file.open.prefs, 'xml')
     Session.on_fileopen_call(pymacterm.file.open.script, 'zsh')
-    
-    # arrange to have "lsof" invoked for one or more process IDs
-    # whenever MacTerm needs to find their current working directories;
-    # returns a map from process ID integers to directory path strings
+
     def pids_cwds(pids_tuple):
-        # run 'lsof' to find the current working directories of given processes
-        # (if you need many, give them all at once so the data can be found in
-        # a single invocation; individual lookups will be much slower)
+        """A callback, invoked by MacTerm, whenever the current working
+        directories for a given list of process IDs is needed.  This responds by
+        running "lsof".  Returns a map from process ID integers to directory
+        path strings.
+        """
         result = dict()
         if len(pids_tuple) > 0:
+            # run 'lsof' to find the current working directories of given
+            # processes (if you need many, give them all at once so the data can
+            # be found in a single invocation; individual lookups will be much
+            # slower)
             cmd = ['/usr/sbin/lsof', '-a', '-d', 'cwd', '-Fn']
             for pid in pids_tuple:
                 cmd.extend(('-p', str(pid)))
-            # allow nonzero exits; if a list of process IDs is given and ANY of them
-            # doesn't return something, the others might still return valid data
-            all_output = pymacterm.utilities.command_data(cmd, allow_nonzero_exit=True)
+            # allow nonzero exits; if a list of process IDs is given and ANY of
+            # them doesn't return something, the others might still return
+            # valid data
+            all_output = command_data(cmd, allow_nonzero_exit=True)
             if all_output is not None:
                 # each line of output has a single letter type prefix; the
                 # first should be a line with, e.g. "p12345" (process ID);
@@ -287,49 +302,54 @@ if __name__ == "__main__":
                             pid = None
         return result
     Session._on_seekpidscwds_call(pids_cwds)
-    
+
     # if desired, override what string is sent after keep-alive timers expire
     #Session.set_keep_alive_transmission(".")
-    
+
     try:
         Terminal.on_seekword_call(pymacterm.term.text.find_word)
-    except Exception as e:
-        print("warning, exception while trying to register word finder for double clicks:", e)
-    
+    except Exception as _:
+        print("warning, exception while trying to register word finder for",
+              "double clicks:", _)
+
     for i in range(0, 256):
         try:
-            Terminal.set_dumb_string_for_char(i, pymacterm.term.text.get_dumb_rendering(i))
-        except Exception as e:
-            print("warning, exception while setting character code %i:" % i, e)
-            pass
-    
+            rendering = pymacterm.term.text.get_dumb_rendering(i)
+            Terminal.set_dumb_string_for_char(i, rendering)
+        except Exception as _:
+            print("warning, exception while setting character code %i:" % i, _)
+
     # banner
     print("MacTerm: Full initialization complete.")
-    
+
     # (if desired, insert code at this point to interact with MacTerm)
-    
+
     # if you want to find out when new sessions are created, you can
     # define a Python function and simply register it...
     #def my_py_func():
     #    print("\n\nI was called by MacTerm!\n\n")
     #Session.on_new_call(my_py_func)
-    
+
     # the following line would run a command every time you start up...
     #session_1 = Session("progname -arg1 -arg2 -arg3 val3 -arg4 val4".split())
-    
+
     # the following would define some custom macros immediately...
     #my_set = Prefs(Prefs.MACRO_SET)
     #my_set.define_macro(1, name="my first macro!", contents="some text")
-    #my_set.define_macro(2, name="my second macro!", contents="yet another macro")
-    #my_set.define_macro(3, name="my third macro!", contents="this is different")
+    #my_set.define_macro(2, name="my second macro!", contents="another macro")
+    #my_set.define_macro(3, name="my third macro!", contents="different")
     #Prefs.set_current_macros(my_set)
-    
+
     def terminate():
+        """Default on_endloop_call() implementation; calls the app_will_finish()
+        hook and then calls Base.all_done() to tear down MacTerm.
+        """
         app_will_finish()
         Base.all_done()
-    
+
     Events.on_endloop_call(terminate)
-    
-    # start user interaction (WARNING: will not return, but calls the endloop callback when finished)
+
+    # start user interaction (WARNING: will not return, but calls the endloop
+    # callback when finished)
     Events.run_loop()
-    # IMPORTANT: anything beyond this point will NEVER RUN; use callbacks instead
+    # IMPORTANT: anything beyond this will NEVER RUN; use callbacks instead
