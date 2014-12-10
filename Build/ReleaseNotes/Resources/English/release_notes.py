@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20141210',
     '20141029',
     '20141028',
     '20141026',
@@ -510,6 +511,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20141210': [
+        'The default setup for terminals now specifies exactly the same control-key mappings as the Apple Terminal.  This does not change very much (primarily the status character, control-T) but it may affect the behavior of applications in the terminal.',
+    ],
     '20141029': [
         "Fixed system Full Screen mode to explicitly ignore Apple's standard Escape key mapping (that way, applications such as text editors that give special meaning to Escape will continue to behave as expected instead of causing Full Screen to end).",
     ],

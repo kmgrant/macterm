@@ -1412,23 +1412,23 @@ fillInTerminalControlStructure	(struct termios*	outTerminalControlPtr)
 	// set to the default values, except maybe what is
 	// overridden by the user’s preferences.
 	controlCharacterArray[VEOF] = CEOF;
-	controlCharacterArray[VEOL] = STATIC_CAST(255, cc_t);
-	controlCharacterArray[VEOL2] = STATIC_CAST(255, cc_t);
-	controlCharacterArray[VERASE] = STATIC_CAST(127/* del */, cc_t);
+	controlCharacterArray[VEOL] = CEOL;
+	controlCharacterArray[VEOL2] = CEOL;
+	controlCharacterArray[VERASE] = CERASE;
 	controlCharacterArray[VWERASE] = CWERASE;
 	controlCharacterArray[VKILL] = CKILL;
 	controlCharacterArray[VREPRINT] = CREPRINT;
-	controlCharacterArray[VINTR] = 'C' - '@'; // TEMPORARY - should set from MacTerm preferences
+	controlCharacterArray[VINTR] = CINTR; // TEMPORARY - should set from MacTerm preferences
 	controlCharacterArray[VQUIT] = CQUIT;
 	controlCharacterArray[VSUSP] = CSUSP;
 	controlCharacterArray[VDSUSP] = CDSUSP;
-	controlCharacterArray[VSTART] = 'Q' - '@'; // TEMPORARY - should set from MacTerm preferences
-	controlCharacterArray[VSTOP] = 'S' - '@'; // TEMPORARY - should set from MacTerm preferences
+	controlCharacterArray[VSTART] = CSTART; // TEMPORARY - should set from MacTerm preferences
+	controlCharacterArray[VSTOP] = CSTOP; // TEMPORARY - should set from MacTerm preferences
 	controlCharacterArray[VLNEXT] = CLNEXT;
 	controlCharacterArray[VDISCARD] = CDISCARD;
 	controlCharacterArray[VMIN] = CMIN;
 	controlCharacterArray[VTIME] = CTIME;
-	controlCharacterArray[VSTATUS] = STATIC_CAST(255, cc_t);
+	controlCharacterArray[VSTATUS] = CSTATUS;
 	
 	// It’s hard to say what to put here...MacTerm is not a
 	// modem!  Oh well, 9600 baud is what Terminal.app uses...
