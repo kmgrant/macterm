@@ -416,6 +416,9 @@ void
 	Session_DisplayWindowRenameUI			(SessionRef							inRef);
 
 Boolean
+	Session_IsInPasswordMode				(SessionRef							inRef);
+
+Boolean
 	Session_IsReadOnly						(SessionRef							inRef);
 
 Session_Result

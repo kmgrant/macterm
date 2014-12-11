@@ -1677,6 +1677,29 @@ Session_GetWindowUserDefinedTitle	(SessionRef		inRef,
 
 
 /*!
+Returns true only if the terminal device associated with the
+main process of the session has currently disabled echoing
+(typically done by programs that are displaying a password
+prompt).
+
+(4.1)
+*/
+Boolean
+Session_IsInPasswordMode		(SessionRef		inRef)
+{
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = false;
+	
+	
+	if ((nullptr != ptr) && (nullptr != ptr->mainProcess))
+	{
+		result = Local_ProcessIsInPasswordMode(ptr->mainProcess);
+	}
+	return result;
+}// IsInPasswordMode
+
+
+/*!
 Returns "true" only if the specified session is not
 allowing user input.
 

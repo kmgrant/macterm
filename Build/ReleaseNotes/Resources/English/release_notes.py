@@ -512,6 +512,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20141210': [
+        'Terminal view cursor shape now includes a solid disk while in line-input mode (for example, when remote log-in programs ask for a password).',
         'The default setup for terminals now specifies exactly the same control-key mappings as the Apple Terminal.  This does not change very much (primarily the status character, control-T) but it may affect the behavior of applications in the terminal.',
     ],
     '20141029': [

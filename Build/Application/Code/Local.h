@@ -120,6 +120,9 @@ void
 	Local_KillProcess						(Local_ProcessRef*			inoutRefPtr);
 
 Boolean
+	Local_ProcessIsInPasswordMode			(Local_ProcessRef			inProcess);
+
+Boolean
 	Local_ProcessIsStopped					(Local_ProcessRef			inProcess);
 
 CFArrayRef

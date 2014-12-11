@@ -337,7 +337,7 @@ struct My_TerminalView
 		
 		struct
 		{
-			RgnHandle			boundsAsRegion;	// redundant precalculation of "bounds" as a region, for rendering
+			RgnHandle			boundsAsRegion;	// update region for cursor (may or may not correspond to "bounds")
 			Rect				bounds;			// the rectangle of the cursor’s visible region, relative to the content pane!!!
 			Rect				ghostBounds;	// the exact view-relative rectangle of a dragged cursor’s outline region
 			MyCursorState		currentState;	// whether the cursor is visible
@@ -10486,6 +10486,39 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 												? viewPtr->animation.cursor.blinkAlpha
 												: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
 						CGContextFillRect(drawingContext, cursorFloatBounds);
+						
+						// if the terminal is currently in password mode, annotate the cursor
+						if (Terminal_IsInPasswordMode(viewPtr->screen.ref))
+						{
+							CGFloat const	newHeight = viewPtr->text.font.heightPerCharacter; // TEMPORARY; does not handle double-height lines (probably does not need to)
+							CGFloat			dotDimensions = ceil(STATIC_CAST(viewPtr->text.font.heightPerCharacter, CGFloat) * 0.33/* arbitrary */);
+							CGRect			fullRectangleBounds = cursorFloatBounds;
+							CGRect			dotBounds = CGRectMake(0, 0, dotDimensions, dotDimensions); // arbitrary
+							
+							
+							// the cursor may not be block-size so convert to a block rectangle
+							// before determining the placement of the oval inset
+							fullRectangleBounds.origin.y = fullRectangleBounds.origin.y + fullRectangleBounds.size.height - newHeight;
+							fullRectangleBounds.size.width = viewPtr->text.font.widthPerCharacter;
+							fullRectangleBounds.size.height = newHeight;
+							RegionUtilities_CenterHIRectIn(dotBounds, fullRectangleBounds);
+							--dotBounds.origin.x; // TEMPORARY: figure out why this correction seems necessary
+							
+							// draw the dot in the middle of the cell that the cursor occupies
+							if (kTerminalView_CursorTypeBlock == gPreferenceProxies.cursorType)
+							{
+								// since the disk will not be visible with a full block shape, first
+								// restore original attributes (that way the disk appears in the
+								// color of the background, not the color of the cursor)
+								cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
+								useTerminalTextColors(viewPtr, drawingContext, cursorAttributes,
+														true/* is cursor */,
+														cursorBlinks(viewPtr)
+														? viewPtr->animation.cursor.blinkAlpha
+														: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
+							}
+							CGContextFillEllipseInRect(drawingContext, dotBounds);
+						}
 					}
 					
 					// kTerminalView_ContentPartCursorGhost
@@ -12304,6 +12337,7 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	Point						characterSizeInPixels; // based on font metrics
 	Rect						rowBounds;
+	Rect						maximumCursorBounds;
 	UInt16						thickness = 0; // used for non-block-shaped cursors
 	TerminalView_CursorType		terminalCursorType = inTerminalCursorType;
 	
@@ -12321,6 +12355,11 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	outBoundsPtr->left = inX * characterSizeInPixels.h;
 	outBoundsPtr->top = rowBounds.top;
+	
+	maximumCursorBounds.left = outBoundsPtr->left;
+	maximumCursorBounds.top = rowBounds.top;
+	maximumCursorBounds.bottom = maximumCursorBounds.top + characterSizeInPixels.v;
+	maximumCursorBounds.right = maximumCursorBounds.left + characterSizeInPixels.h;
 	
 	switch (terminalCursorType)
 	{
@@ -12352,7 +12391,7 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	if (nullptr != inoutBoundsRegionOrNull)
 	{
-		RectRgn(inoutBoundsRegionOrNull, outBoundsPtr);
+		RectRgn(inoutBoundsRegionOrNull, &maximumCursorBounds);
 	}
 }// setUpCursorBounds
 
@@ -13989,14 +14028,53 @@ drawRect:(NSRect)	aRect
 			
 			
 			// flip colors and paint at the current blink alpha value
-			if (cursorAttributes & kTerminalTextAttributeInverseVideo) cursorAttributes &= ~kTerminalTextAttributeInverseVideo;
-			else cursorAttributes |= kTerminalTextAttributeInverseVideo;
+			if (cursorAttributes & kTerminalTextAttributeInverseVideo)
+			{
+				cursorAttributes &= ~kTerminalTextAttributeInverseVideo;
+			}
+			else
+			{
+				cursorAttributes |= kTerminalTextAttributeInverseVideo;
+			}
 			useTerminalTextColors(viewPtr, drawingContext, cursorAttributes,
 									true/* is cursor */,
 									cursorBlinks(viewPtr)
 									? viewPtr->animation.cursor.blinkAlpha
 									: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
 			CGContextFillRect(drawingContext, cursorFloatBounds);
+			
+			// if the terminal is currently in password mode, annotate the cursor
+			if (Terminal_IsInPasswordMode(viewPtr->screen.ref))
+			{
+				CGFloat const	newHeight = viewPtr->text.font.heightPerCharacter; // TEMPORARY; does not handle double-height lines (probably does not need to)
+				CGFloat			dotDimensions = ceil(STATIC_CAST(viewPtr->text.font.heightPerCharacter, CGFloat) * 0.33/* arbitrary */);
+				CGRect			fullRectangleBounds = cursorFloatBounds;
+				CGRect			dotBounds = CGRectMake(0, 0, dotDimensions, dotDimensions); // arbitrary
+				
+				
+				// the cursor may not be block-size so convert to a block rectangle
+				// before determining the placement of the oval inset
+				fullRectangleBounds.origin.y = fullRectangleBounds.origin.y + fullRectangleBounds.size.height - newHeight;
+				fullRectangleBounds.size.width = viewPtr->text.font.widthPerCharacter;
+				fullRectangleBounds.size.height = newHeight;
+				RegionUtilities_CenterHIRectIn(dotBounds, fullRectangleBounds);
+				--dotBounds.origin.x; // TEMPORARY: figure out why this correction seems necessary
+				
+				// draw the dot in the middle of the cell that the cursor occupies
+				if (kTerminalView_CursorTypeBlock == gPreferenceProxies.cursorType)
+				{
+					// since the disk will not be visible with a full block shape, first
+					// restore original attributes (that way the disk appears in the
+					// color of the background, not the color of the cursor)
+					cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
+					useTerminalTextColors(viewPtr, drawingContext, cursorAttributes,
+											true/* is cursor */,
+											cursorBlinks(viewPtr)
+											? viewPtr->animation.cursor.blinkAlpha
+											: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
+				}
+				CGContextFillEllipseInRect(drawingContext, dotBounds);
+			}
 		}
 		
 		if (kMyCursorStateVisible == viewPtr->screen.cursor.ghostState)

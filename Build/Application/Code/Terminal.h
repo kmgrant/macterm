@@ -524,6 +524,9 @@ Terminal_Result
 											 Emulation_FullType			inEmulator);
 
 Boolean
+	Terminal_IsInPasswordMode				(TerminalScreenRef			inScreen);
+
+Boolean
 	Terminal_LEDIsOn						(TerminalScreenRef			inScreen,
 											 SInt16						inOneBasedLEDNumber);
 

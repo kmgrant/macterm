@@ -376,6 +376,34 @@ Local_KillProcess	(Local_ProcessRef*	inoutRefPtr)
 
 
 /*!
+Returns true only if the terminal associated with the specified
+process is apparently waiting for password input.  This can be
+used to give the user some kind of special feedback, such as a
+different terminal cursor.
+
+(4.1)
+*/
+Boolean
+Local_ProcessIsInPasswordMode	(Local_ProcessRef	inProcess)
+{
+	My_ProcessAutoLocker	ptr(gProcessPtrLocks(), inProcess);
+	struct termios			terminalInfo;
+	int						callStatus = 0;
+	Boolean					result = false;
+	
+	
+	callStatus = tcgetattr(ptr->_pseudoTerminal, &terminalInfo);
+	if (0 == callStatus)
+	{
+		// TEMPORARY; might need to check additional state here to avoid false positives
+		result = (0 != (terminalInfo.c_lflag & ICANON));
+	}
+	
+	return result;
+}// ProcessIsInPasswordMode
+
+
+/*!
 Returns true only if the specified process is currently
 stopped, as determined by this module’s periodic checks.
 

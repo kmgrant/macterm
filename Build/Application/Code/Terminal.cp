@@ -1197,6 +1197,7 @@ public:
 	
 	My_LEDBits							litLEDs;					//!< highlighted states of terminal LEDs (lights)
 	
+	Boolean								passwordMode;				//!< when last checked, terminal device of process was not echoing (password prompt)
 	Boolean								mayNeedToSaveToScrollback;	//!< if true, the cursor has moved to the home position, and therefore
 																	//!  a subsequent attempt to erase to the end of the line or screen
 																	//!  should cause the data to be copied to the scrollback first (that is,
@@ -4018,6 +4019,31 @@ Terminal_GetLineRange	(TerminalScreenRef			inScreen,
 
 
 /*!
+Returns true only if the most recent check of the raw
+terminal device showed that it was not echoing (e.g.
+to display a password prompt).
+
+This is currently checked every time the cursor moves
+to a different line.
+
+(4.1)
+*/
+Boolean
+Terminal_IsInPasswordMode	(TerminalScreenRef		inRef)
+{
+	Boolean						result = false;
+	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
+	
+	
+	if (nullptr != dataPtr)
+	{
+		result = dataPtr->passwordMode;
+	}
+	return result;
+}// IsInPasswordMode
+
+
+/*!
 Returns "true" only if the LED with the specified
 number is currently on.  The meaning of an LED with
 a specific number is left to the caller.
@@ -6573,6 +6599,7 @@ visibleBoundary(0, 0, returnScreenColumns(inTerminalConfig) - 1, returnScreenRow
 customScrollingRegion(0, 0), // reset below...
 // text elements - not initialized
 litLEDs(kMy_LEDBitsAllOff),
+passwordMode(false),
 mayNeedToSaveToScrollback(false),
 saveToScrollbackOnClear(true),
 reportOnlyOnRequest(false),
@@ -16218,6 +16245,21 @@ moveCursorX		(My_ScreenBufferPtr		inDataPtr,
 {
 	if (0 == (inDataPtr->printingModes & kMy_PrintingModePrintController))
 	{
+		// arbitrarily check the state of password mode whenever the cursor
+		// moves to a different column (TEMPORARY; may need a more intelligent
+		// way to check this, such as a periodic timer?)
+		{
+			Boolean		currentPasswordMode = Session_IsInPasswordMode(inDataPtr->listeningSession);
+			
+			
+			if (currentPasswordMode != inDataPtr->passwordMode)
+			{
+				inDataPtr->passwordMode = currentPasswordMode;
+				// do not notify; change-location notification occurs below
+				//changeNotifyForTerminal(inDataPtr, kTerminal_ChangeCursorState, inDataPtr->selfRef);
+			}
+		}
+		
 		if ((inDataPtr->mayNeedToSaveToScrollback) && (inNewX != 0))
 		{
 			// once the cursor leaves the home position, there is no
