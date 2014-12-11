@@ -111,6 +111,7 @@ PY_CONFIG := $(BUILD_CONF)
 
 SRC_APP_PROJ_TOP := $(MAKEFILE_DIR)/Application
 SRC_BUGREPORTER_PROJ_TOP := $(MAKEFILE_DIR)/BugReporter
+SRC_CALLPYCLIENT_PROJ_TOP := $(MAKEFILE_DIR)/CallPythonClient
 SRC_PREFSCONVERTER_PROJ_TOP := $(MAKEFILE_DIR)/PrefsConverter
 
 SRC_APP_CODE_TOP := $(SRC_APP_PROJ_TOP)/Code
@@ -118,6 +119,8 @@ SRC_APP_PYCODE_TOP := $(SRC_APP_PROJ_TOP)/PythonCode
 SRC_APP_RESOURCES_TOP := $(SRC_APP_PROJ_TOP)/Resources
 SRC_BUGREPORTER_BUILD_TOP := $(SYMROOT)/$(BUILD_CONF)
 SRC_BUGREPORTER_TOP := $(SRC_BUGREPORTER_BUILD_TOP)/BugReporter.app
+SRC_CALLPYCLIENT_BUILD_TOP := $(SYMROOT)/$(BUILD_CONF)
+SRC_CALLPYCLIENT_TOP := $(SRC_CALLPYCLIENT_BUILD_TOP)/CallPythonClient.xpc
 SRC_PREFSCONVERTER_BUILD_TOP := $(SYMROOT)/$(BUILD_CONF)
 SRC_PREFSCONVERTER_TOP := $(SRC_PREFSCONVERTER_BUILD_TOP)/PrefsConverter.app
 SRC_PY_TOP := $(SYMROOT)/$(PY_CONFIG)/PyMacTerm.framework
@@ -129,7 +132,9 @@ DEST_APP_TOP := $(MAKEFILE_DIR)/MacTerm.app/Contents
 DEST_APP_FW_TOP := $(DEST_APP_TOP)/Frameworks
 DEST_APP_MACOS_TOP := $(DEST_APP_TOP)/MacOS
 DEST_APP_RESOURCES_TOP := $(DEST_APP_TOP)/Resources
+DEST_APP_XPCSERVICES_TOP := $(DEST_APP_TOP)/XPCServices
 DEST_BUGREPORTER_TOP := $(DEST_APP_RESOURCES_TOP)/BugReporter.app
+DEST_CALLPYCLIENT_TOP := $(DEST_APP_XPCSERVICES_TOP)/net.macterm.MacTerm.CallPythonClient.xpc
 DEST_PREFSCONVERTER_TOP := $(DEST_APP_RESOURCES_TOP)/PrefsConverter.app
 DEST_PY_TOP := $(DEST_APP_FW_TOP)/PyMacTerm.framework
 DEST_PY_CODE_TOP := $(DEST_PY_TOP)/Versions/A/lib/python2.6/pymacterm
@@ -510,6 +515,26 @@ clean-bug-reporter:
 	$(XCB) clean -project BugReporter.xcodeproj -configuration $(BUILD_CONF)
 	$(RM) -R $(DEST_BUGREPORTER_TOP)
 
+# Component: Canvas Client
+
+.PHONY: install-callpy-client
+install-callpy-client:
+	$(call banner,$@)
+	@# keep in sync with the matching clean rule
+	$(XCB) -project CallPythonClient.xcodeproj -configuration $(BUILD_CONF)
+	@# avoid rsyncing from /
+	@if [ "x$(SRC_CALLPYCLIENT_TOP)" = "x" ] ; then \
+		echo "SRC_CALLPYCLIENT_TOP variable unset" >&2 ; \
+		exit 1 ; \
+	fi
+	$(MKDIR_P) $(dir $(DEST_CALLPYCLIENT_TOP))
+	$(RSYNC) --archive $(SRC_CALLPYCLIENT_TOP)/ $(DEST_CALLPYCLIENT_TOP)
+
+.PHONY: clean-callpy-client
+clean-callpy-client:
+	$(XCB) clean -project CallPythonClient.xcodeproj -configuration $(BUILD_CONF)
+	$(RM) -R $(DEST_CALLPYCLIENT_TOP)
+
 # Component: Preferences Converter
 
 .PHONY: install-prefs-converter
@@ -542,6 +567,7 @@ $(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_COPIED))
 	$(MKDIR_P) $(DEST_APP_RESOURCES_TOP)/English.lproj
 	$(MAKE) install-app-dot-strings
 	$(MAKE) install-bug-reporter
+	$(MAKE) install-callpy-client
 	$(MAKE) install-prefs-converter
 	@# make a special exception for Growl, which requires a filename with spaces
 	$(MOVE) $(DEST_APP_RESOURCES_TOP)/GrowlRegistrationTicket.growlRegDict \
@@ -558,6 +584,7 @@ clean-resources:
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_BUNDLES))' | $(XARGS) $(RM) -R
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_BUNDLES_GENERATED))' | $(XARGS) $(RM) -R
 	$(MAKE) clean-prefs-converter
+	$(MAKE) clean-callpy-client
 	$(MAKE) clean-bug-reporter
 	$(MAKE) clean-app-dot-strings
 	-$(RMDIR) $(DEST_APP_RESOURCES_TOP)/English.lproj 2>/dev/null
@@ -659,6 +686,7 @@ clean:
 	$(RM) $(DEST_APP_TOP)/PkgInfo
 	$(RM) $(DEST_APP_RESOURCES_TOP)/DefaultPreferences.plist
 	-$(RMDIR) $(SRC_PREFSCONVERTER_BUILD_TOP) 2>/dev/null
+	-$(RMDIR) $(SRC_CALLPYCLIENT_BUILD_TOP) 2>/dev/null
 	-$(RMDIR) $(SRC_BUGREPORTER_BUILD_TOP) 2>/dev/null
 	-$(RMDIR) $(SYMROOT)/$(BUILD_CONF) 2>/dev/null
 	-$(RMDIR) $(DEST_APP_TOP) 2>/dev/null

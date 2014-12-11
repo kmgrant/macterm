@@ -62,7 +62,7 @@ CocoaFuture_AllocInitUserNotification ()
 	
 	if (nil == targetClass)
 	{
-		//Console_Warning(Console_WriteLine, "cannot find NSUserNotification class");
+		Console_Warning(Console_WriteLine, "cannot find NSUserNotification class");
 	}
 	else
 	{
@@ -83,12 +83,59 @@ CocoaFuture_AllocInitUserNotification ()
 		}
 		else
 		{
-			//Console_Warning(Console_WriteLine, "NSUserNotification found, but it does not implement 'alloc' and/or 'init'");
+			Console_Warning(Console_WriteLine, "NSUserNotification found but it does not implement 'alloc' and/or 'init'");
 		}
 	}
 	
 	return result;
-}// CocoaFuture_AllocInitUserNotification
+}// AllocInitUserNotification
+
+
+/*!
+On Mac OS X 10.8 and later, "[[NSXPCConnection alloc] initWithServiceName:aName]";
+on earlier Mac OS X versions, "nil".
+
+This work-around is necessary because older code bases will not be able to
+directly refer to the class (it doesn’t exist).
+
+(1.11)
+*/
+id
+CocoaFuture_AllocInitXPCConnectionWithServiceName	(NSString*		inName)
+{
+	id		result = nil;
+	id		targetClass = objc_getClass("NSXPCConnection");
+	
+	
+	if (nil == targetClass)
+	{
+		Console_Warning(Console_WriteLine, "cannot find NSXPCConnection class");
+	}
+	else
+	{
+		SEL		allocSelector = @selector(alloc);
+		SEL		initSelector = @selector(initWithServiceName:);
+		
+		
+		if ([targetClass respondsToSelector:allocSelector] &&
+			[targetClass instancesRespondToSelector:initSelector])
+		{
+			id		allocatedInstance = [targetClass performSelector:allocSelector];
+			
+			
+			if (nil != allocatedInstance)
+			{
+				result = [allocatedInstance performSelector:initSelector withObject:inName];
+			}
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "NSXPCConnection found but it does not implement 'alloc' and/or 'initWithServiceName'");
+		}
+	}
+	
+	return result;
+}// AllocInitXPCConnectionWithServiceName
 
 
 /*!
@@ -125,11 +172,249 @@ CocoaFuture_DefaultUserNotificationCenter ()
 		}
 		else
 		{
-			//Console_Warning(Console_WriteLine, "NSUserNotificationCenter found, but it does not implement 'defaultUserNotificationCenter'");
+			Console_Warning(Console_WriteLine, "NSUserNotificationCenter found but it does not implement 'defaultUserNotificationCenter'");
 		}
 	}
 	
 	return result;
-}// CocoaFuture_DefaultUserNotificationCenter
+}// DefaultUserNotificationCenter
+
+
+/*!
+On Mac OS X 10.8 and later, "[aConnection remoteObjectProxyWithErrorHandler]";
+on earlier Mac OS X versions, no effect (returning "nil").
+
+This work-around is necessary because older code bases will not be able to
+directly refer to the class (it doesn’t exist).
+
+(1.11)
+*/
+id
+CocoaFuture_XPCConnectionRemoteObjectProxy	(NSXPCConnection*		inConnection,
+											 void (^inHandler)(NSError*))
+{
+	id		result = nil;
+	id		targetClass = objc_getClass("NSXPCConnection");
+	
+	
+	if (nil == targetClass)
+	{
+		Console_Warning(Console_WriteLine, "cannot find NSXPCConnection class");
+	}
+	else
+	{
+		SEL		remoteObjectProxySelector = @selector(remoteObjectProxyWithErrorHandler:);
+		
+		
+		if ([targetClass instancesRespondToSelector:remoteObjectProxySelector])
+		{
+			result = [inConnection performSelector:remoteObjectProxySelector withObject:inHandler];
+			NSLog(@"returning remote object proxy %@ for connection %@", result, inConnection);
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "NSXPCConnection found but it does not implement 'remoteObjectProxyWithErrorHandler:'");
+		}
+	}
+	
+	return result;
+}// XPCConnectionRemoteObjectProxy
+
+
+/*!
+On Mac OS X 10.8 and later, "[aConnection resume]"; on earlier Mac OS X
+versions, no effect.
+
+This work-around is necessary because older code bases will not be able to
+directly refer to the class (it doesn’t exist).
+
+(1.11)
+*/
+void
+CocoaFuture_XPCConnectionResume		(NSXPCConnection*		inConnection)
+{
+	id		targetClass = objc_getClass("NSXPCConnection");
+	
+	
+	if (nil == targetClass)
+	{
+		Console_Warning(Console_WriteLine, "cannot find NSXPCConnection class");
+	}
+	else
+	{
+		SEL		resumeSelector = @selector(resume);
+		
+		
+		if ([targetClass instancesRespondToSelector:resumeSelector])
+		{
+			//NSLog(@"resuming connection %@", inConnection);
+			[inConnection performSelector:resumeSelector];
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "NSXPCConnection found but it does not implement 'resume'");
+		}
+	}
+}// XPCConnectionResume
+
+
+/*!
+On Mac OS X 10.8 and later, "aConnection.interruptionHandler = aBlock";
+on earlier Mac OS X versions, no effect.
+
+This work-around is necessary because older code bases will not be able to
+directly refer to the class (it doesn’t exist).
+
+(1.11)
+*/
+void
+CocoaFuture_XPCConnectionSetInterruptionHandler		(NSXPCConnection*		inConnection,
+													 void					(^inBlock)())
+{
+	id		targetClass = objc_getClass("NSXPCConnection");
+	
+	
+	if (nil == targetClass)
+	{
+		Console_Warning(Console_WriteLine, "cannot find NSXPCConnection class");
+	}
+	else
+	{
+		SEL		setBlockSelector = @selector(setInterruptionHandler:);
+		
+		
+		if ([targetClass instancesRespondToSelector:setBlockSelector])
+		{
+			//NSLog(@"setting interruption handler %@", inConnection);
+			[inConnection performSelector:setBlockSelector withObject:inBlock];
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "NSXPCConnection found but it does not implement 'setInterruptionHandler:'");
+		}
+	}
+}// XPCConnectionSetInterruptionHandler
+
+
+/*!
+On Mac OS X 10.8 and later, "aConnection.invalidationHandler = aBlock";
+on earlier Mac OS X versions, no effect.
+
+This work-around is necessary because older code bases will not be able to
+directly refer to the class (it doesn’t exist).
+
+(1.11)
+*/
+void
+CocoaFuture_XPCConnectionSetInvalidationHandler		(NSXPCConnection*		inConnection,
+													 void					(^inBlock)())
+{
+	id		targetClass = objc_getClass("NSXPCConnection");
+	
+	
+	if (nil == targetClass)
+	{
+		Console_Warning(Console_WriteLine, "cannot find NSXPCConnection class");
+	}
+	else
+	{
+		SEL		setBlockSelector = @selector(setInvalidationHandler:);
+		
+		
+		if ([targetClass instancesRespondToSelector:setBlockSelector])
+		{
+			//NSLog(@"setting invalidation handler %@", inConnection);
+			[inConnection performSelector:setBlockSelector withObject:inBlock];
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "NSXPCConnection found but it does not implement 'setInvalidationHandler:'");
+		}
+	}
+}// XPCConnectionSetInvalidationHandler
+
+
+/*!
+On Mac OS X 10.8 and later, "aConnection.remoteObjectInterface = anInterface";
+on earlier Mac OS X versions, no effect.
+
+This work-around is necessary because older code bases will not be able to
+directly refer to the class (it doesn’t exist).
+
+(1.11)
+*/
+void
+CocoaFuture_XPCConnectionSetRemoteObjectInterface	(NSXPCConnection*		inConnection,
+													 NSXPCInterface*		inInterface)
+{
+	id		targetClass = objc_getClass("NSXPCConnection");
+	
+	
+	if (nil == targetClass)
+	{
+		Console_Warning(Console_WriteLine, "cannot find NSXPCConnection class");
+	}
+	else
+	{
+		SEL		setInterfaceSelector = @selector(setRemoteObjectInterface:);
+		
+		
+		if ([targetClass instancesRespondToSelector:setInterfaceSelector])
+		{
+			//NSLog(@"setting remote object interface %@", inConnection);
+			[inConnection performSelector:setInterfaceSelector withObject:inInterface];
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "NSXPCConnection found but it does not implement 'setRemoteObjectInterface:'");
+		}
+	}
+}// XPCConnectionSetRemoteObjectInterface
+
+
+/*!
+On Mac OS X 10.8 and later, "[NSXPCInterface interfaceWithProtocol:aProtocol]";
+on earlier Mac OS X versions, "nil".
+
+This work-around is necessary because older code bases will not be able to
+directly refer to the class (it doesn’t exist).
+
+(1.11)
+*/
+id
+CocoaFuture_XPCInterfaceWithProtocol	(Protocol*		inProtocol)
+{
+	id		result = nil;
+	id		targetClass = objc_getClass("NSXPCInterface");
+	
+	
+	if (nil == targetClass)
+	{
+		Console_Warning(Console_WriteLine, "cannot find NSXPCInterface class");
+	}
+	else
+	{
+		SEL		interfaceWithProtocolSelector = @selector(interfaceWithProtocol:);
+		
+		
+		if ([targetClass respondsToSelector:interfaceWithProtocolSelector])
+		{
+			id		autoreleasedInstance = [targetClass performSelector:interfaceWithProtocolSelector withObject:inProtocol];
+			
+			
+			if (nil != autoreleasedInstance)
+			{
+				//NSLog(@"XPC interface object %@", autoreleasedInstance);
+				result = autoreleasedInstance;
+			}
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "NSXPCInterface found but it does not implement 'interfaceWithProtocol:'");
+		}
+	}
+	
+	return result;
+}// XPCInterfaceWithProtocol
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

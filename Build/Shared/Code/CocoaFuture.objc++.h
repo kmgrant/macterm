@@ -112,6 +112,7 @@ typedef int/*NSInteger*/	NSScrollerStyle;
 
 @interface NSWindow (NSWindowExtensionsFromLion) //{
 
+// new methods
 	- (void)
 	setAnimationBehavior:(int/*NSInteger*//*NSWindowAnimationBehavior*/)_;
 	- (void)
@@ -139,6 +140,8 @@ typedef int/*NSInteger*/	NSScrollerStyle;
 
 @class NSUserNotification;
 @class NSUserNotificationCenter;
+@class NSXPCConnection;
+@class NSXPCInterface;
 
 @protocol NSUserNotificationCenterDelegate < NSObject > //{
 
@@ -162,12 +165,36 @@ typedef int/*NSInteger*/	NSScrollerStyle;
 @end //}
 
 
-
 id// NSUserNotification*
-	CocoaFuture_AllocInitUserNotification		();
+	CocoaFuture_AllocInitUserNotification				();
+
+id// NSXPCConnection*
+	CocoaFuture_AllocInitXPCConnectionWithServiceName	(NSString*			inName);
 
 id// NSUserNotificationCenter*
-	CocoaFuture_DefaultUserNotificationCenter	();
+	CocoaFuture_DefaultUserNotificationCenter			();
+
+id
+	CocoaFuture_XPCConnectionRemoteObjectProxy			(NSXPCConnection*	inConnection,
+														 void (^inHandler)(NSError*));
+
+void
+	CocoaFuture_XPCConnectionResume						(NSXPCConnection*	inConnection);
+
+void
+	CocoaFuture_XPCConnectionSetInterruptionHandler		(NSXPCConnection*	inConnection,
+														 void				(^inBlock)());
+
+void
+	CocoaFuture_XPCConnectionSetInvalidationHandler		(NSXPCConnection*	inConnection,
+														 void				(^inBlock)());
+
+void
+	CocoaFuture_XPCConnectionSetRemoteObjectInterface	(NSXPCConnection*	inConnection,
+														 NSXPCInterface*	inInterface);
+
+id// NSXPCInterface*
+	CocoaFuture_XPCInterfaceWithProtocol				(Protocol*			inProtocol);
 
 #else
 
@@ -179,8 +206,47 @@ id// NSUserNotificationCenter*
 id// NSUserNotification*
 	CocoaFuture_AllocInitUserNotification		()	{ return [[NSUserNotification alloc] init]; }
 
+id// NSXPCConnection*
+	CocoaFuture_AllocInitXPCConnectionWithServiceName	(NSString*		inName)
+	{
+		return [[NSXPCConnection alloc] initWithServiceName:inName];
+	}
+
 id// NSUserNotificationCenter*
 	CocoaFuture_DefaultUserNotificationCenter	()	{ return [NSUserNotificationCenter defaultUserNotificationCenter]; }
+
+void
+	CocoaFuture_XPCConnectionResume				(NSXPCConnection*		inConnection)
+	{
+		[inConnection resume];
+	}
+
+void
+	CocoaFuture_XPCConnectionSetRemoteObjectInterface	(NSXPCConnection*	inConnection,
+														 NSXPCInterface*	inInterface)
+	{
+		inConnection.remoteObjectInterface = inInterface;
+	}
+
+void
+	CocoaFuture_XPCConnectionSetInterruptionHandler		(NSXPCConnection*	inConnection,
+														 void				(^inBlock)())
+	{
+		inConnection.interruptionHandler = inBlock;
+	}
+
+void
+	CocoaFuture_XPCConnectionSetInvalidationHandler		(NSXPCConnection*	inConnection,
+														 void				(^inBlock)())
+	{
+		inConnection.invalidationHandler = inBlock;
+	}
+
+id// NSXPCInterface*
+	CocoaFuture_XPCInterfaceWithProtocol		(Protocol*			inProtocol)
+	{
+		return [NSXPCInterface interfaceWithProtocol:inProtocol];
+	}
 
 #endif // MAC_OS_X_VERSION_10_8
 

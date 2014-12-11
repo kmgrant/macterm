@@ -232,6 +232,7 @@
 		0A1BCD8905CA2B21005CF1E5 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/TerminalWindow.nib; sourceTree = "<group>"; };
 		0A1BCD9D05CA34FF005CF1E5 /* IconForSessionStatusActive.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSessionStatusActive.icns; path = Application/Resources/IconForSessionStatusActive.icns; sourceTree = "<group>"; };
 		0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSessionStatusDead.icns; path = Application/Resources/IconForSessionStatusDead.icns; sourceTree = "<group>"; };
+		0A1FE93E1A39F196003C81BA /* XPCCallPythonClient.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "XPCCallPythonClient.objc++.h"; path = "Shared/Code/XPCCallPythonClient.objc++.h"; sourceTree = "<group>"; };
 		0A21A1CD131766EA0012240D /* DefaultFormat4.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = DefaultFormat4.plist; path = Application/Resources/DefaultFormat4.plist; sourceTree = "<group>"; };
 		0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AddressDialog.h; path = Application/Code/AddressDialog.h; sourceTree = "<group>"; };
 		0A2890DC0D68017D0017D99E /* GenericPanelTabs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GenericPanelTabs.mm; path = Application/Code/GenericPanelTabs.mm; sourceTree = "<group>"; };
@@ -728,6 +729,7 @@
 				0A9B317E0D538E2800C1616D /* TextDataFile.h */,
 				0A9B31840D538E4D00C1616D /* Undoables.h */,
 				0A4604520554376100ACDF3A /* UniversalDefines.h */,
+				0A1FE93E1A39F196003C81BA /* XPCCallPythonClient.objc++.h */,
 			);
 			name = Shared;
 			sourceTree = "<group>";

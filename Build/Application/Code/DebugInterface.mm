@@ -37,8 +37,10 @@
 
 // library includes
 #import <AutoPool.objc++.h>
+#import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <SoundSystem.h>
+#import <XPCCallPythonClient.objc++.h>
 
 // application includes
 #import "PrefsWindow.h"
@@ -224,6 +226,45 @@ dumpStateOfActiveTerminal:(id)	sender
 	Console_WriteLine("End of active terminal report.");
 	Console_WriteHorizontalRule();
 }// dumpStateOfActiveTerminal:
+
+
+/*!
+Spawns a new instance of the subprocess that wraps calls to
+external Python callbacks.
+
+(4.1)
+*/
+- (void)
+launchNewCallPythonClient:(id)	sender
+{
+#pragma unused(sender)
+	id					connectionObject = CocoaFuture_AllocInitXPCConnectionWithServiceName(@"net.macterm.MacTerm.CallPythonClient");
+	NSXPCInterface*		interfaceObject = CocoaFuture_XPCInterfaceWithProtocol(@protocol(XPCCallPythonClient_RemoteObjectInterface));
+	
+	
+	CocoaFuture_XPCConnectionSetInterruptionHandler(connectionObject, ^{ NSLog(@"call-Python client connection interrupted"); });
+	CocoaFuture_XPCConnectionSetInvalidationHandler(connectionObject, ^{ NSLog(@"call-Python client connection invalidated"); });
+	CocoaFuture_XPCConnectionSetRemoteObjectInterface(connectionObject, interfaceObject);
+	CocoaFuture_XPCConnectionResume(connectionObject);
+	
+	NSLog(@"created call-Python client object: %@", connectionObject);
+	
+	id		remoteProxy = CocoaFuture_XPCConnectionRemoteObjectProxy(connectionObject, ^(NSError* error){
+																			NSLog(@"remote object proxy error: %@", [error localizedDescription]);
+																		});
+	
+	
+	if (nil != remoteProxy)
+	{
+		id< XPCCallPythonClient_RemoteObjectInterface >		asInterface = remoteProxy;
+		
+		
+		[asInterface xpcServiceSendMessage:@"hello!" withReply:^(NSString* aReplyString){
+			NSLog(@"MacTerm received response from Python client: %@", aReplyString);
+		}];
+	}
+	// TEMPORARY (INCOMPLETE)
+}// launchNewCallPythonClient:
 
 
 /*!

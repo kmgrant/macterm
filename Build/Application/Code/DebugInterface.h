@@ -64,6 +64,8 @@ changes to an interface declared in a ".mm" file.
 	- (IBAction)
 	dumpStateOfActiveTerminal:(id)_;
 	- (IBAction)
+	launchNewCallPythonClient:(id)_;
+	- (IBAction)
 	showTestPreferencesWindow:(id)_;
 	- (IBAction)
 	showTestTerminalToolbar:(id)_;

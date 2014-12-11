@@ -1,0 +1,321 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0A1FE93A1A36A516003C81BA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A1FE9381A36A30A003C81BA /* Cocoa.framework */; };
+		0A1FE9421A39F25E003C81BA /* CallPythonClient.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A1FE9401A39F25E003C81BA /* CallPythonClient.xib */; };
+		0A3B585719F20F6A00F672A4 /* MainEntryPoint.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */; };
+		0A3B585919F215F000F672A4 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A3B585819F215F000F672A4 /* AppKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0A1FE9381A36A30A003C81BA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		0A1FE93F1A39F1F0003C81BA /* CallPythonClient.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = CallPythonClient.entitlements; path = CallPythonClient/CallPythonClient.entitlements; sourceTree = "<group>"; };
+		0A1FE9411A39F25E003C81BA /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = CallPythonClient/Resources/English.lproj/CallPythonClient.xib; sourceTree = "<group>"; };
+		0A2EA0E008E0F28A00108992 /* CFUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFUtilities.cp; path = Shared/Code/CFUtilities.cp; sourceTree = "<group>"; };
+		0A33CC5507FABAF800248DDF /* UniversalDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UniversalDefines.h; path = Shared/Code/UniversalDefines.h; sourceTree = "<group>"; };
+		0A3B583F19F1DB1C00F672A4 /* CFRetainRelease.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFRetainRelease.h; path = Shared/Code/CFRetainRelease.h; sourceTree = "<group>"; };
+		0A3B584119F1DB2100F672A4 /* CFRetainRelease.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFRetainRelease.cp; path = Shared/Code/CFRetainRelease.cp; sourceTree = "<group>"; };
+		0A3B584719F208A900F672A4 /* CallPythonClient.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = CallPythonClient.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
+		0A3B584A19F208A900F672A4 /* CallPythonClient-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "CallPythonClient-Info.plist"; path = "CallPythonClient/Resources/CallPythonClient-Info.plist"; sourceTree = "<group>"; };
+		0A3B585419F20B2500F672A4 /* XPCCallPythonClient.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "XPCCallPythonClient.objc++.h"; path = "Shared/Code/XPCCallPythonClient.objc++.h"; sourceTree = "<group>"; };
+		0A3B585819F215F000F672A4 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		0A3C0112081208530088580A /* CFUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFUtilities.h; path = Shared/Code/CFUtilities.h; sourceTree = "<group>"; };
+		0A5C6C661597B1870094E3FD /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MainEntryPoint.mm; path = CallPythonClient/Code/MainEntryPoint.mm; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0A3B584419F208A900F672A4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A3B585919F215F000F672A4 /* AppKit.framework in Frameworks */,
+				0A1FE93A1A36A516003C81BA /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0A1FE9371A36A2A8003C81BA /* Required Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0A3B585819F215F000F672A4 /* AppKit.framework */,
+				0A5C6C661597B1870094E3FD /* Cocoa.framework */,
+			);
+			name = "Required Frameworks";
+			sourceTree = "<group>";
+		};
+		0A33CC5407FABADE00248DDF /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				0A3B584119F1DB2100F672A4 /* CFRetainRelease.cp */,
+				0A3B583F19F1DB1C00F672A4 /* CFRetainRelease.h */,
+				0A2EA0E008E0F28A00108992 /* CFUtilities.cp */,
+				0A3C0112081208530088580A /* CFUtilities.h */,
+				0A33CC5507FABAF800248DDF /* UniversalDefines.h */,
+				0A3B585419F20B2500F672A4 /* XPCCallPythonClient.objc++.h */,
+			);
+			name = Shared;
+			sourceTree = "<group>";
+		};
+		195DF8CFFE9D517E11CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0A3B584719F208A900F672A4 /* CallPythonClient.xpc */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		20286C29FDCF999611CA2CEA /* CanvasClient */ = {
+			isa = PBXGroup;
+			children = (
+				0A1FE9381A36A30A003C81BA /* Cocoa.framework */,
+				0A33CC5407FABADE00248DDF /* Shared */,
+				0A1FE93F1A39F1F0003C81BA /* CallPythonClient.entitlements */,
+				0A3B584A19F208A900F672A4 /* CallPythonClient-Info.plist */,
+				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */,
+				0A1FE9401A39F25E003C81BA /* CallPythonClient.xib */,
+				0A1FE9371A36A2A8003C81BA /* Required Frameworks */,
+				195DF8CFFE9D517E11CA2CBB /* Products */,
+			);
+			name = CanvasClient;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0A3B584619F208A900F672A4 /* CallPythonClient */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0A3B585319F208A900F672A4 /* Build configuration list for PBXNativeTarget "CallPythonClient" */;
+			buildPhases = (
+				0A3B584319F208A900F672A4 /* Sources */,
+				0A3B584419F208A900F672A4 /* Frameworks */,
+				0A3B584519F208A900F672A4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CallPythonClient;
+			productName = CanvasClient2;
+			productReference = 0A3B584719F208A900F672A4 /* CallPythonClient.xpc */;
+			productType = "com.apple.product-type.xpc-service";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		20286C28FDCF999611CA2CEA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0610;
+				TargetAttributes = {
+					0A3B584619F208A900F672A4 = {
+						CreatedOnToolsVersion = 6.0.1;
+						DevelopmentTeam = 8BA57X86ZM;
+						SystemCapabilities = {
+							com.apple.Sandbox = {
+								enabled = 1;
+							};
+						};
+					};
+				};
+			};
+			buildConfigurationList = 0A578EE209D88A71007D1289 /* Build configuration list for PBXProject "CallPythonClient" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
+			mainGroup = 20286C29FDCF999611CA2CEA /* CanvasClient */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0A3B584619F208A900F672A4 /* CallPythonClient */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0A3B584519F208A900F672A4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A1FE9421A39F25E003C81BA /* CallPythonClient.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0A3B584319F208A900F672A4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A3B585719F20F6A00F672A4 /* MainEntryPoint.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		0A1FE9401A39F25E003C81BA /* CallPythonClient.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A1FE9411A39F25E003C81BA /* English */,
+			);
+			name = CallPythonClient.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		0A3B585119F208A900F672A4 /* ForDebugging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_ENTITLEMENTS = CallPythonClient/CallPythonClient.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = "CallPythonClient/Resources/CallPythonClient-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = CallPythonClient;
+				PROVISIONING_PROFILE = "";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = ForDebugging;
+		};
+		0A3B585219F208A900F672A4 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_ENTITLEMENTS = CallPythonClient/CallPythonClient.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = "CallPythonClient/Resources/CallPythonClient-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = CallPythonClient;
+				PROVISIONING_PROFILE = "";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = ForRelease;
+		};
+		0A578EE309D88A71007D1289 /* ForDebugging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				OBJROOT = _Generated;
+				SDKROOT = macosx;
+				SYMROOT = _Generated;
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wextra",
+				);
+			};
+			name = ForDebugging;
+		};
+		0A578EE409D88A71007D1289 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				OBJROOT = _Generated;
+				SDKROOT = macosx;
+				SYMROOT = _Generated;
+			};
+			name = ForRelease;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0A3B585319F208A900F672A4 /* Build configuration list for PBXNativeTarget "CallPythonClient" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A3B585119F208A900F672A4 /* ForDebugging */,
+				0A3B585219F208A900F672A4 /* ForRelease */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ForDebugging;
+		};
+		0A578EE209D88A71007D1289 /* Build configuration list for PBXProject "CallPythonClient" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A578EE309D88A71007D1289 /* ForDebugging */,
+				0A578EE409D88A71007D1289 /* ForRelease */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ForDebugging;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 20286C28FDCF999611CA2CEA /* Project object */;
+}
