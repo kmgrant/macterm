@@ -135,13 +135,13 @@ inline long				INTEGER_MAXIMUM		(long a, long b)	{ return ((a > b) ? a : b); }	/
 inline long				INTEGER_MINIMUM		(long a, long b)	{ return ((a < b) ? a : b); }	//!< return smallest of two signed integers
 inline size_t			INTEGER_MEGABYTES	(unsigned int a)	{ return (a << 20); }			//!< return byte count for integer value measured in MB
 inline size_t			INTEGER_KILOBYTES	(unsigned int a)	{ return (a << 10); }			//!< return byte count for integer value measured in K
-inline unsigned int		INTEGER_OCTUPLED	(unsigned long a)	{ return (a << 3); }			//!< multiply integer by 8
-inline unsigned int		INTEGER_QUADRUPLED	(unsigned long a)	{ return (a << 2); }			//!< multiply integer by 4
-inline unsigned int		INTEGER_TRIPLED		(unsigned long a)	{ return ((a << 1) + a); }		//!< multiply integer by 3
-inline unsigned int		INTEGER_DOUBLED		(unsigned long a)	{ return (a << 1); }			//!< multiply integer by 2
-inline unsigned int		INTEGER_HALVED		(unsigned long a)	{ return (a >> 1); }			//!< divide integer by 2
-inline unsigned int		INTEGER_QUARTERED	(unsigned long a)	{ return (a >> 2); }			//!< divide integer by 4
-inline unsigned int		INTEGER_EIGHTHED	(unsigned long a)	{ return (a >> 3); }			//!< divide integer by 8
+inline unsigned long	INTEGER_OCTUPLED	(unsigned long a)	{ return (a << 3); }			//!< multiply integer by 8 (lossy for huge integers)
+inline unsigned long	INTEGER_QUADRUPLED	(unsigned long a)	{ return (a << 2); }			//!< multiply integer by 4 (lossy for huge integers)
+inline unsigned long	INTEGER_TRIPLED		(unsigned long a)	{ return ((a << 1) + a); }		//!< multiply integer by 3 (lossy for huge integers)
+inline unsigned long	INTEGER_DOUBLED		(unsigned long a)	{ return (a << 1); }			//!< multiply integer by 2 (lossy for huge integers)
+inline unsigned long	INTEGER_HALVED		(unsigned long a)	{ return (a >> 1); }			//!< divide integer by 2
+inline unsigned long	INTEGER_QUARTERED	(unsigned long a)	{ return (a >> 2); }			//!< divide integer by 4
+inline unsigned long	INTEGER_EIGHTHED	(unsigned long a)	{ return (a >> 3); }			//!< divide integer by 8
 #else
 #	define INTEGER_ABSOLUTE(a)		(((a) >= 0) ? (a) : (-(a)))
 #	define INTEGER_MAXIMUM(a, b)	(((a) > (b)) ? (a) : (b))
