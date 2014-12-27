@@ -749,25 +749,7 @@ setCurrentValueDescriptor:(id)	selectedObject
 	}
 	else
 	{
-		// since bindings work “by value”, it is necessary to assume that any
-		// value with the same name as the Default binding is in fact a
-		// request to return to nil (delete setting), exactly as if the value
-		// "nil" had been given; in other words, for preferences of this type,
-		// although the user can click the checkbox to return to Default,
-		// they can also select the Default item from the pop-up menu
-		CFRetainRelease		defaultName(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowDefaultFavoriteName),
-										true/* is retained */);
-		
-		
-		if ([selectedObject isEqualToString:BRIDGE_CAST(defaultName.returnCFStringRef(), NSString*)])
-		{
-			//Console_Warning(Console_WriteLine, "interpreting value with Default name as a request to nullify the setting");
-			[self setNilPreferenceValue];
-		}
-		else
-		{
-			[_preferenceAccessObject setStringValue:selectedObject];
-		}
+		[_preferenceAccessObject setStringValue:selectedObject];
 	}
 	
 	[self didChangeValueForKey:@"currentValueDescriptor"];
