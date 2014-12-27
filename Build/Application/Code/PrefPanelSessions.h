@@ -62,6 +62,55 @@ changes to an interface declared in a ".mm" file.
 
 
 /*!
+Loads a NIB file that defines the Resource pane.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelSessions_ResourceViewManager : Panel_ViewManager< Panel_Delegate,
+																		PrefsWindow_PanelInterface > //{
+{
+@private
+	PrefsContextManager_Object*			prefsMgr;
+	ListenerModel_StandardListener*		preferenceChangeListener;
+	NSRect								idealFrame;
+	NSMutableDictionary*				byKey;
+	NSIndexSet*							_sessionFavoriteIndexes;
+	NSArray*							_sessionFavorites;
+	BOOL								isEditingRemoteShell;
+}
+
+// accessors: preferences
+	- (PreferenceValue_StringByJoiningArray*)
+	commandLine; // binding
+	- (PreferenceValue_CollectionBinding*)
+	formatFavorite; // binding
+	- (PreferenceValue_CollectionBinding*)
+	terminalFavorite; // binding
+	- (PreferenceValue_CollectionBinding*)
+	translationFavorite; // binding
+
+// accessors: low-level user interface state
+	- (BOOL)
+	isEditingRemoteShell; // binding
+	@property (retain) NSIndexSet*
+	sessionFavoriteIndexes; // binding
+	@property (retain, readonly) NSArray*
+	sessionFavorites; // binding
+
+// actions
+	- (IBAction)
+	performSetCommandLineToDefaultShell:(id)_; // binding
+	- (IBAction)
+	performSetCommandLineToLogInShell:(id)_; // binding
+	- (IBAction)
+	performSetCommandLineToRemoteShell:(id)_; // binding
+
+@end //}
+
+
+/*!
 Manages bindings for the capture-file preferences.
 */
 @interface PrefPanelSessions_CaptureFileValue : PreferenceValue_Inherited //{

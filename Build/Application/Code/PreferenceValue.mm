@@ -43,9 +43,25 @@
 #import <Cocoa/Cocoa.h>
 #import <objc/objc-runtime.h>
 
+// library includes
+#import <CFRetainRelease.h>
+#import <ListenerModel.h>
+
 // application includes
 #import "ConstantsRegistry.h"
+#import "UIStrings_PrefsWindow.h"
 
+
+
+#pragma mark Types
+
+@interface PreferenceValue_CollectionBinding (PreferenceValue_CollectionBindingInternal) //{
+
+// new methods
+	- (void)
+	rebuildDescriptorArray;
+
+@end //}
 
 
 #pragma mark Variables
@@ -70,6 +86,7 @@ STATIC_ASSERT(((sizeof(gScaleFactorsByExponentOffset) / sizeof(Float32)) == (-kM
 
 #pragma mark Internal Methods
 
+#pragma mark -
 @implementation PreferenceValue_Inherited
 
 
@@ -231,6 +248,7 @@ prefsMgr
 @end // PreferenceValue_Inherited
 
 
+#pragma mark -
 @implementation PreferenceValue_InheritedSingleTag
 
 
@@ -270,6 +288,7 @@ preferencesTag
 @end // PreferenceValue_InheritedSingleTag
 
 
+#pragma mark -
 @implementation PreferenceValue_IntegerDescriptor
 
 
@@ -326,6 +345,7 @@ setDescribedIntegerValue:(UInt32)	aValue
 @end // PreferenceValue_IntegerDescriptor
 
 
+#pragma mark -
 @implementation PreferenceValue_Array
 
 
@@ -520,6 +540,320 @@ setNilPreferenceValue
 @end // PreferenceValue_Array
 
 
+#pragma mark -
+@implementation PreferenceValue_CollectionBinding
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+sourceClass:(Quills::Prefs::Class)				aPreferencesClass
+{
+	self = [super initWithContextManager:aContextMgr];
+	if (nil != self)
+	{
+		_valueDescriptorArray = [@[] retain];
+		_preferencesClass = aPreferencesClass;
+		_preferenceAccessObject = [[PreferenceValue_String alloc] initWithPreferencesTag:aTag contextManager:aContextMgr];
+		
+		// monitor the preferences context manager so that observers
+		// of preferences in sub-objects can be told to expect changes
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextWillChange:)
+															name:kPrefsContextManager_ContextWillChangeNotification
+															object:aContextMgr];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextDidChange:)
+															name:kPrefsContextManager_ContextDidChangeNotification
+															object:aContextMgr];
+		
+		// install a callback that finds out about changes to available preferences collections
+		// ("rebuildDescriptorArray" will be implicitly called as a side effect of this setup)
+		{
+			Preferences_Result		error = kPreferences_ResultOK;
+			
+			
+			_preferenceChangeListener = [[ListenerModel_StandardListener alloc]
+											initWithTarget:self eventFiredSelector:@selector(model:preferenceChange:context:)];
+			
+			error = Preferences_StartMonitoring([_preferenceChangeListener listenerRef], kPreferences_ChangeContextName,
+												false/* call immediately to get initial value */);
+			assert(kPreferences_ResultOK == error);
+			error = Preferences_StartMonitoring([_preferenceChangeListener listenerRef], kPreferences_ChangeNumberOfContexts,
+												true/* call immediately to get initial value */);
+			assert(kPreferences_ResultOK == error);
+		}
+	}
+	return self;
+}// initWithPreferencesTag:contextManager:preferenceCType:valueDescriptorArray:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([_preferenceChangeListener listenerRef],
+																kPreferences_ChangeContextName);
+	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([_preferenceChangeListener listenerRef],
+																kPreferences_ChangeNumberOfContexts);
+	[_valueDescriptorArray release];
+	[_preferenceAccessObject release];
+	[_preferenceChangeListener release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Called when a monitored preference is changed.  See the
+initializer for the set of events that is monitored.
+
+(4.1)
+*/
+- (void)
+model:(ListenerModel_Ref)				aModel
+preferenceChange:(ListenerModel_Event)	anEvent
+context:(void*)							aContext
+{
+#pragma unused(aModel, aContext)
+	switch (anEvent)
+	{
+	case kPreferences_ChangeContextName:
+		// a context has been renamed; refresh the list
+		[self rebuildDescriptorArray];
+		break;
+	
+	case kPreferences_ChangeNumberOfContexts:
+		// contexts were added or removed; destroy and rebuild the list
+		[self rebuildDescriptorArray];
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// model:preferenceChange:context:
+
+
+/*!
+Responds to a change in preferences context by notifying
+observers that key values have changed (so that updates
+to the user interface occur).
+
+(4.1)
+*/
+- (void)
+prefsContextDidChange:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	// note: should be opposite order of "prefsContextWillChange:"
+	[self didChangeValueForKey:@"currentValueDescriptor"];
+	[self didSetPreferenceValue];
+}// prefsContextDidChange:
+
+
+/*!
+Responds to a change in preferences context by notifying
+observers that key values have changed (so that updates
+to the user interface occur).
+
+(4.1)
+*/
+- (void)
+prefsContextWillChange:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	// note: should be opposite order of "prefsContextDidChange:"
+	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"currentValueDescriptor"];
+}// prefsContextWillChange:
+
+
+/*!
+Rebuilds the array of value descriptors that represents the
+available preferences contexts (for example, in a menu that is
+displayed to the user).
+
+This should be called whenever preferences are changed
+(contexts added, removed or renamed).
+
+(4.1)
+*/
+- (void)
+rebuildDescriptorArray
+{
+	CFArrayRef				newArray = nullptr;
+	Preferences_Result		arrayResult = Preferences_CreateContextNameArray(_preferencesClass, newArray, true/* include Default */);
+	
+	
+	if (kPreferences_ResultOK != arrayResult)
+	{
+		Console_Warning(Console_WriteValue, "unable to create context name array for collection binding, error", arrayResult);
+		_valueDescriptorArray = [@[] retain];
+	}
+	else
+	{
+		_valueDescriptorArray = BRIDGE_CAST(newArray, NSArray*);
+	}
+}
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSArray*)
+valueDescriptorArray
+{
+	return [[_valueDescriptorArray retain] autorelease];
+}// valueDescriptorArray
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (id)
+currentValueDescriptor
+{
+	BOOL		isDefault = NO;
+	NSString*	result = [_preferenceAccessObject readValueSeeIfDefault:&isDefault];
+	
+	
+	return result;
+}
+- (void)
+setCurrentValueDescriptor:(id)	selectedObject
+{
+	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"currentValueDescriptor"];
+	
+	if (nil == selectedObject)
+	{
+		[self setNilPreferenceValue];
+	}
+	else
+	{
+		// since bindings work “by value”, it is necessary to assume that any
+		// value with the same name as the Default binding is in fact a
+		// request to return to nil (delete setting), exactly as if the value
+		// "nil" had been given; in other words, for preferences of this type,
+		// although the user can click the checkbox to return to Default,
+		// they can also select the Default item from the pop-up menu
+		CFRetainRelease		defaultName(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowDefaultFavoriteName),
+										true/* is retained */);
+		
+		
+		if ([selectedObject isEqualToString:BRIDGE_CAST(defaultName.returnCFStringRef(), NSString*)])
+		{
+			//Console_Warning(Console_WriteLine, "interpreting value with Default name as a request to nullify the setting");
+			[self setNilPreferenceValue];
+		}
+		else
+		{
+			[_preferenceAccessObject setStringValue:selectedObject];
+		}
+	}
+	
+	[self didChangeValueForKey:@"currentValueDescriptor"];
+	[self didSetPreferenceValue];
+}
+
+
+#pragma mark PreferenceValue_Inherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = [_preferenceAccessObject isInherited];
+	
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"currentValueDescriptor"];
+	[_preferenceAccessObject setNilPreferenceValue];
+	[self didChangeValueForKey:@"currentValueDescriptor"];
+	[self didSetPreferenceValue];
+}// setNilPreferenceValue
+
+
+@end // PreferenceValue_CollectionBinding
+
+
+#pragma mark -
+@implementation PreferenceValue_CollectionBinding (PreferenceValue_CollectionBindingInternal)
+
+
+#pragma mark New Methods
+
+
+/*!
+Rebuilds the array of value descriptors that represents the
+available preferences contexts (for example, in a menu that is
+displayed to the user).
+
+This should be called whenever preferences are changed
+(contexts added, removed or renamed).
+
+(4.1)
+*/
+- (void)
+rebuildDescriptorArray
+{
+	CFArrayRef				newArray = nullptr;
+	Preferences_Result		arrayResult = Preferences_CreateContextNameArray(_preferencesClass, newArray,
+																				true/* include Default */);
+	
+	
+	if (kPreferences_ResultOK != arrayResult)
+	{
+		Console_Warning(Console_WriteValue, "unable to create context name array for collection binding, error", arrayResult);
+		_valueDescriptorArray = [@[] retain];
+	}
+	else
+	{
+		_valueDescriptorArray = BRIDGE_CAST(newArray, NSArray*);
+	}
+}
+
+
+@end // PreferenceValue_CollectionBinding (PreferenceValue_CollectionBindingInternal)
+
+
+#pragma mark -
 @implementation PreferenceValue_Color
 
 
@@ -622,6 +956,7 @@ setNilPreferenceValue
 @end // PreferenceValue_Color
 
 
+#pragma mark -
 @implementation PreferenceValue_FileSystemObject
 
 
@@ -693,7 +1028,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	
 	if (nullptr != outIsDefault)
 	{
-		*outIsDefault = (YES == isDefault);
+		*outIsDefault = (true == isDefault);
 	}
 	
 	return result;
@@ -840,6 +1175,7 @@ setNilPreferenceValue
 @end // PreferenceValue_FileSystemObject
 
 
+#pragma mark -
 @implementation PreferenceValue_Flag
 
 
@@ -914,7 +1250,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	
 	if (nullptr != outIsDefault)
 	{
-		*outIsDefault = (YES == isDefault);
+		*outIsDefault = (true == isDefault);
 	}
 	
 	return result;
@@ -1023,6 +1359,7 @@ setNilPreferenceValue
 @end // PreferenceValue_Flag
 
 
+#pragma mark -
 @implementation PreferenceValue_Number
 
 
@@ -1186,7 +1523,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	
 	if (nullptr != outIsDefault)
 	{
-		*outIsDefault = (YES == isDefault);
+		*outIsDefault = (true == isDefault);
 	}
 	
 	return result;
@@ -1530,6 +1867,7 @@ setNilPreferenceValue
 @end // PreferenceValue_Number
 
 
+#pragma mark -
 @implementation PreferenceValue_String
 
 
@@ -1586,7 +1924,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	
 	if (nullptr != outIsDefault)
 	{
-		*outIsDefault = (YES == isDefault);
+		*outIsDefault = (true == isDefault);
 	}
 	
 	return result;
@@ -1691,5 +2029,177 @@ setNilPreferenceValue
 
 
 @end // PreferenceValue_String
+
+
+#pragma mark -
+@implementation PreferenceValue_StringByJoiningArray
+
+
+@synthesize characterSetForSplitting = _characterSetForSplitting;
+@synthesize stringForJoiningElements = _stringForJoiningElements;
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+characterSetForSplitting:(NSCharacterSet*)		aCharacterSet
+stringForJoiningElements:(NSString*)			aJoiningCharacter
+{
+	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
+	if (nil != self)
+	{
+		self.characterSetForSplitting = aCharacterSet;
+		self.stringForJoiningElements = aJoiningCharacter;
+	}
+	return self;
+}// initWithPreferencesTag:contextManager:
+
+
+#pragma mark New Methods
+
+
+/*!
+Returns the preference’s current value, and indicates whether or
+not that value was inherited from a parent context.
+
+(4.1)
+*/
+- (NSString*)
+readValueSeeIfDefault:(BOOL*)	outIsDefault
+{
+	NSString*				result = @"";
+	Boolean					isDefault = false;
+	Preferences_ContextRef	sourceContext = [[self prefsMgr] currentContext];
+	
+	
+	if (Preferences_ContextIsValid(sourceContext))
+	{
+		CFArrayRef			arrayValue = nullptr;
+		size_t				actualSize = 0;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+																		sizeof(arrayValue), &arrayValue,
+																		true/* search defaults */, &actualSize,
+																		&isDefault);
+		
+		
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			result = [BRIDGE_CAST(arrayValue, NSArray*) componentsJoinedByString:self.stringForJoiningElements];
+		}
+	}
+	
+	if (nullptr != outIsDefault)
+	{
+		*outIsDefault = (true == isDefault);
+	}
+	
+	return result;
+}// readValueSeeIfDefault:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+stringValue
+{
+	BOOL		isDefault = NO;
+	NSString*	result = [self readValueSeeIfDefault:&isDefault];
+	
+	
+	return result;
+}
+- (void)
+setStringValue:(NSString*)	aString
+{
+	[self willSetPreferenceValue];
+	
+	if (nil == aString)
+	{
+		// when given nothing and the context is non-Default, delete the setting;
+		// this will revert to either the Default value (in non-Default contexts)
+		// or the “factory default” value (in Default contexts)
+		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:[self preferencesTag]];
+		
+		
+		if (NO == deleteOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to remove array-from-string-value preference");
+		}
+	}
+	else
+	{
+		BOOL					saveOK = NO;
+		Preferences_ContextRef	targetContext = [[self prefsMgr] currentContext];
+		
+		
+		if (Preferences_ContextIsValid(targetContext))
+		{
+			NSArray*			arrayValue = [aString componentsSeparatedByCharactersInSet:self.characterSetForSplitting];
+			CFArrayRef			asCFArray = BRIDGE_CAST(arrayValue, CFArrayRef);
+			Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+																			sizeof(asCFArray), &asCFArray);
+			
+			
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				saveOK = YES;
+			}
+		}
+		
+		if (NO == saveOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to save array-from-string-value preference");
+		}
+	}
+	
+	[self didSetPreferenceValue];
+}// setStringValue:
+
+
+#pragma mark PreferenceValue_Inherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = NO;
+	
+	
+	UNUSED_RETURN(NSString*)[self readValueSeeIfDefault:&result];
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self setStringValue:nil];
+}// setNilPreferenceValue
+
+
+@end // PreferenceValue_StringByJoiningArray
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

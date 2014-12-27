@@ -528,7 +528,8 @@ Preferences_Result
 
 Preferences_Result
 	Preferences_CreateContextNameArray				(Quills::Prefs::Class				inClass,
-													 CFArrayRef&						outNewArrayOfNewCFStrings);
+													 CFArrayRef&						outNewArrayOfNewCFStrings,
+													 Boolean							inIncludeDefaultItem = false);
 
 Preferences_Result
 	Preferences_CreateUniqueContextName				(Quills::Prefs::Class				inClass,

@@ -528,6 +528,7 @@
 		0AC838670ABF915B00BEF8B9 /* IconForContextMenu.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForContextMenu.icns; path = Application/Resources/IconForContextMenu.icns; sourceTree = "<group>"; };
 		0AC838690ABF917000BEF8B9 /* IconForScrollLockOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForScrollLockOff.icns; path = Application/Resources/IconForScrollLockOff.icns; sourceTree = "<group>"; };
 		0AC8386A0ABF917000BEF8B9 /* IconForScrollLockOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForScrollLockOn.icns; path = Application/Resources/IconForScrollLockOn.icns; sourceTree = "<group>"; };
+		0AC8F364188F6BC100686F55 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelSessionResourceCocoa.xib; sourceTree = "<group>"; };
 		0ACA57C50AEADC5C00B5F482 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/GenericDialog.nib; sourceTree = "<group>"; };
 		0ACA57D20AEADDE700B5F482 /* GenericDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GenericDialog.mm; path = Application/Code/GenericDialog.mm; sourceTree = "<group>"; };
 		0ACA57D40AEADDF300B5F482 /* GenericDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericDialog.h; path = Application/Code/GenericDialog.h; sourceTree = "<group>"; };
@@ -737,7 +738,6 @@
 		0A46FDA80554325700ACDF3A = {
 			isa = PBXGroup;
 			children = (
-				0AD543C8146796A800B642C3 /* External */,
 				0A33CCEF07FABFBF00248DDF /* Shared */,
 				0AD0B0A60A9EABDF002064BA /* AppleScript */,
 				0AC6BDB90A8C130400AFF37A /* Python */,
@@ -886,7 +886,6 @@
 				0A4604580554376100ACDF3A /* WindowInfo.h */,
 				0A4604590554376100ACDF3A /* WindowTitleDialog.h */,
 				0A46045A0554376100ACDF3A /* Workspace.h */,
-				0AFF137B0AF42077006CCA34 /* Rez Input */,
 				0AFF137A0AF42067006CCA34 /* Icons */,
 				0AFF112F0AF4202B006CCA34 /* NIBs */,
 				0AFF136B0AF42045006CCA34 /* Required Frameworks */,
@@ -965,13 +964,6 @@
 			name = AppleScript;
 			sourceTree = "<group>";
 		};
-		0AD543C8146796A800B642C3 /* External */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = External;
-			sourceTree = "<group>";
-		};
 		0AE960170F0C13D900E75E26 /* pymacterm */ = {
 			isa = PBXGroup;
 			children = (
@@ -1011,6 +1003,7 @@
 				0ACCB21D17934CB1001C3B75 /* PrefPanelSessionDataFlowCocoa.xib */,
 				0AD0B46C179244A400CDC4C8 /* PrefPanelSessionGraphicsCocoa.xib */,
 				0AEBF394176409FB006068C7 /* PrefPanelSessionKeyboardCocoa.xib */,
+				0AC8F363188F6BC100686F55 /* PrefPanelSessionResourceCocoa.xib */,
 				0AF7636216F6C856008F90D9 /* PrefPanelTerminalEmulationCocoa.xib */,
 				0A32442015D74B0D001EBB98 /* PrefPanelTerminalOptionsCocoa.xib */,
 				0A0D315616E2F5440063914A /* PrefPanelTerminalScreenCocoa.xib */,
@@ -1110,13 +1103,6 @@
 				0A54E40F0560B62F005B4592 /* IconForTerminal.icns */,
 			);
 			name = Icons;
-			sourceTree = "<group>";
-		};
-		0AFF137B0AF42077006CCA34 /* Rez Input */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = "Rez Input";
 			sourceTree = "<group>";
 		};
 		0AFF137E0AF421AD006CCA34 /* Preferences */ = {
@@ -1790,6 +1776,14 @@
 				0AC8100C1221C89000687DB2 /* English */,
 			);
 			name = InfoWindowCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0AC8F363188F6BC100686F55 /* PrefPanelSessionResourceCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AC8F364188F6BC100686F55 /* English */,
+			);
+			name = PrefPanelSessionResourceCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0ACA57C40AEADC5C00B5F482 /* GenericDialog.nib */ = {

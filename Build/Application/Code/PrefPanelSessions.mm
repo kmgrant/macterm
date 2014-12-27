@@ -302,10 +302,6 @@ struct My_SessionsPanelResourceUI
 	void
 	readPreferences		(Preferences_ContextRef);
 	
-	UInt16
-	readPreferencesForRemoteServers		(Preferences_ContextRef, Boolean, Session_Protocol&,
-										 CFStringRef&, UInt16&, CFStringRef&);
-	
 	void
 	rebuildFavoritesMenu	(HIViewID const&, UInt32, Quills::Prefs::Class,
 							 UInt32, MenuItemIndex&);
@@ -442,13 +438,31 @@ typedef My_SessionsPanelResourceData*		My_SessionsPanelResourceDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
+Boolean						copyRemoteCommandLineString				(Session_Protocol, CFStringRef, UInt16, CFStringRef,
+																	 CFStringRef&);
 My_CharacterToCFStringMap&	initCharacterToCFStringMap				();
 void						makeAllBevelButtonsUseTheSystemFont		(HIWindowRef);
 void						preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+UInt16						readPreferencesForRemoteServers			(Preferences_ContextRef, Boolean, Session_Protocol&,
+																	 CFStringRef&, UInt16&, CFStringRef&);
 OSStatus					receiveFieldChangedInCommandLine		(EventHandlerCallRef, EventRef, void*);
 OSStatus					receiveServerBrowserEvent				(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
+
+
+/*!
+The private class interface.
+*/
+@interface PrefPanelSessions_ResourceViewManager (PrefPanelSessions_ResourceViewManagerInternal) //{
+
+// new methods
+	- (NSArray*)
+	primaryDisplayBindingKeys;
+	- (void)
+	setCommandLineFromSession:(Preferences_ContextRef)_;
+
+@end //}
 
 
 /*!
@@ -3332,8 +3346,8 @@ readCommandLinePreferenceFromSession	(Preferences_ContextRef		inSession)
 		Boolean				updateOK = false;
 		
 		
-		preferenceCountOK = this->readPreferencesForRemoteServers(inSession, true/* search defaults too */,
-																	givenProtocol, hostCFString, portNumber, userCFString);
+		preferenceCountOK = readPreferencesForRemoteServers(inSession, true/* search defaults too */,
+															givenProtocol, hostCFString, portNumber, userCFString);
 		if (4 != preferenceCountOK)
 		{
 			Console_Warning(Console_WriteLine, "unable to read one or more remote server preferences!");
@@ -3428,80 +3442,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		readCommandLinePreferenceFromSession(inSettings);
 	}
 }// My_SessionsPanelResourceUI::readPreferences
-
-
-/*!
-Reads all preferences from the specified context that define a
-remote server, optionally using global defaults as a fallback
-for undefined settings.
-
-Every result is defined, even if it is an empty string or a
-zero value.  CFRelease() should be called on all strings.
-
-Returns the number of preferences read successfully, which is
-normally 4.  Any unsuccessful reads will have arbitrary values.
-
-(4.0)
-*/
-UInt16
-My_SessionsPanelResourceUI::
-readPreferencesForRemoteServers		(Preferences_ContextRef		inSettings,
-									 Boolean					inSearchDefaults,
-									 Session_Protocol&			outProtocol,
-									 CFStringRef&				outHostNameCopy,
-									 UInt16&					outPortNumber,
-									 CFStringRef&				outUserIDCopy)
-{
-	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	size_t					actualSize = 0;
-	UInt16					result = 0;
-	
-	
-	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerProtocol, sizeof(outProtocol),
-												&outProtocol, inSearchDefaults, &actualSize);
-	if (kPreferences_ResultOK == prefsResult)
-	{
-		++result;
-	}
-	else
-	{
-		outProtocol = kSession_ProtocolSSH1; // arbitrary
-	}
-	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerHost, sizeof(outHostNameCopy),
-												&outHostNameCopy, inSearchDefaults, &actualSize);
-	if (kPreferences_ResultOK == prefsResult)
-	{
-		++result;
-	}
-	else
-	{
-		outHostNameCopy = CFSTR(""); // arbitrary
-		CFRetain(outHostNameCopy);
-	}
-	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerPort, sizeof(outPortNumber),
-												&outPortNumber, inSearchDefaults, &actualSize);
-	if (kPreferences_ResultOK == prefsResult)
-	{
-		++result;
-	}
-	else
-	{
-		outPortNumber = 22; // arbitrary
-	}
-	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerUserID, sizeof(outUserIDCopy),
-												&outUserIDCopy, inSearchDefaults, &actualSize);
-	if (kPreferences_ResultOK == prefsResult)
-	{
-		++result;
-	}
-	else
-	{
-		outUserIDCopy = CFSTR(""); // arbitrary
-		CFRetain(outUserIDCopy);
-	}
-	
-	return result;
-}// My_SessionsPanelResourceUI::readPreferencesForRemoteServers
 
 
 /*!
@@ -4020,9 +3960,8 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 						UInt16								preferenceCountOK = 0;
 						
 						
-						preferenceCountOK = resourceInterfacePtr->readPreferencesForRemoteServers
-											(dataPtr->dataModel, false/* search defaults too */,
-												dataModelProtocol, dataModelHostName, dataModelPort, dataModelUserID);
+						preferenceCountOK = readPreferencesForRemoteServers(dataPtr->dataModel, false/* search defaults too */,
+																			dataModelProtocol, dataModelHostName, dataModelPort, dataModelUserID);
 						if (4 != preferenceCountOK)
 						{
 							Console_Warning(Console_WriteLine, "unable to read one or more remote server preferences!");
@@ -4434,14 +4373,60 @@ updateCommandLine	(Session_Protocol	inProtocol,
 					 UInt16				inPortNumber,
 					 CFStringRef		inUserID)
 {
-	CFRetainRelease			newCommandLineObject(CFStringCreateMutable(kCFAllocatorDefault,
-																		0/* length, or 0 for unlimited */),
-													true/* is retained */);
-	NSString*				portString = (0 == inPortNumber)
-											? nil
-											: [[NSNumber numberWithUnsignedInt:inPortNumber] stringValue];
-	Boolean					result = false;
+	CFStringRef		newCommandLineCFString = nullptr;
+	Boolean			result = copyRemoteCommandLineString(inProtocol, inHostName, inPortNumber, inUserID,
+															newCommandLineCFString);
 	
+	
+	if (result)
+	{
+		// update command line field
+		SetControlTextWithCFString(this->_fieldCommandLine, newCommandLineCFString);
+		CFRelease(newCommandLineCFString), newCommandLineCFString = nullptr;
+	}
+	else
+	{
+		// failed; clear command line field
+		SetControlTextWithCFString(this->_fieldCommandLine, CFSTR(""));
+	}
+	UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(this->_fieldCommandLine, true);
+	
+	return result;
+}// My_SessionsPanelResourceUI::updateCommandLine
+
+
+/*!
+Since everything is “really” a local Unix command, this
+routine uses the given remote options and updates the
+command line field with appropriate values.
+
+Every value should be defined, but if a string is empty
+or the port number is 0, it is skipped in the resulting
+command line.
+
+Returns "true" only if the update was successful.  The
+result "outStringOrNull" is only defined if true is
+returned.
+
+(3.1)
+*/
+Boolean
+copyRemoteCommandLineString		(Session_Protocol	inProtocol,
+								 CFStringRef		inHostName,
+								 UInt16				inPortNumber,
+								 CFStringRef		inUserID,
+								 CFStringRef&		outStringOrNull)
+{
+	CFRetainRelease		newCommandLineObject(CFStringCreateMutable(kCFAllocatorDefault,
+																	0/* length, or 0 for unlimited */),
+												true/* is retained */);
+	NSString*			portString = (0 == inPortNumber)
+										? nil
+										: [[NSNumber numberWithUnsignedInt:inPortNumber] stringValue];
+	Boolean				result = false;
+	
+	
+	outStringOrNull = nullptr; // initially...
 	
 	// the host field is required when updating the command line
 	if ((nullptr != inHostName) && (0 == CFStringGetLength(inHostName)))
@@ -4592,31 +4577,21 @@ updateCommandLine	(Session_Protocol	inProtocol,
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
 			}
 			
-			// update command line field
 			if (0 == CFStringGetLength(newCommandLineCFString))
 			{
 				result = false;
 			}
 			else
 			{
-				SetControlTextWithCFString(this->_fieldCommandLine, newCommandLineCFString);
-				UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(this->_fieldCommandLine, true);
+				outStringOrNull = newCommandLineCFString;
+				CFRetain(outStringOrNull);
 				result = true;
 			}
 		}
-		
-		CFRelease(newCommandLineCFString), newCommandLineCFString = nullptr;
-	}
-	
-	// if unsuccessful, clear the command line
-	if (false == result)
-	{
-		SetControlTextWithCFString(this->_fieldCommandLine, CFSTR(""));
-		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(this->_fieldCommandLine, true);
 	}
 	
 	return result;
-}// My_SessionsPanelResourceUI::updateCommandLine
+}// copyRemoteCommandLineString
 
 
 /*!
@@ -4750,6 +4725,79 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 
 
 /*!
+Reads all preferences from the specified context that define a
+remote server, optionally using global defaults as a fallback
+for undefined settings.
+
+Every result is defined, even if it is an empty string or a
+zero value.  CFRelease() should be called on all strings.
+
+Returns the number of preferences read successfully, which is
+normally 4.  Any unsuccessful reads will have arbitrary values.
+
+(4.0)
+*/
+UInt16
+readPreferencesForRemoteServers		(Preferences_ContextRef		inSettings,
+									 Boolean					inSearchDefaults,
+									 Session_Protocol&			outProtocol,
+									 CFStringRef&				outHostNameCopy,
+									 UInt16&					outPortNumber,
+									 CFStringRef&				outUserIDCopy)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	size_t					actualSize = 0;
+	UInt16					result = 0;
+	
+	
+	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerProtocol, sizeof(outProtocol),
+												&outProtocol, inSearchDefaults, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	else
+	{
+		outProtocol = kSession_ProtocolSSH1; // arbitrary
+	}
+	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerHost, sizeof(outHostNameCopy),
+												&outHostNameCopy, inSearchDefaults, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	else
+	{
+		outHostNameCopy = CFSTR(""); // arbitrary
+		CFRetain(outHostNameCopy);
+	}
+	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerPort, sizeof(outPortNumber),
+												&outPortNumber, inSearchDefaults, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	else
+	{
+		outPortNumber = 22; // arbitrary
+	}
+	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerUserID, sizeof(outUserIDCopy),
+												&outUserIDCopy, inSearchDefaults, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	else
+	{
+		outUserIDCopy = CFSTR(""); // arbitrary
+		CFRetain(outUserIDCopy);
+	}
+	
+	return result;
+}// readPreferencesForRemoteServers
+
+
+/*!
 Embellishes "kEventTextInputUnicodeForKeyEvent" of
 "kEventClassTextInput" for the command line field
 in the Resource tab.  This saves the preferences
@@ -4838,9 +4886,9 @@ receiveServerBrowserEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 			
 			
 			// first set defaults
-			preferenceCountOK = resourceInterfacePtr->readPreferencesForRemoteServers(panelDataPtr->dataModel, true/* search defaults too */,
-																						existingProtocol, existingHostName,
-																						existingPortNumber, existingUserID);
+			preferenceCountOK = readPreferencesForRemoteServers(panelDataPtr->dataModel, true/* search defaults too */,
+																existingProtocol, existingHostName,
+																existingPortNumber, existingUserID);
 			if (4 != preferenceCountOK) // TEMPORARY - should this be an assertion?
 			{
 				Console_Warning(Console_WriteLine, "unable to set defaults for one or more remote server preferences!");
@@ -4922,6 +4970,7 @@ receiveServerBrowserEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation PrefPanelSessions_ViewManager
 
 
@@ -4933,11 +4982,12 @@ Designated initializer.
 - (id)
 init
 {
-	NSArray*	subViewManagers = [NSArray arrayWithObjects:
-												[[[PrefPanelSessions_DataFlowViewManager alloc] init] autorelease],
-												[[[PrefPanelSessions_KeyboardViewManager alloc] init] autorelease],
-												[[[PrefPanelSessions_GraphicsViewManager alloc] init] autorelease],
-												nil];
+	NSArray*	subViewManagers = @[
+										[[[PrefPanelSessions_ResourceViewManager alloc] init] autorelease],
+										[[[PrefPanelSessions_DataFlowViewManager alloc] init] autorelease],
+										[[[PrefPanelSessions_KeyboardViewManager alloc] init] autorelease],
+										[[[PrefPanelSessions_GraphicsViewManager alloc] init] autorelease],
+									];
 	
 	
 	self = [super initWithIdentifier:@"net.macterm.prefpanels.Sessions"
@@ -4967,6 +5017,767 @@ dealloc
 @end // PrefPanelSessions_ViewManager
 
 
+#pragma mark -
+@implementation PrefPanelSessions_ResourceViewManager
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (id)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelSessionResourceCocoa" delegate:self context:nullptr];
+	if (nil != self)
+	{
+		_sessionFavoriteIndexes = [[NSIndexSet alloc] init];
+		_sessionFavorites = [@[] retain];
+		
+		// install a callback that finds out about changes to available preferences collections
+		{
+			Preferences_Result		error = kPreferences_ResultOK;
+			
+			
+			self->preferenceChangeListener = [[ListenerModel_StandardListener alloc]
+												initWithTarget:self
+																eventFiredSelector:@selector(model:preferenceChange:context:)];
+			
+			error = Preferences_StartMonitoring([self->preferenceChangeListener listenerRef], kPreferences_ChangeContextName,
+												false/* call immediately to get initial value */);
+			assert(kPreferences_ResultOK == error);
+			error = Preferences_StartMonitoring([self->preferenceChangeListener listenerRef], kPreferences_ChangeNumberOfContexts,
+												true/* call immediately to get initial value */);
+			assert(kPreferences_ResultOK == error);
+		}
+		
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
+																kPreferences_ChangeContextName);
+	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
+																kPreferences_ChangeNumberOfContexts);
+	[preferenceChangeListener release];
+	[_sessionFavoriteIndexes release];
+	[_sessionFavorites release];
+	[prefsMgr release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Called when a monitored preference is changed.  See the
+initializer for the set of events that is monitored.
+
+(4.1)
+*/
+- (void)
+model:(ListenerModel_Ref)				aModel
+preferenceChange:(ListenerModel_Event)	anEvent
+context:(void*)							aContext
+{
+#pragma unused(aModel, aContext)
+	switch (anEvent)
+	{
+	case kPreferences_ChangeContextName:
+	case kPreferences_ChangeNumberOfContexts:
+		// contexts were renamed, added or removed; destroy and rebuild the session menu
+		{
+			CFArrayRef				contextNamesCFArray = nullptr;
+			Preferences_Result		prefsResult = Preferences_CreateContextNameArray
+													(Quills::Prefs::SESSION, contextNamesCFArray,
+														true/* start with Default */);
+			
+			
+			[self willChangeValueForKey:@"sessionFavorites"];
+			[_sessionFavorites release], _sessionFavorites = nil;
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				NSMutableArray*		mutableArray = [[NSMutableArray alloc] initWithArray:BRIDGE_CAST(contextNamesCFArray, NSArray*)];
+				
+				
+				// the first item is a do-nothing action that is set initially
+				// (CRITICAL to ensure that bindings cannot inadvertently force
+				// a customized command line to always mirror some session);
+				// note that "setSessionFavoriteIndexes:" depends on the index
+				// values implied by the array allocated here
+				[mutableArray insertObject:NSLocalizedStringFromTable(@"Select…", @"PrefPanelSessions", @"initial selection for “copy a Session” menu")
+											atIndex:0];
+				_sessionFavorites = mutableArray;
+			}
+			else
+			{
+				Console_Warning(Console_WriteValue, "failed to refresh session list for Resource tab, error", prefsResult);
+				_sessionFavorites = [@[] retain];
+			}
+			[self didChangeValueForKey:@"sessionFavorites"];
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// model:preferenceChange:context:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_StringByJoiningArray*)
+commandLine
+{
+	return [self->byKey objectForKey:@"commandLine"];
+}// commandLine
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_CollectionBinding*)
+formatFavorite
+{
+	return [self->byKey objectForKey:@"formatFavorite"];
+}// formatFavorite
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isEditingRemoteShell
+{
+	return isEditingRemoteShell;
+}// isEditingRemoteShell
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSIndexSet*)
+sessionFavoriteIndexes
+{
+	return [[_sessionFavoriteIndexes retain] autorelease];
+}
+- (void)
+setSessionFavoriteIndexes:(NSIndexSet*)		indexes
+{
+	if (indexes != _sessionFavoriteIndexes)
+	{
+		NSUInteger const	selectedIndex = [indexes firstIndex];
+		
+		
+		[self willChangeValueForKey:@"sessionFavoriteIndexes"];
+		
+		[_sessionFavoriteIndexes release];
+		_sessionFavoriteIndexes = [indexes retain];
+		
+		[self didChangeValueForKey:@"sessionFavoriteIndexes"];
+		
+		// copy the corresponding session’s command line to the field
+		switch (selectedIndex)
+		{
+		case 0:
+			{
+				// header item
+				// (no action)
+			}
+			break;
+		
+		case 1:
+			{
+				// Default
+				Preferences_ContextRef	defaultContext = nullptr;
+				Preferences_Result		prefsResult = Preferences_GetDefaultContext(&defaultContext,
+																					Quills::Prefs::SESSION);
+				
+				
+				//Console_WriteLine("setting command line using Default context");
+				if ((nullptr != defaultContext) && (kPreferences_ResultOK == prefsResult))
+				{
+					[self setCommandLineFromSession:defaultContext];
+				}
+				else
+				{
+					// failed...
+					Console_Warning(Console_WriteValue, "failed to copy command line from default context, error", prefsResult);
+					Sound_StandardAlert();
+				}
+			}
+			break;
+		
+		default:
+			{
+				NSString*					collectionName = [_sessionFavorites objectAtIndex:selectedIndex];
+				CFStringRef					asCFString = BRIDGE_CAST(collectionName, CFStringRef);
+				Preferences_ContextWrap		sessionContext(Preferences_NewContextFromFavorites
+															(Quills::Prefs::SESSION, asCFString),
+																true/* is retained */);
+				
+				
+				//Console_WriteValueCFString("setting command line using context", asCFString);
+				if (sessionContext.exists())
+				{
+					[self setCommandLineFromSession:sessionContext.returnRef()];
+				}
+				else
+				{
+					// failed...
+					Console_Warning(Console_WriteValueCFString, "failed to copy command line from collection name", asCFString);
+					Sound_StandardAlert();
+				}
+			}
+			break;
+		}
+	}
+}// setSessionFavoriteIndexes:
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (NSArray*)
+sessionFavorites
+{
+	return _sessionFavorites;
+}
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_CollectionBinding*)
+terminalFavorite
+{
+	return [self->byKey objectForKey:@"terminalFavorite"];
+}// terminalFavorite
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_CollectionBinding*)
+translationFavorite
+{
+	return [self->byKey objectForKey:@"translationFavorite"];
+}// translationFavorite
+
+
+#pragma mark Actions
+
+/*!
+Overwrites the command line with the user’s default shell location.
+
+(4.1)
+*/
+- (IBAction)
+performSetCommandLineToDefaultShell:(id)	sender
+{
+#pragma unused(sender)
+	CFArrayRef		argumentCFArray = nullptr;
+	Local_Result	localResult = kLocal_ResultOK;
+	Boolean			isError = true;
+	
+	
+	localResult = Local_GetDefaultShellCommandLine(argumentCFArray);
+	if ((kLocal_ResultOK == localResult) && (nullptr != argumentCFArray))
+	{
+		NSArray*	asNSArray = BRIDGE_CAST(argumentCFArray, NSArray*);
+		
+		
+		[self.commandLine setStringValue:[asNSArray componentsJoinedByString:@" "]];
+		isError = false;
+		CFRelease(argumentCFArray), argumentCFArray = nullptr;
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Console_Warning(Console_WriteLine, "failed to set log-in shell command");
+		Sound_StandardAlert();
+	}
+}// performSetCommandLineToDefaultShell:
+
+
+/*!
+Overwrites the command line with a command to start a log-in shell.
+
+(4.1)
+*/
+- (IBAction)
+performSetCommandLineToLogInShell:(id)	sender
+{
+#pragma unused(sender)
+	CFArrayRef		argumentCFArray = nullptr;
+	Local_Result	localResult = kLocal_ResultOK;
+	Boolean			isError = true;
+	
+	
+	localResult = Local_GetLoginShellCommandLine(argumentCFArray);
+	if ((kLocal_ResultOK == localResult) && (nullptr != argumentCFArray))
+	{
+		NSArray*	asNSArray = BRIDGE_CAST(argumentCFArray, NSArray*);
+		
+		
+		[self.commandLine setStringValue:[asNSArray componentsJoinedByString:@" "]];
+		isError = false;
+		CFRelease(argumentCFArray), argumentCFArray = nullptr;
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Console_Warning(Console_WriteLine, "failed to set log-in shell command");
+		Sound_StandardAlert();
+	}
+}// performSetCommandLineToLogInShell:
+
+
+/*!
+Overwrites the command line with whatever is derived from the
+remote server browser panel.
+
+(4.1)
+*/
+- (IBAction)
+performSetCommandLineToRemoteShell:(id)		sender
+{
+#pragma unused(sender)
+	Console_Warning(Console_WriteLine, "UNIMPLEMENTED");
+	Sound_StandardAlert();
+}// performSetCommandLineToRemoteShell:
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:4/* arbitrary; number of settings */];
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeInspector;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+	assert(nil != byKey);
+	assert(nil != prefsMgr);
+	
+	// remember frame from XIB (it might be changed later)
+	self->idealFrame = [aContainerView frame];
+	
+	// note that all current values will change
+	for (NSString* keyName in [self primaryDisplayBindingKeys])
+	{
+		[self willChangeValueForKey:keyName];
+	}
+	
+	// WARNING: Key names are depended upon by bindings in the XIB file.
+	[self->byKey setObject:[[[PreferenceValue_StringByJoiningArray alloc]
+								initWithPreferencesTag:kPreferences_TagCommandLine
+														contextManager:self->prefsMgr
+														characterSetForSplitting:[NSCharacterSet whitespaceAndNewlineCharacterSet]
+														stringForJoiningElements:@" "]
+							autorelease]
+					forKey:@"commandLine"];
+	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
+								initWithPreferencesTag:kPreferences_TagAssociatedFormatFavorite
+														contextManager:self->prefsMgr
+														sourceClass:Quills::Prefs::FORMAT]
+							autorelease]
+					forKey:@"formatFavorite"];
+	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
+								initWithPreferencesTag:kPreferences_TagAssociatedTerminalFavorite
+														contextManager:self->prefsMgr
+														sourceClass:Quills::Prefs::TERMINAL]
+							autorelease]
+					forKey:@"terminalFavorite"];
+	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
+								initWithPreferencesTag:kPreferences_TagAssociatedTranslationFavorite
+														contextManager:self->prefsMgr
+														sourceClass:Quills::Prefs::TRANSLATION]
+							autorelease]
+					forKey:@"translationFavorite"];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
+	{
+		[self didChangeValueForKey:keyName];
+	}
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = self->idealFrame.size;
+}
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet)
+	// note that all current values will change
+	for (NSString* keyName in [self primaryDisplayBindingKeys])
+	{
+		[self willChangeValueForKey:keyName];
+	}
+	
+	// now apply the specified settings
+	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
+	{
+		[self didChangeValueForKey:keyName];
+	}
+	
+	// reset session short-cut menu
+	self.sessionFavoriteIndexes = [NSIndexSet indexSetWithIndex:0];
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [NSImage imageNamed:@"IconForPrefPanelSessions"];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.Sessions.Resource";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Resource", @"PrefPanelSessions", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintHorizontal;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::SESSION;
+}// preferencesClass
+
+
+@end // PrefPanelSessions_ResourceViewManager
+
+
+#pragma mark -
+@implementation PrefPanelSessions_ResourceViewManager (PrefPanelSessions_ResourceViewManagerInternal)
+
+
+#pragma mark New Methods
+
+
+/*!
+Returns the names of key-value coding keys that represent the
+primary bindings of this panel (those that directly correspond
+to saved preferences).
+
+(4.1)
+*/
+- (NSArray*)
+primaryDisplayBindingKeys
+{
+	return @[@"commandLine", @"terminalFavorite", @"formatFavorite", @"translationFavorite"];
+}// primaryDisplayBindingKeys
+
+
+/*!
+Fills in the command-line field using the given Session context.
+If the Session does not have a command line argument array, the
+command line is generated based on remote server information;
+and if even that fails, the Default settings will be used.
+
+(4.1)
+*/
+- (void)
+setCommandLineFromSession:(Preferences_ContextRef)		inSession
+{
+	CFArrayRef				argumentListCFArray = nullptr;
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	
+	prefsResult = Preferences_ContextGetData(inSession, kPreferences_TagCommandLine,
+												sizeof(argumentListCFArray), &argumentListCFArray);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		[self.commandLine setStringValue:[BRIDGE_CAST(argumentListCFArray, NSArray*) componentsJoinedByString:@" "]];
+	}
+	else
+	{
+		// ONLY if no actual command line was found, generate a
+		// command line based on other settings (like host name)
+		Session_Protocol	givenProtocol = kSession_ProtocolSSH1;
+		CFStringRef			commandLineCFString = nullptr;
+		CFStringRef			hostCFString = nullptr;
+		CFStringRef			userCFString = nullptr;
+		UInt16				portNumber = 0;
+		UInt16				preferenceCountOK = 0;
+		Boolean				updateOK = false;
+		
+		
+		preferenceCountOK = readPreferencesForRemoteServers(inSession, true/* search defaults too */,
+															givenProtocol, hostCFString, portNumber, userCFString);
+		if (4 != preferenceCountOK)
+		{
+			Console_Warning(Console_WriteLine, "unable to read one or more remote server preferences!");
+		}
+		updateOK = copyRemoteCommandLineString(givenProtocol, hostCFString, portNumber, userCFString, commandLineCFString);
+		if (false == updateOK)
+		{
+			Console_Warning(Console_WriteLine, "unable to update some part of command line based on given preferences!");
+		}
+		else
+		{
+			[self.commandLine setStringValue:BRIDGE_CAST(commandLineCFString, NSString*)];
+		}
+		
+		CFRelease(hostCFString), hostCFString = nullptr;
+		CFRelease(userCFString), userCFString = nullptr;
+	}
+}// setCommandLineFromSession
+
+
+@end // PrefPanelSessions_ResourceViewManager (PrefPanelSessions_ResourceViewManagerInternal)
+
+
+#pragma mark -
 @implementation PrefPanelSessions_CaptureFileValue
 
 
@@ -5224,6 +6035,7 @@ setNilPreferenceValue
 @end // PrefPanelSessions_CaptureFileValue
 
 
+#pragma mark -
 @implementation PrefPanelSessions_DataFlowViewManager
 
 
@@ -5621,6 +6433,7 @@ preferencesClass
 @end // PrefPanelSessions_DataFlowViewManager
 
 
+#pragma mark -
 @implementation PrefPanelSessions_DataFlowViewManager (PrefPanelSessions_DataFlowViewManagerInternal)
 
 
@@ -5637,10 +6450,7 @@ to saved preferences).
 - (NSArray*)
 primaryDisplayBindingKeys
 {
-	return [NSArray arrayWithObjects:
-						@"localEcho", @"lineInsertionDelay",
-						@"scrollingDelay", @"captureToFile",
-						nil];
+	return @[@"localEcho", @"lineInsertionDelay", @"scrollingDelay", @"captureToFile"];
 }// primaryDisplayBindingKeys
 
 
@@ -5706,6 +6516,7 @@ dealloc
 @end // PrefPanelSessions_GraphicsModeValue
 
 
+#pragma mark -
 @implementation PrefPanelSessions_GraphicsViewManager
 
 
@@ -6063,6 +6874,7 @@ preferencesClass
 @end // PrefPanelSessions_GraphicsViewManager
 
 
+#pragma mark -
 @implementation PrefPanelSessions_GraphicsViewManager (PrefPanelSessions_GraphicsViewManagerInternal)
 
 
@@ -6079,15 +6891,14 @@ to saved preferences).
 - (NSArray*)
 primaryDisplayBindingKeys
 {
-	return [NSArray arrayWithObjects:
-						@"pageClearsScreen", @"graphicsMode",
-						nil];
+	return @[@"pageClearsScreen", @"graphicsMode"];
 }// primaryDisplayBindingKeys
 
 
 @end // PrefPanelSessions_GraphicsViewManager (PrefPanelSessions_GraphicsViewManagerInternal)
 
 
+#pragma mark -
 @implementation PrefPanelSessions_ControlKeyValue
 
 
@@ -6398,6 +7209,7 @@ setNilPreferenceValue
 @end // PrefPanelSessions_ControlKeyValue
 
 
+#pragma mark -
 @implementation PrefPanelSessions_EmacsMetaValue
 
 
@@ -6457,6 +7269,7 @@ dealloc
 @end // PrefPanelSessions_EmacsMetaValue
 
 
+#pragma mark -
 @implementation PrefPanelSessions_NewLineValue
 
 
@@ -6522,6 +7335,7 @@ dealloc
 @end // PrefPanelSessions_NewLineValue
 
 
+#pragma mark -
 @implementation PrefPanelSessions_KeyboardViewManager
 
 
@@ -7113,6 +7927,7 @@ preferencesClass
 @end // PrefPanelSessions_KeyboardViewManager
 
 
+#pragma mark -
 @implementation PrefPanelSessions_KeyboardViewManager (PrefPanelSessions_KeyboardViewManagerInternal)
 
 
@@ -7129,13 +7944,8 @@ to saved preferences).
 - (NSArray*)
 primaryDisplayBindingKeys
 {
-	return [NSArray arrayWithObjects:
-						@"deleteKeySendsBackspace",
-						@"emacsArrowKeys", @"keyInterruptProcess",
-						@"keyResume", @"keySuspend",
-						@"mappingForEmacsMeta",
-						@"mappingForNewLine",
-						nil];
+	return @[@"deleteKeySendsBackspace", @"emacsArrowKeys", @"keyInterruptProcess",
+				@"keyResume", @"keySuspend", @"mappingForEmacsMeta", @"mappingForNewLine"];
 }// primaryDisplayBindingKeys
 
 

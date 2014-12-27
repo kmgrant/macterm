@@ -47,6 +47,7 @@
 
 // application includes
 #include "Preferences.h"
+#include "UIStrings.h"
 
 
 

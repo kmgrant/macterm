@@ -94,6 +94,7 @@
 #include "Terminal.h"
 #include "TerminalView.h"
 #include "UIStrings.h"
+#include "UIStrings_PrefsWindow.h"
 #include "VectorInterpreter.h"
 
 
@@ -3147,6 +3148,10 @@ specified preferences class; none of these names should
 be used when calling Preferences_NewContextFromFavorites(),
 otherwise the creation will fail.
 
+For convenience, you may set "inIncludeDefaultItem" to true
+to have an item named “Default” appear first in the list
+(commonly useful for user interface elements).
+
 The Core Foundation array is allocated, so you must invoke
 CFRelease() on the array when finished with it (however,
 it is not necessary to do this for the array’s elements).
@@ -3173,7 +3178,8 @@ if any other error occurs
 */
 Preferences_Result
 Preferences_CreateContextNameArray	(Quills::Prefs::Class	inClass,
-									 CFArrayRef&			outNewArrayOfNewCFStrings)
+									 CFArrayRef&			outNewArrayOfNewCFStrings,
+									 Boolean				inIncludeDefaultItem)
 {
 	Preferences_Result				result = kPreferences_ResultGenericFailure;
 	My_FavoriteContextList const*	listPtr = nullptr;
@@ -3188,11 +3194,22 @@ Preferences_CreateContextNameArray	(Quills::Prefs::Class	inClass,
 		
 		if (nullptr != newArray)
 		{
-			auto	toContextPtr = listPtr->begin();
+			CFIndex 	i = 0;
+			auto		toContextPtr = listPtr->begin();
 			
+			
+			if (inIncludeDefaultItem)
+			{
+				CFRetainRelease		defaultName(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowDefaultFavoriteName),
+												true/* is retained */);
+				
+				
+				CFArraySetValueAtIndex(newArray, i, defaultName.returnCFStringRef());
+				++i;
+			}
 			
 			result = kPreferences_ResultOK; // initially...
-			for (CFIndex i = 0; toContextPtr != listPtr->end(); ++toContextPtr)
+			for (; toContextPtr != listPtr->end(); ++toContextPtr)
 			{
 				My_ContextFavoritePtr	contextPtr = *toContextPtr;
 				CFStringRef				thisName = contextPtr->returnName();

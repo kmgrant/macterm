@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="14B25" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+    <dependencies>
+        <deployment version="1060" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelSessions_ResourceViewManager">
+            <connections>
+                <outlet property="logicalFirstResponder" destination="2125" id="2252"/>
+                <outlet property="logicalLastResponder" destination="E3Z-Wg-2dV" id="0tJ-aS-W5H"/>
+                <outlet property="managedView" destination="1835" id="1906"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <arrayController clearsFilterPredicateOnInsertion="NO" id="2157" userLabel="Session Favorites">
+            <declaredKeys>
+                <string>boundName</string>
+            </declaredKeys>
+            <connections>
+                <binding destination="-2" name="selectionIndexes" keyPath="self.sessionFavoriteIndexes" id="GHf-nT-oUf"/>
+                <binding destination="-2" name="contentArray" keyPath="self.sessionFavorites" id="BpX-or-AAx">
+                    <dictionary key="options">
+                        <bool key="NSConditionallySetsEditable" value="NO"/>
+                    </dictionary>
+                </binding>
+            </connections>
+        </arrayController>
+        <box autoresizesSubviews="NO" borderType="none" titlePosition="noTitle" id="1835" userLabel="Managed View">
+            <rect key="frame" x="0.0" y="0.0" width="520" height="447"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <view key="contentView">
+                <rect key="frame" x="0.0" y="0.0" width="520" height="447"/>
+                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                <subviews>
+                    <textField verticalHuggingPriority="750" id="1913">
+                        <rect key="frame" x="18" y="297" width="484" height="17"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Customize the command as needed:" id="1914">
+                            <font key="font" metaFont="systemBold"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" id="Txe-Aj-IuL">
+                        <rect key="frame" x="18" y="410" width="484" height="17"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Choose a command to start from:" id="MGV-aQ-RBb">
+                            <font key="font" metaFont="systemBold"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" id="2010">
+                        <rect key="frame" x="223" y="35" width="279" height="28"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="You can modify these options using Preferences." id="2011">
+                            <font key="font" metaFont="smallSystem"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" id="2089">
+                        <rect key="frame" x="72" y="123" width="145" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Terminal:" id="2093">
+                            <font key="font" metaFont="systemBold"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <popUpButton verticalHuggingPriority="750" id="2090">
+                        <rect key="frame" x="219" y="117" width="236" height="26"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="2091">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="menu"/>
+                            <menu key="menu" title="OtherViews" id="2092"/>
+                        </popUpButtonCell>
+                        <connections>
+                            <binding destination="Xiw-MV-yEY" name="contentValues" keyPath="arrangedObjects" previousBinding="S8K-eW-Kbz" id="GRD-gB-Qvo"/>
+                            <binding destination="Xiw-MV-yEY" name="content" keyPath="arrangedObjects" id="S8K-eW-Kbz"/>
+                            <binding destination="-2" name="selectedObject" keyPath="self.terminalFavorite.currentValueDescriptor" previousBinding="GRD-gB-Qvo" id="bFQ-s6-2qq"/>
+                            <outlet property="nextKeyView" destination="ZgY-RN-WYM" id="etC-4w-vXE"/>
+                        </connections>
+                    </popUpButton>
+                    <button id="2125">
+                        <rect key="frame" x="96" y="377" width="128" height="25"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="square" title="Shell" bezelStyle="shadowlessSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="2126">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="performSetCommandLineToDefaultShell:" target="-2" id="rVH-Bz-IUo"/>
+                            <outlet property="nextKeyView" destination="pKq-7k-NXT" id="UGB-DT-qYk"/>
+                        </connections>
+                    </button>
+                    <button id="pKq-7k-NXT">
+                        <rect key="frame" x="234" y="377" width="128" height="25"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="square" title="Log-In Shell" bezelStyle="shadowlessSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="XaE-pY-5v8">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="performSetCommandLineToLogInShell:" target="-2" id="0bC-b1-xa4"/>
+                            <outlet property="nextKeyView" destination="FmE-b7-yDz" id="CbB-xX-FMU"/>
+                        </connections>
+                    </button>
+                    <button id="FmE-b7-yDz">
+                        <rect key="frame" x="372" y="377" width="128" height="25"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="square" title="Remote Shell…" bezelStyle="shadowlessSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cgc-nx-gis">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="performSetCommandLineToRemoteShell:" target="-2" id="cbP-oO-K3k"/>
+                            <binding destination="-2" name="value" keyPath="self.isEditingRemoteShell" id="41V-6c-m6C"/>
+                            <outlet property="nextKeyView" destination="X2w-tI-AfY" id="5cD-lf-4PF"/>
+                        </connections>
+                    </button>
+                    <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="2139">
+                        <rect key="frame" x="96" y="158" width="404" height="5"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
+                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                        <font key="titleFont" metaFont="system"/>
+                    </box>
+                    <textField verticalHuggingPriority="750" id="2254">
+                        <rect key="frame" x="17" y="248" width="73" height="14"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Use Default" id="2257">
+                            <font key="font" metaFont="smallSystem"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <button id="2255">
+                        <rect key="frame" x="16" y="227" width="22" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2256">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="miniSystem"/>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="-2" name="enabled" keyPath="self.commandLine.inheritEnabled" id="LKA-uK-tb8"/>
+                            <binding destination="-2" name="value" keyPath="self.commandLine.inherited" id="A5K-Lx-i1K"/>
+                            <outlet property="nextKeyView" destination="2295" id="Ffe-FW-dfQ"/>
+                        </connections>
+                    </button>
+                    <button id="2295">
+                        <rect key="frame" x="16" y="123" width="22" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2296">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="miniSystem"/>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="-2" name="enabled" keyPath="self.terminalFavorite.inheritEnabled" id="euO-hA-8fL"/>
+                            <binding destination="-2" name="value" keyPath="self.terminalFavorite.inherited" id="rnV-FU-xzf"/>
+                            <outlet property="nextKeyView" destination="DaW-mz-kxn" id="INF-fc-saU"/>
+                        </connections>
+                    </button>
+                    <textField verticalHuggingPriority="750" id="Gvr-Q3-vOX">
+                        <rect key="frame" x="72" y="97" width="145" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Format:" id="OHc-xa-SDk">
+                            <font key="font" metaFont="systemBold"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <popUpButton verticalHuggingPriority="750" id="ZgY-RN-WYM">
+                        <rect key="frame" x="219" y="91" width="236" height="26"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="aQc-dY-Gm7">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="menu"/>
+                            <menu key="menu" title="OtherViews" id="riB-Bc-M7s"/>
+                        </popUpButtonCell>
+                        <connections>
+                            <binding destination="gzS-4c-By3" name="content" keyPath="arrangedObjects" id="3rX-Ve-ekI"/>
+                            <binding destination="gzS-4c-By3" name="contentValues" keyPath="arrangedObjects" previousBinding="3rX-Ve-ekI" id="J1Y-32-NuA"/>
+                            <binding destination="-2" name="selectedObject" keyPath="self.formatFavorite.currentValueDescriptor" previousBinding="J1Y-32-NuA" id="yZQ-zJ-JyT"/>
+                            <outlet property="nextKeyView" destination="z3T-Ui-0Kx" id="vLb-eY-Mgm"/>
+                        </connections>
+                    </popUpButton>
+                    <button id="DaW-mz-kxn">
+                        <rect key="frame" x="16" y="97" width="22" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="7gN-ms-Mpt">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="miniSystem"/>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="-2" name="enabled" keyPath="self.formatFavorite.inheritEnabled" id="24V-iv-G2r"/>
+                            <binding destination="-2" name="value" keyPath="self.formatFavorite.inherited" id="JMX-mN-zjV"/>
+                            <outlet property="nextKeyView" destination="E3Z-Wg-2dV" id="kX2-F6-wDb"/>
+                        </connections>
+                    </button>
+                    <textField verticalHuggingPriority="750" id="FD9-4l-TPx">
+                        <rect key="frame" x="72" y="71" width="145" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Translation:" id="xO2-fj-mT2">
+                            <font key="font" metaFont="systemBold"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <popUpButton verticalHuggingPriority="750" id="z3T-Ui-0Kx">
+                        <rect key="frame" x="219" y="65" width="236" height="26"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="hVe-oJ-lfB">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="menu"/>
+                            <menu key="menu" title="OtherViews" id="y0Z-t3-mTU"/>
+                        </popUpButtonCell>
+                        <connections>
+                            <binding destination="zt6-tG-GaH" name="contentValues" keyPath="arrangedObjects" previousBinding="NgK-YY-c5I" id="Lc5-SB-EOd"/>
+                            <binding destination="zt6-tG-GaH" name="content" keyPath="arrangedObjects" id="NgK-YY-c5I"/>
+                            <binding destination="-2" name="selectedObject" keyPath="self.translationFavorite.currentValueDescriptor" previousBinding="Lc5-SB-EOd" id="ko7-EF-WTl"/>
+                            <outlet property="nextKeyView" destination="2255" id="51K-t0-uuP"/>
+                        </connections>
+                    </popUpButton>
+                    <button id="E3Z-Wg-2dV">
+                        <rect key="frame" x="16" y="71" width="22" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="BDd-IJ-drT">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="miniSystem"/>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="-2" name="enabled" keyPath="self.translationFavorite.inheritEnabled" id="SZC-mi-Kcn"/>
+                            <binding destination="-2" name="value" keyPath="self.translationFavorite.inherited" id="cqt-AF-rll"/>
+                        </connections>
+                    </button>
+                    <textField verticalHuggingPriority="750" id="xqC-E8-ocs">
+                        <rect key="frame" x="94" y="351" width="214" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="…or copy a Session:" id="ZDs-RS-pmb">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <popUpButton verticalHuggingPriority="750" id="X2w-tI-AfY">
+                        <rect key="frame" x="311" y="345" width="192" height="26"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" pullsDown="YES" id="GNP-dX-W6x">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="menu"/>
+                            <menu key="menu" title="OtherViews" id="HYx-dD-85I"/>
+                        </popUpButtonCell>
+                        <connections>
+                            <binding destination="2157" name="content" keyPath="arrangedObjects" id="etO-zS-9hc"/>
+                            <binding destination="2157" name="contentValues" keyPath="arrangedObjects" previousBinding="etO-zS-9hc" id="og1-CV-zNc"/>
+                            <binding destination="2157" name="selectedIndex" keyPath="selectionIndex" previousBinding="og1-CV-zNc" id="DzY-F3-Wq6"/>
+                            <outlet property="nextKeyView" destination="rg9-HH-8kW" id="m0y-pW-imp"/>
+                        </connections>
+                    </popUpButton>
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" id="rg9-HH-8kW">
+                        <rect key="frame" x="96" y="181" width="404" height="108"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="BSc-qb-NX9">
+                            <font key="font" metaFont="fixedUser"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <binding destination="-2" name="value" keyPath="self.commandLine.stringValue" id="2rz-Gi-QM6"/>
+                            <outlet property="nextKeyView" destination="2090" id="9L7-sM-2cf"/>
+                        </connections>
+                    </textField>
+                </subviews>
+            </view>
+            <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
+            <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            <connections>
+                <outlet property="nextKeyView" destination="DaW-mz-kxn" id="ZUQ-cx-jxF"/>
+            </connections>
+        </box>
+        <arrayController clearsFilterPredicateOnInsertion="NO" id="Xiw-MV-yEY" userLabel="Terminal Favorites">
+            <declaredKeys>
+                <string>boundName</string>
+            </declaredKeys>
+            <connections>
+                <binding destination="-2" name="contentArray" keyPath="self.terminalFavorite.valueDescriptorArray" id="kk7-iE-WSH">
+                    <dictionary key="options">
+                        <bool key="NSConditionallySetsEditable" value="NO"/>
+                    </dictionary>
+                </binding>
+            </connections>
+        </arrayController>
+        <arrayController clearsFilterPredicateOnInsertion="NO" id="gzS-4c-By3" userLabel="Format Favorites">
+            <declaredKeys>
+                <string>boundName</string>
+            </declaredKeys>
+            <connections>
+                <binding destination="-2" name="contentArray" keyPath="self.formatFavorite.valueDescriptorArray" id="U0t-fA-ajO">
+                    <dictionary key="options">
+                        <bool key="NSConditionallySetsEditable" value="NO"/>
+                    </dictionary>
+                </binding>
+            </connections>
+        </arrayController>
+        <arrayController clearsFilterPredicateOnInsertion="NO" id="zt6-tG-GaH" userLabel="Translation Favorites">
+            <declaredKeys>
+                <string>boundName</string>
+            </declaredKeys>
+            <connections>
+                <binding destination="-2" name="contentArray" keyPath="self.translationFavorite.valueDescriptorArray" id="Dba-Zi-mnF">
+                    <dictionary key="options">
+                        <bool key="NSConditionallySetsEditable" value="NO"/>
+                    </dictionary>
+                </binding>
+            </connections>
+        </arrayController>
+    </objects>
+</document>

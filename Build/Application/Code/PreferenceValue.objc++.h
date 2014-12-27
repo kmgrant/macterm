@@ -41,9 +41,11 @@
 // application includes
 #import "Preferences.h"
 #import "PrefsContextManager.objc++.h"
+#import "QuillsPrefs.h"
 
 // library includes
 #import <BoundName.objc++.h>
+@class ListenerModel_StandardListener;
 
 
 
@@ -306,6 +308,44 @@ defined to be a pointer to a CFStringRef.
 
 
 /*!
+Manages bindings for any preference whose value is
+defined to be a pointer to a CFArrayRef of strings,
+using a single string as the access point.  The
+string is split on a character set in order to
+convert.
+*/
+@interface PreferenceValue_StringByJoiningArray : PreferenceValue_InheritedSingleTag //{
+{
+@private
+	NSCharacterSet*		_characterSetForSplitting;
+	NSString*			_stringForJoiningElements;
+}
+
+// initializers
+	- (id)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_
+	characterSetForSplitting:(NSCharacterSet*)_
+	stringForJoiningElements:(NSString*)_;
+
+// new methods
+	- (NSString*)
+	readValueSeeIfDefault:(BOOL*)_;
+
+// accessors
+	@property (strong) NSCharacterSet*
+	characterSetForSplitting;
+	@property (strong) NSString*
+	stringForJoiningElements;
+	- (NSString*)
+	stringValue;
+	- (void)
+	setStringValue:(NSString*)_; // binding
+
+@end //}
+
+
+/*!
 For use with PreferenceValue_Array.  Stores a description
 for a constant value, and the value itself.  When an
 array is bound to a user interface element such as a
@@ -364,6 +404,36 @@ displayed to the user.
 	currentValueDescriptor;
 	- (void)
 	setCurrentValueDescriptor:(id)_; // binding
+
+@end //}
+
+
+/*!
+Manages bindings for a single preference that has a
+string value that comes from the list of available
+collections in a certain preferences class.  This is
+typically bound to a pop-up menu.
+*/
+@interface PreferenceValue_CollectionBinding : PreferenceValue_Inherited //{
+{
+@private
+	NSArray*							_valueDescriptorArray;
+	PreferenceValue_String*				_preferenceAccessObject;
+	ListenerModel_StandardListener*		_preferenceChangeListener;
+	Quills::Prefs::Class				_preferencesClass;
+}
+
+// initializers
+	- (id)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_
+	sourceClass:(Quills::Prefs::Class)_;
+
+// accessors
+	@property (strong) id
+	currentValueDescriptor; // binding
+	@property (strong, readonly) NSArray*
+	valueDescriptorArray; // binding
 
 @end //}
 
