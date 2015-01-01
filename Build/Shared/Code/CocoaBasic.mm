@@ -250,6 +250,56 @@ CocoaBasic_ColorPanelSetTargetView	(HIViewRef	inColorBoxView)
 
 
 /*!
+Creates or overwrites the file at the specified location,
+creating all intermediate parent directories.  If the
+initial data is not "nullptr", it is written into the
+file; otherwise the file has size zero.  Upon return, the
+file is closed.  Returns true only if all steps are
+successful.
+
+(1.10)
+*/
+Boolean
+CocoaBasic_CreateFileAndDirectoriesWithData		(CFURLRef		inDirectoryURL,
+												 CFStringRef	inFileName,
+												 CFDataRef		inInitialDataOrNull)
+{
+	NSURL*				asNSURL = BRIDGE_CAST(inDirectoryURL, NSURL*);
+	assert([asNSURL isFileURL]);
+	NSString*			dirctoryPath = [asNSURL path];
+	NSURL*				fullURL = [asNSURL URLByAppendingPathComponent:BRIDGE_CAST(inFileName, NSString*)];
+	assert([fullURL isFileURL]);
+	NSString*			absoluteFilePath = [fullURL path];
+	NSFileManager*		fileManager = [NSFileManager defaultManager];
+	NSError*			error = nil;
+	Boolean				result = false;
+	
+	
+	// create all parent directories
+	result = [fileManager createDirectoryAtPath:dirctoryPath withIntermediateDirectories:YES
+												attributes:nil error:&error];
+	if (NO == result)
+	{
+		if (nil != error)
+		{
+			Console_Warning(Console_WriteValueCFString, "failed to create parent directories, error",
+							BRIDGE_CAST([error localizedDescription], CFStringRef));
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "failed to create parent directories");
+		}
+	}
+	
+	// create the target file
+	result = [fileManager createFileAtPath:absoluteFilePath contents:BRIDGE_CAST(inInitialDataOrNull, NSData*)
+											attributes:nil];
+	
+	return result;
+}// CreateFileAndDirectoriesWithData
+
+
+/*!
 Shows a modal panel for opening any number of files and
 automatically handling them via Apple Events.  The panel
 resolves aliases, does not allow the user to choose

@@ -58,6 +58,11 @@ void
 	CocoaBasic_ApplyStandardStyleToPopover			(Popover_Window*,
 													 Boolean);
 
+Boolean
+	CocoaBasic_CreateFileAndDirectoriesWithData		(CFURLRef,
+													 CFStringRef,
+													 CFDataRef = nullptr);
+
 CGDeviceColor
 	CocoaBasic_GetGray								(CGDeviceColor const&,
 													 Float32 = 0.5);
