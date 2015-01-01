@@ -6908,80 +6908,29 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 				OSType	captureFileCreator = 'ttxt';
 				
 				
+				// TEMPORARY; should upgrade this to a more modern file API
+				// (will be much easier when moving to NSSavePanel in Cocoa)
 				error = FileSelectionDialogs_CreateOrFindUserSaveFile
 						(reply, captureFileCreator, 'TEXT', saveFile, temporaryFile);
 				if (noErr == error)
 				{
 					My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+					CFRetainRelease			saveFileURL(CFURLCreateFromFSRef(kCFAllocatorDefault, &saveFile));
 					
 					
 					// delete the temporary file; this is ignored for file captures,
 					// since capture files themselves are considered highly volatile
 					UNUSED_RETURN(OSStatus)FSDeleteObject(&temporaryFile);
 					
-					// now write to the file
-					error = FSCreateFork(&saveFile, 0/* name length */, nullptr/* name */);
-					if ((errFSForkExists == error) || (dupFNErr == error))
+					// TEMPORARY - this is not capable of handling multiple screens per window
+					Boolean		captureOK = Terminal_FileCaptureBegin(ptr->targetTerminals.front(), REINTERPRET_CAST(saveFileURL.returnCFTypeRef(), CFURLRef));
+					if (false == captureOK)
 					{
-						// if a capture file already exists, try to delete it; if the delete fails,
-						// try creating files with alternate, similar names until successful
-						if (noErr == FSDeleteFork(&saveFile, 0/* name length */, nullptr/* name */))
-						{
-							error = FSCreateFork(&saveFile, 0/* name length */, nullptr/* name */);
-						}
-						else
-						{
-							// TEMPORARY
-							// persistent create - UNIMPLEMENTED
-							error = noErr;
-						}
+						Console_Warning(Console_WriteLine, "unable to start file capture from terminal");
+						error = ioErr; // arbitrary
 					}
 					
-					if (noErr != error) Alert_ReportOSStatus(error);
-					else
-					{
-						SInt16		fileRefNum = 0;
-						
-						
-						error = FSOpenFork(&saveFile, 0/* name length */, nullptr/* name */, fsWrPerm, &fileRefNum);
-						if (noErr != error) Alert_ReportOSStatus(error);
-						else
-						{
-							// The capture file is opened for writing at this point, but it is not necessary to
-							// close the file in the Session module because of the argument, below, that
-							// transfers responsibility for closing the file to the Terminal module.
-							UNUSED_RETURN(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
-							// TEMPORARY - this command is not capable of handling multiple screens per window
-							Terminal_FileCaptureBegin(ptr->targetTerminals.front(), fileRefNum, true/* auto-close */);
-							
-						#if 0
-							// set the window proxy icon appropriately for the file capture
-							{
-								AliasHandle		alias = nullptr;
-								
-								
-								// I can’t remember if it’s a memory leak to forget about an alias or not...warning...
-								if (noErr == NewAliasMinimal(&captureFile, &alias))
-								{
-									// TEMPORARY - one day it might be nice if MacTerm could display the same screen
-									//             in more than one window; in such case, the following would have to
-									//             adapt to iterate over a list of windows (or better yet, Terminal Window
-									//             module would simply do this automatically)
-									WindowRef		window = TerminalView_ReturnWindow(dataPtr->view);
-									
-									
-									if (nullptr != window)
-									{
-										(OSStatus)SetWindowProxyAlias(window, alias);
-										(OSStatus)SetWindowProxyCreatorAndType(window, captureFileCreator, 'TEXT',
-																				captureFile.vRefNum);
-									}
-									Memory_DisposeHandle(REINTERPRET_CAST(&alias, Handle*));
-								}
-							}
-						#endif
-						}
-					}
+					// UNIMPLEMENTED: set window proxy icon to match opened file?
 				}
 			}
 			else

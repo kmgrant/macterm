@@ -24,7 +24,7 @@
 		0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */; };
 		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */; };
 		0A4FAF951525694700B8142A /* Popover.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4FAF941525694700B8142A /* Popover.mm */; };
-		0A64C5EB1059E423005B8A48 /* StreamCapture.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.cp */; };
+		0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.mm */; };
 		0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A68811112F537A1005F418A /* GrowlSupport.mm */; };
 		0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A70B8AC1079C33B0013E76F /* PythonMain.cp */; };
 		0A766E0B0FB54D8E00259E56 /* kvp.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A766E0A0FB54D8E00259E56 /* kvp.py */; };
@@ -418,7 +418,7 @@
 		0A5CE9411582ED7C008CD243 /* IconForItemAddMenuSegment.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAddMenuSegment.icns; path = Application/Resources/IconForItemAddMenuSegment.icns; sourceTree = "<group>"; };
 		0A6000E915981886001CA6AA /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelGeneralSpecialCocoa.xib; sourceTree = "<group>"; };
 		0A6315B912348AB4003890B8 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ClipboardCocoa.xib; sourceTree = "<group>"; };
-		0A64C5EA1059E423005B8A48 /* StreamCapture.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StreamCapture.cp; path = Application/Code/StreamCapture.cp; sourceTree = "<group>"; };
+		0A64C5EA1059E423005B8A48 /* StreamCapture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = StreamCapture.mm; path = Application/Code/StreamCapture.mm; sourceTree = "<group>"; };
 		0A64C5EC1059E432005B8A48 /* StreamCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamCapture.h; path = Application/Code/StreamCapture.h; sourceTree = "<group>"; };
 		0A65F2C315882AD100B9E338 /* IconForContextMenuSegment@2x.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "IconForContextMenuSegment@2x.icns"; path = "Application/Resources/IconForContextMenuSegment@2x.icns"; sourceTree = "<group>"; };
 		0A66B705154E04DC00B98072 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/VectorWindowCocoa.xib; sourceTree = "<group>"; };
@@ -795,7 +795,7 @@
 				0A46FE14055432A400ACDF3A /* Session.cp */,
 				0A46FE15055432A400ACDF3A /* SessionDescription.cp */,
 				0A46FE17055432A400ACDF3A /* SessionFactory.cp */,
-				0A64C5EA1059E423005B8A48 /* StreamCapture.cp */,
+				0A64C5EA1059E423005B8A48 /* StreamCapture.mm */,
 				0A46FE25055432A400ACDF3A /* Terminal.cp */,
 				0A984182083452E6002E1BCE /* TerminalBackground.cp */,
 				0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */,
@@ -1477,7 +1477,7 @@
 				0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */,
 				0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */,
 				0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */,
-				0A64C5EB1059E423005B8A48 /* StreamCapture.cp in Sources */,
+				0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */,
 				0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */,
 				0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */,
 				0ABAA71B13491D06006B1EF6 /* CocoaFuture.mm in Sources */,

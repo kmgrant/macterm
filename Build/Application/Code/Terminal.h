@@ -614,8 +614,7 @@ Terminal_Result
 
 Boolean
 	Terminal_FileCaptureBegin				(TerminalScreenRef			inScreen,
-											 SInt16						inOpenWritableFile,
-											 Boolean					inAutoClose);
+											 CFURLRef					inFileToOverwrite);
 
 void
 	Terminal_FileCaptureEnd					(TerminalScreenRef			inScreen);

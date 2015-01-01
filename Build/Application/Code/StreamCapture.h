@@ -66,7 +66,7 @@ typedef struct StreamCapture_OpaqueStructure*	StreamCapture_Ref;	//!< represents
 //@{
 
 StreamCapture_Ref
-	StreamCapture_New					(Session_LineEnding			inLineEndings = kSession_LineEndingLF);
+	StreamCapture_New					(Session_LineEnding			inFileLineEndings);
 
 void
 	StreamCapture_Release				(StreamCapture_Ref*			inoutRefPtr);
@@ -78,17 +78,13 @@ void
 
 Boolean
 	StreamCapture_Begin					(StreamCapture_Ref			inRef,
-										 SInt16						inOpenWritableFile,
-										 Boolean					inAutoClose = false);
+										 CFURLRef					inFileToOverwrite);
 
 void
 	StreamCapture_End					(StreamCapture_Ref			inRef);
 
 Boolean
 	StreamCapture_InProgress			(StreamCapture_Ref			inRef);
-
-SInt16
-	StreamCapture_ReturnReferenceNumber	(StreamCapture_Ref			inRef);
 
 void
 	StreamCapture_WriteUTF8Data			(StreamCapture_Ref			inRef,
