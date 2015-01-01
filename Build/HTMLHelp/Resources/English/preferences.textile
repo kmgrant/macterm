@@ -745,7 +745,7 @@ If a file with the name you choose already exists, it will be
 
 * The @\D@ sequence is replaced by the current date, using the international standard YYYY-MM-DD format (for example, if the date were October 17, 2013 then the sequence would be replaced with "2013-10-17").
 
-* The @\T@ sequence is replaced by the current time, using the HH:MM:SS format and the 24-hour clock (for example, if it were 44 seconds after 3:30 in the afternoon then the sequence would be replaced with "15:30:44").
+* The @\T@ sequence is replaced by the current time, using the HHMMSS format and the 24-hour clock (for example, if it were 44 seconds after 3:30 in the afternoon then the sequence would be replaced with "153044").  Note that standard time separators (:) cannot be used in file names because the OS would convert them into forward slashes for historical reasons.
 
 * The @\\@ sequence (double backslash) allows you to insert a single backslash into a generated file's name.
 

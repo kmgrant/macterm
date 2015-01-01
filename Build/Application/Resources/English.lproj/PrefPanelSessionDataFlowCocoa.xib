@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="14B25" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelSessions_DataFlowViewManager">
@@ -13,7 +13,7 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <box autoresizesSubviews="NO" borderType="none" titlePosition="noTitle" id="1835" userLabel="Managed View">
             <rect key="frame" x="0.0" y="0.0" width="560" height="397"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -196,8 +196,8 @@
                             </allowedTypes>
                         </pathCell>
                         <connections>
-                            <binding destination="-2" name="enabled" keyPath="self.captureToFile.enabled" id="2478"/>
                             <binding destination="-2" name="value" keyPath="self.captureToFile.directoryPathURLValue" id="2489"/>
+                            <binding destination="-2" name="enabled" keyPath="self.captureToFile.enabled" id="2478"/>
                             <outlet property="nextKeyView" destination="2466" id="2490"/>
                         </connections>
                     </pathControl>
@@ -235,8 +235,8 @@
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <binding destination="-2" name="enabled" keyPath="self.captureToFile.enabled" id="2482"/>
                             <binding destination="-2" name="value" keyPath="self.captureToFile.allowSubstitutions" id="2472"/>
+                            <binding destination="-2" name="enabled" keyPath="self.captureToFile.enabled" id="2482"/>
                             <outlet property="nextKeyView" destination="2096" id="2492"/>
                         </connections>
                     </button>
@@ -247,7 +247,7 @@
                             <font key="font" metaFont="smallSystem"/>
                             <string key="title">Recognized sequences:
   \D — date, as YYYY-MM-DD
-  \T — 24-hour time, as HH:MM:SS
+  \T — 24-hour time, as HHMMSS
   \\ — \
 
 Files with generated names can coexist with previous logs in the same directory, whereas files with the same name will always be overwritten.</string>

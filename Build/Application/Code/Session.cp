@@ -301,6 +301,10 @@ struct My_Session
 	My_TEKGraphicList			targetVectorGraphics;		// list of TEK graphics attached to this session
 	My_TerminalScreenList		targetDumbTerminals;		// list of DUMB terminals to which incoming data is being copied
 	My_TerminalScreenList		targetTerminals;			// list of screen buffers to which incoming data is being copied
+	CFRetainRelease				autoCaptureFileName;		// if defined, the name or template name for an automatically-created capture file
+	CFRetainRelease				autoCaptureDirectoryURL;	// if defined, URL to directory in which to automatically create capture file
+	Boolean						autoCaptureToFile;			// if set, session automatically starts a file capture
+	Boolean						autoCaptureIsTemplateName;	// if set, file name is actually a pattern that can substitute date, time, etc.
 	Boolean						vectorGraphicsPageOpensNewWindow;	// true if a TEK PAGE opens a new window instead of clearing the current one
 	VectorInterpreter_Mode		vectorGraphicsCommandSet;	// e.g. TEK 4014 or 4105
 	My_VectorWindowSet			vectorGraphicsWindows;		// window controllers for open canvas windows, if any
@@ -375,11 +379,14 @@ typedef My_WatchAlertInfo*		My_WatchAlertInfoPtr;
 namespace {
 
 void						autoActivateWindow					(EventLoopTimerRef, void*);
+Boolean						autoCaptureSessionToFile			(My_SessionPtr);
+Boolean						captureToFile						(My_SessionPtr, CFURLRef, CFStringRef);
 void						changeNotifyForSession				(My_SessionPtr, Session_Change, void*);
 void						changeStateAttributes				(My_SessionPtr, Session_StateAttributes,
 																 Session_StateAttributes);
 void						closeTerminalWindow					(My_SessionPtr);
 void						configureSaveDialog					(SessionRef, NavDialogCreationOptions&);
+UInt16						copyAutoCapturePreferences			(My_SessionPtr, Preferences_ContextRef, Boolean);
 UInt16						copyEventKeyPreferences				(My_SessionPtr, Preferences_ContextRef, Boolean);
 UInt16						copyVectorGraphicsPreferences		(My_SessionPtr, Preferences_ContextRef, Boolean);
 My_HMHelpContentRecWrap&	createHelpTagForInterrupt			();
@@ -5420,6 +5427,10 @@ mainProcess(nullptr),
 targetVectorGraphics(),
 targetDumbTerminals(),
 targetTerminals(),
+autoCaptureFileName(),
+autoCaptureDirectoryURL(),
+autoCaptureToFile(false),
+autoCaptureIsTemplateName(false),
 vectorGraphicsPageOpensNewWindow(true),
 vectorGraphicsCommandSet(kVectorInterpreter_ModeTEK4014), // arbitrary, reset later
 vectorGraphicsWindows(),
@@ -5454,6 +5465,12 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 	}
 	{
 		UInt16		preferenceCount = copyVectorGraphicsPreferences(this, inConfigurationOrNull, true/* search defaults too */);
+		
+		
+		assert(preferenceCount > 0);
+	}
+	{
+		UInt16		preferenceCount = copyAutoCapturePreferences(this, inConfigurationOrNull, true/* search defaults too */);
 		
 		
 		assert(preferenceCount > 0);
@@ -5638,6 +5655,153 @@ autoActivateWindow	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 
 
 /*!
+Uses the configured file name (optionally as a template) and
+configured directory to start a file capture.
+
+(4.1)
+*/
+Boolean
+autoCaptureSessionToFile	(My_SessionPtr		inPtr)
+{
+	Boolean			result = false;
+	Boolean			releaseFileName = false;
+	CFStringRef		fileName = inPtr->autoCaptureFileName.returnCFStringRef();
+	CFURLRef		directoryURL = REINTERPRET_CAST(inPtr->autoCaptureDirectoryURL.returnCFTypeRef(), CFURLRef);
+	
+	
+	if ((nullptr == fileName) || (nullptr == directoryURL))
+	{
+		Console_Warning(Console_WriteLine, "automatic capture: file name and/or directory is not defined");
+	}
+	else
+	{
+		if (inPtr->autoCaptureIsTemplateName)
+		{
+			time_t			timeNow = time(nullptr);
+			struct tm*		timeData = localtime(&timeNow);
+			char			dateFormatBuffer[256/* arbitrary */];
+			char			timeFormatBuffer[256/* arbitrary */];
+			size_t			formatResult = 0;
+			
+			
+			formatResult = strftime(dateFormatBuffer, sizeof(dateFormatBuffer) - 1, "%Y-%m-%d", timeData);
+			if (formatResult <= 0)
+			{
+				Console_Warning(Console_WriteLine, "failed to format current date");
+				fileName = nullptr;
+			}
+			else
+			{
+				formatResult = strftime(timeFormatBuffer, sizeof(timeFormatBuffer) - 1, "%H%M%S", timeData);
+				if (formatResult <= 0)
+				{
+					Console_Warning(Console_WriteLine, "failed to format current time");
+					fileName = nullptr;
+				}
+			}
+			
+			if (nullptr != fileName)
+			{
+				CFRetainRelease			composedName(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* length limit */, fileName));
+				CFRetainRelease			dateCFString(CFStringCreateWithCString(kCFAllocatorDefault, dateFormatBuffer, kCFStringEncodingASCII),
+														true/* is retained */);
+				CFRetainRelease			timeCFString(CFStringCreateWithCString(kCFAllocatorDefault, timeFormatBuffer, kCFStringEncodingASCII),
+														true/* is retained */);
+				CFMutableStringRef		asMutableCFString = composedName.returnCFMutableStringRef();
+				CFIndex					replacementCount = 0;
+				
+				
+				fileName = composedName.returnCFStringRef();
+				CFRetain(fileName);
+				releaseFileName = true;
+				
+				// perform template substitutions...
+				// ...replace \D with the time in the format YYYY-MM-DD
+				replacementCount = CFStringFindAndReplace(asMutableCFString, CFSTR("\\D"), dateCFString.returnCFStringRef(),
+															CFRangeMake(0, CFStringGetLength(asMutableCFString)), 0/* compare options */);
+				// ...replace \T with the time in the format HH:MM:SS
+				replacementCount = CFStringFindAndReplace(asMutableCFString, CFSTR("\\T"), timeCFString.returnCFStringRef(),
+															CFRangeMake(0, CFStringGetLength(asMutableCFString)), 0/* compare options */);
+				// ...replace doubled backslashes with single backslashes
+				replacementCount = CFStringFindAndReplace(asMutableCFString, CFSTR("\\\\"), CFSTR("\\"),
+															CFRangeMake(0, CFStringGetLength(asMutableCFString)), 0/* compare options */);
+			}
+		}
+		
+		Console_WriteValueCFString("capture file directory", CFURLGetString(directoryURL));
+		Console_WriteValueCFString("capture file name", fileName);
+		Boolean		captureOK = captureToFile(inPtr, directoryURL, fileName);
+		if (captureOK)
+		{
+			Console_Warning(Console_WriteLine, "session failed to start file capture");
+		}
+		else
+		{
+			// success!
+			result = true;
+		}
+	}
+	
+	if (releaseFileName)
+	{
+		CFRelease(fileName), fileName = nullptr;
+	}
+	
+	return result;
+}// autoCaptureSessionToFile
+
+
+/*!
+Initiates a capture of the underlying terminal’s text stream
+to the given file.  Returns "noErr" unless there is a problem.
+
+(3.0)
+*/
+Boolean
+captureToFile	(My_SessionPtr		inPtr,
+				 CFURLRef			inDirectoryToCreateIfNecessary,
+				 CFStringRef		inNameOfFileToOverwrite)
+{
+	Boolean				result = false;
+	CFRetainRelease		fullURL(CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, inDirectoryToCreateIfNecessary, inNameOfFileToOverwrite, false/* is directory */),
+								true/* is retained */);
+	
+	
+	if (false == fullURL.exists())
+	{
+		Console_Warning(Console_WriteLine, "file capture: unable to compose valid URL from directory and file name components");
+	}
+	else
+	{
+		Boolean		createOK = CocoaBasic_CreateFileAndDirectoriesWithData(inDirectoryToCreateIfNecessary, inNameOfFileToOverwrite);
+		if (false == createOK)
+		{
+			Console_Warning(Console_WriteValueCFString, "unable to create specified capture file:", inNameOfFileToOverwrite);
+			result = ioErr; // arbitrary
+		}
+		else
+		{
+			Boolean		captureOK = Terminal_FileCaptureBegin(inPtr->targetTerminals.front(), REINTERPRET_CAST(fullURL.returnCFTypeRef(), CFURLRef));
+			if (false == captureOK)
+			{
+				Console_Warning(Console_WriteLine, "unable to start file capture from terminal");
+				result = ioErr; // arbitrary
+			}
+			else
+			{
+				// success!
+				result = true;
+			}
+		}
+		
+		// UNIMPLEMENTED: could set window proxy icon to location of capture file
+	}
+	
+	return result;
+}// captureToFile
+
+
+/*!
 Notifies all listeners for the specified Session
 state change, passing the given context to the
 listener.
@@ -5722,6 +5886,89 @@ configureSaveDialog		(SessionRef					inRef,
 	inoutOptions.preferenceKey = kPreferences_NavPrefKeyGenericSaveFile;
 	inoutOptions.parentWindow = Session_ReturnActiveWindow(inRef);
 }// configureSaveDialog
+
+
+/*!
+Attempts to read all supported auto-capture-to-file tags from the
+given preference context, and any settings that exist will be
+used to update the specified session.
+
+Returns the number of settings that were changed.
+
+(4.1)
+*/
+UInt16
+copyAutoCapturePreferences		(My_SessionPtr				inPtr,
+								 Preferences_ContextRef		inSource,
+								 Boolean					inSearchDefaults)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	FSRef					fsRefValue;
+	CFStringRef				stringValue = nullptr;
+	Boolean					flag = false;
+	UInt16					result = 0;
+	
+	
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagCaptureAutoStart,
+												sizeof(flag), &flag, inSearchDefaults);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		inPtr->autoCaptureToFile = flag;
+		++result;
+		
+		prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagCaptureFileNameAllowsSubstitutions,
+													sizeof(flag), &flag, inSearchDefaults);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			inPtr->autoCaptureIsTemplateName = flag;
+			++result;
+		}
+		else
+		{
+			// this setting may reasonably not exist; ignore
+			inPtr->autoCaptureIsTemplateName = false;
+		}
+		
+		prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagCaptureFileName,
+													sizeof(stringValue), &stringValue, inSearchDefaults);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			Console_WriteValueCFString("setting capture file name", stringValue);
+			inPtr->autoCaptureFileName = stringValue;
+			++result;
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "capture file name not found");
+			inPtr->autoCaptureFileName.clear();
+			inPtr->autoCaptureToFile = false; // need directory information in order to capture
+		}
+		
+		prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagCaptureFileDirectoryObject,
+													sizeof(fsRefValue), &fsRefValue, inSearchDefaults);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			CFRetainRelease		newURL(CFURLCreateFromFSRef(kCFAllocatorDefault, &fsRefValue));
+			
+			
+			Console_WriteLine("setting capture file directory URL");
+			inPtr->autoCaptureDirectoryURL = REINTERPRET_CAST(newURL.returnCFTypeRef(), CFURLRef);
+			++result;
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "capture file directory not found");
+			inPtr->autoCaptureDirectoryURL.clear();
+			inPtr->autoCaptureToFile = false; // need directory information in order to capture
+		}
+	}
+	else
+	{
+		inPtr->autoCaptureToFile = false;
+	}
+	
+	return result;
+}// copyAutoCapturePreferences
 
 
 /*!
@@ -6915,21 +7162,22 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 				if (noErr == error)
 				{
 					My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-					CFRetainRelease			saveFileURL(CFURLCreateFromFSRef(kCFAllocatorDefault, &saveFile));
+					CFRetainRelease			saveFileURL(CFURLCreateFromFSRef(kCFAllocatorDefault, &saveFile),
+														true/* is retained */);
+					CFRetainRelease			saveDirectoryURL(CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, REINTERPRET_CAST(saveFileURL.returnCFTypeRef(), CFURLRef)),
+																true/* is retained */);
 					
 					
 					// delete the temporary file; this is ignored for file captures,
 					// since capture files themselves are considered highly volatile
 					UNUSED_RETURN(OSStatus)FSDeleteObject(&temporaryFile);
 					
-					// TEMPORARY - this is not capable of handling multiple screens per window
-					Boolean		captureOK = Terminal_FileCaptureBegin(ptr->targetTerminals.front(), REINTERPRET_CAST(saveFileURL.returnCFTypeRef(), CFURLRef));
-					if (false == captureOK)
-					{
-						Console_Warning(Console_WriteLine, "unable to start file capture from terminal");
-						error = ioErr; // arbitrary
-					}
+					error = captureToFile(ptr, REINTERPRET_CAST(saveDirectoryURL.returnCFTypeRef(), CFURLRef), reply.saveFileName);
 					
+					if (noErr != error)
+					{
+						Alert_ReportOSStatus(error);
+					}
 					// UNIMPLEMENTED: set window proxy icon to match opened file?
 				}
 			}
@@ -9012,6 +9260,20 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						assert_noerr(error);
 					}
 					Memory_DisposePtr(REINTERPRET_CAST(&viewArray, Ptr*));
+				}
+			}
+			
+			// check the “automatically capture to file” preference; if set,
+			// begin a capture according to the user’s specifications
+			if (ptr->autoCaptureToFile)
+			{
+				Boolean		captureOK = autoCaptureSessionToFile(ptr);
+				
+				
+				if (false == captureOK)
+				{
+					Console_Warning(Console_WriteLine, "failed to initiate automatic capture to file");
+					Sound_StandardAlert();
 				}
 			}
 		}

@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20150101',
     '20141210',
     '20141029',
     '20141028',
@@ -511,6 +512,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20150101': [
+        'Preferences now exist for automatically starting a file capture when a session begins.  Currently, this can only be set using the beta version of the new Preferences window that is available from the debug interface.  A file may have a constant name or it may contain template variables (\\D for the date in YYYY-MM-DD form, \\T for the time in HHMMSS form, \\\\ for a backslash).',
+    ],
     '20141210': [
         'Terminal view cursor shape now includes a solid disk while in line-input mode (for example, when remote log-in programs ask for a password).',
         'The default setup for terminals now specifies exactly the same control-key mappings as the Apple Terminal.  This does not change very much (primarily the status character, control-T) but it may affect the behavior of applications in the terminal.',
