@@ -10,7 +10,7 @@
 
 	Popover Window 1.1 (based on MAAttachedWindow)
 	MAAttachedWindow © 2007 by Magic Aubergine
-	Popover Window © 2011-2014 by Kevin Grant
+	Popover Window © 2011-2015 by Kevin Grant
 	
 	Based on the MAAttachedWindow code created by Matt Gemmell
 	on September 27, 2007 and distributed under the terms in

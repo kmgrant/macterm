@@ -1,7 +1,7 @@
 /*###############################################################
 
 	Python Main
-	© 2009-2014 by Kevin Grant
+	© 2009-2015 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License

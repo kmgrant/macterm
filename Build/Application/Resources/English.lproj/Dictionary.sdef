@@ -14,7 +14,7 @@
 	ScriptingTerminology.sdef
 	
 	MacTerm
-	(c) 1998-2014 by Kevin Grant
+	(c) 1998-2015 by Kevin Grant
 	
 	This file defines MacTerm's AppleScript Dictionary.  Various codes
 	used in this file come from AERegistry.h (in AE.framework in

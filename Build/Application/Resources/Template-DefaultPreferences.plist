@@ -5,7 +5,7 @@
 	DefaultPreferences.plist
 	
 	MacTerm
-	© 1998-2014 by Kevin Grant
+	© 1998-2015 by Kevin Grant
 	
 	This file defines MacTerm's default preferences.  It has EXACTLY
 	the same format as the main Core Foundation Preferences file (i.e.

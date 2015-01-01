@@ -5,7 +5,7 @@
 	Growl Registration Ticket.growlRegDict
 	
 	MacTerm
-	© 1998-2014 by Kevin Grant
+	© 1998-2015 by Kevin Grant
 	
 	This file is used to configure Growl.  See "http://www.growl.info/".
 	(All possible key values are described in "GrowlDefines.h".)
