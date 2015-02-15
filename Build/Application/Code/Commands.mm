@@ -136,7 +136,7 @@ once the application moves to Cocoa completely.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithCommand:(UInt32)_
 	andEventTarget:(EventTargetRef)_
 	andDelay:(Float32)_;
@@ -180,7 +180,7 @@ with an NSMenuItem, via setRepresentedObject:.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithSession:(SessionRef)_;
 
 @end //}
@@ -3675,7 +3675,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithCommand:(UInt32)			aCommand
 andEventTarget:(EventTargetRef)		aTarget
 andDelay:(Float32)					aDelay
@@ -3738,7 +3738,7 @@ sharedExecutor
 {
 	if (nil == gCommands_Executor)
 	{
-		[[[self class] allocWithZone:NULL] init];
+		[[self.class allocWithZone:NULL] init];
 		assert(nil != gCommands_Executor);
 	}
 	return gCommands_Executor;
@@ -3750,7 +3750,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super init];
@@ -3852,7 +3852,7 @@ NOTE:	Menu items with actions and validators in this class
 validateAction:(SEL)	aSelector
 sender:(id)				anObject
 {
-	SEL		validator = [[self class] selectorToValidateAction:aSelector];
+	SEL		validator = [self.class selectorToValidateAction:aSelector];
 	BOOL	result = YES;
 	
 	
@@ -4172,7 +4172,7 @@ canPerformCaptureEnd:(id <NSValidatedUserInterfaceItem>)	anItem
 		result = (Terminal_FileCaptureInProgress(currentScreen) ? YES : NO);
 	}
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4201,7 +4201,7 @@ canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
 	BOOL	result = (PrintTerminal_IsPrintingSupported() && (nullptr != TerminalWindow_ReturnFromMainWindow()));
 	
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4230,7 +4230,7 @@ canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
 	BOOL	result = (PrintTerminal_IsPrintingSupported() && textSelectionExists());
 	
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4247,7 +4247,7 @@ canPerformSaveSelection:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = textSelectionExists();
 	
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4321,7 +4321,7 @@ canPerformCopy:(id <NSValidatedUserInterfaceItem>)		anItem
 			result = ([[target fieldEditor:NO/* create */ forObject:keyResponder] selectedRange].length > 0);
 		}
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4338,7 +4338,7 @@ canPerformCopyAndPaste:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = textSelectionExists();
 	
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4355,7 +4355,7 @@ canPerformCopyWithTabSubstitution:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = textSelectionExists();
 	
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4406,7 +4406,7 @@ canPerformCut:(id <NSValidatedUserInterfaceItem>)		anItem
 			result = ([[target fieldEditor:NO/* create */ forObject:keyResponder] selectedRange].length > 0);
 		}
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4461,7 +4461,7 @@ canPerformDelete:(id <NSValidatedUserInterfaceItem>)	anItem
 			result = ([[target fieldEditor:NO/* create */ forObject:keyResponder] selectedRange].length > 0);
 		}
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4504,7 +4504,7 @@ canPerformPaste:(id <NSValidatedUserInterfaceItem>)		anItem
 					((nullptr != TerminalWindow_ReturnFromKeyWindow()) ||
 						(nullptr != returnActiveCarbonWindowFocusedField()));
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4533,7 +4533,7 @@ canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
 		result = (isEnabled) ? YES : NO;
 	}
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4567,7 +4567,7 @@ canPerformSelectAll:(id <NSValidatedUserInterfaceItem>)		anItem
 	{
 		result = YES;
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4612,7 +4612,7 @@ canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
 		result = (isEnabled) ? YES : NO;
 	}
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4772,7 +4772,7 @@ canPerformKill:(id <NSValidatedUserInterfaceItem>)		anItem
 	{
 		result = (false == Session_StateIsDead(currentSession));
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4794,7 +4794,7 @@ canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
 	{
 		result = YES;
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4948,7 +4948,7 @@ canPerformNewTEKPage:(id <NSValidatedUserInterfaceItem>)	anItem
 	{
 		return @(NO);
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -4973,7 +4973,7 @@ canPerformPageClearToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5049,7 +5049,7 @@ canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
 		}
 	}
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5125,7 +5125,7 @@ canPerformActionForMacro:(id <NSValidatedUserInterfaceItem>)	anItem
 		MacroManager_UpdateMenuItem(asMenuItem, macroIndex/* one-based */);
 	}
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5194,7 +5194,7 @@ canPerformMacroSwitchByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5220,7 +5220,7 @@ canPerformMacroSwitchDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 	
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5246,7 +5246,7 @@ canPerformMacroSwitchNone:(id <NSValidatedUserInterfaceItem>)	anItem
 	
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5280,7 +5280,7 @@ canPerformBellToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5306,7 +5306,7 @@ canPerformSetActivityHandlerNone:(id <NSValidatedUserInterfaceItem>)	anItem
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5332,7 +5332,7 @@ canPerformSetActivityHandlerNotifyOnIdle:(id <NSValidatedUserInterfaceItem>)	anI
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5358,7 +5358,7 @@ canPerformSetActivityHandlerNotifyOnNext:(id <NSValidatedUserInterfaceItem>)	anI
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5384,7 +5384,7 @@ canPerformSetActivityHandlerSendKeepAliveOnIdle:(id <NSValidatedUserInterfaceIte
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5419,7 +5419,7 @@ canPerformDeleteMapToBackspace:(id <NSValidatedUserInterfaceItem>)		anItem
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5448,7 +5448,7 @@ canPerformDeleteMapToDelete:(id <NSValidatedUserInterfaceItem>)		anItem
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5477,7 +5477,7 @@ canPerformEmacsCursorModeToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5506,7 +5506,7 @@ canPerformLocalPageKeysToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5704,7 +5704,7 @@ canPerformLineWrapToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5730,7 +5730,7 @@ canPerformLocalEchoToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5766,7 +5766,7 @@ canPerformSaveOnClearToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5800,7 +5800,7 @@ canPerformSpeechToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5826,7 +5826,7 @@ canPerformSuspendToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 	}
 	setItemCheckMark(anItem, isChecked);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -6502,7 +6502,7 @@ canPerformMaximize:(id <NSValidatedUserInterfaceItem>)		anItem
 			result = (0 != ([window styleMask] & NSResizableWindowMask));
 		}
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -6619,7 +6619,7 @@ canPerformRename:(id <NSValidatedUserInterfaceItem>)	anItem
 						(nullptr != returnTEKSession()));
 	
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -6648,7 +6648,7 @@ canPerformShowHiddenWindows:(id <NSValidatedUserInterfaceItem>)		anItem
 		}
 	}
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -6672,7 +6672,7 @@ canPerformFind:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL				result = (nullptr != terminalWindow);
 	
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -6690,7 +6690,7 @@ canPerformFindCursor:(id <NSValidatedUserInterfaceItem>)	anItem
 	BOOL				result = (nullptr != terminalWindow);
 	
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -6707,7 +6707,7 @@ canPerformFindNext:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = searchResultsExist();
 	
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -6724,7 +6724,7 @@ canPerformFindPrevious:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = searchResultsExist();
 	
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -6806,7 +6806,7 @@ canOrderFrontContextualHelp:(id <NSValidatedUserInterfaceItem>)		anItem
 		}
 	}
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -6875,7 +6875,7 @@ canOrderFrontPreferences:(id <NSValidatedUserInterfaceItem>)	anItem
 	}
 	result = (windowDescriptor != kConstantsRegistry_WindowDescriptorPreferences);
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -7000,7 +7000,7 @@ canToggleFullScreen:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 		}
 	}
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -7027,7 +7027,7 @@ canOrderFrontNextWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = (nil != [NSApp mainWindow]);
 	
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -7048,7 +7048,7 @@ canOrderFrontNextWindowHidingPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
 	{
 		result = NO;
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -7069,7 +7069,7 @@ canOrderFrontPreviousWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 	{
 		result = NO;
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -7144,7 +7144,7 @@ canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 			}
 		}
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -7209,7 +7209,7 @@ canPerformCloseSetup:(id <NSValidatedUserInterfaceItem>)	anItem
 		
 		result = (0 != ([window styleMask] & NSClosableWindowMask));
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -7270,7 +7270,7 @@ canPerformMinimizeSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 			result = (0 != ([window styleMask] & NSMiniaturizableWindowMask));
 		}
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -7287,7 +7287,7 @@ canPerformSpeakSelectedText:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = textSelectionExists();
 	
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -7304,7 +7304,7 @@ canPerformStopSpeaking:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = CocoaBasic_SpeakingInProgress();
 	
 	
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -7365,7 +7365,7 @@ canPerformZoomSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 			result = (0 != ([window styleMask] & NSResizableWindowMask));
 		}
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -7445,7 +7445,7 @@ canRunToolbarCustomizationPaletteSetup:(id <NSValidatedUserInterfaceItem>)		anIt
 			}
 		}
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -7495,7 +7495,7 @@ canToggleToolbarShownSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 			// UNIMPLEMENTED
 		}
 	}
-	return [NSNumber numberWithBool:result];
+	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -7798,7 +7798,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super init];
@@ -8147,7 +8147,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithSession:(SessionRef)	aSession
 {
 	self = [super init];
@@ -8224,8 +8224,8 @@ The signature of the validator is expected to be:
 - (id) canPerformFooBar:(id <NSValidatedUserInterfaceItem>);
 Due to limitations in performSelector:, the result is not a
 BOOL, but rather an object of type NSNumber, whose "boolValue"
-method is called.  Validators are encouraged to use the method
-[NSNumber numberWithBool:] when returning their results.
+method is called.  Validators are encouraged to use the values
+@(YES) or @(NO) when returning their results.
 
 See selectorNameForValidateActionName: and
 validateUserInterfaceItem:.
@@ -8235,7 +8235,7 @@ validateUserInterfaceItem:.
 + (SEL)
 selectorToValidateAction:(SEL)	anAction
 {
-	SEL		result = NSSelectorFromString([[self class] selectorNameForValidateActionName:NSStringFromSelector(anAction)]);
+	SEL		result = NSSelectorFromString([self.class selectorNameForValidateActionName:NSStringFromSelector(anAction)]);
 	
 	
 	return result;

@@ -83,7 +83,7 @@ Helper class for printing from a terminal view.
 	beginPreviewSheetModalForWindow:(NSWindow*)_;
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithString:(NSString*)_
 	andFont:(NSFont*)_
 	andTitle:(NSString*)_
@@ -345,7 +345,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithString:(NSString*)		aString
 andFont:(NSFont*)				aFont
 andTitle:(NSString*)			aTitle
@@ -423,7 +423,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithString:(NSString*)		aString
 andFont:(NSFont*)				aFont
 andTitle:(NSString*)			aTitle

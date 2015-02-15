@@ -105,14 +105,14 @@ changes to an interface declared in a ".mm" file.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
 	orCarbonWindow:(HIWindowRef)_
 	responder:(id< WindowTitleDialog_ViewManagerChannel >)_; // designated initializer
-	- (id)
+	- (instancetype)
 	initForCarbonWindow:(HIWindowRef)_
 	responder:(id< WindowTitleDialog_ViewManagerChannel >)_;
-	- (id)
+	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
 	responder:(id< WindowTitleDialog_ViewManagerChannel >)_;
 

@@ -107,9 +107,9 @@ array of elements of this type.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	init;
-	- (id)
+	- (instancetype)
 	initWithPurpose:(VectorCanvas_PathPurpose)_; // designated initializer
 
 // accessors
@@ -1062,7 +1062,7 @@ No-argument initializer; invokes "initWithPurpose:" using
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [self initWithPurpose:kVectorCanvas_PathPurposeGraphics];
@@ -1078,7 +1078,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPurpose:(VectorCanvas_PathPurpose)	aPurpose
 {
 	self = [super init];
@@ -1138,7 +1138,7 @@ Copies this object.
 - (VectorCanvas_Path*)
 copyWithEmptyPathAndPurpose:(VectorCanvas_PathPurpose)	aPurpose
 {
-	VectorCanvas_Path*	result = [[[self class] alloc] init];
+	VectorCanvas_Path*	result = [[self.class alloc] init];
 	
 	
 	if (nil != result)
@@ -1166,7 +1166,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithFrame:(NSRect)		aFrame
 {
 	self = [super initWithFrame:aFrame];
@@ -1242,7 +1242,7 @@ performCopy:(id)	sender
 #pragma unused(sender)
 	NSRect			imageBounds = [self bounds];
 	NSImage*		copiedImage = [[NSImage alloc] initWithSize:imageBounds.size];
-	NSArray*		dataTypeArray = [NSArray arrayWithObjects:NSPDFPboardType, NSTIFFPboardType, nil];
+	NSArray*		dataTypeArray = @[NSPDFPboardType, NSTIFFPboardType];
 	NSPasteboard*	targetPasteboard = [NSPasteboard generalPasteboard];
 	
 	

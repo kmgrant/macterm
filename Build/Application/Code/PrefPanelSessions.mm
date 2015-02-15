@@ -4979,7 +4979,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	NSArray*	subViewManagers = @[
@@ -5026,7 +5026,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithNibNamed:@"PrefPanelSessionResourceCocoa" delegate:self context:nullptr];
@@ -5394,10 +5394,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];
@@ -5786,7 +5786,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
 	self = [super initWithContextManager:aContextMgr];
@@ -6044,7 +6044,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithNibNamed:@"PrefPanelSessionDataFlowCocoa" delegate:self context:nullptr];
@@ -6133,10 +6133,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];
@@ -6465,7 +6465,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
 	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
@@ -6525,7 +6525,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithNibNamed:@"PrefPanelSessionGraphicsCocoa" delegate:self context:nullptr];
@@ -6590,10 +6590,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];
@@ -6907,7 +6907,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 {
@@ -7163,9 +7163,7 @@ error:(NSError**)						outError
 				
 				*outError = [NSError errorWithDomain:(NSString*)kConstantsRegistry_NSErrorDomainAppDefault
 								code:kConstantsRegistry_NSErrorBadNumber
-								userInfo:[[[NSDictionary alloc] initWithObjectsAndKeys:
-											errorMessage, NSLocalizedDescriptionKey,
-											nil] autorelease]];
+								userInfo:@{ NSLocalizedDescriptionKey: errorMessage }];
 			}
 		}
 	}
@@ -7218,7 +7216,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
 	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
@@ -7278,7 +7276,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
 	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
@@ -7344,7 +7342,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithNibNamed:@"PrefPanelSessionKeyboardCocoa" delegate:self context:nullptr];
@@ -7611,10 +7609,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];

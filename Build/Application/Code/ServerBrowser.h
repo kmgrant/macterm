@@ -134,7 +134,7 @@ changes to an interface declared in a ".mm" file.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithResponder:(id< ServerBrowser_ViewManagerChannel >)_
 	eventTarget:(EventTargetRef)_;
 

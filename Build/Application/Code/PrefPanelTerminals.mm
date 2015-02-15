@@ -3009,14 +3009,14 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
-	NSArray*	subViewManagers = [NSArray arrayWithObjects:
-												[[[PrefPanelTerminals_OptionsViewManager alloc] init] autorelease],
-												[[[PrefPanelTerminals_EmulationViewManager alloc] init] autorelease],
-												[[[PrefPanelTerminals_ScreenViewManager alloc] init] autorelease],
-												nil];
+	NSArray*	subViewManagers = @[
+										[[[PrefPanelTerminals_OptionsViewManager alloc] init] autorelease],
+										[[[PrefPanelTerminals_EmulationViewManager alloc] init] autorelease],
+										[[[PrefPanelTerminals_ScreenViewManager alloc] init] autorelease],
+									];
 	
 	
 	self = [super initWithIdentifier:@"net.macterm.prefpanels.Terminals"
@@ -3054,7 +3054,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
 	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
@@ -3125,7 +3125,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
 	self = [super initWithContextManager:aContextMgr];
@@ -3341,7 +3341,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithNibNamed:@"PrefPanelTerminalEmulationCocoa" delegate:self context:nullptr];
@@ -3418,10 +3418,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];
@@ -3723,10 +3723,10 @@ to saved preferences).
 - (NSArray*)
 primaryDisplayBindingKeys
 {
-	return [NSArray arrayWithObjects:
-						@"baseEmulator", @"emulationTweaks",
-						@"identity",
-						nil];
+	return @[
+				@"baseEmulator", @"emulationTweaks",
+				@"identity",
+			];
 }// primaryDisplayBindingKeys
 
 
@@ -3741,7 +3741,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithNibNamed:@"PrefPanelTerminalOptionsCocoa" delegate:self context:nullptr];
@@ -3842,10 +3842,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];
@@ -4151,11 +4151,11 @@ to saved preferences).
 - (NSArray*)
 primaryDisplayBindingKeys
 {
-	return [NSArray arrayWithObjects:
-						@"wrapLines", @"eightBit",
-						@"saveLinesOnClear", @"normalKeypadTopRow",
-						@"localPageKeys",
-						nil];
+	return @[
+				@"wrapLines", @"eightBit",
+				@"saveLinesOnClear", @"normalKeypadTopRow",
+				@"localPageKeys",
+			];
 }// primaryDisplayBindingKeys
 
 
@@ -4170,7 +4170,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
 	self = [super initWithContextManager:aContextMgr];
@@ -4464,7 +4464,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithNibNamed:@"PrefPanelTerminalScreenCocoa" delegate:self context:nullptr];
@@ -4541,10 +4541,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];
@@ -4845,10 +4845,10 @@ to saved preferences).
 - (NSArray*)
 primaryDisplayBindingKeys
 {
-	return [NSArray arrayWithObjects:
-						@"screenWidth", @"screenHeight",
-						@"scrollback",
-						nil];
+	return @[
+				@"screenWidth", @"screenHeight",
+				@"scrollback",
+			];
 }// primaryDisplayBindingKeys
 
 

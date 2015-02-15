@@ -95,7 +95,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
 	self = [super init];
@@ -257,7 +257,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 {
@@ -297,7 +297,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithIntegerValue:(UInt32)	aValue
 description:(NSString*)			aString
 {
@@ -359,7 +359,7 @@ fixed string values.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 preferenceCType:(PreferenceValue_CType)			aCType
@@ -549,7 +549,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 sourceClass:(Quills::Prefs::Class)				aPreferencesClass
@@ -844,7 +844,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 {
@@ -947,7 +947,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 isDirectory:(BOOL)								aDirectoryFlag
@@ -1166,7 +1166,7 @@ Common initializer; assumes no inversion.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 {
@@ -1179,7 +1179,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 inverted:(BOOL)									anInversionFlag
@@ -1251,7 +1251,7 @@ Accessor.
 numberValue
 {
 	BOOL		isDefault = NO;
-	NSNumber*	result = [NSNumber numberWithBool:[self readValueSeeIfDefault:&isDefault]];
+	NSNumber*	result = ([self readValueSeeIfDefault:&isDefault]) ? @(YES) : @(NO);
 	
 	
 	return result;
@@ -1350,7 +1350,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 preferenceCType:(PreferenceValue_CType)			aCType
@@ -1804,9 +1804,7 @@ error:(NSError**)								outError
 			
 			*outError = [NSError errorWithDomain:(NSString*)kConstantsRegistry_NSErrorDomainAppDefault
 							code:kConstantsRegistry_NSErrorBadNumber
-							userInfo:[[[NSDictionary alloc] initWithObjectsAndKeys:
-										errorMessage, NSLocalizedDescriptionKey,
-										nil] autorelease]];
+							userInfo:@{ NSLocalizedDescriptionKey: errorMessage }];
 		}
 	}
 	return result;
@@ -1858,7 +1856,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 {
@@ -2026,7 +2024,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 characterSetForSplitting:(NSCharacterSet*)		aCharacterSet

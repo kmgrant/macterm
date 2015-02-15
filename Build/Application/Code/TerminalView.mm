@@ -13538,7 +13538,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithFrame:(NSRect)		aFrame
 {
 	self = [super initWithFrame:aFrame];
@@ -13674,7 +13674,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithFrame:(NSRect)		aFrame
 {
 	self = [super initWithFrame:aFrame];

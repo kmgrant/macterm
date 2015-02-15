@@ -696,7 +696,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithNibNamed:@"PrefPanelFullScreenCocoa" delegate:self context:nullptr];
@@ -875,10 +875,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];

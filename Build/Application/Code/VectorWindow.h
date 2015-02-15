@@ -101,7 +101,7 @@ changes to an interface declared in a ".mm" file.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithInterpreter:(VectorInterpreter_Ref)_;
 
 // actions

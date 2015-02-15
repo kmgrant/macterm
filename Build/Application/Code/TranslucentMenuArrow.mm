@@ -54,7 +54,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithFrame:(NSRect)		frameRect
 {
 	self = [super initWithFrame:frameRect];

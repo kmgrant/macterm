@@ -56,7 +56,7 @@ losing less user-friendly information about each address.
 @interface AddressDialog_Address : BoundName_Object //{
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithDescription:(NSString*)_;
 
 @end //}
@@ -92,7 +92,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithDescription:(NSString*)		aString
 {
 	self = [super initWithBoundName:aString];
@@ -114,12 +114,12 @@ Designated initializer.
 
 (3.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super init];
 	// drag and drop support
-	[addressTableView registerForDraggedTypes:[NSArray arrayWithObjects:NSStringPboardType, nil]];
+	[addressTableView registerForDraggedTypes:@[NSStringPboardType]];
 	[addressTableView setDraggingSourceOperationMask:NSDragOperationCopy forLocal:NO];
 	return self;
 }// init
@@ -143,7 +143,7 @@ toPasteboard:(NSPasteboard*)		inoutPasteboard
 	
 	
 	// add the row string to the drag; only one can be selected at at time
-	[inoutPasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:self];
+	[inoutPasteboard declareTypes:@[NSStringPboardType] owner:self];
 	[inoutPasteboard setString:dragData forType:NSStringPboardType];
 	return result;
 }// tableView:writeRowsWithIndexes:toPasteboard:
@@ -168,7 +168,7 @@ sharedAddressPanelController
 {
 	if (nil == gAddressDialog_PanelController)
 	{
-		gAddressDialog_PanelController = [[[self class] allocWithZone:NULL] init];
+		gAddressDialog_PanelController = [[self.class allocWithZone:NULL] init];
 	}
 	return gAddressDialog_PanelController;
 }
@@ -179,7 +179,7 @@ Designated initializer.
 
 (3.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithWindowNibName:@"AddressDialogCocoa"];

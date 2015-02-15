@@ -86,7 +86,7 @@ changes to an interface declared in a ".mm" file.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithString:(NSString*)_
 	andFont:(NSFont*)_
 	andTitle:(NSString*)_

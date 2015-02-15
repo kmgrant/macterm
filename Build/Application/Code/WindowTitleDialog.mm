@@ -83,18 +83,18 @@ Manages the rename-window user interface.
 	viewHandlerFromRef:(WindowTitleDialog_Ref)_;
 
 // initializers
-	- (id)
+	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
 	orCarbonWindow:(HIWindowRef)_
 	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_; // designated initializer
-	- (id)
+	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
 	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_;
-	- (id)
+	- (instancetype)
 	initForCarbonWindow:(HIWindowRef)_
 	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_
 	session:(SessionRef)_;
-	- (id)
+	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
 	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_
 	vectorGraphicsCanvas:(VectorWindow_Ref)_;
@@ -290,7 +290,7 @@ there is no reason to support Carbon windows anymore.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initForCocoaWindow:(NSWindow*)								aCocoaWindow
 orCarbonWindow:(HIWindowRef)								aCarbonWindow
 notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
@@ -320,7 +320,7 @@ support Carbon windows.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initForCocoaWindow:(NSWindow*)								aWindow
 notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
 {
@@ -341,7 +341,7 @@ of the title to be editable.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initForCarbonWindow:(HIWindowRef)							aWindow
 notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
 session:(SessionRef)										aSession
@@ -361,7 +361,7 @@ windows.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initForCocoaWindow:(NSWindow*)								aWindow
 notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
 vectorGraphicsCanvas:(VectorWindow_Ref)						aCanvasWindow
@@ -708,7 +708,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initForCocoaWindow:(NSWindow*)							aCocoaWindow
 orCarbonWindow:(HIWindowRef)							aCarbonWindow
 responder:(id< WindowTitleDialog_ViewManagerChannel >)	aResponder
@@ -748,7 +748,7 @@ Initializer for Carbon-based windows.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initForCarbonWindow:(HIWindowRef)						aWindow
 responder:(id< WindowTitleDialog_ViewManagerChannel >)	aResponder
 {
@@ -766,7 +766,7 @@ be the designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initForCocoaWindow:(NSWindow*)							aWindow
 responder:(id< WindowTitleDialog_ViewManagerChannel >)	aResponder
 {
@@ -870,10 +870,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];

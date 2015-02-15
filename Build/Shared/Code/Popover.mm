@@ -124,7 +124,7 @@ before the window is shown to the user.
 
 (1.1)
 */
-- (id)
+- (instancetype)
 initWithView:(NSView*)		aView
 attachedToPoint:(NSPoint)	aPoint
 inWindow:(NSWindow*)		aWindow
@@ -143,21 +143,21 @@ inWindow:(NSWindow*)		aWindow
 																? kDefaultCornerRadius
 																: 0;
 		float const		kDefaultMargin = 2.0;
-		float const		kDefaultArrowInset = [[self class] arrowInsetWithCornerRadius:kDefaultCornerRadiusForArrowCorner
-																						baseWidth:kDefaultArrowBaseWidth];
+		float const		kDefaultArrowInset = [self.class arrowInsetWithCornerRadius:kDefaultCornerRadiusForArrowCorner
+																					baseWidth:kDefaultArrowBaseWidth];
 		
 		
 		// Create initial contentRect for the attached window (can reset frame at any time).
 		// Note that the content rectangle given to NSWindow is just the frame rectangle;
 		// the illusion of a window margin is created during rendering.
-		Popover_Properties	side = [[self class] bestSideForViewOfSize:[aView frame].size
+		Popover_Properties	side = [self.class bestSideForViewOfSize:[aView frame].size
 																		andMargin:kDefaultMargin
 																		arrowHeight:kDefaultArrowHeight
 																		arrowInset:kDefaultArrowInset
 																		at:aPoint
 																		onParentWindow:aWindow
 																		preferredSide:kPopover_PositionBottom];
-		NSRect		frameRectViewRelative = [[self class] frameRectForViewRect:[aView frame]
+		NSRect		frameRectViewRelative = [self.class frameRectForViewRect:[aView frame]
 																				viewMargin:kDefaultMargin
 																				arrowHeight:kDefaultArrowHeight
 																				side:side];
@@ -165,7 +165,7 @@ inWindow:(NSWindow*)		aWindow
 		
 		
 		contentRectOnScreen.size = frameRectViewRelative.size;
-		contentRectOnScreen.origin = [[self class] idealFrameOriginForSize:contentRectOnScreen.size
+		contentRectOnScreen.origin = [self.class idealFrameOriginForSize:contentRectOnScreen.size
 																			arrowInset:kDefaultArrowInset
 																			at:((aWindow)
 																				? [aWindow convertBaseToScreen:aPoint]
@@ -248,8 +248,8 @@ embedded view has the given local frame.
 - (NSRect)
 frameRectForViewRect:(NSRect)	aRect
 {
-	return [[self class] frameRectForViewRect:aRect viewMargin:[self viewMargin] arrowHeight:[self arrowHeight]
-												side:self->windowPropertyFlags];
+	return [self.class frameRectForViewRect:aRect viewMargin:[self viewMargin] arrowHeight:[self arrowHeight]
+											side:self->windowPropertyFlags];
 }
 
 
@@ -262,8 +262,8 @@ window has the given global frame.
 - (NSRect)
 viewRectForFrameRect:(NSRect)	aRect
 {
-	return [[self class] viewRectForFrameRect:aRect viewMargin:[self viewMargin] arrowHeight:[self arrowHeight]
-												side:self->windowPropertyFlags];
+	return [self.class viewRectForFrameRect:aRect viewMargin:[self viewMargin] arrowHeight:[self arrowHeight]
+											side:self->windowPropertyFlags];
 }
 
 
@@ -321,13 +321,13 @@ within the parent window’s frame.
 setPointWithAutomaticPositioning:(NSPoint)	aPoint
 preferredSide:(Popover_Properties)			aSide
 {
-	Popover_Properties	chosenSide = [[self class] bestSideForViewOfSize:self->viewFrame.size
-																			andMargin:[self viewMargin]
-																			arrowHeight:[self arrowHeight]
-																			arrowInset:[self arrowInset]
-																			at:aPoint
-																			onParentWindow:self->popoverParentWindow
-																			preferredSide:aSide];
+	Popover_Properties	chosenSide = [self.class bestSideForViewOfSize:self->viewFrame.size
+																		andMargin:[self viewMargin]
+																		arrowHeight:[self arrowHeight]
+																		arrowInset:[self arrowInset]
+																		at:aPoint
+																		onParentWindow:self->popoverParentWindow
+																		preferredSide:aSide];
 	
 	
 	[self setPoint:aPoint onSide:chosenSide];
@@ -832,7 +832,7 @@ arrowInset
 								: 0;
 	
 	
-	return [[self class] arrowInsetWithCornerRadius:kRadius baseWidth:self->arrowBaseWidth];
+	return [self.class arrowInsetWithCornerRadius:kRadius baseWidth:self->arrowBaseWidth];
 }
 
 
@@ -874,7 +874,7 @@ Returns the arrow placement portion of the specified properties.
 - (Popover_Properties)
 arrowPlacement
 {
-	return [[self class] arrowPlacement:self->windowPropertyFlags];
+	return [self.class arrowPlacement:self->windowPropertyFlags];
 }
 
 
@@ -1223,9 +1223,9 @@ preferredSide:(Popover_Properties)	aSide
 	for (size_t i = 0; i < kCandidateCount; ++i)
 	{
 		NSRect		viewRect = NSMakeRect(0, 0, aViewSize.width, aViewSize.height);
-		NSRect		frameRect = [[self class] frameRectForViewRect:viewRect viewMargin:aViewMargin
+		NSRect		frameRect = [self.class frameRectForViewRect:viewRect viewMargin:aViewMargin
 																	arrowHeight:anArrowHeight side:kCandidatePositions[i]];
-		NSPoint		idealOrigin = [[self class] idealFrameOriginForSize:frameRect.size arrowInset:anArrowInset
+		NSPoint		idealOrigin = [self.class idealFrameOriginForSize:frameRect.size arrowInset:anArrowInset
 																		at:kPointOnScreen side:kCandidatePositions[i]];
 		
 		
@@ -1354,11 +1354,11 @@ not be called from an initializer).
 - (NSPoint)
 idealFrameOriginForPoint:(NSPoint)		aPoint
 {
-	return [[self class] idealFrameOriginForSize:[self frame].size arrowInset:[self arrowInset]
-													at:((self->popoverParentWindow)
-														? [self->popoverParentWindow convertBaseToScreen:aPoint]
-														: aPoint)
-													side:self->windowPropertyFlags];
+	return [self.class idealFrameOriginForSize:[self frame].size arrowInset:[self arrowInset]
+												at:((self->popoverParentWindow)
+													? [self->popoverParentWindow convertBaseToScreen:aPoint]
+													: aPoint)
+												side:self->windowPropertyFlags];
 }
 
 
@@ -1574,7 +1574,7 @@ Returns the window placement portion of the specified properties.
 - (Popover_Properties)
 windowPlacement
 {
-	return [[self class] windowPlacement:self->windowPropertyFlags];
+	return [self.class windowPlacement:self->windowPropertyFlags];
 }
 
 

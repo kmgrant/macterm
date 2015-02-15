@@ -79,7 +79,7 @@ toolbar.)
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initForToolbar:(NSToolbar*)_
 	experimentalItems:(BOOL)_;
 
@@ -114,7 +114,7 @@ associated with their toolbar’s delegate.
 @interface TerminalToolbar_SessionDependentItem : NSToolbarItem //{
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithItemIdentifier:(NSString*)_;
 
 // accessors
@@ -147,7 +147,7 @@ Base class for items that display a particular LED.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithItemIdentifier:(NSString*)_
 	oneBasedIndexOfLED:(unsigned int)_;
 
@@ -289,7 +289,7 @@ the object array of a TerminalToolbar_ItemTabs instance.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithDescription:(NSAttributedString*)_;
 
 // actions
@@ -325,7 +325,7 @@ can be observed on this toolbar object to find out when
 @interface TerminalToolbar_Object : NSToolbar //{
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithIdentifier:(NSString*)_;
 
 // NSToolbar
@@ -359,7 +359,7 @@ methods on this toolbar).
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithContentRect:(NSRect)_
 	screen:(NSScreen*)_;
 

@@ -94,7 +94,7 @@ Manages the Server Browser user interface.
 	viewHandlerFromRef:(ServerBrowser_Ref)_;
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithPosition:(CGPoint)_
 	relativeToParentWindow:(HIWindowRef)_
 	eventTarget:(EventTargetRef)_;
@@ -155,7 +155,7 @@ about each service.
 }
 
 // initializersbestResolvedPort
-	- (id)
+	- (instancetype)
 	initWithNetService:(NSNetService*)_
 	addressFamily:(unsigned char)_;
 
@@ -195,7 +195,7 @@ protocol.
 	serviceType;
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithID:(Session_Protocol)_
 	description:(NSString*)_
 	serviceType:(NSString*)_
@@ -469,7 +469,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithPosition:(CGPoint)				aPoint
 relativeToParentWindow:(HIWindowRef)	aWindow
 eventTarget:(EventTargetRef)			aTarget
@@ -778,7 +778,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithNetService:(NSNetService*)	aNetService
 addressFamily:(unsigned char)		aSocketAddrFamily
 {
@@ -922,7 +922,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithID:(Session_Protocol)	anID
 description:(NSString*)			aString
 serviceType:(NSString*)			anRFC2782Name
@@ -969,7 +969,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithResponder:(id< ServerBrowser_ViewManagerChannel >)	aResponder
 eventTarget:(EventTargetRef)								aTarget
 {
@@ -1636,11 +1636,12 @@ error:(NSError**)						outError
 		{
 			*outError = [NSError errorWithDomain:(NSString*)kConstantsRegistry_NSErrorDomainAppDefault
 							code:kConstantsRegistry_NSErrorBadUserID
-							userInfo:[[[NSDictionary alloc] initWithObjectsAndKeys:
-										NSLocalizedStringFromTable
-										(@"The port must be a number from 0 to 65535.", @"ServerBrowser"/* table */,
-											@"message displayed for bad port numbers"), NSLocalizedDescriptionKey,
-										nil] autorelease]];
+							userInfo:@{
+											NSLocalizedDescriptionKey: NSLocalizedStringFromTable
+																		(@"The port must be a number from 0 to 65535.",
+																			@"ServerBrowser"/* table */,
+																			@"message displayed for bad port numbers"),
+										}];
 			self.errorMessage = [[*outError userInfo] objectForKey:NSLocalizedDescriptionKey];
 			self.hidesPortNumberError = NO;
 		}
@@ -1693,12 +1694,12 @@ error:(NSError**)					outError
 		{
 			*outError = [NSError errorWithDomain:(NSString*)kConstantsRegistry_NSErrorDomainAppDefault
 							code:kConstantsRegistry_NSErrorBadPortNumber
-							userInfo:[[[NSDictionary alloc] initWithObjectsAndKeys:
-										NSLocalizedStringFromTable
-										(@"The user ID must only use letters, numbers, dashes, underscores, and periods.",
-											@"ServerBrowser"/* table */, @"message displayed for bad user IDs"),
-										NSLocalizedDescriptionKey,
-										nil] autorelease]];
+							userInfo:@{
+											NSLocalizedDescriptionKey: NSLocalizedStringFromTable
+																		(@"The user ID must only use letters, numbers, dashes, underscores, and periods.",
+																			@"ServerBrowser"/* table */,
+																			@"message displayed for bad user IDs"),
+										}];
 			self.errorMessage = [[*outError userInfo] objectForKey:NSLocalizedDescriptionKey];
 			self.hidesUserIDError = NO;
 		}
@@ -1720,10 +1721,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];

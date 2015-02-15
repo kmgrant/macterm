@@ -96,7 +96,7 @@ localized description of the setting.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithContextManager:(PrefsContextManager_Object*)_;
 
 // new methods
@@ -136,7 +136,7 @@ it easy to store and retrieve one tag value.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_;
 
@@ -153,7 +153,7 @@ Manages bindings for a single color preference.
 @interface PreferenceValue_Color : PreferenceValue_InheritedSingleTag //{
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_;
 
@@ -177,7 +177,7 @@ exposed to user interfaces only as a string.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_
 	isDirectory:(BOOL)_;
@@ -209,10 +209,10 @@ defined to be Boolean.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_;
-	- (id)
+	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_
 	inverted:(BOOL)_; // designated initializer
@@ -249,7 +249,7 @@ milliseconds.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_
 	preferenceCType:(PreferenceValue_CType)_;
@@ -290,7 +290,7 @@ defined to be a pointer to a CFStringRef.
 @interface PreferenceValue_String : PreferenceValue_InheritedSingleTag //{
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_;
 
@@ -322,7 +322,7 @@ convert.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_
 	characterSetForSplitting:(NSCharacterSet*)_
@@ -359,7 +359,7 @@ the specified value is used to represent the value.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithIntegerValue:(UInt32)_
 	description:(NSString*)_;
 
@@ -391,7 +391,7 @@ displayed to the user.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_
 	preferenceCType:(PreferenceValue_CType)_
@@ -424,7 +424,7 @@ typically bound to a pop-up menu.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_
 	sourceClass:(Quills::Prefs::Class)_;

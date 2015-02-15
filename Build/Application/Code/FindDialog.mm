@@ -90,7 +90,7 @@ Manages the Find user interface.
 	viewHandlerFromRef:(FindDialog_Ref)_;
 
 // initializers
-	- (id)
+	- (instancetype)
 	initForTerminalWindow:(TerminalWindowRef)_
 	notificationProc:(FindDialog_CloseNotifyProcPtr)_
 	previousSearches:(NSMutableArray*)_
@@ -335,7 +335,7 @@ this class instance is destroyed.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initForTerminalWindow:(TerminalWindowRef)			aTerminalWindow
 notificationProc:(FindDialog_CloseNotifyProcPtr)	aProc
 previousSearches:(NSMutableArray*)					aStringArray
@@ -905,7 +905,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initForTerminalWindow:(TerminalWindowRef)			aTerminalWindow
 responder:(id< FindDialog_ViewManagerChannel >)		aResponder
 initialOptions:(FindDialog_Options)					options
@@ -1215,10 +1215,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];

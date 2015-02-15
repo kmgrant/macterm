@@ -160,7 +160,7 @@ in the source list.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithPreferencesContext:(Preferences_ContextRef)_
 	asDefault:(BOOL)_;
 
@@ -2651,7 +2651,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPreferencesContext:(Preferences_ContextRef)		aContext
 asDefault:(BOOL)										aFlag
 {
@@ -2801,7 +2801,7 @@ Copies this instance by retaining the original context.
 - (id)
 copyWithZone:(NSZone*)	aZone
 {
-	PrefsWindow_Collection*		result = [[[self class] allocWithZone:aZone] init];
+	PrefsWindow_Collection*		result = [[self.class allocWithZone:aZone] init];
 	
 	
 	if (nil != result)
@@ -2844,7 +2844,7 @@ isEqual:(id)	anObject
 	BOOL	result = NO;
 	
 	
-	if ([anObject isKindOfClass:[self class]])
+	if ([anObject isKindOfClass:self.class])
 	{
 		PrefsWindow_Collection*		asCollection = (PrefsWindow_Collection*)anObject;
 		
@@ -2878,7 +2878,7 @@ sharedPrefsWindowController
 {
 	if (nil == gPrefsWindow_Controller)
 	{
-		gPrefsWindow_Controller = [[[self class] allocWithZone:NULL] init];
+		gPrefsWindow_Controller = [[self.class allocWithZone:NULL] init];
 	}
 	return gPrefsWindow_Controller;
 }// sharedPrefsWindowController
@@ -2889,7 +2889,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithWindowNibName:@"PrefsWindowCocoa"];
@@ -3179,11 +3179,11 @@ performImportPreferenceCollectionFromFile:(id)	sender
 {
 #pragma unused(sender)
 	NSOpenPanel*	openPanel = [NSOpenPanel openPanel];
-	NSArray*		allowedTypes = [NSArray arrayWithObjects:
-												@"com.apple.property-list",
-												@"plist"/* redundant, needed for older systems */,
-												@"xml",
-												nil];
+	NSArray*		allowedTypes = @[
+										@"com.apple.property-list",
+										@"plist"/* redundant, needed for older systems */,
+										@"xml",
+									];
 	CFStringRef		promptCFString = nullptr;
 	
 	
@@ -3402,10 +3402,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];
@@ -3502,7 +3502,7 @@ toPasteboard:(NSPasteboard*)	aPasteboard
 		NSData*		copiedData = [NSKeyedArchiver archivedDataWithRootObject:indexSet];
 		
 		
-		[aPasteboard declareTypes:[NSArray arrayWithObject:kMy_PrefsWindowSourceListDataType] owner:self];
+		[aPasteboard declareTypes:@[kMy_PrefsWindowSourceListDataType] owner:self];
 		[aPasteboard setData:copiedData forType:kMy_PrefsWindowSourceListDataType];
 	}
 	
@@ -3537,7 +3537,7 @@ toPasteboard:(NSPasteboard*)	aPasteboard
 		NSData*		copiedData = [NSKeyedArchiver archivedDataWithRootObject:aRowSet];
 		
 		
-		[aPasteboard declareTypes:[NSArray arrayWithObject:kMy_PrefsWindowSourceListDataType] owner:self];
+		[aPasteboard declareTypes:@[kMy_PrefsWindowSourceListDataType] owner:self];
 		[aPasteboard setData:copiedData forType:kMy_PrefsWindowSourceListDataType];
 		result = YES;
 	}
@@ -3908,10 +3908,10 @@ windowDidLoad
 			}
 			
 			// choose a frame size that uses the panel’s ideal size
-			sizeArray = [NSArray arrayWithObjects:
-									[NSNumber numberWithFloat:windowSize.width],
-									[NSNumber numberWithFloat:windowSize.height],
-									nil];
+			sizeArray = @[
+							[NSNumber numberWithFloat:windowSize.width],
+							[NSNumber numberWithFloat:windowSize.height],
+						];
 			[self->windowSizesByID setObject:sizeArray forKey:panelIdentifier];
 			
 			// also require (for now, at least) that the window be
@@ -3928,7 +3928,7 @@ windowDidLoad
 	}
 	
 	// enable drag-and-drop in the source list
-	[self->sourceListTableView registerForDraggedTypes:[NSArray arrayWithObjects:kMy_PrefsWindowSourceListDataType, nil]];
+	[self->sourceListTableView registerForDraggedTypes:@[kMy_PrefsWindowSourceListDataType]];
 	
 	// be notified of source list changes; not strictly necessary on
 	// newer OS versions (where bindings work perfectly) but it seems
@@ -4411,10 +4411,10 @@ withAnimation:(BOOL)												isAnimated
 			// remember the window size that the user wanted for the previous panel
 			NSRect		contentRect = [[self window] contentRectForFrameRect:[[self window] frame]];
 			NSSize		containerSize = NSMakeSize(NSWidth(contentRect), NSHeight(contentRect));
-			NSArray*	sizeArray = [NSArray arrayWithObjects:
-												[NSNumber numberWithFloat:containerSize.width],
-												[NSNumber numberWithFloat:containerSize.height],
-												nil];
+			NSArray*	sizeArray = @[
+										[NSNumber numberWithFloat:containerSize.width],
+										[NSNumber numberWithFloat:containerSize.height],
+									];
 			
 			
 			[self->windowSizesByID setObject:sizeArray forKey:[self->activePanel panelIdentifier]];

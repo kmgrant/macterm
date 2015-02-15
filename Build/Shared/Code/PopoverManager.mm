@@ -65,7 +65,7 @@
 	popoverHandlerFromRef:(PopoverManager_Ref)_;
 
 // initializers
-	- (id)
+	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
 	orCarbonWindow:(HIWindowRef)_
 	popover:(Popover_Window*)_
@@ -392,7 +392,7 @@ for simplicity in the C-style header file.
 
 (2.7	)
 */
-- (id)
+- (instancetype)
 initForCocoaWindow:(NSWindow*)					aCocoaWindow
 orCarbonWindow:(HIWindowRef)					aCarbonWindow
 popover:(Popover_Window*)						aPopover

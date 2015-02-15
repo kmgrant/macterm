@@ -91,7 +91,7 @@ changes to an interface declared in a ".mm" file.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithIdentifier:(NSString*)_
 	localizedName:(NSString*)_
 	localizedIcon:(NSImage*)_

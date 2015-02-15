@@ -3497,13 +3497,13 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
-	NSArray*	subViewManagers = [NSArray arrayWithObjects:
-												[[[PrefPanelFormats_GeneralViewManager alloc] init] autorelease],
-												[[[PrefPanelFormats_StandardColorsViewManager alloc] init] autorelease],
-												nil];
+	NSArray*	subViewManagers = @[
+										[[[PrefPanelFormats_GeneralViewManager alloc] init] autorelease],
+										[[[PrefPanelFormats_StandardColorsViewManager alloc] init] autorelease],
+									];
 	
 	
 	self = [super initWithIdentifier:@"net.macterm.prefpanels.Formats"
@@ -3541,7 +3541,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 {
@@ -3702,7 +3702,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithNibNamed:@"PrefPanelFormatGeneralCocoa" delegate:self context:nullptr];
@@ -3983,10 +3983,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];
@@ -4385,13 +4385,13 @@ Returns the names of key-value coding keys that have color values.
 - (NSArray*)
 colorBindingKeys
 {
-	return [NSArray arrayWithObjects:
-						@"normalBackgroundColor", @"normalForegroundColor",
-						@"boldBackgroundColor", @"boldForegroundColor",
-						@"blinkingBackgroundColor", @"blinkingForegroundColor",
-						@"matteBackgroundColor",
-						@"cursorBackgroundColor",
-						nil];
+	return @[
+				@"normalBackgroundColor", @"normalForegroundColor",
+				@"boldBackgroundColor", @"boldForegroundColor",
+				@"blinkingBackgroundColor", @"blinkingForegroundColor",
+				@"matteBackgroundColor",
+				@"cursorBackgroundColor",
+			];
 }// colorBindingKeys
 
 
@@ -4526,7 +4526,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithNibNamed:@"PrefPanelFormatStandardColorsCocoa" delegate:self context:nullptr];
@@ -4815,10 +4815,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];
@@ -5218,18 +5218,18 @@ to saved preferences).
 - (NSArray*)
 primaryDisplayBindingKeys
 {
-	return [NSArray arrayWithObjects:
-						@"blackNormalColor", @"blackBoldColor",
-						@"blackNormalColorInherited", @"blackBoldColorInherited",
-						@"blackNormalColorInheritEnabled", @"blackBoldColorInheritEnabled",
-						@"redNormalColor", @"redBoldColor",
-						@"greenNormalColor", @"greenBoldColor",
-						@"yellowNormalColor", @"yellowBoldColor",
-						@"blueNormalColor", @"blueBoldColor",
-						@"magentaNormalColor", @"magentaBoldColor",
-						@"cyanNormalColor", @"cyanBoldColor",
-						@"whiteNormalColor", @"whiteBoldColor",
-						nil];
+	return @[
+				@"blackNormalColor", @"blackBoldColor",
+				@"blackNormalColorInherited", @"blackBoldColorInherited",
+				@"blackNormalColorInheritEnabled", @"blackBoldColorInheritEnabled",
+				@"redNormalColor", @"redBoldColor",
+				@"greenNormalColor", @"greenBoldColor",
+				@"yellowNormalColor", @"yellowBoldColor",
+				@"blueNormalColor", @"blueBoldColor",
+				@"magentaNormalColor", @"magentaBoldColor",
+				@"cyanNormalColor", @"cyanBoldColor",
+				@"whiteNormalColor", @"whiteBoldColor",
+			];
 }// primaryDisplayBindingKeys
 
 

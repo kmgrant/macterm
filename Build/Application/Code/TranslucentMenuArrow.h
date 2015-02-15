@@ -69,7 +69,7 @@ menu arrow view.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithFrame:(NSRect)_;
 
 @end //}

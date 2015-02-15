@@ -98,9 +98,9 @@ CocoaBasic_AboutPanelDisplay ()
 {
 	AutoPool		_;
 	// clear out the version field because it tends to be redundant
-	NSDictionary*	aboutBoxOptions = [NSDictionary dictionaryWithObjectsAndKeys:
-										@"", @"Version",
-										nil];
+	NSDictionary*	aboutBoxOptions = @{
+											@"Version": @"",
+										};
 	
 	
 	[NSApp orderFrontStandardAboutPanelWithOptions:aboutBoxOptions];
@@ -783,12 +783,10 @@ CocoaBasic_SetFileTypeCreator	(CFStringRef	inPath,
 {
 	AutoPool		_;
 	Boolean			result = false;
-	NSDictionary*	attributeDict = [NSDictionary dictionaryWithObjectsAndKeys:
-																				[NSNumber numberWithUnsignedLong:inNewType],
-																				NSFileHFSTypeCode,
-																				[NSNumber numberWithUnsignedLong:inNewCreator],
-																				NSFileHFSCreatorCode,
-																				nil];
+	NSDictionary*	attributeDict = @{
+										NSFileHFSTypeCode: [NSNumber numberWithUnsignedLong:inNewType],
+										NSFileHFSCreatorCode: [NSNumber numberWithUnsignedLong:inNewCreator],
+									};
 	
 	
 	if ([[NSFileManager defaultManager] changeFileAttributes:attributeDict atPath:(NSString*)inPath])

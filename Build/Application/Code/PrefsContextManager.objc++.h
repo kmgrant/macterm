@@ -59,9 +59,9 @@ interface).
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	init;
-	- (id)
+	- (instancetype)
 	initWithDefaultContextInClass:(Quills::Prefs::Class)_; // designated initializer
 
 // accessors

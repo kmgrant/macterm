@@ -134,7 +134,7 @@ frame appearance.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithView:(NSView*)_
 	attachedToPoint:(NSPoint)_
 	inWindow:(NSWindow*)_;

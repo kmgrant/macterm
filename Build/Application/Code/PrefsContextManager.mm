@@ -59,7 +59,7 @@ Initializes the object with no current context.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super init];
@@ -85,7 +85,7 @@ class.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithDefaultContextInClass:(Quills::Prefs::Class)	aClass
 {
 	self = [super init];

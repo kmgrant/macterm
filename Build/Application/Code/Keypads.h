@@ -77,7 +77,7 @@ locating a target session.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithWindowNibName:(NSString*)_;
 
 // new methods

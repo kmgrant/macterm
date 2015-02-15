@@ -122,7 +122,7 @@ sharedDebugInterfacePanelController
 {
 	if (nil == gDebugInterface_PanelController)
 	{
-		gDebugInterface_PanelController = [[[self class] allocWithZone:NULL] init];
+		gDebugInterface_PanelController = [[self.class allocWithZone:NULL] init];
 	}
 	return gDebugInterface_PanelController;
 }// sharedDebugInterfacePanelController
@@ -133,7 +133,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithWindowNibName:@"DebugInterfaceCocoa"];

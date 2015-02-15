@@ -216,7 +216,7 @@ changes to an interface declared in a ".mm" file.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithNibNamed:(NSString*)_
 	delegate:(id< Panel_Delegate >)_
 	context:(void*)_;

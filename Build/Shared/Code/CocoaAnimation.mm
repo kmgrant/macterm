@@ -100,7 +100,7 @@ Core Animation was available).
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithTransition:(My_AnimationTransition)_
 	imageWindow:(NSWindow*)_
 	finalWindow:(NSWindow*)_
@@ -110,7 +110,7 @@ Core Animation was available).
 	delayDistribution:(My_AnimationTimeDistribution)_
 	effect:(My_AnimationEffect)_
 	simplified:(BOOL)_; // designated initializer
-	- (id)
+	- (instancetype)
 	initWithTransition:(My_AnimationTransition)_
 	imageWindow:(NSWindow*)_
 	finalWindow:(NSWindow*)_
@@ -192,12 +192,12 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 		// as a precaution, arrange to move the window to the correct
 		// location after a short delay (the animation may fail)
 		{
-			NSArray*	frameCoordinates = [NSArray arrayWithObjects:
+			NSArray*	frameCoordinates = @[
 												[NSNumber numberWithFloat:newFrame.origin.x],
 												[NSNumber numberWithFloat:newFrame.origin.y],
 												[NSNumber numberWithFloat:newFrame.size.width],
 												[NSNumber numberWithFloat:newFrame.size.height],
-												nil];
+											];
 			
 			
 			[inTargetWindow performSelector:@selector(setFrameWithArray:) withObject:frameCoordinates
@@ -300,12 +300,12 @@ CocoaAnimation_TransitionWindowForMove	(NSWindow*		inTargetWindow,
 	
 	// the original window moves after a short delay
 	{
-		NSArray*	frameCoordinates = [NSArray arrayWithObjects:
+		NSArray*	frameCoordinates = @[
 											[NSNumber numberWithFloat:newFrame.origin.x],
 											[NSNumber numberWithFloat:newFrame.origin.y],
 											[NSNumber numberWithFloat:newFrame.size.width],
 											[NSNumber numberWithFloat:newFrame.size.height],
-											nil];
+										];
 		
 		
 		[inTargetWindow performSelector:@selector(setFrameWithArray:) withObject:frameCoordinates
@@ -546,7 +546,7 @@ Designated initializer.
 
 (1.8)
 */
-- (id)
+- (instancetype)
 initWithTransition:(My_AnimationTransition)			aTransition
 imageWindow:(NSWindow*)								aBorderlessWindow
 finalWindow:(NSWindow*)								theActualWindow
@@ -760,7 +760,7 @@ animation (on older machines).
 
 (1.8)
 */
-- (id)
+- (instancetype)
 initWithTransition:(My_AnimationTransition)			aTransition
 imageWindow:(NSWindow*)								aBorderlessWindow
 finalWindow:(NSWindow*)								theActualWindow

@@ -128,7 +128,7 @@ changes to an interface declared in a ".mm" file.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initForTerminalWindow:(TerminalWindowRef)_
 	responder:(id< FindDialog_ViewManagerChannel >)_
 	initialOptions:(FindDialog_Options)_;

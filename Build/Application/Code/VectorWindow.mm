@@ -380,7 +380,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithInterpreter:(VectorInterpreter_Ref)		anInterpreter
 {
 	self = [super initWithWindowNibName:@"VectorWindowCocoa"];

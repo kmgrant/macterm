@@ -68,7 +68,7 @@ Manages bindings for the base emulator preference.
 @interface PrefPanelTerminals_BaseEmulatorValue : PreferenceValue_Array //{
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithContextManager:(PrefsContextManager_Object*)_;
 
 @end //}
@@ -83,7 +83,7 @@ Manages bindings for the emulation tweaks preference.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithContextManager:(PrefsContextManager_Object*)_;
 
 // accessors
@@ -163,7 +163,7 @@ Manages bindings for the scrollback preference.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithContextManager:(PrefsContextManager_Object*)_;
 
 // accessors

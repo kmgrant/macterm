@@ -348,7 +348,7 @@ sharedGrowlDelegate
 {
 	if (nil == gGrowlSupport_Delegate)
 	{
-		gGrowlSupport_Delegate = [[[self class] allocWithZone:NULL] init];
+		gGrowlSupport_Delegate = [[self.class allocWithZone:NULL] init];
 	}
 	return gGrowlSupport_Delegate;
 }// sharedGrowlDelegate
@@ -359,7 +359,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super init];

@@ -1183,7 +1183,7 @@ C-based listeners).
 
 (2.6)
 */
-- (id)
+- (instancetype)
 initWithTarget:(id)			aTarget
 eventFiredSelector:(SEL)	aSelector
 {

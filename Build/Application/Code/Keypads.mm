@@ -572,7 +572,7 @@ sharedArrangeWindowPanelController
 {
 	if (nil == gKeypads_ArrangeWindowPanelController)
 	{
-		gKeypads_ArrangeWindowPanelController = [[[self class] allocWithZone:NULL] init];
+		gKeypads_ArrangeWindowPanelController = [[self.class allocWithZone:NULL] init];
 	}
 	return gKeypads_ArrangeWindowPanelController;
 }// sharedArrangeWindowPanelController
@@ -583,7 +583,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithWindowNibName:@"KeypadArrangeWindowCocoa"];
@@ -713,7 +713,7 @@ implementation, according to the current "pointSize" of the
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithWindowNibName:(NSString*)	aName
 {
 	self = [super initWithWindowNibName:aName];
@@ -924,7 +924,7 @@ sharedControlKeysPanelController
 {
 	if (nil == gKeypads_ControlKeysPanelController)
 	{
-		gKeypads_ControlKeysPanelController = [[[self class] allocWithZone:NULL] init];
+		gKeypads_ControlKeysPanelController = [[self.class allocWithZone:NULL] init];
 	}
 	return gKeypads_ControlKeysPanelController;
 }// sharedControlKeysPanelController
@@ -935,7 +935,7 @@ Designated initializer.
 
 (3.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithWindowNibName:@"KeypadControlKeysCocoa"];
@@ -1429,7 +1429,7 @@ sharedFullScreenPanelController
 {
 	if (nil == gKeypads_FullScreenPanelController)
 	{
-		gKeypads_FullScreenPanelController = [[[self class] allocWithZone:NULL] init];
+		gKeypads_FullScreenPanelController = [[self.class allocWithZone:NULL] init];
 	}
 	return gKeypads_FullScreenPanelController;
 }// sharedFullScreenPanelController
@@ -1440,7 +1440,7 @@ Designated initializer.
 
 (3.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithWindowNibName:@"KeypadFullScreenCocoa"];
@@ -1499,7 +1499,7 @@ sharedFunctionKeysPanelController
 {
 	if (nil == gKeypads_FunctionKeysPanelController)
 	{
-		gKeypads_FunctionKeysPanelController = [[[self class] allocWithZone:NULL] init];
+		gKeypads_FunctionKeysPanelController = [[self.class allocWithZone:NULL] init];
 		
 		// force the window to load because its settings are needed
 		// elsewhere in the user interface (e.g. menu items)
@@ -1514,7 +1514,7 @@ Designated initializer.
 
 (3.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithWindowNibName:@"KeypadFunctionKeysCocoa"];
@@ -2917,7 +2917,7 @@ sharedVT220KeysPanelController
 {
 	if (nil == gKeypads_VT220KeysPanelController)
 	{
-		gKeypads_VT220KeysPanelController = [[[self class] allocWithZone:NULL] init];
+		gKeypads_VT220KeysPanelController = [[self.class allocWithZone:NULL] init];
 	}
 	return gKeypads_VT220KeysPanelController;
 }// sharedVT220KeysPanelController
@@ -2928,7 +2928,7 @@ Designated initializer.
 
 (3.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithWindowNibName:@"KeypadVT220KeysCocoa"];

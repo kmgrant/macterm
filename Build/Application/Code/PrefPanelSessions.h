@@ -123,7 +123,7 @@ Manages bindings for the capture-file preferences.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithContextManager:(PrefsContextManager_Object*)_;
 
 // accessors
@@ -185,7 +185,7 @@ raw control-key characters, such as
 @interface PrefPanelSessions_ControlKeyValue : PreferenceValue_InheritedSingleTag //{
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_;
 
@@ -204,7 +204,7 @@ Manages bindings for the Emacs-meta-key mapping preference.
 @interface PrefPanelSessions_EmacsMetaValue : PreferenceValue_Array //{
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithContextManager:(PrefsContextManager_Object*)_;
 
 @end //}
@@ -216,7 +216,7 @@ Manages bindings for the new-line preference.
 @interface PrefPanelSessions_NewLineValue : PreferenceValue_Array //{
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithContextManager:(PrefsContextManager_Object*)_;
 
 @end //}
@@ -282,7 +282,7 @@ Manages bindings for the TEK-mode preference.
 @interface PrefPanelSessions_GraphicsModeValue : PreferenceValue_Array //{
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithContextManager:(PrefsContextManager_Object*)_;
 
 @end //}

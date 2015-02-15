@@ -429,7 +429,7 @@ Related: NSObject(NSKeyValueObservingCustomization).
 + (SEL)
 selectorToReturnKeyChangeAutoNotifyFlag:(SEL)	anAccessor
 {
-	SEL		result = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:NSStringFromSelector(anAccessor)]);
+	SEL		result = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:NSStringFromSelector(anAccessor)]);
 	
 	
 	return result;
@@ -479,12 +479,12 @@ X, Y, width and height, calls "setFrame:display:" on the
 window (with a display of YES).
 
 The array would be constructed using code such as:
-[NSArray arrayWithObjects:
+@[
 	[NSNumber numberWithFloat:[window frame].origin.x],
 	[NSNumber numberWithFloat:[window frame].origin.y],
 	[NSNumber numberWithFloat:[window frame].size.width],
-	[NSNumber numberWithFloat:[window frame].size.height],
-	nil];
+	[NSNumber numberWithFloat:[window frame].size.height]
+];
 
 This is useful for calls that require an object, such as
 "performSelector:withObject:afterDelay:".

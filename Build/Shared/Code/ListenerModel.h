@@ -134,7 +134,7 @@ NOTE:	The underlying listener that is created uses an
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithTarget:(id)_
 	eventFiredSelector:(SEL)_;
 

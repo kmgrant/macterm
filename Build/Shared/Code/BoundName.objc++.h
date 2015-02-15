@@ -46,7 +46,7 @@ instead of "description".
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithBoundName:(NSString*)_;
 
 // accessors

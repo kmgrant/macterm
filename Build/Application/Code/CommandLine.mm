@@ -147,7 +147,7 @@ Designated initializer.
 
 (3.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super init];
@@ -283,7 +283,7 @@ sharedCommandLinePanelController
 {
 	if (nil == gCommandLine_PanelController)
 	{
-		gCommandLine_PanelController = [[[self class] allocWithZone:NULL] init];
+		gCommandLine_PanelController = [[self.class allocWithZone:NULL] init];
 	}
 	return gCommandLine_PanelController;
 }// sharedCommandLinePanelController
@@ -294,7 +294,7 @@ Designated initializer.
 
 (3.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithWindowNibName:@"CommandLineCocoa"];

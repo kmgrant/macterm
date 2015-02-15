@@ -291,13 +291,13 @@ Mac OS X versions, raw strings do not bind properly.)
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initAsDefault;
-	- (id)
+	- (instancetype)
 	initAsOff;
-	- (id)
+	- (instancetype)
 	initWithDescription:(NSString*)_;
-	- (id)
+	- (instancetype)
 	initWithDescription:(NSString*)_
 	isDefault:(BOOL)_
 	isOff:(BOOL)_; // designated initializer
@@ -2378,14 +2378,14 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
-	NSArray*	subViewManagers = [NSArray arrayWithObjects:
-												[[[PrefPanelGeneral_OptionsViewManager alloc] init] autorelease],
-												[[[PrefPanelGeneral_SpecialViewManager alloc] init] autorelease],
-												[[[PrefPanelGeneral_NotificationsViewManager alloc] init] autorelease],
-												nil];
+	NSArray*	subViewManagers = @[
+										[[[PrefPanelGeneral_OptionsViewManager alloc] init] autorelease],
+										[[[PrefPanelGeneral_SpecialViewManager alloc] init] autorelease],
+										[[[PrefPanelGeneral_NotificationsViewManager alloc] init] autorelease],
+									];
 	
 	
 	self = [super initWithIdentifier:@"net.macterm.prefpanels.General"
@@ -2424,7 +2424,7 @@ default alert sound.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initAsDefault
 {
 	self = [self initWithDescription:nil isDefault:YES isOff:NO];
@@ -2440,7 +2440,7 @@ Creates an object representing the sound-off state.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initAsOff
 {
 	self = [self initWithDescription:nil isDefault:NO isOff:YES];
@@ -2456,7 +2456,7 @@ Creates an object representing a particular sound name.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithDescription:(NSString*)		aDescription
 {
 	self = [self initWithDescription:aDescription isDefault:NO isOff:NO];
@@ -2472,7 +2472,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 initWithDescription:(NSString*)		aDescription
 isDefault:(BOOL)					aDefaultFlag
 isOff:(BOOL)						anOffFlag
@@ -2569,7 +2569,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithNibNamed:@"PrefPanelGeneralNotificationsCocoa" delegate:self context:nullptr];
@@ -2658,7 +2658,7 @@ isBackgroundNotificationNone
 + (id)
 autoNotifyOnChangeToBackgroundNotificationNone
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setBackgroundNotificationNone:(BOOL)	aFlag
@@ -2693,7 +2693,7 @@ isBackgroundNotificationChangeDockIcon
 + (id)
 autoNotifyOnChangeToBackgroundNotificationChangeDockIcon
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setBackgroundNotificationChangeDockIcon:(BOOL)	aFlag
@@ -2728,7 +2728,7 @@ isBackgroundNotificationAnimateIcon
 + (id)
 autoNotifyOnChangeToBackgroundNotificationAnimateIcon
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setBackgroundNotificationAnimateIcon:(BOOL)		aFlag
@@ -2763,7 +2763,7 @@ isBackgroundNotificationDisplayMessage
 + (id)
 autoNotifyOnChangeToBackgroundNotificationDisplayMessage
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setBackgroundNotificationDisplayMessage:(BOOL)		aFlag
@@ -2810,7 +2810,7 @@ soundNameIndexes
 + (id)
 autoNotifyOnChangeToSoundNameIndexes
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setSoundNameIndexes:(NSIndexSet*)	indexes
@@ -2874,10 +2874,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];
@@ -3296,7 +3296,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithNibNamed:@"PrefPanelGeneralOptionsCocoa" delegate:self context:nullptr];
@@ -3567,10 +3567,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];
@@ -3825,7 +3825,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithNibNamed:@"PrefPanelGeneralSpecialCocoa" delegate:self context:nullptr];
@@ -3890,7 +3890,7 @@ cursorShapeIsBlock
 + (id)
 autoNotifyOnChangeToCursorShapeIsBlock
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setCursorShapeIsBlock:(BOOL)	aFlag
@@ -3925,7 +3925,7 @@ cursorShapeIsThickUnderline
 + (id)
 autoNotifyOnChangeToCursorShapeIsThickUnderline
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setCursorShapeIsThickUnderline:(BOOL)	aFlag
@@ -3960,7 +3960,7 @@ cursorShapeIsThickVerticalBar
 + (id)
 autoNotifyOnChangeToCursorShapeIsThickVerticalBar
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setCursorShapeIsThickVerticalBar:(BOOL)		aFlag
@@ -3995,7 +3995,7 @@ cursorShapeIsUnderline
 + (id)
 autoNotifyOnChangeToCursorShapeIsUnderline
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setCursorShapeIsUnderline:(BOOL)	aFlag
@@ -4030,7 +4030,7 @@ cursorShapeIsVerticalBar
 + (id)
 autoNotifyOnChangeToCursorShapeIsVerticalBar
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setCursorShapeIsVerticalBar:(BOOL)		aFlag
@@ -4134,7 +4134,7 @@ isNewCommandCustomNewSession
 + (id)
 autoNotifyOnChangeToNewCommandCustomNewSession
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setNewCommandCustomNewSession:(BOOL)	aFlag
@@ -4172,7 +4172,7 @@ isNewCommandDefaultSessionFavorite
 + (id)
 autoNotifyOnChangeToNewCommandDefaultSessionFavorite
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setNewCommandDefaultSessionFavorite:(BOOL)	aFlag
@@ -4210,7 +4210,7 @@ isNewCommandLogInShell
 + (id)
 autoNotifyOnChangeToNewCommandLogInShell
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setNewCommandLogInShell:(BOOL)	aFlag
@@ -4248,7 +4248,7 @@ isNewCommandShell
 + (id)
 autoNotifyOnChangeToNewCommandShell
 {
-	return [NSNumber numberWithBool:NO];
+	return @(NO);
 }
 - (void)
 setNewCommandShell:(BOOL)	aFlag
@@ -4345,11 +4345,12 @@ error:(NSError**)						outError
 		{
 			*outError = [NSError errorWithDomain:(NSString*)kConstantsRegistry_NSErrorDomainAppDefault
 							code:kConstantsRegistry_NSErrorBadUserID
-							userInfo:[[[NSDictionary alloc] initWithObjectsAndKeys:
-										NSLocalizedStringFromTable
-										(@"“Copy with Tab Substitution” requires a count from 1 to 24 spaces.", @"PrefPanelGeneral"/* table */,
-											@"message displayed for bad numbers"), NSLocalizedDescriptionKey,
-										nil] autorelease]];
+							userInfo:@{
+											NSLocalizedDescriptionKey: NSLocalizedStringFromTable
+																		(@"“Copy with Tab Substitution” requires a count from 1 to 24 spaces.",
+																			@"PrefPanelGeneral"/* table */,
+																			@"message displayed for bad numbers"),
+										}];
 		}
 	}
 	return result;
@@ -4369,10 +4370,10 @@ Returns true for keys that manually notify observers
 automaticallyNotifiesObserversForKey:(NSString*)	theKey
 {
 	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
 	
 	
-	if (NULL != class_getClassMethod([self class], flagSource))
+	if (NULL != class_getClassMethod(self.class, flagSource))
 	{
 		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
 		result = [[self performSelector:flagSource] boolValue];
@@ -4721,9 +4722,9 @@ to saved preferences).
 - (NSArray*)
 primaryDisplayBindingKeys
 {
-	return [NSArray arrayWithObjects:
-						@"spacesPerTab",
-						nil];
+	return @[
+				@"spacesPerTab",
+			];
 }// primaryDisplayBindingKeys
 
 

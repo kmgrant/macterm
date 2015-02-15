@@ -1430,7 +1430,7 @@ Constructor.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithFrame:(NSRect)		aFrame
 {
 	self = [super initWithFrame:aFrame];
@@ -1440,13 +1440,13 @@ initWithFrame:(NSRect)		aFrame
 		
 		// the list of accepted drag text types should correspond with what
 		// Clipboard_CreateCFStringFromPasteboard() will actually support
-		[self registerForDraggedTypes:[NSArray arrayWithObjects:
-													(NSString*)kUTTypeUTF16ExternalPlainText,
-													(NSString*)kUTTypeUTF16PlainText,
-													(NSString*)kUTTypeUTF8PlainText,
-													(NSString*)kUTTypePlainText,
-													(NSString*)CFSTR("com.apple.traditional-mac-plain-text"),
-													nil]];
+		[self registerForDraggedTypes:@[
+											(NSString*)kUTTypeUTF16ExternalPlainText,
+											(NSString*)kUTTypeUTF16PlainText,
+											(NSString*)kUTTypeUTF8PlainText,
+											(NSString*)kUTTypePlainText,
+											(NSString*)CFSTR("com.apple.traditional-mac-plain-text"),
+										]];
 	}
 	return self;
 }// initWithFrame:
@@ -1696,7 +1696,7 @@ sharedClipboardWindowController
 {
 	if (nil == gClipboard_WindowController)
 	{
-		gClipboard_WindowController = [[[self class] allocWithZone:NULL] init];
+		gClipboard_WindowController = [[self.class allocWithZone:NULL] init];
 	}
 	return gClipboard_WindowController;
 }// sharedClipboardWindowController
@@ -1707,7 +1707,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithWindowNibName:@"ClipboardCocoa"];

@@ -43,7 +43,7 @@ Designated initializer.
 
 (1.9)
 */
-- (id)
+- (instancetype)
 initWithBoundName:(NSString*)	aString
 {
 	self = [super init];

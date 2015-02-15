@@ -8231,7 +8231,7 @@ sharedTerminalWindowController
 {
 	if (nil == gTerminalWindow_Controller)
 	{
-		gTerminalWindow_Controller = [[[self class] allocWithZone:NULL] init];
+		gTerminalWindow_Controller = [[self.class allocWithZone:NULL] init];
 	}
 	return gTerminalWindow_Controller;
 }// sharedTerminalWindowController
@@ -8242,7 +8242,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithWindowNibName:@"TerminalWindowCocoa"];
@@ -8402,7 +8402,7 @@ sharedTerminalWindowResizeInfoController
 {
 	if (nil == gTerminalWindow_ResizeInfoController)
 	{
-		gTerminalWindow_ResizeInfoController = [[[self class] allocWithZone:NULL] init];
+		gTerminalWindow_ResizeInfoController = [[self.class allocWithZone:NULL] init];
 	}
 	return gTerminalWindow_ResizeInfoController;
 }// sharedTerminalWindowResizeInfoController
@@ -8413,7 +8413,7 @@ Designated initializer.
 
 (4.1)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithWindowNibName:@"ResizeInfoCocoa"];

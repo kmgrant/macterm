@@ -98,7 +98,7 @@ This class holds information displayed in a row of the table.
 }
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithSession:(SessionRef)_
 	andActivationTime:(CFAbsoluteTime)_;
 
@@ -645,7 +645,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithSession:(SessionRef)		aSession
 andActivationTime:(CFAbsoluteTime)	aTimeInterval
 {
@@ -801,7 +801,7 @@ sharedInfoWindowController
 {
 	if (nil == gInfoWindow_Controller)
 	{
-		gInfoWindow_Controller = [[[self class] allocWithZone:NULL] init];
+		gInfoWindow_Controller = [[self.class allocWithZone:NULL] init];
 	}
 	return gInfoWindow_Controller;
 }// sharedInfoWindowController
@@ -812,7 +812,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithWindowNibName:@"InfoWindowCocoa"];
@@ -837,7 +837,7 @@ dealloc
 }// dealloc
 
 
-#pragma mark NSTableDataSource
+#pragma mark NSTableViewDataSource
 
 
 /*!
@@ -891,7 +891,7 @@ row:(int)							row
 	[[self infoForRow:row] setObject:object forKey:columnKey];
 	if ([columnKey isEqualToString:kMyInfoColumnWindow])
 	{
-		assert([object isKindOfClass:[NSString class]]);
+		assert([object isKindOfClass:NSString.class]);
 		NSString*				asString = (NSString*)object;
 		InfoWindow_SessionRow*	rowData = [self infoForRow:row];
 		
@@ -909,7 +909,8 @@ Responds when the sorting criteria change for the table.
 
 (4.0)
 */
-- (void)tableView:(NSTableView*)		tableView
+- (void)
+tableView:(NSTableView*)				tableView
 sortDescriptorsDidChange:(NSArray*)		oldDescriptors
 {
 #pragma unused(oldDescriptors)
@@ -1042,15 +1043,15 @@ in the given toolbar.
 toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 {
 #pragma unused(toolbar)
-	return [NSArray arrayWithObjects:
-						kTerminalToolbar_ItemIDNewSessionDefaultFavorite,
-						kTerminalToolbar_ItemIDNewSessionShell,
-						kTerminalToolbar_ItemIDNewSessionLogInShell,
-						kTerminalToolbar_ItemIDCustomize,
-						kTerminalToolbar_ItemIDStackWindows,
-						NSToolbarSpaceItemIdentifier,
-						NSToolbarFlexibleSpaceItemIdentifier,
-						nil];
+	return @[
+				kTerminalToolbar_ItemIDNewSessionDefaultFavorite,
+				kTerminalToolbar_ItemIDNewSessionShell,
+				kTerminalToolbar_ItemIDNewSessionLogInShell,
+				kTerminalToolbar_ItemIDCustomize,
+				kTerminalToolbar_ItemIDStackWindows,
+				NSToolbarSpaceItemIdentifier,
+				NSToolbarFlexibleSpaceItemIdentifier,
+			];
 }// toolbarAllowedItemIdentifiers
 
 
@@ -1064,24 +1065,24 @@ given toolbar whenever the user has not customized it.
 toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 {
 #pragma unused(toolbar)
-	return [NSArray arrayWithObjects:
-						NSToolbarSpaceItemIdentifier,
-						NSToolbarSpaceItemIdentifier,
-						NSToolbarSpaceItemIdentifier,
-						NSToolbarSpaceItemIdentifier,
-						NSToolbarSpaceItemIdentifier,
-						NSToolbarFlexibleSpaceItemIdentifier,
-						kTerminalToolbar_ItemIDNewSessionDefaultFavorite,
-						NSToolbarSpaceItemIdentifier,
-						kTerminalToolbar_ItemIDNewSessionShell,
-						NSToolbarSpaceItemIdentifier,
-						kTerminalToolbar_ItemIDNewSessionLogInShell,
-						NSToolbarSpaceItemIdentifier,
-						kTerminalToolbar_ItemIDCustomize,
-						NSToolbarFlexibleSpaceItemIdentifier,
-						kTerminalToolbar_ItemIDStackWindows,
-						NSToolbarSpaceItemIdentifier,
-						nil];
+	return @[
+				NSToolbarSpaceItemIdentifier,
+				NSToolbarSpaceItemIdentifier,
+				NSToolbarSpaceItemIdentifier,
+				NSToolbarSpaceItemIdentifier,
+				NSToolbarSpaceItemIdentifier,
+				NSToolbarFlexibleSpaceItemIdentifier,
+				kTerminalToolbar_ItemIDNewSessionDefaultFavorite,
+				NSToolbarSpaceItemIdentifier,
+				kTerminalToolbar_ItemIDNewSessionShell,
+				NSToolbarSpaceItemIdentifier,
+				kTerminalToolbar_ItemIDNewSessionLogInShell,
+				NSToolbarSpaceItemIdentifier,
+				kTerminalToolbar_ItemIDCustomize,
+				NSToolbarFlexibleSpaceItemIdentifier,
+				kTerminalToolbar_ItemIDStackWindows,
+				NSToolbarSpaceItemIdentifier,
+			];
 }// toolbarDefaultItemIdentifiers
 
 
@@ -1101,13 +1102,13 @@ windowDidLoad
 	[super windowDidLoad];
 	assert(nil != infoTable);
 	
-	[[self window] setExcludedFromWindowsMenu:YES];
+	[self.window setExcludedFromWindowsMenu:YES];
 	
 	// make this window appear on all Spaces by default; note that this only
 	// works on later versions of Mac OS X; scan for "NSWindowExtensionsFromLeopard"
-	if ([[self window] respondsToSelector:@selector(setCollectionBehavior:)])
+	if ([self.window respondsToSelector:@selector(setCollectionBehavior:)])
 	{
-		[(id)[self window] setCollectionBehavior:NSWindowCollectionBehaviorCanJoinAllSpaces];
+		[(id)self.window setCollectionBehavior:NSWindowCollectionBehaviorCanJoinAllSpaces];
 	}
 	
 	// create toolbar; has to be done programmatically, because
@@ -1145,7 +1146,7 @@ windowDidLoad
 		[windowToolbar setAllowsUserCustomization:YES];
 		[windowToolbar setAutosavesConfiguration:YES];
 		[windowToolbar setDelegate:self];
-		[[self window] setToolbar:windowToolbar];
+		[self.window setToolbar:windowToolbar];
 	}
 	
 	// arrange to detect double-clicks on table view rows
@@ -1185,7 +1186,7 @@ table.
 - (void)
 didDoubleClickInView:(id)	sender
 {
-	if ([sender isKindOfClass:[NSTableView class]])
+	if ([sender isKindOfClass:NSTableView.class])
 	{
 		NSTableView*	asTableView = (NSTableView*)sender;
 		//int			clickedColumn = [asTableView clickedColumn]; // not important in this case
@@ -1220,7 +1221,7 @@ infoForRow:(int)	row
 	if ((row >= 0) && (row < [self numberOfRowsInTableView:self->infoTable]))
 	{
 		id		infoObject = [self->dataArray objectAtIndex:row];
-		assert([infoObject isKindOfClass:[InfoWindow_SessionRow class]]);
+		assert([infoObject isKindOfClass:InfoWindow_SessionRow.class]);
 		
 		
 		result = (InfoWindow_SessionRow*)infoObject;

@@ -70,7 +70,7 @@ Manages bindings for a character-width preference.
 @interface PrefPanelFormats_CharacterWidthContent : PreferenceValue_InheritedSingleTag //{
 
 // initializers
-	- (id)
+	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_;
 

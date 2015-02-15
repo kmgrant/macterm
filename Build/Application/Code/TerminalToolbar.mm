@@ -327,7 +327,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initForToolbar:(NSToolbar*)		aToolbar
 experimentalItems:(BOOL)		experimentalFlag
 {
@@ -489,7 +489,7 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 		[result addObject:kMy_ToolbarItemIDTabs];
 	}
 	
-	[result addObjectsFromArray:[NSArray arrayWithObjects:
+	[result addObjectsFromArray:@[
 									// NOTE: these are ordered with their palette arrangement in mind
 									kTerminalToolbar_ItemIDNewSessionDefaultFavorite,
 									kTerminalToolbar_ItemIDNewSessionLogInShell,
@@ -508,7 +508,7 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 									kMy_ToolbarItemIDForceQuit,
 									kMy_ToolbarItemIDSuspend,
 									kMy_ToolbarItemIDBell,
-									nil]];
+								]];
 	
 	return result;
 }// toolbarAllowedItemIdentifiers
@@ -525,26 +525,26 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 {
 #pragma unused(toolbar)
 	// this list should not contain any “experimental” items
-	return [NSArray arrayWithObjects:
-						NSToolbarSpaceItemIdentifier,
-						NSToolbarSpaceItemIdentifier,
-						NSToolbarSpaceItemIdentifier,
-						kMy_ToolbarItemIDHide,
-						kMy_ToolbarItemIDForceQuit,
-						kMy_ToolbarItemIDSuspend,
-						NSToolbarFlexibleSpaceItemIdentifier,
-						kMy_ToolbarItemIDLED1,
-						kMy_ToolbarItemIDLED2,
-						kMy_ToolbarItemIDLED3,
-						kMy_ToolbarItemIDLED4,
-						NSToolbarFlexibleSpaceItemIdentifier,
-						kMy_ToolbarItemIDBell,
-						kMy_ToolbarItemIDPrint,
-						kMy_ToolbarItemIDFullScreen,
-						NSToolbarSpaceItemIdentifier,
-						NSToolbarSpaceItemIdentifier,
-						kTerminalToolbar_ItemIDCustomize,
-						nil];
+	return @[
+				NSToolbarSpaceItemIdentifier,
+				NSToolbarSpaceItemIdentifier,
+				NSToolbarSpaceItemIdentifier,
+				kMy_ToolbarItemIDHide,
+				kMy_ToolbarItemIDForceQuit,
+				kMy_ToolbarItemIDSuspend,
+				NSToolbarFlexibleSpaceItemIdentifier,
+				kMy_ToolbarItemIDLED1,
+				kMy_ToolbarItemIDLED2,
+				kMy_ToolbarItemIDLED3,
+				kMy_ToolbarItemIDLED4,
+				NSToolbarFlexibleSpaceItemIdentifier,
+				kMy_ToolbarItemIDBell,
+				kMy_ToolbarItemIDPrint,
+				kMy_ToolbarItemIDFullScreen,
+				NSToolbarSpaceItemIdentifier,
+				NSToolbarSpaceItemIdentifier,
+				kTerminalToolbar_ItemIDCustomize,
+			];
 }// toolbarDefaultItemIdentifiers
 
 
@@ -559,7 +559,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDBell];
@@ -733,7 +733,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kTerminalToolbar_ItemIDCustomize];
@@ -787,7 +787,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDForceQuit];
@@ -965,7 +965,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDFullScreen];
@@ -1039,7 +1039,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDHide];
@@ -1092,7 +1092,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDLED1 oneBasedIndexOfLED:1];
@@ -1144,7 +1144,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDLED2 oneBasedIndexOfLED:2];
@@ -1196,7 +1196,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDLED3 oneBasedIndexOfLED:3];
@@ -1248,7 +1248,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDLED4 oneBasedIndexOfLED:4];
@@ -1300,7 +1300,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kTerminalToolbar_ItemIDNewSessionDefaultFavorite];
@@ -1353,7 +1353,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kTerminalToolbar_ItemIDNewSessionLogInShell];
@@ -1406,7 +1406,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kTerminalToolbar_ItemIDNewSessionShell];
@@ -1459,7 +1459,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDPrint];
@@ -1512,7 +1512,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kTerminalToolbar_ItemIDStackWindows];
@@ -1585,7 +1585,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDSuspend];
@@ -1756,7 +1756,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithItemIdentifier:(NSString*)	anIdentifier
 oneBasedIndexOfLED:(unsigned int)	anIndex
 {
@@ -1914,7 +1914,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithDescription:(NSAttributedString*)	aDescription
 {
 	self = [super init];
@@ -1990,7 +1990,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 init
 {
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDTabs];
@@ -2010,19 +2010,19 @@ init
 		[self setLabel:@""];
 		[self setPaletteLabel:NSLocalizedString(@"Tabs", @"toolbar item name; for tabs")];
 		
-		[self setTabTargets:[NSArray arrayWithObjects:
-										[[[TerminalToolbar_TabSource alloc]
-											initWithDescription:[[[NSAttributedString alloc]
-																	initWithString:NSLocalizedString
-																					(@"Tab 1", @"toolbar item tabs; default segment 0 name")]
-																	autorelease]] autorelease],
-										[[[TerminalToolbar_TabSource alloc]
-											initWithDescription:[[[NSAttributedString alloc]
-																	initWithString:NSLocalizedString
-																					(@"Tab 2", @"toolbar item tabs; default segment 1 name")]
-																	autorelease]] autorelease],
-										nil]
-				andAction:nil];
+		[self setTabTargets:@[
+								[[[TerminalToolbar_TabSource alloc]
+									initWithDescription:[[[NSAttributedString alloc]
+															initWithString:NSLocalizedString
+																			(@"Tab 1", @"toolbar item tabs; default segment 0 name")]
+															autorelease]] autorelease],
+								[[[TerminalToolbar_TabSource alloc]
+									initWithDescription:[[[NSAttributedString alloc]
+															initWithString:NSLocalizedString
+																			(@"Tab 2", @"toolbar item tabs; default segment 1 name")]
+															autorelease]] autorelease],
+							]
+							andAction:nil];
 	}
 	return self;
 }// init
@@ -2178,7 +2178,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithIdentifier:(NSString*)	anIdentifier
 {
 	self = [super initWithIdentifier:anIdentifier];
@@ -2272,7 +2272,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithItemIdentifier:(NSString*)		anIdentifier
 {
 	self = [super initWithItemIdentifier:anIdentifier];
@@ -2477,7 +2477,7 @@ Designated initializer.
 
 (4.0)
 */
-- (id)
+- (instancetype)
 initWithContentRect:(NSRect)	aRect
 screen:(NSScreen*)				aScreen
 {
