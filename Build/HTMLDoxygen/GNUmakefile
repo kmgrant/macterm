@@ -25,7 +25,7 @@ DOXYGEN := doxygen
 DOXYGEN_CONF_TEMPLATE := $(CURDIR)/Resources/Doxygen.conf.in
 TMP_CONF := /tmp/Doxygen.conf
 
-PY_SRC := $(CURDIR)/../MacTerm.app/Contents/Frameworks/Quills.framework/Versions/B/lib/python2.5/Quills.py
+PY_SRC := $(CURDIR)/../MacTerm.app/Contents/Frameworks/MacTermQuills.framework/Versions/B/lib/python2.5/Quills.py
 APP_INCL := $(CURDIR)/../Application/Code/
 APP_SRC := $(CURDIR)/../Application/Code/
 DOC_SRC := $(CURDIR)/Resources/

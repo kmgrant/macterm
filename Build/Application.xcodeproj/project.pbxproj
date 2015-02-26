@@ -516,7 +516,7 @@
 		0AC6A4E40AC4D24400FF6FC6 /* QuillsTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsTerminal.h; path = Application/Code/QuillsTerminal.h; sourceTree = "<group>"; };
 		0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsSession.cp; path = Application/Code/QuillsSession.cp; sourceTree = "<group>"; };
 		0AC6A6040AC4E45600FF6FC6 /* QuillsSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsSession.h; path = Application/Code/QuillsSession.h; sourceTree = "<group>"; };
-		0AC6BAD20A8C0A8B00AFF37A /* Quills.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quills.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0AC6BAD20A8C0A8B00AFF37A /* MacTermQuills.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MacTermQuills.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC7DDA90AC2579D00ED8C19 /* IconForHide.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForHide.icns; path = Application/Resources/IconForHide.icns; sourceTree = "<group>"; };
 		0AC8100C1221C89000687DB2 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/InfoWindowCocoa.xib; sourceTree = "<group>"; };
 		0AC810AB1221EC5800687DB2 /* IconForNewSessionLogInShell.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForNewSessionLogInShell.icns; path = Application/Resources/IconForNewSessionLogInShell.icns; sourceTree = "<group>"; };
@@ -900,7 +900,7 @@
 		0A46FE73055433CA00ACDF3A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				0AC6BAD20A8C0A8B00AFF37A /* Quills.framework */,
+				0AC6BAD20A8C0A8B00AFF37A /* MacTermQuills.framework */,
 				0A9AF64E0AF5A50500E7DF18 /* PyMacTerm.framework */,
 				0AC1FAF30D1992D600ED3102 /* _Quills.so */,
 				0A70B8A31079C1EB0013E76F /* PythonInvoker */,
@@ -1230,9 +1230,9 @@
 			productReference = 0A9AF64E0AF5A50500E7DF18 /* PyMacTerm.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		0AC6BAD10A8C0A8B00AFF37A /* Quills.framework */ = {
+		0AC6BAD10A8C0A8B00AFF37A /* MacTermQuills.framework */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0AC6BAD40A8C0A8C00AFF37A /* Build configuration list for PBXNativeTarget "Quills.framework" */;
+			buildConfigurationList = 0AC6BAD40A8C0A8C00AFF37A /* Build configuration list for PBXNativeTarget "MacTermQuills.framework" */;
 			buildPhases = (
 				0A79B1E70AF71FD90052ECD3 /* Auto-Date Property List */,
 				0AC6BACD0A8C0A8B00AFF37A /* Headers */,
@@ -1245,9 +1245,9 @@
 			);
 			dependencies = (
 			);
-			name = Quills.framework;
-			productName = Quills.framework;
-			productReference = 0AC6BAD20A8C0A8B00AFF37A /* Quills.framework */;
+			name = MacTermQuills.framework;
+			productName = MacTermQuills.framework;
+			productReference = 0AC6BAD20A8C0A8B00AFF37A /* MacTermQuills.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -1274,7 +1274,7 @@
 			projectRoot = "";
 			targets = (
 				0AFB6A1E0E86FD26005C5A07 /* Everything */,
-				0AC6BAD10A8C0A8B00AFF37A /* Quills.framework */,
+				0AC6BAD10A8C0A8B00AFF37A /* MacTermQuills.framework */,
 				0A70B8A21079C1EB0013E76F /* PythonInvoker */,
 				0A983A9B0D11087A0054B4D2 /* PythonWrapper */,
 				0A9AF64D0AF5A50500E7DF18 /* PyMacTerm.framework */,
@@ -1999,7 +1999,7 @@
 					"$(PYTHON_LDFLAGS)",
 					"$(LDFLAGS_EXTRA_FRAMEWORKS)",
 				);
-				PRODUCT_NAME = Quills;
+				PRODUCT_NAME = MacTermQuills;
 			};
 			name = ForRelease;
 		};
@@ -2048,7 +2048,7 @@
 				OTHER_LDFLAGS = (
 					"$(PYTHON_LDFLAGS)",
 					"-framework",
-					Quills,
+					MacTermQuills,
 				);
 				PRODUCT_NAME = Quills;
 				WARNING_CFLAGS = "-Wall";
@@ -2131,7 +2131,7 @@
 					"$(PYTHON_LDFLAGS)",
 					"$(LDFLAGS_EXTRA_FRAMEWORKS)",
 				);
-				PRODUCT_NAME = Quills;
+				PRODUCT_NAME = MacTermQuills;
 			};
 			name = ForDebugging;
 		};
@@ -2155,7 +2155,7 @@
 				OTHER_LDFLAGS = (
 					"$(PYTHON_LDFLAGS)",
 					"-framework",
-					Quills,
+					MacTermQuills,
 				);
 				PRODUCT_NAME = Quills;
 				WARNING_CFLAGS = "-Wall";
@@ -2209,7 +2209,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = ForDebugging;
 		};
-		0AC6BAD40A8C0A8C00AFF37A /* Build configuration list for PBXNativeTarget "Quills.framework" */ = {
+		0AC6BAD40A8C0A8C00AFF37A /* Build configuration list for PBXNativeTarget "MacTermQuills.framework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0AA249460D13342D00BCAF94 /* ForDebugging */,

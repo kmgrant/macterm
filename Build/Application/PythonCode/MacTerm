@@ -60,7 +60,7 @@ if __name__ == "__main__":
     # things as the application menu and preferences.  A tiny executable runs
     # the Python interpreter from C++ (e.g. "MacTerm_python2.6_wrap").
     #
-    # The Quills.framework code is the largest piece.  It is available as a
+    # MacTermQuills.framework code is the largest piece.  It is available as a
     # Universal binary.
     #
     # Now that the project requires Mac OS X 10.9 or later, Python 2.6 is known
@@ -91,7 +91,7 @@ if __name__ == "__main__":
         QUILLS_FW_VER = DEFAULT_QUILLS_FW_VER
         QUILLS_PYLIB_VER = DEFAULT_QUILLS_PYLIB_VER
     os.environ["PYTHONEXECUTABLE"] = PY_INTERPRETER
-    QUILLS_DIR = path_join(FRAMEWORKS_DIR, "Quills.framework")
+    QUILLS_DIR = path_join(FRAMEWORKS_DIR, "MacTermQuills.framework")
     QUILLS_VERSIONS_DIR = path_join(QUILLS_DIR, "Versions")
     QUILLS_PROPER_VERSION_DIR = path_join(QUILLS_VERSIONS_DIR, QUILLS_FW_VER)
     QUILLS_PYLIB_DIR = path_join(QUILLS_PROPER_VERSION_DIR,
