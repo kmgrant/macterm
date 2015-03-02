@@ -866,6 +866,10 @@ Actions that help the user to find things.
 	performFindPrevious:(id)_;
 	- (IBAction)
 	performFindCursor:(id)_;
+	- (IBAction)
+	performShowCompletions:(id)_;
+	- (IBAction)
+	performSendMenuItemText:(id)_; // from completions menu; “types” the menu item title text
 
 @end //}
 

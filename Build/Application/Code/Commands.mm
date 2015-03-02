@@ -6728,6 +6728,92 @@ canPerformFindPrevious:(id <NSValidatedUserInterfaceItem>)		anItem
 }
 
 
+- (IBAction)
+performShowCompletions:(id)		sender
+{
+#pragma unused(sender)
+	NSWindow*			target = [NSApp keyWindow];
+	TerminalWindowRef	terminalWindow = [target terminalWindowRef];
+	TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+	
+	
+	TerminalView_DisplayCompletionsUI(view);
+}
+- (id)
+canPerformShowCompletions:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	NSWindow*			target = [NSApp keyWindow];
+	TerminalWindowRef	terminalWindow = [target terminalWindowRef];
+	BOOL				result = (nullptr != terminalWindow);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performSendMenuItemText:(id)	sender
+{
+	if ([[sender class] isSubclassOfClass:NSMenuItem.class])
+	{
+		SessionRef			focusSession = SessionFactory_ReturnUserFocusSession();
+		TerminalWindowRef	terminalWindow = (nullptr != focusSession)
+												? Session_ReturnActiveTerminalWindow(focusSession)
+												: nullptr;
+		TerminalViewRef		view = (nullptr != terminalWindow)
+									? TerminalWindow_ReturnViewWithFocus(terminalWindow)
+									: nullptr;
+		
+		
+		if (nullptr == view)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "unable to send menu item text because a user focus session or view was not found");
+		}
+		else
+		{
+			NSMenuItem*			asMenuItem = (NSMenuItem*)sender;
+			CFStringRef			asCFString = BRIDGE_CAST([asMenuItem title], CFStringRef);
+			CFStringRef			completionCFString = asCFString;
+			CFRetainRelease		cursorCFString(TerminalView_ReturnCursorWordCopyAsUnicode(view),
+												true/* is retained */);
+			CFRetainRelease		substringCFString;
+			
+			
+			// since this is meant to be a “completion”, the text
+			// currently at the cursor position matters; characters
+			// may be pruned from the beginning of the proposed
+			// completion string if the cursor text already contains
+			// some part of it (case-insensitive)
+			if (cursorCFString.exists() && (CFStringGetLength(cursorCFString.returnCFStringRef()) > 0))
+			{
+				CFIndex const	kOriginalCompletionLength = CFStringGetLength(asCFString);
+				CFRange			matchRange = CFStringFind(asCFString, cursorCFString.returnCFStringRef(),
+															kCFCompareCaseInsensitive | kCFCompareAnchored);
+				
+				
+				if (matchRange.length > 0)
+				{
+					substringCFString = CFRetainRelease(CFStringCreateWithSubstring(kCFAllocatorDefault, asCFString,
+																					CFRangeMake(matchRange.location + matchRange.length,
+																								kOriginalCompletionLength - matchRange.length)),
+														true/* is retained */);
+					completionCFString = substringCFString.returnCFStringRef();
+				}
+			}
+			
+			// send appropriate text to the session
+			Session_UserInputCFString(focusSession, completionCFString);
+		}
+	}
+	else
+	{
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteLine, "unable to send menu item text because given object is not apparently a menu item");
+	}
+}
+
 @end // Commands_Executor (Commands_Searching)
 
 

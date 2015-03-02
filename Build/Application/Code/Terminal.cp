@@ -76,6 +76,7 @@ extern "C"
 #include <MemoryBlocks.h>
 #include <RegionUtilities.h>
 #include <SoundSystem.h>
+#include <StringUtilities.h>
 
 // application includes
 #include "Commands.h"
@@ -86,6 +87,7 @@ extern "C"
 #include "FileUtilities.h"
 #include "Preferences.h"
 #include "PrintTerminal.h"
+#include "QuillsTerminal.h"
 #include "Session.h"
 #include "StreamCapture.h"
 #include "TerminalLine.h"
@@ -14306,6 +14308,9 @@ cursorWrapIfNecessaryGetLocation	(My_ScreenBufferPtr		inDataPtr,
 Treats the specified string as “verbatim”, sending the
 characters wherever they need to go (any open print jobs
 or capture files, the terminal, etc.).
+
+The given string is also analyzed for words in order to
+support future auto-completion.
 
 (4.0)
 */

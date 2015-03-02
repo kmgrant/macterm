@@ -967,6 +967,201 @@ TerminalView_DeleteScrollback	(TerminalViewRef	inView)
 
 
 /*!
+Displays a pop-up showing possible completions for the
+word under the cursor, or informs the user that there are
+no completions available.  If the user selects a completion,
+it is “typed” into the terminal’s listening session.
+
+(4.1)
+*/
+void
+TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
+{
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	Boolean						areCompletionsAvailable = false;
+	
+	
+	if (nullptr != viewPtr)
+	{
+		TerminalView_CellRange const	kOldSelectionRange = viewPtr->text.selection.range;
+		CFRetainRelease					searchQueryCFString;
+		
+		
+		// if text is selected, assume it is the text to complete;
+		// otherwise, automatically find the word around the cursor
+		// (using the same rules as double-clicking)
+		if (false == viewPtr->text.selection.exists)
+		{
+			searchQueryCFString = TerminalView_ReturnCursorWordCopyAsUnicode(inView);
+		}
+		else
+		{
+			// use current selection as a base
+			searchQueryCFString = CFRetainRelease(TerminalView_ReturnSelectedTextCopyAsUnicode
+													(inView, 0/* spaces to replace with tab */, 0/* flags */),
+													true/* is retained */);
+		}
+		
+		if (false == searchQueryCFString.exists())
+		{
+			Console_Warning(Console_WriteLine, "unable to find a suitable query word for auto-completion");
+		}
+		else
+		{
+			// find all matches for the selected word
+			std::vector< Terminal_RangeDescription >	searchResults;
+			Terminal_SearchFlags						flags = 0;
+			Terminal_Result								searchStatus = kTerminal_ResultOK;
+			
+			
+			// make a mutable copy and strip any end whitespace
+			searchQueryCFString = CFRetainRelease(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* maximum length, or zero */,
+																			searchQueryCFString.returnCFStringRef()),
+													true/* is retained */);
+			CFStringTrimWhitespace(searchQueryCFString.returnCFMutableStringRef());
+			
+			// initiate search for base term; then, at every search
+			// result location, perform a word search to determine
+			// the possible completions
+			if (0 == CFStringGetLength(searchQueryCFString.returnCFStringRef()))
+			{
+				Console_Warning(Console_WriteLine, "query word for auto-completion is effectively empty");
+			}
+			else
+			{
+				Boolean		searchOK = false;
+				
+				
+				// configure search
+				//flags |= kTerminal_SearchFlagsCaseSensitive; // for completions, be case-insensitive
+				
+				// initiate synchronous (should it be asynchronous?) search
+				searchStatus = Terminal_Search(viewPtr->screen.ref, searchQueryCFString.returnCFStringRef(), flags, searchResults);
+				if (kTerminal_ResultOK != searchStatus)
+				{
+					Console_Warning(Console_WriteValue, "search for completions failed, error", searchStatus);
+					searchOK = false;
+				}
+				else
+				{
+					if (false == searchResults.empty())
+					{
+						NSMutableSet*	setOfCompletions = [[[NSMutableSet alloc] init] autorelease];
+						
+						
+						// find all the “words” at the locations where the
+						// starting word fragment were found in the terminal
+						// (scrollback or screen), discarding duplicates
+						for (auto resultRange: searchResults)
+						{
+							CFRetainRelease		completionCFString;
+							
+							
+							// “select” this result
+							viewPtr->text.selection.range.first.first = resultRange.firstColumn;
+							viewPtr->text.selection.range.first.second = resultRange.firstRow;
+							viewPtr->text.selection.range.second.first = resultRange.firstColumn + resultRange.columnCount;
+							viewPtr->text.selection.range.second.second = resultRange.firstRow + 1;
+							
+							// “double-click” this result to find a word (TEMPORARY; should
+							// probably factor out the code that searches for a word so that
+							// the text selection does not have to change; although, this is
+							// a very convenient way to produce exactly the right behavior)
+							handleMultiClick(viewPtr, 2);
+							completionCFString = CFRetainRelease(TerminalView_ReturnSelectedTextCopyAsUnicode
+																	(inView, 0/* spaces to replace with tab */, 0/* flags */),
+																	true/* is retained */);
+							TerminalView_SelectNothing(inView); // fix any highlighting changes caused by the “selection” above
+							if (false == completionCFString.exists())
+							{
+								Console_Warning(Console_WriteValuePair, "failed to find a string for completion location",
+												resultRange.firstColumn, resultRange.firstRow);
+							}
+							else
+							{
+								NSString*	asNSString = BRIDGE_CAST(completionCFString.returnCFStringRef(), NSString*);
+								
+								
+								[setOfCompletions addObject:asNSString];
+							}
+						}
+						
+						// if the resulting set has exactly one string that
+						// matches the original string, ignore it; otherwise,
+						// pop up a menu with completion options
+						if ((setOfCompletions.count > 1) ||
+							(NO == [[setOfCompletions anyObject]
+									isEqualToString:BRIDGE_CAST(searchQueryCFString.returnCFStringRef(), NSString*)]))
+						{
+							NSPoint				globalLocation = NSMakePoint(300, 500); // arbitrary default (TEMPORARY)
+							NSMutableArray*		sortedCompletions = [[[NSMutableArray alloc] initWithCapacity:setOfCompletions.count]
+																		autorelease];
+							NSMenu*				completionsMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+							NSUInteger			completionIndex = 0;
+							
+							
+							// sort the (unique) list of strings
+							for (NSString* completionOption in setOfCompletions)
+							{
+								[sortedCompletions addObject:completionOption];
+							}
+							[sortedCompletions sortUsingSelector:@selector(caseInsensitiveCompare:)];
+							
+							// quick debug
+							//NSLog(@"completions for “%@”: %@", BRIDGE_CAST(searchQueryCFString.returnCFStringRef(), NSString*),
+							//		sortedCompletions);
+							
+							// now create menu items showing completions; the first
+							// few options will be given convenient key equivalents
+							for (NSString* completionOption in sortedCompletions)
+							{
+								NSString*		keyEquivalentString = (completionIndex < 10)
+																		? [[NSNumber numberWithUnsignedInteger:completionIndex]
+																			stringValue]
+																		: @"";
+								NSMenuItem*		newItem = [[NSMenuItem alloc]
+															initWithTitle:completionOption
+																			action:@selector(performSendMenuItemText:)
+																			keyEquivalent:keyEquivalentString];
+								
+								
+								[completionsMenu addItem:newItem];
+								[newItem release], newItem = nil;
+								++completionIndex;
+							}
+							
+							// specify that menu should pop up at cursor location
+							// UNIMPLEMENTED
+							//globalLocation = [NSWindow localToGlobalRelativeToTopForPoint:...];
+							
+							// display the menu; note that this mechanism does not require
+							// either a positioning item or a view, effectively making the
+							// menu appear at the given global location
+							UNUSED_RETURN(BOOL)[completionsMenu popUpMenuPositioningItem:nil atLocation:globalLocation inView:nil];
+							
+							// success!
+							areCompletionsAvailable = true;
+						}
+					}
+				}
+			}
+		}
+		
+		// restore old selection
+		TerminalView_SelectVirtualRange(inView, kOldSelectionRange);
+	}
+	
+	unless (areCompletionsAvailable)
+	{
+		// failed to find any auto-completions
+		// TEMPORARY: could still pop up a menu with a simple
+		// disabled-item message like “No completions available.”
+		Sound_StandardAlert();
+	}
+}// DisplayCompletionsUI
+
+
+/*!
 Displays a dialog allowing the user to choose a destination
 file, and then writes all selected text from the specified
 view to that file.  If no text is selected, no user interface
@@ -1834,6 +2029,44 @@ TerminalView_ReturnContainerNSView		(TerminalViewRef	inView)
 	result = viewPtr->encompassingNSView;
 	return result;
 }// ReturnContainerNSView
+
+
+/*!
+Returns the string nearest the current terminal cursor
+position, or nullptr if there is no selection.  If there
+is no character immediately under the cursor, the character
+immediately preceding the cursor is also checked.  The word
+itself may begin and end anywhere on the cursor line but
+some character of the string will be at the cursor position.
+
+NOTE:	This is a function of the Terminal View and not the
+		screen buffer because only the view has the concept
+		of a “word” (normally used for double-clicking).
+
+(4.1)
+*/
+CFStringRef
+TerminalView_ReturnCursorWordCopyAsUnicode	(TerminalViewRef	inView)
+{
+    My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	CFStringRef					result = nullptr;
+	
+	
+	if (nullptr != viewPtr)
+	{
+		TerminalView_CellRange const	kOldSelectionRange = viewPtr->text.selection.range;
+		
+		
+		TerminalView_SelectBeforeCursorCharacter(inView);
+		handleMultiClick(viewPtr, 2);
+		result = TerminalView_ReturnSelectedTextCopyAsUnicode
+					(inView, 0/* spaces to replace with tab */, 0/* flags */);
+		TerminalView_SelectNothing(inView); // fix any highlighting changes caused by the “selection” above
+		TerminalView_SelectVirtualRange(inView, kOldSelectionRange);
+	}
+	
+	return result;
+}// ReturnCursorWordCopyAsUnicode
 
 
 /*!

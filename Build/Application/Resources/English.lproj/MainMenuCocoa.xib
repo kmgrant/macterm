@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6250" systemVersion="14A389" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="14C109" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6250"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -299,6 +299,15 @@ DQ
                             <menuItem title="Find Previous" tag="3" alternate="YES" keyEquivalent="G" id="819">
                                 <connections>
                                     <action selector="performFindPrevious:" target="945" id="1014"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Show Completions" id="pjc-CU-PR9">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+Gw
+</string>
+                                <modifierMask key="keyEquivalentModifierMask" option="YES"/>
+                                <connections>
+                                    <action selector="performShowCompletions:" target="945" id="RoX-6l-ubK"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="828"/>

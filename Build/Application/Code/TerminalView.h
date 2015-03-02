@@ -305,6 +305,9 @@ void
 //@{
 
 void
+	TerminalView_DisplayCompletionsUI			(TerminalViewRef				inView);
+
+void
 	TerminalView_DisplaySaveSelectedTextUI		(TerminalViewRef				inView);
 
 TerminalView_Result
@@ -331,6 +334,9 @@ void
 void
 	TerminalView_MakeSelectionsRectangular		(TerminalViewRef				inView,
 												 Boolean						inAreSelectionsNotAttachedToScreenEdges);
+
+CFStringRef
+	TerminalView_ReturnCursorWordCopyAsUnicode	(TerminalViewRef				inView);
 
 // INEFFICIENT, USE WITH CARE; LOOK FOR OTHER APIS THAT CAN READ THE SELECTION WITHOUT COPYING IT
 Handle

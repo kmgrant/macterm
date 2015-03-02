@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20150301',
     '20150101',
     '20141210',
     '20141029',
@@ -512,6 +513,15 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20150301': [
+        '"Completions" for words can now be found by invoking the "Show Completions" command of the Edit menu (or using the Option-Escape key sequence).  The base for search is either the currently-selected text or the word that is nearest the terminal cursor.  Conceptually, completions behave as if you had performed a dynamic search for the base text in the terminal, and "double-clicked" each matching location to produce whole words.',
+        '"Completions" enter only a subset of the chosen string, based on the text currently at the cursor position.  For example, if the characters at the cursor are "he" and you select the completion "hello", only "llo" will be sent to the terminal.',
+        '"Completions" display numerical key equivalents for the first few choices.  And, like any menu, you can navigate items via the keyboard (use arrow keys, type letters to select items, or press Escape to dismiss the menu).',
+        '"Completions" do not require a text selection (the word nearest the cursor is used) but the existing keyboard-based text selection mode can be useful if a selection is desired.  Namely, you can often hold down the Shift key and press arrow keys to highlight text prior to requesting completions.',
+        '"Completions" define "words" based on the same rules as double-clicks, which incidentally can be overridden using the Python API.  Note that this can cause completions without punctuation to be included even when a base word has punctuation.',
+        '"Completions" can only match words that are somewhere in the terminal buffer.  In particular, if your scrollback settings allow some unique text to scroll into oblivion, it can no longer appear in a completion.',
+        '"Completions" match any part of a word.  Example: if the lower-case letter "e" is the base selection and the words "hello, "Echo" and "lace" all appear on the terminal screen or in its scrollback, all 3 words will be shown as completions.',
+    ],
     '20150101': [
         'Preferences now exist for automatically starting a file capture when a session begins.  Currently, this can only be set using the beta version of the new Preferences window that is available from the debug interface.  A file may have a constant name or it may contain template variables (\\D for the date in YYYY-MM-DD form, \\T for the time in HHMMSS form, \\\\ for a backslash).',
     ],
