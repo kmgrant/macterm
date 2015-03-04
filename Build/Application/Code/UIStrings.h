@@ -251,6 +251,7 @@ enum UIStrings_ContextualMenuCFString
 	kUIStrings_ContextualMenuSaveSelectedText			= 'Save',
 	kUIStrings_ContextualMenuSpeakSelectedText			= 'SpkS',
 	kUIStrings_ContextualMenuStopSpeaking				= 'SpkE',
+	kUIStrings_ContextualMenuShowCompletions			= 'SCmp',
 	kUIStrings_ContextualMenuSpecialKeySequences		= 'Keys'
 };
 

@@ -16,6 +16,9 @@ h2(#select). Text Selections
 Highlight terminal text by dragging over it with the mouse.  Keep
  it *rectangular* by holding down the Option key.
 
+Text selections can often be initiated from the keyboard by
+ holding down the Shift key and pressing arrow keys.
+
 h3(#selectdrag). Drag and Drop
 
 The Unix pathnames of files or folders can be typed by dropping
@@ -47,7 +50,7 @@ See "the Preferences page":preferences.html for some options related to the
  appearance and behavior of text selections.  For instance, you
  can choose to have them automatically copied to the clipboard.
 
-h3(#termsearch). Terminal Search
+h2(#termsearch). Terminal Search
 
 notextile. <a id="helpsearchingfortext"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
@@ -76,6 +79,25 @@ The history menu allows you to access any previously accepted
 
 You can draw attention to individual results in turn by using the
  Edit >> Find Next command (and via modifier key, Find Previous).
+
+h3. Auto-Completion
+
+You can quickly find words that match either the word nearest the
+ cursor or the selected text.  Invoke Edit >> Show Completions (or
+ press Option-Escape) to display a menu of matches.  The candidate
+ words must appear somewhere in the terminal window or scrollback
+ buffer.
+
+When you select a match from the menu, its text is typed into the
+ active terminal window.  If the text at the cursor position
+ already contains some portion of the completion text however,
+ MacTerm will only "type" the remaining portion for you so that
+ the result is the complete word.
+
+Note that, like any menu, the completions menu can be navigated
+ using the keyboard (for example: typing letters of an item to
+ select it, using arrow keys, or hitting Escape to discard the
+ menu).
 
 h2. Cursor
 

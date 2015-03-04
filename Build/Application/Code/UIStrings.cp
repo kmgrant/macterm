@@ -869,6 +869,11 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 													CFSTR("kUIStrings_ContextualMenuSaveSelectedText"));
 		break;
 	
+	case kUIStrings_ContextualMenuShowCompletions:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Show Completions"), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuShowCompletions"));
+		break;
+	
 	case kUIStrings_ContextualMenuSpeakSelectedText:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Start Speaking Text"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuSpeakSelectedText"));

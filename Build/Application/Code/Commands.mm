@@ -7692,6 +7692,20 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		}
 		break;
 	
+	case kCommandShowCompletions:
+		theSelector = @selector(performShowCompletions:);
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:theSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
+		break;
+	
 	case kCommandFormat:
 		theSelector = @selector(performFormatCustom:);
 		if (onlyIfEnabled)

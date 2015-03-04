@@ -1131,8 +1131,34 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 							}
 							
 							// specify that menu should pop up at cursor location
-							// UNIMPLEMENTED
-							//globalLocation = [NSWindow localToGlobalRelativeToTopForPoint:...];
+							// UNIMPLEMENTED; take a short-cut and pop up at the edge
+							// of the terminal view
+							{
+								Rect		screenRect;
+								Rect		cursorRect;
+								HIRect		cursorHIRect;
+								
+								
+								RegionUtilities_GetWindowDeviceGrayRect(HIViewGetWindow(viewPtr->contentHIView), &screenRect);
+								
+								cursorRect = viewPtr->screen.cursor.bounds;
+								
+								cursorHIRect.origin.x = cursorRect.left;
+								cursorHIRect.origin.y = cursorRect.top;
+								cursorHIRect.size.width = cursorRect.right - cursorRect.left;
+								cursorHIRect.size.height = cursorRect.bottom - cursorRect.top;
+								
+								HIRectConvert(&cursorHIRect, kHICoordSpaceView, viewPtr->contentHIView,
+												kHICoordSpaceScreenPixel, nullptr/* target object */);
+								
+								// translate the selection area into Cocoa coordinates that are
+								// relative to the content view of the window
+								NSLog(@"cursor rect: %f %f", cursorHIRect.origin.x, cursorHIRect.origin.y);
+								NSLog(@"screen height: %d", screenRect.bottom - screenRect.top);
+								globalLocation = NSMakePoint(cursorHIRect.origin.x,
+																screenRect.bottom - screenRect.top - cursorHIRect.origin.y);
+								NSLog(@"chosen location: %f %f", globalLocation.x, globalLocation.y);
+							}
 							
 							// display the menu; note that this mechanism does not require
 							// either a positioning item or a view, effectively making the
@@ -9377,6 +9403,18 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		targetCommandID = kCommandSaveText;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuSaveSelectedText, commandText).ok())
+		{
+			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			if (nil != newItem)
+			{
+				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+				[newItem release], newItem = nil;
+			}
+			CFRelease(commandText), commandText = nullptr;
+		}
+		
+		targetCommandID = kCommandShowCompletions;
+		if (UIStrings_Copy(kUIStrings_ContextualMenuShowCompletions, commandText).ok())
 		{
 			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
 			if (nil != newItem)

@@ -154,6 +154,7 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandFind							'Find'
 #define kCommandFindAgain						'FndN'
 #define kCommandFindPrevious					'FndP'
+#define kCommandShowCompletions					'SCmp'
 #define kCommandFindCursor						'FndC'
 #define kCommandSelectAll						kHICommandSelectAll
 #define kCommandSelectAllWithScrollback			'SlSb'
