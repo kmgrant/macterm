@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20150308',
     '20150303',
     '20150101',
     '20141210',
@@ -513,6 +514,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20150308': [
+        'Fixed "Show Completions" for Full Screen windows (items in the completion menu are no longer disabled).',
+    ],
     '20150303': [
         '"Completions" for words can now be found by invoking the "Show Completions" command of the Edit menu (or using the Option-Escape key sequence).  The base for search is either the currently-selected text or the word that is nearest the terminal cursor.  Conceptually, completions behave as if you had performed a dynamic search for the base text in the terminal, and "double-clicked" each matching location to produce whole words.',
         '"Completions" enter only a subset of the chosen string, based on the text currently at the cursor position.  For example, if the characters at the cursor are "he" and you select the completion "hello", only "llo" will be sent to the terminal.',

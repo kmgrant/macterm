@@ -1131,8 +1131,6 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 							}
 							
 							// specify that menu should pop up at cursor location
-							// UNIMPLEMENTED; take a short-cut and pop up at the edge
-							// of the terminal view
 							{
 								Rect		screenRect;
 								Rect		cursorRect;
@@ -1153,11 +1151,8 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 								
 								// translate the selection area into Cocoa coordinates that are
 								// relative to the content view of the window
-								NSLog(@"cursor rect: %f %f", cursorHIRect.origin.x, cursorHIRect.origin.y);
-								NSLog(@"screen height: %d", screenRect.bottom - screenRect.top);
 								globalLocation = NSMakePoint(cursorHIRect.origin.x,
 																screenRect.bottom - screenRect.top - cursorHIRect.origin.y);
-								NSLog(@"chosen location: %f %f", globalLocation.x, globalLocation.y);
 							}
 							
 							// display the menu; note that this mechanism does not require

@@ -6813,6 +6813,18 @@ performSendMenuItemText:(id)	sender
 		Console_Warning(Console_WriteLine, "unable to send menu item text because given object is not apparently a menu item");
 	}
 }
+- (id)
+canPerformSendMenuItemText:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	// NOTE: should be the same criteria as showing completions
+	NSWindow*			target = [NSApp keyWindow];
+	TerminalWindowRef	terminalWindow = [target terminalWindowRef];
+	BOOL				result = (nullptr != terminalWindow);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
 
 @end // Commands_Executor (Commands_Searching)
 
