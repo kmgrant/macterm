@@ -52,7 +52,6 @@
 #include <CarbonEventUtilities.template.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
-#include <Embedding.h>
 #include <HIViewWrap.h>
 #include <HIViewWrapManip.h>
 #include <IconManager.h>

@@ -1,7 +1,7 @@
 /*!	\file IconManager.cp
-	\brief The most powerful icon utility there is - it allows
-	you to seamlessly use traditional icon suites, new Icon
-	Services icons, or other formats from a single reference!
+	\brief NOTE: This module is not really needed anymore; it
+	previously allowed seamless integration of multiple icon
+	representations, especially legacy formats.
 */
 /*###############################################################
 
@@ -55,8 +55,6 @@ namespace {
 typedef SInt16		IconManagerIconType;
 enum
 {
-	kIconManagerIconTypeOS7 = -1,
-	kIconManagerIconTypeOS8 = 0,
 	kIconManagerIconTypeOSX = 1
 };
 
@@ -70,20 +68,11 @@ struct IconManagerIcon
 	IconManagerIconType		type;
 	union
 	{
-		CIconHandle		OS7;
-		IconSuiteRef	OS8;
-		IconRef			OSX;
+		IconRef		OSX;
 	} data;
 };
 typedef struct IconManagerIcon		IconManagerIcon;
 typedef IconManagerIcon*			IconManagerIconPtr;
-
-} // anonymous namespace
-
-#pragma mark Variables
-namespace {
-
-Boolean		gHaveIconServices = false;
 
 } // anonymous namespace
 
@@ -120,25 +109,9 @@ IconManager_NewIcon ()
 		IconManagerIconPtr	ptr = refAcquireLock(result);
 		
 		
-		ptr->type = kIconManagerIconTypeOS8;
-		ptr->data.OS7 = nullptr;
-		ptr->data.OS8 = nullptr;
+		ptr->type = kIconManagerIconTypeOSX;
 		ptr->data.OSX = nullptr;
 		refReleaseLock(result, &ptr);
-	}
-	
-	// without an Init routine, this test has to be done every time an icon is created
-	{
-		OSStatus	error = noErr;
-		SInt32		gestaltResult = 0L;
-		
-		
-		error = Gestalt(gestaltIconUtilitiesAttr, &gestaltResult);
-		if (error == noErr)
-		{
-			// Icon Services?
-			gHaveIconServices = (gestaltResult & (1 << gestaltIconUtilitiesHasIconServices));
-		}
 	}
 	
 	return result;
@@ -163,189 +136,6 @@ IconManager_DisposeIcon		(IconManagerIconRef*	inoutRefPtr)
 		DisposePtr((Ptr)ptr), ptr = nullptr, *inoutRefPtr = nullptr;
 	}
 }// DisposeIcon
-
-
-/*!
-To determine if an abstract icon reference defines an
-icon based on modern Mac OS icon data, use this method.
-If the application is presently running Mac OS 8.0 or
-8.1, this routine will never return true.
-
-(1.0)
-*/
-Boolean
-IconManager_IsIconServices	(IconManagerIconRef		inRef)
-{
-	Boolean					result = false;
-	IconManagerIconPtr		ptr = refAcquireLock(inRef);
-	
-	
-	if (ptr != nullptr)
-	{
-		result = ((ptr->type == kIconManagerIconTypeOSX) && gHaveIconServices);
-		refReleaseLock(inRef, &ptr);
-	}
-	return result;
-}// IsIconServices
-
-
-/*!
-To determine if an abstract icon reference defines an
-icon based on legacy Mac OS icon suite resources, use
-this method.
-
-(1.0)
-*/
-Boolean
-IconManager_IsIconSuite		(IconManagerIconRef		inRef)
-{
-	Boolean					result = false;
-	IconManagerIconPtr		ptr = refAcquireLock(inRef);
-	
-	
-	if (ptr != nullptr)
-	{
-		result = (ptr->type == kIconManagerIconTypeOS8);
-		refReleaseLock(inRef, &ptr);
-	}
-	return result;
-}// IsIconSuite
-
-
-/*!
-To determine if an abstract icon reference defines an
-icon based on legacy Mac OS 'cicn' data, use this method.
-
-(1.0)
-*/
-Boolean
-IconManager_IsOldColorIcon	(IconManagerIconRef		inRef)
-{
-	Boolean					result = false;
-	IconManagerIconPtr		ptr = refAcquireLock(inRef);
-	
-	
-	if (ptr != nullptr)
-	{
-		result = (ptr->type == kIconManagerIconTypeOS7);
-		refReleaseLock(inRef, &ptr);
-	}
-	return result;
-}// IsOldColorIcon
-
-
-/*!
-To force an abstract icon to render itself based on data
-in an Icon Services set, use this method.  The specified
-icon reference must already exist.
-
-If Mac OS 8.0 or 8.1 is in use, Icon Services will not be
-available.  To avoid problems, this routine automatically
-looks for an equivalent icon suite resource and uses it
-instead.  If no icon of any kind can be found, the result
-is "resNotFound".
-
-(1.0)
-*/
-OSStatus
-IconManager_MakeIconRef		(IconManagerIconRef		inRef,
-							 SInt16					inIconServicesVolumeNumber,
-							 OSType					inIconServicesCreator,
-							 OSType					inIconServicesDescription)
-{
-	IconManagerIconPtr		ptr = refAcquireLock(inRef);
-	OSStatus				result = noErr;
-	
-	
-	if (ptr == nullptr) result = memPCErr;
-	else
-	{
-		// get rid of any previous icon data
-		releaseIcons(ptr);
-		
-		// verify that Icon Services can be used; if it can’t be, look for an equivalent icon suite
-		if (gHaveIconServices)
-		{
-			// Icon Services is available; use it!
-			ptr->type = kIconManagerIconTypeOSX;
-			result = GetIconRef(inIconServicesVolumeNumber, inIconServicesCreator,
-									inIconServicesDescription, &ptr->data.OSX);
-		}
-		else
-		{
-			SInt16		suiteID = 0;
-			Boolean		useColorIconResourceInstead = false; // use 'cicn' instead of icon families?
-			
-			
-			if ((inIconServicesVolumeNumber == kOnSystemDisk) &&
-				(inIconServicesCreator == kSystemIconsCreator))
-			{
-				// NOTE:	This switch statement is infinitely expandable; I’ve only
-				//			included generic icons that I need.  The list should be
-				//			made more complete as necessary, to include mappings for
-				//			other icon suites.  Heck, the implementation should
-				//			probably be different, but I don’t have time for that!
-				switch (inIconServicesDescription)
-				{
-				case kAlertStopIcon:
-					suiteID = 0;
-					useColorIconResourceInstead = true;
-					break;
-				
-				case kAlertNoteIcon:
-					suiteID = 1;
-					useColorIconResourceInstead = true;
-					break;
-				
-				case kAlertCautionIcon:
-					suiteID = 2;
-					useColorIconResourceInstead = true;
-					break;
-				
-				case kGenericApplicationIcon:
-					suiteID = kGenericApplicationIconResource;
-					break;
-				
-				case kGenericDocumentIcon:
-					suiteID = kGenericDocumentIconResource;
-					break;
-				
-				case kGenericFolderIcon:
-					suiteID = kGenericFolderIconResource;
-					break;
-				
-				case kHelpIcon:
-					suiteID = kHelpIconResource;
-					break;
-				
-				default:
-					break;
-				}
-			}
-			
-			if (suiteID == 0) result = resNotFound;
-			else
-			{
-				if (useColorIconResourceInstead)
-				{
-					ptr->type = kIconManagerIconTypeOS7;
-					ptr->data.OS7 = GetCIcon(suiteID);
-					result = (ptr->data.OS7 == nullptr)
-								? STATIC_CAST(resNotFound, OSStatus)
-								: STATIC_CAST(noErr, OSStatus); // correct?
-				}
-				else
-				{
-					ptr->type = kIconManagerIconTypeOS8;
-					result = GetIconSuite(&ptr->data.OS8, suiteID, kSelectorAllAvailableData);
-				}
-			}
-		}
-		refReleaseLock(inRef, &ptr);
-	}
-	
-	return result;
-}// MakeIconRef
 
 
 /*!
@@ -376,7 +166,6 @@ IconManager_MakeIconRefFromBundleFile	(IconManagerIconRef		inRef,
 		releaseIcons(ptr);
 		
 		// verify that Icon Services can be used; if it can’t be, look for an equivalent icon suite
-		if (gHaveIconServices)
 		{
 			FSRef	iconFile;
 			
@@ -396,113 +185,12 @@ IconManager_MakeIconRefFromBundleFile	(IconManagerIconRef		inRef,
 				result = fnfErr;
 			}
 		}
-		else
-		{
-			result = resNotFound;
-		}
+		
 		refReleaseLock(inRef, &ptr);
 	}
 	
 	return result;
 }// MakeIconRefFromBundleFile
-
-
-/*!
-To draw an icon properly no matter how it is internally
-defined, use this convenient method.  If an error occurs,
-the result will depend on the nature of the icon being
-drawn.
-
-(1.0)
-*/
-OSStatus
-IconManager_PlotIcon	(IconManagerIconRef		inRef,
-						 Rect const*			inBounds,
-						 IconAlignmentType		inAlignment,
-						 IconTransformType		inTransform)
-{
-	IconManagerIconPtr		ptr = refAcquireLock(inRef);
-	OSStatus				result = noErr;
-	
-	
-	if (ptr != nullptr)
-	{
-		switch (ptr->type)
-		{
-		case kIconManagerIconTypeOS7:	// treat it as an old-style color icon
-			if (ptr->data.OS7 == nullptr) result = memPCErr;
-			else
-			{
-				result = PlotCIconHandle(inBounds, inAlignment, inTransform, ptr->data.OS7);
-			}
-			break;
-		
-		case kIconManagerIconTypeOS8:	// treat it as an icon suite
-			if (ptr->data.OS8 == nullptr) result = memPCErr;
-			else
-			{
-				result = PlotIconSuite(inBounds, inAlignment, inTransform, ptr->data.OS8);
-			}
-			break;
-		
-		case kIconManagerIconTypeOSX:	// use Icon Services
-			if (gHaveIconServices)
-			{
-				if (ptr->data.OS8 == nullptr) result = memPCErr;
-				else
-				{
-					result = PlotIconRef(inBounds, inAlignment, inTransform,
-											kIconServicesNormalUsageFlag, ptr->data.OSX);
-				}
-			}
-			else
-			{
-				result = cfragNoSymbolErr;
-			}
-			break;
-		
-		default:
-			break;
-		}
-		refReleaseLock(inRef, &ptr);
-	}
-	
-	return result;
-}// PlotIcon
-
-
-/*!
-Returns a reference to the internal icon, coerced to
-a Handle.  Use IconManager_Is...() methods to determine
-what type of data this is (IconSuite or IconRef).
-
-(1.0)
-*/
-Handle
-IconManager_ReturnData	(IconManagerIconRef		inRef)
-{
-	Handle					result = nullptr;
-	IconManagerIconPtr		ptr = refAcquireLock(inRef);
-	
-	
-	if (ptr != nullptr)
-	{
-		if ((ptr->type == kIconManagerIconTypeOSX) && gHaveIconServices)
-		{
-			result = (Handle)ptr->data.OSX;
-		}
-		else if (ptr->type == kIconManagerIconTypeOS8)
-		{
-			result = (Handle)ptr->data.OS8;
-		}
-		else
-		{
-			result = (Handle)ptr->data.OS7;
-		}
-		refReleaseLock(inRef, &ptr);
-	}
-	return result;
-}// ReturnData
 
 
 /*!
@@ -535,21 +223,8 @@ IconManager_SetButtonIcon	(ControlRef				inControl,
 		ControlButtonContentInfo	contentInfo;
 		
 		
-		if (IconManager_IsIconServices(inRef))
-		{
-			contentInfo.contentType = kControlContentIconRef;
-			contentInfo.u.iconRef = ptr->data.OSX;
-		}
-		else if (IconManager_IsOldColorIcon(inRef))
-		{
-			contentInfo.contentType = kControlContentCIconHandle;
-			contentInfo.u.cIconHandle = ptr->data.OS7;
-		}
-		else
-		{
-			contentInfo.contentType = kControlContentIconSuiteHandle;
-			contentInfo.u.iconSuite = ptr->data.OS8;
-		}
+		contentInfo.contentType = kControlContentIconRef;
+		contentInfo.u.iconRef = ptr->data.OSX;
 		result = SetControlData(inControl, kControlNoPart, kControlBevelButtonContentTag,
 								sizeof(contentInfo), &contentInfo);
 		refReleaseLock(inRef, &ptr);
@@ -585,19 +260,7 @@ IconManager_SetMenuTitleIcon	(MenuRef				inMenu,
 	else
 	{
 		// Make the menu’s title iconic.
-		if (IconManager_IsIconServices(inRef))
-		{
-			UNUSED_RETURN(OSStatus)SetMenuTitleIcon(inMenu, kMenuIconRefType, ptr->data.OSX);
-		}
-		else if (IconManager_IsOldColorIcon(inRef))
-		{
-			// UNSUPPORTED
-			result = unimpErr;
-		}
-		else
-		{
-			UNUSED_RETURN(OSStatus)SetMenuTitleIcon(inMenu, kMenuIconSuiteType, ptr->data.OS8);
-		}
+		UNUSED_RETURN(OSStatus)SetMenuTitleIcon(inMenu, kMenuIconRefType, ptr->data.OSX);
 		refReleaseLock(inRef, &ptr);
 	}
 	
@@ -627,14 +290,7 @@ IconManager_SetToolbarItemIcon	(HIToolbarItemRef		inItem,
 	if (ptr == nullptr) result = memPCErr;
 	else
 	{
-		if (IconManager_IsIconServices(inRef))
-		{
-			result = HIToolbarItemSetIconRef(inItem, ptr->data.OSX);
-		}
-		else
-		{
-			result = paramErr;
-		}
+		HIToolbarItemSetIconRef(inItem, ptr->data.OSX);
 		refReleaseLock(inRef, &ptr);
 	}
 	
@@ -688,22 +344,7 @@ releaseIcons	(IconManagerIconPtr		inPtr)
 {
 	if (inPtr != nullptr)
 	{
-		if (inPtr->type == kIconManagerIconTypeOS7)
-		{
-			if (inPtr->data.OS7 != nullptr)
-			{
-				DisposeCIcon(inPtr->data.OS7), inPtr->data.OS7 = nullptr;
-			}
-		}
-		else if (inPtr->type == kIconManagerIconTypeOS8)
-		{
-			if (inPtr->data.OS8 != nullptr)
-			{
-				UNUSED_RETURN(OSStatus)DisposeIconSuite(inPtr->data.OS8, true/* dispose data too */);
-				inPtr->data.OS8 = nullptr;
-			}
-		}
-		else if (inPtr->type == kIconManagerIconTypeOSX)
+		if (inPtr->type == kIconManagerIconTypeOSX)
 		{
 			if (inPtr->data.OSX != nullptr)
 			{

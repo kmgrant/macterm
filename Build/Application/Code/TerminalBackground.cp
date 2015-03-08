@@ -46,7 +46,6 @@
 #include <CFUtilities.h>
 #include <ColorUtilities.h>
 #include <Console.h>
-#include <Embedding.h>
 #include <MemoryBlocks.h>
 #include <NIBLoader.h>
 

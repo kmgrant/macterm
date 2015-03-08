@@ -80,10 +80,6 @@ OSStatus
 											 AEDesc*			outDescPtr);
 
 OSStatus
-	BasicTypesAE_CreatePStringDesc			(Str255				inPascalStringData,
-											 AEDesc*			outDescPtr);
-
-OSStatus
 	BasicTypesAE_CreateRectDesc				(Rect const*		inRectPtr,
 											 AEDesc*			outDescPtr);
 

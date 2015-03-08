@@ -1,21 +1,7 @@
 /*!	\file IconManager.h
-	\brief The most powerful icon utility there is - it allows
-	you to seamlessly use traditional icon suites, new Icon
-	Services icons, or other formats from a single reference!
-	
-	But more than that, it doesn’t matter *how* you describe
-	your icon - for example, if it’s convenient to specify it as
-	an old-style color icon, go ahead - on Mac OS 8.0 and 8.1, a
-	suitable icon resource will automatically be used, and yet
-	on Mac OS 9 and X Icon Services will be used to retrieve an
-	icon of higher quality.  In short, everything about the
-	“real” icon is handled at runtime.  Your code can use
-	new-style specifications such as Icon Services, or old-style
-	resource-based requests, and BOTH will work on ANY version
-	of the Mac OS.  Is that powerful or what?  (This feature is
-	limited to the code’s internal knowledge of the available
-	icons; feel free to extend the code to ensure other icons
-	you want to use will work in this way.)
+	\brief NOTE: This module is not really needed anymore; it
+	previously allowed seamless integration of multiple icon
+	representations, especially legacy formats.
 */
 /*###############################################################
 
@@ -71,50 +57,10 @@ void
 	IconManager_DisposeIcon					(IconManagerIconRef*		inoutRefPtr);
 
 OSStatus
-	IconManager_MakeIconRef					(IconManagerIconRef			inRef,
-											 SInt16						inIconServicesVolumeNumber,
-											 OSType						inIconServicesCreator,
-											 OSType						inIconServicesDescription);
-
-OSStatus
 	IconManager_MakeIconRefFromBundleFile	(IconManagerIconRef			inRef,
 											 CFStringRef				inFileNameWithoutExtension,
 											 OSType						inIconServicesCreator,
 											 OSType						inIconServicesDescription);
-
-//@}
-
-//!\name Icon Inquiries
-//@{
-
-Boolean
-	IconManager_IsIconServices				(IconManagerIconRef			inRef);
-
-Boolean
-	IconManager_IsIconSuite					(IconManagerIconRef			inRef);
-
-Boolean
-	IconManager_IsOldColorIcon				(IconManagerIconRef			inRef);
-
-//@}
-
-//!\name Acquiring Icon Data
-//@{
-
-// RETURNS DATA COERCED TO A HANDLE; USE IconManager_Is...() METHODS TO FIND THE ACTUAL DATA TYPE!!!
-Handle
-	IconManager_ReturnData					(IconManagerIconRef			inRef);
-
-//@}
-
-//!\name Drawing Icons
-//@{
-
-OSStatus
-	IconManager_PlotIcon					(IconManagerIconRef			inRef,
-											 Rect const*				inBounds,
-											 IconAlignmentType			inAlignment,
-											 IconTransformType			inTransform);
 
 //@}
 

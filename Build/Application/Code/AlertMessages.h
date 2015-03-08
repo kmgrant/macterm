@@ -374,27 +374,6 @@ void
 
 //@}
 
-//!\name Debugging Utilities
-//@{
-
-void
-	Alert_DebugCheckpoint				(CFStringRef				inDescription);
-
-void
-	Alert_DebugSendCStringToSelf		(char const*				inSendWhat,
-										 AEEventClass				inEventClass,
-										 AEEventID					inEventID);
-
-void
-	Alert_DebugSendStringToSelf			(ConstStringPtr				inSendWhat,
-										 AEEventClass				inEventClass,
-										 AEEventID					inEventID);
-
-void
-	Alert_DebugSetEnabled				(Boolean					inIsEnabled);
-
-//@}
-
 #endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

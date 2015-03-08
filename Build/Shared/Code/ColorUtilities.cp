@@ -223,23 +223,6 @@ GetSelectionColors	(RGBColor*		outLighterForegroundColorOrNull,
 
 
 /*!
-Determines if the specified device uses Color QuickDraw.
-
-DEPRECATED.  (Don’t rely on QuickDraw types.)
-
-(1.0)
-*/
-Boolean
-ColorUtilities_IsColorDevice	(GDHandle	inDevice)
-{
-	Boolean		result = TestDeviceAttribute(inDevice, gdDevType);
-	
-	
-	return result;
-}// IsColorDevice
-
-
-/*!
 Creates a QuickDraw color by converting the red, green and blue
 intensity values from the given device color.  The resulting
 color will obviously be limited by the number of color values

@@ -46,7 +46,6 @@
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
-#import <Embedding.h>
 #import <HIViewWrap.h>
 #import <IconManager.h>
 #import <ListenerModel.h>
@@ -152,7 +151,6 @@ namespace {
 Boolean				gNotificationIsBackgrounded = false;
 Boolean				gUseSpeech = false;
 Boolean				gIsInited = false;
-Boolean				gDebuggingEnabled = true;
 UInt16				gNotificationPreferences = kAlert_NotifyDisplayDiamondMark;
 Str255				gNotificationMessage;
 NMRecPtr			gNotificationPtr = nullptr;
@@ -557,139 +555,6 @@ Alert_BackgroundNotification ()
 {
 	UNUSED_RETURN(OSStatus)backgroundNotification();
 }// BackgroundNotification
-
-
-/*!
-Displays a note alert with an OK button, the message
-"Checkpoint" and the given descriptive text.  This
-method will alter alert settings, so subsequently
-displayed alerts will default to having no help
-button and a single OK button.
-
-(1.0)
-*/
-void
-Alert_DebugCheckpoint	(CFStringRef	inDescription)
-{
-	if (gDebuggingEnabled)
-	{
-		AlertMessages_BoxRef	box = nullptr;
-		
-		
-		box = Alert_New(); // no help button, single OK button
-		Alert_SetTitleCFString(box, CFSTR("Debug Checkpoint"));
-		Alert_SetTextCFStrings(box, CFSTR("Checkpoint"), inDescription);
-		Alert_SetType(box, kAlertNoteAlert);
-		Alert_Display(box);
-		Alert_Dispose(&box);
-	}
-}// DebugCheckpoint
-
-
-/*!
-Sends an Apple Event to the current process of
-the specified class, setting a "keyDirectObject"
-to "typeChar" data containing the information in
-the given Pascal string.  This is useful if your
-application supports AppleScript and can put this
-string somewhere useful for debugging purposes
-(such as in a log file).  It is also useful for
-debugging shared libraries, since they cannot
-otherwise send information to your application’s
-debugging systems.
-
-This isn’t really an alert routine, but it has
-similar applications to alert debugging routines,
-so it is listed here.
-
-(1.2)
-*/
-void
-Alert_DebugSendCStringToSelf	(char const*		inSendWhat,
-								 AEEventClass		inEventClass,
-								 AEEventID			inEventID)
-{
-	if (gDebuggingEnabled)
-	{
-		AppleEvent				consoleWriteEvent,
-								reply;
-		AEAddressDesc			currentProcessAddress;
-		ProcessSerialNumber		currentProcessID;
-		
-		
-		currentProcessID.highLongOfPSN = 0;
-		currentProcessID.lowLongOfPSN = kCurrentProcess; // don’t use GetCurrentProcess()!
-		UNUSED_RETURN(OSStatus)AECreateDesc(typeProcessSerialNumber,
-											&currentProcessID, sizeof(ProcessSerialNumber), &currentProcessAddress);
-		UNUSED_RETURN(OSStatus)AECreateAppleEvent(inEventClass, inEventID, &currentProcessAddress, kAutoGenerateReturnID, kAnyTransactionID, &consoleWriteEvent);
-		UNUSED_RETURN(OSStatus)AEPutParamPtr(&consoleWriteEvent, keyDirectObject, cString, inSendWhat,
-												STATIC_CAST(CPP_STD::strlen(inSendWhat) * sizeof(char), Size));
-		UNUSED_RETURN(OSStatus)AESend(&consoleWriteEvent, &reply, kAENoReply | kAENeverInteract | kAEDontRecord,
-										kAENormalPriority, kAEDefaultTimeout, nullptr, nullptr);
-		AEDisposeDesc(&consoleWriteEvent);
-	}
-}// DebugSendCStringToSelf
-
-
-/*!
-Sends an Apple Event to the current process of
-the specified class, setting a "keyDirectObject"
-to "typeChar" data containing the information in
-the given Pascal string.  This is useful if your
-application supports AppleScript and can put this
-string somewhere useful for debugging purposes
-(such as in a log file).  It is also useful for
-debugging shared libraries, since they cannot
-otherwise send information to your application’s
-debugging systems.
-
-This isn’t really an alert routine, but it has
-similar applications to alert debugging routines,
-so it is listed here.
-
-(1.0)
-*/
-void
-Alert_DebugSendStringToSelf		(ConstStringPtr		inSendWhat,
-								 AEEventClass		inEventClass,
-								 AEEventID			inEventID)
-{
-	if (gDebuggingEnabled)
-	{
-		AppleEvent				consoleWriteEvent,
-								reply;
-		AEAddressDesc			currentProcessAddress;
-		ProcessSerialNumber		currentProcessID;
-		
-		
-		currentProcessID.highLongOfPSN = 0;
-		currentProcessID.lowLongOfPSN = kCurrentProcess; // don’t use GetCurrentProcess()!
-		UNUSED_RETURN(OSStatus)AECreateDesc(typeProcessSerialNumber,
-											&currentProcessID, sizeof(ProcessSerialNumber), &currentProcessAddress);
-		UNUSED_RETURN(OSStatus)AECreateAppleEvent(inEventClass, inEventID, &currentProcessAddress, kAutoGenerateReturnID, kAnyTransactionID, &consoleWriteEvent);
-		UNUSED_RETURN(OSStatus)AEPutParamPtr(&consoleWriteEvent, keyDirectObject, cString, inSendWhat + 1,
-												STATIC_CAST(PLstrlen(inSendWhat) * sizeof(UInt8), Size));
-		UNUSED_RETURN(OSStatus)AESend(&consoleWriteEvent, &reply, kAENoReply | kAENeverInteract | kAEDontRecord,
-										kAENormalPriority, kAEDefaultTimeout, nullptr, nullptr);
-		AEDisposeDesc(&consoleWriteEvent);
-	}
-}// DebugSendStringToSelf
-
-
-/*!
-Turns on or off the debugging routines, such
-as Alert_DebugCheckpoint().   Use this to
-instantly disable the effects of all calls
-without having to remove the calls from your
-code.
-
-(1.0)
-*/
-void
-Alert_DebugSetEnabled	(Boolean	inEnabled)
-{
-	gDebuggingEnabled = inEnabled;
-}// DebugSetEnabled
 
 
 /*!

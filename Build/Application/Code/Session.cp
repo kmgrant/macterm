@@ -5933,7 +5933,7 @@ copyAutoCapturePreferences		(My_SessionPtr				inPtr,
 													sizeof(stringValue), &stringValue, inSearchDefaults);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			Console_WriteValueCFString("setting capture file name", stringValue);
+			//Console_WriteValueCFString("setting capture file name", stringValue); // debug
 			inPtr->autoCaptureFileName = stringValue;
 			++result;
 		}
@@ -5951,7 +5951,7 @@ copyAutoCapturePreferences		(My_SessionPtr				inPtr,
 			CFRetainRelease		newURL(CFURLCreateFromFSRef(kCFAllocatorDefault, &fsRefValue));
 			
 			
-			Console_WriteLine("setting capture file directory URL");
+			//Console_WriteLine("setting capture file directory URL"); // debug
 			inPtr->autoCaptureDirectoryURL = REINTERPRET_CAST(newURL.returnCFTypeRef(), CFURLRef);
 			++result;
 		}

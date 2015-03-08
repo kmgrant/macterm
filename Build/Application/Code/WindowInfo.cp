@@ -34,7 +34,6 @@
 #include <climits>
 
 // library includes
-#include <Embedding.h>
 #include <MemoryBlockHandleLocker.template.h>
 #include <MemoryBlocks.h>
 #include <SoundSystem.h>

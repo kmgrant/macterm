@@ -868,36 +868,6 @@ Panel_SetDescription	(Panel_Ref		inRef,
 
 
 /*!
-Uses an Icon Services icon set to describe a panel.
-An Icon Services reference will not take effect
-unless the user has at least OS 8.5.  If OS 8.5 or
-later is not in use, an attempt is made to find an
-equivalent icon suite, which may fail.
-
-See also Panel_SetIconRefFromBundleFile().
-
-(3.0)
-*/
-void
-Panel_SetIconRef	(Panel_Ref	inRef,
-					 SInt16		inIconServicesVolumeNumber,
-					 OSType		inIconServicesCreator,
-					 OSType		inIconServicesDescription)
-{
-	if (nullptr != inRef)
-	{
-		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
-		
-		
-		UNUSED_RETURN(OSStatus)IconManager_MakeIconRef(ptr->customizerWritable.icon,
-														inIconServicesVolumeNumber,
-														inIconServicesCreator,
-														inIconServicesDescription);
-	}
-}// SetIconRef
-
-
-/*!
 Uses an Icon Services icon set to describe a panel,
 but based on a flat file in the Mac OS X bundle.
 

@@ -70,11 +70,6 @@ Handle
 	Memory_NewHandle					(Size					inDesiredNumberOfBytes,
 										 Boolean				inIsCritical = false);
 
-Handle
-	Memory_NewHandleInProperZone		(Size					inDesiredNumberOfBytes,
-										 MemoryBlockLifetime	inBlockLifeExpectancy,
-										 Boolean				inIsCritical = false);
-
 void
 	Memory_DisposeHandle				(Handle*				inoutHandle);
 

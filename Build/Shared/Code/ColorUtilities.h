@@ -60,10 +60,6 @@ RGBColor
 //@{
 
 // DEPRECATED
-Boolean
-	ColorUtilities_IsColorDevice				(GDHandle				inDevice);
-
-// DEPRECATED
 SInt16
 	ColorUtilities_ReturnCurrentDepth			(CGrafPtr				inPort);
 

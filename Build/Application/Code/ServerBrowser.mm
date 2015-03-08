@@ -880,7 +880,7 @@ netServiceDidResolveAddress:(NSNetService*)		resolvingService
 					if (inet_ntop(_addressFamily, &inetDataPtr->sin_addr, buffer, sizeof(buffer)))
 					{
 						buffer[sizeof(buffer) - 1] = '\0'; // ensure termination in case of overrun
-						resolvedHost = [NSString stringWithCString:buffer];
+						resolvedHost = [NSString stringWithCString:buffer encoding:NSASCIIStringEncoding];
 						resolvedPort = ntohs(inetDataPtr->sin_port);
 					}
 					else

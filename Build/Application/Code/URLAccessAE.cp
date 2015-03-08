@@ -107,7 +107,7 @@ URLAccessAE_HandleUniformResourceLocator		(AppleEvent const*	inAppleEventPtr,
 	
 	Console_WriteValue("result", error);
 	Console_EndFunction();
-	UNUSED_RETURN(OSStatus)AppleEventUtilities_AddErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	UNUSED_RETURN(OSStatus)AppleEventUtilities_AddErrorToReply(error, outReplyAppleEventPtr);
 	return result;
 }// HandleUniformResourceLocator
 
@@ -286,9 +286,7 @@ handleURL	(AEDesc const*		inFromWhichObject,
 					if (resultCode)
 					{
 						// mention the failure in an error response
-						result = AppleEventUtilities_AddErrorToReply(nullptr/* no particular error message */,
-																		errorCausingNonzeroResult,
-																		outResult);
+						result = AppleEventUtilities_AddErrorToReply(errorCausingNonzeroResult, outResult);
 					}
 				}
 				break;

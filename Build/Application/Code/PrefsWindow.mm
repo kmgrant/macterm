@@ -58,7 +58,6 @@
 #import <CocoaFuture.objc++.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
-#import <Embedding.h>
 #import <FileSelectionDialogs.h>
 #import <HIViewWrap.h>
 #import <HIViewWrapManip.h>
@@ -899,7 +898,11 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 		}
 		
 		// swap panels
-		Embedding_OffscreenSwapOverlappingControls(gPreferencesWindow, nowInvisibleContainer, nowVisibleContainer);
+		if (nullptr != nowInvisibleContainer)
+		{
+			assert_noerr(HIViewSetVisible(nowInvisibleContainer, false));
+		}
+		assert_noerr(HIViewSetVisible(nowVisibleContainer, true));
 		UNUSED_RETURN(OSStatus)HIViewSetVisible(nowVisibleContainer, true/* visible */);
 	}
 }// choosePanel

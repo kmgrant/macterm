@@ -581,12 +581,6 @@ void
 										 CFStringRef				inDescription);
 
 void
-	Panel_SetIconRef					(Panel_Ref					inRef,
-										 SInt16						inIconServicesVolumeNumber,
-										 OSType						inIconServicesCreator,
-										 OSType						inIconServicesDescription);
-
-void
 	Panel_SetIconRefFromBundleFile		(Panel_Ref					inRef,
 										 CFStringRef				inFileNameWithoutExtension,
 										 OSType						inIconServicesCreator,

@@ -75,7 +75,6 @@ extern "C"
 #import <CommonEventHandlers.h>
 #import <Console.h>
 #import <ContextSensitiveMenu.h>
-#import <Embedding.h>
 #import <HIViewWrap.h>
 #import <HIViewWrapManip.h>
 #import <Localization.h>

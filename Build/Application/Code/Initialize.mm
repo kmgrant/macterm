@@ -193,13 +193,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		//InternetPrefs_RunTests();
 	#endif
 		
-		{
-			Size 	junk = 0L;
-			
-			
-			MaxMem(&junk);
-		}
-		
 	#ifndef NDEBUG
 		// write an initial header to the console that describes the user’s runtime environment
 		{
@@ -342,10 +335,12 @@ initApplicationCore ()
 	// set up the Localization module, and define where all user interface resources should come from
 	{
 		Localization_InitFlags		flags = 0L;
-		ScriptCode					systemScriptCode = STATIC_CAST(GetScriptManagerVariable(smSysScript), ScriptCode);
 		
 		
-		if (GetScriptVariable(systemScriptCode, smScriptRight))
+		// TEMPORARY; disable for now (revisit soon, after moving
+		// entire interface to Cocoa)
+		//if ([NSApp userInterfaceLayoutDirection] == NSUserInterfaceLayoutDirectionRightToLeft)
+		if (false)
 		{
 			// then the text reads from the right side of a page to the left (the opposite of North America)
 			flags |= kLocalization_InitFlagReadTextRightToLeft;
@@ -412,9 +407,6 @@ tests are done in initApplicationCore()...
 void
 initMacOSToolbox ()
 {
-	// Launch Services seems to recommend this, so do it
-	LSInit(kLSInitializeDefaults);
-	
 	InitCursor();
 	
 	// initialization of the Alert module must be done here, otherwise startup error alerts can’t be displayed

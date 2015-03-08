@@ -104,8 +104,6 @@ CFStringRef		copyTypeDescription			(CFStringRef);
 CGImageRef		createCGImageFromData		(CFDataRef);
 Boolean			isImageType					(CFStringRef);
 Boolean			isTextType					(CFStringRef);
-void			pictureToScrap				(Handle);
-void			textToScrap					(Handle);
 void			updateClipboard				(PasteboardRef);
 
 } // anonymous namespace
@@ -316,45 +314,6 @@ Clipboard_AddCFStringToPasteboard	(CFStringRef		inStringToCopy,
 	}
 	return result;
 }// AddCFStringToPasteboard
-
-
-/*!
-Reads an Apple Event descriptor containing data meant
-to be copied to the clipboard, and attempts to copy it.
-If successful, "noErr" is returned.
-
-(3.0)
-*/
-OSStatus
-Clipboard_AEDescToScrap		(AEDesc const*		inDescPtr)
-{
-	OSStatus	result = noErr;
-	Size		dataSize = 0L;
-	Handle		handle = nullptr;
-	
-	
-	dataSize = AEGetDescDataSize(inDescPtr);
-	handle = Memory_NewHandle(dataSize);
-	if (handle == nullptr) result = memFullErr;
-	else
-	{
-		Size		actualSize = 0L;
-		
-		
-		// first, try coercing the data into text and copy it that way
-		result = AppleEventUtilities_CopyDescriptorDataAs(typeChar, inDescPtr, *handle, GetHandleSize(handle), &actualSize);
-		if (result == noErr) textToScrap(handle);
-		else
-		{
-			// failed - try coercing the data into a picture instead, and copy it that way
-			result = AppleEventUtilities_CopyDescriptorDataAs(typePict, inDescPtr, *handle, GetHandleSize(handle),
-																&actualSize);
-			if (result == noErr) pictureToScrap(handle);
-		}
-		Memory_DisposeHandle(&handle);
-	}
-	return result;
-}// AEDescToScrap
 
 
 /*!
@@ -1241,60 +1200,6 @@ isTextType	(CFStringRef	inUTI)
 	}
 	return result;
 }// isTextType
-
-
-/*!
-Copies the specified PICT (QuickDraw picture) data
-to the clipboard.
-
-(3.0)
-*/
-void
-pictureToScrap	(Handle		inPictureData)
-{
-	SInt8	hState = HGetState(inPictureData);
-	
-	
-	HLock((Handle)inPictureData);
-	UNUSED_RETURN(OSStatus)ClearCurrentScrap();
-	{
-		ScrapRef	currentScrap = nullptr;
-		
-		
-		if (GetCurrentScrap(&currentScrap) == noErr)
-		{
-			UNUSED_RETURN(OSStatus)PutScrapFlavor(currentScrap, kScrapFlavorTypePicture,
-													kScrapFlavorMaskNone, GetHandleSize(inPictureData),
-													*inPictureData);
-		}
-	}
-	HSetState(inPictureData, hState);
-}// pictureToScrap
-
-
-/*!
-Copies the specified plain text data to the clipboard.
-
-DEPRECATED, use Clipboard_AddCFStringToPasteboard().
-
-(3.0)
-*/
-void
-textToScrap		(Handle		inTextHandle)
-{
-	UNUSED_RETURN(OSStatus)ClearCurrentScrap();
-	{
-		ScrapRef	currentScrap = nullptr;
-		
-		
-		if (GetCurrentScrap(&currentScrap) == noErr)
-		{
-			UNUSED_RETURN(OSStatus)PutScrapFlavor(currentScrap, kScrapFlavorTypeText,
-													kScrapFlavorMaskNone, GetHandleSize(inTextHandle),
-													*inTextHandle);
-		}
-	}
-}// textToScrap
 
 
 /*!

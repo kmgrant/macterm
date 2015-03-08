@@ -44,7 +44,6 @@
 #include <CocoaBasic.h>
 #include <ColorUtilities.h>
 #include <Console.h>
-#include <Embedding.h>
 #include <FlagManager.h>
 #include <RegionUtilities.h>
 

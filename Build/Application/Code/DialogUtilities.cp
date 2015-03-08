@@ -50,7 +50,6 @@
 #include <CarbonEventUtilities.template.h>
 #include <ColorUtilities.h>
 #include <Console.h>
-#include <Embedding.h>
 #include <FileSelectionDialogs.h>
 #include <HIViewWrap.h>
 #include <IconManager.h>

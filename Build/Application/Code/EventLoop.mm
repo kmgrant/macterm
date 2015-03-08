@@ -53,7 +53,6 @@
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
-#import <Embedding.h>
 #import <GrowlSupport.h>
 #import <HIViewWrap.h>
 #import <ListenerModel.h>
@@ -844,10 +843,6 @@ receiveApplicationSwitch	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		
 		// 3.0 - service a pending alert
 		if (resuming) Alert_ServiceNotification();
-		
-		// 3.0 - restore color look-up table for the benefit of applications
-		// that don’t use the Palette Manager
-		unless (resuming) RestoreDeviceClut(nullptr/* restore all devices */);
 		
 		// 3.0 - notify all listeners of switch events that a switch has occurred
 		eventNotifyGlobal(kEventLoop_GlobalEventSuspendResume, nullptr/* context */);

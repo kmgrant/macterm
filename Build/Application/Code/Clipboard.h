@@ -184,9 +184,6 @@ OSStatus
 	Clipboard_AddCFStringToPasteboard		(CFStringRef				inStringToCopy,
 											 PasteboardRef				inPasteboardOrNullForMainClipboard = nullptr);
 
-OSStatus
-	Clipboard_AEDescToScrap					(AEDesc const*				inDescPtr);
-
 Boolean
 	Clipboard_Contains						(CFStringRef				inUTI,
 											 UInt16						inDesiredItemOrZeroForAll,

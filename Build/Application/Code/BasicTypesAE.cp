@@ -208,25 +208,6 @@ BasicTypesAE_CreatePropertyIDDesc	(FourCharCode	inPropertyID,
 
 /*!
 Creates an Apple Event descriptor “wrapper”
-for text, using Pascal string data.
-
-(3.0)
-*/
-OSStatus
-BasicTypesAE_CreatePStringDesc	(Str255		inPascalStringData,
-								 AEDesc*	outDescPtr)
-{
-	OSStatus	result = noErr;
-	
-	
-	result = AECreateDesc(cString, inPascalStringData + 1,
-							PLstrlen(inPascalStringData) * sizeof(UInt8), outDescPtr);
-	return result;
-}// CreatePStringDesc
-
-
-/*!
-Creates an Apple Event descriptor “wrapper”
 for a QuickDraw rectangle.
 
 (3.0)

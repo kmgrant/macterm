@@ -53,9 +53,7 @@
 #pragma mark Public Methods
 
 /*!
-Adds an error to the reply record; at least the
-error code is provided, and optionally you can
-accompany it with an equivalent message.
+Adds an error to the reply record.
 
 You should use this to return error codes from
 ALL Apple Events; if you do, return "noErr" from
@@ -65,8 +63,7 @@ a specific error code.
 (3.0)
 */
 OSStatus
-AppleEventUtilities_AddErrorToReply		(ConstStringPtr		inErrorMessageOrNull,
-										 OSStatus			inError,
+AppleEventUtilities_AddErrorToReply		(OSStatus			inError,
 										 AppleEventPtr		inoutReplyAppleEventPtr)
 {
 	OSStatus	result = noErr;
@@ -80,14 +77,6 @@ AppleEventUtilities_AddErrorToReply		(ConstStringPtr		inErrorMessageOrNull,
 		{
 			result = AEPutParamPtr(inoutReplyAppleEventPtr, keyErrorNumber, typeSInt16,
 									&inError, sizeof(inError));
-		}
-		
-		// if provided, also put the error message
-		if (inErrorMessageOrNull != nullptr)
-		{
-			result = AEPutParamPtr(inoutReplyAppleEventPtr, keyErrorString, typeChar,
-									inErrorMessageOrNull + 1/* skip length byte */,
-									STATIC_CAST(PLstrlen(inErrorMessageOrNull) * sizeof(UInt8), Size));
 		}
 	}
 	else

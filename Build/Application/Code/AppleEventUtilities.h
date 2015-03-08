@@ -48,8 +48,7 @@
 #pragma mark Public Methods
 
 OSStatus
-	AppleEventUtilities_AddErrorToReply				(ConstStringPtr			inErrorMessageOrNull,
-													 OSStatus				inError,
+	AppleEventUtilities_AddErrorToReply				(OSStatus				inError,
 													 AppleEventPtr			inoutReplyAppleEventPtr);
 
 OSStatus

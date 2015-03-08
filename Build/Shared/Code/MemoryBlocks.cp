@@ -130,15 +130,6 @@ considered when making the request, meaning that it is
 then possible for memory to become dangerously low in
 order for this request to complete successfully.
 
-IMPORTANT:	You should not normally use Memory_NewHandle();
-			instead, use Memory_NewHandleInProperZone(),
-			which lets you specify additionally how your
-			handle will be used.  Based on whether the new
-			handle is going to be needed for a long time or
-			a short time, Memory_NewHandleInProperZone()
-			automatically calls ReserveMem() or MoveHHi()
-			appropriately.
-
 (1.0)
 */
 Handle
@@ -150,52 +141,6 @@ Memory_NewHandle	(Size		inDesiredNumberOfBytes,
 	
 	return result;
 }// NewHandle
-
-
-/*!
-Allocates a new Mac OS Memory Manager memory block and
-returns a handle to it, automatically calling either
-MoveHHi() or ReserveMem(), as appropriate, based on
-whether you need the handle for a short period of time.
-If there is not enough contiguous free space in the
-heap zone to successfully perform the allocation, a
-nullptr handle is returned.
-
-If you say you are using the handle for a long time, it
-is AUTOMATICALLY LOCKED, and should not be unlocked
-unless you have a good reason!
-
-In general, you should call this routine for all new
-dynamic memory allocations.  This helps to maintain as
-much contiguous free space as possible for as long as
-possible, reducing the likelihood that future memory
-requests will fail.
-
-(3.0)
-*/
-Handle
-Memory_NewHandleInProperZone	(Size					inDesiredNumberOfBytes,
-								 MemoryBlockLifetime	inBlockLifeExpectancy,
-								 Boolean				inIsCritical)
-{
-	Handle		result = nullptr;
-	
-	
-	// handles sticking around for a long time should have space reserved for them ahead of time
-	unless (kMemoryBlockLifetimeShort == inBlockLifeExpectancy) ReserveMem(inDesiredNumberOfBytes);
-	
-	// allocate space
-	result = Memory_NewHandle(inDesiredNumberOfBytes, inIsCritical);
-	if (IsHandleValid(result))
-	{
-		// handles sticking around for a short period of time should be high in the heap zone;
-		// conversely, those that don’t should be locked throughout their entire existence
-		if (kMemoryBlockLifetimeShort == inBlockLifeExpectancy) MoveHHi(result);
-		else HLock(result);
-	}
-	
-	return result;
-}// NewHandleInProperZone
 
 
 /*!
@@ -282,18 +227,6 @@ Memory_SetHandleSize	(Handle		inoutHandle,
 	SetHandleSize(inoutHandle, inNewHandleSizeInBytes);
 	result = MemError();
 	
-	// now check for failures; some can perhaps be eliminated with extra effort
-	// and a 2nd attempt to set the handle size
-	if (memFullErr == result)
-	{
-		// move the Handle high in the heap, eliminate bubbles (compact memory)
-		// and try again; the Mac OS Memory Manager doesn’t do this itself for
-		// some reason
-		MoveHHi(inoutHandle);
-		CompactMem(maxSize);
-		SetHandleSize(inoutHandle, inNewHandleSizeInBytes);
-		result = MemError();
-	}
 	return result;
 }// SetHandleSize
 
