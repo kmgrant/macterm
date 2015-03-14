@@ -22,7 +22,7 @@
 		0A46C56D15D864B700843BBC /* PreferenceValue.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46C56C15D864B700843BBC /* PreferenceValue.mm */; };
 		0A47A08C14B3E33A00E39136 /* TerminalToolbar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */; };
 		0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */; };
-		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */; };
+		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.mm */; };
 		0A4FAF951525694700B8142A /* Popover.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4FAF941525694700B8142A /* Popover.mm */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.mm */; };
 		0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A68811112F537A1005F418A /* GrowlSupport.mm */; };
@@ -118,6 +118,7 @@
 		0ACA57D30AEADDE800B5F482 /* GenericDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACA57D20AEADDE700B5F482 /* GenericDialog.mm */; };
 		0ACBC3570D5BBC6300FCF05F /* CocoaBasic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */; };
 		0ACBC4280D5BBCC700FCF05F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */; };
+		0ACC406A1A433256009D0D53 /* GenericPanelNumberedList.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACC40691A433256009D0D53 /* GenericPanelNumberedList.mm */; };
 		0ACF35C617EBCC1500178DE2 /* Emulation.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ACF35C517EBCC1500178DE2 /* Emulation.cp */; };
 		0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */; };
 		0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */; };
@@ -401,7 +402,7 @@
 		0A4AC969155ED67E00FA6184 /* VectorWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorWindow.h; path = Application/Code/VectorWindow.h; sourceTree = "<group>"; };
 		0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = VectorWindow.mm; path = Application/Code/VectorWindow.mm; sourceTree = "<group>"; };
 		0A4C9D210FE9B1A0005EAE9D /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelWorkspaces.nib; sourceTree = "<group>"; };
-		0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelWorkspaces.cp; path = Application/Code/PrefPanelWorkspaces.cp; sourceTree = "<group>"; };
+		0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelWorkspaces.mm; path = Application/Code/PrefPanelWorkspaces.mm; sourceTree = "<group>"; };
 		0A4C9D260FE9B986005EAE9D /* PrefPanelWorkspaces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelWorkspaces.h; path = Application/Code/PrefPanelWorkspaces.h; sourceTree = "<group>"; };
 		0A4C9D5E0FE9C5B5005EAE9D /* IconForPrefPanelWorkspaces.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelWorkspaces.icns; path = Application/Resources/IconForPrefPanelWorkspaces.icns; sourceTree = "<group>"; };
 		0A4FAF941525694700B8142A /* Popover.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Popover.mm; path = Shared/Code/Popover.mm; sourceTree = "<group>"; };
@@ -533,6 +534,11 @@
 		0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaBasic.h; path = Shared/Code/CocoaBasic.h; sourceTree = "<group>"; };
 		0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		0ACBF0101449232F00D17678 /* IconForKillSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKillSession.icns; path = Application/Resources/IconForKillSession.icns; sourceTree = "<group>"; };
+		0ACC40641A432446009D0D53 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelWorkspaceOptionsCocoa.xib; sourceTree = "<group>"; };
+		0ACC40661A432446009D0D53 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelWorkspaceWindowsCocoa.xib; sourceTree = "<group>"; };
+		0ACC40681A433064009D0D53 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/GenericPanelNumberedListCocoa.xib; sourceTree = "<group>"; };
+		0ACC40691A433256009D0D53 /* GenericPanelNumberedList.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GenericPanelNumberedList.mm; path = Application/Code/GenericPanelNumberedList.mm; sourceTree = "<group>"; };
+		0ACC406B1A433265009D0D53 /* GenericPanelNumberedList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = GenericPanelNumberedList.h; path = Application/Code/GenericPanelNumberedList.h; sourceTree = "<group>"; };
 		0ACCB21E17934CB1001C3B75 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelSessionDataFlowCocoa.xib; sourceTree = "<group>"; };
 		0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FileSelectionDialogs.h; path = Shared/Code/FileSelectionDialogs.h; sourceTree = "<group>"; };
 		0ACDD9250ABD16C200040553 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AlertMessages.nib; sourceTree = "<group>"; };
@@ -768,6 +774,7 @@
 				0A46FDD7055432A400ACDF3A /* FindDialog.mm */,
 				0A46FDDA055432A400ACDF3A /* Folder.cp */,
 				0ACA57D20AEADDE700B5F482 /* GenericDialog.mm */,
+				0ACC40691A433256009D0D53 /* GenericPanelNumberedList.mm */,
 				0A2890DC0D68017D0017D99E /* GenericPanelTabs.mm */,
 				0A46FDE1055432A400ACDF3A /* HelpSystem.cp */,
 				0A46FDE6055432A400ACDF3A /* IconManager.cp */,
@@ -829,6 +836,7 @@
 				0A4603E20554376100ACDF3A /* FindDialog.h */,
 				0A4603E50554376100ACDF3A /* Folder.h */,
 				0ACA57D40AEADDF300B5F482 /* GenericDialog.h */,
+				0ACC406B1A433265009D0D53 /* GenericPanelNumberedList.h */,
 				0A2890DE0D68019E0017D99E /* GenericPanelTabs.h */,
 				0A4603ED0554376100ACDF3A /* HelpSystem.h */,
 				0A4603F00554376100ACDF3A /* IconManager.h */,
@@ -981,6 +989,7 @@
 				0AB2273212D2D27000D663BB /* CommandLineCocoa.xib */,
 				0AB2272E12D2D03F00D663BB /* DebugInterfaceCocoa.xib */,
 				0AA179F61468E4A500779DA9 /* FindDialogCocoa.xib */,
+				0ACC40671A433064009D0D53 /* GenericPanelNumberedListCocoa.xib */,
 				0AD7CE33158AD31F000C3264 /* GenericPanelTabsCocoa.xib */,
 				0AC8100B1221C89000687DB2 /* InfoWindowCocoa.xib */,
 				0AB2273412D2D27A00D663BB /* KeypadArrangeWindowCocoa.xib */,
@@ -1003,6 +1012,8 @@
 				0A32442015D74B0D001EBB98 /* PrefPanelTerminalOptionsCocoa.xib */,
 				0A0D315616E2F5440063914A /* PrefPanelTerminalScreenCocoa.xib */,
 				0A839C3315805125000F001E /* PrefPanelTranslationsCocoa.xib */,
+				0ACC40631A432446009D0D53 /* PrefPanelWorkspaceOptionsCocoa.xib */,
+				0ACC40651A432446009D0D53 /* PrefPanelWorkspaceWindowsCocoa.xib */,
 				0A5A6FCA1578783700EFCEAB /* PrefsWindowCocoa.xib */,
 				0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */,
 				0AF91B1C18445F15004A7588 /* ResizeInfoCocoa.xib */,
@@ -1112,7 +1123,7 @@
 				0ABC0D230A4503A3009D07FC /* PrefPanelSessions.mm */,
 				0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.mm */,
 				0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */,
-				0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */,
+				0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.mm */,
 				0A46FDDB055432A400ACDF3A /* PrefsContextDialog.mm */,
 				0AD7D0C2158AEBC9000C3264 /* PrefsContextManager.mm */,
 				0A46FE08055432A400ACDF3A /* PrefsWindow.mm */,
@@ -1451,6 +1462,7 @@
 				0AC6BB540A8C0BA100AFF37A /* Network.cp in Sources */,
 				0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */,
 				0AC6BB560A8C0BA100AFF37A /* TextDataFile.cp in Sources */,
+				0ACC406A1A433256009D0D53 /* GenericPanelNumberedList.mm in Sources */,
 				0AC6BB570A8C0BA100AFF37A /* CommonEventHandlers.cp in Sources */,
 				0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */,
 				0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */,
@@ -1470,7 +1482,7 @@
 				0AF502320F872D2F0068CB19 /* CGContextSaveRestore.cp in Sources */,
 				0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */,
 				0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */,
-				0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */,
+				0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.mm in Sources */,
 				0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */,
 				0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */,
 				0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */,
@@ -1786,6 +1798,30 @@
 				0ACA57C50AEADC5C00B5F482 /* English */,
 			);
 			name = GenericDialog.nib;
+			sourceTree = "<group>";
+		};
+		0ACC40631A432446009D0D53 /* PrefPanelWorkspaceOptionsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0ACC40641A432446009D0D53 /* English */,
+			);
+			name = PrefPanelWorkspaceOptionsCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0ACC40651A432446009D0D53 /* PrefPanelWorkspaceWindowsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0ACC40661A432446009D0D53 /* English */,
+			);
+			name = PrefPanelWorkspaceWindowsCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0ACC40671A433064009D0D53 /* GenericPanelNumberedListCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0ACC40681A433064009D0D53 /* English */,
+			);
+			name = GenericPanelNumberedListCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0ACCB21D17934CB1001C3B75 /* PrefPanelSessionDataFlowCocoa.xib */ = {

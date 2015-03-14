@@ -1109,6 +1109,7 @@ panelChanged	(PanelPtr		inPtr,
 
 
 @synthesize delegate = _delegate;
+@synthesize isPanelUserInterfaceLoaded = _isPanelUserInterfaceLoaded;
 @synthesize panelDisplayAction = _panelDisplayAction;
 @synthesize panelDisplayTarget = _panelDisplayTarget;
 @synthesize panelParent = _panelParent;
@@ -1128,6 +1129,7 @@ context:(void*)						aContext
 	if (nil != self)
 	{
 		_delegate = aDelegate;
+		_isPanelUserInterfaceLoaded = NO;
 		_panelDisplayAction = nil;
 		_panelDisplayTarget = nil;
 		_panelParent = nil;
@@ -1445,6 +1447,8 @@ awakeFromNib
 	assert(nil != managedView);
 	assert(nil != logicalFirstResponder);
 	assert(nil != logicalLastResponder);
+	
+	self->_isPanelUserInterfaceLoaded = YES;
 	
 	[self.delegate panelViewManager:self didLoadContainerView:self->managedView];
 }// awakeFromNib

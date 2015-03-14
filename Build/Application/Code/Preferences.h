@@ -345,26 +345,6 @@ enum
 };
 
 /*!
-Boundary elements for use with the special window
-preference APIs; they specify which components of
-a saved window rectangle are to be restored.
-*/
-typedef UInt16 Preferences_WindowBoundaryElements;
-enum
-{
-	kPreferences_WindowBoundaryElementLocationH			= (1 << 0),		//!< specifies that the saved window left edge should be used
-	kPreferences_WindowBoundaryElementLocationV			= (1 << 1),		//!< specifies that the saved window top edge should be used
-	kPreferences_WindowBoundaryElementWidth				= (1 << 2),		//!< specifies that the saved window width should be used
-	kPreferences_WindowBoundaryElementHeight			= (1 << 3),		//!< specifies that the saved window height should be used
-	kPreferences_WindowBoundaryLocation					= kPreferences_WindowBoundaryElementLocationH |
-															kPreferences_WindowBoundaryElementLocationV,
-	kPreferences_WindowBoundarySize						= kPreferences_WindowBoundaryElementWidth |
-															kPreferences_WindowBoundaryElementHeight,
-	kPreferences_WindowBoundaryAllElements				= kPreferences_WindowBoundaryLocation |
-															kPreferences_WindowBoundarySize
-};
-
-/*!
 Lists the kinds of global changes that can trigger notification
 when they occur.  Each of these is considered to be of type
 "Preferences_Change".  Use Preferences_StartMonitoring() to
@@ -409,13 +389,20 @@ Preferences_ContextCopy() API).
 typedef struct Preferences_OpaqueTagSet*	Preferences_TagSetRef;
 
 /*!
-A zero-based preferences index is added to the tag value to
-generate a unique tag that can be hashed.  So, a tag must have
-enough unused bits to allow this arithmetic (and other tags
-must not use values similar to those of indexed tags).
+A tag index is supported only for tags with "...TagIndexed..."
+names that leave enough space in the lower nibble for an index
+to be added to the tag value.  All valid index values start at
+1 so that a lack of index can be detected (adding zero to the
+base tag returns the base tag, which is not a valid tag by
+itself).
 
 Always use Preferences_ReturnTagVariantForIndex() to produce a
 valid tag out of a base tag and an index.
+
+Note that other tags must not use values similar to those of
+indexed tags.  In particular, the “space” in the base tag can
+be filled with arbitrary index values and none of those final
+tag values should match non-indexed tags.
 */
 typedef UInt8		Preferences_Index;
 

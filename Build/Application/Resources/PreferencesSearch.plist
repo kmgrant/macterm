@@ -347,15 +347,19 @@
 		<string>utf8</string>
 		<string>utf-8</string>
 	</array>
-	<key>net.macterm.prefpanels.Workspaces</key>
+	<key>net.macterm.prefpanels.Workspaces.Options</key>
 	<array>
 		<string>full screen</string>
+		<string>tab</string>
+		<string>workspace</string>
+	</array>
+	<key>net.macterm.prefpanels.Workspaces.Windows</key>
+	<array>
 		<string>location</string>
 		<string>position</string>
 		<string>screen</string>
 		<string>session</string>
 		<string>shell</string>
-		<string>tab</string>
 		<string>window</string>
 		<string>workspace</string>
 	</array>

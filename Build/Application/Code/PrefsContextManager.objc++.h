@@ -56,6 +56,7 @@ interface).
 {
 @private
 	Preferences_ContextRef		currentContext;
+	Preferences_Index			currentIndex;
 }
 
 // initializers
@@ -69,8 +70,14 @@ interface).
 	currentContext;
 	- (void)
 	setCurrentContext:(Preferences_ContextRef)_;
+	- (Preferences_Index)
+	currentIndex;
+	- (void)
+	setCurrentIndex:(Preferences_Index)_;
 
 // new methods
+	- (Preferences_Tag)
+	actualTagForBase:(Preferences_Tag)_;
 	- (BOOL)
 	deleteDataForPreferenceTag:(Preferences_Tag)_;
 	- (NSColor*)

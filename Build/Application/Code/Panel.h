@@ -209,6 +209,7 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSView*	logicalFirstResponder;
 	IBOutlet NSView*	logicalLastResponder;
 @private
+	BOOL					_isPanelUserInterfaceLoaded;
 	id< Panel_Delegate >	_delegate;
 	SEL						_panelDisplayAction;
 	id						_panelDisplayTarget;
@@ -224,6 +225,8 @@ changes to an interface declared in a ".mm" file.
 // accessors
 	@property (assign) id< Panel_Delegate >
 	delegate;
+	@property (readonly) BOOL
+	isPanelUserInterfaceLoaded;
 	- (NSView*)
 	logicalFirstResponder;
 	- (NSView*)

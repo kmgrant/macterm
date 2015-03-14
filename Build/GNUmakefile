@@ -244,6 +244,7 @@ English.lproj/ClipboardCocoa \
 English.lproj/CommandLineCocoa \
 English.lproj/DebugInterfaceCocoa \
 English.lproj/FindDialogCocoa \
+English.lproj/GenericPanelNumberedListCocoa \
 English.lproj/GenericPanelTabsCocoa \
 English.lproj/InfoWindowCocoa \
 English.lproj/KeypadArrangeWindowCocoa \
@@ -266,6 +267,8 @@ English.lproj/PrefPanelTerminalEmulationCocoa \
 English.lproj/PrefPanelTerminalOptionsCocoa \
 English.lproj/PrefPanelTerminalScreenCocoa \
 English.lproj/PrefPanelTranslationsCocoa \
+English.lproj/PrefPanelWorkspaceOptionsCocoa \
+English.lproj/PrefPanelWorkspaceWindowsCocoa \
 English.lproj/PrefsWindowCocoa \
 English.lproj/PrintPreviewCocoa \
 English.lproj/ResizeInfoCocoa \

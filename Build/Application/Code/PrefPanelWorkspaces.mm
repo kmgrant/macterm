@@ -1,4 +1,4 @@
-/*!	\file PrefPanelWorkspaces.cp
+/*!	\file PrefPanelWorkspaces.mm
 	\brief Implements the Workspaces panel of Preferences.
 */
 /*###############################################################
@@ -30,47 +30,50 @@
 
 ###############################################################*/
 
-#include "PrefPanelWorkspaces.h"
-#include <UniversalDefines.h>
+#import "PrefPanelWorkspaces.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <cstring>
+#import <cstring>
 
 // standard-C++ includes
-#include <algorithm>
-#include <vector>
+#import <algorithm>
+#import <vector>
 
 // Unix includes
-#include <strings.h>
+#import <strings.h>
 
 // Mac includes
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <Carbon/Carbon.h>
+#import <CoreServices/CoreServices.h>
+#import <objc/objc-runtime.h>
 
 // library includes
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <CommonEventHandlers.h>
-#include <Console.h>
-#include <HIViewWrap.h>
-#include <HIViewWrapManip.h>
-#include <IconManager.h>
-#include <Localization.h>
-#include <ListenerModel.h>
-#include <MemoryBlocks.h>
-#include <NIBLoader.h>
-#include <SoundSystem.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CocoaExtensions.objc++.h>
+#import <CommonEventHandlers.h>
+#import <Console.h>
+#import <HIViewWrap.h>
+#import <HIViewWrapManip.h>
+#import <IconManager.h>
+#import <Localization.h>
+#import <ListenerModel.h>
+#import <MemoryBlocks.h>
+#import <NIBLoader.h>
+#import <SoundSystem.h>
 
 // application includes
-#include "AppResources.h"
-#include "Commands.h"
-#include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
-#include "Keypads.h"
-#include "Panel.h"
-#include "Preferences.h"
-#include "UIStrings.h"
-#include "UIStrings_PrefsWindow.h"
+#import "AppResources.h"
+#import "Commands.h"
+#import "ConstantsRegistry.h"
+#import "DialogUtilities.h"
+#import "HelpSystem.h"
+#import "Keypads.h"
+#import "Panel.h"
+#import "Preferences.h"
+#import "UIStrings.h"
+#import "UIStrings_PrefsWindow.h"
 
 
 
@@ -202,6 +205,54 @@ struct My_WorkspacesPanelData
 typedef My_WorkspacesPanelData*		My_WorkspacesPanelDataPtr;
 
 } // anonymous namespace
+
+
+/*!
+Private properties.
+*/
+@interface PrefPanelWorkspaces_WindowsViewManager () //{
+
+// accessors
+	@property (strong) PrefPanelWorkspaces_WindowEditorViewManager*
+	windowEditorViewManager;
+
+@end //}
+
+
+/*!
+The private class interface.
+*/
+@interface PrefPanelWorkspaces_OptionsViewManager (PrefPanelWorkspaces_OptionsViewManagerInternal) //{
+
+// accessors
+	@property (readonly) NSArray*
+	primaryDisplayBindingKeys;
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface PrefPanelWorkspaces_WindowEditorViewManager () //{
+
+// accessors
+	@property (weak, readonly) PrefPanelWorkspaces_WindowsViewManager*
+	windowsViewManager;
+
+@end //}
+
+
+/*!
+The private class interface.
+*/
+@interface PrefPanelWorkspaces_WindowEditorViewManager (PrefPanelWorkspaces_WindowEditorViewManagerInternal) //{
+
+// accessors
+	@property (readonly) NSArray*
+	primaryDisplayBindingKeys;
+
+@end //}
 
 #pragma mark Internal Method Prototypes
 namespace {
@@ -1692,5 +1743,1297 @@ monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 }// monitorDataBrowserItems
 
 } // anonymous namespace
+
+
+#pragma mark -
+@implementation PrefPanelWorkspaces_ViewManager //{
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (instancetype)
+init
+{
+	NSArray*	subViewManagers =
+				@[
+					[[[PrefPanelWorkspaces_OptionsViewManager alloc] init] autorelease],
+					[[[PrefPanelWorkspaces_WindowsViewManager alloc] init] autorelease],
+				];
+	
+	
+	self = [super initWithIdentifier:@"net.macterm.prefpanels.Workspaces"
+										localizedName:NSLocalizedStringFromTable(@"Workspaces", @"PrefPanelWorkspaces",
+																					@"the name of this panel")
+										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelWorkspaces"]
+										viewManagerArray:subViewManagers];
+	if (nil != self)
+	{
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+@end //} PrefPanelWorkspaces_ViewManager
+
+
+#pragma mark -
+@implementation PrefPanelWorkspaces_OptionsViewManager //{
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (instancetype)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelWorkspaceOptionsCocoa" delegate:self context:nullptr];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_Flag*)
+automaticallyEnterFullScreen
+{
+	return [self->byKey objectForKey:@"automaticallyEnterFullScreen"];
+}// automaticallyEnterFullScreen
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_Flag*)
+useTabbedWindows
+{
+	return [self->byKey objectForKey:@"useTabbedWindows"];
+}// useTabbedWindows
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:5/* arbitrary; number of settings */];
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeInspector;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+	assert(nil != byKey);
+	assert(nil != prefsMgr);
+	
+	// remember frame from XIB (it might be changed later)
+	self->idealSize = [aContainerView frame].size;
+	
+	// note that all current values will change
+	for (NSString* keyName in [self primaryDisplayBindingKeys])
+	{
+		[self willChangeValueForKey:keyName];
+	}
+	
+	// WARNING: Key names are depended upon by bindings in the XIB file.
+	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
+								initWithPreferencesTag:kPreferences_TagArrangeWindowsFullScreen
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"automaticallyEnterFullScreen"];
+	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
+								initWithPreferencesTag:kPreferences_TagArrangeWindowsUsingTabs
+														contextManager:self->prefsMgr] autorelease]
+					forKey:@"useTabbedWindows"];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
+	{
+		[self didChangeValueForKey:keyName];
+	}
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = self->idealSize;
+}
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet)
+	// note that all current values will change
+	for (NSString* keyName in [self primaryDisplayBindingKeys])
+	{
+		[self willChangeValueForKey:keyName];
+	}
+	
+	// now apply the specified settings
+	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
+	{
+		[self didChangeValueForKey:keyName];
+	}
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [NSImage imageNamed:@"IconForPrefPanelWorkspaces"];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.Workspaces.Options";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Options", @"PrefPanelWorkspaces", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintHorizontal;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::WORKSPACE;
+}// preferencesClass
+
+
+@end //} PrefPanelWorkspaces_OptionsViewManager
+
+
+#pragma mark -
+@implementation PrefPanelWorkspaces_OptionsViewManager (PrefPanelWorkspaces_OptionsViewManagerInternal) //{
+
+
+/*!
+Returns the names of key-value coding keys that represent the
+primary bindings of this panel (those that directly correspond
+to saved preferences).
+
+(4.1)
+*/
+- (NSArray*)
+primaryDisplayBindingKeys
+{
+	return @[@"automaticallyEnterFullScreen", @"useTabbedWindows"];
+}// primaryDisplayBindingKeys
+
+
+@end //} PrefPanelWorkspaces_OptionsViewManager (PrefPanelWorkspaces_OptionsViewManagerInternal)
+
+
+#pragma mark -
+@implementation PrefPanelWorkspaces_WindowInfo //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (instancetype)
+init
+{
+	self = [super init];
+	if (nil != self)
+	{
+	}
+	return self;
+}// init
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+windowIndexLabel
+{
+	return [[NSNumber numberWithUnsignedInteger:self.currentIndex] stringValue];
+}// windowIndexLabel
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+windowName
+{
+	NSString*				result = @"";
+	assert(0 != self.currentIndex);
+	Preferences_Tag const	windowTitleIndexedTag = [self actualTagForBase:kPreferences_TagIndexedWindowTitle];
+	CFStringRef				nameCFString = nullptr;
+	Preferences_Result		prefsResult = Preferences_ContextGetData
+											(self.currentContext, windowTitleIndexedTag,
+												sizeof(nameCFString), &nameCFString,
+												false/* search defaults */);
+	
+	
+	if (kPreferences_ResultBadVersionDataNotAvailable == prefsResult)
+	{
+		// this is possible for indexed tags, as not all indexes
+		// in the range may have data defined; ignore
+		//Console_Warning(Console_WriteValue, "failed to retrieve window title preference, error", prefsResult);
+	}
+	else if (kPreferences_ResultOK != prefsResult)
+	{
+		Console_Warning(Console_WriteValue, "failed to retrieve window title preference, error", prefsResult);
+	}
+	else
+	{
+		result = BRIDGE_CAST(nameCFString, NSString*);
+	}
+	
+	return result;
+}
+- (void)
+setWindowName:(NSString*)	aWindowName
+{
+	assert(0 != self.currentIndex);
+	Preferences_Tag const	windowTitleIndexedTag = [self actualTagForBase:kPreferences_TagIndexedWindowTitle];
+	CFStringRef				asCFStringRef = BRIDGE_CAST(aWindowName, CFStringRef);
+	Preferences_Result		prefsResult = Preferences_ContextSetData
+											(self.currentContext, windowTitleIndexedTag,
+												sizeof(asCFStringRef), &asCFStringRef);
+	
+	
+	if (kPreferences_ResultOK != prefsResult)
+	{
+		Console_Warning(Console_WriteValue, "failed to set window title preference, error", prefsResult);
+	}
+}// setWindowName:
+
+
+#pragma mark GenericPanelNumberedList_ListItemHeader
+
+
+/*!
+Return strong reference to user interface string representing
+numbered index in list.
+
+Returns the "windowIndexLabel".
+
+(4.1)
+*/
+- (NSString*)
+numberedListIndexString
+{
+	return self.windowIndexLabel;
+}// numberedListIndexString
+
+
+/*!
+Return or update user interface string for name of item in list.
+
+Accesses the "windowName".
+
+(4.1)
+*/
+- (NSString*)
+numberedListItemName
+{
+	return self.windowName;
+}
+- (void)
+setNumberedListItemName:(NSString*)		aName
+{
+	self.windowName = aName;
+}// setNumberedListItemName:
+
+
+@end //}
+
+
+#pragma mark -
+@implementation PrefPanelWorkspaces_WindowsViewManager //{
+
+
+@synthesize windowEditorViewManager = _windowEditorViewManager;
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (instancetype)
+init
+{
+	self.windowEditorViewManager = [[[PrefPanelWorkspaces_WindowEditorViewManager alloc] init] autorelease];
+	
+	self = [super initWithIdentifier:@"net.macterm.prefpanels.Workspaces.Windows"
+										localizedName:NSLocalizedStringFromTable(@"Windows", @"PrefPanelWorkspaces",
+																					@"the name of this panel")
+										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelWorkspaces"]
+										master:self detailViewManager:self.windowEditorViewManager];
+	if (nil != self)
+	{
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelWorkspaces_WindowInfo*)
+selectedWindowInfo
+{
+	PrefPanelWorkspaces_WindowInfo*		result = nil;
+	NSUInteger							currentIndex = [self.listItemHeaderIndexes firstIndex];
+	
+	
+	if (NSNotFound != currentIndex)
+	{
+		result = [self.listItemHeaders objectAtIndex:currentIndex];
+	}
+	
+	return result;
+}// selectedWindowInfo
+
+
+#pragma mark GeneralPanelNumberedList_Master
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+initializeNumberedListViewManager:(GenericPanelNumberedList_ViewManager*)	aViewManager
+{
+	NSArray*			listData =
+						@[
+							// create as many managers as there are supported indexes
+							// (see the Preferences module)
+							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
+						];
+	Preferences_Index	prefsIndexValue = 1;
+	
+	
+	// configure each context manager to modify a different index
+	// of the current workspace data (the context itself is set
+	// later, through callbacks)
+	for (PrefPanelWorkspaces_WindowInfo* eachInfo in listData)
+	{
+		[eachInfo setCurrentIndex:prefsIndexValue];
+		++prefsIndexValue;
+	}
+	
+	aViewManager.listItemHeaders = listData;
+}// initializeNumberedListViewManager:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+containerViewDidLoadForNumberedListViewManager:(GenericPanelNumberedList_ViewManager*)	aViewManager
+{
+	// customize numbered-list interface
+	aViewManager.headingTitleForNameColumn = NSLocalizedStringFromTable(@"Window Name", @"PrefPanelWorkspaces", @"the title for the item name column");
+}// containerViewDidLoadForNumberedListViewManager:
+
+
+/*!
+Responds to a change in data set by updating the context that
+is associated with each item in the list.
+
+Note that this is also called when the selected index changes
+and the context has not changed (context may be nullptr), and
+this variant is ignored.
+
+(4.1)
+*/
+- (void)
+numberedListViewManager:(GenericPanelNumberedList_ViewManager*)		aViewManager
+didChangeFromDataSet:(GenericPanelNumberedList_DataSet*)			oldStructPtr
+toDataSet:(GenericPanelNumberedList_DataSet*)						newStructPtr
+{
+#pragma unused(aViewManager, oldStructPtr)
+	
+	if (nullptr != newStructPtr)
+	{
+		Preferences_ContextRef		asContext = REINTERPRET_CAST(newStructPtr->parentPanelDataSetOrNull, Preferences_ContextRef);
+		
+		
+		// if the context is nullptr, only the index has changed;
+		// since the index is not important here, it is ignored
+		if (nullptr != asContext)
+		{
+			// update each object in the list to use the new context
+			// (so that, for instance, the right names are displayed)
+			for (PrefPanelWorkspaces_WindowInfo* eachInfo in aViewManager.listItemHeaders)
+			{
+				[eachInfo setCurrentContext:asContext];
+			}
+		}
+	}
+}// numberedListViewManager:didChangeFromDataSet:toDataSet:
+
+
+@end //} PrefPanelWorkspaces_WindowsViewManager
+
+
+#pragma mark -
+@implementation PrefPanelWorkspaces_WindowBoundariesValue
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (instancetype)
+initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	self = [super initWithContextManager:aContextMgr];
+	if (nil != self)
+	{
+		// WARNING: this is not actually of “flag” type and any attempt
+		// to read or set the value will fail; this object is only used
+		// for simplicity because the binding currently only requires
+		// the inherited/enabled settings
+		self->frameObject = [[PreferenceValue_Flag alloc]
+								initWithPreferencesTag:kPreferences_TagIndexedWindowFrameBounds
+														contextManager:aContextMgr];
+		self->screenBoundsObject = [[PreferenceValue_Flag alloc]
+									initWithPreferencesTag:kPreferences_TagIndexedWindowScreenBounds
+															contextManager:aContextMgr];
+		
+		// monitor the preferences context manager so that observers
+		// of preferences in sub-objects can be told to expect changes
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextWillChange:)
+															name:kPrefsContextManager_ContextWillChangeNotification
+															object:aContextMgr];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextDidChange:)
+															name:kPrefsContextManager_ContextDidChangeNotification
+															object:aContextMgr];
+	}
+	return self;
+}// initWithContextManager:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Responds to a change in preferences context by notifying
+observers that key values have changed (so that updates
+to the user interface occur).
+
+(4.1)
+*/
+- (void)
+prefsContextDidChange:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	// note: should be opposite order of "prefsContextWillChange:"
+	[self didSetPreferenceValue];
+}// prefsContextDidChange:
+
+
+/*!
+Responds to a change in preferences context by notifying
+observers that key values have changed (so that updates
+to the user interface occur).
+
+(4.1)
+*/
+- (void)
+prefsContextWillChange:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	// note: should be opposite order of "prefsContextDidChange:"
+	[self willSetPreferenceValue];
+}// prefsContextWillChange:
+
+
+#pragma mark PreferenceValue_Inherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = ([self->frameObject isInherited] && [self->screenBoundsObject isInherited]);
+	
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self willSetPreferenceValue];
+	[self->frameObject setNilPreferenceValue];
+	[self->screenBoundsObject setNilPreferenceValue];
+	[self didSetPreferenceValue];
+}// setNilPreferenceValue
+
+
+@end //} PrefPanelWorkspaces_WindowBoundariesValue
+
+
+#pragma mark -
+@implementation PrefPanelWorkspaces_WindowEditorViewManager //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (instancetype)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelWorkspaceWindowsCocoa" delegate:self context:nil];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Actions
+
+
+/*!
+Displays a panel to edit the location of the window.
+
+(4.1)
+*/
+- (IBAction)
+performSetBoundary:(id)		sender
+{
+#pragma unused(sender)
+	Preferences_ContextRef const	currentContext = [self.windowsViewManager.selectedWindowInfo currentContext];
+	
+	
+	if (nullptr == currentContext)
+	{
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteLine, "attempt to perform set-boundary with invalid context");
+	}
+	else
+	{
+		Preferences_Index const		currentIndex = [self.windowsViewManager.selectedWindowInfo currentIndex];
+		
+		
+		Keypads_SetArrangeWindowPanelBinding(Preferences_ReturnTagVariantForIndex
+												(kPreferences_TagIndexedWindowFrameBounds, currentIndex),
+												typeHIRect,
+												Preferences_ReturnTagVariantForIndex
+												(kPreferences_TagIndexedWindowScreenBounds, currentIndex),
+												typeHIRect,
+												currentContext);
+		Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, true);
+	}
+}// performSetBoundary:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelWorkspaces_WindowBoundariesValue*)
+windowBoundaries
+{
+	return [self->byKey objectForKey:@"windowBoundaries"];
+}// windowBoundaries
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelWorkspaces_WindowSessionValue*)
+windowSession
+{
+	return [self->byKey objectForKey:@"windowSession"];
+}// windowSession
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelWorkspaces_WindowsViewManager*)
+windowsViewManager
+{
+	Panel_ViewManager*		parentViewManager = self.panelParent;
+	assert(nil != parentViewManager);
+	assert([parentViewManager isKindOfClass:PrefPanelWorkspaces_WindowsViewManager.class]);
+	PrefPanelWorkspaces_WindowsViewManager*		result = STATIC_CAST(parentViewManager, PrefPanelWorkspaces_WindowsViewManager*);
+	
+	
+	return result;
+}// windowsViewManager
+
+
+#pragma mark NSKeyValueObservingCustomization
+
+
+/*!
+Returns true for keys that manually notify observers
+(through "willChangeValueForKey:", etc.).
+
+(4.1)
+*/
++ (BOOL)
+automaticallyNotifiesObserversForKey:(NSString*)	theKey
+{
+	BOOL	result = YES;
+	SEL		flagSource = NSSelectorFromString([[self class] selectorNameForKeyChangeAutoNotifyFlag:theKey]);
+	
+	
+	if (NULL != class_getClassMethod([self class], flagSource))
+	{
+		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
+		result = [[self performSelector:flagSource] boolValue];
+	}
+	else
+	{
+		result = [super automaticallyNotifiesObserversForKey:theKey];
+	}
+	return result;
+}// automaticallyNotifiesObserversForKey:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:5/* arbitrary; number of settings */];
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeInspector;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+	assert(nil != byKey);
+	
+	// remember frame from XIB (it might be changed later)
+	self->idealSize = [aContainerView frame].size;
+	
+	// note that all current values will change
+	for (NSString* keyName in [self primaryDisplayBindingKeys])
+	{
+		[self willChangeValueForKey:keyName];
+	}
+	
+	// WARNING: Key names are depended upon by bindings in the XIB file.
+	// NOTE: These are initialized in an invalid state (no context manager)
+	// because they will always be changed via callback to a specific
+	// combination of context and index.
+	[self->byKey setObject:[[[PrefPanelWorkspaces_WindowBoundariesValue alloc]
+								initWithContextManager:nullptr] autorelease]
+					forKey:@"windowBoundaries"];
+	//[self->byKey setObject:[[[PrefPanelWorkspaces_WindowSessionValue alloc]
+	//							initWithContextManager:nullptr] autorelease]
+	//				forKey:@"windowSession"];
+	
+	// note that all values have changed (causes the display to be refreshed)
+	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
+	{
+		[self didChangeValueForKey:keyName];
+	}
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = self->idealSize;
+}
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the data set currently selected by the controlling
+parent (numbered list); the assumption is that this will
+always be in sync with the data set actually given.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet)
+	//GenericPanelNumberedList_DataSet*	oldStructPtr = REINTERPRET_CAST(oldDataSet, GenericPanelNumberedList_DataSet*);
+	GenericPanelNumberedList_DataSet*	newStructPtr = REINTERPRET_CAST(newDataSet, GenericPanelNumberedList_DataSet*);
+	Preferences_ContextRef				asPrefsContext = REINTERPRET_CAST(newStructPtr->parentPanelDataSetOrNull, Preferences_ContextRef);
+	Preferences_Index					asIndex = STATIC_CAST(newStructPtr->selectedListItem, Preferences_Index);
+	
+	
+	if (self.isPanelUserInterfaceLoaded)
+	{
+		// note that all current values will change
+		for (NSString* keyName in [self primaryDisplayBindingKeys])
+		{
+			[self willChangeValueForKey:keyName];
+		}
+		
+		// now apply the specified settings
+		if (nullptr != asPrefsContext)
+		{
+			self.windowBoundaries.prefsMgr.currentContext = asPrefsContext;
+			self.windowSession.prefsMgr.currentContext = asPrefsContext;
+		}
+		self.windowBoundaries.prefsMgr.currentIndex = asIndex;
+		self.windowSession.prefsMgr.currentIndex = asIndex;
+		
+		// note that all values have changed (causes the display to be refreshed)
+		for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
+		{
+			[self didChangeValueForKey:keyName];
+		}
+	}
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [NSImage imageNamed:@"IconForPrefPanelWorkspaces"];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.Workspaces.Windows.EditWindow";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Edit Window", @"PrefPanelWorkspaces", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintHorizontal;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::WORKSPACE;
+}// preferencesClass
+
+
+@end //} PrefPanelWorkspaces_WindowEditorViewManager
+
+
+#pragma mark -
+@implementation PrefPanelWorkspaces_WindowEditorViewManager (PrefPanelWorkspaces_WindowEditorViewManagerInternal) //{
+
+
+/*!
+Returns the names of key-value coding keys that represent the
+primary bindings of this panel (those that directly correspond
+to saved preferences).
+
+(4.1)
+*/
+- (NSArray*)
+primaryDisplayBindingKeys
+{
+	return @[@"windowBoundaries", @"windowSession"];
+}// primaryDisplayBindingKeys
+
+
+@end //} PrefPanelWorkspaces_WindowEditorViewManager (PrefPanelWorkspaces_WindowEditorViewManagerInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -89,6 +89,17 @@ enum
 typedef int/*NSInteger*/	NSScrollerStyle;
 
 
+@interface NSObject (NSObjectExtensionsFromLion) //{
+
+// new methods
+	- (void)
+	removeObserver:(NSObject*)_
+	forKeyPath:(NSString*)_
+	context:(void*)_;
+
+@end //}
+
+
 @interface NSResponder (NSResponderExtensionsFromLion) //{
 
 	- (void)

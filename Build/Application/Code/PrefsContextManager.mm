@@ -94,6 +94,8 @@ initWithDefaultContextInClass:(Quills::Prefs::Class)	aClass
 		Preferences_Result	prefsResult = Preferences_GetDefaultContext(&self->currentContext, aClass);
 		
 		
+		self->currentIndex = 0;
+		
 		if ((kPreferences_ResultOK != prefsResult) ||
 			(false == Preferences_ContextIsValid(self->currentContext)))
 		{
@@ -164,7 +166,56 @@ setCurrentContext:(Preferences_ContextRef)	aContext
 }// setCurrentContext:
 
 
+/*!
+Accessor.
+
+(4.1)
+*/
+- (Preferences_Index)
+currentIndex
+{
+	return self->currentIndex;
+}
+- (void)
+setCurrentIndex:(Preferences_Index)		anIndex
+{
+	if (anIndex != self->currentIndex)
+	{
+		// from a handler point of view, there is no difference
+		// between “context” and “index” changing; both imply the
+		// same response (the data source is effectively changed)
+		// so the same notification type is used as well
+		[[NSNotificationCenter defaultCenter] postNotificationName:kPrefsContextManager_ContextWillChangeNotification
+																	object:self];
+		
+		self->currentIndex = anIndex;
+		
+		[[NSNotificationCenter defaultCenter] postNotificationName:kPrefsContextManager_ContextDidChangeNotification
+																	object:self];
+	}
+}// setCurrentContext:
+
+
 #pragma mark New Methods
+
+
+/*!
+Returns the specified tag combined with the "currentIndex"
+if a nonzero index was set; otherwise, returns the given
+tag unchanged.
+
+(4.1)
+*/
+- (Preferences_Tag)
+actualTagForBase:(Preferences_Tag)		aTag
+{
+	Preferences_Tag		result = (0 == self->currentIndex)
+									? aTag
+									: Preferences_ReturnTagVariantForIndex(aTag, self->currentIndex);
+	
+	
+	return result;
+}// actualTagForBase:
 
 
 /*!
@@ -172,17 +223,22 @@ Removes any value for the specified tag from the current context by
 calling Preferences_ContextDeleteData() and returns YES only if the
 deletion succeeds.  This change becomes permanent upon the next save.
 
+If "currentIndex" is set to a nonzero value, the given tag MUST be an
+index-type tag that can be converted into an actual tag using the
+routine Preferences_ReturnTagVariantForIndex().
+
 (4.1)
 */
 - (BOOL)
 deleteDataForPreferenceTag:(Preferences_Tag)	aTag
 {
-	BOOL	result = NO;
+	Preferences_Tag		actualTag = [self actualTagForBase:aTag];
+	BOOL				result = NO;
 	
 	
 	if (Preferences_ContextIsValid(self->currentContext))
 	{
-		Preferences_Result	prefsResult = Preferences_ContextDeleteData(self->currentContext, aTag);
+		Preferences_Result	prefsResult = Preferences_ContextDeleteData(self->currentContext, actualTag);
 		
 		
 		result = (kPreferences_ResultOK == prefsResult);
@@ -198,6 +254,10 @@ When the return value was read from the Default context (NOT simply if
 the value happens to match the Default value), "outIsDefault" is filled
 in with YES; otherwise it is NO.
 
+If "currentIndex" is set to a nonzero value, the given tag MUST be an
+index-type tag that can be converted into an actual tag using the
+routine Preferences_ReturnTagVariantForIndex().
+
 IMPORTANT:	Only tags with values of type RGBColor should be given!
 			The given NSColor is automatically converted internally.
 
@@ -207,7 +267,8 @@ IMPORTANT:	Only tags with values of type RGBColor should be given!
 readColorForPreferenceTag:(Preferences_Tag)		aTag
 isDefault:(BOOL*)								outIsDefault
 {
-	NSColor*	result = [NSColor blackColor];
+	Preferences_Tag		actualTag = [self actualTagForBase:aTag];
+	NSColor*			result = [NSColor blackColor];
 	
 	
 	if (Preferences_ContextIsValid(self->currentContext))
@@ -215,7 +276,7 @@ isDefault:(BOOL*)								outIsDefault
 		RGBColor			colorData;
 		size_t				actualSize = 0;
 		Boolean				isDefault = false;
-		Preferences_Result	prefsResult = Preferences_ContextGetData(self->currentContext, aTag,
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self->currentContext, actualTag,
 																		sizeof(colorData), &colorData,
 																		true/* search defaults */, &actualSize, &isDefault);
 		
@@ -250,6 +311,10 @@ Reads a true/false value from the current preferences context.
 If the value is not found, the specified default is returned
 instead.
 
+If "currentIndex" is set to a nonzero value, the given tag MUST be an
+index-type tag that can be converted into an actual tag using the
+routine Preferences_ReturnTagVariantForIndex().
+
 IMPORTANT:	Only tags with values of type Boolean should be given!
 
 (4.1)
@@ -258,7 +323,8 @@ IMPORTANT:	Only tags with values of type Boolean should be given!
 readFlagForPreferenceTag:(Preferences_Tag)	aTag
 defaultValue:(BOOL)							aDefault
 {
-	BOOL	result = aDefault;
+	Preferences_Tag		actualTag = [self actualTagForBase:aTag];
+	BOOL				result = aDefault;
 	
 	
 	if (Preferences_ContextIsValid(self->currentContext))
@@ -269,7 +335,7 @@ defaultValue:(BOOL)							aDefault
 		
 		
 		if (kPreferences_ResultOK ==
-			Preferences_ContextGetData(self->currentContext, aTag, sizeof(flagValue), &flagValue, false/* search defaults */,
+			Preferences_ContextGetData(self->currentContext, actualTag, sizeof(flagValue), &flagValue, false/* search defaults */,
 										&actualSize, &isDefault))
 		{
 			result = (flagValue) ? YES : NO;
@@ -287,6 +353,10 @@ defaultValue:(BOOL)							aDefault
 Writes a new user preference for the specified color to the current
 preferences context and returns true only if this succeeds.
 
+If "currentIndex" is set to a nonzero value, the given tag MUST be an
+index-type tag that can be converted into an actual tag using the
+routine Preferences_ReturnTagVariantForIndex().
+
 IMPORTANT:	Only tags with values of type RGBColor should be given!
 			The given NSColor is automatically converted internally.
 
@@ -296,8 +366,9 @@ IMPORTANT:	Only tags with values of type RGBColor should be given!
 writeColor:(NSColor*)				aValue
 forPreferenceTag:(Preferences_Tag)	aTag
 {
-	NSColor*	newColor = [aValue colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
-	BOOL		result = NO;
+	Preferences_Tag		actualTag = [self actualTagForBase:aTag];
+	NSColor*			newColor = [aValue colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+	BOOL				result = NO;
 	
 	
 	if (nil == newColor)
@@ -305,7 +376,7 @@ forPreferenceTag:(Preferences_Tag)	aTag
 		// when given nothing and the context is non-Default, delete the setting;
 		// this will revert to either the Default value (in non-Default contexts)
 		// or the “factory default” value (in Default contexts)
-		result = [self deleteDataForPreferenceTag:aTag];
+		result = [self deleteDataForPreferenceTag:actualTag];
 	}
 	else
 	{
@@ -324,7 +395,7 @@ forPreferenceTag:(Preferences_Tag)	aTag
 		
 		if (Preferences_ContextIsValid(self->currentContext))
 		{
-			Preferences_Result	prefsResult = Preferences_ContextSetData(self->currentContext, aTag,
+			Preferences_Result	prefsResult = Preferences_ContextSetData(self->currentContext, actualTag,
 																			sizeof(newColorRGB), &newColorRGB);
 			
 			
@@ -340,6 +411,10 @@ forPreferenceTag:(Preferences_Tag)	aTag
 Writes a true/false value to the current preferences context and
 returns true only if this succeeds.
 
+If "currentIndex" is set to a nonzero value, the given tag MUST be an
+index-type tag that can be converted into an actual tag using the
+routine Preferences_ReturnTagVariantForIndex().
+
 IMPORTANT:	Only tags with values of type Boolean should be given!
 
 (4.1)
@@ -348,13 +423,14 @@ IMPORTANT:	Only tags with values of type Boolean should be given!
 writeFlag:(BOOL)					aFlag
 forPreferenceTag:(Preferences_Tag)	aTag
 {
-	BOOL	result = NO;
+	Preferences_Tag		actualTag = [self actualTagForBase:aTag];
+	BOOL				result = NO;
 	
 	
 	if (Preferences_ContextIsValid(self->currentContext))
 	{
 		Boolean				flagValue = (YES == aFlag) ? true : false;
-		Preferences_Result	prefsResult = Preferences_ContextSetData(self->currentContext, aTag,
+		Preferences_Result	prefsResult = Preferences_ContextSetData(self->currentContext, actualTag,
 																		sizeof(flagValue), &flagValue);
 		
 		

@@ -2972,16 +2972,12 @@ setCurrentPreferenceCollectionIndexes:(NSIndexSet*)		indexes
 {
 	if (indexes != currentPreferenceCollectionIndexes)
 	{
-		UInt16						oldIndex = ([self->currentPreferenceCollectionIndexes count] > 0)
-												? [self->currentPreferenceCollectionIndexes firstIndex]
-												: 0;
-		UInt16						newIndex = ([indexes count] > 0)
-												? [indexes firstIndex]
-												: 0;
-		PrefsWindow_Collection*		oldCollection = (oldIndex < [currentPreferenceCollections count])
+		NSUInteger					oldIndex = [self->currentPreferenceCollectionIndexes firstIndex];
+		NSUInteger					newIndex = [indexes firstIndex];
+		PrefsWindow_Collection*		oldCollection = (NSNotFound != oldIndex)
 													? [currentPreferenceCollections objectAtIndex:oldIndex]
 													: nil;
-		PrefsWindow_Collection*		newCollection = (newIndex < [currentPreferenceCollections count])
+		PrefsWindow_Collection*		newCollection = (NSNotFound != newIndex)
 													? [currentPreferenceCollections objectAtIndex:newIndex]
 													: nil;
 		Preferences_ContextRef		oldDataSet = (nil != oldCollection)
@@ -3814,6 +3810,7 @@ windowDidLoad
 		for (Class viewMgrClass in
 				@[
 					[PrefPanelGeneral_ViewManager class],
+					[PrefPanelWorkspaces_ViewManager class],
 					[PrefPanelSessions_ViewManager class],
 					[PrefPanelTerminals_ViewManager class],
 					[PrefPanelFormats_ViewManager class],

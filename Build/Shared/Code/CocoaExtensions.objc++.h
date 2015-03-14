@@ -100,4 +100,11 @@
 
 @end //}
 
+
+#pragma mark New Methods
+
+// a macro for a highly-common comparison operation in observers
+#define KEY_PATH_IS_SEL(aKeyPath,aSelector) \
+	[(keyPath) isEqualToString:NSStringFromSelector(aSelector)]
+
 // BELOW IS REQUIRED NEWLINE TO END FILE
