@@ -56,6 +56,7 @@
 #import <CFUtilities.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
+#import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
@@ -300,7 +301,7 @@ Mac OS X versions, raw strings do not bind properly.)
 	- (instancetype)
 	initWithDescription:(NSString*)_
 	isDefault:(BOOL)_
-	isOff:(BOOL)_; // designated initializer
+	isOff:(BOOL)_ NS_DESIGNATED_INITIALIZER;
 
 // new methods
 	- (void)
@@ -2370,6 +2371,7 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation PrefPanelGeneral_ViewManager
 
 
@@ -2415,6 +2417,7 @@ dealloc
 @end // PrefPanelGeneral_ViewManager
 
 
+#pragma mark -
 @implementation PrefPanelGeneral_SoundInfo
 
 
@@ -2561,6 +2564,7 @@ preferenceString
 @end // PrefPanelGeneral_SoundInfo
 
 
+#pragma mark -
 @implementation PrefPanelGeneral_NotificationsViewManager
 
 
@@ -3158,6 +3162,7 @@ preferencesClass
 @end // PrefPanelGeneral_NotificationsViewManager
 
 
+#pragma mark -
 @implementation PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal)
 
 
@@ -3288,6 +3293,7 @@ writeBellSoundName:(NSString*)	aValue
 @end // PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal)
 
 
+#pragma mark -
 @implementation PrefPanelGeneral_OptionsViewManager
 
 
@@ -3811,12 +3817,14 @@ preferencesClass
 @end // PrefPanelGeneral_OptionsViewManager
 
 
+#pragma mark -
 @implementation PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
 
 
 @end // PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
 
 
+#pragma mark -
 @implementation PrefPanelGeneral_SpecialViewManager
 
 
@@ -4636,6 +4644,7 @@ preferencesClass
 @end // PrefPanelGeneral_SpecialViewManager
 
 
+#pragma mark -
 @implementation PrefPanelGeneral_SpecialViewManager (PrefPanelGeneral_SpecialViewManagerInternal)
 
 

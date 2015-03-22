@@ -46,6 +46,11 @@
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
+// library includes
+#ifdef __OBJC__
+#	import <CocoaFuture.objc++.h>
+#endif
+
 // application includes
 #include "SessionRef.typedef.h"
 #include "VectorWindowRef.typedef.h"
@@ -108,7 +113,7 @@ changes to an interface declared in a ".mm" file.
 	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
 	orCarbonWindow:(HIWindowRef)_
-	responder:(id< WindowTitleDialog_ViewManagerChannel >)_; // designated initializer
+	responder:(id< WindowTitleDialog_ViewManagerChannel >)_ NS_DESIGNATED_INITIALIZER;
 	- (instancetype)
 	initForCarbonWindow:(HIWindowRef)_
 	responder:(id< WindowTitleDialog_ViewManagerChannel >)_;

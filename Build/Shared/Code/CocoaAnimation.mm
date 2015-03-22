@@ -109,7 +109,7 @@ Core Animation was available).
 	totalDelay:(NSTimeInterval)_
 	delayDistribution:(My_AnimationTimeDistribution)_
 	effect:(My_AnimationEffect)_
-	simplified:(BOOL)_; // designated initializer
+	simplified:(BOOL)_ NS_DESIGNATED_INITIALIZER;
 	- (instancetype)
 	initWithTransition:(My_AnimationTransition)_
 	imageWindow:(NSWindow*)_
@@ -538,6 +538,7 @@ createImageWindowFrom	(NSWindow*		inWindow,
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation CocoaAnimation_WindowFrameAnimator
 
 

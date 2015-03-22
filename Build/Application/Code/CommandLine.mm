@@ -139,6 +139,7 @@ CommandLine_Display ()
 
 #pragma mark Internal Methods
 
+#pragma mark -
 @implementation CommandLine_HistoryDataSource
 
 
@@ -236,6 +237,7 @@ numberOfItemsInComboBox:(NSComboBox*)	aComboBox
 @end // CommandLine_HistoryDataSource
 
 
+#pragma mark -
 @implementation CommandLine_TerminalLikeComboBox
 
 
@@ -270,6 +272,7 @@ textDidBeginEditing:(NSNotification*)	notification
 @end // CommandLine_TerminalLikeComboBox
 
 
+#pragma mark -
 @implementation CommandLine_PanelController
 
 

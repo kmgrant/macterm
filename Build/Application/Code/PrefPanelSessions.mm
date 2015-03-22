@@ -6457,6 +6457,7 @@ primaryDisplayBindingKeys
 @end // PrefPanelSessions_DataFlowViewManager (PrefPanelSessions_DataFlowViewManagerInternal)
 
 
+#pragma mark -
 @implementation PrefPanelSessions_GraphicsModeValue
 
 

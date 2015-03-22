@@ -45,6 +45,7 @@
 
 // library includes
 #import <BoundName.objc++.h>
+#import <CocoaFuture.objc++.h>
 @class ListenerModel_StandardListener;
 
 
@@ -215,7 +216,7 @@ defined to be Boolean.
 	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_
-	inverted:(BOOL)_; // designated initializer
+	inverted:(BOOL)_ NS_DESIGNATED_INITIALIZER;
 
 // new methods
 	- (BOOL)

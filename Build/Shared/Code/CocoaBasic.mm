@@ -912,6 +912,7 @@ returnPathForFSRef	(FSRef const&	inFileOrFolder)
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation CocoaBasic_NoticeColorPanelChange
 
 

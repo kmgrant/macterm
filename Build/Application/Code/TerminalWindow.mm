@@ -8214,6 +8214,7 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation TerminalWindow_Controller
 
 
@@ -8382,6 +8383,7 @@ windowDidLoad
 @end // TerminalWindow_Controller
 
 
+#pragma mark -
 @implementation TerminalWindow_ResizeInfoController
 
 
@@ -8423,6 +8425,7 @@ init
 @end // TerminalWindow_ResizeInfoController
 
 
+#pragma mark -
 @implementation NSWindow (TerminalWindow_NSWindowExtensions)
 
 

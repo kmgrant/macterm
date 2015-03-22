@@ -46,6 +46,7 @@
 
 #pragma mark Internal Methods
 
+#pragma mark -
 @implementation TranslucentMenuArrow_View
 
 

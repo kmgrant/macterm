@@ -368,6 +368,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation PopoverManager_Handler
 
 

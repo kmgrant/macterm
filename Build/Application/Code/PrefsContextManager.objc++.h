@@ -35,6 +35,9 @@
 #ifndef __PREFSCONTEXTMANAGER__
 #define __PREFSCONTEXTMANAGER__
 
+// library includes
+#import <CocoaFuture.objc++.h>
+
 // application includes
 #import "Preferences.h"
 
@@ -63,7 +66,7 @@ interface).
 	- (instancetype)
 	init;
 	- (instancetype)
-	initWithDefaultContextInClass:(Quills::Prefs::Class)_; // designated initializer
+	initWithDefaultContextInClass:(Quills::Prefs::Class)_ NS_DESIGNATED_INITIALIZER;
 
 // accessors
 	- (Preferences_ContextRef)

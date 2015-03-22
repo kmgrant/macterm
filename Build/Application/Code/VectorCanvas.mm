@@ -44,6 +44,7 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
+#import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlockReferenceLocker.template.h>
@@ -110,7 +111,7 @@ array of elements of this type.
 	- (instancetype)
 	init;
 	- (instancetype)
-	initWithPurpose:(VectorCanvas_PathPurpose)_; // designated initializer
+	initWithPurpose:(VectorCanvas_PathPurpose)_ NS_DESIGNATED_INITIALIZER;
 
 // accessors
 	- (void)
@@ -1053,6 +1054,7 @@ setPaletteColor		(My_VectorCanvasPtr		inPtr,
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation VectorCanvas_Path
 
 
@@ -1158,6 +1160,7 @@ copyWithEmptyPathAndPurpose:(VectorCanvas_PathPurpose)	aPurpose
 @end // VectorCanvas_Path
 
 
+#pragma mark -
 @implementation VectorCanvas_View
 
 
@@ -1525,6 +1528,7 @@ resetCursorRects
 @end // VectorCanvas_View
 
 
+#pragma mark -
 @implementation VectorCanvas_View (VectorCanvas_ViewInternal)
 
 

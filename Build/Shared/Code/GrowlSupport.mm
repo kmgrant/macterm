@@ -332,6 +332,7 @@ GrowlSupport_PreferencesPaneDisplay ()
 
 #pragma mark Internal Methods
 
+#pragma mark -
 @implementation GrowlSupport_Delegate
 
 
@@ -413,6 +414,7 @@ growlIsReady
 @end
 
 
+#pragma mark -
 @implementation GrowlSupport_MacUserNotificationDelegate
 
 

@@ -372,6 +372,7 @@ VectorWindow_StopMonitoring		(VectorWindow_Ref			inWindow,
 #pragma mark Internal Methods
 
 
+#pragma mark -
 @implementation VectorWindow_Controller
 
 
@@ -512,6 +513,7 @@ windowDidLoad
 @end // VectorWindow_Controller
 
 
+#pragma mark -
 @implementation VectorWindow_Controller (VectorWindow_ControllerInternal)
 
 

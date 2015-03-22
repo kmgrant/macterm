@@ -446,6 +446,7 @@ receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation ServerBrowser_Handler
 
 
@@ -765,6 +766,7 @@ toScreenFrame:(NSRect)						aRect
 @end // ServerBrowser_Handler
 
 
+#pragma mark -
 @implementation ServerBrowser_NetService
 
 
@@ -909,6 +911,7 @@ netServiceDidResolveAddress:(NSNetService*)		resolvingService
 @end // ServerBrowser_NetService
 
 
+#pragma mark -
 @implementation ServerBrowser_Protocol
 
 
@@ -955,6 +958,7 @@ dealloc
 @end // ServerBrowser_Protocol
 
 
+#pragma mark -
 @implementation ServerBrowser_ViewManager
 
 
@@ -1835,6 +1839,7 @@ awakeFromNib
 @end // ServerBrowser_ViewManager
 
 
+#pragma mark -
 @implementation ServerBrowser_ViewManager (ServerBrowser_ViewManagerInternal)
 
 

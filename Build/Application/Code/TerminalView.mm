@@ -13793,6 +13793,7 @@ visualBell	(TerminalViewRef	inView)
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation TerminalView_BackgroundView
 
 
@@ -13854,6 +13855,7 @@ setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
 @end // TerminalView_BackgroundView
 
 
+#pragma mark -
 @implementation TerminalView_BackgroundView (TerminalView_BackgroundViewInternal)
 
 
@@ -13928,6 +13930,7 @@ isOpaque
 @end // TerminalView_BackgroundView (TerminalView_BackgroundViewInternal)
 
 
+#pragma mark -
 @implementation TerminalView_ContentView
 
 
@@ -14107,6 +14110,7 @@ flagsChanged:(NSEvent*)		anEvent
 @end // TerminalView_ContentView
 
 
+#pragma mark -
 @implementation TerminalView_ContentView (TerminalView_ContentViewInternal)
 
 

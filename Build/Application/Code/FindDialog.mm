@@ -308,6 +308,7 @@ FindDialog_StandardCloseNotifyProc		(FindDialog_Ref		UNUSED_ARGUMENT(inDialogTha
 #pragma mark Internal Methods
 
 
+#pragma mark -
 @implementation FindDialog_Handler
 
 
@@ -869,6 +870,7 @@ idealSize
 @end // FindDialog_Handler
 
 
+#pragma mark -
 @implementation FindDialog_SearchField
 
 
@@ -891,6 +893,7 @@ awakeFromNib
 @end // FindDialog_SearchField
 
 
+#pragma mark -
 @implementation FindDialog_ViewManager
 
 

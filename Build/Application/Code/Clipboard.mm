@@ -1327,6 +1327,7 @@ updateClipboard		(PasteboardRef		inPasteboard)
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation Clipboard_ContentView
 
 
@@ -1585,6 +1586,7 @@ isOpaque
 @end // Clipboard_ContentView
 
 
+#pragma mark -
 @implementation Clipboard_WindowController
 
 

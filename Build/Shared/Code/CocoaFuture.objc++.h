@@ -63,6 +63,22 @@
 #define NSAppKitVersionNumber10_7 1138
 #endif
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED <= 1080 /* MAC_OS_X_VERSION_10_8 */
+#define NSAppKitVersionNumber10_8 1187
+#endif
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED <= 1090 /* MAC_OS_X_VERSION_10_9 */
+
+#define NSAppKitVersionNumber10_9 1265
+
+// NS_DESIGNATED_INITIALIZER was only added in the 10.10 SDK
+// but it is useful as a marker in earlier versions of code
+#ifndef NS_DESIGNATED_INITIALIZER
+#	define NS_DESIGNATED_INITIALIZER
+#endif
+
+#endif
+
 
 
 #pragma mark Types

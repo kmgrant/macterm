@@ -86,7 +86,7 @@ Manages the rename-window user interface.
 	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
 	orCarbonWindow:(HIWindowRef)_
-	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_; // designated initializer
+	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_ NS_DESIGNATED_INITIALIZER;
 	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
 	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_;
@@ -265,6 +265,7 @@ WindowTitleDialog_StandardCloseNotifyProc	(WindowTitleDialog_Ref	UNUSED_ARGUMENT
 #pragma mark Internal Methods
 
 
+#pragma mark -
 @implementation WindowTitleDialog_Handler
 
 
@@ -697,6 +698,7 @@ returnInitialTitleTextForManagedView:(NSView*)		aManagedView
 @end // WindowTitleDialog_Handler
 
 
+#pragma mark -
 @implementation WindowTitleDialog_ViewManager
 
 

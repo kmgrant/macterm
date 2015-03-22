@@ -688,6 +688,7 @@ updateCheckBoxPreference	(MyKioskPanelUIPtr		inInterfacePtr,
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation PrefPanelFullScreen_ViewManager
 
 
@@ -1119,6 +1120,7 @@ preferencesClass
 @end // PrefPanelFullScreen_ViewManager
 
 
+#pragma mark -
 @implementation PrefPanelFullScreen_ViewManager (PrefPanelFullScreen_ViewManagerInternal)
 
 

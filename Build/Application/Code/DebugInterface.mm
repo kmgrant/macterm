@@ -104,6 +104,7 @@ DebugInterface_DisplayTestTerminal ()
 
 #pragma mark Internal Methods
 
+#pragma mark -
 @implementation DebugInterface_PanelController
 
 

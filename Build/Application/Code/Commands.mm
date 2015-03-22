@@ -139,7 +139,7 @@ once the application moves to Cocoa completely.
 	- (instancetype)
 	initWithCommand:(UInt32)_
 	andEventTarget:(EventTargetRef)_
-	andDelay:(Float32)_;
+	andDelay:(Float32)_ NS_DESIGNATED_INITIALIZER;
 
 // new methods
 	- (void)
@@ -181,7 +181,7 @@ with an NSMenuItem, via setRepresentedObject:.
 
 // initializers
 	- (instancetype)
-	initWithSession:(SessionRef)_;
+	initWithSession:(SessionRef)_ NS_DESIGNATED_INITIALIZER;
 
 @end //}
 
@@ -3667,6 +3667,7 @@ textSelectionExists ()
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation Commands_DelayedCommand
 
 
@@ -3719,6 +3720,7 @@ executeWithoutDelay
 @end // Commands_DelayedCommand
 
 
+#pragma mark -
 @implementation Commands_Executor
 
 
@@ -3921,6 +3923,7 @@ validateUserInterfaceItem:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 @end // Commands_Executor
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_ApplicationCoreEvents)
 
 
@@ -4139,6 +4142,7 @@ applicationWillTerminate:(NSNotification*)		aNotification
 @end // Commands_Executor (Commands_ApplicationCoreEvents)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_Capturing)
 
 
@@ -4254,6 +4258,7 @@ canPerformSaveSelection:(id <NSValidatedUserInterfaceItem>)		anItem
 @end // Commands_Executor (Commands_Capturing)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_Editing)
 
 
@@ -4619,6 +4624,7 @@ canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
 @end // Commands_Executor (Commands_Editing)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_OpeningSessions)
 
 
@@ -4927,6 +4933,7 @@ replyEvent:(NSAppleEventDescriptor*)			replyEvent
 @end // Commands_Executor (Commands_OpeningSessions)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_OpeningVectorGraphics)
 
 
@@ -4980,6 +4987,7 @@ canPerformPageClearToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 @end // Commands_Executor (Commands_OpeningVectorGraphics)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_OpeningWebPages)
 
 
@@ -5070,6 +5078,7 @@ canPerformProvideFeedback:(id <NSValidatedUserInterfaceItem>)	anItem
 @end // Commands_Executor (Commands_OpeningWebPages)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_ManagingMacros)
 
 
@@ -5253,6 +5262,7 @@ canPerformMacroSwitchNone:(id <NSValidatedUserInterfaceItem>)	anItem
 @end // Commands_Executor (Commands_ManagingMacros)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_ManagingTerminalEvents)
 
 
@@ -5391,6 +5401,7 @@ canPerformSetActivityHandlerSendKeepAliveOnIdle:(id <NSValidatedUserInterfaceIte
 @end // Commands_Executor (Commands_ManagingTerminalEvents)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_ManagingTerminalKeyMappings)
 
 
@@ -5661,6 +5672,7 @@ performTranslationSwitchDefault:(id)	sender
 @end // Commands_Executor (Commands_ManagingTerminalKeyMappings)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_ManagingTerminalSettings)
 
 
@@ -5841,6 +5853,7 @@ performTerminalCustomSetup:(id)		sender
 @end // Commands_Executor (Commands_ManagingTerminalSettings)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_ModifyingTerminalDimensions)
 
 
@@ -5911,6 +5924,7 @@ performScreenResizeWider:(id)	sender
 @end // Commands_Executor (Commands_ModifyingTerminalDimensions)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_ModifyingTerminalText)
 
 
@@ -6067,6 +6081,7 @@ performFormatTextSmaller:(id)	sender
 @end // Commands_Executor (Commands_ModifyingTerminalText)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_ModifyingWindows)
 
 /*!
@@ -6655,6 +6670,7 @@ canPerformShowHiddenWindows:(id <NSValidatedUserInterfaceItem>)		anItem
 @end // Commands_Executor (Commands_ModifyingWindows)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_Searching)
 
 
@@ -6829,6 +6845,7 @@ canPerformSendMenuItemText:(id <NSValidatedUserInterfaceItem>)	anItem
 @end // Commands_Executor (Commands_Searching)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_ShowingPanels)
 
 
@@ -7026,6 +7043,7 @@ canOrderFrontVT220Keypad:(id <NSValidatedUserInterfaceItem>)	anItem
 @end // Commands_ExecutionDelegate (Commands_ShowingPanels)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_SwitchingModes)
 
 
@@ -7105,6 +7123,7 @@ canToggleFullScreen:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 @end // Commands_Executor (Commands_SwitchingModes)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_SwitchingWindows)
 
 
@@ -7249,6 +7268,7 @@ canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 @end // Commands_Executor (Commands_SwitchingWindows)
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_TransitionFromCarbon)
 
 
@@ -7902,6 +7922,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 @end // Commands_Executor (Commands_TransitionFromCarbon)
 
 
+#pragma mark -
 @implementation Commands_ServiceProviders
 
 
@@ -8251,6 +8272,7 @@ error:(NSString**)			outError // NOTE: really is NSString**, not NSError** (unli
 @end // Commands_ServiceProviders
 
 
+#pragma mark -
 @implementation Commands_SessionWrap
 
 
@@ -8288,6 +8310,7 @@ dealloc
 @end // Commands_SessionWrap
 
 
+#pragma mark -
 @implementation Commands_Executor (Commands_ExecutorInternal)
 
 

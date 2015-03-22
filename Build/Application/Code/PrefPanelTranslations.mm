@@ -1385,6 +1385,7 @@ setDataBrowserColumnWidths	(My_TranslationsPanelUIPtr		inInterfacePtr)
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation PrefPanelTranslations_TableInfo
 
 
@@ -1441,6 +1442,7 @@ setEncodingType:(CFStringEncoding)		anEncoding
 @end // PrefPanelTranslations_TableInfo
 
 
+#pragma mark -
 @implementation PrefPanelTranslations_ViewManager
 
 
@@ -1962,6 +1964,7 @@ preferencesClass
 @end // PrefPanelTranslations_ViewManager
 
 
+#pragma mark -
 @implementation PrefPanelTranslations_ViewManager (PrefPanelTranslations_ViewManagerInternal)
 
 

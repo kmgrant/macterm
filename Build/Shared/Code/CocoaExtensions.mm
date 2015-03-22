@@ -38,6 +38,7 @@
 
 #pragma mark Public Methods
 
+#pragma mark -
 @implementation NSColor (CocoaExtensions_NSColor)
 
 
@@ -341,6 +342,7 @@ setAsForegroundInQDCurrentPort
 @end // NSColor (CocoaExtensions_NSColor)
 
 
+#pragma mark -
 @implementation NSInvocation (CocoaExtensions_NSInvocation)
 
 
@@ -373,6 +375,7 @@ target:(id)						aTarget
 @end // NSInvocation (CocoaExtensions_NSInvocation)
 
 
+#pragma mark -
 @implementation NSObject (CocoaExtensions_NSObject)
 
 
@@ -439,6 +442,7 @@ selectorToReturnKeyChangeAutoNotifyFlag:(SEL)	anAccessor
 @end // NSObject (CocoaExtensions_NSObject)
 
 
+#pragma mark -
 @implementation NSWindow (CocoaExtensions_NSWindow)
 
 

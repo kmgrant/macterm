@@ -2165,6 +2165,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation AlertMessages_ModalWindowController
 
 
@@ -2234,6 +2235,7 @@ windowDidLoad
 @end // AlertMessages_ModalWindowController
 
 
+#pragma mark -
 @implementation AlertMessages_NotificationWindowController
 
 
@@ -2320,6 +2322,7 @@ windowFrameAutosaveName
 @end // AlertMessages_NotificationWindowController
 
 
+#pragma mark -
 @implementation AlertMessages_WindowController
 
 
@@ -2839,6 +2842,7 @@ windowDidLoad
 @end // AlertMessages_WindowController
 
 
+#pragma mark -
 @implementation AlertMessages_WindowController (AlertMessages_WindowControllerInternal)
 
 

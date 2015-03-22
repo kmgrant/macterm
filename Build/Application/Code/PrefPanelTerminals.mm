@@ -3001,6 +3001,7 @@ compareDataBrowserItems		(HIViewRef					UNUSED_ARGUMENT(inDataBrowser),
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation PrefPanelTerminals_ViewManager
 
 
@@ -3046,6 +3047,7 @@ dealloc
 @end // PrefPanelTerminals_ViewManager
 
 
+#pragma mark -
 @implementation PrefPanelTerminals_BaseEmulatorValue
 
 
@@ -3117,6 +3119,7 @@ dealloc
 @end // PrefPanelTerminals_BaseEmulatorValue
 
 
+#pragma mark -
 @implementation PrefPanelTerminals_EmulationTweaksValue
 
 
@@ -3333,6 +3336,7 @@ setNilPreferenceValue
 @end // PrefPanelTerminals_EmulationTweaksValue
 
 
+#pragma mark -
 @implementation PrefPanelTerminals_EmulationViewManager
 
 
@@ -3710,6 +3714,7 @@ preferencesClass
 @end // PrefPanelTerminals_EmulationViewManager
 
 
+#pragma mark -
 @implementation PrefPanelTerminals_EmulationViewManager (PrefPanelTerminals_EmulationViewManagerInternal)
 
 
@@ -3733,6 +3738,7 @@ primaryDisplayBindingKeys
 @end // PrefPanelTerminals_EmulationViewManager (PrefPanelTerminals_EmulationViewManagerInternal)
 
 
+#pragma mark -
 @implementation PrefPanelTerminals_OptionsViewManager
 
 
@@ -4138,6 +4144,7 @@ preferencesClass
 @end // PrefPanelTerminals_OptionsViewManager
 
 
+#pragma mark -
 @implementation PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal)
 
 
@@ -4162,6 +4169,7 @@ primaryDisplayBindingKeys
 @end // PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal)
 
 
+#pragma mark -
 @implementation PrefPanelTerminals_ScrollbackValue
 
 
@@ -4456,6 +4464,7 @@ setNilPreferenceValue
 @end // PrefPanelTerminals_ScrollbackValue
 
 
+#pragma mark -
 @implementation PrefPanelTerminals_ScreenViewManager
 
 
@@ -4832,6 +4841,7 @@ preferencesClass
 @end // PrefPanelTerminals_ScreenViewManager
 
 
+#pragma mark -
 @implementation PrefPanelTerminals_ScreenViewManager (PrefPanelTerminals_ScreenViewManagerInternal)
 
 

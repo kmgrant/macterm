@@ -51,6 +51,7 @@ NSString*	kPrefsContextManager_ContextDidChangeNotification =
 
 #pragma mark Public Methods
 
+#pragma mark -
 @implementation PrefsContextManager_Object
 
 

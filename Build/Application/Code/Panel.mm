@@ -1105,6 +1105,7 @@ panelChanged	(PanelPtr		inPtr,
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation Panel_ViewManager
 
 

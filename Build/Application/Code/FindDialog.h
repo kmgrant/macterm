@@ -44,6 +44,9 @@
 #include <CoreServices/CoreServices.h>
 
 // application includes
+#ifdef __OBJC__
+#	include <CocoaFuture.objc++.h>
+#endif
 #include "TerminalWindowRef.typedef.h"
 
 
@@ -131,7 +134,7 @@ changes to an interface declared in a ".mm" file.
 	- (instancetype)
 	initForTerminalWindow:(TerminalWindowRef)_
 	responder:(id< FindDialog_ViewManagerChannel >)_
-	initialOptions:(FindDialog_Options)_;
+	initialOptions:(FindDialog_Options)_ NS_DESIGNATED_INITIALIZER;
 
 // new methods
 	- (NSView*)

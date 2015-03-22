@@ -35,6 +35,7 @@
 
 #pragma mark Public Methods
 
+#pragma mark -
 @implementation BoundName_Object
 
 

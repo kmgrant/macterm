@@ -102,6 +102,7 @@ The private class interface.
 
 #pragma mark Internal Methods
 
+#pragma mark -
 @implementation Popover_Window
 
 
@@ -756,6 +757,7 @@ windowDidResize:(NSNotification*)	aNotification
 @end // Popover_Window
 
 
+#pragma mark -
 @implementation Popover_Window (Popover_WindowInternal)
 
 

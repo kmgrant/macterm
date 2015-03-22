@@ -637,6 +637,7 @@ showHideInfoWindow	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation InfoWindow_SessionRow
 
 
@@ -785,6 +786,7 @@ forKey:(NSString*)	aKey
 @end // InfoWindow_SessionRow
 
 
+#pragma mark -
 @implementation InfoWindow_Controller
 
 
@@ -1174,6 +1176,7 @@ windowFrameAutosaveName
 @end // InfoWindow_Controller
 
 
+#pragma mark -
 @implementation InfoWindow_Controller (InfoWindow_ControllerInternal)
 
 

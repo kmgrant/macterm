@@ -29,6 +29,9 @@
 // Mac includes
 #import <Cocoa/Cocoa.h>
 
+// library includes
+#import <CocoaFuture.objc++.h>
+
 
 
 #pragma mark Types
@@ -47,7 +50,7 @@ instead of "description".
 
 // initializers
 	- (instancetype)
-	initWithBoundName:(NSString*)_;
+	initWithBoundName:(NSString*)_ NS_DESIGNATED_INITIALIZER;
 
 // accessors
 	- (NSString*)

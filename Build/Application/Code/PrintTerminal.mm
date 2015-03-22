@@ -334,6 +334,7 @@ returnNSFontForTerminalView		(TerminalViewRef	inView)
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation PrintTerminal_Job
 
 
@@ -415,6 +416,7 @@ jobFromRef:(PrintTerminal_JobRef)	ref
 @end // PrintTerminal_Job
 
 
+#pragma mark -
 @implementation PrintTerminal_PreviewPanelController
 
 

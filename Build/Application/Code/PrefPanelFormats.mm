@@ -3489,6 +3489,7 @@ setInheritanceCheckBox		(HIViewWrap		inCheckBox,
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation PrefPanelFormats_ViewManager
 
 
@@ -3533,6 +3534,7 @@ dealloc
 @end // PrefPanelFormats_ViewManager
 
 
+#pragma mark -
 @implementation PrefPanelFormats_CharacterWidthContent
 
 
@@ -3694,6 +3696,7 @@ setNilPreferenceValue
 @end // PrefPanelFormats_CharacterWidthContent
 
 
+#pragma mark -
 @implementation PrefPanelFormats_GeneralViewManager
 
 
@@ -4374,6 +4377,7 @@ preferencesClass
 @end // PrefPanelFormats_GeneralViewManager
 
 
+#pragma mark -
 @implementation PrefPanelFormats_GeneralViewManager (PrefPanelFormats_GeneralViewManagerInternal)
 
 
@@ -4518,6 +4522,7 @@ restrictedTag2:(Preferences_Tag)						inTagRestriction2
 @end // PrefPanelFormats_GeneralViewManager (PrefPanelFormats_GeneralViewManagerInternal)
 
 
+#pragma mark -
 @implementation PrefPanelFormats_StandardColorsViewManager
 
 
@@ -5154,6 +5159,7 @@ preferencesClass
 @end // PrefPanelFormats_StandardColorsViewManager
 
 
+#pragma mark -
 @implementation PrefPanelFormats_StandardColorsViewManager (PrefPanelFormats_StandardColorsViewManagerInternal)
 
 

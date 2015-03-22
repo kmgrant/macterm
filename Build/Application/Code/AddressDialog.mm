@@ -40,6 +40,7 @@
 #import <AutoPool.objc++.h>
 #import <BoundName.objc++.h>
 #import <Console.h>
+#import <CocoaFuture.objc++.h>
 
 // application includes
 #import "Network.h"
@@ -57,7 +58,7 @@ losing less user-friendly information about each address.
 
 // initializers
 	- (instancetype)
-	initWithDescription:(NSString*)_;
+	initWithDescription:(NSString*)_ NS_DESIGNATED_INITIALIZER;
 
 @end //}
 
@@ -84,6 +85,7 @@ AddressDialog_Display ()
 #pragma mark Internal Methods
 
 
+#pragma mark -
 @implementation AddressDialog_Address
 
 
@@ -106,6 +108,7 @@ initWithDescription:(NSString*)		aString
 @end // AddressDialog_Address
 
 
+#pragma mark -
 @implementation AddressDialog_AddressArrayController
 
 
@@ -152,6 +155,7 @@ toPasteboard:(NSPasteboard*)		inoutPasteboard
 @end // AddressDialog_AddressArrayController
 
 
+#pragma mark -
 @implementation AddressDialog_PanelController
 
 

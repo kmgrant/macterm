@@ -273,6 +273,7 @@ receiveNewSystemUIMode	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 } // anonymous namespace
 
 
+#pragma mark -
 @implementation NSToolbar (TerminalToolbar_NSToolbarExtensions)
 
 
@@ -319,6 +320,7 @@ terminalToolbarSession
 @end // NSToolbar (TerminalToolbar_NSToolbarExtensions)
 
 
+#pragma mark -
 @implementation TerminalToolbar_Delegate
 
 
@@ -551,6 +553,7 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 @end // TerminalToolbar_Delegate
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemBell
 
 
@@ -661,6 +664,7 @@ didChangeSession
 @end // TerminalToolbar_ItemBell
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemBell (TerminalToolbar_ItemBellInternal)
 
 
@@ -725,6 +729,7 @@ setStateFromScreen:(TerminalScreenRef)		aScreen
 @end // TerminalToolbar_ItemBell (TerminalToolbar_ItemBellInternal)
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemCustomize
 
 
@@ -779,6 +784,7 @@ performToolbarItemAction:(id)	sender
 @end // TerminalToolbar_ItemCustomize
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemForceQuit
 
 
@@ -895,6 +901,7 @@ didChangeSession
 @end // TerminalToolbar_ItemForceQuit
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemForceQuit (TerminalToolbar_ItemForceQuitInternal)
 
 
@@ -957,6 +964,7 @@ setStateFromSession:(SessionRef)	aSession
 @end // TerminalToolbar_ItemForceQuit (TerminalToolbar_ItemForceQuitInternal)
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemFullScreen
 
 
@@ -1031,6 +1039,7 @@ validateToolbarItem:(NSToolbarItem*)	anItem
 @end // TerminalToolbar_ItemFullScreen
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemHide
 
 
@@ -1084,6 +1093,7 @@ performToolbarItemAction:(id)	sender
 @end // TerminalToolbar_ItemHide
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemLED1
 
 
@@ -1136,6 +1146,7 @@ performToolbarItemAction:(id)	sender
 @end // TerminalToolbar_ItemLED1
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemLED2
 
 
@@ -1188,6 +1199,7 @@ performToolbarItemAction:(id)	sender
 @end // TerminalToolbar_ItemLED2
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemLED3
 
 
@@ -1240,6 +1252,7 @@ performToolbarItemAction:(id)	sender
 @end // TerminalToolbar_ItemLED3
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemLED4
 
 
@@ -1292,6 +1305,7 @@ performToolbarItemAction:(id)	sender
 @end // TerminalToolbar_ItemLED4
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemNewSessionDefaultFavorite
 
 
@@ -1345,6 +1359,7 @@ performToolbarItemAction:(id)	sender
 @end // TerminalToolbar_ItemNewSessionDefaultFavorite
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemNewSessionLogInShell
 
 
@@ -1398,6 +1413,7 @@ performToolbarItemAction:(id)	sender
 @end // TerminalToolbar_ItemNewSessionLogInShell
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemNewSessionShell
 
 
@@ -1451,6 +1467,7 @@ performToolbarItemAction:(id)	sender
 @end // TerminalToolbar_ItemNewSessionShell
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemPrint
 
 
@@ -1504,6 +1521,7 @@ performToolbarItemAction:(id)	sender
 @end // TerminalToolbar_ItemPrint
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemStackWindows
 
 
@@ -1577,6 +1595,7 @@ validateToolbarItem:(NSToolbarItem*)	anItem
 @end // TerminalToolbar_ItemStackWindows
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemSuspend
 
 
@@ -1686,6 +1705,7 @@ didChangeSession
 @end // TerminalToolbar_ItemSuspend
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemSuspend (TerminalToolbar_ItemSuspendInternal)
 
 
@@ -1748,6 +1768,7 @@ setStateFromSession:(SessionRef)	aSession
 @end // TerminalToolbar_ItemSuspend (TerminalToolbar_ItemSuspendInternal)
 
 
+#pragma mark -
 @implementation TerminalToolbar_LEDItem
 
 
@@ -1842,6 +1863,7 @@ didChangeSession
 @end // TerminalToolbar_LEDItem
 
 
+#pragma mark -
 @implementation TerminalToolbar_LEDItem (TerminalToolbar_LEDItemInternal)
 
 
@@ -1906,6 +1928,7 @@ setStateFromScreen:(TerminalScreenRef)		aScreen
 @end // TerminalToolbar_LEDItem (TerminalToolbar_LEDItemInternal)
 
 
+#pragma mark -
 @implementation TerminalToolbar_TabSource
 
 
@@ -1982,6 +2005,7 @@ toolTip
 @end // TerminalToolbar_TabSource
 
 
+#pragma mark -
 @implementation TerminalToolbar_ItemTabs
 
 
@@ -2170,6 +2194,7 @@ andAction:(SEL)				aSelector
 @end // TerminalToolbar_ItemTabs
 
 
+#pragma mark -
 @implementation TerminalToolbar_Object
 
 
@@ -2264,6 +2289,7 @@ setVisible:(BOOL)	isVisible
 @end // TerminalToolbar_Object
 
 
+#pragma mark -
 @implementation TerminalToolbar_SessionDependentItem
 
 
@@ -2469,6 +2495,7 @@ validateToolbarItem:(NSToolbarItem*)	anItem
 @end // TerminalToolbar_SessionDependentItem
 
 
+#pragma mark -
 @implementation TerminalToolbar_Window
 
 
@@ -2683,6 +2710,7 @@ animate:(BOOL)		animateFlag
 @end // TerminalToolbar_Window
 
 
+#pragma mark -
 @implementation TerminalToolbar_Window (TerminalToolbar_WindowInternal)
 
 

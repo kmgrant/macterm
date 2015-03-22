@@ -556,6 +556,7 @@ getCurrentSession ()
 }// anonymous namespace
 
 
+#pragma mark -
 @implementation Keypads_ArrangeWindowPanelController
 
 
@@ -701,6 +702,7 @@ andY:(int)			y // this is flipped to be measured from the top
 @end // Keypads_ArrangeWindowPanelController
 
 
+#pragma mark -
 @implementation Keypads_PanelController
 
 
@@ -908,6 +910,7 @@ sendKey:(UInt8)		inKey
 @end // Keypads_PanelController
 
 
+#pragma mark -
 @implementation Keypads_ControlKeysPanelController
 
 
@@ -1413,6 +1416,7 @@ windowFrameAutosaveName
 @end // Keypads_ControlKeysPanelController
 
 
+#pragma mark -
 @implementation Keypads_FullScreenPanelController
 
 
@@ -1483,6 +1487,7 @@ windowFrameAutosaveName
 @end // Keypads_FullScreenPanelController
 
 
+#pragma mark -
 @implementation Keypads_FunctionKeysPanelController
 
 
@@ -2901,6 +2906,7 @@ windowFrameAutosaveName
 @end // Keypads_FunctionKeysPanelController
 
 
+#pragma mark -
 @implementation Keypads_VT220KeysPanelController
 
 
