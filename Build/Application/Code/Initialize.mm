@@ -129,9 +129,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	// initialize memory manager, start up toolbox managers, etc.
 	initMacOSToolbox();
 	
-	// on Mac OS X the following call also stops the bouncing of the Dock icon
-	//FlushEvents(everyEvent/* events to flush */, 0/* events to not flush */);
-	
 	initApplicationCore();
 	
 #ifndef NDEBUG
@@ -407,8 +404,6 @@ tests are done in initApplicationCore()...
 void
 initMacOSToolbox ()
 {
-	InitCursor();
-	
 	// initialization of the Alert module must be done here, otherwise startup error alerts can’t be displayed
 	Alert_Init();
 	

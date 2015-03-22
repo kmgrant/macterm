@@ -1111,31 +1111,6 @@ SetControlNumericalTitle	(ControlRef		inControl,
 
 
 /*!
-To set a static text or editable text control’s
-text contents to represent the specified four-
-character code, use this method.
-
-Use DrawOneControl() to update the control to
-reflect the change.
-
-(3.0)
-*/
-void
-SetControlOSTypeText	(ControlRef		inControl,
-						 OSType			inType)
-{
-	Str15		typeString;
-	
-	
-	typeString[0] = 4;
-	BlockMoveData(&inType, &typeString[1], sizeof(OSType));
-	UNUSED_RETURN(OSStatus)SetControlData(inControl, kControlEditTextPart, kControlEditTextTextTag,
-											PLstrlen(typeString) * sizeof(UInt8),
-											typeString + 1/* length byte is skipped */);
-}// SetControlOSTypeText
-
-
-/*!
 This method uses the SetControlData() API to
 change the text of an editable text control.
 
@@ -1387,55 +1362,5 @@ TextFontByName		(ConstStringPtr		inFontName)
 		TextFont(fontID);
 	}
 }// TextFontByName
-
-
-/*!
-This is a standard ControlKeyFilterUPP that will
-prevent any characters invalid in a Unix command line
-from being typed into a text field.
-
-(3.1)
-*/
-ControlKeyFilterResult
-UnixCommandLineLimiter	(ControlRef			UNUSED_ARGUMENT(inControl),
-						 SInt16*			inKeyCode,
-						 SInt16*			UNUSED_ARGUMENT(inCharCode),
-						 EventModifiers*	UNUSED_ARGUMENT(inModifiers))
-{
-	ControlKeyFilterResult  result = kControlKeyFilterPassKey;
-	
-	
-	// make sure that any arrow or delete key press is allowed
-	if ((*inKeyCode != 0x3B/* left arrow */) &&
-		(*inKeyCode != 0x7B/* left arrow */) &&
-		(*inKeyCode != 0x3E/* up arrow */) &&
-		(*inKeyCode != 0x7E/* up arrow */) &&
-		(*inKeyCode != 0x3C/* right arrow */) &&
-		(*inKeyCode != 0x7C/* right arrow */) &&
-		(*inKeyCode != 0x3D/* down arrow */) &&
-		(*inKeyCode != 0x7D/* down arrow */) &&
-		(*inKeyCode != 0x33/* delete */) &&
-		(*inKeyCode != 0x75/* del */))
-	{
-		; // UNIMPLEMENTED
-	}
-	
-	return result;
-}// UnixCommandLineLimiter
-
-
-/*!
-Returns a key filter UPP for UnixCommandLineLimiter().
-
-(3.1)
-*/
-ControlKeyFilterUPP
-UnixCommandLineLimiterKeyFilterUPP ()
-{
-	static ControlKeyFilterUPP		result = NewControlKeyFilterUPP(UnixCommandLineLimiter);
-	
-	
-	return result;
-}// UnixCommandLineLimiterKeyFilterUPP
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

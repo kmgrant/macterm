@@ -55,6 +55,7 @@
 #import "Console.h"
 #import "ConstantsRegistry.h"
 #import "HelpSystem.h"
+#import "SoundSystem.h"
 #import "Terminal.h"
 #import "TerminalView.h"
 
@@ -119,14 +120,28 @@ PrintTerminal_NewJobFromFile	(CFURLRef			inFile,
 	CFRetainRelease			selectedText(TerminalView_ReturnSelectedTextCopyAsUnicode
 											(inView, 0/* space/tab conversion, or zero */, 0/* flags */),
 											true/* is retained */);
+	NSError*				error = nil;
+	NSString*				printFileString = [NSString stringWithContentsOfURL:BRIDGE_CAST(inFile, NSURL*)
+																				encoding:NSUTF8StringEncoding
+																				error:&error];
 	PrintTerminal_JobRef	result = nullptr;
 	
 	
-	result = REINTERPRET_CAST([[PrintTerminal_Job alloc] initWithString:[NSString stringWithContentsOfURL:BRIDGE_CAST(inFile, NSURL*)]
-																		andFont:returnNSFontForTerminalView(inView)
-																		andTitle:BRIDGE_CAST(inJobName, NSString*)
-																		andLandscape:((inDefaultToLandscape) ? YES : NO)],
-								PrintTerminal_JobRef);
+	if (nil != error)
+	{
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteValueCFString, "failed to read string from temporary printing file, error",
+						BRIDGE_CAST([error localizedDescription], CFStringRef));
+	}
+	else
+	{
+		result = REINTERPRET_CAST([[PrintTerminal_Job alloc] initWithString:printFileString
+																			andFont:returnNSFontForTerminalView(inView)
+																			andTitle:BRIDGE_CAST(inJobName, NSString*)
+																			andLandscape:((inDefaultToLandscape) ? YES : NO)],
+									PrintTerminal_JobRef);
+	}
+	
 	return result;
 }// NewJobFromFile
 

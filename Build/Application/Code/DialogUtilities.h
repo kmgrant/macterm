@@ -131,10 +131,6 @@ void
 											 SInt32					inNumber);
 
 void
-	SetControlOSTypeText					(ControlRef				inControl,
-											 OSType					inType);
-
-void
 	SetControlText							(ControlRef				inControl,
 											 ConstStringPtr			inText);
 
@@ -163,15 +159,6 @@ HIViewWrap&
 
 void
 	TextFontByName							(ConstStringPtr			inFontName);
-
-ControlKeyFilterResult
-	UnixCommandLineLimiter					(ControlRef				inControl,
-											 SInt16*				inKeyCode,
-											 SInt16*				inCharCode,
-											 EventModifiers*		inModifiers);
-
-ControlKeyFilterUPP
-	UnixCommandLineLimiterKeyFilterUPP		();
 
 
 

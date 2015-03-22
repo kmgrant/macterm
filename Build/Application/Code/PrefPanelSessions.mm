@@ -3005,8 +3005,7 @@ _numberOfTerminalItemsAdded		(0),
 _numberOfTranslationItemsAdded	(0),
 _serverBrowser					(nullptr),
 _fieldCommandLine				(HIViewWrap(idMyFieldCommandLine, inOwningWindow)
-									<< HIViewWrap_AssertExists
-									<< HIViewWrap_InstallKeyFilter(UnixCommandLineLimiter)),
+									<< HIViewWrap_AssertExists),
 _containerResizer				(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
 									My_SessionsPanelResourceUI::deltaSize, this/* context */),
 _buttonCommandsHandler			(GetWindowEventTarget(inOwningWindow), receiveHICommand,
