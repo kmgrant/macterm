@@ -419,9 +419,6 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 void*					UNUSED_ARGUMENT(inEventContextPtr),
 					 void*					UNUSED_ARGUMENT(inListenerContextPtr))
 {
-	size_t	actualSize = 0L;
-	
-	
 	switch (inPreferenceTagThatChanged)
 	{
 	case kPreferences_TagBellSound:
@@ -433,7 +430,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			// system alert sound if the returned string is either unavailable or empty
 			if (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagBellSound, sizeof(soundNameCFString),
-									&soundNameCFString, &actualSize))
+									&soundNameCFString))
 			{
 				// see "Preferences.h"; the value "off" has special meaning
 				if (kCFCompareEqualTo == CFStringCompare(soundNameCFString, CFSTR("off"), kCFCompareCaseInsensitive))

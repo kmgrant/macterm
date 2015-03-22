@@ -2951,13 +2951,10 @@ Session_SetState	(SessionRef			inRef,
 	// which this flag may be overridden)
 	if (kSession_StateDead == inNewState)
 	{
-		size_t		actualSize = 0L;
-		
-		
 		// get the user’s process service preference, if possible
-		unless (Preferences_GetData(kPreferences_TagDontAutoClose,
-									sizeof(keepWindowOpen), &keepWindowOpen,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagDontAutoClose,
+									sizeof(keepWindowOpen), &keepWindowOpen))
 		{
 			keepWindowOpen = false; // assume window should be closed, if preference can’t be found
 		}
@@ -5166,7 +5163,6 @@ Session_UserInputPaste	(SessionRef			inRef,
 	{
 		Boolean		isOneLine = false;
 		Boolean		noWarning = false;
-		size_t		actualSize = 0;
 		
 		
 		// examine the Clipboard; if the data contains new-lines, warn the user
@@ -5178,7 +5174,7 @@ Session_UserInputPaste	(SessionRef			inRef,
 		// determine if the user should be warned
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagNoPasteWarning,
-									sizeof(noWarning), &noWarning, &actualSize))
+									sizeof(noWarning), &noWarning))
 		{
 			noWarning = false; // assume a value, if preference can’t be found
 		}
@@ -7424,13 +7420,12 @@ pasteWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 				// first time; create the timer
 				OSStatus			error = noErr;
 				Preferences_Result	prefsResult = kPreferences_ResultOK;
-				size_t				actualSize = 0L;
 				EventTime			delayValue = 0;
 				
 				
 				// determine how long the delay between lines should be
 				prefsResult = Preferences_GetData(kPreferences_TagPasteNewLineDelay, sizeof(delayValue),
-													&delayValue, &actualSize);
+													&delayValue);
 				if (kPreferences_ResultOK != prefsResult)
 				{
 					// set an arbitrary default value
@@ -7486,7 +7481,6 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	Preferences_ContextRef	prefsContext = REINTERPRET_CAST(inPreferencesContext, Preferences_ContextRef);
 	SessionRef				ref = REINTERPRET_CAST(inListenerContextPtr, SessionRef);
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
-	size_t					actualSize = 0L;
 	
 	
 	switch (inPreferenceTagThatChanged)
@@ -7496,7 +7490,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagCursorBlinks,
 									sizeof(ptr->preferencesCache.cursorFlashes),
-									&ptr->preferencesCache.cursorFlashes, &actualSize))
+									&ptr->preferencesCache.cursorFlashes))
 		{
 			ptr->preferencesCache.cursorFlashes = true; // assume a value, if preference can’t be found
 		}
@@ -7510,7 +7504,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			unless (kPreferences_ResultOK ==
 					Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode,
-										sizeof(useCustomMethod), &useCustomMethod, &actualSize))
+										sizeof(useCustomMethod), &useCustomMethod))
 			{
 				useCustomMethod = false; // assume a value, if preference can’t be found
 			}
@@ -7524,7 +7518,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagMapBackquote,
 									sizeof(ptr->preferencesCache.remapBackquoteToEscape),
-									&ptr->preferencesCache.remapBackquoteToEscape, &actualSize))
+									&ptr->preferencesCache.remapBackquoteToEscape))
 		{
 			ptr->preferencesCache.remapBackquoteToEscape = false; // assume a value, if preference can’t be found
 		}
@@ -7783,7 +7777,6 @@ receiveTerminalViewEntered		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 	assert(kEventKind == kEventControlTrackingAreaEntered);
 	{
 		Boolean		focusFollowsMouse = false;
-		size_t		actualSize = 0L;
 		
 		
 		// do not change focus unless the preference is set;
@@ -7791,9 +7784,9 @@ receiveTerminalViewEntered		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 		// the alternative would be to update preferenceChanged() to
 		// monitor changes to the preference and add/remove the
 		// tracking handler as appropriate
-		unless (Preferences_GetData(kPreferences_TagFocusFollowsMouse, sizeof(focusFollowsMouse),
-									&focusFollowsMouse, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagFocusFollowsMouse, sizeof(focusFollowsMouse),
+									&focusFollowsMouse))
 		{
 			focusFollowsMouse = false; // assume a value, if preference can’t be found
 		}
@@ -8309,13 +8302,12 @@ sessionDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			{
 				Session_Result		pasteResult = kSession_ResultOK;
 				Boolean				cursorMovesPriorToDrops = false;
-				size_t				actualSize = 0L;
 				
 				
 				// if the user preference is set, first move the cursor to the drop location
-				unless (Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops,
-											sizeof(cursorMovesPriorToDrops), &cursorMovesPriorToDrops,
-											&actualSize) == kPreferences_ResultOK)
+				unless (kPreferences_ResultOK ==
+						Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops,
+											sizeof(cursorMovesPriorToDrops), &cursorMovesPriorToDrops))
 				{
 					cursorMovesPriorToDrops = false; // assume a value, if a preference can’t be found
 				}
@@ -9057,12 +9049,11 @@ watchTimerResetForSession	(My_SessionPtr	inPtr,
 	if (kSession_WatchForKeepAlive == inWatchType)
 	{
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
-		size_t				actualSize = 0L;
 		UInt16				intValue = 0;
 		
 		
 		prefsResult = Preferences_GetData(kPreferences_TagKeepAlivePeriodInMinutes, sizeof(intValue),
-											&intValue, &actualSize);
+											&intValue);
 		if (kPreferences_ResultOK != prefsResult)
 		{
 			// set an arbitrary default value
@@ -9084,12 +9075,11 @@ watchTimerResetForSession	(My_SessionPtr	inPtr,
 	else if (kSession_WatchForInactivity == inWatchType)
 	{
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
-		size_t				actualSize = 0L;
 		UInt16				intValue = 0;
 		
 		
 		prefsResult = Preferences_GetData(kPreferences_TagIdleAfterInactivityInSeconds, sizeof(intValue),
-											&intValue, &actualSize);
+											&intValue);
 		if (kPreferences_ResultOK != prefsResult)
 		{
 			// set an arbitrary default value

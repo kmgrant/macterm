@@ -2890,12 +2890,11 @@ windowDidResignKey:(NSNotification*)	aNotification
 	unless (self->isDisplayingSheet)
 	{
 		Float32		fadeAlpha = 1.0;
-		size_t		actualSize = 0;
 		
 		
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagFadeAlpha,
-				sizeof(fadeAlpha), &fadeAlpha, &actualSize))
+				sizeof(fadeAlpha), &fadeAlpha))
 		{
 			fadeAlpha = 1.0; // assume a value, if preference can’t be found
 		}

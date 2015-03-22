@@ -186,13 +186,12 @@ InfoWindow_Init	()
 	// otherwise, wait until it is requested by the user
 	{
 		Boolean		windowIsVisible = false;
-		size_t		actualSize = 0L;
 		
 		
 		// get visibility preference for the Clipboard
-		unless (Preferences_GetData(kPreferences_TagWasSessionInfoShowing,
-									sizeof(windowIsVisible), &windowIsVisible,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagWasSessionInfoShowing,
+									sizeof(windowIsVisible), &windowIsVisible))
 		{
 			windowIsVisible = false; // assume invisible if the preference can’t be found
 		}

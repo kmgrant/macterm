@@ -283,7 +283,6 @@ const
 	HIViewRef					result = nullptr;
 	std::vector< HIViewRef >	viewList;
 	Rect						idealContainerBounds;
-	size_t						actualSize = 0;
 	OSStatus					error = noErr;
 	
 	
@@ -329,7 +328,7 @@ const
 		
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagKioskShowsMenuBar, sizeof(showMenuBar),
-									&showMenuBar, &actualSize))
+									&showMenuBar))
 		{
 			showMenuBar = false; // assume a default, if preference can’t be found
 		}
@@ -341,7 +340,7 @@ const
 		
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(showScrollBar),
-									&showScrollBar, &actualSize))
+									&showScrollBar))
 		{
 			showScrollBar = false; // assume a default, if preference can’t be found
 		}
@@ -353,7 +352,7 @@ const
 		
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagKioskShowsWindowFrame, sizeof(showWindowFrame),
-									&showWindowFrame, &actualSize))
+									&showWindowFrame))
 		{
 			showWindowFrame = true; // assume a default, if preference can’t be found
 		}
@@ -365,7 +364,7 @@ const
 		
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
-									&allowForceQuit, &actualSize))
+									&allowForceQuit))
 		{
 			allowForceQuit = false; // assume a default, if preference can’t be found
 		}
@@ -377,7 +376,7 @@ const
 		
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(noSystemFullScreenStyle),
-									&noSystemFullScreenStyle, &actualSize))
+									&noSystemFullScreenStyle))
 		{
 			noSystemFullScreenStyle = false; // assume a default, if preference can’t be found
 		}
@@ -394,7 +393,7 @@ const
 		
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagKioskShowsOffSwitch, sizeof(showOffSwitch),
-									&showOffSwitch, &actualSize))
+									&showOffSwitch))
 		{
 			showOffSwitch = false; // assume a default, if preference can’t be found
 		}

@@ -72,12 +72,11 @@ void
 CommandLine_Init ()
 {
 	Boolean		windowIsVisible = false;
-	size_t		actualSize = 0L;
 	
 	
-	unless (Preferences_GetData(kPreferences_TagWasCommandLineShowing,
-								sizeof(windowIsVisible), &windowIsVisible,
-								&actualSize) == kPreferences_ResultOK)
+	unless (kPreferences_ResultOK ==
+			Preferences_GetData(kPreferences_TagWasCommandLineShowing,
+								sizeof(windowIsVisible), &windowIsVisible))
 	{
 		windowIsVisible = false; // assume invisible if the preference can’t be found
 	}

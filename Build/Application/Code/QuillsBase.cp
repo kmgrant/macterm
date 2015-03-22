@@ -208,12 +208,11 @@ void
 Base::_version_warning ()
 {
 	Boolean		noUpdateWarning = false;
-	size_t		actualSize = 0;
 	
 	
 	unless (kPreferences_ResultOK ==
 			Preferences_GetData(kPreferences_TagNoUpdateWarning,
-								sizeof(noUpdateWarning), &noUpdateWarning, &actualSize))
+								sizeof(noUpdateWarning), &noUpdateWarning))
 	{
 		noUpdateWarning = false; // assume a value, if preference can’t be found
 	}

@@ -144,7 +144,6 @@ Keypads_SetArrangeWindowPanelBinding	(Preferences_Tag			inWindowBindingOrZero,
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	Preferences_ContextRef	newContext = inContextOrNull;
-	size_t					actualSize = 0;
 	UInt16 const			kDefaultX = 128; // arbitrary
 	UInt16 const			kDefaultY = 128; // arbitrary
 	
@@ -180,7 +179,7 @@ Keypads_SetArrangeWindowPanelBinding	(Preferences_Tag			inWindowBindingOrZero,
 		{
 			prefsResult = Preferences_ContextGetData(gArrangeWindowBindingContext, gArrangeWindowBinding,
 														sizeof(gArrangeWindowStackingOrigin), &gArrangeWindowStackingOrigin,
-														false/* search defaults */, &actualSize);
+														false/* search defaults */);
 			if (kPreferences_ResultOK != prefsResult)
 			{
 				SetPt(&gArrangeWindowStackingOrigin, kDefaultX, kDefaultY); // assume a default, if preference can’t be found
@@ -192,7 +191,7 @@ Keypads_SetArrangeWindowPanelBinding	(Preferences_Tag			inWindowBindingOrZero,
 			
 			
 			prefsResult = Preferences_ContextGetData(gArrangeWindowBindingContext, gArrangeWindowBinding,
-														sizeof(prefValue), &prefValue, false/* search defaults */, &actualSize);
+														sizeof(prefValue), &prefValue, false/* search defaults */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				gArrangeWindowStackingOrigin.h = prefValue.origin.x;

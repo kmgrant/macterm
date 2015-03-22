@@ -206,13 +206,12 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		// for the application delegate, in "Commands.mm")
 		{
 			Boolean		quellAutoNew = false;
-			size_t		actualSize = 0L;
 			
 			
 			// get the user’s “don’t auto-new” application preference, if possible
 			if (kPreferences_ResultOK !=
 				Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(quellAutoNew),
-									&quellAutoNew, &actualSize))
+									&quellAutoNew))
 			{
 				// assume a value if it cannot be found
 				quellAutoNew = false;
@@ -363,12 +362,11 @@ initApplicationCore ()
 	// set up notification info
 	{
 		UInt16		notificationPreferences = kAlert_NotifyDisplayDiamondMark;
-		size_t		actualSize = 0L;
 		
 		
-		unless (Preferences_GetData(kPreferences_TagNotification, sizeof(notificationPreferences),
-									&notificationPreferences, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNotification, sizeof(notificationPreferences),
+									&notificationPreferences))
 		{
 			notificationPreferences = kAlert_NotifyDisplayDiamondMark; // assume default, if preference can’t be found
 		}

@@ -607,7 +607,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		// IMPORTANT: the tags read here should be in sync with those
 		// returned by PrefPanelTranslations_NewTagSet()
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		size_t					actualSize = 0;
 		
 		
 		// select character set
@@ -625,7 +624,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagBackupFontName, sizeof(fontName),
-														&fontName, true/* search defaults too */, &actualSize);
+														&fontName, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setFontName(fontName);
@@ -1218,13 +1217,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					FontSelectionQDStyle	fontInfo;
 					CFStringRef				fontName = nullptr;
 					Boolean					releaseFontName = true;
-					size_t					actualSize = 0;
 					Preferences_Result		prefsResult = kPreferences_ResultOK;
 					
 					
 					prefsResult = Preferences_ContextGetData(panelDataPtr->_dataModel, kPreferences_TagBackupFontName,
-																sizeof(fontName), &fontName, false/* search defaults too */,
-																&actualSize);
+																sizeof(fontName), &fontName, false/* search defaults too */);
 					if (kPreferences_ResultOK != prefsResult)
 					{
 						// not found; set an arbitrary default

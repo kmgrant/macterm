@@ -137,7 +137,6 @@ MacroManager_AddContextualMenuGroup		(NSMenu*					inoutContextualMenu,
 												? gCurrentMacroSet()
 												: inMacroSetOrNullForActiveSet;
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		size_t					actualSize = 0;
 		MacroManager_Action		actionType = kMacroManager_ActionSendTextVerbatim;
 		CFStringRef				contentsCFString = nullptr;
 		CFStringRef				nameCFString = nullptr;
@@ -157,13 +156,13 @@ MacroManager_AddContextualMenuGroup		(NSMenu*					inoutContextualMenu,
 			// retrieve action
 			prefsResult = Preferences_ContextGetData
 							(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i),
-								sizeof(actionType), &actionType, false/* search defaults too */, &actualSize);
+								sizeof(actionType), &actionType, false/* search defaults too */);
 			if ((kPreferences_ResultOK == prefsResult) && (kMacroManager_ActionSendTextProcessingEscapes == actionType))
 			{
 				// retrieve contents
 				prefsResult = Preferences_ContextGetData
 								(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, i),
-									sizeof(contentsCFString), &contentsCFString, false/* search defaults too */, &actualSize);
+									sizeof(contentsCFString), &contentsCFString, false/* search defaults too */);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					NSString*	contentsNSString = BRIDGE_CAST(contentsCFString, NSString*);
@@ -179,7 +178,7 @@ MacroManager_AddContextualMenuGroup		(NSMenu*					inoutContextualMenu,
 						// retrieve name
 						prefsResult = Preferences_ContextGetData
 										(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, i),
-											sizeof(nameCFString), &nameCFString, false/* search defaults too */, &actualSize);
+											sizeof(nameCFString), &nameCFString, false/* search defaults too */);
 						if (kPreferences_ResultOK == prefsResult)
 						{
 							newItem = [[NSMenuItem alloc] initWithTitle:BRIDGE_CAST(nameCFString, NSString*)
@@ -364,13 +363,12 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 	CFStringRef				nameCFString = nullptr;
 	MacroManager_KeyID		macroKeyID = 0;
 	UInt32					modifiers = 0;
-	size_t					actualSize = 0;
 	
 	
 	// retrieve name
 	prefsResult = Preferences_ContextGetData
 					(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, inOneBasedMacroIndex),
-						sizeof(nameCFString), &nameCFString, false/* search defaults too */, &actualSize);
+						sizeof(nameCFString), &nameCFString, false/* search defaults too */);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		[inMenuItem setTitle:(NSString*)nameCFString];
@@ -388,7 +386,7 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 	// retrieve key code
 	prefsResult = Preferences_ContextGetData
 					(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, inOneBasedMacroIndex),
-						sizeof(macroKeyID), &macroKeyID, false/* search defaults too */, &actualSize);
+						sizeof(macroKeyID), &macroKeyID, false/* search defaults too */);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		UInt16 const	kKeyCode = MacroManager_KeyIDKeyCode(macroKeyID);
@@ -413,7 +411,7 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 	prefsResult = Preferences_ContextGetData
 					(prefsContext,
 						Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, inOneBasedMacroIndex),
-						sizeof(modifiers), &modifiers, false/* search defaults too */, &actualSize);
+						sizeof(modifiers), &modifiers, false/* search defaults too */);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		unsigned int	abbreviatedModifiers = 0;
@@ -469,7 +467,6 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 	if ((nullptr != context) && (nullptr != session))
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		size_t					actualSize = 0;
 		CFStringRef				actionCFString = nullptr;
 		Session_EventKeys		sessionEventKeys = Session_ReturnEventKeys(session);
 		MacroManager_Action		actionPerformed = kMacroManager_ActionSendTextProcessingEscapes;
@@ -481,13 +478,13 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 		// only on a cached array at this point
 		prefsResult = Preferences_ContextGetData
 						(context, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, inZeroBasedMacroIndex + 1),
-							sizeof(actionPerformed), &actionPerformed, true/* search defaults too */, &actualSize);
+							sizeof(actionPerformed), &actionPerformed, true/* search defaults too */);
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			// retrieve action text
 			prefsResult = Preferences_ContextGetData
 							(context, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, inZeroBasedMacroIndex + 1),
-								sizeof(actionCFString), &actionCFString, true/* search defaults too */, &actualSize);
+								sizeof(actionCFString), &actionCFString, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				switch (actionPerformed)

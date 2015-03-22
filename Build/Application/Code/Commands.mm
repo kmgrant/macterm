@@ -783,13 +783,12 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandKillProcessesKeepWindow:
 			{
 				Boolean		allowForceQuit = true;
-				size_t		actualSize = 0;
 				
 				
 				// in Full Screen mode, this command might not always be allowed
 				if (kPreferences_ResultOK !=
 					Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
-										&allowForceQuit, &actualSize))
+										&allowForceQuit))
 				{
 					allowForceQuit = true; // assume a value if the preference cannot be found
 				}
@@ -808,13 +807,12 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandRestartSession:
 			{
 				Boolean		allowForceQuit = true;
-				size_t		actualSize = 0;
 				
 				
 				// in Full Screen mode, this command might not always be allowed
 				if (kPreferences_ResultOK !=
 					Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
-										&allowForceQuit, &actualSize))
+										&allowForceQuit))
 				{
 					allowForceQuit = true; // assume a value if the preference cannot be found
 				}
@@ -1420,13 +1418,11 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandToggleMacrosMenuVisibility:
 			{
 				Preferences_Result		preferencesResult = kPreferences_ResultOK;
-				size_t					actualSize = 0;
 				Boolean					isVisible = false;
 				
 				
 				preferencesResult = Preferences_GetData(kPreferences_TagMacrosMenuVisible,
-														sizeof(isVisible), &isVisible,
-														&actualSize);
+														sizeof(isVisible), &isVisible);
 				unless (preferencesResult == kPreferences_ResultOK)
 				{
 					isVisible = false; // assume a value, if preference can’t be found
@@ -2640,7 +2636,6 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 void*					UNUSED_ARGUMENT(inListenerContextPtr))
 {
 	//Preferences_ChangeContext*	contextPtr = REINTERPRET_CAST(inEventContextPtr, Preferences_ChangeContext*);
-	size_t						actualSize = 0L;
 	
 	
 	switch (inPreferenceTagThatChanged)
@@ -2648,9 +2643,9 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kPreferences_TagNewCommandShortcutEffect:
 		// update internal variable that matches the value of the preference
 		// (easier than calling Preferences_GetData() every time!)
-		unless (Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
-									sizeof(gNewCommandShortcutEffect), &gNewCommandShortcutEffect,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
+									sizeof(gNewCommandShortcutEffect), &gNewCommandShortcutEffect))
 		{
 			gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite; // assume command, if preference can’t be found
 		}
@@ -2684,14 +2679,13 @@ BOOL
 quellAutoNew ()
 {
 	Boolean		quellAutoNew = false;
-	size_t		actualSize = 0L;
 	BOOL		result = NO;
 	
 	
 	// get the user’s “don’t auto-new” application preference, if possible
 	if (kPreferences_ResultOK !=
 		Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(quellAutoNew),
-							&quellAutoNew, &actualSize))
+							&quellAutoNew))
 	{
 		// assume a value if it cannot be found
 		quellAutoNew = false;
@@ -3013,13 +3007,12 @@ sessionWindowStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 																			[windowScreen frame].origin.y + NSHeight([windowScreen frame]) - menuBarHeight,
 																			72/* arbitrary width */, menuBarHeight);
 					Boolean		noAnimations = false;
-					size_t		actualSize = 0;
 					
 					
 					// determine if animation should occur
 					unless (kPreferences_ResultOK ==
 							Preferences_GetData(kPreferences_TagNoAnimations,
-												sizeof(noAnimations), &noAnimations, &actualSize))
+												sizeof(noAnimations), &noAnimations))
 					{
 						noAnimations = false; // assume a value, if preference can’t be found
 					}
@@ -4006,15 +3999,13 @@ hasVisibleWindows:(BOOL)						flag
 		// handle the case where the application has no open windows and
 		// the user double-clicks the application icon in the Finder
 		UInt32		newCommandID = kCommandNewSessionDefaultFavorite;
-		size_t		actualSize = 0;
 		
 		
 		// assume that the user is mapping command-N to the same type of session
 		// that would be appropriate for opening by default on startup or re-open
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
-									sizeof(newCommandID), &newCommandID,
-									&actualSize))
+									sizeof(newCommandID), &newCommandID))
 		{
 			// assume a value if it cannot be found
 			newCommandID = kCommandNewSessionDefaultFavorite;

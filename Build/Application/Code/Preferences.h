@@ -562,7 +562,6 @@ Preferences_Result
 											 size_t								inDataStorageSize,
 											 void*								outDataStorage,
 											 Boolean							inSearchDefaults = false,
-											 size_t*							outActualSizePtrOrNull = nullptr,
 											 Boolean*							outIsDefaultOrNull = nullptr);
 
 Boolean
@@ -669,8 +668,7 @@ Preferences_Result
 Preferences_Result
 	Preferences_GetData						(Preferences_Tag					inDataPreferenceTag,
 											 size_t								inDataStorageSize,
-											 void*								outDataStorage,
-											 size_t*							outActualSizePtrOrNull = nullptr);
+											 void*								outDataStorage);
 
 // DEPRECATED
 Preferences_Result

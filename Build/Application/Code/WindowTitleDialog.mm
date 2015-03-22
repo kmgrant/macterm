@@ -551,13 +551,12 @@ didLoadManagedView:(NSView*)					aManagedView
 		NSWindow*						asNSWindow = [self renamedCocoaWindow];
 		PopoverManager_AnimationType	animationType = kPopoverManager_AnimationTypeStandard;
 		Boolean							noAnimations = false;
-		size_t							actualSize = 0;
 		
 		
 		// determine if animation should occur
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagNoAnimations,
-									sizeof(noAnimations), &noAnimations, &actualSize))
+									sizeof(noAnimations), &noAnimations))
 		{
 			noAnimations = false; // assume a value, if preference can’t be found
 		}

@@ -4341,12 +4341,10 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	// and initialize appropriately
 	{
 		Boolean		affectsFontSize = false;
-		size_t		actualSize = 0;
 		
 		
 		if (kPreferences_ResultOK !=
-			Preferences_GetData(kPreferences_TagTerminalResizeAffectsFontSize, sizeof(affectsFontSize), &affectsFontSize,
-								&actualSize))
+			Preferences_GetData(kPreferences_TagTerminalResizeAffectsFontSize, sizeof(affectsFontSize), &affectsFontSize))
 		{
 			// assume a default, if the value cannot be found...
 			affectsFontSize = false;
@@ -5323,11 +5321,11 @@ copySelectedTextIfUserPreference	(My_TerminalViewPtr		inTerminalViewPtr)
 	if (inTerminalViewPtr->text.selection.exists)
 	{
 		Boolean		copySelectedText = false;
-		size_t		actualSize = 0L;
 		
 		
-		unless (Preferences_GetData(kPreferences_TagCopySelectedText, sizeof(copySelectedText),
-									&copySelectedText, &actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagCopySelectedText, sizeof(copySelectedText),
+									&copySelectedText))
 		{
 			copySelectedText = false; // assume text isn’t automatically copied, if preference can’t be found
 		}
@@ -9107,7 +9105,6 @@ mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kEventLoop_GlobalEventSuspendResume:
 		{
 			Boolean		fadeWindows = false;
-			size_t		actualSize = 0;
 			Float32		alpha = 1.0;
 			
 			
@@ -9116,7 +9113,7 @@ mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			unless (kPreferences_ResultOK ==
 					Preferences_GetData(kPreferences_TagFadeBackgroundWindows,
-					sizeof(fadeWindows), &fadeWindows, &actualSize))
+					sizeof(fadeWindows), &fadeWindows))
 			{
 				fadeWindows = false; // assume a value, if preference can’t be found
 			}
@@ -9132,7 +9129,7 @@ mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				unless (kPreferences_ResultOK ==
 						Preferences_GetData(kPreferences_TagFadeAlpha,
-						sizeof(fadeAlpha), &fadeAlpha, &actualSize))
+						sizeof(fadeAlpha), &fadeAlpha))
 				{
 					fadeAlpha = 1.0; // assume a value, if preference can’t be found
 				}
@@ -9636,16 +9633,13 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 void*					UNUSED_ARGUMENT(inEventContextPtr),
 					 void*					UNUSED_ARGUMENT(inListenerContextPtr))
 {
-	size_t	actualSize = 0L;
-	
-	
 	switch (inPreferenceTagThatChanged)
 	{
 	case kPreferences_TagCursorBlinks:
 		// update global variable with current preference value
-		unless (Preferences_GetData(kPreferences_TagCursorBlinks, sizeof(gPreferenceProxies.cursorBlinks),
-									&gPreferenceProxies.cursorBlinks, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagCursorBlinks, sizeof(gPreferenceProxies.cursorBlinks),
+									&gPreferenceProxies.cursorBlinks))
 		{
 			gPreferenceProxies.cursorBlinks = false; // assume a value, if preference can’t be found
 		}
@@ -9653,9 +9647,9 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	
 	case kPreferences_TagNotifyOfBeeps:
 		// update global variable with current preference value
-		unless (Preferences_GetData(kPreferences_TagNotifyOfBeeps, sizeof(gPreferenceProxies.notifyOfBeeps),
-									&gPreferenceProxies.notifyOfBeeps, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNotifyOfBeeps, sizeof(gPreferenceProxies.notifyOfBeeps),
+									&gPreferenceProxies.notifyOfBeeps))
 		{
 			gPreferenceProxies.notifyOfBeeps = false; // assume a value, if preference can’t be found
 		}
@@ -9663,9 +9657,9 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	
 	case kPreferences_TagPureInverse:
 		// update global variable with current preference value
-		unless (Preferences_GetData(kPreferences_TagPureInverse, sizeof(gPreferenceProxies.invertSelections),
-									&gPreferenceProxies.invertSelections, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagPureInverse, sizeof(gPreferenceProxies.invertSelections),
+									&gPreferenceProxies.invertSelections))
 		{
 			gPreferenceProxies.invertSelections = false; // assume a value, if preference can’t be found
 		}
@@ -9673,9 +9667,9 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	
 	case kPreferences_TagTerminalCursorType:
 		// update global variable with current preference value
-		unless (Preferences_GetData(kPreferences_TagTerminalCursorType, sizeof(gPreferenceProxies.cursorType),
-									&gPreferenceProxies.cursorType, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagTerminalCursorType, sizeof(gPreferenceProxies.cursorType),
+									&gPreferenceProxies.cursorType))
 		{
 			gPreferenceProxies.cursorType = kTerminalView_CursorTypeBlock; // assume a value, if preference can’t be found
 		}
@@ -9683,9 +9677,9 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	
 	case kPreferences_TagTerminalShowMarginAtColumn:
 		// update global variable with current preference value
-		unless (Preferences_GetData(kPreferences_TagTerminalShowMarginAtColumn, sizeof(gPreferenceProxies.renderMarginAtColumn),
-									&gPreferenceProxies.renderMarginAtColumn, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagTerminalShowMarginAtColumn, sizeof(gPreferenceProxies.renderMarginAtColumn),
+									&gPreferenceProxies.renderMarginAtColumn))
 		{
 			gPreferenceProxies.renderMarginAtColumn = 0; // assume a value, if preference can’t be found
 		}
@@ -9727,13 +9721,10 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		{
 		case kPreferences_TagDontDimBackgroundScreens:
 			{
-				size_t		actualSize = 0;
-				
-				
 				// update global variable with current preference value
-				unless (Preferences_GetData(kPreferences_TagDontDimBackgroundScreens, sizeof(gPreferenceProxies.dontDimTerminals),
-											&gPreferenceProxies.dontDimTerminals, &actualSize) ==
-						kPreferences_ResultOK)
+				unless (kPreferences_ResultOK ==
+						Preferences_GetData(kPreferences_TagDontDimBackgroundScreens, sizeof(gPreferenceProxies.dontDimTerminals),
+											&gPreferenceProxies.dontDimTerminals))
 				{
 					gPreferenceProxies.dontDimTerminals = false; // assume a value, if preference can’t be found
 				}
@@ -9773,13 +9764,12 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		case kPreferences_TagTerminalResizeAffectsFontSize:
 			// change the display mode for the specified view
 			{
-				size_t		actualSize = 0;
 				Boolean		resizeAffectsFont = false;
 				
 				
-				unless (Preferences_GetData(kPreferences_TagTerminalResizeAffectsFontSize, sizeof(resizeAffectsFont),
-											&resizeAffectsFont, &actualSize) ==
-						kPreferences_ResultOK)
+				unless (kPreferences_ResultOK ==
+						Preferences_GetData(kPreferences_TagTerminalResizeAffectsFontSize, sizeof(resizeAffectsFont),
+											&resizeAffectsFont))
 				{
 					resizeAffectsFont = false; // assume a value, if preference can’t be found
 				}
@@ -13751,14 +13741,13 @@ visualBell	(TerminalViewRef	inView)
 	Boolean const				kWasReverseVideo = viewPtr->screen.isReverseVideo;
 	Boolean						visual = false;				// is visual used?
 	Boolean						visualPreference = false;	// is ONLY visual used?
-	size_t						actualSize = 0L;
 	
 	
 	// If the user turned off audible bells, always use a visual;
 	// otherwise, use a visual if the beep is in a background window.
-	unless (Preferences_GetData(kPreferences_TagVisualBell, sizeof(visualPreference),
-								&visualPreference, &actualSize) ==
-			kPreferences_ResultOK)
+	unless (kPreferences_ResultOK ==
+			Preferences_GetData(kPreferences_TagVisualBell, sizeof(visualPreference),
+								&visualPreference))
 	{
 		visualPreference = false; // assume audible bell, if preference can’t be found
 	}

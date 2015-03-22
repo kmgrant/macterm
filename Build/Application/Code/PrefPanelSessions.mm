@@ -1249,7 +1249,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 	if (nullptr != inSettings)
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		size_t					actualSize = 0;
 		
 		
 		// INCOMPLETE
@@ -1260,8 +1259,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagLocalEchoEnabled,
-														sizeof(localEcho), &localEcho, true/* search defaults too */,
-														&actualSize);
+														sizeof(localEcho), &localEcho, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setLocalEcho(localEcho);
@@ -1274,8 +1272,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagPasteNewLineDelay,
-														sizeof(asEventTime), &asEventTime, true/* search defaults too */,
-														&actualSize);
+														sizeof(asEventTime), &asEventTime, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setLineInsertionDelay(asEventTime);
@@ -1288,8 +1285,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagScrollDelay,
-														sizeof(asEventTime), &asEventTime, true/* search defaults too */,
-														&actualSize);
+														sizeof(asEventTime), &asEventTime, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setScrollDelay(asEventTime);
@@ -1864,7 +1860,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 	if (nullptr != inSettings)
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		size_t					actualSize = 0;
 		
 		
 		// set TEK mode
@@ -1873,7 +1868,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTektronixMode, sizeof(graphicsMode),
-														&graphicsMode, true/* search defaults too */, &actualSize);
+														&graphicsMode, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setMode(graphicsMode);
@@ -1886,7 +1881,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTektronixPAGEClearsScreen, sizeof(pageClearsScreen),
-														&pageClearsScreen, true/* search defaults too */, &actualSize);
+														&pageClearsScreen, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setPageClears(pageClearsScreen);
@@ -2356,7 +2351,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		HIWindowRef				window = HIViewGetWindow(this->mainView);
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		OSStatus				error = noErr;
-		size_t					actualSize = 0;
 		
 		
 		// set interrupt key
@@ -2366,7 +2360,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagKeyInterruptProcess,
 														sizeof(keyCode), &keyCode,
-														true/* search defaults too */, &actualSize);
+														true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				HIViewWrap		button(idMyButtonChangeInterruptKey, window);
@@ -2384,7 +2378,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagKeySuspendOutput,
 														sizeof(keyCode), &keyCode,
-														true/* search defaults too */, &actualSize);
+														true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				HIViewWrap		button(idMyButtonChangeSuspendKey, window);
@@ -2402,7 +2396,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagKeyResumeOutput,
 														sizeof(keyCode), &keyCode,
-														true/* search defaults too */, &actualSize);
+														true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				HIViewWrap		button(idMyButtonChangeResumeKey, window);
@@ -2420,7 +2414,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagMapArrowsForEmacs,
 														sizeof(mapArrows), &mapArrows,
-														true/* search defaults too */, &actualSize);
+														true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				HIViewWrap		checkBox(idMyCheckBoxMapArrowsForEmacs, window);
@@ -2437,7 +2431,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagEmacsMetaKey,
 														sizeof(metaKey), &metaKey,
-														true/* search defaults too */, &actualSize);
+														true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				HIViewWrap		segmentedView(idMySegmentsEmacsMetaKey, window);
@@ -2470,7 +2464,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagMapDeleteToBackspace,
 														sizeof(deleteUsesBackspace), &deleteUsesBackspace,
-														true/* search defaults too */, &actualSize);
+														true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				HIViewWrap		segmentedView(idMySegmentsDeleteKeyMapping, window);
@@ -2490,7 +2484,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagNewLineMapping,
 														sizeof(newLineMapping), &newLineMapping,
-														true/* search defaults too */, &actualSize);
+														true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				HIViewWrap		popUpMenu(idMyPopUpMenuNewLineMapping, window);
@@ -3375,7 +3369,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 	if (nullptr != inSettings)
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		size_t					actualSize = 0;
 		
 		
 		// INCOMPLETE
@@ -3387,7 +3380,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagAssociatedTerminalFavorite,
 														sizeof(associatedTerminalName), &associatedTerminalName,
-														true/* search defaults too */, &actualSize);
+														true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setAssociatedTerminal(associatedTerminalName);
@@ -3406,7 +3399,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagAssociatedFormatFavorite,
 														sizeof(associatedFormatName), &associatedFormatName,
-														true/* search defaults too */, &actualSize);
+														true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setAssociatedFormat(associatedFormatName);
@@ -3425,7 +3418,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagAssociatedTranslationFavorite,
 														sizeof(associatedTranslationName), &associatedTranslationName,
-														true/* search defaults too */, &actualSize);
+														true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setAssociatedTranslation(associatedTranslationName);
@@ -4745,12 +4738,11 @@ readPreferencesForRemoteServers		(Preferences_ContextRef		inSettings,
 									 CFStringRef&				outUserIDCopy)
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	size_t					actualSize = 0;
 	UInt16					result = 0;
 	
 	
 	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerProtocol, sizeof(outProtocol),
-												&outProtocol, inSearchDefaults, &actualSize);
+												&outProtocol, inSearchDefaults);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		++result;
@@ -4760,7 +4752,7 @@ readPreferencesForRemoteServers		(Preferences_ContextRef		inSettings,
 		outProtocol = kSession_ProtocolSSH1; // arbitrary
 	}
 	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerHost, sizeof(outHostNameCopy),
-												&outHostNameCopy, inSearchDefaults, &actualSize);
+												&outHostNameCopy, inSearchDefaults);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		++result;
@@ -4771,7 +4763,7 @@ readPreferencesForRemoteServers		(Preferences_ContextRef		inSettings,
 		CFRetain(outHostNameCopy);
 	}
 	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerPort, sizeof(outPortNumber),
-												&outPortNumber, inSearchDefaults, &actualSize);
+												&outPortNumber, inSearchDefaults);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		++result;
@@ -4781,7 +4773,7 @@ readPreferencesForRemoteServers		(Preferences_ContextRef		inSettings,
 		outPortNumber = 22; // arbitrary
 	}
 	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerUserID, sizeof(outUserIDCopy),
-												&outUserIDCopy, inSearchDefaults, &actualSize);
+												&outUserIDCopy, inSearchDefaults);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		++result;
@@ -7017,14 +7009,12 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	
 	if (Preferences_ContextIsValid(sourceContext))
 	{
-		size_t				actualSize = 0;
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
 		
 		
 		prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
 													sizeof(result), &result,
-													true/* search defaults */,
-													&actualSize, &isDefault);
+													true/* search defaults */, &isDefault);
 		if (kPreferences_ResultOK != prefsResult)
 		{
 			Console_Warning(Console_WriteValue, "failed to read control-key preference, error", prefsResult);

@@ -275,11 +275,10 @@ isDefault:(BOOL*)								outIsDefault
 	if (Preferences_ContextIsValid(self->currentContext))
 	{
 		RGBColor			colorData;
-		size_t				actualSize = 0;
 		Boolean				isDefault = false;
 		Preferences_Result	prefsResult = Preferences_ContextGetData(self->currentContext, actualTag,
 																		sizeof(colorData), &colorData,
-																		true/* search defaults */, &actualSize, &isDefault);
+																		true/* search defaults */, &isDefault);
 		
 		
 		if (nullptr != outIsDefault)
@@ -332,12 +331,11 @@ defaultValue:(BOOL)							aDefault
 	{
 		Boolean		flagValue = false;
 		Boolean		isDefault = false;
-		size_t		actualSize = 0;
 		
 		
 		if (kPreferences_ResultOK ==
-			Preferences_ContextGetData(self->currentContext, actualTag, sizeof(flagValue), &flagValue, false/* search defaults */,
-										&actualSize, &isDefault))
+			Preferences_ContextGetData(self->currentContext, actualTag, sizeof(flagValue), &flagValue,
+										false/* search defaults */, &isDefault))
 		{
 			result = (flagValue) ? YES : NO;
 		}

@@ -1127,7 +1127,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 	if (nullptr != inSettings)
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		size_t					actualSize = 0;
 		
 		
 		// INCOMPLETE
@@ -1138,7 +1137,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalEmulatorType, sizeof(emulatorType),
-														&emulatorType, true/* search defaults too */, &actualSize);
+														&emulatorType, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setEmulator(emulatorType, false/* set answer-back */);
@@ -1151,8 +1150,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalAnswerBackMessage,
-														sizeof(messageCFString), &messageCFString, true/* search defaults too */,
-														&actualSize);
+														sizeof(messageCFString), &messageCFString, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setAnswerBack(messageCFString);
@@ -1576,7 +1574,6 @@ createContainerView		(Panel_Ref		inPanel,
 	Rect						dummy;
 	Rect						idealContainerBounds;
 	OSStatus					error = noErr;
-	size_t						actualSize = 0;
 	Boolean						flag = false;
 	
 	
@@ -1615,7 +1612,7 @@ createContainerView		(Panel_Ref		inPanel,
 		
 		assert(checkBox.exists());
 		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagTerminalLineWrap, sizeof(flag), &flag, &actualSize))
+				Preferences_GetData(kPreferences_TagTerminalLineWrap, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1627,7 +1624,7 @@ createContainerView		(Panel_Ref		inPanel,
 		
 		assert(checkBox.exists());
 		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagDataReceiveDoNotStripHighBit, sizeof(flag), &flag, &actualSize))
+				Preferences_GetData(kPreferences_TagDataReceiveDoNotStripHighBit, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1639,7 +1636,7 @@ createContainerView		(Panel_Ref		inPanel,
 		
 		assert(checkBox.exists());
 		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagTerminalClearSavesLines, sizeof(flag), &flag, &actualSize))
+				Preferences_GetData(kPreferences_TagTerminalClearSavesLines, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1651,7 +1648,7 @@ createContainerView		(Panel_Ref		inPanel,
 		
 		assert(checkBox.exists());
 		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagMapKeypadTopRowForVT220, sizeof(flag), &flag, &actualSize))
+				Preferences_GetData(kPreferences_TagMapKeypadTopRowForVT220, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1663,7 +1660,7 @@ createContainerView		(Panel_Ref		inPanel,
 		
 		assert(checkBox.exists());
 		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagPageKeysControlLocalTerminal, sizeof(flag), &flag, &actualSize))
+				Preferences_GetData(kPreferences_TagPageKeysControlLocalTerminal, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1828,7 +1825,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		// IMPORTANT: the tags read here should be in sync with those
 		// returned by PrefPanelTerminals_NewOptionsPaneTagSet()
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		size_t					actualSize = 0;
 		
 		
 		// set line wrap
@@ -1837,7 +1833,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalLineWrap, sizeof(flag),
-														&flag, true/* search defaults too */, &actualSize);
+														&flag, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setLineWrap(flag);
@@ -1854,7 +1850,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagDataReceiveDoNotStripHighBit, sizeof(flag),
-														&flag, true/* search defaults too */, &actualSize);
+														&flag, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setEightBit(flag);
@@ -1871,7 +1867,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagMapKeypadTopRowForVT220, sizeof(flag),
-														&flag, true/* search defaults too */, &actualSize);
+														&flag, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setNormalKeypadTopRow(false == flag);
@@ -1888,7 +1884,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagPageKeysControlLocalTerminal, sizeof(flag),
-														&flag, true/* search defaults too */, &actualSize);
+														&flag, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setPageKeysControlLocalTerminal(flag);
@@ -1905,7 +1901,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalClearSavesLines, sizeof(flag),
-														&flag, true/* search defaults too */, &actualSize);
+														&flag, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setSaveOnClear(flag);
@@ -2406,7 +2402,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		// IMPORTANT: the tags read here should be in sync with those
 		// returned by PrefPanelTerminals_NewScreenPaneTagSet()
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		size_t					actualSize = 0;
 		
 		
 		// set columns
@@ -2415,7 +2410,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalScreenColumns, sizeof(dimension),
-														&dimension, true/* search defaults too */, &actualSize);
+														&dimension, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setColumns(dimension);
@@ -2432,7 +2427,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalScreenRows, sizeof(dimension),
-														&dimension, true/* search defaults too */, &actualSize);
+														&dimension, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setRows(dimension);
@@ -2449,7 +2444,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalScreenScrollbackRows, sizeof(dimension),
-														&dimension, true/* search defaults too */, &actualSize);
+														&dimension, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setScrollbackRows(dimension);
@@ -2466,7 +2461,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalScreenScrollbackType, sizeof(allocationRule),
-														&allocationRule, true/* search defaults too */, &actualSize);
+														&allocationRule, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setScrollbackType(allocationRule);

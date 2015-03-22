@@ -144,7 +144,6 @@ TextTranslation_ContextReturnEncoding	(Preferences_ContextRef		inContext,
 	CFStringEncoding	result = kCFStringEncodingInvalidId;
 	CFStringRef			selectedEncodingIANAName = nullptr;
 	Preferences_Result	prefsResult = kPreferences_ResultOK;
-	size_t				actualSize = 0;
 	
 	
 	// initialize the module if necessary
@@ -153,7 +152,7 @@ TextTranslation_ContextReturnEncoding	(Preferences_ContextRef		inContext,
 	// first search for a name; prefer this as a way to express the
 	// desired character set, but fall back on a simple encoding ID
 	prefsResult = Preferences_ContextGetData(inContext, kPreferences_TagTextEncodingIANAName, sizeof(selectedEncodingIANAName),
-												&selectedEncodingIANAName, true/* search defaults too */, &actualSize);
+												&selectedEncodingIANAName, true/* search defaults too */);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		result = CFStringConvertIANACharSetNameToEncoding(selectedEncodingIANAName);
@@ -164,7 +163,7 @@ TextTranslation_ContextReturnEncoding	(Preferences_ContextRef		inContext,
 	{
 		// the name was not found, or could not be resolved; look for an ID
 		prefsResult = Preferences_ContextGetData(inContext, kPreferences_TagTextEncodingID, sizeof(result),
-													&result, true/* search defaults too */, &actualSize);
+													&result, true/* search defaults too */);
 		if (kPreferences_ResultOK != prefsResult)
 		{
 			// nothing found - guess!!!

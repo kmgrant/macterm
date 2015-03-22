@@ -604,13 +604,12 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 					{
 						// a Session context could be associated with a Translation context;
 						// if so, a little work must be done to find the actual context
-						CFStringRef				contextName;
-						size_t					actualSize = 0;
+						CFStringRef		contextName = nullptr;
 						
 						
 						prefsResult = Preferences_ContextGetData(inContextOrNull, kPreferences_TagAssociatedTranslationFavorite,
 																	sizeof(contextName), &contextName,
-																	false/* search defaults too */, &actualSize);
+																	false/* search defaults too */);
 						if (kPreferences_ResultOK == prefsResult)
 						{
 							if (false == Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, contextName))
@@ -1210,7 +1209,6 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 	Boolean					result = true;
 	Boolean					enterFullScreen = false;
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	size_t					actualSize = 0;
 	
 	
 	// determine if this workspace should automatically enter Full Screen
@@ -1234,7 +1232,7 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 													Preferences_ReturnTagVariantForIndex
 													(kPreferences_TagIndexedWindowSessionFavorite, i),
 													sizeof(associatedSessionName), &associatedSessionName,
-													false/* search defaults too */, &actualSize);
+													false/* search defaults too */);
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			if (false == Preferences_IsContextNameInUse(Quills::Prefs::SESSION, associatedSessionName))
@@ -1276,7 +1274,7 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 														Preferences_ReturnTagVariantForIndex
 														(kPreferences_TagIndexedWindowCommandType, i),
 														sizeof(associatedSessionType), &associatedSessionType,
-														false/* search defaults too */, &actualSize);
+														false/* search defaults too */);
 			if ((kPreferences_ResultOK == prefsResult) && (0 != associatedSessionType))
 			{
 				terminalWindow = createTerminalWindow();
@@ -2289,7 +2287,6 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 								 Preferences_ContextRef		inSessionContext)
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	size_t					actualSize = 0;
 	Boolean					result = false;
 	
 	
@@ -2303,7 +2300,7 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 		// font and color settings
 		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedFormatFavorite,
 													sizeof(contextName), &contextName,
-													false/* search defaults too */, &actualSize);
+													false/* search defaults too */);
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			if (false == Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, contextName))
@@ -2333,7 +2330,7 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 		// terminal emulator settings
 		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTerminalFavorite,
 													sizeof(contextName), &contextName,
-													false/* search defaults too */, &actualSize);
+													false/* search defaults too */);
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			if (false == Preferences_IsContextNameInUse(Quills::Prefs::TERMINAL, contextName))
@@ -2363,7 +2360,7 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 		// translation settings
 		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTranslationFavorite,
 													sizeof(contextName), &contextName,
-													false/* search defaults too */, &actualSize);
+													false/* search defaults too */);
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			if (false == Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, contextName))
@@ -2481,14 +2478,12 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 		if ((0 != inWindowIndexInWorkspaceOrZero) && (nullptr != inWorkspaceOrNull))
 		{
 			HIRect		frameBounds;
-			size_t		actualSize = 0;
 			
 			
 			prefsResult = Preferences_ContextGetData(inWorkspaceOrNull, Preferences_ReturnTagVariantForIndex
 																		(kPreferences_TagIndexedWindowFrameBounds,
 																			inWindowIndexInWorkspaceOrZero),
-														sizeof(frameBounds), &frameBounds, false/* search defaults */,
-														&actualSize);
+														sizeof(frameBounds), &frameBounds, false/* search defaults */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				// UNIMPLEMENTED - check kPreferences_TagIndexedWindowScreenBounds too, and
@@ -2503,14 +2498,12 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 		if ((0 != inWindowIndexInWorkspaceOrZero) && (nullptr != inWorkspaceOrNull))
 		{
 			CFStringRef		titleCFString = nullptr;
-			size_t			actualSize = 0;
 			
 			
 			prefsResult = Preferences_ContextGetData(inWorkspaceOrNull, Preferences_ReturnTagVariantForIndex
 																		(kPreferences_TagIndexedWindowTitle,
 																			inWindowIndexInWorkspaceOrZero),
-														sizeof(titleCFString), &titleCFString, false/* search defaults */,
-														&actualSize);
+														sizeof(titleCFString), &titleCFString, false/* search defaults */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				if (CFStringGetLength(titleCFString) > 0)

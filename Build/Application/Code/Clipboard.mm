@@ -155,13 +155,12 @@ Clipboard_Init ()
 	// otherwise, wait until it is requested by the user
 	{
 		Boolean		windowIsVisible = false;
-		size_t		actualSize = 0L;
 		
 		
 		// get visibility preference for the Clipboard
-		unless (Preferences_GetData(kPreferences_TagWasClipboardShowing,
-									sizeof(windowIsVisible), &windowIsVisible,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagWasClipboardShowing,
+									sizeof(windowIsVisible), &windowIsVisible))
 		{
 			windowIsVisible = false; // assume invisible if the preference can’t be found
 		}
@@ -1013,13 +1012,10 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 	
 	if (inHowToCopy & kClipboard_CopyMethodTable)
 	{
-		size_t	actualSize = 0L;
-		
-		
 		// get the user’s “one tab equals X spaces” preference, if possible
-		unless (Preferences_GetData(kPreferences_TagCopyTableThreshold,
-									sizeof(tableThreshold), &tableThreshold,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagCopyTableThreshold,
+									sizeof(tableThreshold), &tableThreshold))
 		{
 			tableThreshold = 4; // default to 4 spaces per tab if no preference can be found
 		}

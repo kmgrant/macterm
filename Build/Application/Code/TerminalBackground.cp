@@ -405,13 +405,10 @@ preferenceChangedForBackground	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel
 	{
 	case kPreferences_TagDontDimBackgroundScreens:
 		{
-			size_t		actualSize = 0;
-			
-			
 			// update global variable with current preference value
-			unless (Preferences_GetData(kPreferences_TagDontDimBackgroundScreens, sizeof(dataPtr->dontDimBackgroundScreens),
-										&dataPtr->dontDimBackgroundScreens, &actualSize) ==
-					kPreferences_ResultOK)
+			unless (kPreferences_ResultOK ==
+					Preferences_GetData(kPreferences_TagDontDimBackgroundScreens, sizeof(dataPtr->dontDimBackgroundScreens),
+										&dataPtr->dontDimBackgroundScreens))
 			{
 				dataPtr->dontDimBackgroundScreens = false; // assume a value, if preference can’t be found
 			}

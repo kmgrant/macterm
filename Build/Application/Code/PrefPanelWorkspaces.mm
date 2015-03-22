@@ -850,7 +850,6 @@ readPreferences		(Preferences_ContextRef		inSettings,
 	{
 		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		size_t					actualSize = 0;
 		Boolean					wasDefault = false;
 		
 		
@@ -867,7 +866,7 @@ readPreferences		(Preferences_ContextRef		inSettings,
 																	(kPreferences_TagIndexedWindowSessionFavorite,
 																		inOneBasedIndex),
 														sizeof(associatedSessionName), &associatedSessionName,
-														false/* search defaults too */, &actualSize);
+														false/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setAssociatedSession(associatedSessionName);
@@ -882,7 +881,7 @@ readPreferences		(Preferences_ContextRef		inSettings,
 																		(kPreferences_TagIndexedWindowCommandType,
 																			inOneBasedIndex),
 															sizeof(associatedSessionType), &associatedSessionType,
-															false/* search defaults too */, &actualSize);
+															false/* search defaults too */);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					this->setAssociatedSessionByType(associatedSessionType);
@@ -901,7 +900,7 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			
 			assert(checkBox.exists());
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagArrangeWindowsUsingTabs, sizeof(flag), &flag,
-														true/* search defaults */, &actualSize, &wasDefault);
+														true/* search defaults */, &wasDefault);
 			unless (prefsResult == kPreferences_ResultOK)
 			{
 				flag = false; // assume a value, if preference can’t be found
@@ -916,7 +915,7 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			
 			assert(checkBox.exists());
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagArrangeWindowsFullScreen, sizeof(flag), &flag,
-														true/* search defaults */, &actualSize, &wasDefault);
+														true/* search defaults */, &wasDefault);
 			unless (prefsResult == kPreferences_ResultOK)
 			{
 				flag = false; // assume a value, if preference can’t be found
@@ -1449,13 +1448,12 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 					Preferences_Index	windowIndex = STATIC_CAST(inItemID, Preferences_Index);
 					CFStringRef			nameCFString = nullptr;
 					Preferences_Result	prefsResult = kPreferences_ResultOK;
-					size_t				actualSize = 0;
 					
 					
 					prefsResult = Preferences_ContextGetData
 									(panelDataPtr->dataModel,
 										Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex),
-										sizeof(nameCFString), &nameCFString, false/* search defaults too */, &actualSize);
+										sizeof(nameCFString), &nameCFString, false/* search defaults too */);
 					if (kPreferences_ResultOK == prefsResult)
 					{
 						result = SetDataBrowserItemDataText(inItemData, nameCFString);
@@ -1589,19 +1587,18 @@ compareDataBrowserItems		(HIViewRef					inDataBrowser,
 			{
 				SInt32		windowIndex1 = STATIC_CAST(inItemOne, SInt32);
 				SInt32		windowIndex2 = STATIC_CAST(inItemTwo, SInt32);
-				size_t		actualSize = 0;
 				
 				
 				// ignore results, the strings are checked below
 				UNUSED_RETURN(Preferences_Result)Preferences_ContextGetData
 													(panelDataPtr->dataModel,
 														Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex1),
-														sizeof(string1), &string1, false/* search defaults too */, &actualSize);
+														sizeof(string1), &string1, false/* search defaults too */);
 				
 				UNUSED_RETURN(Preferences_Result)Preferences_ContextGetData
 													(panelDataPtr->dataModel,
 														Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowTitle, windowIndex2),
-														sizeof(string2), &string2, false/* search defaults too */, &actualSize);
+														sizeof(string2), &string2, false/* search defaults too */);
 			}
 			
 			// check for nullptr, because CFStringCompare() will not deal with it

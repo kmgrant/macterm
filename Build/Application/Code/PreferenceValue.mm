@@ -981,11 +981,9 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	if (Preferences_ContextIsValid(sourceContext))
 	{
 		FSRef				fileObjectValue;
-		size_t				actualSize = 0;
 		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
 																		sizeof(fileObjectValue), &fileObjectValue,
-																		true/* search defaults */, &actualSize,
-																		&isDefault);
+																		true/* search defaults */, &isDefault);
 		
 		
 		if (kPreferences_ResultOK == prefsResult)
@@ -1213,11 +1211,9 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	if (Preferences_ContextIsValid(sourceContext))
 	{
 		Boolean				flagValue = false;
-		size_t				actualSize = 0;
 		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
 																		sizeof(flagValue), &flagValue,
-																		true/* search defaults */, &actualSize,
-																		&isDefault);
+																		true/* search defaults */, &isDefault);
 		
 		
 		if (kPreferences_ResultOK == prefsResult)
@@ -1385,7 +1381,6 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	
 	if (Preferences_ContextIsValid(sourceContext))
 	{
-		size_t				actualSize = 0;
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
 		
 		
@@ -1398,7 +1393,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 				
 				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
 															sizeof(intValue), &intValue, true/* search defaults */,
-															&actualSize, &isDefault);
+															&isDefault);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					result = [NSNumber numberWithInt:intValue];
@@ -1413,7 +1408,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 				
 				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
 															sizeof(intValue), &intValue, true/* search defaults */,
-															&actualSize, &isDefault);
+															&isDefault);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					result = [NSNumber numberWithUnsignedInt:intValue];
@@ -1428,7 +1423,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 				
 				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
 															sizeof(intValue), &intValue, true/* search defaults */,
-															&actualSize, &isDefault);
+															&isDefault);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					result = [NSNumber numberWithLong:intValue];
@@ -1443,7 +1438,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 				
 				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
 															sizeof(intValue), &intValue, true/* search defaults */,
-															&actualSize, &isDefault);
+															&isDefault);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					result = [NSNumber numberWithUnsignedLong:intValue];
@@ -1458,7 +1453,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 				
 				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
 															sizeof(floatValue), &floatValue, true/* search defaults */,
-															&actualSize, &isDefault);
+															&isDefault);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					if (0 != self->scaleExponent)
@@ -1481,7 +1476,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 				
 				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
 															sizeof(floatValue), &floatValue, true/* search defaults */,
-															&actualSize, &isDefault);
+															&isDefault);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					if (0 != self->scaleExponent)
@@ -1888,11 +1883,9 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	if (Preferences_ContextIsValid(sourceContext))
 	{
 		CFStringRef			stringValue = nullptr;
-		size_t				actualSize = 0;
 		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
 																		sizeof(stringValue), &stringValue,
-																		true/* search defaults */, &actualSize,
-																		&isDefault);
+																		true/* search defaults */, &isDefault);
 		
 		
 		if (kPreferences_ResultOK == prefsResult)
@@ -2060,11 +2053,9 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	if (Preferences_ContextIsValid(sourceContext))
 	{
 		CFArrayRef			arrayValue = nullptr;
-		size_t				actualSize = 0;
 		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
 																		sizeof(arrayValue), &arrayValue,
-																		true/* search defaults */, &actualSize,
-																		&isDefault);
+																		true/* search defaults */, &isDefault);
 		
 		
 		if (kPreferences_ResultOK == prefsResult)

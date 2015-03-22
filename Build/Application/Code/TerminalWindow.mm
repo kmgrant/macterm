@@ -2861,7 +2861,6 @@ installedActions()
 	// put the toolbar in the window
 	{
 		OSStatus	error = noErr;
-		size_t		actualSize = 0L;
 		Boolean		headersCollapsed = false;
 		
 		
@@ -2869,9 +2868,9 @@ installedActions()
 		assert_noerr(error);
 		
 		// also show the toolbar, unless the user preference to collapse is set
-		unless (Preferences_GetData(kPreferences_TagHeadersCollapsed, sizeof(headersCollapsed),
-									&headersCollapsed, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagHeadersCollapsed, sizeof(headersCollapsed),
+									&headersCollapsed))
 		{
 			headersCollapsed = false; // assume headers aren’t collapsed, if preference can’t be found
 		}
@@ -2972,7 +2971,6 @@ My_TerminalWindow::
 	if (nil != this->window)
 	{
 		Boolean		noAnimations = false;
-		size_t		actualSize = 0;
 		
 		
 		gCarbonTerminalNSWindows().erase(this->window);
@@ -2980,7 +2978,7 @@ My_TerminalWindow::
 		// determine if animation should occur
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagNoAnimations,
-									sizeof(noAnimations), &noAnimations, &actualSize))
+									sizeof(noAnimations), &noAnimations))
 		{
 			noAnimations = false; // assume a value, if preference can’t be found
 		}
@@ -3094,14 +3092,13 @@ calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 		Point		stackingOrigin;
 		Point		stagger;
 		Rect		screenRect;
-		size_t		actualSize = 0;
 		
 		
 		// determine the user’s preferred stacking origin
 		// (TEMPORARY; ideally this preference can be per-display)
 		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagWindowStackingOrigin, sizeof(stackingOrigin),
-									&stackingOrigin, &actualSize))
+									&stackingOrigin))
 		{
 			SetPt(&stackingOrigin, 40, 40); // assume a default, if preference can’t be found
 		}
@@ -3773,7 +3770,6 @@ createWindow ()
 	NSWindow*		result = nil;
 	HIWindowRef		window = nullptr;
 	Boolean			useCustomFullScreenMode = false;
-	size_t			actualSize = 0;
 	
 	
 	// load the NIB containing this window (automatically finds the right localization)
@@ -3789,7 +3785,7 @@ createWindow ()
 		
 		if (kPreferences_ResultOK !=
 			Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
-								&useCustomFullScreenMode, &actualSize))
+								&useCustomFullScreenMode))
 		{
 			useCustomFullScreenMode = false; // assume a default if preference can’t be found
 		}
@@ -5001,14 +4997,13 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// as long as the user preference to show a scroll bar is set;
 						// otherwise, any form of scrolling (via mouse or not) is disabled
 						Boolean		allowScrolling = true;
-						size_t		actualSize = 0;
 						
 						
 						if (TerminalWindow_IsFullScreen(terminalWindow))
 						{
 							if (kPreferences_ResultOK !=
 								Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(allowScrolling),
-													&allowScrolling, &actualSize))
+													&allowScrolling))
 							{
 								allowScrolling = true; // assume a value if the preference cannot be found
 							}
@@ -6334,12 +6329,11 @@ returnScrollBarWidth	(My_TerminalWindowPtr	inPtr)
 {
 	UInt16		result = 0;
 	Boolean		showScrollBar = true;
-	size_t		actualSize = 0;
 	
 	
 	if (kPreferences_ResultOK !=
 		Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(showScrollBar),
-							&showScrollBar, &actualSize))
+							&showScrollBar))
 	{
 		showScrollBar = true; // assume a value if the preference cannot be found
 	}
@@ -7106,7 +7100,6 @@ setTerminalWindowFullScreen		(My_TerminalWindowPtr	inPtr,
 								 Boolean				inSwapViewMode)
 {
 	Boolean		useCustomFullScreenMode = false; // if not set, implies modal mode
-	size_t		actualSize = 0;
 	
 	
 	if (false == inIsFullScreen)
@@ -7120,7 +7113,7 @@ setTerminalWindowFullScreen		(My_TerminalWindowPtr	inPtr,
 	{
 		if (kPreferences_ResultOK !=
 			Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
-								&useCustomFullScreenMode, &actualSize))
+								&useCustomFullScreenMode))
 		{
 			useCustomFullScreenMode = false; // assume a value if the preference cannot be found
 		}
@@ -7142,7 +7135,7 @@ setTerminalWindowFullScreen		(My_TerminalWindowPtr	inPtr,
 			// read relevant user preferences
 			if (kPreferences_ResultOK !=
 				Preferences_GetData(kPreferences_TagKioskShowsWindowFrame, sizeof(showWindowFrame),
-									&showWindowFrame, &actualSize))
+									&showWindowFrame))
 			{
 				showWindowFrame = true; // assume a value if the preference cannot be found
 			}
@@ -7229,7 +7222,6 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 	Boolean				allowForceQuit = true;
 	Boolean				showMenuBar = true;
 	Boolean				showWindowFrame = true;
-	size_t				actualSize = 0;
 	
 	
 	if (false == inWillBeFullScreen)
@@ -7243,7 +7235,7 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 	{
 		if (kPreferences_ResultOK !=
 			Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
-								&useCustomFullScreenMode, &actualSize))
+								&useCustomFullScreenMode))
 		{
 			useCustomFullScreenMode = false; // assume a value if the preference cannot be found
 		}
@@ -7251,21 +7243,21 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 	
 	if (kPreferences_ResultOK !=
 		Preferences_GetData(kPreferences_TagKioskShowsOffSwitch, sizeof(showOffSwitch),
-							&showOffSwitch, &actualSize))
+							&showOffSwitch))
 	{
 		showOffSwitch = true; // assume a value if the preference cannot be found
 	}
 	
 	if (kPreferences_ResultOK !=
 		Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(showScrollBar),
-							&showScrollBar, &actualSize))
+							&showScrollBar))
 	{
 		showScrollBar = true; // assume a value if the preference cannot be found
 	}
 	
 	if (kPreferences_ResultOK !=
 		Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
-							&allowForceQuit, &actualSize))
+							&allowForceQuit))
 	{
 		allowForceQuit = true; // assume a value if the preference cannot be found
 	}
@@ -7273,7 +7265,7 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 	
 	if (kPreferences_ResultOK !=
 		Preferences_GetData(kPreferences_TagKioskShowsMenuBar, sizeof(showMenuBar),
-							&showMenuBar, &actualSize))
+							&showMenuBar))
 	{
 		showMenuBar = false; // assume a value if the preference cannot be found
 	}
@@ -7281,7 +7273,7 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 	
 	if (kPreferences_ResultOK !=
 		Preferences_GetData(kPreferences_TagKioskShowsWindowFrame, sizeof(showWindowFrame),
-							&showWindowFrame, &actualSize))
+							&showWindowFrame))
 	{
 		showWindowFrame = true; // assume a value if the preference cannot be found
 	}
@@ -8294,12 +8286,11 @@ windowDidLoad
 	// determine if a Full Screen icon should appear on the window frame
 	{
 		Boolean		useCustomFullScreenMode = false;
-		size_t		actualSize = 0;
 		
 		
 		if (kPreferences_ResultOK !=
 			Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
-								&useCustomFullScreenMode, &actualSize))
+								&useCustomFullScreenMode))
 		{
 			useCustomFullScreenMode = false; // assume a default if preference can’t be found
 		}

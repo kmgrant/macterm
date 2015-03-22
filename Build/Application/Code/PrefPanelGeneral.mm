@@ -940,19 +940,18 @@ const
 	
 	// initialize values
 	{
-		size_t		actualSize = 0;
 		Boolean		visualBell = false;
 		Boolean		notifyOfBeeps = false;
 		
 		
-		unless (Preferences_GetData(kPreferences_TagVisualBell, sizeof(visualBell), &visualBell, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagVisualBell, sizeof(visualBell), &visualBell))
 		{
 			visualBell = false; // assume default, if preference can’t be found
 		}
-		unless (Preferences_GetData(kPreferences_TagNotifyOfBeeps, sizeof(notifyOfBeeps),
-									&notifyOfBeeps, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNotifyOfBeeps, sizeof(notifyOfBeeps),
+									&notifyOfBeeps))
 		{
 			notifyOfBeeps = false; // assume default, if preference can’t be found
 		}
@@ -969,9 +968,9 @@ const
 			
 			
 			// determine user preferred sound, to initialize the menu selection
-			unless (Preferences_GetData(kPreferences_TagBellSound, sizeof(userPreferredSoundName),
-										&userPreferredSoundName, &actualSize) ==
-					kPreferences_ResultOK)
+			unless (kPreferences_ResultOK ==
+					Preferences_GetData(kPreferences_TagBellSound, sizeof(userPreferredSoundName),
+										&userPreferredSoundName))
 			{
 				userPreferredSoundName = CFSTR(""); // assume default, if preference can’t be found
 				releaseUserPreferredSoundName = false;
@@ -1035,9 +1034,9 @@ const
 			UInt16				notificationPreferences = kAlert_NotifyDisplayDiamondMark;
 			
 			
-			unless (Preferences_GetData(kPreferences_TagNotification, sizeof(notificationPreferences),
-										&notificationPreferences, &actualSize) ==
-					kPreferences_ResultOK)
+			unless (kPreferences_ResultOK ==
+					Preferences_GetData(kPreferences_TagNotification, sizeof(notificationPreferences),
+										&notificationPreferences))
 			{
 				notificationPreferences = kAlert_NotifyDisplayDiamondMark; // assume default, if preference can’t be found
 			}
@@ -1148,7 +1147,6 @@ const
 	Rect						dummy;
 	Rect						idealContainerBounds;
 	OSStatus					error = noErr;
-	size_t						actualSize = 0L;
 	Boolean						flag = false;
 	
 	
@@ -1183,8 +1181,8 @@ const
 		
 		
 		assert(checkBox.exists());
-		unless (Preferences_GetData(kPreferences_TagDontAutoClose, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagDontAutoClose, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1195,8 +1193,8 @@ const
 		
 		
 		assert(checkBox.exists());
-		unless (Preferences_GetData(kPreferences_TagDontDimBackgroundScreens, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagDontDimBackgroundScreens, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1207,8 +1205,8 @@ const
 		
 		
 		assert(checkBox.exists());
-		unless (Preferences_GetData(kPreferences_TagPureInverse, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagPureInverse, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1219,8 +1217,8 @@ const
 		
 		
 		assert(checkBox.exists());
-		unless (Preferences_GetData(kPreferences_TagCopySelectedText, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagCopySelectedText, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1231,8 +1229,8 @@ const
 		
 		
 		assert(checkBox.exists());
-		unless (Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1243,8 +1241,8 @@ const
 		
 		
 		assert(checkBox.exists());
-		unless (Preferences_GetData(kPreferences_TagNoPasteWarning, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNoPasteWarning, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1255,8 +1253,8 @@ const
 		
 		
 		assert(checkBox.exists());
-		unless (Preferences_GetData(kPreferences_TagMapBackquote, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagMapBackquote, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1267,8 +1265,8 @@ const
 		
 		
 		assert(checkBox.exists());
-		unless (Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1279,8 +1277,8 @@ const
 		
 		
 		assert(checkBox.exists());
-		unless (Preferences_GetData(kPreferences_TagFocusFollowsMouse, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagFocusFollowsMouse, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1291,8 +1289,8 @@ const
 		
 		
 		assert(checkBox.exists());
-		unless (Preferences_GetData(kPreferences_TagFadeBackgroundWindows, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagFadeBackgroundWindows, sizeof(flag), &flag))
 		{
 			flag = false; // assume a value, if preference can’t be found
 		}
@@ -1410,7 +1408,6 @@ const
 	std::vector< HIViewRef >	viewList;
 	Rect						dummy;
 	Rect						idealContainerBounds;
-	size_t						actualSize = 0L;
 	OSStatus					error = noErr;
 	
 	
@@ -1442,8 +1439,9 @@ const
 		TerminalView_CursorType		terminalCursorType = kTerminalView_CursorTypeBlock;
 		
 		
-		unless (Preferences_GetData(kPreferences_TagTerminalCursorType, sizeof(terminalCursorType),
-									&terminalCursorType, &actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagTerminalCursorType, sizeof(terminalCursorType),
+									&terminalCursorType))
 		{
 			terminalCursorType = kTerminalView_CursorTypeBlock; // assume a block-shaped cursor, if preference can’t be found
 		}
@@ -1482,9 +1480,9 @@ const
 		Boolean		cursorBlinks = false;
 		
 		
-		unless (Preferences_GetData(kPreferences_TagCursorBlinks, sizeof(cursorBlinks),
-									&cursorBlinks, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagCursorBlinks, sizeof(cursorBlinks),
+									&cursorBlinks))
 		{
 			cursorBlinks = false; // assume the cursor doesn’t flash, if preference can’t be found
 		}
@@ -1498,10 +1496,9 @@ const
 		Boolean		affectsFontSize = false;
 		
 		
-		unless (Preferences_GetData(kPreferences_TagTerminalResizeAffectsFontSize,
-									sizeof(affectsFontSize), &affectsFontSize,
-									&actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagTerminalResizeAffectsFontSize,
+									sizeof(affectsFontSize), &affectsFontSize))
 		{
 			affectsFontSize = false; // assume default, if preference can’t be found
 		}
@@ -1519,9 +1516,9 @@ const
 		UInt16		copyTableThreshold = 0;
 		
 		
-		unless (Preferences_GetData(kPreferences_TagCopyTableThreshold, sizeof(copyTableThreshold),
-									&copyTableThreshold, &actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagCopyTableThreshold, sizeof(copyTableThreshold),
+									&copyTableThreshold))
 		{
 			copyTableThreshold = 4; // assume 4 spaces per tab, if preference can’t be found
 		}
@@ -1538,10 +1535,9 @@ const
 		UInt32		newCommandShortcutEffect = kCommandNewSessionShell;
 		
 		
-		unless (Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
-									sizeof(newCommandShortcutEffect), &newCommandShortcutEffect,
-									&actualSize) ==
-				kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
+									sizeof(newCommandShortcutEffect), &newCommandShortcutEffect))
 		{
 			newCommandShortcutEffect = kCommandNewSessionShell; // assume default, if preference can’t be found
 		}
@@ -3201,10 +3197,9 @@ result will match a "kAlert_Notify..." constant.
 - (SInt16)
 readBackgroundNotificationTypeWithDefaultValue:(SInt16)		aDefaultValue
 {
-	SInt16						result = aDefaultValue;
-	size_t						actualSize = 0;
-	Preferences_Result			prefsResult = Preferences_GetData(kPreferences_TagNotification,
-																	sizeof(result), &result, &actualSize);
+	SInt16					result = aDefaultValue;
+	Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagNotification,
+																sizeof(result), &result);
 	
 	
 	if (kPreferences_ResultOK != prefsResult)
@@ -3230,13 +3225,12 @@ readBellSoundNameWithDefaultValue:(NSString*)	aDefaultValue
 	NSString*			result = nil;
 	CFStringRef			soundName = nullptr;
 	Preferences_Result	prefsResult = kPreferences_ResultOK;
-	size_t				actualSize = 0;
 	BOOL				releaseSoundName = YES;
 	
 	
 	// determine user’s preferred sound
 	prefsResult = Preferences_GetData(kPreferences_TagBellSound, sizeof(soundName),
-										&soundName, &actualSize);
+										&soundName);
 	if (kPreferences_ResultOK != prefsResult)
 	{
 		soundName = BRIDGE_CAST(aDefaultValue, CFStringRef);
@@ -4747,9 +4741,8 @@ or the specified default value if no preference exists.
 readCursorTypeWithDefaultValue:(TerminalView_CursorType)	aDefaultValue
 {
 	TerminalView_CursorType		result = aDefaultValue;
-	size_t						actualSize = 0;
 	Preferences_Result			prefsResult = Preferences_GetData(kPreferences_TagTerminalCursorType,
-																	sizeof(result), &result, &actualSize);
+																	sizeof(result), &result);
 	
 	
 	if (kPreferences_ResultOK != prefsResult)
@@ -4770,9 +4763,8 @@ or the specified default value if no preference exists.
 readNewCommandShortcutEffectWithDefaultValue:(UInt32)	aDefaultValue
 {
 	UInt32				result = aDefaultValue;
-	size_t				actualSize = 0;
 	Preferences_Result	prefsResult = Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
-															sizeof(result), &result, &actualSize);
+															sizeof(result), &result);
 	
 	
 	if (kPreferences_ResultOK != prefsResult)
@@ -4793,9 +4785,8 @@ or the specified default value if no preference exists.
 readSpacesPerTabWithDefaultValue:(UInt16)	aDefaultValue
 {
 	UInt16				result = aDefaultValue;
-	size_t				actualSize = 0;
 	Preferences_Result	prefsResult = Preferences_GetData(kPreferences_TagCopyTableThreshold,
-															sizeof(result), &result, &actualSize);
+															sizeof(result), &result);
 	
 	
 	if (kPreferences_ResultOK != prefsResult)

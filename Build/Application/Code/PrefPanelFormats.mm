@@ -2144,7 +2144,6 @@ readPreferencesForCursorColors	(Preferences_ContextRef		inSettings,
 	{
 		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
-		size_t				actualSize = 0;
 		Boolean				isAutoSet = false;
 		Boolean				isDefault = false;
 		Boolean				isDefaultAutoCursor = false;
@@ -2157,7 +2156,7 @@ readPreferencesForCursorColors	(Preferences_ContextRef		inSettings,
 		// set “Automatic” check box
 		prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagAutoSetCursorColor,
 													sizeof(isAutoSet), &isAutoSet, true/* search defaults too */,
-													&actualSize, &isDefaultAutoCursor);
+													&isDefaultAutoCursor);
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			this->setAutoCursorColor(isAutoSet, isDefaultAutoCursor);
@@ -2196,13 +2195,12 @@ readPreferencesForFontCharacterWidth	(Preferences_ContextRef		inSettings,
 	{
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
 		Float32				scaleFactor = 1.0;
-		size_t				actualSize = 0;
 		Boolean				isDefault = false;
 		
 		
 		prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontCharacterWidthMultiplier,
 													sizeof(scaleFactor), &scaleFactor, true/* search defaults too */,
-													&actualSize, &isDefault);
+													&isDefault);
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			this->setFontWidthScaleFactor(scaleFactor, isDefault);
@@ -2230,13 +2228,11 @@ readPreferencesForFontName	(Preferences_ContextRef		inSettings,
 	{
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
 		CFStringRef			fontName = nullptr;
-		size_t				actualSize = 0;
 		Boolean				isDefault = false;
 		
 		
 		prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontName, sizeof(fontName),
-													&fontName, true/* search defaults too */, &actualSize,
-													&isDefault);
+													&fontName, true/* search defaults too */, &isDefault);
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			this->setFontName(fontName, isDefault);
@@ -2264,13 +2260,11 @@ readPreferencesForFontSize	(Preferences_ContextRef		inSettings,
 	{
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
 		SInt16				fontSize = 0;
-		size_t				actualSize = 0;
 		Boolean				isDefault = false;
 		
 		
 		prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontSize, sizeof(fontSize),
-													&fontSize, true/* search defaults too */, &actualSize,
-													&isDefault);
+													&fontSize, true/* search defaults too */, &isDefault);
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			this->setFontSize(fontSize, isDefault);
@@ -2394,12 +2388,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					HIViewWrap						sizeButton(idMyButtonFontSize, HIViewGetWindow(buttonHit));
 					Boolean							releaseFontName = true;
 					SInt16							fontSize = 0;
-					size_t							actualSize = 0;
 					Preferences_Result				prefsResult = kPreferences_ResultOK;
 					
 					
 					prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPreferences_TagFontName, sizeof(fontName),
-																&fontName, false/* search defaults too */, &actualSize);
+																&fontName, false/* search defaults too */);
 					if (kPreferences_ResultOK != prefsResult)
 					{
 						// error...pick an arbitrary value
@@ -2407,7 +2400,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						releaseFontName = false;
 					}
 					prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPreferences_TagFontSize, sizeof(fontSize),
-																&fontSize, false/* search defaults too */, &actualSize);
+																&fontSize, false/* search defaults too */);
 					if (kPreferences_ResultOK != prefsResult)
 					{
 						// error...pick an arbitrary value
@@ -2990,11 +2983,10 @@ copyColor	(Preferences_Tag			inSourceTag,
 {
 	Preferences_Result	result = kPreferences_ResultOK;
 	RGBColor			colorValue;
-	size_t				actualSize = 0;
 	
 	
 	result = Preferences_ContextGetData(inSource, inSourceTag, sizeof(colorValue), &colorValue,
-										inSearchDefaults, &actualSize, outIsDefaultOrNull);
+										inSearchDefaults, outIsDefaultOrNull);
 	if (kPreferences_ResultOK == result)
 	{
 		result = Preferences_ContextSetData(inoutDestination, inSourceTag, sizeof(colorValue), &colorValue);
@@ -3437,12 +3429,11 @@ setColorBox		(Preferences_ContextRef		inSettings,
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	RGBColor				colorValue;
-	size_t					actualSize = 0;
 	
 	
 	// read each color, falling back to defaults for anything not defined
 	prefsResult = Preferences_ContextGetData(inSettings, inSourceTag, sizeof(colorValue),
-												&colorValue, true/* search defaults too */, &actualSize,
+												&colorValue, true/* search defaults too */,
 												&outIsDefault);
 	if (kPreferences_ResultOK == prefsResult)
 	{
@@ -3574,11 +3565,9 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	
 	if (Preferences_ContextIsValid(sourceContext))
 	{
-		size_t				actualSize = 0;
 		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
 																		sizeof(result), &result,
-																		true/* search defaults */, &actualSize,
-																		&isDefault);
+																		true/* search defaults */, &isDefault);
 		
 		
 		if (kPreferences_ResultOK != prefsResult)

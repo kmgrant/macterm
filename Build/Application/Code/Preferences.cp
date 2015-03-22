@@ -693,7 +693,7 @@ Preferences_Result		assertInitialized						();
 void					changeNotify							(Preferences_Change, Preferences_ContextRef = nullptr,
 																 Boolean = false);
 Preferences_Result		contextGetData							(My_ContextInterfacePtr, Quills::Prefs::Class, Preferences_Tag,
-																 size_t, void*, size_t*);
+																 size_t, void*);
 Boolean					convertCFArrayToHIRect					(CFArrayRef, HIRect&);
 Boolean					convertCFArrayToRGBColor				(CFArrayRef, RGBColor*);
 Boolean					convertHIRectToCFArray					(HIRect const&, CFArrayRef&);
@@ -1300,12 +1300,11 @@ Preferences_Init ()
 	// is no cleanup function in the Keypads module)
 	{
 		Boolean		windowIsVisible = false;
-		size_t		actualSize = 0L;
 		
 		
-		unless (Preferences_GetData(kPreferences_TagWasControlKeypadShowing,
-									sizeof(windowIsVisible), &windowIsVisible,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagWasControlKeypadShowing,
+									sizeof(windowIsVisible), &windowIsVisible))
 		{
 			windowIsVisible = false; // assume invisible if the preference can’t be found
 		}
@@ -1315,9 +1314,9 @@ Preferences_Init ()
 			Keypads_SetVisible(kKeypads_WindowTypeControlKeys, true);
 		}
 		
-		unless (Preferences_GetData(kPreferences_TagWasFunctionKeypadShowing,
-									sizeof(windowIsVisible), &windowIsVisible,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagWasFunctionKeypadShowing,
+									sizeof(windowIsVisible), &windowIsVisible))
 		{
 			windowIsVisible = false; // assume invisible if the preference can’t be found
 		}
@@ -1327,9 +1326,9 @@ Preferences_Init ()
 			Keypads_SetVisible(kKeypads_WindowTypeFunctionKeys, true);
 		}
 		
-		unless (Preferences_GetData(kPreferences_TagWasVT220KeypadShowing,
-									sizeof(windowIsVisible), &windowIsVisible,
-									&actualSize) == kPreferences_ResultOK)
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagWasVT220KeypadShowing,
+									sizeof(windowIsVisible), &windowIsVisible))
 		{
 			windowIsVisible = false; // assume invisible if the preference can’t be found
 		}
@@ -2252,7 +2251,6 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 							 size_t						inDataStorageSize,
 							 void*						outDataStorage,
 							 Boolean					inSearchDefaults,
-							 size_t*					outActualSizePtrOrNull,
 							 Boolean*					outIsDefaultOrNull)
 {
 	CFStringRef				keyName = nullptr;
@@ -2292,8 +2290,8 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 		
 		if (nullptr != ptr)
 		{
-			result = contextGetData(ptr, dataClass, inDataPreferenceTag, inDataStorageSize,
-									outDataStorage, outActualSizePtrOrNull);
+			result = contextGetData(ptr, dataClass, inDataPreferenceTag,
+									inDataStorageSize, outDataStorage);
 			if ((searchDefaults) && (kPreferences_ResultOK == result))
 			{
 				searchDefaults = false;
@@ -2320,8 +2318,8 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 				My_ContextAutoLocker	alternatePtr(gMyContextPtrLocks(), alternateContext);
 				
 				
-				result = contextGetData(alternatePtr, dataClass, inDataPreferenceTag, inDataStorageSize,
-										outDataStorage, outActualSizePtrOrNull);
+				result = contextGetData(alternatePtr, dataClass, inDataPreferenceTag,
+										inDataStorageSize, outDataStorage);
 			}
 			
 			if (kPreferences_ResultOK != result)
@@ -2340,8 +2338,8 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 					My_ContextAutoLocker	rootPtr(gMyContextPtrLocks(), rootContext);
 					
 					
-					result = contextGetData(rootPtr, dataClass, inDataPreferenceTag, inDataStorageSize,
-											outDataStorage, outActualSizePtrOrNull);
+					result = contextGetData(rootPtr, dataClass, inDataPreferenceTag,
+											inDataStorageSize, outDataStorage);
 				}
 			}
 		}
@@ -3409,8 +3407,7 @@ given tag.
 Preferences_Result
 Preferences_GetData		(Preferences_Tag	inDataPreferenceTag,
 						 size_t				inDataStorageSize,
-						 void*				outDataStorage,
-						 size_t*			outActualSizePtrOrNull)
+						 void*				outDataStorage)
 {
 	Preferences_Result			result = kPreferences_ResultOK;
 	Preferences_ContextRef		context = nullptr;
@@ -3427,7 +3424,7 @@ Preferences_GetData		(Preferences_Tag	inDataPreferenceTag,
 		if (kPreferences_ResultOK == result)
 		{
 			result = Preferences_ContextGetData(context, inDataPreferenceTag, inDataStorageSize,
-												outDataStorage, false/* search defaults too */, outActualSizePtrOrNull);
+												outDataStorage, false/* search defaults too */);
 		}
 	}
 	return result;
@@ -5482,40 +5479,40 @@ contextGetData		(My_ContextInterfacePtr		inContextPtr,
 					 Quills::Prefs::Class		inDataClass,
 					 Preferences_Tag			inDataPreferenceTag,
 					 size_t						inDataStorageSize,
-					 void*						outDataStorage,
-					 size_t*					outActualSizePtrOrNull)
+					 void*						outDataStorage)
 {
 	Preferences_Result		result = kPreferences_ResultOK;
+	size_t					actualSize = 0;
 	
 	
 	switch (inDataClass)
 	{
 	case Quills::Prefs::FORMAT:
-		result = getFormatPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		result = getFormatPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, &actualSize);
 		break;
 	
 	case Quills::Prefs::GENERAL:
-		result = getGeneralPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		result = getGeneralPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, &actualSize);
 		break;
 	
 	case Quills::Prefs::MACRO_SET:
-		result = getMacroPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		result = getMacroPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, &actualSize);
 		break;
 	
 	case Quills::Prefs::SESSION:
-		result = getSessionPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		result = getSessionPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, &actualSize);
 		break;
 	
 	case Quills::Prefs::TERMINAL:
-		result = getTerminalPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		result = getTerminalPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, &actualSize);
 		break;
 	
 	case Quills::Prefs::TRANSLATION:
-		result = getTranslationPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		result = getTranslationPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, &actualSize);
 		break;
 	
 	case Quills::Prefs::WORKSPACE:
-		result = getWorkspacePreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		result = getWorkspacePreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, &actualSize);
 		break;
 	
 	default:
@@ -5523,6 +5520,13 @@ contextGetData		(My_ContextInterfacePtr		inContextPtr,
 		result = kPreferences_ResultUnknownTagOrClass;
 		break;
 	}
+	
+	if (inDataStorageSize != actualSize)
+	{
+		Console_Warning(Console_WriteValueFourChars, "incorrect request for preference data with tag", inDataPreferenceTag);
+		Console_Warning(Console_WriteValue, "required byte count for value", actualSize);
+	}
+	
 	return result;
 }// contextGetData
 

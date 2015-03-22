@@ -1092,7 +1092,6 @@ readPreferences		(Preferences_ContextRef		inSettings,
 	{
 		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		size_t					actualSize = 0;
 		
 		
 		// set key type
@@ -1102,7 +1101,7 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			
 			prefsResult = Preferences_ContextGetData
 							(inSettings, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, inOneBasedIndex),
-								sizeof(macroKey), &macroKey, false/* search defaults too */, &actualSize);
+								sizeof(macroKey), &macroKey, false/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				UInt32		prefKeyType = 0;
@@ -1128,7 +1127,7 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			
 			prefsResult = Preferences_ContextGetData
 							(inSettings, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, inOneBasedIndex),
-								sizeof(modifiers), &modifiers, false/* search defaults too */, &actualSize);
+								sizeof(modifiers), &modifiers, false/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setKeyModifiers(modifiers);
@@ -1147,7 +1146,7 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			
 			prefsResult = Preferences_ContextGetData
 							(inSettings, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, inOneBasedIndex),
-								sizeof(actionPerformed), &actionPerformed, false/* search defaults too */, &actualSize);
+								sizeof(actionPerformed), &actionPerformed, false/* search defaults too */);
 			if (kPreferences_ResultOK != prefsResult)
 			{
 				// initialize; do not fall back on defaults because there is
@@ -1172,7 +1171,7 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			
 			prefsResult = Preferences_ContextGetData
 							(inSettings, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, inOneBasedIndex),
-								sizeof(actionCFString), &actionCFString, false/* search defaults too */, &actualSize);
+								sizeof(actionCFString), &actionCFString, false/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				SetControlTextWithCFString(HIViewWrap(idMyFieldMacroText, kOwningWindow), actionCFString);
@@ -1604,13 +1603,12 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 				Preferences_Index	macroIndex = STATIC_CAST(inItemID, Preferences_Index);
 				CFStringRef			nameCFString = nullptr;
 				Preferences_Result	prefsResult = kPreferences_ResultOK;
-				size_t				actualSize = 0;
 				
 				
 				prefsResult = Preferences_ContextGetData
 								(panelDataPtr->dataModel,
 									Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex),
-									sizeof(nameCFString), &nameCFString, false/* search defaults too */, &actualSize);
+									sizeof(nameCFString), &nameCFString, false/* search defaults too */);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					result = SetDataBrowserItemDataText(inItemData, nameCFString);
@@ -1748,18 +1746,17 @@ compareDataBrowserItems		(HIViewRef					inDataBrowser,
 			{
 				SInt32		macroIndex1 = STATIC_CAST(inItemOne, SInt32);
 				SInt32		macroIndex2 = STATIC_CAST(inItemTwo, SInt32);
-				size_t		actualSize = 0;
 				
 				
 				// ignore results, the strings are checked below
 				UNUSED_RETURN(Preferences_Result)Preferences_ContextGetData
 													(panelDataPtr->dataModel,
 														Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex1),
-														sizeof(string1), &string1, false/* search defaults too */, &actualSize);
+														sizeof(string1), &string1, false/* search defaults too */);
 				UNUSED_RETURN(Preferences_Result)Preferences_ContextGetData
 													(panelDataPtr->dataModel,
 														Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex2),
-														sizeof(string2), &string2, false/* search defaults too */, &actualSize);
+														sizeof(string2), &string2, false/* search defaults too */);
 			}
 			
 			// check for nullptr, because CFStringCompare() will not deal with it
