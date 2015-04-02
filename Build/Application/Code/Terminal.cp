@@ -2356,8 +2356,8 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 					// fill in remaining lines; the last line is special
 					// because it will end “early” at the end anchor
 					{
-						register SInt16		i = 0;
-						SInt32 const		kLineEnd = (inNumberOfRowsToConsider - 1);
+						SInt16			i = 0;
+						SInt32 const	kLineEnd = (inNumberOfRowsToConsider - 1);
 						
 						
 						for (i = 0; i < kLineEnd; ++i, iteratorPtr->goToNextLine(isEnd))
@@ -3126,7 +3126,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 			// character in this particular buffer may form the first character
 			// in a sequence, and this scan must be continued the next time this
 			// function is called)
-			for (register UInt32 i = inLength; i > 0; )
+			for (UInt32 i = inLength; i > 0; )
 			{
 				Boolean		skipEmulators = false;
 				
@@ -6415,9 +6415,10 @@ sendEscape	(SessionRef		inSession,
 		}
 		else
 		{
-			UInt8	eightBit[] = { asCharPtr[1] + 0x40 }; // translate 7-bit to 8-bit, ignore the ESC
+			UInt8	eightBit[] = { '\0' };
 			
 			
+			eightBit[0] = (asCharPtr[1] + 0x40); // translate 7-bit to 8-bit, ignore the ESC
 			Session_SendData(inSession, eightBit, 1/* count */);
 			if (inSequenceLength > 2)
 			{
@@ -8974,7 +8975,7 @@ inline void
 My_VT100::
 loadLEDs	(My_ScreenBufferPtr		inDataPtr)
 {
-	register SInt16		i = 0;
+	SInt16		i = 0;
 	
 	
 	for (i = 0; i <= inDataPtr->emulator.argLastIndex; ++i)
@@ -9016,8 +9017,8 @@ modeSetReset	(My_ScreenBufferPtr		inDataPtr,
 	{
 	case kMy_ParamPrivate: // DEC-private control sequence
 		{
-			register SInt16		i = 0;
-			Boolean				emulateDECOMBug = false;
+			SInt16		i = 0;
+			Boolean		emulateDECOMBug = false;
 			
 			
 			for (i = 1/* skip the meta-parameter */; i <= inDataPtr->emulator.argLastIndex; ++i)
@@ -14191,10 +14192,10 @@ changeLineRangeAttributes	(My_ScreenBufferPtr			inDataPtr,
 							 TerminalTextAttributes		inSetTheseAttributes,
 							 TerminalTextAttributes		inClearTheseAttributes)
 {
-	SInt16				pastTheEndColumn = (inZeroBasedPastTheEndColumnOrNegativeForLastColumn < 0)
-											? inDataPtr->text.visibleScreen.numberOfColumnsAllocated
-											: inZeroBasedPastTheEndColumnOrNegativeForLastColumn;
-	register SInt16		i = 0;
+	SInt16		pastTheEndColumn = (inZeroBasedPastTheEndColumnOrNegativeForLastColumn < 0)
+									? inDataPtr->text.visibleScreen.numberOfColumnsAllocated
+									: inZeroBasedPastTheEndColumnOrNegativeForLastColumn;
+	SInt16		i = 0;
 	
 	
 	// update attributes for the specified columns of the given line
@@ -14385,8 +14386,8 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 	if (false == kPrinterOnly)
 	{
 		My_ScreenBufferLineList::iterator	cursorLineIterator;
-		register SInt16						preWriteCursorX = inDataPtr->current.cursorX;
-		register My_ScreenRowIndex			preWriteCursorY = inDataPtr->current.cursorY;
+		SInt16								preWriteCursorX = inDataPtr->current.cursorX;
+		My_ScreenRowIndex					preWriteCursorY = inDataPtr->current.cursorY;
 		TerminalTextAttributes				temporaryAttributes = 0;
 		CFStringInlineBuffer				inlineBuffer;
 		
@@ -14549,7 +14550,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 	{
 		ASCII_ESC	= 0x1B		//!< escape character
 	};
-	register SInt16				escflg = 0;//inDataPtr->current.escapeSequence.level;
+	SInt16						escflg = 0;//inDataPtr->current.escapeSequence.level;
     SInt32						ctr = inLength; // 3.0 - use a COPY so string length parameter’s original value isn’t lost!!!
 	UInt8 const*				c = inBuffer;
 	My_CharacterSetInfoPtr		characterSetInfoPtr = nullptr; // which character set (G0 or G1) is being modified; used only for shift-in, -out
@@ -14696,7 +14697,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			TerminalLine_TextIterator			startIterator = nullptr;
 			TerminalTextAttributes				attrib = 0;
 			TerminalTextAttributes				temporaryAttributes = 0;
-			register SInt16						preWriteCursorX = 0;
+			SInt16								preWriteCursorX = 0;
 			SInt16								extra = 0;
 			Boolean								wrapped = false;
 			My_ScreenBufferLineList::iterator	cursorLineIterator;
@@ -16601,7 +16602,7 @@ screenMoveLinesToScrollback		(My_ScreenBufferPtr						inDataPtr,
 			
 			// get the line destined for the new bottom of the main screen;
 			// either extract it from elsewhere, or allocate a new line
-			for (register My_ScreenBufferLineList::size_type i = 0; i < inNumberOfElements; ++i)
+			for (My_ScreenBufferLineList::size_type i = 0; i < inNumberOfElements; ++i)
 			{
 				// extract the oldest line
 				assert(!inDataPtr->screenBuffer.empty());

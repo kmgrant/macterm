@@ -189,34 +189,6 @@ protected:
 private:
 };
 
-
-/*!
-This is a functor that calls Memory_DisposePtr() on a
-pointer - so, on output, the pointer is set to nullptr.
-(Presumably, the pointer was allocated with
-Memory_NewPtr().)
-
-Model of STL Unary Function.
-
-(1.0)
-*/
-#pragma mark ptrDisposer
-class ptrDisposer:
-public std::unary_function< Ptr&/* argument */, void/* return */ >
-{
-public:
-	void
-	operator()	(Ptr&	inoutPtr)
-	const
-	{
-		Memory_DisposePtr(&inoutPtr);
-	}
-
-protected:
-
-private:
-};
-
 } // anonymous namespace
 
 
@@ -2260,8 +2232,8 @@ parseFile	(SInt16				inFileReferenceNumber,
 		}
 		
 		// clean up
-		std::for_each(nameList.begin(), nameList.end(), ptrDisposer());
-		std::for_each(valueList.begin(), valueList.end(), ptrDisposer());
+		std::for_each(nameList.begin(), nameList.end(), [&](Ptr p) { Memory_DisposePtr(&p); });
+		std::for_each(valueList.begin(), valueList.end(), [&](Ptr p) { Memory_DisposePtr(&p); });
 		TextDataFile_Dispose(&file);
 	}
 	

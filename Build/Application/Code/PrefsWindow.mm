@@ -318,35 +318,6 @@ Float32									gBottomMargin = 0;
 #pragma mark Functors
 
 /*!
-This is a functor that determines if a given panel
-data structure is intended for a particular panel.
-
-Model of STL Predicate.
-
-(3.0)
-*/
-class isPanelDataForSpecificPanel:
-public std::unary_function< MyPanelDataPtr/* argument */, bool/* return */ >
-{
-public:
-	isPanelDataForSpecificPanel	(Panel_Ref	inPanel)
-	: _panel(inPanel)
-	{
-	}
-	
-	bool
-	operator ()	(MyPanelDataPtr		inPanelDataPtr)
-	{
-		return (inPanelDataPtr->panel == _panel);
-	}
-
-protected:
-
-private:
-	Panel_Ref	_panel;
-};
-
-/*!
 Finds a panel’s ideal size.  If invoked on several
 panels successively, the cumulative maximum is stored.
 

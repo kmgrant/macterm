@@ -820,28 +820,6 @@ private:
 	CFRetainRelease		_name;
 };
 
-/*!
-Calls save() on a context.
-
-(3.1)
-*/
-class contextSave:
-public std::unary_function< My_ContextInterfacePtr/* argument */, void/* return */ >
-{
-public:
-	contextSave () {}
-	
-	void
-	operator ()	(My_ContextInterfacePtr		inContextPtr)
-	{
-		inContextPtr->save();
-	}
-
-protected:
-
-private:
-};
-
 } // anonymous namespace
 
 
@@ -2651,9 +2629,9 @@ Preferences_ContextRepositionRelativeToContext	(Preferences_ContextRef		inContex
 		else
 		{
 			auto	toMovedContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
-														std::bind2nd(std::equal_to< My_ContextFavoritePtr >(), derivedPtr));
+														[=](My_ContextFavoritePtr p) { return (derivedPtr == p); });
 			auto	toRefContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
-													std::bind2nd(std::equal_to< My_ContextFavoritePtr >(), derivedReferencePtr));
+													[=](My_ContextFavoritePtr p) { return (derivedReferencePtr == p); });
 			
 			
 			if ((listPtr->end() == toMovedContextPtr) || (listPtr->end() == toRefContextPtr))
@@ -2664,7 +2642,7 @@ Preferences_ContextRepositionRelativeToContext	(Preferences_ContextRef		inContex
 			{
 				listPtr->erase(toMovedContextPtr);
 				toRefContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
-												std::bind2nd(std::equal_to< My_ContextFavoritePtr >(), derivedReferencePtr));
+												[=](My_ContextFavoritePtr p) { return (derivedReferencePtr == p); });
 				assert(listPtr->end() != toRefContextPtr);
 				if (false == inInsertBefore)
 				{
@@ -2727,7 +2705,7 @@ Preferences_ContextRepositionRelativeToSelf		(Preferences_ContextRef		inContext,
 		{
 			// find the position of the specified context in the list
 			auto	toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
-												std::bind2nd(std::equal_to< My_ContextFavoritePtr >(), derivedPtr));
+												[=](My_ContextFavoritePtr p) { return (derivedPtr == p); });
 			
 			
 			if (listPtr->end() == toContextPtr) result = kPreferences_ResultInvalidContextReference;
@@ -3629,7 +3607,8 @@ Preferences_IsContextNameInUse		(Quills::Prefs::Class	inClass,
 		
 		if (getListOfContexts(inClass, listPtr))
 		{
-			auto	toContextPtr = std::find_if(listPtr->begin(), listPtr->end(), contextNameEqualTo(inProposedName));
+			auto	toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
+												contextNameEqualTo(inProposedName));
 			
 			
 			if (listPtr->end() != toContextPtr)
@@ -3718,16 +3697,17 @@ Preferences_Result
 Preferences_Save ()
 {
 	Preferences_Result		result = kPreferences_ResultOK;
+	auto					contextSaver = [](My_ContextInterfacePtr p) { p->save(); };
 	
 	
 	// make sure all open context dictionaries are in preferences too
-	std::for_each(gAutoSaveNamedContexts().begin(), gAutoSaveNamedContexts().end(), contextSave());
-	std::for_each(gFormatNamedContexts().begin(), gFormatNamedContexts().end(), contextSave());
-	std::for_each(gMacroSetNamedContexts().begin(), gMacroSetNamedContexts().end(), contextSave());
-	std::for_each(gSessionNamedContexts().begin(), gSessionNamedContexts().end(), contextSave());
-	std::for_each(gTerminalNamedContexts().begin(), gTerminalNamedContexts().end(), contextSave());
-	std::for_each(gTranslationNamedContexts().begin(), gTranslationNamedContexts().end(), contextSave());
-	std::for_each(gWorkspaceNamedContexts().begin(), gWorkspaceNamedContexts().end(), contextSave());
+	std::for_each(gAutoSaveNamedContexts().begin(), gAutoSaveNamedContexts().end(), contextSaver);
+	std::for_each(gFormatNamedContexts().begin(), gFormatNamedContexts().end(), contextSaver);
+	std::for_each(gMacroSetNamedContexts().begin(), gMacroSetNamedContexts().end(), contextSaver);
+	std::for_each(gSessionNamedContexts().begin(), gSessionNamedContexts().end(), contextSaver);
+	std::for_each(gTerminalNamedContexts().begin(), gTerminalNamedContexts().end(), contextSaver);
+	std::for_each(gTranslationNamedContexts().begin(), gTranslationNamedContexts().end(), contextSaver);
+	std::for_each(gWorkspaceNamedContexts().begin(), gWorkspaceNamedContexts().end(), contextSaver);
 	
 	if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
 	{
@@ -7336,7 +7316,8 @@ getNamedContext		(Quills::Prefs::Class		inClass,
 		
 		if (getListOfContexts(inClass, listPtr))
 		{
-			auto	toContextPtr = std::find_if(listPtr->begin(), listPtr->end(), contextNameEqualTo(inName));
+			auto	toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
+												contextNameEqualTo(inName));
 			
 			
 			if (listPtr->end() != toContextPtr)

@@ -348,7 +348,7 @@ Console_WriteValueBitFlags		(char const*	inLabel,
 	
 	
 	s << inLabel << " = ";
-	register SInt16		i = 0;
+	SInt16		i = 0;
 	for (i = 31; i >= 0; --i)
 	{
 		s << (in32BitValue & (1 << i) ? "1" : "0");

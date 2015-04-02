@@ -4062,13 +4062,13 @@ handleNewSize	(WindowRef	inWindow,
 											};
 			UInt16 const					kNumberOfViews = TerminalWindow_ReturnViewCount(terminalWindow);
 			TerminalViewRef*				viewArray = new TerminalViewRef[kNumberOfViews];
-			register SInt16					groupIndex = 0;
+			SInt16							groupIndex = 0;
 			
 			
 			for (groupIndex = 0; groupIndex < STATIC_CAST(sizeof(kViewGroupArray) / sizeof(TerminalWindow_ViewGroup), SInt16); ++groupIndex)
 			{
-				register SInt16		i = 0;
-				UInt16				actualNumberOfViews = 0;
+				SInt16		i = 0;
+				UInt16		actualNumberOfViews = 0;
 				
 				
 				// find all the views belonging to this tab and apply the resize

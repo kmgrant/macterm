@@ -1214,7 +1214,7 @@ Local_TerminalWriteBytes	(int			inFileDescriptor,
 	size_t				bytesLeft = 0;
 	ssize_t				bytesWritten = 0;
 	ssize_t				result = inByteCount;
-	register SInt16		clogCount = 0;
+	SInt16				clogCount = 0;
 	
 	
 	ptr = REINTERPRET_CAST(inBufferPtr, char const*); // use char*, pointer arithmetic doesn’t work on void*

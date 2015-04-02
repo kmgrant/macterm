@@ -167,11 +167,11 @@ void
 Localization_ArrangeButtonArray		(ControlRef const*	inButtons,
 									 UInt16				inButtonCount)
 {
-	register SInt16		i = 0;
-	UInt16				firstButtonWidth = 0;
-	SInt16				positionH = 0;
-	SInt16				positionV = 0;
-	Rect				windowRect;
+	SInt16		i = 0;
+	UInt16		firstButtonWidth = 0;
+	SInt16		positionH = 0;
+	SInt16		positionV = 0;
+	Rect		windowRect;
 	
 	
 	bzero(&windowRect, sizeof(windowRect));

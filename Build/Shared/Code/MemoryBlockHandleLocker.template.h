@@ -57,12 +57,12 @@ public MemoryBlockLocker< structure_reference_type, structure_type >
 public:
 	//! returns the value of the handle’s master pointer, guaranteed to be stable while the handle is locked
 	structure_type*
-	acquireLock	(structure_reference_type	inReference);
+	acquireLock	(structure_reference_type	inReference) override;
 	
 	//! nullifies a copy of the master pointer value so the caller can no longer use it; might unlock the underlying handle
 	void
 	releaseLock	(structure_reference_type	inReference,
-				 structure_type**			inoutPtrPtr);
+				 structure_type**			inoutPtrPtr) override;
 
 protected:
 

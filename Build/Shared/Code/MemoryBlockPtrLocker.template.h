@@ -63,12 +63,12 @@ public:
 	
 	//! reinterprets the reference as a pointer; nullptr is allowed
 	structure_type*
-	acquireLock	(structure_reference_type	inReference);
+	acquireLock	(structure_reference_type	inReference) override;
 	
 	//! for basic pointer locks, an unlock simply means “set my copy to nullptr so I don’t use it again”
 	void
 	releaseLock	(structure_reference_type	inReference,
-				 structure_type**			inoutPtrPtr);
+				 structure_type**			inoutPtrPtr) override;
 	
 	//! test routine
 	static Boolean

@@ -204,31 +204,6 @@ private:
 
 
 /*!
-This is a functor designed to dispose of the
-specified event listener list.
-
-Model of STL Unary Function.
-
-(1.0)
-*/
-#pragma mark modelListenerListDeleter
-class modelListenerListDeleter:
-public std::unary_function< My_EventToListenerListPtrMap::value_type/* argument */, void/* return */ >
-{
-public:
-	void
-	operator()	(My_EventToListenerListPtrMap::value_type&	inPair)
-	{
-		delete inPair.second;
-	}
-
-protected:
-
-private:
-};
-
-
-/*!
 This is a functor designed to invoke a listener
 of the OSStatus type (that is, it has a return
 value of true as long as the result is something

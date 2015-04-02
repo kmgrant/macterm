@@ -124,10 +124,10 @@ Network_CopyIPAddresses		(std::vector< CFRetainRelease >&	inoutAddresses)
 		result = allCurrentIPAddressesAndAliases(currentHost, targetFamilies[i]);
 		if (result)
 		{
-			char**				hostList = currentHost->h_addr_list;
+			char**			hostList = currentHost->h_addr_list;
 			assert(nullptr != hostList);
-			register SInt16		hostIndex = 0;
-			CFStringRef			addressCFString = nullptr;
+			SInt16			hostIndex = 0;
+			CFStringRef		addressCFString = nullptr;
 			
 			
 			for (; nullptr != *hostList; ++hostList, ++hostIndex)

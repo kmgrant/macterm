@@ -513,8 +513,8 @@ public:
 	{
 		// dumb terminal - raw mode for debugging, pass through escape sequences
 		// and other special characters as <27> symbols
-		register size_t		i = 0;
-		UInt8 const*		currentCharPtr = _buffer;
+		size_t			i = 0;
+		UInt8 const*	currentCharPtr = _buffer;
 		
 		
 		for (i = 0; i < _bufferSize; ++i, ++currentCharPtr)
@@ -1578,7 +1578,7 @@ void
 Session_FlushNetwork	(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	register SInt16			remainingBytesCount = 0;
+	SInt16					remainingBytesCount = 0;
 	
 	
 	TerminalView_SetDrawingEnabled(TerminalWindow_ReturnViewWithFocus(Session_ReturnActiveTerminalWindow(inRef)),
@@ -9174,10 +9174,10 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				if (viewArray != nullptr)
 				{
-					HIViewRef			userFocusView = nullptr;
-					HIViewRef			dragFocusView = nullptr;
-					register SInt16		i = 0;
-					OSStatus			error = noErr;
+					HIViewRef		userFocusView = nullptr;
+					HIViewRef		dragFocusView = nullptr;
+					SInt16			i = 0;
+					OSStatus		error = noErr;
 					
 					
 					ptr->terminalViewDragDropUPP = NewEventHandlerUPP(receiveTerminalViewDragDrop);
@@ -9293,9 +9293,9 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				if (viewArray != nullptr)
 				{
-					HIViewRef			userFocusView = nullptr;
-					HIViewRef			dragFocusView = nullptr;
-					register SInt16		i = 0;
+					HIViewRef		userFocusView = nullptr;
+					HIViewRef		dragFocusView = nullptr;
+					SInt16			i = 0;
 					
 					
 					TerminalWindow_GetViews(ptr->terminalWindow, viewCount, viewArray, &viewCount/* actual length */);

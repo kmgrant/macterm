@@ -58,16 +58,6 @@
 #pragma mark Types
 namespace {
 
-struct create_cfstr:
-public std::unary_function< std::string, CFStringRef >
-{
-	CFStringRef
-	operator ()	(std::string const&		inString)
-	{
-		return CFStringCreateWithCString(kCFAllocatorDefault, inString.c_str(), kCFStringEncodingUTF8);
-	}
-};
-
 typedef std::pair< Quills::FunctionReturnVoidArg1VoidPtrArg2CharPtr, void* >	MyFileHandlerPythonObjectPair;
 typedef std::map< std::string, MyFileHandlerPythonObjectPair >					MyFileHandlerPythonObjectPairByExtension;
 
@@ -128,7 +118,8 @@ _session(nullptr)
 		Preferences_ContextRef							workspaceContext = nullptr;
 		
 		
-		std::transform(inArgV.begin(), inArgV.end(), args, create_cfstr());
+		std::transform(inArgV.begin(), inArgV.end(), args,
+						[](const std::string &s) { return CFStringCreateWithCString(kCFAllocatorDefault, s.c_str(), kCFStringEncodingUTF8); });
 		argsObject.setCFTypeRef(CFArrayCreate(kCFAllocatorDefault, args, argc, &kCFTypeArrayCallBacks), true/* is retained */);
 		_session = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argsObject.returnCFArrayRef()/* command */,
 																nullptr/* preferences context */, false/* reconfigure terminal */,

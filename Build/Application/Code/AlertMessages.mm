@@ -1929,7 +1929,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 				ControlRef		allIcons[] = { ptr->stopIcon, ptr->noteIcon, ptr->cautionIcon };
 				
 				
-				for (register size_t i = 0; i < sizeof(allIcons) / sizeof(ControlRef); ++i)
+				for (size_t i = 0; i < sizeof(allIcons) / sizeof(ControlRef); ++i)
 				{
 					if (ptr->mainIcon != allIcons[i])
 					{

@@ -59,7 +59,7 @@ public MemoryBlockLocker< structure_reference_type, structure_type >
 public:
 	//! increments the lock count by one; always returns nullptr because pointer return value has no meaning
 	structure_type*
-	acquireLock	(structure_reference_type	inReference);
+	acquireLock	(structure_reference_type	inReference) override;
 	
 	//! decrements the lock count by one
 	void
@@ -69,7 +69,7 @@ protected:
 	//! decrements the lock count by one; unused 2nd parameter
 	void
 	releaseLock	(structure_reference_type	inReference,
-				 structure_type**			inDummyPtr);
+				 structure_type**			inDummyPtr) override;
 
 private:
 };

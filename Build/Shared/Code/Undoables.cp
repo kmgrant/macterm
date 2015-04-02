@@ -151,7 +151,7 @@ Undoables_Done ()
 	MyUndoStack const*	stacks[] = { &gUndoStack(), &gRedoStack() };
 	
 	
-	for (register UInt16 i = 0; i < (sizeof(stacks) / sizeof(MyUndoStack const*)); ++i)
+	for (UInt16 i = 0; i < (sizeof(stacks) / sizeof(MyUndoStack const*)); ++i)
 	{
 		while (false == stacks[i]->empty())
 		{

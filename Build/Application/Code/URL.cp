@@ -360,8 +360,8 @@ URL_Type
 URL_ReturnTypeFromCharacterRange	(char const*	inBegin,
 									 char const*	inPastEnd)
 {
-	URL_Type			result = kURL_TypeInvalid;
-	register SInt16		i = 0;
+	URL_Type	result = kURL_TypeInvalid;
+	SInt16		i = 0;
 	
 	
 	// look for a match on the prefix (e.g. "http:")

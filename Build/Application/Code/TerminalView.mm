@@ -1363,10 +1363,10 @@ TerminalView_FlashSelection		(TerminalViewRef	inView)
 	
 	if (viewPtr->text.selection.exists)
 	{
-		register SInt16		i = 0;
-		UInt32				finalTick = 0L;
-		CGrafPtr			currentPort = nullptr;
-		GDHandle			currentDevice = nullptr;
+		SInt16		i = 0;
+		UInt32		finalTick = 0L;
+		CGrafPtr	currentPort = nullptr;
+		GDHandle	currentDevice = nullptr;
 		
 		
 		// for better performance on Mac OS X, lock the bits of a port
@@ -5942,10 +5942,12 @@ drawSymbolFontLetter	(My_TerminalViewPtr		UNUSED_ARGUMENT(inTerminalViewPtr),
 	if (FMGetFontFamilyFromName("\pSymbol") != kInvalidFontFamily)
 	{
 		// this is in Mac Roman encoding
-		UInt8	text[] = { inMacRomanForQuickDraw };
+		UInt8	text[] = { '\0' };
 		SInt16	oldFontID = 0;
 		SInt16	oldFontSize = 0;
 		
+		
+		text[0] = inMacRomanForQuickDraw;
 		
 		{
 			CGrafPtr	currentPort = nullptr;
@@ -6265,8 +6267,8 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			{
 				// bottom half of double-sized text; force the text to use
 				// twice the normal font metrics
-				register SInt16		i = 0;
-				Point				oldPen;
+				SInt16		i = 0;
+				Point		oldPen;
 				
 				
 				for (i = 0; i < inCharacterCount; ++i)
@@ -6293,9 +6295,9 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			{
 				// proportional font, or bold, or otherwise non-standard width; force the text
 				// to draw one character at a time so that the character offset can be corrected
-				register SInt16		i = 0;
-				Point				oldPen;
-				char				previousChar = '\0'; // aids heuristic algorithm; certain letter combinations may demand different offsets
+				SInt16		i = 0;
+				Point		oldPen;
+				char		previousChar = '\0'; // aids heuristic algorithm; certain letter combinations may demand different offsets
 				
 				
 				for (i = 0; i < inCharacterCount; ++i)
@@ -7175,8 +7177,10 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
 		// non-graphics character
 		{
 			// this is in Mac Roman encoding
-			UInt8	text[] = { inMacRomanForQuickDraw };
+			UInt8	text[] = { '\0' };
 			
+			
+			text[0] = inMacRomanForQuickDraw;
 			
 			DrawText(text, 0/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
 		}
@@ -11955,7 +11959,7 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		{
 			Terminal_RangeDescriptionConstPtr	rangeInfoPtr = REINTERPRET_CAST(inEventContextPtr,
 																				Terminal_RangeDescriptionConstPtr);
-			register SInt32						i = 0;
+			SInt32								i = 0;
 			
 			
 			// debug

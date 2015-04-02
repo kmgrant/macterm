@@ -275,71 +275,6 @@ Model of STL Unary Function.
 
 (3.1)
 */
-#pragma mark removeTerminalWindowFromWorkspace
-class removeTerminalWindowFromWorkspace:
-public std::unary_function< Workspace_Ref/* argument */, void/* return */ >
-{
-public:
-	removeTerminalWindowFromWorkspace	(TerminalWindowRef	inTerminalWindow)
-	: _window(TerminalWindow_ReturnWindow(inTerminalWindow))
-	{
-	}
-	
-	void
-	operator()	(Workspace_Ref	inWorkspace)
-	const
-	{
-		HIWindowRef		window = REINTERPRET_CAST(_window.returnHIObjectRef(), HIWindowRef);
-		
-		
-		Workspace_RemoveWindow(inWorkspace, window);
-	}
-
-protected:
-
-private:
-	CFRetainRelease		_window;
-};
-
-/*!
-This is a functor that determines if the specified
-terminal window is used by the given session.
-
-Model of STL Predicate.
-
-(3.0)
-*/
-#pragma mark sessionUsesTerminalWindow
-class sessionUsesTerminalWindow:
-public std::unary_function< SessionRef/* argument */, bool/* return */ >
-{
-public:
-	sessionUsesTerminalWindow	(TerminalWindowRef	inTerminalWindowRef)
-	: _terminalWindow(inTerminalWindowRef)
-	{
-	}
-	
-	bool
-	operator()	(SessionRef		inSession)
-	const
-	{
-		return (Session_ReturnActiveTerminalWindow(inSession) == _terminalWindow);
-	}
-
-protected:
-
-private:
-	TerminalWindowRef	_terminalWindow;
-};
-
-/*!
-This is a functor that removes the terminal window
-given at construction time, from a specified workspace.
-
-Model of STL Unary Function.
-
-(3.1)
-*/
 #pragma mark workspaceContainsWindow
 class workspaceContainsWindow:
 public std::unary_function< Workspace_Ref/* argument */, bool/* return */ >
@@ -1782,8 +1717,7 @@ SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalW
 	assert(workspaceList.end() != std::find(workspaceList.begin(), workspaceList.end(), newWorkspace));
 	
 	// ensure the window is not a member of any other workspace
-	(removeTerminalWindowFromWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
-														removeTerminalWindowFromWorkspace(inTerminalWindow));
+	std::for_each(workspaceList.begin(), workspaceList.end(), [=](Workspace_Ref wsp) { Workspace_RemoveWindow(wsp, window); });
 	if (gAutoRearrangeTabs)
 	{
 		// TEMPORARY, INCOMPLETE - figure out what workspace the window used to be in,
@@ -3365,7 +3299,10 @@ stopTrackingSession		(SessionRef		inSession)
 			// window as well!
 			SessionList&	targetList = gSessionListSortedByCreationTime();
 			auto			sessionIterator = std::find_if(targetList.begin(), targetList.end(),
-															sessionUsesTerminalWindow(terminalWindow));
+															[=](SessionRef s)
+															{
+																return (Session_ReturnActiveTerminalWindow(s) == terminalWindow);
+															});
 			
 			
 			if (targetList.end() == sessionIterator)
@@ -3401,9 +3338,12 @@ stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 {
 	// remove this window from any workspaces that contain it,
 	// and shuffle tab order across workspaces accordingly
-	MyWorkspaceList&		workspaceList = gWorkspaceListSortedByCreationTime();
-	(removeTerminalWindowFromWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
-														removeTerminalWindowFromWorkspace(inTerminalWindow));
+	MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
+	HIWindowRef			window = TerminalWindow_ReturnWindow(inTerminalWindow);
+	
+	
+	std::for_each(workspaceList.begin(), workspaceList.end(), [=](Workspace_Ref wsp) { Workspace_RemoveWindow(wsp, window); });
+	
 	if (gAutoRearrangeTabs)
 	{
 		(fixTerminalWindowTabPositionsInWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),

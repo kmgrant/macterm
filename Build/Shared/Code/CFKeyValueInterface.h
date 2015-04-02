@@ -295,93 +295,99 @@ public:
 	explicit
 	CFKeyValueDictionary	(CFDictionaryRef	inSource);
 	
+	
+	// CFKeyValueInterface overrides
+	
 	//! inserts array value into dictionary
 	inline void
 	addArray	(CFStringRef	inKey,
-				 CFArrayRef		inValue);
+				 CFArrayRef		inValue) override;
 	
 	//! inserts data value into dictionary
 	inline void
 	addData		(CFStringRef	inKey,
-				 CFDataRef		inValue);
+				 CFDataRef		inValue) override;
 	
 	//! inserts true/false value into dictionary
 	inline void
 	addFlag		(CFStringRef	inKey,
-				 Boolean		inValue);
+				 Boolean		inValue) override;
 	
 	//! inserts floating-point value into dictionary
 	inline void
 	addFloat	(CFStringRef	inKey,
-				 Float32		inValue);
+				 Float32		inValue) override;
 	
 	//! inserts short integer value into dictionary
 	inline void
 	addInteger	(CFStringRef	inKey,
-				 SInt16			inValue);
+				 SInt16			inValue) override;
 	
 	//! inserts short integer value into dictionary
 	inline void
 	addLong		(CFStringRef	inKey,
-				 SInt32			inValue);
+				 SInt32			inValue) override;
 	
 	//! inserts string value into dictionary
 	inline void
 	addString	(CFStringRef	inKey,
-				 CFStringRef	inValue);
+				 CFStringRef	inValue) override;
 	
 	//! inserts arbitrary value into dictionary
 	inline void
 	addValue	(CFStringRef		inKey,
-				 CFPropertyListRef	inValue);
+				 CFPropertyListRef	inValue) override;
 	
 	//! removes an arbitrary value from the dictionary
 	inline void
-	deleteValue		(CFStringRef	inKey);
+	deleteValue		(CFStringRef	inKey) override;
 	
 	//! returns true only if a key exists in the dictionary
 	inline Boolean
-	exists	(CFStringRef	inKey) const;
+	exists	(CFStringRef	inKey) const override;
 	
 	//! retrieves an array value from the dictionary (use only if the value really is an array!)
 	inline CFArrayRef
-	returnArrayCopy		(CFStringRef	inKey) const;
+	returnArrayCopy		(CFStringRef	inKey) const override;
+	
+	//! retrieves a true or false value from the dictionary (use only if the value really is a Boolean!)
+	inline Boolean
+	returnFlag		(CFStringRef	inKey) const override;
+	
+	//! retrieves a floating-point value from the dictionary (use only if the value really is a number!)
+	inline Float32
+	returnFloat		(CFStringRef	inKey) const override;
+	
+	//! retrieves a short integer value from the dictionary (use only if the value really is a number!)
+	inline SInt16
+	returnInteger	(CFStringRef	inKey) const override;
+	
+	//! creates an array of CFStringRef values for each key used in this context
+	inline CFArrayRef
+	returnKeyListCopy () const override;
+	
+	//! retrieves a long integer value from the dictionary (use only if the value really is a number!)
+	inline SInt32
+	returnLong		(CFStringRef	inKey) const override;
+	
+	//! retrieves a string value from the dictionary (use only if the value really is a string!)
+	inline CFStringRef
+	returnStringCopy	(CFStringRef	inKey) const override;
+	
+	//! retrieves an arbitrary value from the dictionary
+	inline CFPropertyListRef
+	returnValueCopy		(CFStringRef	inKey) const override;
+	
+	
+	// new methods
 	
 	//! return the managed dictionary in a form that cannot be changed
 	inline CFDictionaryRef
 	returnDictionary () const;
 	
-	//! retrieves a true or false value from the dictionary (use only if the value really is a Boolean!)
-	inline Boolean
-	returnFlag		(CFStringRef	inKey) const;
-	
-	//! retrieves a floating-point value from the dictionary (use only if the value really is a number!)
-	inline Float32
-	returnFloat		(CFStringRef	inKey) const;
-	
-	//! retrieves a short integer value from the dictionary (use only if the value really is a number!)
-	inline SInt16
-	returnInteger	(CFStringRef	inKey) const;
-	
-	//! creates an array of CFStringRef values for each key used in this context
-	inline CFArrayRef
-	returnKeyListCopy () const;
-	
-	//! retrieves a long integer value from the dictionary (use only if the value really is a number!)
-	inline SInt32
-	returnLong		(CFStringRef	inKey) const;
-	
 	//! return the managed dictionary
 	inline CFMutableDictionaryRef
 	returnMutableDictionary () const;
-	
-	//! retrieves a string value from the dictionary (use only if the value really is a string!)
-	inline CFStringRef
-	returnStringCopy	(CFStringRef	inKey) const;
-	
-	//! retrieves an arbitrary value from the dictionary
-	inline CFPropertyListRef
-	returnValueCopy		(CFStringRef	inKey) const;
 	
 	//! changes the managed dictionary
 	inline void
@@ -405,85 +411,91 @@ public:
 	explicit inline
 	CFKeyValuePreferences	(CFStringRef	inTargetApplication = kCFPreferencesCurrentApplication);
 	
+	
+	// CFKeyValueInterface overrides
+	
 	//! inserts array value into Core Foundation Preferences
 	inline void
 	addArray	(CFStringRef	inKey,
-				 CFArrayRef		inValue);
+				 CFArrayRef		inValue) override;
 	
 	//! inserts data value into Core Foundation Preferences
 	inline void
 	addData		(CFStringRef	inKey,
-				 CFDataRef		inValue);
+				 CFDataRef		inValue) override;
 	
 	//! inserts true/false value into Core Foundation Preferences
 	inline void
 	addFlag		(CFStringRef	inKey,
-				 Boolean		inValue);
+				 Boolean		inValue) override;
 	
 	//! inserts floating-point value into Core Foundation Preferences
 	void
 	addFloat	(CFStringRef	inKey,
-				 Float32		inValue);
+				 Float32		inValue) override;
 	
 	//! inserts short integer value into Core Foundation Preferences
 	void
 	addInteger	(CFStringRef	inKey,
-				 SInt16			inValue);
+				 SInt16			inValue) override;
 	
 	//! inserts short integer value into Core Foundation Preferences
 	void
 	addLong		(CFStringRef	inKey,
-				 SInt32			inValue);
+				 SInt32			inValue) override;
 	
 	//! inserts string value into Core Foundation Preferences
 	inline void
 	addString	(CFStringRef	inKey,
-				 CFStringRef	inValue);
+				 CFStringRef	inValue) override;
 	
 	//! inserts arbitrary value into Core Foundation Preferences
 	inline void
 	addValue	(CFStringRef		inKey,
-				 CFPropertyListRef	inValue);
+				 CFPropertyListRef	inValue) override;
 	
 	//! removes an arbitrary value from Core Foundation Preferences
 	inline void
-	deleteValue		(CFStringRef	inKey);
+	deleteValue		(CFStringRef	inKey) override;
 	
 	//! returns true only if a preference in Core Foundation Preferences has the given key
 	inline Boolean
-	exists	(CFStringRef	inKey) const;
+	exists	(CFStringRef	inKey) const override;
 	
 	//! retrieves an array value from global preferences (use only if the value really is an array!)
 	inline CFArrayRef
-	returnArrayCopy		(CFStringRef	inKey) const;
+	returnArrayCopy		(CFStringRef	inKey) const override;
 	
 	//! retrieves a true or false value from global preferences (use only if the value really is a Boolean!)
 	inline Boolean
-	returnFlag		(CFStringRef	inKey) const;
+	returnFlag		(CFStringRef	inKey) const override;
 	
 	//! retrieves a floating-point value from global preferences (use only if the value really is a number!)
 	inline Float32
-	returnFloat		(CFStringRef	inKey) const;
+	returnFloat		(CFStringRef	inKey) const override;
 	
 	//! retrieves a short integer value from global preferences (use only if the value really is a number!)
 	inline SInt16
-	returnInteger	(CFStringRef	inKey) const;
+	returnInteger	(CFStringRef	inKey) const override;
 	
 	//! creates an array of CFStringRef values for each key used in this context
 	inline CFArrayRef
-	returnKeyListCopy () const;
+	returnKeyListCopy () const override;
 	
 	//! retrieves a long integer value from global preferences (use only if the value really is a number!)
 	inline SInt32
-	returnLong		(CFStringRef	inKey) const;
+	returnLong		(CFStringRef	inKey) const override;
 	
 	//! retrieves a string value from global preferences (use only if the value really is a string!)
 	inline CFStringRef
-	returnStringCopy	(CFStringRef	inKey) const;
+	returnStringCopy	(CFStringRef	inKey) const override;
 	
 	//! retrieves an arbitrary value from global preferences
 	inline CFPropertyListRef
-	returnValueCopy		(CFStringRef	inKey) const;
+	returnValueCopy		(CFStringRef	inKey) const override;
+	
+	
+	// new methods
 	
 	//! returns the domain in which preferences are saved
 	inline CFStringRef
