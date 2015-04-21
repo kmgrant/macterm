@@ -207,7 +207,6 @@ protocol.
 namespace {
 
 void		notifyOfClosedPopover		(EventTargetRef);
-OSStatus	receiveLookupComplete		(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -387,61 +386,6 @@ notifyOfClosedPopover	(EventTargetRef		inOldTarget)
 		ReleaseEvent(panelClosedEvent), panelClosedEvent = nullptr;
 	}
 }// notifyOfClosedPopover
-
-
-/*!
-Handles "kEventNetEvents_HostLookupComplete" of
-"kEventClassNetEvents_DNS" by updating the text
-field containing the remote host name.
-
-(4.0)
-*/
-OSStatus
-receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					inViewManager)
-{
-	AutoPool					_;
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
-	ServerBrowser_ViewManager*	serverBrowser = REINTERPRET_CAST(inViewManager, ServerBrowser_ViewManager*);
-	OSStatus					result = eventNotHandledErr;
-	
-	
-	assert(kEventClass == kEventClassNetEvents_DNS);
-	assert(kEventKind == kEventNetEvents_HostLookupComplete);
-	{
-		struct hostent*		lookupDataPtr = nullptr;
-		
-		
-		// find the lookup results
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_DirectHostEnt,
-														typeNetEvents_StructHostEntPtr, lookupDataPtr);
-		if (noErr == result)
-		{
-			// NOTE: The lookup data could be a linked list of many matches.
-			// The first is used arbitrarily.
-			if ((nullptr != lookupDataPtr->h_addr_list) && (nullptr != lookupDataPtr->h_addr_list[0]))
-			{
-				CFStringRef		addressCFString = DNR_CopyResolvedHostAsCFString(lookupDataPtr, 0/* which address */);
-				
-				
-				if (nullptr != addressCFString)
-				{
-					serverBrowser.hostName = BRIDGE_CAST(addressCFString, NSString*);
-					CFRelease(addressCFString), addressCFString = nullptr;
-					result = noErr;
-				}
-			}
-			DNR_Dispose(&lookupDataPtr);
-		}
-	}
-	
-	// hide progress indicator
-	serverBrowser.hidesProgress = YES;
-	
-	return result;
-}// receiveLookupComplete
 
 } // anonymous namespace
 
@@ -987,7 +931,6 @@ eventTarget:(EventTargetRef)								aTarget
 		
 		_responder = aResponder;
 		_eventTarget = aTarget;
-		_lookupHandlerPtr = nullptr;
 		_browser = [[NSNetServiceBrowser alloc] init];
 		[_browser setDelegate:self];
 		_discoveredHostIndexes = [[NSIndexSet alloc] init];
@@ -1060,8 +1003,6 @@ dealloc
 	// See the initializer and "awakeFromNib" for initializations to clean up here.
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	
-	delete _lookupHandlerPtr, _lookupHandlerPtr = nullptr;
-	
 	[_userID release];
 	[_portNumber release];
 	[_hostName release];
@@ -1114,16 +1055,6 @@ lookUpHostName:(id)		sender
 		char	hostNameBuffer[256];
 		
 		
-		// install lookup handler if none exists
-		if (nullptr == _lookupHandlerPtr)
-		{
-			_lookupHandlerPtr = new CarbonEventHandlerWrap(GetApplicationEventTarget(), receiveLookupComplete,
-															CarbonEventSetInClass
-															(CarbonEventClass(kEventClassNetEvents_DNS),
-																kEventNetEvents_HostLookupComplete),
-															self/* user data */);
-		}
-		
 		// begin lookup of the domain name
 		self.hidesProgress = NO;
 		if (CFStringGetCString(BRIDGE_CAST(self.hostName, CFStringRef), hostNameBuffer, sizeof(hostNameBuffer), kCFStringEncodingASCII))
@@ -1132,7 +1063,36 @@ lookUpHostName:(id)		sender
 			
 			
 			// the global handler installed as gBrowserLookupResponder() will receive a Carbon Event from this eventually
-			lookupAttemptResult = DNR_New(hostNameBuffer, false/* use IP version 4 addresses (defaults to IPv6) */);
+			lookupAttemptResult = DNR_New(hostNameBuffer, false/* use IP version 4 addresses (defaults to IPv6) */,
+			^(struct hostent* inLookupDataPtr)
+			{
+				if (nullptr == inLookupDataPtr)
+				{
+					// lookup failed (TEMPORARY; add error message to user interface?)
+					Sound_StandardAlert();
+				}
+				else
+				{
+					// NOTE: The lookup data could be a linked list of many matches.
+					// The first is used arbitrarily.
+					if ((nullptr != inLookupDataPtr->h_addr_list) && (nullptr != inLookupDataPtr->h_addr_list[0]))
+					{
+						CFStringRef		addressCFString = DNR_CopyResolvedHostAsCFString(inLookupDataPtr, 0/* which address */);
+						
+						
+						if (nullptr != addressCFString)
+						{
+							self.hostName = BRIDGE_CAST(addressCFString, NSString*);
+							CFRelease(addressCFString), addressCFString = nullptr;
+						}
+					}
+					DNR_Dispose(&inLookupDataPtr);
+				}
+				
+				// hide progress indicator
+				self.hidesProgress = YES;
+			});
+			
 			if (false == lookupAttemptResult.ok())
 			{
 				// could not even initiate, so restore UI

@@ -49,7 +49,6 @@ enum
 	typeNetEvents_SessionProtocol		= 'TSPr',	//!< "Session_Protocol"
 	typeNetEvents_SessionRef			= 'TSn&',	//!< "SessionRef"
 	typeNetEvents_SessionState			= 'TSSt',	//!< "Session_State"
-	typeNetEvents_StructHostEntPtr		= 'TSHE',	//!< "struct hostent*"
 	typeNetEvents_TerminalScreenRef		= 'TTSR',	//!< "TerminalScreenRef"
 	typeNetEvents_TerminalViewRef		= 'TTVR',	//!< "TerminalViewRef"
 	typeNetEvents_CFBooleanRef			= 'CFTF',	//!< "CFBooleanRef"; could use typeCFBooleanRef but that is not available in the Mac OS 10.1 SDK
@@ -62,7 +61,6 @@ Custom Carbon Event parameters.
 */
 enum
 {
-	kEventParamNetEvents_DirectHostEnt				= 'PSHE',	//!< the "struct hostent*" of direct focus (data: typeNetEvents_StructHostEntPtr)
 	kEventParamNetEvents_DirectSession				= 'PSn&',	//!< the session directly impacted by an event (data: typeNetEvents_SessionRef)
 	kEventParamNetEvents_DispatcherQueue			= 'PDQ&',	//!< queue to submit follow-up events to, for 2-way communication
 																//!  (data: typeNetEvents_CarbonEventQueueRef)
@@ -77,39 +75,6 @@ enum
 	kEventParamNetEvents_TerminalFormatPreferences	= 'PTFP',	//!< format settings for font, size, etc. (data: typeNetEvents_PreferencesContextRef)
 	kEventParamNetEvents_UserID						= 'PUsr',	//!< user login name (data: typeCFStringRef, auto-retain/release!)
 };
-
-//!\name Domain Name System Carbon Events
-//@{
-
-/*!
-kEventClassNetEvents_DNS quick reference:
-
-kEventNetEvents_HostLookupComplete
-*/
-enum
-{
-	kEventClassNetEvents_DNS = 'CDNS'
-};
-
-/*!
-kEventClassNetEvents_DNS / kEventNetEvents_HostLookupComplete
-
-Summary:
-  Issued when a pending domain name lookup has completed.
-
-Discussion:
-  Handling this event allows lookups to be asynchronous.
-
-Parameters:
-  <-- kEventParamNetEvents_DirectHostEnt (out, typeNetEvents_StructHostEntPtr)
-		The results of the lookup; call DNR_Dispose() to free memory.
-*/
-enum
-{
-	kEventNetEvents_HostLookupComplete = 'KDLC'
-};
-
-//@}
 
 //!\name Server Browser Carbon Events
 //@{

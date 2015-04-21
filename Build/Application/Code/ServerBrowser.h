@@ -114,7 +114,6 @@ changes to an interface declared in a ".mm" file.
 @private
 	id< ServerBrowser_ViewManagerChannel >	_responder;
 	EventTargetRef							_eventTarget;
-	CarbonEventHandlerWrap*					_lookupHandlerPtr;
 	NSNetServiceBrowser*					_browser;
 	NSIndexSet*								_discoveredHostIndexes;
 	NSIndexSet*								_protocolIndexes;

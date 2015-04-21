@@ -67,7 +67,8 @@ struct hostent;
 
 DNR_Result
 	DNR_New							(char const*			inHostNameCString,
-									 Boolean				inRestrictIPv4 = false);
+									 Boolean				inRestrictIPv4,
+									 void					(^inResponseBlock)(struct hostent*));
 
 void
 	DNR_Dispose						(struct hostent**		inoutDataPtr);
