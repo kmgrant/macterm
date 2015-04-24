@@ -37,7 +37,6 @@
 extern "C"
 {
 #	include <netdb.h>
-#	include <pthread.h>
 #	include <sys/socket.h>
 #	include <sys/types.h>
 }
@@ -75,53 +74,37 @@ DNR_New		(char const*	inHostNameCString,
 			 Boolean		inRestrictIPv4,
 			 void			(^inResponseBlock)(struct hostent*))
 {
-	DNR_Result			result = kDNR_ResultOK;
-	pthread_attr_t		attr;
-	int					error = 0;
+	DNR_Result		result = kDNR_ResultOK;
 	
 	
-	// start a thread for DNS lookup so that the main event loop can still run
-	error = pthread_attr_init(&attr);
-	if (0 != error) result = kDNR_ResultThreadError;
-	else
-	{
-		size_t const	kInputHostStringLength = std::strlen(inHostNameCString);
-		size_t const	kHostBufferLength = 1 + kInputHostStringLength;
+	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0/* flags */),
+	^{
+		int					posixError = 0;
+		struct hostent*		hostData = getipnodebyname(inHostNameCString,
+														inRestrictIPv4 ? AF_INET : AF_INET6,
+														AI_DEFAULT, &posixError);
 		
-		
-		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0/* flags */),
-		^{
-			int		posixError = 0;
-			char*	buffer{ new char[kHostBufferLength] };
-			
-			
-			std::strncpy(buffer, inHostNameCString, kInputHostStringLength);
-			
-			struct hostent*		hostData = getipnodebyname(buffer,
-															inRestrictIPv4 ? AF_INET : AF_INET6,
-															AI_DEFAULT, &posixError);
-			
-			if (nullptr == hostData)
+		if (nullptr == hostData)
+		{
+			if (HOST_NOT_FOUND == posixError)
 			{
-				if (HOST_NOT_FOUND == posixError)
-				{
-					Console_WriteLine("lookup failed; host not found");
-				}
-				else if (TRY_AGAIN == posixError)
-				{
-					Console_WriteLine("lookup failed (suggest retrying)");
-				}
-				else
-				{
-					Console_WriteValue("lookup failed; error", posixError);
-				}
+				Console_WriteLine("lookup failed; host not found");
 			}
-			
+			else if (TRY_AGAIN == posixError)
+			{
+				Console_WriteLine("lookup failed (suggest retrying)");
+			}
+			else
+			{
+				Console_WriteValue("lookup failed; error", posixError);
+			}
+		}
+		
+		dispatch_async(dispatch_get_main_queue(),
+		^{
 			inResponseBlock(hostData);
-			
-			delete [] buffer;
 		});
-	}
+	});
 	
 	return result;
 }// New
