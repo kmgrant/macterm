@@ -289,7 +289,12 @@ onSide:(Popover_Properties)		aSide
 	// update the window frame
 	{
 		NSRect		windowFrame = [self frameRectForViewRect:[self->embeddedView frame]]; // ignore origin, use only size
-		NSPoint		idealOrigin = [self idealFrameOriginForPoint:aPoint];
+		NSPoint		idealOrigin = [self.class idealFrameOriginForSize:windowFrame.size
+																		arrowInset:[self arrowInset]
+																		at:((self->popoverParentWindow)
+																			? [self->popoverParentWindow convertBaseToScreen:aPoint]
+																			: aPoint)
+																		side:aSide];
 		
 		
 		windowFrame.origin.x = idealOrigin.x;
@@ -869,7 +874,7 @@ arrowPlacement:(Popover_Properties)		aFlagSet
 
 
 /*!
-Returns the arrow placement portion of the specified properties.
+Returns the arrow placement portion of the current properties.
 
 (1.1)
 */
