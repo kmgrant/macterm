@@ -43,6 +43,7 @@
 #	include "PreferenceValue.objc++.h"
 #	include "PrefsContextManager.objc++.h"
 #endif
+#include "ServerBrowser.h"
 
 
 
@@ -69,13 +70,16 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface PrefPanelSessions_ResourceViewManager : Panel_ViewManager< Panel_Delegate,
-																		PrefsWindow_PanelInterface > //{
+																		PrefsWindow_PanelInterface,
+																		ServerBrowser_DataChangeObserver > //{
 {
+	IBOutlet NSView*					commandLineTextField;
 @private
 	PrefsContextManager_Object*			prefsMgr;
 	ListenerModel_StandardListener*		preferenceChangeListener;
 	NSRect								idealFrame;
 	NSMutableDictionary*				byKey;
+	ServerBrowser_Ref					_serverBrowser;
 	NSIndexSet*							_sessionFavoriteIndexes;
 	NSArray*							_sessionFavorites;
 	BOOL								isEditingRemoteShell;
@@ -98,6 +102,16 @@ changes to an interface declared in a ".mm" file.
 	sessionFavoriteIndexes; // binding
 	@property (retain, readonly) NSArray*
 	sessionFavorites; // binding
+
+// accessors: internal bindings
+	- (PreferenceValue_String*)
+	serverHost;
+	- (PreferenceValue_Number*)
+	serverPort;
+	- (PreferenceValue_Number*)
+	serverProtocol;
+	- (PreferenceValue_String*)
+	serverUserID;
 
 // actions
 	- (IBAction)

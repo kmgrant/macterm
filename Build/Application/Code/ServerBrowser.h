@@ -44,6 +44,7 @@
 // library includes
 #ifdef __OBJC__
 class CarbonEventHandlerWrap;
+#import <CocoaFuture.objc++.h>
 @class NSWindow;
 #else
 class CarbonEventHandlerWrap;
@@ -62,6 +63,50 @@ typedef struct ServerBrowser_OpaqueStruct*		ServerBrowser_Ref;
 #ifdef __OBJC__
 
 @class ServerBrowser_ViewManager;
+
+
+/*!
+The object that implements this protocol will be told about
+changes made to the Server Browser panel’s key properties.
+Currently MacTerm responds by composing an equivalent Unix
+command line.
+
+Yes, "observeValueForKeyPath:ofObject:change:context:" does
+appear to provide the same functionality but that is not
+nearly as convenient.
+*/
+@protocol ServerBrowser_DataChangeObserver //{
+
+@required
+
+	// the user has selected a different connection protocol type
+	- (void)
+	serverBrowser:(ServerBrowser_ViewManager*)_
+	didSetProtocol:(Session_Protocol)_;
+
+	// the user has entered a different server host name
+	- (void)
+	serverBrowser:(ServerBrowser_ViewManager*)_
+	didSetHostName:(NSString*)_;
+
+	// the user has entered a different server port number
+	- (void)
+	serverBrowser:(ServerBrowser_ViewManager*)_
+	didSetPortNumber:(NSUInteger)_;
+
+	// the user has entered a different server log-in ID
+	- (void)
+	serverBrowser:(ServerBrowser_ViewManager*)_
+	didSetUserID:(NSString*)_;
+
+@optional
+
+	// the browser has been removed
+	- (void)
+	serverBrowserDidClose:(ServerBrowser_ViewManager*)_;
+
+@end //}
+
 
 /*!
 Classes that are delegates of ServerBrowser_ViewManager
@@ -113,6 +158,7 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSResponder*	nextResponderWhenHidingDiscoveredHosts;
 @private
 	id< ServerBrowser_ViewManagerChannel >	_responder;
+	id< ServerBrowser_DataChangeObserver >	_dataObserver;
 	EventTargetRef							_eventTarget;
 	NSNetServiceBrowser*					_browser;
 	NSIndexSet*								_discoveredHostIndexes;
@@ -133,6 +179,9 @@ changes to an interface declared in a ".mm" file.
 }
 
 // initializers
+	- (instancetype)
+	initWithResponder:(id< ServerBrowser_ViewManagerChannel >)_
+	dataObserver:(id< ServerBrowser_DataChangeObserver >)_ NS_DESIGNATED_INITIALIZER;
 	- (instancetype)
 	initWithResponder:(id< ServerBrowser_ViewManagerChannel >)_
 	eventTarget:(EventTargetRef)_;
@@ -206,6 +255,13 @@ changes to an interface declared in a ".mm" file.
 
 
 #pragma mark Public Methods
+
+#ifdef __OBJC__
+ServerBrowser_Ref
+	ServerBrowser_New			(NSWindow*				inParentWindow,
+								 CGPoint				inParentRelativePoint,
+								 id< ServerBrowser_DataChangeObserver >		inDataObserver);
+#endif
 
 ServerBrowser_Ref
 	ServerBrowser_New			(HIWindowRef			inParentWindow,

@@ -1088,7 +1088,7 @@ Preferences_Init ()
 									sizeof(SInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagServerProtocol,
 									CFSTR("server-protocol"), typeCFStringRef,
-									sizeof(Session_Protocol), Quills::Prefs::SESSION);
+									sizeof(UInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagServerUserID,
 									CFSTR("server-user-id"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
@@ -7878,7 +7878,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							Session_Protocol*	storedValuePtr = REINTERPRET_CAST(outDataPtr, Session_Protocol*);
+							UInt16*		storedValuePtr = REINTERPRET_CAST(outDataPtr, UInt16*);
 							
 							
 							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("ftp"), kCFCompareCaseInsensitive))
@@ -10152,7 +10152,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagServerProtocol:
 				{
-					Session_Protocol const* const	data = REINTERPRET_CAST(inDataPtr, Session_Protocol const*);
+					UInt16 const* const		data = REINTERPRET_CAST(inDataPtr, UInt16 const*);
 					
 					
 					assert(typeCFStringRef == keyValueType);

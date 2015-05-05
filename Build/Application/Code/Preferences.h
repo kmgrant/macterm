@@ -258,7 +258,7 @@ enum
 	kPreferences_TagScrollDelay							= 'scrd',	//!< data: "EventTime"; stored as milliseconds, but scaled to EventTime when used
 	kPreferences_TagServerHost							= 'host',	//!< data: "CFStringRef" (domain name or IP address)
 	kPreferences_TagServerPort							= 'port',	//!< data: "SInt16"
-	kPreferences_TagServerProtocol						= 'prcl',	//!< data: "Session_Protocol"
+	kPreferences_TagServerProtocol						= 'prcl',	//!< data: "UInt16" (Session_Protocol)
 	kPreferences_TagServerUserID						= 'user',	//!< data: "CFStringRef"
 	kPreferences_TagTektronixMode						= 'tekm',	//!< data: "UInt16" (VectorInterpreter_Mode)
 	kPreferences_TagTektronixPAGEClearsScreen			= 'tkpc'	//!< data: "Boolean"

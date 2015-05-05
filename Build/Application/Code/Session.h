@@ -244,7 +244,8 @@ enum
 /*!
 Protocols supported by a Session.
 */
-enum Session_Protocol
+typedef UInt16 Session_Protocol;
+enum
 {
 	kSession_ProtocolFTP = (1 << 0),	//!< file transfer protocol
 	kSession_ProtocolSFTP = (1 << 1),	//!< secure file transfer protocol

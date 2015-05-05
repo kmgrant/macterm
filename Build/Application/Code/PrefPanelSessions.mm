@@ -461,6 +461,8 @@ The private class interface.
 	primaryDisplayBindingKeys;
 	- (void)
 	setCommandLineFromSession:(Preferences_ContextRef)_;
+	- (void)
+	updateCommandLineFromRemotePreferences;
 
 @end //}
 
@@ -4050,6 +4052,7 @@ savePreferencesForRemoteServers		(Preferences_ContextRef		inoutSettings,
 									 CFStringRef				inUserID)
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	UInt16					protocolAsUInt16 = STATIC_CAST(inProtocol, UInt16);
 	SInt16					portAsSInt16 = STATIC_CAST(inPortNumber, SInt16);
 	UInt16					result = 0;
 	
@@ -4067,7 +4070,7 @@ savePreferencesForRemoteServers		(Preferences_ContextRef		inoutSettings,
 	}
 	// protocol
 	prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerProtocol,
-												sizeof(inProtocol), &inProtocol);
+												sizeof(protocolAsUInt16), &protocolAsUInt16);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		++result;
@@ -4738,13 +4741,15 @@ readPreferencesForRemoteServers		(Preferences_ContextRef		inSettings,
 									 CFStringRef&				outUserIDCopy)
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	UInt16					protocolValue = 0;
 	UInt16					result = 0;
 	
 	
-	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerProtocol, sizeof(outProtocol),
-												&outProtocol, inSearchDefaults);
+	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerProtocol, sizeof(protocolValue),
+												&protocolValue, inSearchDefaults);
 	if (kPreferences_ResultOK == prefsResult)
 	{
+		outProtocol = STATIC_CAST(protocolValue, Session_Protocol);
 		++result;
 	}
 	else
@@ -5023,6 +5028,7 @@ init
 	self = [super initWithNibNamed:@"PrefPanelSessionResourceCocoa" delegate:self context:nullptr];
 	if (nil != self)
 	{
+		_serverBrowser = nil;
 		_sessionFavoriteIndexes = [[NSIndexSet alloc] init];
 		_sessionFavorites = [@[] retain];
 		
@@ -5128,7 +5134,7 @@ context:(void*)							aContext
 }// model:preferenceChange:context:
 
 
-#pragma mark Accessors
+#pragma mark Accessors: Preferences
 
 
 /*!
@@ -5153,6 +5159,33 @@ formatFavorite
 {
 	return [self->byKey objectForKey:@"formatFavorite"];
 }// formatFavorite
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_CollectionBinding*)
+terminalFavorite
+{
+	return [self->byKey objectForKey:@"terminalFavorite"];
+}// terminalFavorite
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_CollectionBinding*)
+translationFavorite
+{
+	return [self->byKey objectForKey:@"translationFavorite"];
+}// translationFavorite
+
+
+#pragma mark Accessors: Low-Level User Interface State
 
 
 /*!
@@ -5263,16 +5296,7 @@ sessionFavorites
 }
 
 
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_CollectionBinding*)
-terminalFavorite
-{
-	return [self->byKey objectForKey:@"terminalFavorite"];
-}// terminalFavorite
+#pragma mark Accessors: Internal Bindings
 
 
 /*!
@@ -5280,11 +5304,47 @@ Accessor.
 
 (4.1)
 */
-- (PreferenceValue_CollectionBinding*)
-translationFavorite
+- (PreferenceValue_String*)
+serverHost
 {
-	return [self->byKey objectForKey:@"translationFavorite"];
-}// translationFavorite
+	return [self->byKey objectForKey:@"serverHost"];
+}// serverHost
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_Number*)
+serverPort
+{
+	return [self->byKey objectForKey:@"serverPort"];
+}// serverPort
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_Number*)
+serverProtocol
+{
+	return [self->byKey objectForKey:@"serverProtocol"];
+}// serverProtocol
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PreferenceValue_String*)
+serverUserID
+{
+	return [self->byKey objectForKey:@"serverUserID"];
+}// serverUserID
 
 
 #pragma mark Actions
@@ -5359,7 +5419,9 @@ performSetCommandLineToLogInShell:(id)	sender
 
 /*!
 Overwrites the command line with whatever is derived from the
-remote server browser panel.
+remote server browser panel.  If the panel has not been
+displayed yet, it is initialized based on the remote server
+preferences.
 
 (4.1)
 */
@@ -5367,8 +5429,31 @@ remote server browser panel.
 performSetCommandLineToRemoteShell:(id)		sender
 {
 #pragma unused(sender)
-	Console_Warning(Console_WriteLine, "UNIMPLEMENTED");
-	Sound_StandardAlert();
+	if (nil != _serverBrowser)
+	{
+		ServerBrowser_Remove(_serverBrowser);
+	}
+	else
+	{
+		NSWindow*	window = self.managedView.window;
+		NSView*		contentView = [window contentView];
+		NSPoint		fieldLocalPoint = NSMakePoint(NSMidX(self->commandLineTextField.bounds),
+													NSMidY(self->commandLineTextField.bounds));
+		CGPoint		browserPointOrigin = NSPointToCGPoint([self->commandLineTextField convertPoint:fieldLocalPoint toView:contentView]);
+		
+		
+		_serverBrowser = ServerBrowser_New(window, browserPointOrigin, self/* observer */);
+		
+		// update the browser with the new settings (might be sharing
+		// a previously-constructed interface with old data)
+		ServerBrowser_Configure(_serverBrowser, STATIC_CAST([self.serverProtocol.numberValue unsignedIntegerValue], Session_Protocol),
+								BRIDGE_CAST(self.serverHost.stringValue, CFStringRef),
+								[self.serverPort.numberValue unsignedIntegerValue],
+								BRIDGE_CAST(self.serverUserID.stringValue, CFStringRef));
+		
+		// display server browser (closed by the user)
+		ServerBrowser_Display(_serverBrowser);
+	}
 }// performSetCommandLineToRemoteShell:
 
 
@@ -5446,6 +5531,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
+	assert(nil != commandLineTextField);
 	assert(nil != byKey);
 	assert(nil != prefsMgr);
 	
@@ -5484,6 +5570,31 @@ didLoadContainerView:(NSView*)			aContainerView
 														sourceClass:Quills::Prefs::TRANSLATION]
 							autorelease]
 					forKey:@"translationFavorite"];
+	
+	// these keys are not directly bound in the UI but they
+	// are convenient for setting remote-server preferences
+	[self->byKey setObject:[[[PreferenceValue_String alloc]
+								initWithPreferencesTag:kPreferences_TagServerHost
+														contextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"serverHost"];
+	[self->byKey setObject:[[[PreferenceValue_Number alloc]
+								initWithPreferencesTag:kPreferences_TagServerPort
+														contextManager:self->prefsMgr
+														preferenceCType:kPreferenceValue_CTypeSInt16]
+							autorelease]
+					forKey:@"serverPort"];
+	[self->byKey setObject:[[[PreferenceValue_Number alloc]
+								initWithPreferencesTag:kPreferences_TagServerProtocol
+														contextManager:self->prefsMgr
+														preferenceCType:kPreferenceValue_CTypeUInt16]
+							autorelease]
+					forKey:@"serverProtocol"];
+	[self->byKey setObject:[[[PreferenceValue_String alloc]
+								initWithPreferencesTag:kPreferences_TagServerUserID
+														contextManager:self->prefsMgr]
+							autorelease]
+					forKey:@"serverUserID"];
 	
 	// note that all values have changed (causes the display to be refreshed)
 	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
@@ -5685,6 +5796,109 @@ preferencesClass
 }// preferencesClass
 
 
+#pragma mark ServerBrowser_DataChangeObserver
+
+/*!
+Updates the command line field appropriately for the given
+change in server protocol.
+
+(4.1)
+*/
+- (void)
+serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
+didSetProtocol:(Session_Protocol)			aProtocol
+{
+#pragma unused(aBrowser)
+	// save value in preferences (although only the command line
+	// “matters”, this allows most of the command to be reconstructed
+	// later when the user edits remote-server properties)
+	self.serverProtocol.numberValue = [NSNumber numberWithUnsignedInteger:STATIC_CAST(aProtocol, UInt16)];
+	
+	// reconstruct command line accordingly
+	[self updateCommandLineFromRemotePreferences];
+}// serverBrowser:didSetProtocol:
+
+
+/*!
+Updates the command line field appropriately for the given
+change in server host name.
+
+(4.1)
+*/
+- (void)
+serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
+didSetHostName:(NSString*)					aHostName
+{
+#pragma unused(aBrowser)
+	// save value in preferences (although only the command line
+	// “matters”, this allows most of the command to be reconstructed
+	// later when the user edits remote-server properties)
+	self.serverHost.stringValue = aHostName;
+	
+	// reconstruct command line accordingly
+	[self updateCommandLineFromRemotePreferences];
+}// serverBrowser:didSetHostName:
+
+
+/*!
+Updates the command line field appropriately for the given
+change in server port number.
+
+(4.1)
+*/
+- (void)
+serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
+didSetPortNumber:(NSUInteger)				aPortNumber
+{
+#pragma unused(aBrowser)
+	// save value in preferences (although only the command line
+	// “matters”, this allows most of the command to be reconstructed
+	// later when the user edits remote-server properties)
+	self.serverPort.numberValue = [NSNumber numberWithUnsignedInteger:aPortNumber];
+	
+	// reconstruct command line accordingly
+	[self updateCommandLineFromRemotePreferences];
+}// serverBrowser:didSetPortNumber:
+
+
+/*!
+Updates the command line field appropriately for the given
+change in user ID.
+
+(4.1)
+*/
+- (void)
+serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
+didSetUserID:(NSString*)					aUserID
+{
+#pragma unused(aBrowser)
+	// save value in preferences (although only the command line
+	// “matters”, this allows most of the command to be reconstructed
+	// later when the user edits remote-server properties)
+	self.serverUserID.stringValue = aUserID;
+	
+	// reconstruct command line accordingly
+	[self updateCommandLineFromRemotePreferences];
+}// serverBrowser:didSetUserID:
+
+
+/*!
+Ensures that server-related settings are saved.
+
+(4.1)
+*/
+- (void)
+serverBrowserDidClose:(ServerBrowser_ViewManager*)	aBrowser
+{
+#pragma unused(aBrowser)
+	[self willChangeValueForKey:@"isEditingRemoteShell"];
+	self->isEditingRemoteShell = NO;
+	[self didChangeValueForKey:@"isEditingRemoteShell"];
+	
+	ServerBrowser_Dispose(&_serverBrowser);
+}// serverBrowserDidClose:
+
+
 @end // PrefPanelSessions_ResourceViewManager
 
 
@@ -5705,7 +5919,9 @@ to saved preferences).
 - (NSArray*)
 primaryDisplayBindingKeys
 {
-	return @[@"commandLine", @"terminalFavorite", @"formatFavorite", @"translationFavorite"];
+	return @[@"commandLine", @"serverHost", @"serverPort", @"serverProtocol",
+				@"serverUserID", @"terminalFavorite", @"formatFavorite",
+				@"translationFavorite"];
 }// primaryDisplayBindingKeys
 
 
@@ -5763,6 +5979,40 @@ setCommandLineFromSession:(Preferences_ContextRef)		inSession
 		CFRelease(userCFString), userCFString = nullptr;
 	}
 }// setCommandLineFromSession
+
+
+/*!
+Fills in the command-line field using the current
+preferences context’s remote-server preferences ONLY,
+discarding any customizations the user may have done.
+
+Currently this reads the protocol, host, port, and
+user ID values.
+
+(4.1)
+*/
+- (void)
+updateCommandLineFromRemotePreferences
+{
+	CFStringRef		newCommandLine = nullptr;
+	
+	
+	// reconstruct command line accordingly
+	if (false == copyRemoteCommandLineString(STATIC_CAST([self.serverProtocol.numberValue integerValue], Session_Protocol),
+												BRIDGE_CAST(self.serverHost.stringValue, CFStringRef),
+												[self.serverPort.numberValue integerValue],
+												BRIDGE_CAST(self.serverUserID.stringValue, CFStringRef),
+												newCommandLine))
+	{
+		Console_Warning(Console_WriteLine, "failed to update command line string to match change in remote server setting");
+		self.commandLine.stringValue = @"";
+	}
+	else
+	{
+		self.commandLine.stringValue = BRIDGE_CAST(newCommandLine, NSString*);
+		CFRelease(newCommandLine), newCommandLine = nullptr;
+	}
+}// updateCommandLineFromRemotePreferences
 
 
 @end // PrefPanelSessions_ResourceViewManager (PrefPanelSessions_ResourceViewManagerInternal)
