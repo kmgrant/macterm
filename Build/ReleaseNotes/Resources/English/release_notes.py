@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20150505',
     '20150308',
     '20150303',
     '20150101',
@@ -514,6 +515,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20150505': [
+        'Changed the artwork for document icons to match Yosemite style.',
+        'Various other minor updates to icon artwork.',
+    ],
     '20150308': [
         'Fixed "Show Completions" for Full Screen windows (items in the completion menu are no longer disabled).',
     ],
