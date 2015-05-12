@@ -160,34 +160,32 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 	
 	
 	// show the window offscreen so its image is defined
-	[inTargetWindow setFrameTopLeftPoint:NSMakePoint(-2000, -2000)];
+	[inTargetWindow setFrameTopLeftPoint:NSMakePoint(-5000, -5000)];
 	[inTargetWindow orderFront:nil];
 	
 	// animate the change
 	{
 		float const		kAnimationDelay = 0.001;
-		NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds])
-										autorelease];
 		NSRect			oldFrame = [inRelativeToWindow frame];
 		NSRect			newFrame = NSZeroRect;
 		NSRect			mainScreenFrame = [[NSScreen mainScreen] visibleFrame];
+		NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] frame])
+										autorelease];
 		
-		
-		// if by some chance the target window is offscreen, ignore its location
-		// and put the window somewhere onscreen
-		if (NO == NSContainsRect(mainScreenFrame, oldFrame))
-		{
-			oldFrame.origin = NSMakePoint(250, 250); // arbitrary
-		}
-		
-		// copy only the relative window’s location, not its size
-		oldFrame.size = [inTargetWindow frame].size;
 		
 		// target a new location that is slightly offset from the related window
 		newFrame.origin = oldFrame.origin;
 		newFrame.origin.x += 20/* arbitrary */;
 		newFrame.origin.y -= 20/* arbitrary */;
 		newFrame.size = [inTargetWindow frame].size;
+		
+		// aim to keep the top-left corner on the screen
+		if (NO == NSPointInRect(NSMakePoint(newFrame.origin.x, newFrame.origin.y + NSHeight(newFrame)), mainScreenFrame))
+		{
+			// fix location (it is relative to the bottom-left of the screen)
+			newFrame.origin.x = (mainScreenFrame.origin.x + 150); // arbitrary
+			newFrame.origin.y = (mainScreenFrame.origin.y + mainScreenFrame.size.height - newFrame.size.height - 40); // arbitrary
+		}
 		
 		// as a precaution, arrange to move the window to the correct
 		// location after a short delay (the animation may fail)
@@ -235,7 +233,7 @@ CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
 										 CGRect			inEndLocation)
 {
 	AutoPool	_;
-	NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds])
+	NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] frame])
 								autorelease];
 	NSRect		oldFrame = [imageWindow frame];
 	NSRect		newFrame = NSZeroRect;
@@ -278,7 +276,7 @@ CocoaAnimation_TransitionWindowForMove	(NSWindow*		inTargetWindow,
 										 CGRect			inEndLocation)
 {
 	AutoPool		_;
-	NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds])
+	NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] frame])
 									autorelease];
 	NSRect			oldFrame = [imageWindow frame];
 	NSRect			newFrame = NSZeroRect;
@@ -318,6 +316,10 @@ CocoaAnimation_TransitionWindowForMove	(NSWindow*		inTargetWindow,
 Animates "inTargetWindow" in a way that suggests it is being
 destroyed.
 
+If "inIsConfirming" is true, the animation may change to show
+that changes in the window are being accepted (as opposed to
+discarded entirely), which is a useful distinction for dialogs.
+
 In order to avoid potential problems with the lifetime of a
 window, the specified window is actually hidden immediately
 and is replaced with a borderless window that renders the
@@ -327,25 +329,37 @@ window that appears to be the original window.
 (1.8)
 */
 void
-CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow)
+CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow,
+											 Boolean		inIsConfirming)
 {
 	AutoPool	_;
 	
 	
 	if ([inTargetWindow isVisible])
 	{
-		NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] bounds])
+		NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] frame])
 									autorelease];
 		NSRect		oldFrame = [imageWindow frame];
 		NSRect		newFrame = [imageWindow frame];
 		NSRect		screenFrame = [[inTargetWindow screen] frame];
 		
 		
-		// target a new location that appears to toss the window away
-		newFrame.origin.x += (screenFrame.size.width / 3)/* arbitrary */;
-		newFrame.origin.y -= (screenFrame.size.height / 3)/* arbitrary */;
-		newFrame.size.width /= 4; // arbitrary
-		newFrame.size.height /= 4; // arbitrary
+		if (inIsConfirming)
+		{
+			// target a new location that appears to preserve the window’s changes
+			newFrame.origin.x += (oldFrame.size.width / 4);
+			newFrame.origin.y += (oldFrame.size.height / 4);
+			newFrame.size.width /= 2; // arbitrary
+			newFrame.size.height /= 2; // arbitrary
+		}
+		else
+		{
+			// target a new location that appears to toss the window away
+			newFrame.origin.x += (screenFrame.size.width / 3)/* arbitrary */;
+			newFrame.origin.y -= (screenFrame.size.height / 3)/* arbitrary */;
+			newFrame.size.width /= 4; // arbitrary
+			newFrame.size.height /= 4; // arbitrary
+		}
 		
 		// animate!
 		[imageWindow orderFront:nil];
@@ -470,7 +484,7 @@ Creates a new, borderless window whose content view is an
 image view that renders the specified portion of the given
 window.   The rectangle is a section of the content view’s
 bounds (that is, the unscaled region independent of any
-chosen frame), so use "[[inWindow contentView] bounds]" to
+chosen frame), so use "[[inWindow contentView] frame]" to
 capture the entire window.
 
 This is very useful as a basis for animations, because it
@@ -605,8 +619,8 @@ simplified:(BOOL)									isSimplified
 			// move by even amounts directly toward the destination
 			for (size_t i = 0; i < self->frameCount; ++i)
 			{
-				self->frameOffsetsH[i] = 1 + i;
-				self->frameOffsetsV[i] = 1 + i;
+				self->frameOffsetsH[i] = i;
+				self->frameOffsetsV[i] = i;
 			}
 			break;
 		}

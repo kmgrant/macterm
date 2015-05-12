@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20150512',
     '20150505',
     '20150308',
     '20150303',
@@ -515,6 +516,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20150512': [
+        'Fixed minor animation quirks, including an issue that could make "duplicated" windows choose inconvenient positions.',
+    ],
     '20150505': [
         'Changed the artwork for document icons to match Yosemite style.',
         'Various other minor updates to icon artwork.',

@@ -57,7 +57,8 @@ void
 															 CGRect);
 
 void
-	CocoaAnimation_TransitionWindowForRemove				(NSWindow*);
+	CocoaAnimation_TransitionWindowForRemove				(NSWindow*,
+															 Boolean = false);
 
 void
 	CocoaAnimation_TransitionWindowSectionForOpen			(NSWindow*,
