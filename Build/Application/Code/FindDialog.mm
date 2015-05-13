@@ -108,7 +108,7 @@ Manages the Find user interface.
 	notFinal:(BOOL)_
 	didSearch:(BOOL*)_;
 	- (void)
-	remove;
+	removeWithAcceptance:(BOOL)_;
 	- (void)
 	zoomToSearchResults;
 
@@ -226,22 +226,6 @@ FindDialog_Display	(FindDialog_Ref		inDialog)
 		[ptr display];
 	}
 }// Display
-
-
-/*!
-Hides the Find dialog.  It can be redisplayed at any
-time by calling FindDialog_Display() again.
-
-(4.0)
-*/
-void
-FindDialog_Remove	(FindDialog_Ref		inDialog)
-{
-	FindDialog_Handler*		ptr = [FindDialog_Handler viewHandlerFromRef:inDialog];
-	
-	
-	[ptr remove];
-}// Remove
 
 
 /*!
@@ -594,13 +578,13 @@ using the "display" method.
 (4.0)
 */
 - (void)
-remove
+removeWithAcceptance:(BOOL)		isAccepted
 {
 	if (nil != self->popoverMgr)
 	{
-		PopoverManager_RemovePopover(self->popoverMgr);
+		PopoverManager_RemovePopover(self->popoverMgr, isAccepted);
 	}
-}// remove
+}// removeWithAcceptance:
 
 
 /*!
@@ -757,7 +741,7 @@ finalOptions:(FindDialog_Options)		options
 	}
 	
 	// hide the popover
-	[self remove];
+	[self removeWithAcceptance:acceptedSearch];
 	
 	// highlight search results
 	if (acceptedSearch)

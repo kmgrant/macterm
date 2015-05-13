@@ -37,6 +37,7 @@
 // library includes
 #import <AlertMessages.h>
 #import <CarbonEventHandlerWrap.template.h>
+#import <CocoaAnimation.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
@@ -87,11 +88,12 @@
 	- (void)
 	popUnder;
 	- (void)
-	removeWindow;
+	removeWindowAfterDelayWithAcceptance:(BOOL)_;
 	- (void)
-	removeWindowWithDelay;
+	removeWindowWithAcceptance:(BOOL)_;
 	- (void)
-	removeWindowWithDelay:(float)_;
+	removeWindowWithAcceptance:(BOOL)_
+	afterDelay:(float)_;
 	- (void)
 	setToIdealSize;
 
@@ -210,12 +212,13 @@ animations that may occur at closing time.
 (2.7)
 */
 void
-PopoverManager_RemovePopover	(PopoverManager_Ref		inRef)
+PopoverManager_RemovePopover	(PopoverManager_Ref		inRef,
+								 Boolean				inIsConfirming)
 {
 	PopoverManager_Handler*		ptr = [PopoverManager_Handler popoverHandlerFromRef:inRef];
 	
 	
-	[ptr removeWindow];
+	[ptr removeWindowWithAcceptance:inIsConfirming];
 }// Remove
 
 
@@ -325,7 +328,7 @@ receiveWindowCollapse	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	if ([handler isVisible])
 	{
-		[handler removeWindowWithDelay];
+		[handler removeWindowAfterDelayWithAcceptance:NO];
 	}
 	result = eventNotHandledErr; // not completely handled
 	
@@ -495,6 +498,14 @@ display
 		}
 		break;
 	
+	case kPopoverManager_AnimationTypeDialog:
+		if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
+		{
+			// create bubble effect; admittedly a bit of a hack...
+			[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(5, NSWindowAnimationBehaviorAlertPanel)];
+		}
+		break;
+	
 	case kPopoverManager_AnimationTypeStandard:
 	default:
 		if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
@@ -657,36 +668,42 @@ popUnder
 
 
 /*!
-Invokes "removeWindowWithDelay:" with no delay.  This
-is the normal case.
-
-(2.7)
-*/
-- (void)
-removeWindow
-{
-	[self removeWindowWithDelay:0];
-}// removeWindow
-
-
-/*!
-Invokes "removeWindowWithDelay:" with a short delay.
-Useful when hiding amidst other animations that should
+Invokes "removeWindowWithAcceptance:afterDelay:" with a short
+delay.  Useful when hiding amidst other animations that should
 not be interrupted by closing animations.
 
 (2.7)
 */
 - (void)
-removeWindowWithDelay
+removeWindowAfterDelayWithAcceptance:(BOOL)		isAccepted
 {
-	[self removeWindowWithDelay:0.03];
-}// removeWindowWithDelay
+	[self removeWindowWithAcceptance:isAccepted afterDelay:0.03];
+}// removeWindowAfterDelayWithAcceptance:
+
+
+/*!
+Invokes "removeWindowWithAcceptance:afterDelay:" with no delay.
+This is the normal case.
+
+(2.7)
+*/
+- (void)
+removeWindowWithAcceptance:(BOOL)	isAccepted
+{
+	[self removeWindowWithAcceptance:isAccepted afterDelay:0];
+}// removeWindowWithAcceptance:
 
 
 /*!
 Hides the popover window, removing it as a child of its
-parent window.  If a delay is specified then the window
-is only hidden after that time period.
+parent window.
+
+The "isAccepted" flag may cause the animation to vary to
+show the user that the window’s changes are being accepted
+(as opposed to being discarded entirely).
+
+If a delay is specified then the window is only hidden
+after that time period.
 
 The "close" method is invoked so you can detect this
 event through NSWindowWillCloseNotification.
@@ -696,7 +713,8 @@ See also "display".
 (2.7)
 */
 - (void)
-removeWindowWithDelay:(float)	aDelay
+removeWindowWithAcceptance:(BOOL)	isAccepted
+afterDelay:(float)					aDelay
 {
 	// hide the popover; remove the parent window association first to keep
 	// the parent window from disappearing on some versions of Mac OS X!
@@ -709,6 +727,17 @@ removeWindowWithDelay:(float)	aDelay
 			// remove window animations
 			[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(2, NSWindowAnimationBehaviorNone)];
 		}
+		[self->containerWindow performSelector:@selector(close) withObject:nil afterDelay:aDelay];
+		break;
+	
+	case kPopoverManager_AnimationTypeDialog:
+		if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
+		{
+			// remove system-provided window animations because this
+			// has a custom close animation style
+			[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(2, NSWindowAnimationBehaviorNone)];
+		}
+		CocoaAnimation_TransitionWindowForRemove(self->containerWindow, isAccepted);
 		break;
 	
 	default:
@@ -718,10 +747,10 @@ removeWindowWithDelay:(float)	aDelay
 			// create fade-out effect; admittedly a bit of a hack...
 			[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(4, NSWindowAnimationBehaviorUtilityWindow)];
 		}
+		[self->containerWindow performSelector:@selector(close) withObject:nil afterDelay:aDelay];
 		break;
 	}
-	[self->containerWindow performSelector:@selector(close) withObject:nil afterDelay:aDelay];
-}// removeWindowWithDelay:
+}// removeWindowWithAcceptance:afterDelay:
 
 
 /*!
@@ -765,7 +794,7 @@ windowDidResignKey:(NSNotification*)	aNotification
 	{
 		if (nil == [formerKeyWindow attachedSheet])
 		{
-			[self removeWindow];
+			[self removeWindowWithAcceptance:NO];
 		}
 	}
 }// windowDidResignKey:

@@ -65,8 +65,9 @@
 enum PopoverManager_AnimationType
 {
 	kPopoverManager_AnimationTypeStandard	= 0,	//!< open with balloon, close with fade-out
-	kPopoverManager_AnimationTypeMinimal	= 1,	//!< open and close with fade
-	kPopoverManager_AnimationTypeNone		= 2		//!< open and close without animation
+	kPopoverManager_AnimationTypeDialog		= 1,	//!< open normally, close depending on acceptance flag
+	kPopoverManager_AnimationTypeMinimal	= 2,	//!< open and close with fade
+	kPopoverManager_AnimationTypeNone		= 3		//!< open and close without animation
 };
 
 #pragma mark Types
@@ -119,7 +120,8 @@ void
 	PopoverManager_DisplayPopover				(PopoverManager_Ref				inRef);
 
 void
-	PopoverManager_RemovePopover				(PopoverManager_Ref				inRef);
+	PopoverManager_RemovePopover				(PopoverManager_Ref				inRef,
+												 Boolean						inIsConfirming);
 
 void
 	PopoverManager_UseIdealLocationAfterDelay	(PopoverManager_Ref				inRef,

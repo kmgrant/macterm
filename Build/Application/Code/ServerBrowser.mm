@@ -568,7 +568,7 @@ remove
 {
 	if (nil != _popoverMgr)
 	{
-		PopoverManager_RemovePopover(_popoverMgr);
+		PopoverManager_RemovePopover(_popoverMgr, true/* is confirming */);
 	}
 }// remove
 

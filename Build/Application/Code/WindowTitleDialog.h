@@ -182,9 +182,6 @@ void
 void
 	WindowTitleDialog_Display					(WindowTitleDialog_Ref					inDialog);
 
-void
-	WindowTitleDialog_Remove					(WindowTitleDialog_Ref					inDialog);
-
 #endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

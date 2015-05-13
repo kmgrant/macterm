@@ -103,7 +103,7 @@ Manages the rename-window user interface.
 	- (void)
 	display;
 	- (void)
-	remove;
+	removeWithAcceptance:(BOOL)_;
 
 // accessors
 	- (NSWindow*)
@@ -231,22 +231,6 @@ WindowTitleDialog_Display	(WindowTitleDialog_Ref		inDialog)
 		[ptr display];
 	}
 }// Display
-
-
-/*!
-Hides the Rename dialog.  It can be redisplayed at any
-time by calling WindowTitleDialog_Display() again.
-
-(4.0)
-*/
-void
-WindowTitleDialog_Remove	(WindowTitleDialog_Ref		inDialog)
-{
-	WindowTitleDialog_Handler*	ptr = [WindowTitleDialog_Handler viewHandlerFromRef:inDialog];
-	
-	
-	[ptr remove];
-}// Remove
 
 
 /*!
@@ -433,13 +417,13 @@ using the "display" method.
 (4.0)
 */
 - (void)
-remove
+removeWithAcceptance:(BOOL)		isAccepted
 {
 	if (nil != _popoverMgr)
 	{
-		PopoverManager_RemovePopover(_popoverMgr);
+		PopoverManager_RemovePopover(_popoverMgr, isAccepted);
 	}
-}// remove
+}// removeWithAcceptance:
 
 
 /*!
@@ -549,7 +533,7 @@ didLoadManagedView:(NSView*)					aManagedView
 	if (nil == _containerWindow)
 	{
 		NSWindow*						asNSWindow = [self renamedCocoaWindow];
-		PopoverManager_AnimationType	animationType = kPopoverManager_AnimationTypeStandard;
+		PopoverManager_AnimationType	animationType = kPopoverManager_AnimationTypeDialog;
 		Boolean							noAnimations = false;
 		
 		
@@ -603,7 +587,7 @@ finalTitle:(NSString*)							newTitle
 {
 #pragma unused(aViewMgr, aManagedView)
 	// hide the popover
-	[self remove];
+	[self removeWithAcceptance:acceptedRename];
 	
 	// prepare to rename the window
 	if (acceptedRename)
