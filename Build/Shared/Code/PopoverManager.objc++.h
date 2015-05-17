@@ -83,11 +83,13 @@ must conform to this protocol.
 	// return the proper position of the popover arrow tip (if any), relative
 	// to its parent window; also called during window resizing
 	- (NSPoint)
-	idealAnchorPointForParentWindowFrame:(NSRect)_;
+	idealAnchorPointForFrame:(NSRect)_
+	parentWindow:(NSWindow*)_;
 
 	// return the desired popover arrow placement
 	- (Popover_Properties)
-	idealArrowPositionForParentWindowFrame:(NSRect)_;
+	idealArrowPositionForFrame:(NSRect)_
+	parentWindow:(NSWindow*)_;
 
 	// return the dimensions the popover should initially have
 	- (NSSize)

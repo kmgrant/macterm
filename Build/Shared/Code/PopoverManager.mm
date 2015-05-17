@@ -78,9 +78,11 @@
 	- (void)
 	display;
 	- (NSPoint)
-	idealAnchorPointForParentWindowFrame:(NSRect)_;
+	idealAnchorPointForFrame:(NSRect)_
+	parentWindow:(NSWindow*)_;
 	- (Popover_Properties)
-	idealArrowPositionForParentWindowFrame:(NSRect)_;
+	idealArrowPositionForFrame:(NSRect)_
+	parentWindow:(NSWindow*)_;
 	- (void)
 	moveToIdealPosition;
 	- (void)
@@ -499,11 +501,7 @@ display
 		break;
 	
 	case kPopoverManager_AnimationTypeDialog:
-		if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
-		{
-			// create bubble effect; admittedly a bit of a hack...
-			[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(5, NSWindowAnimationBehaviorAlertPanel)];
-		}
+		CocoaAnimation_TransitionWindowForSheetOpen(self->containerWindow, [self parentCocoaWindow]);
 		break;
 	
 	case kPopoverManager_AnimationTypeStandard:
@@ -524,7 +522,7 @@ display
 Returns the location (relative to the window) where the
 popover’s arrow tip should appear.  The location of the
 popover itself depends on the arrow placement chosen by
-"idealArrowPositionForParentWindowFrame:".
+"idealArrowPositionForFrame:parentWindow:".
 
 IMPORTANT:	This must be implemented by the delegate.
 
@@ -533,13 +531,15 @@ See also "moveToIdealPosition".
 (2.7)
 */
 - (NSPoint)
-idealAnchorPointForParentWindowFrame:(NSRect)	parentFrame
+idealAnchorPointForFrame:(NSRect)	parentFrame
+parentWindow:(NSWindow*)			parentWindow
 {
-	NSPoint		result = [self->delegate idealAnchorPointForParentWindowFrame:parentFrame];
+#pragma unused(parentWindow)
+	NSPoint		result = [self->delegate idealAnchorPointForFrame:parentFrame parentWindow:parentWindow];
 	
 	
 	return result;
-}// idealAnchorPointForParentWindowFrame:
+}// idealAnchorPointForFrame:parentWindow:
 
 
 /*!
@@ -550,13 +550,14 @@ IMPORTANT:	This must be implemented by the delegate.
 (2.7)
 */
 - (Popover_Properties)
-idealArrowPositionForParentWindowFrame:(NSRect)		parentFrame
+idealArrowPositionForFrame:(NSRect)		parentFrame
+parentWindow:(NSWindow*)				parentWindow
 {
-	Popover_Properties	result = [self->delegate idealArrowPositionForParentWindowFrame:parentFrame];
+	Popover_Properties	result = [self->delegate idealArrowPositionForFrame:parentFrame parentWindow:parentWindow];
 	
 	
 	return result;
-}// idealArrowPositionForParentWindowFrame:
+}// idealArrowPositionForFrame:parentWindow:
 
 
 /*!
@@ -594,16 +595,17 @@ isVisible
 Moves the popover to its correct position relative to
 its parent window.
 
-See also "idealAnchorPointForParentWindowFrame:".
+See also "idealAnchorPointForFrame:parentWindow:".
 
 (2.7)
 */
 - (void)
 moveToIdealPosition
 {
-	NSRect				parentFrame = [[self parentCocoaWindow] frame];
-	NSPoint				popoverLocation = [self idealAnchorPointForParentWindowFrame:parentFrame];
-	Popover_Properties	arrowType = [self idealArrowPositionForParentWindowFrame:parentFrame];
+	NSWindow*			parentWindow = [self parentCocoaWindow];
+	NSRect				parentFrame = [parentWindow frame];
+	NSPoint				popoverLocation = [self idealAnchorPointForFrame:parentFrame parentWindow:parentWindow];
+	Popover_Properties	arrowType = [self idealArrowPositionForFrame:parentFrame parentWindow:parentWindow];
 	
 	
 	[self->containerWindow setPointWithAutomaticPositioning:popoverLocation preferredSide:arrowType];

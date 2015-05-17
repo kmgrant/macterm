@@ -139,9 +139,11 @@ Manages the Find user interface.
 
 // PopoverManager_Delegate
 	- (NSPoint)
-	idealAnchorPointForParentWindowFrame:(NSRect)_;
+	idealAnchorPointForFrame:(NSRect)_
+	parentWindow:(NSWindow*)_;
 	- (Popover_Properties)
-	idealArrowPositionForParentWindowFrame:(NSRect)_;
+	idealArrowPositionForFrame:(NSRect)_
+	parentWindow:(NSWindow*)_;
 	- (NSSize)
 	idealSize;
 
@@ -792,13 +794,15 @@ finalOptions:(FindDialog_Options)		options
 Returns the location (relative to the window) where the
 popover’s arrow tip should appear.  The location of the
 popover itself depends on the arrow placement chosen by
-"idealArrowPositionForParentWindowFrame:".
+"idealArrowPositionForFrame:parentWindow:".
 
 (4.0)
 */
 - (NSPoint)
-idealAnchorPointForParentWindowFrame:(NSRect)	parentFrame
+idealAnchorPointForFrame:(NSRect)	parentFrame
+parentWindow:(NSWindow*)			parentWindow
 {
+#pragma unused(parentWindow)
 	NSPoint		result = NSZeroPoint;
 	
 	
@@ -810,7 +814,7 @@ idealAnchorPointForParentWindowFrame:(NSRect)	parentFrame
 		result = NSMakePoint(parentFrame.size.width - managedViewFrame.size.width - 16.0/* arbitrary */, 0.0);
 	}
 	return result;
-}// idealAnchorPointForParentWindowFrame:
+}// idealAnchorPointForFrame:parentWindow:
 
 
 /*!
@@ -819,14 +823,15 @@ Returns arrow placement information for the popover.
 (4.0)
 */
 - (Popover_Properties)
-idealArrowPositionForParentWindowFrame:(NSRect)		parentFrame
+idealArrowPositionForFrame:(NSRect)		parentFrame
+parentWindow:(NSWindow*)				parentWindow
 {
-#pragma unused(parentFrame)
+#pragma unused(parentWindow, parentFrame)
 	Popover_Properties	result = kPopover_PropertyArrowBeginning | kPopover_PropertyPlaceFrameAboveArrow;
 	
 	
 	return result;
-}// idealArrowPositionForParentWindowFrame:
+}// idealArrowPositionForFrame:parentWindow:
 
 
 /*!

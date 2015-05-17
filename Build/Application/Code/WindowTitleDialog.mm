@@ -111,9 +111,11 @@ Manages the rename-window user interface.
 
 // PopoverManager_Delegate
 	- (NSPoint)
-	idealAnchorPointForParentWindowFrame:(NSRect)_;
+	idealAnchorPointForFrame:(NSRect)_
+	parentWindow:(NSWindow*)_;
 	- (Popover_Properties)
-	idealArrowPositionForParentWindowFrame:(NSRect)_;
+	idealArrowPositionForFrame:(NSRect)_
+	parentWindow:(NSWindow*)_;
 	- (NSSize)
 	idealSize;
 
@@ -459,9 +461,9 @@ popover itself depends on the arrow placement chosen by
 (4.0)
 */
 - (NSPoint)
-idealAnchorPointForParentWindowFrame:(NSRect)	parentFrame
+idealAnchorPointForFrame:(NSRect)	parentFrame
+parentWindow:(NSWindow*)			parentWindow
 {
-	NSWindow*	parentWindow = [self renamedCocoaWindow];
 	NSRect		screenFrame = [[parentWindow screen] visibleFrame];
 	NSRect		managedViewFrame = [_managedView frame];
 	NSPoint		result = NSMakePoint(parentFrame.size.width / 2.0, parentFrame.size.height - 12/* arbitrary */);
@@ -486,9 +488,10 @@ Returns arrow placement information for the popover.
 (4.0)
 */
 - (Popover_Properties)
-idealArrowPositionForParentWindowFrame:(NSRect)		parentFrame
+idealArrowPositionForFrame:(NSRect)		parentFrame
+parentWindow:(NSWindow*)				parentWindow
 {
-#pragma unused(parentFrame)
+#pragma unused(parentFrame, parentWindow)
 	Popover_Properties	result = kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameBelowArrow;
 	
 	

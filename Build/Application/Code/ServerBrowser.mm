@@ -124,9 +124,11 @@ Manages the Server Browser user interface.
 
 // PopoverManager_Delegate
 	- (NSPoint)
-	idealAnchorPointForParentWindowFrame:(NSRect)_;
+	idealAnchorPointForFrame:(NSRect)_
+	parentWindow:(NSWindow*)_;
 	- (Popover_Properties)
-	idealArrowPositionForParentWindowFrame:(NSRect)_;
+	idealArrowPositionForFrame:(NSRect)_
+	parentWindow:(NSWindow*)_;
 	- (NSSize)
 	idealSize;
 
@@ -638,19 +640,20 @@ usingRect:(NSRect)				rect
 Returns the location (relative to the window) where the
 popover’s arrow tip should appear.  The location of the
 popover itself depends on the arrow placement chosen by
-"idealArrowPositionForParentWindowFrame:".
+"idealArrowPositionForFrame:parentWindow:".
 
 (4.0)
 */
 - (NSPoint)
-idealAnchorPointForParentWindowFrame:(NSRect)	parentFrame
+idealAnchorPointForFrame:(NSRect)	parentFrame
+parentWindow:(NSWindow*)			parentWindow
 {
-#pragma unused(parentFrame)
-	NSPoint		result = NSMakePoint(_parentRelativeArrowTip.x, parentFrame.size.height - _parentRelativeArrowTip.y);
+#pragma unused(parentWindow)
+	NSPoint		result = NSMakePoint(_parentRelativeArrowTip.x, NSHeight(parentFrame) - _parentRelativeArrowTip.y);
 	
 	
 	return result;
-}// idealAnchorPointForParentWindowFrame:
+}// idealAnchorPointForFrame:parentWindow:
 
 
 /*!
@@ -659,14 +662,15 @@ Returns arrow placement information for the popover.
 (4.0)
 */
 - (Popover_Properties)
-idealArrowPositionForParentWindowFrame:(NSRect)		parentFrame
+idealArrowPositionForFrame:(NSRect)		parentFrame
+parentWindow:(NSWindow*)				parentWindow
 {
-#pragma unused(parentFrame)
+#pragma unused(parentFrame, parentWindow)
 	Popover_Properties	result = kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameBelowArrow;
 	
 	
 	return result;
-}// idealArrowPositionForParentWindowFrame:
+}// idealArrowPositionForFrame:parentWindow:
 
 
 /*!
