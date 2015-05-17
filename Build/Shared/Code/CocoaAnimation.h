@@ -61,6 +61,10 @@ void
 															 Boolean = false);
 
 void
+	CocoaAnimation_TransitionWindowForSheetOpen				(NSWindow*,
+															 NSWindow*);
+
+void
 	CocoaAnimation_TransitionWindowSectionForOpen			(NSWindow*,
 															 CGRect);
 

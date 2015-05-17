@@ -378,6 +378,67 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow,
 
 
 /*!
+Animates "inTargetWindow" as if it were a sheet opening
+on a parent window.
+
+(1.10)
+*/
+void
+CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
+												 NSWindow*		UNUSED_ARGUMENT(inRelativeToWindow))
+{
+	AutoPool	_;
+	NSRect		actualFrame = [inTargetWindow frame];
+	
+	
+	// show the window offscreen so its image is defined
+	[inTargetWindow setFrameTopLeftPoint:NSMakePoint(-5000, -5000)];
+	[inTargetWindow orderFront:nil];
+	
+	// animate the change
+	{
+		float const		kAnimationDelay = 0.001;
+		float const		kXInset = (0.10 * NSWidth(actualFrame)); // arbitrary
+		NSRect			oldFrame = actualFrame;
+		NSRect			newFrame = actualFrame;
+		NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] frame])
+										autorelease];
+		
+		
+		// start from a location that is slightly offset from the target window
+		oldFrame.origin.x += kXInset/* arbitrary */;
+		oldFrame.origin.y += (0.25 * NSHeight(actualFrame))/* arbitrary */;
+		oldFrame.size.width -= (2.0 * kXInset)/* arbitrary */;
+		oldFrame.size.height -= (2.0 * kXInset)/* arbitrary */;
+		
+		// as a precaution, arrange to move the window to the correct
+		// location after a short delay (the animation may fail)
+		{
+			NSArray*	frameCoordinates = @[
+												[NSNumber numberWithFloat:newFrame.origin.x],
+												[NSNumber numberWithFloat:newFrame.origin.y],
+												[NSNumber numberWithFloat:newFrame.size.width],
+												[NSNumber numberWithFloat:newFrame.size.height],
+											];
+			
+			
+			[inTargetWindow performSelector:@selector(setFrameWithArray:) withObject:frameCoordinates
+											afterDelay:(kAnimationDelay + 0.25)];
+		}
+		
+		// animate!
+		[imageWindow orderFront:nil];
+		[imageWindow setLevel:(1 + [inTargetWindow level])];
+		[[[CocoaAnimation_WindowFrameAnimator alloc]
+			initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:inTargetWindow
+								fromFrame:oldFrame toFrame:newFrame totalDelay:0.005
+								delayDistribution:kMy_AnimationTimeDistributionLinear
+								effect:kMy_AnimationEffectFadeIn] autorelease];
+	}
+}// TransitionWindowForSheetOpen
+
+
+/*!
 Animates the specified section of "inTargetWindow" in a way that
 makes it seem to “open”, starting at the specified frame.  The
 rectangle "inStartLocation" is relative to the boundaries of the
