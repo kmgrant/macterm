@@ -142,6 +142,42 @@ Localization_AdjustHelpButtonControl	(ControlRef		inControl)
 
 
 /*!
+Auto-arranges a window’s help button to occupy the
+lower-left (for left-to-right localization) or lower-
+right (for right-to-left localization) corner of a
+window.
+
+(2.7)
+*/
+void
+Localization_AdjustHelpNSButton		(NSButton*		inHelpButton)
+{
+	Float32		xOffset = 0;
+	Float32		yOffset = 22; // arbitrary but according to UI guidelines
+	Float32		buttonWidth = NSWidth([inHelpButton frame]);
+	Float32		buttonHeight = NSHeight([inHelpButton frame]);
+	
+	
+	if (false == Localization_IsLeftToRight())
+	{
+		// in right-to-left locales, the help button is in the lower right
+		NSRect		parentFrame = [[inHelpButton superview] bounds];
+		
+		
+		xOffset = NSWidth(parentFrame) - 22/* arbitrary but according to UI guidelines */;
+		xOffset -= buttonWidth;
+		[inHelpButton setFrame:NSMakeRect(xOffset, yOffset, buttonWidth, buttonHeight)];
+	}
+	else
+	{
+		// in right-to-left locales, the help button is in the lower left
+		xOffset = 20/* arbitrary but according to UI guidelines */;
+		[inHelpButton setFrame:NSMakeRect(xOffset, yOffset, buttonWidth, buttonHeight)];
+	}
+}// AdjustHelpNSButton
+
+
+/*!
 Auto-sizes and auto-arranges a series of action
 buttons for a modal window.  Buttons are assumed
 to be positioned on the same line horizontally,
@@ -232,6 +268,78 @@ Localization_ArrangeButtonArray		(ControlRef const*	inButtons,
 		}
 	}
 }// ArrangeButtonArray
+
+
+/*!
+Auto-sizes and auto-arranges a series of action
+buttons for a modal window.  Buttons are assumed
+to be positioned on the same line horizontally,
+and located at the bottom-right corner of a modal
+window (or the bottom-left corner, if the locale
+is right-to-left).  Thus, buttons are moved away
+from their assumed corner, and spaced exactly 12
+pixels apart (as specified in "Localization.h").
+The first button in the given array of item
+indices is expected to be the default button (if
+any), and buttons are positioned in the order
+they appear in the array.
+
+(2.7)
+*/
+void
+Localization_ArrangeNSButtonArray	(CFArrayRef		inNSButtonArray)
+{
+	NSArray*	asNSArray = BRIDGE_CAST(inNSButtonArray, NSArray*);
+	
+	
+	if ([asNSArray count] > 0)
+	{
+		Float32		buttonHeight = NSHeight([STATIC_CAST([asNSArray objectAtIndex:0], NSButton*) bounds]);
+		Float32		xOffset = 0;
+		Float32		yOffset = 20; // arbitrary but according to UI guidelines
+		
+		
+		if (false == Localization_IsLeftToRight())
+		{
+			// in right-to-left locales, the action buttons
+			// are anchored in the bottom-left corner and
+			// the default button is leftmost
+			xOffset = 20/* arbitrary but according to UI guidelines */;
+			for (NSButton* button in asNSArray)
+			{
+				UInt16		buttonWidth = Localization_AutoSizeNSButton(button);
+				
+				
+				// in Cocoa the “frame” of a button appears to also
+				// include the space after the button so the offset
+				// only changes by the frame width
+				[button setFrame:NSMakeRect(xOffset, yOffset, buttonWidth, buttonHeight)];
+				xOffset += buttonWidth;
+			}
+		}
+		else
+		{
+			// in left-to-right locales, the action buttons
+			// are anchored in the bottom-right corner and
+			// the default button is rightmost
+			NSRect		parentFrame = [[STATIC_CAST([asNSArray objectAtIndex:0], NSButton*) superview] bounds];
+			
+			
+			xOffset = NSWidth(parentFrame) - 20/* arbitrary but according to UI guidelines */;
+			for (NSButton* button in asNSArray)
+			{
+				UInt16		buttonWidth = Localization_AutoSizeNSButton(button);
+				
+				
+				// in Cocoa the “frame” of a button appears to also
+				// include the space after the button so the offset
+				// only changes by the frame width
+				xOffset -= buttonWidth;
+				[button setFrame:NSMakeRect(xOffset, yOffset, buttonWidth, buttonHeight)];
+			}
+		}
+	}
+}// ArrangeNSButtonArray
 
 
 /*!

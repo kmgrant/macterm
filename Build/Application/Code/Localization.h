@@ -166,8 +166,14 @@ void
 	Localization_AdjustHelpButtonControl		(ControlRef					inControl);
 
 void
+	Localization_AdjustHelpNSButton				(NSButton*					inHelpButton);
+
+void
 	Localization_ArrangeButtonArray				(ControlRef const*			inButtons,
 												 UInt16						inButtonCount);
+
+void
+	Localization_ArrangeNSButtonArray			(CFArrayRef					inNSButtonArray);
 
 UInt16
 	Localization_AutoSizeButtonControl			(ControlRef					inControl,
