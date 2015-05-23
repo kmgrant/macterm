@@ -4783,15 +4783,13 @@ performRestart:(id)		sender
 canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	SessionRef		currentSession = SessionFactory_ReturnUserRecentSession();
-	BOOL			result = NO;
-	
-	
-	if (nullptr != currentSession)
+	// this is not exactly the same as the default validator;
+	// in particular, this is permitted in Full Screen mode
+	if (nullptr != SessionFactory_ReturnUserFocusSession())
 	{
-		result = YES;
+		return @(YES);
 	}
-	return ((result) ? @(YES) : @(NO));
+	return @(NO);
 }
 
 
@@ -4889,7 +4887,9 @@ performSaveAs:(id)		sender
 canPerformSaveAs:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	if (nullptr != SessionFactory_ReturnUserRecentSession())
+	// this is not exactly the same as the default validator;
+	// in particular, this is permitted in Full Screen mode
+	if (nullptr != SessionFactory_ReturnUserFocusSession())
 	{
 		return @(YES);
 	}
