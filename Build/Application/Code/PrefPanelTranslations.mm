@@ -1656,7 +1656,7 @@ Displays a font panel for editing the backup font.
 - (IBAction)
 performBackupFontSelection:(id)		sender
 {
-	[[NSFontPanel sharedFontPanel] makeKeyAndOrderFront:sender];
+	[[NSFontPanel sharedFontPanel] orderFront:sender];
 }// performBackupFontSelection:
 
 

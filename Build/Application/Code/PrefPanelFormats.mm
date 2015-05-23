@@ -3890,7 +3890,7 @@ and font size to use for general formatting.
 performFontSelection:(id)	sender
 {
 #pragma unused(sender)
-	[[NSFontPanel sharedFontPanel] makeKeyAndOrderFront:sender];
+	[[NSFontPanel sharedFontPanel] orderFront:sender];
 }// performFontSelection:
 
 
