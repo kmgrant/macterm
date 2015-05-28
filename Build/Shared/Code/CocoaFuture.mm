@@ -92,6 +92,55 @@ CocoaFuture_AllocInitUserNotification ()
 
 
 /*!
+On Mac OS X 10.10 and later, "[[NSVisualEffectView alloc] initWithFrame:]";
+on earlier Mac OS X versions, "nil".
+
+This work-around is necessary because older code bases will not be able to
+directly refer to the class (it doesn’t exist).
+
+(1.10)
+*/
+id
+CocoaFuture_AllocInitVisualEffectViewWithFrame		(CGRect		inFrame)
+{
+	id		result = nil;
+	id		targetClass = objc_getClass("NSVisualEffectView");
+	
+	
+	if (nil == targetClass)
+	{
+		Console_Warning(Console_WriteLine, "cannot find NSVisualEffectView class");
+	}
+	else
+	{
+		SEL		allocSelector = @selector(alloc);
+		SEL		initSelector = @selector(initWithFrame:);
+		
+		
+		if ([targetClass respondsToSelector:allocSelector] &&
+			[targetClass instancesRespondToSelector:initSelector])
+		{
+			id		allocatedInstance = [targetClass performSelector:allocSelector];
+			
+			
+			if (nil != allocatedInstance)
+			{
+				// NOTE: must use obc_msgSend() and not "performSelector:"
+				// because the parameter is a C structure type
+				result = objc_msgSend(allocatedInstance, initSelector, NSRectFromCGRect(inFrame));
+			}
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "NSVisualEffectView found but it does not implement 'alloc' and/or 'initWithFrame:'");
+		}
+	}
+	
+	return result;
+}// AllocInitVisualEffectViewWithFrame
+
+
+/*!
 On Mac OS X 10.8 and later, "[[NSXPCConnection alloc] initWithServiceName:aName]";
 on earlier Mac OS X versions, "nil".
 

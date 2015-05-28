@@ -195,6 +195,9 @@ typedef int/*NSInteger*/	NSScrollerStyle;
 id// NSUserNotification*
 	CocoaFuture_AllocInitUserNotification				();
 
+id// NSVisualEffectView*
+	CocoaFuture_AllocInitVisualEffectViewWithFrame		(CGRect				inFrame);
+
 id// NSXPCConnection*
 	CocoaFuture_AllocInitXPCConnectionWithServiceName	(NSString*			inName);
 
