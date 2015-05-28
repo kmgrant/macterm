@@ -95,18 +95,19 @@ extern "C"
 #import "DialogUtilities.h"
 #import "EventLoop.h"
 #import "FindDialog.h"
+#import "GenericDialog.h"
 #import "HelpSystem.h"
 #import "Keypads.h"
 #import "Preferences.h"
 #import "PrefPanelFormats.h"
 #import "PrefPanelTerminals.h"
 #import "PrefPanelTranslations.h"
-#import "PrefsContextDialog.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
 #import "TerminalToolbar.objc++.h"
 #import "TerminalView.h"
 #import "UIStrings.h"
+#import "UIStrings_PrefsWindow.h"
 
 
 
@@ -4475,14 +4476,27 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						}
 						else
 						{
-							PrefsContextDialog_Ref		dialog = nullptr;
-							Panel_Ref					prefsPanel = PrefPanelFormats_New();
-							
+							GenericDialog_Ref				dialog = nullptr;
+							PrefPanelFormats_ViewManager*	embeddedPanel = [[PrefPanelFormats_ViewManager alloc] init];
+							CFRetainRelease					addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
+																				true/* is retained */);
+						
 							
 							// display the sheet
-							dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel, temporaryContext,
-															kPrefsContextDialog_DisplayOptionsDefault, sheetClosed);
-							PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
+							dialog = GenericDialog_New(TerminalWindow_ReturnWindow(terminalWindow),
+														embeddedPanel, temporaryContext, sheetClosed);
+							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
+							GenericDialog_AddButton(dialog, addToPrefsString.returnCFStringRef(),
+													^{
+														Preferences_TagSetRef	tagSet = PrefPanelFormats_NewTagSet();
+														
+														
+														PrefsWindow_AddCollection(temporaryContext, tagSet,
+																					kCommandDisplayPrefPanelFormats);
+														Preferences_ReleaseTagSet(&tagSet);
+													});
+							GenericDialog_SetImplementation(dialog, terminalWindow);
+							GenericDialog_Display(dialog); // automatically disposed when the user clicks a button
 						}
 						
 						result = noErr;
@@ -4600,14 +4614,16 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						}
 						else
 						{
-							PrefsContextDialog_Ref		dialog = nullptr;
-							Panel_Ref					prefsPanel = PrefPanelTerminals_NewScreenPane();
+							GenericDialog_Ref						dialog = nullptr;
+							PrefPanelTerminals_ScreenViewManager*	embeddedPanel = [[PrefPanelTerminals_ScreenViewManager alloc] init];
 							
 							
 							// display the sheet
-							dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel, temporaryContext,
-															kPrefsContextDialog_DisplayOptionNoAddToPrefsButton, sheetClosed);
-							PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
+							dialog = GenericDialog_New(TerminalWindow_ReturnWindow(terminalWindow),
+														embeddedPanel, temporaryContext, sheetClosed);
+							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
+							GenericDialog_SetImplementation(dialog, terminalWindow);
+							GenericDialog_Display(dialog); // automatically disposed when the user clicks a button
 						}
 						
 						result = noErr;
@@ -4773,14 +4789,27 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						}
 						else
 						{
-							PrefsContextDialog_Ref		dialog = nullptr;
-							Panel_Ref					prefsPanel = PrefPanelTranslations_New();
+							GenericDialog_Ref					dialog = nullptr;
+							PrefPanelTranslations_ViewManager*	embeddedPanel = [[PrefPanelTranslations_ViewManager alloc] init];
+							CFRetainRelease						addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
+																					true/* is retained */);
 							
 							
 							// display the sheet
-							dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel, temporaryContext,
-															kPrefsContextDialog_DisplayOptionsDefault, sheetClosed);
-							PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
+							dialog = GenericDialog_New(TerminalWindow_ReturnWindow(terminalWindow),
+														embeddedPanel, temporaryContext, sheetClosed);
+							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
+							GenericDialog_AddButton(dialog, addToPrefsString.returnCFStringRef(),
+													^{
+														Preferences_TagSetRef	tagSet = PrefPanelTranslations_NewTagSet();
+														
+														
+														PrefsWindow_AddCollection(temporaryContext, tagSet,
+																					kCommandDisplayPrefPanelTranslations);
+														Preferences_ReleaseTagSet(&tagSet);
+													});
+							GenericDialog_SetImplementation(dialog, terminalWindow);
+							GenericDialog_Display(dialog); // automatically disposed when the user clicks a button
 						}
 						
 						result = noErr;
@@ -6981,11 +7010,11 @@ setScreenPreferences	(My_TerminalWindowPtr		inPtr,
 			
 			
 			prefsResult = Preferences_ContextGetData(inContext, kPreferences_TagTerminalScreenColumns,
-														sizeof(columns), &columns);
+														sizeof(columns), &columns, true/* search defaults */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				prefsResult = Preferences_ContextGetData(inContext, kPreferences_TagTerminalScreenRows,
-															sizeof(rows), &rows);
+															sizeof(rows), &rows, true/* search defaults */);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					Terminal_SetVisibleScreenDimensions(activeScreen, columns, rows);
@@ -7679,7 +7708,7 @@ void
 sheetClosed		(GenericDialog_Ref		inDialogThatClosed,
 				 Boolean				inOKButtonPressed)
 {
-	TerminalWindowRef				ref = [GenericDialog_ReturnParentNSWindow(inDialogThatClosed) terminalWindowRef];
+	TerminalWindowRef				ref = REINTERPRET_CAST(GenericDialog_ReturnImplementation(inDialogThatClosed), TerminalWindowRef);
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), ref);
 	
 	
@@ -7710,6 +7739,7 @@ sheetClosed		(GenericDialog_Ref		inDialogThatClosed,
 				break;
 			}
 		}
+		
 		sheetContextEnd(ptr);
 	}
 }// sheetClosed

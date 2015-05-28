@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20150523',
     '20150512',
     '20150505',
     '20150308',
@@ -516,6 +517,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20150523': [
+        'Several sheets (Custom Screen Size, Custom Format, Custom Key Sequences, Custom Text Translation) have been reimplemented in Cocoa, which makes them look much better on Retina displays.  The new sheets also support inheritance features that were previously only available in the Custom Format sheet.',
+    ],
     '20150512': [
         'Fixed minor animation quirks, including an issue that could make "duplicated" windows choose inconvenient positions.',
     ],

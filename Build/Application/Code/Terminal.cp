@@ -1092,13 +1092,13 @@ public:
 	returnLineEndings ();
 	
 	UInt16
-	returnScreenColumns		(Preferences_ContextRef);
+	returnScreenColumns		(Preferences_ContextRef, Boolean = true);
 	
 	UInt16
-	returnScreenRows		(Preferences_ContextRef);
+	returnScreenRows		(Preferences_ContextRef, Boolean = true);
 	
 	UInt32
-	returnScrollbackRows	(Preferences_ContextRef);
+	returnScrollbackRows	(Preferences_ContextRef, Boolean = true);
 	
 	CFStringEncoding
 	returnTextEncoding		(Preferences_ContextRef);
@@ -7009,14 +7009,15 @@ context, and returns either that value or the default value of
 */
 UInt16
 My_ScreenBuffer::
-returnScreenColumns		(Preferences_ContextRef		inTerminalConfig)
+returnScreenColumns		(Preferences_ContextRef		inTerminalConfig,
+						 Boolean					inFallBackToDefaults)
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	UInt16					result = 80; // arbitrary default
 	
 	
 	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenColumns,
-												sizeof(result), &result);
+												sizeof(result), &result, inFallBackToDefaults);
 	if (kPreferences_ResultOK != prefsResult)
 	{
 		Console_Warning(Console_WriteValue, "screen buffer failed to read column count from preferences, error", prefsResult);
@@ -7034,14 +7035,15 @@ context, and returns either that value or the default value of
 */
 UInt16
 My_ScreenBuffer::
-returnScreenRows	(Preferences_ContextRef		inTerminalConfig)
+returnScreenRows	(Preferences_ContextRef		inTerminalConfig,
+					 Boolean					inFallBackToDefaults)
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	UInt16					result = 24; // arbitrary default
 	
 	
 	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenRows,
-												sizeof(result), &result);if (kPreferences_ResultOK != prefsResult)
+												sizeof(result), &result, inFallBackToDefaults);
 	if (kPreferences_ResultOK != prefsResult)
 	{
 		Console_Warning(Console_WriteValue, "screen buffer failed to read row count from preferences, error", prefsResult);
@@ -7058,7 +7060,8 @@ and returns an appropriate value for scrollback size.
 */
 UInt32
 My_ScreenBuffer::
-returnScrollbackRows	(Preferences_ContextRef		inTerminalConfig)
+returnScrollbackRows	(Preferences_ContextRef		inTerminalConfig,
+						 Boolean					inFallBackToDefaults)
 {
 	Preferences_Result			prefsResult = kPreferences_ResultOK;
 	Terminal_ScrollbackType		scrollbackType = kTerminal_ScrollbackTypeFixed;
@@ -7066,7 +7069,7 @@ returnScrollbackRows	(Preferences_ContextRef		inTerminalConfig)
 	
 	
 	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenScrollbackType,
-												sizeof(scrollbackType), &scrollbackType);
+												sizeof(scrollbackType), &scrollbackType, inFallBackToDefaults);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		if (kTerminal_ScrollbackTypeDisabled == scrollbackType)

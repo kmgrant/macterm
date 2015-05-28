@@ -48,8 +48,9 @@
 
 #pragma mark Types
 
-@interface PopoverManager_Handler : NSObject //{
+@interface PopoverManager_Handler : NSWindowController //{
 {
+@public
 	PopoverManager_Ref				selfRef;				// identical to address of structure, but typed as ref
 	id< PopoverManager_Delegate >	delegate;				// used to determine dynamic popover information
 	Popover_Window*					containerWindow;		// holds the popover itself (note: is an NSWindow subclass)
@@ -57,6 +58,7 @@
 	PopoverManager_AnimationType	animationType;			// specifies how to open and close the popover window
 	NSWindow*						parentCocoaWindow;		// the window the popover is relative to, if Cocoa
 	HIWindowRef						parentCarbonWindow;		// the window the popover is relative to, if Carbon
+	CarbonEventHandlerWrap*			activationHandlerPtr;	// embellishes Carbon Event for activating window
 	CarbonEventHandlerWrap*			minimizeHandlerPtr;		// embellishes Carbon Event for minimizing window
 	CarbonEventHandlerWrap*			resizeHandlerPtr;		// embellishes Carbon Event for resizing window
 }
@@ -285,15 +287,19 @@ receiveWindowActivationChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 	#if 0
 		[handler removeWindow];
 	#else
-		if (kEventKind == kEventWindowDeactivated)
+		if (kPopoverManager_AnimationTypeDialog == handler->animationType)
 		{
-			// when the parent window is active, the popover should remain on top
-			[handler popUnder];
-		}
-		else
-		{
-			// allow other normal windows to sit above background popovers
-			[handler popOver];
+			if (kEventKind == kEventWindowDeactivated)
+			{
+				// when the parent window is active, the popover should remain on top
+				[handler popUnder];
+			}
+			else
+			{
+				// allow other normal windows to sit above background popovers
+				[handler popOver];
+				HiliteWindow(handler->parentCarbonWindow, false);
+			}
 		}
 	#endif
 	}
@@ -406,7 +412,7 @@ firstResponder:(NSView*)						aView
 animationType:(PopoverManager_AnimationType)	animationSpec
 delegate:(id< PopoverManager_Delegate >)		anObject
 {
-	self = [super init];
+	self = [super initWithWindow:aPopover];
 	if (nil != self)
 	{
 		HIWindowRef		windowWatchedForMinimize = nullptr;
@@ -436,6 +442,11 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 			// unfortunately Cocoa window notifications do not seem to work for
 			// Carbon-based Cocoa windows on all Mac OS X versions, so for now
 			// use Carbon Events to detect important changes
+			self->activationHandlerPtr = new CarbonEventHandlerWrap
+												(GetWindowEventTarget(aCarbonWindow), receiveWindowActivationChange,
+													CarbonEventSetInClass(CarbonEventClass(kEventClassWindow),
+																			kEventWindowActivated,
+																			kEventWindowDeactivated), self/* handler data */);
 			self->minimizeHandlerPtr = new CarbonEventHandlerWrap
 											(GetWindowEventTarget(windowWatchedForMinimize), receiveWindowCollapse,
 												CarbonEventSetInClass(CarbonEventClass(kEventClassWindow),
@@ -464,6 +475,7 @@ Destructor.
 dealloc
 {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	delete self->activationHandlerPtr, activationHandlerPtr = nullptr;
 	delete self->minimizeHandlerPtr, minimizeHandlerPtr = nullptr;
 	delete self->resizeHandlerPtr, resizeHandlerPtr = nullptr;
 	[containerWindow release];
@@ -775,28 +787,104 @@ setToIdealSize
 }// setToIdealSize
 
 
+#pragma mark NSColorPanel
+
+
+/*!
+Forwards this message to the main view manager if the
+panel implements a "changeColor:" method.
+
+NOTE:	It is possible that one day panels will be set up
+		as responders themselves and placed directly in
+		the responder chain.  For now this is sufficient.
+
+(4.1)
+*/
+- (void)
+changeColor:(id)	sender
+{
+	NSObject*	asNSObject = STATIC_CAST(self->delegate, NSObject*);
+	
+	
+	if ([asNSObject respondsToSelector:@selector(changeColor:)])
+	{
+		[asNSObject changeColor:sender];
+	}
+}// changeColor:
+
+
+#pragma mark NSFontPanel
+
+
+/*!
+Forwards this message to the main view manager if the
+panel implements a "changeFont:" method.
+
+NOTE:	It is possible that one day panels will be set up
+		as responders themselves and placed directly in
+		the responder chain.  For now this is sufficient.
+
+(4.1)
+*/
+- (void)
+changeFont:(id)		sender
+{
+	NSObject*	asNSObject = STATIC_CAST(self->delegate, NSObject*);
+	
+	
+	if ([asNSObject respondsToSelector:@selector(changeFont:)])
+	{
+		[asNSObject changeFont:sender];
+	}
+}// changeFont:
+
+
 #pragma mark NSWindowNotifications
 
 
 /*!
 Dismisses the popover when the user goes somewhere else,
 unless the reason for that focus change was to display
-a sheet on top.
+a sheet on top or activate a floating panel.
 
 (2.7)
 */
 - (void)
 windowDidResignKey:(NSNotification*)	aNotification
 {
-#pragma unused(aNotification)
 	NSWindow*	formerKeyWindow = (NSWindow*)[aNotification object];
 	
 	
-	if ([self isVisible] && (formerKeyWindow == self->containerWindow))
+	if (formerKeyWindow == self->containerWindow)
 	{
-		if (nil == [formerKeyWindow attachedSheet])
+		BOOL	removePopover = YES;
+		
+		
+		if (kPopoverManager_AnimationTypeDialog == self->animationType)
 		{
-			[self removeWindowWithAcceptance:NO];
+			// dialogs try to retain keyboard focus, expecting to be
+			// dismissed in an explicit way (e.g. via buttons)
+			removePopover = NO;
+		#if 0
+			if ([NSApp keyWindow] == [self parentCocoaWindow])
+			{
+				// force clicks in the parent to be ignored
+				[self->containerWindow makeKeyWindow];
+				[[self parentCocoaWindow] resignMainWindow];
+			}
+		#endif
+		}
+		
+		if (removePopover)
+		{
+			if ([self isVisible])
+			{
+				if ((nil == [formerKeyWindow attachedSheet]) &&
+					(NO == [[NSApp keyWindow] isKindOfClass:NSPanel.class]))
+				{
+					[self removeWindowWithAcceptance:NO];
+				}
+			}
 		}
 	}
 }// windowDidResignKey:

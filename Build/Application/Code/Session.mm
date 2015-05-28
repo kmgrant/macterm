@@ -1,4 +1,4 @@
-/*!	\file Session.cp
+/*!	\file Session.mm
 	\brief The front end to a particular running command
 	or server connection.  This remains valid as long as
 	the session is defined, even if the command has
@@ -33,75 +33,74 @@
 
 ###############################################################*/
 
-#include "Session.h"
-#include <UniversalDefines.h>
+#import "Session.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <cctype>
-#include <cstring>
-#include <sstream>
-#include <string>
+#import <cctype>
+#import <cstring>
+#import <sstream>
+#import <string>
 
 // standard-C++ includes
-#include <algorithm>
-#include <map>
-#include <set>
-#include <vector>
+#import <algorithm>
+#import <map>
+#import <set>
+#import <vector>
 
 // Unix includes
-#include <strings.h>
+#import <strings.h>
 
 // Mac includes
-#include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
-class NSWindow; // TEMPORARY (currently a C++ file, not Objective-C++)
-#include <CoreServices/CoreServices.h>
+#import <ApplicationServices/ApplicationServices.h>
+#import <Carbon/Carbon.h>
+#import <CoreServices/CoreServices.h>
 
 // library includes
-#include <AlertMessages.h>
-#include <AppleEventUtilities.h>
-#include <CFRetainRelease.h>
-#include <CFUtilities.h>
-#include <CarbonEventUtilities.template.h>
-#include <CocoaAnimation.h>
-#include <CocoaBasic.h>
-#include <Console.h>
-#include <FileSelectionDialogs.h>
-#include <GrowlSupport.h>
-#include <ListenerModel.h>
-#include <Localization.h>
-#include <MemoryBlockPtrLocker.template.h>
-#include <MemoryBlocks.h>
-#include <Panel.h>
-#include <RegionUtilities.h>
-#include <SoundSystem.h>
-#include <StringUtilities.h>
+#import <AlertMessages.h>
+#import <AppleEventUtilities.h>
+#import <CFRetainRelease.h>
+#import <CFUtilities.h>
+#import <CarbonEventUtilities.template.h>
+#import <CocoaAnimation.h>
+#import <CocoaBasic.h>
+#import <Console.h>
+#import <FileSelectionDialogs.h>
+#import <GrowlSupport.h>
+#import <ListenerModel.h>
+#import <Localization.h>
+#import <MemoryBlockPtrLocker.template.h>
+#import <MemoryBlocks.h>
+#import <Panel.h>
+#import <RegionUtilities.h>
+#import <SoundSystem.h>
+#import <StringUtilities.h>
 
 // application includes
-#include "AppResources.h"
-#include "Clipboard.h"
-#include "Commands.h"
-#include "DialogUtilities.h"
-#include "Local.h"
-#include "MacroManager.h"
-#include "NetEvents.h"
-#include "Preferences.h"
-#include "PrefPanelSessions.h"
-#include "PrefsContextDialog.h"
-#include "QuillsSession.h"
-#include "SessionDescription.h"
-#include "SessionFactory.h"
-#include "Terminal.h"
-#include "TerminalView.h"
-#include "TerminalWindow.h"
-#include "Terminology.h"
-#include "TextTranslation.h"
-#include "UIStrings.h"
-#include "VectorCanvas.h"
-#include "VectorInterpreter.h"
-#include "VectorWindow.h"
-#include "VTKeys.h"
-#include "WindowTitleDialog.h"
+#import "AppResources.h"
+#import "Clipboard.h"
+#import "Commands.h"
+#import "DialogUtilities.h"
+#import "GenericDialog.h"
+#import "Local.h"
+#import "MacroManager.h"
+#import "NetEvents.h"
+#import "Preferences.h"
+#import "PrefPanelSessions.h"
+#import "QuillsSession.h"
+#import "SessionDescription.h"
+#import "SessionFactory.h"
+#import "Terminal.h"
+#import "TerminalView.h"
+#import "TerminalWindow.h"
+#import "Terminology.h"
+#import "TextTranslation.h"
+#import "UIStrings.h"
+#import "VectorCanvas.h"
+#import "VectorInterpreter.h"
+#import "VectorWindow.h"
+#import "VTKeys.h"
+#import "WindowTitleDialog.h"
 
 
 
@@ -318,7 +317,8 @@ struct My_Session
 	EventLoopTimerRef			inactivityWatchTimer;		// short timer
 	EventLoopTimerUPP			pendingPasteTimerUPP;		// procedure that is called periodically when pasting lines
 	EventLoopTimerRef			pendingPasteTimer;			// paste timer, reset only when a Paste or an equivalent (like a drag) occurs
-	My_SessionSheetType			currentSheet;				// if "kMy_SessionSheetTypeNone", no significant sheet is currently open
+	Preferences_ContextWrap		recentSheetContext;			// defined temporarily while a Preferences-dependent sheet (such as key sequences) is up
+	My_SessionSheetType			sheetType;					// if "kMy_SessionSheetTypeNone", no significant sheet is currently open
 	AlertMessages_BoxRef		watchBox;					// if defined, the global alert used to show notifications for this session
 	WindowTitleDialog_Ref		renameDialog;				// if defined, the user interface for renaming the terminal window
 	SessionRef					selfRef;					// convenient reference to this structure
@@ -419,7 +419,10 @@ HIWindowRef					returnActiveWindow					(My_SessionPtr);
 OSStatus					sessionDragDrop						(EventHandlerCallRef, EventRef, SessionRef,
 																 HIViewRef, DragRef);
 void						setIconFromState					(My_SessionPtr);
-void						specialKeySequencesSheetClosed		(GenericDialog_Ref, Boolean);
+void						sheetClosed							(GenericDialog_Ref, Boolean);
+Preferences_ContextRef		sheetContextBegin					(My_SessionPtr, Quills::Prefs::Class,
+																 My_SessionSheetType);
+void						sheetContextEnd						(My_SessionPtr);
 void						terminalHoverLocalEchoString		(My_SessionPtr, UInt8 const*, size_t);
 void						terminalInsertLocalEchoString		(My_SessionPtr, UInt8 const*, size_t);
 void						terminalWindowChanged				(ListenerModel_Ref, ListenerModel_Event,
@@ -976,22 +979,27 @@ void
 Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 {
 	// display a key mapping customization dialog
-	PrefsContextDialog_Ref	dialog = nullptr;
-	Panel_Ref				prefsPanel = PrefPanelSessions_NewKeyboardPane();
+	My_SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
+	Preferences_ContextRef		temporaryContext = sheetContextBegin(ptr, Quills::Prefs::SESSION,
+																		kMy_SessionSheetTypeSpecialKeySequences);
 	
 	
-	// display the sheet
-	dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel,
-									Session_ReturnConfiguration(inRef),
-									kPrefsContextDialog_DisplayOptionNoAddToPrefsButton,
-									specialKeySequencesSheetClosed);
-	if (nullptr != dialog)
+	if (nullptr == temporaryContext)
 	{
-		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteLine, "failed to construct temporary sheet context");
+	}
+	else
+	{
+		GenericDialog_Ref						dialog = nullptr;
+		PrefPanelSessions_KeyboardViewManager*	embeddedPanel = [[PrefPanelSessions_KeyboardViewManager alloc] init];
 		
 		
-		PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
-		ptr->currentSheet = kMy_SessionSheetTypeSpecialKeySequences;
+		dialog = GenericDialog_New(Session_ReturnActiveWindow(inRef),
+									embeddedPanel, temporaryContext, sheetClosed);
+		[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
+		GenericDialog_SetImplementation(dialog, inRef);
+		GenericDialog_Display(dialog); // automatically disposed when the user clicks a button
 	}
 }// DisplaySpecialKeySequencesDialog
 
@@ -3916,7 +3924,7 @@ Session_UserInputFunctionKey	(SessionRef					inRef,
 	{
 		result = kSession_ResultInvalidReference;
 	}
-	else if (kMy_SessionSheetTypeNone != ptr->currentSheet)
+	else if (kMy_SessionSheetTypeNone != ptr->sheetType)
 	{
 		result = kSession_ResultNotReady;
 	}
@@ -4897,7 +4905,7 @@ Session_UserInputKey	(SessionRef		inRef,
 	{
 		result = kSession_ResultInvalidReference;
 	}
-	else if (kMy_SessionSheetTypeSpecialKeySequences == ptr->currentSheet)
+	else if (kMy_SessionSheetTypeSpecialKeySequences == ptr->sheetType)
 	{
 		result = kSession_ResultNotReady;
 	}
@@ -5440,7 +5448,8 @@ inactivityWatchTimerUPP(nullptr),
 inactivityWatchTimer(nullptr),
 pendingPasteTimerUPP(nullptr),
 pendingPasteTimer(nullptr),
-currentSheet(kMy_SessionSheetTypeNone),
+recentSheetContext(nullptr),
+sheetType(kMy_SessionSheetTypeNone),
 watchBox(nullptr),
 renameDialog(nullptr),
 selfRef(REINTERPRET_CAST(this, SessionRef))
@@ -5542,6 +5551,8 @@ My_Session::
 {
 	assert(Session_IsValid(this->selfRef));
 	assert(this->status != kSession_StateImminentDisposal);
+	
+	sheetContextEnd(this);
 	
 	// give listeners one last chance to respond before the
 	// session becomes invalid (starting to destruct)
@@ -8370,33 +8381,133 @@ setIconFromState	(My_SessionPtr	inPtr)
 
 
 /*!
-Responds to a close of the Special Key Sequences sheet by
-re-enabling key recognition.
+Responds to a close of any sheet on a Session that is
+updating a context constructed by sheetContextBegin().
 
-This hack is necessary to deal with the temporary problem of
-events from the Control Keys palette being automatically
-forwarded to the session even when the desired target is one
-of the buttons in the Special Key Sequences sheet.
+This calls sheetContextEnd() to ensure that the context is
+cleaned up.
 
 (4.0)
 */
 void
-specialKeySequencesSheetClosed	(GenericDialog_Ref	inDialogThatClosed,
-								 Boolean			UNUSED_ARGUMENT(inOKButtonPressed))
+sheetClosed		(GenericDialog_Ref		inDialogThatClosed,
+				 Boolean				inOKButtonPressed)
 {
-	TerminalWindowRef		terminalWindow = TerminalWindow_ReturnFromWindow
-												(GenericDialog_ReturnParentWindow(inDialogThatClosed));
-	SessionRef				session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	SessionRef				ref = REINTERPRET_CAST(GenericDialog_ReturnImplementation(inDialogThatClosed), SessionRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
 	
 	
-	if (nullptr != session)
+	if (nullptr == ptr)
 	{
-		My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-		
-		
-		ptr->currentSheet = kMy_SessionSheetTypeNone;
+		Console_Warning(Console_WriteLine, "unexpected problem finding Session that corresponds to a closed sheet");
 	}
-}// specialKeySequencesSheetClosed
+	else
+	{
+		if (inOKButtonPressed)
+		{
+			switch (ptr->sheetType)
+			{
+			case kMy_SessionSheetTypeSpecialKeySequences:
+				UNUSED_RETURN(UInt16)copyEventKeyPreferences(ptr, ptr->recentSheetContext.returnRef(),
+																true/* search defaults */);
+				break;
+			
+			default:
+				Console_Warning(Console_WriteLine, "no active sheet but sheet context still exists and was changed");
+				break;
+			}
+		}
+		
+		sheetContextEnd(ptr);
+	}
+}// sheetClosed
+
+
+/*!
+Constructs a new sheet context and starts monitoring it for
+changes.  The given sheet type determines what the response
+will be when settings are dumped into the target context.
+
+The returned context is stored as "recentSheetContext" in the
+specified window structure, and is nullptr if there was any
+error.
+
+(4.1)
+*/
+Preferences_ContextRef
+sheetContextBegin	(My_SessionPtr			inPtr,
+					 Quills::Prefs::Class	inClass,
+					 My_SessionSheetType	inSheetType)
+{
+	Preferences_ContextWrap		newContext(Preferences_NewContext(inClass), true/* is retained */);
+	Preferences_ContextRef		result = nullptr;
+	
+	
+	if (kMy_SessionSheetTypeNone == inPtr->sheetType)
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		Boolean					copyOK = false;
+		
+		
+		// initialize settings so that the sheet has the right data
+		// IMPORTANT: the contexts and tag sets chosen here should match those
+		// used elsewhere in this file to update preferences later (such as
+		// copyEventKeyPreferences())
+		switch (inSheetType)
+		{
+		case kMy_SessionSheetTypeSpecialKeySequences:
+			{
+				Preferences_TagSetRef	tagSet = PrefPanelSessions_NewKeyboardPaneTagSet();
+				
+				
+				prefsResult = Preferences_ContextCopy(Session_ReturnConfiguration(inPtr->selfRef),
+														newContext.returnRef(), tagSet);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					copyOK = true;
+				}
+				Preferences_ReleaseTagSet(&tagSet);
+			}
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+		
+		if (copyOK)
+		{
+			inPtr->sheetType = inSheetType;
+			inPtr->recentSheetContext.setRef(newContext.returnRef()); // this also retains the new context
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "failed to copy initial preferences into sheet context");
+		}
+	}
+	
+	result = inPtr->recentSheetContext.returnRef();
+	
+	return result;
+}// sheetContextBegin
+
+
+/*!
+Destroys the temporary sheet preferences context, removing
+the monitor on it, and clearing any flags that keep track of
+active sheets.
+
+(4.1)
+*/
+void
+sheetContextEnd		(My_SessionPtr		inPtr)
+{
+	if (Preferences_ContextIsValid(inPtr->recentSheetContext.returnRef()))
+	{
+		inPtr->recentSheetContext.clear();
+	}
+	inPtr->sheetType = kMy_SessionSheetTypeNone;
+}// sheetContextEnd
 
 
 /*!

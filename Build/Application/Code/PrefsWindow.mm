@@ -446,6 +446,66 @@ PrefsWindow_Done ()
 
 
 /*!
+Copies the specified settings into a new global preferences
+collection of the appropriate type.
+
+If you want the user to immediately see the new settings,
+pass an appropriate nonzero command ID that will be used to
+request the display of a specific panel in the window.
+
+(4.1)
+*/
+void
+PrefsWindow_AddCollection		(Preferences_ContextRef		inReferenceContextToCopy,
+								 Preferences_TagSetRef		inTagSetOrNull,
+								 UInt32						inPrefPanelShowCommandIDOrZero)
+{
+	// create and immediately save a new named context, which
+	// triggers callbacks to update Favorites lists, etc.
+	Preferences_ContextWrap		newContext(Preferences_NewContextFromFavorites
+											(Preferences_ContextReturnClass(inReferenceContextToCopy),
+												nullptr/* name, or nullptr to auto-generate */),
+											true/* is retained */);
+	
+	
+	if (false == newContext.exists())
+	{
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteLine, "unable to create a new Favorite for copying local changes");
+	}
+	else
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_ContextSave(newContext.returnRef());
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "unable to save the new context!");
+		}
+		else
+		{
+			prefsResult = Preferences_ContextCopy(inReferenceContextToCopy, newContext.returnRef(), inTagSetOrNull);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Sound_StandardAlert();
+				Console_Warning(Console_WriteLine, "unable to copy local changes into the new Favorite!");
+			}
+			else
+			{
+				if (0 != inPrefPanelShowCommandIDOrZero)
+				{
+					// trigger an automatic switch to focus a related part of the Preferences window
+					Commands_ExecuteByIDUsingEvent(inPrefPanelShowCommandIDOrZero);
+				}
+			}
+		}
+	}
+}// AddCollection
+
+
+/*!
 Use this method to display the preferences window.
 If the window is not yet in memory, it is created.
 

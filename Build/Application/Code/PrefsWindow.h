@@ -48,6 +48,7 @@ class ListenerModel_StandardListener;
 #endif
 
 // application includes
+#include "Preferences.h"
 #include "QuillsPrefs.h"
 #ifdef __OBJC__
 #	import "Panel.h"
@@ -172,6 +173,11 @@ changes to an interface declared in a ".mm" file.
 
 void
 	PrefsWindow_Done				();
+
+void
+	PrefsWindow_AddCollection		(Preferences_ContextRef		inReferenceContextToCopy,
+									 Preferences_TagSetRef		inTagSetOrNull = nullptr,
+									 UInt32						inPrefPanelShowCommandIDOrZero = 0);
 
 void
 	PrefsWindow_Display				();

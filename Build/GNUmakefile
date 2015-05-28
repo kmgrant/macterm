@@ -244,6 +244,7 @@ English.lproj/ClipboardCocoa \
 English.lproj/CommandLineCocoa \
 English.lproj/DebugInterfaceCocoa \
 English.lproj/FindDialogCocoa \
+English.lproj/GenericDialogCocoa \
 English.lproj/GenericPanelNumberedListCocoa \
 English.lproj/GenericPanelTabsCocoa \
 English.lproj/InfoWindowCocoa \

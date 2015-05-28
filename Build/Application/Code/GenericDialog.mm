@@ -59,6 +59,7 @@
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
 #import <CocoaBasic.h>
+#import <CocoaFuture.objc++.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
 #import <HIViewWrap.h>
@@ -67,6 +68,8 @@
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlocks.h>
 #import <NIBLoader.h>
+#import <Popover.objc++.h>
+#import <PopoverManager.objc++.h>
 #import <SoundSystem.h>
 
 // application includes
@@ -105,7 +108,7 @@ typedef std::map< UInt32, GenericDialog_DialogEffect >		My_DialogEffectsByComman
 
 struct My_GenericDialog
 {
-	My_GenericDialog	(NSWindow*, Panel_Ref, void*,
+	My_GenericDialog	(NSWindow*, HIWindowRef, Panel_ViewManager*, Panel_Ref, void*,
 						 GenericDialog_CloseNotifyProcPtr, HelpSystem_KeyPhrase);
 	
 	~My_GenericDialog	();
@@ -113,14 +116,21 @@ struct My_GenericDialog
 	void
 	autoArrangeButtons ();
 	
+	void
+	loadViewManager ();
+	
 	// IMPORTANT: DATA MEMBER ORDER HAS A CRITICAL EFFECT ON CONSTRUCTOR CODE EXECUTION ORDER.  DO NOT CHANGE!!!
 	GenericDialog_Ref						selfRef;						//!< identical to address of structure, but typed as ref
 	NSWindow*								parentWindow;					//!< the terminal window for which this dialog applies
+	HIWindowRef								parentCarbonWindow;				//!< legacy; if parent is a Carbon window, specify it here
 	Boolean									isModal;						//!< if false, the dialog is a sheet
-	Panel_Ref								hostedPanel;					//!< the panel implementing the primary user interface
-	void*									dataSetPtr;						//!< data that is given to the panel; represents what is being edited
+	GenericDialog_ViewManager*				containerViewManager;			//!< new-style; object for rendering user interface around primary view (such as OK and Cancel buttons)
+	Panel_ViewManager*						hostedViewManager;				//!< new-style; the Cocoa view manager for the primary user interface
+	Panel_Ref								hostedPanel;					//!< old-style; the panel implementing the primary user interface
 	HISize									panelIdealSize;					//!< the dimensions most appropriate for displaying the UI
-	NIBWindow								dialogWindow;					//!< acts as the Mac OS window for the dialog
+	PopoverManager_Ref						popoverManager;					//!< object to help display popover window
+	Popover_Window*							popoverWindow;					//!< new-style, popover variant; contains a Cocoa view in a popover frame
+	NIBWindow								dialogWindow;					//!< old-style; acts as the Mac OS window for the dialog
 	HIViewWrap								userPaneForMargins;				//!< used to determine location of, and space around, the hosted panel
 	HIViewWrap								buttonHelp;						//!< displays context-sensitive help on this dialog
 	HIViewWrap								buttonOK;						//!< accepts the user’s changes
@@ -141,6 +151,22 @@ typedef LockAcquireRelease< GenericDialog_Ref, My_GenericDialog >		My_GenericDia
 
 } // anonymous namespace
 
+
+/*!
+The private class interface.
+*/
+@interface GenericDialog_ViewManager (GenericDialog_ViewManagerInternal) //{
+
+// new methods
+	- (void)
+	setStringProperty:(NSString**)_
+	withName:(NSString*)_
+	toValue:(NSString*)_;
+	- (void)
+	updateButtonLayout;
+
+@end //}
+
 #pragma mark Variables
 namespace {
 
@@ -160,6 +186,48 @@ OSStatus	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 
 
 #pragma mark Public Methods
+
+/*!
+This method is used to create a Cocoa-based popover view.
+
+The format of "inDataSetPtr" is entirely defined by the
+type of panel that the dialog is hosting.  The data is
+passed to the panel with Panel_SendMessageNewDataSet().
+
+If "inParentWindowOrNullForModalDialog" is nullptr, the
+window is automatically made application-modal; otherwise,
+it is a sheet.
+
+(4.1)
+*/
+GenericDialog_Ref
+GenericDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
+					 Panel_ViewManager*					inHostedViewManager,
+					 void*								inDataSetPtr,
+					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+					 HelpSystem_KeyPhrase				inHelpButtonAction)
+{
+	GenericDialog_Ref	result = nullptr;
+	
+	
+	assert(nil != inHostedViewManager);
+	
+	try
+	{
+		result = REINTERPRET_CAST(new My_GenericDialog
+									(CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNullForModalDialog),
+										inParentWindowOrNullForModalDialog,
+										inHostedViewManager, nullptr/* old-style panel */,
+										inDataSetPtr, inCloseNotifyProcPtr, inHelpButtonAction),
+									GenericDialog_Ref);
+	}
+	catch (std::bad_alloc)
+	{
+		result = nullptr;
+	}
+	return result;
+}// New
+
 
 /*!
 This method is used to create a dialog box.  It creates
@@ -185,10 +253,15 @@ GenericDialog_New	(NSWindow*							inParentWindowOrNullForModalDialog,
 	GenericDialog_Ref	result = nullptr;
 	
 	
+	assert(nullptr != inHostedPanel);
+	
 	try
 	{
-		result = REINTERPRET_CAST(new My_GenericDialog(inParentWindowOrNullForModalDialog, inHostedPanel,
-									inDataSetPtr, inCloseNotifyProcPtr, inHelpButtonAction), GenericDialog_Ref);
+		result = REINTERPRET_CAST(new My_GenericDialog
+									(inParentWindowOrNullForModalDialog, nullptr/* Carbon parent */,
+										nil/* view manager */, inHostedPanel,
+										inDataSetPtr, inCloseNotifyProcPtr, inHelpButtonAction),
+									GenericDialog_Ref);
 	}
 	catch (std::bad_alloc)
 	{
@@ -225,10 +298,15 @@ GenericDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
 	GenericDialog_Ref	result = nullptr;
 	
 	
+	assert(nullptr != inHostedPanel);
+	
 	try
 	{
-		result = REINTERPRET_CAST(new My_GenericDialog(CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNullForModalDialog),
-														inHostedPanel, inDataSetPtr, inCloseNotifyProcPtr, inHelpButtonAction),
+		result = REINTERPRET_CAST(new My_GenericDialog
+									(CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNullForModalDialog),
+										inParentWindowOrNullForModalDialog,
+										nil/* view manager */, inHostedPanel, inDataSetPtr,
+										inCloseNotifyProcPtr, inHelpButtonAction),
 									GenericDialog_Ref);
 	}
 	catch (std::bad_alloc)
@@ -244,17 +322,10 @@ Call this method to destroy a dialog box and its associated
 data structures.  On return, your copy of the dialog reference
 is set to nullptr.
 
-IMPORTANT:	Since the associated Panel is not created by this
-			module, it is not destroyed here.  Be sure to
-			use Panel_Dispose() on the hosted panel after
-			disposing of the dialog (if necessary, call
-			GenericDialog_ReturnHostedPanel() to find the
-			reference before the dialog is destroyed).
-
 (3.1)
 */
 void
-GenericDialog_Dispose	(GenericDialog_Ref*	inoutRefPtr)
+GenericDialog_Dispose	(GenericDialog_Ref*		inoutRefPtr)
 {
 	if (gGenericDialogPtrLocks().isLocked(*inoutRefPtr))
 	{
@@ -269,34 +340,39 @@ GenericDialog_Dispose	(GenericDialog_Ref*	inoutRefPtr)
 
 
 /*!
-Dialogs normally have only an OK and Cancel button; to show a
-third button (automatically sized to fit the specified title),
-use this method.
+Specifies that there should be a third button with a custom
+action attached.  The given block is run on the main thread
+when the button is clicked.
 
-IMPORTANT:	Currently, only one additional button is supported.
+The button is automatically sized to be large enough for the
+given title string, and automatically placed to the left of
+other command buttons.
 
-(3.1)
+Currently, this will not work for more than one extra button.
+
+(4.1)
 */
 void
 GenericDialog_AddButton		(GenericDialog_Ref		inDialog,
 							 CFStringRef			inButtonTitle,
-							 UInt32					inButtonCommandID)
+							 void					(^inResponseBlock)())
 {
 	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
-	OSStatus					error = noErr;
 	
 	
-	// set up the new button
-	error = SetControlTitleWithCFString(ptr->buttonOther, inButtonTitle);
-	assert_noerr(error);
-	error = SetControlCommandID(ptr->buttonOther, inButtonCommandID);
-	assert_noerr(error);
-	UNUSED_RETURN(UInt16)Localization_AutoSizeButtonControl(ptr->buttonOther, 0/* minimum width */);
-	error = HIViewSetVisible(ptr->buttonOther, true);
-	assert_noerr(error);
-	
-	// now determine where the left edge of the button should be (locale-sensitive)
-	ptr->autoArrangeButtons();
+	if (nil != ptr->hostedViewManager)
+	{
+		// new way (Cocoa)
+		ptr->loadViewManager();
+		assert(nil != ptr->containerViewManager);
+		ptr->containerViewManager.thirdButtonName = BRIDGE_CAST(inButtonTitle, NSString*);
+		ptr->containerViewManager.thirdButtonBlock = inResponseBlock;
+	}
+	else
+	{
+		// not supported in legacy Carbon mode
+		Console_Warning(Console_WriteLine, "GenericDialog_AddButton() not supported on Carbon-based dialogs anymore");
+	}
 }// AddButton
 
 
@@ -326,56 +402,75 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog)
 	if (nullptr == ptr) Alert_ReportOSStatus(paramErr);
 	else
 	{
-		HIViewRef	panelContainer = nullptr;
-		OSStatus	error = noErr;
-		
-		
-		// show the panel
-		Panel_GetContainerView(ptr->hostedPanel, panelContainer);
-		Panel_SendMessageNewVisibility(ptr->hostedPanel, true/* visible */);
-		error = HIViewSetVisible(panelContainer, true/* visible */);
-		assert_noerr(error);
-		
-		// display the dialog
-		if (ptr->isModal)
+		if (nil != ptr->hostedViewManager)
 		{
-			// handle events
-			ShowWindow(ptr->dialogWindow);
-			EventLoop_SelectOverRealFrontWindow(ptr->dialogWindow);
-			UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
-			Panel_SendMessageFocusFirst(ptr->hostedPanel);
-			error = RunAppModalLoopForWindow(ptr->dialogWindow);
-			assert_noerr(error);
+			//
+			// new method: use Cocoa
+			//
+			
+			ptr->loadViewManager();
+			assert(nil != ptr->containerViewManager);
+			
+			if (nil == ptr->popoverWindow)
+			{
+				ptr->popoverWindow = [[Popover_Window alloc] initWithView:ptr->containerViewManager.managedView
+																			attachedToPoint:NSMakePoint(0, 0)/* TEMPORARY */
+																			inWindow:ptr->parentWindow];
+				// TEMPORARY; this should not necessarily have “standard popover style”
+				// because it does not have an arrow like a popover; perhaps a new look
+				// should be created, one that has an NSVisualEffectView behind it?
+				CocoaBasic_ApplyStandardStyleToPopover(ptr->popoverWindow, false/* has arrow */);
+			}
+			
+			if (nil == ptr->popoverManager)
+			{
+				ptr->popoverManager = PopoverManager_New(ptr->popoverWindow,
+															[ptr->containerViewManager logicalFirstResponder],
+															ptr->containerViewManager/* delegate */,
+															kPopoverManager_AnimationTypeDialog,
+															ptr->parentCarbonWindow);
+			}
+			
+			PopoverManager_DisplayPopover(ptr->popoverManager);
 		}
 		else
 		{
-			ShowSheetWindow(ptr->dialogWindow, REINTERPRET_CAST([ptr->parentWindow windowRef], HIWindowRef));
-			UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
-			Panel_SendMessageFocusFirst(ptr->hostedPanel);
-			CocoaBasic_MakeKeyWindowCarbonUserFocusWindow();
-			// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
+			//
+			// legacy (Carbon); will be removed soon
+			//
+			
+			HIViewRef	panelContainer = nullptr;
+			OSStatus	error = noErr;
+			
+			
+			// show the panel
+			Panel_GetContainerView(ptr->hostedPanel, panelContainer);
+			Panel_SendMessageNewVisibility(ptr->hostedPanel, true/* visible */);
+			error = HIViewSetVisible(panelContainer, true/* visible */);
+			assert_noerr(error);
+			
+			// display the dialog
+			if (ptr->isModal)
+			{
+				// handle events
+				ShowWindow(ptr->dialogWindow);
+				EventLoop_SelectOverRealFrontWindow(ptr->dialogWindow);
+				UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
+				Panel_SendMessageFocusFirst(ptr->hostedPanel);
+				error = RunAppModalLoopForWindow(ptr->dialogWindow);
+				assert_noerr(error);
+			}
+			else
+			{
+				ShowSheetWindow(ptr->dialogWindow, REINTERPRET_CAST([ptr->parentWindow windowRef], HIWindowRef));
+				UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
+				Panel_SendMessageFocusFirst(ptr->hostedPanel);
+				CocoaBasic_MakeKeyWindowCarbonUserFocusWindow();
+				// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
+			}
 		}
 	}
 }// Display
-
-
-/*!
-Returns the panel that composes the primary user interface
-of the specified dialog.
-
-(3.1)
-*/
-Panel_Ref
-GenericDialog_ReturnHostedPanel		(GenericDialog_Ref	inDialog)
-{
-	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
-	Panel_Ref					result = nullptr;
-	
-	
-	if (nullptr != ptr) result = ptr->hostedPanel;
-	
-	return result;
-}// ReturnHostedPanel
 
 
 /*!
@@ -395,46 +490,6 @@ GenericDialog_ReturnImplementation	(GenericDialog_Ref	inDialog)
 	
 	return result;
 }// ReturnImplementation
-
-
-/*!
-Returns a reference to the terminal window being
-customized by a particular dialog.
-
-(4.1)
-*/
-NSWindow*
-GenericDialog_ReturnParentNSWindow	(GenericDialog_Ref	inDialog)
-{
-	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
-	NSWindow*					result = nil;
-	
-	
-	if (nullptr != ptr) result = ptr->parentWindow;
-	
-	return result;
-}// ReturnParentNSWindow
-
-
-/*!
-Returns a reference to the terminal window being
-customized by a particular dialog.
-
-DEPRECATED.  Use GenericDialog_ReturnParentNSWindow().
-
-(3.1)
-*/
-HIWindowRef
-GenericDialog_ReturnParentWindow	(GenericDialog_Ref	inDialog)
-{
-	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
-	HIWindowRef					result = nullptr;
-	
-	
-	if (nullptr != ptr) result = REINTERPRET_CAST([ptr->parentWindow windowRef], HIWindowRef);
-	
-	return result;
-}// ReturnParentWindow
 
 
 /*!
@@ -459,9 +514,23 @@ GenericDialog_SetCommandButtonTitle		(GenericDialog_Ref		inDialog,
 	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
 	
 	
-	if (kHICommandOK == inCommandID)
+	if (nil != ptr->hostedViewManager)
 	{
-		UNUSED_RETURN(OSStatus)SetControlTitleWithCFString(ptr->buttonOK, inButtonTitle);
+		// new method: use Cocoa
+		if (kHICommandOK == inCommandID)
+		{
+			ptr->loadViewManager();
+			assert(nil != ptr->containerViewManager);
+			ptr->containerViewManager.primaryActionButtonName = BRIDGE_CAST(inButtonTitle, NSString*);
+		}
+	}
+	else
+	{
+		// legacy (Carbon)
+		if (kHICommandOK == inCommandID)
+		{
+			UNUSED_RETURN(OSStatus)SetControlTitleWithCFString(ptr->buttonOK, inButtonTitle);
+		}
 	}
 	ptr->autoArrangeButtons();
 }// SetCommandButtonTitle
@@ -540,7 +609,9 @@ forces good object design.
 */
 My_GenericDialog::
 My_GenericDialog	(NSWindow*							inParentNSWindowOrNull,
-					 Panel_Ref							inHostedPanel,
+					 HIWindowRef						inParentCarbonWindowOrNull,
+					 Panel_ViewManager*					inHostedViewManagerOrNull,
+					 Panel_Ref							inHostedPanelOrNull,
 					 void*								inDataSetPtr,
 					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 					 HelpSystem_KeyPhrase				inHelpButtonAction)
@@ -548,27 +619,42 @@ My_GenericDialog	(NSWindow*							inParentNSWindowOrNull,
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 selfRef							(REINTERPRET_CAST(this, GenericDialog_Ref)),
 parentWindow					(inParentNSWindowOrNull),
+parentCarbonWindow				(inParentCarbonWindowOrNull),
 isModal							(nil == inParentNSWindowOrNull),
-hostedPanel						(inHostedPanel),
-dataSetPtr						(inDataSetPtr),
+containerViewManager			(nil), // set later if necessary
+hostedViewManager				([inHostedViewManagerOrNull retain]),
+hostedPanel						(inHostedPanelOrNull),
 panelIdealSize					(CGSizeMake(0, 0)), // set later
+popoverManager					(nullptr), // created as needed
+popoverWindow					(nil), // set later if necessary
 dialogWindow					(NIBWindow(AppResources_ReturnBundleForNIBs(),
-											CFSTR("GenericDialog"), (this->isModal) ? CFSTR("Dialog") : CFSTR("Sheet"))
-									<< NIBLoader_AssertWindowExists),
-userPaneForMargins				(dialogWindow.returnHIViewWithID(idMyUserPanePanelMargins)
-									<< HIViewWrap_AssertExists),
-buttonHelp						(dialogWindow.returnHIViewWithID(idMyButtonHelp)
-									<< HIViewWrap_AssertExists
-									<< DialogUtilities_SetUpHelpButton),
-buttonOK						(dialogWindow.returnHIViewWithID(idMyButtonOK)
-									<< HIViewWrap_AssertExists),
-buttonCancel					(dialogWindow.returnHIViewWithID(idMyButtonCancel)
-									<< HIViewWrap_AssertExists),
-buttonOther						(dialogWindow.returnHIViewWithID(idMyButtonOther)
-									<< HIViewWrap_AssertExists),
-buttonHICommandsHandler			(GetWindowEventTarget(this->dialogWindow), receiveHICommand,
-									CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
-									this->selfRef/* user data */),
+											CFSTR("GenericDialog"),
+											(this->isModal)
+											? CFSTR("Dialog")
+											: CFSTR("Sheet"))
+											<< NIBLoader_AssertWindowExists),
+userPaneForMargins				((nil != inHostedViewManagerOrNull)
+									? nullptr
+									: (dialogWindow.returnHIViewWithID(idMyUserPanePanelMargins)
+										<< HIViewWrap_AssertExists)),
+buttonHelp						((nil != inHostedViewManagerOrNull)
+									? nullptr
+									: (dialogWindow.returnHIViewWithID(idMyButtonHelp)
+										<< HIViewWrap_AssertExists
+										<< DialogUtilities_SetUpHelpButton)),
+buttonOK						((nil != inHostedViewManagerOrNull)
+									? nullptr
+									: (dialogWindow.returnHIViewWithID(idMyButtonOK)
+										<< HIViewWrap_AssertExists)),
+buttonCancel					((nil != inHostedViewManagerOrNull)
+									? nullptr
+									: (dialogWindow.returnHIViewWithID(idMyButtonCancel)
+										<< HIViewWrap_AssertExists)),
+buttonOther						((nil != inHostedViewManagerOrNull)
+									? nullptr
+									: (dialogWindow.returnHIViewWithID(idMyButtonOther)
+										<< HIViewWrap_AssertExists)),
+buttonHICommandsHandler			(), // set later if necessary
 closeNotifyProc					(inCloseNotifyProcPtr),
 closeEffects					(),
 windowResizeHandler				(),
@@ -582,137 +668,164 @@ userDataPtr						(nullptr)
 	HIViewRef	panelContainer = nullptr;
 	
 	
-	// allow the panel to create its controls by providing a pointer to the containing window
-	Panel_SendMessageCreateViews(this->hostedPanel, this->dialogWindow);
-	Panel_GetContainerView(this->hostedPanel, panelContainer);
-	
-	// figure out where the panel should be, and how much space is around it
+	if (nullptr != hostedPanel)
 	{
-		HIViewWrap	contentView(kHIViewWindowContentID, this->dialogWindow);
-		HIRect		contentBounds;
-		HIRect		panelFrame;
+		//
+		// legacy (Carbon) setup; will be removed soon
+		//
 		
+		assert(nil == this->hostedViewManager);
 		
-		assert(contentView.exists());
-		error = HIViewGetBounds(contentView, &contentBounds);
-		assert_noerr(error);
-		error = HIViewGetFrame(this->userPaneForMargins, &panelFrame);
-		assert_noerr(error);
-		panelMarginsTopLeft = CGSizeMake(panelFrame.origin.x, panelFrame.origin.y);
-		panelMarginsBottomRight = CGSizeMake(contentBounds.size.width - panelFrame.size.width - panelMarginsTopLeft.width,
-												contentBounds.size.height - panelFrame.size.height - panelMarginsTopLeft.height);
+		// initialize button command handler
+		buttonHICommandsHandler.install(GetWindowEventTarget(this->dialogWindow), receiveHICommand,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+										this->selfRef/* user data */);
 		
-		// set the *initial* size of the panel to match the NIB...but (below)
-		// once a delta-size handler is set up and the proper window size is
-		// calculated, this will be automatically adjusted to the ideal size
-		error = HIViewSetFrame(panelContainer, &panelFrame);
-		assert_noerr(error);
-	}
-	
-	// make the grow box transparent by default, which looks better most of the time;
-	// however, give the panel the option to change this appearance
-	{
-		HIViewWrap		growBox(kHIViewWindowGrowBoxID, this->dialogWindow);
+		// allow the panel to create its controls by providing a pointer to the containing window
+		Panel_SendMessageCreateViews(this->hostedPanel, this->dialogWindow);
+		Panel_GetContainerView(this->hostedPanel, panelContainer);
 		
-		
-		if (kPanel_ResponseGrowBoxOpaque == Panel_SendMessageGetGrowBoxLook(this->hostedPanel))
+		// figure out where the panel should be, and how much space is around it
 		{
-			UNUSED_RETURN(OSStatus)HIGrowBoxViewSetTransparent(growBox, false);
-		}
-		else
-		{
-			UNUSED_RETURN(OSStatus)HIGrowBoxViewSetTransparent(growBox, true);
-		}
-	}
-	
-	// set up window resizing
-	{
-		SInt32		resizeRequirements = Panel_SendMessageGetUsefulResizeAxes(this->hostedPanel);
-		UInt16		maxWidthOffset = 200; // arbitrary
-		UInt16		maxHeightOffset = 100; // arbitrary
-		
-		
-		// adjust offsets
-		if (kPanel_ResponseResizeHorizontal == resizeRequirements)
-		{
-			maxHeightOffset = 0;
-		}
-		if (kPanel_ResponseResizeVertical == resizeRequirements)
-		{
-			maxWidthOffset = 0;
-		}
-		
-		// hide the grow box completely if it is not useful to resize the panel
-		if (kPanel_ResponseResizeNotNeeded == resizeRequirements)
-		{
-			UNUSED_RETURN(OSStatus)ChangeWindowAttributes(this->dialogWindow, 0/* attributes to set */,
-															kWindowResizableAttribute/* attributes to clear */);
-		}
-		
-		// install a callback that responds as a window is resized
-		{
-			Rect		currentBounds;
+			HIViewWrap	contentView(kHIViewWindowContentID, this->dialogWindow);
+			HIRect		contentBounds;
+			HIRect		panelFrame;
 			
 			
-			error = GetWindowBounds(this->dialogWindow, kWindowContentRgn, &currentBounds);
+			assert(contentView.exists());
+			error = HIViewGetBounds(contentView, &contentBounds);
 			assert_noerr(error);
-			this->windowResizeHandler.install(this->dialogWindow, handleNewSize, this->selfRef/* user data */,
-												currentBounds.right - currentBounds.left/* minimum width */,
-												currentBounds.bottom - currentBounds.top/* minimum height */,
-												currentBounds.right - currentBounds.left + 200/* arbitrary maximum width */,
-												currentBounds.bottom - currentBounds.top/* maximum height */);
-			assert(this->windowResizeHandler.isInstalled());
+			error = HIViewGetFrame(this->userPaneForMargins, &panelFrame);
+			assert_noerr(error);
+			panelMarginsTopLeft = CGSizeMake(panelFrame.origin.x, panelFrame.origin.y);
+			panelMarginsBottomRight = CGSizeMake(contentBounds.size.width - panelFrame.size.width - panelMarginsTopLeft.width,
+													contentBounds.size.height - panelFrame.size.height - panelMarginsTopLeft.height);
+			
+			// set the *initial* size of the panel to match the NIB...but (below)
+			// once a delta-size handler is set up and the proper window size is
+			// calculated, this will be automatically adjusted to the ideal size
+			error = HIViewSetFrame(panelContainer, &panelFrame);
+			assert_noerr(error);
 		}
 		
-		// adjust for ideal size
-		if (kPanel_ResponseSizeProvided != Panel_SendMessageGetIdealSize(this->hostedPanel, this->panelIdealSize))
+		// make the grow box transparent by default, which looks better most of the time;
+		// however, give the panel the option to change this appearance
 		{
-			// some problem setting the size; choose one arbitrarily
-			Console_Warning(Console_WriteLine, "unable to determine ideal size of dialog panel");
-			panelIdealSize = CGSizeMake(400.0, 250.0); // arbitrary
+			HIViewWrap		growBox(kHIViewWindowGrowBoxID, this->dialogWindow);
+			
+			
+			if (kPanel_ResponseGrowBoxOpaque == Panel_SendMessageGetGrowBoxLook(this->hostedPanel))
+			{
+				UNUSED_RETURN(OSStatus)HIGrowBoxViewSetTransparent(growBox, false);
+			}
+			else
+			{
+				UNUSED_RETURN(OSStatus)HIGrowBoxViewSetTransparent(growBox, true);
+			}
 		}
-		windowInitialSize = CGSizeMake(panelMarginsTopLeft.width + this->panelIdealSize.width + panelMarginsBottomRight.width,
-										panelMarginsTopLeft.height + this->panelIdealSize.height + panelMarginsBottomRight.height);
-		this->windowResizeHandler.setWindowIdealSize(windowInitialSize.width, windowInitialSize.height);
-		this->windowResizeHandler.setWindowMinimumSize(windowInitialSize.width, windowInitialSize.height);
-		this->windowResizeHandler.setWindowMaximumSize(windowInitialSize.width + maxWidthOffset,
-														windowInitialSize.height + maxHeightOffset);
+		
+		// set up window resizing
+		{
+			SInt32		resizeRequirements = Panel_SendMessageGetUsefulResizeAxes(this->hostedPanel);
+			UInt16		maxWidthOffset = 200; // arbitrary
+			UInt16		maxHeightOffset = 100; // arbitrary
+			
+			
+			// adjust offsets
+			if (kPanel_ResponseResizeHorizontal == resizeRequirements)
+			{
+				maxHeightOffset = 0;
+			}
+			if (kPanel_ResponseResizeVertical == resizeRequirements)
+			{
+				maxWidthOffset = 0;
+			}
+			
+			// hide the grow box completely if it is not useful to resize the panel
+			if (kPanel_ResponseResizeNotNeeded == resizeRequirements)
+			{
+				UNUSED_RETURN(OSStatus)ChangeWindowAttributes(this->dialogWindow, 0/* attributes to set */,
+																kWindowResizableAttribute/* attributes to clear */);
+			}
+			
+			// install a callback that responds as a window is resized
+			{
+				Rect		currentBounds;
+				
+				
+				error = GetWindowBounds(this->dialogWindow, kWindowContentRgn, &currentBounds);
+				assert_noerr(error);
+				this->windowResizeHandler.install(this->dialogWindow, handleNewSize, this->selfRef/* user data */,
+													currentBounds.right - currentBounds.left/* minimum width */,
+													currentBounds.bottom - currentBounds.top/* minimum height */,
+													currentBounds.right - currentBounds.left + 200/* arbitrary maximum width */,
+													currentBounds.bottom - currentBounds.top/* maximum height */);
+				assert(this->windowResizeHandler.isInstalled());
+			}
+			
+			// adjust for ideal size
+			if (kPanel_ResponseSizeProvided != Panel_SendMessageGetIdealSize(this->hostedPanel, this->panelIdealSize))
+			{
+				// some problem setting the size; choose one arbitrarily
+				Console_Warning(Console_WriteLine, "unable to determine ideal size of dialog panel");
+				panelIdealSize = CGSizeMake(400.0, 250.0); // arbitrary
+			}
+			windowInitialSize = CGSizeMake(panelMarginsTopLeft.width + this->panelIdealSize.width + panelMarginsBottomRight.width,
+											panelMarginsTopLeft.height + this->panelIdealSize.height + panelMarginsBottomRight.height);
+			this->windowResizeHandler.setWindowIdealSize(windowInitialSize.width, windowInitialSize.height);
+			this->windowResizeHandler.setWindowMinimumSize(windowInitialSize.width, windowInitialSize.height);
+			this->windowResizeHandler.setWindowMaximumSize(windowInitialSize.width + maxWidthOffset,
+															windowInitialSize.height + maxHeightOffset);
+		}
+		
+		// resize the window; due to event handlers, a resize of the window
+		// changes the panel size too
+		SizeWindow(this->dialogWindow, STATIC_CAST(windowInitialSize.width, SInt16),
+					STATIC_CAST(windowInitialSize.height, SInt16), true/* update */);
+		
+		// auto-size and auto-arrange the initial buttons
+		this->autoArrangeButtons();
+		
+		// positioning is not done in the NIB because an arbitrarily-sized panel is
+		// added programmatically, and affects the size (and centering) of the window
+		if (this->isModal)
+		{
+			HIWindowRef const	kAnchorWindow = GetUserFocusWindow();
+			
+			
+			UNUSED_RETURN(OSStatus)RepositionWindow(this->dialogWindow, kAnchorWindow,
+													(nullptr == kAnchorWindow)
+													? kWindowCenterOnMainScreen
+													: kWindowCenterOnParentWindowScreen);
+		}
+		
+		// now notify the panel of its data
+		{
+			Panel_DataSetTransition		dataSetTransition;
+			
+			
+			bzero(&dataSetTransition, sizeof(dataSetTransition));
+			dataSetTransition.newDataSet = inDataSetPtr;
+			Panel_SendMessageNewDataSet(inHostedPanelOrNull, dataSetTransition);
+		}
+		
+		// ensure other handlers were installed
+		assert(buttonHICommandsHandler.isInstalled());
 	}
-	
-	// resize the window; due to event handlers, a resize of the window
-	// changes the panel size too
-	SizeWindow(this->dialogWindow, STATIC_CAST(windowInitialSize.width, SInt16),
-				STATIC_CAST(windowInitialSize.height, SInt16), true/* update */);
-	
-	// auto-size and auto-arrange the initial buttons
-	this->autoArrangeButtons();
-	
-	// positioning is not done in the NIB because an arbitrarily-sized panel is
-	// added programmatically, and affects the size (and centering) of the window
-	if (this->isModal)
+	else
 	{
-		HIWindowRef const	kAnchorWindow = GetUserFocusWindow();
+		//
+		// new method; use Cocoa object and view
+		//
 		
+		assert(nullptr == this->hostedPanel);
 		
-		UNUSED_RETURN(OSStatus)RepositionWindow(this->dialogWindow, kAnchorWindow,
-												(nullptr == kAnchorWindow)
-												? kWindowCenterOnMainScreen
-												: kWindowCenterOnParentWindowScreen);
+		// now notify the panel of its data
+		[inHostedViewManagerOrNull.delegate panelViewManager:inHostedViewManagerOrNull
+																didChangeFromDataSet:nullptr
+																toDataSet:inDataSetPtr];
 	}
-	
-	// now notify the panel of its data
-	{
-		Panel_DataSetTransition		dataSetTransition;
-		
-		
-		bzero(&dataSetTransition, sizeof(dataSetTransition));
-		dataSetTransition.newDataSet = inDataSetPtr;
-		Panel_SendMessageNewDataSet(inHostedPanel, dataSetTransition);
-	}
-	
-	// ensure other handlers were installed
-	assert(buttonHICommandsHandler.isInstalled());
-}// My_GenericDialog 4-argument constructor
+}// My_GenericDialog constructor
 
 
 /*!
@@ -723,7 +836,23 @@ Destructor.  See GenericDialog_Dispose().
 My_GenericDialog::
 ~My_GenericDialog ()
 {
-	DisposeWindow(this->dialogWindow.operator WindowRef());
+	if (nullptr != popoverManager)
+	{
+		PopoverManager_RemovePopover(popoverManager, false/* is confirming */);
+		PopoverManager_Dispose(&popoverManager);
+	}
+	
+	if (nil != popoverWindow)
+	{
+		[popoverWindow release];
+	}
+	
+	[hostedViewManager release];
+	
+	if (this->dialogWindow.exists())
+	{
+		DisposeWindow(this->dialogWindow.operator WindowRef());
+	}
 }// My_GenericDialog destructor
 
 
@@ -738,11 +867,44 @@ void
 My_GenericDialog::
 autoArrangeButtons ()
 {
-	HIViewRef	buttonArray[] = { this->buttonOK, this->buttonCancel, this->buttonOther };
-	
-	
-	Localization_ArrangeButtonArray(buttonArray, sizeof(buttonArray) / sizeof(HIViewRef));
+	if (nil != this->hostedViewManager)
+	{
+		// new method: use Cocoa
+		// UNIMPLEMENTED
+	}
+	else
+	{
+		// legacy (Carbon)
+		HIViewRef	buttonArray[] = { this->buttonOK, this->buttonCancel, this->buttonOther };
+		
+		
+		Localization_ArrangeButtonArray(buttonArray, sizeof(buttonArray) / sizeof(HIViewRef));
+	}
 }// autoArrangeButtons
+
+
+/*!
+Constructs the internal view manager object if necessary,
+and transfers ownership of this object to that manager.
+
+Cocoa only.
+
+(4.1)
+*/
+void
+My_GenericDialog::
+loadViewManager ()
+{
+	if (nil == this->containerViewManager)
+	{
+		this->containerViewManager = [[GenericDialog_ViewManager alloc]
+										initWithRef:this->selfRef/* transfer ownership here */
+														identifier:[this->hostedViewManager panelIdentifier]
+														localizedName:[this->hostedViewManager panelName]
+														localizedIcon:[this->hostedViewManager panelIcon]
+														viewManager:this->hostedViewManager];
+	}
+}// loadViewManager
 
 
 /*!
@@ -948,5 +1110,718 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 }// receiveHICommand
 
 } // anonymous namespace
+
+
+#pragma mark -
+@implementation GenericDialog_ViewManager
+
+
+@synthesize thirdButtonBlock = _thirdButtonBlock;
+
+
+#pragma mark Initializers
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (instancetype)
+initWithRef:(GenericDialog_Ref)		aDialogRef
+identifier:(NSString*)				anIdentifier
+localizedName:(NSString*)			aName
+localizedIcon:(NSImage*)			anImage
+viewManager:(Panel_ViewManager*)	aViewManager
+{
+	self = [super initWithNibNamed:@"GenericDialogCocoa"
+									delegate:self
+									context:@{
+												@"identifier": anIdentifier,
+												@"localizedName": aName,
+												@"localizedIcon": anImage,
+												@"viewManager": aViewManager,
+											}];
+	if (nil != self)
+	{
+		self->dialogRef = aDialogRef;
+		
+		aViewManager.panelParent = self;
+		
+		// set an initial button value for bindings to use
+		self.primaryActionButtonName = [BRIDGE_CAST(UIStrings_ReturnCopy(kUIStrings_ButtonOK), NSString*) autorelease];
+		
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// initWithRef:identifier:localizedName:localizedIcon:viewManager:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	
+	GenericDialog_Dispose(&dialogRef);
+	mainViewManager.panelParent = nil;
+	[identifier release];
+	[localizedName release];
+	[localizedIcon release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+primaryActionButtonName
+{
+	return [[self->_primaryActionButtonName copy] autorelease];
+}
+- (void)
+setPrimaryActionButtonName:(NSString*)		aString
+{
+	[self setStringProperty:&_primaryActionButtonName withName:@"primaryActionButtonName" toValue:aString];
+	
+	// NOTE: UI updates are OK here because there are no
+	// bindings that can be set ahead of construction
+	// (initialization occurs at view-load time); otherwise
+	// it would be necessary to keep track of pending updates
+	[self updateButtonLayout];
+}// setPrimaryActionButtonName:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+thirdButtonName
+{
+	return [[self->_thirdButtonName copy] autorelease];
+}
+- (void)
+setThirdButtonName:(NSString*)		aString
+{
+	[self setStringProperty:&_thirdButtonName withName:@"thirdButtonName" toValue:aString];
+	
+	// NOTE: UI updates are OK here because there are no
+	// bindings that can be set ahead of construction
+	// (initialization occurs at view-load time); otherwise
+	// it would be necessary to keep track of pending updates
+	[self updateButtonLayout];
+}// setThirdButtonName:
+
+
+#pragma mark Actions
+
+
+/*!
+Invoked when the user clicks the “third button” in the dialog.
+See the "thirdButtonName" property.
+
+(4.1)
+*/
+- (IBAction)
+performThirdButtonAction:(id)	sender
+{
+#pragma unused(sender)
+	if (nil != self.thirdButtonBlock)
+	{
+		self.thirdButtonBlock();
+	}
+}// performThirdButtonAction
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager)
+	// IMPORTANT: see the initializer for the construction of this dictionary and the names of keys that are used
+	NSDictionary*		asDictionary = STATIC_CAST(aContext, NSDictionary*);
+	NSString*			givenIdentifier = [asDictionary objectForKey:@"identifier"];
+	NSString*			givenName = [asDictionary objectForKey:@"localizedName"];
+	NSImage*			givenIcon = [asDictionary objectForKey:@"localizedIcon"];
+	Panel_ViewManager*	givenViewManager = [asDictionary objectForKey:@"viewManager"];
+	
+	
+	self->identifier = [givenIdentifier retain];
+	self->localizedName = [givenName retain];
+	self->localizedIcon = [givenIcon retain];
+	self->mainViewManager = [givenViewManager retain];
+	
+	assert(nil != self->mainViewManager);
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	// forward to child view
+	*outEditType = kPanel_EditTypeNormal;
+	[self->mainViewManager.delegate panelViewManager:aViewManager requestingEditType:outEditType];
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+	assert(nil != self->actionButton);
+	assert(nil != self->cancelButton);
+	assert(nil != self->otherButton);
+	assert(nil != self->helpButton);
+	assert(nil != self->viewContainer);
+	
+	assert(aViewManager == self);
+	assert(aContainerView == self.managedView);
+	
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(parentViewFrameDidChange:)
+														name:NSViewFrameDidChangeNotification
+														object:self->viewContainer];
+	
+	// determine ideal size of embedded panel, and calculate the
+	// ideal size of the entire window accordingly
+	{
+		NSRect		containerFrame = [aContainerView frame];
+		NSSize		panelIdealSize;
+		Float32		initialWidth = NSWidth(containerFrame);
+		Float32		initialHeight = NSHeight(containerFrame);
+		
+		
+		[self->mainViewManager.delegate panelViewManager:self->mainViewManager requestingIdealSize:&panelIdealSize];
+		[self->mainViewManager.managedView setFrameSize:panelIdealSize];
+		
+		if (panelIdealSize.width > initialWidth)
+		{
+			initialWidth = panelIdealSize.width;
+		}
+		initialHeight += panelIdealSize.height;
+		
+		// resize the container (and the window, through constraints)
+		self->initialPanelSize = NSMakeSize(initialWidth, initialHeight);
+		[aContainerView setFrameSize:self->initialPanelSize];
+	}
+	
+	// if supported by the runtime OS, add a vibrancy effect to
+	// make the entire window more translucent than transparent
+	@try
+	{
+		NSView*		parentView = [self->viewContainer superview];
+		id			visualEffectObject = CocoaFuture_AllocInitVisualEffectViewWithFrame(NSRectToCGRect(parentView.frame));
+		
+		
+		if (nil != visualEffectObject)
+		{
+			NSView*		visualEffectView = STATIC_CAST(visualEffectObject, NSView*);
+			NSArray*	subviews = [[parentView subviews] copy];
+			
+			
+			if (nil == subviews)
+			{
+				// this should never happen...
+				subviews = @[];
+			}
+			
+			visualEffectView.autoresizingMask = (NSViewMinXMargin | NSViewWidthSizable | NSViewMaxXMargin |
+													NSViewMinYMargin | NSViewHeightSizable | NSViewMaxYMargin);
+			
+			// keep the views from disappearing when they are removed temporarily
+			[subviews enumerateObjectsUsingBlock:^(id object, NSUInteger index, BOOL *stop)
+			{
+			#pragma unused(index, stop)
+				NSView*		asView = STATIC_CAST(object, NSView*);
+				
+				
+				[[object retain] autorelease];
+				[asView removeFromSuperview];
+			}];
+			
+			[visualEffectView setSubviews:subviews];
+			[parentView setSubviews:@[visualEffectView]];
+		}
+		else
+		{
+			// OS is too old to support this effect (no problem)
+		}
+	}
+	@catch (NSException*	inException)
+	{
+		// since this is just a visual adornment, do not allow
+		// exceptions to cause problems; just log and continue
+		Console_Warning(Console_WriteValueCFString, "visual effect adornment failed, exception", BRIDGE_CAST([inException name], CFStringRef));
+	}
+	
+	// there is only one “tab” (and the frame and background are
+	// hidden) but using NSTabView allows several important
+	// subview-management tasks to be taken care of automatically,
+	// such as the view size and initial keyboard focus
+	{
+		NSRect				panelFrame = self->mainViewManager.managedView.frame;
+		NSTabViewItem*		tabItem = [[NSTabViewItem alloc] initWithIdentifier:[aViewManager panelIdentifier]];
+		
+		
+		[tabItem setView:self->mainViewManager.managedView];
+		[tabItem setInitialFirstResponder:[self->mainViewManager logicalFirstResponder]];
+		[self->viewContainer addTabViewItem:tabItem];
+		[tabItem release];
+		
+		// anchor at the top of the window
+		panelFrame.origin.y = NSHeight([[self->viewContainer superview] frame]) - NSHeight(panelFrame);
+		self->viewContainer.frame = panelFrame;
+	}
+	
+	// link the key view chains of the panel and the dialog
+	[self->mainViewManager logicalLastResponder].nextKeyView = [super logicalFirstResponder];
+	[super logicalLastResponder].nextKeyView = [self->mainViewManager logicalFirstResponder];
+	
+	[self updateButtonLayout];
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	// copy the size used for the popover
+	*outIdealSize = [self idealSize];
+}// panelViewManager:requestingIdealSize:
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager)
+	// forward to child view
+	[self->mainViewManager.delegate panelViewManager:self->mainViewManager didPerformContextSensitiveHelp:sender];
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager)
+	// forward to child view
+	[self->mainViewManager.delegate panelViewManager:self->mainViewManager willChangePanelVisibility:aVisibility];
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager)
+	// forward to child view
+	[self->mainViewManager.delegate panelViewManager:self->mainViewManager didChangePanelVisibility:aVisibility];
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+The message is forwarded to the detail view but the data type
+of the context is changed to "GeneralPanelNumberedList_DataSet"
+(where only the "parentPanelDataSetOrNull" field can be
+expected to change from old to new).
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager)
+	// forward to child view
+	[self->mainViewManager.delegate panelViewManager:self->mainViewManager didChangeFromDataSet:oldDataSet toDataSet:newDataSet];
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).
+
+The message is forwarded to the detail view.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager)
+	// forward to child view
+	[self->mainViewManager.delegate panelViewManager:self->mainViewManager didFinishUsingContainerView:aContainerView userAccepted:isAccepted];
+	
+	// forward to original caller
+	{
+		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
+		
+		
+		GenericDialog_InvokeCloseNotifyProc(ptr->closeNotifyProc, ptr->selfRef, isAccepted/* OK was pressed */);
+		
+		PopoverManager_RemovePopover(ptr->popoverManager, isAccepted);
+	}
+	
+	// by contract, the Generic Dialog takes control of the
+	// object if the dialog is displayed; destroy it (this
+	// must happen outside the lock-block above)
+	GenericDialog_Dispose(&self->dialogRef);
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_Parent
+
+
+/*!
+Selects the panel with the given panel identifier, or does
+nothing if the identifier does not match any panel.
+
+Currently the animation flag has no effect.
+
+(4.1)
+*/
+- (void)
+panelParentDisplayChildWithIdentifier:(NSString*)	anIdentifier
+withAnimation:(BOOL)								isAnimated
+{
+#pragma unused(anIdentifier, isAnimated)
+	// nothing needed
+}// panelParentDisplayChildWithIdentifier:withAnimation:
+
+
+/*!
+Returns an enumerator over the Panel_ViewManager* objects
+for the panels in this view.
+
+(4.1)
+*/
+- (NSEnumerator*)
+panelParentEnumerateChildViewManagers
+{
+	return [[[@[self->mainViewManager] retain] autorelease] objectEnumerator];
+}// panelParentEnumerateChildViewManagers
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Overrides the base to return the logical first responder
+of the embedded panel (so that keyboard entry starts in
+that panel).
+
+Note that the last responder is not overridden, and the
+loop is set in "panelViewManager:didLoadContainerView:".
+
+(4.1)
+*/
+- (NSView*)
+logicalFirstResponder
+{
+	return [self->mainViewManager logicalFirstResponder];
+}// logicalFirstResponder
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [[self->localizedIcon retain] autorelease];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return [[self->identifier retain] autorelease];
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return [[self->localizedName retain] autorelease];
+}// panelName
+
+
+/*!
+Returns the corresponding result from the child view manager.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	// return the child view’s constraint
+	Panel_ResizeConstraint	result = [self->mainViewManager panelResizeAxes];
+	
+	
+	return result;
+}// panelResizeAxes
+
+
+#pragma mark PopoverManager_Delegate
+
+
+/*!
+Returns the proper position of the popover arrow tip (if any),
+relative to its parent window; also called during window resizing.
+
+(4.1)
+*/
+- (NSPoint)
+idealAnchorPointForFrame:(NSRect)	parentFrame
+parentWindow:(NSWindow*)			parentWindow
+{
+	NSRect		contentFrame = [parentWindow contentRectForFrameRect:parentFrame];
+	NSPoint		result = NSMakePoint(0, 0);
+	
+	
+	result.x = (NSWidth(parentFrame) / 2.0);
+	result.y = ((parentFrame.origin.y - contentFrame.origin.y) + NSHeight(contentFrame));
+	
+	result.y -= 20; // arbitrary; make it easier to drag the parent window
+	
+	return result;
+}// idealAnchorPointForFrame:parentWindow:
+
+
+/*!
+Returns the desired popover arrow placement.
+
+(4.1)
+*/
+- (Popover_Properties)
+idealArrowPositionForFrame:(NSRect)		parentFrame
+parentWindow:(NSWindow*)				parentWindow
+{
+#pragma unused(parentFrame, parentWindow)
+	Popover_Properties		result = (kPopover_PropertyArrowMiddle |
+										kPopover_PropertyPlaceFrameBelowArrow);
+	
+	
+	return result;
+}// idealArrowPositionForFrame:parentWindow:
+
+
+/*!
+Returns the dimensions the popover should initially have.
+
+(4.1)
+*/
+- (NSSize)
+idealSize
+{
+	return self->initialPanelSize;
+}// idealSize
+
+
+#pragma mark NSColorPanel
+
+
+/*!
+Forwards this message to the main view manager if the
+panel implements a "changeColor:" method.
+
+NOTE:	It is possible that one day panels will be set up
+		as responders themselves and placed directly in
+		the responder chain.  For now this is sufficient.
+
+(4.1)
+*/
+- (void)
+changeColor:(id)	sender
+{
+	if ([self->mainViewManager respondsToSelector:@selector(changeColor:)])
+	{
+		[self->mainViewManager changeColor:sender];
+	}
+}// changeColor:
+
+
+#pragma mark NSFontPanel
+
+
+/*!
+Forwards this message to the main view manager if the
+panel implements a "changeFont:" method.
+
+NOTE:	It is possible that one day panels will be set up
+		as responders themselves and placed directly in
+		the responder chain.  For now this is sufficient.
+
+(4.1)
+*/
+- (void)
+changeFont:(id)		sender
+{
+	if ([self->mainViewManager respondsToSelector:@selector(changeFont:)])
+	{
+		[self->mainViewManager changeFont:sender];
+	}
+}// changeFont:
+
+
+#pragma mark Notifications
+
+
+/*!
+Invoked when the parent view frame is changed.  The layout
+of action buttons in the dialog depends on the width of the
+main view.
+
+(4.1)
+*/
+- (void)
+parentViewFrameDidChange:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	[self updateButtonLayout];
+}// parentViewFrameDidChange:
+
+
+@end // GenericDialog_ViewManager
+
+
+@implementation GenericDialog_ViewManager (GenericDialog_ViewManagerInternal)
+
+
+#pragma mark New Methods
+
+
+/*!
+A helper to make string-setters less cumbersome to write.
+
+(4.1)
+*/
+- (void)
+setStringProperty:(NSString**)		propertyPtr
+withName:(NSString*)				propertyName
+toValue:(NSString*)					aString
+{
+	if (aString != *propertyPtr)
+	{
+		[self willChangeValueForKey:propertyName];
+		
+		if (nil == aString)
+		{
+			*propertyPtr = [@"" retain];
+		}
+		else
+		{
+			[*propertyPtr autorelease];
+			*propertyPtr = [aString copy];
+		}
+		
+		[self didChangeValueForKey:propertyName];
+	}
+}// setStringProperty:withName:toValue:
+
+
+/*!
+Automatically resizes all action buttons and lays them out
+according to normal interface guidelines and the current
+localization (right-to-left versus left-to-right).
+
+(4.1)
+*/
+-
+(void)
+updateButtonLayout
+{
+	// do nothing unless views are loaded
+	if (nil != self->actionButton)
+	{
+		NSArray*	buttonArray = @[self->actionButton, self->cancelButton, self->otherButton];
+		
+		
+		Localization_ArrangeNSButtonArray(BRIDGE_CAST(buttonArray, CFArrayRef));
+		Localization_AdjustHelpNSButton(self->helpButton);
+	}
+}// updateButtonLayout
+
+
+@end // GenericDialog_ViewManager (GenericDialog_ViewManagerInternal)
+
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

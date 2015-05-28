@@ -45,6 +45,11 @@
 class NSWindow;
 #endif
 
+// library includes
+#ifdef __OBJC__
+#	import <PopoverManager.objc++.h>
+#endif
+
 // application includes
 #include "HelpSystem.h"
 #include "Panel.h"
@@ -63,6 +68,60 @@ enum GenericDialog_DialogEffect
 #pragma mark Types
 
 typedef struct GenericDialog_OpaqueRef*		GenericDialog_Ref;
+
+#ifdef __OBJC__
+
+/*!
+Loads a NIB file that defines this panel.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface GenericDialog_ViewManager : Panel_ViewManager< Panel_Delegate,
+															Panel_Parent,
+															PopoverManager_Delegate > //{
+{
+@private
+	IBOutlet NSTabView*		viewContainer;
+	IBOutlet NSButton*		actionButton;
+	IBOutlet NSButton*		cancelButton;
+	IBOutlet NSButton*		otherButton;
+	IBOutlet NSButton*		helpButton;
+	NSString*				_primaryActionButtonName;
+	NSString*				_thirdButtonName;
+	void					(^_thirdButtonBlock)();
+	NSString*				identifier;
+	NSString*				localizedName;
+	NSImage*				localizedIcon;
+	NSSize					initialPanelSize;
+	Panel_ViewManager*		mainViewManager;
+	GenericDialog_Ref		dialogRef;
+}
+
+// initializers
+	- (instancetype)
+	initWithRef:(GenericDialog_Ref)_
+	identifier:(NSString*)_
+	localizedName:(NSString*)_
+	localizedIcon:(NSImage*)_
+	viewManager:(Panel_ViewManager*)_;
+
+// accessors: user interface settings
+	@property (strong) NSString*
+	primaryActionButtonName;
+	@property (strong) void
+	(^thirdButtonBlock)();
+	@property (strong) NSString*
+	thirdButtonName;
+
+// actions
+	- (IBAction)
+	performThirdButtonAction:(id)_;
+
+@end //}
+
+#endif // __OBJC__
 
 #pragma mark Callbacks
 
@@ -90,6 +149,16 @@ GenericDialog_InvokeCloseNotifyProc		(GenericDialog_CloseNotifyProcPtr	inUserRou
 
 #pragma mark Public Methods
 
+#ifdef __OBJC__
+// NOTE: SPECIFIED VIEW MANAGER IS RETAINED BY THIS CALL
+GenericDialog_Ref
+	GenericDialog_New							(HIWindowRef						inParentWindowOrNullForModalDialog,
+												 Panel_ViewManager*					inHostedPanel,
+												 void*								inDataSetPtr,
+												 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+												 HelpSystem_KeyPhrase				inHelpButtonAction = kHelpSystem_KeyPhraseDefault);
+#endif
+
 GenericDialog_Ref
 	GenericDialog_New							(NSWindow*							inParentWindowOrNullForModalDialog,
 												 Panel_Ref							inHostedPanel,
@@ -111,23 +180,13 @@ void
 void
 	GenericDialog_AddButton						(GenericDialog_Ref					inDialog,
 												 CFStringRef						inButtonTitle,
-												 UInt32								inButtonCommandID);
+												 void								(^inResponseBlock)());
 
 void
 	GenericDialog_Display						(GenericDialog_Ref					inDialog);
 
-Panel_Ref
-	GenericDialog_ReturnHostedPanel				(GenericDialog_Ref					inDialog);
-
 void*
 	GenericDialog_ReturnImplementation			(GenericDialog_Ref					inDialog);
-
-NSWindow*
-	GenericDialog_ReturnParentNSWindow			(GenericDialog_Ref					inDialog);
-
-// DEPRECATED; USE GenericDialog_ReturnParentNSWindow()
-HIWindowRef
-	GenericDialog_ReturnParentWindow			(GenericDialog_Ref					inDialog);
 
 void
 	GenericDialog_SetCommandButtonTitle			(GenericDialog_Ref					inDialog,

@@ -17,6 +17,7 @@ p(#abstract). This page is arranged in the same categories as those in
  the MacTerm menu.  See also the "low-level settings":advprefs.html page.
 
 * "About Grouped Preferences":#collections
+* "About Inherited Preferences":#inheritance
 * "About Preferences Search":#search
 * "General":#general
 * "Macros":#macros
@@ -129,6 +130,32 @@ Exported settings are a good way to share among users of MacTerm.
  For instance, if you are the administrator of a school you might
  want to export some settings and make them available to students
  so that everyone's computer can be configured fairly easily.
+
+h2(#inheritance). About Inherited Preferences
+
+If a panel has one or more columns of check boxes on the side, it
+ means that you can delete any "local" values for that setting
+ and force the collection to always inherit the default value.
+ When the Default is changed, inheriting collections will always
+ use the latest Default value.
+
+For example, you may decide that you want every terminal window
+ to use the same font and size but allow different Format options
+ to have different colors.  To have the font kept in sync
+ automatically, simply set the font and size in the Default Format
+ and ensure that the appropriate check boxes are set in all other
+ Format collections to use that Default.
+
+When there is more than one check box side-by-side, each box
+ corresponds to a different setting in the same row.  For example,
+ if you see two color boxes side-by-side, each will have its own
+ check box to control inheritance of one color.
+
+The "Use Default" check boxes are disabled once they are checked.
+ Enter a different value to make the "Use Default" option
+ available again; for example, if the check box controls a color,
+ click the color box to select a new color and the check box will
+ be enabled.
 
 h2(#search). About Preferences Search
 
@@ -254,7 +281,7 @@ h4. Terminal Cursor
 h5(#cursorshape). Shape
 
 MacTerm allows one of 5 different shapes for the terminal
- cursor; a solid square is typical, but you may wish to have the
+ cursor; a solid square is typical but you may wish to have the
  standard Mac vertical bar, a horizontal underline, or thicker
  versions of either (more noticeable on LCD displays).
 
@@ -508,7 +535,7 @@ table(deftable).
 (def). |<(key). @\s@|(desc)<. dynamically substitute the terminal's current text selection, verbatim (even keeping new-lines)|
 (def). |<(key). @\t@|(desc)<. horizontal tab|
 (def). |<(key). @\#@|(desc)<. dynamically substitute the number of terminal lines|
-(def). |<(key). @\"@|(desc)<. quote; allowed for legacy reasons, but no longer needs escaping|
+(def). |<(key). @\"@|(desc)<. quote; allowed for legacy reasons but no longer needs escaping|
 
 fn1. To see the octal versions of all ASCII characters,
  look at <a href="x-man-page://ascii">x-man-page://ascii</a> (opens a
@@ -586,7 +613,7 @@ New windows are added to the tab group of the active window.
  is handy to have a tab group for each space.
 
 It is important to notice that MacTerm tabs are normal
- windows, so they are independent and can be modified in the
+ windows so they are independent and can be modified in the
  usual ways.  The _only_ exception is that all the windows in
  the group will move together.
 
@@ -604,6 +631,9 @@ bq. You can create more than one set of preferences in
  choose a name from the list in the drawer, and then
  edit that collection's settings in the main Preferences
  window.
+
+bq. Preferences in this category allow inheritance;
+ see "About Inherited Preferences" for details.
 
 Sessions are a little like Bookmarks from your web browser.
 
@@ -630,13 +660,13 @@ bq. Note that even if you use a helper (such as the "Shell" button)
 
 The "Shell" button writes a command to invoke your default shell.
  For most users this is set by the version of Mac OS X that you
- have, but MacTerm will also respect any custom shell that was
+ have but MacTerm will also respect any custom shell that was
  selected by the @chsh@ Unix utility.
 
 The "Log-In Shell" button writes a command to invoke your shell,
  but in a more controlled way (for instance, Unix environment is
  not inherited).  In most shells this will also affect how the
- shell starts, so you may see slightly different behavior; for
+ shell starts so you may see slightly different behavior; for
  example, you may see a welcome message.
 
 The "Remote Shell..." button opens the Servers panel.  Note that
@@ -858,7 +888,7 @@ Since some systems or applications recognize different characters
 
 h3(#sessiontek). Graphics (TEK)
 
-MacTerm is not only a terminal emulator, but also a display for
+MacTerm is not only a terminal emulator but also a display for
  various kinds of images.  You can enable a vector graphics
  command set for a session so that, when MacTerm receives
  certain special sequences, it will automatically render the data
@@ -886,6 +916,9 @@ bq. You can create more than one set of preferences in
  choose a name from the list in the drawer, and then
  edit that collection's settings in the main Preferences
  window.
+
+bq. Preferences in this category allow inheritance;
+ see "About Inherited Preferences" for details.
 
 Terminals decide somewhat technical aspects of a window, such as
  the emulation type.  Usually, you set up one or more of these
@@ -931,7 +964,7 @@ h5. VT220
 
 This device has additional capabilities like special keyboard
  keys and 8-bit controls.  MacTerm is a very good VT220
- emulator, but it does not currently support all features, like
+ emulator but it does not currently support all features, like
  user-defined keys (UDKs) and certain character set registers.
 
 Note that in the Window menu there are commands to show VT220
@@ -1016,8 +1049,8 @@ Note that XTerm is also an emulator type of its own, that has
 
 h6. 256 Colors
 
-Enables all 256 new XTerm colors, which includes the 16 basic
- "ANSI colors" that can be customized in MacTerm's Formats
+Enables all 256 new XTerm colors, which includes 16 "standard
+ colors" that can be customized in MacTerm's Formats
  preferences.  This allows an application to give text a specific
  foreground and background color, instead of relying on terminal
  defaults.
@@ -1032,18 +1065,19 @@ h6. Background Color Erase
 
 In programs such as text editors that customize terminal colors,
  this mode allows the most recent custom color to be applied to
- any erased region (for efficiency, so that color settings do not
+ any erased region (for efficiency, as color settings do not
  have to be repeatedly transmitted).
 
 This is a very important mode that is needed by many modern
- terminal-based programs, so it is enabled by default.
+ terminal-based programs so it is enabled by default.
 
 h6. Color
 
-Enables *only* the 16 basic colors commonly called "ANSI colors",
- which can be customized in MacTerm's Formats preferences.
- This allows an application to give text a specific foreground
- and background color, instead of relying on terminal defaults.
+Enables *only* the 16 basic colors commonly called "ANSI colors"
+ or Standard Colors which can be customized in MacTerm's Formats
+ preferences.  This allows an application to give text a specific
+ foreground and background color, instead of relying on terminal
+ defaults.
 
 For this to work, your Identity may need to be "xterm-color" or
  equivalent.
@@ -1064,7 +1098,7 @@ h6. Window Alteration
 Allows applications to change the title of your terminal window,
  as well as its minimized state, position, size, and other
  attributes.  This is not completely supported by MacTerm's
- daily builds yet, but it will be soon.
+ daily builds yet but it will be soon.
 
 For this to work, your Identity may need to be "xterm" or
  equivalent.
@@ -1082,7 +1116,7 @@ h4. Width
 The maximum number of columns of text (equivalent to characters,
  in Western locales, when in single-width) that are stored and
  visible on each line.  Currently, MacTerm won't horizontally
- scroll terminals, so this is also the display width.
+ scroll terminals so this is also the display width.
 
 If a window is reduced in size, it may internally retain the
  entire original line.  A line that is made double-size will
@@ -1100,7 +1134,7 @@ If a window is reduced in size, it may completely lose the
 h4. Scrollback
 
 It is often useful to refer back to previous text written to a
- terminal, so there is an option to save it.  In addition, note
+ terminal so there is an option to save it.  In addition, note
  that Terminal >> Delete Entire Scrollback Buffer can be used at
  any time during a session to wipe out the saved lines.
 
@@ -1116,9 +1150,7 @@ h5. Fixed Size
 Allocates no more than the given amount.  If measured in rows,
  each row might occupy as much memory as the maximum width
  requires, plus space for auxiliary data (Unicode characters,
- attributes, etc.).  If measured in kilobytes, divides the given
- buffer size by the requirements for each character of width, so
- that the buffer doesn't use any more memory.
+ attributes, etc.).
 
 h5. Unlimited
 
@@ -1196,11 +1228,7 @@ bq. You can create more than one set of preferences in
  window.
 
 bq. Preferences in this category allow inheritance;
- checking this box for a setting will erase the custom
- value for that setting.  When applied to a window, a
- collection with inherited settings will only overwrite
- the settings that are not inherited.  In new windows,
- inherited settings will match Default settings.
+ see "About Inherited Preferences" for details.
 
 notextile. <a id="helpwithscreenformatting"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
@@ -1210,7 +1238,7 @@ Formats are collections of fonts, font sizes, colors, and more,
  specify in Preferences, or to make customizations local to the
  frontmost window.
 
-h3. Normal
+h3. General
 
 Settings that apply to all text, unless overridden by some more
  specific property.
@@ -1218,7 +1246,7 @@ Settings that apply to all text, unless overridden by some more
 To edit most settings, click on a box and the standard system
  panel (Fonts or Colors) will appear.
 
-Character width is normally 100%, but you can choose to make the
+Character width is normally 100% but you can choose to make the
  text cells of a terminal slightly narrower or wider (useful with
  certain fonts).  It is important to realize that if the width is
  not 100%, the renderer may have to use less optimal methods of
@@ -1231,7 +1259,7 @@ The terminal cursor can be set to a custom color, or you can use
  the "Automatic" check box to have the color change based on the
  text that is underneath the cursor at any given time.
 
-h3. ANSI Colors
+h3. Standard Colors
 
 Terminal applications can rely on an ANSI standard palette of
  colors.  While it is a good idea to choose colors that match the
@@ -1243,7 +1271,7 @@ Color settings have two entries, the leftmost box is the "normal"
  Ordinarily, the bold color is a slightly brighter version of the
  normal color.
 
-Feel free to experiment, "Set to the Standard Colors..." can be
+Feel free to experiment; "Set to MacTerm Default Colors..." can be
  clicked to restore the 16 ordinary colors.
 
 Not all applications in terminals will make use of these colors.
@@ -1267,7 +1295,7 @@ The Map menu allows you to choose among these translation
 
 h3. Settings
 
-h4. Character Set
+h4. Characters
 
 Choose an encoding from the list to tell MacTerm how to
  interpret text while these translation settings are active.
@@ -1280,7 +1308,7 @@ h5. Use a backup font
 Unfortunately, not all fonts are the same: some of them cannot
  render all possible characters.  A "backup font" allows you to
  *prefer* current Format preferences for most text (perhaps
- because those fonts look nicer in general), but use the backup
+ because those fonts look nicer in general) but use the backup
  to handle special characters.  A Unicode font is recommended as
  a backup font.
 
@@ -1311,7 +1339,7 @@ If your goal is to run an application in the terminal window for
 
 h5. Show menu bar on demand
 
-The menu bar is hidden in Full Screen mode, but it can normally
+The menu bar is hidden in Full Screen mode but it can normally
  be displayed simply by moving the mouse to the top of the screen
  and pausing a moment.
 
@@ -1371,7 +1399,7 @@ h5. Display an "off switch" window
 
 If you do not want your kiosk disturbed, you may wish to remove
  the floating button that appears by default.  (Full Screen can
- always be disabled, but without this button it is less likely
+ always be disabled but without this button it is less likely
  that visitors will determine how.)
 
 notextile. </div>
