@@ -42,6 +42,8 @@
 #pragma mark Constants
 namespace {
 
+size_t const	kCurveLength = 10; // arbitrary (number of elements in curve arrays)
+
 /*!
 Effects used by CocoaAnimation_WindowFrameAnimator.  These
 determine any other changes (besides the window frame) that
@@ -165,7 +167,7 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 	
 	// animate the change
 	{
-		float const		kAnimationDelay = 0.001;
+		float const		kAnimationDelay = 0.05;
 		NSRect			oldFrame = [inRelativeToWindow frame];
 		NSRect			newFrame = NSZeroRect;
 		NSRect			mainScreenFrame = [[NSScreen mainScreen] visibleFrame];
@@ -207,7 +209,7 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 		[imageWindow setLevel:[inTargetWindow level]];
 		[[[CocoaAnimation_WindowFrameAnimator alloc]
 			initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:inTargetWindow
-								fromFrame:oldFrame toFrame:newFrame totalDelay:0.05
+								fromFrame:oldFrame toFrame:newFrame totalDelay:kAnimationDelay
 								delayDistribution:kMy_AnimationTimeDistributionLinear
 								effect:kMy_AnimationEffectFadeIn] autorelease];
 	}
@@ -389,21 +391,24 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 {
 	AutoPool	_;
 	NSRect		actualFrame = [inTargetWindow frame];
+	BOOL		useAnimation = ((NSWidth(actualFrame) * NSHeight(actualFrame)) < 250000/* arbitrary */); // avoid if window is large
 	
 	
-	// show the window offscreen so its image is defined
-	[inTargetWindow setFrameTopLeftPoint:NSMakePoint(-5000, -5000)];
-	[inTargetWindow orderFront:nil];
-	
-	// animate the change
+	if (useAnimation)
 	{
-		float const		kAnimationDelay = 0.001;
+		float const		kAnimationDelay = 0.002;
 		float const		kXInset = (0.10 * NSWidth(actualFrame)); // arbitrary
 		NSRect			oldFrame = actualFrame;
 		NSRect			newFrame = actualFrame;
-		NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] frame])
-										autorelease];
+		NSWindow*		imageWindow = nil;
 		
+		
+		// show the window offscreen so its image is defined
+		[inTargetWindow setFrameTopLeftPoint:NSMakePoint(-5000, -5000)];
+		[inTargetWindow orderFront:nil];
+		
+		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] frame])
+												autorelease];
 		
 		// start from a location that is slightly offset from the target window
 		oldFrame.origin.x += kXInset/* arbitrary */;
@@ -431,9 +436,15 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 		[imageWindow setLevel:(1 + [inTargetWindow level])];
 		[[[CocoaAnimation_WindowFrameAnimator alloc]
 			initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:inTargetWindow
-								fromFrame:oldFrame toFrame:newFrame totalDelay:0.005
-								delayDistribution:kMy_AnimationTimeDistributionLinear
+								fromFrame:oldFrame toFrame:newFrame totalDelay:kAnimationDelay
+								delayDistribution:kMy_AnimationTimeDistributionEaseOut
 								effect:kMy_AnimationEffectFadeIn] autorelease];
+	}
+	else
+	{
+		// no animation; show the window immediately
+		[inTargetWindow setFrame:actualFrame display:NO];
+		[inTargetWindow orderFront:nil];
 	}
 }// TransitionWindowForSheetOpen
 
@@ -531,7 +542,7 @@ CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow
 	[imageWindow setLevel:[inTargetWindow level]];
 	[[[CocoaAnimation_WindowFrameAnimator alloc]
 		initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-							fromFrame:oldFrame toFrame:newFrame totalDelay:0.08
+							fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
 							delayDistribution:kMy_AnimationTimeDistributionLinear
 							effect:kMy_AnimationEffectFadeIn] autorelease];
 }// TransitionWindowSectionForSearchResult
@@ -653,19 +664,27 @@ simplified:(BOOL)									isSimplified
 		self->originalFrame = sourceRect;
 		self->targetFrame = targetRect;
 		self->frameCount = (reduceFrameRate) ? 5 : 10;
+		if (baseDuration < 0.05/* arbitrary */)
+		{
+			// timers are not precise and over-delays are possible;
+			// arbitrarily cut frames if the total duration is
+			// intended to be quite fast (otherwise the animation
+			// could lag noticeably)
+			self->frameCount -= ((reduceFrameRate) ? 2 : 6); // arbitrary reducation
+		}
 		self->currentFrame = 0;
-		self->frameDelays = new NSTimeInterval[self->frameCount];
+		self->frameDelays = new NSTimeInterval[kCurveLength];
 		if ((kMy_AnimationEffectFadeIn == anEffect) ||
 			(kMy_AnimationEffectFadeOut == anEffect))
 		{
-			self->frameAlphas = new float[self->frameCount];
+			self->frameAlphas = new float[kCurveLength];
 		}
 		else
 		{
 			self->frameAlphas = nullptr;
 		}
-		self->frameOffsetsH = new float[self->frameCount];
-		self->frameOffsetsV = new float[self->frameCount];
+		self->frameOffsetsH = new float[kCurveLength];
+		self->frameOffsetsV = new float[kCurveLength];
 		
 		// start by configuring offsets in terms of a UNIT SQUARE,
 		// which means that the sum of all frame offsets should
@@ -678,7 +697,7 @@ simplified:(BOOL)									isSimplified
 		case kMy_AnimationTransitionSlide:
 		default:
 			// move by even amounts directly toward the destination
-			for (size_t i = 0; i < self->frameCount; ++i)
+			for (size_t i = 0; i < kCurveLength; ++i)
 			{
 				self->frameOffsetsH[i] = i;
 				self->frameOffsetsV[i] = i;
@@ -694,28 +713,17 @@ simplified:(BOOL)									isSimplified
 				size_t		i = 0;
 				
 				
-				if (5 == self->frameCount)
-				{
-					self->frameAlphas[i++] = 0.2;
-					self->frameAlphas[i++] = 0.4;
-					self->frameAlphas[i++] = 0.6;
-					self->frameAlphas[i++] = 0.8;
-					self->frameAlphas[i++] = 1.0;
-				}
-				else
-				{
-					self->frameAlphas[i++] = 0.2;
-					self->frameAlphas[i++] = 0.3;
-					self->frameAlphas[i++] = 0.4;
-					self->frameAlphas[i++] = 0.5;
-					self->frameAlphas[i++] = 0.6;
-					self->frameAlphas[i++] = 0.7;
-					self->frameAlphas[i++] = 0.8;
-					self->frameAlphas[i++] = 0.9;
-					self->frameAlphas[i++] = 0.95;
-					self->frameAlphas[i++] = 1.0;
-				}
-				assert(i == self->frameCount);
+				self->frameAlphas[i++] = 0.2;
+				self->frameAlphas[i++] = 0.3;
+				self->frameAlphas[i++] = 0.4;
+				self->frameAlphas[i++] = 0.5;
+				self->frameAlphas[i++] = 0.6;
+				self->frameAlphas[i++] = 0.7;
+				self->frameAlphas[i++] = 0.8;
+				self->frameAlphas[i++] = 0.9;
+				self->frameAlphas[i++] = 0.95;
+				self->frameAlphas[i++] = 1.0;
+				assert(kCurveLength == i);
 			}
 			break;
 		
@@ -724,28 +732,17 @@ simplified:(BOOL)									isSimplified
 				size_t		i = 0;
 				
 				
-				if (5 == self->frameCount)
-				{
-					self->frameAlphas[i++] = 0.7;
-					self->frameAlphas[i++] = 0.5;
-					self->frameAlphas[i++] = 0.3;
-					self->frameAlphas[i++] = 0.2;
-					self->frameAlphas[i++] = 0.1;
-				}
-				else
-				{
-					self->frameAlphas[i++] = 0.85;
-					self->frameAlphas[i++] = 0.7;
-					self->frameAlphas[i++] = 0.55;
-					self->frameAlphas[i++] = 0.45;
-					self->frameAlphas[i++] = 0.35;
-					self->frameAlphas[i++] = 0.25;
-					self->frameAlphas[i++] = 0.2;
-					self->frameAlphas[i++] = 0.15;
-					self->frameAlphas[i++] = 0.1;
-					self->frameAlphas[i++] = 0.05;
-				}
-				assert(i == self->frameCount);
+				self->frameAlphas[i++] = 0.85;
+				self->frameAlphas[i++] = 0.7;
+				self->frameAlphas[i++] = 0.55;
+				self->frameAlphas[i++] = 0.45;
+				self->frameAlphas[i++] = 0.35;
+				self->frameAlphas[i++] = 0.25;
+				self->frameAlphas[i++] = 0.2;
+				self->frameAlphas[i++] = 0.15;
+				self->frameAlphas[i++] = 0.1;
+				self->frameAlphas[i++] = 0.05;
+				assert(kCurveLength == i);
 			}
 			break;
 		
@@ -761,7 +758,7 @@ simplified:(BOOL)									isSimplified
 		// be increased to smooth out the animation over time, and right
 		// now the frame count is fairly inflexible)
 		{
-			float const		kPerUnitLinearDelay = baseDuration / self->frameCount;
+			float const		kPerUnitLinearDelay = baseDuration / kCurveLength;
 			
 			
 			if (kMy_AnimationTimeDistributionEaseOut == aDistribution)
@@ -772,30 +769,19 @@ simplified:(BOOL)									isSimplified
 				size_t		i = 0;
 				
 				
-				if (5 == self->frameCount)
-				{
-					self->frameDelays[i++] = 0.7;
-					self->frameDelays[i++] = 0.8;
-					self->frameDelays[i++] = 1.0;
-					self->frameDelays[i++] = 1.2;
-					self->frameDelays[i++] = 1.3;
-				}
-				else
-				{
-					self->frameDelays[i++] = 0.7;
-					self->frameDelays[i++] = 0.8;
-					self->frameDelays[i++] = 0.9;
-					self->frameDelays[i++] = 0.9;
-					self->frameDelays[i++] = 1.0;
-					self->frameDelays[i++] = 1.0;
-					self->frameDelays[i++] = 1.1;
-					self->frameDelays[i++] = 1.1;
-					self->frameDelays[i++] = 1.2;
-					self->frameDelays[i++] = 1.3;
-				}
-				assert(i == self->frameCount);
+				self->frameDelays[i++] = 0.7;
+				self->frameDelays[i++] = 0.8;
+				self->frameDelays[i++] = 0.9;
+				self->frameDelays[i++] = 0.9;
+				self->frameDelays[i++] = 1.0;
+				self->frameDelays[i++] = 1.0;
+				self->frameDelays[i++] = 1.1;
+				self->frameDelays[i++] = 1.1;
+				self->frameDelays[i++] = 1.2;
+				self->frameDelays[i++] = 1.3;
+				assert(kCurveLength == i);
 			}
-			for (size_t i = 0; i < self->frameCount; ++i)
+			for (size_t i = 0; i < kCurveLength; ++i)
 			{
 				if (kMy_AnimationTimeDistributionEaseOut == aDistribution)
 				{
@@ -811,13 +797,13 @@ simplified:(BOOL)									isSimplified
 		}
 		
 		// calculate the size of each unit of the animation
-		self->frameUnitH = (self->targetFrame.origin.x - self->originalFrame.origin.x) / self->frameCount;
-		self->frameUnitV = (self->targetFrame.origin.y - self->originalFrame.origin.y) / self->frameCount;
-		self->frameDeltaSizeH = (self->targetFrame.size.width - self->originalFrame.size.width) / self->frameCount;
-		self->frameDeltaSizeV = (self->targetFrame.size.height - self->originalFrame.size.height) / self->frameCount;
+		self->frameUnitH = (self->targetFrame.origin.x - self->originalFrame.origin.x) / kCurveLength;
+		self->frameUnitV = (self->targetFrame.origin.y - self->originalFrame.origin.y) / kCurveLength;
+		self->frameDeltaSizeH = (self->targetFrame.size.width - self->originalFrame.size.width) / kCurveLength;
+		self->frameDeltaSizeV = (self->targetFrame.size.height - self->originalFrame.size.height) / kCurveLength;
 		
 		// finally, scale the offsets based on these units
-		for (size_t i = 0; i < self->frameCount; ++i)
+		for (size_t i = 0; i < kCurveLength; ++i)
 		{
 			self->frameOffsetsH[i] *= self->frameUnitH;
 			self->frameOffsetsV[i] *= self->frameUnitV;
@@ -945,8 +931,8 @@ animationStep:(id)	unused
 	}
 	
 	// step to next frame
-	++(self->currentFrame);
-	if (self->currentFrame < self->frameCount)
+	self->currentFrame += (kCurveLength / self->frameCount);
+	if (self->currentFrame < kCurveLength)
 	{
 		[self performSelector:@selector(animationStep:) withObject:nil afterDelay:self->frameDelays[self->currentFrame]];
 	}
