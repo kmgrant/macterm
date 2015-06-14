@@ -1,0 +1,4 @@
+Build/_Generated
+Build/*.app
+Build/GrowlSDK
+Build/HTMLHelp/**/*.html
