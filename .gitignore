@@ -2,3 +2,4 @@ Build/_Generated
 Build/*.app
 Build/GrowlSDK
 Build/HTMLHelp/**/*.html
+Build/ReleaseNotes/*.html
