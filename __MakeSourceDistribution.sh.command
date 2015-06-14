@@ -4,9 +4,6 @@
 #
 # Creates a tarball with all necessary files to build MacTerm.
 #
-# You may need to set your PATH appropriately to find the
-# Subversion (svn) program.
-#
 # Kevin Grant (kmg@mac.com)
 # June 17, 2004
 
@@ -18,16 +15,10 @@ die () {
 trap die ERR
 
 # config
-cat=/bin/cat
 date=/bin/date
 dirname=/usr/bin/dirname
-find=/usr/bin/find
-gnu_tar=/usr/bin/tar
+git=git
 root=~/Desktop # where the tarball goes
-svn=svn
-
-PATH=/opt/svn/bin:$PATH
-export PATH
 
 $date "+Started creating source tarball at %T."
 
@@ -58,15 +49,10 @@ elif [ "x$sub" != "x" ] ; then
 fi
 version=${maj}.${min}${sub}${alb}${bld}
 directory=sourceMacTerm${version}
-target=$root/$directory
-
-# use Subversion to dump all checked-in files to the target;
-# this is awesome because it simply omits any temporary files
-# or other work-area gunk that doesn't belong in the release
-$svn export . ${target}/
+target=$root/${directory}.tar.gz
 
 # create archive
-$gnu_tar zcvf "$root/$directory.tar.gz" -C "$root" "$directory"
+$git archive --format=tar.gz --prefix="$directory/" master > "$target"
 
 $date "+Finished creating source tarball at %T."
 
