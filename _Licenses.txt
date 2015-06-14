@@ -15,7 +15,7 @@ MAIN SOURCE CODE LICENSE
   MacTerm is free software; you may distribute it or modify it
   under the terms of the GNU General Public License, either
   version 2 of the license or (at your option) a later version.
-
+  
   Note that the "source" of a component includes everything in
   its directory tree: Code, Resources, Artwork, etc. as well as
   any scripts that are required to build it.
@@ -36,7 +36,7 @@ GENERIC CODE LICENSE
   (formerly "MAAttachedWindow.m" and "MAAttachedWindow.h" but
   extensively modified) are so modified under the terms of the
   license from Matt Gemmell.
-
+  
   A copy of Matt Gemmell's license is in Licenses/.
 
                                         Kevin Grant (kmg@mac.com)

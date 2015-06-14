@@ -4,14 +4,13 @@
 REPORTING BUGS
   You are welcome to submit via E-mail to "kmg@mac.com".
   
-  Due to recent infrastructure changes at SourceForge there is
-  currently no web page for logging bug reports in a more
-  official manner.  This may change; you can access the project
-  page here:
-    http://sourceforge.net/projects/mactelnet/
+  Issues have not been formally tracked in awhile, ever since
+  SourceForge dropped its Trac support.  Since the project has
+  recently moved to GitHub, issue-tracking may resume there;
+  check "https://github.com/kmgrant/macterm/issues" periodically.
   
-  Please see http://macterm.net/bug-reporter/ for a variety of
-  advice on submitting useful bug reports.
+  Please see http://www.macterm.net/bug-reporter/ for a variety
+  of advice on submitting useful bug reports.
 
                                         Kevin Grant (kmg@mac.com)
                                         Lead Developer, MacTerm

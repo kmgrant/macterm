@@ -2,15 +2,25 @@
                       How to Build MacTerm             2009-09-03
 
 PREREQUISITES
-  The latest version of Mac OS X should be used to build.  On the
-  other hand, the project currently does not support Xcode 4.x so
-  an Xcode 3.x installation is preferable.  Xcode can be anywhere
-  but see "Build/GNUmakefile" for a variable that determines
-  where the build looks for development tools.
+  Build with the latest OS X and the most recent Xcode.
   
-  MacTerm expects to compile against the 10.6 SDK.  Recent Mac
-  development environments may only include the 10.7 SDK and
-  require a separate download of the 10.6 SDK.
+  Currently, MacTerm requires the 10.6 SDK, which is not included
+  with Xcode anymore.  Download the SDK separately from Apple's
+  developer site, and put the "MacOSX10.6.sdk" directory in the
+  following location (alongside other SDKs):
+      /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/
+  (Unfortunately, even minor App Store updates to Xcode will
+  obliterate manually-copied SDKs.  This process must be repeated
+  if Xcode is updated!  Keeping a side copy of the 10.6 SDK is
+  advisable.)
+  
+  Work is being done to adopt more recent SDKs; the primary issue
+  is that the 10.7 SDK abandons all Carbon APIs.  Many parts of
+  MacTerm have switched to Cocoa, and MacTerm can even *call*
+  APIs from later SDKs (see "Build/Shared/Code/CocoaFuture.*").
+  Unfortunately the most important view is the terminal itself,
+  and until its many Carbon and QuickDraw dependencies can be
+  replaced there is no feasible way to upgrade the default SDK.
   
   By default MacTerm compiles in support for Growl notifications
   (http://www.growl.info/) so a default build requires the SDK
@@ -25,10 +35,10 @@ PREREQUISITES
   Python.  This is accomplished with the Simple Wrapper Interface
   Generator (SWIG), which you must download and build separately;
   look at "Build/Tools/SwigConfig.sh".  The latest version of
-  SWIG is recommended (the 2.x series was tested recently).  See
+  SWIG is recommended (the 3.x series was tested recently).  See
   "Build/Shared/CustomPaths.xcconfig" for a variable that sets
   the install path (/opt/swig-<version>/bin/swig by default).
-
+  
   Note that the build system only uses artwork from a component's
   Resources directory (such as "Build/Application/Resources").
   If you decide to modify any of the source artwork files located
@@ -51,17 +61,14 @@ UNDERSTANDING THE DIRECTORY STRUCTURE
     Build/
         Source code for all components and documentation, and the
         scripts required to build them.  The top level has Xcode
-        projects and/or build scripts for each component.  In
-        addition, files used by more than one component are in
-        Build/Shared/.
+        projects and/or build scripts for each component.  Files
+        used by more than one component are in Build/Shared/.
     Debug/
         Scripts that simplify MacTerm debugging.
 
 HOW TO BUILD
-  The MacTerm.app bundle is constructed using a makefile, since
-  it has an unusual file layout.  However, Xcode is still called
-  by the makefile to do builds and cleans; so if a build was
-  initiated from the GUI, those results will be used by "make".
+  The MacTerm.app bundle has an unusual file layout so it is
+  constructed by a makefile.
   
   There are a few ways to do builds, and they are equivalent:
   - Use "Build/Application.xcodeproj".  The "Everything" target
@@ -73,14 +80,15 @@ HOW TO BUILD
     include settings that customize the build.
   
   You can clean in the usual ways (i.e. the Clean command on the
-  "Everything" target, or "make clean").
+  "Everything" target, or "make clean").  Note also that since
+  the vast majority of files go into "Build/_Generated", it is
+  often enough to simply trash that folder.
   
-  IMPORTANT: The build system currently will only rebuild the
-  entire Python wrapper when the SWIG file "Quills.i" is changed.
-  However, that is NOT the only file that affects the wrapper: in
-  particular, if you ever change Quills*.{cp,h}, you should also
-  "touch" Quills.i so that the wrapper is rebuilt with your
-  changes.
+  IMPORTANT: The build system currently will only rebuild Python
+  wrappers when the SWIG file "Quills.i" is changed, even though
+  this is NOT the only file affecting wrappers.  In particular,
+  if you ever change Quills*.{cp,h}, you should also "touch"
+  Quills.i so that the wrapper is rebuilt with your changes.
 
 HOW TO CUSTOMIZE THE BUILD
   It is possible to tweak the makefile or environment to change
