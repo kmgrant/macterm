@@ -3,3 +3,5 @@ Build/*.app
 Build/GrowlSDK
 Build/HTMLHelp/**/*.html
 Build/ReleaseNotes/*.html
+Build/*.xcodeproj/project.xcworkspace
+Build/*.xcodeproj/xcuserdata
