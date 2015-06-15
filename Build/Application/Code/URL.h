@@ -59,7 +59,7 @@ enum URL_InternetLocation
 	kURL_InternetLocationApplicationSupportEMail	= 'Mail',	//!< E-mail address for support
 	kURL_InternetLocationApplicationUpdatesPage		= 'Updt',	//!< information on updates for this version
 	kURL_InternetLocationSourceCodeLicense			= 'CGPL',	//!< GNU General Public License
-	kURL_InternetLocationSourceForgeProject			= 'Proj'	//!< SourceForge project page
+	kURL_InternetLocationProjectPage				= 'Proj'	//!< project page, for downloading source code
 };
 
 enum URL_Type

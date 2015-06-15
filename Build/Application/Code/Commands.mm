@@ -720,7 +720,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandURLProjectStatus:
-			UNUSED_RETURN(Boolean)URL_OpenInternetLocation(kURL_InternetLocationSourceForgeProject);
+			UNUSED_RETURN(Boolean)URL_OpenInternetLocation(kURL_InternetLocationProjectPage);
 			break;
 		
 		//case kCommandNewSessionLoginShell:

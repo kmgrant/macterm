@@ -225,8 +225,8 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 		}
 		break;
 	
-	case kURL_InternetLocationSourceForgeProject:
-		urlCFString = CFBundleGetValueForInfoDictionaryKey(AppResources_ReturnBundleForInfo(), CFSTR("MySourceForgeProjectURL"));
+	case kURL_InternetLocationProjectPage:
+		urlCFString = CFBundleGetValueForInfoDictionaryKey(AppResources_ReturnBundleForInfo(), CFSTR("MyProjectURL"));
 		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!

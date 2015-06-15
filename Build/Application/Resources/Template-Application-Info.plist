@@ -252,8 +252,8 @@
 	<string>http://www.macterm.net/</string>
 	<key>MySourceCodeLicenseURL</key>
 	<string>http://www.gnu.org/copyleft/gpl.html</string>
-	<key>MySourceForgeProjectURL</key>
-	<string>http://sourceforge.net/projects/mactelnet/</string>
+	<key>MyProjectURL</key>
+	<string>https://github.com/kmgrant/macterm</string>
 	<key>MySupportEMailURL</key>
 	<string>mailto:kmg@mac.com?Subject=MacTerm</string>
 	<key>MyUpdatesURL</key>
