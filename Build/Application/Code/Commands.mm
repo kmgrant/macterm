@@ -2612,9 +2612,12 @@ moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef		inSession,
 			Session_DisplayTerminationWarning(inSession, dialogOptions);
 			// there is a chance that displaying the alert will destroy
 			// the session, in which case the stop-monitoring call is
-			// invalid (but only in that case); TEMPORARY, not sure how
-			// to fix this, yet
-			Session_StopMonitoring(inSession, kSession_ChangeCloseWarningAnswered, gCurrentQuitWarningAnswerListener);
+			// invalid (but only in that case)
+			if (Session_IsValid(inSession))
+			{
+				Session_StopMonitoring(inSession, kSession_ChangeCloseWarningAnswered, gCurrentQuitWarningAnswerListener);
+			}
+			
 			*outFlagPtr = gCurrentQuitCancelled;
 		}
 	}

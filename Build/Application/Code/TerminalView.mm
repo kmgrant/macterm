@@ -5351,7 +5351,8 @@ copyTranslationPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	Terminal_SetTextEncoding(inTerminalViewPtr->screen.ref, newInputEncoding);
 	
-	Console_WriteValue("terminal input text encoding changed to", newInputEncoding);
+	//Console_WriteValue("terminal input text encoding changed to", newInputEncoding);
+	if (0)
 	{
 		CFStringRef		nameCFString = CFStringConvertEncodingToIANACharSetName(newInputEncoding);
 		
@@ -9984,7 +9985,7 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 			}
 			else
 			{
-				Console_WriteValueAddress("request to destroy HIObject implementation", view);
+				//Console_WriteValueAddress("request to destroy HIObject implementation", view);
 				delete REINTERPRET_CAST(view, My_TerminalViewPtr);
 				result = noErr;
 			}
