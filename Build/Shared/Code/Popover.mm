@@ -3,7 +3,7 @@
 */
 /*###############################################################
 
-	Popover Window 1.1 (based on MAAttachedWindow)
+	Popover Window 1.2 (based on MAAttachedWindow)
 	MAAttachedWindow © 2007 by Magic Aubergine
 	Popover Window © 2011-2015 by Kevin Grant
 	
@@ -62,6 +62,12 @@ The private class interface.
 	windowPlacement:(Popover_Properties)_;
 
 // class methods: frame conversion
+	+ (NSPoint)
+	convertToScreenFromWindow:(NSWindow*)_
+	point:(NSPoint)_;
+	+ (NSPoint)
+	convertToWindow:(NSWindow*)_
+	fromScreenPoint:(NSPoint)_;
 	+ (NSRect)
 	frameRectForViewRect:(NSRect)_
 	viewMargin:(float)_
@@ -76,6 +82,10 @@ The private class interface.
 // new methods
 	- (void)
 	appendArrowToPath:(NSBezierPath*)_;
+	- (NSPoint)
+	convertToScreenFromWindowPoint:(NSPoint)_;
+	- (NSPoint)
+	convertToWindowFromScreenPoint:(NSPoint)_;
 	- (void)
 	fixViewFrame;
 	- (NSPoint)
@@ -291,8 +301,9 @@ onSide:(Popover_Properties)		aSide
 		NSRect		windowFrame = [self frameRectForViewRect:[self->embeddedView frame]]; // ignore origin, use only size
 		NSPoint		idealOrigin = [self.class idealFrameOriginForSize:windowFrame.size
 																		arrowInset:[self arrowInset]
-																		at:((self->popoverParentWindow)
-																			? [self->popoverParentWindow convertBaseToScreen:aPoint]
+																		at:((nil != self->popoverParentWindow)
+																			? [self.class convertToScreenFromWindow:self->popoverParentWindow
+																													point:aPoint]
 																			: aPoint)
 																		side:aSide];
 		
@@ -1195,7 +1206,7 @@ preferredSide:(Popover_Properties)	aSide
 									? [[aWindow screen] visibleFrame]
 									: [[NSScreen mainScreen] visibleFrame];
 	NSPoint const	kPointOnScreen = (nil != aWindow)
-										? [aWindow convertBaseToScreen:aPoint]
+										? [self.class convertToScreenFromWindow:aWindow point:aPoint]
 										: aPoint;
 	Popover_Properties		result = kPopover_PositionBottom;
 	
@@ -1268,6 +1279,63 @@ preferredSide:(Popover_Properties)	aSide
 
 
 /*!
+Given a point in window coordinates (e.g. by passing "nil"
+to an NSView conversion method), returns the screen
+coordinates.  See also "convertToWindow:fromScreenPoint:".
+
+Currently this is implemented by adding the frame origin.
+
+(1.2)
+*/
++ (NSPoint)
+convertToScreenFromWindow:(NSWindow*)	aWindow
+point:(NSPoint)							aPoint
+{
+	return NSMakePoint(aPoint.x + NSMinX(aWindow.frame), aPoint.y + NSMinY(aWindow.frame));
+}
+
+
+/*!
+Given a point in screen coordinates, returns the window
+coordinates.  See also "convertToScreenFromWindow:point:".
+
+Currently this is implemented by subtracting the frame origin.
+
+(1.2)
+*/
++ (NSPoint)
+convertToWindow:(NSWindow*)		aWindow
+fromScreenPoint:(NSPoint)		aPoint
+{
+	return NSMakePoint(aPoint.x - NSMinX(aWindow.frame), aPoint.y - NSMinY(aWindow.frame));
+}
+
+
+/*!
+The per-window version of "convertToScreenFromWindow:point:".
+
+(1.2)
+*/
+- (NSPoint)
+convertToScreenFromWindowPoint:(NSPoint)	aPoint
+{
+	return [self.class convertToScreenFromWindow:self point:aPoint];
+}
+
+
+/*!
+The per-window version of "convertToWindow:fromScreenPoint:".
+
+(1.2)
+*/
+- (NSPoint)
+convertToWindowFromScreenPoint:(NSPoint)	aPoint
+{
+	return [self.class convertToWindow:self fromScreenPoint:aPoint];
+}
+
+
+/*!
 Updates the location and size of the embedded content view so
 that it is correct for the current configuration of the popover
 (arrow position, offsets, etc.).
@@ -1277,8 +1345,8 @@ that it is correct for the current configuration of the popover
 - (void)
 fixViewFrame
 {
-	self->viewFrame = [self viewRectForFrameRect:[self frame]];
-	self->viewFrame.origin = [self convertScreenToBase:self->viewFrame.origin];
+	self->viewFrame = [self viewRectForFrameRect:self.frame];
+	self->viewFrame.origin = [self convertToWindowFromScreenPoint:self->viewFrame.origin];
 	[self->embeddedView setFrame:self->viewFrame];
 }
 
@@ -1363,7 +1431,8 @@ idealFrameOriginForPoint:(NSPoint)		aPoint
 {
 	return [self.class idealFrameOriginForSize:[self frame].size arrowInset:[self arrowInset]
 												at:((self->popoverParentWindow)
-													? [self->popoverParentWindow convertBaseToScreen:aPoint]
+													? [self.class convertToScreenFromWindow:self->popoverParentWindow
+																							point:aPoint]
 													: aPoint)
 												side:self->windowPropertyFlags];
 }
