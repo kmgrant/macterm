@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="7702" systemVersion="14D136" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="7706" systemVersion="14E46" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="7702"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="7706"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelSessions_ResourceViewManager">
@@ -80,9 +80,9 @@
                             <menu key="menu" title="OtherViews" id="2092"/>
                         </popUpButtonCell>
                         <connections>
-                            <binding destination="Xiw-MV-yEY" name="contentValues" keyPath="arrangedObjects" previousBinding="S8K-eW-Kbz" id="GRD-gB-Qvo"/>
                             <binding destination="Xiw-MV-yEY" name="content" keyPath="arrangedObjects" id="S8K-eW-Kbz"/>
-                            <binding destination="-2" name="selectedObject" keyPath="self.terminalFavorite.currentValueDescriptor" previousBinding="GRD-gB-Qvo" id="bFQ-s6-2qq"/>
+                            <binding destination="Xiw-MV-yEY" name="contentValues" keyPath="arrangedObjects.boundName" previousBinding="S8K-eW-Kbz" id="bW5-e0-zwS"/>
+                            <binding destination="-2" name="selectedObject" keyPath="self.terminalFavorite.currentValueDescriptor" previousBinding="bW5-e0-zwS" id="09j-OA-b4t"/>
                             <outlet property="nextKeyView" destination="ZgY-RN-WYM" id="etC-4w-vXE"/>
                         </connections>
                     </popUpButton>
@@ -184,8 +184,8 @@
                         </popUpButtonCell>
                         <connections>
                             <binding destination="gzS-4c-By3" name="content" keyPath="arrangedObjects" id="3rX-Ve-ekI"/>
-                            <binding destination="gzS-4c-By3" name="contentValues" keyPath="arrangedObjects" previousBinding="3rX-Ve-ekI" id="J1Y-32-NuA"/>
-                            <binding destination="-2" name="selectedObject" keyPath="self.formatFavorite.currentValueDescriptor" previousBinding="J1Y-32-NuA" id="yZQ-zJ-JyT"/>
+                            <binding destination="gzS-4c-By3" name="contentValues" keyPath="arrangedObjects.boundName" previousBinding="3rX-Ve-ekI" id="A6h-fR-RpX"/>
+                            <binding destination="-2" name="selectedObject" keyPath="self.formatFavorite.currentValueDescriptor" previousBinding="A6h-fR-RpX" id="S9o-Sx-cb4"/>
                             <outlet property="nextKeyView" destination="z3T-Ui-0Kx" id="vLb-eY-Mgm"/>
                         </connections>
                     </popUpButton>
@@ -220,9 +220,9 @@
                             <menu key="menu" title="OtherViews" id="y0Z-t3-mTU"/>
                         </popUpButtonCell>
                         <connections>
-                            <binding destination="zt6-tG-GaH" name="contentValues" keyPath="arrangedObjects" previousBinding="NgK-YY-c5I" id="Lc5-SB-EOd"/>
                             <binding destination="zt6-tG-GaH" name="content" keyPath="arrangedObjects" id="NgK-YY-c5I"/>
-                            <binding destination="-2" name="selectedObject" keyPath="self.translationFavorite.currentValueDescriptor" previousBinding="Lc5-SB-EOd" id="ko7-EF-WTl"/>
+                            <binding destination="zt6-tG-GaH" name="contentValues" keyPath="arrangedObjects.boundName" previousBinding="NgK-YY-c5I" id="aG3-cy-b5N"/>
+                            <binding destination="-2" name="selectedObject" keyPath="self.translationFavorite.currentValueDescriptor" previousBinding="aG3-cy-b5N" id="Npd-Sr-Kre"/>
                             <outlet property="nextKeyView" destination="2255" id="51K-t0-uuP"/>
                         </connections>
                     </popUpButton>

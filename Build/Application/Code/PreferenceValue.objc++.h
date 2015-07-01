@@ -374,6 +374,37 @@ the specified value is used to represent the value.
 
 
 /*!
+For use with PreferenceValue_Array.  Stores a description for
+a string, and the string itself.  When an array is bound to a
+user interface element such as a pop-up menu or a matrix, the
+(localized) description for the specified value is used to
+represent the value.
+
+While in many cases a string’s descriptor may be the string
+itself, this provides important flexibility for the cases
+where it may not (such as, to map a Default value).
+*/
+@interface PreferenceValue_StringDescriptor : BoundName_Object //{
+{
+@private
+	NSString*	describedValue;
+}
+
+// initializers
+	- (instancetype)
+	initWithStringValue:(NSString*)_
+	description:(NSString*)_;
+
+// accessors
+	- (NSString*)
+	describedStringValue;
+	- (void)
+	setDescribedStringValue:(NSString*)_;
+
+@end //}
+
+
+/*!
 Manages bindings for a single preference that has a
 fixed array of possible values (with descriptions).
 This is very commonly bound to a pop-up menu or a

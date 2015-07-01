@@ -1,4 +1,4 @@
-/*!	\file SessionFactory.cp
+/*!	\file SessionFactory.mm
 	\brief Construction mechanism for sessions (terminal
 	windows that run local or remote processes).
 */
@@ -31,55 +31,60 @@
 
 ###############################################################*/
 
-#include "SessionFactory.h"
-#include <UniversalDefines.h>
+#import "SessionFactory.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <cctype>
-#include <cstring>
+#import <cctype>
+#import <cstring>
 
 // standard-C++ includes
-#include <algorithm>
-#include <map>
-#include <sstream> // note, there is a version of this on the net that works with gcc 2.95.2, if necessary
-#include <vector>
+#import <algorithm>
+#import <map>
+#import <sstream>
+#import <vector>
 
 // Mac includes
-#include <CoreServices/CoreServices.h>
+#import <CoreServices/CoreServices.h>
 
 // library includes
-#include <CarbonEventHandlerWrap.template.h>
-#include <CarbonEventUtilities.template.h>
-#include <CFRetainRelease.h>
-#include <CFUtilities.h>
-#include <CocoaAnimation.h>
-#include <Console.h>
-#include <MemoryBlocks.h>
-#include <RegionUtilities.h>
-#include <SoundSystem.h>
-#include <StringUtilities.h>
+#import <CarbonEventHandlerWrap.template.h>
+#import <CarbonEventUtilities.template.h>
+#import <CFRetainRelease.h>
+#import <CFUtilities.h>
+#import <CocoaAnimation.h>
+#import <Console.h>
+#import <MemoryBlocks.h>
+#import <RegionUtilities.h>
+#import <SoundSystem.h>
+#import <StringUtilities.h>
 
 // application includes
-#include "DialogUtilities.h"
-#include "EventLoop.h"
-#include "InfoWindow.h"
-#include "Local.h"
-#include "MacroManager.h"
-#include "NetEvents.h"
-#include "NewSessionDialog.h"
-#include "Preferences.h"
-#include "QuillsBase.h"
-#include "SessionDescription.h"
-#include "Terminal.h"
-#include "TerminalView.h"
-#include "Terminology.h"
-#include "TextTranslation.h"
-#include "UIStrings.h"
-#include "Workspace.h"
+#import "DialogUtilities.h"
+#import "EventLoop.h"
+#import "GenericDialog.h"
+#import "InfoWindow.h"
+#import "Local.h"
+#import "MacroManager.h"
+#import "NetEvents.h"
+#import "Preferences.h"
+#import "PrefPanelSessions.h"
+#import "PrefsWindow.h"
+#import "QuillsBase.h"
+#import "SessionDescription.h"
+#import "Terminal.h"
+#import "TerminalView.h"
+#import "TerminalWindow.h"
+#import "Terminology.h"
+#import "TextTranslation.h"
+#import "UIStrings.h"
+#import "UIStrings_PrefsWindow.h"
+#import "Workspace.h"
 
 
 
 #pragma mark Types
+
 namespace {
 
 typedef std::vector< SessionRef >						SessionList;
@@ -88,12 +93,51 @@ typedef std::vector< Workspace_Ref >					MyWorkspaceList;
 
 } // anonymous namespace
 
+
+/*!
+Reloads the specified preferences context (assumed
+to be temporary) and applies certain changes to the
+target terminal window.
+*/
+@interface SessionFactory_NewSessionDataObject : NSObject //{
+{
+@private
+	BOOL						_disableObservers;
+	Preferences_ContextRef		_temporaryContext;
+	TerminalWindowRef			_terminalWindow;
+}
+
+// initializers
+	- (instancetype)
+	initWithSessionContext:(Preferences_ContextRef)_
+	terminalWindow:(TerminalWindowRef)_;
+
+// accessors
+	@property (assign) BOOL
+	disableObservers;
+	@property (readonly) Preferences_ContextRef
+	temporaryContext;
+	@property (assign) TerminalWindowRef
+	terminalWindow;
+
+// NSKeyValueObserving
+	- (void)
+	observeValueForKeyPath:(NSString*)_
+	ofObject:(id)_
+	change:(NSDictionary*)_
+	context:(void*)_;
+
+@end //}
+
 #pragma mark Internal Method Prototypes
 namespace {
 
 OSStatus				appendDataForProcessing			(EventHandlerCallRef, EventRef, void*);
 void					changeNotifyGlobal				(SessionFactory_Change, void*);
 Boolean					configureSessionTerminalWindow	(TerminalWindowRef, Preferences_ContextRef);
+Boolean					configureSessionTerminalWindowByClass	(TerminalWindowRef, Preferences_ContextRef, Quills::Prefs::Class);
+void					copySessionTerminalWindowConfiguration	(Preferences_ContextRef, Quills::Prefs::Class,
+														 Preferences_ContextRef&);
 TerminalWindowRef		createTerminalWindow			(Preferences_ContextRef = nullptr,
 														 Preferences_ContextRef = nullptr,
 														 Preferences_ContextRef = nullptr,
@@ -104,6 +148,7 @@ void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionFil
 														 SessionFactory_SessionOpProcPtr, void*, SInt32, void*);
 void					forEveryTerminalWindowInListDo	(SessionFactory_TerminalWindowList const&,
 														 SessionFactory_TerminalWindowOpProcPtr, void*, SInt32, void*);
+void					handleNewSessionDialogClose		(GenericDialog_Ref, Boolean);
 Boolean					newSessionFromCommand			(TerminalWindowRef, UInt32, Preferences_ContextRef, UInt16);
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowActivated			(EventHandlerCallRef, EventRef, void*);
@@ -498,7 +543,7 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 	{
 		if (false == configureSessionTerminalWindow(terminalWindow, inContextOrNull))
 		{
-			Console_Warning(Console_WriteLine, "unable to reconfigure terminal window");
+			Console_Warning(Console_WriteLine, "terminal window for arbitrary command could not apply associated-context preferences");
 		}
 	}
 	
@@ -1101,7 +1146,7 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindow,
 	// below, to make sure it does not repeat this reconfiguration
 	if (false == configureSessionTerminalWindow(terminalWindow, inSessionContext))
 	{
-		Console_Warning(Console_WriteLine, "unable to reconfigure terminal window");
+		Console_Warning(Console_WriteLine, "terminal window for user favorite command could not apply associated-context preferences");
 	}
 	
 	// display the window
@@ -1325,19 +1370,18 @@ SessionFactory_CountIsAtLeastOne ()
 
 
 /*!
-Creates a terminal window and immediately displays
-a dialog allowing the user to customize what it
-should be used for.  (On Mac OS X, the dialog is a
-sheet attached to the window.)  The given preferences
-context is used to initialize the user interface.
+Creates a terminal window and immediately displays a
+session customization dialog.  The given workspace
+information, if any, is used to set the initial
+position and title of the window.
 
 Returns true only if the user customization *attempt*
 was made without errors.  Since the user may take
 considerable time to complete the session creation,
 this function returns immediately; you can only use
-the return value to determine if (say) a dialog
-box was displayed correctly, NOT to determine if the
-user’s new session was created.
+the return value to determine if (say) the dialog was
+displayed correctly, NOT to determine if the user’s
+new session was created.
 
 If you need to know when the user is finished, install
 a listener for a Session Factory event (such as
@@ -1351,44 +1395,77 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 											 Preferences_ContextRef		inWorkspaceOrNull,
 											 UInt16						inWindowIndexInWorkspaceOrZero)
 {
-	TerminalWindowRef		terminalWindow = inTerminalWindow;
-	Preferences_ContextRef	sessionContext = nullptr;
-	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	Boolean					result = true;
+	TerminalWindowRef						terminalWindow = inTerminalWindow;
+	Preferences_ContextRef					sessionContext = nullptr;
+	Preferences_ContextRef					temporaryContext = nullptr;
+	SessionFactory_NewSessionDataObject*	dataObject = nil;
+	Preferences_Result						prefsResult = kPreferences_ResultOK;
+	Boolean									result = false;
 	
 	
-
+	assert(nullptr != terminalWindow);
+	
 	prefsResult = Preferences_GetDefaultContext(&sessionContext, Quills::Prefs::SESSION);
 	if (kPreferences_ResultOK != prefsResult)
 	{
 		Console_Warning(Console_WriteLine, "unable to initialize dialog with Session Default preferences!");
 	}
 	
-	assert(nullptr != terminalWindow);
+	dataObject = [[SessionFactory_NewSessionDataObject alloc]
+					initWithSessionContext:sessionContext terminalWindow:terminalWindow];
+	temporaryContext = dataObject.temporaryContext; // lifetime is managed by data object
+	
+	if (nullptr == temporaryContext)
 	{
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteLine, "failed to construct temporary sheet context");
+	}
+	else
+	{
+		PrefPanelSessions_ResourceViewManager*		embeddedPanel = [[PrefPanelSessions_ResourceViewManager alloc] init];
+		
+		
+		// observe changes to menus so that the terminal window
+		// can show the user what their effect would be (e.g.
+		// different size or colors); due to callbacks, this
+		// can change the initial terminal window appearance
+		[embeddedPanel addObserver:dataObject forKeyPath:@"formatFavorite.currentValueDescriptor" options:0 context:nullptr];
+		[embeddedPanel addObserver:dataObject forKeyPath:@"terminalFavorite.currentValueDescriptor" options:0 context:nullptr];
+		
 		// display a terminal window and then immediately display
 		// a sheet asking the user what to do with the new window
-		NewSessionDialog_Ref	dialog = NewSessionDialog_New(terminalWindow, sessionContext);
-		
-		
-		// synchronize the window’s initial appearance with its preferences
-		// (e.g. window size due to font and screen dimensions, and colors);
-		// note however that this will be reset anyway when the session begins
-		UNUSED_RETURN(Boolean)configureSessionTerminalWindow(terminalWindow, sessionContext);
-		
 		if (displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 		{
-			NewSessionDialog_Display(dialog); // automatically disposed when the user clicks a button
-		}
-		else
-		{
-			// some kind of problem?!?
-			Sound_StandardAlert();
-			Console_WriteLine("unexpected problem displaying terminal window!!!");
-			NewSessionDialog_Dispose(&dialog);
-			result = false;
+			GenericDialog_Ref	dialog = nullptr;
+			CFRetainRelease		addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
+													true/* is retained */);
+			CFRetainRelease		startSessionString(UIStrings_ReturnCopy(kUIStrings_ButtonStartSession),
+													true/* is retained */);
+			
+			
+			// display the sheet
+			dataObject.disableObservers = YES; // temporarily disable to prevent visible shift in window appearance
+			dialog = GenericDialog_New(TerminalWindow_ReturnWindow(terminalWindow),
+										embeddedPanel, temporaryContext, handleNewSessionDialogClose);
+			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
+			GenericDialog_SetCommandDialogEffect(dialog, kHICommandCancel, kGenericDialog_DialogEffectCloseImmediately);
+			GenericDialog_SetCommandButtonTitle(dialog, kHICommandOK, startSessionString.returnCFStringRef());
+			GenericDialog_AddButton(dialog, addToPrefsString.returnCFStringRef(),
+									^{
+										Preferences_TagSetRef	tagSet = PrefPanelSessions_NewResourcePaneTagSet();
+										
+										
+										PrefsWindow_AddCollection(temporaryContext, tagSet,
+																	kCommandDisplayPrefPanelSessions);
+										Preferences_ReleaseTagSet(&tagSet);
+									});
+			GenericDialog_SetImplementation(dialog, dataObject);
+			GenericDialog_Display(dialog); // automatically disposed when the user clicks a button
+			dataObject.disableObservers = NO;
+			result = true;
 		}
 	}
+	
 	return result;
 }// DisplayUserCustomizationUI
 
@@ -2205,125 +2282,163 @@ changeNotifyGlobal		(SessionFactory_Change	inWhatChanged,
 
 
 /*!
+Convenience routine to call configureSessionTerminalWindowByClass()
+for all typical associated context types.
+
+Returns true only if all configurations succeed.
+
+(4.1)
+*/
+Boolean
+configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
+								 Preferences_ContextRef		inSessionContext)
+{
+	Boolean		result = true; // initially...
+	
+	
+	if (false == configureSessionTerminalWindowByClass(inTerminalWindow, inSessionContext, Quills::Prefs::TERMINAL))
+	{
+		Console_Warning(Console_WriteLine, "unable to apply terminal preferences to window");
+		result = false;
+	}
+	
+	if (false == configureSessionTerminalWindowByClass(inTerminalWindow, inSessionContext, Quills::Prefs::FORMAT))
+	{
+		Console_Warning(Console_WriteLine, "unable to apply format preferences to window");
+		result = false;
+	}
+	
+	if (false == configureSessionTerminalWindowByClass(inTerminalWindow, inSessionContext, Quills::Prefs::TRANSLATION))
+	{
+		Console_Warning(Console_WriteLine, "unable to apply translation preferences to window");
+		result = false;
+	}
+	
+	return result;
+}// configureSessionTerminalWindow
+
+
+/*!
 Using a *session* context, configures the specified
 terminal window appropriately.
 
-This works by checking for any “associated format” in
-the given context, finds the context with that name,
-and copies its settings.
+The “associated” context of the specified type is
+consulted (if any), and its settings are copied.  If
+no such association exists, the Default is copied.
 
 Returns true only if successful.
 
 (4.0)
 */
 Boolean
-configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
-								 Preferences_ContextRef		inSessionContext)
+configureSessionTerminalWindowByClass	(TerminalWindowRef			inTerminalWindow,
+										 Preferences_ContextRef		inSessionContext,
+										 Quills::Prefs::Class		inClass)
+{
+	Preferences_ContextRef		sourceContext = nullptr;
+	Boolean						result = false;
+	
+	
+	// find the appropriate settings; a session context will not
+	// directly contain view settings such as fonts and colors
+	// but it may contain the name of a context to use for this
+	copySessionTerminalWindowConfiguration(inSessionContext, inClass, sourceContext);
+	
+	if (nullptr != sourceContext)
+	{
+		// copy recognized settings to the terminal window
+		result = TerminalWindow_ReconfigureViewsInGroup
+					(inTerminalWindow, kTerminalWindow_ViewGroupActive, sourceContext,
+						inClass);
+		Preferences_ReleaseContext(&sourceContext);
+	}
+	
+	return result;
+}// configureSessionTerminalWindowByClass
+
+
+/*!
+Using a *session* context, determines a related context
+of the specified class that would set up a terminal
+window by default.
+
+This works by checking for the appropriate “associated”
+setting in the given context, finding the context with
+that name and copying its settings.  You must free your
+copy of the context if it is not nullptr.  Note that
+for convenience, any associated context named Default
+will return a retained default context instead, which
+simplifies possible issues with bindings.
+
+See also configureSessionTerminalWindow().
+
+(4.1)
+*/
+void
+copySessionTerminalWindowConfiguration	(Preferences_ContextRef		inSessionContext,
+										 Quills::Prefs::Class		inClass,
+										 Preferences_ContextRef&	outContext)
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	Boolean					result = false;
+	Preferences_Tag			associationTag = 0;
 	
 	
-	// copy settings to the terminal window; note that a session context
-	// will not directly contain view settings such as fonts and colors,
-	// but it may contain the name of a context to use for this
+	// initialize result
+	outContext = nullptr;
+	
+	// find the appropriate tag
+	switch (inClass)
+	{
+	case Quills::Prefs::FORMAT:
+		associationTag = kPreferences_TagAssociatedFormatFavorite;
+		break;
+	
+	case Quills::Prefs::TERMINAL:
+		associationTag = kPreferences_TagAssociatedTerminalFavorite;
+		break;
+	
+	case Quills::Prefs::TRANSLATION:
+		associationTag = kPreferences_TagAssociatedTranslationFavorite;
+		break;
+	
+	default:
+		Console_Warning(Console_WriteValueFourChars, "inappropriate class for copySessionTerminalWindowConfiguration()", inClass);
+		break;
+	}
+	
+	// a session context will not directly contain view settings such as
+	// fonts and colors but it may contain the name of a context to use
 	{
 		CFStringRef		contextName = nullptr;
 		
 		
 		// font and color settings
-		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedFormatFavorite,
+		prefsResult = Preferences_ContextGetData(inSessionContext, associationTag,
 													sizeof(contextName), &contextName,
-													false/* search defaults too */);
-		if (kPreferences_ResultOK == prefsResult)
+													true/* search defaults too */);
+		if (kPreferences_ResultOK != prefsResult)
 		{
-			if (false == Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, contextName))
-			{
-				Console_Warning(Console_WriteValueCFString, "associated Format not found", contextName);
-			}
-			else
-			{
-				Preferences_ContextWrap		associatedContext(Preferences_NewContextFromFavorites
-																(Quills::Prefs::FORMAT, contextName), true/* is retained */);
-				
-				
-				if (false == associatedContext.exists())
-				{
-					Console_Warning(Console_WriteValueCFString, "associated Format could not be used", contextName);
-				}
-				else
-				{
-					result = TerminalWindow_ReconfigureViewsInGroup
-								(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext.returnRef(),
-									Quills::Prefs::FORMAT);
-				}
-			}
-			CFRelease(contextName), contextName = nullptr;
+			// assume Default
+			contextName = UIStrings_ReturnCopy(kUIStrings_PreferencesWindowDefaultFavoriteName);
+			prefsResult = kPreferences_ResultOK;
 		}
 		
-		// terminal emulator settings
-		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTerminalFavorite,
-													sizeof(contextName), &contextName,
-													false/* search defaults too */);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			if (false == Preferences_IsContextNameInUse(Quills::Prefs::TERMINAL, contextName))
+			if (false == Preferences_IsContextNameInUse(inClass, contextName))
 			{
-				Console_Warning(Console_WriteValueCFString, "associated Terminal not found", contextName);
+				Console_Warning(Console_WriteValueCFString, "associated context not found", contextName);
+				Console_Warning(Console_WriteValueFourChars, "context class", inClass);
 			}
 			else
 			{
-				Preferences_ContextWrap		associatedContext(Preferences_NewContextFromFavorites
-																(Quills::Prefs::TERMINAL, contextName), true/* is retained */);
-				
-				
-				if (false == associatedContext.exists())
-				{
-					Console_Warning(Console_WriteValueCFString, "associated Terminal could not be used", contextName);
-				}
-				else
-				{
-					result = TerminalWindow_ReconfigureViewsInGroup
-								(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext.returnRef(),
-									Quills::Prefs::TERMINAL);
-				}
-			}
-			CFRelease(contextName), contextName = nullptr;
-		}
-		
-		// translation settings
-		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTranslationFavorite,
-													sizeof(contextName), &contextName,
-													false/* search defaults too */);
-		if (kPreferences_ResultOK == prefsResult)
-		{
-			if (false == Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, contextName))
-			{
-				Console_Warning(Console_WriteValueCFString, "associated Translation not found", contextName);
-			}
-			else
-			{
-				Preferences_ContextWrap		associatedContext(Preferences_NewContextFromFavorites
-																(Quills::Prefs::TRANSLATION, contextName), true/* is retained */);
-				
-				
-				if (false == associatedContext.exists())
-				{
-					Console_Warning(Console_WriteValueCFString, "associated Translation could not be used", contextName);
-				}
-				else
-				{
-					result = TerminalWindow_ReconfigureViewsInGroup
-								(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedContext.returnRef(),
-									Quills::Prefs::TRANSLATION);
-				}
+				// also works if context name refers to Default
+				outContext = Preferences_NewContextFromFavorites(inClass, contextName);
 			}
 			CFRelease(contextName), contextName = nullptr;
 		}
 	}
-	
-	return result;
-}// configureSessionTerminalWindow
+}// copySessionTerminalWindowConfiguration
 
 
 /*!
@@ -2625,6 +2740,84 @@ forEveryTerminalWindowInListDo	(SessionFactory_TerminalWindowList const&	inList,
 
 
 /*!
+Responds to a close of a New Session Dialog by creating a
+new session.
+
+(4.1)
+*/
+void
+handleNewSessionDialogClose		(GenericDialog_Ref		inDialogThatClosed,
+								 Boolean				inOKButtonPressed)
+{
+	SessionFactory_NewSessionDataObject*	dataObject = REINTERPRET_CAST(GenericDialog_ReturnImplementation(inDialogThatClosed), SessionFactory_NewSessionDataObject*);
+	
+	
+	if (inOKButtonPressed)
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		CFArrayRef				argumentListCFArray = nullptr;
+		
+		
+		// create a session; this information is expected to be defined by
+		// the panel as the user makes edits in the user interface
+		prefsResult = Preferences_ContextGetData(dataObject.temporaryContext, kPreferences_TagCommandLine,
+													sizeof(argumentListCFArray), &argumentListCFArray);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "unexpected problem retrieving the command line from the panel!");
+		}
+		else
+		{
+			// dump the process into the terminal window associated with the dialog
+			SessionRef		session = nullptr;
+			
+			
+			// since the terminal window is already displayed when the UI is presented,
+			// its workspace-window-specific settings have already been applied;
+			// therefore, no specific workspace or window index should ever be given here
+			// TEMPORARY: the reconfigure-terminal argument is "true" for now, because
+			// update-on-menu-selection is not implemented for all pop-up menus of
+			// associated favorites (it only works for Formats; to work for others, new
+			// command IDs must be implemented in TerminalWindow.mm or Commands.mm);
+			// the goal is to eventually auto-update windows as soon as items are chosen
+			// from menus, so that no reconfiguration is necessary when the session spawns
+			session = SessionFactory_NewSessionArbitraryCommand
+						(dataObject.terminalWindow, argumentListCFArray, dataObject.temporaryContext,
+							true/* reconfigure terminal */, nullptr/* workspace context */, 0/* window index */);
+			if (nullptr == session)
+			{
+				Console_Warning(Console_WriteLine, "failed to create new session");
+				Sound_StandardAlert();
+			}
+			CFRelease(argumentListCFArray), argumentListCFArray = nullptr;
+			
+			// in this case the new window must be explicitly activated to prevent the
+			// window from staying in the background; and, notably, the mechanism for
+			// selecting the window MUST be the Carbon API call SelectWindow()
+			// (otherwise system-handled commands such as Close and Minimize have no
+			// effect on the new window; it is not clear why this is an issue)
+			SelectWindow(TerminalWindow_ReturnWindow(dataObject.terminalWindow));
+		}
+	}
+	else
+	{
+		// immediately destroy the parent terminal window
+		if (nullptr != dataObject.terminalWindow)
+		{
+			TerminalWindowRef	localCopy = dataObject.terminalWindow;
+			
+			
+			stopTrackingTerminalWindow(localCopy);
+			TerminalWindow_Dispose(&localCopy), dataObject.terminalWindow = nullptr;
+		}
+	}
+	
+	[dataObject release];
+}// handleNewSessionDialogClose
+
+
+/*!
 Creates a new session based on a command ID (such as from a
 menu); or, arranges for the appropriate user interface to
 appear, in the case of a custom new session.  Returns true only
@@ -2681,6 +2874,12 @@ newSessionFromCommand	(TerminalWindowRef			inTerminalWindow,
 	case kCommandNewSessionDialog:
 		result = SessionFactory_DisplayUserCustomizationUI(inTerminalWindow, inWorkspaceOrNull,
 															inWindowIndexInWorkspaceOrZero);
+		if (false == result)
+		{
+			// some kind of problem
+			Sound_StandardAlert();
+			Console_WriteLine("unexpected problem displaying custom session dialog!");
+		}
 		break;
 	
 	case kCommandNewSessionLoginShell:
@@ -2759,11 +2958,28 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandNewSessionLoginShell:
 				case kCommandNewSessionShell:
 					{
-						TerminalWindowRef			terminalWindow = createTerminalWindow();
+						Preferences_Result			prefsResult = kPreferences_ResultOK;
+						Preferences_ContextRef		defaultSession = nullptr;
 						Preferences_ContextRef		workspaceContext = nullptr;
-						Boolean						launchOK = newSessionFromCommand
-																(terminalWindow, received.commandID, workspaceContext,
-																	0/* window index */);
+						TerminalWindowRef			terminalWindow = createTerminalWindow();
+						
+						
+						prefsResult = Preferences_GetDefaultContext(&defaultSession, Quills::Prefs::SESSION);
+						if (kPreferences_ResultOK != prefsResult)
+						{
+							Console_Warning(Console_WriteValue, "failed to find default session settings for new terminal window; error", prefsResult);
+						}
+						else
+						{
+							if (false == configureSessionTerminalWindow(terminalWindow, defaultSession))
+							{
+								Console_Warning(Console_WriteValueFourChars, "terminal window could not apply associated-context preferences for command ID", received.commandID);
+							}
+						}
+						
+						Boolean		launchOK = newSessionFromCommand
+												(terminalWindow, received.commandID, workspaceContext,
+													0/* window index */);
 						
 						
 						if (launchOK)
@@ -3361,5 +3577,104 @@ stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 }// stopTrackingTerminalWindow
 
 } // anonymous namespace
+
+
+#pragma mark -
+@implementation SessionFactory_NewSessionDataObject
+
+
+@synthesize disableObservers = _disableObservers;
+@synthesize temporaryContext = _temporaryContext;
+@synthesize terminalWindow = _terminalWindow;
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (instancetype)
+initWithSessionContext:(Preferences_ContextRef)		aSessionContext
+terminalWindow:(TerminalWindowRef)					aTerminalWindow
+{
+	self = [super init];
+	if (nil != self)
+	{
+		_disableObservers = NO;
+		_terminalWindow = aTerminalWindow;
+		_temporaryContext = Preferences_NewContext(Quills::Prefs::SESSION);
+		
+		// make a locally-modifiable copy of the relevant
+		// original data, to store user changes temporarily
+		Preferences_TagSetRef	tagSet = PrefPanelSessions_NewResourcePaneTagSet();
+		Preferences_Result		prefsResult = Preferences_ContextCopy
+												(aSessionContext, _temporaryContext, tagSet);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to copy default session preferences for New Session sheet!");
+		}
+		Preferences_ReleaseTagSet(&tagSet);
+	}
+	return self;
+}// initWithSessionContext:terminalWindow:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	Preferences_ReleaseContext(&_temporaryContext);
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark NSKeyValueObserving
+
+
+/*!
+Intercepts changes to bound values by updating the parent
+terminal window.  For example, if the user chooses a new
+Format, the colors of the window may change accordingly;
+and if the user chooses a new Terminal, the size may
+change.
+
+(4.1)
+*/
+- (void)
+observeValueForKeyPath:(NSString*)	aKeyPath
+ofObject:(id)						anObject
+change:(NSDictionary*)				aChangeDictionary
+context:(void*)						aContext
+{
+#pragma unused(anObject, aContext)
+	if (NO == self.disableObservers)
+	{
+		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+		{
+			if ([aKeyPath isEqualToString:@"formatFavorite.currentValueDescriptor"])
+			{
+				UNUSED_RETURN(Boolean)configureSessionTerminalWindowByClass(self.terminalWindow, self.temporaryContext,
+																			Quills::Prefs::FORMAT);
+			}
+			else if ([aKeyPath isEqualToString:@"terminalFavorite.currentValueDescriptor"])
+			{
+				UNUSED_RETURN(Boolean)configureSessionTerminalWindowByClass(self.terminalWindow, self.temporaryContext,
+																			Quills::Prefs::TERMINAL);
+			}
+		}
+	}
+}// observeValueForKeyPath:ofObject:change:context:
+
+
+@end // SessionFactory_NewSessionDataObject
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

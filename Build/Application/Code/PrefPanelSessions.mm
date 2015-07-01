@@ -5436,10 +5436,11 @@ performSetCommandLineToRemoteShell:(id)		sender
 	else
 	{
 		NSWindow*	window = self.managedView.window;
-		NSView*		contentView = [window contentView];
-		NSPoint		fieldLocalPoint = NSMakePoint(NSMidX(self->commandLineTextField.bounds),
-													NSMidY(self->commandLineTextField.bounds));
-		CGPoint		browserPointOrigin = NSPointToCGPoint([self->commandLineTextField convertPoint:fieldLocalPoint toView:contentView]);
+		NSPoint		fieldLocalPoint = NSMakePoint(NSWidth(self->commandLineTextField.bounds) / 2.0,
+													NSHeight(self->commandLineTextField.bounds) / 2.0);
+		CGPoint		browserPointOrigin = NSPointToCGPoint
+											([self->commandLineTextField convertPoint:fieldLocalPoint
+																						toView:nil/* make window coordinates */]);
 		
 		
 		_serverBrowser = ServerBrowser_New(window, browserPointOrigin, self/* observer */);

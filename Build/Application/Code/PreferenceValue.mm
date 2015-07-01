@@ -346,6 +346,63 @@ setDescribedIntegerValue:(UInt32)	aValue
 
 
 #pragma mark -
+@implementation PreferenceValue_StringDescriptor
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (instancetype)
+initWithStringValue:(NSString*)		aValue
+description:(NSString*)				aString
+{
+	self = [super initWithBoundName:aString];
+	if (nil != self)
+	{
+		[self setDescribedStringValue:aValue];
+	}
+	return self;
+}// initWithStringValue:description:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+describedStringValue
+{
+	return describedValue;
+}
+- (void)
+setDescribedStringValue:(NSString*)		aValue
+{
+	describedValue = aValue;
+}// setDescribedStringValue:
+
+
+@end // PreferenceValue_StringDescriptor
+
+
+#pragma mark -
 @implementation PreferenceValue_Array
 
 
@@ -464,18 +521,18 @@ currentValueDescriptor
 	id			result = nil;
 	
 	
-	for (UInt16 i = 0; i < [[self valueDescriptorArray] count]; ++i)
+	for (id object in [self valueDescriptorArray])
 	{
-		PreferenceValue_IntegerDescriptor*	asInfo = (PreferenceValue_IntegerDescriptor*)
-														[[self valueDescriptorArray] objectAtIndex:i];
+		PreferenceValue_IntegerDescriptor*	asDesc = STATIC_CAST(object, PreferenceValue_IntegerDescriptor*);
 		
 		
-		if (currentValue == [asInfo describedIntegerValue])
+		if (currentValue == [asDesc describedIntegerValue])
 		{
-			result = asInfo;
+			result = asDesc;
 			break;
 		}
 	}
+	
 	return result;
 }
 - (void)
@@ -679,35 +736,6 @@ prefsContextWillChange:(NSNotification*)	aNotification
 }// prefsContextWillChange:
 
 
-/*!
-Rebuilds the array of value descriptors that represents the
-available preferences contexts (for example, in a menu that is
-displayed to the user).
-
-This should be called whenever preferences are changed
-(contexts added, removed or renamed).
-
-(4.1)
-*/
-- (void)
-rebuildDescriptorArray
-{
-	CFArrayRef				newArray = nullptr;
-	Preferences_Result		arrayResult = Preferences_CreateContextNameArray(_preferencesClass, newArray, true/* include Default */);
-	
-	
-	if (kPreferences_ResultOK != arrayResult)
-	{
-		Console_Warning(Console_WriteValue, "unable to create context name array for collection binding, error", arrayResult);
-		_valueDescriptorArray = [@[] retain];
-	}
-	else
-	{
-		_valueDescriptorArray = BRIDGE_CAST(newArray, NSArray*);
-	}
-}
-
-
 #pragma mark Accessors
 
 
@@ -731,9 +759,30 @@ Accessor.
 - (id)
 currentValueDescriptor
 {
-	BOOL		isDefault = NO;
-	NSString*	result = [_preferenceAccessObject readValueSeeIfDefault:&isDefault];
+	// NOTE: the “is default” nature of a value is reflected
+	// separately in the user interface (inheritance indicator)
+	// and NOT in the value; see "isInherited"
+	CFRetainRelease		defaultName(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowDefaultFavoriteName),
+									true/* is retained */);
+	NSString*			asNSStringDefaultName = BRIDGE_CAST(defaultName.returnCFStringRef(), NSString*);
+	NSString*			currentValue = [_preferenceAccessObject stringValue];
+	id					result = nil;
 	
+	
+	for (id object in [self valueDescriptorArray])
+	{
+		PreferenceValue_StringDescriptor*	asDesc = STATIC_CAST(object, PreferenceValue_StringDescriptor*);
+		NSString*							thisValue = [asDesc describedStringValue];
+		
+		
+		// consider an empty string or a Default string to be equivalent
+		if ([currentValue isEqualToString:thisValue] ||
+			([currentValue isEqualToString:@""] && [thisValue isEqualToString:asNSStringDefaultName]))
+		{
+			result = asDesc;
+			break;
+		}
+	}
 	
 	return result;
 }
@@ -749,12 +798,15 @@ setCurrentValueDescriptor:(id)	selectedObject
 	}
 	else
 	{
-		[_preferenceAccessObject setStringValue:selectedObject];
+		PreferenceValue_StringDescriptor*	asInfo = (PreferenceValue_StringDescriptor*)selectedObject;
+		
+		
+		[self->_preferenceAccessObject setStringValue:[asInfo describedStringValue]];
 	}
 	
 	[self didChangeValueForKey:@"currentValueDescriptor"];
 	[self didSetPreferenceValue];
-}
+}// setCurrentValueDescriptor:
 
 
 #pragma mark PreferenceValue_Inherited
@@ -815,9 +867,8 @@ This should be called whenever preferences are changed
 - (void)
 rebuildDescriptorArray
 {
-	CFArrayRef				newArray = nullptr;
-	Preferences_Result		arrayResult = Preferences_CreateContextNameArray(_preferencesClass, newArray,
-																				true/* include Default */);
+	CFArrayRef				newNameArray = nullptr;
+	Preferences_Result		arrayResult = Preferences_CreateContextNameArray(_preferencesClass, newNameArray, true/* include Default */);
 	
 	
 	if (kPreferences_ResultOK != arrayResult)
@@ -827,9 +878,24 @@ rebuildDescriptorArray
 	}
 	else
 	{
-		_valueDescriptorArray = BRIDGE_CAST(newArray, NSArray*);
+		NSArray*			asNSArray = BRIDGE_CAST(newNameArray, NSArray*);
+		NSMutableArray*		newValueDescArray = [[NSMutableArray alloc] initWithCapacity:asNSArray.count];
+		
+		
+		for (NSString* collectionName in asNSArray)
+		{
+			[newValueDescArray addObject:[[[PreferenceValue_StringDescriptor alloc]
+												initWithStringValue:collectionName description:collectionName]
+											autorelease]];
+		}
+		
+		// make the field refer to the new array (released later)
+		[_valueDescriptorArray release];
+		_valueDescriptorArray = newValueDescArray;
+		
+		CFRelease(newNameArray), newNameArray = nullptr;
 	}
-}
+}// rebuildDescriptorArray
 
 
 @end // PreferenceValue_CollectionBinding (PreferenceValue_CollectionBindingInternal)

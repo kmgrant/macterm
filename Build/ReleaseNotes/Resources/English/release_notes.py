@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20150630',
     '20150528',
     '20150512',
     '20150505',
@@ -517,6 +518,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20150630': [
+        'Custom New Session sheet has been reimplemented in Cocoa, which makes it look much better on Retina displays.  The new sheet also supports inheritance features and the ability to quickly add settings to Preferences.',
+    ],
     '20150528': [
         'Several sheets (Custom Screen Size, Custom Format, Custom Key Sequences, Custom Text Translation) have been reimplemented in Cocoa, which makes them look much better on Retina displays.  The new sheets also support inheritance features that were previously only available in the Custom Format sheet.',
     ],

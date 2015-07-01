@@ -649,7 +649,7 @@ idealAnchorPointForFrame:(NSRect)	parentFrame
 parentWindow:(NSWindow*)			parentWindow
 {
 #pragma unused(parentWindow)
-	NSPoint		result = NSMakePoint(_parentRelativeArrowTip.x, NSHeight(parentFrame) - _parentRelativeArrowTip.y);
+	NSPoint		result = NSMakePoint(_parentRelativeArrowTip.x, _parentRelativeArrowTip.y);
 	
 	
 	return result;
