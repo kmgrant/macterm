@@ -1616,6 +1616,12 @@ matching data is saved already, the resulting context will
 refer to NEW data; call Preferences_IsContextNameInUse() to
 have control over this data creation.
 
+As a special exception, if the Default name is chosen then
+the given class’ default context is returned, as if you had
+called Preferences_GetDefaultContext().  Unlike that call,
+this function retains the default context so that it has to
+be released like any other context returned by this function.
+
 Contexts from Favorites focus on one named dictionary in a
 particular class (to the user, this is a collection).  These
 changes are mirrored to disk in the system’s standard ways.
@@ -1660,9 +1666,11 @@ Preferences_NewContextFromFavorites		(Quills::Prefs::Class	inClass,
 	// the name may be explicitly nullptr, but otherwise it must not be empty
 	if ((nullptr == inNameOrNullToAutoGenerateUniqueName) || (CFStringGetLength(inNameOrNullToAutoGenerateUniqueName) > 0))
 	{
-		CFStringRef		contextName = inNameOrNullToAutoGenerateUniqueName;
-		Boolean			releaseName = false;
-		Boolean			badInput = false;
+		CFRetainRelease		defaultName(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowDefaultFavoriteName),
+										true/* is retained */);
+		CFStringRef			contextName = inNameOrNullToAutoGenerateUniqueName;
+		Boolean				releaseName = false;
+		Boolean				badInput = false;
 		
 		
 		// when nullptr is given, scan the list of all contexts for the
@@ -1688,7 +1696,32 @@ Preferences_NewContextFromFavorites		(Quills::Prefs::Class	inClass,
 			}
 		}
 		
-		if (false == badInput)
+		// see if the name matches the Default context (special case);
+		// this is sometimes useful if the Default name happens to
+		// appear alongside other named contexts, such as in a menu
+		if (kCFCompareEqualTo == CFStringCompare(defaultName.returnCFStringRef(), contextName, 0/* options */))
+		{
+			My_ContextInterfacePtr	defaultContextPtr = nullptr;
+			Boolean					getDefaultOK = getDefaultContext(inClass, defaultContextPtr);
+			
+			
+			if (false == getDefaultOK)
+			{
+				Console_Warning(Console_WriteLine, "failed to find default context when given Default name");
+			}
+			else
+			{
+				// usually a Default context should not be found this way
+				// but it may be useful (e.g. if found in a menu of choices);
+				// unlike Preferences_GetDefaultContext(), this function is
+				// meant to return a “new” context so the result is retained
+				//Console_Warning(Console_WriteValue, "returning Default context by name; preferences class", inClass);
+				result = REINTERPRET_CAST(defaultContextPtr, Preferences_ContextRef);
+				Preferences_RetainContext(result);
+			}
+		}
+		
+		if ((nullptr == result) && (false == badInput))
 		{
 			try
 			{
@@ -1876,7 +1909,7 @@ told to detach the duplicate from disk.)
 void
 Preferences_ReleaseContext	(Preferences_ContextRef*	inoutRefPtr)
 {
-	if (inoutRefPtr != nullptr)
+	if ((nullptr != inoutRefPtr) && (nullptr != *inoutRefPtr))
 	{
 		gMyContextRefLocks().releaseLock(*inoutRefPtr);
 		unless (gMyContextRefLocks().isLocked(*inoutRefPtr))
@@ -3583,7 +3616,7 @@ Preferences_InsertContextNamesInMenu	(Quills::Prefs::Class	inClass,
 
 /*!
 Returns true only if there is a context in the given class
-that has the specified name.
+that has the specified name, or the Default name is given.
 
 This is useful for Preferences_NewContextFromFavorites() calls,
 in case you want to avoid creating new contexts for names that
@@ -3612,6 +3645,23 @@ Preferences_IsContextNameInUse		(Quills::Prefs::Class	inClass,
 			
 			
 			if (listPtr->end() != toContextPtr)
+			{
+				result = true;
+			}
+		}
+		
+		// although the Default name does NOT directly match
+		// any context, it is recognized as a reserved name
+		// because this is sometimes necessary (for example,
+		// a menu that binds to valid context names may
+		// contain a Default item as well)
+		if (false == result)
+		{
+			CFRetainRelease		defaultName(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowDefaultFavoriteName),
+												true/* is retained */);
+			
+			
+			if (kCFCompareEqualTo == CFStringCompare(defaultName.returnCFStringRef(), inProposedName, 0/* options */))
 			{
 				result = true;
 			}
