@@ -1516,10 +1516,17 @@ userAccepted:(BOOL)						isAccepted
 	// forward to original caller
 	{
 		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
+		UInt32						commandID = (isAccepted) ? kHICommandOK : kHICommandCancel;
+		Boolean						animateClose = (ptr->closeEffects.end() == ptr->closeEffects.find(commandID)) ||
+													(kGenericDialog_DialogEffectCloseNormally == ptr->closeEffects[commandID]);
 		
 		
 		GenericDialog_InvokeCloseNotifyProc(ptr->closeNotifyProc, ptr->selfRef, isAccepted/* OK was pressed */);
 		
+		if (false == animateClose)
+		{
+			PopoverManager_SetAnimationType(ptr->popoverManager, kPopoverManager_AnimationTypeNone);
+		}
 		PopoverManager_RemovePopover(ptr->popoverManager, isAccepted);
 	}
 	

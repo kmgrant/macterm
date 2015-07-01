@@ -126,6 +126,10 @@ void
 												 Boolean						inIsConfirming);
 
 void
+	PopoverManager_SetAnimationType				(PopoverManager_Ref				inRef,
+												 PopoverManager_AnimationType	inAnimation);
+
+void
 	PopoverManager_UseIdealLocationAfterDelay	(PopoverManager_Ref				inRef,
 												 Float32						inDelay);
 

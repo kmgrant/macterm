@@ -227,6 +227,25 @@ PopoverManager_RemovePopover	(PopoverManager_Ref		inRef,
 
 
 /*!
+Changes the type of animation used for the popover.
+This is typically only used just prior to closing a
+popover, in order to hide it immediately in certain
+situations (such as closing its parent window).
+
+(2.8)
+*/
+void
+PopoverManager_SetAnimationType		(PopoverManager_Ref				inRef,
+									 PopoverManager_AnimationType	inAnimation)
+{
+	PopoverManager_Handler*		ptr = [PopoverManager_Handler popoverHandlerFromRef:inRef];
+	
+	
+	ptr->animationType = inAnimation;
+}// SetAnimationType
+
+
+/*!
 For popovers that use “automatic” placement, recalculates
 the best place for the arrow and relocates the popover so
 that it is pointing (in a possibly new direction) at its
@@ -732,7 +751,10 @@ afterDelay:(float)					aDelay
 {
 	// hide the popover; remove the parent window association first to keep
 	// the parent window from disappearing on some versions of Mac OS X!
-	[[self parentCocoaWindow] removeChildWindow:self->containerWindow];
+	if ([self->containerWindow parentWindow] == [self parentCocoaWindow])
+	{
+		[[self parentCocoaWindow] removeChildWindow:self->containerWindow];
+	}
 	switch (self->animationType)
 	{
 	case kPopoverManager_AnimationTypeNone:
