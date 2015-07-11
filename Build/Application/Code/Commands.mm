@@ -244,6 +244,7 @@ BOOL				activeCarbonWindowHasSelectedText				();
 BOOL				addWindowMenuItemForSession						(SessionRef, My_MenuItemInsertionInfoConstPtr,
 																	 CFStringRef);
 void				addWindowMenuItemSessionOp						(SessionRef, void*, SInt32, void*);
+NSAttributedString*	attributedStringForWindowMenuItemTitle			(NSString*);
 void				changeNotifyForCommandExecution					(UInt32);
 BOOL				handleQuit										(BOOL);
 int					indexOfItemWithAction							(NSMenu*, SEL);
@@ -2209,16 +2210,10 @@ addWindowMenuItemForSession		(SessionRef							inSession,
 	if (nil != newItem)
 	{
 		// define an attributed title so that it is possible to italicize the text for hidden windows
-		NSAttributedString*			immutableText = [[[NSAttributedString alloc] initWithString:[newItem title]]
-														autorelease];
-		NSMutableAttributedString*	mutableText = [[immutableText mutableCopyWithZone:NULL] autorelease];
+		NSAttributedString*		titleString = attributedStringForWindowMenuItemTitle(newItem.title);
 		
 		
-		// unfortunately, attributed strings have no properties whatsoever, so even normal text
-		// requires explicitly setting the proper system font for menu items!
-		[mutableText addAttribute:NSFontAttributeName value:[NSFont menuFontOfSize:[NSFont systemFontSize]]
-														range:NSMakeRange(0, [mutableText length])];
-		[newItem setAttributedTitle:mutableText];
+		[newItem setAttributedTitle:titleString];
 		
 		// set icon appropriately for the state
 		setWindowMenuItemMarkForSession(inSession, newItem);
@@ -2272,6 +2267,31 @@ addWindowMenuItemSessionOp	(SessionRef		inSession,
 		++(*numberOfItemsAddedPtr);
 	}
 }// addWindowMenuItemSessionOp
+
+
+/*!
+Returns an autoreleased attributed string suitable for use as
+the attributed title of a session item in the Window menu.
+
+This is used to initialize new items and to change their titles
+later (as the system will only recognize changes if they remain
+attributed strings).
+
+(4.1)
+*/
+NSAttributedString*
+attributedStringForWindowMenuItemTitle		(NSString*		inTitleText)
+{
+	NSMutableAttributedString*		result = [[[NSMutableAttributedString alloc] initWithString:inTitleText] autorelease];
+	
+	
+	// unfortunately, attributed strings have no properties whatsoever, so even normal text
+	// requires explicitly setting the proper system font for menu items!
+	[result addAttribute:NSFontAttributeName value:[NSFont menuFontOfSize:[NSFont systemFontSize]]
+												range:NSMakeRange(0, result.length)];
+	
+	return result;
+}// attributedStringForWindowMenuItemTitle
 
 
 /*!
@@ -3044,10 +3064,15 @@ sessionWindowStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (Session_GetWindowUserDefinedTitle(session, text) == kSession_ResultOK)
 			{
-				NSMenuItem*		item = returnWindowMenuItemForSession(session);
+				NSMenuItem*				item = returnWindowMenuItemForSession(session);
+				NSAttributedString*		asAttributedString = attributedStringForWindowMenuItemTitle(STATIC_CAST(text, NSString*));
 				
 				
-				[item setTitle:(NSString*)text];
+				// NOTE: this MUST use "setAttributedTitle:" (not "setTitle:")
+				// because addWindowMenuItemForSession() creates items using
+				// attributed titles in the first place and the OS appears to
+				// ignore "setTitle:" when there is an attributed title
+				[item setAttributedTitle:asAttributedString];
 			}
 		}
 		break;
