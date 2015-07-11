@@ -82,6 +82,7 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 {
 #pragma unused(aNotification)
 
+	NSAlert*	alertBox = [[[NSAlert alloc] init] autorelease];
 	NSString*	button1 = NSLocalizedString(@"Compose E-Mail", @"button label");
 	NSString*	button2 = NSLocalizedString(@"Quit Without Reporting", @"button label");
 	NSString*	messageText = NSLocalizedString
@@ -98,16 +99,18 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 	[NSApp activateIgnoringOtherApps:YES];
 	
 	// display an error to the user, with options
-	clickedButton = [[NSAlert alertWithMessageText:messageText defaultButton:button1 alternateButton:button2
-													otherButton:nil informativeTextWithFormat:helpText, nil]
-						runModal];
+	alertBox.messageText = messageText;
+	alertBox.informativeText = helpText;
+	UNUSED_RETURN(NSButton*)[alertBox addButtonWithTitle:button1];
+	UNUSED_RETURN(NSButton*)[alertBox addButtonWithTitle:button2];
+	clickedButton = [alertBox runModal];
 	switch (clickedButton)
 	{
-	case NSAlertAlternateReturn:
+	case NSAlertSecondButtonReturn:
 		// quit without doing anything
 		break;
 	
-	case NSAlertDefaultReturn:
+	case NSAlertFirstButtonReturn:
 	default:
 		// compose an E-mail with details on the error
 		sendMail = YES;
@@ -282,6 +285,9 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 		if (failedToSubmitReport)
 		{
 			// display an error
+			NSAlert*	errorBox = [[[NSAlert alloc] init] autorelease];
+			
+			
 			button1 = NSLocalizedString(@"Quit Without Reporting", @"button label");
 			messageText = NSLocalizedString
 							(@"Unfortunately there has been a problem reporting this bug automatically.",
@@ -290,9 +296,12 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 						(@"Please visit the main web site to report this issue, instead.",
 							@"submission failure help message");
 			NSLog(@"Failed to submit bug report in the normal fashion (internal failure mode: %d).", failureMode);
-			UNUSED_RETURN(int)[[NSAlert alertWithMessageText:messageText defaultButton:button1 alternateButton:nil
-																			otherButton:nil informativeTextWithFormat:helpText, nil]
-								runModal];
+			
+			errorBox.messageText = messageText;
+			errorBox.informativeText = helpText;
+			UNUSED_RETURN(NSButton*)[errorBox addButtonWithTitle:button1];
+			
+			UNUSED_RETURN(int)[errorBox runModal];
 		}
 	}
 	
