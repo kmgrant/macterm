@@ -274,8 +274,8 @@ IMPORTANT:  The line text buffer may be nullptr, and if it
 			many characters in length.
 */
 typedef void (*Terminal_ScreenRunProcPtr)	(TerminalScreenRef			inScreen,
-											 UniChar const*				inLineTextBufferOrNull,
-											 UInt16						inLineTextBufferLength,
+											 UInt16						inLineTextBufferOrWhitespaceLength,
+											 CFStringRef				inLineTextBufferAsCFStringOrNull,
 											 Terminal_LineRef			inRow,
 											 UInt16						inZeroBasedStartColumnNumber,
 											 TerminalTextAttributes		inAttributes,
@@ -283,14 +283,14 @@ typedef void (*Terminal_ScreenRunProcPtr)	(TerminalScreenRef			inScreen,
 inline void
 Terminal_InvokeScreenRunProc	(Terminal_ScreenRunProcPtr		inUserRoutine,
 								 TerminalScreenRef				inScreen,
-								 UniChar const*					inLineTextBufferOrNull,
-								 UInt16							inLineTextBufferLength,
+								 UInt16							inLineTextBufferOrWhitespaceLength,
+								 CFStringRef					inLineTextBufferAsCFStringOrNull,
 								 Terminal_LineRef				inRow,
 								 UInt16							inZeroBasedStartColumnNumber,
 								 TerminalTextAttributes			inAttributes,
 								 void*							inContextPtr)
 {
-	(*inUserRoutine)(inScreen, inLineTextBufferOrNull, inLineTextBufferLength,
+	(*inUserRoutine)(inScreen, inLineTextBufferOrWhitespaceLength, inLineTextBufferAsCFStringOrNull,
 						inRow, inZeroBasedStartColumnNumber, inAttributes, inContextPtr);
 }
 

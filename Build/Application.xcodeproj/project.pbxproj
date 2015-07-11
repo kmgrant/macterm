@@ -101,7 +101,7 @@
 		0AC6BB470A8C0BA100AFF37A /* WindowInfo.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE3B055432A400ACDF3A /* WindowInfo.cp */; };
 		0AC6BB480A8C0BA100AFF37A /* Clipboard.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDBC055432A400ACDF3A /* Clipboard.mm */; };
 		0AC6BB490A8C0BA100AFF37A /* AlertMessages.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB8055432A400ACDF3A /* AlertMessages.mm */; };
-		0AC6BB4B0A8C0BA100AFF37A /* Terminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE25055432A400ACDF3A /* Terminal.cp */; };
+		0AC6BB4B0A8C0BA100AFF37A /* Terminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE25055432A400ACDF3A /* Terminal.mm */; };
 		0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */; };
 		0AC6BB540A8C0BA100AFF37A /* Network.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFF055432A400ACDF3A /* Network.cp */; };
 		0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF607FAC04200248DDF /* ListenerModel.mm */; };
@@ -379,7 +379,7 @@
 		0A46FE19055432A400ACDF3A /* SoundSystem.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoundSystem.mm; path = Shared/Code/SoundSystem.mm; sourceTree = "<group>"; };
 		0A46FE21055432A400ACDF3A /* VectorCanvas.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = VectorCanvas.mm; path = Application/Code/VectorCanvas.mm; sourceTree = "<group>"; };
 		0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = VectorInterpreter.cp; path = Application/Code/VectorInterpreter.cp; sourceTree = "<group>"; };
-		0A46FE25055432A400ACDF3A /* Terminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Terminal.cp; path = Application/Code/Terminal.cp; sourceTree = "<group>"; };
+		0A46FE25055432A400ACDF3A /* Terminal.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Terminal.mm; path = Application/Code/Terminal.mm; sourceTree = "<group>"; };
 		0A46FE27055432A400ACDF3A /* TerminalSpeaker.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalSpeaker.cp; path = Application/Code/TerminalSpeaker.cp; sourceTree = "<group>"; };
 		0A46FE28055432A400ACDF3A /* TerminalView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TerminalView.mm; path = Application/Code/TerminalView.mm; sourceTree = "<group>"; };
 		0A46FE29055432A400ACDF3A /* TerminalWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TerminalWindow.mm; path = Application/Code/TerminalWindow.mm; sourceTree = "<group>"; };
@@ -792,7 +792,7 @@
 				0A46FE15055432A400ACDF3A /* SessionDescription.cp */,
 				0A46FE17055432A400ACDF3A /* SessionFactory.mm */,
 				0A64C5EA1059E423005B8A48 /* StreamCapture.mm */,
-				0A46FE25055432A400ACDF3A /* Terminal.cp */,
+				0A46FE25055432A400ACDF3A /* Terminal.mm */,
 				0A984182083452E6002E1BCE /* TerminalBackground.cp */,
 				0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */,
 				0A46FE27055432A400ACDF3A /* TerminalSpeaker.cp */,
@@ -1447,7 +1447,7 @@
 				0AC6BB470A8C0BA100AFF37A /* WindowInfo.cp in Sources */,
 				0AC6BB480A8C0BA100AFF37A /* Clipboard.mm in Sources */,
 				0AC6BB490A8C0BA100AFF37A /* AlertMessages.mm in Sources */,
-				0AC6BB4B0A8C0BA100AFF37A /* Terminal.cp in Sources */,
+				0AC6BB4B0A8C0BA100AFF37A /* Terminal.mm in Sources */,
 				0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */,
 				0AC6BB540A8C0BA100AFF37A /* Network.cp in Sources */,
 				0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */,

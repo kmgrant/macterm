@@ -472,10 +472,10 @@ OSStatus			dragTextSelection					(My_TerminalViewPtr, RgnHandle, EventRecord*, B
 Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, TerminalView_RowIndex,
 														 UInt16, TerminalView_RowIndex);
 void				drawSymbolFontLetter				(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char, Boolean);
-void				drawTerminalScreenRunOp				(TerminalScreenRef, UniChar const*, UInt16, Terminal_LineRef,
-														 UInt16, TerminalTextAttributes, void*);
-void				drawTerminalText					(My_TerminalViewPtr, CGContextRef, CGRect const&, Rect const&, UniChar const*,
-														 CFIndex, TerminalTextAttributes);
+void				drawTerminalScreenRunOp				(TerminalScreenRef, UInt16, CFStringRef, Terminal_LineRef, UInt16,
+														 TerminalTextAttributes, void*);
+void				drawTerminalText					(My_TerminalViewPtr, CGContextRef, CGRect const&, Rect const&, CFIndex,
+														 CFStringRef, TerminalTextAttributes);
 void				drawVTGraphicsGlyph					(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char, Boolean);
 void				eraseSection						(My_TerminalViewPtr, CGContextRef, SInt16, SInt16, CGRect&);
 void				eventNotifyForView					(My_TerminalViewConstPtr, TerminalView_Event, void*);
@@ -5991,8 +5991,8 @@ Terminal_ForEachLikeAttributeRunDo().
 */
 void
 drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
-							 UniChar const*				inLineTextBufferOrNull,
 							 UInt16						inLineTextBufferLength,
+							 CFStringRef				inLineTextBufferAsCFStringOrNull,
 							 Terminal_LineRef			UNUSED_ARGUMENT(inRow),
 							 UInt16						inZeroBasedStartColumnNumber,
 							 TerminalTextAttributes		inAttributes,
@@ -6014,7 +6014,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 					sectionBounds);
 	
 	// draw the text or graphics
-	if ((nullptr != inLineTextBufferOrNull) && (0 != inLineTextBufferLength))
+	if ((nullptr != inLineTextBufferAsCFStringOrNull) && (0 != inLineTextBufferLength))
 	{
 		Rect	intBounds;
 		
@@ -6025,7 +6025,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 				STATIC_CAST(sectionBounds.origin.y + sectionBounds.size.height, short));
 		
 		drawTerminalText(viewPtr, viewPtr->screen.currentRenderContext, sectionBounds, intBounds,
-							inLineTextBufferOrNull, inLineTextBufferLength, inAttributes);
+							inLineTextBufferLength, inLineTextBufferAsCFStringOrNull, inAttributes);
 		
 		// since blinking forces frequent redraws, do not do it more
 		// than necessary; keep track of any blink attributes, and
@@ -6093,6 +6093,12 @@ IMPORTANT:	The "inOldQuickDrawBoundaries" parameter should be
 			corner when making certain calls (e.g. filling
 			rectangles, but not framing rectangles).
 
+IMPORTANT:	The "inTextBufferAsCFString" parameter should be
+			equivalent to the pair "inTextBufferPtr" and
+			"inCharacterCount", and the CFStringRef be used
+			wherever possible.  The latter two are only for
+			legacy QuickDraw code and they will be removed.
+
 (3.0)
 */
 void
@@ -6100,8 +6106,8 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 					 CGContextRef				inDrawingContext,
 					 CGRect const&				inBoundaries,
 					 Rect const&				inOldQuickDrawBoundaries,
-					 UniChar const*				inTextBufferPtr,
 					 CFIndex					inCharacterCount,
+					 CFStringRef				inTextBufferAsCFString,
 					 TerminalTextAttributes		inAttributes)
 {
 	if (inTerminalViewPtr->isCocoa)
@@ -6109,11 +6115,8 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 		// TEMPORARY: allocate (instead of caching) these instances here
 		// to experiment with what is required to draw text correctly;
 		// eventually the text and layout will be handled more efficiently
-		CFRetainRelease		textCFString(CFStringCreateWithCharacters
-											(kCFAllocatorDefault, inTextBufferPtr, inCharacterCount),
-												true/* is retained */);
 		NSTextStorage*		textStorage = [[NSTextStorage alloc]
-											initWithString:(NSString*)textCFString.returnCFStringRef()];
+											initWithString:BRIDGE_CAST(inTextBufferAsCFString, NSString*)];
 		NSLayoutManager*	layoutMgr = [[NSLayoutManager alloc] init];
 		NSTextContainer*	container = [[NSTextContainer alloc] init];
 		
@@ -6176,12 +6179,8 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 	{
 		// TEMPORARY: Unicode imaging is not supported yet, so the data
 		// must first be converted into Mac Roman so QuickDraw can use it
-		CFRetainRelease		oldMacRomanBufferCFString(CFStringCreateWithCharacters
-														(kCFAllocatorDefault, inTextBufferPtr, inCharacterCount),
-														true/* is retained */);
-		char const*			oldMacRomanBufferForQuickDraw = CFStringGetCStringPtr(oldMacRomanBufferCFString.returnCFStringRef(),
-																					kCFStringEncodingMacRoman);
-		UInt8*				deletedBufferPtr = nullptr;
+		char const*		oldMacRomanBufferForQuickDraw = CFStringGetCStringPtr(inTextBufferAsCFString, kCFStringEncodingMacRoman);
+		UInt8*			deletedBufferPtr = nullptr;
 		
 		
 		if (nullptr == oldMacRomanBufferForQuickDraw)
@@ -6192,8 +6191,9 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			deletedBufferPtr = new UInt8[inCharacterCount];
 			
 			CFIndex		bytesUsed = 0;
-			CFIndex		conversionResult = CFStringGetBytes(oldMacRomanBufferCFString.returnCFStringRef(), CFRangeMake(0, inCharacterCount),
-															kCFStringEncodingMacRoman, '?'/* loss byte */, false/* is external representation */,
+			CFIndex		conversionResult = CFStringGetBytes(inTextBufferAsCFString, CFRangeMake(0, inCharacterCount),
+															kCFStringEncodingMacRoman, '?'/* loss byte */,
+															false/* is external representation */,
 															deletedBufferPtr, inCharacterCount, &bytesUsed);
 			if (conversionResult > 0)
 			{
@@ -6278,7 +6278,8 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 					if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 					{
 						// draw a graphics character
-						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i],
+						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries,
+											CFStringGetCharacterAtIndex(inTextBufferAsCFString, i),
 											oldMacRomanBufferForQuickDraw[i], true/* is double width */);
 					}
 					else
@@ -6385,7 +6386,8 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 					if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 					{
 						// draw a graphics character
-						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i],
+						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries,
+											CFStringGetCharacterAtIndex(inTextBufferAsCFString, i),
 											oldMacRomanBufferForQuickDraw[i], false/* is double width */);
 					}
 					else

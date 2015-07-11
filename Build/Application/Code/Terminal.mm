@@ -1,4 +1,4 @@
-/*!	\file Terminal.cp
+/*!	\file Terminal.mm
 	\brief Terminal emulators.
 */
 /*###############################################################
@@ -30,29 +30,29 @@
 
 ###############################################################*/
 
-#include "Terminal.h"
-#include <UniversalDefines.h>
+#import "Terminal.h"
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <cctype>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <set>
+#import <cctype>
+#import <cstdio>
+#import <cstdlib>
+#import <cstring>
+#import <set>
 
 // standard-C++ includes
-#include <algorithm>
-#include <iterator>
-#include <list>
-#include <map>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <utility>
-#include <vector>
+#import <algorithm>
+#import <iterator>
+#import <list>
+#import <map>
+#import <sstream>
+#import <stdexcept>
+#import <string>
+#import <utility>
+#import <vector>
 
 // GNU compiler includes
-#include <ext/algorithm>
+#import <ext/algorithm>
 
 // UNIX includes
 extern "C"
@@ -62,41 +62,41 @@ extern "C"
 }
 
 // Mac includes
-#include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <ApplicationServices/ApplicationServices.h>
+#import <Carbon/Carbon.h>
+#import <CoreServices/CoreServices.h>
 
 // library includes
-#include <AlertMessages.h>
-#include <CFRetainRelease.h>
-#include <CFUtilities.h>
-#include <Console.h>
-#include <FileSelectionDialogs.h>
-#include <MemoryBlockReferenceLocker.template.h>
-#include <MemoryBlocks.h>
-#include <RegionUtilities.h>
-#include <SoundSystem.h>
-#include <StringUtilities.h>
+#import <AlertMessages.h>
+#import <CFRetainRelease.h>
+#import <CFUtilities.h>
+#import <Console.h>
+#import <FileSelectionDialogs.h>
+#import <MemoryBlockReferenceLocker.template.h>
+#import <MemoryBlocks.h>
+#import <RegionUtilities.h>
+#import <SoundSystem.h>
+#import <StringUtilities.h>
 
 // application includes
-#include "Commands.h"
-#include "DebugInterface.h"
-#include "DialogUtilities.h"
-#include "Emulation.h"
-#include "EventLoop.h"
-#include "FileUtilities.h"
-#include "Preferences.h"
-#include "PrintTerminal.h"
-#include "QuillsTerminal.h"
-#include "Session.h"
-#include "StreamCapture.h"
-#include "TerminalLine.h"
-#include "TerminalSpeaker.h"
-#include "TerminalView.h"
-#include "TextTranslation.h"
-#include "UIStrings.h"
-#include "UTF8Decoder.h"
-#include "VTKeys.h"
+#import "Commands.h"
+#import "DebugInterface.h"
+#import "DialogUtilities.h"
+#import "Emulation.h"
+#import "EventLoop.h"
+#import "FileUtilities.h"
+#import "Preferences.h"
+#import "PrintTerminal.h"
+#import "QuillsTerminal.h"
+#import "Session.h"
+#import "StreamCapture.h"
+#import "TerminalLine.h"
+#import "TerminalSpeaker.h"
+#import "TerminalView.h"
+#import "TextTranslation.h"
+#import "UIStrings.h"
+#import "UTF8Decoder.h"
+#import "VTKeys.h"
 
 
 
@@ -3803,8 +3803,10 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 	#if 0
 		// DEBUGGING ONLY: if you suspect a bug in the incremental loop below,
 		// try asking the entire line to be drawn without formatting, first
-		InvokeScreenRunOperationProc(inDoWhat, inRef, currentLine.textVectorBegin/* starting point */,
+		InvokeScreenRunOperationProc(inDoWhat, inRef,
+										currentLine.textVectorBegin/* starting point */,
 										currentLine.textVectorSize/* length */,
+										currentLine.textCFString.returnCFStringRef(),
 										inStartRow, 0/* zero-based start column */,
 										currentLine.returnGlobalAttributes(), inContextPtr);
 	#endif
@@ -3830,11 +3832,16 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 				if (styleRunLength > 0)
 				{
 					TerminalTextAttributes		rangeAttributes = previousAttributes;
+					NSRange						runRange = NSMakeRange(runStartCharacterIndex, styleRunLength);
+					CFStringRef					lineAsCFString = currentLine.textCFString.returnCFStringRef();
+					NSString*					lineAsNSString = BRIDGE_CAST(lineAsCFString, NSString*);
+					NSString*					styleRunSubstring = [lineAsNSString substringWithRange:runRange];
 					
 					
 					STYLE_ADD(rangeAttributes, currentLine.returnGlobalAttributes());
-					Terminal_InvokeScreenRunProc(inDoWhat, inRef, currentLine.textVectorBegin + runStartCharacterIndex/* starting point */,
-													styleRunLength/* length */, inStartRow,
+					Terminal_InvokeScreenRunProc(inDoWhat, inRef, styleRunLength/* length */,
+													BRIDGE_CAST(styleRunSubstring, CFStringRef),
+													inStartRow,
 													runStartCharacterIndex/* zero-based start column */,
 													rangeAttributes, inContextPtr);
 				}
@@ -3862,7 +3869,7 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 					STYLE_ADD(attributesForRemainder, kTerminalTextAttributeSelected);
 				}
 				
-				Terminal_InvokeScreenRunProc(inDoWhat, inRef, nullptr/* starting point */, styleRunLength/* length */,
+				Terminal_InvokeScreenRunProc(inDoWhat, inRef, styleRunLength/* length */, nullptr/* starting point */,
 												inStartRow, runStartCharacterIndex/* zero-based start column */,
 												attributesForRemainder, inContextPtr);
 			}

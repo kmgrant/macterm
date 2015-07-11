@@ -521,6 +521,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20150710': [
         'Fixed Rename command to immediately update the title displayed in the Window menu.',
+        'Terminal window rendering performance has substantially improved.',
     ],
     '20150630': [
         'Custom New Session sheet has been reimplemented in Cocoa, which makes it look much better on Retina displays.  The new sheet also supports inheritance features and the ability to quickly add settings to Preferences.',
