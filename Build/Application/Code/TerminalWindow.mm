@@ -1160,21 +1160,6 @@ TerminalWindow_IsValid	(TerminalWindowRef	inRef)
 
 
 /*!
-For convenience, looks at the main window and sees if it is a
-terminal window that is in full-screen mode.  You can also
-call TerminalWindow_IsFullScreen() directly on an existing
-reference to a terminal window.
-
-(4.1)
-*/
-Boolean
-TerminalWindow_MainWindowIsFullScreenTerminal ()
-{
-	return TerminalWindow_IsFullScreen(TerminalWindow_ReturnFromMainWindow());
-}// MainWindowIsFullScreenTerminal
-
-
-/*!
 Changes the settings of every view in the specified group,
 to include the recognized settings of the given context.  You
 might use this, for example, to do a batch-mode change of all

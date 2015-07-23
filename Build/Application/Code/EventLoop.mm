@@ -52,6 +52,7 @@
 #import <CarbonEventUtilities.template.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
+#import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <GrowlSupport.h>
 #import <HIViewWrap.h>
@@ -360,6 +361,45 @@ EventLoop_IsControlKeyDown ()
 
 
 /*!
+Returns true if the main window is in Full Screen mode, by
+calling EventLoop_IsWindowFullScreen() on the main window.
+
+(4.1)
+*/
+Boolean
+EventLoop_IsMainWindowFullScreen ()
+{
+	Boolean		result = EventLoop_IsWindowFullScreen([NSApp mainWindow]);
+	
+	
+	return result;
+}// IsMainWindowFullScreen
+
+
+/*!
+Returns true if the specified window is in Full Screen mode.
+
+This is slightly more convenient than checking the mask of an
+arbitrary NSWindow but it is also necessary since there are
+multiple ways for a terminal window to become full-screen
+(user preference to bypass system mode).
+
+(4.1)
+*/
+Boolean
+EventLoop_IsWindowFullScreen	(NSWindow*		inWindow)
+{
+	TerminalWindowRef	terminalWindow = [inWindow terminalWindowRef];
+	Boolean				result = (nullptr != terminalWindow)
+									? TerminalWindow_IsFullScreen(terminalWindow)
+									: (0 != ([inWindow styleMask] & FUTURE_SYMBOL(1 << 14, NSFullScreenWindowMask)));
+	
+	
+	return result;
+}// IsWindowFullScreen
+
+
+/*!
 This routine blocks until a mouse-down event occurs
 or the “double time” has elapsed.  Returns "true"
 only if it is a “double-click” event.
@@ -640,26 +680,6 @@ EventLoop_SelectOverRealFrontWindow		(HIWindowRef	inWindow)
 	SelectWindow(inWindow);
 	CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
 }// SelectOverRealFrontWindow
-
-
-/*!
-Manually flags that a window has been made Full Screen.  This is
-necessary short-term to deal with several possible differences
-in the way a window might become Full Screen (e.g. it could use
-the original scheme or the new scheme introduced with Lion, and
-it could be a Carbon or Cocoa window).
-
-The context parameter must be consistent with the documentation
-in the header file for each event.
-
-(4.1)
-*/
-void
-EventLoop_SendFullScreenWindowEvent		(EventLoop_GlobalEvent		inEvent,
-										 void*						inEventContext)
-{
-	eventNotifyGlobal(inEvent, inEventContext);
-}// SendFullScreenWindowEvent
 
 
 /*!

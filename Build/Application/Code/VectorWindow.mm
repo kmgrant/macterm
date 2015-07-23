@@ -53,6 +53,7 @@
 // application includes
 #import "Console.h"
 #import "ConstantsRegistry.h"
+#import "EventLoop.h"
 #import "VectorInterpreter.h"
 #import "WindowTitleDialog.h"
 
@@ -406,6 +407,12 @@ Destructor.
 - (void)
 dealloc
 {
+	// kick the window out of Full Screen if necessary
+	if (EventLoop_IsWindowFullScreen(self.window))
+	{
+		[self.window toggleFullScreen:NSApp];
+	}
+	
 	gVectorCanvasWindowValidRefs().erase(self);
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[canvasView release];
@@ -500,13 +507,16 @@ windowDidLoad
 	
 	[canvasView setInterpreterRef:[self interpreterRef]];
 	
-	if ([[self window] respondsToSelector:@selector(setAnimationBehavior:)])
+	if ([self.window respondsToSelector:@selector(setAnimationBehavior:)])
 	{
-		[[self window] setAnimationBehavior:FUTURE_SYMBOL(3, NSWindowAnimationBehaviorDocumentWindow)];
+		[self.window setAnimationBehavior:FUTURE_SYMBOL(3, NSWindowAnimationBehaviorDocumentWindow)];
 	}
 	
+	// enable Full Screen
+	[self.window setCollectionBehavior:([self.window collectionBehavior] | FUTURE_SYMBOL(1 << 7, NSWindowCollectionBehaviorFullScreenPrimary))];
+	
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillClose:)
-														name:NSWindowWillCloseNotification object:[self window]];
+														name:NSWindowWillCloseNotification object:self.window];
 }// windowDidLoad
 
 

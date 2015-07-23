@@ -2054,7 +2054,7 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 			// set when the current window is determined to be valid
 			currentWindow = nil;
 			
-			if (TerminalWindow_MainWindowIsFullScreenTerminal())
+			if (EventLoop_IsMainWindowFullScreen())
 			{
 				// if Full Screen is active, only rotate between the
 				// full-screen terminal windows
@@ -3837,7 +3837,7 @@ sender:(id)							anObject
 	// by default, assume actions cannot be used in Full Screen mode
 	// (most of them would have side effects that could mess up a
 	// Full Screen view, e.g. by changing the window size)
-	if ((result) && TerminalWindow_MainWindowIsFullScreenTerminal())
+	if ((result) && EventLoop_IsMainWindowFullScreen())
 	{
 		result = NO;
 	}
@@ -4548,7 +4548,7 @@ canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
 	
 	
 	Undoables_GetRedoCommandInfo(redoCommandName, &isEnabled);
-	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (false == EventLoop_IsMainWindowFullScreen())
 	{
 		NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
 		
@@ -4627,7 +4627,7 @@ canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
 	
 	
 	Undoables_GetUndoCommandInfo(undoCommandName, &isEnabled);
-	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (false == EventLoop_IsMainWindowFullScreen())
 	{
 		NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
 		
@@ -4699,7 +4699,7 @@ performNewByFavoriteName:(id)	sender
 canPerformNewByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	if (TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (EventLoop_IsMainWindowFullScreen())
 	{
 		return @(NO);
 	}
@@ -4717,7 +4717,7 @@ performNewCustom:(id)		sender
 canPerformNewCustom:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	if (TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (EventLoop_IsMainWindowFullScreen())
 	{
 		return @(NO);
 	}
@@ -4735,7 +4735,7 @@ performNewDefault:(id)		sender
 canPerformNewDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	if (TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (EventLoop_IsMainWindowFullScreen())
 	{
 		return @(NO);
 	}
@@ -4753,7 +4753,7 @@ performNewLogInShell:(id)	sender
 canPerformNewLogInShell:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	if (TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (EventLoop_IsMainWindowFullScreen())
 	{
 		return @(NO);
 	}
@@ -4771,7 +4771,7 @@ performNewShell:(id)	sender
 canPerformNewShell:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	if (TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (EventLoop_IsMainWindowFullScreen())
 	{
 		return @(NO);
 	}
@@ -4831,7 +4831,7 @@ performRestoreWorkspaceDefault:(id)		sender
 canPerformRestoreWorkspaceDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	if (TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (EventLoop_IsMainWindowFullScreen())
 	{
 		return @(NO);
 	}
@@ -4879,7 +4879,7 @@ performRestoreWorkspaceByFavoriteName:(id)	sender
 canPerformRestoreWorkspaceByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	if (TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (EventLoop_IsMainWindowFullScreen())
 	{
 		return @(NO);
 	}
@@ -4897,7 +4897,7 @@ performOpen:(id)	sender
 canPerformOpen:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	if (TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (EventLoop_IsMainWindowFullScreen())
 	{
 		return @(NO);
 	}
@@ -4970,10 +4970,6 @@ canPerformNewTEKPage:(id <NSValidatedUserInterfaceItem>)	anItem
 	BOOL			result = (nullptr != currentSession);
 	
 	
-	if (TerminalWindow_MainWindowIsFullScreenTerminal())
-	{
-		return @(NO);
-	}
 	return ((result) ? @(YES) : @(NO));
 }
 
@@ -5048,7 +5044,7 @@ performOpenURL:(id)		sender
 canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = ((false == TerminalWindow_MainWindowIsFullScreenTerminal()) && textSelectionExists());
+	BOOL	result = ((false == EventLoop_IsMainWindowFullScreen()) && textSelectionExists());
 	
 	
 	if (result)
@@ -6509,7 +6505,7 @@ canPerformMaximize:(id <NSValidatedUserInterfaceItem>)		anItem
 	id		target = [NSApp targetForAction:@selector(performMaximize:)];
 	
 	
-	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (false == EventLoop_IsMainWindowFullScreen())
 	{
 		if (isCarbonWindow(target))
 		{
@@ -7023,7 +7019,7 @@ orderFrontSessionInfo:(id)	sender
 canOrderFrontSessionInfo:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	if (TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (EventLoop_IsMainWindowFullScreen())
 	{
 		return @(NO);
 	}
@@ -7095,7 +7091,8 @@ canToggleFullScreen:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 	// returns objects for such windows it will be necessary
 	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	BOOL				isCocoaTerminal = [[[NSApp mainWindow] windowController] isKindOfClass:[TerminalWindow_Controller class]];
-	BOOL				result = ((nullptr != terminalWindow) || (isCocoaTerminal));
+	BOOL				isGraphicsWindow = [[[NSApp mainWindow] windowController] isKindOfClass:[VectorWindow_Controller class]];
+	BOOL				result = ((nullptr != terminalWindow) || (isCocoaTerminal) || isGraphicsWindow);
 	
 	
 	// update “Enter / Exit Full Screen” item name; note that
@@ -7104,9 +7101,7 @@ canToggleFullScreen:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 	// not change the menu item); instead, the item title has
 	// to be updated explicitly
 	{
-		BOOL			isCurrentlyFullScreen = (isCocoaTerminal)
-												? (0 != ([[NSApp mainWindow] styleMask] & FUTURE_SYMBOL(1 << 14, NSFullScreenWindowMask)))
-												: TerminalWindow_IsFullScreen(terminalWindow);
+		BOOL			isCurrentlyFullScreen = EventLoop_IsMainWindowFullScreen();
 		CFStringRef		titleCFString = nullptr;
 		
 		
@@ -7180,7 +7175,7 @@ canOrderFrontNextWindowHidingPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
 	BOOL	result = (nil != [NSApp mainWindow]);
 	
 	
-	if ((result) && TerminalWindow_MainWindowIsFullScreenTerminal())
+	if ((result) && EventLoop_IsMainWindowFullScreen())
 	{
 		result = NO;
 	}
@@ -7201,7 +7196,7 @@ canOrderFrontPreviousWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = (nil != [NSApp mainWindow]);
 	
 	
-	if ((result) && TerminalWindow_MainWindowIsFullScreenTerminal())
+	if ((result) && EventLoop_IsMainWindowFullScreen())
 	{
 		result = NO;
 	}
@@ -7248,7 +7243,7 @@ orderFrontSpecificWindow:(id)		sender
 - (id)
 canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 {
-	BOOL	result = (false == TerminalWindow_MainWindowIsFullScreenTerminal());
+	BOOL	result = (false == EventLoop_IsMainWindowFullScreen());
 	
 	
 	if (result)
@@ -7377,7 +7372,7 @@ canPerformMinimizeSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = NO;
 	
 	
-	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (false == EventLoop_IsMainWindowFullScreen())
 	{
 		id		target = [NSApp targetForAction:@selector(performMiniaturize:)];
 		
@@ -7472,7 +7467,7 @@ canPerformZoomSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = NO;
 	
 	
-	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (false == EventLoop_IsMainWindowFullScreen())
 	{
 		id		target = [NSApp targetForAction:@selector(performZoom:)];
 		
@@ -7543,7 +7538,7 @@ canRunToolbarCustomizationPaletteSetup:(id <NSValidatedUserInterfaceItem>)		anIt
 	BOOL	result = NO;
 	
 	
-	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (false == EventLoop_IsMainWindowFullScreen())
 	{
 		if (isCarbonWindow([NSApp mainWindow]))
 		{
@@ -7608,7 +7603,7 @@ canToggleToolbarShownSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 	BOOL	result = NO;
 	
 	
-	if (false == TerminalWindow_MainWindowIsFullScreenTerminal())
+	if (false == EventLoop_IsMainWindowFullScreen())
 	{
 		HIWindowRef		userFocusWindow = GetUserFocusWindow();
 		

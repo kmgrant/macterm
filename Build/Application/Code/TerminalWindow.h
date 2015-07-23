@@ -261,9 +261,6 @@ Boolean
 	TerminalWindow_IsObscured						(TerminalWindowRef			inRef);
 
 Boolean
-	TerminalWindow_MainWindowIsFullScreenTerminal	();
-
-Boolean
 	TerminalWindow_ReconfigureViewsInGroup			(TerminalWindowRef			inRef,
 													 TerminalWindow_ViewGroup	inViewGroup,
 													 Preferences_ContextRef		inContext,

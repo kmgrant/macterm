@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20150723',
     '20150710',
     '20150630',
     '20150528',
@@ -519,6 +520,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20150723': [
+        'Vector graphics windows can now be made Full Screen.',
+        'Vector graphics windows may now be created while a terminal window is Full Screen (via "New TEK Page").  If the terminal is using the system full-screen style, the new graphics window automatically becomes Full Screen in a new Space.  Note however that the terminal window must still be used for keyboard input.',
+    ],
     '20150710': [
         'Fixed Rename command to immediately update the title displayed in the Window menu.',
         'Terminal window rendering performance has substantially improved.',
