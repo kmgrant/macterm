@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="7706" systemVersion="14E46" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="7706"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="FindDialog_ViewManager">
@@ -12,14 +12,15 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <menu id="227" userLabel="Search Menu">
             <items>
                 <menuItem title="Recent Searches:" tag="1000" enabled="NO" id="228">
                     <attributedString key="attributedTitle">
                         <fragment content="Recent Searches:">
                             <attributes>
-                                <font key="NSFont" metaFont="smallSystemBold"/>
+                                <font key="NSFont" size="12" name="Helvetica-Bold"/>
+                                <font key="NSOriginalFont" size="12" name="Helvetica-Bold"/>
                                 <paragraphStyle key="NSParagraphStyle" alignment="left" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
                             </attributes>
                         </fragment>
@@ -154,6 +155,6 @@
         <userDefaultsController representsSharedInstance="YES" id="3XC-uQ-s0w"/>
     </objects>
     <resources>
-        <image name="IconForCaution" width="128" height="128"/>
+        <image name="IconForCaution" width="512" height="512"/>
     </resources>
 </document>
