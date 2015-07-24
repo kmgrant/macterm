@@ -1553,7 +1553,7 @@ Returns the size of the pop-up menu button at a zero origin.
 - (NSRect)
 popUpMenuButtonBounds
 {
-	NSRect		result = NSMakeRect(0, 0, 28, 16);
+	NSRect		result = NSMakeRect(0, 0, 20, 16); // arbitrary
 	
 	
 	return result;

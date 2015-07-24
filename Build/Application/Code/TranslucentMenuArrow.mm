@@ -171,43 +171,31 @@ drawRect:(NSRect)	aRect
 	else
 	{
 		// not square; use a rounded rectangle
-		RegionUtilities_AddRoundedRectangleToPath(drawingContext, contentBounds, contentBounds.size.height / 2.0/* curve width */,
-													contentBounds.size.height / 2.0/* curve height */);
+		RegionUtilities_AddRoundedRectangleToPath(drawingContext, contentBounds, contentBounds.size.height / 3.0/* curve width */,
+													contentBounds.size.height / 3.0/* curve height */);
 	}
 	CGContextClosePath(drawingContext);
 	CGContextFillPath(drawingContext);
 	
-	// draw an arrow
+	// draw an arrow in Yosemite style
 	{
-		HIThemePopupArrowDrawInfo	info;
-		HIRect						arrowBounds = contentBounds;
+		// NOTE: cannot use CGRectGetMidX(), etc. because they are not constant expressions
+		CGFloat const	kMidX = (contentBounds.origin.x + contentBounds.size.width / 2.0);
+		CGFloat const	kMidY = (contentBounds.origin.y + contentBounds.size.height / 2.0);
+		CGPoint			points[] =
+						{
+							{ kMidX - 3.0f/* arbitrary */, kMidY + 1.5f/* arbitrary */ },
+							{ kMidX, kMidY - 1.5f/* arbitrary */ },
+							{ kMidX, kMidY - 1.5f/* arbitrary */ },
+							{ kMidX + 3.0f/* arbitrary */, kMidY + 1.5f/* arbitrary */ },
+						};
 		
 		
-		bzero(&info, sizeof(info));
-		info.version = 0;
-		if ([[self window] isKeyWindow])
-		{
-			info.state = (NO == isEnabled)
-							? kThemeStateUnavailable
-							: (self->hoverState)
-								? kThemeStateRollover
-								: kThemeStateActive;
-		}
-		else
-		{
-			info.state = (NO == isEnabled)
-							? kThemeStateUnavailableInactive
-							: kThemeStateInactive;
-		}
-		info.orientation = kThemeArrowDown;
-		info.size = kThemeArrow7pt;
-		
-		arrowBounds.size.width = 7;
-		arrowBounds.size.height = 4;
-		arrowBounds.origin.x += (contentBounds.size.width - arrowBounds.size.width) / 2.0;
-		arrowBounds.origin.y += (contentBounds.size.height - arrowBounds.size.height) / 2.0;
-		
-		UNUSED_RETURN(OSStatus)HIThemeDrawPopupArrow(&arrowBounds, &info, drawingContext, kHIThemeOrientationInverted);
+		CGContextSetRGBStrokeColor(drawingContext, 0, 0, 0, ((self->hoverState) && (isEnabled)) ? 0.5 : 0.3/* alpha */);
+		CGContextSetLineWidth(drawingContext, 1.5);
+		CGContextSetLineCap(drawingContext, kCGLineCapRound);
+		CGContextSetLineJoin(drawingContext, kCGLineJoinRound);
+		CGContextStrokeLineSegments(drawingContext, points, sizeof(points) / sizeof(CGPoint));
 	}
 }// drawRect:
 
