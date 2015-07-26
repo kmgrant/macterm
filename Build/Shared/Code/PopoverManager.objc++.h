@@ -65,9 +65,14 @@
 enum PopoverManager_AnimationType
 {
 	kPopoverManager_AnimationTypeStandard	= 0,	//!< open with balloon, close with fade-out
-	kPopoverManager_AnimationTypeDialog		= 1,	//!< open normally, close depending on acceptance flag
-	kPopoverManager_AnimationTypeMinimal	= 2,	//!< open and close with fade
-	kPopoverManager_AnimationTypeNone		= 3		//!< open and close without animation
+	kPopoverManager_AnimationTypeMinimal	= 1,	//!< open and close with fade
+	kPopoverManager_AnimationTypeNone		= 2		//!< open and close without animation
+};
+
+enum PopoverManager_BehaviorType
+{
+	kPopoverManager_BehaviorTypeStandard	= 0,	//!< popover can be implicitly dismissed
+	kPopoverManager_BehaviorTypeDialog		= 1		//!< popover can never be implicitly dismissed
 };
 
 #pragma mark Types
@@ -106,6 +111,7 @@ PopoverManager_Ref
 												 NSView*						inLogicalFirstResponder,
 												 id< PopoverManager_Delegate >	inDelegate,
 												 PopoverManager_AnimationType	inAnimation,
+												 PopoverManager_BehaviorType	inBehavior,
 												 NSWindow*						inParentWindow);
 
 PopoverManager_Ref
@@ -113,6 +119,7 @@ PopoverManager_Ref
 												 NSView*						inLogicalFirstResponder,
 												 id< PopoverManager_Delegate >	inDelegate,
 												 PopoverManager_AnimationType	inAnimation,
+												 PopoverManager_BehaviorType	inBehavior,
 												 HIWindowRef					inParentWindow);
 
 void
@@ -128,6 +135,10 @@ void
 void
 	PopoverManager_SetAnimationType				(PopoverManager_Ref				inRef,
 												 PopoverManager_AnimationType	inAnimation);
+
+void
+	PopoverManager_SetBehaviorType				(PopoverManager_Ref				inRef,
+												 PopoverManager_BehaviorType	inBehavior);
 
 void
 	PopoverManager_UseIdealLocationAfterDelay	(PopoverManager_Ref				inRef,

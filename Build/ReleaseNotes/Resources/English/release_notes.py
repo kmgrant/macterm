@@ -522,6 +522,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20150724': [
+        'Low-level preference "no-animations" now disables even more effects, including: animations for certain sheets, modal alert messages, duplicated session windows, and search results.',
         'Menu section titles now use a Yosemite-style font.',
     ],
     '20150723': [

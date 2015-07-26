@@ -536,7 +536,7 @@ didLoadManagedView:(NSView*)					aManagedView
 	if (nil == _containerWindow)
 	{
 		NSWindow*						asNSWindow = [self renamedCocoaWindow];
-		PopoverManager_AnimationType	animationType = kPopoverManager_AnimationTypeDialog;
+		PopoverManager_AnimationType	animationType = kPopoverManager_AnimationTypeStandard;
 		Boolean							noAnimations = false;
 		
 		
@@ -561,12 +561,14 @@ didLoadManagedView:(NSView*)					aManagedView
 		if (nullptr != _targetCarbonWindow)
 		{
 			_popoverMgr = PopoverManager_New(_containerWindow, [aViewMgr logicalFirstResponder],
-												self/* delegate */, animationType, _targetCarbonWindow);
+												self/* delegate */, animationType, kPopoverManager_BehaviorTypeDialog,
+												_targetCarbonWindow);
 		}
 		else
 		{
 			_popoverMgr = PopoverManager_New(_containerWindow, [aViewMgr logicalFirstResponder],
-												self/* delegate */, animationType, _targetCocoaWindow);
+												self/* delegate */, animationType, kPopoverManager_BehaviorTypeDialog,
+												_targetCocoaWindow);
 		}
 		PopoverManager_DisplayPopover(_popoverMgr);
 	}

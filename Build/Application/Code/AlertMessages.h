@@ -256,6 +256,9 @@ void
 //@{
 
 void
+	Alert_SetIsAnimationAllowed			(Boolean					inIsAnimationAllowed);
+
+void
 	Alert_SetIsBackgrounded				(Boolean					inIsApplicationSuspended);
 
 void

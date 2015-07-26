@@ -663,6 +663,7 @@ didLoadManagedView:(NSView*)			aManagedView
 		CocoaBasic_ApplyStandardStyleToPopover(self->containerWindow, false/* has arrow */);
 		self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
 												self/* delegate */, kPopoverManager_AnimationTypeNone,
+												kPopoverManager_BehaviorTypeStandard, // e.g. dismiss by clicking outside
 												TerminalWindow_ReturnWindow([self terminalWindow]));
 		PopoverManager_DisplayPopover(self->popoverMgr);
 	}
@@ -748,15 +749,27 @@ finalOptions:(FindDialog_Options)		options
 	// highlight search results
 	if (acceptedSearch)
 	{
-		BOOL	didSearch = NO;
+		Boolean		noAnimations = false;
+		BOOL		didSearch = NO;
 		
 		
 		UNUSED_RETURN(unsigned long)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:multiTerminal
 															notFinal:NO didSearch:&didSearch];
 		
-		// show the user where the text is; delay this slightly to avoid
-		// animation interference caused by the closing of the popover
-		[self performSelector:@selector(zoomToSearchResults) withObject:nil afterDelay:0.1/* seconds */];
+		// determine if animation should occur
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNoAnimations,
+									sizeof(noAnimations), &noAnimations))
+		{
+			noAnimations = false; // assume a value, if preference can’t be found
+		}
+		
+		unless (noAnimations)
+		{
+			// show the user where the text is; delay this slightly to avoid
+			// animation interference caused by the closing of the popover
+			[self performSelector:@selector(zoomToSearchResults) withObject:nil afterDelay:0.1/* seconds */];
+		}
 	}
 	else
 	{

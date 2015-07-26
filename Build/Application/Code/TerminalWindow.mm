@@ -4319,10 +4319,23 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					// once, this is simply a focusing mechanism and does not conduct a search
 					{
 						TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+						Boolean				noAnimations = false;
 						
+						
+						// determine if animation should occur
+						unless (kPreferences_ResultOK ==
+								Preferences_GetData(kPreferences_TagNoAnimations,
+													sizeof(noAnimations), &noAnimations))
+						{
+							noAnimations = false; // assume a value, if preference can’t be found
+						}
 						
 						TerminalView_RotateSearchResultHighlight(view, (kCommandFindPrevious == received.commandID) ? -1 : +1);
-						TerminalView_ZoomToSearchResults(view);
+						
+						unless (noAnimations)
+						{
+							TerminalView_ZoomToSearchResults(view);
+						}
 					}
 					result = noErr;
 					break;

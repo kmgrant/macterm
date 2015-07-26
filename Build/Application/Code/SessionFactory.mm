@@ -474,12 +474,31 @@ SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindow,
 		
 		if (false == TerminalWindow_IsTab(sourceTerminalWindow))
 		{
+			NSWindow*	targetWindow = TerminalWindow_ReturnNSWindow(inTerminalWindow);
+			Boolean		noAnimations = false;
+			
+			
+			// determine if animation should occur
+			unless (kPreferences_ResultOK ==
+					Preferences_GetData(kPreferences_TagNoAnimations,
+										sizeof(noAnimations), &noAnimations))
+			{
+				noAnimations = false; // assume a value, if preference can’t be found
+			}
+			
 			// if an original terminal window was given, perform a transition to
 			// move the window from its (unstaggered) location to its new location
-			CocoaAnimation_TransitionWindowForDuplicate(TerminalWindow_ReturnNSWindow(inTerminalWindow),
-														(nullptr != sourceTerminalWindow)
-															? TerminalWindow_ReturnNSWindow(sourceTerminalWindow)
-															: TerminalWindow_ReturnNSWindow(inTerminalWindow));
+			if (noAnimations)
+			{
+				[targetWindow orderFront:nil];
+			}
+			else
+			{
+				CocoaAnimation_TransitionWindowForDuplicate(targetWindow,
+															(nullptr != sourceTerminalWindow)
+																? TerminalWindow_ReturnNSWindow(sourceTerminalWindow)
+																: TerminalWindow_ReturnNSWindow(inTerminalWindow));
+			}
 		}
 	}
 	

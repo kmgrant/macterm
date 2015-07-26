@@ -648,7 +648,7 @@ popover itself depends on the arrow placement chosen by
 idealAnchorPointForFrame:(NSRect)	parentFrame
 parentWindow:(NSWindow*)			parentWindow
 {
-#pragma unused(parentWindow)
+#pragma unused(parentFrame, parentWindow)
 	NSPoint		result = NSMakePoint(_parentRelativeArrowTip.x, _parentRelativeArrowTip.y);
 	
 	
@@ -727,12 +727,14 @@ didLoadManagedView:(NSView*)				aManagedView
 			// legacy (will be removed)
 			_popoverMgr = PopoverManager_New(_containerWindow, [aBrowser logicalFirstResponder],
 												self/* delegate */, kPopoverManager_AnimationTypeMinimal,
+												kPopoverManager_BehaviorTypeStandard,
 												self.parentCarbonWindow);
 		}
 		else
 		{
 			_popoverMgr = PopoverManager_New(_containerWindow, [aBrowser logicalFirstResponder],
 												self/* delegate */, kPopoverManager_AnimationTypeMinimal,
+												kPopoverManager_BehaviorTypeStandard,
 												self.parentCocoaWindow);
 		}
 		PopoverManager_DisplayPopover(_popoverMgr);

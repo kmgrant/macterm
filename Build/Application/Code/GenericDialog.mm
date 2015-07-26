@@ -408,6 +408,17 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog)
 			// new method: use Cocoa
 			//
 			
+			Boolean		noAnimations = false;
+			
+			
+			// determine if animation should occur
+			unless (kPreferences_ResultOK ==
+					Preferences_GetData(kPreferences_TagNoAnimations,
+										sizeof(noAnimations), &noAnimations))
+			{
+				noAnimations = false; // assume a value, if preference can’t be found
+			}
+			
 			ptr->loadViewManager();
 			assert(nil != ptr->containerViewManager);
 			
@@ -427,7 +438,10 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog)
 				ptr->popoverManager = PopoverManager_New(ptr->popoverWindow,
 															[ptr->containerViewManager logicalFirstResponder],
 															ptr->containerViewManager/* delegate */,
-															kPopoverManager_AnimationTypeDialog,
+															(noAnimations)
+															? kPopoverManager_AnimationTypeNone
+															: kPopoverManager_AnimationTypeStandard,
+															kPopoverManager_BehaviorTypeDialog,
 															ptr->parentCarbonWindow);
 			}
 			

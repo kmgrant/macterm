@@ -148,6 +148,7 @@ typedef LockAcquireRelease< AlertMessages_BoxRef, My_AlertMessage >		My_AlertAut
 #pragma mark Variables
 namespace {
 
+Boolean				gIsAnimationAllowed = false;
 Boolean				gNotificationIsBackgrounded = false;
 Boolean				gUseSpeech = false;
 Boolean				gIsInited = false;
@@ -582,6 +583,8 @@ Mac OS X 10.7 and beyond (where the window can “pop”
 open).  If you suppress animation, the window is
 displayed immediately without the standard animation.
 This is not recommended except in special situations.
+Note that if Alert_SetIsAnimationAllowed() has been
+set to false, it takes precedence over the flag here.
 
 If the program is in the background (as specified by
 a call to Alert_SetIsBackgrounded()), a notification
@@ -611,6 +614,7 @@ Alert_Display	(AlertMessages_BoxRef	inAlert,
 				 Boolean				inAnimated)
 {
 	OSStatus	result = noErr;
+	Boolean		animationFinalFlag = (inAnimated && gIsAnimationAllowed);
 	
 	
 	// only attempt to display an alert if the module was properly initialized
@@ -648,7 +652,7 @@ Alert_Display	(AlertMessages_BoxRef	inAlert,
 				NSWindow*	window = [alertPtr->targetWindowController window];
 				
 				
-				if (inAnimated)
+				if (animationFinalFlag)
 				{
 					if ([window respondsToSelector:@selector(setAnimationBehavior:)])
 					{
@@ -1016,6 +1020,22 @@ Alert_SetHelpButton		(AlertMessages_BoxRef	inAlert,
 		alertPtr->params.helpButton = inIsHelpButton;
 	}
 }// SetHelpButton
+
+
+/*!
+This sets a global override for animation flags so that
+even if animation is requested in Alert_Display(), it
+has no effect.
+
+This should correspond to a user preference setting.
+
+(2.6)
+*/
+void
+Alert_SetIsAnimationAllowed		(Boolean	inIsAnimationAllowed)
+{
+	gIsAnimationAllowed = inIsAnimationAllowed;
+}// SetIsAnimationAllowed
 
 
 /*!

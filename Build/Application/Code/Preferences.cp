@@ -1317,6 +1317,22 @@ Preferences_Init ()
 		}
 	}
 	
+	// configure the Alert module according to animation settings
+	{
+		Boolean		noAnimations = false;
+		
+		
+		// determine if animation should occur
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNoAnimations,
+									sizeof(noAnimations), &noAnimations))
+		{
+			noAnimations = false; // assume a value, if preference can’t be found
+		}
+		
+		Alert_SetIsAnimationAllowed(false == noAnimations);
+	}
+	
 	return result;
 }// Init
 

@@ -56,6 +56,7 @@
 	Popover_Window*					containerWindow;		// holds the popover itself (note: is an NSWindow subclass)
 	NSView*							logicalFirstResponder;	// the view to give initial keyboard focus to, in "display" method
 	PopoverManager_AnimationType	animationType;			// specifies how to open and close the popover window
+	PopoverManager_BehaviorType		behaviorType;			// specifies how the popover window responds to other events
 	NSWindow*						parentCocoaWindow;		// the window the popover is relative to, if Cocoa
 	HIWindowRef						parentCarbonWindow;		// the window the popover is relative to, if Carbon
 	CarbonEventHandlerWrap*			activationHandlerPtr;	// embellishes Carbon Event for activating window
@@ -74,6 +75,7 @@
 	popover:(Popover_Window*)_
 	firstResponder:(NSView*)_
 	animationType:(PopoverManager_AnimationType)_
+	behavior:(PopoverManager_BehaviorType)_
 	delegate:(id< PopoverManager_Delegate >)_;
 
 // new methods
@@ -135,6 +137,7 @@ PopoverManager_New	(Popover_Window*				inPopover,
 					 NSView*						inLogicalFirstResponder,
 					 id< PopoverManager_Delegate >	inDelegate,
 					 PopoverManager_AnimationType	inAnimation,
+					 PopoverManager_BehaviorType	inBehavior,
 					 NSWindow*						inParentWindow)
 {
 	PopoverManager_Ref	result = nullptr;
@@ -143,7 +146,8 @@ PopoverManager_New	(Popover_Window*				inPopover,
 	result = (PopoverManager_Ref)[[PopoverManager_Handler alloc]
 									initForCocoaWindow:inParentWindow orCarbonWindow:nullptr popover:inPopover
 														firstResponder:inLogicalFirstResponder
-														animationType:inAnimation delegate:inDelegate];
+														animationType:inAnimation behavior:inBehavior
+														delegate:inDelegate];
 	return result;
 }// New
 
@@ -159,6 +163,7 @@ PopoverManager_New	(Popover_Window*				inPopover,
 					 NSView*						inLogicalFirstResponder,
 					 id< PopoverManager_Delegate >	inDelegate,
 					 PopoverManager_AnimationType	inAnimation,
+					 PopoverManager_BehaviorType	inBehavior,
 					 HIWindowRef					inParentWindow)
 {
 	PopoverManager_Ref	result = nullptr;
@@ -167,7 +172,8 @@ PopoverManager_New	(Popover_Window*				inPopover,
 	result = (PopoverManager_Ref)[[PopoverManager_Handler alloc]
 									initForCocoaWindow:nil orCarbonWindow:inParentWindow popover:inPopover
 														firstResponder:inLogicalFirstResponder
-														animationType:inAnimation delegate:inDelegate];
+														animationType:inAnimation behavior:inBehavior
+														delegate:inDelegate];
 	return result;
 }// New
 
@@ -246,6 +252,22 @@ PopoverManager_SetAnimationType		(PopoverManager_Ref				inRef,
 
 
 /*!
+Changes the way that a popover responds to other events.
+
+(2.8)
+*/
+void
+PopoverManager_SetBehaviorType		(PopoverManager_Ref				inRef,
+									 PopoverManager_BehaviorType	inBehavior)
+{
+	PopoverManager_Handler*		ptr = [PopoverManager_Handler popoverHandlerFromRef:inRef];
+	
+	
+	ptr->behaviorType = inBehavior;
+}// SetBehaviorType
+
+
+/*!
 For popovers that use “automatic” placement, recalculates
 the best place for the arrow and relocates the popover so
 that it is pointing (in a possibly new direction) at its
@@ -306,7 +328,7 @@ receiveWindowActivationChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 	#if 0
 		[handler removeWindow];
 	#else
-		if (kPopoverManager_AnimationTypeDialog == handler->animationType)
+		if (kPopoverManager_BehaviorTypeDialog == handler->behaviorType)
 		{
 			if (kEventKind == kEventWindowDeactivated)
 			{
@@ -429,6 +451,7 @@ orCarbonWindow:(HIWindowRef)					aCarbonWindow
 popover:(Popover_Window*)						aPopover
 firstResponder:(NSView*)						aView
 animationType:(PopoverManager_AnimationType)	animationSpec
+behavior:(PopoverManager_BehaviorType)			behaviorSpec
 delegate:(id< PopoverManager_Delegate >)		anObject
 {
 	self = [super initWithWindow:aPopover];
@@ -453,6 +476,7 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 		[self->containerWindow retain];
 		self->logicalFirstResponder = aView;
 		self->animationType = animationSpec;
+		self->behaviorType = behaviorSpec;
 		self->parentCocoaWindow = aCocoaWindow;
 		self->parentCarbonWindow = aCarbonWindow;
 		
@@ -531,16 +555,19 @@ display
 		}
 		break;
 	
-	case kPopoverManager_AnimationTypeDialog:
-		CocoaAnimation_TransitionWindowForSheetOpen(self->containerWindow, [self parentCocoaWindow]);
-		break;
-	
 	case kPopoverManager_AnimationTypeStandard:
 	default:
-		if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
+		if (kPopoverManager_BehaviorTypeDialog == self->behaviorType)
 		{
-			// create bubble effect; admittedly a bit of a hack...
-			[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(5, NSWindowAnimationBehaviorAlertPanel)];
+			CocoaAnimation_TransitionWindowForSheetOpen(self->containerWindow, [self parentCocoaWindow]);
+		}
+		else
+		{
+			if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
+			{
+				// create bubble effect; admittedly a bit of a hack...
+				[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(5, NSWindowAnimationBehaviorAlertPanel)];
+			}
 		}
 		break;
 	}
@@ -766,24 +793,27 @@ afterDelay:(float)					aDelay
 		[self->containerWindow performSelector:@selector(close) withObject:nil afterDelay:aDelay];
 		break;
 	
-	case kPopoverManager_AnimationTypeDialog:
-		if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
-		{
-			// remove system-provided window animations because this
-			// has a custom close animation style
-			[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(2, NSWindowAnimationBehaviorNone)];
-		}
-		CocoaAnimation_TransitionWindowForRemove(self->containerWindow, isAccepted);
-		break;
-	
 	default:
-		// currently, all other closing animations are the same
-		if ([self->containerWindow respondsToSelector:@selector(setAnimationBehavior:)])
+		if (kPopoverManager_BehaviorTypeDialog == self->behaviorType)
 		{
-			// create fade-out effect; admittedly a bit of a hack...
-			[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(4, NSWindowAnimationBehaviorUtilityWindow)];
+			if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
+			{
+				// remove system-provided window animations because this
+				// has a custom close animation style
+				[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(2, NSWindowAnimationBehaviorNone)];
+			}
+			CocoaAnimation_TransitionWindowForRemove(self->containerWindow, isAccepted);
 		}
-		[self->containerWindow performSelector:@selector(close) withObject:nil afterDelay:aDelay];
+		else
+		{
+			// currently, all other closing animations are the same
+			if ([self->containerWindow respondsToSelector:@selector(setAnimationBehavior:)])
+			{
+				// create fade-out effect; admittedly a bit of a hack...
+				[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(4, NSWindowAnimationBehaviorUtilityWindow)];
+			}
+			[self->containerWindow performSelector:@selector(close) withObject:nil afterDelay:aDelay];
+		}
 		break;
 	}
 }// removeWindowWithAcceptance:afterDelay:
@@ -882,7 +912,7 @@ windowDidResignKey:(NSNotification*)	aNotification
 		BOOL	removePopover = YES;
 		
 		
-		if (kPopoverManager_AnimationTypeDialog == self->animationType)
+		if (kPopoverManager_BehaviorTypeDialog == self->behaviorType)
 		{
 			// dialogs try to retain keyboard focus, expecting to be
 			// dismissed in an explicit way (e.g. via buttons)

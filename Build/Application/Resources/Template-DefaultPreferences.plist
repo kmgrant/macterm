@@ -252,6 +252,8 @@
 	</array>
 	<key>new-means</key>
 	<string>dialog</string>
+	<key>no-animations</key>
+	<false/>
 	<key>no-auto-close</key>
 	<false/>
 	<key>no-auto-new</key>
