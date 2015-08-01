@@ -1324,13 +1324,10 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandStackWindows:
 			{
 				// on Mac OS X, this command also requires that all application windows come to the front
-				ProcessSerialNumber		psn;
+				NSRunningApplication*	runningApplication = [NSRunningApplication currentApplication];
 				
 				
-				if (GetCurrentProcess(&psn) == noErr)
-				{
-					UNUSED_RETURN(OSStatus)SetFrontProcess(&psn);
-				}
+				UNUSED_RETURN(BOOL)[runningApplication activateWithOptions:(NSApplicationActivateAllWindows)];
 				
 				// arrange windows in a diagonal pattern
 				TerminalWindow_StackWindows();

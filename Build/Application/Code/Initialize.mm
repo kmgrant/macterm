@@ -252,13 +252,11 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	// when debugging, make sure the application activates after it starts up
 	if (Local_StandardInputIsATerminal())
 	{
-		ProcessSerialNumber		psn;
+		NSRunningApplication*	runningApplication = [NSRunningApplication currentApplication];
 		
 		
-		if (GetCurrentProcess(&psn) == noErr)
-		{
-			UNUSED_RETURN(OSStatus)SetFrontProcess(&psn);
-		}
+		UNUSED_RETURN(BOOL)[runningApplication activateWithOptions:(NSApplicationActivateAllWindows |
+																	NSApplicationActivateIgnoringOtherApps)];
 	}
 }// ApplicationStartup
 
