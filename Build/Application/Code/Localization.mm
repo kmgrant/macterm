@@ -418,11 +418,12 @@ Localization_AutoSizeNSButton	(NSButton*		inButton,
 	{
 		NSString*	stringValue = [inButton title];
 		NSFont*		font = [inButton font];
+		CGFloat		stringWidth = [stringValue sizeWithAttributes:@{
+																		NSFontAttributeName: font
+																	}].width;
 		
 		
-		// This is obviously a simplistic approach, but it is enough for now.
-		// LOCALIZE THIS
-		result = [font widthOfString:stringValue] + INTEGER_DOUBLED(MINIMUM_BUTTON_TITLE_CUSHION);
+		result = (stringWidth + INTEGER_DOUBLED(MINIMUM_BUTTON_TITLE_CUSHION));
 		if (result < inMinimumWidth)
 		{
 			result = inMinimumWidth;
