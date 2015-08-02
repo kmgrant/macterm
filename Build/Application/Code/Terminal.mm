@@ -1132,13 +1132,13 @@ public:
 	My_ScrollbackBufferLineList::size_type	scrollbackBufferCachedSize;	//!< linked list size is sometimes needed, but is VERY expensive to calculate;
 																	//!  therefore, it is cached, and ALL code that changes "scrollbackBuffer" must
 																	//!  be aware of this cached size and update it accordingly!
-	My_ScrollbackBufferLineList			scrollbackBuffer;			//!< a double-ended queue containing all the scrollback text for the terminal;
-																	//!  IMPORTANT: the FRONT of this queue is the scrollback line CLOSEST to the
-																	//!  top (FRONT) of the screen buffer line queue; imagine both queues starting
-																	//!  at the home line and growing outwards from one another
-	My_ScreenBufferLineList				screenBuffer;				//!< a double-ended queue containing all the visible text for the terminal;
-																	//!  insertion or deletion from either end is fast, other operations are slow;
-																	//!  NOTE you should ONLY modify this using screen...() routines!
+	My_ScrollbackBufferLineList			scrollbackBuffer;			//!< all of the scrollback text for the terminal; "scrollbackBufferCachedSize"
+																	//!  is a redundant copy of the (expensively-computed) full size of the buffer;
+																	//!  IMPORTANT: the FRONT is the scrollback line CLOSEST to the top (FRONT) of
+																	//!  the screen buffer; imagine both buffers starting at the home line and
+																	//!  growing away from one another
+	My_ScreenBufferLineList				screenBuffer;				//!< all of the visible text for the terminal;
+																	//!  IMPORTANT: ONLY modify the screen buffer using screen...() routines!
 	My_ByteString						bytesToEcho;				//!< captures contiguous blocks of text to be translated and echoed
 	
 	// Error Counts
@@ -4616,15 +4616,8 @@ Terminal_Search		(TerminalScreenRef							inRef,
 					 std::vector< Terminal_RangeDescription >&	outMatches)
 {
 	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
-	pthread_mutex_t		matchVectorMutex;
 	Terminal_Result		result = kTerminal_ResultOK;
 	
-	
-	if (-1 == pthread_mutex_init(&matchVectorMutex, NULL/* attributes */))
-	{
-		Console_Warning(Console_WriteValue, "failed to create mutex for terminal search, errno", errno);
-		result = kTerminal_ResultNotEnoughMemory;
-	}
 	
 	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
 	else if (nullptr == inQuery) result = kTerminal_ResultParameterError;
@@ -4718,7 +4711,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 		}
 		if (false == dataPtr->scrollbackBuffer.empty())
 		{
-			size_t const	kScrollbackSize = dataPtr->scrollbackBuffer.size();
+			size_t const	kScrollbackSize = dataPtr->scrollbackBufferCachedSize;
 			UInt16			scrollbackThreadCount = 1;
 			
 			
@@ -4767,7 +4760,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 					{
 						// since the scrollback size is unlikely to divide perfectly between
 						// threads, the last thread picks up the slack
-						threadContextPtr->rowCount = dataPtr->scrollbackBuffer.size() - threadContextPtr->startRowIndex;
+						threadContextPtr->rowCount = kScrollbackSize - threadContextPtr->startRowIndex;
 					}
 					
 					threadResult = pthread_create(&threadList[i], &threadAttributes,
