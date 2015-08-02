@@ -312,6 +312,9 @@ void
 void
 	Terminal_ReleaseScreen					(TerminalScreenRef*			inoutScreenPtr);
 
+Boolean
+	Terminal_IsValid						(TerminalScreenRef			inScreen);
+
 //@}
 
 //!\name Enabling Session Talkback (Such As VT100 Device Attributes)

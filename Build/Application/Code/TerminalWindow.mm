@@ -8241,6 +8241,9 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 static TerminalWindow_Controller*	gTerminalWindow_Controller = nil;
 
 
+@synthesize testTerminalContentView = testTerminalContentView;
+
+
 /*!
 Returns the singleton.
 

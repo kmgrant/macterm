@@ -222,6 +222,11 @@ changes to an interface declared in a ".mm" file.
 	NSUInteger	_modifierFlagsForCursor;
 	void*		_internalViewPtr;
 }
+
+// new methods
+	- (TerminalViewRef)
+	terminalViewRef;
+
 @end //}
 
 #else
@@ -260,6 +265,19 @@ TerminalViewRef
 TerminalViewRef
 	TerminalView_NewHIViewBased		(TerminalScreenRef				inScreenDataSource,
 									 Preferences_ContextRef			inFormatOrNull = nullptr);
+
+//@}
+
+//!\name Modifying Terminal View Data
+//@{
+
+TerminalView_Result
+	TerminalView_AddDataSource				(TerminalViewRef			inView,
+											 TerminalScreenRef			inScreenDataSource);
+
+TerminalView_Result
+	TerminalView_RemoveDataSource			(TerminalViewRef			inView,
+											 TerminalScreenRef			inScreenDataSourceOrNull);
 
 //@}
 

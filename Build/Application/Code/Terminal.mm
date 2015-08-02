@@ -75,6 +75,7 @@ extern "C"
 #import <MemoryBlockReferenceLocker.template.h>
 #import <MemoryBlocks.h>
 #import <RegionUtilities.h>
+#import <Registrar.template.h>
 #import <SoundSystem.h>
 #import <StringUtilities.h>
 
@@ -1064,6 +1065,9 @@ private:
 };
 typedef My_Emulator*	My_EmulatorPtr;
 
+typedef MemoryBlockReferenceTracker< TerminalScreenRef >	My_RefTracker;
+typedef Registrar< TerminalScreenRef, My_RefTracker >		My_RefRegistrar;
+
 struct My_ScreenBuffer
 {
 public:
@@ -1112,6 +1116,7 @@ public:
 	Boolean
 	returnXTermWindowAlteration		(Preferences_ContextRef);
 	
+	My_RefRegistrar						refValidator;				//!< ensures this reference is recognized as a valid one
 	Preferences_ContextWrap				configuration;
 	My_Emulator							emulator;					//!< handles all parsing of the data stream
 	SessionRef							listeningSession;			//!< may be nullptr; the currently attached session, where certain terminal reports are sent
@@ -1829,6 +1834,7 @@ namespace {
 My_PrintableByUniChar&			gDumbTerminalRenderings ()	{ static My_PrintableByUniChar x; return x; }
 My_ScreenBufferLine&			gEmptyScreenBufferLine ()	{ static My_ScreenBufferLine x; return x; }
 My_ScreenReferenceLocker&		gScreenRefLocks ()			{ static My_ScreenReferenceLocker x; return x; }
+My_RefTracker&					gTerminalScreenValidRefs ()	{ static My_RefTracker x; return x; }
 
 } // anonymous namespace
 
@@ -1931,6 +1937,7 @@ Terminal_ReleaseScreen	(TerminalScreenRef*		inoutRefPtr)
 		
 		delete ptr;
 	}
+	*inoutRefPtr = nullptr;
 }// ReleaseScreen
 
 
@@ -1965,7 +1972,11 @@ Terminal_NewMainScreenLineIterator	(TerminalScreenRef				inRef,
 	My_ScreenBufferPtr		ptr = getVirtualScreenData(inRef);
 	
 	
-	if (nullptr != ptr)
+	if (false == Terminal_IsValid(inRef))
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to construct iterator from invalid reference", inRef);
+	}
+	else if (nullptr != ptr)
 	{
 		// ensure the specified row is in range
 		if (inLineNumberZeroForTop < ptr->screenBuffer.size())
@@ -4050,6 +4061,28 @@ Terminal_IsInPasswordMode	(TerminalScreenRef		inRef)
 	}
 	return result;
 }// IsInPasswordMode
+
+
+/*!
+Returns "true" only if the specified terminal screen has
+not been destroyed with Terminal_ReleaseScreen(), and is
+not in the process of being destroyed.
+
+Most of the time, checking for a null reference is enough,
+and efficient; this check may be slower, but is important
+if you are handling something indirectly or asynchronously
+(where a terminal could have been destroyed at any time).
+
+(4.1)
+*/
+Boolean
+Terminal_IsValid        (TerminalScreenRef      inRef)
+{
+	Boolean		result = ((nullptr != inRef) && (gTerminalScreenValidRefs().find(inRef) != gTerminalScreenValidRefs().end()));
+	
+	
+	return result;
+}// IsValid
 
 
 /*!
@@ -6577,6 +6610,7 @@ My_ScreenBuffer	(Preferences_ContextRef		inTerminalConfig,
 				 Preferences_ContextRef		inTranslationConfig)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+refValidator(REINTERPRET_CAST(this, TerminalScreenRef), gTerminalScreenValidRefs()),
 configuration(Preferences_NewCloneContext(inTerminalConfig, true/* detach */), true/* is retained */),
 emulator(returnEmulator(inTerminalConfig), returnAnswerBackMessage(inTerminalConfig), returnTextEncoding(inTranslationConfig)),
 listeningSession(nullptr),
@@ -6734,6 +6768,9 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 			Console_Warning(Console_WriteValue, "screen buffer failed to set up monitor for batch-mode changes to configuration, error", prefsResult);
 		}
 	}
+	
+	assert(Terminal_IsValid(this->selfRef));
+	//Console_WriteValueAddress("validated screen", this);
 }// My_ScreenBuffer 1-argument constructor
 
 
@@ -6762,6 +6799,8 @@ My_ScreenBuffer::
 																		kPreferences_ChangeContextBatchMode);
 	TerminalSpeaker_Dispose(&this->speaker);
 	ListenerModel_Dispose(&this->changeListenerModel);
+	
+	//Console_WriteValueAddress("invalidated screen", this);
 }// My_ScreenBuffer destructor
 
 

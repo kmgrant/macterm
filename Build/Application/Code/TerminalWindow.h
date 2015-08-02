@@ -167,6 +167,10 @@ changes to an interface declared in a ".mm" file.
 	+ (id)
 	sharedTerminalWindowController; // TEMPORARY
 
+// accessors
+	@property (strong) TerminalView_ContentView*
+	testTerminalContentView;
+
 @end //}
 
 

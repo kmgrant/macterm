@@ -2,10 +2,10 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
 		<int key="IBDocument.SystemTarget">1060</int>
-		<string key="IBDocument.SystemVersion">14B25</string>
+		<string key="IBDocument.SystemVersion">14C109</string>
 		<string key="IBDocument.InterfaceBuilderVersion">6254</string>
-		<string key="IBDocument.AppKitVersion">1343.16</string>
-		<string key="IBDocument.HIToolboxVersion">755.00</string>
+		<string key="IBDocument.AppKitVersion">1344.72</string>
+		<string key="IBDocument.HIToolboxVersion">757.30</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
 			<string key="NS.object.0">6254</string>
@@ -39,7 +39,7 @@
 			<object class="NSWindowTemplate" id="1047098468">
 				<int key="NSWindowStyleMask">8339</int>
 				<int key="NSWindowBacking">2</int>
-				<string key="NSWindowRect">{{191, 672}, {466, 286}}</string>
+				<string key="NSWindowRect">{{191, 672}, {466, 319}}</string>
 				<int key="NSWTFlags">-469762048</int>
 				<string key="NSWindowTitle">Debugging Options</string>
 				<string key="NSWindowClass">NSPanel</string>
@@ -55,7 +55,7 @@
 							<reference key="NSNextResponder" ref="64225887"/>
 							<int key="NSvFlags">268</int>
 							<array class="NSMutableArray" key="NSSubviews"/>
-							<string key="NSFrame">{{184, 248}, {264, 18}}</string>
+							<string key="NSFrame">{{184, 281}, {264, 18}}</string>
 							<reference key="NSSuperview" ref="64225887"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
@@ -96,7 +96,7 @@
 							<reference key="NSNextResponder" ref="64225887"/>
 							<int key="NSvFlags">268</int>
 							<array class="NSMutableArray" key="NSSubviews"/>
-							<string key="NSFrame">{{184, 228}, {264, 18}}</string>
+							<string key="NSFrame">{{184, 261}, {264, 18}}</string>
 							<reference key="NSSuperview" ref="64225887"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
@@ -128,7 +128,7 @@
 							<reference key="NSNextResponder" ref="64225887"/>
 							<int key="NSvFlags">268</int>
 							<array class="NSMutableArray" key="NSSubviews"/>
-							<string key="NSFrame">{{184, 208}, {264, 18}}</string>
+							<string key="NSFrame">{{184, 241}, {264, 18}}</string>
 							<reference key="NSSuperview" ref="64225887"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
@@ -159,7 +159,7 @@
 						<object class="NSTextField" id="174546653">
 							<reference key="NSNextResponder" ref="64225887"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{17, 249}, {146, 17}}</string>
+							<string key="NSFrame">{{17, 282}, {146, 17}}</string>
 							<reference key="NSSuperview" ref="64225887"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="301053687"/>
@@ -205,7 +205,7 @@
 						<object class="NSTextField" id="395615870">
 							<reference key="NSNextResponder" ref="64225887"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{17, 160}, {146, 17}}</string>
+							<string key="NSFrame">{{17, 193}, {146, 17}}</string>
 							<reference key="NSSuperview" ref="64225887"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="964642497"/>
@@ -232,7 +232,7 @@
 							<reference key="NSNextResponder" ref="64225887"/>
 							<int key="NSvFlags">268</int>
 							<array class="NSMutableArray" key="NSSubviews"/>
-							<string key="NSFrame">{{180, 150}, {182, 32}}</string>
+							<string key="NSFrame">{{180, 183}, {182, 32}}</string>
 							<reference key="NSSuperview" ref="64225887"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
@@ -261,7 +261,7 @@
 						<object class="NSTextField" id="260695050">
 							<reference key="NSNextResponder" ref="64225887"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{17, 120}, {146, 17}}</string>
+							<string key="NSFrame">{{17, 153}, {146, 17}}</string>
 							<reference key="NSSuperview" ref="64225887"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="575996668"/>
@@ -288,7 +288,7 @@
 							<reference key="NSNextResponder" ref="64225887"/>
 							<int key="NSvFlags">268</int>
 							<array class="NSMutableArray" key="NSSubviews"/>
-							<string key="NSFrame">{{180, 110}, {182, 32}}</string>
+							<string key="NSFrame">{{180, 143}, {182, 32}}</string>
 							<reference key="NSSuperview" ref="64225887"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
@@ -318,7 +318,7 @@
 							<reference key="NSNextResponder" ref="64225887"/>
 							<int key="NSvFlags">268</int>
 							<array class="NSMutableArray" key="NSSubviews"/>
-							<string key="NSFrame">{{180, 46}, {182, 32}}</string>
+							<string key="NSFrame">{{180, 79}, {182, 32}}</string>
 							<reference key="NSSuperview" ref="64225887"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
@@ -348,7 +348,7 @@
 							<reference key="NSNextResponder" ref="64225887"/>
 							<int key="NSvFlags">268</int>
 							<array class="NSMutableArray" key="NSSubviews"/>
-							<string key="NSFrame">{{180, 13}, {182, 32}}</string>
+							<string key="NSFrame">{{180, 46}, {182, 32}}</string>
 							<reference key="NSSuperview" ref="64225887"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
@@ -378,7 +378,7 @@
 							<reference key="NSNextResponder" ref="64225887"/>
 							<int key="NSvFlags">268</int>
 							<array class="NSMutableArray" key="NSSubviews"/>
-							<string key="NSFrame">{{180, 78}, {182, 32}}</string>
+							<string key="NSFrame">{{180, 111}, {182, 32}}</string>
 							<reference key="NSSuperview" ref="64225887"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
@@ -404,8 +404,38 @@
 							</object>
 							<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 						</object>
+						<object class="NSButton" id="304792109">
+							<reference key="NSNextResponder" ref="64225887"/>
+							<int key="NSvFlags">268</int>
+							<array class="NSMutableArray" key="NSSubviews"/>
+							<string key="NSFrame">{{180, 13}, {182, 32}}</string>
+							<reference key="NSSuperview" ref="64225887"/>
+							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
+							<bool key="NSViewIsLayerTreeHost">YES</bool>
+							<array key="NSViewContentFilters">
+								<object class="CIColorInvert">
+									<bool key="CIEnabled">YES</bool>
+								</object>
+							</array>
+							<bool key="NSEnabled">YES</bool>
+							<object class="NSButtonCell" key="NSCell" id="257053442">
+								<int key="NSCellFlags">-2080374784</int>
+								<int key="NSCellFlags2">134217728</int>
+								<string key="NSContents">Cocoa Term Session</string>
+								<reference key="NSSupport" ref="569083415"/>
+								<reference key="NSControlView" ref="304792109"/>
+								<int key="NSButtonFlags">-2038284288</int>
+								<int key="NSButtonFlags2">1</int>
+								<string key="NSAlternateContents"/>
+								<string key="NSKeyEquivalent"/>
+								<int key="NSPeriodicDelay">200</int>
+								<int key="NSPeriodicInterval">25</int>
+							</object>
+							<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
+						</object>
 					</array>
-					<string key="NSFrameSize">{466, 286}</string>
+					<string key="NSFrameSize">{466, 319}</string>
 					<reference key="NSSuperview"/>
 					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="174546653"/>
@@ -465,6 +495,14 @@
 						<reference key="destination" ref="24068009"/>
 					</object>
 					<int key="connectionID">133</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">setTestTerminalToActiveSessionData:</string>
+						<reference key="source" ref="491703908"/>
+						<reference key="destination" ref="304792109"/>
+					</object>
+					<int key="connectionID">137</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBBindingConnection" key="connection">
@@ -565,6 +603,7 @@
 							<reference ref="945860677"/>
 							<reference ref="592794529"/>
 							<reference ref="24068009"/>
+							<reference ref="304792109"/>
 						</array>
 						<reference key="parent" ref="1047098468"/>
 					</object>
@@ -711,13 +750,26 @@
 						<reference key="object" ref="138557257"/>
 						<reference key="parent" ref="24068009"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">134</int>
+						<reference key="object" ref="304792109"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="257053442"/>
+						</array>
+						<reference key="parent" ref="64225887"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">135</int>
+						<reference key="object" ref="257053442"/>
+						<reference key="parent" ref="304792109"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
 				<string key="-1.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="-2.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="-3.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<string key="1.IBPersistedLastKnownCanvasPosition">{244, 356}</string>
+				<string key="1.IBPersistedLastKnownCanvasPosition">{244, 372.5}</string>
 				<string key="1.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1.IBWindowTemplateEditedContentRect">{{711, 701}, {466, 252}}</string>
 				<boolean value="YES" key="1.NSWindowTemplate.visibleAtLaunch"/>
@@ -733,6 +785,8 @@
 				<string key="126.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="129.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="130.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="134.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="135.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<reference key="2.IBNSViewMetadataGestureRecognizers" ref="0"/>
 				<string key="2.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="47.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -762,7 +816,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">133</int>
+			<int key="maxID">137</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -772,6 +826,7 @@
 					<dictionary class="NSMutableDictionary" key="actions">
 						<string key="dumpStateOfActiveTerminal:">id</string>
 						<string key="launchNewCallPythonClient:">id</string>
+						<string key="setTestTerminalToActiveSessionData:">id</string>
 						<string key="showTestPreferencesWindow:">id</string>
 						<string key="showTestTerminalToolbar:">id</string>
 						<string key="showTestTerminalWindow:">id</string>
@@ -783,6 +838,10 @@
 						</object>
 						<object class="IBActionInfo" key="launchNewCallPythonClient:">
 							<string key="name">launchNewCallPythonClient:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="setTestTerminalToActiveSessionData:">
+							<string key="name">setTestTerminalToActiveSessionData:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="showTestPreferencesWindow:">
@@ -807,6 +866,7 @@
 					<string key="className">DebugInterface_PanelController</string>
 					<dictionary class="NSMutableDictionary" key="actions">
 						<string key="dumpStateOfActiveTerminal:">id</string>
+						<string key="setTestTerminalToActiveSessionData:">id</string>
 						<string key="showTestPreferencesWindow:">id</string>
 						<string key="showTestTerminalToolbar:">id</string>
 						<string key="showTestTerminalWindow:">id</string>
@@ -814,6 +874,10 @@
 					<dictionary class="NSMutableDictionary" key="actionInfosByName">
 						<object class="IBActionInfo" key="dumpStateOfActiveTerminal:">
 							<string key="name">dumpStateOfActiveTerminal:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="setTestTerminalToActiveSessionData:">
+							<string key="name">setTestTerminalToActiveSessionData:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="showTestPreferencesWindow:">

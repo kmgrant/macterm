@@ -452,6 +452,7 @@ public:
 #pragma mark Internal Method Prototypes
 namespace {
 
+Boolean				addDataSource						(My_TerminalViewPtr, TerminalScreenRef);
 void				animateBlinkingItems				(EventLoopTimerRef, void*);
 void				audioEvent							(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 EventTime			calculateAnimationStageDelay		(My_TerminalViewPtr, My_TimeIntervalList::size_type);
@@ -533,6 +534,7 @@ OSStatus			receiveTerminalViewRegionRequest	(EventHandlerCallRef, EventRef, Term
 OSStatus			receiveTerminalViewTrack			(EventHandlerCallRef, EventRef, TerminalViewRef);
 void				receiveVideoModeChange				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				releaseRowIterator					(My_TerminalViewPtr, Terminal_LineRef*);
+Boolean				removeDataSource					(My_TerminalViewPtr, TerminalScreenRef);
 SInt64				returnNumberOfCharacters			(My_TerminalViewPtr);
 CFStringRef			returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr, UInt16, TerminalView_TextFlags);
 void				screenBufferChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -552,6 +554,8 @@ void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, Rect*, RgnHan
 														 TerminalView_CursorType = kTerminalView_CursorTypeCurrentPreferenceValue);
 void				setUpScreenFontMetrics				(My_TerminalViewPtr);
 void				sortAnchors							(TerminalView_Cell&, TerminalView_Cell&, Boolean);
+Boolean				startMonitoringDataSource			(My_TerminalViewPtr, TerminalScreenRef);
+Boolean				stopMonitoringDataSource			(My_TerminalViewPtr, TerminalScreenRef);
 void				trackTextSelection					(My_TerminalViewPtr, Point, EventModifiers, Point*, UInt32*);
 void				updateDisplay						(My_TerminalViewPtr);
 void				updateDisplayInRegion				(My_TerminalViewPtr, RgnHandle);
@@ -944,6 +948,58 @@ TerminalView_NewNSViewBased		(TerminalView_ContentView*		inBaseView,
 	
 	return result;
 }// NewNSViewBased
+
+
+/*!
+Specifies a terminal buffer whose data will be displayed
+by the terminal view, and starts monitoring it for changes
+that would affect the display.
+
+Currently only one data source can be set at a time; to
+remove a previous one, call TerminalView_RemoveDataSource().
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+\retval kTerminalView_ResultParameterError
+if the data source cannot be changed
+
+(4.1)
+*/
+TerminalView_Result
+TerminalView_AddDataSource	(TerminalViewRef		inView,
+							 TerminalScreenRef		inScreenDataSource)
+{
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		if (false == addDataSource(viewPtr, inScreenDataSource))
+		{
+			result = kTerminalView_ResultParameterError;
+		}
+		else
+		{
+			if (false == startMonitoringDataSource(viewPtr, inScreenDataSource))
+			{
+				result = kTerminalView_ResultParameterError;
+			}
+			else
+			{
+				// success!
+				result = kTerminalView_ResultOK;
+			}
+		}
+	}
+	
+	return result;
+}// AddDataSource
 
 
 /*!
@@ -1983,6 +2039,56 @@ TerminalView_PtInSelection	(TerminalViewRef	inView,
 	}
 	return result;
 }// PtInSelection
+
+
+/*!
+Removes a specific data source that was previously set by
+TerminalView_AddDataSource(), or removes all data sources
+if "nullptr" is given.  The data from the removed source
+is no longer reflected in the view.
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+\retval kTerminalView_ResultParameterError
+if at least one requested data source cannot be removed
+
+(4.1)
+*/
+TerminalView_Result
+TerminalView_RemoveDataSource	(TerminalViewRef		inView,
+								 TerminalScreenRef		inScreenDataSourceOrNull)
+{
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		if (false == stopMonitoringDataSource(viewPtr, inScreenDataSourceOrNull))
+		{
+			result = kTerminalView_ResultParameterError;
+		}
+		else
+		{
+			if (false == removeDataSource(viewPtr, inScreenDataSourceOrNull))
+			{
+				result = kTerminalView_ResultParameterError;
+			}
+			else
+			{
+				// success!
+				result = kTerminalView_ResultOK;
+			}
+		}
+	}
+	
+	return result;
+}// RemoveDataSource
 
 
 /*!
@@ -4353,8 +4459,8 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	}
 	
 	// retain the screen reference
-	this->screen.ref = inScreenDataSource;
-	Terminal_RetainScreen(this->screen.ref);
+	this->screen.ref = nullptr; // initially (asserted by addDataSource())
+	assert(addDataSource(this, inScreenDataSource));
 	
 	// miscellaneous settings
 	this->text.font.normalFont = nil; // set later
@@ -4572,25 +4678,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		HIViewSetVisible(this->encompassingHIView, true/* visible */);
 	}
 	
-	// ask to be notified of terminal bells
-	this->screen.bellHandler.setRef(ListenerModel_NewStandardListener(audioEvent, this->selfRef/* context */), true/* is retained */);
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeAudioEvent, this->screen.bellHandler.returnRef());
-	
-	// ask to be notified of video mode changes
-	this->screen.videoModeMonitor.setRef(ListenerModel_NewStandardListener(receiveVideoModeChange, this->selfRef/* context */), true/* is retained */);
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeVideoMode, this->screen.videoModeMonitor.returnRef());
-	
-	// ask to be notified of screen buffer content changes
-	this->screen.contentMonitor.setRef(ListenerModel_NewStandardListener(screenBufferChanged, this->selfRef/* context */), true/* is retained */);
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeTextEdited, this->screen.contentMonitor.returnRef());
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeScrollActivity, this->screen.contentMonitor.returnRef());
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeXTermColor, this->screen.contentMonitor.returnRef());
-	
-	// ask to be notified of cursor changes
-	this->screen.cursorMonitor.setRef(ListenerModel_NewStandardListener(screenCursorChanged, this->selfRef/* context */), true/* is retained */);
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeCursorLocation, this->screen.cursorMonitor.returnRef());
-	Terminal_StartMonitoring(inScreenDataSource, kTerminal_ChangeCursorState, this->screen.cursorMonitor.returnRef());
-	
 	// set up a callback to receive preference change notifications
 	this->screen.preferenceMonitor.setRef(ListenerModel_NewStandardListener(preferenceChangedForView, this->selfRef/* context */),
 											true/* is retained */);
@@ -4646,6 +4733,9 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 										&this->screen.refreshTimerRef);
 		assert_noerr(error);
 	}
+	
+	// now that everything is initialized, start watching for data changes
+	assert(startMonitoringDataSource(this, inScreenDataSource));
 }// My_TerminalView::initialize
 
 
@@ -4677,20 +4767,8 @@ My_TerminalView::
 		delete this->extendedColorsPtr;
 	}
 	
-	// stop listening for terminal bells
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeAudioEvent, this->screen.bellHandler.returnRef());
-	
-	// stop listening for video mode changes
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeVideoMode, this->screen.videoModeMonitor.returnRef());
-	
-	// stop listening for screen buffer content changes
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeTextEdited, this->screen.contentMonitor.returnRef());
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeScrollActivity, this->screen.contentMonitor.returnRef());
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeXTermColor, this->screen.contentMonitor.returnRef());
-	
-	// stop listening for cursor changes
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeCursorLocation, this->screen.cursorMonitor.returnRef());
-	Terminal_StopMonitoring(this->screen.ref, kTerminal_ChangeCursorState, this->screen.cursorMonitor.returnRef());
+	// stop watching for data changes
+	assert(stopMonitoringDataSource(this, nullptr/* specific screen or nullptr for all screens */));
 	
 	// stop receiving preference change notifications
 	Preferences_StopMonitoring(this->screen.preferenceMonitor.returnRef(), kPreferences_TagDontDimBackgroundScreens);
@@ -4715,8 +4793,47 @@ My_TerminalView::
 	Memory_DisposeRegion(&this->screen.refreshRegion);
 	ListenerModel_Dispose(&this->changeListenerModel);
 	
-	Terminal_ReleaseScreen(&this->screen.ref);
+	// release strong references to data sources
+	assert(removeDataSource(this, nullptr/* specific screen or nullptr for all screens */));
 }// My_TerminalView destructor
+
+
+/*!
+Specifies a terminal buffer whose data will be displayed
+by the terminal view and returns true only if successful.
+
+See also startMonitoringDataSource().
+
+IMPORTANT: Currently the implementation is limited to a
+single data source so this routine will fail if any
+other data source is already set.  A previous source can
+be removed with removeDataSource().
+
+(4.1)
+*/
+Boolean
+addDataSource	(My_TerminalViewPtr		inTerminalViewPtr,
+				 TerminalScreenRef		inScreenDataSource)
+{
+	Boolean		result = false;
+	
+	
+	// currently only one source is possible so the implementation
+	// is more straightforward (IMPORTANT: the steps below should
+	// be the inverse of the code in removeDataSource())
+	if (nullptr == inTerminalViewPtr->screen.ref)
+	{
+		TerminalScreenRef	screenRef = inScreenDataSource;
+		
+		
+		inTerminalViewPtr->screen.ref = screenRef;
+		Terminal_RetainScreen(screenRef);
+		
+		result = true;
+	}
+	
+	return result;
+}// addDataSource
 
 
 /*!
@@ -11711,6 +11828,42 @@ releaseRowIterator  (My_TerminalViewPtr		UNUSED_ARGUMENT(inTerminalViewPtr),
 
 
 /*!
+Removes a data source previously specified with addDataSource()
+(or all data sources if "nullptr" is given) and returns true
+only if all requested data source(s) were actually removed.
+
+(4.1)
+*/
+Boolean
+removeDataSource	(My_TerminalViewPtr		inTerminalViewPtr,
+					 TerminalScreenRef		inScreenDataSourceOrNull)
+{
+	Boolean		result = false;
+	
+	
+	// currently only one source is possible so the implementation
+	// is more straightforward (IMPORTANT: the steps below should
+	// be the inverse of the code in addDataSource())
+	if (inScreenDataSourceOrNull == inTerminalViewPtr->screen.ref)
+	{
+		// remove specified screen buffer reference (currently can only be one)
+		Terminal_ReleaseScreen(&(inTerminalViewPtr->screen.ref));
+		assert(nullptr == inTerminalViewPtr->screen.ref);
+		result = true;
+	}
+	else if (nullptr == inScreenDataSourceOrNull)
+	{
+		// remove all screen buffer references (currently can only be one)
+		Terminal_ReleaseScreen(&(inTerminalViewPtr->screen.ref));
+		assert(nullptr == inTerminalViewPtr->screen.ref);
+		result = true;
+	}
+	
+	return result;
+}// removeDataSource
+
+
+/*!
 Returns an approximation of how many characters are
 represented by this terminal view’s text area.
 
@@ -12823,6 +12976,112 @@ sortAnchors		(TerminalView_Cell&		inoutPoint1,
 		}
 	}
 }// sortAnchors
+
+
+/*!
+Starts monitoring a screen buffer for key state changes
+so that the view remains up-to-date.  Returns true only
+if successful.  The screen buffer must have previously
+been added to the view with addDataSource().
+
+See also stopMonitoringDataSource().
+
+(4.1)
+*/
+Boolean
+startMonitoringDataSource	(My_TerminalViewPtr		inTerminalViewPtr,
+							 TerminalScreenRef		inScreenDataSource)
+{
+	Boolean		result = false;
+	
+	
+	// currently only one source is possible so the implementation
+	// is more straightforward (IMPORTANT: the steps below should
+	// be the inverse of the code in stopMonitoringDataSource())
+	if (inScreenDataSource == inTerminalViewPtr->screen.ref)
+	{
+		TerminalScreenRef	screenRef = inScreenDataSource;
+		
+		
+		// ask to be notified of terminal bells
+		inTerminalViewPtr->screen.bellHandler.setRef(ListenerModel_NewStandardListener(audioEvent, inTerminalViewPtr->selfRef/* context */),
+														true/* is retained */);
+		Terminal_StartMonitoring(screenRef, kTerminal_ChangeAudioEvent, inTerminalViewPtr->screen.bellHandler.returnRef());
+		
+		// ask to be notified of video mode changes
+		inTerminalViewPtr->screen.videoModeMonitor.setRef(ListenerModel_NewStandardListener(receiveVideoModeChange, inTerminalViewPtr->selfRef/* context */),
+															true/* is retained */);
+		Terminal_StartMonitoring(screenRef, kTerminal_ChangeVideoMode, inTerminalViewPtr->screen.videoModeMonitor.returnRef());
+		
+		// ask to be notified of screen buffer content changes
+		inTerminalViewPtr->screen.contentMonitor.setRef(ListenerModel_NewStandardListener(screenBufferChanged, inTerminalViewPtr->selfRef/* context */),
+														true/* is retained */);
+		Terminal_StartMonitoring(screenRef, kTerminal_ChangeTextEdited, inTerminalViewPtr->screen.contentMonitor.returnRef());
+		Terminal_StartMonitoring(screenRef, kTerminal_ChangeScrollActivity, inTerminalViewPtr->screen.contentMonitor.returnRef());
+		Terminal_StartMonitoring(screenRef, kTerminal_ChangeXTermColor, inTerminalViewPtr->screen.contentMonitor.returnRef());
+		
+		// ask to be notified of cursor changes
+		inTerminalViewPtr->screen.cursorMonitor.setRef(ListenerModel_NewStandardListener(screenCursorChanged, inTerminalViewPtr->selfRef/* context */),
+														true/* is retained */);
+		Terminal_StartMonitoring(screenRef, kTerminal_ChangeCursorLocation, inTerminalViewPtr->screen.cursorMonitor.returnRef());
+		Terminal_StartMonitoring(screenRef, kTerminal_ChangeCursorState, inTerminalViewPtr->screen.cursorMonitor.returnRef());
+		
+		result = true;
+	}
+	
+	return result;
+}// startMonitoringDataSource
+
+
+/*!
+Stops monitoring a screen buffer for key state changes
+so the view will no longer reflect its content.  Returns
+true only if successful.
+
+See also startMonitoringDataSource().
+
+(4.1)
+*/
+Boolean
+stopMonitoringDataSource	(My_TerminalViewPtr		inTerminalViewPtr,
+							 TerminalScreenRef		inScreenDataSourceOrNull)
+{
+	TerminalScreenRef	screenRef = inTerminalViewPtr->screen.ref;
+	Boolean				result = false;
+	
+	
+	if (nullptr != inScreenDataSourceOrNull)
+	{
+		if (inScreenDataSourceOrNull != screenRef)
+		{
+			screenRef = nullptr;
+		}
+	}
+	
+	// IMPORTANT: the steps below should be the inverse of the
+	// code in startMonitoringDataSource()
+	if (nullptr != screenRef)
+	{
+		// stop listening for terminal bells
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeAudioEvent, inTerminalViewPtr->screen.bellHandler.returnRef());
+		
+		// stop listening for video mode changes
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeVideoMode, inTerminalViewPtr->screen.videoModeMonitor.returnRef());
+		
+		// stop listening for screen buffer content changes
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeTextEdited, inTerminalViewPtr->screen.contentMonitor.returnRef());
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeScrollActivity, inTerminalViewPtr->screen.contentMonitor.returnRef());
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeXTermColor, inTerminalViewPtr->screen.contentMonitor.returnRef());
+		
+		// stop listening for cursor changes
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeCursorLocation, inTerminalViewPtr->screen.cursorMonitor.returnRef());
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeCursorState, inTerminalViewPtr->screen.cursorMonitor.returnRef());
+		
+		result = true;
+	}
+	
+	return result;
+}// stopMonitoringDataSource
 
 
 /*!
@@ -13985,6 +14244,27 @@ setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
 {
 	_internalViewPtr = aViewPtr;
 }// setInternalViewPtr:
+
+
+/*!
+Returns any Terminal View that is associated with this NSView
+subclass, or nullptr if there is none.
+
+(4.1)
+*/
+- (TerminalViewRef)
+terminalViewRef
+{
+	TerminalViewRef		result = nullptr;
+	My_TerminalViewPtr	ptr = [self internalViewPtr];
+	
+	
+	if (nullptr != ptr)
+	{
+		result = ptr->selfRef;
+	}
+	return result;
+}// terminalViewRef
 
 
 #pragma mark Actions

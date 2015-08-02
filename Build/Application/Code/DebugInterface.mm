@@ -48,6 +48,7 @@
 #import "SessionFactory.h"
 #import "Terminal.h"
 #import "TerminalToolbar.objc++.h"
+#import "TerminalView.h"
 #import "TerminalWindow.h"
 
 
@@ -266,6 +267,45 @@ launchNewCallPythonClient:(id)	sender
 	}
 	// TEMPORARY (INCOMPLETE)
 }// launchNewCallPythonClient:
+
+
+/*!
+Changes the data source of the test Cocoa terminal window so
+that it displays the same terminal screen as the active
+session.
+
+(4.1)
+*/
+- (IBAction)
+setTestTerminalToActiveSessionData:(id)		sender
+{
+#pragma unused(sender)
+	SessionRef					activeSession = SessionFactory_ReturnUserRecentSession();
+	TerminalWindowRef			activeTerminalWindow = Session_ReturnActiveTerminalWindow(activeSession);
+	TerminalScreenRef			activeScreen = TerminalWindow_ReturnScreenWithFocus(activeTerminalWindow);
+	TerminalWindow_Controller*	terminalWC = [TerminalWindow_Controller sharedTerminalWindowController];
+	TerminalViewRef				testView = [terminalWC.testTerminalContentView terminalViewRef];
+	TerminalView_Result			viewResult = kTerminalView_ResultOK;
+	
+	
+	if ((nullptr == activeScreen) || (nullptr == testView))
+	{
+		Console_Warning(Console_WriteLine, "test view and/or active screen could not be found");
+	}
+	else
+	{
+		viewResult = TerminalView_RemoveDataSource(testView, nullptr/* specific screen or "nullptr" for all screens */);
+		if (kTerminalView_ResultOK != viewResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to remove Cocoa terminal view’s previous data source, error", viewResult);
+		}
+		viewResult = TerminalView_AddDataSource(testView, activeScreen);
+		if (kTerminalView_ResultOK != viewResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to set new data source for Cocoa terminal view, error", viewResult);
+		}
+	}
+}// setTestTerminalToActiveSessionData:
 
 
 /*!

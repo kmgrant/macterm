@@ -66,6 +66,8 @@ changes to an interface declared in a ".mm" file.
 	- (IBAction)
 	launchNewCallPythonClient:(id)_;
 	- (IBAction)
+	setTestTerminalToActiveSessionData:(id)_;
+	- (IBAction)
 	showTestPreferencesWindow:(id)_;
 	- (IBAction)
 	showTestTerminalToolbar:(id)_;
