@@ -5697,17 +5697,61 @@ dictionaryWithTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	// set font attributes
 	{
-		NSFont*		sourceFont = inTerminalViewPtr->text.font.normalFont;
+		NSFontManager*	fontManager = [NSFontManager sharedFontManager];
+		NSFont*			originalFont = inTerminalViewPtr->text.font.normalFont;
+		NSFont*			sourceFont = originalFont;
 		
 		
-		if (STYLE_BOLD(inAttributes) && (nil != inTerminalViewPtr->text.font.boldFont))
+		if ((STYLE_BOLD(inAttributes) || STYLE_SEARCH_RESULT(inAttributes)) &&
+			(nil != inTerminalViewPtr->text.font.boldFont))
 		{
 			sourceFont = inTerminalViewPtr->text.font.boldFont;
+		}
+		
+		if (STYLE_ITALIC(inAttributes))
+		{
+			sourceFont = [fontManager convertFont:sourceFont toHaveTrait:NSItalicFontMask];
+			if ((nil == sourceFont) ||
+				(NSItalicFontMask != ([fontManager traitsOfFont:sourceFont] & NSItalicFontMask)))
+			{
+				// if no dedicated italic font is available, apply a transform to make
+				// the current font appear slanted (note: this is what WebKit does)
+				NSAffineTransform*			fontTransform = [NSAffineTransform transform];
+				NSAffineTransform*			italicTransform = [NSAffineTransform transform];
+				NSAffineTransformStruct		slantTransformData;
+				
+				
+				std::memset(&slantTransformData, 0, sizeof(slantTransformData));
+				slantTransformData.m11 = 1.0;
+				slantTransformData.m12 = 0.0;
+				slantTransformData.m21 = -tanf(-14.0/* rotation in degrees */ * acosf(0) / 90.0);
+				slantTransformData.m22 = 1.0;
+				slantTransformData.tX  = 0.0;
+				slantTransformData.tY  = 0.0;
+				[italicTransform setTransformStruct:slantTransformData];
+				
+				[fontTransform scaleBy:[originalFont pointSize]];
+				[fontTransform appendTransform:italicTransform];
+				
+				sourceFont = [NSFont fontWithDescriptor:[originalFont fontDescriptor] textTransform:fontTransform];
+			}
+		}
+		
+		// in case the font is somehow not resolved at all after
+		// attempts to transform it, bail and use the original
+		if (nil == sourceFont)
+		{
+			sourceFont = originalFont;
 		}
 		
 		if (nil != sourceFont)
 		{
 			[result setObject:sourceFont forKey:NSFontAttributeName];
+		}
+		
+		if (STYLE_UNDERLINE(inAttributes) || STYLE_SEARCH_RESULT(inAttributes))
+		{
+			[result setObject:@(1) forKey:NSUnderlineStyleAttributeName];
 		}
 	}
 	
@@ -12427,6 +12471,9 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 {
 	if (inTerminalViewPtr->isCocoa)
 	{
+		NSFontManager*		fontManager = [NSFontManager sharedFontManager];
+		
+		
 		// release any previous fonts
 		if (nil != inTerminalViewPtr->text.font.normalFont)
 		{
@@ -12443,23 +12490,25 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 		[inTerminalViewPtr->text.font.normalFont retain];
 		
 		// find a font for boldface text
-		inTerminalViewPtr->text.font.boldFont =
-			[[NSFontManager sharedFontManager] fontWithFamily:[inTerminalViewPtr->text.font.normalFont familyName]
-																traits:(NSBoldFontMask | NSUnitalicFontMask)
-																weight:0/* as documented, ignored when bold */
-																size:inFontSizeOrZero];
-		if (nil == inTerminalViewPtr->text.font.boldFont)
+		inTerminalViewPtr->text.font.boldFont = [fontManager convertFont:inTerminalViewPtr->text.font.normalFont
+																			toHaveTrait:NSBoldFontMask];
+		if ((nil == inTerminalViewPtr->text.font.boldFont) ||
+			(NSBoldFontMask != ([fontManager traitsOfFont:inTerminalViewPtr->text.font.boldFont] & NSBoldFontMask)))
 		{
 			// if no dedicated bold font is available, try a higher-weight version of the original
 			inTerminalViewPtr->text.font.boldFont =
-				[[NSFontManager sharedFontManager] fontWithFamily:[inTerminalViewPtr->text.font.normalFont familyName]
-																	traits:0 weight:9/* as documented, for bold */
-																	size:inFontSizeOrZero];
+				[fontManager fontWithFamily:[inTerminalViewPtr->text.font.normalFont familyName]
+											traits:0 weight:9/* as documented, for bold */
+											size:inFontSizeOrZero];
 		}
+		
+		// in case the font is somehow not resolved at all after
+		// attempts to transform it, bail and use the original
 		if (nil == inTerminalViewPtr->text.font.boldFont)
 		{
 			inTerminalViewPtr->text.font.boldFont = inTerminalViewPtr->text.font.normalFont;
 		}
+		
 		[inTerminalViewPtr->text.font.boldFont retain];
 	}
 	
