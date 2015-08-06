@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20150806',
     '20150724',
     '20150723',
     '20150710',
@@ -521,6 +522,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20150806': [
+        'Fixed a possible crash when using "Find Next" or "Find Previous".',
+    ],
     '20150724': [
         'Low-level preference "no-animations" now disables even more effects, including: animations for certain sheets, modal alert messages, duplicated session windows, and search results.',
         'Menu section titles now use a Yosemite-style font.',

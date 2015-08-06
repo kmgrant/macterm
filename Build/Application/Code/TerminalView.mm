@@ -1385,10 +1385,7 @@ TerminalView_FindVirtualRange	(TerminalViewRef				inView,
 		
 		viewPtr->text.searchResults.push_back(inSelection);
 		assert(false == viewPtr->text.searchResults.empty());
-		if (viewPtr->text.searchResults.end() == viewPtr->text.toCurrentSearchResult)
-		{
-			viewPtr->text.toCurrentSearchResult = viewPtr->text.searchResults.begin();
-		}
+		viewPtr->text.toCurrentSearchResult = viewPtr->text.searchResults.begin();
 		highlightVirtualRange(viewPtr, viewPtr->text.searchResults.back(),
 								kTerminalTextAttributeSearchResult,
 								true/* is highlighted */, true/* redraw */);
