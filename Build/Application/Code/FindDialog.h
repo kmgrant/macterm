@@ -59,6 +59,7 @@ enum
 	kFindDialog_OptionsAllOff				= 0,
 	kFindDialog_OptionCaseInsensitive		= (1 << 0),
 	kFindDialog_OptionAllOpenTerminals		= (1 << 1),
+	kFindDialog_OptionNotFinal				= (1 << 2), // internal option
 	kFindDialog_OptionsDefault				= kFindDialog_OptionCaseInsensitive
 };
 
@@ -142,7 +143,7 @@ changes to an interface declared in a ".mm" file.
 	- (NSSearchField*)
 	searchField;
 	- (void)
-	updateUserInterfaceWithMatches:(unsigned long)_
+	updateUserInterfaceWithMatches:(UInt32)_
 	didSearch:(BOOL)_;
 
 // actions
@@ -223,6 +224,12 @@ FindDialog_Options
 // ONLY VALID TO CALL FROM YOUR "FindDialog_CloseNotifyProcPtr"
 TerminalWindowRef
 	FindDialog_ReturnTerminalWindow		(FindDialog_Ref					inDialog);
+
+UInt32
+	FindDialog_SearchWithoutDialog		(CFStringRef					inQueryBaseOrNullToClear,
+										 TerminalWindowRef				inStartTerminalWindow,
+										 FindDialog_Options				inFlags,
+										 Boolean*						outDidSearchOrNull = nullptr);
 
 void
 	FindDialog_StandardCloseNotifyProc	(FindDialog_Ref					inDialogThatClosed);

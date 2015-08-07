@@ -58,6 +58,7 @@
 // application includes
 #import "Commands.h"
 #import "ConstantsRegistry.h"
+#import "FindDialog.h"
 #import "HelpSystem.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
@@ -101,7 +102,7 @@ Manages the Find user interface.
 	clearSearchHighlightingInContext:(FindDialog_SearchContext)_;
 	- (void)
 	display;
-	- (unsigned long)
+	- (UInt32)
 	initiateSearchFor:(NSString*)_
 	ignoringCase:(BOOL)_
 	allTerminals:(BOOL)_
@@ -280,6 +281,193 @@ FindDialog_ReturnTerminalWindow		(FindDialog_Ref		inDialog)
 
 
 /*!
+Performs a highlight-all-results search as if the user had
+initiated a search with the Find interface, except the
+search is done programmatically.
+
+If the query string is nullptr, no search is performed and
+highlighting is cleared in the given context (one window or
+all windows).
+
+Returns the number of matches.
+
+(4.1)
+*/
+UInt32
+FindDialog_SearchWithoutDialog		(CFStringRef					inQueryBaseOrNullToClear,
+									 TerminalWindowRef				inStartTerminalWindow,
+									 FindDialog_Options				inFlags,
+									 Boolean*						outDidSearchOrNull)
+{
+	UInt32		result = 0;
+	
+	
+	// remove highlighting from any previous searches
+	if (inFlags & kFindDialog_OptionAllOpenTerminals)
+	{
+		SessionFactory_TerminalWindowList const&	searchedWindows = SessionFactory_ReturnTerminalWindowList();
+		
+		
+		for (auto terminalWindowRef : searchedWindows)
+		{
+			if (TerminalWindow_IsValid(terminalWindowRef))
+			{
+				TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindowRef);
+				
+				
+				TerminalView_FindNothing(view);
+			}
+		}
+	}
+	else
+	{
+		if (TerminalWindow_IsValid(inStartTerminalWindow))
+		{
+			TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(inStartTerminalWindow);
+			
+			
+			TerminalView_FindNothing(view);
+		}
+	}
+	
+	if ((nullptr == inQueryBaseOrNullToClear) ||
+		(0 == CFStringGetLength(inQueryBaseOrNullToClear)))
+	{
+		if (nullptr != outDidSearchOrNull)
+		{
+			*outDidSearchOrNull = false;
+		}
+	}
+	else
+	{
+		Boolean										queryOK = true;
+		CFIndex										searchQueryLength = CFStringGetLength(inQueryBaseOrNullToClear);
+		NSCharacterSet*								whitespaceSet = [NSCharacterSet whitespaceCharacterSet];
+		NSString*									asNSString = BRIDGE_CAST(inQueryBaseOrNullToClear, NSString*);
+		NSString*									trimmedString = [asNSString stringByTrimmingCharactersInSet:whitespaceSet];
+		SessionFactory_TerminalWindowList			singleWindowList;
+		SessionFactory_TerminalWindowList const*	searchedWindows = &singleWindowList;
+		
+		
+		if (nullptr != outDidSearchOrNull)
+		{
+			*outDidSearchOrNull = true; // initially...
+		}
+		
+		if (inFlags & kFindDialog_OptionNotFinal)
+		{
+			queryOK = false; // initially...
+			if (STATIC_CAST(searchQueryLength, UInt32) >= 2/* arbitrary */)
+			{
+				//
+				// if a search string is not final then it is being entered
+				// interactively by the user; use this opportunity to avoid
+				// expensive dynamic searches
+				//
+				
+				// (no heuristics defined yet)
+				queryOK = true;
+			}
+		}
+		
+		// NEVER search for strings that contain only whitespace, as this
+		// is a sure way to bring the search engine to its knees and it
+		// has no real value to the user
+		if (0 == [trimmedString length])
+		{
+			queryOK = false;
+		}
+		
+		if (false == queryOK)
+		{
+			// cannot find a query string; abort the search
+			singleWindowList.clear();
+			if (nullptr != outDidSearchOrNull)
+			{
+				*outDidSearchOrNull = false;
+			}
+		}
+		else if (inFlags & kFindDialog_OptionAllOpenTerminals)
+		{
+			// search more than one terminal and highlight results in all!
+			searchedWindows = &(SessionFactory_ReturnTerminalWindowList());
+		}
+		else
+		{
+			// search only the active session
+			singleWindowList.push_back(inStartTerminalWindow);
+		}
+		
+		for (auto terminalWindowRef : *searchedWindows)
+		{
+			TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(terminalWindowRef);
+			TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(terminalWindowRef);
+			My_TerminalRangeList	searchResults;
+			Terminal_SearchFlags	flags = 0;
+			Terminal_Result			searchStatus = kTerminal_ResultOK;
+			
+			
+			// initiate synchronous (should be asynchronous!) search
+			if ((nullptr != inQueryBaseOrNullToClear) && (searchQueryLength > 0))
+			{
+				// configure search
+				if (0 == (inFlags & kFindDialog_OptionCaseInsensitive))
+				{
+					flags |= kTerminal_SearchFlagsCaseSensitive;
+				}
+				
+				// if the string ends with an apparent new-line character and this
+				// can never match (due to the way lines are stored), magically
+				// interpret it as a restriction that matches can only occur at
+				// the end of lines
+				{
+					unichar		tailCharacter = [asNSString characterAtIndex:([asNSString length] - 1)];
+					
+					
+					if (('\n' == tailCharacter) || ('\r' == tailCharacter))
+					{
+						// interpret as “matches only at end of line”; for
+						// convenience, Terminal_Search() implicitly ignores
+						// trailing new-line characters in this mode so that
+						// the query string does not need to strip them
+						flags |= kTerminal_SearchFlagsMatchOnlyAtLineEnd;
+					}
+				}
+				
+				// initiate synchronous (should it be asynchronous?) search
+				searchStatus = Terminal_Search(screen, inQueryBaseOrNullToClear, flags, searchResults);
+				if (kTerminal_ResultOK == searchStatus)
+				{
+					if (false == searchResults.empty())
+					{
+						// the count is global (if multi-terminal, reflects results from all terminals)
+						result += STATIC_CAST(searchResults.size(), UInt32);
+						
+						// highlight search results
+						for (auto rangeDesc : searchResults)
+						{
+							TerminalView_CellRange		highlightRange;
+							TerminalView_Result			viewResult = kTerminalView_ResultOK;
+							
+							
+							// translate this result range into cell anchors for highlighting
+							viewResult = TerminalView_TranslateTerminalScreenRange(view, rangeDesc, highlightRange);
+							if (kTerminalView_ResultOK == viewResult)
+							{
+								TerminalView_FindVirtualRange(view, highlightRange);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	return result;
+}// SearchWithoutDialog
+
+
+/*!
 The default handler for closing a search dialog.
 
 (3.0)
@@ -374,37 +562,15 @@ longer highlighted.
 - (void)
 clearSearchHighlightingInContext:(FindDialog_SearchContext)		aContext
 {
-	if (kFindDialog_SearchContextLocal == aContext)
+	FindDialog_Options		flags = kFindDialog_OptionsAllOff;
+	
+	
+	if (kFindDialog_SearchContextGlobal == aContext)
 	{
-		TerminalWindowRef		targetWindow = [self terminalWindow];
-		
-		
-		if (TerminalWindow_IsValid(targetWindow))
-		{
-			TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(targetWindow);
-			
-			
-			// remove highlighting from any previous searches
-			TerminalView_FindNothing(view);
-		}
+		flags |= kFindDialog_OptionAllOpenTerminals;
 	}
-	else
-	{
-		SessionFactory_TerminalWindowList const&	searchedWindows = SessionFactory_ReturnTerminalWindowList();
-		
-		
-		for (auto terminalWindowRef : searchedWindows)
-		{
-			if (TerminalWindow_IsValid(terminalWindowRef))
-			{
-				TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindowRef);
-				
-				
-				// remove highlighting from any previous searches
-				TerminalView_FindNothing(view);
-			}
-		}
-	}
+	
+	UNUSED_RETURN(UInt32)FindDialog_SearchWithoutDialog(nullptr/* query */, self.terminalWindow, flags);
 }// clearSearchHighlightingInContext:
 
 
@@ -448,7 +614,7 @@ YES if the search actually occurred.
 
 (4.0)
 */
-- (unsigned long)
+- (UInt32)
 initiateSearchFor:(NSString*)	queryString
 ignoringCase:(BOOL)				ignoreCase
 allTerminals:(BOOL)				allTerminals
@@ -460,7 +626,7 @@ didSearch:(BOOL*)				outDidSearch
 	FindDialog_SearchContext	searchContext = (YES == allTerminals)
 												? kFindDialog_SearchContextGlobal
 												: kFindDialog_SearchContextLocal;
-	unsigned long				result = 0;
+	UInt32						result = 0;
 	
 	
 	*outDidSearch = YES; // initially...
@@ -474,99 +640,28 @@ didSearch:(BOOL*)				outDidSearch
 	}
 	else
 	{
-		Boolean										queryOK = true;
-		SessionFactory_TerminalWindowList			singleWindowList;
-		SessionFactory_TerminalWindowList const*	searchedWindows = &singleWindowList;
+		FindDialog_Options		searchFlags = 0;
+		Boolean					didSearch = false;
 		
+		
+		if (ignoreCase)
+		{
+			searchFlags |= kFindDialog_OptionCaseInsensitive;
+		}
 		
 		if (isNotFinal)
 		{
-			queryOK = false; // initially...
-			if (STATIC_CAST(searchQueryLength, UInt32) >= 2/* arbitrary */)
-			{
-				CFRetainRelease		searchQueryMutableCopy(CFStringCreateMutableCopy(kCFAllocatorDefault, searchQueryLength,
-																						searchQueryCFString),
-															true/* is retained */);
-				
-				
-				// note that the mutable copy is ONLY used for these heuristics,
-				// and the search itself is conducted with the original query only
-				if (searchQueryMutableCopy.exists())
-				{
-					// do not dynamically search for long strings of only whitespace;
-					// they will match almost the entire terminal buffer, and will
-					// surely bring the CPU to its knees
-					CFStringTrimWhitespace(searchQueryMutableCopy.returnCFMutableStringRef());
-					queryOK = (CFStringGetLength(searchQueryMutableCopy.returnCFStringRef()) > 0);
-				}
-			}
+			searchFlags |= kFindDialog_OptionNotFinal;
 		}
 		
-		if (false == queryOK)
+		if (allTerminals)
 		{
-			// cannot find a query string; abort the search
-			singleWindowList.clear();
-			*outDidSearch = NO;
-		}
-		else if (allTerminals)
-		{
-			// search more than one terminal and highlight results in all!
-			searchedWindows = &(SessionFactory_ReturnTerminalWindowList());
-		}
-		else
-		{
-			// search only the active session
-			singleWindowList.push_back([self terminalWindow]);
+			searchFlags |= kFindDialog_OptionAllOpenTerminals;
 		}
 		
-		// remove highlighting from any previous searches
-		[self clearSearchHighlightingInContext:searchContext];
-		
-		for (auto terminalWindowRef : *searchedWindows)
-		{
-			TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(terminalWindowRef);
-			TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(terminalWindowRef);
-			My_TerminalRangeList	searchResults;
-			Terminal_SearchFlags	flags = 0;
-			Terminal_Result			searchStatus = kTerminal_ResultOK;
-			
-			
-			// initiate synchronous (should be asynchronous!) search
-			if ((nullptr != searchQueryCFString) && (searchQueryLength > 0))
-			{
-				// configure search
-				unless (ignoreCase)
-				{
-					flags |= kTerminal_SearchFlagsCaseSensitive;
-				}
-				
-				// initiate synchronous (should it be asynchronous?) search
-				searchStatus = Terminal_Search(screen, searchQueryCFString, flags, searchResults);
-				if (kTerminal_ResultOK == searchStatus)
-				{
-					if (false == searchResults.empty())
-					{
-						// the count is global (if multi-terminal, reflects results from all terminals)
-						result += STATIC_CAST(searchResults.size(), unsigned long);
-						
-						// highlight search results
-						for (auto rangeDesc : searchResults)
-						{
-							TerminalView_CellRange		highlightRange;
-							TerminalView_Result			viewResult = kTerminalView_ResultOK;
-							
-							
-							// translate this result range into cell anchors for highlighting
-							viewResult = TerminalView_TranslateTerminalScreenRange(view, rangeDesc, highlightRange);
-							if (kTerminalView_ResultOK == viewResult)
-							{
-								TerminalView_FindVirtualRange(view, highlightRange);
-							}
-						}
-					}
-				}
-			}
-		}
+		result = FindDialog_SearchWithoutDialog(BRIDGE_CAST(queryString, CFStringRef),
+												[self terminalWindow], searchFlags, &didSearch);
+		*outDidSearch = (true == didSearch);
 	}
 	
 	return result;
@@ -698,11 +793,11 @@ didSearchInManagedView:(NSView*)		aManagedView
 withQuery:(NSString*)					searchText
 {
 #pragma unused(aManagedView)
-	BOOL			didSearch = NO;
-	unsigned long	matchCount = [self initiateSearchFor:searchText
-															ignoringCase:aViewMgr.caseInsensitiveSearch
-															allTerminals:aViewMgr.multiTerminalSearch
-															notFinal:YES didSearch:&didSearch];
+	BOOL		didSearch = NO;
+	UInt32		matchCount = [self initiateSearchFor:searchText
+														ignoringCase:aViewMgr.caseInsensitiveSearch
+														allTerminals:aViewMgr.multiTerminalSearch
+														notFinal:YES didSearch:&didSearch];
 	
 	
 	[aViewMgr updateUserInterfaceWithMatches:matchCount didSearch:didSearch];
@@ -753,8 +848,8 @@ finalOptions:(FindDialog_Options)		options
 		BOOL		didSearch = NO;
 		
 		
-		UNUSED_RETURN(unsigned long)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:multiTerminal
-															notFinal:NO didSearch:&didSearch];
+		UNUSED_RETURN(UInt32)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:multiTerminal
+														notFinal:NO didSearch:&didSearch];
 		
 		// determine if animation should occur
 		unless (kPreferences_ResultOK ==
@@ -780,8 +875,8 @@ finalOptions:(FindDialog_Options)		options
 			
 			
 			searchText = STATIC_CAST([recentSearchesArray objectAtIndex:0], NSString*);
-			UNUSED_RETURN(unsigned long)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:NO
-																notFinal:NO didSearch:&didSearch];
+			UNUSED_RETURN(UInt32)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:NO
+															notFinal:NO didSearch:&didSearch];
 		}
 		else
 		{
@@ -1099,8 +1194,8 @@ similar methods; this single call will clean up the UI.
 (4.0)
 */
 - (void)
-updateUserInterfaceWithMatches:(unsigned long)	matchCount
-didSearch:(BOOL)								didSearch
+updateUserInterfaceWithMatches:(UInt32)		matchCount
+didSearch:(BOOL)							didSearch
 {
 	UIStrings_Result	stringResult = kUIStrings_ResultOK;
 	CFStringRef			statusCFString = nullptr;
@@ -1132,7 +1227,7 @@ didSearch:(BOOL)								didSearch
 		if (stringResult.ok())
 		{
 			statusCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */, templateCFString,
-														matchCount);
+														STATIC_CAST(matchCount, unsigned long));
 			releaseStatusString = YES;
 			CFRelease(templateCFString), templateCFString = nullptr;
 		}

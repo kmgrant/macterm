@@ -1808,6 +1808,7 @@ void						setCursorVisible						(My_ScreenBufferPtr, Boolean);
 void						setScrollbackSize						(My_ScreenBufferPtr, UInt32);
 Terminal_Result				setVisibleColumnCount					(My_ScreenBufferPtr, UInt16);
 Terminal_Result				setVisibleRowCount						(My_ScreenBufferPtr, UInt16);
+CFStringRef					stringByStrippingEndWhitespace			(CFStringRef);
 // IMPORTANT: Attribute bit manipulation is fully described in "TerminalTextAttributes.typedef.h".
 //            Changes must be kept consistent everywhere.  See below, for usage.
 inline TerminalTextAttributes	styleOfVTParameter					(UInt8	inPs)
@@ -4626,6 +4627,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 		typedef std::vector< Terminal_RangeDescription >	RangeDescriptionVector;
 		typedef std::vector< RangeDescriptionVector >		RangeDescriptionVectorList;
 		typedef std::vector< pthread_t >					ThreadVector;
+		CFStringRef					actualQuery = inQuery; // usually the same but could change below
 		CFOptionFlags				searchFlags = 0;
 		pthread_attr_t				threadAttributes;
 		pthread_t					threadList[] =
@@ -4654,6 +4656,22 @@ Terminal_Search		(TerminalScreenRef							inRef,
 		// translate given flags to Core Foundation String search flags
 		if (0 == (inFlags & kTerminal_SearchFlagsCaseSensitive)) searchFlags |= kCFCompareCaseInsensitive;
 		if (inFlags & kTerminal_SearchFlagsSearchBackwards) searchFlags |= kCFCompareBackwards;
+		if (inFlags & kTerminal_SearchFlagsMatchOnlyAtLineEnd)
+		{
+			NSCharacterSet*		newlineSet = [NSCharacterSet characterSetWithCharactersInString:@"\n\r\0"];
+			NSString*			asNSString = BRIDGE_CAST(actualQuery, NSString*);
+			
+			
+			searchFlags |= (kCFCompareAnchored | kCFCompareBackwards);
+			
+			// also strip any new-lines that may be at the end of the query string
+			// (technically this call strips the characters from ANYWHERE in the
+			// query but realistically they would only appear at the end and this
+			// is simpler than manually creating a copy of the string and stripping
+			// only ending characters that match)
+			actualQuery = BRIDGE_CAST([asNSString stringByTrimmingCharactersInSet:newlineSet], CFStringRef);
+			//NSLog(@"actual query changed to “%@”", (NSString*)actualQuery); // debug
+		}
 		
 		threadResult = pthread_attr_init(&threadAttributes);
 		if (-1 == threadResult)
@@ -4694,7 +4712,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 			threadContextPtr = new My_SearchThreadContext; // contains C++ classes, must use "new"
 			threadContextPtr->screenBufferPtr = dataPtr;
 			threadContextPtr->matchesVectorPtr = matchVectorsList[0];
-			threadContextPtr->queryCFString = inQuery;
+			threadContextPtr->queryCFString = actualQuery;
 			threadContextPtr->searchFlags = searchFlags;
 			threadContextPtr->threadNumber = 0;
 			threadContextPtr->rangeStart = dataPtr->screenBuffer.begin();
@@ -4746,7 +4764,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 					threadContextPtr = new My_SearchThreadContext; // contains C++ classes, must use "new"
 					threadContextPtr->screenBufferPtr = dataPtr;
 					threadContextPtr->matchesVectorPtr = matchVectorsList[i];
-					threadContextPtr->queryCFString = inQuery;
+					threadContextPtr->queryCFString = actualQuery;
 					threadContextPtr->searchFlags = searchFlags;
 					threadContextPtr->threadNumber = i;
 					threadContextPtr->rangeStart = dataPtr->scrollbackBuffer.begin();
@@ -17079,6 +17097,46 @@ setVisibleRowCount	(My_ScreenBufferPtr		inPtr,
 
 
 /*!
+Returns an autoreleased string that is a substring of the
+given string, keeping all leading whitespace but stopping
+before all trailing whitespace.
+
+This is useful when searching, for example, as there is no
+benefit to scanning beyond the text portion of a line.
+
+TEMPORARY:	Could move this to String Utilities module but
+			that file is pure C++ right now.
+
+(4.1)
+*/
+CFStringRef
+stringByStrippingEndWhitespace		(CFStringRef	inSourceString)
+{
+	CFStringRef		result = inSourceString;
+	
+	
+	if (nullptr != inSourceString)
+	{
+		CFIndex const		kStringLength = CFStringGetLength(inSourceString);
+		NSCharacterSet*		whitespaceSet = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+		NSString*			asNSString = BRIDGE_CAST(inSourceString, NSString*);
+		NSInteger			i = 0;
+		
+		
+		for (i = (kStringLength - 1);
+				((i >= 0) && [whitespaceSet characterIsMember:[asNSString characterAtIndex:i]]); --i)
+		{
+			// empty loop
+		}
+		
+		result = BRIDGE_CAST([asNSString substringToIndex:(i + 1)], CFStringRef);
+	}
+	
+	return result;
+}// stringByStrippingEndWhitespace
+
+
+/*!
 Removes all tab stops.  See also tabStopInitialize(),
 which sets tabs to reasonable default values.
 
@@ -17198,7 +17256,7 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 		// that begin at the end of one line and continue at the start of
 		// the next, but that is a known limitation right now (TEMPORARY)
 		My_ScreenBufferLine const&	kLine = *toLine;
-		CFStringRef const			kCFStringToSearch = kLine.textCFString.returnCFStringRef();
+		CFStringRef const			kCFStringToSearch = stringByStrippingEndWhitespace(kLine.textCFString.returnCFStringRef());
 		CFRetainRelease				resultsArray(CFStringCreateArrayWithFindResults
 													(kCFAllocatorDefault, kCFStringToSearch, contextPtr->queryCFString,
 														CFRangeMake(0, CFStringGetLength(kCFStringToSearch)),
