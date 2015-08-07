@@ -1350,7 +1350,9 @@ saveKeyTypeAndCharacterPreferences	(Preferences_ContextRef		inoutSettings,
 				}
 				else
 				{
-					Console_Warning(Console_WriteLine, "ordinary character requested for macro, but no character was entered");
+					// do not warn about this case because right now there is
+					// no other way to simply say “macro wants no key mapping”
+					//Console_Warning(Console_WriteLine, "ordinary character requested for macro but no character was entered");
 				}
 				CFRelease(ordinaryCharCFString), ordinaryCharCFString = nullptr;
 			}
@@ -1393,7 +1395,8 @@ setAction		(UInt32		inSetMacroActionCommandID)
 	
 	viewWrap = HIViewWrap(idMyPopUpMenuMacroAction, kOwningWindow);
 	UNUSED_RETURN(OSStatus)DialogUtilities_SetPopUpItemByCommand(viewWrap, inSetMacroActionCommandID);
-	if (inSetMacroActionCommandID != kCommandSetMacroActionEnterText)
+	if ((inSetMacroActionCommandID != kCommandSetMacroActionEnterTextWithSub) &&
+		(inSetMacroActionCommandID != kCommandSetMacroActionFindTextWithSub))
 	{
 		UNUSED_RETURN(OSStatus)DeactivateControl(HIViewWrap(idMyButtonInsertControlKey, kOwningWindow));
 	}
@@ -2084,8 +2087,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				}
 				break;
 			
-			case kCommandSetMacroActionEnterText:
+			case kCommandSetMacroActionEnterTextWithSub:
 			case kCommandSetMacroActionEnterTextVerbatim:
+			case kCommandSetMacroActionFindTextWithSub:
+			case kCommandSetMacroActionFindTextVerbatim:
 			case kCommandSetMacroActionOpenURL:
 			case kCommandSetMacroActionNewWindowCommand:
 			case kCommandSetMacroActionSelectWindow:

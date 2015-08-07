@@ -60,6 +60,7 @@
 
 // application includes
 #import "ConstantsRegistry.h"
+#import "FindDialog.h"
 #import "MenuBar.h"
 #import "Network.h"
 #import "Preferences.h"
@@ -77,11 +78,12 @@
 #pragma mark Internal Method Prototypes
 namespace {
 
-void						macroSetChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-void						preferenceChanged		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-Preferences_ContextRef		returnDefaultMacroSet	(Boolean);
-NSMenu*						returnMacrosMenu		();
-unichar						virtualKeyToUnicode		(UInt16);
+void						macroSetChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+Preferences_ContextRef		returnDefaultMacroSet				(Boolean);
+NSMenu*						returnMacrosMenu					();
+CFStringRef					returnStringCopyWithSubstitutions	(CFStringRef, SessionRef);
+unichar						virtualKeyToUnicode					(UInt16);
 
 } // anonymous namespace
 
@@ -157,7 +159,9 @@ MacroManager_AddContextualMenuGroup		(NSMenu*					inoutContextualMenu,
 			prefsResult = Preferences_ContextGetData
 							(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i),
 								sizeof(actionType), &actionType, false/* search defaults too */);
-			if ((kPreferences_ResultOK == prefsResult) && (kMacroManager_ActionSendTextProcessingEscapes == actionType))
+			if ((kPreferences_ResultOK == prefsResult) &&
+				((kMacroManager_ActionSendTextProcessingEscapes == actionType) ||
+					(kMacroManager_ActionFindTextProcessingEscapes == actionType)))
 			{
 				// retrieve contents
 				prefsResult = Preferences_ContextGetData
@@ -468,7 +472,6 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		CFStringRef				actionCFString = nullptr;
-		Session_EventKeys		sessionEventKeys = Session_ReturnEventKeys(session);
 		MacroManager_Action		actionPerformed = kMacroManager_ActionSendTextProcessingEscapes;
 		
 		
@@ -495,365 +498,46 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 					result = kMacroManager_ResultOK;
 					break;
 				
+				case kMacroManager_ActionFindTextVerbatim:
+					// find string as-is without performing substitutions
+					UNUSED_RETURN(NSUInteger)FindDialog_SearchWithoutDialog(actionCFString, Session_ReturnActiveTerminalWindow(session),
+																			kFindDialog_OptionsAllOff);
+					result = kMacroManager_ResultOK;
+					break;
+				
 				case kMacroManager_ActionSendTextProcessingEscapes:
 					{
-						// TEMPORARY - translate everything here for now, but the plan is to
-						// eventually monitor preference changes and pre-scan and cache a
-						// mostly-processed string (e.g. static escape sequences translated)
-						// so that very little has to be done at this point
-						CFIndex const			kLength = CFStringGetLength(actionCFString);
-						CFStringInlineBuffer	charBuffer;
-						CFRetainRelease			finalCFString(CFStringCreateMutable(kCFAllocatorDefault, 0/* limit */), true/* is retained */);
-						Boolean					substitutionError = false;
-						UniChar					octalSequenceCharCode = '\0'; // overwritten each time a \0nn is processed
-						SInt16					readOctal = -1;		// if 0, a \0 was read, and the first "n" (in \0nn) might be next;
-																	// if 1, a \1 was read, and the first "n" (in \1nn) might be next;
+						CFRetainRelease		finalCFString(returnStringCopyWithSubstitutions(actionCFString, session), true/* is retained */);
 						
 						
-						CFStringInitInlineBuffer(actionCFString, &charBuffer, CFRangeMake(0, kLength));
-						for (CFIndex i = 0; i < kLength; ++i)
-						{
-							UniChar		thisChar = CFStringGetCharacterFromInlineBuffer(&charBuffer, i);
-							
-							
-							if (i == (kLength - 1))
-							{
-								CFStringAppendCharacters(finalCFString.returnCFMutableStringRef(), &thisChar, 1/* count */);
-							}
-							else
-							{
-								UniChar		nextChar = CFStringGetCharacterFromInlineBuffer(&charBuffer, i + 1);
-								
-								
-								if (readOctal >= 0)
-								{
-									if (readOctal == 1) octalSequenceCharCode = '\100';
-									else octalSequenceCharCode = '\0';
-									
-									switch (thisChar)
-									{
-									case '0':
-										break;
-									
-									case '1':
-										octalSequenceCharCode += '\010';
-										break;
-									
-									case '2':
-										octalSequenceCharCode += '\020';
-										break;
-									
-									case '3':
-										octalSequenceCharCode += '\030';
-										break;
-									
-									case '4':
-										octalSequenceCharCode += '\040';
-										break;
-									
-									case '5':
-										octalSequenceCharCode += '\050';
-										break;
-									
-									case '6':
-										octalSequenceCharCode += '\060';
-										break;
-									
-									case '7':
-										octalSequenceCharCode += '\070';
-										break;
-									
-									default:
-										// ???
-										Console_WriteLine("non-octal-numeric character found while handling a \\0nn sequence");
-										substitutionError = true;
-										readOctal = -1; // flag error
-										break;
-									}
-									
-									switch (nextChar)
-									{
-									case '0':
-										break;
-									
-									case '1':
-										octalSequenceCharCode += '\001';
-										break;
-									
-									case '2':
-										octalSequenceCharCode += '\002';
-										break;
-									
-									case '3':
-										octalSequenceCharCode += '\003';
-										break;
-									
-									case '4':
-										octalSequenceCharCode += '\004';
-										break;
-									
-									case '5':
-										octalSequenceCharCode += '\005';
-										break;
-									
-									case '6':
-										octalSequenceCharCode += '\006';
-										break;
-									
-									case '7':
-										octalSequenceCharCode += '\007';
-										break;
-									
-									default:
-										// ???
-										Console_WriteLine("non-octal-numeric character found while handling a \\0nn sequence");
-										substitutionError = true;
-										readOctal = -1; // flag error
-										break;
-									}
-									
-									// this is set to false to flag errors in the above switches...
-									if (readOctal >= 0)
-									{
-										++i; // skip the 2nd digit (1st digit is current)
-										CFStringAppendCharacters(finalCFString.returnCFMutableStringRef(),
-																	&octalSequenceCharCode, 1/* count */);
-									}
-									
-									readOctal = -1;
-								}
-								else if (thisChar == '\\')
-								{
-									// process escape sequence
-									switch (nextChar)
-									{
-									case '\\':
-										// an escaped backslash; send a single backslash
-										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\\"));
-										++i; // skip special sequence character
-										break;
-									
-									case '"':
-										// an escaped double-quote; send a double-quote (for legacy reasons, this is allowed)
-										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\""));
-										++i; // skip special sequence character
-										break;
-									
-									case '#':
-										// number of terminal lines
-										{
-											TerminalWindowRef const		kTerminalWindow = Session_ReturnActiveTerminalWindow(session);
-											
-											
-											substitutionError = true;
-											if (nullptr == kTerminalWindow)
-											{
-												Console_WriteLine("unexpected error finding the terminal window, while handling \\# sequence");
-											}
-											else
-											{
-												TerminalScreenRef const		kTerminalScreen = TerminalWindow_ReturnScreenWithFocus(kTerminalWindow);
-												
-												
-												if (nullptr == kTerminalScreen)
-												{
-													Console_WriteLine("unexpected error finding the terminal screen, while handling \\# sequence");
-												}
-												else
-												{
-													unsigned int const			kLineCount = Terminal_ReturnRowCount(kTerminalScreen);
-													CFRetainRelease				numberCFString(CFStringCreateWithFormat
-																								(kCFAllocatorDefault, nullptr/* options */,
-																									CFSTR("%u"), kLineCount), true/* is retained */);
-													
-													
-													CFStringAppend(finalCFString.returnCFMutableStringRef(), numberCFString.returnCFStringRef());
-													substitutionError = false;
-												}
-											}
-										}
-										++i; // skip special sequence character
-										break;
-									
-									case 'b':
-										// backspace; equivalent to \010
-										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\010"));
-										++i; // skip special sequence character
-										break;
-									
-									case 'e':
-										// escape; equivalent to \033
-										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\033"));
-										++i; // skip special sequence character
-										break;
-									
-									case 'i':
-										// IP address
-										{
-											std::vector< CFRetainRelease >		addressList;
-											
-											
-											if (Network_CopyIPAddresses(addressList))
-											{
-												// TEMPORARY - should there be a way to select among available addresses?
-												assert(false == addressList.empty());
-												CFStringAppend(finalCFString.returnCFMutableStringRef(), addressList[0].returnCFStringRef());
-											}
-											else
-											{
-												substitutionError = true;
-											}
-										}
-										++i; // skip special sequence character
-										break;
-									
-									case 'j':
-									case 'q':
-									case 's':
-										// currently-selected text, optionally joined together as a single line and with quoting
-										{
-											TerminalWindowRef const		kTerminalWindow = Session_ReturnActiveTerminalWindow(session);
-											
-											
-											if (TerminalWindow_IsValid(kTerminalWindow))
-											{
-												TerminalViewRef const	kTerminalView = TerminalWindow_ReturnViewWithFocus(kTerminalWindow);
-												
-												
-												if (nullptr != kTerminalView)
-												{
-													CFStringRef			selectedText = TerminalView_ReturnSelectedTextCopyAsUnicode
-																						(kTerminalView, 0/* spaces to replace with tabs */,
-																							(('s' == nextChar)
-																								? 0
-																								: kTerminalView_TextFlagInline));
-													
-													
-													if (nullptr != selectedText)
-													{
-														CFRetainRelease		workArea;
-														
-														
-														if ('q' == nextChar)
-														{
-															// copy the string and insert escapes at certain locations to perform quoting
-															workArea.setCFMutableStringRef
-																		(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* max. length or zero */,
-																									selectedText),
-																			true/* is retained */);
-															if (workArea.exists())
-															{
-																CFRange const	kWholeString = CFRangeMake
-																								(0, CFStringGetLength
-																									(workArea.returnCFStringRef()));
-																
-																
-																selectedText = workArea.returnCFStringRef();
-																
-																// escape spaces and tabs
-																UNUSED_RETURN(CFIndex)CFStringFindAndReplace
-																						(workArea.returnCFMutableStringRef(),
-																							CFSTR(" "), CFSTR("\\ "), kWholeString,
-																							0/* flags */);
-																UNUSED_RETURN(CFIndex)CFStringFindAndReplace
-																						(workArea.returnCFMutableStringRef(),
-																							CFSTR("\t"), CFSTR("\\\t"), kWholeString,
-																							0/* flags */);
-																
-																// TEMPORARY; no other escapes are performed (might add more in
-																// the future, or make this extensible somehow)
-															}
-														}
-														
-														// add the appropriate text to the macro expansion
-														if (nullptr != selectedText)
-														{
-															CFStringAppend(finalCFString.returnCFMutableStringRef(), selectedText);
-														}
-													}
-												}
-											}
-										}
-										++i; // skip special sequence character
-										break;
-									
-									case 'n':
-										// new-line
-										// send the sanctioned new-line sequence for the session
-										switch (sessionEventKeys.newline)
-										{
-										case kSession_NewlineModeMapCR:
-											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\015"));
-											break;
-										
-										case kSession_NewlineModeMapCRLF:
-											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\015\012"));
-											break;
-										
-										case kSession_NewlineModeMapCRNull:
-											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\015\000"));
-											break;
-										
-										case kSession_NewlineModeMapLF:
-											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\012"));
-											break;
-										
-										default:
-											Console_Warning(Console_WriteValue,
-															"macro new-line sequence does not handle mode", sessionEventKeys.newline);
-											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\n"));
-											break;
-										}
-										++i; // skip special sequence character
-										break;
-									
-									case 'r':
-										// carriage return without line feed; equivalent to \015
-										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\r"));
-										++i; // skip special sequence character
-										break;
-									
-									case 't':
-										// horizontal tabulation
-										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\t"));
-										++i; // skip special sequence character
-										break;
-									
-									case '0':
-										// possibly an arbitrary character code substitution
-										readOctal = 0;
-										++i; // skip special sequence character
-										break;
-									
-									case '1':
-										// possibly an arbitrary character code substitution
-										readOctal = 1;
-										++i; // skip special sequence character
-										break;
-									
-									default:
-										// ???
-										Console_Warning(Console_WriteValueCharacter, "unrecognized backslash escape", nextChar);
-										substitutionError = true;
-										break;
-									}
-								}
-								else 
-								{
-									// not an escape sequence
-									CFStringAppendCharacters(finalCFString.returnCFMutableStringRef(), &thisChar, 1/* count */);
-								}
-							}
-						}
-						
-						if (substitutionError)
+						if (false == finalCFString.exists())
 						{
 							Console_WriteLine("macro was not handled due to substitution errors");
 						}
 						else
 						{
-							// at last, send the edited string to the session!
+							// send the edited string to the session!
 							Session_UserInputCFString(session, finalCFString.returnCFStringRef());
+							result = kMacroManager_ResultOK;
+						}
+					}
+					break;
+				
+				case kMacroManager_ActionFindTextProcessingEscapes:
+					// find string after performing substitutions
+					{
+						CFRetainRelease		finalCFString(returnStringCopyWithSubstitutions(actionCFString, session), true/* is retained */);
+						
+						
+						if (false == finalCFString.exists())
+						{
+							Console_WriteLine("macro was not handled due to substitution errors");
+						}
+						else
+						{
+							// perform a search with the edited string
+							UNUSED_RETURN(NSUInteger)FindDialog_SearchWithoutDialog(finalCFString.returnCFStringRef(), Session_ReturnActiveTerminalWindow(session),
+																					kFindDialog_OptionsAllOff);
 							result = kMacroManager_ResultOK;
 						}
 					}
@@ -1131,6 +815,389 @@ returnMacrosMenu ()
 	
 	return result;
 }// returnMacrosMenu
+
+
+/*!
+Returns a new string that is at least a copy of the given
+string.  If any substitution characters are present (all
+two-character sequences starting with a backslash are
+reserved) then they are stripped and replaced with the
+appropriate values.
+
+If there are substitution errors, they are flagged and
+the resulting string will be nullptr.  Specific error
+information is currently sent only to the console.
+
+(4.1)
+*/
+CFStringRef
+returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
+									 SessionRef		inTargetSession)
+{
+	// TEMPORARY - translate everything here for now but the plan is to
+	// eventually monitor preference changes and pre-scan and cache a
+	// mostly-processed string (e.g. static escape sequences translated)
+	// so that very little has to be done at this point
+	CFIndex const			kLength = CFStringGetLength(inBaseString);
+	CFStringRef				result = nullptr;
+	CFStringInlineBuffer	charBuffer;
+	CFRetainRelease			finalCFString(CFStringCreateMutable(kCFAllocatorDefault, 0/* limit */), true/* is retained */);
+	Boolean					substitutionError = false;
+	UniChar					octalSequenceCharCode = '\0'; // overwritten each time a \0nn is processed
+	SInt16					readOctal = -1;		// if 0, a \0 was read, and the first "n" (in \0nn) might be next;
+												// if 1, a \1 was read, and the first "n" (in \1nn) might be next;
+	
+	
+	CFStringInitInlineBuffer(inBaseString, &charBuffer, CFRangeMake(0, kLength));
+	for (CFIndex i = 0; i < kLength; ++i)
+	{
+		UniChar		thisChar = CFStringGetCharacterFromInlineBuffer(&charBuffer, i);
+		
+		
+		if (i == (kLength - 1))
+		{
+			CFStringAppendCharacters(finalCFString.returnCFMutableStringRef(), &thisChar, 1/* count */);
+		}
+		else
+		{
+			UniChar		nextChar = CFStringGetCharacterFromInlineBuffer(&charBuffer, i + 1);
+			
+			
+			if (readOctal >= 0)
+			{
+				if (readOctal == 1) octalSequenceCharCode = '\100';
+				else octalSequenceCharCode = '\0';
+				
+				switch (thisChar)
+				{
+				case '0':
+					break;
+				
+				case '1':
+					octalSequenceCharCode += '\010';
+					break;
+				
+				case '2':
+					octalSequenceCharCode += '\020';
+					break;
+				
+				case '3':
+					octalSequenceCharCode += '\030';
+					break;
+				
+				case '4':
+					octalSequenceCharCode += '\040';
+					break;
+				
+				case '5':
+					octalSequenceCharCode += '\050';
+					break;
+				
+				case '6':
+					octalSequenceCharCode += '\060';
+					break;
+				
+				case '7':
+					octalSequenceCharCode += '\070';
+					break;
+				
+				default:
+					// ???
+					Console_WriteLine("non-octal-numeric character found while handling a \\0nn sequence");
+					substitutionError = true;
+					readOctal = -1; // flag error
+					break;
+				}
+				
+				switch (nextChar)
+				{
+				case '0':
+					break;
+				
+				case '1':
+					octalSequenceCharCode += '\001';
+					break;
+				
+				case '2':
+					octalSequenceCharCode += '\002';
+					break;
+				
+				case '3':
+					octalSequenceCharCode += '\003';
+					break;
+				
+				case '4':
+					octalSequenceCharCode += '\004';
+					break;
+				
+				case '5':
+					octalSequenceCharCode += '\005';
+					break;
+				
+				case '6':
+					octalSequenceCharCode += '\006';
+					break;
+				
+				case '7':
+					octalSequenceCharCode += '\007';
+					break;
+				
+				default:
+					// ???
+					Console_WriteLine("non-octal-numeric character found while handling a \\0nn sequence");
+					substitutionError = true;
+					readOctal = -1; // flag error
+					break;
+				}
+				
+				// this is set to false to flag errors in the above switches...
+				if (readOctal >= 0)
+				{
+					++i; // skip the 2nd digit (1st digit is current)
+					CFStringAppendCharacters(finalCFString.returnCFMutableStringRef(),
+												&octalSequenceCharCode, 1/* count */);
+				}
+				
+				readOctal = -1;
+			}
+			else if (thisChar == '\\')
+			{
+				// process escape sequence
+				switch (nextChar)
+				{
+				case '\\':
+					// an escaped backslash; send a single backslash
+					CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\\"));
+					++i; // skip special sequence character
+					break;
+				
+				case '"':
+					// an escaped double-quote; send a double-quote (for legacy reasons, this is allowed)
+					CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\""));
+					++i; // skip special sequence character
+					break;
+				
+				case '#':
+					// number of terminal lines
+					{
+						TerminalWindowRef const		kTerminalWindow = Session_ReturnActiveTerminalWindow(inTargetSession);
+						
+						
+						substitutionError = true;
+						if (nullptr == kTerminalWindow)
+						{
+							Console_WriteLine("unexpected error finding the terminal window, while handling \\# sequence");
+						}
+						else
+						{
+							TerminalScreenRef const		kTerminalScreen = TerminalWindow_ReturnScreenWithFocus(kTerminalWindow);
+							
+							
+							if (nullptr == kTerminalScreen)
+							{
+								Console_WriteLine("unexpected error finding the terminal screen, while handling \\# sequence");
+							}
+							else
+							{
+								unsigned int const			kLineCount = Terminal_ReturnRowCount(kTerminalScreen);
+								CFRetainRelease				numberCFString(CFStringCreateWithFormat
+																			(kCFAllocatorDefault, nullptr/* options */,
+																				CFSTR("%u"), kLineCount), true/* is retained */);
+								
+								
+								CFStringAppend(finalCFString.returnCFMutableStringRef(), numberCFString.returnCFStringRef());
+								substitutionError = false;
+							}
+						}
+					}
+					++i; // skip special sequence character
+					break;
+				
+				case 'b':
+					// backspace; equivalent to \010
+					CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\010"));
+					++i; // skip special sequence character
+					break;
+				
+				case 'e':
+					// escape; equivalent to \033
+					CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\033"));
+					++i; // skip special sequence character
+					break;
+				
+				case 'i':
+					// IP address
+					{
+						std::vector< CFRetainRelease >		addressList;
+						
+						
+						if (Network_CopyIPAddresses(addressList))
+						{
+							// TEMPORARY - should there be a way to select among available addresses?
+							assert(false == addressList.empty());
+							CFStringAppend(finalCFString.returnCFMutableStringRef(), addressList[0].returnCFStringRef());
+						}
+						else
+						{
+							substitutionError = true;
+						}
+					}
+					++i; // skip special sequence character
+					break;
+				
+				case 'j':
+				case 'q':
+				case 's':
+					// currently-selected text, optionally joined together as a single line and with quoting
+					{
+						TerminalWindowRef const		kTerminalWindow = Session_ReturnActiveTerminalWindow(inTargetSession);
+						
+						
+						if (TerminalWindow_IsValid(kTerminalWindow))
+						{
+							TerminalViewRef const	kTerminalView = TerminalWindow_ReturnViewWithFocus(kTerminalWindow);
+							
+							
+							if (nullptr != kTerminalView)
+							{
+								CFStringRef			selectedText = TerminalView_ReturnSelectedTextCopyAsUnicode
+																	(kTerminalView, 0/* spaces to replace with tabs */,
+																		(('s' == nextChar)
+																			? 0
+																			: kTerminalView_TextFlagInline));
+								
+								
+								if (nullptr != selectedText)
+								{
+									CFRetainRelease		workArea;
+									
+									
+									if ('q' == nextChar)
+									{
+										// copy the string and insert escapes at certain locations to perform quoting
+										workArea.setCFMutableStringRef
+													(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* max. length or zero */,
+																				selectedText),
+														true/* is retained */);
+										if (workArea.exists())
+										{
+											CFRange const	kWholeString = CFRangeMake
+																			(0, CFStringGetLength
+																				(workArea.returnCFStringRef()));
+											
+											
+											selectedText = workArea.returnCFStringRef();
+											
+											// escape spaces and tabs
+											UNUSED_RETURN(CFIndex)CFStringFindAndReplace
+																	(workArea.returnCFMutableStringRef(),
+																		CFSTR(" "), CFSTR("\\ "), kWholeString,
+																		0/* flags */);
+											UNUSED_RETURN(CFIndex)CFStringFindAndReplace
+																	(workArea.returnCFMutableStringRef(),
+																		CFSTR("\t"), CFSTR("\\\t"), kWholeString,
+																		0/* flags */);
+											
+											// TEMPORARY; no other escapes are performed (might add more in
+											// the future, or make this extensible somehow)
+										}
+									}
+									
+									// add the appropriate text to the macro expansion
+									if (nullptr != selectedText)
+									{
+										CFStringAppend(finalCFString.returnCFMutableStringRef(), selectedText);
+									}
+								}
+							}
+						}
+					}
+					++i; // skip special sequence character
+					break;
+				
+				case 'n':
+					// new-line
+					{
+						Session_EventKeys		sessionEventKeys = Session_ReturnEventKeys(inTargetSession);
+						
+						
+						// send the sanctioned new-line sequence for the session
+						switch (sessionEventKeys.newline)
+						{
+						case kSession_NewlineModeMapCR:
+							CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\015"));
+							break;
+						
+						case kSession_NewlineModeMapCRLF:
+							CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\015\012"));
+							break;
+						
+						case kSession_NewlineModeMapCRNull:
+							CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\015\000"));
+							break;
+						
+						case kSession_NewlineModeMapLF:
+							CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\012"));
+							break;
+						
+						default:
+							Console_Warning(Console_WriteValue,
+											"macro new-line sequence does not handle mode", sessionEventKeys.newline);
+							CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\n"));
+							break;
+						}
+					}
+					++i; // skip special sequence character
+					break;
+				
+				case 'r':
+					// carriage return without line feed; equivalent to \015
+					CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\r"));
+					++i; // skip special sequence character
+					break;
+				
+				case 't':
+					// horizontal tabulation
+					CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\t"));
+					++i; // skip special sequence character
+					break;
+				
+				case '0':
+					// possibly an arbitrary character code substitution
+					readOctal = 0;
+					++i; // skip special sequence character
+					break;
+				
+				case '1':
+					// possibly an arbitrary character code substitution
+					readOctal = 1;
+					++i; // skip special sequence character
+					break;
+				
+				default:
+					// ???
+					Console_Warning(Console_WriteValueCharacter, "unrecognized backslash escape", nextChar);
+					substitutionError = true;
+					break;
+				}
+			}
+			else 
+			{
+				// not an escape sequence
+				CFStringAppendCharacters(finalCFString.returnCFMutableStringRef(), &thisChar, 1/* count */);
+			}
+		}
+	}
+	
+	if (false == substitutionError)
+	{
+		result = finalCFString.returnCFStringRef();
+		CFRetain(result);
+	}
+	
+	return result;
+}// returnStringCopyWithSubstitutions
+
 
 
 /*!

@@ -446,8 +446,10 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSetMacroKeyModifierOption		'McMO'		// “Preferences” window
 #define kCommandSetMacroKeyModifierShift		'McMS'		// “Preferences” window
 #define kCommandSetMacroKeyAllowOnlyInMacroMode	'XRMM'		// “Preferences” window
-#define kCommandSetMacroActionEnterText			'MAET'		// “Preferences” window
+#define kCommandSetMacroActionEnterTextWithSub	'MAET'		// “Preferences” window
 #define kCommandSetMacroActionEnterTextVerbatim	'MAEV'		// “Preferences” window
+#define kCommandSetMacroActionFindTextWithSub	'MAFS'		// “Preferences” window
+#define kCommandSetMacroActionFindTextVerbatim	'MAFV'		// “Preferences” window
 #define kCommandSetMacroActionOpenURL			'MAOU'		// “Preferences” window
 #define kCommandSetMacroActionNewWindowCommand	'MANW'		// “Preferences” window
 #define kCommandSetMacroActionSelectWindow		'MASW'		// “Preferences” window

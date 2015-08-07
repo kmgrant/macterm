@@ -495,16 +495,28 @@ The Contents will be typed into the active terminal view as if
  the keyboard was used, and *no* special sequences will be
  substituted.
 
-h5. Enter Text with Substitutions
+h5. Find in Local Terminal Verbatim
+
+The Contents will be used to search for matching text in the
+ active terminal view as if the Find command had been used, and
+ *no* special sequences will be substituted.
+
+h5. Enter Text with Substitutions and Find in Local Terminal with Substitutions
 
 The Contents will be scrubbed for any special sequences (as
  defined below) and replaced with the indicated values; only
- the modified version is typed into the active terminal view.
+ the modified version is used to Enter or Find text respectively.
 
-This mode is very useful if your macro contains things like
- escape sequences or other "invisible" characters (which is
- common when "emulating key codes":keys.html from other
- operating systems, for example).
+These modes are very useful if your macro needs to operate on
+ the current text selection, or if it contains escape sequences
+ or other "invisible" characters (common when
+ "emulating key codes":keys.html from other operating systems,
+ for example).
+
+bq. *Tip:* If you create a macro with content of "\j" (joined text
+ selection) and action "Find in Local Terminal with Substitutions",
+ you can use it to perform a search for any phrase you select
+ with the mouse -- even if it wraps from one line to another.
 
 Many substitution sequences correspond directly to the codes
  used by control keys.  For this reason, MacTerm offers an
@@ -536,6 +548,10 @@ table(deftable).
 (def). |<(key). @\t@|(desc)<. horizontal tab|
 (def). |<(key). @\#@|(desc)<. dynamically substitute the number of terminal lines|
 (def). |<(key). @\"@|(desc)<. quote; allowed for legacy reasons but no longer needs escaping|
+
+If you use the @\s@, @\j@ or @\q@ sequences in a macro that has a
+ name, it will *automatically appear in contextual menus* when
+ text is selected in a terminal window.
 
 fn1. To see the octal versions of all ASCII characters,
  look at <a href="x-man-page://ascii">x-man-page://ascii</a> (opens a

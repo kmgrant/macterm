@@ -90,14 +90,18 @@ enum MacroManager_Action
 	// But, you should use the utility routines below to convert between them anyway.
 	kMacroManager_ActionSendTextVerbatim			= kCommandSetMacroActionEnterTextVerbatim,	//!< macro content is a string to send as-is (no
 																								//!  metacharacters allowed)
-	kMacroManager_ActionSendTextProcessingEscapes	= kCommandSetMacroActionEnterText,			//!< macro content is a string to send (perhaps
+	kMacroManager_ActionSendTextProcessingEscapes	= kCommandSetMacroActionEnterTextWithSub,	//!< macro content is a string to send (perhaps
 																								//!  with metacharacters to be substituted)
 	kMacroManager_ActionHandleURL					= kCommandSetMacroActionOpenURL,			//!< macro content is a URL to be opened
 	kMacroManager_ActionNewWindowWithCommand		= kCommandSetMacroActionNewWindowCommand,	//!< macro content is a Unix command line to be
 																								//!  executed in a new terminal window
-	kMacroManager_ActionSelectMatchingWindow		= kCommandSetMacroActionSelectWindow		//!< macro content is a string to use as a search
+	kMacroManager_ActionSelectMatchingWindow		= kCommandSetMacroActionSelectWindow,		//!< macro content is a string to use as a search
 																								//!  key against the titles of open windows; the
 																								//!  next window with a matching title is activated
+	kMacroManager_ActionFindTextVerbatim			= kCommandSetMacroActionFindTextVerbatim,	//!< macro content is a string to send as-is (no
+																								//!  metacharacters allowed)
+	kMacroManager_ActionFindTextProcessingEscapes	= kCommandSetMacroActionFindTextWithSub		//!< macro content is a string to send (perhaps
+																								//!  with metacharacters to be substituted)
 };
 
 /*!

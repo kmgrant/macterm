@@ -7170,6 +7170,14 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							{
 								*storedValuePtr = kMacroManager_ActionSelectMatchingWindow;
 							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("find verbatim"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kMacroManager_ActionFindTextVerbatim;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("find with substitutions"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kMacroManager_ActionFindTextProcessingEscapes;
+							}
 							else
 							{
 								result = kPreferences_ResultBadVersionDataNotAvailable;
@@ -9680,6 +9688,14 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					case kMacroManager_ActionSelectMatchingWindow:
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("select matching window"));
+						break;
+					
+					case kMacroManager_ActionFindTextVerbatim:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("find verbatim"));
+						break;
+					
+					case kMacroManager_ActionFindTextProcessingEscapes:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("find with substitutions"));
 						break;
 					
 					default:
