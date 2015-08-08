@@ -142,6 +142,9 @@ struct TerminalLine_Object
 	inline bool
 	operator == (TerminalLine_Object const&  inLine) const;
 	
+	inline bool
+	operator != (TerminalLine_Object const&  inLine) const;
+	
 	inline TerminalLine_TextAttributesList const&
 	returnAttributeVector () const;
 	
@@ -161,7 +164,7 @@ private:
 	TerminalLine_AttributeInfo*		attributeInfo;
 	
 	void
-	clearAttributes();
+	clearAttributes ();
 	
 	void
 	copyAttributes (TerminalLine_AttributeInfo const*);
@@ -178,6 +181,60 @@ private:
 	
 	inline TerminalLine_AttributeInfo&
 	returnMutableAttributeInfo ();
+};
+
+
+/*!
+Semantically this is like a pointer to TerminalLine_Object
+except that it has special nullability support.
+
+By default, ALL handles that are not constructed with a
+particular pointer will be assigned to the SAME global,
+shared, empty-line data.
+
+*/
+struct TerminalLine_Handle
+{
+	TerminalLine_Handle ();
+	~TerminalLine_Handle ();
+	
+	TerminalLine_Handle	(TerminalLine_Handle const&);
+	
+	TerminalLine_Handle&
+	operator = (TerminalLine_Handle const&);
+	
+	inline TerminalLine_Object const&
+	operator * () const;
+	
+	TerminalLine_Object&
+	operator * (); // note: this is not inlined, it is more complex
+	
+	inline TerminalLine_Object const*
+	operator -> () const;
+	
+	inline TerminalLine_Object*
+	operator -> ();
+	
+	inline bool
+	operator == (TerminalLine_Handle const&  inHandle) const;
+	
+	inline bool
+	operator == (TerminalLine_Object const*  inObjectPtr) const;
+	
+	inline bool
+	operator != (TerminalLine_Handle const&  inHandle) const;
+	
+	inline bool
+	operator != (TerminalLine_Object const*  inObjectPtr) const;
+	
+	bool
+	isDefault () const;
+	
+	void
+	reset ();
+
+private:
+	mutable TerminalLine_Object*	linePtr;
 };
 
 
@@ -227,6 +284,20 @@ const
 {
 	return (&inLine == this);
 }// TerminalLine_Object::operator ==
+
+
+/*!
+Returns the opposite of "operator ==".
+
+(4.1)
+*/
+bool
+TerminalLine_Object::
+operator != (TerminalLine_Object const&  inLine)
+const
+{
+	return (false == (this->operator ==(inLine)));
+}// TerminalLine_Object::operator !=
 
 
 /*!
@@ -342,6 +413,116 @@ returnMutableGlobalAttributes ()
 	return this->returnMutableAttributeInfo().globalAttributes;
 }// TerminalLine_Object::returnMutableGlobalAttributes
 
+
+/*!
+Returns the line data that this handle refers to.  If the handle
+is in a reset state, the line is blank and the returned pointer
+will always refer to the shared, immutable blank line data; as
+such the underlying object references are NOT all unique, even
+though handles themselves are always unique.
+
+See also the non-const version (not inlined), which actually has
+copy-on-write semantics.
+
+(4.1)
+*/
+TerminalLine_Object const&
+TerminalLine_Handle::
+operator * ()
+const
+{
+	return *linePtr;
+}// TerminalLine_Handle::operator * (const)
+
+
+/*!
+Calls "operator *".
+
+(4.1)
+*/
+TerminalLine_Object const*
+TerminalLine_Handle::
+operator -> ()
+const
+{
+	return &(this->operator *());
+}// TerminalLine_Handle::operator * (const)
+
+
+/*!
+Calls "operator *", with the same special semantics as
+the non-const version of "operator *".
+
+(4.1)
+*/
+TerminalLine_Object*
+TerminalLine_Handle::
+operator -> ()
+{
+	return &(this->operator *());
+}// TerminalLine_Handle::operator -> (non-const)
+
+
+/*!
+Returns true only if the given handle refers to the
+same line data as this handle.
+
+(4.1)
+*/
+bool
+TerminalLine_Handle::
+operator == (TerminalLine_Handle const&  inHandle)
+const
+{
+	return (inHandle.linePtr == this->linePtr);
+}// TerminalLine_Handle::operator == (TerminalLine_Handle const&)
+
+
+/*!
+Returns true only if the given line data pointer is the
+same as the one managed by this handle.
+
+This is for convenience, as it is often the case that
+terminal code will have ready access to the line data
+but not the handle that it originally came from.
+
+(4.1)
+*/
+bool
+TerminalLine_Handle::
+operator == (TerminalLine_Object const*  inObjectPtr)
+const
+{
+	return (inObjectPtr == this->linePtr);
+}// TerminalLine_Handle::operator == (TerminalLine_Object const*)
+
+
+/*!
+Returns the opposite of "operator ==".
+
+(4.1)
+*/
+bool
+TerminalLine_Handle::
+operator != (TerminalLine_Handle const&  inHandle)
+const
+{
+	return (false == (this->operator ==(inHandle)));
+}// TerminalLine_Handle::operator != (TerminalLine_Handle const&)
+
+
+/*!
+Returns the opposite of "operator ==".
+
+(4.1)
+*/
+bool
+TerminalLine_Handle::
+operator != (TerminalLine_Object const*  inObjectPtr)
+const
+{
+	return (false == (this->operator ==(inObjectPtr)));
+}// TerminalLine_Handle::operator != (TerminalLine_Object const*)
 
 
 #endif

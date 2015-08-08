@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20150808',
     '20150807',
     '20150806',
     '20150724',
@@ -523,6 +524,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20150808': [
+        'Terminal windows now use significantly less memory while empty.  For instance, a new terminal window now requires NO memory for its entire scrollback buffer, even if that buffer is thousands of lines long (the space is requested only as it is required).',
+        'Terminal window search is now MUCH faster by default, as a side effect of aggressively sharing blank space.  The search performance degrades with the number of non-blank lines to be searched; windows with large scrollback buffers that have been open for a long time will take longer to scan.',
+    ],
     '20150807': [
         'Preferences window Macros pane now offers two new Action types: "Find in Local Terminal Verbatim" and "Find in Local Terminal with Substitutions", to automatically highlight all matching search results based on the macro content.  The "Find Next" and "Find Previous" commands rotate through the results normally.',
         'Macros of type "Find in Local Terminal with Substitutions" recognize the same substitution characters as the similar action type "Enter Text with Substitutions".  Note in particular, the sequences that operate on text selections ("\\s", "\\j" and "\\q") can be used to initiate terminal searches based on text that you have selected.  Also, an expression like "word\\n" or "word\\r" causes the search to only match at the end of a line (ignoring whitespace).',

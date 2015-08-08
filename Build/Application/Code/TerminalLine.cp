@@ -33,6 +33,9 @@
 #include "TerminalLine.h"
 #include <UniversalDefines.h>
 
+// library includes
+#include <Console.h>
+
 
 
 #pragma mark Variables
@@ -40,6 +43,7 @@ namespace {
 
 
 TerminalLine_AttributeInfo&		gEmptyLineAttributes ()		{ static TerminalLine_AttributeInfo x; return x; }
+TerminalLine_Object const&		gEmptyLineData ()			{ static TerminalLine_Object x; return x; }
 
 
 } // anonymous namespace
@@ -264,5 +268,165 @@ structureInitialize ()
 	std::fill(textVectorBegin, textVectorEnd, ' ');
 	clearAttributes();
 }// TerminalLine_Object::structureInitialize
+
+
+/*!
+Creates a new screen buffer line handle by making it point
+to a shared, immutable empty-line data structure.  This
+ensures that the vast majority of lines consume minimal
+resources until they are actually changed (at which time
+unique allocations are performed).
+
+(4.1)
+*/
+TerminalLine_Handle::
+TerminalLine_Handle ()
+:
+linePtr(nullptr) // see below
+{
+	this->reset(); // set to shared empty-line data
+}// TerminalLine_Handle constructor
+
+
+/*!
+Handles copy construction by making the data pointer
+unique if necessary.  (Should be consistent with all
+other code that mutates the pointer value.)
+
+(4.1)
+*/
+TerminalLine_Handle::
+TerminalLine_Handle		(TerminalLine_Handle const&		inOther)
+:
+linePtr(nullptr) // see below
+{
+	if (inOther.isDefault())
+	{
+		this->reset(); // set to shared empty-line data
+	}
+	else
+	{
+		// make unique (should be consistent with the allocation
+		// behavior of the non-const "operator *()")
+		linePtr = new TerminalLine_Object();
+		assert(false == this->isDefault());
+		//Console_WriteValueAddress("upon copy, allocating unique line data for handle", this); // debug
+	}
+}// TerminalLine_Handle copy constructor
+
+
+/*!
+Creates a new screen buffer line handle by making it point
+to a shared, immutable empty-line data structure.  This
+ensures that the vast majority of lines consume minimal
+resources until they are actually changed (at which time
+unique allocations are performed).
+
+(4.1)
+*/
+TerminalLine_Handle::
+~TerminalLine_Handle ()
+{
+	if (false == this->isDefault())
+	{
+		// IMPORTANT: these semantics may change; for instance,
+		// they may simply *mark* an allocated line as available
+		// and not necessarily deallocate (the behavior of the
+		// non-const "operator *()" should be consistent)
+		delete linePtr, linePtr = nullptr;
+	}
+}// TerminalLine_Handle destructor
+
+
+/*!
+Handles assignment by making the data pointer unique
+if necessary.  (Should be consistent with all other
+code that mutates the pointer value.)
+
+(4.1)
+*/
+TerminalLine_Handle&
+TerminalLine_Handle::
+operator = (TerminalLine_Handle const&		inOther)
+{
+	if (inOther.isDefault())
+	{
+		this->reset(); // set to shared empty-line data
+	}
+	else
+	{
+		// make unique (should be consistent with the allocation
+		// behavior of the non-const "operator *()")
+		linePtr = new TerminalLine_Object();
+		assert(false == this->isDefault());
+		//Console_WriteValueAddress("upon assignment, allocating unique line data for handle", this); // debug
+	}
+	return *this;
+}// TerminalLine_Handle::operator =
+
+
+/*!
+Returns the line data that this handle refers to.
+
+Since this is the mutating version, if the handle is in a reset
+(nulled) state then this will CHANGE the internal pointer to
+allocate a unique value and return that.  Always use "const"
+references to read lines if you do not need to make changes so
+that handles will share the empty line as long as possible.
+
+NOTE: The "const" version is trivial and inlined, as it does
+not have the same complex semantics.
+
+(4.1)
+*/
+TerminalLine_Object&
+TerminalLine_Handle::
+operator * ()
+{
+	if (this->isDefault())
+	{
+		// copy-on-write semantics; auto-allocate a unique version
+		// IMPORTANT: should match logic of destructor
+		linePtr = new TerminalLine_Object();
+		assert(false == this->isDefault());
+		//Console_WriteValueAddress("allocating unique line data for handle", this); // debug
+	}
+	return *linePtr;
+}// TerminalLine_Handle::operator * (non-const)
+
+
+/*!
+Returns true if this handle is currently relying on shared,
+default data (in other words, it is an empty line that has
+never been modified).
+
+(4.1)
+*/
+bool
+TerminalLine_Handle::
+isDefault ()
+const
+{
+	return (&gEmptyLineData() == this->linePtr);
+}// TerminalLine_Handle::isDefault
+
+
+/*!
+Conceptually the same as deleting a heap-allocated line structure
+except that the resulting object may be marked for reuse instead
+(and the line data may not even be on the heap).
+
+(4.1)
+*/
+void
+TerminalLine_Handle::
+reset ()
+{
+	// IMPORTANT: immutability of shared empty-line data is ensured
+	// by the code in this class; in any case, the shared empty line
+	// must NEVER be modified (otherwise all empty lines would change)
+	this->linePtr = CONST_CAST(&gEmptyLineData(), TerminalLine_Object*);
+	assert(this->isDefault());
+}// TerminalLine_Handle::reset
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
