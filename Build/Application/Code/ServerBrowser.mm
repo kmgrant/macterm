@@ -1100,7 +1100,7 @@ Destructor.
 dealloc
 {
 	// See the initializer and "awakeFromNib" for initializations to clean up here.
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[self ignoreWhenObjectsPostNotes];
 	
 	[_userID release];
 	[_portNumber release];
@@ -1856,8 +1856,8 @@ awakeFromNib
 	[_responder serverBrowser:self didLoadManagedView:self->managedView];
 	
 	// find out when the window will close, so that the button that opened the window can return to normal
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(serverBrowserWindowWillClose:)
-											name:NSWindowWillCloseNotification object:[self->managedView window]];
+	[self whenObject:[self->managedView window] postsNote:NSWindowWillCloseNotification
+						performSelector:@selector(serverBrowserWindowWillClose:)];
 	
 	// since double-click bindings require 10.4 or later, do this manually now
 	[discoveredHostsTableView setIgnoresMultiClick:NO];

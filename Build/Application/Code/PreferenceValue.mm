@@ -45,6 +45,7 @@
 
 // library includes
 #import <CFRetainRelease.h>
+#import <CocoaExtensions.objc++.h>
 #import <ListenerModel.h>
 
 // application includes
@@ -431,12 +432,10 @@ valueDescriptorArray:(NSArray*)					aDescriptorArray
 		
 		// monitor the preferences context manager so that observers
 		// of preferences in sub-objects can be told to expect changes
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextWillChange:)
-															name:kPrefsContextManager_ContextWillChangeNotification
-															object:aContextMgr];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextDidChange:)
-															name:kPrefsContextManager_ContextDidChangeNotification
-															object:aContextMgr];
+		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextWillChangeNotification
+							performSelector:@selector(prefsContextWillChange:)];
+		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextDidChangeNotification
+							performSelector:@selector(prefsContextDidChange:)];
 	}
 	return self;
 }// initWithPreferencesTag:contextManager:preferenceCType:valueDescriptorArray:
@@ -450,7 +449,7 @@ Destructor.
 - (void)
 dealloc
 {
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[self ignoreWhenObjectsPostNotes];
 	[valueDescriptorArray release];
 	[preferenceAccessObject release];
 	[super dealloc];
@@ -620,12 +619,10 @@ sourceClass:(Quills::Prefs::Class)				aPreferencesClass
 		
 		// monitor the preferences context manager so that observers
 		// of preferences in sub-objects can be told to expect changes
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextWillChange:)
-															name:kPrefsContextManager_ContextWillChangeNotification
-															object:aContextMgr];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextDidChange:)
-															name:kPrefsContextManager_ContextDidChangeNotification
-															object:aContextMgr];
+		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextWillChangeNotification
+							performSelector:@selector(prefsContextWillChange:)];
+		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextDidChangeNotification
+							performSelector:@selector(prefsContextDidChange:)];
 		
 		// install a callback that finds out about changes to available preferences collections
 		// ("rebuildDescriptorArray" will be implicitly called as a side effect of this setup)
@@ -656,7 +653,7 @@ Destructor.
 - (void)
 dealloc
 {
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[self ignoreWhenObjectsPostNotes];
 	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([_preferenceChangeListener listenerRef],
 																kPreferences_ChangeContextName);
 	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([_preferenceChangeListener listenerRef],

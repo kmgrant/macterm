@@ -77,6 +77,24 @@
 @end //}
 
 
+@interface NSObject (CocoaExtensions_NSObject) //{
+
+// new methods: simpler notifications
+	- (void)
+	postNote:(NSString*)_;
+	- (void)
+	whenObject:(id)_
+	postsNote:(NSString*)_
+	performSelector:(SEL)_;
+	- (void)
+	ignoreWhenObject:(id)_
+	postsNote:(NSString*)_;
+	- (void)
+	ignoreWhenObjectsPostNotes;
+
+@end //}
+
+
 @interface NSWindow (CocoaExtensions_NSWindow) //{
 
 // new methods: coordinate translation

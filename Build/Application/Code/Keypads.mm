@@ -40,6 +40,7 @@
 
 // library includes
 #import <AutoPool.objc++.h>
+#import <CocoaExtensions.objc++.h>
 #import <Console.h>
 #import <SoundSystem.h>
 
@@ -1534,9 +1535,9 @@ Destructor.
 - (void)
 dealloc
 {
-	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidBecomeKeyNotification object:[self window]];
-	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidResizeNotification object:[self window]];
-	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowWillCloseNotification object:[self window]];
+	[self ignoreWhenObject:self.window postsNote:NSWindowDidBecomeKeyNotification];
+	[self ignoreWhenObject:self.window postsNote:NSWindowDidResizeNotification];
+	[self ignoreWhenObject:self.window postsNote:NSWindowWillCloseNotification];
 	[menuChildWindow release];
 	[super dealloc];
 }// dealloc
@@ -2877,12 +2878,12 @@ windowDidLoad
 	[layoutMenu setAutoenablesItems:NO];
 	
 	// keep the window attached to the title bar
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidBecomeKey:)
-														name:NSWindowDidBecomeKeyNotification object:[self window]];
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidResize:)
-														name:NSWindowDidResizeNotification object:[self window]];
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillClose:)
-														name:NSWindowWillCloseNotification object:[self window]];
+	[self whenObject:self.window postsNote:NSWindowDidBecomeKeyNotification
+						performSelector:@selector(windowDidBecomeKey:)];
+	[self whenObject:self.window postsNote:NSWindowDidResizeNotification
+						performSelector:@selector(windowDidResize:)];
+	[self whenObject:self.window postsNote:NSWindowWillCloseNotification
+						performSelector:@selector(windowWillClose:)];
 }// windowDidLoad
 
 

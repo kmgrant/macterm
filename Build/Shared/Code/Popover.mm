@@ -30,6 +30,9 @@
 #import <Cocoa/Cocoa.h>
 #import <CoreServices/CoreServices.h>
 
+// library includes
+#import <CocoaExtensions.objc++.h>
+
 
 
 #pragma mark Internal Method Prototypes
@@ -222,8 +225,8 @@ inWindow:(NSWindow*)		aWindow
 			[self updateBackground];
 			
 			// subscribe to notifications
-			[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidResize:)
-																name:NSWindowDidResizeNotification object:self];
+			[self whenObject:self postsNote:NSWindowDidResizeNotification
+								performSelector:@selector(windowDidResize:)];
 		}
 	}
 	return self;
@@ -238,7 +241,7 @@ Destructor.
 - (void)
 dealloc
 {
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[self ignoreWhenObjectsPostNotes];
 	[borderOuterColor release];
 	[borderPrimaryColor release];
 	[popoverBackgroundColor release];

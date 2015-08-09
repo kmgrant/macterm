@@ -40,6 +40,7 @@
 // library includes
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
+#import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <ListenerModel.h>
@@ -377,11 +378,9 @@ setSession:(SessionRef)		aSession
 {
 	if (self->associatedSession != aSession)
 	{
-		[[NSNotificationCenter defaultCenter] postNotificationName:kTerminalToolbar_DelegateSessionWillChangeNotification
-																	object:self];
+		[self postNote:kTerminalToolbar_DelegateSessionWillChangeNotification];
 		self->associatedSession = aSession;
-		[[NSNotificationCenter defaultCenter] postNotificationName:kTerminalToolbar_DelegateSessionDidChangeNotification
-																	object:self];
+		[self postNote:kTerminalToolbar_DelegateSessionDidChangeNotification];
 	}
 }// setSession
 
@@ -2241,8 +2240,7 @@ detect when this is invoked.
 setDisplayMode:(NSToolbarDisplayMode)	displayMode
 {
 	[super setDisplayMode:displayMode];
-	[[NSNotificationCenter defaultCenter] postNotificationName:kTerminalToolbar_ObjectDidChangeDisplayModeNotification
-																object:self];
+	[self postNote:kTerminalToolbar_ObjectDidChangeDisplayModeNotification];
 }// setDisplayMode:
 
 
@@ -2258,8 +2256,7 @@ detect when this is invoked.
 setSizeMode:(NSToolbarSizeMode)		sizeMode
 {
 	[super setSizeMode:sizeMode];
-	[[NSNotificationCenter defaultCenter] postNotificationName:kTerminalToolbar_ObjectDidChangeSizeModeNotification
-																object:self];
+	[self postNote:kTerminalToolbar_ObjectDidChangeSizeModeNotification];
 }// setSizeMode:
 
 
@@ -2280,8 +2277,7 @@ setVisible:(BOOL)	isVisible
 	[super setVisible:isVisible];
 	if (fireNotification)
 	{
-		[[NSNotificationCenter defaultCenter] postNotificationName:kTerminalToolbar_ObjectDidChangeVisibilityNotification
-																	object:self];
+		[self postNote:kTerminalToolbar_ObjectDidChangeVisibilityNotification];
 	}
 }// setVisible:
 
@@ -2304,12 +2300,10 @@ initWithItemIdentifier:(NSString*)		anIdentifier
 	self = [super initWithItemIdentifier:anIdentifier];
 	if (nil != self)
 	{
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(sessionWillChange:)
-															name:kTerminalToolbar_DelegateSessionWillChangeNotification
-															object:[[self toolbar] terminalToolbarDelegate]];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(sessionDidChange:)
-															name:kTerminalToolbar_DelegateSessionDidChangeNotification
-															object:[[self toolbar] terminalToolbarDelegate]];
+		[self whenObject:[self.toolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionWillChangeNotification
+							performSelector:@selector(sessionWillChange:)];
+		[self whenObject:[self.toolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionDidChangeNotification
+							performSelector:@selector(sessionDidChange:)];
 	}
 	return self;
 }// initWithItemIdentifier:
@@ -2324,7 +2318,7 @@ Destructor.
 dealloc
 {
 	[self willChangeSession]; // allows subclasses to automatically stop monitoring the current session
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[self ignoreWhenObjectsPostNotes];
 	[super dealloc];
 }// dealloc
 
@@ -2526,15 +2520,12 @@ screen:(NSScreen*)				aScreen
 			[windowToolbar setAllowsUserCustomization:YES];
 			[windowToolbar setAutosavesConfiguration:YES];
 			[windowToolbar setDelegate:self->toolbarDelegate];
-			[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(toolbarDidChangeDisplayMode:)
-																name:kTerminalToolbar_ObjectDidChangeDisplayModeNotification
-																object:windowToolbar];
-			[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(toolbarDidChangeSizeMode:)
-																name:kTerminalToolbar_ObjectDidChangeSizeModeNotification
-																object:windowToolbar];
-			[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(toolbarDidChangeVisibility:)
-																name:kTerminalToolbar_ObjectDidChangeVisibilityNotification
-																object:windowToolbar];
+			[self whenObject:windowToolbar postsNote:kTerminalToolbar_ObjectDidChangeDisplayModeNotification
+								performSelector:@selector(toolbarDidChangeDisplayMode:)];
+			[self whenObject:windowToolbar postsNote:kTerminalToolbar_ObjectDidChangeSizeModeNotification
+								performSelector:@selector(toolbarDidChangeSizeMode:)];
+			[self whenObject:windowToolbar postsNote:kTerminalToolbar_ObjectDidChangeVisibilityNotification
+								performSelector:@selector(toolbarDidChangeVisibility:)];
 			[self setToolbar:windowToolbar];
 		}
 		
@@ -2577,17 +2568,16 @@ screen:(NSScreen*)				aScreen
 		[self setFrameWithPossibleAnimation];
 		
 		// arrange to auto-zoom when certain window changes occur
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidChangeScreenParameters:)
-															name:NSApplicationDidChangeScreenParametersNotification
-															object:NSApp];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidBecomeKey:)
-															name:NSWindowDidBecomeKeyNotification object:self];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidResignKey:)
-															name:NSWindowDidResignKeyNotification object:self];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillBeginSheet:)
-															name:NSWindowWillBeginSheetNotification object:self];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidEndSheet:)
-															name:NSWindowDidEndSheetNotification object:self];
+		[self whenObject:NSApp postsNote:NSApplicationDidChangeScreenParametersNotification
+							performSelector:@selector(applicationDidChangeScreenParameters:)];
+		[self whenObject:self postsNote:NSWindowDidBecomeKeyNotification
+							performSelector:@selector(windowDidBecomeKey:)];
+		[self whenObject:self postsNote:NSWindowDidResignKeyNotification
+							performSelector:@selector(windowDidResignKey:)];
+		[self whenObject:self postsNote:NSWindowWillBeginSheetNotification
+							performSelector:@selector(windowWillBeginSheet:)];
+		[self whenObject:self postsNote:NSWindowDidEndSheetNotification
+							performSelector:@selector(windowDidEndSheet:)];
 		
 		if (nil == gSharedTerminalToolbar)
 		{
@@ -2618,7 +2608,7 @@ dealloc
 										[sessionFactoryChangeListener listenerRef]);
 		[sessionFactoryChangeListener release];
 	}
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[self ignoreWhenObjectsPostNotes];
 	[self->toolbarDelegate release];
 	[super dealloc];
 }// dealloc

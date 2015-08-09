@@ -44,6 +44,7 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
+#import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <ListenerModel.h>
 #import <MemoryBlockPtrLocker.template.h>
@@ -414,7 +415,7 @@ dealloc
 	}
 	
 	gVectorCanvasWindowValidRefs().erase(self);
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[self ignoreWhenObjectsPostNotes];
 	[canvasView release];
 	if (nullptr != changeListenerModel)
 	{
@@ -515,8 +516,8 @@ windowDidLoad
 	// enable Full Screen
 	[self.window setCollectionBehavior:([self.window collectionBehavior] | FUTURE_SYMBOL(1 << 7, NSWindowCollectionBehaviorFullScreenPrimary))];
 	
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillClose:)
-														name:NSWindowWillCloseNotification object:self.window];
+	[self whenObject:self.window postsNote:NSWindowWillCloseNotification
+						performSelector:@selector(windowWillClose:)];
 }// windowDidLoad
 
 

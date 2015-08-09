@@ -376,6 +376,80 @@ target:(id)						aTarget
 
 
 #pragma mark -
+@implementation NSObject (CocoaExtensions_NSObject)
+
+
+/*!
+Calls "postNotificationName:object:" on the default
+NSNotificationCenter, with the object "self".
+
+This utility is meant to shorten code that is required
+very frequently, and to encourage clearer terminology.
+
+(1.11)
+*/
+- (void)
+postNote:(NSString*)	aNotificationName
+{
+	[[NSNotificationCenter defaultCenter] postNotificationName:aNotificationName object:self];
+}// postNote:
+
+
+/*!
+Calls "addObserver:selector:name:object:" on the default
+NSNotificationCenter, setting the observer to "self" and
+the other parameters as indicated.  (Therefore, you must
+remove it later; see "ignoreWhenObjectsPostNotes" and
+"ignoreWhenObject:postsNote:".)
+
+This utility is meant to shorten code that is required
+very frequently, and to encourage clearer terminology.
+
+(1.11)
+*/
+- (void)
+whenObject:(id)			anObservedObject
+postsNote:(NSString*)	aNotificationName
+performSelector:(SEL)	aSelector
+{
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:aSelector
+														name:aNotificationName
+														object:anObservedObject];
+}// whenObject:postsNote:performSelector:
+
+
+/*!
+Removes the specified notification’s handler from the
+default NSNotificationCenter.
+
+(1.11)
+*/
+- (void)
+ignoreWhenObject:(id)	anObservedObject
+postsNote:(NSString*)	aNotificationName
+{
+	[[NSNotificationCenter defaultCenter]
+		removeObserver:self name:aNotificationName object:anObservedObject];
+}// ignoreWhenObject:postsNote:
+
+
+/*!
+Removes all of the current object’s observers from the
+default NSNotificationCenter.
+
+(1.11)
+*/
+- (void)
+ignoreWhenObjectsPostNotes
+{
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+}// ignoreWhenObjectsPostNotes
+
+
+@end // NSObject (CocoaExtensions_NSObject)
+
+
+#pragma mark -
 @implementation NSWindow (CocoaExtensions_NSWindow)
 
 

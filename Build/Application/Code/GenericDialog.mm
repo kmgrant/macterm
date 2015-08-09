@@ -59,6 +59,7 @@
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
 #import <CocoaBasic.h>
+#import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
@@ -1178,7 +1179,7 @@ Destructor.
 - (void)
 dealloc
 {
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[self ignoreWhenObjectsPostNotes];
 	
 	GenericDialog_Dispose(&dialogRef);
 	mainViewManager.panelParent = nil;
@@ -1325,9 +1326,8 @@ didLoadContainerView:(NSView*)			aContainerView
 	assert(aViewManager == self);
 	assert(aContainerView == self.managedView);
 	
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(parentViewFrameDidChange:)
-														name:NSViewFrameDidChangeNotification
-														object:self->viewContainer];
+	[self whenObject:self->viewContainer postsNote:NSViewFrameDidChangeNotification
+						performSelector:@selector(parentViewFrameDidChange:)];
 	
 	// determine ideal size of embedded panel, and calculate the
 	// ideal size of the entire window accordingly

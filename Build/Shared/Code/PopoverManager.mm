@@ -501,9 +501,8 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 		}
 		
 		// also monitor the popover itself to know when to auto-hide
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidResignKey:)
-															name:NSWindowDidResignKeyNotification
-															object:self->containerWindow];
+		[self whenObject:self->containerWindow postsNote:NSWindowDidResignKeyNotification
+							performSelector:@selector(windowDidResignKey:)];
 	}
 	return self;
 }// initForCarbonWindow:popover:
@@ -517,7 +516,7 @@ Destructor.
 - (void)
 dealloc
 {
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[self ignoreWhenObjectsPostNotes];
 	delete self->activationHandlerPtr, activationHandlerPtr = nullptr;
 	delete self->minimizeHandlerPtr, minimizeHandlerPtr = nullptr;
 	delete self->resizeHandlerPtr, resizeHandlerPtr = nullptr;

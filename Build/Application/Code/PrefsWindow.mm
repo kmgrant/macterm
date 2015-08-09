@@ -2968,7 +2968,7 @@ Destructor.
 - (void)
 dealloc
 {
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[self ignoreWhenObjectsPostNotes];
 	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
 																kPreferences_ChangeContextName);
 	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
@@ -3935,9 +3935,8 @@ windowDidLoad
 	// be notified of source list changes; not strictly necessary on
 	// newer OS versions (where bindings work perfectly) but it seems
 	// to be necessary for correct behavior on Panther at least
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(tableViewSelectionDidChange:)
-														name:NSTableViewSelectionDidChangeNotification
-														object:self->sourceListTableView];
+	[self whenObject:self->sourceListTableView postsNote:NSTableViewSelectionDidChangeNotification
+						performSelector:@selector(tableViewSelectionDidChange:)];
 	
 	// on Mac OS X versions prior to 10.5 there is no concept of
 	// “bottom chrome” so a horizontal line is included to produce
@@ -3951,8 +3950,8 @@ windowDidLoad
 	[self displayPanel:[self->panelsByID objectForKey:[self->panelIDArray objectAtIndex:0]] withAnimation:NO];
 	
 	// find out when the window closes
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillClose:)
-														name:NSWindowWillCloseNotification object:[self window]];
+	[self whenObject:self.window postsNote:NSWindowWillCloseNotification
+					performSelector:@selector(windowWillClose:)];
 }// windowDidLoad
 
 

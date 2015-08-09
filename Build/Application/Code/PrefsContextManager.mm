@@ -40,6 +40,9 @@
 // Mac includes
 #import <Cocoa/Cocoa.h>
 
+// library includes
+#import <CocoaExtensions.objc++.h>
+
 
 
 #pragma mark Constants
@@ -146,8 +149,7 @@ setCurrentContext:(Preferences_ContextRef)	aContext
 {
 	if (aContext != self->currentContext)
 	{
-		[[NSNotificationCenter defaultCenter] postNotificationName:kPrefsContextManager_ContextWillChangeNotification
-																	object:self];
+		[self postNote:kPrefsContextManager_ContextWillChangeNotification];
 		
 		if (Preferences_ContextIsValid(self->currentContext))
 		{
@@ -161,8 +163,7 @@ setCurrentContext:(Preferences_ContextRef)	aContext
 			Preferences_RetainContext(self->currentContext);
 		}
 		
-		[[NSNotificationCenter defaultCenter] postNotificationName:kPrefsContextManager_ContextDidChangeNotification
-																	object:self];
+		[self postNote:kPrefsContextManager_ContextDidChangeNotification];
 	}
 }// setCurrentContext:
 
@@ -186,13 +187,11 @@ setCurrentIndex:(Preferences_Index)		anIndex
 		// between “context” and “index” changing; both imply the
 		// same response (the data source is effectively changed)
 		// so the same notification type is used as well
-		[[NSNotificationCenter defaultCenter] postNotificationName:kPrefsContextManager_ContextWillChangeNotification
-																	object:self];
+		[self postNote:kPrefsContextManager_ContextWillChangeNotification];
 		
 		self->currentIndex = anIndex;
 		
-		[[NSNotificationCenter defaultCenter] postNotificationName:kPrefsContextManager_ContextDidChangeNotification
-																	object:self];
+		[self postNote:kPrefsContextManager_ContextDidChangeNotification];
 	}
 }// setCurrentContext:
 

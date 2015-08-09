@@ -6020,12 +6020,10 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 		
 		// monitor the preferences context manager so that observers
 		// of preferences in sub-objects can be told to expect changes
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextWillChange:)
-															name:kPrefsContextManager_ContextWillChangeNotification
-															object:aContextMgr];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prefsContextDidChange:)
-															name:kPrefsContextManager_ContextDidChangeNotification
-															object:aContextMgr];
+		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextWillChangeNotification
+							performSelector:@selector(prefsContextWillChange:)];
+		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextDidChangeNotification
+							performSelector:@selector(prefsContextDidChange:)];
 	}
 	return self;
 }// initWithContextManager:
@@ -6039,7 +6037,7 @@ Destructor.
 - (void)
 dealloc
 {
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[self ignoreWhenObjectsPostNotes];
 	[enabledObject release];
 	[allowSubsObject release];
 	[fileNameObject release];
