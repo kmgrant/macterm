@@ -2655,10 +2655,10 @@ isBackgroundNotificationNone
 {
 	return (kAlert_NotifyDoNothing == [self readBackgroundNotificationTypeWithDefaultValue:kAlert_NotifyDoNothing]);
 }
-+ (id)
-autoNotifyOnChangeToBackgroundNotificationNone
++ (BOOL)
+automaticallyNotifiesObserversOfBackgroundNotificationNone
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setBackgroundNotificationNone:(BOOL)	aFlag
@@ -2690,10 +2690,10 @@ isBackgroundNotificationChangeDockIcon
 {
 	return (kAlert_NotifyDisplayDiamondMark == [self readBackgroundNotificationTypeWithDefaultValue:kAlert_NotifyDoNothing]);
 }
-+ (id)
-autoNotifyOnChangeToBackgroundNotificationChangeDockIcon
++ (BOOL)
+automaticallyNotifiesObserversOfBackgroundNotificationChangeDockIcon
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setBackgroundNotificationChangeDockIcon:(BOOL)	aFlag
@@ -2725,10 +2725,10 @@ isBackgroundNotificationAnimateIcon
 {
 	return (kAlert_NotifyDisplayIconAndDiamondMark == [self readBackgroundNotificationTypeWithDefaultValue:kAlert_NotifyDoNothing]);
 }
-+ (id)
-autoNotifyOnChangeToBackgroundNotificationAnimateIcon
++ (BOOL)
+automaticallyNotifiesObserversOfBackgroundNotificationAnimateIcon
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setBackgroundNotificationAnimateIcon:(BOOL)		aFlag
@@ -2760,10 +2760,10 @@ isBackgroundNotificationDisplayMessage
 {
 	return (kAlert_NotifyAlsoDisplayAlert == [self readBackgroundNotificationTypeWithDefaultValue:kAlert_NotifyDoNothing]);
 }
-+ (id)
-autoNotifyOnChangeToBackgroundNotificationDisplayMessage
++ (BOOL)
+automaticallyNotifiesObserversOfBackgroundNotificationDisplayMessage
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setBackgroundNotificationDisplayMessage:(BOOL)		aFlag
@@ -2807,10 +2807,10 @@ soundNameIndexes
 {
 	return [[soundNameIndexes retain] autorelease];
 }
-+ (id)
-autoNotifyOnChangeToSoundNameIndexes
++ (BOOL)
+automaticallyNotifiesObserversOfSoundNameIndexes
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setSoundNameIndexes:(NSIndexSet*)	indexes
@@ -2859,35 +2859,6 @@ setSoundNameIndexes:(NSIndexSet*)	indexes
 		[info playSound];
 	}
 }// setSoundNameIndexes:
-
-
-#pragma mark NSKeyValueObservingCustomization
-
-
-/*!
-Returns true for keys that manually notify observers
-(through "willChangeValueForKey:", etc.).
-
-(4.1)
-*/
-+ (BOOL)
-automaticallyNotifiesObserversForKey:(NSString*)	theKey
-{
-	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
-	
-	
-	if (NULL != class_getClassMethod(self.class, flagSource))
-	{
-		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
-		result = [[self performSelector:flagSource] boolValue];
-	}
-	else
-	{
-		result = [super automaticallyNotifiesObserversForKey:theKey];
-	}
-	return result;
-}// automaticallyNotifiesObserversForKey:
 
 
 #pragma mark Panel_Delegate
@@ -3554,35 +3525,6 @@ setFocusFollowsMouse:(BOOL)	aFlag
 }// setFocusFollowsMouse:
 
 
-#pragma mark NSKeyValueObservingCustomization
-
-
-/*!
-Returns true for keys that manually notify observers
-(through "willChangeValueForKey:", etc.).
-
-(4.1)
-*/
-+ (BOOL)
-automaticallyNotifiesObserversForKey:(NSString*)	theKey
-{
-	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
-	
-	
-	if (NULL != class_getClassMethod(self.class, flagSource))
-	{
-		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
-		result = [[self performSelector:flagSource] boolValue];
-	}
-	else
-	{
-		result = [super automaticallyNotifiesObserversForKey:theKey];
-	}
-	return result;
-}// automaticallyNotifiesObserversForKey:
-
-
 #pragma mark Panel_Delegate
 
 
@@ -3889,10 +3831,10 @@ cursorShapeIsBlock
 {
 	return (kTerminalView_CursorTypeBlock == [self readCursorTypeWithDefaultValue:kTerminalView_CursorTypeBlock]);
 }
-+ (id)
-autoNotifyOnChangeToCursorShapeIsBlock
++ (BOOL)
+automaticallyNotifiesObserversOfCursorShapeIsBlock
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setCursorShapeIsBlock:(BOOL)	aFlag
@@ -3924,10 +3866,10 @@ cursorShapeIsThickUnderline
 {
 	return (kTerminalView_CursorTypeThickUnderscore == [self readCursorTypeWithDefaultValue:kTerminalView_CursorTypeBlock]);
 }
-+ (id)
-autoNotifyOnChangeToCursorShapeIsThickUnderline
++ (BOOL)
+automaticallyNotifiesObserversOfCursorShapeIsThickUnderline
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setCursorShapeIsThickUnderline:(BOOL)	aFlag
@@ -3959,10 +3901,10 @@ cursorShapeIsThickVerticalBar
 {
 	return (kTerminalView_CursorTypeThickVerticalLine == [self readCursorTypeWithDefaultValue:kTerminalView_CursorTypeBlock]);
 }
-+ (id)
-autoNotifyOnChangeToCursorShapeIsThickVerticalBar
++ (BOOL)
+automaticallyNotifiesObserversOfCursorShapeIsThickVerticalBar
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setCursorShapeIsThickVerticalBar:(BOOL)		aFlag
@@ -3994,10 +3936,10 @@ cursorShapeIsUnderline
 {
 	return (kTerminalView_CursorTypeUnderscore == [self readCursorTypeWithDefaultValue:kTerminalView_CursorTypeBlock]);
 }
-+ (id)
-autoNotifyOnChangeToCursorShapeIsUnderline
++ (BOOL)
+automaticallyNotifiesObserversOfCursorShapeIsUnderline
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setCursorShapeIsUnderline:(BOOL)	aFlag
@@ -4029,10 +3971,10 @@ cursorShapeIsVerticalBar
 {
 	return (kTerminalView_CursorTypeVerticalLine == [self readCursorTypeWithDefaultValue:kTerminalView_CursorTypeBlock]);
 }
-+ (id)
-autoNotifyOnChangeToCursorShapeIsVerticalBar
++ (BOOL)
+automaticallyNotifiesObserversOfCursorShapeIsVerticalBar
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setCursorShapeIsVerticalBar:(BOOL)		aFlag
@@ -4133,10 +4075,10 @@ isNewCommandCustomNewSession
 	
 	return (kCommandNewSessionDialog == value);
 }
-+ (id)
-autoNotifyOnChangeToNewCommandCustomNewSession
++ (BOOL)
+automaticallyNotifiesObserversOfNewCommandCustomNewSession
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setNewCommandCustomNewSession:(BOOL)	aFlag
@@ -4171,10 +4113,10 @@ isNewCommandDefaultSessionFavorite
 	
 	return (kCommandNewSessionDefaultFavorite == value);
 }
-+ (id)
-autoNotifyOnChangeToNewCommandDefaultSessionFavorite
++ (BOOL)
+automaticallyNotifiesObserversOfNewCommandDefaultSessionFavorite
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setNewCommandDefaultSessionFavorite:(BOOL)	aFlag
@@ -4209,10 +4151,10 @@ isNewCommandLogInShell
 	
 	return (kCommandNewSessionLoginShell == value);
 }
-+ (id)
-autoNotifyOnChangeToNewCommandLogInShell
++ (BOOL)
+automaticallyNotifiesObserversOfNewCommandLogInShell
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setNewCommandLogInShell:(BOOL)	aFlag
@@ -4247,10 +4189,10 @@ isNewCommandShell
 	
 	return (kCommandNewSessionShell == value);
 }
-+ (id)
-autoNotifyOnChangeToNewCommandShell
++ (BOOL)
+automaticallyNotifiesObserversOfNewCommandShell
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setNewCommandShell:(BOOL)	aFlag
@@ -4357,35 +4299,6 @@ error:(NSError**)						outError
 	}
 	return result;
 }// validateSpacesPerTab:error:
-
-
-#pragma mark NSKeyValueObservingCustomization
-
-
-/*!
-Returns true for keys that manually notify observers
-(through "willChangeValueForKey:", etc.).
-
-(4.1)
-*/
-+ (BOOL)
-automaticallyNotifiesObserversForKey:(NSString*)	theKey
-{
-	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
-	
-	
-	if (NULL != class_getClassMethod(self.class, flagSource))
-	{
-		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
-		result = [[self performSelector:flagSource] boolValue];
-	}
-	else
-	{
-		result = [super automaticallyNotifiesObserversForKey:theKey];
-	}
-	return result;
-}// automaticallyNotifiesObserversForKey:
 
 
 #pragma mark Panel_Delegate

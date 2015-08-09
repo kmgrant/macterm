@@ -77,17 +77,6 @@
 @end //}
 
 
-@interface NSObject (CocoaExtensions_NSObject) //{
-
-// class methods: helpers for key-value observing customization
-	+ (NSString*)
-	selectorNameForKeyChangeAutoNotifyFlag:(NSString*)_;
-	+ (SEL)
-	selectorToReturnKeyChangeAutoNotifyFlag:(SEL)_;
-
-@end //}
-
-
 @interface NSWindow (CocoaExtensions_NSWindow) //{
 
 // new methods: coordinate translation

@@ -2534,10 +2534,10 @@ dialogText
 {
 	return [[dialogText copy] autorelease];
 }
-+ (id)
-autoNotifyOnChangeToDialogText
++ (BOOL)
+automaticallyNotifiesObserversOfDialogText
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setDialogText:(NSString*)	aString
@@ -2557,10 +2557,10 @@ helpText
 {
 	return [[helpText copy] autorelease];
 }
-+ (id)
-autoNotifyOnChangeToHelpText
++ (BOOL)
+automaticallyNotifiesObserversOfHelpText
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setHelpText:(NSString*)		aString
@@ -2635,10 +2635,10 @@ iconImageName
 {
 	return [[iconImageName copy] autorelease];
 }
-+ (id)
-autoNotifyOnChangeToIconImageName
++ (BOOL)
+automaticallyNotifiesObserversOfIconImageName
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setIconImageName:(NSString*)	aString
@@ -2658,10 +2658,10 @@ primaryButtonText
 {
 	return [[primaryButtonText copy] autorelease];
 }
-+ (id)
-autoNotifyOnChangeToPrimaryButtonText
++ (BOOL)
+automaticallyNotifiesObserversOfPrimaryButtonText
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setPrimaryButtonText:(NSString*)	aString
@@ -2680,10 +2680,10 @@ secondaryButtonText
 {
 	return [[secondaryButtonText copy] autorelease];
 }
-+ (id)
-autoNotifyOnChangeToSecondaryButtonText
++ (BOOL)
+automaticallyNotifiesObserversOfSecondaryButtonText
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setSecondaryButtonText:(NSString*)	aString
@@ -2703,10 +2703,10 @@ tertiaryButtonText
 {
 	return [[tertiaryButtonText copy] autorelease];
 }
-+ (id)
-autoNotifyOnChangeToTertiaryButtonText
++ (BOOL)
+automaticallyNotifiesObserversOfTertiaryButtonText
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setTertiaryButtonText:(NSString*)	aString
@@ -2726,10 +2726,10 @@ titleText
 {
 	return [[titleText copy] autorelease];
 }
-+ (id)
-autoNotifyOnChangeToTitleText
++ (BOOL)
+automaticallyNotifiesObserversOfTitleText
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setTitleText:(NSString*)	aString
@@ -2791,35 +2791,6 @@ performTertiaryAction:(id)		sender
 #pragma unused(sender)
 	[self didFinishAlertWithButton:kAlert_ItemButton3 fromEvent:YES];
 }// performTertiaryAction:
-
-
-#pragma mark NSKeyValueObservingCustomization
-
-
-/*!
-Returns true for keys that manually notify observers
-(through "willChangeValueForKey:", etc.).
-
-(4.0)
-*/
-+ (BOOL)
-automaticallyNotifiesObserversForKey:(NSString*)	theKey
-{
-	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
-	
-	
-	if (NULL != class_getClassMethod(self.class, flagSource))
-	{
-		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
-		result = [[self performSelector:flagSource] boolValue];
-	}
-	else
-	{
-		result = [super automaticallyNotifiesObserversForKey:theKey];
-	}
-	return result;
-}// automaticallyNotifiesObserversForKey:
 
 
 #pragma mark NSWindowController

@@ -3962,35 +3962,6 @@ context:(void*)						aContext
 }// observeValueForKeyPath:ofObject:change:context:
 
 
-#pragma mark NSKeyValueObservingCustomization
-
-
-/*!
-Returns true for keys that manually notify observers
-(through "willChangeValueForKey:", etc.).
-
-(4.1)
-*/
-+ (BOOL)
-automaticallyNotifiesObserversForKey:(NSString*)	theKey
-{
-	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
-	
-	
-	if (NULL != class_getClassMethod(self.class, flagSource))
-	{
-		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
-		result = [[self performSelector:flagSource] boolValue];
-	}
-	else
-	{
-		result = [super automaticallyNotifiesObserversForKey:theKey];
-	}
-	return result;
-}// automaticallyNotifiesObserversForKey:
-
-
 #pragma mark Panel_Delegate
 
 
@@ -4794,35 +4765,6 @@ changeColor:(id)	sender
 #pragma unused(sender)
 	// no action is necessary due to Cocoa Bindings
 }// changeColor:
-
-
-#pragma mark NSKeyValueObservingCustomization
-
-
-/*!
-Returns true for keys that manually notify observers
-(through "willChangeValueForKey:", etc.).
-
-(4.1)
-*/
-+ (BOOL)
-automaticallyNotifiesObserversForKey:(NSString*)	theKey
-{
-	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
-	
-	
-	if (NULL != class_getClassMethod(self.class, flagSource))
-	{
-		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
-		result = [[self performSelector:flagSource] boolValue];
-	}
-	else
-	{
-		result = [super automaticallyNotifiesObserversForKey:theKey];
-	}
-	return result;
-}// automaticallyNotifiesObserversForKey:
 
 
 #pragma mark Panel_Delegate

@@ -1317,10 +1317,10 @@ setProtocolIndexByProtocol:(Session_Protocol)	aProtocol
 		++i;
 	}
 }
-+ (id)
-autoNotifyOnChangeToProtocolIndexes
++ (BOOL)
+automaticallyNotifiesObserversOfProtocolIndexes
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setProtocolIndexes:(NSIndexSet*)	indexes
@@ -1395,10 +1395,10 @@ hostName
 {
 	return [[_hostName copy] autorelease];
 }
-+ (id)
-autoNotifyOnChangeToHostName
++ (BOOL)
+automaticallyNotifiesObserversOfHostName
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setHostName:(NSString*)		aString
@@ -1434,10 +1434,10 @@ portNumber
 {
 	return [[_portNumber copy] autorelease];
 }
-+ (id)
-autoNotifyOnChangeToPortNumber
++ (BOOL)
+automaticallyNotifiesObserversOfPortNumber
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setPortNumber:(NSString*)	aString
@@ -1474,10 +1474,10 @@ target
 {
 	return _target;
 }
-+ (id)
-autoNotifyOnChangeToTarget
++ (BOOL)
+automaticallyNotifiesObserversOfTarget
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setTarget:(id)		anObject
@@ -1504,10 +1504,10 @@ userID
 {
 	return [[_userID copy] autorelease];
 }
-+ (id)
-autoNotifyOnChangeToUserID
++ (BOOL)
+automaticallyNotifiesObserversOfUserID
 {
-	return @(NO);
+	return NO;
 }
 - (void)
 setUserID:(NSString*)	aString
@@ -1769,35 +1769,6 @@ error:(NSError**)					outError
 	}
 	return result;
 }// validateUserID:error:
-
-
-#pragma mark NSKeyValueObservingCustomization
-
-
-/*!
-Returns true for keys that manually notify observers
-(through "willChangeValueForKey:", etc.).
-
-(4.0)
-*/
-+ (BOOL)
-automaticallyNotifiesObserversForKey:(NSString*)	theKey
-{
-	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
-	
-	
-	if (NULL != class_getClassMethod(self.class, flagSource))
-	{
-		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
-		result = [[self performSelector:flagSource] boolValue];
-	}
-	else
-	{
-		result = [super automaticallyNotifiesObserversForKey:theKey];
-	}
-	return result;
-}// automaticallyNotifiesObserversForKey:
 
 
 #pragma mark NSNetServiceBrowserDelegateMethods

@@ -3041,12 +3041,12 @@ Accessor.
 currentPreferenceCollections
 {
 	return [[currentPreferenceCollections retain] autorelease];
-}// currentPreferenceCollections
-- (BOOL)
-autoNotifyOnChangeToCurrentPreferenceCollections
+}
++ (BOOL)
+automaticallyNotifiesObserversOfCurrentPreferenceCollections
 {
 	return NO;
-}// autoNotifyOnChangeToCurrentPreferenceCollections
+}// automaticallyNotifiesObserversOfCurrentPreferenceCollections
 
 
 /*!
@@ -3417,35 +3417,6 @@ changeFont:(id)		sender
 		[self->activePanel changeFont:sender];
 	}
 }// changeFont:
-
-
-#pragma mark NSKeyValueObservingCustomization
-
-
-/*!
-Returns true for keys that manually notify observers
-(through "willChangeValueForKey:", etc.).
-
-(4.1)
-*/
-+ (BOOL)
-automaticallyNotifiesObserversForKey:(NSString*)	theKey
-{
-	BOOL	result = YES;
-	SEL		flagSource = NSSelectorFromString([self.class selectorNameForKeyChangeAutoNotifyFlag:theKey]);
-	
-	
-	if (NULL != class_getClassMethod(self.class, flagSource))
-	{
-		// See selectorToReturnKeyChangeAutoNotifyFlag: for more information on the form of the selector.
-		result = [[self performSelector:flagSource] boolValue];
-	}
-	else
-	{
-		result = [super automaticallyNotifiesObserversForKey:theKey];
-	}
-	return result;
-}// automaticallyNotifiesObserversForKey:
 
 
 #pragma mark NSTableDataSource
