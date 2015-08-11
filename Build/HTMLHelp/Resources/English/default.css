@@ -28,21 +28,24 @@ body
 
 a:link,
 a:visited,
-a:active
+a:active,
+a:hover
 {
+	border-radius:		1em;
+	
 	margin-top:			0;
 	border-top:			0;
-	padding-top:		0;
+	padding-top:		0.3em;
 	height:				auto;
-	padding-bottom:		0;
+	padding-bottom:		0.3em;
 	border-bottom:		solid transparent 0.1em;
 	margin-bottom:		0;
 	
 	margin-left:		0;
 	border-left:		0;
-	padding-left:		0.2em;
+	padding-left:		0.9em;
 	width:				auto;
-	padding-right:		0.2em;
+	padding-right:		0.9em;
 	border-right:		0;
 	margin-right:		0;
 }
@@ -62,6 +65,12 @@ a:visited
 a:active
 {
 	background:			transparent; /* okay because the body image color is known */
+	color:				#29a;
+}
+
+a:hover
+{
+	background:			#eee;
 	color:				#29a;
 }
 
@@ -121,8 +130,6 @@ a:active
 
 .navigation a
 {
-	text-shadow:		#222 0.045em 0.1em 0.4em;
-	
 	margin-top:			0;
 	border-top:			solid transparent 0.1em;
 	padding-top:		0.1em;
@@ -150,16 +157,18 @@ a:active
 {
 	background:			transparent; /* okay because the body image color is known */
 	color:				#444;
-	
-	border-left-color:	#333;
 }
 
 .navigation a:active
 {
 	background:			transparent; /* okay because the body image color is known */
 	color:				white;
-	
-	border-left-color:	#333;
+}
+
+.navigation a:hover
+{
+	background:			#ddd;
+	color:				#29a;
 }
 
 .pagetitle
@@ -188,7 +197,7 @@ a:active
 
 h2
 {
-	background:			#dedede -webkit-gradient(linear, left bottom, right top, from(#dedede), to(#fff), color-stop(0.4, #ccc));
+	background:			#dedede linear-gradient(189deg, #dedede, #ccc 40%, #fff);
 	color:				black;
 	font-family:		Optima, sans-serif;
 	line-height:		130%;
@@ -236,7 +245,7 @@ h3
 
 h4
 {
-	background:			white -webkit-gradient(linear, left bottom, right top, from(#fff), to(#fff), color-stop(0.1, #efefef));
+	background:			white linear-gradient(140deg, #fff, #efefef 10%, #fff);
 	color:				black;
 	font-family:		Optima, sans-serif;
 	line-height:		130%;
@@ -352,7 +361,7 @@ h6
 
 blockquote
 {
-	background:			white -webkit-gradient(linear, right bottom, left top, from(#ccc), to(#fff), color-stop(0.3, #efefef));
+	background:			white linear-gradient(-45deg, #ccc, #efefef 30%, #fff);
 	color:				#556;
 	font-style:			italic;
 	
@@ -365,7 +374,7 @@ blockquote
 	margin-bottom:		0;
 	
 	margin-left:		2em;
-	border-left:		dashed #aae 0.1em;
+	border-left:		solid #aaa 0.1em;
 	padding-left:		1.5em;
 	width:				auto;
 	padding-right:		1em;

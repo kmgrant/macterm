@@ -37,82 +37,7 @@
 	font-weight:		normal;
 	text-align:			right;
 	
-	margin-top:			0em;
-	border-top:			0em;
-	padding-top:		0.3em;
-	height:				auto;
-	padding-bottom:		0.25em;
-	border-bottom:		0em;
-	margin-bottom:		0em;
-	
-	margin-left:		0em;
-	border-left:		0em;
-	padding-left:		0em;
-	width:				auto;
-	padding-right:		1em;
-	border-right:		0em;
-	margin-right:		0em;
-}
-
-#externalnavigation a
-{
-	background:			transparent;  /* okay because the background color is known */
-}
-
-#externalnavigation a:link
-{
-	background:			transparent;  /* okay because the background color is known */
-	color:				blue;
-	
-	margin-top:			0.2em;
-	border-top:			solid transparent 0.1em;
-	padding-top:		0.25em;
-	height:				auto;
-	padding-bottom:		0.30em;
-	border-bottom:		solid transparent 0.1em;
-	margin-bottom:		0.2em;
-	
-	margin-left:		1em;
-	border-left:		solid transparent 0.1em;
-	padding-left:		0.65em;
-	width:				auto;
-	padding-right:		0.65em;
-	border-right:		solid transparent 0.1em;
-	margin-right:		0em;
-}
-
-#externalnavigation a:visited
-{
-	background:			transparent;  /* okay because the background color is known */
-	color:				#5533cc;
-	
-	margin-top:			0.2em;
-	border-top:			solid transparent 0.1em;
-	padding-top:		0.25em;
-	height:				auto;
-	padding-bottom:		0.30em;
-	border-bottom:		solid transparent 0.1em;
-	margin-bottom:		0.2em;
-	
-	margin-left:		1em;
-	border-left:		solid transparent 0.1em;
-	padding-left:		0.65em;
-	width:				auto;
-	padding-right:		0.65em;
-	border-right:		solid transparent 0.1em;
-	margin-right:		0em;
-}
-
-#externalnavigation a:active
-{
-	background:			#777;
-	color:				white;
-	
-	border-top-color:	#111;
-	border-bottom-color:#999;
-	
-	border-left-color:	#111;
-	border-right-color:	#999;
+	margin-right:		1em;
 }
 
 #mainnavigation
@@ -167,7 +92,7 @@
 	font-size:			smaller;
 	font-style:			italic;
 	font-weight:		bold;
-	text-shadow:		#666 0.075em 0.15em 0.5em;
+	text-shadow:		#666 0.05em 0.1em 0.5em;
 	text-transform:		uppercase;
 	
 	margin-top:			0em;
@@ -261,7 +186,8 @@
 
 #mainnavigation a:link,
 #mainnavigation a:visited,
-#mainnavigation a:active
+#mainnavigation a:active,
+#mainnavigation a:hover
 {
 	margin-top:			0.2em;
 	border-top:			solid transparent 0.1em;
@@ -296,12 +222,12 @@
 {
 	background:			#777;
 	color:				white;
-	
-	border-top-color:	#111;
-	border-bottom-color:#999;
-	
-	border-left-color:	#111;
-	border-right-color:	#999;
+}
+
+#mainnavigation a:hover
+{
+	background:			#eee;
+	color:				#29a;
 }
 
 #footer
