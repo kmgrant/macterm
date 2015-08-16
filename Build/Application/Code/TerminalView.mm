@@ -472,12 +472,12 @@ NSDictionary*		dictionaryWithTerminalTextAttributes(My_TerminalViewPtr, Terminal
 OSStatus			dragTextSelection					(My_TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
 Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, TerminalView_RowIndex,
 														 UInt16, TerminalView_RowIndex);
-void				drawSymbolFontLetter				(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char, Boolean);
+void				drawSymbolFontLetter				(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char);
 void				drawTerminalScreenRunOp				(TerminalScreenRef, UInt16, CFStringRef, Terminal_LineRef, UInt16,
 														 TerminalTextAttributes, void*);
 void				drawTerminalText					(My_TerminalViewPtr, CGContextRef, CGRect const&, Rect const&, CFIndex,
 														 CFStringRef, TerminalTextAttributes);
-void				drawVTGraphicsGlyph					(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char, Boolean);
+void				drawVTGraphicsGlyph					(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char);
 void				eraseSection						(My_TerminalViewPtr, CGContextRef, SInt16, SInt16, CGRect&);
 void				eventNotifyForView					(My_TerminalViewConstPtr, TerminalView_Event, void*);
 Terminal_LineRef	findRowIterator						(My_TerminalViewPtr, TerminalView_RowIndex, Terminal_LineStackStorage*);
@@ -6091,8 +6091,7 @@ drawSymbolFontLetter	(My_TerminalViewPtr		UNUSED_ARGUMENT(inTerminalViewPtr),
 						 CGContextRef			UNUSED_ARGUMENT(inDrawingContext),
 						 CGRect const&			UNUSED_ARGUMENT(inBoundaries),
 						 UniChar				UNUSED_ARGUMENT(inUnicode),
-						 char					inMacRomanForQuickDraw, // DEPRECATED
-						 Boolean				UNUSED_ARGUMENT(inIsDoubleWidth))
+						 char					inMacRomanForQuickDraw) // DEPRECATED
 {
 	// Greek character; “cheat” and try to use the Symbol font for this
 	// (changing the font on the fly is probably insanely inefficient,
@@ -6426,8 +6425,12 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			{
 				// bottom half of double-sized text; force the text to use
 				// twice the normal font metrics
-				SInt16		i = 0;
-				Point		oldPen;
+				CGFloat const	kHOffsetPerGlyph = INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter);
+				SInt16			i = 0;
+				Point			oldPen;
+				CGRect			glyphBounds = CGRectMake(inBoundaries.origin.x, inBoundaries.origin.y,
+															kHOffsetPerGlyph,
+															INTEGER_DOUBLED(inTerminalViewPtr->text.font.heightPerCharacter));
 				
 				
 				for (i = 0; i < inCharacterCount; ++i)
@@ -6436,9 +6439,9 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 					if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 					{
 						// draw a graphics character
-						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries,
+						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, glyphBounds,
 											CFStringGetCharacterAtIndex(inTextBufferAsCFString, i),
-											oldMacRomanBufferForQuickDraw[i], true/* is double width */);
+											oldMacRomanBufferForQuickDraw[i]);
 					}
 					else
 					{
@@ -6446,7 +6449,8 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 						DrawText(oldMacRomanBufferForQuickDraw, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
 					}
 					
-					MoveTo(oldPen.h + INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter), oldPen.v);
+					glyphBounds.origin.x += glyphBounds.size.width;
+					MoveTo(oldPen.h + STATIC_CAST(glyphBounds.size.width, SInt16), oldPen.v);
 				}
 			}
 			else if ((terminalFontStyle & bold) || (terminalFontID == kArbitraryVTGraphicsPseudoFontID) ||
@@ -6455,9 +6459,13 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			{
 				// proportional font, or bold, or otherwise non-standard width; force the text
 				// to draw one character at a time so that the character offset can be corrected
-				SInt16		i = 0;
-				Point		oldPen;
-				char		previousChar = '\0'; // aids heuristic algorithm; certain letter combinations may demand different offsets
+				CGFloat const	kHOffsetPerGlyph = inTerminalViewPtr->text.font.widthPerCharacter;
+				SInt16			i = 0;
+				char			previousChar = '\0'; // aids heuristic algorithm; certain letter combinations may demand different offsets
+				Point			oldPen;
+				CGRect			glyphBounds = CGRectMake(inBoundaries.origin.x, inBoundaries.origin.y,
+															kHOffsetPerGlyph,
+															inTerminalViewPtr->text.font.heightPerCharacter);
 				
 				
 				for (i = 0; i < inCharacterCount; ++i)
@@ -6544,16 +6552,17 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 					if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 					{
 						// draw a graphics character
-						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries,
+						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, glyphBounds,
 											CFStringGetCharacterAtIndex(inTextBufferAsCFString, i),
-											oldMacRomanBufferForQuickDraw[i], false/* is double width */);
+											oldMacRomanBufferForQuickDraw[i]);
 					}
 					else
 					{
 						// draw a normal character
 						DrawText(oldMacRomanBufferForQuickDraw, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
 					}
-					MoveTo(oldPen.h + inTerminalViewPtr->text.font.widthPerCharacter, oldPen.v);
+					glyphBounds.origin.x += glyphBounds.size.width;
+					MoveTo(oldPen.h + STATIC_CAST(glyphBounds.size.width, SInt16), oldPen.v);
 					
 					previousChar = thisChar;
 				}
@@ -6577,24 +6586,28 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 
 
 /*!
-Renders a special graphics character at the current
-pen location, assuming the pen is at the baseline of
-where a font character would be inserted.  All other
-text-related aspects of the specified port are used to
-affect graphics (such as the presence of a bold face).
+Renders a special graphics character within the specified
+boundaries, assuming the pen is at the baseline of where a
+font character would be inserted.  Glyphs that are drawn by
+fonts will be inserted at the pen’s location.  Glyphs that
+are specially rendered can use the bounding rectangle
+directly and may ignore the pen location.
 
-The specified Unicode character is redundantly specified
-as a pre-translated Mac Roman character (or some loss
-byte if none is appropriate), for the TEMPORARY use of
-old drawing code that must use QuickDraw.
+All other text-related aspects of the specified port are
+used to affect graphics (such as the presence of bold face).
 
-Due to the difficulty of creating vector-based fonts
-that line graphics up properly, and the lousy look
-of scaled-up bitmapped fonts, MacTerm renders most
-VT font characters on its own, using line drawing.
-In addition, MacTerm uses international symbols
-for glyphs such as CR, HT, etc. instead of the Roman-
-based ones prescribed by the standard VT font.
+The specified Unicode character is redundantly specified as
+a pre-translated Mac Roman character (or some loss byte if
+none is appropriate), for the TEMPORARY use of old drawing
+code that must use QuickDraw.
+
+Due to the difficulty of creating vector-based fonts that
+line graphics up properly, and the lousy look of scaled-up
+bitmapped fonts, MacTerm renders most VT font characters on
+its own, using line drawing.  In addition, MacTerm uses
+international symbols for glyphs such as CR, HT, etc.
+instead of the Roman-based ones prescribed by the standard
+VT font.
 
 (3.0)
 */
@@ -6603,8 +6616,7 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
 						 CGContextRef			inDrawingContext,
 						 CGRect const&			inBoundaries,
 						 UniChar				inUnicode,
-						 char					inMacRomanForQuickDraw, // DEPRECATED
-						 Boolean				inIsDoubleWidth)
+						 char					inMacRomanForQuickDraw) // DEPRECATED
 {
 	Rect		cellRect;
 	Point		cellCenter; // used for line drawing glyphs
@@ -6651,9 +6663,8 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		GetPen(&penLocation);
 		cellTop = inBoundaries.origin.y;
-		cellLeft = penLocation.h;
-		cellRight = cellLeft + inTerminalViewPtr->text.font.widthPerCharacter;
-		if (inIsDoubleWidth) cellRight += inTerminalViewPtr->text.font.widthPerCharacter;
+		cellLeft = inBoundaries.origin.x;
+		cellRight = cellLeft + inBoundaries.size.width; // implicitly double-width if appropriate
 		cellBottom = inBoundaries.origin.y + inBoundaries.size.height;
 		SetRect(&cellRect, cellLeft, cellTop, cellRight, cellBottom);
 	}
@@ -7253,7 +7264,7 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
 		LineTo(cellCenter.h + lineWidth * 2/* arbitrary */, cellCenter.v - lineHeight);
 	#else
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 0xA6, inIsDoubleWidth);
+							 0xA6);
 	#endif
 		break;
 	
@@ -7266,72 +7277,72 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	case 0x03B1: // alpha
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'a', inIsDoubleWidth);
+							 'a');
 		break;
 	
 	case 0x00DF: // beta
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-						 	'b', inIsDoubleWidth);
+						 	'b');
 		break;
 	
 	case 0x0393: // capital gamma
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'G', inIsDoubleWidth);
+							 'G');
 		break;
 	
 	case 0x03C0: // pi
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-						 		'p', inIsDoubleWidth);
+						 		'p');
 		break;
 	
 	case 0x03A3: // capital sigma
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-						 		'S', inIsDoubleWidth);
+						 		'S');
 		break;
 	
 	case 0x03C3: // sigma
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-						 		's', inIsDoubleWidth);
+						 		's');
 		break;
 	
 	case 0x00B5: // mu
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-								'm', inIsDoubleWidth);
+								'm');
 		break;
 	
 	case 0x03C4: // tau
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 't', inIsDoubleWidth);
+							 't');
 		break;
 	
 	case 0x03A6: // capital phi
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'F', inIsDoubleWidth);
+							 'F');
 		break;
 	
 	case 0x0398: // capital theta
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'Q', inIsDoubleWidth);
+							 'Q');
 		break;
 	
 	case 0x03A9: // capital omega
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'W', inIsDoubleWidth);
+							 'W');
 		break;
 	
 	case 0x03B4: // delta
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'd', inIsDoubleWidth);
+							 'd');
 		break;
 	
 	case 0x03C6: // phi
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'f', inIsDoubleWidth);
+							 'f');
 		break;
 	
 	case 0x03B5: // epsilon
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'e', inIsDoubleWidth);
+							 'e');
 		break;
 	
 	default:
