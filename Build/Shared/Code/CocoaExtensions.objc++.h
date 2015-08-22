@@ -95,6 +95,19 @@
 @end //}
 
 
+@interface NSValue (CocoaExtensions_NSValue) //{
+
+// class methods: helpers for constructing from Core Graphics data
+	+ (NSValue*)
+	valueWithCGPoint:(CGPoint)_;
+	+ (NSValue*)
+	valueWithCGRect:(CGRect)_;
+	+ (NSValue*)
+	valueWithCGSize:(CGSize)_;
+
+@end //}
+
+
 @interface NSWindow (CocoaExtensions_NSWindow) //{
 
 // new methods: coordinate translation

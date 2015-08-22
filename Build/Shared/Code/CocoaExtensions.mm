@@ -450,6 +450,55 @@ ignoreWhenObjectsPostNotes
 
 
 #pragma mark -
+@implementation NSValue (CocoaExtensions_NSValue)
+
+
+/*!
+Returns an NSValue* from CGPoint data, much like its version
+on iOS (and similar to the Mac OS X "valueWithPoint:" that
+accepts an NSPoint).
+
+(1.11)
+*/
++ (NSValue*)
+valueWithCGPoint:(CGPoint)	aPoint
+{
+	return [NSValue valueWithPoint:NSPointFromCGPoint(aPoint)];
+}// valueWithCGPoint:
+
+
+/*!
+Returns an NSValue* from CGRect data, much like its version
+on iOS (and similar to the Mac OS X "valueWithRect:" that
+accepts an NSRect).
+
+(1.11)
+*/
++ (NSValue*)
+valueWithCGRect:(CGRect)	aRect
+{
+	return [NSValue valueWithRect:NSRectFromCGRect(aRect)];
+}// valueWithCGRect:
+
+
+/*!
+Returns an NSValue* from CGRect data, much like its version
+on iOS (and similar to the Mac OS X "valueWithRect:" that
+accepts an NSRect).
+
+(1.11)
+*/
++ (NSValue*)
+valueWithCGSize:(CGSize)	aSize
+{
+	return [NSValue valueWithSize:NSSizeFromCGSize(aSize)];
+}// valueWithCGSize:
+
+
+@end // NSValue (CocoaExtensions_NSValue)
+
+
+#pragma mark -
 @implementation NSWindow (CocoaExtensions_NSWindow)
 
 
