@@ -280,7 +280,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				OBJROOT = _Generated;
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 				SYMROOT = _Generated;
 				WARNING_CFLAGS = (
 					"-Wall",
@@ -293,7 +293,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				OBJROOT = _Generated;
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 				SYMROOT = _Generated;
 			};
 			name = ForRelease;
