@@ -17742,20 +17742,58 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		case 0x2320: // integral sign (elongated S), top
 		case 0x2321: // integral sign (elongated S), bottom
 		case 0x0192: // small 'f' with hook
-		case 0x03B1: // alpha
-		case 0x00DF: // beta
+		case 0x0391: // capital alpha
+		case 0x0392: // capital beta
 		case 0x0393: // capital gamma
-		case 0x03C0: // pi
-		case 0x03A3: // capital sigma
-		case 0x03C3: // sigma
-		case 0x00B5: // mu
-		case 0x03C4: // tau
-		case 0x03A6: // capital phi
+		case 0x0394: // capital delta
+		case 0x0395: // capital epsilon
+		case 0x0396: // capital zeta
+		case 0x0397: // capital eta
 		case 0x0398: // capital theta
+		case 0x0399: // capital iota
+		case 0x039A: // capital kappa
+		case 0x039B: // capital lambda
+		case 0x039C: // capital mu
+		case 0x039D: // capital nu
+		case 0x039E: // capital xi
+		case 0x039F: // capital omicron
+		case 0x03A0: // capital pi
+		case 0x03A1: // capital rho
+		case 0x03A3: // capital sigma
+		case 0x03A4: // capital tau
+		case 0x03A5: // capital upsilon
+		case 0x03A6: // capital phi
+		case 0x03A7: // capital chi
+		case 0x03A8: // capital psi
 		case 0x03A9: // capital omega
+		case 0x03B1: // alpha
+		case 0x03B2: // beta
+		case 0x03B3: // gamma
 		case 0x03B4: // delta
-		case 0x03C6: // phi
 		case 0x03B5: // epsilon
+		case 0x03B6: // zeta
+		case 0x03B7: // eta
+		case 0x03B8: // theta
+		case 0x03B9: // iota
+		case 0x03BA: // kappa
+		case 0x03BB: // lambda
+		case 0x03BC: // mu
+		case 0x03BD: // nu
+		case 0x03BE: // xi
+		case 0x03BF: // omicron
+		case 0x03C0: // pi
+		case 0x03C1: // rho
+		case 0x03C2: // final sigma
+		case 0x03C3: // sigma
+		case 0x03C4: // tau
+		case 0x03C5: // upsilon
+		case 0x03C6: // phi
+		case 0x03C7: // chi
+		case 0x03C8: // psi
+		case 0x03C9: // omega
+		case 0x03D1: // theta (symbol)
+		case 0x03D5: // phi (symbol)
+		case 0x03D6: // pi (symbol)
 		case 0x221A: // square root left edge
 			STYLE_ADD(outNewAttributes, kTerminalTextAttributeVTGraphics);
 			break;

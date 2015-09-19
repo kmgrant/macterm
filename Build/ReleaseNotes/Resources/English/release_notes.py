@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20150919',
     '20150810',
     '20150808',
     '20150807',
@@ -525,6 +526,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20150919': [
+        'Terminal graphics characters now cover more of the Greek alphabet, especially for mathematics.',
+    ],
     '20150810': [
         'Help web page styles have been slightly tweaked.',
     ],

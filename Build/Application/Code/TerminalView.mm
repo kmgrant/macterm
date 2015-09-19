@@ -7275,74 +7275,266 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
 		LineTo(cellRight - lineWidth, cellTop + lineHeight);
 		break;
 	
-	case 0x03B1: // alpha
+	case 0x0391: // capital alpha
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'a');
+							 0x41);
 		break;
 	
-	case 0x00DF: // beta
+	case 0x0392: // capital beta
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-						 	'b');
+							 0x42);
 		break;
 	
 	case 0x0393: // capital gamma
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'G');
+							 0x47);
 		break;
 	
-	case 0x03C0: // pi
+	case 0x0394: // capital delta
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-						 		'p');
+						 	 0x44);
 		break;
 	
-	case 0x03A3: // capital sigma
+	case 0x0395: // capital epsilon
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-						 		'S');
+						 	 0x45);
 		break;
 	
-	case 0x03C3: // sigma
+	case 0x0396: // capital zeta
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-						 		's');
+						 	 0x5A);
 		break;
 	
-	case 0x00B5: // mu
+	case 0x0397: // capital eta
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-								'm');
-		break;
-	
-	case 0x03C4: // tau
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 't');
-		break;
-	
-	case 0x03A6: // capital phi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'F');
+						 	 0x48);
 		break;
 	
 	case 0x0398: // capital theta
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'Q');
+						 	 0x51);
+		break;
+	
+	case 0x0399: // capital iota
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x49);
+		break;
+	
+	case 0x039A: // capital kappa
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x4B);
+		break;
+	
+	case 0x039B: // capital lambda
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x4C);
+		break;
+	
+	case 0x039C: // capital mu
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x4D);
+		break;
+	
+	case 0x039D: // capital nu
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x4E);
+		break;
+	
+	case 0x039E: // capital xi
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x58);
+		break;
+	
+	case 0x039F: // capital omicron
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x4F);
+		break;
+	
+	case 0x03A0: // capital pi
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x50);
+		break;
+	
+	case 0x03A1: // capital rho
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x52);
+		break;
+	
+	case 0x03A3: // capital sigma
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x53);
+		break;
+	
+	case 0x03A4: // capital tau
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x54);
+		break;
+	
+	case 0x03A5: // capital upsilon
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x55);
+		break;
+	
+	case 0x03A6: // capital phi
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x46);
+		break;
+	
+	case 0x03A7: // capital chi
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x43);
+		break;
+	
+	case 0x03A8: // capital psi
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x59);
 		break;
 	
 	case 0x03A9: // capital omega
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'W');
+							 0x57);
+		break;
+	
+	case 0x03B1: // alpha
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x61);
+		break;
+	
+	case 0x03B2: // beta
+	case 0x00DF: // small sharp "S" (TEMPORARY; render as a beta due to similarity)
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x62);
+		break;
+	
+	case 0x03B3: // gamma
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x67);
 		break;
 	
 	case 0x03B4: // delta
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'd');
-		break;
-	
-	case 0x03C6: // phi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'f');
+						 	 0x64);
 		break;
 	
 	case 0x03B5: // epsilon
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
-							 'e');
+						 	 0x65);
+		break;
+	
+	case 0x03B6: // zeta
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x7A);
+		break;
+	
+	case 0x03B7: // eta
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x68);
+		break;
+	
+	case 0x03B8: // theta
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+						 	 0x71);
+		break;
+	
+	case 0x03B9: // iota
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x69);
+		break;
+	
+	case 0x03BA: // kappa
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x6B);
+		break;
+	
+	case 0x03BB: // lambda
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x6C);
+		break;
+	
+	case 0x00B5: // mu
+	case 0x03BC: // mu
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x6D);
+		break;
+	
+	case 0x03BD: // nu
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x6E);
+		break;
+	
+	case 0x03BE: // xi
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x78);
+		break;
+	
+	case 0x03BF: // omicron
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x6F);
+		break;
+	
+	case 0x03C0: // pi
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x70);
+		break;
+	
+	case 0x03C1: // rho
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x72);
+		break;
+	
+	case 0x03C2: // final sigma
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x56);
+		break;
+	
+	case 0x03C3: // sigma
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x73);
+		break;
+	
+	case 0x03C4: // tau
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x74);
+		break;
+	
+	case 0x03C5: // upsilon
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x75);
+		break;
+	
+	case 0x03C6: // phi
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x66);
+		break;
+	
+	case 0x03C7: // chi
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x63);
+		break;
+	
+	case 0x03C8: // psi
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x79);
+		break;
+	
+	case 0x03C9: // omega
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x77);
+		break;
+	
+	case 0x03D1: // theta (symbol)
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x4A);
+		break;
+	
+	case 0x03D5: // phi (symbol)
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x6A);
+		break;
+	
+	case 0x03D6: // pi (symbol)
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+							 0x76);
 		break;
 	
 	default:
